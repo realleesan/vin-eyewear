@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MOSCOT Eyewear — NYC Since 1915</title>
+<meta name="description" content="MOSCOT homepage clone — handcrafted eyeglasses and sunglasses, New York since 1915." />
+<style>
+  /* ===================== RESET & TOKENS ===================== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --yellow: #FFCB05;
+    --black: #111111;
+    --ink: #1a1a1a;
+    --white: #ffffff;
+    --grey: #d9d9d9;
+    --grey-2: #ececec;
+    --grey-3: #f5f5f4;
+    --muted: #6b6b6b;
+    --header-h: 64px;
+    --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  html { background: var(--white); scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-sans);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { display: block; max-width: 100%; }
+  ul { list-style: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  .wrap { max-width: 1360px; margin: 0 auto; padding: 0 24px; }
+  .upper { text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ===================== ANNOUNCEMENT BAR ===================== */
+  .announce {
+    background: var(--black);
+    color: var(--white);
+    height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    position: relative;
+  }
+  .announce .slides { position: relative; height: 40px; display: flex; align-items: center; }
+  .announce .slide { display: none; white-space: nowrap; }
+  .announce .slide.active { display: block; }
+  .announce button.arrow {
+    color: var(--white); position: absolute; top: 0; height: 40px; width: 40px;
+    font-size: 14px; opacity: .8;
+  }
+  .announce button.prev { left: 8px; }
+  .announce button.next { right: 8px; }
+
+  /* ===================== HEADER ===================== */
+  .header {
+    background: var(--yellow);
+    position: sticky; top: 0; z-index: 200;
+    border-bottom: 1px solid rgba(0,0,0,.08);
+  }
+  .header-inner {
+    height: var(--header-h);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .logo {
+    font-weight: 800; font-size: 26px; letter-spacing: 0.02em; color: var(--black);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .logo span { display:block; font-size: 8px; letter-spacing: .28em; font-family: var(--font-sans); font-weight:700; margin-top:-2px;}
+  .nav { display: flex; gap: 30px; height: 100%; }
+  .nav-item { display: flex; align-items: center; height: 100%; }
+  .nav-item > button {
+    font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--black); display: flex; align-items: center; gap: 6px; height: 100%;
+    border-bottom: 3px solid transparent;
+  }
+  .nav-item > button .chev { font-size: 9px; transition: transform .2s; }
+  .nav-item:hover > button { border-bottom-color: var(--black); }
+  .nav-item:hover > button .chev { transform: rotate(180deg); }
+
+  .header-actions { display: flex; align-items: center; gap: 18px; }
+  .icon-btn { color: var(--black); display: flex; align-items: center; }
+  .icon-btn svg { width: 20px; height: 20px; }
+  .cart-count {
+    background: var(--black); color: var(--yellow); font-size: 10px; font-weight: 700;
+    border-radius: 50%; width: 16px; height: 16px; display: grid; place-items: center;
+    margin-left: -6px; margin-top: -10px;
+  }
+  .btn-customize {
+    background: var(--black); color: var(--white); font-size: 12px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; padding: 10px 18px; border-radius: 2px;
+  }
+  .btn-customize:hover { opacity: .85; }
+  .lang { font-size: 12px; font-weight: 600; display:none; }
+
+  /* ===================== MEGA MENU ===================== */
+  .mega {
+    position: absolute; left: 0; right: 0; top: 100%;
+    background: var(--white); color: var(--ink);
+    box-shadow: 0 20px 30px -20px rgba(0,0,0,.35);
+    border-top: 1px solid rgba(0,0,0,.06);
+    opacity: 0; visibility: hidden; transform: translateY(6px);
+    transition: opacity .18s ease, transform .18s ease, visibility .18s;
+    z-index: 190;
+  }
+  .nav-item:hover .mega, .mega:hover { opacity: 1; visibility: visible; transform: translateY(0); }
+  .mega-grid {
+    max-width: 1360px; margin: 0 auto; padding: 36px 24px 40px;
+    display: grid; grid-template-columns: repeat(4, minmax(0,1fr)) 1.1fr 1.1fr; gap: 28px;
+  }
+  .mega-col h4 {
+    font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--grey);
+  }
+  .mega-col li { margin-bottom: 11px; }
+  .mega-col a { font-size: 13px; color: #333; }
+  .mega-col a:hover { color: var(--black); text-decoration: underline; }
+  .mega-card { text-align: center; }
+  .mega-card .img { aspect-ratio: 1/1; background: var(--grey-3); overflow: hidden; }
+  .mega-card .img img { width: 100%; height: 100%; object-fit: cover; }
+  .mega-card p { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-top: 12px; }
+  .mega-card:hover p { text-decoration: underline; }
+
+  /* Mobile nav panel */
+  .mobile-toggle { display: none; color: var(--black); }
+  .mobile-toggle svg { width: 24px; height: 24px; }
+  .mobile-nav { display: none; }
+
+  /* ===================== HERO ===================== */
+  .hero {
+    position: relative; min-height: 78vh; background: #cdbfae center/cover no-repeat;
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 56px;
+  }
+  .hero-btn {
+    background: var(--yellow); color: var(--black); font-weight: 700; font-size: 13px;
+    letter-spacing: .1em; text-transform: uppercase; padding: 14px 30px; border-radius: 2px;
+  }
+  .hero-btn:hover { background: #ffd633; }
+  .hero-dots { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+  .hero-dots button { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,.5); }
+  .hero-dots button.active { background: var(--white); }
+
+  /* ===================== SECTION HELPERS ===================== */
+  .section { padding: 64px 0; }
+  .section-eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); text-align:center; }
+  .section-title { font-size: 30px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; text-align: center; }
+
+  /* Featured product */
+  .featured { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .featured .copy { max-width: 440px; }
+  .featured h2 { font-size: 34px; font-weight: 800; text-transform: uppercase; line-height: 1.1; letter-spacing: .02em; }
+  .stars { color: var(--black); letter-spacing: 2px; margin: 14px 0 6px; }
+  .featured p { color: #444; margin: 16px 0 26px; }
+  .link-btn {
+    background: var(--yellow); color: var(--black); font-weight: 700; font-size: 12px;
+    letter-spacing: .1em; text-transform: uppercase; padding: 13px 26px; display: inline-block; border-radius: 2px;
+  }
+  .link-btn:hover { background: #ffd633; }
+  .featured .media { background: var(--grey-3); aspect-ratio: 4/3; overflow: hidden; display:grid; place-items:center; }
+  .featured .media img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Tabs + carousel */
+  .tabs { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 34px; }
+  .tab {
+    font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 9px 18px; border: 1px solid var(--grey); border-radius: 999px; color: #444;
+  }
+  .tab.active { background: var(--yellow); border-color: var(--yellow); color: var(--black); }
+
+  .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .card { text-align: center; }
+  .card .thumb {
+    position: relative; background: var(--grey-3); aspect-ratio: 1/1; overflow: hidden; border-radius: 3px;
+  }
+  .card .thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+  .card:hover .thumb img { transform: scale(1.04); }
+  .card .tag {
+    position: absolute; top: 10px; right: 10px; background: var(--yellow); color: var(--black);
+    font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 2px; letter-spacing: .06em;
+  }
+  .card .choose {
+    position: absolute; left: 12px; right: 12px; bottom: 12px; background: var(--white);
+    color: var(--black); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 10px; border-radius: 2px; opacity: 0; transform: translateY(8px); transition: .25s;
+  }
+  .card:hover .choose { opacity: 1; transform: translateY(0); }
+  .card h3 { font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; margin: 14px 0 4px; }
+  .card .price { font-size: 13px; color: #444; }
+  .swatches { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+  .swatches span { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); cursor: pointer; }
+  .center-cta { text-align: center; margin-top: 40px; }
+
+  /* Category split blocks */
+  .cats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .cat {
+    position: relative; aspect-ratio: 4/5; overflow: hidden; display: flex;
+    align-items: flex-end; justify-content: center; padding-bottom: 48px; background: var(--grey);
+  }
+  .cat img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cat::after { content:""; position:absolute; inset:0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.45)); }
+  .cat .cat-inner { position: relative; z-index: 2; text-align: center; color: var(--white); }
+  .cat h3 { font-size: 28px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 16px; }
+  .cat .white-btn {
+    background: var(--white); color: var(--black); font-size: 11px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; padding: 12px 22px; border-radius: 2px;
+  }
+
+  /* Founder yellow block */
+  .founder { display: grid; grid-template-columns: 1fr 1fr; }
+  .founder .img { background: var(--grey); aspect-ratio: 1/1; overflow: hidden; }
+  .founder .img img { width: 100%; height: 100%; object-fit: cover; }
+  .founder .panel {
+    background: var(--yellow); color: var(--black); padding: 64px 56px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .founder .panel small { font-size: 12px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; }
+  .founder .panel h2 { font-size: 40px; font-weight: 800; text-transform: uppercase; line-height: 1.05; margin: 12px 0 20px; }
+  .founder .panel p { max-width: 420px; margin-bottom: 26px; }
+  .dark-btn {
+    background: var(--black); color: var(--white); font-size: 12px; font-weight: 700;
+    letter-spacing: .1em; text-transform: uppercase; padding: 13px 26px; align-self: flex-start; border-radius: 2px;
+  }
+
+  /* Accordion + image */
+  .accordion-sec { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; align-items: center; }
+  .acc-item { border-bottom: 1px solid var(--grey); }
+  .acc-head {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 4px; font-size: 18px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
+  }
+  .acc-head .plus { font-size: 22px; transition: transform .25s; }
+  .acc-item.open .acc-head .plus { transform: rotate(45deg); }
+  .acc-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+  .acc-body p { padding: 0 4px 22px; color: #444; }
+  .acc-body .link-btn { margin: 0 4px 22px; }
+  .accordion-sec .media { background: var(--grey-3); aspect-ratio: 3/4; overflow: hidden; }
+  .accordion-sec .media img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Story editorial */
+  .story { position: relative; min-height: 60vh; background: var(--grey); overflow: hidden;
+           display: flex; align-items: center; }
+  .story img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .story::after { content:""; position:absolute; inset:0; background: rgba(0,0,0,.35); }
+  .story .story-copy { position: relative; z-index: 2; color: var(--white); max-width: 520px; }
+  .story .story-copy small { letter-spacing: .2em; text-transform: uppercase; font-size: 12px; font-weight: 700; }
+  .story .story-copy h2 { font-size: 40px; font-weight: 800; text-transform: uppercase; line-height: 1.05; margin: 14px 0 20px; }
+  .story .story-copy p { margin-bottom: 26px; }
+
+  /* Quote / concern */
+  .concern { background: var(--yellow); color: var(--black); text-align: center; }
+  .concern .wrap { padding: 72px 24px; }
+  .concern blockquote { font-family: Georgia, serif; font-size: 34px; font-style: italic; font-weight: 700; max-width: 720px; margin: 0 auto 8px; line-height: 1.2; }
+  .concern .who { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; margin-bottom: 32px; }
+  .concern .btn-row { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+  /* ===================== FOOTER ===================== */
+  .footer { background: var(--yellow); color: var(--black); }
+  .footer .top { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; padding: 60px 0 40px; }
+  .footer h5 { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 18px; }
+  .footer li { margin-bottom: 11px; }
+  .footer a { font-size: 13px; }
+  .footer a:hover { text-decoration: underline; }
+  .fit-box { border: 1.5px solid rgba(0,0,0,.35); padding: 22px; border-radius: 3px; }
+  .fit-box p { font-size: 13px; margin-bottom: 14px; }
+  .fit-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .fit-actions a { background: var(--black); color: var(--white); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 9px 14px; border-radius: 2px; }
+  .footer .socials { display: flex; gap: 16px; margin: 8px 0 22px; }
+  .footer .socials a svg { width: 20px; height: 20px; }
+  .footer .bottom {
+    border-top: 1px solid rgba(0,0,0,.2); padding: 20px 0 40px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    font-size: 12px;
+  }
+  .footer .bottom .links { display: flex; gap: 20px; flex-wrap: wrap; }
+
+  /* Popup */
+  .popup-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 500;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    opacity: 0; visibility: hidden; transition: .25s;
+  }
+  .popup-overlay.show { opacity: 1; visibility: visible; }
+  .popup {
+    background: var(--white); max-width: 440px; width: 100%; padding: 40px 32px; text-align: center;
+    position: relative; border-top: 6px solid var(--yellow);
+  }
+  .popup h3 { font-size: 20px; font-weight: 800; text-transform: uppercase; line-height: 1.2; margin-bottom: 18px; }
+  .popup form { display: flex; gap: 8px; }
+  .popup input { flex: 1; border: 1px solid var(--grey); padding: 12px; font-size: 13px; }
+  .popup button.join { background: var(--black); color: var(--white); font-weight: 700; text-transform: uppercase; font-size: 12px; padding: 0 18px; }
+  .popup .close { position: absolute; top: 10px; right: 14px; font-size: 22px; }
+
+  /* ===================== RESPONSIVE ===================== */
+  @media (max-width: 1024px) {
+    .mega-grid { grid-template-columns: repeat(3,1fr); }
+    .mega-card { display: none; }
+    .product-grid { grid-template-columns: repeat(2,1fr); }
+  }
+  @media (max-width: 860px) {
+    .nav, .btn-customize, .header-actions .desktop-only { display: none; }
+    .mobile-toggle { display: block; }
+    .featured, .founder, .accordion-sec, .cats { grid-template-columns: 1fr; }
+    .founder .panel { padding: 44px 28px; }
+    .footer .top { grid-template-columns: 1fr 1fr; }
+    .mobile-nav.open { display: block; background: var(--yellow); border-top: 1px solid rgba(0,0,0,.1); }
+    .mobile-nav .m-item { border-bottom: 1px solid rgba(0,0,0,.1); }
+    .mobile-nav .m-head { width: 100%; text-align: left; padding: 16px 24px; font-weight: 700; text-transform: uppercase; font-size: 14px; display:flex; justify-content:space-between; }
+    .mobile-nav .m-sub { display: none; padding: 0 24px 16px; }
+    .mobile-nav .m-item.open .m-sub { display: block; }
+    .mobile-nav .m-sub a { display: block; padding: 7px 0; font-size: 13px; }
+  }
+  @media (max-width: 560px) {
+    .product-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .footer .top { grid-template-columns: 1fr; }
+    .concern blockquote { font-size: 26px; }
+    .section-title, .featured h2, .founder .panel h2, .story .story-copy h2 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ANNOUNCEMENT BAR -->
+  <div class="announce">
+    <button class="arrow prev" aria-label="Previous">&#10094;</button>
+    <div class="slides">
+      <div class="slide active">New and Noteworthy Frames</div>
+      <div class="slide">Free Shipping on U.S. Orders Over $50</div>
+      <div class="slide">Join the Family and Get 10% Off</div>
+    </div>
+    <button class="arrow next" aria-label="Next">&#10095;</button>
+  </div>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="wrap header-inner">
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <a href="#" class="logo">MOSCOT<span>NYC Since 1915</span></a>
+
+      <nav class="nav" aria-label="Main menu">
+        <!-- EYEGLASSES -->
+        <div class="nav-item">
+          <button>Eyeglasses <span class="chev">&#9660;</span></button>
+          <div class="mega">
+            <div class="mega-grid">
+              <div class="mega-col">
+                <h4>Eyeglasses</h4>
+                <ul>
+                  <li><a href="#">Shop All</a></li>
+                  <li><a href="#">Best Sellers</a></li>
+                  <li><a href="#">New</a></li>
+                  <li><a href="#">Men&apos;s</a></li>
+                  <li><a href="#">Women&apos;s</a></li>
+                  <li><a href="#">Bold</a></li>
+                  <li><a href="#">Thin</a></li>
+                  <li><a href="#">Adjusted Fit</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Shop by Color</h4>
+                <ul>
+                  <li><a href="#">Black</a></li>
+                  <li><a href="#">Tortoise</a></li>
+                  <li><a href="#">Blue</a></li>
+                  <li><a href="#">Green</a></li>
+                  <li><a href="#">Red</a></li>
+                  <li><a href="#">Pink</a></li>
+                  <li><a href="#">Transparent</a></li>
+                  <li><a href="#">Metal</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Shop by Shape</h4>
+                <ul>
+                  <li><a href="#">Round</a></li>
+                  <li><a href="#">Square</a></li>
+                  <li><a href="#">Aviator</a></li>
+                  <li><a href="#">Cateye</a></li>
+                  <li><a href="#">Geometric</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Shop by Size</h4>
+                <ul>
+                  <li><a href="#">Narrow</a></li>
+                  <li><a href="#">Average</a></li>
+                  <li><a href="#">Wide</a></li>
+                  <li><a href="#">Extra Wide</a></li>
+                </ul>
+              </div>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/mega-1.png" alt="Eyeglasses on a yellow toy taxi" /></div>
+                <p>Shop All Eyeglasses</p>
+              </a>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/mega-2.png" alt="Prescription glasses with a measuring tape" /></div>
+                <p>Shop Prescription</p>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUNGLASSES -->
+        <div class="nav-item">
+          <button>Sunglasses <span class="chev">&#9660;</span></button>
+          <div class="mega">
+            <div class="mega-grid">
+              <div class="mega-col">
+                <h4>Sunglasses</h4>
+                <ul>
+                  <li><a href="#">Shop All</a></li>
+                  <li><a href="#">Best Sellers</a></li>
+                  <li><a href="#">New</a></li>
+                  <li><a href="#">Custom Made Tints&trade;</a></li>
+                  <li><a href="#">Polarized</a></li>
+                  <li><a href="#">Men&apos;s</a></li>
+                  <li><a href="#">Women&apos;s</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Shop by Color</h4>
+                <ul>
+                  <li><a href="#">Black</a></li>
+                  <li><a href="#">Tortoise</a></li>
+                  <li><a href="#">Blue</a></li>
+                  <li><a href="#">Amber</a></li>
+                  <li><a href="#">Grey</a></li>
+                  <li><a href="#">Green</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Shop by Shape</h4>
+                <ul>
+                  <li><a href="#">Round</a></li>
+                  <li><a href="#">Square</a></li>
+                  <li><a href="#">Aviator</a></li>
+                  <li><a href="#">Cateye</a></li>
+                  <li><a href="#">Geometric</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Lens Type</h4>
+                <ul>
+                  <li><a href="#">Sun</a></li>
+                  <li><a href="#">Prescription Sun</a></li>
+                  <li><a href="#">Tint+</a></li>
+                  <li><a href="#">Gradient</a></li>
+                </ul>
+              </div>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/prod-1.png" alt="Round sunglasses" /></div>
+                <p>Shop All Sunglasses</p>
+              </a>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/prod-3.png" alt="Custom made tints sunglasses" /></div>
+                <p>Custom Made Tints&trade;</p>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLLECTIONS -->
+        <div class="nav-item">
+          <button>Collections <span class="chev">&#9660;</span></button>
+          <div class="mega">
+            <div class="mega-grid">
+              <div class="mega-col">
+                <h4>Collections</h4>
+                <ul>
+                  <li><a href="#">The Originals</a></li>
+                  <li><a href="#">Limited Editions</a></li>
+                  <li><a href="#">The Vault</a></li>
+                  <li><a href="#">Spirit</a></li>
+                  <li><a href="#">Metal</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Featured</h4>
+                <ul>
+                  <li><a href="#">The Lemtosh</a></li>
+                  <li><a href="#">The Miltzen</a></li>
+                  <li><a href="#">The Zev</a></li>
+                  <li><a href="#">The Dahven</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Explore</h4>
+                <ul>
+                  <li><a href="#">New Arrivals</a></li>
+                  <li><a href="#">Best Sellers</a></li>
+                  <li><a href="#">Gift Cards</a></li>
+                </ul>
+              </div>
+              <div class="mega-col"></div>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/prod-4.png" alt="Featured collection frame" /></div>
+                <p>Shop The Originals</p>
+              </a>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/prod-2.png" alt="Limited edition frame" /></div>
+                <p>Limited Editions</p>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- STORY -->
+        <div class="nav-item">
+          <button>Story <span class="chev">&#9660;</span></button>
+          <div class="mega">
+            <div class="mega-grid">
+              <div class="mega-col">
+                <h4>Our Story</h4>
+                <ul>
+                  <li><a href="#">Since 1915</a></li>
+                  <li><a href="#">The Family</a></li>
+                  <li><a href="#">Craftsmanship</a></li>
+                  <li><a href="#">Sustainability</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Journal</h4>
+                <ul>
+                  <li><a href="#">News</a></li>
+                  <li><a href="#">Collaborations</a></li>
+                  <li><a href="#">Press</a></li>
+                </ul>
+              </div>
+              <div class="mega-col"></div>
+              <div class="mega-col"></div>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/founder.png" alt="MOSCOT heritage" /></div>
+                <p>NYC Since 1915</p>
+              </a>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/story.png" alt="MOSCOT journal" /></div>
+                <p>Read the Journal</p>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- SHOPS -->
+        <div class="nav-item">
+          <button>Shops <span class="chev">&#9660;</span></button>
+          <div class="mega">
+            <div class="mega-grid">
+              <div class="mega-col">
+                <h4>Find a Shop</h4>
+                <ul>
+                  <li><a href="#">New York City</a></li>
+                  <li><a href="#">Los Angeles</a></li>
+                  <li><a href="#">London</a></li>
+                  <li><a href="#">Tokyo</a></li>
+                  <li><a href="#">All Locations</a></li>
+                </ul>
+              </div>
+              <div class="mega-col">
+                <h4>Services</h4>
+                <ul>
+                  <li><a href="#">Book an Eye Exam</a></li>
+                  <li><a href="#">Frame Fit</a></li>
+                  <li><a href="#">Repairs</a></li>
+                </ul>
+              </div>
+              <div class="mega-col"></div>
+              <div class="mega-col"></div>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/story.png" alt="MOSCOT shop" /></div>
+                <p>Visit a Shop</p>
+              </a>
+              <a href="#" class="mega-card">
+                <div class="img"><img src="assets/mega-2.png" alt="Book an eye exam" /></div>
+                <p>Book an Eye Exam</p>
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div class="header-actions">
+        <a href="#" class="icon-btn desktop-only" aria-label="Account">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>
+        </a>
+        <button class="icon-btn desktop-only" aria-label="Search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        </button>
+        <button class="icon-btn" aria-label="Cart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+          <span class="cart-count">0</span>
+        </button>
+        <a href="#" class="btn-customize">Customize</a>
+      </div>
+    </div>
+
+    <!-- MOBILE NAV -->
+    <div class="mobile-nav" id="mobileNav">
+      <div class="m-item"><button class="m-head">Eyeglasses <span>+</span></button>
+        <div class="m-sub"><a href="#">Shop All</a><a href="#">Best Sellers</a><a href="#">New</a><a href="#">Men&apos;s</a><a href="#">Women&apos;s</a></div></div>
+      <div class="m-item"><button class="m-head">Sunglasses <span>+</span></button>
+        <div class="m-sub"><a href="#">Shop All</a><a href="#">Custom Made Tints&trade;</a><a href="#">Polarized</a><a href="#">New</a></div></div>
+      <div class="m-item"><button class="m-head">Collections <span>+</span></button>
+        <div class="m-sub"><a href="#">The Originals</a><a href="#">Limited Editions</a><a href="#">The Vault</a></div></div>
+      <div class="m-item"><button class="m-head">Story <span>+</span></button>
+        <div class="m-sub"><a href="#">Since 1915</a><a href="#">Journal</a><a href="#">Craftsmanship</a></div></div>
+      <div class="m-item"><button class="m-head">Shops <span>+</span></button>
+        <div class="m-sub"><a href="#">Find a Shop</a><a href="#">Book an Eye Exam</a></div></div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" style="background-image:url('assets/hero.png')">
+    <a href="#" class="hero-btn">Shop Sunglasses</a>
+    <div class="hero-dots">
+      <button class="active" aria-label="Slide 1"></button>
+      <button aria-label="Slide 2"></button>
+      <button aria-label="Slide 3"></button>
+    </div>
+  </section>
+
+  <!-- FEATURED PRODUCT -->
+  <section class="section">
+    <div class="wrap featured">
+      <div class="copy">
+        <h2>Avram Black with Custom Made Tints&trade;</h2>
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <small class="upper" style="color:var(--muted);font-size:12px;">$370.00 USD &middot; 4 Reviews</small>
+        <p>The AVRAM was born as a homely medical device, then dressed to the nines as part of a proud NYC legacy. A definitive frame crafted from premium acetate and finished with hand-tinted lenses, made just the way you like them.</p>
+        <a href="#" class="link-btn">Discover the Avram</a>
+      </div>
+      <div class="media"><img src="assets/product-avram.png" alt="Avram Black frame with custom tints" /></div>
+    </div>
+  </section>
+
+  <!-- TABS + CAROUSEL -->
+  <section class="section" style="padding-top:0;">
+    <div class="wrap">
+      <p class="section-eyebrow">Summer with MOSCOT</p>
+      <h2 class="section-title" style="margin-top:8px;">The Lemtosh Lab</h2>
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="0">Custom Made Tints&trade;</button>
+        <button class="tab" data-tab="1">Sunglasses</button>
+        <button class="tab" data-tab="2">Tint+</button>
+      </div>
+
+      <div class="product-grid" id="grid">
+        <!-- populated by JS -->
+      </div>
+      <div class="center-cta"><a href="#" class="link-btn">View All Frames</a></div>
+    </div>
+  </section>
+
+  <!-- CATEGORY SPLIT -->
+  <section>
+    <div class="cats">
+      <div class="cat">
+        <img src="assets/cat-eyeglasses.png" alt="Model wearing eyeglasses" />
+        <div class="cat-inner">
+          <h3>Eyeglasses</h3>
+          <a href="#" class="white-btn">See Collection</a>
+        </div>
+      </div>
+      <div class="cat">
+        <img src="assets/cat-sunglasses.png" alt="Model wearing sunglasses" />
+        <div class="cat-inner">
+          <h3>Sunglasses</h3>
+          <a href="#" class="white-btn">See Collection</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDER BLOCK -->
+  <section class="founder">
+    <div class="img"><img src="assets/founder.png" alt="MOSCOT founder portrait" /></div>
+    <div class="panel">
+      <small>Ask MOSCOT</small>
+      <h2>Family Owned &amp; Operated Since 1915</h2>
+      <p>Five generations of eyewear expertise. Have a question about fit, style, or your prescription? Our family is here to help you find your perfect frame.</p>
+      <a href="#" class="dark-btn">Ask MOSCOT</a>
+    </div>
+  </section>
+
+  <!-- ACCORDION + IMAGE -->
+  <section class="section">
+    <div class="wrap accordion-sec">
+      <div class="accordion" id="accordion">
+        <div class="acc-item open">
+          <button class="acc-head">Accessories <span class="plus">+</span></button>
+          <div class="acc-body">
+            <p>Complete your look with hand-finished cases, cords, and cleaning kits designed to protect your frames wherever you go.</p>
+            <a href="#" class="link-btn">Shop Accessories</a>
+          </div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-head">Clips <span class="plus">+</span></button>
+          <div class="acc-body">
+            <p>Magnetic sun clips turn your favorite eyeglasses into instant sunglasses. Precision-fit for MOSCOT frames.</p>
+            <a href="#" class="link-btn">Shop Clips</a>
+          </div>
+        </div>
+        <div class="acc-item">
+          <button class="acc-head">Eyeglasses <span class="plus">+</span></button>
+          <div class="acc-body">
+            <p>Timeless frames, handcrafted from the finest acetate. Explore the shapes that started it all.</p>
+            <a href="#" class="link-btn">Shop Eyeglasses</a>
+          </div>
+        </div>
+      </div>
+      <div class="media"><img src="assets/prod-4.png" alt="MOSCOT accessories" /></div>
+    </div>
+  </section>
+
+  <!-- SECOND CAROUSEL -->
+  <section class="section" style="padding-top:0;">
+    <div class="wrap">
+      <p class="section-eyebrow">Icons of the Family</p>
+      <h2 class="section-title" style="margin:8px 0 34px;">Best Sellers</h2>
+      <div class="product-grid" id="grid2"></div>
+      <div class="center-cta"><a href="#" class="link-btn">View All Frames</a></div>
+    </div>
+  </section>
+
+  <!-- STORY EDITORIAL -->
+  <section class="story">
+    <img src="assets/story.png" alt="Couple wearing MOSCOT eyewear in New York" />
+    <div class="wrap">
+      <div class="story-copy">
+        <small>The MOSCOT Story</small>
+        <h2>More Than a Century of NYC Cool</h2>
+        <p>From a pushcart on the Lower East Side to a globally beloved eyewear house, MOSCOT has been crafting frames with soul for over one hundred years.</p>
+        <a href="#" class="white-btn">Read Our Story</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONCERN QUOTE -->
+  <section class="concern">
+    <div class="wrap">
+      <blockquote>&ldquo;Your Vision Is Our Concern.&rdquo;</blockquote>
+      <p class="who">&mdash; The MOSCOT Family</p>
+      <div class="btn-row">
+        <a href="#" class="dark-btn">Schedule an Exam</a>
+        <a href="#" class="btn-customize">Find a Shop</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="wrap">
+      <div class="top">
+        <div>
+          <h5>Ask a MOSCOT Frame Fit Specialist</h5>
+          <div class="fit-box">
+            <p>Whether you&apos;re a MOSCOT collector or trying us for the very first time, we&apos;re here to help you find your fit.</p>
+            <div class="fit-actions">
+              <a href="#">Chat With Us</a>
+              <a href="#">Email Us</a>
+              <a href="#">Call Us</a>
+            </div>
+          </div>
+          <div class="socials" style="margin-top:22px;" aria-label="Social links">
+            <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+            <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 22v-8h3l1-4h-4V8c0-1.1.4-2 2-2h2V2h-3c-3 0-5 2-5 5v3H6v4h3v8h4z"/></svg></a>
+            <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 8s-.2-1.4-.8-2c-.8-.8-1.7-.8-2.1-.9C16.3 5 12 5 12 5s-4.3 0-7.1.2c-.4 0-1.3 0-2.1.9C2.2 6.6 2 8 2 8S1.8 9.6 1.8 11.3v1.4C1.8 14.4 2 16 2 16s.2 1.4.8 2c.8.8 1.9.8 2.4.9 1.8.2 6.8.2 6.8.2s4.3 0 7.1-.2c.4 0 1.3 0 2.1-.9.6-.6.8-2 .8-2s.2-1.6.2-3.3v-1.4C22.2 9.6 22 8 22 8zM10 15V9l5 3-5 3z"/></svg></a>
+            <a href="#" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 3c.4 2.3 1.9 4 4 4.3V10c-1.5 0-2.9-.5-4-1.3V15a5.5 5.5 0 1 1-5.5-5.5c.3 0 .6 0 .9.1v2.7a2.8 2.8 0 1 0 2 2.7V3H16z"/></svg></a>
+          </div>
+        </div>
+        <div>
+          <h5>Company</h5>
+          <ul>
+            <li><a href="#">Our Story</a></li>
+            <li><a href="#">Shops</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Collaborations</a></li>
+            <li><a href="#">Press</a></li>
+            <li><a href="#">Wholesale</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Shop</h5>
+          <ul>
+            <li><a href="#">Eyeglasses</a></li>
+            <li><a href="#">Sunglasses</a></li>
+            <li><a href="#">Collections</a></li>
+            <li><a href="#">Accessories</a></li>
+            <li><a href="#">Gift Cards</a></li>
+          </ul>
+        </div>
+        <div>
+          <h5>Help</h5>
+          <ul>
+            <li><a href="#">Shipping &amp; Returns</a></li>
+            <li><a href="#">Prescriptions</a></li>
+            <li><a href="#">Frame Fit</a></li>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="bottom">
+        <span>&copy; 2026 MOSCOT — NYC Since 1915. Homepage clone for demo purposes.</span>
+        <div class="links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Accessibility</a>
+          <a href="#">United States (USD $)</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SIGN-UP POPUP -->
+  <div class="popup-overlay" id="popup">
+    <div class="popup">
+      <button class="close" id="popupClose" aria-label="Close">&times;</button>
+      <h3>Enjoy 10% Off Your First Purchase When You Join the Family</h3>
+      <form onsubmit="return false;">
+        <input type="email" placeholder="EMAIL" required aria-label="Email" />
+        <button class="join" type="submit">Join</button>
+      </form>
+    </div>
+  </div>
+
+<script>
+  /* ---------- Product data ---------- */
+  var products = [
+    { name: "Avram Black with Custom Made Tints\u2122", price: "$370.00 USD", img: "assets/product-avram.png", tag: "New", swatches: ["#2e3b2b","#8a8a8a","#c9942f","#2c4a7a"] },
+    { name: "Lemtosh Sun Limited Edition Blue Fade", price: "$330.00 USD", img: "assets/prod-2.png", tag: "Limited", swatches: ["#2c4a7a"] },
+    { name: "Dahven Sun", price: "$310.00 USD", img: "assets/prod-3.png", tag: "", swatches: ["#5a1f1f","#5c4a2e","#c9a06a","#1e3a5f"] },
+    { name: "Lemtosh Blonde with Custom Made Tints\u2122", price: "$370.00 USD", img: "assets/prod-4.png", tag: "New", swatches: ["#c9a06a","#2e2e2e"] },
+    { name: "Lemtosh", price: "$320.00 USD", img: "assets/prod-1.png", tag: "", swatches: ["#1a1a1a","#5c4a2e","#2c4a7a"] },
+    { name: "Miltzen", price: "$320.00 USD", img: "assets/product-avram.png", tag: "Best Seller", swatches: ["#1a1a1a","#5c4a2e"] },
+    { name: "Zev Sun", price: "$300.00 USD", img: "assets/prod-3.png", tag: "", swatches: ["#5a1f1f","#1a1a1a"] },
+    { name: "Nebb", price: "$320.00 USD", img: "assets/prod-4.png", tag: "", swatches: ["#c9a06a","#2c4a7a","#1a1a1a"] }
+  ];
+
+  function card(p) {
+    var sw = p.swatches.map(function(c){ return '<span style="background:'+c+'"></span>'; }).join("");
+    var tag = p.tag ? '<span class="tag">'+p.tag+'</span>' : '';
+    return '<article class="card">'
+      + '<div class="thumb">' + tag
+      + '<img src="'+p.img+'" alt="'+p.name+'" loading="lazy" />'
+      + '<button class="choose">Choose Options</button>'
+      + '</div>'
+      + '<h3>'+p.name+'</h3>'
+      + '<div class="price">'+p.price+'</div>'
+      + '<div class="swatches">'+sw+'</div>'
+      + '</article>';
+  }
+
+  function render(el, list) {
+    document.getElementById(el).innerHTML = list.map(card).join("");
+  }
+  render("grid", products.slice(0,4));
+  render("grid2", products.slice(4,8));
+
+  /* Tabs just reshuffle the featured grid for demo */
+  var tabSets = [ products.slice(0,4), products.slice(2,6), products.slice(4,8) ];
+  document.querySelectorAll("#tabs .tab").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll("#tabs .tab").forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      render("grid", tabSets[+btn.dataset.tab]);
+    });
+  });
+
+  /* ---------- Announcement rotator ---------- */
+  (function(){
+    var slides = document.querySelectorAll(".announce .slide");
+    var i = 0;
+    function show(n){ slides.forEach(function(s){ s.classList.remove("active"); }); i=(n+slides.length)%slides.length; slides[i].classList.add("active"); }
+    document.querySelector(".announce .next").addEventListener("click", function(){ show(i+1); });
+    document.querySelector(".announce .prev").addEventListener("click", function(){ show(i-1); });
+    setInterval(function(){ show(i+1); }, 4000);
+  })();
+
+  /* ---------- Hero dots ---------- */
+  document.querySelectorAll(".hero-dots button").forEach(function(d, idx){
+    d.addEventListener("click", function(){
+      document.querySelectorAll(".hero-dots button").forEach(function(x){ x.classList.remove("active"); });
+      d.classList.add("active");
+    });
+  });
+
+  /* ---------- Accordion ---------- */
+  document.querySelectorAll("#accordion .acc-head").forEach(function(h){
+    h.addEventListener("click", function(){
+      var item = h.parentElement;
+      var body = h.nextElementSibling;
+      var isOpen = item.classList.contains("open");
+      document.querySelectorAll("#accordion .acc-item").forEach(function(it){
+        it.classList.remove("open");
+        it.querySelector(".acc-body").style.maxHeight = null;
+      });
+      if(!isOpen){ item.classList.add("open"); body.style.maxHeight = body.scrollHeight + "px"; }
+    });
+  });
+  // open first by default
+  (function(){
+    var first = document.querySelector("#accordion .acc-item.open .acc-body");
+    if(first){ first.style.maxHeight = first.scrollHeight + "px"; }
+  })();
+
+  /* ---------- Mobile nav ---------- */
+  document.getElementById("mobileToggle").addEventListener("click", function(){
+    document.getElementById("mobileNav").classList.toggle("open");
+  });
+  document.querySelectorAll("#mobileNav .m-head").forEach(function(h){
+    h.addEventListener("click", function(){ h.parentElement.classList.toggle("open"); });
+  });
+
+  /* ---------- Popup ---------- */
+  (function(){
+    var popup = document.getElementById("popup");
+    setTimeout(function(){ popup.classList.add("show"); }, 2500);
+    document.getElementById("popupClose").addEventListener("click", function(){ popup.classList.remove("show"); });
+    popup.addEventListener("click", function(e){ if(e.target === popup){ popup.classList.remove("show"); } });
+  })();
+</script>
+</body>
+</html>
