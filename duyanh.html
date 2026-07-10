@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#FFCD03">
+<title>MOSCOT — Since 1915 | Eyeglasses & Sunglasses</title>
+<meta name="description" content="MOSCOT is a NYC heritage eyewear brand. Shop handcrafted eyeglasses and sunglasses since 1915.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          serif: ['"Libre Caslon Text"', 'Georgia', 'serif'],
+          sans: ['"Hanken Grotesk"', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', '"Courier New"', 'monospace'],
+        },
+      },
+    },
+  }
+</script>
+
+<style>
+  body { font-family: 'Hanken Grotesk', system-ui, sans-serif; background:#F6F5F1; }
+  .text-balance { text-wrap: balance; }
+  .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+</style>
+</head>
+<body class="antialiased font-sans">
+<main class="min-h-screen bg-[#F6F5F1]">
+
+<!-- ============ HEADER ============ -->
+<header class="sticky top-0 z-50 w-full">
+  <div class="bg-[#FFCD03] text-[#000000] text-center py-2 px-4">
+    <p id="announcement-text" class="font-mono text-[10px] tracking-widest uppercase">JOIN THE FAMILY AND GET 10% OFF</p>
+  </div>
+
+  <nav class="bg-white border-b border-[#D4D1C8]">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-14 md:h-16">
+        <button id="mobile-menu-btn" class="lg:hidden p-2 text-[#000000] hover:text-[#FFCD03] transition-colors" aria-label="Toggle menu">
+          <svg id="icon-menu" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+          <svg id="icon-x" class="w-5 h-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+
+        <div class="hidden lg:flex items-center gap-6 flex-1">
+          <a href="#" class="font-mono text-[10px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors whitespace-nowrap">EYEGLASSES</a>
+          <a href="#" class="font-mono text-[10px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors whitespace-nowrap">SUNGLASSES</a>
+          <a href="#" class="font-mono text-[10px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors whitespace-nowrap">COLLECTIONS</a>
+        </div>
+
+        <div class="flex-shrink-0 mx-4 lg:mx-0">
+          <a href="#" class="block">
+            <span class="font-serif font-bold text-xl md:text-2xl tracking-[0.15em] text-[#000000] uppercase">MOSCOT</span>
+          </a>
+        </div>
+
+        <div class="hidden lg:flex items-center gap-6 flex-1 justify-center">
+          <a href="#" class="font-mono text-[10px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors whitespace-nowrap">STORY</a>
+          <a href="#" class="font-mono text-[10px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors whitespace-nowrap">SHOPS</a>
+        </div>
+
+        <div class="flex items-center gap-4 flex-1 justify-end">
+          <div class="flex items-center gap-3">
+            <button aria-label="Search" class="p-1.5 text-[#000000] hover:text-[#FFCD03] transition-colors">
+              <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+            <button aria-label="Account" class="p-1.5 text-[#000000] hover:text-[#FFCD03] transition-colors">
+              <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </button>
+            <button aria-label="Cart" class="p-1.5 text-[#000000] hover:text-[#FFCD03] transition-colors relative">
+              <svg class="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              <span class="absolute -top-0.5 -right-0.5 bg-[#FFCD03] text-[#000000] text-[9px] font-mono font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">0</span>
+            </button>
+            <a href="#" class="hidden md:inline-flex items-center px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[10px] tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">CUSTOMIZE</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden lg:hidden bg-white border-t border-[#D4D1C8]">
+      <div class="px-4 py-4 flex flex-col gap-1">
+        <a href="#" class="font-mono text-[11px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors py-3 border-b border-[#E8E6E0]">EYEGLASSES</a>
+        <a href="#" class="font-mono text-[11px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors py-3 border-b border-[#E8E6E0]">SUNGLASSES</a>
+        <a href="#" class="font-mono text-[11px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors py-3 border-b border-[#E8E6E0]">COLLECTIONS</a>
+        <a href="#" class="font-mono text-[11px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors py-3 border-b border-[#E8E6E0]">STORY</a>
+        <a href="#" class="font-mono text-[11px] tracking-widest text-[#000000] hover:text-[#FFCD03] transition-colors py-3 border-b border-[#E8E6E0]">SHOPS</a>
+        <a href="#" class="mt-4 inline-flex items-center justify-center px-4 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[10px] tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">CUSTOMIZE</a>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="relative w-full bg-[#F6F5F1] overflow-hidden">
+  <div class="relative w-full h-[420px] md:h-[480px] lg:h-[600px]">
+
+    <div class="hero-slide absolute inset-0 transition-opacity duration-700 opacity-100 z-10">
+      <picture>
+        <source media="(max-width: 767px)" srcset="https://moscot.com/cdn/shop/files/1920x860_-DESKTOP_BANNER-THE_LAB_1_1.jpg?v=1774380838&width=900">
+        <img src="https://moscot.com/cdn/shop/files/1920x860_-DESKTOP_BANNER-THE_LAB_1_1.jpg?v=1774380838&width=1780" alt="Configure your LEMTOSH — MOSCOT Lab customizer" class="w-full h-full object-cover object-center">
+      </picture>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
+      <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 text-center px-4">
+        <h1 class="font-serif text-2xl md:text-4xl lg:text-5xl text-white lowercase drop-shadow-lg">configure your lemtosh</h1>
+        <a href="/products/the-lab" class="inline-flex items-center gap-2 px-6 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[11px] tracking-widest uppercase font-semibold hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">start customizing</a>
+      </div>
+    </div>
+
+    <div class="hero-slide absolute inset-0 transition-opacity duration-700 opacity-0 z-0">
+      <picture>
+        <source media="(max-width: 767px)" srcset="https://moscot.com/cdn/shop/files/900x1290_-HP_BANNER-MOBILE-BJORN_IN_THE_USA_1.jpg?v=1782758163&width=900">
+        <img src="https://moscot.com/cdn/shop/files/1920x860_-HP_BANNER-DESKTOP-AVRAM_CMT_1_a6cd920b-4e09-4463-9e7b-244d79ae8703.jpg?v=1782758165&width=1780" alt="Shop New Arrivals" class="w-full h-full object-cover object-center">
+      </picture>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
+      <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 text-center px-4">
+        <a href="#" class="inline-flex items-center gap-2 px-6 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[11px] tracking-widest uppercase font-semibold hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">SHOP NEW ARRIVALS</a>
+      </div>
+    </div>
+
+    <div class="hero-slide absolute inset-0 transition-opacity duration-700 opacity-0 z-0">
+      <picture>
+        <source media="(max-width: 767px)" srcset="https://moscot.com/cdn/shop/files/900x1290_-HP_BANNER-MOBILE-CUSTOM_MADE_TINT_1.jpg?v=1782758342&width=900">
+        <img src="https://moscot.com/cdn/shop/files/1920x860_-HP_BANNER-DESKTOP-CUSTOM_MADE_TINT_1.jpg?v=1782758340&width=1780" alt="Shop Sunglasses — Custom Made Tints" class="w-full h-full object-cover object-center">
+      </picture>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent"></div>
+      <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 text-center px-4">
+        <a href="#" class="inline-flex items-center gap-2 px-6 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[11px] tracking-widest uppercase font-semibold hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">SHOP SUNGLASSES</a>
+      </div>
+    </div>
+
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
+      <button class="hero-dot w-1.5 h-1.5 rounded-full transition-colors bg-[#FFCD03]" data-index="0" aria-label="Go to slide 1"></button>
+      <button class="hero-dot w-1.5 h-1.5 rounded-full transition-colors bg-white/60" data-index="1" aria-label="Go to slide 2"></button>
+      <button class="hero-dot w-1.5 h-1.5 rounded-full transition-colors bg-white/60" data-index="2" aria-label="Go to slide 3"></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURED PRODUCT: AVRAM ============ -->
+<section class="bg-white py-10 md:py-16 border-b border-[#D4D1C8]">
+  <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-0 items-stretch">
+      <div class="flex flex-col justify-center px-4 md:px-8 lg:px-16 py-8 md:py-0 order-2 md:order-1 border-r-0 md:border-r border-[#D4D1C8]">
+        <span class="font-mono text-[9px] tracking-widest text-[#7D7668] uppercase mb-4">37000</span>
+        <h2 class="font-serif text-2xl md:text-3xl lg:text-4xl text-[#000000] leading-tight mb-4 text-balance">AVRAM BLACK WITH CUSTOM MADE TINTS™</h2>
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed mb-6 max-w-sm">
+          The AVRAM was born a humble medical device, distributed to the needy as part of Lyndon B. Johnson's famous social reform Revenue Act of 1964. Fifty plus years later, The...
+        </p>
+
+        <div class="flex items-center gap-6 mb-6">
+          <div class="flex flex-col items-center gap-1.5 w-16">
+            <img src="https://moscot.com/cdn/shop/files/161x77_-Annotations-Acetate_Nose_Pads_1.png?width=300" alt="Acetate Nose Pads" class="h-8 w-auto object-contain">
+            <span class="font-mono text-[8px] tracking-wide text-[#7D7668] text-center leading-tight">Acetate Nose Pads</span>
+          </div>
+          <div class="flex flex-col items-center gap-1.5 w-16">
+            <img src="https://moscot.com/cdn/shop/files/161x77_-Annotations-Hand_Dipped_CMTs_1.png?width=300" alt="Hand Dipped CMTs" class="h-8 w-auto object-contain">
+            <span class="font-mono text-[8px] tracking-wide text-[#7D7668] text-center leading-tight">Hand Dipped CMTs</span>
+          </div>
+          <div class="flex flex-col items-center gap-1.5 w-16">
+            <img src="https://moscot.com/cdn/shop/files/161x77_-Annotations-Saddle_nose_bridge_1.png?width=300" alt="Saddle nose bridge" class="h-8 w-auto object-contain">
+            <span class="font-mono text-[8px] tracking-wide text-[#7D7668] text-center leading-tight">Saddle nose bridge</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 mb-6">
+          <button title="Forest Wood" aria-label="Forest Wood" class="w-8 h-8 overflow-hidden rounded-full border-2 border-transparent hover:border-[#FFCD03] transition-colors">
+            <img src="https://moscot.com/cdn/shop/files/avram-cmt-color-forest-wood-pos-1.jpg?width=100" alt="Forest Wood" class="w-full h-full object-cover">
+          </button>
+          <button title="American Grey Fade" aria-label="American Grey Fade" class="w-8 h-8 overflow-hidden rounded-full border-2 border-transparent hover:border-[#FFCD03] transition-colors">
+            <img src="https://moscot.com/cdn/shop/files/avram-cmt-color-american-grey-fade-pos-2.jpg?width=100" alt="American Grey Fade" class="w-full h-full object-cover">
+          </button>
+          <button title="Amber" aria-label="Amber" class="w-8 h-8 overflow-hidden rounded-full border-2 border-transparent hover:border-[#FFCD03] transition-colors">
+            <img src="https://moscot.com/cdn/shop/files/avram-cmt-color-amber-pos-2.jpg?width=100" alt="Amber" class="w-full h-full object-cover">
+          </button>
+          <button title="Denim Blue" aria-label="Denim Blue" class="w-8 h-8 overflow-hidden rounded-full border-2 border-transparent hover:border-[#FFCD03] transition-colors">
+            <img src="https://moscot.com/cdn/shop/files/avram-cmt-color-denim-blue-pos-2.jpg?width=100" alt="Denim Blue" class="w-full h-full object-cover">
+          </button>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <a href="#" class="inline-flex items-center gap-2 px-6 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[10px] tracking-widest uppercase font-semibold hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+            DISCOVER THE AVRAM
+            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <span class="font-serif text-lg text-[#000000]">$370.00 USD</span>
+        </div>
+      </div>
+
+      <div class="relative order-1 md:order-2 bg-[#F6F5F1]">
+        <img src="https://moscot.com/cdn/shop/files/1500x609_-Moving-Eyes-Avram_1.gif?v=1782759071&width=800" alt="AVRAM Black with Custom Made Tints" class="w-full h-[300px] md:h-full object-cover object-center">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SUMMER WITH MOSCOT ============ -->
+<section class="bg-[#F6F5F1] py-12 md:py-16">
+  <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+    <div class="text-center mb-10">
+      <h2 class="font-serif text-2xl md:text-3xl lg:text-4xl text-[#000000] mb-6">SUMMER WITH MOSCOT</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left max-w-4xl mx-auto mb-4">
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed">MOSCOT Custom Made Tints™ feature handmade, dip-dyed, colorful tinted lenses in 20+ unique shades.</p>
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed">All of our sunglasses reflect MOSCOT's rich heritage, combining expert craftsmanship with the refined tastes of downtown New York.</p>
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed">Want to go from indoors to outdoors without switching frames? The TINT+ collection features lenses that seamlessly transition from light to dark.</p>
+      </div>
+      <a href="#" class="font-mono text-[10px] tracking-widest text-[#000000] uppercase underline hover:text-[#FFCD03] transition-colors">The LEMTOSH Lab</a>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mt-10">
+      <div class="group cursor-pointer">
+        <div class="relative overflow-hidden bg-white aspect-square mb-3">
+          <img src="https://moscot.com/cdn/shop/files/avram-cmt-color-forest-wood-pos-1.jpg?width=600" alt="AVRAM BLACK WITH CUSTOM MADE TINTS™" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <a href="#" class="px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[9px] tracking-widest uppercase hover:bg-white transition-colors">CHOOSE OPTIONS</a>
+          </div>
+        </div>
+        <span class="font-mono text-[9px] tracking-widest text-[#7D7668] uppercase block mb-1">EYEGLASSES</span>
+        <h3 class="font-sans text-[11px] font-medium text-[#000000] leading-snug mb-2 line-clamp-2">AVRAM BLACK WITH CUSTOM MADE TINTS™</h3>
+        <p class="font-mono text-[9px] text-[#7D7668] mb-1.5">Forest Wood · American Grey Fade · Amber · Denim Blue</p>
+        <span class="font-sans text-sm font-semibold text-[#000000]">$370.00</span>
+      </div>
+
+      <div class="group cursor-pointer">
+        <div class="relative overflow-hidden bg-white aspect-square mb-3">
+          <img src="https://moscot.com/cdn/shop/files/lemtosh-sun-le-color-blue-fade-pos-1.jpg?width=600" alt="LEMTOSH SUN LIMITED EDITION BLUE FADE" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <a href="#" class="px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[9px] tracking-widest uppercase hover:bg-white transition-colors">CHOOSE OPTIONS</a>
+          </div>
+        </div>
+        <span class="font-mono text-[9px] tracking-widest text-[#7D7668] uppercase block mb-1">SUNGLASSES</span>
+        <h3 class="font-sans text-[11px] font-medium text-[#000000] leading-snug mb-2 line-clamp-2">LEMTOSH SUN LIMITED EDITION BLUE FADE</h3>
+        <p class="font-mono text-[9px] text-[#7D7668] mb-1.5">Blue Fade</p>
+        <span class="font-sans text-sm font-semibold text-[#000000]">$410.00</span>
+      </div>
+
+      <div class="group cursor-pointer">
+        <div class="relative overflow-hidden bg-white aspect-square mb-3">
+          <img src="https://moscot.com/cdn/shop/files/dahven-sun-color-burgundy-pos-1.jpg?width=600" alt="DAHVEN SUN" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <a href="#" class="px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[9px] tracking-widest uppercase hover:bg-white transition-colors">CHOOSE OPTIONS</a>
+          </div>
+        </div>
+        <span class="font-mono text-[9px] tracking-widest text-[#7D7668] uppercase block mb-1">SUNGLASSES</span>
+        <h3 class="font-sans text-[11px] font-medium text-[#000000] leading-snug mb-2 line-clamp-2">DAHVEN SUN</h3>
+        <p class="font-mono text-[9px] text-[#7D7668] mb-1.5">Burgundy · Blonde · Sapphire</p>
+        <span class="font-sans text-sm font-semibold text-[#000000]">$370.00</span>
+      </div>
+
+      <div class="group cursor-pointer">
+        <div class="relative overflow-hidden bg-white aspect-square mb-3">
+          <img src="https://moscot.com/cdn/shop/files/lemtosh-blonde-color-cabernet-pos-1.jpg?width=600" alt="LEMTOSH BLONDE WITH CUSTOM MADE TINTS™" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <a href="#" class="px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[9px] tracking-widest uppercase hover:bg-white transition-colors">CHOOSE OPTIONS</a>
+          </div>
+        </div>
+        <span class="font-mono text-[9px] tracking-widest text-[#7D7668] uppercase block mb-1">EYEGLASSES</span>
+        <h3 class="font-sans text-[11px] font-medium text-[#000000] leading-snug mb-2 line-clamp-2">LEMTOSH BLONDE WITH CUSTOM MADE TINTS™</h3>
+        <p class="font-mono text-[9px] text-[#7D7668] mb-1.5">Cabernet · Broadway Blue Fade · New York Rose · Pastel Yellow · Bel Air Blue · Limelight</p>
+        <span class="font-sans text-sm font-semibold text-[#000000]">$370.00</span>
+      </div>
+    </div>
+
+    <div class="text-center mt-10">
+      <a href="#" class="inline-flex items-center gap-2 px-8 py-3 border border-[#000000] text-[#000000] font-mono text-[10px] tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+        VIEW ALL FRAMES
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CATEGORY CARDS ============ -->
+<section class="w-full">
+  <div class="grid grid-cols-1 md:grid-cols-2">
+    <div class="group relative overflow-hidden h-[360px] md:h-[480px] lg:h-[560px] cursor-pointer">
+      <img src="https://moscot.com/cdn/shop/files/920x920_-PROMO_GRID-EYEGLASSES-02_2_1.jpg?v=1782759499&width=1200" alt="EYEGLASSES" class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105">
+      <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
+      <div class="absolute inset-0 flex flex-col items-start justify-end p-8 md:p-10">
+        <h2 class="font-serif text-3xl md:text-4xl lg:text-5xl text-white mb-5 drop-shadow-lg">EYEGLASSES</h2>
+        <a href="#" class="inline-flex items-center gap-2 px-5 py-2.5 border border-white text-white font-mono text-[10px] tracking-widest uppercase hover:bg-[#FFCD03] hover:text-[#000000] hover:border-[#FFCD03] transition-all duration-200">
+          SEE COLLECTION
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="group relative overflow-hidden h-[360px] md:h-[480px] lg:h-[560px] cursor-pointer">
+      <img src="https://moscot.com/cdn/shop/files/920x920_-PROMO_GRID-SUNGLASSES-02_2_1.jpg?v=1782759503&width=1200" alt="SUNGLASSES" class="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105">
+      <div class="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300"></div>
+      <div class="absolute inset-0 flex flex-col items-start justify-end p-8 md:p-10">
+        <h2 class="font-serif text-3xl md:text-4xl lg:text-5xl text-white mb-5 drop-shadow-lg">SUNGLASSES</h2>
+        <a href="#" class="inline-flex items-center gap-2 px-5 py-2.5 border border-white text-white font-mono text-[10px] tracking-widest uppercase hover:bg-[#FFCD03] hover:text-[#000000] hover:border-[#FFCD03] transition-all duration-200">
+          SEE COLLECTION
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HERITAGE ============ -->
+<section class="w-full grid grid-cols-1 md:grid-cols-2 min-h-[400px] md:min-h-[480px]">
+  <div class="relative overflow-hidden h-[280px] md:h-auto">
+    <img src="https://moscot.com/cdn/shop/files/1915-Hyman-in-Shop_1c15aa8d-1722-4b99-b9c6-bcc144d9e2e2.jpg?v=1772055310&width=1200" alt="Hyman Moscot in the original MOSCOT shop, downtown New York City" class="w-full h-full object-cover object-center filter grayscale">
+  </div>
+  <div class="bg-[#FFCD03] flex flex-col items-center justify-center p-10 md:p-14 lg:p-16">
+    <div class="mb-6 flex flex-col items-center gap-2">
+      <span class="font-mono text-[10px] tracking-[0.2em] uppercase text-[#000000]">MOSCOT · NYC · SINCE 1915</span>
+    </div>
+    <blockquote class="font-serif text-xl md:text-2xl lg:text-3xl text-[#000000] text-center leading-snug mb-6 text-balance">
+      "You're not just putting on a pair of eyeglasses when you wear a MOSCOT, you're putting on a slice of history, of downtown New York City."
+    </blockquote>
+    <div class="flex flex-col items-center gap-4">
+      <span class="font-mono text-[10px] tracking-widest uppercase text-[#7D7668]">ZACK MOSCOT — Fifth Generation</span>
+      <a href="#" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#000000] text-[#FFCD03] font-mono text-[10px] tracking-widest uppercase hover:bg-[#7D7668] transition-colors">
+        Our roots
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ACCESSORIES / CLIPS / EYEGLASSES FLOW ============ -->
+<section class="bg-white py-12 md:py-16 border-b border-[#D4D1C8]">
+  <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
+      <div class="flex flex-col">
+        <div class="relative overflow-hidden aspect-[14/9] mb-5 bg-[#F6F5F1]">
+          <img src="https://moscot.com/cdn/shop/files/1400x900_-FLOW-KINDRED_1.jpg?v=1782760926&width=1200" alt="ACCESSORIES" class="w-full h-full object-cover object-center">
+        </div>
+        <h3 class="font-serif text-2xl text-[#000000] mb-3">ACCESSORIES</h3>
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed mb-5 flex-1">Must-have accessories to complete your MOSCOT look.</p>
+        <a href="#" class="inline-flex items-center gap-2 self-start px-6 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[10px] tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+          See Collection
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+      <div class="flex flex-col">
+        <div class="relative overflow-hidden aspect-[14/9] mb-5 bg-[#F6F5F1]">
+          <img src="https://moscot.com/cdn/shop/files/1400x900_-FLOW-CLIPS_4_1.jpg?v=1782326814&width=1200" alt="CLIPS" class="w-full h-full object-cover object-center">
+        </div>
+        <h3 class="font-serif text-2xl text-[#000000] mb-3">CLIPS</h3>
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed mb-5 flex-1">Clip on instant shade, blue light filters, or a Custom Made Tint™ to your MOSCOT glasses with clip-on sunglasses!</p>
+        <a href="#" class="inline-flex items-center gap-2 self-start px-6 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[10px] tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+          See Collection
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+      <div class="flex flex-col">
+        <div class="relative overflow-hidden aspect-[14/9] mb-5 bg-[#F6F5F1]">
+          <img src="https://moscot.com/cdn/shop/files/1400x900_-FLOW-EYEGLASSES_2_1.jpg?v=1782760965&width=1200" alt="EYEGLASSES" class="w-full h-full object-cover object-center">
+        </div>
+        <h3 class="font-serif text-2xl text-[#000000] mb-3">EYEGLASSES</h3>
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed mb-5 flex-1">MOSCOT combines over 100 years of eyewear expertise and craftsmanship with a refined downtown aesthetic to create timeless eyeglasses and eyeglass frames. Though now a global fashion brand, MOSCOT remains true to its roots as a neighborhood optical Shop.</p>
+        <a href="#" class="inline-flex items-center gap-2 self-start px-6 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[10px] tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+          See Collection
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE OPTICAL SHOP ============ -->
+<section class="bg-[#F6F5F1] py-12 md:py-16 border-t border-[#D4D1C8]">
+  <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+    <div class="text-center mb-10">
+      <h2 class="font-serif text-2xl md:text-3xl lg:text-4xl text-[#000000] mb-4">THE OPTICAL SHOP</h2>
+      <p class="font-sans text-sm text-[#7D7668] max-w-lg mx-auto leading-relaxed">
+        MOSCOT combines over 100 years of eyewear expertise and craftsmanship with a refined downtown aesthetic to create timeless eyeglasses and eyeglass frames. Though now a global fashion brand, MOSCOT remains true to its roots as a neighborhood optical Shop.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <!-- LEMTOSH -->
+      <div class="group cursor-pointer">
+        <div class="relative overflow-hidden bg-white aspect-square mb-3">
+          <img src="https://moscot.com/cdn/shop/files/lemtosh-color-black-pos-1_8dbc9dd5-5d01-4cff-afa4-1f502a36c9c3.jpg?width=600" alt="LEMTOSH" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <a href="#" class="px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[9px] tracking-widest uppercase hover:bg-white transition-colors">QUICK SHOP</a>
+          </div>
+        </div>
+        <h3 class="font-sans text-[11px] font-medium text-[#000000] leading-snug mb-1.5">LEMTOSH</h3>
+        <div class="flex items-center gap-0.5 mb-1.5">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <span class="font-mono text-[9px] text-[#7D7668] ml-1">(312)</span>
+        </div>
+        <div class="flex items-center gap-1.5 mb-1.5">
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#1a1a1a"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#5c3d2e"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#c8a96e"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#2c4a3e"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#8B1a1a"></span>
+        </div>
+        <span class="font-sans text-sm font-semibold text-[#000000]">$295</span>
+      </div>
+
+      <!-- LEMTOSH SUN LE -->
+      <div class="group cursor-pointer">
+        <div class="relative overflow-hidden bg-white aspect-square mb-3">
+          <span class="absolute top-2 left-2 z-10 font-mono text-[8px] tracking-widest uppercase px-2 py-1 bg-[#000000] text-[#FFCD03]">LIMITED EDITION</span>
+          <img src="https://moscot.com/cdn/shop/files/lemtosh-sun-le-color-blue-fade-pos-1.jpg?width=600" alt="LEMTOSH SUN LIMITED EDITION BLUE FADE" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <a href="#" class="px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[9px] tracking-widest uppercase hover:bg-white transition-colors">QUICK SHOP</a>
+          </div>
+        </div>
+        <h3 class="font-sans text-[11px] font-medium text-[#000000] leading-snug mb-1.5">LEMTOSH SUN LIMITED EDITION BLUE FADE</h3>
+        <div class="flex items-center gap-0.5 mb-1.5">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <span class="font-mono text-[9px] text-[#7D7668] ml-1">(48)</span>
+        </div>
+        <div class="flex items-center gap-1.5 mb-1.5">
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#1e3a5f"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#2c6e8a"></span>
+        </div>
+        <span class="font-sans text-sm font-semibold text-[#000000]">$410</span>
+      </div>
+
+      <!-- DAHVEN -->
+      <div class="group cursor-pointer">
+        <div class="relative overflow-hidden bg-white aspect-square mb-3">
+          <img src="https://moscot.com/cdn/shop/files/dahven-color-grey-pos-2.jpg?width=600" alt="DAHVEN" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <a href="#" class="px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[9px] tracking-widest uppercase hover:bg-white transition-colors">QUICK SHOP</a>
+          </div>
+        </div>
+        <h3 class="font-sans text-[11px] font-medium text-[#000000] leading-snug mb-1.5">DAHVEN</h3>
+        <div class="flex items-center gap-0.5 mb-1.5">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="#D4D1C8" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="#D4D1C8" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <span class="font-mono text-[9px] text-[#7D7668] ml-1">(89)</span>
+        </div>
+        <div class="flex items-center gap-1.5 mb-1.5">
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#1a1a1a"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#5c3d2e"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#8B6914"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#2c4a3e"></span>
+        </div>
+        <span class="font-sans text-sm font-semibold text-[#000000]">$320</span>
+      </div>
+
+      <!-- LEMTOSH OLIVE BROWN -->
+      <div class="group cursor-pointer">
+        <div class="relative overflow-hidden bg-white aspect-square mb-3">
+          <img src="https://moscot.com/cdn/shop/files/lemtosh-color-olive-brown-pos-2.jpg?width=600" alt="LEMTOSH OLIVE BROWN" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+          <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <a href="#" class="px-4 py-2 bg-[#FFCD03] text-[#000000] font-mono text-[9px] tracking-widest uppercase hover:bg-white transition-colors">QUICK SHOP</a>
+          </div>
+        </div>
+        <h3 class="font-sans text-[11px] font-medium text-[#000000] leading-snug mb-1.5">LEMTOSH OLIVE BROWN</h3>
+        <div class="flex items-center gap-0.5 mb-1.5">
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="#FFCD03" stroke="#FFCD03" stroke-width="1"><path d="m12 2 2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.8-6.2 3.8 1.6-7L2 9.2l7.1-.6L12 2Z"/></svg>
+          <span class="font-mono text-[9px] text-[#7D7668] ml-1">(156)</span>
+        </div>
+        <div class="flex items-center gap-1.5 mb-1.5">
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#c8a96e"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#5c3d2e"></span>
+          <span class="w-3 h-3 rounded-full border border-[#D4D1C8] hover:border-[#FFCD03] cursor-pointer transition-colors" style="background-color:#1a1a1a"></span>
+        </div>
+        <span class="font-sans text-sm font-semibold text-[#000000]">$310</span>
+      </div>
+    </div>
+
+    <div class="text-center mt-10">
+      <a href="#" class="inline-flex items-center gap-2 px-8 py-3 border border-[#000000] text-[#000000] font-mono text-[10px] tracking-widest uppercase hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+        VIEW ALL FRAMES
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VISIT US IN SHOP ============ -->
+<section class="w-full h-[400px] md:h-[540px] lg:h-[640px] relative overflow-hidden">
+  <img src="https://moscot.com/cdn/shop/files/2953x2953_-SHOP-PARIS_1.jpg?v=1781041319&width=1780" alt="MOSCOT shop" class="w-full h-full object-cover object-center">
+  <div class="absolute inset-0 bg-black/25"></div>
+  <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4 gap-4">
+    <span class="font-mono text-[9px] tracking-widest uppercase text-white/80">COME SEE US</span>
+    <h2 class="font-serif text-3xl md:text-4xl text-white drop-shadow-lg">Visit Us In Shop</h2>
+    <p class="font-sans text-sm text-white/90 max-w-sm leading-relaxed drop-shadow">From Orchard Street to around the world, we'd love to see you in person.</p>
+    <div class="flex flex-col sm:flex-row gap-3 mt-2">
+      <a href="#" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[11px] tracking-widest uppercase font-semibold hover:bg-white transition-colors">SCHEDULE AN EXAM</a>
+      <a href="#" class="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white text-white font-mono text-[11px] tracking-widest uppercase font-semibold hover:bg-white hover:text-[#000000] transition-colors">FIND A SHOP</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ STORIES ============ -->
+<section class="bg-white py-12 md:py-16 border-t border-[#D4D1C8]">
+  <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+    <div class="text-center mb-10">
+      <h2 class="font-serif text-2xl md:text-3xl lg:text-4xl text-[#000000] mb-3">Stories</h2>
+      <p class="font-sans text-sm text-[#7D7668] max-w-xl mx-auto leading-relaxed">
+        Every frame has a story. MOSCOT Moments is where we share ours – the heritage, the happenings, and the community that brings it all to life.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+      <article class="group cursor-pointer">
+        <div class="relative overflow-hidden aspect-video mb-5 bg-[#F6F5F1]">
+          <img src="https://moscot.com/cdn/shop/articles/1688x1080_-BLOG-_EyeSpy_Landry_Shamet-LEMTOSH-TORTOISE-AMBER_1_2648cfc7-d811-4e23-b2d7-48c412154ff2.jpg?v=1782178235&width=900" alt="LANDRY SHAMET | THE LEMTOSH AND DAHVEN WITH CUSTOM MADE TINTS™" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+        </div>
+        <h3 class="font-serif text-lg md:text-xl text-[#000000] mb-3 leading-snug group-hover:text-[#7D7668] transition-colors text-balance">LANDRY SHAMET | THE LEMTOSH AND DAHVEN WITH CUSTOM MADE TINTS™</h3>
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed mb-4 line-clamp-3">American professional basketball player for the New York Knicks Landry Shamet knows how to win on and off the court - in The LEMTOSH in Tortoise with Amber Custom Made Tints™. With 20+ unique colorways, Custom Made Tints™ are a great way to add a pop of color to your everyday shades! He also wears The DAHVEN POLYCHROME in Olive Brown with Bel Air Blue Custom Made Tints™.</p>
+        <a href="#" class="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-widest uppercase text-[#000000] hover:text-[#FFCD03] transition-colors border-b border-[#000000] hover:border-[#FFCD03] pb-0.5">
+          READ MORE
+          <svg class="w-[11px] h-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </article>
+
+      <article class="group cursor-pointer">
+        <div class="relative overflow-hidden aspect-video mb-5 bg-[#F6F5F1]">
+          <img src="https://moscot.com/cdn/shop/articles/1688x1080_-BLOG-LEMTOSH_BLACK-CMT_GROUP_2_1_d4ae477c-dd20-46bc-880a-a57cfdd82d20.jpg?v=1782405468&width=900" alt="HOW TO CUSTOMIZE MOSCOT FRAMES FOR YOUR SPORTS TEAM, EVENT, OR FAN PRIDE" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+        </div>
+        <h3 class="font-serif text-lg md:text-xl text-[#000000] mb-3 leading-snug group-hover:text-[#7D7668] transition-colors text-balance">HOW TO CUSTOMIZE MOSCOT FRAMES FOR YOUR SPORTS TEAM, EVENT, OR FAN PRIDE</h3>
+        <p class="font-sans text-sm text-[#7D7668] leading-relaxed mb-4 line-clamp-3">Your vision is our concern – and so is your team spirit. A jersey comes off after the game. A scarf ends up in the closet. But a great pair of frames? Those go everywhere: from the stands to the street, the tailgate to the after-party, the championship parade to the Monday morning commute.</p>
+        <a href="#" class="inline-flex items-center gap-1.5 font-mono text-[10px] tracking-widest uppercase text-[#000000] hover:text-[#FFCD03] transition-colors border-b border-[#000000] hover:border-[#FFCD03] pb-0.5">
+          READ MORE
+          <svg class="w-[11px] h-[11px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="bg-[#1a1a1a] py-12 md:py-14">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+        <div>
+          <h3 class="font-serif text-2xl md:text-3xl text-white mb-2">join the family</h3>
+          <p class="font-sans text-sm text-[#7D7668] max-w-sm">Enjoy 10% off your first purchase and stay up to date on all things MOSCOT.</p>
+        </div>
+        <form id="newsletter-form" class="flex w-full md:w-auto gap-0">
+          <input type="email" id="newsletter-email" placeholder="enter email" required
+            class="flex-1 md:w-64 px-4 py-3 bg-transparent border border-[#3a3a3a] text-white font-mono text-[10px] tracking-widest placeholder:text-[#7D7668] focus:outline-none focus:border-[#FFCD03] transition-colors">
+          <button type="submit" aria-label="Subscribe" class="px-5 py-3 bg-[#FFCD03] text-[#000000] font-mono text-[10px] tracking-widest uppercase hover:bg-white transition-colors flex-shrink-0">subscribe</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-[#FFCD03] py-12 md:py-16">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+        <div class="lg:col-span-2">
+          <div class="mb-4"><span class="font-serif text-2xl font-bold tracking-[0.15em] text-[#000000] uppercase">MOSCOT</span></div>
+          <p class="font-serif text-sm text-[#000000] italic leading-relaxed mb-5 max-w-xs">"Your vision is our concern"</p>
+          <p class="font-mono text-[9px] tracking-widest text-[#3A3830] mb-1">Dr. Harvey Moscot and Zack Moscot</p>
+          <p class="font-mono text-[9px] tracking-widest text-[#3A3830] mb-6">4th and 5th generation</p>
+          <div class="flex items-center gap-3">
+            <a href="#" aria-label="Instagram" class="p-2 border border-[#000000] text-[#000000] hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-3.5 h-3.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            </a>
+            <a href="#" aria-label="Facebook" class="p-2 border border-[#000000] text-[#000000] hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a href="#" aria-label="YouTube" class="p-2 border border-[#000000] text-[#000000] hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-3.5 h-3.5"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.965C5.12 20 12 20 12 20s6.88 0 8.59-.455a2.78 2.78 0 0 0 1.95-1.965A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon fill="currentColor" stroke="none" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/></svg>
+            </a>
+            <a href="#" aria-label="Twitter" class="p-2 border border-[#000000] text-[#000000] hover:bg-[#000000] hover:text-[#FFCD03] transition-colors">
+              <svg viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-mono text-[10px] tracking-widest uppercase text-[#000000] mb-5">Company</h4>
+          <ul class="flex flex-col gap-2.5">
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Our Story</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Shop Locations</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Virtual Appointment</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Eyecare</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Charity</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">EU Wholesale</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">US Wholesale</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-mono text-[10px] tracking-widest uppercase text-[#000000] mb-5">Brand</h4>
+          <ul class="flex flex-col gap-2.5">
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Size & Fit</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Craftsmanship</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Reviews</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Blog</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Press</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Subscribe to Email</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Subscribe to SMS</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-mono text-[10px] tracking-widest uppercase text-[#000000] mb-5">Help</h4>
+          <ul class="flex flex-col gap-2.5">
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Shipping & Returns</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">EU Right of Withdrawal</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Repairs</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Warranty</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">FAQ</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Careers</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Sitemap</a></li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors">Contact Us</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-mono text-[10px] tracking-widest uppercase text-[#000000] mb-5">Ask A MOSCOT Frame Fit Specialist</h4>
+          <p class="font-sans text-xs text-[#3A3830] leading-relaxed mb-4">Whether you're a MOSCOT collector or visiting for the very first time, we're here to assist!</p>
+          <ul class="flex flex-col gap-2.5">
+            <li class="font-sans text-xs text-[#3A3830]">(866) MOSCOTS</li>
+            <li class="font-sans text-xs text-[#3A3830]">support@moscot.com</li>
+            <li><a href="#" class="font-sans text-xs text-[#3A3830] hover:text-[#000000] transition-colors underline">Chat With Us</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 pt-6 border-t border-[#e6b800] flex flex-col gap-4">
+        <div class="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2">
+          <p id="footer-year" class="font-mono text-[9px] tracking-widest text-[#3A3830]">© 2026 MOSCOT</p>
+          <a href="#" class="font-mono text-[9px] tracking-widest text-[#3A3830] hover:text-[#000000] transition-colors">Notice of Financial Incentive</a>
+          <a href="#" class="font-mono text-[9px] tracking-widest text-[#3A3830] hover:text-[#000000] transition-colors">Privacy</a>
+          <a href="#" class="font-mono text-[9px] tracking-widest text-[#3A3830] hover:text-[#000000] transition-colors">Your Privacy Choices</a>
+          <a href="#" class="font-mono text-[9px] tracking-widest text-[#3A3830] hover:text-[#000000] transition-colors">Accessibility</a>
+          <a href="#" class="font-mono text-[9px] tracking-widest text-[#3A3830] hover:text-[#000000] transition-colors">Conformity</a>
+          <a href="#" class="font-mono text-[9px] tracking-widest text-[#3A3830] hover:text-[#000000] transition-colors">Refund Policy</a>
+          <a href="#" class="font-mono text-[9px] tracking-widest text-[#3A3830] hover:text-[#000000] transition-colors">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</main>
+
+<script>
+  // Announcement bar rotation
+  (function () {
+    var messages = ["JOIN THE FAMILY AND GET 10% OFF", "FREE WORLDWIDE SHIPPING"];
+    var i = 0;
+    var el = document.getElementById("announcement-text");
+    setInterval(function () {
+      i = (i + 1) % messages.length;
+      el.textContent = messages[i];
+    }, 4000);
+  })();
+
+  // Mobile menu toggle
+  (function () {
+    var btn = document.getElementById("mobile-menu-btn");
+    var menu = document.getElementById("mobile-menu");
+    var iconMenu = document.getElementById("icon-menu");
+    var iconX = document.getElementById("icon-x");
+    var open = false;
+    btn.addEventListener("click", function () {
+      open = !open;
+      menu.classList.toggle("hidden", !open);
+      iconMenu.classList.toggle("hidden", open);
+      iconX.classList.toggle("hidden", !open);
+    });
+    menu.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function () {
+        open = false;
+        menu.classList.add("hidden");
+        iconMenu.classList.remove("hidden");
+        iconX.classList.add("hidden");
+      });
+    });
+  })();
+
+  // Hero carousel
+  (function () {
+    var slides = document.querySelectorAll(".hero-slide");
+    var dots = document.querySelectorAll(".hero-dot");
+    var active = 0;
+    var timer;
+
+    function show(index) {
+      active = index;
+      slides.forEach(function (slide, i) {
+        if (i === active) {
+          slide.classList.remove("opacity-0", "z-0");
+          slide.classList.add("opacity-100", "z-10");
+        } else {
+          slide.classList.remove("opacity-100", "z-10");
+          slide.classList.add("opacity-0", "z-0");
+        }
+      });
+      dots.forEach(function (dot, i) {
+        if (i === active) {
+          dot.classList.remove("bg-white/60");
+          dot.classList.add("bg-[#FFCD03]");
+        } else {
+          dot.classList.remove("bg-[#FFCD03]");
+          dot.classList.add("bg-white/60");
+        }
+      });
+    }
+
+    function restart() {
+      clearInterval(timer);
+      timer = setInterval(function () {
+        show((active + 1) % slides.length);
+      }, 5500);
+    }
+
+    dots.forEach(function (dot) {
+      dot.addEventListener("click", function () {
+        show(parseInt(dot.dataset.index, 10));
+        restart();
+      });
+    });
+
+    restart();
+  })();
+
+  // Newsletter form
+  document.getElementById("newsletter-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    document.getElementById("newsletter-email").value = "";
+  });
+
+  // Footer year
+  document.getElementById("footer-year").textContent = "© " + new Date().getFullYear() + " MOSCOT";
+</script>
+
+</body>
+</html>
