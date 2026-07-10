@@ -1,24 +1,208 @@
+# Vin Eyewear - Website Bán Kính Mắt AR/AI
 
-Chào anh em, để thống nhất lại tinh thần buổi họp lúc chiều và đo nhanh độ nhạy bén, khả năng tối ưu hóa công cụ AI cũng như kỹ năng deploy cơ bản của từng người, mình giao nhiệm vụ thực chiến (có tính điểm phân chia vai trò về sau) như sau:
+## Giới thiệu dự án
 
-1. Nhiệm vụ chính
-   Web tham khảo: [https://moscot.com/](https://moscot.com/)
-   Yêu cầu: Clone lại giao diện trang chủ (Trang Home bao gồm đầy đủ Header, Body Page và Footer).
-   Hình thức đóng gói: Gộp tất cả vào DUY NHẤT 1 FILE .html (Viết toàn bộ CSS và JS dưới dạng inline/internal bên trong file này, không tách file riêng).
-   Tiêu chí đánh giá: Độ tương đồng về mặt giao diện đạt từ 78% - 80% so với web gốc. Anh em được phép và khuyến khích sử dụng bất kỳ công cụ AI nào mình thông thạo (v0.dev, Cursor, Claude, ChatGPT,...) để tăng tốc độ làm bài.
-2. Quy trình nộp bài & Tài nguyên hệ thống
-   Mốc 1 (Trước 18h30): Anh em gửi Gmail vào nhóm để mình add quyền vào Repo GitHub.
-   Mốc 2 (Sau khi code xong - Hạn cuối 21h00): Anh em triển khai nộp bài qua 2 kênh bắt buộc:
-   Kênh 1: Đẩy code lên GitHub
-   Repo: [https://github.com/realleesan/vin-eyewear.git](https://github.com/realleesan/vin-eyewear.git)
-   Yêu cầu: Đẩy thẳng file .html của mình lên thư mục gốc (root) của nhánh main.
-   Lưu ý: Để tránh đè code của nhau, anh em đặt tên file theo tên của mình (Ví dụ: huy.html, nam.html). Đẩy xong thì nhắn lên nhóm Zalo hoặc tạo Pull Request.
-   Kênh 2: Đẩy file lên Hosting thủ công
-   Link hosing: [https://cpanel.infinityfree.com/login.php](https://cpanel.infinityfree.com/login.php)
-   Username: if0_42377950
-   Password: 8eOO5cNS8DqXjwF
-   Cách làm: Đăng nhập -> Vào Files -> Online File Manager -> Vào thư mục htdocs -> Tải file .html của mình lên đó.
-   Link kiểm tra kết quả: [http://vreyewear.gt.tc/ten_file_cua_ban.html](http://vreyewear.gt.tc/ten_file_cua_ban.html)
-3. Thời hạn nghiêm ngặt (Deadline)
-   21h00 TỐI NAY. Hệ thống sẽ chốt và mình sẽ dựa trên link hosting của từng người để chấm điểm trực tiếp.
-   Bài test này nhằm mục đích xem mức độ phối hợp công cụ của anh em đến đâu để mình sắp xếp các module 5 chức năng chính cho đúng người, đúng sức. Chúc anh em tập trung cao độ và hoàn thành tốt nhiệm vụ!
+Website bán kính mắt Vin Eyewear là dự án thương mại điện tử tích hợp công nghệ AR (Augmented Reality) và AI (Artificial Intelligence) để mang lại trải nghiệm mua sắm kính mắt trực tuyến đột phá.
+
+### Các tính năng chính
+
+- **Thử kính ảo (AR):** Cho phép khách hàng đeo thử kính trực tuyến qua camera
+- **Xem sản phẩm 360 độ:** Xoay và xem chi tiết kính từ mọi góc độ
+- **Phân tích khuôn mặt AI:** Tự động nhận diện dáng mặt để đề xuất gọng kính phù hợp
+- **Đo khoảng cách đồng tử (PD) Online:** Đo thông số PD qua ảnh chụp
+- **Mini ERP:** Quản lý đơn hàng, tồn kho, dữ liệu khách hàng
+
+## Team phát triển
+
+| Thành viên | Vai trò | Nhiệm vụ chính                                  |
+| ------------ | -------- | -------------------------------------------------- |
+| Nhật        | Techlead | Architecture, AR/AI, Payment, Deploy               |
+| Hoàng Nam   | BA/Dev   | Business logic, Order, Admin, Kèm Hoàng Anh      |
+| Sơn         | Dev      | Database, Models, Face Analysis, Product           |
+| Duy Anh      | Dev      | Frontend, UI/UX, Contact, Event, Booking           |
+| Hoàng Anh   | Dev      | Auth UI, Contact UI (được kèm bởi Hoàng Nam) |
+
+## Công nghệ
+
+- **Backend:** PHP thuần (Native PHP)
+- **Frontend:** HTML, CSS, JavaScript
+- **Database:** MySQL
+- **Architecture:** MVC (Model-View-Controller)
+- **AR Library:** MindAR, Three.js
+- **AI Library:** MediaPipe Face Mesh
+- **3D Viewer:** Google model-viewer
+
+## Cấu trúc dự án
+
+```
+vin-eyewear/
+├── app/                    # Application code
+│   ├── controllers/       # Controllers (Logic xử lý)
+│   │   ├── Admin/         # Admin controllers
+│   │   ├── AboutController.php
+│   │   ├── ApiController.php
+│   │   ├── ArController.php
+│   │   ├── AuthController.php
+│   │   ├── BookingController.php
+│   │   ├── ContactController.php
+│   │   ├── ErrorController.php
+│   │   ├── EventController.php
+│   │   ├── HomeController.php
+│   │   ├── OrderController.php
+│   │   └── ProductController.php
+│   ├── models/            # Models (Database logic)
+│   ├── middleware/        # Middleware (Auth, Guest)
+│   ├── services/          # Services (Email, Validation)
+│   └── views/             # Views (Giao diện)
+│       ├── _layout/       # Layout components
+│       ├── admin/         # Admin views
+│       ├── about/
+│       ├── ar/
+│       ├── auth/
+│       ├── booking/
+│       ├── contact/
+│       ├── event/
+│       ├── home/
+│       ├── order/
+│       └── product/
+├── assets/                # Static files
+│   ├── css/              # Stylesheets
+│   ├── fonts/            # Font files
+│   ├── icons/            # Icon files
+│   ├── images/           # Image files
+│   ├── js/               # JavaScript files
+│   ├── models/           # 3D model files (.glb)
+│   └── uploads/          # User uploaded files
+├── config/               # Configuration files
+│   ├── app.php          # App configuration
+│   ├── database.php     # Database configuration
+│   └── routes.php       # Route definitions
+├── core/                # Core MVC framework
+│   ├── App.php          # Application bootstrap
+│   ├── BaseController.php
+│   ├── BaseModel.php
+│   ├── Database.php
+│   ├── Router.php
+│   └── helpers.php
+├── database/            # Database files
+│   └── schema.sql       # Database schema
+├── docs/                # Documentation
+│   ├── brain.md         # Project requirements
+│   ├── nhiem-vu.md      # Task assignments
+│   ├── server-info.md   # Server credentials
+│   └── sitemap.png      # Sitemap diagram
+├── errors/              # Error pages
+├── .env.example         # Environment variables example
+├── .gitignore
+├── .htaccess            # Apache configuration
+└── index.php            # Entry point
+```
+
+## Cài đặt
+
+### Yêu cầu hệ thống
+
+- PHP 7.4 hoặc cao hơn
+- MySQL 5.7 hoặc cao hơn
+- Apache web server với mod_rewrite enabled
+- Composer (nếu cần thư viện PHP)
+
+### Các bước cài đặt
+
+1. **Clone repository**
+
+```bash
+git clone https://github.com/realleesan/vin-eyewear.git
+cd vin-eyewear
+```
+
+2. **Cấu hình database**
+
+- Tạo database MySQL mới
+- Import file `database/schema.sql`
+- Cập nhật thông tin database trong `config/database.php`
+
+3. **Cấu hình environment**
+
+```bash
+cp .env.example .env
+```
+
+- Chỉnh sửa file `.env` với thông tin cấu hình của bạn
+
+4. **Cấu hình web server**
+
+- Đảm bảo mod_rewrite được bật
+- Cấu hình DocumentRoot trỏ đến thư mục dự án
+- Đảm bảo quyền ghi cho thư mục `assets/uploads/`
+
+5. **Truy cập website**
+
+- Mở browser và truy cập: http://localhost/vin-eyewear
+- Hoặc domain đã cấu hình
+
+## Phát triển
+
+### Quy tắc coding
+
+- Tuân thủ chuẩn PSR-12 cho PHP
+- Sử dụng camelCase cho tên biến và hàm
+- Sử dụng PascalCase cho tên class
+- Comment code rõ ràng, tiếng Việt hoặc tiếng Anh
+
+### Quy trình git
+
+1. Pull latest changes: `git pull origin main`
+2. Tạo branch mới cho feature: `git checkout -b feature/ten-feature`
+3. Commit changes: `git commit -m "message"`
+4. Push branch: `git push origin feature/ten-feature`
+5. Tạo Pull Request trên GitHub
+
+### Branch strategy
+
+- `main`: Branch production
+- `develop`: Branch phát triển chính
+- `feature/*`: Branch cho từng feature
+- `hotfix/*`: Branch cho sửa lỗi gấp
+
+## Triển khai
+
+### Hosting
+
+- **Hosting:** InfinityFree
+- **Domain:** vreyewear.gt.tc (tạm)
+- **Cpanel:** https://cpanel.infinityfree.com/login.php
+- Chi tiết đăng nhập xem trong `docs/server-info.md`
+
+### Các bước deploy
+
+1. Commit và push changes lên GitHub
+2. Login vào FTP/SFTP của hosting
+3. Upload files lên hosting (hoặc dùng git pull trên server)
+4. Import database nếu có thay đổi schema
+5. Cấu hình `.env` trên production
+6. Test functionality
+
+## Tài liệu
+
+- **Yêu cầu dự án:** `docs/brain.md`
+- **Phân công nhiệm vụ:** `docs/nhiem-vu.md`
+- **Thông tin server:** `docs/server-info.md`
+- **Biên bản khảo sát:** `docs/[Output] Kính mắt.md`
+- **Sitemap:** `docs/sitemap.png`
+
+## Hỗ trợ
+
+Nếu có vấn đề hoặc câu hỏi:
+
+- Liên hệ Techlead (Nhật)
+- Tạo issue trên GitHub
+- Tham khảo tài liệu trong thư mục `docs/`
+
+## License
+
+Dự án này là tài sản của Vin Eyewear và Techcamp Việt Nam.
+
+---
+
+**Lưu ý:** Đây là dự án thương mại, không được chia sẻ bên ngoài team phát triển.
