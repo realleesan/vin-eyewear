@@ -1,0 +1,239 @@
+/* ============================================
+   Vin Eyewear - Layout CSS
+   Tác giả: Duy Anh
+   Mô tả: Khung giao diện dùng chung (header, navbar, footer, master)
+   ============================================ */
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --primary:     #1a1a2e;
+    --accent:      #c9a96e;
+    --accent-dark: #a8843f;
+    --text:        #333333;
+    --text-light:  #666666;
+    --bg:          #ffffff;
+    --bg-light:    #f8f7f4;
+    --border:      #e8e4dc;
+    --header-h:    72px;
+    --container:   1200px;
+    --radius:      8px;
+    --transition:  0.3s ease;
+    --font-sans:   'Segoe UI', Arial, sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font-sans);
+    color: var(--text);
+    background: var(--bg);
+    line-height: 1.6;
+    padding-top: var(--header-h);
+}
+
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+img { max-width: 100%; display: block; }
+
+/* --- Container --- */
+.container {
+    width: 100%;
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* ============================================
+   HEADER / NAVBAR
+   ============================================ */
+.site-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--header-h);
+    background: var(--primary);
+    z-index: 1000;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
+}
+
+.main-nav {
+    height: 100%;
+}
+
+.main-nav .container {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Brand / Logo */
+.nav-brand a {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    text-transform: uppercase;
+}
+
+/* Nav menu */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-menu li a {
+    display: block;
+    padding: 8px 16px;
+    color: #e0ddd6;
+    font-size: 0.92rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    border-radius: var(--radius);
+    transition: color var(--transition), background var(--transition);
+}
+
+.nav-menu li a:hover,
+.nav-menu li a.active {
+    color: var(--accent);
+    background: rgba(201, 169, 110, 0.12);
+}
+
+/* Hamburger (mobile) */
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: #e0ddd6;
+    border-radius: 2px;
+    transition: var(--transition);
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.site-footer {
+    background: var(--primary);
+    color: #c8c4bb;
+    padding: 56px 0 0;
+    margin-top: 80px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.footer-section h3 {
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.footer-section p,
+.footer-section li {
+    font-size: 0.9rem;
+    line-height: 2;
+    color: #a09b90;
+}
+
+.footer-section ul li a {
+    color: #a09b90;
+    transition: color var(--transition);
+}
+
+.footer-section ul li a:hover {
+    color: var(--accent);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding: 20px 0;
+    font-size: 0.82rem;
+    color: #6b675f;
+}
+
+/* ============================================
+   BUTTONS (dùng chung)
+   ============================================ */
+.btn {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: var(--radius);
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition), transform var(--transition);
+    border: none;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--primary);
+}
+
+.btn-primary:hover {
+    background: var(--accent-dark);
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+}
+
+.btn-outline:hover {
+    background: var(--accent);
+    color: var(--primary);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 900px) {
+    .nav-toggle { display: flex; }
+
+    .nav-menu {
+        display: none;
+        flex-direction: column;
+        align-items: flex-start;
+        position: absolute;
+        top: var(--header-h);
+        left: 0; right: 0;
+        background: var(--primary);
+        padding: 16px 24px 24px;
+        gap: 4px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+
+    .nav-menu.open { display: flex; }
+    .nav-menu li { width: 100%; }
+    .nav-menu li a { padding: 12px 16px; }
+
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+}

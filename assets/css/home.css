@@ -1,0 +1,340 @@
+/* ============================================
+   Vin Eyewear - Home Page CSS
+   Phụ thuộc: layout.css (CSS variables, .btn, .container)
+   ============================================ */
+
+
+/* ============================================
+   SECTION CHUNG
+   ============================================ */
+.section-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.section-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+}
+
+.section-subtitle {
+    font-size: 1rem;
+    color: var(--text-light);
+}
+
+
+/* ============================================
+   HERO CAROUSEL
+   ============================================ */
+.hero {
+    width: 100%;
+    /* Chiều cao viewport trừ header */
+    height: calc(100vh - var(--header-h));
+    min-height: 480px;
+    max-height: 760px;
+    overflow: hidden;
+    position: relative;
+}
+
+.carousel {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Track chứa tất cả slides nằm ngang */
+.carousel__track {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Mỗi slide */
+.carousel__slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Overlay tối để chữ nổi bật */
+.carousel__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to right,
+        rgba(26, 26, 46, 0.75) 0%,
+        rgba(26, 26, 46, 0.35) 60%,
+        rgba(26, 26, 46, 0.10) 100%
+    );
+}
+
+/* Nội dung text bên trong slide */
+.carousel__content {
+    position: relative;
+    z-index: 1;
+    max-width: 560px;
+    color: #fff;
+}
+
+.carousel__title {
+    font-size: clamp(1.6rem, 4vw, 2.8rem);
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+}
+
+.carousel__subtitle {
+    font-size: clamp(0.95rem, 1.8vw, 1.1rem);
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 32px;
+}
+
+.carousel__cta {
+    font-size: 1rem;
+    padding: 14px 32px;
+}
+
+/* Prev / Next buttons */
+.carousel__btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition), transform var(--transition);
+    backdrop-filter: blur(4px);
+}
+
+.carousel__btn:hover {
+    background: rgba(201, 169, 110, 0.6);
+    transform: translateY(-50%) scale(1.08);
+}
+
+.carousel__btn--prev { left: 24px; }
+.carousel__btn--next { right: 24px; }
+
+/* Dots */
+.carousel__dots {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 10;
+}
+
+.carousel__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    background: transparent;
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.carousel__dot.is-active {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.3);
+}
+
+
+/* ============================================
+   BEST SELLER
+   ============================================ */
+.best-seller {
+    padding: 80px 0 64px;
+    background: var(--bg-light);
+}
+
+/* Grid 4 cột → 8 sản phẩm = 2 hàng */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+/* Card */
+.product-card {
+    background: var(--bg);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.product-card:hover {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.10);
+    transform: translateY(-4px);
+}
+
+/* Ảnh */
+.product-card__image-wrap {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--bg-light);
+}
+
+.product-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.product-card:hover .product-card__image {
+    transform: scale(1.06);
+}
+
+/* Badge */
+.product-card__badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--accent);
+    color: var(--primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    z-index: 1;
+}
+
+/* Overlay "Xem chi tiết" khi hover */
+.product-card__actions {
+    position: absolute;
+    inset: 0;
+    background: rgba(26, 26, 46, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.product-card:hover .product-card__actions {
+    opacity: 1;
+}
+
+.product-card__btn {
+    font-size: 0.85rem;
+    padding: 10px 20px;
+}
+
+/* Info */
+.product-card__info {
+    padding: 14px 16px 16px;
+}
+
+.product-card__name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-card__name a {
+    color: inherit;
+    transition: color var(--transition);
+}
+
+.product-card__name a:hover {
+    color: var(--accent);
+}
+
+.product-card__price {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-dark);
+}
+
+/* CTA footer */
+.best-seller__footer {
+    text-align: center;
+    margin-top: 48px;
+}
+
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Tablet: 2 cột */
+@media (max-width: 900px) {
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .hero {
+        max-height: 560px;
+    }
+
+    .carousel__btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .carousel__btn--prev { left: 12px; }
+    .carousel__btn--next { right: 12px; }
+}
+
+/* Mobile: 2 cột nhỏ */
+@media (max-width: 480px) {
+    .hero {
+        min-height: 360px;
+        max-height: 460px;
+    }
+
+    .carousel__content {
+        padding: 0 12px;
+    }
+
+    .carousel__btn {
+        display: none; /* Dùng swipe thay thế trên mobile */
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .product-card__info {
+        padding: 10px 12px 12px;
+    }
+
+    .best-seller {
+        padding: 48px 0 40px;
+    }
+}
