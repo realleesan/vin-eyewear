@@ -1,0 +1,88 @@
+/* Reset CSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: #ffffff;
+    color: #000000;
+    line-height: 1.6;
+}
+
+/* Container chính bao bọc trang sự kiện */
+.event-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 20px;
+}
+
+/* Tiêu đề trang */
+.page-title {
+    text-align: center;
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 60px;
+    font-weight: 500;
+}
+
+/* Dàn khung danh sách banner khuyến mãi */
+.banner-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+/* Styling cho từng khối banner tĩnh */
+.promo-banner {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.3s ease;
+}
+
+.promo-banner:hover {
+    opacity: 0.8; /* Hiệu ứng mờ đi một chút khi hover giống các trang cao cấp */
+}
+
+.banner-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    background-color: #f4f4f4; /* Màu nền chờ khi ảnh chưa load */
+    margin-bottom: 20px;
+}
+
+.banner-content {
+    text-align: center;
+    padding: 0 15px;
+}
+
+.banner-title {
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.banner-desc {
+    font-size: 1rem;
+    color: #444;
+}
+
+/* Responsive: Chia 2 cột khi hiển thị trên màn hình lớn (Tablet/Desktop) */
+@media (min-width: 768px) {
+    .banner-grid {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+    
+    .promo-banner {
+        width: calc(50% - 20px);
+    }
+}
