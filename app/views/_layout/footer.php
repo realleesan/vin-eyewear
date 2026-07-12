@@ -1,38 +1,52 @@
 <footer class="site-footer">
-    <div class="container">
-        <div class="footer-content">
 
-            <!-- Cột 1: Thương hiệu -->
-            <div class="footer-section">
-                <h3>Vin Eyewear</h3>
-                <p>Cửa hàng kính mắt cao cấp với công nghệ AR và AI tiên tiến. Trải nghiệm thử kính trực tuyến ngay tại nhà.</p>
-            </div>
+    <!-- ============================================================
+         FOOTER TOP — grid 4 cột
+         ============================================================ -->
+    <div class="footer-top">
 
-            <!-- Cột 2: Thông tin liên hệ -->
-            <div class="footer-section">
-                <h3>Liên hệ</h3>
-                <p>📍 Hà Nội, Việt Nam</p>
-                <p>📞 0123 456 789</p>
-                <p>✉️ info@vineyewear.com</p>
-            </div>
-
-            <!-- Cột 3: Liên kết nhanh -->
-            <div class="footer-section">
-                <h3>Liên kết</h3>
-                <ul>
-                    <li><a href="/">Trang chủ</a></li>
-                    <li><a href="/product">Sản phẩm</a></li>
-                    <li><a href="/about">Giới thiệu</a></li>
-                    <li><a href="/event">Sự kiện</a></li>
-                    <li><a href="/ar">Thử kính AR</a></li>
-                    <li><a href="/contact">Liên hệ</a></li>
-                </ul>
-            </div>
-
+        <!-- Cột 1: Brand + đăng ký email -->
+        <div class="footer-brand">
+            <div class="footer-brand__logo">Vin Eyewear</div>
+            <p class="footer-brand__tagline">Cửa hàng kính mắt cao cấp với công nghệ AR và AI tiên tiến. Trải nghiệm thử kính trực tuyến ngay tại nhà.</p>
+            <form class="footer-subscribe" action="#" method="post">
+                <input type="email" name="email" placeholder="Email của bạn" aria-label="Email đăng ký nhận tin">
+                <button type="submit">Đăng ký</button>
+            </form>
         </div>
 
-        <div class="footer-bottom">
-            <p>&copy; <?= date('Y') ?> Vin Eyewear. All rights reserved.</p>
+        <!-- Cột 2: Khám phá -->
+        <div class="footer-col">
+            <h3 class="footer-col__heading">Khám phá</h3>
+            <a href="/">Trang chủ</a>
+            <a href="/product">Sản phẩm</a>
+            <a href="/about">Giới thiệu</a>
         </div>
+
+        <!-- Cột 3: Hỗ trợ -->
+        <div class="footer-col">
+            <h3 class="footer-col__heading">Hỗ trợ</h3>
+            <a href="/event">Sự kiện</a>
+            <a href="/ar">Thử kính AR</a>
+            <a href="/contact">Liên hệ</a>
+        </div>
+
+        <!-- Cột 4: Liên hệ -->
+        <div class="footer-col">
+            <h3 class="footer-col__heading">Liên hệ</h3>
+            <p>📍 Hà Nội, Việt Nam</p>
+            <p>📞 0123 456 789</p>
+            <p>✉️ info@vineyewear.com</p>
+        </div>
+
     </div>
+
+    <!-- ============================================================
+         FOOTER BOTTOM
+         ============================================================ -->
+    <div class="footer-bottom">
+        <p>&copy; <?= date('Y') ?> Vin Eyewear. All rights reserved.</p>
+        <p>Made in Hà Nội</p>
+    </div>
+
 </footer>

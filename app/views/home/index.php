@@ -2,112 +2,98 @@
 /**
  * home/index.php
  * Biến nhận từ HomeController::index():
- *   $slides      — mảng slide cho hero carousel (image, title, subtitle, cta_text, cta_href)
  *   $bestSellers — mảng sản phẩm bán chạy (id, name, price, image, badge)
+ *
+ * Nạp CSS riêng của trang tại đây vì master chỉ nạp global + layout.
  */
 ?>
+<link rel="stylesheet" href="/assets/css/home.css">
 
 <!-- ============================================================
-     HERO CAROUSEL
+     SECTION 1 — HERO BANNER
      ============================================================ -->
 <section class="hero">
-    <div class="carousel" id="heroCarousel">
-
-        <!-- Track chứa các slide -->
-        <div class="carousel__track" id="carouselTrack">
-            <?php foreach ($slides as $i => $slide): ?>
-            <div
-                class="carousel__slide <?= $i === 0 ? 'is-active' : '' ?>"
-                style="background-image: url('<?= htmlspecialchars($slide['image']) ?>')"
-                aria-hidden="<?= $i === 0 ? 'false' : 'true' ?>"
-            >
-                <div class="carousel__overlay"></div>
-                <div class="container">
-                    <div class="carousel__content">
-                        <h2 class="carousel__title"><?= htmlspecialchars($slide['title']) ?></h2>
-                        <p class="carousel__subtitle"><?= htmlspecialchars($slide['subtitle']) ?></p>
-                        <a href="<?= htmlspecialchars($slide['cta_href']) ?>" class="btn btn-primary carousel__cta">
-                            <?= htmlspecialchars($slide['cta_text']) ?>
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <?php endforeach; ?>
+    <div class="hero-content">
+        <p class="hero-eyebrow">The Original &middot; Heritage Eyewear</p>
+        <h1>Frames with a <em>Soul</em> of Their Own.</h1>
+        <p class="hero-sub">Kính mắt cao cấp chế tác thủ công — nơi di sản gặp gỡ công nghệ AR &amp; AI. Tìm gọng kính kể câu chuyện của riêng bạn.</p>
+        <div class="hero-actions">
+            <a href="/product" class="btn-primary">Shop Eyeglasses</a>
+            <a href="/ar" class="btn-ghost">Try On With AR</a>
         </div>
-
-        <!-- Prev / Next -->
-        <button class="carousel__btn carousel__btn--prev" id="carouselPrev" aria-label="Slide trước">&#8249;</button>
-        <button class="carousel__btn carousel__btn--next" id="carouselNext" aria-label="Slide sau">&#8250;</button>
-
-        <!-- Dots -->
-        <div class="carousel__dots" id="carouselDots">
-            <?php foreach ($slides as $i => $slide): ?>
-            <button
-                class="carousel__dot <?= $i === 0 ? 'is-active' : '' ?>"
-                data-index="<?= $i ?>"
-                aria-label="Chuyển đến slide <?= $i + 1 ?>"
-                aria-selected="<?= $i === 0 ? 'true' : 'false' ?>"
-            ></button>
-            <?php endforeach; ?>
+    </div>
+    <div class="hero-aside">
+        <div class="frames-icon" aria-hidden="true">
+            <span class="lens"></span>
+            <span class="bridge"></span>
+            <span class="lens"></span>
         </div>
-
     </div>
 </section>
 
+<!-- ============================================================
+     SECTION 2 — TICKER TAPE
+     ============================================================ -->
+<div class="ticker">
+    <div class="ticker-track">
+        <!-- Nhóm item (lặp 2 lần để cuộn liền mạch) -->
+        <span>Eyeglasses</span><span class="dot">&#9733;</span>
+        <span>Sunglasses</span><span class="dot">&#9733;</span>
+        <span>Custom Made Tints&trade;</span><span class="dot">&#9733;</span>
+        <span>Free Worldwide Shipping</span><span class="dot">&#9733;</span>
+        <span>NYC Since 1915</span><span class="dot">&#9733;</span>
+
+        <span>Eyeglasses</span><span class="dot">&#9733;</span>
+        <span>Sunglasses</span><span class="dot">&#9733;</span>
+        <span>Custom Made Tints&trade;</span><span class="dot">&#9733;</span>
+        <span>Free Worldwide Shipping</span><span class="dot">&#9733;</span>
+        <span>NYC Since 1915</span><span class="dot">&#9733;</span>
+    </div>
+</div>
 
 <!-- ============================================================
-     BEST SELLER
+     SECTION 3 — BEST SELLERS (dùng PHP loop từ controller)
      ============================================================ -->
-<section class="best-seller" aria-label="Sản phẩm bán chạy">
-    <div class="container">
-
-        <div class="section-header">
-            <h2 class="section-title">Sản Phẩm Bán Chạy</h2>
-            <p class="section-subtitle">Những mẫu gọng kính được yêu thích nhất tại Vin Eyewear</p>
-        </div>
-
-        <div class="product-grid">
-            <?php foreach ($bestSellers as $product): ?>
-            <article class="product-card">
-                <!-- Ảnh -->
-                <div class="product-card__image-wrap">
-                    <img
-                        src="<?= htmlspecialchars($product['image']) ?>"
-                        alt="<?= htmlspecialchars($product['name']) ?>"
-                        class="product-card__image"
-                        loading="lazy"
-                    >
-                    <?php if (!empty($product['badge'])): ?>
-                    <span class="product-card__badge"><?= htmlspecialchars($product['badge']) ?></span>
-                    <?php endif; ?>
-
-                    <!-- Overlay actions -->
-                    <div class="product-card__actions">
-                        <a href="/product/<?= $product['id'] ?>" class="btn btn-primary product-card__btn">
-                            Xem chi tiết
-                        </a>
-                        <a href="/ar?id=<?= $product['id'] ?>" class="btn btn-outline product-card__btn product-card__btn--ar">
-                            Thử AR
-                        </a>
-                    </div>
+<section class="products-section reveal">
+    <div class="section-header">
+        <h2 class="section-title">Best Sellers</h2>
+        <a href="/product" class="section-link">View All Frames</a>
+    </div>
+    <div class="product-grid">
+        <?php foreach ($bestSellers as $product): ?>
+        <div class="product-card">
+            <div class="card-img">
+                <img
+                    src="<?= htmlspecialchars($product['image']) ?>"
+                    alt="<?= htmlspecialchars($product['name']) ?>"
+                    loading="lazy"
+                >
+                <div class="card-overlay">
+                    <button class="quick-shop-btn">Quick Shop</button>
                 </div>
-
-                <!-- Info -->
-                <div class="product-card__info">
-                    <h3 class="product-card__name">
-                        <a href="/product/<?= $product['id'] ?>"><?= htmlspecialchars($product['name']) ?></a>
-                    </h3>
-                    <p class="product-card__price">
-                        <?= number_format($product['price'], 0, ',', '.') ?> &#8363;
-                    </p>
-                </div>
-            </article>
-            <?php endforeach; ?>
+                <?php if (!empty($product['badge'])): ?>
+                <span class="badge <?= $product['badge'] === 'Mới' ? 'badge-dark' : '' ?>"><?= htmlspecialchars($product['badge']) ?></span>
+                <?php endif; ?>
+            </div>
+            <div class="card-info">
+                <div class="card-name"><?= htmlspecialchars($product['name']) ?></div>
+                <div class="card-price"><?= number_format($product['price'], 0, ',', '.') ?> &#8363;</div>
+            </div>
         </div>
+        <?php endforeach; ?>
+    </div>
+</section>
 
-        <div class="best-seller__footer">
-            <a href="/product" class="btn btn-outline">Xem tất cả sản phẩm</a>
-        </div>
-
+<!-- ============================================================
+     SECTION 4 — QUOTE
+     ============================================================ -->
+<section class="quote-section reveal">
+    <span class="quote-mark">&ldquo;</span>
+    <blockquote class="quote-text">
+        Bạn không chỉ đang đeo một chiếc kính khi chọn Vin Eyewear — bạn đang khoác lên mình
+        một lát cắt của lịch sử, của tinh thần phố thị.
+    </blockquote>
+    <div class="quote-attr">
+        <strong>Vin Eyewear</strong> &middot; Heritage Since 1915
     </div>
 </section>

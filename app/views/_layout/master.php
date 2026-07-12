@@ -10,6 +10,11 @@
 
     <meta name="description" content="Vin Eyewear - Cửa hàng kính mắt cao cấp với công nghệ AR và AI">
 
+    <!-- Google Fonts: Libre Caslon Text / Hanken Grotesk / JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Hanken+Grotesk:wght@400;500;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+
     <!-- CSS dùng chung toàn site -->
     <link rel="stylesheet" href="/assets/css/global.css">
     <link rel="stylesheet" href="/assets/css/layout.css">
@@ -29,6 +34,24 @@
 
     <!-- JS mobile menu dùng chung -->
     <script src="/assets/js/mobile-menu.js" defer></script>
+
+    <!-- Scroll reveal dùng chung toàn site: hiện dần phần tử .reveal khi cuộn tới -->
+    <script>
+        (function () {
+            'use strict';
+            var targets = document.querySelectorAll('.reveal');
+            if (!targets.length) return;
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            targets.forEach(function (el) { observer.observe(el); });
+        })();
+    </script>
 
 </body>
 </html>

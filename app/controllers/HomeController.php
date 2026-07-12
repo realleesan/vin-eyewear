@@ -9,31 +9,6 @@ class HomeController extends BaseController
 {
     public function index(): void
     {
-        // --- Banner carousel (placeholder — thay bằng ảnh thật sau) ---
-        $slides = [
-            [
-                'image'    => '/assets/images/banner/banner-1.jpg',
-                'title'    => 'Phong Cách Của Bạn, Tầm Nhìn Của Chúng Tôi',
-                'subtitle' => 'Bộ sưu tập kính mắt cao cấp — thiết kế tinh tế, chất lượng vượt trội.',
-                'cta_text' => 'Khám phá ngay',
-                'cta_href' => '/product',
-            ],
-            [
-                'image'    => '/assets/images/banner/banner-2.jpg',
-                'title'    => 'Thử Kính Ngay Tại Nhà Với Công Nghệ AR',
-                'subtitle' => 'Không cần đến cửa hàng — đeo thử hàng trăm gọng kính qua camera của bạn.',
-                'cta_text' => 'Thử kính AR',
-                'cta_href' => '/ar',
-            ],
-            [
-                'image'    => '/assets/images/banner/banner-3.jpg',
-                'title'    => 'AI Phân Tích Khuôn Mặt — Chọn Kính Chuẩn Hơn',
-                'subtitle' => 'Hệ thống AI nhận diện dáng mặt và đề xuất gọng kính phù hợp nhất cho bạn.',
-                'cta_text' => 'Tìm kính phù hợp',
-                'cta_href' => '/product',
-            ],
-        ];
-
         // --- Best seller (placeholder — thay bằng query Model sau) ---
         $bestSellers = [
             ['id' => 1, 'name' => 'Classic Round Gold',    'price' => 1_250_000, 'image' => '/assets/images/products/product-1.jpg', 'badge' => 'Bán chạy'],
@@ -49,7 +24,6 @@ class HomeController extends BaseController
         $this->renderView('home/index', [
             'pageTitle'   => 'Vin Eyewear - Kính Mắt Cao Cấp',
             'currentPage' => 'home',
-            'slides'      => $slides,
             'bestSellers' => $bestSellers,
         ]);
     }

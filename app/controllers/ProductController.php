@@ -25,31 +25,10 @@ class ProductController extends BaseController
             ['id' => 12, 'name' => 'Round Clear Lens',      'category' => 'tron',    'price' => 650_000,   'image' => '/assets/images/products/product-12.jpg', 'badge' => ''],
         ];
 
-        // --- Danh mục filter ---
-        $categories = [
-            'all'     => 'Tất cả',
-            'tron'    => 'Gọng tròn',
-            'vuong'   => 'Gọng vuông',
-            'aviator' => 'Aviator',
-            'cat-eye' => 'Cat Eye',
-            'rimless' => 'Không viền',
-            'sport'   => 'Thể thao',
-        ];
-
-        // --- Mức giá filter ---
-        $priceRanges = [
-            'all'  => 'Tất cả mức giá',
-            '0-1'  => 'Dưới 1.000.000 ₫',
-            '1-1.5'=> '1.000.000 – 1.500.000 ₫',
-            '1.5+' => 'Trên 1.500.000 ₫',
-        ];
-
         $this->renderView('product/index', [
             'pageTitle'   => 'Sản Phẩm - Vin Eyewear',
             'currentPage' => 'product',
             'products'    => $products,
-            'categories'  => $categories,
-            'priceRanges' => $priceRanges,
         ]);
     }
 }

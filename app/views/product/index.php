@@ -1,106 +1,61 @@
 <?php
-// CSS & JS riêng của trang PRODUCT
+/**
+ * product/index.php
+ * Biến nhận từ ProductController::index():
+ *   $products — mảng sản phẩm (id, name, category, price, image, badge)
+ * Card dùng component chung .product-card (định nghĩa ở layout.css), đồng bộ với home.
+ */
 ?>
 <link rel="stylesheet" href="/assets/css/product.css">
 
-<!-- ===================== PAGE HEADER ===================== -->
-<section class="page-hero">
-    <div class="container">
-        <h1><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Sản phẩm' ?></h1>
-        <p>Khám phá bộ sưu tập gọng kính cao cấp đa dạng phong cách</p>
+<!-- ============================================================
+     PAGE HEADER
+     ============================================================ -->
+<div class="page-header reveal">
+    <div class="page-header-inner">
+        <p class="page-eyebrow">Eyewear Collection</p>
+        <h1 class="page-title"><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Frames' ?></h1>
+        <p class="page-subtitle">
+            Over a century of optical expertise from the Lower East Side.
+        </p>
     </div>
-</section>
+</div>
 
-<!-- ===================== FILTER BAR ===================== -->
-<section class="product-filter-bar">
-    <div class="container">
-        <div class="filter-group">
-            <span class="filter-label">Danh mục:</span>
-            <button class="filter-btn active" data-filter="all">Tất cả</button>
-            <button class="filter-btn" data-filter="gong-can">Gọng cận</button>
-            <button class="filter-btn" data-filter="gong-mat">Gọng mát</button>
-            <button class="filter-btn" data-filter="gong-doc">Gọng đọc sách</button>
-        </div>
-        <div class="filter-group">
-            <span class="filter-label">Sắp xếp:</span>
-            <select class="filter-select">
-                <option value="default">Mặc định</option>
-                <option value="price-asc">Giá tăng dần</option>
-                <option value="price-desc">Giá giảm dần</option>
-                <option value="new">Mới nhất</option>
-            </select>
-        </div>
-    </div>
-</section>
-
-<!-- ===================== PRODUCT GRID ===================== -->
-<section class="products-section">
-    <div class="container">
-
-        <?php
-        // Dữ liệu tĩnh 12 sản phẩm (Phase 1 – không dùng DB)
-        $products = [
-            ['name' => 'Classic Aviator Gold',   'price' => '1.500.000₫', 'cat' => 'gong-mat',  'tag' => 'Bán chạy', 'img' => ''],
-            ['name' => 'Modern Square Black',    'price' => '2.000.000₫', 'cat' => 'gong-can',  'tag' => 'Mới',      'img' => ''],
-            ['name' => 'Premium Titanium Slim',  'price' => '3.500.000₫', 'cat' => 'gong-can',  'tag' => 'Cao cấp',  'img' => ''],
-            ['name' => 'Sport Shield Pro',       'price' => '1.800.000₫', 'cat' => 'gong-mat',  'tag' => 'Hot',      'img' => ''],
-            ['name' => 'Vintage Round Rose',     'price' => '1.200.000₫', 'cat' => 'gong-mat',  'tag' => '',         'img' => ''],
-            ['name' => 'Cat Eye Crystal Blue',   'price' => '2.200.000₫', 'cat' => 'gong-can',  'tag' => 'Mới',      'img' => ''],
-            ['name' => 'Half-rim Slim Silver',   'price' => '1.650.000₫', 'cat' => 'gong-doc',  'tag' => '',         'img' => ''],
-            ['name' => 'Oversized Bold Brown',   'price' => '1.900.000₫', 'cat' => 'gong-mat',  'tag' => 'Hot',      'img' => ''],
-            ['name' => 'Wire Frame Minimalist',  'price' => '1.100.000₫', 'cat' => 'gong-doc',  'tag' => '',         'img' => ''],
-            ['name' => 'Hexagon Acetate Green',  'price' => '2.400.000₫', 'cat' => 'gong-can',  'tag' => 'Mới',      'img' => ''],
-            ['name' => 'Butterfly Fashion Pink', 'price' => '1.750.000₫', 'cat' => 'gong-mat',  'tag' => '',         'img' => ''],
-            ['name' => 'Browline Classic Tort',  'price' => '1.300.000₫', 'cat' => 'gong-can',  'tag' => 'Bán chạy', 'img' => ''],
-        ];
-        ?>
-
-        <div class="products-grid" id="productsGrid">
-            <?php foreach ($products as $p): ?>
-            <div class="product-card" data-cat="<?= $p['cat'] ?>">
-
-                <?php if ($p['tag']): ?>
-                <span class="product-badge"><?= $p['tag'] ?></span>
+<!-- ============================================================
+     PRODUCT GRID
+     ============================================================ -->
+<section class="product-listing reveal">
+    <div class="product-grid">
+        <?php foreach ($products as $product): ?>
+        <div class="product-card">
+            <div class="card-img">
+                <img
+                    src="<?= htmlspecialchars($product['image']) ?>"
+                    alt="<?= htmlspecialchars($product['name']) ?>"
+                    loading="lazy"
+                >
+                <div class="card-overlay">
+                    <button class="quick-shop-btn">Quick Shop</button>
+                </div>
+                <?php if (!empty($product['badge'])): ?>
+                <span class="badge <?= $product['badge'] === 'Mới' ? 'badge-dark' : '' ?>"><?= htmlspecialchars($product['badge']) ?></span>
                 <?php endif; ?>
-
-                <div class="product-image">
-                    <?php if ($p['img']): ?>
-                        <img src="<?= $p['img'] ?>" alt="<?= htmlspecialchars($p['name']) ?>">
-                    <?php else: ?>
-                        <!-- Placeholder ảnh gọng kính – sẽ thay bằng ảnh thật -->
-                        <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg" width="100%">
-                            <rect width="280" height="200" fill="#f0ede6"/>
-                            <g stroke="#c9a96e" stroke-width="4" fill="none">
-                                <ellipse cx="90"  cy="100" rx="60" ry="44"/>
-                                <ellipse cx="190" cy="100" rx="60" ry="44"/>
-                                <line x1="150" y1="100" x2="130" y2="100"/>
-                                <line x1="30"  y1="86"  x2="10"  y2="80"/>
-                                <line x1="250" y1="86"  x2="270" y2="80"/>
-                            </g>
-                        </svg>
-                    <?php endif; ?>
-
-                    <div class="product-overlay">
-                        <a href="/ar" class="btn-ar">Thử kính AR</a>
-                    </div>
-                </div>
-
-                <div class="product-info">
-                    <h3><?= htmlspecialchars($p['name']) ?></h3>
-                    <p class="price"><?= $p['price'] ?></p>
-                    <a href="#" class="btn btn-primary btn-sm">Xem chi tiết</a>
-                </div>
-
             </div>
-            <?php endforeach; ?>
+            <div class="card-info">
+                <div class="card-name"><?= htmlspecialchars($product['name']) ?></div>
+                <div class="card-price"><?= number_format($product['price'], 0, ',', '.') ?> &#8363;</div>
+            </div>
         </div>
-
-        <!-- Thông báo khi filter không có kết quả -->
-        <div class="no-results" id="noResults" style="display:none;">
-            <p>Không tìm thấy sản phẩm phù hợp.</p>
-        </div>
-
+        <?php endforeach; ?>
     </div>
 </section>
 
-<script src="/assets/js/product.js" defer></script>
+<!-- ============================================================
+     PAGINATION (tĩnh — chưa có phân trang từ controller)
+     ============================================================ -->
+<div class="pagination">
+    <span class="active">1</span>
+    <a href="#">2</a>
+    <a href="#">3</a>
+    <a href="#">Next</a>
+</div>

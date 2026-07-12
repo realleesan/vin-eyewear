@@ -1,7 +1,7 @@
 /* ============================================
    Vin Eyewear - Layout CSS
-   Tác giả: Duy Anh
-   Mô tả: Khung giao diện dùng chung (header, navbar, footer, master)
+   Design system: "Lower East Heritage" (xem DESIGN.md)
+   Sharp 0px · High-contrast · No shadow · Heritage Yellow
    ============================================ */
 
 /* --- Reset & Base --- */
@@ -12,6 +12,24 @@
 }
 
 :root {
+    /* Design system — Lower East Heritage */
+    --yellow:            #FFCC00;
+    --black:             #000000;
+    --white:             #FFFFFF;
+    --warm-bg:           #fff8f1;
+    --gray:              #F6F5F1;
+    --on-surface:        #1f1b10;
+    --on-surface-variant:#4e4632;
+    --outline:           #80765f;
+
+    --font-serif: 'Libre Caslon Text', serif;
+    --font-sans:  'Hanken Grotesk', sans-serif;
+    --font-mono:  'JetBrains Mono', monospace;
+
+    --margin:      64px;
+    --section-gap: 120px;
+
+    /* --- Biến kế thừa (giữ để tương thích home.css / product.css) --- */
     --primary:     #1a1a2e;
     --accent:      #c9a96e;
     --accent-dark: #a8843f;
@@ -20,26 +38,32 @@
     --bg:          #ffffff;
     --bg-light:    #f8f7f4;
     --border:      #e8e4dc;
-    --header-h:    72px;
+    --header-h:    64px;
     --container:   1200px;
     --radius:      8px;
     --transition:  0.3s ease;
-    --font-sans:   'Segoe UI', Arial, sans-serif;
 }
 
 html { scroll-behavior: smooth; }
 
 body {
     font-family: var(--font-sans);
-    color: var(--text);
-    background: var(--bg);
+    background: var(--warm-bg);
+    color: var(--on-surface);
     line-height: 1.6;
-    padding-top: var(--header-h);
+    -webkit-font-smoothing: antialiased;
 }
 
 a { text-decoration: none; color: inherit; }
 ul { list-style: none; }
-img { max-width: 100%; display: block; }
+img { display: block; max-width: 100%; }
+
+/* Form reset — mọi control sharp 0px, kế thừa font (design system) */
+button, input, select, textarea {
+    font: inherit;
+    color: inherit;
+    border-radius: 0;
+}
 
 /* --- Container --- */
 .container {
@@ -50,190 +74,455 @@ img { max-width: 100%; display: block; }
 }
 
 /* ============================================
-   HEADER / NAVBAR
+   ANNOUNCEMENT BAR
+   ============================================ */
+.announcement-bar {
+    background: var(--yellow);
+    color: var(--black);
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    text-align: center;
+    padding: 10px 16px;
+}
+
+/* ============================================
+   MAIN HEADER (sticky)
    ============================================ */
 .site-header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    height: var(--header-h);
-    background: var(--primary);
-    z-index: 1000;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
-}
-
-.main-nav {
-    height: 100%;
-}
-
-.main-nav .container {
-    height: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 64px;
+    padding: 0 var(--margin);
+    background: var(--white);
+    border-bottom: 1.5px solid var(--black);
 }
 
-/* Brand / Logo */
-.nav-brand a {
-    font-size: 1.5rem;
+/* Logo */
+.site-logo {
+    font-family: var(--font-serif);
+    font-size: 22px;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--accent);
-    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--black);
 }
 
-/* Nav menu */
+/* Nav */
+.main-nav {
+    height: 64px;
+}
+
 .nav-menu {
     display: flex;
     align-items: center;
-    gap: 4px;
+    height: 64px;
 }
 
 .nav-menu li a {
-    display: block;
-    padding: 8px 16px;
-    color: #e0ddd6;
-    font-size: 0.92rem;
-    font-weight: 500;
-    letter-spacing: 0.03em;
-    border-radius: var(--radius);
-    transition: color var(--transition), background var(--transition);
+    display: flex;
+    align-items: center;
+    height: 64px;
+    padding: 0 20px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--black);
+    border-right: 1px solid #e0e0e0;
+    transition: background 0.15s;
 }
 
-.nav-menu li a:hover,
-.nav-menu li a.active {
-    color: var(--accent);
-    background: rgba(201, 169, 110, 0.12);
+.nav-menu li:first-child a {
+    border-left: 1px solid #e0e0e0;
 }
 
-/* Hamburger (mobile) */
+.nav-menu li a:hover {
+    background: var(--yellow);
+}
+
+/* Right side: account + cart */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.header-account {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--black);
+    transition: color 0.15s;
+}
+
+.header-account:hover {
+    color: var(--outline);
+}
+
+.header-cart {
+    background: var(--black);
+    color: var(--white);
+    padding: 10px 20px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-radius: 0;
+}
+
+/* Hamburger — ẩn ở desktop, hiện ở mobile (≤900px) */
 .nav-toggle {
     display: none;
     flex-direction: column;
+    justify-content: center;
     gap: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    background: transparent;
+    border: none;
     cursor: pointer;
-    padding: 4px;
 }
 
 .nav-toggle span {
     display: block;
-    width: 24px;
+    width: 100%;
     height: 2px;
-    background: #e0ddd6;
-    border-radius: 2px;
-    transition: var(--transition);
+    background: var(--black);
+    transition: transform 0.2s ease, opacity 0.2s ease;
 }
+
+/* Biến thành dấu X khi menu mở */
+.nav-toggle.is-active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle.is-active span:nth-child(2) { opacity: 0; }
+.nav-toggle.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* ============================================
    FOOTER
    ============================================ */
 .site-footer {
-    background: var(--primary);
-    color: #c8c4bb;
-    padding: 56px 0 0;
-    margin-top: 80px;
+    background: var(--black);
+    color: var(--white);
+    border-top: 1.5px solid #222;
 }
 
-.footer-content {
+/* --- Footer top: grid 4 cột --- */
+.footer-top {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 40px;
-    padding-bottom: 48px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 64px;
+    padding: 64px var(--margin);
+    border-bottom: 1px solid #1a1a1a;
 }
 
-.footer-section h3 {
-    color: var(--accent);
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+/* Brand */
+.footer-brand__logo {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--white);
     margin-bottom: 16px;
 }
 
-.footer-section p,
-.footer-section li {
-    font-size: 0.9rem;
-    line-height: 2;
-    color: #a09b90;
+.footer-brand__tagline {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.45);
+    max-width: 260px;
+    margin-bottom: 24px;
 }
 
-.footer-section ul li a {
-    color: #a09b90;
-    transition: color var(--transition);
+/* Subscribe row */
+.footer-subscribe {
+    display: flex;
+    max-width: 300px;
 }
 
-.footer-section ul li a:hover {
-    color: var(--accent);
+.footer-subscribe input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 1px solid #333;
+    border-right: none;
+    padding: 12px 16px;
+    color: var(--white);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    border-radius: 0;
 }
 
+.footer-subscribe input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.footer-subscribe button {
+    background: var(--yellow);
+    color: var(--black);
+    padding: 12px 20px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border: none;
+    border-radius: 0;
+    cursor: pointer;
+}
+
+/* Link columns 2-4 */
+.footer-col__heading {
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(255, 255, 255, 0.3);
+    margin-bottom: 20px;
+}
+
+.footer-col a,
+.footer-col p {
+    display: block;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.55);
+    margin-bottom: 12px;
+}
+
+.footer-col a {
+    transition: color 0.15s;
+}
+
+.footer-col a:hover {
+    color: var(--yellow);
+}
+
+/* --- Footer bottom --- */
 .footer-bottom {
-    text-align: center;
-    padding: 20px 0;
-    font-size: 0.82rem;
-    color: #6b675f;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px var(--margin);
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 0.06em;
 }
 
 /* ============================================
-   BUTTONS (dùng chung)
+   BUTTONS (dùng chung) — sharp 0px, no shadow
    ============================================ */
 .btn {
     display: inline-block;
     padding: 12px 28px;
-    border-radius: var(--radius);
+    border-radius: 0;
     font-size: 0.92rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     cursor: pointer;
-    transition: background var(--transition), color var(--transition), transform var(--transition);
+    transition: background var(--transition), color var(--transition);
     border: none;
 }
 
 .btn-primary {
-    background: var(--accent);
-    color: var(--primary);
+    background: var(--yellow);
+    color: var(--black);
 }
 
 .btn-primary:hover {
-    background: var(--accent-dark);
-    transform: translateY(-1px);
+    background: var(--black);
+    color: var(--white);
 }
 
 .btn-outline {
     background: transparent;
-    border: 2px solid var(--accent);
-    color: var(--accent);
+    border: 2px solid var(--black);
+    color: var(--black);
 }
 
 .btn-outline:hover {
-    background: var(--accent);
-    color: var(--primary);
+    background: var(--black);
+    color: var(--white);
 }
+
+/* ============================================
+   COMPONENT — PRODUCT GRID & CARD (dùng chung home + product)
+   Nguồn sự thật duy nhất. Dùng grid-stacking thay position:absolute.
+   ============================================ */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    background: var(--black);
+}
+
+.product-card {
+    background: var(--white);
+    cursor: pointer;
+}
+
+/* Khung ảnh: mọi lớp (ảnh, overlay, badge) chồng lên cùng 1 ô grid */
+.card-img {
+    display: grid;
+    aspect-ratio: 1 / 1;
+    background: var(--gray);
+    overflow: hidden;
+}
+
+.card-img > * {
+    grid-area: 1 / 1;
+}
+
+.card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.card-img svg {
+    align-self: center;
+    justify-self: center;
+    width: 100%;
+    height: auto;
+}
+
+/* Badge — đặt góc trên-trái bằng align/justify-self (không absolute) */
+.badge {
+    align-self: start;
+    justify-self: start;
+    margin: 12px;
+    background: var(--yellow);
+    color: var(--black);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 4px 8px;
+}
+
+.badge-dark {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* Overlay — phủ kín ô grid, nút Quick Shop dính đáy */
+.card-overlay {
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.05);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.product-card:hover .card-overlay {
+    opacity: 1;
+}
+
+.quick-shop-btn {
+    width: 100%;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    padding: 12px;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+}
+
+.card-info {
+    padding: 16px 16px 22px;
+}
+
+.card-name {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+}
+
+.card-price {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--outline);
+}
+
+
+/* ============================================
+   UTILITY — SCROLL REVEAL
+   ============================================ */
+.reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 
 /* ============================================
    RESPONSIVE
    ============================================ */
 @media (max-width: 900px) {
+    :root { --margin: 16px; }
+
+    /* Header cho phép nav xuống hàng full-width khi mở (không dùng absolute) */
+    .site-header { flex-wrap: wrap; }
+
     .nav-toggle { display: flex; }
 
+    .main-nav {
+        order: 1;          /* đẩy nav xuống hàng thứ 2, dưới logo + actions */
+        flex-basis: 100%;
+        height: auto;
+    }
+
     .nav-menu {
-        display: none;
+        display: none;     /* mobile-menu.js thêm .open để hiện */
         flex-direction: column;
-        align-items: flex-start;
-        position: absolute;
-        top: var(--header-h);
-        left: 0; right: 0;
-        background: var(--primary);
-        padding: 16px 24px 24px;
-        gap: 4px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        height: auto;
+        border-top: 1.5px solid var(--black);
     }
 
     .nav-menu.open { display: flex; }
-    .nav-menu li { width: 100%; }
-    .nav-menu li a { padding: 12px 16px; }
 
-    .footer-content {
-        grid-template-columns: 1fr;
+    .nav-menu li { width: 100%; }
+
+    .nav-menu li a {
+        height: auto;
+        padding: 14px var(--margin);
+        border-left: none;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .footer-top {
+        grid-template-columns: 1fr 1fr;
         gap: 32px;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .product-grid {
+        grid-template-columns: 1fr;
     }
 }
