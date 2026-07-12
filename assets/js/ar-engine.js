@@ -43,7 +43,7 @@
     }
 
     // ============================================
-    // 🔥 BẬT CAMERA - DÙNG getUserMedia
+    //  BẬT CAMERA - DÙNG getUserMedia
     // ============================================
     async function startCamera() {
         try {
@@ -64,7 +64,7 @@
                 audio: false
             };
 
-            // 🔥 GỌI getUserMedia - XIN QUYỀN CAMERA
+            //  GỌI getUserMedia - XIN QUYỀN CAMERA
             stream = await navigator.mediaDevices.getUserMedia(constraints);
 
             // Gán stream vào video
@@ -80,7 +80,7 @@
     }
 
     // ============================================
-    // 🔥 TỰ ĐỘNG BẬT CAMERA KHI LOAD TRANG
+    //  TỰ ĐỘNG BẬT CAMERA KHI LOAD TRANG
     // ============================================
     async function autoStart() {
         try {
@@ -89,7 +89,7 @@
                 throw new Error('Trình duyệt không hỗ trợ API camera.');
             }
 
-            // 🔥 TỰ ĐỘNG XIN QUYỀN VÀ BẬT CAMERA TRƯỚC
+            // TỰ ĐỘNG XIN QUYỀN VÀ BẬT CAMERA TRƯỚC
             await startCamera();
 
         } catch (error) {
@@ -101,7 +101,7 @@
     // CHẠY KHI LOAD TRANG
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-        // 🔥 TỰ ĐỘNG BẬT CAMERA
+        //  TỰ ĐỘNG BẬT CAMERA
         autoStart();
     });
 
@@ -112,6 +112,6 @@
         }
     });
 
-    console.log('🚀 AR Engine đã sẵn sàng!');
+    console.log('AR Engine đã sẵn sàng!');
 
 })();

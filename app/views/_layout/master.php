@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +19,13 @@
     <!-- CSS dùng chung toàn site -->
     <link rel="stylesheet" href="/assets/css/global.css">
     <link rel="stylesheet" href="/assets/css/layout.css">
+
+    <!-- CSS RIÊNG CHO AR (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && strpos($viewName, 'ar/') === 0): ?>
+        <link rel="stylesheet" href="/assets/css/ar.tryon.css">
+    <?php endif; ?>
 </head>
+
 <body>
 
     <!-- Header & Navbar -->
@@ -35,23 +42,33 @@
     <!-- JS mobile menu dùng chung -->
     <script src="/assets/js/mobile-menu.js" defer></script>
 
+    <!-- JS RIÊNG CHO AR (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && strpos($viewName, 'ar/') === 0): ?>
+        <script src="/assets/js/ar-engine.js" defer></script>
+    <?php endif; ?>
+
     <!-- Scroll reveal dùng chung toàn site: hiện dần phần tử .reveal khi cuộn tới -->
     <script>
-        (function () {
+        (function() {
             'use strict';
             var targets = document.querySelectorAll('.reveal');
             if (!targets.length) return;
-            var observer = new IntersectionObserver(function (entries) {
-                entries.forEach(function (entry) {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
                     if (entry.isIntersecting) {
                         entry.target.classList.add('visible');
                         observer.unobserve(entry.target);
                     }
                 });
-            }, { threshold: 0.1 });
-            targets.forEach(function (el) { observer.observe(el); });
+            }, {
+                threshold: 0.1
+            });
+            targets.forEach(function(el) {
+                observer.observe(el);
+            });
         })();
     </script>
 
 </body>
+
 </html>
