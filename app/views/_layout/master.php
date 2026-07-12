@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <!-- Title động từ controller ($title được extract() từ $data trong BaseController) -->
-    <title><?= isset($title) ? htmlspecialchars($title) : 'Vin Eyewear - Kính Mắt Cao Cấp' ?></title>
+    <!-- Title động từ controller ($pageTitle được extract() từ $data trong BaseController) -->
+    <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Vin Eyewear - Kính Mắt Cao Cấp' ?></title>
 
     <meta name="description" content="Vin Eyewear - Cửa hàng kính mắt cao cấp với công nghệ AR và AI">
 

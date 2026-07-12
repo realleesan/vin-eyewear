@@ -1,86 +1,74 @@
 <?php
 /**
- * product/index.php
- * Biến nhận từ ProductController::index():
- *   $products    — mảng 12 sản phẩm tĩnh
- *   $categories  — mảng danh mục filter
- *   $priceRanges — mảng mức giá filter
+ * home/index.php
+ * Biến nhận từ HomeController::index():
+ *   $slides      — mảng slide cho hero carousel (image, title, subtitle, cta_text, cta_href)
+ *   $bestSellers — mảng sản phẩm bán chạy (id, name, price, image, badge)
  */
 ?>
 
 <!-- ============================================================
-     PAGE HEADER
+     HERO CAROUSEL
      ============================================================ -->
-<section class="page-hero">
-    <div class="container">
-        <h1 class="page-hero__title">Bộ Sưu Tập Kính Mắt</h1>
-        <p class="page-hero__subtitle">Khám phá hàng trăm mẫu gọng kính cao cấp — phong cách, chất lượng, chuẩn thị lực</p>
-    </div>
-</section>
+<section class="hero">
+    <div class="carousel" id="heroCarousel">
 
-
-<!-- ============================================================
-     FILTER BAR
-     ============================================================ -->
-<section class="filter-bar" aria-label="Bộ lọc sản phẩm">
-    <div class="container">
-        <div class="filter-bar__inner">
-
-            <!-- Filter danh mục -->
-            <div class="filter-group" role="group" aria-label="Lọc theo danh mục">
-                <span class="filter-group__label">Danh mục:</span>
-                <div class="filter-chips" id="categoryFilter">
-                    <?php foreach ($categories as $key => $label): ?>
-                    <button
-                        class="filter-chip <?= $key === 'all' ? 'is-active' : '' ?>"
-                        data-filter-cat="<?= htmlspecialchars($key) ?>"
-                        aria-pressed="<?= $key === 'all' ? 'true' : 'false' ?>"
-                    >
-                        <?= htmlspecialchars($label) ?>
-                    </button>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <!-- Filter giá -->
-            <div class="filter-group" role="group" aria-label="Lọc theo giá">
-                <span class="filter-group__label">Giá:</span>
-                <div class="filter-chips" id="priceFilter">
-                    <?php foreach ($priceRanges as $key => $label): ?>
-                    <button
-                        class="filter-chip <?= $key === 'all' ? 'is-active' : '' ?>"
-                        data-filter-price="<?= htmlspecialchars($key) ?>"
-                        aria-pressed="<?= $key === 'all' ? 'true' : 'false' ?>"
-                    >
-                        <?= htmlspecialchars($label) ?>
-                    </button>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <!-- Đếm kết quả -->
-            <p class="filter-count">
-                Hiển thị <span id="productCount"><?= count($products) ?></span> sản phẩm
-            </p>
-
-        </div>
-    </div>
-</section>
-
-
-<!-- ============================================================
-     PRODUCT GRID
-     ============================================================ -->
-<section class="product-listing" aria-label="Danh sách sản phẩm">
-    <div class="container">
-
-        <div class="product-grid" id="productGrid">
-            <?php foreach ($products as $product): ?>
-            <article
-                class="product-card"
-                data-category="<?= htmlspecialchars($product['category']) ?>"
-                data-price="<?= $product['price'] ?>"
+        <!-- Track chứa các slide -->
+        <div class="carousel__track" id="carouselTrack">
+            <?php foreach ($slides as $i => $slide): ?>
+            <div
+                class="carousel__slide <?= $i === 0 ? 'is-active' : '' ?>"
+                style="background-image: url('<?= htmlspecialchars($slide['image']) ?>')"
+                aria-hidden="<?= $i === 0 ? 'false' : 'true' ?>"
             >
+                <div class="carousel__overlay"></div>
+                <div class="container">
+                    <div class="carousel__content">
+                        <h2 class="carousel__title"><?= htmlspecialchars($slide['title']) ?></h2>
+                        <p class="carousel__subtitle"><?= htmlspecialchars($slide['subtitle']) ?></p>
+                        <a href="<?= htmlspecialchars($slide['cta_href']) ?>" class="btn btn-primary carousel__cta">
+                            <?= htmlspecialchars($slide['cta_text']) ?>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Prev / Next -->
+        <button class="carousel__btn carousel__btn--prev" id="carouselPrev" aria-label="Slide trước">&#8249;</button>
+        <button class="carousel__btn carousel__btn--next" id="carouselNext" aria-label="Slide sau">&#8250;</button>
+
+        <!-- Dots -->
+        <div class="carousel__dots" id="carouselDots">
+            <?php foreach ($slides as $i => $slide): ?>
+            <button
+                class="carousel__dot <?= $i === 0 ? 'is-active' : '' ?>"
+                data-index="<?= $i ?>"
+                aria-label="Chuyển đến slide <?= $i + 1 ?>"
+                aria-selected="<?= $i === 0 ? 'true' : 'false' ?>"
+            ></button>
+            <?php endforeach; ?>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ============================================================
+     BEST SELLER
+     ============================================================ -->
+<section class="best-seller" aria-label="Sản phẩm bán chạy">
+    <div class="container">
+
+        <div class="section-header">
+            <h2 class="section-title">Sản Phẩm Bán Chạy</h2>
+            <p class="section-subtitle">Những mẫu gọng kính được yêu thích nhất tại Vin Eyewear</p>
+        </div>
+
+        <div class="product-grid">
+            <?php foreach ($bestSellers as $product): ?>
+            <article class="product-card">
                 <!-- Ảnh -->
                 <div class="product-card__image-wrap">
                     <img
@@ -110,16 +98,15 @@
                         <a href="/product/<?= $product['id'] ?>"><?= htmlspecialchars($product['name']) ?></a>
                     </h3>
                     <p class="product-card__price">
-                        <?= number_format($product['price'], 0, ',', '.') ?> ₫
+                        <?= number_format($product['price'], 0, ',', '.') ?> &#8363;
                     </p>
                 </div>
             </article>
             <?php endforeach; ?>
         </div>
 
-        <!-- Empty state khi filter không có kết quả -->
-        <div class="product-empty" id="productEmpty" hidden>
-            <p>Không tìm thấy sản phẩm phù hợp. Hãy thử bộ lọc khác.</p>
+        <div class="best-seller__footer">
+            <a href="/product" class="btn btn-outline">Xem tất cả sản phẩm</a>
         </div>
 
     </div>
