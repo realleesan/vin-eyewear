@@ -1,0 +1,242 @@
+/* ============================================
+   Vin Eyewear - Home Page CSS
+   Design system: "Lower East Heritage" (xem DESIGN.md)
+   Chỉ chứa phần RIÊNG của trang chủ.
+   Component dùng chung (product-grid/card, .reveal) nằm ở layout.css.
+   ============================================ */
+
+
+/* ============================================
+   SECTION 1 — HERO BANNER
+   ============================================ */
+.hero {
+    display: grid;
+    grid-template-columns: 1fr 45%;
+    background: var(--black);
+    color: var(--white);
+    min-height: 560px;
+}
+
+.hero-content {
+    padding: 100px var(--margin);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.hero-eyebrow {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--yellow);
+    margin-bottom: 28px;
+}
+
+.hero h1 {
+    font-family: var(--font-serif);
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+}
+
+.hero h1 em {
+    font-style: italic;
+    color: var(--yellow);
+}
+
+.hero-sub {
+    font-size: 17px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 44px;
+    max-width: 520px;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.btn-primary,
+.btn-ghost {
+    display: inline-block;
+    border-radius: 0;
+    padding: 14px 32px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+    background: var(--yellow);
+    color: var(--black);
+    border: 2px solid var(--yellow);
+}
+
+.btn-primary:hover {
+    background: transparent;
+    color: var(--yellow);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--white);
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.btn-ghost:hover {
+    background: var(--white);
+    color: var(--black);
+    border-color: var(--white);
+}
+
+.hero-aside {
+    background: #0d0d0d;
+    border-left: 1px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Icon gọng kính — vòng tròn là ngoại lệ bo tròn cho eyewear (DESIGN.md) */
+.frames-icon {
+    display: flex;
+    align-items: center;
+}
+
+.frames-icon .lens {
+    width: 96px;
+    height: 96px;
+    border: 3px solid var(--yellow);
+    border-radius: 50%;
+}
+
+.frames-icon .bridge {
+    width: 28px;
+    height: 3px;
+    background: var(--yellow);
+}
+
+
+/* ============================================
+   SECTION 2 — TICKER TAPE
+   ============================================ */
+.ticker {
+    background: var(--black);
+    overflow: hidden;
+    padding: 14px 0;
+}
+
+.ticker-track {
+    display: flex;
+    gap: 64px;
+    width: max-content;
+    animation: ticker-scroll 28s linear infinite;
+}
+
+@keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+.ticker span {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--white);
+    white-space: nowrap;
+}
+
+.ticker .dot {
+    color: var(--yellow);
+}
+
+
+/* ============================================
+   SECTION 3 — BEST SELLERS (grid/card dùng component chung)
+   ============================================ */
+.products-section {
+    padding: 80px var(--margin) 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 40px;
+}
+
+.section-title {
+    font-family: var(--font-serif);
+    font-size: 36px;
+    font-weight: 700;
+}
+
+.section-link {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border-bottom: 2px solid var(--black);
+    padding-bottom: 2px;
+}
+
+
+/* ============================================
+   SECTION 4 — QUOTE
+   ============================================ */
+.quote-section {
+    padding: 100px var(--margin);
+    background: var(--black);
+    color: var(--white);
+    text-align: center;
+}
+
+.quote-mark {
+    font-family: var(--font-serif);
+    font-size: 80px;
+    color: var(--yellow);
+    line-height: 0.6;
+    display: block;
+    margin-bottom: 28px;
+}
+
+.quote-text {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 30px;
+    line-height: 1.55;
+    max-width: 780px;
+    margin: 0 auto 32px;
+}
+
+.quote-attr {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.quote-attr strong {
+    color: var(--yellow);
+}
+
+
+/* ============================================
+   RESPONSIVE (riêng trang chủ; grid/card responsive ở layout.css)
+   ============================================ */
+@media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 36px; }
+    .hero-aside { display: none; }
+    .quote-text { font-size: 20px; }
+}
