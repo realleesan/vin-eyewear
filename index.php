@@ -8,7 +8,7 @@
 session_start();
 
 // Define absolute path constants
-define('ROOT_PATH', dirname(__DIR__));
+define('ROOT_PATH', __DIR__);
 define('APP_PATH', ROOT_PATH . '/app');
 define('CORE_PATH', ROOT_PATH . '/core');
 define('CONFIG_PATH', ROOT_PATH . '/config');

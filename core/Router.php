@@ -26,6 +26,30 @@ class Router
         // Remove leading/trailing slashes
         $uri = trim($uri, '/');
         
+        // Let PHP built-in server serve existing static files directly
+        if ($uri !== '' && file_exists(ROOT_PATH . '/' . $uri)) {
+            $file = ROOT_PATH . '/' . $uri;
+            $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+            $mime = [
+                'css' => 'text/css',
+                'js' => 'application/javascript',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'gif' => 'image/gif',
+                'svg' => 'image/svg+xml',
+                'ico' => 'image/x-icon',
+                'woff' => 'font/woff',
+                'woff2' => 'font/woff2',
+                'ttf' => 'font/ttf',
+            ];
+            if (isset($mime[$ext])) {
+                header('Content-Type: ' . $mime[$ext]);
+            }
+            readfile($file);
+            exit;
+        }
+        
         // Handle empty URI (root)
         if ($uri === '' || $uri === '/') {
             $uri = '';
