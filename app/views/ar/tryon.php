@@ -1,6 +1,6 @@
 <section class="page-header">
     <div class="container">
-        <h1><?php echo $pageTitle; ?></h1>
+        <h1><?= htmlspecialchars($pageTitle) ?></h1>
         <p>Thử kính ảo với công nghệ AR</p>
     </div>
 </section>
@@ -16,24 +16,31 @@
                 <li>Xem kết quả và điều chỉnh</li>
             </ol>
         </div>
-        
+
         <div class="ar-viewer">
             <div class="camera-placeholder">
-                <p>Khu vực hiển thị camera AR</p>
-                <button class="btn btn-primary">Bật camera</button>
+                <video id="video" autoplay playsinline></video>
+                <img id="glass-overlay" src="/assets/images/glasses.png" alt="Kính AR">
             </div>
-            
+
             <div class="glasses-selector">
                 <h3>Chọn mẫu kính</h3>
                 <div class="glasses-list">
-                    <div class="glasses-item active">
-                        <img src="/assets/images/glasses1.jpg" alt="Kính 1">
+                    <div class="glasses-item active" data-glass="default">
+                        <img src="/assets/images/glasses.png" alt="Kính mặc định">
+                        <span class="glass-name">Mặc định</span>
                     </div>
-                    <div class="glasses-item">
-                        <img src="/assets/images/glasses2.jpg" alt="Kính 2">
+                    <div class="glasses-item" data-glass="1">
+                        <img src="https://placehold.co/200x100/2c3e50/white?text=K%C3%ADnh+A" alt="Kính A">
+                        <span class="glass-name">Kính A</span>
                     </div>
-                    <div class="glasses-item">
-                        <img src="/assets/images/glasses3.jpg" alt="Kính 3">
+                    <div class="glasses-item" data-glass="2">
+                        <img src="https://placehold.co/200x100/e94560/white?text=K%C3%ADnh+B" alt="Kính B">
+                        <span class="glass-name">Kính B</span>
+                    </div>
+                    <div class="glasses-item" data-glass="3">
+                        <img src="https://placehold.co/200x100/3498db/white?text=K%C3%ADnh+C" alt="Kính C">
+                        <span class="glass-name">Kính C</span>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,49 @@
+/* ============================================
+   AR TRY-ON CSS
+   YÊU CẦU: Đặt ảnh kính cố định ở tâm màn hình camera
+   ============================================ */
+
+/* Reset phần camera */
+.camera-placeholder {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 0 auto;
+    aspect-ratio: 4/3;
+}
+
+/* Video từ camera */
+#video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transform: scaleX(-1);
+    /* Lật gương */
+}
+
+/*  ẢNH KÍNH CỐ ĐỊNH Ở TÂM MÀN HÌNH CAMERA */
+#glass-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 55%;
+    max-width: 300px;
+    height: auto;
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.9;
+    filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.3));
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    #glass-overlay {
+        width: 70%;
+        max-width: 200px;
+    }
+}
