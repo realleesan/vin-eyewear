@@ -16,13 +16,16 @@
                 <li>Xem kết quả và điều chỉnh</li>
             </ol>
         </div>
-        
+
         <div class="ar-viewer">
             <div class="camera-placeholder">
-                <p>Khu vực hiển thị camera AR</p>
-                <button class="btn btn-primary">Bật camera</button>
+                <!-- VIDEO CAMERA -->
+                <video id="video" autoplay playsinline></video>
+
+                <!-- ẢNH KÍNH Ở TÂM -->
+                <img id="glass-overlay" src="/assets/images/glasses.png" alt="Kính AR">
             </div>
-            
+
             <div class="glasses-selector">
                 <h3>Chọn mẫu kính</h3>
                 <div class="glasses-list">
@@ -40,3 +43,7 @@
         </div>
     </div>
 </section>
+
+<!-- CSS & JS -->
+<link rel="stylesheet" href="/assets/css/ar.tryon.css">
+<script src="/assets/js/ar-engine.js"></script>
