@@ -2,13 +2,9 @@
 /**
  * ar/tryon.php
  * Trang thử kính AR — overlay cố định tại tâm khung camera.
+ * Biến nhận từ ArController::tryon():
+ *   $glasses — mảng mẫu kính thử (id, name, overlay)
  */
-$glasses = [
-    ['id' => 'classic-round',   'name' => 'Classic Round Gold',  'overlay' => '/assets/images/ar/classic-round.svg'],
-    ['id' => 'aviator',         'name' => 'Aviator Silver',      'overlay' => '/assets/images/ar/aviator.svg'],
-    ['id' => 'square-tortoise', 'name' => 'Square Tortoise',     'overlay' => '/assets/images/ar/square-tortoise.svg'],
-    ['id' => 'cat-eye',         'name' => 'Cat Eye Black',       'overlay' => '/assets/images/ar/cat-eye.svg'],
-];
 ?>
 
 <!-- PAGE HEADER -->
