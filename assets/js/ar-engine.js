@@ -1,33 +1,54 @@
 /**
- * AR ENGINE - Bật camera thiết bị bằng getUserMedia
- * Tự động xin quyền và bật camera mặt trước
+ * AR ENGINE — Bật camera thiết bị + chọn mẫu kính overlay
  */
 
 (function() {
     'use strict';
 
-    // ============================================
-    // DOM ELEMENTS
-    // ============================================
     const video = document.getElementById('video');
     const glassOverlay = document.getElementById('glass-overlay');
+    const cameraStatus = document.getElementById('camera-status');
+    const cameraLoading = document.getElementById('camera-loading');
+    const cameraPlaceholder = document.getElementById('camera-placeholder');
+    const glassesItems = document.querySelectorAll('.glasses-item');
 
-    // ============================================
-    // TRẠNG THÁI
-    // ============================================
     let stream = null;
-    let facingMode = 'user'; // camera trước
+    const facingMode = 'user';
 
-    // ============================================
-    // XỬ LÝ LỖI
-    // ============================================
+    function setStatus(state, text) {
+        if (!cameraStatus) return;
+
+        cameraStatus.classList.remove('is-loading', 'is-active', 'is-error');
+        cameraStatus.classList.add('is-' + state);
+
+        const statusText = cameraStatus.querySelector('.status-text');
+        if (statusText) {
+            statusText.textContent = text;
+        }
+    }
+
+    function hideLoading() {
+        if (cameraLoading) {
+            cameraLoading.classList.add('is-hidden');
+        }
+    }
+
+    function showLoading() {
+        if (cameraLoading) {
+            cameraLoading.classList.remove('is-hidden');
+        }
+    }
+
     function handleError(error) {
+        hideLoading();
+        setStatus('error', 'Không thể bật camera');
+
         let message = 'Không thể bật camera. ';
-        
+
         switch (error.name) {
             case 'NotAllowedError':
             case 'PermissionDeniedError':
-                message += 'Vui lòng cấp quyền truy cập camera.';
+                message += 'Vui lòng cấp quyền truy cập camera trong cài đặt trình duyệt.';
                 break;
             case 'NotFoundError':
                 message += 'Không tìm thấy camera trên thiết bị.';
@@ -36,27 +57,25 @@
                 message += 'Camera đang bị sử dụng bởi ứng dụng khác.';
                 break;
             default:
-                message += error.message;
+                message += error.message || 'Vui lòng thử lại.';
         }
-        
+
         alert(message);
     }
 
-    // ============================================
-    //  BẬT CAMERA - DÙNG getUserMedia
-    // ============================================
     async function startCamera() {
         try {
-            // Dừng stream cũ nếu có
             if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+                stream.getTracks().forEach(function(track) { track.stop(); });
                 stream = null;
             }
 
-            // Cấu hình camera
+            setStatus('loading', 'Đang bật camera…');
+            showLoading();
+
             const constraints = {
                 video: {
-                    facingMode: facingMode, // 'user' = camera trước
+                    facingMode: facingMode,
                     width: { ideal: 640 },
                     height: { ideal: 480 },
                     frameRate: { ideal: 30 }
@@ -64,54 +83,72 @@
                 audio: false
             };
 
-            //  GỌI getUserMedia - XIN QUYỀN CAMERA
             stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-            // Gán stream vào video
             video.srcObject = stream;
             await video.play();
 
-            console.log('✅ Camera bật thành công!');
+            hideLoading();
+            setStatus('active', 'Camera đang hoạt động');
 
         } catch (error) {
-            console.error('❌ Lỗi camera:', error);
+            console.error('Lỗi camera:', error);
             handleError(error);
         }
     }
 
-    // ============================================
-    //  TỰ ĐỘNG BẬT CAMERA KHI LOAD TRANG
-    // ============================================
     async function autoStart() {
-        try {
-            // Kiểm tra trình duyệt hỗ trợ
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                throw new Error('Trình duyệt không hỗ trợ API camera.');
-            }
-
-            // TỰ ĐỘNG XIN QUYỀN VÀ BẬT CAMERA TRƯỚC
-            await startCamera();
-
-        } catch (error) {
-            console.warn('⚠️ Không thể tự động bật camera:', error.message);
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            hideLoading();
+            setStatus('error', 'Trình duyệt không hỗ trợ');
+            alert('Trình duyệt không hỗ trợ API camera. Vui lòng dùng Chrome, Edge hoặc Safari.');
+            return;
         }
+
+        await startCamera();
     }
 
-    // ============================================
-    // CHẠY KHI LOAD TRANG
-    // ============================================
+    function selectGlasses(item) {
+        const overlaySrc = item.getAttribute('data-overlay');
+        if (!overlaySrc || !glassOverlay) return;
+
+        glassesItems.forEach(function(el) {
+            el.classList.remove('active');
+            el.setAttribute('aria-selected', 'false');
+        });
+
+        item.classList.add('active');
+        item.setAttribute('aria-selected', 'true');
+
+        if (cameraPlaceholder) {
+            cameraPlaceholder.classList.add('is-switching');
+        }
+
+        glassOverlay.src = overlaySrc;
+
+        glassOverlay.onload = function() {
+            if (cameraPlaceholder) {
+                cameraPlaceholder.classList.remove('is-switching');
+            }
+        };
+    }
+
+    function initGlassesSelector() {
+        glassesItems.forEach(function(item) {
+            item.addEventListener('click', function() {
+                selectGlasses(item);
+            });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        //  TỰ ĐỘNG BẬT CAMERA
+        initGlassesSelector();
         autoStart();
     });
 
-    // Dừng camera khi rời trang
     window.addEventListener('beforeunload', function() {
         if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+            stream.getTracks().forEach(function(track) { track.stop(); });
         }
     });
-
-    console.log('AR Engine đã sẵn sàng!');
 
 })();
