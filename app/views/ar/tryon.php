@@ -1,49 +1,122 @@
-<section class="page-header">
-    <div class="container">
-        <h1><?= htmlspecialchars($pageTitle) ?></h1>
-        <p>Thử kính ảo với công nghệ AR</p>
-    </div>
-</section>
+<?php
+/**
+ * ar/tryon.php
+ * Trang thử kính AR — overlay cố định tại tâm khung camera.
+ */
+$glasses = [
+    ['id' => 'classic-round',   'name' => 'Classic Round Gold',  'overlay' => '/assets/images/ar/classic-round.svg'],
+    ['id' => 'aviator',         'name' => 'Aviator Silver',      'overlay' => '/assets/images/ar/aviator.svg'],
+    ['id' => 'square-tortoise', 'name' => 'Square Tortoise',     'overlay' => '/assets/images/ar/square-tortoise.svg'],
+    ['id' => 'cat-eye',         'name' => 'Cat Eye Black',       'overlay' => '/assets/images/ar/cat-eye.svg'],
+];
+?>
 
-<section class="ar-section">
-    <div class="container">
-        <div class="ar-instructions">
-            <h2>Hướng dẫn sử dụng</h2>
-            <ol>
-                <li>Cho phép truy cập camera của trình duyệt</li>
-                <li>Đặt khuôn mặt vào khung hình</li>
-                <li>Chọn mẫu kính bạn muốn thử</li>
-                <li>Xem kết quả và điều chỉnh</li>
-            </ol>
+<!-- PAGE HEADER -->
+<div class="page-header ar-page-header reveal">
+    <div class="page-header-inner">
+        <p class="page-eyebrow">Virtual Try-On</p>
+        <h1 class="page-title"><?= htmlspecialchars($pageTitle) ?></h1>
+        <p class="page-subtitle">
+            Thử gọng kính trực tiếp trên khuôn mặt bạn — cho phép camera và chọn mẫu yêu thích.
+        </p>
+    </div>
+</div>
+
+<!-- AR WORKSPACE -->
+<section class="ar-section reveal">
+    <div class="ar-layout">
+
+        <!-- Camera viewer -->
+        <div class="ar-viewer">
+            <div class="camera-frame">
+                <div class="camera-placeholder" id="camera-placeholder">
+                    <div class="camera-status" id="camera-status" aria-live="polite">
+                        <span class="status-dot" aria-hidden="true"></span>
+                        <span class="status-text">Đang khởi động camera…</span>
+                    </div>
+
+                    <div class="camera-loading" id="camera-loading" aria-hidden="true">
+                        <span class="loading-ring"></span>
+                        <p>Đang xin quyền camera</p>
+                    </div>
+
+                    <video id="video" autoplay playsinline muted></video>
+
+                    <div class="face-guide" aria-hidden="true">
+                        <span class="face-guide-oval"></span>
+                    </div>
+
+                    <img
+                        id="glass-overlay"
+                        src="<?= htmlspecialchars($glasses[0]['overlay']) ?>"
+                        alt="Kính AR"
+                    >
+                </div>
+
+                <p class="camera-hint">
+                    Đặt khuôn mặt vào khung oval · Ảnh chỉ hiển thị trên thiết bị của bạn
+                </p>
+            </div>
         </div>
 
-        <div class="ar-viewer">
-            <div class="camera-placeholder">
-                <video id="video" autoplay playsinline></video>
-                <img id="glass-overlay" src="/assets/images/glasses.png" alt="Kính AR">
+        <!-- Sidebar -->
+        <aside class="ar-sidebar">
+            <div class="ar-panel ar-instructions">
+                <h2 class="ar-panel-title">Hướng dẫn</h2>
+                <ol class="ar-steps">
+                    <li>
+                        <span class="step-num">01</span>
+                        <span class="step-text">Cho phép truy cập camera trên trình duyệt</span>
+                    </li>
+                    <li>
+                        <span class="step-num">02</span>
+                        <span class="step-text">Giữ khuôn mặt thẳng, đủ ánh sáng</span>
+                    </li>
+                    <li>
+                        <span class="step-num">03</span>
+                        <span class="step-text">Chọn mẫu kính bên dưới để xem thử</span>
+                    </li>
+                    <li>
+                        <span class="step-num">04</span>
+                        <span class="step-text">Khám phá bộ sưu tập và đặt hàng</span>
+                    </li>
+                </ol>
             </div>
 
-            <div class="glasses-selector">
-                <h3>Chọn mẫu kính</h3>
-                <div class="glasses-list">
-                    <div class="glasses-item active" data-glass="default">
-                        <img src="/assets/images/glasses.png" alt="Kính mặc định">
-                        <span class="glass-name">Mặc định</span>
-                    </div>
-                    <div class="glasses-item" data-glass="1">
-                        <img src="https://placehold.co/200x100/2c3e50/white?text=K%C3%ADnh+A" alt="Kính A">
-                        <span class="glass-name">Kính A</span>
-                    </div>
-                    <div class="glasses-item" data-glass="2">
-                        <img src="https://placehold.co/200x100/e94560/white?text=K%C3%ADnh+B" alt="Kính B">
-                        <span class="glass-name">Kính B</span>
-                    </div>
-                    <div class="glasses-item" data-glass="3">
-                        <img src="https://placehold.co/200x100/3498db/white?text=K%C3%ADnh+C" alt="Kính C">
-                        <span class="glass-name">Kính C</span>
-                    </div>
+            <div class="ar-panel glasses-selector">
+                <div class="ar-panel-header">
+                    <h2 class="ar-panel-title">Chọn mẫu kính</h2>
+                    <span class="ar-panel-count"><?= count($glasses) ?> mẫu</span>
+                </div>
+
+                <div class="glasses-list" role="listbox" aria-label="Danh sách kính thử">
+                    <?php foreach ($glasses as $index => $glass): ?>
+                    <button
+                        type="button"
+                        class="glasses-item<?= $index === 0 ? ' active' : '' ?>"
+                        role="option"
+                        aria-selected="<?= $index === 0 ? 'true' : 'false' ?>"
+                        data-glass="<?= htmlspecialchars($glass['id']) ?>"
+                        data-overlay="<?= htmlspecialchars($glass['overlay']) ?>"
+                    >
+                        <span class="glasses-thumb">
+                            <img
+                                src="<?= htmlspecialchars($glass['overlay']) ?>"
+                                alt=""
+                                loading="lazy"
+                            >
+                        </span>
+                        <span class="glass-name"><?= htmlspecialchars($glass['name']) ?></span>
+                    </button>
+                    <?php endforeach; ?>
                 </div>
             </div>
-        </div>
+
+            <div class="ar-cta">
+                <a href="/product" class="btn-primary">Xem bộ sưu tập</a>
+                <a href="/contact" class="btn-outline">Tư vấn miễn phí</a>
+            </div>
+        </aside>
+
     </div>
 </section>
