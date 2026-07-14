@@ -1,0 +1,381 @@
+/* ============================================================
+   Vin Eyewear - Contact Page Stylesheet
+   Design System: Lower East Heritage
+   Sharp 0px · High-contrast · Bold Borders · Heritage Yellow
+   ============================================================ */
+
+/* --- Page Header Section --- */
+.page-header {
+    background: var(--gray);
+    border-bottom: 1.5px solid var(--black);
+    padding: 80px 0;
+    text-align: center;
+}
+
+.page-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--outline);
+    margin-bottom: 16px;
+}
+
+.page-header h1 {
+    font-family: var(--font-serif);
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--black);
+    margin-bottom: 16px;
+}
+
+.page-desc {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    color: var(--on-surface-variant);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* --- Contact Section Layout --- */
+.contact-section {
+    padding: 80px 0;
+}
+
+.section-title {
+    font-family: var(--font-serif);
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 40px;
+    color: var(--black);
+    position: relative;
+}
+
+/* --- Interactive Store Locator --- */
+.store-locator-wrapper {
+    display: grid;
+    grid-template-columns: 1.2fr 1.8fr;
+    gap: 40px;
+    margin-bottom: 100px;
+}
+
+/* Store Cards List */
+.store-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.store-card {
+    background: var(--white);
+    border: 1.5px solid var(--black);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    outline: none;
+    position: relative;
+}
+
+/* Left Accent Highlight for Active Card */
+.store-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    background: var(--yellow);
+    transition: width 0.15s ease;
+}
+
+.store-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px var(--black);
+}
+
+.store-card.active {
+    border-width: 2px;
+    box-shadow: 8px 8px 0px var(--black);
+}
+
+.store-card.active::before {
+    width: 6px;
+}
+
+/* Store Card Media */
+.store-image-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--gray);
+    overflow: hidden;
+    border-bottom: 1.5px solid var(--black);
+}
+
+.store-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.store-card:hover .store-img {
+    transform: scale(1.03);
+}
+
+.store-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 10px;
+}
+
+/* Store Card Info */
+.store-card-content {
+    padding: 24px;
+}
+
+.store-card-title {
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 16px;
+}
+
+.store-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.store-detail-item {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+}
+
+.store-detail-item .label-mono {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--outline);
+    width: 100px;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.store-detail-item .detail-value {
+    color: var(--on-surface);
+}
+
+.store-phone-link {
+    color: var(--black);
+    font-weight: 600;
+    text-decoration: underline;
+    transition: color 0.15s;
+}
+
+.store-phone-link:hover {
+    color: var(--yellow);
+    background: var(--black);
+    padding: 0 4px;
+}
+
+/* Store Map Viewport */
+.store-map-viewport {
+    border: 2px solid var(--black);
+    background: var(--gray);
+    height: 600px;
+    position: sticky;
+    top: 88px; /* Sticky layout relative to header height */
+    z-index: 10;
+}
+
+.map-container {
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+
+.map-container.active {
+    display: block;
+}
+
+/* --- Contact Form Section --- */
+.contact-form-section {
+    border-top: 1.5px solid var(--black);
+    padding-top: 80px;
+    margin-top: 80px;
+}
+
+.contact-form-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1.8fr;
+    gap: 64px;
+}
+
+.form-title {
+    font-family: var(--font-serif);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 20px;
+}
+
+.form-text {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--on-surface-variant);
+    margin-bottom: 32px;
+}
+
+/* Direct Contact Channels info */
+.direct-contact-channels {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.channel-card {
+    border: 1.5px solid var(--black);
+    background: var(--white);
+    padding: 20px;
+}
+
+.channel-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--outline);
+    display: block;
+    margin-bottom: 6px;
+}
+
+.channel-value {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--black);
+}
+
+/* Vin Eyewear Native Form */
+.vin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--black);
+}
+
+.form-group label .required {
+    color: var(--black);
+    font-weight: 800;
+}
+
+.form-group input,
+.form-group textarea {
+    border: 1.5px solid var(--black);
+    background: var(--white);
+    padding: 14px 18px;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--black);
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--black);
+    box-shadow: 4px 4px 0px var(--yellow);
+}
+
+.btn-submit {
+    align-self: flex-start;
+    padding: 14px 36px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border: 1.5px solid var(--black);
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 900px) {
+    .page-header {
+        padding: 60px 0;
+    }
+    
+    .page-header h1 {
+        font-size: 2.5rem;
+    }
+    
+    .store-locator-wrapper {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        margin-bottom: 60px;
+    }
+    
+    .store-map-viewport {
+        height: 450px;
+        position: static;
+    }
+    
+    .contact-form-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    
+    .contact-form-section {
+        padding-top: 60px;
+        margin-top: 60px;
+    }
+}
+
+@media (max-width: 600px) {
+    .form-row-2 {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    
+    .btn-submit {
+        width: 100%;
+        text-align: center;
+    }
+}
