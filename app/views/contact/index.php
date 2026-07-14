@@ -1,6 +1,12 @@
-<link rel="stylesheet" href="/assets/css/contact.css">
-<script src="/assets/js/contact.js" defer></script>
-
+<?php
+/**
+ * contact/index.php
+ * Trang liên hệ — hệ thống cửa hàng + bản đồ Google Map + form liên hệ.
+ * Biến nhận từ ContactController::index():
+ *   $stores   — mảng cửa hàng (id, name, address, phone, hours, map_url, image)
+ *   $pageTitle — tiêu đề trang
+ */
+?>
 <section class="page-header">
     <div class="container">
         <p class="page-eyebrow">VIN EYEWEAR &middot; DI SẢN &amp; CÔNG NGHỆ</p>
