@@ -29,6 +29,16 @@
             <link rel="stylesheet" href="/assets/css/contact.css">
         <?php endif; ?>
     <?php endif; ?>
+
+    <!-- CSS RIÊNG CHO ABOUT (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && $viewName === 'about/index'): ?>
+        <link rel="stylesheet" href="/assets/css/about.css">
+    <?php endif; ?>
+
+    <!-- CSS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && $viewName === 'event/index'): ?>
+        <link rel="stylesheet" href="/assets/css/event.css">
+    <?php endif; ?>
 </head>
 
 <body>
@@ -55,6 +65,11 @@
         <?php if ($viewName === 'contact/index'): ?>
             <script src="/assets/js/contact.js" defer></script>
         <?php endif; ?>
+    <?php endif; ?>
+
+    <!-- JS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && $viewName === 'event/index'): ?>
+        <script src="/assets/js/event.js" defer></script>
     <?php endif; ?>
 
     <!-- Scroll reveal dùng chung toàn site: hiện dần phần tử .reveal khi cuộn tới -->
