@@ -20,9 +20,14 @@
     <link rel="stylesheet" href="/assets/css/global.css">
     <link rel="stylesheet" href="/assets/css/layout.css">
 
-    <!-- CSS RIÊNG CHO AR (CHỈ LOAD KHI CẦN) -->
-    <?php if (isset($viewName) && strpos($viewName, 'ar/') === 0): ?>
-        <link rel="stylesheet" href="/assets/css/ar.tryon.css">
+    <!-- CSS RIÊNG CHO TỪNG MODULE (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName)): ?>
+        <?php if (strpos($viewName, 'ar/') === 0): ?>
+            <link rel="stylesheet" href="/assets/css/ar.tryon.css">
+        <?php endif; ?>
+        <?php if ($viewName === 'contact/index'): ?>
+            <link rel="stylesheet" href="/assets/css/contact.css">
+        <?php endif; ?>
     <?php endif; ?>
 
     <!-- CSS RIÊNG CHO ABOUT (CHỈ LOAD KHI CẦN) -->
@@ -52,9 +57,14 @@
     <!-- JS mobile menu dùng chung -->
     <script src="/assets/js/mobile-menu.js" defer></script>
 
-    <!-- JS RIÊNG CHO AR (CHỈ LOAD KHI CẦN) -->
-    <?php if (isset($viewName) && strpos($viewName, 'ar/') === 0): ?>
-        <script src="/assets/js/ar-engine.js" defer></script>
+    <!-- JS RIÊNG CHO TỪNG MODULE (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName)): ?>
+        <?php if (strpos($viewName, 'ar/') === 0): ?>
+            <script src="/assets/js/ar-engine.js" defer></script>
+        <?php endif; ?>
+        <?php if ($viewName === 'contact/index'): ?>
+            <script src="/assets/js/contact.js" defer></script>
+        <?php endif; ?>
     <?php endif; ?>
 
     <!-- JS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
