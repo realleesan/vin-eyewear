@@ -3,22 +3,6 @@
    Heritage-meets-Downtown-Cool Design System
    ============================================ */
 
-/* Typography System */
-@import url('https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Hanken+Grotesk:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-
-/* Color Variables */
-:root {
-    --heritage-yellow: #FFCC00;
-    --ink-black: #000000;
-    --paper-white: #FFFFFF;
-    --canvas-gray: #F6F5F1;
-    --surface-dim: #e3d9c7;
-    --surface-container: #f7eddb;
-    --on-surface: #1f1b10;
-    --on-surface-variant: #4e4632;
-    --outline: #80765f;
-}
-
 /* Base Styles */
 * {
     margin: 0;
@@ -27,11 +11,11 @@
 }
 
 body {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 16px;
     line-height: 1.5;
-    color: var(--ink-black);
-    background-color: var(--paper-white);
+    color: var(--black);
+    background-color: var(--white);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -45,28 +29,28 @@ body {
 
 /* Page Header */
 .page-header {
-    background-color: var(--heritage-yellow);
+    background-color: var(--yellow);
     padding: 64px 0;
     text-align: center;
-    border-bottom: 2px solid var(--ink-black);
+    border-bottom: 2px solid var(--black);
 }
 
 .page-header h1 {
-    font-family: 'Libre Caslon Text', serif;
+    font-family: var(--font-serif);
     font-size: 48px;
     font-weight: 700;
     line-height: 56px;
-    color: var(--ink-black);
+    color: var(--black);
     text-transform: uppercase;
     letter-spacing: -0.02em;
     margin-bottom: 8px;
 }
 
 .page-header p {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 18px;
     font-weight: 500;
-    color: var(--ink-black);
+    color: var(--black);
     text-transform: uppercase;
     letter-spacing: 0.1em;
 }
@@ -90,7 +74,7 @@ body {
 }
 
 .subheading-caps {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 800;
     line-height: 20px;
@@ -102,17 +86,17 @@ body {
 }
 
 .headline {
-    font-family: 'Libre Caslon Text', serif;
+    font-family: var(--font-serif);
     font-size: 48px;
     font-weight: 700;
     line-height: 56px;
-    color: var(--ink-black);
+    color: var(--black);
     margin-bottom: 32px;
     letter-spacing: -0.02em;
 }
 
 .story-text p {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 18px;
     font-weight: 400;
     line-height: 28px;
@@ -132,16 +116,16 @@ body {
     width: 100%;
     height: auto;
     display: block;
-    border: 2px solid var(--ink-black);
+    border: 2px solid var(--black);
 }
 
 /* Mission Section */
 .mission-section {
-    background-color: var(--heritage-yellow);
+    background-color: var(--yellow);
     padding: 64px;
     text-align: center;
     margin-bottom: 120px;
-    border: 2px solid var(--ink-black);
+    border: 2px solid var(--black);
 }
 
 .mission-content {
@@ -156,11 +140,11 @@ body {
 }
 
 .mission-section p {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 18px;
     font-weight: 400;
     line-height: 28px;
-    color: var(--ink-black);
+    color: var(--black);
 }
 
 /* Values Section */
@@ -184,14 +168,14 @@ body {
 }
 
 .value-card {
-    background-color: var(--paper-white);
-    border: 2px solid var(--ink-black);
+    background-color: var(--white);
+    border: 2px solid var(--black);
     padding: 32px;
     transition: all 0.3s ease;
 }
 
 .value-card:hover {
-    background-color: var(--heritage-yellow);
+    background-color: var(--yellow);
     transform: translateY(-4px);
 }
 
@@ -201,18 +185,18 @@ body {
 }
 
 .value-card h3 {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 16px;
     font-weight: 700;
     line-height: 24px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--ink-black);
+    color: var(--black);
     margin-bottom: 16px;
 }
 
 .value-card p {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 400;
     line-height: 20px;
@@ -240,41 +224,41 @@ body {
 }
 
 .location-card {
-    background-color: var(--paper-white);
-    border: 2px solid var(--ink-black);
+    background-color: var(--white);
+    border: 2px solid var(--black);
     padding: 40px;
     position: relative;
 }
 
 .location-card.primary {
-    background-color: var(--heritage-yellow);
+    background-color: var(--yellow);
 }
 
 .location-badge {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 500;
     line-height: 16px;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    background-color: var(--ink-black);
-    color: var(--heritage-yellow);
+    background-color: var(--black);
+    color: var(--yellow);
     padding: 8px 16px;
     display: inline-block;
     margin-bottom: 24px;
 }
 
 .location-card h3 {
-    font-family: 'Libre Caslon Text', serif;
+    font-family: var(--font-serif);
     font-size: 32px;
     font-weight: 700;
     line-height: 40px;
-    color: var(--ink-black);
+    color: var(--black);
     margin-bottom: 24px;
 }
 
 .location-address p {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 16px;
     font-weight: 400;
     line-height: 24px;
@@ -285,11 +269,11 @@ body {
 .location-hours {
     margin-top: 32px;
     padding-top: 24px;
-    border-top: 1px solid var(--ink-black);
+    border-top: 1px solid var(--black);
 }
 
 .label-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 500;
     line-height: 16px;
@@ -301,16 +285,16 @@ body {
 }
 
 .location-hours p {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 500;
     line-height: 20px;
-    color: var(--ink-black);
+    color: var(--black);
 }
 
 /* CTA Section */
 .cta-section {
-    background-color: var(--ink-black);
+    background-color: var(--black);
     padding: 80px 40px;
     text-align: center;
 }
@@ -321,16 +305,16 @@ body {
 }
 
 .cta-section .headline {
-    color: var(--paper-white);
+    color: var(--white);
     margin-bottom: 24px;
 }
 
 .cta-section p {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 18px;
     font-weight: 400;
     line-height: 28px;
-    color: var(--paper-white);
+    color: var(--white);
     margin-bottom: 40px;
 }
 
@@ -343,14 +327,14 @@ body {
 
 /* Buttons */
 .btn {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 700;
     line-height: 20px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 16px 32px;
-    border: 2px solid var(--ink-black);
+    border: 2px solid var(--black);
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
@@ -359,23 +343,23 @@ body {
 }
 
 .btn-primary {
-    background-color: var(--heritage-yellow);
-    color: var(--ink-black);
+    background-color: var(--yellow);
+    color: var(--black);
 }
 
 .btn-primary:hover {
-    background-color: var(--paper-white);
+    background-color: var(--white);
 }
 
 .btn-secondary {
     background-color: transparent;
-    color: var(--paper-white);
-    border-color: var(--paper-white);
+    color: var(--white);
+    border-color: var(--white);
 }
 
 .btn-secondary:hover {
-    background-color: var(--paper-white);
-    color: var(--ink-black);
+    background-color: var(--white);
+    color: var(--black);
 }
 
 /* Responsive Design */

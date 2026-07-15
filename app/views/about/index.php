@@ -19,7 +19,7 @@
                 </div>
             </div>
             <div class="story-image">
-                <img src="/assets/images/about/hero-story.jpg" alt="Câu chuyện Vin Eyewear">
+                <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&h=600&fit=crop" alt="Câu chuyện Vin Eyewear">
             </div>
         </div>
 

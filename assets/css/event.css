@@ -3,23 +3,10 @@
    Heritage-meets-Downtown-Cool Design System
    ============================================ */
 
-/* Color Variables */
-:root {
-    --heritage-yellow: #FFCC00;
-    --ink-black: #000000;
-    --paper-white: #FFFFFF;
-    --canvas-gray: #F6F5F1;
-    --surface-dim: #e3d9c7;
-    --surface-container: #f7eddb;
-    --on-surface: #1f1b10;
-    --on-surface-variant: #4e4632;
-    --outline: #80765f;
-}
-
 /* Events Section */
 .events-section {
     padding: 120px 0;
-    background-color: var(--paper-white);
+    background-color: var(--white);
 }
 
 /* Event Slideshow */
@@ -50,8 +37,8 @@
     position: relative;
     aspect-ratio: 16/9;
     overflow: hidden;
-    border: 2px solid var(--ink-black);
-    background-color: var(--canvas-gray);
+    border: 2px solid var(--black);
+    background-color: var(--gray);
 }
 
 .slide-thumbnail img {
@@ -72,35 +59,35 @@
     right: 0;
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
     padding: 24px;
-    color: var(--paper-white);
+    color: var(--white);
 }
 
 .slide-date {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     display: block;
     margin-bottom: 8px;
-    color: var(--heritage-yellow);
+    color: var(--yellow);
 }
 
 .slide-title {
-    font-family: 'Libre Caslon Text', serif;
+    font-family: var(--font-serif);
     font-size: 20px;
     font-weight: 700;
     line-height: 28px;
     margin-bottom: 8px;
-    color: var(--paper-white);
+    color: var(--white);
 }
 
 .slide-preview {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 400;
     line-height: 20px;
-    color: var(--paper-white);
+    color: var(--white);
     opacity: 0.9;
 }
 
@@ -115,9 +102,9 @@
 .nav-btn {
     width: 48px;
     height: 48px;
-    background-color: var(--ink-black);
-    color: var(--heritage-yellow);
-    border: 2px solid var(--ink-black);
+    background-color: var(--black);
+    color: var(--yellow);
+    border: 2px solid var(--black);
     font-size: 24px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -125,8 +112,8 @@
 }
 
 .nav-btn:hover {
-    background-color: var(--heritage-yellow);
-    color: var(--ink-black);
+    background-color: var(--yellow);
+    color: var(--black);
 }
 
 .nav-dots {
@@ -145,12 +132,12 @@
 }
 
 .nav-dot.active {
-    background-color: var(--heritage-yellow);
+    background-color: var(--yellow);
     width: 32px;
 }
 
 .nav-dot:hover {
-    background-color: var(--ink-black);
+    background-color: var(--black);
 }
 
 /* Event Detail Modal */
@@ -174,13 +161,13 @@
 }
 
 .modal-content {
-    background-color: var(--paper-white);
+    background-color: var(--white);
     max-width: 1000px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    border: 2px solid var(--ink-black);
+    border: 2px solid var(--black);
 }
 
 .modal-close {
@@ -189,9 +176,9 @@
     right: 16px;
     width: 48px;
     height: 48px;
-    background-color: var(--ink-black);
-    color: var(--heritage-yellow);
-    border: 2px solid var(--ink-black);
+    background-color: var(--black);
+    color: var(--yellow);
+    border: 2px solid var(--black);
     font-size: 32px;
     cursor: pointer;
     z-index: 10;
@@ -203,8 +190,8 @@
 }
 
 .modal-close:hover {
-    background-color: var(--heritage-yellow);
-    color: var(--ink-black);
+    background-color: var(--yellow);
+    color: var(--black);
 }
 
 .modal-body {
@@ -214,7 +201,7 @@
 }
 
 .event-detail-image {
-    background-color: var(--canvas-gray);
+    background-color: var(--gray);
     aspect-ratio: 16/10;
 }
 
@@ -231,7 +218,7 @@
 }
 
 .label-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 500;
     line-height: 16px;
@@ -243,17 +230,17 @@
 }
 
 .headline {
-    font-family: 'Libre Caslon Text', serif;
+    font-family: var(--font-serif);
     font-size: 36px;
     font-weight: 700;
     line-height: 44px;
-    color: var(--ink-black);
+    color: var(--black);
     margin-bottom: 24px;
     letter-spacing: -0.02em;
 }
 
 .event-detail-description {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 16px;
     font-weight: 400;
     line-height: 24px;
@@ -275,7 +262,7 @@
 }
 
 .subheading-caps {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 800;
     line-height: 20px;
@@ -300,15 +287,15 @@
 
 .product-card {
     flex: 0 0 250px;
-    border: 2px solid var(--ink-black);
+    border: 2px solid var(--black);
     padding: 16px;
-    background-color: var(--paper-white);
+    background-color: var(--white);
     transition: all 0.3s ease;
     cursor: pointer;
 }
 
 .product-card:hover {
-    background-color: var(--heritage-yellow);
+    background-color: var(--yellow);
     transform: translateY(-4px);
 }
 
@@ -317,15 +304,15 @@
     aspect-ratio: 4/3;
     object-fit: cover;
     margin-bottom: 16px;
-    background-color: var(--canvas-gray);
+    background-color: var(--gray);
 }
 
 .product-card h4 {
-    font-family: 'Libre Caslon Text', serif;
+    font-family: var(--font-serif);
     font-size: 18px;
     font-weight: 700;
     line-height: 24px;
-    color: var(--ink-black);
+    color: var(--black);
     margin-bottom: 8px;
     text-transform: uppercase;
 }
@@ -333,7 +320,7 @@
 .product-card .label-mono {
     font-size: 14px;
     font-weight: 500;
-    color: var(--ink-black);
+    color: var(--black);
     margin-bottom: 0;
 }
 
@@ -351,9 +338,9 @@
 .carousel-btn {
     width: 40px;
     height: 40px;
-    background-color: var(--ink-black);
-    color: var(--heritage-yellow);
-    border: 2px solid var(--ink-black);
+    background-color: var(--black);
+    color: var(--yellow);
+    border: 2px solid var(--black);
     font-size: 20px;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -362,8 +349,8 @@
 }
 
 .carousel-btn:hover {
-    background-color: var(--heritage-yellow);
-    color: var(--ink-black);
+    background-color: var(--yellow);
+    color: var(--black);
 }
 
 /* Event CTA */
@@ -372,14 +359,14 @@
 }
 
 .btn {
-    font-family: 'Hanken Grotesk', sans-serif;
+    font-family: var(--font-sans);
     font-size: 14px;
     font-weight: 700;
     line-height: 20px;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 16px 32px;
-    border: 2px solid var(--ink-black);
+    border: 2px solid var(--black);
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
@@ -388,12 +375,12 @@
 }
 
 .btn-primary {
-    background-color: var(--heritage-yellow);
-    color: var(--ink-black);
+    background-color: var(--yellow);
+    color: var(--black);
 }
 
 .btn-primary:hover {
-    background-color: var(--paper-white);
+    background-color: var(--white);
 }
 
 /* Responsive Design */

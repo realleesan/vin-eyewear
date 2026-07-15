@@ -24,6 +24,16 @@
     <?php if (isset($viewName) && strpos($viewName, 'ar/') === 0): ?>
         <link rel="stylesheet" href="/assets/css/ar.tryon.css">
     <?php endif; ?>
+
+    <!-- CSS RIÊNG CHO ABOUT (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && $viewName === 'about/index'): ?>
+        <link rel="stylesheet" href="/assets/css/about.css">
+    <?php endif; ?>
+
+    <!-- CSS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && $viewName === 'event/index'): ?>
+        <link rel="stylesheet" href="/assets/css/event.css">
+    <?php endif; ?>
 </head>
 
 <body>
@@ -45,6 +55,11 @@
     <!-- JS RIÊNG CHO AR (CHỈ LOAD KHI CẦN) -->
     <?php if (isset($viewName) && strpos($viewName, 'ar/') === 0): ?>
         <script src="/assets/js/ar-engine.js" defer></script>
+    <?php endif; ?>
+
+    <!-- JS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && $viewName === 'event/index'): ?>
+        <script src="/assets/js/event.js" defer></script>
     <?php endif; ?>
 
     <!-- Scroll reveal dùng chung toàn site: hiện dần phần tử .reveal khi cuộn tới -->
