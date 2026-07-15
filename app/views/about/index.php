@@ -1,6 +1,6 @@
 <section class="page-header">
     <div class="container">
-        <h1><?php echo $pageTitle; ?></h1>
+        <h1><?= htmlspecialchars($pageTitle) ?></h1>
         <p>Về Vin Eyewear</p>
     </div>
 </section>
