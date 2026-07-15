@@ -1,0 +1,483 @@
+/* ============================================
+   VIN EYEWEAR - ABOUT PAGE STYLES
+   Heritage-meets-Downtown-Cool Design System
+   ============================================ */
+
+/* Typography System */
+@import url('https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:wght@400;700&family=Hanken+Grotesk:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* Color Variables */
+:root {
+    --heritage-yellow: #FFCC00;
+    --ink-black: #000000;
+    --paper-white: #FFFFFF;
+    --canvas-gray: #F6F5F1;
+    --surface-dim: #e3d9c7;
+    --surface-container: #f7eddb;
+    --on-surface: #1f1b10;
+    --on-surface-variant: #4e4632;
+    --outline: #80765f;
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink-black);
+    background-color: var(--paper-white);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Page Header */
+.page-header {
+    background-color: var(--heritage-yellow);
+    padding: 64px 0;
+    text-align: center;
+    border-bottom: 2px solid var(--ink-black);
+}
+
+.page-header h1 {
+    font-family: 'Libre Caslon Text', serif;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 56px;
+    color: var(--ink-black);
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink-black);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* About Section */
+.about-section {
+    padding: 120px 0;
+}
+
+/* Hero Story Section */
+.hero-story {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    margin-bottom: 120px;
+}
+
+.story-content {
+    padding-right: 24px;
+}
+
+.subheading-caps {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    line-height: 20px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--on-surface-variant);
+    display: block;
+    margin-bottom: 16px;
+}
+
+.headline {
+    font-family: 'Libre Caslon Text', serif;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 56px;
+    color: var(--ink-black);
+    margin-bottom: 32px;
+    letter-spacing: -0.02em;
+}
+
+.story-text p {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 28px;
+    color: var(--on-surface);
+    margin-bottom: 24px;
+}
+
+.story-text p:last-child {
+    margin-bottom: 0;
+}
+
+.story-image {
+    position: relative;
+}
+
+.story-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border: 2px solid var(--ink-black);
+}
+
+/* Mission Section */
+.mission-section {
+    background-color: var(--heritage-yellow);
+    padding: 64px;
+    text-align: center;
+    margin-bottom: 120px;
+    border: 2px solid var(--ink-black);
+}
+
+.mission-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.mission-section .headline {
+    font-size: 36px;
+    line-height: 44px;
+    margin-bottom: 24px;
+}
+
+.mission-section p {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 28px;
+    color: var(--ink-black);
+}
+
+/* Values Section */
+.values-section {
+    margin-bottom: 120px;
+}
+
+.values-section .subheading-caps {
+    text-align: center;
+}
+
+.values-section .headline {
+    text-align: center;
+    margin-bottom: 64px;
+}
+
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+}
+
+.value-card {
+    background-color: var(--paper-white);
+    border: 2px solid var(--ink-black);
+    padding: 32px;
+    transition: all 0.3s ease;
+}
+
+.value-card:hover {
+    background-color: var(--heritage-yellow);
+    transform: translateY(-4px);
+}
+
+.value-icon {
+    font-size: 32px;
+    margin-bottom: 16px;
+}
+
+.value-card h3 {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-black);
+    margin-bottom: 16px;
+}
+
+.value-card p {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    color: var(--on-surface-variant);
+}
+
+/* Locations Section */
+.locations-section {
+    margin-bottom: 120px;
+}
+
+.locations-section .subheading-caps {
+    text-align: center;
+}
+
+.locations-section .headline {
+    text-align: center;
+    margin-bottom: 64px;
+}
+
+.locations-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
+}
+
+.location-card {
+    background-color: var(--paper-white);
+    border: 2px solid var(--ink-black);
+    padding: 40px;
+    position: relative;
+}
+
+.location-card.primary {
+    background-color: var(--heritage-yellow);
+}
+
+.location-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background-color: var(--ink-black);
+    color: var(--heritage-yellow);
+    padding: 8px 16px;
+    display: inline-block;
+    margin-bottom: 24px;
+}
+
+.location-card h3 {
+    font-family: 'Libre Caslon Text', serif;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 40px;
+    color: var(--ink-black);
+    margin-bottom: 24px;
+}
+
+.location-address p {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    color: var(--on-surface);
+    margin-bottom: 8px;
+}
+
+.location-hours {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--ink-black);
+}
+
+.label-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 16px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--on-surface-variant);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.location-hours p {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    color: var(--ink-black);
+}
+
+/* CTA Section */
+.cta-section {
+    background-color: var(--ink-black);
+    padding: 80px 40px;
+    text-align: center;
+}
+
+.cta-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.cta-section .headline {
+    color: var(--paper-white);
+    margin-bottom: 24px;
+}
+
+.cta-section p {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 28px;
+    color: var(--paper-white);
+    margin-bottom: 40px;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn {
+    font-family: 'Hanken Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 16px 32px;
+    border: 2px solid var(--ink-black);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    border-radius: 0;
+}
+
+.btn-primary {
+    background-color: var(--heritage-yellow);
+    color: var(--ink-black);
+}
+
+.btn-primary:hover {
+    background-color: var(--paper-white);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--paper-white);
+    border-color: var(--paper-white);
+}
+
+.btn-secondary:hover {
+    background-color: var(--paper-white);
+    color: var(--ink-black);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .values-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .headline {
+        font-size: 36px;
+        line-height: 44px;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        padding: 40px 0;
+    }
+    
+    .page-header h1 {
+        font-size: 32px;
+        line-height: 40px;
+    }
+    
+    .about-section {
+        padding: 64px 0;
+    }
+    
+    .hero-story {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        margin-bottom: 80px;
+    }
+    
+    .story-content {
+        padding-right: 0;
+    }
+    
+    .mission-section {
+        padding: 40px 24px;
+        margin-bottom: 80px;
+    }
+    
+    .values-section {
+        margin-bottom: 80px;
+    }
+    
+    .values-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .locations-section {
+        margin-bottom: 80px;
+    }
+    
+    .locations-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    
+    .location-card {
+        padding: 32px;
+    }
+    
+    .location-card h3 {
+        font-size: 24px;
+        line-height: 32px;
+    }
+    
+    .cta-section {
+        padding: 48px 24px;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn {
+        width: 100%;
+        max-width: 300px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 16px;
+    }
+    
+    .headline {
+        font-size: 28px;
+        line-height: 36px;
+    }
+    
+    .story-text p {
+        font-size: 16px;
+        line-height: 24px;
+    }
+    
+    .value-card {
+        padding: 24px;
+    }
+}
