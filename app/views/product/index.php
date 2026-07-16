@@ -5,6 +5,7 @@
  *   $products — mảng sản phẩm (id, name, category, price, image, badge)
  * Card dùng component chung .product-card (định nghĩa ở layout.css), đồng bộ với home.
  */
+?>
 
 <!-- ============================================================
      PAGE HEADER
