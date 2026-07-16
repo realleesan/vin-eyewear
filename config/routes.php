@@ -9,6 +9,7 @@ return [
     '/' => 'HomeController@index',
     'home' => 'HomeController@index',
     'product' => 'ProductController@index',
+    'product/detail' => 'ProductDetailController@index',
     'about' => 'AboutController@index',
     'event' => 'EventController@index',
     'ar' => 'ArController@tryon',

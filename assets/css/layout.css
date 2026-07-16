@@ -74,18 +74,59 @@ button, input, select, textarea {
 }
 
 /* ============================================
-   ANNOUNCEMENT BAR
+   ANNOUNCEMENT BAR — nền đen, chữ trắng
+   Message căn giữa tuyệt đối; meta (ngôn ngữ/tiền tệ) neo phải.
    ============================================ */
 .announcement-bar {
-    background: var(--yellow);
-    color: var(--black);
-    font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 800;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    min-height: 46px;
+    padding: 0 var(--margin);
+    background: var(--black);
+    color: var(--white);
+}
+
+.announcement-msg {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
     text-align: center;
-    padding: 10px 16px;
+}
+
+.announcement-arrow {
+    background: none;
+    border: none;
+    color: var(--white);
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px 8px;
+    cursor: pointer;
+    opacity: 0.75;
+}
+
+.announcement-arrow:hover { opacity: 1; }
+
+.announcement-meta {
+    position: absolute;
+    right: var(--margin);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--white);
+    white-space: nowrap;
+}
+
+.announcement-meta .caret {
+    font-size: 9px;
+    opacity: 0.7;
 }
 
 /* ============================================
@@ -98,87 +139,99 @@ button, input, select, textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 64px;
+    gap: 24px;
+    min-height: 74px;
     padding: 0 var(--margin);
-    background: var(--white);
-    border-bottom: 1.5px solid var(--black);
-}
-
-/* Logo */
-.site-logo {
-    font-family: var(--font-serif);
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
+    background: var(--yellow);
     color: var(--black);
 }
 
-/* Nav */
+/* Logo — wordmark đen, đậm, giãn chữ */
+.site-logo {
+    font-family: var(--font-sans);
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--black);
+    white-space: nowrap;
+}
+
+/* Nav — căn giữa header */
 .main-nav {
-    height: 64px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
 }
 
 .nav-menu {
     display: flex;
     align-items: center;
-    height: 64px;
+    gap: 4px;
 }
 
 .nav-menu li a {
     display: flex;
     align-items: center;
-    height: 64px;
-    padding: 0 20px;
+    height: 74px;
+    padding: 0 16px;
     font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 13px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.06em;
     color: var(--black);
-    border-right: 1px solid #e0e0e0;
-    transition: background 0.15s;
-}
-
-.nav-menu li:first-child a {
-    border-left: 1px solid #e0e0e0;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.15s;
 }
 
 .nav-menu li a:hover {
-    background: var(--yellow);
+    border-bottom-color: var(--black);
 }
 
-/* Right side: account + cart */
+/* Right side: icons + CTA */
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 18px;
 }
 
-.header-account {
-    font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+.header-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
     color: var(--black);
-    transition: color 0.15s;
 }
 
-.header-account:hover {
-    color: var(--outline);
+.header-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
-.header-cart {
+.header-icon:hover { opacity: 0.65; }
+
+.header-cta {
     background: var(--black);
     color: var(--white);
-    padding: 10px 20px;
+    padding: 12px 22px;
     font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 12px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
     border-radius: 0;
+    transition: opacity 0.15s;
 }
+
+.header-cta:hover { opacity: 0.8; }
 
 /* Hamburger — ẩn ở desktop, hiện ở mobile (≤900px) */
 .nav-toggle {
@@ -208,111 +261,258 @@ button, input, select, textarea {
 .nav-toggle.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* ============================================
+   JOIN THE FAMILY — dải đen trên footer (mọi trang)
+   ============================================ */
+.join {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 48px;
+    padding: 64px var(--margin);
+    background: var(--black);
+    color: var(--white);
+}
+
+.join__info { justify-self: end; max-width: 460px; }
+
+.join__title {
+    font-family: var(--font-sans);
+    font-size: 26px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.join__desc {
+    margin-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.join__form {
+    display: flex;
+    max-width: 470px;
+    width: 100%;
+}
+
+.join__form input {
+    flex: 1;
+    min-width: 0;
+    padding: 16px 18px;
+    background: var(--white);
+    color: var(--black);
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 13px;
+}
+
+.join__form input::placeholder { color: #8a8a8a; }
+
+.join__form button {
+    padding: 16px 26px;
+    background: var(--yellow);
+    color: var(--black);
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.join__form button:hover { opacity: 0.85; }
+
+
+/* ============================================
    FOOTER
    ============================================ */
 .site-footer {
-    background: var(--black);
-    color: var(--white);
-    border-top: 1.5px solid #222;
+    background: var(--yellow);
+    color: var(--black);
 }
 
 /* --- Footer top: grid 4 cột --- */
 .footer-top {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 64px;
-    padding: 64px var(--margin);
-    border-bottom: 1px solid #1a1a1a;
+    grid-template-columns: 1fr 1fr 1fr 1.15fr;
+    gap: 48px;
+    padding: 60px var(--margin) 44px;
 }
 
-/* Brand */
-.footer-brand__logo {
-    font-family: var(--font-serif);
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--white);
-    margin-bottom: 16px;
-}
-
-.footer-brand__tagline {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.45);
-    max-width: 260px;
-    margin-bottom: 24px;
-}
-
-/* Subscribe row */
-.footer-subscribe {
-    display: flex;
-    max-width: 300px;
-}
-
-.footer-subscribe input {
-    flex: 1;
+/* min-width:0 để cột co được: mặc định grid item không thu hẹp dưới min-content,
+   khiến địa chỉ/email dài đẩy cột Liên hệ tràn ra ngoài viewport. */
+.footer-top > * {
     min-width: 0;
-    background: transparent;
-    border: 1px solid #333;
-    border-right: none;
-    padding: 12px 16px;
-    color: var(--white);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    border-radius: 0;
 }
 
-.footer-subscribe input::placeholder {
-    color: rgba(255, 255, 255, 0.35);
+/* Hairline dọc ngăn brand | link | liên hệ (giống ảnh tham khảo) */
+.footer-top > * + * {
+    padding-left: 48px;
+    border-left: 1px solid rgba(0, 0, 0, 0.25);
 }
 
-.footer-subscribe button {
-    background: var(--yellow);
-    color: var(--black);
-    padding: 12px 20px;
+.footer-top > .footer-col + .footer-col:not(.footer-col--contact) {
+    padding-left: 0;
+    border-left: none;
+}
+
+/* Brand — con dấu + khẩu hiệu, căn giữa */
+.footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.footer-brand__stamp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 800;
+    letter-spacing: 0.2em;
+    margin-bottom: 22px;
+}
+
+.footer-brand__stamp-eye {
+    font-size: 26px;
+    line-height: 1;
+    margin: 4px 0;
+}
+
+.footer-brand__quote {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    border: none;
-    border-radius: 0;
-    cursor: pointer;
+    max-width: 280px;
+}
+
+.footer-brand__attr {
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(0, 0, 0, 0.75);
 }
 
 /* Link columns 2-4 */
 .footer-col__heading {
     font-family: var(--font-sans);
-    font-size: 10px;
+    font-size: 14px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: rgba(255, 255, 255, 0.3);
-    margin-bottom: 20px;
+    letter-spacing: 0.04em;
+    color: var(--black);
+    margin-bottom: 22px;
 }
 
 .footer-col a,
 .footer-col p {
     display: block;
+    font-family: var(--font-mono);
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.55);
-    margin-bottom: 12px;
+    color: var(--black);
+    margin-bottom: 14px;
 }
 
 .footer-col a {
-    transition: color 0.15s;
+    transition: opacity 0.15s;
 }
 
 .footer-col a:hover {
-    color: var(--yellow);
+    opacity: 0.55;
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
-/* --- Footer bottom --- */
+/* --- Cột liên hệ: 2 cơ sở + email --- */
+.footer-store {
+    margin-bottom: 18px;
+}
+
+.footer-col--contact .footer-store__name {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--black);
+    margin-bottom: 6px;
+}
+
+.footer-col--contact .footer-store__line {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 4px;
+}
+
+.footer-col--contact .footer-store__phone,
+.footer-col--contact .footer-store__email {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    margin-bottom: 0;
+}
+
+.footer-col--contact .footer-store__email {
+    display: inline-block;
+    max-width: 100%;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+    padding-bottom: 2px;
+    overflow-wrap: anywhere;
+}
+
+/* --- Footer social: icon giữa, hairline hai bên --- */
+.footer-social {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 0 var(--margin) 40px;
+}
+
+.footer-social__rule {
+    flex: 1;
+    height: 1px;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.footer-social__list {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+}
+
+.footer-social__list a {
+    display: block;
+    color: var(--black);
+    transition: opacity 0.15s;
+}
+
+.footer-social__list a:hover { opacity: 0.55; }
+
+.footer-social__list svg {
+    width: 19px;
+    height: 19px;
+    fill: currentColor;
+}
+
+/* --- Footer bottom: dải đen --- */
 .footer-bottom {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 20px var(--margin);
+    background: var(--black);
+    font-family: var(--font-mono);
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.55);
     letter-spacing: 0.06em;
 }
 
@@ -363,7 +563,9 @@ button, input, select, textarea {
     background: var(--black);
 }
 
+/* Card là thẻ <a> trỏ về trang detail — cần display:block để bao trọn nội dung */
 .product-card {
+    display: block;
     background: var(--white);
     cursor: pointer;
 }
@@ -427,7 +629,9 @@ button, input, select, textarea {
     opacity: 1;
 }
 
+/* <span> chứ không phải <button> — card đã là <a>, không lồng button trong a */
 .quick-shop-btn {
+    display: block;
     width: 100%;
     background: var(--black);
     color: var(--white);
@@ -438,6 +642,7 @@ button, input, select, textarea {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
+    text-align: center;
     cursor: pointer;
 }
 
@@ -481,21 +686,33 @@ button, input, select, textarea {
 @media (max-width: 900px) {
     :root { --margin: 16px; }
 
+    /* Announcement: giấu mũi tên + meta, chỉ giữ message ở giữa */
+    .announcement-arrow,
+    .announcement-meta { display: none; }
+
+    .announcement-msg { font-size: 11px; letter-spacing: 0.1em; }
+
     /* Header cho phép nav xuống hàng full-width khi mở (không dùng absolute) */
-    .site-header { flex-wrap: wrap; }
+    .site-header {
+        flex-wrap: wrap;
+        min-height: 64px;
+    }
+
+    .site-logo { font-size: 20px; }
 
     .nav-toggle { display: flex; }
 
     .main-nav {
         order: 1;          /* đẩy nav xuống hàng thứ 2, dưới logo + actions */
         flex-basis: 100%;
-        height: auto;
+        justify-content: stretch;
     }
 
     .nav-menu {
         display: none;     /* mobile-menu.js thêm .open để hiện */
         flex-direction: column;
-        height: auto;
+        gap: 0;
+        width: 100%;
         border-top: 1.5px solid var(--black);
     }
 
@@ -505,16 +722,47 @@ button, input, select, textarea {
 
     .nav-menu li a {
         height: auto;
-        padding: 14px var(--margin);
-        border-left: none;
-        border-right: none;
-        border-bottom: 1px solid #e0e0e0;
+        padding: 14px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+    }
+
+    .nav-menu li a:hover { border-bottom-color: rgba(0, 0, 0, 0.15); }
+
+    /* Nhường chỗ cho hamburger: bỏ CTA chữ, giữ icon */
+    .header-cta { display: none; }
+
+    /* Join: 2 cột -> 1 cột */
+    .join {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding: 40px var(--margin);
+    }
+
+    .join__info {
+        justify-self: stretch;
+        max-width: none;
     }
 
     .footer-top {
         grid-template-columns: 1fr 1fr;
         gap: 32px;
     }
+
+    /* Xếp 2 cột thì hairline dọc hết ý nghĩa -> bỏ */
+    .footer-top > * + *,
+    .footer-top > .footer-col + .footer-col:not(.footer-col--contact) {
+        padding-left: 0;
+        border-left: none;
+    }
+
+    .footer-brand {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .footer-brand__quote { max-width: none; }
+
+    .footer-social { gap: 20px; padding-bottom: 32px; }
 
     .product-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -525,4 +773,14 @@ button, input, select, textarea {
     .product-grid {
         grid-template-columns: 1fr;
     }
+
+    /* Footer: 2 cột quá chật cho địa chỉ 2 cơ sở -> xếp dọc 1 cột */
+    .footer-top {
+        grid-template-columns: 1fr;
+        gap: 36px;
+    }
+
+    /* Join: input + nút xếp dọc cho đỡ chật */
+    .join__form { flex-direction: column; }
+    .join__form button { padding: 14px; }
 }
