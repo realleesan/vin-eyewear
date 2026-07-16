@@ -40,8 +40,6 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
         <?php $renderSwatches($p['colors'] ?? []); ?>
     </a>
 <?php };
-?>
-<link rel="stylesheet" href="/assets/css/home.css">
 
 <!-- ============================================================
      SECTION 1 — HERO (ảnh full-bleed + CTA)
