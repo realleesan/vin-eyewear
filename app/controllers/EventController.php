@@ -18,7 +18,7 @@ class EventController extends BaseController
                     <p><strong>Thời gian áp dụng:</strong> 15/07/2026 - 15/08/2026</p>
                     <p><strong>Địa điểm áp dụng:</strong> Cả hai cơ sở Long Biên và Tây Hồ</p>
                 ',
-                'image' => 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&h=500&fit=crop'
+                'image' => 'https://moscot.com/cdn/shop/files/1920x860_-HP_BANNER-DESKTOP-CUSTOM_MADE_TINT_2_1.jpg?v=1783603402&width=1920'
             ],
             2 => [
                 'date' => '20/08/2026',
@@ -29,7 +29,7 @@ class EventController extends BaseController
                     <p><strong>Sự kiện ra mắt:</strong> 20/08/2026 tại cơ sở Long Biên</p>
                     <p><strong>Ưu đãi đặc biệt:</strong> Giảm 15% cho BST mới trong tuần đầu ra mắt</p>
                 ',
-                'image' => 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&h=500&fit=crop'
+                'image' => 'https://moscot.com/cdn/shop/files/1400x900_-FLOW-CMT_2_1.jpg?v=1783603988&width=1200'
             ],
             3 => [
                 'date' => '01/09/2026',
@@ -41,7 +41,40 @@ class EventController extends BaseController
                     <p><strong>Địa điểm:</strong> Cả hai cơ sở Long Biên và Tây Hồ</p>
                     <p><strong>Đăng ký trước:</strong> Ưu tiên phục vụ khách hàng đã đặt lịch</p>
                 ',
-                'image' => 'https://images.unsplash.com/photo-1556306535-0f09a537f0a3?w=800&h=500&fit=crop'
+                'image' => 'https://moscot.com/cdn/shop/files/1080x1080_CRAFTSMANSHIP_-_HOMEPAGE_BANNER_MOBILE_1.jpg?v=1742324666&width=1920'
+            ],
+            4 => [
+                'date' => '10/10/2026',
+                'title' => 'Kính Mát Eyewear',
+                'description' => '
+                    <p>Bộ sưu tập kính mát mới nhất từ Vin Eyewear với thiết kế hiện đại và chất lượng cao cấp. Bảo vệ mắt khỏi tia UV đồng thời nâng tầm phong cách của bạn.</p>
+                    <p>Đa dạng mẫu mã từ cổ điển đến hiện đại, phù hợp với mọi khuôn mặt và phong cách sử dụng.</p>
+                    <p><strong>Thời gian:</strong> 10/10/2026 - 31/10/2026</p>
+                    <p><strong>Ưu đãi:</strong> Mua 1 tặng 1 bộ vệ sinh kính</p>
+                ',
+                'image' => 'https://moscot.com/cdn/shop/files/920x920_-PROMO_GRID-EYEGLASSES-02_2_1.jpg?v=1782759499&width=920'
+            ],
+            5 => [
+                'date' => '15/11/2026',
+                'title' => 'Kính Mát Sunglasses',
+                'description' => '
+                    <p>Kính mát thời thượng với thiết kế sang trọng và chất liệu cao cấp. Lựa chọn hoàn hảo cho những ngày nắng đẹp.</p>
+                    <p>Công nghệ chống tia UV400, chống chói, bảo vệ mắt tối ưu trong mọi điều kiện ánh sáng.</p>
+                    <p><strong>Thời gian:</strong> 15/11/2026 - 30/11/2026</p>
+                    <p><strong>Ưu đãi:</strong> Giảm 25% cho tất cả kính mát</p>
+                ',
+                'image' => 'https://moscot.com/cdn/shop/files/920x920_-PROMO_GRID-SUNGLASSES-02_2_1.jpg?v=1782759503&width=920'
+            ],
+            6 => [
+                'date' => '01/12/2026',
+                'title' => 'Bộ Sưu Tập Đặc Biệt',
+                'description' => '
+                    <p>Bộ sưu tập đặc biệt nhân dịp kỷ niệm thành lập Vin Eyewear. Những thiết kế độc bản, giới hạn số lượng.</p>
+                    <p>Mỗi chiếc kính là tác phẩm nghệ thuật, kết hợp giữa thủ công truyền thống và công nghệ hiện đại.</p>
+                    <p><strong>Thời gian:</strong> 01/12/2026 - 31/12/2026</p>
+                    <p><strong>Ưu đãi:</strong> Giảm 30% cho BST đặc biệt</p>
+                ',
+                'image' => 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&h=600&fit=crop'
             ]
         ];
 
