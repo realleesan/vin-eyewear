@@ -193,5 +193,5 @@
 
 <!-- Pass event data to JavaScript -->
 <script>
-window.eventData = <?php echo isset($eventData) ? json_encode($eventData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) : '{}'; ?>;
+window.eventData = <?= isset($eventData) ? json_encode($eventData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) : '{}' ?>;
 </script>
