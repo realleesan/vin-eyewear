@@ -39,7 +39,7 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
         <p class="frame-card__price"><?= number_format($p['price'], 0, ',', '.') ?> &#8363;</p>
         <?php $renderSwatches($p['colors'] ?? []); ?>
     </a>
-<?php };
+<?php }; ?>
 
 <!-- ============================================================
      SECTION 1 — HERO (ảnh full-bleed + CTA)
