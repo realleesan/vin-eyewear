@@ -1,103 +1,133 @@
 // Event data passed from controller via global variable
 const eventData = window.eventData || {};
 
-// Slideshow functionality
+// Event Carousel with Auto-run and Hover Backface
 document.addEventListener('DOMContentLoaded', function() {
-    const slides = document.querySelectorAll('.event-slide');
-    const dots = document.querySelectorAll('.nav-dot');
-    const prevBtn = document.querySelector('.prev-btn');
-    const nextBtn = document.querySelector('.next-btn');
-    const modal = document.getElementById('eventDetailModal');
-    let currentSlide = 0;
-    const totalSlides = slides.length;
-
-    function showSlide(index) {
-        slides.forEach((slide, i) => {
-            slide.classList.remove('active');
-            dots[i].classList.remove('active');
+    const carouselTrack = document.querySelector('.carousel-track');
+    const carouselItems = document.querySelectorAll('.carousel-item');
+    const indicators = document.querySelectorAll('.indicator');
+    const storyModal = document.getElementById('storyModal');
+    const modalCloseBtn = document.querySelector('.modal-close-btn');
+    const modalBackdrop = document.querySelector('.modal-backdrop');
+    
+    let currentIndex = 0;
+    const totalItems = carouselItems.length;
+    const itemsPerSlide = 3;
+    const totalSlides = Math.ceil(totalItems / itemsPerSlide);
+    let autoPlayInterval;
+    const autoPlayDelay = 2000; // 2 seconds
+    let isHovering = false;
+    
+    function updateCarousel() {
+        const translateX = -(currentIndex * (100 / itemsPerSlide));
+        carouselTrack.style.transform = `translateX(${translateX}%)`;
+        
+        // Update indicators
+        const currentSlide = Math.floor(currentIndex / itemsPerSlide);
+        indicators.forEach((indicator, index) => {
+            indicator.classList.toggle('active', index === currentSlide);
         });
-        slides[index].classList.add('active');
-        dots[index].classList.add('active');
-        currentSlide = index;
     }
-
+    
     function nextSlide() {
-        showSlide((currentSlide + 1) % totalSlides);
+        const maxIndex = totalItems - itemsPerSlide;
+        currentIndex = (currentIndex + 1) % (maxIndex + 1);
+        updateCarousel();
     }
-
+    
     function prevSlide() {
-        showSlide((currentSlide - 1 + totalSlides) % totalSlides);
+        const maxIndex = totalItems - itemsPerSlide;
+        currentIndex = (currentIndex - 1 + maxIndex + 1) % (maxIndex + 1);
+        updateCarousel();
     }
-
-    // Navigation buttons
-    nextBtn.addEventListener('click', nextSlide);
-    prevBtn.addEventListener('click', prevSlide);
-
-    // Dot navigation
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => showSlide(index));
+    
+    function goToSlide(slideIndex) {
+        currentIndex = slideIndex * itemsPerSlide;
+        const maxIndex = totalItems - itemsPerSlide;
+        if (currentIndex > maxIndex) {
+            currentIndex = maxIndex;
+        }
+        updateCarousel();
+    }
+    
+    function startAutoPlay() {
+        if (!isHovering) {
+            autoPlayInterval = setInterval(nextSlide, autoPlayDelay);
+        }
+    }
+    
+    function stopAutoPlay() {
+        clearInterval(autoPlayInterval);
+    }
+    
+    // Indicator clicks
+    indicators.forEach((indicator, index) => {
+        indicator.addEventListener('click', () => {
+            goToSlide(index);
+            stopAutoPlay();
+            startAutoPlay();
+        });
     });
-
-    // Auto-play slideshow
-    let autoPlay = setInterval(nextSlide, 5000);
-
-    // Pause on hover
-    const slideshowContainer = document.querySelector('.slideshow-container');
-    slideshowContainer.addEventListener('mouseenter', () => clearInterval(autoPlay));
-    slideshowContainer.addEventListener('mouseleave', () => autoPlay = setInterval(nextSlide, 5000));
-
-    // Click on slide to open modal
-    slides.forEach(slide => {
-        slide.addEventListener('click', function() {
+    
+    // Hover to pause auto-play
+    carouselTrack.addEventListener('mouseenter', () => {
+        isHovering = true;
+        stopAutoPlay();
+    });
+    
+    carouselTrack.addEventListener('mouseleave', () => {
+        isHovering = false;
+        startAutoPlay();
+    });
+    
+    // Click on carousel item to open modal
+    carouselItems.forEach(item => {
+        item.addEventListener('click', function() {
             const eventId = this.getAttribute('data-event-id');
             const event = eventData[eventId];
             
             if (event) {
-                document.getElementById('modalEventDate').textContent = event.date;
-                document.getElementById('modalEventTitle').textContent = event.title;
-                document.getElementById('modalEventDescription').innerHTML = event.description;
-                document.getElementById('modalEventImage').src = event.image;
-                document.getElementById('modalEventImage').alt = event.title;
+                document.getElementById('storyDate').textContent = event.date;
+                document.getElementById('storyTitle').textContent = event.title;
+                document.getElementById('storyDescription').innerHTML = event.description;
+                document.getElementById('storyImage').src = event.image;
+                document.getElementById('storyImage').alt = event.title;
                 
-                modal.classList.add('active');
+                storyModal.classList.add('active');
                 document.body.style.overflow = 'hidden';
+                stopAutoPlay();
             }
         });
     });
-
+    
     // Close modal
-    document.querySelector('.modal-close').addEventListener('click', function() {
-        modal.classList.remove('active');
+    function closeModal() {
+        storyModal.classList.remove('active');
         document.body.style.overflow = '';
-    });
-
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
+        startAutoPlay();
+    }
+    
+    modalCloseBtn.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
+    
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && storyModal.classList.contains('active')) {
+            closeModal();
+        }
+        if (e.key === 'ArrowRight' && !storyModal.classList.contains('active')) {
+            stopAutoPlay();
+            nextSlide();
+            startAutoPlay();
+        }
+        if (e.key === 'ArrowLeft' && !storyModal.classList.contains('active')) {
+            stopAutoPlay();
+            prevSlide();
+            startAutoPlay();
         }
     });
-
-    // Product carousel
-    const carouselTrack = document.querySelector('.carousel-track');
-    const carouselPrev = document.querySelector('.carousel-prev');
-    const carouselNext = document.querySelector('.carousel-next');
-    let carouselPosition = 0;
-    const cardWidth = 280;
-    const cardsVisible = Math.floor(carouselTrack.parentElement.offsetWidth / cardWidth);
-    const maxScroll = (carouselTrack.children.length - cardsVisible) * cardWidth;
-
-    carouselNext.addEventListener('click', function() {
-        if (carouselPosition < maxScroll) {
-            carouselPosition += cardWidth;
-            carouselTrack.style.transform = `translateX(-${carouselPosition}px)`;
-        }
-    });
-
-    carouselPrev.addEventListener('click', function() {
-        if (carouselPosition > 0) {
-            carouselPosition -= cardWidth;
-            carouselTrack.style.transform = `translateX(-${carouselPosition}px)`;
-        }
-    });
+    
+    // Initialize carousel
+    updateCarousel();
+    startAutoPlay();
 });
