@@ -158,7 +158,6 @@
             <div class="carousel-indicators">
                 <button class="indicator active" data-slide="0"></button>
                 <button class="indicator" data-slide="1"></button>
-                <button class="indicator" data-slide="2"></button>
             </div>
         </div>
 
@@ -194,5 +193,5 @@
 
 <!-- Pass event data to JavaScript -->
 <script>
-window.eventData = <?php echo isset($eventData) ? json_encode($eventData) : '{}'; ?>;
+window.eventData = <?php echo isset($eventData) ? json_encode($eventData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT) : '{}'; ?>;
 </script>
