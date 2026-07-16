@@ -5,8 +5,6 @@
  *   $products — mảng sản phẩm (id, name, category, price, image, badge)
  * Card dùng component chung .product-card (định nghĩa ở layout.css), đồng bộ với home.
  */
-?>
-<link rel="stylesheet" href="/assets/css/product.css">
 
 <!-- ============================================================
      PAGE HEADER
@@ -26,27 +24,7 @@
      ============================================================ -->
 <section class="product-listing reveal">
     <div class="product-grid">
-        <?php foreach ($products as $product): ?>
-        <div class="product-card">
-            <div class="card-img">
-                <img
-                    src="<?= htmlspecialchars($product['image']) ?>"
-                    alt="<?= htmlspecialchars($product['name']) ?>"
-                    loading="lazy"
-                >
-                <div class="card-overlay">
-                    <button class="quick-shop-btn">Quick Shop</button>
-                </div>
-                <?php if (!empty($product['badge'])): ?>
-                <span class="badge <?= $product['badge'] === 'Mới' ? 'badge-dark' : '' ?>"><?= htmlspecialchars($product['badge']) ?></span>
-                <?php endif; ?>
-            </div>
-            <div class="card-info">
-                <div class="card-name"><?= htmlspecialchars($product['name']) ?></div>
-                <div class="card-price"><?= number_format($product['price'], 0, ',', '.') ?> &#8363;</div>
-            </div>
-        </div>
-        <?php endforeach; ?>
+        <?php foreach ($products as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
     </div>
 </section>
 
