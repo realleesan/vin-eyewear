@@ -81,16 +81,6 @@
             <script src="/assets/js/home.js" defer></script>
         <?php endif; ?>
     <?php endif; ?>
-        <?php if ($viewName === 'contact/index'): ?>
-            <script src="/assets/js/contact.js" defer></script>
-        <?php endif; ?>
-        <?php if ($viewName === 'product/detail'): ?>
-            <script src="/assets/js/product.detail.js" defer></script>
-        <?php endif; ?>
-        <?php if ($viewName === 'home/index'): ?>
-            <script src="/assets/js/home.js" defer></script>
-        <?php endif; ?>
-    <?php endif; ?>
 
     <!-- JS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
     <?php if (isset($viewName) && $viewName === 'event/index'): ?>
