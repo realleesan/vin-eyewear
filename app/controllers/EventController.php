@@ -6,7 +6,7 @@
 
 class EventController extends BaseController
 {
-    public function index()
+    public function index(): void
     {
         $eventData = [
             1 => [

@@ -6,7 +6,7 @@
 
 class AboutController extends BaseController
 {
-    public function index()
+    public function index(): void
     {
         $data = [
             'title' => 'Giới thiệu - Vin Eyewear',
