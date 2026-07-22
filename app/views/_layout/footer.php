@@ -4,8 +4,8 @@
      ============================================================ -->
 <section class="join">
     <div class="join__info">
-        <h2 class="join__title">Gia nhập gia đình Vin</h2>
-        <p class="join__desc">Giảm 10% cho đơn đầu tiên và nhận tin sớm nhất về mọi thứ của Vin Eyewear.</p>
+        <h2 class="join__title">CẬP NHẬT CÙNG VIN EYEWEAR</h2>
+        <p class="join__desc">Đón đầu những ưu đãi mới nhất và cập nhật phong cách kính cùng Vin Eyewear</p>
     </div>
     <form class="join__form" action="#" method="post">
         <input type="email" name="email" placeholder="nhập email" aria-label="Email đăng ký nhận tin" required>

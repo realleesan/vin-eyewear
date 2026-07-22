@@ -74,59 +74,69 @@ button, input, select, textarea {
 }
 
 /* ============================================
-   ANNOUNCEMENT BAR — nền đen, chữ trắng
-   Message căn giữa tuyệt đối; meta (ngôn ngữ/tiền tệ) neo phải.
+   ANNOUNCEMENT BAR — nền đen, 2 vùng
+   Trái: social. Phải: giỏ/tìm/tài khoản.
    ============================================ */
 .announcement-bar {
-    position: relative;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 18px;
-    min-height: 46px;
+    justify-content: space-between;
+    min-height: 38px;
     padding: 0 var(--margin);
     background: var(--black);
     color: var(--white);
 }
 
-.announcement-msg {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    text-align: center;
-}
-
-.announcement-arrow {
-    background: none;
-    border: none;
-    color: var(--white);
-    font-size: 16px;
-    line-height: 1;
-    padding: 4px 8px;
-    cursor: pointer;
-    opacity: 0.75;
-}
-
-.announcement-arrow:hover { opacity: 1; }
-
-.announcement-meta {
-    position: absolute;
-    right: var(--margin);
-    top: 50%;
-    transform: translateY(-50%);
+/* --- VÙNG TRÁI: social --- */
+.announcement-social {
     display: flex;
     align-items: center;
-    gap: 24px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--white);
-    white-space: nowrap;
+    gap: 18px;
 }
 
-.announcement-meta .caret {
-    font-size: 9px;
-    opacity: 0.7;
+.announcement-ico {
+    display: flex;
+    color: var(--white);
+    transition: color 0.2s ease;
+}
+
+.announcement-ico svg {
+    width: 17px;
+    height: 17px;
+    fill: currentColor;
+}
+
+.announcement-ico:hover { color: var(--yellow); }
+
+/* --- VÙNG PHẢI: giỏ/tìm/tài khoản --- */
+.announcement-actions {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.announcement-action {
+    display: flex;
+    align-items: center;
+    color: var(--white);
+    transition: color 0.2s ease;
+}
+
+.announcement-action:hover { color: var(--yellow); }
+
+.announcement-action__ico {
+    position: relative;
+    display: flex;
+}
+
+.announcement-action__ico svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 /* ============================================
@@ -195,27 +205,6 @@ button, input, select, textarea {
     align-items: center;
     gap: 18px;
 }
-
-.header-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    color: var(--black);
-}
-
-.header-icon svg {
-    width: 20px;
-    height: 20px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.header-icon:hover { opacity: 0.65; }
 
 .header-cta {
     background: var(--black);
@@ -686,11 +675,9 @@ button, input, select, textarea {
 @media (max-width: 900px) {
     :root { --margin: 16px; }
 
-    /* Announcement: giấu mũi tên + meta, chỉ giữ message ở giữa */
-    .announcement-arrow,
-    .announcement-meta { display: none; }
-
-    .announcement-msg { font-size: 11px; letter-spacing: 0.1em; }
+    /* Announcement: giữ social + icon giỏ/tìm/tài khoản, thu gọn khoảng cách */
+    .announcement-social { gap: 14px; }
+    .announcement-actions { gap: 16px; }
 
     /* Header cho phép nav xuống hàng full-width khi mở (không dùng absolute) */
     .site-header {
