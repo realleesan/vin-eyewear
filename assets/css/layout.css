@@ -588,6 +588,16 @@ button, input, select, textarea {
     object-fit: cover;
 }
 
+/* Anh goc nhin thu 2 — chong len anh chinh, hien mo dan khi hover card */
+.card-img-hover {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.product-card:hover .card-img-hover {
+    opacity: 1;
+}
+
 .card-img svg {
     align-self: center;
     justify-self: center;
