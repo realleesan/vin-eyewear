@@ -10,8 +10,14 @@
    PAGE HEADER
    ============================================ */
 .page-header {
-    padding: 64px var(--margin) 40px;
-    border-bottom: 1.5px solid var(--black);
+    padding: 64px var(--margin) 0;
+}
+
+/* Duong ke mo dat tren .page-header-inner nen dai bang luoi san pham (4 SP),
+   khong tran full man hinh. Mau nhat (--border) thay cho net den 1.5px. */
+.page-header-inner {
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
 }
 
 .page-eyebrow {
@@ -31,18 +37,31 @@
     margin-bottom: 16px;
 }
 
-.page-subtitle {
-    font-size: 16px;
-    line-height: 1.7;
-    color: var(--on-surface-variant);
-}
-
-
 /* ============================================
    PRODUCT LISTING (grid/card dùng component chung ở layout.css)
    ============================================ */
 .product-listing {
     padding: 60px var(--margin);
+}
+
+/* Override RIENG trang product: bo net den giua card, tang khoang cach.
+   Chi tac dong trong .product-listing nen trang Home giu nguyen luoi hairline. */
+.product-listing .product-grid {
+    gap: 28px;
+    background: transparent;
+}
+
+/* Card co vien mo nhe thay cho net den; vuong goc canh, khong bo tron */
+.product-listing .product-card {
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.product-listing .product-card:hover {
+    border-color: var(--outline);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
 }
 
 
@@ -51,28 +70,44 @@
    ============================================ */
 .pagination {
     display: flex;
-    gap: 2px;
+    gap: 8px;
     justify-content: center;
-    padding: 48px var(--margin);
-    background: var(--black);
+    align-items: center;
+    padding: 8px var(--margin) 64px;
+    background: transparent;
 }
 
 .pagination a,
 .pagination span {
     display: inline-block;
-    padding: 12px 18px;
+    min-width: 42px;
+    text-align: center;
+    padding: 12px 16px;
     font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     background: var(--white);
     color: var(--black);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-.pagination .active,
 .pagination a:hover {
+    border-color: var(--black);
+}
+
+.pagination .active {
     background: var(--yellow);
+    border-color: var(--yellow);
     color: var(--black);
+}
+
+/* Prev/Next khi khong con trang -> mo di, khong bam duoc */
+.pagination .is-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 
@@ -82,4 +117,5 @@
 @media (max-width: 900px) {
     .page-title { font-size: 32px; }
     .product-listing { padding: 40px var(--margin); }
+    .product-listing .product-grid { gap: 16px; }
 }
