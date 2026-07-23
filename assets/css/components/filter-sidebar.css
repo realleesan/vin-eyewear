@@ -173,6 +173,9 @@
         width: min(320px, 85vw);
         border: none;
         max-height: none;       /* bo gioi han compact cua desktop */
+        /* align-self:start (rule desktop) lam panel fixed co lai theo noi dung
+           du da co top/bottom:0 -> ep full chieu cao man hinh */
+        height: 100%;
         overflow-y: auto;
         transform: translateX(-100%);
         transition: transform 0.3s ease;
