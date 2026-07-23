@@ -676,7 +676,9 @@ button, input, select, textarea {
 
 .reveal.visible {
     opacity: 1;
-    transform: translateY(0);
+    /* transform: none (khong phai translateY(0)) — transform khac none tren ancestor
+       se thanh containing block, lam hong position:fixed ben trong (vd: filter slide-over) */
+    transform: none;
 }
 
 

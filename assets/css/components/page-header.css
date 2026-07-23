@@ -1,0 +1,44 @@
+/* ============================================
+   Vin Eyewear - Component: Page Header
+   Design system: "Lower East Heritage" (xem DESIGN.md)
+   Chuẩn design theo trang Product (benchmark).
+   Rule chuyển từ product.css sang đây khi tách component
+   (_layout/page-header.php tự nhúng file này).
+   ============================================ */
+.page-header {
+    padding: 64px var(--margin) 40px;
+    border-bottom: 1.5px solid var(--black);
+}
+
+.page-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--outline);
+    margin-bottom: 12px;
+}
+
+.page-title {
+    font-family: var(--font-serif);
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+}
+
+.page-subtitle {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--on-surface-variant);
+}
+
+
+/* ============================================
+   RESPONSIVE (khớp breakpoint 900px của layout.css)
+   ============================================ */
+@media (max-width: 900px) {
+    .page-title {
+        font-size: 32px;
+    }
+}

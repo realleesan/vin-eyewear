@@ -11,15 +11,16 @@
 ?>
 
 <!-- ============================================================
-     BREADCRUMB
+     BREADCRUMB (component chung _layout/breadcrumb.php)
      ============================================================ -->
-<nav class="pd-breadcrumb" aria-label="Breadcrumb">
-    <a href="/">Trang chủ</a>
-    <span aria-hidden="true">/</span>
-    <a href="/product">Sản phẩm</a>
-    <span aria-hidden="true">/</span>
-    <span class="current"><?= htmlspecialchars($product['name']) ?></span>
-</nav>
+<?php
+$breadcrumb_items = [
+    ['label' => 'Trang chủ', 'url' => '/'],
+    ['label' => 'Sản phẩm', 'url' => '/product'],
+    ['label' => $product['name']], // trang hien tai — khong link
+];
+require VIEWS_PATH . '/_layout/breadcrumb.php';
+?>
 
 <!-- ============================================================
      SECTION 1 — GALLERY + THÔNG TIN SẢN PHẨM
@@ -61,12 +62,15 @@
 
         <p class="pd-desc"><?= htmlspecialchars($product['description']) ?></p>
 
-        <div class="pd-actions">
-            <a href="/ar" class="pd-btn-primary">Thử AR</a>
-            <a href="/contact" class="pd-btn-ghost">Liên hệ tư vấn</a>
-        </div>
-
-        <p class="pd-note">Thử kính trực tuyến bằng camera — không cần tới cửa hàng.</p>
+        <!-- CTA (component chung _layout/cta.php) -->
+        <?php
+        $cta_buttons = [
+            ['label' => 'Thử AR', 'url' => '/ar', 'style' => 'primary'],
+            ['label' => 'Liên hệ tư vấn', 'url' => '/contact', 'style' => 'ghost'],
+        ];
+        $cta_note = 'Thử kính trực tuyến bằng camera — không cần tới cửa hàng.';
+        require VIEWS_PATH . '/_layout/cta.php';
+        ?>
 
         <!-- Thông số kỹ thuật -->
         <dl class="pd-specs">
