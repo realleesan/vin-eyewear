@@ -12,9 +12,18 @@
  *
  * MOCKUP: mọi thẻ đều trỏ về /product/detail (1 trang detail dùng chung).
  * Khi có DB, chỉ cần đổi href ở đây là cả 3 trang cùng cập nhật.
+ *
+ * data-category / data-kind / data-price: phục vụ filter client-side ở trang
+ * /product (assets/js/product.js đọc các attribute này để ẩn/hiện card).
  */
 ?>
-<a href="/product/detail" class="product-card">
+<a
+    href="/product/detail"
+    class="product-card"
+    data-category="<?= htmlspecialchars($card['category'] ?? '') ?>"
+    data-kind="<?= htmlspecialchars($card['type'] ?? '') ?>"
+    data-price="<?= (int) ($card['price'] ?? 0) ?>"
+>
     <div class="card-img">
         <img
             src="<?= htmlspecialchars($card['image']) ?>"
