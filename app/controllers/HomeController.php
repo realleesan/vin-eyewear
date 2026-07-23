@@ -8,8 +8,8 @@ require_once APP_PATH . '/models/ProductModel.php';
  * View:  home/index
  *
  * Trang chủ dựng theo layout Moscot (xem screencapture-moscot-*.png):
- * hero → best seller → 2 tile → feature → heritage → tints
- * → optical shop → craftsmanship → stories → visit → join.
+ * hero → cam kết → best seller → 2 tile → optical shop → cảm nhận KH
+ * → booking đo mắt → visit → join.
  * Ảnh hotlink từ CDN Moscot (giai đoạn mockup).
  */
 class HomeController extends BaseController
@@ -30,11 +30,33 @@ class HomeController extends BaseController
             'pageTitle'   => 'Vin Eyewear - Kính Mắt Cao Cấp',
             'currentPage' => 'home',
 
-            // --- Hero: ảnh full-bleed + CTA ---
+            // --- Hero: slider nhiều ảnh, text đè + bullets (JS ở home.js) ---
+            // Chủ đề: GỌNG KÍNH (shop bán gọng kim loại là chính, không quảng bá tròng).
+            // Ảnh đều là banner ngang / ảnh studio crop đẹp ở khung desktop full-bleed.
             'hero' => [
-                'image' => self::CDN . '1920x860_-HP_BANNER-DESKTOP-CUSTOM_MADE_TINT_2_1.jpg?v=1783603402&width=1920',
-                'alt'   => 'Bộ sưu tập kính râm tròng pha màu thủ công',
-                'cta'   => ['label' => 'Mua kính râm', 'link' => '/product'],
+                'slides' => [
+                    [
+                        'image'    => self::CDN . 'cosnic-tortoise-antique-gold-pos-2.jpg?width=1920',
+                        'alt'      => 'Gọng kính kim loại mạ vàng dáng tròn trên nền be',
+                        'title'    => 'Gọng Kim Loại Kinh Điển',
+                        'subtitle' => 'Khung kim loại mạ vàng antique, vành windsor bọc acetate — nhẹ, bền bỉ và tinh tế trong từng chi tiết.',
+                        'cta'      => ['label' => 'Mua gọng kim loại', 'link' => '/product'],
+                    ],
+                    [
+                        'image'    => self::CDN . '2160x1080px_-HP_BANNER_DESKTOP-FAM_EXT_LAUNCH_3_1.jpg?v=1772504632&width=1920',
+                        'alt'      => 'Bộ sưu tập gọng kính đủ kiểu dáng của Vin Eyewear',
+                        'title'    => 'Bộ Sưu Tập Gọng Kính',
+                        'subtitle' => 'Từ dáng tròn kim loại đến browline acetate — đủ kiểu dáng kinh điển cho mọi khuôn mặt.',
+                        'cta'      => ['label' => 'Khám phá bộ sưu tập', 'link' => '/product'],
+                    ],
+                    [
+                        'image'    => self::CDN . '2160x1080_BUILD_YOUR_FRAMES_-_HP_BANNER_DESKTOP_C_1.jpg?v=1727190203&width=1920',
+                        'alt'      => 'Các mẫu gọng kính thủ công xếp trên nền be ấm',
+                        'title'    => 'Chế Tác Thủ Công',
+                        'subtitle' => 'Mỗi chiếc gọng được hoàn thiện tỉ mỉ qua bàn tay năm thế hệ thợ kính.',
+                        'cta'      => ['label' => 'Đặt lịch thử kính', 'link' => '/contact'],
+                    ],
+                ],
             ],
 
             // --- Best Seller: carousel các sản phẩm bán chạy ---
@@ -154,7 +176,7 @@ class HomeController extends BaseController
                 'products' => $this->pick([3, 6, 9, 11]),
             ],
 
-            // --- Dải ảnh craftsmanship ---
+            // --- Dải ảnh craftsmanship (section đã gỡ khỏi trang chủ, giữ data như $feature/$heritage) ---
             'craftsmanship' => [
                 'image' => self::CDN . '1080x1080_CRAFTSMANSHIP_-_HOMEPAGE_BANNER_MOBILE_1.jpg?v=1742324666&width=1920',
                 'alt'   => 'Bàn làm việc của thợ kính Vin Eyewear',
