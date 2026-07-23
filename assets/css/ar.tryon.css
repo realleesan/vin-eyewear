@@ -171,16 +171,13 @@
     color: var(--white);
     font-size: 13px;
     letter-spacing: 0.04em;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.camera-loading.is-hidden {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
+.camera-loading[aria-hidden="true"] {
+    display: none;
 }
 
-.loading-ring {
+.loading-spinner {
     width: 40px;
     height: 40px;
     border: 2px solid rgba(255, 255, 255, 0.2);
@@ -190,6 +187,91 @@
 
 @keyframes ar-spin {
     to { transform: rotate(360deg); }
+}
+
+/* Error state */
+.camera-error,
+.camera-permission-denied {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 32px;
+    background: rgba(0, 0, 0, 0.85);
+    color: var(--white);
+    text-align: center;
+}
+
+.camera-error[aria-hidden="true"],
+.camera-permission-denied[aria-hidden="true"] {
+    display: none;
+}
+
+.error-icon,
+.permission-icon {
+    color: #e94560;
+}
+
+.camera-error h3,
+.camera-permission-denied h3 {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.camera-error p,
+.camera-permission-denied p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 320px;
+    margin: 0;
+}
+
+.permission-steps {
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.85);
+    padding-left: 20px;
+}
+
+.permission-steps li {
+    margin-bottom: 8px;
+}
+
+.btn-retry {
+    padding: 10px 24px;
+    background: var(--yellow);
+    color: var(--black);
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.btn-retry:hover {
+    background: var(--white);
+}
+
+/* Active state */
+.camera-active {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.camera-active[aria-hidden="true"] {
+    display: none;
 }
 
 .camera-hint {
@@ -435,13 +517,37 @@
         flex-direction: column;
     }
 
+    .camera-frame {
+        max-width: 100%;
+    }
+
+    .camera-placeholder {
+        aspect-ratio: 3 / 4;
+    }
+
     #glass-overlay {
-        width: 68%;
-        max-width: 240px;
+        width: 70%;
+        max-width: 280px;
     }
 
     .face-guide-oval {
-        width: 52%;
+        width: 55%;
+        aspect-ratio: 1 / 1.3;
+    }
+
+    .camera-error h3,
+    .camera-permission-denied h3 {
+        font-size: 16px;
+    }
+
+    .camera-error p,
+    .camera-permission-denied p {
+        font-size: 13px;
+        max-width: 280px;
+    }
+
+    .permission-steps {
+        font-size: 12px;
     }
 }
 
@@ -452,5 +558,31 @@
 
     .ar-panel {
         padding: 24px 16px;
+    }
+
+    .camera-error,
+    .camera-permission-denied {
+        padding: 24px 16px;
+    }
+
+    .camera-error h3,
+    .camera-permission-denied h3 {
+        font-size: 15px;
+    }
+
+    .camera-error p,
+    .camera-permission-denied p {
+        font-size: 12px;
+        max-width: 100%;
+    }
+
+    .permission-steps {
+        font-size: 11px;
+        padding-left: 16px;
+    }
+
+    .btn-retry {
+        padding: 8px 20px;
+        font-size: 10px;
     }
 }

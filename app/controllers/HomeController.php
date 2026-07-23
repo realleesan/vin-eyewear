@@ -8,8 +8,8 @@ require_once APP_PATH . '/models/ProductModel.php';
  * View:  home/index
  *
  * Trang chủ dựng theo layout Moscot (xem screencapture-moscot-*.png):
- * hero → signature sunnies → 2 tile → feature → heritage → tints
- * → optical shop → craftsmanship → stories → visit → join.
+ * hero → cam kết → best seller → 2 tile → optical shop → cảm nhận KH
+ * → booking đo mắt → visit → join.
  * Ảnh hotlink từ CDN Moscot (giai đoạn mockup).
  */
 class HomeController extends BaseController
@@ -18,53 +18,105 @@ class HomeController extends BaseController
 
     public function index(): void
     {
-        // Tab "Gọng ký hiệu" + lưới "Tiệm kính" đều lấy sản phẩm theo id từ ProductModel.
-        $sunniesTabs = [
-            [
-                'id'       => 'nhe',
-                'label'    => 'Gọng siêu nhẹ',
-                'desc'     => 'Từ dáng tròn đến dáng vuông, chúng tôi tuyển chọn những gọng nhẹ nhất của '
-                    . 'nhà Vin Eyewear. Bộ sưu tập dành cho người đeo cả ngày mà quên mất mình đang đeo kính.',
-                'products' => $this->pick([1, 2, 12, 7]),
-            ],
-            [
-                'id'       => 'ban',
-                'label'    => 'Gọng bản dày',
-                'desc'     => 'Acetate nguyên khối, bản dày, đường nét dứt khoát. Dành cho những ai muốn '
-                    . 'chiếc kính lên tiếng trước khi mình kịp mở lời.',
-                'products' => $this->pick([3, 5, 9, 11]),
-            ],
-        ];
+        // Best Seller: chọn nhiều sản phẩm (carousel), ép tag "Bán chạy" cho tất cả
+        // bất kể badge gốc trong catalog. pick() trả mảng copy nên không đụng ProductModel.
+        $bestProducts = $this->pick([1, 5, 10, 3, 2, 6, 9, 11, 7, 4, 8, 12, 13, 14, 15, 16, 17, 18]);
+        foreach ($bestProducts as &$p) {
+            $p['badge'] = 'Bán chạy';
+        }
+        unset($p);
 
         $this->renderView('home/index', [
             'pageTitle'   => 'Vin Eyewear - Kính Mắt Cao Cấp',
             'currentPage' => 'home',
 
-            // --- Hero: ảnh full-bleed + CTA ---
+            // --- Hero: slider nhiều ảnh, text đè + bullets (JS ở home.js) ---
+            // Chủ đề: GỌNG KÍNH (shop bán gọng kim loại là chính, không quảng bá tròng).
+            // Ảnh đều là banner ngang / ảnh studio crop đẹp ở khung desktop full-bleed.
             'hero' => [
-                'image' => self::CDN . '1920x860_-HP_BANNER-DESKTOP-CUSTOM_MADE_TINT_2_1.jpg?v=1783603402&width=1920',
-                'alt'   => 'Bộ sưu tập kính râm tròng pha màu thủ công',
-                'cta'   => ['label' => 'Mua kính râm', 'link' => '/product'],
+                'slides' => [
+                    [
+                        'image'    => self::CDN . 'cosnic-tortoise-antique-gold-pos-2.jpg?width=1920',
+                        'alt'      => 'Gọng kính kim loại mạ vàng dáng tròn trên nền be',
+                        'title'    => 'Gọng Kim Loại Kinh Điển',
+                        'subtitle' => 'Khung kim loại mạ vàng antique, vành windsor bọc acetate — nhẹ, bền bỉ và tinh tế trong từng chi tiết.',
+                        'cta'      => ['label' => 'Mua gọng kim loại', 'link' => '/product'],
+                    ],
+                    [
+                        'image'    => self::CDN . '2160x1080px_-HP_BANNER_DESKTOP-FAM_EXT_LAUNCH_3_1.jpg?v=1772504632&width=1920',
+                        'alt'      => 'Bộ sưu tập gọng kính đủ kiểu dáng của Vin Eyewear',
+                        'title'    => 'Bộ Sưu Tập Gọng Kính',
+                        'subtitle' => 'Từ dáng tròn kim loại đến browline acetate — đủ kiểu dáng kinh điển cho mọi khuôn mặt.',
+                        'cta'      => ['label' => 'Khám phá bộ sưu tập', 'link' => '/product'],
+                    ],
+                    [
+                        'image'    => self::CDN . '2160x1080_BUILD_YOUR_FRAMES_-_HP_BANNER_DESKTOP_C_1.jpg?v=1727190203&width=1920',
+                        'alt'      => 'Các mẫu gọng kính thủ công xếp trên nền be ấm',
+                        'title'    => 'Chế Tác Thủ Công',
+                        'subtitle' => 'Mỗi chiếc gọng được hoàn thiện tỉ mỉ qua bàn tay năm thế hệ thợ kính.',
+                        'cta'      => ['label' => 'Đặt lịch thử kính', 'link' => '/contact'],
+                    ],
+                ],
             ],
 
-            // --- Signature Sunnies: 2 tab, mỗi tab 4 sản phẩm ---
-            'sunnies' => [
+            // --- Best Seller: carousel các sản phẩm bán chạy ---
+            'bestseller' => [
                 'icon'  => self::CDN . 'MOSCOT-Web_Illustrations-Lemtosh_CMT_1.png?v=1782326601&width=140',
-                'title' => 'Gọng Ký Hiệu',
-                'tabs'  => $sunniesTabs,
+                'title' => 'Sản Phẩm Bán Chạy',
+                'desc'  => 'Những chiếc gọng được khách hàng Vin Eyewear chọn nhiều nhất — '
+                    . 'thiết kế kinh điển, chất liệu bền đẹp, hợp với nhiều khuôn mặt.',
+                'products' => $bestProducts,
             ],
 
             // --- 2 tile danh mục ---
             'tiles' => [
                 [
-                    'title' => 'Gọng cận',
+                    'title' => 'Kính cận',
                     'link'  => '/product',
                     'image' => self::CDN . '920x920_-PROMO_GRID-EYEGLASSES-02_2_1.jpg?v=1782759499&width=920',
                 ],
                 [
-                    'title' => 'Kính râm',
+                    'title' => 'Kính thời trang',
                     'link'  => '/product',
+                    'image' => self::CDN . '920x920_-JUNE-W1-2026-PROMO_GRID-SUNGLASSES_1_7b1d56b4-4431-43ff-9c79-fd1fd54a3ec8.jpg?width=920',
+                ],
+            ],
+
+            // --- Booking: (1) mời đo mắt tại cửa hàng, (2) cam kết + cảm nhận KH ---
+            'booking' => [
+                'visit' => [
+                    'label' => 'Trải nghiệm tại cửa hàng',
+                    'title' => 'Đo mắt & thử kính miễn phí',
+                    'desc'  => 'Ghé cửa hàng Vin Eyewear để kỹ thuật viên đo mắt chuẩn xác và thử '
+                        . 'trực tiếp hàng trăm mẫu gọng. Chúng tôi giúp bạn chọn chiếc kính vừa vặn '
+                        . 'và hợp gương mặt nhất.',
+                    'cta'   => ['label' => 'Đặt lịch đo mắt', 'link' => '/contact'],
                     'image' => self::CDN . '920x920_-PROMO_GRID-SUNGLASSES-02_2_1.jpg?v=1782759503&width=920',
+                ],
+                // Huy hiệu cam kết (icon dựng inline ở view theo khóa 'icon')
+                'commitments' => [
+                    ['icon' => 'seal',   'label' => 'Chính hãng 100%'],
+                    ['icon' => 'uv',     'label' => 'Chống tia UV400'],
+                    ['icon' => 'shield', 'label' => 'Bảo hành 12 tháng'],
+                    ['icon' => 'return', 'label' => 'Đổi trả trong 7 ngày'],
+                ],
+                'reviewsTitle' => 'Khách hàng nói gì',
+                'reviews' => [
+                    [
+                        'name'   => 'Nguyễn Minh An',
+                        'rating' => 5,
+                        'quote'  => 'Đo mắt kỹ, tư vấn tận tình. Gọng nhẹ đeo cả ngày không mỏi, đúng gu mình luôn.',
+                    ],
+                    [
+                        'name'   => 'Trần Thu Hà',
+                        'rating' => 5,
+                        'quote'  => 'Tròng pha màu thủ công đẹp mê. Nhân viên hỗ trợ chọn dáng hợp mặt, rất ưng ý.',
+                    ],
+                    [
+                        'name'   => 'Lê Hoàng Nam',
+                        'rating' => 5,
+                        'quote'  => 'Chất liệu acetate xịn, bảo hành rõ ràng. Chắc chắn sẽ quay lại mua cho cả nhà.',
+                    ],
                 ],
             ],
 
@@ -113,16 +165,18 @@ class HomeController extends BaseController
             // --- The Optical Shop: 4 sản phẩm gọng cận ---
             'optical' => [
                 'icon'  => self::CDN . 'MOSCOT-Web_Illustrations-MannequinHead_46caad3d-b555-4ef1-8b00-837d8d26bb71.png?v=1776891281&width=140',
-                'title' => 'Tiệm Kính Vin',
+                'title' => 'Tiệm kính Vin Eyewear',
                 'desc'  => [
-                    'Vin Eyewear kết hợp hơn một thế kỷ kinh nghiệm quang học và tay nghề thủ công với '
-                        . 'tinh thần phố thị để tạo nên những chiếc gọng không bao giờ lỗi mốt.',
-                    'Dù đã có mặt ở nhiều nơi, Vin Eyewear vẫn giữ đúng cái gốc của mình: một tiệm kính của khu phố.',
+                    'Vin Eyewear tin rằng kính không chỉ để nhìn rõ hơn, mà còn là một phần của phong cách. '
+                        . 'Mỗi thiết kế được lựa chọn để trở thành điểm nhấn cho diện mạo và thể hiện cá tính '
+                        . 'riêng của người đeo.',
+                    'Từ những dáng kính tối giản, dễ đeo đến những thiết kế nổi bật theo xu hướng, Vin Eyewear '
+                        . 'mang đến nhiều lựa chọn cho từng khuôn mặt, từng outfit và từng phong cách sống.',
                 ],
                 'products' => $this->pick([3, 6, 9, 11]),
             ],
 
-            // --- Dải ảnh craftsmanship ---
+            // --- Dải ảnh craftsmanship (section đã gỡ khỏi trang chủ, giữ data như $feature/$heritage) ---
             'craftsmanship' => [
                 'image' => self::CDN . '1080x1080_CRAFTSMANSHIP_-_HOMEPAGE_BANNER_MOBILE_1.jpg?v=1742324666&width=1920',
                 'alt'   => 'Bàn làm việc của thợ kính Vin Eyewear',
@@ -157,8 +211,8 @@ class HomeController extends BaseController
                 'desc'  => 'Từ Ngọc Lâm đến Hoàng Hoa Thám, chúng tôi rất mong được gặp bạn trực tiếp.',
                 'image' => self::CDN . '2953x2953_-SHOP-PARIS_1.jpg?v=1781041319&width=900',
                 'ctas'  => [
-                    ['label' => 'Đặt lịch đo mắt', 'link' => '/contact', 'style' => 'yellow'],
-                    ['label' => 'Tìm cửa hàng',    'link' => '/contact', 'style' => 'black'],
+                    ['label' => 'Tìm cửa hàng',   'link' => '/contact', 'style' => 'yellow'],
+                    ['label' => 'Liên hệ tư vấn', 'link' => '/contact', 'style' => 'black'],
                 ],
             ],
         ]);

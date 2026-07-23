@@ -1,35 +1,75 @@
 /**
  * assets/js/home.js
  * JS riêng của trang chủ:
- *   1. Tab "Gọng ký hiệu" — đổi panel sản phẩm
- *   2. Feature gallery   — đổi ảnh lớn khi bấm thumbnail
+ *   0. Hero slider           — fade giữa các slide, bullets + autoplay
+ *   1. Best Seller carousel — nút prev/next cuộn track sản phẩm
+ *   2. Feature gallery       — đổi ảnh lớn khi bấm thumbnail
  * Scroll reveal dùng chung được xử lý inline trong master.php.
  */
 (function () {
     'use strict';
 
-    /* ── 1. Tabs ──────────────────────────────────────── */
-    var tabs = document.querySelectorAll('.tab[data-tab]');
-    var panels = document.querySelectorAll('.tabpanel[data-panel]');
+    /* ── 0. Hero slider ───────────────────────────────── */
+    var heroSlides = document.querySelectorAll('.hero__slide');
+    var heroDots = document.querySelectorAll('.hero__dot');
 
-    if (tabs.length && panels.length) {
-        tabs.forEach(function (tab) {
-            tab.addEventListener('click', function () {
-                var target = tab.getAttribute('data-tab');
+    if (heroSlides.length > 1 && heroDots.length === heroSlides.length) {
+        var HERO_INTERVAL = 5000;
+        var heroIndex = 0;
+        var heroTimer = null;
 
-                tabs.forEach(function (t) {
-                    var on = t === tab;
-                    t.classList.toggle('is-active', on);
-                    t.setAttribute('aria-selected', String(on));
-                });
+        var heroGoTo = function (i) {
+            heroSlides[heroIndex].classList.remove('is-active');
+            heroDots[heroIndex].classList.remove('is-active');
+            heroIndex = (i + heroSlides.length) % heroSlides.length;
+            heroSlides[heroIndex].classList.add('is-active');
+            heroDots[heroIndex].classList.add('is-active');
+        };
 
-                panels.forEach(function (panel) {
-                    var on = panel.getAttribute('data-panel') === target;
-                    panel.classList.toggle('is-active', on);
-                    panel.hidden = !on;
-                });
+        var heroPlay = function () {
+            heroTimer = setInterval(function () {
+                heroGoTo(heroIndex + 1);
+            }, HERO_INTERVAL);
+        };
+
+        // Bam bullet: nhay den slide do + reset dong ho autoplay
+        heroDots.forEach(function (dot, i) {
+            dot.addEventListener('click', function () {
+                clearInterval(heroTimer);
+                heroGoTo(i);
+                heroPlay();
             });
         });
+
+        heroPlay();
+    }
+
+    /* ── 1. Best Seller carousel ──────────────────────── */
+    var track = document.getElementById('bestsellerTrack');
+    var carouselBtns = document.querySelectorAll('.carousel__btn[data-dir]');
+
+    if (track && carouselBtns.length) {
+        // Cuộn 1 "trang" = bề rộng khung nhìn (đã scroll-snap tự canh thẻ)
+        carouselBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var dir = btn.getAttribute('data-dir') === 'prev' ? -1 : 1;
+                track.scrollBy({ left: dir * track.clientWidth, behavior: 'smooth' });
+            });
+        });
+
+        // Ẩn nút prev/next khi chạm 2 đầu (dư 2px cho sai số làm tròn)
+        var prevBtn = document.querySelector('.carousel__btn--prev');
+        var nextBtn = document.querySelector('.carousel__btn--next');
+
+        var updateBtns = function () {
+            var maxScroll = track.scrollWidth - track.clientWidth;
+            if (prevBtn) prevBtn.disabled = track.scrollLeft <= 2;
+            if (nextBtn) nextBtn.disabled = track.scrollLeft >= maxScroll - 2;
+        };
+
+        track.addEventListener('scroll', updateBtns);
+        window.addEventListener('resize', updateBtns);
+        updateBtns();
     }
 
     /* ── 2. Feature gallery ───────────────────────────── */
