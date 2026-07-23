@@ -7,6 +7,9 @@
    ============================================ */
 .cta-actions {
     display: flex;
+    /* Loi thoat overflow: nhieu nut / label dai tren man hep thi xuong dong
+       thay vi tran ngang (voi 2 nut mac dinh khong doi gi o desktop) */
+    flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 14px;
 }

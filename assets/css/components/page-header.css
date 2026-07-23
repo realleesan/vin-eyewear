@@ -25,6 +25,7 @@
     font-weight: 700;
     letter-spacing: -0.02em;
     margin-bottom: 16px;
+    overflow-wrap: anywhere;    /* title 1 tu qua dai cung khong tran man hinh hep */
 }
 
 .page-subtitle {
@@ -35,10 +36,21 @@
 
 
 /* ============================================
-   RESPONSIVE (khớp breakpoint 900px của layout.css)
+   RESPONSIVE (khớp breakpoint 900px / 600px của layout.css)
    ============================================ */
 @media (max-width: 900px) {
+    /* Bo padding desktop 64px — mobile theo nhip 36-40px cua cac trang khac */
+    .page-header {
+        padding: 40px var(--margin) 28px;
+    }
+
     .page-title {
         font-size: 32px;
+    }
+}
+
+@media (max-width: 600px) {
+    .page-title {
+        font-size: 28px;
     }
 }

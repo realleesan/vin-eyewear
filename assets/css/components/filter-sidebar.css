@@ -174,12 +174,18 @@
         border: none;
         max-height: none;       /* bo gioi han compact cua desktop */
         overflow-y: auto;
+        overscroll-behavior: contain; /* cuon het list khong keo lay trang phia sau */
         transform: translateX(-100%);
-        transition: transform 0.3s ease;
+        /* Dong = visibility:hidden de chip/nut ben trong khong nhan duoc
+           focus/click khi da truot ra ngoai man hinh (cung pattern
+           opacity+visibility cua .filter-overlay o tren) */
+        visibility: hidden;
+        transition: transform 0.3s ease, visibility 0.3s ease;
     }
 
     .filter-sidebar.is-open {
         transform: translateX(0);
+        visibility: visible;
     }
 
     .filter-sidebar__close {
