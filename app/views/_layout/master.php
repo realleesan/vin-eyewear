@@ -63,6 +63,9 @@
     <!-- Footer -->
     <?php require_once VIEWS_PATH . '/_layout/footer.php'; ?>
 
+    <!-- Pusher (Scroll to Top) dùng chung toàn site — component tự nhúng CSS/JS riêng -->
+    <?php require_once VIEWS_PATH . '/_layout/pusher.php'; ?>
+
     <!-- JS mobile menu dùng chung -->
     <script src="/assets/js/mobile-menu.js" defer></script>
 
