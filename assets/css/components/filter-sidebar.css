@@ -1,0 +1,201 @@
+/* ============================================
+   Vin Eyewear - Component: Filter Sidebar ("Vỏ")
+   Design system: "Lower East Heritage" (xem DESIGN.md)
+   Sharp 0px · hairline đen · label mono · active vàng
+   Desktop: cột trái sticky. Mobile (≤900px): slide-over
+   từ cạnh trái + overlay, toggle ở filter-sidebar.js.
+   ============================================ */
+
+
+/* ============================================
+   NÚT MỞ FILTER (chỉ hiện mobile)
+   ============================================ */
+.filter-toggle {
+    display: none;              /* bật lại trong media query ≤900px */
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+}
+
+.filter-toggle svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+}
+
+
+/* ============================================
+   OVERLAY NỀN (mobile, khi slide-over mở)
+   ============================================ */
+.filter-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 150;               /* trên .site-header (z-index 100) */
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.filter-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+
+/* ============================================
+   KHUNG SIDEBAR (compact — vừa 1 màn hình desktop)
+   ============================================ */
+.filter-sidebar {
+    position: sticky;
+    top: 90px;                  /* dưới .site-header sticky (74px) */
+    align-self: start;
+    background: var(--white);
+    border: 1.5px solid var(--black);
+    /* Chặn cao không vượt 1 màn hình; dư thì cuộn bên trong */
+    max-height: calc(100vh - 106px);
+    overflow-y: auto;
+}
+
+.filter-sidebar__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--black);
+    color: var(--white);
+}
+
+.filter-sidebar__title {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.filter-sidebar__close {
+    display: none;              /* chỉ hiện mobile */
+    background: none;
+    border: none;
+    color: var(--white);
+    font-size: 22px;
+    line-height: 1;
+    padding: 0 4px;
+    cursor: pointer;
+}
+
+
+/* ============================================
+   NHÓM FILTER
+   ============================================ */
+.filter-group {
+    padding: 12px 14px;
+}
+
+.filter-group + .filter-group {
+    border-top: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.filter-group__title {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--outline);
+    margin-bottom: 8px;
+}
+
+.filter-group__options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+
+/* ============================================
+   CHIP FILTER
+   (product.js toggle .is-active + aria-pressed)
+   ============================================ */
+.filter-chip {
+    display: block;
+    width: 100%;
+    padding: 5px 8px;
+    background: transparent;
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-align: left;
+    color: var(--on-surface);
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.filter-chip:hover {
+    background: var(--gray);
+}
+
+.filter-chip.is-active {
+    background: var(--yellow);
+    color: var(--black);
+}
+
+
+/* ============================================
+   RESPONSIVE — slide-over mobile (≤900px,
+   khớp breakpoint layout.css / mobile-menu.js)
+   ============================================ */
+@media (max-width: 900px) {
+    .filter-toggle {
+        display: inline-flex;
+        margin-bottom: 16px;
+    }
+
+    .filter-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 200;           /* trên overlay (150) */
+        width: min(320px, 85vw);
+        border: none;
+        max-height: none;       /* bo gioi han compact cua desktop */
+        /* align-self:start (rule desktop) lam panel fixed co lai theo noi dung
+           du da co top/bottom:0 -> ep full chieu cao man hinh */
+        height: 100%;
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .filter-sidebar.is-open {
+        transform: translateX(0);
+    }
+
+    .filter-sidebar__close {
+        display: block;
+    }
+
+    /* Slide-over full màn hình: nới lại touch target, không cần compact */
+    .filter-group {
+        padding: 16px;
+    }
+
+    .filter-chip {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+}
