@@ -523,9 +523,12 @@
 
 /* Booking responsive */
 @media (max-width: 900px) {
+    /* Dong bo padding mobile voi cac section khac (giong .tiles: 40/84 -> 24/56) */
+    .booking { padding: 24px var(--margin) 56px; }
     .booking-visit { grid-template-columns: 1fr; gap: 32px; }
     .booking-visit__title { font-size: 30px; }
     .booking-trust { margin-top: 56px; }
+    .booking-trust .section-heading { margin-top: 56px; }
     .commit-list { grid-template-columns: repeat(2, 1fr); }
     .reviews { grid-template-columns: 1fr; }
 }
