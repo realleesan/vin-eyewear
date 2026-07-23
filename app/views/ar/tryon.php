@@ -4,15 +4,12 @@
  * Trang thử kính AR — overlay cố định tại tâm khung camera.
  * Biến nhận từ ArController::tryon():
  *   $glasses — mảng mẫu kính thử (id, name, overlay)
+ *
+ * Layout note:
+ * - Page Header và CTA sẽ được Duy Anh quản lý qua component chung
+ *   (_layout/page-header.php, _layout/cta.php) nên không giữ inline ở đây.
  */
 ?>
-
-<!-- PAGE HEADER -->
-<div class="page-header ar-page-header reveal">
-    <div class="page-header-inner">
-        <h1 class="page-title">Thử kính AR</h1>
-    </div>
-</div>
 
 <!-- AR WORKSPACE -->
 <section class="ar-section reveal">
@@ -109,10 +106,6 @@
                     </button>
                     <?php endforeach; ?>
                 </div>
-            </div>
-
-            <div class="ar-cta">
-                <a href="/product" class="btn-primary">Xem bộ sưu tập</a>
             </div>
         </aside>
 

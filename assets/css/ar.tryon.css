@@ -559,4 +559,30 @@
     .ar-panel {
         padding: 24px 16px;
     }
+
+    .camera-error,
+    .camera-permission-denied {
+        padding: 24px 16px;
+    }
+
+    .camera-error h3,
+    .camera-permission-denied h3 {
+        font-size: 15px;
+    }
+
+    .camera-error p,
+    .camera-permission-denied p {
+        font-size: 12px;
+        max-width: 100%;
+    }
+
+    .permission-steps {
+        font-size: 11px;
+        padding-left: 16px;
+    }
+
+    .btn-retry {
+        padding: 8px 20px;
+        font-size: 10px;
+    }
 }
