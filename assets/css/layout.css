@@ -323,12 +323,12 @@ button, input, select, textarea {
     color: var(--black);
 }
 
-/* --- Footer top: grid 4 cột --- */
+/* --- Footer top: grid 3 cột link, hairline dọc ngăn cách --- */
 .footer-top {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1.15fr;
+    grid-template-columns: 1fr 1fr 1.3fr;
     gap: 48px;
-    padding: 60px var(--margin) 44px;
+    padding: 56px var(--margin) 48px;
 }
 
 /* min-width:0 để cột co được: mặc định grid item không thu hẹp dưới min-content,
@@ -337,61 +337,13 @@ button, input, select, textarea {
     min-width: 0;
 }
 
-/* Hairline dọc ngăn brand | link | liên hệ (giống ảnh tham khảo) */
+/* Hairline dọc ngăn 3 cột: Khám phá | Hỗ trợ | Liên hệ */
 .footer-top > * + * {
     padding-left: 48px;
     border-left: 1px solid rgba(0, 0, 0, 0.25);
 }
 
-.footer-top > .footer-col + .footer-col:not(.footer-col--contact) {
-    padding-left: 0;
-    border-left: none;
-}
-
-/* Brand — con dấu + khẩu hiệu, căn giữa */
-.footer-brand {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-}
-
-.footer-brand__stamp {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: var(--font-sans);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.2em;
-    margin-bottom: 22px;
-}
-
-.footer-brand__stamp-eye {
-    font-size: 26px;
-    line-height: 1;
-    margin: 4px 0;
-}
-
-.footer-brand__quote {
-    font-family: var(--font-serif);
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1.5;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    max-width: 280px;
-}
-
-.footer-brand__attr {
-    margin-top: 18px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    line-height: 1.7;
-    color: rgba(0, 0, 0, 0.75);
-}
-
-/* Link columns 2-4 */
+/* Link columns */
 .footer-col__heading {
     font-family: var(--font-sans);
     font-size: 14px;
@@ -458,51 +410,43 @@ button, input, select, textarea {
     overflow-wrap: anywhere;
 }
 
-/* --- Footer social: icon giữa, hairline hai bên --- */
-.footer-social {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    padding: 0 var(--margin) 40px;
-}
-
-.footer-social__rule {
-    flex: 1;
-    height: 1px;
-    background: rgba(0, 0, 0, 0.25);
-}
-
-.footer-social__list {
-    display: flex;
-    align-items: center;
-    gap: 26px;
-}
-
-.footer-social__list a {
-    display: block;
-    color: var(--black);
-    transition: opacity 0.15s;
-}
-
-.footer-social__list a:hover { opacity: 0.55; }
-
-.footer-social__list svg {
-    width: 19px;
-    height: 19px;
-    fill: currentColor;
-}
-
-/* --- Footer bottom: dải đen --- */
+/* --- Footer bottom: dải đen — copyright | social | made in ---
+   Grid 1fr auto 1fr để cụm social luôn nằm chính giữa
+   bất kể độ dài chữ 2 bên. */
 .footer-bottom {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
-    padding: 20px var(--margin);
+    gap: 24px;
+    padding: 18px var(--margin);
     background: var(--black);
     font-family: var(--font-mono);
     font-size: 11px;
     color: rgba(255, 255, 255, 0.55);
     letter-spacing: 0.06em;
+}
+
+.footer-bottom__made { text-align: right; }
+
+.footer-bottom__social {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.footer-bottom__social a {
+    display: block;
+    color: var(--white);
+    opacity: 0.65;
+    transition: opacity 0.15s;
+}
+
+.footer-bottom__social a:hover { opacity: 1; }
+
+.footer-bottom__social svg {
+    width: 17px;
+    height: 17px;
+    fill: currentColor;
 }
 
 /* ============================================
@@ -730,26 +674,19 @@ button, input, select, textarea {
         max-width: none;
     }
 
+    /* Footer: 3 cột -> 2 cột, Liên hệ chiếm trọn hàng dưới */
     .footer-top {
         grid-template-columns: 1fr 1fr;
         gap: 32px;
     }
 
+    .footer-col--contact { grid-column: 1 / -1; }
+
     /* Xếp 2 cột thì hairline dọc hết ý nghĩa -> bỏ */
-    .footer-top > * + *,
-    .footer-top > .footer-col + .footer-col:not(.footer-col--contact) {
+    .footer-top > * + * {
         padding-left: 0;
         border-left: none;
     }
-
-    .footer-brand {
-        align-items: flex-start;
-        text-align: left;
-    }
-
-    .footer-brand__quote { max-width: none; }
-
-    .footer-social { gap: 20px; padding-bottom: 32px; }
 
     .product-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -766,6 +703,16 @@ button, input, select, textarea {
         grid-template-columns: 1fr;
         gap: 36px;
     }
+
+    /* Footer bottom: xếp dọc, căn giữa cho gọn màn hình hẹp */
+    .footer-bottom {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        gap: 12px;
+        padding: 22px var(--margin);
+    }
+
+    .footer-bottom__made { text-align: center; }
 
     /* Join: input + nút xếp dọc cho đỡ chật */
     .join__form { flex-direction: column; }
