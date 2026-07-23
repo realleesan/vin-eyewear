@@ -12,9 +12,9 @@
  * Thẻ sản phẩm ở trang chủ dùng component riêng .frame-card (ảnh nền xám,
  * chữ căn giữa, hàng chấm màu) — khác .product-card của trang /product.
  *
- * Thứ tự section: hero -> best seller (trên cùng), nhóm sản phẩm (tiles,
- * optical) -> craft -> nội dung (stories) -> ghé cửa hàng (booking, visit)
- * -> join (footer).
+ * Thứ tự section: hero -> best seller -> booking (đặt lịch hẹn, ngay sau
+ * best seller theo task B6) -> nhóm sản phẩm (tiles, optical) -> craft
+ * -> ghé cửa hàng (visit) -> join (footer).
  */
 
 /** Render 1 hàng chấm màu cho thẻ sản phẩm */
@@ -106,51 +106,8 @@ $renderCommitIcon = static function (string $key): void {
 </section>
 
 <!-- ============================================================
-     SECTION 3 — 2 TILE DANH MỤC (Kính cận / Kính thời trang)
-     ============================================================ -->
-<section class="tiles reveal">
-    <?php foreach ($tiles as $tile): ?>
-    <a href="<?= htmlspecialchars($tile['link']) ?>" class="tile">
-        <img class="tile__img" src="<?= htmlspecialchars($tile['image']) ?>" alt="<?= htmlspecialchars($tile['title']) ?>" loading="lazy">
-        <div class="tile__body">
-            <h3 class="tile__title"><?= htmlspecialchars($tile['title']) ?></h3>
-            <span class="btn-yellow tile__btn">Xem bộ sưu tập</span>
-        </div>
-    </a>
-    <?php endforeach; ?>
-</section>
-
-<!-- ============================================================
-     SECTION 4 — THE OPTICAL SHOP (thương hiệu + lưới sản phẩm)
-     ============================================================ -->
-<section class="optical reveal">
-    <h2 class="section-heading">
-        <span><?= htmlspecialchars($optical['title']) ?></span>
-        <img class="section-heading__icon" src="<?= htmlspecialchars($optical['icon']) ?>" alt="" loading="lazy">
-    </h2>
-
-    <?php foreach ($optical['desc'] as $para): ?>
-    <p class="section-desc"><?= htmlspecialchars($para) ?></p>
-    <?php endforeach; ?>
-
-    <div class="frame-grid">
-        <?php foreach ($optical['products'] as $p) { $renderFrameCard($p); } ?>
-    </div>
-
-    <div class="section-cta">
-        <a href="/product" class="btn-yellow">Xem tất cả gọng</a>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 5 — DẢI ẢNH CRAFTSMANSHIP
-     ============================================================ -->
-<section class="craft reveal">
-    <img src="<?= htmlspecialchars($craftsmanship['image']) ?>" alt="<?= htmlspecialchars($craftsmanship['alt']) ?>" loading="lazy">
-</section>
-
-<!-- ============================================================
-     SECTION 6 — BOOKING (mời đo mắt tại cửa hàng + cam kết & cảm nhận)
+     SECTION 3 — BOOKING / ĐẶT LỊCH HẸN (ngay sau Best Seller — task B6)
+     (mời đo mắt tại cửa hàng + cam kết & cảm nhận; CTA -> /contact)
      ============================================================ -->
 <section class="booking reveal">
 
@@ -198,6 +155,50 @@ $renderCommitIcon = static function (string $key): void {
             <?php endforeach; ?>
         </div>
     </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4 — 2 TILE DANH MỤC (Kính cận / Kính thời trang)
+     ============================================================ -->
+<section class="tiles reveal">
+    <?php foreach ($tiles as $tile): ?>
+    <a href="<?= htmlspecialchars($tile['link']) ?>" class="tile">
+        <img class="tile__img" src="<?= htmlspecialchars($tile['image']) ?>" alt="<?= htmlspecialchars($tile['title']) ?>" loading="lazy">
+        <div class="tile__body">
+            <h3 class="tile__title"><?= htmlspecialchars($tile['title']) ?></h3>
+            <span class="btn-yellow tile__btn">Xem bộ sưu tập</span>
+        </div>
+    </a>
+    <?php endforeach; ?>
+</section>
+
+<!-- ============================================================
+     SECTION 5 — THE OPTICAL SHOP (thương hiệu + lưới sản phẩm)
+     ============================================================ -->
+<section class="optical reveal">
+    <h2 class="section-heading">
+        <span><?= htmlspecialchars($optical['title']) ?></span>
+        <img class="section-heading__icon" src="<?= htmlspecialchars($optical['icon']) ?>" alt="" loading="lazy">
+    </h2>
+
+    <?php foreach ($optical['desc'] as $para): ?>
+    <p class="section-desc"><?= htmlspecialchars($para) ?></p>
+    <?php endforeach; ?>
+
+    <div class="frame-grid">
+        <?php foreach ($optical['products'] as $p) { $renderFrameCard($p); } ?>
+    </div>
+
+    <div class="section-cta">
+        <a href="/product" class="btn-yellow">Xem tất cả gọng</a>
+    </div>
+</section>
+
+<!-- ============================================================
+     SECTION 6 — DẢI ẢNH CRAFTSMANSHIP
+     ============================================================ -->
+<section class="craft reveal">
+    <img src="<?= htmlspecialchars($craftsmanship['image']) ?>" alt="<?= htmlspecialchars($craftsmanship['alt']) ?>" loading="lazy">
 </section>
 
 <!-- ============================================================
