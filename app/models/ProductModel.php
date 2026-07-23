@@ -11,7 +11,7 @@
 class ProductModel
 {
     /**
-     * Toàn bộ catalog (12 sản phẩm).
+     * Toàn bộ catalog (18 sản phẩm).
      * Mỗi item: id, name, category, price, image, badge, colors[]
      * colors[] = mã hex các màu gọng, hiển thị thành hàng chấm màu ở trang chủ.
      */
@@ -125,6 +125,60 @@ class ProductModel
                 'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/miltzen-color-blonde-pos-1_9a0ab9c8-6bf0-400c-b088-81dc14863acc.jpg?v=1715367926&width=800',
                 'badge' => '',
                 'colors' => ['#C8891F', '#E0B25C', '#F0D9A8'],
+            ],
+            [
+                'id' => 13,
+                'name' => 'Round Aqua Fade',
+                'category' => 'tron',
+                'price' => 1_150_000,
+                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-light-blue-pos-1.jpg?v=1705433402&width=800',
+                'badge' => 'Bán chạy',
+                'colors' => ['#A8CBD8', '#6E9BB0', '#3E5C6B', '#DCE9EE'],
+            ],
+            [
+                'id' => 14,
+                'name' => 'Round Burgundy',
+                'category' => 'tron',
+                'price' => 1_320_000,
+                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-burgundy-pos-1.jpg?v=1705433402&width=800',
+                'badge' => 'Mới',
+                'colors' => ['#7B2D3B', '#5A1F2A', '#A8535F'],
+            ],
+            [
+                'id' => 15,
+                'name' => 'Round Nude Blonde',
+                'category' => 'tron',
+                'price' => 990_000,
+                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-flesh-pos-1_ba8a10e6-8412-4ad5-b7cf-254ecf409829.jpg?v=1699903559&width=800',
+                'badge' => '',
+                'colors' => ['#D9B99B', '#C49A78', '#EBD6C2'],
+            ],
+            [
+                'id' => 16,
+                'name' => 'Aviator Gold Classic',
+                'category' => 'aviator',
+                'price' => 1_290_000,
+                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/mingle-color-gold-pos-1.jpg?v=1730403716&width=800',
+                'badge' => 'Bán chạy',
+                'colors' => ['#C9A227', '#E6C86E', '#8A6D1F'],
+            ],
+            [
+                'id' => 17,
+                'name' => 'Wayfarer Tortoise',
+                'category' => 'vuong',
+                'price' => 1_240_000,
+                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/arthur-color-tortoise-pos-1.jpg?v=1758566608&width=800',
+                'badge' => 'Mới',
+                'colors' => ['#8A5A2B', '#C8A165', '#3E2B1B', '#D9C9A3'],
+            ],
+            [
+                'id' => 18,
+                'name' => 'Round Honey',
+                'category' => 'tron',
+                'price' => 1_080_000,
+                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-blonde-pos-1.jpg?v=1705433402&width=800',
+                'badge' => 'Bán chạy',
+                'colors' => ['#C8891F', '#E0B25C', '#A66A16', '#F0D9A8'],
             ],
         ];
     }

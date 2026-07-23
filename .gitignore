@@ -4,3 +4,8 @@ Thumbs.db
 *.log
 *.tmp
 .vscode/
+
+# AI assistant
+/CLAUDE.md
+CLAUDE.local.md
+.claude/

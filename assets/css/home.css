@@ -134,42 +134,82 @@
 
 
 /* ============================================
-   SECTION 2 — SIGNATURE SUNNIES
+   SECTION 2 — BEST SELLER (carousel)
    ============================================ */
-.sunnies {
+.bestseller {
     padding: 76px var(--margin) 84px;
 }
 
-/* Tabs */
-.tabs {
+/* Carousel: nút 2 bên | track cuộn ngang | nút. Nút nằm CẠNH ảnh, không đè. */
+.carousel {
     display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 40px;
+}
+
+.frame-track {
+    flex: 1 1 auto;
+    min-width: 0;                     /* cho phép track co lại trong flex */
+    display: flex;
+    gap: 22px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: none;            /* Firefox: ẩn thanh cuộn */
+    -ms-overflow-style: none;
+}
+
+.frame-track::-webkit-scrollbar { display: none; }
+
+/* 4 thẻ / khung nhìn (desktop) */
+.frame-track .frame-card {
+    flex: 0 0 calc((100% - 22px * 3) / 4);
+    scroll-snap-align: start;
+}
+
+/* Nút cạnh ảnh — vuông sharp 0px, viền mảnh, mũi tên nét. Nhỏ, không choán chỗ. */
+.carousel__btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-top: 26px;
-}
-
-.tab {
-    padding: 12px 22px;
-    background: var(--frame-bg);
-    color: var(--on-surface-variant);
-    border: none;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
-}
-
-.tab:hover { color: var(--black); }
-
-.tab.is-active {
-    background: var(--yellow);
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    background: transparent;
+    border: 1.5px solid var(--black);
     color: var(--black);
+    cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease, opacity 0.25s ease;
 }
 
-.tabpanel[hidden] { display: none; }
+.carousel__btn svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.25s ease;
+}
+
+/* Hover: đổ nền đen + mũi tên trượt nhẹ theo hướng — điểm nhấn "nghệ thuật" */
+.carousel__btn:hover {
+    background: var(--black);
+    border-color: var(--black);
+    color: var(--white);
+}
+
+.carousel__btn--prev:hover svg { transform: translateX(-3px); }
+.carousel__btn--next:hover svg { transform: translateX(3px); }
+
+/* Chạm 2 đầu track -> JS gắn [disabled], làm mờ nút */
+.carousel__btn[disabled] {
+    opacity: 0.2;
+    pointer-events: none;
+}
 
 
 /* ============================================
@@ -201,10 +241,10 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: transform 0.3s ease;
 }
 
-.frame-card:hover .frame-card__img img { transform: scale(1.04); }
+.frame-card:hover .frame-card__img img { transform: scale(1.03); }
 
 /* Badge đen bo góc nhẹ, neo góc trên-trái */
 .frame-card__badge {
@@ -277,12 +317,27 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.6s ease;
+    transition: transform 0.3s ease;
 }
 
 .tile:hover .tile__img { transform: scale(1.03); }
 
+/* Lớp phủ tối nhẹ (vignette) — ảnh model Moscot nền sáng nên chữ trắng dễ chìm.
+   Đậm ở giữa nơi đặt chữ, nhạt dần ra rìa để ảnh vẫn tươi. z-index:1 để luôn
+   nằm trên ảnh kể cả khi ảnh scale (transform tạo stacking context riêng). */
+.tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.18) 72%);
+    pointer-events: none;
+}
+
+/* z-index:2 giữ tiêu đề + nút luôn nằm TRÊN cả ảnh lẫn lớp phủ. */
 .tile__body {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -296,9 +351,187 @@
     text-transform: uppercase;
     letter-spacing: 0.03em;
     color: var(--white);
+    text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
 }
 
 .tile__btn { padding: 12px 22px; }
+
+
+/* ============================================
+   SECTION 3.5 — BOOKING (đo mắt tại cửa hàng + cam kết & cảm nhận)
+   ============================================ */
+.booking {
+    padding: 40px var(--margin) 84px;
+}
+
+/* --- (1) Mời đo mắt (2 cột: chữ + ảnh) --- */
+.booking-visit {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 56px;
+}
+
+.booking-visit__label {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--on-surface-variant);
+    margin-bottom: 16px;
+}
+
+.booking-visit__title {
+    font-family: var(--font-sans);
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.12;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    margin-bottom: 18px;
+}
+
+.booking-visit__desc {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--on-surface-variant);
+    max-width: 460px;
+    margin-bottom: 28px;
+}
+
+.booking-visit__media {
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--frame-bg);
+}
+
+.booking-visit__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --- (2) Cam kết + Cảm nhận --- */
+.booking-trust {
+    margin-top: 84px;
+}
+
+/* Dải 4 huy hiệu cam kết — khe đen giữa các ô (giống product-grid) */
+.commit-list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--black);
+    border: 1px solid var(--black);
+}
+
+.commit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 30px 16px;
+    background: var(--white);
+    text-align: center;
+}
+
+.commit__icon { color: var(--black); line-height: 0; }
+
+.commit__icon svg {
+    width: 30px;
+    height: 30px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.commit__label {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Tiêu đề "Khách hàng nói gì" dùng .section-heading sẵn có */
+.booking-trust .section-heading { margin-top: 72px; }
+
+/* Lưới 3 thẻ feedback */
+.reviews {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin-top: 40px;
+}
+
+.review {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    padding: 28px 26px;
+    background: var(--white);
+    border: 1px solid var(--border);
+}
+
+.review__stars {
+    color: var(--black);
+    font-size: 14px;
+    letter-spacing: 0.14em;
+}
+
+.review__quote {
+    flex: 1;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--on-surface);
+}
+
+.review__author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.review__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--yellow);
+    color: var(--black);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.review__name {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* Booking responsive */
+@media (max-width: 900px) {
+    /* Dong bo padding mobile voi cac section khac (giong .tiles: 40/84 -> 24/56) */
+    .booking { padding: 24px var(--margin) 56px; }
+    .booking-visit { grid-template-columns: 1fr; gap: 32px; }
+    .booking-visit__title { font-size: 30px; }
+    .booking-trust { margin-top: 56px; }
+    .booking-trust .section-heading { margin-top: 56px; }
+    .commit-list { grid-template-columns: repeat(2, 1fr); }
+    .reviews { grid-template-columns: 1fr; }
+}
 
 
 /* ============================================
@@ -494,12 +727,9 @@
 /* ============================================
    SECTION 6 — CUSTOM MADE TINTS
    ============================================ */
+/* Sau khi bỏ .tints__info, section chỉ còn dải ảnh full-width */
 .tints {
-    display: grid;
-    grid-template-columns: 1fr 1.35fr;
-    align-items: stretch;
     margin: 84px var(--margin);
-    background: var(--frame-bg);
 }
 
 .tints__info {
@@ -568,7 +798,7 @@
 
 .tints__media img {
     width: 100%;
-    height: 100%;
+    height: 460px;
     object-fit: cover;
 }
 
@@ -711,12 +941,14 @@
     .hero__cta { margin-bottom: 64px; padding: 14px 26px; font-size: 12px; }
     .hero__dots { margin-bottom: 44px; }
 
-    .sunnies { padding: 48px var(--margin) 56px; }
+    .bestseller { padding: 48px var(--margin) 56px; }
 
     /* 4 cột -> 2 cột */
     .frame-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
 
-    .tabs { flex-wrap: wrap; }
+    /* Carousel: 5 -> 3 thẻ / khung nhìn */
+    .frame-track { gap: 16px; }
+    .frame-track .frame-card { flex-basis: calc((100% - 16px * 2) / 3); }
 
     /* Các khối 2 cột -> 1 cột */
     .tiles,
@@ -740,7 +972,6 @@
     .heritage__quote { font-size: 18px; }
 
     .tints { margin: 56px var(--margin); }
-    .tints__info { padding: 32px var(--margin); }
     .tints__media img { height: 300px; }
 
     .optical { padding: 20px var(--margin) 56px; }
@@ -758,5 +989,9 @@
 
 @media (max-width: 600px) {
     .frame-grid { grid-template-columns: 1fr; }
+
+    /* Carousel: 2 thẻ / khung nhìn */
+    .frame-track .frame-card { flex-basis: calc((100% - 16px) / 2); }
+
     .visit__ctas { flex-direction: column; }
 }

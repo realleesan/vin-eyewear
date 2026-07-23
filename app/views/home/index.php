@@ -4,11 +4,17 @@
  * Trang chủ dựng theo layout Moscot (xem screencapture-moscot-*.png).
  *
  * Biến nhận từ HomeController::index():
- *   $hero, $sunnies, $tiles, $feature, $heritage,
- *   $tints, $optical, $craftsmanship, $stories, $visit
+ *   $hero, $bestseller, $tiles, $optical,
+ *   $craftsmanship, $stories, $booking, $visit
+ *   (các biến $feature, $heritage, $tints vẫn được controller cấp nhưng
+ *    section tương ứng đã gỡ khỏi trang chủ.)
  *
  * Thẻ sản phẩm ở trang chủ dùng component riêng .frame-card (ảnh nền xám,
  * chữ căn giữa, hàng chấm màu) — khác .product-card của trang /product.
+ *
+ * Thứ tự section: hero -> best seller -> booking (đặt lịch hẹn, ngay sau
+ * best seller theo task B6) -> nhóm sản phẩm (tiles, optical) -> craft
+ * -> ghé cửa hàng (visit) -> join (footer).
  */
 
 /** Render 1 hàng chấm màu cho thẻ sản phẩm */
@@ -41,6 +47,19 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
     </a>
 <?php }; ?>
 
+<?php
+/** Render icon SVG cho huy hiệu cam kết (Booking) theo khóa 'icon' */
+$renderCommitIcon = static function (string $key): void {
+    $icons = [
+        'seal'   => '<circle cx="12" cy="9.5" r="6"/><path d="M9.6 9.5l1.7 1.7 3.1-3.3"/><path d="M8 14.2l-1.4 6 5.4-2.9 5.4 2.9-1.4-6"/>',
+        'uv'     => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/>',
+        'shield' => '<path d="M12 3l7 2.6v5.1c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V5.6z"/><path d="M9 12l2 2 4-4.2"/>',
+        'return' => '<path d="M4.5 9.5a8 8 0 0 1 13-2.6L20 9"/><path d="M20 4.5V9h-4.5"/><path d="M19.5 14.5a8 8 0 0 1-13 2.6L4 15"/><path d="M4 19.5V15h4.5"/>',
+    ];
+    echo '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' . ($icons[$key] ?? '') . '</svg>';
+};
+?>
+
 <!-- ============================================================
      SECTION 1 — HERO (ảnh full-bleed + CTA)
      ============================================================ -->
@@ -53,41 +72,33 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
 </section>
 
 <!-- ============================================================
-     SECTION 2 — SIGNATURE SUNNIES (tab + 4 thẻ)
+     SECTION 2 — BEST SELLER (carousel sản phẩm bán chạy)
      ============================================================ -->
-<section class="sunnies reveal">
+<section class="bestseller reveal">
     <h2 class="section-heading">
-        <img class="section-heading__icon" src="<?= htmlspecialchars($sunnies['icon']) ?>" alt="" loading="lazy">
-        <span><?= htmlspecialchars($sunnies['title']) ?></span>
+        <img class="section-heading__icon" src="<?= htmlspecialchars($bestseller['icon']) ?>" alt="" loading="lazy">
+        <span><?= htmlspecialchars($bestseller['title']) ?></span>
     </h2>
 
-    <div class="tabs" role="tablist">
-        <?php foreach ($sunnies['tabs'] as $i => $tab): ?>
-        <button
-            type="button"
-            class="tab <?= $i === 0 ? 'is-active' : '' ?>"
-            role="tab"
-            aria-selected="<?= $i === 0 ? 'true' : 'false' ?>"
-            aria-controls="tabpanel-<?= htmlspecialchars($tab['id']) ?>"
-            data-tab="<?= htmlspecialchars($tab['id']) ?>"
-        ><?= htmlspecialchars($tab['label']) ?></button>
-        <?php endforeach; ?>
-    </div>
+    <p class="section-desc"><?= htmlspecialchars($bestseller['desc']) ?></p>
 
-    <?php foreach ($sunnies['tabs'] as $i => $tab): ?>
-    <div
-        class="tabpanel <?= $i === 0 ? 'is-active' : '' ?>"
-        id="tabpanel-<?= htmlspecialchars($tab['id']) ?>"
-        role="tabpanel"
-        data-panel="<?= htmlspecialchars($tab['id']) ?>"
-        <?= $i === 0 ? '' : 'hidden' ?>
-    >
-        <p class="section-desc"><?= htmlspecialchars($tab['desc']) ?></p>
-        <div class="frame-grid">
-            <?php foreach ($tab['products'] as $p) { $renderFrameCard($p); } ?>
+    <div class="carousel">
+        <button type="button" class="carousel__btn carousel__btn--prev" data-dir="prev" aria-label="Sản phẩm trước">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M20 12H5"/><path d="M11 6l-6 6 6 6"/>
+            </svg>
+        </button>
+
+        <div class="frame-track" id="bestsellerTrack">
+            <?php foreach ($bestseller['products'] as $p) { $renderFrameCard($p); } ?>
         </div>
+
+        <button type="button" class="carousel__btn carousel__btn--next" data-dir="next" aria-label="Sản phẩm sau">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 12h15"/><path d="M13 6l6 6-6 6"/>
+            </svg>
+        </button>
     </div>
-    <?php endforeach; ?>
 
     <div class="section-cta">
         <a href="/product" class="btn-yellow">Xem tất cả gọng</a>
@@ -95,7 +106,59 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
 </section>
 
 <!-- ============================================================
-     SECTION 3 — 2 TILE DANH MỤC
+     SECTION 3 — BOOKING / ĐẶT LỊCH HẸN (ngay sau Best Seller — task B6)
+     (mời đo mắt tại cửa hàng + cam kết & cảm nhận; CTA -> /contact)
+     ============================================================ -->
+<section class="booking reveal">
+
+    <!-- (1) Mời đo mắt & thử kính tại cửa hàng -->
+    <div class="booking-visit">
+        <div class="booking-visit__info">
+            <span class="booking-visit__label"><?= htmlspecialchars($booking['visit']['label']) ?></span>
+            <h2 class="booking-visit__title"><?= htmlspecialchars($booking['visit']['title']) ?></h2>
+            <p class="booking-visit__desc"><?= htmlspecialchars($booking['visit']['desc']) ?></p>
+            <a href="<?= htmlspecialchars($booking['visit']['cta']['link']) ?>" class="btn-yellow"><?= htmlspecialchars($booking['visit']['cta']['label']) ?></a>
+        </div>
+        <div class="booking-visit__media">
+            <img src="<?= htmlspecialchars($booking['visit']['image']) ?>" alt="Đo mắt và thử kính tại cửa hàng Vin Eyewear" loading="lazy">
+        </div>
+    </div>
+
+    <!-- (2) Cam kết chất lượng + Cảm nhận khách hàng -->
+    <div class="booking-trust">
+        <ul class="commit-list" role="list">
+            <?php foreach ($booking['commitments'] as $c): ?>
+            <li class="commit">
+                <span class="commit__icon"><?php $renderCommitIcon($c['icon']); ?></span>
+                <span class="commit__label"><?= htmlspecialchars($c['label']) ?></span>
+            </li>
+            <?php endforeach; ?>
+        </ul>
+
+        <h2 class="section-heading"><span><?= htmlspecialchars($booking['reviewsTitle']) ?></span></h2>
+
+        <div class="reviews">
+            <?php foreach ($booking['reviews'] as $r):
+                // Lay chu cai dau cua ten cuoi (an toan UTF-8, khong can ext mbstring)
+                $parts   = preg_split('/\s+/u', trim($r['name']));
+                $last    = (string) end($parts);
+                $initial = strtoupper(preg_match('/^./u', $last, $m) ? $m[0] : substr($last, 0, 1));
+            ?>
+            <figure class="review">
+                <div class="review__stars" aria-label="<?= (int) $r['rating'] ?> trên 5 sao"><?= str_repeat('&#9733;', (int) $r['rating']) ?></div>
+                <blockquote class="review__quote"><?= htmlspecialchars($r['quote']) ?></blockquote>
+                <figcaption class="review__author">
+                    <span class="review__avatar" aria-hidden="true"><?= htmlspecialchars($initial) ?></span>
+                    <span class="review__name"><?= htmlspecialchars($r['name']) ?></span>
+                </figcaption>
+            </figure>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SECTION 4 — 2 TILE DANH MỤC (Kính cận / Kính thời trang)
      ============================================================ -->
 <section class="tiles reveal">
     <?php foreach ($tiles as $tile): ?>
@@ -110,94 +173,7 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
 </section>
 
 <!-- ============================================================
-     SECTION 4 — FEATURE (thông tin trái + gallery phải)
-     ============================================================ -->
-<section class="feature reveal">
-    <div class="feature__info">
-        <h2 class="feature__name"><?= htmlspecialchars($feature['name']) ?></h2>
-        <img class="feature__thumb" src="<?= htmlspecialchars($feature['thumb']) ?>" alt="" loading="lazy">
-        <p class="feature__price"><?= number_format($feature['price'], 0, ',', '.') ?> &#8363;</p>
-        <p class="feature__rating">
-            <span class="stars" aria-hidden="true"><?= str_repeat('&#9733;', $feature['rating']) ?></span>
-            <span class="reviews"><?= (int) $feature['reviews'] ?> đánh giá</span>
-        </p>
-        <p class="feature__desc"><?= htmlspecialchars($feature['desc']) ?></p>
-        <a href="<?= htmlspecialchars($feature['cta']['link']) ?>" class="btn-yellow"><?= htmlspecialchars($feature['cta']['label']) ?></a>
-    </div>
-
-    <div class="feature__gallery">
-        <div class="feature__stage">
-            <img id="featureImg" src="<?= htmlspecialchars($feature['gallery'][0]) ?>" alt="<?= htmlspecialchars($feature['name']) ?>" loading="lazy">
-        </div>
-        <div class="feature__thumbs">
-            <?php foreach ($feature['gallery'] as $i => $img): ?>
-            <button
-                type="button"
-                class="feature__thumb-btn <?= $i === 0 ? 'is-active' : '' ?>"
-                data-full="<?= htmlspecialchars($img) ?>"
-                aria-label="Xem ảnh <?= $i + 1 ?>"
-            >
-                <img src="<?= htmlspecialchars($img) ?>" alt="" loading="lazy">
-            </button>
-            <?php endforeach; ?>
-        </div>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 5 — HERITAGE (ảnh B&W + panel vàng)
-     ============================================================ -->
-<section class="heritage reveal">
-    <div class="heritage__media">
-        <img src="<?= htmlspecialchars($heritage['image']) ?>" alt="Cửa hàng kính đầu thế kỷ 20" loading="lazy">
-    </div>
-    <div class="heritage__panel">
-        <div class="heritage__badge">
-            <span class="heritage__badge-top">VIN EYEWEAR</span>
-            <span class="heritage__badge-eye" aria-hidden="true">&#9673;</span>
-            <span class="heritage__badge-bottom">OPTICIANS</span>
-        </div>
-        <blockquote class="heritage__quote">&ldquo;<?= htmlspecialchars($heritage['quote']) ?>&rdquo;</blockquote>
-        <p class="heritage__author"><?= htmlspecialchars($heritage['author']) ?></p>
-        <p class="heritage__role"><?= htmlspecialchars($heritage['role']) ?></p>
-        <a href="<?= htmlspecialchars($heritage['cta']['link']) ?>" class="btn-black"><?= htmlspecialchars($heritage['cta']['label']) ?></a>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 6 — CUSTOM MADE TINTS (panel xám + accordion)
-     ============================================================ -->
-<section class="tints reveal">
-    <div class="tints__info">
-        <h2 class="tints__title">
-            <?= htmlspecialchars($tints['title']) ?>
-            <span class="arrow" aria-hidden="true">&#8599;</span>
-        </h2>
-        <p class="tints__body">
-            <?= htmlspecialchars($tints['body']) ?>
-            Ghé <a href="<?= htmlspecialchars($tints['link']['href']) ?>"><?= htmlspecialchars($tints['link']['label']) ?></a>
-            để tự tay pha màu cho chiếc gọng bạn thích.
-        </p>
-        <a href="<?= htmlspecialchars($tints['cta']['link']) ?>" class="btn-yellow"><?= htmlspecialchars($tints['cta']['label']) ?></a>
-
-        <ul class="tints__rows">
-            <?php foreach ($tints['rows'] as $row): ?>
-            <li>
-                <a href="<?= htmlspecialchars($row['link']) ?>">
-                    <?= htmlspecialchars($row['label']) ?>
-                    <span class="arrow" aria-hidden="true">&#8599;</span>
-                </a>
-            </li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-    <div class="tints__media">
-        <img src="<?= htmlspecialchars($tints['image']) ?>" alt="Tròng kính pha màu thủ công" loading="lazy">
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 7 — THE OPTICAL SHOP
+     SECTION 5 — THE OPTICAL SHOP (thương hiệu + lưới sản phẩm)
      ============================================================ -->
 <section class="optical reveal">
     <h2 class="section-heading">
@@ -219,35 +195,14 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
 </section>
 
 <!-- ============================================================
-     SECTION 8 — DẢI ẢNH CRAFTSMANSHIP
+     SECTION 6 — DẢI ẢNH CRAFTSMANSHIP
      ============================================================ -->
 <section class="craft reveal">
     <img src="<?= htmlspecialchars($craftsmanship['image']) ?>" alt="<?= htmlspecialchars($craftsmanship['alt']) ?>" loading="lazy">
 </section>
 
 <!-- ============================================================
-     SECTION 9 — STORIES
-     ============================================================ -->
-<section class="stories reveal">
-    <h2 class="section-heading"><span><?= htmlspecialchars($stories['title']) ?></span></h2>
-    <p class="section-desc"><?= htmlspecialchars($stories['desc']) ?></p>
-
-    <div class="stories__grid">
-        <?php foreach ($stories['items'] as $item): ?>
-        <article class="story">
-            <a href="<?= htmlspecialchars($item['link']) ?>" class="story__img">
-                <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['title']) ?>" loading="lazy">
-            </a>
-            <h3 class="story__title"><?= htmlspecialchars($item['title']) ?></h3>
-            <p class="story__body"><?= htmlspecialchars($item['body']) ?></p>
-            <a href="<?= htmlspecialchars($item['link']) ?>" class="story__link">Đọc tiếp</a>
-        </article>
-        <?php endforeach; ?>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 10 — VISIT US IN SHOP
+     SECTION 7 — VISIT US IN SHOP
      ============================================================ -->
 <section class="visit reveal">
     <div class="visit__info">
@@ -267,5 +222,5 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
     </div>
 </section>
 
-<!-- SECTION 11 — JOIN THE FAMILY: nằm trong _layout/footer.php
+<!-- SECTION 8 — JOIN THE FAMILY: nằm trong _layout/footer.php
      (dải đen trên footer, hiện ở mọi trang — giống Moscot) -->
