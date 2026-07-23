@@ -626,6 +626,8 @@ button, input, select, textarea {
     /* Header cho phép nav xuống hàng full-width khi mở (không dùng absolute) */
     .site-header {
         flex-wrap: wrap;
+        align-content: center; /* can giua doc hang logo + hamburger (line rong cua nav lam lech tren) */
+        row-gap: 0;            /* bo gap 24px giua hang logo va line rong cua nav */
         min-height: 64px;
     }
 
@@ -698,11 +700,10 @@ button, input, select, textarea {
         grid-template-columns: 1fr;
     }
 
-    /* Footer: 2 cột quá chật cho địa chỉ 2 cơ sở -> xếp dọc 1 cột */
-    .footer-top {
-        grid-template-columns: 1fr;
-        gap: 36px;
-    }
+    /* Footer: giu 2 cot (Kham pha trai | Ho tro phai) nhu tablet,
+       Lien he van chiem tron hang duoi (grid-column 1/-1 o muc 900px).
+       Chi thu hep khe cot cho man hep. */
+    .footer-top { gap: 36px 20px; }
 
     /* Footer bottom: xếp dọc, căn giữa cho gọn màn hình hẹp */
     .footer-bottom {

@@ -1,12 +1,48 @@
 /**
  * assets/js/home.js
  * JS riêng của trang chủ:
+ *   0. Hero slider           — fade giữa các slide, bullets + autoplay
  *   1. Best Seller carousel — nút prev/next cuộn track sản phẩm
  *   2. Feature gallery       — đổi ảnh lớn khi bấm thumbnail
  * Scroll reveal dùng chung được xử lý inline trong master.php.
  */
 (function () {
     'use strict';
+
+    /* ── 0. Hero slider ───────────────────────────────── */
+    var heroSlides = document.querySelectorAll('.hero__slide');
+    var heroDots = document.querySelectorAll('.hero__dot');
+
+    if (heroSlides.length > 1 && heroDots.length === heroSlides.length) {
+        var HERO_INTERVAL = 5000;
+        var heroIndex = 0;
+        var heroTimer = null;
+
+        var heroGoTo = function (i) {
+            heroSlides[heroIndex].classList.remove('is-active');
+            heroDots[heroIndex].classList.remove('is-active');
+            heroIndex = (i + heroSlides.length) % heroSlides.length;
+            heroSlides[heroIndex].classList.add('is-active');
+            heroDots[heroIndex].classList.add('is-active');
+        };
+
+        var heroPlay = function () {
+            heroTimer = setInterval(function () {
+                heroGoTo(heroIndex + 1);
+            }, HERO_INTERVAL);
+        };
+
+        // Bam bullet: nhay den slide do + reset dong ho autoplay
+        heroDots.forEach(function (dot, i) {
+            dot.addEventListener('click', function () {
+                clearInterval(heroTimer);
+                heroGoTo(i);
+                heroPlay();
+            });
+        });
+
+        heroPlay();
+    }
 
     /* ── 1. Best Seller carousel ──────────────────────── */
     var track = document.getElementById('bestsellerTrack');

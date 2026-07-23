@@ -12,9 +12,7 @@
 }
 
 /* Nền xám của khung ảnh sản phẩm — khớp tone ảnh studio Moscot */
-:root {
-    --frame-bg: #f1f0ec;
-}
+/* --frame-bg đã được định nghĩa trong layout.css, không cần khai báo lại ở đây */
 
 
 /* ============================================
@@ -88,49 +86,118 @@
 
 
 /* ============================================
-   SECTION 1 — HERO (ảnh full-bleed + CTA nổi)
-   Grid-stacking: ảnh, nút, dots chồng cùng 1 ô.
+   SECTION 1 — HERO (slider: ảnh full-bleed + text đè + bullets)
+   Grid-stacking: các slide + dots chồng cùng 1 ô, fade bằng opacity.
    ============================================ */
 .hero {
     display: grid;
-    align-items: end;
-    justify-items: center;
-    min-height: 640px;
+    min-height: 480px;
     background: var(--frame-bg);
+    overflow: hidden;
 }
 
 .hero > * {
     grid-area: 1 / 1;
 }
 
+/* Moi slide cung grid-stack: anh + khoi chu chong nhau */
+.hero__slide {
+    position: relative;
+    display: grid;
+    align-items: end;
+    justify-items: center;
+    opacity: 0;
+    visibility: hidden;               /* an link/CTA cua slide chim khoi tab & click */
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+
+.hero__slide.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.hero__slide > * { grid-area: 1 / 1; }
+
 .hero__img {
     width: 100%;
     height: 100%;
-    min-height: 640px;
+    min-height: 480px;
     object-fit: cover;
 }
 
+/* Lop phu toi dan ve day anh cho chu trang khong bi chim
+   (dam hon binh thuong vi ca 3 anh hero deu nen sang be/trang) */
+.hero__slide::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 36%, rgba(0, 0, 0, 0.62) 100%);
+    pointer-events: none;
+}
+
+/* Khoi text de len anh — can giua, neo gan day (tren hang bullets) */
+.hero__content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 112px;
+    padding: 0 var(--margin);
+    text-align: center;
+}
+
+.hero__title {
+    font-family: var(--font-sans);
+    font-size: 46px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--white);
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+}
+
+.hero__subtitle {
+    max-width: 560px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.92);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+}
+
 .hero__cta {
-    align-self: end;
-    margin-bottom: 92px;
+    margin-top: 10px;
     padding: 18px 40px;
     font-size: 14px;
 }
 
+/* Bullets chuyen slide — thanh ngang manh 34x2, vung bam cao 14px */
 .hero__dots {
     align-self: end;
+    justify-self: center;
+    z-index: 3;
     display: flex;
     gap: 8px;
-    margin-bottom: 68px;
+    margin-bottom: 54px;
 }
 
-.hero__dots span {
+.hero__dot {
     width: 34px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.5);
+    height: 14px;
+    padding: 6px 0;
+    background-color: rgba(255, 255, 255, 0.5);
+    background-clip: content-box;     /* chi to phan 34x2 giua, giu vung bam 14px */
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
-.hero__dots .is-active { background: var(--white); }
+.hero__dot:hover { background-color: rgba(255, 255, 255, 0.8); }
+
+.hero__dot.is-active { background-color: var(--white); }
 
 
 /* ============================================
@@ -358,7 +425,9 @@
 
 
 /* ============================================
-   SECTION 3.5 — BOOKING (đo mắt tại cửa hàng + cam kết & cảm nhận)
+   BOOKING (đo mắt & thử kính) + DẢI CAM KẾT + KHÁCH HÀNG NÓI GÌ
+   (3 section tách riêng: commitments dưới hero, testimonials sau
+   optical, booking sau testimonials)
    ============================================ */
 .booking {
     padding: 40px var(--margin) 84px;
@@ -413,9 +482,9 @@
     object-fit: cover;
 }
 
-/* --- (2) Cam kết + Cảm nhận --- */
-.booking-trust {
-    margin-top: 84px;
+/* --- DẢI CAM KẾT (section riêng ngay dưới hero) --- */
+.commitments {
+    padding: 44px var(--margin) 0;
 }
 
 /* Dải 4 huy hiệu cam kết — khe đen giữa các ô (giống product-grid) */
@@ -457,8 +526,10 @@
     letter-spacing: 0.04em;
 }
 
-/* Tiêu đề "Khách hàng nói gì" dùng .section-heading sẵn có */
-.booking-trust .section-heading { margin-top: 72px; }
+/* --- KHÁCH HÀNG NÓI GÌ (section riêng sau optical) --- */
+.testimonials {
+    padding: 0 var(--margin) 84px;
+}
 
 /* Lưới 3 thẻ feedback */
 .reviews {
@@ -524,11 +595,11 @@
 /* Booking responsive */
 @media (max-width: 900px) {
     /* Dong bo padding mobile voi cac section khac (giong .tiles: 40/84 -> 24/56) */
+    .commitments { padding: 32px var(--margin) 0; }
     .booking { padding: 24px var(--margin) 56px; }
     .booking-visit { grid-template-columns: 1fr; gap: 32px; }
     .booking-visit__title { font-size: 30px; }
-    .booking-trust { margin-top: 56px; }
-    .booking-trust .section-heading { margin-top: 56px; }
+    .testimonials { padding: 0 var(--margin) 56px; }
     .commit-list { grid-template-columns: repeat(2, 1fr); }
     .reviews { grid-template-columns: 1fr; }
 }
@@ -814,16 +885,6 @@
 
 
 /* ============================================
-   SECTION 8 — DẢI ẢNH CRAFTSMANSHIP
-   ============================================ */
-.craft img {
-    width: 100%;
-    height: 560px;
-    object-fit: cover;
-}
-
-
-/* ============================================
    SECTION 9 — STORIES
    ============================================ */
 .stories {
@@ -935,11 +996,14 @@
     .section-heading { font-size: 22px; gap: 12px; }
     .section-heading__icon { width: 34px; }
 
-    /* Hero thấp lại, CTA sát đáy hơn */
+    /* Hero thấp lại, chữ + CTA gọn hơn, sát đáy hơn */
     .hero,
     .hero__img { min-height: 420px; }
-    .hero__cta { margin-bottom: 64px; padding: 14px 26px; font-size: 12px; }
-    .hero__dots { margin-bottom: 44px; }
+    .hero__content { gap: 10px; margin-bottom: 78px; }
+    .hero__title { font-size: 26px; }
+    .hero__subtitle { font-size: 12px; max-width: 420px; }
+    .hero__cta { margin-top: 6px; padding: 14px 26px; font-size: 12px; }
+    .hero__dots { margin-bottom: 40px; }
 
     .bestseller { padding: 48px var(--margin) 56px; }
 
@@ -976,8 +1040,6 @@
 
     .optical { padding: 20px var(--margin) 56px; }
 
-    .craft img { height: 320px; }
-
     .stories { padding: 56px var(--margin); }
     .stories__grid { gap: 40px; }
 
@@ -990,8 +1052,83 @@
 @media (max-width: 600px) {
     .frame-grid { grid-template-columns: 1fr; }
 
-    /* Carousel: 2 thẻ / khung nhìn */
-    .frame-track .frame-card { flex-basis: calc((100% - 16px) / 2); }
+    /* Carousel: 1 thẻ full-width / khung nhìn (2 thẻ bị nhỏ qua) */
+    .frame-track .frame-card { flex-basis: 100%; }
 
     .visit__ctas { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+    /* Hero: thu nhỏ chiều cao và text cho màn hình rất nhỏ */
+    .hero {
+        min-height: 420px;
+    }
+
+    .hero__img {
+        min-height: 420px;
+    }
+
+    .hero__content {
+        gap: 8px;
+        margin-bottom: 80px;
+    }
+
+    .hero__title {
+        font-size: 22px;
+    }
+
+    .hero__subtitle {
+        font-size: 12px;
+        max-width: 100%;
+        padding: 0 16px;
+    }
+
+    .hero__cta {
+        padding: 12px 24px;
+        font-size: 11px;
+    }
+
+    .hero__dots {
+        margin-bottom: 36px;
+        gap: 6px;
+    }
+
+    .hero__dot {
+        width: 28px;
+        height: 12px;
+        padding: 5px 0;
+    }
+
+    /* Commitments: 2 cột thay vì 4 */
+    .commit-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .commit__icon svg {
+        width: 28px;
+        height: 28px;
+    }
+
+    .commit__label {
+        font-size: 11px;
+    }
+
+    /* Booking: giảm padding */
+    .booking {
+        padding: 24px 16px 56px;
+    }
+
+    .booking-visit__title {
+        font-size: 24px;
+    }
+
+    /* Testimonials */
+    .testimonials {
+        padding: 0 16px 56px;
+    }
+
+    .review__quote {
+        font-size: 14px;
+    }
 }

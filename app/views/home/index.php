@@ -4,17 +4,16 @@
  * Trang chủ dựng theo layout Moscot (xem screencapture-moscot-*.png).
  *
  * Biến nhận từ HomeController::index():
- *   $hero, $bestseller, $tiles, $optical,
- *   $craftsmanship, $stories, $booking, $visit
- *   (các biến $feature, $heritage, $tints vẫn được controller cấp nhưng
- *    section tương ứng đã gỡ khỏi trang chủ.)
+ *   $hero, $bestseller, $tiles, $optical, $booking, $visit
+ *   (các biến $feature, $heritage, $tints, $craftsmanship, $stories vẫn
+ *    được controller cấp nhưng section tương ứng đã gỡ khỏi trang chủ.)
  *
  * Thẻ sản phẩm ở trang chủ dùng component riêng .frame-card (ảnh nền xám,
  * chữ căn giữa, hàng chấm màu) — khác .product-card của trang /product.
  *
- * Thứ tự section: hero -> best seller -> booking (đặt lịch hẹn, ngay sau
- * best seller theo task B6) -> nhóm sản phẩm (tiles, optical) -> craft
- * -> ghé cửa hàng (visit) -> join (footer).
+ * Thứ tự section: hero -> dải cam kết (commitments) -> best seller
+ * -> tiles -> optical -> khách hàng nói gì (testimonials) -> booking
+ * (đo mắt & thử kính) -> ghé cửa hàng (visit) -> join (footer).
  */
 
 /** Render 1 hàng chấm màu cho thẻ sản phẩm */
@@ -61,18 +60,54 @@ $renderCommitIcon = static function (string $key): void {
 ?>
 
 <!-- ============================================================
-     SECTION 1 — HERO (ảnh full-bleed + CTA)
+     SECTION 1 — HERO (slider: ảnh full-bleed + text đè + bullets)
+     Slide fade bằng .is-active, JS ở home.js (autoplay + bullets).
      ============================================================ -->
-<section class="hero">
-    <img class="hero__img" src="<?= htmlspecialchars($hero['image']) ?>" alt="<?= htmlspecialchars($hero['alt']) ?>">
-    <a href="<?= htmlspecialchars($hero['cta']['link']) ?>" class="btn-yellow hero__cta"><?= htmlspecialchars($hero['cta']['label']) ?></a>
-    <div class="hero__dots" aria-hidden="true">
-        <span class="is-active"></span><span></span><span></span>
+<section class="hero" aria-label="Bộ sưu tập nổi bật">
+    <?php foreach ($hero['slides'] as $i => $slide): ?>
+    <div class="hero__slide<?= $i === 0 ? ' is-active' : '' ?>">
+        <img
+            class="hero__img"
+            src="<?= htmlspecialchars($slide['image']) ?>"
+            alt="<?= htmlspecialchars($slide['alt']) ?>"
+            <?= $i > 0 ? 'loading="lazy"' : '' ?>
+        >
+        <div class="hero__content">
+            <h2 class="hero__title"><?= htmlspecialchars($slide['title']) ?></h2>
+            <p class="hero__subtitle"><?= htmlspecialchars($slide['subtitle']) ?></p>
+            <a href="<?= htmlspecialchars($slide['cta']['link']) ?>" class="btn-yellow hero__cta"><?= htmlspecialchars($slide['cta']['label']) ?></a>
+        </div>
+    </div>
+    <?php endforeach; ?>
+
+    <!-- Pagination bullets: bam de nhay slide -->
+    <div class="hero__dots">
+        <?php foreach ($hero['slides'] as $i => $slide): ?>
+        <button
+            type="button"
+            class="hero__dot<?= $i === 0 ? ' is-active' : '' ?>"
+            aria-label="Chuyển đến slide <?= $i + 1 ?>: <?= htmlspecialchars($slide['title']) ?>"
+        ></button>
+        <?php endforeach; ?>
     </div>
 </section>
 
 <!-- ============================================================
-     SECTION 2 — BEST SELLER (carousel sản phẩm bán chạy)
+     SECTION 2 — DẢI CAM KẾT (ngay dưới hero)
+     ============================================================ -->
+<section class="commitments reveal">
+    <ul class="commit-list" role="list">
+        <?php foreach ($booking['commitments'] as $c): ?>
+        <li class="commit">
+            <span class="commit__icon"><?php $renderCommitIcon($c['icon']); ?></span>
+            <span class="commit__label"><?= htmlspecialchars($c['label']) ?></span>
+        </li>
+        <?php endforeach; ?>
+    </ul>
+</section>
+
+<!-- ============================================================
+     SECTION 3 — BEST SELLER (carousel sản phẩm bán chạy)
      ============================================================ -->
 <section class="bestseller reveal">
     <h2 class="section-heading">
@@ -102,58 +137,6 @@ $renderCommitIcon = static function (string $key): void {
 
     <div class="section-cta">
         <a href="/product" class="btn-yellow">Xem tất cả gọng</a>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 3 — BOOKING / ĐẶT LỊCH HẸN (ngay sau Best Seller — task B6)
-     (mời đo mắt tại cửa hàng + cam kết & cảm nhận; CTA -> /contact)
-     ============================================================ -->
-<section class="booking reveal">
-
-    <!-- (1) Mời đo mắt & thử kính tại cửa hàng -->
-    <div class="booking-visit">
-        <div class="booking-visit__info">
-            <span class="booking-visit__label"><?= htmlspecialchars($booking['visit']['label']) ?></span>
-            <h2 class="booking-visit__title"><?= htmlspecialchars($booking['visit']['title']) ?></h2>
-            <p class="booking-visit__desc"><?= htmlspecialchars($booking['visit']['desc']) ?></p>
-            <a href="<?= htmlspecialchars($booking['visit']['cta']['link']) ?>" class="btn-yellow"><?= htmlspecialchars($booking['visit']['cta']['label']) ?></a>
-        </div>
-        <div class="booking-visit__media">
-            <img src="<?= htmlspecialchars($booking['visit']['image']) ?>" alt="Đo mắt và thử kính tại cửa hàng Vin Eyewear" loading="lazy">
-        </div>
-    </div>
-
-    <!-- (2) Cam kết chất lượng + Cảm nhận khách hàng -->
-    <div class="booking-trust">
-        <ul class="commit-list" role="list">
-            <?php foreach ($booking['commitments'] as $c): ?>
-            <li class="commit">
-                <span class="commit__icon"><?php $renderCommitIcon($c['icon']); ?></span>
-                <span class="commit__label"><?= htmlspecialchars($c['label']) ?></span>
-            </li>
-            <?php endforeach; ?>
-        </ul>
-
-        <h2 class="section-heading"><span><?= htmlspecialchars($booking['reviewsTitle']) ?></span></h2>
-
-        <div class="reviews">
-            <?php foreach ($booking['reviews'] as $r):
-                // Lay chu cai dau cua ten cuoi (an toan UTF-8, khong can ext mbstring)
-                $parts   = preg_split('/\s+/u', trim($r['name']));
-                $last    = (string) end($parts);
-                $initial = strtoupper(preg_match('/^./u', $last, $m) ? $m[0] : substr($last, 0, 1));
-            ?>
-            <figure class="review">
-                <div class="review__stars" aria-label="<?= (int) $r['rating'] ?> trên 5 sao"><?= str_repeat('&#9733;', (int) $r['rating']) ?></div>
-                <blockquote class="review__quote"><?= htmlspecialchars($r['quote']) ?></blockquote>
-                <figcaption class="review__author">
-                    <span class="review__avatar" aria-hidden="true"><?= htmlspecialchars($initial) ?></span>
-                    <span class="review__name"><?= htmlspecialchars($r['name']) ?></span>
-                </figcaption>
-            </figure>
-            <?php endforeach; ?>
-        </div>
     </div>
 </section>
 
@@ -195,14 +178,49 @@ $renderCommitIcon = static function (string $key): void {
 </section>
 
 <!-- ============================================================
-     SECTION 6 — DẢI ẢNH CRAFTSMANSHIP
+     SECTION 6 — KHÁCH HÀNG NÓI GÌ (cảm nhận khách hàng)
      ============================================================ -->
-<section class="craft reveal">
-    <img src="<?= htmlspecialchars($craftsmanship['image']) ?>" alt="<?= htmlspecialchars($craftsmanship['alt']) ?>" loading="lazy">
+<section class="testimonials reveal">
+    <h2 class="section-heading"><span><?= htmlspecialchars($booking['reviewsTitle']) ?></span></h2>
+
+    <div class="reviews">
+        <?php foreach ($booking['reviews'] as $r):
+            // Lay chu cai dau cua ten cuoi (an toan UTF-8, khong can ext mbstring)
+            $parts   = preg_split('/\s+/u', trim($r['name']));
+            $last    = (string) end($parts);
+            $initial = strtoupper(preg_match('/^./u', $last, $m) ? $m[0] : substr($last, 0, 1));
+        ?>
+        <figure class="review">
+            <div class="review__stars" aria-label="<?= (int) $r['rating'] ?> trên 5 sao"><?= str_repeat('&#9733;', (int) $r['rating']) ?></div>
+            <blockquote class="review__quote"><?= htmlspecialchars($r['quote']) ?></blockquote>
+            <figcaption class="review__author">
+                <span class="review__avatar" aria-hidden="true"><?= htmlspecialchars($initial) ?></span>
+                <span class="review__name"><?= htmlspecialchars($r['name']) ?></span>
+            </figcaption>
+        </figure>
+        <?php endforeach; ?>
+    </div>
 </section>
 
 <!-- ============================================================
-     SECTION 7 — VISIT US IN SHOP
+     SECTION 7 — BOOKING / ĐO MẮT & THỬ KÍNH (CTA -> /contact)
+     ============================================================ -->
+<section class="booking reveal">
+    <div class="booking-visit">
+        <div class="booking-visit__info">
+            <span class="booking-visit__label"><?= htmlspecialchars($booking['visit']['label']) ?></span>
+            <h2 class="booking-visit__title"><?= htmlspecialchars($booking['visit']['title']) ?></h2>
+            <p class="booking-visit__desc"><?= htmlspecialchars($booking['visit']['desc']) ?></p>
+            <a href="<?= htmlspecialchars($booking['visit']['cta']['link']) ?>" class="btn-yellow"><?= htmlspecialchars($booking['visit']['cta']['label']) ?></a>
+        </div>
+        <div class="booking-visit__media">
+            <img src="<?= htmlspecialchars($booking['visit']['image']) ?>" alt="Đo mắt và thử kính tại cửa hàng Vin Eyewear" loading="lazy">
+        </div>
+    </div>
+</section>
+
+<!-- ============================================================
+     SECTION 8 — VISIT US IN SHOP
      ============================================================ -->
 <section class="visit reveal">
     <div class="visit__info">
@@ -222,5 +240,5 @@ $renderCommitIcon = static function (string $key): void {
     </div>
 </section>
 
-<!-- SECTION 8 — JOIN THE FAMILY: nằm trong _layout/footer.php
+<!-- SECTION 9 — JOIN THE FAMILY: nằm trong _layout/footer.php
      (dải đen trên footer, hiện ở mọi trang — giống Moscot) -->
