@@ -182,8 +182,10 @@ $renderCommitIcon = static function (string $key): void {
 
         <div class="reviews">
             <?php foreach ($booking['reviews'] as $r):
-                $parts   = preg_split('/\s+/', trim($r['name']));
-                $initial = mb_strtoupper(mb_substr(end($parts), 0, 1));
+                // Lay chu cai dau cua ten cuoi (an toan UTF-8, khong can ext mbstring)
+                $parts   = preg_split('/\s+/u', trim($r['name']));
+                $last    = (string) end($parts);
+                $initial = strtoupper(preg_match('/^./u', $last, $m) ? $m[0] : substr($last, 0, 1));
             ?>
             <figure class="review">
                 <div class="review__stars" aria-label="<?= (int) $r['rating'] ?> trên 5 sao"><?= str_repeat('&#9733;', (int) $r['rating']) ?></div>
