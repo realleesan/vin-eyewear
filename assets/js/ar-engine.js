@@ -9,58 +9,80 @@
     const glassOverlay = document.getElementById('glass-overlay');
     const cameraStatus = document.getElementById('camera-status');
     const cameraLoading = document.getElementById('camera-loading');
+    const cameraError = document.getElementById('camera-error');
+    const cameraPermissionDenied = document.getElementById('camera-permission-denied');
+    const cameraActive = document.getElementById('camera-active');
     const cameraPlaceholder = document.getElementById('camera-placeholder');
+    const errorTitle = document.getElementById('error-title');
+    const errorMessage = document.getElementById('error-message');
+    const btnRetry = document.getElementById('btn-retry');
+    const btnReload = document.getElementById('btn-reload');
     const glassesItems = document.querySelectorAll('.glasses-item');
 
     let stream = null;
     const facingMode = 'user';
 
-    function setStatus(state, text) {
+    function showState(state) {
+        if (cameraLoading) cameraLoading.setAttribute('aria-hidden', 'true');
+        if (cameraError) cameraError.setAttribute('aria-hidden', 'true');
+        if (cameraPermissionDenied) cameraPermissionDenied.setAttribute('aria-hidden', 'true');
+        if (cameraActive) cameraActive.setAttribute('aria-hidden', 'true');
+
+        switch (state) {
+            case 'loading':
+                if (cameraLoading) cameraLoading.setAttribute('aria-hidden', 'false');
+                break;
+            case 'error':
+                if (cameraError) cameraError.setAttribute('aria-hidden', 'false');
+                break;
+            case 'permission-denied':
+                if (cameraPermissionDenied) cameraPermissionDenied.setAttribute('aria-hidden', 'false');
+                break;
+            case 'active':
+                if (cameraActive) cameraActive.setAttribute('aria-hidden', 'false');
+                break;
+        }
+    }
+
+    function setStatus(text) {
         if (!cameraStatus) return;
-
-        cameraStatus.classList.remove('is-loading', 'is-active', 'is-error');
-        cameraStatus.classList.add('is-' + state);
-
         const statusText = cameraStatus.querySelector('.status-text');
         if (statusText) {
             statusText.textContent = text;
         }
     }
 
-    function hideLoading() {
-        if (cameraLoading) {
-            cameraLoading.classList.add('is-hidden');
-        }
-    }
-
-    function showLoading() {
-        if (cameraLoading) {
-            cameraLoading.classList.remove('is-hidden');
-        }
-    }
-
     function handleError(error) {
-        hideLoading();
-        setStatus('error', 'Không thể bật camera');
-
-        let message = 'Không thể bật camera. ';
+        let title = 'Không thể truy cập camera';
+        let message = 'Vui lòng cấp quyền camera để sử dụng tính năng thử kính.';
+        let state = 'error';
 
         switch (error.name) {
             case 'NotAllowedError':
             case 'PermissionDeniedError':
-                message += 'Vui lòng cấp quyền truy cập camera trong cài đặt trình duyệt.';
+                title = 'Quyền camera bị từ chối';
+                message = 'Bạn đã từ chối quyền truy cập camera. Vui lòng làm theo hướng dẫn bên dưới để cấp quyền.';
+                state = 'permission-denied';
                 break;
             case 'NotFoundError':
-                message += 'Không tìm thấy camera trên thiết bị.';
+                title = 'Không tìm thấy camera';
+                message = 'Không tìm thấy camera trên thiết bị của bạn.';
                 break;
             case 'NotReadableError':
-                message += 'Camera đang bị sử dụng bởi ứng dụng khác.';
+                title = 'Camera đang bận';
+                message = 'Camera đang được sử dụng bởi ứng dụng khác. Vui lòng đóng ứng dụng khác và thử lại.';
+                break;
+            case 'NotSupportedError':
+                title = 'Trình duyệt không hỗ trợ';
+                message = 'Trình duyệt của bạn không hỗ trợ truy cập camera. Vui lòng dùng Chrome, Edge hoặc Safari.';
                 break;
             default:
-                message += error.message || 'Vui lòng thử lại.';
+                message = error.message || 'Đã xảy ra lỗi không xác định. Vui lòng thử lại.';
         }
 
-        alert(message);
+        if (errorTitle) errorTitle.textContent = title;
+        if (errorMessage) errorMessage.textContent = message;
+        showState(state);
     }
 
     async function startCamera() {
@@ -70,8 +92,7 @@
                 stream = null;
             }
 
-            setStatus('loading', 'Đang bật camera…');
-            showLoading();
+            showState('loading');
 
             const constraints = {
                 video: {
@@ -87,8 +108,8 @@
             video.srcObject = stream;
             await video.play();
 
-            hideLoading();
-            setStatus('active', 'Camera đang hoạt động');
+            showState('active');
+            setStatus('Camera đang hoạt động');
 
         } catch (error) {
             console.error('Lỗi camera:', error);
@@ -98,9 +119,9 @@
 
     async function autoStart() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            hideLoading();
-            setStatus('error', 'Trình duyệt không hỗ trợ');
-            alert('Trình duyệt không hỗ trợ API camera. Vui lòng dùng Chrome, Edge hoặc Safari.');
+            if (errorTitle) errorTitle.textContent = 'Trình duyệt không hỗ trợ';
+            if (errorMessage) errorMessage.textContent = 'Trình duyệt của bạn không hỗ trợ truy cập camera. Vui lòng dùng Chrome, Edge hoặc Safari.';
+            showState('error');
             return;
         }
 
@@ -119,16 +140,11 @@
         item.classList.add('active');
         item.setAttribute('aria-selected', 'true');
 
-        if (cameraPlaceholder) {
-            cameraPlaceholder.classList.add('is-switching');
-        }
-
+        glassOverlay.style.opacity = '0.5';
         glassOverlay.src = overlaySrc;
 
         glassOverlay.onload = function() {
-            if (cameraPlaceholder) {
-                cameraPlaceholder.classList.remove('is-switching');
-            }
+            glassOverlay.style.opacity = '1';
         };
     }
 
@@ -140,8 +156,23 @@
         });
     }
 
+    function initRetryButtons() {
+        if (btnRetry) {
+            btnRetry.addEventListener('click', function() {
+                startCamera();
+            });
+        }
+
+        if (btnReload) {
+            btnReload.addEventListener('click', function() {
+                location.reload();
+            });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         initGlassesSelector();
+        initRetryButtons();
         autoStart();
     });
 
