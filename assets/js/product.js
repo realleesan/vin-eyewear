@@ -1,63 +1,124 @@
 /**
  * assets/js/product.js
- * Filter sản phẩm theo danh mục + giá — Vin Eyewear
+ * Filter + phân trang sản phẩm client-side — Vin Eyewear
+ * - Filter theo kiểu sản phẩm + dáng gọng + khoảng giá (AND 3 điều kiện)
+ * - Phân trang PAGE_SIZE sp/trang TRÊN KẾT QUẢ ĐÃ LỌC, đổi filter về trang 1
  * Hoạt động hoàn toàn client-side, không cần reload trang
  */
 
 (function () {
     'use strict';
 
+    /* ── Config ───────────────────────────────────────── */
+    const PAGE_SIZE = 12; // khop $perPage trong app/views/product/index.php
+
     /* ── DOM ──────────────────────────────────────────── */
-    const grid         = document.getElementById('productGrid');
-    const countEl      = document.getElementById('productCount');
-    const emptyEl      = document.getElementById('productEmpty');
-    const catChips     = document.querySelectorAll('[data-filter-cat]');
-    const priceChips   = document.querySelectorAll('[data-filter-price]');
+    const grid       = document.getElementById('productGrid');
+    const countEl    = document.getElementById('productCount');
+    const emptyEl    = document.getElementById('productEmpty');
+    const pagEl      = document.getElementById('productPagination');
+    const kindChips  = document.querySelectorAll('[data-filter-kind]');
+    const catChips   = document.querySelectorAll('[data-filter-cat]');
+    const priceChips = document.querySelectorAll('[data-filter-price]');
 
     if (!grid) return;
 
     const cards = Array.from(grid.querySelectorAll('.product-card'));
 
     /* ── State ────────────────────────────────────────── */
+    let activeKind  = 'all';
     let activeCat   = 'all';
     let activePrice = 'all';
+    let currentPage = 1;
 
     /* ── Helpers ──────────────────────────────────────── */
 
     // Kiểm tra card có khớp bộ lọc giá không
+    // (key range phải khớp $filter_price_ranges ở _layout/filter-sidebar.php)
     function matchPrice(price, range) {
         const p = parseInt(price, 10);
-        if (range === 'all')  return true;
-        if (range === '0-1')  return p < 1_000_000;
-        if (range === '1-1.5')return p >= 1_000_000 && p <= 1_500_000;
-        if (range === '1.5+') return p > 1_500_000;
+        if (range === 'all')   return true;
+        if (range === '0-1')   return p < 1_000_000;
+        if (range === '1-1.5') return p >= 1_000_000 && p <= 1_500_000;
+        if (range === '1.5-2') return p > 1_500_000 && p <= 2_000_000;
+        if (range === '2-3')   return p > 2_000_000 && p <= 3_000_000;
+        if (range === '3+')    return p > 3_000_000;
         return true;
     }
 
-    /* ── Core: áp dụng filter ─────────────────────────── */
+    // Card có khớp cả 3 chiều filter đang chọn không
+    function matchesCard(card) {
+        const kindOk  = activeKind === 'all' || card.dataset.kind === activeKind;
+        const catOk   = activeCat === 'all'  || card.dataset.category === activeCat;
+        const priceOk = matchPrice(card.dataset.price, activePrice);
+        return kindOk && catOk && priceOk;
+    }
+
+    /* ── Core: áp dụng filter + phân trang ────────────── */
     function applyFilters() {
-        let visible = 0;
+        const matched = cards.filter(matchesCard);
 
+        // Clamp trang hiện tại theo số trang thực tế của kết quả lọc
+        const totalPages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        // Chỉ hiện các card thuộc trang hiện tại
+        const start      = (currentPage - 1) * PAGE_SIZE;
+        const visibleSet = new Set(matched.slice(start, start + PAGE_SIZE));
         cards.forEach((card) => {
-            const cat   = card.dataset.category;
-            const price = card.dataset.price;
-
-            const catOk   = activeCat === 'all'   || cat === activeCat;
-            const priceOk = matchPrice(price, activePrice);
-
-            if (catOk && priceOk) {
-                card.classList.remove('is-hidden');
-                visible++;
-            } else {
-                card.classList.add('is-hidden');
-            }
+            card.classList.toggle('is-hidden', !visibleSet.has(card));
         });
 
-        // Cập nhật đếm
-        if (countEl) countEl.textContent = visible;
+        // Đếm = TỔNG số khớp filter (không phải số card trên trang)
+        if (countEl) countEl.textContent = matched.length;
 
         // Hiện/ẩn empty state
-        if (emptyEl) emptyEl.hidden = visible > 0;
+        if (emptyEl) emptyEl.hidden = matched.length > 0;
+
+        renderPagination(totalPages);
+    }
+
+    /* ── Pagination ───────────────────────────────────── */
+
+    // Vẽ lại dải số trang theo kết quả lọc; <=1 trang thì giấu hẳn
+    function renderPagination(totalPages) {
+        if (!pagEl) return;
+
+        pagEl.hidden = totalPages <= 1;
+        if (pagEl.hidden) {
+            pagEl.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        for (let i = 1; i <= totalPages; i++) {
+            html += i === currentPage
+                ? '<span class="active">' + i + '</span>'
+                : '<a href="#" data-page="' + i + '">' + i + '</a>';
+        }
+        if (currentPage < totalPages) {
+            html += '<a href="#" data-page="' + (currentPage + 1) + '">Next</a>';
+        }
+        pagEl.innerHTML = html;
+    }
+
+    // Cuộn về đầu danh sách khi đổi trang (chừa 100px cho header sticky)
+    function scrollToListingTop() {
+        const y = grid.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+
+    // Delegation: 1 listener duy nhất cho cả dải pagination
+    // (nội dung được innerHTML lại mỗi lần render nên không bind từng link)
+    if (pagEl) {
+        pagEl.addEventListener('click', (e) => {
+            const link = e.target.closest('a[data-page]');
+            if (!link) return;
+            e.preventDefault();
+            currentPage = parseInt(link.dataset.page, 10);
+            applyFilters();
+            scrollToListingTop();
+        });
     }
 
     /* ── Cập nhật chip active ─────────────────────────── */
@@ -69,10 +130,21 @@
         });
     }
 
-    /* ── Event: filter danh mục ───────────────────────── */
+    /* ── Event: filter kiểu sản phẩm ──────────────────── */
+    kindChips.forEach((chip) => {
+        chip.addEventListener('click', () => {
+            activeKind  = chip.dataset.filterKind;
+            currentPage = 1; // doi filter -> ve trang dau
+            setActiveChip(kindChips, chip);
+            applyFilters();
+        });
+    });
+
+    /* ── Event: filter dáng gọng ──────────────────────── */
     catChips.forEach((chip) => {
         chip.addEventListener('click', () => {
-            activeCat = chip.dataset.filterCat;
+            activeCat   = chip.dataset.filterCat;
+            currentPage = 1;
             setActiveChip(catChips, chip);
             applyFilters();
         });
@@ -82,6 +154,7 @@
     priceChips.forEach((chip) => {
         chip.addEventListener('click', () => {
             activePrice = chip.dataset.filterPrice;
+            currentPage = 1;
             setActiveChip(priceChips, chip);
             applyFilters();
         });

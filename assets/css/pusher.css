@@ -1,0 +1,76 @@
+/* ============================================
+   Vin Eyewear - Pusher (Scroll to Top) CSS
+   Design system: "Lower East Heritage" (xem DESIGN.md)
+   Sharp 0px · High-contrast · No shadow · Heritage Yellow
+   Nút nổi góc phải-dưới, dùng chung toàn site
+   (_layout/pusher.php tự nhúng file này).
+   ============================================ */
+.pusher {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    /* Duoi moi lop overlay: header sticky 100, filter overlay 150,
+       slide-over 200, event modal 1000 — de overlay luon che duoc nut */
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    /* Mac dinh vang Heritage + icon den (khop .join__form button, pagination active) */
+    background: var(--yellow);
+    color: var(--black);
+    border: 1.5px solid var(--black);
+    border-radius: 0;
+    cursor: pointer;
+
+    /* Trạng thái ẨN mặc định: không bắt click, trượt nhẹ xuống.
+       Dùng opacity+visibility (không display:none) để transition chạy được */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition:
+        opacity 0.25s ease,
+        visibility 0.25s ease,
+        transform 0.25s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+/* Trạng thái HIỆN — pusher.js toggle class này (convention .is-visible) */
+.pusher.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+/* Hover đảo màu: vàng -> đen */
+.pusher:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+.pusher svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* ============================================
+   RESPONSIVE (khớp breakpoint 900px của layout.css)
+   ============================================ */
+@media (max-width: 900px) {
+    .pusher {
+        right: 16px;    /* khop --margin mobile */
+        bottom: 16px;
+        width: 40px;
+        height: 40px;
+    }
+}

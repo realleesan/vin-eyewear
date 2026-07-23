@@ -1,0 +1,51 @@
+/* ============================================
+   Vin Eyewear - Component: Breadcrumb
+   Design system: "Lower East Heritage" (xem DESIGN.md)
+   Chuẩn design theo .pd-breadcrumb cũ của trang Product Detail
+   (rule chuyển từ product.detail.css sang đây khi tách component;
+   _layout/breadcrumb.php tự nhúng file này).
+   ============================================ */
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;            /* tên sản phẩm dài tự xuống dòng, không bể layout */
+    gap: 4px 8px;
+    padding: 24px var(--margin);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--outline);
+}
+
+.breadcrumb a {
+    overflow-wrap: anywhere;    /* label co link dai cung khong tran man hinh hep */
+}
+
+.breadcrumb a:hover {
+    color: var(--black);
+    text-decoration: underline;
+}
+
+.breadcrumb .current {
+    color: var(--black);
+    font-weight: 500;
+    overflow-wrap: anywhere;    /* ten qua dai van khong tran man hinh hep */
+}
+
+
+/* ============================================
+   RESPONSIVE (khớp breakpoint 900px của layout.css)
+   ============================================ */
+@media (max-width: 900px) {
+    .breadcrumb {
+        padding: 16px var(--margin);
+    }
+
+    /* Noi tap target theo chieu doc cho man hinh cham (padding trong suot,
+       khong doi nhin thay gi o desktop) */
+    .breadcrumb a {
+        padding: 6px 0;
+    }
+}
