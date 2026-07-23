@@ -99,6 +99,7 @@
    ============================================ */
 .pagination {
     display: flex;
+    flex-wrap: wrap;    /* nhieu nut trang khong tran ngang man hinh hep */
     gap: 8px;
     justify-content: center;
     align-items: center;
