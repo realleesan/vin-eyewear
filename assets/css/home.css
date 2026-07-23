@@ -91,7 +91,7 @@
    ============================================ */
 .hero {
     display: grid;
-    min-height: 420px;
+    min-height: 480px;
     background: var(--frame-bg);
     overflow: hidden;
 }
@@ -104,7 +104,7 @@
 .hero__slide {
     position: relative;
     display: grid;
-    align-items: center;
+    align-items: end;
     justify-items: center;
     opacity: 0;
     visibility: hidden;               /* an link/CTA cua slide chim khoi tab & click */
@@ -121,7 +121,7 @@
 .hero__img {
     width: 100%;
     height: 100%;
-    min-height: 420px;
+    min-height: 480px;
     object-fit: cover;
 }
 
@@ -144,7 +144,7 @@
     flex-direction: column;
     align-items: center;
     gap: 14px;
-    margin-bottom: 80px;
+    margin-bottom: 112px;
     padding: 0 var(--margin);
     text-align: center;
 }
@@ -1056,46 +1056,25 @@
     .frame-track .frame-card { flex-basis: 100%; }
 
     .visit__ctas { flex-direction: column; }
-
-    /* Hero: thu nhỏ cho màn hình trung bình */
-    .hero {
-        min-height: 380px;
-    }
-
-    .hero__img {
-        min-height: 380px;
-    }
-
-    .hero__content {
-        margin-bottom: 88px;
-    }
-
-    .hero__title {
-        font-size: 24px;
-    }
-
-    .hero__subtitle {
-        font-size: 13px;
-    }
 }
 
 @media (max-width: 480px) {
     /* Hero: thu nhỏ chiều cao và text cho màn hình rất nhỏ */
     .hero {
-        min-height: 360px;
+        min-height: 420px;
     }
 
     .hero__img {
-        min-height: 360px;
+        min-height: 420px;
     }
 
     .hero__content {
         gap: 8px;
-        margin-bottom: 72px;
+        margin-bottom: 80px;
     }
 
     .hero__title {
-        font-size: 20px;
+        font-size: 22px;
     }
 
     .hero__subtitle {
@@ -1110,14 +1089,14 @@
     }
 
     .hero__dots {
-        margin-bottom: 32px;
+        margin-bottom: 36px;
         gap: 6px;
     }
 
     .hero__dot {
-        width: 26px;
-        height: 10px;
-        padding: 4px 0;
+        width: 28px;
+        height: 12px;
+        padding: 5px 0;
     }
 
     /* Commitments: 2 cột thay vì 4 */
