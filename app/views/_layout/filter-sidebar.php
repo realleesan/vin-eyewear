@@ -122,9 +122,39 @@ if (!$show_filter_sidebar) {
     <!-- ── "RUỘT" CATEGORY — thành viên phụ trách Category tự đổ nhóm input vào đây.
          Giữ đúng markup .filter-group / .filter-chip để ăn style + toggle sẵn có. ── -->
     <div class="filter-group">
-        <h3 class="filter-group__title">Danh mục</h3>
+        <h3 class="filter-group__title">Dáng gọng</h3>
         <div class="filter-group__options">
-            <!-- TODO(Category): render chip từ dữ liệu backend, KHÔNG hard-code -->
+            <button type="button" class="filter-chip is-active" data-filter-category="all" aria-pressed="true">Tất cả</button>
+            <button type="button" class="filter-chip" data-filter-category="tron" aria-pressed="false">Tròn</button>
+            <button type="button" class="filter-chip" data-filter-category="vuong" aria-pressed="false">Vuông</button>
+            <button type="button" class="filter-chip" data-filter-category="aviator" aria-pressed="false">Aviator</button>
+            <button type="button" class="filter-chip" data-filter-category="cat-eye" aria-pressed="false">Cat-Eye</button>
+            <button type="button" class="filter-chip" data-filter-category="rimless" aria-pressed="false">Rimless</button>
+            <button type="button" class="filter-chip" data-filter-category="sport" aria-pressed="false">Sport</button>
+        </div>
+    </div>
+
+    <div class="filter-group">
+        <h3 class="filter-group__title">Kiểu sản phẩm</h3>
+        <div class="filter-group__options">
+            <button type="button" class="filter-chip is-active" data-filter-kind="all" aria-pressed="true">Tất cả</button>
+            <button type="button" class="filter-chip" data-filter-kind="kinh-ram" aria-pressed="false">Kính Râm</button>
+            <button type="button" class="filter-chip" data-filter-kind="kinh-can" aria-pressed="false">Kính Cận</button>
+            <button type="button" class="filter-chip" data-filter-kind="kinh-thoi-trang" aria-pressed="false">Kính Thời Trang</button>
+        </div>
+    </div>
+
+    <div class="filter-group">
+        <h3 class="filter-group__title">Khoảng giá</h3>
+        <div class="filter-group__options">
+            <?php foreach ($filter_price_ranges as $range => $label): ?>
+            <button
+                type="button"
+                class="filter-chip<?= $range === 'all' ? ' is-active' : '' ?>"
+                data-filter-price="<?= htmlspecialchars($range) ?>"
+                aria-pressed="<?= $range === 'all' ? 'true' : 'false' ?>"
+            ><?= htmlspecialchars($label) ?></button>
+            <?php endforeach; ?>
         </div>
     </div>
     <?php endif; ?>
@@ -133,11 +163,19 @@ if (!$show_filter_sidebar) {
     <!-- ── "RUỘT" EVENT — thành viên phụ trách Event tự đổ nhóm input vào đây.
          Giữ đúng markup .filter-group / .filter-chip để ăn style + toggle sẵn có. ── -->
     <div class="filter-group">
-        <h3 class="filter-group__title">Sự kiện</h3>
+        <h3 class="filter-group__title">Danh mục</h3>
         <div class="filter-group__options">
-            <!-- TODO(Event): render chip từ dữ liệu backend, KHÔNG hard-code -->
+            <button type="button" class="filter-chip is-active" data-filter-event="all" aria-pressed="true">Tất cả</button>
+            <button type="button" class="filter-chip" data-filter-event="tin-uu-dai" aria-pressed="false">Tin Ưu Đãi</button>
+            <button type="button" class="filter-chip" data-filter-event="su-kien" aria-pressed="false">Sự Kiện</button>
+            <button type="button" class="filter-chip" data-filter-event="meo-cham-soc" aria-pressed="false">Mẹo Chăm Sóc Kính</button>
         </div>
     </div>
     <?php endif; ?>
+
+    <!-- Reset Button -->
+    <div class="filter-reset">
+        <button type="button" class="filter-reset-btn" id="filterReset">Đặt lại</button>
+    </div>
 
 </aside>
