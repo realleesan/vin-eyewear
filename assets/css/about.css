@@ -32,7 +32,7 @@ body {
     background-color: var(--yellow);
     padding: 64px 0;
     text-align: center;
-    border-bottom: 2px solid var(--black);
+    border-bottom: 1px solid var(--black);
 }
 
 .page-header h1 {
@@ -116,7 +116,7 @@ body {
     width: 100%;
     height: auto;
     display: block;
-    border: 2px solid var(--black);
+    border: 1px solid var(--black);
 }
 
 /* Mission Section */
@@ -125,7 +125,7 @@ body {
     padding: 64px;
     text-align: center;
     margin-bottom: 120px;
-    border: 2px solid var(--black);
+    border: 1px solid var(--black);
 }
 
 .mission-content {
@@ -169,7 +169,7 @@ body {
 
 .value-card {
     background-color: var(--white);
-    border: 2px solid var(--black);
+    border: 1px solid var(--black);
     padding: 32px;
     transition: all 0.3s ease;
 }
@@ -225,7 +225,7 @@ body {
 
 .location-card {
     background-color: var(--white);
-    border: 2px solid var(--black);
+    border: 1px solid var(--black);
     padding: 40px;
     position: relative;
 }
@@ -334,7 +334,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 16px 32px;
-    border: 2px solid var(--black);
+    border: 1px solid var(--black);
     cursor: pointer;
     text-decoration: none;
     display: inline-block;

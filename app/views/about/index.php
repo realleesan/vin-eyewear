@@ -1,3 +1,14 @@
+<link rel="stylesheet" href="/assets/css/about.css">
+
+<?php
+$breadcrumb_items = [
+    ['label' => 'Trang chủ', 'url' => '/'],
+    ['label' => 'Về chúng tôi'],
+];
+$show_breadcrumb = true;
+require_once APP_PATH . '/views/_layout/breadcrumb.php';
+?>
+
 <section class="page-header">
     <div class="container">
         <h1><?= htmlspecialchars($pageTitle) ?></h1>
