@@ -8,30 +8,9 @@
 
 
 /* ============================================
-   BREADCRUMB
+   BREADCRUMB — ĐÃ TÁCH thành component dùng chung:
+   _layout/breadcrumb.php + assets/css/components/breadcrumb.css
    ============================================ */
-.pd-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 24px var(--margin);
-    border-bottom: 1px solid var(--border);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--outline);
-}
-
-.pd-breadcrumb a:hover {
-    color: var(--black);
-    text-decoration: underline;
-}
-
-.pd-breadcrumb .current {
-    color: var(--black);
-    font-weight: 500;
-}
 
 
 /* ============================================
@@ -128,53 +107,8 @@
 }
 
 
-/* --- CTA --- */
-.pd-actions {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.pd-btn-primary,
-.pd-btn-ghost {
-    flex: 1;
-    text-align: center;
-    padding: 16px 24px;
-    font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    border: 1.5px solid var(--black);
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
-.pd-btn-primary {
-    background: var(--black);
-    color: var(--white);
-}
-
-.pd-btn-primary:hover {
-    background: var(--yellow);
-    color: var(--black);
-}
-
-.pd-btn-ghost {
-    background: transparent;
-    color: var(--black);
-}
-
-.pd-btn-ghost:hover {
-    background: var(--black);
-    color: var(--white);
-}
-
-.pd-note {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--outline);
-    margin-bottom: 36px;
-}
+/* --- CTA — ĐÃ TÁCH thành component dùng chung:
+   _layout/cta.php + assets/css/components/cta.css --- */
 
 
 /* --- Thông số kỹ thuật --- */
@@ -259,6 +193,6 @@
 }
 
 @media (max-width: 600px) {
-    .pd-actions { flex-direction: column; }
+    /* .cta-actions xep doc o 600px — da chuyen sang components/cta.css */
     .pd-spec-row { grid-template-columns: 110px 1fr; gap: 12px; }
 }
