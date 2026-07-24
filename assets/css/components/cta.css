@@ -1,0 +1,66 @@
+/* ============================================
+   Vin Eyewear - Component: CTA
+   Design system: "Lower East Heritage" (xem DESIGN.md)
+   Chuẩn design theo khối .pd-actions cũ của trang Product Detail
+   (rule chuyển từ product.detail.css sang đây khi tách component;
+   _layout/cta.php tự nhúng file này).
+   ============================================ */
+.cta-actions {
+    display: flex;
+    /* Loi thoat overflow: nhieu nut / label dai tren man hep thi xuong dong
+       thay vi tran ngang (voi 2 nut mac dinh khong doi gi o desktop) */
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.cta-btn-primary,
+.cta-btn-ghost {
+    flex: 1;
+    text-align: center;
+    padding: 16px 24px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border: 1.5px solid var(--black);
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.cta-btn-primary {
+    background: var(--black);
+    color: var(--white);
+}
+
+.cta-btn-primary:hover {
+    background: var(--yellow);
+    color: var(--black);
+}
+
+.cta-btn-ghost {
+    background: transparent;
+    color: var(--black);
+}
+
+.cta-btn-ghost:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+.cta-note {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--outline);
+    margin-bottom: 36px;
+}
+
+
+/* ============================================
+   RESPONSIVE (khớp breakpoint 600px của layout.css)
+   ============================================ */
+@media (max-width: 600px) {
+    .cta-actions {
+        flex-direction: column;
+    }
+}
