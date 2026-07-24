@@ -44,6 +44,35 @@
     padding: 60px var(--margin);
 }
 
+/* --- Layout 2 cột: filter sidebar (component _layout/filter-sidebar.php) + grid --- */
+.listing-layout {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+}
+
+.listing-toolbar {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    margin-bottom: 16px;
+}
+
+/* Empty state khi filter không khớp sản phẩm nào (product.js bỏ [hidden]) */
+.listing-empty {
+    padding: 48px 24px;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* Card bị filter loại — product.js toggle class này */
+.product-card.is-hidden {
+    display: none;
+}
+
 /* Override RIENG trang product: bo net den giua card, tang khoang cach.
    Chi tac dong trong .product-listing nen trang Home giu nguyen luoi hairline. */
 .product-listing .product-grid {
@@ -110,12 +139,33 @@
     cursor: not-allowed;
 }
 
+/* product.js gắn [hidden] khi kết quả lọc <= 1 trang
+   (cần rule này vì display:flex ở trên đè [hidden] mặc định) */
+.pagination[hidden] {
+    display: none;
+}
+
 
 /* ============================================
    RESPONSIVE (riêng trang product; grid responsive ở layout.css)
    ============================================ */
+
+/* Tablet có sidebar: 4 cột quá chật -> 3 cột (chỉ scope trang product,
+   không đụng grid 4 cột của layout.css ở nơi khác) */
+@media (min-width: 901px) and (max-width: 1200px) {
+    .listing-main .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
 @media (max-width: 900px) {
     .page-title { font-size: 32px; }
     .product-listing { padding: 40px var(--margin); }
     .product-listing .product-grid { gap: 16px; }
+
+    /* Sidebar chuyển thành slide-over (filter-sidebar.css) -> grid full-width */
+    .listing-layout {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
 }
