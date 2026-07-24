@@ -74,28 +74,37 @@
 
         <ul class="footer-bottom__social" role="list">
             <li>
-                <a href="#" aria-label="Facebook">
+                <a href="https://www.facebook.com/vineyewear" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M14 8.5h2.2V5.6h-2.4c-2.5 0-3.9 1.5-3.9 3.9v1.6H8v3h1.9V21h3v-6.9h2.2l.4-3h-2.6V9.8c0-.9.3-1.3 1.1-1.3z"/>
                     </svg>
                 </a>
             </li>
             <li>
-                <a href="#" aria-label="Instagram">
+                <a href="https://shopee.vn/vineyewear" target="_blank" rel="noopener noreferrer" aria-label="Shopee">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path stroke="currentColor" stroke-width="1.6" fill="none" d="M8.5 7a3.5 3.5 0 017 0"/>
+                        <path d="M4.5 7h15l-1 12.5a1.5 1.5 0 01-1.5 1.4H7a1.5 1.5 0 01-1.5-1.4z"/>
+                        <path d="M10 15.2c.5.7 1.3 1 2.1 1 1.2 0 2-.6 2-1.5 0-2-3.8-1.2-3.8-3.1 0-.8.8-1.4 1.8-1.4.8 0 1.4.3 1.8.8"/>
+                    </svg>
+                </a>
+            </li>
+            <li>
+                <a href="https://www.instagram.com/vineyewear" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M12 4.6c2.4 0 2.7 0 3.6.05 2.5.1 3.6 1.3 3.7 3.7.05.9.05 1.2.05 3.6s0 2.7-.05 3.6c-.1 2.4-1.2 3.6-3.7 3.7-.9.05-1.2.05-3.6.05s-2.7 0-3.6-.05c-2.5-.1-3.6-1.3-3.7-3.7C4.6 14.7 4.6 14.4 4.6 12s0-2.7.05-3.6c.1-2.4 1.2-3.6 3.7-3.7C9.3 4.6 9.6 4.6 12 4.6zm0 3.4a4 4 0 100 8 4 4 0 000-8zm0 6.6a2.6 2.6 0 110-5.2 2.6 2.6 0 010 5.2zm4.2-6.7a.94.94 0 100-1.9.94.94 0 000 1.9z"/>
                     </svg>
                 </a>
             </li>
             <li>
-                <a href="#" aria-label="YouTube">
+                <a href="https://www.youtube.com/@vineyewear" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M21.6 8.2a2.5 2.5 0 00-1.8-1.8C18.2 6 12 6 12 6s-6.2 0-7.8.4A2.5 2.5 0 002.4 8.2 26 26 0 002 12c0 1.3.1 2.6.4 3.8a2.5 2.5 0 001.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8c.3-1.2.4-2.5.4-3.8s-.1-2.6-.4-3.8zM10.2 14.8V9.2l5 2.8z"/>
                     </svg>
                 </a>
             </li>
             <li>
-                <a href="#" aria-label="TikTok">
+                <a href="https://www.tiktok.com/@vineyewear" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M16.5 3h-2.8v11.4a2.3 2.3 0 11-1.9-2.3V9.2a5.2 5.2 0 105 5.2V9.1a6.3 6.3 0 003.4 1V7.4a3.6 3.6 0 01-3.7-3.7z"/>
                     </svg>

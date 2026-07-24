@@ -5,18 +5,19 @@
 
     <!-- VUNG TRAI: social / e-commerce -->
     <div class="announcement-social">
-        <a href="#" class="announcement-ico" aria-label="Facebook">
+        <a href="https://www.facebook.com/vineyewear" target="_blank" rel="noopener noreferrer" class="announcement-ico" aria-label="Facebook">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M14 8.5h2.2V5.6h-2.4c-2.5 0-3.9 1.5-3.9 3.9v1.6H8v3h1.9V21h3v-6.9h2.2l.4-3h-2.6V9.8c0-.9.3-1.3 1.1-1.3z"/>
             </svg>
         </a>
-        <a href="#" class="announcement-ico" aria-label="Shopee">
+        <a href="https://shopee.vn/vineyewear" target="_blank" rel="noopener noreferrer" class="announcement-ico" aria-label="Shopee">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M8.5 7a3.5 3.5 0 017 0M4.5 7h15l-1 12.5a1.5 1.5 0 01-1.5 1.4H7a1.5 1.5 0 01-1.5-1.4z"/>
+                <path stroke="currentColor" stroke-width="1.6" fill="none" d="M8.5 7a3.5 3.5 0 017 0"/>
+                <path d="M4.5 7h15l-1 12.5a1.5 1.5 0 01-1.5 1.4H7a1.5 1.5 0 01-1.5-1.4z"/>
                 <path d="M10 15.2c.5.7 1.3 1 2.1 1 1.2 0 2-.6 2-1.5 0-2-3.8-1.2-3.8-3.1 0-.8.8-1.4 1.8-1.4.8 0 1.4.3 1.8.8"/>
             </svg>
         </a>
-        <a href="#" class="announcement-ico" aria-label="TikTok">
+        <a href="https://www.tiktok.com/@vineyewear" target="_blank" rel="noopener noreferrer" class="announcement-ico" aria-label="TikTok">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M16.5 3h-2.8v11.4a2.3 2.3 0 11-1.9-2.3V9.2a5.2 5.2 0 105 5.2V9.1a6.3 6.3 0 003.4 1V7.4a3.6 3.6 0 01-3.7-3.7z"/>
             </svg>

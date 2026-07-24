@@ -25,11 +25,11 @@
         <?php if (strpos($viewName, 'ar/') === 0): ?>
             <link rel="stylesheet" href="/assets/css/ar.tryon.css">
         <?php endif; ?>
-        <?php if ($viewName === 'contact/index'): ?>
-            <link rel="stylesheet" href="/assets/css/contact.css">
-        <?php endif; ?>
         <?php if ($viewName === 'home/index'): ?>
             <link rel="stylesheet" href="/assets/css/home.css">
+        <?php endif; ?>
+        <?php if ($viewName === 'contact/index'): ?>
+            <link rel="stylesheet" href="/assets/css/contact.css">
         <?php endif; ?>
         <?php if ($viewName === 'product/index'): ?>
             <link rel="stylesheet" href="/assets/css/product.css">
@@ -71,14 +71,14 @@
         <?php if (strpos($viewName, 'ar/') === 0): ?>
             <script src="/assets/js/ar-engine.js" defer></script>
         <?php endif; ?>
-        <?php if ($viewName === 'contact/index'): ?>
-            <script src="/assets/js/contact.js" defer></script>
-        <?php endif; ?>
         <?php if ($viewName === 'product/detail'): ?>
             <script src="/assets/js/product.detail.js" defer></script>
         <?php endif; ?>
         <?php if ($viewName === 'home/index'): ?>
             <script src="/assets/js/home.js" defer></script>
+        <?php endif; ?>
+        <?php if ($viewName === 'contact/index'): ?>
+            <script src="/assets/js/contact.js" defer></script>
         <?php endif; ?>
     <?php endif; ?>
 

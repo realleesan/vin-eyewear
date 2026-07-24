@@ -55,13 +55,14 @@
 /* --- Interactive Store Locator --- */
 .store-locator-wrapper {
     display: grid;
-    grid-template-columns: 1.2fr 1.8fr;
-    gap: 40px;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 24px;
     margin-bottom: 100px;
 }
 
 /* Store Cards List */
 .store-list {
+    grid-column: span 5;
     display: flex;
     flex-direction: column;
     gap: 24px;
@@ -69,7 +70,8 @@
 
 .store-card {
     background: var(--white);
-    border: 1.5px solid var(--black);
+    border: 2px solid var(--black); /* Bold borders matching design system */
+    border-radius: 0 !important;
     cursor: pointer;
     transition: all 0.2s ease;
     display: flex;
@@ -111,7 +113,7 @@
     aspect-ratio: 16 / 9;
     background: var(--gray);
     overflow: hidden;
-    border-bottom: 1.5px solid var(--black);
+    border-bottom: 2px solid var(--black);
 }
 
 .store-img {
@@ -137,6 +139,7 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     padding: 5px 10px;
+    border-radius: 0;
 }
 
 /* Store Card Info */
@@ -195,11 +198,13 @@
 
 /* Store Map Viewport */
 .store-map-viewport {
+    grid-column: span 7;
     border: 2px solid var(--black);
+    border-radius: 0 !important;
     background: var(--gray);
     height: 600px;
     position: sticky;
-    top: 88px; /* Sticky layout relative to header height */
+    top: 98px; /* Sticky layout relative to header height + margin */
     z-index: 10;
 }
 
@@ -215,15 +220,23 @@
 
 /* --- Contact Form Section --- */
 .contact-form-section {
-    border-top: 1.5px solid var(--black);
+    border-top: 2px solid var(--black);
     padding-top: 80px;
     margin-top: 80px;
 }
 
 .contact-form-grid {
     display: grid;
-    grid-template-columns: 1.2fr 1.8fr;
-    gap: 64px;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 24px;
+}
+
+.form-intro {
+    grid-column: span 5;
+}
+
+.form-wrapper {
+    grid-column: span 7;
 }
 
 .form-title {
@@ -250,7 +263,8 @@
 }
 
 .channel-card {
-    border: 1.5px solid var(--black);
+    border: 2px solid var(--black);
+    border-radius: 0 !important;
     background: var(--white);
     padding: 20px;
 }
@@ -304,25 +318,44 @@
 
 .form-group input,
 .form-group textarea {
-    border: 1.5px solid var(--black);
+    border: 2px solid var(--black); /* Bold solid borders */
+    border-radius: 0 !important; /* Shape language: strictly 0px */
     background: var(--white);
     padding: 14px 18px;
     font-family: var(--font-sans);
     font-size: 15px;
     color: var(--black);
     outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: none !important; /* Absolutely no soft shadow */
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-    color: rgba(0, 0, 0, 0.3);
+    color: rgba(0, 0, 0, 0.35);
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
     border-color: var(--black);
-    box-shadow: 4px 4px 0px var(--yellow);
+    background-color: #fffdfa; /* Vintage background shift on focus */
+    box-shadow: none !important;
+}
+
+/* Error state styles */
+.form-group.has-error input,
+.form-group.has-error textarea {
+    border: 2px solid #ba1a1a !important; /* Error red border */
+    border-radius: 0 !important;
+}
+
+.error-message {
+    color: #ba1a1a;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 6px;
+    display: block;
 }
 
 .btn-submit {
@@ -333,11 +366,96 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    border: 1.5px solid var(--black);
+    background: var(--yellow); /* Heritage Yellow #FFCC00 */
+    color: var(--black); /* Ink Black #000000 */
+    border: 2px solid var(--black);
+    border-radius: 0 !important; /* Shape language: strictly 0px */
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-submit:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+/* ============================================================
+   SUCCESS MODAL POPUP (PHASE 1.5 PROTOTYPE)
+   ============================================================ */
+.success-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.success-modal-content {
+    background: var(--white);
+    border: 3px solid var(--black);
+    border-radius: 0 !important;
+    width: 90%;
+    max-width: 500px;
+    padding: 32px;
+    box-shadow: 12px 12px 0px var(--yellow); /* Hard shadow matching design system */
+}
+
+.success-modal-header {
+    font-family: var(--font-sans);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--black);
+    border-bottom: 2px solid var(--black);
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+}
+
+.success-modal-body {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--on-surface-variant);
+    margin-bottom: 24px;
+}
+
+.success-modal-body p {
+    margin-bottom: 10px;
+}
+
+.success-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.success-modal-close-btn {
+    background: var(--black);
+    color: var(--white);
+    border: 2px solid var(--black);
+    border-radius: 0 !important;
+    padding: 10px 24px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.success-modal-close-btn:hover {
+    background: var(--yellow);
+    color: var(--black);
 }
 
 /* --- Responsive Adjustments --- */
-@media (max-width: 900px) {
+@media (max-width: 1023px) {
     .page-header {
         padding: 60px 0;
     }
@@ -348,8 +466,13 @@
     
     .store-locator-wrapper {
         grid-template-columns: 1fr;
-        gap: 30px;
+        gap: 24px;
         margin-bottom: 60px;
+    }
+    
+    .store-list,
+    .store-map-viewport {
+        grid-column: span 12;
     }
     
     .store-map-viewport {
@@ -359,7 +482,12 @@
     
     .contact-form-grid {
         grid-template-columns: 1fr;
-        gap: 40px;
+        gap: 32px;
+    }
+    
+    .form-intro,
+    .form-wrapper {
+        grid-column: span 12;
     }
     
     .contact-form-section {
