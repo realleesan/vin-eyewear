@@ -10,7 +10,7 @@
 <section class="page-header">
     <div class="container">
         <p class="page-eyebrow">VIN EYEWEAR &middot; DI SẢN &amp; CÔNG NGHỆ</p>
-        <h1><?php echo htmlspecialchars($pageTitle); ?></h1>
+        <h1>Liên hệ</h1>
         <p class="page-desc">Kết nối với chúng tôi qua hệ thống cửa hàng vật lý và các kênh tư vấn trực tuyến.</p>
     </div>
 </section>
@@ -22,14 +22,24 @@
         <div class="store-locator-wrapper reveal">
             <!-- Left: Store Cards List -->
             <div class="store-list">
-                <?php foreach ($stores as $index => $store): ?>
+                <?php foreach ($stores as $index => $store): 
+                    $storeName = htmlspecialchars($store['name']);
+                    $storeTagline = htmlspecialchars($store['tagline']);
+                    if ($store['id'] === 'long-bien') {
+                        $storeName = 'Vin Eyewear - Long Biên';
+                        $storeTagline = 'Chuyên đo khám';
+                    } elseif ($store['id'] === 'tay-ho') {
+                        $storeName = 'Vin Eyewear - Tây Hồ - Thụy Khuê';
+                        $storeTagline = 'Mới khai trương';
+                    }
+                ?>
                 <div class="store-card <?= $index === 0 ? 'active' : '' ?>" data-store-id="<?= htmlspecialchars($store['id']) ?>" role="button" tabindex="0">
                     <div class="store-image-container">
-                        <img src="<?= htmlspecialchars($store['image']) ?>" alt="<?= htmlspecialchars($store['name']) ?>" class="store-img">
-                        <span class="store-badge"><?= htmlspecialchars($store['tagline']) ?></span>
+                        <img src="<?= htmlspecialchars($store['image']) ?>" alt="<?= $storeName ?>" class="store-img">
+                        <span class="store-badge"><?= $storeTagline ?></span>
                     </div>
                     <div class="store-card-content">
-                        <h3 class="store-card-title"><?= htmlspecialchars($store['name']) ?></h3>
+                        <h3 class="store-card-title"><?= $storeName ?></h3>
                         <div class="store-details">
                             <p class="store-detail-item">
                                 <span class="label-mono">ĐỊA CHỈ:</span>

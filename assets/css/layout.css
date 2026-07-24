@@ -719,3 +719,34 @@ button, input, select, textarea {
     .join__form { flex-direction: column; }
     .join__form button { padding: 14px; }
 }
+
+/* Tối ưu hóa cho thiết bị di động màn hình hẹp (390px - 480px) */
+@media (max-width: 480px) {
+    :root {
+        --margin: 12px;
+    }
+    
+    .announcement-bar {
+        padding: 0 12px;
+        min-height: 42px;
+    }
+    
+    .announcement-social {
+        gap: 16px; /* Khoảng cách hợp lý cho FB, Shopee, Tiktok */
+    }
+    
+    .announcement-actions {
+        gap: 16px;
+    }
+    
+    .announcement-ico svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .footer-bottom__social {
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
