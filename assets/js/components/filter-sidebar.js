@@ -16,6 +16,7 @@
     const toggle   = document.getElementById('filterToggle');
     const overlay  = document.getElementById('filterOverlay');
     const closeBtn = document.getElementById('filterClose');
+    const resetBtn = document.getElementById('filterReset');
 
     if (!sidebar || !toggle || !overlay) return; // Guard: trang không có filter sidebar
 
@@ -66,5 +67,29 @@
             closeSidebar();
         }
     });
+
+    /* ── Reset Filters ─────────────────────────────── */
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            // Reset all filter chips to default state
+            const allChips = sidebar.querySelectorAll('.filter-chip');
+            allChips.forEach(chip => {
+                chip.classList.remove('is-active');
+                chip.setAttribute('aria-pressed', 'false');
+            });
+
+            // Set "all" chips as active for each filter group
+            const allValueChips = sidebar.querySelectorAll('.filter-chip[data-filter-kind="all"], .filter-chip[data-filter-cat="all"], .filter-chip[data-filter-category="all"], .filter-chip[data-filter-event="all"], .filter-chip[data-filter-price="all"]');
+            allValueChips.forEach(chip => {
+                chip.classList.add('is-active');
+                chip.setAttribute('aria-pressed', 'true');
+            });
+
+            // Trigger custom event for other scripts to handle
+            const resetEvent = new CustomEvent('filterReset', { bubbles: true });
+            sidebar.dispatchEvent(resetEvent);
+        });
+    }
 
 })();
