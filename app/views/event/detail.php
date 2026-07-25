@@ -71,7 +71,7 @@ require_once APP_PATH . '/views/_layout/breadcrumb.php';
 
                 <div class="event-content-block">
                     <h3>Lưu ý quan trọng</h3>
-                    <p>Chương trình không áp dụng đồng thời với các khuyến mãi khác. Số lượng quà tặng Limited Edition có hạn, sẽ được ưu tiên cho khách hàng đặt hàng sớm nhất. Vin Eyewear保留 quyền điều chỉnh chương trình khi cần thiết.</p>
+                    <p>Chương trình không áp dụng đồng thời với các khuyến mãi khác. Số lượng quà tặng Limited Edition có hạn, sẽ được ưu tiên cho khách hàng đặt hàng sớm nhất. Vin Eyewear giữ quyền điều chỉnh chương trình khi cần thiết.</p>
                 </div>
 
                 <!-- CTA Section -->
