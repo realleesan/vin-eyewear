@@ -1,14 +1,14 @@
 <?php
-/**
- * ar/tryon.php
- * Trang thử kính AR — overlay cố định tại tâm khung camera.
- * Biến nhận từ ArController::tryon():
- *   $glasses — mảng mẫu kính thử (id, name, overlay)
- *
- * Layout note:
- * - Page Header và CTA sẽ được Duy Anh quản lý qua component chung
- *   (_layout/page-header.php, _layout/cta.php) nên không giữ inline ở đây.
- */
+$show_breadcrumb = true;
+$breadcrumb_items = [
+    ['label' => 'Trang chủ', 'url' => '/'],
+    ['label' => 'Thử AR'],
+];
+$show_page_header = true;
+$page_eyebrow = 'AR TRY-ON';
+$page_subtitle = 'Thử kính trực tuyến bằng camera — không cần tới cửa hàng.';
+$show_cta = false;
+$show_pusher = true;
 ?>
 
 <!-- AR WORKSPACE -->

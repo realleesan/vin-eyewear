@@ -16,6 +16,11 @@
  * (đo mắt & thử kính) -> ghé cửa hàng (visit) -> join (footer).
  */
 
+$show_breadcrumb = false;
+$show_page_header = false;
+$show_cta = false;
+$show_pusher = true;
+
 /** Render 1 hàng chấm màu cho thẻ sản phẩm */
 $renderSwatches = static function (array $colors): void {
     if (empty($colors)) {
@@ -32,7 +37,8 @@ $renderSwatches = static function (array $colors): void {
 };
 
 /** Render 1 thẻ sản phẩm kiểu trang chủ */
-$renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
+$renderFrameCard = static function (array $p) use ($renderSwatches): void {
+    ?>
     <a href="/product/detail" class="frame-card">
         <div class="frame-card__img">
             <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" loading="lazy">
@@ -44,9 +50,9 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void { ?>
         <p class="frame-card__price"><?= number_format($p['price'], 0, ',', '.') ?> &#8363;</p>
         <?php $renderSwatches($p['colors'] ?? []); ?>
     </a>
-<?php }; ?>
+    <?php
+};
 
-<?php
 /** Render icon SVG cho huy hiệu cam kết (Booking) theo khóa 'icon' */
 $renderCommitIcon = static function (string $key): void {
     $icons = [

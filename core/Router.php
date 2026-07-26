@@ -86,7 +86,11 @@ class Router
                 
                 // Check if action exists
                 if (method_exists($controller, $action)) {
-                    $controller->$action();
+                    try {
+                        $controller->$action();
+                    } catch (\Throwable $e) {
+                        $this->handle500();
+                    }
                 } else {
                     $this->handle404();
                 }
@@ -101,7 +105,18 @@ class Router
     private function handle404()
     {
         header('HTTP/1.0 404 Not Found');
-        require_once ROOT_PATH . '/errors/404.php';
+        require_once APP_PATH . '/controllers/ErrorController.php';
+        $controller = new ErrorController();
+        $controller->notFound();
+        exit;
+    }
+
+    private function handle500()
+    {
+        header('HTTP/1.0 500 Internal Server Error');
+        require_once APP_PATH . '/controllers/ErrorController.php';
+        $controller = new ErrorController();
+        $controller->serverError();
         exit;
     }
 }

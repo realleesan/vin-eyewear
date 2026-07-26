@@ -1,24 +1,17 @@
-<link rel="stylesheet" href="/assets/css/event.css">
-<script src="/assets/js/event.js" defer></script>
-
 <?php
+$show_breadcrumb = true;
 $breadcrumb_items = [
     ['label' => 'Trang chủ', 'url' => '/'],
     ['label' => 'Tin tức & Sự kiện'],
 ];
-$show_breadcrumb = true;
-require_once APP_PATH . '/views/_layout/breadcrumb.php';
+$show_page_header = true;
+$page_eyebrow = 'JOURNAL';
+$page_subtitle = 'Khám phá những câu chuyện độc bản và các cột mốc đáng nhớ trong hành trình của Vin Eyewear.';
+$show_cta = false;
+$show_pusher = true;
 ?>
 
-<section class="page-header">
-    <div class="container">
-        <div class="header-content">
-            <span class="header-label">JOURNAL</span>
-            <h1><?= htmlspecialchars($pageTitle) ?></h1>
-            <p class="header-tagline">Khám phá những câu chuyện độc bản và các cột mốc đáng nhớ trong hành trình của Vin Eyewear.</p>
-        </div>
-    </div>
-</section>
+<script src="/assets/js/event.js" defer></script>
 
 <section class="events-section">
     <div class="container">

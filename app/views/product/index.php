@@ -41,18 +41,19 @@ foreach ($products as $p) {
 }
 
 $filter_type = 'product';
-?>
-<script src="/assets/js/product.js" defer></script>
 
-<!-- ============================================================
-     PAGE HEADER
-     ============================================================ -->
-<div class="page-header reveal">
-    <div class="page-header-inner">
-        <p class="page-eyebrow">Eyewear Collection</p>
-        <h1 class="page-title"><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Frames' ?></h1>
-    </div>
-</div>
+$show_breadcrumb = true;
+$breadcrumb_items = [
+    ['label' => 'Trang chủ', 'url' => '/'],
+    ['label' => 'Sản phẩm'],
+];
+$show_page_header = true;
+$page_eyebrow = 'Eyewear Collection';
+$show_cta = false;
+$show_pusher = true;
+?>
+
+<script src="/assets/js/product.js" defer></script>
 
 <!-- ============================================================
      PRODUCT LISTING — filter sidebar (trái) + grid (phải)

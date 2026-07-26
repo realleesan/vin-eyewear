@@ -27,34 +27,6 @@ body {
     padding: 0 24px;
 }
 
-/* Page Header */
-.page-header {
-    background-color: var(--yellow);
-    padding: 64px 0;
-    text-align: center;
-    border-bottom: 1px solid var(--black);
-}
-
-.page-header h1 {
-    font-family: var(--font-serif);
-    font-size: 48px;
-    font-weight: 700;
-    line-height: 56px;
-    color: var(--black);
-    text-transform: uppercase;
-    letter-spacing: -0.02em;
-    margin-bottom: 8px;
-}
-
-.page-header p {
-    font-family: var(--font-sans);
-    font-size: 18px;
-    font-weight: 500;
-    color: var(--black);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
 /* About Section */
 .about-section {
     padding: 120px 0;
@@ -375,15 +347,6 @@ body {
 }
 
 @media (max-width: 768px) {
-    .page-header {
-        padding: 40px 0;
-    }
-    
-    .page-header h1 {
-        font-size: 32px;
-        line-height: 40px;
-    }
-    
     .about-section {
         padding: 64px 0;
     }

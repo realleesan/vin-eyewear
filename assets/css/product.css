@@ -7,37 +7,6 @@
 
 
 /* ============================================
-   PAGE HEADER
-   ============================================ */
-.page-header {
-    padding: 64px var(--margin) 0;
-}
-
-/* Duong ke mo dat tren .page-header-inner nen dai bang luoi san pham (4 SP),
-   khong tran full man hinh. Mau nhat (--border) thay cho net den 1.5px. */
-.page-header-inner {
-    padding-bottom: 40px;
-    border-bottom: 1px solid var(--border);
-}
-
-.page-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--outline);
-    margin-bottom: 12px;
-}
-
-.page-title {
-    font-family: var(--font-serif);
-    font-size: 48px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 16px;
-}
-
-/* ============================================
    PRODUCT LISTING (grid/card dùng component chung ở layout.css)
    ============================================ */
 .product-listing {
@@ -160,7 +129,6 @@
 }
 
 @media (max-width: 900px) {
-    .page-title { font-size: 32px; }
     .product-listing { padding: 40px var(--margin); }
     .product-listing .product-grid { gap: 16px; }
 

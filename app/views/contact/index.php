@@ -7,13 +7,19 @@
  *   $pageTitle — tiêu đề trang
  */
 ?>
-<section class="page-header">
-    <div class="container">
-        <p class="page-eyebrow">VIN EYEWEAR &middot; DI SẢN &amp; CÔNG NGHỆ</p>
-        <h1>Liên hệ</h1>
-        <p class="page-desc">Kết nối với chúng tôi qua hệ thống cửa hàng vật lý và các kênh tư vấn trực tuyến.</p>
-    </div>
-</section>
+<?php
+$show_breadcrumb = true;
+$breadcrumb_items = [
+    ['label' => 'Trang chủ', 'url' => '/'],
+    ['label' => 'Liên hệ'],
+];
+$show_page_header = true;
+$page_eyebrow = 'VIN EYEWEAR · DI SẢN & CÔNG NGHỆ';
+$page_title = 'Liên hệ';
+$page_subtitle = 'Kết nối với chúng tôi qua hệ thống cửa hàng vật lý và các kênh tư vấn trực tuyến.';
+$show_cta = false;
+$show_pusher = true;
+?>
 
 <section class="contact-section">
     <div class="container">

@@ -4,50 +4,6 @@
    Grid Listing Layout
    ============================================ */
 
-/* Page Header - Editorial Style */
-.page-header {
-    background-color: var(--yellow);
-    padding: 80px 0;
-    border-bottom: 1px solid var(--black);
-}
-
-.header-content {
-    text-align: center;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.header-label {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--black);
-    display: block;
-    margin-bottom: 16px;
-}
-
-.page-header h1 {
-    font-family: var(--font-serif);
-    font-size: 64px;
-    font-weight: 700;
-    line-height: 72px;
-    color: var(--black);
-    margin-bottom: 24px;
-    letter-spacing: -0.02em;
-}
-
-.header-tagline {
-    font-family: var(--font-sans);
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 28px;
-    color: var(--black);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
 /* Events Section */
 .events-section {
     padding: 120px 0;
@@ -484,11 +440,6 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .page-header h1 {
-        font-size: 48px;
-        line-height: 56px;
-    }
-    
     .events-layout {
         grid-template-columns: 240px 1fr;
         gap: 32px;
@@ -511,20 +462,6 @@
 @media (max-width: 768px) {
     .events-section {
         padding: 64px 0;
-    }
-    
-    .page-header {
-        padding: 48px 0;
-    }
-    
-    .page-header h1 {
-        font-size: 36px;
-        line-height: 44px;
-    }
-    
-    .header-tagline {
-        font-size: 16px;
-        line-height: 24px;
     }
     
     .events-layout {
@@ -574,11 +511,6 @@
 }
 
 @media (max-width: 480px) {
-    .page-header h1 {
-        font-size: 28px;
-        line-height: 36px;
-    }
-    
     .event-content {
         padding: 16px;
     }

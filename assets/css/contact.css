@@ -4,40 +4,6 @@
    Sharp 0px · High-contrast · Bold Borders · Heritage Yellow
    ============================================================ */
 
-/* --- Page Header Section --- */
-.page-header {
-    background: var(--gray);
-    border-bottom: 1.5px solid var(--black);
-    padding: 80px 0;
-    text-align: center;
-}
-
-.page-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    color: var(--outline);
-    margin-bottom: 16px;
-}
-
-.page-header h1 {
-    font-family: var(--font-serif);
-    font-size: 3.5rem;
-    font-weight: 700;
-    line-height: 1.1;
-    color: var(--black);
-    margin-bottom: 16px;
-}
-
-.page-desc {
-    font-family: var(--font-sans);
-    font-size: 1.1rem;
-    color: var(--on-surface-variant);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
 /* --- Contact Section Layout --- */
 .contact-section {
     padding: 80px 0;
@@ -456,14 +422,6 @@
 
 /* --- Responsive Adjustments --- */
 @media (max-width: 1023px) {
-    .page-header {
-        padding: 60px 0;
-    }
-    
-    .page-header h1 {
-        font-size: 2.5rem;
-    }
-    
     .store-locator-wrapper {
         grid-template-columns: 1fr;
         gap: 24px;

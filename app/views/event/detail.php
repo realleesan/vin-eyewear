@@ -1,24 +1,23 @@
 <link rel="stylesheet" href="/assets/css/event.css">
 
 <?php
+$show_breadcrumb = true;
 $breadcrumb_items = [
     ['label' => 'Trang chủ', 'url' => '/'],
     ['label' => 'Tin tức & Sự kiện', 'url' => '/event'],
     ['label' => 'Chi tiết'],
 ];
-$show_breadcrumb = true;
-require_once APP_PATH . '/views/_layout/breadcrumb.php';
+$show_page_header = true;
+$page_eyebrow = 'JOURNAL';
+$page_title = 'The Heritage Collection Summer Sale';
+$page_subtitle = 'Cơ hội sở hữu những thiết kế kinh điển với mức giá đặc biệt';
+$show_cta = true;
+$cta_buttons = [
+    ['label' => 'Xem sản phẩm', 'url' => '/product', 'style' => 'primary'],
+    ['label' => 'Liên hệ tư vấn', 'url' => '/contact', 'style' => 'ghost'],
+];
+$show_pusher = true;
 ?>
-
-<section class="page-header">
-    <div class="container">
-        <div class="header-content">
-            <span class="header-label">JOURNAL</span>
-            <h1>The Heritage Collection Summer Sale</h1>
-            <p class="header-tagline">Cơ hội sở hữu những thiết kế kinh điển với mức giá đặc biệt</p>
-        </div>
-    </div>
-</section>
 
 <section class="event-detail-section">
     <div class="container">
@@ -72,12 +71,6 @@ require_once APP_PATH . '/views/_layout/breadcrumb.php';
                 <div class="event-content-block">
                     <h3>Lưu ý quan trọng</h3>
                     <p>Chương trình không áp dụng đồng thời với các khuyến mãi khác. Số lượng quà tặng Limited Edition có hạn, sẽ được ưu tiên cho khách hàng đặt hàng sớm nhất. Vin Eyewear giữ quyền điều chỉnh chương trình khi cần thiết.</p>
-                </div>
-
-                <!-- CTA Section -->
-                <div class="event-cta">
-                    <a href="/product" class="btn btn-primary">XEM SẢN PHẨM</a>
-                    <a href="/contact" class="btn btn-secondary">LIÊN HỆ TƯ VẤN</a>
                 </div>
             </div>
 

@@ -1,20 +1,15 @@
-<link rel="stylesheet" href="/assets/css/about.css">
-
 <?php
+$show_breadcrumb = true;
 $breadcrumb_items = [
     ['label' => 'Trang chủ', 'url' => '/'],
     ['label' => 'Về chúng tôi'],
 ];
-$show_breadcrumb = true;
-require_once APP_PATH . '/views/_layout/breadcrumb.php';
+$show_page_header = true;
+$show_cta = false;
+$show_pusher = true;
 ?>
 
-<section class="page-header">
-    <div class="container">
-        <h1><?= htmlspecialchars($pageTitle) ?></h1>
-        <p>Về Vin Eyewear</p>
-    </div>
-</section>
+<link rel="stylesheet" href="/assets/css/about.css">
 
 <section class="about-section">
     <div class="container">

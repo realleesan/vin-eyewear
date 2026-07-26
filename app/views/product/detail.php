@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * product/detail.php
  * Biến nhận từ ProductDetailController::index():
@@ -8,25 +8,29 @@
  * MOCKUP: đây là trang detail DÙNG CHUNG — mọi thẻ sản phẩm đều trỏ về đây.
  * CSS/JS riêng của trang do master.php nạp theo $viewName.
  */
+$show_breadcrumb = true;
+$breadcrumb_items = [
+    ['label' => 'Trang chủ', 'url' => '/'],
+    ['label' => 'Sản phẩm', 'url' => '/product'],
+    ['label' => $product['name']],
+];
+$show_page_header = true;
+$page_eyebrow = 'Vin Eyewear · Handcrafted Collection';
+$show_cta = true;
+$cta_buttons = [
+    ['label' => 'Thử AR', 'url' => '/ar', 'style' => 'primary'],
+    ['label' => 'Liên hệ tư vấn', 'url' => '/contact', 'style' => 'ghost'],
+];
+$cta_note = 'Thử kính trực tuyến bằng camera — không cần tới cửa hàng.';
+$show_pusher = true;
 ?>
 
 <!-- ============================================================
-     BREADCRUMB
-     ============================================================ -->
-<nav class="pd-breadcrumb" aria-label="Breadcrumb">
-    <a href="/">Trang chủ</a>
-    <span aria-hidden="true">/</span>
-    <a href="/product">Sản phẩm</a>
-    <span aria-hidden="true">/</span>
-    <span class="current"><?= htmlspecialchars($product['name']) ?></span>
-</nav>
-
-<!-- ============================================================
-     SECTION 1 — GALLERY + THÔNG TIN SẢN PHẨM
+     SECTION 1 â€” GALLERY + THÃ”NG TIN Sáº¢N PHáº¨M
      ============================================================ -->
 <section class="pd-main">
 
-    <!-- Cột trái: ảnh lớn + thumbnail -->
+    <!-- Cá»™t trÃ¡i: áº£nh lá»›n + thumbnail -->
     <div class="pd-gallery">
         <div class="pd-stage">
             <img
@@ -35,7 +39,7 @@
                 alt="<?= htmlspecialchars($product['name']) ?>"
             >
             <?php if (!empty($product['badge'])): ?>
-            <span class="badge <?= $product['badge'] === 'Mới' ? 'badge-dark' : '' ?>"><?= htmlspecialchars($product['badge']) ?></span>
+            <span class="badge <?= $product['badge'] === 'Má»›i' ? 'badge-dark' : '' ?>"><?= htmlspecialchars($product['badge']) ?></span>
             <?php endif; ?>
         </div>
 
@@ -45,7 +49,7 @@
                 type="button"
                 class="pd-thumb <?= $i === 0 ? 'active' : '' ?>"
                 data-full="<?= htmlspecialchars($img) ?>"
-                aria-label="Xem ảnh <?= $i + 1 ?>"
+                aria-label="Xem áº£nh <?= $i + 1 ?>"
             >
                 <img src="<?= htmlspecialchars($img) ?>" alt="" loading="lazy">
             </button>
@@ -53,22 +57,14 @@
         </div>
     </div>
 
-    <!-- Cột phải: tên, giá, mô tả, CTA -->
+    <!-- Cá»™t pháº£i: tÃªn, giÃ¡, mÃ´ táº£ -->
     <div class="pd-info">
-        <p class="pd-eyebrow">Vin Eyewear &middot; Handcrafted Collection</p>
         <h1 class="pd-name"><?= htmlspecialchars($product['name']) ?></h1>
         <p class="pd-price"><?= number_format($product['price'], 0, ',', '.') ?> &#8363;</p>
 
         <p class="pd-desc"><?= htmlspecialchars($product['description']) ?></p>
 
-        <div class="pd-actions">
-            <a href="/ar" class="pd-btn-primary">Thử AR</a>
-            <a href="/contact" class="pd-btn-ghost">Liên hệ tư vấn</a>
-        </div>
-
-        <p class="pd-note">Thử kính trực tuyến bằng camera — không cần tới cửa hàng.</p>
-
-        <!-- Thông số kỹ thuật -->
+        <!-- ThÃ´ng sá»‘ ká»¹ thuáº­t -->
         <dl class="pd-specs">
             <?php foreach ($product['specs'] as $label => $value): ?>
             <div class="pd-spec-row">
@@ -82,12 +78,12 @@
 </section>
 
 <!-- ============================================================
-     SECTION 2 — SẢN PHẨM GỢI Ý (dùng component .product-grid ở layout.css)
+     SECTION 2 â€” Sáº¢N PHáº¨M Gá»¢I Ã (dÃ¹ng component .product-grid á»Ÿ layout.css)
      ============================================================ -->
 <section class="pd-related reveal">
     <div class="pd-related-header">
-        <h2 class="pd-related-title">Có thể bạn thích</h2>
-        <a href="/product" class="pd-related-link">Xem tất cả</a>
+        <h2 class="pd-related-title">CÃ³ thá»ƒ báº¡n thÃ­ch</h2>
+        <a href="/product" class="pd-related-link">Xem táº¥t cáº£</a>
     </div>
 
     <div class="product-grid">

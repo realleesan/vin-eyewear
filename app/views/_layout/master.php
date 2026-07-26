@@ -37,6 +37,9 @@
         <?php if ($viewName === 'product/detail'): ?>
             <link rel="stylesheet" href="/assets/css/product.detail.css">
         <?php endif; ?>
+        <?php if (strpos($viewName, 'errors/') === 0): ?>
+            <link rel="stylesheet" href="/assets/css/errors.css">
+        <?php endif; ?>
     <?php endif; ?>
 
     <!-- CSS RIÊNG CHO ABOUT (CHỈ LOAD KHI CẦN) -->
@@ -45,7 +48,7 @@
     <?php endif; ?>
 
     <!-- CSS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
-    <?php if (isset($viewName) && $viewName === 'event/index'): ?>
+    <?php if (isset($viewName) && (strpos($viewName, 'event/') === 0 || $viewName === 'event/index')): ?>
         <link rel="stylesheet" href="/assets/css/event.css">
     <?php endif; ?>
 </head>
@@ -57,7 +60,35 @@
 
     <!-- Nội dung trang con — $viewName được truyền từ BaseController::renderView() -->
     <main class="main-content">
-        <?php require_once VIEWS_PATH . '/' . $viewName . '.php'; ?>
+        <?php
+        // Capture nội dung view để đọc biến bật/tắt layout component
+        ob_start();
+        require_once VIEWS_PATH . '/' . $viewName . '.php';
+        $viewContent = ob_get_clean();
+        ?>
+
+        <!-- Breadcrumb -->
+        <?php if (isset($show_breadcrumb) && $show_breadcrumb && !empty($breadcrumb_items)): ?>
+            <?php require_once VIEWS_PATH . '/_layout/breadcrumb.php'; ?>
+        <?php endif; ?>
+
+        <!-- Page Header -->
+        <?php if (isset($show_page_header) && $show_page_header): ?>
+            <?php require_once VIEWS_PATH . '/_layout/page-header.php'; ?>
+        <?php endif; ?>
+
+        <!-- Nội dung trang -->
+        <?= $viewContent ?>
+
+        <!-- CTA -->
+        <?php if (isset($show_cta) && $show_cta && !empty($cta_buttons)): ?>
+            <?php require_once VIEWS_PATH . '/_layout/cta.php'; ?>
+        <?php endif; ?>
+
+        <!-- Pusher (Scroll to Top) -->
+        <?php if (!isset($show_pusher) || $show_pusher): ?>
+            <?php require_once VIEWS_PATH . '/_layout/pusher.php'; ?>
+        <?php endif; ?>
     </main>
 
     <!-- Footer -->

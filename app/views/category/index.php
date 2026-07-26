@@ -2,23 +2,17 @@
 <script src="/assets/js/category.js" defer></script>
 
 <?php
+$show_breadcrumb = true;
 $breadcrumb_items = [
     ['label' => 'Trang chủ', 'url' => '/'],
     ['label' => 'Danh mục'],
 ];
-$show_breadcrumb = true;
-require_once APP_PATH . '/views/_layout/breadcrumb.php';
+$show_page_header = true;
+$page_eyebrow = 'COLLECTION';
+$page_subtitle = 'Khám phá bộ sưu tập kính mắt đẳng cấp';
+$show_cta = false;
+$show_pusher = true;
 ?>
-
-<section class="page-header">
-    <div class="container">
-        <div class="header-content">
-            <span class="header-label">COLLECTION</span>
-            <h1><?= htmlspecialchars($pageTitle) ?></h1>
-            <p class="header-tagline">Khám phá bộ sưu tập kính mắt đẳng cấp</p>
-        </div>
-    </div>
-</section>
 
 <section class="category-section">
     <div class="container">

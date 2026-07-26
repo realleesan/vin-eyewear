@@ -4,37 +4,6 @@
    Yêu cầu: ảnh kính cố định ở tâm màn hình camera
    ============================================ */
 
-/* --- Page header (đồng bộ product.css) --- */
-.page-header {
-    padding: 64px var(--margin) 40px;
-    border-bottom: 1.5px solid var(--black);
-}
-
-.page-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--outline);
-    margin-bottom: 12px;
-}
-
-.page-title {
-    font-family: var(--font-serif);
-    font-size: clamp(36px, 5vw, 48px);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin-bottom: 16px;
-}
-
-.page-subtitle {
-    font-size: 16px;
-    line-height: 1.7;
-    color: var(--on-surface-variant);
-    max-width: 560px;
-}
-
-
 /* --- Main layout --- */
 .ar-section {
     padding: 48px var(--margin) var(--section-gap);
@@ -501,11 +470,7 @@
         padding: 32px var(--margin) 64px;
     }
 
-    .page-header {
-        padding: 48px var(--margin) 32px;
-    }
-
-    .ar-viewer {
+.ar-viewer {
         padding: 16px;
     }
 
