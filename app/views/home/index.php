@@ -39,7 +39,7 @@ $renderSwatches = static function (array $colors): void {
 /** Render 1 thẻ sản phẩm kiểu trang chủ */
 $renderFrameCard = static function (array $p) use ($renderSwatches): void {
     ?>
-    <a href="/product/detail" class="frame-card">
+    <a href="/product/detail?id=<?= (int) ($p['id'] ?? 0) ?>" class="frame-card">
         <div class="frame-card__img">
             <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" loading="lazy">
             <?php if (!empty($p['badge'])): ?>
