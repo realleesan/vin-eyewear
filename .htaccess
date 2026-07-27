@@ -8,6 +8,14 @@
     RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
 </IfModule>
 
+# UTF-8 cho mọi response tĩnh (CSS/JS): nếu thiếu, trình duyệt tự đoán charset
+# và tiếng Việt trong file .css/.js sẽ hiển thị sai.
+AddDefaultCharset utf-8
+
+<IfModule mod_mime.c>
+    AddCharset utf-8 .css .js
+</IfModule>
+
 # Security headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"

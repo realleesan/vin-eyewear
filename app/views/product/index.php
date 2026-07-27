@@ -71,7 +71,7 @@ $show_pusher = true;
                 Hiển thị <strong id="productCount"><?= count($products) ?></strong> sản phẩm
             </p>
 
-            <div class="product-grid" id="productGrid">
+            <div class="product-grid product-grid--boxed" id="productGrid">
                 <?php foreach ($products as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
             </div>
 
