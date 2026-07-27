@@ -300,46 +300,138 @@ class ProductModel
         return array_slice(array_values($others), 0, $limit);
     }
 
-    /** Id của sản phẩm hiển thị ở trang detail dùng chung (mockup) */
+    /** Id dùng khi /product/detail được mở mà không kèm ?id= (link cũ, bookmark) */
     public const FEATURED_ID = 3; // Square Tortoise
 
     /**
-     * Sản phẩm cho trang detail.
-     * MOCKUP: mọi thẻ sản phẩm đều trỏ về đây nên trả về 1 sản phẩm cố định.
-     * Khi có DB, bỏ hàm này và gọi thẳng find($id) với id lấy từ URL.
+     * Mô tả + thông số theo dáng gọng.
+     * MOCKUP: catalog() chưa có cột mô tả riêng cho từng sản phẩm nên detail()
+     * dựng nội dung từ category. Khi có DB, đọc thẳng các cột tương ứng.
+     * 'desc' chứa một %s để chèn tên sản phẩm.
      */
-    public static function featured(): array
-    {
-        $product = self::find(self::FEATURED_ID);
+    private const SHAPE_PROFILE = [
+        'tron' => [
+            'shape'    => 'Tròn (Round)',
+            'material' => 'Acetate Ý kết hợp càng kim loại',
+            'size'     => '47 - 22 - 145 mm',
+            'desc'     => '%s giữ nguyên tinh thần của dáng tròn kinh điển: viền mảnh, cầu kính '
+                . 'key-hole và tỉ lệ cân đối giúp gương mặt trông mềm hơn. Acetate được đánh bóng '
+                . 'thủ công qua nhiều công đoạn nên bề mặt sáng đều, cầm chắc tay mà vẫn nhẹ.',
+        ],
+        'vuong' => [
+            'shape'    => 'Vuông bo tròn (Square)',
+            'material' => 'Acetate Ý nguyên khối',
+            'size'     => '46 - 24 - 145 mm',
+            'desc'     => '%s dựng từ acetate Ý nguyên khối với dáng vuông bo tròn — đường nét dứt '
+                . 'khoát nhưng không cứng. Khớp nối thép không gỉ cùng cầu kính key-hole giữ dáng '
+                . 'bền theo năm tháng, một thiết kế đi qua nhiều thập kỷ mà chưa từng lỗi mốt.',
+        ],
+        'aviator' => [
+            'shape'    => 'Phi công (Aviator)',
+            'material' => 'Khung kim loại mạ, đệm mũi silicone',
+            'size'     => '58 - 14 - 140 mm',
+            'desc'     => '%s lấy nguyên mẫu từ kính phi công nguyên bản: khung kim loại mảnh, hai '
+                . 'thanh cầu ngang và tròng dáng giọt nước. Đệm mũi silicone điều chỉnh được nên '
+                . 'gọng bám chắc mà không để lại vết hằn sau nhiều giờ đeo.',
+        ],
+        'cat-eye' => [
+            'shape'    => 'Mắt mèo (Cat Eye)',
+            'material' => 'Acetate Ý nguyên khối',
+            'size'     => '52 - 18 - 140 mm',
+            'desc'     => '%s vuốt cao ở hai đuôi gọng theo đúng tinh thần mắt mèo, tôn phần gò má '
+                . 'và kéo dài ánh nhìn. Phần acetate dày dần về phía đuôi được mài tay để giữ độ '
+                . 'cong đều — chi tiết quyết định thần thái của cả chiếc gọng.',
+        ],
+        'rimless' => [
+            'shape'    => 'Không viền (Rimless)',
+            'material' => 'Titanium nguyên chất',
+            'size'     => '54 - 18 - 145 mm',
+            'desc'     => '%s bỏ hoàn toàn phần viền, chỉ còn càng titanium và mối bắt vít giấu '
+                . 'khéo sau tròng. Titanium nguyên chất cho trọng lượng rất nhẹ, không gỉ và không '
+                . 'gây kích ứng — lựa chọn cho người đeo kính cả ngày.',
+        ],
+        'sport' => [
+            'shape'    => 'Ôm mặt (Sport Wrap)',
+            'material' => 'Nhựa TR90 siêu nhẹ, càng cao su chống trượt',
+            'size'     => '60 - 16 - 130 mm',
+            'desc'     => '%s thiết kế ôm sát thái dương để chắn gió và bụi khi vận động. Khung '
+                . 'TR90 chịu va đập, uốn cong không gãy; phần càng và đệm mũi bọc cao su bám tốt '
+                . 'ngay cả khi ra mồ hôi.',
+        ],
+    ];
 
-        // description/specs bên dưới viết riêng cho Square Tortoise. Nếu id này biến mất
-        // khỏi catalog thì fail to còn hơn im lặng trả về sản phẩm khác kèm mô tả sai.
-        if ($product === null) {
-            throw new RuntimeException(
-                'ProductModel::FEATURED_ID = ' . self::FEATURED_ID . ' không có trong catalog()'
-            );
-        }
+    /** Dùng khi category không nằm trong SHAPE_PROFILE */
+    private const DEFAULT_PROFILE = [
+        'shape'    => 'Cổ điển (Classic)',
+        'material' => 'Acetate Ý nguyên khối',
+        'size'     => '50 - 20 - 145 mm',
+        'desc'     => '%s được hoàn thiện thủ công từ acetate Ý, đánh bóng qua nhiều công đoạn để '
+            . 'có bề mặt sáng đều. Khớp nối thép không gỉ giữ form gọng ổn định theo thời gian.',
+    ];
 
-        $product['description'] = 'Gọng vuông bo tròn dựng từ acetate Ý nguyên khối, hoàn thiện '
-            . 'thủ công qua nhiều công đoạn đánh bóng. Vân tortoise được cắt thủ công nên không '
-            . 'chiếc nào trùng chiếc nào. Khớp nối thép không gỉ cùng cầu kính key-hole giữ dáng '
-            . 'bền theo năm tháng — một thiết kế đi qua hơn một thế kỷ mà chưa từng lỗi mốt.';
+    /**
+     * Mô tả viết tay cho từng sản phẩm cụ thể, ưu tiên hơn SHAPE_PROFILE['desc'].
+     * Sản phẩm không có ở đây dùng mô tả dựng theo dáng gọng.
+     */
+    private const DESCRIPTION_OVERRIDE = [
+        3 => 'Gọng vuông bo tròn dựng từ acetate Ý nguyên khối, hoàn thiện thủ công qua nhiều '
+            . 'công đoạn đánh bóng. Vân tortoise được cắt thủ công nên không chiếc nào trùng chiếc '
+            . 'nào. Khớp nối thép không gỉ cùng cầu kính key-hole giữ dáng bền theo năm tháng — '
+            . 'một thiết kế đi qua hơn một thế kỷ mà chưa từng lỗi mốt.',
+    ];
 
-        $product['specs'] = [
-            'Chất liệu'  => 'Acetate Ý nguyên khối',
-            'Kích thước' => '46 - 24 - 145 mm',
-            'Dáng gọng'  => 'Vuông bo tròn (Square)',
-            'Tròng kính' => 'Chống tia UV400, tùy chọn đổi tròng cận',
-            'Bảo hành'   => '12 tháng chính hãng',
-        ];
-
-        $product['gallery'] = [
+    /**
+     * Ảnh gallery viết tay cho một số sản phẩm (nhiều góc/màu hơn 2 ảnh trong catalog).
+     * Sản phẩm không có ở đây dùng image + image2 làm gallery.
+     */
+    private const GALLERY_OVERRIDE = [
+        3 => [
             'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-1_51a51dc4-f52a-4ebf-ae8c-53394cb8720c.jpg?v=1705433402&width=1000',
             'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-2_3d0284ce-bd3e-4c66-84bb-49bd189f2988.jpg?v=1705433402&width=1000',
             'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-burgundy-pos-1.jpg?v=1705433402&width=1000',
             'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-light-blue-pos-1.jpg?v=1705433402&width=1000',
+        ],
+    ];
+
+    /**
+     * Sản phẩm cho trang detail: dữ liệu catalog + description, specs, gallery.
+     * Trả về null nếu id không có trong catalog để controller trả 404.
+     */
+    public static function detail(int $id): ?array
+    {
+        $product = self::find($id);
+
+        if ($product === null) {
+            return null;
+        }
+
+        $profile = self::SHAPE_PROFILE[$product['category']] ?? self::DEFAULT_PROFILE;
+
+        $product['description'] = self::DESCRIPTION_OVERRIDE[$id]
+            ?? sprintf($profile['desc'], $product['name']);
+
+        $product['specs'] = [
+            'Chất liệu'  => $profile['material'],
+            'Kích thước' => $profile['size'],
+            'Dáng gọng'  => $profile['shape'],
+            'Tròng kính' => 'Chống tia UV400, tùy chọn đổi tròng cận',
+            'Bảo hành'   => '12 tháng chính hãng',
         ];
 
+        $product['gallery'] = self::GALLERY_OVERRIDE[$id] ?? self::galleryFrom($product);
+
         return $product;
+    }
+
+    /** Gallery mặc định: ảnh chính + ảnh góc thứ hai, nâng width lên cỡ trang detail */
+    private static function galleryFrom(array $product): array
+    {
+        $images = array_filter([$product['image'] ?? null, $product['image2'] ?? null]);
+
+        return array_values(array_map(
+            // Ảnh CDN có tham số ?width=800 cho thẻ card; trang detail hiển thị lớn hơn.
+            static fn(string $url): string => preg_replace('/([?&]width=)\d+/', '${1}1000', $url),
+            $images
+        ));
     }
 }

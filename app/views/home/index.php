@@ -8,20 +8,50 @@
  *   (các biến $feature, $heritage, $tints, $craftsmanship, $stories vẫn
  *    được controller cấp nhưng section tương ứng đã gỡ khỏi trang chủ.)
  *
- * Thẻ sản phẩm ở trang chủ dùng CHUNG component _layout/product-card.php với
- * trang /product — cùng khung, badge, overlay Quick Shop, hiệu ứng hover và
- * nét kẻ lưới 2px. Trước đây trang chủ có component riêng .frame-card (chữ căn
- * giữa, hàng chấm màu), nay đã gỡ để 2 trang không lệch nhau.
+ * Thẻ sản phẩm ở trang chủ dùng component riêng .frame-card (ảnh nền xám,
+ * chữ căn giữa, hàng chấm màu) — khác .product-card của trang /product.
  *
  * Thứ tự section: hero -> dải cam kết (commitments) -> best seller
  * -> tiles -> optical -> khách hàng nói gì (testimonials) -> booking
- * (đo mắt & thử kính) -> ghé cửa hàng (visit) -> footer.
+ * (đo mắt & thử kính) -> ghé cửa hàng (visit) -> join (footer).
  */
 
 $show_breadcrumb = false;
 $show_page_header = false;
 $show_cta = false;
 $show_pusher = true;
+
+/** Render 1 hàng chấm màu cho thẻ sản phẩm */
+$renderSwatches = static function (array $colors): void {
+    if (empty($colors)) {
+        return;
+    }
+    echo '<div class="frame-swatches">';
+    foreach ($colors as $hex) {
+        printf(
+            '<span class="frame-swatch" style="background:%s"></span>',
+            htmlspecialchars($hex)
+        );
+    }
+    echo '</div>';
+};
+
+/** Render 1 thẻ sản phẩm kiểu trang chủ */
+$renderFrameCard = static function (array $p) use ($renderSwatches): void {
+    ?>
+    <a href="/product/detail?id=<?= (int) ($p['id'] ?? 0) ?>" class="frame-card">
+        <div class="frame-card__img">
+            <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" loading="lazy">
+            <?php if (!empty($p['badge'])): ?>
+            <span class="frame-card__badge"><?= htmlspecialchars($p['badge']) ?></span>
+            <?php endif; ?>
+        </div>
+        <h3 class="frame-card__name"><?= htmlspecialchars($p['name']) ?></h3>
+        <p class="frame-card__price"><?= number_format($p['price'], 0, ',', '.') ?> &#8363;</p>
+        <?php $renderSwatches($p['colors'] ?? []); ?>
+    </a>
+    <?php
+};
 
 /** Render icon SVG cho huy hiệu cam kết (Booking) theo khóa 'icon' */
 $renderCommitIcon = static function (string $key): void {
@@ -100,10 +130,8 @@ $renderCommitIcon = static function (string $key): void {
             </svg>
         </button>
 
-        <!-- Track cuộn ngang nhưng thẻ bên trong là .product-card dùng chung.
-             LƯU Ý: require (KHÔNG require_once) vì nằm trong vòng lặp. -->
         <div class="frame-track" id="bestsellerTrack">
-            <?php foreach ($bestseller['products'] as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
+            <?php foreach ($bestseller['products'] as $p) { $renderFrameCard($p); } ?>
         </div>
 
         <button type="button" class="carousel__btn carousel__btn--next" data-dir="next" aria-label="Sản phẩm sau">
@@ -146,8 +174,8 @@ $renderCommitIcon = static function (string $key): void {
     <p class="section-desc"><?= htmlspecialchars($para) ?></p>
     <?php endforeach; ?>
 
-    <div class="product-grid">
-        <?php foreach ($optical['products'] as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
+    <div class="frame-grid">
+        <?php foreach ($optical['products'] as $p) { $renderFrameCard($p); } ?>
     </div>
 
     <div class="section-cta">

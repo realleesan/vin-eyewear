@@ -5,7 +5,7 @@
  *   $product — sản phẩm (name, price, image, badge, description, specs[], gallery[])
  *   $related — 4 sản phẩm gợi ý
  *
- * MOCKUP: đây là trang detail DÙNG CHUNG — mọi thẻ sản phẩm đều trỏ về đây.
+ * Sản phẩm hiển thị lấy theo ?id= trên URL (xem ProductDetailController).
  * CSS/JS riêng của trang do master.php nạp theo $viewName.
  */
 $show_breadcrumb = true;
