@@ -42,25 +42,11 @@
     display: none;
 }
 
-/* Override RIENG trang product: bo net den giua card, tang khoang cach.
-   Chi tac dong trong .product-listing nen trang Home giu nguyen luoi hairline. */
-.product-listing .product-grid {
-    gap: 28px;
-    background: transparent;
-}
-
-/* Card co vien mo nhe thay cho net den; vuong goc canh, khong bo tron */
-.product-listing .product-card {
-    border: 1px solid var(--border);
-    overflow: hidden;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.product-listing .product-card:hover {
-    border-color: var(--outline);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    transform: translateY(-4px);
-}
+/* LUU Y: kieu "the roi" (bo net den giua card, gap 28px, vien mo nhe, hover
+   nhac len) DA CHUYEN thanh modifier dung chung .product-grid--boxed trong
+   layout.css. Markup o day chi can them class do vao .product-grid.
+   Nho vay trang San pham va khoi "Co the ban thich" (.pd-related o trang chi
+   tiet) dung CHUNG mot nguon su that, khong con ban sao CSS theo tung trang. */
 
 
 /* ============================================
@@ -130,7 +116,6 @@
 
 @media (max-width: 900px) {
     .product-listing { padding: 40px var(--margin); }
-    .product-listing .product-grid { gap: 16px; }
 
     /* Sidebar chuyển thành slide-over (filter-sidebar.css) -> grid full-width */
     .listing-layout {

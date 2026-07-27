@@ -4,6 +4,10 @@
  * Application bootstrap file
  */
 
+// Toàn bộ view/dữ liệu là UTF-8 -> khai báo tường minh, không phụ thuộc vào
+// default_charset trong php.ini của máy chủ (nếu bị đặt khác, tiếng Việt sẽ vỡ).
+header('Content-Type: text/html; charset=UTF-8');
+
 // Start session
 session_start();
 

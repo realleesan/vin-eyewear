@@ -128,7 +128,7 @@ class HomeController extends BaseController
                 'reviews' => 15,
                 'desc'    => 'Gọng dựa trên dáng vuông bo tròn kinh điển nhưng thanh hơn, gọng mảnh hơn '
                     . 'và cầu kính key-hole cho vẻ chỉn chu hơn một chút. Người ta bảo...',
-                'cta'     => ['label' => 'Khám phá Square Tortoise', 'link' => '/product/detail'],
+                'cta'     => ['label' => 'Khám phá Square Tortoise', 'link' => '/product/detail?id=3'],
                 'thumb'   => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-1_51a51dc4-f52a-4ebf-ae8c-53394cb8720c.jpg?v=1705433402&width=300',
                 'gallery' => [
                     'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-2_3d0284ce-bd3e-4c66-84bb-49bd189f2988.jpg?v=1705433402&width=1000',
@@ -193,14 +193,14 @@ class HomeController extends BaseController
                         'title' => 'Minh Quân | Square Tortoise',
                         'body'  => 'Tay đua Minh Quân xuất hiện cùng Square Tortoise màu Light Grey với tròng pha '
                             . 'Aqua Sunrise. Chế tác từ acetate Ý, gọng nổi bật với chi tiết đinh tán kim cương…',
-                        'link'  => '/product/detail',
+                        'link'  => '/product/detail?id=3',
                     ],
                     [
                         'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-1_51a51dc4-f52a-4ebf-ae8c-53394cb8720c.jpg?v=1705433402&width=900',
                         'title' => 'Hà Linh | Square Tortoise và Browline Havana pha màu thủ công',
                         'body'  => 'Vận động viên bóng rổ chuyên nghiệp Hà Linh biết cách chiến thắng cả trong lẫn '
                             . 'ngoài sân đấu — với Square Tortoise màu Tortoise cùng tròng pha Amber…',
-                        'link'  => '/product/detail',
+                        'link'  => '/product/detail?id=3',
                     ],
                 ],
             ],

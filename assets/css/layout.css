@@ -521,14 +521,11 @@ button, input, select, textarea {
     object-fit: cover;
 }
 
-/* Anh goc nhin thu 2 — chong len anh chinh, hien mo dan khi hover card */
+/* Anh goc nhin thu 2 — chong len anh chinh (cung o grid), AN mac dinh.
+   Chi hien khi hover card; khong bao gio de no de len anh chinh luc tinh. */
 .card-img-hover {
     opacity: 0;
     transition: opacity 0.4s ease;
-}
-
-.product-card:hover .card-img-hover {
-    opacity: 1;
 }
 
 .card-img svg {
@@ -558,19 +555,21 @@ button, input, select, textarea {
     color: var(--white);
 }
 
-/* Overlay — phủ kín ô grid, nút Quick Shop dính đáy */
+/* Overlay QUICK SHOP — phủ kín ô grid, nút dính đáy. AN mac dinh (opacity 0),
+   chi hien khi hover card. pointer-events:none de overlay khong an click cua <a>. */
 .card-overlay {
     display: flex;
     align-items: flex-end;
     padding: 16px;
     background: rgba(0, 0, 0, 0.05);
     opacity: 0;
+    pointer-events: none;
     transition: opacity 0.2s ease;
 }
 
-.product-card:hover .card-overlay {
-    opacity: 1;
-}
+/* Chi hien overlay + anh thu 2 khi hover card. */
+.product-card:hover .card-img-hover { opacity: 1; }
+.product-card:hover .card-overlay   { opacity: 1; }
 
 /* <span> chứ không phải <button> — card đã là <a>, không lồng button trong a */
 .quick-shop-btn {
@@ -608,18 +607,74 @@ button, input, select, textarea {
 }
 
 
+/* --- MODIFIER .product-grid--boxed -----------------------------------------
+   Bien the "the roi": bo net den hairline giua cac card, thay bang khoang cach
+   that + vien mo nhe quanh tung card (nen trang, vuong goc, khong ke doc).
+   Dung chung cho trang San pham (/product) VA khoi goi y (.pd-related) o trang
+   chi tiet -> hai noi luon giong het nhau, khong can CSS rieng cho tung trang.
+   --------------------------------------------------------------------------- */
+.product-grid--boxed {
+    gap: 28px;
+    background: transparent;
+}
+
+.product-grid--boxed .product-card {
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.product-grid--boxed .product-card:hover {
+    border-color: var(--outline);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+}
+
+
+/* --- Thiet bi cam ung: go trang thai hover "dinh" -------------------------
+   Sau khi cham vao 1 card, trinh duyet giu :hover tren card do cho toi khi
+   cham cho khac -> overlay QUICK SHOP / anh thu 2 hien CO DINH tren vai card.
+   Chi tat o dung truong hop touch that su (hover: none VA pointer: coarse);
+   may desktop van giu nguyen hieu ung hover.
+   ------------------------------------------------------------------------- */
+@media (hover: none) and (pointer: coarse) {
+    .product-card:hover .card-img-hover,
+    .product-card:hover .card-overlay {
+        opacity: 0;
+    }
+
+    .product-grid--boxed .product-card:hover {
+        border-color: var(--border);
+        box-shadow: none;
+        transform: none;
+    }
+}
+
+
 /* ============================================
    UTILITY — SCROLL REVEAL
    ============================================ */
 .reveal {
-    opacity: 0;
-    transform: translateY(24px);
     transition: opacity 0.6s ease, transform 0.6s ease;
 }
 
-.reveal.visible {
+/* Trang thai an ban dau CHI ap dung khi JS con song: reveal.js gan .js-reveal
+   len <html> va tu go ra neu script khong chay duoc (xem master.php).
+   Nho vay noi dung KHONG BAO GIO bi an vinh vien vi JS loi / bi chan. */
+.js-reveal .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+}
+
+.js-reveal .reveal.visible {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* Nguoi dung tat animation -> hien ngay, khong dich chuyen. */
+@media (prefers-reduced-motion: reduce) {
+    .reveal { transition: none; }
+    .js-reveal .reveal { opacity: 1; transform: none; }
 }
 
 
@@ -703,6 +758,8 @@ button, input, select, textarea {
     .product-grid {
         grid-template-columns: repeat(2, 1fr);
     }
+
+    .product-grid--boxed { gap: 16px; }
 }
 
 @media (max-width: 600px) {

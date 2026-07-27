@@ -11,7 +11,15 @@
        thay vi tran ngang (voi 2 nut mac dinh khong doi gi o desktop) */
     flex-wrap: wrap;
     gap: 12px;
-    margin-bottom: 14px;
+
+    /* Le ngang bam theo --margin nhu moi section khac (pd-related, product-listing...)
+       -> nut khong con tran sat mep man hinh. */
+    padding: 0 var(--margin);
+
+    /* Khoang tho truoc dai footer den. Truoc day khoang nay do .cta-note gánh
+       (margin-bottom: 36px); bo note thi chuyen han xuong day, nho vay trang
+       event/detail (von khong co note, chi cach footer 14px) cung het chat. */
+    margin-bottom: 64px;
 }
 
 .cta-btn-primary,
@@ -48,19 +56,16 @@
     color: var(--white);
 }
 
-.cta-note {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--outline);
-    margin-bottom: 36px;
-}
-
-
 /* ============================================
    RESPONSIVE (khớp breakpoint 600px của layout.css)
    ============================================ */
+@media (max-width: 900px) {
+    .cta-actions { margin-bottom: 48px; }
+}
+
 @media (max-width: 600px) {
     .cta-actions {
         flex-direction: column;
+        margin-bottom: 40px;
     }
 }

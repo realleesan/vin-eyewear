@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
+    <!-- Cổng an toàn cho scroll reveal: .reveal chỉ bị ẩn (opacity 0) khi
+         <html> có class .js-reveal (xem layout.css). Đặt inline trong <head>
+         để không nháy nội dung, và tự gỡ ra nếu assets/js/reveal.js không chạy
+         được (404, bị chặn, lỗi JS) — nội dung KHÔNG BAO GIỜ ẩn vĩnh viễn vì JS. -->
+    <script>
+        (function () {
+            var root = document.documentElement;
+            root.classList.add('js-reveal');
+            setTimeout(function () {
+                if (typeof window.initReveal !== 'function') root.classList.remove('js-reveal');
+            }, 2000);
+        })();
+    </script>
+
     <!-- Title động từ controller ($pageTitle được extract() từ $data trong BaseController) -->
     <title><?= isset($pageTitle) ? htmlspecialchars($pageTitle) : 'Vin Eyewear - Kính Mắt Cao Cấp' ?></title>
 
@@ -97,6 +111,12 @@
     <!-- JS mobile menu dùng chung -->
     <script src="/assets/js/mobile-menu.js" defer></script>
 
+    <!-- Scroll reveal dùng chung toàn site — window.initReveal(container), gọi lại
+         được sau mỗi lần render động (xem assets/js/reveal.js).
+         Nạp defer & đặt TRƯỚC các JS module: script defer chạy đúng thứ tự tài
+         liệu nên window.initReveal chắc chắn có sẵn cho product.detail.js. -->
+    <script src="/assets/js/reveal.js" defer></script>
+
     <!-- JS RIÊNG CHO TỪNG MODULE (CHỈ LOAD KHI CẦN) -->
     <?php if (isset($viewName)): ?>
         <?php if (strpos($viewName, 'ar/') === 0): ?>
@@ -117,28 +137,6 @@
     <?php if (isset($viewName) && $viewName === 'event/index'): ?>
         <script src="/assets/js/event.js" defer></script>
     <?php endif; ?>
-
-    <!-- Scroll reveal dùng chung toàn site: hiện dần phần tử .reveal khi cuộn tới -->
-    <script>
-        (function() {
-            'use strict';
-            var targets = document.querySelectorAll('.reveal');
-            if (!targets.length) return;
-            var observer = new IntersectionObserver(function(entries) {
-                entries.forEach(function(entry) {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, {
-                threshold: 0.1
-            });
-            targets.forEach(function(el) {
-                observer.observe(el);
-            });
-        })();
-    </script>
 
 </body>
 

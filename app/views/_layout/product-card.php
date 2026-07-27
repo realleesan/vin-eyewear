@@ -4,21 +4,20 @@
  * Component thẻ sản phẩm dùng chung: home/index, product/index, product/detail.
  *
  * Biến cần có trong scope trước khi require:
- *   $card — mảng sản phẩm (name, price, image, image2, badge)
+ *   $card — mảng sản phẩm (id, name, price, image, image2, badge)
  *           image2 (tuy chon): anh goc nhin khac, hien khi hover.
  *
  * Cách dùng (LƯU Ý: require, KHÔNG require_once — nằm trong vòng lặp):
  *   <?php foreach ($products as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
  *
- * MOCKUP: mọi thẻ đều trỏ về /product/detail (1 trang detail dùng chung).
- * Khi có DB, chỉ cần đổi href ở đây là cả 3 trang cùng cập nhật.
+ * Thẻ trỏ về /product/detail?id={id} — mỗi sản phẩm mở đúng trang của nó.
  *
  * data-category / data-kind / data-price: phục vụ filter client-side ở trang
  * /product (assets/js/product.js đọc các attribute này để ẩn/hiện card).
  */
 ?>
 <a
-    href="/product/detail"
+    href="/product/detail?id=<?= (int) ($card['id'] ?? 0) ?>"
     class="product-card"
     data-category="<?= htmlspecialchars($card['category'] ?? '') ?>"
     data-kind="<?= htmlspecialchars($card['type'] ?? '') ?>"
