@@ -13,13 +13,16 @@
     const cameraPermissionDenied = document.getElementById('camera-permission-denied');
     const cameraActive = document.getElementById('camera-active');
     const cameraPlaceholder = document.getElementById('camera-placeholder');
+    const cameraInitial = document.getElementById('camera-initial');
     const errorTitle = document.getElementById('error-title');
     const errorMessage = document.getElementById('error-message');
     const btnRetry = document.getElementById('btn-retry');
     const btnReload = document.getElementById('btn-reload');
+    const btnCameraToggle = document.getElementById('btn-camera-toggle');
     const glassesItems = document.querySelectorAll('.glasses-item');
 
     let stream = null;
+    let isCameraOn = false;
     const facingMode = 'user';
 
     function showState(state) {
@@ -27,8 +30,12 @@
         if (cameraError) cameraError.setAttribute('aria-hidden', 'true');
         if (cameraPermissionDenied) cameraPermissionDenied.setAttribute('aria-hidden', 'true');
         if (cameraActive) cameraActive.setAttribute('aria-hidden', 'true');
+        if (cameraInitial) cameraInitial.setAttribute('aria-hidden', 'true');
 
         switch (state) {
+            case 'initial':
+                if (cameraInitial) cameraInitial.setAttribute('aria-hidden', 'false');
+                break;
             case 'loading':
                 if (cameraLoading) cameraLoading.setAttribute('aria-hidden', 'false');
                 break;
@@ -110,22 +117,63 @@
 
             showState('active');
             setStatus('Camera đang hoạt động');
+            isCameraOn = true;
+            updateCameraToggleButton();
 
         } catch (error) {
             console.error('Lỗi camera:', error);
             handleError(error);
+            isCameraOn = false;
+            updateCameraToggleButton();
         }
     }
 
-    async function autoStart() {
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(function(track) { track.stop(); });
+            stream = null;
+        }
+        isCameraOn = false;
+        showState('initial');
+        updateCameraToggleButton();
+    }
+
+    function toggleCamera() {
+        if (isCameraOn) {
+            stopCamera();
+        } else {
+            startCamera();
+        }
+    }
+
+    function updateCameraToggleButton() {
+        if (!btnCameraToggle) return;
+
+        const iconOn = btnCameraToggle.querySelector('.icon-camera-on');
+        const iconOff = btnCameraToggle.querySelector('.icon-camera-off');
+        const btnText = btnCameraToggle.querySelector('.btn-text');
+
+        if (isCameraOn) {
+            if (iconOn) iconOn.style.display = 'none';
+            if (iconOff) iconOff.style.display = 'block';
+            if (btnText) btnText.textContent = 'Tắt camera';
+            btnCameraToggle.setAttribute('aria-label', 'Tắt camera');
+        } else {
+            if (iconOn) iconOn.style.display = 'block';
+            if (iconOff) iconOff.style.display = 'none';
+            if (btnText) btnText.textContent = 'Bật camera';
+            btnCameraToggle.setAttribute('aria-label', 'Bật camera');
+        }
+    }
+
+    function checkBrowserSupport() {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             if (errorTitle) errorTitle.textContent = 'Trình duyệt không hỗ trợ';
             if (errorMessage) errorMessage.textContent = 'Trình duyệt của bạn không hỗ trợ truy cập camera. Vui lòng dùng Chrome, Edge hoặc Safari.';
             showState('error');
-            return;
+            return false;
         }
-
-        await startCamera();
+        return true;
     }
 
     function selectGlasses(item) {
@@ -170,10 +218,22 @@
         }
     }
 
+    function initCameraToggle() {
+        if (btnCameraToggle) {
+            btnCameraToggle.addEventListener('click', function() {
+                if (checkBrowserSupport()) {
+                    toggleCamera();
+                }
+            });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         initGlassesSelector();
         initRetryButtons();
-        autoStart();
+        initCameraToggle();
+        checkBrowserSupport();
+        showState('initial');
     });
 
     window.addEventListener('beforeunload', function() {
