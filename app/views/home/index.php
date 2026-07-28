@@ -13,7 +13,7 @@
  *
  * Thứ tự section: hero -> dải cam kết (commitments) -> best seller
  * -> tiles -> optical -> khách hàng nói gì (testimonials) -> booking
- * (đo mắt & thử kính) -> ghé cửa hàng (visit) -> join (footer).
+ * (đo mắt & thử kính) -> ghé cửa hàng (visit) -> footer.
  */
 
 $show_breadcrumb = false;

@@ -1,66 +1,192 @@
 /* ============================================
    Vin Eyewear - Component: CTA
    Design system: "Lower East Heritage" (xem DESIGN.md)
-   Chuẩn design theo khối .pd-actions cũ của trang Product Detail
-   (rule chuyển từ product.detail.css sang đây khi tách component;
-   _layout/cta.php tự nhúng file này).
+   Dải nền đen full-width ngay trên footer vàng — giữ nhịp đen -> vàng
+   mà section .join cũ để lại sau khi bị bỏ.
+   (_layout/cta.php tự nhúng file này.)
    ============================================ */
-.cta-actions {
-    display: flex;
-    /* Loi thoat overflow: nhieu nut / label dai tren man hep thi xuong dong
-       thay vi tran ngang (voi 2 nut mac dinh khong doi gi o desktop) */
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 14px;
+.cta-band {
+    position: relative;
+    padding: 72px var(--margin);
+    background: var(--black);
+    color: var(--white);
+    /* Kẻ dọc rất mờ làm texture nền cho dải đen */
+    background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 0 1px,
+        transparent 1px 48px
+    );
+    overflow: hidden;
 }
 
-.cta-btn-primary,
-.cta-btn-ghost {
-    flex: 1;
+/* Vệt vàng loang từ mép phải — điểm sáng duy nhất của dải, đủ để nền
+   không phẳng lì mà vẫn không đọ với chữ trắng bên trái. */
+.cta-band::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+        60% 120% at 100% 50%,
+        rgba(255, 204, 0, 0.16),
+        transparent 70%
+    );
+}
+
+/* z-index để nội dung nổi trên lớp ::after */
+.cta-band__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 48px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* --- Vế trái: eyebrow + tiêu đề + mô tả --- */
+/* Gạch vàng ngắn dẫn vào eyebrow, cùng ngôn ngữ với hairline của footer */
+.cta-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--yellow);
+    margin-bottom: 18px;
+}
+
+.cta-eyebrow::before {
+    content: "";
+    width: 36px;
+    height: 1.5px;
+    flex: none;
+    background: var(--yellow);
+}
+
+.cta-title {
+    font-family: var(--font-serif);
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;    /* title 1 tu qua dai cung khong tran man hep */
+}
+
+.cta-desc {
+    margin-top: 16px;
+    max-width: 52ch;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.75;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* --- Vế phải: nút --- */
+.cta-band__actions {
+    justify-self: end;
+}
+
+.cta-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 240px;
+}
+
+.cta-btn {
     text-align: center;
-    padding: 16px 24px;
+    padding: 17px 32px;
     font-family: var(--font-sans);
     font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    border: 1.5px solid var(--black);
-    transition: background 0.2s ease, color 0.2s ease;
+    border: 1.5px solid transparent;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-.cta-btn-primary {
-    background: var(--black);
-    color: var(--white);
-}
-
-.cta-btn-primary:hover {
+.cta-btn--primary {
     background: var(--yellow);
+    border-color: var(--yellow);
     color: var(--black);
 }
 
-.cta-btn-ghost {
+.cta-btn--primary:hover {
+    background: var(--white);
+    border-color: var(--white);
+}
+
+.cta-btn--ghost {
     background: transparent;
+    border-color: rgba(255, 255, 255, 0.45);
+    color: var(--white);
+}
+
+.cta-btn--ghost:hover {
+    background: var(--white);
+    border-color: var(--white);
     color: var(--black);
 }
 
-.cta-btn-ghost:hover {
-    background: var(--black);
-    color: var(--white);
+.cta-btn:focus-visible {
+    outline: 2px solid var(--yellow);
+    outline-offset: 3px;
 }
 
 .cta-note {
+    margin-top: 14px;
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--outline);
-    margin-bottom: 36px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: center;
+    max-width: 240px;
 }
 
 
 /* ============================================
-   RESPONSIVE (khớp breakpoint 600px của layout.css)
+   RESPONSIVE (khớp breakpoint 900px / 600px của layout.css)
    ============================================ */
-@media (max-width: 600px) {
-    .cta-actions {
-        flex-direction: column;
+@media (max-width: 900px) {
+    .cta-band {
+        padding: 52px var(--margin);
     }
+
+    /* Hết chỗ cho 2 vế cạnh nhau -> xếp dọc, nút về hàng ngang bên trái */
+    .cta-band__inner {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .cta-band__actions { justify-self: stretch; }
+
+    .cta-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        min-width: 0;
+    }
+
+    .cta-actions .cta-btn { flex: 1 1 200px; }
+
+    .cta-note {
+        text-align: left;
+        max-width: none;
+    }
+
+    .cta-title { font-size: 32px; }
+}
+
+@media (max-width: 600px) {
+    .cta-title { font-size: 26px; }
+
+    /* Nút xếp dọc: 2 nút cạnh nhau ở khổ này chữ bị bóp xuống dòng */
+    .cta-actions { flex-direction: column; }
+
+    /* BẮT BUỘC reset: `flex: 1 1 200px` của breakpoint 900 tính theo trục chính,
+       mà trục chính giờ là TRỤC DỌC -> mỗi nút bị kéo cao 200px. */
+    .cta-actions .cta-btn { flex: 0 0 auto; }
 }

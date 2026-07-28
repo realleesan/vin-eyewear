@@ -12,6 +12,9 @@ $page_eyebrow = 'JOURNAL';
 $page_title = 'The Heritage Collection Summer Sale';
 $page_subtitle = 'Cơ hội sở hữu những thiết kế kinh điển với mức giá đặc biệt';
 $show_cta = true;
+$cta_eyebrow = 'Vin Eyewear · Ưu đãi đang diễn ra';
+$cta_title = 'Chọn gọng kính của bạn';
+$cta_desc = 'Ưu đãi áp dụng cho toàn bộ bộ sưu tập trong thời gian diễn ra sự kiện.';
 $cta_buttons = [
     ['label' => 'Xem sản phẩm', 'url' => '/product', 'style' => 'primary'],
     ['label' => 'Liên hệ tư vấn', 'url' => '/contact', 'style' => 'ghost'],

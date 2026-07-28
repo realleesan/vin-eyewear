@@ -17,7 +17,7 @@
     justify-content: center;
     width: 44px;
     height: 44px;
-    /* Mac dinh vang Heritage + icon den (khop .join__form button, pagination active) */
+    /* Mac dinh vang Heritage + icon den (khop .cta-btn--primary, pagination active) */
     background: var(--yellow);
     color: var(--black);
     border: 1.5px solid var(--black);

@@ -268,100 +268,117 @@ button, input, select, textarea {
 .nav-toggle.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
 /* ============================================
-   JOIN THE FAMILY — dải đen trên footer (mọi trang)
-   ============================================ */
-.join {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    gap: 48px;
-    padding: 64px var(--margin);
-    background: var(--black);
-    color: var(--white);
-}
-
-.join__info { justify-self: end; max-width: 460px; }
-
-.join__title {
-    font-family: var(--font-sans);
-    font-size: 26px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.join__desc {
-    margin-top: 12px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.75);
-}
-
-.join__form {
-    display: flex;
-    max-width: 470px;
-    width: 100%;
-}
-
-.join__form input {
-    flex: 1;
-    min-width: 0;
-    padding: 16px 18px;
-    background: var(--white);
-    color: var(--black);
-    border: none;
-    font-family: var(--font-mono);
-    font-size: 13px;
-}
-
-.join__form input::placeholder { color: #8a8a8a; }
-
-.join__form button {
-    padding: 16px 26px;
-    background: var(--yellow);
-    color: var(--black);
-    border: none;
-    font-family: var(--font-sans);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.join__form button:hover { opacity: 0.85; }
-
-
-/* ============================================
-   FOOTER
+   FOOTER — 4 cột (bố cục theo footer.jpeg)
+   Thương hiệu | Khám phá | Hỗ trợ | Đăng ký nhận tin
+   Section .join cũ đã bỏ; form email nay là cột 4.
    ============================================ */
 .site-footer {
     background: var(--yellow);
     color: var(--black);
 }
 
-/* --- Footer top: grid 3 cột link, hairline dọc ngăn cách --- */
+/* --- Footer top: grid 4 cột, hairline dọc ngăn cách --- */
 .footer-top {
     display: grid;
-    grid-template-columns: 1fr 1fr 1.3fr;
+    grid-template-columns: 1.35fr 0.8fr 0.95fr 1.15fr;
     gap: 48px;
-    padding: 56px var(--margin) 48px;
+    padding: 64px var(--margin) 52px;
 }
 
 /* min-width:0 để cột co được: mặc định grid item không thu hẹp dưới min-content,
-   khiến địa chỉ/email dài đẩy cột Liên hệ tràn ra ngoài viewport. */
+   khiến địa chỉ/email dài đẩy cột ra ngoài viewport. */
 .footer-top > * {
     min-width: 0;
 }
 
-/* Hairline dọc ngăn 3 cột: Khám phá | Hỗ trợ | Liên hệ */
+/* Hairline dọc ngăn 4 cột */
 .footer-top > * + * {
-    padding-left: 48px;
-    border-left: 1px solid rgba(0, 0, 0, 0.25);
+    padding-left: 40px;
+    border-left: 1px solid rgba(0, 0, 0, 0.18);
 }
 
-/* Link columns */
+/* --- Cột 1: thương hiệu --- */
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.footer-logo__mark {
+    display: flex;
+    flex: none;
+    padding: 5px;
+    border: 1.5px solid var(--black);
+}
+
+.footer-logo__mark svg {
+    width: 34px;
+    height: 19px;
+    fill: none;
+    stroke: var(--black);
+    stroke-width: 2;
+    stroke-linecap: square;
+}
+
+.footer-logo__word {
+    font-family: var(--font-sans);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+}
+
+.footer-brand__legal {
+    margin-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: rgba(0, 0, 0, 0.72);
+    text-transform: uppercase;
+}
+
+.footer-contact {
+    margin-top: 20px;
+    display: grid;
+    gap: 12px;
+}
+
+/* Icon cột trái cố định 16px, chữ tự xuống dòng ở cột phải */
+.footer-contact__item {
+    display: grid;
+    grid-template-columns: 16px 1fr;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+}
+
+.footer-contact__ico {
+    display: flex;
+    /* Căn icon với dòng chữ đầu tiên (line-height 1.65 × 12.5px ≈ 20.6px) */
+    padding-top: 3px;
+}
+
+.footer-contact__ico svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--black);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.footer-contact__item a {
+    overflow-wrap: anywhere;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.45);
+    padding-bottom: 1px;
+    justify-self: start;
+    transition: opacity 0.15s;
+}
+
+.footer-contact__item a:hover { opacity: 0.55; }
+
+/* --- Cột 2 & 3: link --- */
 .footer-col__heading {
     font-family: var(--font-sans);
     font-size: 14px;
@@ -372,99 +389,135 @@ button, input, select, textarea {
     margin-bottom: 22px;
 }
 
-.footer-col a,
-.footer-col p {
+/* Con TRỰC TIẾP: cột 4 cũng là .footer-col nhưng chứa <a> social lồng trong
+   .footer-social — nếu chọn `.footer-col a` thì margin/gạch chân của link text
+   đè lên ô social (cùng specificity 0,1,1, khó gỡ). */
+.footer-col > a {
     display: block;
     font-family: var(--font-mono);
     font-size: 13px;
     color: var(--black);
     margin-bottom: 14px;
-}
-
-.footer-col a {
     transition: opacity 0.15s;
 }
 
-.footer-col a:hover {
+.footer-col > a:hover {
     opacity: 0.55;
     text-decoration: underline;
     text-underline-offset: 3px;
 }
 
-/* --- Cột liên hệ: 2 cơ sở + email --- */
-.footer-store {
+/* --- Cột 4: đăng ký nhận tin --- */
+.footer-news__desc {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: rgba(0, 0, 0, 0.72);
     margin-bottom: 18px;
 }
 
-.footer-col--contact .footer-store__name {
-    font-family: var(--font-sans);
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+/* Viền đen bao ngoài để input + nút đọc như MỘT control trên nền vàng */
+.footer-news__form {
+    display: flex;
+    border: 1.5px solid var(--black);
+    background: var(--white);
+}
+
+.footer-news__form input {
+    flex: 1;
+    min-width: 0;
+    padding: 13px 14px;
+    background: transparent;
     color: var(--black);
-    margin-bottom: 6px;
-}
-
-.footer-col--contact .footer-store__line {
+    border: none;
     font-family: var(--font-mono);
-    font-size: 13px;
-    line-height: 1.6;
-    margin-bottom: 4px;
+    font-size: 12.5px;
 }
 
-.footer-col--contact .footer-store__phone,
-.footer-col--contact .footer-store__email {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    margin-bottom: 0;
+.footer-news__form input:focus { outline: none; }
+
+/* Ring focus đặt trên bọc ngoài: người dùng tab vào thấy cả khối sáng lên */
+.footer-news__form:focus-within {
+    outline: 2px solid var(--black);
+    outline-offset: 2px;
 }
 
-.footer-col--contact .footer-store__email {
-    display: inline-block;
-    max-width: 100%;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.5);
-    padding-bottom: 2px;
-    overflow-wrap: anywhere;
-}
+.footer-news__form input::placeholder { color: rgba(0, 0, 0, 0.45); }
 
-/* --- Footer bottom: dải đen — copyright | social | made in ---
-   Grid 1fr auto 1fr để cụm social luôn nằm chính giữa
-   bất kể độ dài chữ 2 bên. */
-.footer-bottom {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+.footer-news__form button {
+    flex: none;
+    display: flex;
     align-items: center;
-    gap: 24px;
+    justify-content: center;
+    width: 48px;
+    background: var(--black);
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.footer-news__form button svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--yellow);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.2s ease, transform 0.2s ease;
+}
+
+.footer-news__form button:hover { background: var(--white); }
+
+.footer-news__form button:hover svg {
+    stroke: var(--black);
+    transform: translateX(2px);
+}
+
+/* --- Social: ô vuông sharp 0px (không bo tròn như mẫu, theo design system) --- */
+.footer-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+}
+
+.footer-social a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    color: var(--black);
+    border: 1.5px solid var(--black);
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.footer-social a:hover {
+    background: var(--black);
+    color: var(--yellow);
+}
+
+.footer-social svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+/* --- Footer bottom: dải đen — copyright | made in ---
+   Social đã chuyển lên cột 4 nên dải này chỉ còn 2 vế. */
+.footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+    flex-wrap: wrap;
     padding: 18px var(--margin);
     background: var(--black);
     font-family: var(--font-mono);
     font-size: 11px;
     color: rgba(255, 255, 255, 0.55);
     letter-spacing: 0.06em;
-}
-
-.footer-bottom__made { text-align: right; }
-
-.footer-bottom__social {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-}
-
-.footer-bottom__social a {
-    display: block;
-    color: var(--white);
-    opacity: 0.65;
-    transition: opacity 0.15s;
-}
-
-.footer-bottom__social a:hover { opacity: 1; }
-
-.footer-bottom__social svg {
-    width: 17px;
-    height: 17px;
-    fill: currentColor;
 }
 
 /* ============================================
@@ -712,25 +765,19 @@ button, input, select, textarea {
     /* Nhường chỗ cho hamburger: bỏ CTA chữ, giữ icon */
     .header-cta { display: none; }
 
-    /* Join: 2 cột -> 1 cột */
-    .join {
-        grid-template-columns: 1fr;
-        gap: 24px;
-        padding: 40px var(--margin);
-    }
-
-    .join__info {
-        justify-self: stretch;
-        max-width: none;
-    }
-
-    /* Footer: 3 cột -> 2 cột, Liên hệ chiếm trọn hàng dưới */
+    /* Footer: 4 cột -> 2 cột.
+       Thương hiệu và Nhận tin là 2 khối "nặng" nhất -> mỗi khối chiếm trọn
+       một hàng, 2 cột link gọn nằm chung hàng giữa. */
     .footer-top {
         grid-template-columns: 1fr 1fr;
-        gap: 32px;
+        gap: 36px 32px;
+        padding: 48px var(--margin) 40px;
     }
 
-    .footer-col--contact { grid-column: 1 / -1; }
+    .footer-brand,
+    .footer-news { grid-column: 1 / -1; }
+
+    .footer-news__form { max-width: 480px; }
 
     /* Xếp 2 cột thì hairline dọc hết ý nghĩa -> bỏ */
     .footer-top > * + * {
@@ -749,23 +796,18 @@ button, input, select, textarea {
     }
 
     /* Footer: giu 2 cot (Kham pha trai | Ho tro phai) nhu tablet,
-       Lien he van chiem tron hang duoi (grid-column 1/-1 o muc 900px).
+       Thuong hieu / Nhan tin van chiem tron hang (grid-column 1/-1 o 900px).
        Chi thu hep khe cot cho man hep. */
-    .footer-top { gap: 36px 20px; }
+    .footer-top { gap: 32px 20px; }
+
+    .footer-logo__word { font-size: 18px; }
 
     /* Footer bottom: xếp dọc, căn giữa cho gọn màn hình hẹp */
     .footer-bottom {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        gap: 12px;
-        padding: 22px var(--margin);
+        justify-content: center;
+        text-align: center;
+        gap: 10px;
     }
-
-    .footer-bottom__made { text-align: center; }
-
-    /* Join: input + nút xếp dọc cho đỡ chật */
-    .join__form { flex-direction: column; }
-    .join__form button { padding: 14px; }
 }
 
 /* Tối ưu hóa cho thiết bị di động màn hình hẹp (390px - 480px) */
@@ -792,9 +834,13 @@ button, input, select, textarea {
         height: 18px;
     }
     
-    .footer-bottom__social {
-        gap: 20px;
-        flex-wrap: wrap;
-        justify-content: center;
+    /* Footer: 2 cột link ép về 1 cột — 480px không đủ chỗ cho 2 làn chữ mono */
+    .footer-top {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .footer-social {
+        gap: 8px;
     }
 }

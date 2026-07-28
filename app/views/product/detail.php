@@ -17,11 +17,14 @@ $breadcrumb_items = [
 $show_page_header = true;
 $page_eyebrow = 'Vin Eyewear · Handcrafted Collection';
 $show_cta = true;
+$cta_eyebrow = 'Vin Eyewear · AR Fitting';
+$cta_title = 'Đeo thử gọng này ngay bây giờ';
+$cta_desc = 'Bật camera, xem gọng kính lên khuôn mặt bạn trong vài giây. Ưng mắt rồi hãy tới cửa hàng.';
 $cta_buttons = [
     ['label' => 'Thử AR', 'url' => '/ar', 'style' => 'primary'],
     ['label' => 'Liên hệ tư vấn', 'url' => '/contact', 'style' => 'ghost'],
 ];
-$cta_note = 'Thử kính trực tuyến bằng camera — không cần tới cửa hàng.';
+$cta_note = 'Không cần cài ứng dụng.';
 $show_pusher = true;
 ?>
 
