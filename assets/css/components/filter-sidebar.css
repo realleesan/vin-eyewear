@@ -60,12 +60,12 @@
    ============================================ */
 .filter-sidebar {
     position: sticky;
-    top: 90px;                  /* dưới .site-header sticky (74px) */
+    top: calc(var(--header-h) + 16px);   /* dưới .site-header sticky */
     align-self: start;
     background: var(--white);
     border: 1.5px solid var(--black);
     /* Chặn cao không vượt 1 màn hình; dư thì cuộn bên trong */
-    max-height: calc(100vh - 106px);
+    max-height: calc(100vh - var(--header-h) - 32px);
     overflow-y: auto;
 }
 

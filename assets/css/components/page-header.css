@@ -5,9 +5,20 @@
    Rule chuyển từ product.css sang đây khi tách component
    (_layout/page-header.php tự nhúng file này).
    ============================================ */
+/* Nét kẻ ngăn cách đặt ở .page-header-inner chứ KHÔNG ở .page-header: để trên
+   .page-header thì nó chạy hết bề ngang màn hình, thừa hẳn ra so với nội dung
+   bên dưới. .page-header-inner nằm trong padding ngang var(--margin) của
+   .page-header, mà .product-listing của trang sản phẩm cũng thụt vào đúng
+   var(--margin) -> hai mép trùng nhau ở mọi khổ màn (64/16/12px).
+   padding-bottom chuyển xuống inner để khoảng cách chữ -> nét kẻ vẫn là 40px. */
 .page-header {
-    padding: 64px var(--margin) 40px;
-    border-bottom: 1.5px solid var(--black);
+    padding: 64px var(--margin) 0;
+}
+
+.page-header-inner {
+    padding-bottom: 40px;
+    /* Mảnh và mờ như nét kẻ của .breadcrumb, thay cho 1.5px đen đặc */
+    border-bottom: 1px solid var(--border);
 }
 
 .page-eyebrow {
@@ -41,7 +52,11 @@
 @media (max-width: 900px) {
     /* Bo padding desktop 64px — mobile theo nhip 36-40px cua cac trang khac */
     .page-header {
-        padding: 40px var(--margin) 28px;
+        padding: 40px var(--margin) 0;
+    }
+
+    .page-header-inner {
+        padding-bottom: 28px;
     }
 
     .page-title {

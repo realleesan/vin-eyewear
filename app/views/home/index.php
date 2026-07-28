@@ -42,6 +42,14 @@ $renderFrameCard = static function (array $p) use ($renderSwatches): void {
     <a href="/product/detail" class="frame-card">
         <div class="frame-card__img">
             <img src="<?= htmlspecialchars($p['image']) ?>" alt="<?= htmlspecialchars($p['name']) ?>" loading="lazy">
+            <?php if (!empty($p['image2'])): ?>
+            <!-- Goc chup thu 2, hien khi hover. Dat NGAY SAU anh chinh: ca 2 nam
+                 chung 1 o grid (.frame-card__img > * { grid-area: 1/1 }) nen thu
+                 tu DOM quyet dinh lop tren — badge khai bao sau nen van noi len.
+                 alt rong: anh chi la goc nhin khac cua chinh san pham vua doc o
+                 tren, khong mang thong tin moi cho trinh doc man hinh. -->
+            <img class="frame-card__img-hover" src="<?= htmlspecialchars($p['image2']) ?>" alt="" loading="lazy">
+            <?php endif; ?>
             <?php if (!empty($p['badge'])): ?>
             <span class="frame-card__badge"><?= htmlspecialchars($p['badge']) ?></span>
             <?php endif; ?>

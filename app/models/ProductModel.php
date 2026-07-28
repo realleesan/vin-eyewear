@@ -123,8 +123,12 @@ class ProductModel
                 'name' => 'Cat Eye Marble',
                 'category' => 'cat-eye',
                 'price' => 920_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/cosnic-model-pos-1.jpg?v=1750858208&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/cosnic-model-pos-2.jpg?v=1750858208&width=800',
+                // Anh cu (cosnic-model-pos-1/2) la chan dung nguoi deo kinh — lac
+                // dieu so voi moi the con lai deu chup rieng gong tren nen studio.
+                // Doi sang chinh dong COSNIC, ban tortoise/antique gold cho khop
+                // ten "Cat Eye Marble" va dai swatch nau-kem ben duoi.
+                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/cosnic-tortoise-antique-gold-pos-1.jpg?width=800',
+                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/cosnic-tortoise-antique-gold-pos-2.jpg?width=800',
                 'badge' => 'Mới',
                 'colors' => ['#9C7B5A', '#C3A98C', '#5E4A38', '#E2D5C3'],
             ],

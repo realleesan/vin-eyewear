@@ -1,3 +1,34 @@
+<?php
+/**
+ * _layout/header.php
+ *
+ * ACTIVE NAV — xác định theo segment ĐẦU TIÊN của URL hiện tại, không so khớp
+ * nguyên đường dẫn. Nhờ vậy route lồng vẫn sáng đúng mục cha:
+ *   /product/detail  -> "Sản phẩm"
+ *   /event/detail    -> "Sự kiện"
+ * và path sâu hơn sau này (/product/abc/xyz) cũng không cần sửa gì thêm.
+ *
+ * 'match' là danh sách segment cùng thuộc một mục:
+ *   - Trang chủ nhận cả '' (root) lẫn 'home' vì routes.php map cả hai.
+ *   - 'category' xếp vào Sản phẩm — trang này là danh sách sản phẩm lọc theo
+ *     danh mục, không có mục nav riêng, nếu không gom thì đứng ở đó sẽ không
+ *     mục nào sáng.
+ * Route lạ (404) không khớp mục nào -> không mục nào active, đúng ý đồ.
+ */
+
+/* So khớp phân biệt hoa/thường, đúng như Router::dispatch() — nếu hạ về
+   chữ thường ở đây thì /PRODUCT (router trả 404) lại sáng mục "Sản phẩm". */
+$currentPath    = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$currentSegment = explode('/', trim($currentPath, '/'))[0];
+
+$navItems = [
+    ['label' => 'Trang chủ',  'url' => '/',        'match' => ['', 'home']],
+    ['label' => 'Sản phẩm',   'url' => '/product', 'match' => ['product', 'category']],
+    ['label' => 'Giới thiệu', 'url' => '/about',   'match' => ['about']],
+    ['label' => 'Sự kiện',    'url' => '/event',   'match' => ['event']],
+    ['label' => 'Liên hệ',    'url' => '/contact', 'match' => ['contact']],
+];
+?>
 <!-- ============================================================
      ANNOUNCEMENT BAR — 3 vung: social | thong bao | tai khoan
      ============================================================ -->
@@ -59,14 +90,14 @@
     <!-- Logo / Thương hiệu -->
     <a href="/" class="site-logo">VIN EYEWEAR</a>
 
-    <!-- Điều hướng 6 trang chính -->
+    <!-- Điều hướng 5 trang chính — cùng 1 <ul> dùng cho cả desktop lẫn mobile,
+         nên trạng thái active chỉ cần đánh dấu một lần ở đây. -->
     <nav class="main-nav" aria-label="Điều hướng chính">
         <ul class="nav-menu" id="navMenu" role="list">
-            <li><a href="/">Trang chủ</a></li>
-            <li><a href="/product">Sản phẩm</a></li>
-            <li><a href="/about">Giới thiệu</a></li>
-            <li><a href="/event">Sự kiện</a></li>
-            <li><a href="/contact">Liên hệ</a></li>
+            <?php foreach ($navItems as $item): ?>
+                <?php $isActive = in_array($currentSegment, $item['match'], true); ?>
+            <li><a href="<?= htmlspecialchars($item['url']) ?>"<?= $isActive ? ' class="is-active" aria-current="page"' : '' ?>><?= htmlspecialchars($item['label']) ?></a></li>
+            <?php endforeach; ?>
         </ul>
     </nav>
 

@@ -78,10 +78,16 @@
     color: var(--on-surface);
 }
 
+/* Carousel da co padding-bottom 24px (cho cho bong do) nen bot margin tuong
+   ung de khoang ho duoi luoi giu nguyen 44px nhu cac section khac. */
 .section-cta {
     display: flex;
     justify-content: center;
     margin-top: 44px;
+}
+
+.carousel + .section-cta {
+    margin-top: 20px;
 }
 
 
@@ -89,9 +95,15 @@
    SECTION 1 — HERO (slider: ảnh full-bleed + text đè + bullets)
    Grid-stacking: các slide + dots chồng cùng 1 ô, fade bằng opacity.
    ============================================ */
+/* Chieu cao hero do container quyet dinh (KHONG de anh tu quyet dinh):
+   3 anh nguon khac ti le (1920x1443 = 4:3, 1920x960 = 2:1) -> neu tha tu do
+   thi hero cao ~1080px o desktop va nhay chieu cao moi lan doi slide.
+   clamp(min, vh, max): co gian theo man hinh, chan tren/duoi de khong qua
+   thap (mat tinh banner) hay qua cao. Anh khong meo vi dung object-fit: cover. */
 .hero {
+    --hero-h: clamp(460px, 58vh, 600px);
     display: grid;
-    min-height: 420px;
+    height: var(--hero-h);
     background: var(--frame-bg);
     overflow: hidden;
 }
@@ -103,6 +115,7 @@
 /* Moi slide cung grid-stack: anh + khoi chu chong nhau */
 .hero__slide {
     position: relative;
+    isolation: isolate;               /* moi slide 1 stacking context rieng: anh(0) < scrim(1) < chu(2) */
     display: grid;
     align-items: center;
     justify-items: center;
@@ -118,21 +131,39 @@
 
 .hero__slide > * { grid-area: 1 / 1; }
 
+/* Dat tuyet doi de anh phu dung khung slide (= chieu cao hero).
+   KHONG dung height:100%: .hero__slide la grid long nhau, hang cua no auto nen
+   % chieu cao roi ve auto -> anh lay chieu cao goc (vd 1443px) roi bi cat thua. */
 .hero__img {
+    position: absolute;
+    inset: 0;
+    z-index: 0;                       /* day duoi scrim (1) va khoi chu (2) */
     width: 100%;
     height: 100%;
-    min-height: 420px;
-    object-fit: cover;
+    object-fit: cover;                /* lap day khung, giu nguyen ti le -> khong meo */
+    object-position: center 48%;      /* san pham nam hoi tren giua -> cat bot nen duoi */
 }
 
-/* Lop phu toi dan ve day anh cho chu trang khong bi chim
-   (dam hon binh thuong vi ca 3 anh hero deu nen sang be/trang) */
+/* Scrim 2 lop cho chu trang noi han tren nen anh sang.
+   Ca 3 anh hero deu la studio nen be/trang (~#EDEAE3), chu trang de bi chim.
+   - Lop 1 (radial): vung toi cuc bo dat dung sau khoi chu (giua, ~58% chieu cao)
+     -> du tuong phan cho chu ma van chua sang o 2 ria + dinh anh (san pham van ro).
+   - Lop 2 (linear): dai toi chan anh, neo khoi chu va lam ro hang bullets. */
 .hero__slide::after {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0) 36%, rgba(0, 0, 0, 0.62) 100%);
+    background:
+        radial-gradient(78% 74% at 50% 50%,
+            rgba(0, 0, 0, 0.62) 0%,
+            rgba(0, 0, 0, 0.50) 40%,
+            rgba(0, 0, 0, 0.18) 74%,
+            rgba(0, 0, 0, 0) 100%),
+        linear-gradient(180deg,
+            rgba(0, 0, 0, 0) 30%,
+            rgba(0, 0, 0, 0.30) 72%,
+            rgba(0, 0, 0, 0.62) 100%);
     pointer-events: none;
 }
 
@@ -143,35 +174,46 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
     margin-bottom: 80px;
     padding: 0 var(--margin);
     text-align: center;
 }
 
 .hero__title {
+    max-width: 16ch;                  /* ngat dong som -> khoi chu gon trong vung scrim dam nhat */
     font-family: var(--font-sans);
     font-size: 46px;
     font-weight: 800;
+    line-height: 1.14;                /* 1.6 ke thua tu body qua thoang cho tieu de 46px in hoa */
     text-transform: uppercase;
     letter-spacing: 0.03em;
+    text-wrap: balance;
     color: var(--white);
-    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+    /* 2 lop: vien sat chu cho net + quang mo rong de tach khoi anh */
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.45),
+        0 4px 22px rgba(0, 0, 0, 0.55);
 }
 
 .hero__subtitle {
     max-width: 560px;
     font-family: var(--font-mono);
     font-size: 14px;
+    font-weight: 500;                 /* mono 14px tren anh: 400 qua manh, de mat net */
     line-height: 1.7;
-    color: rgba(255, 255, 255, 0.92);
-    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
+    letter-spacing: 0.01em;
+    color: rgba(255, 255, 255, 0.96);
+    text-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.5),
+        0 2px 14px rgba(0, 0, 0, 0.45);
 }
 
 .hero__cta {
-    margin-top: 10px;
+    margin-top: 12px;
     padding: 18px 40px;
     font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);   /* nhac nut khoi anh, khong doi mau thuong hieu */
 }
 
 /* Bullets chuyen slide — thanh ngang manh 34x2, vung bam cao 14px */
@@ -208,11 +250,13 @@
 }
 
 /* Carousel: nút 2 bên | track cuộn ngang | nút. Nút nằm CẠNH ảnh, không đè. */
+/* margin-top 28 + padding-top 12 cua .frame-track = 40px, dung bang khoang
+   ho truoc khi them cho cho bong do. */
 .carousel {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 40px;
+    margin-top: 28px;
 }
 
 .frame-track {
@@ -220,8 +264,18 @@
     min-width: 0;                     /* cho phép track co lại trong flex */
     display: flex;
     gap: 22px;
+    /* Chua cho cho the nhac len 4px + bong do (0 8px 24px loi ~12px moi phia
+       -> can ~8px tren, ~16px duoi). BAT BUOC: overflow-x:auto khien
+       overflow-y tu 'visible' bi tinh thanh 'auto', nen khong co padding thi
+       phan nhac len va bong deu bi cat cut ngay tai mep track. */
+    padding: 12px 0 24px;
     overflow-x: auto;
-    scroll-snap-type: x mandatory;
+    /* 'proximity' chu KHONG 'mandatory': moi .frame-card vua la snap target vua
+       bi transform khi hover. Voi mandatory, trinh duyet phai tinh lai vi tri
+       snap trong TUNG khung hinh cua cu nhac the -> giat. Trang product khong
+       co khung cuon nen khong dinh loi nay. proximity van canh thang the khi
+       cuon (nut prev/next o home.js dung scrollBy nen khong anh huong). */
+    scroll-snap-type: x proximity;
     scroll-behavior: smooth;
     scrollbar-width: none;            /* Firefox: ẩn thanh cuộn */
     -ms-overflow-style: none;
@@ -290,28 +344,70 @@
     margin-top: 40px;
 }
 
+/* Nhac the len khi hover — cung thong so voi .product-card o trang product
+   (translateY -4px, 0.2s ease) de 2 trang chuyen dong giong nhau. */
 .frame-card {
     display: block;
     text-align: center;
+    /* Nen dac trung mau nen trang (.bestseller khong dat nen rieng nen the dang
+       nam tren --warm-bg cua body) -> nhin khong doi gi, nhung the tro thanh
+       lop DUC. .product-card ben trang product cung co background: var(--white).
+       The trong suot khi dich chuyen buoc trinh duyet ve lai vung phia sau moi
+       khung hinh; the duc thi chi can dich lop da ve san. */
+    background: var(--warm-bg);
+    transition: transform 0.2s ease;
 }
+
+.frame-card:hover { transform: translateY(-4px); }
 
 .frame-card__img {
     display: grid;
     aspect-ratio: 1 / 1;
     background: var(--frame-bg);
     overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+/* Bong do dat o .frame-card__img chu KHONG o .frame-card: .frame-card khong co
+   nen lan vien, do bong len no thi bong se vien quanh ca vung chu ben duoi —
+   thanh quang toi bao quanh mot khung vo hinh. .frame-card__img la phan duy
+   nhat co ranh gioi nhin thay duoc. */
+.frame-card:hover .frame-card__img {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
 .frame-card__img > * { grid-area: 1 / 1; }
 
+/* KHONG zoom anh khi hover. Truoc day co transform: scale(1.03) 0.3s, nhung
+   phong to mot anh 800px dat object-fit:cover trong khung overflow:hidden buoc
+   trinh duyet ve lai ca vung anh moi khung hinh — dong thoi the dang dich
+   chuyen va anh thu 2 dang mo dan chong len. Ba hieu ung nang tren cung mot
+   vung anh lam chuyen dong giat. Trang product khong zoom, chi nhac the + mo
+   dan, nen muot; giu giong het o day. */
 .frame-card__img img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
 }
 
-.frame-card:hover .frame-card__img img { transform: scale(1.03); }
+/* Anh goc chup thu 2 — chong len anh chinh, mo dan hien ra khi hover the.
+   Cung o grid voi anh chinh nen khong chiem them chieu cao, the khong nhay. */
+.frame-card__img-hover {
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.frame-card:hover .frame-card__img-hover { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+    .frame-card,
+    .frame-card__img,
+    .frame-card__img-hover {
+        transition: none;
+    }
+
+    .frame-card:hover { transform: none; }
+}
 
 /* Badge đen bo góc nhẹ, neo góc trên-trái */
 .frame-card__badge {
@@ -376,6 +472,12 @@
     place-items: center;
     aspect-ratio: 1 / 1;
     overflow: hidden;
+
+    /* Cường độ lớp phủ — 1 knob duy nhất cho cả 2 tile. Cả 2 ảnh nguồn đều là
+       studio nền sáng (beige ~188 / xám ~198) nên cần scrim đủ dày, không chỉ
+       vignette nhẹ, thì chữ trắng + nút vàng mới nổi. */
+    --scrim-center: 0.55;
+    --scrim-edge:   0.34;
 }
 
 .tile > * { grid-area: 1 / 1; }
@@ -397,9 +499,20 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.18) 72%);
+    background: radial-gradient(
+        ellipse at center,
+        rgba(0, 0, 0, var(--scrim-center)) 0%,
+        rgba(0, 0, 0, var(--scrim-edge)) 72%
+    );
     pointer-events: none;
 }
+
+/* Hai tile dùng chung một bộ scrim — không override riêng tile nào.
+   Đo dải ngang giữa (nơi đặt tiêu đề + nút): ảnh "Kính cận" nền rèm beige
+   (188,168,133), ảnh "Kính thời trang" nền tường xám (198,198,200). Cùng scrim
+   .55 thì nền dưới chữ ra 8.5:1 và 7.0:1 — cả hai đều tối rõ, chữ trắng và nút
+   vàng nổi hẳn; tile "Kính cận" nếu có lệch thì lệch về phía tối hơn một chút,
+   đúng hướng cần. Muốn đậm/nhạt thêm thì chỉ sửa --scrim-center bên trên. */
 
 /* z-index:2 giữ tiêu đề + nút luôn nằm TRÊN cả ảnh lẫn lớp phủ. */
 .tile__body {
@@ -487,7 +600,11 @@
     padding: 44px var(--margin) 0;
 }
 
-/* Dải 4 huy hiệu cam kết — khe đen giữa các ô (giống product-grid) */
+/* Dải 4 huy hiệu cam kết — khe đen giữa các ô (giống product-grid).
+   CẨN TRỌNG: đường kẻ ở đây KHÔNG phải border của .commit mà là nền đen của
+   .commit-list lộ ra qua khe grid. Nên `gap` chính là ĐỘ DÀY nét kẻ — đổi gap
+   thành số lớn ở breakpoint nào là ô trắng bị đẩy xa nhau, hở ra mảng đen dày
+   bằng đúng số đó. Muốn giãn ô thì tăng padding của .commit, đừng đụng gap. */
 .commit-list {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -500,6 +617,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 12px;
     padding: 30px 16px;
     background: var(--white);
@@ -522,8 +640,12 @@
     font-family: var(--font-sans);
     font-size: 13px;
     font-weight: 700;
+    line-height: 1.35;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    /* Nhãn dài nhất ("Đổi trả trong 7 ngày") xuống 2 dòng khi ô hẹp — balance
+       chia đều 2 dòng thay vì để dòng dưới trơ trọi 1 từ. */
+    text-wrap: balance;
 }
 
 /* --- KHÁCH HÀNG NÓI GÌ (section riêng sau optical) --- */
@@ -592,17 +714,9 @@
     letter-spacing: 0.04em;
 }
 
-/* Booking responsive */
-@media (max-width: 900px) {
-    /* Dong bo padding mobile voi cac section khac (giong .tiles: 40/84 -> 24/56) */
-    .commitments { padding: 32px var(--margin) 0; }
-    .booking { padding: 24px var(--margin) 56px; }
-    .booking-visit { grid-template-columns: 1fr; gap: 32px; }
-    .booking-visit__title { font-size: 30px; }
-    .testimonials { padding: 0 var(--margin) 56px; }
-    .commit-list { grid-template-columns: repeat(2, 1fr); }
-    .reviews { grid-template-columns: 1fr; }
-}
+/* Responsive của booking/commitments/testimonials nằm chung ở khối
+   @media (max-width: 900px) cuối file — trước đây tách rời ở đây, cùng một
+   breakpoint khai báo 2 nơi cách nhau ~400 dòng nên rất dễ ghi đè nhầm. */
 
 
 /* ============================================
@@ -997,13 +1111,23 @@
     .section-heading__icon { width: 34px; }
 
     /* Hero thấp lại, chữ + CTA gọn hơn, sát đáy hơn */
-    .hero,
-    .hero__img { min-height: 420px; }
-    .hero__content { gap: 10px; margin-bottom: 78px; }
-    .hero__title { font-size: 26px; }
+    .hero { --hero-h: clamp(380px, 50vh, 460px); }
+    .hero__content { gap: 12px; margin-bottom: 64px; }
+    .hero__title { font-size: 26px; max-width: 20ch; }
     .hero__subtitle { font-size: 12px; max-width: 420px; }
-    .hero__cta { margin-top: 6px; padding: 14px 26px; font-size: 12px; }
+    .hero__cta { margin-top: 8px; padding: 14px 26px; font-size: 12px; }
     .hero__dots { margin-bottom: 40px; }
+
+    /* Khối chữ chiếm gần trọn bề ngang -> bỏ radial (thu hẹp về giữa),
+       chuyển sang scrim dọc phủ đều toàn khung cho chắc tương phản.
+       Đậm hơn bản desktop: khung hẹp cắt sát vào vùng nền sáng nhất của ảnh. */
+    .hero__slide::after {
+        background: linear-gradient(180deg,
+            rgba(0, 0, 0, 0.22) 0%,
+            rgba(0, 0, 0, 0.56) 24%,
+            rgba(0, 0, 0, 0.72) 55%,
+            rgba(0, 0, 0, 0.84) 100%);
+    }
 
     .bestseller { padding: 48px var(--margin) 56px; }
 
@@ -1045,8 +1169,26 @@
 
     .visit { padding: 0 var(--margin) 56px; }
     .visit__info { justify-self: stretch; max-width: none; }
+    .visit__title { font-size: 24px; }
     .visit__media { order: -1; }
 
+    /* --- Dải cam kết + booking + testimonials (gộp từ khối 900px rời ở trên) --- */
+    .commitments { padding: 32px var(--margin) 0; }
+    .booking { padding: 24px var(--margin) 56px; }
+    .booking-visit { grid-template-columns: 1fr; gap: 32px; }
+    .booking-visit__title { font-size: 30px; }
+    .testimonials { padding: 0 var(--margin) 56px; }
+    .reviews { grid-template-columns: 1fr; }
+
+    /* 4 ô -> 2x2. Chỉ đổi số cột và bóp padding — gap giữ 1px để nét kẻ
+       không phình thành mảng đen. */
+    .commit-list { grid-template-columns: repeat(2, 1fr); }
+    .commit { gap: 10px; padding: 22px 14px; }
+    .commit__icon svg { width: 26px; height: 26px; }
+    .commit__label { font-size: 12px; }
+
+    /* Nút carousel đủ lớn để bấm bằng ngón tay (34px dưới ngưỡng 44px) */
+    .carousel__btn { width: 44px; height: 44px; }
 }
 
 @media (max-width: 600px) {
@@ -1059,19 +1201,16 @@
 
     /* Hero: thu nhỏ cho màn hình trung bình */
     .hero {
-        min-height: 380px;
-    }
-
-    .hero__img {
-        min-height: 380px;
+        --hero-h: clamp(300px, 42vh, 360px);
     }
 
     .hero__content {
-        margin-bottom: 88px;
+        margin-bottom: 60px;
     }
 
     .hero__title {
         font-size: 24px;
+        max-width: 18ch;
     }
 
     .hero__subtitle {
@@ -1082,20 +1221,17 @@
 @media (max-width: 480px) {
     /* Hero: thu nhỏ chiều cao và text cho màn hình rất nhỏ */
     .hero {
-        min-height: 360px;
-    }
-
-    .hero__img {
-        min-height: 360px;
+        --hero-h: clamp(280px, 40vh, 330px);
     }
 
     .hero__content {
         gap: 8px;
-        margin-bottom: 72px;
+        margin-bottom: 56px;
     }
 
     .hero__title {
         font-size: 20px;
+        max-width: 100%;
     }
 
     .hero__subtitle {
@@ -1120,33 +1256,37 @@
         padding: 4px 0;
     }
 
-    /* Commitments: 2 cột thay vì 4 */
-    .commit-list {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
+    /* Dải cam kết: giữ 2x2 (đã đặt ở khối 900px), chỉ bóp thêm cho màn hẹp.
+       KHÔNG đặt lại `gap` ở đây — gap là độ dày nét kẻ, xem chú thích ở
+       .commit-list. Trước đây khối này để gap:20px nên 4 ô trắng bị tách ra,
+       hở nền đen thành mảng dày 20px cắt ngang dải. */
+    .commit {
+        gap: 8px;
+        padding: 18px 10px;
     }
 
     .commit__icon svg {
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
     }
 
     .commit__label {
         font-size: 11px;
+        letter-spacing: 0.02em;
     }
 
-    /* Booking: giảm padding */
+    /* Gutter bám --margin (=12px ở ≤480px) như mọi section khác; hardcode 16px
+       khiến 2 section này lệch mép so với phần còn lại của trang. */
     .booking {
-        padding: 24px 16px 56px;
+        padding: 24px var(--margin) 56px;
     }
 
     .booking-visit__title {
         font-size: 24px;
     }
 
-    /* Testimonials */
     .testimonials {
-        padding: 0 16px 56px;
+        padding: 0 var(--margin) 56px;
     }
 
     .review__quote {

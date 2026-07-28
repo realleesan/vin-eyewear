@@ -49,6 +49,11 @@ $breadcrumb_items = [
 ];
 $show_page_header = true;
 $page_eyebrow = 'Eyewear Collection';
+/* Đặt tay thay vì để page-header.php fallback về $pageTitle — $pageTitle của
+   ProductController là 'Sản Phẩm - Vin Eyewear', chuỗi dành cho thẻ <title>,
+   để lọt vào H1 thì tiêu đề trang hiện luôn cả hậu tố thương hiệu. */
+$page_title = 'Sản phẩm';
+$page_subtitle = 'Toàn bộ gọng kính cận và kính thời trang của Vin Eyewear, lọc theo kiểu dáng và khoảng giá để tìm nhanh mẫu vừa ý.';
 $show_cta = false;
 $show_pusher = true;
 ?>

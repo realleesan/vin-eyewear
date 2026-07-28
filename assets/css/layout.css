@@ -29,6 +29,11 @@
     --margin:      64px;
     --section-gap: 120px;
 
+    /* Header tinh gọn — chiều cao dùng chung cho .site-header, chiều cao link
+       nav và offset của .filter-sidebar (trước hardcode rời nhau, lệch nhau). */
+    --header-h:   60px;
+    --header-pad: 40px;
+
     /* --- Biến kế thừa (giữ để tương thích home.css / product.css) --- */
     --primary:     #1a1a2e;
     --accent:      #c9a96e;
@@ -38,7 +43,6 @@
     --bg:          #ffffff;
     --bg-light:    #f8f7f4;
     --border:      #e8e4dc;
-    --header-h:    64px;
     --container:   1200px;
     --radius:      8px;
     --transition:  0.3s ease;
@@ -149,9 +153,9 @@ button, input, select, textarea {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
-    min-height: 74px;
-    padding: 0 var(--margin);
+    gap: 16px;
+    min-height: var(--header-h);
+    padding: 0 var(--header-pad);
     background: var(--yellow);
     color: var(--black);
 }
@@ -159,7 +163,7 @@ button, input, select, textarea {
 /* Logo — wordmark đen, đậm, giãn chữ */
 .site-logo {
     font-family: var(--font-sans);
-    font-size: 26px;
+    font-size: 21px;
     font-weight: 800;
     letter-spacing: 0.02em;
     color: var(--black);
@@ -173,29 +177,43 @@ button, input, select, textarea {
     justify-content: center;
 }
 
+/* Khoảng cách giữa 2 item do padding của link tạo ra (24px), không cộng thêm
+   gap — gap ăn vào vùng bấm được mà nhìn vẫn thưa. */
 .nav-menu {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 0;
 }
 
+/* Thang bậc rõ 3 mức: nghỉ (đen 62%) < hover (đen đặc + gạch mờ) < active
+   (đen đặc + gạch đen đặc). Giữ nguyên border 3px trong suốt ở trạng thái
+   nghỉ để lúc đổi trạng thái chữ không bị nhích lên/xuống.
+   Đen 62% trên nền vàng = 5.4:1, vẫn trên ngưỡng 4.5:1 cho chữ 12px. */
 .nav-menu li a {
     display: flex;
     align-items: center;
-    height: 74px;
-    padding: 0 16px;
+    height: var(--header-h);
+    padding: 0 12px;
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--black);
+    letter-spacing: 0.05em;
+    color: rgba(0, 0, 0, 0.62);
     white-space: nowrap;
-    border-bottom: 2px solid transparent;
-    transition: border-color 0.15s;
+    border-bottom: 3px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
 }
 
 .nav-menu li a:hover {
+    color: var(--black);
+    border-bottom-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Trang đang đứng — không đổi font-weight vì chữ đậm lên sẽ rộng ra
+   và đẩy các mục nav xê dịch ngang. */
+.nav-menu li a.is-active {
+    color: var(--black);
     border-bottom-color: var(--black);
 }
 
@@ -203,15 +221,15 @@ button, input, select, textarea {
 .header-actions {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 12px;
 }
 
 .header-cta {
     background: var(--black);
     color: var(--white);
-    padding: 12px 22px;
+    padding: 9px 18px;
     font-family: var(--font-sans);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -228,9 +246,9 @@ button, input, select, textarea {
     flex-direction: column;
     justify-content: center;
     gap: 5px;
-    width: 40px;
-    height: 40px;
-    padding: 8px;
+    width: 36px;
+    height: 36px;
+    padding: 7px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -627,7 +645,11 @@ button, input, select, textarea {
    RESPONSIVE
    ============================================ */
 @media (max-width: 900px) {
-    :root { --margin: 16px; }
+    :root {
+        --margin: 16px;
+        --header-h: 56px;
+        --header-pad: 16px;
+    }
 
     /* Announcement: giữ social + icon giỏ/tìm/tài khoản, thu gọn khoảng cách */
     .announcement-social { gap: 14px; }
@@ -637,11 +659,10 @@ button, input, select, textarea {
     .site-header {
         flex-wrap: wrap;
         align-content: center; /* can giua doc hang logo + hamburger (line rong cua nav lam lech tren) */
-        row-gap: 0;            /* bo gap 24px giua hang logo va line rong cua nav */
-        min-height: 64px;
+        row-gap: 0;            /* bo gap giua hang logo va line rong cua nav */
     }
 
-    .site-logo { font-size: 20px; }
+    .site-logo { font-size: 18px; }
 
     .nav-toggle { display: flex; }
 
@@ -651,11 +672,16 @@ button, input, select, textarea {
         justify-content: stretch;
     }
 
+    /* padding dọc tách nội dung khỏi 2 mép: nếu để 0, thanh đen ngăn cách
+       (border-top) chạm thẳng vào thanh indicator dọc của mục đang active ở
+       dòng đầu — 2 vệt đen dính nhau thành góc chữ L. Đệm ra cho rời hẳn.
+       Đệm luôn phía dưới để đường kẻ của dòng cuối không sát đáy header. */
     .nav-menu {
         display: none;     /* mobile-menu.js thêm .open để hiện */
         flex-direction: column;
         gap: 0;
         width: 100%;
+        padding: 10px 0;
         border-top: 1.5px solid var(--black);
     }
 
@@ -663,13 +689,25 @@ button, input, select, textarea {
 
     .nav-menu li { width: 100%; }
 
+    /* Mobile xếp dọc: border-bottom ở đây là đường kẻ ngăn dòng, không dùng
+       làm indicator được nữa -> chuyển chỉ báo active sang thanh dọc bên trái.
+       Mọi dòng đều chừa sẵn 3px border + padding trái nên khi đổi trạng thái
+       chữ không xê dịch. */
     .nav-menu li a {
         height: auto;
-        padding: 14px 0;
+        padding: 13px 0 13px 12px;
         border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+        border-left: 3px solid transparent;
     }
 
     .nav-menu li a:hover { border-bottom-color: rgba(0, 0, 0, 0.15); }
+
+    .nav-menu li a.is-active {
+        color: var(--black);
+        border-left-color: var(--black);
+        /* Ghi đè gạch chân đen của rule desktop, trả về màu đường kẻ ngăn dòng */
+        border-bottom-color: rgba(0, 0, 0, 0.15);
+    }
 
     /* Nhường chỗ cho hamburger: bỏ CTA chữ, giữ icon */
     .header-cta { display: none; }
