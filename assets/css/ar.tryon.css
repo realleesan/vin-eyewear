@@ -30,6 +30,46 @@
     margin: 0 auto;
 }
 
+/* Camera Controls */
+.camera-controls {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.btn-camera-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.btn-camera-toggle:hover {
+    background: var(--yellow);
+    color: var(--black);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-camera-toggle:active {
+    transform: translateY(0);
+}
+
+.btn-camera-toggle svg {
+    flex-shrink: 0;
+}
+
 .camera-placeholder {
     position: relative;
     width: 100%;
@@ -156,6 +196,47 @@
 
 @keyframes ar-spin {
     to { transform: rotate(360deg); }
+}
+
+/* Initial state */
+.camera-initial {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 32px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    color: var(--white);
+    text-align: center;
+}
+
+.camera-initial[aria-hidden="true"] {
+    display: none;
+}
+
+.initial-icon {
+    color: var(--yellow);
+    opacity: 0.9;
+}
+
+.camera-initial h3 {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.camera-initial p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.75);
+    max-width: 280px;
+    margin: 0;
 }
 
 /* Error state */
@@ -450,12 +531,11 @@
     }
 
     .ar-sidebar {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-direction: column;
     }
 
     .ar-cta {
-        grid-column: 1 / -1;
         flex-direction: row;
     }
 
@@ -548,6 +628,87 @@
 
     .btn-retry {
         padding: 8px 20px;
+        font-size: 10px;
+    }
+
+    .camera-controls {
+        margin-bottom: 16px;
+    }
+
+    .btn-camera-toggle {
+        padding: 10px 20px;
+        font-size: 11px;
+    }
+
+    .camera-initial h3 {
+        font-size: 18px;
+    }
+
+    .camera-initial p {
+        font-size: 13px;
+    }
+}
+
+/* Landscape orientation */
+@media (max-height: 500px) and (orientation: landscape) {
+    .ar-section {
+        padding: 24px var(--margin) 32px;
+    }
+
+    .ar-layout {
+        grid-template-columns: 1fr 320px;
+        gap: 16px;
+    }
+
+    .ar-viewer {
+        padding: 16px;
+    }
+
+    .camera-frame {
+        max-width: 100%;
+    }
+
+    .camera-placeholder {
+        aspect-ratio: 16 / 9;
+    }
+
+    .camera-controls {
+        margin-bottom: 12px;
+    }
+
+    .btn-camera-toggle {
+        padding: 8px 16px;
+        font-size: 10px;
+    }
+
+    .ar-panel {
+        padding: 20px 16px;
+    }
+
+    .ar-panel-header {
+        margin-bottom: 12px;
+    }
+
+    .ar-panel-title {
+        font-size: 18px;
+    }
+
+    .glasses-list {
+        gap: 2px;
+    }
+
+    .glasses-thumb {
+        aspect-ratio: 3 / 2;
+        padding: 12px 8px 6px;
+    }
+
+    .glass-name {
+        padding: 8px 8px 10px;
+        font-size: 9px;
+    }
+
+    .camera-hint {
+        margin-top: 12px;
         font-size: 10px;
     }
 }
