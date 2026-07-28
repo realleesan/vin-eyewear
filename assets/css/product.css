@@ -42,25 +42,9 @@
     display: none;
 }
 
-/* Override RIENG trang product: bo net den giua card, tang khoang cach.
-   Chi tac dong trong .product-listing nen trang Home giu nguyen luoi hairline. */
-.product-listing .product-grid {
-    gap: 28px;
-    background: transparent;
-}
-
-/* Card co vien mo nhe thay cho net den; vuong goc canh, khong bo tron */
-.product-listing .product-card {
-    border: 1px solid var(--border);
-    overflow: hidden;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.product-listing .product-card:hover {
-    border-color: var(--outline);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    transform: translateY(-4px);
-}
+/* Khe 28px, viền card và hiệu ứng hover (nhấc lên + đổ bóng) đã chuyển lên
+   .product-grid / .product-card trong layout.css để trang chủ và trang chi tiết
+   dùng chung — trước đây scope trong .product-listing nên chỉ trang này có. */
 
 
 /* ============================================
@@ -130,7 +114,6 @@
 
 @media (max-width: 900px) {
     .product-listing { padding: 40px var(--margin); }
-    .product-listing .product-grid { gap: 16px; }
 
     /* Sidebar chuyển thành slide-over (filter-sidebar.css) -> grid full-width */
     .listing-layout {

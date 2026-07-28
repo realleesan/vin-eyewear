@@ -259,22 +259,23 @@
     margin-top: 28px;
 }
 
+/* Track dựng lại đúng lưới .product-grid trên trục ngang: khe 28px, không nền,
+   thẻ tự có viền + hover nhấc lên (layout.css). */
 .frame-track {
     flex: 1 1 auto;
     min-width: 0;                     /* cho phép track co lại trong flex */
     display: flex;
-    gap: 22px;
+    gap: 28px;
     /* Chua cho cho the nhac len 4px + bong do (0 8px 24px loi ~12px moi phia
        -> can ~8px tren, ~16px duoi). BAT BUOC: overflow-x:auto khien
        overflow-y tu 'visible' bi tinh thanh 'auto', nen khong co padding thi
        phan nhac len va bong deu bi cat cut ngay tai mep track. */
     padding: 12px 0 24px;
     overflow-x: auto;
-    /* 'proximity' chu KHONG 'mandatory': moi .frame-card vua la snap target vua
-       bi transform khi hover. Voi mandatory, trinh duyet phai tinh lai vi tri
-       snap trong TUNG khung hinh cua cu nhac the -> giat. Trang product khong
-       co khung cuon nen khong dinh loi nay. proximity van canh thang the khi
-       cuon (nut prev/next o home.js dung scrollBy nen khong anh huong). */
+    /* 'proximity' chu KHONG 'mandatory': moi the vua la snap target vua bi
+       transform khi hover. Voi mandatory, trinh duyet phai tinh lai vi tri snap
+       trong TUNG khung hinh cua cu nhac the -> giat. Trang product khong co
+       khung cuon nen khong dinh loi nay. */
     scroll-snap-type: x proximity;
     scroll-behavior: smooth;
     scrollbar-width: none;            /* Firefox: ẩn thanh cuộn */
@@ -283,9 +284,9 @@
 
 .frame-track::-webkit-scrollbar { display: none; }
 
-/* 4 thẻ / khung nhìn (desktop) */
-.frame-track .frame-card {
-    flex: 0 0 calc((100% - 22px * 3) / 4);
+/* 4 thẻ / khung nhìn (desktop) — khớp 4 cột khe 28px của .product-grid */
+.frame-track .product-card {
+    flex: 0 0 calc((100% - 28px * 3) / 4);
     scroll-snap-align: start;
 }
 
@@ -333,126 +334,10 @@
 }
 
 
-/* ============================================
-   COMPONENT — FRAME CARD (thẻ sản phẩm trang chủ)
-   Khác .product-card: không viền lưới, chữ căn giữa, có chấm màu.
-   ============================================ */
-.frame-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 22px;
+/* Lưới sản phẩm section Optical — .product-grid (layout.css) lo phần khung,
+   ở đây chỉ đặt khoảng hở với đoạn mô tả phía trên. */
+.optical .product-grid {
     margin-top: 40px;
-}
-
-/* Nhac the len khi hover — cung thong so voi .product-card o trang product
-   (translateY -4px, 0.2s ease) de 2 trang chuyen dong giong nhau. */
-.frame-card {
-    display: block;
-    text-align: center;
-    /* Nen dac trung mau nen trang (.bestseller khong dat nen rieng nen the dang
-       nam tren --warm-bg cua body) -> nhin khong doi gi, nhung the tro thanh
-       lop DUC. .product-card ben trang product cung co background: var(--white).
-       The trong suot khi dich chuyen buoc trinh duyet ve lai vung phia sau moi
-       khung hinh; the duc thi chi can dich lop da ve san. */
-    background: var(--warm-bg);
-    transition: transform 0.2s ease;
-}
-
-.frame-card:hover { transform: translateY(-4px); }
-
-.frame-card__img {
-    display: grid;
-    aspect-ratio: 1 / 1;
-    background: var(--frame-bg);
-    overflow: hidden;
-    transition: box-shadow 0.2s ease;
-}
-
-/* Bong do dat o .frame-card__img chu KHONG o .frame-card: .frame-card khong co
-   nen lan vien, do bong len no thi bong se vien quanh ca vung chu ben duoi —
-   thanh quang toi bao quanh mot khung vo hinh. .frame-card__img la phan duy
-   nhat co ranh gioi nhin thay duoc. */
-.frame-card:hover .frame-card__img {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-.frame-card__img > * { grid-area: 1 / 1; }
-
-/* KHONG zoom anh khi hover. Truoc day co transform: scale(1.03) 0.3s, nhung
-   phong to mot anh 800px dat object-fit:cover trong khung overflow:hidden buoc
-   trinh duyet ve lai ca vung anh moi khung hinh — dong thoi the dang dich
-   chuyen va anh thu 2 dang mo dan chong len. Ba hieu ung nang tren cung mot
-   vung anh lam chuyen dong giat. Trang product khong zoom, chi nhac the + mo
-   dan, nen muot; giu giong het o day. */
-.frame-card__img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Anh goc chup thu 2 — chong len anh chinh, mo dan hien ra khi hover the.
-   Cung o grid voi anh chinh nen khong chiem them chieu cao, the khong nhay. */
-.frame-card__img-hover {
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
-.frame-card:hover .frame-card__img-hover { opacity: 1; }
-
-@media (prefers-reduced-motion: reduce) {
-    .frame-card,
-    .frame-card__img,
-    .frame-card__img-hover {
-        transition: none;
-    }
-
-    .frame-card:hover { transform: none; }
-}
-
-/* Badge đen bo góc nhẹ, neo góc trên-trái */
-.frame-card__badge {
-    align-self: start;
-    justify-self: start;
-    margin: 12px;
-    padding: 6px 10px;
-    background: var(--black);
-    color: var(--white);
-    font-family: var(--font-sans);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-}
-
-.frame-card__name {
-    margin-top: 18px;
-    font-family: var(--font-sans);
-    font-size: 15px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.frame-card__price {
-    margin-top: 8px;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--on-surface);
-}
-
-/* Hàng chấm màu */
-.frame-swatches {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.frame-swatch {
-    width: 17px;
-    height: 17px;
-    border-radius: 50%;
-    border: 1px solid rgba(0, 0, 0, 0.35);
 }
 
 
@@ -1131,12 +1016,10 @@
 
     .bestseller { padding: 48px var(--margin) 56px; }
 
-    /* 4 cột -> 2 cột */
-    .frame-grid { grid-template-columns: 1fr 1fr; gap: 16px; }
-
-    /* Carousel: 5 -> 3 thẻ / khung nhìn */
+    /* Lưới Optical 4 -> 2 cột và khe 28 -> 16px: đã lo ở .product-grid trong
+       layout.css. Carousel bám theo: 4 -> 3 thẻ / khung nhìn, khe 16px. */
     .frame-track { gap: 16px; }
-    .frame-track .frame-card { flex-basis: calc((100% - 16px * 2) / 3); }
+    .frame-track .product-card { flex-basis: calc((100% - 16px * 2) / 3); }
 
     /* Các khối 2 cột -> 1 cột */
     .tiles,
@@ -1192,10 +1075,8 @@
 }
 
 @media (max-width: 600px) {
-    .frame-grid { grid-template-columns: 1fr; }
-
     /* Carousel: 1 thẻ full-width / khung nhìn (2 thẻ bị nhỏ qua) */
-    .frame-track .frame-card { flex-basis: 100%; }
+    .frame-track .product-card { flex-basis: 100%; }
 
     .visit__ctas { flex-direction: column; }
 

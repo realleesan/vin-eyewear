@@ -557,14 +557,16 @@ button, input, select, textarea {
 }
 
 /* ============================================
-   COMPONENT — PRODUCT GRID & CARD (dùng chung home + product)
+   COMPONENT — PRODUCT GRID & CARD (dùng chung home + product + detail)
    Nguồn sự thật duy nhất. Dùng grid-stacking thay position:absolute.
+   Khe 28px + card có viền mảnh + hover nhấc lên: trước đây là override
+   riêng của .product-listing trong product.css nên trang chủ không nhận
+   được, làm 2 trang lệch nhau. Nay đưa hẳn lên đây.
    ============================================ */
 .product-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 2px;
-    background: var(--black);
+    gap: 28px;
 }
 
 /* Card là thẻ <a> trỏ về trang detail — cần display:block để bao trọn nội dung */
@@ -572,6 +574,26 @@ button, input, select, textarea {
     display: block;
     background: var(--white);
     cursor: pointer;
+    /* Viền mảnh thay cho nét kẻ đen; vuông góc cạnh, không bo tròn */
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.product-card:hover {
+    border-color: var(--outline);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .product-card,
+    .card-img-hover,
+    .card-overlay {
+        transition: none;
+    }
+
+    .product-card:hover { transform: none; }
 }
 
 /* Khung ảnh: mọi lớp (ảnh, overlay, badge) chồng lên cùng 1 ô grid */
@@ -787,6 +809,7 @@ button, input, select, textarea {
 
     .product-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
     }
 }
 
