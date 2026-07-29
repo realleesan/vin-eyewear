@@ -5,8 +5,8 @@ $breadcrumb_items = [
     ['label' => 'Thử AR'],
 ];
 $show_page_header = true;
-$page_eyebrow = 'AR TRY-ON';
-$page_subtitle = 'Thử kính trực tuyến bằng camera — không cần tới cửa hàng.';
+$page_eyebrow = '';
+$page_subtitle = '';
 $show_cta = false;
 $show_pusher = true;
 ?>
@@ -18,7 +18,35 @@ $show_pusher = true;
         <!-- Camera viewer -->
         <div class="ar-viewer">
             <div class="camera-frame">
+                <!-- Camera Controls -->
+                <div class="camera-controls">
+                    <button class="btn-camera-toggle" id="btn-camera-toggle" aria-label="Bật camera">
+                        <svg class="icon-camera-on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <svg class="icon-camera-off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                            <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                        <span class="btn-text">Bật camera</span>
+                    </button>
+                </div>
+
                 <div class="camera-placeholder" id="camera-placeholder">
+                    <!-- Initial State -->
+                    <div class="camera-initial" id="camera-initial" aria-hidden="false">
+                        <div class="initial-icon">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                        </div>
+                        <h3>Thử kính trực tuyến</h3>
+                        <p>Nhấn nút "Bật camera" để bắt đầu trải nghiệm thử kính AR</p>
+                    </div>
+
                     <!-- Loading State -->
                     <div class="camera-loading" id="camera-loading" aria-hidden="true">
                         <div class="loading-spinner"></div>
