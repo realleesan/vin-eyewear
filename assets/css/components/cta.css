@@ -40,7 +40,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 48px;
+    gap: var(--space-12);
     max-width: 1280px;
     margin: 0 auto;
 }
@@ -52,10 +52,10 @@
     align-items: center;
     gap: 14px;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--yellow);
+    color: var(--brand-light);
     margin-bottom: 18px;
 }
 
@@ -65,11 +65,12 @@
     height: 1.5px;
     flex: none;
     background: var(--yellow);
+    color: var(--on-brand);
 }
 
 .cta-title {
     font-family: var(--font-serif);
-    font-size: 42px;
+    font-size: var(--fs-h2);
     font-weight: 700;
     line-height: 1.15;
     letter-spacing: -0.02em;
@@ -77,10 +78,10 @@
 }
 
 .cta-desc {
-    margin-top: 16px;
+    margin-top: var(--space-4);
     max-width: 52ch;
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: var(--fs-note);
     line-height: 1.75;
     color: rgba(255, 255, 255, 0.7);
 }
@@ -93,15 +94,15 @@
 .cta-actions {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-3);
     min-width: 240px;
 }
 
 .cta-btn {
     text-align: center;
-    padding: 17px 32px;
+    padding: 17px var(--space-8);
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -112,7 +113,7 @@
 .cta-btn--primary {
     background: var(--yellow);
     border-color: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
 }
 
 .cta-btn--primary:hover {
@@ -140,13 +141,12 @@
 .cta-note {
     margin-top: 14px;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.45);
     text-align: center;
     max-width: 240px;
 }
-
 
 /* ============================================
    RESPONSIVE (khớp breakpoint 900px / 600px của layout.css)
@@ -159,7 +159,7 @@
     /* Hết chỗ cho 2 vế cạnh nhau -> xếp dọc, nút về hàng ngang bên trái */
     .cta-band__inner {
         grid-template-columns: 1fr;
-        gap: 32px;
+        gap: var(--space-8);
     }
 
     .cta-band__actions { justify-self: stretch; }
@@ -177,11 +177,9 @@
         max-width: none;
     }
 
-    .cta-title { font-size: 32px; }
 }
 
 @media (max-width: 600px) {
-    .cta-title { font-size: 26px; }
 
     /* Nút xếp dọc: 2 nút cạnh nhau ở khổ này chữ bị bóp xuống dòng */
     .cta-actions { flex-direction: column; }

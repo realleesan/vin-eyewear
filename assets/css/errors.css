@@ -8,7 +8,7 @@
     align-items: center;
     justify-content: center;
     min-height: calc(100vh - var(--header-h));
-    padding: 80px 24px;
+    padding: var(--space-20) var(--space-6);
     background: var(--warm-bg);
 }
 
@@ -21,26 +21,26 @@
 .error-page__code {
     display: block;
     font-family: var(--font-sans);
-    font-size: 120px;
+    font-size: var(--fs-display);
     font-weight: 800;
     color: var(--yellow);
     line-height: 1;
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .error-page__title {
     font-family: var(--font-sans);
-    font-size: 28px;
+    font-size: var(--fs-h5);
     font-weight: 700;
     color: var(--black);
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .error-page__desc {
     font-family: var(--font-sans);
-    font-size: 16px;
+    font-size: var(--fs-body-lg);
     color: var(--on-surface-variant);
-    margin-bottom: 32px;
+    margin-bottom: var(--space-8);
     line-height: 1.6;
 }
 
@@ -50,7 +50,7 @@
     background: var(--black);
     color: var(--white);
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: var(--fs-note);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -60,42 +60,30 @@
 
 .error-page__btn:hover {
     background: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
 }
 
 @media (max-width: 900px) {
     .error-page {
-        padding: 48px 16px;
-    }
-
-    .error-page__code {
-        font-size: 80px;
-    }
-
-    .error-page__title {
-        font-size: 22px;
+        padding: var(--space-12) var(--space-4);
     }
 
     .error-page__desc {
-        font-size: 14px;
+        font-size: var(--fs-body-sm);
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
     .error-page {
-        padding: 40px 12px;
-    }
-
-    .error-page__code {
-        font-size: 64px;
+        padding: var(--space-10) var(--space-3);
     }
 
     .error-page__title {
-        font-size: 18px;
+        font-size: var(--fs-subhead);
     }
 
     .error-page__btn {
-        padding: 12px 28px;
-        font-size: 12px;
+        padding: var(--space-3) 28px;
+        font-size: var(--fs-caption);
     }
 }

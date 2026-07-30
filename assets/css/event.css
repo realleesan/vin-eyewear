@@ -6,7 +6,7 @@
 
 /* Events Section */
 .events-section {
-    padding: 120px 0;
+    padding: var(--space-30) 0;
     background-color: var(--white);
     min-height: 80vh;
 }
@@ -15,7 +15,7 @@
 .events-layout {
     display: grid;
     grid-template-columns: 280px 1fr;
-    gap: 48px;
+    gap: var(--space-12);
     align-items: start;
 }
 
@@ -27,7 +27,7 @@
 .events-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
+    gap: var(--space-6);
 }
 
 /* Event Card */
@@ -69,18 +69,18 @@
     top: 16px;
     left: 16px;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     background-color: var(--yellow);
-    color: var(--black);
-    padding: 6px 12px;
+    color: var(--on-brand);
+    padding: 6px var(--space-3);
     border: 1px solid var(--black);
 }
 
 .event-content {
-    padding: 24px;
+    padding: var(--space-6);
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -88,37 +88,37 @@
 
 .event-date {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--on-surface-variant);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
 }
 
 .event-title {
     font-family: var(--font-serif);
-    font-size: 20px;
+    font-size: var(--fs-subhead);
     font-weight: 700;
-    line-height: 28px;
+    line-height: 1.4;
     color: var(--black);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
     letter-spacing: -0.02em;
 }
 
 .event-excerpt {
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     font-weight: 400;
     line-height: 22px;
     color: var(--on-surface);
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
     flex: 1;
 }
 
 .event-link {
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
     color: var(--black);
     text-decoration: none;
@@ -142,7 +142,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: var(--space-10);
 }
 
 .image-modal.active {
@@ -166,9 +166,9 @@
     width: 64px;
     height: 64px;
     background-color: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
     border: 1px solid var(--black);
-    font-size: 48px;
+    font-size: var(--fs-h1);
     cursor: pointer;
     z-index: 10;
     transition: all 0.3s ease;
@@ -200,7 +200,7 @@
 
 /* Event Detail Page */
 .event-detail-section {
-    padding: 120px 0;
+    padding: var(--space-30) 0;
 }
 
 .event-detail {
@@ -211,29 +211,29 @@
 .event-meta {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 32px;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
 }
 
 .event-detail .event-date {
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     margin-bottom: 0;
 }
 
 .event-category {
     font-family: var(--font-sans);
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 800;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--yellow);
+    color: var(--brand-light);
     background-color: var(--black);
-    padding: 8px 16px;
+    padding: var(--space-2) var(--space-4);
 }
 
 .event-featured-image {
     width: 100%;
-    margin-bottom: 48px;
+    margin-bottom: var(--space-12);
     border: 1px solid var(--black);
 }
 
@@ -244,40 +244,40 @@
 }
 
 .event-body {
-    margin-bottom: 80px;
+    margin-bottom: var(--space-20);
 }
 
 .event-headline {
     font-family: var(--font-serif);
-    font-size: 48px;
+    font-size: var(--fs-h1);
     font-weight: 700;
-    line-height: 56px;
+    line-height: 1.167;
     color: var(--black);
-    margin-bottom: 32px;
+    margin-bottom: var(--space-8);
     letter-spacing: -0.02em;
 }
 
 .event-content-block {
-    margin-bottom: 40px;
+    margin-bottom: var(--space-10);
 }
 
 .event-content-block h3 {
     font-family: var(--font-serif);
-    font-size: 28px;
+    font-size: var(--fs-h5);
     font-weight: 700;
-    line-height: 36px;
+    line-height: 1.286;
     color: var(--black);
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
     letter-spacing: -0.02em;
 }
 
 .event-content-block p {
     font-family: var(--font-sans);
-    font-size: 18px;
+    font-size: var(--fs-lead);
     font-weight: 400;
-    line-height: 32px;
+    line-height: 1.778;
     color: var(--on-surface);
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .event-content-block p:last-child {
@@ -287,16 +287,16 @@
 .event-details-list,
 .event-steps-list {
     font-family: var(--font-sans);
-    font-size: 18px;
+    font-size: var(--fs-lead);
     font-weight: 400;
-    line-height: 32px;
+    line-height: 1.778;
     color: var(--on-surface);
-    padding-left: 24px;
+    padding-left: var(--space-6);
 }
 
 .event-details-list li,
 .event-steps-list li {
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
 }
 
 .event-details-list li:last-child,
@@ -306,32 +306,32 @@
 
 .event-cta {
     display: flex;
-    gap: 16px;
-    margin-top: 48px;
-    padding-top: 32px;
+    gap: var(--space-4);
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
     border-top: 1px solid var(--black);
 }
 
 /* Related Events */
 .related-events {
-    padding-top: 80px;
+    padding-top: var(--space-20);
     border-top: 1px solid var(--black);
 }
 
 .related-title {
     font-family: var(--font-serif);
-    font-size: 32px;
+    font-size: var(--fs-h4);
     font-weight: 700;
-    line-height: 40px;
+    line-height: 1.25;
     color: var(--black);
-    margin-bottom: 32px;
+    margin-bottom: var(--space-8);
     letter-spacing: -0.02em;
 }
 
 .related-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
+    gap: var(--space-6);
 }
 
 .related-card {
@@ -364,32 +364,32 @@
 }
 
 .related-content {
-    padding: 24px;
+    padding: var(--space-6);
 }
 
 .related-date {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--on-surface-variant);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
 }
 
 .related-headline {
     font-family: var(--font-serif);
-    font-size: 18px;
+    font-size: var(--fs-lead);
     font-weight: 700;
-    line-height: 24px;
+    line-height: 1.333;
     color: var(--black);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
     letter-spacing: -0.02em;
 }
 
 .related-link {
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
     color: var(--black);
     text-decoration: none;
@@ -404,12 +404,12 @@
 
 .btn {
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
     line-height: 20px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    padding: 20px 48px;
+    padding: var(--space-5) var(--space-12);
     border: 1px solid var(--black);
     cursor: pointer;
     text-decoration: none;
@@ -420,12 +420,12 @@
 
 .btn-primary {
     background-color: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
 }
 
 .btn-primary:hover {
     background-color: var(--black);
-    color: var(--yellow);
+    color: var(--brand-light);
 }
 
 .btn-secondary {
@@ -435,14 +435,14 @@
 
 .btn-secondary:hover {
     background-color: var(--black);
-    color: var(--yellow);
+    color: var(--brand-light);
 }
 
 /* Responsive Design */
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
     .events-layout {
         grid-template-columns: 240px 1fr;
-        gap: 32px;
+        gap: var(--space-8);
     }
     
     .events-grid {
@@ -450,8 +450,8 @@
     }
     
     .event-headline {
-        font-size: 36px;
-        line-height: 44px;
+        font-size: var(--fs-h2);
+        line-height: 1.222;
     }
     
     .related-grid {
@@ -459,9 +459,9 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .events-section {
-        padding: 64px 0;
+        padding: var(--space-16) 0;
     }
     
     .events-layout {
@@ -470,25 +470,23 @@
     
     .events-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: var(--space-4);
     }
     
     .event-detail-section {
-        padding: 64px 0;
+        padding: var(--space-16) 0;
     }
     
     .event-headline {
-        font-size: 28px;
-        line-height: 36px;
+        font-size: var(--fs-h3);
+        line-height: 1.286;
     }
     
     .event-content-block h3 {
-        font-size: 22px;
         line-height: 28px;
     }
     
     .event-content-block p {
-        font-size: 16px;
         line-height: 28px;
     }
     
@@ -504,32 +502,30 @@
     .image-modal .modal-close {
         width: 48px;
         height: 48px;
-        font-size: 32px;
         top: 16px;
         right: 16px;
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
     .event-content {
-        padding: 16px;
+        padding: var(--space-4);
     }
     
     .event-title {
-        font-size: 18px;
         line-height: 24px;
     }
     
     .event-excerpt {
-        font-size: 13px;
+        font-size: var(--fs-note);
         line-height: 20px;
     }
     
     .related-content {
-        padding: 16px;
+        padding: var(--space-4);
     }
     
     .event-detail {
-        padding: 0 16px;
+        padding: 0 var(--space-4);
     }
 }

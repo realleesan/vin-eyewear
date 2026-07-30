@@ -6,7 +6,7 @@
 
 /* --- Main layout --- */
 .ar-section {
-    padding: 48px var(--margin) var(--section-gap);
+    padding: var(--space-12) var(--margin) var(--section-gap);
 }
 
 .ar-layout {
@@ -18,11 +18,10 @@
     margin: 0 auto;
 }
 
-
 /* --- Camera viewer --- */
 .ar-viewer {
     background: var(--white);
-    padding: 32px;
+    padding: var(--space-8);
 }
 
 .camera-frame {
@@ -34,19 +33,19 @@
 .camera-controls {
     display: flex;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
 }
 
 .btn-camera-toggle {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 24px;
+    padding: var(--space-3) var(--space-6);
     background: var(--black);
     color: var(--white);
     border: none;
     font-family: var(--font-sans);
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -57,7 +56,9 @@
 
 .btn-camera-toggle:hover {
     background: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
+    color: var(--on-brand);
+    color: var(--on-brand);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
@@ -132,12 +133,12 @@
     z-index: 20;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     background: rgba(0, 0, 0, 0.72);
     color: var(--white);
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
@@ -146,6 +147,7 @@
     width: 8px;
     height: 8px;
     background: var(--yellow);
+    color: var(--on-brand);
     flex-shrink: 0;
 }
 
@@ -154,11 +156,11 @@
 }
 
 .camera-status.is-error .status-dot {
-    background: #e94560;
+    background: var(--danger-bright);
 }
 
 .camera-status.is-active .status-dot {
-    background: #4ade80;
+    background: var(--success);
 }
 
 @keyframes ar-pulse {
@@ -175,10 +177,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: var(--space-4);
     background: rgba(0, 0, 0, 0.55);
     color: var(--white);
-    font-size: 13px;
+    font-size: var(--fs-note);
     letter-spacing: 0.04em;
 }
 
@@ -207,9 +209,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    padding: 32px;
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    gap: var(--space-5);
+    padding: var(--space-8);
+    background: linear-gradient(135deg, var(--surface-dark-1) 0%, var(--surface-dark-2) 100%);
     color: var(--white);
     text-align: center;
 }
@@ -219,20 +221,20 @@
 }
 
 .initial-icon {
-    color: var(--yellow);
+    color: var(--brand-light);
     opacity: 0.9;
 }
 
 .camera-initial h3 {
     font-family: var(--font-serif);
-    font-size: 20px;
+    font-size: var(--fs-subhead);
     font-weight: 700;
     margin: 0;
     letter-spacing: -0.01em;
 }
 
 .camera-initial p {
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.75);
     max-width: 280px;
@@ -249,8 +251,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 20px;
-    padding: 32px;
+    gap: var(--space-5);
+    padding: var(--space-8);
     background: rgba(0, 0, 0, 0.85);
     color: var(--white);
     text-align: center;
@@ -263,20 +265,20 @@
 
 .error-icon,
 .permission-icon {
-    color: #e94560;
+    color: var(--danger-bright);
 }
 
 .camera-error h3,
 .camera-permission-denied h3 {
     font-family: var(--font-serif);
-    font-size: 18px;
+    font-size: var(--fs-lead);
     font-weight: 700;
     margin: 0;
 }
 
 .camera-error p,
 .camera-permission-denied p {
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: rgba(255, 255, 255, 0.8);
     max-width: 320px;
@@ -285,23 +287,23 @@
 
 .permission-steps {
     text-align: left;
-    font-size: 13px;
+    font-size: var(--fs-note);
     line-height: 1.8;
     color: rgba(255, 255, 255, 0.85);
-    padding-left: 20px;
+    padding-left: var(--space-5);
 }
 
 .permission-steps li {
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
 }
 
 .btn-retry {
-    padding: 10px 24px;
+    padding: 10px var(--space-6);
     background: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
     border: none;
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -325,14 +327,13 @@
 }
 
 .camera-hint {
-    margin-top: 16px;
+    margin-top: var(--space-4);
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     letter-spacing: 0.04em;
     color: var(--on-surface-variant);
     text-align: center;
 }
-
 
 /* --- Sidebar --- */
 .ar-sidebar {
@@ -344,7 +345,7 @@
 
 .ar-panel {
     background: var(--white);
-    padding: 28px 24px;
+    padding: 28px var(--space-6);
     flex: 1;
 }
 
@@ -352,25 +353,24 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
 }
 
 .ar-panel-title {
     font-family: var(--font-serif);
-    font-size: 22px;
+    font-size: var(--fs-subhead);
     font-weight: 700;
     letter-spacing: -0.01em;
 }
 
 .ar-panel-count {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--outline);
 }
-
 
 /* --- Instructions --- */
 .ar-steps {
@@ -383,7 +383,7 @@
 .ar-steps li {
     display: grid;
     grid-template-columns: 40px 1fr;
-    gap: 12px;
+    gap: var(--space-3);
     align-items: start;
     padding: 14px 0;
     border-bottom: 1px solid var(--border);
@@ -396,9 +396,9 @@
 
 .step-num {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 500;
-    color: var(--yellow);
+    color: var(--brand-light);
     background: var(--black);
     padding: 6px 0;
     text-align: center;
@@ -406,12 +406,11 @@
 }
 
 .step-text {
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     line-height: 1.55;
     color: var(--on-surface-variant);
-    padding-top: 4px;
+    padding-top: var(--space-1);
 }
-
 
 /* --- Glasses selector --- */
 .glasses-list {
@@ -447,7 +446,7 @@
     align-items: center;
     justify-content: center;
     aspect-ratio: 2 / 1;
-    padding: 16px 12px 8px;
+    padding: var(--space-4) var(--space-3) var(--space-2);
     background: var(--white);
 }
 
@@ -463,15 +462,14 @@
 
 .glass-name {
     display: block;
-    padding: 10px 12px 14px;
-    font-size: 10px;
+    padding: 10px var(--space-3) 14px;
+    font-size: var(--fs-micro);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--on-surface);
     line-height: 1.4;
 }
-
 
 /* --- CTA --- */
 .ar-cta {
@@ -485,9 +483,9 @@
 .ar-cta .btn-outline {
     display: block;
     text-align: center;
-    padding: 16px 24px;
+    padding: var(--space-4) var(--space-6);
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -497,7 +495,7 @@
 
 .ar-cta .btn-primary {
     background: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
     border: none;
 }
 
@@ -517,17 +515,16 @@
     color: var(--white);
 }
 
-
 /* ============================================
    RESPONSIVE
    ============================================ */
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
     .ar-layout {
         grid-template-columns: 1fr;
     }
 
     .ar-viewer {
-        padding: 24px;
+        padding: var(--space-6);
     }
 
     .ar-sidebar {
@@ -545,13 +542,13 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .ar-section {
-        padding: 32px var(--margin) 64px;
+        padding: var(--space-8) var(--margin) var(--space-16);
     }
 
 .ar-viewer {
-        padding: 16px;
+        padding: var(--space-4);
     }
 
     .ar-sidebar {
@@ -580,88 +577,74 @@
         aspect-ratio: 1 / 1.3;
     }
 
-    .camera-error h3,
-    .camera-permission-denied h3 {
-        font-size: 16px;
-    }
-
     .camera-error p,
     .camera-permission-denied p {
-        font-size: 13px;
+        font-size: var(--fs-note);
         max-width: 280px;
     }
 
     .permission-steps {
-        font-size: 12px;
+        font-size: var(--fs-caption);
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
     .glasses-list {
         grid-template-columns: 1fr;
     }
 
     .ar-panel {
-        padding: 24px 16px;
+        padding: var(--space-6) var(--space-4);
     }
 
     .camera-error,
     .camera-permission-denied {
-        padding: 24px 16px;
-    }
-
-    .camera-error h3,
-    .camera-permission-denied h3 {
-        font-size: 15px;
+        padding: var(--space-6) var(--space-4);
     }
 
     .camera-error p,
     .camera-permission-denied p {
-        font-size: 12px;
+        font-size: var(--fs-caption);
         max-width: 100%;
     }
 
     .permission-steps {
-        font-size: 11px;
-        padding-left: 16px;
+        font-size: var(--fs-label);
+        padding-left: var(--space-4);
     }
 
     .btn-retry {
-        padding: 8px 20px;
-        font-size: 10px;
+        padding: var(--space-2) var(--space-5);
+        font-size: var(--fs-micro);
     }
 
     .camera-controls {
-        margin-bottom: 16px;
+        margin-bottom: var(--space-4);
     }
 
     .btn-camera-toggle {
-        padding: 10px 20px;
-        font-size: 11px;
-    }
-
-    .camera-initial h3 {
-        font-size: 18px;
+        padding: 10px var(--space-5);
+        font-size: var(--fs-label);
     }
 
     .camera-initial p {
-        font-size: 13px;
+        font-size: var(--fs-note);
     }
 }
 
 /* Landscape orientation */
 @media (max-height: 500px) and (orientation: landscape) {
     .ar-section {
-        padding: 24px var(--margin) 32px;
+        padding: var(--space-6) var(--margin) var(--space-8);
     }
 
     .ar-layout {
         grid-template-columns: 1fr 320px;
-        gap: 16px;
+        gap: var(--space-4);
     }
 
     .ar-viewer {
-        padding: 16px;
+        padding: var(--space-4);
     }
 
     .camera-frame {
@@ -673,24 +656,20 @@
     }
 
     .camera-controls {
-        margin-bottom: 12px;
+        margin-bottom: var(--space-3);
     }
 
     .btn-camera-toggle {
-        padding: 8px 16px;
-        font-size: 10px;
+        padding: var(--space-2) var(--space-4);
+        font-size: var(--fs-micro);
     }
 
     .ar-panel {
-        padding: 20px 16px;
+        padding: var(--space-5) var(--space-4);
     }
 
     .ar-panel-header {
-        margin-bottom: 12px;
-    }
-
-    .ar-panel-title {
-        font-size: 18px;
+        margin-bottom: var(--space-3);
     }
 
     .glasses-list {
@@ -699,16 +678,20 @@
 
     .glasses-thumb {
         aspect-ratio: 3 / 2;
-        padding: 12px 8px 6px;
+        padding: var(--space-3) var(--space-2) 6px;
     }
 
     .glass-name {
-        padding: 8px 8px 10px;
-        font-size: 9px;
+        padding: var(--space-2) var(--space-2) 10px;
     }
 
     .camera-hint {
-        margin-top: 12px;
-        font-size: 10px;
+        margin-top: var(--space-3);
+        font-size: var(--fs-micro);
     }
+}
+
+/* Mục kính đang chọn có nền --brand -> tên kính phải dùng chữ kem */
+.glasses-item.active .glass-name {
+    color: var(--on-brand);
 }

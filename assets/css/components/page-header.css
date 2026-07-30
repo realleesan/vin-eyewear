@@ -12,39 +12,38 @@
    var(--margin) -> hai mép trùng nhau ở mọi khổ màn (64/16/12px).
    padding-bottom chuyển xuống inner để khoảng cách chữ -> nét kẻ vẫn là 40px. */
 .page-header {
-    padding: 64px var(--margin) 0;
+    padding: var(--space-16) var(--margin) 0;
 }
 
 .page-header-inner {
-    padding-bottom: 40px;
+    padding-bottom: var(--space-10);
     /* Mảnh và mờ như nét kẻ của .breadcrumb, thay cho 1.5px đen đặc */
     border-bottom: 1px solid var(--border);
 }
 
 .page-eyebrow {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--outline);
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
 }
 
 .page-title {
     font-family: var(--font-serif);
-    font-size: 48px;
+    font-size: var(--fs-h1);
     font-weight: 700;
     letter-spacing: -0.02em;
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
     overflow-wrap: anywhere;    /* title 1 tu qua dai cung khong tran man hinh hep */
 }
 
 .page-subtitle {
-    font-size: 16px;
+    font-size: var(--fs-body-lg);
     line-height: 1.7;
     color: var(--on-surface-variant);
 }
-
 
 /* ============================================
    RESPONSIVE (khớp breakpoint 900px / 600px của layout.css)
@@ -52,7 +51,7 @@
 @media (max-width: 900px) {
     /* Bo padding desktop 64px — mobile theo nhip 36-40px cua cac trang khac */
     .page-header {
-        padding: 40px var(--margin) 0;
+        padding: var(--space-10) var(--margin) 0;
     }
 
     .page-header-inner {
@@ -60,12 +59,7 @@
     }
 
     .page-title {
-        font-size: 32px;
+        font-size: var(--fs-h2);
     }
 }
 
-@media (max-width: 600px) {
-    .page-title {
-        font-size: 28px;
-    }
-}
