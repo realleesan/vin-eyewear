@@ -1,5 +1,3 @@
-<link rel="stylesheet" href="/assets/css/event.css">
-
 <?php
 $show_breadcrumb = true;
 $breadcrumb_items = [
@@ -7,102 +5,115 @@ $breadcrumb_items = [
     ['label' => 'Tin tức & Sự kiện', 'url' => '/event'],
     ['label' => 'Chi tiết'],
 ];
-$show_page_header = true;
-$page_eyebrow = 'JOURNAL';
-$page_title = 'The Heritage Collection Summer Sale';
-$page_subtitle = 'Cơ hội sở hữu những thiết kế kinh điển với mức giá đặc biệt';
-$show_cta = true;
-$cta_eyebrow = 'Vin Eyewear · Ưu đãi đang diễn ra';
-$cta_title = 'Chọn gọng kính của bạn';
-$cta_desc = 'Ưu đãi áp dụng cho toàn bộ bộ sưu tập trong thời gian diễn ra sự kiện.';
-$cta_buttons = [
-    ['label' => 'Xem sản phẩm', 'url' => '/product', 'style' => 'primary'],
-    ['label' => 'Liên hệ tư vấn', 'url' => '/contact', 'style' => 'ghost'],
-];
+$show_page_header = false;
+$show_cta = false;
 $show_pusher = true;
 ?>
 
 <section class="event-detail-section">
     <div class="container">
+        <!-- Back Navigation -->
+        <a href="/event" class="back-link">← Quay lại danh sách sự kiện</a>
+
         <article class="event-detail">
-            <!-- Event Meta -->
+            <!-- Event Meta (Trên cùng 1 dòng, sát phía trên ảnh featured) -->
             <div class="event-meta">
-                <time class="event-date label-mono">15/07/2026 - 15/08/2026</time>
-                <span class="event-category">TIN ƯU ĐÃI</span>
+                <!-- Cụm bên trái: Thời gian sự kiện & Danh mục -->
+                <div class="event-meta-left">
+                    <time class="event-date label-mono"><?= htmlspecialchars($event['date']) ?></time>
+                    <span class="event-category"><?= htmlspecialchars($event['category']) ?></span>
+                </div>
+
+                <!-- Cụm bên phải: Thời gian đăng & Tác giả -->
+                <div class="event-meta-right">
+                    <time class="event-published-at label-mono">Đăng lúc: <?= htmlspecialchars($event['published_at']) ?></time>
+                    <span class="meta-divider">•</span>
+                    <span class="event-author">Bởi: <strong><?= htmlspecialchars($event['author']) ?></strong></span>
+                </div>
             </div>
 
             <!-- Featured Image -->
             <div class="event-featured-image">
-                <img src="https://moscot.com/cdn/shop/files/1920x860_-HP_BANNER-DESKTOP-CUSTOM_MADE_TINT_2_1.jpg?v=1783603402&width=1200" alt="The Heritage Collection Summer Sale">
+                <img src="<?= htmlspecialchars($event['image']) ?>" alt="<?= htmlspecialchars($event['title']) ?>">
             </div>
 
             <!-- Event Content -->
             <div class="event-body">
-                <h2 class="event-headline">The Heritage Collection Summer Sale</h2>
+                <h1 class="event-headline"><?= htmlspecialchars($event['title']) ?></h1>
                 
+                <!-- Intro Block -->
                 <div class="event-content-block">
-                    <p>Vin Eyewear hân hoan mang đến chương trình khuyến mãi đặc biệt mùa hè 2026 - giảm giá 20% cho toàn bộ bộ sưu tập Heritage Collection. Đây là cơ hội tuyệt vời để bạn sở hữu những thiết kế kinh điển, lấy cảm hứng từ di sản Lower East Side với mức giá không thể tốt hơn.</p>
+                    <p><?= htmlspecialchars($event['intro']) ?></p>
                 </div>
 
+                <!-- Section 1 -->
                 <div class="event-content-block">
-                    <h3>Về The Heritage Collection</h3>
-                    <p>The Heritage Collection là bộ sưu tập đặc biệt, kết hợp giữa nghệ thuật chế tác kính truyền thống và công nghệ hiện đại. Mỗi chiếc kính trong bộ sưu tập này đều được chế tác thủ công từ acetate Ý nguyên khối, với các chi tiết được hoàn thiện tỉ mỉ bởi những nghệ nhân lành nghề nhất.</p>
-                    <p>Điểm nhấn của bộ sưu tập là công nghệ Custom Made Tints™ độc quyền - cho phép cá nhân hóa màu sắc tròng kính theo phong cách riêng của từng người đeo. Không có hai chiếc kính nào hoàn toàn giống nhau, giống như không có hai cá tính nào trùng lặp.</p>
+                    <h3><?= htmlspecialchars($event['section1_title']) ?></h3>
+                    <p><?= htmlspecialchars($event['section1_content']) ?></p>
                 </div>
 
+                <!-- Details List -->
+                <?php if (!empty($event['details'])): ?>
                 <div class="event-content-block">
-                    <h3>Chi tiết chương trình</h3>
+                    <h3>Thông tin chi tiết</h3>
                     <ul class="event-details-list">
-                        <li><strong>Thời gian:</strong> 15/07/2026 - 15/08/2026</li>
-                        <li><strong>Giảm giá:</strong> 20% cho toàn bộ Heritage Collection</li>
-                        <li><strong>Địa điểm áp dụng:</strong> Tất cả cửa hàng Vin Eyewear & Online</li>
-                        <li><strong>Quà tặng:</strong> Túi đựng kính Limited Edition cho đơn hàng trên 2 triệu</li>
-                        <li><strong>Bảo hành:</strong> 12 tháng chính hãng (không thay đổi)</li>
+                        <?php foreach ($event['details'] as $detail): ?>
+                        <li>
+                            <span class="detail-label"><?= htmlspecialchars($detail['label']) ?>:</span>
+                            <span class="detail-value"><?= htmlspecialchars($detail['val']) ?></span>
+                        </li>
+                        <?php endforeach; ?>
                     </ul>
                 </div>
+                <?php endif; ?>
 
+                <!-- Steps List -->
+                <?php if (!empty($event['steps'])): ?>
                 <div class="event-content-block">
-                    <h3>Cách thức tham gia</h3>
-                    <p>Để tham gia chương trình, bạn có thể:</p>
+                    <h3>Cách tham gia</h3>
                     <ol class="event-steps-list">
-                        <li>Ghé thăm cửa hàng Vin Eyewear tại Long Biên hoặc Tây Hồ để trải nghiệm trực tiếp</li>
-                        <li>Truy cập website vineyewear.com và đặt hàng online với mã promo HERITAGE20</li>
-                        <li>Sử dụng tính năng AR Try-On để thử kính ảo trước khi quyết định</li>
+                        <?php foreach ($event['steps'] as $index => $step): ?>
+                        <li><?= htmlspecialchars($step) ?></li>
+                        <?php endforeach; ?>
                     </ol>
                 </div>
+                <?php endif; ?>
 
-                <div class="event-content-block">
+                <!-- Note -->
+                <?php if (!empty($event['note'])): ?>
+                <div class="event-content-block event-note">
                     <h3>Lưu ý quan trọng</h3>
-                    <p>Chương trình không áp dụng đồng thời với các khuyến mãi khác. Số lượng quà tặng Limited Edition có hạn, sẽ được ưu tiên cho khách hàng đặt hàng sớm nhất. Vin Eyewear giữ quyền điều chỉnh chương trình khi cần thiết.</p>
+                    <p><?= htmlspecialchars($event['note']) ?></p>
                 </div>
-            </div>
-
-            <!-- Related Events -->
-            <div class="related-events">
-                <h3 class="related-title">Bài viết liên quan</h3>
-                <div class="related-grid">
-                    <article class="related-card">
-                        <div class="related-image">
-                            <img src="https://moscot.com/cdn/shop/files/1400x900_-FLOW-CMT_2_1.jpg?v=1783603988&width=400" alt="Custom Made Tints™">
-                        </div>
-                        <div class="related-content">
-                            <time class="related-date label-mono">20/08/2026</time>
-                            <h4 class="related-headline">Custom Made Tints™ Fall Winter Launch</h4>
-                            <a href="/event/detail/2" class="related-link">Đọc tiếp →</a>
-                        </div>
-                    </article>
-                    <article class="related-card">
-                        <div class="related-image">
-                            <img src="https://moscot.com/cdn/shop/files/1080x1080_CRAFTSMANSHIP_-_HOMEPAGE_BANNER_MOBILE_1.jpg?v=1742324666&width=400" alt="Craftsmanship Workshop">
-                        </div>
-                        <div class="related-content">
-                            <time class="related-date label-mono">01/09/2026</time>
-                            <h4 class="related-headline">Lower East Side Craftsmanship Workshop</h4>
-                            <a href="/event/detail/3" class="related-link">Đọc tiếp →</a>
-                        </div>
-                    </article>
-                </div>
+                <?php endif; ?>
             </div>
         </article>
+
+        <!-- Related Events Section -->
+        <?php if (!empty($relatedEvents)): ?>
+        <section class="related-events-section">
+            <h2 class="related-events-title">Bài viết liên quan</h2>
+            <div class="related-events-grid">
+                <?php foreach ($relatedEvents as $relatedEvent): ?>
+                <article class="related-event-card">
+                    <div class="related-event-image">
+                        <a href="/event/<?= htmlspecialchars($relatedEvent['id']) ?>">
+                            <img src="<?= htmlspecialchars($relatedEvent['image']) ?>" alt="<?= htmlspecialchars($relatedEvent['title']) ?>" loading="lazy">
+                            <span class="event-badge"><?= htmlspecialchars($relatedEvent['category']) ?></span>
+                        </a>
+                    </div>
+                    <div class="related-event-content">
+                        <time class="event-date label-mono"><?= htmlspecialchars($relatedEvent['date']) ?></time>
+                        <h3 class="related-event-title">
+                            <a href="/event/<?= htmlspecialchars($relatedEvent['id']) ?>"><?= htmlspecialchars($relatedEvent['title']) ?></a>
+                        </h3>
+                        <p class="event-excerpt"><?= htmlspecialchars($relatedEvent['excerpt']) ?></p>
+                        <a href="/event/<?= htmlspecialchars($relatedEvent['id']) ?>" class="event-link">Đọc tiếp →</a>
+                    </div>
+                </article>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
     </div>
 </section>
