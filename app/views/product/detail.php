@@ -29,11 +29,11 @@ $show_pusher = true;
 ?>
 
 <!-- ============================================================
-     SECTION 1 â€” GALLERY + THÃ”NG TIN Sáº¢N PHáº¨M
+     SECTION 1 — GALLERY + THÔNG TIN SẢN PHẨM
      ============================================================ -->
 <section class="pd-main">
 
-    <!-- Cá»™t trÃ¡i: áº£nh lá»›n + thumbnail -->
+    <!-- Cột trái: ảnh lớn + thumbnail -->
     <div class="pd-gallery">
         <div class="pd-stage">
             <img
@@ -42,7 +42,7 @@ $show_pusher = true;
                 alt="<?= htmlspecialchars($product['name']) ?>"
             >
             <?php if (!empty($product['badge'])): ?>
-            <span class="badge <?= $product['badge'] === 'Má»›i' ? 'badge-dark' : '' ?>"><?= htmlspecialchars($product['badge']) ?></span>
+            <span class="badge <?= $product['badge'] === 'Mới' ? 'badge-dark' : '' ?>"><?= htmlspecialchars($product['badge']) ?></span>
             <?php endif; ?>
         </div>
 
@@ -52,7 +52,7 @@ $show_pusher = true;
                 type="button"
                 class="pd-thumb <?= $i === 0 ? 'active' : '' ?>"
                 data-full="<?= htmlspecialchars($img) ?>"
-                aria-label="Xem áº£nh <?= $i + 1 ?>"
+                aria-label="Xem ảnh <?= $i + 1 ?>"
             >
                 <img src="<?= htmlspecialchars($img) ?>" alt="" loading="lazy">
             </button>
@@ -60,14 +60,14 @@ $show_pusher = true;
         </div>
     </div>
 
-    <!-- Cá»™t pháº£i: tÃªn, giÃ¡, mÃ´ táº£ -->
+    <!-- Cột phải: tên, giá, mô tả -->
     <div class="pd-info">
         <h1 class="pd-name"><?= htmlspecialchars($product['name']) ?></h1>
         <p class="pd-price"><?= number_format($product['price'], 0, ',', '.') ?> &#8363;</p>
 
         <p class="pd-desc"><?= htmlspecialchars($product['description']) ?></p>
 
-        <!-- ThÃ´ng sá»‘ ká»¹ thuáº­t -->
+        <!-- Thông số kỹ thuật -->
         <dl class="pd-specs">
             <?php foreach ($product['specs'] as $label => $value): ?>
             <div class="pd-spec-row">
@@ -81,15 +81,17 @@ $show_pusher = true;
 </section>
 
 <!-- ============================================================
-     SECTION 2 â€” Sáº¢N PHáº¨M Gá»¢I Ã (dÃ¹ng component .product-grid á»Ÿ layout.css)
+     SECTION 2 — SẢN PHẨM GỢI Ý
+     Dùng đúng component lưới của trang Sản phẩm: .product-grid +
+     modifier .product-grid--boxed (layout.css). KHÔNG viết CSS card riêng cho .pd-related.
      ============================================================ -->
 <section class="pd-related reveal">
     <div class="pd-related-header">
-        <h2 class="pd-related-title">CÃ³ thá»ƒ báº¡n thÃ­ch</h2>
-        <a href="/product" class="pd-related-link">Xem táº¥t cáº£</a>
+        <h2 class="pd-related-title">Có thể bạn thích</h2>
+        <a href="/product" class="pd-related-link">Xem tất cả</a>
     </div>
 
-    <div class="product-grid">
+    <div class="product-grid product-grid--boxed" id="pdRelatedGrid">
         <?php foreach ($related as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
     </div>
 </section>
