@@ -1,0 +1,32 @@
+name: 🚀 Deploy PHP Project to InfinityFree
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    name: 🎉 Syncing PHP Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2 # Chỉ lấy 2 commit gần nhất để so sánh file khác biệt nhanh hơn
+
+      - name: 📂 Sync files via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: ./htdocs/
+          local-dir: ./
+          # --- CÁC THAM SỐ TỐI ƯU THÊM VÀO ---
+          protocol: ftp
+          port: 21
+          state-name: .ftp-deploy-sync-state.json # File lưu trạng thái commit trên server
+          dangerous-clean-up: false # Không tự ý xóa nhầm file không có trong Git trên hosting
+          timeout: 60000 # Tăng thời gian chờ response lên 60 giây để tránh đứt kết nối
