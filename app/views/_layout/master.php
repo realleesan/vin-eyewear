@@ -48,7 +48,7 @@
     <?php endif; ?>
 
     <!-- CSS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
-    <?php if (isset($viewName) && (strpos($viewName, 'event/') === 0 || $viewName === 'event/index')): ?>
+    <?php if (isset($viewName) && (strpos($viewName, 'event/') === 0 || $viewName === 'event/index' || $viewName === 'event/detail')): ?>
         <link rel="stylesheet" href="/assets/css/event.css">
     <?php endif; ?>
 </head>
@@ -116,6 +116,11 @@
     <!-- JS RIÊNG CHO EVENT (CHỈ LOAD KHI CẦN) -->
     <?php if (isset($viewName) && $viewName === 'event/index'): ?>
         <script src="/assets/js/event.js" defer></script>
+    <?php endif; ?>
+
+    <!-- JS RIÊNG CHO ABOUT (CHỈ LOAD KHI CẦN) -->
+    <?php if (isset($viewName) && $viewName === 'about/index'): ?>
+        <script src="/assets/js/about.js" defer></script>
     <?php endif; ?>
 
     <!-- Scroll reveal dùng chung toàn site: hiện dần phần tử .reveal khi cuộn tới -->

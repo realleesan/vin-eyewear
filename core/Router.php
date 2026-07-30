@@ -55,14 +55,43 @@ class Router
             $uri = '';
         }
         
-        // Check if route exists
+        // Check if route exists (exact match first)
         if (array_key_exists($uri, $this->routes)) {
             $route = $this->routes[$uri];
             $this->callController($route);
         } else {
-            // 404 Not Found
-            $this->handle404();
+            // Try dynamic routes like /event/{id}
+            $this->dispatchDynamic($uri);
         }
+    }
+
+    private function dispatchDynamic($uri)
+    {
+        $segments = explode('/', $uri);
+        
+        // Try to match dynamic routes: event/{id} -> EventDetailController@detail
+        if (count($segments) === 2 && $segments[0] === 'event') {
+            $eventId = $segments[1];
+            if (!empty($eventId)) {
+                // Call EventDetailController@detail with eventId parameter
+                require_once APP_PATH . '/controllers/EventDetailController.php';
+                if (class_exists('EventDetailController')) {
+                    $controller = new EventDetailController();
+                    if (method_exists($controller, 'detail')) {
+                        try {
+                            $controller->detail($eventId);
+                            return;
+                        } catch (\Throwable $e) {
+                            $this->handle500();
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // No matching route found
+        $this->handle404();
     }
 
     private function callController($route)

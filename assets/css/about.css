@@ -3,75 +3,69 @@
    Heritage-meets-Downtown-Cool Design System
    ============================================ */
 
-/* Base Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: var(--font-sans);
-    font-size: 16px;
-    line-height: 1.5;
-    color: var(--black);
-    background-color: var(--white);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Container */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-}
-
-/* About Section */
+/* ============================================
+   ABOUT SECTION WRAPPER
+   Padding dùng var(--margin) để căn lề khớp với
+   page-header và breadcrumb (cùng dùng var(--margin)).
+   .container bên trong giới hạn max-width nội dung.
+   ============================================ */
 .about-section {
-    padding: 120px 0;
+    padding: 80px 0 120px;
 }
 
-/* Hero Story Section */
-.hero-story {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 64px;
-    align-items: center;
-    margin-bottom: 120px;
+/* Container — chỉ giới hạn max-width, KHÔNG đặt reset * ở đây
+   để tránh xung đột với global styles */
+.about-section .container {
+    max-width: var(--container);
+    margin: 0 auto;
+    padding: 0 var(--margin);
 }
 
-.story-content {
-    padding-right: 24px;
-}
-
+/* ============================================
+   TYPOGRAPHY HELPERS (dùng trong about page)
+   ============================================ */
 .subheading-caps {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 800;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
     line-height: 20px;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--on-surface-variant);
+    color: var(--outline);
     display: block;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .headline {
     font-family: var(--font-serif);
     font-size: 48px;
     font-weight: 700;
-    line-height: 56px;
+    line-height: 1.2;
     color: var(--black);
     margin-bottom: 32px;
     letter-spacing: -0.02em;
 }
 
+/* ============================================
+   HERO STORY SECTION
+   ============================================ */
+.hero-story {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+    margin-bottom: 80px;
+}
+
+.story-content {
+    padding-right: 16px;
+}
+
 .story-text p {
     font-family: var(--font-sans);
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 400;
-    line-height: 28px;
+    line-height: 1.7;
     color: var(--on-surface);
     margin-bottom: 24px;
 }
@@ -80,351 +74,400 @@ body {
     margin-bottom: 0;
 }
 
+/* CEO Quote — nổi bật bằng border trái vàng + nền xám nhạt */
+.ceo-quote {
+    margin: 28px 0;
+    padding: 24px 28px;
+    background-color: var(--gray);
+    border-left: 4px solid var(--yellow);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+}
+
+.ceo-quote p {
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-style: italic;
+    font-weight: 400;
+    line-height: 1.75;
+    color: var(--on-surface);
+    margin-bottom: 12px !important;
+}
+
+.ceo-quote-footer {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--outline);
+}
+
 .story-image {
     position: relative;
+    align-self: stretch;
+    /* Offset để ảnh thẳng hàng với dòng đầu của .subheading-caps */
+    margin-top: calc(11px + 20px + 12px);
 }
 
 .story-image img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     display: block;
     border: 1px solid var(--black);
 }
 
-/* Mission Section */
-.mission-section {
-    background-color: var(--yellow);
-    padding: 64px;
-    text-align: center;
-    margin-bottom: 120px;
-    border: 1px solid var(--black);
+/* ============================================
+   STORE LOCATOR SECTION (từ contact.css)
+   ============================================ */
+.about-store-locator {
+    padding: 80px 0;
 }
 
-.mission-content {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.mission-section .headline {
-    font-size: 36px;
-    line-height: 44px;
-    margin-bottom: 24px;
-}
-
-.mission-section p {
-    font-family: var(--font-sans);
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 28px;
-    color: var(--black);
-}
-
-/* Values Section */
-.values-section {
-    margin-bottom: 120px;
-}
-
-.values-section .subheading-caps {
-    text-align: center;
-}
-
-.values-section .headline {
-    text-align: center;
-    margin-bottom: 64px;
-}
-
-.values-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
-}
-
-.value-card {
-    background-color: var(--white);
-    border: 1px solid var(--black);
-    padding: 32px;
-    transition: all 0.3s ease;
-}
-
-.value-card:hover {
-    background-color: var(--yellow);
-    transform: translateY(-4px);
-}
-
-.value-icon {
-    font-size: 32px;
-    margin-bottom: 16px;
-}
-
-.value-card h3 {
-    font-family: var(--font-sans);
-    font-size: 16px;
+.section-title {
+    font-family: var(--font-serif);
+    font-size: 2.2rem;
     font-weight: 700;
-    line-height: 24px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    margin-bottom: 40px;
     color: var(--black);
-    margin-bottom: 16px;
-}
-
-.value-card p {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 20px;
-    color: var(--on-surface-variant);
-}
-
-/* Locations Section */
-.locations-section {
-    margin-bottom: 120px;
-}
-
-.locations-section .subheading-caps {
-    text-align: center;
-}
-
-.locations-section .headline {
-    text-align: center;
-    margin-bottom: 64px;
-}
-
-.locations-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 32px;
-}
-
-.location-card {
-    background-color: var(--white);
-    border: 1px solid var(--black);
-    padding: 40px;
     position: relative;
 }
 
-.location-card.primary {
-    background-color: var(--yellow);
+/* Interactive Store Locator */
+.store-locator-wrapper {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 24px;
+    margin-bottom: 0;
 }
 
-.location-badge {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 16px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    background-color: var(--black);
-    color: var(--yellow);
-    padding: 8px 16px;
-    display: inline-block;
-    margin-bottom: 24px;
-}
-
-.location-card h3 {
-    font-family: var(--font-serif);
-    font-size: 32px;
-    font-weight: 700;
-    line-height: 40px;
-    color: var(--black);
-    margin-bottom: 24px;
-}
-
-.location-address p {
-    font-family: var(--font-sans);
-    font-size: 16px;
-    font-weight: 400;
-    line-height: 24px;
-    color: var(--on-surface);
-    margin-bottom: 8px;
-}
-
-.location-hours {
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid var(--black);
-}
-
-.label-mono {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 16px;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--on-surface-variant);
-    display: block;
-    margin-bottom: 8px;
-}
-
-.location-hours p {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 20px;
-    color: var(--black);
-}
-
-/* CTA Section */
-.cta-section {
-    background-color: var(--black);
-    padding: 80px 40px;
-    text-align: center;
-}
-
-.cta-content {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.cta-section .headline {
-    color: var(--white);
-    margin-bottom: 24px;
-}
-
-.cta-section p {
-    font-family: var(--font-sans);
-    font-size: 18px;
-    font-weight: 400;
-    line-height: 28px;
-    color: var(--white);
-    margin-bottom: 40px;
-}
-
-.cta-buttons {
+/* Store Cards List */
+.store-list {
+    grid-column: span 5;
     display: flex;
-    gap: 16px;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 24px;
 }
 
-/* Buttons */
-.btn {
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 700;
-    line-height: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    padding: 16px 32px;
-    border: 1px solid var(--black);
+.store-card {
+    background: var(--white);
+    border: 2px solid var(--black);
+    border-radius: 0 !important;
     cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    outline: none;
+    position: relative;
+}
+
+/* Left Accent Highlight for Active Card */
+.store-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    background: var(--yellow);
+    transition: width 0.15s ease;
+    z-index: 1;
+}
+
+.store-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 6px 6px 0px var(--black);
+}
+
+.store-card.active {
+    border-width: 2px;
+    box-shadow: 8px 8px 0px var(--black);
+}
+
+.store-card.active::before {
+    width: 6px;
+}
+
+/* Store Card Media */
+.store-image-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--gray);
+    overflow: hidden;
+    border-bottom: 2px solid var(--black);
+}
+
+.store-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.store-card:hover .store-img {
+    transform: scale(1.03);
+}
+
+.store-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--black);
+    color: var(--white);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 5px 10px;
     border-radius: 0;
 }
 
-.btn-primary {
-    background-color: var(--yellow);
+/* Store Card Info */
+.store-card-content {
+    padding: 24px;
+    position: relative;
+    z-index: 0;
+}
+
+.store-card-title {
+    font-family: var(--font-serif);
+    font-size: 1.4rem;
+    font-weight: 700;
     color: var(--black);
+    margin-bottom: 16px;
 }
 
-.btn-primary:hover {
-    background-color: var(--white);
+.store-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
-.btn-secondary {
-    background-color: transparent;
+.store-detail-item {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+}
+
+.store-detail-item .label-mono {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--outline);
+    width: 100px;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.store-detail-item .detail-value {
+    color: var(--on-surface);
+}
+
+.store-phone-link {
+    color: var(--black);
+    font-weight: 600;
+    text-decoration: underline;
+    transition: color 0.15s, background 0.15s;
+}
+
+.store-phone-link:hover {
     color: var(--white);
-    border-color: var(--white);
+    background: var(--black);
+    padding: 0 4px;
 }
 
-.btn-secondary:hover {
-    background-color: var(--white);
-    color: var(--black);
+/* Store Map Viewport */
+.store-map-viewport {
+    grid-column: span 7;
+    border: 2px solid var(--black);
+    border-radius: 0 !important;
+    background: var(--gray);
+    height: 600px;
+    position: sticky;
+    top: 98px;
+    z-index: 10;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-    .values-grid {
-        grid-template-columns: repeat(2, 1fr);
+.map-container {
+    display: none;
+    width: 100%;
+    height: 100%;
+}
+
+.map-container.active {
+    display: block;
+}
+
+/* ============================================
+   LABEL MONO UTILITY
+   ============================================ */
+.label-mono {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--outline);
+    display: block;
+    margin-bottom: 6px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* --- Tablet (≤1024px): giảm khoảng cách, giữ 2 cột values --- */
+@media (max-width: 1023px) {
+    .about-section {
+        padding: 48px 0 80px;
     }
-    
+
     .headline {
         font-size: 36px;
-        line-height: 44px;
     }
-}
 
-@media (max-width: 768px) {
-    .about-section {
-        padding: 64px 0;
-    }
-    
     .hero-story {
         grid-template-columns: 1fr;
-        gap: 40px;
-        margin-bottom: 80px;
+        gap: 32px;
+        margin-bottom: 56px;
     }
-    
+
     .story-content {
         padding-right: 0;
     }
-    
-    .mission-section {
-        padding: 40px 24px;
-        margin-bottom: 80px;
+
+    .story-image {
+        margin-top: 0;
+        max-height: 420px;
     }
-    
-    .values-section {
-        margin-bottom: 80px;
+
+    .story-image img {
+        height: 420px;
     }
-    
-    .values-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-    }
-    
-    .locations-section {
-        margin-bottom: 80px;
-    }
-    
-    .locations-grid {
+
+    .store-locator-wrapper {
         grid-template-columns: 1fr;
         gap: 24px;
+        margin-bottom: 0;
     }
     
-    .location-card {
-        padding: 32px;
+    .store-list,
+    .store-map-viewport {
+        grid-column: span 1;
     }
     
-    .location-card h3 {
-        font-size: 24px;
-        line-height: 32px;
-    }
-    
-    .cta-section {
-        padding: 48px 24px;
-    }
-    
-    .cta-buttons {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .btn {
-        width: 100%;
-        max-width: 300px;
-        text-align: center;
+    .store-map-viewport {
+        height: 450px;
+        position: static;
     }
 }
 
-@media (max-width: 480px) {
-    .container {
-        padding: 0 16px;
+/* --- Mobile (≤768px) --- */
+@media (max-width: 768px) {
+    .about-section {
+        padding: 32px 0 64px;
     }
-    
+
+    .hero-story {
+        gap: 24px;
+        margin-bottom: 40px;
+    }
+
+    .story-image {
+        max-height: 280px;
+    }
+
+    .story-image img {
+        height: 280px;
+    }
+
+    .ceo-quote {
+        padding: 20px 20px;
+    }
+
+    .ceo-quote p {
+        font-size: 16px;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        margin-bottom: 32px;
+    }
+
+    .store-list {
+        gap: 20px;
+    }
+
+    .store-card {
+        flex-direction: row;
+    }
+
+    .store-image-container {
+        width: 140px;
+        min-width: 140px;
+        height: 140px;
+        aspect-ratio: 1;
+        border-right: 2px solid var(--black);
+        border-bottom: none;
+    }
+
+    .store-card-content {
+        padding: 16px;
+    }
+
+    .store-card-title {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+    }
+
+    .store-detail-item {
+        font-size: 13px;
+    }
+
+    .store-detail-item .label-mono {
+        width: 70px;
+        font-size: 10px;
+    }
+
+    .store-map-viewport {
+        height: 350px;
+    }
+}
+
+/* --- Small mobile (≤480px) --- */
+@media (max-width: 480px) {
     .headline {
         font-size: 28px;
-        line-height: 36px;
+        line-height: 1.25;
     }
-    
+
     .story-text p {
-        font-size: 16px;
-        line-height: 24px;
+        font-size: 15px;
     }
-    
-    .value-card {
-        padding: 24px;
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .store-card {
+        flex-direction: column;
+    }
+
+    .store-image-container {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 16 / 9;
+        border-right: none;
+        border-bottom: 2px solid var(--black);
+    }
+
+    .store-map-viewport {
+        height: 300px;
     }
 }

@@ -2,14 +2,15 @@
 $show_breadcrumb = true;
 $breadcrumb_items = [
     ['label' => 'Trang chủ', 'url' => '/'],
-    ['label' => 'Về chúng tôi'],
+    ['label' => 'Giới thiệu'],
 ];
 $show_page_header = true;
+$page_eyebrow = 'VIN EYEWEAR · CÂU CHUYỆN THƯƠNG HIỆU';
+$page_title = 'Giới thiệu';
+$page_subtitle = 'Khám phá hành trình của Vin Eyewear từ một cửa hàng nhỏ đến thương hiệu kính mắt uy tín, với cam kết mang lại tầm sáng và sự tự tin cho mọi người Việt Nam.';
 $show_cta = false;
 $show_pusher = true;
 ?>
-
-<link rel="stylesheet" href="/assets/css/about.css">
 
 <section class="about-section">
     <div class="container">
@@ -20,7 +21,10 @@ $show_pusher = true;
                 <h2 class="headline">Từ Đam Mê Đến Đỉnh Cao</h2>
                 <div class="story-text">
                     <p>Vin Eyewear bắt đầu từ một giấc mơ đơn giản của CEO Công Mạnh - mang lại tầm sáng và sự tự tin cho mọi người Việt Nam qua những chiếc kính mắt chất lượng. Với niềm đam mê bất tận về nghệ thuật chế tác kính và tầm nhìn xa về công nghệ, Công Mạnh đã xây dựng Vin Eyewear không chỉ là một cửa hàng bán kính, mà là một hành trình khám phá vẻ đẹp cá nhân.</p>
-                    <p>"Mỗi chiếc kính không chỉ là một công cụ hỗ trợ thị lực, mà là một tuyên ngôn về phong cách và cá tính của người đeo. Tôi muốn Vin Eyewear trở thành nơi mọi người tìm thấy chính mình qua những lăng kính tinh tế nhất."</p>
+                    <blockquote class="ceo-quote">
+                        <p>"Mỗi chiếc kính không chỉ là một công cụ hỗ trợ thị lực, mà là một tuyên ngôn về phong cách và cá tính của người đeo. Tôi muốn Vin Eyewear trở thành nơi mọi người tìm thấy chính mình qua những lăng kính tinh tế nhất."</p>
+                        <footer class="ceo-quote-footer">— Công Mạnh, CEO &amp; Founder</footer>
+                    </blockquote>
                     <p>Từ một cửa hàng nhỏ tại Long Biên, Vin Eyewear đã phát triển mạnh mẽ nhờ sự tin yêu của khách hàng và cam kết không ngừng cải tiến. Chúng tôi tiên phong ứng dụng công nghệ AR và AI vào trải nghiệm mua sắm, giúp khách hàng thử kính trực tuyến và nhận tư vấn cá nhân hóa mọi lúc, mọi nơi.</p>
                 </div>
             </div>
@@ -29,85 +33,88 @@ $show_pusher = true;
             </div>
         </div>
 
-        <!-- Mission Section -->
-        <div class="mission-section">
-            <div class="mission-content">
-                <span class="subheading-caps">SỨ MỆNH & TẦM NHÌN</span>
-                <h2 class="headline">Nhìn Rõ Hơn - Sống Tự Tin Hơn</h2>
-                <p>Vin Eyewear cam kết mang đến trải nghiệm mua sắm kính mắt đột phá thông qua công nghệ tiên tiến, dịch vụ tận tâm và sản phẩm chất lượng cao. Chúng tôi tin rằng mỗi người đều xứng đáng có một chiếc kính hoàn hảo phản ánh vẻ đẹp riêng.</p>
-            </div>
-        </div>
+        <!-- Locations Section (styled like contact page store locator) -->
+        <div class="about-store-locator">
+            <h2 class="section-title reveal">Hệ thống cửa hàng</h2>
+            <div class="store-locator-wrapper reveal">
+                <!-- Left: Store Cards List -->
+                <div class="store-list">
+                    <div class="store-card active" data-store-id="long-bien" role="button" tabindex="0">
+                        <div class="store-image-container">
+                            <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&h=340&fit=crop" alt="Vin Eyewear - Long Biên" class="store-img">
+                            <span class="store-badge">CỬA HÀNG CHÍNH</span>
+                        </div>
+                        <div class="store-card-content">
+                            <h3 class="store-card-title">Vin Eyewear - Long Biên</h3>
+                            <div class="store-details">
+                                <p class="store-detail-item">
+                                    <span class="label-mono">ĐỊA CHỈ:</span>
+                                    <span class="detail-value">261 Ngọc Lâm, P. Bồ Đề, Q. Long Biên, TP. Hà Nội (ngã tư Hồng Tiến)</span>
+                                </p>
+                                <p class="store-detail-item">
+                                    <span class="label-mono">HOTLINE:</span>
+                                    <span class="detail-value">
+                                        <a href="tel:0912345678" class="store-phone-link">0912 345 678</a>
+                                    </span>
+                                </p>
+                                <p class="store-detail-item">
+                                    <span class="label-mono">GIỜ MỞ CỬA:</span>
+                                    <span class="detail-value">Thứ 2 - Chủ nhật: 08:30 - 21:30</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="store-card" data-store-id="tay-ho" role="button" tabindex="0">
+                        <div class="store-image-container">
+                            <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&h=340&fit=crop" alt="Vin Eyewear - Tây Hồ" class="store-img">
+                            <span class="store-badge">MỚI KHAI TRƯƠNG</span>
+                        </div>
+                        <div class="store-card-content">
+                            <h3 class="store-card-title">Vin Eyewear - Tây Hồ - Thụy Khuê</h3>
+                            <div class="store-details">
+                                <p class="store-detail-item">
+                                    <span class="label-mono">ĐỊA CHỈ:</span>
+                                    <span class="detail-value">46 Hoàng Hoa Thám, P. Thụy Khuê, Q. Tây Hồ, TP. Hà Nội</span>
+                                </p>
+                                <p class="store-detail-item">
+                                    <span class="label-mono">HOTLINE:</span>
+                                    <span class="detail-value">
+                                        <a href="tel:0987654321" class="store-phone-link">0987 654 321</a>
+                                    </span>
+                                </p>
+                                <p class="store-detail-item">
+                                    <span class="label-mono">GIỜ MỞ CỬA:</span>
+                                    <span class="detail-value">Thứ 2 - Chủ nhật: 08:30 - 22:00</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Values Grid -->
-        <div class="values-section">
-            <span class="subheading-caps">GIÁ TRỊ CỐT LÕI</span>
-            <h2 class="headline">Những Điều Chúng Tôi Tin</h2>
-            <div class="values-grid">
-                <div class="value-card">
-                    <div class="value-icon">✦</div>
-                    <h3>CHẤT LƯỢNG ĐẦU TIÊN</h3>
-                    <p>Mỗi sản phẩm đều được chọn lọc kỹ lưỡng từ các thương hiệu uy tín, đảm bảo nguồn gốc rõ ràng và kiểm định chất lượng nghiêm ngặt.</p>
-                </div>
-                <div class="value-card">
-                    <div class="value-icon">⚡</div>
-                    <h3>CÔNG NGHỆ TIÊN PHONG</h3>
-                    <p>Ứng dụng AI và AR để mang lại trải nghiệm thử kính ảo đột phá, giúp khách hàng tìm được chiếc kính phù hợp nhất.</p>
-                </div>
-                <div class="value-card">
-                    <div class="value-icon">♥</div>
-                    <h3>DỊCH VỤ TẬN TÂM</h3>
-                    <p>Đội ngũ tư vấn chuyên nghiệp, chính sách bảo hành minh bạch và hỗ trợ khách hàng mọi lúc, mọi nơi.</p>
-                </div>
-                <div class="value-card">
-                    <div class="value-icon">∞</div>
-                    <h3>ĐỔI MỚI KHÔNG NGỪNG</h3>
-                    <p>Luôn cập nhật xu hướng mới nhất, cải tiến dịch vụ và mở rộng danh mục sản phẩm để phục vụ khách hàng tốt hơn.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Locations Section -->
-        <div class="locations-section">
-            <span class="subheading-caps">HỆ THỐNG CỬA HÀNG</span>
-            <h2 class="headline">Ghé Thăm Chúng Tôi</h2>
-            <div class="locations-grid">
-                <div class="location-card primary">
-                    <div class="location-badge">CỬA HÀNG CHÍNH</div>
-                    <h3>Long Biên</h3>
-                    <div class="location-address">
-                        <p>261 Ngọc Lâm, P. Bồ Đề</p>
-                        <p>TP. Hà Nội (ngã tư Hồng Tiến)</p>
-                        <p>Hanoi, Vietnam, 100000</p>
+                <!-- Right: Interactive Google Map Frame -->
+                <div class="store-map-viewport">
+                    <div id="map-long-bien" class="map-container active">
+                        <iframe 
+                            src="https://maps.google.com/maps?q=261%20Ng%E1%BB%8Dc%20L%C3%A2m,%20B%E1%BB%93%20%C4%90%E1%BB%81,%20Long%20Bi%C3%AAn,%20H%C3%A0%20N%E1%BB%99i&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                            width="100%" 
+                            height="100%" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
                     </div>
-                    <div class="location-hours">
-                        <span class="label-mono">GIỜ MỞ CỬA</span>
-                        <p>Thứ 2 - Chủ Nhật: 8:00 - 21:00</p>
+                    <div id="map-tay-ho" class="map-container">
+                        <iframe 
+                            src="https://maps.google.com/maps?q=46%20Ho%C3%A0ng%20Hoa%20Th%C3%A1m,%20Th%E1%BB%A5y%20Khu%C3%AA,%20T%C3%A2y%20H%E1%BB%93,%20H%C3%A0%20N%E1%BB%99i&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                            width="100%" 
+                            height="100%" 
+                            style="border:0;" 
+                            allowfullscreen="" 
+                            loading="lazy" 
+                            referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
                     </div>
-                </div>
-                <div class="location-card">
-                    <div class="location-badge">MỚI MỞ</div>
-                    <h3>Tây Hồ</h3>
-                    <div class="location-address">
-                        <p>46 Hoàng Hoa Thám</p>
-                        <p>Phường Thụy Khuê, Quận Tây Hồ</p>
-                        <p>Hanoi, Vietnam, 10000</p>
-                    </div>
-                    <div class="location-hours">
-                        <span class="label-mono">GIỜ MỞ CỬA</span>
-                        <p>Thứ 2 - Chủ Nhật: 9:00 - 20:00</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CTA Section -->
-        <div class="cta-section">
-            <div class="cta-content">
-                <h2 class="headline">Sẵn Sàng Khám Phá?</h2>
-                <p>Hãy để chúng tôi giúp bạn tìm thấy chiếc kính hoàn hảo phản ánh cá tính của bạn.</p>
-                <div class="cta-buttons">
-                    <a href="/product" class="btn btn-primary">XEM SẢN PHẨM</a>
-                    <a href="/contact" class="btn btn-secondary">LIÊN HỆ TƯ VẤN</a>
                 </div>
             </div>
         </div>
