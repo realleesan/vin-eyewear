@@ -163,8 +163,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Open modal when clicking on event images (if not on detail page)
         eventImages.forEach(img => {
             img.addEventListener('click', function() {
-                // Don't open modal on detail page - use navigation instead
                 if (document.querySelector('.event-detail-section')) {
+                    return;
+                }
+                
+                if (img.closest('.event-card')) {
                     return;
                 }
                 

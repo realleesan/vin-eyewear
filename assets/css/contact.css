@@ -16,6 +16,9 @@
     margin-bottom: var(--space-10);
     color: var(--black);
     position: relative;
+    text-align: center; 
+    display:s flex;
+    justify-content: center;
 }
 
 /* --- Interactive Store Locator --- */
