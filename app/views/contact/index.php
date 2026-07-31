@@ -97,11 +97,11 @@ $show_pusher = true;
                     <div class="direct-contact-channels">
                         <div class="channel-card">
                             <span class="channel-label label-mono">EMAIL HỖ TRỢ</span>
-                            <span class="channel-value">support@vineyewear.com</span>
+                            <span class="channel-value"><a href="mailto:support@vineyewear.com" style="color: inherit; text-decoration: none;">support@vineyewear.com</a></span>
                         </div>
                         <div class="channel-card">
                             <span class="channel-label label-mono">HOTLINE TOÀN QUỐC</span>
-                            <span class="channel-value">1800 6789</span>
+                            <span class="channel-value"><a href="tel:18006789" style="color: inherit; text-decoration: none;">1800 6789</a></span>
                         </div>
                     </div>
                 </div>
@@ -119,8 +119,8 @@ $show_pusher = true;
                             </div>
                         </div>
                         <div class="form-group">
-                            <label for="phone" class="label-mono">SỐ ĐIỆN THOẠI</label>
-                            <input type="tel" id="phone" name="phone" placeholder="Số điện thoại liên hệ">
+                            <label for="phone" class="label-mono">SỐ ĐIỆN THOẠI <span class="required">*</span></label>
+                            <input type="tel" id="phone" name="phone" required placeholder="Số điện thoại liên hệ">
                         </div>
                         <div class="form-group">
                             <label for="message" class="label-mono">NỘI DUNG YÊU CẦU <span class="required">*</span></label>
