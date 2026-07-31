@@ -37,6 +37,7 @@
 .store-card {
     background: var(--white);
     border: 2px solid var(--black); /* Bold borders matching design system */
+    box-shadow: 8px 8px 0px var(--black);
     border-radius: 0 !important;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -53,7 +54,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 0;
+    width: 6px;
     background: var(--yellow);
     color: var(--on-brand);
     transition: width 0.15s ease;
@@ -61,17 +62,18 @@
 
 .store-card:hover {
     transform: translateY(-2px);
-    box-shadow: 6px 6px 0px var(--black);
 }
 
-.store-card.active {
+/* .store-card.active,
+.store-card:hover {
     border-width: 2px;
     box-shadow: 8px 8px 0px var(--black);
-}
+} */
 
-.store-card.active::before {
-    width: 6px;
-}
+/* .store-card.active::before,
+.store-card:hover::before {
+    width: 6px; 
+} */
 
 /* Store Card Media */
 .store-image-container {
@@ -169,7 +171,7 @@
     border: 2px solid var(--black);
     border-radius: 0 !important;
     background: var(--gray);
-    height: 600px;
+    height: calc(100vh - 140px);
     position: sticky;
     top: 98px; /* Sticky layout relative to header height + margin */
     z-index: 10;

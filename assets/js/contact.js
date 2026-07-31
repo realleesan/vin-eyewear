@@ -98,12 +98,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 3. Validate Số điện thoại (Bắt buộc & Chuẩn VN)
             var phoneVal = phoneInput.value.trim();
-            var phoneRegex = /^0\d{9}$/;
+            var phoneRegex = /^(0|\+84)\d{9}$/;
             if (!phoneVal) {
                 showError(phoneInput, 'Vui lòng nhập số điện thoại liên hệ.');
                 isValid = false;
             } else if (!phoneRegex.test(phoneVal)) {
-                showError(phoneInput, 'Số điện thoại Việt Nam phải có đúng 10 số và bắt đầu bằng số 0.');
+                showError(phoneInput, 'Số điện thoại Việt Nam phải có đúng 10 số và bắt đầu bằng số 0 hoặc +84.');
                 isValid = false;
             }
 
