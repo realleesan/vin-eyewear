@@ -17,7 +17,7 @@
     color: var(--black);
     position: relative;
     text-align: center; 
-    display:s flex;
+    display: flex;
     justify-content: center;
 }
 
