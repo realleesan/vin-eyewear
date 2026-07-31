@@ -179,9 +179,23 @@
     line-height: 1;
 }
 
+/* LỖI CŨ (ca thứ tư của cùng một kiểu): nền đổi sang var(--white) =
+   #f3e7d5 nhưng color vẫn là var(--on-brand) cũng #f3e7d5 -> dấu ×
+   biến mất hoàn toàn, 1.00:1. Đây lại đúng là nút để THOÁT khỏi modal
+   ảnh toàn màn hình, nên người dùng mất luôn lối ra nhìn thấy được.
+   Nay theo quy tắc 1: nút đặc thì hover đậm thêm, chữ giữ nguyên. */
 .image-modal .modal-close:hover {
-    background-color: var(--white);
+    background-color: var(--brand-hover);
     transform: rotate(90deg);
+}
+
+.image-modal .modal-close:active {
+    background-color: var(--brand-active);
+}
+
+.image-modal .modal-close:focus-visible {
+    outline: 2px solid var(--on-ink);
+    outline-offset: 3px;
 }
 
 .image-modal .modal-content {
@@ -402,41 +416,14 @@
     color: var(--yellow);
 }
 
-.btn {
-    font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
-    font-weight: 700;
-    line-height: 20px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: var(--space-5) var(--space-12);
-    border: 1px solid var(--black);
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: all 0.3s ease;
-    border-radius: 0;
-}
-
-.btn-primary {
-    background-color: var(--yellow);
-    color: var(--on-brand);
-}
-
-.btn-primary:hover {
-    background-color: var(--black);
-    color: var(--brand-light);
-}
-
-.btn-secondary {
-    background-color: transparent;
-    color: var(--black);
-}
-
-.btn-secondary:hover {
-    background-color: var(--black);
-    color: var(--brand-light);
-}
+/* ĐÃ GỠ: .btn / .btn-primary / .btn-secondary
+   Ba lớp này khai lại nguyên si tên của bộ nút chung trong layout.css
+   nhưng với padding, letter-spacing và hover khác hẳn — thành nguồn sự
+   thật thứ ba cho cùng một cái tên. Mà cả hai view của module event
+   (event/index.php, event/detail.php) không dùng lớp `btn` nào cả, nên
+   khối này chưa từng hiện lên màn hình.
+   Cần nút trong trang event thì dùng thẳng .btn + .btn-primary /
+   .btn-outline / .btn-dark của layout.css. */
 
 /* Responsive Design */
 @media (max-width: 1100px) {

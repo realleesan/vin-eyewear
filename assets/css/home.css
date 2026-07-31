@@ -32,21 +32,49 @@
     text-align: center;
     white-space: nowrap;
     border: none;
-    transition: opacity 0.15s ease;
+    cursor: pointer;
+    transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .btn-yellow {
-    background: var(--yellow);
+    background: var(--brand);
     color: var(--on-brand);
 }
 
 .btn-black {
-    background: var(--black);
-    color: var(--white);
+    background: var(--ink);
+    color: var(--on-ink);
 }
 
-.btn-yellow:hover,
-.btn-black:hover { opacity: 0.85; }
+/* Hover theo quy tắc chung ở layout.css: nút đặc thì ĐẬM THÊM một
+   nấc, giữ nguyên màu chữ.
+
+   Trước đây cả hai nút dùng chung `opacity: 0.85`. opacity làm mờ CẢ
+   nút lẫn chữ và để nền beige của trang lọt qua, nên .btn-yellow khi
+   rê chuột ra #823d44 — hồng nâu, không còn là màu thương hiệu — và
+   tương phản chữ tụt từ 9.09:1 xuống 6.37:1. Tức là hover đang làm
+   nút MỜ ĐI thay vì nổi lên. */
+.btn-yellow:hover {
+    background: var(--brand-hover);
+}
+
+.btn-yellow:active {
+    background: var(--brand-active);
+}
+
+.btn-black:hover {
+    background: var(--ink-hover);
+}
+
+.btn-black:active {
+    background: var(--ink-active);
+}
+
+.btn-yellow:focus-visible,
+.btn-black:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+}
 
 /* ============================================
    HEADING / DESC dùng chung
@@ -846,10 +874,23 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    transition: opacity 0.15s ease;
+    transition: color 0.15s ease;
 }
 
-.tints__rows a:hover { opacity: 0.6; }
+/* Trước là `opacity: 0.6`: chữ --ink trên nền beige nhạt thành #776c66,
+   tương phản tụt 13.88 -> 4.17:1, tức là RỚT chuẩn AA đúng vào lúc
+   người dùng đang trỏ vào link. Đổi sang màu brand + gạch chân: vẫn
+   9.09:1 và có thêm tín hiệu không phụ thuộc màu sắc. */
+.tints__rows a:hover {
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.tints__rows a:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+}
 
 .tints .arrow {
     font-size: var(--fs-body);

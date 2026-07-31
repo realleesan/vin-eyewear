@@ -306,32 +306,57 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: var(--space-4) var(--space-8);
-    border: 1px solid var(--black);
     cursor: pointer;
     text-decoration: none;
     display: inline-block;
-    transition: all 0.3s ease;
+    /* `all` cũ kéo theo cả outline nên vòng focus bị mờ dần khi tab */
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
     border-radius: 0;
 }
 
-.btn-primary {
-    background-color: var(--yellow);
-    color: var(--on-brand);
+/* Hai nút này nằm trong .cta-section (nền --ink), nên dùng bộ
+   "trên nền tối" của layout.css: hover SÁNG LÊN thay vì đậm thêm.
+   Xem ghi chú --brand-lift ở layout.css.
+
+   Viền cũ là `1px solid var(--black)` — trên nền --black nên vô hình;
+   nay .btn-on-dark / .btn-ghost-on-dark cấp viền kem để nút tách khỏi
+   nền (1.53:1 -> 13.88:1). */
+.cta-section {
+    --focus-ring: var(--on-ink);
 }
 
+.btn-primary {
+    background-color: var(--brand);
+    color: var(--on-brand);
+    border: 1.5px solid var(--on-ink);
+}
+
+/* LỖI CŨ: hover chỉ đổi nền sang var(--white) (= #f3e7d5) mà KHÔNG
+   đổi màu chữ, trong khi chữ đang là --on-brand cũng #f3e7d5. Kết quả
+   là chữ kem trên nền kem — tương phản 1.00:1, nút trắng trơn không
+   đọc được chữ suốt thời gian rê chuột. */
 .btn-primary:hover {
-    background-color: var(--white);
+    background-color: var(--brand-lift);
+}
+
+.btn-primary:active {
+    background-color: var(--brand);
 }
 
 .btn-secondary {
     background-color: transparent;
-    color: var(--white);
-    border-color: var(--white);
+    color: var(--on-ink);
+    border: 1.5px solid var(--on-ink);
 }
 
 .btn-secondary:hover {
-    background-color: var(--white);
-    color: var(--black);
+    background-color: var(--on-ink);
+    color: var(--ink);
+}
+
+.btn-secondary:active {
+    background-color: var(--surface-sunken);
+    color: var(--ink);
 }
 
 /* Responsive Design */

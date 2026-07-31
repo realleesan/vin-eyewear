@@ -24,7 +24,9 @@
    ============================================ */
 
 /* --- Reset & Base --- */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -47,13 +49,18 @@
        --on-* tương ứng. Các tên cũ (--yellow, --black, --white...) đã
        thành bí danh trỏ vào đây nên 342 chỗ đang dùng tự ăn theo.
        ============================================================ */
-    --brand:             #6e1f2a;   /* màu chính */
-    --brand-strong:      #571620;   /* bản đậm hơn — hover/nhấn trên nền sáng */
-    --brand-light:       #c9808c;   /* bản nhạt — điểm nhấn/hover TRÊN NỀN TỐI.
+    --brand: #6e1f2a;
+    /* màu chính */
+    --brand-strong: #571620;
+    /* bản đậm hơn — hover/nhấn trên nền sáng */
+    --brand-light: #c9808c;
+    /* bản nhạt — điểm nhấn/hover TRÊN NỀN TỐI.
                                        Bắt buộc phải có: --brand đặt trên --ink
                                        chỉ đạt 1.5:1 nên hover sẽ mất hút. */
-    --on-brand:          #f3e7d5;   /* chữ đặt TRÊN --brand */
-    --on-brand-muted:    rgba(243, 231, 213, 0.72);  /* chữ phụ trên --brand */
+    --on-brand: #f3e7d5;
+    /* chữ đặt TRÊN --brand */
+    --on-brand-muted: rgba(243, 231, 213, 0.72);
+    /* chữ phụ trên --brand */
     /* ┌─ BEIGE #f3e7d5 ─────────────────────────────────────────────
        │ Đây là màu nền của MỌI trang. Trước đây chỉ trang chủ có màu
        │ này: home.css phủ .main-content bằng --surface-raised, còn các
@@ -66,40 +73,115 @@
        │ Muốn thẻ nổi hẳn lên thì chỉ cần đổi --surface-raised sang tông
        │ sáng hơn (ví dụ #fbf6ed), không phải sửa chỗ nào khác.
        └──────────────────────────────────────────────────────────────── */
-    --surface:           #f3e7d5;   /* nền trang — BEIGE */
-    --surface-raised:    #f3e7d5;   /* thẻ, khối nổi, giấy (xem ghi chú trên) */
-    --surface-sunken:    #ddd2be;   /* khối chìm nhẹ so với nền beige */
-    --ink:               #241a1c;   /* chữ chính + nền khối tối */
-    --on-ink:            #f3e7d5;   /* chữ đặt TRÊN --ink */
-    --muted:             #574548;   /* chữ phụ trên nền sáng */
-    --line:              #8a8178;   /* đường kẻ, viền */
+    --surface: #f3e7d5;
+    /* nền trang — BEIGE */
+    --surface-raised: #f3e7d5;
+    /* thẻ, khối nổi, giấy (xem ghi chú trên) */
+    --surface-sunken: #ddd2be;
+    /* khối chìm nhẹ so với nền beige */
+    --ink: #241a1c;
+    /* chữ chính + nền khối tối */
+    --on-ink: #f3e7d5;
+    /* chữ đặt TRÊN --ink */
+    --muted: #574548;
+    /* chữ phụ trên nền sáng */
+    --line: #8a8178;
+    /* đường kẻ, viền */
 
     /* --- Bí danh tên cũ -> vai trò mới. Giữ để không phải sửa 342 chỗ
        đang dùng; code mới nên dùng thẳng tên vai trò ở trên. --- */
-    --yellow:            var(--brand);
-    --black:             var(--ink);
-    --white:             var(--surface-raised);
-    --warm-bg:           var(--surface);
-    --gray:              var(--surface-sunken);
-    --on-surface:        var(--ink);
-    --on-surface-variant:var(--muted);
-    --outline:           var(--muted);  /* vai trò thật là CHỮ PHỤ, không phải đường kẻ */
+    --yellow: var(--brand);
+    --black: var(--ink);
+    --white: var(--surface-raised);
+    --warm-bg: var(--surface);
+    --gray: var(--surface-sunken);
+    --on-surface: var(--ink);
+    --on-surface-variant: var(--muted);
+    --outline: var(--muted);
+    /* vai trò thật là CHỮ PHỤ, không phải đường kẻ */
     /* Được dùng 4 lần trong home.css nhưng TRƯỚC ĐÂY KHÔNG HỀ ĐƯỢC
        ĐỊNH NGHĨA ở đâu (comment home.css:15 nói nhầm là có trong file
        này) -> 4 khung ảnh đó rơi về nền trong suốt. Khai ở đây. */
-    --frame-bg:          var(--surface-sunken);
+    --frame-bg: var(--surface-sunken);
 
     /* Màu trạng thái — trước rải rác dạng hex trong contact.css / ar.tryon.css */
-    --danger:            #a3232c;   /* viền + chữ báo lỗi form */
-    --danger-bright:     #e0555f;   /* chấm trạng thái & icon lỗi trang AR */
-    --success:           #4ade80;   /* chấm trạng thái camera đang chạy */
-    --surface-focus:     #fdf6ea;   /* nền ô nhập khi focus */
-    --surface-dark-1:    #241a1c;   /* 2 điểm dừng của nền tối trang AR */
-    --surface-dark-2:    #3b2b2e;
+    --danger: #a3232c;
+    /* viền + chữ báo lỗi form */
+    --danger-bright: #e0555f;
+    /* chấm trạng thái & icon lỗi trang AR */
+    --success: #4ade80;
+    /* chấm trạng thái camera đang chạy */
+    --surface-focus: #fdf6ea;
+    /* nền ô nhập khi focus */
+    --surface-dark-1: #241a1c;
+    /* 2 điểm dừng của nền tối trang AR */
+    --surface-dark-2: #3b2b2e;
+
+    /* ============================================================
+       ⬛ TẦNG TƯƠNG TÁC — hover / active / focus cho MỌI nút
+
+       Trước đây mỗi file tự chế một kiểu hover: 6 định nghĩa
+       .btn-primary:hover khác nhau, 3 chỗ dùng opacity, và 2 chỗ đổi
+       nền sang màu kem mà QUÊN đổi màu chữ -> chữ kem trên nền kem,
+       tương phản 1.00:1, nút trống trơn khi rê chuột.
+
+       HAI QUY TẮC, không có ngoại lệ:
+
+       1. Nút ĐẶC (có nền màu) -> hover ĐẬM THÊM một nấc, GIỮ NGUYÊN
+          màu chữ. Không đổi tông, không đổi độ mờ. Người dùng thấy nút
+          "lún xuống" chứ không thấy nó biến thành một nút khác.
+
+       2. Nút VIỀN (nền trong suốt) -> hover ĐỔ ĐẦY bằng chính màu chữ,
+          rồi đảo chữ sang màu nền. Đây là chỗ DUY NHẤT được phép đảo
+          màu, vì nút viền vốn không có nền để mà làm đậm.
+
+       ĐỪNG dùng opacity làm hover: nó làm mờ CẢ nút lẫn chữ và để lộ
+       nền trang xuyên qua. --brand ở 85% trên nền beige ra #823d44
+       (hồng nâu) và tương phản chữ tụt 9.09 -> 6.37. Hover phải làm
+       nút NỔI HƠN, không phải nhạt đi.
+       ============================================================ */
+    --brand-hover: var(--brand-strong);
+    /* nền brand khi rê chuột */
+    --brand-active: #411018;
+    /* brand khi ĐANG nhấn — đậm hơn nữa, 13.11:1 */
+    /* --ink đã gần đen, không đậm thêm được nữa. Nút nền tối vì vậy
+       hover sang thẳng --brand: vừa là phản hồi rõ ràng, vừa để màu
+       thương hiệu xuất hiện đúng lúc người dùng chạm vào. 9.09:1 AAA. */
+    --ink-hover: var(--brand);
+    --ink-active: var(--brand-strong);
+
+    /* Nút brand đặt TRÊN NỀN TỐI (.cta-section, khối CTA, trang AR) là
+       một ca riêng, phải xử lý ngược lại:
+
+       · Làm đậm khi hover là SAI hướng — nền đã tối sẵn, nút đậm thêm
+         thì chìm vào nền. Nên ở đó hover phải SÁNG LÊN.
+       · Bản thân nút cũng đang chìm: --brand trên --ink chỉ tách nhau
+         1.53:1, dưới xa ngưỡng 3:1 cho thành phần giao diện. Người
+         dùng thực chất chỉ nhìn thấy CHỮ chứ không thấy hình nút.
+         Cách chữa rẻ nhất mà vẫn giữ được màu thương hiệu: viền kem
+         (--on-ink) quanh nút -> viền tách 13.88:1, nền trong vẫn là
+         burgundy. Xem .btn-on-dark bên dưới. */
+    --brand-lift: #8a2836;
+    /* brand sáng 1 nấc — chỉ dùng hover TRÊN NỀN TỐI. Chữ 7.06:1 */
+
+    /* Vệt sáng loang trên các dải nền tối. Trước khi đổi thương hiệu
+       sang burgundy, site dùng Heritage Yellow #FFCC00 và vệt sáng này
+       là rgba(255,204,0,...) gõ thẳng vào cta.css / ar.tryon.css —
+       đổi màu xong hai chỗ đó vẫn ánh vàng, lạc hẳn khỏi tông mới.
+       Kéo về đây để lần sau đổi tông là đi theo. */
+    --glow-warm: rgba(201, 128, 140, 0.16);
+    /* = --brand-light pha loãng */
+    /* Nền hover cho THẺ/KHỐI trên nền sáng (không phải nút) */
+    --surface-hover: var(--surface-sunken);
+
+    /* Vòng focus bàn phím. Mặc định tối vì phần lớn nút nằm trên nền
+       sáng. Khối nào nền tối thì khai lại --focus-ring: var(--on-ink)
+       trong chính khối đó — mọi nút bên trong tự ăn theo. */
+    --focus-ring: var(--ink);
 
     --font-serif: 'Libre Caslon Text', serif;
-    --font-sans:  'Hanken Grotesk', sans-serif;
-    --font-mono:  'JetBrains Mono', monospace;
+    --font-sans: 'Hanken Grotesk', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
 
     /* ============================================================
        THANG CHỮ — nguồn duy nhất cho mọi font-size của site.
@@ -120,24 +202,35 @@
        ============================================================ */
 
     /* Tầng giao diện — cố định */
-    --fs-micro:    10px;   /* badge, meta nhỏ nhất */
-    --fs-label:    11px;   /* nhãn IN HOA — cỡ dùng nhiều nhất site */
-    --fs-caption:  12px;
-    --fs-note:     13px;
-    --fs-body-sm:  14px;
-    --fs-body:     15px;
-    --fs-body-lg:  16px;
+    --fs-micro: 10px;
+    /* badge, meta nhỏ nhất */
+    --fs-label: 11px;
+    /* nhãn IN HOA — cỡ dùng nhiều nhất site */
+    --fs-caption: 12px;
+    --fs-note: 13px;
+    --fs-body-sm: 14px;
+    --fs-body: 15px;
+    --fs-body-lg: 16px;
 
     /* Tầng tiêu đề — co giãn (giá trị ghi chú là cỡ ở 600px → 1440px) */
-    --fs-lead:     clamp(15px, calc(14.6px + 0.24vw), 18px);   /* 16 → 18 */
-    --fs-subhead:  clamp(17px, calc(15.1px + 0.48vw), 22px);   /* 18 → 22 */
-    --fs-h6:       clamp(19px, calc(16.4px + 0.60vw), 25px);   /* 20 → 25 */
-    --fs-h5:       clamp(20px, calc(17.7px + 0.71vw), 28px);   /* 22 → 28 */
-    --fs-h4:       clamp(22px, calc(18.3px + 0.95vw), 32px);   /* 24 → 32 */
-    --fs-h3:       clamp(24px, calc(18.9px + 1.19vw), 36px);   /* 26 → 36 */
-    --fs-h2:       clamp(26px, calc(18.0px + 1.67vw), 42px);   /* 28 → 42 */
-    --fs-h1:       clamp(28px, calc(17.1px + 2.14vw), 48px);   /* 30 → 48 */
-    --fs-display:  clamp(62px, calc(24.0px + 6.67vw), 120px);  /* 64 → 120 */
+    --fs-lead: clamp(15px, calc(14.6px + 0.24vw), 18px);
+    /* 16 → 18 */
+    --fs-subhead: clamp(17px, calc(15.1px + 0.48vw), 22px);
+    /* 18 → 22 */
+    --fs-h6: clamp(19px, calc(16.4px + 0.60vw), 25px);
+    /* 20 → 25 */
+    --fs-h5: clamp(20px, calc(17.7px + 0.71vw), 28px);
+    /* 22 → 28 */
+    --fs-h4: clamp(22px, calc(18.3px + 0.95vw), 32px);
+    /* 24 → 32 */
+    --fs-h3: clamp(24px, calc(18.9px + 1.19vw), 36px);
+    /* 26 → 36 */
+    --fs-h2: clamp(26px, calc(18.0px + 1.67vw), 42px);
+    /* 28 → 42 */
+    --fs-h1: clamp(28px, calc(17.1px + 2.14vw), 48px);
+    /* 30 → 48 */
+    --fs-display: clamp(62px, calc(24.0px + 6.67vw), 120px);
+    /* 64 → 120 */
 
     /* ============================================================
        THANG KHOẢNG CÁCH — lưới 4px, dùng cho padding/margin/gap.
@@ -146,31 +239,31 @@
        (1, 2, 3, 5, 7, 18, 22, 84…) là tinh chỉnh riêng của từng chỗ,
        cố ý để nguyên px chứ không ép vào thang.
        ============================================================ */
-    --space-1:   4px;
-    --space-2:   8px;
-    --space-3:   12px;
-    --space-4:   16px;
-    --space-5:   20px;
-    --space-6:   24px;
-    --space-8:   32px;
-    --space-10:  40px;
-    --space-12:  48px;
-    --space-14:  56px;
-    --space-16:  64px;
-    --space-20:  80px;
-    --space-24:  96px;
-    --space-30:  120px;
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-14: 56px;
+    --space-16: 64px;
+    --space-20: 80px;
+    --space-24: 96px;
+    --space-30: 120px;
 
     /* --margin = lề trắng hai bên của MỌI section (47 chỗ dùng nó làm padding
        ngang). Đây là núm chỉnh bề rộng nội dung toàn site: tăng --margin =
        nội dung hẹp lại, khoảng trống hai bên rộng ra. */
-    --margin:      96px;
+    --margin: 96px;
     --section-gap: 120px;
 
     /* Chiều cao dùng chung cho .site-header, chiều cao link nav và offset của
        .filter-sidebar (trước hardcode rời nhau, lệch nhau). Đổi ở đây là cả 3
        nơi đi theo — đừng hardcode lại chiều cao header ở file khác. */
-    --header-h:   76px;
+    --header-h: 76px;
     /* Bằng --margin ở mọi khổ màn: logo, icon thanh thông báo và nội dung
        section cùng nằm trên một mép trái. Trước đây 40px trong khi --margin
        64px nên logo thò ra ngoài mép nội dung 24px. */
@@ -179,20 +272,23 @@
     /* --- Biến kế thừa. Chỉ --border còn được dùng (11 chỗ) nên trỏ vào
        bảng màu; 7 biến còn lại đếm ra 0 lần dùng, giữ làm bí danh cho
        code cũ nếu có, không còn là màu độc lập nữa. --- */
-    --border:      var(--line);
-    --primary:     var(--brand);
-    --accent:      var(--brand);
+    --border: var(--line);
+    --primary: var(--brand);
+    --accent: var(--brand);
     --accent-dark: var(--brand-strong);
-    --text:        var(--ink);
-    --text-light:  var(--muted);
-    --bg:          var(--surface);
-    --bg-light:    var(--surface-raised);
-    --container:   1200px;   /* nay chỉ còn ar.tryon.css dùng */
-    --radius:      8px;
-    --transition:  0.3s ease;
+    --text: var(--ink);
+    --text-light: var(--muted);
+    --bg: var(--surface);
+    --bg-light: var(--surface-raised);
+    --container: 1200px;
+    /* nay chỉ còn ar.tryon.css dùng */
+    --radius: 8px;
+    --transition: 0.3s ease;
 }
 
-html { scroll-behavior: smooth; }
+html {
+    scroll-behavior: smooth;
+}
 
 body {
     font-family: var(--font-sans);
@@ -202,12 +298,25 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-a { text-decoration: none; color: inherit; }
-ul { list-style: none; }
-img { display: block; max-width: 100%; }
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+}
 
 /* Form reset — mọi control sharp 0px, kế thừa font (design system) */
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
     font: inherit;
     color: inherit;
     border-radius: 0;
@@ -257,7 +366,9 @@ button, input, select, textarea {
     fill: currentColor;
 }
 
-.announcement-ico:hover { color: var(--brand-light); }
+.announcement-ico:hover {
+    color: var(--brand-light);
+}
 
 /* --- VÙNG PHẢI: giỏ/tìm/tài khoản --- */
 .announcement-actions {
@@ -273,7 +384,9 @@ button, input, select, textarea {
     transition: color 0.2s ease;
 }
 
-.announcement-action:hover { color: var(--brand-light); }
+.announcement-action:hover {
+    color: var(--brand-light);
+}
 
 .announcement-action__ico {
     position: relative;
@@ -383,10 +496,25 @@ button, input, select, textarea {
     letter-spacing: 0.08em;
     white-space: nowrap;
     border-radius: 0;
-    transition: opacity 0.15s;
+    transition: background-color 0.18s ease, color 0.18s ease;
 }
 
-.header-cta:hover { opacity: 0.8; }
+/* NGOẠI LỆ CÓ CHỦ Ý của quy tắc "nút đặc thì hover đậm thêm".
+   Nút này nền --ink nhưng lại nằm TRÊN header màu --brand, nên không
+   thể dùng --ink-hover (= --brand) như các nút tối khác: nút sẽ tan
+   vào nền header. Ở đây đảo hẳn sang kem — đây là hành động chính
+   của header nên càng bật lên càng tốt. Chữ 13.88:1 AAA.
+   (Trước đây là opacity 0.8: làm mờ cả nút lẫn chữ và để lộ màu
+   header xuyên qua, ra #331b1f xỉn thay vì một phản hồi rõ ràng.) */
+.header-cta:hover {
+    background: var(--on-ink);
+    color: var(--ink);
+}
+
+.header-cta:active {
+    background: var(--surface-sunken);
+    color: var(--ink);
+}
 
 /* Hamburger — ẩn ở desktop, hiện ở mobile (≤900px) */
 .nav-toggle {
@@ -411,9 +539,17 @@ button, input, select, textarea {
 }
 
 /* Biến thành dấu X khi menu mở */
-.nav-toggle.is-active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.nav-toggle.is-active span:nth-child(2) { opacity: 0; }
-.nav-toggle.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.nav-toggle.is-active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle.is-active span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.is-active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
 
 /* ============================================
    FOOTER — 4 cột (bố cục theo footer.jpeg)
@@ -435,12 +571,12 @@ button, input, select, textarea {
 
 /* min-width:0 để cột co được: mặc định grid item không thu hẹp dưới min-content,
    khiến địa chỉ/email dài đẩy cột ra ngoài viewport. */
-.footer-top > * {
+.footer-top>* {
     min-width: 0;
 }
 
 /* Hairline dọc ngăn 4 cột */
-.footer-top > * + * {
+.footer-top>*+* {
     padding-left: var(--space-10);
     border-left: 1px solid rgba(0, 0, 0, 0.18);
 }
@@ -524,7 +660,14 @@ button, input, select, textarea {
     transition: opacity 0.15s;
 }
 
-.footer-contact__item a:hover { opacity: 0.55; }
+/* Trước là `opacity: 0.55`: chữ kem trên nền brand nhạt thành #b78d88,
+   tương phản tụt 9.09 -> 3.79:1 — rớt chuẩn AA ngay khi rê chuột.
+   Chữ đã là màu sáng nhất của bảng màu nên không "sáng thêm" được;
+   dùng gạch chân làm tín hiệu hover, giữ nguyên 9.09:1. */
+.footer-contact__item a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
 
 /* --- Cột 2 & 3: link --- */
 .footer-col__heading {
@@ -540,7 +683,7 @@ button, input, select, textarea {
 /* Con TRỰC TIẾP: cột 4 cũng là .footer-col nhưng chứa <a> social lồng trong
    .footer-social — nếu chọn `.footer-col a` thì margin/gạch chân của link text
    đè lên ô social (cùng specificity 0,1,1, khó gỡ). */
-.footer-col > a {
+.footer-col>a {
     display: block;
     font-family: var(--font-mono);
     font-size: var(--fs-note);
@@ -549,8 +692,10 @@ button, input, select, textarea {
     transition: opacity 0.15s;
 }
 
-.footer-col > a:hover {
-    opacity: 0.55;
+/* Bỏ `opacity: 0.55` vì lý do như .footer-contact__item a:hover ở trên
+   (9.09 -> 3.79:1). Gạch chân vốn đã có sẵn ở đây rồi nên hover vẫn
+   thấy rõ, chỉ là không còn kèm việc làm mờ chữ. */
+.footer-col>a:hover {
     text-decoration: underline;
     text-underline-offset: 3px;
 }
@@ -582,7 +727,9 @@ button, input, select, textarea {
     font-size: var(--fs-caption);
 }
 
-.footer-news__form input:focus { outline: none; }
+.footer-news__form input:focus {
+    outline: none;
+}
 
 /* Ring focus đặt trên bọc ngoài: người dùng tab vào thấy cả khối sáng lên */
 .footer-news__form:focus-within {
@@ -592,7 +739,9 @@ button, input, select, textarea {
 
 /* Ô nhập có nền --surface-raised (kem) nên placeholder phải là màu TỐI,
    không đi theo chữ kem của nền footer bao ngoài. */
-.footer-news__form input::placeholder { color: rgba(36, 26, 28, 0.45); }
+.footer-news__form input::placeholder {
+    color: rgba(36, 26, 28, 0.45);
+}
 
 .footer-news__form button {
     flex: none;
@@ -617,7 +766,9 @@ button, input, select, textarea {
     transition: stroke 0.2s ease, transform 0.2s ease;
 }
 
-.footer-news__form button:hover { background: var(--white); }
+.footer-news__form button:hover {
+    background: var(--white);
+}
 
 .footer-news__form button:hover svg {
     stroke: var(--black);
@@ -672,6 +823,11 @@ button, input, select, textarea {
 
 /* ============================================
    BUTTONS (dùng chung) — sharp 0px, no shadow
+
+   NGUỒN SỰ THẬT cho mọi nút. about.css và event.css cũng khai
+   .btn/.btn-primary/.btn-secondary riêng — chúng chỉ còn đè phần
+   HÌNH DÁNG (padding, cỡ chữ), phần MÀU + TRẠNG THÁI lấy ở đây.
+   Thêm nút mới thì thêm vào đây, đừng chép lại xuống file trang.
    ============================================ */
 .btn {
     display: inline-block;
@@ -681,29 +837,135 @@ button, input, select, textarea {
     font-weight: 600;
     letter-spacing: 0.04em;
     cursor: pointer;
-    transition: background var(--transition), color var(--transition);
+    /* Chỉ liệt kê thuộc tính thật sự đổi. `all` (dùng ở about/event)
+       kéo theo cả transform/outline nên vòng focus bị mờ dần khi tab. */
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
     border: none;
 }
 
+/* Nút ĐẶC nền brand — quy tắc 1: hover đậm thêm, chữ giữ nguyên */
 .btn-primary {
-    background: var(--yellow);
+    background: var(--brand);
     color: var(--on-brand);
 }
 
 .btn-primary:hover {
-    background: var(--black);
-    color: var(--white);
+    background: var(--brand-hover);
 }
 
+.btn-primary:active {
+    background: var(--brand-active);
+}
+
+/* Nút VIỀN trên nền sáng — quy tắc 2: hover đổ đầy rồi đảo chữ */
 .btn-outline {
     background: transparent;
-    border: 2px solid var(--black);
-    color: var(--black);
+    border: 2px solid var(--ink);
+    color: var(--ink);
 }
 
 .btn-outline:hover {
-    background: var(--black);
-    color: var(--white);
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+.btn-outline:active {
+    background: var(--ink-hover);
+    border-color: var(--ink-hover);
+    color: var(--on-brand);
+}
+
+/* Nút ĐẶC nền tối — hover sang brand (xem ghi chú --ink-hover) */
+.btn-dark {
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+.btn-dark:hover {
+    background: var(--ink-hover);
+}
+
+.btn-dark:active {
+    background: var(--ink-active);
+}
+
+/* ------------------------------------------------------------
+   NÚT TRÊN NỀN TỐI — dùng cho mọi khối nền --ink / nền ảnh tối
+   (.cta-section của about, component .cta, khối CTA trang AR).
+
+   Đặt --focus-ring sáng lên một lần ở khối cha là đủ cho cả cụm.
+   ------------------------------------------------------------ */
+.btn-on-dark-scope {
+    --focus-ring: var(--on-ink);
+}
+
+/* Chính: giữ nền burgundy để không mất màu thương hiệu, thêm viền kem
+   để nút tách khỏi nền tối (13.88:1 thay vì 1.53:1). Hover SÁNG LÊN. */
+.btn-on-dark {
+    background: var(--brand);
+    color: var(--on-brand);
+    border: 1.5px solid var(--on-ink);
+}
+
+.btn-on-dark:hover {
+    background: var(--brand-lift);
+}
+
+.btn-on-dark:active {
+    background: var(--brand);
+}
+
+/* Phụ: viền kem, hover đổ đầy rồi đảo chữ (quy tắc 2) */
+.btn-ghost-on-dark {
+    background: transparent;
+    color: var(--on-ink);
+    border: 1.5px solid var(--on-ink);
+}
+
+.btn-ghost-on-dark:hover {
+    background: var(--on-ink);
+    color: var(--ink);
+}
+
+.btn-ghost-on-dark:active {
+    background: var(--surface-sunken);
+    color: var(--ink);
+}
+
+/* ------------------------------------------------------------
+   VÒNG FOCUS BÀN PHÍM — dùng chung cho mọi thứ bấm được.
+
+   Trước đây cả site chỉ có ĐÚNG MỘT quy tắc :focus-visible
+   (.cta-btn), nghĩa là người dùng bàn phím tab qua header, footer,
+   nút mua hàng, nút gửi form... đều không thấy mình đang ở đâu.
+
+   Dùng :focus-visible chứ không phải :focus nên bấm chuột sẽ KHÔNG
+   hiện vòng — chỉ hiện khi điều hướng bằng bàn phím.
+   ------------------------------------------------------------ */
+.btn:focus-visible,
+.btn-primary:focus-visible,
+.btn-outline:focus-visible,
+.btn-dark:focus-visible,
+.header-cta:focus-visible,
+.nav-menu li a:focus-visible,
+.announcement-ico:focus-visible,
+.announcement-action:focus-visible,
+.footer-col>a:focus-visible,
+.footer-social a:focus-visible,
+.footer-contact__item a:focus-visible,
+.footer-news__form button:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+}
+
+/* Header + footer nền tối -> vòng focus tối sẽ chìm. Khai lại biến ở
+   đây một lần, mọi nút bên trong tự nhận. */
+.site-header,
+.announcement-bar,
+.site-footer {
+    --focus-ring: var(--on-ink);
 }
 
 /* ============================================
@@ -737,13 +999,16 @@ button, input, select, textarea {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
     .product-card,
     .card-img-hover,
     .card-overlay {
         transition: none;
     }
 
-    .product-card:hover { transform: none; }
+    .product-card:hover {
+        transform: none;
+    }
 }
 
 /* Khung ảnh: mọi lớp (ảnh, overlay, badge) chồng lên cùng 1 ô grid */
@@ -754,7 +1019,7 @@ button, input, select, textarea {
     overflow: hidden;
 }
 
-.card-img > * {
+.card-img>* {
     grid-area: 1 / 1;
 }
 
@@ -872,7 +1137,7 @@ button, input, select, textarea {
    dòng chữ dài quá tầm mắt. */
 @media (min-width: 1600px) {
     :root {
-        --margin:     128px;
+        --margin: 128px;
         --header-pad: 128px;
     }
 }
@@ -884,7 +1149,7 @@ button, input, select, textarea {
    Lề cũng hạ về 64px: giữ 96px ở đây thì nav hết chỗ và nội dung bị bóp. */
 @media (min-width: 901px) and (max-width: 1100px) {
     :root {
-        --margin:     64px;
+        --margin: 64px;
         --header-pad: 64px;
     }
 
@@ -907,20 +1172,30 @@ button, input, select, textarea {
     }
 
     /* Announcement: giữ social + icon giỏ/tìm/tài khoản, thu gọn khoảng cách */
-    .announcement-social { gap: 14px; }
-    .announcement-actions { gap: var(--space-4); }
+    .announcement-social {
+        gap: 14px;
+    }
+
+    .announcement-actions {
+        gap: var(--space-4);
+    }
 
     /* Header cho phép nav xuống hàng full-width khi mở (không dùng absolute) */
     .site-header {
         flex-wrap: wrap;
-        align-content: center; /* can giua doc hang logo + hamburger (line rong cua nav lam lech tren) */
-        row-gap: 0;            /* bo gap giua hang logo va line rong cua nav */
+        align-content: center;
+        /* can giua doc hang logo + hamburger (line rong cua nav lam lech tren) */
+        row-gap: 0;
+        /* bo gap giua hang logo va line rong cua nav */
     }
 
-    .nav-toggle { display: flex; }
+    .nav-toggle {
+        display: flex;
+    }
 
     .main-nav {
-        order: 1;          /* đẩy nav xuống hàng thứ 2, dưới logo + actions */
+        order: 1;
+        /* đẩy nav xuống hàng thứ 2, dưới logo + actions */
         flex-basis: 100%;
         justify-content: stretch;
     }
@@ -930,7 +1205,8 @@ button, input, select, textarea {
        dòng đầu — 2 vệt đen dính nhau thành góc chữ L. Đệm ra cho rời hẳn.
        Đệm luôn phía dưới để đường kẻ của dòng cuối không sát đáy header. */
     .nav-menu {
-        display: none;     /* mobile-menu.js thêm .open để hiện */
+        display: none;
+        /* mobile-menu.js thêm .open để hiện */
         flex-direction: column;
         gap: 0;
         width: 100%;
@@ -938,9 +1214,13 @@ button, input, select, textarea {
         border-top: 1.5px solid var(--black);
     }
 
-    .nav-menu.open { display: flex; }
+    .nav-menu.open {
+        display: flex;
+    }
 
-    .nav-menu li { width: 100%; }
+    .nav-menu li {
+        width: 100%;
+    }
 
     /* Mobile xếp dọc: border-bottom ở đây là đường kẻ ngăn dòng, không dùng
        làm indicator được nữa -> chuyển chỉ báo active sang thanh dọc bên trái.
@@ -953,7 +1233,9 @@ button, input, select, textarea {
         border-left: 3px solid transparent;
     }
 
-    .nav-menu li a:hover { border-bottom-color: rgba(243, 231, 213, 0.25); }
+    .nav-menu li a:hover {
+        border-bottom-color: rgba(243, 231, 213, 0.25);
+    }
 
     .nav-menu li a.is-active {
         color: var(--on-brand);
@@ -963,7 +1245,9 @@ button, input, select, textarea {
     }
 
     /* Nhường chỗ cho hamburger: bỏ CTA chữ, giữ icon */
-    .header-cta { display: none; }
+    .header-cta {
+        display: none;
+    }
 
     /* Footer: 4 cột -> 2 cột.
        Thương hiệu và Nhận tin là 2 khối "nặng" nhất -> mỗi khối chiếm trọn
@@ -975,12 +1259,16 @@ button, input, select, textarea {
     }
 
     .footer-brand,
-    .footer-news { grid-column: 1 / -1; }
+    .footer-news {
+        grid-column: 1 / -1;
+    }
 
-    .footer-news__form { max-width: 480px; }
+    .footer-news__form {
+        max-width: 480px;
+    }
 
     /* Xếp 2 cột thì hairline dọc hết ý nghĩa -> bỏ */
-    .footer-top > * + * {
+    .footer-top>*+* {
         padding-left: 0;
         border-left: none;
     }
@@ -999,7 +1287,9 @@ button, input, select, textarea {
     /* Footer: giu 2 cot (Kham pha trai | Ho tro phai) nhu tablet,
        Thuong hieu / Nhan tin van chiem tron hang (grid-column 1/-1 o 900px).
        Chi thu hep khe cot cho man hep. */
-    .footer-top { gap: var(--space-8) var(--space-5); }
+    .footer-top {
+        gap: var(--space-8) var(--space-5);
+    }
 
     /* Footer bottom: xếp dọc, căn giữa cho gọn màn hình hẹp */
     .footer-bottom {
@@ -1015,25 +1305,26 @@ button, input, select, textarea {
     :root {
         --margin: 12px;
     }
-    
+
     .announcement-bar {
         padding: 0 var(--space-3);
         min-height: 42px;
     }
-    
+
     .announcement-social {
-        gap: var(--space-4); /* Khoảng cách hợp lý cho FB, Shopee, Tiktok */
+        gap: var(--space-4);
+        /* Khoảng cách hợp lý cho FB, Shopee, Tiktok */
     }
-    
+
     .announcement-actions {
         gap: var(--space-4);
     }
-    
+
     .announcement-ico svg {
         width: 18px;
         height: 18px;
     }
-    
+
     /* Footer: 2 cột link ép về 1 cột — 480px không đủ chỗ cho 2 làn chữ mono */
     .footer-top {
         grid-template-columns: 1fr;
@@ -1044,4 +1335,3 @@ button, input, select, textarea {
         gap: var(--space-2);
     }
 }
-
