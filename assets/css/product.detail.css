@@ -141,28 +141,47 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    border: 1.5px solid var(--black);
-    transition: background 0.2s ease, color 0.2s ease;
+    border: 1.5px solid var(--ink);
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
+/* Nút chính = nền tối -> hover sang brand (quy tắc --ink-hover) */
 .pd-btn-primary {
-    background: var(--black);
-    color: var(--white);
+    background: var(--ink);
+    color: var(--on-ink);
 }
 
 .pd-btn-primary:hover {
-    background: var(--yellow);
-    color: var(--on-brand);
+    background: var(--ink-hover);
+    border-color: var(--ink-hover);
 }
 
+.pd-btn-primary:active {
+    background: var(--ink-active);
+    border-color: var(--ink-active);
+}
+
+/* Nút phụ = viền -> hover đổ đầy rồi đảo chữ (quy tắc 2) */
 .pd-btn-ghost {
     background: transparent;
-    color: var(--black);
+    color: var(--ink);
 }
 
 .pd-btn-ghost:hover {
-    background: var(--black);
-    color: var(--white);
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+.pd-btn-ghost:active {
+    background: var(--ink-hover);
+    border-color: var(--ink-hover);
+    color: var(--on-brand);
+}
+
+.pd-btn-primary:focus-visible,
+.pd-btn-ghost:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
 }
 
 .pd-note {

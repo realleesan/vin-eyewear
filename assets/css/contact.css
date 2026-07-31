@@ -333,17 +333,33 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    background: var(--yellow); /* Heritage Yellow #FFCC00 */
-    color: var(--on-brand); /* Ink Black #000000 */
-    border: 2px solid var(--black);
+    /* Hai chú thích cũ ở đây ghi "Heritage Yellow #FFCC00" và "Ink Black
+       #000000" — đó là bảng màu TRƯỚC khi đổi sang burgundy; giá trị
+       thật lấy từ biến nên đã đúng, chỉ mỗi chú thích là sai. */
+    background: var(--brand);
+    color: var(--on-brand);
+    border: 2px solid var(--ink);
     border-radius: 0 !important; /* Shape language: strictly 0px */
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background-color 0.18s ease, color 0.18s ease;
 }
 
+/* Nút đặc trên nền sáng -> quy tắc 1: đậm thêm, giữ nguyên chữ.
+   (Trước là đảo sang nền --black. Nút này mang class
+   "btn btn-primary btn-submit", nên hover cũ của nó còn đá nhau với
+   .btn-primary:hover của layout.css — cùng specificity, chỉ hơn nhau
+   ở thứ tự file. Nay cả hai cùng một đích nên không còn lệ thuộc.) */
 .btn-submit:hover {
-    background: var(--black);
-    color: var(--white);
+    background: var(--brand-hover);
+}
+
+.btn-submit:active {
+    background: var(--brand-active);
+}
+
+.btn-submit:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
 }
 
 /* ============================================================
@@ -401,10 +417,13 @@
     justify-content: flex-end;
 }
 
+/* Nút đặc nền tối trên nền modal sáng -> hover sang brand (--ink-hover),
+   giống .btn-dark ở layout.css. Vốn dĩ đã đúng hướng, nay lấy qua biến
+   để sau này đổi một chỗ là cả site theo. */
 .success-modal-close-btn {
-    background: var(--black);
-    color: var(--white);
-    border: 2px solid var(--black);
+    background: var(--ink);
+    color: var(--on-ink);
+    border: 2px solid var(--ink);
     border-radius: 0 !important;
     padding: 10px var(--space-6);
     font-family: var(--font-sans);
@@ -413,12 +432,22 @@
     text-transform: uppercase;
     letter-spacing: 0.1em;
     cursor: pointer;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
 .success-modal-close-btn:hover {
-    background: var(--yellow);
-    color: var(--on-brand);
+    background: var(--ink-hover);
+    border-color: var(--ink-hover);
+}
+
+.success-modal-close-btn:active {
+    background: var(--ink-active);
+    border-color: var(--ink-active);
+}
+
+.success-modal-close-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
 }
 
 /* --- Responsive Adjustments --- */

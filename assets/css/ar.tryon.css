@@ -41,8 +41,8 @@
     align-items: center;
     gap: 10px;
     padding: var(--space-3) var(--space-6);
-    background: var(--black);
-    color: var(--white);
+    background: var(--ink);
+    color: var(--on-ink);
     border: none;
     font-family: var(--font-sans);
     font-size: var(--fs-caption);
@@ -50,21 +50,29 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
     cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 4px;
+    transition: background-color 0.18s ease, color 0.18s ease;
+    /* Bỏ `border-radius: 4px`: design system quy định sharp 0px, đây là
+       nút DUY NHẤT toàn site bị bo góc. */
+    border-radius: 0;
 }
 
+/* Nút đặc nền tối -> hover sang brand (--ink-hover), như .btn-dark.
+   Dọn thêm 3 thứ trong khối hover cũ:
+     · `color: var(--on-brand)` bị chép LẶP 3 LẦN liên tiếp
+     · `box-shadow: 0 4px 12px ...` — design system ghi rõ "No shadow"
+     · `transform: translateY(-1px)` cùng `transition: all` khiến nút
+       nhích lên và kéo theo cả outline khi focus */
 .btn-camera-toggle:hover {
-    background: var(--yellow);
-    color: var(--on-brand);
-    color: var(--on-brand);
-    color: var(--on-brand);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: var(--ink-hover);
 }
 
 .btn-camera-toggle:active {
-    transform: translateY(0);
+    background: var(--ink-active);
+}
+
+.btn-camera-toggle:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
 }
 
 .btn-camera-toggle svg {
@@ -121,7 +129,11 @@
 .face-guide-oval {
     width: 42%;
     aspect-ratio: 3 / 4;
-    border: 1.5px dashed rgba(255, 204, 0, 0.55);
+    /* Trước là rgba(255,204,0,.55) — Heritage Yellow #FFCC00 của bảng
+       màu CŨ, sót lại sau khi đổi thương hiệu sang burgundy. Dùng
+       --brand-light: hồng nhạt, nổi rõ trên khung hình camera mà vẫn
+       đúng tông mới. */
+    border: 1.5px dashed var(--brand-light);
     border-radius: 50%;
 }
 
@@ -299,7 +311,7 @@
 
 .btn-retry {
     padding: 10px var(--space-6);
-    background: var(--yellow);
+    background: var(--brand);
     color: var(--on-brand);
     border: none;
     font-family: var(--font-sans);
@@ -308,11 +320,25 @@
     text-transform: uppercase;
     letter-spacing: 0.12em;
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: background-color 0.18s ease, color 0.18s ease;
 }
 
+/* LỖI CŨ (ca thứ ba, giống about.css và cta.css): hover đổi nền sang
+   var(--white) = #f3e7d5 nhưng để nguyên color: var(--on-brand) cũng
+   là #f3e7d5 -> 1.00:1. Nút "Thử lại" của trang AR mất chữ đúng vào
+   lúc người dùng đang cần bấm nó để thoát lỗi camera.
+   Nút này nằm trên lớp phủ lỗi nền tối nên hover phải SÁNG LÊN. */
 .btn-retry:hover {
-    background: var(--white);
+    background: var(--brand-hover-dark);
+}
+
+.btn-retry:active {
+    background: var(--brand);
+}
+
+.btn-retry:focus-visible {
+    outline: 2px solid var(--on-ink);
+    outline-offset: 3px;
 }
 
 /* Active state */
@@ -493,26 +519,46 @@
     transition: background 0.15s ease, color 0.15s ease;
 }
 
+/* .ar-cta có background: var(--black) và gap 2px, nên 2 nút này ghép
+   thành một thanh đôi trên NỀN TỐI. Hover cũ của cả hai đều đổ về
+   var(--black) — tức là đúng bằng màu nền khối chứa chúng: rê chuột
+   vào thì nút tan biến, chỉ còn chữ lơ lửng. Trên nền tối, hover phải
+   đi NGƯỢC lại: sáng lên (xem --brand-hover-dark ở layout.css). */
 .ar-cta .btn-primary {
-    background: var(--yellow);
+    background: var(--brand);
     color: var(--on-brand);
     border: none;
 }
 
 .ar-cta .btn-primary:hover {
-    background: var(--black);
-    color: var(--white);
+    background: var(--brand-hover-dark);
 }
 
+.ar-cta .btn-primary:active {
+    background: var(--brand);
+}
+
+/* Đây thực chất là nút ĐẶC nền kem (không phải nút viền như tên gọi).
+   Nền sáng thì hover làm TỐI đi một nấc — vẫn là "đậm thêm" của quy
+   tắc 1, chữ --ink giữ nguyên, 11.32:1. */
 .ar-cta .btn-outline {
-    background: var(--white);
-    color: var(--black);
+    background: var(--on-ink);
+    color: var(--ink);
     border: none;
 }
 
 .ar-cta .btn-outline:hover {
-    background: var(--black);
-    color: var(--white);
+    background: var(--surface-sunken);
+}
+
+.ar-cta .btn-outline:active {
+    background: var(--line);
+}
+
+.ar-cta .btn-primary:focus-visible,
+.ar-cta .btn-outline:focus-visible {
+    outline: 2px solid var(--on-ink);
+    outline-offset: 3px;
 }
 
 /* ============================================

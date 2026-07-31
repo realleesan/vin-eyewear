@@ -19,8 +19,10 @@
     overflow: hidden;
 }
 
-/* Vệt vàng loang từ mép phải — điểm sáng duy nhất của dải, đủ để nền
-   không phẳng lì mà vẫn không đọ với chữ trắng bên trái. */
+/* Vệt sáng loang từ mép phải — điểm sáng duy nhất của dải, đủ để nền
+   không phẳng lì mà vẫn không đọ với chữ kem bên trái.
+   (Trước là rgba(255,204,0,.16) — vàng của thương hiệu CŨ, sót lại sau
+   khi đổi sang burgundy. Nay lấy --glow-warm ở layout.css.) */
 .cta-band::after {
     content: "";
     position: absolute;
@@ -28,7 +30,7 @@
     pointer-events: none;
     background: radial-gradient(
         60% 120% at 100% 50%,
-        rgba(255, 204, 0, 0.16),
+        var(--glow-warm),
         transparent 70%
     );
 }
@@ -110,31 +112,51 @@
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Cả 2 nút nằm trên .cta-band (nền --ink) nên theo bộ "trên nền tối"
+   của layout.css: hover SÁNG LÊN, không đậm thêm. Xem --brand-hover-dark. */
+
+/* Viền cũ là --yellow (= --brand) trùng luôn màu nền nút, nên nút chỉ
+   tách khỏi dải đen 1.53:1. Đổi sang viền kem: 13.88:1. */
 .cta-btn--primary {
-    background: var(--yellow);
-    border-color: var(--yellow);
+    background: var(--brand);
+    border-color: var(--on-ink);
     color: var(--on-brand);
 }
 
+/* LỖI CŨ: hover đổi nền VÀ viền sang var(--white) (= #f3e7d5) nhưng
+   giữ nguyên color: var(--on-brand) cũng là #f3e7d5 -> chữ kem trên
+   nền kem, 1.00:1, nút biến thành một ô trắng trống suốt lúc rê chuột.
+   (Bug y hệt .btn-primary:hover bên about.css.) */
 .cta-btn--primary:hover {
-    background: var(--white);
-    border-color: var(--white);
+    background: var(--brand-hover-dark);
 }
 
+.cta-btn--primary:active {
+    background: var(--brand);
+}
+
+/* rgba(255,255,255,.45) là trắng thuần, lệch tông khỏi chữ kem của cả
+   dải. Dùng thẳng --on-ink cho viền đồng bộ với --cta-btn--primary. */
 .cta-btn--ghost {
     background: transparent;
-    border-color: rgba(255, 255, 255, 0.45);
-    color: var(--white);
+    border-color: var(--on-ink);
+    color: var(--on-ink);
 }
 
 .cta-btn--ghost:hover {
-    background: var(--white);
-    border-color: var(--white);
-    color: var(--black);
+    background: var(--on-ink);
+    color: var(--ink);
 }
 
+.cta-btn--ghost:active {
+    background: var(--surface-sunken);
+    color: var(--ink);
+}
+
+/* Vòng focus brand (--yellow) trên dải đen chỉ được 1.53:1 — gần như
+   không thấy. Trên nền tối phải dùng vòng sáng. */
 .cta-btn:focus-visible {
-    outline: 2px solid var(--yellow);
+    outline: 2px solid var(--on-ink);
     outline-offset: 3px;
 }
 

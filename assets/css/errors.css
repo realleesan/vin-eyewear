@@ -47,20 +47,29 @@
 .error-page__btn {
     display: inline-block;
     padding: 14px 36px;
-    background: var(--black);
-    color: var(--white);
+    background: var(--ink);
+    color: var(--on-ink);
     font-family: var(--font-sans);
     font-size: var(--fs-note);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     border-radius: 0;
-    transition: background var(--transition), color var(--transition);
+    transition: background-color 0.18s ease, color 0.18s ease;
 }
 
+/* Nút đặc nền tối -> hover sang brand, đúng như .btn-dark ở layout.css */
 .error-page__btn:hover {
-    background: var(--yellow);
-    color: var(--on-brand);
+    background: var(--ink-hover);
+}
+
+.error-page__btn:active {
+    background: var(--ink-active);
+}
+
+.error-page__btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
 }
 
 @media (max-width: 900px) {
