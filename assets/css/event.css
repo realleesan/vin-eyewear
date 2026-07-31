@@ -1,21 +1,24 @@
-﻿/* ============================================
+/* ============================================
    VIN EYEWEAR - EVENT PAGE STYLES
    Heritage-meets-Downtown-Cool Design System
    Grid Listing Layout
    ============================================ */
 
-/* Events Section */
+/* Events Section — khối nội dung căn lề đúng bằng .product-listing của trang
+   sản phẩm (padding 60px var(--margin), KHÔNG bọc .container 1200px) để hai
+   trang có cùng bề rộng vùng nội dung. */
 .events-section {
-    padding: var(--space-30) 0;
+    padding: 60px var(--margin);
     background-color: var(--white);
     min-height: 80vh;
 }
 
-/* Events Layout with Sidebar */
+/* Events Layout with Sidebar — cột filter 220px + gap 32px, khớp .listing-layout
+   (product.css) nên bộ lọc hai trang rộng bằng nhau. */
 .events-layout {
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: var(--space-12);
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 32px;
     align-items: start;
 }
 
@@ -24,10 +27,12 @@
     flex: 1;
 }
 
+/* 4 cột, khe 28px — đúng bằng .product-grid (layout.css) nên card sự kiện
+   rộng bằng card sản phẩm và lưới hai trang thẳng hàng. */
 .events-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
 }
 
 /* Event Card */
@@ -46,10 +51,12 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
+/* Khung ảnh vuông 1:1 giống .card-img của product-card (layout.css) — chiều
+   cao cố định 180px cũ làm card sự kiện thấp hơn card sản phẩm cùng cột. */
 .event-image {
     position: relative;
     width: 100%;
-    height: 180px;
+    aspect-ratio: 1 / 1;
     overflow: hidden;
     border-bottom: 1px solid var(--black);
 }
@@ -71,7 +78,7 @@
     top: 16px;
     left: 16px;
     font-family: var(--font-mono);
-    font-size: var(--fs-label);
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -82,7 +89,7 @@
 }
 
 .event-content {
-    padding: var(--space-4);
+    padding: 16px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -90,32 +97,32 @@
 
 .event-date {
     font-family: var(--font-mono);
-    font-size: var(--fs-caption);
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--on-surface-variant);
-    margin-bottom: var(--space-3);
+    margin-bottom: 12px;
 }
 
 .event-title {
     font-family: var(--font-serif);
-    font-size: var(--fs-h6);
+    font-size: 20px;
     font-weight: 700;
     line-height: 28px;
     color: var(--black);
-    margin-bottom: var(--space-3);
+    margin-bottom: 12px;
     letter-spacing: -0.02em;
     text-align: justify;
 }
 
 .event-excerpt {
     font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
+    font-size: 13px;
     font-weight: 400;
     line-height: 1.5;
     color: var(--on-surface);
-    margin-bottom: var(--space-4);
+    margin-bottom: 16px;
     text-align: justify;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -127,7 +134,7 @@
 
 .event-link {
     font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     font-weight: 700;
     color: var(--black);
     text-decoration: none;
@@ -152,7 +159,7 @@
     display: none;
     align-items: center;
     justify-content: center;
-    padding: var(--space-10);
+    padding: 40px;
 }
 
 .image-modal.active {
@@ -178,7 +185,7 @@
     background-color: var(--yellow);
     color: var(--black);
     border: 1px solid var(--black);
-    font-size: var(--fs-h1);
+    font-size: 48px;
     cursor: pointer;
     z-index: 10;
     transition: all 0.3s ease;
@@ -210,19 +217,19 @@
 
 /* Event Detail Page */
 .event-detail-section {
-    padding: var(--space-30) 0;
+    padding: 120px 0;
 }
 
 .back-link {
     display: inline-block;
     font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--black);
     text-decoration: none;
-    margin-bottom: var(--space-12);
+    margin-bottom: 48px;
     padding-bottom: 12px;
     border-bottom: 2px solid transparent;
     transition: border-color 0.3s ease, color 0.3s ease;
@@ -242,27 +249,27 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: var(--space-6);
-    margin-bottom: var(--space-4);
+    gap: 24px;
+    margin-bottom: 16px;
     flex-wrap: wrap;
 }
 
 .event-meta-left {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
+    gap: 12px;
 }
 
 .event-meta-right {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     color: var(--on-surface-variant);
 }
 
 .event-detail .event-date {
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     margin-bottom: 0;
 }
 
@@ -274,7 +281,7 @@
 
 .event-published-at {
     font-family: var(--font-mono);
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -284,7 +291,7 @@
 
 .event-author {
     font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     font-weight: 500;
     color: var(--on-surface-variant);
 }
@@ -296,18 +303,18 @@
 
 .event-category {
     font-family: var(--font-sans);
-    font-size: var(--fs-caption);
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--yellow);
     background-color: var(--black);
-    padding: var(--space-2) var(--space-4);
+    padding: 8px 16px;
 }
 
 .event-featured-image {
     width: 100%;
-    margin-bottom: var(--space-12);
+    margin-bottom: 48px;
     border: 1px solid var(--black);
 }
 
@@ -318,40 +325,40 @@
 }
 
 .event-body {
-    margin-bottom: var(--space-20);
+    margin-bottom: 80px;
 }
 
 .event-headline {
     font-family: var(--font-serif);
-    font-size: var(--fs-h1);
+    font-size: 48px;
     font-weight: 700;
     line-height: 56px;
     color: var(--black);
-    margin-bottom: var(--space-8);
+    margin-bottom: 32px;
     letter-spacing: -0.02em;
 }
 
 .event-content-block {
-    margin-bottom: var(--space-10);
+    margin-bottom: 40px;
 }
 
 .event-content-block h3 {
     font-family: var(--font-serif);
-    font-size: var(--fs-h5);
+    font-size: 28px;
     font-weight: 700;
     line-height: 36px;
     color: var(--black);
-    margin-bottom: var(--space-4);
+    margin-bottom: 16px;
     letter-spacing: -0.02em;
 }
 
 .event-content-block p {
     font-family: var(--font-sans);
-    font-size: var(--fs-lead);
+    font-size: 18px;
     font-weight: 400;
     line-height: 32px;
     color: var(--on-surface);
-    margin-bottom: var(--space-4);
+    margin-bottom: 16px;
 }
 
 .event-content-block p:last-child {
@@ -361,7 +368,7 @@
 .event-note {
     background-color: var(--gray);
     border-left: 4px solid var(--yellow);
-    padding: var(--space-6);
+    padding: 24px;
     border-top: 1px solid var(--border);
     border-right: 1px solid var(--border);
     border-bottom: 1px solid var(--border);
@@ -374,16 +381,16 @@
 .event-details-list,
 .event-steps-list {
     font-family: var(--font-sans);
-    font-size: var(--fs-lead);
+    font-size: 18px;
     font-weight: 400;
     line-height: 32px;
     color: var(--on-surface);
-    padding-left: var(--space-6);
+    padding-left: 24px;
 }
 
 .event-details-list li,
 .event-steps-list li {
-    margin-bottom: var(--space-3);
+    margin-bottom: 12px;
 }
 
 .event-details-list li:last-child,
@@ -393,9 +400,9 @@
 
 .event-cta {
     display: flex;
-    gap: var(--space-4);
-    margin-top: var(--space-12);
-    padding-top: var(--space-8);
+    gap: 16px;
+    margin-top: 48px;
+    padding-top: 32px;
     border-top: 1px solid var(--black);
 }
 
@@ -407,18 +414,18 @@
 
 .related-title {
     font-family: var(--font-serif);
-    font-size: var(--fs-h4);
+    font-size: 32px;
     font-weight: 700;
     line-height: 40px;
     color: var(--black);
-    margin-bottom: var(--space-8);
+    margin-bottom: 32px;
     letter-spacing: -0.02em;
 }
 
 .related-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-6);
+    gap: 24px;
 }
 
 .related-card {
@@ -451,32 +458,32 @@
 }
 
 .related-content {
-    padding: var(--space-6);
+    padding: 24px;
 }
 
 .related-date {
     font-family: var(--font-mono);
-    font-size: var(--fs-caption);
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--on-surface-variant);
-    margin-bottom: var(--space-3);
+    margin-bottom: 12px;
 }
 
 .related-headline {
     font-family: var(--font-serif);
-    font-size: var(--fs-lead);
+    font-size: 18px;
     font-weight: 700;
     line-height: 24px;
     color: var(--black);
-    margin-bottom: var(--space-3);
+    margin-bottom: 12px;
     letter-spacing: -0.02em;
 }
 
 .related-link {
     font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     font-weight: 700;
     color: var(--black);
     text-decoration: none;
@@ -498,18 +505,18 @@
 
 .related-events-title {
     font-family: var(--font-serif);
-    font-size: var(--fs-h4);
+    font-size: 32px;
     font-weight: 700;
     line-height: 40px;
     color: var(--black);
-    margin-bottom: var(--space-8);
+    margin-bottom: 32px;
     letter-spacing: -0.02em;
 }
 
 .related-events-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
+    gap: 24px;
 }
 
 .related-event-card {
@@ -558,7 +565,7 @@
 }
 
 .related-event-content {
-    padding: var(--space-6);
+    padding: 24px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -566,11 +573,11 @@
 
 .related-event-title {
     font-family: var(--font-serif);
-    font-size: var(--fs-lead);
+    font-size: 18px;
     font-weight: 700;
     line-height: 24px;
     color: var(--black);
-    margin-bottom: var(--space-3);
+    margin-bottom: 12px;
     letter-spacing: -0.02em;
 }
 
@@ -592,18 +599,18 @@
 
 .related-title {
     font-family: var(--font-serif);
-    font-size: var(--fs-h4);
+    font-size: 32px;
     font-weight: 700;
     line-height: 40px;
     color: var(--black);
-    margin-bottom: var(--space-8);
+    margin-bottom: 32px;
     letter-spacing: -0.02em;
 }
 
 .related-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-6);
+    gap: 24px;
 }
 
 .related-card {
@@ -636,32 +643,32 @@
 }
 
 .related-content {
-    padding: var(--space-6);
+    padding: 24px;
 }
 
 .related-date {
     font-family: var(--font-mono);
-    font-size: var(--fs-caption);
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--on-surface-variant);
-    margin-bottom: var(--space-3);
+    margin-bottom: 12px;
 }
 
 .related-headline {
     font-family: var(--font-serif);
-    font-size: var(--fs-lead);
+    font-size: 18px;
     font-weight: 700;
     line-height: 24px;
     color: var(--black);
-    margin-bottom: var(--space-3);
+    margin-bottom: 12px;
     letter-spacing: -0.02em;
 }
 
 .related-link {
     font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     font-weight: 700;
     color: var(--black);
     text-decoration: none;
@@ -676,12 +683,12 @@
 
 .btn {
     font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
+    font-size: 14px;
     font-weight: 700;
     line-height: 20px;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    padding: var(--space-5) var(--space-12);
+    padding: 20px 48px;
     border: 1px solid var(--black);
     cursor: pointer;
     text-decoration: none;
@@ -711,18 +718,18 @@
 }
 
 /* Responsive Design */
-@media (max-width: 1100px) {
-    .events-layout {
-        grid-template-columns: 240px 1fr;
-        gap: var(--space-8);
-    }
-    
+
+/* Tablet còn sidebar: 4 cột quá chật -> 3 cột. Cùng khoảng với product.css
+   (901–1200px) để hai trang đổi bố cục ở cùng một điểm. */
+@media (min-width: 901px) and (max-width: 1200px) {
     .events-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
-    
+}
+
+@media (max-width: 1024px) {
     .event-headline {
-        font-size: var(--fs-h2);
+        font-size: 36px;
         line-height: 44px;
     }
     
@@ -735,28 +742,40 @@
     }
 }
 
+/* ≤900px: filter-sidebar.css chuyển sidebar sang slide-over (position:fixed).
+   Phải bỏ cột 220px ở đúng mốc này, nếu không dải 769–900px sẽ chừa một cột
+   trống. Bằng mốc của .listing-layout trong product.css. */
 @media (max-width: 900px) {
     .events-section {
-        padding: var(--space-16) 0;
+        padding: 40px var(--margin);
     }
-    
+
     .events-layout {
         grid-template-columns: 1fr;
+        gap: 0;
     }
-    
+
+    .events-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (max-width: 600px) {
     .events-grid {
         grid-template-columns: 1fr;
-        gap: var(--space-4);
     }
-    
+}
+
+@media (max-width: 768px) {
     .event-detail-section {
-        padding: var(--space-16) 0;
+        padding: 64px 0;
     }
 
     .event-meta {
         flex-wrap: wrap;
         gap: 8px;
-        margin-bottom: var(--space-4);
+        margin-bottom: 16px;
     }
 
     .event-meta-left,
@@ -766,7 +785,7 @@
     }
     
     .event-headline {
-        font-size: var(--fs-h5);
+        font-size: 28px;
         line-height: 36px;
     }
     
@@ -796,36 +815,32 @@
     .image-modal .modal-close {
         width: 48px;
         height: 48px;
-        font-size: var(--fs-h4);
+        font-size: 32px;
         top: 16px;
         right: 16px;
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 480px) {
     .event-content {
-        padding: var(--space-4);
+        padding: 16px;
     }
     
     .event-title {
-        font-size: var(--fs-lead);
+        font-size: 18px;
         line-height: 24px;
     }
     
     .event-excerpt {
-        font-size: var(--fs-body-sm);
+        font-size: 13px;
         line-height: 20px;
     }
     
     .related-content {
-        padding: var(--space-4);
+        padding: 16px;
     }
     
     .event-detail {
         padding: 0 16px;
     }
 }
-
-
-
-

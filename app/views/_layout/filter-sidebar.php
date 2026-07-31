@@ -13,12 +13,16 @@
  *                          view cha suy ra từ dữ liệu backend
  *   $filter_price_ranges — [range => label], key PHẢI khớp matchPrice()
  *                          trong assets/js/product.js
+ *   $filter_event_categories — [slug => label] danh mục bài viết cho trang event,
+ *                          view cha slug hoá từ $eventsData; slug PHẢI khớp
+ *                          data-event-category trên .event-card
  *
- * Data attribute trên chip (product.js đọc):
+ * Data attribute trên chip (product.js / event.js đọc):
  *   data-filter-kind  — kiểu sản phẩm (KHÔNG dùng data-filter-type,
  *                       attr đó đã là marker $filter_type trên <aside>)
  *   data-filter-cat   — dáng gọng
  *   data-filter-price — khoảng giá
+ *   data-filter-event — danh mục bài viết/sự kiện
  *
  * Cách dùng:
  *   <?php $filter_type = 'product'; require VIEWS_PATH . '/_layout/filter-sidebar.php'; ?>
@@ -32,6 +36,7 @@ $show_filter_sidebar = $show_filter_sidebar ?? true;
 $filter_type         = $filter_type         ?? 'product';
 $filter_categories   = $filter_categories   ?? [];
 $filter_kinds        = $filter_kinds        ?? [];
+$filter_event_categories = $filter_event_categories ?? [];
 
 // Khoảng giá mặc định — key phải khớp matchPrice() trong assets/js/product.js
 // (nhãn viết gọn "triệu" cho sidebar compact)
@@ -160,15 +165,18 @@ if (!$show_filter_sidebar) {
     <?php endif; ?>
 
     <?php if ($filter_type === 'event'): ?>
-    <!-- ── "RUỘT" EVENT — thành viên phụ trách Event tự đổ nhóm input vào đây.
-         Giữ đúng markup .filter-group / .filter-chip để ăn style + toggle sẵn có. ── -->
+    <!-- ── NHÓM: DANH MỤC BÀI VIẾT (data từ $filter_event_categories, view cha truyền vào).
+         KHÔNG hard-code danh sách ở đây: slug chip phải khớp data-event-category
+         trên .event-card, cả hai đều do event/index.php slug hoá từ cùng một nguồn. ── -->
     <div class="filter-group">
         <h3 class="filter-group__title">Danh mục</h3>
         <div class="filter-group__options">
             <button type="button" class="filter-chip is-active" data-filter-event="all" aria-pressed="true">Tất cả</button>
-            <button type="button" class="filter-chip" data-filter-event="tin-uu-dai" aria-pressed="false">Tin Ưu Đãi</button>
-            <button type="button" class="filter-chip" data-filter-event="su-kien" aria-pressed="false">Sự Kiện</button>
-            <button type="button" class="filter-chip" data-filter-event="meo-cham-soc" aria-pressed="false">Mẹo Chăm Sóc Kính</button>
+            <?php foreach ($filter_event_categories as $slug => $label): ?>
+            <button type="button" class="filter-chip" data-filter-event="<?= htmlspecialchars($slug) ?>" aria-pressed="false">
+                <?= htmlspecialchars($label) ?>
+            </button>
+            <?php endforeach; ?>
         </div>
     </div>
     <?php endif; ?>

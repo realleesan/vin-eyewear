@@ -20,33 +20,49 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleEventListing() {
+        let activeCategory = 'all';
+
+        // Ẩn/hiện card theo danh mục đang chọn.
+        // Slug trên card (data-event-category) và trên chip (data-filter-event)
+        // đều do app/views/event/index.php sinh ra từ cùng một hàm slug hoá.
+        function applyFilter() {
+            eventCards.forEach(card => {
+                const cardCategory = card.getAttribute('data-event-category');
+                const visible = activeCategory === 'all' || cardCategory === activeCategory;
+
+                if (visible) {
+                    card.style.display = ''; // tra ve display cua .event-card trong CSS
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                    }, 50);
+                } else {
+                    card.style.display = 'none';
+                    card.style.opacity = '0';
+                }
+            });
+        }
+
+        function setActiveChip(selected) {
+            filterChips.forEach(chip => {
+                const isActive = chip === selected;
+                chip.classList.toggle('is-active', isActive);
+                chip.setAttribute('aria-pressed', String(isActive));
+            });
+        }
+
         filterChips.forEach(chip => {
             chip.addEventListener('click', function() {
-                const filterValue = this.getAttribute('data-filter-event');
-
-                // Update active state
-                filterChips.forEach(c => {
-                    c.classList.remove('is-active');
-                    c.setAttribute('aria-pressed', 'false');
-                });
-                this.classList.add('is-active');
-                this.setAttribute('aria-pressed', 'true');
-
-                // Filter event cards with smooth animation
-                eventCards.forEach(card => {
-                    const cardCategory = card.getAttribute('data-event-category');
-                    
-                    if (filterValue === 'all' || cardCategory === filterValue) {
-                        card.style.display = 'flex';
-                        setTimeout(() => {
-                            card.style.opacity = '1';
-                        }, 50);
-                    } else {
-                        card.style.display = 'none';
-                        card.style.opacity = '0';
-                    }
-                });
+                activeCategory = this.getAttribute('data-filter-event');
+                setActiveChip(this);
+                applyFilter();
             });
+        });
+
+        // Nút "Đặt lại" của filter-sidebar.js chỉ reset giao diện chip rồi bắn
+        // sự kiện 'filterReset'; phải tự lọc lại card, nếu không card vẫn bị ẩn.
+        document.addEventListener('filterReset', function() {
+            activeCategory = 'all';
+            applyFilter();
         });
 
         // Click on event card image or title should navigate to detail
