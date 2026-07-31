@@ -316,7 +316,7 @@ body {
 
 /* Hai nút này nằm trong .cta-section (nền --ink), nên dùng bộ
    "trên nền tối" của layout.css: hover SÁNG LÊN thay vì đậm thêm.
-   Xem ghi chú --brand-lift ở layout.css.
+   Xem ghi chú --brand-hover-dark ở layout.css.
 
    Viền cũ là `1px solid var(--black)` — trên nền --black nên vô hình;
    nay .btn-on-dark / .btn-ghost-on-dark cấp viền kem để nút tách khỏi
@@ -336,7 +336,7 @@ body {
    là chữ kem trên nền kem — tương phản 1.00:1, nút trắng trơn không
    đọc được chữ suốt thời gian rê chuột. */
 .btn-primary:hover {
-    background-color: var(--brand-lift);
+    background-color: var(--brand-hover-dark);
 }
 
 .btn-primary:active {

@@ -113,7 +113,7 @@
 }
 
 /* Cả 2 nút nằm trên .cta-band (nền --ink) nên theo bộ "trên nền tối"
-   của layout.css: hover SÁNG LÊN, không đậm thêm. Xem --brand-lift. */
+   của layout.css: hover SÁNG LÊN, không đậm thêm. Xem --brand-hover-dark. */
 
 /* Viền cũ là --yellow (= --brand) trùng luôn màu nền nút, nên nút chỉ
    tách khỏi dải đen 1.53:1. Đổi sang viền kem: 13.88:1. */
@@ -128,7 +128,7 @@
    nền kem, 1.00:1, nút biến thành một ô trắng trống suốt lúc rê chuột.
    (Bug y hệt .btn-primary:hover bên about.css.) */
 .cta-btn--primary:hover {
-    background: var(--brand-lift);
+    background: var(--brand-hover-dark);
 }
 
 .cta-btn--primary:active {

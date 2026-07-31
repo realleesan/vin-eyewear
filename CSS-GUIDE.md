@@ -1,14 +1,15 @@
 # Quy tắc CSS toàn cục — Vin Eyewear
 
 Tài liệu này quy định **cách dùng các biến toàn cục** khi viết CSS cho dự án:
-bảng màu, thang chữ `clamp()`, thang khoảng cách, lề trang, breakpoint.
+bảng màu, trạng thái tương tác (hover / active / focus), thang chữ `clamp()`,
+thang khoảng cách, lề trang, breakpoint.
 
 Tất cả khai báo trong khối `:root` của **`assets/css/layout.css`**.
 Đó là nguồn duy nhất. File CSS của từng trang chỉ được *dùng* các biến này.
 
 ---
 
-## Ba luật bắt buộc
+## Bốn luật bắt buộc
 
 > **Luật 1 — Không viết giá trị tuyệt đối cho thứ đã có biến.**
 > Cỡ chữ, màu, khoảng cách đều đã có token. Viết thẳng `14px` hay `#6e1f2a` là
@@ -22,6 +23,12 @@ Tất cả khai báo trong khối `:root` của **`assets/css/layout.css`**.
 > **Luật 3 — Không khai lại `font-size` trong `@media`.**
 > Thang chữ tiêu đề đã tự co theo bề ngang màn hình. Khai lại vừa thừa, vừa phá
 > tính nhất quán giữa các trang.
+
+> **Luật 4 — Đổi nền khi hover thì phải kiểm lại màu chữ.**
+> Đây là lỗi đã xảy ra **4 lần** trong dự án: hover đổi nền sang `var(--white)`
+> mà quên đổi chữ, trong khi chữ đang là `--on-brand` — hai biến này **cùng một
+> giá trị `#f3e7d5`**. Kết quả là chữ kem trên nền kem, tương phản 1.00:1, nút
+> trống trơn suốt lúc rê chuột. Xem mục 2.
 
 ---
 
@@ -39,6 +46,11 @@ Tất cả khai báo trong khối `:root` của **`assets/css/layout.css`**.
 | Cỡ chữ nội dung | `--fs-body`, `--fs-body-sm`, `--fs-label`… |
 | padding / margin / gap | `--space-1` … `--space-30` |
 | Lề hai bên trang | `--margin` |
+| Hover nút nền brand | `--brand-hover` (nhấn: `--brand-active`) |
+| Hover nút nền tối | `--ink-hover` (nhấn: `--ink-active`) |
+| Hover nút brand **trên nền tối** | `--brand-hover-dark` |
+| Hover **chữ/link** trên nền tối | `--brand-light` |
+| Vòng focus bàn phím | `--focus-ring` |
 
 ---
 
@@ -86,24 +98,17 @@ Nếu khối đó có **phần tử con** đang tự đặt màu chữ tối, ph
 .promo .label { color: var(--on-brand-muted); }
 ```
 
-### Rule: hover trên nền tối dùng `--brand-light`
-
-```css
-/* SAI — brand đặt trên ink chỉ 1.5:1, hover coi như mất hút */
-.footer-social a:hover { color: var(--brand); }
-
-/* ĐÚNG */
-.footer-social a:hover { color: var(--brand-light); }
-```
-
-Quy ước: nền **sáng** → nhấn bằng `--brand-strong`; nền **tối** → nhấn bằng `--brand-light`.
-
 ### Ngưỡng tương phản phải đạt
 
-| Loại chữ | Tối thiểu |
+| Đối tượng | Tối thiểu |
 |---|---|
 | Chữ thường | 4.5 : 1 |
 | Chữ ≥ 24px, hoặc ≥ 18.66px in đậm | 3 : 1 |
+| **Hình khối** (nền nút so với nền xung quanh, đường viền) | 3 : 1 |
+
+Dòng cuối hay bị bỏ qua. Nút `--brand` đặt trên khối `--ink` chỉ tách nhau
+**1.53:1** — người dùng thực chất chỉ nhìn thấy *chữ*, không thấy *hình nút*.
+Xem cách xử lý ở mục 2.
 
 ### Tên biến cũ vẫn chạy, nhưng đừng dùng cho code mới
 
@@ -114,7 +119,116 @@ vào bảng trên (`--yellow` → `--brand`, `--black` → `--ink`, `--white` �
 
 ---
 
-## 2. Cỡ chữ — thang `clamp()`
+## 2. Trạng thái tương tác — hover / active / focus
+
+Hover **không** được tự chế theo từng file. Trước khi gom, cùng một vai trò
+"nút chính" có 6 kiểu hover khác nhau ở 6 file, 3 chỗ dùng `opacity`, và 4 chỗ
+dính lỗi mất chữ ở Luật 4.
+
+### Bảng token
+
+```css
+--brand-hover       var(--brand-strong)   /* nền brand khi rê chuột */
+--brand-active      #411018               /* brand khi ĐANG nhấn */
+--ink-hover         var(--brand)          /* nền tối khi rê chuột */
+--ink-active        var(--brand-strong)
+--brand-hover-dark  #8a2836               /* nút brand ĐẶT TRÊN nền tối */
+--focus-ring        var(--ink)            /* vòng focus bàn phím */
+```
+
+> **Đừng nhầm `--brand-light` với `--brand-hover-dark`.** Tên gần giống nhau
+> nhưng khác vai trò: `--brand-light` (#c9808c, hồng nhạt) dùng cho **chữ và
+> icon** trên nền tối; `--brand-hover-dark` (#8a2836, burgundy sáng 1 nấc) dùng
+> cho **nền nút** trên nền tối. Lấy nhầm `--brand-light` làm nền nút thì chữ
+> `--on-brand` trên đó chỉ còn ~1.9:1.
+
+### Hai quy tắc
+
+**Quy tắc 1 — Nút ĐẶC (có nền màu): hover đậm thêm một nấc, GIỮ NGUYÊN màu chữ.**
+
+```css
+.my-btn        { background: var(--brand); color: var(--on-brand); }
+.my-btn:hover  { background: var(--brand-hover); }   /* chỉ đổi nền */
+.my-btn:active { background: var(--brand-active); }
+```
+
+Không đổi tông, không đổi độ mờ. Người dùng thấy nút "lún xuống", chứ không
+thấy nó biến thành một nút khác.
+
+**Quy tắc 2 — Nút VIỀN (nền trong suốt): hover đổ đầy rồi đảo chữ.**
+
+```css
+.my-ghost        { background: transparent; border: 2px solid var(--ink); color: var(--ink); }
+.my-ghost:hover  { background: var(--ink); color: var(--on-ink); }
+```
+
+Đây là chỗ **duy nhất** được phép đảo màu, vì nút viền vốn không có nền để làm đậm.
+
+### Ca đặc biệt: nút đặt TRÊN nền tối
+
+Trên nền tối, quy tắc 1 đảo chiều — làm đậm là sai hướng vì nút sẽ chìm vào nền.
+
+```css
+/* SAI — .cta-band có background: var(--ink), hover đổ về đúng màu đó
+   thì nút tan biến, chỉ còn chữ lơ lửng */
+.cta-band .my-btn:hover { background: var(--ink); }
+
+/* ĐÚNG — trên nền tối thì hover SÁNG LÊN */
+.cta-band .my-btn:hover { background: var(--brand-hover-dark); }
+```
+
+Nút brand trên nền tối còn cần **viền `--on-ink`**, nếu không nó chỉ tách khỏi
+nền 1.53:1. Dùng sẵn `.btn-on-dark` / `.btn-ghost-on-dark` ở `layout.css`.
+
+### Không dùng `opacity` làm hover
+
+`opacity` làm mờ **cả nút lẫn chữ** và để nền trang lọt qua, nên kết quả là một
+màu bạn không kiểm soát được. Số đo thực tế của 3 chỗ đã bỏ:
+
+| Chỗ dùng | Tương phản chữ | Kết quả |
+|---|---|---|
+| `.btn-yellow` `opacity:.85` | 9.09 → **6.37** | burgundy hoá `#823d44` hồng nâu |
+| `.footer-col > a` `opacity:.55` | 9.09 → **3.79** | rớt AA |
+| `.tints__rows a` `opacity:.6` | 13.88 → **4.17** | rớt AA |
+
+Hover phải làm phần tử **nổi hơn**, không phải nhạt đi. Với chữ đã là màu sáng
+nhất của bảng màu (không "sáng thêm" được), dùng **gạch chân** thay vì làm mờ:
+
+```css
+.footer-col > a:hover { text-decoration: underline; text-underline-offset: 3px; }
+```
+
+### Focus bàn phím là bắt buộc
+
+Mọi thứ bấm được phải có `:focus-visible`. Dùng `:focus-visible` chứ **không**
+phải `:focus` — bấm chuột sẽ không hiện vòng, chỉ hiện khi điều hướng bằng bàn phím.
+
+```css
+.my-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+```
+
+Khối nào **nền tối** thì khai lại biến một lần ở khối cha, mọi nút bên trong tự nhận:
+
+```css
+.my-dark-section { --focus-ring: var(--on-ink); }
+```
+
+Đừng viết `outline: none` mà không có gì thay thế — người dùng bàn phím sẽ mất
+dấu hoàn toàn.
+
+### `transition: all` — đừng dùng
+
+```css
+/* SAI — all kéo theo cả outline, nên vòng focus bị mờ dần khi tab qua */
+transition: all 0.3s ease;
+
+/* ĐÚNG — liệt kê đúng thứ thật sự đổi */
+transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+```
+
+---
+
+## 3. Cỡ chữ — thang `clamp()`
 
 ### Hai tầng, cố ý khác nhau
 
@@ -197,7 +311,7 @@ Ví dụ muốn 30px → 48px: `B = 18/840×100 = 2.14vw`, `A = 30 − 12.86 = 1
 
 ---
 
-## 3. Khoảng cách
+## 4. Khoảng cách
 
 Lưới 4px, dùng cho `padding` / `margin` / `gap`:
 
@@ -220,7 +334,7 @@ comment lý do**, để người sau biết đó là chủ đích chứ không p
 
 ---
 
-## 4. Lề trang & bố cục
+## 5. Lề trang & bố cục
 
 ```css
 --margin       96px    /* lề trắng hai bên của MỌI section */
@@ -249,7 +363,7 @@ cả 5 chỗ, không chỉ dòng trong `:root`.
 
 ---
 
-## 5. Breakpoint
+## 6. Breakpoint
 
 **Chỉ dùng 4 mốc này. Không tự thêm mốc mới.**
 
@@ -274,7 +388,7 @@ Bù lại, thang chữ đã dùng `clamp()` nên bạn gần như không cần �
 
 ---
 
-## 6. Không khai lại class dùng chung
+## 7. Không khai lại class dùng chung
 
 Thứ tự nạp CSS: `layout.css` → CSS của trang → CSS của component. **File nạp sau thắng.**
 
@@ -292,9 +406,25 @@ rất khó nhìn ra vì hai file cách xa nhau.
 
 Áp dụng cho mọi class dùng chung: `.container`, `.btn`, `.badge`, `.product-card`…
 
+**Bộ nút là ví dụ điển hình.** `.btn` / `.btn-primary` / `.btn-secondary` từng
+được khai lại ở `layout.css`, `about.css` **và** `event.css` — ba nguồn sự thật
+cho cùng một cái tên, mỗi nơi một padding và một kiểu hover. Bản trong
+`event.css` còn là code chết (không view event nào dùng lớp `btn`) nên đã gỡ.
+
+Nay `layout.css` giữ toàn bộ **màu + trạng thái**; file trang chỉ được đè phần
+**hình dáng** (padding, cỡ chữ). Cần nút mới thì thêm vào `layout.css`:
+
+| Lớp | Dùng khi |
+|---|---|
+| `.btn-primary` | nút chính, nền brand, trên nền sáng |
+| `.btn-outline` | nút phụ dạng viền, trên nền sáng |
+| `.btn-dark` | nút nền tối, trên nền sáng |
+| `.btn-on-dark` | nút chính đặt **trên nền tối** |
+| `.btn-ghost-on-dark` | nút phụ dạng viền **trên nền tối** |
+
 ---
 
-## 7. Tóm tắt Sai → Đúng
+## 8. Tóm tắt Sai → Đúng
 
 | Sai | Đúng |
 |---|---|
@@ -304,10 +434,18 @@ rất khó nhìn ra vì hai file cách xa nhau.
 | `color: #6e1f2a` | `color: var(--brand)` |
 | `background: var(--brand); color: var(--ink)` | `… color: var(--on-brand)` |
 | `:hover { color: var(--brand) }` trên nền tối | `:hover { color: var(--brand-light) }` |
+| `:hover { opacity: .85 }` | `:hover { background: var(--brand-hover) }` |
+| `:hover` đổi nền mà không đổi `color` | đổi nền **và** kiểm lại `color` (Luật 4) |
+| `:hover { background: var(--white) }` trên nút brand | `:hover { background: var(--brand-hover) }` |
+| Nút trên nền tối hover đổ về `var(--ink)` | `var(--brand-hover-dark)` |
+| Không có `:focus-visible` | `outline: 2px solid var(--focus-ring)` |
+| `outline: none` không thay thế gì | giữ `:focus-visible`, hoặc `:focus-within` ở khối bọc |
+| `transition: all 0.3s ease` | liệt kê đúng thuộc tính đổi |
 | `padding: 24px` | `padding: var(--space-6)` |
 | `padding: 60px 80px` cho lề section | `padding: var(--space-16) var(--margin)` |
 | `@media (max-width: 768px)` | `@media (max-width: 900px)` |
 | Khai lại `.container` trong file trang | `.trang-cua-ban .container` |
+| Khai lại `.btn*` trong file trang | thêm biến thể vào `layout.css` |
 | Thêm `clamp()` rời trong file trang | Thêm token mới vào `:root` |
 
 ---

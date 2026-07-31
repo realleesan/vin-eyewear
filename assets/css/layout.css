@@ -1,7 +1,9 @@
 /* ============================================
    Vin Eyewear - Layout CSS
    Design system: "Lower East Heritage" (xem DESIGN.md)
-   Sharp 0px · High-contrast · No shadow · Heritage Yellow
+   Sharp 0px · High-contrast · No shadow · Burgundy/Beige
+   (Trước đây ghi "Heritage Yellow" — đó là bảng màu CŨ #ffcc00.
+    Quy tắc dùng biến: xem CSS-GUIDE.md ở gốc repo.)
    ============================================
 
    BỘ BREAKPOINT CHUẨN — chỉ dùng 4 mốc này, không thêm mốc mới:
@@ -161,7 +163,7 @@
          Cách chữa rẻ nhất mà vẫn giữ được màu thương hiệu: viền kem
          (--on-ink) quanh nút -> viền tách 13.88:1, nền trong vẫn là
          burgundy. Xem .btn-on-dark bên dưới. */
-    --brand-lift: #8a2836;
+    --brand-hover-dark: #8a2836;
     /* brand sáng 1 nấc — chỉ dùng hover TRÊN NỀN TỐI. Chữ 7.06:1 */
 
     /* Vệt sáng loang trên các dải nền tối. Trước khi đổi thương hiệu
@@ -908,7 +910,7 @@ textarea {
 }
 
 .btn-on-dark:hover {
-    background: var(--brand-lift);
+    background: var(--brand-hover-dark);
 }
 
 .btn-on-dark:active {

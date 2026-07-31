@@ -329,7 +329,7 @@
    lúc người dùng đang cần bấm nó để thoát lỗi camera.
    Nút này nằm trên lớp phủ lỗi nền tối nên hover phải SÁNG LÊN. */
 .btn-retry:hover {
-    background: var(--brand-lift);
+    background: var(--brand-hover-dark);
 }
 
 .btn-retry:active {
@@ -523,7 +523,7 @@
    thành một thanh đôi trên NỀN TỐI. Hover cũ của cả hai đều đổ về
    var(--black) — tức là đúng bằng màu nền khối chứa chúng: rê chuột
    vào thì nút tan biến, chỉ còn chữ lơ lửng. Trên nền tối, hover phải
-   đi NGƯỢC lại: sáng lên (xem --brand-lift ở layout.css). */
+   đi NGƯỢC lại: sáng lên (xem --brand-hover-dark ở layout.css). */
 .ar-cta .btn-primary {
     background: var(--brand);
     color: var(--on-brand);
@@ -531,7 +531,7 @@
 }
 
 .ar-cta .btn-primary:hover {
-    background: var(--brand-lift);
+    background: var(--brand-hover-dark);
 }
 
 .ar-cta .btn-primary:active {
