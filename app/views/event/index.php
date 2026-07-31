@@ -62,35 +62,39 @@ $show_pusher = true;
 
 <script src="/assets/js/event.js" defer></script>
 
+<!-- ============================================================
+     EVENTS LISTING — filter sidebar (trái) + grid (phải).
+     KHÔNG bọc .container (max-width 1200px): trang sản phẩm dùng
+     .product-listing căn lề bằng var(--margin), bọc container ở đây
+     sẽ làm vùng nội dung hai trang lệch nhau.
+     ============================================================ -->
 <section class="events-section">
-    <div class="container">
-        <div class="events-layout">
-            <!-- Filter Sidebar -->
-            <?php
-            $filter_type = 'event';
-            require VIEWS_PATH . '/_layout/filter-sidebar.php';
-            ?>
+    <div class="events-layout">
+        <!-- Filter Sidebar -->
+        <?php
+        $filter_type = 'event';
+        require VIEWS_PATH . '/_layout/filter-sidebar.php';
+        ?>
 
-            <!-- Events Grid -->
-            <div class="events-main">
-                <div class="events-grid">
-                    <?php foreach ($eventsData as $event): ?>
-                    <article class="event-card" data-event-category="<?= htmlspecialchars($eventSlug($event['category'])) ?>">
-                        <div class="event-image">
-                            <img src="<?= htmlspecialchars($event['image']) ?>" alt="<?= htmlspecialchars($event['title']) ?>" loading="lazy">
-                            <span class="event-badge"><?= htmlspecialchars($event['category']) ?></span>
-                        </div>
-                        <div class="event-content">
-                            <time class="event-date label-mono"><?= htmlspecialchars($event['date']) ?></time>
-                            <h3 class="event-title">
-                                <a href="/event/<?= htmlspecialchars($event['id']) ?>"><?= htmlspecialchars($event['title']) ?></a>
-                            </h3>
-                            <p class="event-excerpt"><?= htmlspecialchars($event['excerpt']) ?></p>
-                            <a href="/event/<?= htmlspecialchars($event['id']) ?>" class="event-link">Đọc tiếp →</a>
-                        </div>
-                    </article>
-                    <?php endforeach; ?>
-                </div>
+        <!-- Events Grid -->
+        <div class="events-main">
+            <div class="events-grid">
+                <?php foreach ($eventsData as $event): ?>
+                <article class="event-card" data-event-category="<?= htmlspecialchars($eventSlug($event['category'])) ?>">
+                    <div class="event-image">
+                        <img src="<?= htmlspecialchars($event['image']) ?>" alt="<?= htmlspecialchars($event['title']) ?>" loading="lazy">
+                        <span class="event-badge"><?= htmlspecialchars($event['category']) ?></span>
+                    </div>
+                    <div class="event-content">
+                        <time class="event-date label-mono"><?= htmlspecialchars($event['date']) ?></time>
+                        <h3 class="event-title">
+                            <a href="/event/<?= htmlspecialchars($event['id']) ?>"><?= htmlspecialchars($event['title']) ?></a>
+                        </h3>
+                        <p class="event-excerpt"><?= htmlspecialchars($event['excerpt']) ?></p>
+                        <a href="/event/<?= htmlspecialchars($event['id']) ?>" class="event-link">Đọc tiếp →</a>
+                    </div>
+                </article>
+                <?php endforeach; ?>
             </div>
         </div>
     </div>
