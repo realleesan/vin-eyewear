@@ -27,12 +27,11 @@
     flex: 1;
 }
 
-/* 4 cột, khe 28px — đúng bằng .product-grid (layout.css) nên card sự kiện
-   rộng bằng card sản phẩm và lưới hai trang thẳng hàng. */
+/* Events Grid - 3 cột */
 .events-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 28px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
 }
 
 /* Event Card */
@@ -51,12 +50,11 @@
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
-/* Khung ảnh vuông 1:1 giống .card-img của product-card (layout.css) — chiều
-   cao cố định 180px cũ làm card sự kiện thấp hơn card sản phẩm cùng cột. */
+/* Khung ảnh 16:9 để tăng độ rộng, giảm chiều cao ảnh */
 .event-image {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 16 / 9;
     overflow: hidden;
     border-bottom: 1px solid var(--black);
 }
@@ -83,13 +81,13 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     background-color: var(--yellow);
-    color: var(--black);
+    color: var(--white);
     padding: 6px 12px;
     border: 1px solid var(--black);
 }
 
 .event-content {
-    padding: 16px;
+    padding: 12px;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -97,39 +95,43 @@
 
 .event-date {
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--on-surface-variant);
-    margin-bottom: 12px;
+    margin-bottom: 4px;
 }
 
 .event-title {
     font-family: var(--font-serif);
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    line-height: 28px;
+    line-height: 24px;
     color: var(--black);
-    margin-bottom: 12px;
+    margin-bottom: 4px;
     letter-spacing: -0.02em;
     text-align: justify;
 }
 
+.event-title a {
+    color: var(--black);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.event-title a:hover {
+    color: var(--yellow);
+}
+
 .event-excerpt {
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 400;
     line-height: 1.5;
     color: var(--on-surface);
-    margin-bottom: 16px;
+    margin-bottom: 8px;
     text-align: justify;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-height: calc(13px * 1.5 * 2);
 }
 
 .event-link {
