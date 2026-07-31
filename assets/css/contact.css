@@ -6,14 +6,14 @@
 
 /* --- Contact Section Layout --- */
 .contact-section {
-    padding: 80px 0;
+    padding: var(--space-20) 0;
 }
 
 .section-title {
     font-family: var(--font-serif);
-    font-size: 2.2rem;
+    font-size: var(--fs-h3);
     font-weight: 700;
-    margin-bottom: 40px;
+    margin-bottom: var(--space-10);
     color: var(--black);
     position: relative;
 }
@@ -22,7 +22,7 @@
 .store-locator-wrapper {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 24px;
+    gap: var(--space-6);
     margin-bottom: 100px;
 }
 
@@ -31,7 +31,7 @@
     grid-column: span 5;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: var(--space-6);
 }
 
 .store-card {
@@ -55,6 +55,7 @@
     bottom: 0;
     width: 0;
     background: var(--yellow);
+    color: var(--on-brand);
     transition: width 0.15s ease;
 }
 
@@ -100,7 +101,7 @@
     background: var(--black);
     color: var(--white);
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -110,15 +111,15 @@
 
 /* Store Card Info */
 .store-card-content {
-    padding: 24px;
+    padding: var(--space-6);
 }
 
 .store-card-title {
     font-family: var(--font-serif);
-    font-size: 1.4rem;
+    font-size: var(--fs-subhead);
     font-weight: 700;
     color: var(--black);
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .store-details {
@@ -129,7 +130,7 @@
 
 .store-detail-item {
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     line-height: 1.5;
     display: flex;
     align-items: flex-start;
@@ -137,7 +138,7 @@
 
 .store-detail-item .label-mono {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 600;
     color: var(--outline);
     width: 100px;
@@ -157,9 +158,9 @@
 }
 
 .store-phone-link:hover {
-    color: var(--yellow);
+    color: var(--brand-light);
     background: var(--black);
-    padding: 0 4px;
+    padding: 0 var(--space-1);
 }
 
 /* Store Map Viewport */
@@ -187,14 +188,14 @@
 /* --- Contact Form Section --- */
 .contact-form-section {
     border-top: 2px solid var(--black);
-    padding-top: 80px;
-    margin-top: 80px;
+    padding-top: var(--space-20);
+    margin-top: var(--space-20);
 }
 
 .contact-form-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 24px;
+    gap: var(--space-6);
 }
 
 .form-intro {
@@ -207,37 +208,37 @@
 
 .form-title {
     font-family: var(--font-serif);
-    font-size: 2.2rem;
+    font-size: var(--fs-h3);
     font-weight: 700;
     color: var(--black);
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
 }
 
 .form-text {
     font-family: var(--font-sans);
-    font-size: 16px;
+    font-size: var(--fs-body-lg);
     line-height: 1.6;
     color: var(--on-surface-variant);
-    margin-bottom: 32px;
+    margin-bottom: var(--space-8);
 }
 
 /* Direct Contact Channels info */
 .direct-contact-channels {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 .channel-card {
     border: 2px solid var(--black);
     border-radius: 0 !important;
     background: var(--white);
-    padding: 20px;
+    padding: var(--space-5);
 }
 
 .channel-label {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 600;
     color: var(--outline);
     display: block;
@@ -246,7 +247,7 @@
 
 .channel-value {
     font-family: var(--font-serif);
-    font-size: 1.25rem;
+    font-size: var(--fs-subhead);
     font-weight: 700;
     color: var(--black);
 }
@@ -255,24 +256,24 @@
 .vin-form {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: var(--space-6);
 }
 
 .form-row-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: var(--space-5);
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .form-group label {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 600;
     color: var(--black);
 }
@@ -289,7 +290,7 @@
     background: var(--white);
     padding: 14px 18px;
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: var(--fs-body);
     color: var(--black);
     outline: none;
     box-shadow: none !important; /* Absolutely no soft shadow */
@@ -304,21 +305,21 @@
 .form-group input:focus,
 .form-group textarea:focus {
     border-color: var(--black);
-    background-color: #fffdfa; /* Vintage background shift on focus */
+    background-color: var(--surface-focus); /* Vintage background shift on focus */
     box-shadow: none !important;
 }
 
 /* Error state styles */
 .form-group.has-error input,
 .form-group.has-error textarea {
-    border: 2px solid #ba1a1a !important; /* Error red border */
+    border: 2px solid var(--danger) !important; /* Error red border */
     border-radius: 0 !important;
 }
 
 .error-message {
-    color: #ba1a1a;
+    color: var(--danger);
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 600;
     margin-top: 6px;
     display: block;
@@ -328,12 +329,12 @@
     align-self: flex-start;
     padding: 14px 36px;
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
     background: var(--yellow); /* Heritage Yellow #FFCC00 */
-    color: var(--black); /* Ink Black #000000 */
+    color: var(--on-brand); /* Ink Black #000000 */
     border: 2px solid var(--black);
     border-radius: 0 !important; /* Shape language: strictly 0px */
     cursor: pointer;
@@ -367,28 +368,28 @@
     border-radius: 0 !important;
     width: 90%;
     max-width: 500px;
-    padding: 32px;
+    padding: var(--space-8);
     box-shadow: 12px 12px 0px var(--yellow); /* Hard shadow matching design system */
 }
 
 .success-modal-header {
     font-family: var(--font-sans);
-    font-size: 18px;
+    font-size: var(--fs-lead);
     font-weight: 800;
     letter-spacing: 0.08em;
     color: var(--black);
     border-bottom: 2px solid var(--black);
-    padding-bottom: 12px;
+    padding-bottom: var(--space-3);
     margin-bottom: 18px;
     text-transform: uppercase;
 }
 
 .success-modal-body {
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: var(--on-surface-variant);
-    margin-bottom: 24px;
+    margin-bottom: var(--space-6);
 }
 
 .success-modal-body p {
@@ -405,9 +406,9 @@
     color: var(--white);
     border: 2px solid var(--black);
     border-radius: 0 !important;
-    padding: 10px 24px;
+    padding: 10px var(--space-6);
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -417,14 +418,14 @@
 
 .success-modal-close-btn:hover {
     background: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
 }
 
 /* --- Responsive Adjustments --- */
-@media (max-width: 1023px) {
+@media (max-width: 1100px) {
     .store-locator-wrapper {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: var(--space-6);
         margin-bottom: 60px;
     }
     
@@ -440,7 +441,7 @@
     
     .contact-form-grid {
         grid-template-columns: 1fr;
-        gap: 32px;
+        gap: var(--space-8);
     }
     
     .form-intro,
@@ -457,7 +458,7 @@
 @media (max-width: 600px) {
     .form-row-2 {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: var(--space-6);
     }
     
     .btn-submit {

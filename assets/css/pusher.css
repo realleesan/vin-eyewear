@@ -19,7 +19,7 @@
     height: 44px;
     /* Mac dinh vang Heritage + icon den (khop .cta-btn--primary, pagination active) */
     background: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
     border: 1.5px solid var(--black);
     border-radius: 0;
     cursor: pointer;
@@ -61,7 +61,6 @@
     stroke-linecap: round;
     stroke-linejoin: round;
 }
-
 
 /* ============================================
    RESPONSIVE (khớp breakpoint 900px của layout.css)

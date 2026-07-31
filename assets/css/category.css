@@ -6,7 +6,7 @@
 
 /* Category Section */
 .category-section {
-    padding: 120px 0;
+    padding: var(--space-30) 0;
     background-color: var(--white);
 }
 
@@ -14,7 +14,7 @@
 .category-layout {
     display: grid;
     grid-template-columns: 280px 1fr;
-    gap: 48px;
+    gap: var(--space-12);
     align-items: start;
 }
 
@@ -26,7 +26,7 @@
 .products-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 24px;
+    gap: var(--space-6);
 }
 
 /* Product Card - Spans 4 columns (3 products per row) */
@@ -69,26 +69,26 @@
     top: 16px;
     left: 16px;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     background-color: var(--yellow);
-    color: var(--black);
-    padding: 6px 12px;
+    color: var(--on-brand);
+    padding: 6px var(--space-3);
     border: 1px solid var(--black);
 }
 
 .product-info {
-    padding: 24px;
+    padding: var(--space-6);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .product-name {
     font-family: var(--font-sans);
-    font-size: 16px;
+    font-size: var(--fs-body-lg);
     font-weight: 700;
     line-height: 20px;
     color: var(--black);
@@ -99,7 +99,7 @@
 
 .product-price {
     font-family: var(--font-mono);
-    font-size: 16px;
+    font-size: var(--fs-body-lg);
     font-weight: 500;
     color: var(--black);
 }
@@ -108,10 +108,10 @@
 /* The filter-sidebar component already includes mobile slide-over functionality */
 
 /* Responsive Design */
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
     .category-layout {
         grid-template-columns: 240px 1fr;
-        gap: 32px;
+        gap: var(--space-8);
     }
     
     .products-grid {
@@ -123,9 +123,9 @@
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .category-section {
-        padding: 64px 0;
+        padding: var(--space-16) 0;
     }
     
     .category-layout {
@@ -154,7 +154,7 @@
     
     .products-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        gap: var(--space-4);
     }
     
     .product-card {
@@ -162,16 +162,16 @@
     }
     
     .product-name {
-        font-size: 14px;
+        font-size: var(--fs-body-sm);
         line-height: 18px;
     }
     
     .product-price {
-        font-size: 14px;
+        font-size: var(--fs-body-sm);
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
     .products-grid {
         grid-template-columns: 1fr;
     }
@@ -181,12 +181,12 @@
     }
     
     .product-info {
-        padding: 16px;
+        padding: var(--space-4);
     }
     
     .mobile-filter-toggle {
         bottom: 16px;
         right: 16px;
-        padding: 12px 20px;
+        padding: var(--space-3) var(--space-5);
     }
 }

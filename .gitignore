@@ -5,7 +5,9 @@ Thumbs.db
 *.tmp
 .vscode/
 docs/
+scripts/
 # AI assistant
 /CLAUDE.md
 CLAUDE.local.md
 .claude/
+.codegraph/

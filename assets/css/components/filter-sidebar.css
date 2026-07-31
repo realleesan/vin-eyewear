@@ -6,20 +6,19 @@
    từ cạnh trái + overlay, toggle ở filter-sidebar.js.
    ============================================ */
 
-
 /* ============================================
    NÚT MỞ FILTER (chỉ hiện mobile)
    ============================================ */
 .filter-toggle {
     display: none;              /* bật lại trong media query ≤900px */
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
+    gap: var(--space-2);
+    padding: 10px var(--space-4);
     background: var(--black);
     color: var(--white);
     border: none;
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -34,7 +33,6 @@
     stroke-width: 1.6;
     stroke-linecap: round;
 }
-
 
 /* ============================================
    OVERLAY NỀN (mobile, khi slide-over mở)
@@ -53,7 +51,6 @@
     opacity: 1;
     visibility: visible;
 }
-
 
 /* ============================================
    KHUNG SIDEBAR (compact — vừa 1 màn hình desktop)
@@ -80,7 +77,7 @@
 
 .filter-sidebar__title {
     font-family: var(--font-sans);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -91,18 +88,17 @@
     background: none;
     border: none;
     color: var(--white);
-    font-size: 22px;
+    font-size: var(--fs-subhead);
     line-height: 1;
-    padding: 0 4px;
+    padding: 0 var(--space-1);
     cursor: pointer;
 }
-
 
 /* ============================================
    NHÓM FILTER
    ============================================ */
 .filter-group {
-    padding: 12px 14px;
+    padding: var(--space-3) 14px;
 }
 
 .filter-group + .filter-group {
@@ -111,12 +107,12 @@
 
 .filter-group__title {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--outline);
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
 }
 
 .filter-group__options {
@@ -125,7 +121,6 @@
     gap: 2px;
 }
 
-
 /* ============================================
    CHIP FILTER
    (product.js toggle .is-active + aria-pressed)
@@ -133,11 +128,11 @@
 .filter-chip {
     display: block;
     width: 100%;
-    padding: 5px 8px;
+    padding: 5px var(--space-2);
     background: transparent;
     border: none;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     text-align: left;
     color: var(--on-surface);
     cursor: pointer;
@@ -150,25 +145,24 @@
 
 .filter-chip.is-active {
     background: var(--yellow);
-    color: var(--black);
+    color: var(--on-brand);
 }
-
 
 /* ============================================
    RESET BUTTON
    ============================================ */
 .filter-reset {
-    padding: 12px 14px;
+    padding: var(--space-3) 14px;
     border-top: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 .filter-reset-btn {
     width: 100%;
-    padding: 8px 12px;
+    padding: var(--space-2) var(--space-3);
     background: transparent;
     border: 1px solid var(--black);
     font-family: var(--font-sans);
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -180,9 +174,8 @@
 
 .filter-reset-btn:hover {
     background: var(--black);
-    color: var(--yellow);
+    color: var(--brand-light);
 }
-
 
 /* ============================================
    RESPONSIVE — slide-over mobile (≤900px,
@@ -191,7 +184,7 @@
 @media (max-width: 900px) {
     .filter-toggle {
         display: inline-flex;
-        margin-bottom: 16px;
+        margin-bottom: var(--space-4);
     }
 
     .filter-sidebar {
@@ -227,11 +220,11 @@
 
     /* Slide-over full màn hình: nới lại touch target, không cần compact */
     .filter-group {
-        padding: 16px;
+        padding: var(--space-4);
     }
 
     .filter-chip {
-        padding: 10px 12px;
-        font-size: 12px;
+        padding: 10px var(--space-3);
+        font-size: var(--fs-caption);
     }
 }

@@ -9,11 +9,11 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;            /* tên sản phẩm dài tự xuống dòng, không bể layout */
-    gap: 4px 8px;
-    padding: 24px var(--margin);
+    gap: var(--space-1) var(--space-2);
+    padding: var(--space-6) var(--margin);
     border-bottom: 1px solid var(--border);
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--outline);
@@ -34,13 +34,12 @@
     overflow-wrap: anywhere;    /* ten qua dai van khong tran man hinh hep */
 }
 
-
 /* ============================================
    RESPONSIVE (khớp breakpoint 900px của layout.css)
    ============================================ */
 @media (max-width: 900px) {
     .breadcrumb {
-        padding: 16px var(--margin);
+        padding: var(--space-4) var(--margin);
     }
 
     /* Noi tap target theo chieu doc cho man hinh cham (padding trong suot,
