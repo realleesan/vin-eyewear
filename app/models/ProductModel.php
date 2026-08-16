@@ -1,437 +1,574 @@
 <?php
 
 /**
- * ProductModel.php
- * Nguồn dữ liệu sản phẩm duy nhất cho Home / Product / Product Detail.
+ * ProductModel — catalog sản phẩm.
  *
- * GIAI ĐOẠN MOCKUP: dữ liệu tĩnh, ảnh hotlink trực tiếp từ CDN của Moscot
- * (chưa lưu ảnh về local). Khi có DB, chỉ cần thay phần thân catalog()
- * bằng query — các hàm public bên dưới giữ nguyên chữ ký.
+ * Port từ getCatalog / getProductBySlug (src/lib/shop.functions.ts) và phần
+ * lọc trong src/routes/san-pham.index.tsx.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * KHÁC BẢN LOVABLE: LỌC Ở ĐÂU
+ *
+ * Bản Lovable tải TOÀN BỘ catalog về trình duyệt rồi lọc, sắp xếp, phân trang
+ * bằng JavaScript. Cách đó chấp nhận được với 6 sản phẩm mẫu, nhưng tới vài
+ * trăm sản phẩm thì mỗi lượt vào trang phải tải cả kho hàng về máy khách.
+ *
+ * Bản này lọc bằng SQL: chỉ những dòng thật sự hiển thị mới rời khỏi database.
+ * Ngữ nghĩa lọc giữ nguyên hệt bản gốc (xem từng ghi chú ở buildFilter).
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Thay cho policy "public products" của Postgres: mọi hàm dành cho trang công
+ * khai đều kèm is_visible = 1.
  */
-class ProductModel
+
+class ProductModel extends BaseModel
 {
+    protected static string $table = 'products';
+
     /**
-* Toàn bộ catalog (24 sản phẩm).
-     * Mỗi item: id, name, category, price, image, badge, colors[]
-     * colors[] = mã hex các màu gọng, hiển thị thành hàng chấm màu ở trang chủ.
+     * Số sản phẩm mỗi trang.
+     *
+     * 12 KHÔNG PHẢI SỐ TUỲ Ý — nó là bội chung của cả ba bề rộng lưới ở trang
+     * danh mục (assets/css/category.css → .catgrid):
+     *
+     *   ≥ 901px  3 cột  ->  12 / 3 = 4 hàng chẵn
+     *   ≤ 900px  2 cột  ->  12 / 2 = 6 hàng chẵn
+     *   ≤ 560px  1 cột  ->  12 hàng
+     *
+     * Nhờ vậy hàng cuối của mọi trang luôn ĐẦY, không bao giờ còn một hai thẻ
+     * lẻ nằm trơ giữa khoảng trống. Kho có bao nhiêu hàng cũng vậy: đủ 12 là
+     * sang trang 2, không có chuyện lưới dài ra mãi.
+     *
+     * ĐỔI SỐ NÀY THÌ PHẢI CHỌN BỘI CHUNG CỦA 3 VÀ 2 — 6, 12, 18, 24, 30…
+     * Chọn 10 chẳng hạn thì lưới 3 cột có hàng cuối chỉ một thẻ.
      */
-    private static function catalog(): array
+    public const PER_PAGE = 12;
+
+    /**
+     * Các kiểu sắp xếp được phép.
+     *
+     * Danh sách CHO PHÉP, không phải danh sách cấm: giá trị ?sort= đến từ URL
+     * do người dùng kiểm soát và được nhúng thẳng vào ORDER BY (SQL không cho
+     * tham số hoá tên cột). Chỉ những khoá có ở đây mới đi tiếp.
+     */
+    private const SORTS = [
+        'price-asc'  => 'price ASC',
+        'price-desc' => 'price DESC',
+        'rating'     => 'rating DESC, review_count DESC',
+        'newest'     => 'created_at DESC',
+
+        // "Bán chạy" trong ô sắp xếp của "Vin Eyewear Category.dc.html".
+        // Bảng products chưa đếm số lượng đã bán, nên xếp theo thứ tự tốt nhất
+        // hiện có: hàng được đánh dấu nổi bật lên trước, rồi tới điểm đánh giá
+        // và số lượt đánh giá — cùng cách mà trang chủ chọn hàng "bán chạy".
+        // TODO(data): thêm cột `sold_count` rồi đổi vế này thành `sold_count DESC`.
+        'popular'    => 'is_featured DESC, rating DESC, review_count DESC',
+    ];
+
+    // ========================================================================
+    // ĐỌC
+    // ========================================================================
+
+    /**
+     * Lọc, sắp xếp và phân trang.
+     *
+     * @param array $filters q, category, brand, shape, material, gender, max, sort
+     * @return array ['items'=>[], 'total'=>int, 'page'=>int, 'perPage'=>int, 'totalPages'=>int]
+     */
+    public static function filter(array $filters = [], int $page = 1, ?int $perPage = null): array
     {
+        $perPage = $perPage ?? self::PER_PAGE;
+        $page    = max(1, $page);
+
+        [$where, $params] = self::buildFilter($filters);
+
+        $total = (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM products p {$where}",
+            $params
+        );
+
+        $sortKey = $filters['sort'] ?? 'newest';
+        $orderBy = self::SORTS[$sortKey] ?? self::SORTS['newest'];
+
+        $offset = ($page - 1) * $perPage;
+
+        $rows = Database::fetchAll(
+            "SELECT p.* FROM products p {$where}
+              ORDER BY {$orderBy}
+              LIMIT {$perPage} OFFSET {$offset}",
+            $params
+        );
+
         return [
-            [
-                'id' => 1,
-                'name' => 'Classic Round Gold',
-                'category' => 'tron',
-                'price' => 1_250_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/plotz-color-gold-pos-1.jpg?v=1765207556&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/plotz-color-gold-pos-2.jpg?v=1765207556&width=800',
-                'badge' => 'Bán chạy',
-                'colors' => ['#C9A227', '#E4D6A7', '#9AA0A6', '#1F3A5F'],
-            ],
-            [
-                'id' => 2,
-                'name' => 'Aviator Silver',
-                'category' => 'aviator',
-                'price' => 990_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/mingle-color-silver-pos-1.jpg?v=1730403716&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/mingle-color-silver-pos-2.jpg?v=1730403716&width=800',
-                'badge' => 'Mới',
-                'colors' => ['#C4C7CA', '#5A6470', '#2E3338'],
-            ],
-            [
-                'id' => 3,
-                'name' => 'Square Tortoise',
-                'category' => 'vuong',
-                'price' => 1_450_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-1_51a51dc4-f52a-4ebf-ae8c-53394cb8720c.jpg?v=1705433402&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-2_3d0284ce-bd3e-4c66-84bb-49bd189f2988.jpg?v=1705433402&width=800',
-                'badge' => '',
-                'colors' => ['#8A5A2B', '#C8A165', '#3E2B1B', '#D9C9A3'],
-            ],
-            [
-                'id' => 4,
-                'name' => 'Cat Eye Black',
-                'category' => 'cat-eye',
-                'price' => 850_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/baitsim-color-black-pos-1.jpg?v=1723581229&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/baitsim-color-black-pos-2.jpg?v=1723581229&width=800',
-                'badge' => 'Sale',
-                'colors' => ['#1B2A41', '#0F0F0F', '#4A5568'],
-            ],
-            [
-                'id' => 5,
-                'name' => 'Wayfarer Matte Black',
-                'category' => 'vuong',
-                'price' => 1_100_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/arthur-color-black-pos-1.jpg?v=1758566608&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/arthur-color-black-pos-2.jpg?v=1758566608&width=800',
-                'badge' => 'Bán chạy',
-                'colors' => ['#111111', '#3A3A3A', '#6B6B6B'],
-            ],
-            [
-                'id' => 6,
-                'name' => 'Oval Rose Gold',
-                'category' => 'tron',
-                'price' => 1_350_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/zev-color-burgundy-rose-gold-pos-1.jpg?v=1758576598&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/zev-color-burgundy-rose-gold-pos-2.jpg?v=1758576598&width=800',
-                'badge' => 'Mới',
-                'colors' => ['#7B2D3B', '#C98B96', '#E0B7A0'],
-            ],
-            [
-                'id' => 7,
-                'name' => 'Rimless Titanium',
-                'category' => 'rimless',
-                'price' => 2_100_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/products/shav-color-silver-pos-1.jpg?v=1691366113&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/products/shav-color-silver-pos-2.jpg?v=1691366113&width=800',
-                'badge' => '',
-                'colors' => ['#D5D8DB', '#A9AFB5', '#6E767D'],
-            ],
-            [
-                'id' => 8,
-                'name' => 'Sport Wrap Gunmetal',
-                'category' => 'sport',
-                'price' => 780_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/bjorn-color-bamboo-pos-1_655a3a0c-e37b-487e-87ac-e36dc6bba7d8.jpg?v=1758571392&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/bjorn-color-bamboo-pos-2_cffa9de4-9395-48cc-a9c4-c64995c2ea51.jpg?v=1758571392&width=800',
-                'badge' => 'Sale',
-                'colors' => ['#4B5157', '#2B2F33', '#8B9197'],
-            ],
-            [
-                'id' => 9,
-                'name' => 'Browline Havana',
-                'category' => 'vuong',
-                'price' => 1_180_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/products/bluma-color-bark-pos-1.jpg?v=1691340895&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/products/bluma-color-bark-pos-2.jpg?v=1691340895&width=800',
-                'badge' => '',
-                'colors' => ['#8A5A2B', '#5C4033', '#C8A165', '#2F2A25'],
-            ],
-            [
-                'id' => 10,
-                'name' => 'Aviator Gold Mirror',
-                'category' => 'aviator',
-                'price' => 1_050_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/products/brandon-color-black-pos-1_cf41e032-9547-48bd-8487-cc03f28d6597.jpg?v=1758586205&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/products/brandon-color-black-pos-2_e76ddefc-d898-46f0-82ab-62052b8d7b9f.jpg?v=1758586205&width=800',
-                'badge' => 'Bán chạy',
-                'colors' => ['#C9A227', '#E6C86E', '#8A6D1F'],
-            ],
-            [
-                'id' => 11,
-                'name' => 'Cat Eye Marble',
-                'category' => 'cat-eye',
-                'price' => 920_000,
-                // Anh cu (cosnic-model-pos-1/2) la chan dung nguoi deo kinh — lac
-                // dieu so voi moi the con lai deu chup rieng gong tren nen studio.
-                // Doi sang chinh dong COSNIC, ban tortoise/antique gold cho khop
-                // ten "Cat Eye Marble" va dai swatch nau-kem ben duoi.
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/cosnic-tortoise-antique-gold-pos-1.jpg?width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/cosnic-tortoise-antique-gold-pos-2.jpg?width=800',
-                'badge' => 'Mới',
-                'colors' => ['#9C7B5A', '#C3A98C', '#5E4A38', '#E2D5C3'],
-            ],
-            [
-                'id' => 12,
-                'name' => 'Round Clear Lens',
-                'category' => 'tron',
-                'price' => 650_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/cosnic--burgundy-gold-pos-1.jpg?v=1749667639&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/cosnic--burgundy-gold-pos-2.jpg?v=1749667639&width=800',
-                'badge' => '',
-                'colors' => ['#C8891F', '#E0B25C', '#F0D9A8'],
-            ],
-            [
-                'id' => 13,
-                'name' => 'Classic Round Havana',
-                'category' => 'tron',
-                'price' => 1_290_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/miltzen-green_-color-citron-tortoise-pos-1.jpg?v=1779994168&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/miltzen-green_-color-citron-tortoise-pos-2.jpg?v=1779994168&width=800',
-                'badge' => '',
-                'colors' => ['#8A5A2B', '#C8A165', '#3E2B1B'],
-            ],
-            [
-                'id' => 14,
-                'name' => 'Aviator Matte Black',
-                'category' => 'aviator',
-                'price' => 1_020_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-le-color-blue-fade-pos-1.jpg?v=1781275109&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-le-color-blue-fade-pos-2.jpg?v=1781275109&width=800',
-                'badge' => 'Bán chạy',
-                'colors' => ['#111111', '#3A3A3A', '#6B6B6B'],
-            ],
-            [
-                'id' => 15,
-                'name' => 'Square Crystal',
-                'category' => 'vuong',
-                'price' => 1_390_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/avram-cmt-color-american-grey-fade-pos-1.jpg?v=1781715398&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/avram-cmt-color-american-grey-fade-pos-2.jpg?v=1781715398&width=800',
-                'badge' => 'Mới',
-                'colors' => ['#D9D9D9', '#B0B7BF', '#8892A0'],
-            ],
-            [
-                'id' => 16,
-                'name' => 'Cat Eye Burgundy',
-                'category' => 'cat-eye',
-                'price' => 880_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/dolt-green-color-khaki-pos-1.jpg?v=1771015388&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/dolt-green-color-khaki-pos-2.jpg?v=1771015388&width=800',
-                'badge' => '',
-                'colors' => ['#800020', '#A63A50', '#5C1226'],
-            ],
-            [
-                'id' => 17,
-                'name' => 'Wayfarer Tortoise',
-                'category' => 'vuong',
-                'price' => 1_150_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/arthur-monochrome-color-black-pos-1.jpg?v=1773243740&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/arthur-monochrome-color-black-pos-2.jpg?v=1773243740&width=800',
-                'badge' => 'Sale',
-                'colors' => ['#8A5A2B', '#5C4033', '#C8A165'],
-            ],
-            [
-                'id' => 18,
-                'name' => 'Oval Gold Classic',
-                'category' => 'tron',
-                'price' => 1_320_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/jared-color-spot-tortoise-pos-1.jpg?v=1766590619&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/jared-color-spot-tortoise-pos-2.jpg?v=1766590619&width=800',
-                'badge' => '',
-                'colors' => ['#C9A227', '#E4D6A7', '#9AA0A6'],
-            ],
-            [
-                'id' => 19,
-                'name' => 'Rimless Silver Light',
-                'category' => 'rimless',
-                'price' => 1_980_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/utz-color-antique-gold-pos-1.jpg?v=1765208065&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/utz-color-antique-gold-pos-2.jpg?v=1765208065&width=800',
-                'badge' => 'Mới',
-                'colors' => ['#D5D8DB', '#A9AFB5', '#6E767D'],
-            ],
-            [
-                'id' => 20,
-                'name' => 'Sport Wrap Black',
-                'category' => 'sport',
-                'price' => 820_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/aygen-color-bamboo-gold-pos-1.jpg?v=1765206071&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/aygen-color-bamboo-gold-pos-2.jpg?v=1765206071&width=800',
-                'badge' => 'Bán chạy',
-                'colors' => ['#111111', '#2B2F33', '#4B5157'],
-            ],
-            [
-                'id' => 21,
-                'name' => 'Browline Gunmetal',
-                'category' => 'vuong',
-                'price' => 1_210_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/mizer-color-bamboo-gold-pos-1.jpg?v=1765207058&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/mizer-color-bamboo-gold-pos-2.jpg?v=1765207058&width=800',
-                'badge' => '',
-                'colors' => ['#5A6470', '#2E3338', '#8B9197'],
-            ],
-            [
-                'id' => 22,
-                'name' => 'Aviator Rose Gold',
-                'category' => 'aviator',
-                'price' => 1_090_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/zissel-color-black-pos-1.jpg?v=1765209443&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/zissel-color-black-pos-2.jpg?v=1765209443&width=800',
-                'badge' => 'Sale',
-                'colors' => ['#C98B96', '#E0B7A0', '#7B2D3B'],
-            ],
-            [
-                'id' => 23,
-                'name' => 'Cat Eye Amber',
-                'category' => 'cat-eye',
-                'price' => 950_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/zev-color-gold-dark-green-pos-1.jpg?v=1758576598&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/zev-color-gold-dark-green-pos-2.jpg?v=1758576598&width=800',
-                'badge' => '',
-                'colors' => ['#C8891F', '#E0B25C', '#9C7B5A'],
-            ],
-            [
-                'id' => 24,
-                'name' => 'Round Blonde',
-                'category' => 'tron',
-                'price' => 690_000,
-                'image' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/frankie-color-tortoise-pos-1_d8dbb969-66e8-4615-b8b3-f114e506dad6.jpg?v=1758574520&width=800',
-                'image2' => 'https://cdn.shopify.com/s/files/1/2403/8187/files/frankie-color-tortoise-pos-2_6603d4b6-8c83-47b2-9570-284e77fbf3c1.jpg?v=1758574520&width=800',
-                'badge' => 'Mới',
-                 'colors' => ['#E0B25C', '#F0D9A8', '#C8891F'],
-            ],
+            'items'      => array_map([self::class, 'decode'], $rows),
+            'total'      => $total,
+            'page'       => $page,
+            'perPage'    => $perPage,
+            'totalPages' => (int) ceil($total / $perPage),
         ];
     }
 
-    /** Toàn bộ sản phẩm — trang /product */
-    public static function all(): array
+    /**
+     * Dựng mệnh đề WHERE từ tham số lọc trên URL.
+     *
+     * Ngữ nghĩa khớp bản Lovable (san-pham.index.tsx):
+     *   q        — tìm trong name + brand + sku
+     *   category — theo SLUG danh mục, không phải id
+     *   brand / shape / material / gender — khớp chính xác
+     *   max      — giá <= max
+     */
+    private static function buildFilter(array $f): array
     {
-        return self::catalog();
+        $conds  = ['p.is_visible = 1'];
+        $params = [];
+
+        // Tìm kiếm tự do.
+        //
+        // Collation utf8mb4_unicode_ci khiến LIKE bỏ qua cả HOA/thường lẫn
+        // DẤU, nên gõ "kinh mat" vẫn ra "Kính mát" — tiện hơn hẳn bản
+        // JavaScript vốn chỉ hạ chữ thường rồi so khớp nguyên văn.
+        if (!empty($f['q'])) {
+            // TÁCH TỪ rồi bắt khớp TẤT CẢ các từ, mỗi từ khớp ở bất kỳ đâu.
+            //
+            // Trước đây cả câu được ghép thành một chuỗi liền: gõ "gọng titan"
+            // sinh ra LIKE '%gọng titan%', mà tên sản phẩm là "Gọng kính Titan
+            // Vin T01" — hai từ cách nhau bởi chữ "kính" nên không khớp, và
+            // người dùng nhận về 0 kết quả cho một truy vấn hoàn toàn hợp lý.
+            //
+            // Nay mỗi từ là một điều kiện riêng nối bằng AND, trong mỗi điều
+            // kiện thì OR qua tên / thương hiệu / SKU. "gọng titan" thành
+            // (khớp "gọng") AND (khớp "titan") — thứ tự và khoảng cách giữa
+            // các từ không còn quan trọng.
+            //
+            // Giới hạn 6 từ: mỗi từ thêm 3 điều kiện LIKE, người gõ cả một câu
+            // dài không nên biến thành câu truy vấn hàng chục phép quét bảng.
+            $words = preg_split('/\s+/u', trim((string) $f['q']), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+            $words = array_slice($words, 0, 6);
+
+            foreach ($words as $i => $word) {
+                // Ba tham số RIÊNG cho cùng một giá trị, không dùng lại một tên.
+                //
+                // Bắt buộc phải vậy: dự án tắt EMULATE_PREPARES nên đây là
+                // prepared statement thật của MySQL, mà MySQL ánh xạ tham số
+                // theo VỊ TRÍ. Viết `LIKE :q OR ... LIKE :q` sẽ khiến PDO chỉ
+                // gửi một giá trị cho ba chỗ cần và ném "Invalid parameter number".
+                $conds[] = sprintf(
+                    '(p.name LIKE :q%1$d_name OR p.brand LIKE :q%1$d_brand OR p.sku LIKE :q%1$d_sku)',
+                    $i
+                );
+
+                // addcslashes thoát % và _ để người dùng gõ "50%" không biến
+                // thành ký tự đại diện khớp mọi thứ
+                $needle = '%' . addcslashes($word, '%_\\') . '%';
+
+                $params["q{$i}_name"]  = $needle;
+                $params["q{$i}_brand"] = $needle;
+                $params["q{$i}_sku"]   = $needle;
+            }
+        }
+
+        if (!empty($f['category'])) {
+            $conds[] = 'p.category_id = (SELECT id FROM categories WHERE slug = :category)';
+            $params['category'] = $f['category'];
+        }
+
+        /*
+         * Bốn tiêu chí phân loại — nhận CẢ chuỗi đơn LẪN mảng.
+         *
+         * Bản thiết kế "Vin Eyewear Category.dc.html" cho chọn nhiều giá trị
+         * trong cùng một nhóm (Vuông + Tròn), nên ở đây là `IN (...)` chứ
+         * không còn `= :key`. Chuỗi đơn vẫn chạy y như cũ, nên các liên kết
+         * sẵn có (/san-pham?shape=Round từ trang chủ, ?brand=... từ mega menu)
+         * không phải sửa.
+         *
+         * Nhiều giá trị TRONG một nhóm là HOẶC; giữa các nhóm là VÀ — giống
+         * hệt phép lọc trong bản thiết kế.
+         */
+        foreach (['brand' => 'brand', 'shape' => 'frame_shape',
+                  'material' => 'material', 'gender' => 'gender'] as $key => $column) {
+            $values = self::scalarList($f[$key] ?? null);
+
+            if ($values === []) {
+                continue;
+            }
+
+            $holders = [];
+            foreach ($values as $i => $value) {
+                // Tên tham số riêng cho từng giá trị: dự án tắt EMULATE_PREPARES
+                // nên MySQL ánh xạ tham số theo VỊ TRÍ, dùng lại một tên cho
+                // nhiều chỗ sẽ ném "Invalid parameter number".
+                $name = "{$key}_{$i}";
+                $holders[] = ":{$name}";
+                $params[$name] = $value;
+            }
+
+            $conds[] = "p.`{$column}` IN (" . implode(', ', $holders) . ')';
+        }
+
+        // Bộ sưu tập (S09). Chỉ thêm điều kiện khi cột đã tồn tại: chưa chạy
+        // database/migrations/2026-08-15-bo-suu-tap.sql mà có ai mở link
+        // /san-pham?collection=... thì câu lệnh sẽ đổ "Unknown column" và cả
+        // trang danh sách sập, thay vì chỉ bỏ qua một bộ lọc.
+        if (!empty($f['collection']) && self::hasCollectionColumn()) {
+            $conds[] = 'p.collection = :collection';
+            $params['collection'] = $f['collection'];
+        }
+
+        if (!empty($f['max']) && is_numeric($f['max'])) {
+            $conds[] = 'p.price <= :max';
+            $params['max'] = (int) $f['max'];
+        }
+
+        // Chặn dưới của khoảng giá. Ô "Khoảng giá" trong bản thiết kế là bốn
+        // khoảng có hai đầu, không phải một thanh trượt chỉ có chặn trên.
+        if (!empty($f['min']) && is_numeric($f['min'])) {
+            $conds[] = 'p.price >= :min';
+            $params['min'] = (int) $f['min'];
+        }
+
+        return [' WHERE ' . implode(' AND ', $conds), $params];
     }
 
-    /** N sản phẩm đầu — section Best Sellers ở trang chủ */
-    public static function bestSellers(int $limit = 8): array
+    /**
+     * Chuẩn hoá một tham số lọc thành danh sách chuỗi không rỗng, không trùng.
+     *
+     * Nhận cả `?brand=Ray-Ban` lẫn `?brand[]=Ray-Ban&brand[]=Gucci`. Bỏ qua
+     * mọi phần tử không phải giá trị vô hướng: `?brand[][]=x` cho ra mảng lồng
+     * mảng, ép (string) một mảng sẽ ném lỗi chứ không phải chỉ ra chuỗi lạ.
+     *
+     * Cắt còn 20 giá trị: mỗi giá trị là một tham số trong mệnh đề IN, mà
+     * không có lý do thật nào để lọc quá 20 thương hiệu cùng lúc — phần dư chỉ
+     * có thể đến từ một URL dựng bằng tay để bơm phồng câu truy vấn.
+     */
+    private static function scalarList(mixed $raw): array
     {
-        return array_slice(self::catalog(), 0, $limit);
+        $items  = is_array($raw) ? $raw : [$raw];
+        $values = [];
+
+        foreach ($items as $item) {
+            if (!is_scalar($item)) {
+                continue;
+            }
+
+            $value = trim((string) $item);
+
+            if ($value !== '') {
+                $values[] = $value;
+            }
+        }
+
+        return array_slice(array_values(array_unique($values)), 0, 20);
     }
 
-    /** Tìm sản phẩm theo id, null nếu không có */
-    public static function find(int $id): ?array
+    /**
+     * Bảng products đã có cột `collection` chưa?
+     *
+     * Hỏi MySQL một lần rồi nhớ trong biến static — bộ lọc gọi hàm này mỗi
+     * lần dựng câu WHERE, mà một trang danh sách chạy tới hai câu (đếm tổng
+     * và lấy trang hiện tại).
+     */
+    private static function hasCollectionColumn(): bool
     {
-        foreach (self::catalog() as $product) {
-            if ($product['id'] === $id) {
-                return $product;
+        static $has = null;
+
+        if ($has === null) {
+            try {
+                $has = Database::fetchOne("SHOW COLUMNS FROM products LIKE 'collection'") !== null;
+            } catch (Throwable $e) {
+                $has = false;
+            }
+        }
+
+        return $has;
+    }
+
+    /**
+     * Các giá trị có thật trong catalog, dùng dựng ô chọn của bộ lọc.
+     *
+     * Lấy từ dữ liệu chứ không khai cứng: thêm thương hiệu mới vào kho là bộ
+     * lọc tự có thêm lựa chọn. Chỉ tính sản phẩm đang hiển thị, để bộ lọc
+     * không đưa ra lựa chọn dẫn tới danh sách rỗng.
+     */
+    public static function facets(): array
+    {
+        $pick = static function (string $column): array {
+            $rows = Database::fetchAll(
+                "SELECT DISTINCT `{$column}` AS v
+                   FROM products
+                  WHERE is_visible = 1
+                    AND `{$column}` IS NOT NULL
+                    AND `{$column}` <> ''
+                    AND `{$column}` <> '—'
+                  ORDER BY v"
+            );
+            return array_column($rows, 'v');
+        };
+
+        /*
+         * Số sản phẩm của từng thương hiệu, hiện bên phải mỗi dòng trong ô
+         * "Thương hiệu" của bộ lọc.
+         *
+         * Đếm trên TOÀN kho đang hiển thị, không đếm theo bộ lọc đang bật —
+         * đúng như bản thiết kế. Đếm theo bộ lọc thì con số sẽ nhảy mỗi lần
+         * tick một ô, và mọi thương hiệu chưa chọn đều tụt về 0 ngay khi chọn
+         * thương hiệu đầu tiên (vì lọc giữa các nhóm là VÀ).
+         */
+        $brandCounts = [];
+        foreach (Database::fetchAll(
+            "SELECT brand, COUNT(*) AS c
+               FROM products
+              WHERE is_visible = 1 AND brand IS NOT NULL AND brand <> ''
+              GROUP BY brand"
+        ) as $row) {
+            $brandCounts[$row['brand']] = (int) $row['c'];
+        }
+
+        return [
+            // Tên cột cố định trong code, không đến từ người dùng
+            'brands'      => $pick('brand'),
+            'brandCounts' => $brandCounts,
+            'shapes'      => $pick('frame_shape'),
+            'materials'   => $pick('material'),
+            'genders'     => $pick('gender'),
+            'maxPrice'    => (int) Database::fetchValue(
+                'SELECT COALESCE(MAX(price), 0) FROM products WHERE is_visible = 1'
+            ),
+        ];
+    }
+
+    public static function findVisibleBySlug(string $slug): ?array
+    {
+        $row = static::firstWhere(['slug' => $slug, 'is_visible' => 1]);
+
+        return $row === null ? null : self::decode($row);
+    }
+
+    /**
+     * Sản phẩm cùng danh mục, dùng ở cuối trang chi tiết.
+     *
+     * Danh mục NULL thì trả rỗng thay vì gom hết sản phẩm chưa phân loại —
+     * `category_id = NULL` không khớp gì trong SQL, nhưng nói rõ ý đồ ở đây
+     * để người đọc không tưởng là thiếu sót.
+     */
+    public static function related(?string $categoryId, string $excludeId, int $limit = 4): array
+    {
+        if ($categoryId === null) {
+            return [];
+        }
+
+        $rows = Database::fetchAll(
+            'SELECT * FROM products
+              WHERE is_visible = 1
+                AND category_id = :cat
+                AND id <> :id
+              ORDER BY is_featured DESC, created_at DESC
+              LIMIT ' . max(1, $limit),
+            ['cat' => $categoryId, 'id' => $excludeId]
+        );
+
+        return array_map([self::class, 'decode'], $rows);
+    }
+
+    /**
+     * Sản phẩm nổi bật cho trang chủ.
+     */
+    public static function featured(int $limit = 8): array
+    {
+        $rows = Database::fetchAll(
+            'SELECT * FROM products
+              WHERE is_visible = 1
+                AND is_featured = 1
+              ORDER BY created_at DESC
+              LIMIT ' . max(1, $limit)
+        );
+
+        return array_map([self::class, 'decode'], $rows);
+    }
+
+    /**
+     * Hàng mới về.
+     */
+    public static function newest(int $limit = 8): array
+    {
+        $rows = Database::fetchAll(
+            'SELECT * FROM products
+              WHERE is_visible = 1
+              ORDER BY created_at DESC
+              LIMIT ' . max(1, $limit)
+        );
+
+        return array_map([self::class, 'decode'], $rows);
+    }
+
+    // ========================================================================
+    // THỬ KÍNH AR
+    //
+    // Tập gọng AR KHÔNG nằm ở cột products.ar_model_url (cột đó chưa dùng tới)
+    // mà ở config/ar.php: mỗi mẫu cần một ảnh PNG nền trong chụp chính diện,
+    // nên chỉ vài mẫu có, không phải cả catalog. Trường 'slug' nối mẫu AR với
+    // sản phẩm thật — hai hàm dưới đều đi từ danh sách đó.
+    // ========================================================================
+
+    /**
+     * Slug các mẫu có thể thử AR.
+     *
+     * Nhớ kết quả lại: thẻ sản phẩm gọi hàm này một lần cho MỖI thẻ, mà một
+     * trang danh sách có tới 12 thẻ.
+     */
+    public static function arSlugs(): array
+    {
+        static $slugs = null;
+
+        if ($slugs === null) {
+            $slugs = array_column(config('ar.frames') ?? [], 'slug');
+        }
+
+        return $slugs;
+    }
+
+    /**
+     * Sản phẩm này có mẫu AR để thử không?
+     */
+    public static function hasArTryOn(array $product): bool
+    {
+        return in_array($product['slug'] ?? '', static::arSlugs(), true);
+    }
+
+    /**
+     * Số mẫu gọng đang thử AR được — chỉ đếm mẫu mà sản phẩm còn hiện.
+     *
+     * Đúng phép lọc ArController dùng khi dựng danh sách: mẫu nào gắn với sản
+     * phẩm đã ẩn hoặc đã xoá thì trang AR bỏ qua, nên con số quảng cáo ở trang
+     * chủ cũng phải bỏ theo — nếu không sẽ hứa 6 mẫu mà vào chỉ thấy 4.
+     */
+    public static function countArReady(): int
+    {
+        $slugs = static::arSlugs();
+
+        if ($slugs === []) {
+            return 0;
+        }
+
+        $holders = implode(', ', array_fill(0, count($slugs), '?'));
+
+        return (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM products WHERE is_visible = 1 AND slug IN ({$holders})",
+            $slugs
+        );
+    }
+
+    /**
+     * Lấy nhiều sản phẩm theo id — dùng khi dựng lại giỏ hàng từ session.
+     *
+     * Trả về mảng đánh khoá theo id để chỗ gọi tra thẳng, không phải duyệt lại.
+     */
+    public static function findManyById(array $ids): array
+    {
+        $ids = array_values(array_filter($ids, 'is_string'));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = static::where(['id' => $ids, 'is_visible' => 1]);
+        $out  = [];
+
+        foreach ($rows as $row) {
+            $out[$row['id']] = self::decode($row);
+        }
+
+        return $out;
+    }
+
+    // ========================================================================
+    // TRÌNH BÀY
+    // ========================================================================
+
+    /**
+     * Giải mã các cột JSON thành mảng PHP.
+     *
+     * PDO trả cột JSON của MySQL dưới dạng CHUỖI, không tự giải mã. Không có
+     * bước này thì view phải json_decode ở từng chỗ dùng, và quên một chỗ là
+     * lỗi "không thể duyệt chuỗi" hiện ra giữa trang.
+     */
+    private static function decode(array $row): array
+    {
+        foreach (['images', 'specs'] as $column) {
+            if (isset($row[$column]) && is_string($row[$column])) {
+                $row[$column] = json_decode($row[$column], true) ?? [];
+            } elseif (!isset($row[$column])) {
+                $row[$column] = [];
+            }
+        }
+
+        return $row;
+    }
+
+    /**
+     * Ảnh đại diện. Trả ảnh dự phòng khi sản phẩm chưa có ảnh nào, để bố cục
+     * lưới không bị thủng một ô trống.
+     */
+    public static function image(array $product): string
+    {
+        return $product['images'][0] ?? '/assets/images/product-1.jpg';
+    }
+
+    /**
+     * Sản phẩm này có ảnh thật chưa?
+     *
+     * image() ở trên luôn trả về MỘT đường dẫn, và khi thiếu ảnh thì nó mượn
+     * product-1.jpg — tức là ảnh của một mặt hàng khác. Ở lưới danh mục thì
+     * chuyện đó thành nói dối người xem: họ thấy một cặp gọng và tưởng đó là
+     * món đang đọc. Nơi nào cần phân biệt "chưa có ảnh" với "có ảnh" thì hỏi
+     * hàm này trước rồi tự vẽ ô trống, đừng gọi thẳng image().
+     *
+     * Hay gặp ngay sau khi thêm hàng trong trang quản trị mà chưa kịp tải ảnh.
+     */
+    public static function hasImage(array $product): bool
+    {
+        $first = $product['images'][0] ?? '';
+
+        return is_string($first) && trim($first) !== '';
+    }
+
+    /**
+     * Ảnh thứ hai — hiện khi rê chuột. Null nghĩa là không có, view bỏ qua.
+     */
+    public static function hoverImage(array $product): ?string
+    {
+        return $product['images'][1] ?? null;
+    }
+
+    /**
+     * Kích thước gọng lấy từ specs.
+     *
+     * Dò nhiều tên khoá vì dữ liệu nhập tay không thống nhất — đúng như bản
+     * Lovable làm (frameSize trong product-card.tsx).
+     */
+    public static function frameSize(array $product): ?string
+    {
+        $specs = $product['specs'] ?? [];
+
+        if (!is_array($specs)) {
+            return null;
+        }
+
+        foreach (['Kích thước', 'size', 'kich_thuoc', 'frame_size'] as $key) {
+            if (isset($specs[$key]) && (is_string($specs[$key]) || is_numeric($specs[$key]))) {
+                return (string) $specs[$key];
             }
         }
 
         return null;
     }
 
-    /** N sản phẩm gợi ý, loại trừ $excludeId để không tự gợi ý chính nó */
-    public static function related(int $excludeId, int $limit = 4): array
+    /**
+     * Còn bán được hay không. Kiểm CẢ trạng thái lẫn số lượng tồn: một sản
+     * phẩm có status 'in_stock' nhưng tồn 0 vẫn là hết hàng.
+     */
+    public static function inStock(array $product, int $quantity = 1): bool
     {
-        $others = array_filter(
-            self::catalog(),
-            fn(array $p): bool => $p['id'] !== $excludeId
-        );
-
-        return array_slice(array_values($others), 0, $limit);
-    }
-
-    /** Id dùng khi /product/detail được mở mà không kèm ?id= (link cũ, bookmark) */
-    public const FEATURED_ID = 3; // Square Tortoise
-
-    /**
-     * Mô tả + thông số theo dáng gọng.
-     * MOCKUP: catalog() chưa có cột mô tả riêng cho từng sản phẩm nên detail()
-     * dựng nội dung từ category. Khi có DB, đọc thẳng các cột tương ứng.
-     * 'desc' chứa một %s để chèn tên sản phẩm.
-     */
-    private const SHAPE_PROFILE = [
-        'tron' => [
-            'shape'    => 'Tròn (Round)',
-            'material' => 'Acetate Ý kết hợp càng kim loại',
-            'size'     => '47 - 22 - 145 mm',
-            'desc'     => '%s giữ nguyên tinh thần của dáng tròn kinh điển: viền mảnh, cầu kính '
-                . 'key-hole và tỉ lệ cân đối giúp gương mặt trông mềm hơn. Acetate được đánh bóng '
-                . 'thủ công qua nhiều công đoạn nên bề mặt sáng đều, cầm chắc tay mà vẫn nhẹ.',
-        ],
-        'vuong' => [
-            'shape'    => 'Vuông bo tròn (Square)',
-            'material' => 'Acetate Ý nguyên khối',
-            'size'     => '46 - 24 - 145 mm',
-            'desc'     => '%s dựng từ acetate Ý nguyên khối với dáng vuông bo tròn — đường nét dứt '
-                . 'khoát nhưng không cứng. Khớp nối thép không gỉ cùng cầu kính key-hole giữ dáng '
-                . 'bền theo năm tháng, một thiết kế đi qua nhiều thập kỷ mà chưa từng lỗi mốt.',
-        ],
-        'aviator' => [
-            'shape'    => 'Phi công (Aviator)',
-            'material' => 'Khung kim loại mạ, đệm mũi silicone',
-            'size'     => '58 - 14 - 140 mm',
-            'desc'     => '%s lấy nguyên mẫu từ kính phi công nguyên bản: khung kim loại mảnh, hai '
-                . 'thanh cầu ngang và tròng dáng giọt nước. Đệm mũi silicone điều chỉnh được nên '
-                . 'gọng bám chắc mà không để lại vết hằn sau nhiều giờ đeo.',
-        ],
-        'cat-eye' => [
-            'shape'    => 'Mắt mèo (Cat Eye)',
-            'material' => 'Acetate Ý nguyên khối',
-            'size'     => '52 - 18 - 140 mm',
-            'desc'     => '%s vuốt cao ở hai đuôi gọng theo đúng tinh thần mắt mèo, tôn phần gò má '
-                . 'và kéo dài ánh nhìn. Phần acetate dày dần về phía đuôi được mài tay để giữ độ '
-                . 'cong đều — chi tiết quyết định thần thái của cả chiếc gọng.',
-        ],
-        'rimless' => [
-            'shape'    => 'Không viền (Rimless)',
-            'material' => 'Titanium nguyên chất',
-            'size'     => '54 - 18 - 145 mm',
-            'desc'     => '%s bỏ hoàn toàn phần viền, chỉ còn càng titanium và mối bắt vít giấu '
-                . 'khéo sau tròng. Titanium nguyên chất cho trọng lượng rất nhẹ, không gỉ và không '
-                . 'gây kích ứng — lựa chọn cho người đeo kính cả ngày.',
-        ],
-        'sport' => [
-            'shape'    => 'Ôm mặt (Sport Wrap)',
-            'material' => 'Nhựa TR90 siêu nhẹ, càng cao su chống trượt',
-            'size'     => '60 - 16 - 130 mm',
-            'desc'     => '%s thiết kế ôm sát thái dương để chắn gió và bụi khi vận động. Khung '
-                . 'TR90 chịu va đập, uốn cong không gãy; phần càng và đệm mũi bọc cao su bám tốt '
-                . 'ngay cả khi ra mồ hôi.',
-        ],
-    ];
-
-    /** Dùng khi category không nằm trong SHAPE_PROFILE */
-    private const DEFAULT_PROFILE = [
-        'shape'    => 'Cổ điển (Classic)',
-        'material' => 'Acetate Ý nguyên khối',
-        'size'     => '50 - 20 - 145 mm',
-        'desc'     => '%s được hoàn thiện thủ công từ acetate Ý, đánh bóng qua nhiều công đoạn để '
-            . 'có bề mặt sáng đều. Khớp nối thép không gỉ giữ form gọng ổn định theo thời gian.',
-    ];
-
-    /**
-     * Mô tả viết tay cho từng sản phẩm cụ thể, ưu tiên hơn SHAPE_PROFILE['desc'].
-     * Sản phẩm không có ở đây dùng mô tả dựng theo dáng gọng.
-     */
-    private const DESCRIPTION_OVERRIDE = [
-        3 => 'Gọng vuông bo tròn dựng từ acetate Ý nguyên khối, hoàn thiện thủ công qua nhiều '
-            . 'công đoạn đánh bóng. Vân tortoise được cắt thủ công nên không chiếc nào trùng chiếc '
-            . 'nào. Khớp nối thép không gỉ cùng cầu kính key-hole giữ dáng bền theo năm tháng — '
-            . 'một thiết kế đi qua hơn một thế kỷ mà chưa từng lỗi mốt.',
-    ];
-
-    /**
-     * Ảnh gallery viết tay cho một số sản phẩm (nhiều góc/màu hơn 2 ảnh trong catalog).
-     * Sản phẩm không có ở đây dùng image + image2 làm gallery.
-     */
-    private const GALLERY_OVERRIDE = [
-        3 => [
-            'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-1_51a51dc4-f52a-4ebf-ae8c-53394cb8720c.jpg?v=1705433402&width=1000',
-            'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-tortoise-pos-2_3d0284ce-bd3e-4c66-84bb-49bd189f2988.jpg?v=1705433402&width=1000',
-            'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-burgundy-pos-1.jpg?v=1705433402&width=1000',
-            'https://cdn.shopify.com/s/files/1/2403/8187/files/lemtosh-color-light-blue-pos-1.jpg?v=1705433402&width=1000',
-        ],
-    ];
-
-    /**
-     * Sản phẩm cho trang detail: dữ liệu catalog + description, specs, gallery.
-     * Trả về null nếu id không có trong catalog để controller trả 404.
-     */
-    public static function detail(int $id): ?array
-    {
-        $product = self::find($id);
-
-        if ($product === null) {
-            return null;
-        }
-
-        $profile = self::SHAPE_PROFILE[$product['category']] ?? self::DEFAULT_PROFILE;
-
-        $product['description'] = self::DESCRIPTION_OVERRIDE[$id]
-            ?? sprintf($profile['desc'], $product['name']);
-
-        $product['specs'] = [
-            'Chất liệu'  => $profile['material'],
-            'Kích thước' => $profile['size'],
-            'Dáng gọng'  => $profile['shape'],
-            'Tròng kính' => 'Chống tia UV400, tùy chọn đổi tròng cận',
-            'Bảo hành'   => '12 tháng chính hãng',
-        ];
-
-        $product['gallery'] = self::GALLERY_OVERRIDE[$id] ?? self::galleryFrom($product);
-
-        return $product;
-    }
-
-    /** Gallery mặc định: ảnh chính + ảnh góc thứ hai, nâng width lên cỡ trang detail */
-    private static function galleryFrom(array $product): array
-    {
-        $images = array_filter([$product['image'] ?? null, $product['image2'] ?? null]);
-
-        return array_values(array_map(
-            // Ảnh CDN có tham số ?width=800 cho thẻ card; trang detail hiển thị lớn hơn.
-            static fn(string $url): string => preg_replace('/([?&]width=)\d+/', '${1}1000', $url),
-            $images
-        ));
+        return ($product['status'] ?? '') === 'in_stock'
+            && (int) ($product['stock_quantity'] ?? 0) >= $quantity;
     }
 }

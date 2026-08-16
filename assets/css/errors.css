@@ -9,7 +9,7 @@
     justify-content: center;
     min-height: calc(100vh - var(--header-h));
     padding: var(--space-20) var(--space-6);
-    background: var(--warm-bg);
+    background: var(--surface);
 }
 
 .error-page__container {
@@ -23,7 +23,7 @@
     font-family: var(--font-sans);
     font-size: var(--fs-display);
     font-weight: 800;
-    color: var(--yellow);
+    color: var(--brand);
     line-height: 1;
     margin-bottom: var(--space-4);
 }
@@ -32,14 +32,14 @@
     font-family: var(--font-sans);
     font-size: var(--fs-h5);
     font-weight: 700;
-    color: var(--black);
+    color: var(--ink);
     margin-bottom: var(--space-4);
 }
 
 .error-page__desc {
     font-family: var(--font-sans);
     font-size: var(--fs-body-lg);
-    color: var(--on-surface-variant);
+    color: var(--muted);
     margin-bottom: var(--space-8);
     line-height: 1.6;
 }
@@ -47,19 +47,19 @@
 .error-page__btn {
     display: inline-block;
     padding: 14px 36px;
-    background: var(--black);
-    color: var(--white);
+    background: var(--ink);
+    color: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: var(--fs-note);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     border-radius: 0;
-    transition: background var(--transition), color var(--transition);
+    transition: background 0.2s ease, color 0.2s ease;
 }
 
 .error-page__btn:hover {
-    background: var(--yellow);
+    background: var(--brand);
     color: var(--on-brand);
 }
 

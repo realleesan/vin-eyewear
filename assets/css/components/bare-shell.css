@@ -1,0 +1,124 @@
+/* ============================================================
+   components/bare-shell.css — KHUNG RÚT GỌN
+
+   Đầu và chân trang tối giản cho những trang mà mọi liên kết thừa đều là một
+   lối để người dùng bỏ dở việc đang làm:
+
+     /auth · /quen-mat-khau · /dat-lai-mat-khau   (Vin Eyewear Login.dc.html)
+     /thanh-toan                                  (Vin Eyewear Checkout.dc.html)
+
+   Hai bản thiết kế vẽ khối này GIỐNG NHAU tới từng con số — logo Lora 24px bên
+   trái, một dòng chữ phụ 13–13.5px bên phải, đệm 20px 56px; chân trang một
+   dòng bản quyền và hai liên kết pháp lý. Chỉ khác NỘI DUNG bên phải, nên nó
+   là một component dùng chung chứ không phải hai đoạn CSS song song.
+
+   Bật bằng cờ $bareLayout trong _layout/master.php — controller truyền
+   'bareLayout' => true. Markup: _layout/auth-header.php · checkout-header.php ·
+   auth-footer.php
+
+   TRƯỚC ĐÂY khối này nằm trong auth.css với tiền tố .authbar/.authfoot. Trang
+   thanh toán cũng cần nó, mà nạp "auth.css" cho trang thanh toán thì tên file
+   nói sai việc — nên tách ra đây và đổi sang tiền tố trung tính .barebar/
+   .barefoot. Cùng lý do đã tách components/page-head.css khỏi category.css.
+   ============================================================ */
+
+/* Chân trang phải nằm ĐÁY màn hình kể cả khi nội dung ngắn — bản thiết kế
+   dựng cả trang bằng một cột flex cao 100vh. .is-bare do master.php gắn lên
+   <body> khi $bareLayout bật. */
+body.is-bare {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: var(--surface);
+}
+
+body.is-bare .main-content {
+    flex: 1;
+    display: flex;
+}
+
+/* --- Đầu trang --- */
+
+.barebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 20px 56px;
+}
+
+.barebar__logo {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+/* Nửa sau của tên ở nét nghiêng THẬT của Lora, không phải nghiêng giả —
+   font đã nạp cả bản italic, xem thẻ <link> trong master.php. */
+.barebar__logo em { font-weight: 500; }
+
+/* Tên thương hiệu không được xuống dòng: ở 380px nó vỡ thành "Vin / Eyewear",
+   trông như hai chữ rời chứ không phải một logo. Dòng chữ phụ bên phải co
+   được (đã flex-wrap), nên nhường chỗ cho nó. */
+.barebar__logo { white-space: nowrap; }
+
+.barebar__help {
+    font-size: 13.5px;
+    color: #9a877f;
+}
+
+.barebar__help a {
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.barebar__help a:hover { color: var(--brand-strong); }
+
+/* Biến thể của trang thanh toán: ổ khoá + hai mẩu chữ nằm cùng một hàng.
+   Bản đăng nhập chỉ có một câu nên không cần flex. */
+.barebar__help--pay {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    flex-wrap: wrap;
+}
+
+.barebar__help--pay svg { flex-shrink: 0; }
+
+.barebar__dot { opacity: 0.4; }
+
+/* --- Chân trang --- */
+
+.barefoot {
+    padding: 0 56px;
+    border-top: 1px solid #eee0d4;
+}
+
+.barefoot__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px 0 24px;
+    font-size: 12px;
+    color: #b0a094;
+}
+
+.barefoot__links {
+    display: flex;
+    gap: 24px;
+}
+
+.barefoot__links a {
+    color: #b0a094;
+    text-decoration: none;
+}
+
+.barefoot__links a:hover { color: var(--brand); }

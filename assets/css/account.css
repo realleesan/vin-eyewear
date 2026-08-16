@@ -1,0 +1,1387 @@
+/* ============================================================
+   account.css — trang tài khoản (/tai-khoan)
+
+   Dựng theo "Vin Eyewear Account.dc.html" (Claude Design):
+
+     hai cột — cột điều hướng 300px dính theo cuộn | vùng nội dung
+     mỗi mục là một khối thẻ trắng bo 28px trên nền pearl
+
+   Markup: app/views/auth/profile.php + app/views/auth/account/*.php
+
+   CỠ CHỮ ghi thẳng bằng px, không qua thang --fs-*, cùng lý do đã ghi ở đầu
+   category.css: thang --fs-* là clamp() nên ở 1280px nó lệch 1–5px so với
+   từng con số của bản thiết kế, và bản thiết kế dùng nhiều cỡ nửa pixel
+   (11.5 · 12.5 · 13.5 · 15.5 · 16.5 · 17.5) mà thang không có.
+
+   MÀU gọi qua token (--brand, --ink, --surface…) vì các token đó đã mang đúng
+   giá trị của bản thiết kế — xem layout.css. Riêng năm cặp màu huy hiệu
+   trạng thái là màu mới, khai ngay trong file này vì không nơi nào khác dùng.
+
+   Bản thiết kế là khung cứng 1280px (`min-width:1280px`). Site này chạy từ
+   điện thoại lên, nên có thêm mốc gãy: 1100px cột điều hướng thành dải ngang
+   nằm trên nội dung, 900px các lưới hai cột về một cột, 560px thẻ đơn hàng
+   xếp dọc.
+   ============================================================ */
+
+.acct {
+    /* Chữ phụ tông ấm — cùng bộ với category.css, đúng sắc bản thiết kế */
+    --a-note:   #9a877f;   /* mô tả dưới tiêu đề, dòng phụ trong thẻ */
+    --a-meta:   #b0a094;   /* chữ nhỏ nhất: ngày tháng, hạn dùng */
+    --a-item:   #4a3b38;   /* chữ mục điều hướng chưa chọn */
+    --a-quiet:  #9a877f;   /* mục điều hướng phụ (đăng xuất) */
+
+    /* Đường kẻ trong thẻ — nhạt hơn --line, chỉ để chia nhóm */
+    --a-rule:   #f0e4d8;
+    /* Nền vùng "được chọn" trong cột điều hướng */
+    --a-pick:   #f7efe6;
+    /* Viền nút phụ — đậm hơn --line một nấc, đúng bản thiết kế */
+    --a-edge:   #e0cfc2;
+    /* Nền ô ảnh sản phẩm, thấy được lúc ảnh chưa tải xong */
+    --a-shell:  var(--surface-sunken);
+
+    /* Hai mức đổ bóng: 12px cho cột điều hướng, 10px cho thẻ nội dung */
+    --a-shadow-nav:  0 2px 12px rgba(90, 40, 40, 0.06);
+    --a-shadow-card: 0 2px 10px rgba(90, 40, 40, 0.05);
+
+    /* Bề ngang và lề của thân trang — 1392px, giống trang danh sách sản phẩm:
+       bản thiết kế nới riêng khối này ra vì nó phải chứa THÊM cột điều hướng
+       300px bên trái. */
+    max-width: 1392px;
+    margin: 0 auto;
+    padding: 24px 56px 96px;
+}
+
+/* Bản thiết kế khai `a { text-decoration:none }` cho cả trang; layout.css của
+   site thì chỉ đặt `a { color: inherit }` và để nguyên gạch chân mặc định của
+   trình duyệt, mỗi component tự tắt lấy. Ở đây gạch chân KHÔNG hợp chỗ nào:
+   mục điều hướng, thẻ lọc và nút đều là link nhưng trông phải như nút.
+
+   Ngoại lệ duy nhất là link nằm giữa dòng chữ (tên sản phẩm trong bảng chi
+   tiết đơn) — chỗ đó gạch chân là thứ duy nhất cho biết đấy là link, nên nó
+   bật lại ngay dưới .acct-order__items a. */
+.acct a { text-decoration: none; }
+
+.acct__grid {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 24px;
+    /* start chứ không phải stretch: cột điều hướng phải cao đúng bằng nội
+       dung của nó thì position:sticky mới có chỗ mà trượt. */
+    align-items: start;
+}
+
+/* ============================================================
+   CỘT ĐIỀU HƯỚNG
+   ============================================================ */
+
+.acct-nav {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-raised);
+    border-radius: 28px;
+    padding: 12px;
+    box-shadow: var(--a-shadow-nav);
+    /* 88px = chiều cao header (76px) + 12px thở.
+       Bản thiết kế ghi top:24px vì header của nó KHÔNG dính theo cuộn.
+       Header của site này thì có, nên 24px sẽ đẩy cột này chui xuống dưới. */
+    position: sticky;
+    top: 88px;
+}
+
+/* --- Thẻ khách ở đầu cột --- */
+
+.acct-nav__me {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 18px 22px;
+    border-bottom: 1px solid var(--a-rule);
+    margin-bottom: 10px;
+    /* Là <form> chứ không <div>: hình tròn bên trong chính là nút đổi ảnh đại
+       diện. flex-wrap để nút gửi dự phòng (khi tắt JS) xuống hàng riêng. */
+    flex-wrap: wrap;
+}
+
+/* --- Hình tròn = nút đổi ảnh đại diện --- */
+
+.acct-nav__face {
+    position: relative;
+    width: 54px;
+    height: 54px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+/* Lớp trong lo phần CẮT TRÒN. Tách khỏi .acct-nav__face vì huy hiệu máy ảnh
+   phải thò ra ngoài mép tròn — để overflow:hidden ở lớp ngoài là nó bị xén. */
+.acct-nav__facein {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--brand-subtle);
+}
+
+.acct-nav__facein img {
+    width: 100%;
+    height: 100%;
+    /* cover: cắt vuông về tròn thay vì bóp méo mặt người */
+    object-fit: cover;
+}
+
+.acct-nav__initial {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.acct-nav__cam {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    display: grid;
+    place-items: center;
+    width: 21px;
+    height: 21px;
+    border: 2px solid var(--surface-raised);
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* Ô chọn file thật: phủ kín hình tròn, trong suốt. Nằm TRONG <label> nên bàn
+   phím Tab tới được và trình đọc màn hình đọc đúng aria-label. */
+.acct-nav__face input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Phủ một lớp nâu mờ khi rê chuột, để biết ảnh bấm được. Vẽ bằng ::after của
+   lớp trong nên nó bị cắt tròn theo. */
+.acct-nav__facein::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: rgba(51, 39, 42, 0.35);
+    opacity: 0;
+    transition: opacity 0.2s var(--ease-out-soft, ease);
+}
+
+.acct-nav__face:hover .acct-nav__facein::after { opacity: 1; }
+
+/* Vòng focus vẽ trên cái NHÌN THẤY, vì ô thật trong suốt */
+.acct-nav__face:focus-within {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
+    border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .acct-nav__facein::after { transition: none; }
+}
+
+/* Có JS thì chọn ảnh xong gửi luôn (account.js), nút gửi thành thừa.
+   .js do <script> ở đầu master.php đặt, TRƯỚC khi trang vẽ ra. */
+.acct-nav__send {
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.js .acct-nav__send { display: none; }
+
+.acct-nav__who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.acct-nav__name {
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--ink);
+    /* Tên dài không được đẩy vỡ cột 300px */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.acct-nav__edit {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: var(--eyebrow);
+}
+
+.acct-nav__edit:hover { color: var(--brand); }
+
+/* --- Mục điều hướng --- */
+
+.acct-nav__item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 13px 18px;
+    border: none;
+    border-radius: 18px;
+    background: none;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--a-item);
+    cursor: pointer;
+}
+
+.acct-nav__item:hover {
+    background: var(--a-pick);
+    color: var(--brand);
+}
+
+/* Mục cấp một đang mở — nền hồng phấn đặc */
+.acct-nav__item.is-active {
+    background: var(--brand-subtle);
+    color: var(--brand);
+    font-weight: 600;
+}
+
+/* Đầu nhóm khi mục đang mở nằm TRONG nhóm — chỉ đổi màu chữ, không đổi nền:
+   nền đặc ở đây sẽ đá nhau với nền của mục con đang được chọn ngay bên dưới. */
+.acct-nav__item.is-current {
+    color: var(--brand);
+    font-weight: 600;
+}
+
+.acct-nav__icon {
+    display: flex;
+    justify-content: center;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.acct-nav__label {
+    flex: 1;
+    text-align: left;
+}
+
+.acct-nav__count {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+/* --- Nhóm thu gọn được --- */
+
+.acct-nav__group > summary {
+    /* Bỏ tam giác mặc định của trình duyệt — bản thiết kế dùng mũi tên riêng
+       ở .acct-nav__chev. Cần cả ba dòng: Safari đọc dòng ::-webkit-, Firefox
+       và Chrome đọc list-style. */
+    list-style: none;
+}
+
+.acct-nav__group > summary::-webkit-details-marker { display: none; }
+.acct-nav__group > summary::marker { content: ''; }
+
+.acct-nav__chev {
+    display: flex;
+    color: var(--a-meta);
+    transition: transform 0.2s var(--ease-out-soft, ease);
+}
+
+.acct-nav__group[open] .acct-nav__chev { transform: rotate(180deg); }
+
+@media (prefers-reduced-motion: reduce) {
+    .acct-nav__chev { transition: none; }
+}
+
+.acct-nav__sub {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 0 6px;
+}
+
+.acct-nav__subitem {
+    /* 52px trái = 18px đệm + 20px ô icon + 14px khe, để chữ mục con thẳng
+       hàng với chữ mục cha ở trên nó */
+    padding: 9px 18px 9px 52px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    color: var(--muted);
+}
+
+.acct-nav__subitem:hover { color: var(--brand); }
+
+.acct-nav__subitem.is-current {
+    background: var(--a-pick);
+    color: var(--brand);
+    font-weight: 600;
+}
+
+/* --- Chân cột --- */
+
+.acct-nav__foot {
+    border-top: 1px solid var(--a-rule);
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+.acct-nav__quiet {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 13px 18px;
+    border: none;
+    border-radius: 18px;
+    background: none;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--a-quiet);
+    cursor: pointer;
+}
+
+.acct-nav__quiet:hover {
+    background: var(--a-pick);
+    color: var(--brand);
+}
+
+/* ============================================================
+   VÙNG NỘI DUNG — khung chung
+   ============================================================ */
+
+.acct-main {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* BẮT BUỘC. Ô của lưới mặc định là `min-width:auto`, nghĩa là nó KHÔNG co
+       xuống dưới bề rộng nội dung nhỏ nhất của mình. Trong cột này có bảng
+       thông số và thanh tiến trình 5 bước — hai thứ có bề rộng tối thiểu khá
+       lớn — nên thiếu dòng này là cả cột phình to hơn màn hình và trang bị
+       cuộn ngang, kéo theo cả cột điều hướng lẫn chân trang.
+
+       Ở khổ rộng thì minmax(0,1fr) của .acct__grid đã lo; nhưng mốc gãy 1100px
+       đổi sang một cột và rất dễ viết `1fr` cụt như vậy. Đặt luôn ở đây để lỗi
+       đó không quay lại. */
+    min-width: 0;
+}
+
+/* --- Tiêu đề mục --- */
+
+.acct-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 6px 0;
+}
+
+/* Biến thể có nút bên phải (sổ địa chỉ, đo mắt, lịch hẹn).
+   flex-end: nút căn theo ĐÁY của cụm tiêu đề, không phải giữa — đúng bản
+   thiết kế, và cũng là chỗ mắt đang nhìn khi vừa đọc xong dòng mô tả. */
+.acct-head--row {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.acct-head--row > div:first-child {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.acct-head__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.acct-head__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-head__lead {
+    margin: 0;
+    font-size: 14px;
+    color: var(--a-note);
+}
+
+/* --- Thẻ nội dung --- */
+
+.acct-card {
+    background: var(--surface-raised);
+    border-radius: 28px;
+    box-shadow: var(--a-shadow-card);
+}
+
+.acct-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* --- Thông báo sau khi lưu ---
+   Không dùng .alert của ui.css: khối đó có viền vuông 4px của thiết kế cũ,
+   đặt cạnh các thẻ bo 28px ở đây thì lạc hẳn. */
+
+.acct-flash {
+    margin: 12px 0 0;
+    padding: 14px 22px;
+    border-radius: 18px;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.acct-flash--ok  { background: #eef3e9; color: #3d6633; }
+.acct-flash--err { background: #f6e7e7; color: #8f3535; }
+
+/* ============================================================
+   NÚT
+   ============================================================ */
+
+.acct-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.acct-btn--primary {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.acct-btn--primary:hover,
+.acct-btn--primary:focus-visible { background: var(--brand-strong); color: var(--on-brand); }
+
+.acct-btn--outline {
+    border: 1.5px solid var(--a-edge);
+    background: var(--surface-raised);
+    color: var(--ink);
+}
+
+.acct-btn--outline:hover,
+.acct-btn--outline:focus-visible { border-color: var(--brand); color: var(--brand); }
+
+/* Nút trong thẻ — nhỏ hơn nút ở đầu mục một nấc */
+.acct-btn--sm  { padding: 10px 22px; font-size: 13px; }
+
+/* Nút "Lưu thay đổi" cuối form: bản thiết kế đẩy nó về mép trái và cách ô
+   cuối thêm 6px */
+.acct-btn--start {
+    align-self: flex-start;
+    margin-top: 6px;
+    padding: 13px 32px;
+    font-size: 14px;
+}
+
+/* ============================================================
+   FORM — dùng chung cho hồ sơ, địa chỉ, đổi mật khẩu, đo mắt
+   ============================================================ */
+
+.acct-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 36px 40px;
+}
+
+.acct-form--narrow { max-width: 520px; }
+
+.acct-form__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.acct-form__actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.acct-form__note {
+    margin: -6px 0 0;
+    font-size: 12.5px;
+    color: var(--a-meta);
+}
+
+.acct-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.acct-field__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.acct-field__input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 13px 18px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--ink);
+}
+
+.acct-field__input:focus {
+    outline: none;
+    border-color: #c9a79b;
+    background: var(--surface-focus);
+}
+
+.acct-field__input:disabled {
+    color: var(--a-note);
+    cursor: not-allowed;
+}
+
+/* Ô chọn ngày/giờ và <select> phải cao đúng bằng ô chữ: Safari cho chúng
+   line-height riêng nên không có dòng này thì hàng hai cột lệch nhau vài px */
+.acct-field__input[type="date"],
+select.acct-field__input {
+    height: 48px;
+    appearance: none;
+}
+
+/* --- Ba nút giới tính ---
+   Ô radio thật nằm dưới, nhãn phủ lên trên: giữ được bàn phím và trình đọc
+   màn hình mà vẫn ra đúng hình dạng viên thuốc của bản thiết kế. */
+
+.acct-choice {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.acct-choice__opt { position: relative; }
+
+.acct-choice__opt input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.acct-choice__opt span {
+    display: block;
+    padding: 11px 22px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    font-size: 13.5px;
+    color: var(--a-item);
+}
+
+.acct-choice__opt input:hover + span { border-color: var(--brand); }
+
+.acct-choice__opt input:checked + span {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+}
+
+/* Vòng focus phải vẽ trên cái NHÌN THẤY, vì ô thật trong suốt */
+.acct-choice__opt input:focus-visible + span {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* --- Ô tick "đặt làm mặc định" --- */
+
+.acct-check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--a-item);
+    cursor: pointer;
+}
+
+.acct-check input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--brand);
+    cursor: pointer;
+}
+
+.acct-check input:disabled { cursor: not-allowed; }
+
+/* ============================================================
+   MỤC HỒ SƠ
+
+   Bản thiết kế chia mục này làm hai cột: form bên trái, thẻ ảnh đại diện
+   280px bên phải. Thẻ bên phải đã BỎ — đổi ảnh nay bấm thẳng vào hình tròn ở
+   cột điều hướng (xem .acct-nav__face bên trên), nên form chiếm trọn bề ngang
+   và không cần lớp bao nào cả.
+   ============================================================ */
+
+/* ============================================================
+   MỤC SỔ ĐỊA CHỈ
+   ============================================================ */
+
+.acct-addr {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 32px;
+    padding: 28px 32px;
+}
+
+.acct-addr__body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.acct-addr__who {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.acct-addr__name {
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-addr__bar {
+    width: 1px;
+    height: 14px;
+    background: var(--line);
+}
+
+.acct-addr__phone {
+    font-size: 13.5px;
+    color: var(--a-note);
+}
+
+.acct-addr__lines {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.acct-addr__side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.acct-addr__links {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* layout.css đặt `a { color: inherit }`, mà thẻ địa chỉ có màu chữ nâu đậm —
+   nên "Sửa" phải tự lấy lại màu thương hiệu như bản thiết kế vẽ. */
+.acct-addr__links a { color: var(--brand); }
+.acct-addr__links a:hover { color: var(--brand-strong); }
+
+/* Nút "Xoá" phải là <button> vì nó gửi POST, nhưng bản thiết kế vẽ nó như
+   một liên kết cạnh "Sửa" — nên gỡ sạch hình dạng nút mặc định. */
+.acct-addr__del {
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--a-note);
+    cursor: pointer;
+}
+
+.acct-addr__del:hover { color: var(--brand); }
+
+.acct-tag {
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--brand-subtle);
+    color: var(--brand);
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+/* ============================================================
+   MỤC ĐƠN HÀNG (và lịch hẹn, dùng chung thẻ)
+   ============================================================ */
+
+.acct-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.acct-tab {
+    padding: 10px 20px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    font-size: 13.5px;
+    color: var(--a-item);
+    white-space: nowrap;
+}
+
+.acct-tab:hover { border-color: var(--brand); color: var(--brand); }
+
+.acct-tab.is-active {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+}
+
+.acct-order {
+    display: flex;
+    flex-direction: column;
+    padding: 26px 30px;
+}
+
+/* --- Đầu thẻ --- */
+
+.acct-order__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--a-rule);
+}
+
+.acct-order__id {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.acct-order__code {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-order__when {
+    font-size: 12.5px;
+    color: var(--a-meta);
+}
+
+/* --- Huy hiệu trạng thái ---
+   Năm cặp màu lấy nguyên từ bản thiết kế. Xem ghi chú đầu
+   app/views/auth/account/don-hang.php về việc 6 trạng thái dùng 5 cặp màu. */
+
+.acct-badge {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.acct-badge--wait { background: #fdf3e3; color: #a2701c; }  /* chờ xử lý */
+.acct-badge--prep { background: #eef0fa; color: #4a5aa8; }  /* đã xác nhận / đang chuẩn bị */
+.acct-badge--ship { background: #e9f2fb; color: #2e6da4; }  /* đang giao */
+.acct-badge--done { background: #eef3e9; color: #4d7a3f; }  /* hoàn tất */
+.acct-badge--stop { background: #f6e7e7; color: #a24040; }  /* đã huỷ */
+
+/* --- Dòng sản phẩm --- */
+
+.acct-order__line {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 0;
+}
+
+.acct-order__thumb {
+    display: grid;
+    place-items: center;
+    width: 88px;
+    height: 88px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--a-shell);
+    flex-shrink: 0;
+}
+
+/* contain chứ không cover: gọng kính chụp trên nền trắng, cắt mép là mất càng */
+.acct-order__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.acct-order__thumb--icon { background: var(--brand-subtle); }
+
+.acct-order__what {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.acct-order__brand {
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--a-meta);
+}
+
+.acct-order__name {
+    font-family: var(--font-serif);
+    font-size: 17.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-order__variant {
+    font-size: 13px;
+    color: var(--a-note);
+}
+
+.acct-order__money {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.acct-order__qty {
+    font-size: 12.5px;
+    color: var(--a-meta);
+}
+
+.acct-order__total {
+    font-size: 16.5px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+/* --- Thanh tiến trình --- */
+
+.acct-track {
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    padding: 6px 0 20px;
+    list-style: none;
+}
+
+.acct-track__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+}
+
+/* Vạch nối tới bước TRƯỚC. top:12px = nửa chiều cao chấm 26px, trừ 1px nửa
+   độ dày vạch, để vạch đi đúng qua tâm chấm. */
+.acct-track__bar {
+    position: absolute;
+    top: 12px;
+    right: 50%;
+    width: 100%;
+    height: 2px;
+    background: var(--a-rule);
+}
+
+/* Bước đầu không có gì ở bên trái để nối */
+.acct-track__step:first-child .acct-track__bar { display: none; }
+
+/* Vạch đi VÀO một bước đã tới thì tô màu thương hiệu */
+.acct-track__step--1 .acct-track__bar,
+.acct-track__step--2 .acct-track__bar { background: var(--brand); }
+
+.acct-track__dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 26px;
+    height: 26px;
+    border: 2px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    color: transparent;
+    /* Trên vạch nối */
+    z-index: 1;
+}
+
+.acct-track__step--1 .acct-track__dot {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+.acct-track__step--2 .acct-track__dot {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.acct-track__label {
+    font-size: 12.5px;
+    text-align: center;
+    color: var(--a-meta);
+}
+
+.acct-track__step--1 .acct-track__label,
+.acct-track__step--2 .acct-track__label {
+    color: var(--ink);
+    font-weight: 600;
+}
+
+.acct-track__time {
+    font-size: 11px;
+    text-align: center;
+    color: var(--a-meta);
+    /* Giữ chỗ cả khi chưa có mốc, để hàng chấm không so le */
+    min-height: 1em;
+}
+
+/* --- Chân thẻ --- */
+
+.acct-order__foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid var(--a-rule);
+    flex-wrap: wrap;
+}
+
+.acct-order__note {
+    margin: 0;
+    padding: 0 0 14px;
+    font-size: 13px;
+    color: var(--a-note);
+}
+
+/* --- Phần "Xem chi tiết" mở ra --- */
+
+.acct-order__detail {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-top: 20px;
+}
+
+.acct-order__items {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.acct-order__items th,
+.acct-order__items td {
+    padding: 10px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--a-rule);
+}
+
+.acct-order__items thead th {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.acct-order__items th:first-child,
+.acct-order__items td:first-child { text-align: left; }
+
+.acct-order__items tbody th {
+    font-weight: 500;
+    color: var(--ink);
+}
+
+/* Link giữa dòng chữ — xem ghi chú ở `.acct a` đầu file */
+.acct-order__items a {
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.acct-order__items tbody td { color: var(--a-item); }
+
+.acct-order__items tfoot th {
+    font-weight: 500;
+    color: var(--a-note);
+    border-bottom: none;
+}
+
+.acct-order__items tfoot td {
+    color: var(--ink);
+    border-bottom: none;
+}
+
+.acct-order__grand th,
+.acct-order__grand td {
+    padding-top: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+/* ============================================================
+   MỤC THÔNG SỐ ĐO MẮT
+   ============================================================ */
+
+.acct-rxcard {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 32px 36px;
+}
+
+.acct-rxcard__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.acct-rxcard__when {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-rxcard__note {
+    font-size: 12.5px;
+    color: var(--a-meta);
+}
+
+/* Bảng thông số. Bản thiết kế dựng bằng CSS grid 120px + 4 cột đều; ở đây là
+   <table> thật vì đó là dữ liệu bảng và trình đọc màn hình cần biết ô "-2.25"
+   thuộc hàng "Phải (OD)" cột "Cầu (SPH)". Kết quả nhìn giống hệt: cùng khung
+   bo 20px, cùng nền hàng tiêu đề, cùng đường kẻ ngang. */
+.acct-rx {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid var(--a-rule);
+    border-radius: 20px;
+    overflow: hidden;
+    font-size: 14px;
+    text-align: center;
+}
+
+.acct-rx thead th {
+    padding: 14px;
+    background: var(--surface);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.acct-rx thead th:first-child { text-align: left; width: 120px; }
+
+.acct-rx tbody th,
+.acct-rx tbody td {
+    padding: 16px 14px;
+    border-top: 1px solid var(--a-rule);
+    color: var(--a-item);
+}
+
+.acct-rx tbody th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* Bảng ở chế độ nhập — ô nhỏ hơn để nhường chỗ cho ô nhập */
+.acct-rx--edit tbody th,
+.acct-rx--edit tbody td { padding: 10px 12px; }
+
+.acct-rx__input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    text-align: center;
+    color: var(--ink);
+}
+
+.acct-rx__input:focus {
+    outline: none;
+    border-color: #c9a79b;
+    background: var(--surface-focus);
+}
+
+/* --- Thẻ tròn thông tin thêm (PD, khuyến nghị, cách giao hàng…) --- */
+
+.acct-chips {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.acct-chip {
+    padding: 9px 18px;
+    border-radius: 999px;
+    background: var(--brand-subtle);
+    color: #6e4a42;
+    font-size: 13px;
+}
+
+/* ============================================================
+   MỤC ƯU ĐÃI
+   ============================================================ */
+
+.acct-vouchers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.acct-voucher {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    /* 24px chứ không 28px như các thẻ khác — thẻ ưu đãi nhỏ hơn nên bản thiết
+       kế bo nhẹ hơn một nấc cho cân */
+    border-radius: 24px;
+    padding: 22px 26px;
+}
+
+.acct-voucher__tag {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: var(--brand-subtle);
+    color: var(--brand);
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.acct-voucher__what {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+}
+
+.acct-voucher__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-voucher__cond {
+    font-size: 12.5px;
+    color: var(--a-note);
+}
+
+.acct-voucher__exp {
+    font-size: 12px;
+    color: var(--a-meta);
+}
+
+/* ============================================================
+   TRẠNG THÁI RỖNG — dùng chung cho mọi mục
+   ============================================================ */
+
+.acct-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 80px 32px;
+    border-radius: 28px;
+    background: var(--surface-raised);
+    text-align: center;
+}
+
+.acct-empty__ring {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 999px;
+    background: var(--brand-subtle);
+}
+
+.acct-empty__title {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-empty__lead {
+    font-size: 13.5px;
+    color: var(--a-note);
+    max-width: 42ch;
+}
+
+.acct-empty__cta {
+    margin-top: 8px;
+    padding: 12px 28px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.acct-empty__cta:hover { background: var(--brand-strong); color: var(--on-brand); }
+
+/* ============================================================
+   MỐC GÃY
+
+   Bản thiết kế là khung cứng 1280px. Ba mốc dưới đây là phần THÊM, theo bộ
+   breakpoint chuẩn khai ở đầu layout.css.
+   ============================================================ */
+
+@media (max-width: 1100px) {
+    .acct {
+        max-width: none;
+        padding: 24px 16px 64px;
+    }
+
+    /* minmax(0,1fr) chứ không phải 1fr — xem ghi chú min-width ở .acct-main */
+    .acct__grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    /* Cột điều hướng thành khối ngang nằm trên nội dung — bỏ dính theo cuộn,
+       vì dính một khối cao bằng nửa màn hình là che mất nội dung. */
+    .acct-nav { position: static; }
+
+    .acct-vouchers { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+    .acct-form { padding: 28px 24px; }
+    .acct-form__row { grid-template-columns: 1fr; }
+
+    .acct-order   { padding: 22px 20px; }
+    .acct-rxcard  { padding: 26px 22px; }
+    .acct-addr    { padding: 22px 20px; gap: 20px; }
+
+    .acct-head__title { font-size: 26px; }
+
+    /* Bảng thông số và bảng dòng hàng không co được nữa — cho cuộn ngang
+       trong chính nó, không để nó kéo cả trang rộng ra. */
+    .acct-rx,
+    .acct-order__items { display: block; overflow-x: auto; white-space: nowrap; }
+}
+
+@media (max-width: 560px) {
+    .acct-order__line {
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .acct-order__money {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .acct-addr {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .acct-addr__side {
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .acct-voucher {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    /* Chữ dưới chấm tiến trình không còn chỗ ở 5 bước — giữ chấm và vạch,
+       bỏ nhãn, để thanh vẫn nói được "đơn đang ở bước thứ mấy trên mấy". */
+    .acct-track__label { font-size: 11px; }
+    .acct-track__time  { display: none; }
+}

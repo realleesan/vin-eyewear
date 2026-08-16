@@ -1,9 +1,13 @@
 <?php
+
+/**
+ * errors/500.php — lỗi phía máy chủ.
+ *
+ * Không breadcrumb, không đầu trang — cùng lý do đã ghi ở errors/404.php:
+ * trang lỗi không phải một nhánh của cây nội dung, nó là một ngõ cụt kèm lối ra.
+ */
+
 $pageTitle = '500 - Lỗi hệ thống | Vin Eyewear';
-$show_breadcrumb = false;
-$show_page_header = false;
-$show_cta = false;
-$show_pusher = false;
 ?>
 
 <section class="error-page">

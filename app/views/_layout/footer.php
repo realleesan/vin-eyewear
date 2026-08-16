@@ -1,175 +1,152 @@
 <?php
+
 /**
  * _layout/footer.php
- * Footer 4 cột (mọi trang) — bố cục theo footer.jpeg, màu giữ nguyên design
- * system "Lower East Heritage": nền vàng, chữ đen, dải bottom đen.
  *
- * Section .join cũ (dải đen "CẬP NHẬT CÙNG VIN EYEWEAR" + form email) đã bỏ;
- * nội dung đăng ký nhận tin chuyển thành cột 4 "Đăng ký nhận tin" bên dưới.
- * Cụm social cũng chuyển từ .footer-bottom lên cột 4 -> dải bottom chỉ còn
- * 2 vế: copyright | made in.
+ * Dựng theo "Vin Eyewear Home.dc.html" (Claude Design).
+ *
+ * Lưới 4 cột 1.4fr/1fr/1fr/1fr — Thương hiệu | Sản phẩm | Dịch vụ | Liên hệ —
+ * rồi một dải dưới cùng: bản quyền bên trái, hai liên kết pháp lý bên phải.
+ *
+ * HAI CHỖ CỐ Ý KHÁC BẢN THIẾT KẾ, đều vì lý do ngoài thẩm mỹ:
+ *   1. Dải dưới cùng giữ TÊN PHÁP NHÂN + MÃ SỐ THUẾ. Bản thiết kế chỉ có
+ *      "© 2026 Vin Eyewear. Bảo lưu mọi quyền." — bỏ hẳn hai thứ này là bỏ
+ *      thông tin bắt buộc của một website thương mại điện tử.
+ *   2. Giữ hàng icon mạng xã hội dưới đoạn giới thiệu. Thiết kế không vẽ,
+ *      nhưng bỏ đi thì Facebook/Instagram/YouTube không còn lối vào nào trên
+ *      site — mà với một shop kính thời trang thì đó là kênh chính.
+ *
+ * Số điện thoại, email, giờ mở cửa đọc từ config/company.php.
  */
+
+$company = config('company');
+
+/*
+ * Danh mục ĐỌC TỪ CSDL, không gõ cứng.
+ *
+ * Bảng xổ "Sản phẩm" trên header cũng đọc từ đó. Gõ cứng ba dòng ở đây thì
+ * ngay lần admin thêm danh mục thứ tư, header có nó mà chân trang thì không —
+ * một sai lệch không ai để ý cho tới khi khách hỏi.
+ *
+ * Cắt ở 6: chân trang là bốn cột ngang nhau, cột này dài ra là ba cột kia
+ * trống một khoảng bằng đúng phần dôi.
+ */
+$products = array_map(
+    static fn (array $c): array => [
+        'label' => $c['name'],
+        'url'   => '/san-pham?category=' . rawurlencode($c['slug']),
+    ],
+    array_slice(CategoryModel::visible(), 0, 6)
+);
+
+/*
+ * Cột 3 mang tiêu đề "Về Vin Eyewear" chứ không phải "Dịch vụ" như bản
+ * Home.dc.html. CỐ Ý lệch: thanh nav rút còn năm mục nên "Giới thiệu" và
+ * "Chính sách & FAQ" rơi khỏi đó, và chân trang là lối vào còn lại của chúng
+ * trên desktop. Nhét hai trang ấy vào một cột tên "Dịch vụ" thì tiêu đề nói
+ * sai về thứ nằm dưới nó.
+ *
+ * "Thử kính ảo" theo cùng một cờ với thanh nav — xem config/ar.php. Một cờ,
+ * ba chỗ; để footer tự quyết thì bật tính năng lên sẽ sót đúng chỗ này.
+ */
+$services = array_values(array_filter([
+    ['label' => 'Giới thiệu',         'url' => '/gioi-thieu'],
+    ['label' => 'Đo mắt miễn phí',    'url' => '/dat-lich'],
+    config('ar.nav_enabled')
+        ? ['label' => 'Thử kính ảo',  'url' => '/thu-ar']
+        : null,
+    ['label' => 'Bảo hành & đổi trả', 'url' => '/chinh-sach#doi-tra'],
+    ['label' => 'Chính sách & FAQ',   'url' => '/chinh-sach'],
+]));
+
+/**
+ * Icon mạng xã hội. Dùng path dựng sẵn thay vì thư viện icon: bản Lovable
+ * kéo lucide-react (một gói npm), còn ở đây chỉ cần 4 hình cố định.
+ */
+$socialPaths = [
+    'facebook'  => 'M14 8.5h2.2V5.6h-2.4c-2.5 0-3.9 1.5-3.9 3.9v1.6H8v3h1.9V21h3v-6.9h2.2l.4-3h-2.6V9.8c0-.9.3-1.3 1.1-1.3z',
+    'instagram' => 'M12 7.6a4.4 4.4 0 100 8.8 4.4 4.4 0 000-8.8zm0 7.2a2.8 2.8 0 110-5.6 2.8 2.8 0 010 5.6zM17.4 7.4a1 1 0 11-2 0 1 1 0 012 0zM7.5 3.5h9A4 4 0 0120.5 7.5v9a4 4 0 01-4 4h-9a4 4 0 01-4-4v-9a4 4 0 014-4zm0 1.6a2.4 2.4 0 00-2.4 2.4v9a2.4 2.4 0 002.4 2.4h9a2.4 2.4 0 002.4-2.4v-9a2.4 2.4 0 00-2.4-2.4z',
+    'youtube'   => 'M21.3 8.1a2.4 2.4 0 00-1.7-1.7C18.1 6 12 6 12 6s-6.1 0-7.6.4A2.4 2.4 0 002.7 8.1 25 25 0 002.3 12c0 1.3.1 2.6.4 3.9a2.4 2.4 0 001.7 1.7C5.9 18 12 18 12 18s6.1 0 7.6-.4a2.4 2.4 0 001.7-1.7c.3-1.3.4-2.6.4-3.9s-.1-2.6-.4-3.9zM10.2 14.6V9.4l5 2.6z',
+    // Path lấy nguyên từ bản thiết kế — bốn icon của thiết kế là
+    // Facebook · Instagram · YouTube · TikTok (không phải Messenger).
+    'tiktok'    => 'M16.6 5.82A4.28 4.28 0 0115.54 3h-3.09v12.4a2.59 2.59 0 11-2.59-2.59c.27 0 .53.04.77.12V9.77a5.76 5.76 0 00-.77-.05 5.66 5.66 0 105.66 5.66V9.01a7.35 7.35 0 004.3 1.38V7.3a4.28 4.28 0 01-3.22-1.48z',
+];
 ?>
 <footer class="site-footer">
 
-    <!-- ============================================================
-         FOOTER TOP — grid 4 cột: Thương hiệu | Khám phá | Hỗ trợ | Nhận tin
-         Hairline dọc ngăn cách giữ nguyên idiom cũ của site.
-         ============================================================ -->
-    <div class="footer-top">
+    <div class="footer-grid">
 
-        <!-- Cột 1: Thương hiệu + thông tin liên hệ
-             Địa chỉ 2 cơ sở lấy từ trang Contact — nguồn chuẩn là $stores
-             trong ContactController::index(). Sửa ở đó thì sửa cả ở đây. -->
+        <!-- Cột 1: Thương hiệu -->
         <div class="footer-brand">
+            <p class="footer-logo">Vin <em>Eyewear</em></p>
 
-            <a class="footer-logo" href="/">
-                <!-- Mark: 2 mắt kính vuông + cầu nối — gọng vuông đúng tinh thần
-                     sharp 0px của design system, không bo tròn. -->
-                <span class="footer-logo__mark" aria-hidden="true">
-                    <svg viewBox="0 0 44 24" focusable="false">
-                        <rect x="2" y="6" width="16" height="12"/>
-                        <rect x="26" y="6" width="16" height="12"/>
-                        <path d="M18 12h8"/>
-                    </svg>
-                </span>
-                <span class="footer-logo__word">VIN EYEWEAR</span>
-            </a>
+            <p class="footer-blurb">
+                Kính thời trang và tròng kính chính hãng. Đo mắt miễn phí tại hệ thống cửa hàng.
+            </p>
 
-            <!-- MOCKUP: tên pháp nhân tạm đặt, thay bằng tên trên GPKD khi có. -->
-            <p class="footer-brand__legal">Công ty Cổ phần Vin Eyewear Việt Nam</p>
-
-            <ul class="footer-contact" role="list">
-                <li class="footer-contact__item">
-                    <span class="footer-contact__ico" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false">
-                            <path d="M12 21s7-5.6 7-11a7 7 0 10-14 0c0 5.4 7 11 7 11z"/>
-                            <circle cx="12" cy="10" r="2.6"/>
-                        </svg>
-                    </span>
-                    <span>CS1 &middot; 261 Ngọc Lâm, P. Bồ Đề, Q. Long Biên, TP. Hà Nội</span>
-                </li>
-                <li class="footer-contact__item">
-                    <span class="footer-contact__ico" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false">
-                            <path d="M12 21s7-5.6 7-11a7 7 0 10-14 0c0 5.4 7 11 7 11z"/>
-                            <circle cx="12" cy="10" r="2.6"/>
-                        </svg>
-                    </span>
-                    <span>CS2 &middot; 46 Hoàng Hoa Thám, P. Thụy Khuê, Q. Tây Hồ, TP. Hà Nội</span>
-                </li>
-                <li class="footer-contact__item">
-                    <span class="footer-contact__ico" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false">
-                            <path d="M6.5 3.5h3l1.5 4-2 1.4a12 12 0 006.1 6.1l1.4-2 4 1.5v3a2 2 0 01-2.2 2A16.5 16.5 0 014.5 5.7a2 2 0 012-2.2z"/>
-                        </svg>
-                    </span>
-                    <a href="tel:0912345678">0912 345 678</a>
-                </li>
-                <li class="footer-contact__item">
-                    <span class="footer-contact__ico" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false">
-                            <rect x="3" y="5.5" width="18" height="13"/>
-                            <path d="M3.5 6.5l8.5 6.5 8.5-6.5"/>
-                        </svg>
-                    </span>
-                    <a href="mailto:info@vineyewear.com">info@vineyewear.com</a>
-                </li>
+            <ul class="footer-socials" role="list">
+                <?php foreach ($company['socials'] as $social): ?>
+                    <?php $path = $socialPaths[$social['icon']] ?? null; ?>
+                    <?php if ($path === null) continue; ?>
+                    <li>
+                        <a href="<?= e($social['href']) ?>"
+                           target="_blank"
+                           rel="noreferrer noopener"
+                           aria-label="<?= e($social['label']) ?>">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="<?= e($path) ?>"/>
+                            </svg>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
             </ul>
         </div>
 
-        <!-- Cột 2: Khám phá — toàn bộ link điều hướng của site -->
-        <nav class="footer-col" aria-label="Liên kết trang">
-            <h3 class="footer-col__heading">Khám phá</h3>
-            <a href="/">Trang chủ</a>
-            <a href="/product">Sản phẩm</a>
-            <a href="/about">Giới thiệu</a>
-            <a href="/event">Sự kiện</a>
-            <a href="/ar">Thử kính AR</a>
-            <a href="/contact">Liên hệ</a>
-        </nav>
-
-        <!-- Cột 3: Hỗ trợ — chính sách & điều khoản
-             MOCKUP: chưa có route cho các trang này nên tạm để href="#". -->
+        <!-- Cột 2: Sản phẩm -->
         <div class="footer-col">
-            <h3 class="footer-col__heading">Hỗ trợ</h3>
-            <a href="#">Chính sách bảo hành</a>
-            <a href="#">Chính sách đổi trả</a>
-            <a href="#">Chính sách bảo mật</a>
-            <a href="#">Chính sách vận chuyển</a>
-            <a href="#">Điều khoản sử dụng</a>
-            <a href="#">Câu hỏi thường gặp</a>
-        </div>
-
-        <!-- Cột 4: Đăng ký nhận tin — form email duy nhất của site + social -->
-        <div class="footer-col footer-news">
-            <h3 class="footer-col__heading">Đăng ký nhận tin</h3>
-            <p class="footer-news__desc">Bộ sưu tập mới và ưu đãi riêng, gửi thẳng vào hộp thư của bạn.</p>
-
-            <form class="footer-news__form" action="#" method="post">
-                <input
-                    type="email"
-                    name="email"
-                    placeholder="Nhập email của bạn"
-                    aria-label="Email đăng ký nhận tin"
-                    required
-                >
-                <button type="submit" aria-label="Đăng ký nhận tin">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M4 12h15M13 6l6 6-6 6"/>
-                    </svg>
-                </button>
-            </form>
-
-            <ul class="footer-social" role="list">
-                <li>
-                    <a href="https://www.facebook.com/vineyewear" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M14 8.5h2.2V5.6h-2.4c-2.5 0-3.9 1.5-3.9 3.9v1.6H8v3h1.9V21h3v-6.9h2.2l.4-3h-2.6V9.8c0-.9.3-1.3 1.1-1.3z"/>
-                        </svg>
-                    </a>
-                </li>
-                <li>
-                    <a href="https://shopee.vn/vineyewear" target="_blank" rel="noopener noreferrer" aria-label="Shopee">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path stroke="currentColor" stroke-width="1.6" fill="none" d="M8.5 7a3.5 3.5 0 017 0"/>
-                            <path d="M4.5 7h15l-1 12.5a1.5 1.5 0 01-1.5 1.4H7a1.5 1.5 0 01-1.5-1.4z"/>
-                            <path d="M10 15.2c.5.7 1.3 1 2.1 1 1.2 0 2-.6 2-1.5 0-2-3.8-1.2-3.8-3.1 0-.8.8-1.4 1.8-1.4.8 0 1.4.3 1.8.8"/>
-                        </svg>
-                    </a>
-                </li>
-                <li>
-                    <a href="https://www.instagram.com/vineyewear" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M12 4.6c2.4 0 2.7 0 3.6.05 2.5.1 3.6 1.3 3.7 3.7.05.9.05 1.2.05 3.6s0 2.7-.05 3.6c-.1 2.4-1.2 3.6-3.7 3.7-.9.05-1.2.05-3.6.05s-2.7 0-3.6-.05c-2.5-.1-3.6-1.3-3.7-3.7C4.6 14.7 4.6 14.4 4.6 12s0-2.7.05-3.6c.1-2.4 1.2-3.6 3.7-3.7C9.3 4.6 9.6 4.6 12 4.6zm0 3.4a4 4 0 100 8 4 4 0 000-8zm0 6.6a2.6 2.6 0 110-5.2 2.6 2.6 0 010 5.2zm4.2-6.7a.94.94 0 100-1.9.94.94 0 000 1.9z"/>
-                        </svg>
-                    </a>
-                </li>
-                <li>
-                    <a href="https://www.youtube.com/@vineyewear" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M21.6 8.2a2.5 2.5 0 00-1.8-1.8C18.2 6 12 6 12 6s-6.2 0-7.8.4A2.5 2.5 0 002.4 8.2 26 26 0 002 12c0 1.3.1 2.6.4 3.8a2.5 2.5 0 001.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 001.8-1.8c.3-1.2.4-2.5.4-3.8s-.1-2.6-.4-3.8zM10.2 14.8V9.2l5 2.8z"/>
-                        </svg>
-                    </a>
-                </li>
-                <li>
-                    <a href="https://www.tiktok.com/@vineyewear" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M16.5 3h-2.8v11.4a2.3 2.3 0 11-1.9-2.3V9.2a5.2 5.2 0 105 5.2V9.1a6.3 6.3 0 003.4 1V7.4a3.6 3.6 0 01-3.7-3.7z"/>
-                        </svg>
-                    </a>
-                </li>
+            <h2 class="footer-heading">Sản phẩm</h2>
+            <ul class="footer-links" role="list">
+                <?php foreach ($products as $item): ?>
+                    <li><a href="<?= e($item['url']) ?>"><?= e($item['label']) ?></a></li>
+                <?php endforeach; ?>
             </ul>
         </div>
 
+        <!-- Cột 3: Về Vin Eyewear — xem ghi chú ở $services đầu file -->
+        <div class="footer-col">
+            <h2 class="footer-heading">Về Vin Eyewear</h2>
+            <ul class="footer-links" role="list">
+                <?php foreach ($services as $item): ?>
+                    <li><a href="<?= e($item['url']) ?>"><?= e($item['label']) ?></a></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
+
+        <!-- Cột 4: Liên hệ -->
+        <div class="footer-col">
+            <h2 class="footer-heading">Liên hệ</h2>
+            <ul class="footer-contact" role="list">
+                <li>
+                    Hotline:
+                    <a class="footer-phone" href="<?= e($company['hotline_href']) ?>"><?= e($company['hotline']) ?></a>
+                </li>
+                <li><?= e($company['open_hours'] ?? '8:30 – 21:30, cả tuần') ?></li>
+                <li><a class="footer-break" href="mailto:<?= e($company['email']) ?>"><?= e($company['email']) ?></a></li>
+                <li><a href="/lien-he">Hệ thống cửa hàng</a></li>
+            </ul>
+        </div>
     </div>
 
-    <!-- ============================================================
-         FOOTER BOTTOM — dải đen: copyright | made in
-         ============================================================ -->
     <div class="footer-bottom">
-        <p class="footer-bottom__copy">&copy; <?= date('Y') ?> Vin Eyewear. Đã đăng ký bảo hộ.</p>
-        <p class="footer-bottom__made">Made in Hà Nội</p>
+        <div class="footer-bottom__inner">
+            <p class="footer-bottom__legal">
+                © <?= date('Y') ?> Vin Eyewear · <?= e($company['name']) ?>
+                · MST <?= e($company['tax_code']) ?>
+            </p>
+            <nav aria-label="Liên kết pháp lý" class="footer-bottom__nav">
+                <a href="/chinh-sach#bao-mat">Chính sách bảo mật</a>
+                <a href="/chinh-sach#dieu-khoan">Điều khoản</a>
+            </nav>
+        </div>
     </div>
-
 </footer>

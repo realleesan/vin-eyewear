@@ -1,0 +1,675 @@
+/* ============================================================
+   booking.css — Đặt lịch đo mắt (/dat-lich)
+
+   Dựng theo "Vin Eyewear Booking.dc.html" (Claude Design). Đi kèm
+   app/views/booking/index.php, đăng ký trong bảng $pageStyles của
+   app/views/_layout/master.php.
+
+   Quy ước chung của các trang dựng theo Claude Design (xem thêm đầu
+   category.css / account.css / event.css): cỡ chữ ghi thẳng bằng px vì thang
+   --fs-* là clamp nên lệch so với thiết kế; màu gọi qua token trong
+   layout.css; bản thiết kế cố định 1280px nên mọi @media ở cuối file là phần
+   THÊM, không phải phần bản thiết kế vẽ.
+
+   ────────────────────────────────────────────────────────────
+   PHẦN "CHỌN LỰA BẰNG CSS" Ở CUỐI FILE
+
+   Trang này không có JavaScript. Cột tóm tắt đổi theo lựa chọn, và lưới giờ
+   đổi theo cơ sở/ngày, đều nhờ :has() cộng với các nút radio thật. Cách làm
+   và lý do ghi ở đầu app/views/booking/index.php — đọc chỗ đó trước khi sửa
+   khối luật ở cuối file này.
+
+   Các luật đó viết theo CHỈ SỐ (0, 1, 2…) chứ không theo giá trị, nên không
+   phụ thuộc vào danh sách khung giờ trong config hay ngày hôm nay. Đổi lại,
+   số luật là hữu hạn: 8 cơ sở · 8 dịch vụ · 7 ngày · 16 khung giờ. Vượt quá
+   thì thêm dòng, KHÔNG có cách nào để CSS tự sinh thêm.
+   ============================================================ */
+
+.bk {
+    --bk-line:  #e5d8cc;
+    --bk-soft:  #9a877f;
+    --bk-warm:  #6e4a42;
+    --bk-off:   #c9b8ac;
+    --bk-ok:    #4d7a3f;
+    /* Ba sắc bản thiết kế dùng mà layout.css chưa có token: chữ trên viên
+       chưa chọn, chữ mờ nhất, và nền nút chính khi rê chuột. */
+    --bk-ink2:  #4a3b38;
+    --bk-faint: #b0a094;
+    --bk-hi:    #6e1b28;
+
+    max-width: 1392px;
+    margin: 0 auto;
+    padding: 48px 56px 96px;
+}
+
+.bk__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 24px;
+    align-items: start;
+}
+
+.bk__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* Nút radio thật, ẩn khỏi mắt nhưng KHÔNG ẩn khỏi bàn phím.
+   display:none hay visibility:hidden sẽ loại nó khỏi thứ tự Tab và trình đọc
+   màn hình — mất luôn ngữ nghĩa "chọn một trong nhiều" mà cả trang dựa vào. */
+.bk__radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ============================================================
+   THẺ MỘT BƯỚC
+   ============================================================ */
+
+.bkcard {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 32px 36px;
+    border-radius: 28px;
+    background: var(--surface-raised);
+    box-shadow: 0 2px 10px rgba(90, 40, 40, 0.05);
+}
+
+.bkcard__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.bkcard__num {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--brand-subtle);
+    color: var(--brand);
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.bkcard__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* ============================================================
+   1 · CƠ SỞ
+   ============================================================ */
+
+.bkstores {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.bkstore {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    border: 1.5px solid var(--bk-line);
+    border-radius: 20px;
+    background: var(--surface-raised);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.bkstore:hover { border-color: var(--brand); }
+
+.bkstore:has(:checked) {
+    border-color: var(--brand);
+    background: #faf3ee;
+}
+
+.bkstore:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Ô tròn của bản thiết kế CHÍNH LÀ nút radio, chỉ bỏ hình mặc định đi rồi vẽ
+   lại — nhẹ hơn là ẩn radio rồi thêm một <span> giả làm chấm tròn. */
+.bkstore__dot {
+    appearance: none;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 1.5px solid #d8c7ba;
+    border-radius: 999px;
+    background: var(--surface-raised);
+    cursor: pointer;
+    transition: border 0.15s;
+}
+
+.bkstore__dot:checked { border: 5.5px solid var(--brand); }
+
+.bkstore__text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.bkstore__name {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.bkstore__addr {
+    font-size: 12.5px;
+    color: var(--bk-soft);
+}
+
+/* ============================================================
+   VIÊN CHỌN (dịch vụ · khung giờ)
+   ============================================================ */
+
+.bkpills,
+.bkslots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bkpill {
+    padding: 11px 22px;
+    border: 1.5px solid var(--bk-line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    color: var(--bk-ink2);
+    font-size: 13.5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.bkpill:hover { border-color: var(--brand); }
+
+.bkpill:has(:checked) {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+}
+
+.bkpill:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+/* Khung giờ đã có người đặt HOẶC đã trôi qua. Gạch ngang chứ không bỏ hẳn:
+   một ngày kín lịch phải NHÌN RA được là kín, chứ không phải trông như ngày
+   chưa mở giờ nào. */
+.bkpill--off,
+.bkpill--off:hover {
+    border-color: #f0e4d8;
+    background: var(--surface-sunken);
+    color: var(--bk-off);
+    text-decoration: line-through;
+    cursor: default;
+}
+
+/* ============================================================
+   3 · NGÀY & GIỜ
+   ============================================================ */
+
+.bkdays {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bkday {
+    padding: 10px 18px;
+    border: 1.5px solid var(--bk-line);
+    border-radius: 18px;
+    background: var(--surface-raised);
+    color: var(--bk-ink2);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.bkday:hover { border-color: var(--brand); }
+
+.bkday:has(:checked) {
+    border-color: var(--brand);
+    background: #faf3ee;
+    color: var(--brand);
+}
+
+.bkday:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+.bkday__box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.bkday__wd {
+    font-size: 11.5px;
+    opacity: 0.75;
+}
+
+.bkday__dm {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.bkdpane {
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bkslots__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.bkslots__none {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--bk-soft);
+}
+
+/* ============================================================
+   4 · THÔNG TIN
+   ============================================================ */
+
+.bkfields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.bkfield {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.bkfield__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.bkfield__opt {
+    font-style: normal;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--bk-faint);
+}
+
+.bkfield__input,
+.bkfield__area {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 13px 18px;
+    border: 1px solid var(--bk-line);
+    border-radius: 16px;
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+}
+
+.bkfield__area {
+    padding: 14px 18px;
+    resize: vertical;
+}
+
+.bkfield__input::placeholder,
+.bkfield__area::placeholder { color: var(--bk-faint); }
+
+.bkfield__input:focus,
+.bkfield__area:focus {
+    outline: none;
+    border-color: #c9a79b;
+}
+
+/* ============================================================
+   CỘT PHẢI
+   ============================================================ */
+
+.bkside {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 24px;
+}
+
+.bkside__card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 30px;
+    border-radius: 28px;
+    background: var(--surface-raised);
+    box-shadow: 0 2px 12px rgba(90, 40, 40, 0.06);
+}
+
+.bkside__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.bksum {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bksum__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13.5px;
+}
+
+.bksum__k { color: var(--bk-soft); }
+
+.bksum__v {
+    font-weight: 600;
+    color: var(--ink);
+    text-align: right;
+}
+
+.bksum__free {
+    font-weight: 600;
+    color: var(--bk-ok);
+}
+
+.bkside__cta {
+    padding: 14px 0;
+    border: none;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.bkside__cta:hover { background: var(--bk-hi); }
+
+.bkok {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: #eef3e9;
+    color: var(--bk-ok);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+
+.bkok svg { flex-shrink: 0; }
+
+/* --- Quy trình đo mắt --- */
+
+.bkflow {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 28px 30px;
+    border-radius: 28px;
+    background: var(--brand-subtle);
+}
+
+.bkflow__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.bkflow__step {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.bkflow__n {
+    min-width: 20px;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.bkflow__text {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--bk-warm);
+}
+
+.bkflow__rule {
+    height: 1px;
+    background: #e3cfc4;
+}
+
+.bkflow__note {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #8d7268;
+}
+
+.bkflow__note strong { color: var(--bk-warm); }
+
+.bkflow__note a {
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.bkflow__note a:hover { text-decoration: underline; }
+
+/* ============================================================
+   BÁO LỖI · CHƯA MỞ LỊCH
+   ============================================================ */
+
+.bkalert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 14px 20px;
+    border-radius: 18px;
+    background: #fbeceb;
+    color: #9a3128;
+    font-size: 13.5px;
+}
+
+.bkalert svg { flex-shrink: 0; }
+
+.bkempty {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 56px 40px;
+    border-radius: 28px;
+    background: var(--surface-raised);
+    text-align: center;
+}
+
+.bkempty__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.bkempty__lead {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+/* ============================================================
+   CHỌN LỰA BẰNG CSS
+
+   Đọc ghi chú ở đầu file và ở đầu app/views/booking/index.php trước khi sửa.
+
+   Ba nhóm luật, cùng một khuôn: thứ cần giấu để display:none, rồi cho hiện
+   lại đúng cái tương ứng với nút radio đang được chọn.
+   ============================================================ */
+
+/* --- 1. Lưới giờ: hiện đúng một cơ sở × một ngày --------------- */
+
+.bkspane,
+.bkdpane { display: none; }
+
+.bk__grid:has(#bk-st-0:checked) .bkspane--0,
+.bk__grid:has(#bk-st-1:checked) .bkspane--1,
+.bk__grid:has(#bk-st-2:checked) .bkspane--2,
+.bk__grid:has(#bk-st-3:checked) .bkspane--3,
+.bk__grid:has(#bk-st-4:checked) .bkspane--4,
+.bk__grid:has(#bk-st-5:checked) .bkspane--5,
+.bk__grid:has(#bk-st-6:checked) .bkspane--6,
+.bk__grid:has(#bk-st-7:checked) .bkspane--7 { display: block; }
+
+.bk__grid:has(#bk-d-0:checked) .bkdpane--0,
+.bk__grid:has(#bk-d-1:checked) .bkdpane--1,
+.bk__grid:has(#bk-d-2:checked) .bkdpane--2,
+.bk__grid:has(#bk-d-3:checked) .bkdpane--3,
+.bk__grid:has(#bk-d-4:checked) .bkdpane--4,
+.bk__grid:has(#bk-d-5:checked) .bkdpane--5,
+.bk__grid:has(#bk-d-6:checked) .bkdpane--6 { display: flex; }
+
+/* --- 2. Cột tóm tắt: tên cơ sở và dịch vụ ---------------------- */
+
+.bksum__v > span { display: none; }
+
+.bk__grid:has(#bk-st-0:checked) .bksum-st-0,
+.bk__grid:has(#bk-st-1:checked) .bksum-st-1,
+.bk__grid:has(#bk-st-2:checked) .bksum-st-2,
+.bk__grid:has(#bk-st-3:checked) .bksum-st-3,
+.bk__grid:has(#bk-st-4:checked) .bksum-st-4,
+.bk__grid:has(#bk-st-5:checked) .bksum-st-5,
+.bk__grid:has(#bk-st-6:checked) .bksum-st-6,
+.bk__grid:has(#bk-st-7:checked) .bksum-st-7,
+
+.bk__grid:has(#bk-sv-0:checked) .bksum-sv-0,
+.bk__grid:has(#bk-sv-1:checked) .bksum-sv-1,
+.bk__grid:has(#bk-sv-2:checked) .bksum-sv-2,
+.bk__grid:has(#bk-sv-3:checked) .bksum-sv-3,
+.bk__grid:has(#bk-sv-4:checked) .bksum-sv-4,
+.bk__grid:has(#bk-sv-5:checked) .bksum-sv-5,
+.bk__grid:has(#bk-sv-6:checked) .bksum-sv-6,
+.bk__grid:has(#bk-sv-7:checked) .bksum-sv-7 { display: inline; }
+
+/* --- 3. Cột tóm tắt: giờ và ngày ------------------------------
+
+   Ô giờ mang giá trị "chỉ số ngày|chỉ số khung". Cả GIỜ lẫn NGÀY đều đọc từ
+   chính ô đang được chọn — một cái khớp phần đuôi, một cái khớp phần đầu —
+   nên tóm tắt không thể chỉ ra giờ của ngày này mà ngày của ngày khác.
+
+   Dấu "|" là thứ khiến hai phép khớp không nhầm lẫn: "|1" không phải phần
+   đuôi của "3|11", và "1|" không phải phần đầu của "10|5". */
+
+.bksum__none { display: inline; }
+.bksum__sep  { display: none; }
+
+.bk__grid:has(input[name="time_slot"]:checked) .bksum__none { display: none; }
+.bk__grid:has(input[name="time_slot"]:checked) .bksum__sep  { display: inline; }
+
+.bk__grid:has(input[name="time_slot"][value$="|0"]:checked)  .bksum-t-0,
+.bk__grid:has(input[name="time_slot"][value$="|1"]:checked)  .bksum-t-1,
+.bk__grid:has(input[name="time_slot"][value$="|2"]:checked)  .bksum-t-2,
+.bk__grid:has(input[name="time_slot"][value$="|3"]:checked)  .bksum-t-3,
+.bk__grid:has(input[name="time_slot"][value$="|4"]:checked)  .bksum-t-4,
+.bk__grid:has(input[name="time_slot"][value$="|5"]:checked)  .bksum-t-5,
+.bk__grid:has(input[name="time_slot"][value$="|6"]:checked)  .bksum-t-6,
+.bk__grid:has(input[name="time_slot"][value$="|7"]:checked)  .bksum-t-7,
+.bk__grid:has(input[name="time_slot"][value$="|8"]:checked)  .bksum-t-8,
+.bk__grid:has(input[name="time_slot"][value$="|9"]:checked)  .bksum-t-9,
+.bk__grid:has(input[name="time_slot"][value$="|10"]:checked) .bksum-t-10,
+.bk__grid:has(input[name="time_slot"][value$="|11"]:checked) .bksum-t-11,
+.bk__grid:has(input[name="time_slot"][value$="|12"]:checked) .bksum-t-12,
+.bk__grid:has(input[name="time_slot"][value$="|13"]:checked) .bksum-t-13,
+.bk__grid:has(input[name="time_slot"][value$="|14"]:checked) .bksum-t-14,
+.bk__grid:has(input[name="time_slot"][value$="|15"]:checked) .bksum-t-15,
+
+.bk__grid:has(input[name="time_slot"][value^="0|"]:checked) .bksum-d-0,
+.bk__grid:has(input[name="time_slot"][value^="1|"]:checked) .bksum-d-1,
+.bk__grid:has(input[name="time_slot"][value^="2|"]:checked) .bksum-d-2,
+.bk__grid:has(input[name="time_slot"][value^="3|"]:checked) .bksum-d-3,
+.bk__grid:has(input[name="time_slot"][value^="4|"]:checked) .bksum-d-4,
+.bk__grid:has(input[name="time_slot"][value^="5|"]:checked) .bksum-d-5,
+.bk__grid:has(input[name="time_slot"][value^="6|"]:checked) .bksum-d-6 { display: inline; }
+
+/* ============================================================
+   MÀN HÌNH HẸP — phần THÊM, bản thiết kế chỉ vẽ ở 1280px
+   ============================================================ */
+
+@media (max-width: 1100px) {
+    .bk {
+        max-width: none;
+        padding: 32px 16px 64px;
+    }
+
+    /* minmax(0,1fr) chứ không 1fr — ô lưới mặc định là min-width:auto nên
+       không co xuống dưới bề rộng nội dung nhỏ nhất. */
+    .bk__grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    /* Bỏ dính theo cuộn: cột tóm tắt nay nằm DƯỚI form, dính lại thì nó bám
+       đáy màn hình che mất phần cuối form. */
+    .bkside { position: static; }
+
+    .bkcard { padding: 26px 24px; }
+}
+
+@media (max-width: 700px) {
+    .bkcard {
+        gap: 16px;
+        padding: 22px 18px;
+        border-radius: 22px;
+    }
+
+    .bkcard__title { font-size: 19px; }
+
+    /* Một cột: hai thẻ cơ sở cạnh nhau ở 360px thì địa chỉ vỡ thành bốn dòng. */
+    .bkstores,
+    .bkfields { grid-template-columns: minmax(0, 1fr); }
+
+    .bkpill { padding: 10px 16px; }
+
+    .bkday { padding: 9px 13px; }
+
+    .bkside__card,
+    .bkflow { padding: 24px 20px; }
+}

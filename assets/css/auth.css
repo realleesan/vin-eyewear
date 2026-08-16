@@ -1,0 +1,552 @@
+/* ============================================================
+   auth.css — luồng tài khoản khi CHƯA đăng nhập, và trang lỗi
+
+   Dựng theo "Vin Eyewear Login.dc.html" (Claude Design):
+
+     khung rút gọn — logo + hotline | thẻ giữa màn | chân trang pháp lý
+     thẻ 1060px bo 36px, chia hai: ảnh thương hiệu (co giãn) | form 460px
+
+   Markup: app/views/_layout/auth-header.php · auth-footer.php
+           app/views/auth/index.php · _password.php · forgot.php · reset.php
+   JS:     assets/js/auth.js  (chỉ là nút hiện/ẩn mật khẩu)
+
+   Khung rút gọn bật bằng cờ $bareLayout trong _layout/master.php — controller
+   truyền 'bareLayout' => true.
+
+   CỠ CHỮ ghi thẳng bằng px, không qua thang --fs-*, cùng lý do đã ghi ở đầu
+   category.css và account.css: thang --fs-* là clamp() nên ở 1280px nó lệch
+   1–5px so với từng con số của bản thiết kế, và bản thiết kế dùng nhiều cỡ
+   nửa pixel (12.5 · 13.5 · 14.5) mà thang không có.
+
+   MÀU gọi qua token (--brand, --ink, --surface…) vì các token đó đã mang đúng
+   giá trị của bản thiết kế — xem layout.css.
+
+   Bản thiết kế là khung cứng 1280px (`min-width:1280px`). Site này chạy từ
+   điện thoại lên, nên có thêm mốc gãy: 980px thẻ bỏ cột ảnh, còn một cột form;
+   560px thu đệm và cỡ tiêu đề.
+
+   LỚP CŨ ĐÃ BỎ: .auth__inner, .authtabs*, .checkline, .authform__row/forgot/
+   hint/alt. Chúng dựng theo bản Lovable — dải tab vuông trên nền pearl — mà
+   bản thiết kế mới bỏ hẳn dải tab, nên không tái dùng được mẩu nào.
+   ============================================================ */
+
+/* ============================================================
+   KHUNG RÚT GỌN — ĐÃ CHUYỂN ĐI
+
+   Đầu/chân trang tối giản nay là component dùng chung:
+   assets/css/components/bare-shell.css, bộ lớp .barebar* / .barefoot* /
+   body.is-bare. Trang thanh toán cũng dùng nó, mà nạp "auth.css" cho trang
+   thanh toán thì tên file nói sai việc.
+
+   Bảng $pageStyles trong master.php phải nạp bare-shell.css TRƯỚC auth.css.
+   ============================================================ */
+
+/* ============================================================
+   THẺ HAI CỘT
+   ============================================================ */
+
+.authwrap {
+    /* Chữ phụ tông ấm — cùng bộ với category.css và account.css */
+    --u-note: #9a877f;
+    --u-meta: #b0a094;
+
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 32px 64px;
+}
+
+.authcard {
+    display: grid;
+    /* minmax(0,1fr) chứ không 1fr: cột ảnh phải chịu co lại khi màn hình hẹp
+       hơn 1060px, không thì thẻ đẩy cả trang cuộn ngang. */
+    grid-template-columns: minmax(0, 1fr) 460px;
+    width: 1060px;
+    max-width: 100%;
+    background: var(--surface-raised);
+    border-radius: 36px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(90, 40, 40, 0.08);
+}
+
+/* --- Cột ảnh thương hiệu --- */
+
+.authcard__brand {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 620px;
+    /* Nền chờ phía sau ảnh, thấy được lúc ảnh chưa tải xong */
+    background: var(--brand-subtle);
+}
+
+.authcard__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    /* cover: ảnh người phải lấp kín cột, cắt bớt còn hơn để lộ nền */
+    object-fit: cover;
+}
+
+.authcard__caption {
+    position: relative;
+    padding: 40px 44px;
+    /* Nền chuyển dần lên trên, để chữ trắng đọc được trên bất kỳ tấm ảnh nào
+       — kể cả ảnh sáng. Không có nó thì chữ phụ thuộc hoàn toàn vào tấm ảnh
+       mà cửa hàng thả vào. */
+    background: linear-gradient(to top, rgba(59, 18, 25, 0.72), rgba(59, 18, 25, 0));
+    /* Lớp phủ này không nuốt cú bấm nào — dưới nó không có gì bấm được, còn
+       chuột vẫn chọn được chữ. */
+    pointer-events: none;
+}
+
+.authcard__quote {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #fff;
+    text-wrap: pretty;
+}
+
+.authcard__sub {
+    margin: 8px 0 0;
+    font-size: 13.5px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* --- Cột form --- */
+
+.authcard__panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 22px;
+    padding: 56px 52px;
+    min-width: 0;
+}
+
+.authhead {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.authhead__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.authhead__lead {
+    margin: 0;
+    font-size: 14px;
+    color: var(--u-note);
+}
+
+/* ============================================================
+   FORM
+   ============================================================ */
+
+.authform {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.authfield {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.authfield__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+/* Hàng "MẬT KHẨU ......... Quên mật khẩu?" */
+.authfield__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.authfield__aside {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.authfield__aside:hover { color: var(--brand-strong); }
+
+.authfield__input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: 14.5px;
+    color: var(--ink);
+}
+
+.authfield__input:focus {
+    outline: none;
+    border-color: #c9a79b;
+    background: var(--surface-focus);
+}
+
+.authfield__input::placeholder { color: var(--u-meta); }
+
+/* Chỉ tô đỏ SAU khi người dùng đã rời ô và gõ sai — :user-invalid, không phải
+   :invalid. :invalid tô đỏ mọi ô bắt buộc ngay khi trang vừa mở. */
+.authfield__input:user-invalid { border-color: var(--danger); }
+
+.authfield__hint {
+    font-size: 12px;
+    color: var(--u-meta);
+}
+
+/* --- Ô mật khẩu + nút con mắt --- */
+
+.authpw {
+    position: relative;
+    display: block;
+}
+
+/* 52px bên phải để chữ không chui xuống dưới nút */
+.authpw__input { padding-right: 52px; }
+
+.authpw__eye {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 999px;
+    background: none;
+    color: var(--u-meta);
+    cursor: pointer;
+}
+
+.authpw__eye:hover { color: var(--brand); }
+
+/* Đổi hình theo aria-pressed — thuộc tính DUY NHẤT mà auth.js phải đảo, và
+   cũng chính là thứ trình đọc màn hình dùng để thông báo trạng thái. */
+.authpw__eye .authpw__on  { display: none; }
+.authpw__eye .authpw__off { display: block; }
+.authpw__eye[aria-pressed="true"] .authpw__on  { display: block; }
+.authpw__eye[aria-pressed="true"] .authpw__off { display: none; }
+
+/* --- Ô tick "Duy trì đăng nhập" --- */
+
+.authcheck {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    /* Bản thiết kế xếp ô tick SAU nút gửi trên màn hình, nhưng trong HTML nó
+       đứng TRƯỚC để thứ tự Tab đúng — xem ghi chú số 3 ở đầu
+       app/views/auth/index.php. `order` lo phần hình ảnh.
+       2 vì .authform là flex column và nút gửi mang order mặc định 0. */
+    order: 2;
+}
+
+/* Ô tick thật: ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc màn hình.
+   display:none hay visibility:hidden sẽ gỡ nó khỏi cả hai. */
+.authcheck input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.authcheck__box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid #d8c7ba;
+    border-radius: 7px;
+    background: var(--surface-raised);
+    color: transparent;
+    flex-shrink: 0;
+}
+
+.authcheck input:checked + .authcheck__box {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* Vòng focus vẽ trên cái NHÌN THẤY, vì ô thật đã ẩn đi */
+.authcheck input:focus-visible + .authcheck__box {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.authcheck__text {
+    font-size: 13.5px;
+    color: var(--muted);
+}
+
+/* ============================================================
+   NÚT
+   ============================================================ */
+
+.authbtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 15px 0;
+    border: none;
+    border-radius: 999px;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.authbtn--primary {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.authbtn--primary:hover,
+.authbtn--primary:focus-visible { background: var(--brand-strong); }
+
+.authbtn--google {
+    padding: 14px 0;
+    border: 1.5px solid var(--line);
+    background: var(--surface-raised);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+.authbtn--google:hover:not(:disabled) { border-color: var(--brand); }
+
+/* Đăng nhập bằng Google chưa nối được — dự án chưa có hạ tầng OAuth. Nút giữ
+   đúng hình dạng bản thiết kế nhưng mờ đi và không bấm được, kèm nhãn "Sắp
+   có": một cái nút bấm được mà không xảy ra gì thì người dùng tưởng trang hỏng. */
+.authbtn--google:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.authbtn--google:disabled svg { filter: grayscale(1); }
+
+.authbtn__soon {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--u-meta);
+}
+
+/* ============================================================
+   VẠCH NGĂN · CHÚ THÍCH · THÔNG BÁO
+   ============================================================ */
+
+.author {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.author__line {
+    flex: 1;
+    height: 1px;
+    background: #eee0d4;
+}
+
+.author__word {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--u-meta);
+}
+
+.authnote {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    text-align: center;
+    color: var(--u-meta);
+}
+
+.authnote a,
+.authalt a {
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.authnote a:hover,
+.authalt a:hover { color: var(--brand-strong); }
+
+.authalt {
+    margin: 0;
+    font-size: 13.5px;
+    text-align: center;
+    color: var(--u-note);
+}
+
+/* Không dùng .alert của ui.css: khối đó có viền vuông 4px của thiết kế cũ,
+   đặt trong một thẻ bo 36px thì lạc hẳn. */
+.authflash {
+    margin: 0;
+    padding: 13px 18px;
+    border-radius: 16px;
+    font-size: 13.5px;
+    font-weight: 500;
+}
+
+.authflash--ok  { background: #eef3e9; color: #3d6633; }
+.authflash--err { background: #f6e7e7; color: #8f3535; }
+
+/* ============================================================
+   KHỐI "ĐÃ XONG" — quên mật khẩu / liên kết hỏng
+   ============================================================ */
+
+.authdone {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.authdone__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.authdone p {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+.authdone__note { color: var(--u-note) !important; }
+
+.authdone a {
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.authdone a:hover { color: var(--brand-strong); }
+
+/* ============================================================
+   MỐC GÃY
+
+   Bản thiết kế là khung cứng 1280px. Hai mốc dưới đây là phần THÊM.
+   ============================================================ */
+
+@media (max-width: 980px) {
+    .authbar  { padding: 16px var(--gutter, 20px); }
+    .authfoot { padding: 0 var(--gutter, 20px); }
+
+    .authwrap { padding: 16px var(--gutter, 20px) 40px; }
+
+    /* Bỏ cột ảnh: ép nó xuống dưới form thì nó thành 620px ảnh nằm dưới một
+       form đã cuộn hết màn hình — không ai cuộn tới. Ảnh là trang trí, form
+       là việc cần làm. */
+    .authcard {
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+        max-width: 460px;
+        border-radius: 28px;
+    }
+
+    .authcard__brand { display: none; }
+
+    .authcard__panel { padding: 40px 32px; }
+}
+
+@media (max-width: 560px) {
+    .authcard__panel { padding: 32px 22px; gap: 18px; }
+    .authform        { gap: 18px; }
+    .authhead__title { font-size: 26px; }
+
+    .authfoot__inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}
+
+/* ============================================================
+   TRANG LỖI (403 · 404 · 500)
+
+   KHÔNG dùng khung rút gọn — trang lỗi vẫn nằm trong khung đầy đủ, vì người
+   gặp lỗi cần đúng cái thanh điều hướng để đi tiếp. Chúng chỉ nạp chung file
+   CSS này vì bảng $pageStyles trong master.php đã trỏ như vậy từ trước.
+   ============================================================ */
+
+.errpage__inner {
+    max-width: 640px;
+    margin-inline: auto;
+    padding: var(--section-pad) var(--gutter-tight);
+    text-align: center;
+}
+
+.errpage__code {
+    font-family: var(--font-serif);
+    font-size: clamp(64px, 14vw, 120px);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--brand);
+}
+
+.errpage__title {
+    margin-top: 8px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.errpage__lead {
+    margin-top: 12px;
+    font-size: var(--fs-body);
+    line-height: 1.75;
+    color: var(--muted);
+}
+
+.errpage__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 32px;
+}

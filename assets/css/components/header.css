@@ -1,0 +1,562 @@
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+/* KHÔNG có border-bottom: bản thiết kế để header trôi thẳng vào hero, chỉ
+   cách nhau 8px nền trang. Một đường kẻ ở đây cắt ngang đúng chỗ đó và làm
+   khối hero trông như bị dán vào chứ không phải nổi trên nền.
+
+   position:sticky và hiệu ứng thu gọn khi cuộn là phần THÊM ngoài bản thiết
+   kế — bản thiết kế là ảnh tĩnh nên không nói gì về lúc cuộn. Ở trạng thái
+   đầu trang, hai bản trông giống hệt nhau. */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    color: var(--ink);
+    /* Nền mờ để nội dung cuộn phía dưới không đọc xuyên qua chữ header */
+    backdrop-filter: blur(12px);
+    transition: box-shadow 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.site-header.is-scrolled {
+    box-shadow: var(--elev-2);
+}
+
+/* --- 1. Dải thông báo --------------------------------------- */
+
+.header-announce {
+    overflow: hidden;
+    /* Thiết kế đặt dải này nền crimson, không phải nền mực như bản cũ */
+    background: var(--brand);
+    /* #f6e3dd — hồng rất nhạt, không phải trắng pha trong suốt. Trên nền
+       crimson nó cho 6.9:1, đủ cho chữ 12.5px. */
+    color: #f6e3dd;
+    max-height: 64px;
+    padding-block: 10px;
+    opacity: 1;
+    transition:
+        max-height 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
+        padding    0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
+        opacity    0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* Cuộn xuống -> dải thu về 0, nhường chỗ cho nội dung */
+.site-header.is-scrolled .header-announce {
+    max-height: 0;
+    padding-block: 0;
+    opacity: 0;
+}
+
+.header-announce__text {
+    max-width: var(--container, 1280px);
+    margin-inline: auto;
+    padding-inline: var(--gutter);
+    text-align: center;
+    /* Chữ thường, không giãn ký tự — đúng dải thông báo của bản thiết kế.
+       Bản trước IN HOA + letter-spacing 0.18em, đọc nặng hơn hẳn và ở màn
+       hình hẹp thì câu duy nhất này phải xuống hai dòng. */
+    font-size: 12.5px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+}
+
+.header-announce__link {
+    color: inherit;
+    white-space: nowrap;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: color-mix(in srgb, var(--brand-light) 60%, transparent);
+    transition: color 0.2s;
+}
+
+.header-announce__link:hover,
+.header-announce__link:focus-visible {
+    color: var(--brand-light);
+}
+
+/* --- 2. Hàng chính ------------------------------------------ */
+
+/*
+ * MỘT hàng: wordmark trái · điều hướng giữa · tác vụ phải.
+ *
+ * Bản trước dựng lưới 3 cột để ghim wordmark vào chính giữa, và đẩy điều
+ * hướng xuống một thanh riêng bên dưới. Thiết kế mới gom hết vào một hàng
+ * cao 76px nên lưới đó không còn việc gì để làm.
+ */
+/* KHÔNG có max-width: bản thiết kế cho header chạy hết bề ngang trang, chỉ
+   chừa lề 56px hai bên — wordmark nằm sát mép trái chứ không thụt vào theo
+   cột nội dung 1280px như các section bên dưới. Đây là chỗ header cố tình
+   khác phần thân trang, không phải sơ suất. */
+.header-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    /* min-height chứ không phải height: khoá cứng thì màn hình hẹp bị bóp.
+       80px = 40px nút tròn + 20px đệm trên dưới, đúng bản thiết kế. */
+    min-height: 80px;
+    padding: 20px 56px;
+    transition: min-height 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.site-header.is-scrolled .header-main {
+    min-height: 64px;
+}
+
+@media (max-width: 1100px) {
+    .header-main { padding: 12px var(--gutter); }
+}
+
+/* --- Ô tìm kiếm (trong cụm tác vụ, cạnh icon tài khoản) ------ */
+
+.header-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Viền và nền lấy từ .header-action bên dưới — nút này là một trong ba nút
+   tròn của cụm tác vụ, chỉ khác ở chỗ nó là <button> nên phải gỡ style mặc
+   định của trình duyệt. */
+.header-search__toggle {
+    font: inherit;
+    cursor: pointer;
+}
+
+/* ĐANG MỞ — trạng thái DUY NHẤT của ba nút tròn có nền đổ đầy, để thấy rõ ô
+   tìm kiếm bên dưới thuộc về nút này. Cùng quy ước với thanh điều hướng: nền
+   be nghĩa là "đang mở", không phải "con trỏ đang ở đây". */
+.header-search__toggle[aria-expanded="true"] {
+    color: var(--brand);
+    background: #f1e7dd;
+    border-color: #f1e7dd;
+}
+
+/* Khay bo tròn nổi dưới nút kính lúp.
+   Bo 26px + bóng ấm, cùng ngôn ngữ với thẻ thông tin trên bản đồ trang liên
+   hệ (.cmap__card) — bản thiết kế không vẽ trạng thái mở này nên nó lấy dáng
+   từ những khối nổi khác của cùng bộ thiết kế. */
+.header-search__panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    /* Neo mép phải theo nút: panel rộng hơn nút nhiều, neo trái sẽ tràn
+       khỏi khung nhìn vì nút nằm sát cạnh phải màn hình. */
+    right: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: min(340px, calc(100vw - 2 * var(--gutter, 16px)));
+    padding: 10px;
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 26px;
+    box-shadow: 0 6px 20px rgba(90, 40, 40, 0.14);
+}
+
+.header-search__panel[hidden] {
+    display: none;
+}
+
+/*
+ * Điện thoại: neo panel vào .header-main thay vì vào nút.
+ * Nút tìm kiếm còn 3 icon đứng sau (tài khoản, giỏ, hamburger ~132px) nên mép
+ * phải của nó cách rìa màn hình khá xa; neo `right: 0` vào nút thì panel rộng
+ * 320px thò hẳn ra ngoài mép trái (đo được -118px ở 360px, -88px ở 390px) —
+ * icon kính lúp và phần đầu ô nhập bị cắt mất. Neo vào .header-main thì panel
+ * trải đúng từ lề trái tới lề phải của khung nội dung.
+ */
+@media (max-width: 699px) {
+    .header-search { position: static; }
+
+    .header-search__panel {
+        left: var(--gutter);
+        right: var(--gutter);
+        width: auto;
+    }
+}
+
+/* Kính lúp NẰM TRONG ô nhập chứ không đứng thành một cột riêng.
+   Ô nhập nay là một viên thuốc có viền của chính nó; để icon đứng ngoài thì
+   viên thuốc bị đẩy lệch khỏi tâm khay và trông như hai mẩu rời. Neo tuyệt
+   đối được vì .header-search__panel đã là position:absolute.
+   left: 10px đệm khay + 17px vào trong ô nhập. */
+.header-search__ico {
+    position: absolute;
+    left: 27px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+    color: var(--eyebrow);
+}
+
+.header-search__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    /* 44px theo vùng chạm tối thiểu WCAG 2.5.5, giống .tap-target */
+    height: 44px;
+    /* padding-left chừa chỗ cho kính lúp neo đè lên trên */
+    padding: 0 18px 0 42px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    color: var(--ink);
+}
+
+.header-search__input::placeholder {
+    color: color-mix(in srgb, var(--muted) 70%, transparent);
+}
+
+/* MỘT vòng đỏ thôi, không phải hai.
+   Viền chỉ đậm lên một nấc sang hồng nhạt; vòng đỏ để cho outline đảm nhận.
+   Đổi cả viền sang đỏ thì hai vòng đỏ nằm cách nhau 1px, ô nhập trông như bị
+   viền kép. Cùng cặp giá trị với ô nhập ở form liên hệ (.cfield__input:focus).
+   offset dương chứ không âm — khay có 10px đệm nên vòng ngoài không bị cắt. */
+.header-search__input:focus {
+    border-color: #c9a79b;
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+}
+
+/* Viên thuốc đặc màu thương hiệu, cùng dáng với "Đặt lịch đo mắt" ở trang
+   liên hệ và "Xoá bộ lọc" ở trang danh mục. Bỏ IN HOA + giãn ký tự của bản
+   cũ: các bản thiết kế mới viết chữ nút theo kiểu thường. */
+.header-search__submit {
+    flex: none;
+    border: 0;
+    border-radius: 999px;
+    /* Cùng ngưỡng chạm 44px với ô nhập — chữ "Tìm" ngắn nên phải ép chiều cao */
+    height: 44px;
+    padding: 0 22px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.header-search__submit:hover,
+.header-search__submit:focus-visible {
+    background: var(--brand-strong);
+}
+
+/* Wordmark */
+.header-logo {
+    min-width: 0;
+    text-decoration: none;
+    color: inherit;
+}
+
+.header-logo__text {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+    /* Cả cụm chữ ăn màu thương hiệu, không chỉ riêng "Eyewear" — bản thiết kế
+       đặt màu ở thẻ bọc ngoài. */
+    color: var(--brand);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: font-size 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.site-header.is-scrolled .header-logo__text {
+    font-size: 21px;
+}
+
+/* Nhẹ hơn nửa nấc, KHÔNG đổi màu — giống hệt wordmark ở chân trang */
+.header-logo__text em {
+    font-style: italic;
+    font-weight: 500;
+}
+
+/* Tác vụ bên phải */
+.header-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Ba nút tròn viền mảnh nền trắng.
+   Bản trước là ba icon trần không viền, nền chỉ hiện khi rê chuột; bản thiết
+   kế vẽ sẵn viền và nền trắng ở trạng thái nghỉ, nên cụm tác vụ nổi rõ khỏi
+   nền pearl kể cả khi không chạm vào.
+
+   40px chứ không phải 44px của .tap-target: đây là số của bản thiết kế. 40px
+   vẫn qua WCAG 2.5.8 (mức AA, ngưỡng 24px), chỉ hụt so với 2.5.5 (mức AAA,
+   ngưỡng 44px). Cả ba nút đều còn lối đi khác trên trang (ô tìm kiếm ở trang
+   sản phẩm, link tài khoản và giỏ hàng trong menu trượt) nên không có thao
+   tác nào chỉ bấm được qua đúng nút 40px này. */
+.header-action {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    color: #4a3b38;
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+}
+
+.header-action svg {
+    width: 17px;
+    height: 17px;
+}
+
+/* RÊ CHUỘT CHỈ ĐỔI MÀU VIỀN VÀ ICON, KHÔNG ĐỔ NỀN — cùng lý do với thanh
+   điều hướng ngay bên cạnh: nền be để dành cho trạng thái ĐANG MỞ, không
+   phải cho việc con trỏ vô tình lướt qua.
+
+   Đây cũng là cách mọi nút viền mảnh khác trong site đang phản hồi: huy hiệu
+   lọc (.pchip), nút phân trang (.catpager__btn), nút "Chi tiết" ở thẻ sản
+   phẩm (.bcard__btn--ghost) đều đổi viền + chữ sang màu thương hiệu chứ
+   không đổ đầy. Ba nút tròn này nay theo cùng một quy ước. */
+.header-action:hover,
+.header-action:focus-visible {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+/* Nhô ra ngoài viền nút: nút chỉ còn 40px và có viền, đặt huy hiệu vào
+   trong thì nó đè lên chính icon giỏ hàng. */
+.header-action__badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    display: grid;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding-inline: 4px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Hamburger */
+.header-burger {
+    display: grid;
+    place-content: center;
+    gap: 5px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    color: var(--ink);
+}
+
+@media (min-width: 1101px) {
+    .header-burger { display: none; }
+}
+
+.header-burger span {
+    display: block;
+    width: 22px;
+    height: 1.5px;
+    background: currentColor;
+    transition: transform 0.25s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)), opacity 0.2s;
+}
+
+/* --- 3. Điều hướng (trong hàng chính, từ 1101px) ------------- */
+
+.header-nav {
+    display: none;
+}
+
+@media (min-width: 1101px) {
+    .header-nav { display: block; }
+}
+
+.header-nav__list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+}
+
+/* VIÊN THUỐC, KHÔNG PHẢI GẠCH CHÂN.
+   Bản trước là chữ trần cách nhau 32px, rê chuột thì một gạch 1px chạy ra từ
+   giữa. Bản thiết kế bỏ hẳn lối đó: mỗi mục là một viên thuốc bo tròn, rê
+   chuột thì cả viên đổ nền be #f1e7dd. Hai cách chiếm chỗ khác hẳn nhau —
+   viên thuốc tự mang đệm 9px/18px nên khoảng cách giữa các mục rút từ 32px
+   xuống 8px mà nhìn vẫn thoáng hơn. */
+.header-nav__list > li > a {
+    display: block;
+    padding: 9px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+/* RÊ CHUỘT CHỈ ĐỔI MÀU CHỮ, KHÔNG ĐỔ NỀN.
+   Viên thuốc nền be để dành riêng cho mục đang mở. Bản thiết kế cho cả hai
+   trạng thái cùng một nền #f1e7dd, nhưng khi chạy thật thì rê chuột qua thanh
+   nav là các viên thuốc sáng lên rồi tắt liên tục, trông y hệt trạng thái
+   "đang ở trang này" — người dùng mất luôn cái mốc để biết mình đang đứng
+   đâu. Nay hai trạng thái tách hẳn: rê chuột = đổi màu chữ, đang mở = viên
+   thuốc.
+
+   Không cần thay nền bằng gì khác cho bàn phím: :focus-visible dùng chung
+   trong layout.css đã vẽ sẵn vòng viền 2px quanh mục đang focus. */
+.header-nav__list > li > a:hover,
+.header-nav__list > li > a:focus-visible {
+    color: var(--brand);
+}
+
+/* Mục đang mở — trạng thái DUY NHẤT có nền.
+   Bản thiết kế không vẽ nó ở trang chủ (ảnh tĩnh, không mục nào đang mở),
+   nhưng bản Category và Contact thì có: mục tương ứng mang nền #f1e7dd, chữ
+   đỏ và in đậm. */
+.header-nav__list > li > a.is-active {
+    background: #f1e7dd;
+    color: var(--brand);
+    font-weight: 600;
+}
+
+/* Ở ĐÂY TRƯỚC CÓ .is-accent tô riêng mục "Khuyến mãi" đỏ + đậm sẵn — đã bỏ.
+   Nó lấy theo "Vin Eyewear Home.dc.html"; nhưng hai bản thiết kế làm sau
+   ("Vin Eyewear Category.dc.html" và "Vin Eyewear Contact.dc.html") đều vẽ
+   mục đó bằng chữ thường #33272a như năm mục còn lại. Nay cả sáu mục cùng
+   một dáng, chỉ đổi màu khi rê chuột, và MÀU ĐỎ trên thanh điều hướng chỉ
+   còn mang đúng một nghĩa: đây là trang bạn đang mở (.is-active). */
+
+/* ============================================================
+   MENU TRƯỢT (mobile)
+   ============================================================ */
+
+.mobile-nav {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+}
+
+.mobile-nav[hidden] {
+    display: none;
+}
+
+.mobile-nav__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(26 18 20 / 0.5);
+    opacity: 0;
+    transition: opacity 0.25s ease-out;
+}
+
+.mobile-nav.is-open .mobile-nav__backdrop {
+    opacity: 1;
+}
+
+.mobile-nav__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    width: 88vw;
+    max-width: 384px;
+    padding: 16px var(--gutter-tight) 8px;
+    background: var(--surface);
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.28s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.mobile-nav.is-open .mobile-nav__panel {
+    transform: translateX(0);
+}
+
+.mobile-nav__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Cùng cách tô màu với logo ở header chính, để hai chỗ không lệch nhau */
+.mobile-nav__logo {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h5);
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.mobile-nav__logo em {
+    font-style: italic;
+    color: var(--brand);
+}
+
+.mobile-nav__close {
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.mobile-nav__close svg {
+    width: 22px;
+    height: 22px;
+}
+
+.mobile-nav__search {
+    margin-top: 16px;
+}
+
+.mobile-nav__search input {
+    width: 100%;
+    height: 44px;
+    padding-inline: 12px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    color: var(--ink);
+}
+
+.mobile-nav__search input:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+/* Nút hành động dính đáy panel */
+.mobile-nav__foot {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    padding: 16px 0 8px;
+    border-top: 1px solid var(--line);
+    background: var(--surface);
+}
+
+/* Người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành */
+@media (prefers-reduced-motion: reduce) {
+    .site-header *,
+    .mobile-nav * {
+        transition-duration: 0.01ms !important;
+    }
+}

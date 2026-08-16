@@ -1,477 +1,252 @@
-﻿/* ============================================
-   VIN EYEWEAR - ABOUT PAGE STYLES
-   Heritage-meets-Downtown-Cool Design System
-   ============================================ */
+/* ============================================================
+   about.css — Trang Giới thiệu
+   Port từ src/routes/gioi-thieu.tsx (Lovable)
 
-/* ============================================
-   ABOUT SECTION WRAPPER
-   Padding dùng var(--margin) để căn lề khớp với
-   page-header và breadcrumb (cùng dùng var(--margin)).
-   .container bên trong giới hạn max-width nội dung.
-   ============================================ */
-.about-section {
-    padding: var(--space-20) 0 var(--space-30);
-}
+   Đầu trang dùng chung nằm ở components/page-head.css (.pagehead), master.php
+   nạp cho mọi trang — không có gì phải khai thêm ở đây.
+   ============================================================ */
 
-/* Container — chỉ giới hạn max-width, KHÔNG đặt reset * ở đây
-   để tránh xung đột với global styles */
-.about-section .container {
-    max-width: var(--container);
-    margin: 0 auto;
-    padding: 0 var(--margin);
-}
+/* --- Tiện ích chung của trang ------------------------------- */
 
-/* ============================================
-   TYPOGRAPHY HELPERS (dùng trong about page)
-   ============================================ */
-.subheading-caps {
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    font-weight: 500;
-    line-height: 20px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    display: block;
-    margin-bottom: var(--space-3);
-}
-
-.headline {
+.about-h2 {
+    margin-top: 16px;
     font-family: var(--font-serif);
-    font-size: var(--fs-h1);
+    font-size: var(--fs-h3);
     font-weight: 700;
-    line-height: 1.2;
-    color: var(--black);
-    margin-bottom: var(--space-8);
-    letter-spacing: -0.02em;
+    line-height: 1.16;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    text-wrap: balance;
 }
 
-/* ============================================
-   HERO STORY SECTION
-   ============================================ */
-.hero-story {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-16);
-    align-items: start;
-    margin-bottom: var(--space-20);
-}
+.about-h2--narrow { max-width: 20ch; }
 
-.story-content {
-    padding-right: var(--space-4);
-}
-
-.story-text p {
-    font-family: var(--font-sans);
-    font-size: var(--fs-lead);
-    font-weight: 400;
-    line-height: 1.7;
-    color: var(--on-surface);
-    margin-bottom: var(--space-6);
-}
-
-.story-text p:last-child {
-    margin-bottom: 0;
-}
-
-/* CEO Quote — nổi bật bằng border trái vàng + nền xám nhạt */
-.ceo-quote {
-    margin: 28px 0;
-    padding: 24px 28px;
-    background-color: var(--gray);
-    border-left: 4px solid var(--yellow);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-}
-
-.ceo-quote p {
-    font-family: var(--font-serif);
-    font-size: var(--fs-lead);
-    font-style: italic;
-    font-weight: 400;
-    line-height: 1.75;
-    color: var(--on-surface);
-    margin-bottom: var(--space-3) !important;
-}
-
-.ceo-quote-footer {
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-}
-
-.story-image {
-    position: relative;
-    align-self: stretch;
-    /* Offset để ảnh thẳng hàng với dòng đầu của .subheading-caps */
-    margin-top: calc(11px + 20px + 12px);
-}
-
-.story-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    border: 1px solid var(--black);
-}
-
-/* ============================================
-   STORE LOCATOR SECTION (từ contact.css)
-   ============================================ */
-.about-store-locator {
-    padding: 80px 0;
-}
-
-.section-title {
-    font-family: var(--font-serif);
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 40px;
-    color: var(--black);
-    position: relative;
-}
-
-/* Interactive Store Locator */
-.store-locator-wrapper {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: var(--space-6);
-    margin-bottom: 0;
-}
-
-/* Store Cards List */
-.store-list {
-    grid-column: span 5;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
-}
-
-.store-card {
-    background: var(--white);
-    border: 2px solid var(--black);
-    border-radius: 0 !important;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    outline: none;
-    position: relative;
-}
-
-/* Left Accent Highlight for Active Card */
-.store-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 0;
-    background: var(--yellow);
-    transition: width 0.15s ease;
-    z-index: 1;
-}
-
-.store-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 6px 6px 0px var(--black);
-}
-
-.store-card.active {
-    border-width: 2px;
-    box-shadow: 8px 8px 0px var(--black);
-}
-
-.store-card.active::before {
-    width: 6px;
-}
-
-/* Store Card Media */
-.store-image-container {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: var(--gray);
-    overflow: hidden;
-    border-bottom: 2px solid var(--black);
-}
-
-.store-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-}
-
-.store-card:hover .store-img {
-    transform: scale(1.03);
-}
-
-.store-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    background: var(--black);
-    color: var(--white);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 5px 10px;
-    border-radius: 0;
-}
-
-/* Store Card Info */
-.store-card-content {
-    padding: var(--space-6);
-    position: relative;
-    z-index: 0;
-}
-
-.store-card-title {
-    font-family: var(--font-serif);
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--black);
-    margin-bottom: var(--space-4);
-}
-
-.store-details {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.store-detail-item {
-    font-family: var(--font-sans);
+.about-lead {
+    max-width: 34ch;
+    margin-top: 16px;
     font-size: var(--fs-body-sm);
-    line-height: 1.5;
-    display: flex;
-    align-items: flex-start;
+    line-height: 1.7;
+    color: var(--muted);
+    text-wrap: pretty;
 }
 
-.store-detail-item .label-mono {
-    font-family: var(--font-mono);
+
+/* --- 01. Câu chuyện ----------------------------------------- */
+
+.about-story {
+    max-width: var(--container, 1280px);
+    margin-inline: auto;
+    padding: var(--section-pad) var(--gutter);
+}
+
+.about-story__grid {
+    display: grid;
+    gap: 40px;
+}
+
+@media (min-width: 1101px) {
+    .about-story__grid {
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        gap: 64px;
+    }
+}
+
+.about-story__text { min-width: 0; }
+
+.about-prose {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+    font-size: var(--fs-body);
+    line-height: 1.75;
+    color: var(--muted);
+}
+
+/* Số liệu */
+.about-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 32px;
+    margin-top: 40px;
+}
+
+@media (min-width: 601px) {
+    .about-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.about-stat {
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.about-stat__value {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h4);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--brand);
+    /* Chữ số cùng bề rộng -> 4 cột số thẳng hàng nhau */
+    font-variant-numeric: tabular-nums;
+}
+
+.about-stat__label {
+    margin-top: 8px;
     font-size: var(--fs-label);
-    font-weight: 600;
-    color: var(--outline);
-    width: 100px;
-    flex-shrink: 0;
-    display: inline-block;
-}
-
-.store-detail-item .detail-value {
-    color: var(--on-surface);
-}
-
-.store-phone-link {
-    color: var(--black);
-    font-weight: 600;
-    text-decoration: underline;
-    transition: color 0.15s, background 0.15s;
-}
-
-.store-phone-link:hover {
-    color: var(--white);
-    background: var(--black);
-    padding: 0 4px;
-}
-
-/* Store Map Viewport */
-.store-map-viewport {
-    grid-column: span 7;
-    border: 2px solid var(--black);
-    border-radius: 0 !important;
-    background: var(--gray);
-    height: 600px;
-    position: sticky;
-    top: 98px;
-    z-index: 10;
-}
-
-.map-container {
-    display: none;
-    width: 100%;
-    height: 100%;
-}
-
-.map-container.active {
-    display: block;
-}
-
-/* ============================================
-   LABEL MONO UTILITY
-   ============================================ */
-.label-mono {
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--outline);
+    letter-spacing: 0.16em;
+    color: var(--muted);
+}
+
+/* Ảnh showroom */
+.about-figure { min-width: 0; }
+
+@media (min-width: 1101px) {
+    /* Lệch xuống để không thẳng hàng cứng với cột chữ */
+    .about-figure { margin-top: 48px; }
+}
+
+.about-figure img {
     display: block;
-    margin-bottom: 6px;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-/* --- Tablet (≤1024px): giảm khoảng cách, giữ 2 cột values --- */
-@media (max-width: 1100px) {
-    .about-section {
-        padding: 48px 0 80px;
-    }
-
-    .headline {
-        font-size: var(--fs-h3);
-    }
-
-    .hero-story {
-        grid-template-columns: 1fr;
-        gap: var(--space-8);
-        margin-bottom: 56px;
-    }
-
-    .story-content {
-        padding-right: 0;
-    }
-
-    .story-image {
-        margin-top: 0;
-        max-height: 420px;
-    }
-
-    .story-image img {
-        height: 420px;
-    }
-
-    .store-locator-wrapper {
-        grid-template-columns: 1fr;
-        gap: var(--space-6);
-        margin-bottom: 0;
-    }
-    
-    .store-list,
-    .store-map-viewport {
-        grid-column: span 1;
-    }
-    
-    .store-map-viewport {
-        height: 450px;
-        position: static;
-    }
+.about-figure figcaption {
+    margin-top: 12px;
+    font-size: var(--fs-label);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--muted);
 }
 
-/* --- Mobile (≤768px) --- */
-@media (max-width: 900px) {
-    .about-section {
-        padding: 32px 0 64px;
-    }
+/* --- 02. Cam kết -------------------------------------------- */
 
-    .hero-story {
-        gap: var(--space-6);
-        margin-bottom: 40px;
-    }
+.about-values {
+    border-block: 1px solid var(--line);
+    background: color-mix(in srgb, var(--surface-sunken) 50%, var(--surface));
+}
 
-    .story-image {
-        max-height: 280px;
-    }
+.about-values__inner {
+    max-width: var(--container, 1280px);
+    margin-inline: auto;
+    padding: 64px var(--gutter);
+}
 
-    .story-image img {
-        height: 280px;
-    }
+@media (min-width: 901px) {
+    .about-values__inner { padding-block: 80px; }
+}
 
-    .ceo-quote {
-        padding: 20px 20px;
-    }
+/* Nền --line + khe 1px = đường kẻ ngăn ô. Dùng border từng ô thì chỗ hai ô
+   giáp nhau sẽ dày 2px, còn cạnh ngoài cùng lại chỉ 1px. */
+.about-values__list {
+    display: grid;
+    gap: 1px;
+    margin-top: 40px;
+    border: 1px solid var(--line);
+    background: var(--line);
+    list-style: none;
+}
 
-    .ceo-quote p {
-        font-size: 16px;
-    }
+@media (min-width: 601px) {
+    .about-values__list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 
-    .section-title {
-        font-size: 1.75rem;
-        margin-bottom: var(--space-8);
-    }
+.about-value {
+    padding: 24px;
+    background: var(--surface);
+}
 
-    .store-list {
-        gap: 20px;
-    }
+@media (min-width: 901px) {
+    .about-value { padding: 32px; }
+}
 
-    .store-card {
-        flex-direction: row;
-    }
+.about-value__index {
+    font-family: var(--font-serif);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+}
 
-    .store-image-container {
-        width: 140px;
-        min-width: 140px;
-        height: 140px;
-        aspect-ratio: 1;
-        border-right: 2px solid var(--black);
-        border-bottom: none;
-    }
+.about-value__ico {
+    display: block;
+    margin-top: 20px;
+    color: var(--brand);
+}
 
-    .store-card-content {
-        padding: var(--space-4);
-    }
+.about-value__title {
+    margin-top: 16px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-h6);
+    font-weight: 600;
+    color: var(--ink);
+}
 
-    .store-card-title {
-        font-size: 1.1rem;
-        margin-bottom: var(--space-3);
-    }
+.about-value__desc {
+    margin-top: 8px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: var(--muted);
+}
 
-    .store-detail-item {
-        font-size: var(--fs-body-sm);
-    }
+/* --- 03. Quy trình ------------------------------------------ */
 
-    .store-detail-item .label-mono {
-        width: 70px;
-        font-size: 10px;
-    }
+.about-process {
+    max-width: var(--container, 1280px);
+    margin-inline: auto;
+    padding: var(--section-pad) var(--gutter);
+}
 
-    .store-map-viewport {
-        height: 350px;
+.about-process__grid {
+    display: grid;
+    gap: 24px;
+}
+
+@media (min-width: 1101px) {
+    .about-process__grid {
+        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     }
 }
 
-/* --- Small mobile (≤480px) --- */
-@media (max-width: 600px) {
-    .headline {
-        font-size: 28px;
-        line-height: 1.25;
-    }
+.about-process__cta { margin-top: 32px; }
 
-    .story-text p {
-        font-size: 15px;
-    }
-
-    .section-title {
-        font-size: 1.5rem;
-    }
-
-    .store-card {
-        flex-direction: column;
-    }
-
-    .store-image-container {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 16 / 9;
-        border-right: none;
-        border-bottom: 2px solid var(--black);
-    }
-
-    .store-map-viewport {
-        height: 300px;
-    }
+.about-steps {
+    min-width: 0;
+    list-style: none;
 }
 
+.about-step {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 16px;
+    padding-block: 24px;
+    border-top: 1px solid var(--line);
+}
 
+.about-step:last-child { border-bottom: 1px solid var(--line); }
 
+.about-step__num {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h5);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+}
 
+.about-step__body { min-width: 0; }
+
+.about-step__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h6);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.about-step__desc {
+    margin-top: 4px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: var(--muted);
+}

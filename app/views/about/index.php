@@ -1,122 +1,118 @@
 <?php
-$show_breadcrumb = true;
-$breadcrumb_items = [
-    ['label' => 'Trang chủ', 'url' => '/'],
-    ['label' => 'Giới thiệu'],
-];
-$show_page_header = true;
-$page_eyebrow = 'VIN EYEWEAR · CÂU CHUYỆN THƯƠNG HIỆU';
-$page_title = 'Giới thiệu';
-$page_subtitle = 'Khám phá hành trình của Vin Eyewear từ một cửa hàng nhỏ đến thương hiệu kính mắt uy tín, với cam kết mang lại tầm sáng và sự tự tin cho mọi người Việt Nam.';
-$show_cta = false;
-$show_pusher = true;
+
+/**
+ * about/index.php — Giới thiệu
+ * Port từ src/routes/gioi-thieu.tsx.
+ *
+ * Ba phần: Câu chuyện (kèm số liệu + ảnh) · Cam kết · Quy trình 5 bước.
+ *
+ * Class .reveal là hiệu ứng hiện dần khi cuộn tới, do đoạn script dùng chung
+ * ở cuối master.php xử lý — thay cho component <Reveal> của bản React.
+ */
+
+partial('_layout/page-head', [
+    'head_crumbs' => [['label' => 'Giới thiệu']],
+    'head_title'  => 'Nhìn rõ hơn, sống đẹp hơn',
+    'head_lead'   => 'Vin Eyewear ra đời với mong muốn giúp mọi người tiếp cận dịch vụ chăm sóc '
+                   . 'thị lực chuẩn xác và sản phẩm kính mắt chính hãng ở mức giá minh bạch.',
+]);
 ?>
 
-<section class="about-section">
-    <div class="container">
-        <!-- Hero Story Section -->
-        <div class="hero-story">
-            <div class="story-content">
-                <span class="subheading-caps">CÂU CHUYỆN THƯƠNG HIỆU</span>
-                <h2 class="headline">Từ Đam Mê Đến Đỉnh Cao</h2>
-                <div class="story-text">
-                    <p>Vin Eyewear bắt đầu từ một giấc mơ đơn giản của CEO Công Mạnh - mang lại tầm sáng và sự tự tin cho mọi người Việt Nam qua những chiếc kính mắt chất lượng. Với niềm đam mê bất tận về nghệ thuật chế tác kính và tầm nhìn xa về công nghệ, Công Mạnh đã xây dựng Vin Eyewear không chỉ là một cửa hàng bán kính, mà là một hành trình khám phá vẻ đẹp cá nhân.</p>
-                    <blockquote class="ceo-quote">
-                        <p>"Mỗi chiếc kính không chỉ là một công cụ hỗ trợ thị lực, mà là một tuyên ngôn về phong cách và cá tính của người đeo. Tôi muốn Vin Eyewear trở thành nơi mọi người tìm thấy chính mình qua những lăng kính tinh tế nhất."</p>
-                        <footer class="ceo-quote-footer">— Công Mạnh, CEO &amp; Founder</footer>
-                    </blockquote>
-                    <p>Từ một cửa hàng nhỏ tại Long Biên, Vin Eyewear đã phát triển mạnh mẽ nhờ sự tin yêu của khách hàng và cam kết không ngừng cải tiến. Chúng tôi tiên phong ứng dụng công nghệ AR và AI vào trải nghiệm mua sắm, giúp khách hàng thử kính trực tuyến và nhận tư vấn cá nhân hóa mọi lúc, mọi nơi.</p>
-                </div>
+<!-- ============================================================
+     01 — CÂU CHUYỆN
+     ============================================================ -->
+<section class="about-story" aria-labelledby="story-title">
+    <div class="about-story__grid">
+
+        <div class="about-story__text reveal">
+            <p class="micro-label">Câu chuyện</p>
+            <h2 id="story-title" class="about-h2">Một cửa hàng kính vận hành như một phòng khám</h2>
+
+            <div class="about-prose">
+                <p>
+                    Chúng tôi kết hợp thiết bị đo khúc xạ hiện đại với đội ngũ kỹ thuật viên được
+                    đào tạo bài bản, đồng thời tuyển chọn gọng kính và tròng kính từ các thương
+                    hiệu uy tín.
+                </p>
+                <p>
+                    Mỗi khách hàng đều được đo khúc xạ miễn phí, tư vấn dáng gọng theo khuôn mặt
+                    và bàn giao kính sau khi cân chỉnh hoàn chỉnh.
+                </p>
             </div>
-            <div class="story-image">
-                <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=800&h=600&fit=crop" alt="Câu chuyện Vin Eyewear">
-            </div>
+
+            <dl class="about-stats">
+                <?php foreach ($stats as $stat): ?>
+                    <div class="about-stat">
+                        <dt class="about-stat__value"><?= e($stat['value']) ?></dt>
+                        <dd class="about-stat__label"><?= e($stat['label']) ?></dd>
+                    </div>
+                <?php endforeach; ?>
+            </dl>
         </div>
 
-        <!-- Locations Section (styled like contact page store locator) -->
-        <div class="about-store-locator">
-            <h2 class="section-title reveal">Hệ thống cửa hàng</h2>
-            <div class="store-locator-wrapper reveal">
-                <!-- Left: Store Cards List -->
-                <div class="store-list">
-                    <div class="store-card active" data-store-id="long-bien" role="button" tabindex="0">
-                        <div class="store-image-container">
-                            <img src="https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=600&h=340&fit=crop" alt="Vin Eyewear - Long Biên" class="store-img">
-                            <span class="store-badge">CỬA HÀNG CHÍNH</span>
-                        </div>
-                        <div class="store-card-content">
-                            <h3 class="store-card-title">Vin Eyewear - Long Biên</h3>
-                            <div class="store-details">
-                                <p class="store-detail-item">
-                                    <span class="label-mono">ĐỊA CHỈ:</span>
-                                    <span class="detail-value">261 Ngọc Lâm, P. Bồ Đề, Q. Long Biên, TP. Hà Nội (ngã tư Hồng Tiến)</span>
-                                </p>
-                                <p class="store-detail-item">
-                                    <span class="label-mono">HOTLINE:</span>
-                                    <span class="detail-value">
-                                        <a href="tel:0912345678" class="store-phone-link">0912 345 678</a>
-                                    </span>
-                                </p>
-                                <p class="store-detail-item">
-                                    <span class="label-mono">GIỜ MỞ CỬA:</span>
-                                    <span class="detail-value">Thứ 2 - Chủ nhật: 08:30 - 21:30</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="store-card" data-store-id="tay-ho" role="button" tabindex="0">
-                        <div class="store-image-container">
-                            <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&h=340&fit=crop" alt="Vin Eyewear - Tây Hồ" class="store-img">
-                            <span class="store-badge">MỚI KHAI TRƯƠNG</span>
-                        </div>
-                        <div class="store-card-content">
-                            <h3 class="store-card-title">Vin Eyewear - Tây Hồ - Thụy Khuê</h3>
-                            <div class="store-details">
-                                <p class="store-detail-item">
-                                    <span class="label-mono">ĐỊA CHỈ:</span>
-                                    <span class="detail-value">46 Hoàng Hoa Thám, P. Thụy Khuê, Q. Tây Hồ, TP. Hà Nội</span>
-                                </p>
-                                <p class="store-detail-item">
-                                    <span class="label-mono">HOTLINE:</span>
-                                    <span class="detail-value">
-                                        <a href="tel:0987654321" class="store-phone-link">0987 654 321</a>
-                                    </span>
-                                </p>
-                                <p class="store-detail-item">
-                                    <span class="label-mono">GIỜ MỞ CỬA:</span>
-                                    <span class="detail-value">Thứ 2 - Chủ nhật: 08:30 - 22:00</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <figure class="about-figure reveal">
+            <img
+                src="<?= asset('assets/images/store-interior.jpg') ?>"
+                alt="Không gian trưng bày gọng kính tại showroom Vin Eyewear"
+                width="1200" height="900"
+                loading="lazy" decoding="async"
+            >
+            <figcaption>Showroom Tây Hồ — Hà Nội</figcaption>
+        </figure>
+    </div>
+</section>
 
-                <!-- Right: Interactive Google Map Frame -->
-                <div class="store-map-viewport">
-                    <div id="map-long-bien" class="map-container active">
-                        <iframe 
-                            src="https://maps.google.com/maps?q=261%20Ng%E1%BB%8Dc%20L%C3%A2m,%20B%E1%BB%93%20%C4%90%E1%BB%81,%20Long%20Bi%C3%AAn,%20H%C3%A0%20N%E1%BB%99i&t=&z=16&ie=UTF8&iwloc=&output=embed" 
-                            width="100%" 
-                            height="100%" 
-                            style="border:0;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                    </div>
-                    <div id="map-tay-ho" class="map-container">
-                        <iframe 
-                            src="https://maps.google.com/maps?q=46%20Ho%C3%A0ng%20Hoa%20Th%C3%A1m,%20Th%E1%BB%A5y%20Khu%C3%AA,%20T%C3%A2y%20H%E1%BB%93,%20H%C3%A0%20N%E1%BB%99i&t=&z=16&ie=UTF8&iwloc=&output=embed" 
-                            width="100%" 
-                            height="100%" 
-                            style="border:0;" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                        </iframe>
-                    </div>
-                </div>
-            </div>
+<!-- ============================================================
+     02 — CAM KẾT
+     ============================================================ -->
+<section class="about-values" aria-labelledby="values-title">
+    <div class="about-values__inner">
+        <p class="micro-label">02 — Cam kết</p>
+        <h2 id="values-title" class="about-h2 about-h2--narrow">Ba điều chúng tôi không thoả hiệp</h2>
+
+        <!-- Lưới dùng gap 1px trên nền --line để tạo đường kẻ ngăn ô, thay
+             cho border từng ô (border kề nhau sẽ dày gấp đôi ở chỗ giáp ranh) -->
+        <ul class="about-values__list" role="list">
+            <?php foreach ($values as $i => $value): ?>
+                <li class="about-value">
+                    <span class="about-value__index"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
+                    <?= icon($value['icon'], 'about-value__ico', 20) ?>
+                    <h3 class="about-value__title"><?= e($value['title']) ?></h3>
+                    <p class="about-value__desc"><?= e($value['desc']) ?></p>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+</section>
+
+<!-- ============================================================
+     03 — QUY TRÌNH
+     ============================================================ -->
+<section class="about-process" aria-labelledby="process-title">
+    <div class="about-process__grid">
+
+        <div class="about-process__intro">
+            <p class="micro-label">03 — Quy trình</p>
+            <h2 id="process-title" class="about-h2">Đo mắt 5 bước</h2>
+            <p class="about-lead">
+                Toàn bộ quy trình diễn ra trong 25–40 phút, hoàn toàn miễn phí kể cả khi bạn
+                chưa mua kính.
+            </p>
+            <a href="/dat-lich" class="btn-primary btn-inline about-process__cta">Đặt lịch đo mắt</a>
         </div>
+
+        <ol class="about-steps">
+            <?php foreach ($steps as $i => $step): ?>
+                <!-- style --d: độ trễ hiện dần, mỗi bước chậm hơn bước trước 60ms
+                     để 5 bước xuất hiện nối tiếp chứ không cùng lúc -->
+                <li class="about-step reveal" style="--d: <?= $i * 60 ?>ms">
+                    <span class="about-step__num"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
+                    <div class="about-step__body">
+                        <h3 class="about-step__title"><?= e($step['title']) ?></h3>
+                        <p class="about-step__desc"><?= e($step['desc']) ?></p>
+                    </div>
+                </li>
+            <?php endforeach; ?>
+        </ol>
     </div>
 </section>

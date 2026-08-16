@@ -1,24 +1,19 @@
 /* ============================================
-   Vin Eyewear - Layout CSS
-   Design system: "Lower East Heritage" (xem DESIGN.md)
-   Sharp 0px · High-contrast · No shadow · Heritage Yellow
-   ============================================
+   Vin Eyewear — Token của design system
+   Bảng màu Crimson / Pearl, port từ src/styles.css của bản Lovable.
 
-   BỘ BREAKPOINT CHUẨN — chỉ dùng 4 mốc này, không thêm mốc mới:
+   File này CHỈ chứa reset và bảng token. Không thêm CSS giao diện
+   vào đây — mỗi component có file riêng trong assets/css/components/.
 
-     ≤ 600px   điện thoại
-     ≤ 900px   máy bảng / mốc chính: nav thu thành hamburger
-     ≤ 1100px  laptop hẹp (lề 64px, nav thu cỡ chữ)
-     ≥ 1600px  màn rộng (lề 128px)
+   BỘ BREAKPOINT CHUẨN — chỉ dùng 3 mốc này, không thêm mốc mới:
 
-   Trước đây có 6 mốc rời rạc (480 / 600 / 768 / 900 / 1023 / 1024) —
-   cùng một kiểu chuyển bố cục mà mỗi file lại chọn một con số khác.
-   Đã gom về bộ trên: 1023+1024 -> 1100, 768 -> 900, 480 -> 600.
+     ≥ 601px   máy bảng dọc
+     ≥ 901px   máy bảng ngang
+     ≥ 1101px  mốc CHÍNH: nav desktop, bố cục 2 cột
 
    LƯU Ý: CSS thuần KHÔNG cho dùng var() trong @media —
-   `@media (max-width: var(--bp-md))` không chạy. Nên 4 con số này là
-   quy ước phải gõ tay, khối comment này là chỗ tra duy nhất. Muốn thật
-   sự chỉnh từ một biến thì phải thêm SASS/PostCSS vào quy trình build.
+   `@media (min-width: var(--bp-md))` không chạy. Nên 3 con số này là
+   quy ước phải gõ tay, khối comment này là chỗ tra duy nhất.
    Bù lại, THANG CHỮ bên dưới dùng clamp() nên tiêu đề tự co theo mọi
    bề ngang, không cần khai lại font-size ở từng breakpoint.
    ============================================ */
@@ -47,58 +42,96 @@
        --on-* tương ứng. Các tên cũ (--yellow, --black, --white...) đã
        thành bí danh trỏ vào đây nên 342 chỗ đang dùng tự ăn theo.
        ============================================================ */
-    --brand:             #6e1f2a;   /* màu chính */
-    --brand-strong:      #571620;   /* bản đậm hơn — hover/nhấn trên nền sáng */
-    --brand-light:       #c9808c;   /* bản nhạt — điểm nhấn/hover TRÊN NỀN TỐI.
-                                       Bắt buộc phải có: --brand đặt trên --ink
-                                       chỉ đạt 1.5:1 nên hover sẽ mất hút. */
-    --on-brand:          #f3e7d5;   /* chữ đặt TRÊN --brand */
-    --on-brand-muted:    rgba(243, 231, 213, 0.72);  /* chữ phụ trên --brand */
-    /* ┌─ BEIGE #f3e7d5 ─────────────────────────────────────────────
-       │ Đây là màu nền của MỌI trang. Trước đây chỉ trang chủ có màu
-       │ này: home.css phủ .main-content bằng --surface-raised, còn các
-       │ trang khác để lộ nền body màu xám sage #cac5bc -> mỗi trang một
-       │ tông. Nay đưa thẳng beige vào --surface nên tất cả đồng bộ.
+    /* ┌─ BẢNG MÀU LOVABLE ──────────────────────────────────────────
+       │ Chuyển từ src/styles.css của bản Lovable (Crimson / Pearl).
+       │ Tên vai trò giữ nguyên như cũ nên 342 chỗ đang dùng tự ăn theo,
+       │ không phải sửa file trang nào.
        │
-       │ --surface và --surface-raised đang CỐ Ý cùng một giá trị: đó là
-       │ cách trang chủ vốn làm — thẻ và nền cùng tông beige, tách nhau
-       │ bằng ĐƯỜNG VIỀN (--line) chứ không bằng chênh lệch màu nền.
-       │ Muốn thẻ nổi hẳn lên thì chỉ cần đổi --surface-raised sang tông
-       │ sáng hơn (ví dụ #fbf6ed), không phải sửa chỗ nào khác.
+       │ Tỉ lệ tương phản đã đo, ghi ngay cạnh từng cặp để lần sau đổi
+       │ màu là biết ngay mình đang phá cái gì.
        └──────────────────────────────────────────────────────────────── */
-    --surface:           #f3e7d5;   /* nền trang — BEIGE */
-    --surface-raised:    #f3e7d5;   /* thẻ, khối nổi, giấy (xem ghi chú trên) */
-    --surface-sunken:    #ddd2be;   /* khối chìm nhẹ so với nền beige */
-    --ink:               #241a1c;   /* chữ chính + nền khối tối */
-    --on-ink:            #f3e7d5;   /* chữ đặt TRÊN --ink */
-    --muted:             #574548;   /* chữ phụ trên nền sáng */
-    --line:              #8a8178;   /* đường kẻ, viền */
+    --brand:             #8a2432;   /* Crimson — header, nút chính, khối nhấn — 8.39:1 trên pearl */
+    --brand-strong:      #6e1b28;   /* bản đậm hơn — hover/nhấn trên nền sáng */
+    --brand-light:       #c98d81;   /* bản nhạt — điểm nhấn/hover TRÊN NỀN TỐI.
+                                       Bắt buộc phải có: --brand đặt trên --ink
+                                       chỉ đạt 1.5:1 nên hover sẽ mất hút.
+                                       Bản nhạt này đạt 5.10:1 trên --ink mới.
+                                       Đúng sắc #c98d81 mà bản thiết kế dùng cho
+                                       số thứ tự các bước trong khối đo mắt —
+                                       chỉnh từ #c97a80 vì trên nền --ink mới
+                                       (#33272a, sáng hơn #1a1214 cũ) sắc đó
+                                       tụt xuống 4.48:1, dưới ngưỡng AA. */
+    --brand-subtle:      #f2e4dc;   /* nền nhấn rất nhạt — badge, khối trích dẫn */
+    --on-brand:          #ffffff;   /* chữ đặt TRÊN --brand — 8.96:1 */
+    --on-brand-muted:    #ecc9c0;   /* chữ phụ trên --brand — 5.34:1 */
+    /* ┌─ PEARL #faf6f2 ─────────────────────────────────────────────
+       │ Nền của MỌI trang.
+       │
+       │ KHÁC BẢN BEIGE CŨ: --surface và --surface-raised trước đây cố ý
+       │ TRÙNG nhau (thẻ và nền cùng tông, tách bằng đường viền). Bản
+       │ Lovable tách hẳn hai giá trị — nền pearl #faf6f2, thẻ trắng
+       │ #ffffff — nên thẻ nổi nhẹ lên khỏi nền. Comment cũ ở đây đã nói
+       │ trước đúng cách làm việc này: chỉ cần đổi --surface-raised sang
+       │ tông sáng hơn, không phải sửa chỗ nào khác.
+       └──────────────────────────────────────────────────────────────── */
+    --surface:           #faf6f0;   /* nền trang — PEARL */
+    --surface-raised:    #ffffff;   /* thẻ, khối nổi — nổi nhẹ khỏi nền pearl */
+    --surface-sunken:    #f5efe7;   /* khối chìm nhẹ so với nền pearl */
+    --ink:               #33272a;   /* chữ chính + nền khối tối — 13.42:1 trên pearl */
+    --on-ink:            #f8ede8;   /* chữ đặt TRÊN --ink */
+    --muted:             #6f5f5a;   /* chữ phụ trên nền sáng — 5.61:1 trên pearl */
 
-    /* --- Bí danh tên cũ -> vai trò mới. Giữ để không phải sửa 342 chỗ
-       đang dùng; code mới nên dùng thẳng tên vai trò ở trên. --- */
-    --yellow:            var(--brand);
-    --black:             var(--ink);
-    --white:             var(--surface-raised);
-    --warm-bg:           var(--surface);
-    --gray:              var(--surface-sunken);
-    --on-surface:        var(--ink);
-    --on-surface-variant:var(--muted);
-    --outline:           var(--muted);  /* vai trò thật là CHỮ PHỤ, không phải đường kẻ */
-    /* Được dùng 4 lần trong home.css nhưng TRƯỚC ĐÂY KHÔNG HỀ ĐƯỢC
-       ĐỊNH NGHĨA ở đâu (comment home.css:15 nói nhầm là có trong file
-       này) -> 4 khung ảnh đó rơi về nền trong suốt. Khai ở đây. */
-    --frame-bg:          var(--surface-sunken);
+    /* ┌─ HAI MỨC ĐƯỜNG KẺ ──────────────────────────────────────────
+       │ Bản Lovable chỉ có một giá trị #c5bcb8 cho mọi đường viền.
+       │ Giá trị đó chỉ đạt 1.73:1 trên nền trang — dưới xa ngưỡng 3:1
+       │ mà WCAG 1.4.11 đòi cho thành phần giao diện. Với đường kẻ trang
+       │ trí thì không sao, nhưng viền ô nhập liệu mà mờ như vậy thì
+       │ người mắt kém không thấy ô nhập ở đâu.
+       │
+       │ Nên tách làm hai, giữ nguyên tông xám ấm:
+       │   --line        trang trí — đường phân cách, viền thẻ
+       │   --line-strong chức năng — viền input, select, textarea, ô
+       │                 chọn; bắt buộc dùng cho mọi thứ người dùng
+       │                 phải nhìn ra ranh giới để thao tác.
+       └──────────────────────────────────────────────────────────────── */
+    --line:              #e5d8cc;   /* trang trí — đúng viền nút tròn của bản thiết kế */
+    --line-strong:       #9d8b84;   /* chức năng — 3.06:1 trên nền trang */
 
-    /* Màu trạng thái — trước rải rác dạng hex trong contact.css / ar.tryon.css */
-    --danger:            #a3232c;   /* viền + chữ báo lỗi form */
-    --danger-bright:     #e0555f;   /* chấm trạng thái & icon lỗi trang AR */
-    --success:           #4ade80;   /* chấm trạng thái camera đang chạy */
-    --surface-focus:     #fdf6ea;   /* nền ô nhập khi focus */
-    --surface-dark-1:    #241a1c;   /* 2 điểm dừng của nền tối trang AR */
-    --surface-dark-2:    #3b2b2e;
+    /* Nhãn phụ tông hồng ấm — chữ IN HOA nhỏ đứng trên mỗi tiêu đề khối,
+       tiêu đề cột chân trang, breadcrumb, nhãn ô nhập trong form liên hệ.
+       Mọi bản thiết kế đều dùng đúng sắc này; trước đây nó bị chép tay ở bốn
+       file CSS khác nhau nên đổi tông là phải nhớ sửa đủ bốn chỗ. */
+    --eyebrow:           #b0736a;
 
-    --font-serif: 'Libre Caslon Text', serif;
-    --font-sans:  'Hanken Grotesk', sans-serif;
+    /* Bí danh tên cũ (--yellow, --black, --white, --warm-bg…) đã BỎ HẲN.
+       Chúng tồn tại để khỏi phải sửa "342 chỗ đang dùng" của thiết kế cũ;
+       thiết kế cũ đi rồi thì chỉ còn 8 chỗ trong errors.css, nay đã đổi
+       sang tên vai trò. Code mới dùng thẳng --brand / --ink / --surface. */
+
+    /* Màu trạng thái — lấy theo bản Lovable, đo tương phản trên nền pearl */
+    --danger:            #c0392b;   /* viền + chữ báo lỗi form — 5.06:1 */
+    --success:           #27ae60;   /* chấm trạng thái camera đang chạy — 6.41:1 trên ink */
+    --surface-focus:     #fffdfb;   /* nền ô nhập khi focus — sáng hơn pearl một chút */
+
+    /* ┌─ FONT ──────────────────────────────────────────────────────
+       │ Lora cho tiêu đề, Be Vietnam Pro cho chữ chạy — đúng hai dòng
+       │ mà "Vin Eyewear Home.dc.html" nạp.
+       │ Be Vietnam Pro được thiết kế riêng cho tiếng Việt: dấu thanh
+       │ đặt đúng chỗ, không đè lên dấu mũ như phần lớn font Latin.
+       │ Lora cũng phủ đủ bộ dấu tiếng Việt, kể cả bản nghiêng — thẻ
+       │ <em> trong tiêu đề hero và câu trích dẫn ở khối đánh giá đều
+       │ dùng tới nét nghiêng thật chứ không phải nghiêng giả.
+       │
+       │ ĐỔI TỪ Playfair Display: hai font không thay được cho nhau.
+       │ Playfair chênh nét thanh/đậm rất mạnh nên cùng một cỡ chữ nhìn
+       │ nặng hơn hẳn — đó là lý do trước đây .hcat .section-h2 phải hạ
+       │ font-weight từ 700 xuống 600 để "bù". Nay dùng đúng Lora thì
+       │ không cần bù nữa.
+       │
+       │ Nhớ đổi kèm thẻ <link> Google Fonts trong _layout/master.php.
+       └──────────────────────────────────────────────────────────────── */
+    --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+    --font-sans:  'Be Vietnam Pro', 'Helvetica Neue', Arial, sans-serif;
     --font-mono:  'JetBrains Mono', monospace;
 
     /* ============================================================
@@ -161,887 +194,151 @@
     --space-24:  96px;
     --space-30:  120px;
 
-    /* --margin = lề trắng hai bên của MỌI section (47 chỗ dùng nó làm padding
-       ngang). Đây là núm chỉnh bề rộng nội dung toàn site: tăng --margin =
-       nội dung hẹp lại, khoảng trống hai bên rộng ra. */
-    --margin:      96px;
-    --section-gap: 120px;
+    /* ============================================================
+       NHỊP ĐIỆU TRANG — bốn núm chỉnh bố cục toàn site.
+
+       Bốn giá trị này TRƯỚC ĐÂY được gõ cứng thẳng vào từng file: riêng
+       lề ngang lặp lại 26 lần. Muốn nới nội dung ra một chút là phải sửa
+       26 chỗ và chỉ cần sót một chỗ là các section lệch mép nhau — kiểu
+       lỗi không ai để ý cho tới khi nhìn hai section cạnh nhau.
+
+       (Chỗ này từng có --margin/--section-gap kèm chú thích khẳng định
+       "47 chỗ dùng nó". Thực tế đếm được 0. Đã bỏ.)
+
+       clamp(nhỏ nhất, co theo màn, lớn nhất) — con số giữa là vw nên
+       khoảng cách tự giãn theo bề ngang, không cần @media.
+       ============================================================ */
+    /* Lề trái/phải MỌI section.
+       5vw cũ cho ra lề 72px ở màn 1440 và 88px ở màn 1920 — nội dung bị bó
+       lại giữa hai dải trống rất rộng. Bản thiết kế "Vin Eyewear Home.dc.html"
+       dùng lề 32px cố định; ở đây giữ dạng clamp để màn hẹp vẫn co được, chỉ
+       hạ hệ số. Nay hạ tiếp một nấc theo yêu cầu "cho nhỏ hơn nữa":
+       16px trên điện thoại, 26px ở 1280, 32px từ 1600 trở lên. */
+    --gutter:        clamp(16px, 2vw, 32px);
+    --gutter-tight:  clamp(16px, 5vw, 24px);   /* lề trong khối hẹp (thẻ, hộp) */
+    --section-pad:   clamp(56px, 8vw, 128px);  /* đệm TRÊN/DƯỚI mỗi section */
+    --block-gap:     clamp(36px, 6vw, 76px);   /* giãn cách giữa các khối trong section */
 
     /* Chiều cao dùng chung cho .site-header, chiều cao link nav và offset của
        .filter-sidebar (trước hardcode rời nhau, lệch nhau). Đổi ở đây là cả 3
        nơi đi theo — đừng hardcode lại chiều cao header ở file khác. */
     --header-h:   76px;
-    /* Bằng --margin ở mọi khổ màn: logo, icon thanh thông báo và nội dung
-       section cùng nằm trên một mép trái. Trước đây 40px trong khi --margin
-       64px nên logo thò ra ngoài mép nội dung 24px. */
-    --header-pad: 96px;
 
-    /* --- Biến kế thừa. Chỉ --border còn được dùng (11 chỗ) nên trỏ vào
-       bảng màu; 7 biến còn lại đếm ra 0 lần dùng, giữ làm bí danh cho
-       code cũ nếu có, không còn là màu độc lập nữa. --- */
-    --border:      var(--line);
-    --primary:     var(--brand);
-    --accent:      var(--brand);
-    --accent-dark: var(--brand-strong);
-    --text:        var(--ink);
-    --text-light:  var(--muted);
-    --bg:          var(--surface);
-    --bg-light:    var(--surface-raised);
-    --container:   1200px;   /* nay chỉ còn ar.tryon.css dùng */
-    --radius:      8px;
-    --transition:  0.3s ease;
+    /* Bề ngang tối đa của cột nội dung — 25 chỗ trong 13 file dùng nó.
+       ĐÃ SỬA 1200 -> 1280: cả 25 chỗ đều viết var(--container, 1280px),
+       tức người viết định 1280. Nhưng token có khai báo thì giá trị dự
+       phòng không bao giờ tới lượt, nên thực tế cả site chạy 1200 —
+       hẹp hơn ý đồ 80px ở mọi trang, và không có lỗi nào để lần ra.
+
+       ĐÃ SỬA TIẾP 1280 -> 1600: trên màn 1440-1920, phần trống hai bên KHÔNG
+       phải do --gutter mà do cột nội dung bị chặn ở 1280 rồi căn giữa — ở
+       1920 riêng khoảng căn giữa đã là 313px mỗi bên, hạ gutter bao nhiêu
+       cũng không đụng tới nó. */
+    --container:   1600px;
+
+    /* ============================================================
+       ĐỘ NỔI — bóng đổ.
+
+       Thiết kế cũ phẳng tuyệt đối: phân tách chỉ bằng viền 1px, và 8 chỗ
+       tự gõ box-shadow riêng nên không chỗ nào giống chỗ nào.
+
+       Bóng ở đây tô bằng chính --ink (#1a1214) chứ không phải đen thuần:
+       trên nền pearl ấm, bóng xám trung tính trông xỉn và bẩn. Mỗi mức
+       gồm hai lớp — lớp sát để tạo mép, lớp toả để tạo chiều sâu.
+       ============================================================ */
+    --elev-1: 0 1px 2px rgba(26, 18, 20, 0.05),
+              0 1px 1px rgba(26, 18, 20, 0.04);   /* thẻ ở trạng thái nghỉ */
+    --elev-2: 0 4px 14px rgba(26, 18, 20, 0.07),
+              0 1px 3px  rgba(26, 18, 20, 0.05);  /* thẻ khi rê chuột */
+    --elev-3: 0 14px 36px rgba(26, 18, 20, 0.11),
+              0 4px 10px  rgba(26, 18, 20, 0.06); /* lớp nổi: menu, hộp thoại */
 }
 
-html { scroll-behavior: smooth; }
+
+/* ============================================================
+   NỀN TRANG
+
+   Ba khai báo dưới đây TỪNG nằm trong home.css của thiết kế cũ, nên khi
+   bỏ file đó đi thì cả site mất nền pearl, mất font và mất màu chữ mặc
+   định — nhưng không trang nào báo lỗi, chỉ trông sai.
+   Nay đặt cạnh token, nơi chúng thuộc về.
+   ============================================================ */
+
+html {
+    scroll-behavior: smooth;
+    /* Bù cho header dính khi nhảy tới liên kết neo */
+    scroll-padding-top: 140px;
+    -webkit-text-size-adjust: 100%;
+}
+
+html, body {
+    max-width: 100%;
+    /* Chặn trang trượt ngang khi một khối lỡ rộng quá khung */
+    overflow-x: hidden;
+}
 
 body {
+    background: var(--surface);
+    color: var(--ink);
     font-family: var(--font-sans);
-    background: var(--warm-bg);
-    color: var(--on-surface);
-    line-height: 1.6;
+    font-size: var(--fs-body);
+    font-weight: 400;
+    line-height: 1.7;
+    letter-spacing: -0.005em;
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-a { text-decoration: none; color: inherit; }
-ul { list-style: none; }
-img { display: block; max-width: 100%; }
-
-/* Form reset — mọi control sharp 0px, kế thừa font (design system) */
-button, input, select, textarea {
-    font: inherit;
-    color: inherit;
-    border-radius: 0;
+/* Tiêu điểm bàn phím phải thấy rõ trên MỌI phần tử tương tác */
+:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 3px;
 }
 
-/* --- Container (about / contact / category / event / errors) ---
-   Cùng gutter --margin với các trang dựng bằng section, KHÔNG cap + căn giữa
-   nữa: hộp căn giữa làm mép trái nội dung lệch khỏi breadcrumb/page-header
-   (2 khối này đệm theo --margin) — trên /about lệch thấy rõ 48px. Bỏ cap thì
-   mọi trang chung một mép trái, và --margin là núm duy nhất chỉnh bề rộng.
-   Khối chữ bên trong đã tự cap 600–800px nên bỏ cap ở đây không làm dòng dài. */
-.container {
-    width: 100%;
-    padding: 0 var(--margin);
+/* Bôi đen: nền hồng phấn, chữ giữ nguyên màu — đúng `::selection` của
+   "Vin Eyewear Home.dc.html". Bản trước tô nền đỏ đậm + chữ trắng, đọc được
+   nhưng đè mất màu của chữ đang bôi (giá tiền, tên thương hiệu…). */
+::selection {
+    background: #f0dcd6;
+    color: var(--ink);
 }
 
-/* ============================================
-   ANNOUNCEMENT BAR — nền đen, 2 vùng
-   Trái: social. Phải: giỏ/tìm/tài khoản.
-   ============================================ */
-.announcement-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 38px;
-    padding: 0 var(--margin);
-    background: var(--black);
-    color: var(--white);
-}
+img, svg, video, iframe { max-width: 100%; }
 
-/* --- VÙNG TRÁI: social --- */
-.announcement-social {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-}
+/* Ảnh không bị kéo-thả vô tình trên cảm ứng */
+img { -webkit-user-drag: none; }
 
-.announcement-ico {
-    display: flex;
-    color: var(--white);
-    transition: color 0.2s ease;
-}
+/* Chữ xuống dòng đẹp hơn: đoạn văn tránh dòng cuối trơ trọi một từ,
+   tiêu đề chia đều các dòng */
+p  { text-wrap: pretty; }
+h1, h2, h3 { text-wrap: balance; }
 
-.announcement-ico svg {
-    width: 17px;
-    height: 17px;
-    fill: currentColor;
-}
+a { color: inherit; }
 
-.announcement-ico:hover { color: var(--brand-light); }
-
-/* --- VÙNG PHẢI: giỏ/tìm/tài khoản --- */
-.announcement-actions {
-    display: flex;
-    align-items: center;
-    gap: 22px;
-}
-
-.announcement-action {
-    display: flex;
-    align-items: center;
-    color: var(--white);
-    transition: color 0.2s ease;
-}
-
-.announcement-action:hover { color: var(--brand-light); }
-
-.announcement-action__ico {
-    position: relative;
-    display: flex;
-}
-
-.announcement-action__ico svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-/* ============================================
-   MAIN HEADER (sticky)
-   ============================================ */
-.site-header {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    min-height: var(--header-h);
-    padding: 0 var(--header-pad);
-    background: var(--yellow);
-    color: var(--on-brand);
-}
-
-/* Logo — wordmark đen, đậm, giãn chữ. Cỡ chữ đi theo --header-h (76px):
-   nhỏ hơn thì wordmark bị lọt thỏm giữa hai khoảng trắng trên/dưới. */
-.site-logo {
-    font-family: var(--font-sans);
-    font-size: var(--fs-h6);
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: var(--on-brand);
-    white-space: nowrap;
-}
-
-/* Nav — căn giữa header */
-.main-nav {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-}
-
-/* Khoảng cách giữa 2 item do padding của link tạo ra (30px), không cộng thêm
-   gap — gap ăn vào vùng bấm được mà nhìn vẫn thưa. */
-.nav-menu {
-    display: flex;
-    align-items: center;
-    gap: 0;
-}
-
-/* Thang bậc rõ 3 mức: nghỉ (đen 62%) < hover (đen đặc + gạch mờ) < active
-   (đen đặc + gạch đen đặc). Giữ nguyên border 3px trong suốt ở trạng thái
-   nghỉ để lúc đổi trạng thái chữ không bị nhích lên/xuống.
-   Đen 62% trên nền vàng = 5.4:1, vẫn trên ngưỡng 4.5:1 cho chữ 13px. */
-.nav-menu li a {
-    display: flex;
-    align-items: center;
-    height: var(--header-h);
-    padding: 0 15px;
-    font-family: var(--font-sans);
-    font-size: var(--fs-note);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: rgba(243, 231, 213, 0.72);
-    white-space: nowrap;
-    border-bottom: 3px solid transparent;
-    transition: color 0.15s, border-color 0.15s;
-}
-
-.nav-menu li a:hover {
-    color: var(--on-brand);
-    border-bottom-color: rgba(243, 231, 213, 0.45);
-}
-
-/* Trang đang đứng — không đổi font-weight vì chữ đậm lên sẽ rộng ra
-   và đẩy các mục nav xê dịch ngang. */
-.nav-menu li a.is-active {
-    color: var(--on-brand);
-    border-bottom-color: var(--on-brand);
-}
-
-/* Right side: icons + CTA */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-}
-
-.header-cta {
-    background: var(--black);
-    color: var(--white);
-    padding: var(--space-3) 22px;
-    font-family: var(--font-sans);
-    font-size: var(--fs-caption);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    white-space: nowrap;
-    border-radius: 0;
-    transition: opacity 0.15s;
-}
-
-.header-cta:hover { opacity: 0.8; }
-
-/* Hamburger — ẩn ở desktop, hiện ở mobile (≤900px) */
-.nav-toggle {
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-    width: 36px;
-    height: 36px;
-    padding: 7px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-.nav-toggle span {
-    display: block;
-    width: 100%;
-    height: 2px;
-    background: var(--black);
-    transition: transform 0.2s ease, opacity 0.2s ease;
-}
-
-/* Biến thành dấu X khi menu mở */
-.nav-toggle.is-active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-.nav-toggle.is-active span:nth-child(2) { opacity: 0; }
-.nav-toggle.is-active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
-
-/* ============================================
-   FOOTER — 4 cột (bố cục theo footer.jpeg)
-   Thương hiệu | Khám phá | Hỗ trợ | Đăng ký nhận tin
-   Section .join cũ đã bỏ; form email nay là cột 4.
-   ============================================ */
-.site-footer {
-    background: var(--yellow);
-    color: var(--on-brand);
-}
-
-/* --- Footer top: grid 4 cột, hairline dọc ngăn cách --- */
-.footer-top {
-    display: grid;
-    grid-template-columns: 1.35fr 0.8fr 0.95fr 1.15fr;
-    gap: var(--space-12);
-    padding: var(--space-16) var(--margin) 52px;
-}
-
-/* min-width:0 để cột co được: mặc định grid item không thu hẹp dưới min-content,
-   khiến địa chỉ/email dài đẩy cột ra ngoài viewport. */
-.footer-top > * {
-    min-width: 0;
-}
-
-/* Hairline dọc ngăn 4 cột */
-.footer-top > * + * {
-    padding-left: var(--space-10);
-    border-left: 1px solid rgba(0, 0, 0, 0.18);
-}
-
-/* --- Cột 1: thương hiệu --- */
-.footer-logo {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-}
-
-.footer-logo__mark {
-    display: flex;
-    flex: none;
-    padding: 5px;
-    border: 1.5px solid var(--black);
-}
-
-.footer-logo__mark svg {
-    width: 34px;
-    height: 19px;
-    fill: none;
-    stroke: var(--black);
-    stroke-width: 2;
-    stroke-linecap: square;
-}
-
-.footer-logo__word {
-    font-family: var(--font-sans);
-    font-size: var(--fs-subhead);
-    font-weight: 800;
-    letter-spacing: 0.14em;
-}
-
-.footer-brand__legal {
-    margin-top: 18px;
-    font-family: var(--font-mono);
-    font-size: var(--fs-caption);
-    line-height: 1.7;
-    color: rgba(243, 231, 213, 0.78);
-    text-transform: uppercase;
-}
-
-.footer-contact {
-    margin-top: var(--space-5);
-    display: grid;
-    gap: var(--space-3);
-}
-
-/* Icon cột trái cố định 16px, chữ tự xuống dòng ở cột phải */
-.footer-contact__item {
-    display: grid;
-    grid-template-columns: 16px 1fr;
-    gap: 10px;
-    font-family: var(--font-mono);
-    font-size: var(--fs-caption);
-    line-height: 1.65;
-}
-
-.footer-contact__ico {
-    display: flex;
-    /* Căn icon với dòng chữ đầu tiên (line-height 1.65 × 12.5px ≈ 20.6px) */
-    padding-top: 3px;
-}
-
-.footer-contact__ico svg {
-    width: 16px;
-    height: 16px;
-    fill: none;
-    stroke: var(--black);
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.footer-contact__item a {
-    overflow-wrap: anywhere;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.45);
-    padding-bottom: 1px;
-    justify-self: start;
-    transition: opacity 0.15s;
-}
-
-.footer-contact__item a:hover { opacity: 0.55; }
-
-/* --- Cột 2 & 3: link --- */
-.footer-col__heading {
-    font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: var(--on-brand);
-    margin-bottom: 22px;
-}
-
-/* Con TRỰC TIẾP: cột 4 cũng là .footer-col nhưng chứa <a> social lồng trong
-   .footer-social — nếu chọn `.footer-col a` thì margin/gạch chân của link text
-   đè lên ô social (cùng specificity 0,1,1, khó gỡ). */
-.footer-col > a {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: var(--fs-note);
-    color: var(--on-brand);
-    margin-bottom: 14px;
-    transition: opacity 0.15s;
-}
-
-.footer-col > a:hover {
-    opacity: 0.55;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-/* --- Cột 4: đăng ký nhận tin --- */
-.footer-news__desc {
-    font-family: var(--font-mono);
-    font-size: var(--fs-caption);
-    line-height: 1.7;
-    color: rgba(243, 231, 213, 0.78);
-    margin-bottom: 18px;
-}
-
-/* Viền đen bao ngoài để input + nút đọc như MỘT control trên nền vàng */
-.footer-news__form {
-    display: flex;
-    border: 1.5px solid var(--black);
-    background: var(--white);
-}
-
-.footer-news__form input {
-    flex: 1;
-    min-width: 0;
-    padding: 13px 14px;
-    background: transparent;
-    color: var(--black);
-    border: none;
-    font-family: var(--font-mono);
-    font-size: var(--fs-caption);
-}
-
-.footer-news__form input:focus { outline: none; }
-
-/* Ring focus đặt trên bọc ngoài: người dùng tab vào thấy cả khối sáng lên */
-.footer-news__form:focus-within {
-    outline: 2px solid var(--black);
-    outline-offset: 2px;
-}
-
-/* Ô nhập có nền --surface-raised (kem) nên placeholder phải là màu TỐI,
-   không đi theo chữ kem của nền footer bao ngoài. */
-.footer-news__form input::placeholder { color: rgba(36, 26, 28, 0.45); }
-
-.footer-news__form button {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 48px;
-    background: var(--black);
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s ease;
-}
-
-.footer-news__form button svg {
-    width: 20px;
-    height: 20px;
-    fill: none;
-    stroke: var(--yellow);
-    stroke-width: 1.8;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    transition: stroke 0.2s ease, transform 0.2s ease;
-}
-
-.footer-news__form button:hover { background: var(--white); }
-
-.footer-news__form button:hover svg {
-    stroke: var(--black);
-    transform: translateX(2px);
-}
-
-/* --- Social: ô vuông sharp 0px (không bo tròn như mẫu, theo design system) --- */
-.footer-social {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 22px;
-}
-
-.footer-social a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    color: var(--on-brand);
-    border: 1.5px solid var(--black);
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
-.footer-social a:hover {
-    background: var(--black);
-    color: var(--brand-light);
-}
-
-.footer-social svg {
-    width: 18px;
-    height: 18px;
-    fill: currentColor;
-}
-
-/* --- Footer bottom: dải đen — copyright | made in ---
-   Social đã chuyển lên cột 4 nên dải này chỉ còn 2 vế. */
-.footer-bottom {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4) var(--space-6);
-    flex-wrap: wrap;
-    padding: 18px var(--margin);
-    background: var(--black);
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    color: rgba(255, 255, 255, 0.55);
-    letter-spacing: 0.06em;
-}
-
-/* ============================================
-   BUTTONS (dùng chung) — sharp 0px, no shadow
-   ============================================ */
-.btn {
-    display: inline-block;
-    padding: var(--space-3) 28px;
-    border-radius: 0;
-    font-size: var(--fs-body-sm);
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-    transition: background var(--transition), color var(--transition);
-    border: none;
-}
-
-.btn-primary {
-    background: var(--yellow);
-    color: var(--on-brand);
-}
-
-.btn-primary:hover {
-    background: var(--black);
-    color: var(--white);
-}
-
-.btn-outline {
-    background: transparent;
-    border: 2px solid var(--black);
-    color: var(--black);
-}
-
-.btn-outline:hover {
-    background: var(--black);
-    color: var(--white);
-}
-
-/* ============================================
-   COMPONENT — PRODUCT GRID & CARD (dùng chung home + product + detail)
-   Nguồn sự thật duy nhất. Dùng grid-stacking thay position:absolute.
-   Khe 28px + card có viền mảnh + hover nhấc lên: trước đây là override
-   riêng của .product-listing trong product.css nên trang chủ không nhận
-   được, làm 2 trang lệch nhau. Nay đưa hẳn lên đây.
-   ============================================ */
-.product-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 28px;
-}
-
-/* Card là thẻ <a> trỏ về trang detail — cần display:block để bao trọn nội dung */
-.product-card {
-    display: block;
-    background: var(--white);
-    cursor: pointer;
-    /* Viền mảnh thay cho nét kẻ đen; vuông góc cạnh, không bo tròn */
-    border: 1px solid var(--border);
-    overflow: hidden;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.product-card:hover {
-    border-color: var(--outline);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    transform: translateY(-4px);
-}
+.main-content { display: block; }
 
 @media (prefers-reduced-motion: reduce) {
-    .product-card,
-    .card-img-hover,
-    .card-overlay {
-        transition: none;
-    }
+    html { scroll-behavior: auto; }
 
-    .product-card:hover { transform: none; }
-}
-
-/* Khung ảnh: mọi lớp (ảnh, overlay, badge) chồng lên cùng 1 ô grid */
-.card-img {
-    display: grid;
-    aspect-ratio: 1 / 1;
-    background: var(--gray);
-    overflow: hidden;
-}
-
-.card-img > * {
-    grid-area: 1 / 1;
-}
-
-.card-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Anh goc nhin thu 2 — chong len anh chinh, hien mo dan khi hover card */
-.card-img-hover {
-    opacity: 0;
-    transition: opacity 0.4s ease;
-}
-
-.product-card:hover .card-img-hover {
-    opacity: 1;
-}
-
-.card-img svg {
-    align-self: center;
-    justify-self: center;
-    width: 100%;
-    height: auto;
-}
-
-/* Badge — đặt góc trên-trái bằng align/justify-self (không absolute) */
-.badge {
-    align-self: start;
-    justify-self: start;
-    margin: var(--space-3);
-    background: var(--yellow);
-    color: var(--on-brand);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: var(--space-1) var(--space-2);
-}
-
-.badge-dark {
-    background: var(--black);
-    color: var(--white);
-}
-
-/* Overlay — phủ kín ô grid, nút Quick Shop dính đáy */
-.card-overlay {
-    display: flex;
-    align-items: flex-end;
-    padding: var(--space-4);
-    background: rgba(0, 0, 0, 0.05);
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.product-card:hover .card-overlay {
-    opacity: 1;
-}
-
-/* <span> chứ không phải <button> — card đã là <a>, không lồng button trong a */
-.quick-shop-btn {
-    display: block;
-    width: 100%;
-    background: var(--black);
-    color: var(--white);
-    border: none;
-    padding: var(--space-3);
-    font-family: var(--font-sans);
-    font-size: var(--fs-micro);
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    text-align: center;
-    cursor: pointer;
-}
-
-.card-info {
-    padding: var(--space-4) var(--space-4) 22px;
-}
-
-.card-name {
-    font-size: var(--fs-label);
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 6px;
-}
-
-.card-price {
-    font-family: var(--font-mono);
-    font-size: var(--fs-note);
-    color: var(--outline);
-}
-
-/* ============================================
-   UTILITY — SCROLL REVEAL
-   ============================================ */
-.reveal {
-    opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.reveal.visible {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-/* Màn rộng: nới lề thêm nữa, nếu không nội dung cứ giãn theo màn hình và
-   dòng chữ dài quá tầm mắt. */
-@media (min-width: 1600px) {
-    :root {
-        --margin:     128px;
-        --header-pad: 128px;
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
 
-/* Bậc trung gian (901–1100px): vẫn là header ngang 1 hàng, nhưng logo 25px +
-   nav 13px + 5 nhãn tiếng Việt cộng lại gần chạm bề ngang. Header desktop
-   không wrap và link để nowrap, nên thiếu chỗ là tràn ngang cả trang chứ
-   không xuống hàng. Thu chữ/đệm về đúng cỡ cũ ở dải này thay vì cho tràn.
-   Lề cũng hạ về 64px: giữ 96px ở đây thì nav hết chỗ và nội dung bị bóp. */
-@media (min-width: 901px) and (max-width: 1100px) {
-    :root {
-        --margin:     64px;
-        --header-pad: 64px;
-    }
+/* ============================================================
+   HẾT PHẦN TOKEN.
+   
+   File này CHỈ còn reset + bảng token của design system. Toàn bộ CSS
+   giao diện cũ (announcement-bar, site-header/footer bản cũ, product-card
+   bản cũ, breadcrumb, cta, page-header…) đã bỏ cùng thiết kế cũ.
 
-    .nav-menu li a {
-        padding: 0 11px;
-        font-size: var(--fs-caption);
-    }
-
-    .header-cta {
-        padding: 10px var(--space-4);
-        font-size: var(--fs-label);
-    }
-}
-
-@media (max-width: 900px) {
-    :root {
-        --margin: 16px;
-        --header-h: 64px;
-        --header-pad: 16px;
-    }
-
-    /* Announcement: giữ social + icon giỏ/tìm/tài khoản, thu gọn khoảng cách */
-    .announcement-social { gap: 14px; }
-    .announcement-actions { gap: var(--space-4); }
-
-    /* Header cho phép nav xuống hàng full-width khi mở (không dùng absolute) */
-    .site-header {
-        flex-wrap: wrap;
-        align-content: center; /* can giua doc hang logo + hamburger (line rong cua nav lam lech tren) */
-        row-gap: 0;            /* bo gap giua hang logo va line rong cua nav */
-    }
-
-    .nav-toggle { display: flex; }
-
-    .main-nav {
-        order: 1;          /* đẩy nav xuống hàng thứ 2, dưới logo + actions */
-        flex-basis: 100%;
-        justify-content: stretch;
-    }
-
-    /* padding dọc tách nội dung khỏi 2 mép: nếu để 0, thanh đen ngăn cách
-       (border-top) chạm thẳng vào thanh indicator dọc của mục đang active ở
-       dòng đầu — 2 vệt đen dính nhau thành góc chữ L. Đệm ra cho rời hẳn.
-       Đệm luôn phía dưới để đường kẻ của dòng cuối không sát đáy header. */
-    .nav-menu {
-        display: none;     /* mobile-menu.js thêm .open để hiện */
-        flex-direction: column;
-        gap: 0;
-        width: 100%;
-        padding: 10px 0;
-        border-top: 1.5px solid var(--black);
-    }
-
-    .nav-menu.open { display: flex; }
-
-    .nav-menu li { width: 100%; }
-
-    /* Mobile xếp dọc: border-bottom ở đây là đường kẻ ngăn dòng, không dùng
-       làm indicator được nữa -> chuyển chỉ báo active sang thanh dọc bên trái.
-       Mọi dòng đều chừa sẵn 3px border + padding trái nên khi đổi trạng thái
-       chữ không xê dịch. */
-    .nav-menu li a {
-        height: auto;
-        padding: 13px 0 13px var(--space-3);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.15);
-        border-left: 3px solid transparent;
-    }
-
-    .nav-menu li a:hover { border-bottom-color: rgba(243, 231, 213, 0.25); }
-
-    .nav-menu li a.is-active {
-        color: var(--on-brand);
-        border-left-color: var(--on-brand);
-        /* Ghi đè gạch chân đen của rule desktop, trả về màu đường kẻ ngăn dòng */
-        border-bottom-color: rgba(243, 231, 213, 0.25);
-    }
-
-    /* Nhường chỗ cho hamburger: bỏ CTA chữ, giữ icon */
-    .header-cta { display: none; }
-
-    /* Footer: 4 cột -> 2 cột.
-       Thương hiệu và Nhận tin là 2 khối "nặng" nhất -> mỗi khối chiếm trọn
-       một hàng, 2 cột link gọn nằm chung hàng giữa. */
-    .footer-top {
-        grid-template-columns: 1fr 1fr;
-        gap: 36px var(--space-8);
-        padding: var(--space-12) var(--margin) var(--space-10);
-    }
-
-    .footer-brand,
-    .footer-news { grid-column: 1 / -1; }
-
-    .footer-news__form { max-width: 480px; }
-
-    /* Xếp 2 cột thì hairline dọc hết ý nghĩa -> bỏ */
-    .footer-top > * + * {
-        padding-left: 0;
-        border-left: none;
-    }
-
-    .product-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--space-4);
-    }
-}
-
-@media (max-width: 600px) {
-    .product-grid {
-        grid-template-columns: 1fr;
-    }
-
-    /* Footer: giu 2 cot (Kham pha trai | Ho tro phai) nhu tablet,
-       Thuong hieu / Nhan tin van chiem tron hang (grid-column 1/-1 o 900px).
-       Chi thu hep khe cot cho man hep. */
-    .footer-top { gap: var(--space-8) var(--space-5); }
-
-    /* Footer bottom: xếp dọc, căn giữa cho gọn màn hình hẹp */
-    .footer-bottom {
-        justify-content: center;
-        text-align: center;
-        gap: 10px;
-    }
-
-    /* --- Dưới đây vốn là block @480 riêng; gộp vào đây khi thống nhất
-       bộ breakpoint 600/900/1100/1600. Giữ nguyên thứ tự nên các khai báo
-       trùng selector vẫn đè theo đúng cascade cũ. --- */
-
-    :root {
-        --margin: 12px;
-    }
-    
-    .announcement-bar {
-        padding: 0 var(--space-3);
-        min-height: 42px;
-    }
-    
-    .announcement-social {
-        gap: var(--space-4); /* Khoảng cách hợp lý cho FB, Shopee, Tiktok */
-    }
-    
-    .announcement-actions {
-        gap: var(--space-4);
-    }
-    
-    .announcement-ico svg {
-        width: 18px;
-        height: 18px;
-    }
-    
-    /* Footer: 2 cột link ép về 1 cột — 480px không đủ chỗ cho 2 làn chữ mono */
-    .footer-top {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-
-    .footer-social {
-        gap: var(--space-2);
-    }
-}
-
+   CSS giao diện mới nằm ở:
+     components/header.css        header + mega menu + menu trượt
+     components/footer.css        chân trang
+     components/page-head.css     đầu trang (breadcrumb · tiêu đề · mô tả)
+     components/product.css       thẻ sản phẩm, danh sách, chi tiết
+     components/home-sections.css các section trang chủ dùng chung
+   ============================================================ */

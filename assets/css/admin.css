@@ -1,0 +1,810 @@
+/* ============================================================
+   admin.css — Khu quản trị
+   Port từ src/components/admin/* và src/routes/_authenticated/quan-tri/*
+
+   Độc lập với CSS site bán hàng: khu này có thanh bên tối, bảng dữ liệu
+   dày đặc, và không dùng header/footer/mega-menu.
+
+   Token màu lấy từ layout.css. Thanh bên dùng --ink làm nền, đúng ý đồ
+   "tách biệt khỏi giao diện bán hàng" ghi trong styles.css của Lovable.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body.admin {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.skip-link {
+    position: fixed;
+    top: 8px; left: 8px;
+    z-index: 100;
+    padding: 10px 16px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: var(--fs-note);
+    font-weight: 600;
+    transform: translateY(-200%);
+    transition: transform 0.2s;
+}
+
+.skip-link:focus-visible { transform: translateY(0); }
+
+/* --- Khung ------------------------------------------------- */
+
+.admin__shell {
+    display: grid;
+    min-height: 100vh;
+}
+
+@media (min-width: 901px) {
+    .admin__shell { grid-template-columns: 232px minmax(0, 1fr); }
+}
+
+.admin__main {
+    min-width: 0;
+    padding: clamp(20px, 3vw, 32px);
+}
+
+/* --- Thanh bên --------------------------------------------- */
+
+.asidebar {
+    display: flex;
+    flex-direction: column;
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+@media (min-width: 901px) {
+    /* Bám theo khi cuộn nội dung dài; tự cuộn riêng nếu menu quá cao */
+    .asidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+}
+
+.asidebar__head {
+    padding: 20px 16px 16px;
+    border-bottom: 1px solid color-mix(in srgb, var(--on-ink) 12%, transparent);
+}
+
+/* CHỖ DUY NHẤT trong trang quản trị còn dùng serif — và cố ý như vậy.
+   Đây là chữ ký thương hiệu, không phải chi tiết giao diện: nó giữ cho
+   bảng điều khiển vẫn thuộc về Vin Eyewear dù mọi thứ còn lại đã chuyển
+   sang phong cách công cụ. Đừng đổi sang sans cho "đồng bộ". */
+.asidebar__logo {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h6);
+    font-weight: 600;
+    color: var(--on-ink);
+    text-decoration: none;
+}
+
+.asidebar__logo em { font-style: italic; color: var(--brand-light); }
+
+.asidebar__sub {
+    margin-top: 2px;
+    font-size: var(--fs-label);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: color-mix(in srgb, var(--on-ink) 60%, transparent);
+}
+
+.asidebar__nav { flex: 1; padding: 12px 8px; }
+.asidebar__nav ul { list-style: none; margin: 0; padding: 0; }
+
+.asidebar__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: var(--fs-body-sm);
+    text-decoration: none;
+    color: color-mix(in srgb, var(--on-ink) 75%, transparent);
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.asidebar__link:hover {
+    background: color-mix(in srgb, var(--on-ink) 8%, transparent);
+    color: var(--on-ink);
+}
+
+.asidebar__link.is-active {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.asidebar__ico { flex-shrink: 0; }
+
+.asidebar__badge {
+    margin-left: auto;
+    display: grid;
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding-inline: 6px;
+    border-radius: 999px;
+    background: var(--brand-light);
+    color: var(--ink);
+    font-size: var(--fs-micro);
+    font-weight: 700;
+}
+
+.asidebar__link.is-active .asidebar__badge {
+    background: var(--on-brand);
+    color: var(--brand);
+}
+
+.asidebar__foot {
+    padding: 16px;
+    border-top: 1px solid color-mix(in srgb, var(--on-ink) 12%, transparent);
+}
+
+.asidebar__user {
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    color: var(--on-ink);
+}
+
+.asidebar__role {
+    font-size: var(--fs-label);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: color-mix(in srgb, var(--on-ink) 55%, transparent);
+}
+
+.asidebar__logout {
+    margin-top: 10px;
+    padding: 8px 12px;
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--on-ink) 25%, transparent);
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: color-mix(in srgb, var(--on-ink) 80%, transparent);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.asidebar__logout:hover {
+    border-color: var(--brand-light);
+    color: var(--brand-light);
+}
+
+/* --- Tiêu đề trang ----------------------------------------- */
+
+.ahead { margin-bottom: 20px; }
+
+/* Sans, cỡ CỐ ĐỊNH, không co giãn.
+
+   Trang quản trị không phải trang bán hàng: người dùng mở nó cả ngày trên
+   cùng một màn hình, và cái họ cần là nhìn thấy nhiều dòng dữ liệu cùng
+   lúc chứ không phải một tiêu đề đẹp. Serif 36px ăn mất gần một dòng bảng
+   mà không mang thêm thông tin nào. */
+.ahead__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+}
+
+.ahead__lead {
+    margin: 4px 0 0;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+/* --- Thông báo --------------------------------------------- */
+
+.alert {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    border-left: 3px solid;
+    font-size: var(--fs-body-sm);
+}
+
+.alert--ok  { border-color: var(--success); background: color-mix(in srgb, var(--success) 10%, transparent); }
+.alert--err { border-color: var(--danger);  background: color-mix(in srgb, var(--danger) 10%, transparent); }
+
+/* --- Thẻ số liệu ------------------------------------------- */
+
+.astats {
+    display: grid;
+    /* 150px thay vì 180px: vừa đủ cho "11.840.000đ", và ở 1440px xếp được
+       8 thẻ trên MỘT hàng thay vì 6 + 2 lẻ như trước. */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 8px;
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.astat {
+    display: grid;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    text-decoration: none;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+/* KHÔNG nhún lên khi rê chuột. Trên trang bán hàng cú nhún là phản hồi dễ
+   chịu; trên bảng điều khiển có 8 thẻ sát nhau, rê chuột ngang qua thành
+   một dãy nhấp nhô. Đổi nền là đủ để biết con trỏ đang ở đâu. */
+.astat:hover {
+    border-color: var(--brand);
+    background: var(--brand-subtle);
+}
+
+.astat__label {
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+
+/* 19px, không phải 22px. Thẻ hẹp nhất rộng 150px, trừ lề trong còn 122px
+   để chứa chữ. Con số dài nhất trên bảng này là doanh thu dạng
+   "11.840.000đ" — 12 ký tự; ở 22px nó tràn qua mép thẻ và dấu đ bị cắt.
+   Đây là loại lỗi chỉ xuất hiện khi cửa hàng bán được nhiều, tức là đúng
+   lúc không ai muốn nhìn thấy nó. */
+.astat__value {
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+}
+
+.astat__note {
+    font-size: var(--fs-label);
+    color: var(--muted);
+}
+
+/* --- Khối nội dung ----------------------------------------- */
+
+.agrid {
+    display: grid;
+    gap: 20px;
+}
+
+@media (min-width: 1281px) {
+    .agrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .apanel--wide { grid-column: 1 / -1; }
+}
+
+.apanel {
+    min-width: 0;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+}
+
+.apanel__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.apanel__title {
+    /* serif -> sans: xem lý do ở .ahead__title */
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+}
+
+.apanel__more {
+    font-size: var(--fs-body-sm);
+    text-decoration: none;
+    color: var(--brand);
+}
+
+.apanel__more:hover { text-decoration: underline; }
+
+.apanel__empty {
+    padding: 32px 16px;
+    text-align: center;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+/* --- Dải lọc ----------------------------------------------- */
+
+.atabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.atabs__item {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    font-size: var(--fs-body-sm);
+    text-decoration: none;
+    color: var(--muted);
+    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+}
+
+.atabs__item:hover { border-color: var(--brand); color: var(--brand); }
+
+.atabs__item.is-active {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+.atabs__num {
+    font-size: var(--fs-label);
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+}
+
+/* --- Bảng --------------------------------------------------- */
+
+/* Bảng dữ liệu rộng hơn màn hình thì CUỘN TRONG KHUNG, không đẩy cả trang
+   trượt ngang — nếu không, thanh bên và tiêu đề cũng trôi theo. */
+.atable-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+}
+
+.atable {
+    width: 100%;
+    border-collapse: collapse;
+    /* 13px thay vì 14px: thêm được khoảng một dòng rưỡi mỗi màn hình.
+       Vẫn trên ngưỡng đọc thoải mái cho bảng dữ liệu. */
+    font-size: var(--fs-note);
+}
+
+.atable--full { min-width: 860px; }
+
+.atable th,
+.atable td {
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+/* Sọc chẵn/lẻ thay cho kẻ ngang từng dòng.
+
+   Bảng đặc thì đường kẻ dưới MỖI dòng biến bảng thành lưới sọc ngang, mắt
+   phải nhảy qua từng vạch. Nền xen kẽ dẫn mắt chạy hết chiều ngang một
+   dòng — đúng thao tác đọc bảng — mà không thêm nét nào. */
+.atable tbody tr:nth-child(even) {
+    background: color-mix(in srgb, var(--ink) 2.5%, transparent);
+}
+
+.atable thead th {
+    position: sticky;
+    top: 0;
+    /* z-index: dòng đầu bảng phải đè lên nội dung cuộn qua bên dưới nó,
+       nếu không chữ của dòng dữ liệu sẽ chồng lên tên cột. */
+    z-index: 1;
+    padding-block: 9px;
+    border-bottom: 1px solid var(--line-strong);
+    background: var(--surface-sunken);
+    font-size: var(--fs-micro);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.atable tbody tr:hover { background: color-mix(in srgb, var(--brand) 7%, transparent); }
+
+.atable code {
+    font-family: var(--font-mono);
+    font-size: var(--fs-caption);
+    color: var(--brand);
+}
+
+.atable a { color: var(--ink); }
+
+.atable__sub {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--fs-label);
+    color: var(--muted);
+}
+
+.atable__line {
+    display: block;
+    font-size: var(--fs-label);
+    color: var(--muted);
+}
+
+.atable__msg {
+    max-width: 380px;
+    white-space: pre-wrap;
+    color: var(--muted);
+}
+
+.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.num.is-danger { color: var(--danger); font-weight: 700; }
+
+/* --- Nhãn trạng thái ---------------------------------------- */
+
+.badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--muted);
+}
+
+/* Màu KÈM chữ, không dùng riêng màu để truyền trạng thái */
+.badge--new,       .badge--pending   { background: var(--brand-subtle); color: var(--brand); }
+.badge--confirmed, .badge--handling  { background: color-mix(in srgb, var(--info, var(--ink)) 12%, transparent); }
+.badge--completed, .badge--done,
+.badge--in_stock                     { background: color-mix(in srgb, var(--success) 15%, transparent); color: var(--ink); }
+.badge--cancelled, .badge--out_of_stock { background: color-mix(in srgb, var(--danger) 15%, transparent); color: var(--danger); }
+
+/* --- Form đổi trạng thái / tồn kho -------------------------- */
+
+.astatus,
+.ainv__form {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.astatus select,
+.ainv__form input {
+    height: 36px;
+    padding-inline: 8px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body-sm);
+    color: var(--ink);
+}
+
+.ainv__form input { width: 88px; text-align: center; }
+
+.astatus select:focus,
+.ainv__form input:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+.astatus__save {
+    height: 36px;
+    padding-inline: 12px;
+    border: 1px solid var(--brand);
+    background: var(--brand);
+    font-family: var(--font-sans);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    color: var(--on-brand);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.astatus__save:hover { background: var(--brand-strong); }
+
+/* Có JavaScript thì select tự gửi form, nút Lưu thành thừa -> ẩn.
+   Không có JS thì nút vẫn hiện và dùng được. */
+.js .astatus__save { display: none; }
+
+.ainv.is-low  td { background: color-mix(in srgb, var(--brand) 5%, transparent); }
+.ainv.is-out  td { background: color-mix(in srgb, var(--danger) 6%, transparent); }
+
+.ainv__hint {
+    margin-top: 12px;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+/* --- Phân trang --------------------------------------------- */
+
+.pager {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 20px;
+}
+
+.pager__link {
+    display: grid;
+    place-items: center;
+    min-width: 40px;
+    height: 40px;
+    padding-inline: 10px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    font-size: var(--fs-body-sm);
+    text-decoration: none;
+    color: var(--ink);
+}
+
+.pager__link:hover { border-color: var(--brand); color: var(--brand); }
+
+.pager__link.is-current {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* ============================================================
+   TRANG CRUD — form thêm/sửa dùng chung
+   ============================================================ */
+
+.ahead--row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ahead__note {
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+.astatus__save--ghost {
+    background: transparent;
+    color: var(--brand);
+    text-decoration: none;
+    display: inline-grid;
+    place-items: center;
+}
+
+.astatus__save--ghost:hover { background: var(--brand-subtle); }
+
+/* Nút "Thêm mới" là thẻ <a> nhưng trông như nút */
+a.astatus__save {
+    display: inline-grid;
+    place-items: center;
+    text-decoration: none;
+}
+
+.asearch {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.asearch input {
+    flex: 1;
+    min-width: 200px;
+    max-width: 360px;
+    height: 36px;
+    padding-inline: 10px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body-sm);
+    color: var(--ink);
+}
+
+.asearch input:focus { outline: 2px solid var(--brand); outline-offset: -2px; }
+
+/* Cột thao tác trong bảng */
+.arow-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.arow-actions a {
+    font-size: var(--fs-body-sm);
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.arow-del {
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-body-sm);
+    color: var(--danger);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+/* Nút hàng ngang KHÔNG phá huỷ gì — "Phát cho tất cả" ở màn hình mã giảm giá.
+   Nó mượn dáng của .arow-del để nằm cùng hàng cho đều, nhưng màu đỏ ở đó là
+   để cảnh báo, và một nút phát quà mà đỏ như nút xoá thì đọc sai hẳn ý. */
+.arow-del--calm { color: var(--brand); }
+
+/* Form thêm/sửa */
+.aform {
+    margin-top: 24px;
+    padding: 20px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    /* Chừa chỗ khi nhảy tới #form, nếu không tiêu đề bị mép trên cắt */
+    scroll-margin-top: 24px;
+}
+
+.aform__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.aform__grid .field--wide { grid-column: 1 / -1; }
+
+.aform__grid label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+
+.aform__grid input[type="text"],
+.aform__grid input[type="url"],
+.aform__grid input[type="tel"],
+.aform__grid input[type="search"],
+.aform__grid input[type="number"],
+.aform__grid input[type="datetime-local"],
+.aform__grid input[type="date"],
+.aform__grid select,
+.aform__grid textarea {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body-sm);
+    color: var(--ink);
+}
+
+.aform__grid textarea { resize: vertical; line-height: 1.6; font-family: var(--font-mono); }
+
+.aform__grid input:focus,
+.aform__grid select:focus,
+.aform__grid textarea:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+/* Ô tick — nhãn nằm cùng dòng với ô, không viết hoa như nhãn trường khác */
+.field--check label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.field--check input { width: 18px; height: 18px; accent-color: var(--brand); }
+
+.field__hint {
+    margin-top: 4px;
+    font-size: var(--fs-label);
+    color: var(--muted);
+}
+
+/* Bảng ký hiệu Markdown dưới ô "Nội dung" của sự kiện. Dấu chấm nằm trong lề
+   (list-position: inside) để danh sách thẳng hàng với dòng chú thích ở trên
+   thay vì thụt ra ngoài. */
+.field__hint--list {
+    margin-top: 2px;
+    padding-left: 2px;
+    list-style-position: inside;
+    line-height: 1.9;
+}
+
+.field__hint--list code {
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--surface-sunken, #f3efec);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .95em;
+    color: var(--ink, #33272a);
+}
+
+.field__opt {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+}
+
+.aform__grid > button { grid-column: 1 / -1; justify-self: start; }
+
+/* ============================================================
+   LIÊN KẾT ĐẶT LẠI MẬT KHẨU — hiện đúng một lần
+
+   Cố ý làm nổi bật và khác hẳn phần còn lại của trang: đây là thứ nhân viên
+   phải đọc cho khách NGAY, và mất đi khi tải lại trang.
+   ============================================================ */
+
+.resetlink {
+    margin-bottom: 20px;
+    padding: 16px 18px;
+    border: 2px solid var(--brand);
+    background: var(--brand-subtle);
+}
+
+.resetlink__title {
+    font-size: var(--fs-label);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--brand);
+}
+
+.resetlink__note {
+    margin-top: 4px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.65;
+    color: var(--ink);
+}
+
+.resetlink__url {
+    display: block;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    font-family: var(--font-mono);
+    font-size: var(--fs-body-sm);
+    line-height: 1.6;
+    color: var(--ink);
+    /* Liên kết dài, phải xuống dòng được để đọc trọn qua điện thoại */
+    word-break: break-all;
+    user-select: all;
+}
+
+/* Trạng thái riêng của bảng yêu cầu đặt lại */
+.badge--sent    { background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+.badge--used    { background: var(--surface-sunken); color: var(--muted); }

@@ -1,97 +1,365 @@
-﻿<?php
+<?php
+
 /**
- * product/detail.php
- * Biến nhận từ ProductDetailController::index():
- *   $product — sản phẩm (name, price, image, badge, description, specs[], gallery[])
- *   $related — 4 sản phẩm gợi ý
+ * product/detail.php — chi tiết sản phẩm (/san-pham/{slug})
  *
- * Sản phẩm hiển thị lấy theo ?id= trên URL (xem ProductDetailController).
- * CSS/JS riêng của trang do master.php nạp theo $viewName.
+ * Dựng theo "Vin Eyewear Product.dc.html" (Claude Design):
+ *
+ *   breadcrumb → hai cột đều nhau, gap 48:
+ *     trái  thư viện ảnh dính theo cuộn (ảnh lớn 520px + hàng ảnh nhỏ 92px)
+ *     phải  thông tin, chọn phương án, mua hàng, 4 thẻ cam kết
+ *   → hai thẻ ngang nhau: Thông số kỹ thuật | Đánh giá
+ *
+ * CSS: assets/css/product-detail.css
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ĐỔI ẢNH VÀ CHỌN PHƯƠNG ÁN — KHÔNG JAVASCRIPT
+ *
+ * Ảnh: mỗi ảnh lớn có id, ảnh nhỏ là <a href="#id">. CSS `:target` quyết định
+ * ảnh nào hiện. Bấm ảnh nhỏ đổi ảnh lớn mà không tải lại trang, và địa chỉ
+ * mang theo ảnh đang xem nên gửi link được.
+ *
+ * Phương án (chiết suất): ô radio thật + `:has()`, đúng cách đã dùng ở trang
+ * thanh toán. Giá trị đi thẳng vào form "Thêm vào giỏ" nằm ngay dưới, nên
+ * không có bước đồng bộ nào giữa hai nơi.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
-$show_breadcrumb = true;
-$breadcrumb_items = [
-    ['label' => 'Trang chủ', 'url' => '/'],
-    ['label' => 'Sản phẩm', 'url' => '/product'],
-    ['label' => $product['name']],
+
+$price    = (int) $product['price'];
+$compare  = $product['compare_at_price'] !== null ? (int) $product['compare_at_price'] : null;
+$percent  = discount($price, $compare);
+$rating   = (float) ($product['rating'] ?? 5);
+$reviewN  = (int) ($product['review_count'] ?? 0);
+$images   = $product['images'] ?: [ProductModel::image($product)];
+$specs    = is_array($product['specs']) ? $product['specs'] : [];
+$slug     = rawurlencode($product['slug']);
+
+/* Biến thể đang được chọn sẵn. Ưu tiên cái khách vừa chọn hỏng (?pa=), rồi tới
+   phương án còn hàng đầu tiên — chọn sẵn một phương án đã hết hàng là bẫy. */
+$firstInStock = null;
+foreach ($variants as $v) {
+    if ((int) $v['stock_quantity'] > 0) { $firstInStock = $v['id']; break; }
+}
+$activeVariant = $pickedVariant !== '' ? $pickedVariant : ($firstInStock ?? ($variants[0]['id'] ?? ''));
+
+/* Còn hàng hay không, tính cả biến thể: có biến thể thì chỉ cần MỘT phương án
+   còn hàng là mặt hàng còn bán được. */
+$inStock = $variants === []
+    ? ProductModel::inStock($product)
+    : ($product['status'] === 'in_stock' && $firstInStock !== null);
+
+$commitments = [
+    ['shield', 'Bảo hành 24 tháng',   'Lỗi nhà sản xuất, đổi mới trong 7 ngày đầu'],
+    ['eye',    'Đo mắt miễn phí',     'Quy trình khúc xạ chuẩn, kể cả khi không mua'],
+    ['truck',  'Giao hàng đồng kiểm', 'Mở hộp kiểm tra trước khi thanh toán'],
+    ['wrench', 'Nắn chỉnh trọn đời',  'Miễn phí không giới hạn tại cả hai cơ sở'],
 ];
-$show_page_header = true;
-$page_eyebrow = 'Vin Eyewear · Handcrafted Collection';
-$show_cta = true;
-$cta_eyebrow = 'Vin Eyewear · AR Fitting';
-$cta_title = 'Đeo thử gọng này ngay bây giờ';
-$cta_desc = 'Bật camera, xem gọng kính lên khuôn mặt bạn trong vài giây. Ưng mắt rồi hãy tới cửa hàng.';
-$cta_buttons = [
-    ['label' => 'Thử AR', 'url' => '/ar', 'style' => 'primary'],
-    ['label' => 'Liên hệ tư vấn', 'url' => '/contact', 'style' => 'ghost'],
-];
-$cta_note = 'Không cần cài ứng dụng.';
-$show_pusher = true;
+
+/** Năm ngôi sao đặc/rỗng theo điểm — dùng cho cả phần đầu và từng đánh giá. */
+$stars = static function (float $score): string {
+    $full = (int) round($score);
+    return str_repeat('★', max(0, min(5, $full))) . str_repeat('☆', max(0, 5 - $full));
+};
 ?>
 
-<!-- ============================================================
-     SECTION 1 — GALLERY + THÔNG TIN SẢN PHẨM
-     ============================================================ -->
-<section class="pd-main">
+<section class="pd">
 
-    <!-- Cột trái: ảnh lớn + thumbnail -->
-    <div class="pd-gallery">
-        <div class="pd-stage">
-            <img
-                id="pd-main-img"
-                src="<?= htmlspecialchars($product['gallery'][0]) ?>"
-                alt="<?= htmlspecialchars($product['name']) ?>"
-            >
-            <?php if (!empty($product['badge'])): ?>
-            <span class="badge <?= $product['badge'] === 'Mới' ? 'badge-dark' : '' ?>"><?= htmlspecialchars($product['badge']) ?></span>
+    <?php
+    /*
+     * CHỈ breadcrumb — không tiêu đề, không mô tả.
+     *
+     * Tên sản phẩm đã là <h1> của trang (nằm trong cột thông tin bên phải),
+     * nên một dải tiêu đề nữa vừa nói hai lần vừa đẩy thư viện ảnh xuống dưới
+     * màn hình đầu tiên. Breadcrumb thì vẫn cần: trang này nằm sâu trong cây
+     * và phần lớn người xem vào thẳng từ tìm kiếm.
+     */
+    $crumbs = [];
+    if ($category !== null) {
+        $crumbs[] = [
+            'label' => $category['name'],
+            'url'   => '/san-pham?category=' . rawurlencode($category['slug']),
+        ];
+    }
+    $crumbs[] = ['label' => $product['name']];
+
+    partial('_layout/page-head', ['head_crumbs' => $crumbs]);
+    ?>
+
+    <div class="pd__grid">
+
+        <!-- ══════════ THƯ VIỆN ẢNH ══════════ -->
+        <div class="pdgal">
+            <div class="pdgal__stage">
+                <?php foreach ($images as $i => $img): ?>
+                    <!-- id là đích của ảnh nhỏ bên dưới; CSS :target chọn ảnh
+                         nào hiện. Ảnh đầu hiện mặc định khi chưa có :target. -->
+                    <img class="pdgal__img<?= $i === 0 ? ' is-first' : '' ?>"
+                         id="anh-<?= $i ?>" src="<?= e($img) ?>"
+                         alt="<?= e($product['name']) ?><?= $i > 0 ? ' — ảnh ' . ($i + 1) : '' ?>"
+                         width="520" height="520"
+                         <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
+                <?php endforeach; ?>
+
+                <?php if ($percent !== null): ?>
+                    <span class="pdgal__sale">-<?= (int) $percent ?>%</span>
+                <?php endif; ?>
+            </div>
+
+            <?php if (count($images) > 1): ?>
+                <div class="pdgal__thumbs">
+                    <?php foreach ($images as $i => $img): ?>
+                        <a class="pdgal__thumb" href="#anh-<?= $i ?>">
+                            <img src="<?= e($img) ?>" alt="Xem ảnh <?= $i + 1 ?>"
+                                 width="92" height="92" loading="lazy" decoding="async">
+                        </a>
+                    <?php endforeach; ?>
+                </div>
             <?php endif; ?>
         </div>
 
-        <div class="pd-thumbs">
-            <?php foreach ($product['gallery'] as $i => $img): ?>
-            <button
-                type="button"
-                class="pd-thumb <?= $i === 0 ? 'active' : '' ?>"
-                data-full="<?= htmlspecialchars($img) ?>"
-                aria-label="Xem ảnh <?= $i + 1 ?>"
-            >
-                <img src="<?= htmlspecialchars($img) ?>" alt="" loading="lazy">
-            </button>
-            <?php endforeach; ?>
+        <!-- ══════════ THÔNG TIN ══════════ -->
+        <div class="pdinfo">
+
+            <div class="pdinfo__head">
+                <span class="pdinfo__eyebrow">
+                    <?= e($product['brand'] ?? 'Vin Eyewear') ?> · SKU <?= e($product['sku']) ?>
+                </span>
+                <h1 class="pdinfo__title"><?= e($product['name']) ?></h1>
+
+                <div class="pdinfo__rate">
+                    <span class="pdstars" aria-hidden="true"><?= $stars($rating) ?></span>
+                    <span class="pdinfo__score"><?= e(number_format($rating, 1)) ?></span>
+                    <span class="pdinfo__dot" aria-hidden="true">·</span>
+                    <a href="#danh-gia"><?= $reviewN ?> đánh giá</a>
+                    <span class="pdinfo__dot" aria-hidden="true">·</span>
+                    <span class="pdinfo__stock<?= $inStock ? '' : ' is-out' ?>">
+                        <?= $inStock ? 'Còn hàng' : 'Tạm hết hàng' ?>
+                    </span>
+                </div>
+            </div>
+
+            <div class="pdinfo__price">
+                <span class="pdinfo__now"><?= money($price) ?></span>
+                <?php if ($compare !== null && $compare > $price): ?>
+                    <span class="pdinfo__old"><?= money($compare) ?></span>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!empty($product['description'])): ?>
+                <p class="pdinfo__desc"><?= e($product['description']) ?></p>
+            <?php endif; ?>
+
+            <form class="pdbuy" method="post" action="/gio-hang/them">
+                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                <input type="hidden" name="product_id" value="<?= e($product['id']) ?>">
+
+                <?php if ($variants !== []): ?>
+                    <div class="pdopts">
+                        <span class="pdopts__label" id="nhan-pa">Chiết suất — chọn theo độ cận</span>
+
+                        <div class="pdopts__row" role="radiogroup" aria-labelledby="nhan-pa">
+                            <?php foreach ($variants as $v): ?>
+                                <?php $vStock = (int) $v['stock_quantity']; ?>
+                                <label class="pdopt<?= $vStock > 0 ? '' : ' is-out' ?>">
+                                    <input type="radio" name="variant_id" value="<?= e($v['id']) ?>"
+                                           required <?= $vStock > 0 ? '' : 'disabled' ?>
+                                           <?= $activeVariant === $v['id'] && $vStock > 0 ? 'checked' : '' ?>>
+                                    <span class="pdopt__body">
+                                        <span class="pdopt__name"><?= e($v['label']) ?></span>
+                                        <span class="pdopt__note">
+                                            <?= $vStock > 0 ? e($v['note'] ?? '') : 'Tạm hết' ?>
+                                        </span>
+                                    </span>
+                                    <?php if ((int) $v['price_delta'] !== 0): ?>
+                                        <!-- Chênh giá phải hiện ngay trên nút: bản thiết
+                                             kế mẫu có ba phương án cùng giá, nhưng dữ liệu
+                                             thật thì không, và đổi giá âm thầm khi khách
+                                             bấm là điều tệ nhất một trang bán hàng làm được. -->
+                                        <span class="pdopt__delta">
+                                            <?= (int) $v['price_delta'] > 0 ? '+' : '−' ?><?= money(abs((int) $v['price_delta'])) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="pdbuy__row">
+                    <div class="pdqty">
+                        <!-- Không JS nên hai nút ± ở đây sẽ phải gửi form; thay
+                             vào đó là một ô số thật. Trình duyệt cho mũi tên
+                             lên/xuống và bàn phím, không cần thêm gì. -->
+                        <label class="sr-only" for="so-luong">Số lượng</label>
+                        <input class="pdqty__num" type="number" id="so-luong" name="quantity"
+                               value="1" min="1" max="20" step="1" inputmode="numeric"
+                               <?= $inStock ? '' : 'disabled' ?>>
+                    </div>
+
+                    <button type="submit" name="action" value="buy" class="pdbtn pdbtn--buy"
+                            <?= $inStock ? '' : 'disabled' ?>>
+                        <?= $inStock ? 'Mua ngay' : 'Tạm hết hàng' ?>
+                    </button>
+
+                    <button type="submit" class="pdbtn pdbtn--add" <?= $inStock ? '' : 'disabled' ?>>
+                        Thêm vào giỏ
+                    </button>
+                </div>
+            </form>
+
+            <ul class="pdcommit" role="list">
+                <?php foreach ($commitments as [$ico, $title, $desc]): ?>
+                    <li class="pdcommit__item">
+                        <?= icon($ico, 'pdcommit__ico', 17) ?>
+                        <span class="pdcommit__text">
+                            <span class="pdcommit__title"><?= e($title) ?></span>
+                            <span class="pdcommit__desc"><?= e($desc) ?></span>
+                        </span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
         </div>
     </div>
 
-    <!-- Cột phải: tên, giá, mô tả -->
-    <div class="pd-info">
-        <h1 class="pd-name"><?= htmlspecialchars($product['name']) ?></h1>
-        <p class="pd-price"><?= number_format($product['price'], 0, ',', '.') ?> &#8363;</p>
+    <!-- ══════════ THÔNG SỐ + ĐÁNH GIÁ ══════════ -->
+    <div class="pdbottom">
 
-        <p class="pd-desc"><?= htmlspecialchars($product['description']) ?></p>
+        <div class="pdcard">
+            <h2 class="pdcard__title">Thông số kỹ thuật</h2>
 
-        <!-- Thông số kỹ thuật -->
-        <dl class="pd-specs">
-            <?php foreach ($product['specs'] as $label => $value): ?>
-            <div class="pd-spec-row">
-                <dt><?= htmlspecialchars($label) ?></dt>
-                <dd><?= htmlspecialchars($value) ?></dd>
+            <?php
+            /* Ghép vài cột có sẵn vào bảng thông số để nó không quá lèo tèo khi
+               cột `specs` chưa được điền — bản thiết kế vẽ sáu dòng. Cột nào
+               trống thì bỏ, không in "—". */
+            /* Lọc cả giá trị RỖNG lẫn dấu gạch: cửa hàng gõ "—" vào ô không áp
+               dụng (tròng kính thì không có dáng gọng), và in nguyên dấu gạch
+               ra bảng thông số trông như dữ liệu bị thiếu chứ không phải cố ý. */
+            $blank = static fn ($v): bool =>
+                $v === null || trim((string) $v) === ''
+                || in_array(trim((string) $v), ['-', '–', '—', 'N/A', 'n/a'], true);
+
+            $rows = array_filter([
+                'Thương hiệu'  => $product['brand'] ?? null,
+                'Chất liệu'    => $product['material'] ?? null,
+                'Màu sắc'      => $product['color'] ?? null,
+                'Dáng gọng'    => $product['frame_shape'] ?? null,
+            ], static fn ($v) => !$blank($v)) + array_filter($specs, static fn ($v) => !$blank($v));
+
+            if ($variants !== []) {
+                $rows['Phương án'] = implode(' / ', array_column($variants, 'label'));
+            }
+            ?>
+
+            <?php if ($rows === []): ?>
+                <p class="pdcard__empty">Chưa cập nhật thông số cho sản phẩm này.</p>
+            <?php else: ?>
+                <dl class="pdspecs">
+                    <?php foreach ($rows as $k => $v): ?>
+                        <div class="pdspecs__row">
+                            <dt><?= e((string) $k) ?></dt>
+                            <dd><?= e((string) $v) ?></dd>
+                        </div>
+                    <?php endforeach; ?>
+                </dl>
+            <?php endif; ?>
+        </div>
+
+        <div class="pdcard" id="danh-gia">
+            <div class="pdcard__head">
+                <h2 class="pdcard__title">Đánh giá (<?= $reviewN ?>)</h2>
+                <div class="pdcard__score">
+                    <span class="pdcard__num"><?= e(number_format($rating, 1)) ?></span>
+                    <span class="pdstars pdstars--sm" aria-hidden="true"><?= $stars($rating) ?></span>
+                </div>
             </div>
-            <?php endforeach; ?>
-        </dl>
+
+            <?php if ($reviewMsg !== null): ?>
+                <p class="pdreview__flash<?= $reviewOk ? ' is-ok' : ' is-err' ?>"
+                   role="<?= $reviewOk ? 'status' : 'alert' ?>"><?= e($reviewMsg) ?></p>
+            <?php endif; ?>
+
+            <?php if ($reviews === []): ?>
+                <p class="pdcard__empty">Chưa có đánh giá nào. Hãy là người đầu tiên.</p>
+            <?php else: ?>
+                <?php foreach ($reviews as $rv): ?>
+                    <article class="pdreview">
+                        <div class="pdreview__head">
+                            <span class="pdreview__face" aria-hidden="true">
+                                <?= e(utf8Substr($rv['author_name'], 0, 1)) ?>
+                            </span>
+                            <span class="pdreview__who">
+                                <span class="pdreview__name"><?= e($rv['author_name']) ?></span>
+                                <span class="pdreview__meta">
+                                    <?php
+                                    /* "Đã mua · Chiết suất 1.61 · 08/2026" — huy hiệu
+                                       "Đã mua" chỉ có khi đánh giá gắn với một đơn thật. */
+                                    $bits = [];
+                                    if ($rv['order_id'] !== null)      { $bits[] = 'Đã mua'; }
+                                    if (!empty($rv['variant_label']))  { $bits[] = $rv['variant_label']; }
+                                    $bits[] = formatDate($rv['created_at'], 'm/Y');
+                                    echo e(implode(' · ', $bits));
+                                    ?>
+                                </span>
+                            </span>
+                            <span class="pdstars pdstars--sm pdreview__stars" aria-label="<?= (int) $rv['rating'] ?> trên 5 sao">
+                                <?= $stars((float) $rv['rating']) ?>
+                            </span>
+                        </div>
+                        <p class="pdreview__body"><?= e($rv['body']) ?></p>
+                    </article>
+                <?php endforeach; ?>
+            <?php endif; ?>
+
+            <?php if (!$showAll && $reviewN > count($reviews)): ?>
+                <a class="pdcard__more" href="/san-pham/<?= $slug ?>?danh-gia=tat-ca#danh-gia">
+                    Xem tất cả đánh giá
+                </a>
+            <?php endif; ?>
+
+            <?php if ($canReview['ok']): ?>
+                <form class="pdwrite" method="post" action="/san-pham/danh-gia">
+                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                    <input type="hidden" name="slug" value="<?= e($product['slug']) ?>">
+
+                    <span class="pdwrite__label">Viết đánh giá của bạn</span>
+
+                    <!-- Năm ô radio xếp NGƯỢC trong HTML rồi lật lại bằng CSS
+                         (flex-direction: row-reverse). Nhờ vậy "tô sáng mọi sao
+                         bên trái sao đang chọn" làm được bằng bộ chọn ~ của CSS,
+                         vốn chỉ nhìn được về phía SAU trong cây DOM. -->
+                    <div class="pdwrite__stars" role="radiogroup" aria-label="Chấm điểm">
+                        <?php foreach ([5, 4, 3, 2, 1] as $n): ?>
+                            <input type="radio" name="rating" id="sao-<?= $n ?>" value="<?= $n ?>"
+                                   required <?= $n === 5 ? 'checked' : '' ?>>
+                            <label for="sao-<?= $n ?>" title="<?= $n ?> sao">
+                                <span class="sr-only"><?= $n ?> sao</span>
+                                <span aria-hidden="true">★</span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <label class="sr-only" for="noi-dung">Nhận xét</label>
+                    <textarea class="pdwrite__area" id="noi-dung" name="body" rows="3"
+                              required minlength="10" maxlength="2000"
+                              placeholder="Kính dùng có vừa ý không? Cắt lắp mất bao lâu?"></textarea>
+
+                    <button type="submit" class="pdwrite__send">Gửi đánh giá</button>
+                    <span class="pdwrite__note">Đánh giá hiển thị sau khi được duyệt.</span>
+                </form>
+            <?php elseif (!empty($canReview['reason'])): ?>
+                <p class="pdcard__note"><?= e($canReview['reason']) ?></p>
+            <?php endif; ?>
+        </div>
     </div>
 
-</section>
-
-<!-- ============================================================
-     SECTION 2 — SẢN PHẨM GỢI Ý
-     Dùng đúng component lưới của trang Sản phẩm: .product-grid +
-     modifier .product-grid--boxed (layout.css). KHÔNG viết CSS card riêng cho .pd-related.
-     ============================================================ -->
-<section class="pd-related reveal">
-    <div class="pd-related-header">
-        <h2 class="pd-related-title">Có thể bạn thích</h2>
-        <a href="/product" class="pd-related-link">Xem tất cả</a>
-    </div>
-
-    <div class="product-grid product-grid--boxed" id="pdRelatedGrid">
-        <?php foreach ($related as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
-    </div>
+    <?php if ($related !== []): ?>
+        <section class="pdrelated" aria-labelledby="lien-quan">
+            <h2 class="pdcard__title" id="lien-quan">Sản phẩm liên quan</h2>
+            <div class="plist__grid">
+                <?php foreach ($related as $item): ?>
+                    <?php partial('_layout/product-card', ['product' => $item]); ?>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php endif; ?>
 </section>

@@ -1,0 +1,182 @@
+/* ============================================================
+   S22 — CỤM NÚT NỔI HỖ TRỢ
+   Markup: app/views/_layout/floating-actions.php
+   Hành vi: assets/js/floating.js
+   ============================================================ */
+
+.fab {
+    position: fixed;
+    right: clamp(12px, 3vw, 24px);
+    bottom: clamp(12px, 3vw, 24px);
+    /* Dưới .mobile-nav (z-index 100) để menu trượt luôn phủ lên cụm này,
+       trên header (40) và mọi nội dung trang. */
+    z-index: 90;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.fab__list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    list-style: none;
+}
+
+/* --- Nút tròn dùng chung --- */
+
+.fab__btn,
+.fab__toggle {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    border-radius: 999px;
+    color: var(--on-brand);
+    box-shadow: var(--elev-2);
+    cursor: pointer;
+    transition:
+        transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
+        box-shadow 0.2s;
+}
+
+/* Thuộc tính hidden phải thắng display:grid ở trên, nếu không nút "lên đầu
+   trang" và nút mở/đóng vẫn hiện dù JS chưa gỡ hidden. */
+.fab__btn[hidden],
+.fab__toggle[hidden] {
+    display: none;
+}
+
+.fab__btn:hover,
+.fab__toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--elev-3);
+}
+
+.fab__ico {
+    /* Nét vẽ không được co lại khi nhãn bên cạnh dài */
+    flex: none;
+}
+
+/* Màu từng kênh — nhận diện bằng màu thương hiệu, nhãn chữ nói rõ phần còn lại */
+.fab__btn--call      { background: var(--brand); }
+.fab__btn--call:hover{ background: var(--brand-strong); }
+.fab__btn--zalo      { background: #0068ff; }
+.fab__btn--messenger { background: #0084ff; }
+
+.fab__btn--top {
+    background: var(--surface-raised);
+    color: var(--ink);
+    border: 1px solid var(--line);
+}
+
+/* --- Nhãn chữ nổi bên trái nút --- */
+
+.fab__label {
+    position: absolute;
+    /* Neo mép phải vào cạnh trái của nút: nhãn dài ngắn khác nhau vẫn không
+       đẩy nút lệch khỏi cột. */
+    right: calc(100% + 10px);
+    padding: 6px 10px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(6px);
+    pointer-events: none;
+    transition:
+        opacity 0.2s,
+        transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.fab__btn:hover .fab__label,
+.fab__btn:focus-visible .fab__label {
+    opacity: 1;
+    transform: none;
+}
+
+/* --- Nút mở/đóng (chỉ dưới 900px) --- */
+
+/* Từ 900px trở lên ba kênh đã xếp dọc và luôn thấy, nút mở/đóng thành thừa.
+   Đặt SAU khối .fab__btn, .fab__toggle ở trên để ghi đè display: grid. */
+.fab__toggle {
+    display: none;
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+/* Hai icon chồng lên nhau trong cùng một ô lưới, đổi bên nào hiện theo
+   trạng thái — làm vậy thì nút không đổi kích thước lúc mở/đóng. */
+.fab__toggle-ico {
+    grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.fab__toggle-ico--close { opacity: 0; transform: rotate(-45deg); }
+.fab.is-open .fab__toggle-ico--open  { opacity: 0; transform: rotate(45deg); }
+.fab.is-open .fab__toggle-ico--close { opacity: 1; transform: none; }
+
+/* ============================================================
+   BỀ NGANG HẸP — gộp ba kênh vào sau nút mở/đóng
+   ============================================================ */
+
+@media (max-width: 899px) {
+
+    .fab__toggle:not([hidden]) { display: grid; }
+
+    /* Chỉ thu gọn khi có JavaScript: không có JS thì nút mở/đóng vẫn mang
+       thuộc tính hidden, thu gọn danh sách lúc đó là giấu luôn cả ba kênh. */
+    .js .fab__list {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 10px);
+        visibility: hidden;
+        opacity: 0;
+        transform: translateY(8px);
+        transition:
+            opacity 0.2s,
+            transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
+            visibility 0.2s;
+    }
+
+    .js .fab.is-open .fab__list {
+        visibility: visible;
+        opacity: 1;
+        transform: none;
+    }
+
+    /* Màn cảm ứng không có hover -> mở ra là hiện luôn nhãn, nếu không hai
+       bong bóng chat (Zalo và Messenger) chỉ khác nhau mỗi sắc xanh. */
+    .js .fab.is-open .fab__label {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Bản in không có gì để bấm */
+@media print {
+    .fab { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fab__btn,
+    .fab__toggle,
+    .fab__label,
+    .fab__toggle-ico,
+    .js .fab__list {
+        transition: none;
+    }
+
+    .fab__btn:hover,
+    .fab__toggle:hover {
+        transform: none;
+    }
+}

@@ -1,0 +1,461 @@
+/* ============================================================
+   checkout.css — thanh toán (/thanh-toan)
+
+   Dựng theo "Vin Eyewear Checkout.dc.html" (Claude Design):
+
+     khung rút gọn → breadcrumb + tiêu đề
+     → hai cột: ba thẻ bước đánh số | tóm tắt 400px dính theo cuộn
+
+   Markup: app/views/order/checkout.php · _layout/checkout-header.php
+
+   BA FILE CÙNG PHỤC VỤ TRANG NÀY, mỗi file một việc:
+     components/bare-shell.css  đầu/chân trang rút gọn (.barebar/.barefoot)
+     cart.css                   khối tóm tắt (.csum*) — DÙNG CHUNG với giỏ hàng
+     checkout.css               phần riêng của trang này
+
+   Khối tóm tắt không chép lại ở đây vì hai bản thiết kế vẽ nó giống nhau tới
+   từng con số: thẻ bo 28px, đệm 30px, khe 16px, tổng cộng Lora 26px. Sửa
+   .csum* thì mở cả /gio-hang xem lại.
+
+   CỠ CHỮ ghi thẳng bằng px, không qua thang --fs-*, cùng lý do đã ghi ở đầu
+   category.css / account.css / auth.css / cart.css.
+
+   Bản thiết kế là khung cứng 1280px (`min-width:1280px`). Site này chạy từ
+   điện thoại lên, nên có thêm mốc gãy: 1100px tóm tắt xuống dưới, 640px các
+   hàng hai cột về một cột.
+   ============================================================ */
+
+.checkout {
+    /* Chữ phụ tông ấm — cùng bộ với các trang đã port */
+    --o-note:  #9a877f;
+    --o-meta:  #b0a094;
+    --o-rule:  #f0e4d8;
+    --o-edge:  #d8c7ba;   /* viền ô radio chưa chọn */
+
+    --o-shadow-step: 0 2px 10px rgba(90, 40, 40, 0.05);
+
+    max-width: 1392px;
+    margin: 0 auto;
+    padding: 24px 56px 96px;
+    /* Khung rút gọn cho <main> display:flex, nên khối này phải tự chiếm hết
+       bề ngang — xem body.is-bare trong components/bare-shell.css. */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.checkout a { text-decoration: none; }
+
+/* --- Tiêu đề ---
+   Chỉ còn tiêu đề. Bộ lớp breadcrumb (.cohead__crumbs/__sep/__here) đã bỏ
+   cùng lúc với markup — lý do ghi trong app/views/order/checkout.php. */
+
+.cohead {
+    padding: 12px 6px 24px;
+}
+
+.cohead__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* ============================================================
+   KHUNG HAI CỘT
+   ============================================================ */
+
+.cogrid {
+    display: grid;
+    /* 400px chứ không 380px như giỏ hàng — bản thiết kế nới cột tóm tắt của
+       trang này ra để chứa thêm danh sách sản phẩm. */
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 24px;
+    align-items: start;
+}
+
+.costeps {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* ============================================================
+   THẺ BƯỚC
+   ============================================================ */
+
+.costep {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-radius: 28px;
+    background: var(--surface-raised);
+    padding: 32px 36px;
+    box-shadow: var(--o-shadow-step);
+}
+
+.costep__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.costep__num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--brand-subtle);
+    color: var(--brand);
+    font-family: var(--font-serif);
+    font-size: 15px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.costep__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* ============================================================
+   Ô NHẬP
+
+   CÙNG hình dạng với .acct-field__input (account.css): đệm 13px 18px, bo 16px,
+   viền --line, nền --surface. Hai bản thiết kế khai y hệt nhau.
+
+   Chưa gộp thành một component dùng chung vì bản đăng nhập lại là một biến thể
+   khác (14px 18px, cỡ chữ 14.5px), nên gộp đúng cách cần đụng cả ba trang đã
+   nghiệm thu. Để lại đây một ghi chú thay vì âm thầm chép lần thứ ba mà không
+   ai biết — xem mục "còn tồn" trong ghi chú bàn giao.
+   ============================================================ */
+
+.cofield {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.cofield__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.cofield__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+/* Phần "(để nhận xác nhận đơn)" — chữ thường, không giãn, tông nhạt hơn */
+.cofield__label em {
+    font-style: normal;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--o-meta);
+}
+
+.cofield__input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 13px 18px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--ink);
+}
+
+.cofield__input:focus {
+    outline: none;
+    border-color: #c9a79b;
+    background: var(--surface-focus);
+}
+
+.cofield__input::placeholder { color: var(--o-meta); }
+
+/* Chỉ tô đỏ SAU khi khách đã rời ô và gõ sai — :user-invalid, không phải
+   :invalid (cái đó tô đỏ mọi ô bắt buộc ngay khi trang vừa mở). */
+.cofield__input:user-invalid { border-color: var(--danger); }
+
+.cofield__area {
+    padding: 14px 18px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+/* ============================================================
+   THẺ LỰA CHỌN (radio) — hình thức nhận hàng · cơ sở · thanh toán
+   ============================================================ */
+
+.cocards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Hai thẻ nằm ngang — chỉ dùng cho cặp "Giao tận nơi / Nhận tại cửa hàng" */
+.cocards--2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.cocard {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 18px 20px;
+    border: 1.5px solid var(--line);
+    border-radius: 20px;
+    background: var(--surface-raised);
+    cursor: pointer;
+}
+
+.cocard:hover { border-color: var(--brand); }
+
+/* Ô radio THẬT nằm dưới, ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc
+   màn hình. Nhờ nó mà cả khối ẩn/hiện bên dưới chạy được bằng CSS, không JS. */
+.cocard input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.cocard__dot {
+    box-sizing: border-box;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--o-edge);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    flex-shrink: 0;
+}
+
+.cocard__body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: left;
+    flex: 1;
+    min-width: 0;
+}
+
+.cocard__name {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.cocard__note {
+    font-size: 12.5px;
+    color: var(--o-note);
+}
+
+/* --- Trạng thái đã chọn --- */
+
+.cocard:has(input:checked) {
+    border-color: var(--brand);
+    background: #faf3ee;
+}
+
+/* Vòng tròn đặc ở giữa vẽ bằng chính viền 5.5px, không cần phần tử con */
+.cocard:has(input:checked) .cocard__dot {
+    border: 5.5px solid var(--brand);
+}
+
+/* Vòng focus vẽ trên cái NHÌN THẤY, vì ô thật đã ẩn đi */
+.cocard:has(input:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* --- Lựa chọn chưa mở --- */
+
+.cocard.is-soon {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.cocard.is-soon:hover { border-color: var(--line); }
+
+.cocard__soon {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--o-meta);
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   ẨN/HIỆN THEO HÌNH THỨC NHẬN HÀNG — KHÔNG JAVASCRIPT
+
+   `:has()` cho phép thẻ cha đọc trạng thái ô radio bên trong nó. Nhờ vậy khối
+   địa chỉ và khối chọn cơ sở tự đổi nhau mà không cần một dòng script.
+
+   Cả hai khối LUÔN nằm trong DOM và luôn được gửi lên — server tự bỏ qua phần
+   không dùng (xem OrderController::place). Ẩn bằng JS thì tắt JS là không đặt
+   được hàng; ẩn bằng CSS thì tệ nhất cũng chỉ là thấy cả hai khối.
+
+   Trình duyệt không hỗ trợ :has() (Firefox < 121) sẽ hiện CẢ HAI khối — xấu
+   nhưng vẫn đặt hàng được, và server vẫn kiểm đúng. Đó là lý do chọn cách này
+   thay vì `display:none` mặc định rồi bật lên.
+   ============================================================ */
+
+.copick__ship,
+.copick__store {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.copick__store { gap: 10px; }
+
+.copick:has(input[name="delivery_method"][value="pickup"]:checked) .copick__ship,
+.copick:has(input[name="delivery_method"][value="shipping"]:checked) .copick__store {
+    display: none;
+}
+
+.copick__none {
+    margin: 0;
+    font-size: 13px;
+    color: var(--danger);
+}
+
+/* ============================================================
+   DANH SÁCH SẢN PHẨM TRONG KHỐI TÓM TẮT
+   ============================================================ */
+
+.coitems {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.coitem {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.coitem__thumb {
+    display: grid;
+    place-items: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--surface-sunken);
+    flex-shrink: 0;
+}
+
+/* contain chứ không cover: gọng kính chụp trên nền trắng, cắt mép là mất càng */
+.coitem__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.coitem__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+
+.coitem__name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.coitem__meta {
+    font-size: 12px;
+    color: var(--o-note);
+}
+
+.coitem__price {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+/* ============================================================
+   THẺ CAM KẾT
+   ============================================================ */
+
+.cotrust {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 22px 26px;
+    border-radius: 24px;
+    background: var(--brand-subtle);
+    list-style: none;
+}
+
+.cotrust li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #6e4a42;
+}
+
+.cotrust svg { flex-shrink: 0; }
+
+/* ============================================================
+   MỐC GÃY
+   ============================================================ */
+
+@media (max-width: 1100px) {
+    .checkout {
+        max-width: none;
+        padding: 24px 16px 64px;
+    }
+
+    /* minmax(0,1fr) chứ không 1fr — ô của lưới mặc định là min-width:auto nên
+       không co xuống dưới bề rộng nội dung nhỏ nhất, và cả trang cuộn ngang. */
+    .cogrid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 20px;
+    }
+
+    /* Bỏ dính theo cuộn: khối tóm tắt nay nằm DƯỚI form, dính lại thì nó bám
+       đáy màn hình che mất phần cuối của form. */
+    .csum { position: static; }
+}
+
+@media (max-width: 640px) {
+    .costep { padding: 24px 20px; gap: 18px; }
+
+    .cofield__row,
+    .cocards--2 { grid-template-columns: 1fr; }
+
+    .cocard { padding: 16px 16px; }
+
+    .cohead__title { font-size: 26px; }
+}

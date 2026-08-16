@@ -1,3 +1,8 @@
+# Cấu hình có mật khẩu DB — mỗi máy một bản, không đưa lên git.
+# Bản mẫu không chứa giá trị thật là .env.example thì VẪN theo dõi.
+.env
+!.env.example
+
 screencapture*
 .DS_Store
 Thumbs.db
@@ -11,3 +16,12 @@ scripts/
 CLAUDE.local.md
 .claude/
 .codegraph/
+# Ảnh chụp giao diện để đưa sang Claude Design — sinh lại được, không cần theo dõi
+design-export/
+
+# Thư mục ghi của ứng dụng (bản nháp email, log) — không đưa lên git
+storage/
+
+# Ảnh khách tự tải lên (ảnh đại diện). Là dữ liệu của người dùng, không phải
+# mã nguồn — và .htaccess trong đó do core/AvatarStorage.php tự sinh lại.
+assets/uploads/avatars/

@@ -1,0 +1,427 @@
+/* ============================================================
+   ui.css — Nguyên thể giao diện dùng chung toàn site
+
+   Đây là những mẩu xuất hiện ở nhiều trang: nút, ô nhập, thông báo,
+   tiêu đề section, phân trang, sao đánh giá.
+
+   VÌ SAO TÁCH RA: trước đây .field nằm trong contact.css và .alert nằm
+   trong cart.css, nên trang thanh toán phải nạp cả hai file kia chỉ để
+   mượn hai mẩu ấy. master.php biến thành một mớ điều kiện chồng chéo,
+   và sửa CSS trang liên hệ có thể làm hỏng trang đặt hàng.
+
+   Quy tắc: mẩu nào dùng ở TỪ HAI TRANG trở lên thì đặt ở đây, không
+   để trong file của một trang cụ thể.
+
+   admin.css CỐ Ý khai lại vài mẩu trong này — khu quản trị không nạp
+   CSS của site nên phải tự đủ.
+   ============================================================ */
+
+/* ============================================================
+   TRỢ NĂNG
+   ============================================================ */
+
+/* Ẩn khỏi mắt nhưng trình đọc màn hình vẫn đọc được.
+   Không dùng display:none — cách đó ẩn khỏi CẢ trình đọc màn hình. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Vùng chạm tối thiểu 44×44 theo WCAG 2.5.5 */
+.tap-target {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+/* Link "bỏ qua điều hướng" — chỉ hiện khi focus bằng bàn phím */
+.skip-link {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 200;
+    padding: 10px 16px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: var(--fs-note);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transform: translateY(-200%);
+    transition: transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.skip-link:focus-visible { transform: translateY(0); }
+
+/* ============================================================
+   HIỆN DẦN KHI CUỘN
+   Cặp .reveal/.visible do đoạn script dùng chung ở cuối master.php gắn.
+   --d là độ trễ riêng của từng phần tử, đặt inline trong view.
+
+   MỌI LUẬT ẨN Ở ĐÂY ĐỀU PHẢI NẰM TRONG `.js`.
+   Chỉ có script mới gắn được .visible, nên nếu ẩn vô điều kiện thì trình
+   duyệt không chạy JS sẽ không bao giờ thấy 8 khối này — trang chủ mất
+   nguyên phần danh mục, trang giới thiệu mất phần mốc thời gian. Lớp .js
+   do <head> của master.php gắn, chạy trước khi trang vẽ.
+   ============================================================ */
+
+.js .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+        opacity   0.7s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)) var(--d, 0ms),
+        transform 0.7s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)) var(--d, 0ms);
+}
+
+.js .reveal.visible { opacity: 1; transform: none; }
+
+/* Người dùng đã tắt hiệu ứng: hiện thẳng, không chờ script */
+@media (prefers-reduced-motion: reduce) {
+    .js .reveal { opacity: 1; transform: none; transition: none; }
+}
+
+/* ============================================================
+   TIÊU ĐỀ SECTION
+   ============================================================ */
+
+.eyebrow {
+    font-size: var(--fs-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+
+.micro-label {
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--brand);
+}
+
+.section-h2 {
+    margin-top: 16px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    line-height: 1.16;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    text-wrap: balance;
+}
+
+.section-h2--narrow { max-width: 26ch; }
+
+/* Hàng tiêu đề có phần phụ bên phải (nút, điểm số) */
+.section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+/* ============================================================
+   NÚT
+   ============================================================ */
+
+.btn-primary,
+.btn-outline,
+.btn-secondary,
+.btn-ghost {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+/* Biến thể nằm trong dòng — bốn nút trên mặc định chiếm hết chiều ngang
+   vì dùng nhiều trong menu trượt và cột hẹp. */
+.btn-inline {
+    display: inline-flex;
+    width: auto;
+    gap: 8px;
+    padding-inline: 20px;
+    margin-top: 0;
+}
+
+.btn-lg { height: 48px; }
+
+.btn-primary {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-primary:focus-visible { background: var(--brand-strong); }
+
+.btn-primary:disabled {
+    background: var(--surface-sunken);
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+.btn-outline {
+    height: 44px;
+    border-color: var(--line-strong);
+    color: color-mix(in srgb, var(--ink) 75%, transparent);
+}
+
+.btn-outline:hover,
+.btn-outline:focus-visible { border-color: var(--brand); color: var(--brand); }
+
+.btn-secondary {
+    height: 44px;
+    padding-inline: 20px;
+    width: auto;
+    display: inline-flex;
+    border-color: var(--line-strong);
+    background: var(--surface-sunken);
+    color: var(--ink);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* Nút trên nền tối (hero, khối kêu gọi hành động) */
+.btn-ghost {
+    border-color: color-mix(in srgb, var(--on-ink) 40%, transparent);
+    color: var(--on-ink);
+}
+
+.btn-ghost:hover,
+.btn-ghost:focus-visible {
+    border-color: var(--on-ink);
+    background: var(--on-ink);
+    color: var(--ink);
+}
+
+/* ============================================================
+   THÔNG BÁO
+   ============================================================ */
+
+.alert {
+    padding: 12px 16px;
+    border-left: 3px solid;
+    font-size: var(--fs-body-sm);
+}
+
+.alert--ok {
+    border-color: var(--success);
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+    color: var(--ink);
+}
+
+.alert--err {
+    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 10%, transparent);
+    color: var(--ink);
+}
+
+/* ============================================================
+   Ô NHẬP LIỆU
+   ============================================================ */
+
+/* Lưới form hai cột, dùng ở liên hệ, thanh toán, tài khoản, đặt lịch */
+.form-grid {
+    display: grid;
+    gap: 16px;
+}
+
+@media (min-width: 601px) {
+    .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.field { min-width: 0; }
+.field--wide { grid-column: 1 / -1; }
+
+.field label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+
+.field__opt,
+.field__hint {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 400;
+}
+
+.field__hint {
+    display: block;
+    margin-top: 4px;
+    font-size: var(--fs-label);
+    color: var(--muted);
+}
+
+.field input,
+.field select,
+.field textarea {
+    width: 100%;
+    padding: 12px;
+    /* Viền ô nhập -> --line-strong (3.11:1) theo WCAG 1.4.11.
+       KHÔNG dùng --line: nó chỉ 1.73:1, người mắt kém không thấy ô ở đâu. */
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    color: var(--ink);
+}
+
+.field input,
+.field select { height: 48px; }
+
+.field textarea {
+    resize: vertical;
+    min-height: 96px;
+    line-height: 1.7;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+    background: var(--surface-focus);
+}
+
+/* Ô bị vô hiệu hoá — nền xám nói rõ "không sửa được ở đây" */
+.field input:disabled,
+.field select:disabled,
+.field textarea:disabled {
+    background: var(--surface-sunken);
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+/* Chỉ tô đỏ khi ô ĐÃ được chạm vào và sai.
+   :invalid sẽ tô đỏ ngay lúc trang vừa tải, khi khách còn chưa gõ gì. */
+.field input:user-invalid,
+.field textarea:user-invalid { border-color: var(--danger); }
+
+/* Ô số lượng — thẻ sản phẩm, giỏ hàng, chi tiết */
+.qty__input {
+    width: 88px;
+    height: 48px;
+    padding-inline: 12px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    font-weight: 600;
+    text-align: center;
+    color: var(--ink);
+}
+
+.qty__input:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+/* ============================================================
+   SAO ĐÁNH GIÁ
+   ============================================================ */
+
+.rating-stars { display: inline-flex; gap: 2px; }
+
+/* Kích thước do thuộc tính width/height của starIcon() đặt; class này
+   chỉ giữ sao không bị co lại khi hàng chật */
+.rating-star     { flex-shrink: 0; }
+.rating-star--on { color: var(--brand); }
+.rating-star--off{ color: var(--line-strong); }
+
+/* ============================================================
+   PHÂN TRANG
+   ============================================================ */
+
+.pager {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 40px;
+}
+
+.pager__link {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    height: 44px;
+    padding-inline: 12px;
+    border: 1px solid var(--line);
+    font-size: var(--fs-body-sm);
+    text-decoration: none;
+    color: var(--ink);
+    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+}
+
+.pager__link:hover,
+.pager__link:focus-visible { border-color: var(--brand); color: var(--brand); }
+
+.pager__link.is-current {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* ============================================================
+   TRẠNG THÁI RỖNG
+   ============================================================ */
+
+.plist__empty {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 56px 24px;
+    border: 1px dashed var(--line-strong);
+    text-align: center;
+    color: var(--muted);
+}
+
+.plist__empty strong {
+    font-size: var(--fs-body-lg);
+    color: var(--ink);
+}
+
+.plist__empty .btn-inline { margin-top: 12px; }
+
+/* ============================================================
+   KHỐI BỌC TRONG LƯỚI
+
+   min-width: 0 là bắt buộc cho con trực tiếp của grid/flex chứa nội dung
+   dài (tên sản phẩm, địa chỉ). Mặc định min-width là `auto`, nên một chuỗi
+   không ngắt được sẽ nong cột rộng ra và đẩy cả lưới tràn khỏi màn hình.
+   Đây là nguyên nhân phổ biến nhất của "trang bị trượt ngang".
+   ============================================================ */
+
+/* .mega__col không còn ở đây — nó về cùng nhà với phần còn lại của bảng xổ,
+   trong components/mega-menu.css. */
+.hproc__text,
+.lspot__text,
+.about-process__intro { min-width: 0; }

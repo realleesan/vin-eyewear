@@ -1,0 +1,165 @@
+/* ============================================================
+   page-head.css — Đầu trang nền hồng phấn
+
+   Đi kèm app/views/_layout/page-head.php. Dựng theo khối "PAGE HEAD" mà cả
+   "Vin Eyewear Category.dc.html" lẫn "Vin Eyewear Contact.dc.html" đều vẽ
+   giống hệt nhau — cùng kích thước, cùng màu, chỉ khác chữ.
+
+   Vì là component dùng chung, master.php nạp file này cho MỌI trang — đừng
+   chuyển ngược vào CSS của một trang cụ thể, trang khác dùng page-head sẽ
+   mất định dạng. (Đây chính là lý do trước đó nó nằm nhầm trong category.css
+   dưới tên .cathead: trang liên hệ cần đúng khối đó mà không nạp được.)
+
+   BA PHẦN RỜI NHAU. Breadcrumb, tiêu đề và mô tả là ba tham số độc lập của
+   app/views/_layout/page-head.php — trang nào cũng chỉ lấy phần mình cần.
+   Nên mọi khoảng cách ở đây phải do `gap` sinh ra, KHÔNG do margin của từng
+   phần: thiếu một phần thì khoảng trắng của nó phải biến mất theo.
+
+   Trang chỉ truyền breadcrumb (chi tiết sản phẩm) nhận thêm `.pagehead--bare`:
+   không nền, không bo, không lề — chỉ còn một hàng đường dẫn nằm gọn trong
+   khung của trang gọi nó.
+   ============================================================ */
+
+.pagehead {
+    margin: 8px 32px 0;
+    padding: 56px 72px 60px;
+    background: var(--brand-subtle);
+    border-radius: 36px;
+}
+
+.pagehead__inner {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.pagehead__crumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.pagehead__crumbs a {
+    color: var(--eyebrow);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.pagehead__crumbs a:hover,
+.pagehead__crumbs a:focus-visible { color: var(--brand); }
+
+.pagehead__sep { opacity: 0.5; }
+
+.pagehead__here {
+    color: var(--brand);
+    font-weight: 600;
+}
+
+/* Tiêu đề trái, mô tả phải, hai bên cùng chạm đáy — nên dòng cuối của đoạn
+   mô tả thẳng hàng với chân chữ của tiêu đề. */
+.pagehead__row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 48px;
+}
+
+/* 46px ở 1280px — to hơn tiêu đề khối của trang chủ (36px) một bậc rõ rệt,
+   vì đây là tiêu đề của cả trang. clamp neo qua 600px → 1280px giống
+   .hero__title: 13.2 + 0.0256×1280 = 46.0. */
+.pagehead__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: clamp(28px, calc(13.2px + 2.56vw), 46px);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: normal;
+    color: var(--ink);
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+}
+
+/* Cột trái của bản bài viết: nhãn phân loại + tiêu đề. Các trang khác không
+   truyền $head_badge nên khối này chỉ bọc thêm một lớp quanh <h1>, không đổi
+   gì về hình ảnh. */
+.pagehead__main {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    max-width: 640px;
+}
+
+.pagehead__badge {
+    align-self: flex-start;
+    padding: 7px 16px;
+    border-radius: 999px;
+    background: var(--surface-raised);
+    color: var(--brand);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+/* Bản bài viết thu tiêu đề còn 44px và bó cột trái ở 640px — bài viết có tiêu
+   đề dài hơn tên một trang, để 46px tràn hết bề ngang thì nó nuốt cả chỗ của
+   đoạn mô tả bên phải. */
+.pagehead--article .pagehead__title {
+    font-size: clamp(26px, calc(12.4px + 2.47vw), 44px);
+    line-height: 1.15;
+}
+
+.pagehead--article .pagehead__lead { max-width: 380px; }
+
+.pagehead__lead {
+    margin: 0;
+    max-width: 420px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+/* --- Chỉ có breadcrumb ---------------------------------------
+   Trang chi tiết sản phẩm không truyền tiêu đề (tên sản phẩm đã là <h1> của
+   nó) nên không còn gì để khối nền hồng bọc. Bỏ nền và bỏ lề ngang: khối này
+   nằm BÊN TRONG khung của trang gọi nó (`.pd` có sẵn đệm 56px), tự thụt vào
+   lần nữa là lệch hẳn so với thư viện ảnh ngay dưới. */
+.pagehead--bare {
+    margin: 0;
+    padding: 8px 6px 24px;
+    background: none;
+    border-radius: 0;
+}
+
+.pagehead--bare .pagehead__inner { max-width: none; }
+
+/* Hai truy vấn dưới đây chỉ chỉnh khối CÓ nền. `:not(--bare)` là bắt buộc:
+   chúng đứng sau trong file mà cùng độ đặc hiệu, không loại trừ thì bản chỉ
+   có breadcrumb bị trả lại đệm 44px và lề 16px của khối nền. */
+@media (max-width: 1024px) {
+    .pagehead:not(.pagehead--bare) { padding: 44px 40px 48px; }
+
+    .pagehead__row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .pagehead__lead { max-width: none; }
+}
+
+@media (max-width: 720px) {
+    .pagehead:not(.pagehead--bare) {
+        margin: 8px 16px 0;
+        padding: 32px 24px 36px;
+        border-radius: 28px;
+    }
+}

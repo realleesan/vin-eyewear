@@ -1,220 +1,35 @@
 <?php
+
 /**
- * home/index.php
- * Trang chủ dựng theo layout Moscot (xem screencapture-moscot-*.png).
+ * home/index.php — trang chủ.
  *
- * Biến nhận từ HomeController::index():
- *   $hero, $bestseller, $tiles, $optical, $booking, $visit
- *   (các biến $feature, $heritage, $tints, $craftsmanship, $stories vẫn
- *    được controller cấp nhưng section tương ứng đã gỡ khỏi trang chủ.)
+ * Dựng đúng theo "Vin Eyewear Home.dc.html" (Claude Design), CHỈ tám khối
+ * của bản thiết kế, theo đúng thứ tự của nó:
  *
- * Thẻ sản phẩm ở trang chủ dùng CHUNG component _layout/product-card.php với
- * trang /product — cùng khung, badge, overlay Quick Shop, hiệu ứng hover và
- * nét kẻ lưới 2px. Trước đây trang chủ có component riêng .frame-card (chữ căn
- * giữa, hàng chấm màu), nay đã gỡ để 2 trang không lệch nhau.
+ *   hero → danh mục → bán chạy → chọn theo khuôn mặt → cắt lắp tròng
+ *   → đo mắt → đánh giá → kêu gọi hành động
  *
- * Thứ tự section: hero -> dải cam kết (commitments) -> best seller
- * -> tiles -> optical -> khách hàng nói gì (testimonials) -> booking
- * (đo mắt & thử kính) -> ghé cửa hàng (visit) -> join (footer).
+ * Khối "số liệu" (_layout/home/authority.php) đã gỡ khỏi đây: bản thiết kế
+ * không có nó. File partial và CSS của nó vẫn còn nhưng không được include.
+ *
+ * Header và footer KHÔNG nằm trong phạm vi trang này — chúng là partial dùng
+ * chung cho mọi trang (_layout/header.php, _layout/footer.php) và đã sẵn đúng
+ * dáng của bản thiết kế.
  */
-
-$show_breadcrumb = false;
-$show_page_header = false;
-$show_cta = false;
-$show_pusher = true;
-
-/** Render icon SVG cho huy hiệu cam kết (Booking) theo khóa 'icon' */
-$renderCommitIcon = static function (string $key): void {
-    $icons = [
-        'seal'   => '<circle cx="12" cy="9.5" r="6"/><path d="M9.6 9.5l1.7 1.7 3.1-3.3"/><path d="M8 14.2l-1.4 6 5.4-2.9 5.4 2.9-1.4-6"/>',
-        'uv'     => '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/>',
-        'shield' => '<path d="M12 3l7 2.6v5.1c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V5.6z"/><path d="M9 12l2 2 4-4.2"/>',
-        'return' => '<path d="M4.5 9.5a8 8 0 0 1 13-2.6L20 9"/><path d="M20 4.5V9h-4.5"/><path d="M19.5 14.5a8 8 0 0 1-13 2.6L4 15"/><path d="M4 19.5V15h4.5"/>',
-    ];
-    echo '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' . ($icons[$key] ?? '') . '</svg>';
-};
 ?>
 
-<!-- ============================================================
-     SECTION 1 — HERO (slider: ảnh full-bleed + text đè + bullets)
-     Slide fade bằng .is-active, JS ở home.js (autoplay + bullets).
-     ============================================================ -->
-<section class="hero" aria-label="Bộ sưu tập nổi bật">
-    <?php foreach ($hero['slides'] as $i => $slide): ?>
-    <div class="hero__slide<?= $i === 0 ? ' is-active' : '' ?>">
-        <img
-            class="hero__img"
-            src="<?= htmlspecialchars($slide['image']) ?>"
-            alt="<?= htmlspecialchars($slide['alt']) ?>"
-            <?= $i > 0 ? 'loading="lazy"' : '' ?>
-        >
-        <div class="hero__content">
-            <h2 class="hero__title"><?= htmlspecialchars($slide['title']) ?></h2>
-            <p class="hero__subtitle"><?= htmlspecialchars($slide['subtitle']) ?></p>
-            <a href="<?= htmlspecialchars($slide['cta']['link']) ?>" class="btn-yellow hero__cta"><?= htmlspecialchars($slide['cta']['label']) ?></a>
-        </div>
-    </div>
-    <?php endforeach; ?>
+<?php partial('_layout/home/hero'); ?>
 
-    <!-- Pagination bullets: bam de nhay slide -->
-    <div class="hero__dots">
-        <?php foreach ($hero['slides'] as $i => $slide): ?>
-        <button
-            type="button"
-            class="hero__dot<?= $i === 0 ? ' is-active' : '' ?>"
-            aria-label="Chuyển đến slide <?= $i + 1 ?>: <?= htmlspecialchars($slide['title']) ?>"
-        ></button>
-        <?php endforeach; ?>
-    </div>
-</section>
+<?php partial('_layout/home/categories', ['categories' => $categories]); ?>
 
-<!-- ============================================================
-     SECTION 2 — DẢI CAM KẾT (ngay dưới hero)
-     ============================================================ -->
-<section class="commitments reveal">
-    <ul class="commit-list" role="list">
-        <?php foreach ($booking['commitments'] as $c): ?>
-        <li class="commit">
-            <span class="commit__icon"><?php $renderCommitIcon($c['icon']); ?></span>
-            <span class="commit__label"><?= htmlspecialchars($c['label']) ?></span>
-        </li>
-        <?php endforeach; ?>
-    </ul>
-</section>
+<?php partial('_layout/home/best-sellers', ['products' => $bestSellers]); ?>
 
-<!-- ============================================================
-     SECTION 3 — BEST SELLER (carousel sản phẩm bán chạy)
-     ============================================================ -->
-<section class="bestseller reveal">
-    <h2 class="section-heading">
-        <img class="section-heading__icon" src="<?= htmlspecialchars($bestseller['icon']) ?>" alt="" loading="lazy">
-        <span><?= htmlspecialchars($bestseller['title']) ?></span>
-    </h2>
+<?php partial('_layout/home/style-guide'); ?>
 
-    <p class="section-desc"><?= htmlspecialchars($bestseller['desc']) ?></p>
+<?php partial('_layout/home/lenses'); ?>
 
-    <div class="carousel">
-        <button type="button" class="carousel__btn carousel__btn--prev" data-dir="prev" aria-label="Sản phẩm trước">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M20 12H5"/><path d="M11 6l-6 6 6 6"/>
-            </svg>
-        </button>
+<?php partial('_layout/home/eye-exam'); ?>
 
-        <div class="frame-track" id="bestsellerTrack">
-            <?php foreach ($bestseller['products'] as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
-        </div>
+<?php partial('_layout/home/reviews'); ?>
 
-        <button type="button" class="carousel__btn carousel__btn--next" data-dir="next" aria-label="Sản phẩm sau">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M4 12h15"/><path d="M13 6l6 6-6 6"/>
-            </svg>
-        </button>
-    </div>
-
-    <div class="section-cta">
-        <a href="/product" class="btn-yellow">Xem tất cả gọng</a>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 4 — 2 TILE DANH MỤC (Kính cận / Kính thời trang)
-     ============================================================ -->
-<section class="tiles reveal">
-    <?php foreach ($tiles as $tile): ?>
-    <a href="<?= htmlspecialchars($tile['link']) ?>" class="tile">
-        <img class="tile__img" src="<?= htmlspecialchars($tile['image']) ?>" alt="<?= htmlspecialchars($tile['title']) ?>" loading="lazy">
-        <div class="tile__body">
-            <h3 class="tile__title"><?= htmlspecialchars($tile['title']) ?></h3>
-            <span class="btn-yellow tile__btn">Xem bộ sưu tập</span>
-        </div>
-    </a>
-    <?php endforeach; ?>
-</section>
-
-<!-- ============================================================
-     SECTION 5 — THE OPTICAL SHOP (thương hiệu + lưới sản phẩm)
-     ============================================================ -->
-<section class="optical reveal">
-    <h2 class="section-heading">
-        <span><?= htmlspecialchars($optical['title']) ?></span>
-        <img class="section-heading__icon" src="<?= htmlspecialchars($optical['icon']) ?>" alt="" loading="lazy">
-    </h2>
-
-    <?php foreach ($optical['desc'] as $para): ?>
-    <p class="section-desc"><?= htmlspecialchars($para) ?></p>
-    <?php endforeach; ?>
-
-    <div class="product-grid">
-        <?php foreach ($optical['products'] as $card): require VIEWS_PATH . '/_layout/product-card.php'; endforeach; ?>
-    </div>
-
-    <div class="section-cta">
-        <a href="/product" class="btn-yellow">Xem tất cả gọng</a>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 6 — KHÁCH HÀNG NÓI GÌ (cảm nhận khách hàng)
-     ============================================================ -->
-<section class="testimonials reveal">
-    <h2 class="section-heading"><span><?= htmlspecialchars($booking['reviewsTitle']) ?></span></h2>
-
-    <div class="reviews">
-        <?php foreach ($booking['reviews'] as $r):
-            // Lay chu cai dau cua ten cuoi (an toan UTF-8, khong can ext mbstring)
-            $parts   = preg_split('/\s+/u', trim($r['name']));
-            $last    = (string) end($parts);
-            $initial = strtoupper(preg_match('/^./u', $last, $m) ? $m[0] : substr($last, 0, 1));
-        ?>
-        <figure class="review">
-            <div class="review__stars" aria-label="<?= (int) $r['rating'] ?> trên 5 sao"><?= str_repeat('&#9733;', (int) $r['rating']) ?></div>
-            <blockquote class="review__quote"><?= htmlspecialchars($r['quote']) ?></blockquote>
-            <figcaption class="review__author">
-                <span class="review__avatar" aria-hidden="true"><?= htmlspecialchars($initial) ?></span>
-                <span class="review__name"><?= htmlspecialchars($r['name']) ?></span>
-            </figcaption>
-        </figure>
-        <?php endforeach; ?>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 7 — BOOKING / ĐO MẮT & THỬ KÍNH (CTA -> /contact)
-     ============================================================ -->
-<section class="booking reveal">
-    <div class="booking-visit">
-        <div class="booking-visit__info">
-            <span class="booking-visit__label"><?= htmlspecialchars($booking['visit']['label']) ?></span>
-            <h2 class="booking-visit__title"><?= htmlspecialchars($booking['visit']['title']) ?></h2>
-            <p class="booking-visit__desc"><?= htmlspecialchars($booking['visit']['desc']) ?></p>
-            <a href="<?= htmlspecialchars($booking['visit']['cta']['link']) ?>" class="btn-yellow"><?= htmlspecialchars($booking['visit']['cta']['label']) ?></a>
-        </div>
-        <div class="booking-visit__media">
-            <img src="<?= htmlspecialchars($booking['visit']['image']) ?>" alt="Đo mắt và thử kính tại cửa hàng Vin Eyewear" loading="lazy">
-        </div>
-    </div>
-</section>
-
-<!-- ============================================================
-     SECTION 8 — VISIT US IN SHOP
-     ============================================================ -->
-<section class="visit reveal">
-    <div class="visit__info">
-        <h2 class="visit__title"><?= htmlspecialchars($visit['title']) ?></h2>
-        <p class="visit__desc"><?= htmlspecialchars($visit['desc']) ?></p>
-        <div class="visit__ctas">
-            <?php foreach ($visit['ctas'] as $cta): ?>
-            <a
-                href="<?= htmlspecialchars($cta['link']) ?>"
-                class="<?= $cta['style'] === 'yellow' ? 'btn-yellow' : 'btn-black' ?>"
-            ><?= htmlspecialchars($cta['label']) ?></a>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <div class="visit__media">
-        <img src="<?= htmlspecialchars($visit['image']) ?>" alt="Cửa hàng Vin Eyewear" loading="lazy">
-    </div>
-</section>
-
-<!-- SECTION 9 — JOIN THE FAMILY: nằm trong _layout/footer.php
-     (dải đen trên footer, hiện ở mọi trang — giống Moscot) -->
+<?php partial('_layout/home/cta'); ?>

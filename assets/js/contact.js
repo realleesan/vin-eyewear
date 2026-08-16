@@ -1,201 +1,67 @@
 /**
- * Vin Eyewear - Contact Page JavaScript
- * Handles interactive store location map switching and client-side form validation.
+ * contact.js — đổi cơ sở trên bản đồ mà không tải lại trang.
+ *
+ * LÀ TĂNG CƯỜNG, KHÔNG PHẢI ĐIỀU KIỆN ĐỂ TRANG CHẠY. Mỗi thẻ cơ sở là một
+ * <a href="?cs=MÃ"> thật; tắt JavaScript thì bấm vào vẫn đổi được bản đồ, chỉ
+ * là qua một lượt tải trang. File này bắt cú bấm đó lại và đổi ngay tại chỗ,
+ * giống hệt hành vi trong bản thiết kế.
+ *
+ * Mọi dữ liệu cần thiết đã nằm sẵn trong thuộc tính data-* của từng thẻ, nên
+ * không phải gọi mạng lần nào.
  */
-document.addEventListener('DOMContentLoaded', function() {
+
+(function () {
     'use strict';
 
-    /* ============================================================
-       1. INTERACTIVE STORE MAP LOCATOR
-       ============================================================ */
-    var storeCards = document.querySelectorAll('.store-card');
-    var mapContainers = document.querySelectorAll('.map-container');
+    var list  = document.querySelector('.cstores__list');
+    var frame = document.getElementById('storeMap');
 
-    if (storeCards.length && mapContainers.length) {
-        /**
-         * Activate the selected store and display its respective map iframe.
-         * @param {string} storeId The ID of the store (e.g. 'long-bien', 'tay-ho')
-         */
-        var activateStore = function(storeId) {
-            // Remove active state from all store cards
-            storeCards.forEach(function(card) {
-                card.classList.remove('active');
-            });
+    if (!list || !frame) return;
 
-            // Remove active state from all map containers
-            mapContainers.forEach(function(map) {
-                map.classList.remove('active');
-            });
+    var card = {
+        name:    document.querySelector('[data-map-name]'),
+        address: document.querySelector('[data-map-address]'),
+        link:    document.querySelector('[data-map-link]'),
+    };
 
-            // Add active state to the current store card
-            var targetCard = document.querySelector('.store-card[data-store-id="' + storeId + '"]');
-            if (targetCard) {
-                targetCard.classList.add('active');
-            }
+    if (!card.name || !card.address || !card.link) return;
 
-            // Add active state to the corresponding map viewport container
-            var targetMap = document.getElementById('map-' + storeId);
-            if (targetMap) {
-                targetMap.classList.add('active');
-            }
-        };
+    list.addEventListener('click', function (event) {
+        var store = event.target.closest('.cstore');
 
-        // Bind event listeners to each store card
-        storeCards.forEach(function(card) {
-            var storeId = card.getAttribute('data-store-id');
-            if (!storeId) return;
+        if (!store || !list.contains(store)) return;
 
-            // Mouse click activation
-            card.addEventListener('click', function() {
-                activateStore(storeId);
-            });
+        // Ctrl/Cmd/giữa chuột = người dùng cố ý mở tab mới -> để trình duyệt lo
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
 
-            // Accessibility activation via Enter or Space when focused
-            card.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault(); // Prevent browser scrolling on Spacebar keypress
-                    activateStore(storeId);
-                }
-            });
-        });
-    }
+        event.preventDefault();
 
-    /* ============================================================
-       2. CLIENT-SIDE FORM VALIDATION
-       ============================================================ */
-    var form = document.querySelector('.vin-form');
-    if (form) {
-        var nameInput = document.getElementById('name');
-        var emailInput = document.getElementById('email');
-        var phoneInput = document.getElementById('phone');
-        var messageInput = document.getElementById('message');
+        // Đang xem sẵn rồi thì không làm gì — tránh nạp lại iframe vô ích
+        if (store.classList.contains('is-on')) return;
 
-        form.addEventListener('submit', function(event) {
-            var isValid = true;
-            clearErrors();
-
-            // 1. Validate Họ Tên (Bắt buộc & chỉ chứa chữ cái + khoảng trắng)
-            var nameVal = nameInput.value.trim();
-            var nameRegex = /^[\p{L}\s]+$/u;
-            if (!nameVal) {
-                showError(nameInput, 'Vui lòng nhập họ và tên của bạn.');
-                isValid = false;
-            } else if (!nameRegex.test(nameVal)) {
-                showError(nameInput, 'Họ và tên chỉ được chứa chữ cái và khoảng trắng, không chứa số hoặc ký tự đặc biệt.');
-                isValid = false;
-            }
-
-            // 2. Validate Email (Bắt buộc & Chuẩn quốc tế)
-            var emailVal = emailInput.value.trim();
-            var emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            if (!emailVal) {
-                showError(emailInput, 'Vui lòng nhập địa chỉ email của bạn.');
-                isValid = false;
-            } else if (!emailRegex.test(emailVal)) {
-                showError(emailInput, 'Địa chỉ email không đúng định dạng quốc tế.');
-                isValid = false;
-            }
-
-            // 3. Validate Số điện thoại (Bắt buộc & Chuẩn VN)
-            var phoneVal = phoneInput.value.trim();
-            var phoneRegex = /^(0|\+84)\d{9}$/;
-            if (!phoneVal) {
-                showError(phoneInput, 'Vui lòng nhập số điện thoại liên hệ.');
-                isValid = false;
-            } else if (!phoneRegex.test(phoneVal)) {
-                showError(phoneInput, 'Số điện thoại Việt Nam phải có đúng 10 số và bắt đầu bằng số 0 hoặc +84.');
-                isValid = false;
-            }
-
-            // 4. Validate Nội dung (Bắt buộc)
-            if (!messageInput.value.trim()) {
-                showError(messageInput, 'Vui lòng nhập nội dung yêu cầu tư vấn.');
-                isValid = false;
-            }
-
-            // Ngăn gửi form nếu có lỗi
-            if (!isValid) {
-                event.preventDefault();
-                // Cuộn tới lỗi đầu tiên
-                var firstError = form.querySelector('.form-group.has-error');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            } else {
-                // Chặn submit thực tế do đang ở Phase 1.5 và hiển thị popup thành công
-                event.preventDefault();
-                showSuccessModal(nameInput.value.trim());
-                form.reset();
-            }
+        list.querySelectorAll('.cstore').forEach(function (el) {
+            el.classList.remove('is-on');
+            el.removeAttribute('aria-current');
         });
 
-        /**
-         * Hiển thị lỗi dưới input
-         */
-        function showError(inputElement, errorMessage) {
-            var formGroup = inputElement.closest('.form-group');
-            if (formGroup) {
-                formGroup.classList.add('has-error');
-                
-                var errorSpan = document.createElement('span');
-                errorSpan.className = 'error-message';
-                errorSpan.textContent = errorMessage;
-                formGroup.appendChild(errorSpan);
-            }
+        store.classList.add('is-on');
+        store.setAttribute('aria-current', 'true');
+
+        var name = store.getAttribute('data-name');
+
+        frame.src = store.getAttribute('data-map');
+        frame.title = 'Bản đồ ' + name;
+
+        card.name.textContent    = name;
+        card.address.textContent = store.getAttribute('data-address');
+        card.link.href           = store.getAttribute('data-directions');
+
+        // Địa chỉ trên thanh URL đi theo nội dung đang xem, để sao chép gửi
+        // cho người khác vẫn ra đúng cơ sở này. replaceState chứ không
+        // pushState: chọn qua lại giữa hai cơ sở không đáng để nút Back phải
+        // lùi từng bước một.
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', store.getAttribute('href'));
         }
-
-        /**
-         * Xóa toàn bộ thông báo lỗi cũ
-         */
-        function clearErrors() {
-            var errorGroups = form.querySelectorAll('.form-group.has-error');
-            errorGroups.forEach(function(group) {
-                group.classList.remove('has-error');
-                var errorMsgs = group.querySelectorAll('.error-message');
-                errorMsgs.forEach(function(msg) {
-                    msg.remove();
-                });
-            });
-        }
-
-        /**
-         * Hiển thị Modal thông báo gửi thành công chuẩn phong cách Vin Eyewear
-         */
-        function showSuccessModal(clientName) {
-            // Tạo background overlay
-            var overlay = document.createElement('div');
-            overlay.className = 'success-modal-overlay';
-            
-            // Nội dung modal
-            overlay.innerHTML = `
-                <div class="success-modal-content">
-                    <div class="success-modal-header">GỬI YÊU CẦU THÀNH CÔNG</div>
-                    <div class="success-modal-body">
-                        <p>Cảm ơn <strong>${clientName}</strong> đã liên hệ với <strong>Vin Eyewear</strong>.</p>
-                        <p>Thông tin của bạn đã được hệ thống ghi nhận. Chúng tôi sẽ phản hồi lại qua Email hoặc Số điện thoại trong vòng 24 giờ tới.</p>
-                    </div>
-                    <div class="success-modal-footer">
-                        <button type="button" class="btn success-modal-close-btn">ĐỒNG Ý</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(overlay);
-            // Disable scroll
-            document.body.style.overflow = 'hidden';
-
-            var closeModal = function() {
-                overlay.remove();
-                document.body.style.overflow = '';
-            };
-
-            // Sự kiện đóng modal
-            overlay.querySelector('.success-modal-close-btn').addEventListener('click', closeModal);
-            overlay.addEventListener('click', function(e) {
-                if (e.target === overlay) {
-                    closeModal();
-                }
-            });
-        }
-    }
-});
+    });
+})();

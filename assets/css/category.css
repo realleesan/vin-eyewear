@@ -1,192 +1,773 @@
-/* ============================================
-   VIN EYEWEAR - CATEGORY PAGE STYLES
-   Heritage-meets-Downtown-Cool Design System
-   12-Column Fixed Grid Layout
-   ============================================ */
+/* ============================================================
+   category.css — trang danh sách sản phẩm (/san-pham)
 
-/* Category Section */
-.category-section {
-    padding: var(--space-30) 0;
-    background-color: var(--white);
+   Dựng theo "Vin Eyewear Category.dc.html" (Claude Design):
+
+     đầu trang nền hồng phấn (breadcrumb · tiêu đề · mô tả)
+     → hai cột: cột lọc 280px dính theo cuộn | lưới sản phẩm 3 cột
+
+   Markup: app/views/product/index.php · app/views/_layout/product-tile.php
+
+   CỠ CHỮ ghi thẳng bằng px, không qua thang --fs-*, cùng lý do đã ghi ở đầu
+   cụm trang chủ trong components/home-sections.css: thang --fs-* là clamp()
+   nên ở 1280px nó lệch 1–5px so với từng con số của bản thiết kế, và bản
+   thiết kế dùng nhiều cỡ nửa pixel (11.5 · 12.5 · 13.5) mà thang không có.
+
+   MÀU gọi qua token (--brand, --ink, --surface…) vì các token đó đã mang đúng
+   giá trị của bản thiết kế — xem layout.css.
+
+   Bản thiết kế là khung cứng 1280px (`min-width:1280px`). Site này chạy từ
+   điện thoại lên, nên có thêm mốc gãy: 1100px cột lọc thành khối gập được nằm
+   trên lưới, 900px lưới còn 2 cột, 560px còn 1 cột.
+   ============================================================ */
+
+.catbody {
+    /* Nền chờ phía sau ảnh sản phẩm, thấy được lúc ảnh chưa tải xong */
+    --c-shell:   #f5efe7;
+
+    /* Chữ phụ tông ấm — nhạt hơn --muted, đúng sắc của bản thiết kế */
+    --c-eyebrow: var(--eyebrow);
+    --c-note:    #9a877f;
+    --c-meta:    #b0a094;
+
+    /* Chữ trên nền trắng của cột lọc — đậm hơn --muted một nấc */
+    --c-item:    #4a3b38;
+
+    /* Đường kẻ trong cột lọc: nhạt hơn --line, chỉ để chia nhóm */
+    --c-rule:    #f0e4d8;
+
+    /* Viền ô chưa chọn (ô tick, nút tròn) — đậm hơn --line để nhìn ra ranh giới */
+    --c-box:     #d8c7ba;
+
+    --c-shadow:  0 2px 12px rgba(90, 40, 40, 0.06);
+
+    /* Bề ngang và lề của thân trang — 1392px chứ không phải 1280px như các
+       khối trang chủ: bản thiết kế nới riêng khối này ra vì nó phải chứa THÊM
+       cột lọc 280px bên trái. Trừ lề 56px hai bên và khoảng cách 32px giữa
+       hai cột thì lưới sản phẩm còn đúng 968px — vừa ba thẻ 309px. */
+    max-width: 1392px;
+    margin: 0 auto;
+    padding: 40px 56px 96px;
 }
 
-/* Category Layout with Sidebar */
-.category-layout {
+/* ĐẦU TRANG (.cathead*) ĐÃ CHUYỂN ĐI — nay là component dùng chung
+   assets/css/components/page-head.css + app/views/_layout/page-head.php,
+   mang tên .pagehead*. Lý do: "Vin Eyewear Contact.dc.html" vẽ khối đầu
+   trang GIỐNG HỆT bản danh mục tới từng con số, mà category.css chỉ được
+   nạp cho trang /san-pham nên trang liên hệ không với tới được. */
+
+/* ============================================================
+   THÂN TRANG — khung hai cột
+   ============================================================ */
+
+.catbody__grid {
     display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: var(--space-12);
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 32px;
+    /* start chứ không phải stretch: cột lọc phải cao đúng bằng nội dung của
+       nó thì position:sticky mới có chỗ mà trượt. Kéo cao bằng cột kết quả
+       là nó dính chặt tại chỗ. */
     align-items: start;
 }
 
-/* Products Grid - 12-Column Fixed Grid */
-.category-main {
-    flex: 1;
+@media (max-width: 1100px) {
+    .catbody {
+        max-width: none;
+        padding: 24px 16px 64px;
+    }
+
+    .catbody__grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
 }
 
-.products-grid {
+/* ============================================================
+   CỘT LỌC
+   ============================================================ */
+
+.cfilter {
+    background: var(--surface-raised);
+    border-radius: 28px;
+    box-shadow: var(--c-shadow);
+    /* 88px = chiều cao header (76px) + 12px thở.
+       Bản thiết kế ghi top:24px vì header của nó KHÔNG dính theo cuộn. Header
+       của site này thì có, nên 24px sẽ đẩy cột lọc chui xuống dưới header. */
+    position: sticky;
+    top: 88px;
+}
+
+/* --- Nút thu gọn (chỉ dưới 1101px) --- */
+
+.cfilter__toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+}
+
+.cfilter__toggle::-webkit-details-marker { display: none; }
+
+.cfilter__count {
     display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: var(--space-6);
+    place-items: center;
+    min-width: 20px;
+    height: 20px;
+    padding-inline: 6px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 11px;
+    font-weight: 600;
 }
 
-/* Product Card - Spans 4 columns (3 products per row) */
-.product-card {
-    background-color: var(--white);
-    border: 1px solid var(--black);
-    grid-column: span 4;
+.cfilter__panel {
     display: flex;
     flex-direction: column;
-    transition: all 0.3s ease;
+    gap: 8px;
+    padding: 28px 26px;
 }
 
-.product-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+@media (min-width: 1101px) {
+    .cfilter__toggle { display: none; }
+
+    /*
+     * Ẩn <summary> KHÔNG làm <details> mở ra: thiếu thuộc tính `open` thì
+     * trình duyệt vẫn giấu nội dung qua
+     * `::details-content { content-visibility: hidden }`. Không có hai dòng
+     * dưới, desktop mất sạch cột lọc mà cũng không còn nút nào để mở lại.
+     */
+    .cfilter::details-content { content-visibility: visible; }
+
+    /* Trình duyệt chưa hỗ trợ ::details-content — nội dung bị UA đặt display:none */
+    .cfilter:not([open]) > .cfilter__panel { display: flex; }
 }
 
-.product-image {
-    position: relative;
+@media (max-width: 1100px) {
+    .cfilter {
+        position: static;
+        border: 1px solid var(--line);
+    }
+
+    .cfilter__panel { padding: 4px 20px 20px; }
+}
+
+/* --- Hàng đầu: "Bộ lọc" + "Xoá tất cả" --- */
+
+.cfilter__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--c-rule);
+}
+
+.cfilter__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.cfilter__clear {
+    padding: 4px 0;
+    font-size: 12.5px;
+    color: var(--c-eyebrow);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+
+.cfilter__clear:hover,
+.cfilter__clear:focus-visible { color: var(--brand); }
+
+/* Chưa lọc gì — vẫn chiếm chỗ để hàng tiêu đề không nhảy, nhưng mờ đi cho
+   thấy rõ là chưa có gì để xoá. */
+.cfilter__clear.is-off {
+    opacity: 0.4;
+    cursor: default;
+}
+
+/* --- Một nhóm lọc --- */
+
+.pfacet {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 0 20px;
+    border-bottom: 1px solid var(--c-rule);
+}
+
+/* Nhóm cuối không kẻ đáy: đường kẻ ở đó chỉ nằm lơ lửng trên khoảng trống
+   giữa nó và mép dưới của thẻ. */
+.pfacet:last-child {
+    padding-bottom: 6px;
+    border-bottom: 0;
+}
+
+.pfacet__legend {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-eyebrow);
+}
+
+.pfacet__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* Hai nhóm dạng danh sách (thương hiệu, khoảng giá) xếp dòng sát nhau hơn
+   nhóm huy hiệu, nên tự khai gap riêng thay vì 12px của .pfacet. */
+.pfacet__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* Danh sách thương hiệu có thể dài hơn cả cột lọc — cắt ở 186px (khoảng 6
+   dòng) rồi cho cuộn trong chính nó, đúng như bản thiết kế. */
+.pfacet:has(.pfacet__search) .pfacet__list {
+    max-height: 186px;
+    overflow-y: auto;
+}
+
+.pfacet__none {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--c-note);
+}
+
+/* --- Ô tìm thương hiệu --- */
+
+.pfacet__search {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.pfacet__input {
     width: 100%;
-    aspect-ratio: 4/5;
-    overflow: hidden;
-    border-bottom: 1px solid var(--black);
+    min-width: 0;
+    padding: 9px 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink);
 }
 
-.product-image img {
+.pfacet__input:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+/* Nút gửi của ô tìm thương hiệu. Có JavaScript thì catalog.js lọc ngay tại
+   chỗ và ẩn nút này đi; không có JS thì đây là cách duy nhất để lọc, nên
+   không được xoá khỏi markup. */
+.pfacet__go {
+    flex: none;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    color: var(--c-item);
+    cursor: pointer;
+}
+
+.js .pfacet__go { display: none; }
+
+/* --- Huy hiệu lọc --- */
+
+.pchip {
+    /* Giá trị lọc cũng do người nhập hàng gõ ("Nhựa acetate chống xước"),
+       nên huy hiệu phải biết tự bẻ dòng thay vì chọc ra khỏi cột lọc. */
+    max-width: 100%;
+    padding: 8px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    font-size: 13px;
+    color: var(--c-item);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+}
+
+.pchip:hover,
+.pchip:focus-visible {
+    border-color: var(--brand);
+    color: var(--c-item);
+}
+
+.pchip.is-on {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.pchip.is-on:hover,
+.pchip.is-on:focus-visible {
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+    color: var(--on-brand);
+}
+
+/* --- Dòng có ô tick (thương hiệu) --- */
+
+.pcheck {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 6px 0;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.pcheck__box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--c-box);
+    border-radius: 6px;
+    background: var(--surface-raised);
+    font-size: 11px;
+    line-height: 1;
+    color: transparent;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.pcheck.is-on .pcheck__box {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.pcheck:hover .pcheck__box,
+.pcheck:focus-visible .pcheck__box { border-color: var(--brand); }
+
+/* Tên thương hiệu dài cắt bằng dấu ba chấm chứ không xuống dòng: cột lọc
+   chỉ rộng 280px, để nó xuống dòng thì ô tick và số lượng lệch nhau. */
+.pcheck__label {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--c-item);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pcheck__count {
+    flex: none;
+    font-size: 12px;
+    color: var(--c-meta);
+}
+
+/* --- Dòng có nút tròn (khoảng giá) --- */
+
+.pradio {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 6px 0;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Chấm đặc dựng bằng chính viền: viền dày 5px trên hình tròn 16px chỉ chừa
+   lại một lõi trắng 6px ở giữa. Một phần tử, không cần ::after. */
+.pradio__dot {
+    flex-shrink: 0;
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--c-box);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    transition: border-color 0.2s, border-width 0.2s;
+}
+
+.pradio.is-on .pradio__dot {
+    border: 5px solid var(--brand);
+}
+
+.pradio:hover .pradio__dot,
+.pradio:focus-visible .pradio__dot { border-color: var(--brand); }
+
+.pradio__label {
+    font-size: 14px;
+    color: var(--c-item);
+}
+
+/* ============================================================
+   CỘT KẾT QUẢ
+   ============================================================ */
+
+.catmain {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* --- Thanh trên: số kết quả + ô sắp xếp --- */
+
+.catbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+}
+
+.catbar__count {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.catbar__count strong { color: var(--ink); }
+
+.catbar__drop {
+    margin-left: 4px;
+    font-size: 13px;
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.catsort {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.catsort__label {
+    font-size: 13px;
+    color: var(--c-note);
+    white-space: nowrap;
+}
+
+.catsort__field { position: relative; }
+
+/* appearance:none để bỏ mũi tên mặc định của trình duyệt — bản thiết kế vẽ
+   mũi tên riêng bằng ▼ màu thương hiệu, đặt đè lên bằng .catsort__caret. */
+.catsort__select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 10px 40px 10px 20px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.catsort__select:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+.catsort__caret {
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    font-size: 10px;
+    color: var(--brand);
+}
+
+.catsort__go {
+    padding: 10px 18px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--c-item);
+    cursor: pointer;
+}
+
+.js .catsort__go { display: none; }
+
+/* --- Lưới --- */
+
+.catgrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 900px) { .catgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .catgrid { grid-template-columns: 1fr; } }
+
+/* --- Thẻ sản phẩm --- */
+
+.ptile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-raised);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(90, 40, 40, 0.05);
+    text-decoration: none;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ptile:hover,
+.ptile:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 40px rgba(90, 40, 40, 0.13);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ptile:hover { transform: none; }
+}
+
+/* ẢNH ĐẶT TRÊN "SÂN TRẮNG" BO GÓC, LỒNG TRONG KHUNG HỒNG.
+   ─────────────────────────────────────────────────────────────────────
+   Bản thiết kế cho ảnh tràn kín ô 220px trên nền #f5efe7, vì ảnh của nó là
+   ảnh cắt nền sẵn khớp đúng tông đó. Ảnh chụp sản phẩm thật thì gần như
+   luôn có NỀN TRẮNG, mà trắng đặt trên hồng thì thành một hộp trắng lộ rõ
+   hai mép — nhìn như lỗi ghép ảnh chứ không phải một thiết kế.
+
+   Cách chữa: khung hồng lùi ra thành viền 14px, bên trong là một sân trắng
+   bo 18px, ảnh nằm giữa sân đó. Nền trắng của ảnh trùng luôn với sân nên
+   không còn ranh giới nào để nhìn ra.
+
+   Quan trọng là nó ĐÚNG VỚI MỌI ẢNH sẽ upload sau này:
+     · ảnh nền trắng      -> hoà vào sân, không thấy mép
+     · ảnh PNG nền trong  -> hiện trên sân trắng, sạch
+     · ảnh chụp nền màu   -> nằm gọn giữa sân, phần thừa là trắng chứ không
+                             phải hai vệt hồng lệch tông
+     · ảnh dọc / ngang / vuông -> contain nên tấm nào cũng vừa khít, không
+                             tấm nào bị xén mất càng gọng
+
+   (Cách khác là `mix-blend-mode: multiply` để nền trắng tan vào nền hồng.
+   Gọn hơn nhưng chỉ đúng với ảnh nền trắng — gặp ảnh nền tối là đen kịt.
+   Kho hàng do người khác nhập thì không đặt cược vào giả định đó được.) */
+.ptile__media {
+    display: block;
+    height: 220px;
+    padding: 14px;
+    background: var(--c-shell);
+}
+
+/* contain chứ không cover: ảnh sản phẩm là ảnh cắt nền, cover sẽ xén mất
+   càng gọng ở hai mép — đúng `fit="contain"` của bản thiết kế. */
+.ptile__media img {
+    display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-    box-shadow: none;
+    object-fit: contain;
+    /* Nền của chính thẻ <img>: hiện ra ở phần sân thừa khi ảnh không cùng
+       tỉ lệ với ô. Cùng màu trắng nên không nhìn ra chỗ nào là ảnh, chỗ nào
+       là sân. */
+    background: var(--surface-raised);
+    border-radius: 18px;
+    /* Viền tóc rất nhạt để sân trắng không tan vào nền thẻ ở màn hình sáng */
+    box-shadow: inset 0 0 0 1px rgba(90, 40, 40, 0.05);
 }
 
-.product-card:hover .product-image img {
-    transform: scale(1.05);
+/* Sản phẩm chưa có ảnh — hay gặp ngay sau khi thêm hàng trong trang quản
+   trị mà chưa kịp tải ảnh lên. Vẽ đúng một sân trắng trống kèm chữ, thay vì
+   mượn ảnh của sản phẩm khác làm ảnh thay thế (người xem sẽ tưởng đó là
+   hàng thật). */
+.ptile__noimg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 18px;
+    background: var(--surface-raised);
+    box-shadow: inset 0 0 0 1px rgba(90, 40, 40, 0.05);
+    font-size: 12.5px;
+    color: var(--c-meta);
 }
 
-.product-badge {
+.ptile__badge {
     position: absolute;
     top: 16px;
     left: 16px;
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    background-color: var(--yellow);
+    /* Không cho huy hiệu dài (vd "Sắp về hàng") chạy quá mép thẻ */
+    max-width: calc(100% - 32px);
+    padding: 5px 13px;
+    border-radius: 999px;
+    background: var(--brand);
     color: var(--on-brand);
-    padding: 6px var(--space-3);
-    border: 1px solid var(--black);
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
 }
 
-.product-info {
-    padding: var(--space-6);
+/* ─────────────────────────────────────────────────────────────────────
+   MỌI THỨ TỪ ĐÂY XUỐNG ĐỀU CÓ CHẶN TRÀN.
+
+   Nội dung sẽ do người khác nhập trong trang quản trị, nên không được giả
+   định tên ngắn hay thương hiệu một chữ. Ba lớp chặn:
+     · min-width:0  — ô lưới CSS mặc định không co nhỏ hơn nội dung của nó,
+                      thiếu dòng này thì một chữ dài đẩy phình cả cột;
+     · cắt dòng     — tên cắt sau 2 dòng, thương hiệu cắt sau 1;
+     · overflow-wrap:anywhere — chuỗi dài không dấu cách (mã SKU, link dán
+                      nhầm) tự bẻ dòng thay vì chọc thủng thẻ.
+   Nhờ vậy mọi thẻ trong một hàng luôn cao bằng nhau và không thẻ nào tràn.
+   ───────────────────────────────────────────────────────────────────── */
+.ptile__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 20px 24px 24px;
+}
+
+.ptile__brand {
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-meta);
+    /* Thương hiệu luôn gọn trong MỘT dòng: nó là nhãn phụ, dài ra hai dòng
+       sẽ đẩy tên sản phẩm xuống và làm lệch cả hàng thẻ. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ptile__name {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+    /* Tên dài cắt sau 2 dòng để các thẻ trong lưới cao bằng nhau */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+
+.ptile:hover .ptile__name,
+.ptile:focus-visible .ptile__name { color: var(--brand); }
+
+/* margin-top:auto đẩy giá xuống đáy thẻ: tên dài ngắn khác nhau, không ghim
+   thì hàng giá của các thẻ cạnh nhau so le. */
+.ptile__price {
+    margin-top: auto;
+    padding-top: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--brand);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* --- Không có kết quả --- */
+
+.catempty {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    align-items: center;
+    gap: 14px;
+    padding: 72px 32px;
+    background: var(--surface-raised);
+    border-radius: 28px;
+    text-align: center;
 }
 
-.product-name {
-    font-family: var(--font-sans);
-    font-size: var(--fs-body-lg);
-    font-weight: 700;
-    line-height: 20px;
-    color: var(--black);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+.catempty__title {
     margin: 0;
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
 }
 
-.product-price {
-    font-family: var(--font-mono);
-    font-size: var(--fs-body-lg);
+.catempty__text {
+    margin: 0;
+    font-size: 14px;
+    color: var(--c-note);
+}
+
+.catempty__btn {
+    margin-top: 8px;
+    padding: 12px 28px;
+    border-radius: 999px;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 13.5px;
     font-weight: 500;
-    color: var(--black);
+    text-decoration: none;
+    transition: background-color 0.2s;
 }
 
-/* Mobile Filter Toggle - handled by filter-sidebar component */
-/* The filter-sidebar component already includes mobile slide-over functionality */
-
-/* Responsive Design */
-@media (max-width: 1100px) {
-    .category-layout {
-        grid-template-columns: 240px 1fr;
-        gap: var(--space-8);
-    }
-    
-    .products-grid {
-        grid-template-columns: repeat(8, 1fr);
-    }
-    
-    .product-card {
-        grid-column: span 4;
-    }
+.catempty__btn:hover,
+.catempty__btn:focus-visible {
+    background: var(--brand-strong);
+    color: var(--on-brand);
 }
 
-@media (max-width: 900px) {
-    .category-section {
-        padding: var(--space-16) 0;
-    }
-    
-    .category-layout {
-        grid-template-columns: 1fr;
-    }
-    
-    /* Hide desktop sidebar */
-    .category-layout > aside {
-        display: none;
-    }
-    
-    /* Show mobile filter toggle */
-    .mobile-filter-toggle {
-        display: flex;
-        align-items: center;
-    }
-    
-    /* Mobile sidebar */
-    .filter-sidebar {
-        display: block;
-    }
-    
-    .filter-sidebar-close {
-        display: flex;
-    }
-    
-    .products-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--space-4);
-    }
-    
-    .product-card {
-        grid-column: span 1;
-    }
-    
-    .product-name {
-        font-size: var(--fs-body-sm);
-        line-height: 18px;
-    }
-    
-    .product-price {
-        font-size: var(--fs-body-sm);
-    }
+/* --- Phân trang --- */
+
+.catpager {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
 }
 
-@media (max-width: 600px) {
-    .products-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .product-card {
-        grid-column: span 1;
-    }
-    
-    .product-info {
-        padding: var(--space-4);
-    }
-    
-    .mobile-filter-toggle {
-        bottom: 16px;
-        right: 16px;
-        padding: var(--space-3) var(--space-5);
-    }
+.catpager__btn {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    color: var(--c-item);
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+}
+
+.catpager__btn:hover,
+.catpager__btn:focus-visible {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+.catpager__btn.is-current {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
 }

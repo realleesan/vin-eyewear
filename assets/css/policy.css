@@ -1,0 +1,344 @@
+/* ============================================================
+   policy.css — Trang Chính sách & Cam kết chất lượng
+   Port từ src/routes/chinh-sach.tsx (Lovable)
+   ============================================================ */
+
+/* --- Thân trang --------------------------------------------- */
+
+.policy__inner {
+    max-width: var(--container, 1280px);
+    margin-inline: auto;
+    padding: var(--section-pad) var(--gutter);
+}
+
+/* 4 cam kết nổi bật */
+.policy-highlights {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    list-style: none;
+}
+
+@media (min-width: 1101px) {
+    .policy-highlights { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.policy-card {
+    padding: 20px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    box-shadow: var(--elev-1);
+    transition:
+        box-shadow    0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
+        border-color  0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
+        transform     0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.policy-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--brand);
+    box-shadow: var(--elev-2);
+}
+
+.policy-card__ico {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    background: color-mix(in srgb, var(--brand) 10%, transparent);
+    color: var(--brand);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.policy-card:hover .policy-card__ico {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.policy-card__title {
+    margin-top: 16px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-body-lg);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
+}
+
+.policy-card__desc {
+    margin-top: 8px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+/* --- Bố cục 2 cột ------------------------------------------- */
+
+.policy-body {
+    display: grid;
+    gap: 32px;
+    margin-top: 56px;
+}
+
+@media (min-width: 1101px) {
+    .policy-body { grid-template-columns: 280px minmax(0, 1fr); }
+}
+
+/* Cột trái */
+.policy-nav {
+    min-width: 0;
+}
+
+@media (min-width: 1101px) {
+    .policy-nav {
+        position: sticky;
+        /* Chừa chỗ cho header dính trên cùng, nếu không mục đầu bị che */
+        top: 160px;
+        align-self: start;
+    }
+}
+
+.policy-nav__label {
+    font-size: var(--fs-label);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+}
+
+.policy-nav__list {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-bottom: 8px;
+    /* Dưới 1100px: cuộn ngang thay vì xuống dòng thành khối cao */
+    overflow-x: auto;
+}
+
+@media (min-width: 1101px) {
+    .policy-nav__list {
+        flex-direction: column;
+        overflow: visible;
+        padding-bottom: 0;
+    }
+}
+
+.policy-nav__item {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
+    text-align: left;
+    text-decoration: none;
+    color: var(--ink);
+    transition: all 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+@media (min-width: 1101px) {
+    .policy-nav__item { flex-shrink: 1; width: 100%; }
+}
+
+.policy-nav__item:hover,
+.policy-nav__item:focus-visible {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+.policy-nav__item.is-active {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.policy-nav__ico { flex-shrink: 0; }
+
+/* Cột phải */
+.policy-content { min-width: 0; }
+
+.policy-search {
+    position: relative;
+}
+
+.policy-search__ico {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--muted);
+}
+
+.policy-search__input {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px 0 36px;
+    /* Viền ô nhập -> --line-strong (3.11:1), không dùng --line trang trí */
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body);
+    color: var(--ink);
+}
+
+.policy-search__input:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+.policy-result {
+    margin-top: 24px;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+/* Nhóm chính sách.
+   ─────────────────────────────────────────────────────────────────────────
+   MẶC ĐỊNH LÀ HIỆN HẾT. Việc ẩn bớt chỉ bật lên khi policy.js đã chạy và
+   gắn class .js-ready. Viết ngược lại (mặc định ẩn, JS hiện) thì người tắt
+   JavaScript — hoặc gặp lúc script tải lỗi — sẽ thấy trang chính sách trống
+   trơn, mà đây lại là trang có giá trị pháp lý.
+   ───────────────────────────────────────────────────────────────────────── */
+.policy-group { display: block; }
+
+.policy.js-ready .policy-group { display: none; }
+.policy.js-ready .policy-group.is-active { display: block; }
+
+.policy-group + .policy-group { margin-top: 48px; }
+
+.policy-group__title {
+    margin-top: 24px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    line-height: 1.16;
+    color: var(--ink);
+}
+
+.policy-group__intro {
+    margin-top: 8px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+/* Câu hỏi thường gặp */
+.policy-faq {
+    margin-top: 20px;
+    border-top: 1px solid var(--line);
+}
+
+.policy-faq__item {
+    border-bottom: 1px solid var(--line);
+}
+
+.policy-faq__item[hidden] { display: none; }
+
+.policy-faq__q {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 0;
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+}
+
+.policy-faq__q::-webkit-details-marker { display: none; }
+
+.policy-faq__q:hover { color: var(--brand); }
+
+.policy-faq__text { min-width: 0; flex: 1; }
+
+.policy-faq__badge {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    font-size: var(--fs-micro);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+}
+
+.policy-faq__badge[hidden] { display: none; }
+
+.policy-faq__chevron {
+    flex-shrink: 0;
+    color: var(--muted);
+    transition: transform 0.2s;
+}
+
+.policy-faq__item[open] .policy-faq__chevron { transform: rotate(180deg); }
+
+.policy-faq__a {
+    padding: 0 0 16px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.75;
+    color: var(--muted);
+}
+
+/* Không có kết quả */
+.policy-empty {
+    display: grid;
+    gap: 4px;
+    margin-top: 24px;
+    padding: 40px;
+    border: 1px dashed var(--line-strong);
+    text-align: center;
+}
+
+.policy-empty[hidden] { display: none; }
+
+.policy-empty strong { font-weight: 600; color: var(--ink); }
+
+.policy-empty span {
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+/* --- Khối hỗ trợ -------------------------------------------- */
+
+.policy-help {
+    display: grid;
+    gap: 24px;
+    margin-top: 56px;
+    padding: 32px;
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
+}
+
+@media (min-width: 901px) {
+    .policy-help {
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+    }
+}
+
+.policy-help__text { min-width: 0; }
+
+.policy-help__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h4);
+    font-weight: 700;
+    line-height: 1.16;
+    color: var(--ink);
+}
+
+.policy-help__text p {
+    margin-top: 8px;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+.policy-help__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}

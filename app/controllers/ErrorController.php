@@ -21,4 +21,19 @@ class ErrorController extends BaseController
             'pageTitle' => '500 - Lỗi hệ thống | Vin Eyewear',
         ]);
     }
+
+    /**
+     * 403 — đã đăng nhập nhưng không đủ quyền.
+     *
+     * Tách khỏi 404 có chủ ý: người dùng ĐÃ đăng nhập, nói rõ "không đủ
+     * quyền" hữu ích hơn là giả vờ trang không tồn tại. Với người CHƯA đăng
+     * nhập thì AuthMiddleware đã đẩy về /auth trước khi tới đây.
+     */
+    public function forbidden(): void
+    {
+        http_response_code(403);
+        $this->renderView('errors/403', [
+            'pageTitle' => '403 - Không đủ quyền truy cập | Vin Eyewear',
+        ]);
+    }
 }

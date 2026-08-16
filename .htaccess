@@ -1,19 +1,99 @@
+# ============================================================================
+# Vin Eyewear — cấu hình Apache
+#
+# Dự án đặt mã nguồn CÙNG CẤP với thư mục gốc web (không có public/ riêng),
+# nên mọi file trong repo về nguyên tắc đều nằm trong tầm với của trình duyệt.
+# Khối CHẶN TRUY CẬP bên dưới là thứ duy nhất ngăn điều đó — đừng gỡ.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# 1. CHẶN TRUY CẬP FILE NHẠY CẢM
+#
+# Luật rewrite ở mục 2 có điều kiện `!-f` (bỏ qua file có thật), nên file tồn
+# tại được Apache trả về NGUYÊN VĂN mà không đi qua index.php. Không có khối
+# này thì https://site/.env trả thẳng mật khẩu database dưới dạng văn bản
+# thuần, và https://site/database/schema.sql phơi toàn bộ cấu trúc CSDL.
+#
+# Đặt TRƯỚC mọi luật khác để không luật nào lách qua được.
+# ----------------------------------------------------------------------------
+
+# Mọi file bắt đầu bằng dấu chấm: .env, .gitignore, .htaccess, .ftpignore…
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Đuôi file không bao giờ được phục vụ trực tiếp
+<FilesMatch "\.(sql|md|sh|log|lock|example|ini|yml|yaml|bak|old|orig|swp|dist)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Thư mục mã nguồn — chỉ index.php ở gốc được chạy trực tiếp.
+# Chặn cả .php: file trong core/ và app/ được include từ index.php, gọi thẳng
+# qua URL chỉ gây lỗi (thiếu hằng ROOT_PATH) hoặc chạy code ngoài ngữ cảnh.
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    
-    # Keep existing query string
+    RewriteRule ^(app|core|config|database|docs|scripts|storage)/ - [F,L]
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 2. ĐIỀU HƯỚNG — mọi đường dẫn không phải file/thư mục có thật đều về index.php
+# ----------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} !^/assets/
     RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
 </IfModule>
 
-# Security headers
+# ----------------------------------------------------------------------------
+# 3. HEADER BẢO MẬT
+# ----------------------------------------------------------------------------
 <IfModule mod_headers.c>
+    # Trình duyệt không được tự đoán kiểu nội dung khác với Content-Type khai báo
     Header set X-Content-Type-Options "nosniff"
+
+    # Không cho site khác nhúng trang này vào iframe (chống clickjacking)
     Header set X-Frame-Options "SAMEORIGIN"
-    Header set X-XSS-Protection "1; mode=block"
+
+    # Chỉ gửi đường dẫn đầy đủ khi điều hướng trong cùng site; sang site khác
+    # chỉ gửi tên miền, không lộ đường dẫn người dùng vừa xem
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Trang này không dùng các API đó — tắt sẵn để script bên thứ ba
+    # (nếu bị chèn) cũng không xin quyền được.
+    # LƯU Ý: trang thử kính AR CẦN camera; nếu bật lại thì phải bỏ 'camera'
+    # khỏi danh sách hoặc khai riêng cho đường dẫn /thu-ar.
+    Header set Permissions-Policy "geolocation=(), microphone=(), payment=()"
 </IfModule>
 
-# Prevent directory listing
+# ----------------------------------------------------------------------------
+# 4. KHÁC
+# ----------------------------------------------------------------------------
+
+# Không liệt kê nội dung thư mục khi không có index
 Options -Indexes
+
+# Chặn truy cập file .htaccess và .htpasswd (bổ sung cho luật dotfile ở trên)
+<FilesMatch "^\.ht">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

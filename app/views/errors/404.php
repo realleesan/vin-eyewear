@@ -1,9 +1,14 @@
 <?php
+
+/**
+ * errors/404.php — không tìm thấy trang.
+ *
+ * Không breadcrumb, không đầu trang: người tới đây đang ở một địa chỉ KHÔNG
+ * tồn tại, nên chẳng có chỗ nào trong cây điều hướng để định vị họ vào. Thứ
+ * duy nhất cần là một lối đi tiếp.
+ */
+
 $pageTitle = '404 - Trang không tìm thấy | Vin Eyewear';
-$show_breadcrumb = false;
-$show_page_header = false;
-$show_cta = false;
-$show_pusher = false;
 ?>
 
 <section class="error-page">

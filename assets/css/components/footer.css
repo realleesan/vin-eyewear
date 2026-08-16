@@ -1,0 +1,251 @@
+/* ============================================================
+   footer.css — Chân trang, dựng theo "Vin Eyewear Home.dc.html"
+
+   ĐÃ ĐỔI TỪ KHỐI NỀN TỐI SANG NỀN TRANG. Bản trước tô nền --ink và chữ
+   --on-ink, mọi sắc độ chữ phụ dựng bằng color-mix() trên --on-ink. Bản
+   thiết kế không có khối tối nào ở chân trang: footer đứng thẳng trên nền
+   pearl của trang, tách khỏi nội dung bằng ĐÚNG MỘT đường kẻ 1px. Vì thế
+   toàn bộ cụm color-mix() đã bỏ — trên nền sáng chúng cho ra chữ xám nhạt
+   không đọc nổi, mà cũng không còn --on-ink để trộn cho đúng nữa.
+
+   Ba sắc chữ của bản thiết kế, dùng thẳng chứ không qua token: chữ phụ
+   #6f5f5a (= --muted), đoạn giới thiệu #9a877f, dải bản quyền #b0a094.
+   Đường kẻ #eee0d4 nhạt hơn --line một nấc, đúng như thiết kế.
+
+   Footer dùng chung cho MỌI trang, không riêng trang chủ.
+   ============================================================ */
+
+/* margin-top:88px là khoảng thở giữa khối cuối trang và chân trang, ghi
+   trong "Vin Eyewear Home.dc.html". Không đặt ở .main-content vì mỗi trang
+   kết thúc bằng một khối khác nhau — để ở đây thì trang nào cũng có đúng
+   một khoảng. */
+.site-footer {
+    margin-top: 88px;
+    padding: 64px 56px 0;
+    border-top: 1px solid #eee0d4;
+    color: var(--muted);
+}
+
+/* TRỪ hai trang tự lo lấy khoảng đó.
+   "Vin Eyewear Category.dc.html" và "Vin Eyewear Contact.dc.html" không đặt
+   margin-top cho footer; thay vào đó khối cuối của chúng có sẵn 96px đệm
+   dưới. Cộng cả hai thành 184px trống trước chân trang — gấp đôi thiết kế. */
+.page-product-index .site-footer,
+.page-contact-index .site-footer,
+.page-product-detail .site-footer,
+.page-event-index .site-footer,
+.page-event-detail .site-footer,
+.page-booking-index .site-footer {
+    margin-top: 0;
+}
+
+/* --- 1. Lưới 4 cột ------------------------------------------ */
+
+.footer-grid {
+    display: grid;
+    gap: 48px;
+    max-width: 1280px;
+    margin-inline: auto;
+}
+
+@media (min-width: 601px) {
+    .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1101px) {
+    /* 1.4 / 1 / 1 / 1.2 — cột thương hiệu rộng nhất cho đoạn giới thiệu,
+       cột liên hệ rộng hơn hai cột liên kết vì chứa email và giờ mở cửa. */
+    .footer-grid {
+        grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+        gap: 48px;
+    }
+}
+
+.footer-brand,
+.footer-col {
+    min-width: 0;
+}
+
+/* Wordmark 22px — nhỏ hơn wordmark trên header (24px) đúng một nấc */
+.footer-logo {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--brand);
+}
+
+/* Nghiêng và nhẹ hơn nửa nấc, KHÔNG đổi màu: cả hai chữ cùng một sắc đỏ,
+   giống hệt wordmark trên header. */
+.footer-logo em {
+    font-style: italic;
+    font-weight: 500;
+}
+
+.footer-blurb {
+    max-width: 280px;
+    margin-top: 16px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #9a877f;
+}
+
+/* Mạng xã hội */
+.footer-socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 22px;
+    list-style: none;
+}
+
+.footer-socials a {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--brand);
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+/* Đổ đầy màu thương hiệu khi rê chuột — cùng cách với .pill-link ở trang chủ
+   và ba nút tròn trên header, để cả site chỉ có MỘT kiểu nút tròn. */
+.footer-socials a:hover,
+.footer-socials a:focus-visible {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
+}
+
+.footer-socials svg {
+    width: 15px;
+    height: 15px;
+    fill: currentColor;
+}
+
+/* Tiêu đề cột — cùng tông hồng ấm với .eyebrow của các khối trang chủ */
+.footer-heading {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--eyebrow);
+}
+
+/* Cột "Liên hệ" — ba loại thông tin, không icon */
+.footer-contact {
+    margin-top: 12px;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+.footer-contact a {
+    color: var(--brand);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-contact a:hover,
+.footer-contact a:focus-visible {
+    color: var(--brand-strong);
+}
+
+/* Hotline là thứ khách tìm nhanh nhất trong cột này -> đậm hơn hai dòng
+   ngay trên nó. Giữ màu chữ thường chứ không tô đỏ: bản thiết kế viết cả
+   dòng "Hotline: 1900 6868" bằng một màu, chỉ email mới là liên kết. */
+.footer-phone {
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+}
+
+.footer-phone:hover,
+.footer-phone:focus-visible { color: var(--brand); }
+
+/* Email dài không được đẩy tràn cột trên màn hình hẹp */
+.footer-break {
+    word-break: break-all;
+}
+
+/* Cột liên kết */
+.footer-links {
+    margin-top: 12px;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+    font-size: 13.5px;
+}
+
+.footer-links a {
+    display: inline-block;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-links a:hover,
+.footer-links a:focus-visible {
+    color: var(--brand);
+}
+
+/* --- 2. Dải dưới cùng --------------------------------------- */
+
+/* Đường kẻ và lề nằm trên __inner chứ không trên .footer-bottom: bản thiết
+   kế cho dải này rộng đúng bằng lưới 4 cột (1280px, căn giữa), nên đường kẻ
+   phải dừng lại ở mép lưới chứ không chạy hết bề ngang trang. */
+.footer-bottom__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    max-width: 1280px;
+    margin: 48px auto 0;
+    padding: 20px 0;
+    border-top: 1px solid #eee0d4;
+    font-size: 12px;
+    color: #b0a094;
+}
+
+@media (min-width: 601px) {
+    .footer-bottom__inner { flex-direction: row; }
+}
+
+.footer-bottom__nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.footer-bottom__nav a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer-bottom__nav a:hover,
+.footer-bottom__nav a:focus-visible {
+    color: var(--brand);
+}
+
+/* Dòng pháp nhân: gộp tên công ty + MST vào một dòng thay cho cả một tầng
+   riêng. Chữ nhỏ và mờ nhưng vẫn phải đọc được — đây là thông tin bắt buộc
+   theo quy định thương mại điện tử, không phải chú thích trang trí. */
+.footer-bottom__legal {
+    margin: 0;
+    color: #a4948b;
+}
+
+@media (max-width: 720px) {
+    .site-footer {
+        margin-top: 56px;
+        padding: 48px 20px 0;
+    }
+}

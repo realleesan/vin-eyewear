@@ -1,697 +1,474 @@
-/* ============================================
-   AR TRY-ON CSS
-   Design system: Lower East Heritage
-   Yêu cầu: ảnh kính cố định ở tâm màn hình camera
-   ============================================ */
+/* ============================================================
+   ar.tryon.css — Trang thử kính AR
+   Port từ src/components/ar/ar-tryon.tsx (Lovable)
+   ============================================================ */
 
-/* --- Main layout --- */
-.ar-section {
-    padding: var(--space-12) var(--margin) var(--section-gap);
+.ar__inner {
+    max-width: var(--container, 1280px);
+    margin-inline: auto;
+    padding: clamp(24px, 5vw, 56px) var(--gutter);
 }
 
-.ar-layout {
+.ar__layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
-    gap: 2px;
-    background: var(--black);
-    max-width: var(--container);
-    margin: 0 auto;
+    gap: 24px;
 }
 
-/* --- Camera viewer --- */
-.ar-viewer {
-    background: var(--white);
-    padding: var(--space-8);
+@media (min-width: 1101px) {
+    .ar__layout { grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; }
 }
 
-.camera-frame {
-    max-width: 720px;
-    margin: 0 auto;
-}
+/* ============================================================
+   KHUNG HÌNH
+   ============================================================ */
 
-/* Camera Controls */
-.camera-controls {
-    display: flex;
-    justify-content: center;
-    margin-bottom: var(--space-5);
-}
-
-.btn-camera-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: var(--space-3) var(--space-6);
-    background: var(--black);
-    color: var(--white);
-    border: none;
-    font-family: var(--font-sans);
-    font-size: var(--fs-caption);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border-radius: 4px;
-}
-
-.btn-camera-toggle:hover {
-    background: var(--yellow);
-    color: var(--on-brand);
-    color: var(--on-brand);
-    color: var(--on-brand);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.btn-camera-toggle:active {
-    transform: translateY(0);
-}
-
-.btn-camera-toggle svg {
-    flex-shrink: 0;
-}
-
-.camera-placeholder {
+.arstage {
     position: relative;
-    width: 100%;
     aspect-ratio: 4 / 3;
-    background: var(--black);
     overflow: hidden;
-    border: 1.5px solid var(--black);
+    background: var(--ink);
+    /* Điểm neo cho lớp gọng đặt bằng position: absolute */
+    isolation: isolate;
 }
 
-#video {
+.arstage__video,
+.arstage__photo {
     width: 100%;
     height: 100%;
-    display: block;
     object-fit: cover;
+    /* Lật ngang để người dùng thấy như soi gương — nghiêng đầu sang trái
+       thì hình trên màn hình cũng nghiêng sang trái. */
     transform: scaleX(-1);
 }
 
-/* Ảnh kính cố định ở tâm màn hình camera */
-#glass-overlay {
+/* --- Lớp gọng ---
+   JS đặt 4 biến: --ar-x/--ar-y (tâm, %), --ar-w (bề rộng, %), --ar-r (góc).
+   Đặt qua biến CSS thay vì gán style.transform từng khung hình: trình duyệt
+   chỉ phải tính lại phần transform, không phải phân tích lại chuỗi CSS. */
+.arstage__frame {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 58%;
-    max-width: 320px;
+    left: var(--ar-x, 50%);
+    top: var(--ar-y, 45%);
+    width: var(--ar-w, 40%);
     height: auto;
+    /* scaleX(-1) để khớp với video đã lật; nếu thiếu, gọng sẽ ngược chiều
+       nghiêng so với đầu. */
+    transform: translate(-50%, -50%) rotate(var(--ar-r, 0deg)) scaleX(-1);
+    transform-origin: center;
     pointer-events: none;
-    z-index: 10;
-    opacity: 0.92;
-    transition: opacity 0.25s ease;
+    opacity: 0;
+    /* Chuyển động rất ngắn: đủ mượt giữa hai khung nhận diện, chưa đủ để
+       thấy gọng "trôi" chậm sau khuôn mặt. */
+    transition: opacity 0.2s ease-out;
+    will-change: transform;
+    z-index: 2;
 }
 
-.camera-placeholder.is-switching #glass-overlay {
-    opacity: 0.5;
-}
+/* --- Các lớp phủ trạng thái --- */
 
-/* Face guide oval */
-.face-guide {
+.arstage__idle,
+.arstage__loading,
+.arstage__error {
     position: absolute;
     inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 5;
+    z-index: 3;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    gap: 10px;
+    padding: 24px;
+    background: color-mix(in srgb, var(--ink) 88%, transparent);
+    color: var(--on-ink);
+    text-align: center;
 }
 
-.face-guide-oval {
-    width: 42%;
-    aspect-ratio: 3 / 4;
-    border: 1.5px dashed rgba(255, 204, 0, 0.55);
-    border-radius: 50%;
+.arstage__ico { color: var(--brand-light); }
+
+.arstage__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h6);
+    font-weight: 600;
 }
 
-/* Camera status badge */
-.camera-status {
+.arstage__note {
+    max-width: 44ch;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: color-mix(in srgb, var(--on-ink) 70%, transparent);
+}
+
+.arstage__alt {
+    margin-top: 4px;
+    font-size: var(--fs-body-sm);
+    color: color-mix(in srgb, var(--on-ink) 70%, transparent);
+}
+
+.arstage__upload {
+    color: var(--brand-light);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+/* Vòng xoay chờ */
+.arspin {
+    width: 32px;
+    height: 32px;
+    border: 2px solid color-mix(in srgb, var(--on-ink) 25%, transparent);
+    border-top-color: var(--brand-light);
+    border-radius: 999px;
+    animation: arspin 0.8s linear infinite;
+}
+
+@keyframes arspin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .arspin { animation-duration: 2s; }
+}
+
+/* Dải trạng thái nhận diện */
+.arstage__status {
     position: absolute;
-    top: 16px;
-    left: 16px;
-    z-index: 20;
+    left: 50%;
+    bottom: 64px;
+    z-index: 4;
+    transform: translateX(-50%);
+    max-width: 90%;
+    padding: 8px 14px;
+    background: color-mix(in srgb, var(--ink) 85%, transparent);
+    color: var(--on-ink);
+    font-size: var(--fs-body-sm);
+    text-align: center;
+}
+
+/* Thanh công cụ */
+.arstage__bar {
+    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    z-index: 4;
+    display: flex;
+    gap: 8px;
+    transform: translateX(-50%);
+}
+
+.arbtn {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    background: rgba(0, 0, 0, 0.72);
-    color: var(--white);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    background: var(--yellow);
-    color: var(--on-brand);
-    flex-shrink: 0;
-}
-
-.camera-status.is-loading .status-dot {
-    animation: ar-pulse 1.2s ease infinite;
-}
-
-.camera-status.is-error .status-dot {
-    background: var(--danger-bright);
-}
-
-.camera-status.is-active .status-dot {
-    background: var(--success);
-}
-
-@keyframes ar-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-}
-
-/* Loading overlay */
-.camera-loading {
-    position: absolute;
-    inset: 0;
-    z-index: 15;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
-    background: rgba(0, 0, 0, 0.55);
-    color: var(--white);
-    font-size: var(--fs-note);
-    letter-spacing: 0.04em;
-}
-
-.camera-loading[aria-hidden="true"] {
-    display: none;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    border-top-color: var(--yellow);
-    animation: ar-spin 0.8s linear infinite;
-}
-
-@keyframes ar-spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Initial state */
-.camera-initial {
-    position: absolute;
-    inset: 0;
-    z-index: 15;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-5);
-    padding: var(--space-8);
-    background: linear-gradient(135deg, var(--surface-dark-1) 0%, var(--surface-dark-2) 100%);
-    color: var(--white);
-    text-align: center;
-}
-
-.camera-initial[aria-hidden="true"] {
-    display: none;
-}
-
-.initial-icon {
-    color: var(--brand-light);
-    opacity: 0.9;
-}
-
-.camera-initial h3 {
-    font-family: var(--font-serif);
-    font-size: var(--fs-subhead);
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: -0.01em;
-}
-
-.camera-initial p {
-    font-size: var(--fs-body-sm);
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.75);
-    max-width: 280px;
-    margin: 0;
-}
-
-/* Error state */
-.camera-error,
-.camera-permission-denied {
-    position: absolute;
-    inset: 0;
-    z-index: 15;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-5);
-    padding: var(--space-8);
-    background: rgba(0, 0, 0, 0.85);
-    color: var(--white);
-    text-align: center;
-}
-
-.camera-error[aria-hidden="true"],
-.camera-permission-denied[aria-hidden="true"] {
-    display: none;
-}
-
-.error-icon,
-.permission-icon {
-    color: var(--danger-bright);
-}
-
-.camera-error h3,
-.camera-permission-denied h3 {
-    font-family: var(--font-serif);
-    font-size: var(--fs-lead);
-    font-weight: 700;
-    margin: 0;
-}
-
-.camera-error p,
-.camera-permission-denied p {
-    font-size: var(--fs-body-sm);
-    line-height: 1.6;
-    color: rgba(255, 255, 255, 0.8);
-    max-width: 320px;
-    margin: 0;
-}
-
-.permission-steps {
-    text-align: left;
-    font-size: var(--fs-note);
-    line-height: 1.8;
-    color: rgba(255, 255, 255, 0.85);
-    padding-left: var(--space-5);
-}
-
-.permission-steps li {
-    margin-bottom: var(--space-2);
-}
-
-.btn-retry {
-    padding: 10px var(--space-6);
-    background: var(--yellow);
-    color: var(--on-brand);
-    border: none;
+    gap: 6px;
+    /* 44px theo WCAG 2.5.5 — đây là nút bấm trên màn hình cảm ứng */
+    min-height: 44px;
+    padding-inline: 16px;
+    border: 1px solid color-mix(in srgb, var(--on-ink) 30%, transparent);
+    background: color-mix(in srgb, var(--ink) 82%, transparent);
     font-family: var(--font-sans);
     font-size: var(--fs-label);
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.12em;
+    color: var(--on-ink);
     cursor: pointer;
-    transition: background 0.15s ease;
+    transition: border-color 0.2s, color 0.2s;
 }
 
-.btn-retry:hover {
-    background: var(--white);
+.arbtn:hover { border-color: var(--brand-light); color: var(--brand-light); }
+
+/* ============================================================
+   BẢNG ĐIỀU KHIỂN
+   ============================================================ */
+
+.arpanel {
+    display: grid;
+    gap: 16px;
+    align-content: start;
 }
 
-/* Active state */
-.camera-active {
-    position: relative;
-    width: 100%;
-    height: 100%;
+.arblock {
+    padding: 16px;
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
 }
 
-.camera-active[aria-hidden="true"] {
-    display: none;
-}
-
-.camera-hint {
-    margin-top: var(--space-4);
-    font-family: var(--font-mono);
+.arblock__title {
+    font-family: var(--font-sans);
     font-size: var(--fs-label);
-    letter-spacing: 0.04em;
-    color: var(--on-surface-variant);
-    text-align: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--muted);
 }
 
-/* --- Sidebar --- */
-.ar-sidebar {
-    display: flex;
-    flex-direction: column;
+/* --- Chọn gọng --- */
+
+.arframes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* Ô radio ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím */
+.arframe__radio,
+.arswatch__radio,
+.arlens__radio,
+.arsize__radio {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.arframe {
+    display: grid;
     gap: 2px;
-    background: var(--black);
+    padding: 10px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
 }
 
-.ar-panel {
-    background: var(--white);
-    padding: 28px var(--space-6);
-    flex: 1;
+.arframe img {
+    width: 100%;
+    height: auto;
+    /* Ảnh gọng nền trong suốt, đặt trên nền chìm cho dễ nhìn */
+    background: var(--surface-sunken);
 }
 
-.ar-panel-header {
+.arframe__name {
+    margin-top: 6px;
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.arframe__meta { font-size: var(--fs-label); color: var(--muted); }
+
+.arframe__price {
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.arframe:hover { border-color: var(--brand); }
+
+.arframe__radio:checked + .arframe {
+    border-color: var(--brand);
+    background: var(--brand-subtle);
+}
+
+.arframe__radio:focus-visible + .arframe {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* --- Màu gọng --- */
+
+.arswatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.arswatch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: var(--fs-label);
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.arswatch__dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
+}
+
+.arswatch:hover { border-color: var(--brand); }
+
+.arswatch__radio:checked + .arswatch {
+    border-color: var(--brand);
+    color: var(--brand);
+    font-weight: 600;
+}
+
+.arswatch__radio:focus-visible + .arswatch {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* --- Hiệu ứng tròng --- */
+
+.arlens {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.arlens__item {
+    display: grid;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.arlens__item strong { font-size: var(--fs-body-sm); font-weight: 600; color: var(--ink); }
+.arlens__item span   { font-size: var(--fs-label); color: var(--muted); }
+
+.arlens__radio:checked + .arlens__item {
+    border-color: var(--brand);
+    background: var(--brand-subtle);
+}
+
+.arlens__radio:focus-visible + .arlens__item {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* --- Tinh chỉnh --- */
+
+.artune {
+    display: grid;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+/* .artune__grouplabel là nhãn của nhóm ô chọn cỡ gọng — một <span>, không
+   phải <label>, vì nó nói cho cả ba ô S/M/L. Kiểu dáng giống hệt nhãn của
+   ba thanh trượt bên dưới nên gộp chung một luật. */
+.artune__row label,
+.artune__row .artune__grouplabel {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: var(--space-3);
-    margin-bottom: var(--space-5);
-}
-
-.ar-panel-title {
-    font-family: var(--font-serif);
-    font-size: var(--fs-subhead);
-    font-weight: 700;
-    letter-spacing: -0.01em;
-}
-
-.ar-panel-count {
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--outline);
-}
-
-/* --- Instructions --- */
-.ar-steps {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-.ar-steps li {
-    display: grid;
-    grid-template-columns: 40px 1fr;
-    gap: var(--space-3);
-    align-items: start;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.ar-steps li:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.step-num {
-    font-family: var(--font-mono);
-    font-size: var(--fs-label);
-    font-weight: 500;
-    color: var(--brand-light);
-    background: var(--black);
-    padding: 6px 0;
-    text-align: center;
-    letter-spacing: 0.04em;
-}
-
-.step-text {
+    gap: 8px;
+    margin-bottom: 4px;
     font-size: var(--fs-body-sm);
-    line-height: 1.55;
-    color: var(--on-surface-variant);
-    padding-top: var(--space-1);
+    color: var(--ink);
 }
 
-/* --- Glasses selector --- */
-.glasses-list {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2px;
-    background: var(--black);
+.artune__row label span {
+    font-family: var(--font-mono);
+    font-size: var(--fs-caption);
+    color: var(--muted);
 }
 
-.glasses-item {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
-    padding: 0;
-    background: var(--gray);
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.15s ease;
-}
-
-.glasses-item:hover {
-    background: var(--white);
-}
-
-.glasses-item.active {
-    background: var(--yellow);
-}
-
-.glasses-thumb {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 2 / 1;
-    padding: var(--space-4) var(--space-3) var(--space-2);
-    background: var(--white);
-}
-
-.glasses-item.active .glasses-thumb {
-    background: var(--yellow);
-}
-
-.glasses-thumb img {
+.artune__row input[type="range"] {
     width: 100%;
-    max-height: 48px;
-    object-fit: contain;
+    height: 32px;
+    accent-color: var(--brand);
 }
 
-.glass-name {
-    display: block;
-    padding: 10px var(--space-3) 14px;
-    font-size: var(--fs-micro);
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--on-surface);
-    line-height: 1.4;
+.artune__row input[type="range"]:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
 }
 
-/* --- CTA --- */
-.ar-cta {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    background: var(--black);
+.arsize { display: flex; gap: 6px; }
+
+.arsize__item {
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    height: 36px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
 }
 
-.ar-cta .btn-primary,
-.ar-cta .btn-outline {
-    display: block;
-    text-align: center;
-    padding: var(--space-4) var(--space-6);
-    font-family: var(--font-sans);
-    font-size: var(--fs-label);
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    border-radius: 0;
-    transition: background 0.15s ease, color 0.15s ease;
-}
-
-.ar-cta .btn-primary {
-    background: var(--yellow);
+.arsize__radio:checked + .arsize__item {
+    border-color: var(--brand);
+    background: var(--brand);
     color: var(--on-brand);
-    border: none;
 }
 
-.ar-cta .btn-primary:hover {
-    background: var(--black);
-    color: var(--white);
+.arsize__radio:focus-visible + .arsize__item {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
 }
 
-.ar-cta .btn-outline {
-    background: var(--white);
-    color: var(--black);
-    border: none;
+.arreset {
+    justify-self: start;
+    border: 0;
+    background: none;
+    padding: 4px 0;
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    color: var(--muted);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
 }
 
-.ar-cta .btn-outline:hover {
-    background: var(--black);
-    color: var(--white);
+.arreset:hover { color: var(--brand); }
+
+/* --- Dáng khuôn mặt --- */
+
+.arblock--advice { border-color: var(--brand); background: var(--brand-subtle); }
+
+.aradvice__shape {
+    margin-top: 8px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-h6);
+    font-weight: 600;
+    color: var(--brand);
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-@media (max-width: 1100px) {
-    .ar-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .ar-viewer {
-        padding: var(--space-6);
-    }
-
-    .ar-sidebar {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .ar-cta {
-        flex-direction: row;
-    }
-
-    .ar-cta .btn-primary,
-    .ar-cta .btn-outline {
-        flex: 1;
-    }
+.aradvice__text {
+    margin-top: 4px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: var(--ink);
 }
 
-@media (max-width: 900px) {
-    .ar-section {
-        padding: var(--space-8) var(--margin) var(--space-16);
-    }
+/* --- Mua --- */
 
-.ar-viewer {
-        padding: var(--space-4);
-    }
+.arblock--buy { display: grid; gap: 8px; }
 
-    .ar-sidebar {
-        grid-template-columns: 1fr;
-    }
-
-    .ar-cta {
-        flex-direction: column;
-    }
-
-    .camera-frame {
-        max-width: 100%;
-    }
-
-    .camera-placeholder {
-        aspect-ratio: 3 / 4;
-    }
-
-    #glass-overlay {
-        width: 70%;
-        max-width: 280px;
-    }
-
-    .face-guide-oval {
-        width: 55%;
-        aspect-ratio: 1 / 1.3;
-    }
-
-    .camera-error p,
-    .camera-permission-denied p {
-        font-size: var(--fs-note);
-        max-width: 280px;
-    }
-
-    .permission-steps {
-        font-size: var(--fs-caption);
-    }
+.arbuy__name {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h6);
+    font-weight: 600;
+    color: var(--ink);
 }
+
+.arbuy__price {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: var(--fs-h6);
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.arbuy__price s {
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    color: var(--muted);
+}
+
+.arblock--buy .btn-inline,
+.arbuy__form { width: 100%; }
+.arbuy__form button { width: 100%; }
+
+/* Nhãn màu gọng — ẩn trên màn hình hẹp, chỉ còn chấm màu cho đỡ chật */
+.arswatch__label { white-space: nowrap; }
 
 @media (max-width: 600px) {
-    .glasses-list {
-        grid-template-columns: 1fr;
-    }
-
-    .ar-panel {
-        padding: var(--space-6) var(--space-4);
-    }
-
-    .camera-error,
-    .camera-permission-denied {
-        padding: var(--space-6) var(--space-4);
-    }
-
-    .camera-error p,
-    .camera-permission-denied p {
-        font-size: var(--fs-caption);
-        max-width: 100%;
-    }
-
-    .permission-steps {
-        font-size: var(--fs-label);
-        padding-left: var(--space-4);
-    }
-
-    .btn-retry {
-        padding: var(--space-2) var(--space-5);
-        font-size: var(--fs-micro);
-    }
-
-    .camera-controls {
-        margin-bottom: var(--space-4);
-    }
-
-    .btn-camera-toggle {
-        padding: 10px var(--space-5);
-        font-size: var(--fs-label);
-    }
-
-    .camera-initial p {
-        font-size: var(--fs-note);
-    }
-}
-
-/* Landscape orientation */
-@media (max-height: 500px) and (orientation: landscape) {
-    .ar-section {
-        padding: var(--space-6) var(--margin) var(--space-8);
-    }
-
-    .ar-layout {
-        grid-template-columns: 1fr 320px;
-        gap: var(--space-4);
-    }
-
-    .ar-viewer {
-        padding: var(--space-4);
-    }
-
-    .camera-frame {
-        max-width: 100%;
-    }
-
-    .camera-placeholder {
-        aspect-ratio: 16 / 9;
-    }
-
-    .camera-controls {
-        margin-bottom: var(--space-3);
-    }
-
-    .btn-camera-toggle {
-        padding: var(--space-2) var(--space-4);
-        font-size: var(--fs-micro);
-    }
-
-    .ar-panel {
-        padding: var(--space-5) var(--space-4);
-    }
-
-    .ar-panel-header {
-        margin-bottom: var(--space-3);
-    }
-
-    .glasses-list {
-        gap: 2px;
-    }
-
-    .glasses-thumb {
-        aspect-ratio: 3 / 2;
-        padding: var(--space-3) var(--space-2) 6px;
-    }
-
-    .glass-name {
-        padding: var(--space-2) var(--space-2) 10px;
-    }
-
-    .camera-hint {
-        margin-top: var(--space-3);
-        font-size: var(--fs-micro);
-    }
-}
-
-/* Mục kính đang chọn có nền --brand -> tên kính phải dùng chữ kem */
-.glasses-item.active .glass-name {
-    color: var(--on-brand);
+    .arswatch__label { display: none; }
+    .arswatch { padding: 8px; }
 }
