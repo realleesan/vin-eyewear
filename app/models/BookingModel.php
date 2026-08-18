@@ -5,11 +5,17 @@
  *
  * Port từ createAppointment / getBookedSlots trong src/lib/shop.functions.ts.
  *
- * Bảng `appointments` có UNIQUE (store_id, appointment_date, time_slot). Đó
- * mới là thứ THỰC SỰ chặn đặt trùng: kiểm tra bằng SELECT rồi mới INSERT sẽ
- * hở đúng khoảnh khắc giữa hai câu lệnh, hai người bấm cùng lúc đều thấy
- * "còn trống". Ở đây vẫn kiểm trước để báo lỗi cho đẹp, nhưng chốt chặn cuối
- * cùng là ràng buộc của DB — xem cách bắt lỗi 1062 trong create().
+ * Bảng `appointments` có UNIQUE trên cột sinh ra `slot_lock` — bộ ba (cơ sở,
+ * ngày, giờ) khi lịch còn hiệu lực, NULL khi đã huỷ. Đó mới là thứ THỰC SỰ chặn
+ * đặt trùng: kiểm tra bằng SELECT rồi mới INSERT sẽ hở đúng khoảnh khắc giữa hai
+ * câu lệnh, hai người bấm cùng lúc đều thấy "còn trống". Ở đây vẫn kiểm trước để
+ * báo lỗi cho đẹp, nhưng chốt chặn cuối cùng là ràng buộc của DB — xem cách bắt
+ * lỗi 1062 trong create() và reschedule().
+ *
+ * Vì sao khoá đặt trên cột sinh ra chứ không trực tiếp trên ba cột: MySQL bỏ qua
+ * NULL trong khoá duy nhất, nên lịch đã huỷ KHÔNG còn giữ chỗ. Trước bản nâng
+ * cấp 2026-08-18 thì nó có giữ, và khung giờ của một lịch đã huỷ thành không bao
+ * giờ đặt lại được trong khi vẫn hiện ra là còn trống.
  */
 
 class BookingModel extends BaseModel
@@ -207,6 +213,234 @@ class BookingModel extends BaseModel
               ORDER BY a.appointment_date DESC, a.time_slot DESC',
             ['uid' => $userId]
         );
+    }
+
+    /**
+     * Một lịch hẹn theo MÃ, và chỉ khi đúng chủ.
+     *
+     * Điều kiện user_id nằm trong câu lệnh, không kiểm sau khi đọc: mã lịch in
+     * trên trang tài khoản và cả trong email, nên nó không phải bí mật.
+     */
+    public static function findOwned(string $code, string $userId): ?array
+    {
+        if ($code === '') {
+            return null;
+        }
+
+        return Database::fetchOne(
+            'SELECT a.*, s.name AS store_name, s.address AS store_address
+               FROM appointments a
+               LEFT JOIN stores s ON s.id = a.store_id
+              WHERE a.code = :code AND a.user_id = :uid
+              LIMIT 1',
+            ['code' => $code, 'uid' => $userId]
+        );
+    }
+
+    // ========================================================================
+    // KHÁCH TỰ ĐỔI / HUỶ LỊCH
+    //
+    // MỘT CHỖ TRẢ LỜI "ĐƯỢC SỬA HAY KHÔNG": changeBlocker(). View gọi nó để biết
+    // có in nút ra hay không, controller gọi lại đúng nó trước khi ghi. Nếu mỗi
+    // bên tự viết điều kiện riêng thì sớm muộn nút hiện ra mà bấm vào bị chặn,
+    // hoặc tệ hơn — nút không hiện nhưng POST tay vẫn ghi được.
+    // ========================================================================
+
+    /**
+     * Vì sao lịch này KHÔNG được đổi/huỷ nữa — hoặc null nếu được.
+     *
+     * Chuỗi trả về viết cho khách đọc, nên view in thẳng được.
+     */
+    public static function changeBlocker(array $appointment): ?string
+    {
+        $status = (string) ($appointment['status'] ?? '');
+
+        if ($status === 'cancelled') {
+            return 'Lịch này đã huỷ.';
+        }
+
+        if ($status === 'done') {
+            return 'Lịch này đã hoàn tất.';
+        }
+
+        $at = self::startsAt($appointment);
+
+        if ($at === null) {
+            // Ngày/giờ hỏng thì không đoán — để khách gọi tổng đài, đừng cho sửa
+            // một hàng mà chính hệ thống không đọc nổi.
+            return 'Không đọc được giờ hẹn, vui lòng gọi tổng đài.';
+        }
+
+        if ($at <= time()) {
+            return 'Giờ hẹn đã qua.';
+        }
+
+        $cutoff = self::cutoffSeconds();
+
+        if ($at - time() < $cutoff) {
+            return sprintf(
+                'Chỉ đổi hoặc huỷ được trước giờ hẹn ít nhất %d giờ. Vui lòng gọi tổng đài.',
+                (int) round($cutoff / 3600)
+            );
+        }
+
+        return null;
+    }
+
+    /** Khách hàng đổi/huỷ được tới trước giờ hẹn bao nhiêu giây. */
+    private static function cutoffSeconds(): int
+    {
+        return max(0, (int) config('app.booking_change_cutoff_hours', 2)) * 3600;
+    }
+
+    /**
+     * Mốc thời gian bắt đầu của lịch hẹn, hoặc null nếu dữ liệu hỏng.
+     *
+     * time_slot lưu dạng "09:00" nên ghép thẳng với ngày là ra mốc đầy đủ.
+     */
+    private static function startsAt(array $appointment): ?int
+    {
+        $date = (string) ($appointment['appointment_date'] ?? '');
+        $slot = (string) ($appointment['time_slot'] ?? '');
+
+        if ($date === '' || !preg_match('/^\d{1,2}:\d{2}$/', $slot)) {
+            return null;
+        }
+
+        return strtotime($date . ' ' . $slot) ?: null;
+    }
+
+    /**
+     * Khách tự huỷ lịch.
+     *
+     * KHÔNG xoá hàng: cửa hàng cần biết khung giờ đó từng có người hẹn rồi huỷ —
+     * đó là dữ liệu vận hành (khách hay huỷ giờ nào, cơ sở nào trống thật). Cột
+     * sinh ra `slot_lock` tự về NULL khi status thành 'cancelled', nên khung giờ
+     * mở lại cho người khác ngay.
+     *
+     * @return array ['ok'=>true] | ['ok'=>false,'error'=>...]
+     */
+    public static function cancelOwned(string $code, string $userId): array
+    {
+        $appointment = self::findOwned($code, $userId);
+
+        if ($appointment === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy lịch hẹn.'];
+        }
+
+        $blocker = self::changeBlocker($appointment);
+
+        if ($blocker !== null) {
+            return ['ok' => false, 'error' => $blocker];
+        }
+
+        /*
+         * Điều kiện status nằm TRONG câu UPDATE, không chỉ ở phép kiểm phía trên:
+         * giữa lúc đọc và lúc ghi, nhân viên có thể vừa đổi lịch sang 'done'.
+         * Trả về 0 dòng thì coi như có người khác vừa đổi trước.
+         */
+        $changed = Database::execute(
+            "UPDATE appointments
+                SET status = 'cancelled'
+              WHERE code = :code AND user_id = :uid
+                AND status IN ('pending', 'confirmed')",
+            ['code' => $code, 'uid' => $userId]
+        );
+
+        if ($changed === 0) {
+            return ['ok' => false, 'error' => 'Lịch hẹn vừa được cập nhật, vui lòng tải lại trang.'];
+        }
+
+        return ['ok' => true];
+    }
+
+    /**
+     * Khách tự đổi sang ngày/giờ khác.
+     *
+     * BA quyết định đáng ghi lại:
+     *
+     * 1. SỬA TẠI CHỖ, không huỷ-rồi-đặt-mới. Khách giữ nguyên mã lịch đã được
+     *    nhắc qua điện thoại, và cửa hàng không có hai hàng cho cùng một lần hẹn.
+     *
+     * 2. ĐỔI XONG VỀ 'pending'. Nhân viên xác nhận cho một giờ CỤ THỂ; giờ khác
+     *    thì lời xác nhận cũ không còn nghĩa gì. Để nguyên 'confirmed' sẽ thành
+     *    một lịch "đã xác nhận" mà chưa ai ở cửa hàng nhìn thấy.
+     *
+     * 3. GIỮ NGUYÊN CƠ SỞ. Đổi cơ sở là đổi gần hết thông tin của lần hẹn (đường
+     *    đi, nhân viên, thiết bị) — việc đó nên là đặt lịch mới, không phải sửa.
+     *
+     * @return array ['ok'=>true] | ['ok'=>false,'error'=>...]
+     */
+    public static function rescheduleOwned(
+        string $code,
+        string $userId,
+        string $date,
+        string $slot
+    ): array {
+        $appointment = self::findOwned($code, $userId);
+
+        if ($appointment === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy lịch hẹn.'];
+        }
+
+        $blocker = self::changeBlocker($appointment);
+
+        if ($blocker !== null) {
+            return ['ok' => false, 'error' => $blocker];
+        }
+
+        // Cùng bộ kiểm với create(): form không phải đường vào duy nhất.
+        if ($date < date('Y-m-d')) {
+            return ['ok' => false, 'error' => 'Không thể hẹn vào một ngày đã qua.'];
+        }
+
+        if (!in_array($slot, (array) config('app.time_slots'), true)) {
+            return ['ok' => false, 'error' => 'Khung giờ không hợp lệ.'];
+        }
+
+        if (self::isPastSlot($date, $slot)) {
+            return ['ok' => false, 'error' => 'Khung giờ này đã qua, vui lòng chọn giờ khác.'];
+        }
+
+        if ($date === $appointment['appointment_date'] && $slot === $appointment['time_slot']) {
+            return ['ok' => false, 'error' => 'Bạn đang chọn đúng giờ hẹn hiện tại.'];
+        }
+
+        // Giờ MỚI cũng phải cách hiện tại đủ xa như luật đổi/huỷ, không thì khách
+        // dùng chức năng đổi lịch để lách hạn: đổi sang 30 phút sau rồi huỷ.
+        $newAt = self::startsAt(['appointment_date' => $date, 'time_slot' => $slot]);
+
+        if ($newAt === null || $newAt - time() < self::cutoffSeconds()) {
+            return ['ok' => false, 'error' => 'Vui lòng chọn giờ hẹn xa hơn so với hiện tại.'];
+        }
+
+        try {
+            $changed = Database::execute(
+                "UPDATE appointments
+                    SET appointment_date = :date,
+                        time_slot        = :slot,
+                        status           = 'pending'
+                  WHERE code = :code AND user_id = :uid
+                    AND status IN ('pending', 'confirmed')",
+                ['date' => $date, 'slot' => $slot, 'code' => $code, 'uid' => $userId]
+            );
+        } catch (PDOException $e) {
+            // 1062 trên uq_appointments_active_slot = khung giờ mới vừa có người
+            // khác đặt xong trong lúc khách đang chọn.
+            if (((int) ($e->errorInfo[1] ?? 0)) === 1062) {
+                return ['ok' => false, 'error' => 'Khung giờ này vừa được đặt, vui lòng chọn giờ khác.'];
+            }
+
+            error_log('[BookingModel] Không đổi được lịch hẹn: ' . $e->getMessage());
+
+            return ['ok' => false, 'error' => 'Không đổi được lịch, vui lòng thử lại.'];
+        }
+
+        if ($changed === 0) {
+            return ['ok' => false, 'error' => 'Lịch hẹn vừa được cập nhật, vui lòng tải lại trang.'];
+        }
+
+        return ['ok' => true];
     }
 
     /**

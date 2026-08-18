@@ -15,45 +15,50 @@ Dự án: <https://claude.ai/design/p/189016ac-229d-4e2e-bd8c-8639a10b828c>
 `.jpeg` → `.png` rồi mới quay về ảnh dự phòng. Thả file đúng tên vào thư mục
 này là trang tự đổi, không phải sửa view.
 
-| Tên file cần đặt | Ô trong thiết kế | Nội dung ảnh | Ảnh dự phòng đang dùng |
-|---|---|---|---|
-| `hero-photo.*`   | `hero-photo`   | Chân dung đeo kính (ảnh lớn bên phải hero) | `hero-models.jpg` |
-| `hero-thumb-1.*` | `uploads/1.jpg` | Ảnh tròn nhỏ số 1 dưới hero | `product-1.jpg` |
-| `hero-thumb-2.*` | `uploads/2.jpg` | Ảnh tròn nhỏ số 2 dưới hero | `product-2.jpg` |
-| `hero-thumb-3.*` | `uploads/3.jpg` | Ảnh tròn nhỏ số 3 dưới hero | `product-3.jpg` |
-| `cat-gong.*`     | `cat-gong`     | Ảnh bìa danh mục "Gọng kính"  | `product-1.jpg` |
-| `cat-mat.*`      | `cat-mat`      | Ảnh bìa danh mục "Kính mát"   | `product-3.jpg` |
-| `cat-trong.*`    | `cat-trong`    | Ảnh bìa danh mục "Tròng kính" | `product-5.jpg` |
-| `style-1.*` ✅   | `style-1`      | Gọng vuông — thẻ "Năng động"  | *(đã có)* |
-| `style-2.*`      | `style-2`      | Gọng oval — thẻ "Thanh lịch"  | `product-3.jpg` |
-| `style-3.*`      | `style-3`      | Gọng tròn — thẻ "Cổ điển trở lại" | `product-2.jpg` |
-| `lab-photo.*`    | `lab-photo`    | Máy đo mắt / bảng thị lực     | `showroom-exam-room.jpg` |
-| `store-photo.*`  | `store-photo`  | Không gian cửa hàng           | `showroom-frames.jpg` |
-| `cta-photo.*` ✅ | `cta-photo`    | Kệ trưng bày kính             | *(đã có)* |
+| Tên file cần đặt | Nội dung ảnh | Ảnh dự phòng đang dùng |
+|---|---|---|
+| `hero-photo.*`    | Băng hero, ảnh 1 — chân dung đeo kính      | `hero-models.jpg` |
+| `hero-slide-2.*`  | Băng hero, ảnh 2 — bộ sưu tập kính mát     | `showroom-frames.jpg` |
+| `hero-slide-3.*`  | Băng hero, ảnh 3 — gọng titan mới lên kệ   | `hero-eyewear.jpg` |
+| `cat-gong.*`      | Ảnh bìa danh mục "Gọng kính"               | `product-1.jpg` |
+| `cat-mat.*`       | Ảnh bìa danh mục "Kính mát"                | `product-3.jpg` |
+| `cat-trong.*`     | Ảnh bìa danh mục "Tròng kính"              | `product-5.jpg` |
+| `check-1.*`       | Thẻ "Chọn tròng" — tròng kính cận cảnh     | `product-5.jpg` |
+| `check-2.*`       | Thẻ "Chọn gọng" — kệ trưng bày gọng        | `showroom-frames.jpg` |
+| `check-3.*`       | Thẻ "Đặt lịch" — tư vấn tại cửa hàng       | `showroom-exam-room.jpg` |
+| `lab-photo.*`     | Máy đo mắt / bảng thị lực                  | `showroom-exam-room.jpg` |
+| `store-photo.*`   | Không gian cửa hàng (khối "Đo mắt")        | `showroom-frames.jpg` |
+| `cta-photo.*` ✅  | Kệ trưng bày kính (khối cuối trang)        | *(đã có)* |
 
 ✅ = đã trích được sẵn, không cần tải lại.
 
-## Hai ô KHÔNG nằm trong bảng này
+`style-1.webp` còn nằm trong thư mục này nhưng **không còn nơi nào dùng**: nó
+phục vụ khối "chọn theo khuôn mặt" của bản thiết kế trước, đã được khối "Bỏ ra
+5 phút để kiểm tra" thay chỗ. Xoá được, giữ lại cũng không sao.
 
-`prod-1` và `prod-2` (hai thẻ "Sản phẩm bán chạy") **cố ý không** đọc từ thư
-mục này. Khối đó lấy ảnh từ cột ảnh của bảng `products` qua
-`ProductModel::image()`, vì nó hiển thị hàng có thật trong kho chứ không phải
-hai món cố định của bản thiết kế. Muốn đổi ảnh thì sửa trong trang quản trị
-sản phẩm.
+## Ba ô KHÔNG nằm trong bảng này
+
+- **Hai lưới sản phẩm** ("Sản phẩm mới về" và "Sản phẩm bán chạy") lấy ảnh từ
+  cột ảnh của bảng `products` qua `ProductModel::image()`, vì chúng hiển thị
+  hàng có thật trong kho chứ không phải mấy món cố định của bản thiết kế. Muốn
+  đổi ảnh thì sửa trong trang quản trị sản phẩm.
+- **Lưới "Bộ sưu tập mới"** lấy ảnh từ `config/collections.php` — xem
+  `assets/images/collections/README.md`.
 
 ## Cắt ảnh thế nào
 
-Bản thiết kế để `object-fit: cover` cho mọi ô, trừ hai ô sản phẩm dùng
+Bản thiết kế để `object-fit: cover` cho mọi ô, trừ hai lưới sản phẩm dùng
 `contain`. Nghĩa là ảnh sẽ **bị xén cho vừa khung**, không phải thu nhỏ lọt
 khung — nên cứ tải nguyên tấm về, đừng cắt trước. Tỉ lệ khung của từng ô:
 
-- `hero-photo` — cột cao, tối thiểu 560px chiều cao
+- `hero-photo` · `hero-slide-2` · `hero-slide-3` — cột cao, tối thiểu 680px
+  chiều cao; cả ba phải cùng tỉ lệ, không thì băng ảnh nhảy khung khi trượt
 - `cat-*` — khung ngang 300px chiều cao
-- `style-*` — khung vòm 260px chiều cao, hai góc trên bo bán nguyệt
+- `check-*` — khung ngang 400px chiều cao
 - `lab-photo` — khung ngang 280px chiều cao
-- `store-photo` — khung vòm cao 460px
+- `store-photo` — khung ngang 460px chiều cao
 - `cta-photo` — cột phải của khối CTA, tối thiểu 340px chiều cao
 
 Nếu chưa tải ảnh về, trang vẫn chạy bình thường bằng ảnh dự phòng — chỉ khác
-là mấy ô danh mục và khuôn mặt sẽ xén mất càng gọng, vì ảnh dự phòng là ảnh
-sản phẩm cắt nền chứ không phải ảnh bìa chụp tràn khung.
+là mấy ô danh mục sẽ xén mất càng gọng, vì ảnh dự phòng là ảnh sản phẩm cắt
+nền chứ không phải ảnh bìa chụp tràn khung.

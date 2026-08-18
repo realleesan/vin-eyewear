@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="vi">
+<?php /* lang động: trình đọc màn hình chọn giọng đọc theo thuộc tính này,
+         và trình duyệt dùng nó để gợi ý dịch trang. Khoá cứng "vi" thì khách
+         chọn English vẫn bị đọc bằng giọng tiếng Việt. */ ?>
+<html lang="<?= e(currentLang()) ?>">
 
 <head>
     <meta charset="UTF-8">
@@ -17,6 +20,20 @@
 
     <!-- Mỗi controller có thể truyền $metaDesc riêng; thiếu thì dùng mô tả chung -->
     <meta name="description" content="<?= e($metaDesc ?? 'Vin Eyewear — cửa hàng kính mắt chính hãng tại Hà Nội, đo khúc xạ miễn phí và thử kính AR trực tuyến.') ?>">
+
+    <?php
+    /*
+     * Trang nào truyền 'noindex' => true thì xin máy tìm kiếm bỏ qua. Hiện chỉ
+     * trang kết quả tìm kiếm dùng: mỗi từ khoá là một URL, lập chỉ mục hết thì
+     * sinh ra vô số trang mỏng trùng nội dung với /san-pham và /su-kien.
+     *
+     * `follow` chứ không phải `nofollow`: đừng lập chỉ mục TRANG NÀY, nhưng cứ
+     * đi theo các liên kết trong đó tới sản phẩm và bài viết thật.
+     */
+    if (!empty($noindex)) {
+        echo '    <meta name="robots" content="noindex, follow">' . "\n";
+    }
+    ?>
 
     <!-- Google Fonts: Lora (tiêu đề) / Be Vietnam Pro (chữ chạy) / JetBrains Mono.
          Trùng với --font-serif / --font-sans / --font-mono trong layout.css —
@@ -53,6 +70,11 @@
     <link rel="stylesheet" href="<?= asset('assets/css/components/footer.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/page-head.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/product.css') ?>">
+    <?php /* Hộp thoại "Chọn hình thức mua". Nạp cho MỌI trang chứ không theo
+             bảng $pageStyles bên dưới: nó hiện đè lên bất kỳ trang nào có nút
+             thêm giỏ — trang chủ, danh mục, tìm kiếm, chi tiết — và một hộp
+             thoại vẽ ra không có kiểu thì che mất cả trang. */ ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/components/buy-modal.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/floating.css') ?>">
 
     <?php
@@ -67,10 +89,11 @@
         // Trang danh sách nay dựng theo "Vin Eyewear Category.dc.html" và có
         // bộ lớp riêng; nó không còn mượn .section-head/.eyebrow của trang chủ
         // nên cũng không nạp home-sections.css nữa.
+        'search/index'   => ['search.css'],
         'product/index'  => ['category.css'],
         // Trang chi tiết nay dựng theo "Vin Eyewear Product.dc.html" và có bộ
         // lớp riêng (.pd*); nó không còn mượn .section-h2 của trang chủ nữa.
-        // Thẻ "sản phẩm liên quan" dùng .pcard trong components/product.css,
+        // Thẻ "sản phẩm liên quan" dùng .pcard trong components/product.css
         // vốn đã nạp cho mọi trang.
         'product/detail' => ['product-detail.css'],
         // Trang danh sách nay dựng theo "Vin Eyewear News.dc.html" và có bộ lớp
@@ -88,12 +111,19 @@
         'cart/index'     => ['cart.css'],
         // Trang thanh toán dựng theo "Vin Eyewear Checkout.dc.html": khung rút
         // gọn (bare-shell) + khối tóm tắt dùng chung với giỏ hàng (cart.css)
-        // + bộ lớp riêng của nó (checkout.css). order.css nay chỉ còn phục vụ
-        // trang đặt lịch và trang xác nhận đơn.
+        // + bộ lớp riêng của nó (checkout.css).
         'order/checkout' => ['components/bare-shell.css', 'cart.css', 'checkout.css'],
-        'order/success'  => ['components/home-sections.css', 'event.css', 'order.css'],
+        // Màn "Thanh toán QR" — màn thứ hai của cùng bản thiết kế, nên dùng
+        // chung checkout.css (bộ lớp .coqr*). Không cần cart.css: màn này
+        // không có khối tóm tắt .csum*.
+        'order/transfer' => ['components/bare-shell.css', 'checkout.css'],
+        // Trang xác nhận đơn nay dựng theo "Vin Eyewear Order Complete.dc.html"
+        // và có bộ lớp riêng (.ocomp*); nó không còn mượn .section-h2 của trang
+        // chủ hay .edetail__cta của trang sự kiện. order.css đã bỏ — trang đặt
+        // lịch (bộ lớp .b* trong file đó) từ lâu đã có booking.css riêng.
+        'order/success'  => ['order-complete.css'],
         // Trang đặt lịch nay dựng theo "Vin Eyewear Booking.dc.html" và có bộ
-        // lớp riêng (.bk*); nó không còn mượn .field/.bslot của order.css.
+        // lớp riêng (.bk*).
         'booking/index'  => ['booking.css'],
         // Ba trang tài khoản-chưa-đăng-nhập dựng theo "Vin Eyewear Login.dc.html".
         // bare-shell.css phải đứng TRƯỚC auth.css: nó giữ khung rút gọn dùng
@@ -102,8 +132,7 @@
         'auth/forgot'    => ['components/bare-shell.css', 'auth.css'],
         'auth/reset'     => ['components/bare-shell.css', 'auth.css'],
         // Trang tài khoản nay dựng theo "Vin Eyewear Account.dc.html" và có bộ
-        // lớp riêng (.acct*); nó không còn mượn .acard/.otable của auth.css
-        // hay .order* của order.css nữa.
+        // lớp riêng (.acct*); nó không còn mượn .acard/.otable của auth.css.
         'auth/profile'   => ['account.css'],
         'ar/tryon'       => ['ar.tryon.css'],
         // errors.css giữ .error-page* mà 404 và 500 dùng; auth.css giữ .errpage*
@@ -175,6 +204,32 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
 
     <?php partial($bare ? '_layout/auth-footer' : '_layout/footer'); ?>
 
+    <?php
+    /*
+     * Hộp thoại "Chọn hình thức mua" — chỉ khi ?mua=<id> trỏ tới một chiếc
+     * gọng hoặc kính mát đang bán. BaseController::renderView dựng $buyModal.
+     *
+     * Đặt CUỐI <body>, sau chân trang: nó nổi lên bằng position:fixed nên vị
+     * trí trong luồng không ảnh hưởng gì tới hình ảnh, mà để cuối thì trình
+     * đọc màn hình và phím Tab đi hết nội dung trang rồi mới tới nó — đúng thứ
+     * tự với một lớp phủ.
+     */
+    if (!empty($buyModal)) {
+        partial('_layout/buy-modal', ['buyModal' => $buyModal]);
+    }
+    ?>
+
+    <?php if (!empty($toast)): ?>
+        <?php /* Dải báo sau khi thêm vào giỏ. role="status" để trình đọc màn
+                 hình đọc lên mà không cắt ngang việc đang làm — aria-live
+                 "polite", đúng với một lời xác nhận.
+
+                 Tự mờ đi sau vài giây bằng CSS animation, không phải setTimeout:
+                 xem .toast trong components/ui.css. */ ?>
+        <p class="toast toast--<?= e($toastTone ?? 'ok') ?>"
+           role="<?= ($toastTone ?? 'ok') === 'err' ? 'alert' : 'status' ?>"><?= e($toast) ?></p>
+    <?php endif; ?>
+
     <?php if (!$bare): ?>
         <!-- S22 — cụm nút nổi hỗ trợ. Đặt sau footer để thứ tự đọc của trình đọc
              màn hình khớp với thứ tự trên màn hình: đây là tiện ích phụ, không
@@ -189,11 +244,15 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
     /*
      * JS riêng của từng trang — cùng cách làm với CSS ở trên.
      *
-     * 'home/index' đã bỏ khỏi bảng: hero của bản thiết kế mới là khối tĩnh
-     * hai cột, không còn carousel nên không cần hero.js. File assets/js/hero.js
-     * và config/banners.php giờ không còn nơi nào dùng.
+     * 'home/index' -> home.js: băng ảnh hero, đồng hồ đếm ngược ưu đãi, hộp
+     * thoại "kiểm tra 5 phút" và băng trượt khối đánh giá. Tất cả đều chỉ là
+     * tăng cường — xem khối chú thích đầu assets/js/home.js.
+     *
+     * KHÔNG phải assets/js/hero.js: file đó là carousel tự chạy đọc từ
+     * config/banners.php của thiết kế cũ, cả hai giờ không còn nơi nào dùng.
      */
     $pageScripts = [
+        'home/index'    => 'home.js',
         'policy/index'  => 'policy.js',
         'ar/tryon'      => 'ar-tryon.js',
         // Chỉ là tăng cường: đổi ô sắp xếp là gửi form luôn, và lọc danh sách
@@ -211,6 +270,9 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         // Cũng chỉ là tăng cường: nút "sao chép liên kết" ở cột chia sẻ.
         // Không có file này thì nút tự ẩn, nút Facebook bên cạnh vẫn chạy.
         'event/detail'  => 'share.js',
+        // Đếm ngược rồi tự sang mục "Đơn hàng của tôi". Không có file này thì
+        // không có đếm ngược nào và nút "Xem đơn hàng của tôi" vẫn ở đó.
+        'order/success' => 'order-success.js',
     ];
 
     if (isset($pageScripts[$viewName ?? ''])) {

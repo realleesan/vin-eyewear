@@ -3,30 +3,60 @@
 /**
  * auth/account/don-hang.php — mục "Đơn hàng của tôi" (/tai-khoan?muc=don-hang).
  *
- * Bản thiết kế: dải thẻ lọc theo trạng thái, rồi mỗi đơn là một thẻ gồm
- * đầu thẻ (mã · ngày · huy hiệu trạng thái) → dòng sản phẩm → thanh tiến
- * trình → chân thẻ (nút hành động).
+ * Dựng theo khối "ĐƠN HÀNG" trong "Vin Eyewear Account.dc.html" (Claude Design):
+ *
+ *   dải thẻ lọc theo trạng thái
+ *   rồi mỗi đơn là một thẻ VIỀN MỎNG chia thành từng dải ngang:
+ *     dải đầu (nền pearl)  mã · ngày · huy hiệu trạng thái
+ *     dải hàng             ảnh 84px · thương hiệu/tên/phiên bản · SL + tiền
+ *     dải tiến trình       5 chấm
+ *     dải chi tiết         (nền pearl) hai cột: nhận hàng | tóm tắt thanh toán
+ *     dải chân             cách giao · cách trả  ‖  nút hành động
+ *
+ * Thẻ đơn hàng KHÔNG cùng ngôn ngữ hình khối với các thẻ khác của trang tài
+ * khoản: bản thiết kế vẽ những thẻ kia bo tròn lớn + đổ bóng, còn thẻ đơn thì
+ * viền 1px + bo nhỏ + không bóng, và chia dải bằng nền pearl. Đây là chủ ý của
+ * bản thiết kế (một hoá đơn nên trông như chứng từ, không như thẻ quảng cáo),
+ * nên .acct-order tự tắt bóng và tự thêm viền chứ không sửa .acct-card.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * MÀU HUY HIỆU TRẠNG THÁI
  *
- * Bản thiết kế đặt tên 5 trạng thái, OrderModel::STATUSES có 6. Bốn cặp màu
- * khớp thẳng; hai trạng thái 'confirmed' và 'preparing' cùng ứng với một
- * trạng thái duy nhất của bản thiết kế ("Đang chuẩn bị hàng") nên dùng chung
- * sắc chàm của nó. Chúng là hai bước liền nhau trong cùng một giai đoạn, và
- * chữ trên huy hiệu vẫn nói rõ đang ở bước nào.
+ * Sáu trạng thái của OrderModel::STATUSES ↔ đúng sáu cặp màu bản thiết kế khai
+ * trong `Component.STATUS`. 'confirmed' xanh chàm và 'preparing' tím là HAI cặp
+ * khác nhau — trước đây hai trạng thái này dùng chung một màu.
  *
- * THANH TIẾN TRÌNH: NĂM BƯỚC, KHÔNG PHẢI BỐN
- * Bản thiết kế vẽ 4 chấm với dữ liệu mẫu 4 bước; vòng đời thật có 5 mốc.
- * Khối chấm là một danh sách lặp nên số lượng đi theo dữ liệu — 5 chấm dựng
- * bằng đúng thành phần ấy. Đơn đã huỷ thì không vẽ thanh này: một đường tiến
- * trình dừng giữa chừng trông như đơn đang kẹt chứ không phải đã huỷ.
+ * THANH TIẾN TRÌNH: NĂM BƯỚC
+ * Đúng 5 mốc như bản thiết kế. Đơn đã huỷ thì không vẽ thanh này: một đường
+ * tiến trình dừng giữa chừng trông như đơn đang kẹt chứ không phải đã huỷ.
+ *
+ * BỐN CHỖ THÊM SO VỚI BẢN THIẾT KẾ — VÀ VÌ SAO
+ *
+ * 1. DÒNG "GIẢM GIÁ" trong tóm tắt thanh toán. Bản thiết kế chỉ có tạm tính +
+ *    phí vận chuyển + tổng cộng vì đơn mẫu của nó không có mã giảm giá. Thiếu
+ *    dòng này thì hoá đơn thật trông như tính sai. Chỉ hiện khi discount > 0.
+ *
+ * 2. DÒNG TỪNG SẢN PHẨM trong tóm tắt, CHỈ khi đơn có nhiều hơn một món. Bản
+ *    thiết kế vẽ đơn một món nên dải hàng nói được hết; đơn nhiều món thì
+ *    không, và khách không còn chỗ nào xem mình đã mua gì. Dựng bằng đúng
+ *    nguyên thể "dòng tóm tắt" (nhãn trái · số phải) mà bản thiết kế đã định
+ *    nghĩa ngay trong cột đó, không thêm hình khối mới.
+ *
+ * 3. GHI CHÚ CỦA KHÁCH dưới địa chỉ, cùng cột "Thông tin nhận hàng" — nó là
+ *    một phần của việc nhận hàng. Chỉ hiện khi đơn có ghi chú.
+ *
+ * 4. HUY HIỆU TRẠNG THÁI TIỀN ở đầu thẻ, và KHỐI CHUYỂN KHOẢN trong cột tóm tắt
+ *    khi đơn chuyển khoản còn nợ tiền. Bản thiết kế chỉ vẽ một huy hiệu — trạng
+ *    thái giao vận — vì dữ liệu mẫu của nó không có trục trạng thái tiền nào.
+ *    CSDL thì có (orders.payment_status), và đó là thứ khách hỏi trước nhất khi
+ *    mở trang này: "tôi đã trả chưa, còn phải chuyển bao nhiêu, vào đâu".
+ *    Xem OrderModel::PAYMENT_STATUSES.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 $badgeTones = [
     'new'       => 'wait',
-    'confirmed' => 'prep',
+    'confirmed' => 'sure',
     'preparing' => 'prep',
     'shipping'  => 'ship',
     'completed' => 'done',
@@ -43,16 +73,38 @@ $flow = [
     'completed' => 'Đã nhận hàng',
 ];
 
-/* Nút chính ở chân thẻ, theo trạng thái. null = chỉ có nút "Xem chi tiết". */
+/* Nút chính ở chân thẻ, theo trạng thái. Trạng thái không có tên ở đây thì chân
+   thẻ chỉ còn nút "Xem chi tiết" — đúng như bản thiết kế để trống hai trạng
+   thái 'confirmed' và 'preparing'.
+
+   TRẠNG THÁI 'new' KHÔNG CÒN NÚT NÀO. Trước đây nó là "Xem hướng dẫn thanh
+   toán" trỏ /chinh-sach#thanh-toan — một NEO CHẾT (trang chính sách chỉ có
+   bao-hanh · doi-tra · do-mat · giao-hang · bao-mat), nên nút mở trang chính
+   sách rồi đứng ở đầu trang. Nó lại hiện cho cả đơn COD, mà đơn COD thì không có
+   hướng dẫn thanh toán nào để xem — cứ nhận hàng rồi trả tiền cho shipper.
+
+   Việc trả tiền nay đi theo TRẠNG THÁI TIỀN chứ không theo trạng thái đơn: đơn
+   chuyển khoản chưa nhận tiền có nút riêng, xem $needsTransfer bên dưới. */
 $primaryLabels = [
-    'new'       => 'Xem hướng dẫn thanh toán',
     'shipping'  => 'Theo dõi vận chuyển',
     'completed' => 'Mua lại',
     'cancelled' => 'Mua lại',
 ];
 
 $deliveryLabels = ['pickup' => 'Nhận tại cửa hàng', 'shipping' => 'Giao tận nơi'];
-$paymentLabels  = ['cod' => 'Thanh toán khi nhận hàng', 'bank_transfer' => 'Chuyển khoản ngân hàng'];
+
+/* HAI tên cho cùng một cách thanh toán, đúng như bản thiết kế viết: thẻ vuông
+   trong phần chi tiết ghi cả chữ viết tắt (`payMethod`), còn dòng dưới chân thẻ
+   thì bỏ nó đi (`footNote`) — chỗ đó là một dòng đọc nhanh, ngoặc đơn chỉ làm
+   rối. */
+$paymentLabels = [
+    'cod'           => 'Thanh toán khi nhận hàng (COD)',
+    'bank_transfer' => 'Chuyển khoản ngân hàng',
+];
+$paymentShort  = [
+    'cod'           => 'Thanh toán khi nhận hàng',
+    'bank_transfer' => 'Chuyển khoản ngân hàng',
+];
 ?>
 
 <div class="acct-head">
@@ -61,13 +113,17 @@ $paymentLabels  = ['cod' => 'Thanh toán khi nhận hàng', 'bank_transfer' => '
 </div>
 
 <div class="acct-tabs">
+    <?php
+    /* Số trong ngoặc CHỈ hiện khi khác 0, đúng bản thiết kế: "Đã huỷ (0)" là
+       một con số không nói gì mà vẫn chiếm chỗ trên dải. */
+    ?>
     <a class="acct-tab<?= $tab === '' ? ' is-active' : '' ?>" href="/tai-khoan?muc=don-hang">
-        Tất cả (<?= (int) $total ?>)
+        Tất cả<?= $total > 0 ? ' (' . (int) $total . ')' : '' ?>
     </a>
     <?php foreach ($statuses as $key => $label): ?>
         <a class="acct-tab<?= $tab === $key ? ' is-active' : '' ?>"
            href="/tai-khoan?muc=don-hang&amp;loc=<?= e($key) ?>">
-            <?= e($label) ?><?= isset($tabCounts[$key]) ? ' (' . (int) $tabCounts[$key] . ')' : '' ?>
+            <?= e($label) ?><?= !empty($tabCounts[$key]) ? ' (' . (int) $tabCounts[$key] . ')' : '' ?>
         </a>
     <?php endforeach; ?>
 </div>
@@ -91,10 +147,43 @@ $paymentLabels  = ['cod' => 'Thanh toán khi nhận hàng', 'bank_transfer' => '
         <?php foreach ($orders as $o): ?>
             <?php
             $lines = $items[$o['id']] ?? [];
-            $lead  = $lines[0] ?? null;          // dòng hàng in ra ngoài thẻ
-            $extra = max(0, count($lines) - 1);  // số dòng còn lại, nêu ở "Xem chi tiết"
+            $lead  = $lines[0] ?? null;          // dòng hàng in ra dải hàng
+            $extra = max(0, count($lines) - 1);  // số dòng còn lại, nêu ở phiên bản
             $marks = $history[$o['id']] ?? [];
             $step  = array_search($o['status'], array_keys($flow), true);
+
+            /* Mở/đóng bằng URL (?don=<mã>) chứ không bằng <details>: cùng lý do
+               đã ghi ở đầu app/views/auth/profile.php — gửi được link tới đúng
+               đơn đang hỏi, và F5 không đóng lại.
+
+               Khối chi tiết dựng SẴN cho mọi đơn (ẩn bằng `hidden` nếu đang thu
+               gọn) chứ không dựng khi ?don= khớp: dữ liệu của cả danh sách đã
+               nạp từ trước — xem itemsForOrders trong AuthController — nên in
+               thêm không tốn câu truy vấn nào, mà account.js mới có gì để
+               bật/tắt tại chỗ, khỏi tải lại trang. Không có JS thì href bên
+               dưới vẫn làm đúng việc như cũ. */
+            $isOpen    = $expanded === $o['code'];
+            $base      = '/tai-khoan?muc=don-hang' . ($tab !== '' ? '&amp;loc=' . e($tab) : '');
+            $openHref  = $base . '&amp;don=' . e(rawurlencode($o['code'])) . '#' . e($o['code']);
+            $closeHref = $base . '#' . e($o['code']);
+            $detailId  = 'chi-tiet-' . e($o['code']);
+
+            $delivery = $deliveryLabels[$o['delivery_method']] ?? $o['delivery_method'];
+            $payment  = $paymentLabels[$o['payment_method']] ?? $o['payment_method'];
+            $payShort = $paymentShort[$o['payment_method']] ?? $payment;
+
+            $isPaid = ($o['payment_status'] ?? 'unpaid') === 'paid';
+
+            /* Đơn chuyển khoản còn nợ tiền và chưa huỷ -> chân thẻ có nút riêng
+               dẫn tới khối chuyển khoản, nằm ngay trong phần chi tiết của chính
+               thẻ này. Bấm nút = mở phần chi tiết ra (cùng href với "Xem chi
+               tiết"), nên không đi đâu khỏi trang và cũng không cần JS.
+
+               Đơn COD KHÔNG có nút này: khách không phải làm gì trước khi nhận
+               hàng cả. */
+            $needsTransfer = !$isPaid
+                && $o['payment_method'] === 'bank_transfer'
+                && $o['status'] !== 'cancelled';
             ?>
             <div class="acct-card acct-order" id="<?= e($o['code']) ?>">
 
@@ -103,9 +192,25 @@ $paymentLabels  = ['cod' => 'Thanh toán khi nhận hàng', 'bank_transfer' => '
                         <span class="acct-order__code"><?= e($o['code']) ?></span>
                         <span class="acct-order__when">Đặt ngày <?= e(formatDate($o['created_at'])) ?></span>
                     </div>
-                    <span class="acct-badge acct-badge--<?= e($badgeTones[$o['status']] ?? 'wait') ?>">
-                        <?= e($statuses[$o['status']] ?? $o['status']) ?>
-                    </span>
+                    <div class="acct-order__flags">
+                        <?php
+                        /* Huy hiệu TIỀN đứng trước huy hiệu trạng thái đơn, và có
+                           dáng khác (viền thay vì nền đặc) để hai trục trạng thái
+                           không tranh nhau — xem OrderModel::PAYMENT_STATUSES.
+
+                           Đơn đã huỷ thì không nói chuyện tiền: "Chưa thanh toán"
+                           trên một đơn đã huỷ đọc như còn nợ. */
+                        ?>
+                        <?php if ($o['status'] !== 'cancelled'): ?>
+                            <span class="acct-badge acct-badge--<?= $isPaid ? 'paid' : 'due' ?>">
+                                <?= $isPaid ? 'Đã thanh toán' : 'Chưa thanh toán' ?>
+                            </span>
+                        <?php endif; ?>
+
+                        <span class="acct-badge acct-badge--<?= e($badgeTones[$o['status']] ?? 'wait') ?>">
+                            <?= e($statuses[$o['status']] ?? $o['status']) ?>
+                        </span>
+                    </div>
                 </div>
 
                 <div class="acct-order__line">
@@ -118,7 +223,7 @@ $paymentLabels  = ['cod' => 'Thanh toán khi nhận hàng', 'bank_transfer' => '
                         $pic  = is_array($pics) ? ($pics[0] ?? null) : null;
                         ?>
                         <?php if ($pic !== null): ?>
-                            <img src="<?= e(asset($pic)) ?>" alt="" width="88" height="88" loading="lazy">
+                            <img src="<?= e(asset($pic)) ?>" alt="" width="84" height="84" loading="lazy">
                         <?php endif; ?>
                     </div>
 
@@ -141,7 +246,7 @@ $paymentLabels  = ['cod' => 'Thanh toán khi nhận hàng', 'bank_transfer' => '
                                 $bits[] = 'và ' . $extra . ' sản phẩm khác';
                             }
 
-                            echo e($bits === [] ? $deliveryLabels[$o['delivery_method']] ?? '' : implode(' · ', $bits));
+                            echo e($bits === [] ? $delivery : implode(' · ', $bits));
                             ?>
                         </span>
                     </div>
@@ -184,113 +289,185 @@ $paymentLabels  = ['cod' => 'Thanh toán khi nhận hàng', 'bank_transfer' => '
                     </ol>
                 <?php endif; ?>
 
-                <?php
-                /* "Xem chi tiết" mở ngay tại chỗ chứ không sang trang khác —
-                   bản thiết kế không vẽ trang chi tiết đơn nào, và mọi thứ cần
-                   xem đều vừa trong thẻ này.
+                <div class="acct-order__detail" id="<?= $detailId ?>"<?= $isOpen ? '' : ' hidden' ?>>
 
-                   Mở/đóng bằng URL (?don=<mã>) chứ không bằng <details>: cùng
-                   lý do đã ghi ở đầu app/views/auth/profile.php — gửi được
-                   link tới đúng đơn đang hỏi, và F5 không đóng lại. */
-                $isOpen = $expanded === $o['code'];
-                $base   = '/tai-khoan?muc=don-hang' . ($tab !== '' ? '&amp;loc=' . e($tab) : '');
-                ?>
-                <div class="acct-order__foot">
-                    <?php if (isset($primaryLabels[$o['status']])): ?>
-                        <?php if ($primaryLabels[$o['status']] === 'Mua lại'): ?>
-                            <form method="post" action="/tai-khoan/mua-lai">
-                                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                <input type="hidden" name="code" value="<?= e($o['code']) ?>">
-                                <button type="submit" class="acct-btn acct-btn--primary acct-btn--sm">
-                                    Mua lại
-                                </button>
-                            </form>
-                        <?php elseif ($o['status'] === 'new'): ?>
-                            <a class="acct-btn acct-btn--primary acct-btn--sm" href="/chinh-sach#thanh-toan">
-                                <?= e($primaryLabels[$o['status']]) ?>
-                            </a>
-                        <?php else: ?>
-                            <a class="acct-btn acct-btn--primary acct-btn--sm" href="/lien-he">
-                                <?= e($primaryLabels[$o['status']]) ?>
-                            </a>
-                        <?php endif; ?>
-                    <?php endif; ?>
-
-                    <a class="acct-btn acct-btn--outline acct-btn--sm"
-                       href="<?= $isOpen ? $base . '#' . e($o['code']) : $base . '&amp;don=' . e(rawurlencode($o['code'])) . '#' . e($o['code']) ?>"
-                       aria-expanded="<?= $isOpen ? 'true' : 'false' ?>">
-                        <?= $isOpen ? 'Thu gọn' : 'Xem chi tiết' ?>
-                    </a>
-                </div>
-
-                <?php if ($isOpen): ?>
-                    <div class="acct-order__detail">
-                        <table class="acct-order__items">
-                            <caption class="sr-only">Các sản phẩm trong đơn <?= e($o['code']) ?></caption>
-                            <thead>
-                                <tr>
-                                    <th scope="col">Sản phẩm</th>
-                                    <th scope="col">Đơn giá</th>
-                                    <th scope="col">SL</th>
-                                    <th scope="col">Thành tiền</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($lines as $ln): ?>
-                                    <tr>
-                                        <th scope="row">
-                                            <?php if (!empty($ln['slug'])): ?>
-                                                <a href="/san-pham/<?= e($ln['slug']) ?>"><?= e($ln['product_name']) ?></a>
-                                            <?php else: ?>
-                                                <?= e($ln['product_name']) ?>
-                                            <?php endif; ?>
-                                        </th>
-                                        <td><?= money((int) $ln['unit_price']) ?></td>
-                                        <td><?= (int) $ln['quantity'] ?></td>
-                                        <td><?= money((int) $ln['line_total']) ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th scope="row" colspan="3">Tạm tính</th>
-                                    <td><?= money((int) $o['subtotal']) ?></td>
-                                </tr>
-                                <?php if ((int) $o['discount'] > 0): ?>
-                                    <!-- Thiếu dòng này thì tạm tính + phí vận chuyển không
-                                         ra tổng cộng, và hoá đơn trông như tính sai. -->
-                                    <tr>
-                                        <th scope="row" colspan="3">Giảm giá</th>
-                                        <td>−<?= money((int) $o['discount']) ?></td>
-                                    </tr>
-                                <?php endif; ?>
-                                <tr>
-                                    <th scope="row" colspan="3">Phí vận chuyển</th>
-                                    <td><?= (int) $o['shipping_fee'] === 0 ? 'Miễn phí' : money((int) $o['shipping_fee']) ?></td>
-                                </tr>
-                                <tr class="acct-order__grand">
-                                    <th scope="row" colspan="3">Tổng cộng</th>
-                                    <td><?= money((int) $o['total']) ?></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-
-                        <div class="acct-chips">
-                            <span class="acct-chip">
-                                <?= e($deliveryLabels[$o['delivery_method']] ?? $o['delivery_method']) ?><?php
-                                    if (!empty($o['store_name'])): ?>: <?= e($o['store_name']) ?><?php endif; ?>
+                    <div class="acct-order__block">
+                        <span class="acct-order__eyebrow">Thông tin nhận hàng</span>
+                        <div class="acct-order__who">
+                            <span class="acct-order__to">
+                                <?= e($o['customer_name']) ?> · <?= e($o['customer_phone']) ?>
                             </span>
-                            <span class="acct-chip"><?= e($paymentLabels[$o['payment_method']] ?? $o['payment_method']) ?></span>
-                            <?php if (!empty($o['shipping_address'])): ?>
-                                <span class="acct-chip">Giao tới: <?= e($o['shipping_address']) ?></span>
-                            <?php endif; ?>
+                            <span class="acct-order__addr">
+                                <?php
+                                /* Đơn giao tận nơi có địa chỉ khách; đơn nhận tại
+                                   cửa hàng thì địa chỉ CẦN xem là địa chỉ cơ sở —
+                                   in địa chỉ nhà khách ở đây là chỉ sai đường. */
+                                if ($o['delivery_method'] === 'pickup') {
+                                    echo e(trim(($o['store_name'] ?? 'Cơ sở Vin Eyewear')
+                                        . (!empty($o['store_address']) ? ' · ' . $o['store_address'] : '')));
+                                } else {
+                                    echo e($o['shipping_address'] ?: 'Chưa có địa chỉ nhận hàng');
+                                }
+                                ?>
+                            </span>
                         </div>
 
                         <?php if (!empty($o['note'])): ?>
-                            <p class="acct-order__note">Ghi chú: <?= e($o['note']) ?></p>
+                            <p class="acct-order__memo">Ghi chú: <?= e($o['note']) ?></p>
+                        <?php endif; ?>
+
+                        <div class="acct-order__tags">
+                            <span class="acct-order__tag"><?= e($delivery) ?></span>
+                            <span class="acct-order__tag"><?= e($payment) ?></span>
+                            <?php if ($isPaid && !empty($o['paid_at'])): ?>
+                                <span class="acct-order__tag">
+                                    Đã nhận tiền <?= e(formatDate($o['paid_at'], 'd/m/Y')) ?>
+                                </span>
+                            <?php endif; ?>
+                        </div>
+
+                    </div>
+
+                    <div class="acct-order__block">
+                        <span class="acct-order__eyebrow">Tóm tắt thanh toán</span>
+
+                        <?php if ($extra > 0): ?>
+                            <?php foreach ($lines as $ln): ?>
+                                <div class="acct-order__sum">
+                                    <span>
+                                        <?php if (!empty($ln['slug'])): ?>
+                                            <a href="/san-pham/<?= e($ln['slug']) ?>"><?= e($ln['product_name']) ?></a>
+                                        <?php else: ?>
+                                            <?= e($ln['product_name']) ?>
+                                        <?php endif; ?>
+                                        × <?= (int) $ln['quantity'] ?>
+                                        <?php if (!empty($ln['lens_name']) || !empty($ln['prescription'])): ?>
+                                            <?php /* Tròng cắt kèm đã nằm trong
+                                                     line_total — nói tên nó ra để
+                                                     con số không cao hơn giá gọng
+                                                     mà không có lời giải thích. */ ?>
+                                            <span class="acct-order__lens">
+                                                <?php if (!empty($ln['lens_name'])): ?>
+                                                    + <?= e($ln['lens_name']) ?><?= $ln['prescription'] !== null ? ' ·' : '' ?>
+                                                <?php endif; ?>
+                                                <?php if ($ln['prescription'] !== null): ?>
+                                                    <?= e($ln['prescription']) ?>
+                                                <?php endif; ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </span>
+                                    <span class="acct-order__num"><?= money((int) $ln['line_total']) ?></span>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+
+                        <div class="acct-order__sum<?= $extra > 0 ? ' acct-order__sum--split' : '' ?>">
+                            <span>Tạm tính</span>
+                            <span class="acct-order__num"><?= money((int) $o['subtotal']) ?></span>
+                        </div>
+
+                        <?php if ((int) $o['discount'] > 0): ?>
+                            <div class="acct-order__sum">
+                                <span>Giảm giá</span>
+                                <span class="acct-order__num">−<?= money((int) $o['discount']) ?></span>
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="acct-order__sum">
+                            <span>Phí vận chuyển</span>
+                            <?php if ((int) $o['shipping_fee'] === 0): ?>
+                                <span class="acct-order__free">Miễn phí</span>
+                            <?php else: ?>
+                                <span class="acct-order__num"><?= money((int) $o['shipping_fee']) ?></span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="acct-order__sum acct-order__sum--grand">
+                            <span>Tổng cộng</span>
+                            <span class="acct-order__grand"><?= money((int) $o['total']) ?></span>
+                        </div>
+
+                        <?php if ($needsTransfer && !empty($bank['number'])): ?>
+                            <?php
+                            /* Khối chuyển khoản nằm NGAY TRONG thẻ đơn, không phải
+                               một trang khác: khách cần số tài khoản, số tiền và
+                               nội dung = mã đơn — ba thứ đó chỉ có nghĩa cùng với
+                               đơn này. Nút ở chân thẻ chỉ mở phần này ra. */
+                            ?>
+                            <div class="acct-order__pay" id="ck-<?= e($o['code']) ?>">
+                                <span class="acct-order__eyebrow">Chuyển khoản tới</span>
+                                <dl class="acct-order__bank">
+                                    <div>
+                                        <dt>Ngân hàng</dt>
+                                        <dd><?= e($bank['name']) ?></dd>
+                                    </div>
+                                    <div>
+                                        <dt>Số tài khoản</dt>
+                                        <dd><strong><?= e($bank['number']) ?></strong></dd>
+                                    </div>
+                                    <div>
+                                        <dt>Chủ tài khoản</dt>
+                                        <dd><?= e($bank['holder']) ?></dd>
+                                    </div>
+                                    <div>
+                                        <dt>Số tiền</dt>
+                                        <dd><strong><?= money((int) $o['total']) ?></strong></dd>
+                                    </div>
+                                    <div>
+                                        <dt>Nội dung</dt>
+                                        <dd><strong><?= e($o['code']) ?></strong></dd>
+                                    </div>
+                                </dl>
+                                <p class="acct-order__memo">
+                                    Ghi đúng mã đơn ở phần nội dung để chúng tôi đối chiếu được.
+                                </p>
+                            </div>
                         <?php endif; ?>
                     </div>
-                <?php endif; ?>
+                </div>
+
+                <div class="acct-order__foot">
+                    <span class="acct-order__footnote"><?= e($delivery) ?> · <?= e($payShort) ?></span>
+
+                    <div class="acct-order__acts">
+                        <?php if ($needsTransfer && !empty($bank['number'])): ?>
+                            <!-- Khối chuyển khoản nằm trong chính phần chi tiết của
+                                 thẻ này, nên nút chỉ mở phần đó ra rồi cuộn tới
+                                 #ck-<mã>. Có JS thì account.js bỏ `hidden` tại chỗ
+                                 (data-reveal); không có JS thì href tải lại trang
+                                 với ?don= và máy chủ dựng ra ở trạng thái mở. -->
+                            <a class="acct-btn acct-btn--primary acct-btn--sm"
+                               href="<?= $isOpen ? '#ck-' . e($o['code']) : $base . '&amp;don=' . e(rawurlencode($o['code'])) . '#ck-' . e($o['code']) ?>"
+                               data-reveal="<?= $detailId ?>"
+                               data-reveal-to="ck-<?= e($o['code']) ?>">
+                                Xem thông tin chuyển khoản
+                            </a>
+                        <?php elseif (isset($primaryLabels[$o['status']])): ?>
+                            <?php if ($primaryLabels[$o['status']] === 'Mua lại'): ?>
+                                <form method="post" action="/tai-khoan/mua-lai">
+                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                    <input type="hidden" name="code" value="<?= e($o['code']) ?>">
+                                    <button type="submit" class="acct-btn acct-btn--primary acct-btn--sm">
+                                        Mua lại
+                                    </button>
+                                </form>
+                            <?php else: ?>
+                                <a class="acct-btn acct-btn--primary acct-btn--sm" href="/lien-he">
+                                    <?= e($primaryLabels[$o['status']]) ?>
+                                </a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
+                        <a class="acct-btn acct-btn--outline acct-btn--sm acct-order__more"
+                           href="<?= $isOpen ? $closeHref : $openHref ?>"
+                           aria-expanded="<?= $isOpen ? 'true' : 'false' ?>"
+                           aria-controls="<?= $detailId ?>"
+                           data-open-href="<?= $openHref ?>"
+                           data-close-href="<?= $closeHref ?>">
+                            <?= $isOpen ? 'Thu gọn' : 'Xem chi tiết' ?>
+                        </a>
+                    </div>
+                </div>
             </div>
         <?php endforeach; ?>
     </div>

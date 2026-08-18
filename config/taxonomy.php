@@ -29,23 +29,37 @@ return [
         ['label' => 'Wayfarer',           'search' => ['shape' => 'Wayfarer']],
     ],
 
-    // Dùng tìm kiếm toàn văn (q) thay vì lọc cột material: chuỗi chất liệu
-    // trong DB không chuẩn hoá tuyệt đối ("Polycarbonate 1.61" chứa "1.61"),
-    // nên khớp gần đúng cho kết quả sát ý người dùng hơn.
+    // Lọc ĐÚNG CỘT `material`, không dùng tìm kiếm toàn văn.
+    //
+    // ĐÃ SỬA TỪ 'q': chú thích cũ ở đây nói dùng q để "khớp gần đúng" chuỗi
+    // chất liệu — nhưng ProductModel::buildFilter() cho q tìm trong name,
+    // brand và sku, KHÔNG tìm trong material. Nên cả năm liên kết này luôn
+    // trả về 0 sản phẩm, ở cả mega menu lẫn mọi chỗ khác gọi tới chúng.
+    //
+    // Giá trị phải khớp NGUYÊN VĂN giá trị trong cột (buildFilter dùng IN,
+    // không phải LIKE). Đối chiếu bằng ProductModel::facets()['materials'].
     'materials' => [
-        ['label' => 'Titanium',        'search' => ['q' => 'titanium']],
-        ['label' => 'Acetate',         'search' => ['q' => 'acetate']],
-        ['label' => 'TR90',            'search' => ['q' => 'tr90']],
-        ['label' => 'Thép không gỉ',   'search' => ['q' => 'stainless']],
-        ['label' => 'Ultem',           'search' => ['q' => 'ultem']],
+        ['label' => 'Titanium',        'search' => ['material' => 'Titanium']],
+        ['label' => 'Acetate',         'search' => ['material' => 'Acetate']],
+        ['label' => 'TR90',            'search' => ['material' => 'TR90']],
+        ['label' => 'Thép không gỉ',   'search' => ['material' => 'Stainless Steel']],
+        ['label' => 'Ultem',           'search' => ['material' => 'Ultem']],
     ],
 
+    // Tính năng tròng KHÔNG có cột riêng trong bảng products, nên đây là chỗ
+    // duy nhất thật sự cần tìm kiếm toàn văn (q tìm trong name/brand/sku).
+    //
+    // TỪ KHOÁ TIẾNG VIỆT, không phải tiếng Anh. Bản trước gõ 'blue',
+    // 'photochromic', 'index' — mà tên sản phẩm trong kho viết tiếng Việt
+    // ("Tròng kính chống ánh sáng xanh 1.61"), nên không liên kết nào khớp.
+    // Collation utf8mb4_unicode_ci bỏ qua cả hoa/thường lẫn dấu, nên chuỗi
+    // tiếng Việt ở đây khớp được cả khi tên hàng viết không dấu.
     'lens_functions' => [
-        ['label' => 'Chống ánh sáng xanh',        'search' => ['q' => 'blue']],
-        ['label' => 'Đổi màu (Photochromic)',     'search' => ['q' => 'photochromic']],
-        ['label' => 'Chiết suất cao 1.56 – 1.74', 'search' => ['q' => 'index']],
-        ['label' => 'Chống chói (Anti-glare)',    'search' => ['q' => 'anti-glare']],
-        ['label' => 'Đa tròng (Progressive)',     'search' => ['q' => 'progressive']],
+        ['label' => 'Chống ánh sáng xanh',        'search' => ['q' => 'ánh sáng xanh']],
+        ['label' => 'Đổi màu (Photochromic)',     'search' => ['q' => 'đổi màu']],
+        ['label' => 'Chiết suất cao 1.56 – 1.74', 'search' => ['q' => 'chiết suất']],
+        ['label' => 'Chống chói (Anti-glare)',    'search' => ['q' => 'chống chói']],
+        ['label' => 'Đa tròng (Progressive)',     'search' => ['q' => 'đa tròng']],
     ],
 
     // Khớp cột gender của bảng products
@@ -63,30 +77,51 @@ return [
 
     // Gói tròng kính khách cắt kèm khi mua gọng — dùng ở trang chi tiết
     // sản phẩm và bước thanh toán.
+    /*
+     * BẢNG GIÁ CẮT TRÒNG — lấy nguyên năm mục của "Vin Eyewear Product.dc.html"
+     * (bước "Chọn loại tròng kính" trong hộp thoại mua hàng).
+     *
+     * Dùng ở hai nơi:
+     *   _layout/home/lenses.php    "Gói tròng phổ biến" ở trang chủ
+     *   _layout/buy-modal.php      bước chọn tròng khi mua gọng
+     *
+     * `desc` cố ý nói theo DẢI ĐỘ chứ không theo tính năng: khách đứng ở bước
+     * này vừa nhập xong số đo ở bước trước, nên câu hỏi trong đầu họ là "độ của
+     * mình thì chọn cái nào", không phải "chiết suất 1.61 nghĩa là gì".
+     *
+     * Đọc qua LensModel::packages() — đừng gọi thẳng config() ở view, vì nơi đó
+     * còn lo cả việc tra id (LensModel::find) khi form gửi lên.
+     */
     'lens_packages' => [
         [
-            'id'    => 'blue-156',
-            'name'  => 'Tròng chống ánh sáng xanh 1.56',
-            'desc'  => 'Phù hợp độ nhẹ, làm việc máy tính nhiều.',
-            'price' => 450000,
+            'id'    => 'clear-150',
+            'name'  => 'Tròng trắng 1.50',
+            'desc'  => 'Phù hợp độ cận/viễn nhẹ đến trung bình (dưới -4.00)',
+            'price' => 500000,
         ],
         [
-            'id'    => 'photochromic',
-            'name'  => 'Tròng đổi màu Photochromic',
-            'desc'  => 'Tự động sẫm màu ngoài trời, chống UV400.',
-            'price' => 1250000,
+            'id'    => 'clear-156',
+            'name'  => 'Tròng trắng 1.56',
+            'desc'  => 'Mỏng hơn, phù hợp cận trung bình (-4.00 → -6.00)',
+            'price' => 700000,
         ],
         [
-            'id'    => 'index-167',
-            'name'  => 'Tròng chiết suất cao 1.67',
-            'desc'  => 'Mỏng nhẹ cho độ cao trên 4.00.',
-            'price' => 1650000,
+            'id'    => 'blue-161',
+            'name'  => 'Chống sáng xanh 1.61',
+            'desc'  => 'Bảo vệ mắt khi làm việc máy tính nhiều giờ',
+            'price' => 1200000,
         ],
         [
-            'id'    => 'progressive',
-            'name'  => 'Tròng đa tròng Progressive',
-            'desc'  => 'Nhìn xa – trung – gần trên một tròng kính.',
-            'price' => 2900000,
+            'id'    => 'blue-167',
+            'name'  => 'Chống sáng xanh 1.67',
+            'desc'  => 'Siêu mỏng, thẩm mỹ cao, cận nặng (trên -6.00)',
+            'price' => 1800000,
+        ],
+        [
+            'id'    => 'photo-156',
+            'name'  => 'Đổi màu Photochromic 1.56',
+            'desc'  => 'Tự điều chỉnh theo ánh sáng, tiện dùng trong/ngoài trời',
+            'price' => 2500000,
         ],
     ],
 
@@ -135,6 +170,60 @@ return [
             'rating' => 4,
             'text'   => 'Không gian đẹp, quy trình chuyên nghiệp. Đặt lịch online nhanh, '
                       . 'đến là được đo ngay.',
+        ],
+        // ─────────────────────────────────────────────────────────────────
+        // SÁU MỤC DƯỚI ĐÂY LÀ NỘI DUNG MẪU — thay bằng đánh giá thật khi có.
+        //
+        // Khối đánh giá ở trang chủ hiện 5 thẻ một khung nhìn và TỰ CHẠY.
+        // Băng chỉ trượt được khi số đánh giá NHIỀU HƠN số thẻ nhìn thấy:
+        // đúng 5 mục thì nó đứng im và hai mũi tên tự ẩn (xem
+        // _layout/home/reviews.php). Mười mục cho ra 6 vị trí dừng, đủ để
+        // vòng chạy không thành một cái lắc qua lắc lại.
+        //
+        // Bớt xuống dưới 6 thì nhớ hạ số thẻ mỗi khung nhìn ở .rcard trong
+        // components/home-sections.css, nếu không khối này thành tĩnh.
+        // ─────────────────────────────────────────────────────────────────
+        [
+            'name'   => 'Vũ Hải Yến',
+            'store'  => 'CS1 · 261 Ngọc Lâm',
+            'rating' => 5,
+            'text'   => 'Cận 7 độ mà tròng 1.74 vẫn mỏng nhẹ. Tư vấn đúng nhu cầu, '
+                      . 'không chèo kéo gói đắt.',
+        ],
+        [
+            'name'   => 'Đỗ Minh Châu',
+            'store'  => 'CS2 · 46 Hoàng Hoa Thám',
+            'rating' => 5,
+            'text'   => 'Đưa con đi đo mắt học đường, quy trình nhanh mà kỹ. '
+                      . 'Có hồ sơ theo dõi độ cận từng đợt.',
+        ],
+        [
+            'name'   => 'Hoàng Nam Trung',
+            'store'  => 'CS1 · 261 Ngọc Lâm',
+            'rating' => 5,
+            'text'   => 'Gọng cũ gãy càng, mang ra được thay và chỉnh lại trong 20 phút. '
+                      . 'Không tính thêm đồng nào.',
+        ],
+        [
+            'name'   => 'Bùi Thanh Vân',
+            'store'  => 'CS2 · 46 Hoàng Hoa Thám',
+            'rating' => 4,
+            'text'   => 'Mẫu mình thích hết size, nhân viên gọi lại sau ba ngày khi có hàng. '
+                      . 'Giữ đúng hẹn.',
+        ],
+        [
+            'name'   => 'Ngô Gia Bảo',
+            'store'  => 'CS1 · 261 Ngọc Lâm',
+            'rating' => 5,
+            'text'   => 'Đo xong được in phiếu ghi rõ độ từng mắt và khoảng cách đồng tử. '
+                      . 'Mang đi đâu cũng dùng được.',
+        ],
+        [
+            'name'   => 'Trịnh Khánh Linh',
+            'store'  => 'CS2 · 46 Hoàng Hoa Thám',
+            'rating' => 5,
+            'text'   => 'Tròng đổi màu đúng như tư vấn, ra nắng sẫm nhanh. '
+                      . 'Đeo lái xe buổi trưa dễ chịu hẳn.',
         ],
     ],
 

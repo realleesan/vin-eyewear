@@ -65,8 +65,23 @@ final class Markdown
          * cắt ngang ký tự là đủ. substr_chr thay byte hỏng bằng ký tự thay thế
          * để phần còn lại của bài vẫn định dạng đúng.
          */
-        if (!mb_check_encoding($text, 'UTF-8')) {
-            $text = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+        /*
+         * KHÔNG dùng mb_check_encoding()/mb_convert_encoding(): dự án cố ý
+         * không phụ thuộc extension mbstring (xem VN_ACCENT_MAP trong
+         * core/helpers.php), mà máy dev đang thiếu nó — hai hàm đó làm mọi
+         * trang có Markdown chết hẳn với "Call to undefined function".
+         *
+         * preg_match('//u', ...) là phép kiểm UTF-8 rẻ nhất: mẫu rỗng không
+         * khớp gì, nhưng cờ /u buộc PCRE thẩm định chuỗi trước, và nó trả về
+         * false khi chuỗi hỏng — đúng cái ta cần biết.
+         *
+         * iconv()//IGNORE vứt bỏ byte hỏng. iconv nằm trong lõi PHP (bật sẵn),
+         * khác hẳn mbstring. Lưu ý: chỗ khác trong dự án từ chối iconv vì
+         * //TRANSLIT phụ thuộc locale máy chủ — //IGNORE thì không, nó chỉ
+         * lọc byte không hợp lệ nên cùng một chuỗi luôn ra cùng kết quả.
+         */
+        if (preg_match('//u', $text) !== 1) {
+            $text = iconv('UTF-8', 'UTF-8//IGNORE', $text) ?: '';
         }
 
         /*

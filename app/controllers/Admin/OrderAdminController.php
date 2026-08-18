@@ -53,6 +53,9 @@ class OrderAdminController extends AdminController
             'totalPages'=> $result['totalPages'],
             'status'    => $status,
             'statuses'  => OrderModel::STATUSES,
+            // Nhãn trạng thái TIỀN. Truyền vào như 'statuses' thay vì để view gọi
+            // thẳng hằng của model — cùng một lối cho cả hai trục trạng thái.
+            'payStatuses' => OrderModel::PAYMENT_STATUSES,
             'counts'    => $this->statusCounts(),
         ]);
     }
@@ -77,15 +80,53 @@ class OrderAdminController extends AdminController
             redirect('/quan-tri/don-hang');
         }
 
-        // Cột `status` và bảng lịch sử phải đổi CÙNG NHAU: thanh tiến trình
-        // trong trang tài khoản của khách đọc lịch sử để lấy giờ của từng
-        // bước, nên một bản ghi thiếu là một mốc trống vĩnh viễn.
-        Database::transaction(static function () use ($id, $status): void {
-            OrderModel::update($id, ['status' => $status]);
-            OrderModel::logStatus($id, $status, AuthMiddleware::userId());
-        });
+        // Mọi luật đi kèm việc đổi trạng thái nằm trong model: ghi lịch sử
+        // (thanh tiến trình của khách đọc bảng đó) và đánh dấu đã thu tiền khi
+        // đơn COD hoàn tất. Xem OrderModel::changeStatus.
+        OrderModel::changeStatus($id, $status, AuthMiddleware::userId());
 
         flash('admin_success', 'Đã cập nhật trạng thái đơn hàng.');
+        redirect('/quan-tri/don-hang');
+    }
+
+    /**
+     * Ghi nhận đã nhận được tiền, hoặc gỡ đánh dấu nếu bấm nhầm
+     * (POST /quan-tri/don-hang/thanh-toan).
+     *
+     * Đây là bước ĐỐI CHIẾU TAY cho đơn chuyển khoản: nhân viên xem sao kê, thấy
+     * tiền vào với nội dung là mã đơn thì bấm. Đơn COD không cần bấm — thu tiền
+     * và giao hàng là cùng một việc, nên changeStatus() tự đánh dấu khi đơn sang
+     * "Hoàn tất".
+     *
+     * Khi nối cổng thanh toán, webhook sẽ gọi thẳng OrderModel::markPaid() và
+     * nút này còn lại để xử lý những ca cổng không bắt được (khách chuyển từ
+     * ngân hàng khác, sai nội dung…).
+     */
+    public function updatePayment(): void
+    {
+        $this->requirePost('/quan-tri/don-hang');
+
+        $id   = (string) ($_POST['id'] ?? '');
+        $paid = ($_POST['paid'] ?? '') === '1';
+
+        if (!OrderModel::exists(['id' => $id])) {
+            flash('admin_error', 'Không tìm thấy đơn hàng.');
+            redirect('/quan-tri/don-hang');
+        }
+
+        $changed = $paid ? OrderModel::markPaid($id) : OrderModel::markUnpaid($id);
+
+        // Nói rõ "không có gì đổi" thay vì báo thành công: hai nhân viên cùng
+        // xem một sao kê và cùng bấm thì người thứ hai phải biết là mình không
+        // vừa ghi thêm một lần thu tiền nào.
+        if (!$changed) {
+            flash('admin_error', 'Đơn hàng đã ở đúng trạng thái thanh toán đó.');
+            redirect('/quan-tri/don-hang');
+        }
+
+        flash('admin_success', $paid
+            ? 'Đã ghi nhận thanh toán cho đơn hàng.'
+            : 'Đã gỡ đánh dấu thanh toán.');
         redirect('/quan-tri/don-hang');
     }
 

@@ -52,6 +52,8 @@ const ICONS = [
     'newspaper'   => '<path d="M4 5.5h13v13H5.5A1.5 1.5 0 014 17z"/><path d="M17 8.5h3v8.5a1.5 1.5 0 01-3 0z"/><path d="M7 8.5h7M7 11.5h7M7 14.5h4"/>',
     'quote'       => '<path d="M9.5 6.5C7 7.6 5.5 9.9 5.5 12.6V17h5v-5H8c0-1.9.6-3.3 2.3-4.2z"/><path d="M18 6.5c-2.5 1.1-4 3.4-4 6.1V17h5v-5h-2.5c0-1.9.6-3.3 2.3-4.2z"/>',
     'check'       => '<path d="M4.5 12.5l5 5 10-10"/>',
+    // Hai tờ giấy xếp lệch — nút "sao chép mã đơn" ở trang xác nhận đặt hàng
+    'copy'        => '<rect x="9" y="9" width="12" height="12" rx="1.5"/><path d="M5 15V4.5A1.5 1.5 0 016.5 3H15"/>',
     'layers'      => '<path d="M12 3.5l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16.5l8 4 8-4"/>',
     'ruler'       => '<path d="M4 14.5L14.5 4l5.5 5.5L9.5 20z"/><path d="M8 10.5l1.8 1.8M11 7.5l1.8 1.8M13.8 13.3l1.8 1.8"/>',
     'filter'      => '<path d="M3.5 5.5h17l-6.5 7.5V19l-4 2v-8z"/>',

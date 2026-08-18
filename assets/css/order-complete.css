@@ -1,0 +1,476 @@
+/* ============================================================
+   order-complete.css — trang xác nhận đặt hàng (/thanh-toan/hoan-tat)
+
+   Dựng theo "Vin Eyewear Order Complete.dc.html" (Claude Design):
+
+     cụm mừng giữa trang (dấu tick tròn · tiêu đề · ô mã đơn · dòng dẫn)
+     thẻ hai ô thông tin (thông tin giao hàng | thanh toán)
+     thẻ đơn hàng (đầu thẻ · từng dòng hàng · cụm cộng tiền)
+     hai nút giữa trang
+
+   Markup: app/views/order/success.php
+
+   ─────────────────────────────────────────────────────────────────────────────
+   MÀU VÀ ĐỘ BO LẤY CỦA TRANG CHỦ, KHÔNG LẤY CỦA BẢN THIẾT KẾ
+
+   Bản thiết kế đi kèm một bảng màu riêng (nền #FAF7F1, nâu đỏ #5E1F24, viền
+   #E7DFD3, chữ nhấn vàng #D9A05B, chữ serif Cormorant Garamond) và bo góc 0 —
+   mọi thẻ đều vuông cạnh. Site này đã có ngôn ngữ hình khối của riêng nó, dựng
+   từ trang chủ, nên trang này lấy HÌNH DÁNG của bản thiết kế nhưng MÀU và ĐỘ BO
+   của trang chủ:
+
+     nền           #FAF7F1  ->  var(--surface)
+     thẻ           #fff     ->  var(--surface-raised)
+     viền thẻ      #E7DFD3  ->  var(--h-card-line)   1px, y như thẻ trang chủ
+     kẻ trong thẻ  #F1EAE0  ->  var(--h-rule)
+     nâu đỏ        #5E1F24  ->  var(--brand)
+     chữ thân bài  #5C544B  ->  var(--muted)
+     nhãn nhỏ      #8A8074  ->  var(--eyebrow)  (tông hồng ấm của .eyebrow)
+     vàng          #D9A05B  ->  var(--eyebrow)  — site không có sắc vàng nào
+     bo góc        0        ->  var(--h-radius) / var(--radius-sm)
+
+   CỠ CHỮ giữ nguyên từng con số của bản thiết kế (11 · 12.5 · 13.5 · 14.5 ·
+   17 · 22 · 28), cùng lý do đã ghi ở đầu account.css: thang --fs-* là clamp()
+   nên lệch vài pixel, và bản thiết kế dùng nhiều cỡ nửa pixel mà thang không
+   có. Riêng tiêu đề h1 gọi var(--fs-h1) — ở màn hình rộng nó ra 48px, sát con
+   số 46px của bản thiết kế, mà trên điện thoại còn tự co lại.
+   ─────────────────────────────────────────────────────────────────────────────
+
+   File này THAY assets/css/order.css. File đó dựng theo bản Lovable và chứa
+   thêm bộ lớp .b* của trang đặt lịch — trang đặt lịch nay có booking.css riêng
+   nên không còn ai dùng tới nó.
+   ============================================================ */
+
+.ocomp {
+    /* 880px là bề ngang bản thiết kế ghi cho <main>, kể cả đệm hai bên. Hẹp
+       hơn --container của site rất nhiều: đây là một tờ phiếu, đọc một cột. */
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 64px clamp(16px, 4vw, 32px) 96px;
+}
+
+/* ============================================================
+   CỤM MỪNG
+   ============================================================ */
+
+.ocomp__hero {
+    margin-bottom: 56px;
+    text-align: center;
+}
+
+/* Dấu tick trong hình tròn đặc màu thương hiệu */
+.ocomp__seal {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 28px;
+    border-radius: var(--radius-round);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.ocomp__title {
+    margin: 0 0 20px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-h1);
+    /* 500 chứ không 600 như tiêu đề khối trang chủ: đây là một câu nói với
+       khách ("Cảm ơn bạn…"), không phải nhãn của một khối nội dung. */
+    font-weight: 500;
+    line-height: 1.18;
+    color: var(--ink);
+    text-wrap: balance;
+}
+
+/* --- Ô mã đơn --- */
+
+.ocomp__code {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 12px 24px;
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+}
+
+.ocomp__codelabel {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.ocomp__codeval {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: var(--brand);
+}
+
+/* Nút sao chép: `hidden` sẵn trong HTML, chỉ order-success.js bỏ ra — không có
+   JS thì không có clipboard, và một nút bấm không làm gì là tệ hơn không nút. */
+.ocomp__copy {
+    display: flex;
+    padding: 2px;
+    border: none;
+    background: none;
+    color: var(--h-meta);
+    cursor: pointer;
+}
+
+.ocomp__copy[hidden] { display: none; }
+
+.ocomp__copy:hover,
+.ocomp__copy:focus-visible { color: var(--brand); }
+
+.ocomp__copied {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--brand);
+}
+
+.ocomp__copied[hidden] { display: none; }
+
+.ocomp__lead {
+    max-width: 440px;
+    margin: 0 auto;
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+/* ============================================================
+   THẺ DÙNG CHUNG
+   ============================================================ */
+
+.ocomp__card {
+    margin-bottom: 16px;
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--h-radius);
+    background: var(--surface-raised);
+    /* Đầu thẻ và các dòng hàng có đường kẻ chạy hết bề ngang, phải bị bo theo
+       góc thẻ */
+    overflow: hidden;
+}
+
+/* Nhãn nhỏ in hoa mở đầu mỗi ô. Không dùng .eyebrow của ui.css: nhãn ở đây
+   nhỏ hơn một nấc (11px so với 12.5px) và giãn chữ rộng hơn — bản thiết kế cố
+   ý làm chúng lặng hơn nhãn khối, vì mỗi thẻ có tới ba cái. */
+.ocomp__label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+/* ============================================================
+   BA Ô THÔNG TIN
+   ============================================================ */
+
+/* HAI ô, ô trái rộng gấp rưỡi: nó chứa cả địa chỉ nên cần chỗ cho một đoạn
+   văn, còn ô phải chỉ có hai dòng ngắn. */
+.ocomp__facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+}
+
+.ocomp__fact {
+    padding: 26px 28px;
+    min-width: 0;
+}
+
+.ocomp__fact + .ocomp__fact { border-left: 1px solid var(--h-card-line); }
+
+.ocomp__factval {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.ocomp__factsub {
+    margin: 3px 0 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+/* Địa chỉ nhận hàng — nằm trong ô trái, cùng cỡ chữ thân bài và ĐẬM MÀU như
+   chữ chính: đây là thứ khách rà lại xem có đúng nhà mình không. */
+.ocomp__addr {
+    margin: 6px 0 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink);
+}
+
+.ocomp__addr strong { font-weight: 600; }
+
+/* Dòng "cách nhận · thời gian dự kiến" — lặng nhất trong ô */
+.ocomp__how {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--h-meta);
+}
+
+/* --- Khối tài khoản chuyển khoản (chỉ đơn chuyển khoản) ---
+   Nhãn trái · giá trị phải, mỗi dòng một cặp. Số tài khoản, số tiền và nội dung
+   in đậm vì đó là ba thứ khách phải gõ lại vào app ngân hàng. */
+
+.ocomp__bank {
+    display: grid;
+    gap: 6px;
+    margin: 8px 0 10px;
+    font-size: 13.5px;
+}
+
+.ocomp__bank > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.ocomp__bank dt {
+    color: var(--muted);
+}
+
+.ocomp__bank dd {
+    margin: 0;
+    text-align: right;
+    color: var(--ink);
+    /* Số tài khoản dài không được đẩy nhãn co lại */
+    min-width: 0;
+    word-break: break-word;
+}
+
+.ocomp__bank dd strong { font-weight: 600; }
+
+/* ============================================================
+   THẺ ĐƠN HÀNG
+   ============================================================ */
+
+/* Thẻ cuối trước hàng nút — nới ra cho bằng bản thiết kế */
+.ocomp__card--order { margin-bottom: 40px; }
+
+.ocomp__orderhead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 28px;
+    border-bottom: 1px solid var(--h-card-line);
+}
+
+.ocomp__ordertitle {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.ocomp__ordercount {
+    font-size: 12.5px;
+    color: var(--h-meta);
+}
+
+/* --- Dòng hàng --- */
+
+.ocomp__items {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ocomp__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--h-rule);
+}
+
+.ocomp__itemmain {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+}
+
+.ocomp__thumb {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--h-shell);
+    color: var(--h-meta);
+    flex-shrink: 0;
+}
+
+/* contain chứ không cover: gọng kính chụp trên nền trắng, cắt mép là mất càng */
+.ocomp__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.ocomp__itemname {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
+}
+
+.ocomp__itemqty {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--h-meta);
+}
+
+.ocomp__itemsum {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+/* --- Cụm cộng tiền --- */
+
+.ocomp__sums {
+    display: grid;
+    gap: 10px;
+    padding: 20px 28px;
+}
+
+.ocomp__sum {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.ocomp__sum--grand {
+    align-items: baseline;
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--h-card-line);
+}
+
+.ocomp__grandlabel {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.ocomp__grandval {
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--brand);
+}
+
+/* ============================================================
+   HÀNG NÚT
+   ============================================================ */
+
+.ocomp__acts {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+/* Nút chính và nút viền dùng .btn-primary/.btn-outline của ui.css — đúng dáng
+   bản thiết kế vẽ (chữ in hoa, giãn rộng). Nới đệm ngang cho khớp con số 36px
+   của nó, và BO GÓC theo nút trang chủ.
+
+   .btn-primary/.btn-outline của ui.css không khai border-radius nào, tức là
+   vuông cạnh 0px. Nhưng mọi nút mà TRANG CHỦ tự tạo kiểu — .hero__btn,
+   .hcta__btn, .qcard__btn, .hlens__cta, .hexam__cta, .pcard__btn — đều bo
+   var(--h-radius-sm). Đó mới là dáng nút của trang chủ, nên gọi lại ở đây.
+
+   Chỉ đặt trong .ocomp__acts, KHÔNG sửa .btn-* dùng chung: hai lớp đó chạy trên
+   gần như mọi trang, đổi ở gốc là đổi hình khối cả site — việc đó phải làm riêng
+   và có chủ ý. */
+.ocomp__acts .btn-primary,
+.ocomp__acts .btn-outline {
+    padding-inline: 36px;
+    border-radius: var(--h-radius-sm);
+}
+
+/* ============================================================
+   MỐC GÃY
+
+   Bản thiết kế là khung cứng cho màn hình rộng. Ba mốc dưới đây là phần THÊM,
+   theo bộ breakpoint chuẩn khai ở đầu layout.css.
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .ocomp { padding-top: 40px; padding-bottom: 64px; }
+
+    .ocomp__hero { margin-bottom: 36px; }
+
+    /* Hai ô thông tin về một cột — đường chia đổi từ dọc sang ngang, nếu không
+       border-left sẽ thành một vạch lửng bên trái mỗi ô. */
+    .ocomp__facts { grid-template-columns: minmax(0, 1fr); }
+
+    .ocomp__fact + .ocomp__fact {
+        border-left: none;
+        border-top: 1px solid var(--h-card-line);
+    }
+}
+
+@media (max-width: 560px) {
+    .ocomp__fact,
+    .ocomp__orderhead,
+    .ocomp__item,
+    .ocomp__sums { padding-inline: 20px; }
+
+    /* Tiền của từng dòng hàng xuống dưới tên sản phẩm: còn 3 chữ số group thì
+       giữ cùng hàng là tên bị bóp còn hai chữ. */
+    .ocomp__item {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .ocomp__itemsum { margin-left: 82px; }
+
+    /* Nút chiếm hết chiều ngang, số điện thoại nằm hàng cuối */
+    .ocomp__acts { flex-direction: column; align-items: stretch; }
+    .ocomp__acts .btn-primary,
+    .ocomp__acts .btn-outline { width: 100%; }
+}
+
+
+/* ============================================================
+   TRÒNG CẮT KÈM
+
+   Dòng hàng có gói tròng khách chọn ở hộp thoại "Chọn hình thức mua"
+   (_layout/buy-modal.php). Hai dòng phụ nằm giữa tên hàng và số lượng.
+   ============================================================ */
+
+.ocomp__itemlens {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.ocomp__itemrx {
+    margin: 1px 0 0;
+    font-size: 12px;
+    color: #9a877f;
+}

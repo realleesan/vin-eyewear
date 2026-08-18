@@ -10,6 +10,10 @@
  * dữ liệu nghiệp vụ cần trang quản trị. Chuyển sang DB sau này thì chỉ việc
  * đổi nguồn trong PolicyController, view giữ nguyên.
  *
+ * 'short' là nhãn NGẮN cho cột điều hướng bên trái; 'label' là tiêu đề <h2>
+ * đầy đủ của nhóm. Bản thiết kế cố ý để hai chuỗi khác nhau — cột hẹp 256px
+ * không chứa nổi "Chính sách Bảo hành & Sửa chữa" trên một dòng.
+ *
  * 'id' của mỗi nhóm cũng là neo URL: /chinh-sach#doi-tra — header và footer
  * đang trỏ tới #doi-tra, #bao-mat, #dieu-khoan, ĐỪNG đổi nếu không sửa cả
  * những chỗ đó.
@@ -44,6 +48,7 @@ return [
     'groups' => [
         [
             'id'    => 'bao-hanh',
+            'short' => 'Bảo hành & Sửa chữa',
             'label' => 'Chính sách Bảo hành & Sửa chữa',
             'icon'  => 'shield',
             'intro' => 'Mọi sản phẩm Vin Eyewear đều được bảo hành chính hãng và hỗ trợ dịch vụ chăm sóc trọn đời.',
@@ -68,6 +73,7 @@ return [
         ],
         [
             'id'    => 'doi-tra',
+            'short' => 'Đổi trả & Hoàn tiền',
             'label' => 'Chính sách Đổi trả & Hoàn tiền',
             'icon'  => 'refresh',
             'intro' => 'Đổi mẫu linh hoạt trong 7 ngày để bạn luôn hài lòng với lựa chọn của mình.',
@@ -92,6 +98,7 @@ return [
         ],
         [
             'id'    => 'do-mat',
+            'short' => 'Đo mắt & Tròng kính',
             'label' => 'Chính sách Đo mắt & Tròng kính',
             'icon'  => 'eye',
             'intro' => 'Quy trình khúc xạ chuẩn phòng khám, thực hiện bởi kỹ thuật viên được đào tạo chuyên sâu.',
@@ -116,6 +123,7 @@ return [
         ],
         [
             'id'    => 'giao-hang',
+            'short' => 'Giao hàng & Đồng kiểm',
             'label' => 'Giao hàng & Đồng kiểm',
             'icon'  => 'truck',
             'intro' => 'Giao toàn quốc, cho phép mở hàng kiểm tra trước khi thanh toán.',
@@ -140,6 +148,7 @@ return [
         ],
         [
             'id'    => 'bao-mat',
+            'short' => 'Bảo mật thông tin',
             'label' => 'Bảo mật thông tin',
             'icon'  => 'shield',
             'intro' => 'Dữ liệu cá nhân và hồ sơ khúc xạ của bạn được lưu trữ an toàn, chỉ dùng cho mục đích chăm sóc.',

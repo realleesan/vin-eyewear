@@ -4,9 +4,9 @@
    HEADER
    ============================================================ */
 
-/* KHÔNG có border-bottom: bản thiết kế để header trôi thẳng vào hero, chỉ
-   cách nhau 8px nền trang. Một đường kẻ ở đây cắt ngang đúng chỗ đó và làm
-   khối hero trông như bị dán vào chứ không phải nổi trên nền.
+/* GÓC BO 4px, KHÔNG PHẢI VIÊN THUỐC. Bản thiết kế mới vẽ mọi nút và mục nav
+   bằng góc gần vuông; cụm 999px cũ đã đổi hết ở dưới. Chân trang và các khối
+   trang chủ đi theo cùng ngôn ngữ này.
 
    position:sticky và hiệu ứng thu gọn khi cuộn là phần THÊM ngoài bản thiết
    kế — bản thiết kế là ảnh tĩnh nên không nói gì về lúc cuộn. Ở trạng thái
@@ -15,6 +15,11 @@
     position: sticky;
     top: 0;
     z-index: 40;
+    /* Vạch ngăn với hero. Bản thiết kế TRƯỚC cho hero là khối bo góc nổi cách
+       header 8px nên một đường kẻ ở đây sẽ cắt ngang đúng chỗ đó; bản này cho
+       hero tràn cạnh và cùng màu pearl với header, nên không có vạch thì hai
+       vùng dính liền thành một mảng. */
+    border-bottom: 1px solid #eee0d4;
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     color: var(--ink);
     /* Nền mờ để nội dung cuộn phía dưới không đọc xuyên qua chữ header */
@@ -32,9 +37,10 @@
     overflow: hidden;
     /* Thiết kế đặt dải này nền crimson, không phải nền mực như bản cũ */
     background: var(--brand);
-    /* #f6e3dd — hồng rất nhạt, không phải trắng pha trong suốt. Trên nền
-       crimson nó cho 6.9:1, đủ cho chữ 12.5px. */
-    color: #f6e3dd;
+    /* Hồng rất nhạt, không phải trắng pha trong suốt. Trên nền crimson nó cho
+       6.9:1, đủ cho chữ 12.5px. Chân trang dùng chung sắc này — xem
+       --on-brand-soft trong layout.css. */
+    color: var(--on-brand-soft);
     max-height: 64px;
     padding-block: 10px;
     opacity: 1;
@@ -100,7 +106,10 @@
     /* min-height chứ không phải height: khoá cứng thì màn hình hẹp bị bóp.
        80px = 40px nút tròn + 20px đệm trên dưới, đúng bản thiết kế. */
     min-height: 80px;
-    padding: 20px 56px;
+    /* Cùng lề với các khối trang chủ và chân trang — xem --page-edge trong
+       layout.css. Bản thiết kế cho header chạy hết bề ngang trang, wordmark
+       nằm sát lề trái chứ không thụt theo cột nội dung. */
+    padding: 20px var(--page-edge);
     transition: min-height 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
@@ -112,84 +121,26 @@
     .header-main { padding: 12px var(--gutter); }
 }
 
-/* --- Ô tìm kiếm (trong cụm tác vụ, cạnh icon tài khoản) ------ */
+/* --- Ô TÌM KIẾM — nằm TRONG bảng xổ .hpop__panel ------------
+   Trước đây đây là một khay riêng bo 26px tự bung ra dưới nút kính lúp. Nay
+   nó dùng chung khuôn bảng xổ với ba nút còn lại, nên phần định vị/nền/bóng
+   đã do .hpop__panel lo; ở đây chỉ còn ruột của cái form. */
 
-.header-search {
+.header-search__form {
     position: relative;
     display: flex;
     align-items: center;
-}
-
-/* Viền và nền lấy từ .header-action bên dưới — nút này là một trong ba nút
-   tròn của cụm tác vụ, chỉ khác ở chỗ nó là <button> nên phải gỡ style mặc
-   định của trình duyệt. */
-.header-search__toggle {
-    font: inherit;
-    cursor: pointer;
-}
-
-/* ĐANG MỞ — trạng thái DUY NHẤT của ba nút tròn có nền đổ đầy, để thấy rõ ô
-   tìm kiếm bên dưới thuộc về nút này. Cùng quy ước với thanh điều hướng: nền
-   be nghĩa là "đang mở", không phải "con trỏ đang ở đây". */
-.header-search__toggle[aria-expanded="true"] {
-    color: var(--brand);
-    background: #f1e7dd;
-    border-color: #f1e7dd;
-}
-
-/* Khay bo tròn nổi dưới nút kính lúp.
-   Bo 26px + bóng ấm, cùng ngôn ngữ với thẻ thông tin trên bản đồ trang liên
-   hệ (.cmap__card) — bản thiết kế không vẽ trạng thái mở này nên nó lấy dáng
-   từ những khối nổi khác của cùng bộ thiết kế. */
-.header-search__panel {
-    position: absolute;
-    top: calc(100% + 10px);
-    /* Neo mép phải theo nút: panel rộng hơn nút nhiều, neo trái sẽ tràn
-       khỏi khung nhìn vì nút nằm sát cạnh phải màn hình. */
-    right: 0;
-    z-index: 60;
-    display: flex;
-    align-items: center;
     gap: 8px;
-    width: min(340px, calc(100vw - 2 * var(--gutter, 16px)));
-    padding: 10px;
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-    border-radius: 26px;
-    box-shadow: 0 6px 20px rgba(90, 40, 40, 0.14);
 }
 
-.header-search__panel[hidden] {
-    display: none;
-}
-
-/*
- * Điện thoại: neo panel vào .header-main thay vì vào nút.
- * Nút tìm kiếm còn 3 icon đứng sau (tài khoản, giỏ, hamburger ~132px) nên mép
- * phải của nó cách rìa màn hình khá xa; neo `right: 0` vào nút thì panel rộng
- * 320px thò hẳn ra ngoài mép trái (đo được -118px ở 360px, -88px ở 390px) —
- * icon kính lúp và phần đầu ô nhập bị cắt mất. Neo vào .header-main thì panel
- * trải đúng từ lề trái tới lề phải của khung nội dung.
- */
-@media (max-width: 699px) {
-    .header-search { position: static; }
-
-    .header-search__panel {
-        left: var(--gutter);
-        right: var(--gutter);
-        width: auto;
-    }
-}
-
-/* Kính lúp NẰM TRONG ô nhập chứ không đứng thành một cột riêng.
-   Ô nhập nay là một viên thuốc có viền của chính nó; để icon đứng ngoài thì
-   viên thuốc bị đẩy lệch khỏi tâm khay và trông như hai mẩu rời. Neo tuyệt
-   đối được vì .header-search__panel đã là position:absolute.
-   left: 10px đệm khay + 17px vào trong ô nhập. */
+/* Neo theo Ô NHẬP, không theo cả cái form: form mang thêm 12px đệm dưới nên
+   top:50% của nó rơi thấp hơn tâm ô nhập 6px. 22px = nửa chiều cao ô nhập,
+   và ô nhập bắt đầu ngay ở mép trên phần nội dung của form.
+   left 24px = 12px đệm form + 12px vào trong ô nhập. */
 .header-search__ico {
     position: absolute;
-    left: 27px;
-    top: 50%;
+    left: 24px;
+    top: 22px;
     transform: translateY(-50%);
     width: 16px;
     height: 16px;
@@ -203,9 +154,9 @@
     /* 44px theo vùng chạm tối thiểu WCAG 2.5.5, giống .tap-target */
     height: 44px;
     /* padding-left chừa chỗ cho kính lúp neo đè lên trên */
-    padding: 0 18px 0 42px;
+    padding: 0 18px 0 38px;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: var(--font-sans);
     font-size: 13.5px;
@@ -220,20 +171,19 @@
    Viền chỉ đậm lên một nấc sang hồng nhạt; vòng đỏ để cho outline đảm nhận.
    Đổi cả viền sang đỏ thì hai vòng đỏ nằm cách nhau 1px, ô nhập trông như bị
    viền kép. Cùng cặp giá trị với ô nhập ở form liên hệ (.cfield__input:focus).
-   offset dương chứ không âm — khay có 10px đệm nên vòng ngoài không bị cắt. */
+   offset dương chứ không âm — bảng xổ có đệm nên vòng ngoài không bị cắt. */
 .header-search__input:focus {
     border-color: #c9a79b;
     outline: 2px solid var(--brand);
     outline-offset: 1px;
 }
 
-/* Viên thuốc đặc màu thương hiệu, cùng dáng với "Đặt lịch đo mắt" ở trang
-   liên hệ và "Xoá bộ lọc" ở trang danh mục. Bỏ IN HOA + giãn ký tự của bản
-   cũ: các bản thiết kế mới viết chữ nút theo kiểu thường. */
+/* Nút đặc màu thương hiệu, cùng dáng với "Đặt lịch đo mắt" ở trang liên hệ và
+   "Xoá bộ lọc" ở trang danh mục. */
 .header-search__submit {
     flex: none;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     /* Cùng ngưỡng chạm 44px với ô nhập — chữ "Tìm" ngắn nên phải ép chiều cao */
     height: 44px;
     padding: 0 22px;
@@ -291,16 +241,24 @@
     gap: 10px;
 }
 
-/* Ba nút tròn viền mảnh nền trắng.
-   Bản trước là ba icon trần không viền, nền chỉ hiện khi rê chuột; bản thiết
-   kế vẽ sẵn viền và nền trắng ở trạng thái nghỉ, nên cụm tác vụ nổi rõ khỏi
-   nền pearl kể cả khi không chạm vào.
+/* ============================================================
+   BỐN NÚT TÁC VỤ — KHÔNG CÒN KHUNG BAO
+
+   Bản trước vẽ ba nút tròn viền mảnh nền trắng + một nút ngôn ngữ cùng dáng,
+   lấy theo "Vin Eyewear Home.dc.html". Nay bỏ hẳn viền và nền: bốn nút nằm
+   thẳng trên nền của thanh điều hướng, đúng như các mục nav ngay bên trái
+   chúng — cụm tác vụ không còn là bốn cái hộp trắng chen vào giữa dải pearl.
+
+   RÊ CHUỘT CHỈ ĐỔI MÀU, KHÔNG ĐỔ NỀN — cùng quy ước với .header-nav__list > a
+   ở cuối file: nền be dành riêng cho trạng thái "đang mở".
 
    40px chứ không phải 44px của .tap-target: đây là số của bản thiết kế. 40px
    vẫn qua WCAG 2.5.8 (mức AA, ngưỡng 24px), chỉ hụt so với 2.5.5 (mức AAA,
-   ngưỡng 44px). Cả ba nút đều còn lối đi khác trên trang (ô tìm kiếm ở trang
+   ngưỡng 44px). Cả bốn nút đều còn lối đi khác trên trang (ô tìm kiếm ở trang
    sản phẩm, link tài khoản và giỏ hàng trong menu trượt) nên không có thao
-   tác nào chỉ bấm được qua đúng nút 40px này. */
+   tác nào chỉ bấm được qua đúng nút 40px này.
+   ============================================================ */
+
 .header-action {
     position: relative;
     display: grid;
@@ -309,11 +267,11 @@
     height: 40px;
     min-width: 40px;
     min-height: 40px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    background: var(--surface-raised);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
     color: #4a3b38;
-    transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+    transition: color 0.2s;
 }
 
 .header-action svg {
@@ -321,37 +279,226 @@
     height: 17px;
 }
 
-/* RÊ CHUỘT CHỈ ĐỔI MÀU VIỀN VÀ ICON, KHÔNG ĐỔ NỀN — cùng lý do với thanh
-   điều hướng ngay bên cạnh: nền be để dành cho trạng thái ĐANG MỞ, không
-   phải cho việc con trỏ vô tình lướt qua.
-
-   Đây cũng là cách mọi nút viền mảnh khác trong site đang phản hồi: huy hiệu
-   lọc (.pchip), nút phân trang (.catpager__btn), nút "Chi tiết" ở thẻ sản
-   phẩm (.bcard__btn--ghost) đều đổi viền + chữ sang màu thương hiệu chứ
-   không đổ đầy. Ba nút tròn này nay theo cùng một quy ước. */
 .header-action:hover,
 .header-action:focus-visible {
-    border-color: var(--brand);
     color: var(--brand);
 }
 
-/* Nhô ra ngoài viền nút: nút chỉ còn 40px và có viền, đặt huy hiệu vào
-   trong thì nó đè lên chính icon giỏ hàng. */
+/* Neo vào mép icon chứ không vào mép nút: nút 40px nay không còn viền, đặt
+   huy hiệu ở góc ô 40px thì nó trôi hẳn ra khỏi hình giỏ hàng. */
 .header-action__badge {
     position: absolute;
-    top: -4px;
-    right: -4px;
+    top: 4px;
+    right: 3px;
     display: grid;
     place-items: center;
-    min-width: 18px;
-    height: 18px;
+    min-width: 16px;
+    height: 16px;
     padding-inline: 4px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-size: var(--fs-micro);
     font-weight: 700;
     line-height: 1;
+}
+
+/* ============================================================
+   BẢNG XỔ DÙNG CHUNG (.hpop)
+   Markup: app/views/_layout/header.php
+
+   Một khuôn cho cả bốn nút tác vụ: ngôn ngữ · tìm kiếm · tài khoản · giỏ hàng.
+   Trước đây chỉ nút ngôn ngữ có bảng xổ (.langsw, dựng bằng <details> nên chỉ
+   mở được khi BẤM); nay cả bốn cùng bung ra khi RÊ CHUỘT.
+
+   MỞ BẰNG CSS, KHÔNG PHẢI JS: :hover cho chuột, :focus-within cho bàn phím —
+   Tab tới nút là bảng hiện ra, Tab hết mục cuối là bảng đóng, không cần một
+   dòng script nào. .is-open là phần JS thêm vào cho màn hình cảm ứng (chạm
+   nút ngôn ngữ / kính lúp), xem assets/js/header.js.
+
+   ĐỘ BO GÓC lấy theo nút của trang chủ — var(--radius-sm), 4px. Xem khối
+   "ĐỘ BO GÓC" đầu assets/css/layout.css.
+   ============================================================ */
+
+.hpop {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Nút ngôn ngữ: chữ "VI ▾" nên rộng hơn ô vuông 40px của ba nút icon, nhưng
+   vẫn cùng chiều cao để bốn nút thẳng hàng. */
+.hpop__trigger--text {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    height: 40px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: #4a3b38;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.hpop__trigger--text:hover,
+.hpop__trigger--text:focus-visible,
+.hpop:hover .hpop__trigger--text,
+.hpop:focus-within .hpop__trigger--text { color: var(--brand); }
+
+/* Nút icon cũng sáng lên khi con trỏ ở bất kỳ đâu trong cụm — kể cả khi đã
+   trôi xuống bảng xổ. Thiếu dòng này thì lúc đang chọn trong bảng, cái nút
+   sinh ra nó lại tắt màu, trông như bảng không thuộc về nút nào. */
+.hpop:hover .header-action,
+.hpop:focus-within .header-action { color: var(--brand); }
+
+.hpop__chevron {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.hpop:hover .hpop__chevron,
+.hpop:focus-within .hpop__chevron,
+.hpop.is-open .hpop__chevron { transform: rotate(180deg); }
+
+/*
+ * Neo MÉP PHẢI: cụm tác vụ nằm sát cạnh phải màn hình, neo trái thì bảng rộng
+ * 190px thò ra ngoài khung nhìn.
+ *
+ * top: 100% + padding-top CHỨ KHÔNG PHẢI top: calc(100% + 8px): khoảng hở
+ * giữa nút và bảng phải nằm TRONG vùng chuột của bảng, nếu không con trỏ đi
+ * từ nút xuống bảng sẽ băng qua 8px trống và bảng sập ngay giữa đường.
+ */
+.hpop__panel {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: 60;
+    padding-top: 8px;
+    /* Ẩn bằng visibility chứ không display:none — cần giữ phần tử trong luồng
+       tiêu điểm để :focus-within có cái mà bắt, và để còn chuyển động mượt. */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    min-width: 190px;
+}
+
+.hpop:hover .hpop__panel,
+.hpop:focus-within .hpop__panel,
+.hpop.is-open .hpop__panel {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hpop__panel--search {
+    /* Ô nhập + nút "Tìm" cần chỗ; 380px là bề ngang tối thiểu để câu gợi ý
+       "Tìm gọng, tròng kính..." không bị cắt. */
+    min-width: 380px;
+}
+
+@media (max-width: 560px) {
+    .hpop__panel--search {
+        min-width: 0;
+        /* Trừ hai lề trang: bảng 380px ở màn 400px sẽ tràn ra ngoài */
+        width: calc(100vw - 2 * var(--page-edge));
+    }
+}
+
+/* Cái hộp thật: nền, viền, bóng. Gộp cả .hpop__head/.hpop__note/.hpop__list
+   vào một khung bo 4px. */
+.hpop__head,
+.hpop__note,
+.hpop__list,
+.hpop__panel--search .header-search__form {
+    background: var(--surface-raised);
+}
+
+.hpop__head {
+    padding: 11px 16px 9px;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    box-shadow: 0 -2px 10px rgba(90, 40, 40, 0.05);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--h-note);
+}
+
+.hpop__note {
+    padding: 0 16px 10px;
+    border-inline: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.hpop__list {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    list-style: none;
+    border: 1px solid var(--line);
+    border-top: 0;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    box-shadow: 0 14px 34px rgba(90, 40, 40, 0.16);
+}
+
+.hpop__panel--search .header-search__form {
+    padding: 0 12px 12px;
+    border: 1px solid var(--line);
+    border-top: 0;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    box-shadow: 0 14px 34px rgba(90, 40, 40, 0.16);
+}
+
+.hpop__item {
+    display: block;
+    width: 100%;
+    padding: 11px 16px;
+    border: 0;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    text-align: left;
+    color: var(--h-note);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.hpop__item:hover,
+.hpop__item:focus-visible {
+    background: #f1e7dd;
+    color: var(--brand);
+}
+
+/* Nút "Đăng xuất" nằm trong <form> POST — <button> nên phải gỡ dáng mặc định
+   của trình duyệt để nó xếp hàng cùng ba liên kết bên trên. */
+.hpop__item--btn {
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+}
+
+/* Ngôn ngữ đang dùng — đổ nền thương hiệu, giống mục đang mở trên thanh nav */
+.hpop__item.is-on {
+    background: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+}
+
+/* Dưới 1101px cụm tác vụ chật hơn vì có thêm nút hamburger */
+@media (max-width: 1100px) {
+    .hpop__trigger--text { height: 36px; padding: 0 7px; gap: 5px; }
 }
 
 /* Hamburger */
@@ -390,7 +537,7 @@
 .header-nav__list {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     list-style: none;
 }
 
@@ -402,8 +549,8 @@
    xuống 8px mà nhìn vẫn thoáng hơn. */
 .header-nav__list > li > a {
     display: block;
-    padding: 9px 18px;
-    border-radius: 999px;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
     font-size: 14px;
     font-weight: 400;
     color: var(--ink);

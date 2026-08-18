@@ -1,32 +1,128 @@
 <?php
 
 /**
- * _layout/home/hero.php — hero trang chủ.
+ * _layout/home/hero.php — hero trang chủ (S01).
  *
- * Dựng theo "Vin Eyewear Home.dc.html": một khối bo góc lớn nền hồng phấn,
- * chia hai cột — chữ bên trái, ảnh chân dung tràn cạnh bên phải:
+ * Dựng theo "Vin Eyewear Home.dc.html": hai cột TRÀN CẠNH, không còn khối bo
+ * góc nổi trên nền như bản trước.
  *
- *   nhãn "Bộ sưu tập 2026" · tiêu đề serif hai màu · một dòng mô tả
- *   · hai nút · dải ba ảnh tròn chồng mép kèm ghi chú "10+ mẫu mới"
+ *   trái  nhãn "Bộ sưu tập 2026" · tiêu đề serif hai màu · mô tả · hai nút
+ *         · liên kết AR · dải ưu đãi kèm ĐỒNG HỒ ĐẾM NGƯỢC · bộ điều khiển
+ *         băng ảnh (số thứ tự, hai mũi tên, ba vạch tiến độ)
+ *   phải  băng ba ảnh trượt ngang, kèm thẻ chú thích nền sẫm ở mép trái dưới
+ *   dưới  dải cam kết nền nâu sẫm chạy hết bề ngang
  *
- * KHÔNG CÒN CAROUSEL. Bản trước là băng ảnh tự trượt đọc từ config/banners.php
- * (kèm assets/js/hero.js); thiết kế này là một khối tĩnh nên toàn bộ phần đó
- * đã bỏ — không còn JS, không còn nút điều hướng, không còn trạng thái tự chạy.
+ * BĂNG ẢNH TRỞ LẠI. Bản thiết kế trước là khối tĩnh nên hero.js đã bỏ; bản này
+ * có ba ảnh trượt ngang nên phần đó quay lại — nhưng ở assets/js/home.js (một
+ * file cho cả trang chủ) chứ không phải hero.js cũ.
  *
- * Ba ảnh tròn ở dải cuối là ẢNH TRANG TRÍ, cố ý gõ cứng chứ không lấy từ DB:
- * chúng minh hoạ cho câu "mẫu mới về", không phải lối vào sản phẩm cụ thể, nên
- * mang alt rỗng và không bọc liên kết.
+ * BĂNG TỰ CHẠY, và chạy nhanh (theo yêu cầu) — khác bản thiết kế, vốn đứng yên
+ * chờ bấm mũi tên. Nhịp khai bằng data-autoplay ngay trên .hero__media bên
+ * dưới. Băng dừng lại khi con trỏ hoặc tiêu điểm bàn phím ở trong hero: ảnh tự
+ * trôi đi giữa lúc người ta đang nhìn là một cách gây bực.
+ *
+ * KHÔNG CÓ JS THÌ VẪN ĐỌC ĐƯỢC: ảnh đầu tiên hiện sẵn, đồng hồ đếm ngược đã
+ * được PHP tính trước ở phía máy chủ (JS chỉ chạy tiếp từng giây), hai mũi tên
+ * và ba vạch chỉ là điều khiển phụ.
+ *
+ * Nhận qua partial():
+ *   $promo — sự kiện ưu đãi đang chạy (EventModel::currentPromo()) hoặc null.
+ *            Không có ưu đãi nào còn hạn thì cả dải đếm ngược ẩn đi: một chiếc
+ *            đồng hồ đếm ngược tới hư không còn tệ hơn là không có nó.
  */
 
+$promo = $promo ?? null;
+
 /*
- * Ba ảnh tròn: bản thiết kế trỏ thẳng vào uploads/1.jpg · 2.jpg · 3.jpg của
- * dự án Claude Design. designImage() tìm hero-thumb-1..3 trong
- * assets/images/home/, chưa có thì tạm dùng ảnh sản phẩm trong repo.
+ * Ba ảnh của băng. Ô "hero-photo · hero-slide-2 · hero-slide-3" trong bản
+ * thiết kế; chưa tải ảnh thiết kế về thì dùng ảnh có sẵn trong repo.
  */
-$thumbs = [
-    designImage('hero-thumb-1', 'assets/images/product-1.jpg'),
-    designImage('hero-thumb-2', 'assets/images/product-2.jpg'),
-    designImage('hero-thumb-3', 'assets/images/product-3.jpg'),
+$slides = [
+    [
+        'image'   => designImage('hero-photo', 'assets/images/hero-models.jpg'),
+        'alt'     => 'Khách hàng thử gọng kính tại Vin Eyewear',
+        'caption' => 'Đo khúc xạ chuẩn phòng khám · Hà Nội',
+    ],
+    [
+        'image'   => designImage('hero-slide-2', 'assets/images/showroom-frames.jpg'),
+        'alt'     => 'Kệ trưng bày kính mát tại cửa hàng',
+        'caption' => 'Bộ sưu tập kính mát 2026 · Polarized UV400',
+    ],
+    [
+        'image'   => designImage('hero-slide-3', 'assets/images/hero-eyewear.jpg'),
+        'alt'     => 'Gọng titan siêu nhẹ vừa lên kệ',
+        'caption' => 'Gọng titan siêu nhẹ 9 gram · Vừa lên kệ',
+    ],
+];
+
+/*
+ * ĐỒNG HỒ ĐẾM NGƯỢC — tính SẴN ở máy chủ.
+ *
+ * Bản thiết kế để JavaScript tính từ con số 0; ở đây bốn ô đã mang đúng giá
+ * trị ngay trong HTML, nên trang không JS vẫn nói đúng còn bao lâu, và trang
+ * có JS không nhấp nháy "00:00:00:00" trong khung hình đầu tiên.
+ *
+ * Mốc kết thúc: ends_at của ưu đãi, thiếu thì lấy starts_at (sự kiện một ngày).
+ */
+$deadline = null;
+$parts    = ['d' => '00', 'h' => '00', 'm' => '00', 's' => '00'];
+
+if ($promo !== null) {
+    $raw = $promo['ends_at'] ?? $promo['starts_at'] ?? null;
+
+    // ?: null — strtotime() trả false cho chuỗi ngày hỏng; để nguyên false thì
+    // date() bên dưới in ra mốc 1970 và đồng hồ đứng ở 00:00:00:00.
+    $deadline = $raw !== null ? (strtotime((string) $raw) ?: null) : null;
+
+    if ($deadline !== null) {
+        // Mốc đã qua giữa lúc truy vấn và lúc vẽ -> coi như hết giờ, không âm
+        $left = max(0, $deadline - time());
+
+        $parts = [
+            'd' => str_pad((string) intdiv($left, 86400),      2, '0', STR_PAD_LEFT),
+            'h' => str_pad((string) intdiv($left % 86400, 3600), 2, '0', STR_PAD_LEFT),
+            'm' => str_pad((string) intdiv($left % 3600, 60),  2, '0', STR_PAD_LEFT),
+            's' => str_pad((string) ($left % 60),              2, '0', STR_PAD_LEFT),
+        ];
+    }
+}
+
+$hasCountdown = $promo !== null && $deadline !== null;
+
+// Bốn ô đếm ngược, ô cuối (giây) tô màu thương hiệu như bản thiết kế
+$cells = [
+    ['key' => 'd', 'label' => 'Ngày'],
+    ['key' => 'h', 'label' => 'Giờ'],
+    ['key' => 'm', 'label' => 'Phút'],
+    ['key' => 's', 'label' => 'Giây'],
+];
+
+/*
+ * Dải cam kết dưới hero. Bốn mục, icon vẽ thẳng ở đây chứ không qua core/icons.php:
+ * ba trong bốn hình (gọng kính, khiên, xe tải) không có trong bộ icon chung.
+ */
+$trust = [
+    [
+        'label' => 'Đo khúc xạ miễn phí',
+        'path'  => '<circle cx="6.5" cy="12" r="4"/><circle cx="17.5" cy="12" r="4"/><path d="M10.5 12h3"/>',
+    ],
+    [
+        'label' => 'Đổi trả trong 7 ngày',
+        'path'  => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+    ],
+    [
+        // Bản thiết kế ghi "Bảo hành 24 tháng". Trang chính sách thì nêu CẢ HAI
+        // mốc: trọn đời cho dịch vụ chăm sóc (nắn gọng, thay ốc, vệ sinh) và 24
+        // tháng cho lỗi nhà sản xuất — xem config/policy.php. Dải này lấy con số
+        // của bản thiết kế; đổi sang "trọn đời" thì phải đổi cả bốn nhãn cho
+        // cùng một giọng, không sửa lẻ một chỗ.
+        'label' => 'Bảo hành 24 tháng',
+        'path'  => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    ],
+    [
+        'label' => 'Giao nhanh toàn quốc',
+        'path'  => '<path d="M1 3h13v13H1zM14 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/>',
+    ],
 ];
 ?>
 
@@ -34,47 +130,127 @@ $thumbs = [
     <div class="hero__inner">
 
         <div class="hero__text">
-            <p class="hero__badge">Bộ sưu tập 2026</p>
+            <p class="hero__eyebrow">
+                <span class="hero__eyebrow-rule" aria-hidden="true"></span>
+                Bộ sưu tập 2026
+            </p>
 
             <h1 id="hero-title" class="hero__title">
-                Kính đẹp là kính hợp với <em>chính bạn.</em>
+                Nhìn rõ hơn,<br><em>tự tin hơn.</em>
             </h1>
 
             <p class="hero__lead">
-                Gọng kính và kính mát tuyển chọn từ hơn 50 thương hiệu quốc tế.
-                Đo mắt chuẩn phòng khám, cắt lắp trong ngày.
+                Gọng titanium &amp; acetate chính hãng, đo khúc xạ miễn phí cùng
+                chuyên viên trước khi bạn chốt đơn.
             </p>
 
             <div class="hero__actions">
-                <a class="hero__btn hero__btn--solid" href="/san-pham">Mua ngay</a>
-                <a class="hero__btn hero__btn--ghost" href="/dat-lich">Đặt lịch đo mắt</a>
+                <a class="hero__btn hero__btn--solid" href="/san-pham">Khám Phá Bộ Sưu Tập</a>
+                <a class="hero__btn hero__btn--ghost" href="/dat-lich">Đặt Lịch Đo Mắt Miễn Phí</a>
             </div>
 
-            <div class="hero__proof">
-                <div class="hero__thumbs" aria-hidden="true">
-                    <?php foreach ($thumbs as $thumb): ?>
-                        <span class="hero__thumb">
-                            <img src="<?= e($thumb) ?>" alt="" decoding="async">
-                        </span>
-                    <?php endforeach; ?>
+            <?php /* Cùng cờ với thanh điều hướng — xem ghi chú đầu config/ar.php.
+                     Tính năng còn tắt thì không mời người ta bấm vào. */ ?>
+            <?php if (config('ar.nav_enabled')): ?>
+                <a class="hero__ar" href="/thu-ar">Hoặc thử kính ảo bằng camera (AR) →</a>
+            <?php endif; ?>
+
+            <?php if ($hasCountdown): ?>
+                <hr class="hero__divider">
+
+                <div class="hero__promo">
+                    <a class="hero__promo-title" href="/su-kien/<?= e(rawurlencode($promo['slug'])) ?>">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <circle cx="12" cy="13" r="8"/>
+                            <path d="M12 9.5V13l2.5 1.5M9 2h6"/>
+                        </svg>
+                        <?= e($promo['title']) ?>
+                    </a>
+
+                    <?php /* datetime ISO-8601 để JS đọc lại đúng mốc mà PHP đã dùng */ ?>
+                    <ul class="hcd" role="list"
+                        data-countdown="<?= e(date(DATE_ATOM, $deadline)) ?>">
+                        <?php foreach ($cells as $i => $cell): ?>
+                            <?php if ($i > 0): ?>
+                                <li class="hcd__sep" aria-hidden="true">:</li>
+                            <?php endif; ?>
+                            <li class="hcd__cell">
+                                <span class="hcd__num" data-cd="<?= e($cell['key']) ?>"><?= e($parts[$cell['key']]) ?></span>
+                                <span class="hcd__label"><?= e($cell['label']) ?></span>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
                 </div>
+            <?php endif; ?>
 
-                <p class="hero__proof-text">
-                    <strong>10+ mẫu mới</strong> vừa về trong bộ sưu tập mùa này
-                </p>
-            </div>
+            <?php /* Bộ điều khiển băng ảnh. Ẩn khi chỉ có một ảnh — hai mũi tên
+                     không làm gì là một lời hứa suông. */ ?>
+            <?php if (count($slides) > 1): ?>
+                <div class="hero__nav">
+                    <p class="hero__counter">
+                        <span data-hero-index>01</span> / <?= str_pad((string) count($slides), 2, '0', STR_PAD_LEFT) ?>
+                    </p>
+
+                    <div class="hero__arrows">
+                        <button type="button" class="hero__arrow" data-hero="prev" aria-label="Ảnh trước">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M19 12H5M11 6l-6 6 6 6"/>
+                            </svg>
+                        </button>
+                        <button type="button" class="hero__arrow" data-hero="next" aria-label="Ảnh sau">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M5 12h14M13 6l6 6-6 6"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="hero__bars" aria-hidden="true">
+                        <?php foreach ($slides as $i => $slide): ?>
+                            <span class="hero__bar<?= $i === 0 ? ' is-on' : '' ?>"></span>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
 
-        <?php /* fetchpriority=high: ảnh này là Largest Contentful Paint của
-                 trang chủ, để trình duyệt tải trước mọi ảnh khác.
+        <?php /* data-autoplay: số mili-giây giữa hai lần tự đổi ảnh. Có thuộc
+                 tính này thì assets/js/home.js bật chế độ tự chạy; bỏ đi là băng
+                 chỉ đổi khi bấm mũi tên (đúng bản thiết kế — nó KHÔNG tự chạy).
+                 Cùng quy ước với data-autoplay của khối đánh giá.
 
-                 Ô "hero-photo" của bản thiết kế — chân dung đeo kính. Chưa tải
-                 về thì dùng hero-models.jpg trong repo (hai người mẫu đeo kính,
-                 nền be); tấm hero-eyewear.jpg cũ đánh đèn đỏ cam gắt, chọi hẳn
-                 với nền hồng phấn của khối này nên không dùng làm dự phòng. */ ?>
-        <div class="hero__media">
-            <img src="<?= designImage('hero-photo', 'assets/images/hero-models.jpg') ?>" alt=""
-                 fetchpriority="high" decoding="async">
+                 2000ms là CỐ Ý NHANH theo yêu cầu. Trừ 0.55s chuyển động ở
+                 .hero__track thì mỗi ảnh đứng yên khoảng 1.45 giây. Muốn chậm
+                 lại thì tăng đúng con số này, không cần sửa JavaScript.
+
+                 Máy đặt "giảm chuyển động" (prefers-reduced-motion) thì home.js
+                 KHÔNG bật tự chạy, dù có thuộc tính này. */ ?>
+        <?php /* aria-live=off: chú thích đổi theo ảnh, đọc lại mỗi lần đổi chỉ
+                 làm phiền — nhất là khi băng tự chạy. */ ?>
+        <div class="hero__media" data-hero-slider data-autoplay="2000">
+            <div class="hero__track">
+                <?php foreach ($slides as $i => $slide): ?>
+                    <figure class="hero__slide" data-caption="<?= e($slide['caption']) ?>">
+                        <?php /* fetchpriority=high cho tấm đầu: đây là Largest
+                                 Contentful Paint của trang chủ. */ ?>
+                        <img src="<?= e($slide['image']) ?>" alt="<?= e($slide['alt']) ?>"
+                             <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
+                    </figure>
+                <?php endforeach; ?>
+            </div>
+
+            <p class="hero__caption" data-hero-caption><?= e($slides[0]['caption']) ?></p>
         </div>
     </div>
+
+    <ul class="hero__trust" role="list">
+        <?php foreach ($trust as $i => $item): ?>
+            <?php if ($i > 0): ?>
+                <li class="hero__trust-sep" aria-hidden="true"></li>
+            <?php endif; ?>
+            <li class="hero__trust-item">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><?= $item['path'] ?></svg>
+                <?= e($item['label']) ?>
+            </li>
+        <?php endforeach; ?>
+    </ul>
 </section>

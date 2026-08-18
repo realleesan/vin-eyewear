@@ -3,9 +3,23 @@
 /**
  * _layout/mega-menu.php — bảng xổ của mục "Sản phẩm" trên thanh điều hướng.
  *
+ * Dựng theo "Vin Eyewear Home.dc.html". Bảng có mặt trên MỌI trang vì header
+ * dùng chung — trang /san-pham cũng vậy, không phải dựng riêng.
+ *
  * File này được require BÊN TRONG <ul class="header-nav__list"> nên phần tử
  * gốc phải là <li>. Biến $isProductActive do header.php đặt sẵn.
  *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ĐÃ RÚT GỌN MẠNH so với bản trước — đây là thay đổi lớn nhất của lần dựng này
+ *
+ * Bản trước có 5 vùng: danh mục kèm số đếm · dáng gọng + đối tượng · chất liệu
+ * + tính năng tròng · thương hiệu · dải 3 thẻ sản phẩm nổi bật; kèm sợi chỉ
+ * crimson nối viên thuốc xuống bảng và hiệu ứng "vào nét" ba tầng.
+ *
+ * Bản thiết kế mới chỉ có BỐN cột: ba cột liên kết và một thẻ ảnh bộ sưu tập.
+ * Không thương hiệu, không thẻ sản phẩm, không "Tất cả sản phẩm" (chính viên
+ * thuốc "Sản phẩm" đã trỏ tới /san-pham). Mọi thứ bỏ đi đều còn đường khác:
+ * lọc thương hiệu và lọc sâu nằm ở cột lọc trang /san-pham, rộng rãi hơn nhiều.
  * ─────────────────────────────────────────────────────────────────────────────
  * MỞ BẰNG CSS, KHÔNG BẰNG JAVASCRIPT
  *
@@ -13,31 +27,26 @@
  * Thiếu :focus-within thì bảng này chỉ tồn tại với người dùng chuột — bấm Tab
  * là focus nhảy vào các liên kết đang bị ẩn, không ai thấy mình đang ở đâu.
  *
+ * Bản thiết kế dùng state + hẹn giờ đóng 180ms; ở đây là CSS thuần nên vai trò
+ * đó do một vùng bắt chuột vô hình đảm nhiệm (.mega__trigger::after).
+ *
  * Mega chỉ chạy từ 1101px. Hẹp hơn thì cả .header-nav ẩn đi và menu trượt
  * (_layout/mega-menu-mobile.php) lo phần điều hướng.
  * ─────────────────────────────────────────────────────────────────────────────
- * BỐ CỤC PHẢI ĐỨNG YÊN KHI KHO LỚN LÊN
+ * BA CỘT CỦA BẢN THIẾT KẾ LÀ BA DANH MỤC — ĐỌC TỪ CSDL
  *
- * Admin sẽ thêm sản phẩm và danh mục về sau, nên mọi thứ ở đây đều có TRẦN:
+ * Bản thiết kế gõ cứng ba tiêu đề "Gọng kính · Kính mát · Tròng kính" và bốn
+ * liên kết dưới mỗi cái. Ở đây tiêu đề lấy từ bảng `categories`, còn bốn liên
+ * kết lấy từ config/taxonomy.php và ĐƯỢC RÀNG THEO danh mục của cột — bấm
+ * "Titanium" dưới cột "Gọng kính" ra gọng titan, không ra cả kho.
  *
- *   1. Dải "Nổi bật" LUÔN đúng 3 thẻ. Kho có 3 hay 300 mặt hàng thì bảng vẫn
- *      cao y hệt. Chưa gắn cờ "nổi bật" cho mặt hàng nào thì lấy hàng mới về
- *      bù vào — bảng không bao giờ có ô trống.
- *   2. Cột danh mục cắt ở MAX_CATS mục; phần dôi ra do liên kết "Tất cả sản
- *      phẩm" gánh. Không cắt thì thêm 20 danh mục là bảng dài quá màn hình.
- *   3. Bốn cột còn lại đọc từ config/taxonomy.php — danh sách cố định, người
- *      sửa file tự thấy nó dài bao nhiêu.
+ * Vì sao không gõ cứng theo thiết kế: bốn nhãn của bản thiết kế ("Gọng không
+ * viền", "Kính thể thao"…) không có giá trị tương ứng nào trong CSDL, bấm vào
+ * là ra trang rỗng. Một liên kết dẫn tới chỗ trống tệ hơn là không có nó.
  *
- * Kho rỗng hoàn toàn (chưa có sản phẩm nào) thì dải "Nổi bật" biến mất cả
- * tiêu đề, và lưới còn 4 cột. Khung ảnh trống trông như trang hỏng.
- * ─────────────────────────────────────────────────────────────────────────────
+ * Số cột chạy theo số danh mục có thật (xem --mega-cols), nên danh mục thứ tư
+ * "Kính áp tròng" không bị rơi ra ngoài như khi khoá cứng ba cột.
  */
-
-/** Số danh mục hiện tối đa trong cột đầu. */
-$maxCats = 8;
-
-/** Số thẻ sản phẩm của dải "Nổi bật" — cố định, xem ghi chú trên. */
-$tileCount = 3;
 
 $taxonomy = config('taxonomy');
 
@@ -46,149 +55,122 @@ $taxonomy = config('taxonomy');
    thuộc ngầm vào đúng một nơi gọi. */
 $categories = $categories ?? CategoryModel::visible();
 
-/*
- * Ưu tiên hàng đã gắn cờ "nổi bật"; thiếu thì bù bằng hàng mới về. Lọc trùng
- * theo id vì một mặt hàng vừa nổi bật vừa mới về sẽ có mặt ở cả hai danh sách.
- */
-$tiles = ProductModel::featured($tileCount);
-
-if (count($tiles) < $tileCount) {
-    $have = array_column($tiles, 'id');
-
-    foreach (ProductModel::newest($tileCount * 2) as $p) {
-        if (count($tiles) >= $tileCount) {
-            break;
-        }
-        if (!in_array($p['id'], $have, true)) {
-            $tiles[] = $p;
-        }
-    }
-}
-
-/** Dựng URL lọc: ['shape' => 'Square'] -> /san-pham?shape=Square */
-$filterUrl = static fn (array $search): string => '/san-pham?' . http_build_query($search);
+/** Số liên kết tối đa mỗi cột — bản thiết kế vẽ đúng 4. */
+$maxLinks = 4;
 
 /*
- * Hai cột chữ ở giữa. Năm nhóm phân loại chỉ xếp vào HAI cột chứ không phải
- * năm: cộng cả cột danh mục và dải nổi bật thì bảng đã sáu vùng, mà mega chỉ
- * chạy từ 1101px — trừ 56px đệm mỗi bên còn 989px, chia sáu là mỗi vùng ~150px,
- * đủ hẹp để "Chống ánh sáng xanh" gãy làm ba dòng. Bốn vùng thì mỗi nhãn nằm
- * gọn một dòng.
+ * Lát cắt lọc hợp nghĩa cho từng danh mục.
  *
- * Ghép theo nghĩa chứ không phải ghép cho đủ chỗ: dáng gọng đi với đối tượng
- * (cùng nói về cái gọng đeo lên mặt ai), chất liệu đi với tính năng tròng
- * (cùng nói về thứ làm nên cặp kính).
+ * Ghép theo NGHĨA, không phải ghép cho đủ chỗ: người tìm gọng nghĩ theo chất
+ * liệu (titan hay acetate), người tìm kính mát nghĩ theo dáng (phi công hay
+ * mắt mèo), người tìm tròng nghĩ theo tính năng (chống ánh sáng xanh hay đổi
+ * màu). Danh mục lạ chưa có trong bảng thì rơi về dáng gọng — lát cắt dùng
+ * được cho mọi thứ đeo lên mặt.
  */
-$columns = [
-    ['title' => 'Dáng gọng', 'groups' => [
-        ['title' => null,        'links' => $taxonomy['frame_styles']],
-        ['title' => 'Đối tượng', 'links' => $taxonomy['audiences']],
-    ]],
-    ['title' => 'Chất liệu', 'groups' => [
-        ['title' => null,              'links' => $taxonomy['materials']],
-        ['title' => 'Tính năng tròng', 'links' => $taxonomy['lens_functions']],
-    ]],
+$sliceBySlug = [
+    'gong-kinh'     => $taxonomy['materials'],
+    'kinh-mat'      => $taxonomy['frame_styles'],
+    'trong-kinh'    => $taxonomy['lens_functions'],
+    'kinh-ap-trong' => $taxonomy['audiences'],
 ];
+
+/**
+ * Dựng URL lọc, LUÔN kèm danh mục của cột:
+ *   ['q' => 'titanium'] trong cột "Gọng kính" -> /san-pham?category=gong-kinh&q=titanium
+ *
+ * category đứng TRƯỚC để chuỗi truy vấn đọc được từ rộng tới hẹp.
+ */
+$filterUrl = static fn (string $slug, array $search): string =>
+    '/san-pham?' . http_build_query(['category' => $slug] + $search);
+
+/*
+ * Thẻ ảnh ở cột cuối — ô "mega-featured" của bản thiết kế.
+ *
+ * Bản thiết kế ghi cứng "Bộ sưu tập 2026 / 10+ mẫu mới vừa về". Ở đây lấy bộ
+ * sưu tập ĐẦU TIÊN trong config/collections.php: cùng bố cục, nhưng tên và câu
+ * mô tả là thật, và liên kết ra đúng bộ lọc của nó. Treo "10+ mẫu" lên một cửa
+ * hàng đang có 6 mặt hàng là nói sai ngay trên trang.
+ *
+ * Không có bộ sưu tập nào thì cả thẻ biến mất và lưới còn lại các cột chữ —
+ * một khung ảnh trống trông như trang hỏng.
+ */
+$feature = (config('collections') ?? [])[0] ?? null;
+
+if ($feature !== null) {
+    $featureImage = $feature['image'] ?? '';
+
+    if ($featureImage === '' || !is_file(ROOT_PATH . '/' . ltrim($featureImage, '/'))) {
+        $featureImage = $feature['image_sample'] ?? '';
+    }
+
+    $featureImage = designImage('mega-featured', $featureImage);
+}
 ?>
 <li class="mega">
 
     <a href="/san-pham"
        class="mega__trigger<?= $isProductActive ? ' is-active' : '' ?>"
        <?= $isProductActive ? 'aria-current="page"' : '' ?>>
-        Sản phẩm
+        <?= e(t('nav.products')) ?>
         <svg class="mega__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8"
+            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <?php /* SỢI CHỈ nối viên thuốc xuống mép trên của bảng — thứ trả lời
-                 câu "cái nút này mở ra cái gì". Nó tự vẽ xuống khi mở. Để là
-                 <span> thật chứ không phải ::after vì trigger đã dùng ::after
-                 cho vùng bắt chuột phủ khoảng trống. */ ?>
-        <span class="mega__thread" aria-hidden="true"></span>
+
+        <?php /* Mũi nhọn hình thoi cắm vào mép trên bảng — thứ trả lời câu
+                 "cái nút này mở ra cái gì". Thay cho SỢI CHỈ crimson của bản
+                 trước. Là <span> thật chứ không phải ::after vì trigger đã
+                 dùng ::after cho vùng bắt chuột phủ khoảng trống. */ ?>
+        <span class="mega__caret" aria-hidden="true"></span>
     </a>
 
+    <?php /* --mega-cols: số cột CHỮ, chưa tính thẻ ảnh. Bản thiết kế vẽ 3;
+             CSDL hiện có 4 danh mục nên thực tế in ra 4. */ ?>
     <div class="mega__panel">
-        <div class="mega__grid<?= $tiles === [] ? ' mega__grid--no-tiles' : '' ?>">
+        <div class="mega__grid<?= $feature === null ? ' mega__grid--no-feature' : '' ?>"
+             style="--mega-cols: <?= count($categories) ?>">
 
-            <!-- ══════════ CỘT 1 — DANH MỤC (từ CSDL) ══════════
-                 Trục chính của bảng, nên nó khác các cột lọc: chữ to hơn một
-                 bậc và mỗi dòng mang SỐ MẶT HÀNG đang bán. Con số là thứ giúp
-                 khách chọn trước khi bấm, không phải hoạ tiết. -->
-            <div class="mega__col mega__col--primary">
-                <p class="mega__label">Danh mục</p>
-                <ul class="mega__cats" role="list">
-                    <?php foreach (array_slice($categories, 0, $maxCats) as $cat): ?>
-                        <?php $n = (int) ($cat['product_count'] ?? 0); ?>
-                        <li>
-                            <?php /* Danh mục 0 món vẫn hiện — admin vừa tạo nó phải thấy nó ở
-                                     đây — nhưng làm nhạt đi, vì bấm vào là ra trang rỗng. Nhạt
-                                     chứ không ẩn: ẩn thì admin tưởng mình tạo hỏng. */ ?>
-                            <a href="/san-pham?category=<?= e(rawurlencode($cat['slug'])) ?>"
-                               <?= $n === 0 ? 'class="is-empty"' : '' ?>>
-                                <span class="mega__cat-name"><?= e($cat['name']) ?></span>
-                                <span class="mega__cat-count"><?= $n ?></span>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-
-                <a class="mega__all" href="/san-pham">
-                    Tất cả sản phẩm
-                    <span class="mega__all-arrow" aria-hidden="true">→</span>
-                </a>
-            </div>
-
-            <!-- ══════════ CỘT 2–3 — CÁC LÁT CẮT LỌC ══════════ -->
-            <?php foreach ($columns as $col): ?>
+            <?php foreach ($categories as $cat): ?>
+                <?php $slice = $sliceBySlug[$cat['slug']] ?? $taxonomy['frame_styles']; ?>
                 <div class="mega__col">
-                    <p class="mega__label"><?= e($col['title']) ?></p>
+                    <?php /* Tiêu đề cột bấm được: nó là lối vào cả danh mục, còn
+                             bốn dòng dưới chỉ là lát cắt hẹp hơn của chính nó. */ ?>
+                    <a class="mega__label" href="/san-pham?category=<?= e(rawurlencode($cat['slug'])) ?>">
+                        <?= e($cat['name']) ?>
+                    </a>
 
-                    <?php foreach ($col['groups'] as $group): ?>
-                        <?php if ($group['title'] !== null): ?>
-                            <p class="mega__label mega__label--sub"><?= e($group['title']) ?></p>
-                        <?php endif; ?>
-
-                        <ul class="mega__links" role="list">
-                            <?php foreach ($group['links'] as $link): ?>
-                                <li>
-                                    <a href="<?= e($filterUrl($link['search'])) ?>"><?= e($link['label']) ?></a>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endforeach; ?>
-                </div>
-            <?php endforeach; ?>
-
-            <!-- ══════════ CỘT 4 — THƯƠNG HIỆU ══════════ -->
-            <div class="mega__col">
-                <p class="mega__label">Thương hiệu</p>
-                <ul class="mega__links mega__links--2col" role="list">
-                    <?php foreach ($taxonomy['top_brands'] as $brand): ?>
-                        <li><a href="<?= e($filterUrl(['brand' => $brand])) ?>"><?= e($brand) ?></a></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-
-            <!-- ══════════ DẢI NỔI BẬT — luôn 3 thẻ, hoặc không có gì ══════════ -->
-            <?php if ($tiles !== []): ?>
-                <div class="mega__feature">
-                    <p class="mega__label">Nổi bật</p>
-
-                    <ul class="mega__tiles" role="list">
-                        <?php foreach ($tiles as $p): ?>
+                    <ul class="mega__links" role="list">
+                        <?php foreach (array_slice($slice, 0, $maxLinks) as $link): ?>
                             <li>
-                                <a class="mega-tile" href="/san-pham/<?= e(rawurlencode($p['slug'])) ?>">
-                                    <span class="mega-tile__frame">
-                                        <img src="<?= e(ProductModel::image($p)) ?>" alt=""
-                                             width="120" height="90" loading="lazy" decoding="async">
-                                    </span>
-                                    <span class="mega-tile__name"><?= e($p['name']) ?></span>
-                                    <span class="mega-tile__price"><?= money((int) $p['price']) ?></span>
-                                </a>
+                                <a href="<?= e($filterUrl($cat['slug'], $link['search'])) ?>"><?= e($link['label']) ?></a>
                             </li>
                         <?php endforeach; ?>
                     </ul>
                 </div>
+            <?php endforeach; ?>
+
+            <?php if ($feature !== null): ?>
+                <a class="mega-feature" href="/san-pham?<?= e(http_build_query(['collection' => $feature['slug']])) ?>">
+                    <span class="mega-feature__media">
+                        <?php if ($featureImage !== ''): ?>
+                            <img src="<?= e($featureImage) ?>" alt=""
+                                 width="400" height="280" loading="lazy" decoding="async">
+                        <?php endif; ?>
+                    </span>
+
+                    <span class="mega-feature__body">
+                        <span class="mega-feature__name"><?= e($feature['name']) ?></span>
+                        <?php /* "· Xem ngay →" bọc riêng và cấm ngắt dòng: câu
+                                 mô tả do người nhập nội dung viết, dài ngắn tuỳ
+                                 ý, nên nếu để chảy tự do thì mũi tên hay rơi
+                                 xuống một dòng của riêng nó. Cắt tagline ngắn
+                                 hơn ô này (30 ký tự) vì thẻ chỉ rộng ~220px. */ ?>
+                        <span class="mega-feature__note">
+                            <?= e(excerpt($feature['tagline'] ?? '', 30)) ?>
+                            <span class="mega-feature__more">· Xem ngay →</span>
+                        </span>
+                    </span>
+                </a>
             <?php endif; ?>
 
         </div>

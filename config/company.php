@@ -31,6 +31,38 @@ return [
     // Giờ RIÊNG của từng cơ sở nằm ở cột open_hours bảng `stores`.
     'open_hours'   => '8:30 – 21:30, cả tuần',
 
+    /*
+     * TÀI KHOẢN NHẬN CHUYỂN KHOẢN
+     *
+     * ⚠️ SỐ LIỆU MẪU — PHẢI THAY BẰNG TÀI KHOẢN THẬT TRƯỚC KHI CHẠY THẬT.
+     * Để trống 'number' thì trang xác nhận đơn và thẻ đơn hàng tự ẩn khối chuyển
+     * khoản đi và quay về câu "nhân viên sẽ gọi và đọc thông tin" — thà vậy còn
+     * hơn hiện một số tài khoản sai.
+     *
+     * NỘI DUNG CHUYỂN KHOẢN LUÔN LÀ MÃ ĐƠN, không phải tên khách. Đây là quy ước
+     * để việc đối chiếu sao kê làm được: nhân viên đọc nội dung là ra đúng đơn.
+     * Nó cũng chính là thứ cổng thanh toán (SePay…) dùng để tự khớp giao dịch
+     * với đơn sau này, nên đừng đổi sang gì khác.
+     */
+    'bank' => [
+        'name'    => 'Vietcombank',
+        'branch'  => 'CN Tây Hồ, Hà Nội',
+        'number'  => '0011001234567',
+        'holder'  => 'CONG TY TNHH VIN EYEWEAR VIET NAM',
+
+        /*
+         * MÃ NGÂN HÀNG THEO CHUẨN NAPAS (BIN) — dùng để dựng ảnh VietQR ở màn
+         * "Thanh toán QR" (/thanh-toan/chuyen-khoan).
+         *
+         * 970436 = Vietcombank. Đổi ngân hàng thì phải đổi CẢ 'name' và mã này;
+         * tra bảng mã tại https://api.vietqr.io/v2/banks.
+         *
+         * Để TRỐNG thì màn QR tự bỏ ảnh mã đi và chỉ in số tài khoản — thà vậy
+         * còn hơn hiện một mã QR trỏ sai nơi nhận tiền.
+         */
+        'bin'     => '970436',
+    ],
+
     'stores' => [
         'Cơ sở 1: 46 Hoàng Hoa Thám, phường Tây Hồ, TP. Hà Nội',
         'Cơ sở 2: 261 Ngọc Lâm, phường Bồ Đề, TP. Hà Nội',

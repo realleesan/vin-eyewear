@@ -10,7 +10,7 @@
 
    Markup: app/views/product/detail.php
 
-   Thẻ "sản phẩm liên quan" ở cuối trang dùng .pcard/.plist__grid trong
+   Thẻ "sản phẩm liên quan" ở cuối trang dùng .pcard/.pcard__grid trong
    components/product.css — nạp sẵn cho mọi trang, không khai lại ở đây.
 
    CỠ CHỮ ghi thẳng bằng px, cùng lý do đã ghi ở đầu category.css / account.css
@@ -30,9 +30,9 @@
     --d-shadow-card: 0 2px 10px rgba(90, 40, 40, 0.05);
     --d-shadow-gal:  0 2px 12px rgba(90, 40, 40, 0.06);
 
-    max-width: 1392px;
+    max-width: var(--container, 1600px);
     margin: 0 auto;
-    padding: 16px 56px 0;
+    padding: 16px var(--page-edge) 0;
 }
 
 .pd a { text-decoration: none; }
@@ -73,7 +73,7 @@
 .pdgal__stage {
     position: relative;
     height: 520px;
-    border-radius: 32px;
+    border-radius: var(--radius);
     overflow: hidden;
     background: var(--surface-raised);
     box-shadow: var(--d-shadow-gal);
@@ -102,7 +102,7 @@
     top: 20px;
     left: 20px;
     padding: 6px 16px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-size: 12px;
@@ -124,7 +124,7 @@
     height: 92px;
     padding: 3px;
     border: 2px solid #eee0d4;
-    border-radius: 18px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
 }
 
@@ -133,7 +133,7 @@
 .pdgal__thumb img {
     width: 100%;
     height: 100%;
-    border-radius: 14px;
+    border-radius: var(--radius-sm);
     object-fit: contain;
     background: var(--surface-sunken);
 }
@@ -273,7 +273,7 @@
     gap: 10px;
     padding: 11px 20px;
     border: 1.5px solid var(--line);
-    border-radius: 18px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     color: #4a3b38;
     cursor: pointer;
@@ -349,7 +349,7 @@
     display: flex;
     align-items: center;
     border: 1.5px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     padding: 4px;
     background: var(--surface-raised);
     flex-shrink: 0;
@@ -375,7 +375,7 @@
 .pdqty__num:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
 }
 
 .pdbtn {
@@ -383,7 +383,7 @@
     min-width: 150px;
     padding: 16px 0;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     font-family: var(--font-sans);
     font-size: 15px;
     line-height: 1.2;
@@ -429,7 +429,7 @@
     display: flex;
     align-items: flex-start;
     gap: 12px;
-    border-radius: 20px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     padding: 16px 18px;
 }
@@ -474,7 +474,7 @@
 .pdcard {
     display: flex;
     flex-direction: column;
-    border-radius: 28px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     padding: 34px 38px;
     box-shadow: var(--d-shadow-card);
@@ -525,7 +525,7 @@
     margin-top: 18px;
     padding: 11px 26px;
     border: 1.5px solid #e0cfc2;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     font-size: 13px;
     font-weight: 500;
     color: var(--ink);
@@ -583,7 +583,7 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--brand-subtle);
     color: var(--brand);
     font-size: 14px;
@@ -624,7 +624,7 @@
 .pdreview__flash {
     margin: 0 0 8px;
     padding: 12px 16px;
-    border-radius: 14px;
+    border-radius: var(--radius-sm);
     font-size: 13px;
     font-weight: 500;
 }
@@ -698,7 +698,7 @@
     width: 100%;
     padding: 13px 16px;
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: var(--font-sans);
     font-size: 14px;
@@ -717,7 +717,7 @@
     align-self: flex-start;
     padding: 12px 28px;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-family: var(--font-sans);

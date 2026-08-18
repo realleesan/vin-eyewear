@@ -20,12 +20,21 @@
     background: var(--surface-sunken);
 }
 
+/* SÁU KHỐI DƯỚI ĐÂY TỪNG LỆCH MÉP VỚI CÁC KHỐI CÒN LẠI CỦA TRANG CHỦ.
+   Chúng thụt vào bằng --gutter (tối đa 32px) còn .hbest/.hrev/.hcat… thụt vào
+   bằng --page-edge (nay 128px) — trên màn 1600 là lệch nhau gần 100px, nhìn hai
+   khối chồng nhau là thấy ngay. Nay cả trang dùng một lề.
+
+   max-width phải CỘNG THÊM hai lần lề, vì ở đây lề nằm TRONG hộp bị chặn
+   max-width, còn ở .hbest lề nằm trên chính thẻ <section> và cột nội dung mới
+   là hộp bị chặn. Cùng công thức min(bề ngang màn − 2 lề, --container) thì hai
+   kiểu dựng mới ra đúng một mép. */
 .trust-bar__list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-width: var(--container, 1280px);
+    max-width: calc(var(--container, 1600px) + var(--page-edge) * 2);
     margin-inline: auto;
-    padding-inline: var(--gutter);
+    padding-inline: var(--page-edge);
     list-style: none;
 }
 
@@ -84,9 +93,9 @@
 .press { background: var(--surface-sunken); }
 
 .press__inner {
-    max-width: var(--container, 1280px);
+    max-width: calc(var(--container, 1600px) + var(--page-edge) * 2);
     margin-inline: auto;
-    padding: var(--section-pad) var(--gutter);
+    padding: var(--section-pad) var(--page-edge);
 }
 
 .press__grid {
@@ -160,9 +169,9 @@
 
 
 .hevent__inner {
-    max-width: var(--container, 1280px);
+    max-width: calc(var(--container, 1600px) + var(--page-edge) * 2);
     margin-inline: auto;
-    padding: var(--section-pad) var(--gutter);
+    padding: var(--section-pad) var(--page-edge);
 }
 
 /* ============================================================
@@ -182,9 +191,9 @@
     display: grid;
     gap: 40px;
     align-items: center;
-    max-width: var(--container, 1280px);
+    max-width: calc(var(--container, 1600px) + var(--page-edge) * 2);
     margin-inline: auto;
-    padding: var(--section-pad) var(--gutter);
+    padding: var(--section-pad) var(--page-edge);
 }
 
 @media (min-width: 901px) {
@@ -287,114 +296,10 @@
    { border-bottom:0 }` — trong khi bản thiết kế kẻ đường dưới CẢ BỐN dòng,
    kể cả dòng cuối. Muốn dùng lại lens-spotlight thì đặt tên lớp khác. */
 
-/* ============================================================
-   S09 — BỘ SƯU TẬP / LOOKBOOK
-   Markup: app/views/_layout/home/collections.php
-   ============================================================ */
-
-.hcoll { background: var(--surface); }
-
-.hcoll__inner {
-    max-width: var(--container, 1280px);
-    margin-inline: auto;
-    padding: var(--section-pad) var(--gutter);
-}
-
-.hcoll__grid {
-    display: grid;
-    gap: 20px;
-    margin-top: 48px;
-    list-style: none;
-}
-
-/* Ba thẻ ngang hàng từ 901px. Dưới mốc đó xếp dọc: thẻ lookbook sống bằng
-   ảnh, ép hai thẻ vào một hàng điện thoại thì ảnh nhỏ hơn cả ảnh sản phẩm. */
-@media (min-width: 901px) {
-    .hcoll__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-.ccard__link {
-    position: relative;
-    display: block;
-    overflow: hidden;
-    /* Khung dọc 4:5 — ảnh người đeo kính đứng, khung ngang sẽ cắt mất mặt */
-    aspect-ratio: 4 / 5;
-    background: var(--ink);
-    text-decoration: none;
-}
-
-.ccard__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.6s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.ccard__link:hover .ccard__img,
-.ccard__link:focus-visible .ccard__img {
-    transform: scale(1.04);
-}
-
-.ccard__body {
-    position: absolute;
-    inset: auto 0 0 0;
-    display: grid;
-    gap: 6px;
-    padding: 0 20px 20px;
-    /* Nền chuyển dần thay vì một lớp phủ đều: nửa trên của ảnh không bị làm
-       đục. Đậm tới 96% ở đáy và chỉ tan hẳn ở 78% chiều cao khối chữ — ảnh
-       lookbook có thể là ảnh chụp ngoài nắng rất sáng, phủ nhạt hơn thì chữ
-       trắng chìm mất (đo trên ảnh mẫu nền sáng: không đọc nổi tên bộ sưu tập). */
-    background: linear-gradient(
-        to top,
-        color-mix(in srgb, var(--ink) 96%, transparent) 0%,
-        color-mix(in srgb, var(--ink) 78%, transparent) 45%,
-        transparent 100%
-    );
-    padding-top: 56px;
-    color: var(--on-ink);
-}
-
-.ccard__name {
-    font-family: var(--font-serif);
-    font-size: var(--fs-h4);
-    font-weight: 600;
-    line-height: 1.15;
-}
-
-.ccard__tagline {
-    font-size: var(--fs-body-sm);
-    line-height: 1.6;
-    color: color-mix(in srgb, var(--on-ink) 82%, transparent);
-}
-
-.ccard__more {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 6px;
-    font-size: var(--fs-label);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--brand-light);
-}
-
-.ccard__more svg {
-    transition: transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.ccard__link:hover .ccard__more svg,
-.ccard__link:focus-visible .ccard__more svg {
-    transform: translateX(4px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .ccard__img,
-    .ccard__more svg { transition: none; }
-
-    .ccard__link:hover .ccard__img { transform: none; }
-}
+/* Ở ĐÂY TRƯỚC CÓ CỤM S09 — BỘ SƯU TẬP / LOOKBOOK (.hcoll / .ccard*).
+   Đã dời xuống cụm "TRANG CHỦ" phía dưới cùng các khối còn lại của bản thiết
+   kế: khối này nay là "Bộ sưu tập mới" dựng theo lưới khảm 1+2, không còn là
+   ba thẻ dọc 4:5 phủ chuyển sắc như bản Lovable. */
 
 /* ============================================================
    S13 — LƯỚI LOGO THƯƠNG HIỆU
@@ -407,9 +312,9 @@
 }
 
 .hbrands__inner {
-    max-width: var(--container, 1280px);
+    max-width: calc(var(--container, 1600px) + var(--page-edge) * 2);
     margin-inline: auto;
-    padding: var(--section-pad) var(--gutter);
+    padding: var(--section-pad) var(--page-edge);
 }
 
 .hbrands__group + .hbrands__group { margin-top: 40px; }
@@ -507,9 +412,9 @@
     display: grid;
     gap: 32px;
     align-items: center;
-    max-width: var(--container, 1280px);
+    max-width: calc(var(--container, 1600px) + var(--page-edge) * 2);
     margin-inline: auto;
-    padding: var(--section-pad) var(--gutter);
+    padding: var(--section-pad) var(--page-edge);
 }
 
 /* Hai cột khi đủ rộng: lời mời bên trái, ô nhập bên phải */
@@ -567,7 +472,7 @@
    TIỆN ÍCH DÙNG CHUNG CHO CÁC KHỐI TRANG CHỦ
    ============================================================ */
 
-/* Liên kết "Xem tất cả" kiểu gạch chân — thiết kế dùng ở đầu mỗi lưới */
+/* Liên kết "Xem tất cả" kiểu gạch chân — dùng ở các khối ngoài trang chủ */
 .link-underline {
     align-self: flex-end;
     padding-bottom: 2px;
@@ -593,19 +498,27 @@
 .section-head--tight { align-items: baseline; }
 
 /* ============================================================
-   TRANG CHỦ — TÁM KHỐI CỦA "Vin Eyewear Home.dc.html"
+   TRANG CHỦ — MƯỜI KHỐI CỦA "Vin Eyewear Home.dc.html"
 
    Markup: app/views/_layout/home/*.php · Thứ tự: app/views/home/index.php
 
-     hero → danh mục → bán chạy → chọn theo khuôn mặt → cắt lắp tròng
-     → đo mắt → đánh giá → kêu gọi hành động
+     hero → bộ sưu tập mới → sản phẩm mới về → danh mục → bán chạy
+     → kiểm tra 5 phút → cắt lắp tròng → đo mắt → đánh giá → kêu gọi hành động
+
+   ĐÃ ĐỔI NGÔN NGỮ HÌNH KHỐI so với bản trước, đây là thay đổi lớn nhất:
+
+     · GÓC BO 999px/36px/32px  ->  6px cho thẻ, 4px cho nút và huy hiệu.
+       Không còn viên thuốc, không còn hình vòm, không còn khối bo lớn nổi
+       trên nền. Bản thiết kế mới vẽ mọi thứ bằng góc gần vuông.
+     · KHỐI NỔI CÓ LỀ  ->  DẢI TRÀN CẠNH. Hero, đo mắt và CTA trước đây là
+       những khối bo góc cách mép trang 32px; nay chúng chạy sát hai mép.
+     · VIỀN THAY BÓNG. Thẻ đứng yên có viền 1px #eee0d4 và không bóng; bóng
+       chỉ xuất hiện lúc rê chuột.
 
    MÀU và CHỮ vẫn gọi qua token của site (--brand, --surface, --ink,
-   --font-serif) — nhưng nay chính các token đó ĐÃ mang đúng giá trị của bản
-   thiết kế (#8a2432 / #faf6f0 / #33272a / Lora, xem layout.css). Trước đây
-   site chạy #801a20 + Playfair Display nên chỗ này phải ghi chú "cố ý lệch";
-   lệch đó đã gỡ. Những màu KHÔNG có token tương ứng (hồng phấn, nâu sẫm của
-   khối đo mắt…) gom hết vào cụm --h-* ngay dưới đây.
+   --font-serif) vì chính các token đó đã mang đúng giá trị của bản thiết kế
+   (#8a2432 / #faf6f0 / #33272a / Lora, xem layout.css). Những màu KHÔNG có
+   token tương ứng gom hết vào cụm --h-* ngay dưới đây.
 
    CỠ CHỮ ghi thẳng bằng px, KHÔNG qua thang --fs-*. Đây là ngoại lệ duy nhất
    của quy ước "đừng viết font-size bằng px" trong layout.css, và có lý do:
@@ -616,193 +529,197 @@
    trùng. Riêng TIÊU ĐỀ hero và CTA vẫn dùng clamp, nhưng clamp được tính lại
    để chạm đúng cỡ của thiết kế ở 1280px rồi dừng.
 
-   BỀ NGANG: bản thiết kế đặt `max-width:1280px` TRÊN CHÍNH section, và lề
-   trong 56px nằm bên trong 1280px đó — nên cột nội dung rộng 1168px, không
-   phải 1280px. Cặp .h*__inner bên dưới tái lập đúng phép tính này.
+   BỀ NGANG: bản thiết kế KHÔNG đặt max-width — mọi khối chạy hết bề ngang
+   trang và chỉ chừa lề 96px hai bên. Ở đây lề đó là --page-edge (khai trong
+   layout.css, dùng chung với header và chân trang), còn cột nội dung chặn
+   thêm ở --container để trên màn 2K chữ không kéo dài thành một dòng 1700px.
+   Dưới 1792px hai cách cho ra kết quả giống hệt nhau.
 
    Bản thiết kế là khung cứng 1280px (`min-width:1280px`), không có bản cho
    màn hẹp. Site này chạy từ điện thoại lên, nên mỗi khối có thêm mốc gãy:
-   1024px xếp hai cột thành một, 720px thu lưới còn một cột.
+   1180/1024px xếp hai cột thành một, 720px thu lưới còn một cột.
    ============================================================ */
 
-.hero,
+/* Ở ĐÂY TRƯỚC CÓ CỤM --h-* gắn trên một danh sách 11 selector.
+   Đã chuyển nguyên vẹn lên :root trong layout.css: từ khi thẻ sản phẩm dùng
+   chung (.pcard) chuyển sang components/product.css và chạy ở CẢ trang chi
+   tiết lẫn trang chủ, mấy token này phải với tới được ngoài phạm vi các khối
+   trang chủ — gắn trên danh sách selector thì ngoài đó var() không phân giải
+   được và mọi màu rơi về giá trị rỗng. */
+
+/* Lề ngang chung. Hero, đo mắt và CTA tự lo lấy vì chúng có nền tràn cạnh và
+   chỉ phần chữ mới thụt vào. */
+.hcoll,
+.hnew,
 .hcat,
 .hbest,
-.hstyle,
+.qcheck,
 .hlens,
 .hexam,
-.hrev,
-.hcta {
-    /* Hồng phấn — nền hero và các nhãn viên thuốc */
-    --h-blush:         #f2e4dc;
-    --h-blush-line:    #e3cfc4;
-
-    /* Nền chờ phía sau ảnh, thấy được lúc ảnh chưa tải xong */
-    --h-shell:         #f5efe7;
-
-    /* Chữ phụ tông ấm — nhạt hơn --muted, đúng sắc của bản thiết kế */
-    --h-eyebrow:       var(--eyebrow);
-    --h-note:          #9a877f;
-    --h-line:          #e0cfc2;
-
-    /* Khối đo mắt: nền nâu sẫm, không phải --ink (đen trung tính) */
-    --h-dark:          #3b1219;
-    --h-dark-eyebrow:  #d8a49a;
-    --h-on-dark:       #f8ede8;
-    --h-on-dark-muted: #bd9d95;
-    --h-on-dark-num:   #c98d81;
-
-    --h-radius:        36px;
-    --h-gutter:        32px;
-    --h-shadow:        0 2px 12px rgba(90, 40, 40, 0.06);
-    --h-shadow-lift:   0 20px 44px rgba(90, 40, 40, 0.14);
-
-    /* Lề trong của bốn khối "nền trang" (danh mục, bán chạy, khuôn mặt,
-       đánh giá). Nằm BÊN TRONG max-width:1280px, xem chú thích đầu cụm. */
-    --h-inset:         56px;
+.hrev {
+    padding: var(--h-pad-y) var(--page-edge);
 }
 
-/* Bề ngang và lề trong dùng chung cho bốn khối chạy trên nền trang.
-   Khối hero / cắt lắp tròng / đo mắt / CTA có khung riêng nên không ăn cụm
-   này — chúng tràn sát mép, chỉ chừa --h-gutter hai bên. */
+/* "Bộ sưu tập" khép sát hơn ở dưới vì nó và khối "mới về" NGAY DƯỚI NÓ là một
+   cặp, không phải hai chương riêng — cả hai cùng trả lời "có gì để xem".
+   Ràng buộc là hai khối phải đứng LIỀN NHAU, không phải .hcoll phải đứng đầu:
+   khối đầu tiên sau hero nay là "danh mục" (xem app/views/home/index.php). */
+.hcoll { padding-bottom: 24px; }
+.hrev  { padding-bottom: 64px; }
+
+/* Cột nội dung — xem chú thích "BỀ NGANG" ở đầu cụm */
+.hcoll__inner,
+.hnew__inner,
 .hcat__inner,
 .hbest__inner,
-.hstyle__inner,
-.hrev__inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 var(--h-inset);
+.qcheck__inner,
+.hrev__inner,
+.hlens__inner,
+.hexam__inner {
+    max-width: var(--container, 1600px);
+    margin-inline: auto;
 }
 
-/* Nhãn phụ của mọi khối trang chủ đi tông hồng ấm thay vì xám --muted.
-   12.5px/600/0.14em là số của bản thiết kế; .eyebrow dùng chung trong
-   ui.css là 11px/500/0.12em nên phải viết đè cả ba. */
-.hcat .eyebrow,
-.hbest .eyebrow,
-.hstyle .eyebrow,
-.hlens .eyebrow,
-.hrev .eyebrow {
-    color: var(--h-eyebrow);
-    font-size: 12.5px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-}
+/* Cụm viết đè .eyebrow ĐÃ BỎ: 12.5px/600/0.14em nay là giá trị MẶC ĐỊNH của
+   .eyebrow trong components/ui.css, nên mọi trang cùng một dáng nhãn. */
 
-/* Tiêu đề khối: Lora 600, 36px chẵn.
-   .section-h2 dùng chung có letter-spacing:-0.012em và text-wrap:balance —
-   bản thiết kế không siết chữ và ngắt dòng theo `pretty`, nên gỡ cả hai.
-   (`balance` chia đều số chữ mỗi dòng, `pretty` chỉ lo dòng cuối; hai cách
-   ngắt cho ra hai hình khối chữ khác nhau ở tiêu đề dài.) */
+/* Tiêu đề khối trang chủ: 36px CHẴN, không co theo màn hình.
+   Cân nặng 600, không siết chữ và ngắt dòng `pretty` nay là mặc định của
+   .section-h2 (components/ui.css) nên không phải viết đè nữa — chỉ còn cỡ chữ.
+
+   Vì sao cố định 36px: thang --fs-h3 là clamp() co theo bề ngang, ở 1280px nó
+   cho 34.1px chỗ bản thiết kế ghi 36px. Sai số ở mọi dòng tiêu đề cộng lại
+   thành một trang khác hẳn.
+
+   MỘT DẤU PHẨY THỪA ĐÃ LÀM RULE NÀY CHẾT HẲN. Danh sách selector trước đây gõ
+   `.hcoll .section-h2,,` — CSS coi selector rỗng giữa hai dấu phẩy là sai cú
+   pháp và loại BỎ CẢ khối, nên bảy tiêu đề khối rơi về --fs-h3 (34.1px ở
+   1280px) suốt từ lúc đó. Không có gì báo: trang vẫn dựng, chỉ nhỏ hơn 2px. */
+.hcoll .section-h2,
+.hnew .section-h2,
 .hcat .section-h2,
 .hbest .section-h2,
-.hstyle .section-h2,
+.qcheck .section-h2,
 .hlens .section-h2,
-.hexam .section-h2,
-.hrev .section-h2 {
+.hexam .section-h2 {
     font-size: 36px;
-    font-weight: 600;
-    line-height: 1.16;
-    letter-spacing: normal;
-    text-wrap: pretty;
 }
 
-/* Cụm nhãn + tiêu đề bên trái mỗi hàng tiêu đề: xếp dọc, cách nhau 10px.
-   Không có rule này thì hai dòng dính sát nhau (.section-h2--plain đã tắt
-   margin-top mặc định 16px). */
-.hcat .section-head > div,
-.hbest .section-head > div {
+/* --- Đầu khối CĂN GIỮA, và nút "xem tất cả" nằm DƯỚI lưới ---
+
+   Bốn khối lưới (bộ sưu tập · sản phẩm mới · danh mục · bán chạy) trước đây
+   dùng .section-head: một HÀNG NGANG với nhãn + tiêu đề bên trái và liên kết
+   "xem tất cả" đẩy sang phải. Bản thiết kế thì khác hẳn:
+
+     nhãn + tiêu đề CĂN GIỮA, cách nhau 10px, cách lưới 40px
+     liên kết thành một NÚT VIỀN căn giữa, nằm dưới lưới, cách 40px
+
+   .section-head/.pill-link vẫn còn nguyên trong ui.css cho trang tìm kiếm dùng
+   — đây chỉ là trang chủ thôi không dùng chúng nữa. */
+.hsec-head {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 10px;
+    margin-bottom: 40px;
+    text-align: center;
 }
 
-.hcat .section-head,
-.hbest .section-head { margin-bottom: 36px; }
+.hsec-head .eyebrow { margin: 0; }
 
-/* Liên kết "Tất cả sản phẩm →" ở góc phải mỗi tiêu đề: viên thuốc viền
-   mảnh, rê chuột thì đổ đầy màu thương hiệu. */
-.pill-link {
-    align-self: flex-end;
-    padding: 11px 24px;
+.hsec-all {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.hsec-all__link {
+    padding: 13px 36px;
     border: 1.5px solid var(--h-line);
-    border-radius: 999px;
+    border-radius: var(--h-radius-sm);
     font-size: 13.5px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--ink);
     text-decoration: none;
-    white-space: nowrap;
     transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.pill-link:hover,
-.pill-link:focus-visible {
-    background: var(--brand);
+.hsec-all__link:hover,
+.hsec-all__link:focus-visible {
     border-color: var(--brand);
+    background: var(--brand);
     color: var(--on-brand);
 }
 
+/* .pill-link ĐÃ CHUYỂN sang components/ui.css — nó là một nguyên thể dùng
+   chung, không phải của riêng trang chủ. Để lại đây thì trang tìm kiếm (và
+   bất kỳ trang nào khác gọi tới nó) nhận một liên kết KHÔNG có viền, vì
+   home-sections.css chỉ nạp ở trang chủ. */
+
+
 /* ============================================================
    HERO (S01)
-   Markup: app/views/_layout/home/hero.php
+   Markup: app/views/_layout/home/hero.php · JS: assets/js/home.js
 
-   Khối tĩnh, KHÔNG có JavaScript. Bản trước là carousel tự chạy
-   (assets/js/hero.js + config/banners.php); thiết kế này bỏ hẳn.
+   Hai cột tràn cạnh + một dải cam kết nền tối chạy hết bề ngang bên dưới.
    ============================================================ */
 
 .hero {
-    margin: 8px var(--h-gutter) 0;
-    background: var(--h-blush);
-    border-radius: var(--h-radius);
+    background: var(--surface);
+    /* Vạch ngăn với header. Bản trước không có vì hero là khối bo góc nổi
+       trên nền; nay hai vùng cùng màu pearl dính liền nhau nên cần vạch. */
+    border-top: 1px solid var(--h-card-line);
     overflow: hidden;
 }
 
 .hero__inner {
     display: grid;
-    /* Cột ảnh hẹp hơn cột chữ đúng tỉ lệ 1 : 0.92 của bản thiết kế */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
-    gap: 56px;
+    /* Cột ảnh RỘNG HƠN cột chữ — ngược với bản trước (1 : 0.92) */
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
     align-items: stretch;
-    padding-left: 80px;
 }
 
 .hero__text {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 28px;
-    max-width: 560px;
-    padding: 80px 0;
+    gap: 24px;
+    /* Trái ăn theo lề trang, phải hẹp hơn: cột ảnh bên cạnh không có lề */
+    padding: 72px 72px 48px var(--page-edge);
 }
 
-.hero__badge {
-    align-self: flex-start;
+.hero__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     margin: 0;
-    padding: 8px 18px;
-    border-radius: 999px;
-    background: var(--surface-raised);
-    color: var(--brand);
     font-size: 12.5px;
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
+    color: var(--brand);
 }
 
-/* clamp neo qua hai mốc 600px → 1280px, tính sao cho chạm ĐÚNG 58px của bản
-   thiết kế ngay tại 1280px rồi dừng: 12.8 + 0.0353×1280 = 58.0.
-   Bản trước neo tới 1440px nên ở 1280px mới được 56.4px — hụt 1.6px so với
-   thiết kế, đủ để dòng "chính bạn." rơi khác chỗ. */
+.hero__eyebrow-rule {
+    flex: none;
+    width: 38px;
+    height: 1.5px;
+    background: var(--brand);
+}
+
+/* clamp neo qua hai mốc 600px → 1280px, tính sao cho chạm ĐÚNG 62px của bản
+   thiết kế ngay tại 1280px rồi dừng: 9.9 + 0.0407×1280 = 62.0. */
 .hero__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: clamp(34px, calc(12.8px + 3.53vw), 58px);
+    font-size: clamp(34px, calc(9.9px + 4.07vw), 62px);
     font-weight: 600;
-    line-height: 1.1;
+    line-height: 1.12;
     color: var(--ink);
     text-wrap: pretty;
 }
 
-/* Nửa sau tiêu đề: đổi màu VÀ để nguyên nét nghiêng của thẻ <em>, đúng như
-   bản thiết kế. */
+/* Nửa sau tiêu đề: đổi màu VÀ giữ nét nghiêng thật của thẻ <em> */
 .hero__title em {
     font-style: italic;
     color: var(--brand);
@@ -810,23 +727,25 @@
 
 .hero__lead {
     margin: 0;
-    max-width: 440px;
+    max-width: 460px;
     font-size: 16.5px;
-    line-height: 1.7;
+    line-height: 1.75;
     color: var(--muted);
 }
 
 .hero__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px;
+    gap: 12px;
+    margin-top: 4px;
 }
 
 .hero__btn {
-    padding: 15px 34px;
-    border-radius: 999px;
-    font-size: 15px;
-    font-weight: 500;
+    padding: 14px 24px;
+    border: 1px solid transparent;
+    border-radius: var(--h-radius-sm);
+    font-size: 14px;
+    font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
     transition: background-color 0.2s, color 0.2s, border-color 0.2s;
@@ -834,8 +753,8 @@
 
 .hero__btn--solid {
     background: var(--brand);
+    border-color: var(--brand);
     color: var(--on-brand);
-    border: 1.5px solid var(--brand);
 }
 
 .hero__btn--solid:hover,
@@ -846,128 +765,441 @@
 }
 
 .hero__btn--ghost {
-    background: transparent;
-    border: 1.5px solid #c9a79b;
-    color: var(--brand);
+    background: var(--surface-raised);
+    border-color: #d8c7ba;
+    color: var(--ink);
 }
 
 .hero__btn--ghost:hover,
 .hero__btn--ghost:focus-visible {
-    background: var(--surface-raised);
-    border-color: var(--surface-raised);
+    border-color: var(--brand);
     color: var(--brand);
 }
 
-.hero__proof {
+.hero__ar {
+    align-self: flex-start;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.hero__ar:hover,
+.hero__ar:focus-visible { color: var(--brand); }
+
+.hero__divider {
+    height: 1px;
+    margin: 6px 0 0;
+    border: 0;
+    background: var(--h-blush-line);
+}
+
+/* --- Dải ưu đãi + đồng hồ đếm ngược ------------------------- */
+
+.hero__promo {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-left: 22px;
+    border-left: 3px solid var(--brand);
+}
+
+.hero__promo-title {
     display: flex;
     align-items: center;
-    gap: 16px;
-    margin-top: 14px;
-    padding-top: 26px;
-    border-top: 1px solid var(--h-blush-line);
-}
-
-.hero__thumbs {
-    display: flex;
-    flex-shrink: 0;
-}
-
-/* Ba ảnh tròn chồng mép nhau; viền cùng màu nền hero nên trông như khoét
-   thủng lớp nền chứ không phải ba vòng tròn có viền trắng. */
-.hero__thumb {
-    width: 64px;
-    height: 64px;
-    border: 3px solid var(--h-blush);
-    border-radius: 999px;
-    overflow: hidden;
-    background: #ead8ce;
-    flex-shrink: 0;
-}
-
-.hero__thumb + .hero__thumb { margin-left: -14px; }
-
-.hero__thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.hero__proof-text {
-    margin: 0;
-    font-size: 13.5px;
-    line-height: 1.55;
-    color: var(--muted);
-}
-
-.hero__proof-text strong {
+    gap: 9px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
     color: var(--brand);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.hero__promo-title svg {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.hero__promo-title:hover,
+.hero__promo-title:focus-visible { color: var(--brand-strong); }
+
+.hcd {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.hcd__cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    width: 66px;
+    padding: 11px 0 9px;
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--h-radius-sm);
+}
+
+/* tabular-nums: chữ số cùng bề ngang, nếu không thì mỗi giây trôi qua là bốn
+   ô nhích qua nhích lại theo bề ngang của chữ số vừa đổi. */
+.hcd__num {
+    font-family: var(--font-serif);
+    font-size: 25px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Ô cuối là GIÂY — ô duy nhất đổi mỗi giây, nên tô màu thương hiệu để mắt
+   biết chỗ nào đang chạy. Nó là <li> cuối của .hcd (dấu ":" xen giữa). */
+.hcd__cell:last-child .hcd__num { color: var(--brand); }
+
+.hcd__label {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--h-note);
+}
+
+.hcd__sep {
+    color: #c9b8ac;
     font-weight: 600;
 }
 
-.hero__media {
-    position: relative;
-    min-height: 560px;
+/* --- Bộ điều khiển băng ảnh --------------------------------- */
+
+.hero__nav {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-top: 14px;
 }
 
-.hero__media img {
+.hero__counter {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+.hero__arrows {
+    display: flex;
+    gap: 8px;
+}
+
+.hero__arrow {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid #d8c7ba;
+    border-radius: var(--h-radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.hero__arrow svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.hero__arrow:hover,
+.hero__arrow:focus-visible {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
+}
+
+.hero__bars {
+    flex: 1;
+    display: flex;
+    gap: 10px;
+}
+
+/* margin-top:20px đẩy ba vạch xuống ngang tâm hàng nút, chứ không phải căn
+   giữa: bản thiết kế cố ý cho chúng nằm thấp hơn một chút. */
+.hero__bar {
+    flex: 1;
+    height: 2px;
+    margin-top: 20px;
+    background: var(--h-blush-line);
+    transition: background-color 0.3s;
+}
+
+.hero__bar.is-on { background: var(--brand); }
+
+/* --- Băng ảnh ----------------------------------------------- */
+
+.hero__media {
+    position: relative;
+    min-height: 680px;
+    overflow: hidden;
+}
+
+/* inset:0 chứ không phải height:100% — .hero__media chỉ có min-height, mà
+   phần trăm chiều cao không tính được từ min-height. */
+.hero__track {
     position: absolute;
     inset: 0;
+    display: flex;
+    transition: transform 0.55s ease;
+}
+
+.hero__slide {
+    flex: 0 0 100%;
+    margin: 0;
+    background: var(--h-shell);
+}
+
+.hero__slide img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
 
+.hero__caption {
+    position: absolute;
+    left: 0;
+    bottom: 36px;
+    margin: 0;
+    padding: 13px 26px;
+    border-radius: 0 var(--h-radius-sm) var(--h-radius-sm) 0;
+    background: var(--h-dark);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--h-on-dark);
+    pointer-events: none;
+}
+
+/* --- Dải cam kết -------------------------------------------- */
+
+.hero__trust {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    margin: 0;
+    padding: 20px var(--page-edge);
+    list-style: none;
+    background: var(--h-dark);
+}
+
+.hero__trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--h-on-dark);
+    white-space: nowrap;
+}
+
+.hero__trust-item svg {
+    flex: none;
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: var(--h-on-dark-num);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.hero__trust-sep {
+    width: 1px;
+    height: 18px;
+    background: rgba(248, 237, 232, 0.2);
+}
+
 @media (max-width: 1024px) {
-    .hero__inner {
-        grid-template-columns: 1fr;
-        gap: 0;
-        padding-left: 0;
+    .hero__inner { grid-template-columns: 1fr; }
+
+    .hero__text { padding: 48px var(--page-edge) 40px; }
+
+    /* Ảnh xuống dưới chữ thì không cần cao 680px nữa */
+    .hero__media { min-height: 420px; }
+
+    /* Bốn cam kết không còn đủ chỗ trên một hàng -> bỏ vạch ngăn, cho xuống
+       dòng. Giữ vạch thì chúng rơi vào đầu dòng như dấu câu lạc chỗ. */
+    .hero__trust {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 12px 24px;
     }
 
-    .hero__text {
-        max-width: none;
-        padding: 56px 40px 48px;
-    }
-
-    /* Ảnh xuống dưới chữ thì không cần cao 560px nữa */
-    .hero__media { min-height: 380px; }
+    .hero__trust-sep { display: none; }
 }
 
 @media (max-width: 720px) {
-    .hero {
-        margin: 8px 16px 0;
-        border-radius: 28px;
-    }
-
-    .hero__text {
-        gap: 22px;
-        padding: 40px 24px 36px;
-    }
-
+    .hero__text { gap: 20px; padding: 36px var(--page-edge) 32px; }
     .hero__btn { flex: 1 1 auto; text-align: center; }
+    .hero__media { min-height: 320px; }
 
-    .hero__media { min-height: 300px; }
+    /* Bốn ô đếm ngược phải ở CÙNG MỘT HÀNG mới đọc ra là một cái đồng hồ;
+       xuống dòng 3+1 thì ô "giây" trông như một con số lạc. Thu ô và khoảng
+       cách lại vừa đủ cho màn 360px. */
+    .hcd { gap: 6px; }
+    .hcd__cell { width: 56px; }
+    .hcd__num { font-size: 22px; }
+
+    /* Ba vạch xuống hàng riêng: cùng hàng với nút thì mỗi vạch còn ~20px */
+    .hero__nav { flex-wrap: wrap; }
+    .hero__bars { flex: 1 0 100%; }
+    .hero__bar { margin-top: 0; }
 }
+
+/* ============================================================
+   BỘ SƯU TẬP MỚI (S09)
+   Markup: app/views/_layout/home/collections.php
+
+   Lưới khảm: ô lớn bên trái cao bằng hai hàng, hai ô nhỏ bên phải.
+   ============================================================ */
+
+.hcoll__grid {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    grid-template-rows: repeat(2, 320px);
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ccard {
+    display: flex;
+    min-height: 0;
+}
+
+.ccard--lead { grid-row: span 2; }
+
+.ccard__link {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--h-shell);
+    border-radius: var(--h-radius);
+    overflow: hidden;
+    text-decoration: none;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ccard__link:hover,
+.ccard__link:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--h-shadow-lift);
+}
+
+.ccard__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Tấm biển DÍNH VÀO MÉP TRÁI ảnh: chỉ bo hai góc phải, không có lề trái —
+   trông như một cái nhãn dán thò ra khỏi ảnh. pointer-events tắt để không
+   chắn cú bấm vào thẻ. */
+.ccard__plate {
+    position: absolute;
+    left: 0;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    max-width: min(100%, 340px);
+    padding: 13px 22px;
+    background: var(--h-dark);
+    border-radius: 0 var(--h-radius-sm) var(--h-radius-sm) 0;
+    pointer-events: none;
+}
+
+.ccard__name {
+    font-family: var(--font-serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--h-on-dark);
+}
+
+.ccard__tagline {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #d9bcb3;
+}
+
+/* Ô lớn: cùng cấu trúc, mọi con số nhích lên một nấc */
+.ccard--lead .ccard__plate {
+    bottom: 32px;
+    gap: 4px;
+    max-width: min(100%, 460px);
+    padding: 16px 26px;
+}
+
+.ccard--lead .ccard__name    { font-size: 21px; }
+.ccard--lead .ccard__tagline { font-size: 12.5px; }
+
+@media (max-width: 1024px) {
+    .hcoll__grid { grid-template-rows: repeat(2, 260px); }
+}
+
+@media (max-width: 720px) {
+    /* Hình khảm cần hai cột mới có nghĩa; một cột thì ba ô cao bằng nhau */
+    .hcoll__grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+        gap: 16px;
+    }
+
+    .ccard        { height: 240px; }
+    .ccard--lead  { grid-row: auto; height: 280px; }
+}
+
+/* THẺ SẢN PHẨM DỌC ĐÃ CHUYỂN ĐI.
+   Nay là .pcard* trong components/product.css — nạp cho MỌI trang, vì cùng
+   một thẻ đó dùng ở hai lưới trang chủ VÀ ở dải "sản phẩm liên quan" cuối
+   trang chi tiết. Để lại đây thì trang chi tiết không có CSS cho nó.
+   Markup: app/views/_layout/product-card.php */
 
 /* ============================================================
    DANH MỤC (S05)
    Markup: app/views/_layout/home/categories.php
    ============================================================ */
 
-/* Lề ngang nằm ở .hcat__inner (56px, trong 1280px) chứ không phải ở đây —
-   xem cụm .hcat__inner/.hbest__inner/... phía trên. */
-.hcat {
-    padding: 96px 0 48px;
-}
-
-/* margin:0 — khoảng 36px giữa tiêu đề và lưới do .section-head mang, đúng chỗ
-   bản thiết kế đặt nó. Trước đây khoảng đó nằm ở margin-top của lưới; để cả
-   hai thì thành 72px. */
+/* --hcat-cols do categories.php đặt nội tuyến theo SỐ danh mục có thật (3 hoặc
+   4). Khoá cứng 3 cột như bản thiết kế thì danh mục thứ tư rơi xuống một hàng
+   riêng, bỏ trống hai phần ba chiều ngang — xem chú thích trong file view đó.
+   Giá trị dự phòng 3 là con số của bản thiết kế, dùng khi thiếu style nội tuyến. */
 .hcat__grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--hcat-cols, 3), minmax(0, 1fr));
     gap: 24px;
     margin: 0;
     padding: 0;
@@ -977,33 +1209,33 @@
 .ccat { display: flex; }
 
 .ccat__link {
-    position: relative;
     display: flex;
     flex-direction: column;
     width: 100%;
     background: var(--surface-raised);
-    border-radius: 32px;
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--h-radius);
     overflow: hidden;
-    box-shadow: var(--h-shadow);
     text-decoration: none;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .ccat__link:hover,
 .ccat__link:focus-visible {
-    transform: translateY(-5px);
+    transform: translateY(-4px);
     box-shadow: var(--h-shadow-lift);
 }
 
 .ccat__media {
+    position: relative;
     display: block;
     height: 300px;
     background: var(--h-shell);
+    border-bottom: 1px solid var(--h-rule);
 }
 
-/* cover, đúng như `<image-slot shape="rect">` không kèm fit của bản thiết kế
-   (chỉ hai ô ảnh sản phẩm mới ghi fit="contain"). Ba ô này là ảnh bìa biên
-   tập chụp tràn khung, cắt mép là đúng ý.
+/* cover, đúng như `<image-slot shape="rect">` không kèm fit của bản thiết kế.
+   Ba ô này là ảnh bìa biên tập chụp tràn khung, cắt mép là đúng ý.
 
    LƯU Ý khi CHƯA tải ảnh thiết kế về: ảnh dự phòng trong repo là ảnh sản
    phẩm cắt nền trắng, cover sẽ xén mất hai càng gọng. Đó là dấu hiệu ảnh
@@ -1017,396 +1249,605 @@
 
 .ccat__count {
     position: absolute;
-    top: 18px;
-    left: 18px;
-    padding: 7px 16px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.92);
+    top: 14px;
+    left: 14px;
+    padding: 5px 12px;
+    border-radius: var(--h-radius-sm);
+    background: rgba(255, 255, 255, 0.94);
+    font-family: var(--font-serif);
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
     color: var(--brand);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
     pointer-events: none;
 }
 
 .ccat__body {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 24px 28px 26px;
-}
-
-.ccat__text {
-    display: flex;
     flex-direction: column;
-    gap: 5px;
-    min-width: 0;
+    gap: 4px;
+    padding: 16px 22px 12px;
 }
 
 .ccat__name {
     font-family: var(--font-serif);
-    font-size: 22px;
+    font-size: 19px;
     font-weight: 600;
     color: var(--ink);
 }
 
 .ccat__note {
     font-size: 13px;
+    line-height: 1.55;
     color: var(--h-note);
 }
 
-.ccat__arrow {
+.ccat__foot {
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 42px;
-    height: 42px;
-    border-radius: 999px;
-    background: var(--h-blush);
+    justify-content: space-between;
+    margin-top: auto;
+    padding: 11px 22px 14px;
+    border-top: 1px solid var(--h-rule);
+}
+
+.ccat__more {
+    font-size: 12.5px;
+    font-weight: 600;
     color: var(--brand);
-    font-size: 16px;
-    flex-shrink: 0;
-    transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.ccat__arrow {
+    font-size: 13px;
+    color: var(--brand);
+    transition: transform 0.25s ease;
 }
 
 .ccat__link:hover .ccat__arrow,
-.ccat__link:focus-visible .ccat__arrow {
-    background: var(--brand);
-    color: var(--on-brand);
-}
+.ccat__link:focus-visible .ccat__arrow { transform: translateX(4px); }
 
 @media (max-width: 1024px) {
-    .hcat { padding: 64px 0 40px; }
-    .hcat__inner { padding: 0 24px; }
     .hcat__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .ccat__media { height: 240px; }
 }
 
 @media (max-width: 720px) {
-    .hcat__inner { padding: 0 16px; }
     .hcat__grid { grid-template-columns: 1fr; gap: 18px; }
 }
 
 /* ============================================================
-   BÁN CHẠY (S08)
-   Markup: app/views/_layout/home/best-sellers.php
-
-   Thẻ NẰM NGANG: ảnh vuông bên trái, thông tin và hai nút bên phải.
+   KIỂM TRA 5 PHÚT (S06)
+   Markup: app/views/_layout/home/quick-check.php · JS: assets/js/home.js
    ============================================================ */
 
-.hbest {
-    padding: 48px 0;
+.qcheck__head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 36px;
 }
 
-/* margin:0 — cùng lý do với .hcat__grid */
-.hbest__grid {
+/* Câu dẫn nằm TRÊN tiêu đề nhưng KHÔNG phải .eyebrow: nó là chữ thường cỡ
+   14.5px, không in hoa, không giãn ký tự — nửa đầu của một câu mà tiêu đề là
+   nửa sau ("… hãy / Bỏ ra 5 phút để kiểm tra"). */
+.qcheck__kicker {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--h-note);
+}
+
+.qcheck__grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.bcard {
-    display: grid;
-    grid-template-columns: 240px minmax(0, 1fr);
-    gap: 26px;
-    align-items: center;
-    padding: 18px;
+.qcard {
+    display: flex;
+    flex-direction: column;
     background: var(--surface-raised);
-    border-radius: 28px;
-    box-shadow: 0 2px 10px rgba(90, 40, 40, 0.05);
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--h-radius);
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* Ảnh đặt trên SÂN TRẮNG bo góc lồng trong khung hồng — cùng cách xử lý với
-   .ptile__media ở trang danh mục, xem chú thích dài trong assets/css/category.css.
-   Tóm tắt: ảnh chụp sản phẩm thật gần như luôn có nền trắng, mà trắng đặt
-   thẳng lên #f5efe7 thì thành một hộp trắng lộ hai mép. Lùi nền hồng ra thành
-   viền 12px rồi cho ảnh nằm trên sân trắng thì không còn ranh giới nào. */
-.bcard__media {
-    position: relative;
-    height: 210px;
-    padding: 12px;
-    border-radius: 20px;
-    overflow: hidden;
+.qcard:hover,
+.qcard:focus-within {
+    transform: translateY(-4px);
+    box-shadow: var(--h-shadow-lift);
+}
+
+.qcard__media {
+    height: 400px;
     background: var(--h-shell);
 }
 
-.bcard__media img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    display: block;
-    background: var(--surface-raised);
-    border-radius: 12px;
-    box-shadow: inset 0 0 0 1px rgba(90, 40, 40, 0.05);
-}
-
-.bcard__badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    padding: 5px 12px;
-    border-radius: 999px;
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: 11.5px;
-    font-weight: 600;
-    pointer-events: none;
-}
-
-.bcard__body {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding-right: 12px;
-    min-width: 0;
-}
-
-.bcard__brand {
-    margin: 0;
-    font-size: 11.5px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #b0a094;
-}
-
-.bcard__name {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: 21px;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--ink);
-}
-
-.bcard__name a {
-    color: inherit;
-    text-decoration: none;
-}
-
-.bcard__name a:hover,
-.bcard__name a:focus-visible { color: var(--brand); }
-
-.bcard__prices {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    margin: 0;
-    flex-wrap: wrap;
-}
-
-.bcard__price {
-    font-size: 19px;
-    font-weight: 600;
-    color: var(--brand);
-}
-
-.bcard__was {
-    font-size: 14px;
-    color: #b0a094;
-    text-decoration: line-through;
-}
-
-.bcard__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 8px;
-}
-
-.bcard__btn {
-    display: inline-block;
-    padding: 11px 26px;
-    border-radius: 999px;
-    font: inherit;
-    font-size: 13.5px;
-    font-weight: 500;
-    text-decoration: none;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-}
-
-.bcard__btn--solid {
-    background: var(--brand);
-    border: 1.5px solid var(--brand);
-    color: var(--on-brand);
-}
-
-.bcard__btn--solid:hover:not(:disabled),
-.bcard__btn--solid:focus-visible:not(:disabled) {
-    background: var(--brand-strong);
-    border-color: var(--brand-strong);
-}
-
-/* Hết hàng: nút vẫn hiện để người dùng biết món này có tồn tại, nhưng tắt
-   hẳn khả năng bấm thay vì giấu đi. */
-.bcard__btn--solid:disabled {
-    background: var(--surface-sunken);
-    border-color: var(--surface-sunken);
-    color: var(--muted);
-    cursor: not-allowed;
-}
-
-.bcard__btn--ghost {
-    padding: 11px 22px;
-    background: transparent;
-    border: 1.5px solid var(--h-line);
-    color: var(--ink);
-}
-
-.bcard__btn--ghost:hover,
-.bcard__btn--ghost:focus-visible {
-    border-color: var(--brand);
-    color: var(--brand);
-}
-
-@media (max-width: 1180px) {
-    .hbest { padding: 40px 0; }
-    .hbest__inner { padding: 0 24px; }
-    .hbest__grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 560px) {
-    .hbest__inner { padding: 0 16px; }
-
-    /* Dưới mốc này ảnh 240px chiếm gần hết bề ngang, nên thẻ xếp dọc lại */
-    .bcard {
-        grid-template-columns: 1fr;
-        gap: 18px;
-    }
-
-    .bcard__body { padding-right: 0; }
-}
-
-/* ============================================================
-   CHỌN THEO KHUÔN MẶT (S06)
-   Markup: app/views/_layout/home/style-guide.php
-
-   Ảnh bo hình vòm, chữ nằm DƯỚI ảnh và căn giữa.
-   ============================================================ */
-
-.hstyle {
-    padding: 48px 0 96px;
-}
-
-.hstyle__head {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 44px;
-    text-align: center;
-}
-
-.hstyle__head .eyebrow { margin: 0; }
-
-.hstyle__title {
-    max-width: 560px;
-    text-wrap: pretty;
-}
-
-.hstyle__lead {
-    margin: 0;
-    max-width: 460px;
-    font-size: 15.5px;
-    color: var(--muted);
-}
-
-.hstyle__grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 24px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.scard__link {
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    transition: transform 0.2s ease;
-}
-
-.scard__link:hover,
-.scard__link:focus-visible { transform: translateY(-4px); }
-
-/* Vòm: hai góc trên bo bằng nửa bề ngang thẻ nên thành hình bán nguyệt,
-   hai góc dưới chỉ bo nhẹ. Ảnh phải `cover` mới lấp kín được cái vòm —
-   `contain` để lộ nền ra bốn phía thì vòm vỡ thành ba mảng. */
-.scard__media {
-    display: block;
-    height: 260px;
-    border-radius: 180px 180px 24px 24px;
-    overflow: hidden;
-    background: var(--h-shell);
-}
-
-.scard__media img {
+.qcard__media img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
 }
 
-.scard__body {
+.qcard__body {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    align-items: center;
-    padding: 22px 12px 0;
-    text-align: center;
+    padding: 18px 22px 12px;
+    flex: 1;
 }
 
-.scard__name {
+.qcard__name {
+    margin: 0;
     font-family: var(--font-serif);
     font-size: 21px;
     font-weight: 600;
     color: var(--ink);
 }
 
-.scard__note {
+.qcard__desc {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--h-note);
+}
+
+.qcard__foot {
+    margin-top: auto;
+    padding: 12px 22px 18px;
+    border-top: 1px solid var(--h-rule);
+}
+
+.qcard__btn {
+    display: inline-block;
+    padding: 10px 22px;
+    border: 1.5px solid var(--h-line);
+    border-radius: var(--h-radius-sm);
+    background: var(--surface-raised);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.qcard__btn:hover,
+.qcard__btn:focus-visible {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+@media (max-width: 1024px) {
+    .qcheck__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .qcard__media { height: 300px; }
+}
+
+@media (max-width: 720px) {
+    .qcheck__grid { grid-template-columns: 1fr; }
+    .qcard__media { height: 260px; }
+}
+
+/* --- Hộp thoại ---------------------------------------------- */
+
+.qmodal {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+}
+
+/* [hidden] mặc định là display:none, nhưng display:flex ở trên ĐÈ LÊN nó —
+   thuộc tính hidden thua mọi khai báo display trong CSS. Thiếu dòng này là
+   hộp thoại mở sẵn ngay khi tải trang. */
+.qmodal[hidden] { display: none; }
+
+.qmodal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(51, 39, 42, 0.55);
+}
+
+.qmodal__panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+    width: 960px;
+    max-width: 100%;
+    max-height: calc(100vh - 80px);
+    overflow: auto;
+    padding: 26px 40px 40px;
+    background: var(--surface-raised);
+    border-radius: var(--h-radius);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.3);
+}
+
+.qmodal__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qmodal__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.qmodal__close {
+    margin-left: auto;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    border-radius: var(--h-radius-sm);
+    background: none;
+    color: var(--h-note);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.qmodal__close svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+}
+
+.qmodal__close:hover,
+.qmodal__close:focus-visible { color: var(--brand); }
+
+.qmodal__panel-lens,
+.qmodal__panel-frame {
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+
+.qmodal__panel-lens[hidden],
+.qmodal__panel-frame[hidden] { display: none; }
+
+/* Nền trang không cuộn sau lưng hộp thoại. Đặt ở đây chứ không ở layout.css:
+   chỉ trang chủ có hộp thoại này. */
+body.is-modal-open { overflow: hidden; }
+
+/* --- Bảng 1: chọn tròng ------------------------------------- */
+
+.qlens {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 0 6px;
+}
+
+.qlens__question {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    text-align: center;
+}
+
+.qlens__options {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.qlens__option {
+    padding: 13px 28px;
+    border: 1.5px solid var(--h-line);
+    border-radius: var(--h-radius-sm);
+    background: var(--surface-raised);
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.qlens__option:hover { border-color: var(--brand); }
+
+.qlens__option.is-picked {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
+    font-weight: 600;
+}
+
+/* --- Câu gợi ý (dùng chung cho cả hai bảng) ----------------- */
+
+.qrec {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 18px 24px;
+    background: #faf3ee;
+    border-left: 3px solid var(--brand);
+    border-radius: 0 var(--h-radius-sm) var(--h-radius-sm) 0;
+}
+
+.qrec[hidden] { display: none; }
+
+.qrec__text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #4a3b38;
+}
+
+.qrec__text strong { color: var(--brand); }
+
+.qrec__link {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s;
+}
+
+.qrec__link:hover,
+.qrec__link:focus-visible { color: var(--brand-strong); }
+
+/* --- Bảng 2: chọn gọng theo khuôn mặt ----------------------- */
+
+.qface__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+}
+
+.qface__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.qface__sub {
+    margin: 0;
     font-size: 13.5px;
     color: var(--h-note);
 }
 
-@media (max-width: 1024px) {
-    .hstyle { padding: 40px 0 64px; }
-    .hstyle__inner { padding: 0 24px; }
-    .scard__media { height: 220px; border-radius: 140px 140px 24px 24px; }
+.qface { position: relative; }
+
+/* margin 60px chừa chỗ cho hai mũi tên đứng ngoài vùng cắt */
+.qface__window {
+    overflow: hidden;
+    margin: 0 60px;
+    padding: 4px 0;
 }
 
-@media (max-width: 720px) {
-    .hstyle__inner { padding: 0 16px; }
-    .hstyle__grid { grid-template-columns: 1fr; gap: 28px; }
+.qface__track {
+    display: flex;
+    /* 20px, khớp phép chia của .qface__item ngay dưới */
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* 0.5s như bản thiết kế. Dải này KHÔNG tự chạy — chỉ đổi khi người dùng bấm
+       mũi tên — nên cú trượt dài không làm ai phải đọc chữ đang nhoè. Băng đánh
+       giá thì ngược lại, xem .hrev__track. */
+    transition: transform 0.5s ease;
+}
+
+/* Ba thẻ một khung nhìn: (100% − hai khoảng 20px) ÷ 3 */
+.qface__item { flex: 0 0 calc((100% - 40px) / 3); }
+
+.qface__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 26px 16px;
+    background: var(--surface);
+    border: 1.5px solid var(--h-card-line);
+    border-radius: var(--h-radius);
+    font: inherit;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.qface__card:hover { border-color: var(--brand); }
+
+.qface__card.is-picked {
+    background: #faf3ee;
+    border-color: var(--brand);
+}
+
+.qface__draw {
+    width: 140px;
+    height: 188px;
+    pointer-events: none;
+}
+
+.qface__name {
+    padding: 8px 20px;
+    border: 1px solid #d8c7ba;
+    border-radius: var(--h-radius-sm);
+    background: var(--surface-raised);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+@media (max-width: 900px) {
+    .qmodal { padding: 16px; }
+    .qmodal__panel { padding: 20px 22px 28px; gap: 20px; }
+
+    /* Hai thẻ khuôn mặt một khung nhìn, mũi tên thu vào sát mép */
+    .qface__window { margin: 0 46px; }
+    .qface__item   { flex: 0 0 calc((100% - 20px) / 2); }
+    .qface__draw   { width: 110px; height: 148px; }
+
+    .qrec { flex-direction: column; align-items: flex-start; gap: 12px; }
+}
+
+/* ============================================================
+   MŨI TÊN BĂNG TRƯỢT — dùng chung cho dải khuôn mặt và khối đánh giá
+   ============================================================ */
+
+.qface__arrow,
+.hrev__arrow,
+.pstrip__arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--line);
+    border-radius: var(--h-radius-sm);
+    background: var(--surface-raised);
+    color: #4a3b38;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(90, 40, 40, 0.12);
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.qface__arrow svg,
+.hrev__arrow svg,
+.pstrip__arrow svg {
+    width: 17px;
+    height: 17px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.qface__arrow--prev,
+.hrev__arrow--prev,
+.pstrip__arrow--prev { left: 0; }
+
+.qface__arrow--next,
+.hrev__arrow--next,
+.pstrip__arrow--next { right: 0; }
+
+.qface__arrow:hover:not(:disabled),
+.qface__arrow:focus-visible:not(:disabled),
+.hrev__arrow:hover:not(:disabled),
+.hrev__arrow:focus-visible:not(:disabled),
+.pstrip__arrow:hover:not(:disabled),
+.pstrip__arrow:focus-visible:not(:disabled) {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+/* Đã ở đầu/cuối băng: nút mờ đi và mất bóng, nhưng KHÔNG biến mất — chỗ trống
+   nhảy ra nhảy vào mỗi lần trượt còn khó chịu hơn. */
+.qface__arrow:disabled,
+.hrev__arrow:disabled,
+.pstrip__arrow:disabled {
+    border-color: var(--h-card-line);
+    color: #d8c7ba;
+    cursor: default;
+    box-shadow: none;
+}
+
+/* ============================================================
+   BĂNG TRƯỢT SẢN PHẨM (.pstrip) — dùng cho CẢ HAI khối "mới về" (S07) và
+   "bán chạy" (S08).
+   Markup: _layout/home/new-arrivals.php · _layout/home/best-sellers.php
+   Hành vi: makeStrip() trong assets/js/home.js
+
+   Cùng cấu trúc ba lớp với băng đánh giá (.hrev__*): khung ngoài định vị hai
+   mũi tên · cửa sổ cắt · đường ray trượt. Không gộp chung selector với .hrev
+   vì hai băng khác nhau ở số thẻ mỗi khung nhìn, khoảng cột và chiều cao —
+   gộp lại thì mỗi lần chỉnh một bên phải nhớ cả bên kia.
+
+   MŨI TÊN thì có gộp: xem cụm .hrev__arrow phía trên, ba băng của trang chủ
+   dùng đúng một dáng nút.
+   ============================================================ */
+
+.pstrip { position: relative; }
+
+/* margin 56px chừa chỗ cho hai mũi tên (rộng 44px), còn 6px thở hai bên —
+   cùng con số với .hrev__window.
+
+   ĐỆM DỌC KHÔNG ĐỐI XỨNG: thẻ sản phẩm nhấc lên 4px khi rê chuột và đổ bóng
+   --h-shadow-lift toả xuống 40px (xem .pcard trong components/product.css).
+   overflow:hidden của cửa sổ sẽ xén mất cái bóng đó nếu không chừa chỗ. 6px
+   trên là đủ cho cú nhấc, 26px dưới là cho cái bóng; margin-bottom âm kéo lại
+   phần đệm thừa để khoảng cách xuống nút "Xem tất cả" không đội lên. */
+.pstrip__window {
+    overflow: hidden;
+    margin: 0 56px -18px;
+    padding: 6px 0 26px;
+}
+
+.pstrip__track {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* 0.35s như bản thiết kế — băng này KHÔNG tự chạy (khác .hrev__track, xem
+       ghi chú ở đó) nên cú trượt được phép thong thả hơn. */
+    transition: transform 0.35s ease;
+}
+
+/* Bốn thẻ một khung nhìn: (100% − ba khoảng 20px) ÷ 4.
+   Ba mốc dưới đây khớp với lưới .pcard__grid trong components/product.css —
+   trang danh mục và trang tìm kiếm vẫn dùng lưới đó, hai chỗ phải xuống cột ở
+   cùng bề ngang thì thẻ sản phẩm mới cùng cỡ trên mọi trang. */
+.pstrip__track > * { flex: 0 0 calc((100% - 60px) / 4); }
+
+@media (max-width: 1024px) {
+    .pstrip__track > * { flex: 0 0 calc((100% - 20px) / 2); }
+}
+
+@media (max-width: 560px) {
+    .pstrip__track > * { flex: 0 0 100%; }
+
+    /* Màn hẹp không còn chỗ cho hai lề 56px: chúng ăn mất 112px trên một bề
+       ngang chỉ 360px, thẻ sản phẩm còn lại hẹp hơn cả tấm ảnh trong nó.
+       Mũi tên chuyển sang NẰM ĐÈ lên hai mép thẻ và nhích ra ngoài 6px —
+       đúng cách băng đánh giá xử lý ở mốc 640px, xem .hrev__window. */
+    .pstrip__window { margin-inline: 8px; }
+
+    .pstrip__arrow--prev { left: -6px; }
+    .pstrip__arrow--next { right: -6px; }
 }
 
 /* ============================================================
    CẮT LẮP TRÒNG (S11)
    Markup: app/views/_layout/home/lenses.php
-
-   Khối trắng bo lớn nổi trên nền trang, chia hai cột.
    ============================================================ */
 
-.hlens {
-    margin: 0 var(--h-gutter);
-    background: var(--surface-raised);
-    border-radius: var(--h-radius);
-    box-shadow: 0 2px 14px rgba(90, 40, 40, 0.05);
-}
+.hlens { background: var(--surface); }
 
 .hlens__inner {
     display: grid;
     grid-template-columns: 1.1fr 1fr;
     gap: 64px;
     align-items: center;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 72px;
 }
 
 .hlens__main {
@@ -1418,12 +1859,10 @@
 .hlens__main .eyebrow,
 .hlens__main .section-h2 { margin: 0; }
 
-.hlens__main .section-h2 { text-wrap: pretty; }
-
 .hlens__figure {
     height: 280px;
     margin: 0;
-    border-radius: 28px;
+    border-radius: var(--h-radius-sm);
     overflow: hidden;
     background: var(--h-shell);
 }
@@ -1446,7 +1885,7 @@
 
 .hlens__fact {
     padding: 9px 18px;
-    border-radius: 999px;
+    border-radius: var(--h-radius-sm);
     background: var(--h-blush);
     color: #6e4a42;
     font-size: 13px;
@@ -1463,8 +1902,9 @@
     flex-direction: column;
     gap: 4px;
     padding: 36px 34px;
-    background: var(--surface);
-    border-radius: 28px;
+    background: var(--surface-raised);
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--h-radius);
 }
 
 .hlens__ptitle {
@@ -1490,7 +1930,7 @@
     justify-content: space-between;
     gap: 16px;
     padding: 16px 0;
-    border-bottom: 1px solid #eee0d4;
+    border-bottom: 1px solid var(--h-card-line);
 }
 
 .lpack__text {
@@ -1524,7 +1964,7 @@
 .hlens__cta {
     margin-top: 22px;
     padding: 14px 0;
-    border-radius: 999px;
+    border-radius: var(--h-radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-size: 14px;
@@ -1538,22 +1978,13 @@
 .hlens__cta:focus-visible { background: var(--brand-strong); }
 
 @media (max-width: 1024px) {
-    .hlens { margin: 0 16px; }
-
     .hlens__inner {
         grid-template-columns: 1fr;
         gap: 40px;
-        padding: 48px 32px;
     }
 }
 
 @media (max-width: 720px) {
-    .hlens {
-        margin: 0 12px;
-        border-radius: 28px;
-    }
-
-    .hlens__inner { padding: 36px 20px; }
     .hlens__figure { height: 220px; }
     .hlens__packages { padding: 28px 22px; }
 }
@@ -1562,14 +1993,12 @@
    ĐO MẮT (S14)
    Markup: app/views/_layout/home/eye-exam.php
 
-   Khối nền nâu sẫm. .eyebrow và .section-h2 mặc định ăn màu chữ nền sáng
-   nên phải viết đè ở đây, nếu không chữ chìm hẳn vào nền.
+   Dải nền nâu sẫm tràn hai mép. .eyebrow và .section-h2 mặc định ăn màu chữ
+   nền sáng nên phải viết đè ở đây, nếu không chữ chìm hẳn vào nền.
    ============================================================ */
 
 .hexam {
-    margin: var(--h-gutter);
     background: var(--h-dark);
-    border-radius: var(--h-radius);
     overflow: hidden;
 }
 
@@ -1578,15 +2007,12 @@
     grid-template-columns: 1fr 1.1fr;
     gap: 64px;
     align-items: center;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 72px;
 }
 
 .hexam__figure {
     height: 460px;
     margin: 0;
-    border-radius: 230px 230px 28px 28px;
+    border-radius: var(--h-radius);
     overflow: hidden;
     background: var(--h-shell);
 }
@@ -1629,7 +2055,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    counter-reset: none;
 }
 
 .hexam__steps li {
@@ -1665,7 +2090,7 @@
     margin-top: 26px;
     padding: 14px 32px;
     border: 1.5px solid rgba(248, 237, 232, 0.4);
-    border-radius: 999px;
+    border-radius: var(--h-radius-sm);
     color: var(--h-on-dark);
     font-size: 14px;
     font-weight: 500;
@@ -1680,21 +2105,16 @@
 }
 
 @media (max-width: 1024px) {
-    .hexam { margin: 16px; }
-
     .hexam__inner {
         grid-template-columns: 1fr;
         gap: 40px;
-        padding: 48px 32px;
     }
 
-    .hexam__figure { height: 340px; border-radius: 170px 170px 28px 28px; }
+    .hexam__figure { height: 340px; }
 }
 
 @media (max-width: 720px) {
-    .hexam { border-radius: 28px; }
-    .hexam__inner { padding: 36px 20px; }
-    .hexam__figure { height: 260px; border-radius: 130px 130px 24px 24px; }
+    .hexam__figure { height: 260px; }
 
     /* Bề ngang hẹp: ghi chú xuống hàng riêng thay vì chen cùng tên bước */
     .hexam__steps li { flex-wrap: wrap; gap: 8px 16px; }
@@ -1704,12 +2124,8 @@
 
 /* ============================================================
    ĐÁNH GIÁ (S16)
-   Markup: app/views/_layout/home/reviews.php
+   Markup: app/views/_layout/home/reviews.php · JS: assets/js/home.js
    ============================================================ */
-
-.hrev {
-    padding: 72px 0 96px;
-}
 
 .hrev__head {
     display: flex;
@@ -1722,28 +2138,52 @@
 
 .hrev__head .eyebrow { margin: 0; }
 
-.hrev__grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
+.hrev__carousel { position: relative; }
+
+/* margin 56px chừa chỗ cho hai mũi tên (rộng 44px), còn 6px thở hai bên;
+   padding dọc để bóng thẻ không bị vùng cắt xén mất mép trên/dưới.
+
+   HẸP HƠN 68px của bản thiết kế: khung nhìn là 5 thẻ chứ không phải 4 (yêu cầu
+   riêng, xem ghi chú ở .rcard), nên 12px lấy lại được ở mỗi bên đi thẳng vào bề
+   ngang thẻ. */
+.hrev__window {
+    overflow: hidden;
+    margin: 0 56px;
+    padding: 6px 0;
+}
+
+.hrev__track {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
     margin: 0;
     padding: 0;
     list-style: none;
+    /* 0.3s chứ không phải 0.5s của bản thiết kế: băng này TỰ CHẠY và chạy nhanh
+       (xem data-autoplay trong _layout/home/reviews.php), nên cú trượt phải kết
+       thúc gọn — trượt dài thì chữ nhoè gần hết nhịp nghỉ giữa hai bước. */
+    transition: transform 0.3s ease;
 }
 
+/* NĂM thẻ một khung nhìn: (100% − bốn khoảng 16px) ÷ 5.
+
+   CỐ Ý KHÁC BẢN THIẾT KẾ (nó vẽ 4 thẻ, `flex:0 0 calc(25% - 15px)`, khoảng cột
+   20px). Đổi sang 5 thì khoảng cột, lề khung nhìn và đệm trong thẻ đều phải thu
+   lại — 16px / 56px / 24px-20px — nếu không chữ chỉ còn ~140px và câu trích dẫn
+   vỡ thành bảy dòng. */
 .rcard {
+    flex: 0 0 calc((100% - 64px) / 5);
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 32px 30px;
+    gap: 12px;
+    padding: 24px 20px;
     background: var(--surface-raised);
-    border-radius: 28px;
-    box-shadow: 0 2px 10px rgba(90, 40, 40, 0.05);
+    border-radius: var(--h-radius);
+    box-shadow: var(--h-shadow);
 }
 
-/* Bản thiết kế viết năm ngôi sao bằng ký tự "★★★★★" cỡ 14px, giãn chữ 3px.
-   Ở đây là năm <svg> nên khoảng cách phải đặt bằng gap; 14px cạnh + 3px gap
-   cho ra đúng bề ngang và nhịp của dãy sao trong thiết kế. Dùng svg chứ không
+/* Bản thiết kế viết năm ngôi sao bằng ký tự "★★★★★" cỡ 13px, giãn chữ 3px.
+   Ở đây là năm <svg> nên khoảng cách phải đặt bằng gap. Dùng svg chứ không
    dùng ký tự vì còn phải phân biệt sao đặc / sao rỗng khi điểm không tròn 5. */
 .rcard .rating-stars {
     display: inline-flex;
@@ -1756,8 +2196,8 @@
    cha: thẻ con tự khai màu thì màu thừa kế từ cha không tới lượt, bất kể độ
    ưu tiên của bộ chọn cha. */
 .rcard .rating-star {
-    width: 14px;
-    height: 14px;
+    width: 13px;
+    height: 13px;
 }
 
 .rcard .rating-star--on  { color: #c98d3a; }
@@ -1768,7 +2208,7 @@
     flex: 1;
     font-family: var(--font-serif);
     font-style: italic;
-    font-size: 16.5px;
+    font-size: 15px;
     line-height: 1.65;
     color: #4a3b38;
 }
@@ -1778,38 +2218,60 @@
     flex-direction: column;
     gap: 2px;
     padding-top: 14px;
-    border-top: 1px solid #f0e4d8;
+    border-top: 1px solid var(--h-rule);
 }
 
 .rcard__name {
     margin: 0;
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 600;
     color: var(--ink);
 }
 
 .rcard__item {
     margin: 0;
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--h-note);
 }
 
-@media (max-width: 1024px) {
-    .hrev { padding: 56px 0 64px; }
-    .hrev__inner { padding: 0 24px; }
-    .hrev__grid { grid-template-columns: 1fr; gap: 18px; }
+/* Bậc thang 5 -> 4 -> 3 -> 2 -> 1.
+   Con số trừ đi = (số thẻ − 1) × khoảng cột 16px.
+
+   NẤC ĐẦU LÀ 1180px, KHÔNG PHẢI 1280px. `max-width: 1280px` BAO GỒM cả đúng
+   1280 — mà 1280 là bề ngang khung thiết kế và cũng là bề ngang màn hình laptop
+   phổ biến, nên đặt ở đó thì màn 1280 tụt về 4 thẻ và yêu cầu "5 thẻ" coi như
+   không có tác dụng ở chính chỗ hay được nhìn nhất.
+
+   Đánh đổi: ở 1280px, năm thẻ nằm trong khung ~976px nên cột chữ mỗi thẻ còn
+   ~142px và câu trích dẫn xuống 5–6 dòng. Muốn thoáng hơn thì nâng con số 1180
+   này lên, không phải sửa gì khác. */
+@media (max-width: 1180px) {
+    .rcard { flex: 0 0 calc((100% - 48px) / 4); }
 }
 
-@media (max-width: 720px) {
-    .hrev__inner { padding: 0 16px; }
-    .rcard { padding: 26px 24px; }
+@media (max-width: 1000px) {
+    .rcard { flex: 0 0 calc((100% - 32px) / 3); }
+}
+
+@media (max-width: 820px) {
+    .hrev__window { margin: 0 50px; }
+    .rcard { flex: 0 0 calc((100% - 16px) / 2); }
+}
+
+@media (max-width: 640px) {
+    .hrev__window { margin: 0 8px; }
+    .rcard { flex: 0 0 100%; }
+
+    /* Mũi tên hết chỗ đứng ngoài khung -> đè lên mép hai thẻ */
+    .hrev__arrow--prev { left: -6px; }
+    .hrev__arrow--next { right: -6px; }
 }
 
 /* ============================================================
    KÊU GỌI HÀNH ĐỘNG (CTA)
    Markup: app/views/_layout/home/cta.php
 
-   Khối đỏ bo lớn: chữ bên trái, ảnh tràn cạnh phải.
+   Dải nâu sẫm tràn hai mép: chữ bên trái, ảnh tràn cạnh phải.
    ============================================================ */
 
 .hcta {
@@ -1817,10 +2279,8 @@
     grid-template-columns: 1.1fr 1fr;
     align-items: center;
     gap: 48px;
-    margin: 0 var(--h-gutter);
-    padding-left: 72px;
-    background: var(--brand);
-    border-radius: var(--h-radius);
+    padding-left: var(--page-edge);
+    background: var(--h-dark);
     overflow: hidden;
 }
 
@@ -1839,7 +2299,7 @@
     font-size: clamp(26px, calc(15.4px + 1.76vw), 38px);
     font-weight: 600;
     line-height: 1.16;
-    color: var(--on-brand);
+    color: #fff;
     text-wrap: pretty;
 }
 
@@ -1848,7 +2308,7 @@
     max-width: 420px;
     font-size: 15.5px;
     line-height: 1.7;
-    color: var(--on-brand-muted);
+    color: #d9bcb3;
 }
 
 .hcta__actions {
@@ -1860,17 +2320,18 @@
 
 .hcta__btn {
     padding: 14px 32px;
-    border-radius: 999px;
+    border: 1.5px solid transparent;
+    border-radius: var(--h-radius-sm);
     font-size: 14.5px;
     text-decoration: none;
     white-space: nowrap;
-    transition: background-color 0.2s, color 0.2s;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
 .hcta__btn--solid {
-    background: var(--on-brand);
-    border: 1.5px solid var(--on-brand);
-    color: var(--brand);
+    background: #fff;
+    border-color: #fff;
+    color: var(--h-dark);
     font-weight: 600;
 }
 
@@ -1878,20 +2339,21 @@
 .hcta__btn--solid:focus-visible {
     background: var(--h-blush);
     border-color: var(--h-blush);
-    color: var(--brand);
+    color: var(--h-dark);
 }
 
 .hcta__btn--ghost {
     background: transparent;
-    border: 1.5px solid rgba(255, 255, 255, 0.45);
-    color: var(--on-brand);
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff;
     font-weight: 500;
 }
 
 .hcta__btn--ghost:hover,
 .hcta__btn--ghost:focus-visible {
-    background: rgba(255, 255, 255, 0.12);
-    color: var(--on-brand);
+    background: var(--h-on-dark);
+    border-color: var(--h-on-dark);
+    color: var(--h-dark);
 }
 
 .hcta__media {
@@ -1910,16 +2372,13 @@
     .hcta {
         grid-template-columns: 1fr;
         gap: 0;
-        margin: 0 16px;
         padding-left: 0;
     }
 
-    .hcta__text { padding: 48px 32px; }
+    .hcta__text { padding: 48px var(--page-edge); }
     .hcta__media { min-height: 260px; }
 }
 
 @media (max-width: 720px) {
-    .hcta { border-radius: 28px; }
-    .hcta__text { padding: 36px 22px; }
     .hcta__btn { flex: 1 1 auto; text-align: center; }
 }

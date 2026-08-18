@@ -1,5 +1,6 @@
 /**
- * header.js — Thu gọn header khi cuộn + menu trượt mobile.
+ * header.js — Thu gọn header khi cuộn, bảng xổ của cụm tác vụ (ngôn ngữ · tìm
+ * kiếm · tài khoản · giỏ hàng) và menu trượt mobile.
  *
  * Port hành vi từ src/components/site-header.tsx.
  * Không phụ thuộc thư viện nào; chạy được với thuộc tính `defer`.
@@ -69,48 +70,93 @@
     }
 
     /* ====================================================================
-       2. Ô TÌM KIẾM BUNG RA (cạnh icon tài khoản)
+       2. BẢNG XỔ CỦA CỤM TÁC VỤ (ngôn ngữ · tìm kiếm · tài khoản · giỏ hàng)
+
+       PHẦN CHÍNH NẰM Ở CSS, KHÔNG PHẢI Ở ĐÂY. Bảng bung ra khi rê chuột
+       (:hover) và khi tiêu điểm bàn phím đi vào cụm (:focus-within) — cả hai
+       đều là selector thuần CSS, xem khối .hpop trong components/header.css.
+       Tắt JavaScript thì bốn bảng vẫn mở được bằng chuột và bằng phím Tab.
+
+       Đoạn dưới đây chỉ THÊM một thứ CSS không làm được: màn hình cảm ứng
+       không có động tác "rê chuột". Nên hai nút KHÔNG phải liên kết (ngôn ngữ
+       và kính lúp) được gắn thêm cú bấm để bật/tắt lớp .is-open.
+
+       Tài khoản và giỏ hàng không cần: chúng là <a> thật, chạm là đi thẳng
+       tới /tai-khoan và /gio-hang — đúng hành vi cũ, không mất gì.
        ==================================================================== */
 
-    var searchToggle = document.getElementById('headerSearchToggle');
-    var searchPanel = document.getElementById('headerSearchPanel');
+    var pops = Array.prototype.slice.call(document.querySelectorAll('[data-hpop]'));
 
-    if (searchToggle && searchPanel) {
-        var searchInput = searchPanel.querySelector('.header-search__input');
+    if (pops.length) {
+        var closePop = function (pop) {
+            pop.classList.remove('is-open');
 
-        var openSearch = function () {
-            searchPanel.hidden = false;
-            searchToggle.setAttribute('aria-expanded', 'true');
-            if (searchInput) searchInput.focus();
-        };
-
-        var closeSearch = function (returnFocus) {
-            searchPanel.hidden = true;
-            searchToggle.setAttribute('aria-expanded', 'false');
-            if (returnFocus) searchToggle.focus();
-        };
-
-        searchToggle.addEventListener('click', function () {
-            if (searchPanel.hidden) {
-                openSearch();
-            } else {
-                closeSearch(false);
+            var btn = pop.querySelector('[data-hpop-trigger]');
+            if (btn && btn.hasAttribute('aria-expanded')) {
+                btn.setAttribute('aria-expanded', 'false');
             }
+        };
+
+        var closeAllPops = function (except) {
+            pops.forEach(function (pop) {
+                if (pop !== except) closePop(pop);
+            });
+        };
+
+        pops.forEach(function (pop) {
+            var trigger = pop.querySelector('[data-hpop-trigger]');
+            if (!trigger || trigger.tagName !== 'BUTTON') return;
+
+            trigger.addEventListener('click', function () {
+                var willOpen = !pop.classList.contains('is-open');
+
+                // Mở cái này thì đóng ba cái kia — hai bảng chồng nhau thì
+                // cái sau đè lên cái trước, không đọc được cái nào.
+                closeAllPops(pop);
+                pop.classList.toggle('is-open', willOpen);
+                trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+
+                /* Mở ô tìm kiếm bằng CÚ BẤM thì đưa luôn tiêu điểm vào ô nhập —
+                   người ta bấm kính lúp là để gõ. Cố ý KHÔNG làm việc này khi
+                   bảng bung ra do rê chuột: cướp tiêu điểm chỉ vì con trỏ lướt
+                   qua là hành vi rất khó chịu, nhất là khi đang gõ ở chỗ khác. */
+                if (willOpen) {
+                    var field = pop.querySelector('.header-search__input');
+
+                    /* Hoãn một khung hình: ngay trong handler này bảng vẫn còn
+                       visibility:hidden (kiểu chưa được tính lại), mà trình
+                       duyệt từ chối đặt tiêu điểm vào phần tử đang ẩn — gọi
+                       thẳng field.focus() ở đây là không có tác dụng gì. */
+                    if (field) window.requestAnimationFrame(function () { field.focus(); });
+                }
+            });
         });
 
-        // Bấm ra ngoài -> đóng. Bắt ở document nên phải loại trừ chính cụm
-        // nút + panel, nếu không cú click mở nút cũng tự đóng ngay.
+        /* Bấm ra ngoài -> đóng hết. Bắt ở document nên phải loại trừ chính cụm
+           vừa bấm, nếu không cú click MỞ cũng chạy tiếp xuống đây và đóng ngay.
+
+           instanceof Element: e.target của một click do script phát ra có thể
+           là chính document, mà document không có closest() — thiếu chốt này
+           thì handler ném lỗi và bảng kẹt mở. */
         document.addEventListener('click', function (e) {
-            if (searchPanel.hidden) return;
-            if (e.target.closest('.header-search')) return;
-            closeSearch(false);
+            var inside = e.target instanceof Element ? e.target.closest('[data-hpop]') : null;
+            closeAllPops(inside);
         });
 
+        /* Esc đóng và trả tiêu điểm về nút — người dùng bàn phím cần đường lui,
+           nếu không họ mắc kẹt phải Tab hết các mục trong bảng mới ra được. */
         document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && !searchPanel.hidden) closeSearch(true);
+            if (e.key !== 'Escape') return;
+
+            pops.forEach(function (pop) {
+                if (!pop.classList.contains('is-open')) return;
+
+                var trigger = pop.querySelector('[data-hpop-trigger]');
+                closePop(pop);
+                if (trigger) trigger.focus();
+            });
         });
     }
-
     /* ====================================================================
        3. MENU TRƯỢT MOBILE
        ==================================================================== */

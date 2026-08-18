@@ -140,13 +140,24 @@ $chipGroup = static function (string $key, string $legend, array $options, array
 $hasFacetFilter = $filters['brand'] || $filters['shape'] || $filters['material']
                 || $filters['gender'] || $filters['price'] !== null;
 
-// Danh sách thương hiệu đã lọc theo ô "Tìm thương hiệu".
-// mb_stripos để gõ thường vẫn khớp tên viết hoa.
+/*
+ * Danh sách thương hiệu đã lọc theo ô "Tìm thương hiệu".
+ *
+ * utf8Lower() ở CẢ HAI VẾ để gõ thường vẫn khớp tên viết hoa — thay cho
+ * mb_stripos() trước đây. Đổi vì dự án cố ý KHÔNG phụ thuộc extension
+ * mbstring (xem chú thích ở VN_ACCENT_MAP trong core/helpers.php), mà máy dev
+ * đang thiếu đúng extension đó: mb_stripos() làm cả trang này chết với
+ * "Call to undefined function", không chỉ hỏng bộ lọc.
+ *
+ * Hạ chữ thường một lần cho từ khoá, không hạ lại trong mỗi vòng lặp.
+ */
 $brandList = $facets['brands'];
 if ($filters['bq'] !== '') {
+    $needle = utf8Lower($filters['bq']);
+
     $brandList = array_values(array_filter(
         $brandList,
-        static fn ($b) => mb_stripos((string) $b, $filters['bq']) !== false
+        static fn ($b) => str_contains(utf8Lower((string) $b), $needle)
     ));
 }
 ?>
@@ -232,7 +243,10 @@ partial('_layout/page-head', [
                                href="<?= e($toggleUrl('brand', (string) $brand)) ?>"
                                <?= $on ? 'aria-current="true"' : '' ?>
                                rel="nofollow"
-                               data-brand="<?= e(mb_strtolower((string) $brand)) ?>">
+                               <?php /* utf8Lower(), không phải mb_strtolower(): xem $brandList ở đầu file.
+                                        Chuỗi này phải khớp với String.toLowerCase() bên assets/js/catalog.js,
+                                        nên GIỮ NGUYÊN DẤU — đừng đổi sang slugify(). */ ?>
+                               data-brand="<?= e(utf8Lower((string) $brand)) ?>">
                                 <span class="pcheck__box" aria-hidden="true"><?= $on ? '✓' : '' ?></span>
                                 <span class="pcheck__label"><?= e($brand) ?></span>
                                 <span class="pcheck__count">
@@ -335,11 +349,24 @@ partial('_layout/page-head', [
                     ])) ?>">Xoá bộ lọc</a>
                 </div>
             <?php else: ?>
-                <div class="catgrid">
-                    <?php foreach ($products as $p): ?>
-                        <?php partial('_layout/product-tile', ['product' => $p]); ?>
+                <?php /* THẺ DÙNG CHUNG VỚI TRANG CHỦ — _layout/product-card.php.
+                         Trước đây trang này có thẻ riêng (_layout/product-tile.php,
+                         cả thẻ là một liên kết, ảnh 220px, không nút nào), nên cùng
+                         một sản phẩm hiện ra hai dáng tuỳ khách đi vào từ đâu. File
+                         đó đã bỏ; xem chú thích ở .catgrid trong assets/css/category.css.
+
+                         <ul> chứ không <div>: product-card.php in ra <li>. */ ?>
+                <ul class="catgrid" role="list">
+                    <?php foreach ($products as $i => $p): ?>
+                        <?php partial('_layout/product-card', [
+                            'product'     => $p,
+                            'showCompare' => true,
+                            // Hàng thẻ ĐẦU TIÊN (ba cột) nằm trong khung nhìn ngay
+                            // khi trang mở, lazy-load chúng chỉ làm ảnh tới chậm hơn.
+                            'eager'       => $i < 3,
+                        ]); ?>
                     <?php endforeach; ?>
-                </div>
+                </ul>
 
                 <?php if ($totalPages > 1): ?>
                     <?php

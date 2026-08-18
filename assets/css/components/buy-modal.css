@@ -1,0 +1,688 @@
+/* ============================================================
+   components/buy-modal.css — hộp thoại mua hàng, năm bước
+
+   Dựng theo khối "LUỒNG MUA HÀNG" của "Vin Eyewear Product.dc.html".
+   Markup: app/views/_layout/buy-modal.php
+
+   NẠP CHO MỌI TRANG (xem master.php): hộp thoại hiện đè lên bất kỳ trang nào
+   có nút thêm giỏ — trang chủ, danh mục, tìm kiếm, chi tiết sản phẩm.
+
+   ─────────────────────────────────────────────────────────────────────────
+   ĐỘ BO LẤY THEO TRANG CHỦ, KHÔNG THEO BẢN THIẾT KẾ NÀY
+
+   "Product.dc.html" vẽ hộp thoại bo 12px, thẻ 8–10px, nút 8px, ảnh 6px. Cả
+   site thì đi theo "Home.dc.html": --radius 6px cho thẻ/hộp/hộp thoại,
+   --radius-sm 4px cho nút và ô nhập, --radius-round chỉ cho thứ TRÒN THẬT.
+
+   Nên file này KHÔNG có một con số bo góc nào viết thẳng — chỉ token. Một hộp
+   thoại bo tròn hơn hẳn trang đứng sau nó trông như của website khác dán vào.
+   Xem khối "ĐỘ BO GÓC" trong assets/css/layout.css.
+   ─────────────────────────────────────────────────────────────────────────
+
+   KHÔNG MỘT DÒNG JAVASCRIPT NÀO. Bước đang mở nằm trên URL, mở/đóng bằng liên
+   kết. Vì thế file này không có class trạng thái (.is-open): hộp thoại có
+   trong DOM nghĩa là nó đang mở.
+
+   CỠ CHỮ ghi thẳng bằng px, cùng lý do đã ghi ở đầu category.css / cart.css.
+   ============================================================ */
+
+.bmodal {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    box-sizing: border-box;
+    /* Cuộn được khi màn hình thấp hơn nội dung — bước nhập số đo có bốn thẻ
+       tật khúc xạ cộng hai ô chọn, ở điện thoại nằm ngang là vượt chiều cao. */
+    overflow-y: auto;
+}
+
+/* Nền mờ là một <a> phủ kín, không phải <div> nghe click — bấm ra ngoài để
+   đóng mà không cần script. Nằm dưới panel nhờ thứ tự trong DOM. */
+.bmodal__scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(30, 12, 15, 0.5);
+}
+
+.bmodal__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    width: 520px;
+    max-width: 100%;
+    margin: auto;
+    padding: 22px 24px 26px;
+    box-sizing: border-box;
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    box-shadow: var(--elev-3);
+}
+
+/* --- Đầu hộp thoại: [← lùi] tiêu đề … [✕] --- */
+
+.bmodal__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bmodal__title {
+    margin: 0;
+    /* Chữ THƯỜNG (Be Vietnam Pro) chứ không phải Lora như tiêu đề trang: bản
+       thiết kế để 17px/600 ở đây, và một hộp thoại thao tác không phải chỗ
+       cho font tiêu đề — nó là nhãn của việc đang làm, không phải nội dung. */
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    flex: 1;
+    min-width: 0;
+}
+
+.bmodal__back,
+.bmodal__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.bmodal__back { color: #4a3b38; }
+.bmodal__close { color: var(--h-note); }
+
+.bmodal__back:hover {
+    background: var(--surface-sunken);
+    color: var(--brand);
+}
+
+.bmodal__close:hover {
+    background: var(--surface-sunken);
+    color: var(--brand);
+}
+
+/* --- Thẻ sản phẩm, có ở mọi bước --- */
+
+.bmodal__item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--h-rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.bmodal__thumb {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border: 1px solid var(--h-rule);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--surface-raised);
+    color: var(--h-meta);
+    flex-shrink: 0;
+}
+
+/* contain chứ không cover: gọng kính chụp trên nền trắng, cắt mép là mất càng */
+.bmodal__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.bmodal__itembody {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.bmodal__name {
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--ink);
+}
+
+.bmodal__meta {
+    font-size: 12px;
+    color: var(--h-note);
+}
+
+.bmodal__price {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+/* --- Nút chính / nút phụ, dùng lại ở nhiều bước --- */
+
+.bmodal__cta {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 15px 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-family: var(--font-sans);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.bmodal__cta:hover {
+    background: var(--brand-strong);
+    color: var(--on-brand);
+}
+
+/* Cùng dáng nhưng là <a> — thẻ neo không thừa kế font và không tự giãn */
+.bmodal__cta--link { line-height: 1.2; }
+
+.bmodal__ghost {
+    display: block;
+    padding: 13px 0;
+    border: 1px solid var(--h-line);
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    text-align: center;
+    text-decoration: none;
+}
+
+.bmodal__ghost:hover {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+/* ============================================================
+   BƯỚC 1 — CHỌN HÌNH THỨC MUA
+   ============================================================ */
+
+/* HAI <form> riêng, không phải một: "Chỉ mua …" gửi thẳng sang /gio-hang/them
+   và kết thúc, còn "… + cắt tròng" đi tiếp sang /gio-hang/chon. Cho form co
+   giãn như một nút để hai lựa chọn cao bằng nhau. */
+.bmodal__opts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.bmodal__opts form { display: flex; }
+
+.bopt {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 16px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    text-align: left;
+    cursor: pointer;
+}
+
+.bopt:hover { border-color: var(--brand); }
+
+.bopt:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* Vòng tròn quanh biểu tượng là thứ TRÒN THẬT -> --radius-round hợp lệ ở đây,
+   khác với nút chữ nhật (xem ghi chú token trong layout.css). */
+.bopt__ico {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-round);
+    background: var(--h-shell);
+    color: #4a3b38;
+    flex-shrink: 0;
+}
+
+/* Lựa chọn cắt tròng mang màu thương hiệu: đó là đường đi dài hơn và cũng là
+   thứ cửa hàng muốn khách chọn — nhưng chỉ nhấn bằng MÀU BIỂU TƯỢNG, không
+   bằng viền đậm hay nền đặc. Lựa chọn kia phải vẫn dễ thấy như nhau. */
+.bopt__ico--brand {
+    background: #f7e8e2;
+    color: var(--brand);
+}
+
+.bopt__body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.bopt__name {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.bopt__note {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--h-note);
+}
+
+/* ============================================================
+   BƯỚC 2 — SỐ ĐO KHÚC XẠ
+   ============================================================ */
+
+/* Hộp nhắc "Bạn chưa có hồ sơ khúc xạ" */
+.bnote {
+    display: flex;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    background: var(--h-shell);
+    color: #8a6a5e;
+}
+
+.bnote svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.bnote__body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.bnote__title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.bnote__text {
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #8a7a72;
+}
+
+/* Hồ sơ khúc xạ đã lưu */
+.brxsaved {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.brxsaved__card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--h-rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.brxsaved__label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand);
+}
+
+/* Chữ đẳng khoảng: "−2.50 / −0.75 × 180°" phải đọc được không nhầm dấu */
+.brxsaved__val {
+    font-family: var(--font-mono, monospace);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.brxsaved__meta {
+    font-size: 12px;
+    color: var(--h-note);
+}
+
+.brxsaved__old { color: #a2701c; }
+
+/* ============================================================
+   BƯỚC 3 — NHẬP SỐ ĐO KHÚC XẠ
+   ============================================================ */
+
+.brx {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.brx__group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.brx__legend {
+    padding: 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.brx__types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.btype {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    cursor: pointer;
+}
+
+.btype:hover { border-color: var(--brand); }
+
+/* Ô radio THẬT nằm dưới, ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc
+   màn hình — cùng cách làm với .cocard ở trang thanh toán. */
+.btype input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.btype:has(input:checked) {
+    border-color: var(--brand);
+    background: #f7e8e2;
+}
+
+.btype:has(input:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.btype__name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.btype__desc {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--h-note);
+}
+
+/* Khối một mắt */
+.beye {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+    border: 1px solid var(--h-rule);
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.beye__label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand);
+}
+
+.beye__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.beye__cap {
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.beye__field select {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--h-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    color: var(--ink);
+    outline: none;
+}
+
+.beye__field select:focus { border-color: var(--brand); }
+
+/* ============================================================
+   BƯỚC 4 — CHỌN LOẠI TRÒNG KÍNH
+   ============================================================ */
+
+/* Nhắc lại số đo vừa nhập, ngay trên danh sách */
+.brxecho {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--h-shell);
+    font-family: var(--font-mono, monospace);
+    font-size: 12.5px;
+    color: #6f5f5a;
+}
+
+.blens {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.blens__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 15px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    text-align: left;
+    cursor: pointer;
+}
+
+.blens__item:hover { border-color: var(--brand); }
+
+/* Gói đã chọn ở lần trước, khi khách lùi lại bước này để đổi ý */
+.blens__item.is-on {
+    border-color: var(--brand);
+    background: #f7e8e2;
+}
+
+.blens__item:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.blens__body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.blens__name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.blens__desc {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--h-note);
+}
+
+.blens__price {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--brand);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   BƯỚC 5 — XÁC NHẬN SẢN PHẨM
+   ============================================================ */
+
+.bsum {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.bsum__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    font-size: 13.5px;
+    color: var(--h-note);
+}
+
+.bsum__val {
+    font-weight: 600;
+    color: var(--ink);
+    text-align: right;
+}
+
+.bsum__val--price { color: var(--brand); }
+
+.bsum__val--soft {
+    font-weight: 400;
+    color: var(--h-note);
+}
+
+/* Bộ đếm số lượng — hai nút gửi form, không phải hai nút JS */
+.bqty {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    background: var(--surface);
+}
+
+.bqty__label {
+    font-size: 13.5px;
+    color: var(--ink);
+}
+
+.bqty__stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bqty__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    /* Vuông và tròn thật -> --radius-round đúng vai */
+    border: 1px solid var(--h-line);
+    border-radius: var(--radius-round);
+    background: var(--surface-raised);
+    font-size: 16px;
+    color: #4a3b38;
+    cursor: pointer;
+}
+
+.bqty__btn:hover:not(:disabled) {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+.bqty__btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.bqty__num {
+    min-width: 24px;
+    text-align: center;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.bsum__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--h-rule);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.bsum__totalnum {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+/* ============================================================
+   MỐC GÃY
+   ============================================================ */
+
+@media (max-width: 480px) {
+    .bmodal { padding: 12px; }
+
+    .bmodal__panel { padding: 18px 16px 22px; }
+
+    .bmodal__title { font-size: 16px; }
+
+    /* Bốn thẻ tật khúc xạ hai cột chỉ còn ~150px mỗi thẻ ở màn 360px, mà mô tả
+       dài nhất là "Nhìn mờ hoặc méo ở mọi khoảng cách" — xuống một cột. */
+    .brx__types { grid-template-columns: 1fr; }
+
+    .bopt { padding: 14px; }
+}

@@ -46,6 +46,43 @@ class VariantModel extends BaseModel
     }
 
     /**
+     * Id của MỌI mặt hàng đang có ít nhất một biến thể bật.
+     *
+     * Một câu truy vấn cho cả trang, nhớ lại trong suốt request: thẻ sản phẩm
+     * (_layout/product-card.php) phải biết mặt hàng có phương án hay không để
+     * quyết định vẽ nút "Mua ngay" hay liên kết "Chọn phương án", mà một lưới
+     * trang chủ có tới 8 thẻ và partial thì được gọi từng cái một.
+     *
+     * Hỏi NGƯỢC (ai có biến thể) thay vì hỏi từng mặt hàng: bảng này nhỏ và
+     * thưa — phần lớn mặt hàng không có biến thể nào — nên danh sách trả về
+     * ngắn hơn hẳn danh sách mặt hàng.
+     *
+     * @return array<string, true> tra bằng isset()
+     */
+    public static function productIdsWithVariants(): array
+    {
+        static $cache = null;
+
+        if ($cache === null) {
+            $cache = [];
+
+            foreach (Database::fetchAll(
+                'SELECT DISTINCT product_id FROM product_variants WHERE is_active = 1'
+            ) as $row) {
+                $cache[$row['product_id']] = true;
+            }
+        }
+
+        return $cache;
+    }
+
+    /** Mặt hàng này có bắt buộc chọn phương án trước khi mua không? */
+    public static function hasVariants(string $productId): bool
+    {
+        return isset(self::productIdsWithVariants()[$productId]);
+    }
+
+    /**
      * Một biến thể, CHỈ khi nó thuộc đúng mặt hàng đang xét.
      *
      * Nhận cả hai tham số chứ không chỉ id: id đến từ form nên sửa được, và

@@ -62,14 +62,14 @@ $isProductActive = $segment === 'san-pham';
  * trước/sau vòng lặp) nên đọc file là thấy ngay thứ tự thật của năm mục.
  */
 $navItems = [
-    ['label' => 'Trang chủ',   'url' => '/',           'match' => ['', 'home']],
+    ['label' => t('nav.home'),   'url' => '/',           'match' => ['', 'home']],
     ['mega'  => true],
     // Ngay sau "Sản phẩm": thử kính là một cách xem hàng, không phải một
     // trang giới thiệu. Đứng cạnh thứ nó phục vụ.
-    ['label' => 'Thử kính ảo', 'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
-    ['label' => 'Giới thiệu',  'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
-    ['label' => 'Sự kiện',     'url' => '/su-kien',    'match' => ['su-kien']],
-    ['label' => 'Liên hệ',     'url' => '/lien-he',    'match' => ['lien-he']],
+    ['label' => t('nav.tryon'),  'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
+    ['label' => t('nav.about'),  'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
+    ['label' => t('nav.events'), 'url' => '/su-kien',    'match' => ['su-kien']],
+    ['label' => t('nav.contact'),'url' => '/lien-he',    'match' => ['lien-he']],
 ];
 
 /*
@@ -81,8 +81,8 @@ $navItems = [
  * menu trượt hiện nó hai lần.
  */
 $mobileExtra = [
-    ['label' => 'Đặt lịch đo mắt',  'url' => '/dat-lich',   'match' => ['dat-lich']],
-    ['label' => 'Chính sách & FAQ', 'url' => '/chinh-sach', 'match' => ['chinh-sach']],
+    ['label' => t('nav.booking'), 'url' => '/dat-lich',   'match' => ['dat-lich']],
+    ['label' => t('nav.policy'),  'url' => '/chinh-sach', 'match' => ['chinh-sach']],
 ];
 
 /**
@@ -114,7 +114,7 @@ $keyword = $_GET['q'] ?? '';
 $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?? [], true);
 ?>
 
-<a class="skip-link" href="#noi-dung-chinh">Bỏ qua điều hướng, tới nội dung chính</a>
+<a class="skip-link" href="#noi-dung-chinh"><?= e(t('action.skip')) ?></a>
 
 <header class="site-header" id="siteHeader">
 
@@ -122,9 +122,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
          1. DẢI THÔNG BÁO — thu về 0 chiều cao khi cuộn xuống
          ============================================================ -->
     <div class="header-announce">
-        <p class="header-announce__text">
-            Miễn phí giao hàng toàn quốc cho đơn từ 1.000.000₫
-        </p>
+        <p class="header-announce__text"><?= e(t('announce')) ?></p>
     </div>
 
     <!-- ============================================================
@@ -152,17 +150,111 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             </ul>
         </nav>
 
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * BỐN NÚT TÁC VỤ — MỘT KHUÔN DUY NHẤT (.hpop)
+         *
+         * Ngôn ngữ · Tìm kiếm · Tài khoản · Giỏ hàng. Cả bốn nay KHÔNG còn
+         * khung viền trắng bao quanh — chúng nằm thẳng trên nền của thanh điều
+         * hướng, chỉ đổi màu khi rê chuột, đúng như các mục nav ngay bên cạnh.
+         *
+         * Cả bốn cùng bung một bảng xổ khi rê chuột (và khi tiêu điểm bàn phím
+         * đi vào cụm, nhờ :focus-within). Trước đây chỉ bảng ngôn ngữ có bảng
+         * xổ, mà lại mở bằng cách bấm.
+         *
+         * VÌ SAO KHÔNG CÒN <details> Ở NÚT NGÔN NGỮ
+         *   <details> mở/đóng bằng thuộc tính `open`, CSS không với tới được,
+         *   nên không thể cho nó bung ra khi rê chuột mà không viết JS điều
+         *   khiển state. Nay bảng xổ hiện bằng :hover/:focus-within — thuần
+         *   CSS, chạy cả khi tắt JavaScript.
+         *
+         * MÀN HÌNH CẢM ỨNG không có "rê chuột". Nên:
+         *   - Tài khoản và Giỏ hàng vẫn là <a> thật: chạm là đi thẳng tới
+         *     /tai-khoan và /gio-hang, y như trước.
+         *   - Ngôn ngữ và Tìm kiếm là <button>: assets/js/header.js bắt cú bấm
+         *     và bật lớp .is-open. Không có JS thì nút ngôn ngữ vẫn mở được
+         *     bằng phím Tab (focus-within), còn ô tìm kiếm luôn có lối khác ở
+         *     trang danh sách sản phẩm.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        ?>
         <div class="header-actions">
 
-            <!-- Tìm kiếm — nút mở, ô nhập bung ra ngay dưới cụm tác vụ.
-                 Thiết kế vẽ một icon kính lúp; ô nhập là phần bản thiết kế
-                 không vẽ tới (nó chỉ có một trạng thái tĩnh). -->
-            <div class="header-search">
+            <?php
+            /*
+             * ĐỔI NGÔN NGỮ (VI / EN)
+             *
+             * Hai lựa chọn là LIÊN KẾT THẬT tới /ngon-ngu, nên tắt JS vẫn đổi
+             * được. rel="nofollow": máy tìm kiếm không cần đi theo, và đi theo
+             * thì cùng một trang bị lập chỉ mục hai lần.
+             *
+             * PHẠM VI DỊCH rất hẹp — chỉ khung giao diện. Xem ghi chú dài ở
+             * đầu config/lang/vi.php trước khi hứa với ai là site có tiếng Anh.
+             */
+            $lang = currentLang();
+
+            /*
+             * Đường quay lại GIỮ CẢ chuỗi truy vấn: đang lọc
+             * /san-pham?category=gong-kinh&material=Titanium mà đổi ngôn ngữ
+             * thì phải về đúng danh sách đó, không phải về cả kho.
+             *
+             * Ghép tay từ currentPath() + QUERY_STRING chứ không lấy thẳng
+             * REQUEST_URI: chuỗi kia đến từ trình duyệt và còn mang cả fragment
+             * lẫn ký tự lạ, mà giá trị này đi vào một tham số chuyển hướng.
+             */
+            $back = currentPath();
+            $query = (string) ($_SERVER['QUERY_STRING'] ?? '');
+
+            if ($query !== '') {
+                $back .= '?' . $query;
+            }
+            ?>
+            <div class="hpop hpop--lang" data-hpop>
+                <button type="button"
+                        class="hpop__trigger hpop__trigger--text"
+                        data-hpop-trigger
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        title="<?= e(t('lang.label')) ?>">
+                    <?= e(strtoupper($lang)) ?>
+                    <svg class="hpop__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+
+                <div class="hpop__panel">
+                    <p class="hpop__head"><?= e(t('lang.label')) ?></p>
+                    <ul class="hpop__list" role="list">
+                        <?php foreach (['vi' => t('lang.vi'), 'en' => t('lang.en')] as $code => $label): ?>
+                            <li>
+                                <a class="hpop__item<?= $lang === $code ? ' is-on' : '' ?>"
+                                   lang="<?= e($code) ?>"
+                                   rel="nofollow"
+                                   <?= $lang === $code ? 'aria-current="true"' : '' ?>
+                                   href="/ngon-ngu?<?= e(http_build_query(['lang' => $code, 'redirect' => $back])) ?>"><?= e($label) ?></a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            </div>
+
+            <?php
+            /*
+             * TÌM KIẾM — bảng xổ chứa nguyên ô nhập, không phải một khay riêng
+             * nữa. Bản thiết kế chỉ vẽ một icon kính lúp; ô nhập là phần bản
+             * thiết kế không vẽ tới (nó chỉ có một trạng thái tĩnh).
+             */
+            ?>
+            <div class="hpop hpop--search" data-hpop>
                 <button
                     type="button"
-                    class="header-search__toggle header-action tap-target"
+                    class="hpop__trigger header-action"
                     id="headerSearchToggle"
-                    aria-label="Tìm kiếm sản phẩm"
+                    data-hpop-trigger
+                    aria-label="<?= e(t('action.search')) ?>"
+                    aria-haspopup="true"
                     aria-expanded="false"
                     aria-controls="headerSearchPanel"
                 >
@@ -172,34 +264,30 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                     </svg>
                 </button>
 
-                <form
-                    class="header-search__panel"
-                    id="headerSearchPanel"
-                    role="search"
-                    action="/san-pham"
-                    method="get"
-                    hidden
-                >
-                    <label class="sr-only" for="headerSearch">Tìm kiếm sản phẩm</label>
-                    <svg class="header-search__ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
-                        <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                    </svg>
-                    <input
-                        type="search"
-                        id="headerSearch"
-                        name="q"
-                        class="header-search__input"
-                        placeholder="Tìm gọng, tròng kính..."
-                        value="<?= e($keyword) ?>"
-                    >
-                    <button type="submit" class="header-search__submit">Tìm</button>
-                </form>
+                <div class="hpop__panel hpop__panel--search" id="headerSearchPanel">
+                    <p class="hpop__head"><?= e(t('action.search')) ?></p>
+                    <form class="header-search__form" role="search" action="/tim-kiem" method="get">
+                        <label class="sr-only" for="headerSearch"><?= e(t('action.search')) ?></label>
+                        <svg class="header-search__ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                            <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                        </svg>
+                        <input
+                            type="search"
+                            id="headerSearch"
+                            name="q"
+                            class="header-search__input"
+                            placeholder="<?= e(t('search.placeholder')) ?>"
+                            value="<?= e($keyword) ?>"
+                        >
+                        <button type="submit" class="header-search__submit"><?= e(t('search.submit')) ?></button>
+                    </form>
+                </div>
             </div>
 
             <?php
             /*
-             * Icon tài khoản: vào thẳng /auth, KHÔNG kèm ?redirect=.
+             * TÀI KHOẢN — icon vào thẳng /auth, KHÔNG kèm ?redirect=.
              *
              * ?redirect= dành riêng cho trường hợp khách BỊ CHẶN — đang muốn
              * tới /gio-hang hay /quan-tri thì AuthMiddleware::requireLogin()
@@ -214,32 +302,82 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             $isLoggedIn = AuthMiddleware::check();
             $accountUrl = $isLoggedIn ? '/tai-khoan' : '/auth';
             ?>
-            <a href="<?= e($accountUrl) ?>" class="header-action tap-target"
-               aria-label="<?= $isLoggedIn ? 'Tài khoản của tôi' : 'Đăng nhập' ?>">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/>
-                    <path d="M4 20.5c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                </svg>
-            </a>
+            <div class="hpop" data-hpop>
+                <a href="<?= e($accountUrl) ?>" class="hpop__trigger header-action"
+                   data-hpop-trigger
+                   aria-label="<?= e($isLoggedIn ? t('action.account') : t('action.login')) ?>">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                        <path d="M4 20.5c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                </a>
 
-            <a href="/gio-hang" class="header-action tap-target" aria-label="Giỏ hàng, <?= (int) $cartCount ?> sản phẩm">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M5 8h14l-1.2 12H6.2L5 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-                    <path d="M8.5 8V6.5a3.5 3.5 0 017 0V8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                </svg>
-                <!-- Thiết kế hiện huy hiệu cả khi giỏ trống (số 0). Ở đây chỉ
-                     hiện khi có hàng: một chấm đỏ báo "0" là báo động giả. -->
-                <?php if ($cartCount > 0): ?>
-                    <span class="header-action__badge" aria-hidden="true"><?= (int) $cartCount ?></span>
-                <?php endif; ?>
-            </a>
+                <div class="hpop__panel">
+                    <?php /* Luôn là "Tài khoản", kể cả khi chưa đăng nhập: lấy
+                             t('action.login') làm nhãn đầu bảng thì nó lặp lại
+                             đúng chữ của mục ngay bên dưới. */ ?>
+                    <p class="hpop__head"><?= e(t('pop.account')) ?></p>
+                    <ul class="hpop__list" role="list">
+                        <?php if ($isLoggedIn): ?>
+                            <li><a class="hpop__item" href="/tai-khoan"><?= e(t('pop.profile')) ?></a></li>
+                            <li><a class="hpop__item" href="/tai-khoan?muc=don-hang"><?= e(t('pop.orders')) ?></a></li>
+                            <li><a class="hpop__item" href="/tai-khoan?muc=lich-hen"><?= e(t('pop.bookings')) ?></a></li>
+                            <li>
+                                <?php /* Đăng xuất qua POST: một thẻ <img src="/auth/dang-xuat"> trên
+                                         trang khác cũng đủ để đá khách ra nếu dùng GET. */ ?>
+                                <form method="post" action="/auth/dang-xuat">
+                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                    <button type="submit" class="hpop__item hpop__item--btn"><?= e(t('pop.logout')) ?></button>
+                                </form>
+                            </li>
+                        <?php else: ?>
+                            <li><a class="hpop__item" href="/auth"><?= e(t('action.login')) ?></a></li>
+                            <li><a class="hpop__item" href="/auth?tab=dang-ky"><?= e(t('pop.register')) ?></a></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- GIỎ HÀNG -->
+            <div class="hpop" data-hpop>
+                <a href="/gio-hang" class="hpop__trigger header-action"
+                   data-hpop-trigger
+                   aria-label="<?= e(t('action.cart')) ?>, <?= (int) $cartCount ?>">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M5 8h14l-1.2 12H6.2L5 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                        <path d="M8.5 8V6.5a3.5 3.5 0 017 0V8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                    <!-- Thiết kế hiện huy hiệu cả khi giỏ trống (số 0). Ở đây chỉ
+                         hiện khi có hàng: một chấm đỏ báo "0" là báo động giả. -->
+                    <?php if ($cartCount > 0): ?>
+                        <span class="header-action__badge" aria-hidden="true"><?= (int) $cartCount ?></span>
+                    <?php endif; ?>
+                </a>
+
+                <div class="hpop__panel">
+                    <p class="hpop__head"><?= e(t('action.cart')) ?></p>
+                    <p class="hpop__note">
+                        <?= $cartCount > 0
+                            ? e(sprintf(t('pop.cart_count'), (int) $cartCount))
+                            : e(t('pop.cart_empty')) ?>
+                    </p>
+                    <ul class="hpop__list" role="list">
+                        <?php if ($cartCount > 0): ?>
+                            <li><a class="hpop__item" href="/gio-hang"><?= e(t('pop.cart_view')) ?></a></li>
+                            <li><a class="hpop__item" href="/thanh-toan"><?= e(t('pop.checkout')) ?></a></li>
+                        <?php else: ?>
+                            <li><a class="hpop__item" href="/san-pham"><?= e(t('pop.shop')) ?></a></li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
 
             <!-- Hamburger — chỉ hiện dưới 1100px -->
             <button
                 type="button"
                 class="header-burger tap-target"
                 id="navToggle"
-                aria-label="Mở menu điều hướng"
+                aria-label="<?= e(t('action.open_menu')) ?>"
                 aria-expanded="false"
                 aria-controls="mobileNav"
             >
@@ -262,7 +400,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
 
         <div class="mobile-nav__head">
             <span class="mobile-nav__logo">Vin <em>Eyewear</em></span>
-            <button type="button" class="mobile-nav__close tap-target" data-close-nav aria-label="Đóng menu">
+            <button type="button" class="mobile-nav__close tap-target" data-close-nav aria-label="<?= e(t('action.close_menu')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                 </svg>

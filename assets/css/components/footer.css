@@ -1,18 +1,29 @@
 /* ============================================================
-   footer.css — Chân trang, dựng theo "Vin Eyewear Home.dc.html"
+   footer.css — Chân trang.
 
-   ĐÃ ĐỔI TỪ KHỐI NỀN TỐI SANG NỀN TRANG. Bản trước tô nền --ink và chữ
-   --on-ink, mọi sắc độ chữ phụ dựng bằng color-mix() trên --on-ink. Bản
-   thiết kế không có khối tối nào ở chân trang: footer đứng thẳng trên nền
-   pearl của trang, tách khỏi nội dung bằng ĐÚNG MỘT đường kẻ 1px. Vì thế
-   toàn bộ cụm color-mix() đã bỏ — trên nền sáng chúng cho ra chữ xám nhạt
-   không đọc nổi, mà cũng không còn --on-ink để trộn cho đúng nữa.
+   NỀN CRIMSON, GIỐNG DẢI THÔNG BÁO TRÊN HEADER. Hai đầu trang và cuối
+   trang nay đóng khung nội dung bằng cùng một mảng màu: cùng nền
+   var(--brand), cùng sắc chữ var(--on-brand-soft).
 
-   Ba sắc chữ của bản thiết kế, dùng thẳng chứ không qua token: chữ phụ
-   #6f5f5a (= --muted), đoạn giới thiệu #9a877f, dải bản quyền #b0a094.
-   Đường kẻ #eee0d4 nhạt hơn --line một nấc, đúng như thiết kế.
+   LỆCH BẢN THIẾT KẾ, CÓ CHỦ Ý. "Vin Eyewear Home.dc.html" vẽ chân trang
+   đứng trên nền pearl, tách khỏi nội dung bằng một đường kẻ 1px. Đây là
+   yêu cầu riêng, không phải port thiếu — ai so lại với file thiết kế sẽ
+   thấy khác và cần biết vì sao.
 
-   Footer dùng chung cho MỌI trang, không riêng trang chủ.
+   BA MỨC CHỮ TRÊN NỀN ĐỎ, đo sẵn để lần sau đổi màu là biết mình phá gì:
+
+     --on-brand        #ffffff  8.96:1  thứ cần nổi — wordmark, liên kết
+     --on-brand-soft   #f6e3dd  6.90:1  thân bài — mức mặc định của cả khối
+     --on-brand-muted  #ecc9c0  5.34:1  hạng phụ — tiêu đề cột, dải bản quyền
+
+   Cả ba đều qua ngưỡng AA (4.5:1) cho chữ nhỏ; chân trang toàn chữ 12–13.5px
+   nên không được hạ thêm nấc nào nữa.
+
+   Đường kẻ dùng rgba trên nền đỏ chứ không phải màu đặc: một sắc pha sẵn sẽ
+   sai ngay khi --brand đổi tông.
+
+   Footer dùng chung cho MỌI trang, không riêng trang chủ. Khung rút gọn
+   (đăng nhập, thanh toán) dùng .barefoot riêng, không đụng tới file này.
    ============================================================ */
 
 /* margin-top:88px là khoảng thở giữa khối cuối trang và chân trang, ghi
@@ -21,20 +32,27 @@
    một khoảng. */
 .site-footer {
     margin-top: 88px;
-    padding: 64px 56px 0;
-    border-top: 1px solid #eee0d4;
-    color: var(--muted);
+    /* Cùng lề với header và các khối trang chủ — xem --page-edge (layout.css) */
+    padding: 64px var(--page-edge) 12px;
+    /* KHÔNG còn border-top: chính mảng màu đã tách chân trang khỏi nội dung.
+       Giữ lại thì thành một sợi chỉ sáng vắt ngang mép trên khối đỏ. */
+    background: var(--brand);
+    color: var(--on-brand-soft);
 }
 
 /* TRỪ hai trang tự lo lấy khoảng đó.
    "Vin Eyewear Category.dc.html" và "Vin Eyewear Contact.dc.html" không đặt
    margin-top cho footer; thay vào đó khối cuối của chúng có sẵn 96px đệm
    dưới. Cộng cả hai thành 184px trống trước chân trang — gấp đôi thiết kế. */
+/* Trang chủ cũng vậy, vì lý do khác: khối cuối của nó (.hcta) là một dải
+   nền nâu sẫm tràn hai mép, và bản thiết kế cho chân trang bắt đầu ngay dưới
+   dải đó. Chừa 88px thì giữa hai vùng có một băng pearl trống không thuộc về
+   khối nào. */
+.page-home-index .site-footer,
 .page-product-index .site-footer,
 .page-contact-index .site-footer,
-.page-product-detail .site-footer,
-.page-event-index .site-footer,
-.page-event-detail .site-footer,
+.page-product-detail .site-foote,
+.page-event-index .site-fo .page-event-detail .site-footer,
 .page-booking-index .site-footer {
     margin-top: 0;
 }
@@ -44,15 +62,18 @@
 .footer-grid {
     display: grid;
     gap: 48px;
-    max-width: 1280px;
+    max-width: var(--container, 1600px);
     margin-inline: auto;
 }
 
 @media (min-width: 601px) {
-    .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .footer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (min-width: 1101px) {
+
     /* 1.4 / 1 / 1 / 1.2 — cột thương hiệu rộng nhất cho đoạn giới thiệu,
        cột liên hệ rộng hơn hai cột liên kết vì chứa email và giờ mở cửa. */
     .footer-grid {
@@ -72,7 +93,7 @@
     font-size: 22px;
     font-weight: 600;
     line-height: 1.15;
-    color: var(--brand);
+    color: var(--on-brand);
 }
 
 /* Nghiêng và nhẹ hơn nửa nấc, KHÔNG đổi màu: cả hai chữ cùng một sắc đỏ,
@@ -87,7 +108,7 @@
     margin-top: 16px;
     font-size: 13.5px;
     line-height: 1.7;
-    color: #9a877f;
+    color: var(--on-brand-muted);
 }
 
 /* Mạng xã hội */
@@ -104,19 +125,20 @@
     place-items: center;
     width: 36px;
     height: 36px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    color: var(--brand);
+    border: 1px solid rgba(246, 227, 221, 0.3);
+    border-radius: var(--radius-round);
+    color: var(--on-brand-soft);
     transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
 
-/* Đổ đầy màu thương hiệu khi rê chuột — cùng cách với .pill-link ở trang chủ
-   và ba nút tròn trên header, để cả site chỉ có MỘT kiểu nút tròn. */
+/* ĐẢO MÀU khi rê chuột. Trên nền sáng, kiểu nút tròn của site là "đổ đầy màu
+   thương hiệu"; ở đây nền ĐÃ là màu thương hiệu nên đổ tiếp thì không thấy gì.
+   Đảo lại giữ đúng cái ý "rê chuột thì nút đặc lại". */
 .footer-socials a:hover,
 .footer-socials a:focus-visible {
-    background: var(--brand);
-    border-color: var(--brand);
-    color: var(--on-brand);
+    background: var(--on-brand-soft);
+    border-color: var(--on-brand-soft);
+    color: var(--brand);
 }
 
 .footer-socials svg {
@@ -132,7 +154,9 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--eyebrow);
+    /* KHÔNG dùng --eyebrow (#b0736a): sắc hồng ấm đó sinh ra cho nền pearl,
+       đặt lên crimson chỉ còn 1.6:1 — gần như biến mất. */
+    color: var(--on-brand-muted);
 }
 
 /* Cột "Liên hệ" — ba loại thông tin, không icon */
@@ -143,18 +167,21 @@
     gap: 12px;
     font-size: 13.5px;
     line-height: 1.7;
-    color: var(--muted);
+    color: var(--on-brand-soft);
 }
 
 .footer-contact a {
-    color: var(--brand);
+    color: var(--on-brand);
     text-decoration: none;
     transition: color 0.2s;
 }
 
+/* Gạch chân khi rê chuột thay vì đổi màu: liên kết ở đây đã là màu sáng nhất
+   có trên nền đỏ, không còn nấc nào sáng hơn để nhảy lên. */
 .footer-contact a:hover,
 .footer-contact a:focus-visible {
-    color: var(--brand-strong);
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 /* Hotline là thứ khách tìm nhanh nhất trong cột này -> đậm hơn hai dòng
@@ -162,12 +189,15 @@
    dòng "Hotline: 1900 6868" bằng một màu, chỉ email mới là liên kết. */
 .footer-phone {
     font-weight: 600;
-    color: var(--ink);
+    color: var(--on-brand);
     letter-spacing: 0.02em;
 }
 
 .footer-phone:hover,
-.footer-phone:focus-visible { color: var(--brand); }
+.footer-phone:focus-visible {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
 
 /* Email dài không được đẩy tràn cột trên màn hình hẹp */
 .footer-break {
@@ -185,14 +215,14 @@
 
 .footer-links a {
     display: inline-block;
-    color: var(--muted);
+    color: var(--on-brand-soft);
     text-decoration: none;
     transition: color 0.2s;
 }
 
 .footer-links a:hover,
 .footer-links a:focus-visible {
-    color: var(--brand);
+    color: var(--on-brand);
 }
 
 /* --- 2. Dải dưới cùng --------------------------------------- */
@@ -206,16 +236,18 @@
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    max-width: 1280px;
+    max-width: var(--container, 1600px);
     margin: 48px auto 0;
     padding: 20px 0;
-    border-top: 1px solid #eee0d4;
+    border-top: 1px solid rgba(246, 227, 221, 0.22);
     font-size: 12px;
-    color: #b0a094;
+    color: var(--on-brand-muted);
 }
 
 @media (min-width: 601px) {
-    .footer-bottom__inner { flex-direction: row; }
+    .footer-bottom__inner {
+        flex-direction: row;
+    }
 }
 
 .footer-bottom__nav {
@@ -232,7 +264,7 @@
 
 .footer-bottom__nav a:hover,
 .footer-bottom__nav a:focus-visible {
-    color: var(--brand);
+    color: var(--on-brand);
 }
 
 /* Dòng pháp nhân: gộp tên công ty + MST vào một dòng thay cho cả một tầng
@@ -240,12 +272,12 @@
    theo quy định thương mại điện tử, không phải chú thích trang trí. */
 .footer-bottom__legal {
     margin: 0;
-    color: #a4948b;
+    color: var(--on-brand-muted);
 }
 
 @media (max-width: 720px) {
     .site-footer {
         margin-top: 56px;
-        padding: 48px 20px 0;
+        padding: 48px var(--page-edge) 12px;
     }
 }

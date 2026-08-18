@@ -9,18 +9,54 @@
  * Dựng bằng ĐÚNG những nguyên thể mà bản thiết kế đã định nghĩa cho mục đơn
  * hàng (thẻ .acct-card, đầu thẻ mã + huy hiệu, chân thẻ nút hành động), nên
  * hai mục nhìn như một bộ chứ không phải hai trang khác nhau ghép lại.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ĐỔI VÀ HUỶ LỊCH
+ *
+ * Nút chỉ hiện khi lịch THẬT SỰ đổi/huỷ được, và câu trả lời đó do
+ * BookingModel::changeBlocker() đưa ra — chính hàm mà controller gọi lại trước
+ * khi ghi. Một nguồn cho cả hai bên, nên không có cảnh nút hiện ra rồi bấm vào
+ * bị chặn (hoặc ngược lại: nút ẩn nhưng POST tay vẫn ghi được).
+ *
+ * Không đổi/huỷ được thì KHÔNG ẩn đi im lặng: in luôn lý do (đã qua giờ hẹn,
+ * còn dưới hạn cho phép…) kèm lối gọi tổng đài. Một thẻ lịch hẹn không có nút
+ * nào và không nói vì sao là chỗ khách sẽ gọi điện để hỏi.
+ *
+ * Form chọn giờ mới mở bằng ?doi=<mã> NGAY TRONG thẻ đó — cùng lối với ?sua=
+ * của sổ địa chỉ. Đổi ngày trong form là một GET (?ngay=…) để máy chủ dựng lại
+ * danh sách giờ trống, nên không cần một dòng JavaScript nào.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 $tones = [
     'pending'   => 'wait',
-    'confirmed' => 'prep',
+    'confirmed' => 'sure',
     'done'      => 'done',
     'cancelled' => 'stop',
 ];
 
 $today = date('Y-m-d');
+
+/* Lịch đang mở form đổi giờ, ngày đang xem giờ trống, và bảng "vì sao lịch này
+   không sửa được nữa" — controller dựng sẵn hết. View KHÔNG tự gọi
+   BookingModel::changeBlocker: giữ đúng lối của trang này, mọi luật nghiệp vụ đi
+   qua controller. */
+$blockers  = $blockers  ?? [];
+$editing   = $editing   ?? null;
+$slotDate  = $slotDate  ?? $today;
+$freeSlots = $freeSlots ?? [];
+
+/** Đường dẫn mở form đổi giờ của một lịch (kèm ngày muốn xem). */
+$editHref = static fn (string $code, string $date): string =>
+    '/tai-khoan?muc=lich-hen&doi=' . rawurlencode($code) . '&ngay=' . rawurlencode($date);
 ?>
 
+<?php
+/* Đầu mục NẰM NGOÀI nhánh rỗng/không-rỗng, cố ý: nút "Đặt lịch mới" phải ở đúng
+   một chỗ dù khách có lịch hay chưa. Đưa nó vào trong nhánh thì lúc chưa có lịch
+   nào, hành động chính của cả mục lại nằm ở giữa thẻ trạng thái rỗng và nhảy chỗ
+   ngay khi khách đặt lịch đầu tiên. ĐỪNG di chuyển khối này vào trong. */
+?>
 <div class="acct-head acct-head--row">
     <div>
         <h1 class="acct-head__title">Lịch hẹn của tôi</h1>
@@ -85,13 +121,65 @@ $today = date('Y-m-d');
                     <p class="acct-order__note">Ghi chú: <?= e($a['note']) ?></p>
                 <?php endif; ?>
 
+                <?php
+                $blocker   = $blockers[$a['code']] ?? null;
+                $isEditing = $editing !== null && $editing['code'] === $a['code'];
+
+                /* Lịch CÒN HIỆU LỰC nhưng đã ngoài hạn tự sửa — chỉ đúng trường
+                   hợp này thì gọi tổng đài mới có nghĩa, và chỉ ở đây mới cần in
+                   lý do. Lịch đã huỷ / đã hoàn tất thì huy hiệu ở đầu thẻ đã nói
+                   rồi, nhắc lại thành hai lần cùng một câu, mà tổng đài cũng
+                   không làm được gì. */
+                $callable = $blocker !== null
+                    && in_array($a['status'], ['pending', 'confirmed'], true);
+                ?>
+
+                <?php if ($blocker === null && $isEditing): ?>
+                    <?php partial('auth/account/_doi-lich', [
+                        'appointment' => $a,
+                        'slotDate'    => $slotDate,
+                        'freeSlots'   => $freeSlots,
+                    ]); ?>
+                <?php endif; ?>
+
                 <div class="acct-order__foot">
-                    <?php if ($a['status'] === 'done' || $a['appointment_date'] < $today): ?>
-                        <a class="acct-btn acct-btn--primary acct-btn--sm" href="/dat-lich">Đặt lại</a>
+                    <?php if ($callable): ?>
+                        <span class="acct-order__footnote"><?= e($blocker) ?></span>
                     <?php endif; ?>
-                    <!-- Đổi/huỷ lịch cần đối chiếu khung giờ còn trống của cơ
-                         sở, nên làm qua tổng đài chứ không tự sửa tại đây. -->
-                    <a class="acct-btn acct-btn--outline acct-btn--sm" href="/lien-he">Đổi hoặc huỷ lịch</a>
+
+                    <div class="acct-order__acts">
+                        <?php if ($a['status'] === 'done' || $a['appointment_date'] < $today): ?>
+                            <a class="acct-btn acct-btn--primary acct-btn--sm" href="/dat-lich">Đặt lại</a>
+                        <?php endif; ?>
+
+                        <?php if ($blocker === null): ?>
+                            <?php if (!$isEditing): ?>
+                                <a class="acct-btn acct-btn--primary acct-btn--sm"
+                                   href="<?= e($editHref($a['code'], max($a['appointment_date'], $today))) ?>">
+                                    Đổi giờ hẹn
+                                </a>
+                            <?php endif; ?>
+
+                            <?php
+                            /* Huỷ là thao tác KHÔNG lấy lại được, nên nó là <form>
+                               POST có CSRF, và có một lớp hỏi lại. onsubmit chỉ là
+                               lớp thứ hai: tắt JS thì vẫn huỷ được, nhưng nút nằm
+                               ở dạng lặng nhất trong chân thẻ. */
+                            ?>
+                            <form method="post" action="/tai-khoan/lich-hen/huy"
+                                  onsubmit="return confirm('Huỷ lịch hẹn <?= e($a['code']) ?>? Khung giờ này sẽ mở lại cho người khác.');">
+                                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                <input type="hidden" name="code" value="<?= e($a['code']) ?>">
+                                <button type="submit" class="acct-btn acct-btn--quiet acct-btn--sm">
+                                    Huỷ lịch
+                                </button>
+                            </form>
+                        <?php elseif ($callable): ?>
+                            <!-- Ngoài hạn tự sửa: tổng đài còn kịp gọi người trong
+                                 danh sách chờ, còn form thì không. -->
+                            <a class="acct-btn acct-btn--outline acct-btn--sm" href="/lien-he">Gọi tổng đài</a>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         <?php endforeach; ?>

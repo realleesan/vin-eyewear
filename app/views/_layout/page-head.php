@@ -63,7 +63,7 @@ if (!$hasTitle && !$hasLead) {
 
         <?php if ($head_crumbs !== []): ?>
             <nav class="pagehead__crumbs" aria-label="Đường dẫn">
-                <a href="/">Trang chủ</a>
+                <a href="/"><?= e(t('nav.home')) ?></a>
                 <?php foreach ($head_crumbs as $crumb): ?>
                     <span class="pagehead__sep" aria-hidden="true">/</span>
                     <?php if (!empty($crumb['url'])): ?>

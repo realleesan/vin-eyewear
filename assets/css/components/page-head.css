@@ -20,18 +20,27 @@
    khung của trang gọi nó.
    ============================================================ */
 
+/* TRÀN HAI MÉP, chữ thụt vào đúng --page-edge — cùng nhịp với trang chủ.
+   Bản trước là một khối bo góc cách mép 32px với đệm trong 72px, nên chữ rơi
+   vào 104px trong khi wordmark trên header và chân trang đều ở 96px: lệch 8px,
+   đủ để thấy khi cuộn từ header xuống.
+
+   Trang chủ không có khối này; thứ tương đương là hero — nền tràn sát mép,
+   chữ bắt đầu ở --page-edge. Khối đầu trang nay theo đúng cách đó, và vì đã
+   tràn mép thì không còn bo góc nữa. */
 .pagehead {
-    margin: 8px 32px 0;
-    padding: 56px 72px 60px;
+    margin: 0;
+    padding: 56px var(--page-edge) 60px;
     background: var(--brand-subtle);
-    border-radius: 36px;
 }
 
+/* Chặn ở --container giống mọi khối trang chủ: dưới 1792px thì hai bên khớp
+   nhau tuyệt đối, trên mức đó cột chữ mới bắt đầu thụt vào cho khỏi dài quá. */
 .pagehead__inner {
     display: flex;
     flex-direction: column;
     gap: 18px;
-    max-width: 1280px;
+    max-width: var(--container, 1600px);
     margin: 0 auto;
 }
 
@@ -100,7 +109,7 @@
 .pagehead__badge {
     align-self: flex-start;
     padding: 7px 16px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
     color: var(--brand);
     font-size: 11.5px;
@@ -145,7 +154,7 @@
    chúng đứng sau trong file mà cùng độ đặc hiệu, không loại trừ thì bản chỉ
    có breadcrumb bị trả lại đệm 44px và lề 16px của khối nền. */
 @media (max-width: 1024px) {
-    .pagehead:not(.pagehead--bare) { padding: 44px 40px 48px; }
+    .pagehead:not(.pagehead--bare) { padding: 44px var(--page-edge) 48px; }
 
     .pagehead__row {
         flex-direction: column;
@@ -157,9 +166,5 @@
 }
 
 @media (max-width: 720px) {
-    .pagehead:not(.pagehead--bare) {
-        margin: 8px 16px 0;
-        padding: 32px 24px 36px;
-        border-radius: 28px;
-    }
+    .pagehead:not(.pagehead--bare) { padding: 32px var(--page-edge) 36px; }
 }

@@ -9,7 +9,7 @@
  * dày nét khác nhau.
  *
  * Nhận qua partial():
- *   $key — khoá mục ('don-hang' | 'do-mat' | 'uu-dai' | 'lich-hen')
+ *   $key — khoá mục ('don-hang' | 'do-mat' | 'lich-hen')
  */
 ?>
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -24,11 +24,6 @@
             <circle cx="6.5" cy="12" r="4"></circle>
             <circle cx="17.5" cy="12" r="4"></circle>
             <path d="M10.5 12h3M2.5 10.5L1 9M21.5 10.5L23 9"></path>
-            <?php break;
-
-        case 'uu-dai': ?>
-            <rect x="3" y="8" width="18" height="4" rx="1"></rect>
-            <path d="M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8M12 8v13M12 8s-4.5.2-5.5-2C5.8 4.4 7.5 3 9 3.5c2 .7 3 4.5 3 4.5s1-3.8 3-4.5c1.5-.5 3.2.9 2.5 2.5-1 2.2-5.5 2-5.5 2z"></path>
             <?php break;
 
         case 'lich-hen': ?>

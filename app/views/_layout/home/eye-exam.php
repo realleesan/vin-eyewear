@@ -3,10 +3,13 @@
 /**
  * _layout/home/eye-exam.php — dịch vụ đo mắt (S14).
  *
- * Dựng theo "Vin Eyewear Home.dc.html": khối nền nâu sẫm bo 36px, chia hai
- * cột. Trái là ảnh cửa hàng bo hình vòm; phải là nhãn · tiêu đề · 5 bước quy
- * trình (số thứ tự — tên bước — ghi chú căn phải, ngăn nhau bằng đường kẻ mờ)
- * · nút "Đặt lịch đo mắt" viền mảnh.
+ * Dựng theo "Vin Eyewear Home.dc.html": dải nền nâu sẫm CHẠY HẾT BỀ NGANG
+ * trang, chia hai cột. Trái là ảnh cửa hàng bo 6px; phải là nhãn · tiêu đề
+ * · 5 bước quy trình (số thứ tự — tên bước — ghi chú căn phải, ngăn nhau bằng
+ * đường kẻ mờ) · nút "Đặt lịch đo mắt" viền mảnh.
+ *
+ * Bản trước là một khối bo 36px có lề hai bên. Thiết kế này cho dải tối tràn
+ * sát mép màn hình, cùng cách với dải cam kết dưới hero và khối CTA cuối trang.
  */
 
 $steps = [

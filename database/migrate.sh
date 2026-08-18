@@ -1,0 +1,238 @@
+#!/usr/bin/env bash
+#
+# database/migrate.sh — áp các file trong database/migrations/ lên CSDL ĐANG CHẠY.
+#
+#     sudo bash database/migrate.sh            # áp những file còn thiếu
+#     sudo bash database/migrate.sh --status    # chỉ liệt kê, KHÔNG đụng vào DB
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# VÌ SAO CẦN FILE NÀY, TRONG KHI ĐÃ CÓ setup.sh
+#
+# setup.sh chỉ nạp database/schema.sql, và CHỈ nạp khi database còn trống. Gặp
+# database đã có bảng thì nó vào chế độ sửa chữa và bỏ qua schema — đúng, vì
+# schema.sql mở đầu bằng DROP TABLE cho cả 22 bảng.
+#
+# Hệ quả: một máy cài từ bản schema cũ rồi `git pull` sẽ KHÔNG bao giờ nhận
+# được bảng và cột mới, mà cũng không có gì báo. Nó chỉ lộ ra khi mở một trang
+# chạm tới bảng thiếu và nhận 500 — đúng cái đã xảy ra với trang tài khoản
+# (bảng `user_vouchers` và `addresses` không tồn tại).
+#
+# File này lấp đúng khoảng đó: áp từng file migration một, ghi sổ lại, chạy
+# lại bao nhiêu lần cũng không hỏng gì.
+# ─────────────────────────────────────────────────────────────────────────────
+# HAI CƠ CHẾ CHỐNG ÁP HAI LẦN
+#
+# Cần cả hai, vì chúng chặn hai tình huống khác nhau:
+#
+#   1. SỔ GHI (bảng `schema_migrations`). Chặn việc chạy lại chính script này.
+#   2. CỘT MỐC (sentinel). Chặn việc áp lại file mà ai đó đã chạy TAY từ trước,
+#      hồi chưa có sổ. Mỗi migration khai một thứ mà chỉ nó tạo ra; thứ đó có
+#      sẵn nghĩa là file đã chạy rồi, script chỉ ghi sổ chứ không chạy lại.
+#
+# Không có cơ chế 2 thì trên máy hiện tại script sẽ chết ngay file đầu tiên:
+# `2026-08-14` thêm UNIQUE KEY `uq_profiles_phone`, mà khoá đó đã tồn tại —
+# ALTER lần hai đổ "Duplicate key name". Ba trong bảy file không có
+# IF NOT EXISTS nên đây không phải phòng xa.
+# ─────────────────────────────────────────────────────────────────────────────
+# THỨ TỰ TRONG MIGRATIONS[] LÀ THỨ TỰ CHẠY — KHÔNG PHẢI THỨ TỰ TÊN FILE
+#
+# `2026-08-16-gio-hang-ma-giam-gia` chạy ALTER TABLE `vouchers`, mà bảng đó do
+# `2026-08-16-trang-tai-khoan` tạo. Xếp theo alphabet thì "gio-hang" đứng trước
+# "trang-tai-khoan" và ALTER đổ "Table doesn't exist". Chính đầu file gio-hang
+# cũng ghi "CHẠY FILE ĐÓ TRƯỚC".
+#
+# Thêm migration mới thì THÊM MỘT DÒNG vào cuối mảng dưới đây. File nằm trong
+# thư mục mà không có trong mảng sẽ bị script báo và bỏ qua, chứ không tự đoán
+# chỗ chèn.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Vì sao cần sudo: tài khoản MySQL của ứng dụng chỉ có SELECT/INSERT/UPDATE/
+# DELETE (setup.sh cố ý không cấp CREATE/ALTER — một lỗ SQL injection lọt lưới
+# cũng không DROP được bảng nào). Đổi cấu trúc bảng phải mượn quyền root, mà
+# trên Ubuntu root của MySQL dùng plugin auth_socket nên chỉ vào được khi tiến
+# trình chạy dưới quyền root của hệ điều hành.
+
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MIG_DIR="${ROOT_DIR}/database/migrations"
+
+STATUS_ONLY=0
+[[ "${1:-}" == "--status" ]] && STATUS_ONLY=1
+
+if [[ -n "${1:-}" && "${1}" != "--status" ]]; then
+    echo "Dùng: sudo bash database/migrate.sh [--status]" >&2
+    exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# Bảng migration: "tên file|loại cột mốc|bảng|tên"
+#
+#   table   -> đã có BẢNG <bảng> chưa
+#   column  -> bảng <bảng> đã có CỘT <tên> chưa
+#   index   -> bảng <bảng> đã có CHỈ MỤC <tên> chưa
+#
+# Cột mốc phải là thứ CHỈ file đó tạo ra. Chọn nhầm sang thứ file khác cũng
+# tạo thì script sẽ bỏ qua một migration chưa chạy.
+# ---------------------------------------------------------------------------
+MIGRATIONS=(
+    "2026-08-14-dang-nhap-sdt-ghi-nho-quen-mat-khau.sql|index|profiles|uq_profiles_phone"
+    "2026-08-15-bo-suu-tap.sql|column|products|collection"
+    "2026-08-15-dang-ky-nhan-tin.sql|table|newsletter_subscribers|"
+    "2026-08-16-bien-the-va-danh-gia.sql|table|product_variants|"
+    "2026-08-16-trang-tai-khoan.sql|table|addresses|"
+    "2026-08-16-gio-hang-ma-giam-gia.sql|column|orders|discount"
+    "2026-08-16-thanh-toan-chon-co-so.sql|column|orders|store_id"
+)
+
+# ---------------------------------------------------------------------------
+# Kiểm tra điều kiện chạy
+# ---------------------------------------------------------------------------
+command -v mysql >/dev/null 2>&1 || { echo "✗ Thiếu lệnh mysql." >&2; exit 1; }
+
+if [[ ! -f "${ROOT_DIR}/.env" ]]; then
+    echo "✗ Chưa có .env — chạy 'sudo bash database/setup.sh' trước." >&2
+    exit 1
+fi
+
+# Đọc tên database từ .env. cut -d= -f2- chứ không phải -f2: mật khẩu và một
+# số giá trị khác có thể chứa dấu '=' (ở đây là tên DB nên hiếm, nhưng dùng
+# chung một lối đọc cho cả file thì không phải nhớ ngoại lệ).
+DB_NAME="$(grep -E '^DB_NAME=' "${ROOT_DIR}/.env" | head -1 | cut -d= -f2- | tr -d '"'"'"' \r')"
+DB_NAME="${DB_NAME:-vin_eyewear}"
+
+if ! mysql -e 'SELECT 1;' >/dev/null 2>&1; then
+    echo "✗ Không kết nối được MySQL bằng quyền root." >&2
+    echo "  Script này phải chạy qua sudo (root dùng plugin auth_socket)." >&2
+    exit 1
+fi
+
+if ! mysql -N -B -e "SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='${DB_NAME}';" | grep -q .; then
+    echo "✗ Không thấy database '${DB_NAME}'. Chạy 'sudo bash database/setup.sh' trước." >&2
+    exit 1
+fi
+
+echo "→ Database: ${DB_NAME}"
+
+# ---------------------------------------------------------------------------
+# Sổ ghi
+# ---------------------------------------------------------------------------
+if [[ "${STATUS_ONLY}" -eq 0 ]]; then
+    mysql --database="${DB_NAME}" <<'SQL'
+CREATE TABLE IF NOT EXISTS `schema_migrations` (
+    `filename`   VARCHAR(191) NOT NULL,
+    `applied_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`filename`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+SQL
+fi
+
+# Đã ghi sổ chưa? (bảng có thể chưa tồn tại ở chế độ --status)
+in_ledger() {
+    local n
+    n="$(mysql -N -B --database="${DB_NAME}" -e \
+        "SELECT COUNT(*) FROM information_schema.TABLES
+          WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='schema_migrations';")"
+    [[ "${n}" == "0" ]] && return 1
+
+    n="$(mysql -N -B --database="${DB_NAME}" -e \
+        "SELECT COUNT(*) FROM \`schema_migrations\` WHERE filename='${1}';")"
+    [[ "${n}" != "0" ]]
+}
+
+# Cột mốc đã tồn tại chưa?
+sentinel_exists() {
+    local kind="$1" table="$2" name="$3" n
+    case "${kind}" in
+        table)
+            n="$(mysql -N -B -e "SELECT COUNT(*) FROM information_schema.TABLES
+                 WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='${table}';")" ;;
+        column)
+            n="$(mysql -N -B -e "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='${table}'
+                   AND COLUMN_NAME='${name}';")" ;;
+        index)
+            n="$(mysql -N -B -e "SELECT COUNT(*) FROM information_schema.STATISTICS
+                 WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='${table}'
+                   AND INDEX_NAME='${name}';")" ;;
+        *)
+            echo "✗ Loại cột mốc lạ: ${kind}" >&2; exit 1 ;;
+    esac
+    [[ "${n}" != "0" ]]
+}
+
+# ---------------------------------------------------------------------------
+# Chạy
+# ---------------------------------------------------------------------------
+applied=0
+skipped=0
+
+for row in "${MIGRATIONS[@]}"; do
+    IFS='|' read -r file kind table name <<< "${row}"
+    path="${MIG_DIR}/${file}"
+
+    if [[ ! -f "${path}" ]]; then
+        printf '  %-52s ✗ không thấy file\n' "${file}"
+        exit 1
+    fi
+
+    if in_ledger "${file}"; then
+        printf '  %-52s · đã ghi sổ\n' "${file}"
+        skipped=$((skipped + 1))
+        continue
+    fi
+
+    if sentinel_exists "${kind}" "${table}" "${name}"; then
+        printf '  %-52s · đã áp từ trước, ghi sổ\n' "${file}"
+        [[ "${STATUS_ONLY}" -eq 0 ]] && mysql --database="${DB_NAME}" -e \
+            "INSERT IGNORE INTO \`schema_migrations\` (filename) VALUES ('${file}');"
+        skipped=$((skipped + 1))
+        continue
+    fi
+
+    if [[ "${STATUS_ONLY}" -eq 1 ]]; then
+        printf '  %-52s → CHƯA ÁP\n' "${file}"
+        applied=$((applied + 1))
+        continue
+    fi
+
+    printf '  %-52s → đang áp…' "${file}"
+
+    # Mỗi file một lần gọi mysql: client tự tách câu lệnh đúng cách, không
+    # phải tự cắt chuỗi theo dấu ';' (dấu đó còn nằm trong chú thích và trong
+    # chuỗi ký tự).
+    if mysql --database="${DB_NAME}" < "${path}"; then
+        mysql --database="${DB_NAME}" -e \
+            "INSERT INTO \`schema_migrations\` (filename) VALUES ('${file}');"
+        echo " xong"
+        applied=$((applied + 1))
+    else
+        echo " LỖI"
+        echo >&2
+        echo "  Dừng lại tại '${file}'. Các file trước đã áp xong và đã ghi sổ," >&2
+        echo "  nên sửa xong lỗi thì chạy lại script này, nó đi tiếp từ đây." >&2
+        exit 1
+    fi
+done
+
+# ---------------------------------------------------------------------------
+# File nằm trong thư mục nhưng chưa khai trong MIGRATIONS[]
+# ---------------------------------------------------------------------------
+for path in "${MIG_DIR}"/*.sql; do
+    [[ -e "${path}" ]] || continue
+    file="$(basename "${path}")"
+
+    if ! printf '%s\n' "${MIGRATIONS[@]}" | cut -d'|' -f1 | grep -qx "${file}"; then
+        echo
+        echo "  ⚠  '${file}' chưa khai trong MIGRATIONS[] của script này nên bị bỏ qua."
+        echo "     Thêm một dòng vào cuối mảng đó (kèm cột mốc) rồi chạy lại."
+    fi
+done
+
+echo
+if [[ "${STATUS_ONLY}" -eq 1 ]]; then
+    echo "✓ ${applied} file chưa áp · ${skipped} file đã xong."
+else
+    echo "✓ Áp ${applied} file · bỏ qua ${skipped} file đã có."
+    echo "  Kiểm lại:  php database/schema-check.php"
+fi

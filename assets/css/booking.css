@@ -37,9 +37,9 @@
     --bk-faint: #b0a094;
     --bk-hi:    #6e1b28;
 
-    max-width: 1392px;
+    max-width: var(--container, 1600px);
     margin: 0 auto;
-    padding: 48px 56px 96px;
+    padding: 48px var(--page-edge) 96px;
 }
 
 .bk__grid {
@@ -76,7 +76,7 @@
     flex-direction: column;
     gap: 20px;
     padding: 32px 36px;
-    border-radius: 28px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     box-shadow: 0 2px 10px rgba(90, 40, 40, 0.05);
 }
@@ -94,7 +94,7 @@
     justify-content: center;
     width: 32px;
     height: 32px;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--brand-subtle);
     color: var(--brand);
     font-family: var(--font-serif);
@@ -126,7 +126,7 @@
     gap: 14px;
     padding: 18px 20px;
     border: 1.5px solid var(--bk-line);
-    border-radius: 20px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
@@ -150,7 +150,7 @@
     height: 18px;
     margin: 0;
     border: 1.5px solid #d8c7ba;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--surface-raised);
     cursor: pointer;
     transition: border 0.15s;
@@ -190,7 +190,7 @@
 .bkpill {
     padding: 11px 22px;
     border: 1.5px solid var(--bk-line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
     color: var(--bk-ink2);
     font-size: 13.5px;
@@ -235,7 +235,7 @@
 .bkday {
     padding: 10px 18px;
     border: 1.5px solid var(--bk-line);
-    border-radius: 18px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     color: var(--bk-ink2);
     cursor: pointer;
@@ -327,7 +327,7 @@
     width: 100%;
     padding: 13px 18px;
     border: 1px solid var(--bk-line);
-    border-radius: 16px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: inherit;
     font-size: 14px;
@@ -365,7 +365,7 @@
     flex-direction: column;
     gap: 16px;
     padding: 30px;
-    border-radius: 28px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     box-shadow: 0 2px 12px rgba(90, 40, 40, 0.06);
 }
@@ -407,7 +407,7 @@
 .bkside__cta {
     padding: 14px 0;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-family: inherit;
@@ -424,7 +424,7 @@
     align-items: center;
     gap: 10px;
     padding: 12px 16px;
-    border-radius: 14px;
+    border-radius: var(--radius-sm);
     background: #eef3e9;
     color: var(--bk-ok);
     font-size: 12.5px;
@@ -440,7 +440,7 @@
     flex-direction: column;
     gap: 14px;
     padding: 28px 30px;
-    border-radius: 28px;
+    border-radius: var(--radius);
     background: var(--brand-subtle);
 }
 
@@ -504,7 +504,7 @@
     gap: 10px;
     margin: 0;
     padding: 14px 20px;
-    border-radius: 18px;
+    border-radius: var(--radius);
     background: #fbeceb;
     color: #9a3128;
     font-size: 13.5px;
@@ -517,7 +517,7 @@
     flex-direction: column;
     gap: 10px;
     padding: 56px 40px;
-    border-radius: 28px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     text-align: center;
 }
@@ -657,7 +657,7 @@
     .bkcard {
         gap: 16px;
         padding: 22px 18px;
-        border-radius: 22px;
+        border-radius: var(--radius);
     }
 
     .bkcard__title { font-size: 19px; }

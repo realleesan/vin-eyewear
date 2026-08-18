@@ -28,8 +28,16 @@ class EventController extends BaseController
             $active = '';
         }
 
-        $page   = max(1, (int) ($_GET['page'] ?? 1));
-        $result = EventModel::paginateVisible($active, $page, self::PER_PAGE);
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+
+        /*
+         * Chỉ tab "Tất cả" mới có thẻ lớn nổi bật, nên chỉ nó cần lấy dư một
+         * bài ở trang 1 — xem tham số $leadExtra của paginateVisible(). Lọc
+         * theo nhóm thì không có thẻ lớn, lưới lấy đúng PER_PAGE.
+         */
+        $leadExtra = $active === '';
+
+        $result = EventModel::paginateVisible($active, $page, self::PER_PAGE, $leadExtra);
         $items  = $result['items'];
 
         /*
@@ -42,16 +50,38 @@ class EventController extends BaseController
          */
         $featured = null;
 
-        if ($active === '' && $result['page'] === 1 && $items !== []) {
+        if ($leadExtra && $result['page'] === 1 && $items !== []) {
             $featured = array_shift($items);
         }
+
+        /*
+         * MỘT TRANG CHIA LÀM HAI KHỐI, đúng như bản thiết kế dựng:
+         *
+         *   4 bài đầu  -> THẺ NGANG trong lưới 2 cột (ảnh trái, chữ phải)
+         *   còn lại    -> DANH SÁCH GỌN "Bài viết khác" (ảnh 64px một hàng)
+         *
+         * Vì sao không cho cả 9 bài vào lưới thẻ: 9 thẻ ngang xếp thành 5 hàng
+         * cao bằng nhau, và bài thứ 9 trông quan trọng y như bài thứ 1. Bản thiết
+         * kế cố tình hạ bậc phần đuôi — trang vẫn liệt kê đủ, nhưng mắt biết đâu
+         * là phần chính.
+         *
+         * TRANG CHỈ CÒN 1–2 BÀI thì lưới 2 cột sẽ hở một ô trống to bằng nửa
+         * trang. Bản thiết kế xử lý bằng cách cho thẻ chiếm CẢ HAI cột và đổi tỉ
+         * lệ ảnh sang 45% — xem $bigCards.
+         */
+        $bigCards = count($items) <= 2;
 
         $this->renderView('event/index', [
             'pageTitle'  => 'Sự kiện & Tin tức — Vin Eyewear',
             'metaDesc'   => 'Sự kiện, ưu đãi và tin tức mới nhất từ Vin Eyewear — '
                           . 'workshop chọn gọng, khám mắt miễn phí và các chương trình đặc biệt.',
             'featured'   => $featured,
+            // 'events' giữ nguyên để trang biết "có bài nào không"; hai khối bên
+            // dưới mới là thứ view lặp qua.
             'events'     => $items,
+            'cards'      => $bigCards ? $items : array_slice($items, 0, 4),
+            'compact'    => $bigCards ? [] : array_slice($items, 4),
+            'bigCards'   => $bigCards,
             'categories' => $categories,
             'counts'     => $this->counts($categories),
             'active'     => $active,

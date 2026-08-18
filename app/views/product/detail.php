@@ -153,6 +153,10 @@ $stars = static function (float $score): string {
                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="product_id" value="<?= e($product['id']) ?>">
 
+                <?php /* Nơi quay về sau khi chọn hình thức mua — hộp thoại
+                         "Chọn hình thức mua" hiện đè lên chính trang này. */ ?>
+                <input type="hidden" name="back" value="<?= e(currentUrlWithout(['mua', 'buoc'])) ?>">
+
                 <?php if ($variants !== []): ?>
                     <div class="pdopts">
                         <span class="pdopts__label" id="nhan-pa">Chiết suất — chọn theo độ cận</span>
@@ -355,11 +359,11 @@ $stars = static function (float $score): string {
     <?php if ($related !== []): ?>
         <section class="pdrelated" aria-labelledby="lien-quan">
             <h2 class="pdcard__title" id="lien-quan">Sản phẩm liên quan</h2>
-            <div class="plist__grid">
+            <ul class="pcard__grid" role="list">
                 <?php foreach ($related as $item): ?>
                     <?php partial('_layout/product-card', ['product' => $item]); ?>
                 <?php endforeach; ?>
-            </div>
+            </ul>
         </section>
     <?php endif; ?>
 </section>

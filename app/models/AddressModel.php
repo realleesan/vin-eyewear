@@ -73,6 +73,48 @@ class AddressModel extends BaseModel
         );
     }
 
+    /**
+     * Tách cột `line2` thành hai mẩu cho form thanh toán.
+     *
+     * HAI BẢNG GHI ĐỊA CHỈ THEO HAI HÌNH KHÁC NHAU, đây là chỗ nối chúng lại:
+     *
+     *   sổ địa chỉ   line1 "số nhà, ngách, ngõ, đường"
+     *                line2 "phường / xã, tỉnh / thành phố"   ← MỘT ô
+     *   thanh toán   address_line · address_ward · address_city  ← BA ô
+     *
+     * Cắt ở dấu phẩy CUỐI CÙNG chứ không phải dấu đầu tiên: phần tỉnh/thành
+     * luôn đứng cuối trong cách người Việt viết địa chỉ, còn phần phường/xã có
+     * thể tự nó chứa dấu phẩy ("Phường Tây Hồ, Quận Tây Hồ").
+     *
+     * Đây là PHỎNG ĐOÁN có kiểm soát, không phải phép biến đổi chắc chắn — nên
+     * nó chỉ dùng để ĐIỀN SẴN form, nơi khách nhìn thấy và sửa được ngay. Đừng
+     * dùng nó ở chỗ ghi thẳng vào đơn hàng mà không ai xem lại.
+     *
+     * Không có dấu phẩy thì mẩu duy nhất đó vào ô TỈNH/THÀNH PHỐ: đó là đơn vị
+     * rộng nhất và là phần bắt buộc phải có trong mọi địa chỉ, còn phường/xã
+     * thì người ta hay bỏ qua. Đoán sai cũng chỉ tốn của khách một ô gõ lại.
+     *
+     * @return array{0:string, 1:string} [phường/xã, tỉnh/thành phố]
+     */
+    public static function splitArea(?string $line2): array
+    {
+        $line2 = trim((string) $line2);
+
+        if ($line2 === '') {
+            return ['', ''];
+        }
+
+        // strrpos() an toàn với UTF-8 ở đây: dấu phẩy là ký tự ASCII một byte,
+        // không thể trùng với byte giữa chừng của một ký tự nhiều byte.
+        $cut = strrpos($line2, ',');
+
+        if ($cut === false) {
+            return ['', $line2];
+        }
+
+        return [trim(substr($line2, 0, $cut)), trim(substr($line2, $cut + 1))];
+    }
+
     // ========================================================================
     // GHI
     // ========================================================================

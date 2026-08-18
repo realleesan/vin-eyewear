@@ -34,9 +34,9 @@
 
     --o-shadow-step: 0 2px 10px rgba(90, 40, 40, 0.05);
 
-    max-width: 1392px;
+    max-width: var(--container, 1600px);
     margin: 0 auto;
-    padding: 24px 56px 96px;
+    padding: 24px var(--page-edge) 96px;
     /* Khung rút gọn cho <main> display:flex, nên khối này phải tự chiếm hết
        bề ngang — xem body.is-bare trong components/bare-shell.css. */
     width: 100%;
@@ -45,20 +45,60 @@
 
 .checkout a { text-decoration: none; }
 
-/* --- Tiêu đề ---
-   Chỉ còn tiêu đề. Bộ lớp breadcrumb (.cohead__crumbs/__sep/__here) đã bỏ
-   cùng lúc với markup — lý do ghi trong app/views/order/checkout.php. */
+/* --- Breadcrumb + tiêu đề --- */
 
 .cohead {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     padding: 12px 6px 24px;
+}
+
+.cohead__crumbs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.cohead__crumbs a { color: var(--eyebrow); }
+.cohead__crumbs a:hover { color: var(--brand); }
+
+.cohead__sep { opacity: 0.5; }
+
+.cohead__here {
+    color: var(--brand);
+    font-weight: 600;
 }
 
 .cohead__title {
     margin: 0;
     font-family: var(--font-serif);
+    /* 30px — đúng bản thiết kế. Nhỏ hơn tiêu đề khối của trang chủ (36px) là
+       CÓ CHỦ Ý: trang này không mời đọc, nó đứng trên một biểu mẫu dài và
+       nhường trọng lượng thị giác cho ba thẻ bước bên dưới. */
     font-size: 30px;
     font-weight: 600;
     color: var(--ink);
+}
+
+/* Nút gửi mặc định vô hình ở đầu form — lý do trong order/checkout.php.
+   KHÔNG dùng display:none hay hidden: nút không được vẽ ra thì trình duyệt
+   không coi nó là nút gửi mặc định nữa, và cái bẫy quay lại y như cũ. */
+.cofallback {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+    overflow: hidden;
 }
 
 /* ============================================================
@@ -89,7 +129,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    border-radius: 28px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     padding: 32px 36px;
     box-shadow: var(--o-shadow-step);
@@ -107,7 +147,7 @@
     justify-content: center;
     width: 32px;
     height: 32px;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--brand-subtle);
     color: var(--brand);
     font-family: var(--font-serif);
@@ -171,7 +211,7 @@
     width: 100%;
     padding: 13px 18px;
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: var(--font-sans);
     font-size: 14px;
@@ -221,7 +261,7 @@
     width: 100%;
     padding: 18px 20px;
     border: 1.5px solid var(--line);
-    border-radius: 20px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     cursor: pointer;
 }
@@ -243,7 +283,7 @@
     width: 18px;
     height: 18px;
     border: 1.5px solid var(--o-edge);
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--surface-raised);
     flex-shrink: 0;
 }
@@ -297,7 +337,7 @@
 
 .cocard__soon {
     padding: 3px 10px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface-sunken);
     font-size: 11px;
     font-weight: 600;
@@ -362,7 +402,7 @@
     place-items: center;
     width: 60px;
     height: 60px;
-    border-radius: 14px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     background: var(--surface-sunken);
     flex-shrink: 0;
@@ -394,6 +434,19 @@
     color: var(--o-note);
 }
 
+/* Tròng cắt kèm — hai dòng phụ dưới tên hàng. Tông thương hiệu để tách khỏi
+   dòng phiên bản màu xám ngay trên nó. */
+.coitem__lens {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.coitem__rx {
+    font-size: 11.5px;
+    color: var(--o-note);
+}
+
 .coitem__price {
     font-size: 13.5px;
     font-weight: 600;
@@ -411,7 +464,7 @@
     gap: 10px;
     margin: 0;
     padding: 22px 26px;
-    border-radius: 24px;
+    border-radius: var(--radius);
     background: var(--brand-subtle);
     list-style: none;
 }
@@ -426,6 +479,495 @@
 }
 
 .cotrust svg { flex-shrink: 0; }
+
+/* ============================================================
+   MÃ GIẢM GIÁ TRONG KHỐI TÓM TẮT
+
+   Bản thiết kế vẽ một DANH SÁCH THẢ XUỐNG, khác hẳn ô gõ mã của giỏ hàng
+   (.cvou* trong cart.css) — nên đây là bộ lớp riêng .covou*, không phải một
+   biến thể của bộ kia.
+
+   Mở/đóng bằng <details>/<summary>, không JavaScript.
+   ============================================================ */
+
+.covou {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* position:relative để bảng thả xuống bám theo nút, không đẩy khối tổng tiền
+   bên dưới trôi xuống mỗi lần mở. */
+.covou__pick { position: relative; }
+
+.covou__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    font-size: 13.5px;
+    color: #8a7a72;
+    text-align: left;
+    cursor: pointer;
+    list-style: none;
+}
+
+/* Tam giác mặc định của <summary> — bản thiết kế dùng chevron riêng bên phải */
+.covou__toggle::-webkit-details-marker { display: none; }
+.covou__toggle::marker { content: ''; }
+
+.covou__toggle:hover { border-color: #c9a79b; }
+
+.covou__toggle:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.covou__chev {
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.covou__pick[open] .covou__chev { transform: rotate(180deg); }
+
+.covou__menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 8px);
+    border: 1px solid #eee0d4;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    box-shadow: 0 20px 48px rgba(90, 40, 40, 0.2);
+    overflow: hidden;
+    /* Nổi trên khối tổng tiền và nút "Đặt hàng" ngay bên dưới */
+    z-index: 50;
+}
+
+.covou__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    text-align: left;
+    cursor: pointer;
+}
+
+.covou__item + .covou__item { border-top: 1px solid var(--o-rule); }
+
+.covou__item:hover { background: var(--surface); }
+
+/* Mã chưa đủ điều kiện: vẫn hiện (dòng "Đơn tối thiểu…" là lời mời mua thêm)
+   nhưng không bấm được — xem ghi chú trong order/checkout.php. */
+.covou__item:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.covou__item:disabled:hover { background: var(--surface-raised); }
+
+.covou__itembody {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.covou__code {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.covou__desc {
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.covou__min {
+    font-size: 11px;
+    color: var(--o-note);
+}
+
+.covou__cut {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #3f8a4e;
+    white-space: nowrap;
+}
+
+/* --- Mã đang áp --- */
+
+.covou__on {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border: 1px solid #cfe0c6;
+    border-radius: var(--radius-sm);
+    background: #eef4ea;
+    color: #4d7a3f;
+}
+
+.covou__on svg { flex-shrink: 0; }
+
+.covou__onbody {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+
+.covou__oncode {
+    font-size: 13px;
+    font-weight: 700;
+    color: #3f6633;
+}
+
+.covou__onnote {
+    font-size: 11.5px;
+    color: #6d8a5f;
+}
+
+.covou__off {
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: var(--radius-round);
+    background: none;
+    font-size: 13px;
+    color: #6d8a5f;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.covou__off:hover {
+    background: #dce9d4;
+    color: #3f6633;
+}
+
+.covou__none {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--o-note);
+}
+
+.covou__msg { font-size: 12px; }
+.covou__msg.is-ok  { color: #4d7a3f; }
+.covou__msg.is-err { color: #a24040; }
+
+/* ============================================================
+   MÀN "THANH TOÁN QR" (/thanh-toan/chuyen-khoan)
+
+   Màn thứ hai của "Vin Eyewear Checkout.dc.html", hiện ngay sau khi đặt một
+   đơn CHUYỂN KHOẢN. Markup: app/views/order/transfer.php
+
+   Hẹp hơn màn form (1100px so với 1392px) và cột QR đứng TRƯỚC — ở đây chỉ
+   còn một việc để làm, nên nó chiếm chỗ đắt nhất của màn hình.
+   ============================================================ */
+
+.coqr {
+    --o-note: #9a877f;
+    --o-rule: #f0e4d8;
+
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 32px var(--page-edge) 96px;
+    box-sizing: border-box;
+}
+
+.coqr a { text-decoration: none; }
+
+/* --- Đầu màn --- */
+
+.coqr__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.coqr__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-round);
+    background: var(--surface-raised);
+    color: #4a3b38;
+    flex-shrink: 0;
+}
+
+.coqr__back:hover {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+.coqr__titles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.coqr__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.coqr__code {
+    font-size: 12.5px;
+    color: var(--o-note);
+}
+
+/* --- Hai cột --- */
+
+.coqr__grid {
+    display: grid;
+    grid-template-columns: 400px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+}
+
+.coqr__card {
+    /* Token, không phải con số riêng: bản thiết kế vẽ 24px nhưng cả site đi
+       theo "Home.dc.html" — xem khối "ĐỘ BO GÓC" trong layout.css. */
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    box-shadow: 0 2px 12px rgba(90, 40, 40, 0.06);
+}
+
+/* --- Cột trái: mã QR --- */
+
+.coqr__pay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 30px 28px;
+}
+
+.coqr__payhead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+}
+
+.coqr__paytitle {
+    font-size: 16.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.coqr__paysub {
+    font-size: 12.5px;
+    color: var(--o-note);
+}
+
+.coqr__frame {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    width: 210px;
+    height: 210px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+}
+
+.coqr__frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Chưa cấu hình tài khoản nhận tiền (config/company.php) — khung vẫn giữ chỗ
+   để bố cục không xô lệch, nhưng nói thẳng là chưa có mã. */
+.coqr__nocode {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--o-note);
+    text-align: center;
+}
+
+.coqr__bank {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 16px 18px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.coqr__bank > div {
+    display: flex;
+    gap: 6px;
+}
+
+.coqr__bank dt { flex-shrink: 0; }
+
+.coqr__bank dd {
+    margin: 0;
+    font-weight: 600;
+    color: var(--ink);
+    /* Số tài khoản dài không được đẩy ngang khối */
+    word-break: break-word;
+}
+
+.coqr__amount {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px;
+    border: 1px solid #ecc9c0;
+    border-radius: var(--radius);
+    background: #f9e9e6;
+}
+
+.coqr__amountlabel {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.coqr__amountval {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 600;
+    color: #b3392b;
+}
+
+/* --- Cột phải: đơn hàng + xác nhận --- */
+
+.coqr__side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.coqr__order {
+    display: flex;
+    flex-direction: column;
+    padding: 26px 28px;
+}
+
+.coqr__ordertitle {
+    margin: 0 0 10px;
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.coqr__line {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-top: 1px solid var(--o-rule);
+    font-size: 13.5px;
+    color: var(--muted);
+}
+
+/* Tên gói tròng dưới tên hàng ở màn QR */
+.coqr__lens {
+    display: block;
+    font-size: 12px;
+    color: var(--brand);
+}
+
+.coqr__linesum {
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+.coqr__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--o-rule);
+}
+
+.coqr__totallabel {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.coqr__totalval {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.coqr__done {
+    display: block;
+    padding: 16px 0;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.coqr__done:hover {
+    background: var(--brand-strong);
+    color: var(--on-brand);
+}
+
+.coqr__note {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--o-note);
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .coqr {
+        padding: 24px 16px 64px;
+    }
+
+    /* Cột QR 400px cố định sẽ tràn ở màn hẹp — về một cột, QR lên trên vì
+       đó vẫn là việc chính của màn này. */
+    .coqr__grid { grid-template-columns: minmax(0, 1fr); }
+
+    .coqr__title { font-size: 22px; }
+}
 
 /* ============================================================
    MỐC GÃY

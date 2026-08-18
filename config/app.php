@@ -39,4 +39,17 @@ return [
         '14:00', '15:00', '16:00', '17:00',
         '18:00', '19:00', '20:00',
     ],
+
+    /*
+     * Khách tự đổi/huỷ lịch hẹn được tới TRƯỚC GIỜ HẸN bao nhiêu giờ.
+     *
+     * Vì sao phải có hạn chứ không cho huỷ tới sát giờ: cửa hàng đã chặn khung
+     * giờ đó, xếp người và có khi đã lấy hồ sơ khúc xạ cũ ra. Huỷ trước 10 phút
+     * thì khung giờ mở lại cũng không ai kịp đặt — thực chất là một lần không
+     * đến, chỉ khác cái tên. Trong hạn này thì khách gọi tổng đài, để nhân viên
+     * còn kịp gọi người trong danh sách chờ.
+     *
+     * Đặt 0 là bỏ hạn hoàn toàn. Luật đọc con số này ở BookingModel::changeBlocker.
+     */
+    'booking_change_cutoff_hours' => 2,
 ];

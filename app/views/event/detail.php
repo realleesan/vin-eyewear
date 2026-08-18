@@ -196,11 +196,11 @@ partial('_layout/page-head', [
                 <a class="artmore__all" href="/su-kien">Tất cả bài viết →</a>
             </div>
 
-            <div class="nw__grid">
+            <div class="artmore__grid">
                 <?php foreach ($others as $other): ?>
                     <?php $url = '/su-kien/' . rawurlencode($other['slug']); ?>
-                    <a class="nwcard" href="<?= e($url) ?>">
-                        <span class="nwcard__media">
+                    <a class="artmore__card" href="<?= e($url) ?>">
+                        <span class="artmore__media">
                             <?php if (!empty($other['cover_image'])): ?>
                                 <img src="<?= e($other['cover_image']) ?>" alt=""
                                      width="420" height="200" loading="lazy" decoding="async">
@@ -217,16 +217,16 @@ partial('_layout/page-head', [
                             <?php endif; ?>
 
                             <?php if (!empty($other['category'])): ?>
-                                <span class="nwcard__tag"><?= e($other['category']) ?></span>
+                                <span class="artmore__tag"><?= e($other['category']) ?></span>
                             <?php endif; ?>
                         </span>
 
-                        <span class="nwcard__body">
-                            <span class="nwcard__date">
+                        <span class="artmore__body">
+                            <span class="artmore__date">
                                 <?= e(dateRange($other['starts_at'], $other['ends_at'])) ?>
                             </span>
-                            <span class="nwcard__title"><?= e($other['title']) ?></span>
-                            <span class="nwcard__more">Đọc tiếp <span aria-hidden="true">→</span></span>
+                            <span class="artmore__cardtitle"><?= e($other['title']) ?></span>
+                            <span class="artmore__more">Đọc tiếp <span aria-hidden="true">→</span></span>
                         </span>
                     </a>
                 <?php endforeach; ?>

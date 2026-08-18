@@ -1,7 +1,10 @@
 <?php
 
 /**
- * VoucherModel — mã ưu đãi (/tai-khoan?muc=uu-dai).
+ * VoucherModel — mã giảm giá.
+ *
+ * Dùng ở ô nhập mã trong giỏ hàng / thanh toán, và ở trang quản trị mã.
+ * KHÔNG còn phục vụ trang tài khoản: mục "Ưu đãi của tôi" đã gỡ.
  *
  * Dựng theo mục "Ưu đãi của tôi" của "Vin Eyewear Account.dc.html".
  *
@@ -26,54 +29,11 @@ class VoucherModel extends BaseModel
         'shipping' => 'Miễn phí vận chuyển',
     ];
 
-    /**
-     * Ưu đãi CÒN DÙNG ĐƯỢC của một khách.
-     *
-     * Ba điều kiện lọc, thiếu cái nào cũng ra mã không dùng được:
-     *   uv.used_at IS NULL   khách chưa dùng
-     *   v.is_active = 1      chương trình chưa bị quản trị tắt
-     *   v.expires_at >= hôm nay (hoặc NULL = không hạn)
-     *
-     * So sánh bằng CURDATE() chứ không phải NOW(): `expires_at` là kiểu DATE,
-     * mã hết hạn 31/08 phải dùng được tới hết ngày 31/08.
-     */
-    public static function forUser(string $userId): array
-    {
-        return Database::fetchAll(
-            'SELECT v.*, uv.granted_at
-               FROM user_vouchers uv
-               JOIN vouchers v ON v.id = uv.voucher_id
-              WHERE uv.user_id = :uid
-                AND uv.used_at IS NULL
-                AND v.is_active = 1
-                AND (v.expires_at IS NULL OR v.expires_at >= CURDATE())
-              ORDER BY v.expires_at IS NULL, v.expires_at ASC, v.title ASC',
-            ['uid' => $userId]
-        );
-    }
-
-    /**
-     * Số ưu đãi còn dùng được — cho huy hiệu đếm ở cột trái.
-     *
-     * Đếm bằng câu SQL riêng chứ không count(forUser()): cột trái hiện trên
-     * MỌI mục của trang tài khoản, nên câu này chạy cả khi khách đang xem đơn
-     * hàng và không cần tới nội dung từng mã.
-     */
-    public static function countForUser(string $userId): int
-    {
-        $row = Database::fetchOne(
-            'SELECT COUNT(*) AS n
-               FROM user_vouchers uv
-               JOIN vouchers v ON v.id = uv.voucher_id
-              WHERE uv.user_id = :uid
-                AND uv.used_at IS NULL
-                AND v.is_active = 1
-                AND (v.expires_at IS NULL OR v.expires_at >= CURDATE())',
-            ['uid' => $userId]
-        );
-
-        return (int) ($row['n'] ?? 0);
-    }
+    /* forUser() và countForUser() ĐÃ BỎ.
+       Hai hàm đó chỉ phục vụ mục "Ưu đãi của tôi" trong trang tài khoản, mà
+       mục đó đã gỡ. Phần còn lại của model vẫn chạy: evaluate() / apply() /
+       consume() cho ô nhập mã ở giỏ hàng và bước thanh toán, adminList() /
+       grantToAll() / grant() / markUsed() cho trang quản trị mã giảm giá. */
 
     // ========================================================================
     // KHU QUẢN TRỊ
@@ -120,6 +80,48 @@ class VoucherModel extends BaseModel
     // ========================================================================
     // ÁP MÃ Ở GIỎ HÀNG
     // ========================================================================
+
+    /**
+     * Danh sách mã khách CHỌN ĐƯỢC, cho ô "Mã giảm giá" ở trang thanh toán.
+     *
+     * "Vin Eyewear Checkout.dc.html" không vẽ ô gõ mã như giỏ hàng, mà vẽ một
+     * danh sách thả xuống: khách bấm chọn một mã trong đó. Muốn vẽ được danh
+     * sách thì phải có danh sách — evaluate() chỉ trả lời cho MỘT mã đã biết.
+     *
+     * Lọc ngay trong câu SQL, không lọc bằng PHP sau khi lấy hết: bảng này sẽ
+     * dài ra theo từng đợt khuyến mãi, mà một trang thanh toán chỉ cần vài mã
+     * đang chạy.
+     *
+     * KHÔNG lọc theo `min_order` ở đây. Mã chưa đủ điều kiện vẫn hiện, kèm
+     * dòng "Đơn tối thiểu …" — đó là thông tin bán hàng (mua thêm chút nữa là
+     * được giảm), giấu đi thì khách không biết mình đang bỏ lỡ cái gì.
+     * evaluate() vẫn là nơi chặn thật khi khách bấm chọn.
+     *
+     * @param  string|null $userId null = khách vãng lai, chỉ thấy mã công khai
+     * @return array<int, array<string, mixed>>
+     */
+    public static function selectable(?string $userId = null): array
+    {
+        // Mã RIÊNG chỉ hiện cho đúng người được phát và chưa dùng. Khách vãng
+        // lai không có dòng nào trong user_vouchers nên nhánh này bỏ hẳn — bớt
+        // một câu con vô nghĩa.
+        $ownClause = $userId === null
+            ? ''
+            : ' OR v.id IN (SELECT uv.voucher_id
+                              FROM user_vouchers uv
+                             WHERE uv.user_id = :uid AND uv.used_at IS NULL)';
+
+        return Database::fetchAll(
+            'SELECT v.*
+               FROM vouchers v
+              WHERE v.is_active = 1
+                AND (v.expires_at IS NULL OR v.expires_at >= CURDATE())
+                AND (v.max_uses IS NULL OR v.used_count < v.max_uses)
+                AND (v.is_public = 1' . $ownClause . ')
+              ORDER BY v.min_order ASC, v.created_at DESC',
+            $userId === null ? [] : ['uid' => $userId]
+        );
+    }
 
     /**
      * Tra một mã khách vừa gõ và kiểm xem có dùng được không.

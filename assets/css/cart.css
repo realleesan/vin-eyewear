@@ -38,11 +38,9 @@
     --k-shadow-item: 0 2px 10px rgba(90, 40, 40, 0.05);
     --k-shadow-sum:  0 2px 12px rgba(90, 40, 40, 0.06);
 
-    /* 1392px, giống trang danh sách sản phẩm và trang tài khoản: bản thiết kế
-       nới riêng các trang hai cột ra khỏi 1280px của khối trang chủ. */
-    max-width: 1392px;
+    max-width: var(--container, 1600px);
     margin: 0 auto;
-    padding: 24px 56px 96px;
+    padding: 24px var(--page-edge) 96px;
 }
 
 /* Bản thiết kế bỏ hẳn gạch chân mặc định của trình duyệt trên toàn trang.
@@ -57,13 +55,17 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-    padding: 12px 6px 24px;
+    /* Đệm ngang 0: tiêu đề trang phải thẳng hàng với wordmark trên header và
+       với tiêu đề của mọi trang khác. 6px cũ đẩy nó lệch đúng 6px. */
+    padding: 12px 0 24px;
 }
 
 .cart__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 30px;
+    /* 36px — cùng cỡ tiêu đề khối của trang chủ. Bản trước 30px, nên chuyển
+       từ trang chủ sang là chữ tụt hẳn một bậc mà không có lý do nào. */
+    font-size: 36px;
     font-weight: 600;
     color: var(--ink);
 }
@@ -81,7 +83,7 @@
 .cart__flash {
     margin: 0 0 16px;
     padding: 14px 22px;
-    border-radius: 18px;
+    border-radius: var(--radius);
     font-size: 13.5px;
     font-weight: 500;
 }
@@ -124,7 +126,7 @@
     width: 20px;
     height: 20px;
     border: 1.5px solid var(--k-edge);
-    border-radius: 7px;
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
     color: transparent;
     flex-shrink: 0;
@@ -147,7 +149,7 @@
     gap: 16px;
     /* 20px chứ không 24px như thẻ dòng hàng — bản thiết kế bo nhẹ hơn một nấc
        cho thanh mỏng này. */
-    border-radius: 20px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     padding: 16px 24px;
     box-shadow: var(--k-shadow-item);
@@ -191,7 +193,7 @@
     display: flex;
     align-items: center;
     gap: 20px;
-    border-radius: 24px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     padding: 22px 24px;
     box-shadow: var(--k-shadow-item);
@@ -214,7 +216,7 @@
     place-items: center;
     width: 96px;
     height: 96px;
-    border-radius: 18px;
+    border-radius: var(--radius);
     overflow: hidden;
     background: var(--k-shell);
     flex-shrink: 0;
@@ -279,7 +281,7 @@
     align-items: center;
     gap: 2px;
     border: 1.5px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     padding: 4px;
     flex-shrink: 0;
 }
@@ -291,7 +293,7 @@
     width: 32px;
     height: 32px;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: none;
     font-family: var(--font-sans);
     font-size: 16px;
@@ -332,7 +334,7 @@
 .cstep__num:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
 }
 
 /* --- Thành tiền + nút xoá --- */
@@ -364,6 +366,42 @@
 .citem__del:hover { color: var(--brand); }
 
 /* ============================================================
+   TRÒNG CẮT KÈM
+
+   Một dòng hàng có thể mang theo gói tròng khách chọn ở hộp thoại "Chọn hình
+   thức mua" (xem _layout/buy-modal.php). Hiện thành khối riêng có nền chứ
+   không gộp vào dòng phiên bản: nó là phần lớn nhất của khoản chênh giá, và
+   số đo mắt là thứ khách phải soát lại được TRƯỚC khi đặt — sai một con số là
+   một cặp tròng mài hỏng.
+   ============================================================ */
+
+.clens {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 2px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--brand-subtle);
+}
+
+.clens__name {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #6e4a42;
+}
+
+.clens__price { white-space: nowrap; }
+
+.clens__rx {
+    font-size: 11.5px;
+    color: #8a6a60;
+}
+
+/* ============================================================
    KHỐI TÓM TẮT
    ============================================================ */
 
@@ -382,7 +420,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    border-radius: 28px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     padding: 30px 30px 32px;
     box-shadow: var(--k-shadow-sum);
@@ -419,7 +457,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    border-radius: 14px;
+    border-radius: var(--radius-sm);
     background: #fdf3e3;
     padding: 12px 16px;
     font-size: 12.5px;
@@ -455,7 +493,7 @@
 .csum__cta {
     display: block;
     padding: 15px 0;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-size: 15px;
@@ -519,7 +557,7 @@
     flex-direction: column;
     gap: 12px;
     /* 24px chứ không 28px — thẻ nhỏ hơn nên bản thiết kế bo nhẹ hơn một nấc */
-    border-radius: 24px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     padding: 22px 26px;
     box-shadow: var(--k-shadow-item);
@@ -542,7 +580,7 @@
     min-width: 0;
     padding: 12px 16px;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: var(--font-sans);
     font-size: 13px;
@@ -563,7 +601,7 @@
 .cvou__apply {
     padding: 0 22px;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-family: var(--font-sans);
@@ -582,7 +620,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
-    border-radius: 16px;
+    border-radius: var(--radius-sm);
     background: var(--brand-subtle);
     padding: 14px 16px;
 }
@@ -632,7 +670,7 @@
     flex-direction: column;
     align-items: center;
     gap: 14px;
-    border-radius: 28px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     padding: 80px 32px;
     text-align: center;
@@ -644,7 +682,7 @@
     justify-content: center;
     width: 72px;
     height: 72px;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--brand-subtle);
 }
 
@@ -658,7 +696,7 @@
 .cart__empty-cta {
     margin-top: 8px;
     padding: 12px 28px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-size: 13.5px;

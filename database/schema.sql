@@ -493,9 +493,33 @@ CREATE TABLE `appointments` (
     `note`             TEXT         NULL,
     `status`           VARCHAR(32)  NOT NULL DEFAULT 'pending',
     `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- Mốc sửa gần nhất. Khách đổi lịch thì hàng này được sửa tại chỗ (giữ nguyên
+    -- mã lịch), nên thiếu cột này thì nhân viên không biết lịch đã bị đổi.
+    `updated_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                    ON UPDATE CURRENT_TIMESTAMP,
+    /*
+     * KHOÁ CHỐNG ĐẶT TRÙNG KHUNG GIỜ, chỉ áp cho lịch CÒN HIỆU LỰC.
+     *
+     * Cột sinh ra: NULL khi lịch đã huỷ, còn lại là bộ ba (cơ sở, ngày, giờ).
+     * MySQL bỏ qua NULL trong khoá duy nhất, nên một khung giờ có đúng một lịch
+     * còn hiệu lực, mà huỷ bao nhiêu lần cũng được — huỷ lịch TRẢ LẠI khung giờ.
+     *
+     * Trước đây khoá đặt thẳng lên (store_id, appointment_date, time_slot) và
+     * KHÔNG biết tới `status`, nên lịch đã huỷ vẫn giữ chỗ vĩnh viễn trong khi
+     * BookingModel::bookedSlots() lại báo khung giờ đó trống — xem
+     * database/migrations/2026-08-18-doi-huy-lich-hen.sql.
+     *
+     * Cần MySQL 5.7.6+ hoặc MariaDB 10.2+.
+     */
+    `slot_lock`        VARCHAR(96)
+        GENERATED ALWAYS AS (
+            CASE WHEN `status` = 'cancelled' THEN NULL
+                 ELSE CONCAT(`store_id`, '|', `appointment_date`, '|', `time_slot`)
+            END
+        ) STORED,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_appointments_code` (`code`),
-    UNIQUE KEY `uq_appointments_slot` (`store_id`, `appointment_date`, `time_slot`),
+    UNIQUE KEY `uq_appointments_active_slot` (`slot_lock`),
     KEY `idx_appointments_user` (`user_id`),
     KEY `idx_appointments_status` (`status`),
     CONSTRAINT `fk_appointments_user` FOREIGN KEY (`user_id`)
@@ -524,6 +548,19 @@ CREATE TABLE `orders` (
     -- nhận ở đâu và nhân viên phải gọi hỏi từng đơn.
     `store_id`         CHAR(36)     NULL,
     `payment_method`   VARCHAR(32)  NOT NULL DEFAULT 'cod',
+    -- CÁCH trả tiền (payment_method) và VIỆC tiền đã về hay chưa
+    -- (payment_status) là hai chuyện khác nhau, và cũng khác cả cột `status` bên
+    -- dưới — cột đó là vòng đời GIAO VẬN. Đơn COD chỉ thu được tiền lúc giao
+    -- xong, còn đơn chuyển khoản phải thu tiền TRƯỚC khi giao; một cột không
+    -- diễn được cả hai chiều đó.
+    --
+    -- VARCHAR chứ không ENUM để thêm 'pending'/'refunded' lúc nối cổng thanh
+    -- toán không phải ALTER TABLE. Giá trị dùng hiện tại: 'unpaid' | 'paid'.
+    -- Xem OrderModel::PAYMENT_STATUSES.
+    `payment_status`   VARCHAR(16)  NOT NULL DEFAULT 'unpaid',
+    -- Mốc kế toán, tách khỏi updated_at: updated_at đổi theo mọi lần sửa đơn,
+    -- còn "tiền về lúc nào" thì phải đứng yên.
+    `paid_at`          DATETIME     NULL,
     `note`             TEXT         NULL,
     `subtotal`         BIGINT       NOT NULL DEFAULT 0,
     `shipping_fee`     BIGINT       NOT NULL DEFAULT 0,
@@ -544,6 +581,7 @@ CREATE TABLE `orders` (
     UNIQUE KEY `uq_orders_code` (`code`),
     KEY `idx_orders_user` (`user_id`),
     KEY `idx_orders_status_created` (`status`, `created_at`),
+    KEY `idx_orders_payment` (`payment_status`),
     KEY `idx_orders_voucher` (`voucher_id`),
     KEY `idx_orders_store` (`store_id`),
     CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`)
@@ -566,6 +604,24 @@ CREATE TABLE `order_items` (
     -- đổi tên hay xoá biến thể thì hoá đơn cũ vẫn đọc được đúng thứ khách mua.
     `variant_id`    CHAR(36)    NULL,
     `variant_label` VARCHAR(60) NULL,
+    -- Tròng cắt kèm theo số đo khách. Ghi THẲNG vào dòng hàng chứ không tách
+    -- thành một dòng riêng: tròng mài theo đơn kính không tồn tại độc lập với
+    -- chiếc gọng nó được lắp vào, tách ra là mọi chỗ đếm "đơn có mấy sản phẩm"
+    -- đều đếm gấp đôi.
+    --
+    -- `lens_id` trỏ vào bảng giá gói tròng ở config/taxonomy.php — một mảng
+    -- PHP, không phải bảng, nên không có khoá ngoại. `lens_name` chép lại tên
+    -- gói tại thời điểm mua, cùng lý do với `product_name` ngay bên dưới.
+    --
+    -- `lens_price` ĐÃ NẰM TRONG `unit_price`; cột này chỉ để tách ra khi cần
+    -- in "gọng 2.890.000₫ + tròng 450.000₫". Nhờ vậy line_total = unit_price ×
+    -- quantity giữ nguyên nghĩa ở mọi nơi đang đọc bảng này.
+    --
+    -- `prescription` NULL = khách chưa biết độ, đo tại cửa hàng.
+    `lens_id`       VARCHAR(40)  NULL,
+    `lens_name`     VARCHAR(160) NULL,
+    `lens_price`    BIGINT       NOT NULL DEFAULT 0,
+    `prescription`  VARCHAR(160) NULL,
     `product_name` VARCHAR(255) NOT NULL,
     `unit_price`   BIGINT       NOT NULL,
     `quantity`     INT          NOT NULL DEFAULT 1,

@@ -36,6 +36,14 @@ return [
     ''                 => 'HomeController@index',
     '/'                => 'HomeController@index',
 
+    // Đổi ngôn ngữ giao diện rồi trả về đúng trang đang đọc. GET chứ không
+    // phải POST — lý do ghi ở đầu app/controllers/LangController.php.
+    'ngon-ngu'         => 'LangController@switch',
+
+    // Tìm kiếm toàn site: sản phẩm + bài viết + cơ sở + chính sách.
+    // Ô tìm kiếm trên đầu trang trỏ vào đây, KHÔNG còn trỏ /san-pham?q=.
+    'tim-kiem'         => 'SearchController@index',
+
     'san-pham'         => 'ProductController@index',
     // Đặt TRƯỚC 'san-pham/{slug}': router khớp theo thứ tự khai, để sau thì
     // 'danh-gia' bị hiểu thành slug của một sản phẩm.
@@ -73,11 +81,20 @@ return [
     'gio-hang/sua'        => 'CartController@update',
     'gio-hang/chon-tat-ca'=> 'CartController@toggleAll',
     'gio-hang/xoa-chon'   => 'CartController@removeSelected',
+    // Một bước của hộp thoại "Chọn hình thức mua" (POST). Năm bước dùng chung
+    // một đường, phân biệt bằng trường `buoc` — xem CartController::buyStep().
+    'gio-hang/chon'       => 'CartController@buyStep',
     'gio-hang/ma'         => 'CartController@voucher',
     'gio-hang/xoa-het'    => 'CartController@clear',
 
     'thanh-toan'          => 'OrderController@checkout',
     'thanh-toan/dat'      => 'OrderController@place',    // đặt hàng (POST)
+    // Chọn/gỡ mã giảm giá NGAY TRONG form thanh toán (POST). Không dùng lại
+    // 'gio-hang/ma' vì đường đó luôn quay về giỏ hàng và chỉ nhận mỗi ô `code`
+    // — xem OrderController::voucher().
+    'thanh-toan/ma'       => 'OrderController@voucher',
+    // Màn "Thanh toán QR" của bản thiết kế — chỉ đơn chuyển khoản đi qua.
+    'thanh-toan/chuyen-khoan' => 'OrderController@transfer',
     'thanh-toan/hoan-tat' => 'OrderController@success',
     // Đăng nhập / đăng ký / tài khoản
     'auth'              => 'AuthController@index',
@@ -86,7 +103,7 @@ return [
     'auth/dang-xuat'    => 'AuthController@logout',     // POST
     // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": SÁU mục nằm
     // trên CÙNG một đường dẫn, chọn bằng ?muc=... (ho-so · dia-chi · mat-khau
-    // · don-hang · do-mat · uu-dai · lich-hen). Không tách thành sáu route vì
+    // · don-hang · do-mat · lich-hen). Không tách thành năm route vì
     // cột điều hướng bên trái phải hiện y hệt nhau ở cả sáu — tách ra là sáu
     // action chỉ khác nhau đúng một biến.
     'tai-khoan'         => 'AuthController@profile',
@@ -103,6 +120,14 @@ return [
     'tai-khoan/dia-chi/xoa'      => 'AuthController@deleteAddress',     // POST
     'tai-khoan/dia-chi/mac-dinh' => 'AuthController@setDefaultAddress', // POST
 
+    // Khách tự đổi / huỷ lịch hẹn. Cả hai POST, cùng lý do như sổ địa chỉ: huỷ
+    // lịch qua GET nghĩa là một thẻ <img src="/tai-khoan/lich-hen/huy?ma=...">
+    // trên trang khác cũng huỷ được lịch của khách đang đăng nhập.
+    // Form CHỌN giờ mới thì mở bằng ?doi=<mã> trên chính /tai-khoan — xem
+    // app/views/auth/account/lich-hen.php.
+    'tai-khoan/lich-hen/doi' => 'AuthController@rescheduleBooking', // POST
+    'tai-khoan/lich-hen/huy' => 'AuthController@cancelBooking',     // POST
+
     // Quên mật khẩu. Hai bước tách riêng vì bước hai tới từ một liên kết
     // trong email — phải mở được bằng GET, không có phiên nào cả.
     'quen-mat-khau'         => 'AuthController@forgot',
@@ -117,6 +142,10 @@ return [
 
     'quan-tri/don-hang'           => 'OrderAdminController@index',
     'quan-tri/don-hang/trang-thai'=> 'OrderAdminController@updateStatus',       // POST
+    // Ghi nhận đã nhận tiền (đối chiếu sao kê cho đơn chuyển khoản). Tách khỏi
+    // trang-thai vì trạng thái GIAO VẬN và trạng thái TIỀN là hai trục khác
+    // nhau — xem OrderModel::PAYMENT_STATUSES.
+    'quan-tri/don-hang/thanh-toan'=> 'OrderAdminController@updatePayment',      // POST
 
     'quan-tri/lich-hen'           => 'AppointmentAdminController@index',
     'quan-tri/lich-hen/trang-thai'=> 'AppointmentAdminController@updateStatus', // POST

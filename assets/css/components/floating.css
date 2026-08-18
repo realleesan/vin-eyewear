@@ -35,7 +35,10 @@
     width: 48px;
     height: 48px;
     border: 0;
-    border-radius: 999px;
+    /* TRÒN, không phải 4px như các nút khác: cụm nút này nổi đè lên nội dung
+       chứ không nằm trong một thẻ nào, và hình tròn là quy ước quen thuộc cho
+       nút hành động nổi. Cùng nhóm với icon mạng xã hội ở chân trang. */
+    border-radius: var(--radius-round);
     color: var(--on-brand);
     box-shadow: var(--elev-2);
     cursor: pointer;
@@ -62,11 +65,31 @@
     flex: none;
 }
 
-/* Màu từng kênh — nhận diện bằng màu thương hiệu, nhãn chữ nói rõ phần còn lại */
-.fab__btn--call      { background: var(--brand); }
-.fab__btn--call:hover{ background: var(--brand-strong); }
-.fab__btn--zalo      { background: #0068ff; }
-.fab__btn--messenger { background: #0084ff; }
+/* ============================================================
+   MÀU CỤM NÚT — CẢ BA CÙNG MỘT SẮC XANH ZALO
+
+   Bản trước mỗi kênh một màu: gọi crimson, Zalo #0068ff, Messenger #0084ff.
+   Nay cả ba dùng chung #0068ff.
+
+   HỆ QUẢ PHẢI BIẾT: màu không còn phân biệt được ba nút, nên ICON là thứ duy
+   nhất làm việc đó. Vì thế nút Zalo đã đổi từ bong bóng chat trơn (giống hệt
+   Messenger) sang logo Zalo thật — xem _layout/floating-actions.php.
+
+   --fab-blue dùng ở HAI nơi: nền nút, và chữ "Zalo" bên trong logo. Đổi biến
+   này là cả hai đi theo; gõ cứng lại một trong hai chỗ thì chữ lệch tông nền.
+   ============================================================ */
+:root {
+    --fab-blue:        #0068ff;   /* xanh thương hiệu Zalo */
+    --fab-blue-strong: #0052cc;   /* đậm hơn một nấc cho trạng thái rê chuột */
+}
+
+.fab__btn--call,
+.fab__btn--zalo,
+.fab__btn--messenger { background: var(--fab-blue); }
+
+.fab__btn--call:hover,
+.fab__btn--zalo:hover,
+.fab__btn--messenger:hover { background: var(--fab-blue-strong); }
 
 .fab__btn--top {
     background: var(--surface-raised);
@@ -153,8 +176,9 @@
         transform: none;
     }
 
-    /* Màn cảm ứng không có hover -> mở ra là hiện luôn nhãn, nếu không hai
-       bong bóng chat (Zalo và Messenger) chỉ khác nhau mỗi sắc xanh. */
+    /* Màn cảm ứng không có hover -> mở ra là hiện luôn nhãn.
+       Càng cần thiết từ khi cả ba nút chung một màu: không còn sắc nào để
+       phân biệt, chỉ còn icon, mà icon 24px thì đọc lướt rất dễ nhầm. */
     .js .fab.is-open .fab__label {
         opacity: 1;
         transform: none;

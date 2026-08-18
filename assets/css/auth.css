@@ -65,7 +65,7 @@
     width: 1060px;
     max-width: 100%;
     background: var(--surface-raised);
-    border-radius: 36px;
+    border-radius: var(--radius);
     overflow: hidden;
     box-shadow: 0 8px 40px rgba(90, 40, 40, 0.08);
 }
@@ -197,7 +197,7 @@
     width: 100%;
     padding: 14px 18px;
     border: 1px solid var(--line);
-    border-radius: 16px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: var(--font-sans);
     font-size: 14.5px;
@@ -242,7 +242,7 @@
     width: 36px;
     height: 36px;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: none;
     color: var(--u-meta);
     cursor: pointer;
@@ -289,7 +289,7 @@
     width: 20px;
     height: 20px;
     border: 1.5px solid #d8c7ba;
-    border-radius: 7px;
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
     color: transparent;
     flex-shrink: 0;
@@ -324,7 +324,7 @@
     width: 100%;
     padding: 15px 0;
     border: none;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     font-family: var(--font-sans);
     font-size: 15px;
     font-weight: 600;
@@ -363,7 +363,7 @@
 
 .authbtn__soon {
     padding: 3px 10px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface-sunken);
     font-size: 11px;
     font-weight: 600;
@@ -423,7 +423,7 @@
 .authflash {
     margin: 0;
     padding: 13px 18px;
-    border-radius: 16px;
+    border-radius: var(--radius-sm);
     font-size: 13.5px;
     font-weight: 500;
 }
@@ -485,7 +485,7 @@
         grid-template-columns: minmax(0, 1fr);
         width: 100%;
         max-width: 460px;
-        border-radius: 28px;
+        border-radius: var(--radius);
     }
 
     .authcard__brand { display: none; }
@@ -523,7 +523,7 @@
 .errpage__code {
     font-family: var(--font-serif);
     font-size: clamp(64px, 14vw, 120px);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1;
     color: var(--brand);
 }
@@ -532,7 +532,7 @@
     margin-top: 8px;
     font-family: var(--font-serif);
     font-size: var(--fs-h3);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--ink);
 }
 

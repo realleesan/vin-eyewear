@@ -95,6 +95,24 @@ class CartController extends BaseController
 
     /**
      * Thêm sản phẩm vào giỏ. Nhận POST từ thẻ sản phẩm và trang chi tiết.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * GỌNG KÍNH VÀ KÍNH MÁT KHÔNG VÀO THẲNG GIỎ
+     *
+     * Hai danh mục đó bán được theo hai kiểu — mua trần, hoặc cắt kèm tròng
+     * theo số đo mắt — và giá chênh nhau tới vài triệu. Nên lần bấm đầu tiên
+     * không thêm gì cả: nó cất ý định vào phiên rồi đá về đúng trang khách
+     * đang đứng, kèm ?mua=<id>, và _layout/buy-modal.php vẽ hộp thoại "Chọn
+     * hình thức mua" ngay trên trang đó.
+     *
+     * Hộp thoại gửi lại chính đường này, lần này có `mode`:
+     *   mode=gong   thêm trần, đúng như trước khi có hộp thoại
+     *   mode=trong  kèm một gói tròng + số đo mắt
+     *
+     * Không có JS nào trong luồng này. Hộp thoại là HTML do máy chủ vẽ ra,
+     * nút ✕ là một liên kết. Tắt JS vẫn mua được — xem ghi chú đầu
+     * _layout/buy-modal.php.
+     * ─────────────────────────────────────────────────────────────────────
      */
     public function add(): void
     {
@@ -103,6 +121,7 @@ class CartController extends BaseController
         $id        = (string) ($_POST['product_id'] ?? '');
         $variantId = trim((string) ($_POST['variant_id'] ?? '')) ?: null;
         $qty       = max(1, min(self::MAX_QTY, (int) ($_POST['quantity'] ?? 1)));
+        $mode      = (string) ($_POST['mode'] ?? '');
 
         // Đối chiếu lại với DB: product_id đến từ form, người dùng sửa được.
         $product = $id === '' ? null : ProductModel::find($id);
@@ -144,7 +163,84 @@ class CartController extends BaseController
             redirect('/gio-hang');
         }
 
-        $key     = self::key($product['id'], $variantId);
+        // Nơi quay về sau khi chọn xong. Đến từ ô ẩn `back` của form, tức là
+        // do người dùng kiểm soát — safeRedirectPath chặn đường dẫn ra ngoài.
+        $back = safeRedirectPath(
+            $_POST['back'] ?? null,
+            '/san-pham/' . rawurlencode($product['slug'])
+        );
+
+        // ── Chưa qua hộp thoại -> mở hộp thoại thay vì thêm thẳng vào giỏ ──
+        //
+        // MỌI mặt hàng đều đi qua đây, không riêng gọng và kính mát. Trước đây
+        // chỉ hai danh mục đó bị chặn, nên bấm "Mua ngay" một hộp kính áp tròng
+        // là nhảy thẳng sang trang thanh toán — khách chưa kịp thấy mình vừa
+        // mua gì, mua mấy cái.
+        //
+        // Khác nhau ở chỗ hộp thoại MỞ Ở BƯỚC NÀO, không phải ở chỗ có mở hay
+        // không: gọng và kính mát bắt đầu từ "Chọn hình thức mua", còn tròng
+        // rời và kính áp tròng vào thẳng "Xác nhận sản phẩm" — hỏi một hộp
+        // kính áp tròng "chỉ mua gọng hay cắt thêm tròng?" là câu vô nghĩa.
+        if ($mode === '') {
+            // Cất Ý ĐỊNH chứ không nhét vào URL: số lượng, phương án và việc
+            // khách bấm "Mua ngay" hay "Thêm vào giỏ" đều phải sống qua hai
+            // bước của hộp thoại, mà nhồi hết vào query thì địa chỉ dài dòng
+            // và sửa tay được.
+            $_SESSION['_buy_intent'] = [
+                'product_id' => $product['id'],
+                'variant_id' => $variantId,
+                'quantity'   => $qty,
+                'action'     => ($_POST['action'] ?? '') === 'buy' ? 'buy' : 'add',
+                'back'       => $back,
+                // Bốn khoá dưới do buyStep() điền dần qua từng bước của hộp
+                // thoại. Khai sẵn ở đây để mọi nơi đọc chúng không phải nhớ
+                // rằng chúng có thể chưa tồn tại.
+                //
+                'mode'       => null,   // 'frame' | 'combo'
+                'rx_type'    => null,   // khoá trong LensModel::RX_TYPES
+                'rx'         => null,   // chuỗi số đo đã gói
+                'lens_id'    => null,
+            ];
+
+            redirect(self::stepUrl($back, $product['id'], null));
+        }
+
+        // ── Tròng cắt kèm ────────────────────────────────────────────────
+        $lens = null;
+        $rx   = null;
+
+        if ($mode === 'trong') {
+            /* GÓI TRÒNG chỉ áp cho gọng và kính mát. Tròng rời và kính áp tròng
+               đi qua đúng nhánh này (cũng lấy số đo), nhưng bản thân chúng ĐÃ LÀ
+               tròng — cộng thêm một gói tròng nữa là bán hai cặp tròng cho một
+               đơn và tính tiền cả hai. */
+            if (LensModel::takesLensPackage($product)) {
+                // Tra lại gói từ bảng giá, không tin tên và giá gửi lên. Đây là
+                // chỗ duy nhất quyết định phần tròng đáng bao nhiêu tiền.
+                $lens = LensModel::find(trim((string) ($_POST['lens'] ?? '')));
+
+                if ($lens === null) {
+                    flash('cart_error', 'Vui lòng chọn một gói tròng kính.');
+                    redirect($back . (str_contains($back, '?') ? '&' : '?')
+                        . 'mua=' . rawurlencode($product['id']) . '&buoc=trong');
+                }
+            }
+
+            /* Số đo đã được gói thành chuỗi ở bước "Nhập số đo khúc xạ"
+               (buyStep) và nằm trong ý định, không đọc lại từng ô ở đây: bước
+               xác nhận chỉ còn việc chốt số lượng, và bắt nó mang theo bốn ô
+               ẩn nữa là mời người ta sửa tay.
+
+               null = khách bỏ qua bước số đo. Đó là một lựa chọn hợp lệ chứ
+               không phải form điền thiếu — phần lớn người mua kính không nhớ
+               số đo của mình, và cửa hàng đo lại miễn phí. */
+            $rx = $_SESSION['_buy_intent']['rx'] ?? null;
+        }
+
+        // Khoá gồm cả gói tròng và số đo: cùng một chiếc gọng mua trần và mua
+        // kèm tròng là hai món khác giá, và hai chiếc cùng gói tròng nhưng
+        // khác độ là hai sản phẩm khác nhau — gộp chung dòng là mài sai một cái.
+        $key     = self::key($product['id'], $variantId, $lens['id'] ?? null, $rx);
         $current = (int) ($_SESSION['cart'][$key]['quantity'] ?? 0);
         $new     = min(self::MAX_QTY, $current + $qty);
 
@@ -155,12 +251,174 @@ class CartController extends BaseController
             'variant_id' => $variantId,
             'quantity'   => $new,
             'selected'   => true,
+            'lens_id'    => $lens['id'] ?? null,
+            'rx'         => $rx,
         ];
 
-        flash('cart_success', sprintf('Đã thêm "%s" vào giỏ hàng.', $product['name']));
+        // Ý định đã dùng xong. Để lại thì lần sau mở hộp thoại sẽ mang theo
+        // số lượng của lần mua trước.
+        unset($_SESSION['_buy_intent']);
 
-        // Nút "Mua ngay" đi thẳng tới thanh toán; "Thêm vào giỏ" ở lại giỏ hàng
-        redirect(($_POST['action'] ?? '') === 'buy' ? '/thanh-toan' : '/gio-hang');
+        flash('cart_success', $lens === null
+            ? sprintf('Đã thêm "%s" vào giỏ hàng.', $product['name'])
+            : sprintf('Đã thêm "%s" kèm %s vào giỏ hàng.', $product['name'], $lens['name']));
+
+        /*
+         * "MUA NGAY" đi thẳng tới thanh toán. "THÊM VÀO GIỎ" thì Ở LẠI ĐÚNG
+         * TRANG KHÁCH ĐANG ĐỨNG, kèm một dải báo — không đá sang /gio-hang nữa.
+         *
+         * Đây là điểm khác của luồng trong "Trang chi tiết sản phẩm.dc.html":
+         * thêm vào giỏ là một việc PHỤ, làm xong thì khách còn xem tiếp và mua
+         * thêm. Ném họ sang giỏ hàng là kết thúc phiên duyệt hộ họ, và muốn mua
+         * món thứ hai thì phải bấm quay lại.
+         *
+         * Huy hiệu số trên biểu tượng giỏ ở đầu trang tự cập nhật — nó đọc
+         * CartController::count() ở mỗi lần vẽ trang, nên chỉ cần trang được
+         * vẽ lại là con số đúng.
+         */
+        redirect(($_POST['action'] ?? '') === 'buy' ? '/thanh-toan' : $back);
+    }
+
+    /**
+     * Một bước của hộp thoại "Chọn hình thức mua" (POST /gio-hang/chon).
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * NĂM BƯỚC, MỖI BƯỚC MỘT LẦN GỬI FORM
+     *
+     *   (không có)  Chọn hình thức mua      chỉ gọng · hay gọng + cắt tròng
+     *   khuc-xa     Số đo khúc xạ           dùng hồ sơ đã lưu · hay nhập mới
+     *   so-do       Nhập số đo khúc xạ      loại tật + độ hai mắt
+     *   trong       Chọn loại tròng kính    năm gói trong config/taxonomy.php
+     *   xac-nhan    Xác nhận sản phẩm       số lượng + tổng tiền
+     *
+     * Dựng theo luồng của "Vin Eyewear Product.dc.html". Bản thiết kế giữ cả
+     * năm bước trong state trình duyệt; ở đây chúng nằm trong
+     * $_SESSION['_buy_intent'] và mỗi bước là một POST thật.
+     *
+     * Vì sao không nhét vào URL: số đo mắt là dữ liệu sức khoẻ. Nó không nên
+     * nằm trên thanh địa chỉ, trong lịch sử duyệt web, hay trong Referer gửi
+     * sang bên thứ ba.
+     *
+     * KHÔNG kiểm tính hợp lệ ở đây ngoài việc chặn giá trị lạ. Bước cuối gửi
+     * sang add(), và đó mới là nơi tra lại giá tròng và tồn kho — hàm này chỉ
+     * ghi lại khách đã chọn gì.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public function buyStep(): void
+    {
+        $this->requirePost();
+
+        $intent = $_SESSION['_buy_intent'] ?? null;
+
+        // Không có ý định nào đang treo (phiên hết hạn, hoặc ai đó gửi thẳng
+        // lên đây). Không có gì để bước tiếp — về giỏ hàng.
+        if ($intent === null || empty($intent['product_id'])) {
+            redirect('/gio-hang');
+        }
+
+        // Cần dòng sản phẩm để biết nhánh "theo số đo" của nó có phải chọn
+        // thêm một gói tròng rời không — xem LensModel::takesLensPackage().
+        // Mặt hàng vừa bị gỡ khỏi cửa hàng thì không còn gì để mua tiếp.
+        $product = ProductModel::find($intent['product_id']);
+
+        if ($product === null || (int) $product['is_visible'] !== 1) {
+            unset($_SESSION['_buy_intent']);
+            flash('cart_error', 'Sản phẩm không còn khả dụng.');
+            redirect(safeRedirectPath($intent['back'] ?? null, '/gio-hang'));
+        }
+
+        $back = safeRedirectPath($intent['back'] ?? null, '/gio-hang');
+        $next = null;
+
+        switch ((string) ($_POST['buoc'] ?? '')) {
+
+            // ── Bước 1: chỉ mua gọng, hay mua kèm tròng ──────────────────
+            case 'hinh-thuc':
+                $combo = ($_POST['che_do'] ?? '') === 'combo';
+                $intent['mode'] = $combo ? 'combo' : 'frame';
+
+                if (!$combo) {
+                    // Mua trần thì không còn gì để hỏi — bỏ luôn phần tròng
+                    // của lần chọn trước, nếu khách vừa quay lui đổi ý.
+                    $intent['lens_id'] = null;
+                    $intent['rx']      = null;
+                    $intent['rx_type'] = null;
+                }
+
+                $next = $combo ? 'khuc-xa' : 'xac-nhan';
+                break;
+
+            // ── Bước 2: dùng hồ sơ khúc xạ đã lưu ────────────────────────
+            case 'khuc-xa':
+                // Đọc LẠI từ DB chứ không nhận số đo gửi lên: đây là hồ sơ
+                // sức khoẻ của chính khách, và bản trong DB là bản đúng.
+                $userId = AuthMiddleware::userId();
+                $saved  = $userId === null ? null : UserModel::prescription($userId);
+
+                $intent['rx']      = LensModel::formatSavedRx($saved);
+                $intent['rx_type'] = null;
+                $next = LensModel::takesLensPackage($product) ? 'trong' : 'xac-nhan';
+                break;
+
+            // ── Bước 3: số đo gõ tay ─────────────────────────────────────
+            case 'so-do':
+                $type = (string) ($_POST['loai'] ?? '');
+                $intent['rx_type'] = isset(LensModel::RX_TYPES[$type]) ? $type : null;
+                $intent['rx'] = LensModel::formatRx(
+                    $intent['rx_type'],
+                    $_POST['od'] ?? null,
+                    $_POST['os'] ?? null
+                );
+                // Mặt hàng đã là tròng thì không chọn thêm gói tròng nào nữa
+                $next = LensModel::takesLensPackage($product) ? 'trong' : 'xac-nhan';
+                break;
+
+            // ── Bước 4: chọn gói tròng ───────────────────────────────────
+            case 'trong':
+                $lens = LensModel::find(trim((string) ($_POST['lens'] ?? '')));
+
+                if ($lens === null) {
+                    flash('cart_error', 'Vui lòng chọn một gói tròng kính.');
+                    redirect(self::stepUrl($back, $intent['product_id'], 'trong'));
+                }
+
+                $intent['lens_id'] = $lens['id'];
+                $next = 'xac-nhan';
+                break;
+
+            // ── Bước 5: chỉnh số lượng ───────────────────────────────────
+            case 'so-luong':
+                $qty = (int) ($intent['quantity'] ?? 1);
+                $intent['quantity'] = ($_POST['act'] ?? '') === 'tang'
+                    ? min(self::MAX_QTY, $qty + 1)
+                    : max(1, $qty - 1);
+                $next = 'xac-nhan';
+                break;
+
+            default:
+                // Tên bước lạ — đưa về đầu luồng thay vì đoán ý.
+                $next = null;
+        }
+
+        $_SESSION['_buy_intent'] = $intent;
+
+        redirect(self::stepUrl($back, $intent['product_id'], $next));
+    }
+
+    /**
+     * Địa chỉ của một bước trong hộp thoại mua hàng.
+     *
+     * Hộp thoại vẽ ĐÈ LÊN trang khách đang đứng, nên địa chỉ luôn là trang đó
+     * cộng thêm ?mua= (và &buoc= từ bước thứ hai trở đi). Nhờ vậy nút Back của
+     * trình duyệt lùi đúng một bước, và đóng hộp thoại là về lại trang cũ
+     * nguyên vẹn cả bộ lọc.
+     */
+    private static function stepUrl(string $back, string $productId, ?string $step): string
+    {
+        $url = $back . (str_contains($back, '?') ? '&' : '?')
+             . 'mua=' . rawurlencode($productId);
+
+        return $step === null ? $url : $url . '&buoc=' . rawurlencode($step);
     }
 
     /**
@@ -335,6 +593,11 @@ class CartController extends BaseController
                     'product_id' => (string) ($row['product_id'] ?? $key),
                     'variant_id' => $row['variant_id'] ?? null,
                     'quantity'   => $qty,
+                    // Hai khoá này đi thẳng tới OrderModel::place để vào hoá
+                    // đơn. Giỏ hàng cũ (trước bản có hộp thoại) không có chúng
+                    // -> null, và mọi nơi đọc đều hiểu là "mua trần".
+                    'lens_id'    => $row['lens_id'] ?? null,
+                    'rx'         => $row['rx'] ?? null,
                 ];
             }
         }
@@ -357,12 +620,35 @@ class CartController extends BaseController
     /**
      * Khoá của một dòng giỏ hàng.
      *
-     * Mặt hàng không có biến thể giữ nguyên khoá là product_id, nên giỏ hàng
-     * của khách đang mở dở từ trước bản nâng cấp này vẫn đọc được.
+     *     <product_id>[:<variant_id>][#<lens_id>[@<mã băm số đo>]]
+     *
+     * Mặt hàng không có biến thể và không cắt tròng giữ nguyên khoá là
+     * product_id, nên giỏ hàng của khách đang mở dở từ trước bản nâng cấp này
+     * vẫn đọc được.
+     *
+     * SỐ ĐO nằm trong khoá dưới dạng băm ngắn, không phải nguyên văn: hai
+     * chiếc cùng gói tròng nhưng khác độ là hai sản phẩm khác nhau, gộp một
+     * dòng ×2 là mài sai một chiếc. Băm thay vì chuỗi gốc chỉ để khoá không
+     * phình ra và không chứa ký tự lạ — nội dung thật vẫn nằm trong dòng, khoá
+     * không bao giờ bị tách ngược để lấy dữ liệu.
      */
-    private static function key(string $productId, ?string $variantId): string
-    {
-        return $variantId === null ? $productId : $productId . ':' . $variantId;
+    private static function key(
+        string $productId,
+        ?string $variantId,
+        ?string $lensId = null,
+        ?string $rx = null
+    ): string {
+        $key = $variantId === null ? $productId : $productId . ':' . $variantId;
+
+        if ($lensId !== null) {
+            $key .= '#' . $lensId;
+
+            if ($rx !== null) {
+                $key .= '@' . substr(md5($rx), 0, 8);
+            }
+        }
+
+        return $key;
     }
 
     /**
@@ -432,13 +718,21 @@ class CartController extends BaseController
                 }
             }
 
-            $unit    = VariantModel::priceOf($product, $variant);
+            /* Gói tròng cắt kèm. Tra lại từ bảng giá ở mỗi lần hiện trang,
+               đúng như giá gọng: session chỉ nhớ ID, không bao giờ nhớ tiền.
+               Gói bị gỡ khỏi config thì lui về "mua trần" thay vì bỏ cả dòng —
+               chiếc gọng vẫn bán được, chỉ là không còn gói tròng đó nữa. */
+            $lens = LensModel::find($row['lens_id'] ?? null);
+
+            $unit    = VariantModel::priceOf($product, $variant) + (int) ($lens['price'] ?? 0);
             $lineQty = min($row['quantity'], self::MAX_QTY);
 
             $lines[] = [
                 'key'       => $key,
                 'product'   => $product,
                 'variant'   => $variant,
+                'lens'      => $lens,
+                'rx'        => $row['rx'] ?? null,
                 'quantity'  => $lineQty,
                 'unitPrice' => $unit,
                 'lineTotal' => $unit * $lineQty,
@@ -556,6 +850,20 @@ class CartController extends BaseController
      */
     private function requirePost(): void
     {
+        /*
+         * Hỏng thì trả khách về ĐÚNG TRANG HỌ ĐANG ĐỨNG, không ném sang giỏ hàng.
+         *
+         * Trước đây mọi lỗi ở đây đều đổ về /gio-hang. Với luồng hộp thoại mua
+         * hàng thì đó là một cái bẫy chẩn đoán: bảng "Chọn hình thức mua" hiện
+         * ra bình thường (nó là GET, không cần token), nhưng cú bấm sau đó bị
+         * từ chối và khách bị đá sang giỏ hàng — TRÔNG Y HỆT hành vi cũ trước
+         * khi có hộp thoại. Không ai đoán được là token đã hết hạn.
+         *
+         * Token hết hạn là chuyện có thật và hay gặp: mở tab trang sản phẩm từ
+         * hôm qua, hôm nay mới bấm mua.
+         */
+        $back = safeRedirectPath($_POST['back'] ?? null, '/gio-hang');
+
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
             http_response_code(405);
             redirect('/gio-hang');
@@ -563,8 +871,8 @@ class CartController extends BaseController
 
         if (!csrfCheck($_POST['_token'] ?? null)) {
             http_response_code(419);
-            flash('cart_error', 'Phiên làm việc đã hết hạn, vui lòng thử lại.');
-            redirect('/gio-hang');
+            flash('cart_error', 'Phiên làm việc đã hết hạn — vui lòng tải lại trang rồi bấm lại.');
+            redirect($back);
         }
     }
 }

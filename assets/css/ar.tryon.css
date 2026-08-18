@@ -6,7 +6,7 @@
 .ar__inner {
     max-width: var(--container, 1280px);
     margin-inline: auto;
-    padding: clamp(24px, 5vw, 56px) var(--gutter);
+    padding: clamp(24px, 5vw, 56px) var(--page-edge);
 }
 
 .ar__layout {
@@ -116,7 +116,7 @@
     height: 32px;
     border: 2px solid color-mix(in srgb, var(--on-ink) 25%, transparent);
     border-top-color: var(--brand-light);
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     animation: arspin 0.8s linear infinite;
 }
 
@@ -287,7 +287,7 @@
 .arswatch__dot {
     width: 14px;
     height: 14px;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent);
 }
 

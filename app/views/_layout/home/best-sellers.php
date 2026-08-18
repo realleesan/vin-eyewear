@@ -3,22 +3,23 @@
 /**
  * _layout/home/best-sellers.php — lưới sản phẩm bán chạy (S08).
  *
- * Dựng theo "Vin Eyewear Home.dc.html": lưới 2 cột, mỗi thẻ NẰM NGANG — ảnh
- * vuông bên trái, bên phải là thương hiệu · tên · giá (kèm giá gạch) · hai nút
- * "Mua ngay" và "Chi tiết". Huy hiệu giảm giá nổi trên góc trái ảnh.
+ * Dựng theo "Vin Eyewear Home.dc.html": thẻ sản phẩm DỌC — ảnh cao 300px, huy
+ * hiệu đỏ mức giảm giá ở góc trái, dưới ảnh là thương hiệu · tên · giá kèm giá
+ * gốc gạch ngang, chân thẻ có hai nút "Mua ngay" và "Chi tiết".
  *
- * Bản trước là 4 thẻ dọc thanh mảnh. Thiết kế đổi sang thẻ ngang nên mỗi thẻ
- * đủ chỗ cho cả hai nút — trước đó chỉ có một liên kết "Mua ngay" dạng chữ.
+ * KHÁC BẢN THIẾT KẾ: lưới tĩnh 4 cột của bản thiết kế nay là BĂNG TRƯỢT có hai
+ * mũi tên tới/lui — xem chú thích dài hơn ở đầu _layout/home/new-arrivals.php,
+ * hai khối dùng chung hệt nhau bộ lớp .pstrip và makeStrip() của home.js.
  *
- * KHÔNG dùng chung _layout/product-card.php: thẻ đó xếp dọc và có thêm nút
- * "Thử AR", đúng cho lưới trang /san-pham nhưng khác hẳn thẻ ngang ở đây.
- *
- * "Mua ngay" là form POST thêm thẳng vào giỏ (giống product-card), không phải
- * liên kết sang trang chi tiết — nhãn nút hứa gì thì làm đúng thế. "Chi tiết"
- * mới là đường sang trang sản phẩm.
+ * Bản trước là 2 cột thẻ NẰM NGANG (ảnh trái, chữ phải). Bản thiết kế này gom
+ * cả hai lưới sản phẩm của trang chủ về cùng một dáng thẻ dọc, nên phần dựng
+ * thẻ đã dời sang _layout/product-card.php dùng chung với khối "mới về" và với
+ * khối này giờ chỉ còn tiêu đề và cái lưới.
  *
  * Nhận qua partial():
- *   $products — mảng sản phẩm đã qua ProductModel
+ *   $products — ProductModel::featured(8). Kho hàng mẫu hiện chỉ có 4 sản
+ *               phẩm gắn "nổi bật" nên băng này chưa trượt được; hai mũi tên
+ *               vẫn in ra ở trạng thái mờ và tự sống lại khi có thêm hàng.
  */
 
 $products = $products ?? [];
@@ -28,81 +29,47 @@ $products = $products ?? [];
 <section class="hbest" data-section="s08" aria-labelledby="hbest-title">
     <div class="hbest__inner">
 
-        <div class="section-head">
-            <div>
-                <p class="eyebrow">Được yêu thích</p>
-                <h2 id="hbest-title" class="section-h2 section-h2--plain">Sản phẩm bán chạy</h2>
-            </div>
-            <a href="/san-pham" class="pill-link">Xem tất cả →</a>
+        <div class="hsec-head">
+            <p class="eyebrow">Được yêu thích</p>
+            <h2 id="hbest-title" class="section-h2 section-h2--plain">Sản phẩm bán chạy</h2>
         </div>
 
-        <ul class="hbest__grid" role="list">
-            <?php foreach ($products as $i => $p): ?>
-                <?php
-                $url     = '/san-pham/' . rawurlencode($p['slug']);
-                $price   = (int) $p['price'];
-                $compare = $p['compare_at_price'] !== null ? (int) $p['compare_at_price'] : null;
-                $percent = discount($price, $compare);
-                $inStock = ProductModel::inStock($p);
+        <div class="pstrip" data-product-strip>
+            <?php /* Hai mũi tên LUÔN in ra, kể cả khi chưa đủ hàng để trượt.
+                     Lúc đó makeStrip() (assets/js/home.js) tự đặt `disabled` cho
+                     cả hai — chúng mờ đi nhưng vẫn giữ chỗ, nên thêm sản phẩm
+                     trong trang quản trị là băng chạy được ngay, không phải sửa
+                     file nào. Xem .pstrip__arrow:disabled trong home-sections.css
+                     để biết trạng thái mờ trông thế nào. */ ?>
+            <button type="button" class="pstrip__arrow pstrip__arrow--prev"
+                    data-strip="prev" aria-label="Sản phẩm trước" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M15 18l-6-6 6-6"/>
+                </svg>
+            </button>
+            <button type="button" class="pstrip__arrow pstrip__arrow--next"
+                    data-strip="next" aria-label="Sản phẩm sau">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M9 6l6 6-6 6"/>
+                </svg>
+            </button>
 
-                // Huy hiệu: ưu tiên tình trạng kho, rồi tới mức giảm giá.
-                // Thiết kế để trống huy hiệu ở thẻ không có gì đáng nói.
-                $badge = null;
-                if (!$inStock) {
-                    $badge = 'Hết hàng';
-                } elseif ($percent !== null) {
-                    $badge = '-' . $percent . '%';
-                } elseif (!empty($p['is_featured'])) {
-                    $badge = 'Bán chạy';
-                }
-                ?>
-                <li class="bcard">
-                    <div class="bcard__media">
-                        <img src="<?= e(ProductModel::image($p)) ?>" alt=""
-                             width="600" height="600"
-                             <?= $i < 2 ? '' : 'loading="lazy"' ?> decoding="async">
+            <div class="pstrip__window">
+                <ul class="pstrip__track" role="list">
+                    <?php foreach ($products as $p): ?>
+                        <?php partial('_layout/product-card', [
+                            'product'     => $p,
+                            'badgeTone'   => 'sale',
+                            'showCompare' => true,
+                        ]); ?>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </div>
 
-                        <?php if ($badge !== null): ?>
-                            <span class="bcard__badge"><?= e($badge) ?></span>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="bcard__body">
-                        <p class="bcard__brand"><?= e($p['brand'] ?? 'Vin Eyewear') ?></p>
-
-                        <h3 class="bcard__name">
-                            <a href="<?= e($url) ?>"><?= e($p['name']) ?></a>
-                        </h3>
-
-                        <p class="bcard__prices">
-                            <span class="sr-only">Giá bán </span>
-                            <span class="bcard__price"><?= money($price) ?></span>
-                            <?php if ($compare !== null && $compare > $price): ?>
-                                <span class="bcard__was">
-                                    <span class="sr-only">Giá gốc </span><?= money($compare) ?>
-                                </span>
-                            <?php endif; ?>
-                        </p>
-
-                        <div class="bcard__actions">
-                            <form action="/gio-hang/them" method="post">
-                                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                <input type="hidden" name="product_id" value="<?= e($p['id']) ?>">
-                                <button type="submit" class="bcard__btn bcard__btn--solid"
-                                        <?= $inStock ? '' : 'disabled' ?>>
-                                    <?= $inStock ? 'Mua ngay' : 'Hết hàng' ?>
-                                    <span class="sr-only"> — <?= e($p['name']) ?></span>
-                                </button>
-                            </form>
-
-                            <a class="bcard__btn bcard__btn--ghost" href="<?= e($url) ?>">
-                                Chi tiết<span class="sr-only"> — <?= e($p['name']) ?></span>
-                            </a>
-                        </div>
-                    </div>
-                </li>
-            <?php endforeach; ?>
-        </ul>
+        <div class="hsec-all">
+            <a class="hsec-all__link" href="/san-pham">Xem tất cả →</a>
+        </div>
     </div>
 </section>
 <?php endif; ?>

@@ -35,6 +35,25 @@ class OrderModel extends BaseModel
         'cancelled' => 'Đã huỷ',
     ];
 
+    /**
+     * Trạng thái TIỀN — không liên quan tới STATUSES ở trên.
+     *
+     * STATUSES là vòng đời giao vận (đã xác nhận → đang giao → hoàn tất);
+     * cột này chỉ trả lời một câu: tiền đã về hay chưa. Hai trục đó độc lập,
+     * và mỗi cách thanh toán đi theo một thứ tự khác nhau:
+     *
+     *   COD           giao xong -> mới thu được tiền   (completed rồi mới paid)
+     *   Chuyển khoản  thu tiền  -> mới nên giao        (paid rồi mới shipping)
+     *
+     * Còn HAI giá trị vì hiện chỉ có COD và chuyển khoản đối chiếu tay. Cột
+     * trong CSDL là VARCHAR nên lúc nối cổng thanh toán, thêm 'pending' (khách
+     * đã bấm trả, cổng chưa xác nhận) hoặc 'refunded' chỉ là thêm vào mảng này.
+     */
+    public const PAYMENT_STATUSES = [
+        'unpaid' => 'Chưa thanh toán',
+        'paid'   => 'Đã thanh toán',
+    ];
+
     // ========================================================================
     // TẠO ĐƠN
     // ========================================================================
@@ -141,14 +160,33 @@ class OrderModel extends BaseModel
                         throw new RuntimeException(sprintf('Sản phẩm "%s" không đủ tồn kho.', $product['name']));
                     }
 
-                    $unit = max(0, (int) $product['price'] + (int) ($variant['price_delta'] ?? 0));
+                    /* Gói tròng cắt kèm. Tra LẠI từ bảng giá ngay tại đây —
+                       giỏ hàng nằm trong session và chỉ nhớ id gói, đúng như
+                       nó chỉ nhớ id sản phẩm. Nhận giá từ session nghĩa là cho
+                       khách tự đặt giá phần tròng. */
+                    $lens = LensModel::find($row['lens_id'] ?? null);
 
-                    // Chép lại tên, NHÃN BIẾN THỂ và giá tại thời điểm mua —
-                    // đơn cũ không được đổi theo khi sản phẩm đổi giá hay bị gỡ.
+                    /* Tiền tròng CỘNG VÀO unit_price chứ không thành một dòng
+                       riêng, để line_total = unit_price × quantity giữ nguyên
+                       nghĩa ở mọi nơi đang đọc bảng order_items. Cột lens_price
+                       chỉ để tách ra khi cần in "gọng + tròng" — xem ghi chú ở
+                       schema.sql. */
+                    $lensPrice = (int) ($lens['price'] ?? 0);
+                    $unit = max(0, (int) $product['price'] + (int) ($variant['price_delta'] ?? 0))
+                          + $lensPrice;
+
+                    // Chép lại tên, NHÃN BIẾN THỂ, TÊN GÓI TRÒNG và giá tại
+                    // thời điểm mua — đơn cũ không được đổi theo khi sản phẩm
+                    // đổi giá, đổi tên hay bị gỡ.
                     $lines[] = [
                         'product_id'    => $product['id'],
                         'variant_id'    => $variant['id'] ?? null,
                         'variant_label' => $variant['label'] ?? null,
+                        'lens_id'       => $lens['id'] ?? null,
+                        'lens_name'     => $lens['name'] ?? null,
+                        'lens_price'    => $lensPrice,
+                        // null = khách chưa biết độ, đo tại cửa hàng
+                        'prescription'  => $row['rx'] ?? null,
                         'product_name'  => $product['name'],
                         'unit_price'    => $unit,
                         'quantity'      => $quantity,
@@ -236,8 +274,10 @@ class OrderModel extends BaseModel
                     Database::execute(
                         'INSERT INTO order_items
                             (id, order_id, product_id, variant_id, variant_label,
+                             lens_id, lens_name, lens_price, prescription,
                              product_name, unit_price, quantity, line_total)
                          VALUES (:id, :order_id, :product_id, :variant_id, :variant_label,
+                                 :lens_id, :lens_name, :lens_price, :prescription,
                                  :product_name, :unit_price, :quantity, :line_total)',
                         ['id' => uuid(), 'order_id' => $orderId] + $line
                     );
@@ -347,8 +387,16 @@ class OrderModel extends BaseModel
      */
     public static function items(string $orderId): array
     {
+        // `images` LEFT JOIN từ products, không lưu trong order_items: trang xác
+        // nhận đơn in ảnh sản phẩm trên từng dòng hàng. Cùng lý do đã ghi ở
+        // itemsForOrders() bên dưới — ảnh là dữ liệu trình bày, còn tên và giá
+        // thì chép cứng vào order_items lúc đặt hàng. Sản phẩm bị gỡ thì
+        // product_id thành NULL, dòng hàng mất ảnh nhưng hoá đơn vẫn nguyên.
         return Database::fetchAll(
-            'SELECT * FROM order_items WHERE order_id = :id',
+            'SELECT oi.*, p.brand, p.slug, p.images
+               FROM order_items oi
+               LEFT JOIN products p ON p.id = oi.product_id
+              WHERE oi.order_id = :id',
             ['id' => $orderId]
         );
     }
@@ -464,6 +512,91 @@ class OrderModel extends BaseModel
                 'changed_by' => $changedBy,
             ]
         );
+    }
+
+    // ========================================================================
+    // ĐỔI TRẠNG THÁI — GIAO VẬN VÀ TIỀN
+    //
+    // Ba hàm dưới đây là CỬA DUY NHẤT để đổi hai trục trạng thái của đơn. Đừng
+    // gọi update(['status' => …]) hay update(['payment_status' => …]) trực tiếp:
+    // mỗi lần đổi đều kéo theo một việc khác phải làm cùng (ghi lịch sử, đóng
+    // mốc tiền), và những việc đó nằm trong này.
+    //
+    // Khi nối cổng thanh toán (SePay…), webhook chỉ cần gọi markPaid() — mọi
+    // luật về tiền đã nằm sẵn ở đây, không phải viết lại ở lớp webhook.
+    // ========================================================================
+
+    /**
+     * Đổi trạng thái giao vận của đơn.
+     *
+     * Gộp ba việc vào một transaction:
+     *   1. đổi cột `status`
+     *   2. ghi một mốc vào `order_status_history` — thanh tiến trình trong trang
+     *      tài khoản đọc bảng này để lấy giờ của từng bước, nên một bản ghi
+     *      thiếu là một mốc trống VĨNH VIỄN
+     *   3. đơn COD chuyển sang 'completed' thì đánh dấu ĐÃ THU TIỀN luôn
+     *
+     * Việc thứ 3 không phải tiện tay làm thêm: với COD, "giao xong" và "thu được
+     * tiền" là CÙNG một hành động của shipper. Bắt nhân viên bấm hai nút cho một
+     * việc thì sổ tiền sẽ đầy đơn completed mà vẫn 'unpaid', và con số đó thành
+     * vô nghĩa. Đơn chuyển khoản thì KHÔNG suy luận gì — tiền về hay chưa chỉ
+     * sao kê biết.
+     */
+    public static function changeStatus(string $id, string $status, ?string $changedBy = null): void
+    {
+        Database::transaction(static function () use ($id, $status, $changedBy): void {
+            self::update($id, ['status' => $status]);
+            self::logStatus($id, $status, $changedBy);
+
+            if ($status !== 'completed') {
+                return;
+            }
+
+            $order = self::find($id);
+
+            if ($order !== null
+                && $order['payment_method'] === 'cod'
+                && $order['payment_status'] === 'unpaid'
+            ) {
+                self::markPaid($id);
+            }
+        });
+    }
+
+    /**
+     * Đánh dấu đơn đã nhận được tiền.
+     *
+     * Chỉ đi từ 'unpaid' sang 'paid' — điều kiện đó nằm trong câu UPDATE nên gọi
+     * hai lần cũng không dịch `paid_at` sang mốc mới. Sẽ cần đúng tính chất này
+     * lúc nối cổng thanh toán: webhook của cổng có thể gửi lại cùng một giao
+     * dịch nhiều lần, và mốc tiền về không được nhảy theo mỗi lần gửi lại.
+     *
+     * @return bool có đổi gì không (false = đơn đã 'paid' từ trước, hoặc mã sai)
+     */
+    public static function markPaid(string $id): bool
+    {
+        return Database::execute(
+            "UPDATE orders
+                SET payment_status = 'paid', paid_at = NOW()
+              WHERE id = :id AND payment_status = 'unpaid'",
+            ['id' => $id]
+        ) > 0;
+    }
+
+    /**
+     * Gỡ đánh dấu đã thanh toán — dành cho lúc bấm nhầm.
+     *
+     * Xoá luôn `paid_at`: giữ lại một mốc "tiền về" trên đơn đang 'unpaid' thì
+     * lần sau đọc sổ không biết tin cột nào.
+     */
+    public static function markUnpaid(string $id): bool
+    {
+        return Database::execute(
+            "UPDATE orders
+                SET payment_status = 'unpaid', paid_at = NULL
+              WHERE id = :id AND payment_status <> 'unpaid'",
+            ['id' => $id]
+        ) > 0;
     }
 
     /**

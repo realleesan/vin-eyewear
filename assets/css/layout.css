@@ -19,14 +19,16 @@
    ============================================ */
 
 /* --- Reset & Base --- */
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
+*,
+*::before,
+*::after {
+   box-sizing: border-box;
+   margin: 0;
+   padding: 0;
 }
 
 :root {
-    /* ============================================================
+   /* ============================================================
        ⬛ BẢNG MÀU — ĐỔI MÀU TOÀN SITE CHỈ Ở 10 DÒNG NÀY
 
        Đặt tên theo VAI TRÒ, không theo tên màu. Mỗi màu nền đều đi
@@ -42,7 +44,7 @@
        --on-* tương ứng. Các tên cũ (--yellow, --black, --white...) đã
        thành bí danh trỏ vào đây nên 342 chỗ đang dùng tự ăn theo.
        ============================================================ */
-    /* ┌─ BẢNG MÀU LOVABLE ──────────────────────────────────────────
+   /* ┌─ BẢNG MÀU LOVABLE ──────────────────────────────────────────
        │ Chuyển từ src/styles.css của bản Lovable (Crimson / Pearl).
        │ Tên vai trò giữ nguyên như cũ nên 342 chỗ đang dùng tự ăn theo,
        │ không phải sửa file trang nào.
@@ -50,9 +52,12 @@
        │ Tỉ lệ tương phản đã đo, ghi ngay cạnh từng cặp để lần sau đổi
        │ màu là biết ngay mình đang phá cái gì.
        └──────────────────────────────────────────────────────────────── */
-    --brand:             #8a2432;   /* Crimson — header, nút chính, khối nhấn — 8.39:1 trên pearl */
-    --brand-strong:      #6e1b28;   /* bản đậm hơn — hover/nhấn trên nền sáng */
-    --brand-light:       #c98d81;   /* bản nhạt — điểm nhấn/hover TRÊN NỀN TỐI.
+   --brand: #8a2432;
+   /* Crimson — header, nút chính, khối nhấn — 8.39:1 trên pearl */
+   --brand-strong: #6e1b28;
+   /* bản đậm hơn — hover/nhấn trên nền sáng */
+   --brand-light: #c98d81;
+   /* bản nhạt — điểm nhấn/hover TRÊN NỀN TỐI.
                                        Bắt buộc phải có: --brand đặt trên --ink
                                        chỉ đạt 1.5:1 nên hover sẽ mất hút.
                                        Bản nhạt này đạt 5.10:1 trên --ink mới.
@@ -61,10 +66,18 @@
                                        chỉnh từ #c97a80 vì trên nền --ink mới
                                        (#33272a, sáng hơn #1a1214 cũ) sắc đó
                                        tụt xuống 4.48:1, dưới ngưỡng AA. */
-    --brand-subtle:      #f2e4dc;   /* nền nhấn rất nhạt — badge, khối trích dẫn */
-    --on-brand:          #ffffff;   /* chữ đặt TRÊN --brand — 8.96:1 */
-    --on-brand-muted:    #ecc9c0;   /* chữ phụ trên --brand — 5.34:1 */
-    /* ┌─ PEARL #faf6f2 ─────────────────────────────────────────────
+   --brand-subtle: #f2e4dc;
+   /* nền nhấn rất nhạt — badge, khối trích dẫn */
+   --on-brand: #ffffff;
+   /* chữ đặt TRÊN --brand — 8.96:1 */
+   --on-brand-muted: #ecc9c0;
+   /* chữ phụ trên --brand — 5.34:1 */
+   --on-brand-soft: #f6e3dd;
+   /* chữ THÂN BÀI trên --brand — 6.9:1. Nằm giữa --on-brand (trắng, dùng cho
+                                       thứ cần nổi) và --on-brand-muted (mờ nhất). Dải thông báo
+                                       trên header và cả chân trang đều dùng sắc này; trước đây
+                                       nó bị gõ cứng ở header.css nên đổi tông là phải nhớ hai chỗ. */
+   /* ┌─ PEARL #faf6f2 ─────────────────────────────────────────────
        │ Nền của MỌI trang.
        │
        │ KHÁC BẢN BEIGE CŨ: --surface và --surface-raised trước đây cố ý
@@ -74,14 +87,20 @@
        │ trước đúng cách làm việc này: chỉ cần đổi --surface-raised sang
        │ tông sáng hơn, không phải sửa chỗ nào khác.
        └──────────────────────────────────────────────────────────────── */
-    --surface:           #faf6f0;   /* nền trang — PEARL */
-    --surface-raised:    #ffffff;   /* thẻ, khối nổi — nổi nhẹ khỏi nền pearl */
-    --surface-sunken:    #f5efe7;   /* khối chìm nhẹ so với nền pearl */
-    --ink:               #33272a;   /* chữ chính + nền khối tối — 13.42:1 trên pearl */
-    --on-ink:            #f8ede8;   /* chữ đặt TRÊN --ink */
-    --muted:             #6f5f5a;   /* chữ phụ trên nền sáng — 5.61:1 trên pearl */
+   --surface: #faf6f0;
+   /* nền trang — PEARL */
+   --surface-raised: #ffffff;
+   /* thẻ, khối nổi — nổi nhẹ khỏi nền pearl */
+   --surface-sunken: #f5efe7;
+   /* khối chìm nhẹ so với nền pearl */
+   --ink: #33272a;
+   /* chữ chính + nền khối tối — 13.42:1 trên pearl */
+   --on-ink: #f8ede8;
+   /* chữ đặt TRÊN --ink */
+   --muted: #6f5f5a;
+   /* chữ phụ trên nền sáng — 5.61:1 trên pearl */
 
-    /* ┌─ HAI MỨC ĐƯỜNG KẺ ──────────────────────────────────────────
+   /* ┌─ HAI MỨC ĐƯỜNG KẺ ──────────────────────────────────────────
        │ Bản Lovable chỉ có một giá trị #c5bcb8 cho mọi đường viền.
        │ Giá trị đó chỉ đạt 1.73:1 trên nền trang — dưới xa ngưỡng 3:1
        │ mà WCAG 1.4.11 đòi cho thành phần giao diện. Với đường kẻ trang
@@ -94,26 +113,31 @@
        │                 chọn; bắt buộc dùng cho mọi thứ người dùng
        │                 phải nhìn ra ranh giới để thao tác.
        └──────────────────────────────────────────────────────────────── */
-    --line:              #e5d8cc;   /* trang trí — đúng viền nút tròn của bản thiết kế */
-    --line-strong:       #9d8b84;   /* chức năng — 3.06:1 trên nền trang */
+   --line: #e5d8cc;
+   /* trang trí — đúng viền nút tròn của bản thiết kế */
+   --line-strong: #9d8b84;
+   /* chức năng — 3.06:1 trên nền trang */
 
-    /* Nhãn phụ tông hồng ấm — chữ IN HOA nhỏ đứng trên mỗi tiêu đề khối,
+   /* Nhãn phụ tông hồng ấm — chữ IN HOA nhỏ đứng trên mỗi tiêu đề khối,
        tiêu đề cột chân trang, breadcrumb, nhãn ô nhập trong form liên hệ.
        Mọi bản thiết kế đều dùng đúng sắc này; trước đây nó bị chép tay ở bốn
        file CSS khác nhau nên đổi tông là phải nhớ sửa đủ bốn chỗ. */
-    --eyebrow:           #b0736a;
+   --eyebrow: #b0736a;
 
-    /* Bí danh tên cũ (--yellow, --black, --white, --warm-bg…) đã BỎ HẲN.
+   /* Bí danh tên cũ (--yellow, --black, --white, --warm-bg…) đã BỎ HẲN.
        Chúng tồn tại để khỏi phải sửa "342 chỗ đang dùng" của thiết kế cũ;
        thiết kế cũ đi rồi thì chỉ còn 8 chỗ trong errors.css, nay đã đổi
        sang tên vai trò. Code mới dùng thẳng --brand / --ink / --surface. */
 
-    /* Màu trạng thái — lấy theo bản Lovable, đo tương phản trên nền pearl */
-    --danger:            #c0392b;   /* viền + chữ báo lỗi form — 5.06:1 */
-    --success:           #27ae60;   /* chấm trạng thái camera đang chạy — 6.41:1 trên ink */
-    --surface-focus:     #fffdfb;   /* nền ô nhập khi focus — sáng hơn pearl một chút */
+   /* Màu trạng thái — lấy theo bản Lovable, đo tương phản trên nền pearl */
+   --danger: #c0392b;
+   /* viền + chữ báo lỗi form — 5.06:1 */
+   --success: #27ae60;
+   /* chấm trạng thái camera đang chạy — 6.41:1 trên ink */
+   --surface-focus: #fffdfb;
+   /* nền ô nhập khi focus — sáng hơn pearl một chút */
 
-    /* ┌─ FONT ──────────────────────────────────────────────────────
+   /* ┌─ FONT ──────────────────────────────────────────────────────
        │ Lora cho tiêu đề, Be Vietnam Pro cho chữ chạy — đúng hai dòng
        │ mà "Vin Eyewear Home.dc.html" nạp.
        │ Be Vietnam Pro được thiết kế riêng cho tiếng Việt: dấu thanh
@@ -130,11 +154,11 @@
        │
        │ Nhớ đổi kèm thẻ <link> Google Fonts trong _layout/master.php.
        └──────────────────────────────────────────────────────────────── */
-    --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
-    --font-sans:  'Be Vietnam Pro', 'Helvetica Neue', Arial, sans-serif;
-    --font-mono:  'JetBrains Mono', monospace;
+   --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
+   --font-sans: 'Be Vietnam Pro', 'Helvetica Neue', Arial, sans-serif;
+   --font-mono: 'JetBrains Mono', monospace;
 
-    /* ============================================================
+   /* ============================================================
        THANG CHỮ — nguồn duy nhất cho mọi font-size của site.
        Đổi ở đây là mọi trang đổi theo; ĐỪNG viết font-size bằng px
        trong file trang nữa.
@@ -152,49 +176,60 @@
          Ví dụ --fs-h1: 30px ở 600px, 36px ở 900px, 48px ở 1440px trở lên.
        ============================================================ */
 
-    /* Tầng giao diện — cố định */
-    --fs-micro:    10px;   /* badge, meta nhỏ nhất */
-    --fs-label:    11px;   /* nhãn IN HOA — cỡ dùng nhiều nhất site */
-    --fs-caption:  12px;
-    --fs-note:     13px;
-    --fs-body-sm:  14px;
-    --fs-body:     15px;
-    --fs-body-lg:  16px;
+   /* Tầng giao diện — cố định */
+   --fs-micro: 10px;
+   /* badge, meta nhỏ nhất */
+   --fs-label: 11px;
+   /* nhãn IN HOA — cỡ dùng nhiều nhất site */
+   --fs-caption: 12px;
+   --fs-note: 13px;
+   --fs-body-sm: 14px;
+   --fs-body: 15px;
+   --fs-body-lg: 16px;
 
-    /* Tầng tiêu đề — co giãn (giá trị ghi chú là cỡ ở 600px → 1440px) */
-    --fs-lead:     clamp(15px, calc(14.6px + 0.24vw), 18px);   /* 16 → 18 */
-    --fs-subhead:  clamp(17px, calc(15.1px + 0.48vw), 22px);   /* 18 → 22 */
-    --fs-h6:       clamp(19px, calc(16.4px + 0.60vw), 25px);   /* 20 → 25 */
-    --fs-h5:       clamp(20px, calc(17.7px + 0.71vw), 28px);   /* 22 → 28 */
-    --fs-h4:       clamp(22px, calc(18.3px + 0.95vw), 32px);   /* 24 → 32 */
-    --fs-h3:       clamp(24px, calc(18.9px + 1.19vw), 36px);   /* 26 → 36 */
-    --fs-h2:       clamp(26px, calc(18.0px + 1.67vw), 42px);   /* 28 → 42 */
-    --fs-h1:       clamp(28px, calc(17.1px + 2.14vw), 48px);   /* 30 → 48 */
-    --fs-display:  clamp(62px, calc(24.0px + 6.67vw), 120px);  /* 64 → 120 */
+   /* Tầng tiêu đề — co giãn (giá trị ghi chú là cỡ ở 600px → 1440px) */
+   --fs-lead: clamp(15px, calc(14.6px + 0.24vw), 18px);
+   /* 16 → 18 */
+   --fs-subhead: clamp(17px, calc(15.1px + 0.48vw), 22px);
+   /* 18 → 22 */
+   --fs-h6: clamp(19px, calc(16.4px + 0.60vw), 25px);
+   /* 20 → 25 */
+   --fs-h5: clamp(20px, calc(17.7px + 0.71vw), 28px);
+   /* 22 → 28 */
+   --fs-h4: clamp(22px, calc(18.3px + 0.95vw), 32px);
+   /* 24 → 32 */
+   --fs-h3: clamp(24px, calc(18.9px + 1.19vw), 36px);
+   /* 26 → 36 */
+   --fs-h2: clamp(26px, calc(18.0px + 1.67vw), 42px);
+   /* 28 → 42 */
+   --fs-h1: clamp(28px, calc(17.1px + 2.14vw), 48px);
+   /* 30 → 48 */
+   --fs-display: clamp(62px, calc(24.0px + 6.67vw), 120px);
+   /* 64 → 120 */
 
-    /* ============================================================
+   /* ============================================================
        THANG KHOẢNG CÁCH — lưới 4px, dùng cho padding/margin/gap.
        Đổi một token ở đây là mọi chỗ dùng nó giãn/thu theo.
        Chỉ những giá trị nằm ĐÚNG trên lưới mới có token; các số lẻ
        (1, 2, 3, 5, 7, 18, 22, 84…) là tinh chỉnh riêng của từng chỗ,
        cố ý để nguyên px chứ không ép vào thang.
        ============================================================ */
-    --space-1:   4px;
-    --space-2:   8px;
-    --space-3:   12px;
-    --space-4:   16px;
-    --space-5:   20px;
-    --space-6:   24px;
-    --space-8:   32px;
-    --space-10:  40px;
-    --space-12:  48px;
-    --space-14:  56px;
-    --space-16:  64px;
-    --space-20:  80px;
-    --space-24:  96px;
-    --space-30:  120px;
+   --space-1: 4px;
+   --space-2: 8px;
+   --space-3: 12px;
+   --space-4: 16px;
+   --space-5: 20px;
+   --space-6: 24px;
+   --space-8: 32px;
+   --space-10: 40px;
+   --space-12: 48px;
+   --space-14: 56px;
+   --space-16: 64px;
+   --space-20: 80px;
+   --space-24: 96px;
+   --space-30: 120px;
 
-    /* ============================================================
+   /* ============================================================
        NHỊP ĐIỆU TRANG — bốn núm chỉnh bố cục toàn site.
 
        Bốn giá trị này TRƯỚC ĐÂY được gõ cứng thẳng vào từng file: riêng
@@ -208,23 +243,51 @@
        clamp(nhỏ nhất, co theo màn, lớn nhất) — con số giữa là vw nên
        khoảng cách tự giãn theo bề ngang, không cần @media.
        ============================================================ */
-    /* Lề trái/phải MỌI section.
-       5vw cũ cho ra lề 72px ở màn 1440 và 88px ở màn 1920 — nội dung bị bó
-       lại giữa hai dải trống rất rộng. Bản thiết kế "Vin Eyewear Home.dc.html"
-       dùng lề 32px cố định; ở đây giữ dạng clamp để màn hẹp vẫn co được, chỉ
-       hạ hệ số. Nay hạ tiếp một nấc theo yêu cầu "cho nhỏ hơn nữa":
-       16px trên điện thoại, 26px ở 1280, 32px từ 1600 trở lên. */
-    --gutter:        clamp(16px, 2vw, 32px);
-    --gutter-tight:  clamp(16px, 5vw, 24px);   /* lề trong khối hẹp (thẻ, hộp) */
-    --section-pad:   clamp(56px, 8vw, 128px);  /* đệm TRÊN/DƯỚI mỗi section */
-    --block-gap:     clamp(36px, 6vw, 76px);   /* giãn cách giữa các khối trong section */
+   /* LỀ HẸP CỦA DÒNG HEADER TRÊN MÀN HẸP — chỉ còn đúng hai chỗ dùng:
+       .header-main dưới mốc 1100px và dải thông báo trên nó (components/header.css).
+       Dòng header cố ý ép sát cạnh hơn phần thân trang: nó chỉ có wordmark và
+       mấy nút tròn, để nó thụt vào bằng --page-edge thì trên máy tính bảng
+       wordmark bị đẩy vào gần giữa màn.
 
-    /* Chiều cao dùng chung cho .site-header, chiều cao link nav và offset của
+       (Chú thích cũ ở đây khẳng định token này là "lề của các trang dựng theo
+       bản Category/Contact/Product". Đếm lại thì KHÔNG trang nào trong số đó
+       dùng nó — cả 17 file kia đều dùng --page-edge. Đã sửa lời cho khớp.) */
+   --gutter: clamp(16px, 2vw, 32px);
+   --gutter-tight: clamp(16px, 5vw, 24px);
+   /* lề trong khối hẹp (thẻ, hộp) */
+
+   /* ┌─ LỀ NGANG CỦA MỌI CỘT NỘI DUNG ─────────────────────────────
+       │ Một token cho cả site: trang chủ, header, chân trang, và 17 file CSS
+       │ của các trang trong. Đổi ở đây là mọi khối đi theo cùng nhau.
+       │
+       │ "Vin Eyewear Home.dc.html" đặt lề 96px cố định cho MỌI khối — nó là
+       │ khung cứng 1280px nên không cần co. Ở đây giữ dạng clamp để màn hẹp
+       │ vẫn co được.
+       │
+       │ ĐÃ NỚI RỘNG (7.5vw/96px → 8.5vw/128px) theo yêu cầu "cho to ra":
+       │
+       │     màn 1920  →  128px      màn 1280  →  109px
+       │     màn 1600  →  128px      màn  900  →   77px
+       │     màn 1440  →  122px      màn  390  →   33px
+       │
+       │ Mốc dừng 128px thay vì để 8.5vw chạy tự do: trên màn 2560 thì 8.5vw
+       │ là 218px mỗi bên, cột nội dung sẽ hẹp lại thấy rõ mà chẳng đẹp thêm.
+       │ Hệ số 8.5vw chọn để chạm đúng 128px ngay tại 1506px — dưới mốc đó lề
+       │ thu dần theo màn, nên điện thoại chỉ nhích thêm vài pixel so với trước
+       │ (33px thay vì 29px ở màn 390) và thẻ sản phẩm không bị bóp.
+       └──────────────────────────────────────────────────────────────── */
+   --page-edge: clamp(18px, 8.5vw, 128px);
+   --section-pad: clamp(56px, 8vw, 128px);
+   /* đệm TRÊN/DƯỚI mỗi section */
+   --block-gap: clamp(36px, 6vw, 76px);
+   /* giãn cách giữa các khối trong section */
+
+   /* Chiều cao dùng chung cho .site-header, chiều cao link nav và offset của
        .filter-sidebar (trước hardcode rời nhau, lệch nhau). Đổi ở đây là cả 3
        nơi đi theo — đừng hardcode lại chiều cao header ở file khác. */
-    --header-h:   76px;
+   --header-h: 76px;
 
-    /* Bề ngang tối đa của cột nội dung — 25 chỗ trong 13 file dùng nó.
+   /* Bề ngang tối đa của cột nội dung — 25 chỗ trong 13 file dùng nó.
        ĐÃ SỬA 1200 -> 1280: cả 25 chỗ đều viết var(--container, 1280px),
        tức người viết định 1280. Nhưng token có khai báo thì giá trị dự
        phòng không bao giờ tới lượt, nên thực tế cả site chạy 1200 —
@@ -234,9 +297,81 @@
        phải do --gutter mà do cột nội dung bị chặn ở 1280 rồi căn giữa — ở
        1920 riêng khoảng căn giữa đã là 313px mỗi bên, hạ gutter bao nhiêu
        cũng không đụng tới nó. */
-    --container:   1600px;
+   --container: 1600px;
 
-    /* ============================================================
+   /* ============================================================
+       ĐỘ BO GÓC — ba giá trị cho cả site, không có giá trị thứ tư.
+
+       "Vin Eyewear Home.dc.html" vẽ mọi thứ bằng góc gần vuông: thẻ 6px,
+       nút và huy hiệu 4px. Trước đây mỗi trang tự chọn lấy một con số —
+       đếm được 999px, 36, 32, 28, 24, 22, 20, 18, 16, 14, 12, 7, 6, 5 —
+       nên hai khối cạnh nhau ở hai trang khác nhau không bao giờ khớp dáng.
+
+         --radius        thẻ, hộp, panel, ảnh lớn, hộp thoại
+         --radius-sm     nút, ô nhập, huy hiệu, chip, tab, thumbnail
+         --radius-round  thứ TRÒN THẬT: ảnh đại diện, chấm trạng thái, vòng
+                         rỗng, icon mạng xã hội, con số bước trong vòng tròn
+
+       --radius-round KHÔNG phải "viên thuốc". Nút hình chữ nhật bo 999px là
+       thứ bản thiết kế đã bỏ; giá trị này chỉ dành cho phần tử vuông (rộng
+       bằng cao) mà ý đồ là một hình tròn.
+       ============================================================ */
+   --radius: 6px;
+   --radius-sm: 4px;
+   --radius-round: 999px;
+
+   /* ============================================================
+      SẮC ĐỘ CỦA BẢN THIẾT KẾ MỚI — cụm --h-*
+
+      "h" là dấu vết của lúc chúng chỉ phục vụ các khối trang chủ (home) và
+      được gắn trên một danh sách 11 selector trong home-sections.css. Nay cả
+      site đã đổi sang ngôn ngữ hình khối đó, và thẻ sản phẩm dùng chung
+      (.pcard) chạy ở cả trang chủ lẫn trang chi tiết — nên chúng phải nằm ở
+      :root. Giữ nguyên tên vì ~60 chỗ đang gọi.
+
+      Đây là những sắc KHÔNG có token vai trò tương ứng: hồng phấn, nền chờ
+      sau ảnh, ba mức chữ phụ, ba mức đường kẻ, và cụm màu của dải nền tối.
+      ============================================================ */
+   /* Hồng phấn — nhãn cam kết, nút sáng trên nền tối */
+   --h-blush:         #f2e4dc;
+   --h-blush-line:    #e3cfc4;
+
+   /* Nền chờ phía sau ảnh, thấy được lúc ảnh chưa tải xong */
+   --h-shell:         #f5efe7;
+
+   /* Ba sắc chữ phụ, nhạt dần: nhãn khối · mô tả · siêu dữ liệu */
+   --h-eyebrow:       var(--eyebrow);
+   --h-note:          #9a877f;
+   --h-meta:          #b0a094;
+
+   /* HAI mức đường kẻ, cố ý khác nhau:
+   --h-line      viền NÚT phụ (1.5px), phải thấy rõ vì bấm được
+   --h-card-line viền THẺ (1px)
+   --h-rule      đường kẻ TRONG thẻ, nhạt nhất */
+   --h-line:          #e0cfc2;
+   --h-card-line:     #eee0d4;
+   --h-rule:          #f0e4d8;
+
+   /* Ba dải tối của trang (cam kết dưới hero · đo mắt · CTA) dùng CHUNG một
+   sắc nâu sẫm, không phải --ink (đen trung tính) */
+   --h-dark:          #3b1219;
+   --h-dark-eyebrow:  #d8a49a;
+   --h-on-dark:       #f8ede8;
+   --h-on-dark-muted: #bd9d95;
+   --h-on-dark-num:   #c98d81;
+
+   /* Bí danh của token dùng chung trong layout.css — MỘT nguồn cho cả site.
+   Giữ tên --h-* vì 27 chỗ trong file này đang gọi, nhưng giá trị nay
+   không còn khai riêng ở đây nữa. */
+   --h-radius:        var(--radius);      /* thẻ, ảnh, hộp thoại */
+   --h-radius-sm:     var(--radius-sm);   /* nút, huy hiệu, ô đếm ngược */
+
+   --h-pad-y:         56px;  /* đệm trên/dưới mỗi khối */
+
+   --h-shadow:        0 2px 10px rgba(90, 40, 40, 0.05);
+   --h-shadow-lift:   0 18px 40px rgba(90, 40, 40, 0.12);
+
+   /* ============================================================
        ĐỘ NỔI — bóng đổ.
 
        Thiết kế cũ phẳng tuyệt đối: phân tách chỉ bằng viền 1px, và 8 chỗ
@@ -246,12 +381,15 @@
        trên nền pearl ấm, bóng xám trung tính trông xỉn và bẩn. Mỗi mức
        gồm hai lớp — lớp sát để tạo mép, lớp toả để tạo chiều sâu.
        ============================================================ */
-    --elev-1: 0 1px 2px rgba(26, 18, 20, 0.05),
-              0 1px 1px rgba(26, 18, 20, 0.04);   /* thẻ ở trạng thái nghỉ */
-    --elev-2: 0 4px 14px rgba(26, 18, 20, 0.07),
-              0 1px 3px  rgba(26, 18, 20, 0.05);  /* thẻ khi rê chuột */
-    --elev-3: 0 14px 36px rgba(26, 18, 20, 0.11),
-              0 4px 10px  rgba(26, 18, 20, 0.06); /* lớp nổi: menu, hộp thoại */
+   --elev-1: 0 1px 2px rgba(26, 18, 20, 0.05),
+      0 1px 1px rgba(26, 18, 20, 0.04);
+   /* thẻ ở trạng thái nghỉ */
+   --elev-2: 0 4px 14px rgba(26, 18, 20, 0.07),
+      0 1px 3px rgba(26, 18, 20, 0.05);
+   /* thẻ khi rê chuột */
+   --elev-3: 0 14px 36px rgba(26, 18, 20, 0.11),
+      0 4px 10px rgba(26, 18, 20, 0.06);
+   /* lớp nổi: menu, hộp thoại */
 }
 
 
@@ -265,67 +403,110 @@
    ============================================================ */
 
 html {
-    scroll-behavior: smooth;
-    /* Bù cho header dính khi nhảy tới liên kết neo */
-    scroll-padding-top: 140px;
-    -webkit-text-size-adjust: 100%;
+   scroll-behavior: smooth;
+   /* Bù cho header dính khi nhảy tới liên kết neo */
+   scroll-padding-top: 140px;
+   -webkit-text-size-adjust: 100%;
 }
 
-html, body {
-    max-width: 100%;
-    /* Chặn trang trượt ngang khi một khối lỡ rộng quá khung */
-    overflow-x: hidden;
+html,
+body {
+   max-width: 100%;
+}
+
+/*
+ * Chặn trang trượt ngang khi một khối lỡ rộng quá khung.
+ *
+ * CHỈ ĐẶT TRÊN <html>, KHÔNG ĐẶT TRÊN <body>. Đây không phải chuyện gọn gàng —
+ * nó quyết định position:sticky còn chạy hay không:
+ *
+ *   overflow-x:hidden làm trục còn lại tính ra `overflow-y: auto` (quy tắc của
+ *   CSS: một trục khác `visible` thì trục kia không được là `visible`). Đặt lên
+ *   <body> thì BODY thành một vùng cuộn riêng, và mọi phần tử sticky bên trong
+ *   neo theo vùng cuộn ấy thay vì theo màn hình — cuộn trang là chúng trôi đi
+ *   mất.
+ *
+ * Đã dính thật ở hai chỗ: cột lọc chuyên mục trang /su-kien và cột điều hướng
+ * trang /tai-khoan, cả hai khai `position: sticky` mà không dính.
+ *
+ * Để trên <html> thì trang vẫn không trượt ngang được, mà <html> vẫn là vùng
+ * cuộn của cả trang nên sticky neo đúng theo màn hình.
+ */
+html {
+   overflow-x: hidden;
 }
 
 body {
-    background: var(--surface);
-    color: var(--ink);
-    font-family: var(--font-sans);
-    font-size: var(--fs-body);
-    font-weight: 400;
-    line-height: 1.7;
-    letter-spacing: -0.005em;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+   background: var(--surface);
+   color: var(--ink);
+   font-family: var(--font-sans);
+   font-size: var(--fs-body);
+   font-weight: 400;
+   line-height: 1.7;
+   letter-spacing: -0.005em;
+   text-rendering: optimizeLegibility;
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
 }
 
 /* Tiêu điểm bàn phím phải thấy rõ trên MỌI phần tử tương tác */
 :focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 3px;
+   outline: 2px solid var(--brand);
+   outline-offset: 3px;
 }
 
 /* Bôi đen: nền hồng phấn, chữ giữ nguyên màu — đúng `::selection` của
    "Vin Eyewear Home.dc.html". Bản trước tô nền đỏ đậm + chữ trắng, đọc được
    nhưng đè mất màu của chữ đang bôi (giá tiền, tên thương hiệu…). */
 ::selection {
-    background: #f0dcd6;
-    color: var(--ink);
+   background: #f0dcd6;
+   color: var(--ink);
 }
 
-img, svg, video, iframe { max-width: 100%; }
+img,
+svg,
+video,
+iframe {
+   max-width: 100%;
+}
 
 /* Ảnh không bị kéo-thả vô tình trên cảm ứng */
-img { -webkit-user-drag: none; }
+img {
+   -webkit-user-drag: none;
+}
 
 /* Chữ xuống dòng đẹp hơn: đoạn văn tránh dòng cuối trơ trọi một từ,
    tiêu đề chia đều các dòng */
-p  { text-wrap: pretty; }
-h1, h2, h3 { text-wrap: balance; }
+p {
+   text-wrap: pretty;
+}
 
-a { color: inherit; }
+h1,
+h2,
+h3 {
+   text-wrap: balance;
+}
 
-.main-content { display: block; }
+a {
+   color: inherit;
+}
+
+.main-content {
+   display: block;
+}
 
 @media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
+   html {
+      scroll-behavior: auto;
+   }
 
-    *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-    }
+   *,
+   *::before,
+   *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+   }
 }
 
 /* ============================================================

@@ -1,10 +1,14 @@
 /**
- * policy.js — Chuyển nhóm và tìm kiếm cho trang /chinh-sach.
+ * policy.js — Mục lục tự sáng theo vị trí cuộn + tìm nhanh cho /chinh-sach.
  *
- * Cải tiến dần (progressive enhancement): server đã in đủ 5 nhóm chính sách.
- * File này chỉ THÊM khả năng lọc. Tắt JavaScript thì trang vẫn đọc được đủ
- * nội dung, chỉ mất phần lọc — nên ô tìm kiếm mặc định `hidden`, script bật
- * nó lên khi chạy được.
+ * Cải tiến dần (progressive enhancement): server đã in đủ MỌI nhóm chính
+ * sách và mục lục là những thẻ <a href="#…"> thật. File này chỉ thêm hai
+ * thứ — đánh dấu mục đang xem, và lọc theo từ khoá. Tắt JavaScript thì
+ * trang vẫn đọc và nhảy neo được đủ, chỉ mất hai thứ đó.
+ *
+ * KHÁC BẢN TRƯỚC: cột trái không còn là TAB. Trước đây bấm một mục thì bốn
+ * nhóm còn lại bị display:none — xem chú thích đầu app/views/policy/index.php
+ * về lý do bỏ.
  */
 
 (function () {
@@ -13,67 +17,111 @@
     var root = document.querySelector('.policy');
     if (!root) return;
 
-    var tabs     = Array.prototype.slice.call(root.querySelectorAll('[data-policy-tab]'));
+    var tocItems = Array.prototype.slice.call(root.querySelectorAll('[data-policy-toc]'));
     var groups   = Array.prototype.slice.call(root.querySelectorAll('[data-policy-group]'));
     var input    = root.querySelector('#policySearch');
     var resultEl = root.querySelector('[data-policy-result]');
     var emptyEl  = root.querySelector('[data-policy-empty]');
 
-    if (!tabs.length || !groups.length) return;
+    if (!tocItems.length) return;
 
     // Bật những phần chỉ có ý nghĩa khi JavaScript chạy
     root.querySelectorAll('[data-needs-js]').forEach(function (el) {
         el.hidden = false;
     });
 
-    // Báo cho CSS biết được phép ẩn bớt nhóm. Trước dòng này mọi nhóm đều
-    // hiện — xem ghi chú trong policy.css.
-    root.classList.add('js-ready');
-
-    var activeId = groups[0].getAttribute('data-policy-group');
-
     /* ====================================================================
-       CHUYỂN NHÓM
+       MỤC LỤC TỰ SÁNG THEO VỊ TRÍ CUỘN
+
+       Mốc 140px là chiều cao header dính — cùng con số với scroll-padding-top
+       trong layout.css. Section nào có mép trên đã vượt qua mốc đó thì coi
+       như đang đọc; lấy cái CUỐI CÙNG thoả điều kiện.
        ==================================================================== */
 
-    function showGroup(id) {
+    var HEADER_OFFSET = 140;
+
+    // Neo cần theo dõi = đúng thứ tự các mục trong mục lục, nên không thể
+    // lệch với những gì người dùng nhìn thấy bên trái.
+    var anchors = tocItems.map(function (item) {
+        return item.getAttribute('data-policy-toc');
+    });
+
+    var activeId  = anchors[0];
+    var lock      = false;   // đang cuộn mượt theo lệnh bấm
+    var lockTimer = null;
+    var rafId     = null;
+
+    function setActive(id) {
+        if (id === activeId) return;
         activeId = id;
-
-        groups.forEach(function (g) {
-            g.classList.toggle('is-active', g.getAttribute('data-policy-group') === id);
+        tocItems.forEach(function (item) {
+            item.classList.toggle('is-active', item.getAttribute('data-policy-toc') === id);
         });
-
-        tabs.forEach(function (t) {
-            t.classList.toggle('is-active', t.getAttribute('data-policy-tab') === id);
-        });
-
-        // Rời chế độ tìm kiếm: bỏ nhãn nhóm trên từng câu hỏi
-        root.querySelectorAll('[data-policy-badge]').forEach(function (b) {
-            b.hidden = true;
-        });
-
-        if (resultEl) resultEl.hidden = true;
-        if (emptyEl) emptyEl.hidden = true;
     }
 
-    tabs.forEach(function (tab) {
-        tab.addEventListener('click', function (e) {
-            // Chặn nhảy neo để trang không giật; đổi nhóm tại chỗ.
-            // Không có JS thì hành vi neo mặc định vẫn chạy — đó là chủ ý.
-            e.preventDefault();
+    function clearActive() {
+        activeId = null;
+        tocItems.forEach(function (item) { item.classList.remove('is-active'); });
+    }
 
-            if (input) input.value = '';
-            showGroup(tab.getAttribute('data-policy-tab'));
+    function spy() {
+        var current = null;
 
-            // Cập nhật URL để người dùng chia sẻ được đúng nhóm đang xem
-            if (window.history && window.history.replaceState) {
-                window.history.replaceState(null, '', '#' + tab.getAttribute('data-policy-tab'));
+        for (var i = 0; i < anchors.length; i++) {
+            var el = document.getElementById(anchors[i]);
+            // Nhóm đang bị ẩn vì lọc thì không tính
+            if (!el || el.hidden) continue;
+            if (el.getBoundingClientRect().top <= HEADER_OFFSET) current = anchors[i];
+        }
+
+        /* Cuối trang: mục cuối cùng thường quá ngắn để mép trên của nó kịp
+           vượt mốc 140px trước khi hết trang cuộn, nên nếu không có dòng này
+           thì mục "Liên hệ hỗ trợ" không bao giờ sáng. */
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+            for (var j = anchors.length - 1; j >= 0; j--) {
+                var last = document.getElementById(anchors[j]);
+                if (last && !last.hidden) { current = anchors[j]; break; }
             }
+        }
+
+        setActive(current || anchors[0]);
+    }
+
+    function onScroll() {
+        /* Đang cuộn mượt tới mục vừa bấm: giữ nguyên mục sáng, nếu không thì
+           mục lục nhấp nháy chạy qua từng nhóm trên đường đi. Chỉ mở khoá khi
+           cuộn đã dừng hẳn. */
+        if (lock) {
+            window.clearTimeout(lockTimer);
+            lockTimer = window.setTimeout(function () { lock = false; }, 150);
+            return;
+        }
+        if (rafId) return;
+        rafId = window.requestAnimationFrame(function () {
+            rafId = null;
+            spy();
+        });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    /* Bấm mục lục: KHÔNG chặn hành vi mặc định — thẻ neo tự cuộn mượt nhờ
+       `scroll-behavior: smooth` và tự chừa chỗ cho header nhờ
+       `scroll-padding-top`, cả hai đã khai ở layout.css. Ở đây chỉ khoá
+       scrollspy lại trong lúc trang đang trôi. */
+    tocItems.forEach(function (item) {
+        item.addEventListener('click', function () {
+            lock = true;
+            window.clearTimeout(lockTimer);
+            lockTimer = window.setTimeout(function () { lock = false; }, 600);
+            setActive(item.getAttribute('data-policy-toc'));
         });
     });
 
+    spy();
+
     /* ====================================================================
-       TÌM KIẾM
+       TÌM NHANH
        ==================================================================== */
 
     /**
@@ -92,49 +140,51 @@
             .toLowerCase();
     }
 
-    function search(term) {
+    function resetFilter() {
+        groups.forEach(function (group) {
+            group.hidden = false;
+            group.querySelectorAll('[data-policy-item]').forEach(function (item) {
+                item.hidden = false;
+            });
+        });
+        if (resultEl) resultEl.hidden = true;
+        if (emptyEl) emptyEl.hidden = true;
+        spy();
+    }
+
+    function filter(term) {
         var needle = deaccent(term.trim());
 
         if (needle === '') {
-            showGroup(activeId);
+            resetFilter();
             return;
         }
 
         var found = 0;
 
         groups.forEach(function (group) {
-            var groupLabel = group.getAttribute('data-policy-label') || '';
-            var items = group.querySelectorAll('[data-policy-item]');
-            var visibleInGroup = 0;
+            var visible = 0;
 
-            items.forEach(function (item) {
-                var haystack = deaccent(groupLabel + ' ' + item.textContent);
-                var match = haystack.indexOf(needle) !== -1;
-
+            group.querySelectorAll('[data-policy-item]').forEach(function (item) {
+                var match = deaccent(item.textContent).indexOf(needle) !== -1;
                 item.hidden = !match;
-
-                // Hiện nhãn nhóm vì kết quả trộn từ nhiều nhóm khác nhau
-                var badge = item.querySelector('[data-policy-badge]');
-                if (badge) badge.hidden = !match;
-
-                if (match) {
-                    visibleInGroup++;
-                    found++;
-                }
+                if (match) { visible++; found++; }
             });
 
-            // Khi tìm kiếm thì hiện MỌI nhóm còn kết quả, không chỉ nhóm đang mở
-            group.classList.toggle('is-active', visibleInGroup > 0);
-            group.classList.add('is-searching');
+            // Nhóm không còn câu nào khớp thì giấu cả tiêu đề lẫn lời dẫn,
+            // nếu không thì màn hình đầy tiêu đề rỗng.
+            group.hidden = visible === 0;
         });
-
-        tabs.forEach(function (t) { t.classList.remove('is-active'); });
 
         if (resultEl) {
             resultEl.hidden = false;
-            resultEl.textContent = found + ' kết quả cho “' + term.trim() + '”';
+            resultEl.textContent = found + ' nội dung phù hợp với “' + term.trim() + '”';
         }
         if (emptyEl) emptyEl.hidden = found > 0;
+
+        /* Đang lọc thì "mục đang đọc" không còn nghĩa gì — kết quả trộn từ
+           nhiều nhóm, và phần lớn nhóm đã biến mất khỏi trang. */
+        clearActive();
     }
 
     if (input) {
@@ -144,19 +194,7 @@
             // Hoãn 150ms: gõ nhanh sẽ bắn nhiều sự kiện input, mỗi lần lọc là
             // một lượt duyệt toàn bộ DOM câu hỏi.
             window.clearTimeout(timer);
-            timer = window.setTimeout(function () {
-                if (input.value.trim() === '') {
-                    groups.forEach(function (g) {
-                        g.classList.remove('is-searching');
-                        g.querySelectorAll('[data-policy-item]').forEach(function (i) {
-                            i.hidden = false;
-                        });
-                    });
-                    showGroup(activeId);
-                    return;
-                }
-                search(input.value);
-            }, 150);
+            timer = window.setTimeout(function () { filter(input.value); }, 150);
         });
 
         // Esc xoá ô tìm kiếm — thói quen quen thuộc với ô tìm kiếm
@@ -164,22 +202,29 @@
             if (e.key === 'Escape' && input.value !== '') {
                 e.preventDefault();
                 input.value = '';
-                input.dispatchEvent(new Event('input'));
+                window.clearTimeout(timer);
+                resetFilter();
             }
         });
     }
 
     /* ====================================================================
-       MỞ ĐÚNG NHÓM KHI VÀO BẰNG LIÊN KẾT NEO (/chinh-sach#doi-tra)
+       VÀO TRANG BẰNG LIÊN KẾT NEO (/chinh-sach#doi-tra)
+
+       Trình duyệt tự cuộn tới neo; ở đây chỉ cần đồng bộ mục lục. Hoãn một
+       nhịp vì lúc sự kiện chạy thì trang chưa cuộn xong.
        ==================================================================== */
 
-    function openFromHash() {
+    function syncFromHash() {
         var id = window.location.hash.replace('#', '');
-        if (id && groups.some(function (g) { return g.getAttribute('data-policy-group') === id; })) {
-            showGroup(id);
+        if (anchors.indexOf(id) !== -1) {
+            lock = true;
+            window.clearTimeout(lockTimer);
+            lockTimer = window.setTimeout(function () { lock = false; }, 600);
+            setActive(id);
         }
     }
 
-    openFromHash();
-    window.addEventListener('hashchange', openFromHash);
+    syncFromHash();
+    window.addEventListener('hashchange', syncFromHash);
 })();

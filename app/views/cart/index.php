@@ -140,6 +140,34 @@ $count = count($lines);
                             <?php if ($variant !== ''): ?>
                                 <span class="citem__variant"><?= e($variant) ?></span>
                             <?php endif; ?>
+
+                            <?php if ($line['lens'] !== null || $line['rx'] !== null): ?>
+                                <?php /* Tròng cắt kèm. Hiện thành một dòng RIÊNG có
+                                         nền, không gộp vào dòng phiên bản: nó là
+                                         phần lớn nhất của khoản chênh giá, và số đo
+                                         mắt là thứ khách phải soát lại được trước
+                                         khi đặt. Xem CartController::add(). */ ?>
+                                <span class="clens">
+                                    <?php if ($line['lens'] !== null): ?>
+                                        <span class="clens__name">
+                                            + <?= e($line['lens']['name']) ?>
+                                            <span class="clens__price">
+                                                <?= money((int) $line['lens']['price']) ?>
+                                            </span>
+                                        </span>
+                                    <?php endif; ?>
+                                    <?php /* Số đo hiện KỂ CẢ khi không có gói tròng kèm:
+                                             kính áp tròng và tròng rời cũng đi qua nhánh
+                                             "theo số đo" nhưng không cộng thêm gói nào,
+                                             mà con số vẫn là thứ quyết định hàng giao ra. */ ?>
+                                    <span class="clens__rx">
+                                        <?= $line['rx'] !== null
+                                            ? e($line['rx'])
+                                            : 'Chưa có số đo — đo tại cửa hàng' ?>
+                                    </span>
+                                </span>
+                            <?php endif; ?>
+
                             <span class="citem__unit"><?= money($line['unitPrice']) ?></span>
 
                             <?php if (!$line['available']): ?>

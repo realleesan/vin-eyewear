@@ -295,6 +295,69 @@ function dateRange(?string $startsAt, ?string $endsAt): string
 // CHUỖI
 // ============================================================================
 
+// ============================================================================
+// NGÔN NGỮ
+//
+// PHẠM VI RẤT HẸP, đọc trước khi dùng: chỉ KHUNG giao diện (đầu trang, chân
+// trang, bảng xổ, cụm nút nổi) có bản tiếng Anh. Nội dung từng trang và dữ
+// liệu CSDL vẫn là tiếng Việt ở cả hai ngôn ngữ — xem ghi chú dài ở đầu
+// config/lang/vi.php.
+// ============================================================================
+
+/** Mã ngôn ngữ được phép. Danh sách CHO PHÉP, không phải danh sách cấm. */
+const LANG_CODES = ['vi', 'en'];
+
+/** Ngôn ngữ mặc định khi khách chưa chọn gì. */
+const LANG_DEFAULT = 'vi';
+
+/** Tên cookie ghi lựa chọn ngôn ngữ. */
+const LANG_COOKIE = 'vin_lang';
+
+/**
+ * Ngôn ngữ đang dùng.
+ *
+ * Đọc từ cookie và ĐỐI CHIẾU với danh sách cho phép: giá trị này đi thẳng vào
+ * thuộc tính lang của thẻ <html> và vào khoá tra config, nên một chuỗi bịa từ
+ * cookie mà lọt qua là mở đường cho cả hai chỗ đó.
+ */
+function currentLang(): string
+{
+    $lang = (string) ($_COOKIE[LANG_COOKIE] ?? '');
+
+    return in_array($lang, LANG_CODES, true) ? $lang : LANG_DEFAULT;
+}
+
+/**
+ * Dịch một khoá của khung giao diện.
+ *
+ *     t('nav.products')            -> "Sản phẩm" / "Products"
+ *     t('fab.call', $hotline)      -> "Gọi 1900 6868" / "Call 1900 6868"
+ *
+ * BA TẦNG DỰ PHÒNG, cố ý không bao giờ ném lỗi: chuỗi của ngôn ngữ đang chọn
+ * -> chuỗi tiếng Việt -> chính cái khoá. Một khoá gõ sai sẽ hiện ra màn hình
+ * dưới dạng "nav.prodcuts" — xấu nhưng thấy ngay, hơn hẳn việc trang trắng
+ * hoặc một khoảng trống im lặng ở giữa thanh điều hướng.
+ *
+ * Tham số phụ đi qua sprintf, nên chuỗi dịch dùng %s để chừa chỗ.
+ */
+function t(string $key, string|int|float ...$args): string
+{
+    /*
+     * Lấy NGUYÊN bảng rồi tự tra, KHÔNG gọi config('lang.en.nav.home'):
+     * config() tách khoá theo dấu chấm và đi sâu từng tầng mảng, trong khi
+     * khoá ở đây là chuỗi phẳng có dấu chấm ('nav.home'). Gọi kiểu kia thì
+     * config() tìm $table['nav']['home'] và luôn trượt.
+     *
+     * Khoá phẳng là cố ý: grep 'nav.home' ra đúng một chỗ khai và mọi chỗ dùng.
+     */
+    $table    = config('lang.' . currentLang(), []);
+    $fallback = config('lang.' . LANG_DEFAULT, []);
+
+    $text = $table[$key] ?? $fallback[$key] ?? $key;
+
+    return $args === [] ? (string) $text : sprintf((string) $text, ...$args);
+}
+
 /**
  * Bảng bỏ dấu tiếng Việt: ký tự đích => mọi biến thể có dấu của nó.
  *
@@ -360,6 +423,47 @@ function utf8Substr(string $text, int $start, ?int $length = null): string
     $chars = preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
     return implode('', array_slice($chars, $start, $length));
+}
+
+/**
+ * Bảng chữ HOA -> chữ THƯỜNG cho 67 chữ cái tiếng Việt có dấu.
+ *
+ * strtolower() chỉ hạ được A–Z; mọi chữ có dấu nó để nguyên (nó làm việc trên
+ * byte, mà 'Ơ' là hai byte). Bảng này bù đúng phần còn thiếu đó.
+ *
+ * KHÁC VN_ACCENT_MAP ở trên: bảng kia BỎ DẤU để dựng slug ('Ơ' -> 'o'), bảng
+ * này GIỮ DẤU và chỉ đổi hoa thành thường ('Ơ' -> 'ơ'). Không dùng lẫn được:
+ * ô lọc thương hiệu so chuỗi với `String.prototype.toLowerCase()` bên JS, vốn
+ * giữ nguyên dấu — bỏ dấu ở một vế thì gõ "Ơ" không khớp gì cả.
+ */
+const VN_LOWER_MAP = [
+    'À' => 'à', 'Á' => 'á', 'Ạ' => 'ạ', 'Ả' => 'ả', 'Ã' => 'ã',
+    'Â' => 'â', 'Ầ' => 'ầ', 'Ấ' => 'ấ', 'Ậ' => 'ậ', 'Ẩ' => 'ẩ', 'Ẫ' => 'ẫ',
+    'Ă' => 'ă', 'Ằ' => 'ằ', 'Ắ' => 'ắ', 'Ặ' => 'ặ', 'Ẳ' => 'ẳ', 'Ẵ' => 'ẵ',
+    'È' => 'è', 'É' => 'é', 'Ẹ' => 'ẹ', 'Ẻ' => 'ẻ', 'Ẽ' => 'ẽ',
+    'Ê' => 'ê', 'Ề' => 'ề', 'Ế' => 'ế', 'Ệ' => 'ệ', 'Ể' => 'ể', 'Ễ' => 'ễ',
+    'Ì' => 'ì', 'Í' => 'í', 'Ị' => 'ị', 'Ỉ' => 'ỉ', 'Ĩ' => 'ĩ',
+    'Ò' => 'ò', 'Ó' => 'ó', 'Ọ' => 'ọ', 'Ỏ' => 'ỏ', 'Õ' => 'õ',
+    'Ô' => 'ô', 'Ồ' => 'ồ', 'Ố' => 'ố', 'Ộ' => 'ộ', 'Ổ' => 'ổ', 'Ỗ' => 'ỗ',
+    'Ơ' => 'ơ', 'Ờ' => 'ờ', 'Ớ' => 'ớ', 'Ợ' => 'ợ', 'Ở' => 'ở', 'Ỡ' => 'ỡ',
+    'Ù' => 'ù', 'Ú' => 'ú', 'Ụ' => 'ụ', 'Ủ' => 'ủ', 'Ũ' => 'ũ',
+    'Ư' => 'ư', 'Ừ' => 'ừ', 'Ứ' => 'ứ', 'Ự' => 'ự', 'Ử' => 'ử', 'Ữ' => 'ữ',
+    'Ỳ' => 'ỳ', 'Ý' => 'ý', 'Ỵ' => 'ỵ', 'Ỷ' => 'ỷ', 'Ỹ' => 'ỹ',
+    'Đ' => 'đ',
+];
+
+/**
+ * Hạ chữ thường cho chuỗi UTF-8 tiếng Việt, thay cho mb_strtolower().
+ *
+ * strtr() làm việc trên byte nhưng vẫn an toàn với UTF-8: không ký tự nào
+ * trong bảng là tiền tố byte của ký tự khác, nên không thể khớp nhầm vào giữa
+ * chừng một ký tự nhiều byte. Cùng lý lẽ với str_replace() trong slugify().
+ *
+ * Phần ASCII để strtolower() lo — nó nhanh hơn hẳn và không đụng byte ≥ 0x80.
+ */
+function utf8Lower(string $text): string
+{
+    return strtolower(strtr($text, VN_LOWER_MAP));
 }
 
 /**
@@ -517,6 +621,33 @@ function safeRedirectPath(?string $path, string $fallback = '/'): string
 function currentPath(): string
 {
     return parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+}
+
+/**
+ * URL của request hiện tại (đường dẫn + query), sau khi BỎ một số tham số.
+ *
+ * Dùng cho hai việc trong luồng "Chọn hình thức mua":
+ *   ô ẩn `back` của form thêm giỏ  — chỗ cần quay về sau khi chọn xong
+ *   nút ✕ và nền mờ của hộp thoại  — chính trang này, nhưng đã đóng hộp thoại
+ *
+ * Vì sao không dùng currentPath() cho hai việc đó: nó cắt mất query, nên đóng
+ * hộp thoại khi đang ở /san-pham?category=gong-kinh&sort=price sẽ ném khách về
+ * danh sách chưa lọc. Còn giữ nguyên query thì tham số ?mua= ở lại và hộp
+ * thoại mở lại ngay lập tức — nên phải bỏ ĐÚNG những tham số của nó.
+ *
+ * @param string[] $drop tên tham số cần bỏ
+ */
+function currentUrlWithout(array $drop = []): string
+{
+    parse_str($_SERVER['QUERY_STRING'] ?? '', $params);
+
+    foreach ($drop as $key) {
+        unset($params[$key]);
+    }
+
+    $query = http_build_query($params);
+
+    return currentPath() . ($query === '' ? '' : '?' . $query);
 }
 
 /**

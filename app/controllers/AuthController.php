@@ -241,7 +241,6 @@ class AuthController extends BaseController
         'mat-khau' => 'Đổi mật khẩu',
         'don-hang' => 'Đơn hàng của tôi',
         'do-mat'   => 'Thông số đo mắt',
-        'uu-dai'   => 'Ưu đãi của tôi',
         'lich-hen' => 'Lịch hẹn của tôi',
     ];
 
@@ -257,12 +256,13 @@ class AuthController extends BaseController
             $section = self::DEFAULT_SECTION;
         }
 
-        // Số hiện trên hai huy hiệu ở cột trái. Cột trái vẽ ở CẢ BẢY mục nên
-        // hai câu đếm này chạy mọi lần — nhưng chúng là COUNT(*) có chỉ mục,
-        // rẻ hơn nhiều so với việc nạp cả danh sách chỉ để đếm.
+        // Số hiện trên huy hiệu ở cột trái. Cột trái vẽ ở CẢ SÁU mục nên câu
+        // đếm này chạy mọi lần — nhưng nó là COUNT(*) có chỉ mục, rẻ hơn nhiều
+        // so với việc nạp cả danh sách chỉ để đếm.
+        //
+        // Chỉ còn MỘT huy hiệu: mục "Ưu đãi của tôi" đã gỡ khỏi trang tài khoản.
         $counts = [
             'don-hang' => OrderModel::count(['user_id' => $userId]),
-            'uu-dai'   => VoucherModel::countForUser($userId),
         ];
 
         $this->renderView('auth/profile', [
@@ -336,6 +336,10 @@ class AuthController extends BaseController
                     'items'     => OrderModel::itemsForOrders(array_column($shown, 'id')),
                     'history'   => OrderModel::historyForOrders(array_column($shown, 'id')),
                     'statuses'  => OrderModel::STATUSES,
+                    // Tài khoản nhận chuyển khoản — thẻ đơn chuyển khoản chưa
+                    // thanh toán in thẳng số tài khoản + mã đơn làm nội dung
+                    // chuyển khoản. Xem config/company.php.
+                    'bank'      => config('company.bank', []),
                 ];
 
             case 'do-mat':
@@ -351,13 +355,58 @@ class AuthController extends BaseController
                     'stores'       => $editing ? StoreModel::active() : [],
                 ];
 
-            case 'uu-dai':
-                return ['vouchers' => VoucherModel::forUser($userId)];
-
             case 'lich-hen':
+                /*
+                 * ?doi=<mã lịch> mở form đổi giờ NGAY TRONG thẻ lịch hẹn đó —
+                 * cùng lối với ?sua= của sổ địa chỉ và ?don= của đơn hàng, nên
+                 * gửi link được và F5 không mất chỗ.
+                 *
+                 * findOwned trả null khi mã lạ hoặc lịch của người khác, và khi
+                 * đó view chỉ đơn giản không mở form nào.
+                 */
+                $editing = isset($_GET['doi'])
+                    ? BookingModel::findOwned((string) $_GET['doi'], $userId) : null;
+
+                /*
+                 * Ngày đang xem giờ trống. Mặc định là ngày hẹn hiện tại — mở
+                 * form ra là thấy ngay quanh giờ cũ còn chỗ nào, thay vì một
+                 * danh sách rỗng chờ khách tự chọn ngày.
+                 *
+                 * Không nhận ngày trong quá khứ: availableSlots() sẽ trả rỗng và
+                 * khách không hiểu vì sao.
+                 */
+                $slotDate = (string) ($_GET['ngay'] ?? '');
+
+                if ($editing !== null) {
+                    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $slotDate) || $slotDate < date('Y-m-d')) {
+                        $slotDate = max($editing['appointment_date'], date('Y-m-d'));
+                    }
+                }
+
+                $appointments = BookingModel::forUser($userId);
+
+                /*
+                 * "Vì sao lịch này không sửa được nữa", tính SẴN cho từng lịch.
+                 *
+                 * Dựng ở đây chứ không để view gọi BookingModel::changeBlocker():
+                 * view của trang này không gọi model ở đâu khác, và quan trọng hơn
+                 * — đây đúng là hàm mà cancelOwned/rescheduleOwned gọi lại trước
+                 * khi ghi, nên nút hiện ra và phép kiểm lúc ghi không thể lệch.
+                 */
+                $blockers = [];
+
+                foreach ($appointments as $appointment) {
+                    $blockers[$appointment['code']] = BookingModel::changeBlocker($appointment);
+                }
+
                 return [
-                    'appointments'    => BookingModel::forUser($userId),
+                    'appointments'    => $appointments,
                     'bookingStatuses' => BookingModel::STATUSES,
+                    'blockers'        => $blockers,
+                    'editing'         => $editing,
+                    'slotDate'        => $slotDate,
+                    'freeSlots'       => $editing === null ? []
+                        : BookingModel::availableSlots($editing['store_id'], $slotDate),
                 ];
 
             default:   // ho-so, mat-khau — chỉ cần $profile, profile() đã nạp
@@ -494,6 +543,61 @@ class AuthController extends BaseController
         );
 
         redirect('/tai-khoan?muc=dia-chi');
+    }
+
+    // ========================================================================
+    // LỊCH HẸN — KHÁCH TỰ ĐỔI / HUỶ
+    //
+    // Mọi luật (đúng chủ, trạng thái nào được sửa, hạn trước giờ hẹn, khung giờ
+    // còn trống) nằm trong BookingModel. Hai hàm dưới đây chỉ lấy tham số, gọi
+    // model, rồi nói lại kết quả — xem khối "KHÁCH TỰ ĐỔI / HUỶ LỊCH" ở đó.
+    // ========================================================================
+
+    public function cancelBooking(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost('/tai-khoan?muc=lich-hen');
+
+        $result = BookingModel::cancelOwned((string) ($_POST['code'] ?? ''), $userId);
+
+        flash(
+            $result['ok'] ? 'account_success' : 'account_error',
+            $result['ok']
+                ? 'Đã huỷ lịch hẹn. Khung giờ đó nay mở lại cho người khác.'
+                : $result['error']
+        );
+
+        redirect('/tai-khoan?muc=lich-hen');
+    }
+
+    public function rescheduleBooking(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost('/tai-khoan?muc=lich-hen');
+
+        $code   = (string) ($_POST['code'] ?? '');
+        $result = BookingModel::rescheduleOwned(
+            $code,
+            $userId,
+            (string) ($_POST['date'] ?? ''),
+            (string) ($_POST['slot'] ?? '')
+        );
+
+        if ($result['ok']) {
+            flash('account_success', 'Đã đổi giờ hẹn. Cửa hàng sẽ gọi xác nhận lại.');
+            redirect('/tai-khoan?muc=lich-hen');
+        }
+
+        /*
+         * Lỗi thì MỞ LẠI form ở đúng lịch đó (?doi=<mã>) kèm ngày khách vừa xem,
+         * chứ không đẩy về danh sách: khách vừa chọn dở, đóng form lại là bắt họ
+         * bắt đầu từ đầu. Chuyển hướng chứ không render tại chỗ để F5 không gửi
+         * lại POST.
+         */
+        flash('account_error', $result['error']);
+
+        redirect('/tai-khoan?muc=lich-hen&doi=' . rawurlencode($code)
+            . '&ngay=' . rawurlencode((string) ($_POST['date'] ?? '')));
     }
 
     // ========================================================================

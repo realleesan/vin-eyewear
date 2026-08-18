@@ -3,11 +3,12 @@
 /**
  * _layout/home/cta.php — kêu gọi hành động cuối trang (S14b).
  *
- * Dựng theo "Vin Eyewear Home.dc.html": chia đôi màn hình — nửa trái nền
- * crimson chứa chữ và hai nút, nửa phải là ảnh cửa hàng tràn cạnh.
+ * Dựng theo "Vin Eyewear Home.dc.html": chia đôi màn hình, tràn sát hai mép —
+ * nửa trái nền nâu sẫm chứa chữ và hai nút, nửa phải là ảnh cửa hàng.
  *
- * Bản trước là một khối nền tối căn giữa. Kiểu chia đôi này khiến khối cuối
- * trang không lặp lại dáng của khối "đo mắt" ngay phía trên nó.
+ * Nền NÂU SẪM chứ không phải crimson như bản trước: bản thiết kế dùng đúng
+ * một sắc tối (#3b1219) cho cả ba dải tối của trang — cam kết dưới hero, đo
+ * mắt và khối này.
  */
 ?>
 

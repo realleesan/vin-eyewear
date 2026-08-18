@@ -6,7 +6,11 @@
      đầu trang nền hồng phấn (breadcrumb · tiêu đề · mô tả)
      → hai cột: cột lọc 280px dính theo cuộn | lưới sản phẩm 3 cột
 
-   Markup: app/views/product/index.php · app/views/_layout/product-tile.php
+   Markup: app/views/product/index.php
+
+   THẺ SẢN PHẨM KHÔNG CÒN Ở FILE NÀY: lưới dùng .pcard chung với trang chủ
+   (components/product.css) thay cho .ptile dựng theo bản Category — xem chú
+   thích ở .catgrid bên dưới.
 
    CỠ CHỮ ghi thẳng bằng px, không qua thang --fs-*, cùng lý do đã ghi ở đầu
    cụm trang chủ trong components/home-sections.css: thang --fs-* là clamp()
@@ -45,9 +49,9 @@
        khối trang chủ: bản thiết kế nới riêng khối này ra vì nó phải chứa THÊM
        cột lọc 280px bên trái. Trừ lề 56px hai bên và khoảng cách 32px giữa
        hai cột thì lưới sản phẩm còn đúng 968px — vừa ba thẻ 309px. */
-    max-width: 1392px;
+    max-width: var(--container, 1600px);
     margin: 0 auto;
-    padding: 40px 56px 96px;
+    padding: 40px var(--page-edge) 96px;
 }
 
 /* ĐẦU TRANG (.cathead*) ĐÃ CHUYỂN ĐI — nay là component dùng chung
@@ -88,7 +92,7 @@
 
 .cfilter {
     background: var(--surface-raised);
-    border-radius: 28px;
+    border-radius: var(--radius);
     box-shadow: var(--c-shadow);
     /* 88px = chiều cao header (76px) + 12px thở.
        Bản thiết kế ghi top:24px vì header của nó KHÔNG dính theo cuộn. Header
@@ -119,7 +123,7 @@
     min-width: 20px;
     height: 20px;
     padding-inline: 6px;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--brand);
     color: var(--on-brand);
     font-size: 11px;
@@ -261,7 +265,7 @@
     min-width: 0;
     padding: 9px 14px;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: var(--font-sans);
     font-size: 13px;
@@ -280,7 +284,7 @@
     flex: none;
     padding: 0 14px;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: 12.5px;
@@ -298,7 +302,7 @@
     max-width: 100%;
     padding: 8px 16px;
     border: 1.5px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-size: 13px;
     color: var(--c-item);
@@ -347,7 +351,7 @@
     width: 18px;
     height: 18px;
     border: 1.5px solid var(--c-box);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-size: 11px;
     line-height: 1;
@@ -401,7 +405,7 @@
     width: 16px;
     height: 16px;
     border: 1.5px solid var(--c-box);
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: var(--surface-raised);
     transition: border-color 0.2s, border-width 0.2s;
 }
@@ -469,13 +473,21 @@
 .catsort__field { position: relative; }
 
 /* appearance:none để bỏ mũi tên mặc định của trình duyệt — bản thiết kế vẽ
-   mũi tên riêng bằng ▼ màu thương hiệu, đặt đè lên bằng .catsort__caret. */
+   mũi tên riêng bằng ▼ màu thương hiệu, đặt đè lên bằng .catsort__caret.
+
+   BO GÓC THEO THẺ SẢN PHẨM (--radius, 6px) chứ không phải --radius-sm (4px)
+   của nút: ô này là một KHỐI ngang hàng với lưới thẻ ngay dưới nó, không phải
+   một cái nút. Cả cụm "sắp xếp theo" — ô chọn và nút "Áp dụng" cạnh nó — dùng
+   cùng một độ bo, lệch nhau 2px trên hai ô sát nhau là thấy ngay.
+
+   Danh sách bung ra khi bấm thì KHÔNG bo được: nó do hệ điều hành vẽ, không
+   phải HTML trong trang, nên border-radius ở đây không với tới. */
 .catsort__select {
     appearance: none;
     -webkit-appearance: none;
     padding: 10px 40px 10px 20px;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: 13.5px;
@@ -498,10 +510,82 @@
     color: var(--brand);
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   BO GÓC CẢ PHẦN XỔ XUỐNG.
+
+   Danh sách bung ra của một <select> gốc do TRÌNH DUYỆT vẽ chứ không phải HTML
+   trong trang, nên border-radius ở .catsort__select không với tới nó — góc
+   vuông là góc do hệ điều hành quyết định.
+
+   `appearance: base-select` mở cửa cho việc đó: nó bảo trình duyệt vẽ cả ô chọn
+   LẪN danh sách bằng chính cây HTML/CSS của trang. Lúc đó ::picker(select) là
+   hộp bung ra và các <option> là những dòng bên trong nó — bo góc, màu, đệm đều
+   nằm trong tầm CSS.
+
+   Bọc trong @supports vì Firefox và Safari chưa có thứ này: ở đó cả khối bị bỏ
+   qua, <select> vẫn là select gốc y như trước và không hỏng gì — chỉ là phần
+   bung ra vẫn góc vuông. Chrome/Edge (từ 135) thì thấy góc bo.
+   ───────────────────────────────────────────────────────────────────────── */
+@supports (appearance: base-select) {
+    .catsort__select { appearance: base-select; }
+
+    /* base-select tự vẽ thêm một mũi tên riêng, mà trang đã có ▼ của
+       .catsort__caret đè lên sẵn — để cả hai thì ô chọn có hai mũi tên. */
+    .catsort__select::picker-icon { display: none; }
+
+    .catsort__select::picker(select) {
+        appearance: base-select;
+        /* XỔ XUỐNG DƯỚI ô chọn.
+           Cần CẢ BA dòng, không phải chỉ position-area: mặc định trình duyệt đặt
+           position-try-order: most-block-size, tức "chọn phía nào rộng hơn". Ở
+           đây phía trên ô chọn rộng hơn phía dưới (439px so với 330px trên màn
+           1280×769), nên nó lật danh sách lên che mất dòng "Hiển thị N sản phẩm"
+           và cả phần đầu trang — không ai chờ một ô "sắp xếp theo" làm thế. Đo
+           được bằng getComputedStyle(el, '::picker(select)').positionTryOrder.
+           `normal` bảo nó cứ theo position-area, và chỉ lật khi dưới KHÔNG đủ
+           chỗ (ô nằm cuối màn hình) — đó là việc của flip-block. */
+        position-area: block-end span-inline-start;
+        position-try-order: normal;
+        position-try-fallbacks: flip-block;
+        margin-top: 6px;
+        padding: 6px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-raised);
+        box-shadow: var(--c-shadow);
+    }
+
+    .catsort__select option {
+        padding: 9px 14px;
+        /* Dòng bo nhỏ hơn hộp một nấc, đúng lối thẻ trong thẻ của cả site */
+        border-radius: var(--radius-sm);
+        font-size: 13.5px;
+        color: var(--ink);
+        cursor: pointer;
+    }
+
+    /* Dòng đang trỏ tới: nền thương hiệu thay cho nền xanh mặc định của hệ
+       điều hành.
+
+       :focus-VISIBLE chứ không :focus. Mở danh sách bằng chuột thì trình duyệt
+       đặt tiêu điểm lên dòng đang chọn, nên với :focus sẽ có HAI dòng cùng đỏ
+       lúc rê chuột sang dòng khác — đã đo được, không phải phỏng đoán. Dòng đang
+       chọn đã có dấu ✓ và chữ đậm để nhận ra, không cần nền. */
+    .catsort__select option:hover,
+    .catsort__select option:focus-visible {
+        background: var(--brand);
+        color: var(--on-brand);
+        outline: none;
+    }
+
+    .catsort__select option:checked { font-weight: 600; }
+}
+
+/* Cùng độ bo với ô chọn ngay bên trái — xem chú thích ở .catsort__select. */
 .catsort__go {
     padding: 10px 18px;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius);
     background: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: 13px;
@@ -511,183 +595,34 @@
 
 .js .catsort__go { display: none; }
 
-/* --- Lưới --- */
+/* --- Lưới ---
+   THẺ SẢN PHẨM Ở ĐÂY LÀ .pcard, DÙNG CHUNG VỚI TRANG CHỦ.
+
+   Trước đây trang này có thẻ riêng (.ptile, dựng theo "Vin Eyewear
+   Category.dc.html": cả thẻ là một liên kết, ảnh cao 220px, không nút nào).
+   Nghĩa là cùng một sản phẩm hiện ra hai dáng khác nhau tuỳ khách đi vào từ
+   trang chủ hay từ danh mục — mà bốn chỗ còn lại (hai khối trang chủ, "sản
+   phẩm liên quan", trang tìm kiếm) đều đã dùng .pcard. Nay cả năm chỗ một thẻ:
+   xem components/product.css và _layout/product-card.php.
+
+   Vẫn giữ .catgrid riêng chứ không dùng .pcard__grid: cột nội dung ở đây bị bộ
+   lọc bên trái ăn mất một phần, ba cột cho ra thẻ rộng ~336px — xấp xỉ đúng bề
+   ngang thẻ ở trang chủ (~321px ở màn 1600). Nhồi bốn cột vào đây thì thẻ hẹp
+   hơn hẳn trang chủ, tức là KHÔNG còn giống nữa.
+
+   margin/padding/list-style: .catgrid nay là <ul> vì .pcard là <li>. */
 
 .catgrid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 @media (max-width: 900px) { .catgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .catgrid { grid-template-columns: 1fr; } }
-
-/* --- Thẻ sản phẩm --- */
-
-.ptile {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    background: var(--surface-raised);
-    border-radius: 28px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(90, 40, 40, 0.05);
-    text-decoration: none;
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.ptile:hover,
-.ptile:focus-visible {
-    transform: translateY(-4px);
-    box-shadow: 0 18px 40px rgba(90, 40, 40, 0.13);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .ptile:hover { transform: none; }
-}
-
-/* ẢNH ĐẶT TRÊN "SÂN TRẮNG" BO GÓC, LỒNG TRONG KHUNG HỒNG.
-   ─────────────────────────────────────────────────────────────────────
-   Bản thiết kế cho ảnh tràn kín ô 220px trên nền #f5efe7, vì ảnh của nó là
-   ảnh cắt nền sẵn khớp đúng tông đó. Ảnh chụp sản phẩm thật thì gần như
-   luôn có NỀN TRẮNG, mà trắng đặt trên hồng thì thành một hộp trắng lộ rõ
-   hai mép — nhìn như lỗi ghép ảnh chứ không phải một thiết kế.
-
-   Cách chữa: khung hồng lùi ra thành viền 14px, bên trong là một sân trắng
-   bo 18px, ảnh nằm giữa sân đó. Nền trắng của ảnh trùng luôn với sân nên
-   không còn ranh giới nào để nhìn ra.
-
-   Quan trọng là nó ĐÚNG VỚI MỌI ẢNH sẽ upload sau này:
-     · ảnh nền trắng      -> hoà vào sân, không thấy mép
-     · ảnh PNG nền trong  -> hiện trên sân trắng, sạch
-     · ảnh chụp nền màu   -> nằm gọn giữa sân, phần thừa là trắng chứ không
-                             phải hai vệt hồng lệch tông
-     · ảnh dọc / ngang / vuông -> contain nên tấm nào cũng vừa khít, không
-                             tấm nào bị xén mất càng gọng
-
-   (Cách khác là `mix-blend-mode: multiply` để nền trắng tan vào nền hồng.
-   Gọn hơn nhưng chỉ đúng với ảnh nền trắng — gặp ảnh nền tối là đen kịt.
-   Kho hàng do người khác nhập thì không đặt cược vào giả định đó được.) */
-.ptile__media {
-    display: block;
-    height: 220px;
-    padding: 14px;
-    background: var(--c-shell);
-}
-
-/* contain chứ không cover: ảnh sản phẩm là ảnh cắt nền, cover sẽ xén mất
-   càng gọng ở hai mép — đúng `fit="contain"` của bản thiết kế. */
-.ptile__media img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    /* Nền của chính thẻ <img>: hiện ra ở phần sân thừa khi ảnh không cùng
-       tỉ lệ với ô. Cùng màu trắng nên không nhìn ra chỗ nào là ảnh, chỗ nào
-       là sân. */
-    background: var(--surface-raised);
-    border-radius: 18px;
-    /* Viền tóc rất nhạt để sân trắng không tan vào nền thẻ ở màn hình sáng */
-    box-shadow: inset 0 0 0 1px rgba(90, 40, 40, 0.05);
-}
-
-/* Sản phẩm chưa có ảnh — hay gặp ngay sau khi thêm hàng trong trang quản
-   trị mà chưa kịp tải ảnh lên. Vẽ đúng một sân trắng trống kèm chữ, thay vì
-   mượn ảnh của sản phẩm khác làm ảnh thay thế (người xem sẽ tưởng đó là
-   hàng thật). */
-.ptile__noimg {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    border-radius: 18px;
-    background: var(--surface-raised);
-    box-shadow: inset 0 0 0 1px rgba(90, 40, 40, 0.05);
-    font-size: 12.5px;
-    color: var(--c-meta);
-}
-
-.ptile__badge {
-    position: absolute;
-    top: 16px;
-    left: 16px;
-    /* Không cho huy hiệu dài (vd "Sắp về hàng") chạy quá mép thẻ */
-    max-width: calc(100% - 32px);
-    padding: 5px 13px;
-    border-radius: 999px;
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: 11.5px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    pointer-events: none;
-}
-
-/* ─────────────────────────────────────────────────────────────────────
-   MỌI THỨ TỪ ĐÂY XUỐNG ĐỀU CÓ CHẶN TRÀN.
-
-   Nội dung sẽ do người khác nhập trong trang quản trị, nên không được giả
-   định tên ngắn hay thương hiệu một chữ. Ba lớp chặn:
-     · min-width:0  — ô lưới CSS mặc định không co nhỏ hơn nội dung của nó,
-                      thiếu dòng này thì một chữ dài đẩy phình cả cột;
-     · cắt dòng     — tên cắt sau 2 dòng, thương hiệu cắt sau 1;
-     · overflow-wrap:anywhere — chuỗi dài không dấu cách (mã SKU, link dán
-                      nhầm) tự bẻ dòng thay vì chọc thủng thẻ.
-   Nhờ vậy mọi thẻ trong một hàng luôn cao bằng nhau và không thẻ nào tràn.
-   ───────────────────────────────────────────────────────────────────── */
-.ptile__body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-    padding: 20px 24px 24px;
-}
-
-.ptile__brand {
-    font-size: 11.5px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--c-meta);
-    /* Thương hiệu luôn gọn trong MỘT dòng: nó là nhãn phụ, dài ra hai dòng
-       sẽ đẩy tên sản phẩm xuống và làm lệch cả hàng thẻ. */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.ptile__name {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.35;
-    color: var(--ink);
-    /* Tên dài cắt sau 2 dòng để các thẻ trong lưới cao bằng nhau */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    overflow-wrap: anywhere;
-}
-
-.ptile:hover .ptile__name,
-.ptile:focus-visible .ptile__name { color: var(--brand); }
-
-/* margin-top:auto đẩy giá xuống đáy thẻ: tên dài ngắn khác nhau, không ghim
-   thì hàng giá của các thẻ cạnh nhau so le. */
-.ptile__price {
-    margin-top: auto;
-    padding-top: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--brand);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
 
 /* --- Không có kết quả --- */
 
@@ -698,7 +633,7 @@
     gap: 14px;
     padding: 72px 32px;
     background: var(--surface-raised);
-    border-radius: 28px;
+    border-radius: var(--radius);
     text-align: center;
 }
 
@@ -719,7 +654,7 @@
 .catempty__btn {
     margin-top: 8px;
     padding: 12px 28px;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
     font-size: 13.5px;
@@ -750,7 +685,7 @@
     width: 42px;
     height: 42px;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: 13.5px;

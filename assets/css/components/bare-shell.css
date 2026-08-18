@@ -37,6 +37,21 @@ body.is-bare .main-content {
     display: flex;
 }
 
+/* --- Dải thông báo ---
+   Chỉ trang thanh toán dùng (checkout-header.php). "Vin Eyewear Login.dc.html"
+   không vẽ dải này, nên ba trang tài khoản không có nó. */
+
+.barepromo {
+    margin: 0;
+    padding: 10px 24px;
+    background: var(--brand);
+    color: var(--on-brand-soft);
+    font-size: 12.5px;
+    letter-spacing: 0.04em;
+    line-height: 1.6;
+    text-align: center;
+}
+
 /* --- Đầu trang --- */
 
 .barebar {

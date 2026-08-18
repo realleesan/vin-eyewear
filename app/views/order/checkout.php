@@ -26,6 +26,11 @@
  * BA THẺ NHƯNG MỘT <form>
  * Bản thiết kế vẽ ba thẻ trắng rời nhau. Chúng nằm trong CÙNG một <form> —
  * đây là một biểu mẫu duy nhất gửi một lần, không phải ba bước có nút "tiếp theo".
+ *
+ * Ô "Mã giảm giá" trong khối tóm tắt cũng nằm trong form đó, và các nút chọn mã
+ * dùng `formaction="/thanh-toan/ma"`. Nhờ vậy bấm chọn mã là gửi kèm TOÀN BỘ
+ * những gì khách đã gõ, server cất lại rồi trả về — form không bị trắng. Danh
+ * sách thả xuống mở bằng <details>, vẫn không một dòng JavaScript nào.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -34,10 +39,26 @@ $old = $old ?? [];
    từ bảng `vouchers`, view chỉ cộng trừ để hiện — xem CartController::applyVoucher. */
 $total = max(0, $subtotal - $discount) + $shippingFee;
 
-// Điền sẵn từ hồ sơ nếu khách đã đăng nhập; dữ liệu vừa nhập (nếu form báo
-// lỗi) được ưu tiên hơn để khách không mất công gõ lại.
-$fill = static fn (string $key, ?string $fromProfile = null): string =>
-    (string) ($old[$key] ?? $fromProfile ?? '');
+/*
+ * ĐIỀN SẴN — thứ tự ưu tiên, cao xuống thấp:
+ *
+ *   1. $old       dữ liệu khách vừa gõ, khi form quay lại vì báo lỗi.
+ *                 Luôn thắng: không ai muốn gõ lại thứ mình vừa gõ.
+ *   2. $address   địa chỉ MẶC ĐỊNH trong sổ địa chỉ (/tai-khoan?muc=dia-chi).
+ *   3. $profile   hồ sơ tài khoản — chỉ còn lo ô email, vì sổ địa chỉ không
+ *                 giữ email.
+ *
+ * Vì sao sổ địa chỉ đứng trên hồ sơ ở hai ô tên và điện thoại: xem ghi chú ở
+ * OrderController::checkout().
+ */
+$fill = static fn (string $key, ?string $fallback = null): string =>
+    (string) ($old[$key] ?? $fallback ?? '');
+
+$address = $address ?? null;
+
+/* Sổ địa chỉ gộp phường/xã và tỉnh/thành vào một cột `line2`, form này tách
+   làm hai ô — xem AddressModel::splitArea() về cách cắt và giới hạn của nó. */
+[$addressWard, $addressCity] = AddressModel::splitArea($address['line2'] ?? null);
 
 $delivery = $old['deliveryMethod'] ?? 'shipping';
 $payment  = $old['paymentMethod'] ?? 'cod';
@@ -46,13 +67,15 @@ $storeId  = $old['storeId'] ?? '';
 
 <section class="checkout">
 
-    <?php /* KHÔNG breadcrumb ở đây, dù bản thiết kế có vẽ.
-             Trang này nằm trong luồng thanh toán: mọi thứ không phục vụ việc
-             hoàn tất đơn đều là nhiễu, và một đường dẫn ngược là lối ra khỏi
-             luồng đặt ngay cạnh tiêu đề. Ai cần sửa giỏ vẫn có nút "← Quay lại
-             giỏ hàng" trong khối tóm tắt bên phải — đúng chỗ người ta nhìn khi
-             soát lại đơn, chứ không phải trước cả khi đọc tiêu đề. */ ?>
     <div class="cohead">
+        <?php /* Hai mắt xích, đúng bản thiết kế: giỏ hàng → thanh toán. Đây
+                 vừa là đường lùi vừa là thước đo "còn mấy bước nữa" — khách
+                 đang ở giữa một biểu mẫu dài thì cần cả hai. */ ?>
+        <nav class="cohead__crumbs" aria-label="Đường dẫn">
+            <a href="/gio-hang">Giỏ hàng</a>
+            <span class="cohead__sep" aria-hidden="true">/</span>
+            <span class="cohead__here" aria-current="page">Thanh toán</span>
+        </nav>
         <h1 class="cohead__title">Hoàn tất đơn hàng</h1>
     </div>
 
@@ -62,6 +85,15 @@ $storeId  = $old['storeId'] ?? '';
 
     <form class="cogrid" method="post" action="/thanh-toan/dat">
         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+
+        <?php /* NÚT GỬI MẶC ĐỊNH — vô hình, nhưng phải có.
+                 Bấm Enter trong một ô nhập sẽ kích hoạt nút submit ĐẦU TIÊN của
+                 form. Các nút chọn mã giảm giá (formaction="/thanh-toan/ma")
+                 đứng trước nút "Đặt hàng" trong DOM, nên thiếu nút này thì gõ
+                 xong bấm Enter là… áp một mã giảm giá.
+                 Không dùng `hidden` hay display:none: nút không được vẽ ra thì
+                 trình duyệt bỏ qua nó khi tìm nút gửi mặc định. */ ?>
+        <button type="submit" class="cofallback" tabindex="-1" aria-hidden="true">Đặt hàng</button>
 
         <!-- ══════════ CỘT TRÁI: BA BƯỚC ══════════ -->
         <div class="costeps">
@@ -79,14 +111,14 @@ $storeId  = $old['storeId'] ?? '';
                         <input class="cofield__input" type="text" name="customer_name" required
                                minlength="2" maxlength="120" autocomplete="name"
                                placeholder="Nguyễn Văn A"
-                               value="<?= e($fill('customerName', $profile['full_name'] ?? null)) ?>">
+                               value="<?= e($fill('customerName', $address['recipient_name'] ?? $profile['full_name'] ?? null)) ?>">
                     </label>
 
                     <label class="cofield">
                         <span class="cofield__label">Số điện thoại *</span>
                         <input class="cofield__input" type="tel" name="customer_phone" required
                                autocomplete="tel" inputmode="tel" placeholder="09xx xxx xxx"
-                               value="<?= e($fill('customerPhone', $profile['phone'] ?? null)) ?>">
+                               value="<?= e($fill('customerPhone', $address['phone'] ?? $profile['phone'] ?? null)) ?>">
                     </label>
                 </div>
 
@@ -135,14 +167,14 @@ $storeId  = $old['storeId'] ?? '';
                             <span class="cofield__label">Tỉnh / Thành phố *</span>
                             <input class="cofield__input" type="text" name="address_city"
                                    maxlength="80" autocomplete="address-level1" placeholder="Hà Nội"
-                                   value="<?= e($fill('addressCity')) ?>">
+                                   value="<?= e($fill('addressCity', $addressCity)) ?>">
                         </label>
 
                         <label class="cofield">
                             <span class="cofield__label">Phường / Xã *</span>
                             <input class="cofield__input" type="text" name="address_ward"
                                    maxlength="80" autocomplete="address-level2" placeholder="Phường Tây Hồ"
-                                   value="<?= e($fill('addressWard')) ?>">
+                                   value="<?= e($fill('addressWard', $addressWard)) ?>">
                         </label>
                     </div>
 
@@ -151,7 +183,7 @@ $storeId  = $old['storeId'] ?? '';
                         <input class="cofield__input" type="text" name="address_line"
                                maxlength="160" autocomplete="address-line1"
                                placeholder="Số nhà, tên đường…"
-                               value="<?= e($fill('addressLine')) ?>">
+                               value="<?= e($fill('addressLine', $address['line1'] ?? null)) ?>">
                     </label>
                 </div>
 
@@ -244,10 +276,113 @@ $storeId  = $old['storeId'] ?? '';
                                 <span class="coitem__meta">
                                     <?= $variant !== '' ? e($variant) . ' · ' : '' ?>x<?= (int) $line['quantity'] ?>
                                 </span>
+                                <?php if ($line['lens'] !== null || $line['rx'] !== null): ?>
+                                    <?php /* Tròng cắt kèm + số đo. Đây là màn hình
+                                             CUỐI trước khi khách trả tiền, nên nó
+                                             phải in đủ những gì sẽ được mài — sai
+                                             một con số là một cặp tròng bỏ đi. */ ?>
+                                    <?php if ($line['lens'] !== null): ?>
+                                        <span class="coitem__lens">
+                                            + <?= e($line['lens']['name']) ?>
+                                        </span>
+                                    <?php endif; ?>
+                                    <span class="coitem__rx">
+                                        <?= $line['rx'] !== null
+                                            ? e($line['rx'])
+                                            : 'Đo tại cửa hàng' ?>
+                                    </span>
+                                <?php endif; ?>
                             </span>
                             <span class="coitem__price"><?= money($line['lineTotal']) ?></span>
                         </div>
                     <?php endforeach; ?>
+                </div>
+
+                <div class="csum__rule"></div>
+
+                <?php /* ══════ MÃ GIẢM GIÁ ══════
+                         Bản thiết kế vẽ một DANH SÁCH THẢ XUỐNG, không phải ô gõ
+                         mã như giỏ hàng — khách bấm chọn trong những mã đang chạy.
+
+                         Mở/đóng bằng <details>, không JavaScript. Mỗi mã là một
+                         nút submit `formaction` trỏ sang /thanh-toan/ma, kèm
+                         `formnovalidate` — không có nó, bấm chọn mã khi chưa điền
+                         họ tên sẽ bị trình duyệt chặn lại kèm bong bóng "Vui lòng
+                         điền vào trường này", trong khi việc đang làm chẳng liên
+                         quan gì tới ô đó. */ ?>
+                <div class="covou">
+                    <span class="cofield__label" id="co-vou">Mã giảm giá</span>
+
+                    <?php if ($voucher !== null): ?>
+                        <div class="covou__on">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <path d="M8.5 12.5l2.5 2.5 4.5-5"></path>
+                            </svg>
+                            <span class="covou__onbody">
+                                <span class="covou__oncode"><?= e($voucher['code']) ?></span>
+                                <span class="covou__onnote">
+                                    <?= e($voucher['title']) ?><?= $discount > 0 ? ' · −' . money($discount) : '' ?>
+                                </span>
+                            </span>
+                            <button type="submit" class="covou__off" name="act" value="go"
+                                    formaction="/thanh-toan/ma" formnovalidate
+                                    aria-label="Bỏ mã <?= e($voucher['code']) ?>">✕</button>
+                        </div>
+                    <?php elseif ($vouchers === []): ?>
+                        <p class="covou__none">Hiện chưa có mã giảm giá nào đang chạy.</p>
+                    <?php else: ?>
+                        <details class="covou__pick">
+                            <summary class="covou__toggle" aria-describedby="co-vou">
+                                Chọn mã giảm giá…
+                                <svg class="covou__chev" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                     stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                                     stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M6 9l6 6 6-6"></path>
+                                </svg>
+                            </summary>
+
+                            <div class="covou__menu">
+                                <?php foreach ($vouchers as $v): ?>
+                                    <?php
+                                    /* Số tiền giảm tính TẠI ĐÂY, cho đúng đơn này: cùng một
+                                       mã "giảm 10%" cho hai con số khác nhau ở hai đơn khác
+                                       nhau, và mã miễn ship không giảm được gì khi phí ship
+                                       đã bằng 0 (nhận tại cửa hàng, hoặc đơn đã vượt ngưỡng). */
+                                    $calc = VoucherModel::apply($v, $subtotal, $shippingFee);
+                                    $cut  = $calc['freeShipping'] ? $shippingFee : $calc['discount'];
+                                    /* Chưa đủ điều kiện thì khoá lại chứ không giấu đi: dòng
+                                       "Đơn tối thiểu …" là lời mời mua thêm. Bấm được rồi bị
+                                       server từ chối mới là thứ nên tránh. */
+                                    $ok = $subtotal >= (int) $v['min_order'];
+                                    ?>
+                                    <button type="submit" class="covou__item<?= $ok ? '' : ' is-off' ?>"
+                                            name="code" value="<?= e($v['code']) ?>"
+                                            formaction="/thanh-toan/ma" formnovalidate
+                                            <?= $ok ? '' : 'disabled' ?>>
+                                        <span class="covou__itembody">
+                                            <span class="covou__code"><?= e($v['code']) ?></span>
+                                            <span class="covou__desc"><?= e($v['title']) ?></span>
+                                            <?php if ((int) $v['min_order'] > 0): ?>
+                                                <span class="covou__min">
+                                                    Đơn tối thiểu <?= money((int) $v['min_order']) ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </span>
+                                        <span class="covou__cut">
+                                            <?= $cut > 0 ? '−' . money($cut) : '—' ?>
+                                        </span>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </details>
+                    <?php endif; ?>
+
+                    <?php if ($voucherMsg !== null): ?>
+                        <span class="covou__msg<?= $voucherOk ? ' is-ok' : ' is-err' ?>"
+                              role="<?= $voucherOk ? 'status' : 'alert' ?>"><?= e($voucherMsg) ?></span>
+                    <?php endif; ?>
                 </div>
 
                 <div class="csum__rule"></div>
@@ -280,7 +415,17 @@ $storeId  = $old['storeId'] ?? '';
                     <span class="csum__grand-num"><?= money($total) ?></span>
                 </div>
 
-                <button type="submit" class="csum__cta csum__cta--btn">Đặt hàng</button>
+                <?php /* Nhãn đổi theo hình thức thanh toán, đúng bản thiết kế: đơn
+                         COD dừng ở "Đặt hàng", đơn chuyển khoản còn một bước quét
+                         mã QR nữa nên nói trước điều đó.
+
+                         Đọc $payment (giá trị đang chọn lúc VẼ trang) chứ không
+                         theo dõi ô radio: đổi nhãn theo thời gian thực cần JS, mà
+                         trang này cố ý không có. Nhãn sai một nhịp thì cùng lắm là
+                         thừa hai chữ — bước QR vẫn hiện đúng sau khi đặt. */ ?>
+                <button type="submit" class="csum__cta csum__cta--btn">
+                    <?= $payment === 'cod' ? 'Đặt hàng' : 'Đặt hàng &amp; Thanh toán' ?>
+                </button>
                 <a class="csum__more" href="/gio-hang">← Quay lại giỏ hàng</a>
             </div>
 

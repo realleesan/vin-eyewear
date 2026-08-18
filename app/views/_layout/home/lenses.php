@@ -3,13 +3,14 @@
 /**
  * _layout/home/lenses.php — cắt lắp tròng (S11).
  *
- * Dựng theo "Vin Eyewear Home.dc.html": một khối TRẮNG bo 36px nổi trên nền
- * trang, chia hai cột. Trái là nhãn · tiêu đề · ảnh phòng máy · một dải thẻ
- * cam kết dạng viên thuốc; phải là hộp nền chìm chứa bảng giá gói tròng và
- * nút "Tư vấn chọn tròng" chạy hết bề ngang hộp.
+ * Dựng theo "Vin Eyewear Home.dc.html": hai cột chạy thẳng trên nền trang.
+ * Trái là nhãn · tiêu đề · ảnh phòng máy · một dải thẻ cam kết; phải là một
+ * thẻ TRẮNG viền mảnh chứa bảng giá gói tròng và nút "Tư vấn chọn tròng"
+ * chạy hết bề ngang thẻ.
  *
- * Bản trước xếp 4 ô cam kết thành lưới 2×2 có viền. Thiết kế đổi sang dải
- * viên thuốc chảy theo hàng, nên bỏ hẳn lưới đó.
+ * Bản trước bọc cả khối trong một hộp trắng bo 36px nổi trên nền. Thiết kế
+ * này bỏ hộp đó: chỉ còn cột phải là thẻ trắng, cột trái đứng thẳng trên nền
+ * pearl như mọi khối khác của trang.
  *
  * Bảng giá đọc từ config('taxonomy.lens_packages'), cùng nguồn với bản cũ.
  */
@@ -17,16 +18,19 @@
 $packages = config('taxonomy.lens_packages') ?? [];
 
 /*
- * Thẻ cam kết. Bản thiết kế ghi thẻ cuối là "Bảo hành 90 ngày", nhưng
- * config/policy.php và cả thẻ mô tả của chính trang này đều cam kết BẢO HÀNH
- * TRỌN ĐỜI. Giữ nguyên chữ của thiết kế sẽ thành hai lời hứa đá nhau trên
- * cùng một trang, nên ở đây lấy theo chính sách thật.
+ * Thẻ cam kết — lấy nguyên bốn chuỗi của bản thiết kế.
+ *
+ * LƯU Ý VỀ CON SỐ BẢO HÀNH. Bản thiết kế nói tới ba mốc khác nhau ở ba chỗ:
+ * 90 ngày ở đây (bảo hành CẮT LẮP TRÒNG), 24 tháng ở dải cam kết dưới hero (lỗi
+ * nhà sản xuất), còn config/policy.php thì nêu "trọn đời" cho dịch vụ chăm sóc
+ * gọng. Ba thứ đó nói về ba việc khác nhau nên không đá nhau, NHƯNG chúng là cam
+ * kết kinh doanh — sửa số ở đây thì phải khớp lại với trang chính sách.
  */
 $facts = [
     'Đo mắt miễn phí',
     'Nhận kính sau 60–90 phút',
     'Essilor · Zeiss · Hoya · Chemi',
-    'Bảo hành trọn đời',
+    'Bảo hành 90 ngày',
 ];
 ?>
 

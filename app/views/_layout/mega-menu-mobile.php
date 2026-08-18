@@ -22,7 +22,7 @@
 ?>
 <details class="mobile-nav__group"<?= $isProductActive ? ' open' : '' ?>>
     <summary>
-        <span>Sản phẩm</span>
+        <span><?= e(t('nav.products')) ?></span>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8"
                   stroke-linecap="round" stroke-linejoin="round"/>
@@ -30,7 +30,7 @@
     </summary>
 
     <div class="mobile-nav__sub">
-        <a href="/san-pham">Tất cả sản phẩm</a>
+        <a href="/san-pham"><?= e(t('nav.all_products')) ?></a>
         <?php foreach ($categories as $cat): ?>
             <a href="/san-pham?category=<?= e(rawurlencode($cat['slug'])) ?>"><?= e($cat['name']) ?></a>
         <?php endforeach; ?>

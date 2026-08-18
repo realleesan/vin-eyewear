@@ -42,7 +42,7 @@ $initial = utf8Substr($name, 0, 1);
 /* Ba mục trong nhóm thu gọn được, và ba mục cấp một còn lại. Thứ tự lấy
    nguyên từ bản thiết kế. */
 $groupKeys = ['ho-so', 'dia-chi', 'mat-khau'];
-$navKeys   = ['don-hang', 'do-mat', 'uu-dai', 'lich-hen'];
+$navKeys   = ['don-hang', 'do-mat', 'lich-hen'];
 
 $inGroup = in_array($section, $groupKeys, true);
 ?>
