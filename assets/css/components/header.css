@@ -22,6 +22,12 @@
     border-bottom: 1px solid #eee0d4;
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     color: var(--ink);
+    /* Đệm dọc của .header-main, khai thành token vì mega-menu.css PHẢI biết
+       đúng con số này. Viên thuốc "Sản phẩm" là phần tử cao nhất trong hàng
+       (41.8px, hơn cả nút tròn 40px) nên hàng cao đúng bằng nó, và khoảng
+       trống từ đáy viên thuốc xuống mép dưới header chính là đệm dưới này —
+       mũi nhọn cùng vùng bắt chuột của bảng xổ đều đo theo đó. */
+    --header-pad-y: 20px;
     /* Nền mờ để nội dung cuộn phía dưới không đọc xuyên qua chữ header */
     backdrop-filter: blur(12px);
     transition: box-shadow 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
@@ -109,16 +115,25 @@
     /* Cùng lề với các khối trang chủ và chân trang — xem --page-edge trong
        layout.css. Bản thiết kế cho header chạy hết bề ngang trang, wordmark
        nằm sát lề trái chứ không thụt theo cột nội dung. */
-    padding: 20px var(--page-edge);
+    padding: var(--header-pad-y) var(--page-edge);
     transition: min-height 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
+/* HIỆN KHÔNG CÓ TÁC DỤNG — giữ lại vì nó ghi ý đồ, nhưng đừng tin nó đang chạy.
+   Nội dung hàng đã cao 81.8px (viên thuốc 41.8 + đệm 40) nên min-height 64px
+   không bao giờ với tới: min-height không ép được hộp nhỏ hơn nội dung. Cuộn
+   xuống thì chỉ dải thông báo thu lại, hàng chính đứng yên.
+
+   Muốn header thu thật thì giảm --header-pad-y ở trạng thái .is-scrolled —
+   mega-menu.css đo khoảng trống theo token đó nên mũi nhọn và vùng bắt chuột
+   của bảng xổ tự đi theo, không phải chỉnh tay lần nữa. */
 .site-header.is-scrolled .header-main {
     min-height: 64px;
 }
 
 @media (max-width: 1100px) {
-    .header-main { padding: 12px var(--gutter); }
+    .site-header { --header-pad-y: 12px; }
+    .header-main { padding: var(--header-pad-y) var(--gutter); }
 }
 
 /* --- Ô TÌM KIẾM — nằm TRONG bảng xổ .hpop__panel ------------

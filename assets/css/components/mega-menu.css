@@ -28,19 +28,32 @@
    vì bám theo bề rộng của một viên thuốc ~110px.
    ============================================================ */
 
-:root {
-    /* Khoảng trống từ đáy viên thuốc xuống mép dưới header.
-       = (chiều cao .header-main 80px − chiều cao viên thuốc ~38px) / 2.
-       Vùng bắt chuột và mũi nhọn đều tính theo số này. Đổi đệm của
-       .header-main thì đổi cả đây. */
-    --mega-gap: 21px;
-}
+/* KHOẢNG TRỐNG từ đáy viên thuốc xuống mép trên bảng. Vùng bắt chuột và mũi
+   nhọn đều đo theo nó.
 
-/* Header thu gọn khi cuộn: .header-main còn min-height 64px nên khoảng trống
-   hụt đi 8px. Không khai lại thì vùng bắt chuột thò quá bảng và mũi nhọn lệch
-   khỏi mép — chuột đi từ viên thuốc xuống bảng sẽ rơi vào khoảng chết. */
-.site-header.is-scrolled {
-    --mega-gap: 13px;
+   LẤY THẲNG từ --header-pad-y của header.css, KHÔNG gõ lại số — gõ lại chính
+   là cách nó hỏng hai lần trước. Viên thuốc là phần tử cao nhất trong hàng nên
+   hàng cao đúng bằng nó, và khoảng trống dưới viên thuốc bằng đúng đệm dưới
+   của .header-main.
+
+   Khai trên .site-header chứ không phải :root: var() được thay ngay tại phần
+   tử khai nó, mà --header-pad-y chỉ tồn tại từ .site-header trở xuống. Đặt ở
+   :root thì nó rơi về giá trị dự phòng và mất luôn liên kết.
+
+   ─────────────────────────────────────────────────────────────
+   ĐÃ BỎ BẢN RIÊNG CHO HEADER ĐÃ CUỘN (--mega-gap: 13px)
+
+   Bản đó dựa trên giả định .header-main thu từ 80px xuống 64px khi cuộn. Đo
+   thật bằng trình duyệt: hàng này cao 81.8px ở CẢ HAI trạng thái. min-height
+   không bao giờ ép được hộp nhỏ hơn nội dung, mà nội dung ở đây đã là 41.8px
+   (viên thuốc) + 40px (đệm) = 81.8px — vượt cả 80px lẫn 64px. Cuộn xuống chỉ
+   có dải thông báo thu lại, hàng chính đứng yên.
+
+   Giả định sai đó làm hỏng đúng thứ nó định sửa: khi cuộn, mũi nhọn treo cao
+   hơn mép bảng 7px và vùng bắt chuột hụt 7px, nên chuột đi từ viên thuốc
+   xuống bảng rơi vào khoảng chết và bảng đóng sập giữa chừng. */
+.site-header {
+    --mega-gap: var(--header-pad-y, 20px);
 }
 
 .mega {
