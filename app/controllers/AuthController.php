@@ -42,12 +42,22 @@ class AuthController extends BaseController
 
     public function index(): void
     {
-        // Đã đăng nhập rồi thì không có lý do xem trang này nữa
-        if (AuthMiddleware::check()) {
+        $step = self::signupStep();
+
+        /*
+         * Đã đăng nhập rồi thì không có lý do xem trang này nữa — TRỪ màn
+         * "Đăng ký thành công": signupFinish() tạo tài khoản xong là đăng
+         * nhập luôn, nên nếu chặn ở đây thì màn cuối của luồng đăng ký không
+         * bao giờ hiện ra được, khách bị ném thẳng sang /tai-khoan.
+         */
+        if (AuthMiddleware::check() && $step !== 'xong') {
             redirect('/tai-khoan');
         }
 
         $this->renderView('auth/index', [
+            // Bước đang mở trong luồng đăng ký nhiều chặng ('' = màn nhập số).
+            'step'      => $step,
+            'signup'    => self::signupView(),
             // Khung rút gọn: không thanh điều hướng, không chân trang đầy đủ.
             // Xem ghi chú $bare trong app/views/_layout/master.php.
             'bareLayout' => true,
@@ -182,38 +192,288 @@ class AuthController extends BaseController
         redirect('/auth');
     }
 
-    public function register(): void
+    /*
+     * ═════════════════════════════════════════════════════════════════════
+     * ĐĂNG KÝ — BỐN CHẶNG, DỰNG THEO "Dang ky.dc.html"
+     *
+     *   (không có)   nhập số điện thoại            signupPhone()
+     *   xac-minh     "gửi mã qua Zalo?"            → signupSend()
+     *   phuong-thuc  Zalo · SMS · Gọi thoại        → signupSend()
+     *   ma           nhập 6 số                     signupVerify()
+     *   da-dang-ky   số này đã có tài khoản        (ngõ cụt, có lối ra)
+     *   mat-khau     tạo mật khẩu                  signupFinish()
+     *   xong         đăng ký thành công
+     *
+     * Bản trước là MỘT form: họ tên + số điện thoại + mật khẩu, gửi một phát.
+     * Nay số điện thoại phải xác minh trước khi tài khoản ra đời — và bản
+     * thiết kế bỏ hẳn ô họ tên, nên tài khoản mới không còn tên cho tới khi
+     * khách tự điền ở trang tài khoản.
+     *
+     * MỖI CHẶNG LÀ MỘT POST THẬT, bước đang mở nằm trên URL (?buoc=), còn dữ
+     * liệu dở dang nằm trong $_SESSION['_signup'] — cùng lối với hộp thoại mua
+     * hàng (xem _layout/buy-modal.php). Nhờ vậy luồng chạy được khi tắt
+     * JavaScript, và nút Back của trình duyệt lùi đúng một chặng.
+     *
+     * SỐ ĐIỆN THOẠI KHÔNG NẰM TRÊN URL: nó là dữ liệu cá nhân, mà URL thì đi
+     * vào lịch sử duyệt web, vào Referer gửi sang bên thứ ba, và vào log của
+     * mọi proxy trên đường.
+     * ═════════════════════════════════════════════════════════════════════
+     */
+
+    /** Trạng thái luồng đăng ký đang dở, hoặc null nếu chưa bắt đầu. */
+    private static function signup(): ?array
+    {
+        $s = $_SESSION['_signup'] ?? null;
+
+        return is_array($s) && ($s['phone'] ?? '') !== '' ? $s : null;
+    }
+
+    /**
+     * Bước nào ĐƯỢC PHÉP mở lúc này.
+     *
+     * ?buoc= gõ tay được, nên mỗi bước phải tự chứng minh nó có cơ sở: chưa
+     * nhập số thì không có gì để xác minh, chưa xác minh xong thì không được
+     * nhảy tới màn tạo mật khẩu. Thiếu chốt này thì gõ tay một địa chỉ là bỏ
+     * qua được cả khâu xác minh — tức là đăng ký hộ số của người khác.
+     */
+    private static function signupStep(): string
+    {
+        $step   = (string) ($_GET['buoc'] ?? '');
+        $signup = self::signup();
+
+        if ($step === 'xong') {
+            return !empty($_SESSION['_signup_done']) ? 'xong' : '';
+        }
+
+        if ($signup === null) {
+            return '';
+        }
+
+        return match ($step) {
+            'xac-minh', 'phuong-thuc' => $step,
+            'ma'                      => ($signup['hash'] ?? '') !== '' ? 'ma' : 'xac-minh',
+            'da-dang-ky', 'mat-khau'  => !empty($signup['verified']) ? $step : 'xac-minh',
+            default                   => '',
+        };
+    }
+
+    /** Dữ liệu các màn cần in ra. Không bao giờ trả về mã hay hash. */
+    private static function signupView(): array
+    {
+        $signup = self::signup();
+
+        if ($signup === null) {
+            return [];
+        }
+
+        return [
+            'phone'   => $signup['phone'],
+            'display' => Otp::displayPhone($signup['phone']),
+            'method'  => $signup['method'] ?? 'zalo',
+            'sentVia' => Otp::sentVia($signup['method'] ?? 'zalo'),
+            // Còn mấy giây nữa mới được bấm "Gửi lại". 0 = bấm được ngay.
+            'wait'    => max(0, (int) (($signup['resend'] ?? 0) - time())),
+            'exists'  => $signup['exists'] ?? null,
+        ];
+    }
+
+    /** Bước 1: nhận số điện thoại. */
+    public function signupPhone(): void
     {
         $this->requirePost('/auth?tab=dang-ky');
 
-        $fullName = trim((string) ($_POST['full_name'] ?? ''));
-        $phone    = trim((string) ($_POST['phone'] ?? ''));
+        $raw   = trim((string) ($_POST['phone'] ?? ''));
+        $phone = normalizePhone($raw);
+
+        if ($phone === null) {
+            $_SESSION['_old_auth'] = ['phone' => $raw];
+            flash('auth_error', 'Số điện thoại không hợp lệ. Ví dụ đúng: 0912345678.');
+            redirect('/auth?tab=dang-ky');
+        }
+
+        /* Bắt đầu lại từ đầu mỗi lần đổi số: giữ lại mã của số cũ thì khách
+           gõ số mới rồi dán mã cũ vào là xác minh được một số chưa hề nhận
+           tin nào. */
+        $_SESSION['_signup'] = [
+            'phone'    => $phone,
+            'remember' => ($_POST['remember'] ?? '') !== '',
+            'method'   => 'zalo',
+            'hash'     => '',
+            'expires'  => 0,
+            'resend'   => 0,
+            'tries'    => 0,
+            'verified' => false,
+        ];
+        unset($_SESSION['_signup_done']);
+
+        redirect('/auth?tab=dang-ky&buoc=xac-minh');
+    }
+
+    /**
+     * Sinh mã mới và "gửi" đi — dùng cho cả ba nút: "Gửi qua Zalo", chọn
+     * phương thức khác, và "Gửi lại".
+     */
+    public function signupSend(): void
+    {
+        $this->requirePost('/auth?tab=dang-ky');
+
+        $signup = self::signup();
+
+        if ($signup === null) {
+            redirect('/auth?tab=dang-ky');
+        }
+
+        $method = (string) ($_POST['method'] ?? 'zalo');
+
+        if (!in_array($method, Otp::METHODS, true)) {
+            $method = 'zalo';
+        }
+
+        /* CHƯA HẾT 60 GIÂY THÌ KHÔNG SINH MÃ MỚI.
+           Chốt ở máy chủ chứ không chỉ ở nút bấm: đồng hồ đếm ngược nằm trong
+           JavaScript, ai cũng gọi thẳng địa chỉ này được. Không có chốt thì
+           một vòng lặp là bơm được vô số tin nhắn tới số của người khác — và
+           khi đã cắm nhà cung cấp thật thì mỗi tin là tiền. */
+        if (time() < (int) ($signup['resend'] ?? 0)) {
+            redirect('/auth?tab=dang-ky&buoc=ma');
+        }
+
+        $code = Otp::generate();
+
+        $signup['method']  = $method;
+        $signup['hash']    = Otp::hash($code);
+        $signup['expires'] = time() + Otp::TTL;
+        $signup['resend']  = time() + Otp::RESEND_AFTER;
+        $signup['tries']   = 0;
+
+        $_SESSION['_signup'] = $signup;
+
+        Otp::send($signup['phone'], $code, $method);
+
+        /* Ở MÁY PHÁT TRIỂN thì hiện thẳng mã lên màn hình, vì chưa có nhà cung
+           cấp nào mang nó tới tay khách — xem khối chú thích đầu core/Otp.php.
+           Chốt theo app.debug: trên production nó chỉ nằm trong error log. */
+        if (config('app.debug')) {
+            flash('auth_success', 'Mã xác minh (chỉ hiện ở chế độ phát triển): ' . $code);
+        }
+
+        redirect('/auth?tab=dang-ky&buoc=ma');
+    }
+
+    /** Kiểm mã 6 số. */
+    public function signupVerify(): void
+    {
+        $this->requirePost('/auth?tab=dang-ky');
+
+        $signup = self::signup();
+
+        if ($signup === null || ($signup['hash'] ?? '') === '') {
+            redirect('/auth?tab=dang-ky');
+        }
+
+        // Sáu ô rời thành một chuỗi. Không có JavaScript thì khách gõ từng ô,
+        // có thì auth.js tự nhảy ô — hai đường về cùng một chỗ.
+        $code = preg_replace('/\D+/', '', implode('', (array) ($_POST['ma'] ?? [])));
+
+        if (time() > (int) $signup['expires']) {
+            flash('auth_error', 'Mã đã hết hạn. Bấm "Gửi lại" để nhận mã mới.');
+            redirect('/auth?tab=dang-ky&buoc=ma');
+        }
+
+        if (!Otp::matches((string) $code, (string) $signup['hash'])) {
+            $signup['tries'] = (int) $signup['tries'] + 1;
+
+            // Hết lượt thì huỷ mã luôn, không chỉ báo lỗi: còn mã là còn dò được.
+            if ($signup['tries'] >= Otp::MAX_TRIES) {
+                $signup['hash']   = '';
+                $signup['resend'] = 0;
+                $_SESSION['_signup'] = $signup;
+
+                flash('auth_error', 'Nhập sai quá nhiều lần. Vui lòng lấy mã mới.');
+                redirect('/auth?tab=dang-ky&buoc=xac-minh');
+            }
+
+            $_SESSION['_signup'] = $signup;
+
+            flash('auth_error', sprintf(
+                'Mã không đúng. Bạn còn %d lần thử.',
+                Otp::MAX_TRIES - $signup['tries']
+            ));
+            redirect('/auth?tab=dang-ky&buoc=ma');
+        }
+
+        $signup['verified'] = true;
+        $signup['hash']     = '';
+
+        /*
+         * HỎI "SỐ NÀY CÓ TÀI KHOẢN CHƯA" SAU KHI XÁC MINH, KHÔNG PHẢI TRƯỚC.
+         *
+         * Đúng thứ tự của bản thiết kế, và đó là thứ tự an toàn: hỏi trước thì
+         * bất kỳ ai cũng gõ thử một dãy số để biết số đó có tài khoản ở đây
+         * không — một cách dò danh sách khách hàng mà không cần đăng nhập gì.
+         * Hỏi sau thì chỉ người chứng minh được mình đang giữ số mới biết.
+         */
+        $taken = Database::fetchValue(
+            'SELECT COUNT(*) FROM profiles WHERE phone = :p',
+            ['p' => $signup['phone']]
+        ) > 0;
+
+        $signup['exists'] = $taken;
+        $_SESSION['_signup'] = $signup;
+
+        redirect('/auth?tab=dang-ky&buoc=' . ($taken ? 'da-dang-ky' : 'mat-khau'));
+    }
+
+    /** Bước cuối: tạo mật khẩu, tạo tài khoản, đăng nhập luôn. */
+    public function signupFinish(): void
+    {
+        $this->requirePost('/auth?tab=dang-ky');
+
+        $signup = self::signup();
+
+        if ($signup === null || empty($signup['verified'])) {
+            redirect('/auth?tab=dang-ky');
+        }
+
         $password = (string) ($_POST['password'] ?? '');
-        $confirm  = (string) ($_POST['password_confirm'] ?? '');
 
-        if (utf8Length($fullName) < 2) {
-            $this->failRegister('Vui lòng nhập họ tên.', $fullName, $phone);
+        /* BỐN QUY TẮC của bản thiết kế, kiểm ở MÁY CHỦ.
+           auth.js chấm xanh từng dòng ngay khi gõ, nhưng đó chỉ là tăng cường:
+           tắt JavaScript, hay gọi thẳng địa chỉ này, thì bốn dòng dưới đây là
+           thứ duy nhất còn đứng lại. */
+        $failed = match (true) {
+            strlen($password) < 8       => 'Mật khẩu phải có ít nhất 8 ký tự.',
+            !preg_match('/[A-Z]/', $password) => 'Mật khẩu phải có ít nhất một chữ hoa.',
+            !preg_match('/[a-z]/', $password) => 'Mật khẩu phải có ít nhất một chữ thường.',
+            !preg_match('/[0-9]/', $password) => 'Mật khẩu phải có ít nhất một chữ số.',
+            default => null,
+        };
+
+        if ($failed !== null) {
+            flash('auth_error', $failed);
+            redirect('/auth?tab=dang-ky&buoc=mat-khau');
         }
 
-        if ($password !== $confirm) {
-            $this->failRegister('Hai lần nhập mật khẩu không khớp.', $fullName, $phone);
-        }
-
-        /* Không còn ô email trong form — số điện thoại là thứ khách dùng để
-           đăng nhập. Ai muốn tài khoản có email thì bấm "Tiếp tục với Google",
-           và email đó do Google xác nhận chứ không phải chữ khách gõ. */
-        $result = UserModel::register($phone, $password, $fullName);
+        /* Họ tên rỗng: bản thiết kế không hỏi tên ở bước nào cả. Cột
+           profiles.full_name cho phép NULL, và trang tài khoản cho khách điền
+           sau. */
+        $result = UserModel::register($signup['phone'], $password, '');
 
         if (!$result['ok']) {
-            $this->failRegister($result['error'], $fullName, $phone);
+            flash('auth_error', $result['error']);
+            redirect('/auth?tab=dang-ky&buoc=mat-khau');
         }
+
+        $remember = !empty($signup['remember']);
+
+        unset($_SESSION['_signup']);
+        $_SESSION['_signup_done'] = true;
 
         // Đăng ký xong đăng nhập luôn — bắt khách nhập lại ngay thông tin
         // vừa gõ là thêm một bước không cần thiết.
-        AuthMiddleware::login($result['id']);
+        AuthMiddleware::login($result['id'], $remember);
 
-        flash('account_success', 'Tạo tài khoản thành công. Chào mừng bạn đến với Vin Eyewear!');
-        redirect('/tai-khoan');
+        redirect('/auth?tab=dang-ky&buoc=xong');
     }
 
     /**
@@ -826,11 +1086,4 @@ class AuthController extends BaseController
         }
     }
 
-    private function failRegister(string $message, string $fullName, string $phone): never
-    {
-        $_SESSION['_old_auth'] = ['full_name' => $fullName, 'phone' => $phone];
-        flash('auth_error', $message);
-
-        redirect('/auth?tab=dang-ky');
-    }
 }

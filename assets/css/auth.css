@@ -550,3 +550,352 @@
     gap: 12px;
     margin-top: 32px;
 }
+
+/* ============================================================
+   LUỒNG ĐĂNG KÝ NHIỀU CHẶNG
+
+   Dựng theo "Dang ky.dc.html". Bản thiết kế vẽ sáu màn rời, mỗi màn một thẻ
+   520px đứng giữa trang; ở đây cả sáu nằm trong ĐÚNG cột form của thẻ đăng
+   nhập sẵn có — yêu cầu là giữ giao diện cũ, chỉ lấy luồng nút bấm.
+
+   Mọi màu và bo góc lấy từ token của site (--brand, --line, --radius-sm),
+   không gõ lại mã màu của bản thiết kế: hai bảng màu lệch nhau vài nấc và
+   trang này đứng cạnh trang đăng nhập.
+   ============================================================ */
+
+/* --- Dải ba chặng: Xác minh SĐT → Tạo mật khẩu → Hoàn tất --- */
+
+.astage {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 28px;
+    padding: 0;
+    list-style: none;
+}
+
+.astage__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    text-align: center;
+}
+
+/* Vạch nối giữa các chấm. Vẽ bằng ::after của chính mục đứng trước nên số
+   vạch luôn ít hơn số chặng đúng một — không phải thêm phần tử rỗng nào. */
+.astage__item:not(:last-child) { position: relative; }
+
+.astage__item:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    top: 13px;
+    left: calc(50% + 20px);
+    right: calc(-50% + 20px);
+    height: 1px;
+    background: var(--line);
+}
+
+.astage__item.is-done::after { background: var(--brand); }
+
+.astage__dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 27px;
+    height: 27px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-round);
+    background: var(--surface-raised);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.astage__label { font-size: 12px; color: var(--muted); }
+
+.astage__item.is-now .astage__dot,
+.astage__item.is-done .astage__dot {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.astage__item.is-now .astage__label,
+.astage__item.is-done .astage__label { color: var(--brand); }
+
+/* --- Tiêu đề và lời dẫn của từng màn --- */
+
+.asay { position: relative; margin-bottom: 22px; }
+
+.asay__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.asay__text {
+    margin: 10px 0 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.asay__text strong { color: var(--ink); font-weight: 600; }
+
+.asay__phone {
+    margin: 10px 0 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+/* Nút lùi neo ngoài lề trái của cột form, không chen vào hàng tiêu đề: chen
+   vào thì tiêu đề của sáu màn thụt vào một quãng khác nhau tuỳ màn có nút
+   hay không. */
+.aback {
+    position: absolute;
+    top: 2px;
+    left: -38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.aback:hover,
+.aback:focus-visible { background: var(--surface-sunken); color: var(--brand); }
+
+@media (max-width: 1100px) {
+    /* Hết chỗ ngoài lề thì đưa nút về trên tiêu đề */
+    .aback { position: static; margin-bottom: 6px; }
+}
+
+/* --- Nút phụ và lối ra --- */
+
+.authbtn--ghost {
+    border: 1.5px solid var(--line);
+    background: var(--surface-raised);
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.authbtn--ghost:hover,
+.authbtn--ghost:focus-visible { border-color: var(--brand); color: var(--brand); }
+
+.aalt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.aalt .authbtn { margin: 0; }
+
+.aalt__quiet {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.aalt__quiet:hover,
+.aalt__quiet:focus-visible { color: var(--brand); text-decoration: underline; }
+
+/* --- Ba phương thức gửi mã --- */
+
+.amethod { display: flex; flex-direction: column; gap: 12px; }
+
+.amethod__item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    text-align: left;
+    cursor: pointer;
+}
+
+.amethod__item:hover,
+.amethod__item:focus-visible { border-color: var(--brand); }
+
+/* Ba chấm tròn màu kênh liên lạc, cùng sắc xanh với cụm nút nổi ở góc phải
+   dưới (xem components/floating.css) — cùng một thứ thì cùng một màu. */
+.amethod__ico {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-round);
+    background: #2f6fe4;
+}
+
+.amethod__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.amethod__name { font-size: 15px; font-weight: 600; color: var(--ink); }
+.amethod__note { font-size: 13px; color: var(--muted); }
+
+/* --- Sáu ô nhập mã --- */
+
+/* min-width: 0 KHÔNG PHẢI THỪA.
+   <fieldset> mang sẵn `min-inline-size: min-content` trong bộ style mặc định
+   của trình duyệt, nên nó KHÔNG co theo cột form: sáu ô nhập giãn tới bề rộng
+   tự nhiên của <input> và cả hàng phình ra 1742px, tràn khỏi thẻ (đo được).
+   Dòng này ghi đè đúng thuộc tính đó. */
+.aotp {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 4px;
+    padding: 0;
+    border: 0;
+    box-sizing: border-box;
+}
+
+.aotp__box {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 0;
+    border: none;
+    border-bottom: 1.5px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 22px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--ink);
+}
+
+.aotp__box:focus {
+    outline: none;
+    border-bottom-color: var(--brand);
+}
+
+/* --- Đếm ngược và gửi lại --- */
+
+.aresend { margin-top: 18px; text-align: center; }
+
+.aresend__wait,
+.aresend__ask { margin: 0; font-size: 14px; color: var(--muted); }
+
+.aresend__go {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* Thuộc tính `hidden` của HTML chỉ là `display: none` trong style mặc định của
+   trình duyệt, nên BẤT KỲ dòng display nào của mình cũng đè được nó — thiếu
+   dòng dưới đây thì cụm "Gửi lại" hiện ngay cạnh đồng hồ đếm ngược, tức là
+   mời bấm đúng cái nút máy chủ đang từ chối. */
+.aresend__go[hidden],
+.aresend__wait[hidden] { display: none; }
+
+.aresend__go form { display: contents; }
+
+.aresend__ask { flex-basis: 100%; }
+
+/* Nút "Gửi lại" là <button> trong form (nó ĐỔI trạng thái máy chủ nên không
+   được là liên kết), còn "Phương thức khác" là <a>. Cho hai thứ trông giống
+   nhau vì với người dùng chúng là hai lựa chọn ngang hàng. */
+.aresend__link {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.aresend__link:hover,
+.aresend__link:focus-visible { text-decoration: underline; }
+
+.aresend__or { font-size: 14px; color: var(--muted); }
+
+/* --- Bốn quy tắc mật khẩu --- */
+
+.arule {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.arule__item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    color: var(--muted);
+}
+
+.arule__dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--radius-round);
+    font-size: 9px;
+    color: transparent;
+}
+
+/* Đạt rồi thì cả dòng xanh và dấu tick hiện ra. Màu lấy từ .pcard__badge--new
+   của thẻ sản phẩm, sắc xanh duy nhất đang dùng trong site. */
+.arule__item.is-ok { color: #4d7a3f; }
+
+.arule__item.is-ok .arule__dot {
+    border-color: #4d7a3f;
+    color: #4d7a3f;
+}
+
+/* --- Màn hoàn tất --- */
+
+.adone { text-align: center; margin-bottom: 24px; }
+
+.adone__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 68px;
+    height: 68px;
+    border-radius: var(--radius-round);
+    background: #eaf3e6;
+    color: #4d7a3f;
+}
+
+.adone__title {
+    margin: 20px 0 0;
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.adone__text {
+    margin: 12px 0 0;
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--muted);
+}

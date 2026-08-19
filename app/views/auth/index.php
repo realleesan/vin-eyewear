@@ -39,6 +39,17 @@
 
 $old        = $old ?? [];
 $isRegister = $tab === 'dang-ky';
+
+/* Bước của luồng đăng ký nhiều chặng — '' là màn nhập số điện thoại.
+   AuthController::signupStep() đã lọc, ở đây chỉ việc dùng. */
+$step   = $isRegister ? ($step ?? '') : '';
+$signup = $signup ?? [];
+
+/* Khối "HOẶC · Google · điều khoản · đã có tài khoản" chỉ hợp lý ở màn ĐẦU:
+   giữa chừng luồng xác minh, một nút "Tiếp tục với Google" là lời mời bỏ dở
+   việc đang làm, còn dòng "Đã có tài khoản?" thì đã có lối ra riêng ở từng
+   màn rồi. */
+$showOr = $step === '';
 ?>
 
 <section class="authwrap">
@@ -70,14 +81,16 @@ $isRegister = $tab === 'dang-ky';
         <!-- ══════════ CỘT FORM ══════════ -->
         <div class="authcard__panel">
 
-            <div class="authhead">
-                <h1 class="authhead__title"><?= $isRegister ? 'Tạo tài khoản' : 'Đăng nhập' ?></h1>
-                <p class="authhead__lead">
-                    <?= $isRegister
-                        ? 'Mở tài khoản để theo dõi đơn hàng và lịch hẹn.'
-                        : 'Chào mừng bạn quay lại Vin Eyewear.' ?>
-                </p>
-            </div>
+            <?php if ($step === ''): ?>
+                <div class="authhead">
+                    <h1 class="authhead__title"><?= $isRegister ? 'Tạo tài khoản' : 'Đăng nhập' ?></h1>
+                    <p class="authhead__lead">
+                        <?= $isRegister
+                            ? 'Mở tài khoản để theo dõi đơn hàng và lịch hẹn.'
+                            : 'Chào mừng bạn quay lại Vin Eyewear.' ?>
+                    </p>
+                </div>
+            <?php endif; ?>
 
             <?php if ($success !== null): ?>
                 <p class="authflash authflash--ok" role="status"><?= e($success) ?></p>
@@ -143,57 +156,20 @@ $isRegister = $tab === 'dang-ky';
 
             <?php else: ?>
 
-                <form class="authform" method="post" action="/auth/dang-ky">
-                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-
-                    <label class="authfield">
-                        <span class="authfield__label">Họ và tên</span>
-                        <input class="authfield__input" type="text" name="full_name" required
-                               minlength="2" maxlength="120" autocomplete="name" autofocus
-                               placeholder="Nguyễn Văn A"
-                               value="<?= e($old['full_name'] ?? '') ?>">
-                    </label>
-
-                    <?php /* KHÔNG CÒN Ô EMAIL. Số điện thoại nay là thứ khách dùng
-                             để đăng nhập, nên nó thành BẮT BUỘC — bỏ cả hai thì
-                             tài khoản tạo xong không ai vào được nữa. Ai muốn
-                             tài khoản có email thì bấm nút Google phía dưới, và
-                             địa chỉ đó do Google xác nhận chứ không phải chữ gõ
-                             vào ô. */ ?>
-                    <label class="authfield">
-                        <span class="authfield__label">Số điện thoại</span>
-                        <input class="authfield__input" type="tel" name="phone" required
-                               autocomplete="tel" placeholder="0912345678"
-                               value="<?= e($old['phone'] ?? '') ?>">
-                        <span class="authfield__hint">Dùng số này để đăng nhập.</span>
-                    </label>
-
-                    <label class="authfield">
-                        <span class="authfield__label">Mật khẩu</span>
-                        <?php partial('auth/_password', [
-                            'pw_name'     => 'password',
-                            'pw_auto'     => 'new-password',
-                            'pw_holder'   => 'Tối thiểu 8 ký tự',
-                            'pw_min'      => 8,
-                            'pw_required' => true,
-                        ]); ?>
-                    </label>
-
-                    <label class="authfield">
-                        <span class="authfield__label">Nhập lại mật khẩu</span>
-                        <?php partial('auth/_password', [
-                            'pw_name'     => 'password_confirm',
-                            'pw_auto'     => 'new-password',
-                            'pw_holder'   => '••••••••',
-                            'pw_min'      => 8,
-                            'pw_required' => true,
-                        ]); ?>
-                    </label>
-
-                    <button type="submit" class="authbtn authbtn--primary">Tạo tài khoản</button>
-                </form>
+                <?php /* ĐĂNG KÝ NAY LÀ MỘT LUỒNG NHIỀU CHẶNG, không còn một
+                         form gửi một phát: số điện thoại phải xác minh bằng mã
+                         trước khi tài khoản ra đời, và ô họ tên đã bỏ hẳn.
+                         Dựng theo "Dang ky.dc.html" — xem auth/_signup.php và
+                         khối "ĐĂNG KÝ — BỐN CHẶNG" trong AuthController. */ ?>
+                <?php partial('auth/_signup', [
+                    'step'   => $step,
+                    'signup' => $signup,
+                    'old'    => $old,
+                ]); ?>
 
             <?php endif; ?>
+
+            <?php if ($showOr): ?>
 
             <div class="author" aria-hidden="true">
                 <span class="author__line"></span>
@@ -254,6 +230,8 @@ $isRegister = $tab === 'dang-ky';
                     Bạn mới biết đến Vin Eyewear? <a href="/auth?tab=dang-ky">Đăng ký</a>
                 <?php endif; ?>
             </p>
+
+            <?php endif; /* $showOr */ ?>
         </div>
     </div>
 </section>

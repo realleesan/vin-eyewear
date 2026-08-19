@@ -99,7 +99,15 @@ return [
     // Đăng nhập / đăng ký / tài khoản
     'auth'              => 'AuthController@index',
     'auth/dang-nhap'    => 'AuthController@login',      // POST
-    'auth/dang-ky'      => 'AuthController@register',   // POST
+    /*
+     * ĐĂNG KÝ LÀ BỐN CHẶNG, không còn một cú POST như trước — số điện thoại
+     * phải xác minh bằng mã trước khi tài khoản ra đời. Xem khối chú thích
+     * "ĐĂNG KÝ — BỐN CHẶNG" trong AuthController.
+     */
+    'auth/dang-ky'          => 'AuthController@signupPhone',   // POST — nhận số
+    'auth/dang-ky/gui-ma'   => 'AuthController@signupSend',    // POST — sinh & gửi mã
+    'auth/dang-ky/xac-minh' => 'AuthController@signupVerify',  // POST — kiểm mã
+    'auth/dang-ky/mat-khau' => 'AuthController@signupFinish',  // POST — tạo tài khoản
     'auth/dang-xuat'    => 'AuthController@logout',     // POST
     // Đăng nhập/đăng ký bằng Google. Cả hai là GET: chúng phải chạy khi không
     // có JavaScript, và địa chỉ callback do Google gọi tới nên không thể là POST.

@@ -114,7 +114,12 @@ class UserModel extends BaseModel
 
                 Database::execute(
                     'INSERT INTO profiles (id, full_name, phone) VALUES (:id, :name, :phone)',
-                    ['id' => $userId, 'name' => $fullName, 'phone' => $phone ?: null]
+                    /* Tên rỗng thành NULL chứ không phải chuỗi rỗng: luồng
+                       đăng ký mới không hỏi họ tên ở bước nào cả (xem
+                       auth/_signup.php), và một ô trống thì nên nói là "chưa
+                       có" thay vì "có, và nó rỗng". */
+                    ['id' => $userId, 'name' => $fullName !== '' ? $fullName : null,
+                     'phone' => $phone ?: null]
                 );
 
                 // Mọi tài khoản đăng ký từ ngoài đều là 'customer'.
