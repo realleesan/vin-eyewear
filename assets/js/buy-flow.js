@@ -136,12 +136,51 @@
     }
 
     /* ── Một lượt đi–về với máy chủ ─────────────────────────────────────── */
-    function send(url, options, fallback, push) {
+
+    /*
+     * XIN MẢNH, ĐỪNG XIN CẢ TRANG.
+     *
+     * Máy chủ thấy header này thì chỉ in ba mảnh mà apply() thực sự dùng —
+     * xem khối chú thích đầu _layout/master.php. Trang chủ trả 120KB, ba mảnh
+     * đó ~8KB, mà DOMParser phải nhai hết 120KB rồi ta vứt đi 112KB: đo được
+     * 680ms trên máy chậm, tức phần lâu nhất của cả cú bấm.
+     *
+     * Đặt trong send() chứ không ở từng nơi gọi: mọi lượt đi–về của file này
+     * đều chỉ cần ba mảnh, kể cả các bước giữa hộp thoại và nút Lùi.
+     *
+     * Máy chủ cũ không biết header này thì trả nguyên trang như xưa và mọi
+     * thứ vẫn chạy — apply() không quan tâm nó nhận được bao nhiêu HTML thừa.
+     */
+    function withFragmentHeader(options) {
+        var opts = {};
+
+        for (var k in options) {
+            if (Object.prototype.hasOwnProperty.call(options, k)) opts[k] = options[k];
+        }
+
+        opts.headers = { 'X-Buy-Flow': '1' };
+
+        return opts;
+    }
+
+    /*
+     * `busyEl` là NÚT (hoặc liên kết) vừa được bấm.
+     *
+     * Không có nó thì giữa lúc bấm và lúc hộp thoại hiện ra, màn hình KHÔNG
+     * đổi gì cả — chỉ con trỏ chuột thành hình đồng hồ, mà trên điện thoại thì
+     * không có con trỏ nào. Một lượt đi–về vài trăm mili giây im lặng đọc ra
+     * đúng như nút hỏng, và người ta bấm lại lần nữa.
+     *
+     * Đánh dấu ngay tại nút giữ phản hồi ở đúng chỗ mắt đang nhìn, và không
+     * phải chờ máy chủ mới có gì để xem.
+     */
+    function send(url, options, fallback, push, busyEl) {
         busy = true;
 
         document.documentElement.classList.add('is-buying');
+        if (busyEl) busyEl.classList.add('is-buy-busy');
 
-        fetch(url, options)
+        fetch(url, withFragmentHeader(options))
             .then(function (res) {
                 /*
                  * MÁY CHỦ ĐÃ TRẢ LỜI THÌ TUYỆT ĐỐI KHÔNG GỬI LẠI.
@@ -185,6 +224,12 @@
             .then(function () {
                 busy = false;
                 document.documentElement.classList.remove('is-buying');
+
+                /* Nút trong hộp thoại đã bị apply() thay mất — gỡ lớp trên một
+                   phần tử không còn trong trang cũng không sao, còn nút ngoài
+                   trang (thẻ sản phẩm, trang chi tiết) thì ở nguyên đó và phải
+                   trả về trạng thái thường. */
+                if (busyEl) busyEl.classList.remove('is-buy-busy');
             });
     }
 
@@ -245,7 +290,7 @@
             }
 
             form.submit();
-        });
+        }, true, btn || form);
     });
 
     /* ── Bấm link trong hộp thoại: đóng, quay lại, đổi bước ─────────────── */
@@ -261,7 +306,7 @@
 
         e.preventDefault();
         send(link.href, { credentials: 'same-origin' },
-            function () { window.location.href = link.href; });
+            function () { window.location.href = link.href; }, true, link);
     });
 
     /* ── Esc để đóng ────────────────────────────────────────────────────────

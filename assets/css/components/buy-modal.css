@@ -695,3 +695,54 @@
 
 .is-buying .bmodal button,
 .is-buying .bmodal a { pointer-events: none; }
+
+/* ĐÚNG CÁI NÚT VỪA BẤM — buy-flow.js đặt lớp này lên nó ngay lúc bấm, trước
+   khi máy chủ kịp trả lời.
+
+   Vì sao cần: .is-buying ở trên chỉ đổi con trỏ chuột, mà điện thoại không có
+   con trỏ. Không có dấu hiệu nào tại chỗ thì khoảng chờ vài trăm mili giây
+   đọc ra y như nút hỏng, và người ta bấm lại lần nữa.
+
+   pointer-events: none chặn luôn cú bấm thứ hai vào CHÍNH nút đang chờ. Nút
+   của thẻ sản phẩm khác không dính lớp này nên vẫn bấm được như thường —
+   đúng ý đồ ghi ở chốt `busy` trong buy-flow.js. */
+.is-buy-busy {
+    position: relative;
+    /* Cắt thanh chạy theo góc bo của chính nút */
+    overflow: hidden;
+    opacity: 0.7;
+    cursor: progress;
+    pointer-events: none;
+}
+
+/* THANH CHẠY DƯỚI ĐÁY, KHÔNG PHẢI VÒNG XOAY GIỮA NÚT.
+
+   Đã thử vòng xoay neo mép phải: nút "Thêm vào giỏ" của thẻ sản phẩm chỉ rộng
+   ~104px mà nhãn đã chiếm ~85px, nên cái vòng nằm đè lên chữ "giỏ". Nới đệm
+   phải cho nó chỗ thì nhãn tràn ra ngoài — .pcard__btn có white-space: nowrap.
+
+   Thanh chạy dọc mép dưới không bao giờ đụng vào chữ, và không phụ thuộc nút
+   rộng bao nhiêu nên dùng chung được cho cả nút to của trang chi tiết lẫn nút
+   trong hộp thoại. currentColor để chạy trên cả nút đặc (chữ trắng) lẫn nút
+   viền (chữ đỏ) mà không cần bản riêng. */
+.is-buy-busy::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 40%;
+    height: 2px;
+    background: currentColor;
+    animation: buy-busy-slide 0.9s linear infinite;
+}
+
+@keyframes buy-busy-slide {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(350%); }
+}
+
+/* Thanh chạy đứng yên thì thành một vệt trang trí khó hiểu — bỏ hẳn, còn lại
+   phần mờ đi vẫn nói được rằng nút đang chờ. */
+@media (prefers-reduced-motion: reduce) {
+    .is-buy-busy::after { display: none; }
+}

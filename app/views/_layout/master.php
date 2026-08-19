@@ -1,3 +1,50 @@
+<?php
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CHẾ ĐỘ MẢNH — trả lời cú bấm "Mua ngay" / "Thêm vào giỏ"
+ *
+ * assets/js/buy-flow.js gửi form bằng fetch rồi lấy ĐÚNG BA MẢNH ra khỏi câu
+ * trả lời: hộp thoại .bmodal, dải báo .toast, và cụm giỏ hàng [data-cart].
+ * Cả trang còn lại — head, thanh nav, nội dung, chân trang — nó vứt đi.
+ *
+ * Trước đây máy chủ vẫn dựng cả trang cho mỗi cú bấm, và đó là chỗ mất thời
+ * gian THẬT. Đo ở trang chủ (độ trễ mạng 150ms, CPU chậm 4 lần): câu trả lời
+ * về sau 336ms, nhưng hộp thoại mãi 1020ms mới hiện — 680ms còn lại là trình
+ * duyệt ngồi phân tích 120KB HTML bằng DOMParser để lấy ra ~8KB nó cần.
+ *
+ * Nên khi thấy header X-Buy-Flow, in đúng ba mảnh đó rồi dừng.
+ *
+ * TƯƠNG THÍCH NGƯỢC: bản JS cũ (hoặc máy chủ chưa cập nhật) không gửi header
+ * này thì rơi xuống nhánh trang đầy đủ như xưa, và buy-flow.js vẫn lấy được
+ * ba mảnh từ đó. Hai bên không buộc phải lên phiên bản cùng lúc.
+ *
+ * VẪN LÀ MÁY CHỦ DỰNG HTML. Đây không phải bước đầu chuyển sang trả JSON rồi
+ * để trình duyệt tự vẽ hộp thoại — xem khối chú thích đầu buy-flow.js về lý
+ * do không làm thế. Chỉ là thôi gửi kèm phần không ai dùng.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
+    /* Cùng một URL trả hai thứ khác nhau tuỳ header, nên phải nói cho mọi
+       tầng đệm ở giữa biết — thiếu dòng này thì một proxy có thể đem mảnh
+       phát cho người mở trang bằng đường dẫn thường, và họ nhận về một trang
+       trắng chỉ có cái giỏ hàng. */
+    header('Vary: X-Buy-Flow');
+
+    if (!empty($buyModal)) {
+        partial('_layout/buy-modal', ['buyModal' => $buyModal]);
+    }
+
+    if (!empty($toast)) {
+        partial('_layout/toast', ['toast' => $toast, 'toastTone' => $toastTone ?? 'ok']);
+    }
+
+    /* Luôn in, kể cả khi giỏ không đổi: buy-flow.js chép ruột cụm này sang
+       trang đang mở, nên thiếu nó thì huy hiệu đứng im ở con số cũ. */
+    partial('_layout/header-cart');
+
+    return;
+}
+?>
 <!DOCTYPE html>
 <?php /* lang động: trình đọc màn hình chọn giọng đọc theo thuộc tính này,
          và trình duyệt dùng nó để gợi ý dịch trang. Khoá cứng "vi" thì khách
@@ -219,15 +266,10 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
     }
     ?>
 
+    <?php /* Dải báo sau khi thêm vào giỏ — ở _layout/toast.php, vì chế độ
+             mảnh ở đầu file cũng in nó. */ ?>
     <?php if (!empty($toast)): ?>
-        <?php /* Dải báo sau khi thêm vào giỏ. role="status" để trình đọc màn
-                 hình đọc lên mà không cắt ngang việc đang làm — aria-live
-                 "polite", đúng với một lời xác nhận.
-
-                 Tự mờ đi sau vài giây bằng CSS animation, không phải setTimeout:
-                 xem .toast trong components/ui.css. */ ?>
-        <p class="toast toast--<?= e($toastTone ?? 'ok') ?>"
-           role="<?= ($toastTone ?? 'ok') === 'err' ? 'alert' : 'status' ?>"><?= e($toast) ?></p>
+        <?php partial('_layout/toast', ['toast' => $toast, 'toastTone' => $toastTone ?? 'ok']); ?>
     <?php endif; ?>
 
     <?php if (!$bare): ?>
