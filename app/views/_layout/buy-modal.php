@@ -41,6 +41,10 @@
  *
  * MỌI MẶT HÀNG ĐỀU ĐI QUA ĐỦ LUỒNG NÀY, từ bước 1.
  *
+ * Nhánh "chỉ mua <noun>" đi thẳng từ bước 1 sang bước 5 — không có số đo và
+ * không có gói tròng để hỏi, nhưng vẫn phải soát lại hình thức, đơn giá và
+ * chốt số lượng trước khi món hàng vào giỏ.
+ *
  * Khác nhau đúng MỘT chỗ: bước 4 "Chọn loại tròng kính" chỉ có với gọng và
  * kính mát. Tròng rời và kính áp tròng bỏ qua nó — bản thân chúng đã là tròng,
  * cộng thêm một gói tròng nữa là bán hai cặp tròng cho một đơn và tính tiền cả
@@ -91,9 +95,14 @@ $prev = [
     'khuc-xa'  => 'hinh-thuc',
     'so-do'    => 'khuc-xa',
     'trong'    => $rxPrev,
-    // Chỉ nhánh THEO SỐ ĐO mới đi qua bước xác nhận (nhánh mua trần đã kết
-    // thúc ngay ở bước 1), nên đường lùi là bước ngay trước nó trên nhánh đó.
-    'xac-nhan' => $takesPkg ? 'trong' : $rxPrev,
+    /* HAI ĐÍCH, một nút — vì hai đường đi khác nhau cùng dẫn tới bước này.
+       Mua kèm tròng thì lùi về bước ngay trước trên nhánh đó (chọn tròng, hoặc
+       số đo với mặt hàng không có gói tròng). Mua trần thì cả nhánh chỉ có một
+       bước, nên lùi thẳng về "Chọn hình thức mua".
+
+       Trước đây dòng này chỉ có nhánh theo số đo, vì nhánh mua trần kết thúc
+       ngay ở bước 1 và không bao giờ tới đây. Nay nó có tới. */
+    'xac-nhan' => $intent['mode'] === 'combo' ? ($takesPkg ? 'trong' : $rxPrev) : 'hinh-thuc',
 ][$step] ?? null;
 
 /* Đóng hộp thoại = về chính trang này, bỏ hai tham số của nó. Không dùng
@@ -173,26 +182,24 @@ $stepForm = static function (string $buoc): void {
 
             <!-- ══════════ 1. CHỌN HÌNH THỨC MUA ══════════ -->
             <div class="bmodal__opts">
-                <?php /* "CHỈ MUA <?= $noun ?>" KẾT THÚC NGAY TẠI ĐÂY.
-                         Nó gửi thẳng sang /gio-hang/them chứ không đi tiếp một
-                         bước "xác nhận" nào nữa: khách vừa chọn xong hình thức,
-                         số lượng đã đặt ở trang sản phẩm, và không còn câu hỏi
-                         nào chưa trả lời. Thêm một màn hình chỉ để bấm "đồng ý"
-                         là bắt người ta xác nhận cái họ vừa bấm. */ ?>
-                <form method="post" action="/gio-hang/them">
-                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                    <input type="hidden" name="product_id" value="<?= e($product['id']) ?>">
-                    <input type="hidden" name="mode" value="gong">
-                    <input type="hidden" name="quantity" value="<?= $qty ?>">
-                    <input type="hidden" name="back" value="<?= e($intent['back']) ?>">
-                    <?php if ($intent['variant_id'] !== null): ?>
-                        <input type="hidden" name="variant_id" value="<?= e($intent['variant_id']) ?>">
-                    <?php endif; ?>
-                    <?php if ($intent['action'] === 'buy'): ?>
-                        <input type="hidden" name="action" value="buy">
-                    <?php endif; ?>
+                <?php /* "CHỈ MUA <?= $noun ?>" CŨNG ĐI QUA BƯỚC XÁC NHẬN.
+                         Trước đây nút này gửi thẳng sang /gio-hang/them và kết
+                         thúc luôn tại đây, với lý do "khách vừa chọn xong hình
+                         thức thì không còn câu hỏi nào chưa trả lời". Nhưng có
+                         một câu chưa hỏi: SỐ LƯỢNG — thẻ sản phẩm không có bộ
+                         đếm nào, nên mua trần từ thẻ luôn là đúng một chiếc và
+                         không có chỗ nào đổi.
 
-                    <button type="submit" class="bopt">
+                         Nay nó gửi sang /gio-hang/chon như nhánh cắt tròng.
+                         Không cần ô ẩn nào ngoài token và tên bước: số lượng,
+                         phương án và việc khách bấm "Mua ngay" hay "Thêm vào
+                         giỏ" đều đã nằm trong $_SESSION['_buy_intent'] từ lúc
+                         mở hộp thoại. buyStep() đã sẵn định tuyến che_do khác
+                         'combo' về thẳng bước "Xác nhận sản phẩm". */ ?>
+                <form method="post" action="/gio-hang/chon">
+                    <?php $stepForm('hinh-thuc'); ?>
+
+                    <button type="submit" class="bopt" name="che_do" value="gong">
                         <span class="bopt__ico" aria-hidden="true">
                             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                  stroke-width="1.8" stroke-linecap="round">
@@ -208,8 +215,8 @@ $stepForm = static function (string $buoc): void {
                     </button>
                 </form>
 
-                <?php /* Nhánh cắt tròng thì còn ba câu hỏi nữa (số đo · gói
-                         tròng · số lượng), nên nó đi tiếp qua buyStep(). */ ?>
+                <?php /* Nhánh cắt tròng còn ba câu hỏi nữa: số đo, gói tròng,
+                         rồi mới tới số lượng ở bước xác nhận. */ ?>
                 <form method="post" action="/gio-hang/chon">
                     <?php $stepForm('hinh-thuc'); ?>
 
@@ -459,7 +466,7 @@ $stepForm = static function (string $buoc): void {
                     <?php endif; ?>
 
                     <button type="submit" class="bmodal__cta">
-                        <?= $intent['action'] === 'buy' ? 'Mua ngay' : 'Thêm vào giỏ' ?>
+                        <?= $intent['action'] === 'buy' ? 'Mua ngay' : 'Thêm vào giỏ hàng' ?>
                     </button>
                 </form>
             </div>

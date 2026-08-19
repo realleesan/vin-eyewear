@@ -262,9 +262,12 @@ class CartController extends BaseController
         // số lượng của lần mua trước.
         unset($_SESSION['_buy_intent']);
 
-        flash('cart_success', $lens === null
-            ? sprintf('Đã thêm "%s" vào giỏ hàng.', $product['name'])
-            : sprintf('Đã thêm "%s" kèm %s vào giỏ hàng.', $product['name'], $lens['name']));
+        /* MỘT DÒNG, KHÔNG KÈM TÊN HÀNG.
+           Bản trước ghi 'Đã thêm "Gọng kính Titan Vin T01" kèm Chống ánh sáng
+           xanh vào giỏ hàng.' — đúng hơn, nhưng dài và ở màn hẹp thì dải báo
+           xuống ba dòng. Khách vừa bấm nút trên đúng cái thẻ đó nên tên hàng
+           không phải thứ họ cần đọc lại; cái họ cần biết là việc đã xong. */
+        flash('cart_success', 'Đã thêm vào giỏ hàng!');
 
         /*
          * "MUA NGAY" đi thẳng tới thanh toán. "THÊM VÀO GIỎ" thì Ở LẠI ĐÚNG
