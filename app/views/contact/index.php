@@ -22,10 +22,22 @@
  *   - Không có JavaScript vẫn đổi được bản đồ.
  *   - Gửi link "cửa hàng Tây Hồ" cho người khác thì họ mở ra đúng cửa hàng đó.
  * contact.js chỉ tăng cường: đổi ngay tại chỗ, không tải lại trang.
+ *
+ * Nó cũng bắt hai nút "Chỉ đường" (trên thẻ cơ sở và trên thẻ nổi của bản đồ)
+ * để xin vị trí hiện tại rồi mở Google Maps với lộ trình từ chỗ khách đang
+ * đứng tới cơ sở. Không có JS, hoặc khách từ chối chia sẻ vị trí, thì vẫn ra
+ * Google Maps đúng cơ sở — chỉ thiếu điểm xuất phát và Google sẽ tự hỏi.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-/** Đường dẫn chỉ đường Google Maps từ địa chỉ. */
+/**
+ * Đường dẫn chỉ đường Google Maps tới một địa chỉ.
+ *
+ * CỐ Ý KHÔNG có tham số `origin`: đây là bản dùng khi không có JavaScript
+ * (hoặc khách từ chối chia sẻ vị trí), lúc đó Google Maps tự hỏi điểm xuất
+ * phát. Khi có JS, contact.js xin vị trí hiện tại rồi nối thêm
+ * `&origin=<vĩ độ>,<kinh độ>` vào chính đường dẫn này — xem hàm withOrigin.
+ */
 $directionsUrl = static fn (string $address): string =>
     'https://www.google.com/maps/dir/?api=1&destination=' . rawurlencode($address);
 
@@ -167,7 +179,14 @@ $channels = [
                         <span class="cstore__hours<?= $status['open'] ? '' : ' is-closed' ?>">
                             <?= $status['open'] ? 'Mở cửa' : 'Đã đóng' ?> · <?= e($status['range']) ?>
                         </span>
-                        <span class="cstore__go">Chỉ đường</span>
+                        <?php /* Không thể là <a> riêng vì cả thẻ cơ sở đã là
+                                 một <a> rồi, mà HTML cấm <a> lồng <a>.
+                                 contact.js bắt cú bấm vào đây để xin vị trí và
+                                 mở chỉ đường; không có JS thì bấm vào đây bằng
+                                 bấm vào thẻ — mở cơ sở này lên bản đồ, và nút
+                                 chỉ đường thật nằm ngay trên thẻ bản đồ đó. */ ?>
+                        <span class="cstore__go"
+                              title="Chỉ đường từ vị trí của bạn tới <?= e($store['name']) ?>">Chỉ đường</span>
                     </span>
                 </a>
             <?php endforeach; ?>
@@ -191,7 +210,7 @@ $channels = [
                 <p class="cmap__address" data-map-address><?= e($selected['address']) ?></p>
                 <a class="cmap__link" data-map-link
                    href="<?= e($directionsUrl($selected['address'])) ?>"
-                   target="_blank" rel="noreferrer noopener">Mở trên Google Maps ↗</a>
+                   target="_blank" rel="noreferrer noopener">Chỉ đường từ vị trí của tôi ↗</a>
             </div>
         </div>
     </div>

@@ -212,6 +212,20 @@
     color: var(--brand);
 }
 
+/* Viên "Chỉ đường" tự nó là một nút (contact.js bắt cú bấm), nhưng vì nằm
+   trong thẻ <a> của cơ sở nên trình duyệt không cho nó con trỏ riêng. Chỉ
+   định lại cho khách thấy đây là chỗ bấm được. */
+.cstore__go { cursor: pointer; }
+
+/* Đang xin vị trí: mờ đi và khoá con trỏ, để cú bấm thứ hai trong lúc chờ
+   không trông như "bấm mà chẳng thấy gì". pointer-events KHÔNG tắt — tắt thì
+   trình đọc màn hình mất luôn phần tử; contact.js đã tự chặn bấm trùng. */
+.cstore__go.is-locating,
+.cmap__link.is-locating {
+    opacity: 0.6;
+    cursor: progress;
+}
+
 .cstores__cta {
     align-self: flex-start;
     margin-top: 4px;
