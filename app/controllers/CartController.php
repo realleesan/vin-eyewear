@@ -81,7 +81,10 @@ class CartController extends BaseController
             'total'       => $summary['total'],
             'voucher'     => $summary['voucher'],
             'voucherCode' => $_SESSION['cart_voucher'] ?? '',
-            'voucherMsg'  => flash('cart_voucher_msg'),
+            /* Lời của chính thao tác vừa rồi (áp mã / gỡ mã) được ưu tiên;
+               không có thì mới tới lý do mã bị tự gỡ ở lần vẽ này. Hai thứ
+               không bao giờ cùng lúc: gỡ tay thì đã xoá mã trước khi tới đây. */
+            'voucherMsg'  => flash('cart_voucher_msg') ?? $summary['dropped'],
             'voucherOk'   => flash('cart_voucher_ok') !== null,
             'maxQty'      => self::MAX_QTY,
             'success'     => flash('cart_success'),
@@ -472,7 +475,7 @@ class CartController extends BaseController
 
             case 'xoa':
                 unset($_SESSION['cart'][$id]);
-                flash('cart_success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
+                flash('cart_success', 'Đã xoá sản phẩm khỏi giỏ hàng.');
                 break;
 
             default:
@@ -897,6 +900,12 @@ class CartController extends BaseController
             'shippingFee' => $shippingFee,
             'total'       => $subtotal + $shippingFee,
             'voucher'     => null,
+            /* Lý do mã vừa bị GỠ, hoặc null khi không có gì bị gỡ.
+               Mã được đánh giá lại ở MỖI lần vẽ trang, nên nó tự rụng khi giỏ
+               đổi — xoá bớt một món là tạm tính tụt xuống dưới đơn tối thiểu.
+               Không mang lý do ra ngoài thì tiền giảm biến mất không một lời
+               nào, và khách chỉ thấy tổng tiền tự nhiên tăng lên. */
+            'dropped'     => null,
         ];
 
         if ($code === '' || $subtotal <= 0) {
@@ -908,7 +917,9 @@ class CartController extends BaseController
         if (!$result['ok']) {
             unset($_SESSION['cart_voucher']);
 
-            return $none;
+            // evaluate() đã soạn sẵn câu nói rõ thiếu bao nhiêu tiền nữa thì
+            // đủ đơn tối thiểu — chuyển nguyên văn ra thay vì tự viết lại.
+            return ['dropped' => $result['error']] + $none;
         }
 
         $applied = VoucherModel::apply($result['voucher'], $subtotal, $shippingFee);
@@ -919,6 +930,7 @@ class CartController extends BaseController
             'shippingFee' => $ship,
             'total'       => max(0, $subtotal - $applied['discount']) + $ship,
             'voucher'     => $result['voucher'],
+            'dropped'     => null,
         ];
     }
 

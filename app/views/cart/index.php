@@ -62,7 +62,7 @@ $count = count($lines);
                 </svg>
             </span>
             <span class="cart__empty-title">Giỏ hàng của bạn đang trống</span>
-            <a class="cart__empty-cta" href="/san-pham">Khám phá sản phẩm</a>
+            <a class="cart__empty-cta" href="/san-pham">Tiếp tục mua sắm</a>
         </div>
 
     <?php else: ?>
@@ -187,7 +187,7 @@ $count = count($lines);
                             ?>
                             <?php if ($line['quantity'] <= 1): ?>
                                 <button type="submit" name="act" value="xoa" class="cstep__btn"
-                                        onclick="return confirm('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?')"
+                                        onclick="return confirm('Bạn có muốn xoá sản phẩm này khỏi giỏ hàng?')"
                                         aria-label="Bỏ <?= e($p['name']) ?> khỏi giỏ hàng">−</button>
                             <?php else: ?>
                                 <button type="submit" name="act" value="giam" class="cstep__btn"
@@ -218,7 +218,7 @@ $count = count($lines);
                         <div class="citem__end">
                             <span class="citem__total"><?= money($line['lineTotal']) ?></span>
                             <button type="submit" name="act" value="xoa" class="citem__del"
-                                    onclick="return confirm('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?')">
+                                    onclick="return confirm('Bạn có muốn xoá sản phẩm này khỏi giỏ hàng?')">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
