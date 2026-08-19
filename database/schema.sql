@@ -509,13 +509,37 @@ CREATE TABLE `appointments` (
      * BookingModel::bookedSlots() lại báo khung giờ đó trống — xem
      * database/migrations/2026-08-18-doi-huy-lich-hen.sql.
      *
+     * ─────────────────────────────────────────────────────────────────────
+     * CÁCH VIẾT VÒNG VO DƯỚI ĐÂY LÀ CỐ Ý — ĐỪNG RÚT GỌN VỀ CASE / IF.
+     *
+     * Bản đầu viết cho dễ đọc:
+     *
+     *     CASE WHEN `status` = 'cancelled' THEN NULL
+     *          ELSE CONCAT(`store_id`, '|', `appointment_date`, '|', `time_slot`)
+     *     END
+     *
+     * MySQL nhận. MariaDB TỪ CHỐI: nó không cho dùng hàm điều kiện trong
+     * GENERATED ALWAYS AS và trả lỗi #1901, tức là schema này không import
+     * nổi vào hosting InfinityFree (MariaDB) — nơi site đang chạy thật.
+     *
+     * Bản dưới cho ra ĐÚNG cùng một giá trị mà không cần hàm điều kiện, dựa
+     * vào hai tính chất: NULLIF(x, y) trả NULL khi x = y, và CONCAT trả NULL
+     * nếu bất kỳ tham số nào là NULL.
+     *
+     *   lịch đã huỷ:   NULLIF('cancelled', 'cancelled') -> NULL
+     *                  LEFT(NULL, 0)                    -> NULL
+     *                  CONCAT(..., NULL)                -> NULL   (bỏ khoá)
+     *
+     *   còn hiệu lực:  LEFT('pending', 0)               -> ''
+     *                  CONCAT(...)      -> 'cơ sở|ngày|giờ'       (giữ khoá)
+     * ─────────────────────────────────────────────────────────────────────
+     *
      * Cần MySQL 5.7.6+ hoặc MariaDB 10.2+.
      */
     `slot_lock`        VARCHAR(96)
         GENERATED ALWAYS AS (
-            CASE WHEN `status` = 'cancelled' THEN NULL
-                 ELSE CONCAT(`store_id`, '|', `appointment_date`, '|', `time_slot`)
-            END
+            CONCAT(`store_id`, '|', `appointment_date`, '|', `time_slot`,
+                   LEFT(NULLIF(`status`, 'cancelled'), 0))
         ) STORED,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_appointments_code` (`code`),

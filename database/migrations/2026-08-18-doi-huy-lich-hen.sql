@@ -79,13 +79,23 @@
 --
 -- 96 ký tự đủ cho 36 (UUID cơ sở) + 1 + 10 (ngày) + 1 + 20 (khung giờ) = 68.
 -- ----------------------------------------------------------------------------
+-- Vì sao biểu thức viết vòng vo thay vì CASE WHEN status = 'cancelled' cho dễ
+-- đọc: MariaDB (hosting InfinityFree) không cho dùng hàm điều kiện trong
+-- GENERATED ALWAYS AS — báo lỗi #1901 và không chạy được câu này. Bản dưới cho
+-- ra đúng cùng giá trị bằng hai tính chất sẵn có: NULLIF(x, y) = NULL khi x = y,
+-- và CONCAT = NULL nếu có tham số NULL. Xem giải thích đầy đủ ở database/schema.sql.
+--
+--   lịch đã huỷ  -> LEFT(NULLIF('cancelled','cancelled'), 0) = NULL -> cả cột NULL
+--   còn hiệu lực -> LEFT('pending', 0) = ''  -> 'cơ sở|ngày|giờ'
+--
+-- CSDL nào ĐÃ chạy bản CASE cũ (máy các bạn dùng MySQL) thì KHÔNG cần làm lại:
+-- hai cách viết cho ra kết quả y hệt, chỉ khác chỗ MariaDB có nhận hay không.
 ALTER TABLE `appointments`
     DROP INDEX `uq_appointments_slot`,
     ADD COLUMN `slot_lock` VARCHAR(96)
         GENERATED ALWAYS AS (
-            CASE WHEN `status` = 'cancelled' THEN NULL
-                 ELSE CONCAT(`store_id`, '|', `appointment_date`, '|', `time_slot`)
-            END
+            CONCAT(`store_id`, '|', `appointment_date`, '|', `time_slot`,
+                   LEFT(NULLIF(`status`, 'cancelled'), 0))
         ) STORED,
     ADD UNIQUE KEY `uq_appointments_active_slot` (`slot_lock`);
 
