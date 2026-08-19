@@ -46,35 +46,53 @@ class VoucherAdminController extends AdminController
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
+        $ajax = $this->isJsonRequest();
         $id   = (string) ($_POST['id'] ?? '');
         $code = strtoupper(trim((string) ($_POST['code'] ?? '')));
         $type = (string) ($_POST['discount_type'] ?? '');
 
         if (!preg_match('/^[A-Z0-9_]{3,40}$/', $code)) {
-            $this->fail('Mã chỉ gồm chữ IN HOA, số và gạch dưới (3–40 ký tự).');
+            $message = 'Mã chỉ gồm chữ IN HOA, số và gạch dưới (3–40 ký tự).';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            $this->fail($message);
         }
 
-        // Khách gõ mã ở giỏ hàng không phân biệt hoa thường, nên hai mã chỉ
-        // khác nhau ở kiểu chữ là cùng một mã. Đã strtoupper() ở trên nên phép
-        // so sánh này bắt được cả trường hợp đó.
         $clash = VoucherModel::findBy('code', $code);
         if ($clash !== null && $clash['id'] !== $id) {
-            $this->fail(sprintf('Mã "%s" đã tồn tại.', $code));
+            $message = sprintf('Mã "%s" đã tồn tại.', $code);
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            $this->fail($message);
         }
 
         if (!isset(VoucherModel::TYPES[$type])) {
-            $this->fail('Kiểu giảm giá không hợp lệ.');
+            $message = 'Kiểu giảm giá không hợp lệ.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            $this->fail($message);
         }
 
         $tag   = trim((string) ($_POST['tag'] ?? ''));
         $title = trim((string) ($_POST['title'] ?? ''));
 
         if (utf8Length($tag) < 1 || utf8Length($tag) > 16) {
-            $this->fail('Nhãn ngắn phải từ 1 đến 16 ký tự (vd: -10%, 100K, FS).');
+            $message = 'Nhãn ngắn phải từ 1 đến 16 ký tự (vd: -10%, 100K, FS).';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            $this->fail($message);
         }
 
         if (utf8Length($title) < 4) {
-            $this->fail('Vui lòng nhập tên chương trình khuyến mãi.');
+            $message = 'Vui lòng nhập tên chương trình khuyến mãi.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            $this->fail($message);
         }
 
         $value       = max(0, (int) ($_POST['discount_value'] ?? 0));
@@ -83,42 +101,51 @@ class VoucherAdminController extends AdminController
         $maxUses     = trim((string) ($_POST['max_uses'] ?? ''));
         $expires     = trim((string) ($_POST['expires_at'] ?? ''));
 
-        // Mỗi kiểu giảm giá đọc `discount_value` một cách khác nhau, nên mỗi
-        // kiểu có phép kiểm riêng thay vì một luật chung cho cả ba.
         switch ($type) {
             case 'percent':
                 if ($value < 1 || $value > self::MAX_PERCENT) {
-                    $this->fail(sprintf('Phần trăm giảm phải từ 1 đến %d.', self::MAX_PERCENT));
+                    $message = sprintf('Phần trăm giảm phải từ 1 đến %d.', self::MAX_PERCENT);
+                    if ($ajax) {
+                        $this->jsonReply(false, $message);
+                    }
+                    $this->fail($message);
                 }
                 break;
 
             case 'amount':
                 if ($value < 1000) {
-                    $this->fail('Số tiền giảm phải từ 1.000₫ trở lên.');
+                    $message = 'Số tiền giảm phải từ 1.000₫ trở lên.';
+                    if ($ajax) {
+                        $this->jsonReply(false, $message);
+                    }
+                    $this->fail($message);
                 }
 
                 if ($minOrder > 0 && $value >= $minOrder) {
-                    $this->fail('Số tiền giảm phải nhỏ hơn giá trị đơn tối thiểu.');
+                    $message = 'Số tiền giảm phải nhỏ hơn giá trị đơn tối thiểu.';
+                    if ($ajax) {
+                        $this->jsonReply(false, $message);
+                    }
+                    $this->fail($message);
                 }
                 break;
 
             case 'shipping':
-                // Mã miễn ship không mang số tiền: nó đưa phí vận chuyển về 0.
-                // Ép về 0 thay vì báo lỗi — người nhập không cần biết chi tiết đó.
                 $value = 0;
                 break;
         }
 
-        // Trần số tiền giảm CHỈ có nghĩa với phần trăm. Để lại giá trị cũ khi
-        // đổi mã sang kiểu khác sẽ thành một con số nằm im trong CSDL mà không
-        // hàm nào đọc — lần sau đọc bảng sẽ tưởng nó đang có tác dụng.
         $maxDiscountVal = ($type === 'percent' && $maxDiscount !== '' && (int) $maxDiscount > 0)
             ? (int) $maxDiscount : null;
 
         $maxUsesVal = ($maxUses !== '' && (int) $maxUses > 0) ? (int) $maxUses : null;
 
         if ($expires !== '' && date_create($expires) === false) {
-            $this->fail('Hạn sử dụng không hợp lệ.');
+            $message = 'Hạn sử dụng không hợp lệ.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            $this->fail($message);
         }
 
         $data = [
@@ -136,17 +163,47 @@ class VoucherAdminController extends AdminController
             'max_uses'       => $maxUsesVal,
         ];
 
-        if ($id !== '' && VoucherModel::exists(['id' => $id])) {
-            // `used_count` CỐ TÌNH không nằm trong $data: nó là số đếm do hệ
-            // thống ghi mỗi lần đặt hàng thành công, không phải trường nhập.
-            VoucherModel::update($id, $data);
-            flash('admin_success', sprintf('Đã cập nhật mã %s.', $code));
-        } else {
-            VoucherModel::insert($data);
-            flash('admin_success', sprintf('Đã tạo mã %s.', $code));
-        }
+        try {
+            if ($id !== '' && VoucherModel::exists(['id' => $id])) {
+                VoucherModel::update($id, $data);
+                $message = sprintf('Đã cập nhật mã %s.', $code);
+            } else {
+                VoucherModel::insert($data);
+                $message = sprintf('Đã tạo mã %s.', $code);
+            }
 
-        redirect(self::BASE);
+            if ($ajax) {
+                $this->jsonReply(true, $message, self::BASE);
+            }
+
+            flash('admin_success', $message);
+            redirect(self::BASE);
+        } catch (Throwable $e) {
+            $message = 'Lỗi khi lưu dữ liệu: ' . $e->getMessage();
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
+            redirect(self::BASE);
+        }
+    }
+
+    private function isJsonRequest(): bool
+    {
+        $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $xRequested = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        return str_contains($accept, 'application/json') || $xRequested === 'xmlhttprequest';
+    }
+
+    private function jsonReply(bool $success, string $message, ?string $redirect = null): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'redirect' => $redirect,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     public function delete(): void

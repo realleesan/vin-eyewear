@@ -108,9 +108,15 @@ if (!$inStock) {
                  "Chi tiết" vẫn là hai đường tới đúng trang này. */ ?>
         <a class="pcard__shot" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
             <?php if (ProductModel::hasImage($product)): ?>
-                <img src="<?= e(ProductModel::image($product)) ?>" alt=""
-                     width="600" height="600"
+                <?php $imageArray = $product['images'] ?? []; ?>
+                <img src="<?= e($imageArray[0]) ?>" alt="" width="600" height="600"
+                     class="img-default"
                      <?= $eager ? '' : 'loading="lazy"' ?> decoding="async">
+                <?php if (isset($imageArray[1]) && trim((string) $imageArray[1]) !== ''): ?>
+                    <img src="<?= e($imageArray[1]) ?>" alt="" width="600" height="600"
+                         class="img-hover"
+                         <?= $eager ? '' : 'loading="lazy"' ?> decoding="async">
+                <?php endif; ?>
             <?php else: ?>
                 <?php /* Ô trống thật thà, không mượn ảnh của mặt hàng khác —
                          xem chú thích ở ProductModel::hasImage(). */ ?>

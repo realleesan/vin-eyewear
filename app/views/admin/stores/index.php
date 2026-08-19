@@ -62,7 +62,7 @@ $ed = $editing;
             <?= $ed !== null ? 'Sửa cơ sở: ' . e($ed['name']) : 'Thêm cơ sở mới' ?>
         </h2>
 
-        <form method="post" action="/quan-tri/co-so/luu" class="aform__grid">
+        <form id="storeForm" method="post" action="/quan-tri/co-so/luu" class="aform__grid">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -114,5 +114,44 @@ $ed = $editing;
 
             <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm cơ sở' ?></button>
         </form>
+
+        <button type="button" id="btnSaveStore" class="btn-save">
+            Lưu thay đổi
+        </button>
     </section>
 <?php endif; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('storeForm');
+        const btn = document.getElementById('btnSaveStore');
+        if (!form || !btn) return;
+
+        btn.addEventListener('click', async function () {
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/admin/store/save', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                let payload = null;
+                try { payload = await response.json(); } catch (e) { throw new Error('Phản hồi từ máy chủ không phải JSON hợp lệ.'); }
+                if (!response.ok || !payload.success) throw new Error(payload.message || 'Lưu cơ sở thất bại.');
+                alert(payload.message || 'Lưu thành công!');
+                window.location.href = payload.redirect || '/quan-tri/co-so';
+            } catch (error) {
+                alert(error.message || 'Lỗi khi lưu cơ sở.');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    });
+</script>

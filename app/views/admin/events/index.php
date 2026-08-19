@@ -66,7 +66,7 @@ $toLocal = static fn (?string $v): string =>
             <?= $ed !== null ? 'Sửa sự kiện: ' . e($ed['title']) : 'Thêm sự kiện mới' ?>
         </h2>
 
-        <form method="post" action="/quan-tri/su-kien/luu" class="aform__grid">
+        <form id="eventForm" method="post" action="/quan-tri/su-kien/luu" class="aform__grid">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -158,5 +158,44 @@ $toLocal = static fn (?string $v): string =>
 
             <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm sự kiện' ?></button>
         </form>
+
+        <button type="button" id="btnSaveEvent" class="btn-save">
+            Lưu thay đổi
+        </button>
     </section>
 <?php endif; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('eventForm');
+        const btn = document.getElementById('btnSaveEvent');
+        if (!form || !btn) return;
+
+        btn.addEventListener('click', async function () {
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/admin/event/save', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                let payload = null;
+                try { payload = await response.json(); } catch (e) { throw new Error('Phản hồi từ máy chủ không phải JSON hợp lệ.'); }
+                if (!response.ok || !payload.success) throw new Error(payload.message || 'Lưu sự kiện thất bại.');
+                alert(payload.message || 'Lưu thành công!');
+                window.location.href = payload.redirect || '/quan-tri/su-kien';
+            } catch (error) {
+                alert(error.message || 'Lỗi khi lưu sự kiện.');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    });
+</script>

@@ -148,7 +148,7 @@ $whyOff = static function (array $v) use ($today): string {
             <?= $ed !== null ? 'Sửa mã: ' . e($ed['code']) : 'Tạo mã giảm giá mới' ?>
         </h2>
 
-        <form method="post" action="/quan-tri/ma-giam-gia/luu" class="aform__grid">
+        <form id="voucherForm" method="post" action="/quan-tri/ma-giam-gia/luu" class="aform__grid">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -265,5 +265,44 @@ $whyOff = static function (array $v) use ($today): string {
                 <?= $ed !== null ? 'Lưu thay đổi' : 'Tạo mã' ?>
             </button>
         </form>
+
+        <button type="button" id="btnSaveVoucher" class="btn-save">
+            Lưu thay đổi
+        </button>
     </section>
 <?php endif; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('voucherForm');
+        const btn = document.getElementById('btnSaveVoucher');
+        if (!form || !btn) return;
+
+        btn.addEventListener('click', async function () {
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/admin/voucher/save', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                let payload = null;
+                try { payload = await response.json(); } catch (e) { throw new Error('Phản hồi từ máy chủ không phải JSON hợp lệ.'); }
+                if (!response.ok || !payload.success) throw new Error(payload.message || 'Lưu mã giảm giá thất bại.');
+                alert(payload.message || 'Lưu thành công!');
+                window.location.href = payload.redirect || '/quan-tri/ma-giam-gia';
+            } catch (error) {
+                alert(error.message || 'Lỗi khi lưu mã giảm giá.');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    });
+</script>

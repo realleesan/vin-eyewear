@@ -47,32 +47,42 @@ class VariantAdminController extends AdminController
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
+        $ajax = $this->isJsonRequest();
         $id        = (string) ($_POST['id'] ?? '');
         $productId = (string) ($_POST['product_id'] ?? '');
         $back      = self::BASE . '?sp=' . rawurlencode($productId);
 
         if (!ProductModel::exists(['id' => $productId])) {
-            flash('admin_error', 'Không tìm thấy sản phẩm.');
+            $message = 'Không tìm thấy sản phẩm.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
         $label = trim((string) ($_POST['label'] ?? ''));
 
         if (utf8Length($label) < 1 || utf8Length($label) > 60) {
-            flash('admin_error', 'Nhãn phương án phải từ 1 đến 60 ký tự (vd: 1.61, Đen bóng).');
+            $message = 'Nhãn phương án phải từ 1 đến 60 ký tự (vd: 1.61, Đen bóng).';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect($back);
         }
 
-        // Hai biến thể cùng nhãn trong một mặt hàng là lỗi nhập liệu. CSDL đã
-        // có khoá UNIQUE chặn, nhưng bắt ở đây để báo lỗi đọc được thay vì để
-        // lỗi 1062 thô lọt ra.
         $clash = Database::fetchOne(
             'SELECT id FROM product_variants WHERE product_id = :pid AND label = :label',
             ['pid' => $productId, 'label' => $label]
         );
 
         if ($clash !== null && $clash['id'] !== $id) {
-            flash('admin_error', sprintf('Phương án "%s" đã có trong sản phẩm này.', $label));
+            $message = sprintf('Phương án "%s" đã có trong sản phẩm này.', $label);
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect($back);
         }
 
@@ -82,34 +92,64 @@ class VariantAdminController extends AdminController
             'product_id'     => $productId,
             'label'          => $label,
             'note'           => trim((string) ($_POST['note'] ?? '')) ?: null,
-            // Cho phép ÂM: phương án rẻ hơn bản gốc. (int) tự lo dấu trừ.
             'price_delta'    => (int) ($_POST['price_delta'] ?? 0),
             'stock_quantity' => $stock,
             'position'       => max(0, (int) ($_POST['position'] ?? 0)),
             'is_active'      => isset($_POST['is_active']) ? 1 : 0,
         ];
 
-        // Giá bán sau khi cộng chênh lệch không được âm — âm thì hoá đơn thành
-        // khoản cửa hàng nợ khách.
         $product = ProductModel::find($productId);
 
         if ((int) $product['price'] + $data['price_delta'] < 0) {
-            flash('admin_error', sprintf(
-                'Chênh lệch quá lớn: giá bán sẽ âm. Giá gốc là %s.',
-                money((int) $product['price'])
-            ));
+            $message = sprintf('Chênh lệch quá lớn: giá bán sẽ âm. Giá gốc là %s.', money((int) $product['price']));
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect($back);
         }
 
-        if ($id !== '' && VariantModel::exists(['id' => $id])) {
-            VariantModel::update($id, $data);
-            flash('admin_success', sprintf('Đã cập nhật phương án %s.', $label));
-        } else {
-            VariantModel::insert($data);
-            flash('admin_success', sprintf('Đã thêm phương án %s.', $label));
-        }
+        try {
+            if ($id !== '' && VariantModel::exists(['id' => $id])) {
+                VariantModel::update($id, $data);
+                $message = sprintf('Đã cập nhật phương án %s.', $label);
+            } else {
+                VariantModel::insert($data);
+                $message = sprintf('Đã thêm phương án %s.', $label);
+            }
 
-        redirect($back);
+            if ($ajax) {
+                $this->jsonReply(true, $message, $back);
+            }
+
+            flash('admin_success', $message);
+            redirect($back);
+        } catch (Throwable $e) {
+            $message = 'Lỗi khi lưu dữ liệu: ' . $e->getMessage();
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
+            redirect($back);
+        }
+    }
+
+    private function isJsonRequest(): bool
+    {
+        $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $xRequested = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        return str_contains($accept, 'application/json') || $xRequested === 'xmlhttprequest';
+    }
+
+    private function jsonReply(bool $success, string $message, ?string $redirect = null): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'redirect' => $redirect,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     public function delete(): void

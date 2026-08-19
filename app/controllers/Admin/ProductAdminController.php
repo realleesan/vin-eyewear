@@ -81,17 +81,24 @@ class ProductAdminController extends AdminController
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
+        $ajax = $this->isJsonRequest();
         $id   = (string) ($_POST['id'] ?? '');
         $name = trim((string) ($_POST['name'] ?? ''));
         $sku  = strtoupper(trim((string) ($_POST['sku'] ?? '')));
         $slug = trim((string) ($_POST['slug'] ?? ''));
 
         if (utf8Length($name) < 2) {
+            if ($ajax) {
+                $this->jsonReply(false, 'Tên sản phẩm phải có ít nhất 2 ký tự.');
+            }
             flash('admin_error', 'Tên sản phẩm phải có ít nhất 2 ký tự.');
             redirect(self::BASE);
         }
 
         if ($sku === '') {
+            if ($ajax) {
+                $this->jsonReply(false, 'Vui lòng nhập mã SKU.');
+            }
             flash('admin_error', 'Vui lòng nhập mã SKU.');
             redirect(self::BASE);
         }
@@ -99,6 +106,9 @@ class ProductAdminController extends AdminController
         $slug = $slug !== '' ? slugify($slug) : slugify($name);
 
         if ($slug === '') {
+            if ($ajax) {
+                $this->jsonReply(false, 'Không tạo được slug từ tên này, vui lòng nhập slug thủ công.');
+            }
             flash('admin_error', 'Không tạo được slug từ tên này, vui lòng nhập slug thủ công.');
             redirect(self::BASE);
         }
@@ -107,8 +117,12 @@ class ProductAdminController extends AdminController
         foreach (['slug' => $slug, 'sku' => $sku] as $column => $value) {
             $clash = ProductModel::findBy($column, $value);
             if ($clash !== null && $clash['id'] !== $id) {
-                flash('admin_error', sprintf('%s "%s" đã được dùng cho sản phẩm khác.',
-                    $column === 'slug' ? 'Slug' : 'SKU', $value));
+                $message = sprintf('%s "%s" đã được dùng cho sản phẩm khác.',
+                    $column === 'slug' ? 'Slug' : 'SKU', $value);
+                if ($ajax) {
+                    $this->jsonReply(false, $message);
+                }
+                flash('admin_error', $message);
                 redirect(self::BASE);
             }
         }
@@ -117,20 +131,20 @@ class ProductAdminController extends AdminController
         $compare = trim((string) ($_POST['compare_at_price'] ?? ''));
         $stock   = max(0, (int) ($_POST['stock_quantity'] ?? 0));
 
-        // Giá gốc phải CAO HƠN giá bán, nếu không nhãn "-x%" sẽ vô nghĩa
-        // hoặc âm. Để trống nghĩa là không có khuyến mãi.
         if ($compare !== '' && (int) $compare <= $price) {
-            flash('admin_error', 'Giá gốc phải cao hơn giá bán, hoặc để trống nếu không giảm giá.');
+            $message = 'Giá gốc phải cao hơn giá bán, hoặc để trống nếu không giảm giá.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
-        // Ảnh: mỗi dòng một đường dẫn. Lưu JSON đúng như schema.
         $images = array_values(array_filter(array_map(
             'trim',
             preg_split('/\R+/', (string) ($_POST['images'] ?? '')) ?: []
         ), static fn ($v) => $v !== ''));
 
-        // Thông số: mỗi dòng "Nhãn: giá trị"
         $specs = [];
         foreach (preg_split('/\R+/', (string) ($_POST['specs'] ?? '')) ?: [] as $line) {
             if (!str_contains($line, ':')) {
@@ -150,8 +164,6 @@ class ProductAdminController extends AdminController
             'slug'             => $slug,
             'sku'              => $sku,
             'name'             => $name,
-            // Danh mục phải có thật; giá trị lạ đưa về NULL thay vì để khoá
-            // ngoại ném lỗi 1452
             'category_id'      => CategoryModel::exists(['id' => $categoryId]) ? $categoryId : null,
             'brand'            => trim((string) ($_POST['brand'] ?? '')) ?: null,
             'frame_shape'      => trim((string) ($_POST['frame_shape'] ?? '')) ?: null,
@@ -165,22 +177,75 @@ class ProductAdminController extends AdminController
             'price'            => $price,
             'compare_at_price' => $compare !== '' ? (int) $compare : null,
             'stock_quantity'   => $stock,
-            // Trạng thái suy ra từ tồn kho, không cho nhập tay: hai con số
-            // này lệch nhau là nguồn gốc của "mua được hàng đã hết".
             'status'           => $stock > 0 ? 'in_stock' : 'out_of_stock',
             'is_featured'      => isset($_POST['is_featured']) ? 1 : 0,
             'is_visible'       => isset($_POST['is_visible']) ? 1 : 0,
         ];
 
-        if ($id !== '' && ProductModel::exists(['id' => $id])) {
-            ProductModel::update($id, $data);
-            flash('admin_success', 'Đã cập nhật sản phẩm.');
-        } else {
-            ProductModel::insert($data);
-            flash('admin_success', 'Đã thêm sản phẩm mới.');
+        try {
+            if ($id !== '' && ProductModel::exists(['id' => $id])) {
+                ProductModel::update($id, $data);
+                $message = 'Đã cập nhật sản phẩm.';
+            } else {
+                ProductModel::insert($data);
+                $message = 'Đã thêm sản phẩm mới.';
+            }
+
+            if ($ajax) {
+                $this->jsonReply(true, $message, self::BASE);
+            }
+
+            flash('admin_success', $message);
+            redirect(self::BASE);
+        } catch (Throwable $e) {
+            $message = 'Lỗi khi lưu dữ liệu: ' . $e->getMessage();
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
+            redirect(self::BASE);
+        }
+    }
+
+    public function uploadImage(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        if (!isset($_FILES['images']) || !is_array($_FILES['images']['name'])) {
+            $this->jsonReply(false, 'Vui lòng chọn ít nhất một ảnh.');
         }
 
-        redirect(self::BASE);
+        $result = ProductImageStorage::storeMultiple($_FILES['images']);
+
+        if (!$result['ok']) {
+            $this->jsonReply(false, $result['error']);
+        }
+
+        $this->jsonReply(true, 'Đã tải ảnh lên thành công.', null, $result['urls']);
+    }
+
+    private function isJsonRequest(): bool
+    {
+        $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $xRequested = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+
+        return str_contains($accept, 'application/json') || $xRequested === 'xmlhttprequest';
+    }
+
+    private function jsonReply(bool $success, string $message, ?string $redirect = null, ?array $extra = null): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $payload = [
+            'success' => $success,
+            'message' => $message,
+            'redirect' => $redirect,
+        ];
+        if ($extra !== null) {
+            $payload = array_merge($payload, $extra);
+        }
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     public function delete(): void
