@@ -79,6 +79,7 @@
 .pcard__shot {
     display: block;
     height: 100%;
+    position: relative;
 }
 
 .pcard__media img {
@@ -86,6 +87,25 @@
     height: 100%;
     object-fit: contain;
     display: block;
+    position: absolute;
+    inset: 0;
+    transition: opacity 0.3s ease;
+}
+
+.pcard__media .img-default {
+    opacity: 1;
+}
+
+.pcard__media .img-hover {
+    opacity: 0;
+}
+
+.pcard__media:hover .img-default {
+    opacity: 0;
+}
+
+.pcard__media:hover .img-hover {
+    opacity: 1;
 }
 
 /* Không có ảnh thì mới để lộ nền chờ — ô trống phải trông khác ô có ảnh */

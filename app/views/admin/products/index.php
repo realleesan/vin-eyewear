@@ -109,7 +109,7 @@ if ($ed !== null) {
             <?= $ed !== null ? 'Sửa sản phẩm: ' . e($ed['name']) : 'Thêm sản phẩm mới' ?>
         </h2>
 
-        <form method="post" action="/quan-tri/san-pham/luu" class="aform__grid">
+        <form id="productForm" method="post" action="/quan-tri/san-pham/luu" class="aform__grid">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -214,8 +214,21 @@ if ($ed !== null) {
 
             <div class="field field--wide">
                 <label for="images">Ảnh — mỗi dòng một đường dẫn</label>
-                <textarea id="images" name="images" rows="3"
-                          placeholder="/assets/images/product-1.jpg"><?= e($edImages) ?></textarea>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="imageInput" name="images[]" multiple accept="image/*" style="display:none">
+                    <div class="upload-zone__content">
+                        <svg class="upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p class="upload-zone__text">Kéo ảnh vào đây hoặc <span class="upload-zone__link">bấm để chọn</span></p>
+                        <p class="upload-zone__hint">PNG, JPG, JPEG, WEBP — tối đa 5 MB / ảnh</p>
+                    </div>
+                    <div id="previewContainer" class="preview-container"></div>
+                    <textarea id="images" name="images" rows="3"
+                              placeholder="/assets/images/product-1.jpg"><?= e($edImages) ?></textarea>
+                </div>
                 <p class="field__hint">Dòng đầu là ảnh đại diện, dòng thứ hai hiện khi rê chuột.</p>
             </div>
 
@@ -227,5 +240,205 @@ if ($ed !== null) {
 
             <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm sản phẩm' ?></button>
         </form>
+
+        <button type="button" id="btnSaveProduct" class="btn-save">
+            Lưu thay đổi
+        </button>
     </section>
 <?php endif; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('productForm');
+        const btn = document.getElementById('btnSaveProduct');
+
+        if (!form || !btn) {
+            return;
+        }
+
+        btn.addEventListener('click', async function () {
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            try {
+                const formData = new FormData(form);
+                const token = form.querySelector('input[name="_token"]');
+                if (token) {
+                    formData.set('_token', token.value);
+                }
+
+                const response = await fetch('/quan-tri/san-pham/luu', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+
+                let payload = null;
+                try {
+                    payload = await response.json();
+                } catch (error) {
+                    throw new Error('Phản hồi từ máy chủ không phải JSON hợp lệ.');
+                }
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.message || 'Lưu sản phẩm thất bại.');
+                }
+
+                alert(payload.message || 'Lưu thành công!');
+                window.location.href = payload.redirect || '/quan-tri/san-pham';
+            } catch (error) {
+                alert(error.message || 'Lỗi khi lưu sản phẩm.');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    });
+
+    // ============ UPLOAD ZONE ============
+    const uploadZone = document.getElementById('uploadZone');
+    const imageInput = document.getElementById('imageInput');
+    const imagesTextarea = document.getElementById('images');
+    const previewContainer = document.getElementById('previewContainer');
+
+    if (uploadZone && imageInput && imagesTextarea && previewContainer) {
+        const csrfToken = form ? (form.querySelector('input[name="_token"]')?.value || '') : '';
+        const MAX_BYTES = 5 * 1024 * 1024;
+        const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
+        uploadZone.addEventListener('click', function (e) {
+            if (e.target === imagesTextarea || imagesTextarea.contains(e.target)) {
+                return;
+            }
+            imageInput.click();
+        });
+
+        uploadZone.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            uploadZone.classList.add('upload-zone--over');
+        });
+
+        uploadZone.addEventListener('dragleave', function (e) {
+            e.preventDefault();
+            uploadZone.classList.remove('upload-zone--over');
+        });
+
+        uploadZone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            uploadZone.classList.remove('upload-zone--over');
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+        });
+
+        imageInput.addEventListener('change', function () {
+            const files = Array.from(imageInput.files);
+            if (files.length > 0) {
+                handleFiles(files);
+            }
+            imageInput.value = '';
+        });
+
+        function validateFiles(files) {
+            const errors = [];
+            files.forEach(function (file, index) {
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    errors.push('File #' + (index + 1) + ': "' + file.name + '" không phải định dạng ảnh hợp lệ (chỉ nhận JPG, PNG, WEBP).');
+                }
+                if (file.size > MAX_BYTES) {
+                    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+                    errors.push('File #' + (index + 1) + ': "' + file.name + '" vượt quá dung lượng tối đa 5 MB (đang là ' + sizeMB + ' MB).');
+                }
+            });
+            return errors;
+        }
+
+        function showPreview(files) {
+            files.forEach(function (file) {
+                const objectUrl = URL.createObjectURL(file);
+                const wrapper = document.createElement('div');
+                wrapper.className = 'preview-item';
+
+                const img = document.createElement('img');
+                img.src = objectUrl;
+                img.alt = file.name;
+                img.className = 'preview-img';
+                img.dataset.objectUrl = objectUrl;
+
+                wrapper.appendChild(img);
+                previewContainer.appendChild(wrapper);
+            });
+        }
+
+        function clearPreviewUrls() {
+            const imgs = previewContainer.querySelectorAll('img[data-object-url]');
+            imgs.forEach(function (img) {
+                URL.revokeObjectURL(img.dataset.objectUrl);
+            });
+        }
+
+        async function uploadFiles(files) {
+            const formData = new FormData();
+            files.forEach(function (file) {
+                formData.append('images[]', file);
+            });
+            formData.append('_token', csrfToken);
+
+            try {
+                const response = await fetch('/admin/product/upload-image', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+
+                let payload = null;
+                try {
+                    payload = await response.json();
+                } catch (error) {
+                    throw new Error('Phản hồi từ máy chủ không phải JSON hợp lệ.');
+                }
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(payload.message || 'Tải ảnh lên thất bại.');
+                }
+
+                if (payload.urls && payload.urls.length > 0) {
+                    const current = imagesTextarea.value;
+                    const prefix = current ? current + '\n' : '';
+                    imagesTextarea.value = prefix + payload.urls.join('\n');
+                }
+            } catch (error) {
+                alert(error.message || 'Lỗi khi tải ảnh lên.');
+                console.error(error);
+            }
+        }
+
+        async function handleFiles(files) {
+            const validationErrors = validateFiles(files);
+            if (validationErrors.length > 0) {
+                alert(validationErrors.join('\n'));
+                return;
+            }
+
+            showPreview(files);
+
+            try {
+                await uploadFiles(files);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    }
+</script>

@@ -107,7 +107,7 @@ $base = '/quan-tri/bien-the';
                 <?= $ed !== null ? 'Sửa phương án: ' . e($ed['label']) : 'Thêm phương án cho ' . e($product['name']) ?>
             </h2>
 
-            <form method="post" action="<?= e($base) ?>/luu" class="aform__grid">
+            <form id="variantForm" method="post" action="<?= e($base) ?>/luu" class="aform__grid">
                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
                 <input type="hidden" name="product_id" value="<?= e($product['id']) ?>">
@@ -162,6 +162,45 @@ $base = '/quan-tri/bien-the';
                     <?= $ed !== null ? 'Lưu thay đổi' : 'Thêm phương án' ?>
                 </button>
             </form>
+
+            <button type="button" id="btnSaveVariant" class="btn-save">
+                <?= $ed !== null ? 'Lưu thay đổi' : 'Thêm phương án' ?>
+            </button>
         </section>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const form = document.getElementById('variantForm');
+                const btn = document.getElementById('btnSaveVariant');
+                if (!form || !btn) return;
+
+                btn.addEventListener('click', async function () {
+                    const originalText = btn.textContent;
+                    btn.disabled = true;
+                    btn.textContent = 'Đang lưu...';
+
+                    try {
+                        const formData = new FormData(form);
+                        const response = await fetch('/admin/variant/save', {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                            body: formData,
+                            credentials: 'same-origin'
+                        });
+                        let payload = null;
+                        try { payload = await response.json(); } catch (e) { throw new Error('Phản hồi từ máy chủ không phải JSON hợp lệ.'); }
+                        if (!response.ok || !payload.success) throw new Error(payload.message || 'Lưu phương án thất bại.');
+                        alert(payload.message || 'Lưu thành công!');
+                        window.location.href = payload.redirect || '/quan-tri/bien-the?sp=' + encodeURIComponent(formData.get('product_id') || '');
+                    } catch (error) {
+                        alert(error.message || 'Lỗi khi lưu phương án.');
+                        console.error(error);
+                    } finally {
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                });
+            });
+        </script>
     <?php endif; ?>
 <?php endif; ?>

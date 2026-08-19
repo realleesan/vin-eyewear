@@ -30,29 +30,38 @@ class CategoryAdminController extends AdminController
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
+        $ajax = $this->isJsonRequest();
         $id   = (string) ($_POST['id'] ?? '');
         $name = trim((string) ($_POST['name'] ?? ''));
         $slug = trim((string) ($_POST['slug'] ?? ''));
 
         if (utf8Length($name) < 2) {
-            flash('admin_error', 'Tên danh mục phải có ít nhất 2 ký tự.');
+            $message = 'Tên danh mục phải có ít nhất 2 ký tự.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
-        // Slug bỏ trống thì tự sinh từ tên — người nhập nội dung không cần
-        // hiểu slug là gì, nhưng vẫn sửa được khi cần.
         $slug = $slug !== '' ? slugify($slug) : slugify($name);
 
         if ($slug === '') {
-            flash('admin_error', 'Không tạo được slug từ tên này, vui lòng nhập slug thủ công.');
+            $message = 'Không tạo được slug từ tên này, vui lòng nhập slug thủ công.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
-        // Slug phải là duy nhất. Kiểm trước để báo lỗi dễ hiểu, thay vì để
-        // ràng buộc UNIQUE của DB ném lỗi 1062 thô ra màn hình.
         $clash = CategoryModel::findBy('slug', $slug);
         if ($clash !== null && $clash['id'] !== $id) {
-            flash('admin_error', sprintf('Slug "%s" đã được dùng cho danh mục khác.', $slug));
+            $message = sprintf('Slug "%s" đã được dùng cho danh mục khác.', $slug);
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
@@ -64,15 +73,47 @@ class CategoryAdminController extends AdminController
             'is_visible'  => isset($_POST['is_visible']) ? 1 : 0,
         ];
 
-        if ($id !== '' && CategoryModel::exists(['id' => $id])) {
-            CategoryModel::update($id, $data);
-            flash('admin_success', 'Đã cập nhật danh mục.');
-        } else {
-            CategoryModel::insert($data);
-            flash('admin_success', 'Đã thêm danh mục mới.');
-        }
+        try {
+            if ($id !== '' && CategoryModel::exists(['id' => $id])) {
+                CategoryModel::update($id, $data);
+                $message = 'Đã cập nhật danh mục.';
+            } else {
+                CategoryModel::insert($data);
+                $message = 'Đã thêm danh mục mới.';
+            }
 
-        redirect(self::BASE);
+            if ($ajax) {
+                $this->jsonReply(true, $message, self::BASE);
+            }
+
+            flash('admin_success', $message);
+            redirect(self::BASE);
+        } catch (Throwable $e) {
+            $message = 'Lỗi khi lưu dữ liệu: ' . $e->getMessage();
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
+            redirect(self::BASE);
+        }
+    }
+
+    private function isJsonRequest(): bool
+    {
+        $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $xRequested = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        return str_contains($accept, 'application/json') || $xRequested === 'xmlhttprequest';
+    }
+
+    private function jsonReply(bool $success, string $message, ?string $redirect = null): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'redirect' => $redirect,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     public function delete(): void

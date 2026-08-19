@@ -171,18 +171,23 @@ return [
     'quan-tri/san-pham'     => 'ProductAdminController@index',
     'quan-tri/san-pham/luu' => 'ProductAdminController@save',      // POST
     'quan-tri/san-pham/xoa' => 'ProductAdminController@delete',    // POST
+    'admin/product/save'    => 'ProductAdminController@save',      // POST (alias cho fetch AJAX)
+    'admin/product/upload-image' => 'ProductAdminController@uploadImage', // POST (AJAX upload ảnh)
 
     'quan-tri/danh-muc'     => 'CategoryAdminController@index',
     'quan-tri/danh-muc/luu' => 'CategoryAdminController@save',     // POST
     'quan-tri/danh-muc/xoa' => 'CategoryAdminController@delete',   // POST
+    'admin/category/save'    => 'CategoryAdminController@save',     // POST (alias cho fetch AJAX)
 
     'quan-tri/su-kien'      => 'EventAdminController@index',
     'quan-tri/su-kien/luu'  => 'EventAdminController@save',        // POST
     'quan-tri/su-kien/xoa'  => 'EventAdminController@delete',      // POST
+    'admin/event/save'      => 'EventAdminController@save',        // POST (alias cho fetch AJAX)
 
     'quan-tri/bien-the'     => 'VariantAdminController@index',
     'quan-tri/bien-the/luu' => 'VariantAdminController@save',    // POST
     'quan-tri/bien-the/xoa' => 'VariantAdminController@delete',  // POST
+    'admin/variant/save'    => 'VariantAdminController@save',    // POST (alias cho fetch AJAX)
 
     'quan-tri/danh-gia'     => 'ReviewAdminController@index',
     'quan-tri/danh-gia/sua' => 'ReviewAdminController@update',   // POST
@@ -191,10 +196,12 @@ return [
     'quan-tri/ma-giam-gia/luu'  => 'VoucherAdminController@save',   // POST
     'quan-tri/ma-giam-gia/xoa'  => 'VoucherAdminController@delete', // POST
     'quan-tri/ma-giam-gia/phat' => 'VoucherAdminController@grant',  // POST
+    'admin/voucher/save'        => 'VoucherAdminController@save',      // POST (alias cho fetch AJAX)
 
-    'quan-tri/co-so'        => 'StoreAdminController@index',
-    'quan-tri/co-so/luu'    => 'StoreAdminController@save',        // POST
-    'quan-tri/co-so/xoa'    => 'StoreAdminController@delete',      // POST
+    'quan-tri/co-so'            => 'StoreAdminController@index',
+    'quan-tri/co-so/luu'        => 'StoreAdminController@save',       // POST
+    'quan-tri/co-so/xoa'        => 'StoreAdminController@delete',     // POST
+    'admin/store/save'          => 'StoreAdminController@save',       // POST (alias cho fetch AJAX)
 
     // Yêu cầu đặt lại mật khẩu — đường dự phòng khi hosting không gửi được
     // mail. Nhân viên gọi xác minh rồi mới bấm tạo liên kết.

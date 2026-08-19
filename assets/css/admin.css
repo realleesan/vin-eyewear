@@ -559,23 +559,57 @@ body.admin {
 }
 
 .astatus__save {
-    height: 36px;
-    padding-inline: 12px;
-    border: 1px solid var(--brand);
-    background: var(--brand);
-    font-family: var(--font-sans);
-    font-size: var(--fs-label);
-    font-weight: 600;
-    color: var(--on-brand);
+    flex: 1;
+    display: block;
+    padding: 10px 0;
+    border: 1.5px solid var(--brand);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    background: var(--brand);
+    color: var(--on-brand);
 }
 
-.astatus__save:hover { background: var(--brand-strong); }
+.astatus__save:hover:not(:disabled),
+.astatus__save:focus-visible:not(:disabled) {
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+}
 
 /* Có JavaScript thì select tự gửi form, nút Lưu thành thừa -> ẩn.
    Không có JS thì nút vẫn hiện và dùng được. */
 .js .astatus__save { display: none; }
+
+.btn-save {
+    flex: 1;
+    display: block;
+    padding: 10px 0;
+    border: 1.5px solid var(--brand);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    background: var(--brand);
+    color: var(--on-brand);
+    margin-top: 1rem;
+}
+
+.btn-save:hover:not(:disabled),
+.btn-save:focus-visible:not(:disabled) {
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+}
 
 .ainv.is-low  td { background: color-mix(in srgb, var(--brand) 5%, transparent); }
 .ainv.is-out  td { background: color-mix(in srgb, var(--danger) 6%, transparent); }
@@ -870,3 +904,101 @@ a.astatus__save {
     line-height: 1.5;
     color: var(--brand, #8a2432);
 }
+
+/* ============================================================
+   UPLOAD ZONE — vùng kéo thả / chọn ảnh cho form sản phẩm
+   ============================================================ */
+
+.upload-zone {
+    position: relative;
+    border: 2px dashed var(--h-line);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.upload-zone--over {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 6%, transparent);
+}
+
+.upload-zone__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 18px 12px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.upload-zone__icon {
+    width: 32px;
+    height: 32px;
+    color: var(--muted);
+}
+
+.upload-zone__text {
+    margin: 0;
+    font-size: var(--fs-body-sm);
+    color: var(--ink);
+}
+
+.upload-zone__link {
+    color: var(--brand);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.upload-zone__hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.upload-zone textarea {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--h-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-body-sm);
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.upload-zone textarea:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+.preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.preview-container--empty {
+    display: none;
+}
+
+.preview-item {
+    position: relative;
+    display: inline-flex;
+}
+
+.preview-img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--h-line);
+    background: var(--surface-sunken);
+}
+

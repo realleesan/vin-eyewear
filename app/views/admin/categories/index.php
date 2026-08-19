@@ -59,7 +59,7 @@ $ed = $editing;
             <?= $ed !== null ? 'Sửa danh mục: ' . e($ed['name']) : 'Thêm danh mục mới' ?>
         </h2>
 
-        <form method="post" action="/quan-tri/danh-muc/luu" class="aform__grid">
+        <form id="categoryForm" method="post" action="/quan-tri/danh-muc/luu" class="aform__grid">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -95,5 +95,44 @@ $ed = $editing;
 
             <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm danh mục' ?></button>
         </form>
+
+        <button type="button" id="btnSaveCategory" class="btn-save">
+            Lưu thay đổi
+        </button>
     </section>
 <?php endif; ?>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('categoryForm');
+        const btn = document.getElementById('btnSaveCategory');
+        if (!form || !btn) return;
+
+        btn.addEventListener('click', async function () {
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch('/admin/category/save', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                let payload = null;
+                try { payload = await response.json(); } catch (e) { throw new Error('Phản hồi từ máy chủ không phải JSON hợp lệ.'); }
+                if (!response.ok || !payload.success) throw new Error(payload.message || 'Lưu danh mục thất bại.');
+                alert(payload.message || 'Lưu thành công!');
+                window.location.href = payload.redirect || '/quan-tri/danh-muc';
+            } catch (error) {
+                alert(error.message || 'Lỗi khi lưu danh mục.');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        });
+    });
+</script>

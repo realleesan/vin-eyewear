@@ -28,35 +28,50 @@ class EventAdminController extends AdminController
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
+        $ajax = $this->isJsonRequest();
         $id    = (string) ($_POST['id'] ?? '');
         $title = trim((string) ($_POST['title'] ?? ''));
         $slug  = trim((string) ($_POST['slug'] ?? ''));
 
         if (utf8Length($title) < 4) {
-            flash('admin_error', 'Tiêu đề phải có ít nhất 4 ký tự.');
+            $message = 'Tiêu đề phải có ít nhất 4 ký tự.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
         $slug = $slug !== '' ? slugify($slug) : slugify($title);
 
         if ($slug === '') {
-            flash('admin_error', 'Không tạo được slug từ tiêu đề này, vui lòng nhập slug thủ công.');
+            $message = 'Không tạo được slug từ tiêu đề này, vui lòng nhập slug thủ công.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
         $clash = EventModel::findBy('slug', $slug);
         if ($clash !== null && $clash['id'] !== $id) {
-            flash('admin_error', sprintf('Slug "%s" đã được dùng cho sự kiện khác.', $slug));
+            $message = sprintf('Slug "%s" đã được dùng cho sự kiện khác.', $slug);
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
         $startsAt = $this->toDateTime($_POST['starts_at'] ?? '');
         $endsAt   = $this->toDateTime($_POST['ends_at'] ?? '');
 
-        // Kết thúc không được trước khi bắt đầu — nếu lọt, dateRange() sẽ in
-        // ra khoảng thời gian ngược và phần lọc "còn hạn" phân loại sai.
         if ($startsAt !== null && $endsAt !== null && $endsAt < $startsAt) {
-            flash('admin_error', 'Thời gian kết thúc phải sau thời gian bắt đầu.');
+            $message = 'Thời gian kết thúc phải sau thời gian bắt đầu.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
@@ -73,15 +88,47 @@ class EventAdminController extends AdminController
             'is_visible'  => isset($_POST['is_visible']) ? 1 : 0,
         ];
 
-        if ($id !== '' && EventModel::exists(['id' => $id])) {
-            EventModel::update($id, $data);
-            flash('admin_success', 'Đã cập nhật sự kiện.');
-        } else {
-            EventModel::insert($data);
-            flash('admin_success', 'Đã thêm sự kiện mới.');
-        }
+        try {
+            if ($id !== '' && EventModel::exists(['id' => $id])) {
+                EventModel::update($id, $data);
+                $message = 'Đã cập nhật sự kiện.';
+            } else {
+                EventModel::insert($data);
+                $message = 'Đã thêm sự kiện mới.';
+            }
 
-        redirect(self::BASE);
+            if ($ajax) {
+                $this->jsonReply(true, $message, self::BASE);
+            }
+
+            flash('admin_success', $message);
+            redirect(self::BASE);
+        } catch (Throwable $e) {
+            $message = 'Lỗi khi lưu dữ liệu: ' . $e->getMessage();
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
+            redirect(self::BASE);
+        }
+    }
+
+    private function isJsonRequest(): bool
+    {
+        $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $xRequested = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        return str_contains($accept, 'application/json') || $xRequested === 'xmlhttprequest';
+    }
+
+    private function jsonReply(bool $success, string $message, ?string $redirect = null): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'redirect' => $redirect,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     public function delete(): void

@@ -30,36 +30,50 @@ class StoreAdminController extends AdminController
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
+        $ajax = $this->isJsonRequest();
         $id      = (string) ($_POST['id'] ?? '');
         $code    = strtoupper(trim((string) ($_POST['code'] ?? '')));
         $name    = trim((string) ($_POST['name'] ?? ''));
         $address = trim((string) ($_POST['address'] ?? ''));
 
         if (!preg_match('/^[A-Z0-9_]{2,40}$/', $code)) {
-            flash('admin_error', 'Mã cơ sở chỉ gồm chữ IN HOA, số và gạch dưới (2–40 ký tự).');
+            $message = 'Mã cơ sở chỉ gồm chữ IN HOA, số và gạch dưới (2–40 ký tự).';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
         if (utf8Length($name) < 2 || utf8Length($address) < 5) {
-            flash('admin_error', 'Vui lòng nhập tên và địa chỉ đầy đủ.');
+            $message = 'Vui lòng nhập tên và địa chỉ đầy đủ.';
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
         $clash = StoreModel::findBy('code', $code);
         if ($clash !== null && $clash['id'] !== $id) {
-            flash('admin_error', sprintf('Mã "%s" đã được dùng cho cơ sở khác.', $code));
+            $message = sprintf('Mã "%s" đã được dùng cho cơ sở khác.', $code);
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
             redirect(self::BASE);
         }
 
         $mapUrl = trim((string) ($_POST['map_url'] ?? ''));
 
-        // Bản đồ nhúng bằng <iframe>, nên chỉ nhận địa chỉ Google Maps.
-        // Không kiểm thì người có quyền quản trị nhúng được trang bất kỳ vào
-        // site — kể cả trang giả mạo form đăng nhập.
         if ($mapUrl !== '') {
             $host = parse_url($mapUrl, PHP_URL_HOST) ?? '';
             if (!preg_match('/(^|\.)google\.com$/', $host)) {
-                flash('admin_error', 'Địa chỉ bản đồ phải là liên kết nhúng của Google Maps.');
+                $message = 'Địa chỉ bản đồ phải là liên kết nhúng của Google Maps.';
+                if ($ajax) {
+                    $this->jsonReply(false, $message);
+                }
+                flash('admin_error', $message);
                 redirect(self::BASE);
             }
         }
@@ -74,15 +88,47 @@ class StoreAdminController extends AdminController
             'is_active'  => isset($_POST['is_active']) ? 1 : 0,
         ];
 
-        if ($id !== '' && StoreModel::exists(['id' => $id])) {
-            StoreModel::update($id, $data);
-            flash('admin_success', 'Đã cập nhật cơ sở.');
-        } else {
-            StoreModel::insert($data);
-            flash('admin_success', 'Đã thêm cơ sở mới.');
-        }
+        try {
+            if ($id !== '' && StoreModel::exists(['id' => $id])) {
+                StoreModel::update($id, $data);
+                $message = 'Đã cập nhật cơ sở.';
+            } else {
+                StoreModel::insert($data);
+                $message = 'Đã thêm cơ sở mới.';
+            }
 
-        redirect(self::BASE);
+            if ($ajax) {
+                $this->jsonReply(true, $message, self::BASE);
+            }
+
+            flash('admin_success', $message);
+            redirect(self::BASE);
+        } catch (Throwable $e) {
+            $message = 'Lỗi khi lưu dữ liệu: ' . $e->getMessage();
+            if ($ajax) {
+                $this->jsonReply(false, $message);
+            }
+            flash('admin_error', $message);
+            redirect(self::BASE);
+        }
+    }
+
+    private function isJsonRequest(): bool
+    {
+        $accept = strtolower((string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
+        $xRequested = strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+        return str_contains($accept, 'application/json') || $xRequested === 'xmlhttprequest';
+    }
+
+    private function jsonReply(bool $success, string $message, ?string $redirect = null): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'redirect' => $redirect,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     public function delete(): void
