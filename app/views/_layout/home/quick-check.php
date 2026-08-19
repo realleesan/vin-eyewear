@@ -89,7 +89,7 @@ $lensOptions = [
  * dẫn sang bộ lọc (khớp config('taxonomy.frame_styles')).
  *
  * KHÔNG dùng config('taxonomy.face_shapes'): mảng đó phục vụ khối
- * _layout/home/face-shape-guide.php của bản Lovable — nó mang 'hint' và một
+ * khối "chọn theo khuôn mặt" của bản Lovable (đã gỡ) — nó mang 'hint' và một
  * DANH SÁCH dáng gọng gợi ý, còn ở đây mỗi khuôn mặt cần đúng một câu mô tả
  * và một hình vẽ. Nhập hai thứ làm một sẽ phải nhét 'path' vào config rồi để
  * đó một trường mà khối kia không bao giờ đọc.

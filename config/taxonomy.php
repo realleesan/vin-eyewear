@@ -137,8 +137,8 @@ return [
      * 'partner_brands' đã bỏ khỏi đây (S13).
      *
      * Danh sách cũ trộn hãng gọng (Ray-Ban, Oakley) với hãng tròng (Essilor,
-     * Zeiss) làm một, chỉ để chạy chữ ngang. Nay tách hai nhóm và chuyển sang
-     * config/brands.php — nơi đó còn giữ cả đường dẫn file logo.
+     * Zeiss) làm một, chỉ để chạy chữ ngang. Khối logo thương hiệu về sau bị
+     * gỡ khỏi trang chủ nên cả danh sách lẫn config/brands.php đều đã xoá.
      */
 
     // Đánh giá Google hiển thị ở trang chủ. Port từ GOOGLE_REVIEWS (taxonomy.ts).

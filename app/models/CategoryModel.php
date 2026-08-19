@@ -56,19 +56,4 @@ class CategoryModel extends BaseModel
               ORDER BY c.sort_order ASC, c.name ASC'
         );
     }
-
-    /**
-     * Bảng tra slug -> tên, dùng khi cần hiện tên danh mục mà không muốn
-     * truy vấn lại cho từng sản phẩm trong danh sách.
-     */
-    public static function slugMap(): array
-    {
-        $map = [];
-
-        foreach (static::visible() as $row) {
-            $map[$row['slug']] = $row['name'];
-        }
-
-        return $map;
-    }
 }

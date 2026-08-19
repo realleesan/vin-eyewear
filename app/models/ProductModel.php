@@ -427,14 +427,6 @@ class ProductModel extends BaseModel
     }
 
     /**
-     * Sản phẩm này có mẫu AR để thử không?
-     */
-    public static function hasArTryOn(array $product): bool
-    {
-        return in_array($product['slug'] ?? '', static::arSlugs(), true);
-    }
-
-    /**
      * Số mẫu gọng đang thử AR được — chỉ đếm mẫu mà sản phẩm còn hiện.
      *
      * Đúng phép lọc ArController dùng khi dựng danh sách: mẫu nào gắn với sản
@@ -529,37 +521,6 @@ class ProductModel extends BaseModel
         $first = $product['images'][0] ?? '';
 
         return is_string($first) && trim($first) !== '';
-    }
-
-    /**
-     * Ảnh thứ hai — hiện khi rê chuột. Null nghĩa là không có, view bỏ qua.
-     */
-    public static function hoverImage(array $product): ?string
-    {
-        return $product['images'][1] ?? null;
-    }
-
-    /**
-     * Kích thước gọng lấy từ specs.
-     *
-     * Dò nhiều tên khoá vì dữ liệu nhập tay không thống nhất — đúng như bản
-     * Lovable làm (frameSize trong product-card.tsx).
-     */
-    public static function frameSize(array $product): ?string
-    {
-        $specs = $product['specs'] ?? [];
-
-        if (!is_array($specs)) {
-            return null;
-        }
-
-        foreach (['Kích thước', 'size', 'kich_thuoc', 'frame_size'] as $key) {
-            if (isset($specs[$key]) && (is_string($specs[$key]) || is_numeric($specs[$key]))) {
-                return (string) $specs[$key];
-            }
-        }
-
-        return null;
     }
 
     /**

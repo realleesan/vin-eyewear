@@ -114,12 +114,4 @@ class NewsletterModel extends BaseModel
 
         return ['ok' => true, 'already' => false];
     }
-
-    /**
-     * Số người đang nhận tin — dùng cho khu quản trị sau này.
-     */
-    public static function countActive(): int
-    {
-        return static::count(['unsubscribed_at' => null]);
-    }
 }

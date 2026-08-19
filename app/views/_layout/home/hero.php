@@ -12,9 +12,9 @@
  *   phải  băng ba ảnh trượt ngang, kèm thẻ chú thích nền sẫm ở mép trái dưới
  *   dưới  dải cam kết nền nâu sẫm chạy hết bề ngang
  *
- * BĂNG ẢNH TRỞ LẠI. Bản thiết kế trước là khối tĩnh nên hero.js đã bỏ; bản này
- * có ba ảnh trượt ngang nên phần đó quay lại — nhưng ở assets/js/home.js (một
- * file cho cả trang chủ) chứ không phải hero.js cũ.
+ * BĂNG ẢNH TRỞ LẠI. Bản thiết kế trước là khối tĩnh nên phần JS trượt ảnh đã
+ * bỏ; bản này có ba ảnh trượt ngang nên nó quay lại — nằm trong
+ * assets/js/home.js, một file cho cả trang chủ.
  *
  * BĂNG TỰ CHẠY, và chạy nhanh (theo yêu cầu) — khác bản thiết kế, vốn đứng yên
  * chờ bấm mũi tên. Nhịp khai bằng data-autoplay ngay trên .hero__media bên

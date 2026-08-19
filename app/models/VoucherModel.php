@@ -33,7 +33,7 @@ class VoucherModel extends BaseModel
        Hai hàm đó chỉ phục vụ mục "Ưu đãi của tôi" trong trang tài khoản, mà
        mục đó đã gỡ. Phần còn lại của model vẫn chạy: evaluate() / apply() /
        consume() cho ô nhập mã ở giỏ hàng và bước thanh toán, adminList() /
-       grantToAll() / grant() / markUsed() cho trang quản trị mã giảm giá. */
+       grantToAll() / markUsed() cho trang quản trị mã giảm giá. */
 
     // ========================================================================
     // KHU QUẢN TRỊ
@@ -262,21 +262,6 @@ class VoucherModel extends BaseModel
             // dòng — đúng như mong đợi, không phải lỗi.
             self::markUsed($userId, $voucherId);
         }
-    }
-
-    /**
-     * Phát một mã cho một khách.
-     *
-     * INSERT IGNORE thay vì kiểm tra tồn tại rồi rẽ nhánh: khoá chính ghép
-     * (user_id, voucher_id) đã cấm trùng, nên phát lại lần hai là câu lệnh
-     * không làm gì chứ không phải lỗi.
-     */
-    public static function grant(string $userId, string $voucherId): void
-    {
-        Database::execute(
-            'INSERT IGNORE INTO user_vouchers (user_id, voucher_id) VALUES (:uid, :vid)',
-            ['uid' => $userId, 'vid' => $voucherId]
-        );
     }
 
     /**

@@ -26,10 +26,10 @@
  * "kiểm tra 5 phút" — cùng vị trí, nhưng từ ba tấm ảnh dẫn sang bộ lọc thành
  * ba việc khách tự làm được ngay tại đây.
  *
- * Các partial còn trong _layout/home/ mà KHÔNG được include (authority, brands,
- * press, newsletter, ar-tryon, lens-partners, lens-spotlight, face-shape-guide,
- * trust-bar): bản thiết kế không có chúng. File và CSS vẫn còn nhưng không nơi
- * nào gọi tới.
+ * CHÍN PARTIAL NGOÀI BẢN THIẾT KẾ ĐÃ XOÁ HẲN (authority, brands, press,
+ * newsletter, ar-tryon, lens-partners, lens-spotlight, face-shape-guide,
+ * trust-bar) cùng CSS và config/brands.php của chúng. Trước đây chúng nằm lại
+ * trong thư mục mà không nơi nào include — xem lịch sử git nếu cần dựng lại.
  *
  * Header và footer KHÔNG nằm trong phạm vi trang này — chúng là partial dùng
  * chung cho mọi trang (_layout/header.php, _layout/footer.php).

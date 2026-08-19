@@ -26,28 +26,9 @@ class EventModel extends BaseModel
     }
 
     /**
-     * Sự kiện CHƯA kết thúc, dùng cho khối "sắp diễn ra".
-     *
-     * Điều kiện đọc là: sự kiện còn hạn nếu ends_at chưa qua, HOẶC (với sự
-     * kiện chỉ có một mốc) starts_at chưa qua. COALESCE gộp hai trường hợp
-     * đó lại — thiếu nó thì mọi sự kiện một-ngày (ends_at NULL) đều bị loại,
-     * vì `NULL >= NOW()` không bao giờ đúng.
-     */
-    public static function upcoming(int $limit = 3): array
-    {
-        return Database::fetchAll(
-            'SELECT * FROM events
-              WHERE is_visible = 1
-                AND COALESCE(ends_at, starts_at) >= NOW()
-              ORDER BY starts_at ASC
-              LIMIT ' . max(1, $limit)
-        );
-    }
-
-    /**
      * MỘT ưu đãi đang chạy, cho dải đếm ngược ở hero trang chủ.
      *
-     * Cùng điều kiện "còn hạn" với upcoming(), chỉ khác chỗ sắp xếp: tin ưu
+     * Cùng điều kiện "còn hạn" với listing(), chỉ khác chỗ sắp xếp: tin ưu
      * đãi được ưu tiên trước, vì hero hứa "ưu đãi" chứ không phải "sự kiện" —
      * đếm ngược tới một buổi workshop thì cái đồng hồ nói sai về thứ nó đếm.
      * Không còn gì trong hạn thì trả null và hero tự ẩn cả dải đó đi.
@@ -60,20 +41,6 @@ class EventModel extends BaseModel
                 AND COALESCE(ends_at, starts_at) >= NOW()
               ORDER BY (category = 'TIN ƯU ĐÃI') DESC, starts_at ASC
               LIMIT 1"
-        );
-    }
-
-    /**
-     * Sự kiện đã kết thúc — trang danh sách hiện ở nhóm dưới.
-     */
-    public static function past(int $limit = 12): array
-    {
-        return Database::fetchAll(
-            'SELECT * FROM events
-              WHERE is_visible = 1
-                AND COALESCE(ends_at, starts_at) < NOW()
-              ORDER BY starts_at DESC
-              LIMIT ' . max(1, $limit)
         );
     }
 
@@ -167,23 +134,6 @@ class EventModel extends BaseModel
         );
 
         return array_column($rows, 'category');
-    }
-
-    /**
-     * Lọc theo nhóm. Chuỗi rỗng nghĩa là không lọc.
-     */
-    public static function byCategory(string $category = '', string $order = 'ASC'): array
-    {
-        if ($category === '') {
-            return static::visible($order);
-        }
-
-        $order = strtoupper($order) === 'DESC' ? 'DESC' : 'ASC';
-
-        return static::where(
-            ['is_visible' => 1, 'category' => $category],
-            "starts_at {$order}"
-        );
     }
 
     /**

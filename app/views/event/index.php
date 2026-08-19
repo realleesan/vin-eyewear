@@ -118,7 +118,7 @@ $whenOf = static fn (array $e): string =>
             <!-- ══════════ ĐĂNG KÝ NHẬN TIN ══════════ -->
             <?php
             /* Đọc flash NGAY TẠI ĐÂY, không nhận qua controller — flash() đọc một
-               lần là xoá, cùng lý do đã ghi ở _layout/home/newsletter.php. */
+               lần là xoá: hai ô nhập cùng một địa chỉ trên một trang thì trình duyệt gợi ý sai. */
             $nlOk  = flash('newsletter_success');
             $nlErr = flash('newsletter_error');
             $nlOld = $_SESSION['_old_newsletter'] ?? '';

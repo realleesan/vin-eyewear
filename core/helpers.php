@@ -195,15 +195,6 @@ function designImage(string $slot, string $fallback): string
     return asset($fallback);
 }
 
-/**
- * In ' class="is-active"' khi $condition đúng, ngược lại in chuỗi rỗng.
- * Rút gọn cho các đoạn đánh dấu mục đang mở trong menu.
- */
-function activeClass(bool $condition, string $class = 'is-active'): string
-{
-    return $condition ? ' class="' . $class . '"' : '';
-}
-
 // ============================================================================
 // VIEW
 // ============================================================================

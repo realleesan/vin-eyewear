@@ -247,9 +247,6 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
      * 'home/index' -> home.js: băng ảnh hero, đồng hồ đếm ngược ưu đãi, hộp
      * thoại "kiểm tra 5 phút" và băng trượt khối đánh giá. Tất cả đều chỉ là
      * tăng cường — xem khối chú thích đầu assets/js/home.js.
-     *
-     * KHÔNG phải assets/js/hero.js: file đó là carousel tự chạy đọc từ
-     * config/banners.php của thiết kế cũ, cả hai giờ không còn nơi nào dùng.
      */
     $pageScripts = [
         'home/index'    => 'home.js',

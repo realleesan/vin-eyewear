@@ -54,7 +54,7 @@ class EventAdminController extends AdminController
         $endsAt   = $this->toDateTime($_POST['ends_at'] ?? '');
 
         // Kết thúc không được trước khi bắt đầu — nếu lọt, dateRange() sẽ in
-        // ra khoảng thời gian ngược và upcoming() phân loại sai.
+        // ra khoảng thời gian ngược và phần lọc "còn hạn" phân loại sai.
         if ($startsAt !== null && $endsAt !== null && $endsAt < $startsAt) {
             flash('admin_error', 'Thời gian kết thúc phải sau thời gian bắt đầu.');
             redirect(self::BASE);
