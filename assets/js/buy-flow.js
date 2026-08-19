@@ -35,6 +35,13 @@
     // Thiếu bất kỳ mảnh nào thì đứng yên, để trình duyệt gửi form như thường.
     if (!window.fetch || !window.DOMParser || !window.history || !history.pushState) return;
 
+    /* e.submitter cho biết NÚT NÀO vừa được bấm, mà cả luồng mua dựa vào nó:
+       "Mua ngay" và "Thêm vào giỏ" là hai nút của CÙNG một form, khác nhau
+       đúng ở name/value của nút. Trình duyệt không có nó (Safari ≤ 15.3) mà
+       vẫn chạy tiếp thì mọi cú bấm đều gửi thiếu — khách bấm "Mua ngay" lại
+       ra "đã thêm vào giỏ". Thà lùi hẳn về cách cũ. */
+    if (typeof SubmitEvent === 'undefined' || !('submitter' in SubmitEvent.prototype)) return;
+
     /* Hai nút ngoài trang gửi tới đây. Các bước GIỮA hộp thoại thì gửi sang
        /gio-hang/chon — không liệt kê từng địa chỉ mà bắt theo "form nằm trong
        hộp thoại", để thêm bước mới sau này không phải nhớ sửa file JS. */
@@ -43,6 +50,9 @@
 
     /** Thẻ đã mở hộp thoại — để trả con trỏ bàn phím về đúng chỗ khi đóng. */
     var opener = null;
+
+    /** Đã có lần nào chính file này đẩy lịch sử chưa — xem khối popstate. */
+    var pushed = false;
 
     function modal()  { return document.querySelector('.bmodal'); }
 
@@ -83,9 +93,15 @@
                 oldTrigger.setAttribute('aria-label', newTrigger.getAttribute('aria-label') || '');
             }
 
-            var oldNote = oldCart.querySelector('.hpop__note');
-            var newNote = newCart.querySelector('.hpop__note');
-            if (oldNote && newNote) oldNote.innerHTML = newNote.innerHTML;
+            /* Thay CẢ bảng xổ chứ không riêng dòng đếm: danh sách liên kết
+               trong đó đổi theo giỏ — giỏ rỗng chỉ có "Mua sắm", có hàng mới
+               hiện "Xem giỏ hàng" và "Thanh toán". Chỉ chép dòng đếm thì sau
+               khi thêm món đầu tiên, bảng xổ nói "1 sản phẩm" mà không có lối
+               nào sang giỏ hàng cho tới lần tải trang thật.
+               header.js chỉ nhớ [data-hpop] và thẻ mở, không nhớ bảng xổ. */
+            var oldPanel = oldCart.querySelector('.hpop__panel');
+            var newPanel = newCart.querySelector('.hpop__panel');
+            if (oldPanel && newPanel) oldPanel.innerHTML = newPanel.innerHTML;
         }
 
         // 4. ĐỊA CHỈ TRÊN THANH URL. Phải đổi theo: ?mua= và ?buoc= là thứ
@@ -95,7 +111,7 @@
         //    KHÔNG đẩy khi chính nút Lùi vừa gọi tới đây: lúc đó trình duyệt
         //    đã tự lùi trong lịch sử rồi, đẩy thêm một mục nữa là bấm Lùi lần
         //    sau lại quay về đúng chỗ vừa rời — khách kẹt trong một vòng.
-        if (url && push) history.pushState(null, '', url);
+        if (url && push) { history.pushState(null, '', url); pushed = true; }
 
         focusModal();
     }
@@ -121,14 +137,26 @@
 
     /* ── Một lượt đi–về với máy chủ ─────────────────────────────────────── */
     function send(url, options, fallback, push) {
-        if (busy) return;
         busy = true;
 
         document.documentElement.classList.add('is-buying');
 
         fetch(url, options)
             .then(function (res) {
-                if (!res.ok) throw new Error('HTTP ' + res.status);
+                /*
+                 * MÁY CHỦ ĐÃ TRẢ LỜI THÌ TUYỆT ĐỐI KHÔNG GỬI LẠI.
+                 *
+                 * Nhánh dự phòng gửi lại form, mà thêm vào giỏ KHÔNG phải thao
+                 * tác lặp lại được: add() đã ghi vào $_SESSION['cart'] xong rồi
+                 * mới chuyển hướng. Trang đích lỗi 500 -> res.ok false -> gửi
+                 * lại -> món vào giỏ HAI lần. Nhận được câu trả lời rồi thì
+                 * chỉ còn việc đi tới đó bằng GET để khách thấy đúng trạng
+                 * thái máy chủ đang có.
+                 */
+                if (!res.ok) {
+                    window.location.href = res.url || window.location.href;
+                    return;
+                }
 
                 /*
                  * MÁY CHỦ ĐƯA SANG TRANG KHÁC THÌ ĐI THẬT, ĐỪNG GHÉP MẢNH.
@@ -149,8 +177,9 @@
                 return res.text().then(function (html) { apply(html, res.url, push !== false); });
             })
             .catch(function () {
-                /* Mạng hỏng, máy chủ lỗi, HTML lạ — giao lại cho trình duyệt
-                   làm theo cách cũ. Khách vẫn mua được, chỉ là trang tải lại. */
+                /* Tới đây chỉ còn lỗi MẠNG (chưa có câu trả lời nào) hoặc HTML
+                   không đọc nổi — giao lại cho trình duyệt làm theo cách cũ.
+                   Khách vẫn mua được, chỉ là trang tải lại. */
                 fallback();
             })
             .then(function () {
@@ -168,6 +197,12 @@
         var inModal = !!form.closest('.bmodal');
 
         if (!inModal && (form.getAttribute('action') || '').indexOf(BUY_ACTION) !== 0) return;
+
+        /* Đang chờ một lượt khác thì KHÔNG chặn — để trình duyệt gửi form theo
+           cách cũ. Chặn rồi bỏ qua là nuốt mất cú bấm: bấm "Thêm vào giỏ" ở
+           thẻ A rồi thẻ B ngay sau đó, thẻ B không có gì xảy ra cả. Thà tải
+           lại trang còn hơn im lặng không làm gì. */
+        if (busy) return;
 
         e.preventDefault();
 
@@ -192,8 +227,25 @@
          */
         var action = form.getAttribute('action') || window.location.pathname;
 
-        send(action, { method: 'POST', body: data, credentials: 'same-origin' },
-            function () { form.submit(); });
+        send(action, { method: 'POST', body: data, credentials: 'same-origin' }, function () {
+            /*
+             * form.submit() KHÔNG kèm name/value của nút đã bấm — trình duyệt
+             * chỉ gửi nút khi chính nó kích hoạt việc gửi. Thiếu chỗ này thì
+             * lúc mạng hỏng: "Mua ngay" mất action=buy nên thành "thêm vào
+             * giỏ" rồi đứng lại trang cũ, và trong hộp thoại thì mất che_do,
+             * act — khách chọn "cắt thêm tròng" lại nhận gọng trần.
+             */
+            if (btn && btn.name) {
+                var carry = document.createElement('input');
+
+                carry.type  = 'hidden';
+                carry.name  = btn.name;
+                carry.value = btn.value;
+                form.appendChild(carry);
+            }
+
+            form.submit();
+        });
     });
 
     /* ── Bấm link trong hộp thoại: đóng, quay lại, đổi bước ─────────────── */
@@ -230,6 +282,13 @@
        pushState ở trên tạo ra các mục trong lịch sử; không nghe popstate thì
        bấm Lùi sẽ đổi địa chỉ mà hộp thoại đứng nguyên tại chỗ. */
     window.addEventListener('popstate', function () {
+        /* CHỈ khi file này từng đẩy lịch sử. Không có chốt đó thì mọi cú bấm
+           Lùi trên trang đều rơi vào đây — mà nhiều trang điều hướng bằng
+           dấu thăng: băng ảnh sản phẩm (#anh-N), mục lục trang chính sách,
+           liên kết nhảy tới nội dung ở header. Xem ba tấm ảnh rồi bấm Lùi sẽ
+           thành tải lại cả trang qua mạng, nuốt dải báo và cướp con trỏ. */
+        if (!pushed) return;
+
         send(window.location.href, { credentials: 'same-origin' },
             function () { window.location.reload(); }, false);
     });

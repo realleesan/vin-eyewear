@@ -442,6 +442,10 @@ class CartController extends BaseController
         $id = (string) ($_POST['key'] ?? '');
 
         if ($id === '' || !isset($_SESSION['cart'][$id])) {
+            /* Nói ra thay vì lặng lẽ quay về. Trường hợp thật hay gặp: khách
+               mở giỏ ở hai tab, xoá một món ở tab này rồi bấm ± cho đúng món
+               đó ở tab kia. Im lặng thì trông như cái nút hỏng. */
+            flash('cart_error', 'Sản phẩm không còn trong giỏ hàng.');
             redirect('/gio-hang');
         }
 
@@ -450,13 +454,15 @@ class CartController extends BaseController
 
         switch ((string) ($_POST['act'] ?? '')) {
             case 'tang':
-                $_SESSION['cart'][$id]['quantity'] = min(self::MAX_QTY, $qty + 1);
+                self::setQuantity($id, $row, min(self::MAX_QTY, $qty + 1));
                 break;
 
             case 'giam':
-                // Sàn là 1, không phải 0: nút "−" giảm số lượng, muốn bỏ món ra
-                // khỏi giỏ thì có nút thùng rác ngay bên cạnh. Để nó tự xoá ở
-                // số 0 nghĩa là bấm nhanh một cái là mất món mà không hỏi.
+                /* Sàn là 1, không phải 0. Muốn bỏ món ra khỏi giỏ thì ở số 1
+                   nút "−" đổi thành nút xoá có hỏi lại — xem cart/index.php.
+                   Tự xoá ở số 0 nghĩa là bấm nhanh một cái là mất món mà
+                   không ai hỏi. Giảm số lượng KHÔNG cần tra tồn kho: ít hơn
+                   thì luôn hợp lệ. */
                 $_SESSION['cart'][$id]['quantity'] = max(1, $qty - 1);
                 break;
 
@@ -466,19 +472,87 @@ class CartController extends BaseController
 
             case 'xoa':
                 unset($_SESSION['cart'][$id]);
+                flash('cart_success', 'Đã xóa sản phẩm khỏi giỏ hàng.');
                 break;
 
             default:
                 // Ô nhập số lượng trực tiếp (không có JS thì đây là đường dự
                 // phòng, và trình đọc màn hình dùng nó thay cho hai nút ±).
-                $direct = (int) ($_POST['quantity'] ?? 0);
+                //
+                // FILTER_VALIDATE_INT chứ không phải (int): ép kiểu biến "7.9"
+                // thành 7 và "abc" thành 0 mà không ai biết là đã bị đổi. Số
+                // lượng phải là SỐ NGUYÊN DƯƠNG, nên thứ không phải vậy thì
+                // từ chối và nói ra.
+                $direct = filter_var($_POST['quantity'] ?? '', FILTER_VALIDATE_INT);
 
-                if ($direct > 0) {
-                    $_SESSION['cart'][$id]['quantity'] = min(self::MAX_QTY, $direct);
+                if ($direct === false || $direct < 1) {
+                    flash('cart_error', 'Số lượng phải là số nguyên lớn hơn 0.');
+                    break;
                 }
+
+                self::setQuantity($id, $row, min(self::MAX_QTY, $direct));
         }
 
         redirect('/gio-hang');
+    }
+
+    /**
+     * Đặt số lượng mới cho một dòng, SAU KHI đối chiếu tồn kho.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO CHẶN Ở ĐÂY CHỨ KHÔNG CHỈ Ở GIAO DIỆN
+     *
+     * Trang giỏ hàng có tắt sẵn nút "+" khi đã chạm tồn kho, nhưng đó chỉ là
+     * thứ nhìn thấy được: thuộc tính disabled sửa được bằng công cụ nhà phát
+     * triển, và ô nhập số lượng thì gửi thẳng số nào cũng được. Trước bản này
+     * máy chủ nhận tuốt — đo được: tồn kho 2 mà bấm "+" ba lần vẫn lên 4, gõ
+     * thẳng 15 cũng vào, và sản phẩm đã chuyển sang hết hàng vẫn tăng được.
+     *
+     * Tồn kho THẬT vẫn chỉ bị trừ lúc đặt hàng (VariantModel::reserve chạy
+     * một câu UPDATE có điều kiện, hai người mua món cuối cùng không cùng lấy
+     * được). Chốt ở đây không thay thế chỗ đó — nó chỉ để khách biết ngay lúc
+     * bấm, thay vì đi hết trang thanh toán mới bị chặn.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    private static function setQuantity(string $key, array $row, int $want): void
+    {
+        $product = ProductModel::find($row['product_id']);
+
+        if ($product === null || (int) ($product['is_visible'] ?? 0) !== 1) {
+            flash('cart_error', 'Sản phẩm không còn khả dụng.');
+            return;
+        }
+
+        $variant = null;
+
+        if (($row['variant_id'] ?? null) !== null) {
+            $variant = VariantModel::findForProduct($row['variant_id'], $product['id']);
+
+            if ($variant === null) {
+                flash('cart_error', 'Phương án bạn chọn không còn khả dụng.');
+                return;
+            }
+        }
+
+        // Hết hàng hoặc ngừng kinh doanh -> không cho tăng. Giữ nguyên số cũ
+        // chứ không hạ xuống: giỏ là thứ của khách, tự ý sửa số của họ là
+        // chuyện khác hẳn với việc từ chối một lần bấm.
+        if (($product['status'] ?? '') !== 'in_stock') {
+            flash('cart_error', 'Sản phẩm đã hết hàng hoặc ngừng kinh doanh.');
+            return;
+        }
+
+        $stock = VariantModel::stockOf($product, $variant);
+
+        if ($want > $stock) {
+            flash('cart_error', sprintf(
+                'Số lượng sản phẩm không đủ. Sản phẩm chỉ còn %d sản phẩm.',
+                $stock
+            ));
+            return;
+        }
+
+        $_SESSION['cart'][$key]['quantity'] = $want;
     }
 
     /** Tick hoặc bỏ tick TẤT CẢ, theo trạng thái hiện tại. */
@@ -740,6 +814,12 @@ class CartController extends BaseController
                 // Tồn kho có thể đã tụt kể từ lúc bỏ vào giỏ
                 'available' => VariantModel::inStock($product, $variant, $lineQty),
                 'stock'     => VariantModel::stockOf($product, $variant),
+                /* Còn tăng được một cái nữa không — để trang tắt sẵn nút "+".
+                   Tính ở đây chứ không để view tự so `stock > quantity`: điều
+                   kiện thật còn gồm cả products.status, mà một chỗ so thiếu
+                   là nút lại mời khách bấm vào chỗ máy chủ sẽ từ chối. */
+                'canAdd'    => $lineQty < self::MAX_QTY
+                               && VariantModel::inStock($product, $variant, $lineQty + 1),
             ];
         }
 

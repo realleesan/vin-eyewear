@@ -343,7 +343,10 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                  cập nhật huy hiệu và dòng đếm trong bảng xổ mà không tải lại
                  trang. Nó chỉ thay RUỘT của hai chỗ đó, không thay thẻ
                  [data-hpop-trigger] — header.js gắn sự kiện thẳng lên thẻ ấy,
-                 thay cả thẻ là mất luôn cái bảng xổ. -->
+                 thay cả THẺ BỌC [data-hpop] là mất luôn cái bảng xổ:
+                 header.js:88 đọc danh sách [data-hpop] MỘT LẦN lúc tải trang
+                 và giữ luôn tham chiếu đó. (Riêng thẻ mở của giỏ hàng là <a>
+                 nên header.js bỏ qua — nó chỉ gắn sự kiện cho <button>.) -->
             <div class="hpop" data-hpop data-cart>
                 <a href="/gio-hang" class="hpop__trigger header-action"
                    data-hpop-trigger

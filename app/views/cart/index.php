@@ -178,9 +178,21 @@ $count = count($lines);
                         </div>
 
                         <div class="cstep">
-                            <button type="submit" name="act" value="giam" class="cstep__btn"
-                                    <?= $line['quantity'] <= 1 ? 'disabled' : '' ?>
-                                    aria-label="Giảm số lượng <?= e($p['name']) ?>">−</button>
+                            <?php
+                            /* Ở SỐ 1, NÚT "−" LÀ NÚT XOÁ CÓ HỎI LẠI.
+                               Trước đây nó bị tắt, nên khách muốn bỏ món ra
+                               phải đi tìm biểu tượng thùng rác ở đầu kia dòng.
+                               Giảm xuống 0 nghĩa là bỏ món đi — cứ hỏi thẳng
+                               câu đó, rồi mới xoá. */
+                            ?>
+                            <?php if ($line['quantity'] <= 1): ?>
+                                <button type="submit" name="act" value="xoa" class="cstep__btn"
+                                        onclick="return confirm('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?')"
+                                        aria-label="Bỏ <?= e($p['name']) ?> khỏi giỏ hàng">−</button>
+                            <?php else: ?>
+                                <button type="submit" name="act" value="giam" class="cstep__btn"
+                                        aria-label="Giảm số lượng <?= e($p['name']) ?>">−</button>
+                            <?php endif; ?>
 
                             <!-- Ô số thật, không phải chữ: bàn phím và trình đọc
                                  màn hình sửa thẳng được số lượng thay vì phải
@@ -191,17 +203,22 @@ $count = count($lines);
                             </label>
                             <input class="cstep__num" type="number" id="qty-<?= e($line['key']) ?>"
                                    name="quantity" value="<?= (int) $line['quantity'] ?>"
-                                   min="1" max="<?= (int) $maxQty ?>" inputmode="numeric">
+                                   min="1" max="<?= (int) min($maxQty, max(1, $line['stock'])) ?>"
+                                   inputmode="numeric">
 
+                            <?php /* Tắt theo TỒN KHO chứ không chỉ theo trần 20 —
+                                     xem 'canAdd' trong CartController::lines().
+                                     Đây chỉ là phần nhìn thấy được; máy chủ vẫn
+                                     kiểm lại trong setQuantity(). */ ?>
                             <button type="submit" name="act" value="tang" class="cstep__btn"
-                                    <?= $line['quantity'] >= $maxQty ? 'disabled' : '' ?>
+                                    <?= $line['canAdd'] ? '' : 'disabled' ?>
                                     aria-label="Tăng số lượng <?= e($p['name']) ?>">+</button>
                         </div>
 
                         <div class="citem__end">
                             <span class="citem__total"><?= money($line['lineTotal']) ?></span>
                             <button type="submit" name="act" value="xoa" class="citem__del"
-                                    onclick="return confirm('Xoá sản phẩm này khỏi giỏ hàng?')">
+                                    onclick="return confirm('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng?')">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
