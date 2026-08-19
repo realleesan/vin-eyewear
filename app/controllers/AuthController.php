@@ -493,7 +493,12 @@ class AuthController extends BaseController
             'recipient_name' => $_POST['recipient_name'] ?? '',
             'phone'          => $_POST['phone'] ?? '',
             'line1'          => $_POST['line1'] ?? '',
-            'line2'          => $_POST['line2'] ?? '',
+            // Bốn ô của cụm chọn tỉnh/phường. TÊN do khách chọn (hoặc gõ tay
+            // khi không có JavaScript), MÃ do JavaScript điền vào ô ẩn kèm theo.
+            'province_code'  => $_POST['province_code'] ?? '',
+            'province_name'  => $_POST['province_name'] ?? '',
+            'ward_code'      => $_POST['ward_code'] ?? '',
+            'ward_name'      => $_POST['ward_name'] ?? '',
             'is_default'     => ($_POST['is_default'] ?? '') !== '',
         ];
 

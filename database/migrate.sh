@@ -90,6 +90,7 @@ MIGRATIONS=(
     # chạy và áp lại từ đầu.
     "2026-08-18-doi-huy-lich-hen.sql|column|appointments|updated_at"
     "2026-08-19-khoa-khung-gio-cho-mariadb.sql|column|appointments|active_slot"
+    "2026-08-19-so-dia-chi-tach-phuong-tinh.sql|column|addresses|province_code"
 )
 
 # ---------------------------------------------------------------------------

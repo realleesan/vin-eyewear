@@ -252,7 +252,22 @@ CREATE TABLE `addresses` (
     `recipient_name` VARCHAR(255) NOT NULL,
     `phone`          VARCHAR(32)  NOT NULL,
     `line1`          VARCHAR(255) NOT NULL,
-    `line2`          VARCHAR(255) NULL,
+    /*
+     * HAI CẤP HÀNH CHÍNH, KHÔNG PHẢI BA — từ 01/07/2025 Việt Nam bỏ cấp huyện,
+     * còn tỉnh/thành phố -> phường/xã. Danh sách lấy từ provinces.open-api.vn
+     * (34 tỉnh thành; `?depth=2` cho phường/xã của một tỉnh).
+     *
+     * Lưu CẢ mã LẪN tên: mã để chọn lại đúng mục khi mở form sửa, tên để hiển
+     * thị và in lên đơn — tên phải nằm trong bảng này chứ không tra lại theo mã,
+     * vì địa chỉ đã lưu không được đổi chữ khi danh mục hành chính sáp nhập.
+     *
+     * NULL được cả bốn: JavaScript tắt hoặc API chết thì form lùi về hai ô gõ
+     * tay, khi đó có tên mà không có mã. Ứng dụng luôn hiển thị theo TÊN.
+     */
+    `province_code`  SMALLINT UNSIGNED  NULL,
+    `province_name`  VARCHAR(120)       NULL,
+    `ward_code`      MEDIUMINT UNSIGNED NULL,
+    `ward_name`      VARCHAR(120)       NULL,
     `is_default`     TINYINT(1)   NOT NULL DEFAULT 0,
     `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP

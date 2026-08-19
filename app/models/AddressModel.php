@@ -74,45 +74,27 @@ class AddressModel extends BaseModel
     }
 
     /**
-     * Tách cột `line2` thành hai mẩu cho form thanh toán.
+     * Chuỗi "phường/xã, tỉnh/thành phố" để hiển thị.
      *
-     * HAI BẢNG GHI ĐỊA CHỈ THEO HAI HÌNH KHÁC NHAU, đây là chỗ nối chúng lại:
+     * Địa chỉ được lưu thành hai cột riêng, nhưng mọi chỗ ĐỌC nó — thẻ trong
+     * sổ địa chỉ, form thanh toán, profiles.address — đều cần một dòng chữ.
+     * Gom phép ghép vào đây để ba nơi đó không tự nối chuỗi mỗi nơi một kiểu.
      *
-     *   sổ địa chỉ   line1 "số nhà, ngách, ngõ, đường"
-     *                line2 "phường / xã, tỉnh / thành phố"   ← MỘT ô
-     *   thanh toán   address_line · address_ward · address_city  ← BA ô
-     *
-     * Cắt ở dấu phẩy CUỐI CÙNG chứ không phải dấu đầu tiên: phần tỉnh/thành
-     * luôn đứng cuối trong cách người Việt viết địa chỉ, còn phần phường/xã có
-     * thể tự nó chứa dấu phẩy ("Phường Tây Hồ, Quận Tây Hồ").
-     *
-     * Đây là PHỎNG ĐOÁN có kiểm soát, không phải phép biến đổi chắc chắn — nên
-     * nó chỉ dùng để ĐIỀN SẴN form, nơi khách nhìn thấy và sửa được ngay. Đừng
-     * dùng nó ở chỗ ghi thẳng vào đơn hàng mà không ai xem lại.
-     *
-     * Không có dấu phẩy thì mẩu duy nhất đó vào ô TỈNH/THÀNH PHỐ: đó là đơn vị
-     * rộng nhất và là phần bắt buộc phải có trong mọi địa chỉ, còn phường/xã
-     * thì người ta hay bỏ qua. Đoán sai cũng chỉ tốn của khách một ô gõ lại.
-     *
-     * @return array{0:string, 1:string} [phường/xã, tỉnh/thành phố]
+     * Bỏ qua phần rỗng: địa chỉ cũ chuyển từ bản một-ô sang có thể chỉ có
+     * tỉnh/thành mà chưa có phường/xã.
      */
-    public static function splitArea(?string $line2): array
+    public static function areaText(?array $address): string
     {
-        $line2 = trim((string) $line2);
-
-        if ($line2 === '') {
-            return ['', ''];
+        if ($address === null) {
+            return '';
         }
 
-        // strrpos() an toàn với UTF-8 ở đây: dấu phẩy là ký tự ASCII một byte,
-        // không thể trùng với byte giữa chừng của một ký tự nhiều byte.
-        $cut = strrpos($line2, ',');
+        $parts = array_filter([
+            trim((string) ($address['ward_name'] ?? '')),
+            trim((string) ($address['province_name'] ?? '')),
+        ], static fn (string $p): bool => $p !== '');
 
-        if ($cut === false) {
-            return ['', $line2];
-        }
-
-        return [trim(substr($line2, 0, $cut)), trim(substr($line2, $cut + 1))];
+        return implode(', ', $parts);
     }
 
     // ========================================================================
@@ -179,7 +161,9 @@ class AddressModel extends BaseModel
         Database::execute(
             'UPDATE addresses
                 SET recipient_name = :recipient_name, phone = :phone,
-                    line1 = :line1, line2 = :line2
+                    line1 = :line1,
+                    province_code = :province_code, province_name = :province_name,
+                    ward_code = :ward_code, ward_name = :ward_name
               WHERE id = :id AND user_id = :uid',
             $values + ['id' => $id, 'uid' => $userId]
         );
@@ -278,10 +262,11 @@ class AddressModel extends BaseModel
     {
         $default = self::defaultFor($userId);
 
+        $area = self::areaText($default);
+
         $text = $default === null
             ? null
-            : trim($default['line1'] . ($default['line2'] !== null && $default['line2'] !== ''
-                ? ', ' . $default['line2'] : ''));
+            : trim($default['line1'] . ($area !== '' ? ', ' . $area : ''));
 
         Database::execute(
             'UPDATE profiles SET address = :addr WHERE id = :uid',
@@ -299,7 +284,8 @@ class AddressModel extends BaseModel
         $name  = trim((string) ($input['recipient_name'] ?? ''));
         $phone = trim((string) ($input['phone'] ?? ''));
         $line1 = trim((string) ($input['line1'] ?? ''));
-        $line2 = trim((string) ($input['line2'] ?? ''));
+        $province = trim((string) ($input['province_name'] ?? ''));
+        $ward     = trim((string) ($input['ward_name'] ?? ''));
 
         if (utf8Length($name) < 2) {
             return ['error' => 'Vui lòng nhập tên người nhận.'];
@@ -318,13 +304,48 @@ class AddressModel extends BaseModel
             return ['error' => 'Vui lòng nhập địa chỉ (số nhà, ngõ, đường).'];
         }
 
+        /*
+         * BẮT BUỘC CẢ HAI CẤP. Bản trước để ô này tuỳ chọn vì nó là một ô gõ
+         * tay, đòi hỏi thì phiền mà cũng không kiểm được gì. Nay là danh sách
+         * chọn sẵn nên đòi được: thiếu tỉnh/thành thì đơn hàng không giao nổi,
+         * mà thiếu phường/xã thì shipper phải gọi lại hỏi.
+         */
+        if ($province === '') {
+            return ['error' => 'Vui lòng chọn tỉnh / thành phố.'];
+        }
+
+        if ($ward === '') {
+            return ['error' => 'Vui lòng chọn phường / xã.'];
+        }
+
         return [
             'values' => [
                 'recipient_name' => utf8Substr($name, 0, 255),
                 'phone'          => $normalized,
                 'line1'          => utf8Substr($line1, 0, 255),
-                'line2'          => $line2 === '' ? null : utf8Substr($line2, 0, 255),
+                /*
+                 * MÃ chỉ nhận khi là số dương, không thì để NULL.
+                 *
+                 * Hai giá trị này do JavaScript điền vào ô ẩn từ dữ liệu API,
+                 * nên chúng vẫn là dữ liệu người dùng gửi lên và sửa được bằng
+                 * công cụ nhà phát triển. Không đối chiếu ngược với API ở đây
+                 * (một lượt gọi mạng cho mỗi lần lưu, mà hosting miễn phí thì
+                 * chặn kết nối ra ngoài): mã sai chỉ làm form sửa chọn trượt
+                 * một mục, còn thứ hiển thị và in lên đơn luôn là TÊN.
+                 */
+                'province_code'  => self::code($input['province_code'] ?? null),
+                'province_name'  => utf8Substr($province, 0, 120),
+                'ward_code'      => self::code($input['ward_code'] ?? null),
+                'ward_name'      => utf8Substr($ward, 0, 120),
             ],
         ];
+    }
+
+    /** Mã hành chính hợp lệ (số nguyên dương) hoặc NULL. */
+    private static function code(mixed $raw): ?int
+    {
+        $code = filter_var($raw, FILTER_VALIDATE_INT);
+
+        return ($code === false || $code <= 0) ? null : $code;
     }
 }

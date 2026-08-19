@@ -58,13 +58,47 @@ $open = $adding || $editing !== null;
                    value="<?= e($form['line1'] ?? '') ?>">
         </label>
 
-        <label class="acct-field">
-            <span class="acct-field__label">Phường / xã, tỉnh / thành phố</span>
-            <input class="acct-field__input" type="text" name="line2"
-                   maxlength="255" autocomplete="address-level2"
-                   placeholder="Phường Tây Hồ, Thành phố Hà Nội"
-                   value="<?= e($form['line2'] ?? '') ?>">
-        </label>
+        <?php
+        /*
+         * TỈNH/THÀNH VÀ PHƯỜNG/XÃ — HAI Ô CHỮ, ĐƯỢC JAVASCRIPT NÂNG THÀNH DANH SÁCH
+         *
+         * Máy chủ in ra ô gõ tay; account.js đổi chúng thành <select> đổ dữ liệu
+         * từ provinces.open-api.vn. Làm ngược lại (in sẵn <select> rỗng rồi chờ
+         * JS đổ vào) thì khách tắt JavaScript — hoặc gặp lúc API chết — nhìn
+         * thấy một ô chọn không có mục nào và không lưu nổi địa chỉ.
+         *
+         * Hai ô ẩn giữ MÃ hành chính. Chỉ JavaScript điền; không có nó thì địa
+         * chỉ vẫn lưu được, chỉ là lần sau mở form sửa danh sách phải dò theo
+         * tên thay vì chọn đúng mã.
+         *
+         * KHÔNG CÓ Ô QUẬN/HUYỆN: từ 01/07/2025 Việt Nam bỏ cấp huyện, địa chỉ
+         * còn hai cấp tỉnh/thành -> phường/xã.
+         */
+        ?>
+        <div class="acct-form__row" data-vnaddr>
+            <label class="acct-field">
+                <span class="acct-field__label">Tỉnh / Thành phố</span>
+                <input class="acct-field__input" type="text" name="province_name" required
+                       maxlength="120" autocomplete="address-level1"
+                       placeholder="Thành phố Hà Nội"
+                       data-vnaddr-field="province"
+                       value="<?= e($form['province_name'] ?? '') ?>">
+            </label>
+
+            <label class="acct-field">
+                <span class="acct-field__label">Phường / Xã</span>
+                <input class="acct-field__input" type="text" name="ward_name" required
+                       maxlength="120" autocomplete="address-level2"
+                       placeholder="Phường Tây Hồ"
+                       data-vnaddr-field="ward"
+                       value="<?= e($form['ward_name'] ?? '') ?>">
+            </label>
+
+            <input type="hidden" name="province_code" data-vnaddr-code="province"
+                   value="<?= e((string) ($form['province_code'] ?? '')) ?>">
+            <input type="hidden" name="ward_code" data-vnaddr-code="ward"
+                   value="<?= e((string) ($form['ward_code'] ?? '')) ?>">
+        </div>
 
         <?php
         /* Địa chỉ mặc định đang sửa thì không cho bỏ tick: bỏ đi nghĩa là
@@ -120,7 +154,8 @@ $open = $adding || $editing !== null;
                     </div>
                     <span class="acct-addr__lines">
                         <?= e($ad['line1']) ?>
-                        <?php if (!empty($ad['line2'])): ?><br><?= e($ad['line2']) ?><?php endif; ?>
+                        <?php $area = AddressModel::areaText($ad); ?>
+                        <?php if ($area !== ''): ?><br><?= e($area) ?><?php endif; ?>
                     </span>
                 </div>
 

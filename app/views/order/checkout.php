@@ -56,9 +56,12 @@ $fill = static fn (string $key, ?string $fallback = null): string =>
 
 $address = $address ?? null;
 
-/* Sổ địa chỉ gộp phường/xã và tỉnh/thành vào một cột `line2`, form này tách
-   làm hai ô — xem AddressModel::splitArea() về cách cắt và giới hạn của nó. */
-[$addressWard, $addressCity] = AddressModel::splitArea($address['line2'] ?? null);
+/* Điền sẵn từ địa chỉ mặc định trong sổ. Trước đây sổ gộp phường/xã và
+   tỉnh/thành vào một cột nên chỗ này phải đoán ngược bằng splitArea(); nay sổ
+   lưu hai cột riêng (xem migration 2026-08-19-so-dia-chi-tach-phuong-tinh)
+   nên lấy thẳng, không còn phép đoán nào. */
+$addressWard = (string) ($address['ward_name'] ?? '');
+$addressCity = (string) ($address['province_name'] ?? '');
 
 $delivery = $old['deliveryMethod'] ?? 'shipping';
 $payment  = $old['paymentMethod'] ?? 'cod';
