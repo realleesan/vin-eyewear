@@ -500,9 +500,11 @@ CREATE TABLE `appointments` (
     /*
      * KHOÁ CHỐNG ĐẶT TRÙNG KHUNG GIỜ, chỉ áp cho lịch CÒN HIỆU LỰC.
      *
-     * Cột sinh ra: NULL khi lịch đã huỷ, còn lại là bộ ba (cơ sở, ngày, giờ).
-     * MySQL bỏ qua NULL trong khoá duy nhất, nên một khung giờ có đúng một lịch
-     * còn hiệu lực, mà huỷ bao nhiêu lần cũng được — huỷ lịch TRẢ LẠI khung giờ.
+     * `active_slot` là một CỜ chứ không phải khoá: '' khi lịch còn hiệu lực,
+     * NULL khi đã huỷ. Khoá duy nhất là bốn cột bên dưới — (cơ sở, ngày, giờ,
+     * cờ). MySQL bỏ qua một hàng trong khoá duy nhất nếu BẤT KỲ cột nào của khoá
+     * là NULL, nên lịch huỷ tự rời khỏi khoá: một khung giờ có đúng một lịch còn
+     * hiệu lực, mà huỷ bao nhiêu lần cũng được — huỷ lịch TRẢ LẠI khung giờ.
      *
      * Trước đây khoá đặt thẳng lên (store_id, appointment_date, time_slot) và
      * KHÔNG biết tới `status`, nên lịch đã huỷ vẫn giữ chỗ vĩnh viễn trong khi
@@ -510,40 +512,42 @@ CREATE TABLE `appointments` (
      * database/migrations/2026-08-18-doi-huy-lich-hen.sql.
      *
      * ─────────────────────────────────────────────────────────────────────
-     * CÁCH VIẾT VÒNG VO DƯỚI ĐÂY LÀ CỐ Ý — ĐỪNG RÚT GỌN VỀ CASE / IF.
+     * VÌ SAO KHÔNG GỘP BA CỘT THÀNH MỘT CHUỖI — ĐỪNG VIẾT LẠI BẰNG CONCAT
      *
-     * Bản đầu viết cho dễ đọc:
+     * Hai bản trước đều gộp, và đều KHÔNG import nổi vào hosting thật
+     * (InfinityFree chạy MariaDB 11.4) — cùng báo lỗi #1901:
      *
      *     CASE WHEN `status` = 'cancelled' THEN NULL
-     *          ELSE CONCAT(`store_id`, '|', `appointment_date`, '|', `time_slot`)
-     *     END
+     *          ELSE CONCAT(`store_id`,'|',`appointment_date`,'|',`time_slot`) END
      *
-     * MySQL nhận. MariaDB TỪ CHỐI: nó không cho dùng hàm điều kiện trong
-     * GENERATED ALWAYS AS và trả lỗi #1901, tức là schema này không import
-     * nổi vào hosting InfinityFree (MariaDB) — nơi site đang chạy thật.
+     *     CONCAT(`store_id`,'|',`appointment_date`,'|',`time_slot`,
+     *            LEFT(NULLIF(`status`,'cancelled'), 0))
      *
-     * Bản dưới cho ra ĐÚNG cùng một giá trị mà không cần hàm điều kiện, dựa
-     * vào hai tính chất: NULLIF(x, y) trả NULL khi x = y, và CONCAT trả NULL
-     * nếu bất kỳ tham số nào là NULL.
+     * Thủ phạm KHÔNG phải CASE mà là CONCAT. Đo thẳng trên MariaDB 11.4 của
+     * hosting: CONCAT(...) trần và CONCAT_WS(...) đều bị từ chối trong
+     * GENERATED ALWAYS AS, còn CASE / IF / NULLIF / LEFT đứng một mình thì được
+     * nhận — nghĩa là hàm điều kiện vốn không bị cấm. Đã thử đủ đường vòng và
+     * đều hỏng: STORED lẫn VIRTUAL (VIRTUAL tạo được cột nhưng đánh khoá lên nó
+     * ném lại đúng lỗi ấy), bảng latin1 lẫn utf8mb4, kết nối SET NAMES latin1
+     * lẫn utf8mb3 lẫn utf8mb4. Đừng thử lại — cứ tránh CONCAT.
      *
-     *   lịch đã huỷ:   NULLIF('cancelled', 'cancelled') -> NULL
-     *                  LEFT(NULL, 0)                    -> NULL
-     *                  CONCAT(..., NULL)                -> NULL   (bỏ khoá)
+     * Bản dưới bỏ hẳn việc ghép chuỗi nên không đụng CONCAT, và giữ nguyên hành
+     * vi cũ. Cờ phải là HẰNG khi lịch còn hiệu lực: để NULLIF(`status`,
+     * 'cancelled') trần thì cờ mang luôn giá trị 'pending' / 'confirmed' /
+     * 'done', và hai lịch khác trạng thái ở cùng khung giờ sẽ lọt qua khoá.
      *
-     *   còn hiệu lực:  LEFT('pending', 0)               -> ''
-     *                  CONCAT(...)      -> 'cơ sở|ngày|giờ'       (giữ khoá)
-     * ─────────────────────────────────────────────────────────────────────
+     *   lịch đã huỷ:   NULLIF('cancelled','cancelled') -> NULL
+     *                  LEFT(NULL, 0)                   -> NULL   (hàng rời khoá)
+     *   còn hiệu lực:  LEFT('pending', 0)              -> ''     (hàng giữ khoá)
      *
      * Cần MySQL 5.7.6+ hoặc MariaDB 10.2+.
      */
-    `slot_lock`        VARCHAR(96)
-        GENERATED ALWAYS AS (
-            CONCAT(`store_id`, '|', `appointment_date`, '|', `time_slot`,
-                   LEFT(NULLIF(`status`, 'cancelled'), 0))
-        ) STORED,
+    `active_slot`      VARCHAR(1)
+        GENERATED ALWAYS AS (LEFT(NULLIF(`status`, 'cancelled'), 0)) STORED,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_appointments_code` (`code`),
-    UNIQUE KEY `uq_appointments_active_slot` (`slot_lock`),
+    UNIQUE KEY `uq_appointments_active_slot`
+        (`store_id`, `appointment_date`, `time_slot`, `active_slot`),
     KEY `idx_appointments_user` (`user_id`),
     KEY `idx_appointments_status` (`status`),
     CONSTRAINT `fk_appointments_user` FOREIGN KEY (`user_id`)

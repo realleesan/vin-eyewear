@@ -5,17 +5,17 @@
  *
  * Port từ createAppointment / getBookedSlots trong src/lib/shop.functions.ts.
  *
- * Bảng `appointments` có UNIQUE trên cột sinh ra `slot_lock` — bộ ba (cơ sở,
- * ngày, giờ) khi lịch còn hiệu lực, NULL khi đã huỷ. Đó mới là thứ THỰC SỰ chặn
- * đặt trùng: kiểm tra bằng SELECT rồi mới INSERT sẽ hở đúng khoảnh khắc giữa hai
- * câu lệnh, hai người bấm cùng lúc đều thấy "còn trống". Ở đây vẫn kiểm trước để
- * báo lỗi cho đẹp, nhưng chốt chặn cuối cùng là ràng buộc của DB — xem cách bắt
- * lỗi 1062 trong create() và reschedule().
+ * Bảng `appointments` có UNIQUE trên bốn cột (cơ sở, ngày, giờ, `active_slot`).
+ * Đó mới là thứ THỰC SỰ chặn đặt trùng: kiểm tra bằng SELECT rồi mới INSERT sẽ
+ * hở đúng khoảnh khắc giữa hai câu lệnh, hai người bấm cùng lúc đều thấy "còn
+ * trống". Ở đây vẫn kiểm trước để báo lỗi cho đẹp, nhưng chốt chặn cuối cùng là
+ * ràng buộc của DB — xem cách bắt lỗi 1062 trong create() và reschedule().
  *
- * Vì sao khoá đặt trên cột sinh ra chứ không trực tiếp trên ba cột: MySQL bỏ qua
- * NULL trong khoá duy nhất, nên lịch đã huỷ KHÔNG còn giữ chỗ. Trước bản nâng
- * cấp 2026-08-18 thì nó có giữ, và khung giờ của một lịch đã huỷ thành không bao
- * giờ đặt lại được trong khi vẫn hiện ra là còn trống.
+ * Vì sao khoá có thêm cột thứ tư: `active_slot` là cột sinh ra, bằng '' khi lịch
+ * còn hiệu lực và NULL khi đã huỷ. MySQL bỏ qua một hàng trong khoá duy nhất nếu
+ * bất kỳ cột nào của khoá là NULL, nên lịch đã huỷ KHÔNG còn giữ chỗ. Trước bản
+ * nâng cấp 2026-08-18 thì nó có giữ, và khung giờ của một lịch đã huỷ thành không
+ * bao giờ đặt lại được trong khi vẫn hiện ra là còn trống.
  */
 
 class BookingModel extends BaseModel
@@ -315,8 +315,8 @@ class BookingModel extends BaseModel
      *
      * KHÔNG xoá hàng: cửa hàng cần biết khung giờ đó từng có người hẹn rồi huỷ —
      * đó là dữ liệu vận hành (khách hay huỷ giờ nào, cơ sở nào trống thật). Cột
-     * sinh ra `slot_lock` tự về NULL khi status thành 'cancelled', nên khung giờ
-     * mở lại cho người khác ngay.
+     * sinh ra `active_slot` tự về NULL khi status thành 'cancelled', nên hàng đó
+     * rời khỏi khoá duy nhất và khung giờ mở lại cho người khác ngay.
      *
      * @return array ['ok'=>true] | ['ok'=>false,'error'=>...]
      */

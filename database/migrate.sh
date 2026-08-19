@@ -83,6 +83,7 @@ MIGRATIONS=(
     "2026-08-16-trang-tai-khoan.sql|table|addresses|"
     "2026-08-16-gio-hang-ma-giam-gia.sql|column|orders|discount"
     "2026-08-16-thanh-toan-chon-co-so.sql|column|orders|store_id"
+    "2026-08-19-khoa-khung-gio-cho-mariadb.sql|column|appointments|active_slot"
 )
 
 # ---------------------------------------------------------------------------
