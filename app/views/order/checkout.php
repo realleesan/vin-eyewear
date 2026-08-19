@@ -63,6 +63,20 @@ $address = $address ?? null;
 $addressWard = (string) ($address['ward_name'] ?? '');
 $addressCity = (string) ($address['province_name'] ?? '');
 
+/*
+ * MÃ HÀNH CHÍNH CHỈ ĐI KÈM KHI Ô CHỮ ĐANG HIỆN ĐÚNG TÊN CỦA SỔ ĐỊA CHỈ.
+ *
+ * $fill() ưu tiên thứ khách vừa gõ hỏng ($old) hơn địa chỉ mặc định. Nếu cứ
+ * đổ mã của sổ vào trong khi ô chữ đang hiện thứ khách gõ, cụm chọn sẽ dò theo
+ * MÃ trước, chọn trúng tỉnh của sổ, rồi ghi đè luôn cái tên khách vừa gõ — mất
+ * dữ liệu ngay trước mắt họ. Lệch thì bỏ mã đi, để cụm dò theo tên.
+ */
+$cityShown = $fill('addressCity', $addressCity);
+$wardShown = $fill('addressWard', $addressWard);
+
+$cityCode = $cityShown === $addressCity ? (string) ($address['province_code'] ?? '') : '';
+$wardCode = $wardShown === $addressWard ? (string) ($address['ward_code'] ?? '') : '';
+
 $delivery = $old['deliveryMethod'] ?? 'shipping';
 $payment  = $old['paymentMethod'] ?? 'cod';
 $storeId  = $old['storeId'] ?? '';
@@ -165,20 +179,38 @@ $storeId  = $old['storeId'] ?? '';
                 <!-- Ẩn/hiện bằng CSS :has() theo ô radio ở trên — không JS.
                      Xem ghi chú đầu file về việc vì sao không ẩn bằng JS. -->
                 <div class="copick__ship">
-                    <div class="cofield__row">
+                    <?php
+                    /*
+                     * Hai ô này được assets/js/address-picker.js nâng thành danh
+                     * sách chọn (provinces.open-api.vn) — cùng cụm với sổ địa
+                     * chỉ, để hai nơi không sinh ra hai kiểu viết cho cùng một
+                     * địa chỉ. Máy chủ vẫn in ra ô gõ tay: thiếu JS hay API chết
+                     * thì khách gõ như trước, xem chú thích đầu file JS đó.
+                     *
+                     * Hai ô mã KHÔNG có `name` nên không gửi lên — đơn hàng chỉ
+                     * lưu chữ. Chúng chỉ để cụm chọn dò đúng mục khi điền sẵn từ
+                     * địa chỉ mặc định trong sổ.
+                     */
+                    ?>
+                    <div class="cofield__row" data-vnaddr>
                         <label class="cofield">
                             <span class="cofield__label">Tỉnh / Thành phố *</span>
                             <input class="cofield__input" type="text" name="address_city"
                                    maxlength="80" autocomplete="address-level1" placeholder="Hà Nội"
-                                   value="<?= e($fill('addressCity', $addressCity)) ?>">
+                                   data-vnaddr-field="province"
+                                   value="<?= e($cityShown) ?>">
                         </label>
 
                         <label class="cofield">
                             <span class="cofield__label">Phường / Xã *</span>
                             <input class="cofield__input" type="text" name="address_ward"
                                    maxlength="80" autocomplete="address-level2" placeholder="Phường Tây Hồ"
-                                   value="<?= e($fill('addressWard', $addressWard)) ?>">
+                                   data-vnaddr-field="ward"
+                                   value="<?= e($wardShown) ?>">
                         </label>
+
+                        <input type="hidden" data-vnaddr-code="province" value="<?= e($cityCode) ?>">
+                        <input type="hidden" data-vnaddr-code="ward" value="<?= e($wardCode) ?>">
                     </div>
 
                     <label class="cofield">

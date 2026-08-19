@@ -226,6 +226,21 @@
 
 .cofield__input::placeholder { color: var(--o-meta); }
 
+/* <select> — cụm chọn tỉnh/phường (assets/js/address-picker.js), dùng chung
+   với sổ địa chỉ. Xem ghi chú dài hơn ở select.acct-field__input trong
+   account.css: <select> dựng line box cao hơn <input> 2px, khai line-height
+   cho nó là hết lệch, nhưng line-height chỉ ăn khi bỏ giao diện gốc — mà bỏ
+   thì mất mũi tên nên phải vẽ lại bằng ảnh nền. */
+select.cofield__input {
+    appearance: none;
+    line-height: 1.15;
+    padding-right: 42px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f5f5a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 14px;
+}
+
 /* Chỉ tô đỏ SAU khi khách đã rời ô và gõ sai — :user-invalid, không phải
    :invalid (cái đó tô đỏ mọi ô bắt buộc ngay khi trang vừa mở). */
 .cofield__input:user-invalid { border-color: var(--danger); }

@@ -242,7 +242,10 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
 
     <?php
     /*
-     * JS riêng của từng trang — cùng cách làm với CSS ở trên.
+     * JS riêng của từng trang — cùng cách làm với CSS ở trên, kể cả chỗ nhận
+     * MẢNG: một trang có thể cần nhiều file, ví dụ trang tài khoản vừa có
+     * account.js của riêng nó vừa dùng chung address-picker.js với trang
+     * thanh toán. Thứ tự trong mảng là thứ tự thẻ <script>.
      *
      * 'home/index' -> home.js: băng ảnh hero, đồng hồ đếm ngược ưu đãi, hộp
      * thoại "kiểm tra 5 phút" và băng trượt khối đánh giá. Tất cả đều chỉ là
@@ -259,7 +262,9 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         'contact/index' => 'contact.js',
         // Cũng chỉ là tăng cường: chọn ảnh đại diện xong là gửi luôn, khỏi
         // bấm thêm nút thứ hai.
-        'auth/profile'  => 'account.js',
+        // account.js lo ảnh đại diện và thẻ đơn hàng; address-picker.js lo cụm
+        // chọn tỉnh/phường trong sổ địa chỉ — cùng file mà trang thanh toán dùng.
+        'auth/profile'  => ['account.js', 'address-picker.js'],
         // Nút con mắt hiện/ẩn mật khẩu. Không có file này thì nút tự ẩn đi và
         // ô mật khẩu vẫn dùng bình thường.
         'auth/index'    => 'auth.js',
@@ -270,10 +275,12 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         // Đếm ngược rồi tự sang mục "Đơn hàng của tôi". Không có file này thì
         // không có đếm ngược nào và nút "Xem đơn hàng của tôi" vẫn ở đó.
         'order/success' => 'order-success.js',
+        // Cũng chỉ là tăng cường: hai ô tỉnh/phường vẫn gõ tay được khi thiếu nó.
+        'order/checkout' => 'address-picker.js',
     ];
 
-    if (isset($pageScripts[$viewName ?? ''])) {
-        printf('    <script src="%s" defer></script>' . "\n", e(asset('assets/js/' . $pageScripts[$viewName])));
+    foreach ((array) ($pageScripts[$viewName ?? ''] ?? []) as $js) {
+        printf('    <script src="%s" defer></script>' . "\n", e(asset('assets/js/' . $js)));
     }
     ?>
 

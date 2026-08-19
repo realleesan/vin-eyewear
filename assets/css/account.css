@@ -612,12 +612,28 @@
     cursor: not-allowed;
 }
 
-/* Ô chọn ngày/giờ và <select> phải cao đúng bằng ô chữ: Safari cho chúng
-   line-height riêng nên không có dòng này thì hàng hai cột lệch nhau vài px */
-.acct-field__input[type="date"],
-select.acct-field__input {
+/* Ô chọn ngày/giờ phải cao đúng bằng ô chữ: trình duyệt cho nó line-height
+   riêng nên không có dòng này thì hàng hai cột lệch nhau vài px. */
+.acct-field__input[type="date"] {
     height: 48px;
     appearance: none;
+}
+
+/* <select> — cụm chọn tỉnh/phường trong sổ địa chỉ (assets/js/address-picker.js).
+   KHÔNG khoá height như ô ngày ở trên: đo thật thì ô chữ cao 44px, khoá 48 là
+   tự tay làm lệch 4px. Nguyên nhân lệch là <select> dựng line box 18px trong
+   khi <input> chỉ 16px, nên chữa đúng chỗ đó — khai line-height cho cả hai cùng
+   một tỉ lệ thì hai ô cao bằng nhau dù sau này có đổi cỡ chữ hay đệm.
+   line-height chỉ ăn khi appearance:none, mà bỏ giao diện gốc là mất luôn mũi
+   tên, nên phải tự vẽ lại bằng ảnh nền — không có nó thì ô chọn nhìn y hệt ô gõ. */
+select.acct-field__input {
+    appearance: none;
+    line-height: 1.15;
+    padding-right: 42px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f5f5a' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 14px;
 }
 
 /* --- Ba nút giới tính ---
