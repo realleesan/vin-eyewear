@@ -286,6 +286,12 @@ class OrderController extends BaseController
 
         unset($_SESSION['cart_voucher']);
 
+        /* Lượt mua kết thúc ở đây. Luồng "Mua ngay" cố ý giữ ý định sống qua
+           trang thanh toán để nút Lùi mở lại bước xác nhận (xem
+           CartController::add) — nhưng đơn đã đặt rồi thì không còn bước nào
+           để lùi về, và dòng hàng cũng vừa bị dọn khỏi giỏ ngay trên. */
+        unset($_SESSION['_buy_intent']);
+
         flash('order_code', $result['code']);
 
         /*

@@ -243,7 +243,38 @@ class CartController extends BaseController
         // Khoá gồm cả gói tròng và số đo: cùng một chiếc gọng mua trần và mua
         // kèm tròng là hai món khác giá, và hai chiếc cùng gói tròng nhưng
         // khác độ là hai sản phẩm khác nhau — gộp chung dòng là mài sai một cái.
-        $key     = self::key($product['id'], $variantId, $lens['id'] ?? null, $rx);
+        $key = self::key($product['id'], $variantId, $lens['id'] ?? null, $rx);
+
+        /*
+         * CHỐT LẠI LẦN THỨ HAI THÌ HOÀN LẠI LẦN TRƯỚC, KHÔNG CỘNG DỒN.
+         *
+         * Luồng "Mua ngay" nay GIỮ ý định sống qua trang thanh toán, để khách
+         * bấm Lùi từ đó quay lại đúng bước "Xác nhận sản phẩm" (xem chỗ chuyển
+         * hướng cuối hàm). Nhưng quay lại được thì cũng chốt lại được — và
+         * chốt lại mà cứ cộng thêm thì một chiếc gọng thành hai, ba, bốn chiếc
+         * theo số lần khách đổi ý.
+         *
+         * done_key/done_prev ghi lại dòng mà CHÍNH lượt mua này đã tạo và số
+         * lượng của dòng đó TRƯỚC lượt mua. Hoàn về con số đó rồi mới cộng lần
+         * mới: khách quay lại đổi thành 3 chiếc thì giỏ có 3, không phải 4. Đổi
+         * cả phương án (quay về bước 1 chọn "cắt tròng") cũng đúng — dòng cũ
+         * lùi về nguyên trạng, dòng mới là một khoá khác.
+         *
+         * Hàng khách đã tự bỏ vào giỏ TỪ TRƯỚC không hề bị đụng tới: done_prev
+         * chính là phần đó.
+         */
+        $done = $_SESSION['_buy_intent']['done_key'] ?? null;
+
+        if ($done !== null && isset($_SESSION['cart'][$done])) {
+            $prev = (int) ($_SESSION['_buy_intent']['done_prev'] ?? 0);
+
+            if ($prev > 0) {
+                $_SESSION['cart'][$done]['quantity'] = $prev;
+            } else {
+                unset($_SESSION['cart'][$done]);
+            }
+        }
+
         $current = (int) ($_SESSION['cart'][$key]['quantity'] ?? 0);
         $new     = min(self::MAX_QTY, $current + $qty);
 
@@ -258,11 +289,29 @@ class CartController extends BaseController
             'rx'         => $rx,
         ];
 
-        // Ý định đã dùng xong. Để lại thì lần sau mở hộp thoại sẽ mang theo
-        // số lượng của lần mua trước.
-        unset($_SESSION['_buy_intent']);
-
         $buyNow = ($_POST['action'] ?? '') === 'buy';
+
+        /*
+         * Ý ĐỊNH MUA SỐNG TỚI KHI NÀO?
+         *
+         * "Thêm vào giỏ" kết thúc ngay tại đây: hàng đã vào giỏ, hộp thoại
+         * đóng, còn lại là một dải báo. Xoá ý định — để lại thì lần sau mở hộp
+         * thoại sẽ mang theo số lượng của lần mua trước, và bấm Lùi về trang
+         * cũ sẽ dựng lại một hộp thoại của việc đã xong.
+         *
+         * "Mua ngay" thì CHƯA xong: khách đang đứng ở trang thanh toán, giữa
+         * chừng một lượt mua. Giữ ý định để nút Lùi (cả nút của trình duyệt
+         * lẫn nút "‹" trên trang thanh toán) đưa họ về đúng bước "Xác nhận sản
+         * phẩm" chứ không rơi thẳng ra trang chủ trắng trơn.
+         *
+         * Ý định đó được xoá khi đơn được đặt xong — xem OrderController::place().
+         */
+        if ($buyNow && isset($_SESSION['_buy_intent'])) {
+            $_SESSION['_buy_intent']['done_key']  = $key;
+            $_SESSION['_buy_intent']['done_prev'] = $current;
+        } else {
+            unset($_SESSION['_buy_intent']);
+        }
 
         /*
          * "MUA NGAY" CHỈ MUA ĐÚNG MÓN VỪA CHỌN.
@@ -304,11 +353,14 @@ class CartController extends BaseController
          * CartController::count() ở mỗi lần vẽ trang, nên chỉ cần trang được
          * vẽ lại là con số đúng.
          */
-        /* ?back= để trang thanh toán có đường lùi về ĐÚNG chỗ khách vừa rời.
-           Không có nó thì nút lùi ở đó chỉ biết chỉ về /gio-hang — mà luồng
-           "Mua ngay" không đi qua giỏ hàng lần nào. */
+        /* ?back= trỏ về BƯỚC TRƯỚC, tức bước "Xác nhận sản phẩm" — không phải
+           trang khách vừa rời. Lùi từ trang thanh toán là lùi một bước trong
+           lượt mua, chứ không phải bỏ cả lượt mua để về trang chủ.
+
+           Không có tham số này thì nút lùi ở đó chỉ biết chỉ về /gio-hang —
+           mà luồng "Mua ngay" không đi qua giỏ hàng lần nào. */
         redirect($buyNow
-            ? '/thanh-toan?back=' . rawurlencode($back)
+            ? '/thanh-toan?back=' . rawurlencode(self::stepUrl($back, $product['id'], 'xac-nhan'))
             : $back);
     }
 

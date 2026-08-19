@@ -348,12 +348,25 @@
        pushState ở trên tạo ra các mục trong lịch sử; không nghe popstate thì
        bấm Lùi sẽ đổi địa chỉ mà hộp thoại đứng nguyên tại chỗ. */
     window.addEventListener('popstate', function () {
-        /* CHỈ khi file này từng đẩy lịch sử. Không có chốt đó thì mọi cú bấm
-           Lùi trên trang đều rơi vào đây — mà nhiều trang điều hướng bằng
-           dấu thăng: băng ảnh sản phẩm (#anh-N), mục lục trang chính sách,
-           liên kết nhảy tới nội dung ở header. Xem ba tấm ảnh rồi bấm Lùi sẽ
-           thành tải lại cả trang qua mạng, nuốt dải báo và cướp con trỏ. */
-        if (!pushed) return;
+        /* Chốt để mọi cú bấm Lùi trên trang KHÔNG rơi hết vào đây: nhiều trang
+           điều hướng bằng dấu thăng — băng ảnh sản phẩm (#anh-N), mục lục
+           trang chính sách, liên kết nhảy tới nội dung ở header. Xem ba tấm
+           ảnh rồi bấm Lùi mà thành tải lại cả trang qua mạng thì nuốt dải báo
+           và cướp con trỏ.
+
+           HAI vế chứ không phải một:
+
+           · pushed — chính file này đã đẩy lịch sử, nên các mục lịch sử quanh
+             đây là của nó;
+           · đang có hộp thoại mở — lúc đó ?mua= và ?buoc= LÀ thứ quyết định
+             màn hình, nên mọi cú Lùi đều phải hỏi lại máy chủ.
+
+           Thiếu vế thứ hai thì có một lỗ: bấm Lùi từ TRANG KHÁC (ví dụ trang
+           thanh toán) về đây làm trình duyệt tải lại tài liệu này từ đầu, tức
+           `pushed` trở về false — rồi những cú Lùi tiếp theo giữa các bước
+           không được xử lý nữa, và hộp thoại đứng im ở bước cũ trong khi địa
+           chỉ đã lùi về bước trước, thậm chí đã rời hẳn khỏi luồng mua. */
+        if (!pushed && !modal()) return;
 
         send(window.location.href, { credentials: 'same-origin' },
             function () { window.location.reload(); }, false);
