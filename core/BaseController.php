@@ -25,6 +25,25 @@ class BaseController
         }
 
         /*
+         * TRANG ĐANG MỞ HỘP THOẠI THÌ ĐỪNG CẤT VÀO ĐỆM LỊCH SỬ.
+         *
+         * ?mua= và ?buoc= là trạng thái GIAO DIỆN tạm thời, không phải nội
+         * dung. Thiếu dòng này, khách tắt JavaScript mua xong rồi bấm Lùi sẽ
+         * được trình duyệt dựng lại nguyên trang cũ từ bfcache — kèm hộp thoại
+         * xác nhận của món vừa mua xong, và máy chủ không có cơ hội nói rằng
+         * lượt mua đó đã kết thúc.
+         *
+         * Chỉ cho trang CÓ hộp thoại: cả site còn lại vẫn được đệm như thường.
+         *
+         * Có JavaScript thì đường đi khác (địa chỉ ?mua= do pushState tạo ra,
+         * chưa từng là một lần tải trang thật nên không mang được header này)
+         * — chốt bên đó nằm ở khối 'pageshow' trong assets/js/buy-flow.js.
+         */
+        if (!empty($data['buyModal'])) {
+            header('Cache-Control: no-store, must-revalidate');
+        }
+
+        /*
          * Dải báo "Đã thêm … vào giỏ hàng".
          *
          * Thêm vào giỏ nay Ở LẠI đúng trang khách đang đứng (xem
@@ -94,15 +113,33 @@ class BaseController
         // còn tròng rời và kính áp tròng thì không — chúng đã là tròng rồi.
         $takesPackage = LensModel::takesLensPackage($product);
 
-        // Ý định treo từ lần bấm "Mua ngay"/"Thêm vào giỏ". Vào thẳng địa chỉ
-        // có ?mua= mà không qua nút bấm thì không có ý định nào — lùi về mặc
-        // định hợp lý (một chiếc, không phương án) chứ không đóng hộp thoại.
+        /*
+         * KHÔNG CÓ Ý ĐỊNH ĐANG TREO THÌ KHÔNG MỞ HỘP THOẠI.
+         *
+         * Ý định được đặt lúc khách bấm "Mua ngay"/"Thêm vào giỏ" và bị xoá
+         * ngay khi món hàng vào giỏ (CartController::add), nên chốt này nói
+         * đúng một điều: hộp thoại chỉ sống trong một lượt mua đang dở.
+         *
+         * VÌ SAO CẦN: ?mua= và ?buoc= nằm trên URL, mà URL thì nằm trong lịch
+         * sử duyệt. Mua xong rồi bấm nút Lùi của trình duyệt là quay lại đúng
+         * địa chỉ ?mua=…&buoc=xac-nhan đó, và bản trước dựng lại hộp thoại như
+         * chưa có gì xảy ra — khách đã mua xong lại thấy màn hình xác nhận
+         * hiện lên lần nữa.
+         *
+         * Bản trước cố ý cho phép: vào thẳng địa chỉ có ?mua= thì lùi về mặc
+         * định hợp lý (một chiếc, không phương án) chứ không đóng hộp thoại.
+         * Đổi lại quy ước đó — một đường dẫn dán tay hay chép cho người khác
+         * nay chỉ mở TRANG, không mở hộp thoại, và nút mua trên trang vẫn ở
+         * nguyên đó cho ai muốn bắt đầu thật.
+         *
+         * Ý định của một SẢN PHẨM KHÁC cũng rơi vào đây: khách mở hộp thoại
+         * cho món A, đóng lại, rồi gõ tay ?mua=<B> — số lượng của A không được
+         * theo sang, và cũng không có gì để mở cho B.
+         */
         $intent = $_SESSION['_buy_intent'] ?? [];
 
-        // Ý định của một SẢN PHẨM KHÁC thì bỏ đi: khách mở hộp thoại cho món A,
-        // đóng lại, rồi gõ tay ?mua=<B> — số lượng của A không được theo sang.
         if (($intent['product_id'] ?? null) !== $product['id']) {
-            $intent = [];
+            return null;
         }
 
         // Bước đang mở. Tên lạ thì về đầu luồng — ?buoc= gõ tay được.

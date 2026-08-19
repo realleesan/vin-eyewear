@@ -74,6 +74,38 @@
     font-weight: 600;
 }
 
+/* Hàng tiêu đề: nút lùi rồi tới chữ. Nút nằm NGOÀI <h1> chứ không lồng vào
+   trong: trình đọc màn hình đọc tiêu đề trang thì không nên đọc kèm một liên
+   kết điều hướng. */
+.cohead__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Cùng kích thước và cách cư xử với .bmodal__back của hộp thoại mua hàng —
+   hai nút lùi trong cùng một luồng thì đừng trông như hai thành phần khác
+   nhau. Lùi vào trong 6px để chữ tiêu đề vẫn thẳng hàng với dải mắt xích
+   phía trên. */
+.cohead__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin-left: -6px;
+    border-radius: var(--radius-sm);
+    color: #4a3b38;
+    text-decoration: none;
+}
+
+.cohead__back:hover,
+.cohead__back:focus-visible {
+    background: var(--surface-sunken);
+    color: var(--brand);
+}
+
 .cohead__title {
     margin: 0;
     font-family: var(--font-serif);

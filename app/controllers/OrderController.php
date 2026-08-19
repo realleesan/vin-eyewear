@@ -141,6 +141,16 @@ class OrderController extends BaseController
             'pageTitle'   => 'Thanh toán — Vin Eyewear',
             'metaDesc'    => 'Hoàn tất đơn hàng tại Vin Eyewear.',
             'payments'    => self::PAYMENTS,
+
+            /*
+             * Đường lùi của nút "‹" cạnh tiêu đề.
+             *
+             * Vào đây từ giỏ hàng thì lùi về giỏ hàng; vào bằng "Mua ngay" thì
+             * lùi về đúng trang khách vừa bấm — CartController::add() đính chỗ
+             * đó vào ?back=. safeRedirectPath chặn đường dẫn ra ngoài site: đây
+             * là tham số trên URL, ai cũng sửa được.
+             */
+            'backUrl'     => safeRedirectPath($_GET['back'] ?? null, '/gio-hang'),
             'lines'       => $lines,
             'subtotal'    => $subtotal,
             'discount'    => $summary['discount'],

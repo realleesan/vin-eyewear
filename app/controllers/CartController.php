@@ -262,6 +262,28 @@ class CartController extends BaseController
         // số lượng của lần mua trước.
         unset($_SESSION['_buy_intent']);
 
+        $buyNow = ($_POST['action'] ?? '') === 'buy';
+
+        /*
+         * "MUA NGAY" CHỈ MUA ĐÚNG MÓN VỪA CHỌN.
+         *
+         * Trang thanh toán lấy hàng qua CartController::selectedItems(), tức là
+         * MỌI dòng đang tick trong giỏ. Nên khách đã có sẵn ba món tick trong
+         * giỏ mà bấm "Mua ngay" một chiếc gọng thì hoá đơn hiện ra bốn món —
+         * họ chỉ định mua một.
+         *
+         * Bỏ tick những dòng còn lại thay vì dựng một "giỏ mua ngay" riêng:
+         * cả trang thanh toán, mã giảm giá lẫn OrderModel::place() đều đọc
+         * chung một chỗ, thêm một nguồn hàng thứ hai là ba nơi đó phải biết về
+         * nó. Hàng KHÔNG mất đi — vẫn nằm nguyên trong giỏ, chỉ là chưa tick;
+         * khách tick lại lúc nào cũng được ở /gio-hang.
+         */
+        if ($buyNow) {
+            foreach ($_SESSION['cart'] as $k => $_) {
+                $_SESSION['cart'][$k]['selected'] = ($k === $key);
+            }
+        }
+
         /* MỘT DÒNG, KHÔNG KÈM TÊN HÀNG.
            Bản trước ghi 'Đã thêm "Gọng kính Titan Vin T01" kèm Chống ánh sáng
            xanh vào giỏ hàng.' — đúng hơn, nhưng dài và ở màn hẹp thì dải báo
@@ -282,7 +304,12 @@ class CartController extends BaseController
          * CartController::count() ở mỗi lần vẽ trang, nên chỉ cần trang được
          * vẽ lại là con số đúng.
          */
-        redirect(($_POST['action'] ?? '') === 'buy' ? '/thanh-toan' : $back);
+        /* ?back= để trang thanh toán có đường lùi về ĐÚNG chỗ khách vừa rời.
+           Không có nó thì nút lùi ở đó chỉ biết chỉ về /gio-hang — mà luồng
+           "Mua ngay" không đi qua giỏ hàng lần nào. */
+        redirect($buyNow
+            ? '/thanh-toan?back=' . rawurlencode($back)
+            : $back);
     }
 
     /**

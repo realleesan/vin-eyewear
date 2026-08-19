@@ -93,7 +93,21 @@ $storeId  = $old['storeId'] ?? '';
             <span class="cohead__sep" aria-hidden="true">/</span>
             <span class="cohead__here" aria-current="page">Thanh toán</span>
         </nav>
-        <h1 class="cohead__title">Hoàn tất đơn hàng</h1>
+        <?php /* NÚT LÙI cạnh tiêu đề, cùng dáng với nút "‹" của hộp thoại mua
+                 hàng. Dải mắt xích ngay trên cũng là một đường lùi, nhưng nó
+                 LUÔN chỉ về giỏ hàng — mà luồng "Mua ngay" không đi qua giỏ
+                 hàng lần nào, nên với họ mắt xích đó dẫn tới một trang lạ.
+                 Nút này chỉ về đúng chỗ vừa rời; xem $backUrl ở
+                 OrderController::checkout(). */ ?>
+        <div class="cohead__row">
+            <a class="cohead__back" href="<?= e($backUrl ?? '/gio-hang') ?>" aria-label="Quay lại">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+            </a>
+            <h1 class="cohead__title">Hoàn tất đơn hàng</h1>
+        </div>
     </div>
 
     <?php if ($error !== null): ?>

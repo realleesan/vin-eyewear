@@ -323,6 +323,27 @@
         if (close) close.click();
     });
 
+    /* ── Trang được phục hồi từ bộ nhớ đệm lịch sử ──────────────────────────
+       Bấm Lùi từ MỘT TRANG KHÁC (ví dụ /thanh-toan sau khi "Mua ngay") không
+       phải là popstate: trình duyệt dựng lại cả tài liệu cũ từ bfcache, kèm
+       nguyên cái DOM lúc rời đi — tức là kèm cả hộp thoại đang mở. Máy chủ
+       không được hỏi câu nào, nên khách mua xong quay lại vẫn thấy màn hình
+       "Xác nhận sản phẩm" hiện ra như chưa có gì xảy ra.
+
+       Hỏi lại máy chủ đúng địa chỉ đó rồi ghép ba mảnh: ý định mua đã bị xoá
+       lúc món hàng vào giỏ, nên câu trả lời không còn hộp thoại và nó biến
+       mất. Huy hiệu giỏ hàng cũng được sửa lại luôn — con số trong bản phục
+       hồi là con số của lúc rời trang.
+
+       Chỉ chạy khi trang ĐANG có hộp thoại: không có thì chẳng có gì lệch, và
+       một lượt đi–về thừa cho mọi cú bấm Lùi trên cả site là không đáng. */
+    window.addEventListener('pageshow', function (e) {
+        if (!e.persisted || !modal()) return;
+
+        send(window.location.href, { credentials: 'same-origin' },
+            function () { window.location.reload(); }, false);
+    });
+
     /* ── Nút Lùi của trình duyệt ────────────────────────────────────────────
        pushState ở trên tạo ra các mục trong lịch sử; không nghe popstate thì
        bấm Lùi sẽ đổi địa chỉ mà hộp thoại đứng nguyên tại chỗ. */
