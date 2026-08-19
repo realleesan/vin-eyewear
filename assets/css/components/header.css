@@ -8,9 +8,16 @@
    bằng góc gần vuông; cụm 999px cũ đã đổi hết ở dưới. Chân trang và các khối
    trang chủ đi theo cùng ngôn ngữ này.
 
-   position:sticky và hiệu ứng thu gọn khi cuộn là phần THÊM ngoài bản thiết
-   kế — bản thiết kế là ảnh tĩnh nên không nói gì về lúc cuộn. Ở trạng thái
-   đầu trang, hai bản trông giống hệt nhau. */
+   position:sticky là phần THÊM ngoài bản thiết kế — bản thiết kế là ảnh tĩnh
+   nên không nói gì về lúc cuộn. Ở trạng thái đầu trang, hai bản trông giống
+   hệt nhau.
+
+   HÀNG NÀY CAO CỐ ĐỊNH, KHÔNG THU GỌN KHI CUỘN. Bản trước co dải thông báo
+   về 0 và hạ wordmark 24px -> 21px; header nằm trong luồng nên cả trang đổi
+   cao 40px mỗi lần lật, chữ to nhỏ và nội dung bên dưới trượt theo — người
+   dùng đọc ra là "nav bị zoom lên zoom xuống". Nay dải thông báo nằm NGOÀI
+   <header> (xem _layout/header.php) nên nó tự cuộn khuất đi, còn ở đây
+   không còn gì đổi kích thước. Cuộn chỉ thêm bóng đổ. */
 .site-header {
     position: sticky;
     top: 0;
@@ -39,28 +46,18 @@
 
 /* --- 1. Dải thông báo --------------------------------------- */
 
+/* KHÔNG dính theo cuộn và KHÔNG co lại — nó là anh em của <header>, cuộn
+   xuống là khuất đi cùng nội dung. Đừng gắn lại max-height/opacity có hoạt
+   ảnh vào đây: dải nằm trên header trong luồng, đổi chiều cao của nó là đẩy
+   cả trang lên xuống. */
 .header-announce {
-    overflow: hidden;
     /* Thiết kế đặt dải này nền crimson, không phải nền mực như bản cũ */
     background: var(--brand);
     /* Hồng rất nhạt, không phải trắng pha trong suốt. Trên nền crimson nó cho
        6.9:1, đủ cho chữ 12.5px. Chân trang dùng chung sắc này — xem
        --on-brand-soft trong layout.css. */
     color: var(--on-brand-soft);
-    max-height: 64px;
     padding-block: 10px;
-    opacity: 1;
-    transition:
-        max-height 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-        padding    0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-        opacity    0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* Cuộn xuống -> dải thu về 0, nhường chỗ cho nội dung */
-.site-header.is-scrolled .header-announce {
-    max-height: 0;
-    padding-block: 0;
-    opacity: 0;
 }
 
 .header-announce__text {
@@ -116,19 +113,6 @@
        layout.css. Bản thiết kế cho header chạy hết bề ngang trang, wordmark
        nằm sát lề trái chứ không thụt theo cột nội dung. */
     padding: var(--header-pad-y) var(--page-edge);
-    transition: min-height 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-/* HIỆN KHÔNG CÓ TÁC DỤNG — giữ lại vì nó ghi ý đồ, nhưng đừng tin nó đang chạy.
-   Nội dung hàng đã cao 81.8px (viên thuốc 41.8 + đệm 40) nên min-height 64px
-   không bao giờ với tới: min-height không ép được hộp nhỏ hơn nội dung. Cuộn
-   xuống thì chỉ dải thông báo thu lại, hàng chính đứng yên.
-
-   Muốn header thu thật thì giảm --header-pad-y ở trạng thái .is-scrolled —
-   mega-menu.css đo khoảng trống theo token đó nên mũi nhọn và vùng bắt chuột
-   của bảng xổ tự đi theo, không phải chỉnh tay lần nữa. */
-.site-header.is-scrolled .header-main {
-    min-height: 64px;
 }
 
 @media (max-width: 1100px) {
@@ -235,11 +219,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    transition: font-size 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.site-header.is-scrolled .header-logo__text {
-    font-size: 21px;
 }
 
 /* Nhẹ hơn nửa nấc, KHÔNG đổi màu — giống hệt wordmark ở chân trang */

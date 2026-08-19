@@ -1,6 +1,6 @@
 /**
- * header.js — Thu gọn header khi cuộn, bảng xổ của cụm tác vụ (ngôn ngữ · tìm
- * kiếm · tài khoản · giỏ hàng) và menu trượt mobile.
+ * header.js — Bóng đổ của header khi cuộn, bảng xổ của cụm tác vụ (ngôn ngữ ·
+ * tìm kiếm · tài khoản · giỏ hàng) và menu trượt mobile.
  *
  * Port hành vi từ src/components/site-header.tsx.
  * Không phụ thuộc thư viện nào; chạy được với thuộc tính `defer`.
@@ -14,34 +14,28 @@
     var nav = document.getElementById('mobileNav');
 
     /* ====================================================================
-       1. THU GỌN HEADER KHI CUỘN
+       1. BÓNG ĐỔ CỦA HEADER KHI CUỘN
+
+       Class này CHỈ bật bóng đổ, không đổi kích thước gì nữa — xem ghi chú
+       ở .site-header trong components/header.css và ở dải thông báo trong
+       _layout/header.php.
+
+       Vì không còn gì đổi kích thước nên MỘT ngưỡng là đủ. Bản trước phải
+       dùng hai ngưỡng lệch nhau (thu ở 80, bung ở đúng 0): lật class khi đó
+       làm header cao thêm ~30px, cơ chế neo cuộn của trình duyệt cộng bù 30px
+       vào scrollY, con số bù lại vượt ngưỡng và lật ngược lớp — đo được 3 lần
+       lật trong MỘT lần cuộn lên. Nay lật class không đụng tới chiều cao
+       trang, không có gì để neo bù, nên vòng lặp đó không còn cửa xảy ra.
+
+       4px chứ không phải 0: chuột và trackpad hay để lại scrollY lẻ 1-2px ở
+       sát đỉnh, bóng nhấp nháy theo thì khó chịu.
        ==================================================================== */
 
     if (header) {
         var scrolled = false;
 
-        /*
-         * Hai ngưỡng LỆCH NHAU: thu gọn khi đã cuộn quá 80px, và chỉ bung
-         * trở lại khi về ĐÚNG đỉnh trang (y === 0).
-         *
-         * Vì sao phải là 0 chứ không phải một con số nhỏ như 12:
-         *
-         * Bung dải thông báo ra làm header CAO THÊM ~30px. Header nằm trong
-         * luồng nên toàn bộ nội dung bên dưới bị đẩy xuống 30px, và cơ chế
-         * neo cuộn (scroll anchoring) của trình duyệt bù lại bằng cách cộng
-         * đúng 30px vào scrollY để nội dung đứng yên trước mắt người dùng.
-         *
-         * Với ngưỡng cũ 12/32, cú bù đó đưa scrollY từ 8 vọt lên 38 — vượt
-         * ngưỡng 32 nên header lập tức thu gọn lại, scrollY lại tụt xuống,
-         * rồi lại bung… Đo được 3 lần lật class trong MỘT lần cuộn lên, và
-         * đó chính là cú giật người dùng nhìn thấy.
-         *
-         * Ở scrollY = 0 thì không còn gì phía trên để neo, nên phép bù không
-         * xảy ra và vòng lặp bị cắt tại gốc.
-         */
         function onScroll() {
-            var y = window.scrollY;
-            var next = scrolled ? y > 0 : y > 80;
+            var next = window.scrollY > 4;
 
             if (next !== scrolled) {
                 scrolled = next;

@@ -6,7 +6,7 @@
  * Dựng theo "Vin Eyewear Home.dc.html" (Claude Design).
  *
  * Bố cục 2 tầng thay cho 3 tầng cũ:
- *   1. Dải thông báo (nền brand) — ẩn dần khi cuộn xuống
+ *   1. Dải thông báo (nền brand) — nằm NGOÀI <header>, cuộn là khuất đi
  *   2. Một HÀNG DUY NHẤT: wordmark trái | điều hướng giữa | tác vụ phải
  *
  * Bản cũ đặt wordmark giữa và đẩy điều hướng xuống một thanh riêng bên dưới.
@@ -116,14 +116,30 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
 
 <a class="skip-link" href="#noi-dung-chinh"><?= e(t('action.skip')) ?></a>
 
-<header class="site-header" id="siteHeader">
+<!-- ============================================================
+     1. DẢI THÔNG BÁO — NẰM NGOÀI <header>, VÀ ĐÓ LÀ CHỦ Ý
 
-    <!-- ============================================================
-         1. DẢI THÔNG BÁO — thu về 0 chiều cao khi cuộn xuống
-         ============================================================ -->
-    <div class="header-announce">
-        <p class="header-announce__text"><?= e(t('announce')) ?></p>
-    </div>
+     Trước đây dải này nằm trong header và thu về 0 chiều cao khi cuộn, kèm
+     wordmark co từ 24px xuống 21px. Header dính theo cuộn nhưng VẪN NẰM
+     TRONG LUỒNG, nên mỗi lần thu/bung là cả trang đổi cao 40px (đo được:
+     123px <-> 83px): chữ to nhỏ, nội dung bên dưới trượt lên rồi trượt
+     xuống — đúng cú "zoom lên zoom xuống" người dùng nhìn thấy.
+
+     Nay dải là ANH EM của <header> và không dính: cuộn xuống thì nó khuất
+     đi như mọi nội dung khác, thanh nav ở lại với chiều cao KHÔNG ĐỔI. Vẫn
+     được đúng thứ hiệu ứng cũ nhắm tới — nhường chỗ khi đọc — mà không có
+     gì đổi kích thước.
+
+     VÌ SAO KHÔNG ĐỂ TRONG <header> RỒI CHO .header-main STICKY: phần tử
+     sticky chỉ dính được trong phạm vi hộp cha. Để nguyên chỗ cũ thì
+     .header-main chỉ bám được hết chiều cao <header> (123px) rồi trôi mất
+     khỏi màn hình.
+     ============================================================ -->
+<div class="header-announce">
+    <p class="header-announce__text"><?= e(t('announce')) ?></p>
+</div>
+
+<header class="site-header" id="siteHeader">
 
     <!-- ============================================================
          2. HÀNG CHÍNH — wordmark | điều hướng | tác vụ

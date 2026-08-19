@@ -41,17 +41,17 @@
    :root thì nó rơi về giá trị dự phòng và mất luôn liên kết.
 
    ─────────────────────────────────────────────────────────────
-   ĐÃ BỎ BẢN RIÊNG CHO HEADER ĐÃ CUỘN (--mega-gap: 13px)
+   MỘT GIÁ TRỊ DUY NHẤT, KHÔNG CÓ BẢN RIÊNG CHO "HEADER ĐÃ CUỘN"
 
-   Bản đó dựa trên giả định .header-main thu từ 80px xuống 64px khi cuộn. Đo
-   thật bằng trình duyệt: hàng này cao 81.8px ở CẢ HAI trạng thái. min-height
-   không bao giờ ép được hộp nhỏ hơn nội dung, mà nội dung ở đây đã là 41.8px
-   (viên thuốc) + 40px (đệm) = 81.8px — vượt cả 80px lẫn 64px. Cuộn xuống chỉ
-   có dải thông báo thu lại, hàng chính đứng yên.
+   Từng có bản --mega-gap: 13px cho trạng thái đã cuộn, dựa trên giả định
+   .header-main thu từ 80px xuống 64px. Giả định đó sai ngay từ đầu (min-height
+   không ép được hộp nhỏ hơn nội dung 81.8px), và làm hỏng đúng thứ nó định
+   sửa: mũi nhọn treo cao hơn mép bảng 7px, vùng bắt chuột hụt 7px, chuột đi
+   từ viên thuốc xuống bảng rơi vào khoảng chết và bảng đóng sập giữa chừng.
 
-   Giả định sai đó làm hỏng đúng thứ nó định sửa: khi cuộn, mũi nhọn treo cao
-   hơn mép bảng 7px và vùng bắt chuột hụt 7px, nên chuột đi từ viên thuốc
-   xuống bảng rơi vào khoảng chết và bảng đóng sập giữa chừng. */
+   Nay header cao CỐ ĐỊNH ở mọi vị trí cuộn — dải thông báo đã ra ngoài
+   <header> và không còn hiệu ứng thu gọn nào (xem components/header.css) —
+   nên chỉ có một con số, và nó luôn đúng. */
 .site-header {
     --mega-gap: var(--header-pad-y, 20px);
 }

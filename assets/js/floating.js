@@ -112,24 +112,15 @@
             return;
         }
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-
         /*
-         * Chốt lại đúng 0 khi hoạt ảnh dừng.
+         * Không cần chốt lại đúng 0 nữa.
          *
-         * Cuộn tới gần đỉnh thì header bung dải thông báo trở lại (bỏ class
-         * is-scrolled), trang cao thêm vài chục pixel, và cơ chế neo cuộn của
-         * trình duyệt bù lại — hoạt ảnh dừng ở scrollY = 17 chứ không phải 0,
-         * tức header vẫn ở dạng thu gọn dù người dùng đã bấm "lên đầu trang".
+         * Bản trước phải làm: header bung dải thông báo trở lại khi tới gần
+         * đỉnh, trang cao thêm vài chục pixel, cơ chế neo cuộn bù lại và hoạt
+         * ảnh dừng ở scrollY = 17 chứ không phải 0. Dải thông báo nay nằm
+         * ngoài header và header cao cố định (xem components/header.css), nên
+         * không còn cú đổi chiều cao nào để phải bù.
          */
-        var snap = function () {
-            if (window.scrollY !== 0) window.scrollTo({ top: 0, behavior: 'auto' });
-        };
-
-        if ('onscrollend' in window) {
-            window.addEventListener('scrollend', snap, { once: true });
-        } else {
-            window.setTimeout(snap, 800);
-        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 })();
