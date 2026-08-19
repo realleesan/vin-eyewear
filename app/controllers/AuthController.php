@@ -186,24 +186,26 @@ class AuthController extends BaseController
     {
         $this->requirePost('/auth?tab=dang-ky');
 
-        $email    = trim((string) ($_POST['email'] ?? ''));
         $fullName = trim((string) ($_POST['full_name'] ?? ''));
         $phone    = trim((string) ($_POST['phone'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
         $confirm  = (string) ($_POST['password_confirm'] ?? '');
 
         if (utf8Length($fullName) < 2) {
-            $this->failRegister('Vui lòng nhập họ tên.', $email, $fullName, $phone);
+            $this->failRegister('Vui lòng nhập họ tên.', $fullName, $phone);
         }
 
         if ($password !== $confirm) {
-            $this->failRegister('Hai lần nhập mật khẩu không khớp.', $email, $fullName, $phone);
+            $this->failRegister('Hai lần nhập mật khẩu không khớp.', $fullName, $phone);
         }
 
-        $result = UserModel::register($email, $password, $fullName, $phone);
+        /* Không còn ô email trong form — số điện thoại là thứ khách dùng để
+           đăng nhập. Ai muốn tài khoản có email thì bấm "Tiếp tục với Google",
+           và email đó do Google xác nhận chứ không phải chữ khách gõ. */
+        $result = UserModel::register($phone, $password, $fullName);
 
         if (!$result['ok']) {
-            $this->failRegister($result['error'], $email, $fullName, $phone);
+            $this->failRegister($result['error'], $fullName, $phone);
         }
 
         // Đăng ký xong đăng nhập luôn — bắt khách nhập lại ngay thông tin
@@ -212,6 +214,81 @@ class AuthController extends BaseController
 
         flash('account_success', 'Tạo tài khoản thành công. Chào mừng bạn đến với Vin Eyewear!');
         redirect('/tai-khoan');
+    }
+
+    /**
+     * Bấm "Tiếp tục với Google" — đẩy khách sang Google.
+     *
+     * GET chứ không phải POST, cùng lý do đã ghi ở LangController: đây là một
+     * thẻ <a> phải chạy được khi không có JavaScript, và bản thân nó chưa đổi
+     * gì cả. Thứ chống giả mạo ở luồng này là tham số `state` — chuỗi ngẫu
+     * nhiên lưu trong session và Google trả lại nguyên văn ở bước sau.
+     */
+    public function googleStart(): void
+    {
+        if (!GoogleAuth::isConfigured()) {
+            flash('auth_error', 'Đăng nhập bằng Google chưa được cấu hình.');
+            redirect('/auth');
+        }
+
+        // Đã đăng nhập rồi thì không có việc gì ở đây.
+        if (AuthMiddleware::userId() !== null) {
+            redirect('/tai-khoan');
+        }
+
+        $after = safeRedirectPath($_GET['redirect'] ?? null, '/tai-khoan');
+
+        // redirect() chỉ đặt header Location nên nhận cả địa chỉ tuyệt đối.
+        redirect(GoogleAuth::authUrl(bin2hex(random_bytes(16)), $after));
+    }
+
+    /**
+     * Google gọi ngược về đây kèm `code` và `state`.
+     */
+    public function googleCallback(): void
+    {
+        if (!GoogleAuth::isConfigured()) {
+            redirect('/auth');
+        }
+
+        $after = safeRedirectPath($_SESSION['_google_after'] ?? null, '/tai-khoan');
+        unset($_SESSION['_google_after']);
+
+        /* Khách bấm "Huỷ" ở màn hình của Google. Không phải lỗi — im lặng đưa
+           họ về trang đăng nhập, đừng doạ bằng một dòng đỏ. */
+        if (isset($_GET['error'])) {
+            redirect('/auth');
+        }
+
+        $token = GoogleAuth::exchange(
+            (string) ($_GET['code'] ?? ''),
+            (string) ($_GET['state'] ?? '')
+        );
+
+        if (!$token['ok']) {
+            flash('auth_error', $token['error']);
+            redirect('/auth');
+        }
+
+        $result = UserModel::findOrCreateGoogle(
+            $token['sub'],
+            $token['email'],
+            $token['name'],
+            (bool) $token['verified']
+        );
+
+        if (!$result['ok']) {
+            flash('auth_error', $result['error']);
+            redirect('/auth');
+        }
+
+        AuthMiddleware::login($result['id']);
+
+        flash('account_success', $result['created']
+            ? 'Tạo tài khoản thành công. Chào mừng bạn đến với Vin Eyewear!'
+            : 'Đăng nhập thành công.');
+
+        redirect($after);
     }
 
     public function logout(): void
@@ -749,9 +826,9 @@ class AuthController extends BaseController
         }
     }
 
-    private function failRegister(string $message, string $email, string $fullName, string $phone): never
+    private function failRegister(string $message, string $fullName, string $phone): never
     {
-        $_SESSION['_old_auth'] = ['email' => $email, 'full_name' => $fullName, 'phone' => $phone];
+        $_SESSION['_old_auth'] = ['full_name' => $fullName, 'phone' => $phone];
         flash('auth_error', $message);
 
         redirect('/auth?tab=dang-ky');

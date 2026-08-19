@@ -42,11 +42,22 @@ class UserModel extends BaseModel
      *
      * @return array ['ok'=>true,'id'=>...] | ['ok'=>false,'error'=>...]
      */
-    public static function register(string $email, string $password, string $fullName, string $phone = ''): array
+    public static function register(string $phone, string $password, string $fullName, string $email = ''): array
     {
+        /*
+         * SỐ ĐIỆN THOẠI THAY EMAIL LÀM THỨ ĐỂ ĐĂNG NHẬP.
+         *
+         * Form đăng ký không còn hỏi email. Đăng nhập vốn đã nhận cả hai (xem
+         * findByLogin), nên bỏ email đi không mất lối vào nào — nhưng vì thế
+         * số điện thoại từ TUỲ CHỌN thành BẮT BUỘC: thiếu cả hai thì tài khoản
+         * tạo ra xong không ai đăng nhập vào được nữa.
+         *
+         * $email nay là tham số cuối và mặc định rỗng: chỉ luồng Google truyền
+         * vào, và đó là địa chỉ Google xác nhận chứ không phải chữ khách gõ.
+         */
         $email = strtolower(trim($email));
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return ['ok' => false, 'error' => 'Email không hợp lệ.'];
         }
 
@@ -54,8 +65,12 @@ class UserModel extends BaseModel
             return ['ok' => false, 'error' => 'Mật khẩu phải có ít nhất 8 ký tự.'];
         }
 
-        if (static::exists(['email' => $email])) {
+        if ($email !== '' && static::exists(['email' => $email])) {
             return ['ok' => false, 'error' => 'Email này đã được đăng ký.'];
+        }
+
+        if (trim($phone) === '') {
+            return ['ok' => false, 'error' => 'Vui lòng nhập số điện thoại.'];
         }
 
         // Số điện thoại là MỘT trong hai cách đăng nhập, nên phải chuẩn hoá
@@ -88,7 +103,9 @@ class UserModel extends BaseModel
                     'INSERT INTO users (id, email, password_hash) VALUES (:id, :email, :hash)',
                     [
                         'id'    => $userId,
-                        'email' => $email,
+                        // Rỗng thành NULL chứ không phải chuỗi rỗng: cột có
+                        // khoá duy nhất, mà '' thì chỉ một tài khoản dùng được.
+                        'email' => $email !== '' ? $email : null,
                         // PASSWORD_DEFAULT để PHP tự nâng thuật toán ở bản
                         // sau mà không phải sửa dòng này
                         'hash'  => password_hash($password, PASSWORD_DEFAULT),
@@ -114,6 +131,95 @@ class UserModel extends BaseModel
         }
 
         return ['ok' => true, 'id' => $userId];
+    }
+
+    /**
+     * Tìm hoặc tạo tài khoản từ thông tin Google đã xác minh.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * BA NHÁNH, THEO ĐÚNG THỨ TỰ NÀY
+     *
+     *   1. Đã có `google_id` này  -> chính chủ, đăng nhập.
+     *   2. Chưa có, nhưng email TRÙNG một tài khoản mật khẩu sẵn có
+     *                             -> NỐI Google vào tài khoản đó.
+     *   3. Không khớp gì          -> tạo tài khoản mới.
+     *
+     * Nhánh 2 chỉ chạy khi Google báo email ĐÃ XÁC MINH. Tài khoản Google
+     * Workspace do doanh nghiệp tự quản có thể khai một email bất kỳ mà chưa
+     * chứng minh sở hữu; tin theo là ai đó tạo tài khoản Workspace mang email
+     * của khách rồi nối thẳng vào tài khoản người ta.
+     *
+     * Tài khoản tạo ở nhánh 3 KHÔNG có số điện thoại và có mật khẩu ngẫu
+     * nhiên không ai biết: khách đăng nhập bằng Google, không bằng mật khẩu.
+     * Cột password_hash NOT NULL nên vẫn phải điền một giá trị — điền chuỗi
+     * ngẫu nhiên 32 byte, chứ để rỗng thì một ngày nào đó có người so sánh
+     * hash rỗng và mở cửa cho cả thiên hạ.
+     *
+     * @return array{ok:bool, error?:string, id?:string, created?:bool}
+     */
+    public static function findOrCreateGoogle(string $sub, ?string $email, ?string $name, bool $emailVerified): array
+    {
+        $existing = Database::fetchOne('SELECT id FROM users WHERE google_id = :g', ['g' => $sub]);
+
+        if ($existing !== null) {
+            return ['ok' => true, 'id' => $existing['id'], 'created' => false];
+        }
+
+        $email = $email !== null ? strtolower(trim($email)) : null;
+
+        if ($email !== null && $email !== '' && $emailVerified) {
+            $byEmail = Database::fetchOne('SELECT id, google_id FROM users WHERE email = :e', ['e' => $email]);
+
+            if ($byEmail !== null) {
+                // Email này đã gắn với MỘT tài khoản Google KHÁC -> dừng.
+                // Trường hợp hiếm nhưng có thật khi doanh nghiệp đổi tên miền;
+                // ghi đè là đá tài khoản Google cũ ra khỏi chính tài khoản đó.
+                if (($byEmail['google_id'] ?? null) !== null) {
+                    return ['ok' => false, 'error' => 'Email này đã liên kết với một tài khoản Google khác.'];
+                }
+
+                Database::execute(
+                    'UPDATE users SET google_id = :g, email_verified = 1 WHERE id = :id',
+                    ['g' => $sub, 'id' => $byEmail['id']]
+                );
+
+                return ['ok' => true, 'id' => $byEmail['id'], 'created' => false];
+            }
+        }
+
+        $userId = uuid();
+
+        try {
+            Database::transaction(static function () use ($userId, $sub, $email, $name, $emailVerified): void {
+                Database::execute(
+                    'INSERT INTO users (id, email, google_id, password_hash, email_verified)
+                     VALUES (:id, :email, :google, :hash, :verified)',
+                    [
+                        'id'       => $userId,
+                        'email'    => ($email !== null && $email !== '') ? $email : null,
+                        'google'   => $sub,
+                        'hash'     => password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT),
+                        'verified' => $emailVerified ? 1 : 0,
+                    ]
+                );
+
+                Database::execute(
+                    'INSERT INTO profiles (id, full_name, phone) VALUES (:id, :name, NULL)',
+                    ['id' => $userId, 'name' => $name !== null && $name !== '' ? $name : 'Khách hàng']
+                );
+
+                Database::execute(
+                    'INSERT INTO user_roles (id, user_id, role) VALUES (:id, :user_id, :role)',
+                    ['id' => uuid(), 'user_id' => $userId, 'role' => 'customer']
+                );
+            });
+        } catch (Throwable $e) {
+            error_log('[UserModel] Không tạo được tài khoản Google: ' . $e->getMessage());
+
+            return ['ok' => false, 'error' => 'Không tạo được tài khoản, vui lòng thử lại.'];
+        }
+
+        return ['ok' => true, 'id' => $userId, 'created' => true];
     }
 
     /**

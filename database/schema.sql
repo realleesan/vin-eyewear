@@ -73,7 +73,20 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- KHÔNG BAO GIỜ lưu mật khẩu thô.
 CREATE TABLE `users` (
     `id`              CHAR(36)     NOT NULL DEFAULT (UUID()),
-    `email`           VARCHAR(255) NOT NULL,
+    /*
+     * EMAIL CHO PHÉP RỖNG. Form đăng ký chỉ hỏi họ tên, số điện thoại và mật
+     * khẩu — số điện thoại vốn đã là một trong hai cách đăng nhập. Email chỉ
+     * có ở tài khoản đăng ký bằng Google (do Google cung cấp) và ở tài khoản
+     * cũ. MySQL cho nhiều dòng NULL trong khoá duy nhất, nên uq_users_email
+     * vẫn chặn được hai người trùng email thật.
+     */
+    `email`           VARCHAR(255) NULL,
+    /*
+     * Trường `sub` của Google, KHÔNG phải email: `sub` không bao giờ đổi và
+     * không bao giờ dùng lại, còn email thì đổi được và địa chỉ đã huỷ có thể
+     * cấp lại cho người khác. Xem migration 2026-08-19-dang-ky-khong-email-va-google.
+     */
+    `google_id`       VARCHAR(64)  NULL,
     `password_hash`   VARCHAR(255) NOT NULL,
     `email_verified`  TINYINT(1)   NOT NULL DEFAULT 0,
     `last_login_at`   DATETIME     NULL,
@@ -81,7 +94,8 @@ CREATE TABLE `users` (
     `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
                                    ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uq_users_email` (`email`)
+    UNIQUE KEY `uq_users_email` (`email`),
+    UNIQUE KEY `uq_users_google` (`google_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Hồ sơ khách hàng — quan hệ 1-1 với users, tách riêng đúng như bản Supabase.

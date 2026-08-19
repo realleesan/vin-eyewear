@@ -101,6 +101,10 @@ return [
     'auth/dang-nhap'    => 'AuthController@login',      // POST
     'auth/dang-ky'      => 'AuthController@register',   // POST
     'auth/dang-xuat'    => 'AuthController@logout',     // POST
+    // Đăng nhập/đăng ký bằng Google. Cả hai là GET: chúng phải chạy khi không
+    // có JavaScript, và địa chỉ callback do Google gọi tới nên không thể là POST.
+    'auth/google'          => 'AuthController@googleStart',
+    'auth/google/callback' => 'AuthController@googleCallback',
     // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": SÁU mục nằm
     // trên CÙNG một đường dẫn, chọn bằng ?muc=... (ho-so · dia-chi · mat-khau
     // · don-hang · do-mat · lich-hen). Không tách thành năm route vì

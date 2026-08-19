@@ -154,19 +154,18 @@ $isRegister = $tab === 'dang-ky';
                                value="<?= e($old['full_name'] ?? '') ?>">
                     </label>
 
-                    <label class="authfield">
-                        <span class="authfield__label">Email</span>
-                        <input class="authfield__input" type="email" name="email" required
-                               autocomplete="email" placeholder="ban@email.com"
-                               value="<?= e($old['email'] ?? '') ?>">
-                    </label>
-
+                    <?php /* KHÔNG CÒN Ô EMAIL. Số điện thoại nay là thứ khách dùng
+                             để đăng nhập, nên nó thành BẮT BUỘC — bỏ cả hai thì
+                             tài khoản tạo xong không ai vào được nữa. Ai muốn
+                             tài khoản có email thì bấm nút Google phía dưới, và
+                             địa chỉ đó do Google xác nhận chứ không phải chữ gõ
+                             vào ô. */ ?>
                     <label class="authfield">
                         <span class="authfield__label">Số điện thoại</span>
-                        <input class="authfield__input" type="tel" name="phone"
+                        <input class="authfield__input" type="tel" name="phone" required
                                autocomplete="tel" placeholder="0912345678"
                                value="<?= e($old['phone'] ?? '') ?>">
-                        <span class="authfield__hint">Không bắt buộc — dùng để đăng nhập thay email.</span>
+                        <span class="authfield__hint">Dùng số này để đăng nhập.</span>
                     </label>
 
                     <label class="authfield">
@@ -202,10 +201,34 @@ $isRegister = $tab === 'dang-ky';
                 <span class="author__line"></span>
             </div>
 
-            <!-- Khoá lại — xem ghi chú số 2 ở đầu file. `disabled` chứ không
-                 phải một liên kết chết: nút xám và không bấm được thì người
-                 dùng biết ngay, còn nút bấm được mà không xảy ra gì thì họ
-                 tưởng trang hỏng. -->
+            <?php
+            /*
+             * NÚT GOOGLE CHỈ SỐNG KHI ĐÃ CẤU HÌNH.
+             *
+             * Chưa điền GOOGLE_CLIENT_ID/SECRET trong .env thì nó vẫn là cái
+             * nút xám "Sắp có" như trước — nút bấm được mà ra trang lỗi của
+             * Google còn tệ hơn nút không bấm được, vì khách không biết lỗi ở
+             * phía họ hay phía site.
+             *
+             * Là thẻ <a> chứ không phải form: bước này chưa đổi gì cả, và nó
+             * phải chạy khi không có JavaScript. Thứ chống giả mạo nằm ở tham
+             * số `state` mà GoogleAuth sinh ra và cất trong session.
+             */
+            $googleOn = GoogleAuth::isConfigured();
+            ?>
+            <?php if ($googleOn): ?>
+            <a class="authbtn authbtn--google"
+               href="/auth/google<?= $redirect !== '' ? '?redirect=' . e(rawurlencode($redirect)) : '' ?>"
+               rel="nofollow">
+                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+                    <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"></path>
+                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"></path>
+                    <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"></path>
+                    <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"></path>
+                </svg>
+                Tiếp tục với Google
+            </a>
+            <?php else: ?>
             <button type="button" class="authbtn authbtn--google" disabled>
                 <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
                     <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"></path>
@@ -216,6 +239,7 @@ $isRegister = $tab === 'dang-ky';
                 Tiếp tục với Google
                 <span class="authbtn__soon">Sắp có</span>
             </button>
+            <?php endif; ?>
 
             <p class="authnote">
                 Bằng việc <?= $isRegister ? 'tạo tài khoản' : 'đăng nhập' ?>, bạn đồng ý với
