@@ -338,8 +338,13 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                 </div>
             </div>
 
-            <!-- GIỎ HÀNG -->
-            <div class="hpop" data-hpop>
+            <!-- GIỎ HÀNG.
+                 data-cart là mốc cho assets/js/buy-flow.js: thêm hàng xong nó
+                 cập nhật huy hiệu và dòng đếm trong bảng xổ mà không tải lại
+                 trang. Nó chỉ thay RUỘT của hai chỗ đó, không thay thẻ
+                 [data-hpop-trigger] — header.js gắn sự kiện thẳng lên thẻ ấy,
+                 thay cả thẻ là mất luôn cái bảng xổ. -->
+            <div class="hpop" data-hpop data-cart>
                 <a href="/gio-hang" class="hpop__trigger header-action"
                    data-hpop-trigger
                    aria-label="<?= e(t('action.cart')) ?>, <?= (int) $cartCount ?>">

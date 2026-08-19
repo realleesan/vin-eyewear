@@ -238,6 +238,11 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
 
         <script src="<?= asset('assets/js/header.js') ?>" defer></script>
         <script src="<?= asset('assets/js/floating.js') ?>" defer></script>
+        <?php /* Mua hàng không tải lại trang. Nạp cho MỌI trang khung đầy đủ
+                 chứ không theo $pageScripts: nút "Thêm vào giỏ" có mặt ở trang
+                 chủ, danh mục, tìm kiếm và chi tiết sản phẩm — cùng chỗ mà
+                 buy-modal.css đã được nạp sẵn ở đầu trang. */ ?>
+        <script src="<?= asset('assets/js/buy-flow.js') ?>" defer></script>
     <?php endif; ?>
 
     <?php

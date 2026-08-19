@@ -686,3 +686,12 @@
 
     .bopt { padding: 14px; }
 }
+
+/* ĐANG GỬI LÊN MÁY CHỦ — assets/js/buy-flow.js đặt lớp này lên <html> trong
+   lúc chờ trả lời. Chỉ đổi con trỏ chuột chứ không khoá màn hình: một lượt
+   đi–về thường chỉ vài trăm mili giây, dựng lớp phủ "đang tải" cho quãng đó
+   thì thứ nhấp nháy còn khó chịu hơn chính việc chờ. */
+.is-buying { cursor: progress; }
+
+.is-buying .bmodal button,
+.is-buying .bmodal a { pointer-events: none; }
