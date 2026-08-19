@@ -83,6 +83,12 @@ MIGRATIONS=(
     "2026-08-16-trang-tai-khoan.sql|table|addresses|"
     "2026-08-16-gio-hang-ma-giam-gia.sql|column|orders|discount"
     "2026-08-16-thanh-toan-chon-co-so.sql|column|orders|store_id"
+    "2026-08-17-trang-thai-thanh-toan.sql|column|orders|payment_status"
+    "2026-08-18-cat-trong-theo-so-do.sql|column|order_items|lens_id"
+    # Cột mốc là `updated_at` chứ KHÔNG phải `slot_lock`: file 2026-08-19 xoá
+    # slot_lock đi, lấy cột đó làm mốc thì sau đấy script tưởng file này chưa
+    # chạy và áp lại từ đầu.
+    "2026-08-18-doi-huy-lich-hen.sql|column|appointments|updated_at"
     "2026-08-19-khoa-khung-gio-cho-mariadb.sql|column|appointments|active_slot"
 )
 
