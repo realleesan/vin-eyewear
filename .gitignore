@@ -1,6 +1,11 @@
 # Cấu hình có mật khẩu DB — mỗi máy một bản, không đưa lên git.
 # Bản mẫu không chứa giá trị thật là .env.example thì VẪN theo dõi.
+#
+# .env.production là bản dành cho hosting, tải tay lên server thành .env.
+# Nó chứa mật khẩu DB thật nên phải chặn RIÊNG: dòng `.env` bên trên chỉ khớp
+# đúng tên đó, không khớp .env.production.
 .env
+.env.production
 !.env.example
 
 screencapture*

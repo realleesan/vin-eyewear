@@ -231,6 +231,30 @@ class BookingController extends BaseController
             $this->fail($result['error'], $data);
         }
 
+        /*
+         * Đặt xong thì đi đâu?
+         *
+         * ĐANG ĐĂNG NHẬP -> sang thẳng "Lịch hẹn của tôi". Lịch vừa đặt đã gắn
+         * user_id nên hiện ngay ở đầu danh sách, kèm nút đổi giờ / huỷ — tức là
+         * khách thấy luôn lịch của mình nằm ở đâu và sửa được bằng cách nào,
+         * thay vì một mã LH… trên trang đặt lịch rồi phải tự mò ra trang tài
+         * khoản. Dùng flash 'account_success' vì đó là ô thông báo mà
+         * auth/profile.php đọc.
+         *
+         * KHÁCH VÃNG LAI -> ở lại /dat-lich như cũ. Không có trang tài khoản
+         * nào để sang, mà /tai-khoan thì AuthMiddleware đá thẳng về trang đăng
+         * nhập — đặt lịch xong bị hỏi mật khẩu là mất hẳn mã lịch hẹn.
+         */
+        if (!empty($data['userId'])) {
+            flash(
+                'account_success',
+                'Đã đặt lịch! Mã lịch hẹn ' . $result['code']
+                . '. Chúng tôi sẽ gọi xác nhận trong 15 phút.'
+            );
+
+            redirect('/tai-khoan?muc=lich-hen');
+        }
+
         flash('booking_success', $result['code']);
         redirect('/dat-lich');
     }
