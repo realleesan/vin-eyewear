@@ -6,9 +6,9 @@
  * Dựng theo khối "LUỒNG MUA HÀNG" của "Vin Eyewear Product.dc.html":
  *
  *   hinh-thuc  Chọn hình thức mua     chỉ mua gọng · hay gọng + cắt tròng
+ *   trong      Chọn loại tròng kính   năm gói trong config/taxonomy.php
  *   khuc-xa    Số đo khúc xạ          dùng hồ sơ đã lưu · hay nhập mới
  *   so-do      Nhập số đo khúc xạ     loại tật + độ hai mắt
- *   trong      Chọn loại tròng kính   năm gói trong config/taxonomy.php
  *   xac-nhan   Xác nhận sản phẩm      số lượng + tổng tiền
  *
  * Mở khi khách bấm "Mua ngay" / "Thêm vào giỏ" một chiếc GỌNG hoặc KÍNH MÁT —
@@ -86,23 +86,29 @@ $titles = [
     'xac-nhan'  => 'Xác nhận sản phẩm',
 ];
 
-/* Bước lùi của từng bước. Bản thiết kế cho "xác nhận" lùi về "chọn tròng" khi
-   mua kèm tròng, và về "hình thức" khi mua trần — cùng một nút, hai đích, vì
-   hai đường đi khác nhau dẫn tới nó. */
+/*
+ * Bước lùi của từng bước — PHẢI ĐI NGƯỢC ĐÚNG THỨ TỰ CỦA CartController::buyStep.
+ *
+ *   chỉ mua gọng:   hình thức ──────────────────────────────► xác nhận
+ *   cắt tròng:      hình thức → chọn tròng → khúc xạ [→ số đo] → xác nhận
+ *
+ * Chọn tròng đứng TRƯỚC phần số đo, theo "Vin Eyewear.dc.html" — lý do ghi ở
+ * nhánh 'hinh-thuc' trong buyStep().
+ *
+ * Mặt hàng không có gói tròng (tròng rời, kính áp tròng) không có bước "chọn
+ * tròng", nên đường lùi của bước khúc xạ rẽ theo $takesPkg.
+ */
 $rxPrev = $saved !== null ? 'khuc-xa' : 'so-do';
 
 $prev = [
-    'khuc-xa'  => 'hinh-thuc',
+    'trong'    => 'hinh-thuc',
+    'khuc-xa'  => $takesPkg ? 'trong' : 'hinh-thuc',
     'so-do'    => 'khuc-xa',
-    'trong'    => $rxPrev,
     /* HAI ĐÍCH, một nút — vì hai đường đi khác nhau cùng dẫn tới bước này.
-       Mua kèm tròng thì lùi về bước ngay trước trên nhánh đó (chọn tròng, hoặc
-       số đo với mặt hàng không có gói tròng). Mua trần thì cả nhánh chỉ có một
-       bước, nên lùi thẳng về "Chọn hình thức mua".
-
-       Trước đây dòng này chỉ có nhánh theo số đo, vì nhánh mua trần kết thúc
-       ngay ở bước 1 và không bao giờ tới đây. Nay nó có tới. */
-    'xac-nhan' => $intent['mode'] === 'combo' ? ($takesPkg ? 'trong' : $rxPrev) : 'hinh-thuc',
+       Mua kèm tròng thì lùi về màn số đo vừa qua ('khuc-xa' nếu khách dùng hồ
+       sơ đã lưu, 'so-do' nếu tự gõ). Mua trần thì cả nhánh chỉ có một bước,
+       nên lùi thẳng về "Chọn hình thức mua". */
+    'xac-nhan' => $intent['mode'] === 'combo' ? $rxPrev : 'hinh-thuc',
 ][$step] ?? null;
 
 /* Đóng hộp thoại = về chính trang này, bỏ hai tham số của nó. Không dùng

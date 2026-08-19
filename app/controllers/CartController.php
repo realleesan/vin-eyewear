@@ -371,9 +371,9 @@ class CartController extends BaseController
      * NĂM BƯỚC, MỖI BƯỚC MỘT LẦN GỬI FORM
      *
      *   (không có)  Chọn hình thức mua      chỉ gọng · hay gọng + cắt tròng
+     *   trong       Chọn loại tròng kính    năm gói trong config/taxonomy.php
      *   khuc-xa     Số đo khúc xạ           dùng hồ sơ đã lưu · hay nhập mới
      *   so-do       Nhập số đo khúc xạ      loại tật + độ hai mắt
-     *   trong       Chọn loại tròng kính    năm gói trong config/taxonomy.php
      *   xac-nhan    Xác nhận sản phẩm       số lượng + tổng tiền
      *
      * Dựng theo luồng của "Vin Eyewear Product.dc.html". Bản thiết kế giữ cả
@@ -430,7 +430,25 @@ class CartController extends BaseController
                     $intent['rx_type'] = null;
                 }
 
-                $next = $combo ? 'khuc-xa' : 'xac-nhan';
+                /*
+                 * THỨ TỰ: CHỌN TRÒNG TRƯỚC, HỎI ĐỘ SAU.
+                 *
+                 * Bản thiết kế "Vin Eyewear.dc.html" xếp thế: bấm "Mua gọng +
+                 * cắt tròng" là ra ngay bảng năm gói tròng, chọn xong mới tới
+                 * màn nhập độ. Bản trước hỏi độ trước rồi mới cho chọn tròng.
+                 *
+                 * Đổi theo bản thiết kế vì nó hợp với thứ tự khách nghĩ: gói
+                 * tròng là thứ có GIÁ và có thể so sánh, còn số đo là dữ liệu
+                 * phải tra đơn thuốc mới điền được. Bắt người ta đi lấy đơn
+                 * thuốc trước khi biết mình sắp trả bao nhiêu là đặt câu hỏi
+                 * khó trước câu hỏi dễ.
+                 *
+                 * Mặt hàng KHÔNG có gói tròng (tròng rời, kính áp tròng) thì
+                 * không có bảng nào để chọn — đi thẳng sang phần số đo.
+                 */
+                $next = !$combo
+                    ? 'xac-nhan'
+                    : (LensModel::takesLensPackage($product) ? 'trong' : 'khuc-xa');
                 break;
 
             // ── Bước 2: dùng hồ sơ khúc xạ đã lưu ────────────────────────
@@ -442,7 +460,8 @@ class CartController extends BaseController
 
                 $intent['rx']      = LensModel::formatSavedRx($saved);
                 $intent['rx_type'] = null;
-                $next = LensModel::takesLensPackage($product) ? 'trong' : 'xac-nhan';
+                // Gói tròng đã chọn ở bước trước rồi — xem ghi chú ở 'hinh-thuc'.
+                $next = 'xac-nhan';
                 break;
 
             // ── Bước 3: số đo gõ tay ─────────────────────────────────────
@@ -454,8 +473,7 @@ class CartController extends BaseController
                     $_POST['od'] ?? null,
                     $_POST['os'] ?? null
                 );
-                // Mặt hàng đã là tròng thì không chọn thêm gói tròng nào nữa
-                $next = LensModel::takesLensPackage($product) ? 'trong' : 'xac-nhan';
+                $next = 'xac-nhan';
                 break;
 
             // ── Bước 4: chọn gói tròng ───────────────────────────────────
@@ -468,7 +486,8 @@ class CartController extends BaseController
                 }
 
                 $intent['lens_id'] = $lens['id'];
-                $next = 'xac-nhan';
+                // Chọn tròng xong mới tới số đo — xem ghi chú ở 'hinh-thuc'.
+                $next = 'khuc-xa';
                 break;
 
             // ── Bước 5: chỉnh số lượng ───────────────────────────────────
