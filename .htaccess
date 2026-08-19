@@ -56,7 +56,22 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} !^/assets/
-    RewriteRule ^(.*)$ index.php?q=$1 [L,QSA]
+    # KHÔNG nhét đường dẫn vào tham số nào cả.
+    #
+    # Bản trước viết `index.php?q=$1`, mà `q` lại đúng là tên ô TÌM KIẾM của
+    # site — nên mọi request đều tự mang theo một từ khoá tìm kiếm bằng chính
+    # đường dẫn của nó, và bốn chỗ đọc $_GET['q'] đều hiểu nhầm:
+    #
+    #   /san-pham            -> lọc danh sách theo chữ "san-pham"  -> LUÔN RỖNG
+    #   /quan-tri/san-pham   -> danh sách sản phẩm khu quản trị cũng rỗng
+    #   /tim-kiem            -> tìm chữ "tim-kiem" thay vì hiện trạng thái trống
+    #   mọi trang            -> ô tìm kiếm trên header hiện sẵn tên đường dẫn
+    #
+    # Bỏ hẳn tham số chứ không đổi tên nó: Router đọc đường dẫn từ REQUEST_URI
+    # (core/Router.php), vốn được mod_rewrite giữ nguyên qua chuyển hướng nội
+    # bộ, nên không có ai cần tới nó. Thêm một tham số không ai đọc thì sớm
+    # muộn cũng lại va vào tên thật của một ô nhập nào đó.
+    RewriteRule ^(.*)$ index.php [L,QSA]
 </IfModule>
 
 # ----------------------------------------------------------------------------
