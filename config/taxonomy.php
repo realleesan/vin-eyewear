@@ -18,15 +18,25 @@
 
 return [
 
-    // Lọc theo cột frame_shape của bảng products
+    /*
+     * Lọc theo dáng gọng.
+     *
+     * Giá trị là KHOÁ CHUẨN của ProductTaxonomy, không phải chữ trong cột
+     * `frame_shape`: kho ghi "Vuông (Square)", "Square / Vuông" và "Square"
+     * lẫn lộn, mà cả ba đều quy về 'square'.
+     *
+     * Chữ hoa vẫn chạy ('Square' cũng ra 'square' sau khi slug hoá), nên các
+     * liên kết cũ đã có người lưu không gãy — nhưng viết thẳng khoá chuẩn ở
+     * đây thì đọc file này là biết ngay bộ lọc nhận cái gì.
+     */
     'frame_styles' => [
-        ['label' => 'Vuông (Square)',     'search' => ['shape' => 'Square']],
-        ['label' => 'Tròn (Round)',       'search' => ['shape' => 'Round']],
-        ['label' => 'Mắt mèo (Cat-eye)',  'search' => ['shape' => 'Cat-eye']],
-        ['label' => 'Phi công (Aviator)', 'search' => ['shape' => 'Aviator']],
-        ['label' => 'Hình học (Geometric)', 'search' => ['shape' => 'Geometric']],
-        ['label' => 'Oval',               'search' => ['shape' => 'Oval']],
-        ['label' => 'Wayfarer',           'search' => ['shape' => 'Wayfarer']],
+        ['label' => 'Oval',                 'search' => ['shape' => 'oval']],
+        ['label' => 'Vuông (Square)',       'search' => ['shape' => 'square']],
+        ['label' => 'Mắt mèo (Cat-eye)',    'search' => ['shape' => 'cat-eye']],
+        ['label' => 'Chữ nhật (Rectangle)', 'search' => ['shape' => 'rectangle']],
+        ['label' => 'Tròn (Round)',         'search' => ['shape' => 'round']],
+        ['label' => 'Phi công (Aviator)',   'search' => ['shape' => 'aviator']],
+        ['label' => 'Hình học (Geometric)', 'search' => ['shape' => 'geometric']],
     ],
 
     // Lọc ĐÚNG CỘT `material`, không dùng tìm kiếm toàn văn.
@@ -36,30 +46,37 @@ return [
     // brand và sku, KHÔNG tìm trong material. Nên cả năm liên kết này luôn
     // trả về 0 sản phẩm, ở cả mega menu lẫn mọi chỗ khác gọi tới chúng.
     //
-    // Giá trị phải khớp NGUYÊN VĂN giá trị trong cột (buildFilter dùng IN,
-    // không phải LIKE). Đối chiếu bằng ProductModel::facets()['materials'].
+    // Giá trị nay là KHOÁ CHUẨN của ProductTaxonomy (app/services), không còn
+    // là chữ nguyên văn trong cột: kho ghi "Kim loại bạc / Titanium" thì khoá
+    // 'titanium' vẫn lọc ra nó, còn so nguyên văn thì không.
+    //
+    // ĐÃ BỎ 'Thép không gỉ' (Stainless Steel): không có sản phẩm nào, và cũng
+    // không phải chất liệu cửa hàng nhập. Một liên kết dẫn tới lưới rỗng tệ
+    // hơn là không có nó.
     'materials' => [
-        ['label' => 'Titanium',        'search' => ['material' => 'Titanium']],
-        ['label' => 'Acetate',         'search' => ['material' => 'Acetate']],
-        ['label' => 'TR90',            'search' => ['material' => 'TR90']],
-        ['label' => 'Thép không gỉ',   'search' => ['material' => 'Stainless Steel']],
-        ['label' => 'Ultem',           'search' => ['material' => 'Ultem']],
+        ['label' => 'Acetate',        'search' => ['material' => 'acetate']],
+        ['label' => 'Kim loại',       'search' => ['material' => 'metal']],
+        ['label' => 'Titanium',       'search' => ['material' => 'titanium']],
+        ['label' => 'Nylon',          'search' => ['material' => 'nylon']],
     ],
 
-    // Tính năng tròng KHÔNG có cột riêng trong bảng products, nên đây là chỗ
-    // duy nhất thật sự cần tìm kiếm toàn văn (q tìm trong name/brand/sku).
+    // Tính năng tròng — nay là một NHÓM LỌC THẬT (?lens[]=...), không còn phải
+    // mượn ô tìm kiếm.
     //
-    // TỪ KHOÁ TIẾNG VIỆT, không phải tiếng Anh. Bản trước gõ 'blue',
-    // 'photochromic', 'index' — mà tên sản phẩm trong kho viết tiếng Việt
-    // ("Tròng kính chống ánh sáng xanh 1.61"), nên không liên kết nào khớp.
-    // Collation utf8mb4_unicode_ci bỏ qua cả hoa/thường lẫn dấu, nên chuỗi
-    // tiếng Việt ở đây khớp được cả khi tên hàng viết không dấu.
+    // Trước đây năm mục này lọc bằng 'q', mà q chỉ tìm trong name/brand/sku:
+    // một gọng ghi "Chống ánh sáng xanh" trong `specs` không bao giờ khớp, nên
+    // cả cột "Tròng kính" của mega menu dẫn tới lưới gần rỗng. ProductTaxonomy
+    // đọc tính năng ra từ specs + mô tả + tên, nên khoá dưới đây khớp đúng thứ
+    // người dùng trông đợi.
+    //
+    // Khoá phải có trong ProductTaxonomy::LENS — thêm mục ở đây mà không thêm
+    // ở đó thì liên kết lọc ra 0 sản phẩm.
     'lens_functions' => [
-        ['label' => 'Chống ánh sáng xanh',        'search' => ['q' => 'ánh sáng xanh']],
-        ['label' => 'Đổi màu (Photochromic)',     'search' => ['q' => 'đổi màu']],
-        ['label' => 'Chiết suất cao 1.56 – 1.74', 'search' => ['q' => 'chiết suất']],
-        ['label' => 'Chống chói (Anti-glare)',    'search' => ['q' => 'chống chói']],
-        ['label' => 'Đa tròng (Progressive)',     'search' => ['q' => 'đa tròng']],
+        ['label' => 'Chống ánh sáng xanh',     'search' => ['lens' => 'blue-light']],
+        ['label' => 'Chống UV (UVA/UVB)',      'search' => ['lens' => 'uv']],
+        ['label' => 'Đổi màu (Photochromic)',  'search' => ['lens' => 'photochromic']],
+        ['label' => 'Phân cực (Polarized)',    'search' => ['lens' => 'polarized']],
+        ['label' => 'Lắp được tròng thuốc',    'search' => ['lens' => 'rx']],
     ],
 
     // Khớp cột gender của bảng products
@@ -70,10 +87,18 @@ return [
         ['label' => 'Trẻ em',  'search' => ['gender' => 'kids']],
     ],
 
-    'top_brands' => [
-        'Ray-Ban', 'Essilor', 'Zeiss', 'Nikon',
-        'Chemi', 'Oakley', 'Gucci', 'Lindberg',
-    ],
+    /*
+     * 'top_brands' đã bỏ khỏi đây.
+     *
+     * Đó là một danh sách GÕ CỨNG tám cái tên — Essilor, Zeiss, Nikon, Chemi,
+     * Oakley, Lindberg — mà cửa hàng không bán một sản phẩm nào; Ray-Ban là
+     * cái tên duy nhất còn trong kho. Không view nào đọc nó nữa (khối logo
+     * thương hiệu ở trang chủ đã gỡ), nên nó chỉ còn là một danh sách chờ ai
+     * đó dùng lại rồi dựng ra một bộ lọc trỏ vào chỗ trống.
+     *
+     * Cần danh sách thương hiệu thì lấy từ DỮ LIỆU: cột lọc trang /san-pham
+     * dựng nó bằng ProductFacets, luôn khớp hàng đang bán và kèm số lượng.
+     */
 
     // Gói tròng kính khách cắt kèm khi mua gọng — dùng ở trang chi tiết
     // sản phẩm và bước thanh toán.

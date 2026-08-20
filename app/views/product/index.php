@@ -9,33 +9,36 @@
  *   → hai cột: cột lọc 280px dính theo cuộn | lưới sản phẩm 3 cột
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * KHÁC BẢN THIẾT KẾ: LỌC BẰNG LIÊN KẾT, KHÔNG BẰNG JAVASCRIPT
+ * LỌC BẰNG LIÊN KẾT, KHÔNG BẰNG JAVASCRIPT
  *
- * Bản thiết kế giữ trạng thái lọc trong `this.state` và lọc ngay trong trình
- * duyệt. Ở đây mỗi huy hiệu lọc là một <a> trỏ tới chính trang này với query
- * string đã thêm/bớt giá trị đó:
+ * Mỗi huy hiệu lọc là một <a> trỏ tới chính trang này với query string đã
+ * thêm/bớt giá trị đó:
  *   - Không có JavaScript vẫn lọc được.
- *   - Mỗi trạng thái lọc là một URL chia sẻ được và quay lại được bằng nút Back.
- *   - Server chỉ trả về đúng 12 sản phẩm của trang, không đẩy cả kho về máy khách.
+ *   - Mỗi trạng thái lọc là một URL chia sẻ được và quay lại được bằng Back.
+ *   - Server chỉ trả về đúng 12 sản phẩm của trang.
  *
  * Nhìn thì không phân biệt được: <a> ở đây mang đúng bộ style của <button>
  * trong bản thiết kế.
+ *
  * ─────────────────────────────────────────────────────────────────────────────
+ * KHÔNG CÒN DANH SÁCH LỰA CHỌN NÀO GÕ TRONG FILE NÀY
+ *
+ * Bảy nhóm lọc đều nhận nguyên mảng $groups[...] mà ProductModel::catalog()
+ * dựng từ hàng đang bán, mỗi mục đã kèm nhãn và số đếm. View chỉ còn việc vẽ.
+ * Kho thêm một dáng gọng là cột lọc có thêm huy hiệu; hãng nào bán hết hàng
+ * thì huy hiệu của hãng đó tự biến mất — không phải sửa file này.
  */
 
 /**
- * Nhãn tiếng Việt cho cột `gender` — DB lưu male/female/unisex/kids.
+ * Trạng thái lọc dưới dạng THAM SỐ URL.
  *
- * Thứ tự các khoá ở đây cũng là thứ tự huy hiệu hiện ra. Facet lấy từ DB
- * sắp theo bảng chữ cái nên nó cho ra "female, male, unisex" -> "Nữ, Nam,
- * Unisex"; bản thiết kế xếp "Nam, Nữ, Unisex".
+ * Khác $filters ở đúng một chỗ: 'price' ở đây là một SỐ (hoặc null) chứ không
+ * phải mảng. Trong model khoảng giá là một nhóm như mọi nhóm khác để dùng
+ * chung phép đếm động, nhưng trên URL nó vẫn là ?price=2 — đổi thành price[]=2
+ * là làm hỏng mọi liên kết đã có người lưu.
  */
-$genderLabels = ['male' => 'Nam', 'female' => 'Nữ', 'unisex' => 'Unisex', 'kids' => 'Trẻ em'];
-
-// Giữ đúng thứ tự của $genderLabels, và giữ lại cả giá trị lạ chưa có nhãn
-// (nếu ai đó thêm gender mới vào DB) bằng cách nối chúng vào cuối.
-$genderFacet = array_values(array_intersect(array_keys($genderLabels), $facets['genders']));
-$genderFacet = array_merge($genderFacet, array_diff($facets['genders'], $genderFacet));
+$state = $filters;
+$state['price'] = $priceIndex;
 
 /**
  * Dựng URL giữ nguyên bộ lọc hiện tại, chỉ đổi/bỏ vài tham số.
@@ -44,10 +47,10 @@ $genderFacet = array_merge($genderFacet, array_diff($facets['genders'], $genderF
  * đầu tiên ("Dưới 2 triệu"), empty(0) là true nên nó sẽ bị vứt khỏi URL và ô
  * đó không bao giờ chọn được.
  */
-$buildUrl = static function (array $patch = []) use ($filters): string {
+$buildUrl = static function (array $patch = []) use ($state): string {
     $clean = [];
 
-    foreach (array_merge($filters, $patch) as $key => $value) {
+    foreach (array_merge($state, $patch) as $key => $value) {
         if (is_array($value)) {
             if ($value !== []) {
                 $clean[$key] = array_values($value);
@@ -71,8 +74,8 @@ $buildUrl = static function (array $patch = []) use ($filters): string {
 };
 
 /** URL bật/tắt một giá trị trong nhóm lọc chọn-nhiều. Luôn về trang 1. */
-$toggleUrl = static function (string $key, string $value) use ($filters, $buildUrl): string {
-    $current = $filters[$key];
+$toggleUrl = static function (string $key, string $value) use ($state, $buildUrl): string {
+    $current = $state[$key] ?? [];
 
     $next = in_array($value, $current, true)
         ? array_values(array_diff($current, [$value]))
@@ -82,14 +85,35 @@ $toggleUrl = static function (string $key, string $value) use ($filters, $buildU
 };
 
 /**
+ * Bộ tham số đưa MỌI nhóm lọc về rỗng — dùng cho "Xoá tất cả".
+ *
+ * Dựng bằng vòng lặp qua ProductFacets::GROUPS chứ không liệt kê tay: thêm một
+ * nhóm lọc mới mà quên thêm vào đây thì "Xoá tất cả" xoá gần hết, chừa lại
+ * đúng nhóm mới — kiểu lỗi không ai để ý cho tới lúc có người khiếu nại rằng
+ * lưới vẫn trống sau khi đã xoá bộ lọc.
+ *
+ * KHÔNG đụng tới 'category' và 'q': danh mục là CHÍNH trang này (tiêu đề trên
+ * kia đọc từ nó), xoá nó đi thì "xoá tất cả" hoá ra chuyển sang trang khác.
+ * 'bq' thì có xoá — nó là chữ đang gõ trong ô tìm thương hiệu, để lại thì
+ * danh sách hãng vẫn cụt sau khi đã xoá bộ lọc.
+ */
+$resetPatch = ['bq' => null, 'page' => null];
+
+foreach (ProductFacets::GROUPS as $group) {
+    $resetPatch[$group] = [];
+}
+
+$resetPatch['price'] = null;
+
+/**
  * In các <input type="hidden"> mang bộ lọc hiện tại qua một form GET.
  *
  * Hai form trên trang (ô sắp xếp, ô tìm thương hiệu) chỉ đổi ĐÚNG MỘT tham
  * số. Không mang phần còn lại theo thì bấm vào là mất sạch bộ lọc đang bật mà
  * chẳng có gì báo.
  */
-$hiddenFilters = static function (array $except = []) use ($filters): void {
-    foreach ($filters as $key => $value) {
+$hiddenFilters = static function (array $except = []) use ($state): void {
+    foreach ($state as $key => $value) {
         if (in_array($key, $except, true)) {
             continue;
         }
@@ -109,57 +133,167 @@ $hiddenFilters = static function (array $except = []) use ($filters): void {
     }
 };
 
-/** Một nhóm huy hiệu lọc (Dáng gọng · Chất liệu · Đối tượng). */
-$chipGroup = static function (string $key, string $legend, array $options, array $labels = []) use ($filters, $toggleUrl): void {
-    if ($options === []) {
+/**
+ * Một nhóm huy hiệu (Dáng gọng · Chất liệu · Tính năng tròng · Đối tượng).
+ *
+ * $extra là một nhóm PHỤ vẽ chung hàng huy hiệu — chỉ dùng cho chip "Chất
+ * liệu tái chế / bio" nằm nối đuôi nhóm Chất liệu. Nó thuộc một nhóm lọc
+ * riêng (?eco[]=recycled) nhưng người dùng đọc nó như một chất liệu nữa, nên
+ * tách ra thành khối có tiêu đề riêng là thừa một dòng chữ hoa.
+ */
+$chipGroup = static function (string $key, string $legend, array $options, ?array $extra = null) use ($toggleUrl): void {
+    $extraKey     = $extra['key']     ?? '';
+    $extraOptions = $extra['options'] ?? [];
+
+    if ($options === [] && $extraOptions === []) {
         return;
     }
     ?>
     <div class="pfacet">
         <p class="pfacet__legend"><?= e($legend) ?></p>
         <div class="pfacet__chips">
-            <?php foreach ($options as $value): ?>
-                <?php $on = in_array($value, $filters[$key], true); ?>
-                <?php /* aria-current chứ không phải aria-pressed: aria-pressed
-                         chỉ hợp lệ trên nút, còn đây là <a>. Kèm một câu chỉ
-                         trình đọc màn hình nghe được — không có nó thì trạng
-                         thái "đang chọn" chỉ nằm ở màu nền, người không nhìn
-                         thấy màu sẽ nghe hai huy hiệu bật và tắt giống hệt nhau. */ ?>
-                <a class="pchip<?= $on ? ' is-on' : '' ?>"
-                   href="<?= e($toggleUrl($key, (string) $value)) ?>"
-                   <?= $on ? 'aria-current="true"' : '' ?>
-                   rel="nofollow"><?= e($labels[$value] ?? $value) ?><?php
-                    if ($on): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif;
-                ?></a>
+            <?php foreach ([[$key, $options], [$extraKey, $extraOptions]] as [$group, $list]): ?>
+                <?php foreach ($list as $opt): ?>
+                    <?php
+                    /*
+                     * Mục lọc ra 0 sản phẩm: vẫn in nhưng bỏ liên kết và làm
+                     * mờ. Giấu hẳn thì cột lọc co giãn sau mỗi cú bấm và người
+                     * dùng mất dấu tiêu chí vừa nhìn thấy ở đó một giây trước.
+                     *
+                     * Mục ĐANG BẬT luôn còn liên kết dù đếm ra bao nhiêu —
+                     * nếu không sẽ không còn cách nào tắt nó đi.
+                     */
+                    $dead = $opt['count'] === 0 && !$opt['on'];
+                    ?>
+                    <?php if ($dead): ?>
+                        <span class="pchip is-off" aria-disabled="true"><?= e($opt['label']) ?><span class="pchip__n">0</span></span>
+                    <?php else: ?>
+                        <?php /* aria-current chứ không phải aria-pressed: aria-pressed
+                                 chỉ hợp lệ trên nút, còn đây là <a>. Kèm một câu chỉ
+                                 trình đọc màn hình nghe được — không có nó thì trạng
+                                 thái "đang chọn" chỉ nằm ở màu nền, người không nhìn
+                                 thấy màu sẽ nghe hai huy hiệu bật và tắt giống hệt nhau. */ ?>
+                        <a class="pchip<?= $opt['on'] ? ' is-on' : '' ?>"
+                           href="<?= e($toggleUrl($group, $opt['key'])) ?>"
+                           <?= $opt['on'] ? 'aria-current="true"' : '' ?>
+                           rel="nofollow"><?= e($opt['label']) ?><span
+                               class="pchip__n"><span class="sr-only"> — </span><?= (int) $opt['count'] ?><span class="sr-only"> sản phẩm</span></span><?php
+                            if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif;
+                        ?></a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
             <?php endforeach; ?>
         </div>
     </div>
     <?php
 };
 
-$hasFacetFilter = $filters['brand'] || $filters['shape'] || $filters['material']
-                || $filters['gender'] || $filters['price'] !== null;
+/**
+ * Một nhóm dạng danh sách tick (Thương hiệu · Bộ sưu tập hợp tác · Bộ sưu tập).
+ *
+ * $search = true thì có thêm ô "Tìm thương hiệu" phía trên.
+ */
+$checkGroup = static function (string $key, string $legend, array $options, bool $search = false)
+    use ($state, $filters, $hiddenFilters, $toggleUrl): void {
+    if ($options === []) {
+        return;
+    }
+
+    /*
+     * Lọc danh sách theo chữ đang gõ trong ô tìm — KHÔNG PHÂN BIỆT HOA THƯỜNG
+     * LẪN DẤU, nên gõ "gioi" ra "Giới", gõ "SAINT" ra "Saint Laurent".
+     *
+     * Hai phép so chứ không một: utf8Lower() giữ dấu (khớp người gõ đủ dấu),
+     * slugify() bỏ dấu (khớp người gõ không dấu — cách gõ nhanh phổ biến hơn
+     * hẳn trên điện thoại).
+     *
+     * utf8Lower() chứ không mb_strtolower(): dự án cố ý KHÔNG phụ thuộc
+     * extension mbstring (xem chú thích ở VN_ACCENT_MAP trong core/helpers.php),
+     * mà máy dev đang thiếu đúng extension đó — mb_strtolower() làm cả trang
+     * này chết với "Call to undefined function", không chỉ hỏng bộ lọc.
+     */
+    $needle = $search ? trim($filters['bq']) : '';
+
+    if ($needle !== '') {
+        $lower = utf8Lower($needle);
+        $plain = slugify($needle);
+
+        $options = array_values(array_filter($options, static function (array $o) use ($lower, $plain) {
+            return str_contains(utf8Lower($o['label']), $lower)
+                || ($plain !== '' && str_contains(slugify($o['label']), $plain));
+        }));
+    }
+
+    $legendId = 'lg-' . $key;
+    ?>
+    <div class="pfacet">
+        <p class="pfacet__legend" id="<?= e($legendId) ?>"><?= e($legend) ?></p>
+
+        <?php if ($search): ?>
+            <form class="pfacet__search" method="get" action="/san-pham" data-brand-filter>
+                <?php $hiddenFilters(['bq', 'page']); ?>
+                <label class="sr-only" for="f-bq">Tìm trong danh sách thương hiệu</label>
+                <input class="pfacet__input" type="text" id="f-bq" name="bq"
+                       value="<?= e($filters['bq']) ?>" placeholder="Tìm thương hiệu"
+                       autocomplete="off">
+                <button type="submit" class="pfacet__go">Lọc</button>
+            </form>
+        <?php endif; ?>
+
+        <div class="pfacet__list" role="group" aria-labelledby="<?= e($legendId) ?>">
+            <?php foreach ($options as $opt): ?>
+                <?php $dead = $opt['count'] === 0 && !$opt['on']; ?>
+                <?php if ($dead): ?>
+                    <span class="pcheck is-off" aria-disabled="true"
+                          <?php if ($search): ?>data-brand="<?= e(utf8Lower($opt['label'])) ?>"
+                          data-brand-plain="<?= e(slugify($opt['label'])) ?>"<?php endif; ?>>
+                        <span class="pcheck__box" aria-hidden="true"></span>
+                        <span class="pcheck__label"><?= e($opt['label']) ?></span>
+                        <span class="pcheck__count">0</span>
+                    </span>
+                <?php else: ?>
+                    <a class="pcheck<?= $opt['on'] ? ' is-on' : '' ?>"
+                       href="<?= e($toggleUrl($key, $opt['key'])) ?>"
+                       <?= $opt['on'] ? 'aria-current="true"' : '' ?>
+                       rel="nofollow"
+                       <?php /* Hai thuộc tính cho hai cách gõ, khớp đúng hai phép so
+                                ở trên và ở assets/js/catalog.js. GIỮ NGUYÊN DẤU ở
+                                data-brand — nó so với String.toLowerCase() bên JS,
+                                vốn không bỏ dấu. */ ?>
+                       <?php if ($search): ?>data-brand="<?= e(utf8Lower($opt['label'])) ?>"
+                       data-brand-plain="<?= e(slugify($opt['label'])) ?>"<?php endif; ?>>
+                        <span class="pcheck__box" aria-hidden="true"><?= $opt['on'] ? '✓' : '' ?></span>
+                        <span class="pcheck__label"><?= e($opt['label']) ?></span>
+                        <span class="pcheck__count">
+                            <span class="sr-only">có </span><?= (int) $opt['count'] ?><span class="sr-only"> sản phẩm</span>
+                        </span>
+                        <?php if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif; ?>
+                    </a>
+                <?php endif; ?>
+            <?php endforeach; ?>
+
+            <?php if ($options === []): ?>
+                <p class="pfacet__none">Không có thương hiệu nào khớp.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php
+};
 
 /*
- * Danh sách thương hiệu đã lọc theo ô "Tìm thương hiệu".
+ * Có tiêu chí nào đang bật không — quyết định "Xoá tất cả" sáng hay mờ.
  *
- * utf8Lower() ở CẢ HAI VẾ để gõ thường vẫn khớp tên viết hoa — thay cho
- * mb_stripos() trước đây. Đổi vì dự án cố ý KHÔNG phụ thuộc extension
- * mbstring (xem chú thích ở VN_ACCENT_MAP trong core/helpers.php), mà máy dev
- * đang thiếu đúng extension đó: mb_stripos() làm cả trang này chết với
- * "Call to undefined function", không chỉ hỏng bộ lọc.
- *
- * Hạ chữ thường một lần cho từ khoá, không hạ lại trong mỗi vòng lặp.
+ * Dùng lại $activeCount của controller thay vì cộng lại một lần nữa ở đây:
+ * hai phép đếm song song là hai chỗ để quên khi thêm nhóm lọc mới. Trừ đi
+ * danh mục vì "Xoá tất cả" cố ý không đụng tới nó.
  */
-$brandList = $facets['brands'];
-if ($filters['bq'] !== '') {
-    $needle = utf8Lower($filters['bq']);
+$hasFacetFilter = ($activeCount - ($filters['category'] !== '' ? 1 : 0)) > 0;
 
-    $brandList = array_values(array_filter(
-        $brandList,
-        static fn ($b) => str_contains(utf8Lower((string) $b), $needle)
-    ));
-}
+/* Tách bộ sưu tập hợp tác khỏi bộ sưu tập theo mùa — hai nhóm khác nhau về
+   bản chất (một là hàng bắt tay với nhà thiết kế, một là chủ đề bán theo mùa)
+   nên đứng chung một danh sách thì không đọc ra được cái nào là cái nào. */
+$collabOptions     = $groups['collab'];
+$collectionOptions = $groups['collection'];
 ?>
 
 <?php
@@ -188,98 +322,95 @@ partial('_layout/page-head', [
              CỘT LỌC
              <details> để màn hình hẹp thu gọn được mà không cần
              JavaScript; từ 1101px CSS ép luôn mở và bỏ nút bấm.
+             Dưới 1101px, CSS biến .cfilter__panel thành bottom-sheet.
              ──────────────────────────────────────────────────── -->
-        <details class="cfilter" <?= $activeCount > 0 ? 'open' : '' ?>>
+        <details class="cfilter" data-filter-sheet>
             <summary class="cfilter__toggle">
                 <?= icon('filter', '', 16) ?>
                 Bộ lọc
                 <?php if ($activeCount > 0): ?>
-                    <span class="cfilter__count"><?= $activeCount ?></span>
+                    <span class="cfilter__count"><?= $activeCount ?><span class="sr-only"> tiêu chí đang bật</span></span>
                 <?php endif; ?>
             </summary>
+
+            <?php /* Nền mờ sau bottom-sheet. Bấm vào là đóng — nhưng đó là
+                     việc của JavaScript; không có JS thì nó chỉ là một lớp
+                     màu, và người dùng đóng sheet bằng chính nút "Bộ lọc"
+                     phía trên. Ẩn hoàn toàn ở desktop. */ ?>
+            <div class="cfilter__scrim" data-sheet-close hidden></div>
 
             <div class="cfilter__panel">
 
                 <div class="cfilter__head">
                     <p class="cfilter__title">Bộ lọc</p>
-                    <?php /* Giữ nguyên danh mục và từ khoá: danh mục là CHÍNH
-                             trang này (tiêu đề trên kia đọc từ nó), xoá nó đi
-                             thì "xoá tất cả" hoá ra chuyển sang trang khác.
-
-                             Chưa lọc gì thì làm mờ và tắt hẳn thay vì giấu đi:
+                    <?php /* Chưa lọc gì thì làm mờ và tắt hẳn thay vì giấu đi:
                              bản thiết kế luôn vẽ nút này, mà giấu rồi hiện lại
                              sẽ khiến hàng tiêu đề nhảy chiều cao mỗi lần bấm
                              tiêu chí lọc đầu tiên. */ ?>
                     <?php if ($hasFacetFilter): ?>
-                        <a class="cfilter__clear" rel="nofollow" href="<?= e($buildUrl([
-                            'brand' => [], 'shape' => [], 'material' => [],
-                            'gender' => [], 'price' => null, 'page' => null,
-                        ])) ?>">Xoá tất cả</a>
+                        <a class="cfilter__clear" rel="nofollow" href="<?= e($buildUrl($resetPatch)) ?>">Xoá tất cả</a>
                     <?php else: ?>
                         <span class="cfilter__clear is-off" aria-hidden="true">Xoá tất cả</span>
                     <?php endif; ?>
                 </div>
 
-                <?php $chipGroup('shape',    'Dáng gọng', $facets['shapes']); ?>
-                <?php $chipGroup('material', 'Chất liệu', $facets['materials']); ?>
+                <?php $chipGroup('shape', 'Dáng gọng', $groups['shape']); ?>
 
-                <!-- Thương hiệu — ô tìm + danh sách tick -->
-                <div class="pfacet">
-                    <p class="pfacet__legend" id="lg-brand">Thương hiệu</p>
+                <?php $chipGroup('material', 'Chất liệu', $groups['material'], [
+                    'key'     => 'eco',
+                    'options' => $groups['eco'],
+                ]); ?>
 
-                    <form class="pfacet__search" method="get" action="/san-pham" data-brand-filter>
-                        <?php $hiddenFilters(['bq', 'page']); ?>
-                        <label class="sr-only" for="f-bq">Tìm trong danh sách thương hiệu</label>
-                        <input class="pfacet__input" type="text" id="f-bq" name="bq"
-                               value="<?= e($filters['bq']) ?>" placeholder="Tìm thương hiệu"
-                               autocomplete="off">
-                        <button type="submit" class="pfacet__go">Lọc</button>
-                    </form>
+                <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
+                <?php $checkGroup('collab', 'Bộ sưu tập hợp tác', $collabOptions); ?>
+                <?php $checkGroup('collection', 'Bộ sưu tập', $collectionOptions); ?>
 
-                    <div class="pfacet__list" role="group" aria-labelledby="lg-brand">
-                        <?php foreach ($brandList as $brand): ?>
-                            <?php $on = in_array($brand, $filters['brand'], true); ?>
-                            <a class="pcheck<?= $on ? ' is-on' : '' ?>"
-                               href="<?= e($toggleUrl('brand', (string) $brand)) ?>"
-                               <?= $on ? 'aria-current="true"' : '' ?>
-                               rel="nofollow"
-                               <?php /* utf8Lower(), không phải mb_strtolower(): xem $brandList ở đầu file.
-                                        Chuỗi này phải khớp với String.toLowerCase() bên assets/js/catalog.js,
-                                        nên GIỮ NGUYÊN DẤU — đừng đổi sang slugify(). */ ?>
-                               data-brand="<?= e(utf8Lower((string) $brand)) ?>">
-                                <span class="pcheck__box" aria-hidden="true"><?= $on ? '✓' : '' ?></span>
-                                <span class="pcheck__label"><?= e($brand) ?></span>
-                                <span class="pcheck__count">
-                                    <span class="sr-only">có </span><?= (int) ($facets['brandCounts'][$brand] ?? 0) ?><span class="sr-only"> sản phẩm</span>
-                                </span>
-                                <?php if ($on): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif; ?>
-                            </a>
-                        <?php endforeach; ?>
+                <?php $chipGroup('lens', 'Tính năng tròng', $groups['lens']); ?>
 
-                        <?php if ($brandList === []): ?>
-                            <p class="pfacet__none">Không có thương hiệu nào khớp.</p>
-                        <?php endif; ?>
+                <?php /* Khoảng giá — chọn MỘT, và chỉ hiện khi kho đã có giá.
+                         Bốn ô tròn không lọc ra được gì thì thà đừng vẽ: người
+                         dùng bấm rồi thấy lưới không đổi sẽ tưởng trang hỏng. */ ?>
+                <?php if ($hasPrices && $groups['price'] !== []): ?>
+                    <div class="pfacet">
+                        <p class="pfacet__legend">Khoảng giá</p>
+                        <div class="pfacet__list">
+                            <?php foreach ($groups['price'] as $opt): ?>
+                                <?php $dead = $opt['count'] === 0 && !$opt['on']; ?>
+                                <?php if ($dead): ?>
+                                    <span class="pradio is-off" aria-disabled="true">
+                                        <span class="pradio__dot" aria-hidden="true"></span>
+                                        <span class="pradio__label"><?= e($opt['label']) ?></span>
+                                        <span class="pcheck__count">0</span>
+                                    </span>
+                                <?php else: ?>
+                                    <?php /* Bấm lại chính ô đang chọn là BỎ chọn: nhóm này
+                                             không có ô "tất cả", không cho bỏ thì chọn nhầm
+                                             một khoảng giá là mắc kẹt trong đó. */ ?>
+                                    <a class="pradio<?= $opt['on'] ? ' is-on' : '' ?>" rel="nofollow"
+                                       <?= $opt['on'] ? 'aria-current="true"' : '' ?>
+                                       href="<?= e($buildUrl(['price' => $opt['on'] ? null : (int) $opt['key'], 'page' => null])) ?>">
+                                        <span class="pradio__dot" aria-hidden="true"></span>
+                                        <span class="pradio__label"><?= e($opt['label']) ?></span>
+                                        <span class="pcheck__count">
+                                            <span class="sr-only">có </span><?= (int) $opt['count'] ?><span class="sr-only"> sản phẩm</span>
+                                        </span>
+                                        <?php if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif; ?>
+                                    </a>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
-                <!-- Khoảng giá — chọn một -->
-                <div class="pfacet">
-                    <p class="pfacet__legend">Khoảng giá</p>
-                    <div class="pfacet__list">
-                        <?php foreach ($priceRanges as $i => $range): ?>
-                            <?php $on = $filters['price'] === $i; ?>
-                            <a class="pradio<?= $on ? ' is-on' : '' ?>" rel="nofollow"
-                               <?= $on ? 'aria-current="true"' : '' ?>
-                               href="<?= e($buildUrl(['price' => $on ? null : $i, 'page' => null])) ?>">
-                                <span class="pradio__dot" aria-hidden="true"></span>
-                                <span class="pradio__label"><?= e($range['label']) ?></span>
-                                <?php if ($on): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif; ?>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
+                <?php $chipGroup('gender', 'Đối tượng', $groups['gender']); ?>
 
-                <?php $chipGroup('gender', 'Đối tượng', $genderFacet, $genderLabels); ?>
+                <?php /* Chốt của bottom-sheet trên màn hình hẹp: sheet che gần
+                         hết màn hình nên nút đóng phải nằm TRONG nó, không thể
+                         bắt người dùng cuộn ngược lên tìm lại chữ "Bộ lọc".
+                         CSS giấu nút này từ 1101px trở lên. */ ?>
+                <button type="button" class="cfilter__done" data-sheet-close>
+                    Xem <?= (int) $total ?> sản phẩm
+                </button>
             </div>
         </details>
 
@@ -291,28 +422,14 @@ partial('_layout/page-head', [
             <div class="catbar">
                 <p class="catbar__count" aria-live="polite">
                     Hiển thị <strong><?= (int) $total ?></strong> sản phẩm<?php
-                    /* Hai mẩu dưới đây KHÔNG có trong bản thiết kế, và phải có:
-                       ô tìm trên header đổ người dùng vào đúng trang này kèm
+                    /* Mẩu dưới đây KHÔNG có trong bản thiết kế, và phải có: ô
+                       tìm trên header đổ người dùng vào đúng trang này kèm
                        ?q=…, mà cột lọc bên trái không có ô tìm nào để soi lại
-                       mình vừa gõ gì. Không in ra thì kết quả trông như bị
-                       lọc ngẫu nhiên. */
+                       mình vừa gõ gì. Không in ra thì kết quả trông như bị lọc
+                       ngẫu nhiên. */
                     ?><?php if ($filters['q'] !== ''): ?>
                         cho “<strong><?= e($filters['q']) ?></strong>”
                         <a class="catbar__drop" rel="nofollow" href="<?= e($buildUrl(['q' => null, 'page' => null])) ?>">bỏ từ khoá</a>
-                    <?php endif; ?>
-                    <?php if ($filters['collection'] !== ''): ?>
-                        <?php
-                        // Tên đẹp của bộ sưu tập; slug lạ thì hiện thẳng slug còn hơn để trống
-                        $collectionName = $filters['collection'];
-                        foreach (config('collections') as $c) {
-                            if ($c['slug'] === $filters['collection']) {
-                                $collectionName = $c['name'];
-                                break;
-                            }
-                        }
-                        ?>
-                        trong bộ sưu tập <strong><?= e($collectionName) ?></strong>
-                        <a class="catbar__drop" rel="nofollow" href="<?= e($buildUrl(['collection' => null, 'page' => null])) ?>">bỏ lọc này</a>
                     <?php endif; ?>
                 </p>
 
@@ -343,10 +460,7 @@ partial('_layout/page-head', [
                 <div class="catempty">
                     <p class="catempty__title">Chưa có sản phẩm phù hợp</p>
                     <p class="catempty__text">Thử bỏ bớt tiêu chí lọc hoặc xoá tất cả bộ lọc.</p>
-                    <a class="catempty__btn" href="<?= e($buildUrl([
-                        'brand' => [], 'shape' => [], 'material' => [],
-                        'gender' => [], 'price' => null, 'page' => null,
-                    ])) ?>">Xoá bộ lọc</a>
+                    <a class="catempty__btn" href="<?= e($buildUrl($resetPatch)) ?>">Xoá bộ lọc</a>
                 </div>
             <?php else: ?>
                 <?php /* THẺ DÙNG CHUNG VỚI TRANG CHỦ — _layout/product-card.php.

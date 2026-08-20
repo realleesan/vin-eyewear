@@ -15,6 +15,11 @@
  *
  * Bản này lọc bằng SQL: chỉ những dòng thật sự hiển thị mới rời khỏi database.
  * Ngữ nghĩa lọc giữ nguyên hệt bản gốc (xem từng ghi chú ở buildFilter).
+ *
+ * MỘT NGOẠI LỆ CÓ CHỦ Ý: catalog() — trang danh sách sản phẩm — kéo cả tập nền
+ * về PHP rồi mới lọc. Không phải quên, mà vì ba cột phân loại là chữ tự do ghi
+ * lẫn tiếng Việt lẫn tiếng Anh và một ô chứa nhiều giá trị, thứ mà `IN (...)`
+ * không so nổi. Lý do đầy đủ và giới hạn của cách làm nằm ngay trên hàm đó.
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * Thay cho policy "public products" của Postgres: mọi hàm dành cho trang công
@@ -283,57 +288,124 @@ class ProductModel extends BaseModel
     }
 
     /**
-     * Các giá trị có thật trong catalog, dùng dựng ô chọn của bộ lọc.
+     * Trang danh sách sản phẩm: lọc + đếm + sắp xếp + phân trang, một lượt.
      *
-     * Lấy từ dữ liệu chứ không khai cứng: thêm thương hiệu mới vào kho là bộ
-     * lọc tự có thêm lựa chọn. Chỉ tính sản phẩm đang hiển thị, để bộ lọc
-     * không đưa ra lựa chọn dẫn tới danh sách rỗng.
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO KHÔNG LỌC BẰNG SQL NHƯ filter()
+     *
+     * filter() so khớp NGUYÊN VĂN giá trị trong cột (`frame_shape IN (...)`).
+     * Cách đó chỉ đúng khi kho ghi mỗi dáng gọng bằng đúng một chuỗi — mà kho
+     * này thì không: ba cột phân loại là ô chữ tự do, một ô ghi được nhiều giá
+     * trị ("Kim loại bạc / Titanium"), và nhóm "Tính năng tròng" còn không có
+     * cột nào cả (đọc ra từ specs + mô tả). Không câu WHERE nào làm được việc
+     * đó mà không phải dựng thêm bảng chỉ mục.
+     *
+     * Nên: SQL lo phần nó làm tốt (hàng đang hiện, danh mục, từ khoá — đều là
+     * so khớp thẳng và có chỉ mục), rồi PHP lo phần phân loại đã chuẩn hoá.
+     *
+     * ĐÁNH ĐỔI, VÀ VÌ SAO CHẤP NHẬN ĐƯỢC: bước này kéo cả tập nền về RAM. Với
+     * catalog vài chục tới vài nghìn gọng kính thì đó là vài trăm KB và vài
+     * mili giây. Nhưng nó KHÔNG mở rộng vô hạn — hôm nào kho lên hàng chục
+     * nghìn dòng thì phải chuyển sang bảng chỉ mục (product_facets: product_id,
+     * group, key) dựng lại lúc lưu hàng, chứ đừng nới thêm ở đây.
+     *
+     * Và cũng KHÔNG có cách nào rẻ hơn cho SỐ ĐẾM ĐỘNG: mỗi con số bên cạnh
+     * mỗi lựa chọn là một phép đếm trên tập nền với một bộ điều kiện khác
+     * nhau. Làm bằng SQL là vài chục câu COUNT cho mỗi lần tải trang.
+     *
+     * @param array $f  q, category + các nhóm trong ProductFacets::GROUPS
+     * @return array{items:array, total:int, page:int, perPage:int,
+     *               totalPages:int, groups:array, hasPrices:bool}
      */
-    public static function facets(): array
+    public static function catalog(array $f, array $priceRanges, int $page = 1, ?int $perPage = null): array
     {
-        $pick = static function (string $column): array {
-            $rows = Database::fetchAll(
-                "SELECT DISTINCT `{$column}` AS v
-                   FROM products
-                  WHERE is_visible = 1
-                    AND `{$column}` IS NOT NULL
-                    AND `{$column}` <> ''
-                    AND `{$column}` <> '—'
-                  ORDER BY v"
-            );
-            return array_column($rows, 'v');
-        };
+        $perPage = $perPage ?? self::PER_PAGE;
+        $page    = max(1, $page);
 
-        /*
-         * Số sản phẩm của từng thương hiệu, hiện bên phải mỗi dòng trong ô
-         * "Thương hiệu" của bộ lọc.
-         *
-         * Đếm trên TOÀN kho đang hiển thị, không đếm theo bộ lọc đang bật —
-         * đúng như bản thiết kế. Đếm theo bộ lọc thì con số sẽ nhảy mỗi lần
-         * tick một ô, và mọi thương hiệu chưa chọn đều tụt về 0 ngay khi chọn
-         * thương hiệu đầu tiên (vì lọc giữa các nhóm là VÀ).
-         */
-        $brandCounts = [];
-        foreach (Database::fetchAll(
-            "SELECT brand, COUNT(*) AS c
-               FROM products
-              WHERE is_visible = 1 AND brand IS NOT NULL AND brand <> ''
-              GROUP BY brand"
-        ) as $row) {
-            $brandCounts[$row['brand']] = (int) $row['c'];
+        // 1. Tập nền — chỉ hai tiêu chí "bối cảnh trang" đi vào SQL.
+        //
+        //    Danh mục và từ khoá KHÔNG phải nhóm lọc trong cột bên trái: chúng
+        //    quyết định trang này đang nói về cái gì, nên mọi con số của bộ
+        //    lọc đều phải tính bên trong chúng. Bốn nhóm huy hiệu thì ngược
+        //    lại — số đếm của chúng phải nhìn thấy nhau (xem ProductFacets).
+        [$where, $params] = self::buildFilter([
+            'q'        => $f['q'] ?? '',
+            'category' => $f['category'] ?? '',
+        ]);
+
+        $rows = Database::fetchAll("SELECT p.* FROM products p {$where}", $params);
+        $all  = ProductFacets::attach(array_map([self::class, 'decode'], $rows), $priceRanges);
+
+        // 2. Tiêu chí đang bật, đã dọn về mảng khoá chuẩn
+        $selected = [];
+        foreach (ProductFacets::GROUPS as $group) {
+            $selected[$group] = self::scalarList($f[$group] ?? null);
         }
 
+        // 3. Danh sách lựa chọn + số đếm — dựng TRƯỚC khi lọc, vì mỗi nhóm
+        //    đếm với một bộ điều kiện khác nhau (bỏ qua chính nó).
+        $groups = [];
+        foreach (ProductFacets::GROUPS as $group) {
+            $order = match ($group) {
+                'gender' => ProductTaxonomy::GENDER_ORDER,
+                'price'  => array_map('strval', array_keys($priceRanges)),
+                default  => [],
+            };
+
+            $groups[$group] = ProductFacets::group($all, $selected, $group, $order);
+        }
+
+        // 4. Kết quả thật
+        $items = ProductFacets::apply($all, $selected);
+        $total = count($items);
+
+        self::sortCatalog($items, (string) ($f['sort'] ?? 'newest'));
+
         return [
-            // Tên cột cố định trong code, không đến từ người dùng
-            'brands'      => $pick('brand'),
-            'brandCounts' => $brandCounts,
-            'shapes'      => $pick('frame_shape'),
-            'materials'   => $pick('material'),
-            'genders'     => $pick('gender'),
-            'maxPrice'    => (int) Database::fetchValue(
-                'SELECT COALESCE(MAX(price), 0) FROM products WHERE is_visible = 1'
-            ),
+            'items'      => array_slice($items, ($page - 1) * $perPage, $perPage),
+            'total'      => $total,
+            'page'       => $page,
+            'perPage'    => $perPage,
+            'totalPages' => (int) ceil($total / $perPage),
+            'groups'     => $groups,
+            'hasPrices'  => ProductFacets::hasPrices($all),
         ];
+    }
+
+    /**
+     * Sắp xếp trong PHP, giữ ĐÚNG ngữ nghĩa của self::SORTS.
+     *
+     * Hai bảng phải nói cùng một thứ: filter() (trang tìm kiếm) vẫn sắp bằng
+     * SQL, catalog() sắp ở đây. Đổi luật ở một chỗ mà quên chỗ kia thì cùng
+     * một lựa chọn "Bán chạy" cho ra hai thứ tự khác nhau tuỳ người dùng vào
+     * từ đường nào.
+     */
+    private static function sortCatalog(array &$items, string $sort): void
+    {
+        $num = static fn (array $p, string $k): float => (float) ($p[$k] ?? 0);
+
+        $by = match ($sort) {
+            'price-asc'  => static fn ($a, $b) => $num($a, 'price') <=> $num($b, 'price'),
+            'price-desc' => static fn ($a, $b) => $num($b, 'price') <=> $num($a, 'price'),
+            'rating'     => static fn ($a, $b) => $num($b, 'rating') <=> $num($a, 'rating')
+                                               ?: $num($b, 'review_count') <=> $num($a, 'review_count'),
+            'popular'    => static fn ($a, $b) => $num($b, 'is_featured') <=> $num($a, 'is_featured')
+                                               ?: $num($b, 'rating') <=> $num($a, 'rating')
+                                               ?: $num($b, 'review_count') <=> $num($a, 'review_count'),
+            default      => null,
+        };
+
+        // 'newest' — created_at giảm dần. So bằng strcmp chứ không strtotime:
+        // cột là DATETIME 'Y-m-d H:i:s', thứ tự chuỗi trùng khít thứ tự thời
+        // gian, mà không phải dựng 57 đối tượng ngày tháng.
+        $by ??= static fn ($a, $b) => strcmp((string) ($b['created_at'] ?? ''), (string) ($a['created_at'] ?? ''));
+
+        // usort của PHP không ổn định trước 8.0 và vẫn không hứa gì về hai
+        // phần tử bằng nhau; chốt bằng slug để hai lần tải trang cùng bộ lọc
+        // không bao giờ cho ra hai thứ tự khác nhau (phân trang sẽ nhân đôi
+        // hoặc nuốt mất sản phẩm nếu thứ tự đổi giữa trang 1 và trang 2).
+        usort($items, static fn ($a, $b) => $by($a, $b)
+            ?: strcmp((string) ($a['slug'] ?? ''), (string) ($b['slug'] ?? '')));
     }
 
     public static function findVisibleBySlug(string $slug): ?array

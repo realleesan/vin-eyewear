@@ -152,13 +152,86 @@
     .cfilter:not([open]) > .cfilter__panel { display: flex; }
 }
 
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ * MÀN HÌNH HẸP: CỘT LỌC THÀNH BOTTOM-SHEET
+ *
+ * Dưới 1101px, <details> vẫn là <details> — không có JavaScript thì bấm
+ * "Bộ lọc" vẫn mở được và mọi thứ bên trong vẫn lọc được. Chỉ có CÁCH VẼ
+ * đổi: thay vì đẩy lưới sản phẩm xuống dưới một khối cao bằng cả màn hình,
+ * panel trượt lên từ mép dưới và nằm đè lên trang.
+ *
+ * Vì sao không để nguyên khối xổ ra như trước: cột lọc nay có bảy nhóm chứ
+ * không phải bốn. Xổ tại chỗ thì người dùng phải cuộn qua ba màn hình huy
+ * hiệu mới nhìn lại được sản phẩm — mà lọc xong thì thứ họ muốn xem chính
+ * là sản phẩm.
+ * ───────────────────────────────────────────────────────────────────────── */
 @media (max-width: 1100px) {
     .cfilter {
         position: static;
         border: 1px solid var(--line);
     }
 
-    .cfilter__panel { padding: 4px 20px 20px; }
+    .cfilter[open] > .cfilter__scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 60;
+        background: rgb(0 0 0 / 0.42);
+    }
+
+    .cfilter[open] > .cfilter__panel {
+        position: fixed;
+        z-index: 61;
+        right: 0;
+        bottom: 0;
+        left: 0;
+
+        /* 82svh chứ không 82vh: trên trình duyệt di động, vh tính theo khung
+           nhìn KHI ĐÃ THU thanh địa chỉ, nên sheet cao hơn chỗ thật sự nhìn
+           thấy và nút "Xem N sản phẩm" ở đáy bị thanh địa chỉ che mất. */
+        max-height: 82svh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        padding: 20px 20px 16px;
+        border-radius: 18px 18px 0 0;
+        background: var(--surface-raised);
+        box-shadow: 0 -12px 40px rgb(0 0 0 / 0.22);
+    }
+
+    .cfilter:not([open]) > .cfilter__panel { padding: 4px 20px 20px; }
+}
+
+/*
+ * Nút chốt ở đáy bottom-sheet.
+ *
+ * Dính đáy panel (sticky) chứ không nằm cuối dòng chảy: sheet cuộn được, và
+ * nút mà trôi lên trên thì lọc xong phải cuộn hết bảy nhóm mới đóng lại được.
+ */
+.cfilter__done {
+    position: sticky;
+    bottom: 0;
+    margin-top: 8px;
+    padding: 13px 16px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--on-brand);
+    cursor: pointer;
+}
+
+.cfilter__done:hover,
+.cfilter__done:focus-visible { background: var(--brand-strong); }
+
+/* Không có JavaScript thì nút này không đóng được sheet (details.open là
+   thuộc tính DOM), nên chỉ hiện khi có JS — và chỉ ở bề rộng có sheet. */
+.cfilter__done { display: none; }
+
+@media (max-width: 1100px) {
+    .js .cfilter[open] > .cfilter__panel > .cfilter__done { display: block; }
 }
 
 /* --- Hàng đầu: "Bộ lọc" + "Xoá tất cả" --- */
@@ -418,8 +491,67 @@
 .pradio:focus-visible .pradio__dot { border-color: var(--brand); }
 
 .pradio__label {
+    flex: 1;
+    min-width: 0;
     font-size: 14px;
     color: var(--c-item);
+}
+
+/* --- Số đếm động --- */
+
+/*
+ * Con số bên phải mỗi huy hiệu ("Oval 16").
+ *
+ * Nhỏ hơn và mờ hơn nhãn một bậc: nó là thông tin PHỤ giúp người dùng đoán
+ * trước cú bấm sẽ ra bao nhiêu món, không phải một phần của tên dáng gọng.
+ * Cùng cỡ chữ thì đọc lướt qua thành "Oval 16" như thể đó là tên mẫu.
+ *
+ * font-variant-numeric: tabular-nums để chữ số rộng bằng nhau — không có nó,
+ * một cột toàn số hai chữ số vẫn so le vì '1' hẹp hơn '8'.
+ */
+.pchip__n {
+    margin-left: 6px;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    color: var(--c-meta);
+}
+
+.pchip.is-on .pchip__n {
+    /* Nền huy hiệu bật là màu thương hiệu, --c-meta trên nền đó gần như không
+       đọc được. Mượn màu chữ của chính huy hiệu rồi hạ độ đục. */
+    color: inherit;
+    opacity: 0.72;
+}
+
+.pcheck__count { font-variant-numeric: tabular-nums; }
+
+/* --- Lựa chọn không lọc ra sản phẩm nào --- */
+
+/*
+ * Mục đếm ra 0 vẫn được in, nhưng KHÔNG phải là liên kết (view in ra <span>).
+ * Làm mờ và đổi con trỏ để không ai mất một cú bấm mới biết.
+ *
+ * Vì sao không giấu hẳn: cột lọc sẽ co giãn sau mỗi thao tác, và mục vừa biến
+ * mất chính là mục người dùng đang định bấm tiếp. Mờ tại chỗ nói được cả hai
+ * điều — "có tiêu chí này" và "kết hợp với thứ bạn đang chọn thì không còn
+ * hàng nào".
+ */
+.pchip.is-off,
+.pcheck.is-off,
+.pradio.is-off {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+.pchip.is-off {
+    /* .pchip là <a> nên nằm inline; bản is-off là <span>, cần khai lại phần
+       hộp để hai dạng cao bằng nhau trong cùng một hàng huy hiệu. */
+    display: inline-block;
+}
+
+.pcheck.is-off,
+.pradio.is-off {
+    display: flex;
 }
 
 /* ============================================================

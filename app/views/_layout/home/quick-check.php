@@ -61,25 +61,30 @@ $cards = [
 /*
  * Câu hỏi chọn tròng. Ba lựa chọn, mỗi lựa chọn một câu gợi ý và một đường
  * lọc có thật trong catalog — bấm vào là ra hàng, không phải một trang giới
- * thiệu suông. Tham số 'q' khớp với config('taxonomy.lens_functions').
+ * thiệu suông.
+ *
+ * ĐÃ ĐỔI TỪ ?q= SANG ?lens[]=: 'q' chỉ tìm trong name/brand/sku, nên
+ * "/san-pham?q=blue" chỉ ra hàng có chữ "blue" TRONG TÊN — gần như không món
+ * nào, dù kho có cả chục gọng ghi tính năng chống ánh sáng xanh trong `specs`.
+ * Khoá dưới đây khớp với nhóm "Tính năng tròng" của cột lọc (ProductTaxonomy).
  */
 $lensOptions = [
     [
         'label' => 'A. Bảo vệ mắt toàn diện khi sử dụng thiết bị điện tử',
         'rec'   => 'Tròng chống ánh sáng xanh (Blue-cut) 1.56 – 1.61 — lọc ánh sáng '
                  . 'màn hình, phù hợp làm việc máy tính nhiều giờ.',
-        'url'   => '/san-pham?q=blue',
+        'url'   => '/san-pham?lens%5B%5D=blue-light',
     ],
     [
         'label' => 'B. Bảo vệ mắt khi trời nắng',
         'rec'   => 'Tròng đổi màu Photochromic hoặc kính mát Polarized UV400 — tự tối '
                  . 'màu khi ra nắng, chống chói.',
-        'url'   => '/san-pham?q=photochromic',
+        'url'   => '/san-pham?lens%5B%5D=photochromic',
     ],
     [
         'label' => 'C. Mỏng nhẹ cho người cận thị độ cao',
         'rec'   => 'Tròng chiết suất cao 1.67 – 1.74 — mỏng nhẹ cho độ cận từ 4.00 trở lên.',
-        'url'   => '/san-pham?q=index',
+        'url'   => '/san-pham?lens%5B%5D=rx',
     ],
 ];
 
