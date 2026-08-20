@@ -92,6 +92,10 @@ MIGRATIONS=(
     "2026-08-19-khoa-khung-gio-cho-mariadb.sql|column|appointments|active_slot"
     "2026-08-19-so-dia-chi-tach-phuong-tinh.sql|column|addresses|province_code"
     "2026-08-19-dang-ky-khong-email-va-google.sql|column|users|google_id"
+    # File này chỉ NỚI một cột sẵn có, không tạo ra bảng/cột/khoá nào mới, nên
+    # không có thứ gì để lấy làm cột mốc theo ba kiểu trên. Dùng kiểu 'coltype':
+    # mốc chính là kiểu mới của cột.
+    "2026-08-20-ghi-chu-tung-mat.sql|coltype|order_items|prescription=varchar(255)"
 )
 
 # ---------------------------------------------------------------------------
@@ -164,6 +168,15 @@ sentinel_exists() {
             n="$(mysql -N -B -e "SELECT COUNT(*) FROM information_schema.STATISTICS
                  WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='${table}'
                    AND INDEX_NAME='${name}';")" ;;
+        coltype)
+            # name có dạng "ten_cot=kieu_mong_doi", ví dụ prescription=varchar(255).
+            # Dành cho migration chỉ ĐỔI KIỂU một cột sẵn có: cột thì vốn đã tồn
+            # tại từ trước nên kiểu 'column' luôn báo "đã áp" và file không bao
+            # giờ chạy.
+            local col="${name%%=*}" want="${name#*=}"
+            n="$(mysql -N -B -e "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='${table}'
+                   AND COLUMN_NAME='${col}' AND COLUMN_TYPE='${want}';")" ;;
         *)
             echo "✗ Loại cột mốc lạ: ${kind}" >&2; exit 1 ;;
     esac

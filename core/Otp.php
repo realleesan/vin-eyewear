@@ -1,10 +1,14 @@
 <?php
 
 /**
- * core/Otp.php — mã xác minh 6 số cho luồng đăng ký bằng số điện thoại.
+ * core/Otp.php — mã xác minh 6 số.
  *
- * Dựng theo "Dang ky.dc.html" (Claude Design): nhập số → chọn kênh gửi →
- * nhập mã → tạo mật khẩu.
+ * Dùng ở HAI luồng, cùng một bộ quy tắc sinh/băm/hạn dùng/số lần thử:
+ *
+ *   Đăng ký bằng số điện thoại  — dựng theo "Dang ky.dc.html" (Claude Design):
+ *                                 nhập số → chọn kênh gửi → nhập mã → tạo mật khẩu.
+ *   Quên mật khẩu               — PasswordResetModel::requestOtp(): gõ email thì
+ *                                 mã đi qua Mailer, gõ số thì đi qua send() dưới đây.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * MÃ CHƯA ĐI TỚI TAY KHÁCH ĐƯỢC — ĐỌC KỸ TRƯỚC KHI ĐƯA LÊN PRODUCTION
@@ -36,6 +40,18 @@
  */
 class Otp
 {
+    /**
+     * ĐÃ CẮM NHÀ CUNG CẤP GỬI TIN CHƯA? Đổi thành true trong chính lần sửa mà
+     * bạn nối eSMS/SpeedSMS/Twilio hay Zalo ZNS vào send() bên dưới.
+     *
+     * Có hằng này vì send() phải trả về SỰ THẬT: nơi gọi dựa vào giá trị đó để
+     * quyết định yêu cầu đặt lại mật khẩu là "đã gửi cho khách" hay "còn treo,
+     * nhân viên phải gọi điện". Trả bừa true thì mọi yêu cầu bằng số điện thoại
+     * đều biến khỏi hàng chờ ở /quan-tri/quen-mat-khau, trong khi khách chẳng
+     * nhận được gì và không còn ai biết mà gọi lại cho họ.
+     */
+    public const PROVIDER_READY = false;
+
     /** Số chữ số của mã. Đúng số ô trên màn hình nhập mã. */
     public const LENGTH = 6;
 
@@ -53,7 +69,15 @@ class Otp
      */
     public const MAX_TRIES = 5;
 
-    /** Ba kênh của bản thiết kế. Giá trị lạ bị đẩy về 'zalo'. */
+    /**
+     * Ba kênh của màn "chọn phương thức" trong luồng ĐĂNG KÝ. Giá trị lạ bị
+     * đẩy về 'zalo'.
+     *
+     * KHÔNG có 'email' ở đây: đăng ký chỉ hỏi số điện thoại, chưa biết email
+     * của khách để mà gửi. Kênh email chỉ xuất hiện ở luồng quên mật khẩu, nơi
+     * chính khách gõ địa chỉ ra — nó có nhãn trong methodLabel()/sentVia()
+     * nhưng không phải một lựa chọn bấm được.
+     */
     public const METHODS = ['zalo', 'sms', 'voice'];
 
     public static function generate(): string
@@ -75,7 +99,12 @@ class Otp
     }
 
     /**
-     * "Gửi" mã đi. Xem khối chú thích đầu file: hiện chỉ ghi ra log.
+     * "Gửi" mã đi bằng kênh của SỐ ĐIỆN THOẠI. Xem khối chú thích đầu file:
+     * hiện chỉ ghi ra log.
+     *
+     * Mã gửi qua EMAIL không đi lối này — nó đã có Mailer, và nội dung thư là
+     * việc của nơi phát sinh mã (xem PasswordResetModel::otpEmailHtml). Hàm
+     * này chỉ dành cho những kênh dự án chưa có đường ra: Zalo, SMS, gọi thoại.
      *
      * Trả về true/false theo nghĩa "đã bàn giao cho nhà cung cấp chưa", để
      * khi cắm dịch vụ thật vào thì nơi gọi biết đường báo lỗi cho khách.
@@ -89,7 +118,7 @@ class Otp
             $code
         ));
 
-        return true;
+        return self::PROVIDER_READY;
     }
 
     /** Tên kênh để in ra màn hình. */
@@ -99,6 +128,7 @@ class Otp
             'zalo'  => 'Zalo',
             'sms'   => 'SMS',
             'voice' => 'cuộc gọi',
+            'email' => 'email',
         ][$method] ?? 'Zalo';
     }
 
@@ -111,6 +141,7 @@ class Otp
             'zalo'  => 'Mã xác minh đã được gửi qua Zalo đến',
             'sms'   => 'Mã xác minh đã được gửi qua SMS đến',
             'voice' => 'Mã xác minh đã được gửi qua cuộc gọi đến',
+            'email' => 'Mã xác minh đã được gửi qua email đến',
         ][$method] ?? 'Mã xác minh đã được gửi qua Zalo đến';
     }
 

@@ -232,34 +232,105 @@ class LensModel
         return $out;
     }
 
+    /** Ghi chú của MỘT mắt dài tối đa bấy nhiêu ký tự — xem cleanNote(). */
+    public const NOTE_MAX = 60;
+
     /**
      * Gói lựa chọn của bước "Nhập số đo khúc xạ" thành MỘT chuỗi để lưu và in.
      *
-     *     "Cận thị · MP −2.00 · MT −2.25"
+     *     "Cận thị · MP −2.00 (hay mỏi khi đọc) · MT −2.25"
      *
      * Vì sao một chuỗi chứ không phải mấy cột riêng: số đo là thứ NHÂN VIÊN
      * ĐỌC rồi nhập vào máy mài, không phải thứ hệ thống tính toán. Không truy
-     * vấn nào cần lọc theo độ cận, nên tách cột chỉ làm phình bảng.
+     * vấn nào cần lọc theo độ cận, nên tách cột chỉ làm phình bảng. Ghi chú đi
+     * theo đúng lối đó: nó cũng là thứ để người đọc, và nó gắn với MỘT MẮT nên
+     * phải nằm cạnh con số của mắt đó chứ không dồn xuống một ô chung cuối form
+     * — dồn chung thì đọc xong vẫn phải đoán ghi chú nói về mắt nào.
      *
      * Trả null khi không có gì để nói — null nghĩa rõ ràng là "đo tại cửa
      * hàng", còn chuỗi rỗng thì không.
+     *
+     * ĐỦ HAY CHƯA TÍNH THEO SỐ ĐO, KHÔNG TÍNH GHI CHÚ. Ghi chú không mài kính
+     * được: hai ô ghi chú kín mít mà không chọn độ nào thì vẫn là "đo tại cửa
+     * hàng". Nhưng một khi phần số đo đã đủ dùng thì ghi chú của mắt còn lại
+     * vẫn được giữ, kể cả mắt đó không chọn độ ("MT (mắt này không cần độ)") —
+     * đó thường lại là ghi chú đáng đọc nhất.
      */
-    public static function formatRx(?string $type, ?string $od, ?string $os): ?string
-    {
-        $bits = [];
-
-        if ($type !== null && isset(self::RX_TYPES[$type])) {
-            $bits[] = self::RX_TYPES[$type][0];
-        }
+    public static function formatRx(
+        ?string $type,
+        ?string $od,
+        ?string $os,
+        ?string $odNote = null,
+        ?string $osNote = null
+    ): ?string {
+        $typeName = $type !== null && isset(self::RX_TYPES[$type])
+            ? self::RX_TYPES[$type][0]
+            : null;
 
         $odLabel = self::diopter($od);
         $osLabel = self::diopter($os);
-
-        if ($odLabel !== null) { $bits[] = 'MP ' . $odLabel; }
-        if ($osLabel !== null) { $bits[] = 'MT ' . $osLabel; }
+        $odNote  = self::cleanNote($odNote);
+        $osNote  = self::cleanNote($osNote);
 
         // Chỉ mỗi tên tật, không con số nào -> chưa đủ để mài. Coi như trống.
-        return count($bits) < 2 ? null : implode(' · ', $bits);
+        $doCount = ($typeName !== null ? 1 : 0)
+                 + ($odLabel !== null ? 1 : 0)
+                 + ($osLabel !== null ? 1 : 0);
+
+        if ($doCount < 2) {
+            return null;
+        }
+
+        $eye = static fn (string $short, ?string $label, ?string $note): ?string => match (true) {
+            $label !== null && $note !== null => $short . ' ' . $label . ' (' . $note . ')',
+            $label !== null                   => $short . ' ' . $label,
+            $note  !== null                   => $short . ' (' . $note . ')',
+            default                           => null,
+        };
+
+        $bits = array_filter([
+            $typeName,
+            $eye('MP', $odLabel, $odNote),
+            $eye('MT', $osLabel, $osNote),
+        ]);
+
+        return implode(' · ', $bits);
+    }
+
+    /**
+     * Dọn một ghi chú khách gõ tay trước khi ghép vào chuỗi số đo.
+     *
+     * Ba việc, mỗi việc vì một lý do riêng:
+     *
+     *   · Bỏ ký tự xuống dòng và ký tự điều khiển — chuỗi này in ra trên MỘT
+     *     dòng ở giỏ hàng, trang xác nhận và phiếu của cửa hàng; một ký tự
+     *     xuống dòng lọt vào là vỡ cả ba chỗ.
+     *   · Bỏ '·', '(' và ')' — đó là dấu phân cách và dấu bọc của chính định
+     *     dạng này. Để nguyên thì một ghi chú như "mắt (trái) yếu hơn" đọc ra
+     *     thành thứ không phân tích ngược được nữa.
+     *   · Cắt còn NOTE_MAX ký tự — cột `prescription` có trần, và một ghi chú
+     *     dài hơn dòng chữ trên phiếu thì người mài cũng không đọc.
+     *
+     * Cắt bằng utf8Substr chứ không phải substr: substr đếm byte, cắt giữa một
+     * chữ tiếng Việt có dấu sẽ để lại nửa ký tự hỏng.
+     */
+    private static function cleanNote(?string $raw): ?string
+    {
+        if ($raw === null) {
+            return null;
+        }
+
+        $note = preg_replace('/[\x00-\x1F\x7F]+/u', ' ', $raw) ?? '';
+        $note = str_replace(['·', '(', ')'], ' ', $note);
+        $note = trim(preg_replace('/\s+/u', ' ', $note) ?? '');
+
+        if ($note === '') {
+            return null;
+        }
+
+        return utf8Length($note) > self::NOTE_MAX
+            ? rtrim(utf8Substr($note, 0, self::NOTE_MAX - 1)) . '…'
+            : $note;
     }
 
     /**

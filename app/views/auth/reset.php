@@ -58,7 +58,7 @@
                     <p class="authflash authflash--err" role="alert"><?= e($error) ?></p>
                 <?php endif; ?>
 
-                <form class="authform" method="post" action="/dat-lai-mat-khau/luu">
+                <form class="authform" method="post" action="/dat-lai-mat-khau/luu" data-pw-rules>
                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                     <input type="hidden" name="token" value="<?= e($token) ?>">
 
@@ -73,7 +73,7 @@
                         <?php partial('auth/_password', [
                             'pw_name'     => 'new_password',
                             'pw_auto'     => 'new-password',
-                            'pw_holder'   => 'Tối thiểu 8 ký tự',
+                            'pw_holder'   => 'Mật khẩu mới',
                             'pw_min'      => 8,
                             'pw_required' => true,
                         ]); ?>
@@ -89,6 +89,8 @@
                             'pw_required' => true,
                         ]); ?>
                     </label>
+
+                    <?php partial('auth/_password-rules'); ?>
 
                     <button type="submit" class="authbtn authbtn--primary">Đặt mật khẩu mới</button>
                 </form>

@@ -468,10 +468,14 @@ class CartController extends BaseController
             case 'so-do':
                 $type = (string) ($_POST['loai'] ?? '');
                 $intent['rx_type'] = isset(LensModel::RX_TYPES[$type]) ? $type : null;
+                // Ghi chú đi kèm TỪNG MẮT — LensModel::cleanNote() lo phần
+                // cắt ngắn và bỏ ký tự phá định dạng, nên ở đây nhận thô.
                 $intent['rx'] = LensModel::formatRx(
                     $intent['rx_type'],
                     $_POST['od'] ?? null,
-                    $_POST['os'] ?? null
+                    $_POST['os'] ?? null,
+                    $_POST['od_note'] ?? null,
+                    $_POST['os_note'] ?? null
                 );
                 $next = 'xac-nhan';
                 break;

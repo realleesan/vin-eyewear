@@ -140,10 +140,17 @@ return [
     'tai-khoan/lich-hen/doi' => 'AuthController@rescheduleBooking', // POST
     'tai-khoan/lich-hen/huy' => 'AuthController@cancelBooking',     // POST
 
-    // Quên mật khẩu. Hai bước tách riêng vì bước hai tới từ một liên kết
-    // trong email — phải mở được bằng GET, không có phiên nào cả.
-    'quen-mat-khau'         => 'AuthController@forgot',
-    'quen-mat-khau/gui'     => 'AuthController@forgotSubmit',   // POST
+    // Quên mật khẩu — khách tự làm bằng mã OTP. Bốn chặng nằm chung một địa
+    // chỉ, chọn bằng ?buoc= (xem khối chú thích trong AuthController).
+    'quen-mat-khau'          => 'AuthController@forgot',
+    'quen-mat-khau/gui'      => 'AuthController@forgotSubmit',  // POST — gửi mã
+    'quen-mat-khau/gui-lai'  => 'AuthController@forgotResend',  // POST — gửi lại mã
+    'quen-mat-khau/xac-minh' => 'AuthController@forgotVerify',  // POST — kiểm mã
+    'quen-mat-khau/dat-lai'  => 'AuthController@forgotFinish',  // POST — lưu mật khẩu mới
+
+    // Đường của NHÂN VIÊN: liên kết có token, cho ca khách không nhận được mã.
+    // Tách riêng vì nó tới từ một liên kết dán qua Zalo hay đọc qua điện thoại
+    // — phải mở được bằng GET, không có phiên nào cả.
     'dat-lai-mat-khau'      => 'AuthController@reset',
     'dat-lai-mat-khau/luu'  => 'AuthController@resetSubmit',    // POST
 

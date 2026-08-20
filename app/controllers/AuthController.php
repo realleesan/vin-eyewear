@@ -103,52 +103,292 @@ class AuthController extends BaseController
         redirect($to);
     }
 
-    // ========================================================================
-    // QUÊN MẬT KHẨU
-    // ========================================================================
+    /*
+     * ═════════════════════════════════════════════════════════════════════
+     * QUÊN MẬT KHẨU — BỐN CHẶNG BẰNG MÃ OTP
+     *
+     *   (không có)   nhập email hoặc số điện thoại   forgotSubmit()
+     *   ma           nhập 6 số                       forgotVerify() · forgotResend()
+     *   mat-khau     đặt mật khẩu mới                forgotFinish()
+     *   xong         đổi xong, mời đăng nhập lại
+     *
+     * KÊNH GỬI CHỌN THEO THỨ KHÁCH GÕ, không hỏi thêm câu nào:
+     *
+     *   có '@'   -> mã đi bằng email
+     *   là số    -> mã đi bằng Zalo
+     *
+     * Không bày màn "chọn phương thức" như luồng đăng ký, vì ở đây không có gì
+     * để chọn: khách gõ email thì ta chỉ biết mỗi email của họ, gõ số thì chỉ
+     * biết mỗi số. Bày ra hai nút mà một nút chắc chắn không gửi được là mời
+     * người ta bấm vào chỗ hỏng.
+     *
+     * ZALO CHƯA CẮM NHÀ CUNG CẤP — mã mới chỉ ghi ra error log, xem core/Otp.php.
+     * Luồng vẫn chạy đủ bốn chặng để khi cắm ZNS vào thì không phải sửa gì ở
+     * đây; chỗ cắm là đúng một hàm Otp::send().
+     *
+     * CÙNG MỘT KHUÔN VỚI LUỒNG ĐĂNG KÝ (xem khối chú thích ở signupPhone):
+     * bước đang mở nằm trên URL (?buoc=), dữ liệu dở dang nằm trong
+     * $_SESSION['_forgot'], mỗi chặng là một POST thật nên tắt JavaScript vẫn
+     * chạy và nút Back lùi đúng một chặng. Email/số điện thoại KHÔNG nằm trên
+     * URL: nó là dữ liệu cá nhân, mà URL thì đi vào lịch sử duyệt web, vào
+     * Referer gửi sang bên thứ ba, và vào log của mọi proxy trên đường.
+     *
+     * ĐƯỜNG NHÂN VIÊN VẪN CÒN, không đụng tới: reset()/resetSubmit() bên dưới
+     * nhận liên kết có token do /quan-tri/quen-mat-khau tạo ra. Nó dành cho ca
+     * khách không nhận được mã — mất số, sai email, kênh gửi hỏng.
+     * ═════════════════════════════════════════════════════════════════════
+     */
 
-    /** Trang nhập email hoặc số điện thoại. */
+    /** Trạng thái luồng quên mật khẩu đang dở, hoặc null nếu chưa bắt đầu. */
+    private static function forgotState(): ?array
+    {
+        $f = $_SESSION['_forgot'] ?? null;
+
+        return is_array($f) && ($f['contact'] ?? '') !== '' ? $f : null;
+    }
+
+    /**
+     * Bước nào ĐƯỢC PHÉP mở lúc này.
+     *
+     * ?buoc= gõ tay được, nên mỗi bước phải tự chứng minh nó có cơ sở. Thiếu
+     * chốt này thì gõ thẳng /quen-mat-khau?buoc=mat-khau là đặt được mật khẩu
+     * mới mà chưa từng nhập mã — tức là chiếm tài khoản của bất kỳ ai.
+     */
+    private static function forgotStep(): string
+    {
+        $step  = (string) ($_GET['buoc'] ?? '');
+        $state = self::forgotState();
+
+        if ($step === 'xong') {
+            return !empty($_SESSION['_forgot_done']) ? 'xong' : '';
+        }
+
+        if ($state === null) {
+            return '';
+        }
+
+        return match ($step) {
+            'ma'       => ($state['hash'] ?? '') !== '' ? 'ma' : '',
+            'mat-khau' => !empty($state['verified']) ? 'mat-khau' : 'ma',
+            default    => '',
+        };
+    }
+
+    /** Trang quên mật khẩu — cả bốn chặng đều vào đây. */
     public function forgot(): void
     {
         if (AuthMiddleware::check()) {
             redirect('/tai-khoan');
         }
 
+        $step  = self::forgotStep();
+        $state = self::forgotState();
+
         $this->renderView('auth/forgot', [
             'bareLayout' => true,
             'pageTitle' => 'Quên mật khẩu — Vin Eyewear',
             'metaDesc'  => 'Đặt lại mật khẩu tài khoản Vin Eyewear.',
+            'step'      => $step,
             'error'     => flash('auth_error'),
-            'done'      => flash('auth_done'),
-            'sent'      => flash('auth_sent') !== null,
+            'notice'    => flash('auth_success'),
             'old'       => $_SESSION['_old_forgot'] ?? '',
+            // KHÔNG bao giờ đưa hash hay user_id ra view: view chỉ cần thứ in
+            // ra màn hình.
+            'forgot'    => $state === null ? [] : [
+                'display' => (string) $state['display'],
+                'channel' => (string) $state['channel'],
+                'sentVia' => Otp::sentVia((string) $state['channel']),
+                // Còn mấy giây nữa mới được bấm "Gửi lại". 0 = bấm được ngay.
+                'wait'    => max(0, (int) ($state['resend'] ?? 0) - time()),
+            ],
         ]);
 
         unset($_SESSION['_old_forgot']);
+
+        // Màn "xong" chỉ xem được một lần: tải lại trang là về form nhập.
+        if ($step === 'xong') {
+            unset($_SESSION['_forgot_done']);
+        }
     }
 
+    /** Chặng 1: nhận email hoặc số điện thoại, gửi mã. */
     public function forgotSubmit(): void
     {
         $this->requirePost('/quen-mat-khau');
 
         $contact = trim((string) ($_POST['contact'] ?? ''));
-        $result  = PasswordResetModel::request($contact);
 
-        if (!$result['ok']) {
+        if (!$this->forgotIssue($contact)) {
             $_SESSION['_old_forgot'] = $contact;
-            flash('auth_error', $result['error'] ?? 'Không xử lý được yêu cầu.');
             redirect('/quen-mat-khau');
         }
 
-        // CỐ TÌNH không nói tài khoản có tồn tại hay không. Nếu báo "không tìm
-        // thấy email này" thì trang quên mật khẩu thành công cụ dò danh sách
-        // khách hàng của cửa hàng.
-        if ($result['sent']) {
-            flash('auth_sent', '1');
+        redirect('/quen-mat-khau?buoc=ma');
+    }
+
+    /** Bấm "Gửi lại" ở màn nhập mã. */
+    public function forgotResend(): void
+    {
+        $this->requirePost('/quen-mat-khau');
+
+        $state = self::forgotState();
+
+        if ($state === null) {
+            redirect('/quen-mat-khau');
         }
 
-        flash('auth_done', '1');
-        redirect('/quen-mat-khau');
+        /* CHƯA HẾT 60 GIÂY THÌ KHÔNG SINH MÃ MỚI.
+           Chốt ở máy chủ chứ không chỉ ở nút bấm: đồng hồ đếm ngược nằm trong
+           JavaScript, ai cũng gọi thẳng địa chỉ này được. Không có chốt thì
+           một vòng lặp là bơm được vô số thư tới hộp thư của người khác — và
+           khi đã cắm Zalo ZNS thì mỗi tin là tiền. */
+        if (time() < (int) ($state['resend'] ?? 0)) {
+            redirect('/quen-mat-khau?buoc=ma');
+        }
+
+        if (!$this->forgotIssue((string) $state['contact'])) {
+            redirect('/quen-mat-khau');
+        }
+
+        redirect('/quen-mat-khau?buoc=ma');
+    }
+
+    /**
+     * Sinh mã, gửi đi, cất trạng thái vào phiên. Dùng chung cho lần gửi đầu
+     * và cho nút "Gửi lại" — hai nơi phải làm giống hệt nhau, tách ra để không
+     * có nơi nào quên đặt lại số lần thử hay đồng hồ chờ.
+     *
+     * @return bool false = có lỗi, đã flash sẵn thông báo cho người gọi.
+     */
+    private function forgotIssue(string $contact): bool
+    {
+        $result = PasswordResetModel::requestOtp($contact);
+
+        if (!$result['ok']) {
+            flash('auth_error', $result['error'] ?? 'Không xử lý được yêu cầu.');
+
+            return false;
+        }
+
+        $_SESSION['_forgot'] = [
+            'contact'  => $contact,
+            'channel'  => $result['channel'],
+            'display'  => $result['display'],
+            'user_id'  => $result['user_id'],
+            'hash'     => $result['hash'],
+            'expires'  => time() + Otp::TTL,
+            'resend'   => time() + Otp::RESEND_AFTER,
+            'tries'    => 0,
+            'verified' => false,
+        ];
+
+        /* Ở MÁY PHÁT TRIỂN thì hiện thẳng mã lên màn hình. Zalo chưa cắm nhà
+           cung cấp, mà hosting hiện tại chặn luôn cả gửi mail (MAIL_DRIVER=log),
+           nên không có đường nào khác để thử luồng. Chốt theo app.debug: trên
+           production mã chỉ nằm trong error log. */
+        if (($result['code'] ?? null) !== null) {
+            flash('auth_success', 'Mã xác minh (chỉ hiện ở chế độ phát triển): ' . $result['code']);
+        }
+
+        return true;
+    }
+
+    /** Chặng 2: kiểm mã 6 số. */
+    public function forgotVerify(): void
+    {
+        $this->requirePost('/quen-mat-khau');
+
+        $state = self::forgotState();
+
+        if ($state === null || ($state['hash'] ?? '') === '') {
+            redirect('/quen-mat-khau');
+        }
+
+        // Sáu ô rời thành một chuỗi — giống màn nhập mã của luồng đăng ký.
+        $code = preg_replace('/\D+/', '', implode('', (array) ($_POST['ma'] ?? [])));
+
+        if (time() > (int) $state['expires']) {
+            flash('auth_error', 'Mã đã hết hạn. Bấm "Gửi lại" để nhận mã mới.');
+            redirect('/quen-mat-khau?buoc=ma');
+        }
+
+        /*
+         * user_id rỗng nghĩa là chuỗi khách gõ KHÔNG khớp tài khoản nào.
+         *
+         * Mã của yêu cầu đó chưa từng được gửi đi đâu (xem
+         * PasswordResetModel::requestOtp), nên trên thực tế không ai nhập đúng
+         * được. Vẫn cho vào tới đây rồi mới trượt ở nhánh "sai mã" là cố ý:
+         * dừng sớm hơn — chẳng hạn báo lỗi ngay ở chặng 1 — thì màn hình hé ra
+         * email nào có tài khoản ở đây, email nào không.
+         */
+        if ($state['user_id'] === null || !Otp::matches((string) $code, (string) $state['hash'])) {
+            $state['tries'] = (int) $state['tries'] + 1;
+
+            // Hết lượt thì bỏ hẳn yêu cầu, không chỉ báo lỗi: còn mã là còn dò.
+            if ($state['tries'] >= Otp::MAX_TRIES) {
+                unset($_SESSION['_forgot']);
+
+                flash('auth_error', 'Nhập sai quá nhiều lần. Vui lòng gửi lại yêu cầu.');
+                redirect('/quen-mat-khau');
+            }
+
+            $_SESSION['_forgot'] = $state;
+
+            flash('auth_error', sprintf(
+                'Mã không đúng. Bạn còn %d lần thử.',
+                Otp::MAX_TRIES - $state['tries']
+            ));
+            redirect('/quen-mat-khau?buoc=ma');
+        }
+
+        $state['verified'] = true;
+        $state['hash']     = '';   // đã dùng xong, không giữ lại làm gì
+
+        $_SESSION['_forgot'] = $state;
+
+        redirect('/quen-mat-khau?buoc=mat-khau');
+    }
+
+    /** Chặng 3: đặt mật khẩu mới. */
+    public function forgotFinish(): void
+    {
+        $this->requirePost('/quen-mat-khau');
+
+        $state = self::forgotState();
+
+        // Kiểm lại verified NGAY TRƯỚC KHI ĐỔI, không tin vào việc bước trước
+        // đã kiểm: giữa hai request, phiên có thể đã bị thay bằng thứ khác.
+        if ($state === null || empty($state['verified']) || $state['user_id'] === null) {
+            redirect('/quen-mat-khau');
+        }
+
+        $new     = (string) ($_POST['new_password'] ?? '');
+        $confirm = (string) ($_POST['new_password_confirm'] ?? '');
+
+        if ($new !== $confirm) {
+            flash('auth_error', 'Hai lần nhập mật khẩu không khớp.');
+            redirect('/quen-mat-khau?buoc=mat-khau');
+        }
+
+        $result = PasswordResetModel::applyNewPassword((string) $state['user_id'], $new);
+
+        if (!$result['ok']) {
+            flash('auth_error', $result['error']);
+            redirect('/quen-mat-khau?buoc=mat-khau');
+        }
+
+        /*
+         * KHÔNG tự đăng nhập luôn sau khi đổi.
+         *
+         * Người vừa đi qua luồng này có thể đang ngồi ở máy lạ (chính vì thế
+         * họ mới phải đặt lại mật khẩu). Bắt gõ mật khẩu mới một lần ở trang
+         * đăng nhập vừa xác nhận họ nhớ đúng thứ vừa đặt, vừa không để lại một
+         * phiên đang đăng nhập trên cái máy đó.
+         */
+        unset($_SESSION['_forgot']);
+        $_SESSION['_forgot_done'] = true;
+
+        redirect('/quen-mat-khau?buoc=xong');
     }
 
     /** Trang đặt mật khẩu mới, tới từ liên kết trong email hoặc do nhân viên gửi. */
@@ -441,13 +681,9 @@ class AuthController extends BaseController
            auth.js chấm xanh từng dòng ngay khi gõ, nhưng đó chỉ là tăng cường:
            tắt JavaScript, hay gọi thẳng địa chỉ này, thì bốn dòng dưới đây là
            thứ duy nhất còn đứng lại. */
-        $failed = match (true) {
-            strlen($password) < 8       => 'Mật khẩu phải có ít nhất 8 ký tự.',
-            !preg_match('/[A-Z]/', $password) => 'Mật khẩu phải có ít nhất một chữ hoa.',
-            !preg_match('/[a-z]/', $password) => 'Mật khẩu phải có ít nhất một chữ thường.',
-            !preg_match('/[0-9]/', $password) => 'Mật khẩu phải có ít nhất một chữ số.',
-            default => null,
-        };
+        // Bộ quy tắc dùng chung cho mọi màn đặt mật khẩu — xem passwordProblem()
+        // trong core/helpers.php.
+        $failed = passwordProblem($password);
 
         if ($failed !== null) {
             flash('auth_error', $failed);

@@ -678,7 +678,7 @@ CREATE TABLE `order_items` (
     `lens_id`       VARCHAR(40)  NULL,
     `lens_name`     VARCHAR(160) NULL,
     `lens_price`    BIGINT       NOT NULL DEFAULT 0,
-    `prescription`  VARCHAR(160) NULL,
+    `prescription`  VARCHAR(255) NULL,
     `product_name` VARCHAR(255) NOT NULL,
     `unit_price`   BIGINT       NOT NULL,
     `quantity`     INT          NOT NULL DEFAULT 1,

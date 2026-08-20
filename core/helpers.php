@@ -719,3 +719,33 @@ function looksLikePhone(string $login): bool
     return !str_contains($login, '@')
         && preg_match('/^[\d\s.\-()+]+$/', trim($login)) === 1;
 }
+
+/**
+ * Mật khẩu mới có đạt yêu cầu không? Trả về câu báo lỗi, hoặc null nếu đạt.
+ *
+ * MỘT NƠI DUY NHẤT ĐỊNH NGHĨA "MẬT KHẨU HỢP LỆ" — dùng ở cả ba màn đặt mật
+ * khẩu: đăng ký (AuthController::signupFinish), quên mật khẩu bằng mã OTP, và
+ * đặt lại bằng liên kết của nhân viên (PasswordResetModel::applyNewPassword).
+ * Trước đây bộ quy tắc nằm chép tay trong màn đăng ký, còn hai màn kia chỉ đòi
+ * 8 ký tự — nghĩa là ai đi đường quên mật khẩu thì đặt được mật khẩu yếu hơn
+ * mức site tự đặt ra cho mình, và chỗ yếu nhất mới là chỗ quyết định.
+ *
+ * Bốn dòng quy tắc in trên màn hình phải khớp với hàm này; chúng có ở
+ * auth/_password-rules.php.
+ *
+ * strlen() đếm BYTE chứ không đếm ký tự — cố ý. Giới hạn của password_hash()
+ * là 72 byte, và với mật khẩu thì "dài" nên hiểu theo byte: một chuỗi tiếng
+ * Việt 8 chữ có dấu là 16-24 byte, đếm theo ký tự sẽ thả lọt thứ ngắn hơn
+ * mức ta tưởng.
+ */
+function passwordProblem(string $password): ?string
+{
+    return match (true) {
+        strlen($password) < 8             => 'Mật khẩu phải có ít nhất 8 ký tự.',
+        strlen($password) > 72            => 'Mật khẩu quá dài (tối đa 72 ký tự).',
+        !preg_match('/[A-Z]/', $password) => 'Mật khẩu phải có ít nhất một chữ hoa.',
+        !preg_match('/[a-z]/', $password) => 'Mật khẩu phải có ít nhất một chữ thường.',
+        !preg_match('/[0-9]/', $password) => 'Mật khẩu phải có ít nhất một chữ số.',
+        default                           => null,
+    };
+}

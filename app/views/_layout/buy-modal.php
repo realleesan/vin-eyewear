@@ -350,6 +350,20 @@ $stepForm = static function (string $buoc): void {
                                 <?php endforeach; ?>
                             </select>
                         </label>
+
+                        <?php /* Ghi chú NẰM NGAY DƯỚI Ô ĐỘ CỦA CHÍNH MẮT ĐÓ, mỗi
+                                 mắt một ô riêng. Một ô chung ở cuối form thì người
+                                 mài đọc xong vẫn phải đoán câu đó nói về mắt nào.
+                                 Không bắt buộc: khách không có gì để dặn thì bỏ
+                                 trống, đây vẫn là bước mua hàng chứ không phải
+                                 phiếu khám. */ ?>
+                        <label class="beye__field beye__field--note">
+                            <span class="beye__cap">Ghi chú <?= e($short) ?> (không bắt buộc)</span>
+                            <input type="text" name="<?= e($side) ?>_note"
+                                   maxlength="<?= LensModel::NOTE_MAX ?>"
+                                   placeholder="Ví dụ: hay mỏi khi đọc lâu"
+                                   value="">
+                        </label>
                     </div>
                 <?php endforeach; ?>
 

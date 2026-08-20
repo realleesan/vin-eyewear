@@ -250,16 +250,7 @@ $backTo = static function (string $href): void { ?>
             ]); ?>
         </label>
 
-        <?php /* BỐN QUY TẮC, cùng bộ với signupFinish() ở máy chủ. auth.js
-                 chấm xanh từng dòng ngay khi gõ; không có JavaScript thì bốn
-                 dòng này vẫn là bản yêu cầu đọc được, và máy chủ vẫn từ chối
-                 mật khẩu thiếu chuẩn. */ ?>
-        <ul class="arule" role="list">
-            <li class="arule__item" data-rule="len"><span class="arule__dot" aria-hidden="true">✓</span>Tối thiểu 8 ký tự</li>
-            <li class="arule__item" data-rule="upper"><span class="arule__dot" aria-hidden="true">✓</span>Ít nhất một chữ hoa</li>
-            <li class="arule__item" data-rule="lower"><span class="arule__dot" aria-hidden="true">✓</span>Ít nhất một chữ thường</li>
-            <li class="arule__item" data-rule="digit"><span class="arule__dot" aria-hidden="true">✓</span>Ít nhất một chữ số</li>
-        </ul>
+        <?php partial('auth/_password-rules'); ?>
 
         <button type="submit" class="authbtn authbtn--primary">Đăng ký</button>
     </form>

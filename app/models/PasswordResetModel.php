@@ -9,15 +9,34 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * HAI ĐƯỜNG ĐẶT LẠI, MỘT BẢNG
  *
- *   Gửi được mail   -> tạo token ngay, gửi liên kết, status = 'sent'
- *   Không gửi được  -> chỉ GHI NHẬN yêu cầu, status = 'pending'
- *                      Nhân viên thấy trong /quan-tri/quen-mat-khau, gọi điện
- *                      xác minh, rồi mới bấm tạo liên kết.
+ *   Khách tự làm  -> mã OTP 6 số gửi thẳng cho khách, requestOtp() bên dưới.
+ *                    Kênh chọn theo thứ khách gõ vào ô:
+ *                        có '@'  -> email
+ *                        là số   -> Zalo
+ *                    Xác minh xong thì đặt mật khẩu ngay trong cùng phiên,
+ *                    không sinh token nào cả.
  *
- * Ở nhánh 'pending' KHÔNG tạo token sẵn. Một token còn hạn nằm trong cơ sở dữ
- * liệu mà chưa ai xác minh danh tính người yêu cầu là một chìa khoá bỏ ngỏ:
- * chỉ cần rò rỉ bảng, hoặc một nhân viên tò mò, là đổi được mật khẩu của
- * khách. Token chỉ sinh ra đúng lúc có người chịu trách nhiệm cho nó.
+ *   Nhân viên      -> issueByStaff() tạo LIÊN KẾT có token cho những ca khách
+ *                    không nhận được mã (mất số, sai email, kênh gửi hỏng).
+ *                    Vào bằng /dat-lai-mat-khau?token=… — mở được bằng GET,
+ *                    không cần phiên nào, nên gửi qua Zalo/điện thoại được.
+ *
+ * VÌ SAO KHÁCH DÙNG OTP CHỨ KHÔNG PHẢI LIÊN KẾT: liên kết chỉ đi được qua
+ * email. Phần lớn tài khoản ở đây đăng ký bằng số điện thoại và email là NULL
+ * (xem migration 2026-08-19-dang-ky-khong-email-va-google), nên với họ đường
+ * liên kết không tồn tại. Mã 6 số thì kênh nào cũng chở được — email hôm nay,
+ * Zalo ZNS khi cắm xong nhà cung cấp.
+ *
+ * Ở nhánh nhân viên KHÔNG tạo token sẵn lúc khách vừa yêu cầu. Một token còn
+ * hạn nằm trong cơ sở dữ liệu mà chưa ai xác minh danh tính người yêu cầu là
+ * một chìa khoá bỏ ngỏ: chỉ cần rò rỉ bảng, hoặc một nhân viên tò mò, là đổi
+ * được mật khẩu của khách. Token chỉ sinh ra đúng lúc có người chịu trách
+ * nhiệm cho nó.
+ *
+ * MÃ OTP KHÔNG CẤT VÀO BẢNG NÀY. Nó sống trong $_SESSION của chính người đang
+ * yêu cầu, đã băm — cùng lối với luồng đăng ký, xem core/Otp.php. Bảng chỉ giữ
+ * phần cần cho việc khác: đếm số lần yêu cầu (chống spam) và hàng chờ cho nhân
+ * viên. Cất thêm mã vào đây chỉ làm dài thêm danh sách thứ bị lộ khi rò rỉ.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -37,73 +56,134 @@ class PasswordResetModel extends BaseModel
     }
 
     /**
-     * Khách gửi yêu cầu đặt lại.
+     * Khách bấm "Gửi yêu cầu" ở /quen-mat-khau.
      *
-     * LUÔN trả về cùng một kết quả dù tài khoản có tồn tại hay không — nếu
-     * báo "không tìm thấy email này" thì trang quên mật khẩu trở thành công cụ
-     * dò xem ai có tài khoản ở đây.
+     * Sinh mã OTP, gửi qua kênh hợp với thứ khách vừa gõ, và trả về trạng thái
+     * để controller cất vào phiên. KHÔNG tự đụng $_SESSION: model chạy được cả
+     * trong script CLI, mà ở đó không có phiên nào.
      *
-     * @return array{ok:bool, sent:bool, error?:string}
+     * LUÔN TRẢ VỀ NHƯ NHAU DÙ TÀI KHOẢN CÓ TỒN TẠI HAY KHÔNG — kể cả khi không
+     * tìm thấy ai, hàm vẫn sinh mã, vẫn trả 'ok', để màn nhập mã hiện lên y
+     * hệt. Báo "không tìm thấy email này" sẽ biến trang quên mật khẩu thành
+     * công cụ dò xem ai là khách hàng của cửa hàng. Mã của một yêu cầu không
+     * khớp ai thì không được gửi đi đâu cả, nên không ai nhập đúng nó được.
+     *
+     * @return array{
+     *     ok: bool, error?: string, channel?: string, display?: string,
+     *     user_id?: ?string, hash?: string, sent?: bool, code?: ?string
+     * }
+     *     code chỉ có giá trị khi app.debug bật — xem chú thích ở nơi gọi.
      */
-    public static function request(string $contact): array
+    public static function requestOtp(string $contact): array
     {
         if (!self::available()) {
-            return ['ok' => false, 'sent' => false,
+            return ['ok' => false,
                     'error' => 'Chức năng đặt lại mật khẩu chưa được bật. Vui lòng gọi hotline.'];
         }
 
         $contact = trim($contact);
 
         if ($contact === '' || utf8Length($contact) > 255) {
-            return ['ok' => false, 'sent' => false, 'error' => 'Vui lòng nhập email hoặc số điện thoại.'];
+            return ['ok' => false, 'error' => 'Vui lòng nhập email hoặc số điện thoại.'];
         }
 
-        // Chặn gửi liên tục: vừa để khỏi làm phiền chủ hộp thư, vừa để không
-        // ai dùng site này làm máy gửi thư rác.
+        $channel = self::channelOf($contact);
+
+        if ($channel === null) {
+            return ['ok' => false,
+                    'error' => 'Chưa nhận ra email hay số điện thoại. Kiểm tra lại giúp bạn nhé.'];
+        }
+
+        // Chặn gửi liên tục: vừa để khỏi làm phiền chủ hộp thư hay chủ số điện
+        // thoại, vừa để không ai dùng site này làm máy gửi thư rác. Đếm theo
+        // chuỗi khách gõ chứ không theo tài khoản, vì chuỗi không khớp ai thì
+        // không có tài khoản nào để mà đếm.
         if (self::tooMany($contact)) {
-            return ['ok' => false, 'sent' => false,
+            return ['ok' => false,
                     'error' => 'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau một giờ.'];
         }
 
-        $user = UserModel::findByLogin($contact);
+        $user   = UserModel::findByLogin($contact);
+        $userId = $user !== null ? (string) $user['id'] : null;
+        $code   = Otp::generate();
 
-        // Không có tài khoản: vẫn ghi nhận (user_id = NULL) rồi trả về như
-        // thành công. Nhân viên nhìn vào sẽ thấy ngay là khách gõ nhầm.
-        if ($user === null) {
-            self::record($contact, null, 'pending');
+        // Ghi nhận MỌI yêu cầu, kể cả yêu cầu không khớp tài khoản nào: nhân
+        // viên nhìn hàng chờ sẽ thấy ngay là khách gõ nhầm, và đó cũng là thứ
+        // tooMany() đếm.
+        $requestId = self::record($contact, $userId, 'pending');
 
-            return ['ok' => true, 'sent' => false];
+        $sent = false;
+
+        if ($user !== null) {
+            $sent = $channel === 'email'
+                ? self::mailOtp((string) $user['email'], $code, (string) ($user['full_name'] ?? ''))
+                // Zalo ZNS CHƯA CẮM: hàm này mới chỉ ghi mã ra error log.
+                // Chỗ cắm nhà cung cấp là Otp::send(), xem core/Otp.php.
+                : Otp::send((string) ($user['phone'] ?? $contact), $code, 'zalo');
+
+            if ($sent) {
+                Database::execute(
+                    "UPDATE password_resets SET status = 'sent' WHERE id = :id",
+                    ['id' => $requestId]
+                );
+            }
         }
 
-        $email = (string) $user['email'];
+        return [
+            'ok'      => true,
+            'channel' => $channel,
+            'display' => self::maskContact($contact, $channel),
+            'user_id' => $userId,
+            'hash'    => Otp::hash($code),
+            'sent'    => $sent,
+            // Ở máy phát triển thì controller in mã ra màn hình — chưa có nhà
+            // cung cấp nào chở mã tới tay khách, mà hosting hiện tại cũng chặn
+            // luôn cả gửi mail (xem MAIL_DRIVER trong .env).
+            'code'    => config('app.debug') ? $code : null,
+        ];
+    }
 
-        if (!Mailer::canDeliver()) {
-            self::record($contact, (string) $user['id'], 'pending');
+    /**
+     * Khách gõ email hay số điện thoại? null = không ra thứ nào cả.
+     *
+     * Nhận diện theo dấu '@' chứ không phải "thử số trước rồi thử email":
+     * looksLikePhone() nhận cả chuỗi có dấu cách và dấu gạch, nên một địa chỉ
+     * gõ vội cũng lọt qua nó được. Có '@' thì chắc chắn không phải số.
+     */
+    public static function channelOf(string $contact): ?string
+    {
+        $contact = trim($contact);
 
-            return ['ok' => true, 'sent' => false];
+        if (str_contains($contact, '@')) {
+            return filter_var($contact, FILTER_VALIDATE_EMAIL) !== false ? 'email' : null;
         }
 
-        $id    = self::record($contact, (string) $user['id'], 'pending');
-        $link  = self::attachToken($id);
+        return normalizePhone($contact) !== null ? 'zalo' : null;
+    }
 
-        $sent = Mailer::send(
-            $email,
-            'Đặt lại mật khẩu Vin Eyewear',
-            self::emailHtml($link, (string) ($user['full_name'] ?? ''))
-        );
-
-        if (!$sent) {
-            // Gửi hụt: gỡ token đi, trả yêu cầu về hàng chờ để nhân viên xử lý.
-            // Để token còn sống mà không ai nhận được liên kết là vô ích và
-            // chỉ làm dài thêm thời gian tồn tại của một chìa khoá.
-            self::detachToken($id);
-
-            return ['ok' => true, 'sent' => false];
+    /**
+     * Chuỗi in trên màn nhập mã: "ng***an@gmail.com" · "(+84) 912 *** 678".
+     *
+     * Che bớt vì màn đó mở được mà không cần đăng nhập: ai mượn máy người khác
+     * cũng đọc được nguyên địa chỉ nếu in đủ. Chừa hai đầu để chính chủ vẫn
+     * nhận ra mình gõ đúng chỗ chưa.
+     */
+    public static function maskContact(string $contact, string $channel): string
+    {
+        if ($channel !== 'email') {
+            return Otp::displayPhone($contact);
         }
 
-        Database::execute("UPDATE password_resets SET status = 'sent' WHERE id = :id", ['id' => $id]);
+        [$name, $domain] = array_pad(explode('@', trim($contact), 2), 2, '');
 
-        return ['ok' => true, 'sent' => true];
+        // Tên ngắn thì chỉ chừa ký tự đầu: chừa cả đuôi nữa mà tên chỉ có một
+        // hai chữ thì phần che chẳng che được gì — "a***a" cho địa chỉ a@… vừa
+        // lộ hết vừa làm người đọc tưởng tên dài hơn thực tế.
+        if (strlen($name) <= 3) {
+            return substr($name, 0, 1) . '***@' . $domain;
+        }
+
+        return substr($name, 0, 2) . '***' . substr($name, -1) . '@' . $domain;
     }
 
     /**
@@ -197,25 +277,40 @@ class PasswordResetModel extends BaseModel
                 'Liên kết không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu lại.'];
         }
 
-        if (strlen($newPassword) < 8) {
-            return ['ok' => false, 'error' => 'Mật khẩu mới phải từ 8 ký tự.'];
+        return self::applyNewPassword((string) $row['user_id'], $newPassword);
+    }
+
+    /**
+     * Đặt mật khẩu mới cho một tài khoản đã được xác minh danh tính.
+     *
+     * Dùng chung cho CẢ HAI đường vào — token của nhân viên (complete() ở
+     * trên) và mã OTP khách tự nhập (AuthController::forgotFinish). Việc phải
+     * làm giống hệt nhau ở hai nơi, mà mỗi việc bỏ sót đều là một lỗ hổng:
+     * quên đóng yêu cầu cũ là để lại chìa khoá dùng được lần hai, quên thu hồi
+     * "ghi nhớ đăng nhập" là kẻ đã chiếm được máy vẫn ở nguyên trong tài khoản
+     * dù chính chủ vừa đổi mật khẩu.
+     *
+     * NGƯỜI GỌI CHỊU TRÁCH NHIỆM XÁC MINH. Hàm này không hỏi lại token hay mã —
+     * đưa $userId vào là nó đổi. Đừng gọi từ chỗ chưa kiểm gì.
+     *
+     * @return array{ok:bool, error?:string}
+     */
+    public static function applyNewPassword(string $userId, string $newPassword): array
+    {
+        $problem = passwordProblem($newPassword);
+
+        if ($problem !== null) {
+            return ['ok' => false, 'error' => $problem];
         }
 
-        $userId = (string) $row['user_id'];
-
-        Database::transaction(static function () use ($userId, $newPassword, $row): void {
+        Database::transaction(static function () use ($userId, $newPassword): void {
             Database::execute(
                 'UPDATE users SET password_hash = :h WHERE id = :id',
                 ['h' => password_hash($newPassword, PASSWORD_DEFAULT), 'id' => $userId]
             );
 
-            Database::execute(
-                "UPDATE password_resets SET status = 'used', used_at = NOW() WHERE id = :id",
-                ['id' => $row['id']]
-            );
-
-            // Mọi yêu cầu khác còn treo của chính người này cũng hết giá trị:
-            // đã đặt lại được rồi thì các liên kết cũ không còn lý do tồn tại.
+            // Mọi yêu cầu còn treo của chính người này đều hết giá trị: đã đặt
+            // lại được rồi thì các liên kết cũ không còn lý do tồn tại.
             Database::execute(
                 "UPDATE password_resets
                     SET status = 'used', used_at = NOW()
@@ -300,16 +395,6 @@ class PasswordResetModel extends BaseModel
              . '/dat-lai-mat-khau?token=' . rawurlencode($selector . ':' . $validator);
     }
 
-    private static function detachToken(string $id): void
-    {
-        Database::execute(
-            "UPDATE password_resets
-                SET selector = NULL, validator = NULL, expires_at = NULL, status = 'pending'
-              WHERE id = :id",
-            ['id' => $id]
-        );
-    }
-
     private static function tooMany(string $contact): bool
     {
         return (int) Database::fetchValue(
@@ -319,35 +404,85 @@ class PasswordResetModel extends BaseModel
         ) >= self::MAX_PER_HOUR;
     }
 
-    private static function emailHtml(string $link, string $name): string
+    /**
+     * Gửi mã qua email. Trả về true CHỈ KHI thư thật sự có đường ra ngoài.
+     *
+     * MAIL_DRIVER='log' không phải là gửi được: nó chỉ ghi thư vào storage/mail
+     * để người phát triển xem lại. Trả true cho nó thì yêu cầu bị đánh dấu
+     * 'sent' và biến mất khỏi hàng chờ ở /quan-tri/quen-mat-khau — khách không
+     * nhận được gì mà cũng không còn ai biết để gọi lại cho họ. Hosting hiện
+     * tại đúng là đang ở tình trạng đó: InfinityFree bản miễn phí chặn cả hàm
+     * mail() lẫn cổng SMTP đi ra.
+     *
+     * Vẫn GỌI Mailer::send ở máy phát triển dù driver là 'log', vì đó là cách
+     * duy nhất xem lại nội dung thư. Trên production thì không: ghi mã xuống
+     * đĩa mà chẳng ai đọc chỉ tổ để lại một bản sao của thứ cần giữ kín.
+     */
+    private static function mailOtp(string $to, string $code, string $name): bool
+    {
+        $deliverable = Mailer::canDeliver();
+
+        if (!$deliverable && !config('app.debug')) {
+            return false;
+        }
+
+        $sent = Mailer::send(
+            $to,
+            'Mã đặt lại mật khẩu Vin Eyewear',
+            self::otpEmailHtml($code, $name),
+            self::otpEmailText($code)
+        );
+
+        return $deliverable && $sent;
+    }
+
+    /**
+     * Thư chở mã OTP.
+     *
+     * MÃ NẰM NGAY TRONG PHẦN NHÌN THẤY, cỡ chữ lớn, giãn ký tự — người đọc
+     * trên điện thoại phải chép được bằng mắt, không phải bấm vào đâu cả.
+     * Không có nút, không có liên kết: thư đặt lại mật khẩu mà có nút bấm là
+     * thứ khách bị dạy phải bấm, và đó đúng là thói quen mà lừa đảo khai thác.
+     */
+    private static function otpEmailHtml(string $code, string $name): string
     {
         $hello = $name !== '' ? 'Chào ' . e($name) . ',' : 'Chào bạn,';
-        $mins  = (int) (self::LIFETIME / 60);
+        $mins  = (int) (Otp::TTL / 60);
+        $code  = e($code);
 
         return <<<HTML
         <div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
                     font-size:15px;line-height:1.7;color:#1a1214;max-width:520px">
           <p style="font-family:Georgia,serif;font-size:22px;margin:0 0 18px">Vin Eyewear</p>
           <p>{$hello}</p>
-          <p>Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.
-             Bấm vào nút dưới đây để chọn mật khẩu mới:</p>
-          <p style="margin:24px 0">
-            <a href="{$link}"
-               style="display:inline-block;padding:13px 26px;background:#801a20;
-                      color:#faf6f2;text-decoration:none;font-weight:600">
-              Đặt lại mật khẩu
-            </a>
-          </p>
+          <p>Mã xác minh để đặt lại mật khẩu của bạn là:</p>
+          <p style="margin:24px 0;font-size:34px;font-weight:700;letter-spacing:10px;
+                    color:#801a20">{$code}</p>
           <p style="color:#5c4f52;font-size:13px">
-            Liên kết có hiệu lực trong {$mins} phút và chỉ dùng được một lần.<br>
+            Mã có hiệu lực trong {$mins} phút và chỉ dùng được một lần.<br>
             Nếu bạn không yêu cầu việc này, hãy bỏ qua email — mật khẩu hiện tại
-            của bạn không thay đổi.
-          </p>
-          <p style="color:#5c4f52;font-size:13px">
-            Nút không bấm được? Chép đường dẫn này vào trình duyệt:<br>
-            <span style="word-break:break-all">{$link}</span>
+            của bạn không thay đổi. Đừng đưa mã cho bất kỳ ai, kể cả người tự
+            xưng là nhân viên Vin Eyewear.
           </p>
         </div>
         HTML;
+    }
+
+    /**
+     * Bản chữ thuần đi kèm.
+     *
+     * Mailer::send() tự rút chữ từ HTML được, nhưng ở đây phần quan trọng nhất
+     * là sáu chữ số nằm trong một thẻ có màu và giãn cách — rút tự động dễ ra
+     * chuỗi dính liền khó đọc. Sáu số thì viết tay một dòng là xong.
+     */
+    private static function otpEmailText(string $code): string
+    {
+        $mins = (int) (Otp::TTL / 60);
+
+        return "Vin Eyewear\n\n"
+             . "Mã xác minh để đặt lại mật khẩu của bạn là: {$code}\n\n"
+             . "Mã có hiệu lực trong {$mins} phút và chỉ dùng được một lần.\n"
+             . "Nếu bạn không yêu cầu việc này, hãy bỏ qua email.\n"
+             . "Đừng đưa mã cho bất kỳ ai, kể cả người tự xưng là nhân viên Vin Eyewear.\n";
     }
 }

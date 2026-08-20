@@ -48,15 +48,33 @@ $statusLabel = [
         </div>
     <?php endif; ?>
 
-    <p class="alert <?= $canDeliver ? 'alert--ok' : 'alert--err' ?>">
-        <?php if ($canDeliver): ?>
-            Đang gửi email tự động (<code><?= e($mailDriver) ?></code>).
-            Yêu cầu chỉ rơi về đây khi gửi thất bại.
+    <?php
+    /*
+     * Khách nhập email thì mã OTP đi bằng email, nhập số điện thoại thì đi
+     * bằng Zalo. Hai kênh bật/tắt độc lập, nên nói gộp "gửi được / không gửi
+     * được" là nói sai một nửa: nhân viên đọc xong tưởng hàng chờ trống là
+     * mọi việc êm, trong khi mọi yêu cầu bằng số điện thoại vẫn đang kẹt.
+     */
+    $kenh = [
+        ['Email',           $canDeliver, 'MAIL_DRIVER=' . $mailDriver],
+        ['Zalo (số điện thoại)', $canSms, 'chưa cắm nhà cung cấp — core/Otp.php'],
+    ];
+    $tatCa = $canDeliver && $canSms;
+    ?>
+
+    <p class="alert <?= $tatCa ? 'alert--ok' : 'alert--err' ?>">
+        <?php if ($tatCa): ?>
+            Mã xác minh đang gửi tự động qua cả hai kênh. Yêu cầu chỉ rơi về đây
+            khi gửi thất bại.
         <?php else: ?>
-            <strong>Chưa gửi được email tự động</strong>
-            (<code>MAIL_DRIVER=<?= e($mailDriver) ?></code>).
-            Mọi yêu cầu đều phải xử lý tay ở trang này.
-            Gọi xác minh đúng người <em>trước khi</em> tạo liên kết —
+            <strong>Kênh gửi mã chưa đủ</strong> — yêu cầu đi qua kênh đang tắt sẽ
+            nằm lại trang này và phải xử lý tay:
+            <?php foreach ($kenh as [$ten, $bat, $vi]): ?>
+                <br><?= $bat ? '✓' : '✗' ?> <?= e($ten) ?>
+                <?= $bat ? 'gửi được' : '<em>không gửi được</em>' ?>
+                (<code><?= e($vi) ?></code>).
+            <?php endforeach; ?>
+            <br>Gọi xác minh đúng người <em>trước khi</em> tạo liên kết —
             đó là bước bảo mật duy nhất của cả luồng.
         <?php endif; ?>
     </p>

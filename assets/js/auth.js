@@ -120,7 +120,11 @@
     var form = document.querySelector('form[data-pw-rules]');
 
     if (form) {
-        var input = form.querySelector('input[name="password"]');
+        /* Ô mật khẩu mang tên khác nhau tuỳ màn: 'password' khi đăng ký,
+           'new_password' ở hai màn đặt lại mật khẩu. querySelector trả về ô
+           ĐẦU TIÊN theo thứ tự tài liệu, nên ở màn có thêm ô "nhập lại" thì
+           vẫn đúng ô trên. */
+        var input = form.querySelector('input[name="password"], input[name="new_password"]');
         var rules = {
             len:   function (v) { return v.length >= 8; },
             upper: function (v) { return /[A-Z]/.test(v); },

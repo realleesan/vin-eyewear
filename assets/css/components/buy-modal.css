@@ -487,6 +487,28 @@
 
 .beye__field select:focus { border-color: var(--brand); }
 
+/* Ghi chú của từng mắt.
+   Cùng dáng ô với <select> ngay trên nó — hai ô thuộc về cùng một mắt, trông
+   khác nhau thì đọc thành hai khối rời. Nhạt hơn một bậc (chữ nhỏ hơn, viền
+   mảnh hơn) để mắt vẫn thấy con số độ là phần chính, ghi chú là phần thêm. */
+.beye__field--note { margin-top: 2px; }
+
+.beye__field--note input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--h-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+}
+
+.beye__field--note input::placeholder { color: var(--muted); }
+.beye__field--note input:focus { border-color: var(--brand); }
+
 /* ============================================================
    BƯỚC 4 — CHỌN LOẠI TRÒNG KÍNH
    ============================================================ */
