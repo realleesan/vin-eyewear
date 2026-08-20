@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+  # Cho phép bấm nút chạy tay ở tab Actions trên GitHub.
+  # Cần cho lần đẩy ĐẦU TIÊN: khi trên máy không còn commit nào để push mà
+  # hosting thì vẫn trống, không có workflow_dispatch sẽ không có cách nào
+  # khởi động deploy ngoài việc tạo một commit rỗng.
+  workflow_dispatch:
 
 jobs:
   web-deploy:
