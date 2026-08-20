@@ -805,12 +805,14 @@ CREATE TABLE `contact_requests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- 7. DỮ LIỆU MẪU
+-- 7. DỮ LIỆU KHỞI TẠO
 --
--- Bê nguyên từ seed của migration Supabase để hai bản chạy ra cùng nội dung.
--- Giá trị frame_shape / material / brand lấy theo BẢN ĐÃ CHUẨN HOÁ ở migration
--- 20260807140539 (Vuông->Square, Titan->Titanium, đổi brand theo dáng gọng),
--- nên ở đây không cần chạy lại các câu UPDATE đó.
+-- Chỉ KHUNG để trang chạy được ngay sau khi cài: cơ sở (form đặt lịch và trang
+-- Liên hệ cần có), danh mục (bộ lọc và điều hướng cần có) và vài bài sự kiện
+-- làm mẫu bố cục.
+--
+-- KHÔNG có sản phẩm nào — xem ghi chú "KHÔNG SEED SẢN PHẨM" bên dưới. Catalog
+-- nhập ở /quan-tri/san-pham.
 -- ============================================================================
 
 INSERT INTO `stores` (`code`, `name`, `address`, `phone`, `open_hours`, `map_url`) VALUES
@@ -822,61 +824,24 @@ INSERT INTO `categories` (`slug`, `name`, `description`, `sort_order`) VALUES
 ('kinh-mat',       'Kính mát',       'Kính mát chống tia UV cho mọi khuôn mặt',         2),
 ('trong-kinh',     'Tròng kính',     'Tròng kính chiết suất cao, chống ánh sáng xanh',  3);
 
-INSERT INTO `products`
-    (`slug`, `sku`, `name`, `category_id`, `brand`, `frame_shape`, `material`, `color`, `gender`,
-     `description`, `specs`, `images`, `price`, `compare_at_price`, `stock_quantity`, `status`,
-     `is_featured`, `rating`, `review_count`)
-VALUES
-('gong-kinh-titan-vin-t01', 'VEW-T01', 'Gọng kính Titan Vin T01',
-    (SELECT `id` FROM `categories` WHERE `slug` = 'gong-kinh'),
-    'Lindberg', 'Square', 'Titanium', 'Đen', 'unisex',
-    'Gọng titan siêu nhẹ 12g, thiết kế vuông thanh lịch phù hợp mọi khuôn mặt.',
-    '{"Vật liệu":"Titan","Kích thước":"52-18-140","Trọng lượng":"12g"}',
-    '["/assets/images/product-1.jpg"]',
-    2890000, 3500000, 12, 'in_stock', 1, 5.0, 18),
-
-('gong-kinh-acetate-vin-a02', 'VEW-A02', 'Gọng kính Acetate Vin A02',
-    (SELECT `id` FROM `categories` WHERE `slug` = 'gong-kinh'),
-    'Oakley', 'Round', 'Acetate', 'Nâu vân', 'unisex',
-    'Gọng acetate vân đồi mồi, phong cách cổ điển hiện đại.',
-    '{"Vật liệu":"Acetate","Kích thước":"50-20-145","Trọng lượng":"22g"}',
-    '["/assets/images/product-2.jpg"]',
-    1690000, 1990000, 20, 'in_stock', 1, 4.9, 32),
-
-('kinh-mat-polarized-vin-s03', 'VEW-S03', 'Kính mát Polarized Vin S03',
-    (SELECT `id` FROM `categories` WHERE `slug` = 'kinh-mat'),
-    'Ray-Ban', 'Aviator', 'Stainless Steel', 'Xám khói', 'male',
-    'Kính mát phân cực chống chói, chặn 100% tia UV400.',
-    '{"Tròng":"Polarized UV400","Kích thước":"58-16-140"}',
-    '["/assets/images/product-3.jpg"]',
-    2190000, 2690000, 8, 'in_stock', 1, 5.0, 24),
-
-('kinh-mat-mat-meo-vin-s04', 'VEW-S04', 'Kính mát Mắt mèo Vin S04',
-    (SELECT `id` FROM `categories` WHERE `slug` = 'kinh-mat'),
-    'Bolon', 'Cat-eye', 'Acetate', 'Hồng trà', 'female',
-    'Kính mát mắt mèo tôn đường nét khuôn mặt, tròng gradient.',
-    '{"Tròng":"Gradient UV400","Kích thước":"55-18-142"}',
-    '["/assets/images/product-4.jpg"]',
-    1890000, NULL, 0, 'out_of_stock', 0, 4.8, 11),
-
-('trong-kinh-chong-anh-sang-xanh', 'VEW-L05', 'Tròng kính chống ánh sáng xanh 1.61',
-    (SELECT `id` FROM `categories` WHERE `slug` = 'trong-kinh'),
-    'Essilor', '—', 'Polycarbonate 1.61', 'Trong', 'unisex',
-    'Tròng chiết suất 1.61 chống ánh sáng xanh, phù hợp làm việc máy tính.',
-    '{"Chiết suất":"1.61","Lớp phủ":"Blue-cut, chống xước"}',
-    '["/assets/images/product-5.jpg"]',
-    1250000, 1500000, 50, 'in_stock', 1, 4.9, 45);
-
--- Bộ sưu tập (S09) — gắn cho dữ liệu mẫu để khối trang chủ bấm vào có hàng.
--- Slug phải khớp config/collections.php.
-UPDATE `products` SET `collection` = 'nang-he'
- WHERE `slug` IN ('kinh-mat-polarized-vin-s03', 'kinh-mat-mat-meo-vin-s04');
-
-UPDATE `products` SET `collection` = 'nhe-ca-ngay'
- WHERE `slug` IN ('gong-kinh-titan-vin-t01', 'trong-kinh-chong-anh-sang-xanh');
-
-UPDATE `products` SET `collection` = 'co-dien-tro-lai'
- WHERE `slug` IN ('gong-kinh-acetate-vin-a02');
+-- ----------------------------------------------------------------------------
+-- KHÔNG SEED SẢN PHẨM — CỐ Ý
+--
+-- Trước đây chỗ này có 5 mặt hàng mẫu (VEW-T01…VEW-L05) kèm ba câu UPDATE gán
+-- chúng vào bộ sưu tập. Bỏ hết: catalog là thứ cửa hàng tự nhập qua
+-- /quan-tri/san-pham, và hàng mẫu trong file cài đặt gây ra đúng hai chuyện:
+--
+--   1. Cài xong là trên trang bán hàng đã có 5 món không tồn tại, giá không
+--      thật. Quên xoá một món là khách đặt được một thứ cửa hàng không có.
+--   2. Sửa giá/tên hàng mẫu trong admin xong, lần cài lại nào cũng quay về giá
+--      cũ — vì nguồn thật của chúng nằm trong file này chứ không phải DB.
+--
+-- Cơ sở, danh mục và sự kiện thì VẪN seed: đó là khung để trang chạy được
+-- ngay (form đặt lịch cần cơ sở, bộ lọc cần danh mục), không phải hàng bán.
+--
+-- Bản cài cũ đã có 5 món đó thì database/migrations/2026-08-20-bo-san-pham-mau.sql
+-- dọn giúp.
+-- ----------------------------------------------------------------------------
 
 -- 3 sự kiện gốc dùng thời gian tương đối (now() + interval) để luôn có sự kiện
 -- sắp diễn ra dù chạy seed vào ngày nào.

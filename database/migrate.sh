@@ -71,6 +71,7 @@ fi
 #   table   -> đã có BẢNG <bảng> chưa
 #   column  -> bảng <bảng> đã có CỘT <tên> chưa
 #   index   -> bảng <bảng> đã có CHỈ MỤC <tên> chưa
+#   data    -> KHÔNG có cột mốc; file chỉ đổi DỮ LIỆU và chạy lại được nhiều lần
 #
 # Cột mốc phải là thứ CHỈ file đó tạo ra. Chọn nhầm sang thứ file khác cũng
 # tạo thì script sẽ bỏ qua một migration chưa chạy.
@@ -96,6 +97,9 @@ MIGRATIONS=(
     # không có thứ gì để lấy làm cột mốc theo ba kiểu trên. Dùng kiểu 'coltype':
     # mốc chính là kiểu mới của cột.
     "2026-08-20-so-do-tung-mat.sql|coltype|order_items|prescription=varchar(255)"
+    # Chỉ XOÁ 5 dòng dữ liệu mẫu, không tạo ra bảng/cột/khoá nào để làm mốc.
+    # Kiểu 'data': chỉ sổ ghi chặn chạy lại, mà chạy lại cũng không hại gì.
+    "2026-08-20-bo-san-pham-mau.sql|data||"
 )
 
 # ---------------------------------------------------------------------------
@@ -177,6 +181,11 @@ sentinel_exists() {
             n="$(mysql -N -B -e "SELECT COUNT(*) FROM information_schema.COLUMNS
                  WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='${table}'
                    AND COLUMN_NAME='${col}' AND COLUMN_TYPE='${want}';")" ;;
+        data)
+            # File đổi dữ liệu: không có mốc nào để tra. Luôn trả "chưa có" để
+            # quyết định hoàn toàn thuộc về sổ ghi. An toàn vì các file loại này
+            # phải viết sao cho chạy lại không đổi kết quả.
+            return 1 ;;
         *)
             echo "✗ Loại cột mốc lạ: ${kind}" >&2; exit 1 ;;
     esac

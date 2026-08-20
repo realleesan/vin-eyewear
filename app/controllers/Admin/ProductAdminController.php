@@ -66,6 +66,8 @@ class ProductAdminController extends AdminController
                 $params
             ),
             'categories' => CategoryModel::all('sort_order ASC, name ASC'),
+            // Bộ sưu tập theo mùa — nguồn là config, không phải bảng DB.
+            'collections' => (array) config('collections'),
             'total'      => $total,
             'page'       => $page,
             'totalPages' => (int) ceil($total / $perPage),
@@ -160,6 +162,11 @@ class ProductAdminController extends AdminController
             'gender'           => in_array($_POST['gender'] ?? '', ['male', 'female', 'unisex', 'kids'], true)
                                     ? $_POST['gender'] : null,
             'description'      => trim((string) ($_POST['description'] ?? '')) ?: null,
+            // Chỉ nhận slug có thật trong config/collections.php. Giá trị lạ về
+            // NULL: một slug không khớp bộ nào thì mặt hàng vừa không hiện ở
+            // trang chủ, vừa không lọc ra được bằng ?collection= — mất hút mà
+            // trong admin nhìn vẫn như đã gán xong.
+            'collection'       => $this->collection((string) ($_POST['collection'] ?? '')),
             'specs'            => json_encode($specs, JSON_UNESCAPED_UNICODE),
             'images'           => json_encode($images, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             'price'            => $price,
@@ -181,6 +188,20 @@ class ProductAdminController extends AdminController
         }
 
         redirect(self::BASE);
+    }
+
+    /**
+     * Slug bộ sưu tập hợp lệ, hoặc null.
+     */
+    private function collection(string $slug): ?string
+    {
+        if ($slug === '') {
+            return null;
+        }
+
+        $known = array_column((array) config('collections'), 'slug');
+
+        return in_array($slug, $known, true) ? $slug : null;
     }
 
     public function delete(): void

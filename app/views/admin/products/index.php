@@ -140,6 +140,25 @@ if ($ed !== null) {
                 </select>
             </div>
 
+            <?php /* Bộ sưu tập là nội dung THEO MÙA khai ở config/collections.php
+                     (khối S09 trang chủ), không phải một bảng trong DB — nên đây
+                     là ô CHỌN chứ không phải ô gõ tự do: gõ sai một ký tự thì
+                     mặt hàng rơi ra ngoài mọi bộ sưu tập mà không có gì báo.
+
+                     Trước đây cột này chỉ gán được bằng câu UPDATE trong seed;
+                     seed sản phẩm đã bỏ nên không còn đường nào khác ngoài ô này. */ ?>
+            <div class="field">
+                <label for="collection">Bộ sưu tập</label>
+                <select id="collection" name="collection">
+                    <option value="">— Không thuộc bộ sưu tập —</option>
+                    <?php foreach ($collections as $col): ?>
+                        <option value="<?= e($col['slug']) ?>"<?= ($ed['collection'] ?? '') === $col['slug'] ? ' selected' : '' ?>>
+                            <?= e($col['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
             <div class="field">
                 <label for="brand">Thương hiệu</label>
                 <input type="text" id="brand" name="brand" value="<?= e($ed['brand'] ?? '') ?>">
