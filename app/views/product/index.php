@@ -292,8 +292,27 @@ $hasFacetFilter = ($activeCount - ($filters['category'] !== '' ? 1 : 0)) > 0;
 /* Tách bộ sưu tập hợp tác khỏi bộ sưu tập theo mùa — hai nhóm khác nhau về
    bản chất (một là hàng bắt tay với nhà thiết kế, một là chủ đề bán theo mùa)
    nên đứng chung một danh sách thì không đọc ra được cái nào là cái nào. */
-$collabOptions     = $groups['collab'];
-$collectionOptions = $groups['collection'];
+$collabOptions = $groups['collab'];
+
+/*
+ * Bộ sưu tập THEO MÙA chỉ vẽ khi đang được lọc.
+ *
+ * Cột lọc chốt ở BẢY nhóm: Dáng gọng · Chất liệu · Thương hiệu · Bộ sưu tập
+ * hợp tác · Tính năng tròng · Khoảng giá · Đối tượng. Bộ sưu tập theo mùa
+ * (Nắng hè, Nhẹ cả ngày…) không nằm trong đó — nó là cách BÀY HÀNG ngoài
+ * trang chủ, không phải một thuộc tính của gọng kính như sáu nhóm kia, và
+ * chen vào giữa danh sách làm loãng đúng chỗ người dùng đang dò thương hiệu.
+ *
+ * Nhưng KHÔNG vẽ gì cả cũng sai: khối lookbook ngoài trang chủ trỏ thẳng tới
+ * /san-pham?collection=nang-he (xem config/collections.php), và ?collection=
+ * vẫn lọc thật. Giấu hẳn thì người bấm từ trang chủ sang rơi vào một lưới bị
+ * cắt còn vài món mà không chỗ nào nói vì sao, cũng không có cách nào tắt trừ
+ * khi sửa tay thanh địa chỉ.
+ *
+ * Nên: vào thẳng /san-pham thì đúng bảy nhóm; tới từ lookbook thì nhóm này
+ * hiện ra với đúng bộ sưu tập đang bật, bấm lại là bỏ.
+ */
+$collectionOptions = $filters['collection'] === [] ? [] : $groups['collection'];
 ?>
 
 <?php
@@ -363,6 +382,11 @@ partial('_layout/page-head', [
 
                 <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
                 <?php $checkGroup('collab', 'Bộ sưu tập hợp tác', $collabOptions); ?>
+
+                <?php /* Rỗng ở lượt xem thường — chỉ hiện khi tới từ khối
+                         lookbook ngoài trang chủ (xem $collectionOptions).
+                         Đứng ở đây chứ không dưới cùng để "Đối tượng" luôn là
+                         nhóm chốt cột lọc, kể cả trong lượt xem đó. */ ?>
                 <?php $checkGroup('collection', 'Bộ sưu tập', $collectionOptions); ?>
 
                 <?php $chipGroup('lens', 'Tính năng tròng', $groups['lens']); ?>

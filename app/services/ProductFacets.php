@@ -65,6 +65,61 @@ class ProductFacets
             $products[$i]['_facets'] = $facets;
         }
 
+        return self::pruneCollabBrands($products);
+    }
+
+    /**
+     * Giữ nhóm Thương hiệu chỉ gồm những HÃNG KÍNH cửa hàng thật sự bán.
+     *
+     * ProductTaxonomy tách "Gentle Monster × Jennie" thành hai vế và xếp món
+     * đó dưới CẢ HAI — cần thiết, vì nếu không thì chọn "Gentle Monster"
+     * không ra hàng collab của chính Gentle Monster. Nhưng để nguyên thì vế
+     * kia cũng leo vào danh sách thương hiệu, và cột lọc mọc thêm "Jennie",
+     * "Bratz", "D'heygere", "Liberty" — tên người và nhãn thời trang, không
+     * phải hãng kính nào cửa hàng nhập về. Bấm vào ra đúng một món, mà món đó
+     * đã nằm sẵn trong nhóm "Bộ sưu tập hợp tác" ngay bên dưới.
+     *
+     * Phân biệt bằng DỮ LIỆU chứ không bằng danh sách gõ cứng: một cái tên là
+     * hãng kính nếu nó còn đứng MỘT MÌNH ở ô thương hiệu của ít nhất một món
+     * khác. Gentle Monster có hàng bán riêng nên đủ tư cách; Jennie thì chỉ
+     * xuất hiện trong đúng một cái tên collab nên không.
+     *
+     * Nhờ vậy nhập thêm một hãng mới là bộ lọc tự có, còn nhập thêm một món
+     * collab thì không đẻ ra thương hiệu rác — không phải sửa file này.
+     *
+     * NGOẠI LỆ: món collab mà KHÔNG vế nào là hãng có bán riêng (cửa hàng chỉ
+     * nhập đúng một món của cặp đó) thì giữ nguyên cả hai vế. Cắt sạch sẽ
+     * khiến món ấy không thuộc thương hiệu nào và biến mất khỏi mọi phép lọc
+     * theo hãng — mất hàng còn tệ hơn thừa một huy hiệu.
+     */
+    private static function pruneCollabBrands(array $products): array
+    {
+        // Lượt 1 — những cái tên đứng một mình ở ô thương hiệu.
+        $houses = [];
+
+        foreach ($products as $p) {
+            if (($p['_facets']['collab'] ?? []) !== []) {
+                continue;
+            }
+
+            foreach (array_keys($p['_facets']['brand'] ?? []) as $key) {
+                $houses[$key] = true;
+            }
+        }
+
+        // Lượt 2 — hàng collab chỉ giữ lại các vế có trong danh sách trên.
+        foreach ($products as $i => $p) {
+            if (($p['_facets']['collab'] ?? []) === []) {
+                continue;
+            }
+
+            $kept = array_intersect_key($p['_facets']['brand'] ?? [], $houses);
+
+            if ($kept !== []) {
+                $products[$i]['_facets']['brand'] = $kept;
+            }
+        }
+
         return $products;
     }
 
