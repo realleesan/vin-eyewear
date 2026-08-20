@@ -95,7 +95,7 @@ MIGRATIONS=(
     # File này chỉ NỚI một cột sẵn có, không tạo ra bảng/cột/khoá nào mới, nên
     # không có thứ gì để lấy làm cột mốc theo ba kiểu trên. Dùng kiểu 'coltype':
     # mốc chính là kiểu mới của cột.
-    "2026-08-20-ghi-chu-tung-mat.sql|coltype|order_items|prescription=varchar(255)"
+    "2026-08-20-so-do-tung-mat.sql|coltype|order_items|prescription=varchar(255)"
 )
 
 # ---------------------------------------------------------------------------

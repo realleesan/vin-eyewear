@@ -1,6 +1,6 @@
 -- ============================================================================
 -- NÂNG CẤP 2026-08-20
--- Ghi chú riêng cho từng mắt ở bước "Nhập số đo khúc xạ"
+-- Số đo khúc xạ theo TỪNG MẮT: loại tật riêng, trụ/trục cho mắt loạn, ghi chú riêng
 --
 -- ─────────────────────────────────────────────────────────────────────────────
 -- CHỈ NỚI MỘT CỘT, KHÔNG THÊM CỘT MỚI
@@ -14,18 +14,23 @@
 --
 --     Cận thị · MP −2.00 (hay mỏi khi đọc lâu) · MT −2.25
 --
--- Nên không có cột `od_note`/`os_note` nào cả. Đổi lại, chuỗi dài thêm tối đa
--- 2 × 63 ký tự (60 ký tự ghi chú + dấu cách + hai dấu ngoặc, xem
--- LensModel::NOTE_MAX).
+-- Nên không có cột `od_note`/`os_note` nào cả — cũng không có `od_cyl`,
+-- `od_axis`. Tất cả nằm trong chuỗi đó.
 --
--- KHÔNG GẤP — chạy lúc nào cũng được. Đo thử trường hợp dài nhất có thể xảy
--- ra (tên tật dài nhất + hai mắt −12.00 + hai ghi chú kín 60 ký tự) ra đúng
--- 158 ký tự, tức là VẪN LỌT trần cũ 160. Không có đơn hàng nào đang bị cắt cụt.
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PHẢI CHẠY TRƯỚC KHI DÙNG BẢN MỚI — 160 KHÔNG CÒN ĐỦ
 --
--- Nới vì 2 ký tự dư là quá sát: đổi NOTE_MAX, thêm một loại tật có tên dài
--- hơn, hay ghép thêm PD vào chuỗi — mỗi việc đó đều đẩy qua trần, và khi qua
--- trần thì MySQL ở chế độ strict KHÔNG cắt âm thầm mà ném lỗi ngay lúc khách
--- bấm đặt hàng. 255 cho tròn và còn chỗ thở.
+-- Cùng lần sửa này, màn nhập số đo chuyển sang hỏi LOẠI TẬT THEO TỪNG MẮT, và
+-- mắt loạn thị có thêm độ trụ với trục. Một mắt nay dài nhất là:
+--
+--     MP Loạn thị −12.00 / −6.00 × 180° (60 ký tự ghi chú)
+--
+-- Hai mắt cộng dấu phân cách ra 195 ký tự — VƯỢT trần cũ 160. Chưa chạy file
+-- này mà khách đặt một đơn như vậy thì MySQL ở chế độ strict ném lỗi ngay lúc
+-- bấm đặt hàng (không phải cắt âm thầm), tức là mất đơn.
+--
+-- 255 cho tròn và còn chỗ thở: 195 là trần tính được của bản hôm nay, còn thừa
+-- 60 ký tự cho lần thêm trường tiếp theo.
 -- ============================================================================
 
 ALTER TABLE `order_items`

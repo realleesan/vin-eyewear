@@ -374,28 +374,6 @@
     gap: 16px;
 }
 
-.brx__group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 0;
-    padding: 0;
-    border: none;
-}
-
-.brx__legend {
-    padding: 0;
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.brx__types {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
 .btype {
     display: flex;
     flex-direction: column;
@@ -436,17 +414,14 @@
     color: var(--ink);
 }
 
-.btype__desc {
-    font-size: 11.5px;
-    line-height: 1.45;
-    color: var(--h-note);
-}
-
 /* Khối một mắt */
 .beye {
+    /* <fieldset> có margin và border mặc định của trình duyệt — dọn sạch rồi
+       tự vẽ, để hai khối mắt trông y hệt các thẻ khác trong hộp thoại. */
+    margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     padding: 14px 16px;
     border: 1px solid var(--h-rule);
     border-radius: var(--radius);
@@ -454,6 +429,15 @@
 }
 
 .beye__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* <legend> mặc định nằm đè lên viền và tự chừa chỗ; float bỏ hành vi đó đi
+       để nó thành một dòng tiêu đề bình thường trong luồng. */
+    float: left;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 2px;
     font-size: 11.5px;
     font-weight: 600;
     letter-spacing: 0.1em;
@@ -461,10 +445,41 @@
     color: var(--brand);
 }
 
+.beye__ico { flex: none; }
+
+.beye__block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Bốn loại tật xếp 2×2 — bốn nút một hàng thì chữ bị bóp, một cột thì khối
+   mắt dài gấp đôi và đẩy nút "Xác nhận độ kính" khỏi tầm nhìn. */
+.beye__types {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+/* Bản gọn của .btype dùng trong khối mắt: một dòng, có icon, không mô tả —
+   mô tả nằm ở thuộc tính title. */
+.btype--tight {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+}
+
+.btype__ico {
+    flex: none;
+    color: var(--brand);
+}
+
 .beye__field {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;   /* cho phép ô co lại trong grid thay vì tràn ra ngoài */
 }
 
 .beye__cap {
@@ -472,7 +487,34 @@
     color: var(--muted);
 }
 
-.beye__field select {
+/* Ba ô độ nằm CÙNG MỘT HÀNG, chia đều phần còn lại.
+   grid-auto-flow: column chỉ xếp cột cho những ô ĐANG HIỆN, nên khi hai ô
+   trụ/trục bị ẩn thì ô độ cầu tự giãn hết chiều ngang — đúng như mắt không
+   loạn trong bản thiết kế, mà không cần một lớp CSS riêng cho trường hợp đó. */
+.beye__row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: 10px;
+}
+
+/*
+ * TRỤ VÀ TRỤC CHỈ HIỆN VỚI MẮT CHỌN "LOẠN THỊ" — bằng CSS thuần, không JS.
+ *
+ * :has() đọc ngược từ con lên cha: "khối mắt nào KHÔNG chứa ô loạn thị đang
+ * được tick thì ẩn hai ô kia đi". Nhờ vậy việc ẩn/hiện xảy ra ngay lúc bấm,
+ * không cần một dòng JavaScript nào và không có nhịp trễ.
+ *
+ * Trình duyệt quá cũ không hiểu :has() thì luật này bị bỏ qua và cả ba ô cùng
+ * hiện — vẫn dùng được, chỉ thừa hai ô, và máy chủ đằng nào cũng bỏ trụ/trục
+ * của mắt không loạn (xem LensModel::formatRx). Hỏng theo hướng an toàn.
+ */
+.beye:not(:has(input[value="loan"]:checked)) .beye__field--astig {
+    display: none;
+}
+
+.beye__field select,
+.beye__field input {
     box-sizing: border-box;
     width: 100%;
     padding: 12px 14px;
@@ -485,29 +527,23 @@
     outline: none;
 }
 
-.beye__field select:focus { border-color: var(--brand); }
+.beye__field select:focus,
+.beye__field input:focus { border-color: var(--brand); }
 
-/* Ghi chú của từng mắt.
-   Cùng dáng ô với <select> ngay trên nó — hai ô thuộc về cùng một mắt, trông
-   khác nhau thì đọc thành hai khối rời. Nhạt hơn một bậc (chữ nhỏ hơn, viền
-   mảnh hơn) để mắt vẫn thấy con số độ là phần chính, ghi chú là phần thêm. */
-.beye__field--note { margin-top: 2px; }
-
+/* Ghi chú của từng mắt: nhạt hơn một bậc để mắt vẫn thấy con số độ là phần
+   chính, ghi chú là phần thêm. */
 .beye__field--note input {
-    box-sizing: border-box;
-    width: 100%;
     padding: 10px 14px;
-    border: 1px solid var(--h-line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
     font-size: 13px;
-    color: var(--ink);
-    outline: none;
 }
 
 .beye__field--note input::placeholder { color: var(--muted); }
-.beye__field--note input:focus { border-color: var(--brand); }
+
+/* Hộp thoại hẹp thì ba ô một hàng thành ba ô bị bóp — xếp dọc lại. */
+@media (max-width: 400px) {
+    .beye__row { grid-auto-flow: row; }
+    .beye__types { grid-template-columns: 1fr; }
+}
 
 /* ============================================================
    BƯỚC 4 — CHỌN LOẠI TRÒNG KÍNH
@@ -704,7 +740,6 @@
 
     /* Bốn thẻ tật khúc xạ hai cột chỉ còn ~150px mỗi thẻ ở màn 360px, mà mô tả
        dài nhất là "Nhìn mờ hoặc méo ở mọi khoảng cách" — xuống một cột. */
-    .brx__types { grid-template-columns: 1fr; }
 
     .bopt { padding: 14px; }
 }

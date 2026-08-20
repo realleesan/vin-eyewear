@@ -308,63 +308,103 @@ $stepForm = static function (string $buoc): void {
         <?php elseif ($step === 'so-do'): ?>
 
             <!-- ══════════ 3. NHẬP SỐ ĐO KHÚC XẠ ══════════ -->
+            <?php
+            /*
+             * MỖI MẮT MỘT KHỐI ĐỘC LẬP: loại tật riêng, độ riêng, ghi chú riêng.
+             *
+             * Bản trước hỏi MỘT loại tật rồi áp cho cả hai mắt. Hai mắt khác
+             * nhau là chuyện thường — cận một bên, loạn bên kia — và khi đó
+             * khách buộc phải chọn một loại sai cho một trong hai mắt.
+             *
+             * Ba ô độ chỉ hiện đủ với mắt LOẠN THỊ; mắt cận/viễn/lão thuần chỉ
+             * cần độ cầu. Việc ẩn do buy-modal.js làm; không có JavaScript thì
+             * cả ba ô cùng hiện và máy chủ tự bỏ trụ/trục của mắt không loạn
+             * (xem LensModel::formatRx) — thừa một ô còn hơn mất một ô.
+             */
+            $eyes = [
+                'od' => ['Mắt phải (OD)', 'MP'],
+                'os' => ['Mắt trái (OS)', 'MT'],
+            ];
+            $sphOptions  = LensModel::sphOptions();
+            $cylOptions  = LensModel::cylOptions();
+            $axisOptions = LensModel::axisOptions();
+
+            /** Icon cho từng loại tật, theo thứ tự của LensModel::RX_TYPES. */
+            $typeIcons = [
+                'can'  => 'glasses',
+                'vien' => 'scan-eye',
+                'loan' => 'refresh',
+                'lao'  => 'newspaper',
+            ];
+            ?>
             <form class="brx" method="post" action="/gio-hang/chon">
                 <?php $stepForm('so-do'); ?>
 
-                <fieldset class="brx__group">
-                    <legend class="brx__legend">Loại tật khúc xạ</legend>
-
-                    <div class="brx__types">
-                        <?php foreach (LensModel::RX_TYPES as $key => [$name, $desc]): ?>
-                            <label class="btype">
-                                <input type="radio" name="loai" value="<?= e($key) ?>"
-                                       <?= ($intent['rx_type'] ?? 'can') === $key ? 'checked' : '' ?>>
-                                <span class="btype__name"><?= e($name) ?></span>
-                                <span class="btype__desc"><?= e($desc) ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                </fieldset>
-
-                <?php
-                /* Hai ô độ. Bản thiết kế chỉ hỏi ĐỘ CẦU (SPH) của từng mắt —
-                   không trụ, không trục, không PD. Giữ đúng vậy: đây là bước
-                   mua hàng, không phải phiếu đo khúc xạ, và mỗi ô thêm vào là
-                   một lý do nữa để khách bỏ dở. Phần còn thiếu do kỹ thuật
-                   viên đo lại trước khi mài. */
-                $eyes = [
-                    'od' => ['Mắt phải (OD)', 'MP'],
-                    'os' => ['Mắt trái (OS)', 'MT'],
-                ];
-                $options = LensModel::sphOptions();
-                ?>
                 <?php foreach ($eyes as $side => [$label, $short]): ?>
-                    <div class="beye">
-                        <span class="beye__label"><?= e($label) ?></span>
-                        <label class="beye__field">
-                            <span class="beye__cap">Độ cầu (SPH)</span>
-                            <select name="<?= e($side) ?>">
-                                <option value="">— Chọn độ —</option>
-                                <?php foreach ($options as $o): ?>
-                                    <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </label>
+                    <fieldset class="beye" data-eye="<?= e($side) ?>">
+                        <legend class="beye__label">
+                            <?= icon('eye', 'beye__ico', 14) ?><?= e($label) ?>
+                        </legend>
 
-                        <?php /* Ghi chú NẰM NGAY DƯỚI Ô ĐỘ CỦA CHÍNH MẮT ĐÓ, mỗi
-                                 mắt một ô riêng. Một ô chung ở cuối form thì người
-                                 mài đọc xong vẫn phải đoán câu đó nói về mắt nào.
-                                 Không bắt buộc: khách không có gì để dặn thì bỏ
-                                 trống, đây vẫn là bước mua hàng chứ không phải
-                                 phiếu khám. */ ?>
+                        <div class="beye__block">
+                            <span class="beye__cap">Loại tật</span>
+                            <div class="beye__types">
+                                <?php foreach (LensModel::RX_TYPES as $key => [$name, $desc]): ?>
+                                    <label class="btype btype--tight" title="<?= e($desc) ?>">
+                                        <input type="radio" name="<?= e($side) ?>_loai"
+                                               value="<?= e($key) ?>">
+                                        <?= icon($typeIcons[$key] ?? 'eye', 'btype__ico', 16) ?>
+                                        <span class="btype__name"><?= e($name) ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <?php /* Ba ô nằm một hàng khi đủ cả ba, và ô độ cầu tự
+                                 giãn hết chiều ngang khi hai ô kia bị ẩn —
+                                 grid-auto-flow lo việc đó, xem buy-modal.css. */ ?>
+                        <div class="beye__row">
+                            <label class="beye__field">
+                                <span class="beye__cap">Độ cầu (SPH)</span>
+                                <select name="<?= e($side) ?>">
+                                    <option value="">— Chọn —</option>
+                                    <?php foreach ($sphOptions as $o): ?>
+                                        <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+
+                            <label class="beye__field beye__field--astig">
+                                <span class="beye__cap">Độ trụ (CYL)</span>
+                                <select name="<?= e($side) ?>_cyl">
+                                    <option value="">— Chọn —</option>
+                                    <?php foreach ($cylOptions as $o): ?>
+                                        <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+
+                            <label class="beye__field beye__field--astig">
+                                <span class="beye__cap">Trục (AXIS°)</span>
+                                <select name="<?= e($side) ?>_axis">
+                                    <option value="">— Chọn —</option>
+                                    <?php foreach ($axisOptions as $o): ?>
+                                        <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+                        </div>
+
+                        <?php /* Ghi chú NẰM NGAY DƯỚI Ô ĐỘ CỦA CHÍNH MẮT ĐÓ. Một ô
+                                 chung ở cuối form thì người mài đọc xong vẫn phải
+                                 đoán câu đó nói về mắt nào. */ ?>
                         <label class="beye__field beye__field--note">
                             <span class="beye__cap">Ghi chú <?= e($short) ?> (không bắt buộc)</span>
                             <input type="text" name="<?= e($side) ?>_note"
                                    maxlength="<?= LensModel::NOTE_MAX ?>"
-                                   placeholder="Ví dụ: hay mỏi khi đọc lâu"
-                                   value="">
+                                   placeholder="Ví dụ: hay mỏi khi đọc lâu">
                         </label>
-                    </div>
+                    </fieldset>
                 <?php endforeach; ?>
 
                 <button type="submit" class="bmodal__cta">Xác nhận độ kính</button>

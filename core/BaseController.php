@@ -171,7 +171,6 @@ class BaseController
                 'quantity'   => max(1, (int) ($intent['quantity'] ?? 1)),
                 'action'     => ($intent['action'] ?? '') === 'buy' ? 'buy' : 'add',
                 'mode'       => ($intent['mode'] ?? '') === 'combo' ? 'combo' : 'frame',
-                'rx_type'    => $intent['rx_type'] ?? null,
                 'rx'         => $intent['rx'] ?? null,
                 'lens_id'    => $intent['lens_id'] ?? null,
                 'back'       => safeRedirectPath(

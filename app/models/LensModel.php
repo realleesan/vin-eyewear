@@ -88,6 +88,35 @@ class LensModel
     public const SPH_MAX  = 8.0;
     public const SPH_STEP = 0.25;
 
+    /**
+     * ĐỘ TRỤ (CYL) — chỉ hỏi khi mắt đó chọn "Loạn thị".
+     *
+     * Dải hẹp hơn độ cầu nhiều: loạn trên 6 diop là hiếm và gần như luôn đi
+     * kèm bệnh lý giác mạc, những ca đó cửa hàng phải đo tại chỗ chứ không
+     * nhận số khách tự gõ.
+     *
+     * Chạy cả hai phía dấu vì đơn thuốc ghi theo hai quy ước tương đương —
+     * "trụ âm" (nhãn khoa hay dùng) và "trụ dương" (một số máy đo in ra). Ép
+     * về một phía là bắt khách tự quy đổi, mà quy đổi sai thì mài sai.
+     */
+    public const CYL_MIN  = -6.0;
+    public const CYL_MAX  = 6.0;
+    public const CYL_STEP = 0.25;
+
+    /**
+     * TRỤC (AXIS) — góc đặt trụ loạn, tính bằng độ.
+     *
+     * 0..180 chứ không phải 0..360: trục là một ĐƯỜNG THẲNG chứ không phải
+     * một hướng, nên 20° và 200° là cùng một trục.
+     *
+     * BƯỚC 1 ĐỘ, không làm tròn về 5 hay 10. Lệch trục 5 độ đã đủ làm người
+     * đeo thấy nhoè và mỏi, mà đơn thuốc thì luôn ghi số nguyên chính xác —
+     * làm tròn ở đây là tự tay hỏng một con số vốn đã đúng.
+     */
+    public const AXIS_MIN  = 0;
+    public const AXIS_MAX  = 180;
+    public const AXIS_STEP = 1;
+
     /** Nhớ slug đã tra, để một request thêm hàng không hỏi DB hai lần. */
     private static array $slugCache = [];
 
@@ -232,88 +261,156 @@ class LensModel
         return $out;
     }
 
+    /**
+     * Các mức độ trụ cho ô "Độ trụ (CYL)".
+     *
+     * BỎ giá trị 0.00: ô này chỉ hiện khi mắt đó đã chọn "Loạn thị", mà loạn
+     * thị 0 độ thì không phải loạn thị. Để nguyên 0.00 trong danh sách là mời
+     * người ta chọn một thứ vô nghĩa rồi phải đoán xem nó có ý gì.
+     */
+    public static function cylOptions(): array
+    {
+        $out = [];
+
+        for ($d = self::CYL_MAX; $d >= self::CYL_MIN; $d -= self::CYL_STEP) {
+            $d = $d == 0.0 ? 0.0 : $d;
+
+            if ($d == 0.0) {
+                continue;
+            }
+
+            $out[] = [
+                'value' => number_format($d, 2, '.', ''),
+                'label' => self::diopterLabel($d),
+            ];
+        }
+
+        return $out;
+    }
+
+    /** Các mức trục cho ô "Trục (AXIS°)": 0°, 1°, … 180°. */
+    public static function axisOptions(): array
+    {
+        $out = [];
+
+        for ($a = self::AXIS_MIN; $a <= self::AXIS_MAX; $a += self::AXIS_STEP) {
+            $out[] = [
+                'value' => (string) $a,
+                'label' => $a . '°',
+            ];
+        }
+
+        return $out;
+    }
+
     /** Ghi chú của MỘT mắt dài tối đa bấy nhiêu ký tự — xem cleanNote(). */
     public const NOTE_MAX = 60;
 
     /**
-     * Gói lựa chọn của bước "Nhập số đo khúc xạ" thành MỘT chuỗi để lưu và in.
+     * Gói số đo của bước "Nhập số đo khúc xạ" thành MỘT chuỗi để lưu và in.
      *
-     *     "Cận thị · MP −2.00 (hay mỏi khi đọc) · MT −2.25"
+     *     "MP Loạn thị −2.00 / −1.25 × 180° · MT Cận thị −2.25 (hay mỏi)"
      *
      * Vì sao một chuỗi chứ không phải mấy cột riêng: số đo là thứ NHÂN VIÊN
      * ĐỌC rồi nhập vào máy mài, không phải thứ hệ thống tính toán. Không truy
-     * vấn nào cần lọc theo độ cận, nên tách cột chỉ làm phình bảng. Ghi chú đi
-     * theo đúng lối đó: nó cũng là thứ để người đọc, và nó gắn với MỘT MẮT nên
-     * phải nằm cạnh con số của mắt đó chứ không dồn xuống một ô chung cuối form
-     * — dồn chung thì đọc xong vẫn phải đoán ghi chú nói về mắt nào.
+     * vấn nào cần lọc theo độ cận, nên tách cột chỉ làm phình bảng.
      *
-     * Trả null khi không có gì để nói — null nghĩa rõ ràng là "đo tại cửa
-     * hàng", còn chuỗi rỗng thì không.
+     * ─────────────────────────────────────────────────────────────────────────
+     * LOẠI TẬT THEO TỪNG MẮT, KHÔNG PHẢI MỘT LOẠI CHUNG CHO CẢ ĐƠN
      *
-     * ĐỦ HAY CHƯA TÍNH THEO SỐ ĐO, KHÔNG TÍNH GHI CHÚ. Ghi chú không mài kính
-     * được: hai ô ghi chú kín mít mà không chọn độ nào thì vẫn là "đo tại cửa
-     * hàng". Nhưng một khi phần số đo đã đủ dùng thì ghi chú của mắt còn lại
-     * vẫn được giữ, kể cả mắt đó không chọn độ ("MT (mắt này không cần độ)") —
-     * đó thường lại là ghi chú đáng đọc nhất.
+     * Bản trước hỏi một lần "loại tật khúc xạ" rồi áp cho cả hai mắt. Thực tế
+     * hai mắt hay khác nhau — cận một bên, loạn bên kia là chuyện thường — và
+     * khi đó khách buộc phải chọn một loại sai cho một trong hai mắt.
+     *
+     * Kéo theo: CYL và AXIS chỉ có nghĩa với mắt CHỌN LOẠN THỊ. Mắt cận thuần
+     * mà mang theo trục 180° là số rác, nên hàm này BỎ hẳn cyl/axis của mắt
+     * không loạn thay vì tin vào việc giao diện đã ẩn hai ô đó — giao diện ẩn
+     * bằng JavaScript, mà request thì gửi tay được.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * Mỗi mắt là một mảng: ['type' =>, 'sph' =>, 'cyl' =>, 'axis' =>, 'note' =>].
+     * Nhận mảng chứ không phải mười tham số rời — mười tham số cùng kiểu ?string
+     * xếp hàng thì đảo nhầm hai cái là mài nhầm mắt, mà không có gì báo.
+     *
+     * ĐỦ HAY CHƯA TÍNH THEO ĐỘ CẦU. Không mắt nào có SPH thì trả null, nghĩa
+     * rõ ràng là "đo tại cửa hàng" — ghi chú, loại tật hay trục đứng một mình
+     * đều không mài kính được. Nhưng một khi đã có ít nhất một mắt đủ số, phần
+     * khách ghi cho mắt còn lại vẫn được giữ.
+     *
+     * @param array{type?:?string, sph?:?string, cyl?:?string, axis?:?string, note?:?string} $od
+     * @param array{type?:?string, sph?:?string, cyl?:?string, axis?:?string, note?:?string} $os
      */
-    public static function formatRx(
-        ?string $type,
-        ?string $od,
-        ?string $os,
-        ?string $odNote = null,
-        ?string $osNote = null
-    ): ?string {
-        $typeName = $type !== null && isset(self::RX_TYPES[$type])
-            ? self::RX_TYPES[$type][0]
-            : null;
+    public static function formatRx(array $od, array $os): ?string
+    {
+        $mp = self::eyeText('MP', $od);
+        $mt = self::eyeText('MT', $os);
 
-        $odLabel = self::diopter($od);
-        $osLabel = self::diopter($os);
-        $odNote  = self::cleanNote($odNote);
-        $osNote  = self::cleanNote($osNote);
-
-        // Chỉ mỗi tên tật, không con số nào -> chưa đủ để mài. Coi như trống.
-        $doCount = ($typeName !== null ? 1 : 0)
-                 + ($odLabel !== null ? 1 : 0)
-                 + ($osLabel !== null ? 1 : 0);
-
-        if ($doCount < 2) {
+        if (self::diopter($od['sph'] ?? null) === null
+            && self::diopter($os['sph'] ?? null) === null) {
             return null;
         }
 
-        $eye = static fn (string $short, ?string $label, ?string $note): ?string => match (true) {
-            $label !== null && $note !== null => $short . ' ' . $label . ' (' . $note . ')',
-            $label !== null                   => $short . ' ' . $label,
-            $note  !== null                   => $short . ' (' . $note . ')',
-            default                           => null,
-        };
-
-        $bits = array_filter([
-            $typeName,
-            $eye('MP', $odLabel, $odNote),
-            $eye('MT', $osLabel, $osNote),
-        ]);
-
-        return implode(' · ', $bits);
+        return implode(' · ', array_filter([$mp, $mt]));
     }
 
     /**
-     * Dọn một ghi chú khách gõ tay trước khi ghép vào chuỗi số đo.
+     * Một mắt thành một mẩu chữ: "MP Loạn thị −2.00 / −1.25 × 180° (ghi chú)".
      *
-     * Ba việc, mỗi việc vì một lý do riêng:
-     *
-     *   · Bỏ ký tự xuống dòng và ký tự điều khiển — chuỗi này in ra trên MỘT
-     *     dòng ở giỏ hàng, trang xác nhận và phiếu của cửa hàng; một ký tự
-     *     xuống dòng lọt vào là vỡ cả ba chỗ.
-     *   · Bỏ '·', '(' và ')' — đó là dấu phân cách và dấu bọc của chính định
-     *     dạng này. Để nguyên thì một ghi chú như "mắt (trái) yếu hơn" đọc ra
-     *     thành thứ không phân tích ngược được nữa.
-     *   · Cắt còn NOTE_MAX ký tự — cột `prescription` có trần, và một ghi chú
-     *     dài hơn dòng chữ trên phiếu thì người mài cũng không đọc.
-     *
-     * Cắt bằng utf8Substr chứ không phải substr: substr đếm byte, cắt giữa một
-     * chữ tiếng Việt có dấu sẽ để lại nửa ký tự hỏng.
+     * Cách viết "sph / cyl × axis°" giống hệt formatSavedRx() dùng cho hồ sơ
+     * khúc xạ đã lưu — hai đường vào cùng in ra một dạng, để nhân viên đọc
+     * phiếu không phải nhận ra mình đang đọc kiểu nào.
      */
+    private static function eyeText(string $short, array $eye): ?string
+    {
+        $type = (string) ($eye['type'] ?? '');
+        $name = isset(self::RX_TYPES[$type]) ? self::RX_TYPES[$type][0] : null;
+        $sph  = self::diopter($eye['sph'] ?? null);
+        $note = self::cleanNote($eye['note'] ?? null);
+
+        $so = $sph;
+
+        // Trụ và trục chỉ đi kèm mắt loạn thị — xem chú thích ở formatRx().
+        if ($so !== null && $type === 'loan') {
+            $cyl = self::diopter($eye['cyl'] ?? null, self::CYL_MIN, self::CYL_MAX);
+
+            if ($cyl !== null) {
+                $so .= ' / ' . $cyl;
+
+                $axis = self::axis($eye['axis'] ?? null);
+
+                if ($axis !== null) {
+                    $so .= ' × ' . $axis . '°';
+                }
+            }
+        }
+
+        // Tên tật đứng một mình (chưa chọn độ) vẫn đáng in: nó cho nhân viên
+        // biết khách tự nhận mình bị gì trước khi đo.
+        $bits = array_filter([$name, $so]);
+
+        if ($bits === [] && $note === null) {
+            return null;
+        }
+
+        $text = trim($short . ' ' . implode(' ', $bits));
+
+        return $note === null ? $text : $text . ' (' . $note . ')';
+    }
+
+    /** Trục loạn: số nguyên 0..180, ngoài dải thì bỏ. */
+    private static function axis(?string $raw): ?int
+    {
+        $raw = trim((string) $raw);
+
+        if ($raw === '' || !ctype_digit(ltrim($raw, '-'))) {
+            return null;
+        }
+
+        $val = (int) $raw;
+
+        return $val >= self::AXIS_MIN && $val <= self::AXIS_MAX ? $val : null;
+    }
+
     private static function cleanNote(?string $raw): ?string
     {
         if ($raw === null) {
@@ -387,7 +484,7 @@ class LensModel
      * Luôn hai chữ số thập phân vì độ kính đi theo bước 0.25 — "−2" và "−2.00"
      * là một, nhưng in ra khác nhau thì người đọc phải dừng lại nghĩ.
      */
-    private static function diopter(?string $raw): ?string
+    private static function diopter(?string $raw, ?float $min = null, ?float $max = null): ?string
     {
         $raw = trim(str_replace(['−', ','], ['-', '.'], (string) $raw));
 
@@ -397,7 +494,10 @@ class LensModel
 
         $val = (float) $raw;
 
-        if ($val < self::SPH_MIN || $val > self::SPH_MAX) {
+        // Mặc định là dải ĐỘ CẦU; độ trụ có dải hẹp hơn nên truyền vào riêng.
+        // Kiểm dải ở đây chứ không tin <select>: giá trị gửi lên sửa tay được,
+        // và một con số ngoài dải lọt xuống phiếu là một cặp tròng mài hỏng.
+        if ($val < ($min ?? self::SPH_MIN) || $val > ($max ?? self::SPH_MAX)) {
             return null;
         }
 

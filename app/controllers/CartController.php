@@ -200,7 +200,6 @@ class CartController extends BaseController
                 // rằng chúng có thể chưa tồn tại.
                 //
                 'mode'       => null,   // 'frame' | 'combo'
-                'rx_type'    => null,   // khoá trong LensModel::RX_TYPES
                 'rx'         => null,   // chuỗi số đo đã gói
                 'lens_id'    => null,
             ];
@@ -426,8 +425,7 @@ class CartController extends BaseController
                     // Mua trần thì không còn gì để hỏi — bỏ luôn phần tròng
                     // của lần chọn trước, nếu khách vừa quay lui đổi ý.
                     $intent['lens_id'] = null;
-                    $intent['rx']      = null;
-                    $intent['rx_type'] = null;
+                    $intent['rx'] = null;
                 }
 
                 /*
@@ -458,25 +456,27 @@ class CartController extends BaseController
                 $userId = AuthMiddleware::userId();
                 $saved  = $userId === null ? null : UserModel::prescription($userId);
 
-                $intent['rx']      = LensModel::formatSavedRx($saved);
-                $intent['rx_type'] = null;
+                $intent['rx'] = LensModel::formatSavedRx($saved);
                 // Gói tròng đã chọn ở bước trước rồi — xem ghi chú ở 'hinh-thuc'.
                 $next = 'xac-nhan';
                 break;
 
             // ── Bước 3: số đo gõ tay ─────────────────────────────────────
             case 'so-do':
-                $type = (string) ($_POST['loai'] ?? '');
-                $intent['rx_type'] = isset(LensModel::RX_TYPES[$type]) ? $type : null;
-                // Ghi chú đi kèm TỪNG MẮT — LensModel::cleanNote() lo phần
-                // cắt ngắn và bỏ ký tự phá định dạng, nên ở đây nhận thô.
-                $intent['rx'] = LensModel::formatRx(
-                    $intent['rx_type'],
-                    $_POST['od'] ?? null,
-                    $_POST['os'] ?? null,
-                    $_POST['od_note'] ?? null,
-                    $_POST['os_note'] ?? null
-                );
+                /* MỖI MẮT MỘT BỘ: loại tật, độ cầu, độ trụ, trục, ghi chú.
+                   Gửi thô sang model — LensModel lo toàn bộ phần kiểm dải, bỏ
+                   trụ/trục của mắt không loạn và cắt ghi chú. Kiểm ở đây nữa
+                   thì thành hai nơi cùng định nghĩa "thế nào là số đo hợp lệ",
+                   và hai nơi đó sẽ lệch nhau vào lần sửa thứ ba. */
+                $eye = static fn (string $side): array => [
+                    'type' => $_POST[$side . '_loai'] ?? null,
+                    'sph'  => $_POST[$side] ?? null,
+                    'cyl'  => $_POST[$side . '_cyl'] ?? null,
+                    'axis' => $_POST[$side . '_axis'] ?? null,
+                    'note' => $_POST[$side . '_note'] ?? null,
+                ];
+
+                $intent['rx'] = LensModel::formatRx($eye('od'), $eye('os'));
                 $next = 'xac-nhan';
                 break;
 
