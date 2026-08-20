@@ -64,6 +64,25 @@ class BookingController extends BaseController
             $old['note'] = $prefill['note'];
         }
 
+        /*
+         * Khách đang đăng nhập thì tên và số điện thoại lấy sẵn từ hồ sơ.
+         *
+         * Cùng lẽ với trang thanh toán (OrderController::checkout): thứ khách
+         * đã khai một lần thì đừng bắt gõ lại. Vẫn là ô nhập bình thường, sửa
+         * được — đặt hộ người nhà bằng số của người ta là chuyện thường.
+         *
+         * isset() chứ không empty(): quay lại sau lỗi thì ô rỗng cũng là lựa
+         * chọn của khách, điền đè lên là giật mất chữ đang gõ dở.
+         */
+        $me = isset($_SESSION['user_id'])
+            ? UserModel::profile((string) $_SESSION['user_id'])
+            : null;
+
+        if ($me !== null) {
+            $old['fullName'] = $old['fullName'] ?? (string) ($me['full_name'] ?? '');
+            $old['phone']    = $old['phone']    ?? (string) ($me['phone'] ?? '');
+        }
+
         $this->renderView('booking/index', [
             'pageTitle' => 'Đặt lịch đo mắt — Vin Eyewear',
             'metaDesc'  => 'Đặt lịch đo khúc xạ miễn phí tại Vin Eyewear. '
@@ -109,7 +128,7 @@ class BookingController extends BaseController
      * `when` cho view biết phải nói gì: 'fit' (đã chọn hộ đủ), 'later' (còn xa,
      * ngoài 7 ngày đang mở) hay 'over' (đã diễn ra xong).
      *
-     * @return array{store: ?int, day: ?int, time: ?int, note: string, when: string}
+     * @return array{store: ?int, service: ?int, day: ?int, time: ?int, note: string, when: string}
      */
     private function eventPrefill(
         ?array $event,
@@ -119,7 +138,10 @@ class BookingController extends BaseController
         array $grid
     ): array {
         if ($event === null) {
-            return ['store' => null, 'day' => null, 'time' => null, 'note' => '', 'when' => ''];
+            return [
+                'store' => null, 'service' => null, 'day' => null,
+                'time'  => null, 'note'    => '',   'when' => '',
+            ];
         }
 
         $store = $this->storeAt((string) ($event['location'] ?? ''), $stores);
@@ -127,15 +149,16 @@ class BookingController extends BaseController
         $when  = $this->eventWindow($event, $day);
 
         return [
-            'store' => $store,
-            'day'   => $day,
+            'store'   => $store,
+            'service' => $this->serviceFor($event),
+            'day'     => $day,
             // Ngày không chọn được thì cũng không có khung giờ nào để chỉ tới.
-            'time'  => $day === null ? null : $this->slotAt($event, $grid, $store ?? 0, $day, $slots),
+            'time'    => $day === null ? null : $this->slotAt($event, $grid, $store ?? 0, $day, $slots),
             // Chương trình đã xong thì KHÔNG điền "Đăng ký tham dự…": khách vẫn
             // đặt được lịch đo mắt bình thường, nhưng để nhân viên đọc thấy câu
             // đăng ký một sự kiện không còn nữa là gây nhầm chứ không giúp gì.
-            'note'  => $when === 'over' ? '' : $this->eventNote($event),
-            'when'  => $when,
+            'note'    => $when === 'over' ? '' : $this->eventNote($event),
+            'when'    => $when,
         ];
     }
 
@@ -151,6 +174,56 @@ class BookingController extends BaseController
         $end = strtotime((string) ($event['ends_at'] ?: $event['starts_at'] ?? ''));
 
         return ($end !== false && $end < time()) ? 'over' : 'later';
+    }
+
+    /**
+     * TỪ KHOÁ NHẬN DẠNG DỊCH VỤ, đọc theo THỨ TỰ TỪ TRÊN XUỐNG.
+     *
+     * Khoá là chỉ số trong self::SERVICES. Thứ tự chính là luật ưu tiên: một
+     * bài hay chạm tới nhiều thứ cùng lúc ("Ưu đãi gọng 0 đồng khi mua tròng
+     * cao cấp" có cả gọng lẫn tròng), nên cái nào đặc trưng hơn thì xét trước.
+     * Đo mắt lên đầu vì đó cũng là mặc định an toàn nhất của cửa hàng.
+     *
+     * Từ khoá viết ở dạng slug (bỏ dấu, gạch nối) để so cho khớp với slugify().
+     */
+    private const SERVICE_HINTS = [
+        // 0 — Đo mắt cận/loạn
+        0 => ['do-mat', 'kham-mat', 'kham-thi-luc', 'thi-luc', 'khuc-xa', 'can-thi', 'loan-thi'],
+        // 3 — Bảo hành / Vệ sinh kính
+        3 => ['ve-sinh', 'bao-quan', 'bao-hanh', 'cham-soc', 'sua-kinh'],
+        // 2 — Cắt tròng lấy liền
+        2 => ['trong-kinh', 'cat-trong', 'nhuom', 'lay-lien'],
+        // 1 — Tư vấn & Thử gọng
+        1 => ['gong', 'thu-kinh', 'dang-kinh', 'khung-kinh', 'bo-suu-tap',
+              'ra-mat', 'trien-lam', 'workshop', 'tu-van'],
+    ];
+
+    /**
+     * Dịch vụ nào hợp với bài sự kiện này? — đoán từ TIÊU ĐỀ và phân loại.
+     *
+     * CỐ Ý không đọc excerpt/content: gần như bài nào cũng nhắc "đo khúc xạ
+     * miễn phí" ở đâu đó trong thân bài, đọc cả thân thì bài nào cũng ra "Đo
+     * mắt cận/loạn" — đoán mà lúc nào cũng ra một đáp án thì không phải đoán.
+     *
+     * Không nhận ra thì trả null và form giữ dịch vụ mặc định.
+     */
+    private function serviceFor(array $event): ?int
+    {
+        // Bọc hai đầu bằng gạch nối để "gong" chỉ khớp trọn một từ: thiếu nó
+        // thì mọi chữ có âm "gong" nằm giữa từ khác cũng tính là khớp.
+        $text = '-' . slugify(
+            $event['title'] . ' ' . ($event['category'] ?? '')
+        ) . '-';
+
+        foreach (self::SERVICE_HINTS as $service => $hints) {
+            foreach ($hints as $hint) {
+                if (str_contains($text, '-' . $hint . '-')) {
+                    return isset(self::SERVICES[$service]) ? $service : null;
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -335,10 +408,11 @@ class BookingController extends BaseController
      * Lựa chọn ban đầu, dạng CHỈ SỐ để khớp với các nút radio trong view.
      *
      * Thứ tự ưu tiên: dữ liệu vừa gõ hụt (quay lại sau lỗi) → bài sự kiện
-     * (?su-kien=SLUG) → ?store=MÃ (liên kết từ trang Liên hệ) → mặc định của
-     * bản thiết kế (cơ sở đầu, dịch vụ đầu, hôm nay, chưa chọn giờ).
+     * (?su-kien=SLUG: cơ sở, dịch vụ, ngày, giờ) → ?store=MÃ (liên kết từ
+     * trang Liên hệ) → mặc định của bản thiết kế (cơ sở đầu, dịch vụ đầu, hôm
+     * nay, chưa chọn giờ).
      *
-     * @param array{store: ?int, day: ?int, time: ?int, note: string} $prefill
+     * @param array{store: ?int, service: ?int, day: ?int, time: ?int, note: string} $prefill
      *
      * @return array{store: int, service: int, day: int, time: ?int}
      */
@@ -366,7 +440,13 @@ class BookingController extends BaseController
             $store = $at === false ? $store : (int) $at;
         }
 
-        $service = array_search($old['serviceType'] ?? null, self::SERVICES, true);
+        // Dịch vụ: đoán từ bài sự kiện, không đoán được thì về mặc định.
+        $service = $prefill['service'] ?? 0;
+        $chosen  = array_search($old['serviceType'] ?? null, self::SERVICES, true);
+
+        if ($chosen !== false) {
+            $service = (int) $chosen;
+        }
 
         // Ngày khai mạc và khung giờ của sự kiện, cũng nhường chỗ cho $old:
         // đã bấm gửi một lần thì lựa chọn của khách mới là thứ đúng nhất.
@@ -383,7 +463,7 @@ class BookingController extends BaseController
 
         return [
             'store'   => $store,
-            'service' => $service === false ? 0 : (int) $service,
+            'service' => isset(self::SERVICES[$service]) ? $service : 0,
             'day'     => ($day >= 0 && $day < count($days)) ? $day : 0,
             'time'    => ($time !== null && $time >= 0 && $time < count($slots)) ? $time : null,
         ];
