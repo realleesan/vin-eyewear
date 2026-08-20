@@ -369,8 +369,24 @@ class LensModel
 
         $so = $sph;
 
-        // Trụ và trục chỉ đi kèm mắt loạn thị — xem chú thích ở formatRx().
-        if ($so !== null && $type === 'loan') {
+        /*
+         * TRỤ VÀ TRỤC ĐI THEO Ô ĐÃ ĐIỀN, KHÔNG THEO LOẠI TẬT ĐÃ CHỌN.
+         *
+         * Trước đây còn một điều kiện `$type === 'loan'` ở đây, hợp lý khi
+         * giao diện chỉ hiện hai ô đó cho mắt loạn thị — điền được thì đã là
+         * loạn rồi. Nay cả ba ô luôn hiện (xem buy-modal.css), nên giữ điều
+         * kiện ấy nghĩa là: khách chọn "Cận thị", điền trụ và trục, bấm xác
+         * nhận, rồi hai con số biến mất không một lời báo. Người mài tròng
+         * nhận phiếu thiếu độ loạn mà không ai biết là đã có người gõ nó vào.
+         *
+         * Chọn tin Ô ĐÃ ĐIỀN hơn là tin ô radio: điền trụ/trục vào một mắt
+         * chính là khai mắt đó có loạn, dù nhãn phía trên ghi gì. diopter() và
+         * axis() vẫn chặn giá trị ngoài dải, nên không có gì lọt qua.
+         *
+         * Vẫn giữ `$so !== null`: trụ mà không có độ cầu thì in ra thành
+         * "MP / −1.25", một mẩu chữ cụt đầu không đọc được.
+         */
+        if ($so !== null) {
             $cyl = self::diopter($eye['cyl'] ?? null, self::CYL_MIN, self::CYL_MAX);
 
             if ($cyl !== null) {

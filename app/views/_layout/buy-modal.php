@@ -316,10 +316,15 @@ $stepForm = static function (string $buoc): void {
              * nhau là chuyện thường — cận một bên, loạn bên kia — và khi đó
              * khách buộc phải chọn một loại sai cho một trong hai mắt.
              *
-             * Ba ô độ chỉ hiện đủ với mắt LOẠN THỊ; mắt cận/viễn/lão thuần chỉ
-             * cần độ cầu. Việc ẩn do buy-modal.js làm; không có JavaScript thì
-             * cả ba ô cùng hiện và máy chủ tự bỏ trụ/trục của mắt không loạn
-             * (xem LensModel::formatRx) — thừa một ô còn hơn mất một ô.
+             * CẢ BA Ô ĐỘ LUÔN HIỆN Ở CẢ HAI MẮT, không phụ thuộc loại tật.
+             *
+             * Từng có luật CSS ẩn trụ/trục ở mắt không tick "Loạn thị". Bỏ rồi:
+             * hai mắt lệch nhau giữa chừng đọc ra thành form hỏng ở bên ít ô
+             * hơn. Lý do đầy đủ nằm ở chỗ luật cũ từng đứng, trong
+             * assets/css/components/buy-modal.css.
+             *
+             * Mắt cận/viễn/lão thuần thấy thừa hai ô — để trống thì máy chủ bỏ
+             * qua, điền thì được giữ lại (xem LensModel::eyeText).
              */
             $eyes = [
                 'od' => ['Mắt phải (OD)', 'MP'],
@@ -360,9 +365,8 @@ $stepForm = static function (string $buoc): void {
                             </div>
                         </div>
 
-                        <?php /* Ba ô nằm một hàng khi đủ cả ba, và ô độ cầu tự
-                                 giãn hết chiều ngang khi hai ô kia bị ẩn —
-                                 grid-auto-flow lo việc đó, xem buy-modal.css. */ ?>
+                        <?php /* Ba ô chia đều một hàng; dưới 480px CSS xếp
+                                 chúng thành ba dòng (400px). Xem buy-modal.css. */ ?>
                         <div class="beye__row">
                             <label class="beye__field">
                                 <span class="beye__cap">Độ cầu (SPH)</span>
@@ -374,7 +378,7 @@ $stepForm = static function (string $buoc): void {
                                 </select>
                             </label>
 
-                            <label class="beye__field beye__field--astig">
+                            <label class="beye__field">
                                 <span class="beye__cap">Độ trụ (CYL)</span>
                                 <select name="<?= e($side) ?>_cyl">
                                     <option value="">— Chọn —</option>
@@ -384,7 +388,7 @@ $stepForm = static function (string $buoc): void {
                                 </select>
                             </label>
 
-                            <label class="beye__field beye__field--astig">
+                            <label class="beye__field">
                                 <span class="beye__cap">Trục (AXIS°)</span>
                                 <select name="<?= e($side) ?>_axis">
                                     <option value="">— Chọn —</option>

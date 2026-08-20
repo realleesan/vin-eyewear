@@ -488,9 +488,8 @@
 }
 
 /* Ba ô độ nằm CÙNG MỘT HÀNG, chia đều phần còn lại.
-   grid-auto-flow: column chỉ xếp cột cho những ô ĐANG HIỆN, nên khi hai ô
-   trụ/trục bị ẩn thì ô độ cầu tự giãn hết chiều ngang — đúng như mắt không
-   loạn trong bản thiết kế, mà không cần một lớp CSS riêng cho trường hợp đó. */
+   Cả ba luôn hiện (xem ghi chú ngay dưới), nên ba cột bằng nhau là hình cuối
+   cùng — không còn trường hợp ô độ cầu phải giãn ra chiếm chỗ hai ô kia. */
 .beye__row {
     display: grid;
     grid-auto-flow: column;
@@ -499,19 +498,21 @@
 }
 
 /*
- * TRỤ VÀ TRỤC CHỈ HIỆN VỚI MẮT CHỌN "LOẠN THỊ" — bằng CSS thuần, không JS.
+ * TRỤ VÀ TRỤC LUÔN HIỆN, KHÔNG PHỤ THUỘC LOẠI TẬT.
  *
- * :has() đọc ngược từ con lên cha: "khối mắt nào KHÔNG chứa ô loạn thị đang
- * được tick thì ẩn hai ô kia đi". Nhờ vậy việc ẩn/hiện xảy ra ngay lúc bấm,
- * không cần một dòng JavaScript nào và không có nhịp trễ.
+ * Trước đây có một luật ẩn hai ô này ở mắt nào không tick "Loạn thị":
  *
- * Trình duyệt quá cũ không hiểu :has() thì luật này bị bỏ qua và cả ba ô cùng
- * hiện — vẫn dùng được, chỉ thừa hai ô, và máy chủ đằng nào cũng bỏ trụ/trục
- * của mắt không loạn (xem LensModel::formatRx). Hỏng theo hướng an toàn.
+ *     .beye:not(:has(input[value="loan"]:checked)) .beye__field--astig
+ *
+ * Bỏ đi vì hai mắt trông LỆCH NHAU giữa chừng: chọn loạn cho mắt phải là bên
+ * đó có ba ô còn mắt trái chỉ còn một, và người dùng đọc ra thành "form bị
+ * lỗi ở mắt trái" chứ không đọc ra thành "ô này chưa cần điền". Khung nhập
+ * đứng yên thì rẻ hơn nhiều so với việc phải giải thích vì sao nó nhảy.
+ *
+ * Đánh đổi đã biết: mắt cận/viễn/lão thuần nhìn thấy hai ô không cần điền.
+ * Chấp nhận được — chúng để trống thì máy chủ bỏ qua, mà điền thì nay được
+ * GIỮ LẠI chứ không âm thầm mất (xem LensModel::eyeText).
  */
-.beye:not(:has(input[value="loan"]:checked)) .beye__field--astig {
-    display: none;
-}
 
 .beye__field select,
 .beye__field input {
