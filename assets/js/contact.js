@@ -49,17 +49,38 @@
     }
 
     /**
-     * Mở Google Maps.
+     * Mở Google Maps ở TAB MỚI — trang Liên hệ đang xem phải giữ nguyên.
      *
-     * Thử tab mới trước cho khách khỏi mất trang Liên hệ đang xem. Vì lệnh này
-     * chạy SAU khi định vị xong (không còn nằm trong cú bấm), trình duyệt có
-     * thể coi là popup và chặn — lúc đó window.open trả về null và ta chuyển
-     * ngay tab hiện tại, chuyển tab thì không bao giờ bị chặn.
+     * Không truyền 'noreferrer' (hay 'noopener') vào tham số features của
+     * window.open: hai từ khoá đó cắt luôn tham chiếu trả về, nên window.open
+     * trả null NGAY CẢ KHI tab mới đã mở bình thường. Coi null là "bị chặn"
+     * rồi chuyển window.location là lý do trước đây một cú bấm mở cả hai chỗ:
+     * tab mới hiện bản đồ, mà trang Liên hệ cũng bỏ đi theo.
+     *
+     * Nên mở trần rồi tự cắt liên kết ngược bằng win.opener = null, và chỉ khi
+     * KHÔNG có tham chiếu thật (popup bị chặn) mới dựng một <a target="_blank">
+     * bấm hộ — trình duyệt xét kiểu bấm-liên-kết nên thường vẫn cho qua. Hỏng
+     * nốt thì cũng chỉ là không mở được gì, tab hiện tại vẫn còn nguyên.
      */
     function openMaps(url) {
-        var win = window.open(url, '_blank', 'noreferrer');
+        var win = window.open(url, '_blank');
 
-        if (!win) window.location.href = url;
+        if (win) {
+            win.opener = null; // thay cho rel="noreferrer" đã bỏ ở trên
+            win.focus();
+            return;
+        }
+
+        var a = document.createElement('a');
+
+        a.href          = url;
+        a.target        = '_blank';
+        a.rel           = 'noopener noreferrer';
+        a.style.display = 'none';
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 
     /**
@@ -199,6 +220,11 @@
     // nên không có JS thì bấm vẫn ra Google Maps — chỉ thiếu điểm xuất phát.
     card.link.addEventListener('click', function (event) {
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+
+        // Không định vị được thì chẳng có gì để thêm vào link: cứ để trình
+        // duyệt tự mở tab mới theo target="_blank" — đường đó không bao giờ
+        // bị chặn, chặn cú bấm lại rồi mở bằng JS chỉ tổ rủi ro hơn.
+        if (!navigator.geolocation) return;
 
         event.preventDefault();
         directions(card.link.getAttribute('href'), card.link);
