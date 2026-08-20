@@ -153,7 +153,12 @@ partial('_layout/page-head', [
 
                 <div class="artside__rule"></div>
 
-                <a class="artside__cta" href="/dat-lich">Đặt lịch tham dự</a>
+                <?php /* Mang theo slug bài viết: trang đặt lịch tra lại sự kiện trong
+                         CSDL rồi điền sẵn cơ sở, ngày, khung giờ và ghi chú —
+                         xem BookingController::eventPrefill(). Chỉ gửi slug chứ
+                         không gửi ngày/giờ, để sửa tay địa chỉ cũng không đặt
+                         được ra ngoài lịch đang mở. */ ?>
+                <a class="artside__cta" href="/dat-lich?su-kien=<?= e(rawurlencode($event['slug'])) ?>">Đặt lịch tham dự</a>
                 <a class="artside__back" href="/su-kien">← Xem sự kiện khác</a>
             </div>
 

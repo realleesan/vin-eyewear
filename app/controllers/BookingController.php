@@ -48,9 +48,21 @@ class BookingController extends BaseController
         $stores = StoreModel::active();
         $slots  = array_values((array) config('app.time_slots'));
         $days   = $this->days();
+        $grid   = $this->grid($stores, $days, $slots);
 
         $old = $_SESSION['_old_booking'] ?? [];
         unset($_SESSION['_old_booking']);
+
+        // Đến từ nút "Đặt lịch tham dự" của một bài sự kiện: cơ sở, ngày, giờ
+        // và ghi chú suy ra từ chính bài đó.
+        $event   = $this->event();
+        $prefill = $this->eventPrefill($event, $stores, $days, $slots, $grid);
+
+        // Ghi chú CHỈ điền khi khách chưa gõ gì. Quay lại sau khi form báo lỗi
+        // thì $old['note'] là chữ của khách — điền đè lên là xoá mất.
+        if (!isset($old['note']) && $prefill['note'] !== '') {
+            $old['note'] = $prefill['note'];
+        }
 
         $this->renderView('booking/index', [
             'pageTitle' => 'Đặt lịch đo mắt — Vin Eyewear',
@@ -60,12 +72,205 @@ class BookingController extends BaseController
             'services'  => self::SERVICES,
             'days'      => $days,
             'slots'     => $slots,
-            'grid'      => $this->grid($stores, $days, $slots),
-            'pick'      => $this->pick($stores, $days, $slots, $old),
+            'grid'      => $grid,
+            'pick'      => $this->pick($stores, $days, $slots, $old, $prefill),
             'old'       => $old,
+            'event'     => $event,
+            // 'fit' | 'later' | 'over' — view đổi câu nhắc theo trạng thái này.
+            'eventWhen' => $prefill['when'],
             'success'   => flash('booking_success'),
             'error'     => flash('booking_error'),
         ]);
+    }
+
+    /* ────────────────────────────────────────────────────────────────────────
+       ĐẶT LỊCH THAM DỰ MỘT SỰ KIỆN
+
+       Nút "Đặt lịch tham dự" ở bài sự kiện trỏ tới /dat-lich?su-kien=SLUG và
+       CHỈ mang đúng cái slug đó. Cơ sở, ngày, giờ đều tra lại từ CSDL ở đây
+       chứ không nhận qua URL: sửa tay địa chỉ cũng không đặt được ra ngoài
+       những cơ sở đang mở và 7 ngày đang nhận lịch.
+
+       Mọi thứ điền sẵn chỉ là GỢI Ý — vẫn là các nút radio bình thường, khách
+       đổi lại được hết. Không suy được thì để nguyên mặc định chứ không đoán.
+       ──────────────────────────────────────────────────────────────────────── */
+
+    /** Bài sự kiện đang đặt chỗ, nếu có. */
+    private function event(): ?array
+    {
+        $slug = trim((string) ($_GET['su-kien'] ?? ''));
+
+        return $slug === '' ? null : EventModel::findVisibleBySlug($slug);
+    }
+
+    /**
+     * Suy lựa chọn ban đầu từ bài sự kiện.
+     *
+     * `when` cho view biết phải nói gì: 'fit' (đã chọn hộ đủ), 'later' (còn xa,
+     * ngoài 7 ngày đang mở) hay 'over' (đã diễn ra xong).
+     *
+     * @return array{store: ?int, day: ?int, time: ?int, note: string, when: string}
+     */
+    private function eventPrefill(
+        ?array $event,
+        array $stores,
+        array $days,
+        array $slots,
+        array $grid
+    ): array {
+        if ($event === null) {
+            return ['store' => null, 'day' => null, 'time' => null, 'note' => '', 'when' => ''];
+        }
+
+        $store = $this->storeAt((string) ($event['location'] ?? ''), $stores);
+        $day   = $this->dayOf($event, $days);
+        $when  = $this->eventWindow($event, $day);
+
+        return [
+            'store' => $store,
+            'day'   => $day,
+            // Ngày không chọn được thì cũng không có khung giờ nào để chỉ tới.
+            'time'  => $day === null ? null : $this->slotAt($event, $grid, $store ?? 0, $day, $slots),
+            // Chương trình đã xong thì KHÔNG điền "Đăng ký tham dự…": khách vẫn
+            // đặt được lịch đo mắt bình thường, nhưng để nhân viên đọc thấy câu
+            // đăng ký một sự kiện không còn nữa là gây nhầm chứ không giúp gì.
+            'note'  => $when === 'over' ? '' : $this->eventNote($event),
+            'when'  => $when,
+        ];
+    }
+
+    /** 'fit' | 'later' | 'over' — xem eventPrefill(). */
+    private function eventWindow(array $event, ?int $day): string
+    {
+        if ($day !== null) {
+            return 'fit';
+        }
+
+        // Không có ends_at thì lấy chính ngày khai mạc làm mốc kết thúc, giống
+        // cách EventModel::currentPromo() hiểu "còn hạn".
+        $end = strtotime((string) ($event['ends_at'] ?: $event['starts_at'] ?? ''));
+
+        return ($end !== false && $end < time()) ? 'over' : 'later';
+    }
+
+    /**
+     * Cơ sở nào tổ chức? — đoán từ `events.location`.
+     *
+     * Cột đó là văn bản tự do ("Cơ sở Long Biên", "Cơ sở 46 Hoàng Hoa Thám,
+     * Tây Hồ", "Cả 2 cơ sở Vin Eyewear") chứ không phải khoá ngoại, nên phải
+     * đối chiếu bằng chữ. So trên dạng slug để bỏ qua dấu và hoa/thường — cùng
+     * cách SearchController::matches() đang làm.
+     *
+     * Nhắc tới TỪ HAI cơ sở trở lên ("cả 2 cơ sở") thì trả null: chọn hộ một
+     * cái là chọn sai một nửa số lần, thà để khách tự chọn.
+     */
+    private function storeAt(string $location, array $stores): ?int
+    {
+        $where = slugify($location);
+
+        if ($where === '') {
+            return null;
+        }
+
+        $brand = slugify((string) config('company.short_name'));
+        $hit   = null;
+
+        foreach ($stores as $i => $store) {
+            // Hai dấu hiệu nhận ra một cơ sở: phần tên riêng (bỏ tên thương
+            // hiệu, còn "tay-ho") và số nhà + tên đường ("46-hoang-hoa-tham").
+            $name    = slugify((string) $store['name']);
+            $needles = [
+                $brand === '' ? $name : trim(str_replace($brand, '', $name), '-'),
+                slugify(explode(',', (string) $store['address'])[0]),
+            ];
+
+            foreach ($needles as $needle) {
+                if ($needle === '' || !str_contains($where, $needle)) {
+                    continue;
+                }
+
+                if ($hit !== null && $hit !== $i) {
+                    return null; // câu chữ chỉ tới nhiều cơ sở
+                }
+
+                $hit = $i;
+                break;
+            }
+        }
+
+        return $hit;
+    }
+
+    /**
+     * Chỉ số ngày khai mạc trong dải 7 ngày, hoặc null nếu không rơi vào đó.
+     */
+    private function dayOf(array $event, array $days): ?int
+    {
+        $start = strtotime((string) ($event['starts_at'] ?? ''));
+
+        if ($start === false) {
+            return null;
+        }
+
+        $at = array_search(date('Y-m-d', $start), array_column($days, 'date'), true);
+
+        if ($at !== false) {
+            return (int) $at;
+        }
+
+        // Chương trình đã khai mạc nhưng CÒN đang chạy (triển lãm dài ngày, đợt
+        // ưu đãi cả tháng): ngày khai mạc thì qua rồi, nhưng hôm nay tới vẫn
+        // đúng chương trình — đó mới là ngày cần điền sẵn.
+        $end = strtotime((string) ($event['ends_at'] ?? ''));
+
+        return ($start < time() && $end !== false && $end >= time()) ? 0 : null;
+    }
+
+    /**
+     * Khung giờ sớm nhất còn trống kể từ giờ khai mạc.
+     *
+     * Không đòi trùng khít giờ khai mạc: sự kiện mở 14:00 mà khung 14:00 đã có
+     * người đặt thì 15:00 vẫn là trong chương trình. Hết chỗ từ giờ đó trở đi
+     * thì trả null và cột tóm tắt hiện "Chưa chọn giờ" như thường.
+     */
+    private function slotAt(array $event, array $grid, int $store, int $day, array $slots): ?int
+    {
+        $start = strtotime((string) ($event['starts_at'] ?? ''));
+        $from  = $start === false ? '' : date('H:i', $start);
+
+        foreach ($slots as $ti => $slot) {
+            // Khung giờ là "HH:MM" nên so chuỗi cũng ra đúng thứ tự thời gian.
+            if ($from !== '' && $slot < $from) {
+                continue;
+            }
+
+            if (!empty($grid[$store][$day][$ti]['free'])) {
+                return $ti;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Ghi chú điền sẵn — để nhân viên gọi xác nhận biết khách đăng ký theo
+     * chương trình nào, vì bảng `appointments` không có cột nào trỏ tới sự kiện.
+     */
+    private function eventNote(array $event): string
+    {
+        $note = 'Đăng ký tham dự: ' . trim((string) $event['title']);
+        $when = dateRange($event['starts_at'] ?? null, $event['ends_at'] ?? null);
+
+        if ($when !== '') {
+            $note .= ' (' . $when . ')';
+        }
+
+        if (!empty($event['location'])) {
+            $note .= ' — ' . $event['location'];
+        }
+
+        // Ô ghi chú giới hạn 500 ký tự; tiêu đề dài cộng địa điểm dài thì vượt.
+        return excerpt($note, 480);
     }
 
     /**
@@ -129,13 +334,15 @@ class BookingController extends BaseController
     /**
      * Lựa chọn ban đầu, dạng CHỈ SỐ để khớp với các nút radio trong view.
      *
-     * Thứ tự ưu tiên: dữ liệu vừa gõ hụt (quay lại sau lỗi) → ?store=MÃ (liên
-     * kết từ trang Liên hệ) → mặc định của bản thiết kế (cơ sở đầu, dịch vụ
-     * đầu, hôm nay, chưa chọn giờ).
+     * Thứ tự ưu tiên: dữ liệu vừa gõ hụt (quay lại sau lỗi) → bài sự kiện
+     * (?su-kien=SLUG) → ?store=MÃ (liên kết từ trang Liên hệ) → mặc định của
+     * bản thiết kế (cơ sở đầu, dịch vụ đầu, hôm nay, chưa chọn giờ).
+     *
+     * @param array{store: ?int, day: ?int, time: ?int, note: string} $prefill
      *
      * @return array{store: int, service: int, day: int, time: ?int}
      */
-    private function pick(array $stores, array $days, array $slots, array $old): array
+    private function pick(array $stores, array $days, array $slots, array $old, array $prefill): array
     {
         $storeIds = array_column($stores, 'id');
 
@@ -148,6 +355,11 @@ class BookingController extends BaseController
             $store = $at === false ? 0 : (int) $at;
         }
 
+        // Nơi tổ chức sự kiện, nếu đoán ra được từ bài viết.
+        if ($prefill['store'] !== null) {
+            $store = $prefill['store'];
+        }
+
         // Quay lại sau khi form báo lỗi: giữ đúng thứ khách đã chọn.
         if (isset($old['storeId'])) {
             $at    = array_search($old['storeId'], $storeIds, true);
@@ -155,8 +367,19 @@ class BookingController extends BaseController
         }
 
         $service = array_search($old['serviceType'] ?? null, self::SERVICES, true);
-        $day     = isset($old['dayIndex']) ? (int) $old['dayIndex'] : 0;
-        $time    = isset($old['timeIndex']) ? (int) $old['timeIndex'] : null;
+
+        // Ngày khai mạc và khung giờ của sự kiện, cũng nhường chỗ cho $old:
+        // đã bấm gửi một lần thì lựa chọn của khách mới là thứ đúng nhất.
+        $day  = $prefill['day'] ?? 0;
+        $time = $prefill['time'];
+
+        if (isset($old['dayIndex'])) {
+            $day = (int) $old['dayIndex'];
+        }
+
+        if (isset($old['timeIndex'])) {
+            $time = (int) $old['timeIndex'];
+        }
 
         return [
             'store'   => $store,
@@ -281,6 +504,17 @@ class BookingController extends BaseController
         $_SESSION['_old_booking'] = $data;
         flash('booking_error', $message);
 
-        redirect('/dat-lich');
+        /*
+         * Quay về ĐÚNG bài sự kiện đang đặt chỗ. Không mang slug theo thì lần
+         * quay lại này mất dòng nhắc "đang đặt lịch cho…", và bấm gửi lần nữa
+         * cũng không còn gì để mang tiếp — trong khi lỗi hay gặp nhất ở đây
+         * (quên chọn giờ) thì gần như chắc chắn có lần gửi thứ hai.
+         *
+         * Cơ sở / ngày / giờ / ghi chú khách đã chọn nằm trong $data nên vẫn
+         * được giữ nguyên như mọi lần lỗi khác.
+         */
+        $slug = trim((string) ($_POST['event_slug'] ?? ''));
+
+        redirect('/dat-lich' . ($slug === '' ? '' : '?su-kien=' . rawurlencode($slug)));
     }
 }

@@ -512,6 +512,32 @@
 
 .bkalert svg { flex-shrink: 0; }
 
+/* Dòng "đang đặt lịch tham dự …" khi khách tới từ một bài sự kiện.
+
+   Cùng khuôn với .bkalert nhưng sắc ấm trung tính chứ không đỏ: đây là lời
+   nhắc đã điền sẵn giúp, không phải lỗi. align-items:flex-start vì câu này
+   thường dài hai ba dòng — canh giữa thì cái biểu tượng trôi xuống lưng chừng. */
+.bknotice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 14px 20px;
+    border: 1px solid var(--bk-line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    color: var(--bk-warm);
+    font-size: 13.5px;
+    line-height: 1.55;
+}
+
+.bknotice svg { flex-shrink: 0; margin-top: 2px; }
+
+.bknotice strong {
+    color: var(--ink);
+    font-weight: 600;
+}
+
 .bkempty {
     display: flex;
     flex-direction: column;
