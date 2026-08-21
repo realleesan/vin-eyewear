@@ -167,7 +167,7 @@ $editHref = static fn (string $code, string $date): string =>
                                ở dạng lặng nhất trong chân thẻ. */
                             ?>
                             <form method="post" action="/tai-khoan/lich-hen/huy"
-                                  onsubmit="return confirm('Huỷ lịch hẹn <?= e($a['code']) ?>? Khung giờ này sẽ mở lại cho người khác.');">
+                                  onsubmit="return confirm('Huỷ lịch hẹn <?= e($a['code']) ?>?');">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="code" value="<?= e($a['code']) ?>">
                                 <button type="submit" class="acct-btn acct-btn--quiet acct-btn--sm">

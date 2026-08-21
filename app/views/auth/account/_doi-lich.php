@@ -20,8 +20,8 @@
  *
  * Nhận qua partial():
  *   $appointment — lịch đang đổi (đã kiểm đúng chủ ở BookingModel::findOwned)
- *   $slotDate    — ngày đang xem giờ trống (YYYY-MM-DD)
- *   $freeSlots   — khung giờ còn trống của cơ sở đó trong ngày đó
+ *   $slotDate    — ngày đang chọn giờ (YYYY-MM-DD)
+ *   $freeSlots   — khung giờ MỞ của ngày đó (cả danh sách, trừ giờ đã qua)
  */
 
 /* Giới hạn ngày chọn được: từ hôm nay tới 60 ngày tới. Cùng ý với trang đặt lịch
@@ -29,10 +29,12 @@
 $minDate = date('Y-m-d');
 $maxDate = date('Y-m-d', strtotime('+60 days'));
 
-/* Giờ hẹn hiện tại vẫn nằm trong danh sách nếu khách xem đúng ngày cũ:
-   availableSlots() coi nó là "đã có người đặt" (chính khách này), nên phải thêm
-   lại — nếu không, khách đổi ngày rồi đổi ý quay về ngày cũ sẽ thấy giờ của
-   CHÍNH MÌNH biến mất. */
+/* Giờ hẹn hiện tại vẫn phải nằm trong danh sách khi khách xem đúng ngày cũ.
+   Trước đây cần đoạn này vì availableSlots() coi giờ ấy là "đã có người đặt" —
+   chính khách này. Nay openSlots() không trừ ai cả, nên chỉ còn một trường hợp
+   giờ cũ vắng mặt: nó đã TRÔI QUA trong hôm nay. Thêm lại để khách đổi ngày
+   rồi đổi ý quay về ngày cũ không thấy giờ của chính mình biến mất; chọn lại
+   đúng giờ ấy thì rescheduleOwned() từ chối kèm lý do đọc được. */
 $sameDay = $slotDate === $appointment['appointment_date'];
 $slots   = $freeSlots;
 

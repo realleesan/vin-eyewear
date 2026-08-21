@@ -5,17 +5,26 @@
  *
  * Port từ createAppointment / getBookedSlots trong src/lib/shop.functions.ts.
  *
- * Bảng `appointments` có UNIQUE trên bốn cột (cơ sở, ngày, giờ, `active_slot`).
- * Đó mới là thứ THỰC SỰ chặn đặt trùng: kiểm tra bằng SELECT rồi mới INSERT sẽ
- * hở đúng khoảnh khắc giữa hai câu lệnh, hai người bấm cùng lúc đều thấy "còn
- * trống". Ở đây vẫn kiểm trước để báo lỗi cho đẹp, nhưng chốt chặn cuối cùng là
- * ràng buộc của DB — xem cách bắt lỗi 1062 trong create() và reschedule().
+ * ─────────────────────────────────────────────────────────────────────────────
+ * MỘT KHUNG GIỜ NHẬN BAO NHIÊU LỊCH CŨNG ĐƯỢC — CHỦ Ý, KHÔNG PHẢI SÓT
  *
- * Vì sao khoá có thêm cột thứ tư: `active_slot` là cột sinh ra, bằng '' khi lịch
- * còn hiệu lực và NULL khi đã huỷ. MySQL bỏ qua một hàng trong khoá duy nhất nếu
- * bất kỳ cột nào của khoá là NULL, nên lịch đã huỷ KHÔNG còn giữ chỗ. Trước bản
- * nâng cấp 2026-08-18 thì nó có giữ, và khung giờ của một lịch đã huỷ thành không
- * bao giờ đặt lại được trong khi vẫn hiện ra là còn trống.
+ * Bảng `appointments` từng có UNIQUE (cơ sở, ngày, giờ, `active_slot`) cho mỗi
+ * khung giờ đúng một lịch còn hiệu lực, kèm cả một cột sinh chỉ để phục vụ
+ * khoá ấy. Cửa hàng yêu cầu bỏ hẳn: đo mắt và cắt kính hết khoảng 30 phút,
+ * phần lâu nhất là 10–15 phút thử tròng còn lắp kính thì máy làm rất nhanh,
+ * nên không cần chia ca như tiệm cắt tóc.
+ *
+ * Nên khung giờ khách chọn là NGUYỆN VỌNG, không phải một chỗ đã giữ. Cửa hàng
+ * ghi nhận rồi GỌI ĐIỆN xác nhận và tự xếp người — cái chốt thật nằm ở cuộc
+ * gọi đó. Kéo theo ba thứ biến mất khỏi file này: bookedSlots(),
+ * bookedMatrix(), và nhánh bắt lỗi 1062 "khung giờ vừa có người đặt".
+ *
+ * CÒN LẠI MỘT LUẬT VỀ GIỜ, và nó không liên quan tới chỗ ngồi: không đặt được
+ * vào giờ ĐÃ TRÔI QUA. 15h chiều mà vẫn mời khách chọn khung 08:00 sáng cùng
+ * ngày thì đó là một cái hẹn không ai giữ được. Xem openSlots().
+ *
+ * Lỗi 1062 trên bảng này nay chỉ còn một nghĩa duy nhất: trùng MÃ lịch hẹn.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 class BookingModel extends BaseModel
@@ -30,95 +39,41 @@ class BookingModel extends BaseModel
     ];
 
     /**
-     * Các khung giờ ĐÃ có người đặt của một cơ sở trong một ngày.
+     * Khung giờ MỞ của một ngày — cả danh sách trong config, trừ đi giờ đã qua.
      *
-     * Bỏ qua lịch đã huỷ — khung giờ đó phải mở lại cho người khác.
+     * Thay cho bộ ba bookedSlots() / bookedMatrix() / availableSlots() cũ. Cả
+     * ba đều tồn tại để trả lời "khung này còn chỗ không", mà câu hỏi đó không
+     * còn nữa — xem khối chú thích đầu file.
+     *
+     * KHÔNG nhận $storeId nữa, và đó là điểm chính: danh sách giờ mở giống hệt
+     * nhau ở mọi cơ sở, nên tham số ấy chỉ còn là một lời hứa sai rằng kết quả
+     * phụ thuộc vào nó.
+     *
+     * @return list<string>
      */
-    public static function bookedSlots(string $storeId, string $date): array
+    public static function openSlots(string $date): array
     {
-        $rows = Database::fetchAll(
-            "SELECT time_slot
-               FROM appointments
-              WHERE store_id = :store
-                AND appointment_date = :date
-                AND status <> 'cancelled'",
-            ['store' => $storeId, 'date' => $date]
-        );
+        $today = date('Y-m-d');
 
-        return array_column($rows, 'time_slot');
-    }
-
-    /**
-     * Khung giờ ĐÃ ĐẶT của NHIỀU cơ sở trong NHIỀU ngày, gộp trong MỘT câu lệnh.
-     *
-     * Trang đặt lịch dựng sẵn lưới giờ cho cả 7 ngày × mọi cơ sở để khách đổi
-     * ngày/cơ sở mà không phải tải lại trang (xem app/views/booking/index.php).
-     * Gọi bookedSlots() trong hai vòng lặp lồng nhau sẽ thành 14 câu lệnh cho
-     * đúng một trang — trong khi WHERE IN … lấy tất cả bằng một lượt.
-     *
-     * @return array<string, array<string, array<string, true>>>
-     *         [store_id][YYYY-MM-DD][HH:MM] => true
-     */
-    public static function bookedMatrix(array $storeIds, array $dates): array
-    {
-        if ($storeIds === [] || $dates === []) {
+        // NGÀY ĐÃ QUA THÌ KHÔNG CÓ KHUNG NÀO, chứ không phải có đủ cả mười một.
+        // Nơi gọi đều đã chặn ngày quá khứ trước khi tới đây, nhưng một hàm
+        // công khai phải tự đúng: trả đủ danh sách cho ngày hôm qua là mời
+        // người gọi tiếp theo dựng ra một cái hẹn không thể xảy ra.
+        if ($date < $today) {
             return [];
         }
 
-        // Chỗ giữ tham số phải sinh theo số phần tử: nhét thẳng mảng vào câu
-        // lệnh là mở đúng cửa SQL injection mà mọi chỗ khác trong dự án đã bịt.
-        $params = [];
-        $sBind  = [];
-        $dBind  = [];
+        $all = array_values((array) config('app.time_slots'));
 
-        foreach (array_values($storeIds) as $i => $id) {
-            $sBind[] = ":s{$i}";
-            $params["s{$i}"] = $id;
+        if ($date > $today) {
+            return $all;
         }
 
-        foreach (array_values($dates) as $i => $date) {
-            $dBind[] = ":d{$i}";
-            $params["d{$i}"] = $date;
-        }
+        // Hôm nay thì cắt phần đã trôi qua. So sánh chuỗi "HH:MM" chạy đúng vì
+        // cả hai vế đều hai chữ số có đệm 0 — "09:00" < "14:00".
+        $now = date('H:i');
 
-        $rows = Database::fetchAll(
-            'SELECT store_id, appointment_date, time_slot
-               FROM appointments
-              WHERE store_id IN (' . implode(', ', $sBind) . ')
-                AND appointment_date IN (' . implode(', ', $dBind) . ")
-                AND status <> 'cancelled'",
-            $params
-        );
-
-        $matrix = [];
-
-        foreach ($rows as $row) {
-            // appointment_date là cột DATE nên PDO trả 'YYYY-MM-DD' — cùng dạng
-            // với khoá $dates, dùng thẳng làm khoá được.
-            $matrix[$row['store_id']][$row['appointment_date']][$row['time_slot']] = true;
-        }
-
-        return $matrix;
-    }
-
-    /**
-     * Khung giờ còn trống, tính từ danh sách khung giờ trong config.
-     */
-    public static function availableSlots(string $storeId, string $date): array
-    {
-        $all    = (array) config('app.time_slots');
-        $booked = self::bookedSlots($storeId, $date);
-        $free   = array_diff($all, $booked);
-
-        // Khung giờ ĐÃ TRÔI QUA của hôm nay không còn là chỗ trống.
-        // Trước đây danh sách chỉ trừ đi những khung đã có người đặt, nên lúc
-        // 15h vẫn mời khách đặt khung 08:00 sáng cùng ngày.
-        if ($date === date('Y-m-d')) {
-            $now  = date('H:i');
-            $free = array_filter($free, static fn (string $slot): bool => $slot > $now);
-        }
-
-        return array_values($free);
+        return array_values(array_filter($all, static fn (string $slot): bool => $slot > $now));
     }
 
     /**
@@ -182,14 +137,11 @@ class BookingModel extends BaseModel
                 ]
             );
         } catch (PDOException $e) {
-            // 1062 = trùng khoá duy nhất. Ở bảng này chỉ có hai khoá như vậy:
-            // `code` (sinh ngẫu nhiên, gần như không đụng) và bộ ba
-            // (cơ sở, ngày, khung giờ) — nên trên thực tế đây luôn là
-            // trường hợp hai người đặt cùng khung giờ.
-            if (((int) ($e->errorInfo[1] ?? 0)) === 1062) {
-                return ['ok' => false, 'error' => 'Khung giờ này vừa được đặt, vui lòng chọn giờ khác.'];
-            }
-
+            /* 1062 = trùng khoá duy nhất. Từ khi bỏ khoá khung giờ, bảng này
+               chỉ còn MỘT khoá như vậy: `code`. Mã sinh ngẫu nhiên nên đụng là
+               chuyện hiếm tới mức gần như không xảy ra, và khi xảy ra thì thử
+               lại là xong — không phải lỗi của khách và cũng không có gì để họ
+               sửa, nên câu báo giống hệt mọi lỗi ghi khác. */
             error_log('[BookingModel] Không tạo được lịch hẹn: ' . $e->getMessage());
 
             return ['ok' => false, 'error' => 'Không đặt được lịch, vui lòng thử lại.'];
@@ -314,9 +266,8 @@ class BookingModel extends BaseModel
      * Khách tự huỷ lịch.
      *
      * KHÔNG xoá hàng: cửa hàng cần biết khung giờ đó từng có người hẹn rồi huỷ —
-     * đó là dữ liệu vận hành (khách hay huỷ giờ nào, cơ sở nào trống thật). Cột
-     * sinh ra `active_slot` tự về NULL khi status thành 'cancelled', nên hàng đó
-     * rời khỏi khoá duy nhất và khung giờ mở lại cho người khác ngay.
+     * đó là dữ liệu vận hành (khách hay huỷ giờ nào, cơ sở nào trống thật), và
+     * nó cũng là thứ nhân viên tra lại khi khách gọi hỏi về một mã lịch cũ.
      *
      * @return array ['ok'=>true] | ['ok'=>false,'error'=>...]
      */
@@ -425,12 +376,8 @@ class BookingModel extends BaseModel
                 ['date' => $date, 'slot' => $slot, 'code' => $code, 'uid' => $userId]
             );
         } catch (PDOException $e) {
-            // 1062 trên uq_appointments_active_slot = khung giờ mới vừa có người
-            // khác đặt xong trong lúc khách đang chọn.
-            if (((int) ($e->errorInfo[1] ?? 0)) === 1062) {
-                return ['ok' => false, 'error' => 'Khung giờ này vừa được đặt, vui lòng chọn giờ khác.'];
-            }
-
+            // Không còn khoá khung giờ nào để đụng: đổi sang giờ đã có người
+            // khác đặt là hợp lệ. Xem khối chú thích đầu file.
             error_log('[BookingModel] Không đổi được lịch hẹn: ' . $e->getMessage());
 
             return ['ok' => false, 'error' => 'Không đổi được lịch, vui lòng thử lại.'];

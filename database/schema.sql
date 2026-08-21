@@ -579,58 +579,39 @@ CREATE TABLE `appointments` (
     `updated_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
                                     ON UPDATE CURRENT_TIMESTAMP,
     /*
-     * KHOÁ CHỐNG ĐẶT TRÙNG KHUNG GIỜ, chỉ áp cho lịch CÒN HIỆU LỰC.
+     * KHÔNG CÓ KHOÁ NÀO GIỚI HẠN SỐ NGƯỜI TRÊN MỘT KHUNG GIỜ — CHỦ Ý.
      *
-     * `active_slot` là một CỜ chứ không phải khoá: '' khi lịch còn hiệu lực,
-     * NULL khi đã huỷ. Khoá duy nhất là bốn cột bên dưới — (cơ sở, ngày, giờ,
-     * cờ). MySQL bỏ qua một hàng trong khoá duy nhất nếu BẤT KỲ cột nào của khoá
-     * là NULL, nên lịch huỷ tự rời khỏi khoá: một khung giờ có đúng một lịch còn
-     * hiệu lực, mà huỷ bao nhiêu lần cũng được — huỷ lịch TRẢ LẠI khung giờ.
+     * Ở đây từng có UNIQUE (store_id, appointment_date, time_slot, active_slot)
+     * cùng một cột sinh `active_slot` chỉ tồn tại để phục vụ nó, cho mỗi khung
+     * giờ đúng một lịch còn hiệu lực. Cửa hàng yêu cầu bỏ hẳn: đo mắt và cắt
+     * kính hết khoảng 30 phút, phần lâu nhất là 10–15 phút thử tròng còn lắp
+     * kính thì máy làm rất nhanh, nên không cần chia ca như tiệm cắt tóc.
      *
-     * Trước đây khoá đặt thẳng lên (store_id, appointment_date, time_slot) và
-     * KHÔNG biết tới `status`, nên lịch đã huỷ vẫn giữ chỗ vĩnh viễn trong khi
-     * BookingModel::bookedSlots() lại báo khung giờ đó trống — xem
-     * database/migrations/2026-08-18-doi-huy-lich-hen.sql.
+     * Khung giờ khách chọn trên web nay là NGUYỆN VỌNG, không phải một chỗ đã
+     * giữ. Cửa hàng ghi nhận rồi gọi điện xác nhận và tự xếp người — cái chốt
+     * thật nằm ở cuộc gọi đó, không nằm ở ràng buộc trong DB.
      *
-     * ─────────────────────────────────────────────────────────────────────
-     * VÌ SAO KHÔNG GỘP BA CỘT THÀNH MỘT CHUỖI — ĐỪNG VIẾT LẠI BẰNG CONCAT
+     * Xem database/migrations/2026-08-22-bo-gioi-han-khung-gio.sql.
      *
-     * Hai bản trước đều gộp, và đều KHÔNG import nổi vào hosting thật
-     * (InfinityFree chạy MariaDB 11.4) — cùng báo lỗi #1901:
-     *
-     *     CASE WHEN `status` = 'cancelled' THEN NULL
-     *          ELSE CONCAT(`store_id`,'|',`appointment_date`,'|',`time_slot`) END
-     *
-     *     CONCAT(`store_id`,'|',`appointment_date`,'|',`time_slot`,
-     *            LEFT(NULLIF(`status`,'cancelled'), 0))
-     *
-     * Thủ phạm KHÔNG phải CASE mà là CONCAT. Đo thẳng trên MariaDB 11.4 của
-     * hosting: CONCAT(...) trần và CONCAT_WS(...) đều bị từ chối trong
-     * GENERATED ALWAYS AS, còn CASE / IF / NULLIF / LEFT đứng một mình thì được
-     * nhận — nghĩa là hàm điều kiện vốn không bị cấm. Đã thử đủ đường vòng và
-     * đều hỏng: STORED lẫn VIRTUAL (VIRTUAL tạo được cột nhưng đánh khoá lên nó
-     * ném lại đúng lỗi ấy), bảng latin1 lẫn utf8mb4, kết nối SET NAMES latin1
-     * lẫn utf8mb3 lẫn utf8mb4. Đừng thử lại — cứ tránh CONCAT.
-     *
-     * Bản dưới bỏ hẳn việc ghép chuỗi nên không đụng CONCAT, và giữ nguyên hành
-     * vi cũ. Cờ phải là HẰNG khi lịch còn hiệu lực: để NULLIF(`status`,
-     * 'cancelled') trần thì cờ mang luôn giá trị 'pending' / 'confirmed' /
-     * 'done', và hai lịch khác trạng thái ở cùng khung giờ sẽ lọt qua khoá.
-     *
-     *   lịch đã huỷ:   NULLIF('cancelled','cancelled') -> NULL
-     *                  LEFT(NULL, 0)                   -> NULL   (hàng rời khoá)
-     *   còn hiệu lực:  LEFT('pending', 0)              -> ''     (hàng giữ khoá)
-     *
-     * Cần MySQL 5.7.6+ hoặc MariaDB 10.2+.
+     * `uq_appointments_code` thì GIỮ, và nó không liên quan gì tới khung giờ:
+     * nó chặn hai lịch trùng MÃ (LH…), thứ khách đọc qua điện thoại và nhân
+     * viên tra trong khu quản trị. Sau khi bỏ khoá kia, lỗi 1062 trên bảng này
+     * chỉ còn đúng một nghĩa là trùng mã.
      */
-    `active_slot`      VARCHAR(1)
-        GENERATED ALWAYS AS (LEFT(NULLIF(`status`, 'cancelled'), 0)) STORED,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_appointments_code` (`code`),
-    UNIQUE KEY `uq_appointments_active_slot`
-        (`store_id`, `appointment_date`, `time_slot`, `active_slot`),
     KEY `idx_appointments_user` (`user_id`),
     KEY `idx_appointments_status` (`status`),
+    /*
+     * Chỉ mục cho `store_id` phải KHAI RÕ, đừng bỏ đi vì "InnoDB tự tạo".
+     *
+     * Khoá ngoại `fk_appointments_store` cần một chỉ mục bắt đầu bằng cột này.
+     * Trước đây nó mượn tạm khoá duy nhất bốn cột (cột đầu là `store_id`), và
+     * chính vì thế lệnh xoá khoá ấy bị InnoDB từ chối với lỗi 1553 — xem
+     * migration 2026-08-22-bo-gioi-han-khung-gio.sql. Khai rõ ở đây thì bảng
+     * dựng mới có cùng bộ chỉ mục với bảng đã nâng cấp, và cùng một cái tên.
+     */
+    KEY `idx_appointments_store` (`store_id`),
     CONSTRAINT `fk_appointments_user` FOREIGN KEY (`user_id`)
         REFERENCES `users` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_appointments_store` FOREIGN KEY (`store_id`)

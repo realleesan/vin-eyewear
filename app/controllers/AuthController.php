@@ -952,7 +952,7 @@ class AuthController extends BaseController
                  * form ra là thấy ngay quanh giờ cũ còn chỗ nào, thay vì một
                  * danh sách rỗng chờ khách tự chọn ngày.
                  *
-                 * Không nhận ngày trong quá khứ: availableSlots() sẽ trả rỗng và
+                 * Không nhận ngày trong quá khứ: openSlots() sẽ trả rỗng và
                  * khách không hiểu vì sao.
                  */
                 $slotDate = (string) ($_GET['ngay'] ?? '');
@@ -985,8 +985,11 @@ class AuthController extends BaseController
                     'blockers'        => $blockers,
                     'editing'         => $editing,
                     'slotDate'        => $slotDate,
+                    /* Khung giờ MỞ của ngày đang xem — cả danh sách trừ giờ đã
+                       trôi qua. Không còn phụ thuộc cơ sở: cửa hàng đã bỏ giới
+                       hạn số người trên một khung giờ. */
                     'freeSlots'       => $editing === null ? []
-                        : BookingModel::availableSlots($editing['store_id'], $slotDate),
+                        : BookingModel::openSlots($slotDate),
                 ];
 
             default:   // ho-so, mat-khau — chỉ cần $profile, profile() đã nạp
@@ -1148,7 +1151,7 @@ class AuthController extends BaseController
         flash(
             $result['ok'] ? 'account_success' : 'account_error',
             $result['ok']
-                ? 'Đã huỷ lịch hẹn. Khung giờ đó nay mở lại cho người khác.'
+                ? 'Đã huỷ lịch hẹn.'
                 : $result['error']
         );
 

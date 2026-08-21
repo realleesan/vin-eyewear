@@ -44,8 +44,8 @@ class AppointmentAdminController extends AdminController
 
         BookingModel::update($id, ['status' => $status]);
 
-        // Huỷ lịch sẽ mở lại khung giờ đó cho người khác — bookedSlots() bỏ
-        // qua lịch có status 'cancelled', nên không cần làm gì thêm.
+        // Không còn khung giờ nào để "trả lại": cửa hàng đã bỏ giới hạn số
+        // người trên một khung — xem khối chú thích đầu BookingModel.
         flash('admin_success', 'Đã cập nhật trạng thái lịch hẹn.');
         redirect('/quan-tri/lich-hen');
     }

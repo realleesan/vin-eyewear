@@ -7,18 +7,24 @@
  * 1-2-3-4 bên trái, cột tóm tắt dính theo cuộn bên phải.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * VÌ SAO DỰNG SẴN LƯỚI GIỜ CỦA CẢ 7 NGÀY × MỌI CƠ SỞ
+ * KHUNG GIỜ LÀ NGUYỆN VỌNG, KHÔNG PHẢI CHỖ ĐÃ GIỮ
  *
- * Bản thiết kế đổi cơ sở/ngày là lưới giờ đổi NGAY, không tải lại trang. Bản
- * cũ ở đây làm ngược lại: mỗi lần đổi là một lượt GET để server tính lại
- * khung giờ trống — mà tải lại thì mất luôn tên, số điện thoại khách vừa gõ.
+ * Cửa hàng yêu cầu bỏ giới hạn số người trên một khung giờ: đo mắt và cắt kính
+ * hết khoảng 30 phút, phần lâu nhất là 10–15 phút thử tròng còn lắp kính thì
+ * máy làm rất nhanh, nên không cần chia ca như tiệm cắt tóc. Khách chọn ngày
+ * và giờ mong muốn, cửa hàng ghi nhận rồi GỌI ĐIỆN xác nhận và tự xếp người.
  *
- * Nay server gửi sẵn lưới giờ cho MỌI tổ hợp (cơ sở × ngày), và CSS chọn ra
- * đúng một lưới để hiện. Không một dòng JavaScript, không mất dữ liệu đang gõ.
- * Giá phải trả là trang nặng thêm: 2 cơ sở × 7 ngày × 11 khung = 154 ô. Vẫn
- * nhẹ, nhưng nếu cửa hàng mở tới hàng chục cơ sở thì phải tính lại cách này.
+ * Kéo theo một lần dọn đáng kể ở đây: lưới giờ không còn phụ thuộc CƠ SỞ.
  *
- * Toàn bộ dữ liệu đó lấy bằng MỘT câu lệnh — xem BookingModel::bookedMatrix().
+ * Bản trước dựng sẵn lưới cho MỌI tổ hợp (cơ sở × ngày) — 2 cơ sở × 7 ngày ×
+ * 11 khung = 154 ô — vì mỗi cơ sở có tập khung đã kín khác nhau, và CSS chọn
+ * ra đúng một lưới để hiện. Nay không cơ sở nào kín khung nào, nên chỉ còn 7
+ * ngày × 11 khung = 77 ô, và mấy luật CSS `.bkspane--0…7` biến mất theo. Luật
+ * ấy vốn gõ cứng tối đa tám cơ sở; mở cơ sở thứ chín là lưới giờ của nó không
+ * hiện ra nữa mà không có gì báo.
+ *
+ * Vẫn KHÔNG một dòng JavaScript và vẫn không tải lại trang khi khách đổi ngày:
+ * dải ngày là một nhóm radio, CSS hiện lưới của ngày đang chọn.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -48,7 +54,7 @@ class BookingController extends BaseController
         $stores = StoreModel::active();
         $slots  = array_values((array) config('app.time_slots'));
         $days   = $this->days();
-        $grid   = $this->grid($stores, $days, $slots);
+        $grid   = $this->grid($days, $slots);
 
         $old = $_SESSION['_old_booking'] ?? [];
         unset($_SESSION['_old_booking']);
@@ -153,7 +159,7 @@ class BookingController extends BaseController
             'service' => $this->serviceFor($event),
             'day'     => $day,
             // Ngày không chọn được thì cũng không có khung giờ nào để chỉ tới.
-            'time'    => $day === null ? null : $this->slotAt($event, $grid, $store ?? 0, $day, $slots),
+            'time'    => $day === null ? null : $this->slotAt($event, $grid, $day, $slots),
             // Chương trình đã xong thì KHÔNG điền "Đăng ký tham dự…": khách vẫn
             // đặt được lịch đo mắt bình thường, nhưng để nhân viên đọc thấy câu
             // đăng ký một sự kiện không còn nữa là gây nhầm chứ không giúp gì.
@@ -300,13 +306,13 @@ class BookingController extends BaseController
     }
 
     /**
-     * Khung giờ sớm nhất còn trống kể từ giờ khai mạc.
+     * Khung giờ mở sớm nhất kể từ giờ khai mạc.
      *
-     * Không đòi trùng khít giờ khai mạc: sự kiện mở 14:00 mà khung 14:00 đã có
-     * người đặt thì 15:00 vẫn là trong chương trình. Hết chỗ từ giờ đó trở đi
-     * thì trả null và cột tóm tắt hiện "Chưa chọn giờ" như thường.
+     * Không đòi trùng khít giờ khai mạc: sự kiện mở 14:00 mà khung ấy đã trôi
+     * qua thì 15:00 vẫn là trong chương trình. Không còn khung nào từ giờ đó
+     * trở đi thì trả null và cột tóm tắt hiện "Chưa chọn giờ" như thường.
      */
-    private function slotAt(array $event, array $grid, int $store, int $day, array $slots): ?int
+    private function slotAt(array $event, array $grid, int $day, array $slots): ?int
     {
         $start = strtotime((string) ($event['starts_at'] ?? ''));
         $from  = $start === false ? '' : date('H:i', $start);
@@ -317,7 +323,7 @@ class BookingController extends BaseController
                 continue;
             }
 
-            if (!empty($grid[$store][$day][$ti]['free'])) {
+            if (!empty($grid[$day][$ti]['free'])) {
                 return $ti;
             }
         }
@@ -376,28 +382,20 @@ class BookingController extends BaseController
      * đã trôi qua (chỉ xảy ra với hôm nay). Cả hai đều hiện gạch ngang như
      * nhau trong bản thiết kế, nên ở đây gộp thành một cờ `free`.
      */
-    private function grid(array $stores, array $days, array $slots): array
+    private function grid(array $days, array $slots): array
     {
-        $booked = BookingModel::bookedMatrix(
-            array_column($stores, 'id'),
-            array_column($days, 'date')
-        );
-
         $today = date('Y-m-d');
         $now   = date('H:i');
         $grid  = [];
 
-        foreach ($stores as $si => $store) {
-            foreach ($days as $di => $day) {
-                foreach ($slots as $ti => $slot) {
-                    $taken = isset($booked[$store['id']][$day['date']][$slot]);
-                    $past  = $day['date'] === $today && $slot <= $now;
-
-                    $grid[$si][$di][$ti] = [
-                        'label' => $slot,
-                        'free'  => !$taken && !$past,
-                    ];
-                }
+        foreach ($days as $di => $day) {
+            foreach ($slots as $ti => $slot) {
+                /* Chỉ còn MỘT lý do một ô không bấm được: giờ đã trôi qua.
+                   "Đã có người đặt" không còn là lý do — xem đầu file. */
+                $grid[$di][$ti] = [
+                    'label' => $slot,
+                    'free'  => !($day['date'] === $today && $slot <= $now),
+                ];
             }
         }
 

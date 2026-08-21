@@ -190,6 +190,17 @@ $steps = [
                         <h2 class="bkcard__title">Chọn ngày &amp; giờ</h2>
                     </div>
 
+                    <?php /* NÓI RA RẰNG ĐÂY LÀ NGUYỆN VỌNG, KHÔNG PHẢI CHỖ ĐÃ GIỮ.
+                             Cửa hàng bỏ giới hạn số người trên một khung giờ, nên
+                             mọi khung đều bấm được và không khung nào "hết chỗ".
+                             Không nói thì khách mặc định hiểu là đã đặt xong chỗ
+                             lúc 15:00 và cứ thế đến — trong khi cái chốt thật là
+                             cuộc gọi xác nhận của cửa hàng. */ ?>
+                    <p class="bkcard__note">
+                        Chọn khung giờ bạn thấy tiện nhất. Cửa hàng sẽ gọi lại để
+                        xác nhận và sắp xếp, nên bạn không cần lo khung giờ hết chỗ.
+                    </p>
+
                     <div class="bkdays">
                         <?php foreach ($days as $i => $day): ?>
                             <!-- Nhóm radio này CHỈ để chọn lưới giờ nào hiện ra; server
@@ -207,35 +218,46 @@ $steps = [
                         <?php endforeach; ?>
                     </div>
 
-                    <?php foreach ($grid as $si => $byDay): ?>
-                        <div class="bkspane bkspane--<?= $si ?>">
-                            <?php foreach ($byDay as $di => $cells): ?>
-                                <?php $free = array_filter($cells, static fn (array $c): bool => $c['free']); ?>
-                                <div class="bkdpane bkdpane--<?= $di ?>">
-                                    <span class="bkslots__label">
-                                        Khung giờ còn trống — <?= e($days[$di]['dm']) ?>
-                                    </span>
+                    <?php
+                    /*
+                     * MỘT LƯỚI CHO MỖI NGÀY, KHÔNG NHÂN THEO CƠ SỞ.
+                     *
+                     * Bản trước lồng thêm một vòng cơ sở ở ngoài, vì mỗi cơ sở
+                     * có tập khung đã kín riêng. Nay không khung nào bị kín —
+                     * cửa hàng bỏ giới hạn số người trên một khung giờ — nên
+                     * lưới giống hệt nhau ở mọi cơ sở và vòng ngoài chỉ còn
+                     * nhân bản đúng một thứ lên vài lần.
+                     *
+                     * Ô duy nhất bị khoá là giờ ĐÃ TRÔI QUA của hôm nay.
+                     */
+                    ?>
+                    <?php foreach ($grid as $di => $cells): ?>
+                        <?php $free = array_filter($cells, static fn (array $c): bool => $c['free']); ?>
+                        <div class="bkdpane bkdpane--<?= $di ?>">
+                            <span class="bkslots__label">
+                                Chọn khung giờ — <?= e($days[$di]['dm']) ?>
+                            </span>
 
-                                    <div class="bkslots">
-                                        <?php foreach ($cells as $ti => $cell): ?>
-                                            <label class="bkpill<?= $cell['free'] ? '' : ' bkpill--off' ?>">
-                                                <input class="bk__radio" type="radio" name="time_slot"
-                                                       value="<?= $di ?>|<?= $ti ?>"
-                                                       <?= $cell['free'] ? '' : 'disabled' ?>
-                                                       <?= ($pick['day'] === $di && $pick['time'] === $ti && $cell['free'])
-                                                           ? 'checked' : '' ?>>
-                                                <span><?= e($cell['label']) ?></span>
-                                            </label>
-                                        <?php endforeach; ?>
-                                    </div>
+                            <div class="bkslots">
+                                <?php foreach ($cells as $ti => $cell): ?>
+                                    <label class="bkpill<?= $cell['free'] ? '' : ' bkpill--off' ?>">
+                                        <input class="bk__radio" type="radio" name="time_slot"
+                                               value="<?= $di ?>|<?= $ti ?>"
+                                               <?= $cell['free'] ? '' : 'disabled' ?>
+                                               <?= ($pick['day'] === $di && $pick['time'] === $ti && $cell['free'])
+                                                   ? 'checked' : '' ?>>
+                                        <span><?= e($cell['label']) ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
 
-                                    <?php if ($free === []): ?>
-                                        <p class="bkslots__none">
-                                            Ngày này đã kín lịch. Bạn chọn giúp một ngày khác nhé.
-                                        </p>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
+                            <?php if ($free === []): ?>
+                                <?php /* Chỉ xảy ra với HÔM NAY, sau khung cuối cùng
+                                         trong ngày. Không còn trường hợp "kín lịch". */ ?>
+                                <p class="bkslots__none">
+                                    Hôm nay đã hết giờ nhận khách. Bạn chọn giúp một ngày khác nhé.
+                                </p>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

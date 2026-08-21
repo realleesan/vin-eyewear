@@ -110,6 +110,15 @@
     color: var(--ink);
 }
 
+/* Câu giải thích dưới tiêu đề một thẻ. Kéo sát lên đầu thẻ (gap của .bkcard là
+   20px, quá thưa cho một dòng thuộc về tiêu đề ngay trên nó). */
+.bkcard__note {
+    margin: -12px 0 0;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
 /* ============================================================
    1 · CƠ SỞ
    ============================================================ */
@@ -571,19 +580,18 @@
    lại đúng cái tương ứng với nút radio đang được chọn.
    ============================================================ */
 
-/* --- 1. Lưới giờ: hiện đúng một cơ sở × một ngày --------------- */
+/* --- 1. Lưới giờ: hiện đúng một ngày --------------------------- */
 
-.bkspane,
+/*
+ * KHÔNG CÒN CHIỀU CƠ SỞ.
+ *
+ * Ở đây từng có thêm tám luật `.bkspane--0…7` chọn lưới theo cơ sở đang tick,
+ * vì mỗi cơ sở có tập khung đã kín riêng. Cửa hàng đã bỏ giới hạn số người
+ * trên một khung giờ, nên lưới giống hệt nhau ở mọi cơ sở và cả tầng ấy biến
+ * mất — cùng với một cái bẫy: danh sách gõ cứng tới #bk-st-7 nghĩa là mở cơ sở
+ * thứ chín thì lưới giờ của nó không bao giờ hiện, mà không có gì báo.
+ */
 .bkdpane { display: none; }
-
-.bk__grid:has(#bk-st-0:checked) .bkspane--0,
-.bk__grid:has(#bk-st-1:checked) .bkspane--1,
-.bk__grid:has(#bk-st-2:checked) .bkspane--2,
-.bk__grid:has(#bk-st-3:checked) .bkspane--3,
-.bk__grid:has(#bk-st-4:checked) .bkspane--4,
-.bk__grid:has(#bk-st-5:checked) .bkspane--5,
-.bk__grid:has(#bk-st-6:checked) .bkspane--6,
-.bk__grid:has(#bk-st-7:checked) .bkspane--7 { display: block; }
 
 .bk__grid:has(#bk-d-0:checked) .bkdpane--0,
 .bk__grid:has(#bk-d-1:checked) .bkdpane--1,

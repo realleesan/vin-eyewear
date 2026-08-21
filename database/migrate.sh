@@ -102,6 +102,10 @@ MIGRATIONS=(
     "2026-08-20-bo-san-pham-mau.sql|data||"
     "2026-08-21-kinh-dang-deo.sql|column|prescriptions|wear_lens_type"
     "2026-08-22-bang-gia-trong.sql|table|lens_prices|"
+    # File này XOÁ một khoá và một cột, không tạo ra thứ gì để làm mốc. Kiểu
+    # 'data': chỉ sổ ghi chặn chạy lại. Chạy lại cũng chỉ báo "check that
+    # column/key exists" rồi dừng, không hỏng dữ liệu.
+    "2026-08-22-bo-gioi-han-khung-gio.sql|data||"
 )
 
 # ---------------------------------------------------------------------------
