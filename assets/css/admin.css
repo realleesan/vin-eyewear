@@ -603,6 +603,99 @@ body.admin {
     color: var(--muted);
 }
 
+/* --- Bảng giá tròng ------------------------------------------ */
+
+/* Hộp giải thích ở đầu trang. Không phải cảnh báo (không đỏ, không vàng): đây
+   là ba câu định nghĩa cho biết con số trong lưới nghĩa là gì, và người mở
+   trang lần đầu cần đọc chúng trước khi gõ. */
+.anote {
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--brand);
+    background: var(--surface-raised);
+}
+
+.anote p {
+    margin: 0;
+    font-size: var(--fs-body-sm);
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.anote p + p { margin-top: 6px; }
+.anote strong { color: var(--ink); }
+
+.anote code {
+    padding: 1px 5px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    color: var(--ink);
+}
+
+/* Cột đầu là tên gói (co giãn), các cột giá bằng nhau và không co: một ô số
+   bị bóp còn 60px thì "1400000" bị cắt mất chữ số cuối, mà đây là bảng giá. */
+.aprice th[scope="col"]:not(:first-child) { width: 170px; }
+
+.aprice__cell { vertical-align: top; }
+
+.aprice__cell input[type="number"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    font-family: var(--font-mono);
+    font-size: var(--fs-body-sm);
+    text-align: right;
+    color: var(--ink);
+}
+
+.aprice__cell input:focus {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+/* Ô chưa có giá: viền nhạt hơn và nền hơi khác, để lướt mắt xuống lưới là
+   thấy ngay chỗ nào còn trống — cùng lối với .ainv.is-out ở trang tồn kho. */
+.aprice__cell.is-empty input[type="number"] {
+    border-style: dashed;
+    background: color-mix(in srgb, var(--brand) 4%, transparent);
+}
+
+/* Số đã định dạng, ngay dưới ô nhập. Ô số không có dấu phân cách nghìn, mà
+   thiếu hay thừa một số 0 trong bảng giá là thứ phải thấy ngay. */
+.aprice__echo {
+    display: block;
+    margin-top: 4px;
+    font-size: var(--fs-label);
+    text-align: right;
+    color: var(--muted);
+}
+
+.aprice__ro {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--fs-body-sm);
+    text-align: right;
+    color: var(--ink);
+}
+
+.aprice__actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+
+/* Điện thoại: lưới ba cột số + cột tên không vừa bề ngang. .atable-wrap đã cho
+   cuộn ngang, chỉ cần chặn cột tên co lại thành một chữ một dòng. */
+@media (max-width: 720px) {
+    .aprice th[scope="row"] { min-width: 180px; }
+}
+
 /* --- Phân trang --------------------------------------------- */
 
 .pager {

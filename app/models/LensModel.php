@@ -4,23 +4,31 @@
  * LensModel — gói tròng kính cắt kèm khi mua gọng, và số đo mắt của khách.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * DỮ LIỆU NẰM Ở config/taxonomy.php, KHÔNG PHẢI BẢNG TRONG DB
+ * DANH MỤC Ở config, GIÁ Ở CSDL
  *
- * Tròng cắt kèm hỏi khách HAI TẦNG, cả hai đều nằm trong config/taxonomy.php:
+ * Tròng cắt kèm hỏi khách HAI TẦNG:
  *
  *   lens_types     kiểu tròng — Đơn tròng · Hai tròng · Đa tròng · Mắt đặt
- *   lens_packages  gói vật liệu/chiết suất, và đây là tầng MANG GIÁ
+ *   lens_packages  gói vật liệu/chiết suất — 1.50, 1.56, chống sáng xanh…
  *
- * Cả hai là một BẢNG GIÁ DỊCH VỤ, không phải hàng tồn kho: không có mã SKU, không trừ tồn,
- * không ảnh, không trang chi tiết. Cửa hàng nhập phôi tròng theo lô và mài theo
- * đơn kính từng khách.
+ * Mã, tên và mô tả của cả hai nằm trong config/taxonomy.php. Chúng là một BẢNG
+ * DỊCH VỤ, không phải hàng tồn kho: không mã SKU, không trừ tồn, không ảnh,
+ * không trang chi tiết — cửa hàng nhập phôi theo lô rồi mài theo đơn từng
+ * khách. Ở config vì mã nguồn tham chiếu tới chúng bằng id (`order_items.lens_id`
+ * chép lại mã ấy vào hoá đơn), và vì thêm một gói là một quyết định về sản phẩm
+ * chứ không phải một lần chỉnh giá. Bảng `products` danh mục "trong-kinh" là
+ * thứ KHÁC hẳn: đó là tròng bán RỜI, có tồn kho và biến thể riêng.
  *
- * Vì thế nó ở config — người làm giá sửa một file, không cần trang quản trị và
- * không cần migration. Bảng `products` danh mục "trong-kinh" là thứ KHÁC: đó là
- * tròng bán RỜI, có tồn kho và biến thể chiết suất riêng.
+ * GIÁ THÌ KHÔNG Ở ĐÓ. Nó nằm ở GIAO ĐIỂM của hai tầng, trong bảng `lens_prices`
+ * của CSDL, vì hai lẽ:
  *
- * Class này vẫn đặt tên *Model và nằm cùng thư mục để nơi gọi không phải nhớ
- * gói tròng đến từ đâu — đổi sang bảng DB sau này chỉ phải sửa trong đây.
+ *   · Một gói không có MỘT giá. Cùng phôi 1.61, đơn tròng và đa tròng chênh
+ *     nhau vài triệu — không tầng nào một mình mang được con số.
+ *   · Giá là thứ CỬA HÀNG sửa, không phải lập trình viên. Mười lăm ô mà mỗi
+ *     lần đổi phải sửa file rồi triển khai lại là việc không ai ở cửa hàng làm
+ *     được. Có bảng thì sửa ngay trên trình duyệt: /quan-tri/gia-trong.
+ *
+ * Xem khối "BẢNG GIÁ — KIỂU TRÒNG × GÓI CHIẾT SUẤT" ở dưới.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -268,14 +276,172 @@ class LensModel
             $pkg['name'] ?? null,
         ]));
 
+        /*
+         * GIÁ LÀ CỦA GIAO ĐIỂM, không phải của riêng gói.
+         *
+         * priceOf() trả null cho ba trường hợp, và cả ba đều ra "báo giá sau":
+         *   · kiểu "Mắt đặt" — không có ô nào, đúng thiết kế
+         *   · gói mới thêm vào config mà cửa hàng chưa nhập giá
+         *   · dòng giỏ cũ có lens_id nhưng chưa có lens_type
+         *
+         * Nói "báo giá sau" thay vì cộng 0đ: cả ba đều là "chưa biết giá", mà
+         * in "+0₫" thì khách đọc ra thành "phần tròng miễn phí".
+         */
+        $price = self::priceOf($type['id'] ?? null, $pkg['id'] ?? null);
+
         return [
             'id'        => $pkg['id'] ?? null,
             'type_id'   => $type['id'] ?? null,
             'name'      => $name,
-            'price'     => (int) ($pkg['price'] ?? 0),
-            // Mắt đặt: chưa có giá, cửa hàng báo sau khi xem thông số.
-            'quoted'    => $pkg === null,
+            'price'     => (int) ($price ?? 0),
+            'quoted'    => $price === null,
         ];
+    }
+
+    // ========================================================================
+    // BẢNG GIÁ — KIỂU TRÒNG × GÓI CHIẾT SUẤT
+    // ========================================================================
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * GIÁ NẰM TRONG CSDL, DANH MỤC NẰM TRONG config
+     *
+     * Cho tới bản trước, mỗi gói chiết suất mang theo một khoá `price` trong
+     * config/taxonomy.php. Cách đó hỏng ở hai chỗ khi bước chọn tròng tách
+     * thành hai tầng:
+     *
+     *   1. MỘT GÓI KHÔNG CÒN MỘT GIÁ. Đơn tròng và đa tròng cùng chọn phôi
+     *      1.61 ra cùng số tiền, trong khi mài đa tròng đắt hơn nhiều lần.
+     *   2. GIÁ LÀ THỨ CỬA HÀNG SỬA. Mười lăm ô mà mỗi lần đổi phải sửa file
+     *      rồi triển khai lại là một việc không ai ở cửa hàng làm được.
+     *
+     * Nên giá xuống bảng `lens_prices`, sửa ở /quan-tri/gia-trong; còn mã, tên
+     * và mô tả ở lại config vì mã nguồn tham chiếu tới chúng bằng id.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+
+    /** @var array<string, array<string, int>>|null Cả bảng giá, nhớ trong request. */
+    private static ?array $priceTable = null;
+
+    /**
+     * Cả bảng giá, dạng [mã kiểu][mã gói] => giá.
+     *
+     * Nhớ trong biến static: một lượt hiện bước "chọn gói" hỏi giá năm lần,
+     * trang chủ hỏi năm lần nữa, mà cả bảng chỉ có mười lăm dòng — đọc một lần
+     * rẻ hơn hẳn, và trong cùng một request thì giá không đổi.
+     *
+     * @return array<string, array<string, int>>
+     */
+    public static function priceTable(): array
+    {
+        if (self::$priceTable !== null) {
+            return self::$priceTable;
+        }
+
+        $out = [];
+
+        foreach (Database::fetchAll('SELECT lens_type, lens_package, price FROM lens_prices') as $r) {
+            $out[$r['lens_type']][$r['lens_package']] = (int) $r['price'];
+        }
+
+        return self::$priceTable = $out;
+    }
+
+    /**
+     * Giá của một ô, hoặc null khi ô đó chưa có giá.
+     *
+     * null KHÁC 0. 0 là "lựa chọn này không tính tiền" — cửa hàng khuyến mãi
+     * được. null là "chưa có giá cho lựa chọn này". Bên gọi in "Báo giá sau"
+     * cho null và "0₫" cho 0; hai câu khác hẳn nhau với người sắp trả tiền.
+     */
+    public static function priceOf(?string $typeId, ?string $packageId): ?int
+    {
+        if ($typeId === null || $packageId === null) {
+            return null;
+        }
+
+        return self::priceTable()[$typeId][$packageId] ?? null;
+    }
+
+    /**
+     * Giá THẤP NHẤT của một gói trên mọi kiểu tròng, hoặc null nếu chưa ô nào
+     * có giá.
+     *
+     * Dùng cho khối "Gói tròng phổ biến" ở trang chủ, nơi khách chưa chọn kiểu
+     * tròng nào nên không có ô cụ thể để in. "Từ 500.000₫" là câu đúng ở mọi
+     * trường hợp; in giá của một kiểu bất kỳ rồi bỏ chữ "từ" là hứa một con số
+     * mà phần lớn khách sẽ không trả.
+     */
+    public static function priceFrom(string $packageId): ?int
+    {
+        $found = [];
+
+        foreach (self::priceTable() as $byPackage) {
+            if (isset($byPackage[$packageId])) {
+                $found[] = $byPackage[$packageId];
+            }
+        }
+
+        return $found === [] ? null : min($found);
+    }
+
+    /**
+     * Ghi lại CẢ bảng giá từ màn quản trị.
+     *
+     * Nhận [mã kiểu][mã gói] => giá và ghi đè toàn bộ. Xoá sạch rồi chèn lại
+     * chứ không cập nhật từng ô: màn quản trị gửi lên đúng những ô nó vừa vẽ
+     * ra, nên bảng sau khi lưu phải là đúng những ô đó. Cập nhật từng ô thì gỡ
+     * một gói khỏi config xong, giá mồ côi của nó vẫn nằm lại trong DB và sống
+     * dậy nếu mã ấy được dùng lại — với một con số không ai còn nhớ.
+     *
+     * Ô ĐỂ TRỐNG thì không ghi dòng nào. Đó là cách khai "chưa định giá", khác
+     * hẳn với ghi số 0.
+     *
+     * Cả hai bước trong MỘT transaction: xoá xong mà chèn hỏng nửa chừng thì
+     * cửa hàng mất bảng giá và mọi lựa chọn tròng thành "báo giá sau".
+     *
+     * @param array<string, array<string, string|int|null>> $rows
+     */
+    public static function savePriceTable(array $rows): void
+    {
+        $clean = [];
+
+        /* Chỉ nhận mã CÓ THẬT trong config, và chỉ kiểu nào thật sự có bảng
+           giá. Không kiểm thì một request gõ tay đặt được giá cho "Mắt đặt"
+           hoặc cho một gói không tồn tại, và bảng giá mọc ra những dòng không
+           màn nào vẽ, không ai xoá được. */
+        foreach (self::types() as $type) {
+            if (!self::typeTakesPackage($type)) {
+                continue;
+            }
+
+            foreach (self::packages() as $pkg) {
+                $raw = trim((string) ($rows[$type['id']][$pkg['id']] ?? ''));
+
+                // ctype_digit chứ không (int): "abc" ép kiểu thành 0, tức là
+                // một lỗi gõ lặng lẽ biến thành "gói này miễn phí".
+                if ($raw === '' || !ctype_digit($raw)) {
+                    continue;
+                }
+
+                $clean[] = [$type['id'], $pkg['id'], (int) $raw];
+            }
+        }
+
+        Database::transaction(static function () use ($clean): void {
+            Database::execute('DELETE FROM lens_prices');
+
+            foreach ($clean as [$type, $pkg, $price]) {
+                Database::execute(
+                    'INSERT INTO lens_prices (lens_type, lens_package, price)
+                     VALUES (:t, :p, :price)',
+                    ['t' => $type, 'p' => $pkg, 'price' => $price]
+                );
+            }
+        });
+
+        // Bảng vừa đổi thì bộ nhớ tạm của chính request này đã sai.
+        self::$priceTable = null;
     }
 
     // ========================================================================

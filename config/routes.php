@@ -199,6 +199,12 @@ return [
     'quan-tri/ma-giam-gia/xoa'  => 'VoucherAdminController@delete', // POST
     'quan-tri/ma-giam-gia/phat' => 'VoucherAdminController@grant',  // POST
 
+    // Bảng giá tròng — một LƯỚI kiểu tròng × gói chiết suất, không phải CRUD:
+    // không có route xoá, và route lưu ghi cả bảng một lượt. Xem
+    // LensPriceAdminController.
+    'quan-tri/gia-trong'     => 'LensPriceAdminController@index',
+    'quan-tri/gia-trong/luu' => 'LensPriceAdminController@save',   // POST
+
     'quan-tri/co-so'        => 'StoreAdminController@index',
     'quan-tri/co-so/luu'    => 'StoreAdminController@save',        // POST
     'quan-tri/co-so/xoa'    => 'StoreAdminController@delete',      // POST

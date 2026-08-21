@@ -1505,6 +1505,22 @@ body.is-modal-open { overflow: hidden; }
     white-space: nowrap;
 }
 
+/* "Từ" nhỏ và nhạt hơn con số: nó là điều kiện của giá, không phải một phần
+   của giá — để nguyên cỡ thì mắt đọc thành "Từ 500.000₫" như một cụm liền và
+   chữ đầu tranh chỗ với con số. */
+.lpack__from {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+/* Gói chưa có ô nào được định giá trong /quan-tri/gia-trong. */
+.lpack__ask {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
 .hlens__cta {
     margin-top: 22px;
     padding: 14px 0;

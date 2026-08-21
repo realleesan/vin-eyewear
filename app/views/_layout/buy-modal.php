@@ -450,13 +450,27 @@ $stepForm = static function (string $buoc): void {
                 <?php $stepForm('trong'); ?>
 
                 <?php foreach (LensModel::packages() as $pk): ?>
+                    <?php
+                    /* GIÁ CỦA CHÍNH KIỂU TRÒNG KHÁCH VỪA CHỌN, không phải một
+                       giá chung của gói: bước này đứng SAU bước chọn kiểu, nên
+                       ở đây đã biết đủ hai vế để tra đúng ô trong bảng giá.
+
+                       null = cửa hàng chưa định giá ô đó. Vẫn cho chọn — cắt
+                       được tròng đó thì vẫn bán được — nhưng nói rõ là chưa có
+                       giá, thay vì in "+0₫" thành ra hứa miễn phí. */
+                    $pkPrice = LensModel::priceOf($intent['lens_type'], $pk['id']);
+                    ?>
                     <button type="submit" class="blens__item<?= $intent['lens_id'] === $pk['id'] ? ' is-on' : '' ?>"
                             name="lens" value="<?= e($pk['id']) ?>">
                         <span class="blens__body">
                             <span class="blens__name"><?= e($pk['name']) ?></span>
                             <span class="blens__desc"><?= e($pk['desc']) ?></span>
                         </span>
-                        <span class="blens__price">+<?= money((int) $pk['price']) ?></span>
+                        <?php if ($pkPrice === null): ?>
+                            <span class="blens__price blens__price--soft">Báo giá sau</span>
+                        <?php else: ?>
+                            <span class="blens__price">+<?= money($pkPrice) ?></span>
+                        <?php endif; ?>
                     </button>
                 <?php endforeach; ?>
             </form>

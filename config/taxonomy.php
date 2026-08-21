@@ -200,6 +200,22 @@ return [
      * này vừa nhập xong số đo ở bước trước, nên câu hỏi trong đầu họ là "độ của
      * mình thì chọn cái nào", không phải "chiết suất 1.61 nghĩa là gì".
      *
+     * ─────────────────────────────────────────────────────────────────────────
+     * KHÔNG CÓ `price` Ở ĐÂY NỮA — GIÁ NẰM TRONG BẢNG `lens_prices`.
+     *
+     * Một gói không còn MỘT giá: giá là của giao điểm (kiểu tròng × gói), vì
+     * mài đa tròng trên phôi 1.67 đắt hơn nhiều lần đơn tròng trên phôi 1.50.
+     * Ba kiểu có bảng giá × năm gói = mười lăm ô, và cửa hàng sửa chúng ở
+     * /quan-tri/gia-trong chứ không sửa file này — giá đổi hằng tháng, mà mỗi
+     * lần đổi phải sửa file rồi triển khai lại là việc không ai ở cửa hàng làm
+     * được.
+     *
+     * Còn lại ở đây là DANH MỤC: mã, tên, mô tả. Chúng ở lại config vì mã
+     * nguồn tham chiếu tới chúng bằng id (`order_items.lens_id` chép lại mã
+     * này), và vì thêm một gói là một quyết định về sản phẩm chứ không phải
+     * một lần chỉnh giá.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
      * Đọc qua LensModel::packages() — đừng gọi thẳng config() ở view, vì nơi đó
      * còn lo cả việc tra id (LensModel::find) khi form gửi lên.
      */
@@ -208,31 +224,26 @@ return [
             'id'    => 'clear-150',
             'name'  => 'Tròng trắng 1.50',
             'desc'  => 'Phù hợp độ cận/viễn nhẹ đến trung bình (dưới -4.00)',
-            'price' => 500000,
         ],
         [
             'id'    => 'clear-156',
             'name'  => 'Tròng trắng 1.56',
             'desc'  => 'Mỏng hơn, phù hợp cận trung bình (-4.00 → -6.00)',
-            'price' => 700000,
         ],
         [
             'id'    => 'blue-161',
             'name'  => 'Chống sáng xanh 1.61',
             'desc'  => 'Bảo vệ mắt khi làm việc máy tính nhiều giờ',
-            'price' => 1200000,
         ],
         [
             'id'    => 'blue-167',
             'name'  => 'Chống sáng xanh 1.67',
             'desc'  => 'Siêu mỏng, thẩm mỹ cao, cận nặng (trên -6.00)',
-            'price' => 1800000,
         ],
         [
             'id'    => 'photo-156',
             'name'  => 'Đổi màu Photochromic 1.56',
             'desc'  => 'Tự điều chỉnh theo ánh sáng, tiện dùng trong/ngoài trời',
-            'price' => 2500000,
         ],
     ],
 

@@ -101,6 +101,7 @@ MIGRATIONS=(
     # Kiểu 'data': chỉ sổ ghi chặn chạy lại, mà chạy lại cũng không hại gì.
     "2026-08-20-bo-san-pham-mau.sql|data||"
     "2026-08-21-kinh-dang-deo.sql|column|prescriptions|wear_lens_type"
+    "2026-08-22-bang-gia-trong.sql|table|lens_prices|"
 )
 
 # ---------------------------------------------------------------------------

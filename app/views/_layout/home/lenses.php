@@ -12,10 +12,22 @@
  * này bỏ hộp đó: chỉ còn cột phải là thẻ trắng, cột trái đứng thẳng trên nền
  * pearl như mọi khối khác của trang.
  *
- * Bảng giá đọc từ config('taxonomy.lens_packages'), cùng nguồn với bản cũ.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * GIÁ Ở ĐÂY LÀ "TỪ X₫", KHÔNG PHẢI MỘT CON SỐ CHẮC CHẮN
+ *
+ * Một gói chiết suất không còn một giá: giá nằm ở giao điểm (kiểu tròng × gói)
+ * trong bảng `lens_prices` — cùng phôi 1.61 thì đơn tròng và đa tròng chênh
+ * nhau vài triệu. Khách đứng ở trang chủ chưa chọn kiểu tròng nào, nên không
+ * có ô cụ thể nào để in.
+ *
+ * In giá THẤP NHẤT của gói kèm chữ "Từ" là câu đúng ở mọi trường hợp. Bỏ chữ
+ * "Từ" đi và in một con số là hứa cái giá mà phần lớn khách sẽ không trả.
+ *
+ * Gói chưa có ô nào được định giá thì không in số nào — xem LensModel::priceFrom().
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
-$packages = config('taxonomy.lens_packages') ?? [];
+$packages = LensModel::packages();
 
 /*
  * Thẻ cam kết — lấy nguyên bốn chuỗi của bản thiết kế.
@@ -68,7 +80,14 @@ $facts = [
                                 <p class="lpack__name"><?= e($p['name']) ?></p>
                                 <p class="lpack__desc"><?= e($p['desc']) ?></p>
                             </div>
-                            <p class="lpack__price"><?= money($p['price']) ?></p>
+                            <?php $from = LensModel::priceFrom($p['id']); ?>
+                            <p class="lpack__price">
+                                <?php if ($from === null): ?>
+                                    <span class="lpack__ask">Liên hệ</span>
+                                <?php else: ?>
+                                    <span class="lpack__from">Từ</span> <?= money($from) ?>
+                                <?php endif; ?>
+                            </p>
                         </li>
                     <?php endforeach; ?>
                 </ul>

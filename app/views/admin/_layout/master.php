@@ -25,6 +25,7 @@ $navItems = [
     ['url' => '/quan-tri/lien-he',   'label' => 'Liên hệ',   'icon' => 'message',  'badge' => $pendingContacts],
     ['url' => '/quan-tri/danh-gia',   'label' => 'Đánh giá',  'icon' => 'quote', 'badge' => $pendingReviews],
     ['url' => '/quan-tri/ma-giam-gia', 'label' => 'Mã giảm giá', 'icon' => 'badge-check'],
+    ['url' => '/quan-tri/gia-trong', 'label' => 'Giá tròng', 'icon' => 'glasses'],
     ['url' => '/quan-tri/co-so',     'label' => 'Cơ sở',     'icon' => 'map-pin'],
     // Chỉ hiện huy hiệu khi có yêu cầu chờ: trên hosting gửi được email thì
     // mục này gần như luôn rỗng, không nên gây chú ý vô cớ.

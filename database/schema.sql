@@ -49,6 +49,7 @@ DROP TABLE IF EXISTS `favorites`;
 DROP TABLE IF EXISTS `user_vouchers`;
 DROP TABLE IF EXISTS `vouchers`;
 DROP TABLE IF EXISTS `addresses`;
+DROP TABLE IF EXISTS `lens_prices`;
 DROP TABLE IF EXISTS `prescriptions`;
 DROP TABLE IF EXISTS `stores`;
 DROP TABLE IF EXISTS `events`;
@@ -263,6 +264,38 @@ CREATE TABLE `prescriptions` (
     -- Khoá ngoại sang `stores` KHÔNG khai ở đây được: bảng đó mãi mục 3 mới
     -- tạo, mà FOREIGN_KEY_CHECKS đã bật lại từ đầu file. Xem lệnh ALTER TABLE
     -- ngay sau CREATE TABLE `stores`.
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- BẢNG GIÁ TRÒNG — MỘT Ô CHO MỖI CẶP (KIỂU TRÒNG, GÓI CHIẾT SUẤT)
+--
+-- Bước "chọn tròng" khi mua hàng hỏi hai tầng: KIỂU tròng (đơn · hai · đa ·
+-- mắt đặt) rồi GÓI chiết suất. Giá nằm ở giao điểm chứ không ở riêng tầng
+-- nào — mài đa tròng trên phôi 1.67 đắt hơn nhiều lần đơn tròng trên phôi
+-- 1.50, mà cũng đắt hơn đa tròng trên phôi 1.50.
+--
+-- 3 kiểu có bảng giá × 5 gói = 15 ô. Kiểu "Mắt đặt" KHÔNG có dòng nào: tròng
+-- đặt riêng theo đơn thì cửa hàng báo giá sau khi xem thông số.
+--
+-- DANH MỤC ở config, GIÁ ở đây. Mã, tên và mô tả của kiểu tròng lẫn gói chiết
+-- suất vẫn nằm trong config/taxonomy.php vì mã nguồn tham chiếu tới chúng
+-- bằng id; còn giá là thứ cửa hàng sửa hằng tháng trên trình duyệt
+-- (/quan-tri/gia-trong), không phải thứ đi kèm một lượt triển khai mã.
+--
+-- KHÔNG khoá ngoại cho hai cột mã: bên kia là mảng PHP trong file config,
+-- không phải bảng. Cùng lý do với `order_items.lens_id`. Ô trỏ tới một mã đã
+-- bị gỡ khỏi config thì LensModel bỏ qua, và màn quản trị không vẽ ra nó.
+--
+-- Không cột `id`: khoá chính là chính cặp mã, nên DB tự chặn việc tạo hai giá
+-- cho cùng một lựa chọn.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `lens_prices` (
+    `lens_type`    VARCHAR(32) NOT NULL,
+    `lens_package` VARCHAR(40) NOT NULL,
+    `price`        BIGINT      NOT NULL DEFAULT 0,
+    `updated_at`   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
+                               ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`lens_type`, `lens_package`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
