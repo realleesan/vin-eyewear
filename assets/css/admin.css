@@ -573,9 +573,26 @@ body.admin {
 
 .astatus__save:hover { background: var(--brand-strong); }
 
-/* Có JavaScript thì select tự gửi form, nút Lưu thành thừa -> ẩn.
-   Không có JS thì nút vẫn hiện và dùng được. */
-.js .astatus__save { display: none; }
+/*
+ * Có JavaScript thì select tự gửi form, nút Lưu thành thừa -> ẩn.
+ * Không có JS thì nút vẫn hiện và dùng được.
+ *
+ * PHẢI GIỚI HẠN Ở FORM CÓ Ô CHỌN TỰ GỬI. Luật này trước đây viết là
+ * `.js .astatus__save`, tức là MỌI nút mang lớp ấy, ở mọi nơi — mà lớp ấy là
+ * lớp nút chính của cả khu quản trị. Hệ quả: bật JavaScript lên (tức là luôn
+ * luôn) thì "+ Thêm mới", "Huỷ sửa", "Tìm" và nút "Lưu thay đổi" của các form
+ * sản phẩm · danh mục · sự kiện · cơ sở · mã giảm giá · biến thể · tồn kho đều
+ * biến mất. Thêm `a.astatus__save { display: inline-grid }` ở dưới cũng không
+ * cứu được: (0,2,0) của luật này thắng (0,1,1) của nó.
+ *
+ * Dấu vết còn lại của cái bẫy: admin/orders/index.php có một nút cố ý KHÔNG
+ * dùng lớp này kèm chú thích giải thích, và .apay__btn ở trên cũng vậy. Cả
+ * hai là cách né tại chỗ; đây mới là chỗ sửa.
+ *
+ * :has() chọn đúng cái mà câu chú thích gốc mô tả — form nào có select tự gửi
+ * thì nút Lưu của form đó mới thừa.
+ */
+.js form:has(select[data-autosubmit]) .astatus__save { display: none; }
 
 .ainv.is-low  td { background: color-mix(in srgb, var(--brand) 5%, transparent); }
 .ainv.is-out  td { background: color-mix(in srgb, var(--danger) 6%, transparent); }
