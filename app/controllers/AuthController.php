@@ -1146,7 +1146,19 @@ class AuthController extends BaseController
         $userId = AuthMiddleware::requireLogin();
         $this->requirePost('/tai-khoan?muc=lich-hen');
 
-        $result = BookingModel::cancelOwned((string) ($_POST['code'] ?? ''), $userId);
+        $code   = (string) ($_POST['code'] ?? '');
+        $result = BookingModel::cancelOwned($code, $userId);
+
+        /* Báo sang Zalo cửa hàng. Một lịch đã huỷ mà không báo còn tệ hơn không
+           báo gì: nhân viên vẫn thấy tin cũ trong Zalo và vẫn gọi cho khách để
+           xác nhận một cái hẹn không còn nữa. Xem core/Zalo.php. */
+        if ($result['ok']) {
+            $saved = BookingModel::findByCode($code);
+
+            if ($saved !== null) {
+                Zalo::appointment($saved, 'cancelled');
+            }
+        }
 
         flash(
             $result['ok'] ? 'account_success' : 'account_error',
@@ -1172,6 +1184,13 @@ class AuthController extends BaseController
         );
 
         if ($result['ok']) {
+            // Cùng lý do với huỷ lịch: tin cũ trong Zalo nay đã sai giờ.
+            $saved = BookingModel::findByCode($code);
+
+            if ($saved !== null) {
+                Zalo::appointment($saved, 'rescheduled');
+            }
+
             flash('account_success', 'Đã đổi giờ hẹn. Cửa hàng sẽ gọi xác nhận lại.');
             redirect('/tai-khoan?muc=lich-hen');
         }

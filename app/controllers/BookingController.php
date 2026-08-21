@@ -533,6 +533,23 @@ class BookingController extends BaseController
         }
 
         /*
+         * ĐẨY SANG ZALO CỦA CỬA HÀNG — ngay khi lịch đã nằm trong CSDL.
+         *
+         * Cửa hàng đặt tính năng này để nhân viên không phải liên tục mở
+         * /quan-tri/lich-hen xem có lịch mới chưa. Đọc lại hàng vừa ghi thay vì
+         * gửi $data: tin báo cần TÊN cơ sở, mà $data chỉ có id.
+         *
+         * Zalo::appointment() tự nuốt mọi lỗi và có hạn giờ ngắn — Zalo sập hay
+         * mạng ra ngoài bị chặn cũng không được phép biến thành trang lỗi cho
+         * người vừa đặt lịch xong. Xem khối chú thích đầu core/Zalo.php.
+         */
+        $saved = BookingModel::findByCode($result['code']);
+
+        if ($saved !== null) {
+            Zalo::appointment($saved, 'created');
+        }
+
+        /*
          * Đặt xong thì đi đâu?
          *
          * ĐANG ĐĂNG NHẬP -> sang thẳng "Lịch hẹn của tôi". Lịch vừa đặt đã gắn

@@ -189,6 +189,32 @@ class BookingModel extends BaseModel
         );
     }
 
+    /**
+     * Một lịch hẹn theo MÃ, không hỏi ai là chủ.
+     *
+     * Chỉ dùng cho việc đẩy thông báo sang Zalo sau khi đã ghi xong — nơi gọi
+     * vừa tự tay tạo hoặc sửa đúng hàng này, nên không có gì để kiểm quyền
+     * thêm. KHÔNG dùng hàm này ở bất kỳ chỗ nào khách nhìn thấy dữ liệu: mã
+     * lịch hẹn ngắn và đoán được, findOwned() mới là hàm cho việc đó.
+     *
+     * Trả về kèm store_name vì tin báo cho cửa hàng phải nói rõ cơ sở nào.
+     */
+    public static function findByCode(string $code): ?array
+    {
+        if ($code === '') {
+            return null;
+        }
+
+        return Database::fetchOne(
+            'SELECT a.*, s.name AS store_name, s.address AS store_address
+               FROM appointments a
+               LEFT JOIN stores s ON s.id = a.store_id
+              WHERE a.code = :code
+              LIMIT 1',
+            ['code' => $code]
+        );
+    }
+
     // ========================================================================
     // KHÁCH TỰ ĐỔI / HUỶ LỊCH
     //
