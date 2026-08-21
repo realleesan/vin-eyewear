@@ -3,13 +3,36 @@
 /**
  * _layout/buy-modal.php — hộp thoại mua hàng, NĂM BƯỚC.
  *
- * Dựng theo khối "LUỒNG MUA HÀNG" của "Vin Eyewear Product.dc.html":
+ *   hinh-thuc   Chọn hình thức mua     chỉ mua gọng · hay gọng + cắt tròng
+ *   so-do       Nhập số đo khúc xạ     SPH / CYL / AXIS + ghi chú, hai mắt
+ *   kieu-trong  Chọn loại tròng kính   Đơn · Hai · Đa tròng · Mắt đặt
+ *   trong       Chọn gói tròng kính    bảng giá chiết suất trong taxonomy.php
+ *   xac-nhan    Xác nhận sản phẩm      số lượng + tổng tiền
  *
- *   hinh-thuc  Chọn hình thức mua     chỉ mua gọng · hay gọng + cắt tròng
- *   trong      Chọn loại tròng kính   năm gói trong config/taxonomy.php
- *   khuc-xa    Số đo khúc xạ          dùng hồ sơ đã lưu · hay nhập mới
- *   so-do      Nhập số đo khúc xạ     loại tật + độ hai mắt
- *   xac-nhan   Xác nhận sản phẩm      số lượng + tổng tiền
+ * ─────────────────────────────────────────────────────────────────────────────
+ * BA THAY ĐỔI SO VỚI BẢN THIẾT KẾ "Vin Eyewear Product.dc.html" — VÀ VÌ SAO
+ *
+ * 1. BỎ KHUNG PHÂN LOẠI TẬT KHÚC XẠ.
+ *    Bản thiết kế hỏi mỗi mắt "Cận · Viễn · Loạn · Lão" trước khi cho nhập độ.
+ *    Cửa hàng yêu cầu bỏ hẳn: khách bình thường không tự xác định đúng được
+ *    mình bị tật gì, nên bốn ô đó thu về một con số đoán mò rồi đặt nó cạnh
+ *    những con số đo thật. Người có chuyên môn đọc SPH/CYL/AXIS là ra loại
+ *    tật — chính xác hơn ô radio nhiều.
+ *
+ * 2. SỐ ĐO LÊN TRƯỚC, CHỌN TRÒNG XUỐNG CUỐI.
+ *    Bản thiết kế cho chọn gói tròng ngay sau bước 1. Nhưng mô tả từng gói nói
+ *    theo DẢI ĐỘ ("dưới −4.00", "trên −6.00"), nên hỏi trước là bắt khách chọn
+ *    khi chưa có dữ kiện. Lý do đầy đủ ghi ở nhánh 'hinh-thuc' trong
+ *    CartController::buyStep().
+ *
+ * 3. KHÔNG CÒN BƯỚC "DÙNG HỒ SƠ KHÚC XẠ ĐÃ LƯU".
+ *    Trước đây khách có hồ sơ thì bấm một nút là xong. Cửa hàng yêu cầu bỏ:
+ *    độ mắt thay đổi theo thời gian, nên số của lần đo trước KHÔNG được mặc
+ *    định trở thành số của lần mua này. Hồ sơ vẫn còn nguyên trong trang tài
+ *    khoản (/tai-khoan?muc=do-mat) để tra cứu; ở đây thì mọi lượt mua đều đi
+ *    qua form nhập, và form ấy để trống. Thông tin hành chính (họ tên, số điện
+ *    thoại, địa chỉ) thì ngược lại — vẫn tự điền đủ ở trang thanh toán.
+ * ─────────────────────────────────────────────────────────────────────────────
  *
  * Mở khi khách bấm "Mua ngay" / "Thêm vào giỏ" một chiếc GỌNG hoặc KÍNH MÁT —
  * xem CartController::add(). Mỗi bước là một POST sang CartController::buyStep().
@@ -54,12 +77,11 @@
  * LensModel::wording(). "Chỉ mua gọng" cho một hộp kính áp tròng là câu vô nghĩa.
  *
  * Nhận qua partial(): $buyModal — mảng do BaseController::renderView dựng.
- *   product · step · saved (hồ sơ khúc xạ đã lưu) · takesPackage · intent
+ *   product · step · takesPackage · intent
  */
 
 $product  = $buyModal['product'];
 $intent   = $buyModal['intent'];
-$saved    = $buyModal['saved'];
 $step     = $buyModal['step'];
 $takesPkg = $buyModal['takesPackage'];
 
@@ -74,41 +96,44 @@ $variant = $intent['variant_id'] !== null
     : null;
 
 $basePrice = VariantModel::priceOf($product, $variant);
-$lens      = LensModel::find($intent['lens_id']);
-$lensPrice = (int) ($lens['price'] ?? 0);
-$qty       = (int) $intent['quantity'];
+
+/* Kiểu tròng và gói chiết suất gộp thành MỘT mẩu để in — xem LensModel::combo.
+   $lensType giữ riêng vì bước lùi cần biết kiểu đang chọn có bảng giá không. */
+$lensType    = LensModel::findType($intent['lens_type']);
+$typeTakesPkg = LensModel::typeTakesPackage($lensType);
+$lens        = LensModel::combo($intent['lens_id'], $intent['lens_type']);
+$lensPrice   = (int) ($lens['price'] ?? 0);
+$qty         = (int) $intent['quantity'];
 
 $titles = [
-    'hinh-thuc' => 'Chọn hình thức mua',
-    'khuc-xa'   => 'Số đo khúc xạ',
-    'so-do'     => 'Nhập số đo khúc xạ',
-    'trong'     => 'Chọn loại tròng kính',
-    'xac-nhan'  => 'Xác nhận sản phẩm',
+    'hinh-thuc'  => 'Chọn hình thức mua',
+    'so-do'      => 'Nhập số đo khúc xạ',
+    'kieu-trong' => 'Chọn loại tròng kính',
+    'trong'      => 'Chọn gói tròng kính',
+    'xac-nhan'   => 'Xác nhận sản phẩm',
 ];
 
 /*
  * Bước lùi của từng bước — PHẢI ĐI NGƯỢC ĐÚNG THỨ TỰ CỦA CartController::buyStep.
  *
- *   chỉ mua gọng:   hình thức ──────────────────────────────► xác nhận
- *   cắt tròng:      hình thức → chọn tròng → khúc xạ [→ số đo] → xác nhận
+ *   chỉ mua gọng:  hình thức ─────────────────────────────────────► xác nhận
+ *   cắt tròng:     hình thức → số đo → kiểu tròng → gói ──────────► xác nhận
+ *                                       └ "Mắt đặt" ──────────────┘
+ *   đã là tròng:   hình thức → số đo ──────────────────────────────► xác nhận
  *
- * Chọn tròng đứng TRƯỚC phần số đo, theo "Vin Eyewear.dc.html" — lý do ghi ở
- * nhánh 'hinh-thuc' trong buyStep().
- *
- * Mặt hàng không có gói tròng (tròng rời, kính áp tròng) không có bước "chọn
- * tròng", nên đường lùi của bước khúc xạ rẽ theo $takesPkg.
+ * Ba nhánh cùng đổ về "xác nhận", nên đường lùi của bước ấy phải hỏi lại
+ * đúng ba câu đã rẽ: có cắt tròng không, mặt hàng có bảng giá tròng không,
+ * và kiểu tròng đang chọn có đi tiếp sang bảng giá không.
  */
-$rxPrev = $saved !== null ? 'khuc-xa' : 'so-do';
+$rxPrev = !$takesPkg
+    ? 'so-do'                              // tròng rời, kính áp tròng
+    : ($typeTakesPkg ? 'trong' : 'kieu-trong');
 
 $prev = [
-    'trong'    => 'hinh-thuc',
-    'khuc-xa'  => $takesPkg ? 'trong' : 'hinh-thuc',
-    'so-do'    => 'khuc-xa',
-    /* HAI ĐÍCH, một nút — vì hai đường đi khác nhau cùng dẫn tới bước này.
-       Mua kèm tròng thì lùi về màn số đo vừa qua ('khuc-xa' nếu khách dùng hồ
-       sơ đã lưu, 'so-do' nếu tự gõ). Mua trần thì cả nhánh chỉ có một bước,
-       nên lùi thẳng về "Chọn hình thức mua". */
-    'xac-nhan' => $intent['mode'] === 'combo' ? $rxPrev : 'hinh-thuc',
+    'so-do'      => 'hinh-thuc',
+    'kieu-trong' => 'so-do',
+    'trong'      => 'kieu-trong',
+    'xac-nhan'   => $intent['mode'] === 'combo' ? $rxPrev : 'hinh-thuc',
 ][$step] ?? null;
 
 /* Đóng hộp thoại = về chính trang này, bỏ hai tham số của nó. Không dùng
@@ -245,102 +270,34 @@ $stepForm = static function (string $buoc): void {
                 </form>
             </div>
 
-        <?php elseif ($step === 'khuc-xa'): ?>
-
-            <!-- ══════════ 2. SỐ ĐO KHÚC XẠ ══════════ -->
-            <?php if ($saved !== null && LensModel::formatSavedRx($saved) !== null): ?>
-                <?php /* Bản thiết kế chỉ vẽ trạng thái "chưa có hồ sơ" — một nút
-                         duy nhất. Nhưng dự án CÓ bảng `prescriptions` và một mục
-                         "Thông số đo mắt" trong trang tài khoản, nên khách đã đo ở
-                         Vin Eyewear là đã có sẵn số đo. Bắt họ gõ lại từng con số
-                         mình vừa được đo là hỏi một câu đã có câu trả lời. */ ?>
-                <form class="brxsaved" method="post" action="/gio-hang/chon">
-                    <?php $stepForm('khuc-xa'); ?>
-
-                    <div class="brxsaved__card">
-                        <span class="brxsaved__label">Hồ sơ khúc xạ của bạn</span>
-                        <span class="brxsaved__val"><?= e(LensModel::formatSavedRx($saved)) ?></span>
-                        <span class="brxsaved__meta">
-                            <?php if (!empty($saved['measured_at'])): ?>
-                                Đo ngày <?= e(date('d/m/Y', strtotime($saved['measured_at']))) ?>
-                                <?php if (!empty($saved['store_name'])): ?>
-                                    · <?= e($saved['store_name']) ?>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                Bạn tự nhập trong trang tài khoản
-                            <?php endif; ?>
-                            <?php if (!UserModel::prescriptionIsValid($saved)): ?>
-                                <?php /* Quá 12 tháng thì độ có thể đã đổi. Không
-                                         chặn — chỉ nói ra, vì chỉ khách mới biết
-                                         mắt mình có thay đổi hay không. */ ?>
-                                · <strong class="brxsaved__old">nên đo lại</strong>
-                            <?php endif; ?>
-                        </span>
-                    </div>
-
-                    <button type="submit" class="bmodal__cta">Dùng số đo này</button>
-                </form>
-
-                <a class="bmodal__ghost" href="<?= e($stepHref('so-do')) ?>">Nhập số đo khác</a>
-
-            <?php else: ?>
-                <div class="bnote">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-                        <circle cx="12" cy="12" r="9"></circle>
-                        <path d="M12 8h.01M12 11v5"></path>
-                    </svg>
-                    <span class="bnote__body">
-                        <span class="bnote__title">Bạn chưa có hồ sơ khúc xạ</span>
-                        <span class="bnote__text">
-                            Nhập số đo từ đơn thuốc khúc xạ gần nhất, hoặc đặt lịch đo mắt
-                            miễn phí tại cửa hàng.
-                        </span>
-                    </span>
-                </div>
-
-                <a class="bmodal__cta bmodal__cta--link" href="<?= e($stepHref('so-do')) ?>">
-                    Nhập số đo khúc xạ
-                </a>
-                <a class="bmodal__ghost" href="/dat-lich">Không nhớ số đo? Đặt lịch đo mắt miễn phí</a>
-            <?php endif; ?>
-
         <?php elseif ($step === 'so-do'): ?>
 
-            <!-- ══════════ 3. NHẬP SỐ ĐO KHÚC XẠ ══════════ -->
+            <!-- ══════════ 2. NHẬP SỐ ĐO KHÚC XẠ ══════════ -->
             <?php
             /*
-             * MỖI MẮT MỘT KHỐI ĐỘC LẬP: loại tật riêng, độ riêng, ghi chú riêng.
+             * MỖI MẮT MỘT KHỐI, HAI KHỐI ĐỨNG SÁT NHAU.
              *
-             * Bản trước hỏi MỘT loại tật rồi áp cho cả hai mắt. Hai mắt khác
-             * nhau là chuyện thường — cận một bên, loạn bên kia — và khi đó
-             * khách buộc phải chọn một loại sai cho một trong hai mắt.
+             * Không còn khung "Loại tật" chen giữa nhãn mắt và ba ô độ, nên
+             * hai khối co lại vừa một màn hình điện thoại và mắt so được số
+             * của hai bên mà không phải cuộn. Đó chính là điều cửa hàng yêu
+             * cầu khi nói "dồn OS và OD lại gần nhau".
              *
-             * CẢ BA Ô ĐỘ LUÔN HIỆN Ở CẢ HAI MẮT, không phụ thuộc loại tật.
+             * BA Ô ĐỘ LUÔN HIỆN Ở CẢ HAI MẮT. Không có gì để ẩn nữa: điều kiện
+             * ẩn trụ/trục ngày trước bám vào ô radio "Loạn thị", mà ô đó đã bỏ.
+             * Mắt không loạn thì để trống hai ô — máy chủ bỏ qua ô trống, và
+             * điền vào thì được giữ nguyên (xem LensModel::eyeText).
              *
-             * Từng có luật CSS ẩn trụ/trục ở mắt không tick "Loạn thị". Bỏ rồi:
-             * hai mắt lệch nhau giữa chừng đọc ra thành form hỏng ở bên ít ô
-             * hơn. Lý do đầy đủ nằm ở chỗ luật cũ từng đứng, trong
-             * assets/css/components/buy-modal.css.
-             *
-             * Mắt cận/viễn/lão thuần thấy thừa hai ô — để trống thì máy chủ bỏ
-             * qua, điền thì được giữ lại (xem LensModel::eyeText).
+             * KHÔNG Ô NÀO ĐƯỢC ĐIỀN SẴN, kể cả khi khách đã có hồ sơ khúc xạ.
+             * Xem điểm 3 ở đầu file.
              */
             $eyes = [
                 'od' => ['Mắt phải (OD)', 'MP'],
                 'os' => ['Mắt trái (OS)', 'MT'],
             ];
-            $sphOptions  = LensModel::sphOptions();
+            $signOptions = LensModel::sphSignOptions();
+            $sphOptions  = LensModel::sphMagnitudeOptions();
             $cylOptions  = LensModel::cylOptions();
             $axisOptions = LensModel::axisOptions();
-
-            /** Icon cho từng loại tật, theo thứ tự của LensModel::RX_TYPES. */
-            $typeIcons = [
-                'can'  => 'glasses',
-                'vien' => 'scan-eye',
-                'loan' => 'refresh',
-                'lao'  => 'newspaper',
-            ];
             ?>
             <form class="brx" method="post" action="/gio-hang/chon">
                 <?php $stepForm('so-do'); ?>
@@ -351,32 +308,56 @@ $stepForm = static function (string $buoc): void {
                             <?= icon('eye', 'beye__ico', 14) ?><?= e($label) ?>
                         </legend>
 
-                        <div class="beye__block">
-                            <span class="beye__cap">Loại tật</span>
-                            <div class="beye__types">
-                                <?php foreach (LensModel::RX_TYPES as $key => [$name, $desc]): ?>
-                                    <label class="btype btype--tight" title="<?= e($desc) ?>">
-                                        <input type="radio" name="<?= e($side) ?>_loai"
-                                               value="<?= e($key) ?>">
-                                        <?= icon($typeIcons[$key] ?? 'eye', 'btype__ico', 16) ?>
-                                        <span class="btype__name"><?= e($name) ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
                         <?php /* Ba ô chia đều một hàng; dưới 480px CSS xếp
                                  chúng thành ba dòng (400px). Xem buy-modal.css. */ ?>
                         <div class="beye__row">
-                            <label class="beye__field">
-                                <span class="beye__cap">Độ cầu (SPH)</span>
-                                <select name="<?= e($side) ?>">
-                                    <option value="">— Chọn —</option>
-                                    <?php foreach ($sphOptions as $o): ?>
-                                        <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
+                            <div class="beye__field">
+                                <span class="beye__cap" id="cap-<?= e($side) ?>-sph">Độ cầu (SPH)</span>
+
+                                <?php
+                                /*
+                                 * DẤU TÁCH RA HAI NÚT, ĐỘ LỚN Ở Ô CHỌN BÊN CẠNH.
+                                 *
+                                 * Cửa hàng yêu cầu cho khách chọn dấu cộng hay
+                                 * dấu trừ. Trước đây dấu nằm lẫn trong nhãn của
+                                 * một danh sách 81 dòng — thứ dễ đọc lướt qua
+                                 * nhất trên cả form, mà đọc nhầm là mài ngược
+                                 * hẳn một cặp tròng. Lý do đầy đủ ghi ở
+                                 * LensModel::sphMagnitudeOptions().
+                                 *
+                                 * Hai ô radio THẬT, không phải <button>: bàn
+                                 * phím và trình đọc màn hình phải biết cái nào
+                                 * đang được chọn. Cùng cách làm với .acct-choice
+                                 * ở trang tài khoản.
+                                 */
+                                ?>
+                                <div class="bsph">
+                                    <div class="bsign" role="radiogroup"
+                                         aria-labelledby="cap-<?= e($side) ?>-sph">
+                                        <?php foreach ($signOptions as $i => $sg): ?>
+                                            <label class="bsign__opt"
+                                                   title="<?= e($sg['note']) ?>">
+                                                <input type="radio" name="<?= e($side) ?>_dau"
+                                                       value="<?= e($sg['value']) ?>"
+                                                       <?= $i === 0 ? 'checked' : '' ?>>
+                                                <span class="bsign__mark" aria-hidden="true"><?= e($sg['label']) ?></span>
+                                                <span class="bsign__note"><?= e($sg['note']) ?></span>
+                                            </label>
+                                        <?php endforeach; ?>
+                                    </div>
+
+                                    <label class="sr-only" for="<?= e($side) ?>-sph">
+                                        <?= e($label) ?> — độ cầu
+                                    </label>
+                                    <select class="bsph__num" id="<?= e($side) ?>-sph"
+                                            name="<?= e($side) ?>">
+                                        <option value="">— Chọn —</option>
+                                        <?php foreach ($sphOptions as $o): ?>
+                                            <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
 
                             <label class="beye__field">
                                 <span class="beye__cap">Độ trụ (CYL)</span>
@@ -411,19 +392,58 @@ $stepForm = static function (string $buoc): void {
                     </fieldset>
                 <?php endforeach; ?>
 
+                <?php /* Bỏ trống cả hai mắt vẫn đi tiếp được: phần lớn người mua
+                         kính không nhớ số đo của mình, và cửa hàng đo lại miễn
+                         phí trước khi mài — xem CartController::add(). */ ?>
                 <button type="submit" class="bmodal__cta">Xác nhận độ kính</button>
             </form>
 
             <a class="bmodal__ghost" href="/dat-lich">Không nhớ số đo? Đặt lịch đo mắt miễn phí</a>
 
+        <?php elseif ($step === 'kieu-trong'): ?>
+
+            <!-- ══════════ 3. CHỌN LOẠI TRÒNG KÍNH ══════════ -->
+            <?php if ($intent['rx'] !== null): ?>
+                <?php /* Nhắc lại số đo vừa nhập ngay trên danh sách: "Mắt đặt"
+                         dành cho độ quá cao, nên hai thứ phải nhìn thấy cùng
+                         lúc mới quyết được. */ ?>
+                <p class="brxecho"><?= e($intent['rx']) ?></p>
+            <?php endif; ?>
+
+            <form class="blens" method="post" action="/gio-hang/chon">
+                <?php $stepForm('kieu-trong'); ?>
+
+                <?php foreach (LensModel::types() as $ty): ?>
+                    <button type="submit" class="blens__item<?= $intent['lens_type'] === $ty['id'] ? ' is-on' : '' ?>"
+                            name="kieu" value="<?= e($ty['id']) ?>">
+                        <span class="blens__body">
+                            <span class="blens__name"><?= e($ty['name']) ?></span>
+                            <span class="blens__desc"><?= e($ty['desc']) ?></span>
+                        </span>
+                        <?php if (empty($ty['takes_package'])): ?>
+                            <?php /* Không có bảng giá nào để chọn tiếp — nói ra ở
+                                     đây thay vì để khách bấm vào rồi mới thấy bước
+                                     kế biến mất. */ ?>
+                            <span class="blens__price blens__price--soft">Báo giá sau</span>
+                        <?php endif; ?>
+                    </button>
+                <?php endforeach; ?>
+            </form>
+
         <?php elseif ($step === 'trong'): ?>
 
-            <!-- ══════════ 4. CHỌN LOẠI TRÒNG KÍNH ══════════ -->
-            <?php if ($intent['rx'] !== null): ?>
-                <?php /* Nhắc lại số đo vừa nhập ngay trên danh sách: mô tả của
-                         từng gói nói theo DẢI ĐỘ ("dưới -4.00", "trên -6.00"),
-                         nên hai thứ phải nhìn thấy cùng lúc mới so được. */ ?>
-                <p class="brxecho"><?= e($intent['rx']) ?></p>
+            <!-- ══════════ 4. CHỌN GÓI TRÒNG KÍNH ══════════ -->
+            <?php /* Nhắc lại KIỂU TRÒNG vừa chọn và SỐ ĐO vừa nhập, ngay trên
+                     bảng giá: mô tả của từng gói nói theo DẢI ĐỘ ("dưới −4.00",
+                     "trên −6.00"), nên cả ba thứ phải nhìn thấy cùng lúc mới
+                     so được. */ ?>
+            <?php if ($lensType !== null || $intent['rx'] !== null): ?>
+                <p class="brxecho">
+                    <?= e(implode(' · ', array_filter([
+                        $lensType['name'] ?? null,
+                        $intent['rx'],
+                    ]))) ?>
+                </p>
             <?php endif; ?>
 
             <form class="blens" method="post" action="/gio-hang/chon">
@@ -462,7 +482,15 @@ $stepForm = static function (string $buoc): void {
                 <?php if ($lens !== null): ?>
                     <div class="bsum__row">
                         <span>Tròng kính · <?= e($lens['name']) ?>:</span>
-                        <span class="bsum__val bsum__val--price">+<?= money($lensPrice) ?></span>
+                        <?php if (!empty($lens['quoted'])): ?>
+                            <?php /* "Mắt đặt" — tròng đặt riêng theo đơn, chưa có
+                                     giá. Ghi "+0₫" ở đây thì khách đọc ra thành
+                                     "phần tròng miễn phí", và con số cuối cùng
+                                     cửa hàng báo sẽ thành một bất ngờ. */ ?>
+                            <span class="bsum__val bsum__val--soft">Báo giá sau khi tư vấn</span>
+                        <?php else: ?>
+                            <span class="bsum__val bsum__val--price">+<?= money($lensPrice) ?></span>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
 
@@ -522,7 +550,11 @@ $stepForm = static function (string $buoc): void {
                     <?php if ($intent['variant_id'] !== null): ?>
                         <input type="hidden" name="variant_id" value="<?= e($intent['variant_id']) ?>">
                     <?php endif; ?>
-                    <?php if ($lens !== null): ?>
+                    <?php /* Kiểu tròng KHÔNG gửi qua ô ẩn — add() đọc thẳng từ
+                             $_SESSION['_buy_intent']. Một ô ẩn ở đây là một chỗ
+                             sửa tay được, mà kiểu tròng quyết định cả tên dòng
+                             hàng lẫn việc có phải chọn gói chiết suất hay không. */ ?>
+                    <?php if (($lens['id'] ?? null) !== null): ?>
                         <input type="hidden" name="lens" value="<?= e($lens['id']) ?>">
                     <?php endif; ?>
                     <?php if ($intent['action'] === 'buy'): ?>

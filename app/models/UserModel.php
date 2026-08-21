@@ -564,4 +564,64 @@ class UserModel extends BaseModel
             $params
         );
     }
+
+    /**
+     * LẦN NHẬP ĐẦU TIÊN thì dựng hồ sơ khúc xạ từ số đo khách vừa gõ ở luồng
+     * mua hàng. Đã có hồ sơ rồi thì KHÔNG đụng vào.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO CHỈ GHI MỘT LẦN, VÀ VÌ SAO KHÔNG BAO GIỜ GHI ĐÈ
+     *
+     * Cửa hàng đặt ra đúng hai luật, nghe thì ngược nhau nhưng ăn khớp:
+     *
+     *   "Hệ thống lưu thông tin ở lần nhập hồ sơ khúc xạ đầu tiên."
+     *   "Số độ cụ thể thì khách phải tự nhập lại ở những lần mua sau."
+     *
+     * Luật thứ hai nói về Ô NHẬP — không được điền sẵn, vì độ mắt đổi theo
+     * thời gian. Luật thứ nhất nói về HỒ SƠ — khách nhập độ lần đầu thì cửa
+     * hàng có ngay một bản ghi để tư vấn, không phải chờ họ tự vào trang tài
+     * khoản khai lại lần nữa.
+     *
+     * Ghi đè ở những lần sau sẽ phá cả hai: hồ sơ trong trang tài khoản là thứ
+     * khách TỰ khai và tự sửa, có ngày đo và cơ sở đo hẳn hoi. Lấy con số gõ
+     * vội giữa lúc mua hàng đè lên nó là xoá một bản ghi có nguồn gốc bằng một
+     * bản ghi không có, mà không hỏi ai.
+     *
+     * `measured_at` để NULL: đây là số khách chép từ đơn thuốc, không phải kết
+     * quả một buổi đo, nên không có ngày đo nào để ghi. Hệ quả có chủ đích là
+     * huy hiệu ở trang tài khoản hiện "Nên đo lại" — đúng, vì cửa hàng chưa
+     * từng đo cho người này.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * Khách vãng lai ($userId null) và số đo rỗng đều là no-op.
+     *
+     * @param array{sph?:?string, cyl?:?string, axis?:?string} $od
+     * @param array{sph?:?string, cyl?:?string, axis?:?string} $os
+     */
+    public static function seedPrescription(?string $userId, array $od, array $os): void
+    {
+        if ($userId === null) {
+            return;
+        }
+
+        // Không có độ cầu ở cả hai mắt thì không có gì đáng gọi là hồ sơ —
+        // cùng ngưỡng "đủ hay chưa" mà LensModel::formatRx() dùng.
+        if (trim((string) ($od['sph'] ?? '')) === ''
+            && trim((string) ($os['sph'] ?? '')) === '') {
+            return;
+        }
+
+        if (self::prescription($userId) !== null) {
+            return;
+        }
+
+        self::savePrescription($userId, [
+            'od_sph'  => $od['sph']  ?? '',
+            'od_cyl'  => $od['cyl']  ?? '',
+            'od_axis' => $od['axis'] ?? '',
+            'os_sph'  => $os['sph']  ?? '',
+            'os_cyl'  => $os['cyl']  ?? '',
+            'os_axis' => $os['axis'] ?? '',
+        ]);
+    }
 }

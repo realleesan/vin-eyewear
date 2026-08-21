@@ -100,6 +100,51 @@ return [
      * dựng nó bằng ProductFacets, luôn khớp hàng đang bán và kèm số lượng.
      */
 
+    /*
+     * KIỂU TRÒNG — TẦNG THỨ NHẤT CỦA BƯỚC "CHỌN LOẠI TRÒNG KÍNH"
+     *
+     * Khách chốt số đo xong thì chọn KIỂU tròng (mấy vùng nhìn), rồi mới chọn
+     * gói vật liệu/chiết suất ở `lens_packages` ngay dưới. Hai câu hỏi khác
+     * nhau hẳn: kiểu tròng là chuyện MẮT NHÌN QUA MẤY VÙNG — do đơn thuốc và
+     * tuổi quyết định; gói tròng là chuyện DÀY MỎNG VÀ LỚP PHỦ — do túi tiền
+     * và thói quen dùng quyết định. Gộp chung một danh sách thì "Đa tròng" và
+     * "Chống sáng xanh 1.61" nằm cạnh nhau như hai lựa chọn loại trừ, trong
+     * khi thực tế khách mua đa tròng chiết suất 1.61 là chuyện bình thường.
+     *
+     * `takes_package`
+     *     false với "Mắt đặt" — tròng đặt riêng theo đơn thì không có bảng giá
+     *     sẵn nào để chọn tiếp, cửa hàng báo giá sau khi xem thông số. Bước
+     *     chọn gói bị bỏ qua và phần tròng vào giỏ với giá 0đ.
+     *
+     * Đọc qua LensModel::types() / LensModel::findType().
+     */
+    'lens_types' => [
+        [
+            'id'            => 'don-trong',
+            'name'          => 'Đơn tròng',
+            'desc'          => 'Một độ duy nhất trên cả mặt tròng — nhìn xa hoặc nhìn gần',
+            'takes_package' => true,
+        ],
+        [
+            'id'            => 'hai-trong',
+            'name'          => 'Hai tròng',
+            'desc'          => 'Hai vùng nhìn tách nhau bằng một đường ranh: xa ở trên, gần ở dưới',
+            'takes_package' => true,
+        ],
+        [
+            'id'            => 'da-trong',
+            'name'          => 'Đa tròng',
+            'desc'          => 'Độ chuyển dần từ xa sang gần, không có đường ranh trên mặt tròng',
+            'takes_package' => true,
+        ],
+        [
+            'id'            => 'mat-dat',
+            'name'          => 'Mắt đặt',
+            'desc'          => 'Độ quá cao hoặc thông số đặc biệt, phải đặt riêng — cửa hàng báo giá sau',
+            'takes_package' => false,
+        ],
+    ],
+
     // Gói tròng kính khách cắt kèm khi mua gọng — dùng ở trang chi tiết
     // sản phẩm và bước thanh toán.
     /*

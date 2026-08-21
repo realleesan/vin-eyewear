@@ -152,7 +152,12 @@ $count = count($lines);
                                         <span class="clens__name">
                                             + <?= e($line['lens']['name']) ?>
                                             <span class="clens__price">
-                                                <?= money((int) $line['lens']['price']) ?>
+                                                <?php /* "Mắt đặt" chưa có giá — cửa hàng báo sau
+                                                         khi xem thông số. In "0₫" ở đây thì khách
+                                                         đọc ra thành "phần tròng miễn phí". */ ?>
+                                                <?= !empty($line['lens']['quoted'])
+                                                    ? 'Báo giá sau'
+                                                    : money((int) $line['lens']['price']) ?>
                                             </span>
                                         </span>
                                     <?php endif; ?>

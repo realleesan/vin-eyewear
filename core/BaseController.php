@@ -145,26 +145,27 @@ class BaseController
         // Bước đang mở. Tên lạ thì về đầu luồng — ?buoc= gõ tay được.
         $step = (string) ($_GET['buoc'] ?? '');
 
-        if (!in_array($step, ['khuc-xa', 'so-do', 'trong', 'xac-nhan'], true)) {
+        if (!in_array($step, ['so-do', 'kieu-trong', 'trong', 'xac-nhan'], true)) {
             $step = 'hinh-thuc';
         }
 
-        // Bước "Chọn loại tròng kính" không tồn tại với mặt hàng đã là tròng —
-        // gõ tay ?buoc=trong cũng không mở ra được.
-        if ($step === 'trong' && !$takesPackage) {
+        /* Hai bước chọn tròng không tồn tại với mặt hàng ĐÃ LÀ tròng (tròng
+           rời, kính áp tròng) — gõ tay ?buoc=trong cũng không mở ra được. */
+        if (!$takesPackage && in_array($step, ['kieu-trong', 'trong'], true)) {
             $step = 'xac-nhan';
         }
 
-        // Hồ sơ khúc xạ đã lưu của khách, cho bước "Số đo khúc xạ". Khách vãng
-        // lai không có -> null, và bước đó rút về đúng hình bản thiết kế vẽ:
-        // một nút "Nhập số đo khúc xạ" kèm dòng "Bạn chưa có hồ sơ khúc xạ".
-        $userId = AuthMiddleware::userId();
-        $saved  = $userId === null ? null : UserModel::prescription($userId);
+        /* Kiểu "Mắt đặt" không có bảng giá nào để chọn tiếp; ?buoc=trong gõ
+           tay khi đang ở kiểu đó chỉ mở ra một bước bên buyStep() sẽ không
+           chấp nhận. */
+        if ($step === 'trong'
+            && !LensModel::typeTakesPackage(LensModel::findType($intent['lens_type'] ?? null))) {
+            $step = 'kieu-trong';
+        }
 
         return [
             'product'  => $product,
             'step'     => $step,
-            'saved'    => $saved,
             'takesPackage' => $takesPackage,
             'intent'  => [
                 'variant_id' => $intent['variant_id'] ?? null,
@@ -173,6 +174,7 @@ class BaseController
                 'mode'       => ($intent['mode'] ?? '') === 'combo' ? 'combo' : 'frame',
                 'rx'         => $intent['rx'] ?? null,
                 'lens_id'    => $intent['lens_id'] ?? null,
+                'lens_type'  => $intent['lens_type'] ?? null,
                 'back'       => safeRedirectPath(
                     $intent['back'] ?? null,
                     '/san-pham/' . rawurlencode($product['slug'])

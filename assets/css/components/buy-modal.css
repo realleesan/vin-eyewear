@@ -287,85 +287,17 @@
     color: var(--h-note);
 }
 
-/* ============================================================
-   BƯỚC 2 — SỐ ĐO KHÚC XẠ
-   ============================================================ */
-
-/* Hộp nhắc "Bạn chưa có hồ sơ khúc xạ" */
-.bnote {
-    display: flex;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: var(--radius);
-    background: var(--h-shell);
-    color: #8a6a5e;
-}
-
-.bnote svg {
-    flex-shrink: 0;
-    margin-top: 2px;
-}
-
-.bnote__body {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.bnote__title {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.bnote__text {
-    font-size: 12.5px;
-    line-height: 1.6;
-    color: #8a7a72;
-}
-
-/* Hồ sơ khúc xạ đã lưu */
-.brxsaved {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.brxsaved__card {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 14px 16px;
-    border: 1px solid var(--h-rule);
-    border-radius: var(--radius);
-    background: var(--surface);
-}
-
-.brxsaved__label {
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--brand);
-}
-
-/* Chữ đẳng khoảng: "−2.50 / −0.75 × 180°" phải đọc được không nhầm dấu */
-.brxsaved__val {
-    font-family: var(--font-mono, monospace);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.brxsaved__meta {
-    font-size: 12px;
-    color: var(--h-note);
-}
-
-.brxsaved__old { color: #a2701c; }
+/*
+ * Ở ĐÂY TỪNG CÓ .bnote VÀ .brxsaved — bước "Số đo khúc xạ", màn hỏi khách
+ * muốn dùng hồ sơ khúc xạ đã lưu hay nhập số mới.
+ *
+ * Bước đó đã bỏ hẳn: cửa hàng yêu cầu MỌI lượt mua đều đi qua form nhập với ô
+ * để trống, vì độ mắt thay đổi theo thời gian. Lý do đầy đủ ghi ở điểm 3 đầu
+ * app/views/_layout/buy-modal.php.
+ */
 
 /* ============================================================
-   BƯỚC 3 — NHẬP SỐ ĐO KHÚC XẠ
+   BƯỚC 2 — NHẬP SỐ ĐO KHÚC XẠ
    ============================================================ */
 
 .brx {
@@ -374,45 +306,11 @@
     gap: 16px;
 }
 
-.btype {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    box-sizing: border-box;
-    padding: 12px 14px;
-    border: 1.5px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    cursor: pointer;
-}
-
-.btype:hover { border-color: var(--brand); }
-
-/* Ô radio THẬT nằm dưới, ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc
-   màn hình — cùng cách làm với .cocard ở trang thanh toán. */
-.btype input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
-}
-
-.btype:has(input:checked) {
-    border-color: var(--brand);
-    background: #f7e8e2;
-}
-
-.btype:has(input:focus-visible) {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-}
-
-.btype__name {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--ink);
-}
+/*
+ * Ở ĐÂY TỪNG CÓ .btype — bốn ô radio "Cận · Viễn · Loạn · Lão thị" trên mỗi
+ * mắt. Khung phân loại tật khúc xạ đã bỏ hẳn theo yêu cầu của cửa hàng; lý do
+ * ghi ở điểm 1 đầu app/views/_layout/buy-modal.php.
+ */
 
 /* Khối một mắt */
 .beye {
@@ -447,34 +345,6 @@
 
 .beye__ico { flex: none; }
 
-.beye__block {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-/* Bốn loại tật xếp 2×2 — bốn nút một hàng thì chữ bị bóp, một cột thì khối
-   mắt dài gấp đôi và đẩy nút "Xác nhận độ kính" khỏi tầm nhìn. */
-.beye__types {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-}
-
-/* Bản gọn của .btype dùng trong khối mắt: một dòng, có icon, không mô tả —
-   mô tả nằm ở thuộc tính title. */
-.btype--tight {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-}
-
-.btype__ico {
-    flex: none;
-    color: var(--brand);
-}
-
 .beye__field {
     display: flex;
     flex-direction: column;
@@ -486,6 +356,88 @@
     font-size: 12.5px;
     color: var(--muted);
 }
+
+/*
+ * Ô ĐỘ CẦU: HAI NÚT DẤU + MỘT Ô CHỌN ĐỘ LỚN.
+ *
+ * Cửa hàng yêu cầu cho khách chọn dấu cộng hay dấu trừ. Bố cục là một hàng
+ * ngang — dấu bên trái, con số bên phải — vì đó đúng thứ tự người ta đọc một
+ * số âm, và vì hai nút xếp dọc sẽ đẩy khối mắt cao thêm 40px ×2.
+ *
+ * `minmax(0, 1fr)` cho ô số: không có nó thì <select> lấy chiều rộng nội dung
+ * làm sàn và tràn khỏi cột grid trên màn hẹp.
+ */
+.bsph {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+}
+
+.bsign {
+    display: flex;
+    gap: 4px;
+}
+
+/* Ô radio thật nằm dưới, ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc
+   màn hình — cùng cách làm với .cocard ở trang thanh toán. */
+.bsign__opt {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    box-sizing: border-box;
+    min-width: 46px;
+    padding: 6px 8px;
+    border: 1px solid var(--h-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    cursor: pointer;
+    user-select: none;
+}
+
+.bsign__opt input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bsign__opt:hover { border-color: var(--brand); }
+
+.bsign__opt:has(input:checked) {
+    border-color: var(--brand);
+    background: #f7e8e2;
+}
+
+.bsign__opt:has(input:focus-visible) {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* Dấu to hẳn: đây là thứ dễ đọc lướt qua nhất trên cả form, mà đọc nhầm là
+   mài ngược một cặp tròng. */
+.bsign__mark {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--ink);
+}
+
+.bsign__note {
+    font-size: 10px;
+    line-height: 1.2;
+    color: var(--muted);
+}
+
+.bsign__opt:has(input:checked) .bsign__note { color: var(--brand); }
+
+/* .bsph__num KHÔNG cần luật riêng: nó là một <select> nằm trong .beye__field,
+   nên đã ăn sẵn `.beye__field select` (và cả `:focus`) ở dưới. Lớp này chỉ để
+   đánh dấu cho người đọc HTML biết ô nào là ô độ lớn. */
 
 /* Ba ô độ nằm CÙNG MỘT HÀNG, chia đều phần còn lại.
    Cả ba luôn hiện (xem ghi chú ngay dưới), nên ba cột bằng nhau là hình cuối
@@ -543,7 +495,6 @@
 /* Hộp thoại hẹp thì ba ô một hàng thành ba ô bị bóp — xếp dọc lại. */
 @media (max-width: 400px) {
     .beye__row { grid-auto-flow: row; }
-    .beye__types { grid-template-columns: 1fr; }
 }
 
 /* ============================================================
@@ -621,6 +572,16 @@
     color: var(--brand);
     white-space: nowrap;
     flex-shrink: 0;
+}
+
+/* "Báo giá sau" của Mắt đặt: cùng chỗ với giá nhưng KHÔNG phải một con số,
+   nên bỏ dáng đậm đi để mắt không đọc nhầm thành tiền. Đứng SAU .blens__price
+   vì nó ghi đè hai thuộc tính của khối trên — cùng độ đặc hiệu thì luật đứng
+   sau mới thắng. */
+.blens__price--soft {
+    font-weight: 500;
+    font-style: italic;
+    color: var(--muted);
 }
 
 /* ============================================================

@@ -160,11 +160,16 @@ class OrderModel extends BaseModel
                         throw new RuntimeException(sprintf('Sản phẩm "%s" không đủ tồn kho.', $product['name']));
                     }
 
-                    /* Gói tròng cắt kèm. Tra LẠI từ bảng giá ngay tại đây —
-                       giỏ hàng nằm trong session và chỉ nhớ id gói, đúng như
-                       nó chỉ nhớ id sản phẩm. Nhận giá từ session nghĩa là cho
-                       khách tự đặt giá phần tròng. */
-                    $lens = LensModel::find($row['lens_id'] ?? null);
+                    /* Tròng cắt kèm — KIỂU tròng (đơn/hai/đa/mắt đặt) gộp với
+                       GÓI chiết suất thành một mẩu tên + một con số tiền. Tra
+                       LẠI từ bảng giá ngay tại đây — giỏ hàng nằm trong session
+                       và chỉ nhớ hai id, đúng như nó chỉ nhớ id sản phẩm. Nhận
+                       giá từ session nghĩa là cho khách tự đặt giá phần tròng.
+
+                       "Mắt đặt" trả về id = null và price = 0: hoá đơn ghi tên
+                       kiểu tròng, còn tiền tròng cửa hàng báo sau khi xem thông
+                       số — xem LensModel::combo(). */
+                    $lens = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
 
                     /* Tiền tròng CỘNG VÀO unit_price chứ không thành một dòng
                        riêng, để line_total = unit_price × quantity giữ nguyên

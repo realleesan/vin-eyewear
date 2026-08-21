@@ -201,15 +201,17 @@ class CartController extends BaseController
                 //
                 'mode'       => null,   // 'frame' | 'combo'
                 'rx'         => null,   // chuỗi số đo đã gói
-                'lens_id'    => null,
+                'lens_type'  => null,   // kiểu tròng: đơn/hai/đa tròng, mắt đặt
+                'lens_id'    => null,   // gói chiết suất (Mắt đặt thì null)
             ];
 
             redirect(self::stepUrl($back, $product['id'], null));
         }
 
         // ── Tròng cắt kèm ────────────────────────────────────────────────
-        $lens = null;
-        $rx   = null;
+        $lens     = null;
+        $lensType = null;
+        $rx       = null;
 
         if ($mode === 'trong') {
             /* GÓI TRÒNG chỉ áp cho gọng và kính mát. Tròng rời và kính áp tròng
@@ -217,14 +219,32 @@ class CartController extends BaseController
                tròng — cộng thêm một gói tròng nữa là bán hai cặp tròng cho một
                đơn và tính tiền cả hai. */
             if (LensModel::takesLensPackage($product)) {
-                // Tra lại gói từ bảng giá, không tin tên và giá gửi lên. Đây là
-                // chỗ duy nhất quyết định phần tròng đáng bao nhiêu tiền.
-                $lens = LensModel::find(trim((string) ($_POST['lens'] ?? '')));
+                /* KIỂU TRÒNG đọc từ ý định chứ không từ $_POST: nó được chốt ở
+                   bước "Chọn loại tròng kính" và bước xác nhận không hỏi lại.
+                   Tra lại qua findType() vì session cũng chỉ giữ id. */
+                $lensType = LensModel::findType(
+                    $_SESSION['_buy_intent']['lens_type'] ?? null
+                );
 
-                if ($lens === null) {
-                    flash('cart_error', 'Vui lòng chọn một gói tròng kính.');
+                if ($lensType === null) {
+                    flash('cart_error', 'Vui lòng chọn loại tròng kính.');
                     redirect($back . (str_contains($back, '?') ? '&' : '?')
-                        . 'mua=' . rawurlencode($product['id']) . '&buoc=trong');
+                        . 'mua=' . rawurlencode($product['id']) . '&buoc=kieu-trong');
+                }
+
+                /* "Mắt đặt" dừng ở đây: không có bảng giá sẵn nào để chọn tiếp,
+                   cửa hàng báo giá sau khi xem thông số. Đòi một gói chiết suất
+                   cho nó là đòi một thứ bước trước cố ý không hỏi. */
+                if (LensModel::typeTakesPackage($lensType)) {
+                    // Tra lại gói từ bảng giá, không tin tên và giá gửi lên. Đây là
+                    // chỗ duy nhất quyết định phần tròng đáng bao nhiêu tiền.
+                    $lens = LensModel::find(trim((string) ($_POST['lens'] ?? '')));
+
+                    if ($lens === null) {
+                        flash('cart_error', 'Vui lòng chọn một gói tròng kính.');
+                        redirect($back . (str_contains($back, '?') ? '&' : '?')
+                            . 'mua=' . rawurlencode($product['id']) . '&buoc=trong');
+                    }
                 }
             }
 
@@ -242,7 +262,13 @@ class CartController extends BaseController
         // Khoá gồm cả gói tròng và số đo: cùng một chiếc gọng mua trần và mua
         // kèm tròng là hai món khác giá, và hai chiếc cùng gói tròng nhưng
         // khác độ là hai sản phẩm khác nhau — gộp chung dòng là mài sai một cái.
-        $key = self::key($product['id'], $variantId, $lens['id'] ?? null, $rx);
+        $key = self::key(
+            $product['id'],
+            $variantId,
+            $lens['id'] ?? null,
+            $rx,
+            $lensType['id'] ?? null
+        );
 
         /*
          * CHỐT LẠI LẦN THỨ HAI THÌ HOÀN LẠI LẦN TRƯỚC, KHÔNG CỘNG DỒN.
@@ -285,6 +311,7 @@ class CartController extends BaseController
             'quantity'   => $new,
             'selected'   => true,
             'lens_id'    => $lens['id'] ?? null,
+            'lens_type'  => $lensType['id'] ?? null,
             'rx'         => $rx,
         ];
 
@@ -424,63 +451,106 @@ class CartController extends BaseController
                 if (!$combo) {
                     // Mua trần thì không còn gì để hỏi — bỏ luôn phần tròng
                     // của lần chọn trước, nếu khách vừa quay lui đổi ý.
-                    $intent['lens_id'] = null;
+                    $intent['lens_id']   = null;
+                    $intent['lens_type'] = null;
                     $intent['rx'] = null;
                 }
 
                 /*
-                 * THỨ TỰ: CHỌN TRÒNG TRƯỚC, HỎI ĐỘ SAU.
+                 * ─────────────────────────────────────────────────────────────
+                 * THỨ TỰ: NHẬP ĐỘ TRƯỚC, CHỌN TRÒNG SAU CÙNG.
                  *
-                 * Bản thiết kế "Vin Eyewear.dc.html" xếp thế: bấm "Mua gọng +
-                 * cắt tròng" là ra ngay bảng năm gói tròng, chọn xong mới tới
-                 * màn nhập độ. Bản trước hỏi độ trước rồi mới cho chọn tròng.
+                 * Bản trước làm ngược — chọn gói tròng ngay sau "Mua gọng +
+                 * cắt tròng", rồi mới tới màn nhập độ, theo bản thiết kế
+                 * "Vin Eyewear.dc.html" và theo lý "hỏi câu dễ trước".
                  *
-                 * Đổi theo bản thiết kế vì nó hợp với thứ tự khách nghĩ: gói
-                 * tròng là thứ có GIÁ và có thể so sánh, còn số đo là dữ liệu
-                 * phải tra đơn thuốc mới điền được. Bắt người ta đi lấy đơn
-                 * thuốc trước khi biết mình sắp trả bao nhiêu là đặt câu hỏi
-                 * khó trước câu hỏi dễ.
+                 * Cửa hàng yêu cầu đảo lại, và họ có lý hơn: gói tròng chọn
+                 * đúng hay sai PHỤ THUỘC VÀO ĐỘ. Mô tả từng gói nói thẳng theo
+                 * dải độ ("dưới −4.00", "trên −6.00"), nên hỏi nó trước là bắt
+                 * khách chọn khi chưa có dữ kiện, rồi phải quay lui đổi lại
+                 * sau khi nhập độ xong. Đưa số đo lên đầu thì mọi câu hỏi còn
+                 * lại đều trả lời được bằng thứ đã có trên màn hình.
+                 *
+                 * Luồng đầy đủ của nhánh cắt tròng:
+                 *
+                 *     hình thức → số đo → kiểu tròng → gói chiết suất → xác nhận
+                 *                          └ "Mắt đặt" ─────────────────┘
                  *
                  * Mặt hàng KHÔNG có gói tròng (tròng rời, kính áp tròng) thì
-                 * không có bảng nào để chọn — đi thẳng sang phần số đo.
+                 * không có tròng nào để chọn — số đo xong là sang xác nhận.
+                 * ─────────────────────────────────────────────────────────────
                  */
-                $next = !$combo
-                    ? 'xac-nhan'
-                    : (LensModel::takesLensPackage($product) ? 'trong' : 'khuc-xa');
+                $next = $combo ? 'so-do' : 'xac-nhan';
                 break;
 
-            // ── Bước 2: dùng hồ sơ khúc xạ đã lưu ────────────────────────
-            case 'khuc-xa':
-                // Đọc LẠI từ DB chứ không nhận số đo gửi lên: đây là hồ sơ
-                // sức khoẻ của chính khách, và bản trong DB là bản đúng.
-                $userId = AuthMiddleware::userId();
-                $saved  = $userId === null ? null : UserModel::prescription($userId);
-
-                $intent['rx'] = LensModel::formatSavedRx($saved);
-                // Gói tròng đã chọn ở bước trước rồi — xem ghi chú ở 'hinh-thuc'.
-                $next = 'xac-nhan';
-                break;
-
-            // ── Bước 3: số đo gõ tay ─────────────────────────────────────
+            // ── Bước 2: số đo gõ tay ─────────────────────────────────────
             case 'so-do':
-                /* MỖI MẮT MỘT BỘ: loại tật, độ cầu, độ trụ, trục, ghi chú.
-                   Gửi thô sang model — LensModel lo toàn bộ phần kiểm dải, bỏ
-                   trụ/trục của mắt không loạn và cắt ghi chú. Kiểm ở đây nữa
-                   thì thành hai nơi cùng định nghĩa "thế nào là số đo hợp lệ",
-                   và hai nơi đó sẽ lệch nhau vào lần sửa thứ ba. */
+                /*
+                 * MỖI MẮT MỘT BỘ: độ cầu (dấu + độ lớn), độ trụ, trục, ghi chú.
+                 *
+                 * KHÔNG còn ô "loại tật" — xem ghi chú trong LensModel, chỗ
+                 * hằng RX_TYPES từng đứng.
+                 *
+                 * Độ cầu tới đây là HAI Ô: `od_dau` mang dấu, `od` mang độ
+                 * lớn. Ghép lại bằng LensModel::joinSph() chứ không nối chuỗi
+                 * tại chỗ — nó là nơi duy nhất biết 0.00 thì bỏ dấu đi.
+                 *
+                 * Phần còn lại gửi thô sang model: LensModel lo toàn bộ việc
+                 * kiểm dải và cắt ghi chú. Kiểm ở đây nữa thì thành hai nơi
+                 * cùng định nghĩa "thế nào là số đo hợp lệ", và hai nơi đó sẽ
+                 * lệch nhau vào lần sửa thứ ba.
+                 */
                 $eye = static fn (string $side): array => [
-                    'type' => $_POST[$side . '_loai'] ?? null,
-                    'sph'  => $_POST[$side] ?? null,
+                    'sph'  => LensModel::joinSph(
+                        $_POST[$side . '_dau'] ?? null,
+                        $_POST[$side] ?? null
+                    ),
                     'cyl'  => $_POST[$side . '_cyl'] ?? null,
                     'axis' => $_POST[$side . '_axis'] ?? null,
                     'note' => $_POST[$side . '_note'] ?? null,
                 ];
 
-                $intent['rx'] = LensModel::formatRx($eye('od'), $eye('os'));
-                $next = 'xac-nhan';
+                $od = $eye('od');
+                $os = $eye('os');
+
+                $intent['rx'] = LensModel::formatRx($od, $os);
+
+                /* LẦN NHẬP ĐẦU TIÊN thì dựng luôn hồ sơ khúc xạ cho khách đang
+                   đăng nhập — cửa hàng có ngay bản ghi để tư vấn thay vì chờ
+                   khách tự vào trang tài khoản khai lại. Đã có hồ sơ rồi thì
+                   hàm này không đụng vào: lý do đầy đủ ở UserModel. */
+                UserModel::seedPrescription(AuthMiddleware::userId(), $od, $os);
+
+                // Đã có độ rồi mới bàn tới tròng — xem ghi chú ở 'hinh-thuc'.
+                $next = LensModel::takesLensPackage($product) ? 'kieu-trong' : 'xac-nhan';
                 break;
 
-            // ── Bước 4: chọn gói tròng ───────────────────────────────────
+            // ── Bước 3: kiểu tròng (đơn · hai · đa · mắt đặt) ────────────
+            case 'kieu-trong':
+                $type = LensModel::findType(trim((string) ($_POST['kieu'] ?? '')));
+
+                if ($type === null) {
+                    flash('cart_error', 'Vui lòng chọn loại tròng kính.');
+                    redirect(self::stepUrl($back, $intent['product_id'], 'kieu-trong'));
+                }
+
+                $intent['lens_type'] = $type['id'];
+
+                /* "Mắt đặt" không đi tiếp sang bảng giá: tròng đặt riêng theo
+                   đơn thì chưa có giá nào để chọn, cửa hàng báo sau khi xem
+                   thông số. Bỏ luôn gói của lần chọn trước, nếu khách vừa quay
+                   lui đổi từ "Đa tròng" sang "Mắt đặt" — để lại thì đơn mang
+                   theo một khoản tiền tròng của kiểu đã bị thay. */
+                if (!LensModel::typeTakesPackage($type)) {
+                    $intent['lens_id'] = null;
+                    $next = 'xac-nhan';
+                    break;
+                }
+
+                $next = 'trong';
+                break;
+
+            // ── Bước 4: chọn gói chiết suất ──────────────────────────────
             case 'trong':
                 $lens = LensModel::find(trim((string) ($_POST['lens'] ?? '')));
 
@@ -490,8 +560,7 @@ class CartController extends BaseController
                 }
 
                 $intent['lens_id'] = $lens['id'];
-                // Chọn tròng xong mới tới số đo — xem ghi chú ở 'hinh-thuc'.
-                $next = 'khuc-xa';
+                $next = 'xac-nhan';
                 break;
 
             // ── Bước 5: chỉnh số lượng ───────────────────────────────────
@@ -775,10 +844,11 @@ class CartController extends BaseController
                     'product_id' => (string) ($row['product_id'] ?? $key),
                     'variant_id' => $row['variant_id'] ?? null,
                     'quantity'   => $qty,
-                    // Hai khoá này đi thẳng tới OrderModel::place để vào hoá
+                    // Ba khoá này đi thẳng tới OrderModel::place để vào hoá
                     // đơn. Giỏ hàng cũ (trước bản có hộp thoại) không có chúng
                     // -> null, và mọi nơi đọc đều hiểu là "mua trần".
                     'lens_id'    => $row['lens_id'] ?? null,
+                    'lens_type'  => $row['lens_type'] ?? null,
                     'rx'         => $row['rx'] ?? null,
                 ];
             }
@@ -802,7 +872,7 @@ class CartController extends BaseController
     /**
      * Khoá của một dòng giỏ hàng.
      *
-     *     <product_id>[:<variant_id>][#<lens_id>[@<mã băm số đo>]]
+     *     <product_id>[:<variant_id>][~<kiểu tròng>][#<lens_id>][@<mã băm số đo>]
      *
      * Mặt hàng không có biến thể và không cắt tròng giữ nguyên khoá là
      * product_id, nên giỏ hàng của khách đang mở dở từ trước bản nâng cấp này
@@ -813,21 +883,34 @@ class CartController extends BaseController
      * dòng ×2 là mài sai một chiếc. Băm thay vì chuỗi gốc chỉ để khoá không
      * phình ra và không chứa ký tự lạ — nội dung thật vẫn nằm trong dòng, khoá
      * không bao giờ bị tách ngược để lấy dữ liệu.
+     *
+     * SỐ ĐO ĐỨNG ĐỘC LẬP VỚI GÓI TRÒNG. Trước đây nó chỉ được nối vào khoá khi
+     * đã có `lens_id`, và hệ quả là mọi mặt hàng KHÔNG cắt gói tròng — kính áp
+     * tròng, tròng rời — gộp mọi số đo về chung một dòng: mua một hộp cho mắt
+     * phải −2.00 rồi một hộp cho mắt trái −3.25 thì giỏ hiện "×2" của một độ
+     * duy nhất. Kiểu "Mắt đặt" (không có gói chiết suất) cũng sẽ rơi đúng vào
+     * đó. Nay ba mảnh — kiểu tròng, gói, số đo — mỗi mảnh vào khoá một cách
+     * độc lập.
      */
     private static function key(
         string $productId,
         ?string $variantId,
         ?string $lensId = null,
-        ?string $rx = null
+        ?string $rx = null,
+        ?string $lensType = null
     ): string {
         $key = $variantId === null ? $productId : $productId . ':' . $variantId;
 
+        if ($lensType !== null) {
+            $key .= '~' . $lensType;
+        }
+
         if ($lensId !== null) {
             $key .= '#' . $lensId;
+        }
 
-            if ($rx !== null) {
-                $key .= '@' . substr(md5($rx), 0, 8);
-            }
+        if ($rx !== null) {
+            $key .= '@' . substr(md5($rx), 0, 8);
         }
 
         return $key;
@@ -900,11 +983,12 @@ class CartController extends BaseController
                 }
             }
 
-            /* Gói tròng cắt kèm. Tra lại từ bảng giá ở mỗi lần hiện trang,
-               đúng như giá gọng: session chỉ nhớ ID, không bao giờ nhớ tiền.
-               Gói bị gỡ khỏi config thì lui về "mua trần" thay vì bỏ cả dòng —
-               chiếc gọng vẫn bán được, chỉ là không còn gói tròng đó nữa. */
-            $lens = LensModel::find($row['lens_id'] ?? null);
+            /* Tròng cắt kèm — kiểu tròng GỘP với gói chiết suất thành một
+               mẩu. Tra lại từ bảng giá ở mỗi lần hiện trang, đúng như giá
+               gọng: session chỉ nhớ ID, không bao giờ nhớ tiền. Cả hai bị gỡ
+               khỏi config thì lui về "mua trần" thay vì bỏ cả dòng — chiếc
+               gọng vẫn bán được, chỉ là không còn lựa chọn tròng đó nữa. */
+            $lens = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
 
             $unit    = VariantModel::priceOf($product, $variant) + (int) ($lens['price'] ?? 0);
             $lineQty = min($row['quantity'], self::MAX_QTY);

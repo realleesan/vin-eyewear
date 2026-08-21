@@ -106,7 +106,7 @@ class OrderController extends BaseController
                (CartController::lines) và với lúc ghi đơn (OrderModel::place).
                Bỏ sót ở đây thì tạm tính trên trang thanh toán thấp hơn trên
                trang giỏ hàng, và khách phát hiện ra ở đúng bước cuối. */
-            $lens = LensModel::find($row['lens_id'] ?? null);
+            $lens = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
             $unit = VariantModel::priceOf($products[$pid], $variant) + (int) ($lens['price'] ?? 0);
 
             $lines[] = [
