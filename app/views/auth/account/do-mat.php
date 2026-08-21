@@ -11,7 +11,26 @@
  * và là cách duy nhất để khách mang đơn thuốc đo ở nơi khác sang, nên không
  * bỏ — chỉ chuyển ra khỏi màn hình mặc định. Chưa có thông số nào thì
  * controller mở thẳng form, khỏi bắt khách nhìn một thẻ rỗng rồi tự tìm nút.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THẺ THỨ HAI: "KÍNH ĐANG ĐEO"
+ *
+ * Cửa hàng yêu cầu thêm phần này để có cơ sở tư vấn chính xác hơn — cùng một
+ * đơn thuốc −3.00 nhưng người đang đeo đa tròng gọng khoan không viền và người
+ * lần đầu cắt kính nhận hai lời khuyên khác hẳn nhau.
+ *
+ * Nó là một THẺ RIÊNG, không phải mấy dòng thêm vào bảng số đo, vì hai thứ trả
+ * lời hai câu khác nhau và cập nhật theo hai nhịp khác nhau: số độ đo lại sau
+ * 6–12 tháng, còn cặp kính đang đeo thì đổi khi khách đổi kính. Gộp một thẻ
+ * thì sửa loại gọng cũng phải đi qua một form đầy số độ.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
+
+/* Đang đeo gì — dùng ở cả hai trạng thái, nên tính một lần ở đây.
+   $wearOn là các tính chất ĐÃ CHỌN; $wearFeatures (do controller đưa vào) là
+   cả danh sách để dựng ô tick. Hai thứ khác nhau nên tên phải khác nhau. */
+$wearType = $prescription['wear_lens_type'] ?? null;
+$wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? null);
 ?>
 
 <div class="acct-head acct-head--row">
@@ -115,6 +134,99 @@
                    value="<?= e($prescription['recommendation'] ?? '') ?>">
         </label>
 
+        <?php
+        /*
+         * KÍNH ĐANG ĐEO — nằm TRONG cùng một <form> với số độ, dù ở màn chỉ đọc
+         * nó là thẻ riêng.
+         *
+         * Hai form riêng thì phải có hai nút "Lưu", và khách sửa cả hai phần
+         * rồi bấm một nút sẽ mất phần kia mà không có gì báo. Một form một nút
+         * là quy ước đang dùng ở mọi mục khác của trang tài khoản.
+         */
+        ?>
+        <hr class="acct-form__rule">
+
+        <h2 class="acct-form__title">Kính đang đeo</h2>
+        <p class="acct-form__note acct-form__note--lead">
+            Không bắt buộc. Khai giúp cửa hàng biết bạn đang quen với loại kính nào
+            để tư vấn cặp mới sát hơn.
+        </p>
+
+        <div class="acct-form__row">
+            <label class="acct-field">
+                <span class="acct-field__label">Loại tròng đang dùng</span>
+                <select class="acct-field__input" name="wear_lens_type">
+                    <option value="">— Chưa khai —</option>
+                    <?php /* "Chưa đeo kính" là một câu trả lời THẬT, khác hẳn
+                             "chưa khai": nó nói cho người tư vấn biết đây là
+                             lần đầu khách cắt kính. */ ?>
+                    <option value="<?= e(UserModel::WEAR_NONE) ?>"
+                            <?= $wearType === UserModel::WEAR_NONE ? 'selected' : '' ?>>
+                        Chưa đeo kính bao giờ
+                    </option>
+                    <?php foreach ($lensTypes as $ty): ?>
+                        <option value="<?= e($ty['id']) ?>"
+                                <?= $wearType === $ty['id'] ? 'selected' : '' ?>>
+                            <?= e($ty['name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+
+            <label class="acct-field">
+                <span class="acct-field__label">Loại gọng đang dùng</span>
+                <select class="acct-field__input" name="wear_frame_type">
+                    <option value="">— Chưa khai —</option>
+                    <?php foreach ($wearFrames as $fr): ?>
+                        <option value="<?= e($fr) ?>"
+                                <?= ($prescription['wear_frame_type'] ?? '') === $fr ? 'selected' : '' ?>>
+                            <?= e($fr) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+        </div>
+
+        <div class="acct-field">
+            <span class="acct-field__label" id="nhan-tinh-chat">Tính chất tròng đang dùng</span>
+            <?php /* Ô NHIỀU LỰA CHỌN: một cặp tròng thường có vài tính chất
+                     cùng lúc (siêu mỏng + chống ánh sáng xanh + chống trầy).
+                     Dùng <select multiple> thì trên điện thoại nó thu về một
+                     danh sách cuộn tí hon mà nhiều người không biết là bấm giữ
+                     được nhiều mục. */ ?>
+            <div class="acct-choice" role="group" aria-labelledby="nhan-tinh-chat">
+                <?php foreach ($wearFeatures as $ft): ?>
+                    <label class="acct-choice__opt">
+                        <input type="checkbox" name="wear_lens_features[]" value="<?= e($ft) ?>"
+                               <?= in_array($ft, $wearOn, true) ? 'checked' : '' ?>>
+                        <span><?= e($ft) ?></span>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <div class="acct-form__row">
+            <label class="acct-field">
+                <span class="acct-field__label">Đã dùng cặp kính hiện tại bao lâu</span>
+                <select class="acct-field__input" name="wear_since">
+                    <option value="">— Chưa khai —</option>
+                    <?php foreach ($wearSince as $sn): ?>
+                        <option value="<?= e($sn) ?>"
+                                <?= ($prescription['wear_since'] ?? '') === $sn ? 'selected' : '' ?>>
+                            <?= e($sn) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+
+            <label class="acct-field">
+                <span class="acct-field__label">Ghi chú thêm</span>
+                <input class="acct-field__input" type="text" name="wear_note" maxlength="255"
+                       placeholder="VD: hay tuột gọng, đeo máy tính cả ngày"
+                       value="<?= e($prescription['wear_note'] ?? '') ?>">
+            </label>
+        </div>
+
         <div class="acct-form__actions">
             <button type="submit" class="acct-btn acct-btn--primary">Lưu thông số</button>
             <?php if ($prescription !== null): ?>
@@ -202,6 +314,48 @@
         <?php endif; ?>
 
         <span class="acct-rxcard__note">Thông số nên được đo lại sau mỗi 6–12 tháng.</span>
+    </div>
+
+    <?php
+    /*
+     * THẺ "KÍNH ĐANG ĐEO" — chỉ hiện khi khách đã khai ít nhất một ô.
+     *
+     * Chưa khai gì thì hiện một lời mời thay vì một thẻ đầy dấu gạch ngang:
+     * bảng số độ ở trên phải in "—" cho ô trống vì trong đơn thuốc "không đo"
+     * khác "bằng không", còn ở đây không có gì để phân biệt — chưa khai thì
+     * đúng là chưa khai.
+     */
+    $wearRows = array_filter([
+        'Loại tròng' => UserModel::wearLensTypeName($wearType),
+        'Tính chất'  => $wearOn === [] ? null : implode(' · ', $wearOn),
+        'Loại gọng'  => $prescription['wear_frame_type'] ?? null,
+        'Đã dùng'    => $prescription['wear_since'] ?? null,
+        'Ghi chú'    => $prescription['wear_note'] ?? null,
+    ]);
+    ?>
+    <div class="acct-card acct-wear">
+        <div class="acct-rxcard__top">
+            <span class="acct-rxcard__when">Kính đang đeo</span>
+            <a class="acct-wear__edit" href="/tai-khoan?muc=do-mat&amp;sua=1">
+                <?= $wearRows === [] ? 'Khai ngay' : 'Cập nhật' ?>
+            </a>
+        </div>
+
+        <?php if ($wearRows === []): ?>
+            <span class="acct-rxcard__note">
+                Bạn chưa khai cặp kính đang đeo. Cửa hàng dùng thông tin này để tư vấn
+                loại tròng và gọng sát với thói quen của bạn hơn.
+            </span>
+        <?php else: ?>
+            <dl class="acct-wear__list">
+                <?php foreach ($wearRows as $label => $value): ?>
+                    <div class="acct-wear__row">
+                        <dt><?= e($label) ?></dt>
+                        <dd><?= e($value) ?></dd>
+                    </div>
+                <?php endforeach; ?>
+            </dl>
+        <?php endif; ?>
     </div>
 
 <?php endif; ?>

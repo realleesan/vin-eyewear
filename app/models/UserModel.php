@@ -515,6 +515,78 @@ class UserModel extends BaseModel
         return $date >= new DateTimeImmutable('today');
     }
 
+    // ------------------------------------------------------------------------
+    // KÍNH ĐANG ĐEO
+    // ------------------------------------------------------------------------
+
+    /*
+     * "Lịch sử loại kính khách đang đeo" — năm cột `wear_*` trên chính bảng
+     * `prescriptions`.
+     *
+     * VÌ SAO KHÔNG PHẢI MỘT BẢNG LỊCH SỬ RIÊNG. Thứ cửa hàng cần khi tư vấn là
+     * CẶP KÍNH KHÁCH ĐANG ĐEO, không phải chuỗi mọi cặp họ từng đeo — và cặp
+     * đang đeo thì mỗi khách có đúng một, y như hồ sơ khúc xạ. Đặt cạnh số độ
+     * trong cùng một bản ghi thì một truy vấn ra đủ thứ cần cho một buổi tư
+     * vấn; tách bảng thì phải JOIN và phải tự định nghĩa "bản ghi nào là bản
+     * đang đeo".
+     *
+     * Cần lịch sử thật (đổi kính lần thứ mấy, mỗi lần đổi gì) thì đó là một
+     * tính năng khác và phải có bảng riêng có mốc thời gian — không phải thứ
+     * nhét thêm vào đây được.
+     */
+
+    /** Chưa đeo kính — giá trị riêng, không nằm trong bảng lens_types. */
+    public const WEAR_NONE = 'khong';
+
+    /** Tính chất tròng đang dùng, cho ô nhiều lựa chọn. */
+    public static function wearLensFeatures(): array
+    {
+        return config('taxonomy.wear_lens_features') ?? [];
+    }
+
+    /** Loại gọng đang dùng. */
+    public static function wearFrameTypes(): array
+    {
+        return config('taxonomy.wear_frame_types') ?? [];
+    }
+
+    /** Đã dùng cặp kính hiện tại bao lâu. */
+    public static function wearSinceOptions(): array
+    {
+        return config('taxonomy.wear_since') ?? [];
+    }
+
+    /**
+     * Tên kiểu tròng đang đeo để in ra ("Đa tròng", "Chưa đeo kính"), hoặc null.
+     *
+     * Dùng chung danh mục với bước mua hàng (LensModel::types) chứ không dựng
+     * một danh sách thứ hai: khách khai "đang đeo đa tròng" rồi vài phút sau
+     * chọn "Đa tròng" ở hộp thoại mua — hai chỗ mà gọi tên khác nhau thì không
+     * ai ghép được chúng lại.
+     */
+    public static function wearLensTypeName(?string $id): ?string
+    {
+        if ($id === null || $id === '') {
+            return null;
+        }
+
+        if ($id === self::WEAR_NONE) {
+            return 'Chưa đeo kính';
+        }
+
+        return LensModel::findType($id)['name'] ?? null;
+    }
+
+    /** Tính chất tròng đã lưu, tách ngược thành mảng để tick lại ô nào đã chọn. */
+    public static function wearFeatureList(?string $raw): array
+    {
+        if ($raw === null || trim($raw) === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode('|', $raw))));
+    }
+
     /**
      * Lưu hồ sơ khúc xạ. Mỗi khách đúng một bản ghi nên dùng
      * INSERT ... ON DUPLICATE KEY UPDATE thay vì tự kiểm tồn tại rồi rẽ nhánh.
@@ -540,27 +612,72 @@ class UserModel extends BaseModel
                 ? null : (int) $raw;
         }
 
-        foreach (['od_va', 'os_va', 'recommendation', 'measured_at', 'store_id'] as $f) {
+        foreach (['od_va', 'os_va', 'recommendation', 'measured_at', 'store_id', 'wear_note'] as $f) {
             $raw = trim((string) ($values[$f] ?? ''));
             $params[$f] = $raw === '' ? null : $raw;
         }
+
+        /*
+         * KÍNH ĐANG ĐEO — ba ô có danh sách cố định, kiểm bằng chính danh sách.
+         *
+         * Không tin chuỗi gửi lên dù ô là <select> hay <input type=checkbox>:
+         * cả hai đều sửa tay được, và cột này là thứ nhân viên đọc để tư vấn.
+         * Giá trị lạ thì thành NULL — "khách chưa khai", đúng hơn là ghi vào
+         * hồ sơ một loại gọng không tồn tại.
+         */
+        $pick = static function (?string $raw, array $allowed): ?string {
+            $raw = trim((string) $raw);
+
+            return $raw !== '' && in_array($raw, $allowed, true) ? $raw : null;
+        };
+
+        $wearType = trim((string) ($values['wear_lens_type'] ?? ''));
+        $params['wear_lens_type'] = $wearType !== ''
+            && ($wearType === self::WEAR_NONE || LensModel::findType($wearType) !== null)
+                ? $wearType : null;
+
+        $params['wear_frame_type'] = $pick($values['wear_frame_type'] ?? null, self::wearFrameTypes());
+        $params['wear_since']      = $pick($values['wear_since'] ?? null, self::wearSinceOptions());
+
+        /* Tính chất tròng là ô NHIỀU lựa chọn -> một chuỗi ngăn bằng "|".
+           Dấu gạch đứng chứ không phải dấu phẩy: nhãn nào cũng có thể chứa
+           dấu phẩy ("Chống trầy, chống loá"), và khi đó tách ngược ra sai. */
+        $features = [];
+
+        foreach ((array) ($values['wear_lens_features'] ?? []) as $f) {
+            $ok = $pick(is_string($f) ? $f : null, self::wearLensFeatures());
+
+            if ($ok !== null && !in_array($ok, $features, true)) {
+                $features[] = $ok;
+            }
+        }
+
+        $params['wear_lens_features'] = $features === [] ? null : implode('|', $features);
 
         Database::execute(
             'INSERT INTO prescriptions
                 (user_id, od_sph, od_cyl, od_axis, od_va,
                          os_sph, os_cyl, os_axis, os_va,
-                         pd, measured_at, store_id, recommendation)
+                         pd, measured_at, store_id, recommendation,
+                         wear_lens_type, wear_lens_features, wear_frame_type,
+                         wear_since, wear_note)
              VALUES
                 (:user_id, :od_sph, :od_cyl, :od_axis, :od_va,
                            :os_sph, :os_cyl, :os_axis, :os_va,
-                           :pd, :measured_at, :store_id, :recommendation)
+                           :pd, :measured_at, :store_id, :recommendation,
+                           :wear_lens_type, :wear_lens_features, :wear_frame_type,
+                           :wear_since, :wear_note)
              ON DUPLICATE KEY UPDATE
                 od_sph = VALUES(od_sph), od_cyl = VALUES(od_cyl),
                 od_axis = VALUES(od_axis), od_va = VALUES(od_va),
                 os_sph = VALUES(os_sph), os_cyl = VALUES(os_cyl),
                 os_axis = VALUES(os_axis), os_va = VALUES(os_va),
                 pd = VALUES(pd), measured_at = VALUES(measured_at),
-                store_id = VALUES(store_id), recommendation = VALUES(recommendation)',
+                store_id = VALUES(store_id), recommendation = VALUES(recommendation),
+                wear_lens_type = VALUES(wear_lens_type),
+                wear_lens_features = VALUES(wear_lens_features),
+                wear_frame_type = VALUES(wear_frame_type),
+                wear_since = VALUES(wear_since), wear_note = VALUES(wear_note)',
             $params
         );
     }

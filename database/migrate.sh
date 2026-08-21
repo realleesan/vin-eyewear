@@ -100,6 +100,7 @@ MIGRATIONS=(
     # Chỉ XOÁ 5 dòng dữ liệu mẫu, không tạo ra bảng/cột/khoá nào để làm mốc.
     # Kiểu 'data': chỉ sổ ghi chặn chạy lại, mà chạy lại cũng không hại gì.
     "2026-08-20-bo-san-pham-mau.sql|data||"
+    "2026-08-21-kinh-dang-deo.sql|column|prescriptions|wear_lens_type"
 )
 
 # ---------------------------------------------------------------------------

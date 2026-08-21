@@ -235,6 +235,25 @@ CREATE TABLE `prescriptions` (
     `measured_at`    DATE          NULL,
     `store_id`       CHAR(36)      NULL,
     `recommendation` VARCHAR(255)  NULL,
+
+    -- Năm cột `wear_*` do migration 2026-08-21-kinh-dang-deo.sql thêm, đã gộp
+    -- thẳng vào đây. Chúng là mục "Kính đang đeo" trong hồ sơ đo mắt — cặp
+    -- kính khách ĐANG dùng, để cửa hàng có cơ sở tư vấn cặp mới.
+    --   wear_lens_type      cùng bộ mã với lens_types ở config/taxonomy.php
+    --                       ('don-trong'…'mat-dat'), cộng 'khong' = chưa đeo
+    --                       kính bao giờ. Không khoá ngoại: bên kia là mảng PHP.
+    --   wear_lens_features  nhiều tính chất, ngăn bằng '|' (nhãn có thể chứa
+    --                       dấu phẩy nên không dùng dấu phẩy làm dấu ngăn)
+    --   wear_frame_type     loại gọng, nguyên văn
+    --   wear_since          đã dùng cặp hiện tại bao lâu
+    --   wear_note           câu khách tự ghi
+    -- Cả năm NULL được: phần này không bắt buộc.
+    `wear_lens_type`     VARCHAR(32)  NULL,
+    `wear_lens_features` VARCHAR(255) NULL,
+    `wear_frame_type`    VARCHAR(64)  NULL,
+    `wear_since`         VARCHAR(32)  NULL,
+    `wear_note`          VARCHAR(255) NULL,
+
     `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
                                    ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`user_id`),

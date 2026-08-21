@@ -101,6 +101,47 @@ return [
      */
 
     /*
+     * LỊCH SỬ KÍNH ĐANG ĐEO — ba danh sách cho mục "Kính đang đeo" trong hồ sơ
+     * đo mắt của khách (/tai-khoan?muc=do-mat).
+     *
+     * Cửa hàng yêu cầu thêm phần này để có cơ sở tư vấn: cùng một đơn thuốc
+     * −3.00 nhưng người đang đeo đa tròng gọng khoan không viền và người lần
+     * đầu cắt kính nhận hai lời khuyên hoàn toàn khác nhau.
+     *
+     * LƯU NGUYÊN VĂN CHỨ KHÔNG LƯU MÃ. Đây là ghi chú tư vấn — thứ nhân viên
+     * ĐỌC chứ không phải thứ hệ thống lọc hay tính. Lưu mã thì mỗi lần đọc DB
+     * hay xuất báo cáo lại phải mang theo file config này để dịch ngược, đổi
+     * lại chẳng được gì. Cả ba danh sách vẫn được kiểm ở máy chủ (in_array)
+     * nên không có chuỗi lạ nào lọt vào — xem UserModel::savePrescription().
+     *
+     * Đọc qua UserModel::WEAR_* — đừng gọi thẳng config() ở view.
+     */
+    'wear_lens_features' => [
+        'Chống ánh sáng xanh',
+        'Đổi màu (photochromic)',
+        'Chống tia UV',
+        'Siêu mỏng (chiết suất cao)',
+        'Chống trầy · chống loá',
+        'Râm màu cố định',
+    ],
+
+    'wear_frame_types' => [
+        'Nhựa (acetate)',
+        'Kim loại',
+        'Titanium',
+        'Nửa viền',
+        'Không viền (khoan)',
+        'Gọng dẻo TR90',
+    ],
+
+    'wear_since' => [
+        'Dưới 6 tháng',
+        '6 – 12 tháng',
+        '1 – 2 năm',
+        'Trên 2 năm',
+    ],
+
+    /*
      * KIỂU TRÒNG — TẦNG THỨ NHẤT CỦA BƯỚC "CHỌN LOẠI TRÒNG KÍNH"
      *
      * Khách chốt số đo xong thì chọn KIỂU tròng (mấy vùng nhìn), rồi mới chọn

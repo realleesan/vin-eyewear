@@ -574,6 +574,21 @@
     color: var(--a-meta);
 }
 
+/* Dòng dẫn ngay dưới một tiêu đề phụ trong form: kéo sát lên tiêu đề để hai
+   dòng đọc thành một khối, thay vì cách đều như hai trường riêng biệt. */
+.acct-form__note--lead { margin: -14px 0 2px; }
+
+/* Vạch ngăn hai phần của cùng một form (số độ | kính đang đeo). Chúng vẫn là
+   MỘT form một nút Lưu — xem ghi chú trong auth/account/do-mat.php — nên đây
+   là vạch phân đoạn, không phải ranh giới giữa hai form. */
+.acct-form__rule {
+    width: 100%;
+    height: 1px;
+    margin: 6px 0 0;
+    border: 0;
+    background: var(--a-rule);
+}
+
 .acct-field {
     display: flex;
     flex-direction: column;
@@ -1467,6 +1482,62 @@ select.acct-field__input {
 .acct-rxcard__note {
     font-size: 12.5px;
     color: var(--a-meta);
+}
+
+/* --- Thẻ "Kính đang đeo" --- */
+
+.acct-wear {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 28px 36px;
+}
+
+.acct-wear__edit {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.acct-wear__edit:hover { text-decoration: underline; }
+
+/* <dl> hai cột: nhãn trái cố định, giá trị phải giãn. Cột nhãn 132px vừa đủ
+   cho chuỗi dài nhất ("Loại tròng") ở cỡ chữ này mà không xuống dòng. */
+.acct-wear__list {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.acct-wear__row {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    gap: 14px;
+    align-items: baseline;
+}
+
+.acct-wear__row dt {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.acct-wear__row dd {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink);
+}
+
+/* Điện thoại: hai cột 132px + phần còn lại bóp giá trị xuống còn vài chữ một
+   dòng. Xếp dọc lại, nhãn thành dòng nhỏ phía trên. */
+@media (max-width: 560px) {
+    .acct-wear { padding: 24px 22px; }
+    .acct-wear__row { grid-template-columns: 1fr; gap: 3px; }
 }
 
 /* Bảng thông số. Bản thiết kế dựng bằng CSS grid 120px + 4 cột đều; ở đây là
