@@ -9,8 +9,8 @@
  *   2. master.php ở CHẾ ĐỘ MẢNH — trả lời cú bấm "Mua ngay"/"Thêm vào giỏ"
  *      của assets/js/buy-flow.js. Xem khối chú thích đầu master.php.
  *
- * Không nhận tham số: số lượng đọc thẳng từ session, nên hai nơi gọi không
- * thể lệch nhau. Giỏ hàng nằm ở $_SESSION nên đây chưa phải một câu truy vấn.
+ * Không nhận tham số: mọi thứ đọc thẳng từ phiên, nên hai nơi gọi không thể
+ * lệch nhau.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * data-cart LÀ MỐC CHO buy-flow.js
@@ -21,30 +21,54 @@
  * luôn cái bảng xổ: header.js đọc danh sách [data-hpop] MỘT LẦN lúc tải trang
  * và giữ luôn tham chiếu đó. (Riêng thẻ mở của giỏ hàng là <a> nên header.js
  * bỏ qua — nó chỉ gắn sự kiện cho <button>.)
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * BẢNG XỔ LIỆT KÊ NĂM MÓN MỚI THÊM, KHÔNG PHẢI CẢ GIỎ
+ *
+ * Trước đây bảng chỉ có một dòng chữ "N sản phẩm đang chờ" và hai liên kết.
+ * Nay nó hiện đúng thứ khách vừa bỏ vào — ảnh, tên, giá — theo mẫu Shopee mà
+ * cửa hàng gửi. Rê chuột vào giỏ là thấy ngay mình vừa thêm gì, không phải
+ * mở hẳn trang giỏ hàng để kiểm.
+ *
+ * NĂM là con số của bản mẫu, và nó cũng là mức hợp lý: bảng dài hơn thì tràn
+ * quá nửa màn hình dọc, mà đã cần cuộn trong một bảng xổ hover thì thà mở
+ * trang giỏ hàng. Số dòng còn lại nói bằng một câu ở chân bảng.
+ *
+ * Đây là chỗ DUY NHẤT trong header chạm tới cơ sở dữ liệu — xem chú thích ở
+ * CartController::recent() về việc cắt trước, tra sau.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
+
+$cartCount = count($_SESSION['cart'] ?? []);
 
 /*
  * ĐẾM SỐ DÒNG TRONG GIỎ, KHÔNG CỘNG SỐ LƯỢNG.
  *
  * Thêm 2 chiếc cùng một gọng thì huy hiệu hiện 1, không phải 2 — giỏ đang giữ
  * MỘT món, món đó có số lượng 2. Con số ở đây phải trả lời "giỏ có mấy thứ",
- * cùng câu hỏi mà trang /gio-hang trả lời bằng số dòng nó vẽ ra. Cộng số lượng
- * thì huy hiệu nói 2 trong khi trang giỏ hàng chỉ có một dòng, và khách bấm
- * vào để tìm món thứ hai không tồn tại.
+ * cùng câu hỏi mà trang /gio-hang trả lời bằng số dòng nó vẽ ra.
  *
  * Khoá của $_SESSION['cart'] gồm cả phương án và gói tròng, nên cùng một gọng
- * mua trần và mua kèm tròng vẫn là HAI dòng — đúng như trang giỏ hàng hiện,
- * vì đó thật sự là hai thứ khác nhau với hai mức giá.
+ * mua trần và mua kèm tròng vẫn là HAI dòng — đúng như trang giỏ hàng hiện.
  */
-$cartCount = count($_SESSION['cart'] ?? []);
+
+$recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' => 0];
 ?>
 <div class="hpop" data-hpop data-cart>
     <a href="/gio-hang" class="hpop__trigger header-action"
        data-hpop-trigger
        aria-label="<?= e(t('action.cart')) ?>, <?= (int) $cartCount ?>">
+        <?php
+        /* XE ĐẨY chứ không phải cái túi. Túi xách là biểu tượng của thời
+           trang; xe đẩy là biểu tượng của "đang mua sắm", và đó mới là việc
+           cái nút này làm. Khách nhìn một lần là hiểu, không phải đoán. */
+        ?>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M5 8h14l-1.2 12H6.2L5 8z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-            <path d="M8.5 8V6.5a3.5 3.5 0 017 0V8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M2.5 3.5h2.2l2.3 10.3h9.6l2.1-7.2H6.4"
+                  fill="none" stroke="currentColor" stroke-width="1.6"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="9.2" cy="19" r="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="16.4" cy="19" r="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/>
         </svg>
         <!-- Thiết kế hiện huy hiệu cả khi giỏ trống (số 0). Ở đây chỉ
              hiện khi có hàng: một chấm đỏ báo "0" là báo động giả. -->
@@ -53,20 +77,50 @@ $cartCount = count($_SESSION['cart'] ?? []);
         <?php endif; ?>
     </a>
 
-    <div class="hpop__panel">
-        <p class="hpop__head"><?= e(t('action.cart')) ?></p>
-        <p class="hpop__note">
-            <?= $cartCount > 0
-                ? e(sprintf(t('pop.cart_count'), (int) $cartCount))
-                : e(t('pop.cart_empty')) ?>
-        </p>
-        <ul class="hpop__list" role="list">
-            <?php if ($cartCount > 0): ?>
-                <li><a class="hpop__item" href="/gio-hang"><?= e(t('pop.cart_view')) ?></a></li>
-                <li><a class="hpop__item" href="/thanh-toan"><?= e(t('pop.checkout')) ?></a></li>
-            <?php else: ?>
+    <div class="hpop__panel hpop__panel--cart">
+        <?php if ($recent['lines'] === []): ?>
+            <p class="hpop__head"><?= e(t('action.cart')) ?></p>
+            <p class="hpop__note"><?= e(t('pop.cart_empty')) ?></p>
+            <ul class="hpop__list" role="list">
                 <li><a class="hpop__item" href="/san-pham"><?= e(t('pop.shop')) ?></a></li>
-            <?php endif; ?>
-        </ul>
+            </ul>
+        <?php else: ?>
+            <p class="hpop__head">Sản phẩm mới thêm</p>
+
+            <ul class="cartpop" role="list">
+                <?php foreach ($recent['lines'] as $line): ?>
+                    <li>
+                        <a class="cartpop__row" href="/san-pham/<?= e(rawurlencode($line['slug'])) ?>">
+                            <span class="cartpop__thumb">
+                                <?php if ($line['image'] !== ''): ?>
+                                    <img src="<?= e($line['image']) ?>" alt="" loading="lazy" width="40" height="40">
+                                <?php endif; ?>
+                            </span>
+
+                            <?php /* Tên CẮT MỘT DÒNG bằng CSS chứ không cắt chuỗi
+                                     trong PHP: máy chủ không biết bảng rộng bao
+                                     nhiêu pixel, mà cắt theo số ký tự thì tên
+                                     ngắn cũng bị thêm dấu ba chấm vô cớ. */ ?>
+                            <span class="cartpop__name"><?= e($line['name']) ?></span>
+
+                            <?php if ($line['quantity'] > 1): ?>
+                                <span class="cartpop__qty">×<?= (int) $line['quantity'] ?></span>
+                            <?php endif; ?>
+
+                            <span class="cartpop__price"><?= money($line['price']) ?></span>
+                        </a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+
+            <div class="cartpop__foot">
+                <span class="cartpop__more">
+                    <?= $recent['more'] > 0
+                        ? e(sprintf('Còn %d sản phẩm nữa trong giỏ', $recent['more']))
+                        : '' ?>
+                </span>
+                <a class="cartpop__cta" href="/gio-hang">Xem giỏ hàng</a>
+            </div>
+        <?php endif; ?>
     </div>
 </div>

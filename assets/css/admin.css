@@ -136,9 +136,8 @@ body.admin {
     min-width: 20px;
     height: 20px;
     padding-inline: 6px;
-    /* --radius-sm, không phải --radius-round: xem khối "HUY HIỆU SỐ" trong
-       assets/css/account.css. */
-    border-radius: var(--radius-sm);
+    /* --radius-round: xem khối "HUY HIỆU SỐ" trong assets/css/account.css. */
+    border-radius: var(--radius-round);
     background: var(--brand-light);
     color: var(--ink);
     font-size: var(--fs-micro);

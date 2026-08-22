@@ -292,7 +292,7 @@
     min-width: 16px;
     height: 16px;
     padding-inline: 4px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-round);
     background: var(--brand);
     color: var(--on-brand);
     font-size: var(--fs-micro);
@@ -401,6 +401,17 @@
     min-width: 380px;
 }
 
+/* Bảng xổ giỏ hàng: 340px là chỗ vừa đủ cho ảnh 40px + một dòng tên đọc được
+   + cột giá. Hẹp hơn thì tên bị cắt tới mức không nhận ra món nào. */
+.hpop__panel--cart { min-width: 340px; }
+
+@media (max-width: 560px) {
+    .hpop__panel--cart {
+        min-width: 0;
+        width: calc(100vw - 2 * var(--page-edge));
+    }
+}
+
 @media (max-width: 560px) {
     .hpop__panel--search {
         min-width: 0;
@@ -478,6 +489,123 @@
     background: #f1e7dd;
     color: var(--brand);
 }
+
+/* ============================================================
+   BẢNG XỔ GIỎ HÀNG — năm món mới thêm
+
+   Markup: app/views/_layout/header-cart.php
+
+   Dùng chung khung của .hpop (nền, viền, bóng, hoạt cảnh mở) nên ở đây chỉ
+   có phần ruột: hàng sản phẩm và chân bảng. Nhờ vậy bảng giỏ hàng và bảng
+   ngôn ngữ mở ra giống hệt nhau, chỉ khác thứ nằm bên trong.
+   ============================================================ */
+
+.cartpop {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: var(--surface-raised);
+    border-inline: 1px solid var(--line);
+}
+
+/* Bốn cột: ảnh · tên (co giãn) · số lượng · giá.
+   1fr cho cột tên là chỗ toàn bộ phần co giãn dồn vào, để ba cột kia luôn
+   giữ nguyên bề rộng dù tên dài tới đâu. */
+.cartpop__row {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.cartpop__row:hover,
+.cartpop__row:focus-visible { background: #f7efe9; }
+
+.cartpop__thumb {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius-sm);
+    /* Nền chờ cho món chưa có ảnh — ô trống vẫn giữ đúng khổ, hàng không xô
+       lệch. Xem ProductModel::hasImage() về việc không mượn ảnh món khác. */
+    background: var(--h-shell);
+}
+
+.cartpop__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* CẮT MỘT DÒNG. Ba dòng dưới đây phải đi cùng nhau: min-width:0 ở
+   grid-template mới cho phép ô co lại nhỏ hơn nội dung, không có nó thì
+   text-overflow không bao giờ có cơ hội chạy. */
+.cartpop__name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--ink);
+}
+
+.cartpop__qty {
+    font-size: 12px;
+    color: var(--h-note);
+    font-variant-numeric: tabular-nums;
+}
+
+.cartpop__price {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand);
+    white-space: nowrap;
+}
+
+/* Chân bảng — đóng nốt cái khung mà .hpop__head đã mở ở trên. */
+.cartpop__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-top: 1px solid var(--h-card-line);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    background: var(--surface-raised);
+    box-shadow: 0 14px 34px rgba(90, 40, 40, 0.16);
+}
+
+.cartpop__more {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--h-note);
+}
+
+.cartpop__cta {
+    flex: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.cartpop__cta:hover,
+.cartpop__cta:focus-visible { background: var(--brand-strong); color: var(--on-brand); }
 
 /* Nút "Đăng xuất" nằm trong <form> POST — <button> nên phải gỡ dáng mặc định
    của trình duyệt để nó xếp hàng cùng ba liên kết bên trên. */

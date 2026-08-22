@@ -315,6 +315,19 @@
        --radius-round KHÔNG phải "viên thuốc". Nút hình chữ nhật bo 999px là
        thứ bản thiết kế đã bỏ; giá trị này chỉ dành cho phần tử vuông (rộng
        bằng cao) mà ý đồ là một hình tròn.
+
+       MỘT NGOẠI LỆ, do cửa hàng chốt (2026-08-22): bốn HUY HIỆU SỐ dùng
+       --radius-round chứ không --radius-sm —
+
+         .header-action__badge  giỏ hàng trên thanh nav
+         .acct-nav__count       cột trái trang tài khoản
+         .asidebar__badge       cột trái khu quản trị
+         .cfilter__count        số bộ lọc đang bật ở trang danh mục
+
+       Một chữ số ra hình tròn thật, đúng tinh thần dòng trên; hai ba chữ số
+       thì nở thành viên thuốc, và đó là cái giá đã biết trước khi chọn. Ghi
+       ngoại lệ ở đây để lần sau đọc bảng này không tưởng bốn chỗ kia làm sai.
+       Chi tiết ở khối "HUY HIỆU SỐ" trong assets/css/account.css.
        ============================================================ */
    --radius: 6px;
    --radius-sm: 4px;

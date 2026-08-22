@@ -351,12 +351,27 @@ class CartController extends BaseController
         $stock   = VariantModel::stockOf($product, $variant);
         $new     = min(self::ABS_MAX_QTY, $stock, $current + $qty);
 
+        /*
+         * SỐ THỨ TỰ THÊM VÀO — để bảng xổ ở thanh nav biết "5 món mới nhất".
+         *
+         * Dùng bộ đếm tăng dần chứ không phải time(): hai lần thêm trong cùng
+         * một giây là chuyện thường (bấm nhanh, hoặc thêm rồi quay lại đổi số
+         * lượng), và khi đó dấu thời gian bằng nhau thì thứ tự trở về ngẫu
+         * nhiên theo cách PHP sắp mảng. Bộ đếm thì không bao giờ hoà.
+         *
+         * GÁN LẠI mỗi lần thêm, kể cả khi dòng đã có sẵn: thêm nữa cùng một
+         * món nghĩa là khách vừa đụng tới nó, nên nó phải nhảy lên đầu danh
+         * sách "mới nhất" — đúng như Shopee làm.
+         */
+        $_SESSION['cart_seq'] = (int) ($_SESSION['cart_seq'] ?? 0) + 1;
+
         // Món vừa bỏ vào giỏ luôn được tick sẵn: khách vừa chủ động thêm nó,
         // bắt họ tick lại một lần nữa là thừa.
         $_SESSION['cart'][$key] = [
             'product_id' => $product['id'],
             'variant_id' => $variantId,
             'quantity'   => $new,
+            'added_seq'  => $_SESSION['cart_seq'],
             'selected'   => true,
             'lens_id'    => $lens['id'] ?? null,
             'lens_type'  => $lensType['id'] ?? null,
@@ -955,11 +970,105 @@ class CartController extends BaseController
                     'lens_id'    => $row['lens_id'] ?? null,
                     'lens_type'  => $row['lens_type'] ?? null,
                     'rx'         => $row['rx'] ?? null,
+                    /* Số thứ tự thêm vào — recent() sắp theo nó. PHẢI chép ra
+                       đây: hàm này dựng một mảng MỚI với danh sách khoá cố
+                       định, nên khoá nào quên là mất hẳn ở mọi nơi đọc giỏ
+                       hàng qua items(). Giỏ cũ chưa có nó -> 0, tức xuống
+                       cuối danh sách "mới nhất", đúng chỗ. */
+                    'added_seq'  => (int) ($row['added_seq'] ?? 0),
                 ];
             }
         }
 
         return $out;
+    }
+
+    /**
+     * Vài món MỚI THÊM GẦN ĐÂY NHẤT, đã ghép với sản phẩm trong CSDL.
+     *
+     * Dùng cho bảng xổ khi rê vào giỏ hàng ở thanh nav.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * CHỈ TRA CỨU ĐÚNG NHỮNG DÒNG SẼ HIỆN RA
+     *
+     * Bảng xổ nằm trong header, tức nó dựng ở MỌI trang của site. Trước khi
+     * có nó, header không chạm tới cơ sở dữ liệu lần nào — giỏ hàng nằm gọn
+     * trong $_SESSION. Nay phải có tên, ảnh và giá, nên không tránh được một
+     * lượt truy vấn.
+     *
+     * Bù lại bằng cách CẮT TRƯỚC, TRA SAU: sắp theo số thứ tự thêm vào, lấy
+     * đúng $limit dòng, rồi mới hỏi CSDL về chừng ấy sản phẩm. Giỏ 30 món
+     * cũng chỉ tra 5. Giỏ rỗng thì không có câu truy vấn nào.
+     *
+     * KHÔNG dọn dòng chết ở đây (sản phẩm đã gỡ khỏi catalog) — chỉ bỏ qua
+     * khi hiện. Việc dọn là của lines() ở trang giỏ hàng, và một hàm chỉ để
+     * VẼ thì không nên có tác dụng phụ lên phiên của khách.
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * @return array{lines: array<int, array>, shown: int, more: int}
+     */
+    public static function recent(int $limit = 5): array
+    {
+        $cart = self::items();
+
+        if ($cart === []) {
+            return ['lines' => [], 'shown' => 0, 'more' => 0];
+        }
+
+        /* Mới nhất lên đầu. Dòng của giỏ cũ (thêm trước khi có added_seq) coi
+           như số 0, tức rơi xuống cuối — đúng chỗ của chúng. */
+        uasort($cart, static function (array $a, array $b): int {
+            return ($b['added_seq'] ?? 0) <=> ($a['added_seq'] ?? 0);
+        });
+
+        $tong  = count($cart);
+        $dau   = array_slice($cart, 0, max(1, $limit), true);
+
+        $products = ProductModel::findManyById(array_column($dau, 'product_id'));
+        $variants = VariantModel::forProducts(array_column($dau, 'product_id'));
+        $lines    = [];
+
+        foreach ($dau as $key => $row) {
+            $pid = $row['product_id'];
+
+            if (!isset($products[$pid])) {
+                continue;
+            }
+
+            $product = $products[$pid];
+            $variant = null;
+
+            if ($row['variant_id'] !== null) {
+                foreach ($variants[$pid] ?? [] as $v) {
+                    if ($v['id'] === $row['variant_id']) {
+                        $variant = $v;
+                        break;
+                    }
+                }
+            }
+
+            $lens = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
+
+            $lines[] = [
+                'key'      => $key,
+                'name'     => $product['name'],
+                'slug'     => $product['slug'],
+                'image'    => ProductModel::image($product),
+                'quantity' => (int) $row['quantity'],
+                // Giá MỘT chiếc đã gồm tròng, giống dòng trong trang giỏ hàng.
+                'price'    => VariantModel::priceOf($product, $variant)
+                              + (int) ($lens['price'] ?? 0),
+            ];
+        }
+
+        return [
+            'lines' => $lines,
+            'shown' => count($lines),
+            /* Đếm trên TỔNG số dòng, không trên số dòng vẽ được: một món đã bị
+               gỡ khỏi catalog vẫn đang nằm trong giỏ khách, và nói "còn 2 món
+               nữa" rồi mở giỏ ra thấy 3 thì thà đừng nói. */
+            'more'  => max(0, $tong - count($lines)),
+        ];
     }
 
     /** Tổng số món trong giỏ — huy hiệu trên header. */
