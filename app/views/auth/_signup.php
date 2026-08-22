@@ -9,7 +9,8 @@
  *
  *   ''            Nhập số điện thoại      → POST /auth/dang-ky
  *   xac-minh      "Gửi mã qua Zalo?"      → POST /auth/dang-ky/gui-ma
- *   phuong-thuc   Zalo · SMS · Gọi thoại  → POST /auth/dang-ky/gui-ma
+ *   phuong-thuc   Chọn kênh gửi           → POST /auth/dang-ky/gui-ma
+ *                 (ĐANG ẨN: chỉ còn Zalo, xem Otp::METHODS)
  *   ma            Nhập 6 số               → POST /auth/dang-ky/xac-minh
  *   da-dang-ky    Số đã có tài khoản      → lối ra: đăng nhập, hoặc đổi số
  *   mat-khau      Tạo mật khẩu            → POST /auth/dang-ky/mat-khau
@@ -116,7 +117,13 @@ $backTo = static function (string $href): void { ?>
     </form>
 
     <div class="aalt">
-        <a class="authbtn authbtn--ghost" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
+        <?php /* "Phương thức khác" chỉ hiện khi THẬT SỰ còn phương thức khác —
+                 xem Otp::hasChoice(). Bản thiết kế vẽ ba nút ở màn này, nhưng
+                 nút thứ ba dẫn tới một danh sách một dòng thì chỉ tổ hứa hẹn
+                 một lối đi không tồn tại. */ ?>
+        <?php if (Otp::hasChoice()): ?>
+            <a class="authbtn authbtn--ghost" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
+        <?php endif; ?>
         <a class="aalt__quiet" href="/auth?tab=dang-ky">Hủy</a>
     </div>
 
@@ -135,11 +142,7 @@ $backTo = static function (string $href): void { ?>
     <?php /* Mỗi lựa chọn là một FORM riêng: chúng gửi cùng một địa chỉ, khác
              nhau đúng ở `method`, và HTML không cho lồng form vào nhau. */ ?>
     <div class="amethod">
-        <?php foreach ([
-            ['zalo',  'Zalo',      'Nhận mã trong ứng dụng Zalo'],
-            ['sms',   'SMS',       'Tin nhắn tới số điện thoại'],
-            ['voice', 'Gọi thoại', 'Tổng đài đọc mã cho bạn'],
-        ] as [$key, $label, $note]): ?>
+        <?php foreach (Otp::choices() as $key => [$label, $note]): ?>
             <form method="post" action="/auth/dang-ky/gui-ma">
                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="method" value="<?= e($key) ?>">
@@ -199,8 +202,10 @@ $backTo = static function (string $href): void { ?>
                 <input type="hidden" name="method" value="<?= e($signup['method'] ?? 'zalo') ?>">
                 <button type="submit" class="aresend__link">Gửi lại</button>
             </form>
-            <span class="aresend__or">hoặc thử</span>
-            <a class="aresend__link" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
+            <?php if (Otp::hasChoice()): ?>
+                <span class="aresend__or">hoặc thử</span>
+                <a class="aresend__link" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -251,6 +256,27 @@ $backTo = static function (string $href): void { ?>
         </label>
 
         <?php partial('auth/_password-rules'); ?>
+
+        <!-- EMAIL LÀ TUỲ CHỌN, VÀ ĐỨNG SAU MẬT KHẨU.
+             Bản thiết kế không có ô này; thêm vào vì tài khoản chỉ có số điện
+             thoại thì mất hai lối: đăng nhập bằng email, và nhận liên kết đặt
+             lại mật khẩu qua email khi không còn giữ số cũ.
+
+             Không bắt buộc và đứng sau, để không cản người chỉ muốn xong nhanh
+             — khách bỏ trống thì điền sau ở trang Hồ sơ cũng được.
+
+             type="email" ở đây thì hợp lệ: ô này chỉ nhận email, khác ô đăng
+             nhập vốn nhận cả số điện thoại. -->
+        <label class="authfield">
+            <span class="authfield__label">Email <em class="authfield__opt">(tuỳ chọn)</em></span>
+            <input class="authfield__input" type="email" name="email"
+                   autocomplete="email" maxlength="255"
+                   placeholder="ban@vidu.com"
+                   value="<?= e($signup['email'] ?? '') ?>">
+            <span class="authfield__hint">
+                Dùng để đăng nhập và lấy lại mật khẩu khi bạn đổi số điện thoại.
+            </span>
+        </label>
 
         <button type="submit" class="authbtn authbtn--primary">Đăng ký</button>
     </form>

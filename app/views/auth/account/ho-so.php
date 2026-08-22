@@ -38,10 +38,20 @@ $gender = $profile['gender'] ?? null;
 
     <label class="acct-field">
         <span class="acct-field__label">Email</span>
-        <!-- Chỉ đọc: email là định danh đăng nhập, đổi nó cần quy trình
-             xác minh riêng nên chưa mở ở đây. `disabled` chứ không
-             `readonly` — ô readonly vẫn được gửi lên cùng form. -->
-        <input class="acct-field__input" type="email" value="<?= e($profile['email']) ?>" disabled>
+        <!-- SỬA ĐƯỢC, và không bắt buộc. Tài khoản đăng ký bằng số điện thoại
+             ra đời không có email; để ô này khoá thì họ không bao giờ thêm
+             được, tức mất luôn lối đăng nhập bằng email và lối nhận liên kết
+             đặt lại mật khẩu khi đã đổi số.
+
+             Địa chỉ gõ ở đây CHƯA XÁC MINH — UserModel::updateEmail() đặt
+             email_verified về 0, nên nó không dùng để nối tài khoản Google. -->
+        <input class="acct-field__input" type="email" name="email" maxlength="255"
+               autocomplete="email" placeholder="ban@vidu.com"
+               value="<?= e($profile['email'] ?? '') ?>">
+        <span class="acct-field__hint">
+            Dùng để đăng nhập và lấy lại mật khẩu. Bỏ trống nếu bạn chỉ muốn
+            dùng số điện thoại.
+        </span>
     </label>
 
     <div class="acct-form__row">

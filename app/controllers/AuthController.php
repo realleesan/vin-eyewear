@@ -280,6 +280,7 @@ class AuthController extends BaseController
             'resend'   => time() + Otp::RESEND_AFTER,
             'tries'    => 0,
             'verified' => false,
+            'email'    => '',
         ];
 
         /* Ở MÁY PHÁT TRIỂN thì hiện thẳng mã lên màn hình. Zalo chưa cắm nhà
@@ -438,7 +439,8 @@ class AuthController extends BaseController
      *
      *   (không có)   nhập số điện thoại            signupPhone()
      *   xac-minh     "gửi mã qua Zalo?"            → signupSend()
-     *   phuong-thuc  Zalo · SMS · Gọi thoại        → signupSend()
+     *   phuong-thuc  chọn kênh gửi                 → signupSend()
+     *                (đang ẩn: chỉ còn Zalo — xem Otp::METHODS)
      *   ma           nhập 6 số                     signupVerify()
      *   da-dang-ky   số này đã có tài khoản        (ngõ cụt, có lối ra)
      *   mat-khau     tạo mật khẩu                  signupFinish()
@@ -490,7 +492,11 @@ class AuthController extends BaseController
         }
 
         return match ($step) {
-            'xac-minh', 'phuong-thuc' => $step,
+            'xac-minh'                => $step,
+            /* Còn đúng một kênh gửi thì màn chọn phương thức không có gì để
+               chọn — đẩy về màn xác minh. Chốt ở đây chứ không chỉ ẩn nút:
+               ?buoc= gõ tay được, và một màn hình rỗng thì trông như hỏng. */
+            'phuong-thuc'             => Otp::hasChoice() ? $step : 'xac-minh',
             'ma'                      => ($signup['hash'] ?? '') !== '' ? 'ma' : 'xac-minh',
             'da-dang-ky', 'mat-khau'  => !empty($signup['verified']) ? $step : 'xac-minh',
             default                   => '',
@@ -509,6 +515,10 @@ class AuthController extends BaseController
         return [
             'phone'   => $signup['phone'],
             'display' => Otp::displayPhone($signup['phone']),
+            // Chữ khách vừa gõ ở ô email, giữ lại khi màn tạo mật khẩu phải
+            // hiện lại vì lỗi. Nằm trong session chứ không phải trên URL —
+            // cùng lý do với số điện thoại, xem khối chú thích đầu mục này.
+            'email'   => $signup['email'] ?? '',
             'method'  => $signup['method'] ?? 'zalo',
             'sentVia' => Otp::sentVia($signup['method'] ?? 'zalo'),
             // Còn mấy giây nữa mới được bấm "Gửi lại". 0 = bấm được ngay.
@@ -676,6 +686,13 @@ class AuthController extends BaseController
         }
 
         $password = (string) ($_POST['password'] ?? '');
+        $email    = trim((string) ($_POST['email'] ?? ''));
+
+        /* Ô email KHÔNG bắt buộc — xem auth/_signup.php. Giữ lại chữ vừa gõ
+           ngay từ đây, để mọi lối thoát lỗi bên dưới đều hiện lại nó thay vì
+           bắt khách gõ lại địa chỉ. */
+        $signup['email']     = $email;
+        $_SESSION['_signup'] = $signup;
 
         /* BỐN QUY TẮC của bản thiết kế, kiểm ở MÁY CHỦ.
            auth.js chấm xanh từng dòng ngay khi gõ, nhưng đó chỉ là tăng cường:
@@ -693,7 +710,9 @@ class AuthController extends BaseController
         /* Họ tên rỗng: bản thiết kế không hỏi tên ở bước nào cả. Cột
            profiles.full_name cho phép NULL, và trang tài khoản cho khách điền
            sau. */
-        $result = UserModel::register($signup['phone'], $password, '');
+        /* Email đi vào register() để nó tự kiểm định dạng và tính duy nhất —
+           cùng một bộ luật với luồng Google, không viết lại ở đây. */
+        $result = UserModel::register($signup['phone'], $password, '', $email);
 
         if (!$result['ok']) {
             flash('auth_error', $result['error']);
@@ -822,10 +841,18 @@ class AuthController extends BaseController
 
     public function profile(): void
     {
-        $userId  = AuthMiddleware::requireLogin();
         $section = (string) ($_GET['muc'] ?? '');
+        $known   = isset(self::SECTIONS[$section]);
 
-        if (!isset(self::SECTIONS[$section])) {
+        /* ĐỌC ?muc= TRƯỚC KHI ĐÒI ĐĂNG NHẬP, để còn mang nó theo.
+           Mặc định requireLogin() dựng đường quay lại bằng currentPath(), mà
+           hàm đó cắt query string — nên bấm một liên kết tới Sổ địa chỉ lúc
+           chưa đăng nhập thì đăng nhập xong lại rơi vào mục mặc định.
+           Chỉ mang theo mục CÓ THẬT: ?muc= gõ tay được, và một giá trị lạ thì
+           đằng nào cũng bị đẩy về mục mặc định ngay dưới đây. */
+        $userId = AuthMiddleware::requireLogin($known ? '/tai-khoan?muc=' . $section : null);
+
+        if (!$known) {
             $section = self::DEFAULT_SECTION;
         }
 
@@ -1006,6 +1033,19 @@ class AuthController extends BaseController
         // thành mục "Sổ địa chỉ" riêng, và profiles.address nay là bản sao do
         // AddressModel giữ. Để form hồ sơ ghi thẳng vào đó nữa là hai nguồn
         // cùng sửa một cột, cái sau đè cái trước.
+        /* EMAIL TRƯỚC, và dừng lại nếu nó hỏng.
+           Nó nằm ở bảng `users` nên là một lệnh ghi riêng — xem
+           UserModel::updateEmail(). Chạy trước vì đây là lỗi hay gặp nhất của
+           form này (địa chỉ đã thuộc về tài khoản khác), và ghi hồ sơ xong rồi
+           mới báo lỗi email thì màn hình nói "không lưu được" trong khi bốn ô
+           kia đã lưu rồi. */
+        $email = UserModel::updateEmail($userId, (string) ($_POST['email'] ?? ''));
+
+        if (!$email['ok']) {
+            flash('account_error', $email['error']);
+            redirect('/tai-khoan?muc=ho-so');
+        }
+
         $result = UserModel::updateProfile($userId, [
             'full_name'     => trim((string) ($_POST['full_name'] ?? '')),
             'phone'         => trim((string) ($_POST['phone'] ?? '')),

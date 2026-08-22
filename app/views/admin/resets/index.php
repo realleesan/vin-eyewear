@@ -57,7 +57,7 @@ $statusLabel = [
      */
     $kenh = [
         ['Email',           $canDeliver, 'MAIL_DRIVER=' . $mailDriver],
-        ['Zalo (số điện thoại)', $canSms, 'chưa cắm nhà cung cấp — core/Otp.php'],
+        ['Zalo (số điện thoại)', $canSms, 'ZNS chưa khai đủ — config/zalo.php'],
     ];
     $tatCa = $canDeliver && $canSms;
     ?>

@@ -11,20 +11,22 @@
  *                                 mã đi qua Mailer, gõ số thì đi qua send() dưới đây.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * MÃ CHƯA ĐI TỚI TAY KHÁCH ĐƯỢC — ĐỌC KỸ TRƯỚC KHI ĐƯA LÊN PRODUCTION
+ * MÃ ĐI QUA ZALO — KIỂM TRA CẤU HÌNH TRƯỚC KHI ĐƯA LÊN PRODUCTION
  *
- * Dự án CHƯA có nhà cung cấp gửi tin: không SMS gateway, không Zalo ZNS. Mục
- * `zalo` trong config/company.php chỉ là đường dẫn chat, không gửi được gì.
- * Nên send() dưới đây chỉ GHI MÃ RA ERROR LOG của máy chủ.
+ * Kênh `zalo` đã cắm thật: send() gọi Zalo::sendOtp(), đi bằng ZNS. Nhưng nó
+ * chỉ chạy khi đã khai đủ app_id, secret_key, refresh_token và mã mẫu tin OTP
+ * — xem config/zalo.php. Chưa khai đủ thì mã chỉ GHI RA ERROR LOG, và khách
+ * thật KHÔNG đăng ký được vì không có cách nào biết mã. Ở máy phát triển
+ * (app.debug) mã hiện thẳng trên màn hình, xem AuthController::signupSend().
  *
- * Hệ quả, nói thẳng: bật luồng này trên production khi chưa cắm nhà cung cấp
- * là khách thật KHÔNG đăng ký được — họ không có cách nào biết mã. Cách duy
- * nhất lấy mã lúc này là đọc error log (hoặc bật app.debug ở máy phát triển,
- * lúc đó mã hiện thẳng trên màn hình).
+ * Dùng ready() để hỏi "gửi được chưa" thay vì đoán: trang
+ * /quan-tri/quen-mat-khau đọc giá trị đó để biết yêu cầu bằng số điện thoại
+ * đang tự chạy hay đang chờ nhân viên gọi điện.
  *
- * CHỖ CẮM NHÀ CUNG CẤP là đúng một hàm: send(). Nối eSMS/SpeedSMS/Twilio hay
- * Zalo ZNS vào đó, trả true khi gửi được — không phần nào khác của luồng phải
- * sửa. Sinh mã, băm, hạn dùng, số lần thử đều đã nằm ở đây và chạy thật.
+ * HAI KÊNH CÒN LẠI CHƯA CÓ ĐƯỜNG RA. SMS cần một gateway (eSMS, SpeedSMS,
+ * Twilio…), gọi thoại cần dịch vụ voice OTP — cả hai đều là hợp đồng riêng,
+ * chưa ký thì send() ghi log rồi trả false. Cửa hàng chọn Zalo trước chính vì
+ * rẻ hơn SMS. Chỗ cắm cho chúng vẫn là đúng một hàm: send().
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * MÃ ĐƯỢC BĂM TRƯỚC KHI CẤT, KHÔNG CẤT NGUYÊN VĂN
@@ -40,18 +42,6 @@
  */
 class Otp
 {
-    /**
-     * ĐÃ CẮM NHÀ CUNG CẤP GỬI TIN CHƯA? Đổi thành true trong chính lần sửa mà
-     * bạn nối eSMS/SpeedSMS/Twilio hay Zalo ZNS vào send() bên dưới.
-     *
-     * Có hằng này vì send() phải trả về SỰ THẬT: nơi gọi dựa vào giá trị đó để
-     * quyết định yêu cầu đặt lại mật khẩu là "đã gửi cho khách" hay "còn treo,
-     * nhân viên phải gọi điện". Trả bừa true thì mọi yêu cầu bằng số điện thoại
-     * đều biến khỏi hàng chờ ở /quan-tri/quen-mat-khau, trong khi khách chẳng
-     * nhận được gì và không còn ai biết mà gọi lại cho họ.
-     */
-    public const PROVIDER_READY = false;
-
     /** Số chữ số của mã. Đúng số ô trên màn hình nhập mã. */
     public const LENGTH = 6;
 
@@ -70,15 +60,76 @@ class Otp
     public const MAX_TRIES = 5;
 
     /**
-     * Ba kênh của màn "chọn phương thức" trong luồng ĐĂNG KÝ. Giá trị lạ bị
-     * đẩy về 'zalo'.
+     * Kênh BẤM ĐƯỢC trong luồng đăng ký. Giá trị lạ bị đẩy về 'zalo'.
      *
-     * KHÔNG có 'email' ở đây: đăng ký chỉ hỏi số điện thoại, chưa biết email
-     * của khách để mà gửi. Kênh email chỉ xuất hiện ở luồng quên mật khẩu, nơi
+     * CHỈ CÒN ZALO. SMS và gọi thoại đã bị gỡ khỏi danh sách này: dự án chưa
+     * ký với gateway nào, nên send() của hai kênh đó chỉ ghi log rồi trả false.
+     * Một nút bấm được mà mã không bao giờ tới còn tệ hơn không có nút — khách
+     * ngồi chờ một tin nhắn không tồn tại, hết mã, rồi bỏ dở việc đăng ký, và
+     * không có gì trên màn hình nói cho họ biết vì sao.
+     *
+     * KÝ XONG THÌ THÊM LẠI MỘT DÒNG VÀO ĐÂY, trong chính lần sửa mà nối gateway
+     * vào send() — không sớm hơn. Màn "chọn phương thức" và các nút "Phương
+     * thức khác" tự hiện lại theo, xem choices() và auth/_signup.php.
+     *
+     * KHÔNG có 'email': đăng ký chỉ hỏi số điện thoại, chưa biết email của
+     * khách để mà gửi. Kênh email chỉ xuất hiện ở luồng quên mật khẩu, nơi
      * chính khách gõ địa chỉ ra — nó có nhãn trong methodLabel()/sentVia()
      * nhưng không phải một lựa chọn bấm được.
      */
-    public const METHODS = ['zalo', 'sms', 'voice'];
+    public const METHODS = ['zalo'];
+
+    /**
+     * Nhãn và câu mô tả của từng kênh trên màn "chọn phương thức".
+     *
+     * Giữ đủ ba dòng kể cả khi hai kênh dưới đang bị ẩn: đây là phần trình bày,
+     * và nó phải sẵn sàng cho ngày METHODS dài trở lại. Thứ quyết định kênh nào
+     * hiện ra là METHODS, không phải bảng này.
+     */
+    public const CHANNELS = [
+        'zalo'  => ['Zalo',      'Nhận mã trong ứng dụng Zalo'],
+        'sms'   => ['SMS',       'Tin nhắn tới số điện thoại'],
+        'voice' => ['Gọi thoại', 'Tổng đài đọc mã cho bạn'],
+    ];
+
+    /**
+     * Các kênh bấm được kèm nhãn — thứ màn "chọn phương thức" lặp qua.
+     *
+     * @return array<string, array{0:string, 1:string}>
+     */
+    public static function choices(): array
+    {
+        return array_intersect_key(self::CHANNELS, array_flip(self::METHODS));
+    }
+
+    /**
+     * CÓ ĐÁNG HIỆN MÀN "CHỌN PHƯƠNG THỨC" KHÔNG?
+     *
+     * Còn đúng một kênh thì không: một danh sách một dòng chẳng cho ai chọn gì,
+     * và cái nút "Phương thức khác" dẫn tới nó chỉ tổ làm khách tưởng còn đường
+     * khác rồi thất vọng. Cả ba chỗ dẫn vào màn đó đều hỏi hàm này.
+     */
+    public static function hasChoice(): bool
+    {
+        return count(self::METHODS) > 1;
+    }
+
+    /**
+     * GỬI ĐƯỢC MÃ QUA SỐ ĐIỆN THOẠI CHƯA?
+     *
+     * Trả lời theo CẤU HÌNH thật, không theo một hằng bật tay: khai đủ token và
+     * mẫu tin ZNS là bật, xoá đi là tắt. Một công tắc riêng thì sớm muộn cũng
+     * lệch với cấu hình, mà lệch ở đây thì mọi yêu cầu đặt lại mật khẩu bằng số
+     * điện thoại biến khỏi hàng chờ ở /quan-tri/quen-mat-khau trong khi khách
+     * chẳng nhận được gì và không còn ai biết mà gọi lại cho họ.
+     *
+     * $method để dành cho ngày cắm SMS/gọi thoại — lúc đó hai kênh kia có điều
+     * kiện riêng, và nơi gọi đã hỏi đúng câu từ bây giờ.
+     */
+    public static function ready(string $method = 'zalo'): bool
+    {
+        return $method === 'zalo' && Zalo::otpReady();
+    }
 
     public static function generate(): string
     {
@@ -99,26 +150,47 @@ class Otp
     }
 
     /**
-     * "Gửi" mã đi bằng kênh của SỐ ĐIỆN THOẠI. Xem khối chú thích đầu file:
-     * hiện chỉ ghi ra log.
+     * Gửi mã đi bằng kênh của SỐ ĐIỆN THOẠI.
      *
      * Mã gửi qua EMAIL không đi lối này — nó đã có Mailer, và nội dung thư là
      * việc của nơi phát sinh mã (xem PasswordResetModel::otpEmailHtml). Hàm
-     * này chỉ dành cho những kênh dự án chưa có đường ra: Zalo, SMS, gọi thoại.
+     * này chỉ dành cho ba kênh của số điện thoại.
      *
-     * Trả về true/false theo nghĩa "đã bàn giao cho nhà cung cấp chưa", để
-     * khi cắm dịch vụ thật vào thì nơi gọi biết đường báo lỗi cho khách.
+     * Trả về true/false theo nghĩa "nhà cung cấp đã nhận chưa", để nơi gọi biết
+     * đường báo cho khách hay đẩy yêu cầu về cho nhân viên.
      */
     public static function send(string $phone, string $code, string $method): bool
     {
+        if ($method === 'zalo') {
+            $sent = Zalo::sendOtp($phone, $code);
+
+            /* Zalo đã tự ghi log lý do hỏng rồi, nhưng chưa ghi MÃ — mà mã mới
+               là thứ nhân viên cần để đọc qua điện thoại cho khách khi ZNS
+               chưa cắm xong. Chỉ ghi khi gửi hỏng: gửi được rồi mà vẫn để mã
+               nằm trong log là tự tay rải mật khẩu một lần ra đĩa. */
+            if (!$sent) {
+                self::log($phone, $code, $method);
+            }
+
+            return $sent;
+        }
+
+        /* SMS và gọi thoại chưa có nhà cung cấp — xem khối chú thích đầu file.
+           Chỗ cắm là ngay đây, và chỉ cần trả true khi gửi được. */
+        self::log($phone, $code, $method);
+
+        return false;
+    }
+
+    /** Mã nằm lại trong error log khi không gửi đi được. */
+    private static function log(string $phone, string $code, string $method): void
+    {
         error_log(sprintf(
-            '[Otp] Mã cho %s qua %s: %s (chưa có nhà cung cấp — xem core/Otp.php)',
+            '[Otp] Mã cho %s qua %s: %s (không gửi đi được — xem core/Otp.php)',
             $phone,
             $method,
             $code
         ));
-
-        return self::PROVIDER_READY;
     }
 
     /** Tên kênh để in ra màn hình. */

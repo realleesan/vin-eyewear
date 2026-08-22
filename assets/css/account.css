@@ -627,6 +627,17 @@
     cursor: not-allowed;
 }
 
+/* Chỉ tô đỏ SAU khi người dùng đã rời ô và gõ sai — :user-invalid, không phải
+   :invalid, cùng lý do đã ghi ở assets/css/auth.css. */
+.acct-field__input:user-invalid { border-color: var(--danger); }
+
+/* Câu giải thích dưới ô. Dùng ở ô email trong mục Hồ sơ. */
+.acct-field__hint {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--a-note);
+}
+
 /* Ô chọn ngày/giờ phải cao đúng bằng ô chữ: trình duyệt cho nó line-height
    riêng nên không có dòng này thì hàng hai cột lệch nhau vài px. */
 .acct-field__input[type="date"] {

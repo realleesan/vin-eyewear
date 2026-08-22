@@ -9,9 +9,9 @@
  *   1. Khách bấm "Quên mật khẩu", nhập email hoặc số điện thoại. Nếu kênh
  *      tương ứng gửi được mã OTP thì khách tự đặt lại xong, KHÔNG rơi về đây.
  *   2. Gửi không được thì yêu cầu hiện ở trang này, trạng thái "Chờ xử lý".
- *      Hiện tại đó là: mọi yêu cầu bằng số điện thoại (Zalo ZNS chưa cắm,
- *      xem Otp::PROVIDER_READY) và mọi yêu cầu bằng email khi MAIL_DRIVER
- *      chưa phải là đường gửi thật.
+ *      Đó là: yêu cầu bằng số điện thoại khi Zalo ZNS chưa khai đủ cấu hình
+ *      (xem Otp::ready() và config/zalo.php) và mọi yêu cầu bằng email khi
+ *      MAIL_DRIVER chưa phải là đường gửi thật.
  *   3. Nhân viên GỌI ĐIỆN xác minh đúng người — bước này là bảo mật thật sự
  *      của cả luồng, không phải thủ tục.
  *   4. Bấm "Tạo liên kết". Liên kết hiện ra ĐÚNG MỘT LẦN để đọc qua điện
@@ -36,7 +36,7 @@ class PasswordResetAdminController extends AdminController
             'mailDriver'=> (string) config('mail.driver', 'log'),
             // Kênh của số điện thoại: false thì MỌI yêu cầu bằng số đều rơi
             // về trang này, dù email có gửi được hay không.
-            'canSms'    => Otp::PROVIDER_READY,
+            'canSms'    => Otp::ready('zalo'),
             // Liên kết vừa tạo — chỉ tồn tại trong đúng lượt tải này
             'freshLink' => flash('reset_link'),
             'freshFor'  => flash('reset_for'),

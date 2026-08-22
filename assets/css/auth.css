@@ -221,6 +221,16 @@
     color: var(--u-meta);
 }
 
+/* "(tuỳ chọn)" nằm TRONG nhãn, nên phải tự gỡ chữ hoa và giãn cách mà
+   .authfield__label áp lên — không thì nó đọc như một phần của tên trường. */
+.authfield__opt {
+    font-style: normal;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--u-meta);
+}
+
 /* --- Ô mật khẩu + nút con mắt --- */
 
 .authpw {

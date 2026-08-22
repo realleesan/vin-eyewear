@@ -5,16 +5,26 @@
  *
  * Đẩy thông báo lịch hẹn qua Zalo — xem core/Zalo.php để biết luồng và giới hạn.
  *
+ * File này khai HAI việc đi chung một đường ZNS:
+ *   · thông báo lịch hẹn cho cửa hàng
+ *   · mã OTP lúc khách đăng ký / quên mật khẩu
+ *
  * ─────────────────────────────────────────────────────────────────────────────
- * TÍNH NĂNG NÀY CHƯA GỬI ĐƯỢC TIN THẬT
+ * LẤY BỐN GIÁ TRỊ BẮT BUỘC Ở ĐÂU
  *
- * Zalo không có API kiểu "gửi tin tới một số điện thoại" dùng ngay. Muốn gửi
- * thật cần Official Account đã xác thực, một mẫu tin ZNS được Zalo duyệt, và
- * access_token của OA (token hết hạn theo giờ, phải làm mới bằng refresh_token).
- * Cả ba đều là việc đăng ký với Zalo, không phải việc viết mã.
+ *   1. developers.zalo.me -> tạo ứng dụng. Mục "Thông tin ứng dụng" cho
+ *      App ID và Secret Key  ->  ZALO_APP_ID, ZALO_APP_SECRET
+ *   2. Gắn Official Account đã xác thực vào ứng dụng, bật quyền "Gửi ZNS".
+ *   3. Vào "Official Account" -> "Cấp quyền cho ứng dụng", đăng nhập bằng tài
+ *      khoản quản trị OA. Zalo trả về một `oauth_code` trên URL; đổi mã đó lấy
+ *      cặp token đầu tiên (một lần duy nhất, bằng tay hoặc bằng công cụ của
+ *      Zalo). Chép refresh_token vào  ->  ZALO_OA_REFRESH_TOKEN
+ *   4. zns.zalo.me -> "Quản lý mẫu tin". Mẫu OTP có sẵn mẫu dựng trước, duyệt
+ *      nhanh nhất. Chép ID mẫu vào  ->  ZALO_ZNS_TEMPLATE_OTP
  *
- * Chưa cấu hình thì thông báo chỉ ghi ra error log; lịch hẹn vẫn đặt bình
- * thường. Chỗ cắm là đúng một hàm — Zalo::send().
+ * Thiếu bất kỳ thứ nào thì tin chỉ ghi ra error log. Lịch hẹn vẫn đặt được và
+ * quên mật khẩu vẫn rơi về hàng chờ của nhân viên — nhưng ĐĂNG KÝ THÌ TẮC,
+ * xem khối chú thích đầu core/Zalo.php.
  * ─────────────────────────────────────────────────────────────────────────────
  *
  * VÌ SAO SỐ CỬA HÀNG Ở ĐÂY MÀ KHÔNG Ở config/company.php: company.php là thông
@@ -51,15 +61,39 @@ return [
     'notify_customer' => (bool) env('ZALO_NOTIFY_CUSTOMER', false),
 
     /*
-     * access_token của Official Account.
+     * ỨNG DỤNG trên developers.zalo.me — dùng để làm mới token.
      *
-     * ⚠️ ĐỂ TRONG .env, KHÔNG BAO GIỜ COMMIT. Token này gửi được tin dưới danh
-     * nghĩa cửa hàng.
+     * ⚠️ ĐỂ TRONG .env, KHÔNG BAO GIỜ COMMIT. Secret key cộng refresh_token là
+     * đủ để gửi tin dưới danh nghĩa cửa hàng.
+     */
+    'app_id'     => env('ZALO_APP_ID', ''),
+    'secret_key' => env('ZALO_APP_SECRET', ''),
+
+    /*
+     * refresh_token LẦN ĐẦU, lấy tay một lần qua màn hình cấp quyền OA.
      *
-     * Token ZNS hết hạn sau ít giờ và phải làm mới bằng refresh_token, nên khi
-     * cắm thật thì .env KHÔNG còn là chỗ đủ: cần một chỗ ghi được token mới
-     * (một bảng, hoặc một file trong storage/). Ghi ra đây để lần sửa ấy không
-     * bắt đầu bằng việc phát hiện lại điều này.
+     * Chỉ dùng khi chưa có file token. Từ lần làm mới đầu tiên trở đi, Zalo
+     * cấp refresh_token MỚI và cái cũ chết ngay — cặp mới nằm trong 'token_file'
+     * bên dưới, còn giá trị ở đây đứng im và dần vô dụng. Đó là chủ ý: .env do
+     * người triển khai giữ, ứng dụng không tự ghi vào.
+     */
+    'refresh_token' => env('ZALO_OA_REFRESH_TOKEN', ''),
+
+    /*
+     * Chỗ cất cặp token đang dùng.
+     *
+     * Dưới storage/ vì thư mục đó đã nằm trong .gitignore và là nơi duy nhất
+     * ứng dụng được phép ghi. File tự sinh ở lần làm mới đầu tiên, quyền 0600.
+     * Xoá nó đi là quay về dùng lại 'refresh_token' ở trên.
+     */
+    'token_file' => ROOT_PATH . '/storage/zalo/token.json',
+
+    /*
+     * ĐƯỜNG LUI CHO LÚC THỬ NGHIỆM: một access_token còn hạn, khai tay.
+     *
+     * Gửi thử được vài tin rồi thôi — token sống khoảng 25 giờ và không có gì
+     * làm mới nó. Đừng dùng trên production; khai đủ bốn giá trị ở trên thì
+     * ứng dụng tự lo phần này.
      */
     'access_token' => env('ZALO_OA_ACCESS_TOKEN', ''),
 
@@ -67,10 +101,28 @@ return [
      * Mã mẫu tin ZNS đã được Zalo duyệt.
      *
      * Một mẫu cho tin báo nội bộ (gửi cửa hàng), một cho tin gửi khách nếu bật
-     * 'notify_customer'. Tên tham số trong mẫu do Zalo duyệt quyết định, nên
-     * phần dựng thân tin trong Zalo::send() phải viết cùng lúc với việc đăng ký
-     * mẫu — đừng đoán trước.
+     * 'notify_customer'. Cả hai là mẫu TỰ SOẠN, nên tên các ô do chính người đi
+     * đăng ký đặt: đặt đúng bảy tên mà Zalo::appointmentParams() đang gửi
+     * (su_kien, ma_lich, khach_hang, dien_thoai, co_so, dich_vu, thoi_gian) thì
+     * không phải sửa mã; đặt khác thì sửa ở đúng hàm đó.
      */
     'template_shop'     => env('ZALO_ZNS_TEMPLATE_SHOP', ''),
     'template_customer' => env('ZALO_ZNS_TEMPLATE_CUSTOMER', ''),
+
+    /*
+     * Mẫu tin OTP — thứ chặn giữa "khách đăng ký được" và "không".
+     *
+     * Ưu tiên khai cái này trước hai mẫu trên: Zalo có mẫu OTP dựng sẵn, duyệt
+     * nhanh; mẫu lịch hẹn phải tự soạn nên chờ lâu hơn.
+     */
+    'template_otp' => env('ZALO_ZNS_TEMPLATE_OTP', ''),
+
+    /*
+     * Tên ô chứa mã trong mẫu OTP.
+     *
+     * Mẫu dựng sẵn của Zalo đặt tên `otp`. Nếu mẫu được duyệt của bạn đặt tên
+     * khác thì sửa ở đây — sai tên thì Zalo từ chối cả tin chứ không bỏ qua
+     * một ô, và thông báo lỗi không nói ra ô nào sai.
+     */
+    'otp_param' => env('ZALO_ZNS_OTP_PARAM', 'otp'),
 ];

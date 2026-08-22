@@ -76,13 +76,24 @@ class AuthMiddleware
     /**
      * Bắt buộc đăng nhập. Chưa đăng nhập thì đưa về /auth kèm địa chỉ đang
      * muốn tới, để đăng nhập xong quay lại đúng chỗ.
+     *
+     * $returnTo ĐỂ TRỐNG thì lấy đường dẫn hiện tại — mà currentPath() CẮT
+     * QUERY STRING. Với hầu hết trang thì đúng như vậy là tốt: query của
+     * /san-pham là bộ lọc, mang qua màn đăng nhập rồi trả về chỉ tổ dài dòng.
+     * Nhưng có những trang mà query CHÍNH LÀ chỗ khách muốn tới — /tai-khoan
+     * dùng ?muc= để chọn mục — và ở đó bỏ query đi nghĩa là đăng nhập xong họ
+     * rơi vào mục mặc định chứ không phải mục vừa bấm.
+     *
+     * Nên nơi gọi tự khai đường quay lại khi nó biết rõ hơn. Giá trị vẫn đi
+     * qua safeRedirectPath() ở đầu bên kia (xem AuthController::loginTarget),
+     * nên một chuỗi dẫn ra ngoài site không bao giờ thành đích thật.
      */
-    public static function requireLogin(): string
+    public static function requireLogin(?string $returnTo = null): string
     {
         $userId = self::userId();
 
         if ($userId === null) {
-            redirect('/auth?redirect=' . rawurlencode(currentPath()));
+            redirect('/auth?redirect=' . rawurlencode($returnTo ?? currentPath()));
         }
 
         return $userId;

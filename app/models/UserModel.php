@@ -47,13 +47,18 @@ class UserModel extends BaseModel
         /*
          * SỐ ĐIỆN THOẠI THAY EMAIL LÀM THỨ ĐỂ ĐĂNG NHẬP.
          *
-         * Form đăng ký không còn hỏi email. Đăng nhập vốn đã nhận cả hai (xem
-         * findByLogin), nên bỏ email đi không mất lối vào nào — nhưng vì thế
-         * số điện thoại từ TUỲ CHỌN thành BẮT BUỘC: thiếu cả hai thì tài khoản
-         * tạo ra xong không ai đăng nhập vào được nữa.
+         * Form đăng ký hỏi SỐ trước, email sau và không bắt buộc. Vì thế số điện
+         * thoại từ TUỲ CHỌN thành BẮT BUỘC: thiếu cả hai thì tài khoản tạo ra
+         * xong không ai đăng nhập vào được nữa.
          *
-         * $email nay là tham số cuối và mặc định rỗng: chỉ luồng Google truyền
-         * vào, và đó là địa chỉ Google xác nhận chứ không phải chữ khách gõ.
+         * $email là tham số cuối và mặc định rỗng — ba nơi truyền vào, khác
+         * nhau ở mức tin cậy:
+         *   · luồng Google      địa chỉ Google đã xác nhận  -> email_verified=1
+         *   · ô email khi đăng ký / trang Hồ sơ: chữ khách tự gõ, CHƯA xác
+         *     minh -> email_verified giữ 0. Nó vẫn đăng nhập được, vì thứ
+         *     chứng minh quyền sở hữu tài khoản là mật khẩu chứ không phải
+         *     địa chỉ; cột email_verified chỉ dùng cho việc NỐI tài khoản
+         *     Google (xem findOrCreateGoogle).
          */
         $email = strtolower(trim($email));
 
@@ -190,6 +195,31 @@ class UserModel extends BaseModel
 
                 return ['ok' => true, 'id' => $byEmail['id'], 'created' => false];
             }
+        }
+
+        /*
+         * TỚI ĐÂY MÀ EMAIL VẪN TRÙNG NGƯỜI KHÁC THÌ BỎ EMAIL ĐI, ĐỪNG NGÃ.
+         *
+         * Chỉ xảy ra khi Google KHÔNG xác nhận địa chỉ (nhánh 2 đã nuốt hết
+         * trường hợp xác nhận rồi): tài khoản Workspace tự khai một email đang
+         * thuộc về khách khác. Không được nối vào tài khoản kia — đó chính là
+         * điều nhánh 2 từ chối làm — nhưng cũng không được ném lỗi:
+         * `uq_users_email` sẽ chặn lệnh INSERT, và khách chỉ thấy câu "không
+         * tạo được tài khoản, vui lòng thử lại", thử lại bao nhiêu lần cũng
+         * hỏng y như vậy vì không có gì đổi giữa hai lần.
+         *
+         * Thứ định danh tài khoản này là `google_id`, không phải email. Bỏ
+         * email ra thì khách vẫn đăng nhập bằng Google bình thường, và tự điền
+         * một địa chỉ khác ở trang Hồ sơ nếu muốn (chỗ đó cũng kiểm trùng).
+         */
+        if ($email !== null && $email !== ''
+            && (int) Database::fetchValue('SELECT COUNT(*) FROM users WHERE email = :e',
+                                          ['e' => $email]) > 0) {
+            error_log('[UserModel] Google gửi email chưa xác minh đang thuộc tài khoản khác ('
+                      . $email . ') — tạo tài khoản không kèm email.');
+
+            $email         = null;
+            $emailVerified = false;
         }
 
         $userId = uuid();
@@ -352,6 +382,85 @@ class UserModel extends BaseModel
               WHERE p.id = :id',
             ['id' => $userId]
         );
+    }
+
+    /**
+     * Đặt hoặc đổi email của tài khoản.
+     *
+     * TÁCH KHỎI updateProfile() vì email nằm ở bảng `users`, không phải
+     * `profiles` — và vì nó là một trong hai định danh đăng nhập, nên cần
+     * kiểm tính duy nhất và trả lời được lý do từ chối.
+     *
+     * CHUỖI RỖNG = XOÁ EMAIL. Cho phép, nhưng chỉ khi tài khoản còn số điện
+     * thoại: bỏ nốt cái cuối cùng là tự khoá mình ra ngoài, và không ai lấy
+     * lại được vì mọi đường khôi phục đều đi qua một trong hai thứ đó.
+     *
+     * @return array{ok:bool, error?:string}
+     */
+    public static function updateEmail(string $userId, string $email): array
+    {
+        $email = strtolower(trim($email));
+
+        $current = Database::fetchOne(
+            'SELECT u.email, p.phone
+               FROM users u
+               LEFT JOIN profiles p ON p.id = u.id
+              WHERE u.id = :id',
+            ['id' => $userId]
+        );
+
+        if ($current === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy tài khoản.'];
+        }
+
+        // Không đổi gì thì thôi — đừng dập email_verified về 0 chỉ vì khách
+        // bấm Lưu ở một form còn có bốn ô khác.
+        if ($email === strtolower((string) ($current['email'] ?? ''))) {
+            return ['ok' => true];
+        }
+
+        if ($email === '' && ($current['phone'] ?? null) === null) {
+            return ['ok' => false, 'error' =>
+                'Cần giữ lại email hoặc số điện thoại để còn đăng nhập được.'];
+        }
+
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['ok' => false, 'error' => 'Email không hợp lệ.'];
+        }
+
+        if ($email !== '') {
+            $taken = Database::fetchValue(
+                'SELECT COUNT(*) FROM users WHERE email = :e AND id <> :id',
+                ['e' => $email, 'id' => $userId]
+            );
+
+            if ((int) $taken > 0) {
+                return ['ok' => false, 'error' => 'Email này đã gắn với một tài khoản khác.'];
+            }
+        }
+
+        try {
+            Database::execute(
+                /* email_verified VỀ 0 cùng lúc: địa chỉ mới là chữ khách vừa
+                   gõ, chưa ai chứng minh nó là của họ. Giữ cờ cũ thì gõ vào
+                   đây email của người khác là chiếm được luôn tài khoản Google
+                   mang địa chỉ đó — xem nhánh nối tài khoản trong
+                   findOrCreateGoogle(). */
+                'UPDATE users SET email = :email, email_verified = 0 WHERE id = :id',
+                [
+                    // Rỗng thành NULL: cột có khoá duy nhất, mà '' thì chỉ một
+                    // tài khoản dùng được.
+                    'email' => $email !== '' ? $email : null,
+                    'id'    => $userId,
+                ]
+            );
+        } catch (Throwable $e) {
+            error_log('[UserModel] Không đổi được email: ' . $e->getMessage());
+
+            return ['ok' => false, 'error' => 'Không lưu được email, vui lòng thử lại.'];
+        }
+
+        return ['ok' => true];
     }
 
     /**
