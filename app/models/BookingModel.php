@@ -153,6 +153,37 @@ class BookingModel extends BaseModel
     /**
      * Lịch hẹn của một khách. Thay cho policy "own appointments read".
      */
+    /**
+     * Số lịch hẹn SẮP TỚI của một khách — con số trên huy hiệu ở cột trái.
+     *
+     * Cùng cách nghĩ với OrderModel::countActive(): huy hiệu đếm việc còn phải
+     * theo dõi, không đếm lịch sử. Ba thứ bị loại:
+     *
+     *   status = 'cancelled'   khách hoặc cửa hàng đã huỷ
+     *   status = 'done'        đã đo xong
+     *   ngày hẹn < hôm nay     quá ngày, dù chưa ai bấm gì
+     *
+     * Vế thứ ba là vế quan trọng nhất và cũng dễ quên nhất: một lịch 'pending'
+     * của tháng trước không bao giờ tự đổi trạng thái — không có tiến trình
+     * nền nào dọn nó, và nhân viên cũng không phải lúc nào cũng vào đánh dấu.
+     * Chỉ dựa vào status thì huy hiệu treo con số đó mãi mãi.
+     *
+     * So theo NGÀY chứ không theo giờ hẹn: lịch 09:00 sáng nay lúc 8 giờ tối
+     * vẫn còn đếm cho tới nửa đêm. Cố tình như vậy — khách tới muộn, hoặc
+     * nhân viên chưa kịp đánh dấu 'done', thì cái lịch ấy vẫn là việc của hôm
+     * nay. CURDATE() để MySQL tự chốt ngày, khỏi lệch múi giờ với PHP.
+     */
+    public static function countUpcoming(string $userId): int
+    {
+        return (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM appointments
+              WHERE user_id = :uid
+                AND status NOT IN (\'done\', \'cancelled\')
+                AND appointment_date >= CURDATE()',
+            ['uid' => $userId]
+        );
+    }
+
     public static function forUser(string $userId): array
     {
         // Kèm tên cơ sở: thẻ lịch hẹn trong trang tài khoản phải nói khách hẹn

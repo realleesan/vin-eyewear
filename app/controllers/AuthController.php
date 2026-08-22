@@ -878,13 +878,31 @@ class AuthController extends BaseController
             $section = self::DEFAULT_SECTION;
         }
 
-        // Số hiện trên huy hiệu ở cột trái. Cột trái vẽ ở CẢ SÁU mục nên câu
-        // đếm này chạy mọi lần — nhưng nó là COUNT(*) có chỉ mục, rẻ hơn nhiều
-        // so với việc nạp cả danh sách chỉ để đếm.
-        //
-        // Chỉ còn MỘT huy hiệu: mục "Ưu đãi của tôi" đã gỡ khỏi trang tài khoản.
+        /*
+         * Số hiện trên huy hiệu ở cột trái. Cột trái vẽ ở CẢ SÁU mục nên hai
+         * câu đếm này chạy mọi lần — nhưng chúng là COUNT(*) có chỉ mục, rẻ
+         * hơn nhiều so với việc nạp cả danh sách chỉ để đếm.
+         *
+         * ─────────────────────────────────────────────────────────────────
+         * HUY HIỆU ĐẾM VIỆC CÒN PHẢI THEO DÕI, KHÔNG ĐẾM LỊCH SỬ
+         *
+         * Trước đây 'don-hang' dùng OrderModel::count() trần, tức đếm MỌI đơn
+         * từng đặt. Con số ấy chỉ tăng, không bao giờ giảm, nên nó không nói
+         * được điều gì đáng làm — khách mua quen vài năm sẽ thấy một số hai
+         * chữ số nằm đó vĩnh viễn.
+         *
+         * Nay cả hai đều đếm thứ còn đang chạy, và cùng biến mất khi xong
+         * việc: đơn hoàn tất hoặc huỷ thì rơi khỏi countActive(); lịch đã đo,
+         * đã huỷ, hoặc quá ngày thì rơi khỏi countUpcoming(). Chi tiết từng
+         * vế nằm ở chú thích của hai hàm đó.
+         *
+         * Mục "Thông số đo mắt" không có huy hiệu: nó là một hồ sơ, không
+         * phải một hàng đợi — đếm "1" ở đó không nói thêm được gì.
+         * ─────────────────────────────────────────────────────────────────
+         */
         $counts = [
-            'don-hang' => OrderModel::count(['user_id' => $userId]),
+            'don-hang' => OrderModel::countActive($userId),
+            'lich-hen' => BookingModel::countUpcoming($userId),
         ];
 
         $this->renderView('auth/profile', [

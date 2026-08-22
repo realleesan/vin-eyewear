@@ -467,6 +467,37 @@ class OrderModel extends BaseModel
      * Đơn của MỘT khách. Thay cho policy "own orders read" của Postgres —
      * điều kiện user_id là thứ duy nhất ngăn khách này xem đơn khách khác.
      */
+    /**
+     * Số đơn CÒN ĐANG CHẠY của một khách — con số trên huy hiệu ở cột trái.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * HUY HIỆU LÀ VIỆC CÒN PHẢI THEO DÕI, KHÔNG PHẢI TỔNG SỐ ĐƠN TỪNG ĐẶT
+     *
+     * Trước đây nó đếm tất, kể cả đơn đã hoàn tất và đã huỷ. Nghĩa là khách
+     * mua quen ba năm mở trang tài khoản ra thấy số 47 nằm cạnh "Đơn hàng của
+     * tôi" — một con số chỉ tăng, không bao giờ giảm, và không nói được điều
+     * gì đáng làm. Huy hiệu kiểu đó người ta học cách phớt lờ sau vài lần.
+     *
+     * Hai trạng thái CUỐI ĐƯỜNG bị loại: 'completed' (hàng đã tới tay) và
+     * 'cancelled' (đơn không còn). Bốn trạng thái còn lại đều là đơn khách
+     * còn phải chờ hoặc còn phải làm gì đó, tức đáng để đếm.
+     *
+     * Không lọc theo payment_status: một đơn COD chưa trả tiền nhưng đang
+     * giao vẫn là đơn đang chạy, mà một đơn đã trả đủ rồi vẫn phải chờ giao.
+     * Trục tiền và trục giao vận độc lập nhau — xem khối chú thích ở
+     * PAYMENT_STATUSES.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public static function countActive(string $userId): int
+    {
+        return (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM orders
+              WHERE user_id = :uid
+                AND status NOT IN (\'completed\', \'cancelled\')',
+            ['uid' => $userId]
+        );
+    }
+
     public static function forUser(string $userId): array
     {
         // Kèm tên cơ sở: thẻ đơn trong trang tài khoản phải nói rõ khách tới
