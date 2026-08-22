@@ -83,6 +83,39 @@
         if (locked) axis.value = '';
     }
 
+    /*
+     * ĐỌC LẠI Ô TÓM TẮT NGAY KHI BẢNG XUẤT HIỆN.
+     *
+     * Bảng số đo nay được máy chủ điền sẵn khi khách bấm Lùi từ bước sau về
+     * (xem $rxRaw trong _layout/buy-modal.php). Nếu chỉ tính tóm tắt lúc có
+     * sự kiện `change` thì cái bảng đầy số ấy lại nằm dưới một ô tóm tắt ghi
+     * "Chưa nhập" — trông như dữ liệu chưa được nhận.
+     *
+     * Bảng có thể tới theo HAI đường: nằm sẵn trong HTML lúc tải trang, hoặc
+     * do buy-flow.js nạp về rồi thay vào .bmodal. MutationObserver bắt được cả
+     * hai; cờ data-rx-doc để một bảng không bị quét hai lần.
+     */
+    function quet(root) {
+        var forms = (root || document).querySelectorAll
+            ? (root || document).querySelectorAll('.brx')
+            : [];
+
+        Array.prototype.forEach.call(forms, function (form) {
+            if (form.getAttribute('data-rx-doc')) return;
+
+            form.setAttribute('data-rx-doc', '1');
+
+            ['od', 'os'].forEach(function (eye) { summarise(form, eye); });
+        });
+    }
+
+    quet(document);
+
+    if (window.MutationObserver) {
+        new MutationObserver(function () { quet(document); })
+            .observe(document.body, { childList: true, subtree: true });
+    }
+
     document.addEventListener('change', function (ev) {
         var sel = ev.target.closest ? ev.target.closest('.brxsel') : null;
         if (!sel) return;

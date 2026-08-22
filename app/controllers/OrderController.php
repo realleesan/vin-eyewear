@@ -85,6 +85,29 @@ class OrderController extends BaseController
         // giỏ hàng thay vì hiện form trống — form trống dễ khiến khách tưởng
         // hệ thống lỗi.
         if ($cart === []) {
+            /*
+             * ─────────────────────────────────────────────────────────────
+             * BẤM LÙI TỪ MÀN QR KHÔNG ĐƯỢC RƠI VÀO GIỎ HÀNG TRỐNG.
+             *
+             * Đặt đơn xong là giỏ được dọn sạch, nên bấm Lùi từ màn quét mã
+             * sẽ về /thanh-toan với giỏ rỗng, và khối dưới đá tiếp về
+             * /gio-hang kèm câu "Giỏ hàng đang trống". Khách vừa đặt xong một
+             * đơn vài triệu đọc được đúng câu đó thì hiểu là đơn đã bay mất —
+             * trong khi đơn nằm nguyên trong CSDL, chỉ chưa trả tiền.
+             *
+             * Còn mã đơn treo trong phiên nghĩa là có một đơn đang chờ chuyển
+             * khoản. Đưa họ về đúng màn QR của nó. flash() ĐỌC LÀ TIÊU, nên
+             * đặt lại ngay — transfer() còn cần nó, và khách bấm F5 ở đó cũng
+             * phải trụ được.
+             * ─────────────────────────────────────────────────────────────
+             */
+            $cho = flash('order_code');
+
+            if ($cho !== null && $cho !== '') {
+                flash('order_code', $cho);
+                redirect('/thanh-toan/chuyen-khoan?ma=' . rawurlencode($cho));
+            }
+
             flash('cart_error', CartController::items() === []
                 ? 'Giỏ hàng đang trống, hãy chọn sản phẩm trước.'
                 : 'Hãy tick chọn ít nhất một sản phẩm để thanh toán.');

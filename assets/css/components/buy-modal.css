@@ -241,6 +241,14 @@
 
 .bopt:hover { border-color: var(--brand); }
 
+/* Phương án đã chọn ở lần trước, khi khách lùi lại bước này để đổi ý. Cùng
+   cặp màu với .blens__item.is-on ở hai bước chọn tròng — ba bước đều là "câu
+   hỏi đã có câu trả lời", nên phải trông giống nhau. */
+.bopt.is-on {
+    border-color: var(--brand);
+    background: #f7e8e2;
+}
+
 .bopt:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;

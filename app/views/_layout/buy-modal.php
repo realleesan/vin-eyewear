@@ -100,6 +100,11 @@ $basePrice = VariantModel::priceOf($product, $variant);
 /* Kiểu tròng và gói chiết suất gộp thành MỘT mẩu để in — xem LensModel::combo.
    $lensType giữ riêng vì bước lùi cần biết kiểu đang chọn có bảng giá không. */
 $lensType    = LensModel::findType($intent['lens_type']);
+
+/* Sáu ô số đo khách đã chọn ở lần đi qua trước — để bấm Lùi về bảng số đo thì
+   nó hiện lại đúng như lúc rời đi, chứ không trắng trơn. Xem khối rx_raw trong
+   CartController::buyStep(). */
+$rxRaw = is_array($intent['rx_raw'] ?? null) ? $intent['rx_raw'] : [];
 $typeTakesPkg = LensModel::typeTakesPackage($lensType);
 $lens        = LensModel::combo($intent['lens_id'], $intent['lens_type']);
 $lensPrice   = (int) ($lens['price'] ?? 0);
@@ -230,7 +235,12 @@ $stepForm = static function (string $buoc): void {
                 <form method="post" action="/gio-hang/chon">
                     <?php $stepForm('hinh-thuc'); ?>
 
-                    <button type="submit" class="bopt" name="che_do" value="gong">
+                    <?php /* Đánh dấu phương án đã chọn ở lượt trước, cùng cách hai
+                             bước chọn tròng đang làm. Khách bấm Lùi về đây phải
+                             thấy mình đang ở đâu, chứ không phải một câu hỏi
+                             trắng như chưa từng trả lời. */ ?>
+                    <button type="submit" name="che_do" value="gong"
+                            class="bopt<?= $intent['mode_set'] && $intent['mode'] === 'frame' ? ' is-on' : '' ?>">
                         <span class="bopt__ico" aria-hidden="true">
                             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                  stroke-width="1.8" stroke-linecap="round">
@@ -251,7 +261,8 @@ $stepForm = static function (string $buoc): void {
                 <form method="post" action="/gio-hang/chon">
                     <?php $stepForm('hinh-thuc'); ?>
 
-                <button type="submit" class="bopt" name="che_do" value="combo">
+                <button type="submit" name="che_do" value="combo"
+                        class="bopt<?= $intent['mode_set'] && $intent['mode'] === 'combo' ? ' is-on' : '' ?>">
                     <span class="bopt__ico bopt__ico--brand" aria-hidden="true">
                         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -364,8 +375,21 @@ $stepForm = static function (string $buoc): void {
                                 ['cyl',  $side . '_cyl',    $cylOptions,  'độ trụ', false],
                                 ['axis', $side . '_axis',   $axisOptions, 'trục',   true],
                             ];
+
+                            /* Lần trước khách chọn gì — xem khối rx_raw trong
+                               CartController. Rỗng ở lần vào đầu tiên. */
+                            $was = $rxRaw[$side] ?? [];
+
+                            /* TRỤC MỞ KHOÁ SẴN khi đã có độ trụ khác 0. Ô bị
+                               disabled thì trình duyệt KHÔNG gửi nó lên, nên
+                               để nguyên khoá là khách bấm Lùi rồi bấm tiếp sẽ
+                               mất trục — đúng cái lỗi đang đi sửa. buy-rx.js
+                               vẫn lo phần đóng/mở về sau. */
+                            $hasCyl = ($was['cyl'] ?? '') !== ''
+                                   && (float) ($was['cyl'] ?? '0') !== 0.0;
                             ?>
                             <?php foreach ($cells as [$kind, $name, $options, $what, $locked]): ?>
+                                <?php $cur = (string) ($was[$kind] ?? ''); ?>
                                 <span class="brxtable__cell">
                                     <label class="sr-only" for="<?= e($side . '-' . $kind) ?>">
                                         <?= e($label) ?> — <?= e($what) ?>
@@ -374,11 +398,14 @@ $stepForm = static function (string $buoc): void {
                                             name="<?= e($name) ?>"
                                             <?php if ($kind === 'cyl'): ?>data-cyl="<?= e($side) ?>"<?php endif; ?>
                                             <?php if ($locked): ?>
-                                                data-axis="<?= e($side) ?>" disabled
+                                                data-axis="<?= e($side) ?>"
+                                                <?= $hasCyl ? '' : 'disabled' ?>
                                             <?php endif; ?>>
                                         <option value="">— Chọn —</option>
                                         <?php foreach ($options as $op): ?>
-                                            <option value="<?= e($op['value']) ?>"><?= e($op['label']) ?></option>
+                                            <option value="<?= e($op['value']) ?>"
+                                                <?= $cur !== '' && $cur === (string) $op['value'] ? 'selected' : '' ?>>
+                                                <?= e($op['label']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </span>
@@ -393,7 +420,14 @@ $stepForm = static function (string $buoc): void {
                    thoại. Không có JS thì <details> vẫn bấm mở được — đó là hành
                    vi sẵn có của trình duyệt, không phải thứ ta tự dựng. */
                 ?>
-                <details class="brxnote">
+                <?php
+                /* MỞ SẴN khi đã có ghi chú: khách bấm Lùi về mà thấy khối ghi
+                   chú gấp lại thì tưởng câu mình gõ đã mất, và gõ lại lần nữa
+                   vào một ô vốn đã có sẵn chữ. */
+                $coGhiChu = trim((string) ($rxRaw['od']['note'] ?? '')) !== ''
+                         || trim((string) ($rxRaw['os']['note'] ?? '')) !== '';
+                ?>
+                <details class="brxnote"<?= $coGhiChu ? ' open' : '' ?>>
                     <summary class="brxnote__toggle">Thêm ghi chú (không bắt buộc)</summary>
 
                     <div class="brxnote__grid">
@@ -402,7 +436,7 @@ $stepForm = static function (string $buoc): void {
                                 <span class="brxnote__cap">Ghi chú <?= e(utf8Lower($label)) ?></span>
                                 <textarea name="<?= e($side) ?>_note" rows="2"
                                           maxlength="<?= LensModel::NOTE_MAX ?>"
-                                          placeholder="Ví dụ: hay mỏi khi đọc lâu"></textarea>
+                                          placeholder="Ví dụ: hay mỏi khi đọc lâu"><?= e($rxRaw[$side]['note'] ?? '') ?></textarea>
                             </label>
                         <?php endforeach; ?>
                     </div>

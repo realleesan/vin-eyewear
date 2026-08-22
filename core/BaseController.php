@@ -172,7 +172,19 @@ class BaseController
                 'quantity'   => max(1, (int) ($intent['quantity'] ?? 1)),
                 'action'     => ($intent['action'] ?? '') === 'buy' ? 'buy' : 'add',
                 'mode'       => ($intent['mode'] ?? '') === 'combo' ? 'combo' : 'frame',
+                /* mode ở trên LUÔN trả về một trong hai giá trị, kể cả khi
+                   khách chưa chọn gì — nên nó không phân biệt được "đã chọn
+                   Chỉ mua gọng" với "chưa trả lời câu nào". Bước 1 cần đúng
+                   phân biệt đó để đánh dấu ô đã chọn khi khách bấm Lùi về. */
+                'mode_set'   => in_array($intent['mode'] ?? null, ['frame', 'combo'], true),
                 'rx'         => $intent['rx'] ?? null,
+                /* Sáu ô số đo nguyên văn — để bảng hiện lại đúng như lúc khách
+                   rời đi khi họ bấm Lùi. Bản chép này CÓ CHỌN LỌC, nên quên
+                   thêm khoá mới vào đây là view không bao giờ thấy nó dù
+                   session đã lưu đủ. Xem rx_raw trong CartController. */
+                'rx_raw'     => is_array($intent['rx_raw'] ?? null)
+                    ? $intent['rx_raw']
+                    : null,
                 'lens_id'    => $intent['lens_id'] ?? null,
                 'lens_type'  => $intent['lens_type'] ?? null,
                 'back'       => safeRedirectPath(

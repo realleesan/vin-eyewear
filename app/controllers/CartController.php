@@ -219,7 +219,8 @@ class CartController extends BaseController
                 // rằng chúng có thể chưa tồn tại.
                 //
                 'mode'       => null,   // 'frame' | 'combo'
-                'rx'         => null,   // chuỗi số đo đã gói
+                'rx'         => null,   // chuỗi số đo đã gói (để hiển thị)
+                'rx_raw'     => null,   // đúng thứ khách đã chọn (để điền lại)
                 'lens_type'  => null,   // kiểu tròng: đơn/hai/đa tròng, mắt đặt
                 'lens_id'    => null,   // gói chiết suất (Mắt đặt thì null)
             ];
@@ -488,7 +489,8 @@ class CartController extends BaseController
                     // của lần chọn trước, nếu khách vừa quay lui đổi ý.
                     $intent['lens_id']   = null;
                     $intent['lens_type'] = null;
-                    $intent['rx'] = null;
+                    $intent['rx']        = null;
+                    $intent['rx_raw']    = null;
                 }
 
                 /*
@@ -551,6 +553,38 @@ class CartController extends BaseController
                 $os = $eye('os');
 
                 $intent['rx'] = LensModel::formatRx($od, $os);
+
+                /*
+                 * ─────────────────────────────────────────────────────────
+                 * GIỮ RIÊNG THỨ KHÁCH ĐÃ CHỌN, KHÔNG CHỈ CHUỖI ĐÃ GÓI
+                 *
+                 * $intent['rx'] là câu chữ để HIỂN THỊ ("MP −2.00 / −0.75 ×
+                 * 180° (hay mỏi khi đọc lâu)"). Nó gộp, làm tròn và chèn dấu
+                 * hiển thị, nên KHÔNG tách ngược ra sáu ô chọn được.
+                 *
+                 * Mà tách ngược là đúng việc phải làm khi khách bấm Lùi từ
+                 * bước sau về đây: hộp thoại được JS nạp lại từ máy chủ (xem
+                 * khối popstate trong buy-flow.js), tức bảng được VẼ LẠI TỪ
+                 * ĐẦU. Máy chủ không nhớ gì thì bảng hiện ra trắng trơn, và
+                 * khách vừa gõ sáu ô xong phải gõ lại từ đầu chỉ vì muốn xem
+                 * lại bước trước.
+                 *
+                 * Nên cất thêm ĐÚNG NGUYÊN VĂN những gì đã gửi lên. Không
+                 * chuẩn hoá, không kiểm tra: đây không phải dữ liệu để tính
+                 * tiền hay ghi đơn — thứ đó là $intent['rx'], đã đi qua
+                 * LensModel rồi. Đây chỉ là để điền lại đúng ô khách đã chọn.
+                 * ─────────────────────────────────────────────────────────
+                 */
+                $intent['rx_raw'] = [];
+
+                foreach (['od', 'os'] as $side) {
+                    $intent['rx_raw'][$side] = [
+                        'sph'  => trim((string) ($_POST[$side] ?? '')),
+                        'cyl'  => trim((string) ($_POST[$side . '_cyl'] ?? '')),
+                        'axis' => trim((string) ($_POST[$side . '_axis'] ?? '')),
+                        'note' => trim((string) ($_POST[$side . '_note'] ?? '')),
+                    ];
+                }
 
                 /* LẦN NHẬP ĐẦU TIÊN thì dựng luôn hồ sơ khúc xạ cho khách đang
                    đăng nhập — cửa hàng có ngay bản ghi để tư vấn thay vì chờ
