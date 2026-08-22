@@ -22,18 +22,12 @@
  *    tôi" đóng/mở bằng <details> — cũng là hành vi y hệt bản thiết kế nhưng
  *    của chính trình duyệt, không cần một dòng JS nào.
  *
- * 2. TÁM MỤC CHỨ KHÔNG SÁU — thêm "Lịch hẹn của tôi" và "Xoá tài khoản".
+ * 2. BẢY MỤC CHỨ KHÔNG SÁU — thêm "Lịch hẹn của tôi".
  *    Trang tài khoản cũ đã có khối lịch hẹn đo mắt và nó đang chạy thật
  *    (BookingModel::forUser). Bản thiết kế không vẽ mục này, nhưng cột điều
  *    hướng của nó là một danh sách lặp (`sc-for navItems`) chứ không phải ba ô
  *    vẽ cứng, nên thêm một mục KHÔNG phá bố cục. Bỏ nó đi thì khách không còn
  *    chỗ nào xem lịch hẹn của mình.
- *
- *    "Xoá tài khoản" thì không phải lựa chọn thiết kế mà là NGHĨA VỤ: luật
- *    bảo vệ dữ liệu cá nhân buộc phải có đường cho khách rút lui, và đường đó
- *    phải nằm trong hồ sơ của chính họ. Nó xếp cuối nhóm "Tài khoản của tôi",
- *    dưới "Đổi mật khẩu" — cùng nhóm cài đặt tài khoản, nhưng là mục cuối
- *    cùng để không ai bấm nhầm khi đang tìm mục khác.
  *
  * 3. SÁU THẺ LỌC ĐƠN HÀNG THÀNH BẢY.
  *    Bản thiết kế liệt kê 5 trạng thái đơn; OrderModel::STATUSES có 6. Dải thẻ
@@ -47,7 +41,7 @@ $initial = utf8Substr($name, 0, 1);
 
 /* Ba mục trong nhóm thu gọn được, và ba mục cấp một còn lại. Thứ tự lấy
    nguyên từ bản thiết kế. */
-$groupKeys = ['ho-so', 'dia-chi', 'mat-khau', 'xoa-tai-khoan'];
+$groupKeys = ['ho-so', 'dia-chi', 'mat-khau'];
 $navKeys   = ['don-hang', 'do-mat', 'lich-hen'];
 
 $inGroup = in_array($section, $groupKeys, true);
@@ -139,14 +133,9 @@ $inGroup = in_array($section, $groupKeys, true);
                     </span>
                 </summary>
 
-                <!-- Mục xoá tài khoản mang thêm .is-danger: nó nằm ngay dưới
-                     "Đổi mật khẩu" trong một danh sách chữ thuần, và không có
-                     gì phân biệt một mục vô hại với mục không hoàn tác được
-                     ngoài chính con chữ. Chú thích để NGOÀI vòng lặp — trong
-                     vòng lặp thì nó in ra bốn lần trong HTML gửi tới khách. -->
                 <div class="acct-nav__sub">
                     <?php foreach ($groupKeys as $key): ?>
-                        <a class="acct-nav__subitem<?= $section === $key ? ' is-current' : '' ?><?= $key === 'xoa-tai-khoan' ? ' is-danger' : '' ?>"
+                        <a class="acct-nav__subitem<?= $section === $key ? ' is-current' : '' ?>"
                            href="/tai-khoan?muc=<?= e($key) ?>"
                            <?= $section === $key ? 'aria-current="page"' : '' ?>>
                             <?= e($key === 'ho-so' ? 'Hồ sơ' : $sections[$key]) ?>

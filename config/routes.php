@@ -113,27 +113,17 @@ return [
     // có JavaScript, và địa chỉ callback do Google gọi tới nên không thể là POST.
     'auth/google'          => 'AuthController@googleStart',
     'auth/google/callback' => 'AuthController@googleCallback',
-    // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": BẢY mục nằm
+    // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": SÁU mục nằm
     // trên CÙNG một đường dẫn, chọn bằng ?muc=... (ho-so · dia-chi · mat-khau
-    // · xoa-tai-khoan · don-hang · do-mat · lich-hen). Không tách thành bảy
-    // route vì cột điều hướng bên trái phải hiện y hệt nhau ở cả bảy — tách ra
-    // là bảy action chỉ khác nhau đúng một biến.
+    // · don-hang · do-mat · lich-hen). Không tách thành năm route vì
+    // cột điều hướng bên trái phải hiện y hệt nhau ở cả sáu — tách ra là sáu
+    // action chỉ khác nhau đúng một biến.
     'tai-khoan'         => 'AuthController@profile',
     'tai-khoan/ho-so'   => 'AuthController@updateProfile',      // POST
     'tai-khoan/khuc-xa' => 'AuthController@updatePrescription', // POST
     'tai-khoan/mat-khau'=> 'AuthController@changePassword',     // POST
     'tai-khoan/anh'     => 'AuthController@updateAvatar',       // POST (multipart)
     'tai-khoan/mua-lai' => 'AuthController@reorder',            // POST
-
-    /*
-     * Khách tự yêu cầu khoá/xoá tài khoản. POST, và cùng lý do như sổ địa chỉ:
-     * qua GET thì một thẻ <img src="/tai-khoan/xoa"> đặt ở bất kỳ trang nào
-     * cũng đủ để xoá tài khoản của người đang đăng nhập.
-     *
-     * XOÁ Ở ĐÂY LÀ XOÁ MỀM — không có dòng nào rời khỏi cơ sở dữ liệu. Xem
-     * khối "XOÁ TÀI KHOẢN" trong UserModel.
-     */
-    'tai-khoan/xoa'     => 'AuthController@deleteAccount',      // POST
 
     // Sổ địa chỉ. Cả ba đều POST: xoá và đổi mặc định qua GET nghĩa là một
     // thẻ <img src="/tai-khoan/dia-chi/xoa?id=..."> trên trang khác cũng xoá

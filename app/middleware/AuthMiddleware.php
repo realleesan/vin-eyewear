@@ -20,9 +20,6 @@ class AuthMiddleware
     /** Đã thử khôi phục từ cookie "ghi nhớ" trong request này chưa. */
     private static bool $rememberChecked = false;
 
-    /** Đã kiểm "tài khoản còn sống không" trong request này chưa. */
-    private static bool $aliveChecked = false;
-
     /**
      * Id người đang đăng nhập, hoặc null.
      *
@@ -33,32 +30,6 @@ class AuthMiddleware
     public static function userId(): ?string
     {
         if (isset($_SESSION['user_id'])) {
-            /*
-             * TÀI KHOẢN ĐÃ YÊU CẦU XOÁ THÌ PHIÊN ĐANG MỞ CŨNG PHẢI CHẾT.
-             *
-             * Xoá tài khoản đăng xuất được cái máy vừa bấm nút và huỷ được mọi
-             * cookie "ghi nhớ" (RememberModel::forgetAllFor), nhưng phiên PHP
-             * trên MÁY KHÁC thì nằm ở file phiên của máy chủ — không có cách
-             * nào tìm và xoá chúng theo user_id. Nên chốt đặt ở đây, tại chỗ
-             * mọi trang đều đi qua: lần tải trang kế tiếp trên chiếc máy đó là
-             * lần cuối nó còn đăng nhập.
-             *
-             * Giá phải trả là MỘT câu COUNT(*) theo khoá chính cho mỗi request
-             * CỦA NGƯỜI ĐÃ ĐĂNG NHẬP — khách vãng lai không có $_SESSION nào
-             * nên không chạm tới. Cùng lối nghĩ với việc vai trò không bao giờ
-             * đọc từ session (xem khối chú thích đầu UserModel): thứ quyết
-             * định quyền truy cập phải hỏi lại nguồn thật.
-             */
-            if (!self::$aliveChecked) {
-                self::$aliveChecked = true;
-
-                if (UserModel::isDeleted($_SESSION['user_id'])) {
-                    self::logout();
-
-                    return null;
-                }
-            }
-
             return $_SESSION['user_id'];
         }
 
@@ -79,19 +50,6 @@ class AuthMiddleware
         if ($userId === null) {
             return null;
         }
-
-        // Cookie còn hạn nhưng tài khoản đã yêu cầu xoá: coi như không có
-        // cookie. forgetAllFor() lúc khoá đã dọn token này rồi, đây là lưới
-        // thứ hai cho token do một request khác cấp sát lúc đó.
-        if (UserModel::isDeleted($userId)) {
-            RememberModel::forget();
-
-            return null;
-        }
-
-        // Phiên dựng từ nhánh này vừa được kiểm ngay trên, khỏi hỏi lại DB ở
-        // lần gọi userId() tiếp theo trong cùng request.
-        self::$aliveChecked = true;
 
         // Đăng nhập lại từ cookie KHÔNG cấp phiên "mới tinh": đánh dấu
         // via_cookie để những thao tác nhạy cảm (đổi mật khẩu, đổi email) có
@@ -194,10 +152,6 @@ class AuthMiddleware
         $_SESSION['logged_at']  = time();
         unset($_SESSION['via_cookie']);
 
-        // Đường vào duy nhất tới đây là attempt()/findOrCreateGoogle(), mà cả
-        // hai đều đã từ chối tài khoản đã khoá.
-        self::$aliveChecked = true;
-
         if ($remember) {
             RememberModel::issue($userId);
         }
@@ -212,12 +166,6 @@ class AuthMiddleware
         // xuất xong tải lại trang là đăng nhập lại ngay — đúng cái người dùng
         // vừa cố tránh, nhất là trên máy dùng chung.
         RememberModel::forget();
-
-        // Phiên tới đây là hết. Đặt lại hai cờ để phần còn lại của request
-        // không dùng kết quả kiểm của phiên vừa bị huỷ — quan trọng khi
-        // logout() được gọi TỪ TRONG userId() ở nhánh tài khoản đã khoá.
-        self::$aliveChecked    = false;
-        self::$rememberChecked = true;   // cookie vừa bị xoá, khỏi đọc lại
 
         // Giữ lại giỏ hàng: khách đăng xuất trên máy chung vẫn nên mất phiên,
         // nhưng giỏ đang chọn dở thì không có lý do gì phải xoá.
