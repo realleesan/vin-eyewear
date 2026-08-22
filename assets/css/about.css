@@ -492,6 +492,17 @@
 
     .about-values__head { gap: 16px; }
 
+    /* Một cột: theo đúng thứ tự HTML thì hai ô ảnh rơi liền nhau (ô mở đầu →
+       01 → ảnh → ảnh → 02 → 03 → 04), mất nhịp xen kẽ ảnh–chữ mà bản thiết kế
+       dựng ở 4 cột. Đẩy tấm thứ hai xuống sau ô 02 để thành 01 → ảnh → 02 →
+       ảnh → 03 → 04.
+
+       `order` chỉ đổi thứ tự NHÌN, không đổi thứ tự đọc của trình đọc màn hình
+       và của phím Tab. Ở đây các ô chỉ có tiêu đề và ảnh, không có gì bấm
+       được, nên lệch này không cắt ai khỏi thao tác nào. */
+    .about-vfig:nth-child(4)   { order: 1; }
+    .about-vcard:nth-child(n+6) { order: 2; }
+
     /* Một cột: ô ảnh không còn ô chữ bên cạnh để lấy chiều cao, để mặc kệ thì
        hai tấm ảnh xếp chồng chiếm gần hai màn hình. */
     .about-vfig img {
