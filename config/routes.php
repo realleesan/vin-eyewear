@@ -96,6 +96,16 @@ return [
     // Màn "Thanh toán QR" của bản thiết kế — chỉ đơn chuyển khoản đi qua.
     'thanh-toan/chuyen-khoan' => 'OrderController@transfer',
     'thanh-toan/hoan-tat' => 'OrderController@success',
+
+    /*
+     * BIÊN NHẬN — chỉ mở được khi TIỀN ĐÃ VỀ THẬT.
+     *
+     * Khác hẳn /thanh-toan/hoan-tat: trang đó nói "đơn đã được ghi nhận" ngay
+     * sau khi đặt, chưa liên quan gì tới tiền. Trang này nói "đã thanh toán",
+     * và câu đó chỉ được phép hiện khi orders.payment_status đã sang 'paid'
+     * hoặc 'deposit_paid' — xem OrderController::paid.
+     */
+    'thanh-toan/thanh-cong' => 'OrderController@paid',
     // Đăng nhập / đăng ký / tài khoản
     'auth'              => 'AuthController@index',
     'auth/dang-nhap'    => 'AuthController@login',      // POST

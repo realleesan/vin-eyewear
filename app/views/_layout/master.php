@@ -169,6 +169,9 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
         // chủ hay .edetail__cta của trang sự kiện. order.css đã bỏ — trang đặt
         // lịch (bộ lớp .b* trong file đó) từ lâu đã có booking.css riêng.
         'order/success'  => ['order-complete.css'],
+        // Biên nhận thanh toán — ở chung file CSS với trang xác nhận đơn, hai
+        // trang là anh em (cùng điểm cuối một luồng, cùng khung rút gọn).
+        'order/paid'     => ['components/bare-shell.css', 'order-complete.css'],
         // Trang đặt lịch nay dựng theo "Vin Eyewear Booking.dc.html" và có bộ
         // lớp riêng (.bk*).
         'booking/index'  => ['booking.css'],

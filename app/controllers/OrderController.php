@@ -586,6 +586,81 @@ class OrderController extends BaseController
     }
 
     /**
+     * Biên nhận thanh toán (/thanh-toan/thanh-cong?ma=<mã đơn>).
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * "THANH TOÁN THÀNH CÔNG" LÀ MỘT LỜI KHẲNG ĐỊNH VỀ TIỀN, KHÔNG PHẢI MỘT
+     * BƯỚC TRONG LUỒNG BẤM NÚT
+     *
+     * Chỗ dễ làm sai nhất của màn này là nối nó vào nút "Tôi đã chuyển khoản"
+     * ở màn QR. Nút đó chỉ là LỜI KHÁCH NÓI — chưa ai đối chiếu sao kê, tiền
+     * có thể chưa rời khỏi tài khoản của họ. Hiện "Thanh toán thành công"
+     * ngay lúc đó là website tự nói dối, và cái giá phải trả rơi vào đúng chỗ
+     * tệ nhất: khách yên tâm chờ hàng, cửa hàng không thấy tiền, hai bên chỉ
+     * phát hiện ra sau vài ngày.
+     *
+     * Nên trang này CHỈ mở khi orders.payment_status đã thật sự sang 'paid'
+     * hoặc 'deposit_paid' — do nhân viên đánh dấu ở /quan-tri/don-hang, hoặc
+     * do webhook SePay tự khớp giao dịch (xem SepayModel::handle).
+     *
+     * Đơn chưa trả tiền thì bị đẩy về màn QR chứ không phải trang lỗi: khách
+     * bấm nhầm vào đây gần như luôn là người đang muốn trả tiền.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public function paid(): void
+    {
+        $userId = self::requireCustomer();
+        $code   = trim((string) ($_GET['ma'] ?? ''));
+
+        if ($code === '') {
+            redirect('/tai-khoan?muc=don-hang');
+        }
+
+        // findByCode kiểm chủ sở hữu — mã của người khác trả về null.
+        $order = OrderModel::findByCode($code, $userId);
+
+        if ($order === null) {
+            redirect('/tai-khoan?muc=don-hang');
+        }
+
+        $status = (string) ($order['payment_status'] ?? 'unpaid');
+
+        if ($status === 'unpaid') {
+            /* Chưa nhận được tiền. Đơn đã huỷ thì không mời trả nữa — về thẻ
+               đơn; còn lại thì đưa thẳng tới màn QR, đó là thứ họ đang cần. */
+            redirect(($order['status'] ?? '') === 'cancelled'
+                ? '/tai-khoan?muc=don-hang&don=' . rawurlencode($code) . '#' . rawurlencode($code)
+                : '/thanh-toan/chuyen-khoan?ma=' . rawurlencode($code));
+        }
+
+        $total   = (int) $order['total'];
+        $deposit = (int) ($order['deposit_amount'] ?? 0);
+
+        $this->renderView('order/paid', [
+            // Khung rút gọn như màn QR: đây là điểm cuối của luồng trả tiền,
+            // mọi liên kết điều hướng đều là một lối để khách đi lạc khỏi nó.
+            'bareLayout' => true,
+            'bareHeader' => '_layout/checkout-header',
+            'pageTitle'  => 'Thanh toán thành công — Vin Eyewear',
+            'metaDesc'   => 'Biên nhận thanh toán đơn hàng tại Vin Eyewear.',
+            'noindex'    => true,
+            'order'      => $order,
+            'items'      => OrderModel::items($order['id']),
+
+            /*
+             * SỐ TIỀN ĐÃ NHẬN — không phải lúc nào cũng bằng tổng đơn.
+             *
+             * Đơn cắt tròng theo độ mới chỉ trả 30% tiền cọc; nói "đã thanh
+             * toán 4.400.000₫" cho một đơn vừa nhận 1.320.000₫ là sai với cả
+             * khách lẫn sổ sách. Xem OrderModel -> khối ĐẶT CỌC.
+             */
+            'isDeposit'  => $status === 'deposit_paid' && $deposit > 0,
+            'paidAmount' => $status === 'deposit_paid' && $deposit > 0 ? $deposit : $total,
+            'remaining'  => $status === 'deposit_paid' && $deposit > 0 ? $total - $deposit : 0,
+        ]);
+    }
+
+    /**
      * Trang xác nhận sau khi đặt hàng thành công.
      */
     public function success(): void

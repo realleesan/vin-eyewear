@@ -542,6 +542,21 @@ $paymentShort  = [
                             <?php endif; ?>
                         <?php endif; ?>
 
+                        <?php
+                        /* BIÊN NHẬN — chỉ hiện khi tiền đã về thật.
+                           Dùng cùng $payState đã tính ở dải đầu thẻ. Đơn đã huỷ
+                           thì không mời xem biên nhận nữa, kể cả khi từng nhận
+                           được tiền: chuyện hoàn tiền là việc nói qua điện
+                           thoại, không phải một trang mừng công. */
+                        ?>
+                        <?php if (in_array($payState, ['paid', 'deposit_paid'], true)
+                                  && $o['status'] !== 'cancelled'): ?>
+                            <a class="acct-btn acct-btn--outline acct-btn--sm"
+                               href="/thanh-toan/thanh-cong?ma=<?= e(rawurlencode($o['code'])) ?>">
+                                Xem biên nhận
+                            </a>
+                        <?php endif; ?>
+
                         <?php if (isset($canStillCancel[$o['status']])): ?>
                             <!--
                                 ĐÂY LÀ CHỖ KHÁCH ĐI TÌM NÚT "HUỶ ĐƠN" — và cố ý

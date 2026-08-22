@@ -515,3 +515,293 @@
     font-size: 12px;
     color: #9a877f;
 }
+
+/* ============================================================
+   BIÊN NHẬN THANH TOÁN — /thanh-toan/thanh-cong
+   Markup: app/views/order/paid.php
+
+   Dựng theo "Thanh toán thành công.dc.html": MỘT CỘT HẸP, khác hẳn trang xác
+   nhận đơn ở trên (ba khối rộng). Chủ ý của bản vẽ: đây là thứ khách liếc một
+   lượt rồi rời đi, không phải hoá đơn để đọc kỹ — hoá đơn đầy đủ nằm ở thẻ đơn
+   trong trang tài khoản.
+
+   Ở CHUNG FILE với trang xác nhận đơn vì hai trang là anh em: cùng là điểm
+   cuối của một luồng, cùng khung rút gọn, và sửa dáng một chỗ thì thường phải
+   ngó cả chỗ kia.
+
+   MÀU và ĐỘ BO theo token của site, không theo con số trong bản vẽ (bo 12–16px)
+   — xem khối "ĐỘ BO GÓC" trong layout.css.
+   ============================================================ */
+
+.opaid {
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 56px var(--page-edge) 88px;
+    box-sizing: border-box;
+}
+
+/* --- Cụm mừng --- */
+
+.opaid__hero { text-align: center; }
+
+/* Dấu tick trong hình tròn XANH LÁ, không phải màu thương hiệu.
+   Đây là chỗ duy nhất trong luồng mua nói "tiền đã về" — xanh lá là quy ước
+   mà không ai phải học, còn đỏ đô của thương hiệu thì trung tính về nghĩa.
+   Vòng sáng bên ngoài dựng bằng box-shadow để không phải thêm một thẻ nữa. */
+.opaid__seal {
+    display: grid;
+    place-items: center;
+    width: 74px;
+    height: 74px;
+    margin: 0 auto;
+    border-radius: var(--radius-round);
+    background: #3d7a4f;
+    color: #fff;
+    box-shadow: 0 0 0 10px #e6f2ea;
+    animation: opaid-pop 0.45s ease-out;
+}
+
+@keyframes opaid-pop {
+    0%   { transform: scale(0.6); opacity: 0; }
+    70%  { transform: scale(1.08); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Người bật "giảm chuyển động" trong hệ điều hành đang nói rõ họ không muốn
+   thứ này. Cùng luật đã áp ở account.css và header.css. */
+@media (prefers-reduced-motion: reduce) {
+    .opaid__seal { animation: none; }
+}
+
+.opaid__title {
+    margin: 26px 0 8px;
+    font-family: var(--font-serif);
+    font-size: clamp(26px, 3.4vw, 32px);
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--ink);
+}
+
+.opaid__lead {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--h-note);
+}
+
+.opaid__lead strong { color: var(--ink); }
+
+/* --- Thẻ biên nhận --- */
+
+.opaid__card {
+    margin-top: 32px;
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    /* Dải tổng tiền có nền riêng, phải bị bo theo góc thẻ */
+    overflow: hidden;
+}
+
+.opaid__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--h-rule);
+}
+
+.opaid__cardtitle {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 16.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.opaid__badge {
+    padding: 5px 12px;
+    border: 1px solid #bcd8c6;
+    border-radius: var(--radius-sm);
+    background: #eef7f0;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #3d6633;
+}
+
+/* Bảng hai cột nhãn · giá trị. <dl> thật chứ không phải hai cột <div>: đây
+   đúng là danh sách cặp thuật ngữ–định nghĩa, và trình đọc màn hình đọc ra
+   được quan hệ đó. */
+.opaid__rows {
+    display: grid;
+    grid-template-columns: 132px minmax(0, 1fr);
+    row-gap: 11px;
+    column-gap: 16px;
+    margin: 0;
+    padding: 20px 24px;
+    font-size: 14px;
+}
+
+.opaid__rows dt { color: var(--h-note); }
+
+.opaid__rows dd {
+    margin: 0;
+    font-weight: 500;
+    color: var(--ink);
+    word-break: break-word;
+}
+
+.opaid__code { font-weight: 600; letter-spacing: 0.02em; }
+
+/* Đơn nhiều món: mỗi món một dòng */
+.opaid__item { display: block; }
+.opaid__item + .opaid__item { margin-top: 5px; }
+
+.opaid__lens {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--h-note);
+}
+
+.opaid__total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    /* Kẻ ĐỨT, đúng bản vẽ: nó nói "phần dưới là kết luận của phần trên", khác
+       với đường kẻ liền vốn chỉ ngăn hai khối ngang hàng nhau. */
+    border-top: 1px dashed var(--h-line);
+    background: var(--h-shell);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.opaid__totalnum {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--brand);
+    white-space: nowrap;
+}
+
+/* Vế thứ hai của đơn đặt cọc — nhạt hơn dòng trên một nấc: nó là số CHƯA trả,
+   không phải số vừa nhận. */
+.opaid__rest {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 24px 16px;
+    background: var(--h-shell);
+    font-size: 13.5px;
+    color: var(--h-note);
+}
+
+.opaid__restnum { font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+/* --- Khối "tiếp theo" --- */
+
+.opaid__next {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-top: 20px;
+    padding: 18px 24px;
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+}
+
+.opaid__arrow {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-round);
+    background: var(--h-blush);
+    color: var(--brand);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.opaid__next p {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.opaid__next strong { color: var(--ink); }
+
+/* --- Hai nút --- */
+
+.opaid__acts {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.opaid__btn {
+    flex: 1;
+    box-sizing: border-box;
+    /* Site gạch chân mọi <a> nằm trong dòng chữ (xem `.ocomp a`). Hai thẻ này
+       là NÚT, không phải liên kết giữa câu — phải nói lại. */
+    text-decoration: none;
+    padding: 15px 24px;
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.opaid__btn:hover,
+.opaid__btn:focus-visible {
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+    color: var(--on-brand);
+    text-decoration: none;
+}
+
+.opaid__btn--ghost {
+    border-color: var(--h-line);
+    background: var(--surface-raised);
+    color: var(--brand);
+}
+
+.opaid__btn--ghost:hover,
+.opaid__btn--ghost:focus-visible {
+    background: var(--surface-raised);
+    border-color: var(--brand);
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.opaid__help {
+    margin: 24px 0 0;
+    font-size: 12.5px;
+    line-height: 1.65;
+    text-align: center;
+    color: var(--h-note);
+}
+
+.opaid__help a { color: var(--ink); font-weight: 600; }
+
+@media (max-width: 560px) {
+    .opaid { padding-top: 40px; }
+
+    /* Nhãn lên dòng riêng: 132px nhãn + giá trị trên điện thoại thì dòng
+       "Sản phẩm" vắt thành bốn dòng. */
+    .opaid__rows { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+    .opaid__rows dt { margin-top: 10px; font-size: 12.5px; }
+    .opaid__rows dt:first-child { margin-top: 0; }
+
+    .opaid__acts { flex-direction: column; }
+}
