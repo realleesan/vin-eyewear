@@ -795,29 +795,70 @@
 
 /* --- Đếm ngược và gửi lại --- */
 
-.aresend { margin-top: 18px; text-align: center; }
-
-.aresend__wait,
-.aresend__ask { margin: 0; font-size: 14px; color: var(--muted); }
-
-.aresend__go {
+.aresend {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
+    margin-top: 18px;
+    text-align: center;
 }
 
-/* Thuộc tính `hidden` của HTML chỉ là `display: none` trong style mặc định của
-   trình duyệt, nên BẤT KỲ dòng display nào của mình cũng đè được nó — thiếu
-   dòng dưới đây thì cụm "Gửi lại" hiện ngay cạnh đồng hồ đếm ngược, tức là
-   mời bấm đúng cái nút máy chủ đang từ chối. */
-.aresend__go[hidden],
-.aresend__wait[hidden] { display: none; }
+.aresend__ask {
+    margin: 0;
+    flex-basis: 100%;
+    font-size: 14px;
+    color: var(--muted);
+}
 
-.aresend__go form { display: contents; }
+.aresend form { display: contents; }
 
-.aresend__ask { flex-basis: 100%; }
+/* NÚT THẬT, có viền — không phải một liên kết chữ như trước.
+
+   Cửa hàng yêu cầu "nút gửi lại", và đúng là nó nên trông như nút: đây là
+   thao tác ĐỔI trạng thái máy chủ (gửi thêm một tin nhắn), khác hẳn
+   "Phương thức khác" bên cạnh vốn chỉ là đi tới một màn khác.
+
+   Nút LUÔN nằm trong trang, khoá lại trong lúc chờ — xem chú thích ở
+   app/views/auth/_signup.php về việc vì sao không giấu nó đi nữa. */
+.aresend__btn {
+    display: inline-flex;
+    align-items: center;
+    /* gap chứ không trông vào dấu cách trong HTML: hộp inline-flex CẮT BỎ
+       khoảng trắng giữa các phần tử con, nên "Gửi lại mã" và "(44s)" dính liền
+       nhau — đúng lỗi đã thấy khi chụp ảnh đối chiếu. */
+    gap: 4px;
+    padding: 9px 18px;
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-sm);
+    background: none;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--brand);
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.aresend__btn:hover:not(:disabled),
+.aresend__btn:focus-visible:not(:disabled) {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* Đang trong 60 giây chờ. Vẫn ĐỌC ĐƯỢC — mờ hẳn thì khách không thấy con số
+   đếm ngược nằm ngay trong nhãn, mà đó chính là thứ đang trả lời "bao giờ
+   thì bấm được". */
+.aresend__btn:disabled {
+    border-color: var(--line-strong);
+    color: var(--muted);
+    cursor: not-allowed;
+}
+
+/* Số giây trong nhãn nút. `hidden` của HTML chỉ là display:none mặc định nên
+   bất kỳ dòng display nào cũng đè được — khai lại cho chắc. */
+.aresend__num[hidden] { display: none; }
 
 /* Nút "Gửi lại" là <button> trong form (nó ĐỔI trạng thái máy chủ nên không
    được là liên kết), còn "Phương thức khác" là <a>. Cho hai thứ trông giống

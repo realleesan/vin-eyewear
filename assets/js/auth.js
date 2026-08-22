@@ -95,22 +95,39 @@
 
     if (resend) {
         var left = parseInt(resend.getAttribute('data-wait'), 10) || 0;
-        var wait = resend.querySelector('.aresend__wait');
         var num  = resend.querySelector('.aresend__num');
-        var go   = resend.querySelector('.aresend__go');
+        var nut  = resend.querySelector('[data-resend]');
 
-        if (left > 0 && wait && num && go) {
+        /*
+         * ĐẾM NGƯỢC NGAY TRONG NHÃN NÚT.
+         *
+         * Bản trước giấu cả cụm gửi lại rồi mới hiện ra khi hết giờ — nghĩa là
+         * không có file này thì nút không bao giờ xuất hiện. Nay nút nằm sẵn
+         * trong HTML và mang `disabled`; việc của đoạn này chỉ là đếm lùi rồi
+         * mở khoá. Không có JS thì tải lại trang là máy chủ tính lại số giây.
+         *
+         * Máy chủ vẫn là nơi chốt thật (AuthController::signupSend) — gỡ
+         * disabled bằng devtools cũng không gửi thêm được mã nào.
+         */
+        if (left > 0 && num && nut) {
+            /* Không kèm dấu cách ở đầu: khoảng hở do `gap` của .aresend__btn
+               lo, và hộp inline-flex cắt bỏ khoảng trắng trong HTML nên dấu
+               cách ở đây cũng vô nghĩa. */
+            var ve = function () { num.textContent = '(' + left + 's)'; };
+
+            ve();
+
             var tick = window.setInterval(function () {
                 left -= 1;
 
                 if (left > 0) {
-                    num.textContent = left;
+                    ve();
                     return;
                 }
 
                 window.clearInterval(tick);
-                wait.hidden = true;
-                go.hidden = false;
+                num.hidden = true;
+                nut.disabled = false;
             }, 1000);
         }
     }

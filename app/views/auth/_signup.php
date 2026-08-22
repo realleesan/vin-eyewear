@@ -187,26 +187,45 @@ $backTo = static function (string $href): void { ?>
         <button type="submit" class="authbtn authbtn--primary">Tiếp theo</button>
     </form>
 
-    <?php /* Đồng hồ đếm ngược do máy chủ phát ra con số đầu tiên, auth.js chỉ
-             đếm lùi cho đỡ phải tải lại trang. Chốt thật nằm ở máy chủ —
-             xem signupSend(). */ ?>
-    <div class="aresend" data-wait="<?= (int) ($signup['wait'] ?? 0) ?>">
-        <p class="aresend__wait"<?= ($signup['wait'] ?? 0) > 0 ? '' : ' hidden' ?>>
-            Vui lòng chờ <span class="aresend__num"><?= (int) ($signup['wait'] ?? 0) ?></span> giây để gửi lại.
-        </p>
+    <?php
+    /* ─────────────────────────────────────────────────────────────────────
+       NÚT GỬI LẠI LUÔN HIỆN, CHỈ KHOÁ LẠI TRONG LÚC CHỜ.
 
-        <div class="aresend__go"<?= ($signup['wait'] ?? 0) > 0 ? ' hidden' : '' ?>>
-            <p class="aresend__ask">Bạn chưa nhận được mã?</p>
-            <form method="post" action="/auth/dang-ky/gui-ma">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                <input type="hidden" name="method" value="<?= e($signup['method'] ?? 'zalo') ?>">
-                <button type="submit" class="aresend__link">Gửi lại</button>
-            </form>
-            <?php if (Otp::hasChoice()): ?>
-                <span class="aresend__or">hoặc thử</span>
-                <a class="aresend__link" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
-            <?php endif; ?>
-        </div>
+       Bản trước giấu hẳn cả cụm này trong 60 giây đầu và chỉ để lại một câu
+       "Vui lòng chờ N giây". Hai vấn đề:
+
+         · Khách không biết là CÓ nút gửi lại. Người không nhận được mã sẽ
+           ngồi nhìn một câu đếm ngược mà không biết chờ xong thì được gì.
+         · Không có JavaScript thì nút KHÔNG BAO GIỜ hiện ra — chính auth.js
+           là thứ duy nhất gỡ thuộc tính hidden. Tắt JS, hoặc file chưa tải
+           xong, là mất hẳn đường gửi lại mã.
+
+       Nay nút nằm đó ngay từ đầu, mang `disabled` kèm số giây đếm ngược ngay
+       trong nhãn. Hết giờ, auth.js mở khoá. Không có JS thì tải lại trang là
+       máy chủ tự tính lại số giây còn — chậm hơn nhưng không kẹt.
+
+       Khoá ở đây CHỈ để đỡ bấm oan: chốt thật nằm ở máy chủ (xem
+       AuthController::signupSend, `if (time() < resend)`), nên gỡ disabled
+       bằng devtools cũng không gửi thêm được mã nào.
+       ───────────────────────────────────────────────────────────────────── */
+    ?>
+    <div class="aresend" data-wait="<?= (int) ($signup['wait'] ?? 0) ?>">
+        <p class="aresend__ask">Bạn chưa nhận được mã?</p>
+
+        <form method="post" action="/auth/dang-ky/gui-ma">
+            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+            <input type="hidden" name="method" value="<?= e($signup['method'] ?? 'zalo') ?>">
+            <button type="submit" class="aresend__btn" data-resend
+                    <?= ($signup['wait'] ?? 0) > 0 ? 'disabled' : '' ?>>
+                Gửi lại mã<span class="aresend__num"<?= ($signup['wait'] ?? 0) > 0 ? '' : ' hidden' ?>>
+                    (<?= (int) ($signup['wait'] ?? 0) ?>s)</span>
+            </button>
+        </form>
+
+        <?php if (Otp::hasChoice()): ?>
+            <span class="aresend__or">hoặc thử</span>
+            <a class="aresend__link" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
+        <?php endif; ?>
     </div>
 
 <?php elseif ($step === 'da-dang-ky'): ?>

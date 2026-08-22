@@ -147,22 +147,24 @@ $backTo = static function (string $href): void { ?>
                 <?php /* Đồng hồ đếm ngược do máy chủ phát ra con số đầu tiên, auth.js
                          chỉ đếm lùi cho đỡ phải tải lại trang. Chốt thật nằm ở máy
                          chủ — xem AuthController::forgotResend(). */ ?>
+                <?php /* Nút luôn hiện, khoá lại trong lúc chờ — cùng cách với
+                         màn đăng ký, xem chú thích đầy đủ ở auth/_signup.php. */ ?>
                 <div class="aresend" data-wait="<?= (int) ($forgot['wait'] ?? 0) ?>">
-                    <p class="aresend__wait"<?= ($forgot['wait'] ?? 0) > 0 ? '' : ' hidden' ?>>
-                        Vui lòng chờ <span class="aresend__num"><?= (int) ($forgot['wait'] ?? 0) ?></span> giây để gửi lại.
-                    </p>
+                    <p class="aresend__ask">Bạn chưa nhận được mã?</p>
 
-                    <div class="aresend__go"<?= ($forgot['wait'] ?? 0) > 0 ? ' hidden' : '' ?>>
-                        <p class="aresend__ask">Bạn chưa nhận được mã?</p>
-                        <form method="post" action="/quen-mat-khau/gui-lai">
-                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                            <button type="submit" class="aresend__link">Gửi lại</button>
-                        </form>
-                        <span class="aresend__or">hoặc gọi</span>
-                        <a class="aresend__link" href="<?= e(config('company.hotline_href')) ?>">
-                            <?= e(config('company.hotline')) ?>
-                        </a>
-                    </div>
+                    <form method="post" action="/quen-mat-khau/gui-lai">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <button type="submit" class="aresend__btn" data-resend
+                                <?= ($forgot['wait'] ?? 0) > 0 ? 'disabled' : '' ?>>
+                            Gửi lại mã<span class="aresend__num"<?= ($forgot['wait'] ?? 0) > 0 ? '' : ' hidden' ?>>
+                                (<?= (int) ($forgot['wait'] ?? 0) ?>s)</span>
+                        </button>
+                    </form>
+
+                    <span class="aresend__or">hoặc gọi</span>
+                    <a class="aresend__link" href="<?= e(config('company.hotline_href')) ?>">
+                        <?= e(config('company.hotline')) ?>
+                    </a>
                 </div>
 
             <?php elseif ($step === 'mat-khau'): ?>
