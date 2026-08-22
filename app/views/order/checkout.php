@@ -464,6 +464,41 @@ $storeId  = $old['storeId'] ?? '';
                     <span class="csum__grand-num"><?= money($total) ?></span>
                 </div>
 
+                <?php if ($needsDeposit): ?>
+                    <?php
+                    /* ══════════ ĐẶT CỌC ══════════
+                       Đơn có cắt tròng theo độ: tròng mài riêng theo số đo của
+                       một người, khách đổi ý thì cửa hàng không bán lại cho ai
+                       khác được. Nên phải cọc trước — cho CẢ COD lẫn chuyển
+                       khoản, đó là chỗ luồng này khác mọi shop khác và cũng là
+                       chỗ dễ khiến khách hiểu nhầm nhất.
+
+                       BA CON SỐ, KHÔNG PHẢI MỘT. "Cọc 30%" đứng một mình vẫn
+                       để lại câu hỏi lớn nhất chưa trả lời: vậy lúc nhận hàng
+                       tôi phải cầm bao nhiêu? Nên in thẳng cả phần còn lại, và
+                       vì cọc tính trên TỔNG nên hai số cộng lại đúng bằng dòng
+                       "Tổng cộng" ngay trên — khách tự kiểm được, không cần tin. */
+                    $deposit = OrderModel::depositFor($total, $depositRate);
+                    ?>
+                    <div class="csum__deposit">
+                        <p class="csum__deposit-why">
+                            Đơn có cắt tròng theo độ nên cần đặt cọc trước
+                            <strong><?= (int) $depositRate ?>%</strong>. Cửa hàng bắt đầu
+                            mài tròng ngay khi nhận được cọc.
+                        </p>
+
+                        <div class="csum__row csum__row--deposit">
+                            <span>Đặt cọc trước (<?= (int) $depositRate ?>%)</span>
+                            <span class="csum__val csum__val--deposit"><?= money($deposit) ?></span>
+                        </div>
+
+                        <div class="csum__row">
+                            <span>Còn lại khi nhận hàng</span>
+                            <span class="csum__val"><?= money($total - $deposit) ?></span>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <?php /* Nhãn đổi theo hình thức thanh toán, đúng bản thiết kế: đơn
                          COD dừng ở "Đặt hàng", đơn chuyển khoản còn một bước quét
                          mã QR nữa nên nói trước điều đó.
@@ -473,7 +508,14 @@ $storeId  = $old['storeId'] ?? '';
                          trang này cố ý không có. Nhãn sai một nhịp thì cùng lắm là
                          thừa hai chữ — bước QR vẫn hiện đúng sau khi đặt. */ ?>
                 <button type="submit" class="csum__cta csum__cta--btn">
-                    <?= $payment === 'cod' ? 'Đặt hàng' : 'Đặt hàng &amp; Thanh toán' ?>
+                    <?php
+                    /* Đơn phải cọc thì SAU KHI đặt vẫn còn màn chuyển khoản,
+                       kể cả khi khách chọn COD — phần cọc không trả cho shipper
+                       được, cửa hàng cần nó trước khi mài tròng. Nên nhãn
+                       "Đặt hàng" trơn ở đây là hứa hụt một bước. */
+                    echo $payment === 'cod' && !$needsDeposit
+                        ? 'Đặt hàng' : 'Đặt hàng &amp; Thanh toán';
+                    ?>
                 </button>
                 <a class="csum__more" href="/gio-hang">← Quay lại giỏ hàng</a>
             </div>

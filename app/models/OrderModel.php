@@ -50,8 +50,12 @@ class OrderModel extends BaseModel
      * đã bấm trả, cổng chưa xác nhận) hoặc 'refunded' chỉ là thêm vào mảng này.
      */
     public const PAYMENT_STATUSES = [
-        'unpaid' => 'Chưa thanh toán',
-        'paid'   => 'Đã thanh toán',
+        'unpaid'       => 'Chưa thanh toán',
+        // Nấc GIỮA, chỉ có ở đơn cắt tròng theo độ: khách đã chuyển 30% và cửa
+        // hàng bắt đầu mài tròng được, nhưng đơn vẫn còn nợ phần còn lại. Thêm
+        // được mà không phải ALTER TABLE đúng như cột VARCHAR đã tính trước.
+        'deposit_paid' => 'Đã đặt cọc',
+        'paid'         => 'Đã thanh toán',
     ];
 
     // ========================================================================
@@ -232,6 +236,14 @@ class OrderModel extends BaseModel
                 }
 
                 $total   = max(0, $subtotal - $discount) + $shippingFee;
+
+                /* ĐẶT CỌC — chốt số tiền NGAY TẠI ĐÂY, trong cùng transaction
+                   với đơn. Từ giây này trở đi nó là con số đã thoả thuận: đổi
+                   'deposit_rate' trong config về sau không được phép làm đơn
+                   này đổi số. Xem depositFor(). */
+                $depositRate   = self::needsDeposit($cart) ? self::depositRate() : 0;
+                $depositAmount = self::depositFor($total, $depositRate);
+
                 $orderId = uuid();
                 $code    = generateCode('DH');
 
@@ -239,11 +251,13 @@ class OrderModel extends BaseModel
                     'INSERT INTO orders
                         (id, code, user_id, customer_name, customer_phone, customer_email,
                          shipping_address, delivery_method, store_id, payment_method, note,
-                         subtotal, shipping_fee, discount, voucher_id, total)
+                         subtotal, shipping_fee, discount, voucher_id, total,
+                         deposit_amount, deposit_rate)
                      VALUES
                         (:id, :code, :user_id, :customer_name, :customer_phone, :customer_email,
                          :shipping_address, :delivery_method, :store_id, :payment_method, :note,
-                         :subtotal, :shipping_fee, :discount, :voucher_id, :total)',
+                         :subtotal, :shipping_fee, :discount, :voucher_id, :total,
+                         :deposit_amount, :deposit_rate)',
                     [
                         'id'               => $orderId,
                         'code'             => $code,
@@ -266,6 +280,8 @@ class OrderModel extends BaseModel
                         'discount'         => $discount,
                         'voucher_id'       => $voucher['id'] ?? null,
                         'total'            => $total,
+                        'deposit_amount'   => $depositAmount,
+                        'deposit_rate'     => $depositRate,
                     ]
                 );
 
@@ -337,6 +353,85 @@ class OrderModel extends BaseModel
         return $subtotal < (int) config('app.free_shipping_threshold')
             ? (int) config('app.shipping_fee')
             : 0;
+    }
+
+    // ========================================================================
+    // ĐẶT CỌC
+    //
+    // Cửa hàng chia luồng mua làm hai, và ranh giới là CÓ CẮT TRÒNG THEO ĐỘ
+    // HAY KHÔNG:
+    //
+    //   chỉ mua gọng     gọng đi kèm tròng demo chưa cắt độ. Hàng có sẵn, ai
+    //                    mua cũng vừa -> bán bình thường, KHÔNG cọc.
+    //   gọng + cắt tròng tròng mài riêng theo số đo của một người, khách đổi
+    //                    ý thì không bán lại cho ai khác được -> cọc 30%.
+    //
+    // Cọc áp cho CẢ COD lẫn chuyển khoản. Cách trả phần CÒN LẠI mới là thứ
+    // khác nhau giữa hai phương thức; phần cọc thì đằng nào cũng phải chuyển
+    // trước khi cửa hàng bắt đầu mài.
+    // ========================================================================
+
+    /**
+     * Đơn này có phải đặt cọc không.
+     *
+     * $cart là các dòng giỏ ĐÃ TICK (CartController::selectedItems). Chỉ cần
+     * MỘT dòng có cắt tròng là cả đơn phải cọc: cửa hàng mài tròng cho đơn đó
+     * ngay khi nhận cọc, không tách được ra thành hai đơn nửa-cọc nửa-không.
+     */
+    public static function needsDeposit(array $cart): bool
+    {
+        foreach ($cart as $row) {
+            if (self::lineNeedsDeposit($row)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Một dòng giỏ có cắt tròng theo độ không.
+     *
+     * Chốt ở `lens_type`, KHÔNG ở `lens_id`: "Mắt đặt" là một kiểu tròng hợp
+     * lệ nhưng chưa có gói chiết suất nào (cửa hàng báo giá sau khi xem thông
+     * số), nên lens_id của nó là null. Chốt nhầm ở lens_id thì đúng loại đơn
+     * khó làm nhất lại là loại duy nhất thoát khỏi việc đặt cọc.
+     *
+     * CartController::add() chỉ điền hai khoá này khi khách đi qua nhánh
+     * mode=trong; nhánh mode=gong để cả hai null.
+     */
+    public static function lineNeedsDeposit(array $row): bool
+    {
+        return ($row['lens_type'] ?? null) !== null;
+    }
+
+    /** Tỷ lệ cọc đang áp, tính theo phần trăm. Kẹp về 0–100 để một giá trị gõ nhầm trong config không sinh ra số tiền vô nghĩa. */
+    public static function depositRate(): int
+    {
+        return max(0, min(100, (int) config('app.deposit_rate', 0)));
+    }
+
+    /**
+     * Tiền cọc của một đơn.
+     *
+     * LÀM TRÒN LÊN (ceil) chứ không xuống: phần lẻ rơi vào tiền cọc thì "còn
+     * lại khi nhận hàng" là số nhỏ hơn, và cả hai vế vẫn cộng đúng bằng tổng.
+     * Làm tròn xuống thì cửa hàng thu thiếu vài đồng trên mỗi đơn — không đáng
+     * kể về tiền, nhưng đối chiếu sổ sách thì lệch là lệch.
+     *
+     * $rate truyền vào chứ không tự đọc config: place() phải dùng ĐÚNG tỷ lệ
+     * mà nó vừa chốt, còn màn hiển thị thì gọi kèm depositRate(). Một hàm đọc
+     * config bên trong sẽ khiến hai chỗ có thể lệch nhau nếu config đổi giữa
+     * chừng.
+     */
+    public static function depositFor(int $total, int $rate): int
+    {
+        if ($rate <= 0 || $total <= 0) {
+            return 0;
+        }
+
+        // Không vượt quá tổng đơn, kể cả khi ai đó đặt tỷ lệ 100.
+        return (int) min($total, ceil($total * $rate / 100));
     }
 
     // ========================================================================

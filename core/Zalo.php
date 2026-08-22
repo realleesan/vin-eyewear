@@ -368,8 +368,14 @@ class Zalo
         /* Câu cuối nhắc việc phải làm — và đây không phải câu xã giao. Khách
            KHÔNG có nút huỷ trên web (xem order()), nên cuộc gọi xác nhận này
            là lần đầu tiên và có thể là lần duy nhất họ nói được là muốn đổi
-           hay bỏ đơn. */
-        $lines[] = 'Vui lòng gọi khách để xác nhận đơn.';
+           hay bỏ đơn.
+
+           Đơn CẮT TRÒNG thì việc phải làm khác hẳn: chưa nhận cọc mà đã mài
+           tròng là mài một cặp không bán lại cho ai được. Nói thẳng ra thứ tự
+           đó, đừng để nhân viên tự nhớ. */
+        $lines[] = (int) ($order['deposit_amount'] ?? 0) > 0
+            ? 'Gọi khách xác nhận đơn. CHỜ NHẬN ĐỦ TIỀN CỌC rồi mới mài tròng.'
+            : 'Vui lòng gọi khách để xác nhận đơn.';
 
         return implode("\n", $lines);
     }
@@ -412,16 +418,31 @@ class Zalo
         return 'Giao tận nơi' . ($address === '' ? '' : ' · ' . $address);
     }
 
-    /** "COD" hoặc "Chuyển khoản (đã nhận tiền / chưa nhận tiền)". */
+    /**
+     * Cách trả tiền, kèm phần đặt cọc nếu có.
+     *
+     * TIỀN CỌC PHẢI NẰM TRONG TIN BÁO. Nhân viên gọi khách xác nhận đơn cắt
+     * tròng cần nói ngay hai câu: chuyển trước bao nhiêu, và cầm bao nhiêu lúc
+     * nhận kính. Bắt họ mở /quan-tri/don-hang ra tra giữa cuộc gọi là đúng cái
+     * việc mà tin báo này sinh ra để khỏi phải làm.
+     */
     private static function orderPayment(array $order): string
     {
-        if ((string) ($order['payment_method'] ?? '') !== 'bank_transfer') {
-            return 'COD — thu khi giao';
+        $method = (string) ($order['payment_method'] ?? '') === 'bank_transfer'
+            ? 'Chuyển khoản — '
+              . ((string) ($order['payment_status'] ?? '') === 'paid'
+                 ? 'đã nhận tiền' : 'CHƯA nhận tiền')
+            : 'COD — thu khi giao';
+
+        $deposit = (int) ($order['deposit_amount'] ?? 0);
+
+        if ($deposit <= 0) {
+            return $method;
         }
 
-        return 'Chuyển khoản — '
-             . ((string) ($order['payment_status'] ?? '') === 'paid'
-                ? 'đã nhận tiền' : 'CHƯA nhận tiền');
+        return $method
+             . ' · CỌC ' . (int) ($order['deposit_rate'] ?? 0) . '% = ' . money($deposit)
+             . ', còn lại ' . money((int) ($order['total'] ?? 0) - $deposit);
     }
 
     /** "Gọng Aviator ×1, Tròng 1.61 ×1" — rỗng thì trả một gạch. */

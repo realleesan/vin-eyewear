@@ -53,6 +53,22 @@ return [
             'icon'  => 'shield',
             'intro' => 'Mọi sản phẩm Vin Eyewear đều được bảo hành chính hãng và hỗ trợ dịch vụ chăm sóc trọn đời.',
             'items' => [
+                /* HAI MỨC BẢO HÀNH CHO KÍNH CẮT THEO ĐỘ, chia theo NƠI LẤY SỐ
+                   ĐO — không phải theo sản phẩm. Cửa hàng chịu trách nhiệm
+                   được tới đâu là tuỳ vào việc số đo do ai lấy: đo tại chỗ thì
+                   đó là số của cửa hàng, còn số khách gửi qua thì cửa hàng chỉ
+                   mài đúng theo con số nhận được.
+
+                   Đặt câu này ĐẦU nhóm vì nó là thứ khác nhau giữa hai luồng
+                   mua, và cũng là thứ khách hỏi trước khi quyết định đo ở đâu. */
+                [
+                    'q' => 'Kính cắt theo độ được bảo hành bao lâu?',
+                    'a' => 'Tuỳ vào nơi lấy số đo. Đo mắt và cắt kính trực tiếp tại cửa hàng: '
+                         . 'bảo hành trọn đời — số đo do chúng tôi lấy nên chúng tôi chịu trách '
+                         . 'nhiệm tới cùng, kể cả khi cần đo lại và làm lại tròng. '
+                         . 'Kính làm theo số đo khách tự gửi: bảo hành 10 ngày kể từ ngày nhận, '
+                         . 'đủ để bạn đeo thử và báo lại nếu chưa êm mắt.',
+                ],
                 [
                     'q' => 'Bảo hành trọn đời gồm những dịch vụ nào?',
                     'a' => 'Nắn chỉnh gọng, siết & thay ốc, thay đệm mũi, vệ sinh kính bằng máy sóng siêu âm — miễn phí trọn đời tại tất cả cơ sở, không giới hạn số lần.',
@@ -91,6 +107,23 @@ return [
                          . 'nút huỷ tự động vì chúng tôi tự vận chuyển và muốn xác nhận trực '
                          . 'tiếp với bạn, tránh trường hợp đơn đã lên đường mà hệ thống báo đã huỷ.',
                 ],
+                /* ĐẶT CỌC — đứng ngay sau câu huỷ đơn vì hai thứ này luôn được
+                   hỏi cùng nhau: "tôi huỷ được không" và "tiền cọc của tôi thì
+                   sao". Trả lời một mà bỏ câu kia là mời một cuộc gọi hotline. */
+                [
+                    'q' => 'Vì sao đơn cắt tròng theo độ phải đặt cọc 30%?',
+                    'a' => 'Tròng được mài riêng theo số đo của bạn nên không dùng lại cho khách '
+                         . 'khác được. Khoản cọc 30% giúp chúng tôi bắt đầu gia công ngay, và áp '
+                         . 'dụng cho cả đơn COD lẫn chuyển khoản. Phần còn lại bạn thanh toán khi '
+                         . 'nhận kính. Đơn chỉ mua gọng (đã kèm tròng demo chưa cắt độ) không cần '
+                         . 'đặt cọc.',
+                ],
+                [
+                    'q' => 'Huỷ đơn rồi thì tiền cọc có được hoàn không?',
+                    'a' => 'Nếu chúng tôi chưa bắt đầu mài tròng, tiền cọc được hoàn đủ. Tròng đã '
+                         . 'vào máy thì khoản cọc bù cho phần vật tư và công đã bỏ ra. Gọi '
+                         . '1900 6868 sớm nhất có thể để chúng tôi kịp dừng.',
+                ],
                 [
                     'q' => 'Điều kiện đổi mẫu trong 7 ngày?',
                     'a' => 'Gọng kính chưa qua sử dụng, không trầy xước, còn nguyên tem và đầy đủ phụ kiện (hộp, khăn lau, túi).',
@@ -106,6 +139,16 @@ return [
                 [
                     'q' => 'Chi phí đổi trả do ai chịu?',
                     'a' => 'Vin Eyewear chịu toàn bộ phí vận chuyển nếu lỗi thuộc về chúng tôi. Trường hợp đổi vì lý do sở thích, khách hàng hỗ trợ phí giao nhận.',
+                ],
+                /* HOÁ ĐƠN ĐỎ — website chưa xuất tự động, cửa hàng làm tay.
+                   Nói ra thay vì im lặng: khách công ty cần hoá đơn để hoàn
+                   thuế sẽ đi tìm nút "xuất hoá đơn" trên trang đơn hàng, không
+                   thấy thì tưởng cửa hàng không xuất được. */
+                [
+                    'q' => 'Tôi cần hoá đơn đỏ để hoàn thuế công ty thì làm thế nào?',
+                    'a' => 'Website chưa xuất hoá đơn điện tử tự động. Bạn nhắn Zalo hoặc gọi '
+                         . '1900 6868 kèm mã đơn và thông tin xuất hoá đơn (tên công ty, mã số '
+                         . 'thuế, địa chỉ), nhân viên sẽ xuất và gửi cho bạn.',
                 ],
             ],
         ],

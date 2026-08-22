@@ -32,6 +32,24 @@ return [
     //   subtotal < 1.000.000đ  ->  thu 30.000đ
     'free_shipping_threshold' => 1000000,
 
+    /*
+     * TỶ LỆ ĐẶT CỌC, tính theo phần trăm tổng đơn.
+     *
+     * CHỈ áp cho đơn có CẮT TRÒNG THEO ĐỘ. Tròng mài riêng theo số đo của một
+     * người thì không bán lại cho ai khác được, nên khách phải cọc trước —
+     * cho cả COD lẫn chuyển khoản. Đơn chỉ mua gọng (gọng kèm tròng demo chưa
+     * cắt độ) không cọc đồng nào.
+     *
+     * Tính trên TỔNG ĐƠN CUỐI CÙNG (tạm tính − giảm giá + phí ship), không
+     * phải trên tiền hàng: nhờ vậy "cọc + còn lại = tổng cộng" đúng bằng phép
+     * cộng, và ba con số trên trang thanh toán khớp nhau mà không cần chú
+     * thích nào.
+     *
+     * Đổi số ở đây KHÔNG đổi tiền cọc của đơn đã đặt: số tiền được chốt vào
+     * `orders.deposit_amount` lúc ghi đơn — xem OrderModel::place().
+     */
+    'deposit_rate' => 30,
+
     // Các khung giờ nhận lịch hẹn — dùng chung cho form đặt lịch và trang
     // quản trị, nên chỉ khai báo một lần tại đây.
     'time_slots' => [

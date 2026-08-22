@@ -291,6 +291,32 @@ $mineHref = $order !== null
                     <span class="ocomp__grandlabel">Tổng cộng</span>
                     <span class="ocomp__grandval"><?= money((int) $order['total']) ?></span>
                 </div>
+
+                <?php
+                /* ĐẶT CỌC — đơn có cắt tròng theo độ.
+                   Trang này là thứ khách CHỤP MÀN HÌNH lại (xem ghi chú đầu
+                   file), nên nó phải mang được cả hai con số: đã/sẽ chuyển bao
+                   nhiêu, và cầm bao nhiêu lúc nhận hàng. Thiếu vế thứ hai thì
+                   tấm ảnh chụp lại không trả lời được câu hỏi duy nhất khách
+                   sẽ hỏi vào ngày nhận kính. */
+                $deposit = (int) ($order['deposit_amount'] ?? 0);
+                ?>
+                <?php if ($deposit > 0): ?>
+                    <div class="ocomp__deposit">
+                        <div class="ocomp__sum">
+                            <span>Đặt cọc <?= (int) ($order['deposit_rate'] ?? 0) ?>% (chuyển trước)</span>
+                            <span class="ocomp__deposit-num"><?= money($deposit) ?></span>
+                        </div>
+                        <div class="ocomp__sum">
+                            <span>Còn lại khi nhận hàng</span>
+                            <span><?= money((int) $order['total'] - $deposit) ?></span>
+                        </div>
+                        <p class="ocomp__deposit-why">
+                            Đơn có cắt tròng theo độ mắt. Cửa hàng bắt đầu mài tròng
+                            ngay khi nhận được tiền cọc.
+                        </p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
 

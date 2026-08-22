@@ -187,8 +187,13 @@ $paymentShort  = [
 
                Đơn COD KHÔNG có nút này: khách không phải làm gì trước khi nhận
                hàng cả. */
+            /* Đơn CẮT TRÒNG chọn COD cũng cần chuyển khoản phần cọc — tiền
+               cọc không trả cho shipper được, cửa hàng cần nó trước khi mài
+               tròng. Nên điều kiện không còn chỉ là "đơn chuyển khoản". */
             $needsTransfer = !$isPaid
-                && $o['payment_method'] === 'bank_transfer'
+                && ($o['payment_method'] === 'bank_transfer'
+                    || (int) ($o['deposit_amount'] ?? 0) > 0)
+                && $o['payment_status'] !== 'deposit_paid'
                 && $o['status'] !== 'cancelled';
             ?>
             <div class="acct-card acct-order" id="<?= e($o['code']) ?>">
@@ -207,9 +212,17 @@ $paymentShort  = [
                            Đơn đã huỷ thì không nói chuyện tiền: "Chưa thanh toán"
                            trên một đơn đã huỷ đọc như còn nợ. */
                         ?>
+                        <?php
+                        /* BA nấc chứ không hai, từ khi có đặt cọc: đơn đã nhận
+                           cọc mà vẫn in "Chưa thanh toán" là nói sai với người
+                           vừa chuyển tiền. Nhãn lấy thẳng từ PAYMENT_STATUSES
+                           để thêm nấc mới sau này không phải sửa view. */
+                        $payState = (string) ($o['payment_status'] ?? 'unpaid');
+                        $payTone  = ['paid' => 'paid', 'deposit_paid' => 'part'][$payState] ?? 'due';
+                        ?>
                         <?php if ($o['status'] !== 'cancelled'): ?>
-                            <span class="acct-badge acct-badge--<?= $isPaid ? 'paid' : 'due' ?>">
-                                <?= $isPaid ? 'Đã thanh toán' : 'Chưa thanh toán' ?>
+                            <span class="acct-badge acct-badge--<?= e($payTone) ?>">
+                                <?= e($payStatuses[$payState] ?? 'Chưa thanh toán') ?>
                             </span>
                         <?php endif; ?>
 
@@ -393,6 +406,26 @@ $paymentShort  = [
                             <span class="acct-order__grand"><?= money((int) $o['total']) ?></span>
                         </div>
 
+                        <?php
+                        /* ĐẶT CỌC — đơn có cắt tròng theo độ.
+                           Đây là chỗ khách quay lại tra "hôm nhận kính phải cầm
+                           bao nhiêu", có khi vài tuần sau khi đặt. Nên in cả hai
+                           vế chứ không chỉ số cọc. */
+                        $deposit = (int) ($o['deposit_amount'] ?? 0);
+                        ?>
+                        <?php if ($deposit > 0): ?>
+                            <div class="acct-order__deposit">
+                                <div class="acct-order__sum">
+                                    <span>Đặt cọc <?= (int) ($o['deposit_rate'] ?? 0) ?>%</span>
+                                    <span class="acct-order__num"><?= money($deposit) ?></span>
+                                </div>
+                                <div class="acct-order__sum">
+                                    <span>Còn lại khi nhận hàng</span>
+                                    <span class="acct-order__num"><?= money((int) $o['total'] - $deposit) ?></span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+
                         <?php if ($needsTransfer && !empty($bank['number'])): ?>
                             <?php
                             /* Khối chuyển khoản nằm NGAY TRONG thẻ đơn, không phải
@@ -417,7 +450,17 @@ $paymentShort  = [
                                     </div>
                                     <div>
                                         <dt>Số tiền</dt>
-                                        <dd><strong><?= money((int) $o['total']) ?></strong></dd>
+                                        <dd>
+                                            <?php /* Đơn cắt tròng chỉ chuyển phần CỌC ở bước
+                                                     này — chuyển cả tổng là thừa tiền và cửa
+                                                     hàng phải hoàn lại. Xem order/transfer.php. */ ?>
+                                            <strong><?= money($deposit > 0 ? $deposit : (int) $o['total']) ?></strong>
+                                            <?php if ($deposit > 0): ?>
+                                                <span class="acct-order__lens">
+                                                    tiền cọc <?= (int) ($o['deposit_rate'] ?? 0) ?>%
+                                                </span>
+                                            <?php endif; ?>
+                                        </dd>
                                     </div>
                                     <div>
                                         <dt>Nội dung</dt>

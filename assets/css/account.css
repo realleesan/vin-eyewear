@@ -933,12 +933,17 @@ select.acct-field__input {
    đơn ngay bên cạnh. Hai thứ đó là hai trục khác nhau; xem
    OrderModel::PAYMENT_STATUSES. */
 .acct-badge--due,
+.acct-badge--part,
 .acct-badge--paid {
     background: var(--surface-raised);
     border: 1px solid currentColor;
 }
 
 .acct-badge--due  { color: #a2701c; }
+/* Nấc GIỮA — đã nhận cọc, còn nợ phần còn lại. Xanh dương chứ không phải một
+   sắc vàng đậm hơn: "đã cọc" là một việc ĐÃ XONG của khách, không phải một
+   mức cảnh báo nặng hơn "chưa thanh toán". */
+.acct-badge--part { color: #3f6a8a; }
 .acct-badge--paid { color: #4d7a3f; }
 
 .acct-badge--wait { background: #fdf3e3; color: #a2701c; }  /* mới */
@@ -1204,6 +1209,18 @@ select.acct-field__input {
 .acct-order__sum--split {
     padding-top: 10px;
     border-top: 1px solid var(--h-card-line);
+}
+
+/* Hai dòng chia đôi tiền của đơn đặt cọc, nằm dưới "Tổng cộng".
+   Nền riêng để đọc ra là PHẦN CỦA tổng, không phải khoản cộng thêm. */
+.acct-order__deposit {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background: #fdf6e8;
 }
 
 .acct-order__sum--grand {

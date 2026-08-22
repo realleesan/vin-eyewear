@@ -48,6 +48,26 @@ $inStock = $variants === []
     ? ProductModel::inStock($product)
     : ($product['status'] === 'in_stock' && $firstInStock !== null);
 
+/*
+ * SỐ LƯỢNG CÒN LẠI — con số thật, không chỉ chữ "Còn hàng".
+ *
+ * Trước bản này trang chỉ nói còn/hết. Khách muốn mua ba cái không có cách nào
+ * biết cửa hàng còn mấy cái, và chỉ phát hiện ra ở trang giỏ khi máy chủ từ
+ * chối tăng số lượng — đúng lúc họ tưởng việc mua đã xong.
+ *
+ * Mặt hàng CÓ biến thể thì cộng tồn của mọi phương án: mỗi phương án hiện tồn
+ * riêng ngay trên nút chọn bên dưới, còn con số ở đây trả lời câu "cửa hàng
+ * này còn bao nhiêu cái tất cả".
+ */
+$stockLeft = $variants === []
+    ? (int) ($product['stock_quantity'] ?? 0)
+    : array_sum(array_map(static fn ($v) => (int) $v['stock_quantity'], $variants));
+
+/* Số nhỏ mới đáng nói. Còn 80 cái mà in "còn 80" thì con số đó không giúp ai
+   quyết định gì, chỉ làm dòng thông tin dài thêm; còn 3 cái thì đó là thứ
+   khách cần biết trước khi chọn số lượng. */
+$stockLow = $inStock && $stockLeft > 0 && $stockLeft <= 10;
+
 $commitments = [
     ['shield', 'Bảo hành 24 tháng',   'Lỗi nhà sản xuất, đổi mới trong 7 ngày đầu'],
     ['eye',    'Đo mắt miễn phí',     'Quy trình khúc xạ chuẩn, kể cả khi không mua'],
@@ -133,7 +153,17 @@ $stars = static function (float $score): string {
                     <a href="#danh-gia"><?= $reviewN ?> đánh giá</a>
                     <span class="pdinfo__dot" aria-hidden="true">·</span>
                     <span class="pdinfo__stock<?= $inStock ? '' : ' is-out' ?>">
-                        <?= $inStock ? 'Còn hàng' : 'Tạm hết hàng' ?>
+                        <?php
+                        /* Ba câu chứ không hai: hết hàng · còn ít (kèm số) · còn
+                           hàng. Xem $stockLow ở đầu file. */
+                        if (!$inStock) {
+                            echo 'Tạm hết hàng';
+                        } elseif ($stockLow) {
+                            echo 'Chỉ còn ' . $stockLeft . ' sản phẩm';
+                        } else {
+                            echo 'Còn hàng · ' . $stockLeft . ' sản phẩm';
+                        }
+                        ?>
                     </span>
                 </div>
             </div>
@@ -171,7 +201,21 @@ $stars = static function (float $score): string {
                                     <span class="pdopt__body">
                                         <span class="pdopt__name"><?= e($v['label']) ?></span>
                                         <span class="pdopt__note">
-                                            <?= $vStock > 0 ? e($v['note'] ?? '') : 'Tạm hết' ?>
+                                            <?php
+                                            /* Ghi chú của phương án, và khi tồn
+                                               xuống thấp thì NHƯỜNG CHỖ cho con
+                                               số: sắp hết là thứ quyết định
+                                               khách bấm hay không, còn ghi chú
+                                               ("dành cho độ cận dưới 4") thì
+                                               đọc lúc nào cũng được. */
+                                            if ($vStock <= 0) {
+                                                echo 'Tạm hết';
+                                            } elseif ($vStock <= 10) {
+                                                echo 'Chỉ còn ' . $vStock;
+                                            } else {
+                                                echo e($v['note'] ?? '');
+                                            }
+                                            ?>
                                         </span>
                                     </span>
                                     <?php if ((int) $v['price_delta'] !== 0): ?>

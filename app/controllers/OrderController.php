@@ -157,6 +157,18 @@ class OrderController extends BaseController
             'voucher'     => $summary['voucher'],
             'shippingFee' => $summary['shippingFee'],
             'threshold'   => (int) config('app.free_shipping_threshold'),
+
+            /*
+             * ĐẶT CỌC — chỉ đơn có cắt tròng theo độ mới phải cọc.
+             *
+             * Truyền cả TỶ LỆ lẫn CỜ có/không, để view khỏi phải tự suy luật
+             * từ các dòng hàng. Số tiền thì view tự tính từ $total của chính
+             * nó: tổng trên màn hình đổi theo hình thức nhận hàng khách đang
+             * chọn (phí ship), nên tính sẵn ở đây sẽ lệch với con số ngay bên
+             * trên nó.
+             */
+            'needsDeposit' => OrderModel::needsDeposit($cart),
+            'depositRate'  => OrderModel::depositRate(),
             'stores'      => StoreModel::active(),
             'old'         => $old,
             'error'       => flash('order_error'),
@@ -330,9 +342,16 @@ class OrderController extends BaseController
          * Không thay trang xác nhận: bấm "Tôi đã chuyển khoản" ở màn QR là
          * sang /thanh-toan/hoan-tat như mọi đơn khác — xem transfer().
          */
-        redirect($data['paymentMethod'] === 'bank_transfer'
-            ? '/thanh-toan/chuyen-khoan'
-            : '/thanh-toan/hoan-tat');
+        /* ĐƠN PHẢI CỌC CŨNG ĐI QUA MÀN QR, KỂ CẢ KHI CHỌN COD.
+           Tiền cọc không trả cho shipper được: cửa hàng cần nó TRƯỚC khi mài
+           tròng, mà shipper thì chỉ xuất hiện lúc giao. Nên đơn cắt tròng
+           chọn COD nghĩa là "phần còn lại trả khi nhận", không phải "không
+           phải chuyển gì cả" — và màn QR ở bước sau thu đúng phần cọc, xem
+           order/transfer.php. */
+        $needsTransfer = $data['paymentMethod'] === 'bank_transfer'
+                      || (int) ($saved['deposit_amount'] ?? 0) > 0;
+
+        redirect($needsTransfer ? '/thanh-toan/chuyen-khoan' : '/thanh-toan/hoan-tat');
     }
 
     /**

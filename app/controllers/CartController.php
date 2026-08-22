@@ -44,8 +44,24 @@
 
 class CartController extends BaseController
 {
-    /** Số lượng tối đa cho một dòng, khớp giới hạn của bản Lovable. */
-    private const MAX_QTY = 20;
+    /**
+     * Trần TUYỆT ĐỐI cho một dòng giỏ — lưới an toàn, KHÔNG phải luật bán hàng.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * TRƯỚC ĐÂY CON SỐ NÀY LÀ 20, VÀ NÓ LÀ LUẬT
+     *
+     * Hồi đó tồn kho chưa được đối chiếu ở đâu cả, nên 20 là cách duy nhất
+     * chặn một đơn vô lý. Nay tồn kho đã được kiểm ở cả ba chỗ — lúc thêm vào
+     * giỏ (VariantModel::inStock), lúc đổi số lượng (setQuantity) và lúc ghi
+     * đơn (VariantModel::reserve) — nên giữ trần 20 chỉ còn một tác dụng: cấm
+     * khách mua 25 cái của mặt hàng đang còn 60 cái trong kho.
+     *
+     * GIỚI HẠN THẬT BÂY GIỜ LÀ TỒN KHO. Con số dưới đây chỉ chặn giá trị vô
+     * nghĩa gửi thẳng lên máy chủ (ô số lượng sửa tay được), để một request
+     * xin 900 triệu cái không phải đi qua truy vấn tồn kho mới bị từ chối.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    private const ABS_MAX_QTY = 999;
 
     // ========================================================================
     // HIỂN THỊ
@@ -86,7 +102,10 @@ class CartController extends BaseController
                không bao giờ cùng lúc: gỡ tay thì đã xoá mã trước khi tới đây. */
             'voucherMsg'  => flash('cart_voucher_msg') ?? $summary['dropped'],
             'voucherOk'   => flash('cart_voucher_ok') !== null,
-            'maxQty'      => self::MAX_QTY,
+            // Trần tuyệt đối, để ô <input type=number> có một `max` hợp lệ khi
+            // tồn kho lớn hơn nó. Giới hạn THẬT của từng dòng là 'stock' trong
+            // lines() — xem cart/index.php.
+            'maxQty'      => self::ABS_MAX_QTY,
             'success'     => flash('cart_success'),
             'error'       => flash('cart_error'),
         ]);
@@ -123,7 +142,7 @@ class CartController extends BaseController
 
         $id        = (string) ($_POST['product_id'] ?? '');
         $variantId = trim((string) ($_POST['variant_id'] ?? '')) ?: null;
-        $qty       = max(1, min(self::MAX_QTY, (int) ($_POST['quantity'] ?? 1)));
+        $qty       = max(1, min(self::ABS_MAX_QTY, (int) ($_POST['quantity'] ?? 1)));
         $mode      = (string) ($_POST['mode'] ?? '');
 
         // Đối chiếu lại với DB: product_id đến từ form, người dùng sửa được.
@@ -301,7 +320,23 @@ class CartController extends BaseController
         }
 
         $current = (int) ($_SESSION['cart'][$key]['quantity'] ?? 0);
-        $new     = min(self::MAX_QTY, $current + $qty);
+
+        /*
+         * KẸP THEO TỒN KHO, không chỉ theo trần tuyệt đối.
+         *
+         * Phép kiểm inStock() ở đầu hàm chỉ hỏi "có đủ $qty cái không" — nó
+         * không biết trong giỏ đã có sẵn mấy cái của đúng dòng này. Tồn 5, bấm
+         * "thêm 3" hai lần thì mỗi lần đều qua được, và giỏ thành 6.
+         *
+         * Trước đây trần 20 che mất chuyện đó với hàng tồn nhiều; từ khi giới
+         * hạn thật là tồn kho thì nó lộ ra ở mọi mặt hàng.
+         *
+         * Kẹp im lặng chứ không báo lỗi: khách vừa bấm "thêm vào giỏ" và món
+         * ĐÃ vào giỏ, chỉ là ít hơn số họ xin. Dòng giỏ hiện ngay số thật cùng
+         * với cảnh báo tồn kho, nên không có gì bị giấu.
+         */
+        $stock   = VariantModel::stockOf($product, $variant);
+        $new     = min(self::ABS_MAX_QTY, $stock, $current + $qty);
 
         // Món vừa bỏ vào giỏ luôn được tick sẵn: khách vừa chủ động thêm nó,
         // bắt họ tick lại một lần nữa là thừa.
@@ -567,7 +602,7 @@ class CartController extends BaseController
             case 'so-luong':
                 $qty = (int) ($intent['quantity'] ?? 1);
                 $intent['quantity'] = ($_POST['act'] ?? '') === 'tang'
-                    ? min(self::MAX_QTY, $qty + 1)
+                    ? min(self::ABS_MAX_QTY, $qty + 1)
                     : max(1, $qty - 1);
                 $next = 'xac-nhan';
                 break;
@@ -631,7 +666,7 @@ class CartController extends BaseController
 
         switch ((string) ($_POST['act'] ?? '')) {
             case 'tang':
-                self::setQuantity($id, $row, min(self::MAX_QTY, $qty + 1));
+                self::setQuantity($id, $row, min(self::ABS_MAX_QTY, $qty + 1));
                 break;
 
             case 'giam':
@@ -667,7 +702,7 @@ class CartController extends BaseController
                     break;
                 }
 
-                self::setQuantity($id, $row, min(self::MAX_QTY, $direct));
+                self::setQuantity($id, $row, min(self::ABS_MAX_QTY, $direct));
         }
 
         redirect('/gio-hang');
@@ -991,7 +1026,7 @@ class CartController extends BaseController
             $lens = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
 
             $unit    = VariantModel::priceOf($product, $variant) + (int) ($lens['price'] ?? 0);
-            $lineQty = min($row['quantity'], self::MAX_QTY);
+            $lineQty = min($row['quantity'], self::ABS_MAX_QTY);
 
             $lines[] = [
                 'key'       => $key,
@@ -1010,7 +1045,7 @@ class CartController extends BaseController
                    Tính ở đây chứ không để view tự so `stock > quantity`: điều
                    kiện thật còn gồm cả products.status, mà một chỗ so thiếu
                    là nút lại mời khách bấm vào chỗ máy chủ sẽ từ chối. */
-                'canAdd'    => $lineQty < self::MAX_QTY
+                'canAdd'    => $lineQty < self::ABS_MAX_QTY
                                && VariantModel::inStock($product, $variant, $lineQty + 1),
             ];
         }
@@ -1065,7 +1100,7 @@ class CartController extends BaseController
             }
 
             $subtotal += VariantModel::priceOf($products[$pid], $variant)
-                       * min($row['quantity'], self::MAX_QTY);
+                       * min($row['quantity'], self::ABS_MAX_QTY);
         }
 
         return $subtotal;

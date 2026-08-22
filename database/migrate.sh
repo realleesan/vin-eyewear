@@ -106,6 +106,7 @@ MIGRATIONS=(
     # 'data': chỉ sổ ghi chặn chạy lại. Chạy lại cũng chỉ báo "check that
     # column/key exists" rồi dừng, không hỏng dữ liệu.
     "2026-08-22-bo-gioi-han-khung-gio.sql|data||"
+    "2026-08-22-dat-coc-cat-trong.sql|column|orders|deposit_amount"
 )
 
 # ---------------------------------------------------------------------------

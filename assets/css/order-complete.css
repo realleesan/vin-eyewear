@@ -383,6 +383,31 @@
     border-top: 1px solid var(--h-card-line);
 }
 
+/* Khối chia đôi tiền của đơn đặt cọc — xem ghi chú trong order/success.php.
+   Nằm DƯỚI dòng "Tổng cộng", tách bằng nền riêng: hai con số này chia tổng ra
+   làm hai lần trả, không phải hai khoản cộng thêm vào tổng. */
+.ocomp__deposit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 16px 18px;
+    border-radius: var(--radius-sm);
+    background: #fdf6e8;
+}
+
+.ocomp__deposit-num {
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.ocomp__deposit-why {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--h-note);
+}
+
 .ocomp__grandlabel {
     font-size: 15px;
     font-weight: 600;

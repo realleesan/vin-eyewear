@@ -35,6 +35,24 @@
 $total = (int) $order['total'];
 
 /*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SỐ TIỀN QUÉT QR KHÔNG PHẢI LÚC NÀO CŨNG LÀ TỔNG ĐƠN
+ *
+ * Đơn có cắt tròng theo độ chỉ thu TIỀN CỌC ở màn này; phần còn lại trả khi
+ * nhận hàng. Nếu để mã QR mang số tổng thì khách quét xong chuyển thừa gấp ba
+ * lần số phải trả bây giờ — và cửa hàng phải hoàn lại, đúng thứ phiền toái mà
+ * cả cơ chế đặt cọc sinh ra để tránh.
+ *
+ * `deposit_amount` là số đã CHỐT lúc ghi đơn, không tính lại từ tỷ lệ trong
+ * config — xem OrderModel::place(). 0 nghĩa là đơn không phải cọc và màn này
+ * thu trọn tổng đơn như trước.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+$deposit = (int) ($order['deposit_amount'] ?? 0);
+$isDeposit = $deposit > 0;
+$due       = $isDeposit ? $deposit : $total;
+
+/*
  * Ảnh QR. `qr_only` là bản chỉ có ô mã, không kèm khung logo ngân hàng — khung
  * 210px của bản thiết kế đã có viền riêng, chồng thêm khung nữa là mã bị bóp
  * nhỏ lại và điện thoại khó bắt.
@@ -44,7 +62,7 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
         'https://img.vietqr.io/image/%s-%s-qr_only.png?amount=%d&addInfo=%s&accountName=%s',
         rawurlencode((string) $bank['bin']),
         rawurlencode((string) $bank['number']),
-        $total,
+        $due,
         rawurlencode($order['code']),
         rawurlencode((string) ($bank['holder'] ?? ''))
     )
@@ -85,7 +103,7 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                     <?php /* alt nói đủ để dùng được khi ảnh không tải: số tiền và
                              nội dung là hai thứ khách phải gõ tay nếu chuyển thủ công. */ ?>
                     <img src="<?= e($qrSrc) ?>" width="178" height="178"
-                         alt="Mã QR chuyển khoản <?= money($total) ?>, nội dung <?= e($order['code']) ?>">
+                         alt="Mã QR chuyển khoản <?= money($due) ?>, nội dung <?= e($order['code']) ?>">
                 <?php else: ?>
                     <p class="coqr__nocode">
                         Chưa có mã QR. Vui lòng chuyển khoản theo thông tin bên dưới.
@@ -122,8 +140,15 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
             <?php endif; ?>
 
             <div class="coqr__amount">
-                <span class="coqr__amountlabel">Số tiền cần chuyển</span>
-                <span class="coqr__amountval"><?= money($total) ?></span>
+                <span class="coqr__amountlabel">
+                    <?= $isDeposit ? 'Đặt cọc cần chuyển ngay' : 'Số tiền cần chuyển' ?>
+                </span>
+                <span class="coqr__amountval"><?= money($due) ?></span>
+                <?php if ($isDeposit): ?>
+                    <span class="coqr__amountrest">
+                        Còn lại <?= money($total - $deposit) ?> trả khi nhận hàng
+                    </span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -171,10 +196,26 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                     <span class="coqr__totallabel">Tổng đơn</span>
                     <span class="coqr__totalval"><?= money($total) ?></span>
                 </div>
+
+                <?php if ($isDeposit): ?>
+                    <?php /* Chia đôi tổng đơn thành hai lần trả. Đặt NGAY DƯỚI
+                             dòng "Tổng đơn" để mắt đọc được phép tính: hai số
+                             này cộng lại đúng bằng số ở trên. */ ?>
+                    <div class="coqr__split">
+                        <div class="coqr__line">
+                            <span>Đặt cọc <?= (int) ($order['deposit_rate'] ?? 0) ?>% — chuyển ngay</span>
+                            <span class="coqr__linesum coqr__linesum--due"><?= money($deposit) ?></span>
+                        </div>
+                        <div class="coqr__line">
+                            <span>Còn lại — trả khi nhận hàng</span>
+                            <span class="coqr__linesum"><?= money($total - $deposit) ?></span>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <a class="coqr__done" href="/thanh-toan/hoan-tat">
-                Tôi đã chuyển khoản <?= money($total) ?> ✓
+                Tôi đã chuyển khoản <?= money($due) ?> ✓
             </a>
 
             <?php /* Bản thiết kế viết "xác nhận tự động sau 1–2 phút". Dự án chưa

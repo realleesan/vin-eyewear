@@ -1,0 +1,46 @@
+-- ============================================================================
+-- NÂNG CẤP 2026-08-22
+-- Đặt cọc 30% cho đơn có cắt tròng theo độ
+--
+-- Cửa hàng chia luồng mua làm hai:
+--
+--   1. CHỈ MUA GỌNG — gọng đi kèm tròng demo chưa cắt độ. Bán như mọi món
+--      hàng có sẵn, KHÔNG đặt cọc.
+--   2. GỌNG + CẮT TRÒNG THEO ĐỘ — tròng mài riêng theo số đo của từng người,
+--      không bán lại cho ai khác được nếu khách đổi ý. Vì thế BẮT BUỘC cọc
+--      trước 30%, áp cho CẢ COD lẫn chuyển khoản.
+--
+-- VÌ SAO LƯU SỐ TIỀN CHỨ KHÔNG TÍNH LẠI TỪ TỶ LỆ
+--
+-- Tỷ lệ 30% nằm ở config/app.php và sẽ có ngày cửa hàng đổi nó. Nếu đơn cũ
+-- tính lại tiền cọc từ tỷ lệ HIỆN TẠI thì một đơn đặt hồi tháng trước sẽ đổi
+-- số tiền cọc ngay khi ai đó sửa config — trong khi khách đã chuyển đúng số
+-- cũ. Tiền đã thoả thuận thì phải đứng yên, cùng lý lẽ với `discount` (số
+-- tiền, không phải phần trăm) và `unit_price` trong order_items.
+--
+-- `deposit_rate` lưu kèm để đối chiếu về sau: biết đơn này chốt ở mức bao
+-- nhiêu phần trăm mà không phải suy ngược từ hai con số.
+--
+-- KHÔNG có cột "đã cọc chưa": việc đó đi bằng `payment_status`, vốn là VARCHAR
+-- và chỉ cần thêm một giá trị 'deposit_paid' vào OrderModel::PAYMENT_STATUSES
+-- — xem chú thích ngay trên cột đó trong schema.sql.
+--
+-- Dùng file này cho cơ sở dữ liệu ĐANG CÓ DỮ LIỆU.
+-- KHÔNG nạp lại database/schema.sql: file đó bắt đầu bằng DROP TABLE và sẽ
+-- xoá sạch đơn hàng, lịch hẹn, tài khoản khách.
+--
+-- Cách chạy
+--   Trên máy:      mysql -u <user> -p <ten_db> < file_này.sql
+--   InfinityFree:  vPanel -> phpMyAdmin -> chọn database -> tab SQL
+--                  -> dán toàn bộ nội dung file -> Go
+--
+-- Chạy hai lần thì MySQL báo "Duplicate column name 'deposit_amount'". Đó là
+-- báo an toàn, không hỏng dữ liệu.
+-- ============================================================================
+
+ALTER TABLE `orders`
+    -- Số tiền khách phải chuyển TRƯỚC. 0 = đơn không phải đặt cọc (chỉ mua
+    -- gọng). Đồng, không thập phân — cùng kiểu với `total`.
+    ADD COLUMN `deposit_amount` BIGINT   NOT NULL DEFAULT 0 AFTER `total`,
+    -- Tỷ lệ đã áp lúc đặt, tính theo phần trăm (30 = 30%). 0 khi không cọc.
+    ADD COLUMN `deposit_rate`   SMALLINT NOT NULL DEFAULT 0 AFTER `deposit_amount`;

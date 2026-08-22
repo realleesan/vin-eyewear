@@ -663,6 +663,22 @@ CREATE TABLE `orders` (
     `voucher_id`       CHAR(36)     NULL,
     -- subtotal + shipping_fee − discount = total
     `total`            BIGINT       NOT NULL DEFAULT 0,
+    /*
+     * ĐẶT CỌC — chỉ đơn CÓ CẮT TRÒNG THEO ĐỘ mới phải cọc.
+     *
+     * Tròng mài riêng theo số đo của một người thì không bán lại cho ai khác
+     * được, nên cửa hàng thu trước 30% cho CẢ đơn COD lẫn đơn chuyển khoản.
+     * Đơn chỉ mua gọng (gọng kèm tròng demo chưa cắt độ) để 0.
+     *
+     * LƯU SỐ TIỀN, không tính lại từ tỷ lệ lúc đọc: tỷ lệ nằm ở config và sẽ
+     * có ngày bị đổi, mà số tiền khách đã chuyển thì phải đứng yên. Cùng lý lẽ
+     * với `discount` ở trên. `deposit_rate` (30 = 30%) lưu kèm để đối chiếu.
+     *
+     * "Đã cọc chưa" thì đi bằng `payment_status` = 'deposit_paid', không cần
+     * cột riêng — xem OrderModel::PAYMENT_STATUSES.
+     */
+    `deposit_amount`   BIGINT       NOT NULL DEFAULT 0,
+    `deposit_rate`     SMALLINT     NOT NULL DEFAULT 0,
     `status`           VARCHAR(32)  NOT NULL DEFAULT 'new',
     `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP

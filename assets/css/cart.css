@@ -490,6 +490,47 @@
     white-space: nowrap;
 }
 
+/* ============================================================
+   KHỐI ĐẶT CỌC — chỉ hiện ở đơn có cắt tròng theo độ
+   Markup: app/views/order/checkout.php
+
+   Tách hẳn khỏi cụm cộng tiền phía trên bằng nền và khung riêng, không phải
+   thêm hai dòng nữa vào cùng danh sách. Lý do: hai con số này KHÔNG cùng loại
+   với "tạm tính · giảm giá · phí ship" — ba dòng kia là các phần cấu thành
+   tổng, còn hai dòng này là CHIA tổng ra làm hai lần trả. Xếp chung một cột
+   thì mắt đọc thành năm dòng cộng dồn và con số cuối trông như cộng sai.
+   ============================================================ */
+
+.csum__deposit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 18px;
+    border: 1px solid var(--k-edge);
+    border-radius: var(--radius-sm);
+    /* Nền vàng nhạt ấm, cùng họ với nền pearl của site: đây là thông tin khách
+       PHẢI đọc trước khi bấm đặt, không phải một dòng tổng kết để liếc qua. */
+    background: #fdf6e8;
+}
+
+.csum__deposit-why {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--k-note);
+}
+
+.csum__deposit-why strong { color: var(--brand); }
+
+/* Dòng tiền cọc — chữ đậm hơn dòng "còn lại" một nấc, vì đây mới là con số
+   khách phải chuyển ngay bây giờ. */
+.csum__row--deposit { color: var(--ink); }
+
+.csum__val--deposit {
+    font-size: 15px;
+    color: var(--brand);
+}
+
 .csum__cta {
     display: block;
     padding: 15px 0;

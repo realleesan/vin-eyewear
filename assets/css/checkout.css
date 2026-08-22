@@ -914,6 +914,31 @@ select.cofield__input {
     color: #b3392b;
 }
 
+/* Dòng "còn lại trả khi nhận hàng" dưới số tiền cọc.
+   Nhỏ và nhạt hơn hẳn con số trên nó: khách đang cầm điện thoại chuẩn bị quét,
+   thứ họ cần đọc đúng lúc này là SỐ PHẢI CHUYỂN BÂY GIỜ. Phần còn lại là để
+   trấn an rằng số kia không phải toàn bộ đơn — chứ không phải để tính toán. */
+.coqr__amountrest {
+    font-size: 12px;
+    line-height: 1.5;
+    text-align: center;
+    color: var(--o-note, #9a877f);
+}
+
+/* Hai dòng chia đôi tổng đơn, nằm dưới dòng "Tổng đơn" ở cột phải.
+   Thụt vào và có đường kẻ mảnh phía trên để đọc ra là PHẦN CỦA tổng đơn, không
+   phải hai khoản cộng thêm. */
+.coqr__split {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--o-rule);
+}
+
+.coqr__linesum--due { color: #b3392b; }
+
 /* --- Cột phải: đơn hàng + xác nhận --- */
 
 .coqr__side {

@@ -936,6 +936,10 @@ class AuthController extends BaseController
                     'items'     => OrderModel::itemsForOrders(array_column($shown, 'id')),
                     'history'   => OrderModel::historyForOrders(array_column($shown, 'id')),
                     'statuses'  => OrderModel::STATUSES,
+                    // Nhãn trạng thái TIỀN. Từ khi có đặt cọc thì nó có ba nấc
+                    // (chưa trả · đã cọc · đã trả đủ), nên view không tự đoán
+                    // được bằng một phép so với 'paid' nữa.
+                    'payStatuses' => OrderModel::PAYMENT_STATUSES,
                     // Tài khoản nhận chuyển khoản — thẻ đơn chuyển khoản chưa
                     // thanh toán in thẳng số tài khoản + mã đơn làm nội dung
                     // chuyển khoản. Xem config/company.php.
