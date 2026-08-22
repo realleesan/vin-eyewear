@@ -709,6 +709,32 @@ function normalizePhone(?string $raw): ?string
 }
 
 /**
+ * Nhóm số điện thoại cho dễ đọc: "0868890120" -> "0868 890 120".
+ *
+ * CHỈ ĐỂ HIỂN THỊ. Số lưu trong CSDL vẫn là chuỗi liền do normalizePhone()
+ * chuẩn hoá — thêm dấu cách vào đó là phá luôn khoá duy nhất trên cột
+ * `profiles.phone` và làm hỏng việc đăng nhập bằng số.
+ *
+ * Vì sao đáng có: số điện thoại là thứ người ta ĐỌC LẠI TỪNG SỐ khi gọi cho
+ * shipper hay đối chiếu với cửa hàng, và mười chữ số dính liền thì mắt phải tự
+ * đếm để không đọc sót. Nhóm 4-3-3 là cách người Việt đọc số di động.
+ *
+ * Thứ không phải 10 chữ số bắt đầu bằng 0 thì TRẢ NGUYÊN VĂN: số cố định, số
+ * có mã quốc gia (+84…), hay chuỗi khách gõ lạ — đoán cách nhóm cho chúng là
+ * dễ tách sai hơn là để yên.
+ */
+function groupPhone(?string $phone): string
+{
+    $phone = trim((string) $phone);
+
+    if (!preg_match('/^0\d{9}$/', $phone)) {
+        return $phone;
+    }
+
+    return substr($phone, 0, 4) . ' ' . substr($phone, 4, 3) . ' ' . substr($phone, 7);
+}
+
+/**
  * Chuỗi người dùng nhập vào ô đăng nhập là số điện thoại hay email?
  *
  * Chỉ cần một phép đoán thô để biết nên tra cột nào; việc kiểm tính hợp lệ

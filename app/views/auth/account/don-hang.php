@@ -313,9 +313,23 @@ $paymentShort  = [
                     <div class="acct-order__block">
                         <span class="acct-order__eyebrow">Thông tin nhận hàng</span>
                         <div class="acct-order__who">
-                            <span class="acct-order__to">
-                                <?= e($o['customer_name']) ?> · <?= e($o['customer_phone']) ?>
-                            </span>
+                            <?php
+                            /* TÊN VÀ SỐ ĐIỆN THOẠI TÁCH HAI DÒNG, không còn
+                               "Tên · Số" dính nhau như trước.
+
+                               Hai thứ đó được đọc trong hai tình huống khác
+                               nhau: tên để khách liếc xem đơn này gửi cho ai,
+                               còn số điện thoại là thứ họ ĐỌC LẠI TỪNG SỐ khi
+                               gọi cho shipper hay đối chiếu với cửa hàng. Dán
+                               liền sau một dấu chấm giữa dòng thì con số phải
+                               tự tách mình ra khỏi cái tên trước đã.
+
+                               Số cũng nhạt và nhỏ hơn tên một nấc: nó là thông
+                               tin phụ của dòng trên, không phải một dòng ngang
+                               hàng. */
+                            ?>
+                            <span class="acct-order__to"><?= e($o['customer_name']) ?></span>
+                            <span class="acct-order__tel"><?= e(groupPhone($o['customer_phone'])) ?></span>
                             <span class="acct-order__addr">
                                 <?php
                                 /* Đơn giao tận nơi có địa chỉ khách; đơn nhận tại

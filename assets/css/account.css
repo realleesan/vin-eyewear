@@ -1123,7 +1123,13 @@ select.acct-field__input {
     /* Hàng thứ hai của lưới là khối chuyển khoản, nó tự vượt cả hai cột bằng
        grid-column:1/-1 — xem .acct-order__pay. */
     grid-template-columns: 1.25fr 1fr;
-    gap: 26px 48px;
+    /* KHE NGANG BẰNG 0: hai cột nay ngăn nhau bằng một ĐƯỜNG KẺ DỌC (xem
+       .acct-order__block + .acct-order__block bên dưới), và đường kẻ phải nằm
+       chính giữa khoảng trống — dùng gap thì nó dính vào mép cột phải. Khoảng
+       cách chuyển sang padding của từng cột.
+
+       Khe DỌC vẫn giữ, cho khối chuyển khoản ở hàng thứ hai. */
+    gap: 26px 0;
     padding: 24px var(--o-pad) 26px;
     /* Nền PEARL, không phải trắng như dải sản phẩm ngay trên. Bản thiết kế tô
        riêng dải này để mắt tách được "hàng bạn mua" khỏi "thông tin đơn" mà
@@ -1143,6 +1149,16 @@ select.acct-field__input {
     flex-direction: column;
     gap: 12px;
     min-width: 0;
+    padding-right: 32px;
+}
+
+/* Đường kẻ dọc ngăn hai cột, vẽ trên cột THỨ HAI.
+   Chọn bằng `+` chứ không phải :last-child: khối chuyển khoản nằm sau hai cột
+   này trong cùng lưới, và :last-child sẽ tô đường kẻ lên nó. */
+.acct-order__block + .acct-order__block {
+    padding-right: 0;
+    padding-left: 32px;
+    border-left: 1px solid var(--h-line);
 }
 
 /* Cột phải xếp khít hơn cột trái: nó là một cột số, không phải văn bản */
@@ -1156,21 +1172,38 @@ select.acct-field__input {
     color: var(--eyebrow);
 }
 
+/* Cụm người nhận: TÊN · SỐ ĐIỆN THOẠI · ĐỊA CHỈ, mỗi thứ một dòng.
+   gap:0 vì ba dòng KHÔNG cách đều nhau — số điện thoại nằm sát tên (nó là
+   thông tin phụ của dòng trên), còn địa chỉ tách hẳn ra thành một ý mới. Từng
+   dòng tự khai margin của mình. */
 .acct-order__who {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 0;
 }
 
 .acct-order__to {
-    font-size: 14px;
+    font-size: 14.5px;
     font-weight: 600;
     color: var(--ink);
 }
 
+/* Nhạt và nhỏ hơn tên một nấc, nằm sát ngay dưới. Giãn chữ nhẹ vì đây là dãy
+   số người ta đọc lại từng con khi gọi cho shipper — xem groupPhone() trong
+   core/helpers.php, chỗ chèn dấu cách nhóm 4-3-3. */
+.acct-order__tel {
+    margin-top: 2px;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    color: var(--a-note);
+}
+
 .acct-order__addr {
-    font-size: 13.5px;
-    line-height: 1.65;
+    /* Tách hẳn khỏi cặp tên/số ở trên — đây là một ý khác, không phải dòng
+       thứ ba của cùng một cụm. */
+    margin-top: 10px;
+    font-size: 14px;
+    line-height: 1.55;
     color: #6f5f5a;
 }
 
@@ -1871,11 +1904,20 @@ select.acct-field__input {
 
     .acct-head__title { font-size: 26px; }
 
-    /* Hai cột chi tiết đơn về một cột. gap 48px là khoảng cách NGANG giữa hai
-       cột, xếp dọc thì nó thành một lỗ trống giữa thẻ — hạ xuống 24px. */
+    /* Hai cột chi tiết đơn về một cột. */
     .acct-order__detail {
         grid-template-columns: minmax(0, 1fr);
         gap: 24px;
+    }
+
+    /* Xếp dọc rồi thì ĐƯỜNG KẺ DỌC ngăn hai cột thành một vạch chạy bên trái
+       khối dưới, không ngăn gì cả — và đệm 32px hai bên thành lề thừa. Trả cả
+       hai về không; khe 24px ở trên đã tách hai khối. */
+    .acct-order__block,
+    .acct-order__block + .acct-order__block {
+        padding-right: 0;
+        padding-left: 0;
+        border-left: 0;
     }
 
     /* Bảng thông số không co được nữa — cho cuộn ngang trong chính nó, không
