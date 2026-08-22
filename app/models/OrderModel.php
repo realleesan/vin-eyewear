@@ -322,8 +322,33 @@ class OrderModel extends BaseModel
                 // dọn khỏi giỏ — dòng khách chưa tick phải được giữ lại.
                 return ['ok' => true, 'code' => $code, 'total' => $total, 'items' => $cart];
             });
+        } catch (PDOException $e) {
+            /*
+             * PHẢI ĐỨNG TRƯỚC RuntimeException — PDOException KẾ THỪA TỪ NÓ.
+             *
+             * Thiếu nhánh này thì mọi lỗi cơ sở dữ liệu rơi vào nhánh "lỗi
+             * nghiệp vụ" ngay dưới, và câu getMessage() của PDO được in NGUYÊN
+             * VĂN lên trang thanh toán cho khách đọc:
+             *
+             *   SQLSTATE[42S22]: Column not found: 1054 Unknown column
+             *   'deposit_amount' in 'INSERT INTO'
+             *
+             * Đã xảy ra thật, trên production, khi cột chưa được thêm. Hai cái
+             * hại: khách nhận một câu tiếng Anh không hiểu gì thay vì lời xin
+             * lỗi, và người ngoài đọc được tên bảng, tên cột của hệ thống.
+             *
+             * Nhánh này KHÔNG bị APP_DEBUG chặn: chuỗi lỗi đi ra bằng đường
+             * "thông điệp cho khách", không phải bằng bộ bắt lỗi chung ở
+             * core/App.php. Nên tắt debug trên production cũng không cứu được —
+             * phải chặn ở đúng đây.
+             */
+            error_log('[OrderModel] Lỗi CSDL khi tạo đơn: ' . $e->getMessage());
+
+            return ['ok' => false, 'error' => 'Không tạo được đơn hàng, vui lòng thử lại.'];
         } catch (RuntimeException $e) {
-            // Lỗi nghiệp vụ — thông điệp viết cho khách đọc
+            // Lỗi nghiệp vụ — thông điệp viết cho khách đọc ("Sản phẩm đã hết
+            // hàng", "Vui lòng chọn cơ sở"…). Chỉ những câu do CHÍNH mã nguồn
+            // này ném ra mới tới được đây, xem nhánh PDOException ở trên.
             return ['ok' => false, 'error' => $e->getMessage()];
         } catch (Throwable $e) {
             error_log('[OrderModel] Không tạo được đơn: ' . $e->getMessage());

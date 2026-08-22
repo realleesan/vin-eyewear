@@ -51,11 +51,16 @@ return [
         'holder'  => 'CONG TY TNHH VIN EYEWEAR VIET NAM',
 
         /*
-         * MÃ NGÂN HÀNG THEO CHUẨN NAPAS (BIN) — dùng để dựng ảnh VietQR ở màn
+         * MÃ NGÂN HÀNG THEO CHUẨN NAPAS (BIN) — dùng để dựng ảnh mã QR ở màn
          * "Thanh toán QR" (/thanh-toan/chuyen-khoan).
          *
          * 970436 = Vietcombank. Đổi ngân hàng thì phải đổi CẢ 'name' và mã này;
-         * tra bảng mã tại https://api.vietqr.io/v2/banks.
+         * tra bảng mã tại https://qr.sepay.vn/banks.json (cột `bin`).
+         *
+         * ⚠️ NGÂN HÀNG PHẢI CÓ `supported: true` TRONG BẢNG ĐÓ. SePay chỉ đọc
+         * được biến động số dư của những ngân hàng nó kết nối; chọn ngân hàng
+         * ngoài danh sách thì mã QR vẫn hiện nhưng đơn không bao giờ tự xác
+         * nhận, và không có gì báo cho ai biết vì sao.
          *
          * Để TRỐNG thì màn QR tự bỏ ảnh mã đi và chỉ in số tài khoản — thà vậy
          * còn hơn hiện một mã QR trỏ sai nơi nhận tiền.

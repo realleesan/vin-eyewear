@@ -55,11 +55,13 @@ $due       = $isDeposit ? $deposit : $total;
 /*
  * Ảnh QR — dựng bởi qr.sepay.vn.
  *
- * VÌ SAO ĐỔI TỪ img.vietqr.io SANG ĐÂY: hai bên cho ra cùng một mã VietQR, quét
- * bằng app ngân hàng nào cũng như nhau. Khác ở chỗ SePay còn là bên ĐỌC biến
- * động số dư của chính tài khoản này và báo về webhook (xem config/sepay.php).
- * Dùng một nhà cho cả hai đầu thì lúc đối chiếu "mã QR bảo chuyển X, webhook
- * báo về Y" không phải hỏi hai nơi.
+ * MỘT NHÀ CHO CẢ HAI ĐẦU. SePay vừa dựng ảnh mã QR, vừa là bên ĐỌC biến động
+ * số dư của chính tài khoản này rồi báo về webhook (xem config/sepay.php). Nhờ
+ * vậy lúc đối chiếu "mã QR bảo chuyển X, webhook báo về Y" không phải hỏi hai
+ * nơi — và cũng không có nhà cung cấp thứ hai nào để mà chết riêng.
+ *
+ * Mã sinh ra vẫn theo chuẩn NAPAS nên app ngân hàng nào cũng quét được; chuẩn
+ * đó là của NAPAS, không phải của một hãng nào.
  *
  * `template=qronly` = chỉ ô mã, không kèm khung logo ngân hàng — khung 210px
  * của bản thiết kế đã có viền riêng, chồng thêm khung nữa là mã bị bóp nhỏ lại
