@@ -413,6 +413,33 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
         </nav>
 
         <div class="mobile-nav__foot">
+            <?php
+            /*
+             * ĐỔI NGÔN NGỮ — bản cho menu trượt.
+             *
+             * Dưới 700px nút "VI" ở đầu trang bị ẩn: cụm tác vụ rộng cố định
+             * 247px, wordmark chỉ còn phần thừa lại nên bị cắt còn "Vin E…"
+             * (xem khối cuối components/header.css). Nút ngôn ngữ là thứ DUY
+             * NHẤT trong cụm chưa có lối đi khác, nên nó chuyển vào đây chứ
+             * không bị bỏ đi.
+             *
+             * $lang và $back tính ở cụm .header-actions phía trên — cùng một
+             * file nên vẫn còn trong phạm vi.
+             */
+            ?>
+            <div class="mobile-nav__lang">
+                <span class="mobile-nav__langlabel"><?= e(t('lang.label')) ?></span>
+                <div class="mobile-nav__langopts">
+                    <?php foreach (['vi' => t('lang.vi'), 'en' => t('lang.en')] as $code => $label): ?>
+                        <a class="mobile-nav__langopt<?= $lang === $code ? ' is-on' : '' ?>"
+                           lang="<?= e($code) ?>"
+                           rel="nofollow"
+                           <?= $lang === $code ? 'aria-current="true"' : '' ?>
+                           href="/ngon-ngu?<?= e(http_build_query(['lang' => $code, 'redirect' => $back])) ?>"><?= e($label) ?></a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
             <a href="/dat-lich" class="btn-primary">Đặt Lịch Đo Mắt</a>
             <a href="<?= e($company['hotline_href']) ?>" class="btn-outline">Gọi <?= e($company['hotline']) ?></a>
         </div>
