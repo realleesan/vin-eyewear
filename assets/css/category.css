@@ -606,8 +606,8 @@
 .catsort__field { position: relative; }
 
 /* appearance:none để bỏ mũi tên mặc định của trình duyệt — bản thiết kế vẽ
-   mũi tên riêng — một SVG chữ V màu thương hiệu, đặt đè lên bằng
-   .catsort__caret. Cùng hình với nút đổi ngôn ngữ trên thanh nav.
+   mũi tên riêng — một SVG chữ V đặt đè lên bằng .catsort__caret. Cùng hình
+   và cùng màu với nút đổi ngôn ngữ trên thanh nav.
 
    BO GÓC THEO THẺ SẢN PHẨM (--radius, 6px) chứ không phải --radius-sm (4px)
    của nút: ô này là một KHỐI ngang hàng với lưới thẻ ngay dưới nó, không phải
@@ -634,9 +634,16 @@
     outline-offset: -2px;
 }
 
-/* Chữ V dựng bằng SVG, cùng hình với .hpop__chevron ở nút đổi ngôn ngữ —
-   11px, nét 2.2, bo đầu tròn. Hai chỗ cùng nói "bấm vào đây để xổ danh sách"
-   thì phải cùng một hình. */
+/* Chữ V dựng bằng SVG, cùng HÌNH và cùng MÀU với .hpop__chevron ở nút đổi
+   ngôn ngữ — 11px, nét 2.2, bo đầu tròn, màu #4a3b38.
+
+   #4a3b38 viết thẳng chứ không dùng token: đó chính là con số .hpop__trigger
+   --text đang dùng, và nó là một sắc nâu riêng của thanh nav, không trùng
+   token nào. Đổi màu nút ngôn ngữ thì phải sửa cả hai chỗ — ghi ra đây để lần
+   sau còn tìm thấy.
+
+   Đỏ thương hiệu để dành cho lúc RÊ VÀO, y như nút ngôn ngữ: mũi tên đứng yên
+   thì là một dấu hiệu tĩnh, đổi màu khi chuột tới mới là lời mời bấm. */
 .catsort__caret {
     position: absolute;
     top: 50%;
@@ -645,8 +652,14 @@
     pointer-events: none;
     width: 11px;
     height: 11px;
-    color: var(--brand);
+    color: #4a3b38;
+    transition: color 0.2s;
 }
+
+/* Bám theo cả ô, không riêng thẻ <select>: mũi tên có pointer-events:none nên
+   chính nó không bao giờ nhận :hover. :focus-within để bàn phím cũng thấy. */
+.catsort__field:hover .catsort__caret,
+.catsort__field:focus-within .catsort__caret { color: var(--brand); }
 
 /* ─────────────────────────────────────────────────────────────────────────
    BO GÓC CẢ PHẦN XỔ XUỐNG.
