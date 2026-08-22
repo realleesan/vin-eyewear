@@ -636,40 +636,20 @@ $paymentShort  = [
                     <?php endif; ?>
 
                     <div class="acct-order__acts">
-                        <?php if ($needsTransfer && !empty($bank['number'])): ?>
-                            <?php
-                            /*
-                                ĐI THẲNG TỚI MÀN QUÉT QR.
+                        <?php
+                        /* KHÔNG CÒN NÚT "QUÉT MÃ QR" Ở ĐÂY.
 
-                                Trước đây nút này ghi "Xem thông tin chuyển khoản"
-                                và chỉ mở phần chi tiết ra rồi cuộn tới khối ngân
-                                hàng — tức là làm ĐÚNG việc mà nút "Xem chi tiết"
-                                ngay cạnh nó đã làm, chỉ thêm một cú cuộn.
+                           Nó từng đứng đúng chỗ này để rút ngắn đường tới chỗ
+                           trả tiền. Nhưng khối chuyển khoản bên trong phần chi
+                           tiết ĐÃ CÓ một nút y hệt, cùng nhãn, cùng đích — hai
+                           nút giống nhau trong một thẻ thì khách phải dừng lại
+                           đoán xem chúng có khác gì nhau không.
 
-                                Cú cuộn đó từng có lý khi khối chuyển khoản nằm
-                                lọt trong cột tóm tắt bên phải. Từ lần dựng lại
-                                theo bản thiết kế, khối đó chiếm ngang cả hai cột
-                                và có nền vàng riêng — mở chi tiết ra là thấy
-                                ngay, không còn gì để cuộn tới.
-
-                                Cái giá của việc giữ nó: khách phải bấm HAI lần
-                                mới tới chỗ trả tiền (nút này mở panel, rồi nút
-                                "Quét mã QR" bên trong mới đi). Nay một lần.
-
-                                Số tài khoản dạng chữ vẫn ở trong phần chi tiết
-                                cho ai muốn chép tay — mở bằng "Xem chi tiết" như
-                                mọi thông tin khác của đơn.
-
-                                (Chú thích PHP chứ không phải <!-- -->: khối này
-                                nằm trong vòng lặp thẻ đơn, HTML comment sẽ được
-                                gửi xuống trình duyệt một lần cho MỖI đơn.)
-                            */
-                            ?>
-                            <a class="acct-btn acct-btn--primary acct-btn--sm"
-                               href="/thanh-toan/chuyen-khoan?ma=<?= e(rawurlencode($o['code'])) ?>">
-                                Quét mã QR để thanh toán
-                            </a>
-                        <?php elseif (isset($primaryLabels[$o['status']])): ?>
+                           Nút còn lại nằm ở dải chân của khối chuyển khoản,
+                           tức ngay dưới bốn ô số tài khoản — đúng chỗ khách
+                           đang nhìn khi họ quyết định quét mã thay vì gõ tay. */
+                        ?>
+                        <?php if (isset($primaryLabels[$o['status']])): ?>
                             <?php if ($primaryLabels[$o['status']] === 'Mua lại'): ?>
                                 <form method="post" action="/tai-khoan/mua-lai">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
@@ -737,7 +717,17 @@ $paymentShort  = [
                             </a>
                         <?php endif; ?>
 
-                        <a class="acct-btn acct-btn--outline acct-btn--sm acct-order__more"
+                        <?php
+                        /* NÚT ĐẶC MÀU THƯƠNG HIỆU, không còn viền rỗng.
+
+                           Từ khi nút "Quét mã QR" rời khỏi chân thẻ, hàng này
+                           toàn nút viền rỗng và một liên kết chữ — không có gì
+                           nói cho mắt biết đâu là việc chính. Mà "Xem chi tiết"
+                           ĐÚNG LÀ việc chính ở đây: mọi thứ khách cần (địa chỉ
+                           nhận, tóm tắt tiền, số tài khoản, nút quét QR) đều
+                           nằm sau nó. */
+                        ?>
+                        <a class="acct-btn acct-btn--primary acct-btn--sm acct-order__more"
                            href="<?= $isOpen ? $closeHref : $openHref ?>"
                            aria-expanded="<?= $isOpen ? 'true' : 'false' ?>"
                            aria-controls="<?= $detailId ?>"
