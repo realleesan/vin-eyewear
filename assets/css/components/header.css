@@ -286,6 +286,9 @@
     right: 3px;
     display: grid;
     place-items: center;
+    /* 16px chứ không 20px như ba huy hiệu số còn lại: cái này nằm ĐÈ LÊN
+       icon giỏ hàng, to hơn là che mất chính cái icon nó đang chú thích.
+       Dáng thì vẫn một kiểu — xem khối "HUY HIỆU SỐ" trong account.css. */
     min-width: 16px;
     height: 16px;
     padding-inline: 4px;
