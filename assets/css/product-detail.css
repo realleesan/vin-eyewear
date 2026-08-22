@@ -738,7 +738,15 @@
    ============================================================ */
 
 .pdrelated { padding: 64px 0 96px; }
+
 .pdrelated .pdcard__title { margin-bottom: 24px; }
+
+/* Khoảng thở trước chân trang nằm ở đệm dưới của .pdrelated, mà khối đó chỉ
+   in ra khi sản phẩm CÓ hàng liên quan (xem cuối product/detail.php) — .pd
+   để đệm dưới bằng 0. Chân trang không chừa margin-top ở trang này
+   (components/footer.css), nên sản phẩm không có hàng liên quan sẽ có khối
+   đánh giá dính thẳng vào mảng đỏ. Nhận lấy đúng con số đó khi thiếu. */
+.pd:not(:has(.pdrelated)) { padding-bottom: 96px; }
 
 /* ============================================================
    MỐC GÃY
@@ -766,6 +774,7 @@
 
     .pdbottom  { padding-top: 40px; }
     .pdrelated { padding: 40px 0 64px; }
+    .pd:not(:has(.pdrelated)) { padding-bottom: 64px; }
 }
 
 @media (max-width: 640px) {
