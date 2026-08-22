@@ -1053,7 +1053,11 @@ class CartController extends BaseController
                 'key'      => $key,
                 'name'     => $product['name'],
                 'slug'     => $product['slug'],
-                'image'    => ProductModel::image($product),
+                /* Bản NHỎ: ô này hiện ở 40px, ảnh gốc 800×800 nặng gấp
+                   mười lăm lần mà không thêm một chi tiết nào nhìn thấy
+                   được. Không có bản nhỏ thì thumb() tự lui về ảnh gốc —
+                   xem ProductModel::thumb(). */
+                'image'    => ProductModel::thumb($product),
                 'quantity' => (int) $row['quantity'],
                 // Giá MỘT chiếc đã gồm tròng, giống dòng trong trang giỏ hàng.
                 'price'    => VariantModel::priceOf($product, $variant)

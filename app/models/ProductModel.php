@@ -578,6 +578,53 @@ class ProductModel extends BaseModel
     }
 
     /**
+     * Đường dẫn ẢNH NHỎ của một sản phẩm — dùng cho ô 40–48px.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * CÓ THÌ DÙNG, KHÔNG CÓ THÌ TRẢ ẢNH GỐC
+     *
+     * Ảnh nhỏ do tools/thumbnails.php sinh sẵn và đi theo git. Nhưng cột
+     * `images` cho phép dán ĐƯỜNG DẪN BẤT KỲ — nhân viên vừa thêm một ảnh
+     * mới mà chưa ai chạy lại script thì chưa có bản nhỏ, và một ảnh trỏ ra
+     * miền khác thì không bao giờ có.
+     *
+     * Cả hai trường hợp đều lui về ảnh gốc: nặng hơn, nhưng vẫn HIỆN. Ô ảnh
+     * vỡ trong bảng xổ giỏ hàng tệ hơn nhiều so với việc tải thừa 30KB.
+     *
+     * is_file() ở đây rẻ: PHP có bộ nhớ đệm stat, và bảng xổ chỉ hỏi 5 lần.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public static function thumb(array $product): string
+    {
+        return self::thumbOf(self::image($product));
+    }
+
+    /**
+     * Bản nhỏ của một đường dẫn ảnh bất kỳ. Tách riêng để chỗ nào có sẵn
+     * đường dẫn (không có cả mảng sản phẩm) vẫn dùng được.
+     */
+    public static function thumbOf(string $src): string
+    {
+        $goc = '/assets/images/';
+
+        // Đường dẫn ngoài (http…), hoặc thư mục khác — không có bản nhỏ.
+        if (!str_starts_with($src, $goc)) {
+            return $src;
+        }
+
+        $rel = substr($src, strlen($goc));
+
+        // Đã là ảnh nhỏ rồi thì thôi, đừng lồng thumbs/thumbs/.
+        if (str_starts_with($rel, 'thumbs/')) {
+            return $src;
+        }
+
+        $nho = $goc . 'thumbs/' . $rel;
+
+        return is_file(ROOT_PATH . $nho) ? $nho : $src;
+    }
+
+    /**
      * Sản phẩm này có ảnh thật chưa?
      *
      * image() ở trên luôn trả về MỘT đường dẫn, và khi thiếu ảnh thì nó mượn

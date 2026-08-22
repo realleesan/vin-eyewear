@@ -92,8 +92,19 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
                     <li>
                         <a class="cartpop__row" href="/san-pham/<?= e(rawurlencode($line['slug'])) ?>">
                             <span class="cartpop__thumb">
+                                <?php
+                                /* onerror ẩn thẻ ảnh đi để lộ nền của ô — ô
+                                   trống trông như "chưa có ảnh", còn biểu
+                                   tượng ảnh vỡ của trình duyệt trông như
+                                   website hỏng. Cần vì đường dẫn ảnh do nhân
+                                   viên gõ tay vào trang quản trị: gõ nhầm một
+                                   ký tự, hoặc ảnh ở miền ngoài bị gỡ, là ra
+                                   đúng cảnh đó. */
+                                ?>
                                 <?php if ($line['image'] !== ''): ?>
-                                    <img src="<?= e($line['image']) ?>" alt="" loading="lazy" width="40" height="40">
+                                    <img src="<?= e($line['image']) ?>" alt="" loading="lazy"
+                                         width="40" height="40"
+                                         onerror="this.style.display='none'">
                                 <?php endif; ?>
                             </span>
 
