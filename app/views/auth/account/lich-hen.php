@@ -166,8 +166,23 @@ $editHref = static fn (string $code, string $date): string =>
                                lớp thứ hai: tắt JS thì vẫn huỷ được, nhưng nút nằm
                                ở dạng lặng nhất trong chân thẻ. */
                             ?>
+                            <?php
+                            /* MỘT câu hỏi, hai đường dùng — xem chú thích ở
+                               assets/js/confirm-dialog.js. onsubmit là lớp dự
+                               phòng khi không có JS; chính file JS đó gỡ nó ra
+                               khi đã sẵn sàng mở hộp thoại trên trang. */
+                            $hoiHuyLich = sprintf(
+                                'Huỷ lịch đo mắt ngày %s, khung %s?',
+                                formatDate($a['appointment_date']),
+                                $a['time_slot']
+                            );
+                            ?>
                             <form method="post" action="/tai-khoan/lich-hen/huy"
-                                  onsubmit="return confirm('Huỷ lịch hẹn <?= e($a['code']) ?>?');">
+                                  data-confirm="<?= e($hoiHuyLich) ?>"
+                                  data-confirm-title="Huỷ lịch hẹn?"
+                                  data-confirm-ok="Huỷ lịch"
+                                  data-confirm-cancel="Giữ lịch"
+                                  onsubmit="return confirm('<?= e($hoiHuyLich) ?>')">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="code" value="<?= e($a['code']) ?>">
                                 <button type="submit" class="acct-btn acct-btn--quiet acct-btn--sm">

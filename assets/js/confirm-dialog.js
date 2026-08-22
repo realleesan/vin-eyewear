@@ -43,6 +43,15 @@
        theo name/value của nó. */
     var dangHoi = null;
 
+    /*
+     * Form đang được CHO QUA. Không có nó thì cú gửi lại ở cuối file bị chính
+     * bộ lọc 'submit' bên dưới bắt lần nữa, mở lại hộp thoại, và form không
+     * bao giờ đi — huỷ lịch hẹn và xoá địa chỉ bấm "đồng ý" xong không có gì
+     * xảy ra. Chỉ hai chỗ đó dính vì data-confirm của chúng đặt trên <form>;
+     * nút xoá trong giỏ hàng đặt trên <button> nên đi đường khác.
+     */
+    var choPhep = null;
+
     var CHU_OK     = ok.textContent;
     var CHU_HUY    = cancel ? cancel.textContent : '';
     var CHU_TITLE  = title.textContent;
@@ -80,7 +89,7 @@
         var form = ev.target;
         var el   = form.matches && form.matches('[data-confirm]') ? form : null;
 
-        if (!el) return;
+        if (!el || el === choPhep) return;
 
         ev.preventDefault();
         mo(el);
@@ -100,7 +109,9 @@
            form đi lên thiếu 'act', controller hiểu thành "đặt lại số lượng"
            và món hàng ở nguyên trong giỏ. */
         if (el.tagName === 'FORM') {
+            choPhep = el;
             el.requestSubmit();
+            choPhep = null;
             return;
         }
 
@@ -109,7 +120,11 @@
         if (!form) return;
 
         if (typeof form.requestSubmit === 'function') {
+            /* Form CŨNG có thể mang data-confirm (nút "Xoá mục đã chọn" trong
+               giỏ hàng), nên cho qua ở đây nữa. */
+            choPhep = form;
             form.requestSubmit(el);
+            choPhep = null;
             return;
         }
 

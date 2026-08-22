@@ -71,12 +71,24 @@ class CartController extends BaseController
     {
         $lines    = self::lines();
         $subtotal = 0;
-        $picked   = 0;   // số SẢN PHẨM đang tick (cộng cả số lượng)
+        /*
+         * ĐẾM SỐ MÓN ĐANG TICK, KHÔNG CỘNG SỐ LƯỢNG.
+         *
+         * Trước đây cộng số lượng, nên một giỏ có đúng một dòng ba chiếc hiện
+         * "1 sản phẩm trong giỏ của bạn" ở đầu trang và "Tạm tính (3 sản
+         * phẩm)" ở cột bên — hai câu cãi nhau trong cùng một khung nhìn, và
+         * khách phải tự đoán câu nào đang nói thật.
+         *
+         * Chốt theo cách hiểu của cửa hàng: một sản phẩm có thể có nhiều số
+         * lượng. Số lượng đã hiện sẵn trong ô của từng dòng rồi. Huy hiệu giỏ
+         * hàng trên thanh nav cũng đếm như vậy.
+         */
+        $picked = 0;   // số MÓN đang tick
 
         foreach ($lines as $line) {
             if ($line['selected']) {
                 $subtotal += $line['lineTotal'];
-                $picked   += $line['quantity'];
+                $picked++;
             }
         }
 

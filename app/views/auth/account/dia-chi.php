@@ -167,8 +167,21 @@ $open = $adding || $editing !== null;
                             <!-- Xoá là POST, không phải link: xem ghi chú ở
                                  config/routes.php. Bản thiết kế vẽ nó như một
                                  liên kết nên nút này mang đúng kiểu đó. -->
+                            <?php
+                            /* Gọi tên địa chỉ sắp xoá: hộp thoại nằm giữa màn
+                               hình, che mất chính thẻ vừa bấm, nên "địa chỉ
+                               này" không còn chỉ vào đâu khi sổ có ba thẻ. */
+                            $hoiXoaDiaChi = sprintf(
+                                'Xoá địa chỉ của %s — %s?',
+                                $ad['recipient_name'],
+                                $ad['line1']
+                            );
+                            ?>
                             <form method="post" action="/tai-khoan/dia-chi/xoa"
-                                  onsubmit="return confirm('Xoá địa chỉ này?')">
+                                  data-confirm="<?= e($hoiXoaDiaChi) ?>"
+                                  data-confirm-title="Xoá địa chỉ?"
+                                  data-confirm-ok="Xoá"
+                                  onsubmit="return confirm('<?= e($hoiXoaDiaChi) ?>')">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="id" value="<?= e($ad['id']) ?>">
                                 <button type="submit" class="acct-addr__del">Xoá</button>

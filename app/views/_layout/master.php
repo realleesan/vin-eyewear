@@ -183,7 +183,7 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
         'auth/reset'     => ['components/bare-shell.css', 'auth.css'],
         // Trang tài khoản nay dựng theo "Vin Eyewear Account.dc.html" và có bộ
         // lớp riêng (.acct*); nó không còn mượn .acard/.otable của auth.css.
-        'auth/profile'   => ['account.css'],
+        'auth/profile'   => ['account.css', 'components/confirm.css'],
         'ar/tryon'       => ['ar.tryon.css'],
         // errors.css giữ .error-page* mà 404 và 500 dùng; auth.css giữ .errpage*
         // mà 403 dùng. Ba trang lỗi hiện dựng theo HAI bộ lớp khác nhau —
@@ -318,7 +318,7 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         // bấm thêm nút thứ hai.
         // account.js lo ảnh đại diện và thẻ đơn hàng; address-picker.js lo cụm
         // chọn tỉnh/phường trong sổ địa chỉ — cùng file mà trang thanh toán dùng.
-        'auth/profile'  => ['account.js', 'address-picker.js', 'copy-btn.js'],
+        'auth/profile'  => ['account.js', 'address-picker.js', 'copy-btn.js', 'confirm-dialog.js'],
         // Nút con mắt hiện/ẩn mật khẩu. Không có file này thì nút tự ẩn đi và
         // ô mật khẩu vẫn dùng bình thường.
         'auth/index'    => 'auth.js',

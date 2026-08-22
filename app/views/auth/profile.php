@@ -210,3 +210,11 @@ $inGroup = in_array($section, $groupKeys, true);
         </div>
     </div>
 </section>
+
+<?php
+/* Hộp thoại hỏi lại trước khi huỷ lịch hẹn / xoá địa chỉ. In MỘT LẦN ở khung
+   ngoài chứ không trong từng mục: trang tài khoản chỉ dựng một mục mỗi lượt,
+   nhưng để ở đây thì mục thứ ba cần hỏi lại sau này không phải nhớ thêm dòng
+   require, và không bao giờ có hai hộp cùng id trên một trang. */
+partial('_layout/confirm-dialog');
+?>
