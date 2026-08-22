@@ -142,6 +142,22 @@
     color: var(--muted);
 }
 
+/* Dòng "cần đổi hoặc huỷ đơn?" — xem ghi chú trong order/success.php.
+   Nhạt hơn và nhỏ hơn dòng trên nó một nấc: đây là thứ khách chỉ đọc khi có
+   việc, không phải thứ cần đọc ngay lúc vừa đặt hàng xong. */
+.ocomp__cancel {
+    max-width: 480px;
+    margin-top: 14px;
+    font-size: 13.5px;
+    color: var(--h-note);
+}
+
+.ocomp__cancel a {
+    color: var(--brand);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 /* ============================================================
    THẺ DÙNG CHUNG
    ============================================================ */

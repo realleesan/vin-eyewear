@@ -78,6 +78,19 @@ return [
             'icon'  => 'refresh',
             'intro' => 'Đổi mẫu linh hoạt trong 7 ngày để bạn luôn hài lòng với lựa chọn của mình.',
             'items' => [
+                /* Câu HỦY ĐƠN đứng đầu nhóm, trước cả điều kiện đổi mẫu.
+                   Website không có nút huỷ đơn — cửa hàng tự đi giao và không
+                   đồng bộ trạng thái vận chuyển thời gian thực — nên đây là
+                   nơi duy nhất khách tra ra được cách huỷ khi họ không còn ở
+                   trang tài khoản. Chôn nó xuống cuối nhóm thì coi như không
+                   có. */
+                [
+                    'q' => 'Tôi muốn huỷ đơn hàng thì làm thế nào?',
+                    'a' => 'Bạn nhắn Zalo hoặc gọi hotline 1900 6868 cho cửa hàng, kèm mã đơn. '
+                         . 'Đơn chưa giao đi thì nhân viên huỷ giúp bạn ngay. Website không có '
+                         . 'nút huỷ tự động vì chúng tôi tự vận chuyển và muốn xác nhận trực '
+                         . 'tiếp với bạn, tránh trường hợp đơn đã lên đường mà hệ thống báo đã huỷ.',
+                ],
                 [
                     'q' => 'Điều kiện đổi mẫu trong 7 ngày?',
                     'a' => 'Gọng kính chưa qua sử dụng, không trầy xước, còn nguyên tem và đầy đủ phụ kiện (hộp, khăn lau, túi).',

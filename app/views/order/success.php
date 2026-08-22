@@ -100,6 +100,27 @@ $mineHref = $order !== null
                 Giữ lại mã đơn để tra cứu khi cần.
             </p>
 
+            <!--
+                CÁCH ĐỔI HOẶC HUỶ ĐƠN — nói ngay ở đây, không để khách tự tìm.
+
+                Trang này không có nút huỷ, và đó là chủ ý: cửa hàng tự đi giao
+                và không đồng bộ trạng thái vận chuyển thời gian thực, nên một
+                nút huỷ trên web sẽ đổi trạng thái trong CSDL trong khi hàng có
+                thể đã nằm trên xe.
+
+                Nhưng "không có nút" mà cũng KHÔNG NÓI GÌ thì khách sẽ đi tìm
+                nút đó — trong trang này, trong trang tài khoản, trong chính
+                sách — rồi mới gọi hotline để hỏi. Bỏ nút thì phải chỉ ra đường
+                thay thế ở đúng chỗ họ sẽ tìm, và chỗ đầu tiên là đây.
+            -->
+            <p class="ocomp__lead ocomp__cancel">
+                Cần đổi hoặc huỷ đơn? Nhắn
+                <a href="<?= e(config('company.channels.zalo')) ?>"
+                   target="_blank" rel="noopener">Zalo cửa hàng</a>
+                hoặc gọi <a href="<?= e(config('company.hotline_href')) ?>"><?= e(config('company.hotline')) ?></a>
+                trước khi đơn được giao đi.
+            </p>
+
         </div>
 
         <!-- ══════════ HAI Ô THÔNG TIN ══════════ -->

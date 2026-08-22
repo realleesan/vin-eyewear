@@ -3,11 +3,12 @@
 /**
  * core/Zalo.php — đường ra Zalo của dự án.
  *
- * Hai việc đi chung một đường vì cùng dùng ZNS, cùng một access_token và cùng
+ * Ba việc đi chung một đường vì cùng dùng ZNS, cùng một access_token và cùng
  * một chỗ gọi HTTP:
  *
  *   1. THÔNG BÁO LỊCH HẸN cho cửa hàng — appointment().
- *   2. MÃ OTP khi khách đăng ký / quên mật khẩu — sendOtp(), do core/Otp.php gọi.
+ *   2. THÔNG BÁO ĐƠN HÀNG MỚI cho cửa hàng — order().
+ *   3. MÃ OTP khi khách đăng ký / quên mật khẩu — sendOtp(), do core/Otp.php gọi.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * BA THỨ PHẢI CÓ TRƯỚC KHI TIN ĐI ĐƯỢC — VÀ CẢ BA LÀ VIỆC ĐĂNG KÝ, KHÔNG PHẢI
@@ -31,16 +32,17 @@
  * phát triển (app.debug) mã hiện thẳng trên màn hình.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * GỬI THÔNG BÁO KHÔNG BAO GIỜ ĐƯỢC LÀM HỎNG VIỆC ĐẶT LỊCH
+ * GỬI THÔNG BÁO KHÔNG BAO GIỜ ĐƯỢC LÀM HỎNG VIỆC ĐẶT LỊCH HAY ĐẶT HÀNG
  *
- * Đây là việc phụ chạy kèm một việc chính đã xong: lịch đã nằm trong CSDL rồi.
- * Zalo sập, token hết hạn, mạng ra ngoài bị chặn — không lý do nào trong số đó
- * được phép biến thành một trang lỗi cho người vừa đặt lịch. Nên mọi lối ra của
- * appointment() đều bị bọc try/catch và mọi hỏng hóc chỉ đi vào error log.
+ * Đây là việc phụ chạy kèm một việc chính đã xong: lịch (hoặc đơn) đã nằm
+ * trong CSDL rồi. Zalo sập, token hết hạn, mạng ra ngoài bị chặn — không lý do
+ * nào trong số đó được phép biến thành một trang lỗi cho người vừa bấm đặt.
+ * Nên mọi lối ra của appointment() và order() đều bị bọc try/catch và mọi hỏng
+ * hóc chỉ đi vào error log.
  *
  * Cũng vì thế mọi lượt gọi ra ngoài phải có HẠN GIỜ NGẮN. Không có hạn thì một
  * đầu bên kia treo sẽ giữ luôn request của khách, và họ ngồi nhìn trang trắng
- * sau khi đã bấm "Đặt lịch".
+ * sau khi đã bấm "Đặt hàng".
  */
 class Zalo
 {
@@ -114,6 +116,66 @@ class Zalo
         } catch (Throwable $e) {
             // Nuốt MỌI thứ. Lịch đã nằm trong CSDL — xem khối chú thích đầu file.
             error_log('[Zalo] Không đẩy được thông báo lịch hẹn: ' . $e->getMessage());
+        }
+    }
+
+    // ========================================================================
+    // ĐIỂM VÀO — ĐƠN HÀNG
+    // ========================================================================
+
+    /**
+     * Đẩy một đơn hàng vừa đặt sang Zalo của cửa hàng.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * ĐÂY LÀ MỘT NỬA CỦA LUỒNG HUỶ ĐƠN, KHÔNG PHẢI MỘT TIỆN ÍCH BÁO TIN
+     *
+     * Website CỐ Ý không có nút "huỷ đơn": cửa hàng tự đi giao và không đồng
+     * bộ trạng thái vận chuyển thời gian thực với đơn vị vận chuyển nào, nên
+     * một nút huỷ trên web sẽ đổi trạng thái trong CSDL trong khi hàng có thể
+     * đã nằm trên xe — hai bên hiểu khác nhau về cùng một đơn.
+     *
+     * Thay vào đó, đơn chạy về Zalo của cửa hàng, nhân viên gọi khách xác
+     * nhận, và khách muốn huỷ thì nhắn lại chính cuộc trò chuyện đó. Cái đẩy
+     * tin này CHÍNH LÀ thứ làm cho việc bỏ nút huỷ trở nên chấp nhận được:
+     * không có nó thì đơn nằm im trong /quan-tri/don-hang chờ ai đó nhớ mở ra,
+     * và khách nhắn Zalo huỷ một đơn mà bên kia còn chưa biết là có.
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * CHỈ GỬI CHO CỬA HÀNG, không gửi cho khách. Khác lịch hẹn ở chỗ đó:
+     * khách vừa rời trang xác nhận đơn có đủ mọi thứ họ cần (mã đơn, số tiền,
+     * chỗ nhận hàng) và sắp nhận một cuộc gọi từ nhân viên — thêm một tin ZNS
+     * tốn phí chỉ để nhắc lại là thừa.
+     *
+     * @param array $order dòng `orders` (kèm store_name nếu có)
+     * @param array $items dòng hàng, để tin báo nói được khách mua gì
+     */
+    public static function order(array $order, array $items = []): void
+    {
+        try {
+            $shop = self::shopPhone();
+
+            if ($shop === null) {
+                return;
+            }
+
+            $template = (string) config('zalo.template_order', '');
+
+            if ($template === '' || !self::hasCredentials()) {
+                /* Chưa khai mẫu thì tin vẫn phải ĐI ĐÂU ĐÓ. Cùng lý lẽ với
+                   notify() của lịch hẹn: nội dung dạng chữ nằm trong error log
+                   vẫn cứu được một đơn bị bỏ quên, còn im lặng thì không. */
+                error_log(sprintf(
+                    "[Zalo] Chưa khai mẫu tin đơn hàng — tin chỉ nằm ở log:\n%s",
+                    self::composeOrder($order, $items)
+                ));
+
+                return;
+            }
+
+            self::sendZns($shop, $template, self::orderParams($order, $items), 'shop');
+        } catch (Throwable $e) {
+            // Nuốt MỌI thứ. Đơn đã nằm trong CSDL — xem khối chú thích đầu file.
+            error_log('[Zalo] Không đẩy được thông báo đơn hàng: ' . $e->getMessage());
         }
     }
 
@@ -279,6 +341,120 @@ class Zalo
             'thoi_gian'  => (string) ($appointment['time_slot'] ?? '—')
                             . ($date === '' ? '' : ' ngày ' . formatDate($date)),
         ];
+    }
+
+    /**
+     * Tin báo đơn hàng dạng CHỮ — dùng khi chưa khai mẫu ZNS, và là bản mẫu
+     * để soạn mẫu tin trên zns.zalo.me.
+     */
+    private static function composeOrder(array $order, array $items): string
+    {
+        $lines = [
+            'ĐƠN HÀNG MỚI · ' . (string) ($order['code'] ?? ''),
+            'Khách:     ' . (string) ($order['customer_name'] ?? '—'),
+            'Điện thoại: ' . (string) ($order['customer_phone'] ?? '—'),
+            'Nhận hàng: ' . self::orderDelivery($order),
+            'Thanh toán: ' . self::orderPayment($order),
+            'Tổng tiền: ' . money((int) ($order['total'] ?? 0)),
+            'Sản phẩm:  ' . self::orderItems($items),
+        ];
+
+        $note = trim((string) ($order['note'] ?? ''));
+
+        if ($note !== '') {
+            $lines[] = 'Ghi chú:   ' . $note;
+        }
+
+        /* Câu cuối nhắc việc phải làm — và đây không phải câu xã giao. Khách
+           KHÔNG có nút huỷ trên web (xem order()), nên cuộc gọi xác nhận này
+           là lần đầu tiên và có thể là lần duy nhất họ nói được là muốn đổi
+           hay bỏ đơn. */
+        $lines[] = 'Vui lòng gọi khách để xác nhận đơn.';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Các ô của mẫu tin đơn hàng.
+     *
+     * TÊN Ô PHẢI KHỚP MẪU ĐÃ DUYỆT — cùng ràng buộc như appointmentParams().
+     * Giá trị đều là chuỗi và đều CẮT NGẮN: ZNS giới hạn độ dài từng ô, và một
+     * đơn năm món hay một địa chỉ dài sẽ vượt quá, khiến Zalo từ chối cả tin.
+     * Thà mất mấy chữ cuối còn hơn mất cả tin báo.
+     */
+    private static function orderParams(array $order, array $items): array
+    {
+        return [
+            'ma_don'     => (string) ($order['code'] ?? '—'),
+            'khach_hang' => self::clip((string) ($order['customer_name'] ?? '—')),
+            'dien_thoai' => (string) ($order['customer_phone'] ?? '—'),
+            'nhan_hang'  => self::clip(self::orderDelivery($order)),
+            'thanh_toan' => self::orderPayment($order),
+            'tong_tien'  => money((int) ($order['total'] ?? 0)),
+            'san_pham'   => self::clip(self::orderItems($items)),
+        ];
+    }
+
+    /**
+     * "Giao tận nơi · <địa chỉ>" hoặc "Nhận tại <tên cơ sở>".
+     *
+     * Nhân viên gọi khách cần biết NGAY là đơn này phải mang đi đâu — đó là
+     * thứ quyết định họ xếp đơn vào chuyến giao nào, hay chỉ để hàng ở quầy.
+     */
+    private static function orderDelivery(array $order): string
+    {
+        if ((string) ($order['delivery_method'] ?? '') === 'pickup') {
+            return 'Nhận tại ' . (string) ($order['store_name'] ?? 'cửa hàng');
+        }
+
+        $address = trim((string) ($order['shipping_address'] ?? ''));
+
+        return 'Giao tận nơi' . ($address === '' ? '' : ' · ' . $address);
+    }
+
+    /** "COD" hoặc "Chuyển khoản (đã nhận tiền / chưa nhận tiền)". */
+    private static function orderPayment(array $order): string
+    {
+        if ((string) ($order['payment_method'] ?? '') !== 'bank_transfer') {
+            return 'COD — thu khi giao';
+        }
+
+        return 'Chuyển khoản — '
+             . ((string) ($order['payment_status'] ?? '') === 'paid'
+                ? 'đã nhận tiền' : 'CHƯA nhận tiền');
+    }
+
+    /** "Gọng Aviator ×1, Tròng 1.61 ×1" — rỗng thì trả một gạch. */
+    private static function orderItems(array $items): string
+    {
+        $parts = [];
+
+        foreach ($items as $item) {
+            $name = trim((string) ($item['product_name'] ?? ''));
+
+            if ($name === '') {
+                continue;
+            }
+
+            $parts[] = $name . ' ×' . (int) ($item['quantity'] ?? 1);
+        }
+
+        return $parts === [] ? '—' : implode(', ', $parts);
+    }
+
+    /**
+     * Cắt một ô của mẫu ZNS về độ dài an toàn.
+     *
+     * 100 ký tự là giới hạn Zalo áp cho phần lớn kiểu ô. Cắt theo KÝ TỰ chứ
+     * không phải byte (utf8Substr, không phải substr): cắt giữa chừng một chữ
+     * tiếng Việt nhiều byte sẽ sinh ký tự hỏng, và Zalo từ chối tin có ký tự
+     * không hợp lệ — đúng cái ta đang cố tránh.
+     */
+    private static function clip(string $value, int $limit = 100): string
+    {
+        return utf8Length($value) <= $limit
+            ? $value
+            : rtrim(utf8Substr($value, 0, $limit - 1)) . '…';
     }
 
     // ========================================================================

@@ -91,6 +91,12 @@ $primaryLabels = [
     'cancelled' => 'Mua lại',
 ];
 
+/* Trạng thái mà khách còn kịp đổi ý.
+   'shipping' KHÔNG có trong này: hàng đã rời cửa hàng thì việc cần làm là gọi
+   hotline nói chuyện với người đang giao, không phải nhắn tin rồi chờ đọc.
+   'completed' và 'cancelled' thì không còn gì để huỷ. */
+$canStillCancel = ['new' => true, 'confirmed' => true, 'preparing' => true];
+
 $deliveryLabels = ['pickup' => 'Nhận tại cửa hàng', 'shipping' => 'Giao tận nơi'];
 
 /* HAI tên cho cùng một cách thanh toán, đúng như bản thiết kế viết: thẻ vuông
@@ -456,6 +462,34 @@ $paymentShort  = [
                                     <?= e($primaryLabels[$o['status']]) ?>
                                 </a>
                             <?php endif; ?>
+                        <?php endif; ?>
+
+                        <?php if (isset($canStillCancel[$o['status']])): ?>
+                            <!--
+                                ĐÂY LÀ CHỖ KHÁCH ĐI TÌM NÚT "HUỶ ĐƠN" — và cố ý
+                                không có nút đó.
+
+                                Cửa hàng tự đi giao, không đồng bộ trạng thái
+                                vận chuyển thời gian thực với đơn vị vận chuyển
+                                nào; một nút huỷ trên web sẽ đổi trạng thái
+                                trong CSDL trong khi hàng có thể đã nằm trên xe,
+                                và hai bên hiểu khác nhau về cùng một đơn.
+
+                                Nhưng chỗ trống thì phải có lối đi thay thế đặt
+                                đúng vào đó, chứ không phải để khách bấm quanh
+                                rồi tự đoán. Nhãn nói thẳng là sang Zalo, không
+                                phải một nút huỷ tại chỗ — bấm nhầm rồi mới biết
+                                nó mở ứng dụng khác là một kiểu nói dối nhỏ.
+
+                                Đơn hàng của khách đã nằm sẵn trong Zalo của cửa
+                                hàng từ lúc đặt (xem Zalo::order), nên nhân viên
+                                bên kia mở đúng đơn này ra được ngay.
+                            -->
+                            <a class="acct-btn acct-btn--quiet acct-btn--sm"
+                               href="<?= e(config('company.channels.zalo')) ?>"
+                               target="_blank" rel="noopener">
+                                Đổi hoặc huỷ đơn qua Zalo
+                            </a>
                         <?php endif; ?>
 
                         <a class="acct-btn acct-btn--outline acct-btn--sm acct-order__more"

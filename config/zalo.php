@@ -5,8 +5,9 @@
  *
  * Đẩy thông báo lịch hẹn qua Zalo — xem core/Zalo.php để biết luồng và giới hạn.
  *
- * File này khai HAI việc đi chung một đường ZNS:
+ * File này khai BA việc đi chung một đường ZNS:
  *   · thông báo lịch hẹn cho cửa hàng
+ *   · thông báo đơn hàng mới cho cửa hàng
  *   · mã OTP lúc khách đăng ký / quên mật khẩu
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -108,6 +109,22 @@ return [
      */
     'template_shop'     => env('ZALO_ZNS_TEMPLATE_SHOP', ''),
     'template_customer' => env('ZALO_ZNS_TEMPLATE_CUSTOMER', ''),
+
+    /*
+     * Mẫu tin ĐƠN HÀNG MỚI — gửi cửa hàng, không gửi khách.
+     *
+     * Đây không phải tiện ích báo tin cho vui: website CỐ Ý không có nút huỷ
+     * đơn (cửa hàng tự giao, không đồng bộ trạng thái vận chuyển thời gian
+     * thực), nên khách muốn huỷ phải nhắn Zalo cho nhân viên. Tin này là thứ
+     * làm cho cuộc trò chuyện đó có chỗ bắt đầu — xem Zalo::order().
+     *
+     * Bảy ô: ma_don, khach_hang, dien_thoai, nhan_hang, thanh_toan, tong_tien,
+     * san_pham. Đặt đúng bảy tên đó lúc soạn mẫu thì không phải sửa mã.
+     *
+     * ĐỂ TRỐNG CŨNG KHÔNG SAO: đơn vẫn đặt được bình thường và tin báo rơi
+     * xuống error log nguyên văn, nhân viên vẫn thấy đơn ở /quan-tri/don-hang.
+     */
+    'template_order' => env('ZALO_ZNS_TEMPLATE_ORDER', ''),
 
     /*
      * Mẫu tin OTP — thứ chặn giữa "khách đăng ký được" và "không".

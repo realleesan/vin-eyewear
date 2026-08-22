@@ -292,6 +292,31 @@ class OrderController extends BaseController
            để lùi về, và dòng hàng cũng vừa bị dọn khỏi giỏ ngay trên. */
         unset($_SESSION['_buy_intent']);
 
+        /*
+         * ĐẨY ĐƠN SANG ZALO CỦA CỬA HÀNG — ngay khi đơn đã nằm trong CSDL.
+         *
+         * Đây là MỘT NỬA của luồng huỷ đơn, không phải một tiện ích báo tin.
+         * Website cố ý không có nút "huỷ đơn": cửa hàng tự đi giao và không
+         * đồng bộ trạng thái vận chuyển thời gian thực với đơn vị vận chuyển
+         * nào, nên một nút huỷ trên web sẽ đổi trạng thái trong CSDL trong khi
+         * hàng có thể đã nằm trên xe. Thay vào đó nhân viên gọi khách xác nhận
+         * từng đơn, và khách muốn huỷ thì nhắn lại chính cuộc trò chuyện đó.
+         *
+         * Bỏ bước này thì việc không có nút huỷ trở thành một lỗ hổng thật:
+         * đơn nằm im trong /quan-tri/don-hang chờ ai đó nhớ mở ra, còn khách
+         * nhắn Zalo huỷ một đơn mà bên kia còn chưa biết là có.
+         *
+         * Đọc lại hàng vừa ghi thay vì gửi $data: tin báo cần TÊN cơ sở nhận
+         * hàng, mà $data chỉ có id. Zalo::order() tự nuốt mọi lỗi và có hạn giờ
+         * ngắn — Zalo sập cũng không được biến thành trang lỗi cho người vừa
+         * đặt hàng xong. Xem khối chú thích đầu core/Zalo.php.
+         */
+        $saved = OrderModel::findByCode($result['code']);
+
+        if ($saved !== null) {
+            Zalo::order($saved, OrderModel::items($saved['id']));
+        }
+
         flash('order_code', $result['code']);
 
         /*
