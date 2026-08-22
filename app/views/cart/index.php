@@ -92,8 +92,18 @@ $count = count($lines);
                         </button>
                     </form>
 
+                    <?php
+                    /* MỘT câu hỏi, hai đường dùng. data-confirm cho hộp thoại
+                       trên trang; onsubmit là lớp dự phòng khi không có JS —
+                       confirm-dialog.js gỡ nó ra khi đã sẵn sàng thay thế.
+                       Cùng một biến nên hai đường không thể lệch chữ. */
+                    $hoiXoaChon = 'Xoá các sản phẩm đã chọn khỏi giỏ hàng?';
+                    ?>
                     <form method="post" action="/gio-hang/xoa-chon"
-                          onsubmit="return confirm('Xoá các sản phẩm đã chọn khỏi giỏ hàng?')">
+                          data-confirm="<?= e($hoiXoaChon) ?>"
+                          data-confirm-title="Xoá mục đã chọn?"
+                          data-confirm-ok="Xoá"
+                          onsubmit="return confirm('<?= e($hoiXoaChon) ?>')">
                         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                         <button type="submit" class="cbar__wipe">Xoá mục đã chọn</button>
                     </form>
@@ -103,6 +113,13 @@ $count = count($lines);
                     <?php
                     $p    = $line['product'];
                     $slug = '/san-pham/' . rawurlencode($p['slug']);
+
+                    /* GỌI TÊN MÓN SẮP XOÁ. Câu cũ ("sản phẩm này") đúng với
+                       hộp confirm() của trình duyệt — nó bật lên ngay dưới con
+                       trỏ nên "này" là rõ. Hộp thoại trên trang thì nằm giữa
+                       màn hình, che mất chính cái dòng vừa bấm, và giỏ có năm
+                       dòng thì "này" không còn chỉ vào đâu cả. */
+                    $hoiXoaMon = sprintf('Bỏ “%s” khỏi giỏ hàng?', $p['name']);
                     /* Dòng mô tả phiên bản. Ưu tiên NHÃN BIẾN THỂ khách đã chọn
                        (vd "Chiết suất 1.61") — đó mới là thứ phân biệt hai dòng
                        cùng một mặt hàng trong giỏ. Không có biến thể thì ghép
@@ -192,7 +209,10 @@ $count = count($lines);
                             ?>
                             <?php if ($line['quantity'] <= 1): ?>
                                 <button type="submit" name="act" value="xoa" class="cstep__btn"
-                                        onclick="return confirm('Bạn có muốn xoá sản phẩm này khỏi giỏ hàng?')"
+                                        data-confirm="<?= e($hoiXoaMon) ?>"
+                                        data-confirm-title="Xoá sản phẩm?"
+                                        data-confirm-ok="Xoá"
+                                        onclick="return confirm('<?= e($hoiXoaMon) ?>')"
                                         aria-label="Bỏ <?= e($p['name']) ?> khỏi giỏ hàng">−</button>
                             <?php else: ?>
                                 <button type="submit" name="act" value="giam" class="cstep__btn"
@@ -223,7 +243,10 @@ $count = count($lines);
                         <div class="citem__end">
                             <span class="citem__total"><?= money($line['lineTotal']) ?></span>
                             <button type="submit" name="act" value="xoa" class="citem__del"
-                                    onclick="return confirm('Bạn có muốn xoá sản phẩm này khỏi giỏ hàng?')">
+                                    data-confirm="<?= e($hoiXoaMon) ?>"
+                                    data-confirm-title="Xoá sản phẩm?"
+                                    data-confirm-ok="Xoá"
+                                    onclick="return confirm('<?= e($hoiXoaMon) ?>')">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
@@ -326,3 +349,9 @@ $count = count($lines);
 
     <?php endif; ?>
 </section>
+
+<?php
+/* Hộp thoại hỏi lại trước khi xoá — in một lần cho cả trang, mọi nút mang
+   data-confirm đều dùng chung nó. Xem _layout/confirm-dialog.php. */
+partial('_layout/confirm-dialog');
+?>

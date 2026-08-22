@@ -155,7 +155,7 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
         // lớp riêng; nó không còn mượn .section-h2/.eyebrow của trang chủ.
         'contact/index'  => ['contact.css'],
         'policy/index'   => ['policy.css'],
-        'cart/index'     => ['cart.css'],
+        'cart/index'     => ['cart.css', 'components/confirm.css'],
         // Trang thanh toán dựng theo "Vin Eyewear Checkout.dc.html": khung rút
         // gọn (bare-shell) + khối tóm tắt dùng chung với giỏ hàng (cart.css)
         // + bộ lớp riêng của nó (checkout.css).
@@ -338,6 +338,10 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         // nhận — thứ thay cho nút "Tôi đã chuyển khoản" đã bỏ. Thiếu nó thì
         // khối chờ vẫn đọc được và lối ra hiện sẵn ngay bên dưới.
         'order/transfer' => ['copy-btn.js', 'pay-watch.js'],
+        // Hộp thoại hỏi lại trước khi xoá dòng giỏ hàng. Thiếu file này thì
+        // mỗi nút xoá vẫn còn onclick="return confirm(...)" của trình duyệt —
+        // xấu hơn, nhưng khách vẫn được hỏi. Xem confirm-dialog.js.
+        'cart/index'     => 'confirm-dialog.js',
     ];
 
     foreach ((array) ($pageScripts[$viewName ?? ''] ?? []) as $js) {
