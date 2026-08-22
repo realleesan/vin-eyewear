@@ -836,8 +836,30 @@ class AuthController extends BaseController
         'lich-hen' => 'Lịch hẹn của tôi',
     ];
 
-    /** Mục mở sẵn khi vào /tai-khoan — đúng trạng thái đầu của bản thiết kế. */
-    private const DEFAULT_SECTION = 'don-hang';
+    /**
+     * Mục mở sẵn khi vào /tai-khoan TRẦN (không kèm ?muc=).
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO LÀ 'ho-so' CHỨ KHÔNG PHẢI 'don-hang'
+     *
+     * Bản thiết kế vẽ trạng thái đầu là danh sách đơn hàng, và trước đây mặc
+     * định bám theo đó. Nhưng địa chỉ trần này KHÔNG PHẢI chỗ người ta tới để
+     * xem đơn — mọi luồng cần đơn hàng đều tự nói ra: trang xác nhận đơn, biên
+     * nhận, thẻ đơn, và ngay cả mục "Đơn hàng của tôi" trong menu người dùng
+     * đều trỏ '?muc=don-hang'.
+     *
+     * Thứ trỏ tới đây là những chỗ mang nghĩa "tài khoản của tôi":
+     *
+     *     menu người dùng -> "Thông tin tài khoản"
+     *     trang 403       -> "Tài khoản của tôi"
+     *     sau khi đăng nhập (HOME_AFTER_LOGIN)
+     *
+     * Để mặc định ở 'don-hang' thì mục đầu menu hứa "Thông tin tài khoản" mà
+     * mở ra danh sách đơn — và nó rơi đúng vào chỗ mục NGAY DƯỚI nó đã dẫn
+     * tới. Hai dòng menu liền nhau, hai nhãn khác nhau, cùng một trang.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    private const DEFAULT_SECTION = 'ho-so';
 
     public function profile(): void
     {
