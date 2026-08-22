@@ -133,24 +133,38 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
             </div>
 
             <?php if (!empty($bank['number'])): ?>
-                <dl class="coqr__bank">
-                    <div>
-                        <dt>Ngân hàng:</dt>
-                        <dd><?= e($bank['name']) ?></dd>
-                    </div>
-                    <div>
-                        <dt>STK:</dt>
-                        <dd><?= e($bank['number']) ?></dd>
-                    </div>
-                    <div>
-                        <dt>Tên:</dt>
-                        <dd><?= e($bank['holder']) ?></dd>
-                    </div>
-                    <div>
-                        <dt>Nội dung:</dt>
-                        <dd><?= e($order['code']) ?></dd>
-                    </div>
-                </dl>
+                <?php
+                /* LƯỚI BA CỘT: nhãn · giá trị · nút chép.
+                   NÚT CHÉP CHỈ CÓ Ở SỐ TÀI KHOẢN VÀ NỘI DUNG — đó là hai thứ
+                   khách phải gõ lại vào app ngân hàng khi không quét được mã
+                   (máy tính bàn, camera hỏng, app không đọc được QR), và cũng
+                   là hai chỗ gõ sai thì tiền đi lạc hoặc về đúng nơi mà không
+                   khớp được đơn nào.
+
+                   Tên ngân hàng thì khách chọn trong danh sách của app, chép
+                   làm gì; tên chủ tài khoản thì app tự hiện ra sau khi nhập số. */
+                ?>
+                <div class="coqr__bank">
+                    <?php /* Dòng KHÔNG có nút chép thì giá trị trải hết hai cột còn
+                             lại. Để một ô rỗng ở đó thì cột nút vẫn giữ chỗ bằng bề
+                             rộng chữ "Sao chép", và tên chủ tài khoản dài bị ép
+                             xuống hai dòng dù còn thừa chỗ bên phải. */ ?>
+                    <span class="coqr__bankkey">Ngân hàng</span>
+                    <span class="coqr__bankval coqr__bankval--wide"><?= e($bank['name']) ?></span>
+
+                    <span class="coqr__bankkey">STK</span>
+                    <span class="coqr__bankval"><?= e($bank['number']) ?></span>
+                    <button type="button" class="coqr__copy js-copy"
+                            data-copy="<?= e($bank['number']) ?>">Sao chép</button>
+
+                    <span class="coqr__bankkey">Tên</span>
+                    <span class="coqr__bankval coqr__bankval--wide"><?= e($bank['holder']) ?></span>
+
+                    <span class="coqr__bankkey">Nội dung</span>
+                    <span class="coqr__bankval"><?= e($order['code']) ?></span>
+                    <button type="button" class="coqr__copy js-copy"
+                            data-copy="<?= e($order['code']) ?>">Sao chép</button>
+                </div>
             <?php else: ?>
                 <?php /* Chưa cấu hình tài khoản nhận tiền — thà hứa một cuộc gọi
                          còn hơn in một số tài khoản không có thật. Cùng cách xử

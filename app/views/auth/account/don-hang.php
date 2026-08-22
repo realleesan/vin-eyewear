@@ -426,71 +426,88 @@ $paymentShort  = [
                             </div>
                         <?php endif; ?>
 
-                        <?php if ($needsTransfer && !empty($bank['number'])): ?>
+                    </div>
+
+                    <?php if ($needsTransfer && !empty($bank['number'])): ?>
+                        <?php
+                        /* ══════════ KHỐI CHUYỂN KHOẢN ══════════
+                           NẰM NGANG CẢ HAI CỘT, không còn nhét trong cột "Tóm
+                           tắt thanh toán" như trước. Đây là thứ khách phải LÀM
+                           chứ không phải con số để đọc, nên nó không thuộc về
+                           một cột tóm tắt — và bó trong nửa bề ngang thì tên
+                           chủ tài khoản dài phải xuống ba dòng.
+
+                           Vẫn ở TRONG phần chi tiết (gấp lại được cùng thẻ):
+                           danh sách nhiều đơn mà thẻ nào cũng bung khối này ra
+                           thì cuộn mãi không hết. */
+                        ?>
+                        <div class="acct-order__pay" id="ck-<?= e($o['code']) ?>">
+
+                            <span class="acct-order__eyebrow acct-order__pay-head">Chuyển khoản tới</span>
+
                             <?php
-                            /* Khối chuyển khoản nằm NGAY TRONG thẻ đơn, không phải
-                               một trang khác: khách cần số tài khoản, số tiền và
-                               nội dung = mã đơn — ba thứ đó chỉ có nghĩa cùng với
-                               đơn này. Nút ở chân thẻ chỉ mở phần này ra. */
+                            /* Bảng ba cột: nhãn · giá trị · nút chép.
+                               NÚT CHÉP CHỈ CÓ Ở HAI DÒNG SỐ TÀI KHOẢN VÀ NỘI
+                               DUNG — đó là hai thứ phải gõ lại vào app ngân
+                               hàng, và cũng là hai chỗ gõ sai thì tiền đi lạc
+                               hoặc không khớp được đơn. Tên ngân hàng thì khách
+                               chọn trong danh sách, chép làm gì. */
+                            $rows = [
+                                ['Ngân hàng',    $bank['name'],   null],
+                                ['Số tài khoản', $bank['number'], $bank['number']],
+                                ['Chủ tài khoản', $bank['holder'], null],
+                            ];
+                            $payAmount = $deposit > 0 ? $deposit : (int) $o['total'];
                             ?>
-                            <div class="acct-order__pay" id="ck-<?= e($o['code']) ?>">
-                                <span class="acct-order__eyebrow">Chuyển khoản tới</span>
-                                <dl class="acct-order__bank">
-                                    <div>
-                                        <dt>Ngân hàng</dt>
-                                        <dd><?= e($bank['name']) ?></dd>
-                                    </div>
-                                    <div>
-                                        <dt>Số tài khoản</dt>
-                                        <dd><strong><?= e($bank['number']) ?></strong></dd>
-                                    </div>
-                                    <div>
-                                        <dt>Chủ tài khoản</dt>
-                                        <dd><?= e($bank['holder']) ?></dd>
-                                    </div>
-                                    <div>
-                                        <dt>Số tiền</dt>
-                                        <dd>
-                                            <?php /* Đơn cắt tròng chỉ chuyển phần CỌC ở bước
-                                                     này — chuyển cả tổng là thừa tiền và cửa
-                                                     hàng phải hoàn lại. Xem order/transfer.php. */ ?>
-                                            <strong><?= money($deposit > 0 ? $deposit : (int) $o['total']) ?></strong>
-                                            <?php if ($deposit > 0): ?>
-                                                <span class="acct-order__lens">
-                                                    tiền cọc <?= (int) ($o['deposit_rate'] ?? 0) ?>%
-                                                </span>
-                                            <?php endif; ?>
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt>Nội dung</dt>
-                                        <dd><strong><?= e($o['code']) ?></strong></dd>
-                                    </div>
-                                </dl>
+
+                            <div class="acct-order__bank">
+                                <?php foreach ($rows as [$label, $value, $copy]): ?>
+                                    <span class="acct-order__bankkey"><?= e($label) ?></span>
+                                    <?php /* Dòng KHÔNG có nút chép thì giá trị trải hết hai
+                                             cột còn lại — để một ô rỗng ở đó thì cột nút vẫn
+                                             giữ chỗ và tên chủ tài khoản dài bị ép xuống dòng. */ ?>
+                                    <span class="acct-order__bankval<?= $copy === null ? ' acct-order__bankval--wide' : '' ?>"><?= e((string) $value) ?></span>
+                                    <?php if ($copy !== null): ?>
+                                        <button type="button" class="acct-copy js-copy" data-copy="<?= e((string) $copy) ?>">Sao chép</button>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+
+                                <span class="acct-order__bankkey">Số tiền</span>
+                                <span class="acct-order__bankval acct-order__bankval--wide">
+                                    <?= money($payAmount) ?>
+                                    <?php if ($deposit > 0): ?>
+                                        <?php /* Đơn cắt tròng chỉ chuyển phần CỌC ở bước này —
+                                                 chuyển cả tổng là thừa tiền và cửa hàng phải
+                                                 hoàn lại. Xem order/transfer.php. */ ?>
+                                        <em class="acct-order__banknote">tiền cọc <?= (int) ($o['deposit_rate'] ?? 0) ?>%</em>
+                                    <?php endif; ?>
+                                </span>
+
+                                <span class="acct-order__bankkey">Nội dung</span>
+                                <span class="acct-order__bankval"><?= e($o['code']) ?></span>
+                                <button type="button" class="acct-copy js-copy" data-copy="<?= e($o['code']) ?>">Sao chép</button>
+                            </div>
+
+                            <div class="acct-order__payfoot">
                                 <p class="acct-order__memo">
                                     Ghi đúng mã đơn ở phần nội dung để chúng tôi đối chiếu được.
                                 </p>
 
                                 <?php
                                 /* LỐI VÀO MÀN QUÉT MÃ QR.
-                                   Khối trên chỉ in số tài khoản dạng chữ, và gõ
-                                   tay 13 chữ số vào app ngân hàng là đúng chỗ
-                                   người ta gõ sai. Nút này mở lại đúng màn hình
-                                   đã hiện ngay sau khi đặt đơn — có mã QR mang
-                                   sẵn số tiền và nội dung chuyển khoản.
-
-                                   Trước bản này màn đó chỉ tới được đúng một
-                                   lần, ngay sau khi đặt (mã đơn đọc từ flash).
-                                   Đóng tab là mất luôn đường quay lại. Xem
-                                   OrderController::transfer. */
+                                   Bảng trên chỉ in số tài khoản dạng chữ, và gõ tay
+                                   13 chữ số vào app ngân hàng là đúng chỗ người ta
+                                   gõ sai. Nút này mở lại đúng màn hình đã hiện ngay
+                                   sau khi đặt đơn — có mã QR mang sẵn số tiền và
+                                   nội dung chuyển khoản. Xem OrderController::transfer. */
                                 ?>
                                 <a class="acct-btn acct-btn--primary acct-btn--sm acct-order__qr"
                                    href="/thanh-toan/chuyen-khoan?ma=<?= e(rawurlencode($o['code'])) ?>">
                                     Quét mã QR để thanh toán
                                 </a>
                             </div>
-                        <?php endif; ?>
-                    </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="acct-order__foot">

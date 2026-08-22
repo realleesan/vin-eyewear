@@ -791,7 +791,12 @@ select.cofield__input {
 
 .coqr__grid {
     display: grid;
-    grid-template-columns: 400px minmax(0, 1fr);
+    /* HAI CỘT BẰNG NHAU, không phải cột trái khoá cứng 400px.
+       Cột trái nay chứa lưới ba cột (nhãn · giá trị · nút chép) — ở 400px thì
+       tên chủ tài khoản dài phải vắt hai dòng và nút chép bị ép sát mép. Chia
+       đôi đúng như bản thiết kế thì cả hai thẻ cùng chiều rộng, và khối bên
+       trái đủ chỗ cho một dòng "HO KINH DOANH PHAM TIEN MANH" liền mạch. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 24px;
     align-items: start;
 }
@@ -861,11 +866,16 @@ select.cofield__input {
     text-align: center;
 }
 
+/* Lưới BA CỘT: nhãn · giá trị · nút chép — xem ghi chú trong order/transfer.php.
+   Trước đây là bốn dòng flex nhãn-giá-trị dán liền nhau; đổi sang lưới để mọi
+   giá trị thẳng một hàng dọc, và để có chỗ đặt nút chép mà không đẩy chữ. */
 .coqr__bank {
     align-self: stretch;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr) auto;
+    align-items: center;
+    row-gap: 9px;
+    column-gap: 14px;
     margin: 0;
     padding: 16px 18px;
     border-radius: var(--radius);
@@ -874,19 +884,60 @@ select.cofield__input {
     color: var(--muted);
 }
 
-.coqr__bank > div {
-    display: flex;
-    gap: 6px;
-}
+.coqr__bankkey { flex-shrink: 0; }
 
-.coqr__bank dt { flex-shrink: 0; }
-
-.coqr__bank dd {
-    margin: 0;
+.coqr__bankval {
     font-weight: 600;
     color: var(--ink);
-    /* Số tài khoản dài không được đẩy ngang khối */
+    /* Số tài khoản 10–13 chữ số: giãn nhẹ cho dễ đọc lại từng số khi gõ tay.
+       break-word để tên chủ tài khoản dài không đẩy ngang khối. */
+    letter-spacing: 0.02em;
     word-break: break-word;
+}
+
+/* Dòng không có nút chép: trải hết hai cột còn lại. */
+.coqr__bankval--wide { grid-column: 2 / -1; }
+
+/* Nút "Sao chép" — dáng nhạt, không tranh với nút "Tôi đã chuyển khoản" bên
+   cột phải. Bo theo --radius-sm như mọi nút khác của site. */
+.coqr__copy {
+    padding: 5px 12px;
+    border: 1px solid var(--o-edge, #e0cfc2);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.coqr__copy:hover,
+.coqr__copy:focus-visible { border-color: var(--brand); color: var(--brand); }
+
+/* Đã chép xong — tự trở lại sau ~1,6 giây (copy-btn.js) */
+.coqr__copy.is-done {
+    border-color: #bcd8c6;
+    background: #eef7f0;
+    color: #3d6633;
+}
+
+/* MÀN HẸP — nhãn lên dòng riêng, cùng lý do đã ghi ở account.css:
+   lưới ba cột chỉ còn hơn trăm pixel cho giá trị, và tên chủ tài khoản dài
+   vắt thành nhiều dòng. */
+@media (max-width: 560px) {
+    .coqr__bank {
+        grid-template-columns: minmax(0, 1fr) auto;
+        row-gap: 14px;
+    }
+
+    .coqr__bankkey {
+        grid-column: 1 / -1;
+        margin-bottom: -10px;
+    }
+
+    .coqr__bankval--wide { grid-column: 1 / -1; }
 }
 
 .coqr__amount {

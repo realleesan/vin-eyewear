@@ -311,7 +311,7 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         // bấm thêm nút thứ hai.
         // account.js lo ảnh đại diện và thẻ đơn hàng; address-picker.js lo cụm
         // chọn tỉnh/phường trong sổ địa chỉ — cùng file mà trang thanh toán dùng.
-        'auth/profile'  => ['account.js', 'address-picker.js'],
+        'auth/profile'  => ['account.js', 'address-picker.js', 'copy-btn.js'],
         // Nút con mắt hiện/ẩn mật khẩu. Không có file này thì nút tự ẩn đi và
         // ô mật khẩu vẫn dùng bình thường.
         'auth/index'    => 'auth.js',
@@ -324,6 +324,9 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         'order/success' => 'order-success.js',
         // Cũng chỉ là tăng cường: hai ô tỉnh/phường vẫn gõ tay được khi thiếu nó.
         'order/checkout' => 'address-picker.js',
+        // Nút "Sao chép" số tài khoản và nội dung chuyển khoản. Thiếu file này
+        // thì hai chuỗi đó vẫn in ra dạng chữ để khách bôi đen chép tay.
+        'order/transfer' => 'copy-btn.js',
     ];
 
     foreach ((array) ($pageScripts[$viewName ?? ''] ?? []) as $js) {
