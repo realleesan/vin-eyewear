@@ -589,6 +589,30 @@ $storeId  = $old['storeId'] ?? '';
                 ?>
                 <div class="csum__deposit" data-deposit-block="bank_transfer"
                      <?= $payment === 'bank_transfer' ? '' : 'hidden' ?>>
+
+                    <?php if (!$needsDeposit): ?>
+                        <?php
+                        /* GỌNG TRẦN KHÔNG CÓ LỰA CHỌN CỌC. Tiền cọc sinh ra cho
+                           tròng mài theo số đo — thứ khách đổi ý thì cửa hàng
+                           không bán lại được. Gọng có sẵn thì không có rủi ro
+                           đó, nên đơn này chỉ hai đường: COD, hoặc chuyển đủ.
+                           Xem OrderModel::place(). */
+                        ?>
+                        <p class="csum__deposit-why">
+                            Chuyển khoản thì thanh toán <strong>đủ 100%</strong>.
+                            <?php if ($reward !== null): ?>
+                                Được tặng mã <strong><?= e($reward['code']) ?></strong>
+                                cho lần mua sau — <?= e($reward['condition_text'] ?: $reward['title']) ?>.
+                            <?php else: ?>
+                                Nhận hàng không phải trả thêm.
+                            <?php endif; ?>
+                        </p>
+
+                        <div class="csum__row csum__row--deposit">
+                            <span>Cần chuyển</span>
+                            <span class="csum__val csum__val--deposit"><?= money($total) ?></span>
+                        </div>
+                    <?php else: ?>
                     <p class="csum__deposit-why">Chọn số tiền chuyển khoản lần này:</p>
 
                     <div class="ckopt" role="radiogroup" aria-label="Số tiền chuyển khoản">
@@ -644,6 +668,7 @@ $storeId  = $old['storeId'] ?? '';
                             </span>
                         </label>
                     </div>
+                    <?php endif; ?>
                 </div>
 
                 <?php /* Nhãn đổi theo hình thức thanh toán, đúng bản thiết kế: đơn

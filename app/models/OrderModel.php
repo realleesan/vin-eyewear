@@ -265,17 +265,27 @@ class OrderModel extends BaseModel
                    khi có đủ tiền, đúng thứ tiền cọc sinh ra để tránh. */
                 $ckCoc = !$laCod && ($data['bankAmount'] ?? '') === 'deposit';
 
-                /* HAI ĐƯỜNG DẪN TỚI TIỀN CỌC, và chúng có phạm vi KHÁC NHAU:
+                /* ─────────────────────────────────────────────────────────
+                   TIỀN CỌC CHỈ TỒN TẠI Ở ĐƠN CÓ MÀI TRÒNG.
                 
-                     COD          chỉ đơn CÓ MÀI TRÒNG mới cọc. Đơn mua gọng
-                                  trần trả hết khi nhận như mọi shop khác —
-                                  hàng có sẵn, khách đổi ý thì bán lại được.
+                   Đó là gốc rễ của cả cơ chế: tròng mài theo số đo của một
+                   người, khách đổi ý thì cửa hàng ôm cặp tròng không bán lại
+                   được. Gọng trần không có rủi ro đó — hàng có sẵn, ai mua
+                   cũng vừa — nên nó bán như mọi shop khác:
                 
-                     chuyển khoản khách TỰ CHỌN, và chọn được với MỌI đơn. Cửa
-                                  hàng chốt như vậy: người muốn giữ hàng bằng
-                                  một khoản nhỏ rồi trả nốt lúc nhận thì cứ để
-                                  họ làm, kể cả khi chỉ mua gọng. */
-                $depositRate   = ($ckCoc || ($laCod && self::needsDeposit($cart)))
+                     gọng trần    COD trả hết khi nhận, hoặc chuyển khoản đủ
+                                  100%. Không có lựa chọn cọc nào cả.
+                
+                     có mài tròng COD thì buộc cọc 30%; chuyển khoản thì khách
+                                  TỰ CHỌN cọc 30% hay chuyển đủ.
+                
+                   Vì thế needsDeposit($cart) là điều kiện CHUNG cho cả hai
+                   nhánh, không riêng nhánh COD. Bỏ nó ở nhánh chuyển khoản
+                   nghĩa là cửa hàng giao một cặp gọng khi mới nhận 30% —
+                   không khác gì COD nhưng phức tạp hơn, và phải thu nốt 70%
+                   lúc giao mà không có cơ chế nào cho việc đó.
+                   ───────────────────────────────────────────────────────── */
+                $depositRate = (self::needsDeposit($cart) && ($laCod || $ckCoc))
                     ? self::depositRate()
                     : 0;
                 $depositAmount = self::depositFor($total, $depositRate);
