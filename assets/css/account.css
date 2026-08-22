@@ -1834,6 +1834,76 @@ select.acct-field__input {
 .acct-rx--edit tbody th,
 .acct-rx--edit tbody td { padding: 10px 12px; }
 
+/* Ô ĐỘ CẦU trong bảng thông số — dấu tách ra hai nút, độ lớn ở ô chọn bên
+   cạnh. Cùng dáng với hộp thoại mua hàng (.bsph/.bsign trong buy-modal.css);
+   lý do đầy đủ ghi trong app/views/auth/account/do-mat.php. */
+.acct-rx__sph {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+}
+
+.acct-rxsign {
+    display: flex;
+    flex: none;
+    gap: 4px;
+}
+
+.acct-rxsign__opt {
+    position: relative;
+    display: block;
+}
+
+/* Ô radio thật nằm dưới, nhãn phủ lên — giữ được bàn phím và trình đọc màn
+   hình mà vẫn ra đúng hình dạng nút. Cùng cách với .acct-choice ở mục Hồ sơ. */
+.acct-rxsign__opt input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.acct-rxsign__opt span {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 100%;
+    min-height: 38px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--a-item);
+}
+
+.acct-rxsign__opt input:hover + span { border-color: var(--brand); }
+
+.acct-rxsign__opt input:checked + span {
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* Vòng focus phải vẽ trên cái NHÌN THẤY, vì ô thật trong suốt */
+.acct-rxsign__opt input:focus-visible + span {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* <select> trong ô độ cầu: bỏ mũi tên gốc cho khỏi chiếm chỗ trong một ô hẹp,
+   và cho nó co được để hai nút dấu luôn đủ chỗ. */
+.acct-rx__sph .acct-rx__input {
+    min-width: 0;
+    padding-inline: 8px;
+    appearance: none;
+    text-align: center;
+}
+
 .acct-rx__input {
     box-sizing: border-box;
     width: 100%;

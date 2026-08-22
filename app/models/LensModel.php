@@ -608,6 +608,36 @@ class LensModel
         return $out;
     }
 
+    /**
+     * TÁCH một con số độ cầu đã lưu thành cặp (dấu, độ lớn) — ngược của
+     * joinSph().
+     *
+     * Cần khi HIỆN LẠI một hồ sơ đã có: cơ sở dữ liệu lưu "-2.00" nguyên một
+     * chuỗi, còn giao diện thì hỏi dấu và độ lớn bằng hai ô riêng. Không có
+     * hàm này thì trang hồ sơ phải tự cắt chuỗi, và cắt sai một lần là hiện
+     * cho khách thấy độ ngược dấu với thứ họ đã nhập.
+     *
+     * Chuỗi rỗng / không phải số -> ['-', ''] : dấu trừ là mặc định của giao
+     * diện (cận thị là đại đa số khách), độ lớn để trống nghĩa là "chưa nhập".
+     *
+     * 0.00 giữ dấu trừ mặc định — nó không âm cũng không dương, và joinSph()
+     * bỏ dấu đi khi ghép lại.
+     *
+     * @return array{0: string, 1: string} [dấu, độ lớn]
+     */
+    public static function splitSph(?string $value): array
+    {
+        $raw = trim((string) $value);
+
+        if ($raw === '' || !is_numeric($raw)) {
+            return ['-', ''];
+        }
+
+        $num = (float) $raw;
+
+        return [$num > 0 ? '+' : '-', number_format(abs($num), 2, '.', '')];
+    }
+
     /** Các mức trục cho ô "Trục (AXIS°)": 0°, 1°, … 180°. */
     public static function axisOptions(): array
     {

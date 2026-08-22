@@ -69,11 +69,70 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
                     <tr>
                         <th scope="row"><?= e($label) ?></th>
                         <?php
-                        /* step 0.25 — độ kính đi theo bước 0.25 diop.
-                           axis 0..180 — trục loạn thị tính bằng độ.
+                        /* ══════════ Ô ĐỘ CẦU: DẤU TÁCH RA HAI NÚT ══════════
+                           Giống hệt hộp thoại mua hàng (_layout/buy-modal.php).
+
+                           Trước đây ô này là <input type=number min=-20>, tức
+                           khách gõ dấu bằng bàn phím. Cùng một con số độ cầu
+                           được nhập ở HAI nơi bằng HAI giao diện khác nhau —
+                           mà lý do cửa hàng yêu cầu tách dấu ra ("đọc nhầm dấu
+                           là mài ngược hẳn một cặp tròng") đúng cho cả hai chỗ
+                           như nhau. Ô số còn có một cái bẫy riêng: bánh xe
+                           chuột lăn qua nó là đổi độ mà không ai để ý.
+
+                           Hồ sơ thì KHÁC hộp thoại mua ở một điểm: nó ĐIỀN SẴN
+                           thứ đã lưu. CSDL giữ "-2.00" nguyên chuỗi, nên phải
+                           tách ngược lại thành cặp dấu + độ lớn —
+                           LensModel::splitSph(). */
+                        [$sphSign, $sphMag] = LensModel::splitSph($prescription[$eye . '_sph'] ?? null);
+                        ?>
+                        <td>
+                            <span class="sr-only" id="rxcap-<?= e($eye) ?>-sph">
+                                <?= e($label) ?> độ cầu
+                            </span>
+                            <div class="acct-rx__sph">
+                                <?php /* Hai ô radio THẬT, không phải <button>: bàn phím
+                                         và trình đọc màn hình phải biết cái nào đang
+                                         được chọn. Cùng cách với .acct-choice ở mục Hồ sơ. */ ?>
+                                <div class="acct-rxsign" role="radiogroup"
+                                     aria-labelledby="rxcap-<?= e($eye) ?>-sph">
+                                    <?php foreach (LensModel::sphSignOptions() as $sg): ?>
+                                        <label class="acct-rxsign__opt" title="<?= e($sg['note']) ?>">
+                                            <input type="radio" name="<?= e($eye) ?>_dau"
+                                                   value="<?= e($sg['value']) ?>"
+                                                   <?= $sphSign === $sg['value'] ? 'checked' : '' ?>>
+                                            <span><?= e($sg['label']) ?></span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <label class="sr-only" for="<?= e($eye) ?>_sph">
+                                    <?= e($label) ?> độ lớn độ cầu
+                                </label>
+                                <select class="acct-rx__input" id="<?= e($eye) ?>_sph"
+                                        name="<?= e($eye) ?>_sph">
+                                    <option value="">—</option>
+                                    <?php foreach (LensModel::sphMagnitudeOptions() as $op): ?>
+                                        <option value="<?= e($op['value']) ?>"
+                                                <?= $sphMag === $op['value'] ? 'selected' : '' ?>>
+                                            <?= e($op['label']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </td>
+
+                        <?php
+                        /* Ba ô còn lại giữ nguyên kiểu cũ.
+                           CYL và AXIS KHÔNG đổi theo: độ trụ trong đơn thuốc gần
+                           như luôn âm và ô số đã mang sẵn dấu, còn trục là số
+                           nguyên 0–180 không có dấu nào để mà chọn. Đổi chúng chỉ
+                           để "cho đồng bộ" là thêm hai ô chọn dài mà không giải
+                           quyết vấn đề nào.
+
+                           step 0.25 — độ kính đi theo bước 0.25 diop.
                            Thị lực là phân số ("10/10") nên phải là ô chữ. */
                         $cells = [
-                            ['sph',  'number', ['step' => '0.25', 'min' => '-20', 'max' => '20', 'placeholder' => '0.00']],
                             ['cyl',  'number', ['step' => '0.25', 'min' => '-20', 'max' => '20', 'placeholder' => '0.00']],
                             ['axis', 'number', ['step' => '1', 'min' => '0', 'max' => '180', 'placeholder' => '0']],
                             ['va',   'text',   ['maxlength' => '16', 'placeholder' => '10/10']],

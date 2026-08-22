@@ -1323,12 +1323,16 @@ class AuthController extends BaseController
         $userId = AuthMiddleware::requireLogin();
         $this->requirePost('/tai-khoan?muc=do-mat');
 
+        /* ĐỘ CẦU TỚI ĐÂY LÀ HAI Ô: dấu (`*_dau`) và độ lớn (`*_sph`).
+           Ghép bằng LensModel::joinSph() — đúng hàm mà luồng thêm tròng vào giỏ
+           đang dùng, nên một con số nhập ở hai nơi ra cùng một chuỗi trong CSDL.
+           Tự nối chuỗi ở đây là mở đường cho hai chỗ lệch nhau ở lần sửa sau. */
         UserModel::savePrescription($userId, [
-            'od_sph'         => $_POST['od_sph'] ?? '',
+            'od_sph'         => LensModel::joinSph($_POST['od_dau'] ?? null, $_POST['od_sph'] ?? null),
             'od_cyl'         => $_POST['od_cyl'] ?? '',
             'od_axis'        => $_POST['od_axis'] ?? '',
             'od_va'          => $_POST['od_va'] ?? '',
-            'os_sph'         => $_POST['os_sph'] ?? '',
+            'os_sph'         => LensModel::joinSph($_POST['os_dau'] ?? null, $_POST['os_sph'] ?? null),
             'os_cyl'         => $_POST['os_cyl'] ?? '',
             'os_axis'        => $_POST['os_axis'] ?? '',
             'os_va'          => $_POST['os_va'] ?? '',
