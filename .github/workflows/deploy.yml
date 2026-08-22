@@ -32,6 +32,19 @@ jobs:
           # --- CÁC THAM SỐ TỐI ƯU THÊM VÀO ---
           protocol: ftp
           port: 21
-          state-name: .ftp-deploy-sync-state.json # File lưu trạng thái commit trên server
+          # ĐẨY LẠI TOÀN BỘ MỘT LẦN — 2026-08-22.
+          #
+          # Action chỉ upload file KHÁC so với trạng thái ghi trong file này. Cơ
+          # chế đó nhanh, nhưng có một điểm mù: file nào đã lên hosting hỏng sẵn
+          # (FTP đứt giữa chừng, upload thiếu đuôi) thì mọi lần deploy sau đều bỏ
+          # qua nó và vẫn báo success — hỏng vĩnh viễn mà bảng điều khiển xanh.
+          #
+          # Đổi tên file trạng thái là cách bảo action "chưa từng deploy bao giờ":
+          # nó không tìm thấy trạng thái cũ nên đẩy lại TẤT CẢ, ghi đè file hỏng.
+          #
+          # Đổi tên chứ không xoá file cũ: `dangerous-clean-up: false` nên bản cũ
+          # cứ nằm đó, và nếu lần này hỏng thì đổi tên ngược lại là quay về đúng
+          # trạng thái trước.
+          state-name: .ftp-deploy-sync-state-v2.json
           dangerous-clean-up: false # Không tự ý xóa nhầm file không có trong Git trên hosting
           timeout: 60000 # Tăng thời gian chờ response lên 60 giây để tránh đứt kết nối
