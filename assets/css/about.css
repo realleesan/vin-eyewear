@@ -407,7 +407,18 @@
     color: var(--muted);
 }
 
-.about-exam__cta { margin-top: 32px; }
+/* BO GÓC như nút của các trang khác. .btn-primary/.btn-outline dùng chung
+   trong ui.css không khai border-radius nào — tức vuông cạnh 0px — nhưng mọi
+   nút mà TRANG tự tạo kiểu (.hero__btn, .hcta__btn, .pcard__btn của trang chủ,
+   .pill-link, hàng nút trang hoàn tất đơn) đều bo var(--h-radius-sm). Đó là
+   dáng nút của site, nên gọi lại ở đây.
+
+   Chỉ đặt trên nút của riêng trang này, KHÔNG sửa .btn-* dùng chung: hai lớp
+   đó chạy trên gần như mọi trang, đổi ở gốc là đổi hình khối cả site. */
+.about-exam__cta {
+    margin-top: 32px;
+    border-radius: var(--h-radius-sm);
+}
 
 
 /* ============================================================
@@ -444,6 +455,12 @@
     justify-content: center;
     gap: 16px;
     margin-top: 38px;
+}
+
+/* Cùng độ bo với .about-exam__cta phía trên — xem ghi chú ở đó. */
+.about-start__actions .btn-primary,
+.about-start__actions .btn-outline {
+    border-radius: var(--h-radius-sm);
 }
 
 /* Nút phụ của bản vẽ: nền trong suốt, viền và chữ màu thương hiệu, di chuột
