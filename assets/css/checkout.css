@@ -719,169 +719,381 @@ select.cofield__input {
 /* ============================================================
    MÀN "THANH TOÁN QR" (/thanh-toan/chuyen-khoan)
 
-   Màn thứ hai của "Vin Eyewear Checkout.dc.html", hiện ngay sau khi đặt một
-   đơn CHUYỂN KHOẢN. Markup: app/views/order/transfer.php
+   Markup: app/views/order/transfer.php
 
-   Hẹp hơn màn form (1100px so với 1392px) và cột QR đứng TRƯỚC — ở đây chỉ
-   còn một việc để làm, nên nó chiếm chỗ đắt nhất của màn hình.
+   BỐ CỤC: hàng đầu (tiêu đề | ba bước) rồi MỘT thẻ hai cột —
+   panel QR nền đỏ đô | tóm tắt đơn + chuyển khoản tay + nút xác nhận.
+
+   VÌ SAO CỘT TRÁI TÔ ĐẬM: cả trang chỉ có ĐÚNG MỘT việc khách cần làm ngay
+   bây giờ, là quét cái mã đó. Đặt nó lên nền thương hiệu thì mắt tìm ra trước
+   cả khi đọc chữ. Trước đây hai cột cùng nền trắng và mã QR phải cạnh tranh
+   sự chú ý với một bảng số tài khoản — hai đường làm cùng một việc, bày ngang
+   nhau, để khách tự đoán nên đi đường nào.
+
+   Bộ chữ trên nền đỏ dùng đúng cặp token của CHÂN TRANG (--on-brand /
+   --on-brand-soft / --on-brand-muted): đó là khối nền thương hiệu duy nhất
+   khác của site, và hai chỗ phải đọc như nhau.
+
+   ĐỘ BO theo token --radius/--radius-sm chứ không theo con số bản vẽ (14–18px)
+   — xem khối "ĐỘ BO GÓC" trong layout.css.
    ============================================================ */
 
 .coqr {
     --o-note: #9a877f;
     --o-rule: #f0e4d8;
 
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    max-width: 1100px;
     width: 100%;
+    max-width: 1060px;
     margin: 0 auto;
-    padding: 32px var(--page-edge) 96px;
+    /* ĐỆM NGANG KẸP TRẦN Ở 32px, không dùng thẳng --page-edge.
+       --page-edge là clamp(18px, 8.5vw, 128px) — con số đó đúng cho những
+       trang chạy hết bề ngang màn hình, nhưng khối này đã tự giới hạn 1060px
+       rồi. Cộng thêm 109px đệm mỗi bên ở màn 1280 là cắt mất 218px của chính
+       nó: cột phải tụt xuống ~370px và tên chủ tài khoản vắt hai dòng.
+
+       min() giữ được cả hai: màn hẹp lấy 18px của --page-edge cho thẳng hàng
+       với các trang khác, màn rộng dừng ở 32px như bản thiết kế. */
+    padding-block: 40px 88px;
+    padding-inline: min(var(--page-edge), 32px);
     box-sizing: border-box;
 }
 
 .coqr a { text-decoration: none; }
 
-/* --- Đầu màn --- */
+/* --- Hàng đầu --- */
 
 .coqr__head {
     display: flex;
     align-items: center;
-    gap: 14px;
-}
-
-.coqr__back {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-round);
-    background: var(--surface-raised);
-    color: #4a3b38;
-    flex-shrink: 0;
-}
-
-.coqr__back:hover {
-    border-color: var(--brand);
-    color: var(--brand);
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
 }
 
 .coqr__titles {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
 }
+
+.coqr__back {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    /* Vòng tròn THẬT (rộng bằng cao) — đúng chỗ --radius-round được phép dùng. */
+    border-radius: var(--radius-round);
+    border: 1px solid var(--o-edge);
+    background: var(--surface-raised);
+    color: var(--ink);
+}
+
+.coqr__back:hover,
+.coqr__back:focus-visible { border-color: var(--brand); color: var(--brand); }
 
 .coqr__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 26px;
+    font-size: clamp(22px, 2.6vw, 29px);
     font-weight: 600;
+    line-height: 1.2;
     color: var(--ink);
 }
 
 .coqr__code {
-    font-size: 12.5px;
+    display: block;
+    margin-top: 3px;
+    font-size: 13px;
+    letter-spacing: 0.02em;
     color: var(--o-note);
 }
 
-/* --- Hai cột --- */
+/* --- Ba bước ---
+   Trả lời câu hỏi đầu tiên trong đầu khách khi tới màn này: "giờ tôi phải làm
+   gì". Trang cũ trả lời bằng cách bày ra một mã QR rồi để họ tự suy. */
 
-.coqr__grid {
-    display: grid;
-    /* HAI CỘT BẰNG NHAU, không phải cột trái khoá cứng 400px.
-       Cột trái nay chứa lưới ba cột (nhãn · giá trị · nút chép) — ở 400px thì
-       tên chủ tài khoản dài phải vắt hai dòng và nút chép bị ép sát mép. Chia
-       đôi đúng như bản thiết kế thì cả hai thẻ cùng chiều rộng, và khối bên
-       trái đủ chỗ cho một dòng "HO KINH DOANH PHAM TIEN MANH" liền mạch. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 24px;
-    align-items: start;
+.coqr__steps {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
+
+.coqr__step {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.coqr__stepnum {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-round);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.coqr__steplabel {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+/* Bước CHƯA xảy ra: viền rỗng, chữ nhạt. Tô đặc cả ba thì dãy số thành một
+   hàng trang trí chứ không nói được đang ở đâu. */
+.coqr__step.is-todo .coqr__stepnum {
+    border-color: var(--o-edge);
+    background: transparent;
+    color: var(--o-note);
+}
+
+.coqr__step.is-todo .coqr__steplabel { color: var(--o-note); }
+
+.coqr__steprule {
+    width: 22px;
+    height: 1px;
+    background: var(--o-edge);
+}
+
+/* --- Thẻ chính --- */
 
 .coqr__card {
-    /* Token, không phải con số riêng: bản thiết kế vẽ 24px nhưng cả site đi
-       theo "Home.dc.html" — xem khối "ĐỘ BO GÓC" trong layout.css. */
+    display: grid;
+    grid-template-columns: 430px minmax(0, 1fr);
+    border: 1px solid var(--h-card-line);
     border-radius: var(--radius);
     background: var(--surface-raised);
-    box-shadow: 0 2px 12px rgba(90, 40, 40, 0.06);
+    /* Panel đỏ phải bị bo theo góc thẻ */
+    overflow: hidden;
 }
 
-/* --- Cột trái: mã QR --- */
+/* --- Cột trái: panel QR --- */
 
 .coqr__pay {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    padding: 30px 28px;
-}
-
-.coqr__payhead {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
+    padding: 38px 36px;
+    background: var(--brand);
     text-align: center;
 }
 
 .coqr__paytitle {
-    font-size: 16.5px;
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--on-brand);
+}
+
+.coqr__paysub {
+    margin: 6px 0 24px;
+    font-size: 13px;
+    color: var(--on-brand-muted);
+}
+
+/* Khung trắng nổi trên nền đỏ. Bóng đổ để nó đứng TRÊN panel chứ không phải
+   một lỗ thủng trong panel — mã QR cần nền trắng thật để máy quét bắt được. */
+.coqr__frame {
+    display: grid;
+    place-items: center;
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    background: #fff;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+    line-height: 0;
+}
+
+.coqr__frame img {
+    display: block;
+    width: 204px;
+    height: 204px;
+    object-fit: contain;
+}
+
+.coqr__amount {
+    margin-top: 24px;
+}
+
+.coqr__amountlabel {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--on-brand-muted);
+}
+
+.coqr__amountval {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-serif);
+    font-size: 29px;
+    font-weight: 700;
+    color: var(--on-brand);
+    white-space: nowrap;
+}
+
+.coqr__amountrest {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--on-brand-muted);
+}
+
+.coqr__paynote {
+    margin: 22px 0 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--on-brand-muted);
+}
+
+/* Trên nền đỏ thì câu "chưa có mã QR" cũng phải đọc được */
+.coqr__pay .coqr__nocode {
+    color: var(--on-brand-muted);
+    background: none;
+    border: 0;
+    padding: 0;
+}
+
+/* --- Cột phải --- */
+
+.coqr__side {
+    display: flex;
+    flex-direction: column;
+    padding: 30px 34px;
+    min-width: 0;
+}
+
+.coqr__orderhead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.coqr__ordertitle {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 17px;
     font-weight: 600;
     color: var(--ink);
 }
 
-.coqr__paysub {
-    font-size: 12.5px;
-    color: var(--o-note);
-}
-
-.coqr__frame {
-    display: grid;
-    place-items: center;
-    box-sizing: border-box;
-    width: 210px;
-    height: 210px;
-    padding: 16px;
-    border: 1px solid var(--line);
+/* Huy hiệu "Chờ thanh toán" — cùng cặp màu hổ phách với huy hiệu tiền ở thẻ
+   đơn trong trang tài khoản. Một trạng thái thì một màu, ở mọi trang. */
+.coqr__wait {
+    flex: none;
+    padding: 5px 12px;
+    border: 1px solid #e8d5b4;
     border-radius: var(--radius-sm);
-    background: var(--surface-raised);
+    background: #fdf6e8;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #8a6a2e;
 }
 
-.coqr__frame img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+.coqr__line {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--o-rule);
+    font-size: 14px;
+    color: var(--muted);
 }
 
-/* Chưa cấu hình tài khoản nhận tiền (config/company.php) — khung vẫn giữ chỗ
-   để bố cục không xô lệch, nhưng nói thẳng là chưa có mã. */
-.coqr__nocode {
-    margin: 0;
+.coqr__line:first-of-type { margin-top: 10px; }
+
+.coqr__lens {
+    display: block;
+    margin-top: 3px;
     font-size: 12.5px;
-    line-height: 1.6;
     color: var(--o-note);
-    text-align: center;
 }
 
-/* Lưới BA CỘT: nhãn · giá trị · nút chép — xem ghi chú trong order/transfer.php.
-   Trước đây là bốn dòng flex nhãn-giá-trị dán liền nhau; đổi sang lưới để mọi
-   giá trị thẳng một hàng dọc, và để có chỗ đặt nút chép mà không đẩy chữ. */
+.coqr__linesum {
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+}
+
+.coqr__total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-top: 13px;
+}
+
+.coqr__totallabel {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.coqr__totalval {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brand);
+    white-space: nowrap;
+}
+
+/* Hai dòng chia đôi tổng đơn của đơn đặt cọc. Kẻ ĐỨT: phần dưới là cách CHIA
+   con số ở trên, không phải hai khoản cộng thêm. */
+.coqr__split {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--o-rule);
+}
+
+.coqr__split .coqr__line { border-bottom: 0; padding: 6px 0; }
+
+.coqr__linesum--due { color: var(--brand); }
+
+/* --- Chuyển khoản tay: ĐƯỜNG LUI, và nhãn nói đúng như vậy --- */
+
+.coqr__manual {
+    display: block;
+    margin: 24px 0 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--o-note);
+}
+
+/* Lưới ba cột: nhãn · giá trị · nút chép. */
 .coqr__bank {
-    align-self: stretch;
     display: grid;
-    grid-template-columns: 74px minmax(0, 1fr) auto;
+    grid-template-columns: 105px minmax(0, 1fr) auto;
     align-items: center;
-    row-gap: 9px;
+    row-gap: 8px;
     column-gap: 14px;
     margin: 0;
-    padding: 16px 18px;
-    border-radius: var(--radius);
+    padding: 14px 18px;
+    border: 1px solid var(--o-rule);
+    border-radius: var(--radius-sm);
     background: var(--surface);
-    font-size: 13px;
-    color: var(--muted);
+    font-size: 13.5px;
+    color: var(--o-note);
 }
 
 .coqr__bankkey { flex-shrink: 0; }
@@ -895,18 +1107,18 @@ select.cofield__input {
     word-break: break-word;
 }
 
-/* Dòng không có nút chép: trải hết hai cột còn lại. */
+/* Dòng KHÔNG có nút chép thì giá trị trải hết hai cột còn lại — để một ô rỗng
+   ở đó thì cột nút vẫn giữ chỗ bằng bề rộng chữ "Sao chép". */
 .coqr__bankval--wide { grid-column: 2 / -1; }
 
-/* Nút "Sao chép" — dáng nhạt, không tranh với nút "Tôi đã chuyển khoản" bên
-   cột phải. Bo theo --radius-sm như mọi nút khác của site. */
 .coqr__copy {
-    padding: 5px 12px;
-    border: 1px solid var(--o-edge, #e0cfc2);
+    flex: none;
+    padding: 3px 10px;
+    border: 1px solid var(--o-edge);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 500;
     color: var(--ink);
     white-space: nowrap;
@@ -923,10 +1135,66 @@ select.cofield__input {
     color: #3d6633;
 }
 
-/* MÀN HẸP — nhãn lên dòng riêng, cùng lý do đã ghi ở account.css:
-   lưới ba cột chỉ còn hơn trăm pixel cho giá trị, và tên chủ tài khoản dài
-   vắt thành nhiều dòng. */
+.coqr__nocode {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--o-note);
+}
+
+/* --- Cụm xác nhận, dính đáy cột --- */
+
+/* margin-top:auto đẩy xuống đáy: nút xác nhận phải nằm ở CUỐI đường đọc, sau
+   khi khách đã thấy đủ số tiền và thông tin chuyển khoản. Cột trái cao hơn cột
+   phải, nên không có dòng này thì nút treo lửng giữa một khoảng trống. */
+.coqr__confirm {
+    margin-top: auto;
+    padding-top: 24px;
+}
+
+.coqr__done {
+    display: block;
+    padding: 15px 24px;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: 14.5px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.coqr__done:hover,
+.coqr__done:focus-visible { background: var(--brand-strong); color: var(--on-brand); }
+
+.coqr__note {
+    margin: 14px 0 0;
+    font-size: 12px;
+    line-height: 1.6;
+    text-align: center;
+    color: var(--o-note);
+}
+
+.coqr__note a { color: var(--ink); font-weight: 600; }
+
+@media (max-width: 900px) {
+    .coqr { padding-block: 24px 64px; }
+
+    /* Cột QR 430px cố định sẽ tràn — về một cột, panel QR lên trên vì đó vẫn
+       là việc chính của màn này. */
+    .coqr__card { grid-template-columns: minmax(0, 1fr); }
+
+    .coqr__pay { padding: 32px 24px; }
+    .coqr__side { padding: 26px 24px; }
+
+    /* Ba bước xuống dòng riêng, bỏ vạch nối: xếp dọc rồi thì vạch ngang 22px
+       chỉ còn là một gạch lửng giữa hai dòng. */
+    .coqr__steps { gap: 10px 16px; }
+    .coqr__steprule { display: none; }
+}
+
 @media (max-width: 560px) {
+    /* Nhãn lên dòng riêng: lưới ba cột chỉ còn hơn trăm pixel cho giá trị, và
+       tên chủ tài khoản dài vắt thành nhiều dòng. */
     .coqr__bank {
         grid-template-columns: minmax(0, 1fr) auto;
         row-gap: 14px;
@@ -938,158 +1206,6 @@ select.cofield__input {
     }
 
     .coqr__bankval--wide { grid-column: 1 / -1; }
-}
-
-.coqr__amount {
-    align-self: stretch;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    padding: 14px;
-    border: 1px solid #ecc9c0;
-    border-radius: var(--radius);
-    background: #f9e9e6;
-}
-
-.coqr__amountlabel {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--brand);
-}
-
-.coqr__amountval {
-    font-family: var(--font-serif);
-    font-size: 26px;
-    font-weight: 600;
-    color: #b3392b;
-}
-
-/* Dòng "còn lại trả khi nhận hàng" dưới số tiền cọc.
-   Nhỏ và nhạt hơn hẳn con số trên nó: khách đang cầm điện thoại chuẩn bị quét,
-   thứ họ cần đọc đúng lúc này là SỐ PHẢI CHUYỂN BÂY GIỜ. Phần còn lại là để
-   trấn an rằng số kia không phải toàn bộ đơn — chứ không phải để tính toán. */
-.coqr__amountrest {
-    font-size: 12px;
-    line-height: 1.5;
-    text-align: center;
-    color: var(--o-note, #9a877f);
-}
-
-/* Hai dòng chia đôi tổng đơn, nằm dưới dòng "Tổng đơn" ở cột phải.
-   Thụt vào và có đường kẻ mảnh phía trên để đọc ra là PHẦN CỦA tổng đơn, không
-   phải hai khoản cộng thêm. */
-.coqr__split {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px dashed var(--o-rule);
-}
-
-.coqr__linesum--due { color: #b3392b; }
-
-/* --- Cột phải: đơn hàng + xác nhận --- */
-
-.coqr__side {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0;
-}
-
-.coqr__order {
-    display: flex;
-    flex-direction: column;
-    padding: 26px 28px;
-}
-
-.coqr__ordertitle {
-    margin: 0 0 10px;
-    font-size: 15.5px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.coqr__line {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 10px 0;
-    border-top: 1px solid var(--o-rule);
-    font-size: 13.5px;
-    color: var(--muted);
-}
-
-/* Tên gói tròng dưới tên hàng ở màn QR */
-.coqr__lens {
-    display: block;
-    font-size: 12px;
-    color: var(--brand);
-}
-
-.coqr__linesum {
-    font-weight: 600;
-    color: var(--ink);
-    white-space: nowrap;
-}
-
-.coqr__total {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 16px;
-    padding-top: 12px;
-    border-top: 1px solid var(--o-rule);
-}
-
-.coqr__totallabel {
-    font-size: 14.5px;
-    font-weight: 700;
-    color: var(--ink);
-}
-
-.coqr__totalval {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--brand);
-}
-
-.coqr__done {
-    display: block;
-    padding: 16px 0;
-    border-radius: var(--radius-sm);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: 14.5px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.coqr__done:hover {
-    background: var(--brand-strong);
-    color: var(--on-brand);
-}
-
-.coqr__note {
-    margin: 0;
-    font-size: 12.5px;
-    line-height: 1.6;
-    color: var(--o-note);
-    text-align: center;
-}
-
-@media (max-width: 900px) {
-    .coqr {
-        padding: 24px 16px 64px;
-    }
-
-    /* Cột QR 400px cố định sẽ tràn ở màn hẹp — về một cột, QR lên trên vì
-       đó vẫn là việc chính của màn này. */
-    .coqr__grid { grid-template-columns: minmax(0, 1fr); }
-
-    .coqr__title { font-size: 22px; }
 }
 
 /* ============================================================
