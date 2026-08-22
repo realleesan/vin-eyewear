@@ -28,8 +28,18 @@
 
     if (!khoi.length) return;
 
-    /* Đơn không mài tròng thì máy chủ không in khối nào — thoát ở dòng trên,
-       và cả file coi như không tồn tại. */
+    /* Giỏ rỗng hoặc trang khác thì không có khối nào — thoát ở dòng trên và
+       cả file coi như không tồn tại. Trang thanh toán bình thường LUÔN có ít
+       nhất khối chuyển khoản, vì mọi đơn đều chọn được cọc hay chuyển đủ. */
+
+    /* Nút đặt hàng. Có thể không có (đơn rỗng) nên mọi chỗ đụng tới đều hỏi
+       lại — file này phải chạy được trên trang thanh toán ở mọi trạng thái. */
+    var nut = document.querySelector('[data-cta]');
+
+    /* Đơn CÓ PHẢI CỌC KHÔNG suy từ chính DOM: khối cọc COD chỉ được máy chủ
+       in ra cho đơn có mài tròng. Không truyền thêm một data-* nữa vì hai
+       nguồn sự thật cho cùng một câu hỏi là hai nguồn có thể lệch nhau. */
+    var coCoc = !!document.querySelector('[data-deposit-block="cod"]');
 
     function doi() {
         var chon = document.querySelector('input[name="payment_method"]:checked');
@@ -38,6 +48,14 @@
         Array.prototype.forEach.call(khoi, function (el) {
             el.hidden = el.getAttribute('data-deposit-block') !== pt;
         });
+
+        if (!nut) return;
+
+        /* "Đặt hàng" trơn CHỈ khi sau đó không còn bước trả tiền nào. Chuyển
+           khoản luôn còn màn QR; COD đơn cắt tròng cũng vậy vì phải cọc. */
+        var xong = pt === 'cod' && !coCoc;
+
+        nut.textContent = nut.getAttribute(xong ? 'data-cta-plain' : 'data-cta-pay');
     }
 
     /* Nghe trên document chứ không trên từng ô radio: gắn thẳng thì một ô

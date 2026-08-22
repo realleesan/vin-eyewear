@@ -121,6 +121,29 @@ $paidAt = $order['paid_at'] ?: ($order['updated_at'] ?? null);
         <?php endif; ?>
     </div>
 
+    <?php if (!empty($reward)): ?>
+        <?php
+        /* ══════════ QUÀ CHO KHÁCH CHUYỂN ĐỦ ══════════
+           Đây là chỗ DUY NHẤT khách được BÁO rằng mình có quà. Mã đã nằm sẵn
+           trong ví (user_vouchers) và sẽ tự hiện ở ô "Chọn mã giảm giá" lần
+           mua sau — nhưng phát mà không nói thì gần như chắc chắn không ai
+           dùng: khách rời trang, và không có màn nào khác kể lại chuyện này.
+
+           In cả MÃ lẫn điều kiện: "bạn được tặng một mã" mà không nói mã gì,
+           giảm bao nhiêu thì vẫn phải đi tìm. */
+        ?>
+        <div class="opaid__gift">
+            <span class="opaid__gifttag">Quà cảm ơn</span>
+            <p class="opaid__giftbody">
+                Bạn đã chuyển khoản đủ nên được tặng mã
+                <strong class="opaid__giftcode"><?= e($reward['code']) ?></strong>
+                cho lần mua sau — <?= e($reward['condition_text'] ?: $reward['title']) ?>.
+                Mã đã lưu sẵn trong tài khoản, lần đặt hàng tới chỉ cần chọn ở
+                ô "Mã giảm giá".
+            </p>
+        </div>
+    <?php endif; ?>
+
     <!-- ══════════ TIẾP THEO ══════════ -->
     <div class="opaid__next">
         <span class="opaid__arrow" aria-hidden="true">→</span>

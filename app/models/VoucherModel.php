@@ -78,6 +78,134 @@ class VoucherModel extends BaseModel
     }
 
     // ========================================================================
+    // MÃ QUÀ TẶNG CHO KHÁCH CHUYỂN KHOẢN ĐỦ
+    //
+    // Đơn có cắt tròng được chọn: chuyển 30% tiền cọc, hoặc chuyển đủ 100%.
+    // Cửa hàng khuyến khích vế thứ hai bằng một mã giảm giá cho lần mua sau.
+    //
+    // "Mã nào đang làm quà tặng" là một cờ trên chính bảng `vouchers`
+    // (is_reward), không phải một thiết lập riêng — xem migration
+    // 2026-08-22-ma-thuong-chuyen-du.sql.
+    // ========================================================================
+
+    /**
+     * Mã đang được dùng làm quà tặng, hoặc null.
+     *
+     * Lọc luôn theo hạn và theo lượt: một mã hết hạn mà vẫn được tặng thì
+     * khách nhận được một lời hứa không tiêu được — tệ hơn là không tặng gì.
+     * Nhờ vậy cửa hàng chỉ cần đặt `expires_at`, không phải nhớ vào tắt cờ.
+     */
+    public static function reward(): ?array
+    {
+        /* ─────────────────────────────────────────────────────────────────
+           CHƯA CHẠY MIGRATION THÌ COI NHƯ KHÔNG CÓ QUÀ, ĐỪNG ĐỔ TRANG.
+
+           Hai hàm đọc is_reward được gọi từ TRANG THANH TOÁN và TRANG BIÊN
+           NHẬN — hai trang mà một lỗi 500 nghĩa là khách không đặt được hàng
+           hoặc không thấy được đơn vừa trả tiền.
+
+           Mã lên máy chủ trước migration là chuyện ĐÃ XẢY RA ở dự án này:
+           workflow deploy chạy tự động khi push, còn migration thì phải có
+           người vào phpMyAdmin dán tay. Giữa hai mốc đó, cột `is_reward`
+           chưa tồn tại và câu SELECT này trả SQLSTATE[42S22].
+
+           Nuốt lỗi ở đây là ĐÚNG chứ không phải giấu: mất quà tặng thì khách
+           vẫn mua hàng bình thường, mất trang thanh toán thì không.
+           ───────────────────────────────────────────────────────────────── */
+        try {
+            return Database::fetchOne(
+                'SELECT * FROM vouchers
+                  WHERE is_reward = 1
+                    AND is_active = 1
+                    AND (expires_at IS NULL OR expires_at >= CURDATE())
+                    AND (max_uses IS NULL OR used_count < max_uses)
+                  LIMIT 1'
+            );
+        } catch (Throwable $e) {
+            error_log('[reward] Không đọc được mã quà tặng: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    /**
+     * Chỉ MỘT mã được làm quà tặng. Gọi trước khi bật cờ cho một mã.
+     */
+    public static function clearRewardFlag(?string $exceptId = null): void
+    {
+        Database::execute(
+            'UPDATE vouchers SET is_reward = 0
+              WHERE is_reward = 1' . ($exceptId === null ? '' : ' AND id <> :id'),
+            $exceptId === null ? [] : ['id' => $exceptId]
+        );
+    }
+
+    /**
+     * Phát một mã cho MỘT khách.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * PHÁT LẠI ĐƯỢC, VÀ ĐÓ LÀ CHỦ Ý
+     *
+     * Khoá chính của `user_vouchers` là (user_id, voucher_id), nên mỗi khách
+     * giữ được đúng MỘT bản của mỗi mã. Khách chuyển khoản đủ lần thứ hai mà
+     * lần trước đã tiêu mất quà rồi thì INSERT trần sẽ trượt khoá và họ không
+     * nhận được gì — im lặng, không ai biết.
+     *
+     * ON DUPLICATE KEY nạp lại: xoá used_at và dời granted_at. Nghĩa là mỗi
+     * lần chuyển đủ đều có quà, nhưng KHÔNG cộng dồn — giữ tối đa một mã chưa
+     * dùng tại một thời điểm. Cộng dồn thì phải đổi khoá chính của bảng, và
+     * "mười mã cùng loại trong ví" cũng không phải thứ cửa hàng muốn.
+     *
+     * KHÔNG đụng nếu khách ĐANG giữ một bản chưa dùng: điều kiện used_at IS
+     * NOT NULL ở mệnh đề UPDATE. Không có nó thì mỗi lần gọi lại sẽ dời
+     * granted_at của một mã đang nằm sẵn trong ví, chẳng để làm gì.
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * @return bool khách có nhận được gì trong lần gọi này không
+     */
+    public static function grantTo(string $userId, string $voucherId): bool
+    {
+        return Database::execute(
+            'INSERT INTO user_vouchers (user_id, voucher_id, granted_at)
+             VALUES (:uid, :vid, NOW())
+             ON DUPLICATE KEY UPDATE
+                 granted_at = IF(used_at IS NOT NULL, NOW(), granted_at),
+                 used_at    = NULL',
+            ['uid' => $userId, 'vid' => $voucherId]
+        ) > 0;
+    }
+
+    /**
+     * Mã quà tặng khách đang giữ mà CHƯA dùng, hoặc null.
+     *
+     * Dùng ở trang biên nhận để nói "bạn vừa được tặng mã X". Hỏi lại CSDL
+     * chứ không tin vào kết quả của grantTo(): trang biên nhận mở được nhiều
+     * lần, và lần thứ hai thì grantTo() đã chạy từ trước.
+     */
+    public static function rewardHeldBy(string $userId): ?array
+    {
+        try {
+            return Database::fetchOne(
+                'SELECT v.* FROM vouchers v
+                   JOIN user_vouchers uv ON uv.voucher_id = v.id
+                  WHERE uv.user_id = :uid
+                    AND uv.used_at IS NULL
+                    AND v.is_reward = 1
+                    AND v.is_active = 1
+                    AND (v.expires_at IS NULL OR v.expires_at >= CURDATE())
+                  LIMIT 1',
+                ['uid' => $userId]
+            );
+        } catch (Throwable $e) {
+            /* Cùng lý do với reward() ngay trên: chưa chạy migration thì
+               trang biên nhận vẫn phải mở được. */
+            error_log('[reward] Không đọc được ví mã của khách: ' . $e->getMessage());
+
+            return null;
+        }
+    }
+
+    // ========================================================================
     // ÁP MÃ Ở GIỎ HÀNG
     // ========================================================================
 

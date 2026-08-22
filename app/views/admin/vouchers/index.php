@@ -279,6 +279,21 @@ $whyOff = static function (array $v) use ($today): string {
                 </p>
             </div>
 
+            <div class="field field--check">
+                <label>
+                    <input type="checkbox" name="is_reward"
+                           <?= ($ed !== null && !empty($ed['is_reward'])) ? 'checked' : '' ?>>
+                    Tặng cho khách chuyển khoản đủ 100%
+                </label>
+                <p class="field__hint">
+                    Đơn có cắt tròng được chọn chuyển 30% tiền cọc hoặc chuyển đủ.
+                    Chọn chuyển đủ thì khách được tặng mã này ngay khi tiền về —
+                    không cần phát tay. <strong>Chỉ một mã</strong> được bật:
+                    tick vào đây là mã đang bật trước đó tự tắt.
+                    Nên dùng với mã riêng (bỏ tick "công khai") để nó thật sự là quà.
+                </p>
+            </div>
+
             <button type="submit" class="astatus__save">
                 <?= $ed !== null ? 'Lưu thay đổi' : 'Tạo mã' ?>
             </button>

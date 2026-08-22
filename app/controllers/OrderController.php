@@ -421,6 +421,11 @@ class OrderController extends BaseController
             'addressCity'     => trim((string) ($_POST['address_city'] ?? '')),
             'storeId'         => trim((string) ($_POST['store_id'] ?? '')) ?: null,
             'paymentMethod'   => (string) ($_POST['payment_method'] ?? 'cod'),
+            /* Chỉ có nghĩa khi paymentMethod = bank_transfer VÀ đơn có cắt
+               tròng: 'deposit' = chuyển 30%, 'full' = chuyển đủ. Mọi giá trị
+               khác được OrderModel::place() hiểu là 'full' — xem chú thích ở
+               đó về việc vì sao 'full' mới là mặc định an toàn. */
+            'bankAmount'      => (string) ($_POST['bank_amount'] ?? 'full'),
             'note'            => trim((string) ($_POST['note'] ?? '')),
         ];
     }
@@ -767,6 +772,12 @@ class OrderController extends BaseController
              * toán 4.400.000₫" cho một đơn vừa nhận 1.320.000₫ là sai với cả
              * khách lẫn sổ sách. Xem OrderModel -> khối ĐẶT CỌC.
              */
+            /* Mã quà tặng khách ĐANG GIỮ và chưa dùng. Hỏi lại CSDL chứ
+               không tin vào kết quả của lần phát: trang này mở lại được nhiều
+               lần, và lần thứ hai thì mã đã phát từ trước. Hỏi cả với đơn đặt
+               cọc — khách có thể đã nhận quà từ một đơn khác, và giấu đi thì
+               họ không bao giờ biết mình đang cầm cái gì. */
+            'reward'     => VoucherModel::rewardHeldBy($userId),
             'isDeposit'  => $status === 'deposit_paid' && $deposit > 0,
             'paidAmount' => $status === 'deposit_paid' && $deposit > 0 ? $deposit : $total,
             'remaining'  => $status === 'deposit_paid' && $deposit > 0 ? $total - $deposit : 0,

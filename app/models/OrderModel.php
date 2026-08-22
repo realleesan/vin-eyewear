@@ -252,8 +252,32 @@ class OrderModel extends BaseModel
                    Tính trên $total, tức SAU khi trừ mã giảm giá và ĐÃ CỘNG
                    phí ship — đúng số cuối cùng khách phải trả, không phải
                    tạm tính. */
-                $laCod         = ($data['paymentMethod'] ?? '') === 'cod';
-                $depositRate   = ($laCod && self::needsDeposit($cart)) ? self::depositRate() : 0;
+                $laCod = ($data['paymentMethod'] ?? '') === 'cod';
+
+                /* CHUYỂN KHOẢN THÌ KHÁCH TỰ CHỌN. 'deposit' = chuyển 30% rồi
+                   trả nốt khi nhận; 'full' = chuyển đủ một lần và được tặng
+                   mã giảm giá cho lần sau (xem grantFullPaymentReward).
+
+                   Mặc định là 'full' khi giá trị gửi lên lạ: đó là vế cửa
+                   hàng khuyến khích, và nó cũng là vế AN TOÀN — đoán nhầm
+                   thành 'full' thì khách thấy số tiền lớn hơn và có thể đổi
+                   ý; đoán nhầm thành 'deposit' thì cửa hàng mài tròng trước
+                   khi có đủ tiền, đúng thứ tiền cọc sinh ra để tránh. */
+                $ckCoc = !$laCod && ($data['bankAmount'] ?? '') === 'deposit';
+
+                /* HAI ĐƯỜNG DẪN TỚI TIỀN CỌC, và chúng có phạm vi KHÁC NHAU:
+                
+                     COD          chỉ đơn CÓ MÀI TRÒNG mới cọc. Đơn mua gọng
+                                  trần trả hết khi nhận như mọi shop khác —
+                                  hàng có sẵn, khách đổi ý thì bán lại được.
+                
+                     chuyển khoản khách TỰ CHỌN, và chọn được với MỌI đơn. Cửa
+                                  hàng chốt như vậy: người muốn giữ hàng bằng
+                                  một khoản nhỏ rồi trả nốt lúc nhận thì cứ để
+                                  họ làm, kể cả khi chỉ mua gọng. */
+                $depositRate   = ($ckCoc || ($laCod && self::needsDeposit($cart)))
+                    ? self::depositRate()
+                    : 0;
                 $depositAmount = self::depositFor($total, $depositRate);
 
                 $orderId = uuid();
@@ -759,12 +783,73 @@ class OrderModel extends BaseModel
      */
     public static function markPaid(string $id): bool
     {
-        return Database::execute(
+        $doi = Database::execute(
             "UPDATE orders
                 SET payment_status = 'paid', paid_at = NOW()
               WHERE id = :id AND payment_status <> 'paid'",
             ['id' => $id]
         ) > 0;
+
+        if ($doi) {
+            self::grantFullPaymentReward($id);
+        }
+
+        return $doi;
+    }
+
+    /**
+     * Tặng mã giảm giá cho khách đã CHUYỂN KHOẢN ĐỦ 100%.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * ĐẶT TRONG markPaid() CHỨ KHÔNG Ở TỪNG NƠI GỌI
+     *
+     * Ba đường đưa một đơn sang 'paid': webhook SePay khớp giao dịch, nhân
+     * viên đánh dấu ở /quan-tri/don-hang, và đơn COD được đánh dấu đã giao.
+     * Rải phép tặng quà ra ba chỗ thì thêm đường thứ tư sau này là quên một
+     * chỗ, và khách mất quà đã được hứa mà không ai biết — không có lỗi nào
+     * nổ ra cả.
+     *
+     * Chỉ chạy khi markPaid() THẬT SỰ đổi trạng thái, nên webhook SePay gửi
+     * lại cùng một giao dịch bảy lần cũng chỉ tặng một lần.
+     *
+     * BA ĐIỀU KIỆN, thiếu một là không tặng:
+     *   chuyển khoản    COD trả đủ khi nhận hàng không phải thứ đang khuyến
+     *                   khích; quà là để bù cho việc trả tiền TRƯỚC.
+     *   deposit = 0     tức khách chọn "chuyển đủ" ngay từ đầu. Đơn chọn cọc
+     *                   rồi trả nốt phần còn lại vẫn về 'paid', nhưng cửa
+     *                   hàng đã phải mài tròng trước khi có đủ tiền.
+     *   có tài khoản    mã riêng phát qua user_vouchers; khách vãng lai không
+     *                   có chỗ nào để nhận.
+     *
+     * NUỐT LỖI CÓ CHỦ Ý: quà là việc phụ, tiền đã về mới là việc chính. Bảng
+     * `vouchers` thiếu cột is_reward (chưa chạy migration) mà để ném ra ngoài
+     * thì webhook SePay nhận 500, SePay coi là thất bại và gửi lại — trong
+     * khi đơn ĐÃ được đánh dấu trả đủ ở câu trên. Ghi log để còn biết.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    private static function grantFullPaymentReward(string $id): void
+    {
+        try {
+            $order = self::find($id);
+
+            if ($order === null
+                || $order['payment_method'] !== 'bank_transfer'
+                || (int) ($order['deposit_amount'] ?? 0) !== 0
+                || empty($order['user_id'])
+            ) {
+                return;
+            }
+
+            $reward = VoucherModel::reward();
+
+            if ($reward === null) {
+                return;   // cửa hàng chưa bật mã quà tặng nào
+            }
+
+            VoucherModel::grantTo((string) $order['user_id'], (string) $reward['id']);
+        } catch (Throwable $e) {
+            error_log('[reward] Không tặng được mã cho đơn ' . $id . ': ' . $e->getMessage());
+        }
     }
 
     /**

@@ -377,12 +377,18 @@ CREATE TABLE `vouchers` (
     -- Cần cột này vì ô nhập mã ở giỏ hàng thì khách VÃNG LAI cũng gõ được,
     -- mà khách vãng lai không có dòng nào trong `user_vouchers`.
     `is_public`      TINYINT(1)   NOT NULL DEFAULT 1,
+    -- Cột `is_reward` do migration 2026-08-22-ma-thuong-chuyen-du.sql thêm, đã
+    -- gộp vào đây. 1 = mã này được TẶNG tự động cho khách chọn chuyển khoản đủ
+    -- 100% cho đơn có cắt tròng. Chỉ MỘT mã được bật cùng lúc; luật đó do PHP
+    -- giữ (VoucherAdminController::save) vì MySQL không có partial unique index.
+    `is_reward`      TINYINT(1)   NOT NULL DEFAULT 0,
     -- NULL = không giới hạn. Thiếu nó thì một mã lọt ra ngoài là bán lỗ vô hạn.
     `max_uses`       INT          NULL,
     `used_count`     INT          NOT NULL DEFAULT 0,
     `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uq_vouchers_code` (`code`)
+    UNIQUE KEY `uq_vouchers_code` (`code`),
+    KEY `idx_vouchers_reward` (`is_reward`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Khoá chính GHÉP: một người không nhận được hai lần cùng một mã, và ràng

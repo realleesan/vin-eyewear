@@ -133,6 +133,7 @@ class VoucherAdminController extends AdminController
             'expires_at'     => $expires ?: null,
             'is_active'      => isset($_POST['is_active']) ? 1 : 0,
             'is_public'      => isset($_POST['is_public']) ? 1 : 0,
+            'is_reward'      => isset($_POST['is_reward']) ? 1 : 0,
             'max_uses'       => $maxUsesVal,
         ];
 
@@ -142,8 +143,20 @@ class VoucherAdminController extends AdminController
             VoucherModel::update($id, $data);
             flash('admin_success', sprintf('Đã cập nhật mã %s.', $code));
         } else {
-            VoucherModel::insert($data);
+            $id = VoucherModel::insert($data);
             flash('admin_success', sprintf('Đã tạo mã %s.', $code));
+        }
+
+        /* CHỈ MỘT MÃ LÀM QUÀ TẶNG. Tắt cờ ở mọi mã khác NGAY SAU khi lưu, chứ
+           không bắt nhân viên tự nhớ đi tắt mã cũ — quên một cái là hai mã
+           cùng bật, và lúc đó VoucherModel::reward() lấy đại một trong hai
+           theo thứ tự CSDL trả về. Không sai đến mức hỏng, nhưng cửa hàng sẽ
+           không hiểu vì sao khách nhận mã này chứ không phải mã kia.
+
+           Chạy cả khi vừa TẮT cờ: lúc đó $data['is_reward'] = 0 nên câu này
+           không tắt nhầm ai — điều kiện `id <> :id` chỉ chừa lại chính nó. */
+        if ((int) $data['is_reward'] === 1 && $id !== '') {
+            VoucherModel::clearRewardFlag((string) $id);
         }
 
         redirect(self::BASE);

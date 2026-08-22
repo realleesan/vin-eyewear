@@ -79,6 +79,10 @@ $wardCode = $wardShown === $addressWard ? (string) ($address['ward_code'] ?? '')
 
 $delivery = $old['deliveryMethod'] ?? 'shipping';
 $payment  = $old['paymentMethod'] ?? 'cod';
+
+/* Chuyển khoản: cọc 30% hay chuyển đủ. Mặc định 'full' — vế cửa hàng khuyến
+   khích và cũng là vế được tặng mã. Xem OrderModel::place(). */
+$bankAmount = ($old['bankAmount'] ?? 'full') === 'deposit' ? 'deposit' : 'full';
 $storeId  = $old['storeId'] ?? '';
 ?>
 
@@ -497,34 +501,29 @@ $storeId  = $old['storeId'] ?? '';
                     <span class="csum__grand-num"><?= money($total) ?></span>
                 </div>
 
+                <?php
+                /* ══════════ ĐẶT CỌC ══════════
+                   Hai khối, hiện đúng một — theo phương thức thanh toán đang
+                   chọn. Trang này không tải lại khi khách đổi ô radio nên máy
+                   chủ in cả hai, assets/js/checkout-deposit.js đổi khối nào
+                   hiện. Không có JS thì khối đúng với phương thức ĐANG chọn
+                   lúc vẽ trang vẫn hiện, và máy chủ mới là nơi chốt số tiền.
+
+                   HAI KHỐI CÓ PHẠM VI KHÁC NHAU, đây là chỗ dễ đọc nhầm nhất:
+
+                     COD          chỉ hiện khi đơn CÓ MÀI TRÒNG. Gọng trần trả
+                                  hết khi nhận như mọi shop khác.
+                     chuyển khoản hiện với MỌI đơn — khách tự chọn cọc 30% hay
+                                  chuyển đủ, kể cả đơn chỉ mua gọng.
+
+                   Cọc tính trên TỔNG (đã trừ mã giảm giá, đã cộng phí ship),
+                   nên cọc + còn lại luôn đúng bằng dòng "Tổng cộng" ngay trên
+                   — khách tự kiểm được, không cần tin. */
+                $deposit = OrderModel::depositFor($total, $depositRate);
+                $reward  = VoucherModel::reward();
+                ?>
+
                 <?php if ($needsDeposit): ?>
-                    <?php
-                    /* ══════════ ĐẶT CỌC ══════════
-                       Đơn có cắt tròng theo độ: tròng mài riêng theo số đo của
-                       một người, khách đổi ý thì cửa hàng không bán lại cho ai
-                       khác được.
-
-                       CHỈ COD MỚI CỌC. Chuyển khoản QR trả đủ 100% trước khi
-                       cửa hàng làm gì cả, nên không còn rủi ro nào để bảo
-                       hiểm — đòi cọc 30% rồi lại đòi nốt 70% chỉ là bắt khách
-                       chuyển khoản hai lần cho cùng một đơn. Xem khối chú
-                       thích ở OrderModel::needsDeposit().
-
-                       BA CON SỐ, KHÔNG PHẢI MỘT. "Cọc 30%" đứng một mình vẫn
-                       để lại câu hỏi lớn nhất chưa trả lời: vậy lúc nhận hàng
-                       tôi phải cầm bao nhiêu? Nên in thẳng cả phần còn lại, và
-                       vì cọc tính trên TỔNG (đã trừ mã giảm giá, đã cộng phí
-                       ship) nên hai số cộng lại đúng bằng dòng "Tổng cộng"
-                       ngay trên — khách tự kiểm được, không cần tin.
-
-                       HAI KHỐI, HIỆN MỘT. Trang này không tải lại khi khách
-                       đổi ô radio, nên cả hai khối đều in ra sẵn và
-                       assets/js/checkout-deposit.js đổi khối nào hiện. Không
-                       có JS thì khối đúng với phương thức ĐANG chọn lúc vẽ
-                       trang vẫn hiện — và máy chủ mới là nơi chốt số tiền,
-                       nên không có JS cũng không ai trả sai. */
-                    $deposit = OrderModel::depositFor($total, $depositRate);
-                    ?>
                     <div class="csum__deposit" data-deposit-block="cod"
                          <?= $payment === 'cod' ? '' : 'hidden' ?>>
                         <p class="csum__deposit-why">
@@ -543,20 +542,58 @@ $storeId  = $old['storeId'] ?? '';
                             <span class="csum__val"><?= money($total - $deposit) ?></span>
                         </div>
                     </div>
-
-                    <div class="csum__deposit" data-deposit-block="bank_transfer"
-                         <?= $payment === 'bank_transfer' ? '' : 'hidden' ?>>
-                        <p class="csum__deposit-why">
-                            Chuyển khoản thì thanh toán <strong>đủ 100%</strong>, không
-                            phải đặt cọc. Cửa hàng bắt đầu mài tròng ngay khi tiền về.
-                        </p>
-
-                        <div class="csum__row csum__row--deposit">
-                            <span>Cần chuyển</span>
-                            <span class="csum__val csum__val--deposit"><?= money($total) ?></span>
-                        </div>
-                    </div>
                 <?php endif; ?>
+
+                <?php
+                /* Hai ô radio THẬT, không phải hai nút <button>: bàn phím và
+                   trình đọc màn hình phải biết cái nào đang chọn, và giá trị
+                   phải đi kèm form đặt hàng.
+
+                   Số tiền in thẳng vào từng lựa chọn. "Cọc 30%" đứng một mình
+                   không trả lời được câu khách đang hỏi — rốt cuộc tôi phải
+                   chuyển bao nhiêu — mà đó mới là thứ họ cần để chọn. */
+                ?>
+                <div class="csum__deposit" data-deposit-block="bank_transfer"
+                     <?= $payment === 'bank_transfer' ? '' : 'hidden' ?>>
+                    <p class="csum__deposit-why">Chọn số tiền chuyển khoản lần này:</p>
+
+                    <div class="ckopt" role="radiogroup" aria-label="Số tiền chuyển khoản">
+                        <label class="ckopt__item">
+                            <input type="radio" name="bank_amount" value="full"
+                                   <?= $bankAmount === 'full' ? 'checked' : '' ?>>
+                            <span class="ckopt__dot" aria-hidden="true"></span>
+                            <span class="ckopt__body">
+                                <span class="ckopt__top">
+                                    <span class="ckopt__name">Chuyển đủ 100%</span>
+                                    <span class="ckopt__num"><?= money($total) ?></span>
+                                </span>
+                                <span class="ckopt__note">
+                                    <?php if ($reward !== null): ?>
+                                        Được tặng mã <strong><?= e($reward['code']) ?></strong>
+                                        cho lần mua sau — <?= e($reward['condition_text'] ?: $reward['title']) ?>.
+                                    <?php else: ?>
+                                        Trả một lần, nhận hàng không phải trả thêm.
+                                    <?php endif; ?>
+                                </span>
+                            </span>
+                        </label>
+
+                        <label class="ckopt__item">
+                            <input type="radio" name="bank_amount" value="deposit"
+                                   <?= $bankAmount === 'deposit' ? 'checked' : '' ?>>
+                            <span class="ckopt__dot" aria-hidden="true"></span>
+                            <span class="ckopt__body">
+                                <span class="ckopt__top">
+                                    <span class="ckopt__name">Đặt cọc <?= (int) $depositRate ?>%</span>
+                                    <span class="ckopt__num"><?= money($deposit) ?></span>
+                                </span>
+                                <span class="ckopt__note">
+                                    Còn <?= money($total - $deposit) ?> trả khi nhận hàng.
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
 
                 <?php /* Nhãn đổi theo hình thức thanh toán, đúng bản thiết kế: đơn
                          COD dừng ở "Đặt hàng", đơn chuyển khoản còn một bước quét
@@ -566,15 +603,23 @@ $storeId  = $old['storeId'] ?? '';
                          theo dõi ô radio: đổi nhãn theo thời gian thực cần JS, mà
                          trang này cố ý không có. Nhãn sai một nhịp thì cùng lắm là
                          thừa hai chữ — bước QR vẫn hiện đúng sau khi đặt. */ ?>
-                <button type="submit" class="csum__cta csum__cta--btn">
-                    <?php
-                    /* Đơn phải cọc thì SAU KHI đặt vẫn còn màn chuyển khoản,
-                       kể cả khi khách chọn COD — phần cọc không trả cho shipper
-                       được, cửa hàng cần nó trước khi mài tròng. Nên nhãn
-                       "Đặt hàng" trơn ở đây là hứa hụt một bước. */
-                    echo $payment === 'cod' && !$needsDeposit
-                        ? 'Đặt hàng' : 'Đặt hàng &amp; Thanh toán';
-                    ?>
+                <?php
+                /* Nhãn nút: "Đặt hàng" trơn CHỈ khi sau đó không còn bước trả
+                   tiền nào — tức COD và đơn không phải cọc. Mọi ca còn lại
+                   (chuyển khoản bất kỳ, hoặc COD đơn cắt tròng phải cọc) đều
+                   đi tiếp qua màn QR, nên nhãn phải nói trước điều đó.
+
+                   data-cta-* để checkout-deposit.js đổi nhãn khi khách bấm ô
+                   radio khác. Không có JS thì nhãn đúng với phương thức ĐANG
+                   chọn lúc vẽ trang, sai một nhịp nếu khách đổi ý — cùng lắm
+                   thừa hai chữ, và bước QR vẫn hiện đúng sau khi đặt. */
+                ?>
+                <button type="submit" class="csum__cta csum__cta--btn"
+                        data-cta
+                        data-cta-plain="Đặt hàng"
+                        data-cta-pay="Đặt hàng &amp; Thanh toán">
+                    <?= $payment === 'cod' && !$needsDeposit
+                        ? 'Đặt hàng' : 'Đặt hàng &amp; Thanh toán' ?>
                 </button>
                 <a class="csum__more" href="/gio-hang">← Quay lại giỏ hàng</a>
             </div>

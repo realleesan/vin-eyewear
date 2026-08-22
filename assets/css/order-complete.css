@@ -620,6 +620,55 @@
     color: var(--ink);
 }
 
+/* ============================================================
+   QUÀ CẢM ƠN — mã tặng khách chuyển khoản đủ
+
+   Markup: app/views/order/paid.php
+
+   Nền xanh nhạt chứ không phải đỏ đô: đây là TIN VUI thêm vào, không phải
+   một dòng số tiền hay một cảnh báo. Cả trang đang toàn sắc đỏ đô nên một
+   mảng khác tông là cách rẻ nhất để mắt dừng lại đúng chỗ.
+   ============================================================ */
+
+.opaid__gift {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 14px 16px;
+    border: 1px solid #cfe0c6;
+    border-radius: var(--radius-sm);
+    background: #f2f8ef;
+}
+
+.opaid__gifttag {
+    align-self: flex-start;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    background: #4d7a3f;
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.opaid__giftbody {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--ink);
+}
+
+/* Mã in bằng chữ đều nét: khách sẽ đọc lại nó ở ô chọn mã lần sau, mà chữ
+   đều nét thì không nhầm 0 với O, 1 với l. */
+.opaid__giftcode {
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 13.5px;
+    letter-spacing: 0.06em;
+    color: #3d6a30;
+}
+
 .opaid__badge {
     padding: 5px 12px;
     border: 1px solid #bcd8c6;
