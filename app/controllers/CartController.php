@@ -555,8 +555,30 @@ class CartController extends BaseController
                 /* LẦN NHẬP ĐẦU TIÊN thì dựng luôn hồ sơ khúc xạ cho khách đang
                    đăng nhập — cửa hàng có ngay bản ghi để tư vấn thay vì chờ
                    khách tự vào trang tài khoản khai lại. Đã có hồ sơ rồi thì
-                   hàm này không đụng vào: lý do đầy đủ ở UserModel. */
-                UserModel::seedPrescription(AuthMiddleware::userId(), $od, $os);
+                   hàm này không đụng vào: lý do đầy đủ ở UserModel.
+
+                   BỌC TRY/CATCH VÌ ĐÂY LÀ VIỆC PHỤ, KHÔNG PHẢI VIỆC CHÍNH.
+
+                   Việc chính của bước này là ghi số đo vào ý định mua hàng —
+                   xong ở dòng trên rồi. Dựng sẵn hồ sơ tài khoản chỉ là tiện
+                   thể. Để nó ném ra ngoài thì một cột thiếu trong bảng
+                   `prescriptions` sẽ CHẶN CẢ ĐƠN HÀNG, mà khách không hiểu vì
+                   sao: hộp thoại gọi bước này bằng fetch, gặp 500 thì
+                   buy-flow.js đưa trình duyệt tới /gio-hang/chon, địa chỉ đó
+                   chỉ nhận POST nên lại đá về /gio-hang. Khách bấm "Xác nhận
+                   độ kính" và thấy mình đứng ở giỏ hàng, không một lời giải
+                   thích. Đúng như vậy đã xảy ra trên hosting ngày 2026-08-22,
+                   khi migration 2026-08-21-kinh-dang-deo.sql chưa được chạy ở
+                   đó nên năm cột wear_* không tồn tại.
+
+                   Nuốt lỗi ở đây là ĐÚNG chứ không phải giấu: mất hồ sơ dựng
+                   sẵn thì khách vẫn khai được ở trang tài khoản, còn mất đơn
+                   hàng thì không lấy lại được. Vẫn ghi log để còn biết. */
+                try {
+                    UserModel::seedPrescription(AuthMiddleware::userId(), $od, $os);
+                } catch (Throwable $e) {
+                    error_log('seedPrescription: ' . $e->getMessage());
+                }
 
                 // Đã có độ rồi mới bàn tới tròng — xem ghi chú ở 'hinh-thuc'.
                 $next = LensModel::takesLensPackage($product) ? 'kieu-trong' : 'xac-nhan';

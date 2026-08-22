@@ -193,7 +193,29 @@
                  * thái máy chủ đang có.
                  */
                 if (!res.ok) {
-                    window.location.href = res.url || window.location.href;
+                    /*
+                     * ĐỪNG ĐI TỚI MỘT ĐỊA CHỈ CHỈ NHẬN POST.
+                     *
+                     * /gio-hang/them và /gio-hang/chon từ chối GET và đá về
+                     * /gio-hang. Nên khi một bước lỗi 500, res.url trỏ đúng
+                     * vào một trong hai địa chỉ đó, và câu lệnh dưới đây từng
+                     * biến "hộp thoại lỗi" thành "khách đột nhiên đứng ở giỏ
+                     * hàng, không một lời giải thích" — mất luôn dấu vết để
+                     * lần ra lỗi thật. Chuyện này đã xảy ra ngày 2026-08-22
+                     * với bước nhập số đo.
+                     *
+                     * Tải lại CHÍNH trang đang đứng thì khách ở nguyên chỗ cũ,
+                     * hộp thoại vẽ lại đúng bước dở dang, và họ bấm lại được.
+                     * Vẫn là GET nên không có nguy cơ gửi lại form — đúng mối
+                     * lo mà nhánh này sinh ra để tránh.
+                     */
+                    var dest = res.url || '';
+                    var postOnly = dest.indexOf('/gio-hang/them') !== -1
+                                || dest.indexOf('/gio-hang/chon') !== -1;
+
+                    window.location.href = (dest && !postOnly)
+                        ? dest
+                        : window.location.href;
                     return;
                 }
 
