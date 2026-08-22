@@ -207,17 +207,17 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
 
         <h2 class="acct-form__title">Kính đang đeo</h2>
         <p class="acct-form__note acct-form__note--lead">
-            Không bắt buộc. Khai giúp cửa hàng biết bạn đang quen với loại kính nào
-            để tư vấn cặp mới sát hơn.
+            Không bắt buộc. Những thông tin này giúp cửa hàng biết bạn đang quen với
+            loại kính nào để tư vấn cặp mới sát hơn.
         </p>
 
         <div class="acct-form__row">
             <label class="acct-field">
                 <span class="acct-field__label">Loại tròng đang dùng</span>
                 <select class="acct-field__input" name="wear_lens_type">
-                    <option value="">— Chưa khai —</option>
+                    <option value="">— Chưa chọn —</option>
                     <?php /* "Chưa đeo kính" là một câu trả lời THẬT, khác hẳn
-                             "chưa khai": nó nói cho người tư vấn biết đây là
+                             "chưa chọn": nó nói cho người tư vấn biết đây là
                              lần đầu khách cắt kính. */ ?>
                     <option value="<?= e(UserModel::WEAR_NONE) ?>"
                             <?= $wearType === UserModel::WEAR_NONE ? 'selected' : '' ?>>
@@ -235,7 +235,7 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
             <label class="acct-field">
                 <span class="acct-field__label">Loại gọng đang dùng</span>
                 <select class="acct-field__input" name="wear_frame_type">
-                    <option value="">— Chưa khai —</option>
+                    <option value="">— Chưa chọn —</option>
                     <?php foreach ($wearFrames as $fr): ?>
                         <option value="<?= e($fr) ?>"
                                 <?= ($prescription['wear_frame_type'] ?? '') === $fr ? 'selected' : '' ?>>
@@ -268,7 +268,7 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
             <label class="acct-field">
                 <span class="acct-field__label">Đã dùng cặp kính hiện tại bao lâu</span>
                 <select class="acct-field__input" name="wear_since">
-                    <option value="">— Chưa khai —</option>
+                    <option value="">— Chưa chọn —</option>
                     <?php foreach ($wearSince as $sn): ?>
                         <option value="<?= e($sn) ?>"
                                 <?= ($prescription['wear_since'] ?? '') === $sn ? 'selected' : '' ?>>
@@ -377,12 +377,15 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
 
     <?php
     /*
-     * THẺ "KÍNH ĐANG ĐEO" — chỉ hiện khi khách đã khai ít nhất một ô.
+     * THẺ "KÍNH ĐANG ĐEO" — chỉ hiện khi khách đã điền ít nhất một ô.
      *
-     * Chưa khai gì thì hiện một lời mời thay vì một thẻ đầy dấu gạch ngang:
+     * Chưa điền gì thì hiện một lời mời thay vì một thẻ đầy dấu gạch ngang:
      * bảng số độ ở trên phải in "—" cho ô trống vì trong đơn thuốc "không đo"
-     * khác "bằng không", còn ở đây không có gì để phân biệt — chưa khai thì
-     * đúng là chưa khai.
+     * khác "bằng không", còn ở đây không có gì để phân biệt — trống thì đúng
+     * là chưa có thông tin.
+     *
+     * (Chữ dùng trong mục này CỐ Ý tránh "khai". Đây là thứ khách tự nguyện
+     * cho biết để được tư vấn sát hơn, không phải một thủ tục phải làm.)
      */
     $wearRows = array_filter([
         'Loại tròng' => UserModel::wearLensTypeName($wearType),
@@ -396,14 +399,17 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
         <div class="acct-rxcard__top">
             <span class="acct-rxcard__when">Kính đang đeo</span>
             <a class="acct-wear__edit" href="/tai-khoan?muc=do-mat&amp;sua=1">
-                <?= $wearRows === [] ? 'Khai ngay' : 'Cập nhật' ?>
+                <?php /* "Điền ngay", không phải "Khai ngay": đây là mục khách
+                         tự nguyện cho biết thói quen đeo kính để được tư vấn sát
+                         hơn — chữ "khai" đọc như một thủ tục bắt buộc. */ ?>
+                <?= $wearRows === [] ? 'Điền ngay' : 'Cập nhật' ?>
             </a>
         </div>
 
         <?php if ($wearRows === []): ?>
             <span class="acct-rxcard__note">
-                Bạn chưa khai cặp kính đang đeo. Cửa hàng dùng thông tin này để tư vấn
-                loại tròng và gọng sát với thói quen của bạn hơn.
+                Bạn chưa cho biết cặp kính đang đeo. Cửa hàng dùng thông tin này để
+                tư vấn loại tròng và gọng sát với thói quen của bạn hơn.
             </span>
         <?php else: ?>
             <dl class="acct-wear__list">
