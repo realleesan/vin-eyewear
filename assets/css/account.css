@@ -1332,73 +1332,127 @@ select.acct-field__input {
    KHỐI CHUYỂN KHOẢN — nằm ngang CẢ HAI CỘT của phần chi tiết
    Markup: app/views/auth/account/don-hang.php
 
-   Trước đây nó bị nhét trong cột "Tóm tắt thanh toán", tức nửa bề ngang: tên
-   chủ tài khoản dài phải vắt ba dòng, và một việc khách PHẢI LÀM lại nằm lẫn
-   giữa những con số chỉ để đọc.
+   BA DẢI CÓ NỀN RIÊNG, không còn là một hộp phẳng với vài dòng chữ:
 
-   Nền vàng ấm, KHÔNG phải nền trắng như các dải khác — cùng sắc với khối đặt
-   cọc ở trên nó (.acct-order__deposit) để hai thứ "cần bạn hành động" đọc ra
-   là cùng một loại.
+     dải đầu   việc đang chờ + SỐ TIỀN (con số quyết định chuyển đúng/sai)
+     thân      bốn ô thông tin để chép sang app ngân hàng
+     dải chân  câu nhắc mã đơn + nút sang màn quét QR
+
+   Chia dải để mắt tách được ba loại việc khác nhau. Trước đây số tiền nằm lẫn
+   giữa bốn dòng chép-dán, tức thứ quan trọng nhất trông giống hệt thứ phụ nhất.
+
+   Nền vàng ấm cùng sắc với khối đặt cọc ở trên nó — hai thứ "cần bạn hành
+   động" phải đọc ra là cùng một loại.
    ============================================================ */
 
 .acct-order__pay {
     grid-column: 1 / -1;   /* vượt qua lưới hai cột của .acct-order__detail */
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
     margin-top: 4px;
-    padding: 20px 22px;
     border: 1px solid #e8d5b4;
     border-radius: var(--radius-sm);
     background: #fdf6e8;
+    /* Ba dải có nền và đường kẻ riêng, phải bị bo theo góc khối */
+    overflow: hidden;
 }
+
+/* --- Dải đầu --- */
+
+.acct-order__payhead {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 16px 22px;
+    border-bottom: 1px solid #f0e4cd;
+}
+
+.acct-order__paywhat { min-width: 0; }
 
 .acct-order__pay-head { color: #8a6a2e; }
 
-/* Bảng BA CỘT: nhãn · giá trị · nút chép.
-   Cột nhãn rộng cố định để mọi giá trị thẳng hàng nhau; cột nút `auto` để nó
-   ôm đúng bề rộng chữ và nằm sát phải giá trị, không trôi ra mép khối. */
-.acct-order__bank {
-    display: grid;
-    grid-template-columns: 132px minmax(0, 1fr) auto;
-    align-items: center;
-    row-gap: 9px;
-    column-gap: 16px;
-    margin: 0;
-    font-size: 13.5px;
+.acct-order__paysub {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--a-meta);
 }
 
-.acct-order__bankkey { color: var(--a-note); }
+/* Cụm số tiền — căn PHẢI và không co lại: nó là con số khách gõ vào ô số tiền
+   của app ngân hàng, không được để nó vắt dòng giữa chừng. */
+.acct-order__paysum {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.acct-order__paylabel {
+    font-size: 11.5px;
+    color: var(--a-meta);
+}
+
+.acct-order__paynum {
+    margin-top: 2px;
+    font-family: var(--font-serif);
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--brand);
+    white-space: nowrap;
+}
+
+/* --- Thân: bốn ô 2×2 --- */
+
+.acct-order__bank {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 32px;
+    margin: 0;
+    padding: 18px 22px;
+}
+
+.acct-order__field { min-width: 0; }
+
+/* Nhãn NẰM TRÊN giá trị, không phải bên trái. Nhãn bên trái buộc phải khoá bề
+   rộng cột cho nhãn dài nhất ("Nội dung chuyển khoản"), và bề rộng đó bị trừ
+   vào chỗ của mọi giá trị. */
+.acct-order__bankkey {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 11.5px;
+    color: var(--a-meta);
+}
+
+/* Giá trị và nút chép nằm cùng dòng, nút bám ngay sau chữ chứ không trôi ra
+   mép ô — khách nhìn là biết nút đó chép cái gì. */
+.acct-order__bankline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
 
 .acct-order__bankval {
+    font-size: 14px;
     font-weight: 600;
     color: var(--ink);
-    /* Số tài khoản 10–13 chữ số: giãn nhẹ cho dễ đọc lại từng số khi khách gõ
-       tay. break-word cho tên chủ tài khoản dài. */
+    /* Số tài khoản 10–13 chữ số: giãn nhẹ cho dễ đọc lại từng số khi gõ tay.
+       break-word để tên chủ tài khoản dài không đẩy ngang ô. */
     letter-spacing: 0.02em;
     word-break: break-word;
 }
 
-/* Dòng không có nút chép: trải hết hai cột còn lại. */
-.acct-order__bankval--wide { grid-column: 2 / -1; }
-
-.acct-order__banknote {
-    font-style: normal;
-    font-weight: 400;
-    font-size: 12.5px;
-    color: var(--a-note);
-}
-
 /* Nút "Sao chép" — CHỈ có ở số tài khoản và nội dung chuyển khoản.
-   Hai thứ đó phải gõ lại vào app ngân hàng, và gõ sai thì tiền đi lạc hoặc
-   không khớp được đơn. Dáng nhạt, không tranh với nút QR bên dưới. */
+   Dáng nhạt, không tranh với nút QR ở dải chân. */
 .acct-copy {
-    padding: 5px 12px;
+    flex: none;
+    padding: 3px 10px;
     border: 1px solid var(--a-edge);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 500;
     color: var(--a-item);
     white-space: nowrap;
@@ -1408,32 +1462,39 @@ select.acct-field__input {
 .acct-copy:hover,
 .acct-copy:focus-visible { border-color: var(--brand); color: var(--brand); }
 
-/* Đã chép xong — xanh lá, tự trở lại sau ~1,6 giây (account.js) */
+/* Đã chép xong — tự trở lại sau ~1,6 giây (copy-btn.js) */
 .acct-copy.is-done {
     border-color: #bcd8c6;
     background: #eef7f0;
     color: #3d6633;
 }
 
-/* Chân khối: câu nhắc bên trái, nút QR bên phải. */
+/* --- Dải chân --- */
+
 .acct-order__payfoot {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 18px;
     flex-wrap: wrap;
-    padding-top: 14px;
-    border-top: 1px solid #eeddc0;
+    padding: 14px 22px;
+    /* Đậm hơn thân một nấc: dải này là việc CUỐI trước khi khách rời trang đi
+       chuyển tiền, nên nó phải nổi hơn phần thông tin ở trên. */
+    background: #fbf3e2;
+    border-top: 1px solid #f0e4cd;
 }
 
 .acct-order__payfoot .acct-order__memo {
     flex: 1;
     min-width: 220px;
     font-size: 12.5px;
+    line-height: 1.5;
     color: #8a6a2e;
 }
 
-.acct-order__payfoot .acct-order__qr { margin: 0; align-self: auto; }
+.acct-order__payfoot .acct-order__memo strong { color: var(--brand); }
+
+.acct-order__payfoot .acct-order__qr { flex: none; margin: 0; align-self: auto; }
 
 .acct-order__grand {
     font-size: 16px;
@@ -1926,24 +1987,24 @@ select.acct-field__input {
 }
 
 @media (max-width: 560px) {
-    /* KHỐI CHUYỂN KHOẢN Ở MÀN HẸP — nhãn lên dòng riêng.
-       Lưới ba cột (132px nhãn · giá trị · nút chép) chỉ còn ~120px cho giá trị
-       trên điện thoại, và "HO KINH DOANH PHAM TIEN MANH" vắt thành bốn dòng.
-       Cho nhãn chiếm trọn một dòng thì giá trị có đủ bề ngang, nút chép nằm
-       ngay cạnh nó. */
+    /* KHỐI CHUYỂN KHOẢN Ở MÀN HẸP — bốn ô về MỘT cột.
+       Hai ô cạnh nhau trên điện thoại thì mỗi ô còn chưa tới 160px, và "HO
+       KINH DOANH PHAM TIEN MANH" vắt thành bốn dòng. Xếp dọc thì mỗi ô được
+       trọn bề ngang.
+
+       (Luật cũ cho lưới ba cột nhãn·giá·nút đã bỏ cùng với chính lưới đó —
+       nhãn nay nằm TRÊN giá trị nên không còn cột nhãn để mà thu.) */
     .acct-order__bank {
-        grid-template-columns: minmax(0, 1fr) auto;
-        row-gap: 14px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
     }
 
-    .acct-order__bankkey {
-        grid-column: 1 / -1;
-        /* Kéo nhãn sát xuống giá trị của chính nó, tách khỏi cặp phía trên */
-        margin-bottom: -10px;
-        font-size: 12.5px;
+    /* Dải đầu: cụm số tiền xuống dòng và về căn trái, cho thẳng hàng với chữ
+       bên trên nó thay vì lửng ở mép phải. */
+    .acct-order__paysum {
+        align-items: flex-start;
+        text-align: left;
     }
-
-    .acct-order__bankval--wide { grid-column: 1 / -1; }
 
     .acct-order__payfoot .acct-order__qr { width: 100%; justify-content: center; }
 
