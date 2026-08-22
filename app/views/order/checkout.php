@@ -379,9 +379,41 @@ $storeId  = $old['storeId'] ?? '';
                                     formaction="/thanh-toan/ma" formnovalidate
                                     aria-label="Bỏ mã <?= e($voucher['code']) ?>">✕</button>
                         </div>
-                    <?php elseif ($vouchers === []): ?>
-                        <p class="covou__none">Hiện chưa có mã giảm giá nào đang chạy.</p>
                     <?php else: ?>
+                        <?php
+                        /* ─────────────────────────────────────────────────
+                           Ô GÕ MÃ LUÔN CÓ, KỂ CẢ KHI DANH SÁCH TRỐNG.
+
+                           Trang này trước đây chỉ có ô CHỌN. Danh sách trống
+                           thì nó nói "chưa có mã nào đang chạy" rồi hết —
+                           khách cầm một mã trên tay (nhận qua Zalo, in trên
+                           phiếu bảo hành, bạn bè cho) không có chỗ nào để gõ,
+                           trong khi trang giỏ hàng thì có. Hai màn của cùng
+                           một luồng mà làm được hai việc khác nhau.
+
+                           Gửi tới ĐÚNG địa chỉ mà các nút chọn mã đang dùng
+                           (/thanh-toan/ma, ô `code`), nên không có thêm nhánh
+                           xử lý nào ở phía máy chủ — chỉ là một đường vào nữa
+                           cho cùng một việc.
+
+                           formnovalidate như các nút chọn mã: form bọc ngoài
+                           là form ĐẶT HÀNG, và bấm "Áp dụng" khi chưa điền họ
+                           tên không được phép biến thành bong bóng "Vui lòng
+                           điền vào trường này" ở một ô chẳng liên quan.
+                           ───────────────────────────────────────────────── */
+                        ?>
+                        <div class="covou__type">
+                            <label class="sr-only" for="co-ma">Mã giảm giá</label>
+                            <input class="covou__input" type="text" id="co-ma" name="code"
+                                   maxlength="40" autocomplete="off" spellcheck="false"
+                                   placeholder="Nhập mã giảm giá">
+                            <button type="submit" class="covou__apply"
+                                    formaction="/thanh-toan/ma" formnovalidate>Áp dụng</button>
+                        </div>
+
+                        <?php if ($vouchers === []): ?>
+                            <p class="covou__none">Hiện chưa có mã nào đang chạy để chọn sẵn.</p>
+                        <?php else: ?>
                         <details class="covou__pick">
                             <summary class="covou__toggle" aria-describedby="co-vou">
                                 Chọn mã giảm giá…
@@ -426,6 +458,7 @@ $storeId  = $old['storeId'] ?? '';
                                 <?php endforeach; ?>
                             </div>
                         </details>
+                        <?php endif; ?>
                     <?php endif; ?>
 
                     <?php if ($voucherMsg !== null): ?>

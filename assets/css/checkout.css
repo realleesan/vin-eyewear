@@ -543,6 +543,57 @@ select.cofield__input {
     gap: 10px;
 }
 
+/* --- Ô gõ mã tay ---
+   Cùng dáng với ô mã ở trang giỏ hàng (.cvou__input / .cvou__apply trong
+   cart.css): hai màn của cùng một luồng, khách gặp cả hai trong một lượt mua
+   nên chúng phải trông như một. */
+.covou__type {
+    display: flex;
+    gap: 8px;
+}
+
+.covou__input {
+    box-sizing: border-box;
+    flex: 1;
+    min-width: 0;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink);
+    /* Mã giảm giá luôn viết hoa — khách gõ thường thì tự hiện hoa, khỏi băn
+       khoăn mình gõ đúng chưa. Server cũng strtoupper() nên hai bên khớp. */
+    text-transform: uppercase;
+}
+
+.covou__input:focus {
+    outline: none;
+    border-color: #c9a79b;
+    background: var(--surface-focus);
+}
+
+.covou__input::placeholder { text-transform: none; color: var(--o-note); }
+
+.covou__apply {
+    flex: none;
+    padding: 0 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.covou__apply:hover,
+.covou__apply:focus-visible { background: var(--brand-strong); }
+
 /* position:relative để bảng thả xuống bám theo nút, không đẩy khối tổng tiền
    bên dưới trôi xuống mỗi lần mở. */
 .covou__pick { position: relative; }
