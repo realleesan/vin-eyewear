@@ -49,6 +49,9 @@
    dải đó. Chừa 88px thì giữa hai vùng có một băng pearl trống không thuộc về
    khối nào. */
 .page-home-index .site-footer,
+/* Trang giới thiệu: khối cuối (.about-start) cũng là một dải nền tràn hai
+   mép, bản thiết kế cho chân trang bắt đầu ngay dưới nó. */
+.page-about-index .site-footer,
 .page-product-index .site-footer,
 .page-contact-index .site-footer,
 .page-product-detail .site-foote,

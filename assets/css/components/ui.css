@@ -454,8 +454,7 @@
 /* .mega__col không còn ở đây — nó về cùng nhà với phần còn lại của bảng xổ,
    trong components/mega-menu.css. */
 .hproc__text,
-.lspot__text,
-.about-process__intro { min-width: 0; }
+.lspot__text { min-width: 0; }
 
 
 /* ============================================================

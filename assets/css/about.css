@@ -1,252 +1,497 @@
 /* ============================================================
    about.css — Trang Giới thiệu
-   Port từ src/routes/gioi-thieu.tsx (Lovable)
 
-   Đầu trang dùng chung nằm ở components/page-head.css (.pagehead), master.php
-   nạp cho mọi trang — không có gì phải khai thêm ở đây.
+   Dựng theo "Gioi thieu v2.dc.html": bốn khối đánh số 01→04 (Về chúng tôi ·
+   Giá trị cốt lõi · Dịch vụ đo mắt · Bắt đầu), xen kẽ nền --surface và nền
+   hồng --brand-subtle.
+
+   MÀU LẤY TỪ BẢNG MÀU CŨ CỦA SITE, không lấy mã màu trong bản thiết kế.
+   Bản thiết kế vẽ bằng một tông đỏ hơi khác (#7d2433 / #faf6f5 / #f3e6e3);
+   chúng ánh xạ 1-1 sang token có sẵn nên chỉ cần đổi tên, không đổi bố cục:
+
+       #7d2433 → var(--brand)          #f3e6e3 / #f0dcdd → var(--brand-subtle)
+       #641c29 → var(--brand-strong)   #26262a           → var(--ink)
+       #faf6f5 → var(--surface)        #5a5a5e           → var(--muted)
+       #f5e8e6 → var(--on-brand-soft)  #e0b3ba / #f0c8ce → var(--on-brand-muted)
+       #e9dcda → var(--line)           #9b8082           → var(--eyebrow)
+       #c4aeb0 → var(--h-meta)         #e2cfcd           → var(--h-blush-line)
+
+   Chữ dùng --font-serif (Lora) chứ không phải Playfair Display của bản vẽ:
+   toàn site đã nạp đúng một họ serif, thêm họ thứ hai chỉ cho một trang là
+   thêm một lượt tải phông cho mọi khách vào trang này.
+
+   Đầu trang (breadcrumb + "Giới thiệu" + câu dẫn bên phải) KHÔNG nằm ở đây:
+   khối nền hồng mà bản thiết kế vẽ ở đầu trang chính là .pagehead dùng chung
+   trong components/page-head.css — cùng nền, cùng cách xếp, chỉ khác chữ.
+
+   Class .reveal là hiệu ứng hiện dần khi cuộn tới, do đoạn script dùng chung
+   ở cuối master.php xử lý.
    ============================================================ */
 
-/* --- Tiện ích chung của trang ------------------------------- */
+.about {
+    /* Đệm dọc của khối. Bản vẽ để 96px ở khổ 1440; --section-pad dùng chung
+       lên tới 128px nên nhịp giữa các khối sẽ rộng hơn bản vẽ một bậc. */
+    --about-pad: clamp(56px, 7vw, 96px);
 
-.about-h2 {
-    margin-top: 16px;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h3);
-    font-weight: 600;
-    line-height: 1.16;
-    letter-spacing: normal;
-    color: var(--ink);
-    text-wrap: balance;
+    /* Khoảng cách giữa hai cột chữ ↔ ảnh */
+    --about-gap: clamp(40px, 5vw, 72px);
+
+    /* Độ lệch của khung viền chạy sau ảnh (xem .about-frame) */
+    --about-frame-shift: 20px;
 }
 
-.about-h2--narrow { max-width: 20ch; }
 
-.about-lead {
-    max-width: 34ch;
-    margin-top: 16px;
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-    color: var(--muted);
+/* ============================================================
+   Mẩu dùng lại giữa các khối
+   ============================================================ */
+
+/* Nhãn "01 — VỀ CHÚNG TÔI": một gạch ngang 36px rồi tới chữ. Gạch vẽ bằng
+   ::before nên phần chữ vẫn là nội dung duy nhất của thẻ — trình đọc màn hình
+   không phải đọc thêm một <span> rỗng. */
+.about-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--brand);
+}
+
+.about-eyebrow::before {
+    content: "";
+    flex: none;
+    width: 36px;
+    height: 1px;
+    background: var(--brand);
+}
+
+/* Bản căn giữa của khối 04: thêm gạch thứ hai ở bên phải */
+.about-eyebrow--center { justify-content: center; }
+
+.about-eyebrow--center::after {
+    content: "";
+    flex: none;
+    width: 36px;
+    height: 1px;
+    background: var(--brand);
+}
+
+.about-h2 {
+    margin: 22px 0 0;
+    font-family: var(--font-serif);
+    font-size: clamp(30px, calc(11.4px + 2.60vw), 50px);
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: normal;
+    color: var(--ink);
     text-wrap: pretty;
 }
 
-
-/* --- 01. Câu chuyện ----------------------------------------- */
-
-.about-story {
-    max-width: var(--container, 1280px);
-    margin-inline: auto;
-    padding: var(--section-pad) var(--page-edge);
+/* Dòng thứ hai của mọi tiêu đề trong bản vẽ: nghiêng, màu thương hiệu */
+.about-h2 em {
+    font-style: italic;
+    color: var(--brand);
 }
-
-.about-story__grid {
-    display: grid;
-    gap: 40px;
-}
-
-@media (min-width: 1101px) {
-    .about-story__grid {
-        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-        gap: 64px;
-    }
-}
-
-.about-story__text { min-width: 0; }
 
 .about-prose {
     display: grid;
     gap: 16px;
-    margin-top: 20px;
+    margin-top: 26px;
     font-size: var(--fs-body);
+    line-height: 1.9;
+    color: var(--muted);
+    text-wrap: pretty;
+}
+
+/* Khung viền mảnh chạy lệch sau ảnh. Ảnh nằm trong .about-frame__media (có
+   nền, che khung), khung là ::before của thẻ ngoài — lệch xuống dưới và sang
+   một bên đúng --about-frame-shift.
+
+   ::before KHÔNG được vẽ đè lên ảnh: nó đứng trước trong thứ tự vẽ và
+   .about-frame__media có position:relative nên luôn nằm trên. */
+.about-frame {
+    position: relative;
+    min-width: 0;
+    margin: 0;
+}
+
+.about-frame::before {
+    content: "";
+    position: absolute;
+    inset: var(--about-frame-shift)
+           calc(-1 * var(--about-frame-shift))
+           calc(-1 * var(--about-frame-shift))
+           var(--about-frame-shift);
+    border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+    border-radius: var(--radius-sm);
+}
+
+/* Bản lệch sang TRÁI, dùng cho ảnh nằm ở cột phải (khối 03) */
+.about-frame--left::before {
+    inset: var(--about-frame-shift)
+           var(--about-frame-shift)
+           calc(-1 * var(--about-frame-shift))
+           calc(-1 * var(--about-frame-shift));
+}
+
+.about-frame__media {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+}
+
+.about-frame__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+/* ============================================================
+   01 — VỀ CHÚNG TÔI
+   ============================================================ */
+
+.about-story {
+    background: var(--surface);
+    padding: var(--about-pad) var(--page-edge);
+}
+
+.about-story__grid {
+    display: grid;
+    gap: var(--about-gap);
+    max-width: var(--container, 1600px);
+    margin-inline: auto;
+}
+
+@media (min-width: 1025px) {
+    .about-story__grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+        align-items: center;
+    }
+
+    .about-story .about-frame__media { height: 480px; }
+}
+
+.about-story__text {
+    min-width: 0;
+    max-width: 540px;
+}
+
+/* Dòng ký tên dưới cùng: một đường kẻ rồi tới chữ nghiêng */
+.about-sign {
+    margin: 32px 0 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-serif);
+    font-size: var(--fs-body);
+    font-style: italic;
+    color: var(--eyebrow);
+}
+
+
+/* ============================================================
+   02 — GIÁ TRỊ CỐT LÕI
+   ============================================================ */
+
+.about-values {
+    background: var(--brand-subtle);
+    padding: var(--about-pad) var(--page-edge);
+}
+
+.about-values__inner {
+    max-width: var(--container, 1600px);
+    margin-inline: auto;
+}
+
+.about-values__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    padding-bottom: 26px;
+    border-bottom: 1px solid var(--h-blush-line);
+}
+
+.about-values__note {
+    font-size: var(--fs-note);
+    color: var(--eyebrow);
+}
+
+/* Lưới ô: nền của lưới là màu nền khối, khe 1px giữa các ô để lộ nền đó ra
+   thành đường kẻ. Nếu cho từng ô một border thì chỗ hai ô giáp nhau sẽ dày
+   gấp đôi cạnh ngoài cùng. */
+.about-values__grid {
+    display: grid;
+    gap: 1px;
+    margin-top: 36px;
+    border: 1px solid color-mix(in srgb, var(--brand) 25%, transparent);
+    border-radius: var(--radius-sm);
+    background: var(--brand-subtle);
+    overflow: hidden;
+    list-style: none;
+}
+
+@media (min-width: 681px) {
+    .about-values__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1025px) {
+    .about-values__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Ô nền đỏ: nhãn số ở trên, tiêu đề dính đáy ô — nên bốn tiêu đề thẳng hàng
+   nhau dù chữ dài ngắn khác nhau. */
+.about-vcard {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 24px;
+    min-height: 190px;
+    padding: 32px;
+    background: var(--brand);
+}
+
+.about-vcard__num {
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: var(--on-brand-muted);
+}
+
+.about-vcard__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h6);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--on-brand-soft);
+}
+
+/* Ô mở đầu: chiếm hai cột, chữ to hơn hẳn bốn ô còn lại */
+.about-vlead {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 32px;
+    padding: 44px 40px;
+    background: var(--brand);
+}
+
+@media (min-width: 681px) {
+    .about-vlead { grid-column: span 2; }
+}
+
+.about-vlead__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-h2);
+    font-weight: 600;
+    line-height: 1.28;
+    color: var(--on-brand-soft);
+}
+
+.about-vlead__title em {
+    font-style: italic;
+    color: var(--on-brand-muted);
+}
+
+.about-vlead__desc {
+    max-width: 380px;
+    font-size: var(--fs-note);
+    line-height: 1.7;
+    color: var(--on-brand-muted);
+}
+
+/* Hai ô ảnh xen giữa các ô nền đỏ */
+.about-vfig {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+.about-vfig img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 220px;
+    object-fit: cover;
+}
+
+
+/* ============================================================
+   03 — DỊCH VỤ ĐO MẮT
+   ============================================================ */
+
+.about-exam {
+    background: var(--surface);
+    padding: var(--about-pad) var(--page-edge);
+}
+
+.about-exam__grid {
+    display: grid;
+    gap: var(--about-gap);
+    max-width: var(--container, 1600px);
+    margin-inline: auto;
+}
+
+@media (min-width: 1025px) {
+    .about-exam__grid {
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        align-items: center;
+    }
+
+    .about-exam .about-frame__media { height: 540px; }
+}
+
+.about-exam__text { min-width: 0; }
+
+/* Tiêu đề khối này nhỏ hơn khối 01 (38px so với 50px) vì cột chữ còn phải
+   chứa cả danh sách ba bước bên dưới. */
+.about-exam__h2 {
+    margin-top: 20px;
+    font-size: var(--fs-h3);
+    line-height: 1.3;
+}
+
+.about-exam__lead {
+    margin-top: 20px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.8;
+    color: var(--muted);
+    text-wrap: pretty;
+}
+
+.about-exam__list {
+    margin-top: 30px;
+    list-style: none;
+}
+
+.about-exam__item {
+    display: flex;
+    gap: 22px;
+    padding-block: 20px;
+    border-bottom: 1px solid var(--line);
+}
+
+.about-exam__item:last-child { border-bottom: 0; }
+
+.about-exam__num {
+    flex: none;
+    width: 28px;
+    font-family: var(--font-serif);
+    font-size: var(--fs-body-lg);
+    font-weight: 600;
+    color: var(--h-meta);
+    font-variant-numeric: tabular-nums;
+}
+
+.about-exam__title {
+    font-family: var(--font-serif);
+    font-size: var(--fs-subhead);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.about-exam__desc {
+    margin-top: 6px;
+    font-size: var(--fs-note);
     line-height: 1.75;
     color: var(--muted);
 }
 
-/* Số liệu */
-.about-stats {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 32px;
-    margin-top: 40px;
+.about-exam__cta { margin-top: 32px; }
+
+
+/* ============================================================
+   04 — BẮT ĐẦU
+   ============================================================ */
+
+.about-start {
+    padding: clamp(64px, 8vw, 110px) var(--page-edge);
+    background: linear-gradient(
+        135deg,
+        var(--brand-subtle) 0%,
+        color-mix(in srgb, var(--brand-subtle) 45%, var(--surface)) 100%
+    );
+    text-align: center;
 }
 
-@media (min-width: 601px) {
-    .about-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.about-start__h2 {
+    margin-top: 26px;
+    font-size: var(--fs-h2);
+    line-height: 1.35;
 }
 
-.about-stat {
-    padding-top: 16px;
-    border-top: 1px solid var(--line);
-}
-
-.about-stat__value {
+.about-start__quote {
+    margin: 22px 0 0;
     font-family: var(--font-serif);
-    font-size: var(--fs-h4);
-    font-weight: 600;
-    line-height: 1;
-    color: var(--brand);
-    /* Chữ số cùng bề rộng -> 4 cột số thẳng hàng nhau */
-    font-variant-numeric: tabular-nums;
+    font-size: var(--fs-body);
+    font-style: italic;
+    color: var(--eyebrow);
 }
 
-.about-stat__label {
-    margin-top: 8px;
-    font-size: var(--fs-label);
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--muted);
-}
-
-/* Ảnh showroom */
-.about-figure { min-width: 0; }
-
-@media (min-width: 1101px) {
-    /* Lệch xuống để không thẳng hàng cứng với cột chữ */
-    .about-figure { margin-top: 48px; }
-}
-
-.about-figure img {
-    display: block;
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-}
-
-.about-figure figcaption {
-    margin-top: 12px;
-    font-size: var(--fs-label);
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--muted);
-}
-
-/* --- 02. Cam kết -------------------------------------------- */
-
-.about-values {
-    border-block: 1px solid var(--line);
-    background: color-mix(in srgb, var(--surface-sunken) 50%, var(--surface));
-}
-
-.about-values__inner {
-    max-width: var(--container, 1280px);
-    margin-inline: auto;
-    padding: 64px var(--page-edge);
-}
-
-@media (min-width: 901px) {
-    .about-values__inner { padding-block: 80px; }
-}
-
-/* Nền --line + khe 1px = đường kẻ ngăn ô. Dùng border từng ô thì chỗ hai ô
-   giáp nhau sẽ dày 2px, còn cạnh ngoài cùng lại chỉ 1px. */
-.about-values__list {
-    display: grid;
-    gap: 1px;
-    margin-top: 40px;
-    border: 1px solid var(--line);
-    background: var(--line);
-    list-style: none;
-}
-
-@media (min-width: 601px) {
-    .about-values__list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-.about-value {
-    padding: 24px;
-    background: var(--surface);
-}
-
-@media (min-width: 901px) {
-    .about-value { padding: 32px; }
-}
-
-.about-value__index {
-    font-family: var(--font-serif);
-    font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-}
-
-.about-value__ico {
-    display: block;
-    margin-top: 20px;
-    color: var(--brand);
-}
-
-.about-value__title {
-    margin-top: 16px;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h6);
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.about-value__desc {
-    margin-top: 8px;
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-    color: var(--muted);
-}
-
-/* --- 03. Quy trình ------------------------------------------ */
-
-.about-process {
-    max-width: var(--container, 1280px);
-    margin-inline: auto;
-    padding: var(--section-pad) var(--page-edge);
-}
-
-.about-process__grid {
-    display: grid;
-    gap: 24px;
-}
-
-@media (min-width: 1101px) {
-    .about-process__grid {
-        grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    }
-}
-
-.about-process__cta { margin-top: 32px; }
-
-.about-steps {
-    min-width: 0;
-    list-style: none;
-}
-
-.about-step {
-    display: grid;
-    grid-template-columns: 3rem minmax(0, 1fr);
+.about-start__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 16px;
-    padding-block: 24px;
-    border-top: 1px solid var(--line);
+    margin-top: 38px;
 }
 
-.about-step:last-child { border-bottom: 1px solid var(--line); }
+/* Nút phụ của bản vẽ: nền trong suốt, viền và chữ màu thương hiệu, di chuột
+   thì tô đặc. .btn-outline dùng chung có viền xám --line-strong và chữ màu
+   --ink, không phải cặp màu này.
 
-.about-step__num {
-    font-family: var(--font-serif);
-    font-size: var(--fs-h5);
-    font-weight: 600;
-    line-height: 1;
+   Chiều cao phải viết lại: .btn-outline hạ xuống 44px và đứng SAU .btn-lg
+   trong ui.css, nên .btn-lg một mình không kéo nút này về 48px cho bằng nút
+   chính bên cạnh. */
+.about-start__alt {
+    height: 48px;
+    border-color: var(--brand);
     color: var(--brand);
-    font-variant-numeric: tabular-nums;
 }
 
-.about-step__body { min-width: 0; }
-
-.about-step__title {
-    font-family: var(--font-serif);
-    font-size: var(--fs-h6);
-    font-weight: 600;
-    color: var(--ink);
+.about-start__alt:hover,
+.about-start__alt:focus-visible {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: var(--on-brand);
 }
 
-.about-step__desc {
-    margin-top: 4px;
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-    color: var(--muted);
+
+/* ============================================================
+   Màn hẹp
+   ============================================================ */
+
+@media (max-width: 1024px) {
+    /* Bỏ khung viền lệch: dưới hai cột, phần khung thò ra ngoài --page-edge
+       (chỉ còn 18px ở màn nhỏ nhất) sẽ tràn mép trang và sinh thanh cuộn
+       ngang. */
+    .about-frame::before { display: none; }
+
+    .about-frame__media img { aspect-ratio: 4 / 3; }
+
+    .about-story__text { max-width: none; }
+}
+
+@media (max-width: 680px) {
+    .about-vlead { padding: 32px 24px; }
+
+    .about-vcard {
+        min-height: 0;
+        padding: 24px;
+    }
+
+    .about-values__head { gap: 16px; }
+
+    /* Một cột: ô ảnh không còn ô chữ bên cạnh để lấy chiều cao, để mặc kệ thì
+       hai tấm ảnh xếp chồng chiếm gần hai màn hình. */
+    .about-vfig img {
+        height: auto;
+        aspect-ratio: 4 / 3;
+    }
+
+    .about-start__actions > * { width: 100%; }
 }
