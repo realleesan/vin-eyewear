@@ -111,10 +111,24 @@ $toLocal = static fn (?string $v): string =>
             </div>
 
             <div class="field field--wide">
-                <label for="cover_image">Ảnh bìa</label>
-                <input type="text" id="cover_image" name="cover_image"
-                       placeholder="/assets/images/product-1.jpg"
-                       value="<?= e($ed['cover_image'] ?? '') ?>">
+                <label>Ảnh bìa</label>
+                <div class="upload-zone" id="coverUploadZone">
+                    <input type="file" id="coverImageInput" accept="image/png, image/jpeg, image/webp" style="display:none">
+                    <input type="hidden" name="existing_cover_image" id="existingCoverImage" value="<?= e($ed['cover_image'] ?? '') ?>">
+                    <div class="upload-zone__content">
+                        <svg class="upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p class="upload-zone__text">Kéo ảnh bìa vào đây hoặc <span class="upload-zone__link">bấm để chọn</span></p>
+                        <p class="upload-zone__hint">PNG, JPG, JPEG, WEBP — tối đa 5 MB</p>
+                    </div>
+                    <div class="preview-single" id="coverPreview" style="display:none">
+                        <img src="" alt="Ảnh bìa xem trước" class="preview-single__img">
+                        <button type="button" class="preview-single__remove" aria-label="Xóa ảnh bìa">×</button>
+                    </div>
+                </div>
             </div>
 
             <div class="field field--check">
@@ -136,24 +150,6 @@ $toLocal = static fn (?string $v): string =>
             <div class="field field--wide">
                 <label for="content">Nội dung</label>
                 <textarea id="content" name="content" rows="10"><?= e($ed['content'] ?? '') ?></textarea>
-
-                <!-- Bảng ký hiệu nằm NGAY DƯỚI ô nhập, không giấu trong tài
-                     liệu riêng: cú pháp mà người viết không nhìn thấy thì coi
-                     như không tồn tại. Xem core/Markdown.php. -->
-                <p class="field__hint">
-                    Mỗi dòng trống tạo một đoạn văn mới. Có thể dùng thêm các ký
-                    hiệu sau ở đầu dòng để bài viết có tiêu đề và danh sách:
-                </p>
-                <ul class="field__hint field__hint--list">
-                    <li><code>## Tiêu đề</code> — tiêu đề mục (<code>###</code> cho mục nhỏ hơn)</li>
-                    <li><code>- nội dung</code> — gạch đầu dòng</li>
-                    <li><code>1. nội dung</code> — các bước có đánh số</li>
-                    <li><code>&gt; lời nhắc</code> — hộp ghi chú nền hồng nhạt</li>
-                    <li><code>**chữ đậm**</code> — in đậm giữa dòng</li>
-                </ul>
-                <p class="field__hint">
-                    Không dùng được thẻ HTML — mọi thứ khác hiện nguyên văn.
-                </p>
             </div>
 
             <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm sự kiện' ?></button>
@@ -165,11 +161,156 @@ $toLocal = static fn (?string $v): string =>
     </section>
 <?php endif; ?>
 
+<script src="https://cdn.jsdelivr.net/npm/tinymce@6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        tinymce.init({
+            selector: '#content',
+            height: 500,
+            menubar: false,
+            language: 'vi',
+            directionality: 'ltr',
+            skin: 'oxide',
+            content_style: 'body { font-family: var(--font-sans, sans-serif); font-size: 14px; }',
+            promotion: false,
+            resize: 'both',
+            statusbar: true,
+            elementpath: false,
+            browser_spellcheck: true,
+            contextmenu: false,
+            toolbar: 'formatselect | bold italic underline strikethrough | link image media | numlist bullist | blockquote | alignleft aligncenter alignright alignjustify | forecolor backcolor',
+            toolbar_mode: 'wrap',
+            toolbar_location: 'top',
+            toolbar_sticky: true,
+            block_formats: 'Paragraph=p; Heading 1=h1; Heading 2=h2; Heading 3=h3; Heading 4=h4',
+            style_formats: [
+                { title: 'Đậm', inline: 'strong' },
+                { title: 'Nghiêng', inline: 'em' },
+                { title: 'Gạch chân', inline: 'u' },
+                { title: 'Gạch ngang', inline: 'strike' },
+                { title: 'Trích dẫn', block: 'blockquote' },
+            ],
+            content_css: '/assets/css/admin.css',
+            branding: false,
+            removed_menuitems: 'newdocument',
+            paste_data_images: true,
+            automatic_uploads: false,
+            images_upload_handler: function (blobInfo, success, failure) {
+                const formData = new FormData();
+                formData.append('file', blobInfo.blob(), blobInfo.filename());
+                formData.append('_token', '<?= e(csrfToken()) ?>');
+                fetch('/admin/event/upload-image', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success && result.url) {
+                        success(result.url);
+                    } else {
+                        failure('Tải ảnh lên thất bại.');
+                    }
+                })
+                .catch(() => failure('Lỗi kết nối khi tải ảnh.'));
+            },
+            setup: function (editor) {
+                editor.on('change', function () {
+                    editor.save();
+                });
+            }
+        });
+
         const form = document.getElementById('eventForm');
         const btn = document.getElementById('btnSaveEvent');
+        const coverZone = document.getElementById('coverUploadZone');
+        const coverInput = document.getElementById('coverImageInput');
+        const existingCoverInput = document.getElementById('existingCoverImage');
+        const coverPreview = document.getElementById('coverPreview');
+        const coverPreviewImg = coverPreview ? coverPreview.querySelector('.preview-single__img') : null;
+        const coverRemoveBtn = coverPreview ? coverPreview.querySelector('.preview-single__remove') : null;
+
         if (!form || !btn) return;
+
+        let selectedCoverFile = null;
+
+        function showCoverPreview(file) {
+            if (!coverPreview || !coverPreviewImg) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                coverPreviewImg.src = e.target.result;
+                coverPreview.style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function hideCoverPreview() {
+            if (!coverPreview || !coverPreviewImg) return;
+            coverPreview.style.display = 'none';
+            coverPreviewImg.src = '';
+            selectedCoverFile = null;
+            if (coverInput) coverInput.value = '';
+            if (existingCoverInput) existingCoverInput.value = '';
+        }
+
+        function showExistingCover(url) {
+            if (!url || !coverPreview || !coverPreviewImg) return;
+            coverPreviewImg.src = url;
+            coverPreview.style.display = 'inline-block';
+        }
+
+        if (coverZone && coverInput) {
+            coverZone.addEventListener('click', function (e) {
+                if (e.target === coverRemoveBtn || coverRemoveBtn.contains(e.target)) {
+                    return;
+                }
+                coverInput.click();
+            });
+
+            coverZone.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                coverZone.classList.add('upload-zone--over');
+            });
+
+            coverZone.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                coverZone.classList.remove('upload-zone--over');
+            });
+
+            coverZone.addEventListener('drop', function (e) {
+                e.preventDefault();
+                coverZone.classList.remove('upload-zone--over');
+                const files = Array.from(e.dataTransfer.files).filter(function (f) {
+                    return f.type.startsWith('image/');
+                });
+                if (files.length > 0) {
+                    selectedCoverFile = files[0];
+                    showCoverPreview(selectedCoverFile);
+                }
+            });
+
+            coverInput.addEventListener('change', function () {
+                const files = Array.from(coverInput.files);
+                if (files.length > 0) {
+                    selectedCoverFile = files[0];
+                    showCoverPreview(selectedCoverFile);
+                }
+                coverInput.value = '';
+            });
+        }
+
+        if (coverRemoveBtn) {
+            coverRemoveBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                hideCoverPreview();
+            });
+        }
+
+        const existingCover = <?= json_encode($ed['cover_image'] ?? '', JSON_UNESCAPED_UNICODE) ?>;
+        if (existingCover && !selectedCoverFile) {
+            showExistingCover(existingCover);
+        }
 
         btn.addEventListener('click', async function () {
             const originalText = btn.textContent;
@@ -177,7 +318,15 @@ $toLocal = static fn (?string $v): string =>
             btn.textContent = 'Đang lưu...';
 
             try {
+                if (typeof tinyMCE !== 'undefined') {
+                    tinyMCE.triggerSave();
+                }
                 const formData = new FormData(form);
+
+                if (selectedCoverFile) {
+                    formData.append('cover_image', selectedCoverFile);
+                }
+
                 const response = await fetch('/admin/event/save', {
                     method: 'POST',
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },

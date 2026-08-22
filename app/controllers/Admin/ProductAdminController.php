@@ -140,10 +140,30 @@ class ProductAdminController extends AdminController
             redirect(self::BASE);
         }
 
-        $images = array_values(array_filter(array_map(
-            'trim',
-            preg_split('/\R+/', (string) ($_POST['images'] ?? '')) ?: []
-        ), static fn ($v) => $v !== ''));
+        $uploadedUrls = [];
+        if (isset($_FILES['images']) && is_array($_FILES['images']['name']) && count($_FILES['images']['name']) > 0) {
+            $result = ProductImageStorage::storeMultiple($_FILES['images']);
+            if (!$result['ok']) {
+                if ($ajax) {
+                    $this->jsonReply(false, $result['error']);
+                }
+                flash('admin_error', $result['error']);
+                redirect(self::BASE);
+            }
+            $uploadedUrls = $result['urls'] ?? [];
+        }
+
+        $existingUrls = [];
+        if (isset($_POST['existing_images']) && is_array($_POST['existing_images'])) {
+            $existingUrls = array_values(array_filter(array_map('trim', $_POST['existing_images']), static fn ($v) => $v !== ''));
+        } elseif (isset($_POST['images']) && is_string($_POST['images'])) {
+            $existingUrls = array_values(array_filter(array_map(
+                'trim',
+                preg_split('/\R+/', (string) $_POST['images']) ?: []
+            ), static fn ($v) => $v !== ''));
+        }
+
+        $images = array_values(array_filter(array_merge($existingUrls, $uploadedUrls), static fn ($v) => $v !== ''));
 
         $specs = [];
         foreach (preg_split('/\R+/', (string) ($_POST['specs'] ?? '')) ?: [] as $line) {

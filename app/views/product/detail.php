@@ -88,34 +88,32 @@ $stars = static function (float $score): string {
     <div class="pd__grid">
 
         <!-- ══════════ THƯ VIỆN ẢNH ══════════ -->
-        <div class="pdgal">
-            <div class="pdgal__stage">
-                <?php foreach ($images as $i => $img): ?>
-                    <!-- id là đích của ảnh nhỏ bên dưới; CSS :target chọn ảnh
-                         nào hiện. Ảnh đầu hiện mặc định khi chưa có :target. -->
-                    <img class="pdgal__img<?= $i === 0 ? ' is-first' : '' ?>"
-                         id="anh-<?= $i ?>" src="<?= e($img) ?>"
-                         alt="<?= e($product['name']) ?><?= $i > 0 ? ' — ảnh ' . ($i + 1) : '' ?>"
-                         width="520" height="520"
-                         <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
-                <?php endforeach; ?>
+            <div class="pdgal">
+                <div class="pdgal__stage">
+                    <?php if (!empty($images)): ?>
+                        <img id="mainImage" class="pdgal__img is-first"
+                             src="<?= e($images[0]) ?>"
+                             alt="<?= e($product['name']) ?>"
+                             width="520" height="520"
+                             fetchpriority="high" decoding="async">
+                    <?php endif; ?>
 
-                <?php if ($percent !== null): ?>
-                    <span class="pdgal__sale">-<?= (int) $percent ?>%</span>
+                    <?php if ($percent !== null): ?>
+                        <span class="pdgal__sale">-<?= (int) $percent ?>%</span>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (count($images) > 1): ?>
+                    <div class="pdgal__thumbs">
+                        <?php foreach ($images as $i => $img): ?>
+                            <a class="pdgal__thumb<?= $i === 0 ? ' is-active' : '' ?>" href="#" data-index="<?= $i ?>" data-src="<?= e($img) ?>">
+                                <img src="<?= e($img) ?>" alt="Xem ảnh <?= $i + 1 ?>"
+                                     width="92" height="92" loading="lazy" decoding="async">
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
             </div>
-
-            <?php if (count($images) > 1): ?>
-                <div class="pdgal__thumbs">
-                    <?php foreach ($images as $i => $img): ?>
-                        <a class="pdgal__thumb" href="#anh-<?= $i ?>">
-                            <img src="<?= e($img) ?>" alt="Xem ảnh <?= $i + 1 ?>"
-                                 width="92" height="92" loading="lazy" decoding="async">
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
-        </div>
 
         <!-- ══════════ THÔNG TIN ══════════ -->
         <div class="pdinfo">
@@ -367,3 +365,35 @@ $stars = static function (float $score): string {
         </section>
     <?php endif; ?>
 </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const mainImage = document.getElementById('mainImage');
+        const thumbnails = document.querySelectorAll('.pdgal__thumb');
+
+        if (!mainImage || thumbnails.length === 0) {
+            return;
+        }
+
+        thumbnails.forEach(function (thumb) {
+            thumb.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const newSrc = thumb.dataset.src;
+
+                if (!newSrc || newSrc === '' || newSrc === 'undefined') {
+                    return;
+                }
+
+                if (mainImage.src !== newSrc) {
+                    mainImage.src = newSrc;
+                }
+
+                thumbnails.forEach(function (t) {
+                    t.classList.remove('is-active');
+                });
+                thumb.classList.add('is-active');
+            });
+        });
+    });
+</script>

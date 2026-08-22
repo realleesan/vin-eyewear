@@ -84,18 +84,12 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    /* contain: gọng kính chụp trên nền trắng, cắt mép là mất càng */
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
     padding: 32px;
     box-sizing: border-box;
-    /* Mặc định ẩn; ảnh đầu và ảnh đang :target được bật lại bên dưới */
-    opacity: 0;
+    opacity: 1;
 }
-
-.pdgal__img.is-first { opacity: 1; }
-/* Khi có ảnh nào đang :target thì ảnh đầu nhường chỗ */
-.pdgal__stage:has(.pdgal__img:target) .pdgal__img.is-first { opacity: 0; }
-.pdgal__img:target { opacity: 1; }
 
 .pdgal__sale {
     position: absolute;
@@ -129,12 +123,14 @@
 }
 
 .pdgal__thumb:hover { border-color: var(--brand); }
+.pdgal__thumb.is-active { border-color: var(--brand); }
 
 .pdgal__thumb img {
     width: 100%;
     height: 100%;
     border-radius: var(--radius-sm);
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
     background: var(--surface-sunken);
 }
 

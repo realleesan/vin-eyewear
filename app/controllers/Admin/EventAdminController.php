@@ -75,13 +75,29 @@ class EventAdminController extends AdminController
             redirect(self::BASE);
         }
 
+        $coverImage = null;
+
+        if (isset($_FILES['cover_image']) && $_FILES['cover_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+            $result = EventCoverStorage::store($_FILES['cover_image']);
+            if (!$result['ok']) {
+                if ($ajax) {
+                    $this->jsonReply(false, $result['error']);
+                }
+                flash('admin_error', $result['error']);
+                redirect(self::BASE);
+            }
+            $coverImage = $result['path'];
+        } elseif (!empty($_POST['existing_cover_image'])) {
+            $coverImage = (string) $_POST['existing_cover_image'];
+        }
+
         $data = [
             'slug'        => $slug,
             'title'       => $title,
             'category'    => trim((string) ($_POST['category'] ?? '')) ?: null,
             'excerpt'     => trim((string) ($_POST['excerpt'] ?? '')) ?: null,
             'content'     => trim((string) ($_POST['content'] ?? '')) ?: null,
-            'cover_image' => trim((string) ($_POST['cover_image'] ?? '')) ?: null,
+            'cover_image' => $coverImage,
             'location'    => trim((string) ($_POST['location'] ?? '')) ?: null,
             'starts_at'   => $startsAt,
             'ends_at'     => $endsAt,
@@ -140,6 +156,24 @@ class EventAdminController extends AdminController
 
         flash('admin_success', 'Đã xoá sự kiện.');
         redirect(self::BASE);
+    }
+
+    public function uploadImage(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            $this->jsonReply(false, 'Không nhận được ảnh, vui lòng thử lại.');
+        }
+
+        $result = EventCoverStorage::store($_FILES['file']);
+
+        if (!$result['ok']) {
+            $this->jsonReply(false, $result['error']);
+        }
+
+        $this->jsonReply(true, 'Đã tải ảnh lên.', null, ['url' => '/' . $result['path']]);
     }
 
     /**

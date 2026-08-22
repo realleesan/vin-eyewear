@@ -8,12 +8,14 @@
 $ed = $editing;
 
 // Cột JSON trong DB là chuỗi; đổi về dạng người nhập được (mỗi dòng một mục)
-$edImages = '';
-$edSpecs  = '';
+$edImages      = '';
+$edImagesArray = [];
+$edSpecs       = '';
 
 if ($ed !== null) {
     $imgs = json_decode((string) $ed['images'], true) ?: [];
     $edImages = implode("\n", $imgs);
+    $edImagesArray = array_values(array_filter($imgs, static fn ($v) => $v !== ''));
 
     foreach (json_decode((string) $ed['specs'], true) ?: [] as $label => $value) {
         $edSpecs .= $label . ': ' . $value . "\n";
@@ -213,9 +215,9 @@ if ($ed !== null) {
             </div>
 
             <div class="field field--wide">
-                <label for="images">Ảnh — mỗi dòng một đường dẫn</label>
+                <label>Ảnh sản phẩm</label>
                 <div class="upload-zone" id="uploadZone">
-                    <input type="file" id="imageInput" name="images[]" multiple accept="image/*" style="display:none">
+                    <input type="file" id="imageInput" multiple accept="image/png, image/jpeg, image/webp" style="display:none">
                     <div class="upload-zone__content">
                         <svg class="upload-zone__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -225,10 +227,8 @@ if ($ed !== null) {
                         <p class="upload-zone__text">Kéo ảnh vào đây hoặc <span class="upload-zone__link">bấm để chọn</span></p>
                         <p class="upload-zone__hint">PNG, JPG, JPEG, WEBP — tối đa 5 MB / ảnh</p>
                     </div>
-                    <div id="previewContainer" class="preview-container"></div>
-                    <textarea id="images" name="images" rows="3"
-                              placeholder="/assets/images/product-1.jpg"><?= e($edImages) ?></textarea>
                 </div>
+                <div class="preview-grid" id="previewGrid"></div>
                 <p class="field__hint">Dòng đầu là ảnh đại diện, dòng thứ hai hiện khi rê chuột.</p>
             </div>
 
@@ -251,6 +251,7 @@ if ($ed !== null) {
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('productForm');
         const btn = document.getElementById('btnSaveProduct');
+        const csrfToken = form ? (form.querySelector('input[name="_token"]')?.value || '') : '';
 
         if (!form || !btn) {
             return;
@@ -263,6 +264,22 @@ if ($ed !== null) {
 
             try {
                 const formData = new FormData(form);
+
+                while (formData.has('images[]')) {
+                    formData.delete('images[]');
+                }
+
+                const newFiles = selectedFiles.filter(function (item) { return !item.existing; });
+                const existingUrls = selectedFiles.filter(function (item) { return item.existing; }).map(function (item) { return item.url; });
+
+                existingUrls.forEach(function (url) {
+                    formData.append('existing_images[]', url);
+                });
+
+                newFiles.forEach(function (item) {
+                    formData.append('images[]', item.file);
+                });
+
                 const token = form.querySelector('input[name="_token"]');
                 if (token) {
                     formData.set('_token', token.value);
@@ -302,20 +319,28 @@ if ($ed !== null) {
     });
 
     // ============ UPLOAD ZONE ============
+    const selectedFiles = [];
     const uploadZone = document.getElementById('uploadZone');
     const imageInput = document.getElementById('imageInput');
-    const imagesTextarea = document.getElementById('images');
-    const previewContainer = document.getElementById('previewContainer');
+    const previewGrid = document.getElementById('previewGrid');
 
-    if (uploadZone && imageInput && imagesTextarea && previewContainer) {
-        const csrfToken = form ? (form.querySelector('input[name="_token"]')?.value || '') : '';
+    if (uploadZone && imageInput && previewGrid) {
         const MAX_BYTES = 5 * 1024 * 1024;
         const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
+        const existingImages = <?= json_encode($edImagesArray, JSON_UNESCAPED_UNICODE) ?>;
+        existingImages.forEach(function (url) {
+            if (!url) return;
+            selectedFiles.push({
+                id: 'existing_' + Math.random().toString(36).slice(2, 9),
+                file: null,
+                url: url,
+                existing: true
+            });
+        });
+        renderPreviews();
+
         uploadZone.addEventListener('click', function (e) {
-            if (e.target === imagesTextarea || imagesTextarea.contains(e.target)) {
-                return;
-            }
             imageInput.click();
         });
 
@@ -361,84 +386,71 @@ if ($ed !== null) {
             return errors;
         }
 
-        function showPreview(files) {
-            files.forEach(function (file) {
-                const objectUrl = URL.createObjectURL(file);
-                const wrapper = document.createElement('div');
-                wrapper.className = 'preview-item';
-
-                const img = document.createElement('img');
-                img.src = objectUrl;
-                img.alt = file.name;
-                img.className = 'preview-img';
-                img.dataset.objectUrl = objectUrl;
-
-                wrapper.appendChild(img);
-                previewContainer.appendChild(wrapper);
-            });
-        }
-
-        function clearPreviewUrls() {
-            const imgs = previewContainer.querySelectorAll('img[data-object-url]');
-            imgs.forEach(function (img) {
-                URL.revokeObjectURL(img.dataset.objectUrl);
-            });
-        }
-
-        async function uploadFiles(files) {
-            const formData = new FormData();
-            files.forEach(function (file) {
-                formData.append('images[]', file);
-            });
-            formData.append('_token', csrfToken);
-
-            try {
-                const response = await fetch('/admin/product/upload-image', {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    },
-                    body: formData,
-                    credentials: 'same-origin'
-                });
-
-                let payload = null;
-                try {
-                    payload = await response.json();
-                } catch (error) {
-                    throw new Error('Phản hồi từ máy chủ không phải JSON hợp lệ.');
-                }
-
-                if (!response.ok || !payload.success) {
-                    throw new Error(payload.message || 'Tải ảnh lên thất bại.');
-                }
-
-                if (payload.urls && payload.urls.length > 0) {
-                    const current = imagesTextarea.value;
-                    const prefix = current ? current + '\n' : '';
-                    imagesTextarea.value = prefix + payload.urls.join('\n');
-                }
-            } catch (error) {
-                alert(error.message || 'Lỗi khi tải ảnh lên.');
-                console.error(error);
-            }
-        }
-
-        async function handleFiles(files) {
+        function handleFiles(files) {
             const validationErrors = validateFiles(files);
             if (validationErrors.length > 0) {
                 alert(validationErrors.join('\n'));
                 return;
             }
 
-            showPreview(files);
+            files.forEach(function (file) {
+                const objectUrl = URL.createObjectURL(file);
+                const item = {
+                    id: 'file_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9),
+                    file: file,
+                    url: objectUrl,
+                    existing: false
+                };
+                selectedFiles.push(item);
+                addPreview(item);
+            });
+        }
 
-            try {
-                await uploadFiles(files);
-            } catch (error) {
-                console.error(error);
+        function addPreview(item) {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.dataset.id = item.id;
+
+            const img = document.createElement('img');
+            img.src = item.url;
+            img.alt = item.existing ? 'Ảnh hiện có' : 'Ảnh xem trước';
+            img.className = 'preview-img';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'preview-item__remove';
+            btn.innerHTML = '×';
+            btn.setAttribute('aria-label', 'Xóa ảnh');
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                removePreview(item.id);
+            });
+
+            div.appendChild(img);
+            div.appendChild(btn);
+            previewGrid.appendChild(div);
+        }
+
+        function removePreview(id) {
+            const index = selectedFiles.findIndex(function (item) { return item.id === id; });
+            if (index > -1) {
+                const item = selectedFiles[index];
+                if (item.url && item.url.startsWith('blob:')) {
+                    URL.revokeObjectURL(item.url);
+                }
+                selectedFiles.splice(index, 1);
             }
+            const el = previewGrid.querySelector('[data-id="' + id + '"]');
+            if (el) {
+                el.remove();
+            }
+        }
+
+        function renderPreviews() {
+            previewGrid.innerHTML = '';
+            selectedFiles.forEach(function (item) {
+                addPreview(item);
+            });
         }
     }
 </script>

@@ -183,6 +183,7 @@ return [
     'quan-tri/su-kien/luu'  => 'EventAdminController@save',        // POST
     'quan-tri/su-kien/xoa'  => 'EventAdminController@delete',      // POST
     'admin/event/save'      => 'EventAdminController@save',        // POST (alias cho fetch AJAX)
+    'admin/event/upload-image' => 'EventAdminController@uploadImage', // POST (TinyMCE upload ảnh nội dung)
 
     'quan-tri/bien-the'     => 'VariantAdminController@index',
     'quan-tri/bien-the/luu' => 'VariantAdminController@save',    // POST

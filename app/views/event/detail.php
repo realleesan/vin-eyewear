@@ -24,7 +24,12 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-$body   = Markdown::render($event['content'] ?? '');
+$rawContent = $event['content'] ?? '';
+if (preg_match('/<[a-z][\s\S]*>/i', $rawContent)) {
+    $body = $rawContent;
+} else {
+    $body = Markdown::render($rawContent);
+}
 $shared = rtrim((string) config('app.url'), '/') . '/su-kien/' . rawurlencode($event['slug']);
 
 /* Tiêu đề bài viết là <h1> DUY NHẤT của trang — thân bài chỉ có ## trở xuống
@@ -48,7 +53,7 @@ partial('_layout/page-head', [
         <article class="artbody">
             <div class="artbody__cover">
                 <?php if (!empty($event['cover_image'])): ?>
-                    <img src="<?= e($event['cover_image']) ?>" alt="<?= e($event['title']) ?>"
+                    <img src="<?= e(asset($event['cover_image'])) ?>" alt="<?= e($event['title']) ?>"
                          width="900" height="420" fetchpriority="high" decoding="async">
                 <?php else: ?>
                     <!-- Bài chưa có ảnh bìa. Vẫn giữ khối ảnh và vẽ một dấu
@@ -81,7 +86,7 @@ partial('_layout/page-head', [
                     <p class="artbody__none">Nội dung chi tiết đang được cập nhật.</p>
                 <?php endif; ?>
 
-                <?php if (!Markdown::hasQuote($event['content'] ?? '')): ?>
+                <?php if (!Markdown::hasQuote($event['content'] ?? '') && !str_contains($event['content'] ?? '', '<blockquote>')): ?>
                     <!-- Hộp mẹo mặc định, chỉ hiện khi bài KHÔNG tự viết lời
                          nhắc nào (`> …` trong nội dung) — hai hộp chồng nhau
                          thì cái nào cũng mất trọng lượng. -->
@@ -202,7 +207,7 @@ partial('_layout/page-head', [
                     <a class="artmore__card" href="<?= e($url) ?>">
                         <span class="artmore__media">
                             <?php if (!empty($other['cover_image'])): ?>
-                                <img src="<?= e($other['cover_image']) ?>" alt=""
+                                <img src="<?= e(asset($other['cover_image'])) ?>" alt=""
                                      width="420" height="200" loading="lazy" decoding="async">
                             <?php else: ?>
                                 <span class="nw__noimg" aria-hidden="true">

@@ -180,7 +180,7 @@ $whenOf = static fn (array $e): string =>
                     <a class="nwbig" href="/su-kien/<?= e(rawurlencode($featured['slug'])) ?>">
                         <span class="nwbig__media">
                             <?php if (!empty($featured['cover_image'])): ?>
-                                <img src="<?= e($featured['cover_image']) ?>" alt=""
+                                <img src="<?= e(asset($featured['cover_image'])) ?>" alt=""
                                      width="640" height="400" fetchpriority="high" decoding="async">
                             <?php else: ?>
                                 <?= $blankCover() ?>
@@ -218,7 +218,7 @@ $whenOf = static fn (array $e): string =>
                                href="/su-kien/<?= e(rawurlencode($e['slug'])) ?>">
                                 <span class="nwcard__media">
                                     <?php if (!empty($e['cover_image'])): ?>
-                                        <img src="<?= e($e['cover_image']) ?>" alt=""
+                                        <img src="<?= e(asset($e['cover_image'])) ?>" alt=""
                                              width="360" height="240" loading="lazy" decoding="async">
                                     <?php else: ?>
                                         <?= $blankCover() ?>
@@ -257,7 +257,7 @@ $whenOf = static fn (array $e): string =>
                             <a class="nwrow" href="/su-kien/<?= e(rawurlencode($e['slug'])) ?>">
                                 <span class="nwrow__media">
                                     <?php if (!empty($e['cover_image'])): ?>
-                                        <img src="<?= e($e['cover_image']) ?>" alt=""
+                                        <img src="<?= e(asset($e['cover_image'])) ?>" alt=""
                                              width="64" height="64" loading="lazy" decoding="async">
                                     <?php else: ?>
                                         <?= $blankCover() ?>
