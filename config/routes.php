@@ -95,6 +95,11 @@ return [
     'thanh-toan/ma'       => 'OrderController@voucher',
     // Màn "Thanh toán QR" của bản thiết kế — chỉ đơn chuyển khoản đi qua.
     'thanh-toan/chuyen-khoan' => 'OrderController@transfer',
+
+    /* Màn QR hỏi vài giây một lần: đơn này đã nhận được tiền chưa. Trả JSON,
+       không trả trang. Đây là thứ thay cho nút "Tôi đã chuyển khoản" đã bỏ —
+       xem OrderController::payStatus(). */
+    'thanh-toan/trang-thai' => 'OrderController@payStatus',
     'thanh-toan/hoan-tat' => 'OrderController@success',
 
     /*

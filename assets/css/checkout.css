@@ -1142,29 +1142,76 @@ select.cofield__input {
     color: var(--o-note);
 }
 
-/* --- Cụm xác nhận, dính đáy cột --- */
+/* --- Cụm chờ xác nhận, dính đáy cột --- */
 
-/* margin-top:auto đẩy xuống đáy: nút xác nhận phải nằm ở CUỐI đường đọc, sau
-   khi khách đã thấy đủ số tiền và thông tin chuyển khoản. Cột trái cao hơn cột
-   phải, nên không có dòng này thì nút treo lửng giữa một khoảng trống. */
+/* margin-top:auto đẩy xuống đáy: cụm này phải nằm ở CUỐI đường đọc, sau khi
+   khách đã thấy đủ số tiền và thông tin chuyển khoản. Cột trái cao hơn cột
+   phải, nên không có dòng này thì nó treo lửng giữa một khoảng trống. */
 .coqr__confirm {
     margin-top: auto;
     padding-top: 24px;
 }
 
-.coqr__done {
-    display: block;
-    padding: 15px 24px;
+/* Chỗ này TRƯỚC ĐÂY là nút "Tôi đã chuyển khoản". Bỏ nút, nhưng giữ nguyên
+   khối lượng thị giác: cụm cuối cột vẫn phải là thứ nặng nhất trên đường đọc,
+   nếu không cột phải hẫng đi một mảng ở đáy. Nền mờ + viền thay cho nền đặc
+   của nút — nó đang CHỜ chứ không mời bấm, nên không được trông như bấm được. */
+.coqr__watch {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 0;
+    padding: 15px 20px;
+    border: 1px solid var(--h-card-line);
     border-radius: var(--radius-sm);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: 14.5px;
+    background: var(--h-shell);
+    font-size: 14px;
     font-weight: 600;
+    line-height: 1.45;
     text-align: center;
+    color: var(--ink);
 }
 
-.coqr__done:hover,
-.coqr__done:focus-visible { background: var(--brand-strong); color: var(--on-brand); }
+/* Chấm nhấp nháy — dấu hiệu DUY NHẤT cho biết trang vẫn đang làm việc chứ
+   không phải đã treo. Không có nó thì một khối chữ đứng yên năm phút đọc y
+   như một trang chết. */
+.coqr__watchdot {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border-radius: var(--radius-round);
+    background: var(--brand);
+    animation: coqr-tho 1.4s ease-in-out infinite;
+}
+
+@keyframes coqr-tho {
+    0%, 100% { opacity: 1;   transform: scale(1); }
+    50%      { opacity: .35; transform: scale(.78); }
+}
+
+/* Người đặt máy tắt hiệu ứng chuyển động thì chấm đứng yên hẳn — nhưng vẫn
+   phải THẤY được, nên giữ nguyên màu chứ không ẩn đi. */
+@media (prefers-reduced-motion: reduce) {
+    .coqr__watchdot { animation: none; }
+}
+
+/* Lối ra khi chờ mãi không thấy. pay-watch.js ẩn lúc mở trang rồi đưa ra sau
+   ba phút; không có JS thì nó hiện sẵn — đúng lúc cần nó nhất. */
+.coqr__slow {
+    margin: 12px 0 0;
+    font-size: 12.5px;
+    line-height: 1.65;
+    text-align: center;
+    color: var(--o-note);
+}
+
+.coqr__slow a {
+    color: var(--ink);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
 
 .coqr__note {
     margin: 14px 0 0;

@@ -333,7 +333,11 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         'order/checkout' => 'address-picker.js',
         // Nút "Sao chép" số tài khoản và nội dung chuyển khoản. Thiếu file này
         // thì hai chuỗi đó vẫn in ra dạng chữ để khách bôi đen chép tay.
-        'order/transfer' => 'copy-btn.js',
+        //
+        // pay-watch.js hỏi máy chủ xem tiền về chưa rồi tự chuyển sang biên
+        // nhận — thứ thay cho nút "Tôi đã chuyển khoản" đã bỏ. Thiếu nó thì
+        // khối chờ vẫn đọc được và lối ra hiện sẵn ngay bên dưới.
+        'order/transfer' => ['copy-btn.js', 'pay-watch.js'],
     ];
 
     foreach ((array) ($pageScripts[$viewName ?? ''] ?? []) as $js) {

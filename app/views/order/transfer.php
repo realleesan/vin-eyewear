@@ -118,7 +118,11 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
         $steps = [
             ['1', 'Mở app ngân hàng',      true],
             ['2', 'Quét mã & chuyển tiền', true],
-            ['3', 'Xác nhận đã chuyển',    false],
+            /* "Hệ thống xác nhận" chứ không phải "Xác nhận đã chuyển": bước
+               này KHÔNG còn là việc của khách kể từ khi nút "Tôi đã chuyển
+               khoản" bị bỏ. Để nguyên chữ cũ là vẫn dặn họ đi tìm một nút
+               không còn tồn tại. */
+            ['3', 'Hệ thống xác nhận',     false],
         ];
         ?>
         <ol class="coqr__steps">
@@ -278,10 +282,46 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
             <?php /* margin-top:auto đẩy cụm này xuống đáy cột — xem .coqr__confirm.
                      Nút xác nhận phải nằm ở cuối đường đọc, sau khi khách đã thấy
                      đủ số tiền và thông tin chuyển khoản. */ ?>
-            <div class="coqr__confirm">
-                <a class="coqr__done" href="<?= e($doneHref) ?>">
-                    Tôi đã chuyển khoản <?= money($due) ?> ✓
-                </a>
+            <?php
+            /* ─────────────────────────────────────────────────────────────
+               KHÔNG CÒN NÚT "TÔI ĐÃ CHUYỂN KHOẢN"
+
+               Nút đó chỉ là lời khách nói, và nó dẫn thẳng sang trang xác
+               nhận — tức website khẳng định đã nhận tiền trong khi chưa ai
+               đối chiếu sao kê. Nay chỗ này là một khối CHỜ: trang tự hỏi
+               máy chủ vài giây một lần và chỉ chuyển đi khi
+               orders.payment_status đã thật sự đổi.
+
+               data-pay-watch là chỗ assets/js/pay-watch.js bám vào. Thiếu
+               file đó thì khối này vẫn đọc được — nó nói đúng việc đang xảy
+               ra ("đang chờ xác nhận"), chỉ là không tự chuyển trang; lối ra
+               nằm ngay dưới, ở liên kết .coqr__slow luôn hiện trong trường
+               hợp không có JS.
+               ───────────────────────────────────────────────────────────── */
+            ?>
+            <div class="coqr__confirm"
+                 data-pay-watch
+                 data-watch-url="/thanh-toan/trang-thai?ma=<?= e(rawurlencode($order['code'])) ?>">
+
+                <p class="coqr__watch">
+                    <span class="coqr__watchdot" aria-hidden="true"></span>
+                    <span class="coqr__watchtext" role="status">
+                        Đang chờ xác nhận chuyển khoản <?= money($due) ?>…
+                    </span>
+                </p>
+
+                <?php /* Lối ra khi chờ mãi không thấy. pay-watch.js ẩn khối này
+                         đi lúc trang mở và chỉ đưa nó ra sau vài phút — không
+                         có JS thì nó hiện sẵn, và đó đúng là lúc cần nó nhất. */ ?>
+                <p class="coqr__slow js-watch-slow">
+                    Đã chuyển tiền nhưng chưa thấy xác nhận? Bạn cứ đóng trang này —
+                    đơn vẫn được giữ. Xem lại ở
+                    <a href="<?= e($orderHref) ?>">đơn hàng của tôi</a>,
+                    hoặc nhắn Zalo
+                    <a href="<?= e(config('company.channels.zalo')) ?>"
+                       target="_blank" rel="noopener"><?= e(config('company.zalo')) ?></a>
+                    để được đối chiếu ngay.
+                </p>
 
                 <p class="coqr__note">
                     <?php
@@ -291,10 +331,12 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                        giữ. Chốt theo config('sepay.enabled'). */
                     ?>
                     <?php if (config('sepay.enabled')): ?>
-                        Đơn tự động xác nhận sau 1–2 phút kể từ khi tiền về.
+                        Trang này tự chuyển sang biên nhận ngay khi tiền về,
+                        thường sau 1–2 phút. Không cần bấm gì thêm.
                     <?php else: ?>
-                        Chúng tôi đối chiếu giao dịch và xác nhận đơn trong giờ làm việc
-                        (<?= e(config('company.open_hours')) ?>).
+                        Chúng tôi đối chiếu giao dịch trong giờ làm việc
+                        (<?= e(config('company.open_hours')) ?>); trang này tự chuyển
+                        sang biên nhận ngay khi xong. Không cần bấm gì thêm.
                     <?php endif; ?>
                     <br>
                     Cần hỗ trợ? Gọi

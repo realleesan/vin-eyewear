@@ -568,7 +568,97 @@ class OrderController extends BaseController
                 ? '/thanh-toan/hoan-tat'
                 : '/tai-khoan?muc=don-hang&don=' . rawurlencode($code)
                   . '#' . rawurlencode($code),
+
+            /* Lối ra của khối "chờ mãi chưa thấy" — LUÔN là thẻ đơn trong
+               trang tài khoản, không đi theo $doneHref. Câu chữ ở đó mời khách
+               "xem lại ở đơn hàng của tôi", mà với đơn vừa đặt thì $doneHref
+               trỏ sang /thanh-toan/hoan-tat — trang nói "đã ghi nhận đơn", không
+               phải danh sách đơn. Hứa một nơi rồi mở ra nơi khác. */
+            'orderHref'  => '/tai-khoan?muc=don-hang&don=' . rawurlencode($code)
+                            . '#' . rawurlencode($code),
         ]);
+    }
+
+    /**
+     * Máy hỏi: đơn này đã nhận được tiền chưa? (/thanh-toan/trang-thai?ma=…)
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO CÓ ĐỊA CHỈ NÀY: ĐỂ BỎ ĐƯỢC NÚT "TÔI ĐÃ CHUYỂN KHOẢN"
+     *
+     * Nút đó chỉ là LỜI KHÁCH NÓI. Nó không chứng minh được đồng nào đã rời
+     * khỏi tài khoản của họ, nên nó không thể dẫn sang trang "Thanh toán
+     * thành công" — lý do đầy đủ nằm ở khối chú thích của paid().
+     *
+     * Nay màn QR tự hỏi máy chủ vài giây một lần, và CHÍNH MÁY CHỦ trả lời.
+     * Câu trả lời "đã trả" chỉ đến từ orders.payment_status, tức từ một
+     * trong hai nguồn có thật:
+     *
+     *   webhook SePay khớp được giao dịch  (SepayModel::handle)
+     *   nhân viên đối chiếu sao kê rồi đánh dấu ở /quan-tri/don-hang
+     *
+     * Nguồn thứ hai đáng kể chứ không phải đường lui: hosting hiện tại chặn
+     * webhook (xem config/sepay.php), nên tới lúc này nó là nguồn DUY NHẤT
+     * đang chạy. Khách vẫn được lợi — không phải ngồi bấm F5 chờ.
+     *
+     * TRẢ JSON KỂ CẢ KHI HỎNG. Đây là địa chỉ cho máy gọi, không phải cho
+     * người xem: chuyển hướng sang trang đăng nhập ở đây sẽ khiến bên kia
+     * nhận về một trang HTML và ném lỗi phân tích cú pháp. Nói thẳng
+     * "thôi đừng hỏi nữa" bằng cờ `stop` thì bên kia biết đường dừng.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public function payStatus(): void
+    {
+        $userId = AuthMiddleware::userId();
+        $code   = trim((string) ($_GET['ma'] ?? ''));
+
+        if ($userId === null || $code === '') {
+            self::payJson(['paid' => false, 'stop' => true]);
+        }
+
+        // findByCode kiểm chủ sở hữu — mã của người khác trả về null.
+        $order = OrderModel::findByCode($code, $userId);
+
+        if ($order === null) {
+            self::payJson(['paid' => false, 'stop' => true]);
+        }
+
+        /* Đơn đã huỷ thì không còn gì để chờ. Bảo bên kia dừng và đưa khách
+           về thẻ đơn — đứng mãi trước một mã QR của đơn đã huỷ là chờ một
+           việc sẽ không bao giờ xảy ra. */
+        if (($order['status'] ?? '') === 'cancelled') {
+            self::payJson([
+                'paid' => false,
+                'stop' => true,
+                'href' => '/tai-khoan?muc=don-hang&don=' . rawurlencode($code)
+                          . '#' . rawurlencode($code),
+            ]);
+        }
+
+        $paid = ($order['payment_status'] ?? 'unpaid') !== 'unpaid';
+
+        self::payJson([
+            'paid' => $paid,
+            'stop' => $paid,
+            /* Cùng địa chỉ mà nút cũ trỏ tới khi tiền đã về thật. Trang đó tự
+               kiểm lại payment_status lần nữa, nên kể cả có ai gọi thẳng vào
+               đây cũng không mở được biên nhận cho một đơn chưa trả. */
+            'href' => $paid ? '/thanh-toan/thanh-cong?ma=' . rawurlencode($code) : null,
+        ]);
+    }
+
+    /**
+     * Trả lời JSON rồi dừng hẳn.
+     *
+     * no-store là bắt buộc: câu trả lời này đổi theo thời gian, mà một tầng
+     * đệm nào đó giữ lại bản "chưa trả" thì màn QR sẽ chờ mãi dù tiền đã về.
+     */
+    private static function payJson(array $payload): never
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+
+        echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     /**
