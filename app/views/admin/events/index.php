@@ -46,8 +46,12 @@ $toLocal = static fn (?string $v): string =>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
                             <a href="/quan-tri/su-kien?sua=<?= e($ev['id']) ?>#form">Sửa</a>
+                            <?php $hoi = sprintf('Xoá sự kiện “%s”?', $ev['title']); ?>
                             <form method="post" action="/quan-tri/su-kien/xoa"
-                                  onsubmit="return confirm('Xoá sự kiện &quot;<?= e($ev['title']) ?>&quot;?')">
+                                  data-confirm="<?= e($hoi) ?>"
+                                  data-confirm-title="Xoá sự kiện?"
+                                  data-confirm-ok="Xoá"
+                                  onsubmit="return confirm('<?= e($hoi) ?>')">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="id" value="<?= e($ev['id']) ?>">
                                 <button type="submit" class="arow-del">Xoá</button>

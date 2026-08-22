@@ -77,8 +77,20 @@
 
                             <!-- Xoá hẳn, không phải "từ chối": đánh giá spam hay
                                  bôi nhọ không có lý do gì phải giữ lại. -->
+                            <?php
+                            /* data-confirm đặt trên NÚT chứ không trên form: form
+                               này còn hai nút khác (duyệt, ẩn) và chúng không cần
+                               hỏi lại. Đặt trên form là hỏi cả ba. */
+                            $hoiXoaDG = sprintf(
+                                'Xoá hẳn đánh giá của %s? Việc này không lùi lại được.',
+                                trim((string) ($rv['author_name'] ?? '')) !== '' ? $rv['author_name'] : 'khách'
+                            );
+                            ?>
                             <button type="submit" name="act" value="xoa" class="arow-del"
-                                    onclick="return confirm('Xoá hẳn đánh giá này?')">Xoá</button>
+                                    data-confirm="<?= e($hoiXoaDG) ?>"
+                                    data-confirm-title="Xoá đánh giá?"
+                                    data-confirm-ok="Xoá"
+                                    onclick="return confirm('<?= e($hoiXoaDG) ?>')">Xoá</button>
                         </form>
                     </td>
                 </tr>

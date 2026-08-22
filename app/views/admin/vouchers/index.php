@@ -118,8 +118,22 @@ $whyOff = static function (array $v) use ($today): string {
                             <a href="/quan-tri/ma-giam-gia?sua=<?= e($v['id']) ?>#form">Sửa</a>
 
                             <?php if ((int) $v['is_public'] !== 1): ?>
+                                <?php
+                                /* KHÔNG phải thao tác xoá, nên nút đồng ý không
+                                   ghi "Xoá" mà ghi đúng việc sắp làm. Phát mã
+                                   cho toàn bộ khách cũng không lùi lại được —
+                                   mã đã vào ví của hàng nghìn người. */
+                                $hoiPhat = sprintf(
+                                    'Phát mã “%s” cho TẤT CẢ khách hàng? Việc này không thu hồi lại được.',
+                                    $v['code']
+                                );
+                                ?>
                                 <form method="post" action="/quan-tri/ma-giam-gia/phat"
-                                      onsubmit="return confirm('Phát mã &quot;<?= e($v['code']) ?>&quot; cho TẤT CẢ khách hàng?')">
+                                      data-confirm="<?= e($hoiPhat) ?>"
+                                      data-confirm-title="Phát mã cho tất cả?"
+                                      data-confirm-ok="Phát mã"
+                                      data-confirm-cancel="Không phát"
+                                      onsubmit="return confirm('<?= e($hoiPhat) ?>')">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                     <input type="hidden" name="id" value="<?= e($v['id']) ?>">
                                     <button type="submit" class="arow-del arow-del--calm">Phát cho tất cả</button>
@@ -127,8 +141,12 @@ $whyOff = static function (array $v) use ($today): string {
                             <?php endif; ?>
 
                             <?php if ((int) $v['order_count'] === 0): ?>
+                                <?php $hoiXoaMa = sprintf('Xoá mã “%s”?', $v['code']); ?>
                                 <form method="post" action="/quan-tri/ma-giam-gia/xoa"
-                                      onsubmit="return confirm('Xoá mã &quot;<?= e($v['code']) ?>&quot;?')">
+                                      data-confirm="<?= e($hoiXoaMa) ?>"
+                                      data-confirm-title="Xoá mã giảm giá?"
+                                      data-confirm-ok="Xoá"
+                                      onsubmit="return confirm('<?= e($hoiXoaMa) ?>')">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                     <input type="hidden" name="id" value="<?= e($v['id']) ?>">
                                     <button type="submit" class="arow-del">Xoá</button>

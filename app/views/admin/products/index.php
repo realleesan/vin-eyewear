@@ -76,8 +76,12 @@ if ($ed !== null) {
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
                             <a href="/quan-tri/san-pham?sua=<?= e($p['id']) ?>#form">Sửa</a>
+                            <?php $hoi = sprintf('Xoá sản phẩm “%s”?', $p['name']); ?>
                             <form method="post" action="/quan-tri/san-pham/xoa"
-                                  onsubmit="return confirm('Xoá sản phẩm &quot;<?= e($p['name']) ?>&quot;?')">
+                                  data-confirm="<?= e($hoi) ?>"
+                                  data-confirm-title="Xoá sản phẩm?"
+                                  data-confirm-ok="Xoá"
+                                  onsubmit="return confirm('<?= e($hoi) ?>')">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="id" value="<?= e($p['id']) ?>">
                                 <button type="submit" class="arow-del">Xoá</button>

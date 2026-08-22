@@ -33,10 +33,20 @@
         <p class="cfm__body" data-cfm-body></p>
 
         <div class="cfm__acts">
-            <button type="submit" value="" class="btn-outline btn-inline cfm__act" autofocus
+            <?php
+            /* Hai nút TỰ MANG kiểu của mình (.cfm__act--*), không mượn
+               .btn-primary/.btn-outline của components/ui.css.
+
+               Vì hộp thoại này còn dùng ở KHU QUẢN TRỊ, mà layout bên đó chỉ
+               nạp layout.css + admin.css — không có ui.css. Mượn lớp ở đó thì
+               hai nút hiện ra trần trụi kiểu mặc định của trình duyệt, giữa
+               một hộp thoại đã dựng xong. Token màu thì cả hai layout đều có
+               vì chúng nằm trong layout.css. */
+            ?>
+            <button type="submit" value="" class="cfm__act cfm__act--huy" autofocus
                     data-cfm-cancel>Giữ lại</button>
 
-            <button type="submit" value="ok" class="btn-primary btn-inline cfm__act"
+            <button type="submit" value="ok" class="cfm__act cfm__act--ok"
                     data-cfm-ok>Xoá</button>
         </div>
     </form>

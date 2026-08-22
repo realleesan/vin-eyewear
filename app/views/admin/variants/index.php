@@ -87,8 +87,12 @@ $base = '/quan-tri/bien-the';
                         <?php if ($canEdit): ?>
                             <td class="arow-actions">
                                 <a href="<?= e($base) ?>?sp=<?= e($product['id']) ?>&amp;sua=<?= e($v['id']) ?>#form">Sửa</a>
+                                <?php $hoi = sprintf('Xoá phương án “%s”?', $v['label']); ?>
                                 <form method="post" action="<?= e($base) ?>/xoa"
-                                      onsubmit="return confirm('Xoá phương án &quot;<?= e($v['label']) ?>&quot;?')">
+                                      data-confirm="<?= e($hoi) ?>"
+                                      data-confirm-title="Xoá phương án?"
+                                      data-confirm-ok="Xoá"
+                                      onsubmit="return confirm('<?= e($hoi) ?>')">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                     <input type="hidden" name="id" value="<?= e($v['id']) ?>">
                                     <button type="submit" class="arow-del">Xoá</button>

@@ -42,8 +42,12 @@ $ed = $editing;
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
                             <a href="/quan-tri/co-so?sua=<?= e($s['id']) ?>#form">Sửa</a>
+                            <?php $hoi = sprintf('Xoá cơ sở “%s”?', $s['name']); ?>
                             <form method="post" action="/quan-tri/co-so/xoa"
-                                  onsubmit="return confirm('Xoá cơ sở &quot;<?= e($s['name']) ?>&quot;?')">
+                                  data-confirm="<?= e($hoi) ?>"
+                                  data-confirm-title="Xoá cơ sở?"
+                                  data-confirm-ok="Xoá"
+                                  onsubmit="return confirm('<?= e($hoi) ?>')">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="id" value="<?= e($s['id']) ?>">
                                 <button type="submit" class="arow-del">Xoá</button>

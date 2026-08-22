@@ -82,13 +82,44 @@
     margin-top: 8px;
 }
 
-/* Ghi đè bề rộng mặc định của .btn-primary/.btn-outline (chiếm trọn cột) —
-   ở đây chúng là hai nút cạnh nhau, không phải hai khối chồng lên nhau. */
+/* Kiểu đầy đủ, không mượn của components/ui.css — xem chú thích trong
+   _layout/confirm-dialog.php. Chữ hoa giãn nét lấy đúng cách .btn-primary của
+   cửa hàng đang làm, để hộp thoại không đọc như của site khác dán vào. */
 .cfm__act {
     flex: none;
     min-width: 104px;
     height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 20px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
 }
+
+.cfm__act--ok {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.cfm__act--ok:hover,
+.cfm__act--ok:focus-visible { background: var(--brand-strong); }
+
+.cfm__act--huy {
+    border-color: var(--line-strong);
+    background: var(--surface-sunken);
+    color: var(--ink);
+}
+
+.cfm__act--huy:hover,
+.cfm__act--huy:focus-visible { border-color: var(--brand); color: var(--brand); }
 
 @media (max-width: 420px) {
     .cfm__acts {

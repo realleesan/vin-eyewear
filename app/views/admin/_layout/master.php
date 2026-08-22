@@ -49,6 +49,11 @@ $navItems = [
 
     <link rel="stylesheet" href="/assets/css/layout.css">
     <link rel="stylesheet" href="/assets/css/admin.css">
+    <?php /* Hộp thoại "bạn có chắc không" — xem _layout/confirm-dialog.php.
+             Nạp cho MỌI trang quản trị: gần như trang danh sách nào cũng có
+             một nút xoá, và một file 2KB rẻ hơn nhiều so với việc nhớ thêm
+             nó mỗi lần dựng trang mới. */ ?>
+    <link rel="stylesheet" href="/assets/css/components/confirm.css">
 </head>
 
 <body class="admin">
@@ -116,7 +121,10 @@ $navItems = [
     </main>
 </div>
 
+<?php partial('_layout/confirm-dialog'); ?>
+
 <script src="/assets/js/admin.js" defer></script>
+<script src="/assets/js/confirm-dialog.js" defer></script>
 </body>
 
 </html>
