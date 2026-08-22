@@ -80,35 +80,9 @@
         // Bấm giữ Ctrl/Shift/giữa chuột là ý muốn mở tab khác — để nguyên.
         if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) return;
 
-        /* Nút "Xem thông tin chuyển khoản" — CHỈ MỞ, không bao giờ đóng, và
-           không đổi chữ trên nút. Khối chuyển khoản nằm trong phần chi tiết của
-           thẻ, nên việc của nút là bỏ `hidden` rồi cuộn tới đúng khối đó. */
-        var reveal = ev.target.closest('[data-reveal]');
-
-        if (reveal) {
-            var target = document.getElementById(reveal.getAttribute('data-reveal'));
-            var block  = document.getElementById(reveal.getAttribute('data-reveal-to'));
-
-            if (!target || !block) return;   // thiếu một trong hai thì để link chạy
-
-            ev.preventDefault();
-            target.hidden = false;
-
-            // Nút "Xem chi tiết" của cùng thẻ giờ đang nói sai — phần chi tiết đã
-            // mở mà nút vẫn mời mở. Đồng bộ lại nhãn và href của nó.
-            var more = reveal.closest('.acct-order__acts').querySelector('.acct-order__more');
-
-            if (more) {
-                more.setAttribute('aria-expanded', 'true');
-                more.textContent = 'Thu gọn';
-                more.setAttribute('href', more.getAttribute('data-close-href'));
-            }
-
-            block.scrollIntoView({ block: 'center', behavior: 'smooth' });
-
-            return;
-        }
-
+        /* ĐÃ GỠ nhánh [data-reveal] của nút "Xem thông tin chuyển khoản".
+           Nút đó nay đi thẳng tới màn quét QR chứ không mở panel nữa, nên nhánh
+           này không còn ai gọi — xem chú thích ở chân thẻ trong don-hang.php. */
         var btn = ev.target.closest('.acct-order__more');
         if (!btn) return;
 

@@ -583,16 +583,37 @@ $paymentShort  = [
 
                     <div class="acct-order__acts">
                         <?php if ($needsTransfer && !empty($bank['number'])): ?>
-                            <!-- Khối chuyển khoản nằm trong chính phần chi tiết của
-                                 thẻ này, nên nút chỉ mở phần đó ra rồi cuộn tới
-                                 #ck-<mã>. Có JS thì account.js bỏ `hidden` tại chỗ
-                                 (data-reveal); không có JS thì href tải lại trang
-                                 với ?don= và máy chủ dựng ra ở trạng thái mở. -->
+                            <?php
+                            /*
+                                ĐI THẲNG TỚI MÀN QUÉT QR.
+
+                                Trước đây nút này ghi "Xem thông tin chuyển khoản"
+                                và chỉ mở phần chi tiết ra rồi cuộn tới khối ngân
+                                hàng — tức là làm ĐÚNG việc mà nút "Xem chi tiết"
+                                ngay cạnh nó đã làm, chỉ thêm một cú cuộn.
+
+                                Cú cuộn đó từng có lý khi khối chuyển khoản nằm
+                                lọt trong cột tóm tắt bên phải. Từ lần dựng lại
+                                theo bản thiết kế, khối đó chiếm ngang cả hai cột
+                                và có nền vàng riêng — mở chi tiết ra là thấy
+                                ngay, không còn gì để cuộn tới.
+
+                                Cái giá của việc giữ nó: khách phải bấm HAI lần
+                                mới tới chỗ trả tiền (nút này mở panel, rồi nút
+                                "Quét mã QR" bên trong mới đi). Nay một lần.
+
+                                Số tài khoản dạng chữ vẫn ở trong phần chi tiết
+                                cho ai muốn chép tay — mở bằng "Xem chi tiết" như
+                                mọi thông tin khác của đơn.
+
+                                (Chú thích PHP chứ không phải <!-- -->: khối này
+                                nằm trong vòng lặp thẻ đơn, HTML comment sẽ được
+                                gửi xuống trình duyệt một lần cho MỖI đơn.)
+                            */
+                            ?>
                             <a class="acct-btn acct-btn--primary acct-btn--sm"
-                               href="<?= $isOpen ? '#ck-' . e($o['code']) : $base . '&amp;don=' . e(rawurlencode($o['code'])) . '#ck-' . e($o['code']) ?>"
-                               data-reveal="<?= $detailId ?>"
-                               data-reveal-to="ck-<?= e($o['code']) ?>">
-                                Xem thông tin chuyển khoản
+                               href="/thanh-toan/chuyen-khoan?ma=<?= e(rawurlencode($o['code'])) ?>">
+                                Quét mã QR để thanh toán
                             </a>
                         <?php elseif (isset($primaryLabels[$o['status']])): ?>
                             <?php if ($primaryLabels[$o['status']] === 'Mua lại'): ?>
@@ -626,7 +647,8 @@ $paymentShort  = [
                         <?php endif; ?>
 
                         <?php if (isset($canStillCancel[$o['status']])): ?>
-                            <!--
+                            <?php
+                            /*
                                 ĐÂY LÀ CHỖ KHÁCH ĐI TÌM NÚT "HUỶ ĐƠN" — và cố ý
                                 không có nút đó.
 
@@ -652,7 +674,8 @@ $paymentShort  = [
                                 dụng; khi đó khách cần ĐỌC được con số để tự tìm,
                                 chứ không phải bấm vào một chỗ không phản hồi rồi
                                 bỏ cuộc.
-                            -->
+                            */
+                            ?>
                             <a class="acct-btn acct-btn--quiet acct-btn--sm"
                                href="<?= e(config('company.channels.zalo')) ?>"
                                target="_blank" rel="noopener">
