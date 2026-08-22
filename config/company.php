@@ -65,9 +65,24 @@ return [
      */
     'bank' => [
         'name'    => 'Vietcombank',
-        'branch'  => 'CN Tây Hồ, Hà Nội',
-        'number'  => '0491000153708',
-        'holder'  => 'CONG TY TNHH VIN EYEWEAR VIET NAM',
+        'branch'  => 'VCB Thăng Long – PGD Thuỵ Khuê',
+        'number'  => '1007128686',
+        /*
+         * TÊN CHỦ TÀI KHOẢN PHẢI KHỚP TỪNG CHỮ VỚI TÊN NGÂN HÀNG GHI.
+         *
+         * Đây là tài khoản HỘ KINH DOANH, không phải tài khoản công ty — trước
+         * bản này ô này ghi "CONG TY TNHH VIN EYEWEAR VIET NAM" trong khi ngân
+         * hàng ghi tên hộ kinh doanh.
+         *
+         * Vì sao lệch một cái tên lại đáng sửa: mã QR chỉ mang SỐ tài khoản,
+         * còn TÊN thì app ngân hàng tự tra từ phía ngân hàng rồi hiện ra. Nên
+         * khách quét mã sẽ thấy web ghi một tên, app hiện một tên khác — đúng
+         * giây họ sắp bấm "Chuyển". Tiền vẫn tới đúng nơi, nhưng phần lớn người
+         * ta sẽ dừng lại vì tưởng bị lừa.
+         *
+         * IN HOA, KHÔNG DẤU: chép đúng cách ngân hàng hiển thị.
+         */
+        'holder'  => 'HO KINH DOANH PHAM TIEN MANH',
 
         /*
          * MÃ NGÂN HÀNG THEO CHUẨN NAPAS (BIN) — dùng để dựng ảnh mã QR ở màn
