@@ -83,6 +83,16 @@ $payment  = $old['paymentMethod'] ?? 'cod';
 /* Chuyển khoản: cọc 30% hay chuyển đủ. Mặc định 'full' — vế cửa hàng khuyến
    khích và cũng là vế được tặng mã. Xem OrderModel::place(). */
 $bankAmount = ($old['bankAmount'] ?? 'full') === 'deposit' ? 'deposit' : 'full';
+
+/* Mã đang được tặng cho khách chuyển đủ 100%, hoặc null nếu cửa hàng chưa bật
+   mã nào. Tra MỘT LẦN ở đây vì trang này nhắc tới nó ở HAI chỗ cách nhau khá
+   xa: thẻ "Chuyển khoản ngân hàng" ở bước 3, và vế "Chuyển đủ 100%" trong
+   khối tóm tắt. Hai lần gọi là hai câu truy vấn cho cùng một câu trả lời.
+
+   KHÔNG phụ thuộc vào việc khách đã từng chuyển đủ hay chưa: đây là LỜI MỜI,
+   phải hiện với cả người mua lần đầu — họ mới là người cần biết nhất. Mã đã
+   nằm trong ví thì hiện ở chỗ khác (xem VoucherModel::rewardHeldBy). */
+$reward = VoucherModel::reward();
 $storeId  = $old['storeId'] ?? '';
 ?>
 
@@ -288,8 +298,33 @@ $storeId  = $old['storeId'] ?? '';
                                    <?= (!$soon && $payment === $value) ? 'checked' : '' ?>>
                             <span class="cocard__dot" aria-hidden="true"></span>
                             <span class="cocard__body">
-                                <span class="cocard__name"><?= e($pm['name']) ?></span>
-                                <span class="cocard__note"><?= e($pm['note']) ?></span>
+                                <span class="cocard__name">
+                                    <?= e($pm['name']) ?>
+                                    <?php
+                                    /* NHÃN QUÀ NGAY Ở ĐÂY, không chỉ trong khối
+                                       tóm tắt bên phải.
+
+                                       Khối bên phải chỉ hiện SAU KHI khách đã
+                                       chọn chuyển khoản — mà mặc định đang là
+                                       COD, nên họ không bao giờ thấy lời mời và
+                                       cũng chẳng có lý do gì để bấm sang xem.
+                                       Con gà và quả trứng.
+
+                                       Đặt ở thẻ phương thức thì lời mời nằm
+                                       đúng chỗ khách đang cân nhắc, và hiện với
+                                       MỌI khách kể cả người chưa mua bao giờ. */
+                                    ?>
+                                    <?php if ($value === 'bank_transfer' && $reward !== null): ?>
+                                        <span class="cocard__gift">+ Tặng mã giảm giá</span>
+                                    <?php endif; ?>
+                                </span>
+                                <span class="cocard__note">
+                                    <?= e($pm['note']) ?>
+                                    <?php if ($value === 'bank_transfer' && $reward !== null): ?>
+                                        · chuyển đủ 100% được tặng mã
+                                        <strong><?= e($reward['code']) ?></strong>
+                                    <?php endif; ?>
+                                </span>
                             </span>
                             <?php if ($soon): ?>
                                 <span class="cocard__soon">Sắp có</span>
@@ -520,7 +555,6 @@ $storeId  = $old['storeId'] ?? '';
                    nên cọc + còn lại luôn đúng bằng dòng "Tổng cộng" ngay trên
                    — khách tự kiểm được, không cần tin. */
                 $deposit = OrderModel::depositFor($total, $depositRate);
-                $reward  = VoucherModel::reward();
                 ?>
 
                 <?php if ($needsDeposit): ?>
