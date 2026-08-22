@@ -30,17 +30,13 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
        trắng chỉ có cái giỏ hàng. */
     header('Vary: X-Buy-Flow');
 
-    if (!empty($buyModal)) {
-        partial('_layout/buy-modal', ['buyModal' => $buyModal]);
-    }
-
-    if (!empty($toast)) {
-        partial('_layout/toast', ['toast' => $toast, 'toastTone' => $toastTone ?? 'ok']);
-    }
-
-    /* Luôn in, kể cả khi giỏ không đổi: buy-flow.js chép ruột cụm này sang
-       trang đang mở, nên thiếu nó thì huy hiệu đứng im ở con số cũ. */
-    partial('_layout/header-cart');
+    /* Ba mảnh nằm ở file riêng vì BaseController::buyFragment() cũng in đúng
+       chúng — xem chú thích đầu _layout/buy-fragment.php. */
+    partial('_layout/buy-fragment', [
+        'buyModal'  => $buyModal ?? null,
+        'toast'     => $toast ?? null,
+        'toastTone' => $toastTone ?? 'ok',
+    ]);
 
     return;
 }

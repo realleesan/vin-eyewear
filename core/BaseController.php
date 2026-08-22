@@ -61,13 +61,7 @@ class BaseController
              * mất không dấu vết — khách bấm mua, không có gì xảy ra, và không
              * ai nói cho họ biết vì sao.
              */
-            $data['toast'] = flash('cart_success');
-            $data['toastTone'] = 'ok';
-
-            if ($data['toast'] === null) {
-                $data['toast'] = flash('cart_error');
-                $data['toastTone'] = 'err';
-            }
+            [$data['toast'], $data['toastTone']] = self::toastFromFlash();
         }
 
         // Extract data array to individual variables
@@ -75,6 +69,72 @@ class BaseController
 
         // Load the master layout
         require_once VIEWS_PATH . '/_layout/master.php';
+    }
+
+    /**
+     * Dải báo lấy từ flash, dùng chung cho trang đầy đủ và cho mảnh.
+     *
+     * @return array{0: string|null, 1: string}
+     */
+    protected static function toastFromFlash(): array
+    {
+        $toast = flash('cart_success');
+
+        if ($toast !== null) {
+            return [$toast, 'ok'];
+        }
+
+        return [flash('cart_error'), 'err'];
+    }
+
+    /**
+     * Trả THẲNG ba mảnh của luồng mua hàng, không qua bước chuyển hướng.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * MỘT CÚ BẤM = MỘT LƯỢT ĐI VỀ, KHÔNG PHẢI HAI
+     *
+     * Đường cũ: buy-flow.js POST sang /gio-hang/chon, máy chủ trả 302, fetch
+     * tự đi tiếp lượt thứ hai để GET trang có ?buoc= mới, rồi mới nhặt được
+     * ba mảnh. Trên máy chủ chạy nhanh thì hai lượt đó không ai để ý; trên
+     * hosting chia sẻ, mỗi lượt tốn vài trăm mili giây và khách bấm một cái
+     * phải chờ gần hai giây — mà luồng mua có tới năm bước.
+     *
+     * Nay khi request mang header X-Buy-Flow, chính cú POST đó trả luôn ba
+     * mảnh của bước kế. Địa chỉ mới đi kèm ở header X-Buy-Url để buy-flow.js
+     * còn pushState — thanh địa chỉ vẫn phải đổi, nếu không nút Lùi và F5 mất
+     * đường về đúng bước.
+     *
+     * LÀM ĐƯỢC VÌ BA MẢNH KHÔNG CẦN CONTROLLER CỦA TRANG ĐÍCH. Hộp thoại dựng
+     * từ ?mua= + ?buoc= + phiên (buyModal), dải báo từ flash, cụm giỏ từ
+     * phiên. Không mảnh nào cần danh sách sản phẩm liên quan hay đánh giá của
+     * trang chi tiết — thứ mà lượt GET thứ hai vẫn phải tính đủ rồi vứt đi.
+     *
+     * KHÔNG dùng cho đích SANG TRANG KHÁC (ví dụ /thanh-toan sau "Mua ngay"):
+     * ở đó phải là chuyển hướng thật để trình duyệt đổi trang. Nơi gọi tự
+     * quyết — xem CartController::buyStepDone().
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    protected function buyFragment(string $url): never
+    {
+        /* buyModal() đọc $_GET, mà đây là request POST tới một địa chỉ khác.
+           Nạp tay hai tham số nó cần, đúng như lượt GET thứ hai sẽ mang. */
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $q);
+
+        $_GET['mua']  = $q['mua']  ?? '';
+        $_GET['buoc'] = $q['buoc'] ?? '';
+
+        header('Vary: X-Buy-Flow');
+        header('X-Buy-Url: ' . $url);
+
+        [$toast, $toastTone] = self::toastFromFlash();
+
+        partial('_layout/buy-fragment', [
+            'buyModal'  => self::buyModal(),
+            'toast'     => $toast,
+            'toastTone' => $toastTone,
+        ]);
+
+        exit;
     }
 
     /**

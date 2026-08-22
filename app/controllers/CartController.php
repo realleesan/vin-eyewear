@@ -237,7 +237,7 @@ class CartController extends BaseController
                 'lens_id'    => null,   // gói chiết suất (Mắt đặt thì null)
             ];
 
-            redirect(self::stepUrl($back, $product['id'], null));
+            $this->buyStepDone(self::stepUrl($back, $product['id'], null));
         }
 
         // ── Tròng cắt kèm ────────────────────────────────────────────────
@@ -651,7 +651,7 @@ class CartController extends BaseController
 
                 if ($type === null) {
                     flash('cart_error', 'Vui lòng chọn loại tròng kính.');
-                    redirect(self::stepUrl($back, $intent['product_id'], 'kieu-trong'));
+                    $this->buyStepDone(self::stepUrl($back, $intent['product_id'], 'kieu-trong'));
                 }
 
                 $intent['lens_type'] = $type['id'];
@@ -676,7 +676,7 @@ class CartController extends BaseController
 
                 if ($lens === null) {
                     flash('cart_error', 'Vui lòng chọn một gói tròng kính.');
-                    redirect(self::stepUrl($back, $intent['product_id'], 'trong'));
+                    $this->buyStepDone(self::stepUrl($back, $intent['product_id'], 'trong'));
                 }
 
                 $intent['lens_id'] = $lens['id'];
@@ -699,7 +699,7 @@ class CartController extends BaseController
 
         $_SESSION['_buy_intent'] = $intent;
 
-        redirect(self::stepUrl($back, $intent['product_id'], $next));
+        $this->buyStepDone(self::stepUrl($back, $intent['product_id'], $next));
     }
 
     /**
@@ -710,6 +710,25 @@ class CartController extends BaseController
      * trình duyệt lùi đúng một bước, và đóng hộp thoại là về lại trang cũ
      * nguyên vẹn cả bộ lọc.
      */
+    /**
+     * Kết thúc một bước của hộp thoại: trả mảnh nếu gọi bằng fetch, không thì
+     * chuyển hướng như cũ.
+     *
+     * MỘT CHỖ DUY NHẤT quyết định điều đó, để bốn lối ra của luồng mua không
+     * thể lệch nhau — thêm bước thứ sáu sau này chỉ việc gọi hàm này.
+     *
+     * Trình duyệt KHÔNG có JavaScript vẫn đi đường cũ (302 rồi GET), nên luồng
+     * mua không phụ thuộc vào fetch. Xem BaseController::buyFragment().
+     */
+    private function buyStepDone(string $url): never
+    {
+        if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
+            $this->buyFragment($url);
+        }
+
+        redirect($url);
+    }
+
     private static function stepUrl(string $back, string $productId, ?string $step): string
     {
         $url = $back . (str_contains($back, '?') ? '&' : '?')

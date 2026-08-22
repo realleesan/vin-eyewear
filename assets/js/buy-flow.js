@@ -230,12 +230,27 @@
                  * So theo ĐƯỜNG DẪN, không so cả địa chỉ: các bước trong hộp
                  * thoại chỉ đổi ?mua= và ?buoc= trên chính trang đang đứng.
                  */
-                if (new URL(res.url).pathname !== window.location.pathname) {
-                    window.location.href = res.url;
+                /*
+                 * ĐỊA CHỈ MỚI: ưu tiên header X-Buy-Url.
+                 *
+                 * Máy chủ nay trả THẲNG ba mảnh cho chính cú POST, không qua
+                 * 302 nữa (xem BaseController::buyFragment) — nhanh gấp đôi
+                 * trên hosting chậm, nhưng đổi lại res.url không còn là địa
+                 * chỉ của bước mới mà là địa chỉ đã POST tới. Dùng nó để
+                 * pushState thì thanh địa chỉ thành /gio-hang/chon, và F5 ở
+                 * đó là mất cả hộp thoại.
+                 *
+                 * Máy chủ chưa lên bản mới thì không có header này và mọi thứ
+                 * chạy y như cũ — hai bên không buộc phải lên cùng lúc.
+                 */
+                var dich = res.headers.get('X-Buy-Url') || res.url;
+
+                if (new URL(dich, window.location.href).pathname !== window.location.pathname) {
+                    window.location.href = dich;
                     return;
                 }
 
-                return res.text().then(function (html) { apply(html, res.url, push !== false); });
+                return res.text().then(function (html) { apply(html, dich, push !== false); });
             })
             .catch(function () {
                 /* Tới đây chỉ còn lỗi MẠNG (chưa có câu trả lời nào) hoặc HTML
