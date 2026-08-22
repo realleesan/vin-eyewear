@@ -19,7 +19,7 @@
  * MÃ QR LÀ THẬT, KHÔNG PHẢI HÌNH TRANG TRÍ
  *
  * Bản thiết kế vẽ một ô vuông QR bằng SVG — nó chỉ là hình minh hoạ, quét
- * không ra gì. Ở đây ảnh dựng từ dịch vụ VietQR theo đúng bốn thứ trong
+ * không ra gì. Ở đây ảnh dựng từ SePay theo đúng bốn thứ trong
  * config/company.php + đơn hàng này: mã ngân hàng, số tài khoản, SỐ TIỀN và
  * NỘI DUNG. Khách quét là app ngân hàng điền sẵn cả bốn.
  *
@@ -108,7 +108,12 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
         <div class="coqr__card coqr__pay">
             <div class="coqr__payhead">
                 <span class="coqr__paytitle">Quét QR để thanh toán</span>
-                <span class="coqr__paysub">App ngân hàng hỗ trợ VietQR</span>
+                <?php /* KHÔNG nêu tên nhà cung cấp nào ở dòng này. Ảnh mã do
+                         SePay dựng (xem $qrSrc), nhưng khách không cần biết —
+                         thứ họ cần biết là "mở app ngân hàng nào cũng quét
+                         được". Nêu tên một dịch vụ ở đây chỉ khiến người đọc
+                         tưởng phải cài thêm app đó mới trả tiền được. */ ?>
+                <span class="coqr__paysub">Mở app ngân hàng bất kỳ và quét mã</span>
             </div>
 
             <div class="coqr__frame">
