@@ -154,6 +154,45 @@ class BookingModel extends BaseModel
      * Lịch hẹn của một khách. Thay cho policy "own appointments read".
      */
     /**
+     * Lịch này đã QUÁ NGÀY mà chưa ai chốt gì chưa?
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * MỘT TRẠNG THÁI SUY RA, KHÔNG PHẢI MỘT TRẠNG THÁI LƯU TRONG CSDL
+     *
+     * Bốn trạng thái trong STATUSES đều do NGƯỜI đặt: khách đặt lịch ('pending'),
+     * nhân viên xác nhận ('confirmed'), đo xong ('done'), một trong hai bên huỷ
+     * ('cancelled'). Không có ai — và không có tiến trình nền nào — đặt trạng
+     * thái "đã quá ngày". Một lịch 'pending' của tháng trước sẽ nằm đó mãi.
+     *
+     * Nên "quá hạn" tính TẠI CHỖ mỗi lần hiện ra, từ ngày hẹn so với hôm nay.
+     * Không ghi vào CSDL vì hai lý do:
+     *
+     *   · Không có tiến trình nền nào để quét. Ghi lúc khách mở trang thì
+     *     lịch của người không bao giờ đăng nhập sẽ không bao giờ được dọn —
+     *     dữ liệu đúng hay sai tuỳ vào ai vừa ghé thăm.
+     *   · Cửa hàng vẫn phải đánh dấu 'done' được cho một lịch cũ khi đối
+     *     chiếu sổ sách. Đè sẵn một trạng thái máy tự đặt là cướp mất quyền đó.
+     *
+     * 'done' và 'cancelled' KHÔNG tính là quá hạn dù ngày đã qua: chúng đã có
+     * kết cục rồi, và "Đã hoàn tất" nói đúng hơn "Đã qua" nhiều.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public static function isExpired(array $appointment): bool
+    {
+        $status = (string) ($appointment['status'] ?? '');
+
+        if ($status !== 'pending' && $status !== 'confirmed') {
+            return false;
+        }
+
+        /* So theo NGÀY, không theo giờ hẹn — cùng ngưỡng mà countUpcoming()
+           dùng, nên con số trên huy hiệu và chữ trên thẻ không bao giờ nói hai
+           điều khác nhau. Lịch 09:00 sáng nay lúc 8 giờ tối vẫn là việc của
+           hôm nay. */
+        return (string) ($appointment['appointment_date'] ?? '') < date('Y-m-d');
+    }
+
+    /**
      * Số lịch hẹn SẮP TỚI của một khách — con số trên huy hiệu ở cột trái.
      *
      * Cùng cách nghĩ với OrderModel::countActive(): huy hiệu đếm việc còn phải

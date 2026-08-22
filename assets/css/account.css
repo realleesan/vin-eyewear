@@ -983,6 +983,11 @@ select.acct-field__input {
 .acct-badge--done { background: #eef3e9; color: #4d7a3f; }  /* hoàn tất */
 .acct-badge--stop { background: #f6e7e7; color: #a24040; }  /* đã huỷ */
 
+/* Lịch hẹn đã QUÁ NGÀY mà không ai chốt gì — xem BookingModel::isExpired().
+   Xám trung tính chứ không đỏ như "đã huỷ": không ai huỷ nó cả, nó chỉ hết
+   hiệu lực theo thời gian. Đỏ đọc thành "có chuyện gì đó đã xảy ra". */
+.acct-badge--gone { background: #f0eeec; color: #6b615d; }  /* đã qua ngày */
+
 /* --- Dải hàng --- */
 
 .acct-order__line {

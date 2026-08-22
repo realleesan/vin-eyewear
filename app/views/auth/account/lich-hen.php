@@ -88,8 +88,25 @@ $editHref = static fn (string $code, string $date): string =>
                         <span class="acct-order__code"><?= e($a['code']) ?></span>
                         <span class="acct-order__when">Đặt ngày <?= e(formatDate($a['created_at'])) ?></span>
                     </div>
-                    <span class="acct-badge acct-badge--<?= e($tones[$a['status']] ?? 'wait') ?>">
-                        <?= e($bookingStatuses[$a['status']] ?? $a['status']) ?>
+                    <?php
+                    /* ─────────────────────────────────────────────────────
+                       LỊCH QUÁ NGÀY ĐỌC LÀ "ĐÃ QUA", KHÔNG PHẢI "CHỜ XÁC NHẬN".
+
+                       Không ai và không tiến trình nền nào đổi trạng thái một
+                       lịch đã qua ngày, nên trong CSDL nó vẫn là 'pending'
+                       hoặc 'confirmed' mãi mãi. Hiện nguyên chữ đó thì khách
+                       mở trang thấy "Chờ xác nhận" cho một buổi hẹn của tháng
+                       trước — và ngồi chờ một cuộc gọi sẽ không bao giờ tới.
+
+                       "Đã qua" là trạng thái SUY RA lúc vẽ, xem
+                       BookingModel::isExpired(). Cùng ngưỡng ngày với
+                       countUpcoming(), nên con số trên huy hiệu ở cột trái và
+                       chữ trên thẻ này không bao giờ nói hai điều khác nhau.
+                       ───────────────────────────────────────────────────── */
+                    $quaHan = BookingModel::isExpired($a);
+                    ?>
+                    <span class="acct-badge acct-badge--<?= $quaHan ? 'gone' : e($tones[$a['status']] ?? 'wait') ?>">
+                        <?= $quaHan ? 'Đã qua' : e($bookingStatuses[$a['status']] ?? $a['status']) ?>
                     </span>
                 </div>
 
@@ -129,8 +146,14 @@ $editHref = static fn (string $code, string $date): string =>
                    hợp này thì gọi tổng đài mới có nghĩa, và chỉ ở đây mới cần in
                    lý do. Lịch đã huỷ / đã hoàn tất thì huy hiệu ở đầu thẻ đã nói
                    rồi, nhắc lại thành hai lần cùng một câu, mà tổng đài cũng
-                   không làm được gì. */
+                   không làm được gì.
+
+                   Lịch ĐÃ QUÁ NGÀY cũng vậy kể từ khi huy hiệu biết nói "Đã
+                   qua": in thêm câu "Giờ hẹn đã qua." ngay dưới là lặp lại
+                   đúng điều vừa đọc. Nút "Đặt lại" bên cạnh mới là thứ khách
+                   cần ở đó. */
                 $callable = $blocker !== null
+                    && !$quaHan
                     && in_array($a['status'], ['pending', 'confirmed'], true);
                 ?>
 
