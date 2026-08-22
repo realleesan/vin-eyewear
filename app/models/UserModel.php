@@ -709,8 +709,22 @@ class UserModel extends BaseModel
     {
         $params = ['user_id' => $userId];
 
+        /*
+         * THỨ KHÔNG PHẢI SỐ THÌ THÀNH NULL, không phải 0.
+         *
+         * Trước đây chỗ này ép thẳng `(float)`, và PHP biến mọi chuỗi lạ thành
+         * 0.0 — không cảnh báo gì. Với cột độ kính thì đó là kiểu hỏng tệ
+         * nhất: 0.00 diop là "không độ", một giá trị HỢP LỆ trong đơn thuốc,
+         * nên nó nằm im trong hồ sơ và không ai biết số đo thật đã mất.
+         *
+         * Bắt được đúng chuyện này khi chạy thử bảng số đo mới: dấu trừ thật
+         * (U+2212) trong "−2.00" khiến (float) trả 0.0. Chuỗi đó nay đã được
+         * chuẩn hoá từ LensModel::joinSph(), nhưng chốt ở đây là lưới thứ hai
+         * — cột này còn nhận dữ liệu từ chỗ khác về sau.
+         */
         foreach (['od_sph', 'od_cyl', 'os_sph', 'os_cyl', 'pd'] as $f) {
-            $params[$f] = ($values[$f] ?? '') === '' ? null : (float) $values[$f];
+            $raw = trim((string) ($values[$f] ?? ''));
+            $params[$f] = is_numeric($raw) ? (float) $raw : null;
         }
 
         foreach (['od_axis', 'os_axis'] as $f) {

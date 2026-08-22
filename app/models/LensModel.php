@@ -567,6 +567,49 @@ class LensModel
             return '';
         }
 
+        /*
+         * GIÁ TRỊ ĐÃ MANG SẴN DẤU THÌ BỎ QUA Ô DẤU.
+         *
+         * Hai giao diện gửi độ cầu về theo hai dạng khác nhau:
+         *   trang hồ sơ      hai ô rời — dấu ở `*_dau`, độ lớn ở `*_sph`
+         *   bảng số đo       MỘT ô chọn mang sẵn dấu ("-2.00")
+         *
+         * Không có nhánh này thì dạng thứ hai bị nối thêm một dấu trừ nữa và
+         * thành "--2.00" — một chuỗi không phải số, diopter() vứt đi, và số đo
+         * khách vừa nhập biến mất không một lời báo.
+         *
+         * Ký tự trừ THẬT (U+2212) cũng nhận: nhãn trên giao diện dùng nó.
+         *
+         * str_starts_with() chứ KHÔNG phải mb_substr(): máy chủ của cửa hàng
+         * không nạp extension mbstring, mọi hàm mb_* là lỗi 500 chờ sẵn — xem
+         * ghi chú ở core/helpers.php, chỗ utf8Length/utf8Substr tự viết. Hàm
+         * này làm việc trên byte nên so được cả tiền tố nhiều byte như '−'.
+         */
+        if (str_starts_with($mag, '+')
+            || str_starts_with($mag, '-')
+            || str_starts_with($mag, '−')) {
+            $label = static::diopter($mag);
+
+            if ($label === null) {
+                return '';
+            }
+
+            /*
+             * TRẢ VỀ DẤU ASCII, không phải nhãn hiển thị.
+             *
+             * diopter() trả ra nhãn để ĐỌC: dấu trừ thật (U+2212) và dấu cộng
+             * ở đầu số dương. Chuỗi đó đi tiếp vào UserModel::savePrescription,
+             * nơi có một phép ép `(float)` — và (float)"−2.00" bằng 0.0, vì
+             * PHP chỉ hiểu dấu gạch nối ASCII.
+             *
+             * Đã xảy ra thật khi chạy thử: nhập cận −2.00, hồ sơ khúc xạ lưu
+             * 0.00 — tức "không độ", một con số HỢP LỆ nên không có lỗi nào
+             * nổi lên. Nhánh hai-ô ở dưới vốn trả dấu ASCII; nhánh này phải
+             * trả cùng một dạng.
+             */
+            return ltrim(str_replace('−', '-', $label), '+');
+        }
+
         // 0.00 không có dấu: "−0.00" là một con số không tồn tại trong đơn thuốc.
         if ((float) $mag == 0.0) {
             return '0.00';
@@ -606,6 +649,59 @@ class LensModel
         }
 
         return $out;
+    }
+
+    /**
+     * ĐỘ CẦU — một ô chọn DUY NHẤT mang sẵn dấu, từ +MAX xuống −MIN.
+     *
+     * Khác sphSignOptions()+sphMagnitudeOptions() (hai ô rời) đang dùng ở trang
+     * hồ sơ. Bảng số đo trong hộp thoại mua hàng vẽ theo mẫu một-ô, và ở đó nó
+     * hợp lý hơn: bốn cột SPH · CYL · TRỤC của hai mắt phải thẳng hàng nhau
+     * trong một bảng, mà nhét thêm hai nút dấu vào ô đầu là cột đó rộng gấp
+     * rưỡi ba cột còn lại.
+     *
+     * Đổi lại, dấu nằm lẫn trong 97 dòng danh sách. Bù bằng hai thứ ở giao
+     * diện: nhãn cột ghi rõ "Cận (−) / Viễn (+)", và ô tóm tắt bên dưới đọc
+     * ngược con số ra thành chữ ("Cận 2.00 · Loạn 0.75") để khách soát lại.
+     *
+     * XẾP TỪ DƯƠNG XUỐNG ÂM cho khớp bản vẽ — và cũng đúng cách đọc đơn kính.
+     * 0.00 có nhãn riêng "Plano": trong đơn thuốc đó là "không có độ", một câu
+     * trả lời THẬT, khác hẳn ô để trống nghĩa là chưa nhập.
+     *
+     * @return array<int, array{value:string, label:string}>
+     */
+    public static function sphSignedOptions(): array
+    {
+        $out = [];
+
+        for ($d = self::SPH_MAX; $d >= self::SPH_MIN; $d -= self::SPH_STEP) {
+            $v = number_format($d, 2, '.', '');
+
+            $out[] = [
+                'value' => $v,
+                'label' => $d == 0.0 ? '0.00 (Plano)' : self::diopterLabel($d),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * ĐỘ TRỤ kèm dòng 0.00 ở đầu.
+     *
+     * cylOptions() cố tình bỏ 0.00 đi vì ở giao diện cũ ô trống đã đủ nghĩa.
+     * Bảng số đo thì cần nó: trục loạn bị KHOÁ khi chưa có độ trụ, nên khách
+     * không loạn phải nói được "tôi không loạn" thay vì để trống rồi tự hỏi
+     * sao ô trục bấm không được.
+     *
+     * @return array<int, array{value:string, label:string}>
+     */
+    public static function cylOptionsWithZero(): array
+    {
+        return array_merge(
+            [['value' => '0.00', 'label' => '0.00 (Không loạn)']],
+            self::cylOptions()
+        );
     }
 
     /**

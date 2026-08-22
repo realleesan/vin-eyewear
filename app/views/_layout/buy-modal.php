@@ -275,122 +275,158 @@ $stepForm = static function (string $buoc): void {
             <!-- ══════════ 2. NHẬP SỐ ĐO KHÚC XẠ ══════════ -->
             <?php
             /*
-             * MỖI MẮT MỘT KHỐI, HAI KHỐI ĐỨNG SÁT NHAU.
+             * BẢNG BA CỘT × HAI HÀNG — dựng theo "Bảng số đo khúc xạ.dc.html".
              *
-             * Không còn khung "Loại tật" chen giữa nhãn mắt và ba ô độ, nên
-             * hai khối co lại vừa một màn hình điện thoại và mắt so được số
-             * của hai bên mà không phải cuộn. Đó chính là điều cửa hàng yêu
-             * cầu khi nói "dồn OS và OD lại gần nhau".
+             * Trước đây mỗi mắt là một khối riêng xếp chồng, mỗi khối lại có
+             * nhãn cột của chính nó. Nay hai mắt nằm trong MỘT bảng dùng chung
+             * một hàng nhãn: đó là cách đơn kính giấy in ra, và là cách khách
+             * đối chiếu — nhìn dọc một cột để so số hai mắt, không phải nhớ số
+             * mắt phải rồi cuộn xuống tìm mắt trái.
              *
-             * BA Ô ĐỘ LUÔN HIỆN Ở CẢ HAI MẮT. Không có gì để ẩn nữa: điều kiện
-             * ẩn trụ/trục ngày trước bám vào ô radio "Loạn thị", mà ô đó đã bỏ.
-             * Mắt không loạn thì để trống hai ô — máy chủ bỏ qua ô trống, và
-             * điền vào thì được giữ nguyên (xem LensModel::eyeText).
+             * ─────────────────────────────────────────────────────────────
+             * ĐỘ CẦU LÀ MỘT Ô CHỌN MANG SẴN DẤU, không phải cặp nút −/+ như ở
+             * trang hồ sơ (mục "Thông số đo mắt").
              *
-             * KHÔNG Ô NÀO ĐƯỢC ĐIỀN SẴN, kể cả khi khách đã có hồ sơ khúc xạ.
-             * Xem điểm 3 ở đầu file.
+             * Bản vẽ chốt như vậy, và trong một cái bảng thì nó hợp lý: bốn
+             * cột của hai mắt phải thẳng hàng nhau, mà nhét thêm hai nút dấu
+             * vào cột đầu là cột đó rộng gấp rưỡi ba cột còn lại.
+             *
+             * Cái giá là dấu nằm lẫn trong 97 dòng danh sách. Bù bằng hai thứ:
+             * nhãn cột ghi thẳng "Cận (−) / Viễn (+)", và ô TÓM TẮT bên dưới
+             * đọc ngược con số ra thành chữ ("Cận 2.00 · Loạn 0.75 · Trục
+             * 180°") để khách soát lại trước khi bấm xác nhận.
+             * ─────────────────────────────────────────────────────────────
+             *
+             * TRỤC BỊ KHOÁ KHI CHƯA CÓ ĐỘ TRỤ. Trục loạn chỉ có nghĩa khi có
+             * độ loạn; chọn "Trục 90°" cho một mắt không loạn là một con số vô
+             * nghĩa đi thẳng xuống phiếu mài. Khoá bằng thuộc tính `disabled`
+             * dựng sẵn ở máy chủ, JS chỉ mở/đóng lại khi khách đổi ô độ trụ —
+             * không có JS thì ô trục mở sẵn và máy chủ vẫn kiểm như cũ.
              */
             $eyes = [
-                'od' => ['Mắt phải (OD)', 'MP'],
-                'os' => ['Mắt trái (OS)', 'MT'],
+                'od' => ['OD', 'Mắt phải'],
+                'os' => ['OS', 'Mắt trái'],
             ];
-            $signOptions = LensModel::sphSignOptions();
-            $sphOptions  = LensModel::sphMagnitudeOptions();
-            $cylOptions  = LensModel::cylOptions();
-            $axisOptions = LensModel::axisOptions();
+            $sphOptions  = LensModel::sphSignedOptions();
+            $cylOptions  = LensModel::cylOptionsWithZero();
+            /* Bỏ mốc 0° đi. Về mặt hình học 0° và 180° là cùng một kinh
+               tuyến, nhưng đơn kính luôn ghi 180 — để cả hai trong danh sách
+               là bày ra hai dòng cho cùng một thứ và mời khách phân vân.
+               Nhãn cột cũng ghi "1–180°" cho khớp. Máy chủ vẫn nhận 0 nếu có
+               ai gửi tay: LensModel::AXIS_MIN không đổi. */
+            $axisOptions = array_values(array_filter(
+                LensModel::axisOptions(),
+                static fn (array $op): bool => $op['value'] !== '0'
+            ));
             ?>
             <form class="brx" method="post" action="/gio-hang/chon">
                 <?php $stepForm('so-do'); ?>
 
-                <?php foreach ($eyes as $side => [$label, $short]): ?>
-                    <fieldset class="beye" data-eye="<?= e($side) ?>">
-                        <legend class="beye__label">
-                            <?= icon('eye', 'beye__ico', 14) ?><?= e($label) ?>
-                        </legend>
+                <div class="brx__head">
+                    <span class="brx__eyebrow">Số đo kính thuốc</span>
+                    <span class="brx__hint">Nhập theo đơn kính của bạn</span>
+                </div>
 
-                        <?php /* Ba ô chia đều một hàng; dưới 480px CSS xếp
-                                 chúng thành ba dòng (400px). Xem buy-modal.css. */ ?>
-                        <div class="beye__row">
-                            <div class="beye__field">
-                                <span class="beye__cap" id="cap-<?= e($side) ?>-sph">Độ cầu (SPH)</span>
+                <div class="brxtable">
 
-                                <?php
-                                /*
-                                 * DẤU TÁCH RA HAI NÚT, ĐỘ LỚN Ở Ô CHỌN BÊN CẠNH.
-                                 *
-                                 * Cửa hàng yêu cầu cho khách chọn dấu cộng hay
-                                 * dấu trừ. Trước đây dấu nằm lẫn trong nhãn của
-                                 * một danh sách 81 dòng — thứ dễ đọc lướt qua
-                                 * nhất trên cả form, mà đọc nhầm là mài ngược
-                                 * hẳn một cặp tròng. Lý do đầy đủ ghi ở
-                                 * LensModel::sphMagnitudeOptions().
-                                 *
-                                 * Hai ô radio THẬT, không phải <button>: bàn
-                                 * phím và trình đọc màn hình phải biết cái nào
-                                 * đang được chọn. Cùng cách làm với .acct-choice
-                                 * ở trang tài khoản.
-                                 */
-                                ?>
-                                <div class="bsph">
-                                    <div class="bsign" role="radiogroup"
-                                         aria-labelledby="cap-<?= e($side) ?>-sph">
-                                        <?php foreach ($signOptions as $i => $sg): ?>
-                                            <label class="bsign__opt"
-                                                   title="<?= e($sg['note']) ?>">
-                                                <input type="radio" name="<?= e($side) ?>_dau"
-                                                       value="<?= e($sg['value']) ?>"
-                                                       <?= $i === 0 ? 'checked' : '' ?>>
-                                                <span class="bsign__mark" aria-hidden="true"><?= e($sg['label']) ?></span>
-                                                <span class="bsign__note"><?= e($sg['note']) ?></span>
-                                            </label>
-                                        <?php endforeach; ?>
-                                    </div>
+                    <?php /* Hàng nhãn — mỗi cột một tên viết tắt kèm một dòng
+                             giải nghĩa, vì SPH/CYL/AXIS là chữ của người trong
+                             nghề chứ không phải của khách. */ ?>
+                    <div class="brxtable__head">
+                        <span></span>
+                        <span class="brxtable__col">
+                            <span class="brxtable__name">Độ cầu <em>SPH</em></span>
+                            <span class="brxtable__sub">Cận (−) / Viễn (+)</span>
+                        </span>
+                        <span class="brxtable__col">
+                            <span class="brxtable__name">Độ trụ <em>CYL</em></span>
+                            <span class="brxtable__sub">Độ loạn</span>
+                        </span>
+                        <span class="brxtable__col">
+                            <span class="brxtable__name">Trục <em>AXIS</em></span>
+                            <span class="brxtable__sub">1–180°</span>
+                        </span>
+                    </div>
 
-                                    <label class="sr-only" for="<?= e($side) ?>-sph">
-                                        <?= e($label) ?> — độ cầu
+                    <?php foreach ($eyes as $side => [$code, $label]): ?>
+                        <div class="brxtable__row">
+                            <span class="brxtable__eye">
+                                <span class="brxtable__badge"><?= e($code) ?></span>
+                                <span class="brxtable__eyename"><?= e($label) ?></span>
+                            </span>
+
+                            <?php
+                            /* Ba ô chọn của một mắt. Khai bằng mảng để hàng OD
+                               và OS không thể lệch nhau — sửa một ô là cả hai
+                               mắt theo. */
+                            $cells = [
+                                ['sph',  $side,             $sphOptions,  'độ cầu', false],
+                                ['cyl',  $side . '_cyl',    $cylOptions,  'độ trụ', false],
+                                ['axis', $side . '_axis',   $axisOptions, 'trục',   true],
+                            ];
+                            ?>
+                            <?php foreach ($cells as [$kind, $name, $options, $what, $locked]): ?>
+                                <span class="brxtable__cell">
+                                    <label class="sr-only" for="<?= e($side . '-' . $kind) ?>">
+                                        <?= e($label) ?> — <?= e($what) ?>
                                     </label>
-                                    <select class="bsph__num" id="<?= e($side) ?>-sph"
-                                            name="<?= e($side) ?>">
+                                    <select class="brxsel" id="<?= e($side . '-' . $kind) ?>"
+                                            name="<?= e($name) ?>"
+                                            <?php if ($kind === 'cyl'): ?>data-cyl="<?= e($side) ?>"<?php endif; ?>
+                                            <?php if ($locked): ?>
+                                                data-axis="<?= e($side) ?>" disabled
+                                            <?php endif; ?>>
                                         <option value="">— Chọn —</option>
-                                        <?php foreach ($sphOptions as $o): ?>
-                                            <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
+                                        <?php foreach ($options as $op): ?>
+                                            <option value="<?= e($op['value']) ?>"><?= e($op['label']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
-                                </div>
-                            </div>
-
-                            <label class="beye__field">
-                                <span class="beye__cap">Độ trụ (CYL)</span>
-                                <select name="<?= e($side) ?>_cyl">
-                                    <option value="">— Chọn —</option>
-                                    <?php foreach ($cylOptions as $o): ?>
-                                        <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
-
-                            <label class="beye__field">
-                                <span class="beye__cap">Trục (AXIS°)</span>
-                                <select name="<?= e($side) ?>_axis">
-                                    <option value="">— Chọn —</option>
-                                    <?php foreach ($axisOptions as $o): ?>
-                                        <option value="<?= e($o['value']) ?>"><?= e($o['label']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
+                                </span>
+                            <?php endforeach; ?>
                         </div>
+                    <?php endforeach; ?>
+                </div>
 
-                        <?php /* Ghi chú NẰM NGAY DƯỚI Ô ĐỘ CỦA CHÍNH MẮT ĐÓ. Một ô
-                                 chung ở cuối form thì người mài đọc xong vẫn phải
-                                 đoán câu đó nói về mắt nào. */ ?>
-                        <label class="beye__field beye__field--note">
-                            <span class="beye__cap">Ghi chú <?= e($short) ?> (không bắt buộc)</span>
-                            <input type="text" name="<?= e($side) ?>_note"
-                                   maxlength="<?= LensModel::NOTE_MAX ?>"
-                                   placeholder="Ví dụ: hay mỏi khi đọc lâu">
-                        </label>
-                    </fieldset>
-                <?php endforeach; ?>
+                <?php
+                /* GHI CHÚ GẤP LẠI. Đại đa số khách không có gì để ghi, và hai ô
+                   chữ mở sẵn đẩy nút xác nhận xuống dưới mép màn hình điện
+                   thoại. Không có JS thì <details> vẫn bấm mở được — đó là hành
+                   vi sẵn có của trình duyệt, không phải thứ ta tự dựng. */
+                ?>
+                <details class="brxnote">
+                    <summary class="brxnote__toggle">Thêm ghi chú (không bắt buộc)</summary>
+
+                    <div class="brxnote__grid">
+                        <?php foreach ($eyes as $side => [$code, $label]): ?>
+                            <label class="brxnote__field">
+                                <span class="brxnote__cap">Ghi chú <?= e(utf8Lower($label)) ?></span>
+                                <textarea name="<?= e($side) ?>_note" rows="2"
+                                          maxlength="<?= LensModel::NOTE_MAX ?>"
+                                          placeholder="Ví dụ: hay mỏi khi đọc lâu"></textarea>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </details>
+
+                <?php
+                /* Ô TÓM TẮT — đọc ngược con số vừa chọn ra thành chữ.
+                   Đây là thứ bù lại cho việc dấu nằm lẫn trong danh sách dài:
+                   "−2.00" đọc lướt có thể nhầm, còn "Cận 2.00" thì không.
+
+                   JS điền vào (buy-modal.js). Không có JS thì khối này ở
+                   nguyên trạng thái "Chưa nhập" — vô hại, vì bảng ngay trên nó
+                   đã hiện đủ thứ khách vừa chọn. */
+                ?>
+                <div class="brxsum">
+                    <div class="brxsum__row">
+                        <span class="brxsum__key">OD · Mắt phải</span>
+                        <span class="brxsum__val" data-sum="od">Chưa nhập</span>
+                    </div>
+                    <div class="brxsum__row">
+                        <span class="brxsum__key">OS · Mắt trái</span>
+                        <span class="brxsum__val" data-sum="os">Chưa nhập</span>
+                    </div>
+                </div>
 
                 <?php /* Bỏ trống cả hai mắt vẫn đi tiếp được: phần lớn người mua
                          kính không nhớ số đo của mình, và cửa hàng đo lại miễn

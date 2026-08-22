@@ -297,204 +297,294 @@
  */
 
 /* ============================================================
-   BƯỚC 2 — NHẬP SỐ ĐO KHÚC XẠ
+   BƯỚC 2 — BẢNG SỐ ĐO KHÚC XẠ
+   Markup: app/views/_layout/buy-modal.php, bước 'so-do'
+   Dựng theo "Bảng số đo khúc xạ.dc.html".
+
+   HAI MẮT TRONG MỘT BẢNG, không phải hai khối xếp chồng như bản trước. Đó là
+   cách đơn kính giấy in ra, và là cách khách đối chiếu: nhìn dọc một cột để
+   so số hai mắt, không phải nhớ số mắt phải rồi cuộn xuống tìm mắt trái.
+
+   MÀU và ĐỘ BO theo token của site, không theo con số bản vẽ (10–20px) —
+   xem khối "ĐỘ BO GÓC" trong layout.css.
+
+   Ở ĐÂY TỪNG CÓ .btype — bốn ô radio "Cận · Viễn · Loạn · Lão thị" trên mỗi
+   mắt. Cửa hàng bỏ hẳn: người dùng bình thường khó tự xác định, và cửa hàng
+   nhìn ba con số là biết. Đừng đưa lại.
+
+   Ở ĐÂY CŨNG TỪNG CÓ .bsign — cặp nút −/+ tách khỏi ô độ lớn. Bảng số đo gộp
+   lại thành MỘT ô chọn mang sẵn dấu vì bốn cột của hai mắt phải thẳng hàng
+   nhau; lý do đầy đủ ghi trong buy-modal.php. Trang hồ sơ (.acct-rxsign) vẫn
+   giữ cặp nút đó — ở đó không có bảng nào để mà thẳng hàng.
    ============================================================ */
 
 .brx {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 
-/*
- * Ở ĐÂY TỪNG CÓ .btype — bốn ô radio "Cận · Viễn · Loạn · Lão thị" trên mỗi
- * mắt. Khung phân loại tật khúc xạ đã bỏ hẳn theo yêu cầu của cửa hàng; lý do
- * ghi ở điểm 1 đầu app/views/_layout/buy-modal.php.
- */
-
-/* Khối một mắt */
-.beye {
-    /* <fieldset> có margin và border mặc định của trình duyệt — dọn sạch rồi
-       tự vẽ, để hai khối mắt trông y hệt các thẻ khác trong hộp thoại. */
-    margin: 0;
+.brx__head {
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    justify-content: space-between;
     gap: 12px;
-    padding: 14px 16px;
-    border: 1px solid var(--h-rule);
-    border-radius: var(--radius);
-    background: var(--surface);
+    flex-wrap: wrap;
 }
 
-.beye__label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    /* <legend> mặc định nằm đè lên viền và tự chừa chỗ; float bỏ hành vi đó đi
-       để nó thành một dòng tiêu đề bình thường trong luồng. */
-    float: left;
-    width: 100%;
-    padding: 0;
-    margin-bottom: 2px;
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
+.brx__eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--brand);
 }
 
-.beye__ico { flex: none; }
-
-.beye__field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;   /* cho phép ô co lại trong grid thay vì tràn ra ngoài */
+.brx__hint {
+    font-size: 12px;
+    color: var(--h-note);
 }
 
-.beye__cap {
-    font-size: 12.5px;
-    color: var(--muted);
-}
+/* --- Bảng --- */
 
-/*
- * Ô ĐỘ CẦU: HAI NÚT DẤU + MỘT Ô CHỌN ĐỘ LỚN.
- *
- * Cửa hàng yêu cầu cho khách chọn dấu cộng hay dấu trừ. Bố cục là một hàng
- * ngang — dấu bên trái, con số bên phải — vì đó đúng thứ tự người ta đọc một
- * số âm, và vì hai nút xếp dọc sẽ đẩy khối mắt cao thêm 40px ×2.
- *
- * `minmax(0, 1fr)` cho ô số: không có nó thì <select> lấy chiều rộng nội dung
- * làm sàn và tràn khỏi cột grid trên màn hẹp.
- */
-.bsph {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 8px;
-    align-items: stretch;
-}
-
-.bsign {
-    display: flex;
-    gap: 4px;
-}
-
-/* Ô radio thật nằm dưới, ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc
-   màn hình — cùng cách làm với .cocard ở trang thanh toán. */
-.bsign__opt {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1px;
-    box-sizing: border-box;
-    min-width: 46px;
-    padding: 6px 8px;
-    border: 1px solid var(--h-line);
+.brxtable {
+    border: 1px solid var(--h-card-line);
     border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    cursor: pointer;
-    user-select: none;
+    /* Hàng nhãn có nền riêng, phải bị bo theo góc bảng */
+    overflow: hidden;
 }
 
-.bsign__opt input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
+/* Một lưới bốn cột dùng chung cho CẢ hàng nhãn lẫn hai hàng mắt — khai một
+   chỗ để ba hàng không thể lệch nhau. */
+.brxtable__head,
+.brxtable__row {
+    display: grid;
+    grid-template-columns: 92px repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px 14px;
 }
 
-.bsign__opt:hover { border-color: var(--brand); }
-
-.bsign__opt:has(input:checked) {
-    border-color: var(--brand);
-    background: #f7e8e2;
+.brxtable__head {
+    align-items: end;
+    background: var(--h-shell);
+    border-bottom: 1px solid var(--h-card-line);
 }
 
-.bsign__opt:has(input:focus-visible) {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
+.brxtable__row { align-items: center; }
+
+.brxtable__row + .brxtable__row { border-top: 1px solid var(--h-rule); }
+
+.brxtable__col {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
 }
 
-/* Dấu to hẳn: đây là thứ dễ đọc lướt qua nhất trên cả form, mà đọc nhầm là
-   mài ngược một cặp tròng. */
-.bsign__mark {
-    font-size: 17px;
-    font-weight: 700;
-    line-height: 1;
+.brxtable__name {
+    font-size: 12px;
+    font-weight: 600;
     color: var(--ink);
 }
 
-.bsign__note {
-    font-size: 10px;
-    line-height: 1.2;
-    color: var(--muted);
+/* Chữ viết tắt của người trong nghề — nhạt hơn tên tiếng Việt đứng trước nó */
+.brxtable__name em {
+    font-style: normal;
+    font-weight: 500;
+    color: var(--h-note);
 }
 
-.bsign__opt:has(input:checked) .bsign__note { color: var(--brand); }
-
-/* .bsph__num KHÔNG cần luật riêng: nó là một <select> nằm trong .beye__field,
-   nên đã ăn sẵn `.beye__field select` (và cả `:focus`) ở dưới. Lớp này chỉ để
-   đánh dấu cho người đọc HTML biết ô nào là ô độ lớn. */
-
-/* Ba ô độ nằm CÙNG MỘT HÀNG, chia đều phần còn lại.
-   Cả ba luôn hiện (xem ghi chú ngay dưới), nên ba cột bằng nhau là hình cuối
-   cùng — không còn trường hợp ô độ cầu phải giãn ra chiếm chỗ hai ô kia. */
-.beye__row {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 1fr;
-    gap: 10px;
+.brxtable__sub {
+    font-size: 11px;
+    line-height: 1.35;
+    color: var(--h-note);
 }
 
-/*
- * TRỤ VÀ TRỤC LUÔN HIỆN, KHÔNG PHỤ THUỘC LOẠI TẬT.
- *
- * Trước đây có một luật ẩn hai ô này ở mắt nào không tick "Loạn thị":
- *
- *     .beye:not(:has(input[value="loan"]:checked)) .beye__field--astig
- *
- * Bỏ đi vì hai mắt trông LỆCH NHAU giữa chừng: chọn loạn cho mắt phải là bên
- * đó có ba ô còn mắt trái chỉ còn một, và người dùng đọc ra thành "form bị
- * lỗi ở mắt trái" chứ không đọc ra thành "ô này chưa cần điền". Khung nhập
- * đứng yên thì rẻ hơn nhiều so với việc phải giải thích vì sao nó nhảy.
- *
- * Đánh đổi đã biết: mắt cận/viễn/lão thuần nhìn thấy hai ô không cần điền.
- * Chấp nhận được — chúng để trống thì máy chủ bỏ qua, mà điền thì nay được
- * GIỮ LẠI chứ không âm thầm mất (xem LensModel::eyeText).
- */
+/* --- Cột đầu: nhãn mắt --- */
 
-.beye__field select,
-.beye__field input {
+.brxtable__eye {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+/* OD/OS — chữ của đơn kính. Để nguyên dạng viết tắt và tô màu thương hiệu thì
+   nó đọc như một cái nhãn dán, không lẫn với chữ thường bên dưới. */
+.brxtable__badge {
+    align-self: flex-start;
+    padding: 2px 7px;
+    border: 1px solid var(--h-blush-line);
+    border-radius: var(--radius-sm);
+    background: var(--brand-subtle);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--brand);
+}
+
+.brxtable__eyename {
+    font-size: 12px;
+    color: #5c4f45;
+}
+
+.brxtable__cell { min-width: 0; }
+
+/* --- Ba ô chọn --- */
+
+.brxsel {
     box-sizing: border-box;
     width: 100%;
-    padding: 12px 14px;
+    height: 46px;
+    padding: 0 26px 0 12px;
     border: 1px solid var(--h-line);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: 13.5px;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--ink);
-    outline: none;
+    cursor: pointer;
+
+    /* Bỏ mũi tên gốc rồi tự vẽ lại: ô chỉ rộng ~90px trên điện thoại, mũi tên
+       mặc định của trình duyệt chiếm quá nhiều chỗ. */
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239b8d80' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    background-size: 13px;
 }
 
-.beye__field select:focus,
-.beye__field input:focus { border-color: var(--brand); }
+.brxsel:focus {
+    outline: 2px solid color-mix(in srgb, var(--brand) 22%, transparent);
+    border-color: var(--brand);
+}
 
-/* Ghi chú của từng mắt: nhạt hơn một bậc để mắt vẫn thấy con số độ là phần
-   chính, ghi chú là phần thêm. */
-.beye__field--note input {
-    padding: 10px 14px;
+/* Ô TRỤC bị khoá khi chưa chọn độ trụ — xem assets/js/buy-rx.js.
+   Vẫn phải NHÌN THẤY được là có một ô ở đó, chỉ là chưa tới lượt. */
+.brxsel:disabled {
+    background-color: var(--h-shell);
+    color: var(--h-meta);
+    cursor: not-allowed;
+    opacity: 1;   /* Safari tự hạ opacity, làm chữ mờ tới mức không đọc nổi */
+}
+
+/* --- Ghi chú, gấp lại --- */
+
+.brxnote { min-width: 0; }
+
+.brxnote__toggle {
+    display: inline-block;
+    padding: 2px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #5c4f45;
+    cursor: pointer;
+    list-style: none;
+}
+
+.brxnote__toggle::-webkit-details-marker { display: none; }
+.brxnote__toggle::marker { content: ''; }
+
+/* Dấu +/− tự đổi theo trạng thái mở — không cần JS, <details> lo phần đóng mở */
+.brxnote__toggle::before { content: '+ '; }
+.brxnote[open] .brxnote__toggle::before { content: '− '; }
+
+.brxnote__toggle:hover { color: var(--ink); }
+
+.brxnote__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.brxnote__field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.brxnote__cap {
+    font-size: 12px;
+    color: var(--h-note);
+}
+
+.brxnote__field textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--h-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+    resize: vertical;
+}
+
+.brxnote__field textarea:focus {
+    outline: 2px solid color-mix(in srgb, var(--brand) 22%, transparent);
+    border-color: var(--brand);
+}
+
+.brxnote__field textarea::placeholder { color: var(--h-meta); }
+
+/* --- Ô tóm tắt --- */
+
+/* Đọc ngược con số vừa chọn ra thành chữ. Đây là thứ bù lại cho việc dấu nằm
+   lẫn trong danh sách 97 dòng: "−2.00" đọc lướt có thể nhầm, "Cận 2.00" thì
+   không. JS điền vào — xem assets/js/buy-rx.js. */
+.brxsum {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius-sm);
+    background: var(--h-shell);
+}
+
+.brxsum__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
     font-size: 13px;
 }
 
-.beye__field--note input::placeholder { color: var(--muted); }
+.brxsum__key { color: var(--h-note); }
 
-/* Hộp thoại hẹp thì ba ô một hàng thành ba ô bị bóp — xếp dọc lại. */
-@media (max-width: 400px) {
-    .beye__row { grid-auto-flow: row; }
+.brxsum__val {
+    font-weight: 600;
+    text-align: right;
+    color: var(--ink);
+}
+
+@media (max-width: 480px) {
+    /* Cột nhãn mắt hẹp lại và ba ô chọn bó sát — ở 390px thì 92px cho cột đầu
+       là gần một phần tư bề ngang hộp thoại. */
+    .brxtable__head,
+    .brxtable__row {
+        grid-template-columns: 56px repeat(3, minmax(0, 1fr));
+        gap: 6px;
+        padding: 10px;
+    }
+
+    .brxtable__eyename { display: none; }   /* "OD" đủ rồi, chỗ nhường cho số */
+
+    .brxsel {
+        height: 42px;
+        padding: 0 22px 0 8px;
+        font-size: 13px;
+        background-position: right 6px center;
+    }
+
+    .brxtable__sub { font-size: 10.5px; }
+
+    /* Hai ô ghi chú xếp dọc: cạnh nhau thì mỗi ô chưa tới 150px */
+    .brxnote__grid { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ============================================================

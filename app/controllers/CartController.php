@@ -526,9 +526,14 @@ class CartController extends BaseController
                  * KHÔNG còn ô "loại tật" — xem ghi chú trong LensModel, chỗ
                  * hằng RX_TYPES từng đứng.
                  *
-                 * Độ cầu tới đây là HAI Ô: `od_dau` mang dấu, `od` mang độ
-                 * lớn. Ghép lại bằng LensModel::joinSph() chứ không nối chuỗi
-                 * tại chỗ — nó là nơi duy nhất biết 0.00 thì bỏ dấu đi.
+                 * Độ cầu tới đây là MỘT ô chọn mang sẵn dấu ("-2.00") — bảng
+                 * số đo vẽ như vậy, xem ghi chú trong _layout/buy-modal.php.
+                 *
+                 * Vẫn đi qua LensModel::joinSph() dù không còn ô dấu nào để
+                 * ghép: hàm đó là nơi DUY NHẤT chuẩn hoá một con số độ cầu, và
+                 * nó nhận cả hai dạng (một ô mang dấu, hoặc hai ô rời như ở
+                 * trang hồ sơ). Đọc thẳng $_POST vào là mở đường cho hai giao
+                 * diện lưu ra hai định dạng khác nhau.
                  *
                  * Phần còn lại gửi thô sang model: LensModel lo toàn bộ việc
                  * kiểm dải và cắt ghi chú. Kiểm ở đây nữa thì thành hai nơi
@@ -536,10 +541,7 @@ class CartController extends BaseController
                  * lệch nhau vào lần sửa thứ ba.
                  */
                 $eye = static fn (string $side): array => [
-                    'sph'  => LensModel::joinSph(
-                        $_POST[$side . '_dau'] ?? null,
-                        $_POST[$side] ?? null
-                    ),
+                    'sph'  => LensModel::joinSph(null, $_POST[$side] ?? null),
                     'cyl'  => $_POST[$side . '_cyl'] ?? null,
                     'axis' => $_POST[$side . '_axis'] ?? null,
                     'note' => $_POST[$side . '_note'] ?? null,

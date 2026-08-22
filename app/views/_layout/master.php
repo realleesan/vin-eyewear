@@ -288,6 +288,10 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
                  chủ, danh mục, tìm kiếm và chi tiết sản phẩm — cùng chỗ mà
                  buy-modal.css đã được nạp sẵn ở đầu trang. */ ?>
         <script src="<?= asset('assets/js/buy-flow.js') ?>" defer></script>
+        <?php /* Bảng số đo khúc xạ trong hộp thoại: khoá ô trục khi chưa có độ
+                 trụ, và ô tóm tắt đọc số ra thành chữ. Nạp cùng chỗ với
+                 buy-flow.js vì hộp thoại xuất hiện ở đúng những trang đó. */ ?>
+        <script src="<?= asset('assets/js/buy-rx.js') ?>" defer></script>
     <?php endif; ?>
 
     <?php
