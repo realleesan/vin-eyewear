@@ -27,6 +27,25 @@ return [
     'hotline_href' => 'tel:19006868',
     'email'        => 'cskh@vineyewear.vn',
 
+    /*
+     * SỐ ZALO CỦA CỬA HÀNG — dạng ĐỌC ĐƯỢC, để in ra màn hình.
+     *
+     * TÁCH KHỎI HOTLINE, và không suy ra từ nó được: 1900 6868 là đầu số tổng
+     * đài, mà đầu số 1900 thì KHÔNG đăng ký Zalo được. Trước bản này liên kết
+     * Zalo dựng thẳng từ hotline (zalo.me/19006868) nên nó dẫn vào một trang
+     * trống — hỏng ở cả thanh liên hệ nổi, trang xác nhận đơn lẫn nút "đổi/huỷ
+     * đơn" trong trang tài khoản.
+     *
+     * In số ra CHỮ chứ không chỉ để trong liên kết: bấm nút Zalo trên máy tính
+     * bàn không phải lúc nào cũng mở được ứng dụng, và khi đó khách cần đọc
+     * được con số để tự tìm.
+     *
+     * KHÁC với 'shop_phone' trong config/zalo.php: số đó là ĐỊA CHỈ NHẬN THÔNG
+     * BÁO NỘI BỘ (đơn mới, lịch hẹn), có thể là số máy trực. Hai số hôm nay
+     * trùng nhau, nhưng phải khai riêng — xem ghi chú đầu config/zalo.php.
+     */
+    'zalo'         => '0366 599 711',
+
     // Giờ mở cửa chung cho cả hai cơ sở — hiện ở cột "Liên hệ" dưới chân trang.
     // Giờ RIÊNG của từng cơ sở nằm ở cột open_hours bảng `stores`.
     'open_hours'   => '8:30 – 21:30, cả tuần',
@@ -73,10 +92,14 @@ return [
         'Cơ sở 2: 261 Ngọc Lâm, phường Bồ Đề, TP. Hà Nội',
     ],
 
-    // Kênh liên hệ nhanh — dùng ở thanh nổi góc màn hình
+    /* Kênh liên hệ nhanh — thanh nổi góc màn hình, nút "đổi/huỷ đơn" trong
+       trang tài khoản, và dòng liên hệ ở trang xác nhận đơn.
+
+       Địa chỉ Zalo phải khớp số ở 'zalo' bên trên, chỉ khác cách viết (bỏ dấu
+       cách). Cùng lối với cặp hotline / hotline_href. */
     'channels' => [
         'hotline'   => 'tel:19006868',
-        'zalo'      => 'https://zalo.me/19006868',
+        'zalo'      => 'https://zalo.me/0366599711',
         'messenger' => 'https://m.me/vineyewear',
     ],
 

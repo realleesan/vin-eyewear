@@ -114,9 +114,9 @@ $mineHref = $order !== null
                 thay thế ở đúng chỗ họ sẽ tìm, và chỗ đầu tiên là đây.
             -->
             <p class="ocomp__lead ocomp__cancel">
-                Cần đổi hoặc huỷ đơn? Nhắn
+                Cần đổi hoặc huỷ đơn? Nhắn Zalo
                 <a href="<?= e(config('company.channels.zalo')) ?>"
-                   target="_blank" rel="noopener">Zalo cửa hàng</a>
+                   target="_blank" rel="noopener"><?= e(config('company.zalo')) ?></a>
                 hoặc gọi <a href="<?= e(config('company.hotline_href')) ?>"><?= e(config('company.hotline')) ?></a>
                 trước khi đơn được giao đi.
             </p>

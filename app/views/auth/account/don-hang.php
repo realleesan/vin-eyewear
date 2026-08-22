@@ -527,11 +527,18 @@ $paymentShort  = [
                                 Đơn hàng của khách đã nằm sẵn trong Zalo của cửa
                                 hàng từ lúc đặt (xem Zalo::order), nên nhân viên
                                 bên kia mở đúng đơn này ra được ngay.
+
+                                SỐ ZALO IN THÀNH CHỮ TRONG CHÍNH NHÃN NÚT, không
+                                chỉ nằm trong href. Bấm liên kết zalo.me trên máy
+                                tính bàn không phải lúc nào cũng mở được ứng
+                                dụng; khi đó khách cần ĐỌC được con số để tự tìm,
+                                chứ không phải bấm vào một chỗ không phản hồi rồi
+                                bỏ cuộc.
                             -->
                             <a class="acct-btn acct-btn--quiet acct-btn--sm"
                                href="<?= e(config('company.channels.zalo')) ?>"
                                target="_blank" rel="noopener">
-                                Đổi hoặc huỷ đơn qua Zalo
+                                Đổi hoặc huỷ đơn — Zalo <?= e(config('company.zalo')) ?>
                             </a>
                         <?php endif; ?>
 

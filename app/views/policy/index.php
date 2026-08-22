@@ -52,7 +52,12 @@ $policyToc[] = ['id' => 'lien-he', 'label' => 'Liên hệ hỗ trợ'];
    riêng trang này, lệch hẳn với header và chân trang. */
 $policyChannels = [
     ['label' => 'Hotline',   'value' => $company['hotline'],              'href' => $company['hotline_href']],
-    ['label' => 'Zalo',      'value' => 'zalo.me/19006868',               'href' => $company['channels']['zalo']],
+    /* Số Zalo đọc từ config, KHÔNG gõ cứng: dòng này từng ghi "zalo.me/19006868"
+       trong khi href đã đọc từ config — nên sau khi đổi số Zalo thật, liên kết
+       đi đúng chỗ còn chữ hiện ra vẫn là số cũ. Đúng cái lỗi mà chú thích ngay
+       trên đang cảnh báo, chỉ khác là lần này nó nằm ở giữa một dòng đã có
+       $company. */
+    ['label' => 'Zalo',      'value' => $company['zalo'],                 'href' => $company['channels']['zalo']],
     ['label' => 'Messenger', 'value' => 'm.me/vineyewear',                'href' => $company['channels']['messenger']],
     ['label' => 'Email',     'value' => $company['email'],                'href' => 'mailto:' . $company['email']],
 ];

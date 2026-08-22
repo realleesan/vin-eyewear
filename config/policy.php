@@ -102,7 +102,8 @@ return [
                    có. */
                 [
                     'q' => 'Tôi muốn huỷ đơn hàng thì làm thế nào?',
-                    'a' => 'Bạn nhắn Zalo hoặc gọi hotline 1900 6868 cho cửa hàng, kèm mã đơn. '
+                    'a' => 'Bạn nhắn Zalo 0366 599 711 hoặc gọi hotline 1900 6868 cho cửa hàng, '
+                         . 'kèm mã đơn. '
                          . 'Đơn chưa giao đi thì nhân viên huỷ giúp bạn ngay. Website không có '
                          . 'nút huỷ tự động vì chúng tôi tự vận chuyển và muốn xác nhận trực '
                          . 'tiếp với bạn, tránh trường hợp đơn đã lên đường mà hệ thống báo đã huỷ.',
@@ -146,8 +147,8 @@ return [
                    thấy thì tưởng cửa hàng không xuất được. */
                 [
                     'q' => 'Tôi cần hoá đơn đỏ để hoàn thuế công ty thì làm thế nào?',
-                    'a' => 'Website chưa xuất hoá đơn điện tử tự động. Bạn nhắn Zalo hoặc gọi '
-                         . '1900 6868 kèm mã đơn và thông tin xuất hoá đơn (tên công ty, mã số '
+                    'a' => 'Website chưa xuất hoá đơn điện tử tự động. Bạn nhắn Zalo 0366 599 711 '
+                         . 'hoặc gọi 1900 6868 kèm mã đơn và thông tin xuất hoá đơn (tên công ty, mã số '
                          . 'thuế, địa chỉ), nhân viên sẽ xuất và gửi cho bạn.',
                 ],
             ],
