@@ -33,6 +33,23 @@ class UserModel extends BaseModel
      */
     public const GENDERS = ['nu' => 'Nữ', 'nam' => 'Nam', 'khac' => 'Khác'];
 
+    /**
+     * Lý do khách chọn khi yêu cầu xoá tài khoản — khoá lưu vào
+     * `users.deletion_reason`, giá trị là nhãn hiện ra.
+     *
+     * Ô "Lý do khác" cho gõ tự do, và chữ khách gõ được lưu NGUYÊN VĂN thay
+     * cho khoá. Cột là VARCHAR chứ không phải ENUM: danh sách này là thứ cửa
+     * hàng sẽ muốn sửa sau khi đọc vài chục câu trả lời đầu tiên.
+     */
+    public const DELETION_REASONS = [
+        'khong-dung'     => 'Tôi không còn dùng dịch vụ nữa',
+        'rieng-tu'       => 'Tôi lo ngại về quyền riêng tư dữ liệu',
+        'nhieu-tin'      => 'Tôi nhận quá nhiều tin nhắn / email',
+        'tai-khoan-2'    => 'Tôi có tài khoản khác',
+        'khong-hai-long' => 'Tôi không hài lòng với sản phẩm hoặc dịch vụ',
+        'khac'           => 'Lý do khác',
+    ];
+
     // ========================================================================
     // ĐĂNG KÝ / ĐĂNG NHẬP
     // ========================================================================
@@ -70,8 +87,21 @@ class UserModel extends BaseModel
             return ['ok' => false, 'error' => 'Mật khẩu phải có ít nhất 8 ký tự.'];
         }
 
-        if ($email !== '' && static::exists(['email' => $email])) {
-            return ['ok' => false, 'error' => 'Email này đã được đăng ký.'];
+        /* Trùng email thì phải nói rõ TRÙNG VỚI LOẠI TÀI KHOẢN NÀO.
+           Một tài khoản đã yêu cầu xoá vẫn giữ chỗ ở cột `email` (dữ liệu gốc
+           không bị đụng tới — xem khối "XOÁ TÀI KHOẢN" bên dưới), nên chính
+           chủ quay lại đăng ký sẽ nhận câu "đã được đăng ký" và không hiểu vì
+           sao: họ vừa xoá xong. taken() trả câu đúng cho từng trường hợp. */
+        if ($email !== '') {
+            $owner = Database::fetchOne(
+                'SELECT deleted_at FROM users WHERE email = :e',
+                ['e' => $email]
+            );
+
+            if ($owner !== null) {
+                return ['ok' => false,
+                        'error' => static::taken('Email này', $owner['deleted_at'] !== null)];
+            }
         }
 
         if (trim($phone) === '') {
@@ -92,9 +122,17 @@ class UserModel extends BaseModel
                     'Số điện thoại không hợp lệ. Ví dụ đúng: 0912345678 hoặc +84912345678.'];
             }
 
-            if (Database::fetchValue('SELECT COUNT(*) FROM profiles WHERE phone = :p',
-                                     ['p' => $normalized]) > 0) {
-                return ['ok' => false, 'error' => 'Số điện thoại này đã được đăng ký.'];
+            $owner = Database::fetchOne(
+                'SELECT u.deleted_at
+                   FROM profiles p
+                   JOIN users u ON u.id = p.id
+                  WHERE p.phone = :p',
+                ['p' => $normalized]
+            );
+
+            if ($owner !== null) {
+                return ['ok' => false,
+                        'error' => static::taken('Số điện thoại này', $owner['deleted_at'] !== null)];
             }
 
             $phone = $normalized;
@@ -169,18 +207,39 @@ class UserModel extends BaseModel
      */
     public static function findOrCreateGoogle(string $sub, ?string $email, ?string $name, bool $emailVerified): array
     {
-        $existing = Database::fetchOne('SELECT id FROM users WHERE google_id = :g', ['g' => $sub]);
+        $existing = Database::fetchOne(
+            'SELECT id, deleted_at FROM users WHERE google_id = :g',
+            ['g' => $sub]
+        );
 
         if ($existing !== null) {
+            /* ĐÃ YÊU CẦU XOÁ THÌ CỬA GOOGLE CŨNG PHẢI ĐÓNG.
+               Không có chốt này thì nút "Đăng nhập bằng Google" là một lối
+               vòng qua toàn bộ việc khoá tài khoản: attempt() chặn mật khẩu,
+               còn đường này đi thẳng tới AuthMiddleware::login(). */
+            if ($existing['deleted_at'] !== null) {
+                return ['ok' => false, 'error' => static::deletedNotice()];
+            }
+
             return ['ok' => true, 'id' => $existing['id'], 'created' => false];
         }
 
         $email = $email !== null ? strtolower(trim($email)) : null;
 
         if ($email !== null && $email !== '' && $emailVerified) {
-            $byEmail = Database::fetchOne('SELECT id, google_id FROM users WHERE email = :e', ['e' => $email]);
+            $byEmail = Database::fetchOne(
+                'SELECT id, google_id, deleted_at FROM users WHERE email = :e',
+                ['e' => $email]
+            );
 
             if ($byEmail !== null) {
+                /* Không NỐI tài khoản Google vào một tài khoản đã khoá: làm
+                   vậy là mở lại nó bằng cửa sau, và lần đăng nhập ngay sau đó
+                   sẽ đi qua nhánh google_id ở trên. */
+                if ($byEmail['deleted_at'] !== null) {
+                    return ['ok' => false, 'error' => static::deletedNotice()];
+                }
+
                 // Email này đã gắn với MỘT tài khoản Google KHÁC -> dừng.
                 // Trường hợp hiếm nhưng có thật khi doanh nghiệp đổi tên miền;
                 // ghi đè là đá tài khoản Google cũ ra khỏi chính tài khoản đó.
@@ -264,14 +323,24 @@ class UserModel extends BaseModel
      * gõ vào" cũng cần cả hai: đăng nhập, quên mật khẩu, tra cứu ở quầy.
      *
      * Trả về dòng `users` kèm `full_name` và `phone` lấy từ `profiles`.
+     *
+     * MẶC ĐỊNH BỎ QUA TÀI KHOẢN ĐÃ YÊU CẦU XOÁ. Với mọi nơi gọi trừ một, đó
+     * đúng là điều cần: quên mật khẩu không được gửi mã tới tài khoản đã
+     * khoá, và cũng không được để lộ rằng nó từng tồn tại.
+     *
+     * $includeDeleted = true chỉ dành cho attempt(): ở đó ta cần TÌM THẤY tài
+     * khoản để kiểm mật khẩu trước đã, rồi mới nói "tài khoản này đã khoá" —
+     * chỉ chính chủ (người gõ đúng mật khẩu) nghe được câu đó.
      */
-    public static function findByLogin(string $login): ?array
+    public static function findByLogin(string $login, bool $includeDeleted = false): ?array
     {
         $login = trim($login);
 
         if ($login === '') {
             return null;
         }
+
+        $alive = $includeDeleted ? '' : ' AND u.deleted_at IS NULL';
 
         if (looksLikePhone($login)) {
             $phone = normalizePhone($login);
@@ -284,7 +353,7 @@ class UserModel extends BaseModel
                 'SELECT u.*, p.full_name, p.phone
                    FROM profiles p
                    JOIN users u ON u.id = p.id
-                  WHERE p.phone = :phone',
+                  WHERE p.phone = :phone' . $alive,
                 ['phone' => $phone]
             );
         }
@@ -293,7 +362,7 @@ class UserModel extends BaseModel
             'SELECT u.*, p.full_name, p.phone
                FROM users u
                LEFT JOIN profiles p ON p.id = u.id
-              WHERE u.email = :email',
+              WHERE u.email = :email' . $alive,
             ['email' => strtolower($login)]
         );
     }
@@ -311,7 +380,10 @@ class UserModel extends BaseModel
      */
     public static function attempt(string $login, string $password): array
     {
-        $user = static::findByLogin($login);
+        // includeDeleted: tài khoản đã yêu cầu xoá vẫn phải TÌM THẤY ở đây,
+        // nếu không nó rơi vào nhánh "không có tài khoản nào" và chính chủ chỉ
+        // nhận được câu "thông tin đăng nhập không đúng" — sai và khó hiểu.
+        $user = static::findByLogin($login, true);
 
         // Vẫn băm một chuỗi giả khi không tìm thấy tài khoản, để thời gian
         // phản hồi của hai nhánh xấp xỉ nhau. Trả về ngay lập tức sẽ nhanh
@@ -324,6 +396,22 @@ class UserModel extends BaseModel
 
         if (!password_verify($password, $user['password_hash'])) {
             return ['ok' => false, 'error' => 'Thông tin đăng nhập không đúng.'];
+        }
+
+        /*
+         * TÀI KHOẢN ĐÃ YÊU CẦU XOÁ — DỪNG Ở ĐÂY.
+         *
+         * Chốt đặt SAU password_verify chứ không phải trước, và đó là chủ ý:
+         * nếu báo "tài khoản đã khoá" ngay khi tra ra dòng dữ liệu thì ô đăng
+         * nhập thành công cụ dò xem số điện thoại nào từng có tài khoản ở đây
+         * — đúng thứ mà thông điệp lỗi dùng chung ở trên đang tránh. Đặt sau,
+         * chỉ người gõ ĐÚNG mật khẩu mới nghe được câu này.
+         *
+         * Cũng vì thế mà không đụng tới last_login_at bên dưới: lần này không
+         * phải một lần đăng nhập.
+         */
+        if ($user['deleted_at'] !== null) {
+            return ['ok' => false, 'error' => static::deletedNotice()];
         }
 
         // Nâng cấp hash khi PHP đổi thuật toán mặc định hoặc đổi độ khó.
@@ -362,6 +450,245 @@ class UserModel extends BaseModel
             'UPDATE users SET password_hash = :hash WHERE id = :id',
             ['hash' => password_hash($new, PASSWORD_DEFAULT), 'id' => $userId]
         );
+
+        return ['ok' => true];
+    }
+
+    // ========================================================================
+    // XOÁ TÀI KHOẢN — XOÁ MỀM
+    //
+    // Luật bảo vệ dữ liệu cá nhân buộc phải có đường cho khách rút lui; cửa
+    // hàng thì vẫn cần hồ sơ để bảo hành, đối chiếu đơn cũ và chăm sóc về
+    // sau. Hai đòi hỏi đó gặp nhau ở chỗ tách "thấy được" khỏi "còn tồn tại":
+    //
+    //   PHÍA KHÁCH  tài khoản biến mất — không đăng nhập được (kể cả bằng
+    //               Google), không lấy lại mật khẩu được, mọi cookie "ghi
+    //               nhớ" bị huỷ, phiên đang mở trên máy khác bị đá ra ở lần
+    //               tải trang kế tiếp (xem AuthMiddleware::userId).
+    //   PHÍA CSDL   KHÔNG XOÁ MỘT DÒNG NÀO. users, profiles, orders,
+    //               appointments, prescriptions, addresses giữ nguyên; chỉ
+    //               `users.deleted_at` chuyển từ NULL sang thời điểm yêu cầu.
+    //
+    // Vì thế cả khối này không có một câu DELETE nào.
+    // ========================================================================
+
+    /**
+     * Câu khách phải gõ để xác nhận, ở dạng ĐÃ CHUẨN HOÁ BẰNG slugify().
+     *
+     * Đi qua slugify() nghĩa là mọi cách gõ của cùng một câu đều về đúng
+     * chuỗi này: có dấu hay không dấu, hoa hay thường, thừa khoảng trắng —
+     * "XOA TAI KHOAN", "Xóa tài khoản", "xoa  tai  khoan" ra cùng một kết quả.
+     *
+     * Dùng slugify() chứ KHÔNG dùng mb_strtoupper(): máy chủ của cửa hàng
+     * không nạp extension mbstring (đó là lý do cả core/helpers.php có sẵn bộ
+     * utf8Length/utf8Substr/utf8Lower tự viết), nên mọi hàm mb_* đều là lỗi
+     * 500 chờ sẵn.
+     */
+    private const CONFIRM_SLUG = 'xoa-tai-khoan';
+
+    /**
+     * Câu báo dùng CHUNG cho mọi cửa vào của một tài khoản đã khoá: đăng nhập
+     * bằng mật khẩu, đăng nhập bằng Google, đăng ký lại bằng chính số cũ.
+     *
+     * Một hàm chứ không phải hằng vì nó ghép số hotline từ config — khách đọc
+     * xong phải biết gọi đâu để mở lại, nếu không đây là cánh cửa một chiều.
+     */
+    public static function deletedNotice(): string
+    {
+        return 'Tài khoản này đã được yêu cầu xoá nên không đăng nhập được nữa. '
+             . 'Nếu bạn đổi ý, vui lòng gọi ' . config('company.hotline', '')
+             . ' để được mở lại.';
+    }
+
+    /**
+     * Câu báo "định danh này đã có người dùng", tách hai trường hợp.
+     *
+     * Cùng một sự thật kỹ thuật (khoá UNIQUE chặn) nhưng hai tình huống hoàn
+     * toàn khác nhau với người đọc: trùng với tài khoản đang sống là "bạn
+     * đăng nhập đi"; trùng với tài khoản đã khoá là "chính bạn vừa xoá nó,
+     * gọi hotline để mở lại".
+     */
+    private static function taken(string $what, bool $byDeleted): string
+    {
+        if ($byDeleted) {
+            return $what . ' thuộc về một tài khoản đã được yêu cầu xoá. '
+                 . 'Dữ liệu vẫn được cửa hàng lưu giữ — vui lòng gọi '
+                 . config('company.hotline', '') . ' nếu bạn muốn mở lại tài khoản cũ.';
+        }
+
+        return $what . ' đã được đăng ký.';
+    }
+
+    /**
+     * Tài khoản này đã yêu cầu xoá chưa.
+     *
+     * Trả về false cho id không tồn tại — nơi gọi duy nhất (AuthMiddleware)
+     * chỉ cần biết "có phải khoá vì đã xoá không", còn id lạ thì đằng nào
+     * cũng không đăng nhập được.
+     */
+    public static function isDeleted(string $userId): bool
+    {
+        return (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM users WHERE id = :id AND deleted_at IS NOT NULL',
+            ['id' => $userId]
+        ) > 0;
+    }
+
+    /**
+     * Tài khoản này ra đời từ luồng Google hay không.
+     *
+     * Chỉ dùng để quyết định ô "mật khẩu hiện tại" ở form xoá tài khoản có
+     * `required` hay không — lý do đầy đủ nằm trong requestDeletion(). Đây là
+     * PHỎNG ĐOÁN chứ không phải sự thật tuyệt đối: một tài khoản Google về
+     * sau có thể tự đặt mật khẩu qua luồng quên mật khẩu. Nên form chỉ nới ô
+     * đó thành không bắt buộc, còn mật khẩu ĐÃ GÕ thì vẫn phải đúng.
+     */
+    public static function isGoogleLinked(string $userId): bool
+    {
+        return (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM users WHERE id = :id AND google_id IS NOT NULL',
+            ['id' => $userId]
+        ) > 0;
+    }
+
+    /**
+     * Thời điểm và lý do khách rút lui — dành cho nhân viên tra khi khách gọi
+     * lại. Trả null nếu tài khoản đang bình thường hoặc id không có thật.
+     */
+    public static function deletionInfo(string $userId): ?array
+    {
+        return Database::fetchOne(
+            'SELECT u.deleted_at, u.deletion_reason, u.email, p.full_name, p.phone
+               FROM users u
+               LEFT JOIN profiles p ON p.id = u.id
+              WHERE u.id = :id AND u.deleted_at IS NOT NULL',
+            ['id' => $userId]
+        );
+    }
+
+    /**
+     * Khách tự yêu cầu khoá/xoá tài khoản của chính mình.
+     *
+     * BA CHỐT, theo thứ tự rẻ trước đắt sau:
+     *
+     *   1. Câu xác nhận gõ tay. Chốt ở MÁY CHỦ chứ không chỉ ở JavaScript:
+     *      địa chỉ này POST tay được, và nó là thao tác không hoàn tác được
+     *      từ phía khách.
+     *   2. Mật khẩu hiện tại — cùng lý do như đổi mật khẩu: phiên đăng nhập
+     *      sống hàng tuần, một máy quên khoá màn hình không được phép đủ để
+     *      xoá tài khoản người khác.
+     *   3. Không cho tài khoản NHÂN VIÊN đi đường này. Trang tài khoản là
+     *      trang của khách; nhân viên tự khoá mình ở đây là tự khoá cả lối
+     *      vào khu quản trị, và không ai trong cửa hàng mở lại được nếu đó là
+     *      admin cuối cùng.
+     *
+     * @return array{ok:bool, error?:string}
+     */
+    public static function requestDeletion(
+        string $userId,
+        string $password,
+        string $confirm,
+        string $reason
+    ): array {
+        $user = Database::fetchOne(
+            'SELECT id, password_hash, google_id, deleted_at FROM users WHERE id = :id',
+            ['id' => $userId]
+        );
+
+        if ($user === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy tài khoản.'];
+        }
+
+        // Đã khoá rồi thì coi như xong, KHÔNG báo lỗi và cũng không ghi đè
+        // deleted_at: hai lần bấm nút (F5 trang xác nhận) không được phép làm
+        // đổi mốc thời gian mà nhân viên đang dựa vào.
+        if ($user['deleted_at'] !== null) {
+            return ['ok' => true];
+        }
+
+        if (slugify($confirm) !== self::CONFIRM_SLUG) {
+            return ['ok' => false, 'error' =>
+                'Vui lòng gõ đúng dòng chữ xác nhận để chắc chắn bạn muốn xoá tài khoản.'];
+        }
+
+        /*
+         * MẬT KHẨU: BẮT BUỘC, TRỪ TÀI KHOẢN TẠO RA TỪ GOOGLE.
+         *
+         * findOrCreateGoogle() đặt cho tài khoản Google một mật khẩu ngẫu
+         * nhiên 32 byte mà chính khách không bao giờ biết. Bắt họ nhập mật
+         * khẩu ở đây là khoá luôn quyền rút lui của họ — thứ mà tính năng này
+         * sinh ra để bảo đảm. Với những tài khoản đó, phiên Google đang đăng
+         * nhập cộng với câu xác nhận gõ tay là đủ.
+         *
+         * Nhưng nếu họ CÓ gõ mật khẩu (tài khoản Google về sau đặt mật khẩu
+         * qua luồng quên mật khẩu) thì mật khẩu đó phải đúng — không im lặng
+         * bỏ qua một ô đã điền.
+         */
+        $needsPassword = $user['google_id'] === null || $password !== '';
+
+        if ($needsPassword && !password_verify($password, $user['password_hash'])) {
+            return ['ok' => false, 'error' => 'Mật khẩu không đúng.'];
+        }
+
+        if (static::isStaff($userId)) {
+            return ['ok' => false, 'error' =>
+                'Tài khoản nhân viên không tự xoá được ở đây. Vui lòng liên hệ quản trị viên.'];
+        }
+
+        $reason = trim($reason);
+
+        if (utf8Length($reason) > 500) {
+            $reason = utf8Substr($reason, 0, 500);
+        }
+
+        try {
+            Database::execute(
+                /* `AND deleted_at IS NULL` để hai request song song chỉ có một
+                   cái ghi được mốc thời gian. */
+                'UPDATE users
+                    SET deleted_at = NOW(), deletion_reason = :reason
+                  WHERE id = :id AND deleted_at IS NULL',
+                ['reason' => $reason !== '' ? $reason : null, 'id' => $userId]
+            );
+        } catch (Throwable $e) {
+            error_log('[UserModel] Không khoá được tài khoản: ' . $e->getMessage());
+
+            return ['ok' => false, 'error' => 'Không xử lý được yêu cầu, vui lòng thử lại.'];
+        }
+
+        // Huỷ mọi cookie "ghi nhớ đăng nhập" trên MỌI máy. Bỏ bước này thì
+        // chiếc điện thoại cũ vẫn tự đăng nhập lại ở lần mở trang sau — trong
+        // khi khách vừa được báo là tài khoản đã xoá.
+        RememberModel::forgetAllFor($userId);
+
+        return ['ok' => true];
+    }
+
+    /**
+     * Mở lại tài khoản đã khoá — dành cho NHÂN VIÊN, không có đường nào từ
+     * giao diện khách gọi tới đây (xem database/mo-lai-tai-khoan.php).
+     *
+     * `deletion_reason` GIỮ NGUYÊN, không xoá đi: nó là lịch sử, và là thứ
+     * duy nhất còn lại cho biết vì sao khách từng rời đi.
+     *
+     * @return array{ok:bool, error?:string}
+     */
+    public static function restore(string $userId): array
+    {
+        $user = Database::fetchOne(
+            'SELECT id, deleted_at FROM users WHERE id = :id',
+            ['id' => $userId]
+        );
+
+        if ($user === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy tài khoản.'];
+        }
+
+        if ($user['deleted_at'] === null) {
+            return ['ok' => false, 'error' => 'Tài khoản này đang hoạt động bình thường.'];
+        }
+
+        Database::execute('UPDATE users SET deleted_at = NULL WHERE id = :id', ['id' => $userId]);
 
         return ['ok' => true];
     }

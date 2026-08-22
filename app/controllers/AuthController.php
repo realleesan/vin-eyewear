@@ -820,20 +820,21 @@ class AuthController extends BaseController
     // ========================================================================
 
     /**
-     * Sáu mục của trang tài khoản, khoá là giá trị ?muc=.
+     * Bảy mục của trang tài khoản, khoá là giá trị ?muc=.
      *
-     * Ba mục đầu gộp trong nhóm "Tài khoản của tôi" ở cột trái (bản thiết kế
+     * Bốn mục đầu gộp trong nhóm "Tài khoản của tôi" ở cột trái (bản thiết kế
      * vẽ chúng trong một menu thu gọn được); ba mục sau là mục cấp một.
-     * 'lich-hen' là mục THỨ BẢY, thêm ngoài bản thiết kế — xem ghi chú đầu
-     * app/views/auth/profile.php.
+     * 'lich-hen' và 'xoa-tai-khoan' là hai mục thêm ngoài bản thiết kế — xem
+     * ghi chú đầu app/views/auth/profile.php.
      */
     private const SECTIONS = [
-        'ho-so'    => 'Hồ sơ của tôi',
-        'dia-chi'  => 'Sổ địa chỉ',
-        'mat-khau' => 'Đổi mật khẩu',
-        'don-hang' => 'Đơn hàng của tôi',
-        'do-mat'   => 'Thông số đo mắt',
-        'lich-hen' => 'Lịch hẹn của tôi',
+        'ho-so'         => 'Hồ sơ của tôi',
+        'dia-chi'       => 'Sổ địa chỉ',
+        'mat-khau'      => 'Đổi mật khẩu',
+        'xoa-tai-khoan' => 'Xoá tài khoản',
+        'don-hang'      => 'Đơn hàng của tôi',
+        'do-mat'        => 'Thông số đo mắt',
+        'lich-hen'      => 'Lịch hẹn của tôi',
     ];
 
     /** Mục mở sẵn khi vào /tai-khoan — đúng trạng thái đầu của bản thiết kế. */
@@ -940,6 +941,22 @@ class AuthController extends BaseController
                     // thanh toán in thẳng số tài khoản + mã đơn làm nội dung
                     // chuyển khoản. Xem config/company.php.
                     'bank'      => config('company.bank', []),
+                ];
+
+            case 'xoa-tai-khoan':
+                return [
+                    'reasons' => UserModel::DELETION_REASONS,
+                    // Quyết định ô "mật khẩu hiện tại" có `required` không.
+                    // Xem UserModel::isGoogleLinked / requestDeletion.
+                    'googleLinked' => UserModel::isGoogleLinked($userId),
+                    /* Đếm những thứ khách sắp mất quyền xem, để câu cảnh báo
+                       nói bằng CON SỐ CỦA CHÍNH HỌ chứ không phải một danh
+                       sách chung chung. Hai câu COUNT(*) có chỉ mục, và chỉ
+                       chạy khi khách mở đúng mục này. */
+                    'willLose' => [
+                        'don-hang' => OrderModel::count(['user_id' => $userId]),
+                        'lich-hen' => count(BookingModel::forUser($userId)),
+                    ],
                 ];
 
             case 'do-mat':
@@ -1382,6 +1399,90 @@ class AuthController extends BaseController
 
         flash('account_success', 'Đã đổi mật khẩu. Các thiết bị khác đã được đăng xuất.');
         redirect('/tai-khoan?muc=mat-khau');
+    }
+
+    /**
+     * Khách tự yêu cầu khoá/xoá tài khoản của chính mình.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * XOÁ Ở ĐÂY LÀ XOÁ MỀM, VÀ ĐÓ LÀ CHỦ Ý CHỨ KHÔNG PHẢI LÀM DỞ
+     *
+     *   PHÍA KHÁCH  tài khoản biến mất thật: không đăng nhập được bằng mật
+     *               khẩu, bằng Google hay bằng cookie "ghi nhớ"; không lấy
+     *               lại mật khẩu được; phiên còn mở trên máy khác bị đá ra ở
+     *               lần tải trang kế tiếp.
+     *   PHÍA CSDL   không một dòng nào bị xoá. Đơn hàng, lịch hẹn, thông số
+     *               đo mắt, số điện thoại vẫn còn nguyên để cửa hàng bảo
+     *               hành, đối chiếu và liên hệ về sau.
+     *
+     * Toàn bộ luật nằm trong UserModel::requestDeletion() — kể cả câu xác
+     * nhận gõ tay — để một request POST dựng tay không đi vòng được qua
+     * chốt nào. Ở đây chỉ ghép LÝ DO từ hai ô của form.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public function deleteAccount(): void
+    {
+        $userId = AuthMiddleware::requireLogin('/tai-khoan?muc=xoa-tai-khoan');
+        $this->requirePost('/tai-khoan?muc=xoa-tai-khoan');
+
+        $result = UserModel::requestDeletion(
+            $userId,
+            (string) ($_POST['current_password'] ?? ''),
+            (string) ($_POST['confirm'] ?? ''),
+            $this->deletionReason()
+        );
+
+        if (!$result['ok']) {
+            flash('account_error', $result['error']);
+            redirect('/tai-khoan?muc=xoa-tai-khoan');
+        }
+
+        // Đăng xuất NGAY, trước khi báo tin: tài khoản vừa khoá thì phiên hiện
+        // tại không còn cơ sở nào để tồn tại. AuthMiddleware::userId() cũng sẽ
+        // tự đá phiên này ra ở request sau, nhưng để nó xảy ra ở đây thì khách
+        // thấy đúng thứ họ vừa yêu cầu chứ không phải một trang tài khoản còn
+        // sáng đèn thêm một nhịp.
+        AuthMiddleware::logout();
+
+        // flash() phải đặt SAU logout(): logout() xoá sạch $_SESSION rồi mở
+        // phiên mới, nên thông điệp đặt trước đó sẽ bay theo phiên cũ.
+        flash('auth_success',
+              'Tài khoản của bạn đã được khoá và gỡ khỏi trang. Cảm ơn bạn đã đồng hành '
+              . 'cùng Vin Eyewear — nếu đổi ý, hãy gọi ' . config('company.hotline', '')
+              . ' để được mở lại.');
+
+        redirect('/auth');
+    }
+
+    /**
+     * Ghép chuỗi lý do lưu vào `users.deletion_reason`.
+     *
+     * Hai ô: một danh sách chọn và một ô gõ tự do. Chuỗi lưu xuống là thứ
+     * NHÂN VIÊN sẽ đọc, nên nó ghép sẵn thành câu tiếng Việt thay vì lưu mã
+     * rồi bắt màn quản trị tra ngược — bảng mã có thể đổi, câu đã lưu thì
+     * không được đổi nghĩa theo.
+     *
+     * Mã lạ (gõ tay vào request) rơi về chuỗi rỗng, và cột nhận NULL: không
+     * có lý do là chuyện bình thường, khách không bắt buộc phải giải thích.
+     */
+    private function deletionReason(): string
+    {
+        $key  = (string) ($_POST['reason'] ?? '');
+        $note = trim((string) ($_POST['reason_note'] ?? ''));
+
+        if (!isset(UserModel::DELETION_REASONS[$key])) {
+            return $note;
+        }
+
+        // "Lý do khác" thì chính chữ khách gõ LÀ lý do; nhãn "Lý do khác" lưu
+        // xuống không nói thêm được gì.
+        if ($key === 'khac') {
+            return $note;
+        }
+
+        $label = UserModel::DELETION_REASONS[$key];
+
+        return $note !== '' ? $label . ' — ' . $note : $label;
     }
 
     // ========================================================================

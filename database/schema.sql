@@ -91,12 +91,24 @@ CREATE TABLE `users` (
     `password_hash`   VARCHAR(255) NOT NULL,
     `email_verified`  TINYINT(1)   NOT NULL DEFAULT 0,
     `last_login_at`   DATETIME     NULL,
+    /*
+     * XOÁ TÀI KHOẢN LÀ XOÁ MỀM — xem migration 2026-08-22-xoa-tai-khoan.
+     *
+     * NULL = đang dùng. Có giá trị = khách đã tự yêu cầu khoá/xoá lúc đó:
+     * không đăng nhập được, không lấy lại mật khẩu được, phiên trên máy khác
+     * bị đá ra. DỮ LIỆU THÌ KHÔNG ĐỘNG TỚI MỘT DÒNG NÀO — đơn hàng, lịch hẹn,
+     * số điện thoại vẫn còn để cửa hàng liên hệ và bảo hành về sau.
+     */
+    `deleted_at`      DATETIME     NULL,
+    /* Lý do khách chọn/gõ khi rút lui. Dùng cho chăm sóc khách hàng. */
+    `deletion_reason` VARCHAR(500) NULL,
     `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
                                    ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_users_email` (`email`),
-    UNIQUE KEY `uq_users_google` (`google_id`)
+    UNIQUE KEY `uq_users_google` (`google_id`),
+    KEY `idx_users_deleted` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Hồ sơ khách hàng — quan hệ 1-1 với users, tách riêng đúng như bản Supabase.

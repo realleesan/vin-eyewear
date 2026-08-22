@@ -338,6 +338,13 @@
 
 .acct-nav__subitem:hover { color: var(--brand); }
 
+/* Mục "Xoá tài khoản" trong danh sách con. Danh sách này là chữ thuần, không
+   có icon nào để phân biệt — nên màu là thứ duy nhất báo rằng mục cuối cùng
+   không cùng loại với ba mục trên nó. */
+.acct-nav__subitem.is-danger { color: var(--danger); }
+
+.acct-nav__subitem.is-danger:hover { color: var(--danger); }
+
 .acct-nav__subitem.is-current {
     background: var(--a-pick);
     color: var(--brand);
@@ -525,6 +532,22 @@
 .acct-btn--quiet:hover,
 .acct-btn--quiet:focus-visible { color: var(--brand); }
 
+/* Nút PHÁ HUỶ — chỉ dùng ở mục "Xoá tài khoản".
+   Không dùng .acct-btn--primary: --brand (#8a2432) là màu của mọi nút chính
+   trên trang này, nên một nút xoá tài khoản trông y hệt nút "Lưu thay đổi" là
+   mời người ta bấm theo quán tính. --danger (#c0392b) là sắc đỏ CAM, tách
+   khỏi đỏ đô của thương hiệu đủ để mắt thấy ngay đây là thứ khác. */
+.acct-btn--danger {
+    background: var(--danger);
+    color: #fff;
+}
+
+.acct-btn--danger:hover,
+.acct-btn--danger:focus-visible {
+    background: color-mix(in srgb, var(--danger) 82%, #000);
+    color: #fff;
+}
+
 /* Nút "Lưu thay đổi" cuối form: bản thiết kế đẩy nó về mép trái và cách ô
    cuối thêm 6px */
 .acct-btn--start {
@@ -636,6 +659,14 @@
     font-size: 12px;
     line-height: 1.5;
     color: var(--a-note);
+}
+
+/* Ô gõ nhiều dòng — ô "bạn muốn nói thêm điều gì" ở mục xoá tài khoản.
+   resize:vertical chứ không phải both: kéo ngang được nghĩa là kéo rách được
+   bố cục hai cột của form. */
+textarea.acct-field__area {
+    line-height: 1.6;
+    resize: vertical;
 }
 
 /* Ô chọn ngày/giờ phải cao đúng bằng ô chữ: trình duyệt cho nó line-height
@@ -1640,6 +1671,137 @@ select.acct-field__input {
 
 
 
+
+/* ============================================================
+   MỤC XOÁ TÀI KHOẢN
+   Markup: app/views/auth/account/xoa-tai-khoan.php
+
+   Mục này không có trong bản thiết kế. Nó mượn nguyên khung của các mục khác
+   (.acct-card + .acct-form) và chỉ thêm ĐÚNG ba thứ: một dải cảnh báo ở đầu
+   thẻ, một đường kẻ ngăn nó với form, và nút đỏ (.acct-btn--danger ở trên).
+
+   CỐ Ý KHÔNG tô đỏ cả thẻ. Trang này là nơi khách thực hiện một quyền hợp
+   pháp của họ, không phải nơi doạ họ đừng làm; một khối đỏ toàn phần đọc như
+   lời cảnh cáo. Sắc dùng ở đây là VÀNG CẢNH BÁO cho phần thông tin, còn đỏ
+   thì để dành đúng cho cái nút.
+   ============================================================ */
+
+.acct-danger {
+    overflow: hidden;   /* dải cảnh báo chạm được tới mép thẻ đã bo góc */
+
+    /* Hẹp cả THẺ chứ không phải hẹp riêng cái form bên trong. Hai cách cho ra
+       cùng một bề rộng ô nhập, nhưng cách kia để lại một mảng trắng rỗng bên
+       phải form — đọc như thẻ bị hụt nội dung. Cùng lối với mục "Đổi mật
+       khẩu": ở đó thẻ CHÍNH LÀ form nên .acct-form--narrow đủ, còn ở đây thẻ
+       còn ôm thêm dải cảnh báo nên bề rộng phải đặt ở thẻ.
+       Rộng hơn 520px của mục đổi mật khẩu vì dải cảnh báo là văn xuôi bốn
+       gạch đầu dòng, bó hẹp quá thì mỗi ý vắt thành bốn dòng. */
+    max-width: 780px;
+}
+
+.acct-danger__note {
+    padding: 28px 40px 26px;
+    border-bottom: 1px solid var(--a-rule);
+    /* Vàng nhạt ấm, cùng họ với nền pearl của trang chứ không phải vàng
+       nguyên chất — đặt cạnh --surface-raised mà chói quá thì nó đọc như một
+       lỗi hệ thống. */
+    background: #fdf6e8;
+}
+
+.acct-danger__h {
+    margin: 0 0 14px;
+    font-family: var(--font-serif);
+    font-size: 17.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.acct-danger__list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--a-item);
+}
+
+.acct-danger__list strong {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* Con số của chính khách ("đang có 12 đơn hàng"). Tách khỏi danh sách bằng
+   một đường kẻ mảnh: nó là KẾT LUẬN rút ra từ bốn gạch đầu dòng trên, không
+   phải gạch thứ năm. */
+.acct-danger__count {
+    margin: 18px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid #f0e2c6;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--a-item);
+}
+
+.acct-danger__count strong { color: var(--danger); }
+
+/* Form nằm TRONG .acct-card nên tự nó không cần nền hay bóng nữa, và cũng
+   không cần bề rộng riêng — .acct-danger ở trên đã lo. */
+.acct-danger__form {
+    background: none;
+}
+
+/* Nhãn "(không bắt buộc)" trong tiêu đề ô — chữ thường, không in hoa giãn
+   rộng như phần còn lại của nhãn, để nó đọc như một lời trấn an chứ không
+   phải một phần của tên trường. */
+.acct-danger__form .acct-field__label em {
+    font-style: normal;
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--a-note);
+}
+
+/* Dòng chữ phải gõ. <code> mặc định là font hệ thống và cỡ 13px — ở giữa một
+   nhãn in hoa 12px thì nó tụt hẳn xuống. */
+.acct-danger__code {
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    background: var(--a-pick);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--danger);
+}
+
+/* Ô tick ở đây có nhãn DÀI hai dòng. .acct-check dùng chung căn giữa theo
+   trục dọc — đúng cho nhãn một dòng ("đặt làm mặc định"), nhưng ở đây nó đẩy
+   ô vuông xuống giữa đoạn văn. */
+.acct-danger .acct-check {
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.65;
+}
+
+.acct-danger .acct-check input {
+    flex: none;
+    margin-top: 2px;   /* thẳng hàng với dòng chữ đầu tiên, không phải mép trên */
+    accent-color: var(--danger);
+}
+
+/* Hàng nút cuối: nút đỏ và lối rút lui đứng cạnh nhau, cách nhau đủ xa để
+   không bấm nhầm trên điện thoại. */
+.acct-danger__form .acct-form__actions {
+    align-items: center;
+    gap: 18px;
+    margin-top: 6px;
+}
+
+@media (max-width: 560px) {
+    .acct-danger__note { padding: 24px 22px; }
+}
 
 /* ============================================================
    TRẠNG THÁI RỖNG — dùng chung cho mọi mục
