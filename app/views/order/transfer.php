@@ -89,7 +89,10 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                  quay lại được: đơn đã ghi vào CSDL rồi, và mở lại form là mời
                  khách đặt thêm một đơn trùng. Nên nó dẫn TỚI trang xác nhận —
                  vẫn là lối ra khỏi màn này, chỉ là đi tiếp thay vì đi lùi. */ ?>
-        <a class="coqr__back" href="/thanh-toan/hoan-tat" aria-label="Xem xác nhận đơn hàng">
+        <?php /* Nút "‹" cũng theo $doneHref: vào từ trang tài khoản thì lùi về
+                 đúng thẻ đơn đó, không phải trang cảm ơn của một đơn đã đặt từ
+                 lâu. Xem OrderController::transfer. */ ?>
+        <a class="coqr__back" href="<?= e($doneHref) ?>" aria-label="Quay lại đơn hàng">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M15 18l-6-6 6-6"></path>
@@ -232,7 +235,7 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                 <?php endif; ?>
             </div>
 
-            <a class="coqr__done" href="/thanh-toan/hoan-tat">
+            <a class="coqr__done" href="<?= e($doneHref) ?>">
                 Tôi đã chuyển khoản <?= money($due) ?> ✓
             </a>
 

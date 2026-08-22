@@ -470,6 +470,24 @@ $paymentShort  = [
                                 <p class="acct-order__memo">
                                     Ghi đúng mã đơn ở phần nội dung để chúng tôi đối chiếu được.
                                 </p>
+
+                                <?php
+                                /* LỐI VÀO MÀN QUÉT MÃ QR.
+                                   Khối trên chỉ in số tài khoản dạng chữ, và gõ
+                                   tay 13 chữ số vào app ngân hàng là đúng chỗ
+                                   người ta gõ sai. Nút này mở lại đúng màn hình
+                                   đã hiện ngay sau khi đặt đơn — có mã QR mang
+                                   sẵn số tiền và nội dung chuyển khoản.
+
+                                   Trước bản này màn đó chỉ tới được đúng một
+                                   lần, ngay sau khi đặt (mã đơn đọc từ flash).
+                                   Đóng tab là mất luôn đường quay lại. Xem
+                                   OrderController::transfer. */
+                                ?>
+                                <a class="acct-btn acct-btn--primary acct-btn--sm acct-order__qr"
+                                   href="/thanh-toan/chuyen-khoan?ma=<?= e(rawurlencode($o['code'])) ?>">
+                                    Quét mã QR để thanh toán
+                                </a>
                             </div>
                         <?php endif; ?>
                     </div>

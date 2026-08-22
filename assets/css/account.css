@@ -1238,6 +1238,14 @@ select.acct-field__input {
    Nằm trong cột tóm tắt thanh toán, tách bằng một khung nhạt: đây là việc khách
    PHẢI LÀM, không phải một con số để đọc cho biết. */
 
+/* Nút "Quét mã QR để thanh toán" trong khối chuyển khoản.
+   align-self:flex-start để nó ôm đúng bề rộng chữ — .acct-order__pay là cột
+   flex nên nút sẽ giãn hết chiều ngang khối nếu không chặn. */
+.acct-order__qr {
+    align-self: flex-start;
+    margin-top: 4px;
+}
+
 .acct-order__pay {
     display: flex;
     flex-direction: column;

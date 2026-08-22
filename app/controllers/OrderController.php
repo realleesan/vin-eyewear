@@ -468,27 +468,78 @@ class OrderController extends BaseController
     /**
      * Màn hình QR chuyển khoản (/thanh-toan/chuyen-khoan).
      *
-     * Màn thứ hai của "Vin Eyewear Checkout.dc.html". Chỉ tới được ngay sau khi
-     * vừa đặt một đơn CHUYỂN KHOẢN — mã đơn đọc từ flash, không nằm trên URL,
-     * nên không ai dò được đơn của người khác.
+     * Màn thứ hai của "Vin Eyewear Checkout.dc.html".
      *
-     * Đặt lại flash sau khi đọc, vì hai lý do: tải lại trang (khách quét QR
-     * bằng điện thoại rồi bấm F5) không được rơi ra ngoài, và nút "Tôi đã
-     * chuyển khoản" dẫn sang /thanh-toan/hoan-tat — trang đó đọc đúng flash này.
+     * ─────────────────────────────────────────────────────────────────────
+     * HAI ĐƯỜNG VÀO, VÀ ĐƯỜNG THỨ HAI MỚI LÀ ĐƯỜNG HAY DÙNG
+     *
+     *   1. VỪA ĐẶT XONG — mã đơn đọc từ flash, không nằm trên URL.
+     *   2. QUAY LẠI SAU — ?ma=<mã đơn>, từ nút trong "Đơn hàng của tôi".
+     *
+     * Trước bản này chỉ có đường 1, và đó là một lỗ thật: khách đóng tab, hết
+     * pin, hay đơn giản là để mai chuyển — thì không còn đường nào quay lại mã
+     * QR nữa. Thẻ đơn trong trang tài khoản chỉ in số tài khoản dạng chữ, mà
+     * gõ tay 13 chữ số vào app ngân hàng là đúng chỗ người ta gõ sai.
+     *
+     * MÃ ĐƠN TRÊN URL KHÔNG PHẢI LỖ HỔNG: findByCode() nhận $userId và trả null
+     * nếu đơn thuộc về người khác, nên gõ mã của người lạ vào chỉ ra trang
+     * "Đơn hàng của tôi" trống. Đó cũng chính là cơ chế mà ?don= của trang tài
+     * khoản đang dùng.
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * Đặt lại flash sau khi đọc: tải lại trang (khách quét QR bằng điện thoại
+     * rồi bấm F5) không được rơi ra ngoài.
      */
     public function transfer(): void
     {
         $userId = self::requireCustomer();
-        $code   = flash('order_code');
 
-        if ($code === null) {
-            redirect('/san-pham');
+        /*
+         * ?ma= THẮNG FLASH, KHÔNG PHẢI NGƯỢC LẠI.
+         *
+         * Thoạt nhìn thì ưu tiên flash có vẻ đúng hơn ("vừa đặt xong thì hiện
+         * đơn vừa đặt"). Nhưng flash ở đây KHÔNG TỰ HẾT: cuối hàm nó được đặt
+         * lại để khách bấm F5 trên điện thoại không rơi ra ngoài. Nghĩa là sau
+         * lần đặt hàng đầu tiên, mã đơn đó nằm trong phiên gần như vĩnh viễn.
+         *
+         * Ưu tiên flash thì hậu quả là: khách đặt đơn A, tuần sau vào trang tài
+         * khoản bấm "Quét mã QR" trên đơn B — và nhận mã QR của đơn A, mang số
+         * tiền của đơn A và nội dung chuyển khoản của đơn A. Tiền vào đúng tài
+         * khoản nhưng khớp nhầm đơn.
+         *
+         * Đọc flash TRƯỚC (để tiêu nó đi) rồi mới xét ?ma=: bấm một địa chỉ có
+         * mã đơn cụ thể là một yêu cầu rõ ràng, phải được tôn trọng.
+         */
+        $flashed = flash('order_code');
+        $asked   = trim((string) ($_GET['ma'] ?? ''));
+
+        $fresh = $asked === '' && $flashed !== null;
+        $code  = $asked !== '' ? $asked : (string) ($flashed ?? '');
+
+        if ($code === '') {
+            redirect('/tai-khoan?muc=don-hang');
         }
 
         $order = OrderModel::findByCode($code, $userId);
 
         if ($order === null) {
-            redirect('/san-pham');
+            redirect('/tai-khoan?muc=don-hang');
+        }
+
+        /*
+         * ĐƠN KHÔNG CÒN GÌ ĐỂ TRẢ THÌ KHÔNG MỞ MÀN NÀY.
+         *
+         * Đã trả đủ, hoặc đã huỷ. Hiện một mã QR cho đơn như thế là mời khách
+         * chuyển tiền lần thứ hai — và tiền đã vào tài khoản rồi thì việc hoàn
+         * lại tốn công hơn nhiều so với việc chặn ở đây.
+         *
+         * Đơn 'deposit_paid' cũng dừng: phần còn lại trả khi nhận hàng, không
+         * chuyển khoản tiếp.
+         */
+        if (($order['payment_status'] ?? 'unpaid') !== 'unpaid'
+            || ($order['status'] ?? '') === 'cancelled') {
+            redirect('/tai-khoan?muc=don-hang&don=' . rawurlencode($code)
+                     . '#' . rawurlencode($code));
         }
 
         flash('order_code', $code);
@@ -504,6 +555,19 @@ class OrderController extends BaseController
             'order'      => $order,
             'items'      => OrderModel::items($order['id']),
             'bank'       => config('company.bank', []),
+
+            /*
+             * Nút "Tôi đã chuyển khoản" đi đâu.
+             *
+             * Vừa đặt xong -> trang xác nhận đơn, đúng nhịp của luồng mua.
+             * Quay lại sau -> về đúng thẻ đơn trong trang tài khoản. Đẩy họ
+             * sang trang "Cảm ơn bạn, đơn hàng đã được ghi nhận" cho một đơn
+             * đặt từ tuần trước là nói sai chuyện vừa xảy ra.
+             */
+            'doneHref'   => $fresh
+                ? '/thanh-toan/hoan-tat'
+                : '/tai-khoan?muc=don-hang&don=' . rawurlencode($code)
+                  . '#' . rawurlencode($code),
         ]);
     }
 
