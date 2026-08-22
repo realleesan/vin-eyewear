@@ -12,9 +12,15 @@
        #7d2433 → var(--brand)          #f3e6e3 / #f0dcdd → var(--brand-subtle)
        #641c29 → var(--brand-strong)   #26262a           → var(--ink)
        #faf6f5 → var(--surface)        #5a5a5e           → var(--muted)
-       #f5e8e6 → var(--on-brand-soft)  #e0b3ba / #f0c8ce → var(--on-brand-muted)
        #e9dcda → var(--line)           #9b8082           → var(--eyebrow)
        #c4aeb0 → var(--h-meta)         #e2cfcd           → var(--h-blush-line)
+
+   RIÊNG lưới giá trị cốt lõi (khối 02) KHÔNG theo bản vẽ: bản vẽ tô các ô
+   bằng chính --brand, ở đây dùng --h-dark (#3b1219) — sắc đỏ đô đậm mà site
+   dành cho MẢNG NỀN TỐI (ba dải tối trang chủ, thẻ tối trang sự kiện), còn
+   --brand là màu của nút và chi tiết nhấn. Kéo theo cả bộ chữ trên nền tối
+   đi cùng nó (--h-on-dark / --h-on-dark-muted / --h-on-dark-num), vì
+   --on-brand-* được chỉnh cho nền #8a2432 sáng hơn hẳn.
 
    Chữ dùng --font-serif (Lora) chứ không phải Playfair Display của bản vẽ:
    toàn site đã nạp đúng một họ serif, thêm họ thứ hai chỉ cho một trang là
@@ -252,14 +258,14 @@
     gap: 24px;
     min-height: 190px;
     padding: 32px;
-    background: var(--brand);
+    background: var(--h-dark);
 }
 
 .about-vcard__num {
     font-size: var(--fs-caption);
     font-weight: 600;
     letter-spacing: 0.16em;
-    color: var(--on-brand-muted);
+    color: var(--h-on-dark-num);
 }
 
 .about-vcard__title {
@@ -267,7 +273,7 @@
     font-size: var(--fs-h6);
     font-weight: 600;
     line-height: 1.4;
-    color: var(--on-brand-soft);
+    color: var(--h-on-dark);
 }
 
 /* Ô mở đầu: chiếm hai cột, chữ to hơn hẳn bốn ô còn lại */
@@ -277,7 +283,7 @@
     justify-content: space-between;
     gap: 32px;
     padding: 44px 40px;
-    background: var(--brand);
+    background: var(--h-dark);
 }
 
 @media (min-width: 681px) {
@@ -289,19 +295,19 @@
     font-size: var(--fs-h2);
     font-weight: 600;
     line-height: 1.28;
-    color: var(--on-brand-soft);
+    color: var(--h-on-dark);
 }
 
 .about-vlead__title em {
     font-style: italic;
-    color: var(--on-brand-muted);
+    color: var(--h-dark-eyebrow);
 }
 
 .about-vlead__desc {
     max-width: 380px;
     font-size: var(--fs-note);
     line-height: 1.7;
-    color: var(--on-brand-muted);
+    color: var(--h-on-dark-muted);
 }
 
 /* Hai ô ảnh xen giữa các ô nền đỏ */
