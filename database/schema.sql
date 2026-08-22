@@ -769,6 +769,37 @@ CREATE TABLE `order_status_history` (
         REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Sổ giao dịch chuyển khoản do SePay báo về qua webhook.
+-- Xem migration 2026-08-22-sepay-doi-soat và config/sepay.php.
+--
+-- `sepay_id` UNIQUE là thứ chặn một lần chuyển tiền bị tính thành hai: SePay
+-- gửi lại tối đa 7 lần nếu không nhận được HTTP 200, kể cả khi máy chủ đã xử
+-- lý xong rồi mới chết lúc trả lời.
+--
+-- Giao dịch KHÔNG khớp đơn nào vẫn được ghi (order_id NULL): khách gõ sai nội
+-- dung chuyển khoản là chuyện thường, và dòng đó là manh mối duy nhất để lần ra.
+CREATE TABLE `sepay_transactions` (
+    `id`               CHAR(36)     NOT NULL DEFAULT (UUID()),
+    `sepay_id`         BIGINT       NOT NULL,
+    `order_id`         CHAR(36)     NULL,
+    `order_code`       VARCHAR(40)  NULL,
+    `gateway`          VARCHAR(64)  NULL,
+    `account_number`   VARCHAR(64)  NULL,
+    `transfer_type`    VARCHAR(8)   NOT NULL DEFAULT 'in',
+    `amount`           BIGINT       NOT NULL DEFAULT 0,
+    `content`          TEXT         NULL,
+    `reference_code`   VARCHAR(64)  NULL,
+    `transaction_date` DATETIME     NULL,
+    -- paid | deposit_paid | partial | no_order | ignored
+    `applied`          VARCHAR(32)  NOT NULL DEFAULT 'no_order',
+    `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_sepay_txn` (`sepay_id`),
+    KEY `idx_sepay_order` (`order_id`),
+    CONSTRAINT `fk_sepay_order` FOREIGN KEY (`order_id`)
+        REFERENCES `orders` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ----------------------------------------------------------------------------
 -- ĐÁNH GIÁ SẢN PHẨM
 --

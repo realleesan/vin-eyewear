@@ -142,6 +142,19 @@ return [
 
     // Quên mật khẩu — khách tự làm bằng mã OTP. Bốn chặng nằm chung một địa
     // chỉ, chọn bằng ?buoc= (xem khối chú thích trong AuthController).
+    /*
+     * WEBHOOK SEPAY — máy chủ SePay gọi vào đây khi có tiền về tài khoản ngân
+     * hàng của cửa hàng, để đơn chuyển khoản tự sang "đã thanh toán" / "đã đặt
+     * cọc" mà không cần ai đối chiếu sao kê.
+     *
+     * Đây là đường DUY NHẤT trong site không kiểm CSRF: người gọi là máy chủ
+     * bên thứ ba, không có phiên và không có token nào để gửi. Thứ thay thế là
+     * khoá bí mật trong header Authorization — xem SepayController::webhook.
+     *
+     * Chưa khai SEPAY_WEBHOOK_KEY thì địa chỉ này trả 403 cho mọi request.
+     */
+    'webhook/sepay'          => 'SepayController@webhook',   // POST, không CSRF
+
     'quen-mat-khau'          => 'AuthController@forgot',
     'quen-mat-khau/gui'      => 'AuthController@forgotSubmit',  // POST — gửi mã
     'quen-mat-khau/gui-lai'  => 'AuthController@forgotResend',  // POST — gửi lại mã

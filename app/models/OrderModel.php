@@ -664,12 +664,17 @@ class OrderModel extends BaseModel
     }
 
     /**
-     * Đánh dấu đơn đã nhận được tiền.
+     * Đánh dấu đơn đã nhận được ĐỦ tiền.
      *
-     * Chỉ đi từ 'unpaid' sang 'paid' — điều kiện đó nằm trong câu UPDATE nên gọi
-     * hai lần cũng không dịch `paid_at` sang mốc mới. Sẽ cần đúng tính chất này
-     * lúc nối cổng thanh toán: webhook của cổng có thể gửi lại cùng một giao
-     * dịch nhiều lần, và mốc tiền về không được nhảy theo mỗi lần gửi lại.
+     * Điều kiện là `payment_status <> 'paid'`, KHÔNG phải `= 'unpaid'`. Hai
+     * chuyện khác nhau kể từ khi có đặt cọc:
+     *
+     *   · Đơn cọc gần như luôn trả làm hai lần. Lần thứ hai phải nâng được đơn
+     *     từ 'deposit_paid' lên 'paid'; chốt ở 'unpaid' thì nó mắc kẹt ở nấc
+     *     giữa dù khách đã trả xong.
+     *   · Vẫn KHÔNG dịch `paid_at` khi gọi lại trên đơn đã 'paid' — webhook của
+     *     SePay gửi lại cùng một giao dịch tối đa 7 lần, và mốc tiền về không
+     *     được nhảy theo mỗi lần gửi lại. Đó mới là tính chất cần giữ.
      *
      * @return bool có đổi gì không (false = đơn đã 'paid' từ trước, hoặc mã sai)
      */
@@ -678,6 +683,30 @@ class OrderModel extends BaseModel
         return Database::execute(
             "UPDATE orders
                 SET payment_status = 'paid', paid_at = NOW()
+              WHERE id = :id AND payment_status <> 'paid'",
+            ['id' => $id]
+        ) > 0;
+    }
+
+    /**
+     * Đánh dấu đơn đã nhận đủ TIỀN CỌC (chưa phải toàn bộ).
+     *
+     * Chỉ đi từ 'unpaid' sang 'deposit_paid' — một chiều, và điều kiện nằm
+     * trong chính câu UPDATE. Nhờ vậy webhook của SePay gửi lại cùng một giao
+     * dịch mười lần cũng không hạ một đơn ĐÃ trả đủ ('paid') xuống lại thành
+     * mới-đặt-cọc. Cùng tính chất với markPaid() ngay trên.
+     *
+     * KHÔNG chạm `paid_at`: cột đó là mốc "tiền về ĐỦ", dùng cho sổ sách. Đặt
+     * nó ở đây thì một đơn mới cọc 30% trông như đã thanh toán xong khi nhìn
+     * bằng cột thời gian. Thời điểm nhận cọc nằm ở `sepay_transactions`.
+     *
+     * @return bool có đổi gì không
+     */
+    public static function markDepositPaid(string $id): bool
+    {
+        return Database::execute(
+            "UPDATE orders
+                SET payment_status = 'deposit_paid'
               WHERE id = :id AND payment_status = 'unpaid'",
             ['id' => $id]
         ) > 0;

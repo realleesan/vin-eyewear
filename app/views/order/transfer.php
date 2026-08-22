@@ -53,18 +53,29 @@ $isDeposit = $deposit > 0;
 $due       = $isDeposit ? $deposit : $total;
 
 /*
- * Ảnh QR. `qr_only` là bản chỉ có ô mã, không kèm khung logo ngân hàng — khung
- * 210px của bản thiết kế đã có viền riêng, chồng thêm khung nữa là mã bị bóp
- * nhỏ lại và điện thoại khó bắt.
+ * Ảnh QR — dựng bởi qr.sepay.vn.
+ *
+ * VÌ SAO ĐỔI TỪ img.vietqr.io SANG ĐÂY: hai bên cho ra cùng một mã VietQR, quét
+ * bằng app ngân hàng nào cũng như nhau. Khác ở chỗ SePay còn là bên ĐỌC biến
+ * động số dư của chính tài khoản này và báo về webhook (xem config/sepay.php).
+ * Dùng một nhà cho cả hai đầu thì lúc đối chiếu "mã QR bảo chuyển X, webhook
+ * báo về Y" không phải hỏi hai nơi.
+ *
+ * `template=qronly` = chỉ ô mã, không kèm khung logo ngân hàng — khung 210px
+ * của bản thiết kế đã có viền riêng, chồng thêm khung nữa là mã bị bóp nhỏ lại
+ * và điện thoại khó bắt.
+ *
+ * `des` LÀ MÃ ĐƠN, không phải tên khách. Đó là sợi dây duy nhất buộc dòng tiền
+ * vào đơn hàng, ở cả hai đầu: nhân viên đọc sao kê, và SepayModel tự khớp.
  */
 $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
     ? sprintf(
-        'https://img.vietqr.io/image/%s-%s-qr_only.png?amount=%d&addInfo=%s&accountName=%s',
-        rawurlencode((string) $bank['bin']),
+        'https://qr.sepay.vn/img?acc=%s&bank=%s&amount=%d&des=%s&template=%s',
         rawurlencode((string) $bank['number']),
+        rawurlencode((string) $bank['bin']),
         $due,
         rawurlencode($order['code']),
-        rawurlencode((string) ($bank['holder'] ?? ''))
+        rawurlencode((string) config('sepay.qr_template', 'qronly'))
     )
     : null;
 ?>
@@ -218,14 +229,23 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                 Tôi đã chuyển khoản <?= money($due) ?> ✓
             </a>
 
-            <?php /* Bản thiết kế viết "xác nhận tự động sau 1–2 phút". Dự án chưa
-                     nối cổng đối soát nào, nên câu đó sẽ là một lời hứa không ai
-                     giữ — khách ngồi đợi một thông báo không bao giờ tới. Nói
-                     đúng việc đang xảy ra: người thật đối chiếu sao kê. */ ?>
+            <?php
+            /* CÂU NÀY ĐỔI THEO VIỆC ĐANG THẬT SỰ XẢY RA, không theo bản thiết kế.
+               Bản thiết kế viết "xác nhận tự động sau 1–2 phút". Câu đó chỉ
+               đúng khi SePay đã bật và đang đọc biến động số dư; chưa bật thì
+               nó là lời hứa không ai giữ, và khách ngồi đợi một thông báo không
+               bao giờ tới. Chốt theo config('sepay.enabled') — xem config/sepay.php. */
+            ?>
             <p class="coqr__note">
-                Chúng tôi đối chiếu giao dịch và xác nhận đơn trong giờ làm việc
-                (8:30 – 21:30). Giữ lại mã đơn <strong><?= e($order['code']) ?></strong>
-                để tra cứu khi cần.
+                <?php if (config('sepay.enabled')): ?>
+                    Đơn tự động xác nhận sau 1–2 phút kể từ khi tiền về. Nhớ giữ
+                    nguyên nội dung chuyển khoản <strong><?= e($order['code']) ?></strong>
+                    — đó là thứ giúp chúng tôi nhận ra giao dịch của bạn.
+                <?php else: ?>
+                    Chúng tôi đối chiếu giao dịch và xác nhận đơn trong giờ làm việc
+                    (8:30 – 21:30). Giữ lại mã đơn <strong><?= e($order['code']) ?></strong>
+                    để tra cứu khi cần.
+                <?php endif; ?>
             </p>
         </div>
     </div>

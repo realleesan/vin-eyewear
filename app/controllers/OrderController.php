@@ -15,11 +15,18 @@ class OrderController extends BaseController
      * Ba lựa chọn thanh toán mà "Vin Eyewear Checkout.dc.html" vẽ.
      *
      * 'card' KHÔNG có trong OrderModel::PAYMENT_METHODS — cố ý. Dự án chưa nối
-     * cổng thanh toán nào, nên nó hiện ra đúng hình dạng bản thiết kế nhưng bị
-     * khoá, và place() từ chối nếu có ai gửi thẳng giá trị đó lên. Một đơn
+     * cổng thanh toán thẻ nào, nên nó hiện ra đúng hình dạng bản thiết kế nhưng
+     * bị khoá, và place() từ chối nếu có ai gửi thẳng giá trị đó lên. Một đơn
      * "đã đặt" mà khách không trả tiền được là tệ hơn hẳn việc thiếu một lựa chọn.
      *
-     * Bật lên sau: bỏ 'soon' => true ở đây và thêm 'card' vào
+     * PHASE 1 CHỐT HAI CÁCH: COD và chuyển khoản QR. Thẻ ATM/Visa/Mastercard để
+     * lại giai đoạn sau, khi làm phần phục vụ khách nước ngoài.
+     *
+     * Chuyển khoản KHÔNG phải "cổng thanh toán" theo nghĩa giữ tiền: khách
+     * chuyển thẳng vào tài khoản cửa hàng, SePay chỉ đọc biến động số dư rồi
+     * báo về để đơn tự đổi trạng thái — xem config/sepay.php.
+     *
+     * Bật thẻ lên sau: bỏ 'soon' => true ở đây và thêm 'card' vào
      * OrderModel::PAYMENT_METHODS, rồi nối cổng ở place().
      */
     private const PAYMENTS = [
@@ -28,8 +35,11 @@ class OrderController extends BaseController
             'note' => 'Trả tiền mặt cho shipper hoặc tại quầy',
         ],
         'bank_transfer' => [
-            'name' => 'Chuyển khoản ngân hàng',
-            'note' => 'Thông tin chuyển khoản gửi sau khi xác nhận đơn',
+            'name' => 'Chuyển khoản ngân hàng (QR)',
+            // Câu cũ ("thông tin gửi sau khi xác nhận đơn") có từ hồi chưa có
+            // màn QR. Nay bấm đặt xong là sang thẳng mã QR, nên nói đúng bước
+            // tiếp theo — khách chọn phương thức dựa vào việc họ sắp phải làm gì.
+            'note' => 'Quét mã QR ngay ở bước sau, hoặc chuyển tay theo số tài khoản',
         ],
         'card' => [
             'name' => 'Thẻ ATM / Visa / Mastercard',

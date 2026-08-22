@@ -53,6 +53,18 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # ĐƯA HEADER `Authorization` VÀO PHP.
+    #
+    # Apache chạy PHP dưới CGI/FastCGI KHÔNG truyền header này xuống, vì nó là
+    # thứ Apache tự giữ lại cho phần xác thực của chính nó. Hệ quả: webhook của
+    # SePay gửi `Authorization: Apikey ...` mà $_SERVER không có gì cả, và mọi
+    # request bị trả 403 — không có lỗi nào để lần, chỉ là im lặng từ chối.
+    #
+    # Dòng dưới chép nó sang HTTP_AUTHORIZATION. Máy chủ nào đã truyền sẵn thì
+    # dòng này chỉ ghi lại đúng giá trị cũ, không hại gì.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} !^/assets/
