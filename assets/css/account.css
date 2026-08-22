@@ -1216,6 +1216,50 @@ select.acct-field__input {
     border-top: 1px solid var(--h-card-line);
 }
 
+/* Dòng "Đã nhận X qua … · ngày" dưới cụm tổng tiền.
+   XANH LÁ, không phải màu thương hiệu: đây là chỗ nói "tiền đã về", và xanh lá
+   là quy ước không ai phải học. Đỏ đô thì trung tính về nghĩa — dùng cho cả
+   con số phải trả lẫn con số đã trả thì mắt không phân biệt được hai loại. */
+.acct-order__got {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 10px 0 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #3d6633;
+}
+
+.acct-order__got strong { font-weight: 600; }
+
+.acct-order__gotmark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    /* Vòng tròn THẬT (rộng bằng cao) — đúng chỗ --radius-round được phép dùng;
+       xem khối "ĐỘ BO GÓC" trong layout.css. */
+    border-radius: var(--radius-round);
+    margin-top: 1px;
+    background: #3d7a4f;
+    color: #fff;
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* Câu cảm ơn ở chân thẻ đơn đã trả tiền — đứng chỗ nút "Xem thông tin chuyển
+   khoản" vừa biến mất, nên nó phải đẩy các nút còn lại sang phải như nút đó
+   từng làm. */
+/* Câu cảm ơn ở chân thẻ đơn đã trả tiền — nằm bên TRÁI, ngay sau dòng ghi chú
+   "cách giao · cách trả". Xem lý do trong don-hang.php.
+   margin-right:auto để cụm nút bên phải vẫn bị đẩy hết ra mép. */
+.acct-order__thanks {
+    margin-right: auto;
+    font-size: 13px;
+    color: #3d6633;
+}
+
 /* Hai dòng chia đôi tiền của đơn đặt cọc, nằm dưới "Tổng cộng".
    Nền riêng để đọc ra là PHẦN CỦA tổng, không phải khoản cộng thêm. */
 .acct-order__deposit {

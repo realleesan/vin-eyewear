@@ -338,11 +338,13 @@ $paymentShort  = [
                         <div class="acct-order__tags">
                             <span class="acct-order__tag"><?= e($delivery) ?></span>
                             <span class="acct-order__tag"><?= e($payment) ?></span>
-                            <?php if ($isPaid && !empty($o['paid_at'])): ?>
-                                <span class="acct-order__tag">
-                                    Đã nhận tiền <?= e(formatDate($o['paid_at'], 'd/m/Y')) ?>
-                                </span>
-                            <?php endif; ?>
+                            <?php /* KHÔNG còn thẻ "Đã nhận tiền <ngày>" ở đây.
+                                     Dòng xanh trong cột "Tóm tắt thanh toán"
+                                     (.acct-order__got) nói đúng chuyện đó và nói
+                                     đủ hơn — có cả SỐ TIỀN và ĐƯỜNG tiền về, thứ
+                                     mà một thẻ vuông chỉ mang ngày không có. Giữ
+                                     cả hai là bắt khách đọc cùng một tin hai lần
+                                     ở hai chỗ, với hai mức đầy đủ khác nhau. */ ?>
                         </div>
 
                     </div>
@@ -424,6 +426,53 @@ $paymentShort  = [
                                     <span class="acct-order__num"><?= money((int) $o['total'] - $deposit) ?></span>
                                 </div>
                             </div>
+                        <?php endif; ?>
+
+                        <?php
+                        /* ══════════ DÒNG XÁC NHẬN ĐÃ NHẬN TIỀN ══════════
+                           Chỉ hiện khi tiền đã về thật. Cột tóm tắt bên trên
+                           mới chỉ nói đơn ĐÁNG bao nhiêu; dòng này nói đã TRẢ
+                           bao nhiêu, bằng đường nào, ngày nào — ba thứ khách
+                           đối chiếu với app ngân hàng của họ.
+
+                           Huy hiệu "Đã thanh toán" ở đầu thẻ không thay được
+                           dòng này: nó chỉ trả lời có/chưa, không nói số tiền
+                           và cũng không nói ngày. Với đơn đặt cọc thì khác
+                           biệt đó là toàn bộ vấn đề — "đã thanh toán" mà mới
+                           nhận 30% là hai chuyện khác nhau.
+
+                           SỐ TIỀN ĐÃ NHẬN không phải lúc nào cũng bằng tổng
+                           đơn: đơn mới nhận cọc thì đó là phần cọc. */
+                        $gotAmount = $payState === 'deposit_paid' && $deposit > 0
+                            ? $deposit : (int) $o['total'];
+
+                        /* Ngày tiền về. paid_at là mốc trả ĐỦ và chỉ có ở đơn
+                           đã xong; đơn mới cọc chưa có mốc đó (xem
+                           OrderModel::markDepositPaid) nên lùi về mốc cập nhật
+                           gần nhất thay vì bỏ trống. */
+                        $gotAt = $o['paid_at'] ?: ($o['updated_at'] ?? null);
+                        ?>
+                        <?php if (in_array($payState, ['paid', 'deposit_paid'], true)
+                                  && $o['status'] !== 'cancelled'): ?>
+                            <p class="acct-order__got">
+                                <span class="acct-order__gotmark" aria-hidden="true">✓</span>
+                                <span>
+                                    Đã nhận <strong><?= money($gotAmount) ?></strong>
+                                    <?php if ($payState === 'deposit_paid' && $deposit > 0): ?>
+                                        (cọc <?= (int) ($o['deposit_rate'] ?? 0) ?>%)
+                                    <?php endif; ?>
+                                    qua <?= e(utf8Lower($payShort)) ?><?php
+                                        /* Đơn chuyển khoản: nói luôn ngân hàng nào —
+                                           đó là thứ khách dò trong app của họ. */
+                                        if ($o['payment_method'] === 'bank_transfer' && !empty($bank['name'])) {
+                                            echo ' ' . e($bank['name']);
+                                        }
+                                        if ($gotAt !== null) {
+                                            echo ' · ' . e(formatDate($gotAt, 'd/m'));
+                                        }
+                                    ?>
+                                </span>
+                            </p>
                         <?php endif; ?>
 
                     </div>
@@ -512,6 +561,25 @@ $paymentShort  = [
 
                 <div class="acct-order__foot">
                     <span class="acct-order__footnote"><?= e($delivery) ?> · <?= e($payShort) ?></span>
+
+                    <?php
+                    /* Câu cảm ơn nằm BÊN TRÁI, cạnh dòng ghi chú — không nhét
+                       vào hàng nút bên phải.
+
+                       Bản thiết kế đặt nó đúng chỗ nút "Xem thông tin chuyển
+                       khoản" vừa biến mất, vì bản vẽ không có nút nào khác ở
+                       chân thẻ. Ở đây thì có: "Xem biên nhận", "Đổi hoặc huỷ
+                       đơn" và "Thu gọn". Thêm một câu chữ vào giữa ba nút đó
+                       là hàng nút tràn xuống dòng thứ hai. */
+                    ?>
+                    <?php if (in_array($payState, ['paid', 'deposit_paid'], true)
+                              && $o['status'] !== 'cancelled'): ?>
+                        <span class="acct-order__thanks">
+                            <?= $payState === 'deposit_paid'
+                                ? 'Cảm ơn bạn — đã nhận tiền cọc.'
+                                : 'Cảm ơn bạn — đơn hàng đã được thanh toán.' ?>
+                        </span>
+                    <?php endif; ?>
 
                     <div class="acct-order__acts">
                         <?php if ($needsTransfer && !empty($bank['number'])): ?>
