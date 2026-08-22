@@ -502,18 +502,31 @@ $storeId  = $old['storeId'] ?? '';
                     /* ══════════ ĐẶT CỌC ══════════
                        Đơn có cắt tròng theo độ: tròng mài riêng theo số đo của
                        một người, khách đổi ý thì cửa hàng không bán lại cho ai
-                       khác được. Nên phải cọc trước — cho CẢ COD lẫn chuyển
-                       khoản, đó là chỗ luồng này khác mọi shop khác và cũng là
-                       chỗ dễ khiến khách hiểu nhầm nhất.
+                       khác được.
+
+                       CHỈ COD MỚI CỌC. Chuyển khoản QR trả đủ 100% trước khi
+                       cửa hàng làm gì cả, nên không còn rủi ro nào để bảo
+                       hiểm — đòi cọc 30% rồi lại đòi nốt 70% chỉ là bắt khách
+                       chuyển khoản hai lần cho cùng một đơn. Xem khối chú
+                       thích ở OrderModel::needsDeposit().
 
                        BA CON SỐ, KHÔNG PHẢI MỘT. "Cọc 30%" đứng một mình vẫn
                        để lại câu hỏi lớn nhất chưa trả lời: vậy lúc nhận hàng
                        tôi phải cầm bao nhiêu? Nên in thẳng cả phần còn lại, và
-                       vì cọc tính trên TỔNG nên hai số cộng lại đúng bằng dòng
-                       "Tổng cộng" ngay trên — khách tự kiểm được, không cần tin. */
+                       vì cọc tính trên TỔNG (đã trừ mã giảm giá, đã cộng phí
+                       ship) nên hai số cộng lại đúng bằng dòng "Tổng cộng"
+                       ngay trên — khách tự kiểm được, không cần tin.
+
+                       HAI KHỐI, HIỆN MỘT. Trang này không tải lại khi khách
+                       đổi ô radio, nên cả hai khối đều in ra sẵn và
+                       assets/js/checkout-deposit.js đổi khối nào hiện. Không
+                       có JS thì khối đúng với phương thức ĐANG chọn lúc vẽ
+                       trang vẫn hiện — và máy chủ mới là nơi chốt số tiền,
+                       nên không có JS cũng không ai trả sai. */
                     $deposit = OrderModel::depositFor($total, $depositRate);
                     ?>
-                    <div class="csum__deposit">
+                    <div class="csum__deposit" data-deposit-block="cod"
+                         <?= $payment === 'cod' ? '' : 'hidden' ?>>
                         <p class="csum__deposit-why">
                             Đơn có cắt tròng theo độ nên cần đặt cọc trước
                             <strong><?= (int) $depositRate ?>%</strong>. Cửa hàng bắt đầu
@@ -528,6 +541,19 @@ $storeId  = $old['storeId'] ?? '';
                         <div class="csum__row">
                             <span>Còn lại khi nhận hàng</span>
                             <span class="csum__val"><?= money($total - $deposit) ?></span>
+                        </div>
+                    </div>
+
+                    <div class="csum__deposit" data-deposit-block="bank_transfer"
+                         <?= $payment === 'bank_transfer' ? '' : 'hidden' ?>>
+                        <p class="csum__deposit-why">
+                            Chuyển khoản thì thanh toán <strong>đủ 100%</strong>, không
+                            phải đặt cọc. Cửa hàng bắt đầu mài tròng ngay khi tiền về.
+                        </p>
+
+                        <div class="csum__row csum__row--deposit">
+                            <span>Cần chuyển</span>
+                            <span class="csum__val csum__val--deposit"><?= money($total) ?></span>
                         </div>
                     </div>
                 <?php endif; ?>

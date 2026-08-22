@@ -501,6 +501,18 @@
    thì mắt đọc thành năm dòng cộng dồn và con số cuối trông như cộng sai.
    ============================================================ */
 
+/* [hidden] PHẢI ĐỨNG TRƯỚC, và phải là một luật riêng.
+
+   Trang thanh toán in ra HAI khối này — một cho COD, một cho chuyển khoản —
+   rồi giấu bớt một bằng thuộc tính `hidden` (xem checkout-deposit.js). Nhưng
+   `hidden` chỉ là `display: none` trong bộ mẫu mặc định của trình duyệt, nên
+   `display: flex` ngay bên dưới THẮNG nó và cả hai khối cùng hiện — đúng lỗi
+   đã thấy khi chụp ảnh đối chiếu.
+
+   Không dùng !important: chỉ cần một luật riêng cho [hidden] là đủ, vì nó
+   cùng độ ưu tiên nhưng cụ thể hơn (thêm một attribute selector). */
+.csum__deposit[hidden] { display: none; }
+
 .csum__deposit {
     display: flex;
     flex-direction: column;

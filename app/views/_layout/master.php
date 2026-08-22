@@ -329,8 +329,11 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         // Đếm ngược rồi tự sang mục "Đơn hàng của tôi". Không có file này thì
         // không có đếm ngược nào và nút "Xem đơn hàng của tôi" vẫn ở đó.
         'order/success' => 'order-success.js',
-        // Cũng chỉ là tăng cường: hai ô tỉnh/phường vẫn gõ tay được khi thiếu nó.
-        'order/checkout' => 'address-picker.js',
+        // address-picker: hai ô tỉnh/phường vẫn gõ tay được khi thiếu nó.
+        // checkout-deposit: đổi khối "đặt cọc" theo phương thức đang chọn.
+        // Thiếu nó thì khối hiện ra là khối đúng lúc máy chủ vẽ trang, và máy
+        // chủ mới là nơi chốt số tiền — xem checkout-deposit.js.
+        'order/checkout' => ['address-picker.js', 'checkout-deposit.js'],
         // Nút "Sao chép" số tài khoản và nội dung chuyển khoản. Thiếu file này
         // thì hai chuỗi đó vẫn in ra dạng chữ để khách bôi đen chép tay.
         //

@@ -240,8 +240,20 @@ class OrderModel extends BaseModel
                 /* ĐẶT CỌC — chốt số tiền NGAY TẠI ĐÂY, trong cùng transaction
                    với đơn. Từ giây này trở đi nó là con số đã thoả thuận: đổi
                    'deposit_rate' trong config về sau không được phép làm đơn
-                   này đổi số. Xem depositFor(). */
-                $depositRate   = self::needsDeposit($cart) ? self::depositRate() : 0;
+                   này đổi số. Xem depositFor().
+
+                   HAI ĐIỀU KIỆN, PHẢI ĐỦ CẢ HAI:
+                     có mài tròng theo độ   -> needsDeposit()
+                     trả tiền khi nhận hàng -> COD
+
+                   Đơn chuyển khoản không cọc: tiền về đủ trước khi cửa hàng
+                   làm gì cả. Xem khối chú thích ở needsDeposit().
+
+                   Tính trên $total, tức SAU khi trừ mã giảm giá và ĐÃ CỘNG
+                   phí ship — đúng số cuối cùng khách phải trả, không phải
+                   tạm tính. */
+                $laCod         = ($data['paymentMethod'] ?? '') === 'cod';
+                $depositRate   = ($laCod && self::needsDeposit($cart)) ? self::depositRate() : 0;
                 $depositAmount = self::depositFor($total, $depositRate);
 
                 $orderId = uuid();
@@ -391,9 +403,20 @@ class OrderModel extends BaseModel
     //   gọng + cắt tròng tròng mài riêng theo số đo của một người, khách đổi
     //                    ý thì không bán lại cho ai khác được -> cọc 30%.
     //
-    // Cọc áp cho CẢ COD lẫn chuyển khoản. Cách trả phần CÒN LẠI mới là thứ
-    // khác nhau giữa hai phương thức; phần cọc thì đằng nào cũng phải chuyển
-    // trước khi cửa hàng bắt đầu mài.
+    // CỌC CHỈ ÁP CHO COD. Cửa hàng chốt như vậy (2026-08-22), và nó hợp lý:
+    //
+    //   COD + cắt tròng    khách trả tiền lúc nhận hàng, nhưng tròng đã mài
+    //                      theo độ của họ từ trước. Không cọc thì khách đổi ý
+    //                      là cửa hàng ôm trọn cặp tròng không bán lại được
+    //                      cho ai -> cọc 30% để hai bên cùng có ràng buộc.
+    //
+    //   Chuyển khoản QR    tiền về đủ 100% TRƯỚC khi cửa hàng làm gì cả.
+    //                      Không còn rủi ro nào để bảo hiểm, nên đòi cọc 30%
+    //                      rồi lại đòi nốt 70% chỉ là bắt khách chuyển khoản
+    //                      hai lần cho cùng một đơn.
+    //
+    // Vì thế needsDeposit() KHÔNG đủ để quyết định — nó chỉ trả lời "đơn này
+    // có mài tròng không". Vế phương thức thanh toán nằm ở place().
     // ========================================================================
 
     /**
