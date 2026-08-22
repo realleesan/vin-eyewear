@@ -612,9 +612,30 @@ select.cofield__input {
 }
 
 .ckopt__name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
     font-size: 13.5px;
     font-weight: 600;
     color: var(--ink);
+}
+
+/* Nhãn quà — XANH LÁ, không đỏ đô.
+
+   Cả khối tóm tắt đang toàn sắc đỏ đô (giá tiền, nút đặt hàng, viền ô đang
+   chọn), nên một nhãn đỏ nữa sẽ chìm nghỉm giữa chúng. Xanh lá là màu site
+   vốn đã dùng cho tin tốt về tiền — "Miễn phí" ở dòng phí giao hàng, và khối
+   "Quà cảm ơn" trên trang biên nhận. Cùng một loại tin thì cùng một màu. */
+.ckopt__gift {
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    background: #e8f2e3;
+    color: #3d6a30;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
 }
 
 .ckopt__num {

@@ -564,14 +564,31 @@ $storeId  = $old['storeId'] ?? '';
                             <span class="ckopt__dot" aria-hidden="true"></span>
                             <span class="ckopt__body">
                                 <span class="ckopt__top">
-                                    <span class="ckopt__name">Chuyển đủ 100%</span>
+                                    <span class="ckopt__name">
+                                        Chuyển đủ 100%
+                                        <?php if ($reward !== null): ?>
+                                            <?php /* NHÃN QUÀ nằm ngay cạnh tên lựa chọn, không
+                                                     chỉ trong dòng ghi chú. Ghi chú là chữ nhỏ
+                                                     màu nhạt — mắt lướt qua khi đang so hai con
+                                                     số. Đây là LÝ DO để chọn vế này, nên nó phải
+                                                     nằm ở tầng khách đọc trước. */ ?>
+                                            <span class="ckopt__gift">+ Tặng mã giảm giá</span>
+                                        <?php endif; ?>
+                                    </span>
                                     <span class="ckopt__num"><?= money($total) ?></span>
                                 </span>
                                 <span class="ckopt__note">
                                     <?php if ($reward !== null): ?>
-                                        Được tặng mã <strong><?= e($reward['code']) ?></strong>
-                                        cho lần mua sau — <?= e($reward['condition_text'] ?: $reward['title']) ?>.
+                                        <?php /* Nói RÕ mã gì và giảm bao nhiêu. "Tặng mã giảm
+                                                 giá" đứng một mình là một lời hứa mơ hồ, mà
+                                                 khách đang phải quyết định trả gấp ba lần số
+                                                 tiền của vế kia. */ ?>
+                                        Mã <strong><?= e($reward['code']) ?></strong> dùng cho lần
+                                        mua sau — <?= e($reward['condition_text'] ?: $reward['title']) ?>.
                                     <?php else: ?>
+                                        <?php /* KHÔNG hứa quà khi cửa hàng chưa bật mã nào. Hứa
+                                                 rồi không có là mất lòng tin đắt hơn nhiều so
+                                                 với việc thiếu một dòng quảng cáo. */ ?>
                                         Trả một lần, nhận hàng không phải trả thêm.
                                     <?php endif; ?>
                                 </span>
