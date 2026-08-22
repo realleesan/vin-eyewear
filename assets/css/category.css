@@ -606,7 +606,8 @@
 .catsort__field { position: relative; }
 
 /* appearance:none để bỏ mũi tên mặc định của trình duyệt — bản thiết kế vẽ
-   mũi tên riêng bằng ▼ màu thương hiệu, đặt đè lên bằng .catsort__caret.
+   mũi tên riêng — một SVG chữ V màu thương hiệu, đặt đè lên bằng
+   .catsort__caret. Cùng hình với nút đổi ngôn ngữ trên thanh nav.
 
    BO GÓC THEO THẺ SẢN PHẨM (--radius, 6px) chứ không phải --radius-sm (4px)
    của nút: ô này là một KHỐI ngang hàng với lưới thẻ ngay dưới nó, không phải
@@ -633,13 +634,17 @@
     outline-offset: -2px;
 }
 
+/* Chữ V dựng bằng SVG, cùng hình với .hpop__chevron ở nút đổi ngôn ngữ —
+   11px, nét 2.2, bo đầu tròn. Hai chỗ cùng nói "bấm vào đây để xổ danh sách"
+   thì phải cùng một hình. */
 .catsort__caret {
     position: absolute;
     top: 50%;
     right: 16px;
     transform: translateY(-50%);
     pointer-events: none;
-    font-size: 10px;
+    width: 11px;
+    height: 11px;
     color: var(--brand);
 }
 

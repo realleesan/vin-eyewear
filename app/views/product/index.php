@@ -471,7 +471,17 @@ partial('_layout/page-head', [
                                 <option value="<?= e($value) ?>"<?= $filters['sort'] === $value ? ' selected' : '' ?>><?= e($text) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <span class="catsort__caret" aria-hidden="true">▼</span>
+                        <?php
+                        /* SVG chữ V, đúng cái ở nút đổi ngôn ngữ trên thanh nav
+                           (.hpop__chevron). Trước đây là ký tự ▼ — mà ký tự thì
+                           mỗi hệ điều hành vẽ một kiểu: Windows ra tam giác đặc
+                           nhỏ xíu, Android ra một hình khác hẳn, và không chỉnh
+                           được độ dày nét cho khớp phần còn lại của site. */
+                        ?>
+                        <svg class="catsort__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
+                                  stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
                     </span>
                     <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn là gửi
                              luôn). Không có JS thì đây là cách duy nhất để
