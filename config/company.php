@@ -47,7 +47,7 @@ return [
     'bank' => [
         'name'    => 'Vietcombank',
         'branch'  => 'CN Tây Hồ, Hà Nội',
-        'number'  => '0011001234567',
+        'number'  => '0491000153708',
         'holder'  => 'CONG TY TNHH VIN EYEWEAR VIET NAM',
 
         /*
