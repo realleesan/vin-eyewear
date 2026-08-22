@@ -23,7 +23,20 @@
  * bỏ qua — nó chỉ gắn sự kiện cho <button>.)
  */
 
-$cartCount = array_sum(array_column($_SESSION['cart'] ?? [], 'quantity'));
+/*
+ * ĐẾM SỐ DÒNG TRONG GIỎ, KHÔNG CỘNG SỐ LƯỢNG.
+ *
+ * Thêm 2 chiếc cùng một gọng thì huy hiệu hiện 1, không phải 2 — giỏ đang giữ
+ * MỘT món, món đó có số lượng 2. Con số ở đây phải trả lời "giỏ có mấy thứ",
+ * cùng câu hỏi mà trang /gio-hang trả lời bằng số dòng nó vẽ ra. Cộng số lượng
+ * thì huy hiệu nói 2 trong khi trang giỏ hàng chỉ có một dòng, và khách bấm
+ * vào để tìm món thứ hai không tồn tại.
+ *
+ * Khoá của $_SESSION['cart'] gồm cả phương án và gói tròng, nên cùng một gọng
+ * mua trần và mua kèm tròng vẫn là HAI dòng — đúng như trang giỏ hàng hiện,
+ * vì đó thật sự là hai thứ khác nhau với hai mức giá.
+ */
+$cartCount = count($_SESSION['cart'] ?? []);
 ?>
 <div class="hpop" data-hpop data-cart>
     <a href="/gio-hang" class="hpop__trigger header-action"
