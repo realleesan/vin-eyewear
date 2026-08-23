@@ -17,7 +17,6 @@ $navItems = [
     ['url' => '/quan-tri',           'label' => 'Tổng quan', 'icon' => 'award',     'exact' => true],
     ['url' => '/quan-tri/san-pham',  'label' => 'Sản phẩm',  'icon' => 'layers'],
     ['url' => '/quan-tri/ton-kho',   'label' => 'Tồn kho',   'icon' => 'truck'],
-    ['url' => '/quan-tri/bien-the',  'label' => 'Biến thể',  'icon' => 'layers'],
     ['url' => '/quan-tri/danh-muc',  'label' => 'Danh mục',  'icon' => 'filter'],
     ['url' => '/quan-tri/su-kien',   'label' => 'Sự kiện',   'icon' => 'newspaper'],
     ['url' => '/quan-tri/don-hang',  'label' => 'Đơn hàng',  'icon' => 'check'],
@@ -32,6 +31,21 @@ $navItems = [
     ['url' => '/quan-tri/quen-mat-khau', 'label' => 'Quên mật khẩu', 'icon' => 'shield',
      'badge' => $pendingResets],
 ];
+
+/*
+ * KHÔNG CÓ MỤC "BIẾN THỂ" Ở ĐÂY LÀ CỐ Ý — bỏ khỏi thanh bên theo yêu cầu.
+ *
+ * Màn quản lý biến thể VẪN CÒN NGUYÊN ở /quan-tri/bien-the (route, controller,
+ * view, dữ liệu đều không đụng tới), chỉ là không còn đường dẫn nào trỏ tới.
+ * Không xoá hẳn vì biến thể là thứ trang bán hàng đang dùng thật: hộp mua
+ * hàng chọn phương án theo biến thể, giỏ hàng và đơn hàng giữ variant_id, và
+ * tồn kho khi đặt hàng trừ vào biến thể (VariantModel::reserve). Gỡ màn quản
+ * lý đi là những dữ liệu đó vẫn chạy mà không ai sửa được nữa.
+ *
+ * Muốn dùng lại: thêm dòng
+ *   ['url' => '/quan-tri/bien-the', 'label' => 'Biến thể', 'icon' => 'layers'],
+ * vào mảng trên, không phải dựng lại gì cả.
+ */
 
 /*
  * MỤC "TÀI KHOẢN NỘI BỘ" CHỈ HIỆN VỚI VAI TRÒ 'admin'.
