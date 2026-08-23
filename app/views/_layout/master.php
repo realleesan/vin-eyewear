@@ -175,6 +175,11 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
         // bare-shell.css phải đứng TRƯỚC auth.css: nó giữ khung rút gọn dùng
         // chung với trang thanh toán, auth.css giữ phần riêng (.authcard/.authform*).
         'auth/index'     => ['components/bare-shell.css', 'auth.css'],
+        // Cổng quản trị dựng theo "Admin Login.dc.html" — nền TỐI, bộ lớp
+        // riêng (.alog*). KHÔNG nạp bare-shell.css: khung rút gọn bên đó vẽ
+        // đầu và chân trang màu be của luồng khách, mà trang này thay cả hai
+        // bằng bản của riêng nó.
+        'admin/login'    => ['admin-login.css'],
         'auth/forgot'    => ['components/bare-shell.css', 'auth.css'],
         'auth/reset'     => ['components/bare-shell.css', 'auth.css'],
         // Trang tài khoản nay dựng theo "Vin Eyewear Account.dc.html" và có bộ
@@ -238,6 +243,21 @@ $bare = !empty($bareLayout);
  * khoản, vì đó là ba trong bốn trang đang dùng khung này.
  */
 $bareHead = $bareHeader ?? '_layout/auth-header';
+
+/*
+ * Chân trang của khung rút gọn cũng có hai bản, cùng lối chọn với đầu trang:
+ *   auth-footer          bản quyền + hai liên kết pháp lý   (Login.dc.html)
+ *   admin-login-footer   bản quyền + hòm thư cấp quyền      (Admin Login.dc.html)
+ *
+ * Thêm cái móc này khi dựng cổng quản trị: trang đó nền tối và chân trang của
+ * nó nói chuyện với NHÂN VIÊN, không phải với khách — hai liên kết "Chính sách
+ * bảo mật / Điều khoản" ở bản kia là thứ khách cần đọc trước khi tạo tài
+ * khoản, còn nhân viên nội bộ thì không.
+ *
+ * Trước đó chân trang bị gõ cứng trong khi đầu trang đã có móc — một sự lệch
+ * không có lý do, chỉ là chưa ai cần tới nửa còn lại.
+ */
+$bareFoot = $bareFooter ?? '_layout/auth-footer';
 ?>
 <body class="<?= e($bodyClass) ?><?= $bare ? ' is-bare' : '' ?>">
 
@@ -248,7 +268,7 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         <?php require VIEWS_PATH . '/' . $viewName . '.php'; ?>
     </main>
 
-    <?php partial($bare ? '_layout/auth-footer' : '_layout/footer'); ?>
+    <?php partial($bare ? $bareFoot : '_layout/footer'); ?>
 
     <?php
     /*
@@ -319,6 +339,10 @@ $bareHead = $bareHeader ?? '_layout/auth-header';
         // ô mật khẩu vẫn dùng bình thường.
         'auth/index'    => 'auth.js',
         'auth/reset'    => 'auth.js',
+        // Cùng nút hiện/ẩn mật khẩu ấy, dùng lại nguyên si — cổng quản trị
+        // đặt đúng bộ lớp .authpw mà file này tìm. Thiếu nó thì nút tự ẩn và
+        // ô mật khẩu vẫn gõ bình thường.
+        'admin/login'   => 'auth.js',
         // Cũng chỉ là tăng cường: nút "sao chép liên kết" ở cột chia sẻ.
         // Không có file này thì nút tự ẩn, nút Facebook bên cạnh vẫn chạy.
         'event/detail'  => 'share.js',

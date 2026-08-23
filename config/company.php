@@ -28,6 +28,19 @@ return [
     'email'        => 'cskh@vineyewear.vn',
 
     /*
+     * HÒM THƯ NỘI BỘ — chỉ hiện ở cổng đăng nhập quản trị.
+     *
+     * Tách khỏi 'email' ở trên, và không suy ra từ nó được: cskh@ là hòm thư
+     * CHĂM SÓC KHÁCH HÀNG, người trực nó không cấp được quyền vào khu quản
+     * trị. Người đọc dòng "Cần cấp quyền? Liên hệ …" là nhân viên đứng ngoài
+     * cửa, nên nó phải trỏ tới nơi thật sự mở cửa được.
+     *
+     * Vẫn khai ở đây chứ không gõ thẳng vào view: file này là NGUỒN DUY NHẤT
+     * cho mọi cách liên hệ — xem khối chú thích đầu file.
+     */
+    'email_it'     => 'it@vineyewear.vn',
+
+    /*
      * SỐ ZALO CỦA CỬA HÀNG — dạng ĐỌC ĐƯỢC, để in ra màn hình.
      *
      * TÁCH KHỎI HOTLINE, và không suy ra từ nó được: 1900 6868 là đầu số tổng

@@ -1,0 +1,367 @@
+/* ============================================================
+   admin-login.css — CỔNG QUẢN TRỊ (/quan-tri/dang-nhap)
+
+   Dựng theo "Admin Login.dc.html" (Claude Design).
+   Markup: app/views/admin/login.php
+           app/views/_layout/admin-login-header.php
+           app/views/_layout/admin-login-footer.php
+
+   ------------------------------------------------------------
+   TRANG DUY NHẤT CỦA SITE CÓ NỀN TỐI — VÀ VÌ SAO KHÔNG DÙNG TOKEN
+
+   Cả site đi theo bảng token trong layout.css: --surface be, --ink nâu sẫm,
+   --brand đỏ rượu. Trang này không dùng chúng, mà khai một bảng riêng ngay
+   dưới đây.
+
+   Không phải vì lười, mà vì token của site là bảng màu của một giao diện
+   SÁNG. Không có --surface-dark hay --on-dark nào cả, nên "dùng token" ở đây
+   nghĩa là phải thêm mười token mới vào :root cho đúng một trang xài — làm
+   phình bảng chung để phục vụ một ngoại lệ.
+
+   Nền tối là chủ ý của bản thiết kế chứ không phải trang trí: nó báo cho
+   người đang gõ mật khẩu biết mình đã rời khu bán hàng. Cùng lý do mà
+   admin.css để thanh bên tối.
+
+   Nên bảng dưới đây là bảng CỤC BỘ, phạm vi đúng một trang, đặt trên
+   .page-admin-login. Muốn đổi tông cổng quản trị thì sửa ở đây, không đụng
+   gì tới site bán hàng.
+
+   Bốn giá trị CÓ họ hàng với token chung, ghi ra để sau này ai đổi tông
+   thương hiệu còn biết đường lần:
+       --alog-brand   #8B2E3B  ~ --brand        #8a2432
+       --alog-accent  #C98A84  ~ --brand-light  #c98d81
+       --alog-fg      #F3ECE3  ~ --on-ink       #f8ede8
+       bo góc 6px / 4px        = --radius / --radius-sm
+   ------------------------------------------------------------ */
+
+.page-admin-login {
+    --alog-bg:        #1B1617;
+    --alog-glow:      rgba(139, 46, 59, 0.18);
+
+    --alog-fg:        #F3ECE3;  /* chữ chính */
+    --alog-lead:      #A99A96;  /* câu dẫn dưới tiêu đề */
+    --alog-label:     #C4B6B2;  /* nhãn ô nhập */
+    --alog-dim:       #8A7A7C;  /* chữ phụ, nút hiện/ẩn */
+    --alog-faint:     #6E6062;  /* chữ mờ trong ô, chân trang */
+
+    --alog-field:     #241E1F;  /* nền ô nhập */
+    --alog-line:      #3A3132;  /* viền ô nhập */
+    --alog-rule:      #2A2324;  /* vạch trên chân trang */
+
+    --alog-focus:     #B04A55;
+    --alog-focus-ring: rgba(176, 74, 85, 0.25);
+
+    --alog-brand:     #8B2E3B;
+    --alog-brand-on:  #9E3542;  /* khi rê chuột */
+    --alog-on-brand:  #FDF8F2;
+
+    --alog-accent:    #C98A84;
+    --alog-accent-line: rgba(201, 138, 132, 0.4);
+    --alog-accent-soft: rgba(201, 138, 132, 0.22);
+
+    --alog-link:      #D9A6A0;
+    --alog-link-on:   #EFC9C3;
+
+    --alog-ok:        #7FAE7C;  /* chỉ báo môi trường thật */
+    --alog-warn:      #D9A23E;  /* chỉ báo môi trường thử */
+
+    --alog-danger:    #E0797F;
+    --alog-danger-line: rgba(224, 121, 127, 0.35);
+    --alog-danger-bg: rgba(224, 121, 127, 0.08);
+}
+
+/* --- Khung trang -------------------------------------------
+   Bản thiết kế bọc tất cả trong MỘT thẻ min-height:100vh xếp dọc. Ở đây
+   khung rút gọn của master.php đã chia sẵn ba tầng (header · main · footer),
+   nên chính <body> đóng vai thẻ bọc ấy. */
+body.page-admin-login {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--alog-bg);
+    /* Quầng sáng đỏ hắt từ mép trên, đúng thông số bản vẽ. */
+    background-image: radial-gradient(ellipse 900px 500px at 50% -10%,
+                                      var(--alog-glow), transparent);
+    background-repeat: no-repeat;
+    color: var(--alog-fg);
+}
+
+/* layout.css đặt .main-content { display:block } cho mọi trang — ở đây nó
+   phải là hộp căn giữa, và phải nở ra để chân trang tụt xuống đáy màn hình
+   ngay cả khi nội dung ngắn. */
+.page-admin-login .main-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+}
+
+.page-admin-login a {
+    color: var(--alog-link);
+    text-decoration: none;
+}
+
+.page-admin-login a:hover {
+    color: var(--alog-link-on);
+    text-decoration: underline;
+}
+
+/* Vòng tiêu điểm cho người dùng bàn phím. Bản thiết kế chỉ vẽ vòng cho ô
+   nhập; nút và liên kết cũng cần, nếu không thì Tab qua trang này là mất dấu
+   hoàn toàn trên nền tối. */
+.page-admin-login a:focus-visible,
+.page-admin-login button:focus-visible {
+    outline: 2px solid var(--alog-focus);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+/* --- Đầu trang --------------------------------------------- */
+.alogbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 40px;
+}
+
+.alogbar__brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+}
+
+.alogbar__logo {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 20px;
+    color: var(--alog-fg);
+}
+
+/* <em> nghiêng sẵn theo mặc định trình duyệt — chỉ nhẹ nét đi một bậc, đúng
+   cách tên hiệu được viết ở mọi nơi khác trên site. */
+.alogbar__logo em { font-weight: 500; }
+
+.alogbar__badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--alog-accent);
+    border: 1px solid var(--alog-accent-line);
+    border-radius: 3px;
+    padding: 3px 8px;
+}
+
+.alogbar__env {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--alog-ok);
+    white-space: nowrap;
+}
+
+.alogbar__env--thu { color: var(--alog-warn); }
+
+.alogbar__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+}
+
+/* --- Cột giữa ---------------------------------------------- */
+.alog {
+    width: 400px;
+    max-width: 100%;
+}
+
+.alog__title {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 28px;
+    line-height: 1.25;
+    color: var(--alog-fg);
+    margin: 0 0 8px;
+}
+
+.alog__lead {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--alog-lead);
+    margin: 0 0 32px;
+}
+
+/* Khối báo lỗi — KHÔNG có trong bản thiết kế, xem ghi chú "BA CHỖ CỐ Ý KHÁC"
+   trong app/views/admin/login.php. Mượn nguyên hình khối của .alognote bên
+   dưới (viền mảnh, bo 6px, chữ nhỏ) rồi đổi sang tông đỏ, để nó đọc như một
+   phần của cùng bộ giao diện chứ không phải một mẩu dán vào. */
+.alog__error {
+    margin: 0 0 20px;
+    padding: 12px 14px;
+    border: 1px solid var(--alog-danger-line);
+    background: var(--alog-danger-bg);
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--alog-danger);
+}
+
+/* --- Form -------------------------------------------------- */
+.alogform {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.alogfield {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.alogfield__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.alogfield__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--alog-label);
+}
+
+.alogfield__aside { font-size: 13px; }
+
+.alogfield__input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    border: 1px solid var(--alog-line);
+    border-radius: 6px;
+    background: var(--alog-field);
+    color: var(--alog-fg);
+    font-family: var(--font-sans);
+    font-size: 15px;
+}
+
+.alogfield__input::placeholder { color: var(--alog-faint); }
+
+.alogfield__input:focus {
+    outline: none;
+    border-color: var(--alog-focus);
+    box-shadow: 0 0 0 3px var(--alog-focus-ring);
+}
+
+/* Ô mật khẩu: chừa chỗ bên phải cho nút chữ đè lên. */
+.alogpw {
+    position: relative;
+    display: block;
+}
+
+.alogpw__input { padding-right: 46px; }
+
+.alogpw__eye {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    height: 36px;
+    min-width: 36px;
+    padding: 0 6px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--alog-dim);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.alogpw__eye:hover { color: var(--alog-fg); }
+
+/* HAI CHỮ CHỒNG NHAU, đổi theo aria-pressed mà assets/js/auth.js đảo.
+   Cùng cách làm với hai hình con mắt trong auth/_password.php — JS chỉ phải
+   sửa đúng một thuộc tính, không phải viết lại nội dung nút. */
+.alogpw__eye .alogpw__off,
+.alogpw__eye[aria-pressed="true"] .alogpw__on { display: none; }
+
+.alogpw__eye[aria-pressed="true"] .alogpw__off { display: inline; }
+
+.alogform__submit {
+    height: 48px;
+    border: none;
+    border-radius: 6px;
+    background: var(--alog-brand);
+    color: var(--alog-on-brand);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+}
+
+.alogform__submit:hover { background: var(--alog-brand-on); }
+
+/* --- Khối cảnh báo ----------------------------------------- */
+.alognote {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 36px 0 0;
+    padding: 14px 16px;
+    border: 1px solid var(--alog-accent-soft);
+    border-radius: 6px;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--alog-dim);
+}
+
+/* Icon SVG, không phải ký tự — xem ghi chú trong app/views/admin/login.php.
+   margin-top nhích nhẹ để tâm hình khoá ngang với dòng chữ đầu tiên: hộp SVG
+   cao đúng 15px và căn theo mép trên, còn dòng chữ 12.5px có line-height 1.6
+   nên chữ nằm thấp hơn mép hộp của nó. */
+.alognote__icon {
+    color: var(--alog-accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* --- Chân trang -------------------------------------------- */
+.alogfoot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 40px;
+    border-top: 1px solid var(--alog-rule);
+    font-size: 12px;
+    color: var(--alog-faint);
+}
+
+.alogfoot a { font-size: 12px; }
+
+/* --- Màn hẹp -----------------------------------------------
+   Bản thiết kế chỉ vẽ ở 1440×900. Đệm 40px hai bên và hai dòng chân trang
+   nằm ngang là vừa cho màn rộng, nhưng trên điện thoại thì chân trang vỡ
+   thành một mớ chữ chen nhau. Xếp dọc và thu đệm lại. */
+@media (max-width: 640px) {
+    .alogbar,
+    .alogfoot { padding-left: 20px; padding-right: 20px; }
+
+    .alogfoot {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .alog__title { font-size: 24px; }
+}

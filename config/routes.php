@@ -185,6 +185,17 @@ return [
     // -----------------------------------------------------------------------
     // KHU QUẢN TRỊ — controller còn RỖNG, sẽ port ở bước sau
     // -----------------------------------------------------------------------
+    /*
+     * CỔNG ĐĂNG NHẬP — hai địa chỉ DUY NHẤT trong khu này mở cho người chưa
+     * đăng nhập. Mọi dòng còn lại đi qua AdminController, và lớp đó chặn ngay
+     * ở constructor.
+     *
+     * Tách GET và POST thành hai đường vì router khớp theo ĐƯỜNG DẪN, không
+     * theo phương thức — cùng lối với cặp 'auth' / 'auth/dang-nhap' ở trên.
+     */
+    'quan-tri/dang-nhap'          => 'AdminAuthController@index',
+    'quan-tri/dang-nhap/xac-thuc' => 'AdminAuthController@login',              // POST
+
     'quan-tri'                    => 'DashboardController@index',
 
     'quan-tri/don-hang'           => 'OrderAdminController@index',

@@ -107,7 +107,34 @@ class AuthMiddleware
      */
     public static function requireStaff(): string
     {
-        $userId = self::requireLogin();
+        $userId = self::userId();
+
+        /*
+         * CHƯA ĐĂNG NHẬP THÌ VỀ CỔNG QUẢN TRỊ, KHÔNG PHẢI /auth.
+         *
+         * Trước đây dòng này gọi requireLogin(), tức là ném nhân viên sang
+         * trang đăng nhập của KHÁCH: nền be, nút "Tạo tài khoản", nút "Đăng
+         * nhập bằng Google". Không có gì trên màn hình đó nói rằng họ đang
+         * bước vào khu quản trị, và cái nút tạo tài khoản thì gợi ý sai hẳn —
+         * tài khoản quản trị không tự đăng ký được.
+         *
+         * Nay có cửa riêng: /quan-tri/dang-nhap, dựng theo "Admin Login.dc.html".
+         *
+         * MANG THEO CẢ QUERY STRING, khác requireLogin() vốn cắt nó bằng
+         * currentPath(). Trong khu quản trị thì query THƯỜNG LÀ chỗ khách
+         * muốn tới: /quan-tri/don-hang?trang-thai=cho-xac-nhan là một tab
+         * riêng, /quan-tri/san-pham?sua=<id> là một biểu mẫu đang mở. Cắt đi
+         * là đăng nhập xong rơi về danh sách trống, phải tìm lại từ đầu.
+         *
+         * Vẫn đi qua safeRedirectPath() ở đầu bên kia — xem
+         * AdminAuthController::target(), nơi còn siết thêm là chỉ nhận đường
+         * dẫn nằm trong /quan-tri.
+         */
+        if ($userId === null) {
+            redirect('/quan-tri/dang-nhap?redirect=' . rawurlencode(
+                currentUrlWithout([])
+            ));
+        }
 
         if (!UserModel::isStaff($userId)) {
             // 403 chứ không 404: người dùng ĐÃ đăng nhập, nói rõ là không đủ
