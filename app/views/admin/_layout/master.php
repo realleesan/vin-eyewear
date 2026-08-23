@@ -82,7 +82,12 @@ if (in_array('admin', $adminRoles, true)) {
     <!-- ============ THANH BÊN ============ -->
     <aside class="asidebar" id="adminNav">
         <div class="asidebar__head">
-            <a href="/" class="asidebar__logo">Vin <em>Eyewear</em></a>
+            <?php /* Logo trỏ về Tổng quan quản trị, KHÔNG về trang bán hàng.
+                     Người đang ngồi trong bảng quản trị bấm logo là muốn về
+                     "trang chủ" của chính khu này; đá họ sang trang bán hàng
+                     là mất hết ngữ cảnh và phải đi lại từ /quan-tri. Muốn xem
+                     mặt tiền thì mở tab mới từ địa chỉ, không phải từ đây. */ ?>
+            <a href="/quan-tri" class="asidebar__logo">Vin <em>Eyewear</em></a>
             <p class="asidebar__sub">Bảng quản trị</p>
         </div>
 
