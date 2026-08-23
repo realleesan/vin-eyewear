@@ -116,12 +116,43 @@ class BaseController
      */
     protected function buyFragment(string $url): never
     {
-        /* buyModal() đọc $_GET, mà đây là request POST tới một địa chỉ khác.
-           Nạp tay hai tham số nó cần, đúng như lượt GET thứ hai sẽ mang. */
-        parse_str((string) parse_url($url, PHP_URL_QUERY), $q);
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * GIẢ LÀM CHÍNH LƯỢT GET THỨ HAI ĐÃ BỊ BỎ ĐI.
+         *
+         * Ba mảnh dưới đây được dựng như thể trình duyệt vừa GET $url. Bỏ
+         * lượt đi–về đó là mục đích của cả hàm này, nhưng nó cũng bỏ luôn
+         * thứ mà lượt ấy mang theo: ĐỊA CHỈ. Ở đây request đang là POST tới
+         * /gio-hang/chon, nên mọi thứ trong view hỏi "tôi đang ở trang nào"
+         * đều nhận về /gio-hang/chon thay vì trang khách thực sự đứng.
+         *
+         * Hai chỗ hỏi câu đó, và cả hai đều là LIÊN KẾT trong hộp thoại
+         * (xem $closeHref và $stepHref trong _layout/buy-modal.php):
+         *
+         *   nút ✕ và nền mờ  ->  currentUrlWithout(['mua', 'buoc'])
+         *   mũi tên Lùi      ->  currentUrlWithout(['buoc']) + &buoc=…
+         *
+         * Không nạp địa chỉ vào thì cả hai trỏ tới /gio-hang/chon — một địa
+         * chỉ CHỈ NHẬN POST, nên bấm vào là bị đá thẳng về /gio-hang. Đóng
+         * hộp thoại hay bấm Lùi đều biến thành "khách đột nhiên đứng ở giỏ
+         * hàng", giữa một lượt mua còn dang dở.
+         *
+         * Nạp cả $_SERVER lẫn $_GET chứ không riêng $_GET: currentPath() và
+         * currentUrlWithout() đọc REQUEST_URI/QUERY_STRING, còn buyModal()
+         * đọc $_GET — hai đường khác nhau tới cùng một câu hỏi, nên phải
+         * cùng trả lời bằng $url.
+         *
+         * Sửa superglobal là an toàn ở đây vì hàm này KHÔNG TRẢ VỀ: in mảnh
+         * xong là exit, không còn ai đọc request thật nữa.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        $query = (string) parse_url($url, PHP_URL_QUERY);
 
-        $_GET['mua']  = $q['mua']  ?? '';
-        $_GET['buoc'] = $q['buoc'] ?? '';
+        parse_str($query, $q);
+
+        $_GET = $q;
+        $_SERVER['REQUEST_URI']  = $url;
+        $_SERVER['QUERY_STRING'] = $query;
 
         header('Vary: X-Buy-Flow');
         header('X-Buy-Url: ' . $url);
