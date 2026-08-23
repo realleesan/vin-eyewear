@@ -57,6 +57,24 @@ const ICONS = [
     'layers'      => '<path d="M12 3.5l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16.5l8 4 8-4"/>',
     'ruler'       => '<path d="M4 14.5L14.5 4l5.5 5.5L9.5 20z"/><path d="M8 10.5l1.8 1.8M11 7.5l1.8 1.8M13.8 13.3l1.8 1.8"/>',
     'filter'      => '<path d="M3.5 5.5h17l-6.5 7.5V19l-4 2v-8z"/>',
+    // ── Thanh bên khu quản trị ──────────────────────────────────────────
+    // Lấy nguyên đường dẫn từ bản thiết kế "Vin Eyewear Admin.dc.html": mỗi
+    // mục điều hướng một hình riêng. Trước đây thanh bên dùng lại icon của
+    // trang bán hàng nên có hai mục cùng đeo 'layers' — nhìn lướt không phân
+    // biệt được "Sản phẩm" với "Tổng quan".
+    'grid'        => '<path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/>',
+    'cart'        => '<path d="M3 4h2l2.3 11.5h11.4L21 8H6"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="16.5" cy="19.5" r="1.3"/>',
+    'clock'       => '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/>',
+    'chat'        => '<path d="M21 12a8 8 0 0 1-8 8H4l1.6-3.2A8 8 0 1 1 21 12z"/>',
+    'box'         => '<path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+    'crate'       => '<path d="M4 8h16v12H4zM4 8l2-4h12l2 4M9 12h6"/>',
+    'tag'         => '<path d="M3 3h8l10 10-8 8L3 11V3z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
+    'calendar'    => '<path d="M4 6h16v15H4zM4 10.5h16M8 3v4M16 3v4"/>',
+    'percent'     => '<path d="M5 19L19 5"/><circle cx="7.5" cy="7.5" r="2.2"/><circle cx="16.5" cy="16.5" r="2.2"/>',
+    'star'        => '<path d="M12 3l2.7 5.5 6 .9-4.3 4.3 1 6-5.4-2.9-5.4 2.9 1-6L3.3 9.4l6-.9L12 3z"/>',
+    'users'       => '<circle cx="9" cy="8" r="3.5"/><path d="M3 20a6.2 6.2 0 0 1 12 0M15.5 5a3.5 3.5 0 0 1 0 6.6M16.5 14.6a6 6 0 0 1 4.5 5.4"/>',
+    'key'         => '<circle cx="8" cy="15" r="4"/><path d="M11.2 11.8L19 4M16 5.5L18.5 8M13.5 8L15.5 10"/>',
+
     'badge-check' =>'<path d="M12 3l2.2 1.8 2.8-.2.6 2.8 2.3 1.7-1.3 2.5 1.3 2.5-2.3 1.7-.6 2.8-2.8-.2L12 21l-2.2-1.8-2.8.2-.6-2.8L4.1 15l1.3-2.5L4.1 10l2.3-1.7.6-2.8 2.8.2z"/><path d="M9 12l2 2 4-4"/>',
 ];
 

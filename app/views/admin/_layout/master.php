@@ -13,23 +13,46 @@
 
 $segment = currentPath();
 
-$navItems = [
-    ['url' => '/quan-tri',           'label' => 'Tổng quan', 'icon' => 'award',     'exact' => true],
-    ['url' => '/quan-tri/san-pham',  'label' => 'Sản phẩm',  'icon' => 'layers'],
-    ['url' => '/quan-tri/ton-kho',   'label' => 'Tồn kho',   'icon' => 'truck'],
-    ['url' => '/quan-tri/danh-muc',  'label' => 'Danh mục',  'icon' => 'filter'],
-    ['url' => '/quan-tri/su-kien',   'label' => 'Sự kiện',   'icon' => 'newspaper'],
-    ['url' => '/quan-tri/don-hang',  'label' => 'Đơn hàng',  'icon' => 'check'],
-    ['url' => '/quan-tri/lich-hen',  'label' => 'Lịch hẹn',  'icon' => 'eye'],
-    ['url' => '/quan-tri/lien-he',   'label' => 'Liên hệ',   'icon' => 'message',  'badge' => $pendingContacts],
-    ['url' => '/quan-tri/danh-gia',   'label' => 'Đánh giá',  'icon' => 'quote', 'badge' => $pendingReviews],
-    ['url' => '/quan-tri/ma-giam-gia', 'label' => 'Mã giảm giá', 'icon' => 'badge-check'],
-    ['url' => '/quan-tri/gia-trong', 'label' => 'Giá tròng', 'icon' => 'glasses'],
-    ['url' => '/quan-tri/co-so',     'label' => 'Cơ sở',     'icon' => 'map-pin'],
-    // Chỉ hiện huy hiệu khi có yêu cầu chờ: trên hosting gửi được email thì
-    // mục này gần như luôn rỗng, không nên gây chú ý vô cớ.
-    ['url' => '/quan-tri/quen-mat-khau', 'label' => 'Quên mật khẩu', 'icon' => 'shield',
-     'badge' => $pendingResets],
+/*
+ * ĐIỀU HƯỚNG CHIA NHÓM — theo "Vin Eyewear Admin.dc.html".
+ *
+ * Trước đây là một danh sách phẳng 14 mục. Ở độ dài đó, tìm một mục là đọc
+ * lần lượt từ trên xuống; chia thành bốn nhóm thì mắt nhảy tới nhóm trước,
+ * chỉ còn đọc ba tới bốn dòng. Nhóm lấy đúng của bản thiết kế: việc hằng
+ * ngày (Vận hành) — hàng hoá (Sản phẩm) — nội dung (Marketing) — cấu hình
+ * (Hệ thống).
+ *
+ * Mỗi mục một icon RIÊNG, cũng theo bản thiết kế. Trước đây "Tổng quan" và
+ * "Sản phẩm" cùng đeo 'layers', nhìn lướt không phân biệt được.
+ *
+ * 'exact' => true chỉ dành cho Tổng quan: mọi mục khác khớp theo tiền tố để
+ * trang con (vd /quan-tri/san-pham/sua) vẫn sáng đúng mục cha.
+ */
+$navGroups = [
+    ['label' => 'Vận hành', 'items' => [
+        ['url' => '/quan-tri',          'label' => 'Tổng quan', 'icon' => 'grid', 'exact' => true],
+        ['url' => '/quan-tri/don-hang', 'label' => 'Đơn hàng',  'icon' => 'cart'],
+        ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',  'icon' => 'clock'],
+        ['url' => '/quan-tri/lien-he',  'label' => 'Liên hệ',   'icon' => 'chat', 'badge' => $pendingContacts],
+    ]],
+    ['label' => 'Sản phẩm', 'items' => [
+        ['url' => '/quan-tri/san-pham',  'label' => 'Sản phẩm',  'icon' => 'box'],
+        ['url' => '/quan-tri/ton-kho',   'label' => 'Tồn kho',   'icon' => 'crate'],
+        ['url' => '/quan-tri/danh-muc',  'label' => 'Danh mục',  'icon' => 'tag'],
+        ['url' => '/quan-tri/gia-trong', 'label' => 'Giá tròng', 'icon' => 'glasses'],
+    ]],
+    ['label' => 'Marketing', 'items' => [
+        ['url' => '/quan-tri/su-kien',     'label' => 'Sự kiện',     'icon' => 'calendar'],
+        ['url' => '/quan-tri/ma-giam-gia', 'label' => 'Mã giảm giá', 'icon' => 'percent'],
+        ['url' => '/quan-tri/danh-gia',    'label' => 'Đánh giá',    'icon' => 'star', 'badge' => $pendingReviews],
+    ]],
+    ['label' => 'Hệ thống', 'items' => [
+        ['url' => '/quan-tri/co-so', 'label' => 'Cơ sở', 'icon' => 'map-pin'],
+        // Chỉ hiện huy hiệu khi có yêu cầu chờ: trên hosting gửi được email thì
+        // mục này gần như luôn rỗng, không nên gây chú ý vô cớ.
+        ['url' => '/quan-tri/quen-mat-khau', 'label' => 'Quên mật khẩu', 'icon' => 'key',
+         'badge' => $pendingResets],
+    ]],
 ];
 
 /*
@@ -42,9 +65,8 @@ $navItems = [
  * tồn kho khi đặt hàng trừ vào biến thể (VariantModel::reserve). Gỡ màn quản
  * lý đi là những dữ liệu đó vẫn chạy mà không ai sửa được nữa.
  *
- * Muốn dùng lại: thêm dòng
- *   ['url' => '/quan-tri/bien-the', 'label' => 'Biến thể', 'icon' => 'layers'],
- * vào mảng trên, không phải dựng lại gì cả.
+ * Muốn dùng lại: thêm một dòng vào nhóm "Sản phẩm" ở trên, không phải dựng
+ * lại gì cả.
  */
 
 /*
@@ -60,8 +82,11 @@ $navItems = [
  * viên đều thấy một cánh cửa khoá.
  */
 if (in_array('admin', $adminRoles, true)) {
-    $navItems[] = ['url' => '/quan-tri/nhan-vien', 'label' => 'Tài khoản nội bộ',
-                   'icon' => 'badge-check'];
+    // Chèn TRƯỚC "Quên mật khẩu" để hai mục về người dùng nằm cạnh nhau,
+    // đúng thứ tự của bản thiết kế.
+    array_splice($navGroups[3]['items'], 1, 0, [
+        ['url' => '/quan-tri/nhan-vien', 'label' => 'Tài khoản nội bộ', 'icon' => 'users'],
+    ]);
 }
 ?>
 <!DOCTYPE html>
@@ -106,44 +131,80 @@ if (in_array('admin', $adminRoles, true)) {
         </div>
 
         <nav class="asidebar__nav" aria-label="Điều hướng quản trị">
-            <ul role="list">
-                <?php foreach ($navItems as $item): ?>
-                    <?php
-                    // Mục "Tổng quan" khớp chính xác, các mục khác khớp tiền tố
-                    // để trang con (vd /quan-tri/san-pham/sua) vẫn sáng đúng mục.
-                    $active = !empty($item['exact'])
-                        ? $segment === $item['url']
-                        : str_starts_with($segment, $item['url']);
-                    ?>
-                    <li>
-                        <a href="<?= e($item['url']) ?>"
-                           class="asidebar__link<?= $active ? ' is-active' : '' ?>"
-                           <?= $active ? 'aria-current="page"' : '' ?>>
-                            <?= icon($item['icon'], 'asidebar__ico', 16) ?>
-                            <span><?= e($item['label']) ?></span>
-                            <?php if (!empty($item['badge'])): ?>
-                                <span class="asidebar__badge"><?= (int) $item['badge'] ?></span>
-                            <?php endif; ?>
-                        </a>
-                    </li>
-                <?php endforeach; ?>
-            </ul>
+            <?php foreach ($navGroups as $group): ?>
+                <?php /* Nhãn nhóm là <p> chứ không phải <h2>: nó không mở ra một
+                         vùng nội dung mà chỉ gom mấy đường dẫn cho dễ nhìn, và
+                         một cấp tiêu đề giả làm rối cây tiêu đề của trang. Danh
+                         sách bên dưới mới là thứ trình đọc màn hình cần. */ ?>
+                <p class="asidebar__group"><?= e($group['label']) ?></p>
+                <ul role="list">
+                    <?php foreach ($group['items'] as $item): ?>
+                        <?php
+                        // Mục "Tổng quan" khớp chính xác, các mục khác khớp tiền tố
+                        // để trang con (vd /quan-tri/san-pham/sua) vẫn sáng đúng mục.
+                        $active = !empty($item['exact'])
+                            ? $segment === $item['url']
+                            : str_starts_with($segment, $item['url']);
+                        ?>
+                        <li>
+                            <a href="<?= e($item['url']) ?>"
+                               class="asidebar__link<?= $active ? ' is-active' : '' ?>"
+                               <?= $active ? 'aria-current="page"' : '' ?>>
+                                <?= icon($item['icon'], 'asidebar__ico', 17) ?>
+                                <span><?= e($item['label']) ?></span>
+                                <?php if (!empty($item['badge'])): ?>
+                                    <span class="asidebar__badge"><?= (int) $item['badge'] ?></span>
+                                <?php endif; ?>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            <?php endforeach; ?>
         </nav>
 
+        <?php
+        /* Chữ cái đầu làm ảnh đại diện — bản thiết kế vẽ một vòng tròn "QT".
+           Lấy chữ đầu của HAI từ cuối trong họ tên ("Phạm Duy Anh" -> "DA"),
+           vì người Việt gọi nhau bằng tên chứ không bằng họ. Không có tên thì
+           lấy hai ký tự đầu của email — vẫn hơn một vòng tròn trống.
+
+           utf8Substr chứ không mb_substr: dự án cố ý không phụ thuộc extension
+           mbstring (xem core/helpers.php), mà substr() trần thì cắt giữa một
+           ký tự nhiều byte và ra dấu hỏi. Việc viết HOA để cho CSS
+           (text-transform) làm: PHP không có sẵn hàm hoa cho chữ Việt có dấu,
+           còn trình duyệt thì có. */
+        $adminName = trim((string) ($adminUser['full_name'] ?? ''));
+        $words     = $adminName !== '' ? preg_split('/\s+/', $adminName) : [];
+        $initials  = count($words) >= 2
+            ? utf8Substr($words[count($words) - 2], 0, 1) . utf8Substr($words[count($words) - 1], 0, 1)
+            : ($adminName !== ''
+                ? utf8Substr($adminName, 0, 2)
+                : utf8Substr((string) ($adminUser['email'] ?? '?'), 0, 2));
+        ?>
         <div class="asidebar__foot">
-            <p class="asidebar__user"><?= e($adminUser['full_name'] ?? $adminUser['email']) ?></p>
-            <p class="asidebar__role"><?= e(implode(', ', $adminRoles)) ?></p>
+            <div class="asidebar__me">
+                <span class="asidebar__avatar" aria-hidden="true"><?= e($initials) ?></span>
+                <span class="asidebar__who">
+                    <span class="asidebar__user"><?= e($adminName !== '' ? $adminName : ($adminUser['email'] ?? '')) ?></span>
+                    <span class="asidebar__role"><?= e(implode(', ', $adminRoles)) ?></span>
+                </span>
+            </div>
 
-            <?php /* Đường tới chỗ đổi mật khẩu của chính mình. Đặt cạnh tên và
-                     nút Đăng xuất vì đây là cụm "tài khoản của tôi" — và vì
-                     người được bàn giao sẽ tìm nó ở đúng chỗ này, chứ không
-                     tìm trong danh sách nghiệp vụ phía trên. */ ?>
-            <a class="asidebar__acct" href="/quan-tri/doi-mat-khau">Đổi mật khẩu</a>
+            <div class="asidebar__acts">
+                <?php /* Đường tới chỗ đổi mật khẩu của chính mình. Đặt cạnh tên và
+                         nút Đăng xuất vì đây là cụm "tài khoản của tôi" — và vì
+                         người được bàn giao sẽ tìm nó ở đúng chỗ này, chứ không
+                         tìm trong danh sách nghiệp vụ phía trên. */ ?>
+                <a class="asidebar__act" href="/quan-tri/doi-mat-khau">Đổi mật khẩu</a>
 
-            <form method="post" action="/auth/dang-xuat">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                <button type="submit" class="asidebar__logout">Đăng xuất</button>
-            </form>
+                <?php /* Đăng xuất là POST: một đường GET đăng xuất có thể bị kích
+                         hoạt bằng một thẻ <img> trên trang bất kỳ. Form nằm gọn
+                         trong cụm nút nên phải bỏ margin mặc định. */ ?>
+                <form method="post" action="/auth/dang-xuat">
+                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                    <button type="submit" class="asidebar__act asidebar__act--out">Đăng xuất</button>
+                </form>
+            </div>
         </div>
     </aside>
 
