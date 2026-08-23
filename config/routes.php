@@ -250,6 +250,23 @@ return [
 
     // Yêu cầu đặt lại mật khẩu — đường dự phòng khi hosting không gửi được
     // mail. Nhân viên gọi xác minh rồi mới bấm tạo liên kết.
+    /*
+     * TÀI KHOẢN NỘI BỘ — khác hẳn 'quan-tri/quen-mat-khau' ngay dưới.
+     *
+     *   nhan-vien      mật khẩu của NHÂN VIÊN, cấp lại ngay tại chỗ vì người
+     *                  đó ngồi cùng phòng. Chỉ vai trò 'admin'.
+     *   quen-mat-khau  mật khẩu của KHÁCH, phát ra một liên kết đặt lại, và
+     *                  bắt gọi điện xác minh trước. Vai trò 'manager' trở lên.
+     *
+     * Lý do đầy đủ ghi ở đầu Admin/StaffAdminController.
+     */
+    'quan-tri/nhan-vien'          => 'StaffAdminController@index',
+    'quan-tri/nhan-vien/dat-lai'  => 'StaffAdminController@resetPassword',     // POST
+
+    // Đổi mật khẩu của CHÍNH MÌNH — mọi nhân viên đều vào được.
+    'quan-tri/doi-mat-khau'       => 'AccountAdminController@index',
+    'quan-tri/doi-mat-khau/luu'   => 'AccountAdminController@save',            // POST
+
     'quan-tri/quen-mat-khau'      => 'PasswordResetAdminController@index',
     'quan-tri/quen-mat-khau/tao'  => 'PasswordResetAdminController@issue',  // POST
 

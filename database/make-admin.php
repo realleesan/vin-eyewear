@@ -36,28 +36,15 @@ App::boot();
 
 const ALLOWED_ROLES = ['admin', 'manager', 'staff'];
 
-/**
- * Sinh mật khẩu ngẫu nhiên chỉ gồm chữ và số.
+/*
+ * Ở ĐÂY TỪNG CÓ randomPassword() — một bản sao y hệt của
+ * UserModel::randomPassword().
  *
- * random_bytes() lấy từ nguồn ngẫu nhiên của hệ điều hành. Không dùng rand()
- * hay mt_rand(): chúng sinh dãy đoán được nếu biết seed.
- *
- * Bỏ ký tự đặc biệt để mật khẩu chép tay qua điện thoại hay đọc qua điện
- * thoại không bị nhầm — độ dài 20 ký tự chữ-số đã đủ mạnh (~119 bit).
+ * Bỏ đi khi khu quản trị có thêm màn "đặt lại mật khẩu cho nhân viên": lúc đó
+ * thành BA nơi cấp mật khẩu do hệ thống sinh (script này, màn kia, và
+ * UserModel), và hai định nghĩa rời sẽ lệch nhau vào lần ai đó đổi độ dài ở
+ * một chỗ. Nay cả ba gọi cùng một hàm.
  */
-function randomPassword(int $length = 20): string
-{
-    $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    $max      = strlen($alphabet) - 1;
-    $password = '';
-
-    for ($i = 0; $i < $length; $i++) {
-        // random_int() phân bố đều, không lệch như `random_bytes() % 62`
-        $password .= $alphabet[random_int(0, $max)];
-    }
-
-    return $password;
-}
 
 /**
  * In mật khẩu trong khung viền, kèm cảnh báo chỉ hiện một lần.
@@ -130,7 +117,7 @@ try {
             exit(1);
         }
 
-        $password = randomPassword();
+        $password = UserModel::randomPassword();
 
         Database::execute(
             'UPDATE `users` SET `password_hash` = :hash WHERE `id` = :id',
@@ -149,7 +136,7 @@ try {
         $password = null;
     } else {
         $userId   = uuid();
-        $password = randomPassword();
+        $password = UserModel::randomPassword();
 
         // Transaction: tài khoản không có hồ sơ đi kèm là trạng thái hỏng —
         // hoặc cả hai cùng được tạo, hoặc không gì cả.

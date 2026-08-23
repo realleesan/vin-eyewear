@@ -847,6 +847,10 @@ a.astatus__save {
 }
 
 .aform__grid input[type="text"],
+/* Thêm khi khu quản trị có màn đổi mật khẩu: thiếu dòng này thì ba ô mật khẩu
+   rơi về kiểu mặc định của trình duyệt, cao và hẹp hơn hẳn mọi ô khác quanh
+   nó — trông như một mẩu dán vào từ trang khác. */
+.aform__grid input[type="password"],
 .aform__grid input[type="url"],
 .aform__grid input[type="tel"],
 .aform__grid input[type="search"],
@@ -980,4 +984,44 @@ a.astatus__save {
     font-size: 11.5px;
     line-height: 1.5;
     color: var(--brand, #8a2432);
+}
+
+
+/* --- Đổi mật khẩu & tài khoản nội bộ ------------------------
+   admin/account/mat-khau.php · admin/staff/index.php */
+
+/* Form một cột hẹp. .aform__grid tự chia cột theo bề rộng (auto-fill 220px),
+   nên trên màn rộng ba ô mật khẩu nằm thành một hàng ngang — đọc ra như ba
+   thứ song song, trong khi chúng là ba bước nối tiếp. Bó bề rộng lại là cách
+   ít can thiệp nhất: mỗi .field--wide vốn đã chiếm trọn hàng. */
+.aform--narrow { max-width: 460px; }
+
+.aform__note {
+    margin-top: 14px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+/* Liên kết ở chân thanh bên, ngay trên nút Đăng xuất. Không mượn
+   .asidebar__link của danh sách nghiệp vụ: cái đó có icon, huy hiệu và trạng
+   thái đang-mở, còn đây chỉ là một dòng chữ trong cụm "tài khoản của tôi". */
+.asidebar__acct {
+    display: inline-block;
+    margin: 10px 0 8px;
+    font-size: var(--fs-note);
+    color: var(--on-ink);
+    opacity: 0.75;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.asidebar__acct:hover { opacity: 1; }
+
+/* Nút "Đổi mật khẩu" ở dòng của chính mình là một <a>, không phải <button>.
+   .astatus__save dựng cho <button> nên thiếu mấy thứ mà thẻ <a> không tự có. */
+a.astatus__save {
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
 }

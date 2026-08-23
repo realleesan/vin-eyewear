@@ -366,6 +366,122 @@ class UserModel extends BaseModel
         return ['ok' => true];
     }
 
+    /**
+     * Sinh mật khẩu ngẫu nhiên chỉ gồm chữ và số.
+     *
+     * random_int() lấy từ nguồn ngẫu nhiên của hệ điều hành và phân bố đều.
+     * KHÔNG dùng rand()/mt_rand() (sinh dãy đoán được nếu biết seed), cũng
+     * không dùng `random_bytes() % 62` (lệch về các ký tự đầu bảng chữ).
+     *
+     * Bỏ ký tự đặc biệt để mật khẩu đọc qua điện thoại hay chép tay không bị
+     * nhầm — 20 ký tự chữ-số đã là ~119 bit, thừa sức.
+     *
+     * ĐÂY LÀ ĐỊNH NGHĨA DUY NHẤT của "mật khẩu do hệ thống sinh".
+     * database/make-admin.php từng có bản sao riêng; nay nó gọi hàm này, để
+     * độ dài và bộ ký tự không thể lệch nhau giữa hai đường cấp mật khẩu.
+     */
+    public static function randomPassword(int $length = 20): string
+    {
+        $abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        $max = strlen($abc) - 1;
+        $out = '';
+
+        for ($i = 0; $i < $length; $i++) {
+            $out .= $abc[random_int(0, $max)];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Mọi tài khoản CÓ QUYỀN VÀO KHU QUẢN TRỊ, kèm vai trò gộp thành chuỗi.
+     *
+     * JOIN chứ không LEFT JOIN trên user_roles: khách hàng thường không thuộc
+     * danh sách này. Họ có đường riêng để lấy lại mật khẩu (/quen-mat-khau,
+     * và PasswordResetAdminController cho ca không nhận được mã).
+     *
+     * LEFT JOIN sang profiles vì hồ sơ CÓ THỂ thiếu — tài khoản dựng tay bằng
+     * SQL trên phpMyAdmin hay quên mất bảng đó. Thiếu hồ sơ thì cột tên rỗng
+     * chứ cả dòng không được biến mất, nếu không thì đúng những tài khoản dựng
+     * ẩu lại vô hình ở chính trang dùng để soát chúng.
+     *
+     * @return array<int, array{id:string, email:?string, full_name:?string,
+     *                          roles:string, last_login_at:?string}>
+     */
+    public static function staffAccounts(): array
+    {
+        // STAFF_ROLES là hằng gõ sẵn trong file này, nhưng vẫn đi qua tham số
+        // ràng buộc: đổi hằng đó thành thứ đọc từ cấu hình sau này thì câu SQL
+        // ở đây không trở thành lỗ chèn mã.
+        $keys   = [];
+        $params = [];
+
+        foreach (self::STAFF_ROLES as $i => $role) {
+            $keys[] = ':r' . $i;
+            $params['r' . $i] = $role;
+        }
+
+        return Database::fetchAll(
+            'SELECT u.id, u.email, u.last_login_at, p.full_name,
+                    GROUP_CONCAT(r.role ORDER BY r.role SEPARATOR \', \') AS roles
+               FROM users u
+               JOIN user_roles r ON r.user_id = u.id AND r.role IN (' . implode(', ', $keys) . ')
+               LEFT JOIN profiles p ON p.id = u.id
+              GROUP BY u.id, u.email, u.last_login_at, p.full_name
+              ORDER BY p.full_name IS NULL, p.full_name, u.email',
+            $params
+        );
+    }
+
+    /**
+     * Đặt lại mật khẩu của MỘT tài khoản nội bộ — KHÔNG cần biết mật khẩu cũ.
+     *
+     * Khác hẳn changePassword() ngay trên: hàm kia là người ta tự đổi mật khẩu
+     * của chính mình và phải chứng minh bằng mật khẩu hiện tại. Hàm này là
+     * quản trị viên cấp lại cho NGƯỜI KHÁC, nên không có mật khẩu cũ nào để
+     * hỏi — chính vì thế nơi gọi phải tự kiểm quyền trước.
+     *
+     * Mật khẩu mới do hệ thống sinh, trả về ĐÚNG MỘT LẦN cho nơi gọi in ra.
+     * Không nhận mật khẩu do người dùng gõ: quản trị viên tự đặt hộ một chuỗi
+     * là chuỗi đó đi qua bàn phím, ô nhập và có khi cả một tin nhắn — mà
+     * người ta hay đặt lại cùng một mật khẩu cho mọi nhân viên.
+     *
+     * @return array{ok:bool, error?:string, password?:string}
+     */
+    public static function resetPasswordFor(string $userId): array
+    {
+        if (static::find($userId) === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy tài khoản.'];
+        }
+
+        if (!self::isStaff($userId)) {
+            // Chốt thứ hai sau chốt ở controller. Trang này chỉ để cấp lại
+            // mật khẩu NỘI BỘ; một id khách hàng gửi tay lên không được biến
+            // nó thành cách chiếm tài khoản khách bỏ qua bước gọi xác minh
+            // mà PasswordResetAdminController bắt buộc.
+            return ['ok' => false, 'error' => 'Tài khoản này không phải tài khoản nội bộ.'];
+        }
+
+        $password = self::randomPassword();
+
+        Database::execute(
+            'UPDATE users SET password_hash = :hash WHERE id = :id',
+            ['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $userId]
+        );
+
+        /* Đá mọi thiết bị đang "ghi nhớ đăng nhập" của người đó ra ngoài —
+           cùng lý do với changePassword(). Đặt lại mật khẩu hộ ai đó thường
+           xảy ra vì họ mất máy hoặc nghi bị lộ; để cookie cũ vẫn vào được thì
+           việc đặt lại gần như vô nghĩa.
+
+           KHÔNG giết được phiên đang mở của họ: phiên nằm trong file session
+           của PHP, khoá theo session id chứ không theo user id. Nếu cần chắc
+           chắn thì bảo người đó bấm Đăng xuất, hoặc chờ phiên hết hạn. */
+        RememberModel::forgetAllFor($userId);
+
+        return ['ok' => true, 'password' => $password];
+    }
+
     // ========================================================================
     // HỒ SƠ & VAI TRÒ
     // ========================================================================

@@ -32,6 +32,23 @@ $navItems = [
     ['url' => '/quan-tri/quen-mat-khau', 'label' => 'Quên mật khẩu', 'icon' => 'shield',
      'badge' => $pendingResets],
 ];
+
+/*
+ * MỤC "TÀI KHOẢN NỘI BỘ" CHỈ HIỆN VỚI VAI TRÒ 'admin'.
+ *
+ * Nhân viên và quản lý vẫn MỞ ĐƯỢC trang đó bằng cách gõ địa chỉ — nó cố ý
+ * cho xem danh sách, vì biết ai đang có quyền vào khu quản trị là việc chính
+ * đáng. Chỉ cái nút đặt lại mật khẩu là bị chặn, và chặn ở controller chứ
+ * không ở đây.
+ *
+ * Giấu khỏi thanh bên là chuyện GỌN MẮT, không phải chuyện bảo mật: bày một
+ * mục mà bấm vào chỉ để đọc dòng "bạn không có quyền" thì mỗi ngày mỗi nhân
+ * viên đều thấy một cánh cửa khoá.
+ */
+if (in_array('admin', $adminRoles, true)) {
+    $navItems[] = ['url' => '/quan-tri/nhan-vien', 'label' => 'Tài khoản nội bộ',
+                   'icon' => 'badge-check'];
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -97,6 +114,13 @@ $navItems = [
         <div class="asidebar__foot">
             <p class="asidebar__user"><?= e($adminUser['full_name'] ?? $adminUser['email']) ?></p>
             <p class="asidebar__role"><?= e(implode(', ', $adminRoles)) ?></p>
+
+            <?php /* Đường tới chỗ đổi mật khẩu của chính mình. Đặt cạnh tên và
+                     nút Đăng xuất vì đây là cụm "tài khoản của tôi" — và vì
+                     người được bàn giao sẽ tìm nó ở đúng chỗ này, chứ không
+                     tìm trong danh sách nghiệp vụ phía trên. */ ?>
+            <a class="asidebar__acct" href="/quan-tri/doi-mat-khau">Đổi mật khẩu</a>
+
             <form method="post" action="/auth/dang-xuat">
                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                 <button type="submit" class="asidebar__logout">Đăng xuất</button>
