@@ -64,6 +64,47 @@ abstract class AdminController extends BaseController
     }
 
     /**
+     * Chặn trường hợp gói POST vượt post_max_size của PHP.
+     *
+     * Khi đó PHP vứt SẠCH $_POST và $_FILES trước khi một dòng mã nào của ta
+     * chạy — kể cả _token — nên requirePost() sẽ kết luận là hết hạn phiên và
+     * báo "Phiên làm việc đã hết hạn, vui lòng thử lại.". Câu đó sai, và nó
+     * đẩy người dùng đi đăng nhập lại thay vì bớt ảnh đi. Dấu hiệu nhận ra:
+     * đúng là POST, CONTENT_LENGTH lớn hơn trần, mà $_POST lại rỗng.
+     *
+     * Gọi TRƯỚC requirePost() ở mọi màn có ô tải file lên.
+     */
+    protected function guardPostSize(string $fallback): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $_POST !== []) {
+            return;
+        }
+
+        $limit = self::iniBytes((string) ini_get('post_max_size'));
+
+        if ($limit > 0 && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > $limit) {
+            flash('admin_error', sprintf(
+                'Tổng dung lượng gửi lên vượt giới hạn của máy chủ (%s). Hãy tải ít ảnh hơn trong một lần.',
+                (string) ini_get('post_max_size')
+            ));
+            redirect($fallback);
+        }
+    }
+
+    /** Đổi giá trị php.ini kiểu "8M", "128M", "1G" ra byte. */
+    private static function iniBytes(string $value): int
+    {
+        $number = (int) $value;
+
+        return match (strtolower(substr(trim($value), -1))) {
+            'g'     => $number * 1024 * 1024 * 1024,
+            'm'     => $number * 1024 * 1024,
+            'k'     => $number * 1024,
+            default => $number,
+        };
+    }
+
+    /**
      * Chỉ admin/manager mới được sửa dữ liệu catalog.
      *
      * Khớp policy gốc: "admin products/categories/events/stores" giới hạn ở
