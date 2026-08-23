@@ -151,7 +151,7 @@ if (in_array('admin', $adminRoles, true)) {
                                class="asidebar__link<?= $active ? ' is-active' : '' ?>"
                                <?= $active ? 'aria-current="page"' : '' ?>>
                                 <?= icon($item['icon'], 'asidebar__ico', 17) ?>
-                                <span><?= e($item['label']) ?></span>
+                                <span class="asidebar__label"><?= e($item['label']) ?></span>
                                 <?php if (!empty($item['badge'])): ?>
                                     <span class="asidebar__badge"><?= (int) $item['badge'] ?></span>
                                 <?php endif; ?>

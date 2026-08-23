@@ -51,10 +51,22 @@ body.admin {
     --success: #2f6b4b;
     --warn: #96631a;
 
-    /* Thẻ 12px, nút và ô nhập 8px — theo bản thiết kế. Ghi đè token chung
-       (6px/4px) chứ không thêm tên mới, để mọi luật cũ tự đi theo. */
+    /* Thẻ 12px, ô nhập 8px — theo bản thiết kế. Ghi đè token chung (6px/4px)
+       chứ không thêm tên mới, để mọi luật cũ tự đi theo. */
     --radius: 12px;
     --radius-sm: 8px;
+
+    /* NÚT thì lấy đúng độ bo của nút trang chủ, không lấy 8px của bản thiết
+       kế. Nút là thứ duy nhất trong khu quản trị có anh em song sinh ở trang
+       bán hàng — người dùng đi qua đi lại giữa hai khu trong cùng một phiên,
+       và hai cái nút cùng màu đỏ mà bo khác nhau thì đọc ra là hai sản phẩm
+       khác nhau. Ô nhập, thẻ, viên lọc thì không có chuyện đó: trang bán hàng
+       không có thứ tương đương để so.
+
+       4px = --radius-sm gốc của layout.css, chính là --h-radius-sm mà
+       .hlens__cta và .hexam__cta ở home-sections.css đang dùng. Viết thẳng số
+       vì trong khối này --radius-sm ĐÃ bị ghi đè thành 8px cho ô nhập. */
+    --a-btn-radius: 4px;
 
     /* Nền riêng của thanh bên: sẫm hơn --ink một chút. Bản thiết kế để hai
        giá trị khác nhau (#251c1e cho thanh bên, #28211c cho chữ) nên không
@@ -218,12 +230,19 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     color: var(--on-brand);
 }
 
-.asidebar__link span { flex: 1; }
+/* CHỈ nhãn chữ được giãn, và phải gọi đúng tên lớp của nó.
+   Viết `.asidebar__link span { flex: 1 }` là trúng CẢ huy hiệu số ở cuối dòng
+   (nó cũng là <span>): huy hiệu bị kéo dài ra hết chỗ trống, con số 2 nằm
+   giữa một viên thuốc rộng bằng nửa thanh bên. */
+.asidebar__label { flex: 1; }
 .asidebar__ico { flex-shrink: 0; }
 
 .asidebar__badge {
     display: grid;
     place-items: center;
+    /* flex: 0 0 auto — huy hiệu luôn ôm sát con số, dù luật nào ở trên có
+       ngỏ ý giãn nó ra. Đây là chốt chặn cho đúng lỗi vừa sửa ở .asidebar__label. */
+    flex: 0 0 auto;
     min-width: 19px;
     padding: 1px 7px;
     /* --radius-round: xem khối "HUY HIỆU SỐ" trong assets/css/account.css. */
@@ -297,7 +316,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     place-items: center;
     padding: 7px 8px;
     border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: var(--radius-sm);
+    border-radius: var(--a-btn-radius);
     background: transparent;
     font-family: var(--font-sans);
     font-size: 11.5px;
@@ -678,7 +697,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     height: 30px;
     padding-inline: 12px;
     border: 1px solid var(--brand);
-    border-radius: var(--radius-sm);
+    border-radius: var(--a-btn-radius);
     background: var(--brand);
     font-family: var(--font-sans);
     font-size: var(--fs-label);
@@ -739,7 +758,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     height: 36px;
     padding-inline: 16px;
     border: 1px solid var(--brand);
-    border-radius: var(--radius-sm);
+    border-radius: var(--a-btn-radius);
     background: var(--brand);
     font-family: var(--font-sans);
     font-size: var(--fs-note);
@@ -894,7 +913,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     height: 38px;
     padding-inline: 10px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    border-radius: var(--a-btn-radius);
     background: var(--surface-raised);
     font-size: var(--fs-body-sm);
     text-decoration: none;
@@ -1339,3 +1358,8 @@ a.astatus__save {
     letter-spacing: 0.1em;
     color: var(--muted);
 }
+
+/* Hai nút của hộp thoại "bạn có chắc không". confirm.css dùng chung với trang
+   bán hàng nên không sửa được ở đó; admin.css thì chỉ khu quản trị mới nạp,
+   nên đây là chỗ duy nhất ghi đè được mà không đụng tới site. */
+.cfm__act { border-radius: var(--a-btn-radius); }
