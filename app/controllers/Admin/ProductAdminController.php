@@ -80,6 +80,7 @@ class ProductAdminController extends AdminController
 
     public function save(): void
     {
+        $this->guardPostSize();
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
@@ -126,11 +127,13 @@ class ProductAdminController extends AdminController
             redirect(self::BASE);
         }
 
-        // Ảnh: mỗi dòng một đường dẫn. Lưu JSON đúng như schema.
-        $images = array_values(array_filter(array_map(
-            'trim',
-            preg_split('/\R+/', (string) ($_POST['images'] ?? '')) ?: []
-        ), static fn ($v) => $v !== ''));
+        // Ảnh: giữ lại ảnh cũ nào, cộng ảnh vừa tải lên từ máy — xem images().
+        //
+        // Khối này nằm SAU mọi lần kiểm tra có redirect ở trên là CỐ Ý:
+        // move_uploaded_file() chạy rồi thì file đã nằm trên đĩa, mà redirect
+        // thì không quay lại đây để dọn. Nhận ảnh ở đây nghĩa là đã chắc chắn
+        // sẽ ghi xuống CSDL. Đừng chuyển nó lên trên.
+        [$images, $imageErrors] = $this->images($id);
 
         // Thông số: mỗi dòng "Nhãn: giá trị"
         $specs = [];
@@ -187,7 +190,110 @@ class ProductAdminController extends AdminController
             flash('admin_success', 'Đã thêm sản phẩm mới.');
         }
 
+        // Một ảnh hỏng KHÔNG huỷ cả lần lưu: mọi thứ khác đã hợp lệ và đã ghi
+        // xuống. Báo riêng để người dùng biết ảnh nào chưa lên, khu quản trị
+        // hiện được cả hai dòng thông báo cùng lúc (xem admin/_layout/master).
+        if ($imageErrors !== []) {
+            flash('admin_error', implode(' ', array_unique($imageErrors)));
+        }
+
         redirect(self::BASE);
+    }
+
+    /**
+     * Danh sách ảnh cuối cùng của sản phẩm: ảnh cũ được giữ + ảnh vừa tải lên.
+     *
+     * @return array{0: string[], 1: string[]} [đường dẫn ảnh, lỗi để báo lại]
+     */
+    private function images(string $id): array
+    {
+        // Ảnh hiện có đọc TỪ CSDL chứ không lấy từ form. Form chỉ được quyền
+        // nói "giữ cái nào"; nếu nhận thẳng đường dẫn do form gửi thì bất cứ ai
+        // vào được trang này cũng nhét được một URL lạ vào cột images, và cột
+        // đó in thẳng ra <img src> ở trang bán hàng.
+        $current = [];
+
+        if ($id !== '') {
+            $row     = ProductModel::find($id);
+            $current = $row !== null
+                ? array_values(array_filter((array) json_decode((string) $row['images'], true), 'is_string'))
+                : [];
+        }
+
+        $asked = array_map('strval', (array) ($_POST['image_keep'] ?? []));
+
+        // Lọc trên $current (chứ không lặp $asked) để giữ nguyên THỨ TỰ CŨ:
+        // thứ tự chính là ý nghĩa — ảnh đầu là ảnh đại diện, ảnh thứ hai hiện
+        // khi rê chuột — mà thứ tự checkbox trình duyệt gửi lên thì không có
+        // gì bảo đảm.
+        $keep = array_values(array_filter(
+            $current,
+            static fn (string $path): bool => in_array($path, $asked, true)
+        ));
+
+        $room   = max(0, ProductImageStorage::MAX_FILES - count($keep));
+        $upload = ProductImageStorage::storeMany($_FILES['image_files'] ?? [], $room);
+        $images = array_merge($keep, $upload['paths']);
+
+        // Ảnh đại diện: đưa ảnh được chọn lên đầu danh sách. Chỉ nhận giá trị
+        // CÓ THẬT trong danh sách vừa dựng, nên nút radio bị sửa tay hoặc trỏ
+        // vào ảnh vừa bị bỏ tick đều rơi vào im lặng chứ không sinh ảnh ma.
+        $main = (string) ($_POST['image_main'] ?? '');
+
+        if ($main !== '' && in_array($main, $images, true)) {
+            $images = array_merge([$main], array_values(array_filter(
+                $images,
+                static fn (string $path): bool => $path !== $main
+            )));
+        }
+
+        // Ảnh bị gỡ khỏi danh sách thì xoá khỏi đĩa luôn — nhưng chỉ ảnh do
+        // chính khu quản trị tải lên; ProductImageStorage::remove() tự bỏ qua
+        // đường dẫn nằm ngoài thư mục upload (ảnh đi kèm mã nguồn).
+        foreach (array_diff($current, $images) as $gone) {
+            ProductImageStorage::remove($gone);
+        }
+
+        return [$images, $upload['errors']];
+    }
+
+    /**
+     * Chặn trường hợp gói POST vượt post_max_size của PHP.
+     *
+     * Khi đó PHP vứt SẠCH $_POST và $_FILES trước khi một dòng mã nào của ta
+     * chạy — kể cả _token — nên requirePost() sẽ kết luận là hết hạn phiên và
+     * báo "Phiên làm việc đã hết hạn, vui lòng thử lại.". Câu đó sai, và nó
+     * đẩy người dùng đi đăng nhập lại thay vì bớt ảnh đi. Dấu hiệu nhận ra:
+     * đúng là POST, CONTENT_LENGTH lớn hơn trần, mà $_POST lại rỗng.
+     */
+    private function guardPostSize(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || $_POST !== []) {
+            return;
+        }
+
+        $limit = self::iniBytes((string) ini_get('post_max_size'));
+
+        if ($limit > 0 && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > $limit) {
+            flash('admin_error', sprintf(
+                'Tổng dung lượng gửi lên vượt giới hạn của máy chủ (%s). Hãy tải ít ảnh hơn trong một lần.',
+                (string) ini_get('post_max_size')
+            ));
+            redirect(self::BASE);
+        }
+    }
+
+    /** Đổi giá trị php.ini kiểu "8M", "128M", "1G" ra byte. */
+    private static function iniBytes(string $value): int
+    {
+        $number = (int) $value;
+
+        return match (strtolower(substr(trim($value), -1))) {
+            'g'     => $number * 1024 * 1024 * 1024,
+            'm'     => $number * 1024 * 1024,
+            'k'     => $number * 1024,
+            default => $number,
+        };
     }
 
     /**
@@ -227,7 +333,19 @@ class ProductAdminController extends AdminController
             redirect(self::BASE);
         }
 
+        // Đọc danh sách ảnh TRƯỚC khi xoá bản ghi, nếu không thì không còn
+        // đường nào biết những file kia thuộc về ai và chúng nằm lại trên đĩa
+        // mãi mãi. Ảnh đi kèm mã nguồn không bị đụng tới (xem remove()).
+        $row    = ProductModel::find($id);
+        $images = $row !== null
+            ? array_filter((array) json_decode((string) $row['images'], true), 'is_string')
+            : [];
+
         ProductModel::delete($id);
+
+        foreach ($images as $path) {
+            ProductImageStorage::remove($path);
+        }
 
         flash('admin_success', 'Đã xoá sản phẩm.');
         redirect(self::BASE);

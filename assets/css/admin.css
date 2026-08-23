@@ -1025,3 +1025,90 @@ a.astatus__save {
     text-align: center;
     text-decoration: none;
 }
+
+/* ============================================================
+   KHU VỰC TẢI ẢNH SẢN PHẨM (.aimgs)
+   ============================================================
+   Trước đây chỗ này chỉ là một <textarea> đường dẫn nên không cần gì cả.
+   Từ khi form nhận file tải lên, nó có ba thứ mới cần kiểu: hàng ảnh xem
+   trước, hai ô điều khiển dưới mỗi ảnh, và ô chọn file.
+
+   Ô <input type="file"> KHÔNG dùng chung khối kiểu với các ô nhập khác ở
+   trên: trình duyệt tự vẽ cái nút "Browse…" bên trong nó và không cho tạo
+   kiểu, nên đổ padding/viền vào chỉ tạo ra một cái hộp lệch hẳn so với phần
+   nút bên trong. Để nó mộc, chỉ chừa khoảng cách. */
+
+.aimgs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 12px;
+    margin: 6px 0 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.aimgs__item {
+    padding: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+}
+
+/* Ảnh cửa hàng tải lên đủ mọi tỉ lệ. object-fit giữ khung vuông đều tăm tắp
+   mà không bóp méo ảnh — thà cắt mất rìa còn hơn một hàng ảnh cao thấp lộn
+   xộn không đọc được. Nền sáng để ảnh PNG trong suốt không thành mảng đen. */
+.aimgs__thumb {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+}
+
+/* Hai nhãn dưới ảnh là ô tick/nút chọn, không phải nhãn trường — nên phải
+   gỡ hết phần viết hoa giãn chữ mà .aform__grid label áp cho mọi <label>. */
+.aimgs__keep,
+.aimgs__main {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 8px 0 0;
+    font-size: var(--fs-caption);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.aimgs__main { margin-top: 4px; }
+
+.aimgs__keep input,
+.aimgs__main input {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--brand);
+}
+
+/* Nhãn của ô chọn file: giữ đúng dáng nhãn trường như mọi ô khác trong form */
+.aimgs__pick { display: block; }
+
+.aform__grid input[type="file"] {
+    margin-top: 2px;
+    font-size: var(--fs-body-sm);
+    color: var(--ink);
+}
+
+/* Nhãn của cả cụm ảnh là <span> chứ không phải <label>: nó không trỏ tới một
+   ô nhập duy nhất nào (bên dưới có nhiều ô), mà <label for> trỏ sai còn tệ
+   hơn không có. Chép lại đúng dáng của .aform__grid label. */
+.field__label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}

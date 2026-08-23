@@ -7,13 +7,17 @@
 
 $ed = $editing;
 
-// Cột JSON trong DB là chuỗi; đổi về dạng người nhập được (mỗi dòng một mục)
-$edImages = '';
+// Cột JSON trong DB là chuỗi; đổi về dạng người nhập được.
+// Ảnh giữ nguyên dạng MẢNG (mỗi ảnh một ô có hình xem trước), thông số thì
+// vẫn là chuỗi nhiều dòng.
+$edImages = [];
 $edSpecs  = '';
 
 if ($ed !== null) {
-    $imgs = json_decode((string) $ed['images'], true) ?: [];
-    $edImages = implode("\n", $imgs);
+    $edImages = array_values(array_filter(
+        (array) json_decode((string) $ed['images'], true),
+        'is_string'
+    ));
 
     foreach (json_decode((string) $ed['specs'], true) ?: [] as $label => $value) {
         $edSpecs .= $label . ': ' . $value . "\n";
@@ -113,7 +117,11 @@ if ($ed !== null) {
             <?= $ed !== null ? 'Sửa sản phẩm: ' . e($ed['name']) : 'Thêm sản phẩm mới' ?>
         </h2>
 
-        <form method="post" action="/quan-tri/san-pham/luu" class="aform__grid">
+        <?php /* enctype BẮT BUỘC: thiếu nó thì trình duyệt gửi mỗi TÊN file
+                 dưới dạng text, $_FILES rỗng, và form "chạy" mà không ảnh nào
+                 lên — không có lỗi nào để lần ra. */ ?>
+        <form method="post" action="/quan-tri/san-pham/luu" class="aform__grid"
+              enctype="multipart/form-data">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -235,11 +243,66 @@ if ($ed !== null) {
                 <textarea id="description" name="description" rows="3"><?= e($ed['description'] ?? '') ?></textarea>
             </div>
 
+            <?php /* KHU VỰC TẢI ẢNH — SRS mục 3.C.1: "Form sản phẩm gồm các
+                     trường thông tin và khu vực tải lên nhiều ảnh".
+
+                     Trước đây chỗ này là một ô gõ ĐƯỜNG DẪN tay. Nó chỉ dùng
+                     được khi ảnh đã nằm sẵn trong assets/images/ do lập trình
+                     viên chép vào, nghĩa là cửa hàng không tự thêm được ảnh cho
+                     mặt hàng mới — đúng thứ SRS đòi phải làm được.
+
+                     KHÔNG CÓ JS NÀO Ở ĐÂY. Ô chọn file, ô tick giữ ảnh và nút
+                     chọn ảnh đại diện đều là điều khiển form thuần: tắt JS thì
+                     mọi thứ vẫn chạy nguyên vẹn qua một lần POST. */ ?>
             <div class="field field--wide">
-                <label for="images">Ảnh — mỗi dòng một đường dẫn</label>
-                <textarea id="images" name="images" rows="3"
-                          placeholder="/assets/images/product-1.jpg"><?= e($edImages) ?></textarea>
-                <p class="field__hint">Dòng đầu là ảnh đại diện, dòng thứ hai hiện khi rê chuột.</p>
+                <span class="field__label">Ảnh sản phẩm</span>
+
+                <?php if ($edImages !== []): ?>
+                    <ul class="aimgs" role="list">
+                        <?php foreach ($edImages as $i => $path): ?>
+                            <li class="aimgs__item">
+                                <?php /* Ảnh cũ hiện to bằng chính nó chứ không phải
+                                         bản nhỏ: bản nhỏ chỉ có với ảnh của seed. */ ?>
+                                <img class="aimgs__thumb" src="<?= e($path) ?>" alt="" loading="lazy">
+
+                                <label class="aimgs__keep">
+                                    <?php /* Mặc định TICK SẴN: mở form ra rồi bấm Lưu mà
+                                             không đụng gì thì ảnh phải còn nguyên. Bỏ tick
+                                             mới là hành động xoá. */ ?>
+                                    <input type="checkbox" name="image_keep[]"
+                                           value="<?= e($path) ?>" checked>
+                                    Giữ ảnh
+                                </label>
+
+                                <label class="aimgs__main">
+                                    <input type="radio" name="image_main"
+                                           value="<?= e($path) ?>" <?= $i === 0 ? 'checked' : '' ?>>
+                                    Ảnh đại diện
+                                </label>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php endif; ?>
+
+                <label class="aimgs__pick" for="image_files">
+                    <?= $edImages !== [] ? 'Thêm ảnh từ máy' : 'Chọn ảnh từ máy' ?>
+                </label>
+
+                <?php /* MAX_FILE_SIZE phải đứng TRƯỚC ô file mới có tác dụng.
+                         Nó chỉ là gợi ý để PHP dừng sớm một file quá nặng thay
+                         vì nhận hết rồi mới báo; giá trị này do form gửi lên nên
+                         sửa được, máy chủ vẫn đo lại trong ImageUploader. */ ?>
+                <input type="hidden" name="MAX_FILE_SIZE" value="<?= (int) ProductImageStorage::MAX_BYTES ?>">
+                <input type="file" id="image_files" name="image_files[]" multiple
+                       accept="<?= e(ProductImageStorage::accept()) ?>">
+
+                <p class="field__hint">
+                    Định dạng <?= e(ProductImageStorage::formatLabel()) ?>, mỗi ảnh tối đa
+                    <?= e(ProductImageStorage::limitLabel()) ?>, tối đa
+                    <?= (int) ProductImageStorage::MAX_FILES ?> ảnh cho một sản phẩm.
+                    Ảnh đại diện là ảnh khách thấy đầu tiên, ảnh thứ hai hiện khi khách rê chuột.
+                    Ảnh mới xếp theo thứ tự chọn — lưu xong mở lại form này để đổi ảnh đại diện.
+                </p>
             </div>
 
             <div class="field field--wide">

@@ -27,6 +27,8 @@ design-export/
 # Thư mục ghi của ứng dụng (bản nháp email, log) — không đưa lên git
 storage/
 
-# Ảnh khách tự tải lên (ảnh đại diện). Là dữ liệu của người dùng, không phải
-# mã nguồn — và .htaccess trong đó do core/AvatarStorage.php tự sinh lại.
+# Ảnh tải lên qua trình duyệt (ảnh đại diện của khách, ảnh sản phẩm do cửa
+# hàng thêm). Là dữ liệu, không phải mã nguồn — và .htaccess trong mỗi thư mục
+# do core/ImageUploader.php tự sinh lại khi cần.
 assets/uploads/avatars/
+assets/uploads/san-pham/
