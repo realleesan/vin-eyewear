@@ -394,8 +394,14 @@ $stepForm = static function (string $buoc): void {
                                     <label class="sr-only" for="<?= e($side . '-' . $kind) ?>">
                                         <?= e($label) ?> — <?= e($what) ?>
                                     </label>
+                                    <?php /* `required` cho CẢ BA ô. Trục thì chỉ có
+                                             hiệu lực khi nó đang mở — ô `disabled`
+                                             được trình duyệt bỏ qua khi kiểm, mà nó
+                                             chỉ mở khi độ trụ khác 0. Đúng bằng luật
+                                             máy chủ đang kiểm, xem nhánh 'so-do'
+                                             trong CartController::buyStep(). */ ?>
                                     <select class="brxsel" id="<?= e($side . '-' . $kind) ?>"
-                                            name="<?= e($name) ?>"
+                                            name="<?= e($name) ?>" required
                                             <?php if ($kind === 'cyl'): ?>data-cyl="<?= e($side) ?>"<?php endif; ?>
                                             <?php if ($locked): ?>
                                                 data-axis="<?= e($side) ?>"
@@ -462,9 +468,13 @@ $stepForm = static function (string $buoc): void {
                     </div>
                 </div>
 
-                <?php /* Bỏ trống cả hai mắt vẫn đi tiếp được: phần lớn người mua
-                         kính không nhớ số đo của mình, và cửa hàng đo lại miễn
-                         phí trước khi mài — xem CartController::add(). */ ?>
+                <?php /* PHẢI ĐIỀN ĐỦ MỚI QUA ĐƯỢC — độ cầu và độ trụ cho cả hai
+                         mắt, thêm trục cho mắt nào có loạn. Bản trước cho bỏ
+                         trống hết; lý do đổi ghi ở nhánh 'so-do' trong
+                         CartController::buyStep(), và chính máy chủ mới là nơi
+                         chốt, `required` ở đây chỉ để báo sớm.
+
+                         Ai chưa biết độ của mình thì đi lối bên dưới. */ ?>
                 <button type="submit" class="bmodal__cta">Xác nhận độ kính</button>
             </form>
 
@@ -588,9 +598,15 @@ $stepForm = static function (string $buoc): void {
                             <span class="bsum__val"><?= e($intent['rx']) ?></span>
                         </div>
                     <?php else: ?>
-                        <?php /* Không có số đo vẫn đặt được — cửa hàng đo lại
-                                 miễn phí trước khi mài. Nói rõ điều đó ở đây,
-                                 chứ để trống thì khách tưởng mình điền sót. */ ?>
+                        <?php /* NHÁNH DỰ PHÒNG, không còn lối thường nào tới đây:
+                                 bước số đo nay bắt điền đủ mới cho đi tiếp. Chỉ
+                                 còn hai đường vào — một lượt mua bắt đầu từ
+                                 TRƯỚC khi có luật đó và còn treo trong phiên,
+                                 hoặc một cú POST dựng tay.
+
+                                 Vẫn in một dòng thay vì bỏ trống: ô "Số đo"
+                                 trống trơn đọc ra như form điền sót, mà cửa hàng
+                                 thì đo lại miễn phí trước khi mài thật. */ ?>
                         <div class="bsum__row">
                             <span>Số đo:</span>
                             <span class="bsum__val bsum__val--soft">Đo tại cửa hàng khi nhận</span>

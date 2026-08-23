@@ -285,9 +285,12 @@ class CartController extends BaseController
                xác nhận chỉ còn việc chốt số lượng, và bắt nó mang theo bốn ô
                ẩn nữa là mời người ta sửa tay.
 
-               null = khách bỏ qua bước số đo. Đó là một lựa chọn hợp lệ chứ
-               không phải form điền thiếu — phần lớn người mua kính không nhớ
-               số đo của mình, và cửa hàng đo lại miễn phí. */
+               null gần như không còn xảy ra: bước số đo nay bắt điền đủ mới
+               cho đi tiếp — xem nhánh 'so-do' của buyStep(). Vẫn đọc bằng ??
+               chứ không đòi hỏi, vì một lượt mua bắt đầu từ trước khi có luật
+               đó có thể còn đang treo trong phiên của ai đó, và chặn nó ở đây
+               là làm hỏng một giỏ hàng đang dở vì một chuyện không phải lỗi
+               của khách. */
             $rx = $_SESSION['_buy_intent']['rx'] ?? null;
         }
 
@@ -576,11 +579,6 @@ class CartController extends BaseController
                     'note' => $_POST[$side . '_note'] ?? null,
                 ];
 
-                $od = $eye('od');
-                $os = $eye('os');
-
-                $intent['rx'] = LensModel::formatRx($od, $os);
-
                 /*
                  * ─────────────────────────────────────────────────────────
                  * GIỮ RIÊNG THỨ KHÁCH ĐÃ CHỌN, KHÔNG CHỈ CHUỖI ĐÃ GÓI
@@ -612,6 +610,70 @@ class CartController extends BaseController
                         'note' => trim((string) ($_POST[$side . '_note'] ?? '')),
                     ];
                 }
+
+                /*
+                 * ─────────────────────────────────────────────────────────
+                 * PHẢI ĐIỀN ĐỦ MỚI ĐI TIẾP ĐƯỢC.
+                 *
+                 * Bản trước cho bỏ trống cả bảng: lý là "phần lớn khách không
+                 * nhớ số đo, cửa hàng đo lại miễn phí". Cửa hàng đã đổi ý và
+                 * họ có lý — một đơn "cắt tròng theo độ" mà không mang theo
+                 * độ nào thì mọi bước sau nó đều đang hỏi về một thứ không
+                 * tồn tại: kiểu tròng và gói chiết suất đều được mô tả theo
+                 * DẢI ĐỘ. Ai chưa biết độ của mình thì đi lối "Đặt lịch đo
+                 * mắt miễn phí" ngay dưới nút, chứ không đi tiếp bằng một
+                 * bảng trắng.
+                 *
+                 * BA Ô, KHÔNG PHẢI MỘT. Độ cầu và độ trụ bắt buộc cho cả hai
+                 * mắt — "không loạn" là một câu trả lời THẬT và có sẵn dòng
+                 * 0.00 để chọn, khác hẳn ô để trống nghĩa là chưa nhập. Trục
+                 * chỉ bắt buộc khi độ trụ khác 0: trục của một mắt không loạn
+                 * là con số vô nghĩa, và ô đó đang bị khoá đúng lúc ấy.
+                 *
+                 * Ghi chú thì không — nó vẫn là "không bắt buộc" như nhãn ghi.
+                 *
+                 * KIỂM Ở ĐÂY DÙ FORM ĐÃ CÓ `required`: thuộc tính đó là của
+                 * trình duyệt, mà bước này nhận POST thẳng — tắt JS, sửa DOM,
+                 * hay gửi tay bằng curl đều đi vòng qua nó được.
+                 *
+                 * Lỗi thì QUAY LẠI CHÍNH BƯỚC NÀY, và $intent['rx_raw'] ở
+                 * trên đã cất đúng những ô khách vừa chọn — bảng vẽ lại vẫn
+                 * đầy số, chỉ thiếu đúng ô còn trống. Không cất trước khi
+                 * kiểm thì mỗi lần thiếu một ô là mất cả năm ô kia.
+                 * ─────────────────────────────────────────────────────────
+                 */
+                $thieu = [];
+
+                foreach (['od' => 'mắt phải', 'os' => 'mắt trái'] as $side => $ten) {
+                    $o = $intent['rx_raw'][$side];
+
+                    if ($o['sph'] === '' || $o['cyl'] === '') {
+                        $thieu[] = 'độ ' . $ten;
+                        continue;
+                    }
+
+                    /* CÓ JS thì gần như không ai tới được đây: buy-rx.js mở ô
+                       trục ngay khi khách chọn độ trụ, và `required` chặn cú
+                       bấm ngay tại chỗ. Nhánh này là cho lượt KHÔNG có JS —
+                       ô trục lúc đó khoá suốt nên không gửi gì lên. Bảng vẽ
+                       lại lần này mở sẵn nó (xem $hasCyl trong
+                       _layout/buy-modal.php), nên họ chọn được ở lượt sau. */
+                    if ((float) $o['cyl'] !== 0.0 && $o['axis'] === '') {
+                        $thieu[] = 'trục ' . $ten;
+                    }
+                }
+
+                if ($thieu !== []) {
+                    $_SESSION['_buy_intent'] = $intent;
+
+                    flash('cart_error', 'Vui lòng chọn đủ: ' . implode(', ', $thieu) . '.');
+                    $this->buyStepDone(self::stepUrl($back, $intent['product_id'], 'so-do'));
+                }
+
+                $od = $eye('od');
+                $os = $eye('os');
+
+                $intent['rx'] = LensModel::formatRx($od, $os);
 
                 /* LẦN NHẬP ĐẦU TIÊN thì dựng luôn hồ sơ khúc xạ cho khách đang
                    đăng nhập — cửa hàng có ngay bản ghi để tư vấn thay vì chờ

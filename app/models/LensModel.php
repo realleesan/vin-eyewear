@@ -815,8 +815,9 @@ class LensModel
          *
          * Từng có điều kiện `$type === 'loan'` ở đây, hợp lý hồi giao diện chỉ
          * hiện hai ô đó cho mắt tick "Loạn thị". Ô radio ấy đã bỏ hẳn, nên nay
-         * quy tắc đơn giản: điền gì giữ nấy. diopter() và axis() vẫn chặn giá
-         * trị ngoài dải, nên không có gì lọt qua.
+         * quy tắc đơn giản: điền gì giữ nấy — trừ đúng một ngoại lệ ngay dưới,
+         * độ trụ 0.00 nghĩa là "không loạn" chứ không phải một số đo. diopter()
+         * và axis() vẫn chặn giá trị ngoài dải, nên không có gì lọt qua.
          *
          * Vẫn giữ `$so !== null`: trụ mà không có độ cầu thì in ra thành
          * "MP / −1.25", một mẩu chữ cụt đầu không đọc được.
@@ -824,7 +825,25 @@ class LensModel
         if ($so !== null) {
             $cyl = self::diopter($eye['cyl'] ?? null, self::CYL_MIN, self::CYL_MAX);
 
-            if ($cyl !== null) {
+            /*
+             * ĐỘ TRỤ 0.00 KHÔNG IN RA, VÀ TRỤC ĐI THEO NÓ.
+             *
+             * Bảng số đo trong hộp thoại mua hàng nay BẮT chọn độ trụ cho cả
+             * hai mắt, và dòng "0.00 (Không loạn)" chính là câu trả lời của
+             * người không loạn — xem nhánh 'so-do' trong
+             * CartController::buyStep(). Nên từ đây phần lớn đơn sẽ mang cyl
+             * "0.00", và in nguyên vào chuỗi thì mọi phiếu mài đọc thành
+             * "MP −2.00 / 0.00" — một con số không nói gì thêm, đứng đúng chỗ
+             * mắt người đọc quen tìm độ loạn.
+             *
+             * Đơn kính giấy cũng viết như vậy: không loạn thì phần trụ bỏ
+             * trống, không ghi số không.
+             *
+             * `!= 0.0` chứ không so chuỗi: diopter() trả về nhãn đã dựng sẵn
+             * ("0.00", và dấu trừ ở đây là U+2212), nên so với '0.00' là buộc
+             * hàm này biết cách hàm kia định dạng.
+             */
+            if ($cyl !== null && (float) str_replace('−', '-', $cyl) != 0.0) {
                 $so .= ' / ' . $cyl;
 
                 $axis = self::axis($eye['axis'] ?? null);
