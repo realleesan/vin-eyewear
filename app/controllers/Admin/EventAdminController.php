@@ -25,6 +25,7 @@ class EventAdminController extends AdminController
 
     public function save(): void
     {
+        $this->guardPostSize(self::BASE);
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
@@ -60,13 +61,18 @@ class EventAdminController extends AdminController
             redirect(self::BASE);
         }
 
+        // Ảnh bìa: xử lý SAU mọi lần kiểm tra có redirect ở trên. File đã
+        // move_uploaded_file() thì nằm lại trên đĩa, mà redirect không quay lại
+        // đây để dọn — nhận ảnh ở đây nghĩa là đã chắc chắn sẽ ghi CSDL.
+        [$cover, $coverError] = $this->cover($id);
+
         $data = [
             'slug'        => $slug,
             'title'       => $title,
             'category'    => trim((string) ($_POST['category'] ?? '')) ?: null,
             'excerpt'     => trim((string) ($_POST['excerpt'] ?? '')) ?: null,
             'content'     => trim((string) ($_POST['content'] ?? '')) ?: null,
-            'cover_image' => trim((string) ($_POST['cover_image'] ?? '')) ?: null,
+            'cover_image' => $cover,
             'location'    => trim((string) ($_POST['location'] ?? '')) ?: null,
             'starts_at'   => $startsAt,
             'ends_at'     => $endsAt,
@@ -81,6 +87,12 @@ class EventAdminController extends AdminController
             flash('admin_success', 'Đã thêm sự kiện mới.');
         }
 
+        // Ảnh hỏng KHÔNG huỷ cả lần lưu: mọi thứ khác đã hợp lệ và đã ghi
+        // xuống. Khu quản trị hiện được cả hai dòng thông báo cùng lúc.
+        if ($coverError !== null) {
+            flash('admin_error', $coverError);
+        }
+
         redirect(self::BASE);
     }
 
@@ -89,10 +101,59 @@ class EventAdminController extends AdminController
         $this->requirePost(self::BASE);
         $this->requireManager(self::BASE);
 
-        EventModel::delete((string) ($_POST['id'] ?? ''));
+        $id = (string) ($_POST['id'] ?? '');
+
+        // Đọc ảnh bìa TRƯỚC khi xoá bản ghi, nếu không thì không còn đường nào
+        // biết file kia thuộc về ai và nó nằm lại trên đĩa mãi mãi.
+        $row = EventModel::find($id);
+
+        EventModel::delete($id);
+
+        EventCoverStorage::remove($row['cover_image'] ?? null);
 
         flash('admin_success', 'Đã xoá sự kiện.');
         redirect(self::BASE);
+    }
+
+    /**
+     * Ảnh bìa cuối cùng của sự kiện.
+     *
+     * Ba tình huống, theo đúng thứ tự ưu tiên:
+     *   1. Có chọn file mới  -> dùng file mới, xoá file cũ.
+     *   2. Tick "Bỏ ảnh bìa" -> về null, xoá file cũ.
+     *   3. Không đụng gì     -> giữ nguyên ảnh đang có.
+     *
+     * @return array{0: string|null, 1: string|null} [đường dẫn ảnh, lỗi để báo lại]
+     */
+    private function cover(string $id): array
+    {
+        // Ảnh hiện tại đọc TỪ CSDL, không lấy từ form: form chỉ được quyền nói
+        // "thay" hoặc "bỏ". Nhận thẳng đường dẫn do form gửi thì ai vào được
+        // trang này cũng nhét được URL lạ vào cột in ra <img src>.
+        $old = $id !== '' ? (EventModel::find($id)['cover_image'] ?? null) : null;
+
+        $stored = EventCoverStorage::store($_FILES['cover_file'] ?? []);
+
+        if ($stored['ok']) {
+            EventCoverStorage::remove($old);
+
+            return [$stored['path'], null];
+        }
+
+        // error = null nghĩa là KHÔNG CHỌN file nào — không phải lỗi.
+        if (($stored['error'] ?? null) !== null) {
+            // Ảnh mới hỏng thì giữ nguyên ảnh cũ. Bỏ ảnh cũ đi trong trường hợp
+            // này là mất trắng: người dùng chỉ định thay, không định xoá.
+            return [$old, $stored['error']];
+        }
+
+        if (isset($_POST['cover_remove'])) {
+            EventCoverStorage::remove($old);
+
+            return [null, null];
+        }
+
+        return [$old, null];
     }
 
     /**

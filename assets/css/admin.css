@@ -1091,6 +1091,17 @@ a.astatus__save {
     accent-color: var(--brand);
 }
 
+/* Ảnh bìa sự kiện: đúng MỘT ảnh nên không cần lưới, chỉ cần chặn nó phình
+   hết chiều ngang form. 132px trùng với ô nhỏ nhất của lưới .aimgs để hai màn
+   quản trị nhìn cùng một cỡ. */
+.aimgs__one {
+    width: 132px;
+    margin: 6px 0 12px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+}
+
 /* Nhãn của ô chọn file: giữ đúng dáng nhãn trường như mọi ô khác trong form */
 .aimgs__pick { display: block; }
 

@@ -32,3 +32,4 @@ storage/
 # do core/ImageUploader.php tự sinh lại khi cần.
 assets/uploads/avatars/
 assets/uploads/san-pham/
+assets/uploads/su-kien/

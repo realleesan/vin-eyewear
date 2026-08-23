@@ -70,7 +70,11 @@ $toLocal = static fn (?string $v): string =>
             <?= $ed !== null ? 'Sửa sự kiện: ' . e($ed['title']) : 'Thêm sự kiện mới' ?>
         </h2>
 
-        <form method="post" action="/quan-tri/su-kien/luu" class="aform__grid">
+        <?php /* enctype BẮT BUỘC: thiếu nó thì trình duyệt gửi mỗi TÊN file
+                 dưới dạng text, $_FILES rỗng, và form "chạy" mà ảnh không lên —
+                 không có lỗi nào để lần ra. */ ?>
+        <form method="post" action="/quan-tri/su-kien/luu" class="aform__grid"
+              enctype="multipart/form-data">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -114,11 +118,42 @@ $toLocal = static fn (?string $v): string =>
                        value="<?= e($ed['location'] ?? '') ?>">
             </div>
 
+            <?php /* Ảnh bìa: chọn file từ máy, không gõ đường dẫn.
+                     Ô cũ là <input type="text"> nhận đường dẫn tay — chỉ dùng
+                     được với ảnh đã nằm sẵn trong assets/images/ do lập trình
+                     viên chép vào, nên người quản trị không tự đặt được ảnh bìa
+                     cho sự kiện mới. Đổi cùng đợt với ảnh sản phẩm để trong khu
+                     quản trị không còn chỗ nào bắt gõ đường dẫn.
+
+                     Không có JS: ô file + ô tick là điều khiển form thuần. */ ?>
             <div class="field field--wide">
-                <label for="cover_image">Ảnh bìa</label>
-                <input type="text" id="cover_image" name="cover_image"
-                       placeholder="/assets/images/product-1.jpg"
-                       value="<?= e($ed['cover_image'] ?? '') ?>">
+                <span class="field__label">Ảnh bìa</span>
+
+                <?php if (!empty($ed['cover_image'])): ?>
+                    <div class="aimgs__one">
+                        <img class="aimgs__thumb" src="<?= e($ed['cover_image']) ?>" alt="" loading="lazy">
+                        <label class="aimgs__keep">
+                            <input type="checkbox" name="cover_remove" value="1">
+                            Bỏ ảnh bìa này
+                        </label>
+                    </div>
+                <?php endif; ?>
+
+                <label class="aimgs__pick" for="cover_file">
+                    <?= !empty($ed['cover_image']) ? 'Chọn ảnh khác để thay' : 'Chọn ảnh từ máy' ?>
+                </label>
+
+                <?php /* MAX_FILE_SIZE phải đứng TRƯỚC ô file mới có tác dụng.
+                         Chỉ là gợi ý để PHP dừng sớm; giá trị do form gửi lên nên
+                         sửa được, máy chủ vẫn đo lại trong ImageUploader. */ ?>
+                <input type="hidden" name="MAX_FILE_SIZE" value="<?= (int) EventCoverStorage::MAX_BYTES ?>">
+                <input type="file" id="cover_file" name="cover_file"
+                       accept="<?= e(EventCoverStorage::accept()) ?>">
+
+                <p class="field__hint">
+                    Định dạng <?= e(EventCoverStorage::formatLabel()) ?>, tối đa
+                    <?= e(EventCoverStorage::limitLabel()) ?>. Chọn ảnh mới là thay ảnh cũ.
+                </p>
             </div>
 
             <div class="field field--check">
