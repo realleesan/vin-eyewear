@@ -992,7 +992,7 @@ class CartController extends BaseController
 
         $code     = strtoupper(trim((string) ($_POST['code'] ?? '')));
         $subtotal = self::selectedSubtotal();
-        $result   = VoucherModel::evaluate($code, $subtotal, $_SESSION['user_id'] ?? null);
+        $result   = VoucherModel::evaluate($code, $subtotal, AuthMiddleware::customerId());
 
         if (!$result['ok']) {
             // KHÔNG lưu mã hỏng vào session: lần hiện trang sau sẽ thử lại nó
@@ -1400,7 +1400,7 @@ class CartController extends BaseController
             return $none;
         }
 
-        $result = VoucherModel::evaluate($code, $subtotal, $userId ?? ($_SESSION['user_id'] ?? null));
+        $result = VoucherModel::evaluate($code, $subtotal, $userId ?? AuthMiddleware::customerId());
 
         if (!$result['ok']) {
             unset($_SESSION['cart_voucher']);

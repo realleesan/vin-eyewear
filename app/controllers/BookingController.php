@@ -80,9 +80,8 @@ class BookingController extends BaseController
          * isset() chứ không empty(): quay lại sau lỗi thì ô rỗng cũng là lựa
          * chọn của khách, điền đè lên là giật mất chữ đang gõ dở.
          */
-        $me = isset($_SESSION['user_id'])
-            ? UserModel::profile((string) $_SESSION['user_id'])
-            : null;
+        $khachId = AuthMiddleware::customerId();
+        $me = $khachId !== null ? UserModel::profile($khachId) : null;
 
         if ($me !== null) {
             $old['fullName'] = $old['fullName'] ?? (string) ($me['full_name'] ?? '');
@@ -507,7 +506,7 @@ class BookingController extends BaseController
             'fullName'    => trim((string) ($_POST['full_name'] ?? '')),
             'phone'       => trim((string) ($_POST['phone'] ?? '')),
             'note'        => trim((string) ($_POST['note'] ?? '')),
-            'userId'      => $_SESSION['user_id'] ?? null,
+            'userId'      => AuthMiddleware::customerId(),
         ];
 
         if (!$valid) {

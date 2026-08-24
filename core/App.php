@@ -118,6 +118,15 @@ class App
         });
     }
 
+    /** Tiền tố đường dẫn của khu quản trị — mốc chia hai phiên. */
+    private const KHU_QUAN_TRI = '/quan-tri';
+
+    /** Tên cookie phiên của khu khách hàng. */
+    private const PHIEN_KHACH = 'vin_session';
+
+    /** Tên cookie phiên của khu quản trị. */
+    private const PHIEN_NOI_BO = 'vin_admin';
+
     /**
      * Mở phiên làm việc với cookie đã siết bảo mật.
      *
@@ -130,6 +139,40 @@ class App
      *               không bị đăng xuất.
      *   secure    — chỉ gửi cookie qua HTTPS. Bật theo môi trường: đặt cứng
      *               true sẽ làm hỏng đăng nhập khi chạy http://localhost.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * HAI KHU VỰC = HAI PHIÊN RIÊNG, HAI COOKIE RIÊNG
+     *
+     * Đây là chỗ luật "tài khoản khách và tài khoản quản trị là hai chỗ khác
+     * nhau" được thực hiện Ở TẦNG THẤP NHẤT — tầng trình duyệt, trước cả khi
+     * một dòng mã nào của ta chạy:
+     *
+     *   /quan-tri/…   ->  cookie `vin_admin`    phạm vi /quan-tri
+     *   mọi đường khác ->  cookie `vin_session`  phạm vi /
+     *
+     * Trình duyệt KHÔNG gửi `vin_admin` khi mở trang cửa hàng. Nghĩa là mã
+     * phía cửa hàng không có cách nào biết tới danh tính nội bộ, kể cả khi cố
+     * tình đi tìm — và một lỗi XSS ở trang bán hàng không với tới được phiên
+     * quản trị.
+     *
+     * VÌ SAO KHÔNG DÙNG MỘT PHIÊN VỚI HAI Ô `user_id` / `admin_id`: cách đó
+     * cho ra đúng hành vi mong muốn, nhưng vẫn là MỘT cookie mang cả hai danh
+     * tính. Ai lấy được cookie đó là lấy được cả hai. Tách ở đây thì sự cô lập
+     * do trình duyệt bảo đảm, không phải do ta nhớ kiểm.
+     *
+     * HỆ QUẢ PHẢI BIẾT TRƯỚC:
+     *
+     *   · Token CSRF, flash, và mọi thứ trong $_SESSION là RIÊNG cho từng khu.
+     *     Đặt flash ở khu này rồi chuyển hướng sang khu kia là mất — xem
+     *     AuthMiddleware, nơi mọi nhánh "đá người sang khu bên cạnh kèm lời
+     *     nhắn" đã bị gỡ vì lý do này.
+     *   · Cookie `vin_remember` vẫn để phạm vi / nên trình duyệt cũng gửi nó
+     *     tới /quan-tri. Không sao: chỉ AuthMiddleware::customerId() đọc nó,
+     *     mà hàm đó không có mặt trong luồng nào của khu quản trị.
+     *   · Lần deploy đầu tiên, nhân viên đang đăng nhập sẽ phải đăng nhập lại
+     *     một lần ở /quan-tri/dang-nhap: danh tính cũ nằm trong `vin_session`,
+     *     còn khu quản trị nay đọc `vin_admin`.
+     * ─────────────────────────────────────────────────────────────────────────
      */
     private static function startSession(): void
     {
@@ -152,17 +195,46 @@ class App
 
         ini_set('session.gc_maxlifetime', (string) config('app.session_lifetime', 1209600));
 
+        $khuQuanTri = self::laDuongQuanTri();
+
         session_set_cookie_params([
             'lifetime' => 0,
-            'path'     => '/',
+            /*
+             * PHẠM VI COOKIE LÀ THỨ LÀM NÊN SỰ CÔ LẬP, không phải cái tên.
+             *
+             * Đổi tên mà để chung path '/' thì trình duyệt vẫn gửi cookie
+             * quản trị kèm mọi request tới trang bán hàng, và ta quay về đúng
+             * tình trạng cũ chỉ với hai cái tên khác nhau.
+             */
+            'path'     => $khuQuanTri ? self::KHU_QUAN_TRI : '/',
             'domain'   => '',
             'secure'   => $isHttps,
             'httponly' => true,
             'samesite' => 'Lax',
         ]);
 
-        session_name('vin_session');
+        session_name($khuQuanTri ? self::PHIEN_NOI_BO : self::PHIEN_KHACH);
         session_start();
+    }
+
+    /**
+     * Request này có thuộc khu quản trị không.
+     *
+     * Đọc thẳng đường dẫn chứ không hỏi Router: hàm này chạy TRƯỚC khi bảng
+     * route được nạp, và nó phải trả lời được cả cho đường không khớp route
+     * nào (trang 404 trong /quan-tri vẫn là khu quản trị).
+     *
+     * So khớp trên biên thư mục — `=== '/quan-tri'` hoặc bắt đầu bằng
+     * '/quan-tri/' — chứ không dùng str_starts_with trần: đường
+     * '/quan-tri-vien' là một trang khác hẳn mà tiền tố trần vẫn nhận, và nó
+     * sẽ lặng lẽ nhận cookie của khu quản trị.
+     */
+    private static function laDuongQuanTri(): bool
+    {
+        $path = rtrim(currentPath(), '/');
+
+        return $path === self::KHU_QUAN_TRI
+            || str_starts_with($path, self::KHU_QUAN_TRI . '/');
     }
 
     /**

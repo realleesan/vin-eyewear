@@ -83,7 +83,7 @@ class OrderAdminController extends AdminController
         // Mọi luật đi kèm việc đổi trạng thái nằm trong model: ghi lịch sử
         // (thanh tiến trình của khách đọc bảng đó) và đánh dấu đã thu tiền khi
         // đơn COD hoàn tất. Xem OrderModel::changeStatus.
-        OrderModel::changeStatus($id, $status, AuthMiddleware::userId());
+        OrderModel::changeStatus($id, $status, AuthMiddleware::staffId());
 
         flash('admin_success', 'Đã cập nhật trạng thái đơn hàng.');
         redirect('/quan-tri/don-hang');

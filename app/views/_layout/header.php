@@ -315,25 +315,30 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             $isLoggedIn = AuthMiddleware::check();
 
             /*
-             * PHIÊN NỘI BỘ THÌ ICON NÀY DẪN VỀ /quan-tri, KHÔNG PHẢI /tai-khoan.
+             * KHÔNG CÓ NHÁNH NÀO CHO PHIÊN QUẢN TRỊ Ở ĐÂY — VÀ KHÔNG THỂ CÓ.
              *
-             * check() đã trả false cho tài khoản nội bộ (xem
-             * AuthMiddleware::customerId), nên không có dòng này thì người
-             * đang mở khu quản trị nhìn thấy đúng cái header của khách chưa
-             * đăng nhập: bấm icon là tới /auth, gõ mật khẩu nội bộ vào đó thì
-             * bị từ chối. Đủ để họ tưởng mình vừa bị đăng xuất.
+             * Trước đây khối này hỏi isStaffSession() để đổi icon thành đường
+             * về /quan-tri. Từ khi hai khu vực có phiên riêng (xem
+             * App::startSession), trang cửa hàng KHÔNG NHẬN được cookie
+             * `vin_admin`, nên câu hỏi đó không còn trả lời được — và đó là
+             * điều đúng, không phải một tính năng bị mất:
              *
-             * Đây chỉ là chuyện HIỆN RA CÁI GÌ. Việc chặn nằm ở
-             * AuthMiddleware::requireLogin(); đổi mấy dòng này không mở thêm
-             * cửa nào.
+             *   · Đang mở khu quản trị mà vào trang bán hàng thì thấy đúng
+             *     header của khách chưa đăng nhập. Bấm icon là tới /auth và
+             *     đăng nhập bằng tài khoản KHÁCH của mình được ngay, trong khi
+             *     phiên quản trị ở tab bên cạnh vẫn còn nguyên.
+             *   · Nhân viên vào khu quản trị bằng địa chỉ /quan-tri như mọi
+             *     khi, không cần cửa hàng chỉ đường.
+             *
+             * Muốn hiện lại gợi ý đó thì phải cho trang cửa hàng đọc được phiên
+             * quản trị — tức là phá đúng ranh giới vừa dựng lên. Đừng làm.
              */
-            $isStaff    = AuthMiddleware::isStaffSession();
-            $accountUrl = $isStaff ? '/quan-tri' : ($isLoggedIn ? '/tai-khoan' : '/auth');
+            $accountUrl = $isLoggedIn ? '/tai-khoan' : '/auth';
             ?>
             <div class="hpop" data-hpop>
                 <a href="<?= e($accountUrl) ?>" class="hpop__trigger header-action"
                    data-hpop-trigger
-                   aria-label="<?= e($isStaff ? t('pop.admin') : ($isLoggedIn ? t('action.account') : t('action.login'))) ?>">
+                   aria-label="<?= e($isLoggedIn ? t('action.account') : t('action.login')) ?>">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/>
                         <path d="M4 20.5c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -346,24 +351,14 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                              đúng chữ của mục ngay bên dưới. */ ?>
                     <p class="hpop__head"><?= e(t('pop.account')) ?></p>
                     <ul class="hpop__list" role="list">
-                        <?php if ($isStaff): ?>
-                            <?php /* Không bày "Đơn hàng của tôi" hay "Lịch hẹn đo mắt":
-                                     tài khoản nội bộ không có hai thứ đó, và bấm vào là
-                                     bị requireLogin() đá ngược về /quan-tri. */ ?>
-                            <li><a class="hpop__item" href="/quan-tri"><?= e(t('pop.admin')) ?></a></li>
-                            <li>
-                                <?php /* Phiên nội bộ ra bằng cửa của khu quản trị, kể cả
-                                         khi người đó đang đứng ở trang bán hàng. Nhờ vậy
-                                         /auth/dang-xuat chỉ còn phục vụ khách, và
-                                         /quan-tri/dang-xuat chỉ còn phục vụ nhân viên —
-                                         mỗi địa chỉ đúng một loại tài khoản, không phải
-                                         đoán theo phiên đang mở. */ ?>
-                                <form method="post" action="/quan-tri/dang-xuat">
-                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                    <button type="submit" class="hpop__item hpop__item--btn"><?= e(t('pop.logout')) ?></button>
-                                </form>
-                            </li>
-                        <?php elseif ($isLoggedIn): ?>
+                        <?php /* KHÔNG CÒN MỤC "Khu quản trị" TRONG BẢNG NÀY.
+                                 Nó từng nằm ở đây kèm một nút Đăng xuất POST sang
+                                 /quan-tri/dang-xuat. Cả hai nay đều không dùng được:
+                                 trang cửa hàng không biết có phiên quản trị hay không,
+                                 và token CSRF nó in ra là token của phiên KHÁCH nên cổng
+                                 quản trị sẽ từ chối. Nhân viên đăng xuất khu quản trị
+                                 bằng nút trong chính khu đó. */ ?>
+                        <?php if ($isLoggedIn): ?>
                             <li><a class="hpop__item" href="/tai-khoan"><?= e(t('pop.profile')) ?></a></li>
                             <li><a class="hpop__item" href="/tai-khoan?muc=don-hang"><?= e(t('pop.orders')) ?></a></li>
                             <li><a class="hpop__item" href="/tai-khoan?muc=lich-hen"><?= e(t('pop.bookings')) ?></a></li>

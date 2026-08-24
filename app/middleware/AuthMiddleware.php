@@ -13,7 +13,7 @@
  * Hệ quả: QUÊN gọi middleware ở một controller quản trị nghĩa là trang đó mở
  * cho tất cả mọi người. Xem bảng đối chiếu ở cuối database/schema.sql.
  * ─────────────────────────────────────────────────────────────────────────────
- * HAI KHU VỰC, HAI LOẠI TÀI KHOẢN, KHÔNG BẮC CẦU
+ * HAI KHU VỰC, HAI PHIÊN, HAI COOKIE — KHÔNG BẮC CẦU, KHÔNG BIẾT NHAU
  *
  * Một tài khoản chỉ thuộc về ĐÚNG MỘT khu vực, quyết định bởi vai trò trong
  * bảng user_roles:
@@ -21,11 +21,35 @@
  *   vai trò nội bộ (staff · manager · admin)  ->  CHỈ khu quản trị  /quan-tri
  *   vai trò khách  (customer, hoặc không có)  ->  CHỈ khu khách     /tai-khoan
  *
- * admin@vineyewear.vn KHÔNG đăng nhập được ở /auth, và tài khoản khách KHÔNG
- * đăng nhập được ở /quan-tri/dang-nhap. Hai chiều đều bị chặn ở TẦNG MÁY CHỦ,
- * không phải bằng cách giấu nút.
+ * VÀ MỖI KHU CÓ PHIÊN RIÊNG. Đây là điểm khác căn bản so với bản trước:
  *
- * VÌ SAO PHẢI TÁCH, chứ không để "ai cũng vào được cả hai":
+ *   khu khách    cookie `vin_session`  phạm vi /           ->  $_SESSION['user_id']
+ *   khu quản trị cookie `vin_admin`    phạm vi /quan-tri   ->  $_SESSION['admin_id']
+ *
+ * Việc chia cookie làm ở core/App.php::startSession(), có ghi rõ lý do ở đó.
+ * Trình duyệt không gửi cookie quản trị tới trang cửa hàng, nên hai danh tính
+ * KHÔNG NHÌN THẤY NHAU — không phải vì mã ở đây chịu khó kiểm, mà vì dữ liệu
+ * không có mặt.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * HAI PHIÊN SỐNG SONG SONG ĐƯỢC, VÀ ĐÓ LÀ CHỦ Ý
+ *
+ * Một người có thể vừa đang đăng nhập /quan-tri, vừa đăng nhập /tai-khoan
+ * bằng tài khoản khách RIÊNG của họ. Hai việc đó không đụng nhau:
+ *
+ *   · Đang mở khu quản trị mà vào /tai-khoan thì thấy đúng trạng thái CHƯA
+ *     ĐĂNG NHẬP — form đăng nhập của khách, y hệt khách vãng lai. Không có
+ *     dòng nhắc nào, không bị đá về /quan-tri.
+ *   · Đăng nhập tài khoản khách ở đó KHÔNG làm mất phiên quản trị.
+ *   · Đăng xuất một bên không đụng bên kia. Hai nút, hai đường, hai cookie.
+ *
+ * BẢN TRƯỚC KHÔNG NHƯ VẬY: cả hai khu dùng chung một ô $_SESSION['user_id'],
+ * nên đăng nhập bên này là ghi đè bên kia, và requireLogin() phải đá tài khoản
+ * nội bộ về /quan-tri kèm một dòng giải thích. Nhánh đó nay đã gỡ — không còn
+ * gì để giải thích, vì với khu khách thì phiên quản trị đơn giản là không tồn tại.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * VÌ SAO PHẢI TÁCH, chứ không để "ai cũng vào được cả hai"
  *
  *   · Mật khẩu mở khu quản trị mà đặt lại được qua luồng "Quên mật khẩu" của
  *     khách (email/OTP) thì cửa sau bên khách chính là cửa trước bên quản trị.
@@ -35,105 +59,61 @@
  *     và dữ liệu đơn thuốc kính. Cổng quản trị cố tình không cấp nó.
  *   · Đăng nhập bằng Google: SRS mục 3.A ghi rõ "Không áp dụng cho tài khoản
  *     nội bộ". Không chặn thì ai chiếm được hộp thư nội bộ là vào thẳng.
+ *   · Một đơn hàng gắn nhầm vào tài khoản admin là dữ liệu bẩn không ai gỡ
+ *     ra được.
  *
- * BA CỬA VÀO, dùng đúng cửa:
+ * ─────────────────────────────────────────────────────────────────────────────
+ * BỐN CỬA, DÙNG ĐÚNG CỬA
  *
- *   userId()      danh tính thô của phiên, CHƯA phân khu. Chỉ dùng ở nơi tự
- *                 kiểm vai trò ngay sau đó (cổng quản trị, chính lớp này).
- *   customerId()  id khách hàng — trả null nếu phiên là tài khoản nội bộ.
- *                 Mọi mã phía cửa hàng dùng cái này.
+ *   customerId()   id khách đang đăng nhập, hoặc null. Mọi mã phía cửa hàng.
+ *   requireLogin() cửa của khu khách.
+ *   staffId()      id nhân viên đang đăng nhập, hoặc null. Chỉ khu quản trị.
  *   requireStaff() cửa của khu quản trị.
+ *
+ * KHÔNG CÒN userId() VÀ isStaffSession(). Hai hàm đó trả lời câu "phiên này là
+ * ai" mà không nói của khu nào — câu hỏi ấy nay vô nghĩa, vì đang có tới hai
+ * phiên và mỗi request chỉ nhìn thấy một. Gỡ hẳn thay vì để lại: một hàm mơ hồ
+ * còn sống là một chỗ để người sửa sau vô tình bắc cầu lại hai khu vực.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 class AuthMiddleware
 {
+    /** Khoá phiên của khu khách — chỉ có trong cookie `vin_session`. */
+    private const O_KHACH = 'user_id';
+
+    /** Khoá phiên của khu quản trị — chỉ có trong cookie `vin_admin`. */
+    private const O_NOI_BO = 'admin_id';
+
     /** Đã thử khôi phục từ cookie "ghi nhớ" trong request này chưa. */
     private static bool $rememberChecked = false;
 
-    /**
-     * Id người đang đăng nhập, hoặc null.
-     *
-     * Không có phiên thì thử cookie "ghi nhớ đăng nhập" MỘT lần cho mỗi
-     * request. Đây là chỗ duy nhất đọc cookie đó, nên mọi đường vào —
-     * check(), requireLogin(), requireStaff() — đều tự hưởng.
-     */
-    public static function userId(): ?string
-    {
-        if (isset($_SESSION['user_id'])) {
-            return $_SESSION['user_id'];
-        }
-
-        if (self::$rememberChecked) {
-            return null;
-        }
-
-        self::$rememberChecked = true;
-
-        // Không có cookie thì thôi, khỏi đụng tới cơ sở dữ liệu. Đại đa số
-        // lượt truy cập là khách vãng lai không có cookie này.
-        if (!isset($_COOKIE[RememberModel::COOKIE])) {
-            return null;
-        }
-
-        $userId = RememberModel::consume();
-
-        if ($userId === null) {
-            return null;
-        }
-
-        /*
-         * COOKIE GHI NHỚ LÀ CƠ CHẾ CỦA RIÊNG KHU KHÁCH HÀNG.
-         *
-         * Cổng quản trị không bao giờ cấp token này — AdminAuthController
-         * ::login() gọi login() không kèm $remember, có ghi rõ lý do ở đó.
-         * Nên một token trỏ tới tài khoản nội bộ chỉ có thể là di sản: cấp
-         * hồi tài khoản đó còn đăng nhập được ở /auth, trước khi hai khu vực
-         * bị tách.
-         *
-         * Huỷ SẠCH token của tài khoản ấy chứ không chỉ bỏ qua lượt này:
-         * consume() vừa xoay token xong, bỏ qua thôi thì lần sau vào trang
-         * lại đúng cảnh này. Người đó đăng nhập lại ở /quan-tri/dang-nhap.
-         */
-        if (UserModel::isStaff($userId)) {
-            RememberModel::forgetAllFor($userId);
-            RememberModel::forget();
-
-            return null;
-        }
-
-        // Đăng nhập lại từ cookie KHÔNG cấp phiên "mới tinh": đánh dấu
-        // via_cookie để những thao tác nhạy cảm (đổi mật khẩu, đổi email) có
-        // thể yêu cầu nhập lại mật khẩu nếu sau này cần siết thêm.
-        session_regenerate_id(true);
-        $_SESSION['user_id']    = $userId;
-        $_SESSION['logged_at']  = time();
-        $_SESSION['via_cookie'] = true;
-
-        // Dọn token chết, thưa thớt thôi — 1/50 lượt khôi phục là đủ để bảng
-        // không phình, mà không biến mỗi lần vào trang thành một lệnh DELETE.
-        if (random_int(1, 50) === 1) {
-            RememberModel::purgeExpired();
-        }
-
-        return $userId;
-    }
+    // ========================================================================
+    // KHU KHÁCH HÀNG
+    // ========================================================================
 
     /**
      * Id KHÁCH HÀNG đang đăng nhập, hoặc null.
      *
-     * KHÁC userId(): tài khoản nội bộ trả về null, tức là với toàn bộ mã phía
-     * cửa hàng thì một người đang mở khu quản trị chỉ là khách vãng lai. Đó
-     * là điều đúng — họ không có giỏ hàng, không có đơn hàng, không có lịch
-     * hẹn ở tư cách ấy, và một đơn hàng gắn nhầm vào tài khoản admin là dữ
-     * liệu bẩn không ai gỡ ra được.
+     * Không có phiên thì thử cookie "ghi nhớ đăng nhập" MỘT lần cho mỗi
+     * request. Đây là chỗ duy nhất đọc cookie đó, nên mọi đường vào —
+     * check(), requireLogin() — đều tự hưởng.
      *
-     * Vai trò đọc lại từ DB mỗi lượt chứ không cất vào phiên: cùng lý do đã
-     * ghi ở requireStaff().
+     * VẪN KIỂM isStaff() DÙ ĐÃ TÁCH COOKIE. Thừa trong đời sống bình thường:
+     * ô này nằm trong phiên của khu khách, và cổng quản trị không bao giờ ghi
+     * vào đó. Nhưng nó rẻ và nó đỡ đúng một ca có thật — phiên `vin_session`
+     * CŨ, cấp hồi hai khu còn dùng chung một ô, đang mang id của một tài khoản
+     * nội bộ. Sau lần deploy này những phiên đó vẫn còn sống trong trình duyệt
+     * nhân viên; không có dòng kiểm này thì họ bỗng thành đang-đăng-nhập với
+     * tư cách khách hàng ở trang bán hàng.
      */
     public static function customerId(): ?string
     {
-        $userId = self::userId();
+        $userId = $_SESSION[self::O_KHACH] ?? null;
+
+        if ($userId === null) {
+            $userId = self::tuCookieGhiNho();
+        }
 
         if ($userId === null || UserModel::isStaff($userId)) {
             return null;
@@ -143,23 +123,10 @@ class AuthMiddleware
     }
 
     /**
-     * Phiên hiện tại có phải tài khoản nội bộ không.
-     *
-     * Dùng cho GIAO DIỆN — ví dụ icon tài khoản ở header trỏ về /quan-tri
-     * thay vì /tai-khoan. Không được dùng thay cho requireStaff(): đây là câu
-     * hỏi "hiện ra cái gì", không phải "cho vào hay không".
-     */
-    public static function isStaffSession(): bool
-    {
-        $userId = self::userId();
-
-        return $userId !== null && UserModel::isStaff($userId);
-    }
-
-    /**
      * Có KHÁCH HÀNG nào đang đăng nhập không.
      *
-     * Tài khoản nội bộ KHÔNG tính — xem customerId().
+     * Phiên quản trị KHÔNG tính, và ở đây thì không tính theo nghĩa mạnh nhất:
+     * request tới trang cửa hàng không hề mang theo cookie `vin_admin`.
      */
     public static function check(): bool
     {
@@ -181,131 +148,41 @@ class AuthMiddleware
      * qua safeRedirectPath() ở đầu bên kia (xem AuthController::loginTarget),
      * nên một chuỗi dẫn ra ngoài site không bao giờ thành đích thật.
      *
-     * ĐÂY LÀ CỬA CỦA KHU KHÁCH HÀNG. Tài khoản nội bộ không đi qua được, kể
-     * cả khi phiên của họ hoàn toàn hợp lệ — xem khối "HAI KHU VỰC" đầu file.
+     * KHÔNG CÒN NHÁNH "TÀI KHOẢN NỘI BỘ ĐI NHẦM SANG ĐÂY". Trước đây hàm này
+     * nhận ra phiên nội bộ rồi đá về /quan-tri kèm lời nhắn. Nay không nhận ra
+     * được nữa, và cũng không cần: cookie quản trị không tới đây, nên với khu
+     * khách thì người đó là khách vãng lai. Họ thấy form đăng nhập bình thường
+     * và đăng nhập bằng tài khoản khách của mình được ngay — đúng thứ luồng cũ
+     * chặn lại.
      */
     public static function requireLogin(?string $returnTo = null): string
     {
-        $userId = self::userId();
+        $userId = self::customerId();
 
         if ($userId === null) {
             redirect('/auth?redirect=' . rawurlencode($returnTo ?? currentPath()));
         }
 
-        /*
-         * TÀI KHOẢN NỘI BỘ ĐI NHẦM SANG KHU KHÁCH.
-         *
-         * Đưa về /quan-tri kèm một dòng giải thích, KHÔNG trả 403 và cũng
-         * không đá sang /auth:
-         *
-         *   · 403 nói "bạn không đủ quyền", mà sự thật ngược lại — họ thừa
-         *     quyền, chỉ là đứng nhầm cửa. Câu đó làm người đọc đi tìm xem
-         *     mình thiếu quyền gì.
-         *   · Đá sang /auth thì họ thấy form đăng nhập trong khi ĐANG đăng
-         *     nhập, và có gõ đúng mật khẩu nội bộ vào đó cũng bị từ chối —
-         *     một vòng tròn không có lối ra.
-         *
-         * Muốn mua hàng bằng tài khoản riêng thì đăng xuất rồi đăng nhập lại
-         * bằng tài khoản khách; đó là hai tài khoản khác nhau, đúng như luật.
-         */
-        if (UserModel::isStaff($userId)) {
-            flash('admin_error',
-                  'Tài khoản nội bộ không dùng được khu vực tài khoản khách hàng. '
-                  . 'Đăng xuất rồi đăng nhập bằng tài khoản khách nếu bạn cần mua hàng.');
-            redirect('/quan-tri');
-        }
-
         return $userId;
     }
 
     /**
-     * Bắt buộc có quyền vào khu quản trị.
-     *
-     * Vai trò đọc lại từ DB mỗi lần, KHÔNG lấy từ session: session sống hàng
-     * tuần, nên người vừa bị gỡ quyền vẫn giữ quyền tới khi tự đăng xuất.
-     */
-    public static function requireStaff(): string
-    {
-        $userId = self::userId();
-
-        /*
-         * CHƯA ĐĂNG NHẬP THÌ VỀ CỔNG QUẢN TRỊ, KHÔNG PHẢI /auth.
-         *
-         * Trước đây dòng này gọi requireLogin(), tức là ném nhân viên sang
-         * trang đăng nhập của KHÁCH: nền be, nút "Tạo tài khoản", nút "Đăng
-         * nhập bằng Google". Không có gì trên màn hình đó nói rằng họ đang
-         * bước vào khu quản trị, và cái nút tạo tài khoản thì gợi ý sai hẳn —
-         * tài khoản quản trị không tự đăng ký được.
-         *
-         * Nay có cửa riêng: /quan-tri/dang-nhap, dựng theo "Admin Login.dc.html".
-         *
-         * MANG THEO CẢ QUERY STRING, khác requireLogin() vốn cắt nó bằng
-         * currentPath(). Trong khu quản trị thì query THƯỜNG LÀ chỗ khách
-         * muốn tới: /quan-tri/don-hang?trang-thai=cho-xac-nhan là một tab
-         * riêng, /quan-tri/san-pham?sua=<id> là một biểu mẫu đang mở. Cắt đi
-         * là đăng nhập xong rơi về danh sách trống, phải tìm lại từ đầu.
-         *
-         * Vẫn đi qua safeRedirectPath() ở đầu bên kia — xem
-         * AdminAuthController::target(), nơi còn siết thêm là chỉ nhận đường
-         * dẫn nằm trong /quan-tri.
-         */
-        if ($userId === null) {
-            redirect('/quan-tri/dang-nhap?redirect=' . rawurlencode(
-                currentUrlWithout([])
-            ));
-        }
-
-        if (!UserModel::isStaff($userId)) {
-            // 403 chứ không 404: người dùng ĐÃ đăng nhập, nói rõ là không đủ
-            // quyền thì hữu ích hơn là giả vờ trang không tồn tại.
-            http_response_code(403);
-            (new ErrorController())->forbidden();
-            exit;
-        }
-
-        return $userId;
-    }
-
-    /**
-     * Bắt buộc một vai trò cụ thể (admin, manager…).
-     *
-     * KHÔNG đi qua requireLogin() nữa: hàm đó nay là cửa của khu KHÁCH và đá
-     * mọi tài khoản nội bộ về /quan-tri, nên requireRole('admin') gọi qua nó
-     * sẽ chặn đúng người mà nó định cho vào. Bẫy đó chưa nổ vì hiện chưa nơi
-     * nào gọi requireRole(); sửa luôn để nơi gọi đầu tiên không phải là người
-     * phát hiện ra.
-     */
-    public static function requireRole(string $role): string
-    {
-        $userId = self::userId();
-
-        if ($userId === null) {
-            redirect('/quan-tri/dang-nhap?redirect=' . rawurlencode(currentUrlWithout([])));
-        }
-
-        if (!UserModel::hasRole($userId, $role)) {
-            http_response_code(403);
-            (new ErrorController())->forbidden();
-            exit;
-        }
-
-        return $userId;
-    }
-
-    /**
-     * Ghi nhận đăng nhập thành công.
+     * Ghi nhận đăng nhập KHÁCH HÀNG thành công.
      *
      * session_regenerate_id() là bắt buộc, không phải phòng xa: kẻ tấn công
      * có thể ép nạn nhân dùng một mã phiên do hắn biết trước (session
      * fixation), rồi sau khi nạn nhân đăng nhập thì dùng chính mã đó để vào.
      * Cấp mã phiên mới ngay lúc đổi quyền sẽ vô hiệu hoá mã cũ.
+     *
+     * Chỉ đụng tới phiên `vin_session`. Phiên quản trị nếu có thì nằm trong
+     * một cookie khác và không hề bị ảnh hưởng.
      */
     public static function login(string $userId, bool $remember = false): void
     {
         session_regenerate_id(true);
 
-        $_SESSION['user_id']    = $userId;
-        $_SESSION['logged_at']  = time();
+        $_SESSION[self::O_KHACH] = $userId;
+        $_SESSION['logged_at']   = time();
         unset($_SESSION['via_cookie']);
 
         if ($remember) {
@@ -314,7 +191,12 @@ class AuthMiddleware
     }
 
     /**
-     * Đăng xuất: xoá sạch dữ liệu phiên và huỷ cookie.
+     * Đăng xuất KHÁCH HÀNG: xoá phiên `vin_session` và cookie ghi nhớ.
+     *
+     * KHÔNG ĐỤNG TỚI PHIÊN QUẢN TRỊ. Không phải nhờ một dòng kiểm nào ở đây —
+     * hàm này chạy trên đường dẫn của khu khách, nên session_destroy() chỉ với
+     * tới được cookie `vin_session`. Nhân viên bấm Đăng xuất ở trang bán hàng
+     * vẫn còn nguyên phiên ở /quan-tri.
      */
     public static function logout(): void
     {
@@ -327,9 +209,221 @@ class AuthMiddleware
         // nhưng giỏ đang chọn dở thì không có lý do gì phải xoá.
         $cart = $_SESSION['cart'] ?? null;
 
+        self::huyPhien();
+
+        if ($cart !== null) {
+            $_SESSION['cart'] = $cart;
+        }
+    }
+
+    // ========================================================================
+    // KHU QUẢN TRỊ
+    // ========================================================================
+
+    /**
+     * Id NHÂN VIÊN đang đăng nhập, hoặc null.
+     *
+     * Chỉ trả về giá trị khi chạy trên đường /quan-tri — ngoài đó thì phiên
+     * đang mở là `vin_session` và ô này không tồn tại. Đó là điều đúng: mã
+     * phía cửa hàng không có việc gì phải biết ai đang trực quầy.
+     *
+     * KHÔNG khôi phục từ cookie "ghi nhớ". Cổng quản trị không bao giờ cấp
+     * token đó (xem AdminAuthController::login), nên ở đây không có gì để
+     * khôi phục — và nếu mai này có ai thêm vào thì phải sửa ở đúng một chỗ.
+     *
+     * Vai trò đọc lại từ DB mỗi lượt chứ không cất vào phiên: cùng lý do đã
+     * ghi ở requireStaff().
+     */
+    public static function staffId(): ?string
+    {
+        $userId = $_SESSION[self::O_NOI_BO] ?? null;
+
+        if ($userId === null || !UserModel::isStaff($userId)) {
+            return null;
+        }
+
+        return $userId;
+    }
+
+    /**
+     * Bắt buộc có quyền vào khu quản trị.
+     *
+     * Vai trò đọc lại từ DB mỗi lần, KHÔNG lấy từ session: session sống hàng
+     * tuần, nên người vừa bị gỡ quyền vẫn giữ quyền tới khi tự đăng xuất.
+     *
+     * CHƯA ĐĂNG NHẬP THÌ VỀ CỔNG QUẢN TRỊ, KHÔNG PHẢI /auth.
+     *
+     * Trước đây dòng này gọi requireLogin(), tức là ném nhân viên sang trang
+     * đăng nhập của KHÁCH: nền be, nút "Tạo tài khoản", nút "Đăng nhập bằng
+     * Google". Không có gì trên màn hình đó nói rằng họ đang bước vào khu quản
+     * trị, và cái nút tạo tài khoản thì gợi ý sai hẳn — tài khoản quản trị
+     * không tự đăng ký được.
+     *
+     * MANG THEO CẢ QUERY STRING, khác requireLogin() vốn cắt nó bằng
+     * currentPath(). Trong khu quản trị thì query THƯỜNG LÀ chỗ người ta muốn
+     * tới: /quan-tri/don-hang?trang-thai=cho-xac-nhan là một tab riêng,
+     * /quan-tri/san-pham?sua=<id> là một biểu mẫu đang mở. Cắt đi là đăng nhập
+     * xong rơi về danh sách trống, phải tìm lại từ đầu.
+     *
+     * Vẫn đi qua safeRedirectPath() ở đầu bên kia — xem
+     * AdminAuthController::target(), nơi còn siết thêm là chỉ nhận đường dẫn
+     * nằm trong /quan-tri.
+     *
+     * KHÔNG CÒN NHÁNH 403 "đã đăng nhập nhưng không đủ quyền". Nhánh đó chỉ có
+     * nghĩa khi một phiên KHÁCH lọt được vào đây, mà nay thì không: ô
+     * `admin_id` chỉ do AdminAuthController::login() ghi, và nó kiểm quyền
+     * trước khi ghi. Một ô rỗng hoặc một tài khoản vừa bị gỡ quyền đều dẫn về
+     * cùng một chỗ — cổng đăng nhập — vì cả hai đều cần đúng một việc: đăng
+     * nhập lại bằng tài khoản có quyền.
+     */
+    public static function requireStaff(): string
+    {
+        $userId = self::staffId();
+
+        if ($userId === null) {
+            redirect('/quan-tri/dang-nhap?redirect=' . rawurlencode(
+                currentUrlWithout([])
+            ));
+        }
+
+        return $userId;
+    }
+
+    /**
+     * Bắt buộc một vai trò cụ thể (admin, manager…).
+     *
+     * Đi qua requireStaff() trước: phải là nhân viên đã, rồi mới xét vai trò
+     * cụ thể. Nhờ vậy người chưa đăng nhập nhận cổng đăng nhập chứ không nhận
+     * 403 — họ chưa được hỏi mật khẩu lần nào thì nói "không đủ quyền" là sai.
+     */
+    public static function requireRole(string $role): string
+    {
+        $userId = self::requireStaff();
+
+        if (!UserModel::hasRole($userId, $role)) {
+            // 403 chứ không 404: người dùng ĐÃ đăng nhập bằng tài khoản nội
+            // bộ hợp lệ, nói rõ là không đủ quyền thì hữu ích hơn là giả vờ
+            // trang không tồn tại.
+            http_response_code(403);
+            (new ErrorController())->forbidden();
+            exit;
+        }
+
+        return $userId;
+    }
+
+    /**
+     * Ghi nhận đăng nhập NHÂN VIÊN thành công.
+     *
+     * Không có tham số $remember, và đó là cố ý chứ không phải thiếu sót:
+     * cookie ghi nhớ sống 30 ngày trên đúng cái máy hay được dùng chung ở
+     * quầy. Cổng quản trị không cấp nó — xem AdminAuthController::login().
+     *
+     * Chỉ đụng tới phiên `vin_admin`. Nhân viên đang đăng nhập tài khoản khách
+     * riêng của mình ở trang bán hàng thì phiên đó còn nguyên.
+     */
+    public static function loginStaff(string $userId): void
+    {
+        session_regenerate_id(true);
+
+        $_SESSION[self::O_NOI_BO] = $userId;
+        $_SESSION['logged_at']    = time();
+    }
+
+    /**
+     * Đăng xuất NHÂN VIÊN: xoá phiên `vin_admin`.
+     *
+     * Không gọi RememberModel::forget() — cổng này không cấp token ghi nhớ nên
+     * không có gì để thu hồi, và cookie đó thuộc về khu khách: xoá nó ở đây là
+     * bấm Đăng xuất bên quản trị lại đá luôn phiên mua hàng của người ta.
+     */
+    public static function logoutStaff(): void
+    {
+        self::huyPhien();
+    }
+
+    // ========================================================================
+    // BÊN TRONG
+    // ========================================================================
+
+    /**
+     * Khôi phục danh tính KHÁCH từ cookie "ghi nhớ đăng nhập".
+     *
+     * Thử một lần cho mỗi request, dù có bao nhiêu nơi gọi customerId().
+     */
+    private static function tuCookieGhiNho(): ?string
+    {
+        if (self::$rememberChecked) {
+            return null;
+        }
+
+        self::$rememberChecked = true;
+
+        // Không có cookie thì thôi, khỏi đụng tới cơ sở dữ liệu. Đại đa số
+        // lượt truy cập là khách vãng lai không có cookie này.
+        if (!isset($_COOKIE[RememberModel::COOKIE])) {
+            return null;
+        }
+
+        $userId = RememberModel::consume();
+
+        if ($userId === null) {
+            return null;
+        }
+
+        /*
+         * COOKIE GHI NHỚ LÀ CƠ CHẾ CỦA RIÊNG KHU KHÁCH HÀNG.
+         *
+         * Cổng quản trị không bao giờ cấp token này — AuthMiddleware
+         * ::loginStaff() không nhận tham số $remember, có ghi rõ lý do ở đó.
+         * Nên một token trỏ tới tài khoản nội bộ chỉ có thể là di sản: cấp
+         * hồi tài khoản đó còn đăng nhập được ở /auth, trước khi hai khu vực
+         * bị tách.
+         *
+         * Huỷ SẠCH token của tài khoản ấy chứ không chỉ bỏ qua lượt này:
+         * consume() vừa xoay token xong, bỏ qua thôi thì lần sau vào trang
+         * lại đúng cảnh này. Người đó đăng nhập lại ở /quan-tri/dang-nhap.
+         */
+        if (UserModel::isStaff($userId)) {
+            RememberModel::forgetAllFor($userId);
+            RememberModel::forget();
+
+            return null;
+        }
+
+        // Đăng nhập lại từ cookie KHÔNG cấp phiên "mới tinh": đánh dấu
+        // via_cookie để những thao tác nhạy cảm (đổi mật khẩu, đổi email) có
+        // thể yêu cầu nhập lại mật khẩu nếu sau này cần siết thêm.
+        session_regenerate_id(true);
+        $_SESSION[self::O_KHACH] = $userId;
+        $_SESSION['logged_at']   = time();
+        $_SESSION['via_cookie']  = true;
+
+        // Dọn token chết, thưa thớt thôi — 1/50 lượt khôi phục là đủ để bảng
+        // không phình, mà không biến mỗi lần vào trang thành một lệnh DELETE.
+        if (random_int(1, 50) === 1) {
+            RememberModel::purgeExpired();
+        }
+
+        return $userId;
+    }
+
+    /**
+     * Xoá sạch phiên ĐANG MỞ và cookie của nó, rồi mở lại một phiên rỗng.
+     *
+     * Dùng chung cho cả hai khu vực, và an toàn để dùng chung chính vì cookie
+     * đã tách: session_name() và session_get_cookie_params() lúc này mang giá
+     * trị mà App::startSession() đặt cho khu vực của request hiện tại, nên hàm
+     * này không có cách nào với sang phiên của khu bên kia.
+     */
+    private static function huyPhien(): void
+    {
         $_SESSION = [];
 
-        // Xoá cả cookie phiên, nếu không trình duyệt vẫn gửi mã cũ lên
+        // Xoá cả cookie phiên, nếu không trình duyệt vẫn gửi mã cũ lên.
+        // $p['path'] là phạm vi của ĐÚNG khu vực này ('/' hoặc '/quan-tri') —
+        // sai path thì trình duyệt giữ nguyên cookie cũ và người dùng bấm
+        // Đăng xuất xong vẫn còn đăng nhập.
         if (ini_get('session.use_cookies')) {
             $p = session_get_cookie_params();
             setcookie(session_name(), '', [
@@ -345,9 +439,5 @@ class AuthMiddleware
         session_destroy();
         session_start();
         session_regenerate_id(true);
-
-        if ($cart !== null) {
-            $_SESSION['cart'] = $cart;
-        }
     }
 }

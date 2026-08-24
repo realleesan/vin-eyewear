@@ -49,14 +49,15 @@ class AdminAuthController extends BaseController
         /*
          * ĐÃ LÀ NHÂN VIÊN ĐANG ĐĂNG NHẬP thì vào thẳng, không bày lại form.
          *
-         * Chỉ bỏ qua khi người đó THẬT SỰ có quyền. Khách hàng đang đăng nhập
-         * mà mò tới đây thì vẫn thấy form: họ cần một chỗ để đăng nhập lại
-         * bằng tài khoản nội bộ, chứ đá thẳng sang /quan-tri chỉ để nhận 403
-         * là một ngõ cụt không lối ra.
+         * staffId() đọc ô `admin_id` trong phiên `vin_admin` và tự kiểm quyền,
+         * nên nó chỉ trả về giá trị khi người đó THẬT SỰ còn quyền.
+         *
+         * Khách hàng đang đăng nhập ở trang bán hàng thì phiên của họ nằm
+         * trong cookie khác, không tới được đây — họ chỉ đơn giản thấy form,
+         * đúng như một người chưa đăng nhập. Đó là điều đúng: đây là cánh cửa
+         * riêng của khu quản trị, không phải nơi nói chuyện với tài khoản khách.
          */
-        $userId = AuthMiddleware::userId();
-
-        if ($userId !== null && UserModel::isStaff($userId)) {
+        if (AuthMiddleware::staffId() !== null) {
             redirect($this->target($_GET['redirect'] ?? null));
         }
 
@@ -168,15 +169,24 @@ class AdminAuthController extends BaseController
             $this->fail($chung, $email, $to);
         }
 
-        AuthMiddleware::login($result['id']);
+        /*
+         * loginStaff(), KHÔNG PHẢI login().
+         *
+         * Hai hàm ghi vào hai ô khác nhau trong hai phiên khác nhau —
+         * `admin_id` trong `vin_admin` so với `user_id` trong `vin_session`.
+         * Gọi nhầm login() ở đây là mở một phiên KHÁCH mang id của tài khoản
+         * nội bộ: khu quản trị vẫn coi như chưa đăng nhập (đá về đúng trang
+         * này, thành vòng lặp), còn trang bán hàng thì có một phiên bỏ quên.
+         */
+        AuthMiddleware::loginStaff($result['id']);
 
         /*
          * KHÔNG CÓ Ô "DUY TRÌ ĐĂNG NHẬP".
          *
          * Bản thiết kế không vẽ nó, và với một khu quản trị thì đó là lựa
-         * chọn đúng: cookie ghi nhớ sống hai tuần trên đúng cái máy hay được
-         * dùng chung ở quầy. AuthMiddleware::login() gọi không kèm $remember
-         * nên phiên chết khi đóng trình duyệt.
+         * chọn đúng: cookie ghi nhớ sống 30 ngày trên đúng cái máy hay được
+         * dùng chung ở quầy. loginStaff() cố tình KHÔNG nhận tham số $remember
+         * nên phiên chết khi đóng trình duyệt, và không có cách nào khai thêm.
          */
         redirect($to);
     }
@@ -222,23 +232,21 @@ class AdminAuthController extends BaseController
         /*
          * CHỈ ĐÓNG PHIÊN NỘI BỘ.
          *
-         * Không có chốt này thì một phiên KHÁCH gửi tới đây cũng bị đóng —
-         * thử rồi, nó đóng thật. Hại thì gần như không (đó là phiên của chính
-         * người gửi, lại có token CSRF), nhưng nó phá đúng cái luật mà cả
-         * commit này dựng lên: mỗi địa chỉ phục vụ ĐÚNG MỘT khu vực. Để hở
-         * thì /quan-tri/dang-xuat là một đường của khu quản trị mà lại thao
-         * tác được lên tài khoản khách, và người đọc mã sau này có quyền suy
-         * ra rằng mấy đường /quan-tri khác cũng vậy.
+         * Nay có hai lớp giữ điều đó, và lớp mạnh hơn nằm ngoài file này:
+         * request tới /quan-tri/dang-xuat chỉ mang theo cookie `vin_admin`,
+         * nên logoutStaff() KHÔNG CÓ CÁCH NÀO với tới phiên mua hàng của
+         * người gửi — kể cả nếu mã ở đây viết sai.
          *
-         * Khách rơi vào đây thì KHÔNG đụng vào phiên của họ — họ có đường ra
-         * riêng ở /auth/dang-xuat — chỉ đưa về cổng quản trị, đúng nơi một
-         * địa chỉ /quan-tri nên dẫn tới khi người gõ không có quyền.
+         * Dòng kiểm dưới đây vì thế không còn là chốt an toàn mà là chuyện
+         * lịch sự: chưa đăng nhập mà POST vào đây thì huỷ một phiên rỗng rồi
+         * chuyển hướng cũng ra cùng kết quả, nhưng nó xoay session id vô ích
+         * và ghi một dòng đăng xuất không có ai đăng xuất vào log.
          */
-        if (!AuthMiddleware::isStaffSession()) {
+        if (AuthMiddleware::staffId() === null) {
             redirect('/quan-tri/dang-nhap');
         }
 
-        AuthMiddleware::logout();
+        AuthMiddleware::logoutStaff();
 
         redirect('/quan-tri/dang-nhap');
     }

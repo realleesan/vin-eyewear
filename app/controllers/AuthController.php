@@ -783,15 +783,13 @@ class AuthController extends BaseController
             redirect('/auth');
         }
 
-        /* Đã đăng nhập rồi thì không có việc gì ở đây — nhưng "về đâu" thì
-           tuỳ tài khoản: phiên nội bộ mà đá sang /tai-khoan là đá vào đúng
-           cánh cửa requireLogin() vừa đóng lại với họ, đi một vòng rồi quay
-           về /quan-tri kèm một dòng báo lỗi không ai cần đọc. */
-        if (AuthMiddleware::isStaffSession()) {
-            redirect('/quan-tri');
-        }
-
-        if (AuthMiddleware::userId() !== null) {
+        /* Đã đăng nhập rồi thì không có việc gì ở đây.
+           Chỉ hỏi customerId(): đây là luồng của khu khách, và phiên quản trị
+           (nếu có) nằm trong cookie khác nên không tới được trang này. Nhân
+           viên đang trực mà bấm "Đăng nhập bằng Google" ở cửa hàng thì đó là
+           họ đang đăng nhập tài khoản KHÁCH của mình — một việc hợp lệ, không
+           phải nhầm lẫn cần chặn. */
+        if (AuthMiddleware::customerId() !== null) {
             redirect('/tai-khoan');
         }
 
@@ -885,21 +883,20 @@ class AuthController extends BaseController
     {
         $this->requirePost('/');
 
-        /* ĐÂY LÀ ĐƯỜNG RA CỦA KHÁCH. Khu quản trị có đường riêng —
-           /quan-tri/dang-xuat, xem AdminAuthController::logout() — và không
-           còn nút nào trong dự án trỏ phiên nội bộ vào đây nữa.
+        /* ĐÂY LÀ ĐƯỜNG RA CỦA KHÁCH, VÀ NAY CHỈ CÓ THỂ LÀ VẬY.
+           Khu quản trị có đường riêng — /quan-tri/dang-xuat, xem
+           AdminAuthController::logout().
 
-           Nhánh dưới vì thế là LƯỚI ĐỠ, không phải đường đi thường ngày: một
-           tab để quên từ bản cũ, một dấu trang, hay một cú POST gõ tay vẫn
-           có thể rơi vào đây. Gặp ca đó thì trả người ta về cổng quản trị
-           thay vì thả giữa trang chủ cửa hàng.
-
-           Hỏi TRƯỚC KHI huỷ phiên: sau logout() thì không còn ai để hỏi. */
-        $wasStaff = AuthMiddleware::isStaffSession();
-
+           Trước đây ở đây có một nhánh "nếu là phiên nội bộ thì trả về cổng
+           quản trị", làm lưới đỡ cho một tab để quên từ bản cũ. Nhánh đó nay
+           vô nghĩa: request tới đường này chỉ mang cookie `vin_session`, nên
+           logout() không có cách nào chạm tới phiên quản trị — nhân viên bấm
+           Đăng xuất ở trang bán hàng chỉ mất phiên MUA HÀNG của họ, và vẫn
+           đang đăng nhập ở /quan-tri. Đưa về trang chủ cửa hàng là đúng chỗ,
+           vì đó chính là nơi họ vừa đăng xuất khỏi. */
         AuthMiddleware::logout();
 
-        redirect($wasStaff ? '/quan-tri/dang-nhap' : '/');
+        redirect('/');
     }
 
     // ========================================================================

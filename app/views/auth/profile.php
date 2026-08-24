@@ -165,10 +165,11 @@ $inGroup = in_array($section, $groupKeys, true);
                  * đưa lại.
                  *
                  * Nó bọc trong `if ($isStaff)`, tức là chỉ hiện với tài khoản
-                 * nội bộ đang xem trang tài khoản khách. Từ khi tách hai khu
-                 * vực, cảnh đó không tồn tại nữa: AuthMiddleware::requireLogin()
-                 * đá mọi phiên nội bộ về /quan-tri trước khi trang này kịp
-                 * dựng, nên nhánh ấy vĩnh viễn không chạy.
+                 * nội bộ đang xem trang tài khoản khách. Từ khi hai khu vực có
+                 * PHIÊN RIÊNG (xem App::startSession), cảnh đó không tồn tại
+                 * nữa: trang này chạy trên cookie `vin_session`, nên nó không
+                 * có cách nào biết người đang xem cũng đang mở khu quản trị —
+                 * nhánh ấy vĩnh viễn không chạy.
                  *
                  * Giữ lại thì tệ hơn là chỉ thừa: nó là một liên kết từ khu
                  * KHÁCH trỏ vào khu QUẢN TRỊ, đúng thứ mà việc tách hai khu

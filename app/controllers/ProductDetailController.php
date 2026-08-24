@@ -32,7 +32,7 @@ class ProductDetailController extends BaseController
             ? CategoryModel::find($product['category_id'])
             : null;
 
-        $userId = $_SESSION['user_id'] ?? null;
+        $userId = AuthMiddleware::customerId();
 
         $this->renderView('product/detail', [
             'pageTitle' => $product['name'] . ' — Vin Eyewear',
@@ -80,7 +80,7 @@ class ProductDetailController extends BaseController
             redirect('/san-pham');
         }
 
-        $userId = $_SESSION['user_id'] ?? null;
+        $userId = AuthMiddleware::customerId();
 
         if ($userId === null) {
             flash('review_msg', 'Đăng nhập để viết đánh giá.');
