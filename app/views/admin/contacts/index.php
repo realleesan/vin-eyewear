@@ -7,7 +7,14 @@
 ?>
 <header class="ahead">
     <h1 class="ahead__title">Yêu cầu liên hệ</h1>
-    <p class="ahead__lead"><?= (int) $total ?> yêu cầu<?= $totalPages > 1 ? ' · trang ' . $page . '/' . $totalPages : '' ?></p>
+    <?php /* Kèm số CHƯA XỬ LÝ — cùng lý do đã ghi ở trang Lịch hẹn. */ ?>
+    <p class="ahead__lead">
+        <?= (int) $total ?> yêu cầu
+        <?php if (!empty($counts['new'])): ?>
+            · <?= (int) $counts['new'] ?> chưa xử lý
+        <?php endif; ?>
+        <?= $totalPages > 1 ? ' · trang ' . $page . '/' . $totalPages : '' ?>
+    </p>
 </header>
 
 <?php partial('admin/_layout/filter-tabs', [

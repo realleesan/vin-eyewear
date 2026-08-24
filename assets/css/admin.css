@@ -296,8 +296,14 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     color: #f0e6da;
 }
 
-.asidebar__role {
+/* Email dưới tên — chữ đẳng khoảng, nhỏ, mờ, đúng bản thiết kế.
+   Cắt bằng ellipsis: địa chỉ nội bộ dài hơn 240px của thanh bên là chuyện
+   bình thường, mà tràn ra thì nó chồng lên vòng tròn chữ cái đầu. */
+.asidebar__mail {
     display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-family: var(--font-mono);
     font-size: var(--fs-micro);
     letter-spacing: 0.1em;
@@ -357,6 +363,18 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     color: var(--muted);
 }
 
+/* Một định danh nằm trong dòng dẫn — email tài khoản, mã cơ sở…
+   Chữ đẳng khoảng nhưng KHÔNG có nền xám như <code> mặc định của trang: ở đây
+   nó là một phần của câu, không phải một mẩu mã trích ra. Cỡ chữ nhỏ hơn một
+   nấc vì chữ đẳng khoảng luôn trông to hơn chữ thường cùng cỡ. */
+.ahead__id {
+    font-family: var(--font-mono);
+    font-size: var(--fs-caption);
+    color: var(--ink);
+    background: none;
+    padding: 0;
+}
+
 /* --- Thông báo --------------------------------------------- */
 
 .alert {
@@ -372,15 +390,26 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 /* --- Thẻ số liệu ------------------------------------------- */
 
+/* BỐN CỘT CỐ ĐỊNH, không phải auto-fill.
+   Bản trước dùng auto-fill cho tám thẻ, nên số cột đổi theo bề rộng cửa sổ và
+   ở 1440px rơi thành 6 + 2 lẻ. Nay chỉ còn bốn thẻ và bản thiết kế xếp chúng
+   thành đúng một hàng bốn cột — cố định thì hàng đó không bao giờ gãy nửa
+   chừng. Dưới 1100px mới hạ xuống hai cột, rồi một cột. */
 .astats {
     display: grid;
-    /* 150px thay vì 180px: vừa đủ cho "11.840.000đ", và ở 1440px xếp được
-       8 thẻ trên MỘT hàng thay vì 6 + 2 lẻ như trước. */
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 14px;
-    margin: 0 0 20px;
+    margin: 0 0 14px;
     padding: 0;
     list-style: none;
+}
+
+@media (max-width: 1100px) {
+    .astats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+    .astats { grid-template-columns: 1fr; }
 }
 
 .astat {
@@ -395,11 +424,14 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 /* KHÔNG nhún lên khi rê chuột. Trên trang bán hàng cú nhún là phản hồi dễ
-   chịu; trên bảng điều khiển có 8 thẻ sát nhau, rê chuột ngang qua thành
-   một dãy nhấp nhô. Đổi nền là đủ để biết con trỏ đang ở đâu. */
-.astat:hover {
+   chịu; trên bảng điều khiển có mấy thẻ sát nhau, rê chuột ngang qua thành
+   một dãy nhấp nhô. Đổi viền là đủ để biết con trỏ đang ở đâu.
+
+   CHỈ thẻ có liên kết mới sáng viền. Thẻ Doanh thu không bấm được (xem ghi
+   chú ở dashboard/index.php); cho nó phản ứng khi rê chuột là hứa một cú bấm
+   không tồn tại. */
+.astat--link:hover {
     border-color: #c9b8a2;
-    background: var(--surface-raised);
 }
 
 .astat__label {
@@ -410,11 +442,12 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     color: #98897b;
 }
 
-/* 19px, không phải 22px. Thẻ hẹp nhất rộng 150px, trừ lề trong còn 122px
-   để chứa chữ. Con số dài nhất trên bảng này là doanh thu dạng
-   "11.840.000đ" — 12 ký tự; ở 22px nó tràn qua mép thẻ và dấu đ bị cắt.
-   Đây là loại lỗi chỉ xuất hiện khi cửa hàng bán được nhiều, tức là đúng
-   lúc không ai muốn nhìn thấy nó. */
+/* 25px theo bản thiết kế. Con số dài nhất ở hàng này là doanh thu dạng
+   "11.840.000đ" — 12 ký tự. Với bốn cột trên 1160px thì mỗi thẻ rộng ~275px,
+   thừa chỗ; nhưng ở nhánh hai cột của màn hẹp thì không, nên vẫn giữ
+   tabular-nums và letter-spacing âm để nó không tràn mép. Đây là loại lỗi
+   chỉ xuất hiện khi cửa hàng bán được nhiều, tức là đúng lúc không ai muốn
+   nhìn thấy nó. */
 .astat__value {
     font-size: 25px;
     font-weight: 700;
@@ -434,6 +467,79 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     color: #a2937f;
 }
 
+/* --- Dải trạng thái kho / nội dung -------------------------- */
+
+/* MỘT thẻ chia bốn ô, không phải bốn thẻ.
+   Đây là điểm khác nhau giữa hai tầng số liệu: hàng trên là bốn việc riêng
+   biệt nên là bốn thẻ rời; dải này là một câu tóm tắt tình trạng nên đứng
+   chung một khung, ngăn bằng vạch mảnh. Tách nó ra thành bốn thẻ nữa là tám
+   thẻ bằng nhau — đúng cái bản thiết kế bỏ đi. */
+.afacts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    /* hidden để nền hover của ô đầu/cuối không thò ra khỏi góc bo */
+    overflow: hidden;
+}
+
+.afacts__cell + .afacts__cell {
+    border-left: 1px solid #f0e9dc;
+}
+
+@media (max-width: 1100px) {
+    .afacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* Ở hai cột thì vạch dọc của ô thứ ba lại rơi vào mép trái thẻ. Vẽ lại
+       theo vị trí trong lưới thay vì theo thứ tự anh em. */
+    .afacts__cell { border-left: 0; }
+    .afacts__cell:nth-child(even) { border-left: 1px solid #f0e9dc; }
+    .afacts__cell:nth-child(n + 3) { border-top: 1px solid #f0e9dc; }
+}
+
+@media (max-width: 560px) {
+    .afacts { grid-template-columns: 1fr; }
+    .afacts__cell { border-left: 0; }
+    .afacts__cell:nth-child(even) { border-left: 0; }
+    .afacts__cell + .afacts__cell { border-top: 1px solid #f0e9dc; }
+}
+
+.afacts__link {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 14px 20px;
+    text-decoration: none;
+    transition: background-color 0.15s;
+}
+
+/* Nền hiện ra khi rê chuột là TẤT CẢ dấu hiệu bấm được mà ô này có. Bản
+   thiết kế vẽ nó là chữ thường; gạch chân hay tô đỏ sẽ biến một dải tóm tắt
+   thành bốn cái nút và kéo mắt khỏi hàng thẻ ở trên. */
+.afacts__link:hover {
+    background: #fcfaf4;
+}
+
+.afacts__num {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Hổ phách chỉ dành cho "sắp hết hàng" — ô duy nhất trong dải mà số càng
+   lớn càng đáng lo. Ba ô kia số lớn là chuyện bình thường. */
+.afacts__num--warn { color: #96631a; }
+
+.afacts__label {
+    font-size: 12.5px;
+    color: #8d8072;
+}
+
 /* --- Khối nội dung ----------------------------------------- */
 
 .agrid {
@@ -441,9 +547,16 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     gap: 14px;
 }
 
+/* 1.15fr / 1fr, không phải chia đôi — theo bản thiết kế.
+   Cột trái là đơn hàng: mã đơn, tên khách, trạng thái, số tiền. Cột phải là
+   lịch hẹn: ngày giờ, tên, trạng thái. Chia đôi đều thì tên khách bên trái bị
+   cắt bằng dấu ba chấm trong khi bên phải còn chỗ trống. */
 @media (min-width: 1281px) {
-    .agrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .agrid { grid-template-columns: 1.15fr 1fr; }
     .apanel--wide { grid-column: 1 / -1; }
+
+    /* Không kéo cao bằng cột trái — xem ghi chú ở dashboard/index.php. */
+    .apanel--side { align-self: start; }
 }
 
 .apanel {

@@ -10,6 +10,7 @@ $ed = $editing;
 <?php partial('admin/_layout/crud-head', [
     'title' => 'Danh mục', 'lead' => count($categories) . ' danh mục',
     'base' => '/quan-tri/danh-muc', 'canEdit' => $canEdit, 'editing' => $ed,
+    'addLabel' => '+ Thêm danh mục',
 ]); ?>
 
 <div class="atable-wrap">

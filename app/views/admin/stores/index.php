@@ -8,8 +8,16 @@
 $ed = $editing;
 ?>
 <?php partial('admin/_layout/crud-head', [
-    'title' => 'Cơ sở', 'lead' => count($stores) . ' cơ sở',
+    'title' => 'Cơ sở',
+    /* "đang nhận lịch hẹn", không phải "cơ sở" trơn — theo bản thiết kế.
+       Cơ sở tắt cờ hoạt động vẫn nằm trong bảng nhưng không hiện ở trang đặt
+       lịch, nên con số đáng đọc là số cơ sở KHÁCH ĐẶT ĐƯỢC, không phải số
+       dòng trong bảng. Hai số này lệch nhau đúng vào lúc một cơ sở đang sửa
+       chữa — cũng là lúc người quản lý cần thấy sự lệch ấy. */
+    'lead'  => count(array_filter($stores, static fn (array $s): bool => !empty($s['is_active'])))
+               . ' cơ sở đang nhận lịch hẹn',
     'base' => '/quan-tri/co-so', 'canEdit' => $canEdit, 'editing' => $ed,
+    'addLabel' => '+ Thêm cơ sở',
 ]); ?>
 
 <div class="atable-wrap">

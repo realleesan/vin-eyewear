@@ -14,6 +14,7 @@ $toLocal = static fn (?string $v): string =>
 <?php partial('admin/_layout/crud-head', [
     'title' => 'Sự kiện', 'lead' => count($events) . ' bài viết',
     'base' => '/quan-tri/su-kien', 'canEdit' => $canEdit, 'editing' => $ed,
+    'addLabel' => '+ Thêm sự kiện',
 ]); ?>
 
 <div class="atable-wrap">

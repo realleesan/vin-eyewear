@@ -36,6 +36,27 @@ abstract class AdminController extends BaseController
         $data['viewName']    = $viewName;
         $data['adminUser']   = UserModel::profile($this->userId);
         $data['adminRoles']  = UserModel::roles($this->userId);
+        /*
+         * HUY HIỆU TRÊN THANH BÊN — theo "Vin Eyewear Admin.dc.html".
+         *
+         * Bản thiết kế đeo số cho bốn mục: Đơn hàng, Lịch hẹn, Liên hệ, Quên
+         * mật khẩu. Điểm chung là cả bốn đều là HÀNG CHỜ CÓ NGƯỜI ĐANG ĐỢI ở
+         * đầu bên kia. Sản phẩm, danh mục, cơ sở thì không — chúng có bao
+         * nhiêu dòng cũng không ai phải làm gì cả, đeo số vào chỉ là nhiễu.
+         *
+         * Đơn hàng và Lịch hẹn gộp MỘT câu lệnh: hai bảng này luôn có trong
+         * schema gốc nên không cần lối thoát "chưa chạy file nâng cấp" như ba
+         * dòng dưới, và một vòng đi-về tới DB rẻ hơn hai.
+         */
+        $queues = Database::fetchOne(
+            "SELECT
+                (SELECT COUNT(*) FROM orders WHERE status = 'new')           AS orders,
+                (SELECT COUNT(*) FROM appointments WHERE status = 'pending') AS appointments"
+        );
+
+        $data['pendingOrders']       = (int) ($queues['orders'] ?? 0);
+        $data['pendingAppointments'] = (int) ($queues['appointments'] ?? 0);
+
         // Huy hiệu "liên hệ chưa xử lý" trên menu — tính một lần cho mọi trang
         $data['pendingContacts'] = ContactModel::countNew();
         // Yêu cầu quên mật khẩu chưa xử lý — trả 0 khi chưa chạy file nâng cấp

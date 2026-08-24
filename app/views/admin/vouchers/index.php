@@ -56,6 +56,7 @@ $whyOff = static function (array $v) use ($today): string {
 <?php partial('admin/_layout/crud-head', [
     'title' => 'Mã giảm giá', 'lead' => count($vouchers) . ' mã',
     'base' => '/quan-tri/ma-giam-gia', 'canEdit' => $canEdit, 'editing' => $ed,
+    'addLabel' => '+ Tạo mã mới',
 ]); ?>
 
 <div class="atable-wrap">

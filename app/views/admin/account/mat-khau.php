@@ -12,8 +12,11 @@
 
 <div class="ahead">
     <h1 class="ahead__title">Đổi mật khẩu</h1>
+    <?php /* Email in chữ đẳng khoảng, theo bản thiết kế. Đây là chỗ người ta
+             kiểm lại "mình đang đổi mật khẩu của tài khoản nào" trước khi gõ,
+             nên nó cần đọc ra là một ĐỊNH DANH chứ không lẫn vào câu văn. */ ?>
     <p class="ahead__lead">
-        Tài khoản <?= e($me['email'] ?? $me['full_name'] ?? 'của bạn') ?>
+        Tài khoản <code class="ahead__id"><?= e($me['email'] ?? $me['full_name'] ?? 'của bạn') ?></code>
     </p>
 </div>
 

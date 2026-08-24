@@ -32,8 +32,12 @@ foreach ($types as $t) {
 <header class="ahead ahead--row">
     <div>
         <h1 class="ahead__title">Bảng giá tròng</h1>
+        <?php /* GÓI CHIẾT SUẤT ĐỨNG TRƯỚC — theo bản thiết kế, và khớp với
+                 chính cái bảng bên dưới: cột đầu tiên của bảng là gói chiết
+                 suất, ba cột sau là ba loại tròng. Đọc dòng dẫn theo thứ tự
+                 ngược lại rồi nhìn xuống bảng là phải đảo lại trong đầu. */ ?>
         <p class="ahead__lead">
-            <?= $cols ?> loại tròng × <?= count($packages) ?> gói chiết suất
+            <?= count($packages) ?> gói chiết suất × <?= $cols ?> loại tròng
             = <?= $cols * count($packages) ?> mức giá.
             <?php if ($missing > 0): ?>
                 <strong><?= $missing ?> ô chưa có giá.</strong>

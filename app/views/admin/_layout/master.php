@@ -27,12 +27,21 @@ $segment = currentPath();
  *
  * 'exact' => true chỉ dành cho Tổng quan: mọi mục khác khớp theo tiền tố để
  * trang con (vd /quan-tri/san-pham/sua) vẫn sáng đúng mục cha.
+ *
+ * 'badge' CHỈ ĐEO CHO HÀNG CHỜ — đơn mới, lịch hẹn chờ xác nhận, liên hệ chưa
+ * xử lý, yêu cầu đặt lại mật khẩu, đánh giá chờ duyệt. Đó là những mục có
+ * NGƯỜI ĐANG ĐỢI ở đầu bên kia. Sản phẩm hay danh mục thì có bao nhiêu dòng
+ * cũng không ai phải làm gì; đeo số vào chỉ làm mắt quen với việc bỏ qua các
+ * con số, và rồi bỏ qua luôn cả bốn cái đáng đọc. Số 0 tự ẩn — xem chỗ in
+ * huy hiệu bên dưới.
  */
 $navGroups = [
     ['label' => 'Vận hành', 'items' => [
         ['url' => '/quan-tri',          'label' => 'Tổng quan', 'icon' => 'grid', 'exact' => true],
-        ['url' => '/quan-tri/don-hang', 'label' => 'Đơn hàng',  'icon' => 'cart'],
-        ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',  'icon' => 'clock'],
+        ['url' => '/quan-tri/don-hang', 'label' => 'Đơn hàng',  'icon' => 'cart',
+         'badge' => $pendingOrders],
+        ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',  'icon' => 'clock',
+         'badge' => $pendingAppointments],
         ['url' => '/quan-tri/lien-he',  'label' => 'Liên hệ',   'icon' => 'chat', 'badge' => $pendingContacts],
     ]],
     ['label' => 'Sản phẩm', 'items' => [
@@ -184,9 +193,20 @@ if (in_array('admin', $adminRoles, true)) {
         <div class="asidebar__foot">
             <div class="asidebar__me">
                 <span class="asidebar__avatar" aria-hidden="true"><?= e($initials) ?></span>
+                <?php /* DÒNG DƯỚI LÀ EMAIL, KHÔNG PHẢI VAI TRÒ — theo bản thiết kế.
+                         Vai trò thì người đang ngồi đây tự biết, và nó cũng lộ ra
+                         ngay ở chỗ thanh bên có mục "Tài khoản nội bộ" hay không.
+                         Cái họ không tự biết là ĐANG ĐĂNG NHẬP BẰNG TÀI KHOẢN NÀO
+                         — câu hỏi có thật ở một cửa hàng dùng chung máy, và là câu
+                         phải trả lời được trước khi bấm nút xoá sản phẩm.
+
+                         Tên rỗng thì dòng trên đã in email; lúc đó không lặp lại
+                         nó lần nữa, để khỏi thành hai dòng y hệt nhau. */ ?>
                 <span class="asidebar__who">
                     <span class="asidebar__user"><?= e($adminName !== '' ? $adminName : ($adminUser['email'] ?? '')) ?></span>
-                    <span class="asidebar__role"><?= e(implode(', ', $adminRoles)) ?></span>
+                    <?php if ($adminName !== '' && ($adminUser['email'] ?? '') !== ''): ?>
+                        <span class="asidebar__mail"><?= e($adminUser['email']) ?></span>
+                    <?php endif; ?>
                 </span>
             </div>
 

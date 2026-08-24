@@ -28,6 +28,7 @@ if ($ed !== null) {
     'title' => 'Sản phẩm',
     'lead'  => $total . ' sản phẩm' . ($totalPages > 1 ? ' · trang ' . $page . '/' . $totalPages : ''),
     'base'  => '/quan-tri/san-pham', 'canEdit' => $canEdit, 'editing' => $ed,
+    'addLabel' => '+ Thêm sản phẩm',
 ]); ?>
 
 <form class="asearch" method="get" action="/quan-tri/san-pham">

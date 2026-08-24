@@ -7,7 +7,17 @@
 ?>
 <header class="ahead">
     <h1 class="ahead__title">Lịch hẹn</h1>
-    <p class="ahead__lead"><?= count($appointments) ?> lịch hẹn</p>
+    <?php /* Kèm luôn số ĐANG CHỜ XÁC NHẬN — theo bản thiết kế.
+             Tổng số lịch hẹn một mình thì không nói được gì để làm: con số
+             đáng đọc là bao nhiêu buổi còn treo chờ người gọi xác nhận. Lấy
+             từ $counts mà thanh lọc bên dưới vẫn đang dùng, không thêm truy
+             vấn nào. */ ?>
+    <p class="ahead__lead">
+        <?= count($appointments) ?> lịch hẹn
+        <?php if (!empty($counts['pending'])): ?>
+            · <?= (int) $counts['pending'] ?> đang chờ xác nhận
+        <?php endif; ?>
+    </p>
 </header>
 
 <?php partial('admin/_layout/filter-tabs', [
