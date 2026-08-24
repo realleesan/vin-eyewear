@@ -59,6 +59,28 @@ $whyOff = static function (array $v) use ($today): string {
     'addLabel' => '+ Tạo mã mới',
 ]); ?>
 
+<?php /*
+ * CHƯA CÓ MÃ NÀO — khối riêng theo bản thiết kế (xem .aempty trong admin.css),
+ * thay cho cái bảng rỗng bảy cột với một dòng <td colspan> ở giữa.
+ *
+ * Nút ở đây neo tới #form y như nút "+ Tạo mã mới" trên đầu trang, và cố ý
+ * lặp lại nó: trang rỗng thì mọi thứ giữa hai cái nút đều biến mất, nên khối
+ * này là chỗ mắt dừng lại. Bắt người ta ngước lên góc phải trên tìm nút là
+ * thừa một bước ở đúng lần mở trang bỡ ngỡ nhất.
+ *
+ * Chỉ hiện nút khi có quyền sửa: người xem-thôi mà bấm vào chỉ tới một chỗ
+ * trống, vì form bên dưới cũng nằm trong $canEdit.
+ */ ?>
+<?php if ($vouchers === []): ?>
+    <div class="aempty">
+        <p class="aempty__title">Chưa có mã giảm giá nào</p>
+        <p class="aempty__note">Tạo mã đầu tiên để chạy chương trình ưu đãi cho khách.</p>
+        <?php if ($canEdit): ?>
+            <a href="#form" class="astatus__save">Tạo mã đầu tiên</a>
+        <?php endif; ?>
+    </div>
+<?php else: ?>
+
 <div class="atable-wrap">
     <table class="atable atable--full">
         <thead>
@@ -74,14 +96,6 @@ $whyOff = static function (array $v) use ($today): string {
             </tr>
         </thead>
         <tbody>
-            <?php if ($vouchers === []): ?>
-                <tr>
-                    <td colspan="<?= $canEdit ? 8 : 7 ?>">
-                        Chưa có mã nào. Tạo mã đầu tiên bằng form bên dưới.
-                    </td>
-                </tr>
-            <?php endif; ?>
-
             <?php foreach ($vouchers as $v): ?>
                 <?php $off = $whyOff($v); ?>
                 <tr>
@@ -160,6 +174,8 @@ $whyOff = static function (array $v) use ($today): string {
         </tbody>
     </table>
 </div>
+
+<?php endif; ?>
 
 <?php if ($canEdit): ?>
     <section class="aform" id="form" aria-labelledby="form-title">

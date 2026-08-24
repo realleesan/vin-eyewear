@@ -20,6 +20,34 @@
     'counts' => $counts, 'current' => $status,
 ]); ?>
 
+<?php /*
+ * TRANG CHƯA CÓ ĐÁNH GIÁ NÀO — bản thiết kế vẽ hẳn một khối riêng, xem .aempty
+ * trong admin.css. Trước đây chỗ này in cái bảng rỗng kèm một dòng
+ * <td colspan>: sáu tên cột không có dòng nào bên dưới, đọc ra như trang bị
+ * hỏng mất phần nội dung.
+ *
+ * Phân biệt hai cảnh RỖNG khác nhau, vì hai câu trả lời khác nhau:
+ *   - còn bộ lọc  → "ở trạng thái này không có" → bấm sang viên lọc khác;
+ *   - lọc "Tất cả" → chưa từng có đánh giá nào → không phải lỗi, chỉ là khách
+ *     chưa viết. Câu thứ hai nói luôn đánh giá từ đâu tới, vì người mới nhận
+ *     bàn giao không có cách nào tự đoán ra.
+ */ ?>
+<?php if ($reviews === []): ?>
+    <div class="aempty">
+        <p class="aempty__mark" aria-hidden="true">★ ★ ★</p>
+        <?php if ($status !== ''): ?>
+            <p class="aempty__title">Không có đánh giá nào ở trạng thái này</p>
+            <p class="aempty__note">Chọn một trạng thái khác ở dải lọc bên trên để xem tiếp.</p>
+        <?php else: ?>
+            <p class="aempty__title">Chưa có đánh giá nào</p>
+            <p class="aempty__note">
+                Đánh giá khách viết trên trang bán hàng sẽ chờ duyệt tại đây trước khi
+                hiển thị công khai.
+            </p>
+        <?php endif; ?>
+    </div>
+<?php else: ?>
+
 <div class="atable-wrap">
     <table class="atable atable--full">
         <thead>
@@ -33,10 +61,6 @@
             </tr>
         </thead>
         <tbody>
-            <?php if ($reviews === []): ?>
-                <tr><td colspan="6">Chưa có đánh giá nào ở trạng thái này.</td></tr>
-            <?php endif; ?>
-
             <?php foreach ($reviews as $rv): ?>
                 <tr>
                     <td>
@@ -98,3 +122,5 @@
         </tbody>
     </table>
 </div>
+
+<?php endif; ?>

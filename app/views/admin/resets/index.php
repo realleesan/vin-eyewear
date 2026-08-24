@@ -62,22 +62,38 @@ $statusLabel = [
     $tatCa = $canDeliver && $canSms;
     ?>
 
-    <p class="alert <?= $tatCa ? 'alert--ok' : 'alert--err' ?>">
-        <?php if ($tatCa): ?>
+    <?php if ($tatCa): ?>
+        <?php /* Mọi kênh đều chạy: một dòng .alert là đủ, vì đây là tin tốt và
+                 nó không đòi ai làm gì. */ ?>
+        <p class="alert alert--ok">
             Mã xác minh đang gửi tự động qua cả hai kênh. Yêu cầu chỉ rơi về đây
             khi gửi thất bại.
-        <?php else: ?>
-            <strong>Kênh gửi mã chưa đủ</strong> — yêu cầu đi qua kênh đang tắt sẽ
-            nằm lại trang này và phải xử lý tay:
+        </p>
+    <?php else: ?>
+        <?php /* .anote--alert chứ KHÔNG phải .alert — bản thiết kế vẽ chỗ này
+                 thành một hộp chữ nhiều dòng, không phải một dải thông báo.
+                 Khác nhau ở tuổi thọ: .alert là câu hiện sau một thao tác rồi
+                 mất, còn khối này nằm lại mọi lần mở trang cho tới khi ai đó
+                 sửa cấu hình — và mỗi lần ấy nhân viên phải đọc lại xem kênh
+                 nào đang tắt trước khi gọi cho khách. Xem admin.css. */ ?>
+        <div class="anote anote--alert" role="alert">
+            <p>
+                <strong>Kênh gửi mã chưa đủ</strong> — yêu cầu đi qua kênh đang tắt
+                sẽ nằm lại trang này và phải xử lý tay:
+            </p>
             <?php foreach ($kenh as [$ten, $bat, $vi]): ?>
-                <br><?= $bat ? '✓' : '✗' ?> <?= e($ten) ?>
-                <?= $bat ? 'gửi được' : '<em>không gửi được</em>' ?>
-                (<code><?= e($vi) ?></code>).
+                <p>
+                    <?= $bat ? '✓' : '✗' ?> <?= e($ten) ?>
+                    <?= $bat ? 'gửi được' : '<em>không gửi được</em>' ?>
+                    (<code><?= e($vi) ?></code>).
+                </p>
             <?php endforeach; ?>
-            <br>Gọi xác minh đúng người <em>trước khi</em> tạo liên kết —
-            đó là bước bảo mật duy nhất của cả luồng.
-        <?php endif; ?>
-    </p>
+            <p>
+                Gọi xác minh đúng người <em>trước khi</em> tạo liên kết —
+                đó là bước bảo mật duy nhất của cả luồng.
+            </p>
+        </div>
+    <?php endif; ?>
 
     <?php if ($requests === []): ?>
         <p class="apanel__empty">Chưa có yêu cầu nào.</p>

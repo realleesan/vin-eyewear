@@ -612,6 +612,61 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     background: var(--surface-raised);
 }
 
+/* --- Trang rỗng LẦN ĐẦU (.aempty) --------------------------- */
+
+/*
+ * Khác hẳn .apanel__empty ở trên, và hai thứ này không thay nhau được.
+ *
+ * .apanel__empty là "bộ lọc hiện tại không ra dòng nào" — bảng vẫn còn đó,
+ * người dùng chỉ cần bấm sang viên lọc khác. Một dòng chữ nhạt là đủ.
+ *
+ * .aempty là "chưa từng có dữ liệu nào ở đây" — bản thiết kế vẽ hẳn hai màn
+ * này (Đánh giá, Mã giảm giá) thành một khối cao, giữa trang, có tiêu đề và
+ * một câu nói rõ dữ liệu sẽ từ đâu tới. Ở màn đó, dòng chữ nhạt đọc ra như
+ * trang bị lỗi: người mới nhận bàn giao không biết mình đang nhìn một trang
+ * hỏng hay một trang chưa dùng tới.
+ *
+ * KHÔNG in cái bảng rỗng kèm theo: hàng tiêu đề cột không nói gì thêm khi
+ * dưới nó không có dòng nào, mà lại đẩy khối chữ này xuống dưới nếp gấp.
+ */
+.aempty {
+    padding: 48px 24px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    text-align: center;
+}
+
+/* Dấu trang trí (ba ngôi sao ở màn Đánh giá). Màu ngà rất nhạt và aria-hidden
+   ở chỗ dùng: nó không mang thông tin nào mà tiêu đề bên dưới chưa nói. */
+.aempty__mark {
+    font-size: 30px;
+    line-height: 1;
+    color: #d9cebc;
+}
+
+.aempty__mark + .aempty__title { margin-top: 14px; }
+
+.aempty__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+/* Bó chiều ngang: một câu chạy hết 1100px thì mắt phải quét ngang cả màn hình
+   để về đầu dòng sau, mà đây là khối căn giữa nên không có mép trái cố định
+   để bám. */
+.aempty__note {
+    max-width: 420px;
+    margin: 6px auto 0;
+    font-size: var(--fs-body-sm);
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.aempty .astatus__save { margin-top: 16px; }
+
 /* --- Dải lọc ----------------------------------------------- */
 
 .atabs {
@@ -778,11 +833,41 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .badge--new,       .badge--pending      { background: var(--brand-subtle); color: var(--brand); }
-.badge--confirmed, .badge--handling     { background: #efe9de; color: #6f6355; }
+.badge--confirmed, .badge--handling,
+.badge--neutral                         { background: #efe9de; color: #6f6355; }
 .badge--completed, .badge--done,
 .badge--in_stock                        { background: #e6f1e9; color: var(--success); }
 .badge--low_stock                       { background: #fbf0dc; color: var(--warn); }
 .badge--cancelled, .badge--out_of_stock { background: #f9e7e9; color: var(--danger); }
+
+/* "Nổi bật" — hổ phách riêng của bản thiết kế (#f8efd9/#8a6a20), KHÔNG dùng
+   chung với năm màu trạng thái ở trên. Nó không phải trạng thái: sản phẩm nổi
+   bật hay không thì cũng đang bán bình thường, không ai phải làm gì cả. Trước
+   đây nó đeo .badge--new (đỏ thương hiệu) nên nằm cạnh "Còn hàng" là đọc ra
+   như một cảnh báo mới tới. Cỡ chữ nhỏ hơn một nấc, cũng theo thiết kế: đây
+   là nhãn phụ đứng sau nhãn trạng thái thật. */
+.badge--featured {
+    padding: 3px 9px;
+    background: #f8efd9;
+    color: #8a6a20;
+    font-size: 10.5px;
+}
+
+/* Nhãn ĐÁNH DẤU CHỦ SỞ HỮU ("Bạn" ở bảng tài khoản nội bộ) — bo 5px chứ không
+   tròn hẳn như .badge, đúng bản thiết kế. Khác dáng là cố ý: nó không nói về
+   trạng thái của dòng mà chỉ trỏ tay "dòng này là bạn", nên phải đọc ra ngay
+   là một loài khác với mấy viên thuốc trạng thái cùng hàng. */
+.atag {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 2px 7px;
+    border-radius: 5px;
+    background: #f0ebe2;
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #6f6355;
+}
 
 /* Trạng thái TIỀN — cố ý khác dáng với huy hiệu trạng thái đơn ở trên: viền
    thay vì nền đặc, để hai trục trạng thái không tranh nhau trong cùng một hàng
@@ -921,30 +1006,49 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 .anote {
     margin-bottom: 16px;
     padding: 14px 18px;
-    border: 1px solid var(--line);
+    /* Ngà ẤM HƠN nền trang, không phải thẻ trắng như bảng dữ liệu bên dưới.
+       Bản thiết kế cố ý tách hai loài: thẻ trắng là chỗ đọc số, hộp ngà là chỗ
+       đọc chữ. Cùng màu trắng thì mắt gộp cả hai thành một khối và bỏ qua
+       phần chữ — mà phần chữ ở đây mới là thứ phải đọc trước. */
+    border: 1px solid #ecdfc8;
     border-left: 3px solid var(--brand);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
+    border-radius: 10px;
+    background: #fdf9f1;
 }
 
 .anote p {
     margin: 0;
     font-size: var(--fs-body-sm);
     line-height: 1.65;
-    color: var(--muted);
+    color: #5b4f42;
 }
 
-.anote p + p { margin-top: 6px; }
+.anote p + p { margin-top: 4px; }
 .anote strong { color: var(--ink); }
 
+/* Không viền: hộp đã có nền riêng, thêm một cái khung nữa quanh mỗi mẩu mã
+   thì ba dòng chữ biến thành một hàng rào. */
 .anote code {
-    padding: 1px 5px;
-    border: 1px solid var(--line);
-    background: var(--surface);
+    padding: 0 5px;
+    border-radius: 4px;
+    background: #f1e8d7;
     font-family: var(--font-mono);
     font-size: 0.92em;
-    color: var(--ink);
+    color: inherit;
 }
+
+/* Biến thể ĐỎ — dùng khi hộp không còn là lời giải thích mà là một điều kiện
+   đang hỏng và người đọc phải bù bằng tay (xem admin/resets/index.php).
+   Vẫn là hộp chữ chứ không phải .alert: .alert dựng cho thông báo một dòng
+   hiện rồi mất, còn cái này nằm lại trang cho tới khi ai đó sửa cấu hình. */
+.anote--alert {
+    border-color: #eed3cb;
+    border-left-color: var(--danger);
+    background: #fdf2ef;
+}
+
+.anote--alert p { line-height: 1.7; color: #5b4038; }
+.anote--alert code { background: #f7e4de; }
 
 /* Cột đầu là tên gói (co giãn), các cột giá bằng nhau và không co: một ô số
    bị bóp còn 60px thì "1400000" bị cắt mất chữ số cuối, mà đây là bảng giá. */
@@ -1056,6 +1160,43 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 .ahead__note {
     font-size: var(--fs-body-sm);
     color: var(--muted);
+}
+
+/* Cụm điều khiển ở mép phải dòng tiêu đề — ô tìm kiếm rồi tới nút thêm mới.
+   Bản thiết kế xếp chúng NGANG HÀNG với tiêu đề chứ không cho ô tìm kiếm một
+   dòng riêng bên dưới: dòng riêng ấy đẩy bảng xuống thêm 54px trên mọi trang,
+   kể cả những lần mở trang không định tìm gì. */
+.ahead__tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+/* .asearch tự nó là một dải riêng (có margin dưới, ô nhập giãn hết chỗ trống).
+   Khi nằm trong cụm trên thì bỏ cả hai: 270px là bề rộng của bản thiết kế, đủ
+   cho một mã SKU cộng vài chữ, và giữ nút thêm mới sát mép phải. */
+/* nowrap: ô nhập và nút "Tìm" phải nằm cùng một dòng. Để .asearch tự xuống
+   dòng thì nút rơi xuống dưới ô nhập và cụm bên phải cao gấp đôi cụm bên
+   trái — dòng tiêu đề gãy làm hai tầng lệch nhau. Hết chỗ thì thứ xuống dòng
+   phải là CẢ cụm .ahead__tools (nó là mục co giãn của .ahead--row, vốn đã
+   flex-wrap), không phải ruột của nó. */
+.ahead__tools .asearch {
+    flex-wrap: nowrap;
+    margin-bottom: 0;
+}
+
+/* width chứ KHÔNG phải flex-basis, dù cả hai cùng ra 270px trên giấy.
+   .asearch nằm lồng hai tầng flex (.ahead--row > .ahead__tools > form), và khi
+   tính bề rộng tự nhiên của tầng ngoài, trình duyệt đo ô nhập theo kích thước
+   nội dung của nó chứ không theo flex-basis — nên cụm bên phải được cấp thiếu
+   chỗ và ô nhập co lại còn ~175px, cắt mất chữ "thương hiệu…" trong câu gợi ý.
+   Đặt width thì con số ấy vào được phép đo, cụm xin đủ chỗ ngay từ đầu. */
+.ahead__tools .asearch input {
+    flex: 0 1 auto;
+    width: 270px;
+    min-width: 0;
+    max-width: 100%;
 }
 
 /* Nút phụ (Huỷ sửa, Đổi mật khẩu cho người khác…) — bản thiết kế cho nó nền

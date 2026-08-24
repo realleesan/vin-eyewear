@@ -36,7 +36,18 @@ $toLocal = static fn (?string $v): string =>
                         <a href="/su-kien/<?= e(rawurlencode($ev['slug'])) ?>" target="_blank" rel="noopener"><?= e($ev['title']) ?></a>
                         <span class="atable__sub"><code><?= e($ev['slug']) ?></code></span>
                     </td>
-                    <td><?= e($ev['category'] ?? '—') ?></td>
+                    <?php /* Nhóm bài viết là một viên thuốc TRUNG TÍNH theo bản
+                             thiết kế: nó phân loại chứ không báo trạng thái, nên
+                             không được mượn màu của "Hiện"/"Ẩn" ở cột bên phải.
+                             Không có nhóm thì in gạch trần — một viên thuốc rỗng
+                             chỉ tổ chiếm chỗ. */ ?>
+                    <td>
+                        <?php if (($ev['category'] ?? '') !== ''): ?>
+                            <span class="badge badge--neutral"><?= e($ev['category']) ?></span>
+                        <?php else: ?>
+                            —
+                        <?php endif; ?>
+                    </td>
                     <td><?= e(dateRange($ev['starts_at'], $ev['ends_at'])) ?: '—' ?></td>
                     <td class="atable__msg"><?= e($ev['location'] ?? '—') ?></td>
                     <td>

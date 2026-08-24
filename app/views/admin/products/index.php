@@ -29,16 +29,17 @@ if ($ed !== null) {
     'lead'  => $total . ' sản phẩm' . ($totalPages > 1 ? ' · trang ' . $page . '/' . $totalPages : ''),
     'base'  => '/quan-tri/san-pham', 'canEdit' => $canEdit, 'editing' => $ed,
     'addLabel' => '+ Thêm sản phẩm',
+    /* Ô tìm kiếm đi CÙNG dòng tiêu đề, không còn là một dải riêng bên dưới —
+       xem khối $search trong admin/_layout/crud-head.php. Câu gợi ý kê đúng ba
+       thứ tìm được, vì đó là ba thứ khác nhau người ta gõ vào đây: khách hỏi
+       theo tên, nhân viên kho hỏi theo SKU, nhà cung cấp hỏi theo thương hiệu. */
+    'search' => [
+        'name'        => 'q',
+        'value'       => $q,
+        'label'       => 'Tìm sản phẩm',
+        'placeholder' => 'Tìm theo tên, SKU, thương hiệu…',
+    ],
 ]); ?>
-
-<form class="asearch" method="get" action="/quan-tri/san-pham">
-    <label class="sr-only" for="q">Tìm sản phẩm</label>
-    <input type="search" id="q" name="q" value="<?= e($q) ?>" placeholder="Tên, SKU hoặc thương hiệu">
-    <button type="submit" class="astatus__save">Tìm</button>
-    <?php if ($q !== ''): ?>
-        <a href="/quan-tri/san-pham" class="apanel__more">Xoá tìm kiếm</a>
-    <?php endif; ?>
-</form>
 
 <div class="atable-wrap">
     <table class="atable atable--full">
@@ -74,8 +75,11 @@ if ($ed !== null) {
                         <?php if (!$p['is_visible']): ?>
                             <span class="badge badge--cancelled">Đang ẩn</span>
                         <?php endif; ?>
+                        <?php /* .badge--featured, KHÔNG phải .badge--new: xem khối
+                                 "Nổi bật" trong admin.css. Đỏ thương hiệu đứng cạnh
+                                 "Còn hàng" đọc ra như một việc mới cần xử lý. */ ?>
                         <?php if ($p['is_featured']): ?>
-                            <span class="badge badge--new">Nổi bật</span>
+                            <span class="badge badge--featured">Nổi bật</span>
                         <?php endif; ?>
                     </td>
                     <?php if ($canEdit): ?>

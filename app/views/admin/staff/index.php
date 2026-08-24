@@ -70,7 +70,12 @@ $nhanVaiTro = [
                         <td>
                             <?= e($a['full_name'] ?: '(chưa đặt tên)') ?>
                             <?php if ($laToi): ?>
-                                <span class="badge badge--pending">Bạn</span>
+                                <?php /* .atag chứ không phải .badge: xem admin.css.
+                                         Nó không nói dòng này đang ở trạng thái gì,
+                                         chỉ trỏ tay "dòng này là bạn" — mà cột bên
+                                         cạnh đã có một viên thuốc trạng thái thật
+                                         (vai trò), hai thứ cùng dáng thì đọc nhầm. */ ?>
+                                <span class="atag">Bạn</span>
                             <?php endif; ?>
                             <?php /* Email là thứ dùng để đăng nhập ở cổng quản trị,
                                      nên nó phải hiện — không có email thì tài khoản
@@ -85,7 +90,11 @@ $nhanVaiTro = [
 
                         <td>
                             <?php foreach (explode(', ', (string) $a['roles']) as $vt): ?>
-                                <span class="badge badge--<?= $vt === 'admin' ? 'paid' : 'confirmed' ?>">
+                                <?php /* Nền đặc, KHÔNG phải .badge--paid. Viên viền
+                                         rỗng trong hệ này dành riêng cho trạng thái
+                                         TIỀN (xem admin.css) — mượn nó cho vai trò là
+                                         dạy sai một quy ước còn dùng ở bảng đơn hàng. */ ?>
+                                <span class="badge badge--<?= $vt === 'admin' ? 'in_stock' : 'neutral' ?>">
                                     <?= e($nhanVaiTro[$vt] ?? $vt) ?>
                                 </span>
                             <?php endforeach; ?>
