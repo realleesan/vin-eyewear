@@ -112,13 +112,23 @@ if (in_array('admin', $adminRoles, true)) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="/assets/css/layout.css">
-    <link rel="stylesheet" href="/assets/css/admin.css">
+    <?php /* asset() chứ KHÔNG phải đường dẫn trần — nó gắn ?v=<filemtime> vào
+             sau tên file, tức là mỗi lần file đổi thì địa chỉ cũng đổi và trình
+             duyệt buộc phải tải lại.
+
+             Trang bán hàng (app/views/_layout/master.php) vẫn luôn dùng asset();
+             riêng khung quản trị bị bỏ sót. Hậu quả không nhìn thấy ngay lúc
+             sửa mã mà chỉ lộ ra sau khi deploy: người đã mở khu quản trị một
+             lần sẽ còn giữ bản CSS cũ trong bộ nhớ đệm cho tới khi họ Ctrl+F5
+             — và không ai nghĩ tới việc đó, nên kết luận đầu tiên luôn là
+             "deploy hỏng". Đây đúng là chuyện đã xảy ra ngày 24/08/2026. */ ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/layout.css') ?>">
+    <link rel="stylesheet" href="<?= asset('assets/css/admin.css') ?>">
     <?php /* Hộp thoại "bạn có chắc không" — xem _layout/confirm-dialog.php.
              Nạp cho MỌI trang quản trị: gần như trang danh sách nào cũng có
              một nút xoá, và một file 2KB rẻ hơn nhiều so với việc nhớ thêm
              nó mỗi lần dựng trang mới. */ ?>
-    <link rel="stylesheet" href="/assets/css/components/confirm.css">
+    <link rel="stylesheet" href="<?= asset('assets/css/components/confirm.css') ?>">
 </head>
 
 <body class="admin">
@@ -252,8 +262,8 @@ if (in_array('admin', $adminRoles, true)) {
 
 <?php partial('_layout/confirm-dialog'); ?>
 
-<script src="/assets/js/admin.js" defer></script>
-<script src="/assets/js/confirm-dialog.js" defer></script>
+<script src="<?= asset('assets/js/admin.js') ?>" defer></script>
+<script src="<?= asset('assets/js/confirm-dialog.js') ?>" defer></script>
 </body>
 
 </html>
