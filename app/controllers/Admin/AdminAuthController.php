@@ -3,8 +3,9 @@
 /**
  * Admin/AdminAuthController.php — cổng đăng nhập khu quản trị.
  *
- *   GET  /quan-tri/dang-nhap            index()  màn hình
- *   POST /quan-tri/dang-nhap/xac-thuc   login()  kiểm và cho vào
+ *   GET  /quan-tri/dang-nhap            index()   màn hình
+ *   POST /quan-tri/dang-nhap/xac-thuc   login()   kiểm và cho vào
+ *   POST /quan-tri/dang-xuat            logout()  ra khỏi khu quản trị
  *
  * Giao diện: app/views/admin/login.php (theo "Admin Login.dc.html")
  *
@@ -82,6 +83,23 @@ class AdminAuthController extends BaseController
             'redirect'   => $this->target($_GET['redirect'] ?? null),
             'error'      => flash('admin_auth_error'),
             'old'        => $_SESSION['_old_admin_auth'] ?? [],
+
+            /*
+             * "QUÊN MẬT KHẨU?" Ở CỔNG NÀY KHÔNG DẪN ĐI ĐÂU ĐƯỢC — VÀ PHẢI
+             * NÓI THẲNG NHƯ VẬY.
+             *
+             * Liên kết đó trước đây trỏ sang /quen-mat-khau, tức là luồng OTP
+             * CỦA KHÁCH. Từ khi hai khu vực bị tách (xem khối "HAI KHU VỰC"
+             * đầu AuthMiddleware), luồng ấy cố tình coi mọi email nội bộ là
+             * "không khớp tài khoản nào": gõ vào cũng nhận mã, nhập mã cũng
+             * báo sai, thử bao nhiêu lần cũng thế. Một cánh cửa vẽ lên tường.
+             *
+             * Nay bấm vào là hiện ngay tại chỗ ba đường đi thật, xếp theo thứ
+             * tự nên thử. Mở bằng ?quen=1 chứ không bằng JavaScript: cổng này
+             * phải chạy được cả khi JS tắt, và một tham số trên URL thì gửi
+             * cho đồng nghiệp qua tin nhắn được.
+             */
+            'showHelp'   => isset($_GET['quen']),
         ]);
 
         unset($_SESSION['_old_admin_auth']);
@@ -161,6 +179,68 @@ class AdminAuthController extends BaseController
          * nên phiên chết khi đóng trình duyệt.
          */
         redirect($to);
+    }
+
+    /**
+     * Ra khỏi khu quản trị.
+     *
+     * ĐƯỜNG RIÊNG, KHÔNG DÙNG CHUNG /auth/dang-xuat CỦA KHÁCH.
+     *
+     * Việc bên trong đúng là y hệt — cùng gọi AuthMiddleware::logout(). Nhưng
+     * để khu quản trị POST sang một địa chỉ mở đầu bằng /auth thì hai khu vực
+     * vẫn dính nhau ở đúng chỗ dễ quên nhất:
+     *
+     *   · Đọc log máy chủ không tách được lượt đăng xuất của nhân viên với
+     *     của khách — mà đó là dòng người ta tra đầu tiên khi soát một phiên
+     *     đáng ngờ ở quầy.
+     *   · Muốn chặn cả khu quản trị ở tầng máy chủ (giới hạn IP trong
+     *     .htaccess chẳng hạn) thì luật "mọi đường /quan-tri" bỏ sót đúng cái
+     *     nút Đăng xuất.
+     *   · Và nếu mai này khu quản trị dời sang tên miền phụ, mỗi đường dùng
+     *     chung là một chỗ phải nhớ sửa tay.
+     *
+     * ĐƯA VỀ CỔNG QUẢN TRỊ, không về trang chủ cửa hàng: người vừa bấm Đăng
+     * xuất ở đây gần như chắc chắn sẽ đăng nhập lại bằng tài khoản khác, hoặc
+     * đang bàn giao máy cho ca sau.
+     */
+    public function logout(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            /* GET không được đăng xuất ai cả: một thẻ <img src="…"> trên
+               trang bất kỳ cũng đủ để đá nhân viên ra giữa lúc đang nhập
+               liệu. Đây là lý do nút Đăng xuất nằm trong <form method="post">
+               chứ không phải một thẻ <a>. */
+            http_response_code(405);
+            redirect('/quan-tri');
+        }
+
+        if (!csrfCheck($_POST['_token'] ?? null)) {
+            http_response_code(419);
+            redirect('/quan-tri');
+        }
+
+        /*
+         * CHỈ ĐÓNG PHIÊN NỘI BỘ.
+         *
+         * Không có chốt này thì một phiên KHÁCH gửi tới đây cũng bị đóng —
+         * thử rồi, nó đóng thật. Hại thì gần như không (đó là phiên của chính
+         * người gửi, lại có token CSRF), nhưng nó phá đúng cái luật mà cả
+         * commit này dựng lên: mỗi địa chỉ phục vụ ĐÚNG MỘT khu vực. Để hở
+         * thì /quan-tri/dang-xuat là một đường của khu quản trị mà lại thao
+         * tác được lên tài khoản khách, và người đọc mã sau này có quyền suy
+         * ra rằng mấy đường /quan-tri khác cũng vậy.
+         *
+         * Khách rơi vào đây thì KHÔNG đụng vào phiên của họ — họ có đường ra
+         * riêng ở /auth/dang-xuat — chỉ đưa về cổng quản trị, đúng nơi một
+         * địa chỉ /quan-tri nên dẫn tới khi người gõ không có quyền.
+         */
+        if (!AuthMiddleware::isStaffSession()) {
+            redirect('/quan-tri/dang-nhap');
+        }
+
+        AuthMiddleware::logout();
+
+        redirect('/quan-tri/dang-nhap');
     }
 
     /**

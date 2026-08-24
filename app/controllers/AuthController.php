@@ -885,11 +885,16 @@ class AuthController extends BaseController
     {
         $this->requirePost('/');
 
-        /* Hỏi TRƯỚC KHI huỷ phiên: sau logout() thì không còn ai để hỏi nữa.
-           Khu quản trị dùng chung đúng địa chỉ đăng xuất này (xem
-           admin/_layout/master.php), nên nhân viên bấm "Đăng xuất" ở đó mà
-           rơi vào trang chủ cửa hàng là lạc chỗ — trả họ về đúng cánh cửa
-           vừa bước ra. */
+        /* ĐÂY LÀ ĐƯỜNG RA CỦA KHÁCH. Khu quản trị có đường riêng —
+           /quan-tri/dang-xuat, xem AdminAuthController::logout() — và không
+           còn nút nào trong dự án trỏ phiên nội bộ vào đây nữa.
+
+           Nhánh dưới vì thế là LƯỚI ĐỠ, không phải đường đi thường ngày: một
+           tab để quên từ bản cũ, một dấu trang, hay một cú POST gõ tay vẫn
+           có thể rơi vào đây. Gặp ca đó thì trả người ta về cổng quản trị
+           thay vì thả giữa trang chủ cửa hàng.
+
+           Hỏi TRƯỚC KHI huỷ phiên: sau logout() thì không còn ai để hỏi. */
         $wasStaff = AuthMiddleware::isStaffSession();
 
         AuthMiddleware::logout();
@@ -996,7 +1001,6 @@ class AuthController extends BaseController
             'counts'    => $counts,
             'profile'   => UserModel::profile($userId),
             'roles'     => UserModel::roles($userId),
-            'isStaff'   => UserModel::isStaff($userId),
             'genders'   => UserModel::GENDERS,
             'success'   => flash('account_success'),
             'error'     => flash('account_error'),

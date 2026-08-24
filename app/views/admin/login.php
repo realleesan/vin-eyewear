@@ -103,7 +103,12 @@ $old = $old ?? [];
         <div class="alogfield">
             <div class="alogfield__row">
                 <label class="alogfield__label" for="adm-pass">Mật khẩu</label>
-                <a class="alogfield__aside" href="/quen-mat-khau">Quên mật khẩu?</a>
+                <?php /* KHÔNG trỏ sang /quen-mat-khau nữa — đó là luồng OTP CỦA
+                         KHÁCH, và từ khi tách hai khu vực thì nó cố tình coi mọi
+                         email nội bộ là "không khớp tài khoản nào". Bấm vào là
+                         nhận mã, nhập mã là báo sai, thử mãi cũng thế. Nay mở
+                         phần trợ giúp ngay tại cổng này. */ ?>
+                <a class="alogfield__aside" href="/quan-tri/dang-nhap?quen=1#quen">Quên mật khẩu?</a>
             </div>
 
             <?php /*
@@ -136,6 +141,59 @@ $old = $old ?? [];
 
         <button type="submit" class="alogform__submit">Đăng nhập</button>
     </form>
+
+    <?php
+    /*
+     * ─────────────────────────────────────────────────────────────────────
+     * "QUÊN MẬT KHẨU?" — BA ĐƯỜNG THẬT, KHÔNG PHẢI MỘT Ô NHẬP EMAIL
+     *
+     * Bản thiết kế vẽ liên kết "Quên mật khẩu?" nhưng không vẽ trang nó dẫn
+     * tới, và mục 3.A của SRS chỉ ghi một dòng: "Gửi link đặt lại qua email
+     * nội bộ — cần xác nhận lại với BA nếu nhân viên không có email công ty."
+     * Tức là luồng ấy CHƯA CHỐT.
+     *
+     * Trong lúc chờ, khối này nói đúng hiện trạng thay vì dựng một ô nhập
+     * email không gửi được gì. Hosting đang để MAIL_DRIVER=log và Zalo ZNS
+     * chưa khai đủ, nên kể cả có làm luồng tự động thì mã cũng không tới tay
+     * ai — đúng cái cảnh trang /quan-tri/quen-mat-khau đang phải dọn tay.
+     *
+     * Ba đường xếp theo thứ tự nên thử: nhờ đồng nghiệp (nhanh nhất, không
+     * cần ai biết dòng lệnh), rồi tới người giữ máy chủ. Người đọc dừng ở
+     * dòng đầu tiên áp dụng được cho mình.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    ?>
+    <?php if (!empty($showHelp)): ?>
+        <div class="aloghelp" id="quen" role="note">
+            <p class="aloghelp__title">Quên mật khẩu tài khoản nội bộ</p>
+
+            <p class="aloghelp__text">
+                Cổng này không tự gửi được mã đặt lại — tài khoản nội bộ cố ý
+                không đi qua luồng "Quên mật khẩu" của khách. Ba cách lấy lại,
+                xếp theo thứ tự nên thử:
+            </p>
+
+            <ol class="aloghelp__list">
+                <li>
+                    Nhờ một <strong>quản trị viên</strong> khác cấp lại giúp ở
+                    mục <em>Tài khoản nội bộ</em> trong khu quản trị. Mật khẩu
+                    mới hiện đúng một lần trên màn hình của họ.
+                </li>
+                <li>
+                    Không liên lạc được ai, nhưng có người giữ mã nguồn: chạy
+                    <code class="aloghelp__code">php database/make-admin.php --reset-password &lt;email&gt;</code>
+                </li>
+                <li>
+                    Không còn quản trị viên nào đăng nhập được nữa: phải sửa
+                    thẳng trong cơ sở dữ liệu qua phpMyAdmin của hosting.
+                </li>
+            </ol>
+
+            <p class="aloghelp__back">
+                <a href="/quan-tri/dang-nhap">← Quay lại đăng nhập</a>
+            </p>
+        </div>
+    <?php endif; ?>
 
     <?php /*
         CHỖ KHÁC BẢN THIẾT KẾ THỨ TƯ — CÂU THỨ HAI TRONG KHỐI NÀY.

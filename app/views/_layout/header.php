@@ -352,7 +352,13 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                                      bị requireLogin() đá ngược về /quan-tri. */ ?>
                             <li><a class="hpop__item" href="/quan-tri"><?= e(t('pop.admin')) ?></a></li>
                             <li>
-                                <form method="post" action="/auth/dang-xuat">
+                                <?php /* Phiên nội bộ ra bằng cửa của khu quản trị, kể cả
+                                         khi người đó đang đứng ở trang bán hàng. Nhờ vậy
+                                         /auth/dang-xuat chỉ còn phục vụ khách, và
+                                         /quan-tri/dang-xuat chỉ còn phục vụ nhân viên —
+                                         mỗi địa chỉ đúng một loại tài khoản, không phải
+                                         đoán theo phiên đang mở. */ ?>
+                                <form method="post" action="/quan-tri/dang-xuat">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                     <button type="submit" class="hpop__item hpop__item--btn"><?= e(t('pop.logout')) ?></button>
                                 </form>

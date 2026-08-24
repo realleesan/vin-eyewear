@@ -159,23 +159,26 @@ $inGroup = in_array($section, $groupKeys, true);
             <?php endforeach; ?>
 
             <div class="acct-nav__foot">
-                <?php if ($isStaff): ?>
-                    <!-- Chỉ hiện với nhân viên. Bản thiết kế không có mục này
-                         vì nó vẽ trang của khách hàng. -->
-                    <a class="acct-nav__quiet" href="/quan-tri">
-                        <span class="acct-nav__icon" aria-hidden="true">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="7" height="9" rx="1"></rect>
-                                <rect x="14" y="3" width="7" height="5" rx="1"></rect>
-                                <rect x="14" y="12" width="7" height="9" rx="1"></rect>
-                                <rect x="3" y="16" width="7" height="5" rx="1"></rect>
-                            </svg>
-                        </span>
-                        <span>Khu quản trị</span>
-                    </a>
-                <?php endif; ?>
-
+                <?php
+                /*
+                 * Ở ĐÂY TỪNG CÓ MỘT MỤC "KHU QUẢN TRỊ" — đã gỡ, và không được
+                 * đưa lại.
+                 *
+                 * Nó bọc trong `if ($isStaff)`, tức là chỉ hiện với tài khoản
+                 * nội bộ đang xem trang tài khoản khách. Từ khi tách hai khu
+                 * vực, cảnh đó không tồn tại nữa: AuthMiddleware::requireLogin()
+                 * đá mọi phiên nội bộ về /quan-tri trước khi trang này kịp
+                 * dựng, nên nhánh ấy vĩnh viễn không chạy.
+                 *
+                 * Giữ lại thì tệ hơn là chỉ thừa: nó là một liên kết từ khu
+                 * KHÁCH trỏ vào khu QUẢN TRỊ, đúng thứ mà việc tách hai khu
+                 * vực đang dọn đi. Người đọc mã sau này thấy nó sẽ tưởng hai
+                 * bên vẫn đi lại được với nhau.
+                 *
+                 * Nhân viên muốn vào khu quản trị thì đi cửa của họ:
+                 * /quan-tri/dang-nhap.
+                 */
+                ?>
                 <!-- Đăng xuất qua POST: một thẻ <img src="/auth/dang-xuat"> trên
                      trang khác cũng đủ để đá khách ra nếu dùng GET. -->
                 <form method="post" action="/auth/dang-xuat">

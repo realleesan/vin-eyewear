@@ -335,6 +335,74 @@ body.page-admin-login {
     margin-top: 2px;
 }
 
+/* --- Khối trợ giúp "quên mật khẩu" -------------------------- */
+
+/* Mở bằng ?quen=1 nên nó là một TRẠNG THÁI KHÁC của cùng trang, không phải
+   một hộp thoại. Vì thế nó lấy hình khối của .alognote ngay trên (viền mảnh,
+   bo 6px, chữ nhỏ) chứ không dựng một cái thẻ nổi lên trên form — cổng này
+   chỉ có một cột hẹp, thêm một tầng nữa là chật. */
+.aloghelp {
+    margin: 28px 0 0;
+    padding: 16px 18px;
+    border: 1px solid var(--alog-accent-soft);
+    border-radius: 6px;
+    /* Viền trái đậm hơn để phân biệt với .alognote ở dưới: khối kia là lời
+       nhắc thường trực, khối này là thứ vừa mở ra do một cú bấm. */
+    border-left: 2px solid var(--alog-accent);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--alog-dim);
+}
+
+.aloghelp__title {
+    margin: 0 0 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--alog-fg);
+}
+
+.aloghelp__text { margin: 0; }
+
+.aloghelp__list {
+    margin: 10px 0 0;
+    /* 18px: đủ chỗ cho số thứ tự mà không đẩy chữ ra xa mép khối. */
+    padding-left: 18px;
+}
+
+.aloghelp__list li + li { margin-top: 8px; }
+
+.aloghelp__list strong,
+.aloghelp__list em { color: var(--alog-label); }
+
+/* Lệnh dòng lệnh: nền chìm và cho XUỐNG DÒNG được.
+   Chuỗi "php database/make-admin.php --reset-password <email>" dài hơn cột
+   360px của cổng này; để nguyên white-space thì nó đẩy ngang cả khối và sinh
+   thanh cuộn ngang trên điện thoại. */
+.aloghelp__code {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--alog-field);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--alog-accent);
+    overflow-wrap: anywhere;
+}
+
+.aloghelp__back { margin: 12px 0 0; }
+
+.aloghelp__back a {
+    color: var(--alog-link);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.aloghelp__back a:hover {
+    color: var(--alog-link-on);
+    text-decoration: underline;
+}
+
 /* --- Chân trang -------------------------------------------- */
 .alogfoot {
     display: flex;

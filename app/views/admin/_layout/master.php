@@ -219,8 +219,13 @@ if (in_array('admin', $adminRoles, true)) {
 
                 <?php /* Đăng xuất là POST: một đường GET đăng xuất có thể bị kích
                          hoạt bằng một thẻ <img> trên trang bất kỳ. Form nằm gọn
-                         trong cụm nút nên phải bỏ margin mặc định. */ ?>
-                <form method="post" action="/auth/dang-xuat">
+                         trong cụm nút nên phải bỏ margin mặc định.
+
+                         /quan-tri/dang-xuat chứ KHÔNG phải /auth/dang-xuat: khu
+                         quản trị có đường ra của riêng nó, và nó đưa người bấm
+                         về cổng quản trị thay vì trang chủ cửa hàng. Lý do đầy
+                         đủ ở AdminAuthController::logout(). */ ?>
+                <form method="post" action="/quan-tri/dang-xuat">
                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                     <button type="submit" class="asidebar__act asidebar__act--out">Đăng xuất</button>
                 </form>

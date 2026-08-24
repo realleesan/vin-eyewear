@@ -196,6 +196,16 @@ return [
     'quan-tri/dang-nhap'          => 'AdminAuthController@index',
     'quan-tri/dang-nhap/xac-thuc' => 'AdminAuthController@login',              // POST
 
+    /*
+     * ĐĂNG XUẤT CỦA KHU QUẢN TRỊ — đường riêng, không dùng chung
+     * 'auth/dang-xuat' của khách ở phía trên file này.
+     *
+     * Việc bên trong y hệt nhau, nhưng để hai khu vực POST chung một địa chỉ
+     * là giữ lại đúng sợi dây cuối cùng nối chúng với nhau — lý do đầy đủ ghi
+     * ở AdminAuthController::logout().
+     */
+    'quan-tri/dang-xuat'          => 'AdminAuthController@logout',             // POST
+
     'quan-tri'                    => 'DashboardController@index',
 
     'quan-tri/don-hang'           => 'OrderAdminController@index',
