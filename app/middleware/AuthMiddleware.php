@@ -13,6 +13,37 @@
  * Hệ quả: QUÊN gọi middleware ở một controller quản trị nghĩa là trang đó mở
  * cho tất cả mọi người. Xem bảng đối chiếu ở cuối database/schema.sql.
  * ─────────────────────────────────────────────────────────────────────────────
+ * HAI KHU VỰC, HAI LOẠI TÀI KHOẢN, KHÔNG BẮC CẦU
+ *
+ * Một tài khoản chỉ thuộc về ĐÚNG MỘT khu vực, quyết định bởi vai trò trong
+ * bảng user_roles:
+ *
+ *   vai trò nội bộ (staff · manager · admin)  ->  CHỈ khu quản trị  /quan-tri
+ *   vai trò khách  (customer, hoặc không có)  ->  CHỈ khu khách     /tai-khoan
+ *
+ * admin@vineyewear.vn KHÔNG đăng nhập được ở /auth, và tài khoản khách KHÔNG
+ * đăng nhập được ở /quan-tri/dang-nhap. Hai chiều đều bị chặn ở TẦNG MÁY CHỦ,
+ * không phải bằng cách giấu nút.
+ *
+ * VÌ SAO PHẢI TÁCH, chứ không để "ai cũng vào được cả hai":
+ *
+ *   · Mật khẩu mở khu quản trị mà đặt lại được qua luồng "Quên mật khẩu" của
+ *     khách (email/OTP) thì cửa sau bên khách chính là cửa trước bên quản trị.
+ *     Xem PasswordResetModel::requestOtp.
+ *   · Cookie "ghi nhớ đăng nhập" sống 30 ngày là thứ hợp lý cho khách mua
+ *     hàng, và là thứ không nên tồn tại cho một tài khoản mở được kho hàng
+ *     và dữ liệu đơn thuốc kính. Cổng quản trị cố tình không cấp nó.
+ *   · Đăng nhập bằng Google: SRS mục 3.A ghi rõ "Không áp dụng cho tài khoản
+ *     nội bộ". Không chặn thì ai chiếm được hộp thư nội bộ là vào thẳng.
+ *
+ * BA CỬA VÀO, dùng đúng cửa:
+ *
+ *   userId()      danh tính thô của phiên, CHƯA phân khu. Chỉ dùng ở nơi tự
+ *                 kiểm vai trò ngay sau đó (cổng quản trị, chính lớp này).
+ *   customerId()  id khách hàng — trả null nếu phiên là tài khoản nội bộ.
+ *                 Mọi mã phía cửa hàng dùng cái này.
+ *   requireStaff() cửa của khu quản trị.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 class AuthMiddleware
@@ -51,6 +82,26 @@ class AuthMiddleware
             return null;
         }
 
+        /*
+         * COOKIE GHI NHỚ LÀ CƠ CHẾ CỦA RIÊNG KHU KHÁCH HÀNG.
+         *
+         * Cổng quản trị không bao giờ cấp token này — AdminAuthController
+         * ::login() gọi login() không kèm $remember, có ghi rõ lý do ở đó.
+         * Nên một token trỏ tới tài khoản nội bộ chỉ có thể là di sản: cấp
+         * hồi tài khoản đó còn đăng nhập được ở /auth, trước khi hai khu vực
+         * bị tách.
+         *
+         * Huỷ SẠCH token của tài khoản ấy chứ không chỉ bỏ qua lượt này:
+         * consume() vừa xoay token xong, bỏ qua thôi thì lần sau vào trang
+         * lại đúng cảnh này. Người đó đăng nhập lại ở /quan-tri/dang-nhap.
+         */
+        if (UserModel::isStaff($userId)) {
+            RememberModel::forgetAllFor($userId);
+            RememberModel::forget();
+
+            return null;
+        }
+
         // Đăng nhập lại từ cookie KHÔNG cấp phiên "mới tinh": đánh dấu
         // via_cookie để những thao tác nhạy cảm (đổi mật khẩu, đổi email) có
         // thể yêu cầu nhập lại mật khẩu nếu sau này cần siết thêm.
@@ -68,9 +119,51 @@ class AuthMiddleware
         return $userId;
     }
 
+    /**
+     * Id KHÁCH HÀNG đang đăng nhập, hoặc null.
+     *
+     * KHÁC userId(): tài khoản nội bộ trả về null, tức là với toàn bộ mã phía
+     * cửa hàng thì một người đang mở khu quản trị chỉ là khách vãng lai. Đó
+     * là điều đúng — họ không có giỏ hàng, không có đơn hàng, không có lịch
+     * hẹn ở tư cách ấy, và một đơn hàng gắn nhầm vào tài khoản admin là dữ
+     * liệu bẩn không ai gỡ ra được.
+     *
+     * Vai trò đọc lại từ DB mỗi lượt chứ không cất vào phiên: cùng lý do đã
+     * ghi ở requireStaff().
+     */
+    public static function customerId(): ?string
+    {
+        $userId = self::userId();
+
+        if ($userId === null || UserModel::isStaff($userId)) {
+            return null;
+        }
+
+        return $userId;
+    }
+
+    /**
+     * Phiên hiện tại có phải tài khoản nội bộ không.
+     *
+     * Dùng cho GIAO DIỆN — ví dụ icon tài khoản ở header trỏ về /quan-tri
+     * thay vì /tai-khoan. Không được dùng thay cho requireStaff(): đây là câu
+     * hỏi "hiện ra cái gì", không phải "cho vào hay không".
+     */
+    public static function isStaffSession(): bool
+    {
+        $userId = self::userId();
+
+        return $userId !== null && UserModel::isStaff($userId);
+    }
+
+    /**
+     * Có KHÁCH HÀNG nào đang đăng nhập không.
+     *
+     * Tài khoản nội bộ KHÔNG tính — xem customerId().
+     */
     public static function check(): bool
     {
-        return self::userId() !== null;
+        return self::customerId() !== null;
     }
 
     /**
@@ -87,6 +180,9 @@ class AuthMiddleware
      * Nên nơi gọi tự khai đường quay lại khi nó biết rõ hơn. Giá trị vẫn đi
      * qua safeRedirectPath() ở đầu bên kia (xem AuthController::loginTarget),
      * nên một chuỗi dẫn ra ngoài site không bao giờ thành đích thật.
+     *
+     * ĐÂY LÀ CỬA CỦA KHU KHÁCH HÀNG. Tài khoản nội bộ không đi qua được, kể
+     * cả khi phiên của họ hoàn toàn hợp lệ — xem khối "HAI KHU VỰC" đầu file.
      */
     public static function requireLogin(?string $returnTo = null): string
     {
@@ -94,6 +190,29 @@ class AuthMiddleware
 
         if ($userId === null) {
             redirect('/auth?redirect=' . rawurlencode($returnTo ?? currentPath()));
+        }
+
+        /*
+         * TÀI KHOẢN NỘI BỘ ĐI NHẦM SANG KHU KHÁCH.
+         *
+         * Đưa về /quan-tri kèm một dòng giải thích, KHÔNG trả 403 và cũng
+         * không đá sang /auth:
+         *
+         *   · 403 nói "bạn không đủ quyền", mà sự thật ngược lại — họ thừa
+         *     quyền, chỉ là đứng nhầm cửa. Câu đó làm người đọc đi tìm xem
+         *     mình thiếu quyền gì.
+         *   · Đá sang /auth thì họ thấy form đăng nhập trong khi ĐANG đăng
+         *     nhập, và có gõ đúng mật khẩu nội bộ vào đó cũng bị từ chối —
+         *     một vòng tròn không có lối ra.
+         *
+         * Muốn mua hàng bằng tài khoản riêng thì đăng xuất rồi đăng nhập lại
+         * bằng tài khoản khách; đó là hai tài khoản khác nhau, đúng như luật.
+         */
+        if (UserModel::isStaff($userId)) {
+            flash('admin_error',
+                  'Tài khoản nội bộ không dùng được khu vực tài khoản khách hàng. '
+                  . 'Đăng xuất rồi đăng nhập bằng tài khoản khách nếu bạn cần mua hàng.');
+            redirect('/quan-tri');
         }
 
         return $userId;
@@ -149,10 +268,20 @@ class AuthMiddleware
 
     /**
      * Bắt buộc một vai trò cụ thể (admin, manager…).
+     *
+     * KHÔNG đi qua requireLogin() nữa: hàm đó nay là cửa của khu KHÁCH và đá
+     * mọi tài khoản nội bộ về /quan-tri, nên requireRole('admin') gọi qua nó
+     * sẽ chặn đúng người mà nó định cho vào. Bẫy đó chưa nổ vì hiện chưa nơi
+     * nào gọi requireRole(); sửa luôn để nơi gọi đầu tiên không phải là người
+     * phát hiện ra.
      */
     public static function requireRole(string $role): string
     {
-        $userId = self::requireLogin();
+        $userId = self::userId();
+
+        if ($userId === null) {
+            redirect('/quan-tri/dang-nhap?redirect=' . rawurlencode(currentUrlWithout([])));
+        }
 
         if (!UserModel::hasRole($userId, $role)) {
             http_response_code(403);

@@ -171,6 +171,36 @@ try {
     } elseif ($added > 0) {
         echo "\n✓ Đã cấp vai trò '{$role}' cho tài khoản có sẵn {$email}.\n";
         echo "  Mật khẩu giữ nguyên, không thay đổi.\n\n";
+
+        /*
+         * CẢNH BÁO, KHÔNG PHẢI LỜI CHÚC MỪNG.
+         *
+         * Từ khi hai khu vực bị tách (xem khối "HAI KHU VỰC" ở đầu
+         * AuthMiddleware, và mục 3.A.3 của SRS), một tài khoản có vai trò nội
+         * bộ KHÔNG còn đăng nhập được ở /auth nữa. Cấp vai trò cho một tài
+         * khoản khách đang dùng là ĐÓNG luôn tài khoản mua hàng của người đó:
+         * đơn hàng cũ vẫn nằm trong cơ sở dữ liệu nhưng chính chủ không mở
+         * được trang nào để xem.
+         *
+         * In ra ở đây vì đây là nơi DUY NHẤT việc ấy xảy ra, và người chạy
+         * lệnh thường không nghĩ tới hệ quả đó — họ chỉ định "cho bạn này
+         * quyền vào trang quản trị".
+         */
+        $donHang = (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM `orders` WHERE `user_id` = :id',
+            ['id' => $userId]
+        );
+
+        echo "  ⚠ Tài khoản này nay là TÀI KHOẢN NỘI BỘ, nên không đăng nhập\n";
+        echo "    được ở cổng khách hàng (/auth) nữa — chỉ vào /quan-tri.\n";
+
+        if ($donHang > 0) {
+            echo "    Nó đang có {$donHang} đơn hàng. Chủ tài khoản sẽ không tự xem\n";
+            echo "    lại được nữa; muốn tiếp tục mua hàng thì cần một tài khoản\n";
+            echo "    khách RIÊNG, bằng email hoặc số điện thoại khác.\n";
+        }
+
+        echo "\n";
     } else {
         echo "\n• Tài khoản {$email} vốn đã có vai trò '{$role}'. Không có gì thay đổi.\n\n";
     }

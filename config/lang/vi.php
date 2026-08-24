@@ -55,6 +55,7 @@ return [
     'pop.orders'        => 'Đơn hàng của tôi',
     'pop.bookings'      => 'Lịch hẹn đo mắt',
     'pop.logout'        => 'Đăng xuất',
+    'pop.admin'         => 'Khu quản trị',
     'pop.register'      => 'Đăng ký',
     'pop.cart_empty'    => 'Giỏ hàng đang trống',
     'pop.cart_count'    => '%d sản phẩm đang chờ',

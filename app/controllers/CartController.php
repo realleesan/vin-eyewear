@@ -698,7 +698,7 @@ class CartController extends BaseController
                    sẵn thì khách vẫn khai được ở trang tài khoản, còn mất đơn
                    hàng thì không lấy lại được. Vẫn ghi log để còn biết. */
                 try {
-                    UserModel::seedPrescription(AuthMiddleware::userId(), $od, $os);
+                    UserModel::seedPrescription(AuthMiddleware::customerId(), $od, $os);
                 } catch (Throwable $e) {
                     error_log('seedPrescription: ' . $e->getMessage());
                 }

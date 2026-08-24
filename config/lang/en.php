@@ -40,6 +40,7 @@ return [
     'pop.orders'        => 'My orders',
     'pop.bookings'      => 'Eye test bookings',
     'pop.logout'        => 'Sign out',
+    'pop.admin'         => 'Admin area',
     'pop.register'      => 'Sign up',
     'pop.cart_empty'    => 'Your cart is empty',
     'pop.cart_count'    => '%d item(s) waiting',

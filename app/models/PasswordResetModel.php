@@ -103,7 +103,41 @@ class PasswordResetModel extends BaseModel
                     'error' => 'Bạn đã yêu cầu quá nhiều lần. Vui lòng thử lại sau một giờ.'];
         }
 
-        $user   = UserModel::findByLogin($contact);
+        $user = UserModel::findByLogin($contact);
+
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * TÀI KHOẢN NỘI BỘ COI NHƯ KHÔNG TỒN TẠI Ở CỬA NÀY
+         *
+         * Đây là luồng "Quên mật khẩu" CỦA KHÁCH: gõ email hoặc số, nhận mã 6
+         * số, đặt mật khẩu mới. Không lọc ở đây thì nó là đường đặt lại mật
+         * khẩu của admin@vineyewear.vn — ai chiếm được hộp thư nội bộ là đổi
+         * được mật khẩu mở khu quản trị, mà không cần đi qua cổng nào cả.
+         * Cả bộ chốt phân khu ở AuthMiddleware sẽ vô nghĩa vì kẻ kia không
+         * cần "đăng nhập nhầm cửa": họ vào bằng cửa đúng, với mật khẩu vừa
+         * tự đặt.
+         *
+         * Đường của nhân viên là /quan-tri/nhan-vien (admin cấp lại cho nhau)
+         * — xem StaffAdminController.
+         *
+         * COI NHƯ KHÔNG TÌM THẤY, KHÔNG BÁO LỖI RIÊNG. Một câu "tài khoản này
+         * là tài khoản nội bộ" biến form thành máy dò: gõ thử từng địa chỉ là
+         * lọc ra danh sách nhân viên của cửa hàng, mà ở đây thì không cần biết
+         * mật khẩu mới đọc được câu trả lời — khác hẳn ca ở AuthController
+         * ::login(), nơi câu báo chỉ hiện sau khi mật khẩu đã đúng.
+         *
+         * Nhánh $user === null bên dưới đã lo phần còn lại: vẫn ghi yêu cầu
+         * (để tooMany() đếm được), không gửi mã đi đâu, vẫn trả về 'ok' kèm
+         * một hash để màn nhập mã hiện ra y hệt ca gõ nhầm địa chỉ. Người gõ
+         * sẽ trượt ở bước nhập mã. user_id = null cũng chặn luôn cửa
+         * issueByStaff(): nhân viên không "cấp liên kết đặt lại" cho yêu cầu
+         * này được.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if ($user !== null && UserModel::isStaff((string) $user['id'])) {
+            $user = null;
+        }
+
         $userId = $user !== null ? (string) $user['id'] : null;
         $code   = Otp::generate();
 

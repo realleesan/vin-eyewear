@@ -690,6 +690,34 @@ class UserModel extends BaseModel
         return array_intersect(self::roles($userId), self::STAFF_ROLES) !== [];
     }
 
+    /**
+     * Địa chỉ email này có đang thuộc về một tài khoản NỘI BỘ không?
+     *
+     * Hỏi bằng email chứ không bằng id vì có nơi cần biết ĐIỀU NÀY TRƯỚC KHI
+     * chạm vào tài khoản: luồng "Tiếp tục với Google" khớp người theo email,
+     * và thao tác khớp ấy GHI — nó gắn google_id vào dòng users tìm được. Đợi
+     * tới lúc có id trong tay mới kiểm thì tài khoản nội bộ đã bị gắn với một
+     * tài khoản Google, dù cuối cùng ta vẫn từ chối cho vào.
+     *
+     * Không tìm thấy email, hoặc email rỗng/null, thì trả false: "không phải
+     * tài khoản nội bộ" là câu trả lời đúng cho một địa chỉ không thuộc về ai.
+     */
+    public static function isStaffEmail(?string $email): bool
+    {
+        $email = strtolower(trim((string) $email));
+
+        if ($email === '') {
+            return false;
+        }
+
+        $id = Database::fetchValue(
+            'SELECT id FROM users WHERE email = :e',
+            ['e' => $email]
+        );
+
+        return $id !== null && $id !== false && self::isStaff((string) $id);
+    }
+
     // ========================================================================
     // HỒ SƠ KHÚC XẠ
     // ========================================================================

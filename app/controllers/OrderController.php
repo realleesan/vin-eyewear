@@ -61,7 +61,18 @@ class OrderController extends BaseController
      */
     private static function requireCustomer(): string
     {
-        $userId = AuthMiddleware::userId();
+        /* Tài khoản nội bộ không đặt hàng bằng chính nó — xem khối "HAI KHU
+           VỰC" ở đầu AuthMiddleware. Tách nhánh này ra trước customerId() vì
+           customerId() trả null cho họ, mà câu "Vui lòng đăng nhập" thì sai
+           hẳn với người ĐANG đăng nhập, và /auth cũng không nhận họ. */
+        if (AuthMiddleware::isStaffSession()) {
+            flash('admin_error',
+                  'Tài khoản nội bộ không đặt hàng được. Đăng xuất rồi đăng nhập '
+                  . 'bằng tài khoản khách nếu bạn cần mua hàng.');
+            redirect('/quan-tri');
+        }
+
+        $userId = AuthMiddleware::customerId();
 
         if ($userId === null) {
             flash('auth_error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
@@ -636,7 +647,9 @@ class OrderController extends BaseController
      */
     public function payStatus(): void
     {
-        $userId = AuthMiddleware::userId();
+        // customerId(): đơn hàng luôn thuộc về một tài khoản KHÁCH, nên phiên
+        // nội bộ ở đây cũng vô danh như khách vãng lai.
+        $userId = AuthMiddleware::customerId();
         $code   = trim((string) ($_GET['ma'] ?? ''));
 
         if ($userId === null || $code === '') {

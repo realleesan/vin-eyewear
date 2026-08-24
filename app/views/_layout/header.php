@@ -313,12 +313,27 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
              * AuthController::login() mặc định là /tai-khoan, cứ để nó lo.
              */
             $isLoggedIn = AuthMiddleware::check();
-            $accountUrl = $isLoggedIn ? '/tai-khoan' : '/auth';
+
+            /*
+             * PHIÊN NỘI BỘ THÌ ICON NÀY DẪN VỀ /quan-tri, KHÔNG PHẢI /tai-khoan.
+             *
+             * check() đã trả false cho tài khoản nội bộ (xem
+             * AuthMiddleware::customerId), nên không có dòng này thì người
+             * đang mở khu quản trị nhìn thấy đúng cái header của khách chưa
+             * đăng nhập: bấm icon là tới /auth, gõ mật khẩu nội bộ vào đó thì
+             * bị từ chối. Đủ để họ tưởng mình vừa bị đăng xuất.
+             *
+             * Đây chỉ là chuyện HIỆN RA CÁI GÌ. Việc chặn nằm ở
+             * AuthMiddleware::requireLogin(); đổi mấy dòng này không mở thêm
+             * cửa nào.
+             */
+            $isStaff    = AuthMiddleware::isStaffSession();
+            $accountUrl = $isStaff ? '/quan-tri' : ($isLoggedIn ? '/tai-khoan' : '/auth');
             ?>
             <div class="hpop" data-hpop>
                 <a href="<?= e($accountUrl) ?>" class="hpop__trigger header-action"
                    data-hpop-trigger
-                   aria-label="<?= e($isLoggedIn ? t('action.account') : t('action.login')) ?>">
+                   aria-label="<?= e($isStaff ? t('pop.admin') : ($isLoggedIn ? t('action.account') : t('action.login'))) ?>">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/>
                         <path d="M4 20.5c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -331,7 +346,18 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                              đúng chữ của mục ngay bên dưới. */ ?>
                     <p class="hpop__head"><?= e(t('pop.account')) ?></p>
                     <ul class="hpop__list" role="list">
-                        <?php if ($isLoggedIn): ?>
+                        <?php if ($isStaff): ?>
+                            <?php /* Không bày "Đơn hàng của tôi" hay "Lịch hẹn đo mắt":
+                                     tài khoản nội bộ không có hai thứ đó, và bấm vào là
+                                     bị requireLogin() đá ngược về /quan-tri. */ ?>
+                            <li><a class="hpop__item" href="/quan-tri"><?= e(t('pop.admin')) ?></a></li>
+                            <li>
+                                <form method="post" action="/auth/dang-xuat">
+                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                    <button type="submit" class="hpop__item hpop__item--btn"><?= e(t('pop.logout')) ?></button>
+                                </form>
+                            </li>
+                        <?php elseif ($isLoggedIn): ?>
                             <li><a class="hpop__item" href="/tai-khoan"><?= e(t('pop.profile')) ?></a></li>
                             <li><a class="hpop__item" href="/tai-khoan?muc=don-hang"><?= e(t('pop.orders')) ?></a></li>
                             <li><a class="hpop__item" href="/tai-khoan?muc=lich-hen"><?= e(t('pop.bookings')) ?></a></li>

@@ -98,6 +98,38 @@ class AuthController extends BaseController
             redirect('/auth?redirect=' . rawurlencode($to));
         }
 
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * TÀI KHOẢN NỘI BỘ KHÔNG ĐĂNG NHẬP Ở CỬA NÀY
+         *
+         * Đối xứng với AdminAuthController::login(), nơi tài khoản khách bị
+         * từ chối. Xem khối "HAI KHU VỰC" ở đầu AuthMiddleware.
+         *
+         * CHẶN TRƯỚC KHI MỞ PHIÊN. Cho vào rồi để requireLogin() đá về
+         * /quan-tri cũng chặn được đường tới /tai-khoan, nhưng nó bỏ lại một
+         * phiên quản trị đang mở trên trang bán hàng — mở ở một cái máy mà
+         * người ngồi trước đó chỉ định đăng nhập mua hàng.
+         *
+         * NÓI THẲNG LÝ DO, KHÔNG NHẬP NHOÈ như bên cổng quản trị.
+         *
+         * Câu này chỉ hiện ra SAU KHI mật khẩu đã đúng, nên nó không phải một
+         * máy tra cứu: ai đọc được nó thì đã cầm sẵn mật khẩu của tài khoản
+         * đó rồi, biết thêm "đây là tài khoản nội bộ" cũng không thêm gì.
+         * Đổi lại, người gõ nhầm cửa biết ngay phải đi đâu thay vì đứng trước
+         * câu "Thông tin đăng nhập không đúng." trong khi họ gõ đúng.
+         *
+         * Ở cổng quản trị thì ngược hẳn: câu báo bên đó hiện ra cả khi mật
+         * khẩu SAI, nên tách bạch là rò rỉ danh sách nhân viên.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if (UserModel::isStaff($result['id'])) {
+            $_SESSION['_old_auth'] = ['email' => $login, 'remember' => $remember];
+            flash('auth_error',
+                  'Đây là tài khoản nội bộ. Vui lòng đăng nhập tại cổng quản trị: '
+                  . '/quan-tri/dang-nhap');
+            redirect('/auth?redirect=' . rawurlencode($to));
+        }
+
         AuthMiddleware::login($result['id'], $remember);
 
         redirect($to);
@@ -746,7 +778,14 @@ class AuthController extends BaseController
             redirect('/auth');
         }
 
-        // Đã đăng nhập rồi thì không có việc gì ở đây.
+        /* Đã đăng nhập rồi thì không có việc gì ở đây — nhưng "về đâu" thì
+           tuỳ tài khoản: phiên nội bộ mà đá sang /tai-khoan là đá vào đúng
+           cánh cửa requireLogin() vừa đóng lại với họ, đi một vòng rồi quay
+           về /quan-tri kèm một dòng báo lỗi không ai cần đọc. */
+        if (AuthMiddleware::isStaffSession()) {
+            redirect('/quan-tri');
+        }
+
         if (AuthMiddleware::userId() !== null) {
             redirect('/tai-khoan');
         }
@@ -785,6 +824,31 @@ class AuthController extends BaseController
             redirect('/auth');
         }
 
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * GOOGLE KHÔNG PHẢI ĐƯỜNG VÀO CỦA TÀI KHOẢN NỘI BỘ
+         *
+         * SRS mục 3.A đã chốt: "Đăng nhập bằng Google — Không áp dụng cho tài
+         * khoản nội bộ ở Giai đoạn 1". Cổng /quan-tri/dang-nhap vì thế không
+         * vẽ nút Google. Nhưng không có mấy dòng này thì cửa đó vẫn mở, chỉ là
+         * mở ở phía bên kia: nhánh 2 của findOrCreateGoogle() khớp người theo
+         * EMAIL ĐÃ XÁC MINH, nên một tài khoản Google mang địa chỉ
+         * admin@vineyewear.vn là nối thẳng vào tài khoản quản trị — không cần
+         * biết mật khẩu.
+         *
+         * CHẶN TRƯỚC KHI GỌI, không phải sau. findOrCreateGoogle() GHI: nó
+         * UPDATE google_id vào dòng users nó tìm được. Kiểm sau thì tài khoản
+         * nội bộ đã bị gắn vĩnh viễn với một tài khoản Google bên ngoài, dù
+         * lượt đăng nhập này vẫn bị từ chối.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if (UserModel::isStaffEmail($token['email'])) {
+            flash('auth_error',
+                  'Đây là tài khoản nội bộ. Vui lòng đăng nhập tại cổng quản trị: '
+                  . '/quan-tri/dang-nhap');
+            redirect('/auth');
+        }
+
         $result = UserModel::findOrCreateGoogle(
             $token['sub'],
             $token['email'],
@@ -794,6 +858,16 @@ class AuthController extends BaseController
 
         if (!$result['ok']) {
             flash('auth_error', $result['error']);
+            redirect('/auth');
+        }
+
+        /* Lưới thứ hai, cho nhánh 1 của findOrCreateGoogle(): một google_id
+           đã nối sẵn vào tài khoản nội bộ từ trước khi hai khu vực bị tách
+           thì lượt vào không đi qua email, nên chốt bên trên không thấy nó. */
+        if (UserModel::isStaff($result['id'])) {
+            flash('auth_error',
+                  'Đây là tài khoản nội bộ. Vui lòng đăng nhập tại cổng quản trị: '
+                  . '/quan-tri/dang-nhap');
             redirect('/auth');
         }
 
@@ -810,9 +884,16 @@ class AuthController extends BaseController
     {
         $this->requirePost('/');
 
+        /* Hỏi TRƯỚC KHI huỷ phiên: sau logout() thì không còn ai để hỏi nữa.
+           Khu quản trị dùng chung đúng địa chỉ đăng xuất này (xem
+           admin/_layout/master.php), nên nhân viên bấm "Đăng xuất" ở đó mà
+           rơi vào trang chủ cửa hàng là lạc chỗ — trả họ về đúng cánh cửa
+           vừa bước ra. */
+        $wasStaff = AuthMiddleware::isStaffSession();
+
         AuthMiddleware::logout();
 
-        redirect('/');
+        redirect($wasStaff ? '/quan-tri/dang-nhap' : '/');
     }
 
     // ========================================================================
