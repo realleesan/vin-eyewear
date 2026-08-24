@@ -99,6 +99,39 @@ $showOr = $step === '';
                 <p class="authflash authflash--err" role="alert"><?= e($error) ?></p>
             <?php endif; ?>
 
+            <?php
+            /*
+             * ĐỨNG NHẦM CỔNG — KHÔNG PHẢI GÕ SAI MẬT KHẨU.
+             *
+             * Khối riêng chứ không dùng dải đỏ .authflash--err ở trên, vì hai
+             * chuyện khác hẳn nhau: người này gõ ĐÚNG mật khẩu, chỉ là tài
+             * khoản của họ thuộc khu quản trị. Một dòng chữ đỏ sẽ đẩy họ đi
+             * kiểm lại mật khẩu — đúng cái việc vô ích duy nhất ở đây.
+             *
+             * Và liên kết phải là LIÊN KẾT BẤM ĐƯỢC. Bản trước nhét
+             * "/quan-tri/dang-nhap" vào giữa câu chữ, người đọc phải tự bôi
+             * đen chép sang thanh địa chỉ; trên điện thoại thì gần như không
+             * chép nổi.
+             */
+            ?>
+            <?php if (!empty($staffGate)): ?>
+                <div class="authgate" role="alert">
+                    <span class="authgate__icon" aria-hidden="true"><?= icon('shield', '', 18) ?></span>
+
+                    <div>
+                        <p class="authgate__title">Đây là tài khoản nội bộ</p>
+                        <p class="authgate__text">
+                            Tài khoản nhân viên và quản trị đăng nhập ở cổng riêng,
+                            không dùng chung với tài khoản mua hàng.
+                        </p>
+                        <a class="authgate__link" href="/quan-tri/dang-nhap">
+                            Tới cổng quản trị
+                            <?= icon('arrow-right', 'authgate__arrow', 15) ?>
+                        </a>
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <?php if (!$isRegister): ?>
 
                 <form class="authform" method="post" action="/auth/dang-nhap">

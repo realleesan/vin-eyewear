@@ -442,6 +442,88 @@
 .authflash--err { background: #f6e7e7; color: #8f3535; }
 
 /* ============================================================
+   KHỐI "ĐỨNG NHẦM CỔNG" — tài khoản nội bộ gõ vào form khách
+   ============================================================
+
+   KHÔNG dùng .authflash--err, dù chỗ đứng trên trang là một.
+
+   Dải đỏ ở trên nói "bạn làm sai gì đó". Ở đây thì không: mật khẩu gõ đúng,
+   tài khoản có thật, chỉ là nó thuộc khu quản trị. Tô đỏ là đẩy người đọc đi
+   kiểm lại mật khẩu — việc duy nhất chắc chắn vô ích. Nên khối này lấy tông
+   thương hiệu và có sức nặng của một chỉ dẫn, không phải một lời trách.
+
+   Màu lấy từ token của layout.css. Hai dòng #eef3e9/#f6e7e7 ngay trên là màu
+   gõ thẳng có từ trước; không nhân thêm nếp đó ra khối mới. */
+.authgate {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    /* Viền trái thay cho viền bốn cạnh: đủ để tách khối khỏi form mà không
+       dựng thêm một cái hộp nữa cạnh mấy ô nhập vốn đã có viền. */
+    border-left: 3px solid var(--brand);
+    background: var(--surface-sunken);
+    text-align: left;
+}
+
+.authgate__icon {
+    flex: none;
+    display: block;
+    margin-top: 1px;
+    color: var(--brand);
+}
+
+.authgate__title {
+    margin: 0;
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.authgate__text {
+    margin: 3px 0 0;
+    font-size: var(--fs-note);
+    line-height: 1.55;
+    color: var(--muted);
+}
+
+.authgate__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    font-size: var(--fs-note);
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+    /* Gạch chân dựng bằng border trong suốt rồi mới hiện lúc hover: dùng
+       text-decoration thì nét gạch dính sát chữ và chạy cả dưới mũi tên. */
+    border-bottom: 1px solid transparent;
+}
+
+.authgate__link:hover,
+.authgate__link:focus-visible {
+    color: var(--brand-strong);
+    border-bottom-color: currentColor;
+}
+
+/* Mũi tên nhích sang phải khi rê chuột — cùng cử chỉ với các liên kết "xem
+   thêm" ở trang chủ, để nó đọc ra là một lối đi chứ không phải chữ trang trí. */
+.authgate__arrow {
+    flex: none;
+    transition: transform .18s ease;
+}
+
+.authgate__link:hover .authgate__arrow {
+    transform: translateX(2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .authgate__arrow { transition: none; }
+}
+
+/* ============================================================
    KHỐI "ĐÃ XONG" — quên mật khẩu / liên kết hỏng
    ============================================================ */
 

@@ -71,6 +71,13 @@ class AuthController extends BaseController
             'old'       => $_SESSION['_old_auth'] ?? [],
             'error'     => flash('auth_error'),
             'success'   => flash('auth_success'),
+
+            /* Cờ riêng, KHÔNG dùng chung ô $error.
+               Ca này không phải lỗi — mật khẩu gõ đúng, chỉ là đứng nhầm
+               cổng — nên nó cần một khối riêng có chỗ đặt liên kết sang cổng
+               quản trị. Nhét đường dẫn vào giữa một câu chữ đỏ thì người đọc
+               phải tự bôi đen rồi chép sang thanh địa chỉ. */
+            'staffGate' => flash('auth_staff_gate') !== null,
         ]);
 
         unset($_SESSION['_old_auth']);
@@ -124,9 +131,7 @@ class AuthController extends BaseController
          */
         if (UserModel::isStaff($result['id'])) {
             $_SESSION['_old_auth'] = ['email' => $login, 'remember' => $remember];
-            flash('auth_error',
-                  'Đây là tài khoản nội bộ. Vui lòng đăng nhập tại cổng quản trị: '
-                  . '/quan-tri/dang-nhap');
+            flash('auth_staff_gate', '1');
             redirect('/auth?redirect=' . rawurlencode($to));
         }
 
@@ -843,9 +848,7 @@ class AuthController extends BaseController
          * ─────────────────────────────────────────────────────────────────
          */
         if (UserModel::isStaffEmail($token['email'])) {
-            flash('auth_error',
-                  'Đây là tài khoản nội bộ. Vui lòng đăng nhập tại cổng quản trị: '
-                  . '/quan-tri/dang-nhap');
+            flash('auth_staff_gate', '1');
             redirect('/auth');
         }
 
@@ -865,9 +868,7 @@ class AuthController extends BaseController
            đã nối sẵn vào tài khoản nội bộ từ trước khi hai khu vực bị tách
            thì lượt vào không đi qua email, nên chốt bên trên không thấy nó. */
         if (UserModel::isStaff($result['id'])) {
-            flash('auth_error',
-                  'Đây là tài khoản nội bộ. Vui lòng đăng nhập tại cổng quản trị: '
-                  . '/quan-tri/dang-nhap');
+            flash('auth_staff_gate', '1');
             redirect('/auth');
         }
 
