@@ -227,4 +227,72 @@ class VariantModel extends BaseModel
 
         return true;
     }
+
+    /**
+     * TRẢ HÀNG VỀ KHO — bản đối xứng của reserve().
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO CẦN HÀM NÀY
+     *
+     * Đặt hàng TRỪ tồn kho ngay trong transaction tạo đơn, nhưng huỷ đơn thì
+     * trước nay KHÔNG trả lại — kể cả khi nhân viên huỷ trong khu quản trị.
+     * Mỗi đơn huỷ là một lần kho ghi thiếu vĩnh viễn: món hàng vẫn nằm trên
+     * kệ mà hệ thống coi như đã bán, và tới lúc nào đó nó tự đánh dấu
+     * "hết hàng" trong khi cửa hàng còn nguyên vài cái.
+     *
+     * KHÔNG CÓ TRẦN TRÊN. reserve() có điều kiện `stock_quantity >= :q` để hai
+     * người mua cùng lúc không cùng lấy được món cuối; ở chiều ngược lại không
+     * có ràng buộc tương ứng nào — cộng trả về thì bao nhiêu cũng hợp lệ.
+     *
+     * MỞ LẠI TRẠNG THÁI BÁN được, và đây mới là phần dễ quên: reserve() tự đặt
+     * products.status = 'out_of_stock' khi tồn về 0. Chỉ cộng số mà không mở
+     * lại cờ ấy thì hàng có trong kho nhưng vẫn biến mất khỏi danh mục — lỗi
+     * im lặng, chỉ lộ ra khi có người hỏi "sao món này không bán nữa".
+     *
+     * Mốc mở lại là `stock_quantity > 0`, KHÔNG phải một ngưỡng "còn ít": cột
+     * status chỉ có hai giá trị 'in_stock' / 'out_of_stock' (xem
+     * InventoryAdminController, nơi cũng đồng bộ theo đúng luật này) — còn
+     * "sắp hết" là thứ khu quản trị TÍNH RA từ con số, không lưu.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public static function release(?string $variantId, string $productId, int $quantity): void
+    {
+        if ($quantity <= 0) {
+            return;
+        }
+
+        if ($variantId === null) {
+            Database::execute(
+                'UPDATE products
+                    SET stock_quantity = stock_quantity + :q,
+                        status = CASE WHEN stock_quantity + :q2 > 0 THEN :ok ELSE status END
+                  WHERE id = :id',
+                ['q' => $quantity, 'q2' => $quantity, 'ok' => 'in_stock', 'id' => $productId]
+            );
+
+            return;
+        }
+
+        Database::execute(
+            'UPDATE product_variants SET stock_quantity = stock_quantity + :q WHERE id = :id',
+            ['q' => $quantity, 'id' => $variantId]
+        );
+
+        /* Mặt hàng CÓ biến thể: mở lại cờ bán khi TỔNG tồn của các biến thể
+           đang bật lớn hơn 0 — cùng phép đếm mà reserve() dùng để đóng cờ, chỉ
+           ngược chiều. Đếm lại từ CSDL chứ không suy từ :q, vì biến thể vừa
+           cộng có thể đang bị tắt (is_active = 0). */
+        $con = (int) Database::fetchValue(
+            'SELECT COALESCE(SUM(stock_quantity), 0) FROM product_variants
+              WHERE product_id = :pid AND is_active = 1',
+            ['pid' => $productId]
+        );
+
+        if ($con > 0) {
+            Database::execute(
+                'UPDATE products SET status = :ok WHERE id = :id AND status = :oos',
+                ['ok' => 'in_stock', 'id' => $productId, 'oos' => 'out_of_stock']
+            );
+        }
+    }
 }

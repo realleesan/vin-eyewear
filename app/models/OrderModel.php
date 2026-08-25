@@ -758,8 +758,77 @@ class OrderModel extends BaseModel
     public static function changeStatus(string $id, string $status, ?string $changedBy = null): void
     {
         Database::transaction(static function () use ($id, $status, $changedBy): void {
+            /*
+             * ĐỌC TRẠNG THÁI CŨ TRƯỚC KHI GHI ĐÈ.
+             *
+             * Việc hoàn kho phụ thuộc vào CHIỀU đi chứ không phải vào trạng
+             * thái đích: chỉ lần ĐẦU sang 'cancelled' mới trả hàng về kho. Đọc
+             * sau khi update thì không còn phân biệt được "vừa huỷ" với "đã
+             * huỷ từ trước, nhân viên bấm lại nút Lưu" — và bấm lại là chuyện
+             * xảy ra thường xuyên.
+             */
+            $truoc = (string) (self::find($id)['status'] ?? '');
+
             self::update($id, ['status' => $status]);
             self::logStatus($id, $status, $changedBy);
+
+            /*
+             * ─────────────────────────────────────────────────────────────
+             * TỒN KHO ĐI THEO TRẠNG THÁI, HAI CHIỀU
+             *
+             * Đặt hàng TRỪ kho ngay trong transaction tạo đơn (xem place()),
+             * nhưng huỷ đơn thì trước nay không trả lại — kể cả nhân viên huỷ
+             * trong khu quản trị. Mỗi đơn huỷ là một lần kho ghi thiếu vĩnh
+             * viễn: hàng còn trên kệ mà hệ thống coi như đã bán.
+             *
+             * Đặt ở ĐÂY chứ không ở controller vì đây là cửa duy nhất đổi
+             * `status` (xem khối chú thích ngay trên hàm này). Nhét vào
+             * controller thì đường nào gọi thẳng model sẽ lặng lẽ bỏ qua.
+             *
+             * PHẢI CÓ CẢ CHIỀU NGƯỢC LẠI. Nhân viên bấm nhầm 'Đã huỷ' rồi
+             * chuyển về 'Đang chuẩn bị' là chuyện có thật; chỉ cộng mà không
+             * trừ lại thì kho phình lên đúng bằng số lần bấm nhầm.
+             *
+             * Trừ lại dùng chính reserve(), nên nếu trong lúc đơn đang huỷ mà
+             * hàng đã bán hết cho người khác thì nó từ chối và tồn kho đứng
+             * yên ở 0 thay vì rơi xuống số âm. Ghi một dòng vào log để người
+             * trực còn biết mà đối chiếu — đây là ca hiếm nhưng im lặng bỏ qua
+             * thì không ai phát hiện.
+             * ─────────────────────────────────────────────────────────────
+             */
+            $huyMoi   = $status === 'cancelled' && $truoc !== 'cancelled';
+            $moHuy    = $truoc === 'cancelled' && $status !== 'cancelled';
+
+            if ($huyMoi || $moHuy) {
+                foreach (self::items($id) as $dong) {
+                    $sl  = (int) ($dong['quantity'] ?? 0);
+                    $spId = (string) ($dong['product_id'] ?? '');
+
+                    /* product_id thành NULL khi sản phẩm đã bị gỡ khỏi danh mục
+                       (khoá ngoại ON DELETE SET NULL — xem items()). Dòng hàng
+                       vẫn nằm trong hoá đơn để đơn cũ đọc được, nhưng không còn
+                       kho nào để trả về. Bỏ qua, không phải lỗi. */
+                    if ($sl <= 0 || $spId === '') {
+                        continue;
+                    }
+
+                    if ($huyMoi) {
+                        VariantModel::release($dong['variant_id'] ?? null, $spId, $sl);
+                        continue;
+                    }
+
+                    $ok = VariantModel::reserve($dong['variant_id'] ?? null, $spId, $sl);
+
+                    if (!$ok) {
+                        error_log(sprintf(
+                            '[OrderModel] Mở lại đơn %s: không trừ được %d của sản phẩm %s — kho không đủ.',
+                            $id,
+                            $sl,
+                            $spId
+                        ));
+                    }
+                }
+            }
 
             if ($status !== 'completed') {
                 return;
