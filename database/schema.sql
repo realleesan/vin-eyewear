@@ -573,7 +573,11 @@ CREATE TABLE `appointments` (
     `user_id`          CHAR(36)     NULL,
     `store_id`         CHAR(36)     NOT NULL,
     `appointment_date` DATE         NOT NULL,
-    `time_slot`        VARCHAR(20)  NOT NULL,
+    -- Giờ hẹn. NULL kể từ 2026-08-25: form khách chỉ còn chọn NGÀY, cửa hàng gọi
+    -- điện xác nhận rồi tự xếp giờ (giả định A5). Lịch đặt trước mốc đó vẫn giữ
+    -- giờ khách đã chọn, nên cột được nới NULL chứ không bị drop — xem
+    -- database/migrations/2026-08-25-bo-khung-gio-khoi-form-khach.sql.
+    `time_slot`        VARCHAR(20)  NULL     DEFAULT NULL,
     `service_type`     VARCHAR(60)  NOT NULL,
     `full_name`        VARCHAR(255) NOT NULL,
     `phone`            VARCHAR(32)  NOT NULL,

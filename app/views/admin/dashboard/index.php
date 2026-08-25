@@ -172,7 +172,9 @@ $facts = [
                     <?php foreach ($recentBookings as $a): ?>
                         <tr>
                             <td><?= e(formatDate($a['appointment_date'])) ?></td>
-                            <td><?= e($a['time_slot']) ?></td>
+                            <?php /* Chưa có giờ là trạng thái bình thường từ
+                                     2026-08-25 — xem admin/appointments/index.php. */ ?>
+                            <td><?= e($a['time_slot'] ?: 'Chưa chốt') ?></td>
                             <td><?= e($a['full_name']) ?></td>
                             <td><span class="badge badge--<?= e($a['status']) ?>"><?= e($bookingStatuses[$a['status']] ?? $a['status']) ?></span></td>
                         </tr>

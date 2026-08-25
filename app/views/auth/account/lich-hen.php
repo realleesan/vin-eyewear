@@ -37,18 +37,29 @@ $tones = [
 
 $today = date('Y-m-d');
 
-/* Lịch đang mở form đổi giờ, ngày đang xem giờ trống, và bảng "vì sao lịch này
-   không sửa được nữa" — controller dựng sẵn hết. View KHÔNG tự gọi
-   BookingModel::changeBlocker: giữ đúng lối của trang này, mọi luật nghiệp vụ đi
-   qua controller. */
-$blockers  = $blockers  ?? [];
-$editing   = $editing   ?? null;
-$slotDate  = $slotDate  ?? $today;
-$freeSlots = $freeSlots ?? [];
+/* Lịch đang mở form đổi ngày, và bảng "vì sao lịch này không sửa được nữa" —
+   controller dựng sẵn hết. View KHÔNG tự gọi BookingModel::changeBlocker: giữ
+   đúng lối của trang này, mọi luật nghiệp vụ đi qua controller. */
+$blockers = $blockers ?? [];
+$editing  = $editing  ?? null;
 
-/** Đường dẫn mở form đổi giờ của một lịch (kèm ngày muốn xem). */
-$editHref = static fn (string $code, string $date): string =>
-    '/tai-khoan?muc=lich-hen&doi=' . rawurlencode($code) . '&ngay=' . rawurlencode($date);
+/** Đường dẫn mở form đổi ngày của một lịch. */
+$editHref = static fn (string $code): string =>
+    '/tai-khoan?muc=lich-hen&doi=' . rawurlencode($code);
+
+/**
+ * Ngày hẹn, kèm giờ NẾU CÓ.
+ *
+ * Lịch đặt từ 2026-08-25 trở đi không có giờ: khách chỉ chọn ngày, cửa hàng
+ * chốt giờ qua điện thoại (giả định A5). Lịch cũ thì vẫn có. Nối bằng " · "
+ * chỉ khi thật sự có vế thứ hai — không thì thẻ hiện "25/08 · " cụt đuôi,
+ * trông như dữ liệu hỏng chứ không như một lịch chưa xếp giờ.
+ */
+$khiNao = static function (array $a): string {
+    $ngay = formatDate($a['appointment_date']);
+
+    return empty($a['time_slot']) ? $ngay : $ngay . ' · ' . $a['time_slot'];
+};
 ?>
 
 <?php
@@ -123,7 +134,7 @@ $editHref = static fn (string $code, string $date): string =>
                     <div class="acct-order__what">
                         <span class="acct-order__brand"><?= e($a['service_type']) ?></span>
                         <span class="acct-order__name">
-                            <?= e(formatDate($a['appointment_date'])) ?> · <?= e($a['time_slot']) ?>
+                            <?= e($khiNao($a)) ?>
                         </span>
                         <span class="acct-order__variant">
                             <?= e($a['store_name'] ?? 'Cơ sở Vin Eyewear') ?>
@@ -158,11 +169,7 @@ $editHref = static fn (string $code, string $date): string =>
                 ?>
 
                 <?php if ($blocker === null && $isEditing): ?>
-                    <?php partial('auth/account/_doi-lich', [
-                        'appointment' => $a,
-                        'slotDate'    => $slotDate,
-                        'freeSlots'   => $freeSlots,
-                    ]); ?>
+                    <?php partial('auth/account/_doi-lich', ['appointment' => $a]); ?>
                 <?php endif; ?>
 
                 <div class="acct-order__foot">
@@ -178,8 +185,8 @@ $editHref = static fn (string $code, string $date): string =>
                         <?php if ($blocker === null): ?>
                             <?php if (!$isEditing): ?>
                                 <a class="acct-btn acct-btn--primary acct-btn--sm"
-                                   href="<?= e($editHref($a['code'], max($a['appointment_date'], $today))) ?>">
-                                    Đổi giờ hẹn
+                                   href="<?= e($editHref($a['code'])) ?>">
+                                    Đổi ngày hẹn
                                 </a>
                             <?php endif; ?>
 
@@ -195,9 +202,8 @@ $editHref = static fn (string $code, string $date): string =>
                                phòng khi không có JS; chính file JS đó gỡ nó ra
                                khi đã sẵn sàng mở hộp thoại trên trang. */
                             $hoiHuyLich = sprintf(
-                                'Huỷ lịch đo mắt ngày %s, khung %s?',
-                                formatDate($a['appointment_date']),
-                                $a['time_slot']
+                                'Huỷ lịch đo mắt %s?',
+                                $khiNao($a)
                             );
                             ?>
                             <form method="post" action="/tai-khoan/lich-hen/huy"

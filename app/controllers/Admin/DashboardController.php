@@ -54,7 +54,7 @@ class DashboardController extends AdminController
                    FROM appointments a
                    JOIN stores s ON s.id = a.store_id
                   WHERE a.appointment_date >= CURDATE()
-                  ORDER BY a.appointment_date ASC, a.time_slot ASC
+                  ORDER BY a.appointment_date ASC, a.created_at ASC
                   LIMIT 8"
             ),
             'lowStock'     => Database::fetchAll(

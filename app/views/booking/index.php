@@ -183,32 +183,34 @@ $steps = [
                     </div>
                 </div>
 
-                <!-- ────── 3. NGÀY & GIỜ ────── -->
+                <!-- ────── 3. NGÀY ────── -->
                 <div class="bkcard">
                     <div class="bkcard__head">
                         <span class="bkcard__num" aria-hidden="true">3</span>
-                        <h2 class="bkcard__title">Chọn ngày &amp; giờ</h2>
+                        <h2 class="bkcard__title">Chọn ngày</h2>
                     </div>
 
-                    <?php /* NÓI RA RẰNG ĐÂY LÀ NGUYỆN VỌNG, KHÔNG PHẢI CHỖ ĐÃ GIỮ.
-                             Cửa hàng bỏ giới hạn số người trên một khung giờ, nên
-                             mọi khung đều bấm được và không khung nào "hết chỗ".
-                             Không nói thì khách mặc định hiểu là đã đặt xong chỗ
-                             lúc 15:00 và cứ thế đến — trong khi cái chốt thật là
-                             cuộc gọi xác nhận của cửa hàng. */ ?>
+                    <?php /* NÓI RA RẰNG GIỜ HẸN CHỐT QUA ĐIỆN THOẠI.
+                             Form không hỏi giờ nữa, nên nếu không nói gì thì khách
+                             đọc xong vẫn không biết mấy giờ thì đến — một câu hỏi
+                             mà trang tự tạo ra rồi bỏ ngỏ. Câu này trả lời sẵn:
+                             giờ do cuộc gọi xác nhận chốt. */ ?>
                     <p class="bkcard__note">
-                        Chọn khung giờ bạn thấy tiện nhất. Cửa hàng sẽ gọi lại để
-                        xác nhận và sắp xếp, nên bạn không cần lo khung giờ hết chỗ.
+                        Chọn ngày bạn tiện ghé. Cửa hàng sẽ gọi lại để thống nhất
+                        giờ cụ thể, nên bạn không cần chọn giờ ở đây.
                     </p>
 
                     <div class="bkdays">
                         <?php foreach ($days as $i => $day): ?>
-                            <!-- Nhóm radio này CHỈ để chọn lưới giờ nào hiện ra; server
-                                 bỏ qua nó. Ngày thật nằm trong giá trị của ô giờ, nên
-                                 hai thứ không thể lệch nhau. -->
+                            <?php /* TRƯỜNG THẬT, không còn là nhóm radio trang trí.
+                                     Trước đây nhóm này chỉ để CSS chọn lưới giờ nào
+                                     hiện ra và server bỏ qua nó — ngày thật nằm trong
+                                     giá trị của ô giờ. Bỏ ô giờ thì đây là chỗ duy
+                                     nhất còn mang ngày, và server dựng lại ngày từ
+                                     chỉ số này. */ ?>
                             <label class="bkday">
                                 <input class="bk__radio" type="radio" name="bk_day"
-                                       id="bk-d-<?= $i ?>" value="<?= $i ?>"
+                                       id="bk-d-<?= $i ?>" value="<?= $i ?>" required
                                        <?= $i === $pick['day'] ? 'checked' : '' ?>>
                                 <span class="bkday__box">
                                     <span class="bkday__wd"><?= e($day['weekday']) ?></span>
@@ -218,48 +220,6 @@ $steps = [
                         <?php endforeach; ?>
                     </div>
 
-                    <?php
-                    /*
-                     * MỘT LƯỚI CHO MỖI NGÀY, KHÔNG NHÂN THEO CƠ SỞ.
-                     *
-                     * Bản trước lồng thêm một vòng cơ sở ở ngoài, vì mỗi cơ sở
-                     * có tập khung đã kín riêng. Nay không khung nào bị kín —
-                     * cửa hàng bỏ giới hạn số người trên một khung giờ — nên
-                     * lưới giống hệt nhau ở mọi cơ sở và vòng ngoài chỉ còn
-                     * nhân bản đúng một thứ lên vài lần.
-                     *
-                     * Ô duy nhất bị khoá là giờ ĐÃ TRÔI QUA của hôm nay.
-                     */
-                    ?>
-                    <?php foreach ($grid as $di => $cells): ?>
-                        <?php $free = array_filter($cells, static fn (array $c): bool => $c['free']); ?>
-                        <div class="bkdpane bkdpane--<?= $di ?>">
-                            <span class="bkslots__label">
-                                Chọn khung giờ — <?= e($days[$di]['dm']) ?>
-                            </span>
-
-                            <div class="bkslots">
-                                <?php foreach ($cells as $ti => $cell): ?>
-                                    <label class="bkpill<?= $cell['free'] ? '' : ' bkpill--off' ?>">
-                                        <input class="bk__radio" type="radio" name="time_slot"
-                                               value="<?= $di ?>|<?= $ti ?>"
-                                               <?= $cell['free'] ? '' : 'disabled' ?>
-                                               <?= ($pick['day'] === $di && $pick['time'] === $ti && $cell['free'])
-                                                   ? 'checked' : '' ?>>
-                                        <span><?= e($cell['label']) ?></span>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-
-                            <?php if ($free === []): ?>
-                                <?php /* Chỉ xảy ra với HÔM NAY, sau khung cuối cùng
-                                         trong ngày. Không còn trường hợp "kín lịch". */ ?>
-                                <p class="bkslots__none">
-                                    Hôm nay đã hết giờ nhận khách. Bạn chọn giúp một ngày khác nhé.
-                                </p>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
                 </div>
 
                 <!-- ────── 4. THÔNG TIN ────── -->
@@ -321,18 +281,19 @@ $steps = [
                         </div>
 
                         <div class="bksum__row">
-                            <span class="bksum__k">Thời gian</span>
+                            <span class="bksum__k">Ngày hẹn</span>
                             <span class="bksum__v">
-                                <!-- "Chưa chọn giờ" biến mất ngay khi có một ô giờ được
-                                     chọn; giờ và ngày đều đọc từ CHÍNH ô giờ đó nên
-                                     không bao giờ lệch nhau. -->
-                                <span class="bksum__none">Chưa chọn giờ</span
-                                ><?php foreach ($slots as $i => $slot): ?><span
-                                    class="bksum-t-<?= $i ?>"><?= e($slot) ?></span><?php endforeach; ?><span
-                                    class="bksum__sep"> · </span
-                                ><?php foreach ($days as $i => $day): ?><span
-                                    class="bksum-d-<?= $i ?>"><?= e($day['dm']) ?></span><?php endforeach; ?>
+                                <!-- KHÔNG có nhánh "chưa chọn": dải ngày luôn có sẵn
+                                     một ngày được tick (mặc định hôm nay), khác hẳn ô
+                                     giờ ngày trước vốn bắt đầu ở trạng thái rỗng. -->
+                                <?php foreach ($days as $i => $day): ?><span
+                                    class="bksum-d-<?= $i ?>"><?= e($day['weekday']) ?> · <?= e($day['dm']) ?></span><?php endforeach; ?>
                             </span>
+                        </div>
+
+                        <div class="bksum__row">
+                            <span class="bksum__k">Giờ hẹn</span>
+                            <span class="bksum__v bksum__v--soft">Cửa hàng gọi xác nhận</span>
                         </div>
 
                         <div class="bksum__row">

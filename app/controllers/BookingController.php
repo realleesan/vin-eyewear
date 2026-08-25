@@ -7,24 +7,28 @@
  * 1-2-3-4 bên trái, cột tóm tắt dính theo cuộn bên phải.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * KHUNG GIỜ LÀ NGUYỆN VỌNG, KHÔNG PHẢI CHỖ ĐÃ GIỮ
+ * KHÁCH CHỌN NGÀY, KHÔNG CHỌN GIỜ — 2026-08-25
  *
- * Cửa hàng yêu cầu bỏ giới hạn số người trên một khung giờ: đo mắt và cắt kính
- * hết khoảng 30 phút, phần lâu nhất là 10–15 phút thử tròng còn lắp kính thì
- * máy làm rất nhanh, nên không cần chia ca như tiệm cắt tóc. Khách chọn ngày
- * và giờ mong muốn, cửa hàng ghi nhận rồi GỌI ĐIỆN xác nhận và tự xếp người.
+ * Cửa hàng đã bỏ giới hạn số người trên một khung giờ từ trước: đo mắt và cắt
+ * kính hết khoảng 30 phút, phần lâu nhất là 10–15 phút thử tròng còn lắp kính
+ * thì máy làm rất nhanh, nên không cần chia ca như tiệm cắt tóc. Khung giờ vì
+ * thế đã chỉ còn là NGUYỆN VỌNG — cửa hàng ghi nhận rồi GỌI ĐIỆN xác nhận và
+ * tự xếp người.
  *
- * Kéo theo một lần dọn đáng kể ở đây: lưới giờ không còn phụ thuộc CƠ SỞ.
+ * Nay bỏ nốt ô chọn giờ. Một câu hỏi mà câu trả lời gần như không bao giờ được
+ * dùng thì chỉ làm form dài thêm và tạo kỳ vọng sai: khách tick 15:00 rồi tin
+ * rằng mình đã có chỗ lúc 15:00.
  *
- * Bản trước dựng sẵn lưới cho MỌI tổ hợp (cơ sở × ngày) — 2 cơ sở × 7 ngày ×
- * 11 khung = 154 ô — vì mỗi cơ sở có tập khung đã kín khác nhau, và CSS chọn
- * ra đúng một lưới để hiện. Nay không cơ sở nào kín khung nào, nên chỉ còn 7
- * ngày × 11 khung = 77 ô, và mấy luật CSS `.bkspane--0…7` biến mất theo. Luật
- * ấy vốn gõ cứng tối đa tám cơ sở; mở cơ sở thứ chín là lưới giờ của nó không
- * hiện ra nữa mà không có gì báo.
+ * Cái mất đi lớn nhất ở file này là LƯỚI GIỜ. Bản trước dựng sẵn 7 ngày × 11
+ * khung = 77 ô kèm cờ "còn bấm được không", cùng grid() và slotAt(); trước nữa
+ * còn nhân thêm chiều cơ sở thành 154 ô. Không còn ô giờ thì cả tầng ấy biến
+ * mất, và dải ngày — vốn là một nhóm radio CHỈ để chọn lưới nào hiện ra, server
+ * bỏ qua — nay là trường được gửi lên thật.
  *
- * Vẫn KHÔNG một dòng JavaScript và vẫn không tải lại trang khi khách đổi ngày:
- * dải ngày là một nhóm radio, CSS hiện lưới của ngày đang chọn.
+ * Vẫn KHÔNG một dòng JavaScript: dải ngày là nhóm radio, CSS đọc ngày đang tick
+ * để cập nhật cột tóm tắt bên phải.
+ *
+ * ĐÂY LÀ GIẢ ĐỊNH A5 trong CLAUDE.md, chưa được BA nghiệm thu.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -52,17 +56,15 @@ class BookingController extends BaseController
     public function index(): void
     {
         $stores = StoreModel::active();
-        $slots  = array_values((array) config('app.time_slots'));
         $days   = $this->days();
-        $grid   = $this->grid($days, $slots);
 
         $old = $_SESSION['_old_booking'] ?? [];
         unset($_SESSION['_old_booking']);
 
-        // Đến từ nút "Đặt lịch tham dự" của một bài sự kiện: cơ sở, ngày, giờ
-        // và ghi chú suy ra từ chính bài đó.
+        // Đến từ nút "Đặt lịch tham dự" của một bài sự kiện: cơ sở, ngày và
+        // ghi chú suy ra từ chính bài đó.
         $event   = $this->event();
-        $prefill = $this->eventPrefill($event, $stores, $days, $slots, $grid);
+        $prefill = $this->eventPrefill($event, $stores, $days);
 
         // Ghi chú CHỈ điền khi khách chưa gõ gì. Quay lại sau khi form báo lỗi
         // thì $old['note'] là chữ của khách — điền đè lên là xoá mất.
@@ -91,13 +93,11 @@ class BookingController extends BaseController
         $this->renderView('booking/index', [
             'pageTitle' => 'Đặt lịch đo mắt — Vin Eyewear',
             'metaDesc'  => 'Đặt lịch đo khúc xạ miễn phí tại Vin Eyewear. '
-                         . 'Chọn cơ sở, ngày và khung giờ phù hợp.',
+                         . 'Chọn cơ sở và ngày phù hợp.',
             'stores'    => $stores,
             'services'  => self::SERVICES,
             'days'      => $days,
-            'slots'     => $slots,
-            'grid'      => $grid,
-            'pick'      => $this->pick($stores, $days, $slots, $old, $prefill),
+            'pick'      => $this->pick($stores, $days, $old, $prefill),
             'old'       => $old,
             'event'     => $event,
             // 'fit' | 'later' | 'over' — view đổi câu nhắc theo trạng thái này.
@@ -133,19 +133,14 @@ class BookingController extends BaseController
      * `when` cho view biết phải nói gì: 'fit' (đã chọn hộ đủ), 'later' (còn xa,
      * ngoài 7 ngày đang mở) hay 'over' (đã diễn ra xong).
      *
-     * @return array{store: ?int, service: ?int, day: ?int, time: ?int, note: string, when: string}
+     * @return array{store: ?int, service: ?int, day: ?int, note: string, when: string}
      */
-    private function eventPrefill(
-        ?array $event,
-        array $stores,
-        array $days,
-        array $slots,
-        array $grid
-    ): array {
+    private function eventPrefill(?array $event, array $stores, array $days): array
+    {
         if ($event === null) {
             return [
                 'store' => null, 'service' => null, 'day' => null,
-                'time'  => null, 'note'    => '',   'when' => '',
+                'note'  => '',   'when'    => '',
             ];
         }
 
@@ -157,8 +152,6 @@ class BookingController extends BaseController
             'store'   => $store,
             'service' => $this->serviceFor($event),
             'day'     => $day,
-            // Ngày không chọn được thì cũng không có khung giờ nào để chỉ tới.
-            'time'    => $day === null ? null : $this->slotAt($event, $grid, $day, $slots),
             // Chương trình đã xong thì KHÔNG điền "Đăng ký tham dự…": khách vẫn
             // đặt được lịch đo mắt bình thường, nhưng để nhân viên đọc thấy câu
             // đăng ký một sự kiện không còn nữa là gây nhầm chứ không giúp gì.
@@ -305,32 +298,6 @@ class BookingController extends BaseController
     }
 
     /**
-     * Khung giờ mở sớm nhất kể từ giờ khai mạc.
-     *
-     * Không đòi trùng khít giờ khai mạc: sự kiện mở 14:00 mà khung ấy đã trôi
-     * qua thì 15:00 vẫn là trong chương trình. Không còn khung nào từ giờ đó
-     * trở đi thì trả null và cột tóm tắt hiện "Chưa chọn giờ" như thường.
-     */
-    private function slotAt(array $event, array $grid, int $day, array $slots): ?int
-    {
-        $start = strtotime((string) ($event['starts_at'] ?? ''));
-        $from  = $start === false ? '' : date('H:i', $start);
-
-        foreach ($slots as $ti => $slot) {
-            // Khung giờ là "HH:MM" nên so chuỗi cũng ra đúng thứ tự thời gian.
-            if ($from !== '' && $slot < $from) {
-                continue;
-            }
-
-            if (!empty($grid[$day][$ti]['free'])) {
-                return $ti;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Ghi chú điền sẵn — để nhân viên gọi xác nhận biết khách đăng ký theo
      * chương trình nào, vì bảng `appointments` không có cột nào trỏ tới sự kiện.
      */
@@ -375,45 +342,22 @@ class BookingController extends BaseController
     }
 
     /**
-     * Lưới giờ [chỉ số cơ sở][chỉ số ngày][chỉ số khung] => ['label', 'free'].
-     *
-     * Một khung giờ KHÔNG trống vì hai lý do khác nhau: đã có người đặt, hoặc
-     * đã trôi qua (chỉ xảy ra với hôm nay). Cả hai đều hiện gạch ngang như
-     * nhau trong bản thiết kế, nên ở đây gộp thành một cờ `free`.
-     */
-    private function grid(array $days, array $slots): array
-    {
-        $today = date('Y-m-d');
-        $now   = date('H:i');
-        $grid  = [];
-
-        foreach ($days as $di => $day) {
-            foreach ($slots as $ti => $slot) {
-                /* Chỉ còn MỘT lý do một ô không bấm được: giờ đã trôi qua.
-                   "Đã có người đặt" không còn là lý do — xem đầu file. */
-                $grid[$di][$ti] = [
-                    'label' => $slot,
-                    'free'  => !($day['date'] === $today && $slot <= $now),
-                ];
-            }
-        }
-
-        return $grid;
-    }
-
-    /**
      * Lựa chọn ban đầu, dạng CHỈ SỐ để khớp với các nút radio trong view.
      *
      * Thứ tự ưu tiên: dữ liệu vừa gõ hụt (quay lại sau lỗi) → bài sự kiện
-     * (?su-kien=SLUG: cơ sở, dịch vụ, ngày, giờ) → ?store=MÃ (liên kết từ
-     * trang Liên hệ) → mặc định của bản thiết kế (cơ sở đầu, dịch vụ đầu, hôm
-     * nay, chưa chọn giờ).
+     * (?su-kien=SLUG: cơ sở, dịch vụ, ngày) → ?store=MÃ (liên kết từ trang
+     * Liên hệ) → mặc định của bản thiết kế (cơ sở đầu, dịch vụ đầu, hôm nay).
      *
-     * @param array{store: ?int, service: ?int, day: ?int, time: ?int, note: string} $prefill
+     * KHÔNG CÒN KHOÁ 'time'. Ngày luôn có một giá trị được chọn sẵn — mặc định
+     * là hôm nay — nên khác hẳn khung giờ ngày trước: khung giờ chấp nhận
+     * "chưa chọn" và cột tóm tắt phải có sẵn câu "Chưa chọn giờ" cho trạng
+     * thái đó. Nay không có trạng thái rỗng nào để hiện.
      *
-     * @return array{store: int, service: int, day: int, time: ?int}
+     * @param array{store: ?int, service: ?int, day: ?int, note: string} $prefill
+     *
+     * @return array{store: int, service: int, day: int}
      */
-    private function pick(array $stores, array $days, array $slots, array $old, array $prefill): array
+    private function pick(array $stores, array $days, array $old, array $prefill): array
     {
         $storeIds = array_column($stores, 'id');
 
@@ -445,24 +389,18 @@ class BookingController extends BaseController
             $service = (int) $chosen;
         }
 
-        // Ngày khai mạc và khung giờ của sự kiện, cũng nhường chỗ cho $old:
-        // đã bấm gửi một lần thì lựa chọn của khách mới là thứ đúng nhất.
-        $day  = $prefill['day'] ?? 0;
-        $time = $prefill['time'];
+        // Ngày khai mạc của sự kiện, cũng nhường chỗ cho $old: đã bấm gửi một
+        // lần thì lựa chọn của khách mới là thứ đúng nhất.
+        $day = $prefill['day'] ?? 0;
 
         if (isset($old['dayIndex'])) {
             $day = (int) $old['dayIndex'];
-        }
-
-        if (isset($old['timeIndex'])) {
-            $time = (int) $old['timeIndex'];
         }
 
         return [
             'store'   => $store,
             'service' => isset(self::SERVICES[$service]) ? $service : 0,
             'day'     => ($day >= 0 && $day < count($days)) ? $day : 0,
-            'time'    => ($time !== null && $time >= 0 && $time < count($slots)) ? $time : null,
         ];
     }
 
@@ -480,28 +418,30 @@ class BookingController extends BaseController
             redirect('/dat-lich');
         }
 
-        $slots = array_values((array) config('app.time_slots'));
-        $days  = $this->days();
+        $days = $this->days();
 
         /*
-         * Ô giờ gửi lên dạng "chỉ số ngày|chỉ số khung", ví dụ "3|5".
+         * Form gửi lên CHỈ SỐ ngày trong dải 7 ngày, không phải ngày tháng.
          *
-         * KHÔNG nhận thẳng ngày và giờ từ form. Ngày được dựng LẠI ở server từ
-         * chỉ số, nên dù có sửa tay giá trị gửi lên cũng chỉ chọn được trong
-         * đúng 7 ngày đang mở — không đặt lùi về quá khứ hay nhảy sang năm sau
-         * được. (BookingModel::create() vẫn kiểm lần nữa, đây chỉ là lớp đầu.)
+         * Giữ nguyên tính chất quan trọng nhất của cách làm cũ: ngày được dựng
+         * LẠI ở server từ chỉ số, nên sửa tay giá trị gửi lên cũng chỉ chọn
+         * được trong đúng 7 ngày đang mở — không đặt lùi về quá khứ hay nhảy
+         * sang năm sau được. (BookingModel::create() vẫn kiểm lần nữa, đây chỉ
+         * là lớp đầu.)
+         *
+         * Tên trường vẫn là `bk_day` như hồi nó chỉ dùng để CSS chọn lưới giờ
+         * nào hiện ra và server bỏ qua. Đổi tên thì đẹp hơn nhưng phải sửa cả
+         * các luật CSS gắn với #bk-d-N, mà cái tên này không sai — nó vẫn là
+         * "ngày đang chọn".
          */
-        [$dayIndex, $timeIndex] = $this->parseSlot((string) ($_POST['time_slot'] ?? ''));
-
-        $valid = $dayIndex !== null && $timeIndex !== null
-              && isset($days[$dayIndex], $slots[$timeIndex]);
+        $rawDay   = (string) ($_POST['bk_day'] ?? '');
+        $dayIndex = preg_match('/^\d{1,2}$/', $rawDay) ? (int) $rawDay : null;
+        $valid    = $dayIndex !== null && isset($days[$dayIndex]);
 
         $data = [
             'storeId'     => (string) ($_POST['store_id'] ?? ''),
             'dayIndex'    => $dayIndex,
-            'timeIndex'   => $timeIndex,
             'date'        => $valid ? $days[$dayIndex]['date'] : '',
-            'timeSlot'    => $valid ? $slots[$timeIndex] : '',
             'serviceType' => (string) ($_POST['service_type'] ?? ''),
             'fullName'    => trim((string) ($_POST['full_name'] ?? '')),
             'phone'       => trim((string) ($_POST['phone'] ?? '')),
@@ -510,7 +450,7 @@ class BookingController extends BaseController
         ];
 
         if (!$valid) {
-            $this->fail('Vui lòng chọn khung giờ.', $data);
+            $this->fail('Vui lòng chọn ngày hẹn.', $data);
         }
 
         if (utf8Length($data['fullName']) < 2) {
@@ -552,7 +492,7 @@ class BookingController extends BaseController
          * Đặt xong thì đi đâu?
          *
          * ĐANG ĐĂNG NHẬP -> sang thẳng "Lịch hẹn của tôi". Lịch vừa đặt đã gắn
-         * user_id nên hiện ngay ở đầu danh sách, kèm nút đổi giờ / huỷ — tức là
+         * user_id nên hiện ngay ở đầu danh sách, kèm nút đổi ngày / huỷ — tức là
          * khách thấy luôn lịch của mình nằm ở đâu và sửa được bằng cách nào,
          * thay vì một mã LH… trên trang đặt lịch rồi phải tự mò ra trang tài
          * khoản. Dùng flash 'account_success' vì đó là ô thông báo mà
@@ -574,20 +514,6 @@ class BookingController extends BaseController
 
         flash('booking_success', $result['code']);
         redirect('/dat-lich');
-    }
-
-    /**
-     * Tách "3|5" thành [3, 5]. Trả [null, null] nếu không đúng dạng.
-     *
-     * @return array{0: ?int, 1: ?int}
-     */
-    private function parseSlot(string $raw): array
-    {
-        if (!preg_match('/^(\d{1,2})\|(\d{1,2})$/', $raw, $m)) {
-            return [null, null];
-        }
-
-        return [(int) $m[1], (int) $m[2]];
     }
 
     /**

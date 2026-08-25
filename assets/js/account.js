@@ -37,27 +37,6 @@
     });
 }());
 
-/* ── Đổi ngày trong form đổi giờ hẹn: gửi form luôn ───────────────────────────
- *
- * Danh sách giờ trống do máy chủ dựng, nên đổi ngày là phải tải lại. File này bỏ
- * đi cái bấm thứ hai: chọn ngày xong là đi luôn, khỏi bấm "Xem giờ trống".
- *
- * Nút đó bị CSS ẩn khi có JS (.js .acct-resched__go) — nên không có kịch bản nào
- * mà cả nút lẫn chức năng tự gửi đều vắng mặt.
- */
-(function () {
-    'use strict';
-
-    var day = document.querySelector('.acct-resched__date[data-autosubmit]');
-    if (!day || !day.form) return;
-
-    day.addEventListener('change', function () {
-        // Ngày rỗng (khách xoá ô) thì đừng gửi: máy chủ sẽ về ngày mặc định và
-        // trông như cú bấm bị bỏ qua.
-        if (day.value) day.form.submit();
-    });
-}());
-
 /* ── "Xem chi tiết" / "Thu gọn" đơn hàng: bật tắt tại chỗ ─────────────────────
  *
  * Không có JS thì hai nút này là link thường (?don=<mã>) và trang tải lại —

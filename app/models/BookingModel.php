@@ -19,11 +19,31 @@
  * gọi đó. Kéo theo ba thứ biến mất khỏi file này: bookedSlots(),
  * bookedMatrix(), và nhánh bắt lỗi 1062 "khung giờ vừa có người đặt".
  *
- * CÒN LẠI MỘT LUẬT VỀ GIỜ, và nó không liên quan tới chỗ ngồi: không đặt được
- * vào giờ ĐÃ TRÔI QUA. 15h chiều mà vẫn mời khách chọn khung 08:00 sáng cùng
- * ngày thì đó là một cái hẹn không ai giữ được. Xem openSlots().
- *
  * Lỗi 1062 trên bảng này nay chỉ còn một nghĩa duy nhất: trùng MÃ lịch hẹn.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * KHÁCH KHÔNG CHỌN GIỜ NỮA — 2026-08-25
+ *
+ * Bước tiếp theo của chính quyết định trên. Khung giờ đã là nguyện vọng chứ
+ * không phải chỗ đã giữ, mà cửa hàng thì vẫn gọi điện xếp lại giờ trong gần
+ * như mọi trường hợp — nên hỏi khách một câu mà câu trả lời hầu như không được
+ * dùng chỉ làm form dài thêm và tạo kỳ vọng sai ("tôi đã đặt 15:00 rồi").
+ *
+ * Khách nay chỉ chọn NGÀY. `time_slot` ghi NULL cho lịch mới; lịch cũ giữ
+ * nguyên giờ khách từng chọn (cột được nới NULL chứ không drop).
+ *
+ * Kéo theo: openSlots() và isPastSlot() biến mất. Cả hai chỉ tồn tại để trả
+ * lời "khung giờ nào còn đặt được", câu hỏi không còn ai hỏi.
+ *
+ * CÒN LẠI MỘT LUẬT VỀ THỜI GIAN: không đặt được vào NGÀY đã qua. Trước đây
+ * luật này xét tới từng khung giờ — 15h chiều thì khung 08:00 cùng ngày là
+ * một cái hẹn không ai giữ được. Không còn giờ để xét thì mốc thô nhất còn
+ * đúng là ngày: hẹn cho hôm nay vẫn nhận, vì cửa hàng mở tới 21:00 và người
+ * gọi xác nhận sẽ chốt giờ cụ thể.
+ *
+ * ĐÂY LÀ GIẢ ĐỊNH A5 trong CLAUDE.md, chưa được BA nghiệm thu. Mọi chỗ phụ
+ * thuộc vào nó đều gom ở file này và ở BookingController.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -39,63 +59,20 @@ class BookingModel extends BaseModel
     ];
 
     /**
-     * Khung giờ MỞ của một ngày — cả danh sách trong config, trừ đi giờ đã qua.
-     *
-     * Thay cho bộ ba bookedSlots() / bookedMatrix() / availableSlots() cũ. Cả
-     * ba đều tồn tại để trả lời "khung này còn chỗ không", mà câu hỏi đó không
-     * còn nữa — xem khối chú thích đầu file.
-     *
-     * KHÔNG nhận $storeId nữa, và đó là điểm chính: danh sách giờ mở giống hệt
-     * nhau ở mọi cơ sở, nên tham số ấy chỉ còn là một lời hứa sai rằng kết quả
-     * phụ thuộc vào nó.
-     *
-     * @return list<string>
-     */
-    public static function openSlots(string $date): array
-    {
-        $today = date('Y-m-d');
-
-        // NGÀY ĐÃ QUA THÌ KHÔNG CÓ KHUNG NÀO, chứ không phải có đủ cả mười một.
-        // Nơi gọi đều đã chặn ngày quá khứ trước khi tới đây, nhưng một hàm
-        // công khai phải tự đúng: trả đủ danh sách cho ngày hôm qua là mời
-        // người gọi tiếp theo dựng ra một cái hẹn không thể xảy ra.
-        if ($date < $today) {
-            return [];
-        }
-
-        $all = array_values((array) config('app.time_slots'));
-
-        if ($date > $today) {
-            return $all;
-        }
-
-        // Hôm nay thì cắt phần đã trôi qua. So sánh chuỗi "HH:MM" chạy đúng vì
-        // cả hai vế đều hai chữ số có đệm 0 — "09:00" < "14:00".
-        $now = date('H:i');
-
-        return array_values(array_filter($all, static fn (string $slot): bool => $slot > $now));
-    }
-
-    /**
-     * Khung giờ này đã trôi qua chưa (chỉ xét khi đặt cho chính hôm nay).
-     */
-    private static function isPastSlot(string $date, string $slot): bool
-    {
-        return $date === date('Y-m-d') && $slot <= date('H:i');
-    }
-
-    /**
      * Tạo lịch hẹn.
      *
      * @return array ['ok'=>true,'code'=>...] | ['ok'=>false,'error'=>...]
      */
     public static function create(array $data): array
     {
-        // Không cho đặt lịch trong quá khứ — xét cả NGÀY lẫn GIỜ.
-        // Đặt cho 15:00 hôm nay lúc 09:00 sáng thì hợp lệ; đặt cho 08:00 hôm
-        // nay lúc 15:00 chiều thì không. Kiểm ở đây chứ không chỉ ở khâu dựng
-        // danh sách khung giờ: form không phải đường vào duy nhất, ai gửi
-        // thẳng POST cũng phải bị chặn.
+        // Không cho đặt lịch trong quá khứ. Kiểm ở đây chứ không chỉ ở khâu dựng
+        // dải ngày: form không phải đường vào duy nhất, ai gửi thẳng POST cũng
+        // phải bị chặn.
+        //
+        // Chỉ còn xét NGÀY. Trước đây có thêm hai phép kiểm về khung giờ (giờ
+        // có trong config không, giờ đã trôi qua chưa) — khách không chọn giờ
+        // nữa nên không còn gì để kiểm. Hẹn cho hôm nay vẫn hợp lệ: cửa hàng mở
+        // tới 21:00 và người gọi xác nhận sẽ chốt giờ cụ thể.
         $today = date('Y-m-d');
         if ($data['date'] < $today) {
             return ['ok' => false, 'error' => 'Không thể đặt lịch trong quá khứ.'];
@@ -105,23 +82,20 @@ class BookingModel extends BaseModel
             return ['ok' => false, 'error' => 'Cơ sở không hợp lệ.'];
         }
 
-        if (!in_array($data['timeSlot'], (array) config('app.time_slots'), true)) {
-            return ['ok' => false, 'error' => 'Khung giờ không hợp lệ.'];
-        }
-
-        if (self::isPastSlot($data['date'], $data['timeSlot'])) {
-            return ['ok' => false, 'error' => 'Khung giờ này đã qua, vui lòng chọn giờ khác.'];
-        }
-
         $code = generateCode('LH');
 
         try {
             Database::execute(
+                /* KHÔNG có `time_slot` trong danh sách cột — cột đã nới NULL và
+                   tự nhận NULL. Viết thẳng ra `time_slot = NULL` cũng ra kết
+                   quả y hệt, nhưng bỏ hẳn cột khỏi câu lệnh nói đúng hơn điều
+                   đang xảy ra: lúc đặt lịch KHÔNG AI BIẾT giờ hẹn, chứ không
+                   phải biết rồi mà cố tình ghi rỗng. */
                 'INSERT INTO appointments
-                    (id, code, user_id, store_id, appointment_date, time_slot,
+                    (id, code, user_id, store_id, appointment_date,
                      service_type, full_name, phone, note)
                  VALUES
-                    (:id, :code, :user_id, :store_id, :appointment_date, :time_slot,
+                    (:id, :code, :user_id, :store_id, :appointment_date,
                      :service_type, :full_name, :phone, :note)',
                 [
                     'id'               => uuid(),
@@ -129,7 +103,6 @@ class BookingModel extends BaseModel
                     'user_id'          => $data['userId'] ?? null,
                     'store_id'         => $data['storeId'],
                     'appointment_date' => $data['date'],
-                    'time_slot'        => $data['timeSlot'],
                     'service_type'     => $data['serviceType'],
                     'full_name'        => $data['fullName'],
                     'phone'            => $data['phone'],
@@ -232,7 +205,7 @@ class BookingModel extends BaseModel
                FROM appointments a
                LEFT JOIN stores s ON s.id = a.store_id
               WHERE a.user_id = :uid
-              ORDER BY a.appointment_date DESC, a.time_slot DESC',
+              ORDER BY a.appointment_date DESC, a.created_at DESC',
             ['uid' => $userId]
         );
     }
@@ -311,59 +284,43 @@ class BookingModel extends BaseModel
             return 'Lịch này đã hoàn tất.';
         }
 
-        $at = self::startsAt($appointment);
+        $date = (string) ($appointment['appointment_date'] ?? '');
 
-        if ($at === null) {
-            // Ngày/giờ hỏng thì không đoán — để khách gọi tổng đài, đừng cho sửa
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            // Ngày hỏng thì không đoán — để khách gọi tổng đài, đừng cho sửa
             // một hàng mà chính hệ thống không đọc nổi.
-            return 'Không đọc được giờ hẹn, vui lòng gọi tổng đài.';
+            return 'Không đọc được ngày hẹn, vui lòng gọi tổng đài.';
         }
 
-        if ($at <= time()) {
-            return 'Giờ hẹn đã qua.';
-        }
-
-        $cutoff = self::cutoffSeconds();
-
-        if ($at - time() < $cutoff) {
-            return sprintf(
-                'Chỉ đổi hoặc huỷ được trước giờ hẹn ít nhất %d giờ. Vui lòng gọi tổng đài.',
-                (int) round($cutoff / 3600)
-            );
+        /*
+         * HẠN LÀ HẾT NGÀY HÔM TRƯỚC NGÀY HẸN — không còn là "trước giờ hẹn N giờ".
+         *
+         * Luật cũ ghép ngày với time_slot thành một mốc chính xác tới phút rồi
+         * trừ đi booking_change_cutoff_hours. Khách không chọn giờ nữa nên vế
+         * đầu không dựng được: lịch mới có time_slot NULL.
+         *
+         * Đã cân nhắc lấy 00:00 của ngày hẹn làm mốc rồi giữ nguyên con số 2
+         * giờ — bỏ, vì "hạn chót 22:00 đêm hôm trước" là một con số không giải
+         * thích được cho khách, và tệ hơn là nó thay đổi ý nghĩa của một tham
+         * số cấu hình mà tên vẫn như cũ.
+         *
+         * Mốc theo ngày thì nói thành một câu: sang ngày hẹn là thôi tự đổi,
+         * gọi tổng đài. Đúng với cách cửa hàng làm việc — sáng ra nhân viên
+         * chốt danh sách hẹn của ngày rồi mới gọi từng người.
+         */
+        if ($date <= date('Y-m-d')) {
+            return 'Đã tới ngày hẹn, vui lòng gọi tổng đài để đổi hoặc huỷ.';
         }
 
         return null;
     }
 
-    /** Khách hàng đổi/huỷ được tới trước giờ hẹn bao nhiêu giây. */
-    private static function cutoffSeconds(): int
-    {
-        return max(0, (int) config('app.booking_change_cutoff_hours', 2)) * 3600;
-    }
-
-    /**
-     * Mốc thời gian bắt đầu của lịch hẹn, hoặc null nếu dữ liệu hỏng.
-     *
-     * time_slot lưu dạng "09:00" nên ghép thẳng với ngày là ra mốc đầy đủ.
-     */
-    private static function startsAt(array $appointment): ?int
-    {
-        $date = (string) ($appointment['appointment_date'] ?? '');
-        $slot = (string) ($appointment['time_slot'] ?? '');
-
-        if ($date === '' || !preg_match('/^\d{1,2}:\d{2}$/', $slot)) {
-            return null;
-        }
-
-        return strtotime($date . ' ' . $slot) ?: null;
-    }
-
     /**
      * Khách tự huỷ lịch.
      *
-     * KHÔNG xoá hàng: cửa hàng cần biết khung giờ đó từng có người hẹn rồi huỷ —
-     * đó là dữ liệu vận hành (khách hay huỷ giờ nào, cơ sở nào trống thật), và
-     * nó cũng là thứ nhân viên tra lại khi khách gọi hỏi về một mã lịch cũ.
+     * KHÔNG xoá hàng: cửa hàng cần biết ngày đó từng có người hẹn rồi huỷ — đó
+     * là dữ liệu vận hành (khách hay huỷ vào ngày nào, cơ sở nào trống thật),
+     * và nó cũng là thứ nhân viên tra lại khi khách gọi hỏi về một mã lịch cũ.
      *
      * @return array ['ok'=>true] | ['ok'=>false,'error'=>...]
      */
@@ -409,9 +366,13 @@ class BookingModel extends BaseModel
      * 1. SỬA TẠI CHỖ, không huỷ-rồi-đặt-mới. Khách giữ nguyên mã lịch đã được
      *    nhắc qua điện thoại, và cửa hàng không có hai hàng cho cùng một lần hẹn.
      *
-     * 2. ĐỔI XONG VỀ 'pending'. Nhân viên xác nhận cho một giờ CỤ THỂ; giờ khác
-     *    thì lời xác nhận cũ không còn nghĩa gì. Để nguyên 'confirmed' sẽ thành
-     *    một lịch "đã xác nhận" mà chưa ai ở cửa hàng nhìn thấy.
+     * 2. ĐỔI XONG VỀ 'pending'. Nhân viên xác nhận cho một NGÀY cụ thể; ngày
+     *    khác thì lời xác nhận cũ không còn nghĩa gì. Để nguyên 'confirmed' sẽ
+     *    thành một lịch "đã xác nhận" mà chưa ai ở cửa hàng nhìn thấy.
+     *
+     *    Đổi ngày cũng XOÁ giờ mà nhân viên đã xếp (time_slot về NULL). Giờ ấy
+     *    được chốt qua điện thoại cho đúng cái ngày cũ; bê nguyên sang ngày mới
+     *    là bịa ra một cuộc hẹn chưa ai xác nhận.
      *
      * 3. GIỮ NGUYÊN CƠ SỞ. Đổi cơ sở là đổi gần hết thông tin của lần hẹn (đường
      *    đi, nhân viên, thiết bị) — việc đó nên là đặt lịch mới, không phải sửa.
@@ -421,8 +382,7 @@ class BookingModel extends BaseModel
     public static function rescheduleOwned(
         string $code,
         string $userId,
-        string $date,
-        string $slot
+        string $date
     ): array {
         $appointment = self::findOwned($code, $userId);
 
@@ -441,39 +401,31 @@ class BookingModel extends BaseModel
             return ['ok' => false, 'error' => 'Không thể hẹn vào một ngày đã qua.'];
         }
 
-        if (!in_array($slot, (array) config('app.time_slots'), true)) {
-            return ['ok' => false, 'error' => 'Khung giờ không hợp lệ.'];
+        if ($date === $appointment['appointment_date']) {
+            return ['ok' => false, 'error' => 'Bạn đang chọn đúng ngày hẹn hiện tại.'];
         }
 
-        if (self::isPastSlot($date, $slot)) {
-            return ['ok' => false, 'error' => 'Khung giờ này đã qua, vui lòng chọn giờ khác.'];
-        }
-
-        if ($date === $appointment['appointment_date'] && $slot === $appointment['time_slot']) {
-            return ['ok' => false, 'error' => 'Bạn đang chọn đúng giờ hẹn hiện tại.'];
-        }
-
-        // Giờ MỚI cũng phải cách hiện tại đủ xa như luật đổi/huỷ, không thì khách
-        // dùng chức năng đổi lịch để lách hạn: đổi sang 30 phút sau rồi huỷ.
-        $newAt = self::startsAt(['appointment_date' => $date, 'time_slot' => $slot]);
-
-        if ($newAt === null || $newAt - time() < self::cutoffSeconds()) {
-            return ['ok' => false, 'error' => 'Vui lòng chọn giờ hẹn xa hơn so với hiện tại.'];
+        /* NGÀY MỚI cũng phải qua được chính luật đổi/huỷ, không thì khách dùng
+           chức năng đổi lịch để lách hạn: đổi sang hôm nay rồi huỷ. changeBlocker
+           chặn 'pending'/'confirmed' theo ngày, nên ở đây chỉ cần hỏi lại đúng
+           câu ấy với ngày mới. */
+        if ($date <= date('Y-m-d')) {
+            return ['ok' => false, 'error' => 'Vui lòng chọn một ngày hẹn từ ngày mai trở đi.'];
         }
 
         try {
             $changed = Database::execute(
                 "UPDATE appointments
                     SET appointment_date = :date,
-                        time_slot        = :slot,
+                        time_slot        = NULL,
                         status           = 'pending'
                   WHERE code = :code AND user_id = :uid
                     AND status IN ('pending', 'confirmed')",
-                ['date' => $date, 'slot' => $slot, 'code' => $code, 'uid' => $userId]
+                ['date' => $date, 'code' => $code, 'uid' => $userId]
             );
         } catch (PDOException $e) {
-            // Không còn khoá khung giờ nào để đụng: đổi sang giờ đã có người
-            // khác đặt là hợp lệ. Xem khối chú thích đầu file.
+            // Không còn khoá nào để đụng: đổi sang ngày đã có người khác hẹn là
+            // hợp lệ. Xem khối chú thích đầu file.
             error_log('[BookingModel] Không đổi được lịch hẹn: ' . $e->getMessage());
 
             return ['ok' => false, 'error' => 'Không đổi được lịch, vui lòng thử lại.'];
@@ -504,7 +456,7 @@ class BookingModel extends BaseModel
                FROM appointments a
                JOIN stores s ON s.id = a.store_id
                {$where}
-              ORDER BY a.appointment_date DESC, a.time_slot DESC
+              ORDER BY a.appointment_date DESC, a.created_at DESC
               LIMIT " . max(1, $limit),
             $params
         );

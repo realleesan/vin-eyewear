@@ -109,6 +109,10 @@ MIGRATIONS=(
     "2026-08-22-dat-coc-cat-trong.sql|column|orders|deposit_amount"
     "2026-08-22-sepay-doi-soat.sql|table|sepay_transactions|"
     "2026-08-22-ma-thuong-chuyen-du.sql|column|vouchers|is_reward"
+    # Chỉ NỚI `time_slot` từ NOT NULL sang NULL. Kiểu cột giữ nguyên varchar(20)
+    # nên 'coltype' cũng không phân biệt được trước/sau — dùng 'colnull', mốc là
+    # chính tính cho-phép-rỗng của cột.
+    "2026-08-25-bo-khung-gio-khoi-form-khach.sql|colnull|appointments|time_slot=YES"
 )
 
 # ---------------------------------------------------------------------------

@@ -21,15 +21,14 @@
 
    Các luật đó viết theo CHỈ SỐ (0, 1, 2…) chứ không theo giá trị, nên không
    phụ thuộc vào danh sách khung giờ trong config hay ngày hôm nay. Đổi lại,
-   số luật là hữu hạn: 8 cơ sở · 8 dịch vụ · 7 ngày · 16 khung giờ. Vượt quá
-   thì thêm dòng, KHÔNG có cách nào để CSS tự sinh thêm.
+   số luật là hữu hạn: 8 cơ sở · 8 dịch vụ · 7 ngày. Vượt quá thì thêm dòng,
+   KHÔNG có cách nào để CSS tự sinh thêm.
    ============================================================ */
 
 .bk {
     --bk-line:  #e5d8cc;
     --bk-soft:  #9a877f;
     --bk-warm:  #6e4a42;
-    --bk-off:   #c9b8ac;
     --bk-ok:    #4d7a3f;
     /* Ba sắc bản thiết kế dùng mà layout.css chưa có token: chữ trên viên
        chưa chọn, chữ mờ nhất, và nền nút chính khi rê chuột. */
@@ -186,11 +185,10 @@
 }
 
 /* ============================================================
-   VIÊN CHỌN (dịch vụ · khung giờ)
+   VIÊN CHỌN (dịch vụ)
    ============================================================ */
 
-.bkpills,
-.bkslots {
+.bkpills {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
@@ -219,20 +217,8 @@
 
 .bkpill:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
 
-/* Khung giờ đã có người đặt HOẶC đã trôi qua. Gạch ngang chứ không bỏ hẳn:
-   một ngày kín lịch phải NHÌN RA được là kín, chứ không phải trông như ngày
-   chưa mở giờ nào. */
-.bkpill--off,
-.bkpill--off:hover {
-    border-color: #f0e4d8;
-    background: var(--surface-sunken);
-    color: var(--bk-off);
-    text-decoration: line-through;
-    cursor: default;
-}
-
 /* ============================================================
-   3 · NGÀY & GIỜ
+   3 · NGÀY
    ============================================================ */
 
 .bkdays {
@@ -276,25 +262,6 @@
 .bkday__dm {
     font-size: 15px;
     font-weight: 600;
-}
-
-.bkdpane {
-    flex-direction: column;
-    gap: 12px;
-}
-
-.bkslots__label {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--eyebrow);
-}
-
-.bkslots__none {
-    margin: 0;
-    font-size: 13.5px;
-    color: var(--bk-soft);
 }
 
 /* ============================================================
@@ -580,27 +547,6 @@
    lại đúng cái tương ứng với nút radio đang được chọn.
    ============================================================ */
 
-/* --- 1. Lưới giờ: hiện đúng một ngày --------------------------- */
-
-/*
- * KHÔNG CÒN CHIỀU CƠ SỞ.
- *
- * Ở đây từng có thêm tám luật `.bkspane--0…7` chọn lưới theo cơ sở đang tick,
- * vì mỗi cơ sở có tập khung đã kín riêng. Cửa hàng đã bỏ giới hạn số người
- * trên một khung giờ, nên lưới giống hệt nhau ở mọi cơ sở và cả tầng ấy biến
- * mất — cùng với một cái bẫy: danh sách gõ cứng tới #bk-st-7 nghĩa là mở cơ sở
- * thứ chín thì lưới giờ của nó không bao giờ hiện, mà không có gì báo.
- */
-.bkdpane { display: none; }
-
-.bk__grid:has(#bk-d-0:checked) .bkdpane--0,
-.bk__grid:has(#bk-d-1:checked) .bkdpane--1,
-.bk__grid:has(#bk-d-2:checked) .bkdpane--2,
-.bk__grid:has(#bk-d-3:checked) .bkdpane--3,
-.bk__grid:has(#bk-d-4:checked) .bkdpane--4,
-.bk__grid:has(#bk-d-5:checked) .bkdpane--5,
-.bk__grid:has(#bk-d-6:checked) .bkdpane--6 { display: flex; }
-
 /* --- 2. Cột tóm tắt: tên cơ sở và dịch vụ ---------------------- */
 
 .bksum__v > span { display: none; }
@@ -623,45 +569,32 @@
 .bk__grid:has(#bk-sv-6:checked) .bksum-sv-6,
 .bk__grid:has(#bk-sv-7:checked) .bksum-sv-7 { display: inline; }
 
-/* --- 3. Cột tóm tắt: giờ và ngày ------------------------------
+/* --- 3. Cột tóm tắt: ngày hẹn ---------------------------------
 
-   Ô giờ mang giá trị "chỉ số ngày|chỉ số khung". Cả GIỜ lẫn NGÀY đều đọc từ
-   chính ô đang được chọn — một cái khớp phần đuôi, một cái khớp phần đầu —
-   nên tóm tắt không thể chỉ ra giờ của ngày này mà ngày của ngày khác.
+   Trước đây khối này đọc ô giờ, vì giá trị của ô ấy là "chỉ số ngày|chỉ số
+   khung" và mang cả hai chiều: một luật khớp phần đuôi ra GIỜ, một luật khớp
+   phần đầu ra NGÀY, dấu "|" giữ cho hai phép khớp không nhầm ("|1" không phải
+   đuôi của "3|11"). Form không còn ô giờ, nên tất cả rút về đúng một chiều:
+   đọc thẳng nhóm radio ngày.
 
-   Dấu "|" là thứ khiến hai phép khớp không nhầm lẫn: "|1" không phải phần
-   đuôi của "3|11", và "1|" không phải phần đầu của "10|5". */
+   Cũng không còn `.bksum__none` / `.bksum__sep`. Cả hai tồn tại cho trạng thái
+   "chưa chọn giờ"; dải ngày thì luôn có sẵn một ngày được tick, nên trạng thái
+   rỗng ấy không xảy ra được nữa. */
 
-.bksum__none { display: inline; }
-.bksum__sep  { display: none; }
+.bk__grid:has(#bk-d-0:checked) .bksum-d-0,
+.bk__grid:has(#bk-d-1:checked) .bksum-d-1,
+.bk__grid:has(#bk-d-2:checked) .bksum-d-2,
+.bk__grid:has(#bk-d-3:checked) .bksum-d-3,
+.bk__grid:has(#bk-d-4:checked) .bksum-d-4,
+.bk__grid:has(#bk-d-5:checked) .bksum-d-5,
+.bk__grid:has(#bk-d-6:checked) .bksum-d-6 { display: inline; }
 
-.bk__grid:has(input[name="time_slot"]:checked) .bksum__none { display: none; }
-.bk__grid:has(input[name="time_slot"]:checked) .bksum__sep  { display: inline; }
-
-.bk__grid:has(input[name="time_slot"][value$="|0"]:checked)  .bksum-t-0,
-.bk__grid:has(input[name="time_slot"][value$="|1"]:checked)  .bksum-t-1,
-.bk__grid:has(input[name="time_slot"][value$="|2"]:checked)  .bksum-t-2,
-.bk__grid:has(input[name="time_slot"][value$="|3"]:checked)  .bksum-t-3,
-.bk__grid:has(input[name="time_slot"][value$="|4"]:checked)  .bksum-t-4,
-.bk__grid:has(input[name="time_slot"][value$="|5"]:checked)  .bksum-t-5,
-.bk__grid:has(input[name="time_slot"][value$="|6"]:checked)  .bksum-t-6,
-.bk__grid:has(input[name="time_slot"][value$="|7"]:checked)  .bksum-t-7,
-.bk__grid:has(input[name="time_slot"][value$="|8"]:checked)  .bksum-t-8,
-.bk__grid:has(input[name="time_slot"][value$="|9"]:checked)  .bksum-t-9,
-.bk__grid:has(input[name="time_slot"][value$="|10"]:checked) .bksum-t-10,
-.bk__grid:has(input[name="time_slot"][value$="|11"]:checked) .bksum-t-11,
-.bk__grid:has(input[name="time_slot"][value$="|12"]:checked) .bksum-t-12,
-.bk__grid:has(input[name="time_slot"][value$="|13"]:checked) .bksum-t-13,
-.bk__grid:has(input[name="time_slot"][value$="|14"]:checked) .bksum-t-14,
-.bk__grid:has(input[name="time_slot"][value$="|15"]:checked) .bksum-t-15,
-
-.bk__grid:has(input[name="time_slot"][value^="0|"]:checked) .bksum-d-0,
-.bk__grid:has(input[name="time_slot"][value^="1|"]:checked) .bksum-d-1,
-.bk__grid:has(input[name="time_slot"][value^="2|"]:checked) .bksum-d-2,
-.bk__grid:has(input[name="time_slot"][value^="3|"]:checked) .bksum-d-3,
-.bk__grid:has(input[name="time_slot"][value^="4|"]:checked) .bksum-d-4,
-.bk__grid:has(input[name="time_slot"][value^="5|"]:checked) .bksum-d-5,
-.bk__grid:has(input[name="time_slot"][value^="6|"]:checked) .bksum-d-6 { display: inline; }
+/* "Cửa hàng gọi xác nhận" — một câu chú thích, không phải giá trị khách chọn.
+   Nhạt hơn và không in đậm để nó không tranh chấp với dòng ngày ngay trên. */
+.bksum__v--soft {
+    font-weight: 500;
+    color: var(--muted);
+}
 
 /* ============================================================
    MÀN HÌNH HẸP — phần THÊM, bản thiết kế chỉ vẽ ở 1280px

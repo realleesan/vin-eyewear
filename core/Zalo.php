@@ -86,7 +86,7 @@ class Zalo
      *
      * ĐỔI VÀ HUỶ CŨNG BÁO, không chỉ lúc đặt. Cửa hàng yêu cầu tính năng này
      * để "nhân viên không phải liên tục túc trực kiểm tra trên web" — mà nếu
-     * chỉ báo lúc đặt thì một lịch đã đổi giờ hoặc đã huỷ vẫn nằm im trong Zalo
+     * chỉ báo lúc đặt thì một lịch đã đổi ngày hoặc đã huỷ vẫn nằm im trong Zalo
      * với thông tin cũ, và nhân viên tin vào nó. Báo thiếu còn tệ hơn không báo.
      *
      * @param array $appointment dòng `appointments` (kèm store_name nếu có)
@@ -254,12 +254,23 @@ class Zalo
     {
         $head = [
             'created'     => 'LỊCH HẸN MỚI',
-            'rescheduled' => 'KHÁCH ĐỔI GIỜ HẸN',
+            'rescheduled' => 'KHÁCH ĐỔI NGÀY HẸN',
             'cancelled'   => 'KHÁCH HUỶ LỊCH',
         ][$event] ?? 'LỊCH HẸN';
 
         $date = (string) ($appointment['appointment_date'] ?? '');
         $when = $date === '' ? '—' : formatDate($date);
+
+        /*
+         * GIỜ HẸN CÓ THỂ CHƯA CÓ — và đó là trạng thái bình thường, không phải
+         * dữ liệu thiếu. Từ 2026-08-25 khách chỉ chọn ngày; chính cuộc gọi mà
+         * tin báo này thúc giục mới là lúc giờ được chốt (giả định A5).
+         *
+         * Nên viết hẳn "chưa chốt giờ" chứ không in dấu "—": nhân viên đọc tin
+         * phải hiểu ngay đây là việc CẦN LÀM, chứ không phải một ô dữ liệu lỗi.
+         */
+        $slot = trim((string) ($appointment['time_slot'] ?? ''));
+        $gio  = $slot === '' ? 'chưa chốt giờ' : $slot;
 
         $lines = [
             $head . ' · ' . (string) ($appointment['code'] ?? ''),
@@ -267,7 +278,7 @@ class Zalo
             'Điện thoại: ' . (string) ($appointment['phone'] ?? ''),
             'Cơ sở:    ' . (string) ($appointment['store_name'] ?? '—'),
             'Dịch vụ:  ' . (string) ($appointment['service_type'] ?? '—'),
-            'Thời gian: ' . (string) ($appointment['time_slot'] ?? '—') . ' ngày ' . $when,
+            'Thời gian: ' . $when . ' — ' . $gio,
         ];
 
         $note = trim((string) ($appointment['note'] ?? ''));
@@ -330,7 +341,7 @@ class Zalo
         return [
             'su_kien'    => [
                 'created'     => 'Lịch hẹn mới',
-                'rescheduled' => 'Khách đổi giờ hẹn',
+                'rescheduled' => 'Khách đổi ngày hẹn',
                 'cancelled'   => 'Khách huỷ lịch',
             ][$event] ?? 'Lịch hẹn',
             'ma_lich'    => (string) ($appointment['code'] ?? '—'),
@@ -338,8 +349,10 @@ class Zalo
             'dien_thoai' => (string) ($appointment['phone'] ?? '—'),
             'co_so'      => (string) ($appointment['store_name'] ?? '—'),
             'dich_vu'    => (string) ($appointment['service_type'] ?? '—'),
-            'thoi_gian'  => (string) ($appointment['time_slot'] ?? '—')
-                            . ($date === '' ? '' : ' ngày ' . formatDate($date)),
+            // Cùng lẽ với bản chữ ở composeAppointment(): "chưa chốt giờ" là
+            // trạng thái thật, không phải ô trống.
+            'thoi_gian'  => ($date === '' ? '—' : formatDate($date))
+                            . ' — ' . (trim((string) ($appointment['time_slot'] ?? '')) ?: 'chưa chốt giờ'),
         ];
     }
 

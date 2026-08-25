@@ -46,7 +46,12 @@
                         <td><code><?= e($a['code']) ?></code></td>
                         <td>
                             <?= e(formatDate($a['appointment_date'])) ?>
-                            <span class="atable__sub"><?= e($a['time_slot']) ?></span>
+                            <?php /* Lịch đặt từ 2026-08-25 không có giờ — khách chỉ
+                                     chọn ngày, nhân viên chốt giờ qua điện thoại
+                                     (giả định A5). Viết hẳn "Chưa chốt giờ" chứ
+                                     không để ô trống: ô trống trong bảng đọc như
+                                     dữ liệu lỗi, còn đây là việc cần làm. */ ?>
+                            <span class="atable__sub"><?= e($a['time_slot'] ?: 'Chưa chốt giờ') ?></span>
                         </td>
                         <td><?= e($a['store_name']) ?></td>
                         <td>

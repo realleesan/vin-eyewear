@@ -1101,22 +1101,9 @@ class AuthController extends BaseController
                 $editing = isset($_GET['doi'])
                     ? BookingModel::findOwned((string) $_GET['doi'], $userId) : null;
 
-                /*
-                 * Ngày đang xem giờ trống. Mặc định là ngày hẹn hiện tại — mở
-                 * form ra là thấy ngay quanh giờ cũ còn chỗ nào, thay vì một
-                 * danh sách rỗng chờ khách tự chọn ngày.
-                 *
-                 * Không nhận ngày trong quá khứ: openSlots() sẽ trả rỗng và
-                 * khách không hiểu vì sao.
-                 */
-                $slotDate = (string) ($_GET['ngay'] ?? '');
-
-                if ($editing !== null) {
-                    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $slotDate) || $slotDate < date('Y-m-d')) {
-                        $slotDate = max($editing['appointment_date'], date('Y-m-d'));
-                    }
-                }
-
+                /* Không còn $slotDate / $freeSlots: form đổi lịch chỉ hỏi NGÀY
+                   nên không phải hỏi máy chủ giờ trống của ngày nào cả — xem
+                   khối chú thích đầu app/views/auth/account/_doi-lich.php. */
                 $appointments = BookingModel::forUser($userId);
 
                 /*
@@ -1138,12 +1125,6 @@ class AuthController extends BaseController
                     'bookingStatuses' => BookingModel::STATUSES,
                     'blockers'        => $blockers,
                     'editing'         => $editing,
-                    'slotDate'        => $slotDate,
-                    /* Khung giờ MỞ của ngày đang xem — cả danh sách trừ giờ đã
-                       trôi qua. Không còn phụ thuộc cơ sở: cửa hàng đã bỏ giới
-                       hạn số người trên một khung giờ. */
-                    'freeSlots'       => $editing === null ? []
-                        : BookingModel::openSlots($slotDate),
                 ];
 
             default:   // ho-so, mat-khau — chỉ cần $profile, profile() đã nạp
@@ -1346,32 +1327,33 @@ class AuthController extends BaseController
         $result = BookingModel::rescheduleOwned(
             $code,
             $userId,
-            (string) ($_POST['date'] ?? ''),
-            (string) ($_POST['slot'] ?? '')
+            (string) ($_POST['date'] ?? '')
         );
 
         if ($result['ok']) {
-            // Cùng lý do với huỷ lịch: tin cũ trong Zalo nay đã sai giờ.
+            // Cùng lý do với huỷ lịch: tin cũ trong Zalo nay đã sai ngày.
             $saved = BookingModel::findByCode($code);
 
             if ($saved !== null) {
                 Zalo::appointment($saved, 'rescheduled');
             }
 
-            flash('account_success', 'Đã đổi giờ hẹn. Cửa hàng sẽ gọi xác nhận lại.');
+            flash('account_success', 'Đã đổi ngày hẹn. Cửa hàng sẽ gọi xác nhận lại.');
             redirect('/tai-khoan?muc=lich-hen');
         }
 
         /*
-         * Lỗi thì MỞ LẠI form ở đúng lịch đó (?doi=<mã>) kèm ngày khách vừa xem,
-         * chứ không đẩy về danh sách: khách vừa chọn dở, đóng form lại là bắt họ
-         * bắt đầu từ đầu. Chuyển hướng chứ không render tại chỗ để F5 không gửi
-         * lại POST.
+         * Lỗi thì MỞ LẠI form ở đúng lịch đó (?doi=<mã>), chứ không đẩy về danh
+         * sách: khách vừa chọn dở, đóng form lại là bắt họ bắt đầu từ đầu.
+         * Chuyển hướng chứ không render tại chỗ để F5 không gửi lại POST.
+         *
+         * Không mang theo &ngay= nữa — tham số đó từng dùng để máy chủ dựng lại
+         * danh sách giờ trống của ngày khách đang xem, mà nay form không có
+         * danh sách nào để dựng.
          */
         flash('account_error', $result['error']);
 
-        redirect('/tai-khoan?muc=lich-hen&doi=' . rawurlencode($code)
-            . '&ngay=' . rawurlencode((string) ($_POST['date'] ?? '')));
+        redirect('/tai-khoan?muc=lich-hen&doi=' . rawurlencode($code));
     }
 
     // ========================================================================

@@ -50,24 +50,22 @@ return [
      */
     'deposit_rate' => 30,
 
-    // Các khung giờ nhận lịch hẹn — dùng chung cho form đặt lịch và trang
-    // quản trị, nên chỉ khai báo một lần tại đây.
-    'time_slots' => [
-        '08:00', '09:00', '10:00', '11:00',
-        '14:00', '15:00', '16:00', '17:00',
-        '18:00', '19:00', '20:00',
-    ],
-
     /*
-     * Khách tự đổi/huỷ lịch hẹn được tới TRƯỚC GIỜ HẸN bao nhiêu giờ.
+     * ─────────────────────────────────────────────────────────────────────────
+     * ĐÃ BỎ: 'time_slots' và 'booking_change_cutoff_hours' — 2026-08-25
      *
-     * Vì sao phải có hạn chứ không cho huỷ tới sát giờ: cửa hàng đã chặn khung
-     * giờ đó, xếp người và có khi đã lấy hồ sơ khúc xạ cũ ra. Huỷ trước 10 phút
-     * thì khung giờ mở lại cũng không ai kịp đặt — thực chất là một lần không
-     * đến, chỉ khác cái tên. Trong hạn này thì khách gọi tổng đài, để nhân viên
-     * còn kịp gọi người trong danh sách chờ.
+     * Ghi lại ở đây vì cả hai đều phục vụ GIẢ ĐỊNH A5 trong CLAUDE.md, mà A5
+     * chưa được BA nghiệm thu. Đảo lại quyết định thì đây là chỗ đầu tiên phải
+     * dựng lại, nên để trống mà không nói gì là bắt người sau tự đi tìm.
      *
-     * Đặt 0 là bỏ hạn hoàn toàn. Luật đọc con số này ở BookingModel::changeBlocker.
+     *   'time_slots' — mười một khung giờ nhận lịch: 08:00–11:00 và 14:00–20:00.
+     *      Khách không chọn giờ nữa nên không còn ai đọc mảng này.
+     *
+     *   'booking_change_cutoff_hours' => 2 — khách tự đổi/huỷ được tới trước
+     *      GIỜ hẹn 2 tiếng. Con số ấy cần một mốc chính xác tới phút để trừ đi,
+     *      mà mốc đó dựng từ ngày ghép với khung giờ. Không còn khung giờ thì
+     *      không còn gì để trừ: luật nay là "sang tới ngày hẹn thì gọi tổng
+     *      đài", một câu không có tham số nào. Xem BookingModel::changeBlocker.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    'booking_change_cutoff_hours' => 2,
 ];
