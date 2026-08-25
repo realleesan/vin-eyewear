@@ -217,6 +217,7 @@ return [
 
     'quan-tri/lich-hen'           => 'AppointmentAdminController@index',
     'quan-tri/lich-hen/trang-thai'=> 'AppointmentAdminController@updateStatus', // POST
+    'quan-tri/lich-hen/gio'       => 'AppointmentAdminController@updateTime',   // POST
 
     'quan-tri/lien-he'            => 'ContactAdminController@index',
     'quan-tri/lien-he/trang-thai' => 'ContactAdminController@updateStatus',     // POST

@@ -439,6 +439,58 @@ class BookingModel extends BaseModel
     }
 
     /**
+     * Nhân viên chốt GIỜ cho một lịch hẹn, hoặc xoá giờ đã chốt.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * NỬA CÒN LẠI CỦA VIỆC BỎ Ô CHỌN GIỜ Ở FORM KHÁCH
+     *
+     * Khách chỉ chọn ngày (giả định A5). Cửa hàng gọi điện rồi thống nhất giờ
+     * — nhưng nếu không có chỗ nào GHI cái giờ vừa thống nhất thì thoả thuận
+     * đó chỉ nằm trong đầu người vừa gọi, và `time_slot` sẽ NULL vĩnh viễn.
+     * Đây là chỗ ghi.
+     *
+     * KHÔNG dùng lại config('app.time_slots') — mảng ấy đã bị xoá cùng lúc với
+     * ô chọn giờ, và cố ý: nhân viên xếp giờ qua điện thoại thì không bị bó
+     * vào mười một khung định sẵn. Khách hẹn 15:20 vì đó là lúc họ tan làm,
+     * ép về 15:00 là ghi sai thoả thuận. Nên nhận BẤT KỲ giờ hợp lệ nào trong
+     * ngày, chỉ kiểm đúng định dạng.
+     *
+     * Chuỗi rỗng = XOÁ giờ (về NULL), dùng khi khách đổi ý mà chưa hẹn lại
+     * được. Khác hẳn "chưa từng chốt", nhưng cùng biểu diễn — và đúng như
+     * vậy: cả hai đều nghĩa là chưa có giờ nào được thống nhất.
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * @return array ['ok'=>true] | ['ok'=>false,'error'=>...]
+     */
+    public static function setTimeSlot(string $id, string $slot): array
+    {
+        $slot = trim($slot);
+
+        /* "9:5" hay "25:00" đều bị chặn ở đây. Chuẩn hoá về HH:MM hai chữ số
+           có đệm 0 vì mọi chỗ so sánh và sắp xếp giờ trong dự án đều so CHUỖI
+           — "9:00" đứng SAU "10:00" theo thứ tự chuỗi, đúng nghĩa thì không. */
+        if ($slot !== '') {
+            if (!preg_match('/^(\d{1,2}):(\d{2})$/', $slot, $m)
+                || (int) $m[1] > 23 || (int) $m[2] > 59) {
+                return ['ok' => false, 'error' => 'Giờ hẹn không hợp lệ.'];
+            }
+
+            $slot = sprintf('%02d:%02d', (int) $m[1], (int) $m[2]);
+        }
+
+        if (!static::exists(['id' => $id])) {
+            return ['ok' => false, 'error' => 'Không tìm thấy lịch hẹn.'];
+        }
+
+        Database::execute(
+            'UPDATE appointments SET time_slot = :slot WHERE id = :id',
+            ['slot' => $slot !== '' ? $slot : null, 'id' => $id]
+        );
+
+        return ['ok' => true, 'slot' => $slot];
+    }
+
+    /**
      * Danh sách cho khu quản trị, kèm tên cơ sở.
      */
     public static function withStore(string $status = '', int $limit = 100): array
