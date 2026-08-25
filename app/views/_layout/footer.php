@@ -141,9 +141,22 @@ $socialPaths = [
                 © <?= date('Y') ?> Vin Eyewear · <?= e($company['name']) ?>
                 · MST <?= e($company['tax_code']) ?>
             </p>
+            <?php
+            /* "Điều khoản" chỉ hiện khi văn bản ĐÃ TỒN TẠI.
+               Nó vốn trỏ cứng tới /chinh-sach#dieu-khoan, mà config/policy.php
+               không có mục nào mang neo đó — bấm vào chỉ nhảy lên đầu trang
+               chính sách. Một liên kết pháp lý dẫn tới không đâu thì tệ hơn là
+               không có liên kết.
+
+               Điền config/auth.php ['consent']['terms_url'] là nó tự hiện lại
+               ở đây, ở chân trang đăng nhập và trong câu đồng ý khi đăng ký. */
+            $termsUrl = (string) config('auth.consent.terms_url', '');
+            ?>
             <nav aria-label="Liên kết pháp lý" class="footer-bottom__nav">
-                <a href="/chinh-sach#bao-mat"><?= e(t('footer.privacy')) ?></a>
-                <a href="/chinh-sach#dieu-khoan"><?= e(t('footer.terms')) ?></a>
+                <a href="<?= e((string) config('auth.consent.privacy_url', '/chinh-sach#bao-mat')) ?>"><?= e(t('footer.privacy')) ?></a>
+                <?php if ($termsUrl !== ''): ?>
+                    <a href="<?= e($termsUrl) ?>"><?= e(t('footer.terms')) ?></a>
+                <?php endif; ?>
             </nav>
         </div>
     </div>
