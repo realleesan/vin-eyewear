@@ -77,27 +77,56 @@ $paymentLabels  = ['cod' => 'COD', 'bank_transfer' => 'Chuyển khoản'];
                             <?php endforeach; ?>
                         </td>
 
-                        <td>
-                            <?= e($deliveryLabels[$o['delivery_method']] ?? $o['delivery_method']) ?>
+                        <td class="aship">
+                            <?php /* Cách NHẬN hàng dẫn đầu, cách TRẢ tiền lặng hẳn
+                                     bên dưới: cái đầu quyết định việc phải làm tiếp
+                                     (soạn hàng gửi đi hay để dành ở quầy), cái sau
+                                     chỉ là ghi chú đi kèm. Xem .aship trong
+                                     assets/css/admin.css. */ ?>
+                            <span class="aship__how">
+                                <?= e($deliveryLabels[$o['delivery_method']] ?? $o['delivery_method']) ?>
+                            </span>
                             <?php if (!empty($o['store_name'])): ?>
                                 <!-- Cơ sở nhận hàng. Thiếu dòng này thì nhân viên
                                      không biết soạn hàng ở đâu và phải gọi hỏi khách. -->
                                 <span class="atable__sub"><?= e($o['store_name']) ?></span>
                             <?php endif; ?>
-                            <span class="atable__sub"><?= e($paymentLabels[$o['payment_method']] ?? $o['payment_method']) ?></span>
+                            <span class="aship__pay">
+                                <?= e($paymentLabels[$o['payment_method']] ?? $o['payment_method']) ?>
+                            </span>
                         </td>
 
-                        <td class="num">
-                            <?= money((int) $o['total']) ?>
-
+                        <td class="amoney">
                             <?php $paid = $o['payment_status'] === 'paid'; ?>
-                            <span class="badge badge--<?= $paid ? 'paid' : 'unpaid' ?>">
-                                <?= e($payStatuses[$o['payment_status']] ?? $o['payment_status']) ?>
-                            </span>
 
-                            <?php if ($paid && !empty($o['paid_at'])): ?>
-                                <span class="atable__sub"><?= e(formatDate($o['paid_at'], 'd/m/Y H:i')) ?></span>
-                            <?php endif; ?>
+                            <?php
+                            /*
+                             * TRẠNG THÁI TIỀN LÀ CHẤM TRÒN + CHỮ, KHÔNG PHẢI VIÊN NHÃN.
+                             *
+                             * Trước đây chỗ này là .badge--paid/.badge--unpaid —
+                             * một viên viền rỗng nằm sát viên nhãn trạng thái ĐƠN ở
+                             * cột bên. Hai viên cùng cỡ, cùng độ bo, nói về hai
+                             * chuyện khác hẳn nhau: mắt phải đọc chữ mới biết viên
+                             * nào là tiền, viên nào là đơn.
+                             *
+                             * Đơn giữ viên nhãn, tiền xuống thành dòng chữ có chấm
+                             * màu dẫn đầu. Khác dáng thì không phải đọc mới phân
+                             * biệt được. Xem .amoney__pay trong admin.css.
+                             */
+                            ?>
+                            <span class="amoney__inner">
+                                <span class="amoney__total"><?= money((int) $o['total']) ?></span>
+
+                                <span class="amoney__pay amoney__pay--<?= $paid ? 'paid' : 'unpaid' ?>">
+                                    <?= e($payStatuses[$o['payment_status']] ?? $o['payment_status']) ?>
+                                </span>
+
+                                <?php if ($paid && !empty($o['paid_at'])): ?>
+                                    <?php /* Giờ tiền về — thứ nhân viên đối chiếu với
+                                             sao kê ngân hàng. */ ?>
+                                    <span class="amoney__when"><?= e(formatDate($o['paid_at'], 'd/m/Y H:i')) ?></span>
+                                <?php endif; ?>
+                            </span>
 
                             <?php
                             /* Đơn COD chưa giao thì KHÔNG có nút này: tiền chỉ về

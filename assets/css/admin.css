@@ -80,6 +80,17 @@ body.admin {
     --a-row-line: #f5efe4;
     --a-chip-on: #2b2124;
 
+    /* NĂM CẶP MÀU NHÃN của bản thiết kế, khai một lần ở đây.
+       Trước đây chúng nằm rải trong khối .badge--*; từ khi ô chọn trạng thái ở
+       bảng đơn hàng cũng phải mang đúng năm cặp ấy (xem .astatus__pick), có hai
+       nơi cùng chép một bảng màu — và hai bản chép thì sớm muộn lệch nhau.
+       Nghĩa cố định của từng cặp ghi ở khối .badge bên dưới. */
+    --pill-brand-bg:   #f7e8ea; --pill-brand-ink:   #7d2434;
+    --pill-neutral-bg: #efe9de; --pill-neutral-ink: #6f6355;
+    --pill-ok-bg:      #e6f1e9; --pill-ok-ink:      #2f6b4b;
+    --pill-warn-bg:    #fbf0dc; --pill-warn-ink:    #96631a;
+    --pill-danger-bg:  #f9e7e9; --pill-danger-ink:  #a03245;
+
     margin: 0;
     background: var(--surface);
     color: var(--ink);
@@ -825,20 +836,20 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     display: inline-block;
     padding: 3px 10px;
     border-radius: var(--radius-round);
-    background: #efe9de;
+    background: var(--pill-neutral-bg);
     font-size: 11.5px;
     font-weight: 600;
     white-space: nowrap;
-    color: #6f6355;
+    color: var(--pill-neutral-ink);
 }
 
-.badge--new,       .badge--pending      { background: var(--brand-subtle); color: var(--brand); }
+.badge--new,       .badge--pending      { background: var(--pill-brand-bg);   color: var(--pill-brand-ink); }
 .badge--confirmed, .badge--handling,
-.badge--neutral                         { background: #efe9de; color: #6f6355; }
+.badge--neutral                         { background: var(--pill-neutral-bg); color: var(--pill-neutral-ink); }
 .badge--completed, .badge--done,
-.badge--in_stock                        { background: #e6f1e9; color: var(--success); }
-.badge--low_stock                       { background: #fbf0dc; color: var(--warn); }
-.badge--cancelled, .badge--out_of_stock { background: #f9e7e9; color: var(--danger); }
+.badge--in_stock                        { background: var(--pill-ok-bg);      color: var(--pill-ok-ink); }
+.badge--low_stock                       { background: var(--pill-warn-bg);    color: var(--pill-warn-ink); }
+.badge--cancelled, .badge--out_of_stock { background: var(--pill-danger-bg);  color: var(--pill-danger-ink); }
 
 /* "Nổi bật" — hổ phách riêng của bản thiết kế (#f8efd9/#8a6a20), KHÔNG dùng
    chung với năm màu trạng thái ở trên. Nó không phải trạng thái: sản phẩm nổi
@@ -869,19 +880,87 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     color: #6f6355;
 }
 
-/* Trạng thái TIỀN — cố ý khác dáng với huy hiệu trạng thái đơn ở trên: viền
-   thay vì nền đặc, để hai trục trạng thái không tranh nhau trong cùng một hàng
-   bảng. Xem OrderModel::PAYMENT_STATUSES. */
-.badge--unpaid {
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--danger) 45%, transparent);
-    color: var(--danger);
+/* ============================================================
+   CỘT "NHẬN / TRẢ" và CỘT "TỔNG TIỀN" của bảng đơn hàng
+   (.aship · .amoney — xem app/views/admin/orders/index.php)
+   ============================================================ */
+
+/* Hai dòng, dòng dưới lặng hẳn. Cách nhận hàng là thứ quyết định việc phải
+   làm tiếp (soạn hàng gửi đi hay để dành ở quầy), còn cách trả tiền chỉ là
+   ghi chú đi kèm — bản thiết kế hạ nó xuống 11px màu nhạt đúng vì thế. */
+.aship__how {
+    display: block;
+    font-weight: 500;
 }
 
-.badge--paid {
-    background: transparent;
-    border: 1px solid color-mix(in srgb, var(--success) 45%, transparent);
-    color: var(--success);
+.aship__pay {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--fs-caption);
+    color: #a2937f;
+}
+
+/* Cột tiền dồn về mép PHẢI: các con số xếp thẳng hàng đơn vị thì liếc một cái
+   là so được đơn nào to đơn nào nhỏ, việc mà cột căn trái không làm được. */
+.amoney {
+    text-align: right;
+}
+
+.amoney__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.amoney__total {
+    font-size: var(--fs-note);
+    font-weight: 700;
+    line-height: 20px;
+}
+
+/*
+ * TRẠNG THÁI TIỀN LÀ CHẤM TRÒN + CHỮ, KHÔNG PHẢI VIÊN NHÃN.
+ *
+ * Bản cũ dùng .badge--paid/.badge--unpaid: một viên viền rỗng nằm ngay cạnh
+ * viên nhãn trạng thái đơn ở cột bên. Hai viên thuốc cùng cỡ, cùng độ bo, sát
+ * nhau, nói về hai chuyện khác hẳn nhau — mắt phải đọc chữ mới biết viên nào
+ * là tiền viên nào là đơn.
+ *
+ * Bản thiết kế tách hẳn hai loài: đơn giữ viên nhãn, tiền xuống thành một
+ * dòng chữ có chấm màu dẫn đầu. Khác dáng thì không còn phải đọc mới phân
+ * biệt được.
+ *
+ * Chưa trả tiền là HỔ PHÁCH chứ không phải đỏ (bản cũ dùng --danger): đơn COD
+ * chưa giao thì đương nhiên chưa có tiền, đó là tình trạng bình thường của
+ * gần hết bảng. Sơn đỏ cả cột là dạy người đọc lướt qua màu đỏ.
+ */
+.amoney__pay {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.amoney__pay::before {
+    content: "";
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.amoney__pay--paid   { color: var(--pill-ok-ink); }
+.amoney__pay--unpaid { color: var(--pill-warn-ink); }
+
+/* Giờ nhận tiền — bản thiết kế không vẽ dòng này vì dữ liệu mẫu không có, còn
+   ở đây nó là thứ nhân viên đối chiếu với sao kê ngân hàng nên phải giữ. */
+.amoney__when {
+    font-size: var(--fs-caption);
+    color: var(--muted);
 }
 
 /* --- Nút ghi nhận thanh toán -------------------------------- */
@@ -967,6 +1046,61 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .astatus__save:hover { background: var(--brand-strong); }
+
+/* --- Ô chốt giờ hẹn trong bảng lịch hẹn ----------------------
+
+   Khách chỉ chọn NGÀY; giờ được thống nhất trong cuộc gọi xác nhận, và đây là
+   chỗ nhân viên ghi lại. Xem app/views/admin/appointments/index.php.
+
+   Nhỏ hơn .astatus một cỡ (32px thay vì 36px, nút chỉ có viền): ô này nằm
+   TRONG một ô bảng đã có sẵn ngày ở trên, không phải điều khiển chính của
+   hàng — điều khiển chính là ô trạng thái ở cột cuối. Cùng cỡ thì hai thứ
+   tranh nhau. */
+.atime {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.atime__input {
+    height: 32px;
+    padding-inline: 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: var(--fs-note);
+    color: var(--ink);
+}
+
+.atime__input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
+}
+
+/* Nút viền chứ không nền đặc: chốt giờ là việc thường ngày, không phải hành
+   động cần cảnh báo. Nền đặc ở đây sẽ có màu brand đậm lặp lại trên MỌI hàng
+   của bảng, át mất nút "Lưu" trạng thái vốn mới là việc chính. */
+.atime__save {
+    height: 32px;
+    padding-inline: 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--a-btn-radius);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.atime__save:hover {
+    border-color: var(--brand);
+    color: var(--brand);
+}
 
 /*
  * Có JavaScript thì select tự gửi form, nút Lưu thành thừa -> ẩn.
