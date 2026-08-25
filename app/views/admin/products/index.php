@@ -266,18 +266,25 @@ if ($ed !== null) {
                     <ul class="aimgs" role="list">
                         <?php foreach ($edImages as $i => $path): ?>
                             <li class="aimgs__item">
+                                <?php
+                                /* TICK SẴN nghĩa là GIỮ: mở form ra rồi bấm Lưu mà không
+                                   đụng gì thì ảnh phải còn nguyên. Bấm × sẽ BỎ tick — tức
+                                   là chiều ngược với ảnh bìa, nên truyền x_keep = true để
+                                   CSS biết trạng thái nào là "đang đánh dấu xoá".
+                                   Xem admin/_layout/image-x.php. */
+                                partial('admin/_layout/image-x', [
+                                    'x_id' => 'x-img-' . $i, 'x_name' => 'image_keep[]',
+                                    'x_value' => $path, 'x_checked' => true, 'x_keep' => true,
+                                    'x_label' => 'Xoá ảnh này khi lưu',
+                                ]);
+                                ?>
                                 <?php /* Ảnh cũ hiện to bằng chính nó chứ không phải
                                          bản nhỏ: bản nhỏ chỉ có với ảnh của seed. */ ?>
                                 <img class="aimgs__thumb" src="<?= e($path) ?>" alt="" loading="lazy">
 
-                                <label class="aimgs__keep">
-                                    <?php /* Mặc định TICK SẴN: mở form ra rồi bấm Lưu mà
-                                             không đụng gì thì ảnh phải còn nguyên. Bỏ tick
-                                             mới là hành động xoá. */ ?>
-                                    <input type="checkbox" name="image_keep[]"
-                                           value="<?= e($path) ?>" checked>
-                                    Giữ ảnh
-                                </label>
+                                <?php partial('admin/_layout/image-x-btn', [
+                                    'x_id' => 'x-img-' . $i, 'x_label' => 'Xoá ảnh này khi lưu',
+                                ]); ?>
 
                                 <label class="aimgs__main">
                                     <input type="radio" name="image_main"

@@ -172,11 +172,14 @@ $dangDung = $ed === null ? 0 : (int) ($counts[$ed['slug']] ?? 0);
 
                 <?php if (!empty($ed['cover_image'])): ?>
                     <div class="aimgs__one">
+                        <?php partial('admin/_layout/image-x', [
+                            'x_id' => 'x-cover', 'x_name' => 'cover_remove', 'x_value' => '1',
+                            'x_label' => 'Xoá ảnh bìa khi lưu',
+                        ]); ?>
                         <img class="aimgs__thumb" src="<?= e(asset($ed['cover_image'])) ?>" alt="" loading="lazy">
-                        <label class="aimgs__keep">
-                            <input type="checkbox" name="cover_remove" value="1">
-                            Bỏ ảnh bìa này
-                        </label>
+                        <?php partial('admin/_layout/image-x-btn', [
+                            'x_id' => 'x-cover', 'x_label' => 'Xoá ảnh bìa khi lưu',
+                        ]); ?>
                     </div>
                 <?php endif; ?>
 

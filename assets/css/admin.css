@@ -1654,6 +1654,116 @@ a.astatus__save {
     background: var(--surface-sunken);
 }
 
+/* ============================================================
+   NÚT × XOÁ MỘT ẢNH ĐÃ TẢI LÊN
+   (.aimgx — xem app/views/admin/_layout/image-x.php)
+
+   KHÔNG CÓ MỘT DÒNG JAVASCRIPT NÀO. Toàn bộ phần này là một <input type=
+   checkbox> bị ẩn khỏi mắt, cộng một <label for> vẽ thành dấu ×. Bấm × là
+   tick ô; tick ô là "xoá ảnh này KHI LƯU", không phải xoá ngay.
+
+   Ô tick nằm TRƯỚC ảnh trong HTML nên ở đây dùng được bộ chọn anh-em `~` để
+   với tới ảnh, dấu × và dòng chữ trạng thái. Đó là lý do duy nhất khiến thứ
+   tự DOM phải như vậy.
+
+   HAI CHIỀU NGƯỢC NHAU:
+     · ảnh bìa (cover_remove)   tick   = xoá
+     · ảnh sản phẩm (image_keep[]) BỎ tick = xoá  -> .aimgx__box--keep
+   ============================================================ */
+
+/* MỌI SELECTOR CỦA .aimgx ĐỀU NEO VÀO Ô CHỨA ẢNH, không đứng một mình.
+   Lý do: .aform__grid label ở trên có độ đặc hiệu (0,1,1) và áp display:block
+   + màu xám nhạt cho MỌI <label> trong form. Một mình `.aimgx` chỉ (0,1,0) nên
+   thua — dấu × mất nền tròn lẫn màu trắng, thành một chấm xám lẫn vào ảnh.
+   `.aimgs__one .aimgx` là (0,2,0), thắng.
+
+   Khung cần position để dấu × neo được vào góc ảnh. Hai lớp này là ô chứa
+   ảnh ở cả hai màn: .aimgs__one (một ảnh bìa) và .aimgs__item (lưới ảnh). */
+.aimgs__one,
+.aimgs__item { position: relative; }
+
+/* Ô tick thật: ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc màn hình.
+   display:none hay visibility:hidden sẽ gỡ nó khỏi cả hai. */
+.aimgx__box {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.aimgs__one .aimgx,
+.aimgs__item .aimgx {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-round);
+    /* Nền đặc chứ không trong suốt: dấu × nằm ĐÈ LÊN ẢNH, mà ảnh thì sáng tối
+       tuỳ tấm — để trong suốt thì có tấm nhìn rõ, có tấm mất hút. */
+    background: rgba(40, 33, 28, 0.72);
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.15s;
+}
+
+.aimgs__one .aimgx:hover,
+.aimgs__item .aimgx:hover { background: var(--danger); }
+
+/* Vòng focus vẽ trên cái NHÌN THẤY, vì ô tick thật đã ẩn đi */
+.aimgx__box:focus-visible + .aimgs__thumb + .aimgx,
+.aimgx__box:focus-visible ~ .aimgx {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.aimgx__mark::before { content: "\00D7"; }
+
+/* Dòng "Sẽ xoá khi lưu" — mặc định ẩn, chỉ hiện khi đã đánh dấu. */
+.aimgs__one .aimgx__flag,
+.aimgs__item .aimgx__flag {
+    display: none;
+    margin-top: 8px;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--danger);
+}
+
+/* ── TRẠNG THÁI ĐÃ ĐÁNH DẤU XOÁ ─────────────────────────────
+   Hai bộ chọn cho hai chiều ngược nhau, gộp chung một khối kiểu. */
+
+.aimgx__box:checked ~ .aimgs__thumb,
+.aimgx__box--keep:not(:checked) ~ .aimgs__thumb {
+    opacity: 0.35;
+    filter: grayscale(1);
+}
+
+.aimgs__one .aimgx__box:checked ~ .aimgx,
+.aimgs__item .aimgx__box:checked ~ .aimgx,
+.aimgs__one .aimgx__box--keep:not(:checked) ~ .aimgx,
+.aimgs__item .aimgx__box--keep:not(:checked) ~ .aimgx {
+    background: var(--danger);
+    transform: rotate(0);
+}
+
+/* × thành ↺: nói rằng bấm lần nữa là hoàn tác, chứ không phải xoá thêm lần nữa */
+.aimgx__box:checked ~ .aimgx .aimgx__mark::before,
+.aimgx__box--keep:not(:checked) ~ .aimgx .aimgx__mark::before { content: "\21BA"; }
+
+.aimgs__one .aimgx__box:checked ~ .aimgx__flag,
+.aimgs__item .aimgx__box:checked ~ .aimgx__flag,
+.aimgs__one .aimgx__box--keep:not(:checked) ~ .aimgx__flag,
+.aimgs__item .aimgx__box--keep:not(:checked) ~ .aimgx__flag { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+    .aimgx { transition: none; }
+}
+
 /* Nhãn của ô chọn file: giữ đúng dáng nhãn trường như mọi ô khác trong form */
 .aimgs__pick { display: block; }
 
