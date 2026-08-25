@@ -46,13 +46,7 @@ $maxDate = date('Y-m-d', strtotime('+60 days'));
     <span class="acct-order__eyebrow">Đổi ngày hẹn</span>
 
     <p class="acct-resched__now">
-        Hiện tại: <strong><?= e(formatDate($appointment['appointment_date'])) ?><?php
-            /* Lịch cũ (đặt khi form còn ô giờ) vẫn có time_slot, và cả lịch mà
-               nhân viên đã xếp giờ hộ cũng vậy. Có thì in ra — khách cần thấy
-               đúng cái đang được đổi. Không có thì im lặng bỏ qua, đừng in một
-               dấu gạch trống trông như dữ liệu hỏng. */
-            if (!empty($appointment['time_slot'])):
-        ?> · <?= e($appointment['time_slot']) ?><?php endif; ?></strong>
+        Hiện tại: <strong><?= e(formatDate($appointment['appointment_date'])) ?></strong>
         tại <?= e($appointment['store_name'] ?? 'Cơ sở Vin Eyewear') ?>
     </p>
 
@@ -90,7 +84,7 @@ $maxDate = date('Y-m-d', strtotime('+60 days'));
 
         <p class="acct-resched__hint">
             Đổi ngày xong lịch quay về <strong>Chờ xác nhận</strong> — cửa hàng
-            sẽ gọi để thống nhất giờ cho ngày mới.
+            sẽ gọi lại để thống nhất giờ cho ngày mới.
         </p>
     </form>
 </div>

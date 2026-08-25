@@ -1047,61 +1047,6 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 .astatus__save:hover { background: var(--brand-strong); }
 
-/* --- Ô chốt giờ hẹn trong bảng lịch hẹn ----------------------
-
-   Khách chỉ chọn NGÀY; giờ được thống nhất trong cuộc gọi xác nhận, và đây là
-   chỗ nhân viên ghi lại. Xem app/views/admin/appointments/index.php.
-
-   Nhỏ hơn .astatus một cỡ (32px thay vì 36px, nút chỉ có viền): ô này nằm
-   TRONG một ô bảng đã có sẵn ngày ở trên, không phải điều khiển chính của
-   hàng — điều khiển chính là ô trạng thái ở cột cuối. Cùng cỡ thì hai thứ
-   tranh nhau. */
-.atime {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 4px;
-}
-
-.atime__input {
-    height: 32px;
-    padding-inline: 8px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: var(--fs-note);
-    color: var(--ink);
-}
-
-.atime__input:focus {
-    outline: none;
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
-}
-
-/* Nút viền chứ không nền đặc: chốt giờ là việc thường ngày, không phải hành
-   động cần cảnh báo. Nền đặc ở đây sẽ có màu brand đậm lặp lại trên MỌI hàng
-   của bảng, át mất nút "Lưu" trạng thái vốn mới là việc chính. */
-.atime__save {
-    height: 32px;
-    padding-inline: 10px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--a-btn-radius);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: var(--fs-caption);
-    font-weight: 600;
-    color: var(--ink);
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-}
-
-.atime__save:hover {
-    border-color: var(--brand);
-    color: var(--brand);
-}
-
 /*
  * Có JavaScript thì select tự gửi form, nút Lưu thành thừa -> ẩn.
  * Không có JS thì nút vẫn hiện và dùng được.

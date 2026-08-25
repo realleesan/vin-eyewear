@@ -114,6 +114,10 @@ MIGRATIONS=(
     # chính tính cho-phép-rỗng của cột.
     "2026-08-25-bo-khung-gio-khoi-form-khach.sql|colnull|appointments|time_slot=YES"
     "2026-08-25-dong-y-dieu-khoan.sql|column|users|terms_accepted_at"
+    # File này XOÁ một cột, không tạo ra thứ gì để làm mốc. Kiểu 'data': chỉ sổ
+    # ghi chặn chạy lại, mà bản thân file đã tự kiểm trước khi drop nên chạy
+    # lại cũng chỉ in ra một dòng "đã bỏ, bỏ qua".
+    "2026-08-25-bo-han-cot-khung-gio.sql|data||"
 )
 
 # ---------------------------------------------------------------------------

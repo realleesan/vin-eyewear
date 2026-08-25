@@ -577,22 +577,18 @@ CREATE TABLE `favorites` (
 
 -- Lịch hẹn khám mắt / tư vấn.
 --
--- UNIQUE (store_id, appointment_date, time_slot) là ràng buộc nghiệp vụ quan
--- trọng: mỗi cơ sở chỉ nhận MỘT lịch cho mỗi khung giờ mỗi ngày. Nhờ nó,
--- hai người đặt trùng khung giờ cùng lúc sẽ có một người bị DB từ chối
--- (lỗi 1062) thay vì cả hai cùng được nhận. Tầng PHP bắt lỗi này và báo
--- "khung giờ vừa có người đặt" — xem BookingModel::create().
+-- CHỈ CÓ NGÀY, KHÔNG CÓ GIỜ. Khách chọn ngày; giờ được thống nhất trong cuộc
+-- gọi xác nhận của cửa hàng và không lưu lại ở đâu cả.
+--
+-- Chú thích cũ ở chỗ này mô tả một khoá UNIQUE (cơ sở, ngày, khung giờ) cho
+-- mỗi khung giờ đúng một lịch. Khoá đó đã bị bỏ từ 2026-08-22 và cột khung giờ
+-- bị bỏ nốt ngày 2026-08-25 — xem hai migration cùng tên ở database/migrations.
 CREATE TABLE `appointments` (
     `id`               CHAR(36)     NOT NULL DEFAULT (UUID()),
     `code`             VARCHAR(40)  NOT NULL,
     `user_id`          CHAR(36)     NULL,
     `store_id`         CHAR(36)     NOT NULL,
     `appointment_date` DATE         NOT NULL,
-    -- Giờ hẹn. NULL kể từ 2026-08-25: form khách chỉ còn chọn NGÀY, cửa hàng gọi
-    -- điện xác nhận rồi tự xếp giờ (giả định A5). Lịch đặt trước mốc đó vẫn giữ
-    -- giờ khách đã chọn, nên cột được nới NULL chứ không bị drop — xem
-    -- database/migrations/2026-08-25-bo-khung-gio-khoi-form-khach.sql.
-    `time_slot`        VARCHAR(20)  NULL     DEFAULT NULL,
     `service_type`     VARCHAR(60)  NOT NULL,
     `full_name`        VARCHAR(255) NOT NULL,
     `phone`            VARCHAR(32)  NOT NULL,
@@ -612,11 +608,12 @@ CREATE TABLE `appointments` (
      * kính hết khoảng 30 phút, phần lâu nhất là 10–15 phút thử tròng còn lắp
      * kính thì máy làm rất nhanh, nên không cần chia ca như tiệm cắt tóc.
      *
-     * Khung giờ khách chọn trên web nay là NGUYỆN VỌNG, không phải một chỗ đã
-     * giữ. Cửa hàng ghi nhận rồi gọi điện xác nhận và tự xếp người — cái chốt
-     * thật nằm ở cuộc gọi đó, không nằm ở ràng buộc trong DB.
+     * Từ 2026-08-25 bảng này không còn cột giờ nào nữa: lịch hẹn chỉ có NGÀY.
+     * Cửa hàng ghi nhận rồi gọi điện xác nhận và tự xếp người — cái chốt thật
+     * nằm ở cuộc gọi đó, không nằm trong CSDL.
      *
-     * Xem database/migrations/2026-08-22-bo-gioi-han-khung-gio.sql.
+     * Xem database/migrations/2026-08-22-bo-gioi-han-khung-gio.sql và
+     * database/migrations/2026-08-25-bo-han-cot-khung-gio.sql.
      *
      * `uq_appointments_code` thì GIỮ, và nó không liên quan gì tới khung giờ:
      * nó chặn hai lịch trùng MÃ (LH…), thứ khách đọc qua điện thoại và nhân

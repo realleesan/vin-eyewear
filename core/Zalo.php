@@ -261,24 +261,15 @@ class Zalo
         $date = (string) ($appointment['appointment_date'] ?? '');
         $when = $date === '' ? '—' : formatDate($date);
 
-        /*
-         * GIỜ HẸN CÓ THỂ CHƯA CÓ — và đó là trạng thái bình thường, không phải
-         * dữ liệu thiếu. Từ 2026-08-25 khách chỉ chọn ngày; chính cuộc gọi mà
-         * tin báo này thúc giục mới là lúc giờ được chốt (giả định A5).
-         *
-         * Nên viết hẳn "chưa chốt giờ" chứ không in dấu "—": nhân viên đọc tin
-         * phải hiểu ngay đây là việc CẦN LÀM, chứ không phải một ô dữ liệu lỗi.
-         */
-        $slot = trim((string) ($appointment['time_slot'] ?? ''));
-        $gio  = $slot === '' ? 'chưa chốt giờ' : $slot;
-
         $lines = [
             $head . ' · ' . (string) ($appointment['code'] ?? ''),
             'Khách:    ' . (string) ($appointment['full_name'] ?? ''),
             'Điện thoại: ' . (string) ($appointment['phone'] ?? ''),
             'Cơ sở:    ' . (string) ($appointment['store_name'] ?? '—'),
             'Dịch vụ:  ' . (string) ($appointment['service_type'] ?? '—'),
-            'Thời gian: ' . $when . ' — ' . $gio,
+            /* CHỈ CÓ NGÀY. Lịch hẹn không lưu giờ — chính cuộc gọi mà tin
+               báo này thúc giục mới là lúc giờ được thống nhất. */
+            'Ngày hẹn:  ' . $when,
         ];
 
         $note = trim((string) ($appointment['note'] ?? ''));
@@ -349,10 +340,10 @@ class Zalo
             'dien_thoai' => (string) ($appointment['phone'] ?? '—'),
             'co_so'      => (string) ($appointment['store_name'] ?? '—'),
             'dich_vu'    => (string) ($appointment['service_type'] ?? '—'),
-            // Cùng lẽ với bản chữ ở composeAppointment(): "chưa chốt giờ" là
-            // trạng thái thật, không phải ô trống.
-            'thoi_gian'  => ($date === '' ? '—' : formatDate($date))
-                            . ' — ' . (trim((string) ($appointment['time_slot'] ?? '')) ?: 'chưa chốt giờ'),
+            // Chỉ có ngày — xem composeAppointment(). Giữ tên khoá 'thoi_gian'
+            // vì đó là tên tham số đã khai trong mẫu tin ZNS trên zns.zalo.me;
+            // đổi ở đây mà không sửa mẫu bên đó là tin không gửi được.
+            'thoi_gian'  => $date === '' ? '—' : formatDate($date),
         ];
     }
 

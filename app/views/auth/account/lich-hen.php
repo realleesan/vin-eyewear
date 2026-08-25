@@ -48,18 +48,13 @@ $editHref = static fn (string $code): string =>
     '/tai-khoan?muc=lich-hen&doi=' . rawurlencode($code);
 
 /**
- * Ngày hẹn, kèm giờ NẾU CÓ.
+ * Ngày hẹn.
  *
- * Lịch đặt từ 2026-08-25 trở đi không có giờ: khách chỉ chọn ngày, cửa hàng
- * chốt giờ qua điện thoại (giả định A5). Lịch cũ thì vẫn có. Nối bằng " · "
- * chỉ khi thật sự có vế thứ hai — không thì thẻ hiện "25/08 · " cụt đuôi,
- * trông như dữ liệu hỏng chứ không như một lịch chưa xếp giờ.
+ * Từ 2026-08-25 lịch hẹn KHÔNG CÒN GIỜ — bảng không có cột nào lưu nó nữa.
+ * Giữ hàm này thay vì gọi thẳng formatDate() ở hai chỗ dùng, vì cả hai (thẻ
+ * lịch và câu hỏi trước khi huỷ) phải nói về một cái hẹn theo cùng một cách.
  */
-$khiNao = static function (array $a): string {
-    $ngay = formatDate($a['appointment_date']);
-
-    return empty($a['time_slot']) ? $ngay : $ngay . ' · ' . $a['time_slot'];
-};
+$khiNao = static fn (array $a): string => formatDate($a['appointment_date']);
 ?>
 
 <?php

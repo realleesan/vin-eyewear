@@ -30,8 +30,9 @@
  * như mọi trường hợp — nên hỏi khách một câu mà câu trả lời hầu như không được
  * dùng chỉ làm form dài thêm và tạo kỳ vọng sai ("tôi đã đặt 15:00 rồi").
  *
- * Khách nay chỉ chọn NGÀY. `time_slot` ghi NULL cho lịch mới; lịch cũ giữ
- * nguyên giờ khách từng chọn (cột được nới NULL chứ không drop).
+ * Khách nay chỉ chọn NGÀY, và cột `time_slot` đã bị BỎ HẲN khỏi bảng
+ * (2026-08-25-bo-han-cot-khung-gio.sql). Giờ được thống nhất trong cuộc gọi
+ * xác nhận và không lưu lại ở đâu cả — cái hẹn nằm trong cuộc gọi đó.
  *
  * Kéo theo: openSlots() và isPastSlot() biến mất. Cả hai chỉ tồn tại để trả
  * lời "khung giờ nào còn đặt được", câu hỏi không còn ai hỏi.
@@ -86,11 +87,6 @@ class BookingModel extends BaseModel
 
         try {
             Database::execute(
-                /* KHÔNG có `time_slot` trong danh sách cột — cột đã nới NULL và
-                   tự nhận NULL. Viết thẳng ra `time_slot = NULL` cũng ra kết
-                   quả y hệt, nhưng bỏ hẳn cột khỏi câu lệnh nói đúng hơn điều
-                   đang xảy ra: lúc đặt lịch KHÔNG AI BIẾT giờ hẹn, chứ không
-                   phải biết rồi mà cố tình ghi rỗng. */
                 'INSERT INTO appointments
                     (id, code, user_id, store_id, appointment_date,
                      service_type, full_name, phone, note)
@@ -295,9 +291,9 @@ class BookingModel extends BaseModel
         /*
          * HẠN LÀ HẾT NGÀY HÔM TRƯỚC NGÀY HẸN — không còn là "trước giờ hẹn N giờ".
          *
-         * Luật cũ ghép ngày với time_slot thành một mốc chính xác tới phút rồi
-         * trừ đi booking_change_cutoff_hours. Khách không chọn giờ nữa nên vế
-         * đầu không dựng được: lịch mới có time_slot NULL.
+         * Luật cũ ghép ngày với khung giờ thành một mốc chính xác tới phút rồi
+         * trừ đi booking_change_cutoff_hours. Bảng không còn cột giờ nào nên
+         * vế đầu không dựng được nữa.
          *
          * Đã cân nhắc lấy 00:00 của ngày hẹn làm mốc rồi giữ nguyên con số 2
          * giờ — bỏ, vì "hạn chót 22:00 đêm hôm trước" là một con số không giải
@@ -370,9 +366,9 @@ class BookingModel extends BaseModel
      *    khác thì lời xác nhận cũ không còn nghĩa gì. Để nguyên 'confirmed' sẽ
      *    thành một lịch "đã xác nhận" mà chưa ai ở cửa hàng nhìn thấy.
      *
-     *    Đổi ngày cũng XOÁ giờ mà nhân viên đã xếp (time_slot về NULL). Giờ ấy
-     *    được chốt qua điện thoại cho đúng cái ngày cũ; bê nguyên sang ngày mới
-     *    là bịa ra một cuộc hẹn chưa ai xác nhận.
+     *    Giờ hẹn thống nhất qua điện thoại cho đúng cái ngày CŨ, nên đổi ngày
+     *    là lời hẹn giờ đó cũng hết hiệu lực — cửa hàng gọi lại để chốt giờ
+     *    mới. Hệ thống không lưu giờ nên không có gì phải dọn ở đây.
      *
      * 3. GIỮ NGUYÊN CƠ SỞ. Đổi cơ sở là đổi gần hết thông tin của lần hẹn (đường
      *    đi, nhân viên, thiết bị) — việc đó nên là đặt lịch mới, không phải sửa.
@@ -417,7 +413,6 @@ class BookingModel extends BaseModel
             $changed = Database::execute(
                 "UPDATE appointments
                     SET appointment_date = :date,
-                        time_slot        = NULL,
                         status           = 'pending'
                   WHERE code = :code AND user_id = :uid
                     AND status IN ('pending', 'confirmed')",
@@ -436,58 +431,6 @@ class BookingModel extends BaseModel
         }
 
         return ['ok' => true];
-    }
-
-    /**
-     * Nhân viên chốt GIỜ cho một lịch hẹn, hoặc xoá giờ đã chốt.
-     *
-     * ─────────────────────────────────────────────────────────────────────
-     * NỬA CÒN LẠI CỦA VIỆC BỎ Ô CHỌN GIỜ Ở FORM KHÁCH
-     *
-     * Khách chỉ chọn ngày (giả định A5). Cửa hàng gọi điện rồi thống nhất giờ
-     * — nhưng nếu không có chỗ nào GHI cái giờ vừa thống nhất thì thoả thuận
-     * đó chỉ nằm trong đầu người vừa gọi, và `time_slot` sẽ NULL vĩnh viễn.
-     * Đây là chỗ ghi.
-     *
-     * KHÔNG dùng lại config('app.time_slots') — mảng ấy đã bị xoá cùng lúc với
-     * ô chọn giờ, và cố ý: nhân viên xếp giờ qua điện thoại thì không bị bó
-     * vào mười một khung định sẵn. Khách hẹn 15:20 vì đó là lúc họ tan làm,
-     * ép về 15:00 là ghi sai thoả thuận. Nên nhận BẤT KỲ giờ hợp lệ nào trong
-     * ngày, chỉ kiểm đúng định dạng.
-     *
-     * Chuỗi rỗng = XOÁ giờ (về NULL), dùng khi khách đổi ý mà chưa hẹn lại
-     * được. Khác hẳn "chưa từng chốt", nhưng cùng biểu diễn — và đúng như
-     * vậy: cả hai đều nghĩa là chưa có giờ nào được thống nhất.
-     * ─────────────────────────────────────────────────────────────────────
-     *
-     * @return array ['ok'=>true] | ['ok'=>false,'error'=>...]
-     */
-    public static function setTimeSlot(string $id, string $slot): array
-    {
-        $slot = trim($slot);
-
-        /* "9:5" hay "25:00" đều bị chặn ở đây. Chuẩn hoá về HH:MM hai chữ số
-           có đệm 0 vì mọi chỗ so sánh và sắp xếp giờ trong dự án đều so CHUỖI
-           — "9:00" đứng SAU "10:00" theo thứ tự chuỗi, đúng nghĩa thì không. */
-        if ($slot !== '') {
-            if (!preg_match('/^(\d{1,2}):(\d{2})$/', $slot, $m)
-                || (int) $m[1] > 23 || (int) $m[2] > 59) {
-                return ['ok' => false, 'error' => 'Giờ hẹn không hợp lệ.'];
-            }
-
-            $slot = sprintf('%02d:%02d', (int) $m[1], (int) $m[2]);
-        }
-
-        if (!static::exists(['id' => $id])) {
-            return ['ok' => false, 'error' => 'Không tìm thấy lịch hẹn.'];
-        }
-
-        Database::execute(
-            'UPDATE appointments SET time_slot = :slot WHERE id = :id',
-            ['slot' => $slot !== '' ? $slot : null, 'id' => $id]
-        );
-
-        return ['ok' => true, 'slot' => $slot];
     }
 
     /**

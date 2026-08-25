@@ -50,42 +50,6 @@ class AppointmentAdminController extends AdminController
         redirect('/quan-tri/lich-hen');
     }
 
-    /**
-     * Nhân viên chốt giờ hẹn sau cuộc gọi xác nhận (POST /quan-tri/lich-hen/gio).
-     *
-     * KHÔNG gọi requireManager(): đây là việc của người trực quầy, cùng hạng
-     * với đổi trạng thái lịch ngay bên trên. Policy gốc cho staff xử lý lịch
-     * hẹn; bắt phải là manager mới điền được giờ vừa hẹn qua điện thoại thì
-     * chính người gọi lại không ghi được.
-     *
-     * Không đẩy thông báo Zalo: tin Zalo tồn tại để BÁO NHÂN VIÊN có lịch mới
-     * (xem core/Zalo.php), mà ở đây chính nhân viên là người vừa thao tác.
-     * Khách thì đã biết giờ — họ vừa nghe qua điện thoại xong.
-     */
-    public function updateTime(): void
-    {
-        $this->requirePost('/quan-tri/lich-hen');
-
-        $result = BookingModel::setTimeSlot(
-            (string) ($_POST['id'] ?? ''),
-            (string) ($_POST['time_slot'] ?? '')
-        );
-
-        if (!$result['ok']) {
-            flash('admin_error', $result['error']);
-            redirect('/quan-tri/lich-hen');
-        }
-
-        flash(
-            'admin_success',
-            $result['slot'] === ''
-                ? 'Đã xoá giờ hẹn.'
-                : 'Đã chốt giờ hẹn ' . $result['slot'] . '.'
-        );
-
-        redirect('/quan-tri/lich-hen');
-    }
-
     private function statusCounts(): array
     {
         $rows   = Database::fetchAll('SELECT status, COUNT(*) AS n FROM appointments GROUP BY status');
