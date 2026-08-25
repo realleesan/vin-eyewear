@@ -42,8 +42,13 @@ class UserModel extends BaseModel
      *
      * @return array ['ok'=>true,'id'=>...] | ['ok'=>false,'error'=>...]
      */
-    public static function register(string $phone, string $password, string $fullName, string $email = ''): array
-    {
+    public static function register(
+        string $phone,
+        string $password,
+        string $fullName,
+        string $email = '',
+        string $termsVersion = ''
+    ): array {
         /*
          * SỐ ĐIỆN THOẠI THAY EMAIL LÀM THỨ ĐỂ ĐĂNG NHẬP.
          *
@@ -103,9 +108,21 @@ class UserModel extends BaseModel
         $userId = uuid();
 
         try {
-            Database::transaction(static function () use ($userId, $email, $password, $fullName, $phone): void {
+            Database::transaction(static function () use ($userId, $email, $password, $fullName, $phone, $termsVersion): void {
+                /*
+                 * VẾT ĐỒNG Ý ĐIỀU KHOẢN nằm trong CHÍNH câu INSERT tạo tài khoản.
+                 *
+                 * Không tách thành một UPDATE chạy sau: câu ấy hỏng thì còn lại
+                 * đúng thứ không được phép tồn tại — một tài khoản đã tạo xong
+                 * mà không có vết nào cho biết người ta đã đồng ý gì.
+                 *
+                 * Phiên bản rỗng -> ghi NULL cả hai cột. Rỗng nghĩa là nơi gọi
+                 * KHÔNG đi qua form đăng ký (làm test, hoặc một luồng nội bộ),
+                 * và "không biết" phải trông khác hẳn "đã đồng ý bản rỗng".
+                 */
                 Database::execute(
-                    'INSERT INTO users (id, email, password_hash) VALUES (:id, :email, :hash)',
+                    'INSERT INTO users (id, email, password_hash, terms_accepted_at, terms_version)
+                     VALUES (:id, :email, :hash, :accepted_at, :terms_version)',
                     [
                         'id'    => $userId,
                         // Rỗng thành NULL chứ không phải chuỗi rỗng: cột có
@@ -114,6 +131,8 @@ class UserModel extends BaseModel
                         // PASSWORD_DEFAULT để PHP tự nâng thuật toán ở bản
                         // sau mà không phải sửa dòng này
                         'hash'  => password_hash($password, PASSWORD_DEFAULT),
+                        'accepted_at'   => $termsVersion !== '' ? date('Y-m-d H:i:s') : null,
+                        'terms_version' => $termsVersion !== '' ? $termsVersion : null,
                     ]
                 );
 
@@ -225,16 +244,37 @@ class UserModel extends BaseModel
         $userId = uuid();
 
         try {
-            Database::transaction(static function () use ($userId, $sub, $email, $name, $emailVerified): void {
+            $termsVersion = (string) config('auth.consent.version', '');
+
+            Database::transaction(static function () use ($userId, $sub, $email, $name, $emailVerified, $termsVersion): void {
+                /*
+                 * TÀI KHOẢN TẠO QUA GOOGLE CŨNG GHI VẾT ĐỒNG Ý.
+                 *
+                 * Ở đây KHÔNG có ô tick nào để kiểm — luồng Google không đi qua
+                 * form đăng ký. Cái đứng thay là dòng chữ ngay cạnh nút "Tiếp
+                 * tục với Google" trên /auth: "Bằng việc tạo tài khoản, bạn
+                 * đồng ý với…". Bấm nút đó là hành vi đồng ý, cùng chuẩn mà các
+                 * trang khác dùng cho nút đăng nhập mạng xã hội.
+                 *
+                 * Ghi lại chứ không bỏ trống, vì bỏ trống thì cột này nói sai:
+                 * NULL nghĩa là "tài khoản có trước khi có ô tick", mà tài khoản
+                 * Google tạo hôm nay thì không phải vậy.
+                 *
+                 * Nếu sau này cửa hàng muốn Google cũng phải tick tường minh
+                 * thì chỗ sửa là màn /auth, không phải chỗ này.
+                 */
                 Database::execute(
-                    'INSERT INTO users (id, email, google_id, password_hash, email_verified)
-                     VALUES (:id, :email, :google, :hash, :verified)',
+                    'INSERT INTO users (id, email, google_id, password_hash, email_verified,
+                                        terms_accepted_at, terms_version)
+                     VALUES (:id, :email, :google, :hash, :verified, :accepted_at, :terms_version)',
                     [
                         'id'       => $userId,
                         'email'    => ($email !== null && $email !== '') ? $email : null,
                         'google'   => $sub,
                         'hash'     => password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT),
                         'verified' => $emailVerified ? 1 : 0,
+                        'accepted_at'   => $termsVersion !== '' ? date('Y-m-d H:i:s') : null,
+                        'terms_version' => $termsVersion !== '' ? $termsVersion : null,
                     ]
                 );
 

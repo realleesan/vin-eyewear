@@ -41,4 +41,39 @@ return [
          */
         'redirect'      => rtrim((string) env('APP_URL', ''), '/') . '/auth/google/callback',
     ],
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * ĐỒNG Ý ĐIỀU KHOẢN KHI ĐĂNG KÝ
+     *
+     * 'version' được ghi thẳng vào users.terms_version của từng tài khoản mới.
+     * ĐỔI GIÁ TRỊ NÀY MỖI KHI SỬA NỘI DUNG văn bản — nếu không, tài khoản đăng
+     * ký sau bản sửa sẽ mang cùng một nhãn với tài khoản đăng ký trước đó, và
+     * cột kia mất hết ý nghĩa.
+     *
+     * Dùng ngày ISO làm phiên bản chứ không phải số đếm: đọc phát biết ngay là
+     * văn bản của thời điểm nào, không phải đi tra bảng đối chiếu.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CÒN THIẾU: VĂN BẢN ĐIỀU KHOẢN DỊCH VỤ
+     *
+     * 'terms_url' để RỖNG vì trang Điều khoản dịch vụ CHƯA TỒN TẠI.
+     * config/policy.php hiện chỉ có năm mục: bao-hanh, doi-tra, do-mat,
+     * giao-hang, bao-mat — không có 'dieu-khoan'. Ba nơi đang trỏ tới
+     * /chinh-sach#dieu-khoan (auth/index.php, _layout/footer.php,
+     * _layout/auth-footer.php) nên hiện chỉ nhảy lên đầu trang.
+     *
+     * Ô tick vì thế CHỈ nói về Chính sách bảo mật — thứ có thật và đọc được.
+     * Xin đồng ý cho một văn bản không tồn tại thì tệ hơn là không xin.
+     *
+     * Khi có nội dung: thêm mục 'dieu-khoan' vào config/policy.php, điền
+     * 'terms_url' bên dưới, và ĐỔI 'version'. auth/_signup.php tự thêm vế
+     * "Điều khoản dịch vụ" vào câu khi thấy 'terms_url' khác rỗng.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    'consent' => [
+        'version'     => '2026-08-25',
+        'privacy_url' => '/chinh-sach#bao-mat',
+        'terms_url'   => '',
+    ],
 ];

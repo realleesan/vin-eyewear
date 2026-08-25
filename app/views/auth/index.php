@@ -250,10 +250,36 @@ $showOr = $step === '';
             </button>
             <?php endif; ?>
 
+            <?php
+            /*
+             * ĐỒNG Ý NGẦM — chỉ còn đúng nghĩa ở HAI chỗ, và câu chữ phải nói
+             * đúng chỗ nào:
+             *
+             *   · màn ĐĂNG NHẬP — người đã có tài khoản thì đã tick lúc đăng ký;
+             *     bắt tick lại mỗi lần vào là thêm ma sát mà không thêm giá trị
+             *     pháp lý nào.
+             *   · nút "Tiếp tục với Google" — luồng đó không đi qua form đăng ký
+             *     nên không có ô tick nào; chính cú bấm là hành vi đồng ý.
+             *     UserModel::findOrCreateGoogle() ghi vết dựa trên câu này.
+             *
+             * Màn ĐĂNG KÝ bằng số điện thoại thì không: ở đó có ô tick thật ở
+             * chặng cuối (auth/_signup.php).
+             *
+             * Vế "Điều khoản dịch vụ" chỉ hiện khi văn bản đã tồn tại. Trước đây
+             * nó trỏ cứng tới /chinh-sach#dieu-khoan — một neo KHÔNG có trong
+             * config/policy.php, nên bấm vào chỉ nhảy lên đầu trang. Xem
+             * config/auth.php.
+             */
+            $consent  = (array) config('auth.consent', []);
+            $termsUrl = (string) ($consent['terms_url'] ?? '');
+            ?>
             <p class="authnote">
                 Bằng việc <?= $isRegister ? 'tạo tài khoản' : 'đăng nhập' ?>, bạn đồng ý với
-                <a href="/chinh-sach#dieu-khoan">Điều khoản dịch vụ</a> và
-                <a href="/chinh-sach#bao-mat">Chính sách bảo mật</a> của Vin Eyewear.
+                <?php if ($termsUrl !== ''): ?>
+                    <a href="<?= e($termsUrl) ?>">Điều khoản dịch vụ</a> và
+                <?php endif; ?>
+                <a href="<?= e((string) ($consent['privacy_url'] ?? '/chinh-sach#bao-mat')) ?>">Chính sách bảo mật</a>
+                của Vin Eyewear.
             </p>
 
             <p class="authalt">

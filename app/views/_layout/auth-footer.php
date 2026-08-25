@@ -11,8 +11,15 @@
  * Hai liên kết ở đây là ngoại lệ có lý do: đăng nhập tức là chấp nhận điều
  * khoản, nên chúng phải với tới được ngay tại chỗ.
  *
+ * "Điều khoản" chỉ hiện khi văn bản ĐÃ TỒN TẠI. Trước đây nó trỏ cứng tới
+ * /chinh-sach#dieu-khoan, mà config/policy.php không có mục nào mang neo đó —
+ * bấm vào chỉ nhảy lên đầu trang chính sách. Một liên kết pháp lý dẫn tới
+ * không đâu thì tệ hơn là không có liên kết. Xem config/auth.php.
+ *
  * Dùng qua $bareLayout trong _layout/master.php, không gọi trực tiếp.
  */
+
+$termsUrl = (string) config('auth.consent.terms_url', '');
 ?>
 
 <footer class="barefoot">
@@ -20,8 +27,10 @@
         <span>© <?= date('Y') ?> Vin Eyewear · <?= e(config('company.name')) ?></span>
 
         <div class="barefoot__links">
-            <a href="/chinh-sach#bao-mat">Chính sách bảo mật</a>
-            <a href="/chinh-sach#dieu-khoan">Điều khoản</a>
+            <a href="<?= e((string) config('auth.consent.privacy_url', '/chinh-sach#bao-mat')) ?>">Chính sách bảo mật</a>
+            <?php if ($termsUrl !== ''): ?>
+                <a href="<?= e($termsUrl) ?>">Điều khoản</a>
+            <?php endif; ?>
         </div>
     </div>
 </footer>

@@ -322,6 +322,37 @@
     color: var(--muted);
 }
 
+/* --- Ô tick "Tôi đã đọc và đồng ý…" ở màn tạo mật khẩu ---
+
+   Cùng nguyên thể với ô "Duy trì đăng nhập", khác đúng hai điểm:
+
+   · order về mặc định. `order: 2` của .authcheck tồn tại để đẩy ô tick xuống
+     DƯỚI nút gửi trên màn đăng nhập, trong khi HTML giữ nó ở trên cho đúng
+     thứ tự Tab. Ở đây không có nghịch lý đó: ô tick phải đứng ngay trước nút
+     "Đăng ký" cả trên màn hình lẫn trong mã nguồn — người ta đồng ý rồi mới
+     bấm.
+   · canh theo mép TRÊN. Câu này dài hơn một dòng; align-items:center của
+     .authcheck sẽ dìm hộp vuông xuống giữa khối chữ, trông như nó thuộc về
+     dòng thứ hai. */
+.authcheck--agree {
+    order: 0;
+    align-items: flex-start;
+}
+
+/* 2px đẩy hộp vuông xuống cho khớp đường chân chữ của dòng đầu — hộp cao 20px
+   còn dòng chữ 13.5px/1.55 nên hai tâm không tự trùng nhau. */
+.authcheck--agree .authcheck__box { margin-top: 2px; }
+
+.authcheck--agree .authcheck__text { line-height: 1.55; }
+
+.authcheck--agree a {
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.authcheck--agree a:hover { color: var(--brand-strong); }
+
 /* ============================================================
    NÚT
    ============================================================ */

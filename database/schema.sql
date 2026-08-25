@@ -90,6 +90,21 @@ CREATE TABLE `users` (
     `google_id`       VARCHAR(64)  NULL,
     `password_hash`   VARCHAR(255) NOT NULL,
     `email_verified`  TINYINT(1)   NOT NULL DEFAULT 0,
+    /*
+     * ĐỒNG Ý ĐIỀU KHOẢN — mốc bấm nút đăng ký với ô tick đã bật, và phiên bản
+     * văn bản lúc đó (config/auth.php ['consent']['version']).
+     *
+     * Lưu phiên bản chứ không phải một cờ bật/tắt: văn bản sẽ được sửa, mà cờ
+     * thì sau lần sửa đầu tiên không phân biệt nổi ai đọc bản nào.
+     *
+     * NULL = tài khoản có trước 2026-08-25, hoặc tạo bằng đường không đi qua
+     * form đăng ký. Không được điền đại ngày tạo tài khoản vào đây — đó là
+     * dựng bằng chứng cho một cú tick chưa từng xảy ra.
+     *
+     * Xem database/migrations/2026-08-25-dong-y-dieu-khoan.sql.
+     */
+    `terms_accepted_at` DATETIME   NULL,
+    `terms_version`   VARCHAR(20)  NULL,
     `last_login_at`   DATETIME     NULL,
     `created_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP

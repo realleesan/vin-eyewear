@@ -113,6 +113,7 @@ MIGRATIONS=(
     # nên 'coltype' cũng không phân biệt được trước/sau — dùng 'colnull', mốc là
     # chính tính cho-phép-rỗng của cột.
     "2026-08-25-bo-khung-gio-khoi-form-khach.sql|colnull|appointments|time_slot=YES"
+    "2026-08-25-dong-y-dieu-khoan.sql|column|users|terms_accepted_at"
 )
 
 # ---------------------------------------------------------------------------

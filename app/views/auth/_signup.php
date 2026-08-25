@@ -297,6 +297,54 @@ $backTo = static function (string $href): void { ?>
             </span>
         </label>
 
+        <?php
+        /*
+         * Ô ĐỒNG Ý — đặt ở ĐÂY chứ không ở màn nhập số điện thoại.
+         *
+         * Đây là chặng cuối, cũng là chỗ tài khoản thật sự ra đời
+         * (AuthController::signupFinish -> UserModel::register). Tick ở chặng
+         * đầu rồi bỏ dở giữa chừng thì cú tick ấy chẳng gắn với tài khoản nào;
+         * tick ngay cạnh nút tạo tài khoản mới đúng là đồng ý cho việc sắp làm.
+         *
+         * `required` là lớp thứ nhất, trình duyệt tự chặn. Lớp thật nằm ở máy
+         * chủ: signupFinish() kiểm lại trước khi gọi register(), vì tắt
+         * JavaScript hay gọi thẳng /auth/dang-ky/mat-khau đều bỏ qua được
+         * thuộc tính này.
+         *
+         * CÂU CHỮ CHỈ NÓI VỀ THỨ CÓ THẬT. Trang Điều khoản dịch vụ chưa tồn
+         * tại (xem config/auth.php), nên vế đó chỉ hiện khi 'terms_url' đã
+         * được điền. Tick "tôi đồng ý với Điều khoản" trong khi Điều khoản
+         * không ở đâu cả thì tệ hơn là không hỏi.
+         */
+        $consent  = (array) config('auth.consent', []);
+        $termsUrl = (string) ($consent['terms_url'] ?? '');
+        ?>
+        <?php /* Dùng lại đúng nguyên thể .authcheck của ô "Duy trì đăng nhập":
+                 ô thật ẩn khỏi mắt nhưng còn nguyên với bàn phím và trình đọc
+                 màn hình, hộp vuông vẽ bằng CSS, dấu tick là SVG.
+                 --agree chỉ chỉnh hai thứ: bỏ `order: 2` (thứ đó dành riêng cho
+                 bố cục màn đăng nhập) và canh chữ theo mép trên vì câu này dài
+                 hơn một dòng. */ ?>
+        <label class="authcheck authcheck--agree">
+            <input type="checkbox" name="dong_y" value="1" required
+                   <?= !empty($old['dongY']) ? 'checked' : '' ?>>
+            <span class="authcheck__box" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 12.5l5.5 5.5L20 7"></path>
+                </svg>
+            </span>
+            <span class="authcheck__text">
+                Tôi đã đọc và đồng ý với
+                <?php if ($termsUrl !== ''): ?>
+                    <a href="<?= e($termsUrl) ?>" target="_blank" rel="noopener">Điều khoản dịch vụ</a> và
+                <?php endif; ?>
+                <a href="<?= e((string) ($consent['privacy_url'] ?? '/chinh-sach#bao-mat')) ?>"
+                   target="_blank" rel="noopener">Chính sách bảo mật</a>
+                của Vin Eyewear.
+            </span>
+        </label>
+
         <button type="submit" class="authbtn authbtn--primary">Đăng ký</button>
     </form>
 

@@ -724,12 +724,34 @@ class AuthController extends BaseController
 
         $password = (string) ($_POST['password'] ?? '');
         $email    = trim((string) ($_POST['email'] ?? ''));
+        $dongY    = !empty($_POST['dong_y']);
 
         /* Ô email KHÔNG bắt buộc — xem auth/_signup.php. Giữ lại chữ vừa gõ
            ngay từ đây, để mọi lối thoát lỗi bên dưới đều hiện lại nó thay vì
            bắt khách gõ lại địa chỉ. */
         $signup['email']     = $email;
         $_SESSION['_signup'] = $signup;
+
+        /* Ô tick cũng nhớ lại, cùng lẽ với email: quay về vì mật khẩu yếu mà
+           mất luôn cú tick là bắt làm lại một việc đã làm đúng. */
+        $_SESSION['_old_auth'] = ['dongY' => $dongY];
+
+        /*
+         * ĐỒNG Ý ĐIỀU KHOẢN — kiểm ở MÁY CHỦ, không tin `required` của form.
+         *
+         * Thuộc tính `required` trên ô tick chỉ là lớp thứ nhất: tắt JavaScript
+         * không ảnh hưởng gì tới nó, nhưng gọi thẳng POST /auth/dang-ky/mat-khau
+         * thì bỏ qua được cả form. Mà đây đúng là loại ràng buộc không được
+         * phép chỉ sống ở trình duyệt — cả điểm của nó là ghi nhận một hành vi
+         * có thật của người dùng.
+         *
+         * Đứng TRƯỚC mọi phép kiểm khác vì nó rẻ nhất và vì thứ tự này khớp
+         * với thứ tự trên màn hình.
+         */
+        if (!$dongY) {
+            flash('auth_error', 'Vui lòng đồng ý với Chính sách bảo mật để tiếp tục.');
+            redirect('/auth?tab=dang-ky&buoc=mat-khau');
+        }
 
         /* BỐN QUY TẮC của bản thiết kế, kiểm ở MÁY CHỦ.
            auth.js chấm xanh từng dòng ngay khi gõ, nhưng đó chỉ là tăng cường:
@@ -748,8 +770,19 @@ class AuthController extends BaseController
            profiles.full_name cho phép NULL, và trang tài khoản cho khách điền
            sau. */
         /* Email đi vào register() để nó tự kiểm định dạng và tính duy nhất —
-           cùng một bộ luật với luồng Google, không viết lại ở đây. */
-        $result = UserModel::register($signup['phone'], $password, '', $email);
+           cùng một bộ luật với luồng Google, không viết lại ở đây.
+
+           Phiên bản văn bản cũng đi cùng, và được ghi TRONG CÙNG giao dịch tạo
+           tài khoản: không có đường nào để một tài khoản ra đời mà thiếu vết
+           đồng ý. Ghi bằng một câu UPDATE riêng sau đó thì câu ấy hỏng là còn
+           lại đúng thứ không được phép tồn tại. */
+        $result = UserModel::register(
+            $signup['phone'],
+            $password,
+            '',
+            $email,
+            (string) config('auth.consent.version', '')
+        );
 
         if (!$result['ok']) {
             flash('auth_error', $result['error']);
@@ -758,7 +791,7 @@ class AuthController extends BaseController
 
         $remember = !empty($signup['remember']);
 
-        unset($_SESSION['_signup']);
+        unset($_SESSION['_signup'], $_SESSION['_old_auth']);
         $_SESSION['_signup_done'] = true;
 
         // Đăng ký xong đăng nhập luôn — bắt khách nhập lại ngay thông tin
