@@ -22,9 +22,19 @@ return [
     'license'      => 'GPKD số 0109876543 – Sở KH&ĐT TP. Hà Nội',
     'tax_code'     => '0109876543',
 
-    'hotline'      => '1900 6868',
-    // Bỏ khoảng trắng: thuộc tính href của tel: không được chứa dấu cách
-    'hotline_href' => 'tel:19006868',
+    'hotline'      => '0366 599 711',
+    /*
+     * Dạng E.164 (+84…) chứ không phải '0366599711'.
+     *
+     * Bỏ khoảng trắng là bắt buộc — thuộc tính href của tel: không được chứa
+     * dấu cách. Còn chọn +84 thay cho số 0 đầu là để cú bấm gọi được từ MỌI
+     * nơi: máy đang chuyển vùng ở nước ngoài, hay SIM nước ngoài của khách du
+     * lịch, đều không hiểu số 0 dẫn đầu là mã Việt Nam.
+     *
+     * Số HIỂN THỊ vẫn giữ dạng 0366 599 711 vì đó là cách người Việt đọc và
+     * gõ lại số này.
+     */
+    'hotline_href' => 'tel:+84366599711',
     'email'        => 'cskh@vineyewear.vn',
 
     /*
@@ -43,19 +53,28 @@ return [
     /*
      * SỐ ZALO CỦA CỬA HÀNG — dạng ĐỌC ĐƯỢC, để in ra màn hình.
      *
-     * TÁCH KHỎI HOTLINE, và không suy ra từ nó được: 1900 6868 là đầu số tổng
-     * đài, mà đầu số 1900 thì KHÔNG đăng ký Zalo được. Trước bản này liên kết
-     * Zalo dựng thẳng từ hotline (zalo.me/19006868) nên nó dẫn vào một trang
-     * trống — hỏng ở cả thanh liên hệ nổi, trang xác nhận đơn lẫn nút "đổi/huỷ
-     * đơn" trong trang tài khoản.
+     * HÔM NAY TRÙNG HOTLINE, và vẫn phải khai riêng.
+     *
+     * Trước 2026-08-25 hotline là tổng đài 1900 6868, mà đầu số 1900 thì KHÔNG
+     * đăng ký Zalo được — nên hai số buộc phải khác nhau, và chú thích cũ ở
+     * đây lấy chính điều đó làm lý do tách. Nay cửa hàng dùng một số di động
+     * cho cả hai, lý do ấy hết hiệu lực nhưng KẾT LUẬN thì không: đây là hai
+     * KÊNH khác nhau, chỉ đang tình cờ chung một số. Đổi tổng đài mà quên rằng
+     * có chỗ nào đó suy số Zalo ra từ hotline là hỏng lặng lẽ.
+     *
+     * Đúng kiểu hỏng ấy đã từng xảy ra: liên kết Zalo có thời dựng thẳng từ
+     * hotline (zalo.me/19006868) nên nó dẫn vào một trang trống — hỏng ở cả
+     * thanh liên hệ nổi, trang xác nhận đơn lẫn nút "đổi/huỷ đơn" trong trang
+     * tài khoản.
      *
      * In số ra CHỮ chứ không chỉ để trong liên kết: bấm nút Zalo trên máy tính
      * bàn không phải lúc nào cũng mở được ứng dụng, và khi đó khách cần đọc
      * được con số để tự tìm.
      *
      * KHÁC với 'shop_phone' trong config/zalo.php: số đó là ĐỊA CHỈ NHẬN THÔNG
-     * BÁO NỘI BỘ (đơn mới, lịch hẹn), có thể là số máy trực. Hai số hôm nay
-     * trùng nhau, nhưng phải khai riêng — xem ghi chú đầu config/zalo.php.
+     * BÁO NỘI BỘ (đơn mới, lịch hẹn), có thể là số máy trực. Ba số — hotline,
+     * zalo, shop_phone — hôm nay trùng nhau cả, nhưng phải khai riêng: xem ghi
+     * chú đầu config/zalo.php.
      */
     'zalo'         => '0366 599 711',
 
@@ -126,7 +145,7 @@ return [
        Địa chỉ Zalo phải khớp số ở 'zalo' bên trên, chỉ khác cách viết (bỏ dấu
        cách). Cùng lối với cặp hotline / hotline_href. */
     'channels' => [
-        'hotline'   => 'tel:19006868',
+        'hotline'   => 'tel:+84366599711',
         'zalo'      => 'https://zalo.me/0366599711',
         'messenger' => 'https://m.me/vineyewear',
     ],

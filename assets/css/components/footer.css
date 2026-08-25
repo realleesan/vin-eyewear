@@ -190,7 +190,7 @@
 
 /* Hotline là thứ khách tìm nhanh nhất trong cột này -> đậm hơn hai dòng
    ngay trên nó. Giữ màu chữ thường chứ không tô đỏ: bản thiết kế viết cả
-   dòng "Hotline: 1900 6868" bằng một màu, chỉ email mới là liên kết. */
+   dòng "Hotline: <số>" bằng một màu, chỉ email mới là liên kết. */
 .footer-phone {
     font-weight: 600;
     color: var(--on-brand);

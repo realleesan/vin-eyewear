@@ -322,7 +322,7 @@ function currentLang(): string
  * Dịch một khoá của khung giao diện.
  *
  *     t('nav.products')            -> "Sản phẩm" / "Products"
- *     t('fab.call', $hotline)      -> "Gọi 1900 6868" / "Call 1900 6868"
+ *     t('fab.call', $hotline)      -> "Gọi 0366 599 711" / "Call 0366 599 711"
  *
  * BA TẦNG DỰ PHÒNG, cố ý không bao giờ ném lỗi: chuỗi của ngôn ngữ đang chọn
  * -> chuỗi tiếng Việt -> chính cái khoá. Một khoá gõ sai sẽ hiện ra màn hình

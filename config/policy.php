@@ -17,6 +17,17 @@
  * 'id' của mỗi nhóm cũng là neo URL: /chinh-sach#doi-tra — header và footer
  * đang trỏ tới #doi-tra, #bao-mat, #dieu-khoan, ĐỪNG đổi nếu không sửa cả
  * những chỗ đó.
+ *
+ * SỐ ĐIỆN THOẠI ĐỌC TỪ config/company.php, KHÔNG GÕ CỨNG.
+ *
+ * Ba câu trả lời bên dưới từng ghi thẳng "1900 6868". Khi cửa hàng đổi tổng
+ * đài, company.php đã sửa mà trang chính sách vẫn mời khách gọi số cũ — không
+ * có gì báo, vì đó chỉ là một chuỗi trong mảng. Chính vì thế company.php tự
+ * nhận là "NGUỒN DUY NHẤT cho hotline, email, địa chỉ".
+ *
+ * Gọi config() từ trong một file config KHÁC là an toàn: helper nạp theo từng
+ * file và có cache riêng, nên company.php chỉ được require một lần và không có
+ * vòng lặp nào — miễn là hai file không gọi chéo lẫn nhau.
  */
 
 return [
@@ -102,8 +113,11 @@ return [
                    có. */
                 [
                     'q' => 'Tôi muốn huỷ đơn hàng thì làm thế nào?',
-                    'a' => 'Bạn nhắn Zalo 0366 599 711 hoặc gọi hotline 1900 6868 cho cửa hàng, '
-                         . 'kèm mã đơn. '
+                    /* Zalo và hotline nay CÙNG một số nên chỉ đọc số MỘT lần —
+                       nhắc hai lần trong một câu thì khách tưởng là hai số khác
+                       nhau rồi dừng lại đối chiếu. */
+                    'a' => 'Bạn nhắn Zalo hoặc gọi hotline ' . config('company.hotline')
+                         . ' cho cửa hàng, kèm mã đơn. '
                          . 'Đơn chưa giao đi thì nhân viên huỷ giúp bạn ngay. Website không có '
                          . 'nút huỷ tự động vì chúng tôi tự vận chuyển và muốn xác nhận trực '
                          . 'tiếp với bạn, tránh trường hợp đơn đã lên đường mà hệ thống báo đã huỷ.',
@@ -123,7 +137,7 @@ return [
                     'q' => 'Huỷ đơn rồi thì tiền cọc có được hoàn không?',
                     'a' => 'Nếu chúng tôi chưa bắt đầu mài tròng, tiền cọc được hoàn đủ. Tròng đã '
                          . 'vào máy thì khoản cọc bù cho phần vật tư và công đã bỏ ra. Gọi '
-                         . '1900 6868 sớm nhất có thể để chúng tôi kịp dừng.',
+                         . config('company.hotline') . ' sớm nhất có thể để chúng tôi kịp dừng.',
                 ],
                 [
                     'q' => 'Điều kiện đổi mẫu trong 7 ngày?',
@@ -147,8 +161,9 @@ return [
                    thấy thì tưởng cửa hàng không xuất được. */
                 [
                     'q' => 'Tôi cần hoá đơn đỏ để hoàn thuế công ty thì làm thế nào?',
-                    'a' => 'Website chưa xuất hoá đơn điện tử tự động. Bạn nhắn Zalo 0366 599 711 '
-                         . 'hoặc gọi 1900 6868 kèm mã đơn và thông tin xuất hoá đơn (tên công ty, mã số '
+                    'a' => 'Website chưa xuất hoá đơn điện tử tự động. Bạn nhắn Zalo hoặc gọi '
+                         . config('company.hotline')
+                         . ' kèm mã đơn và thông tin xuất hoá đơn (tên công ty, mã số '
                          . 'thuế, địa chỉ), nhân viên sẽ xuất và gửi cho bạn.',
                 ],
             ],
