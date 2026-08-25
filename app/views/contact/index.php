@@ -78,37 +78,47 @@ $openStatus = static function (?string $hours): array {
 /*
  * Bốn kênh liên hệ nhanh.
  *
- * 'glyph' là một ký tự đặt trong vòng tròn, đúng như bản thiết kế. Riêng
- * hotline và email dùng icon SVG của site thay cho ☎ và ✉: hai ký tự đó bị
- * nhiều hệ điều hành vẽ thành emoji màu, phá hẳn vòng tròn đơn sắc. Zalo và
- * Messenger giữ chữ cái Z / M — chính vì thế mà bản thiết kế dùng chữ chứ
- * không dùng icon: hai kênh nhắn tin mà cùng một hình bong bóng thì không
- * phân biệt được kênh nào với kênh nào.
+ * KHÁC BẢN THIẾT KẾ: dùng LOGO GỐC của từng ứng dụng (brandIcon), không phải
+ * vòng tròn hồng chứa một ký tự.
+ *
+ * Bản thiết kế đặt chữ "Z" và "M" trong vòng tròn đơn sắc vì nếu vẽ cả hai
+ * bằng icon bong bóng chat của site thì không phân biệt được kênh nào. Logo
+ * gốc giải quyết đúng vấn đề đó mà còn tốt hơn: khách nhận ra Zalo, Messenger
+ * hay Gmail bằng màu và hình quen thuộc, không phải đọc nhãn. Đây là bốn nút
+ * dẫn khách RA NGOÀI site — dấu hiệu của nơi sắp đến quan trọng hơn việc giữ
+ * cho hàng icon đồng bộ với phần còn lại của trang.
+ *
+ * Đổi lại, các mark này không còn ăn theo màu chữ nữa: màu là một phần nhận
+ * dạng thương hiệu, không được đổi. Nên .cchan__mark--brand bỏ hẳn nền hồng
+ * và màu chữ — xem contact.css.
+ *
+ * Hotline không phải ứng dụng nên không có logo gốc; brandIcon('hotline') vẽ
+ * nút nhấc máy xanh lá quen mắt của iOS/Android.
  */
 $channels = [
     [
-        'icon'  => 'phone',
+        'brand' => 'hotline',
         'label' => 'Hotline',
         'value' => $company['hotline'],
         'href'  => $company['hotline_href'],
         'blank' => false,
     ],
     [
-        'glyph' => 'Z',
+        'brand' => 'zalo',
         'label' => 'Zalo',
         'value' => 'Nhắn tin tư vấn',
         'href'  => $company['channels']['zalo'],
         'blank' => true,
     ],
     [
-        'glyph' => 'M',
+        'brand' => 'messenger',
         'label' => 'Messenger',
         'value' => 'Chat trực tiếp',
         'href'  => $company['channels']['messenger'],
         'blank' => true,
     ],
     [
-        'icon'  => 'mail',
+        'brand' => 'gmail',
         'label' => 'Email',
         'value' => $company['email'],
         'href'  => 'mailto:' . $company['email'],
@@ -286,8 +296,8 @@ $channels = [
             <?php foreach ($channels as $ch): ?>
                 <a class="cchan" href="<?= e($ch['href']) ?>"
                    <?= $ch['blank'] ? 'target="_blank" rel="noreferrer noopener"' : '' ?>>
-                    <span class="cchan__mark" aria-hidden="true">
-                        <?= isset($ch['icon']) ? icon($ch['icon'], '', 18) : e($ch['glyph']) ?>
+                    <span class="cchan__mark cchan__mark--brand" aria-hidden="true">
+                        <?= brandIcon($ch['brand'], 'cchan__logo cchan__logo--' . $ch['brand'], 34) ?>
                     </span>
                     <span class="cchan__text">
                         <span class="cchan__label"><?= e($ch['label']) ?></span>

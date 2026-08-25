@@ -531,6 +531,29 @@
     font-weight: 600;
 }
 
+/* Ô chứa LOGO GỐC (Gmail, Zalo, Messenger, nút gọi).
+
+   Bỏ nền hồng và bỏ `color`: logo tự mang màu của nó, đặt lên một đĩa hồng
+   thì thành hai hình tròn chồng nhau — vòng hồng của site và vòng tròn/ô bo
+   góc của chính logo. Nền thẻ .cchan vốn đã là --surface-raised (trắng), đúng
+   nền mà các bộ nhận diện này được thiết kế để đứng trên.
+
+   Giữ nguyên 42px như mark chữ để hàng kênh không nhảy cột khi đổi qua lại. */
+.cchan__mark--brand {
+    background: none;
+    color: inherit;
+}
+
+/* Logo vuông (Zalo, Messenger, nút gọi) chiếm gần trọn 42px; riêng Gmail là
+   phong bì nằm ngang nên cao chưa tới một nửa khung — nếu để cùng cỡ, nó trông
+   bé hẳn so với ba cái kia. Cho nó tràn hết ô để phần nhìn cân nhau. */
+.cchan__logo { display: block; }
+
+.cchan__logo--gmail {
+    width: 42px;
+    height: 42px;
+}
+
 .cchan__text {
     display: flex;
     flex-direction: column;
