@@ -1764,6 +1764,77 @@ a.astatus__save {
     .aimgx { transition: none; }
 }
 
+/* ============================================================
+   DANH SÁCH ẢNH VỪA CHỌN, KÈM × ĐỂ BỎ TỪNG TẤM
+   (.apick — do assets/js/admin.js dựng ra)
+
+   KHÔNG có JavaScript thì khối này KHÔNG TỒN TẠI trong DOM, nên ở đây không
+   cần luật `.js` nào để ẩn đi. Lý do phải dùng JS ở đúng chỗ này — và chỉ chỗ
+   này — ghi trong admin.js: value của <input type=file> không đặt lại được
+   bằng HTML thuần.
+
+   Khác hẳn .aimgx (dấu × trên ảnh ĐÃ LƯU): cái kia là ô tick gửi kèm form và
+   chạy được khi tắt JS. Cái này thao tác trên thứ chưa từng rời khỏi trình
+   duyệt, nên không có gì để gửi.
+   ============================================================ */
+
+.apick {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.apick__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+}
+
+/* Tên file dài hơn ô thì cắt bằng dấu ba chấm, KHÔNG bẻ dòng: mỗi ảnh phải
+   chiếm đúng một dòng để mắt đếm được nhanh có bao nhiêu tấm đang chọn. */
+.apick__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--fs-caption);
+    color: var(--ink);
+}
+
+.apick__x {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-round);
+    background: var(--surface-sunken);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.apick__x:hover {
+    background: var(--danger);
+    color: #fff;
+}
+
+.apick__x:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
 /* Nhãn của ô chọn file: giữ đúng dáng nhãn trường như mọi ô khác trong form */
 .aimgs__pick { display: block; }
 
