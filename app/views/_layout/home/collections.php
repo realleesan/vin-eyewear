@@ -11,15 +11,16 @@
  * Với kính thời trang đây là kênh bán chính chứ không phải khối trang trí:
  * khách chọn theo "trông thế nào" trước khi chọn theo thông số.
  *
- * Nội dung ở config/collections.php, đường lọc dùng lại ProductController
- * (/san-pham?collection=<slug>) — không có controller hay model riêng.
+ * Nội dung ở bảng `collections` (quản lý tại /quan-tri/bo-suu-tap), đường lọc
+ * dùng lại ProductController (/san-pham?collection=<slug>).
  *
  * CẮT Ở BA: lưới khảm của bản thiết kế có đúng ba ô và ô đầu chiếm hai hàng.
- * Thêm bộ sưu tập thứ tư trong config thì nó sẽ phá vỡ hình khảm chứ không tự
- * xuống hàng cho đẹp, nên chặn ngay ở đây.
+ * Cửa hàng thêm bộ thứ tư thì nó sẽ phá vỡ hình khảm chứ không tự xuống hàng
+ * cho đẹp, nên chặn ngay ở đây — ba bộ ĐẦU theo thứ tự trưng bày. Muốn xem đủ
+ * thì có trang riêng: /bo-suu-tap.
  */
 
-$collections = array_slice(config('collections') ?? [], 0, 3);
+$collections = array_slice(CollectionModel::visible(), 0, 3);
 ?>
 
 <?php if ($collections !== []): ?>
@@ -34,12 +35,9 @@ $collections = array_slice(config('collections') ?? [], 0, 3);
         <ul class="hcoll__grid" role="list">
             <?php foreach ($collections as $i => $c): ?>
                 <?php
-                /* Ảnh thật chưa có thì dùng ảnh mẫu trong kho, để bố cục dựng
-                   được ngay. Xem assets/images/collections/README.md. */
-                $img = $c['image'] ?? '';
-                if ($img === '' || !is_file(ROOT_PATH . '/' . ltrim($img, '/'))) {
-                    $img = $c['image_sample'] ?? '';
-                }
+                /* cover() trả rỗng khi đường dẫn trỏ tới file không tồn tại,
+                   nên thẻ tự bỏ ảnh thay vì vẽ icon ảnh vỡ. */
+                $img = CollectionModel::cover($c);
 
                 $url = '/san-pham?' . http_build_query(['collection' => $c['slug']]);
                 ?>

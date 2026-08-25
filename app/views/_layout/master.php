@@ -142,6 +142,11 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
         // Trang danh sách nay dựng theo "Vin Eyewear News.dc.html" và có bộ lớp
         // riêng (.nw*); nó không còn mượn .section-h2/.eyebrow của trang chủ.
         // Trang CHI TIẾT thì vẫn theo bản Lovable nên giữ nguyên.
+        // Trang bộ sưu tập có bộ lớp riêng (.coll*), không mượn của trang chủ.
+        // KHÔNG có 'collection/detail': nút "Xem chi tiết" dẫn sang
+        // /san-pham?collection=… chứ không sang trang riêng — xem
+        // app/controllers/CollectionController.php.
+        'collection/index' => ['collection.css'],
         'event/index'    => ['event.css'],
         // Trang chi tiết nay dựng theo "Vin Eyewear Article.dc.html" và có bộ
         // lớp riêng (.art*); nó không còn mượn .section-h2 của trang chủ.

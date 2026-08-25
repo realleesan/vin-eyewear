@@ -67,7 +67,7 @@ class ProductAdminController extends AdminController
             ),
             'categories' => CategoryModel::all('sort_order ASC, name ASC'),
             // Bộ sưu tập theo mùa — nguồn là config, không phải bảng DB.
-            'collections' => (array) config('collections'),
+            'collections' => CollectionModel::allOrdered(),
             'total'      => $total,
             'page'       => $page,
             'totalPages' => (int) ceil($total / $perPage),
@@ -165,7 +165,7 @@ class ProductAdminController extends AdminController
             'gender'           => in_array($_POST['gender'] ?? '', ['male', 'female', 'unisex', 'kids'], true)
                                     ? $_POST['gender'] : null,
             'description'      => trim((string) ($_POST['description'] ?? '')) ?: null,
-            // Chỉ nhận slug có thật trong config/collections.php. Giá trị lạ về
+            // Chỉ nhận slug có thật trong bảng `collections`. Giá trị lạ về
             // NULL: một slug không khớp bộ nào thì mặt hàng vừa không hiện ở
             // trang chủ, vừa không lọc ra được bằng ?collection= — mất hút mà
             // trong admin nhìn vẫn như đã gán xong.
@@ -266,9 +266,11 @@ class ProductAdminController extends AdminController
             return null;
         }
 
-        $known = array_column((array) config('collections'), 'slug');
-
-        return in_array($slug, $known, true) ? $slug : null;
+        /* Đối chiếu với bảng `collections`, kể cả bộ đang ẩn — xem
+           CollectionModel::labels(). Chỉ nhận bộ đang hiện thì gắn sản phẩm
+           vào một bộ sắp ra mắt (còn ẩn) sẽ bị từ chối, mà đó đúng là lúc
+           người ta cần gắn. */
+        return isset(CollectionModel::labels()[$slug]) ? $slug : null;
     }
 
     public function delete(): void

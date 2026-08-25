@@ -286,7 +286,7 @@ class ProductTaxonomy
     /**
      * Bộ sưu tập THƯỜNG (theo mùa) — cột `collection`.
      *
-     * Nhãn lấy từ config/collections.php khi slug có ở đó, để cột lọc và khối
+     * Nhãn lấy từ bảng `collections` khi slug có ở đó, để cột lọc và khối
      * lookbook ngoài trang chủ gọi cùng một bộ sưu tập bằng cùng một cái tên.
      *
      * $alreadyCollab: hàng đã được nhận là collab qua tên hãng thì không xếp
@@ -300,10 +300,14 @@ class ProductTaxonomy
             return [];
         }
 
-        foreach ((array) config('collections') as $c) {
-            if (($c['slug'] ?? '') === $raw) {
-                return [$raw => (string) $c['name']];
-            }
+        /* Nhãn lấy từ CSDL (CollectionModel::labels() có cache trong request),
+           không còn từ config/collections.php. Bộ đã bị xoá khỏi bảng mà sản
+           phẩm vẫn còn gắn slug thì rơi xuống prettify() như trước — thà hiện
+           một cái tên suy từ slug còn hơn để trống ô lọc. */
+        $ten = CollectionModel::labels()[$raw] ?? null;
+
+        if ($ten !== null) {
+            return [$raw => $ten];
         }
 
         return [slugify($raw) => self::prettify($raw)];

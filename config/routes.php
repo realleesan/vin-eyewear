@@ -50,6 +50,19 @@ return [
     'san-pham/danh-gia' => 'ProductDetailController@review',   // POST
     'san-pham/{slug}'  => 'ProductDetailController@show',
 
+    /*
+     * BỘ SƯU TẬP — KHÔNG có route con /bo-suu-tap/{slug}, cố ý.
+     * Nút "Xem chi tiết" dẫn thẳng sang /san-pham?collection=<slug>; lý do
+     * đầy đủ ghi ở đầu app/controllers/CollectionController.php.
+     */
+    'bo-suu-tap'       => 'CollectionController@index',
+
+    /*
+     * SỰ KIỆN vẫn chạy đủ (danh sách, chi tiết, CRUD quản trị, nút "Đặt lịch
+     * tham dự" ở /dat-lich?su-kien=…), chỉ KHÔNG còn ô trên thanh điều hướng
+     * chính — chỗ đó nay là Bộ sưu tập. Link đã chia sẻ và link trong bài vẫn
+     * mở được bình thường.
+     */
     'su-kien'          => 'EventController@index',
     'su-kien/{slug}'   => 'EventDetailController@show',
 
@@ -231,6 +244,10 @@ return [
     'quan-tri/danh-muc'     => 'CategoryAdminController@index',
     'quan-tri/danh-muc/luu' => 'CategoryAdminController@save',     // POST
     'quan-tri/danh-muc/xoa' => 'CategoryAdminController@delete',   // POST
+
+    'quan-tri/bo-suu-tap'     => 'CollectionAdminController@index',
+    'quan-tri/bo-suu-tap/luu' => 'CollectionAdminController@save',      // POST
+    'quan-tri/bo-suu-tap/xoa' => 'CollectionAdminController@delete',    // POST
 
     'quan-tri/su-kien'      => 'EventAdminController@index',
     'quan-tri/su-kien/luu'  => 'EventAdminController@save',        // POST

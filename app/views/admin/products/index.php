@@ -157,13 +157,13 @@ if ($ed !== null) {
                 </select>
             </div>
 
-            <?php /* Bộ sưu tập là nội dung THEO MÙA khai ở config/collections.php
-                     (khối S09 trang chủ), không phải một bảng trong DB — nên đây
-                     là ô CHỌN chứ không phải ô gõ tự do: gõ sai một ký tự thì
-                     mặt hàng rơi ra ngoài mọi bộ sưu tập mà không có gì báo.
+            <?php /* Ô CHỌN chứ không phải ô gõ tự do: gõ sai một ký tự thì mặt
+                     hàng rơi ra ngoài mọi bộ sưu tập mà không có gì báo.
 
-                     Trước đây cột này chỉ gán được bằng câu UPDATE trong seed;
-                     seed sản phẩm đã bỏ nên không còn đường nào khác ngoài ô này. */ ?>
+                     Danh sách lấy từ bảng `collections` (quản lý ở
+                     /quan-tri/bo-suu-tap), KỂ CẢ bộ đang ẩn — gắn hàng vào một
+                     bộ sắp ra mắt là việc làm trước khi bộ đó được hiện, nên
+                     lọc bỏ bộ ẩn ở đây là chặn đúng lúc người ta cần dùng. */ ?>
             <div class="field">
                 <label for="collection">Bộ sưu tập</label>
                 <select id="collection" name="collection">

@@ -68,7 +68,21 @@ $navItems = [
     // trang giới thiệu. Đứng cạnh thứ nó phục vụ.
     ['label' => t('nav.tryon'),  'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
     ['label' => t('nav.about'),  'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
-    ['label' => t('nav.events'), 'url' => '/su-kien',    'match' => ['su-kien']],
+    /*
+     * BỘ SƯU TẬP THAY CHỖ SỰ KIỆN — 2026-08-25.
+     *
+     * Sự kiện KHÔNG bị bỏ: /su-kien, /su-kien/{slug}, CRUD quản trị và nút
+     * "Đặt lịch tham dự" (/dat-lich?su-kien=…) đều còn nguyên. Nó chỉ mất ô
+     * trên thanh điều hướng chính, vì cửa hàng muốn chỗ đó dành cho hàng đang
+     * bán chứ không phải cho tin tức.
+     *
+     * Vì thế 'match' vẫn KHÔNG chứa 'su-kien': đang đọc một bài sự kiện thì
+     * không ô nào trên thanh nav sáng lên, đúng như các trang khác không có
+     * chỗ trên nav (xem $extraLinks bên dưới). Nhét 'su-kien' vào đây sẽ làm
+     * sáng "Bộ sưu tập" khi người ta đang xem một bài viết — chỉ vì hai thứ
+     * từng dùng chung một ô.
+     */
+    ['label' => t('nav.collections'), 'url' => '/bo-suu-tap', 'match' => ['bo-suu-tap']],
     ['label' => t('nav.contact'),'url' => '/lien-he',    'match' => ['lien-he']],
 ];
 
@@ -82,6 +96,8 @@ $navItems = [
  */
 $mobileExtra = [
     ['label' => t('nav.booking'), 'url' => '/dat-lich',   'match' => ['dat-lich']],
+    // Vào đây khi Bộ sưu tập lấy chỗ của nó trên thanh nav — xem $navItems.
+    ['label' => t('nav.events'),  'url' => '/su-kien',    'match' => ['su-kien']],
     ['label' => t('nav.policy'),  'url' => '/chinh-sach', 'match' => ['chinh-sach']],
 ];
 

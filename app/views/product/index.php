@@ -295,24 +295,25 @@ $hasFacetFilter = ($activeCount - ($filters['category'] !== '' ? 1 : 0)) > 0;
 $collabOptions = $groups['collab'];
 
 /*
- * Bộ sưu tập THEO MÙA chỉ vẽ khi đang được lọc.
+ * BỘ SƯU TẬP NAY LUÔN HIỆN — 2026-08-25.
  *
- * Cột lọc chốt ở BẢY nhóm: Dáng gọng · Chất liệu · Thương hiệu · Bộ sưu tập
- * hợp tác · Tính năng tròng · Khoảng giá · Đối tượng. Bộ sưu tập theo mùa
- * (Nắng hè, Nhẹ cả ngày…) không nằm trong đó — nó là cách BÀY HÀNG ngoài
- * trang chủ, không phải một thuộc tính của gọng kính như sáu nhóm kia, và
- * chen vào giữa danh sách làm loãng đúng chỗ người dùng đang dò thương hiệu.
+ * Trước đây nhóm này chỉ vẽ khi URL đã có ?collection=, với lý lẽ: cột lọc
+ * chốt ở BẢY nhóm theo bản thiết kế, còn bộ sưu tập theo mùa là cách BÀY HÀNG
+ * ngoài trang chủ chứ không phải một thuộc tính của gọng kính, chen vào giữa
+ * thì làm loãng đúng chỗ người ta đang dò thương hiệu.
  *
- * Nhưng KHÔNG vẽ gì cả cũng sai: khối lookbook ngoài trang chủ trỏ thẳng tới
- * /san-pham?collection=nang-he (xem config/collections.php), và ?collection=
- * vẫn lọc thật. Giấu hẳn thì người bấm từ trang chủ sang rơi vào một lưới bị
- * cắt còn vài món mà không chỗ nào nói vì sao, cũng không có cách nào tắt trừ
- * khi sửa tay thanh địa chỉ.
+ * Cửa hàng quyết định ngược lại, và lý do đủ mạnh: bộ sưu tập nay có TRANG
+ * RIÊNG (/bo-suu-tap) và một ô trên thanh điều hướng chính. Từ lúc nó là một
+ * lối duyệt hàng chính thức thì việc người ta muốn bật/tắt nó ngay trong cột
+ * lọc là chuyện đương nhiên — giấu đi thành ra bắt họ quay ra trang kia rồi
+ * bấm vào lại.
  *
- * Nên: vào thẳng /san-pham thì đúng bảy nhóm; tới từ lookbook thì nhóm này
- * hiện ra với đúng bộ sưu tập đang bật, bấm lại là bỏ.
+ * $groups['collection'] chỉ chứa những bộ CÓ HÀNG trong kết quả hiện tại, nên
+ * không cần lọc thêm: bộ rỗng tự vắng mặt thay vì thành một dòng bấm vào ra
+ * lưới trắng. Bộ đang ẩn trong khu quản trị cũng không lọt vào đây chừng nào
+ * không còn sản phẩm nào gắn nó.
  */
-$collectionOptions = $filters['collection'] === [] ? [] : $groups['collection'];
+$collectionOptions = $groups['collection'];
 ?>
 
 <?php
@@ -383,10 +384,8 @@ partial('_layout/page-head', [
                 <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
                 <?php $checkGroup('collab', 'Bộ sưu tập hợp tác', $collabOptions); ?>
 
-                <?php /* Rỗng ở lượt xem thường — chỉ hiện khi tới từ khối
-                         lookbook ngoài trang chủ (xem $collectionOptions).
-                         Đứng ở đây chứ không dưới cùng để "Đối tượng" luôn là
-                         nhóm chốt cột lọc, kể cả trong lượt xem đó. */ ?>
+                <?php /* Đứng ở đây chứ không dưới cùng để "Đối tượng" luôn là
+                         nhóm chốt cột lọc. */ ?>
                 <?php $checkGroup('collection', 'Bộ sưu tập', $collectionOptions); ?>
 
                 <?php $chipGroup('lens', 'Tính năng tròng', $groups['lens']); ?>

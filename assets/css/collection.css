@@ -1,0 +1,158 @@
+/* ============================================================
+   TRANG BỘ SƯU TẬP (/bo-suu-tap)
+
+   Ba–năm thẻ lớn xếp dọc, ảnh và chữ so le trái/phải. Không dùng lưới thẻ
+   nhỏ như trang danh mục: ở đây mỗi bộ cần đủ chỗ cho một đoạn giới thiệu
+   thật, mà thẻ lưới thì chỉ chứa nổi một dòng.
+
+   Màu và cỡ chữ lấy từ token trong layout.css — xem quy ước ở CLAUDE.md.
+   ============================================================ */
+
+.colls {
+    max-width: var(--container, 1600px);
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+}
+
+.colls__list {
+    display: flex;
+    flex-direction: column;
+    gap: 72px;
+}
+
+.colls__empty {
+    margin: 0;
+    padding: 48px 0;
+    text-align: center;
+    font-size: 15px;
+    color: var(--muted);
+}
+
+.colls__empty a {
+    font-weight: 600;
+    color: var(--brand);
+}
+
+/* --- Một bộ sưu tập --- */
+
+.coll {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 48px;
+}
+
+/* So le: đảo THỨ TỰ CỘT bằng CSS, không đảo trong HTML — thứ tự đọc của trình
+   đọc màn hình phải giữ nguyên ảnh-rồi-chữ ở mọi thẻ. */
+.coll--flip .coll__media { order: 2; }
+
+.coll__img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+    border-radius: var(--radius);
+}
+
+/* Ô giữ chỗ khi bộ chưa có ảnh bìa. Giữ đúng aspect-ratio của ảnh thật để
+   bố cục không nhảy khi ảnh được thêm vào sau. */
+.coll__img--empty {
+    display: grid;
+    place-items: center;
+    background: var(--brand-subtle);
+    color: var(--brand);
+}
+
+.coll__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.coll__when {
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.coll__name {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 38px;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: normal;
+    color: var(--ink);
+}
+
+.coll__tagline {
+    margin: 0;
+    font-size: 17px;
+    line-height: 1.5;
+    color: var(--ink);
+}
+
+.coll__intro {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--muted);
+}
+
+.coll__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    padding: 13px 26px;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--on-brand);
+    text-decoration: none;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.coll__cta:hover {
+    background: var(--brand-strong);
+    transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .coll__cta:hover { transform: none; }
+}
+
+/* ============================================================
+   MÀN HÌNH HẸP — xếp dọc, bỏ so le
+
+   Dưới 900px hai cột thành một, nên .coll--flip không còn nghĩa: đảo `order`
+   lúc này chỉ đẩy ảnh xuống DƯỚI chữ ở các thẻ chẵn, làm nhịp đọc gãy.
+   ============================================================ */
+
+@media (max-width: 900px) {
+    .colls { padding: 40px 20px 72px; }
+
+    .colls__list { gap: 56px; }
+
+    .coll {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    .coll--flip .coll__media { order: 0; }
+
+    .coll__name { font-size: 30px; }
+}
+
+@media (max-width: 560px) {
+    .colls { padding-inline: 16px; }
+
+    .coll__name    { font-size: 26px; }
+    .coll__tagline { font-size: 15.5px; }
+}

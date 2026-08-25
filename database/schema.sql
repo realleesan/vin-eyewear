@@ -515,6 +515,40 @@ CREATE TABLE `product_variants` (
         REFERENCES `products` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Bộ sưu tập theo mùa.
+--
+-- `slug` là thứ nối bảng này với `products.collection` và với mọi link
+-- /san-pham?collection=<slug> đã phát ra ngoài. ĐỪNG đổi slug của một bộ đã
+-- phát hành — đổi là làm chết cả hai.
+--
+-- Trước 2026-08-25 dữ liệu này nằm trong config/collections.php. Chuyển sang
+-- CSDL để nhân viên tự thêm/sửa/ẩn trong khu quản trị thay vì phải sửa mã và
+-- deploy mỗi lần cửa hàng ra bộ mới.
+--
+-- `tagline` (một dòng, cho thẻ trang chủ và mega menu) tách khỏi `intro`
+-- (đoạn dài, cho trang /bo-suu-tap): hai chỗ cần độ dài rất khác nhau.
+--
+-- `sort_order` vì sắp theo `launched_at` không đủ — hai bộ có thể ra cùng
+-- ngày, hoặc cửa hàng muốn đẩy một bộ cũ lên đầu vì còn hàng.
+CREATE TABLE `collections` (
+    `id`          CHAR(36)     NOT NULL DEFAULT (UUID()),
+    `slug`        VARCHAR(64)  NOT NULL,
+    `name`        VARCHAR(160) NOT NULL,
+    `tagline`     VARCHAR(255) NULL,
+    `intro`       TEXT         NULL,
+    `cover_image` VARCHAR(500) NULL,
+    `launched_at` DATE         NULL,
+    `sort_order`  SMALLINT     NOT NULL DEFAULT 0,
+    `is_visible`  TINYINT(1)   NOT NULL DEFAULT 1,
+    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                               ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_collections_slug` (`slug`),
+    KEY `idx_collections_visible` (`is_visible`, `sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 -- ============================================================================
 -- 3. SỰ KIỆN & CƠ SỞ
 -- ============================================================================

@@ -51,6 +51,10 @@ $products = array_map(
  */
 $services = array_values(array_filter([
     ['label' => t('nav.about'),       'url' => '/gioi-thieu'],
+    /* Sự kiện MẤT ô trên thanh nav từ 2026-08-25 (chỗ đó nay là Bộ sưu tập)
+       nhưng tính năng vẫn chạy đủ. Không thêm vào đây thì nó thành trang không
+       có LỐI VÀO NÀO — chỉ mở được nếu ai đó còn giữ link. */
+    ['label' => t('nav.events'),      'url' => '/su-kien'],
     ['label' => t('footer.exam'),     'url' => '/dat-lich'],
     config('ar.nav_enabled')
         ? ['label' => t('nav.tryon'), 'url' => '/thu-ar']

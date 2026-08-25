@@ -118,6 +118,7 @@ MIGRATIONS=(
     # ghi chặn chạy lại, mà bản thân file đã tự kiểm trước khi drop nên chạy
     # lại cũng chỉ in ra một dòng "đã bỏ, bỏ qua".
     "2026-08-25-bo-han-cot-khung-gio.sql|data||"
+    "2026-08-25-bang-bo-suu-tap.sql|table|collections|"
 )
 
 # ---------------------------------------------------------------------------

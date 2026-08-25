@@ -87,21 +87,20 @@ $filterUrl = static fn (string $slug, array $search): string =>
  * Thẻ ảnh ở cột cuối — ô "mega-featured" của bản thiết kế.
  *
  * Bản thiết kế ghi cứng "Bộ sưu tập 2026 / 10+ mẫu mới vừa về". Ở đây lấy bộ
- * sưu tập ĐẦU TIÊN trong config/collections.php: cùng bố cục, nhưng tên và câu
+ * sưu tập ĐẦU TIÊN theo thứ tự trưng bày: cùng bố cục, nhưng tên và câu
  * mô tả là thật, và liên kết ra đúng bộ lọc của nó. Treo "10+ mẫu" lên một cửa
  * hàng đang có 6 mặt hàng là nói sai ngay trên trang.
  *
  * Không có bộ sưu tập nào thì cả thẻ biến mất và lưới còn lại các cột chữ —
  * một khung ảnh trống trông như trang hỏng.
  */
-$feature = (config('collections') ?? [])[0] ?? null;
+/* Bộ đầu tiên theo thứ tự trưng bày của cửa hàng (sort_order), lấy từ CSDL
+   thay cho config/collections.php. CollectionModel::cover() đã tự kiểm file có
+   thật hay không, nên ở đây không cần is_file() nữa. */
+$feature = CollectionModel::visible()[0] ?? null;
 
 if ($feature !== null) {
-    $featureImage = $feature['image'] ?? '';
-
-    if ($featureImage === '' || !is_file(ROOT_PATH . '/' . ltrim($featureImage, '/'))) {
-        $featureImage = $feature['image_sample'] ?? '';
-    }
+    $featureImage = CollectionModel::cover($feature);
 
     $featureImage = designImage('mega-featured', $featureImage);
 }
