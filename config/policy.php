@@ -203,6 +203,85 @@ return [
                 ],
             ],
         ],
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * ĐIỀU KHOẢN DỊCH VỤ — BẢN NHÁP, CHƯA QUA PHÁP CHẾ
+         *
+         * Toàn bộ câu trả lời dưới đây MÔ TẢ ĐÚNG những gì hệ thống đang làm,
+         * và mọi con số đều lấy từ mã nguồn chứ không bịa:
+         *
+         *   · cọc 30%            config/app.php ['deposit_rate']
+         *   · phí ship 30.000đ   config/app.php ['shipping_fee']
+         *   · miễn ship từ 1tr   config/app.php ['free_shipping_threshold']
+         *   · đổi/huỷ lịch hẹn   BookingModel::changeBlocker()
+         *   · xác minh SĐT       AuthController, chặng 'ma'
+         *   · giữ hồ sơ 5 năm    chính mục 'bao-mat' ngay bên dưới
+         *
+         * CỐ Ý KHÔNG CÓ ba loại điều khoản mà một văn bản pháp lý đầy đủ
+         * thường có: giới hạn trách nhiệm, luật áp dụng và cơ quan giải quyết
+         * tranh chấp, quyền sở hữu trí tuệ. Chúng là CAM KẾT PHÁP LÝ, không
+         * phải mô tả tính năng — viết chúng ra từ việc đọc mã nguồn là bịa
+         * ràng buộc thay cho doanh nghiệp. Pháp chế bổ sung.
+         *
+         * Vì vậy mục này CHƯA được nối vào ô "Tôi đã đọc và đồng ý" ở màn đăng
+         * ký: config/auth.php ['consent']['terms_url'] vẫn để rỗng. Bật lên là
+         * một dòng, nhưng nên bật SAU khi có người duyệt nội dung — xin người
+         * dùng đồng ý với một văn bản chưa ai duyệt thì cái tick mất ý nghĩa.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        [
+            'id'    => 'dieu-khoan',
+            'short' => 'Điều khoản dịch vụ',
+            'label' => 'Điều khoản dịch vụ',
+            'icon'  => 'handshake',
+            'intro' => 'Những gì bạn và Vin Eyewear cùng thống nhất khi bạn tạo tài khoản, đặt hàng hoặc đặt lịch đo mắt.',
+            'items' => [
+                [
+                    'q' => 'Tạo tài khoản cần những gì?',
+                    'a' => 'Một số điện thoại còn dùng được — chúng tôi gửi mã xác minh tới số đó trước khi tài khoản được tạo. Email không bắt buộc, nhưng nên có để đăng nhập được cả bằng email và lấy lại mật khẩu khi bạn đổi số. Bạn cũng có thể đăng nhập bằng tài khoản Google.',
+                ],
+                [
+                    'q' => 'Tôi chịu trách nhiệm gì với tài khoản của mình?',
+                    'a' => 'Giữ kín mật khẩu và mã xác minh. Mọi đơn hàng, lịch hẹn đặt từ tài khoản đang đăng nhập được xem là do bạn thực hiện. Nếu nghi ngờ người khác truy cập được, hãy đổi mật khẩu và gọi hotline ngay.',
+                ],
+                [
+                    'q' => 'Thông tin bạn cung cấp phải chính xác tới mức nào?',
+                    'a' => 'Họ tên, số điện thoại và địa chỉ nhận hàng cần đúng để chúng tôi giao được hàng và gọi xác nhận. Với đơn có cắt tròng theo độ, số đo bạn khai là căn cứ để mài tròng — sai số đo thì tròng đã mài không dùng lại được cho ai khác, nên hãy kiểm tra kỹ hoặc để kỹ thuật viên đo tại cửa hàng.',
+                ],
+                [
+                    'q' => 'Đặt hàng trên web đã là hợp đồng chưa?',
+                    'a' => 'Chưa. Đơn bạn gửi là đề nghị mua; giao dịch được xác lập khi chúng tôi gọi điện xác nhận đơn. Trong khoảng đó, nếu sản phẩm hết hàng hoặc giá hiển thị sai, chúng tôi sẽ báo bạn và hoàn lại toàn bộ khoản đã thanh toán.',
+                ],
+                [
+                    'q' => 'Khi nào phải đặt cọc?',
+                    'a' => 'Đơn có cắt tròng theo độ phải cọc trước 30% tổng đơn, áp dụng cho cả COD lẫn chuyển khoản. Lý do: tròng được mài riêng theo số đo của bạn, không bán lại cho người khác được. Đơn chỉ mua gọng thì không cọc đồng nào.',
+                ],
+                [
+                    'q' => 'Giá và phí hiển thị đã gồm những gì?',
+                    'a' => 'Giá sản phẩm hiển thị bằng đồng Việt Nam. Phí vận chuyển 30.000đ với đơn dưới 1.000.000đ và miễn phí từ 1.000.000đ, được cộng vào trước khi bạn xác nhận đặt hàng — tổng cuối cùng luôn hiện đầy đủ ở bước thanh toán.',
+                ],
+                [
+                    'q' => 'Mã giảm giá dùng thế nào?',
+                    'a' => 'Mỗi mã có điều kiện riêng về giá trị đơn tối thiểu và hạn sử dụng, hiện ngay khi bạn nhập mã. Mã đã hết hạn hoặc đơn chưa đạt mức tối thiểu sẽ bị từ chối kèm lý do. Không cộng dồn nhiều mã trên cùng một đơn.',
+                ],
+                [
+                    'q' => 'Đặt lịch đo mắt có ràng buộc gì không?',
+                    'a' => 'Không mất phí và không giữ chỗ theo giờ: bạn chọn ngày, cửa hàng gọi lại để thống nhất giờ cụ thể. Bạn tự đổi ngày hoặc huỷ trong trang tài khoản cho tới trước ngày hẹn; sang tới ngày hẹn thì gọi hotline để nhân viên còn kịp xếp lại lịch.',
+                ],
+                [
+                    'q' => 'Bảo hành và đổi trả theo điều khoản nào?',
+                    'a' => 'Theo đúng hai mục "Bảo hành & Sửa chữa" và "Đổi trả & Hoàn tiền" trên chính trang này. Chúng là một phần của điều khoản dịch vụ, không phải cam kết riêng lẻ.',
+                ],
+                [
+                    'q' => 'Dữ liệu của tôi được xử lý ra sao?',
+                    'a' => 'Theo mục "Bảo mật thông tin" ngay bên dưới. Riêng hồ sơ khúc xạ là dữ liệu sức khoẻ, chỉ nhân viên chuyên môn của Vin Eyewear truy cập được để phục vụ việc đo mắt và cắt tròng cho bạn; hồ sơ được giữ 5 năm trừ khi bạn yêu cầu xoá sớm hơn.',
+                ],
+                [
+                    'q' => 'Điều khoản thay đổi thì tôi biết bằng cách nào?',
+                    'a' => 'Bản đang áp dụng luôn là bản hiển thị tại trang này, và mỗi bản có một số phiên bản riêng. Khi bạn tạo tài khoản, chúng tôi ghi lại bạn đã đồng ý với phiên bản nào — nên nếu về sau có tranh luận, cả hai bên đối chiếu được đúng văn bản tại thời điểm đó.',
+                ],
+            ],
+        ],
         [
             'id'    => 'bao-mat',
             'short' => 'Bảo mật thông tin',
