@@ -23,16 +23,66 @@
 -- ra. NULL đọc đúng là "không biết"; điền đại ngày tạo tài khoản là dựng bằng
 -- chứng cho một cú tick chưa từng xảy ra.
 --
+-- ─────────────────────────────────────────────────────────────────────────────
+-- VÌ SAO PHẢI VÒNG VO THẾ NÀY THAY VÌ MỘT CÂU `ALTER TABLE ... ADD COLUMN`
+--
+-- CLAUDE.md yêu cầu migration chạy lại nhiều lần không hỏng. `ADD COLUMN` trần
+-- thì lần thứ hai đổ "Duplicate column name" và DỪNG — nghĩa là mọi câu lệnh
+-- sau nó trong cùng file cũng không chạy. Nguy hiểm khi file có nhiều bước.
+--
+-- MySQL 8 KHÔNG có `ADD COLUMN IF NOT EXISTS` (MariaDB thì có, nhưng dự án
+-- chạy trên cả hai nên không dùng được cú pháp riêng của một bên).
+--
+-- Đã cân nhắc và BỎ phương án stored procedure: nó cần `DELIMITER`, mà hosting
+-- InfinityFree không có SSH nên file này được dán tay vào phpMyAdmin — chỗ mà
+-- `DELIMITER` hay vướng nhất.
+--
+-- Còn lại cách này: hỏi information_schema, rồi PREPARE một câu lệnh dựng sẵn.
+-- Chạy trên cả MySQL 8 lẫn MariaDB, cả mysql CLI lẫn phpMyAdmin, không cần
+-- DELIMITER. Chạy lần thứ hai thì @sql thành một câu SELECT vô hại.
+-- ─────────────────────────────────────────────────────────────────────────────
+--
 -- Dùng file này cho cơ sở dữ liệu ĐANG CÓ DỮ LIỆU.
 -- KHÔNG nạp lại database/schema.sql: file đó bắt đầu bằng DROP TABLE và sẽ
 -- xoá sạch đơn hàng, lịch hẹn, tài khoản khách.
---
--- Chạy hai lần thì MySQL báo "Duplicate column name 'terms_accepted_at'". Đó
--- là báo an toàn, không hỏng dữ liệu.
 -- ============================================================================
 
-ALTER TABLE `users`
-    -- Mốc bấm nút đăng ký với ô đồng ý đã tick.
-    ADD COLUMN `terms_accepted_at` DATETIME    NULL DEFAULT NULL AFTER `email_verified`,
-    -- Phiên bản văn bản đã đồng ý, lấy từ config/auth.php ['consent']['version'].
-    ADD COLUMN `terms_version`     VARCHAR(20) NULL DEFAULT NULL AFTER `terms_accepted_at`;
+-- --------------------------------------------------------------------------
+-- 1. Mốc bấm nút đăng ký với ô đồng ý đã tick
+-- --------------------------------------------------------------------------
+SET @co_cot := (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME   = 'users'
+       AND COLUMN_NAME  = 'terms_accepted_at'
+);
+
+SET @sql := IF(@co_cot = 0,
+    'ALTER TABLE `users`
+        ADD COLUMN `terms_accepted_at` DATETIME NULL DEFAULT NULL AFTER `email_verified`',
+    'SELECT ''users.terms_accepted_at da co, bo qua'' AS ghi_chu'
+);
+
+PREPARE cau_lenh FROM @sql;
+EXECUTE cau_lenh;
+DEALLOCATE PREPARE cau_lenh;
+
+-- --------------------------------------------------------------------------
+-- 2. Phiên bản văn bản đã đồng ý — config/auth.php ['consent']['version']
+-- --------------------------------------------------------------------------
+SET @co_cot := (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME   = 'users'
+       AND COLUMN_NAME  = 'terms_version'
+);
+
+SET @sql := IF(@co_cot = 0,
+    'ALTER TABLE `users`
+        ADD COLUMN `terms_version` VARCHAR(20) NULL DEFAULT NULL AFTER `terms_accepted_at`',
+    'SELECT ''users.terms_version da co, bo qua'' AS ghi_chu'
+);
+
+PREPARE cau_lenh FROM @sql;
+EXECUTE cau_lenh;
+DEALLOCATE PREPARE cau_lenh;
