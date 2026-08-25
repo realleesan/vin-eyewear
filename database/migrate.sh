@@ -190,6 +190,16 @@ sentinel_exists() {
             n="$(mysql -N -B -e "SELECT COUNT(*) FROM information_schema.COLUMNS
                  WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='${table}'
                    AND COLUMN_NAME='${col}' AND COLUMN_TYPE='${want}';")" ;;
+        colnull)
+            # name có dạng "ten_cot=YES" hoặc "ten_cot=NO" — mốc là cột đó có cho
+            # phép NULL hay không. Dành cho migration chỉ NỚI/SIẾT ràng buộc NULL:
+            # 'column' thì cột vốn đã có nên luôn báo "đã áp", còn 'coltype' thì
+            # COLUMN_TYPE không đổi (varchar(20) trước và sau vẫn thế) nên cũng
+            # không phân biệt được.
+            local ncol="${name%%=*}" nwant="${name#*=}"
+            n="$(mysql -N -B -e "SELECT COUNT(*) FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='${table}'
+                   AND COLUMN_NAME='${ncol}' AND IS_NULLABLE='${nwant}';")" ;;
         data)
             # File đổi dữ liệu: không có mốc nào để tra. Luôn trả "chưa có" để
             # quyết định hoàn toàn thuộc về sổ ghi. An toàn vì các file loại này
