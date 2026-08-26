@@ -1863,3 +1863,329 @@ a.astatus__save {
    bán hàng nên không sửa được ở đó; admin.css thì chỉ khu quản trị mới nạp,
    nên đây là chỗ duy nhất ghi đè được mà không đụng tới site. */
 .cfm__act { border-radius: var(--a-btn-radius); }
+
+/* ============================================================================
+   MODULE KHÁCH HÀNG — tiền tố `acus` (admin · customer)
+   /quan-tri/khach-hang và trang chi tiết năm tab.
+
+   Nằm trong admin.css chứ không thành file riêng: khung quản trị chỉ nạp
+   layout.css + admin.css + confirm.css cho MỌI trang, nó không có bảng
+   $pageStyles như khung của site bán hàng. Thêm một cơ chế nạp CSS theo trang
+   chỉ để tách ~200 dòng này ra là đắt hơn cái thu được.
+   ============================================================================ */
+
+/* Cột số: căn phải để mắt so được hàng nào lớn hơn, và khoá bề ngang để cột
+   tiền không co giãn theo độ dài tên khách ở cột đầu. */
+.acus__num-col { text-align: right; white-space: nowrap; }
+
+/* Lối ra khỏi trang chi tiết. Đứng trên tiêu đề vì mắt tìm lối ra ở góc trên
+   bên trái, không tìm trong cụm nút hành động bên phải. */
+.acus__back {
+    margin: 0 0 10px;
+    font-size: 13px;
+}
+
+.acus__back a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.acus__back a:hover { color: var(--brand); }
+
+/* Con số ngày/giờ trong dải .astats — nhỏ hơn hai ô tiền và số đơn bên cạnh.
+   Một chuỗi "26/08/2026" đặt ở cỡ chữ của "12.500.000 đ" sẽ tràn ô trên màn
+   hẹp, mà nó cũng không phải con số người ta liếc tìm trước. */
+.astat__value--nho { font-size: 20px; }
+
+/* Hai cột nội dung. Sập thành một cột ở màn hẹp — bảng quản trị vẫn được mở
+   trên máy tính bảng ở quầy. */
+.acus__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 16px;
+    align-items: start;
+}
+
+/* ── Bảng dữ kiện tài khoản (dl/dt/dd) ────────────────────────────────────
+   Grid hai cột thay vì float: nhãn và giá trị luôn thẳng hàng dù nhãn dài
+   ngắn khác nhau, và không cần clearfix. */
+.acus__facts {
+    margin: 0;
+    padding: 0 18px 18px;
+    display: grid;
+    gap: 10px;
+}
+
+.acus__facts > div {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 10px;
+    align-items: baseline;
+}
+
+.acus__facts dt {
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+.acus__facts dd { margin: 0; font-size: 14px; }
+
+@media (max-width: 520px) {
+    /* Dưới ngưỡng này hai cột 150px + phần còn lại làm giá trị bị bóp thành
+       hai ba chữ một dòng. Xếp chồng thì nhãn nằm trên, giá trị nằm dưới. */
+    .acus__facts > div { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* ── Cụm hành động trên tài khoản ─────────────────────────────────────── */
+.acus__acts {
+    padding: 0 18px 18px;
+    border-top: 1px solid var(--a-row-line);
+    padding-top: 16px;
+    display: grid;
+    gap: 14px;
+}
+
+.acus__act-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Ô lý do khoá. Viền cảnh báo để nó không lẫn với các ô nhập bình thường —
+   đây là ô duy nhất trên trang mà gõ xong bấm nút là một người mất quyền
+   đăng nhập. */
+.acus__lock {
+    display: grid;
+    gap: 6px;
+    padding: 14px;
+    border: 1px solid var(--pill-danger-bg);
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--danger) 4%, transparent);
+}
+
+.acus__lock label {
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+
+.acus__lock input[type="text"] {
+    padding: 9px 11px;
+    border: 1px solid var(--a-row-line);
+    border-radius: var(--a-btn-radius);
+    background: var(--surface-raised);
+    font: inherit;
+    color: var(--ink);
+}
+
+.acus__lock input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
+}
+
+.acus__lock button { justify-self: start; }
+
+/* ── Sổ địa chỉ ───────────────────────────────────────────────────────── */
+.acus__addrs {
+    margin: 0;
+    padding: 0 18px 18px;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+}
+
+.acus__addr {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border: 1px solid var(--a-row-line);
+    border-radius: var(--radius-sm);
+}
+
+/* Thẻ mặc định được viền nhấn: đây là địa chỉ trang thanh toán sẽ điền sẵn,
+   nên nó phải nhận ra được mà không cần đọc chữ. */
+.acus__addr.is-default { border-color: var(--brand); }
+
+.acus__addr-body { min-width: 0; }
+.acus__addr-name { margin: 0 0 4px; font-weight: 600; }
+.acus__addr-line { margin: 0; font-size: 13px; color: var(--muted); }
+
+.acus__addr-acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    font-size: 13px;
+}
+
+.acus__addr-acts form { margin: 0; }
+
+/* Nút trông như đường dẫn. Phải là <button> vì nó gửi một form POST — dùng
+   thẻ <a> cho thao tác đổi dữ liệu thì một thẻ <img> trên trang bất kỳ cũng
+   kích hoạt được nó. */
+.acus__linkbtn {
+    border: 0;
+    padding: 0;
+    background: none;
+    font: inherit;
+    color: var(--brand);
+    cursor: pointer;
+}
+
+.acus__linkbtn:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ── Bảng đơn thuốc kính ──────────────────────────────────────────────── */
+
+/* Rộng hơn .atable--full thường (860px): mười hai cột số đo không bóp lại
+   được nữa mà vẫn đọc ra. Cho nó cuộn ngang trong .atable-wrap thay vì xuống
+   dòng — một hàng số đo bị gãy đôi là hàng không so được với hàng dưới. */
+.acus__rx { min-width: 1080px; }
+
+/* Hàng tiêu đề thứ hai (SPH · CYL · AXIS) nhỏ và nhạt hơn hàng gộp phía trên,
+   để hai hàng đọc ra là "nhóm rồi tới cột con" chứ không phải hai nhóm. */
+.acus__rx-sub th {
+    padding-top: 0;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--muted);
+}
+
+/* Nền so le giữa hai mắt. KHÔNG dùng màu để phân biệt phải/trái — chữ "Mắt
+   phải (OD)" ở tiêu đề mới là thứ nói điều đó; nền chỉ giúp mắt không trượt
+   từ cột của mắt này sang cột của mắt kia giữa chừng một hàng. */
+.acus__rx-od { background: color-mix(in srgb, var(--brand) 3%, transparent); }
+.acus__rx-os { background: color-mix(in srgb, var(--ink) 2%, transparent); }
+
+/* Bản ghi mới nhất — cái đang được dùng để mài tròng. */
+.acus__rx tbody tr.is-latest td { font-weight: 600; }
+
+.acus__delta {
+    display: inline-flex;
+    gap: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.acus__delta-eye { white-space: nowrap; }
+
+/* Độ TĂNG (số âm hơn) tô đỏ. Giữ nguyên hay giảm thì không tô: chỉ tô cái
+   đáng nói tới, tô hết thì không còn gì nổi bật. */
+.acus__delta-eye.is-worse { color: var(--danger); font-weight: 700; }
+
+/* Nhóm bốn ô của một mắt trong form nhập. <fieldset> thật chứ không phải div:
+   trình đọc màn hình đọc <legend> trước mỗi ô, nên người dùng nghe được
+   "Mắt phải, SPH" thay vì bốn ô SPH/CYL/AXIS/Thị lực lặp lại hai lần không
+   biết của mắt nào. */
+.acus__eye {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--a-row-line);
+    border-radius: var(--radius-sm);
+}
+
+.acus__eye legend {
+    padding: 0 6px;
+    font-size: var(--fs-label);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--brand);
+}
+
+.acus__eye-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+}
+
+/* ── Dòng thời gian hoạt động (liên hệ · đánh giá) ────────────────────── */
+.acus__feed {
+    margin: 0;
+    padding: 0 18px 18px;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+}
+
+.acus__feed > li {
+    padding-left: 12px;
+    border-left: 2px solid var(--a-row-line);
+}
+
+.acus__feed-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin: 0 0 4px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.acus__feed-body { margin: 0; font-size: 14px; line-height: 1.6; }
+
+/* ── Ghi chú nội bộ ───────────────────────────────────────────────────── */
+.acus__notes {
+    margin: 0;
+    padding: 0 18px 18px;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+}
+
+.acus__note {
+    padding: 12px 14px;
+    border: 1px solid var(--a-row-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+}
+
+.acus__note-meta { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
+.acus__note-body { margin: 0; font-size: 14px; line-height: 1.65; }
+
+.acus__note-acts {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin: 8px 0 0;
+    font-size: 13px;
+}
+
+.acus__note-acts form { margin: 0; }
+
+/* Ô lý do xoá đứng cùng dòng với nút. Ngắn — nó không bắt buộc, nên không nên
+   chiếm chỗ ngang với ô lý do khoá phía trên (ô đó thì bắt buộc). */
+.acus__del {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.acus__del input[type="text"] {
+    width: 220px;
+    padding: 7px 10px;
+    border: 1px solid var(--a-row-line);
+    border-radius: var(--a-btn-radius);
+    background: var(--surface-raised);
+    font: inherit;
+    font-size: 13px;
+    color: var(--ink);
+}
+
+.acus__del input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
+}

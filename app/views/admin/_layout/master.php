@@ -43,6 +43,15 @@ $navGroups = [
         ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',  'icon' => 'clock',
          'badge' => $pendingAppointments],
         ['url' => '/quan-tri/lien-he',  'label' => 'Liên hệ',   'icon' => 'chat', 'badge' => $pendingContacts],
+        /* KHÔNG ĐEO HUY HIỆU — đúng luật đã ghi ở khối trên: huy hiệu chỉ dành
+           cho hàng chờ có NGƯỜI ĐANG ĐỢI ở đầu bên kia. Có bao nhiêu khách
+           hàng cũng không ai phải làm gì cả.
+
+           Nằm ở "Vận hành" chứ không ở "Hệ thống" cạnh "Tài khoản nội bộ":
+           tra hồ sơ khách là việc làm mỗi ngày ở quầy, còn cấp tài khoản cho
+           nhân viên thì vài tháng một lần. Nhóm theo TẦN SUẤT DÙNG, không theo
+           việc cả hai đều là "danh sách người". */
+        ['url' => '/quan-tri/khach-hang', 'label' => 'Khách hàng', 'icon' => 'user'],
     ]],
     ['label' => 'Sản phẩm', 'items' => [
         ['url' => '/quan-tri/san-pham',  'label' => 'Sản phẩm',  'icon' => 'box'],

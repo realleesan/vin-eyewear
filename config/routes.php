@@ -258,6 +258,44 @@ return [
     'quan-tri/gia-trong'     => 'LensPriceAdminController@index',
     'quan-tri/gia-trong/luu' => 'LensPriceAdminController@save',   // POST
 
+    /*
+     * KHÁCH HÀNG
+     *
+     * Trang chi tiết là MỘT route có tham số, và năm tab đi qua ?tab= chứ
+     * không phải năm route con. Tab dựng bằng địa chỉ (không phải JavaScript)
+     * nên sau mỗi POST còn quay về đúng chỗ vừa đứng — xem CustomerAdminController::TABS.
+     *
+     * MƯỜI BA ĐƯỜNG POST ĐỀU ĐẶT TRƯỚC 'khach-hang/{id}'. Router khớp chính
+     * xác trước rồi mới tới route có tham số nên thứ tự khai không đổi kết
+     * quả, nhưng đọc theo thứ tự này thì thấy ngay cái nào là trang, cái nào
+     * là thao tác — và người thêm route thứ mười bốn sẽ đặt nó đúng chỗ.
+     */
+    'quan-tri/khach-hang'                  => 'CustomerAdminController@index',
+    'quan-tri/khach-hang/xuat'             => 'CustomerAdminController@export',
+
+    'quan-tri/khach-hang/ho-so'            => 'CustomerAdminController@saveProfile',       // POST
+    'quan-tri/khach-hang/khoa'             => 'CustomerAdminController@lock',              // POST
+    'quan-tri/khach-hang/mo-khoa'          => 'CustomerAdminController@unlock',            // POST
+    'quan-tri/khach-hang/xoa'              => 'CustomerAdminController@softDelete',        // POST
+    'quan-tri/khach-hang/khoi-phuc'        => 'CustomerAdminController@restore',           // POST
+    'quan-tri/khach-hang/dat-lai'          => 'CustomerAdminController@sendReset',         // POST
+
+    'quan-tri/khach-hang/dia-chi/luu'      => 'CustomerAdminController@saveAddress',       // POST
+    'quan-tri/khach-hang/dia-chi/xoa'      => 'CustomerAdminController@deleteAddress',     // POST
+    'quan-tri/khach-hang/dia-chi/mac-dinh' => 'CustomerAdminController@defaultAddress',    // POST
+
+    'quan-tri/khach-hang/don-thuoc/luu'    => 'CustomerAdminController@savePrescription',  // POST
+    'quan-tri/khach-hang/don-thuoc/xoa'    => 'CustomerAdminController@deletePrescription',// POST
+
+    'quan-tri/khach-hang/ghi-chu/luu'      => 'CustomerAdminController@saveNote',          // POST
+    'quan-tri/khach-hang/ghi-chu/xoa'      => 'CustomerAdminController@deleteNote',        // POST
+
+    // Đặt SAU mọi đường trên. Id là UUID nên trên thực tế không đụng nhau,
+    // nhưng đừng dựa vào đó: thêm 'khach-hang/thong-ke' mà quên đặt lên trên
+    // thì nó vẫn chạy nhờ luật khớp chính xác — chỉ là người đọc file không
+    // còn thấy được luật đó nữa.
+    'quan-tri/khach-hang/{id}'             => 'CustomerAdminController@show',
+
     'quan-tri/co-so'        => 'StoreAdminController@index',
     'quan-tri/co-so/luu'    => 'StoreAdminController@save',        // POST
     'quan-tri/co-so/xoa'    => 'StoreAdminController@delete',      // POST

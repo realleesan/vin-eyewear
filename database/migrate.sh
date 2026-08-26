@@ -123,6 +123,9 @@ MIGRATIONS=(
     # để làm mốc. Kiểu 'data' — DROP TABLE IF EXISTS chạy lại bao nhiêu lần
     # cũng ra cùng một kết quả.
     "2026-08-26-bo-su-kien.sql|data||"
+    # Module Khách hàng. Mốc là bảng `customer_prescriptions` — bảng đầu tiên
+    # file đó tạo ra, và không có gì khác tạo ra nó.
+    "2026-08-26-module-khach-hang.sql|table|customer_prescriptions|"
 )
 
 # ---------------------------------------------------------------------------

@@ -36,6 +36,11 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- Ba bảng của module Khách hàng (mục 7) — xoá trước vì chúng trỏ sang
+-- `users`, `appointments` và `stores`.
+DROP TABLE IF EXISTS `customer_audit_logs`;
+DROP TABLE IF EXISTS `customer_notes`;
+DROP TABLE IF EXISTS `customer_prescriptions`;
 DROP TABLE IF EXISTS `password_resets`;
 DROP TABLE IF EXISTS `remember_tokens`;
 DROP TABLE IF EXISTS `newsletter_subscribers`;
@@ -90,6 +95,63 @@ CREATE TABLE `users` (
     `password_hash`   VARCHAR(255) NOT NULL,
     `email_verified`  TINYINT(1)   NOT NULL DEFAULT 0,
     /*
+     * TRẠNG THÁI TÀI KHOẢN — 'active' | 'locked'.
+     *
+     * Đặt ở `users` chứ không ở `profiles` vì khoá tài khoản phải chặn được
+     * ĐĂNG NHẬP, mà đường đăng nhập đọc bảng này (UserModel::findByLogin,
+     * ::attempt, ::findOrCreateGoogle, RememberModel::consume). Để ở
+     * `profiles` thì nút khoá chỉ đổi một con chữ trên màn hình quản trị còn
+     * người bị khoá vẫn vào được — tệ hơn cả không có nút, vì nhân viên tin
+     * là đã khoá rồi.
+     *
+     * VARCHAR chứ không ENUM: thêm giá trị sau này không phải ALTER TABLE
+     * khoá bảng. Cùng lẽ với `orders`.`payment_status`.
+     */
+    `status`          VARCHAR(16)  NOT NULL DEFAULT 'active',
+    /*
+     * Lý do khoá — CHỈ ĐỌC TRONG KHU QUẢN TRỊ, không bao giờ hiện cho khách.
+     * Khách bị khoá chỉ thấy đúng câu "Tài khoản đã bị khoá. Vui lòng liên hệ
+     * cửa hàng."; đọc lý do cho họ nghe là việc của người trả lời điện thoại,
+     * ở đó còn cân nhắc được nên nói gì.
+     *
+     * Bắt buộc phải có giá trị khi khoá, nhưng ép ở tầng PHP chứ không bằng
+     * CHECK constraint: MySQL 8 và MariaDB xử lý CHECK khác nhau mà dự án
+     * chạy trên cả hai.
+     */
+    `locked_reason`   VARCHAR(255) NULL,
+    `locked_at`       DATETIME     NULL,
+    `locked_by`       CHAR(36)     NULL,
+    /*
+     * XOÁ MỀM. NULL = còn dùng.
+     *
+     * Tách riêng khỏi `status` chứ không gộp thành status = 'deleted': khoá và
+     * xoá chồng lên nhau chứ không loại trừ nhau — một tài khoản bị khoá vì
+     * gian lận rồi mới xoá thì vẫn phải đọc được lý do khoá. Cột này còn mang
+     * theo MỐC THỜI GIAN, thứ một giá trị 'deleted' không có.
+     *
+     * Vì sao không xoá cứng: `orders`.`user_id` là ON DELETE SET NULL, nên xoá
+     * cứng một khách là làm đơn hàng của họ mất chủ vĩnh viễn.
+     */
+    `deleted_at`      DATETIME     NULL,
+    /*
+     * Vì sao xoá. Không bắt buộc, khác hẳn `locked_reason` ở trên.
+     *
+     * CỘT NÀY CÓ TRƯỚC MODULE KHÁCH HÀNG. Nó do migration
+     * 2026-08-22-xoa-tai-khoan.sql tạo ra — bản "khách tự yêu cầu xoá tài
+     * khoản", commit 0628170, bị revert bốn phút sau bằng 7e14d0d vì cả site
+     * trắng trang. Revert gỡ được mã nguồn nhưng KHÔNG gỡ được cột đã tạo
+     * trong cơ sở dữ liệu đang chạy, nên từ đó tới 26/08/2026 nó nằm lại đây
+     * không ai đọc, không ai ghi, và không có trong file này.
+     *
+     * Module Khách hàng nhận nó về dùng đúng việc nó được đặt tên: lý do một
+     * tài khoản bị xoá. Khai lại ở đây để máy cài mới khớp với máy đang chạy —
+     * lệch lược đồ giữa hai bên là thứ chỉ lộ ra lúc deploy.
+     *
+     * VARCHAR(500) chứ không 255 như `locked_reason`: giữ đúng độ dài cột cũ.
+     * Nới hay siết một cột đang có dữ liệu là việc riêng, không lẫn vào đây.
+     */
+    `deletion_reason` VARCHAR(500) NULL,
+    /*
      * ĐỒNG Ý ĐIỀU KHOẢN — mốc bấm nút đăng ký với ô tick đã bật, và phiên bản
      * văn bản lúc đó (config/auth.php ['consent']['version']).
      *
@@ -110,7 +172,12 @@ CREATE TABLE `users` (
                                    ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_users_email` (`email`),
-    UNIQUE KEY `uq_users_google` (`google_id`)
+    UNIQUE KEY `uq_users_google` (`google_id`),
+    -- Trang danh sách khách lọc theo cả hai cột này ở MỌI lượt tải — kể cả
+    -- lượt không lọc gì, vì luôn phải loại tài khoản đã xoá mềm.
+    KEY `idx_users_status` (`status`, `deleted_at`),
+    CONSTRAINT `fk_users_locked_by` FOREIGN KEY (`locked_by`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Hồ sơ khách hàng — quan hệ 1-1 với users, tách riêng đúng như bản Supabase.
@@ -913,6 +980,19 @@ CREATE TABLE `newsletter_subscribers` (
 
 CREATE TABLE `contact_requests` (
     `id`         CHAR(36)     NOT NULL DEFAULT (UUID()),
+    /*
+     * Tài khoản đã gửi yêu cầu, NULL nếu khách chưa đăng nhập.
+     *
+     * Ba bảng hoạt động khác của khách (`orders`, `appointments`, `reviews`)
+     * đều đã có cột này; thiếu ở đây thì tab "Hoạt động" của module Khách hàng
+     * khuyết mất một mục. So bằng số điện thoại lúc đọc KHÔNG thay thế được:
+     * cột `phone` ngay dưới lưu nguyên văn khách gõ, còn `profiles`.`phone` đã
+     * qua normalizePhone().
+     *
+     * SET NULL chứ không CASCADE: xoá tài khoản không được xoá yêu cầu liên
+     * hệ, vì module Liên hệ có hàng đợi riêng và nhân viên bên đó đang xử lý.
+     */
+    `user_id`    CHAR(36)     NULL,
     `full_name`  VARCHAR(255) NOT NULL,
     `phone`      VARCHAR(32)  NOT NULL,
     `email`      VARCHAR(255) NULL,
@@ -920,11 +1000,174 @@ CREATE TABLE `contact_requests` (
     `status`     VARCHAR(32)  NOT NULL DEFAULT 'new',
     `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    KEY `idx_contact_requests_status` (`status`, `created_at`)
+    KEY `idx_contact_requests_status` (`status`, `created_at`),
+    KEY `idx_contact_user` (`user_id`, `created_at`),
+    CONSTRAINT `fk_contact_user` FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================================
--- 7. DỮ LIỆU KHỞI TẠO
+-- 7. KHÁCH HÀNG — DỮ LIỆU DO KHU QUẢN TRỊ SỞ HỮU
+--
+-- Ba bảng của module /quan-tri/khach-hang. Đặt ở CUỐI file vì cả ba đều trỏ
+-- khoá ngoại sang `users`, `appointments` và `stores` — mà FOREIGN_KEY_CHECKS
+-- đã bật lại từ đầu file, nên bảng được trỏ tới phải tồn tại trước.
+--
+-- Xem thêm database/migrations/2026-08-26-module-khach-hang.sql — file đó dành
+-- cho cơ sở dữ liệu đang chạy, file này dành cho máy cài mới.
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- LỊCH SỬ ĐƠN THUỐC KÍNH
+--
+-- VÌ SAO CÓ BẢNG NÀY KHI ĐÃ CÓ `prescriptions`
+--
+-- `prescriptions` có khoá chính là `user_id` — MỘT dòng cho MỘT khách, lần đo
+-- sau ghi đè lên lần đo trước. Nó đúng với việc nó sinh ra để làm: trang tài
+-- khoản của khách chỉ hỏi "độ của tôi bây giờ là bao nhiêu".
+--
+-- Nhưng cửa hàng kính cần đọc được ĐƯỜNG ĐI của độ cận theo năm tháng — tăng
+-- bao nhiêu diop một năm là câu quyết định việc tư vấn tròng. Ghi đè là xoá
+-- mất chính dữ liệu đó.
+--
+-- ĐÃ CÂN NHẮC VÀ BỎ phương án đổi thẳng `prescriptions` thành bảng nhiều dòng:
+-- bốn chỗ đang đọc nó đều nằm trên luồng mua hàng, và luồng đó đã gãy đúng một
+-- lần vì bảng này (2026-08-22, xem chú thích trong CartController). Không đem
+-- luồng mua hàng ra đổi lược đồ để lấy một tính năng của khu quản trị.
+--
+-- Nên: bảng NÀY là nguồn chân lý, còn `prescriptions` tụt xuống thành BẢN SAO
+-- của bản ghi mới nhất — đúng nếp `addresses` -> `profiles`.`address` đã có.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `customer_prescriptions` (
+    `id`             CHAR(36)      NOT NULL DEFAULT (UUID()),
+    `user_id`        CHAR(36)      NOT NULL,
+    -- Toa khách mang từ ngoài vào thì NULL. SET NULL: xoá một lịch hẹn không
+    -- được kéo theo số đo đã ghi trong lần hẹn đó.
+    `appointment_id` CHAR(36)      NULL,
+    /*
+     * NGUỒN SỐ ĐO — CỘT BẮT BUỘC, KHÔNG PHẢI CỘT TRANG TRÍ.
+     *
+     *   'store'    kỹ thuật viên của cửa hàng đo
+     *   'customer' khách tự khai (trang tài khoản, hoặc bước 'so-do' khi mua)
+     *   'external' toa của bệnh viện / phòng khám ngoài
+     *
+     * CLAUDE.md điểm A1: hai nguồn này KHÔNG ĐƯỢC TRỘN. Số khách tự gõ và số
+     * máy đo ra không có cùng độ tin cậy, mà nhìn vào bảng số thì chúng giống
+     * hệt nhau. Thiếu cột này thì sáu tháng sau không ai phân biệt nổi, và
+     * người mài tròng sẽ tin nhầm một con số khách nhớ mang máng.
+     */
+    `source`         VARCHAR(16)   NOT NULL DEFAULT 'store',
+    -- Cùng kiểu với bảng `prescriptions` để hai bên chép qua lại không mất số lẻ.
+    `od_sph`         DECIMAL(4,2)  NULL,
+    `od_cyl`         DECIMAL(4,2)  NULL,
+    `od_axis`        SMALLINT      NULL,
+    `od_va`          VARCHAR(16)   NULL,
+    `os_sph`         DECIMAL(4,2)  NULL,
+    `os_cyl`         DECIMAL(4,2)  NULL,
+    `os_axis`        SMALLINT      NULL,
+    `os_va`          VARCHAR(16)   NULL,
+    `pd`             DECIMAL(4,1)  NULL,
+    /*
+     * NGÀY ĐO, BẮT BUỘC — khác created_at (lúc gõ vào máy).
+     *
+     * Cả module dựng trên trục thời gian này: sắp xếp lịch sử, tính "độ tăng
+     * bao nhiêu sau bao lâu", và huy hiệu còn hiệu lực. Cho NULL thì một dòng
+     * không có ngày sẽ rơi ra khỏi mọi phép so sánh mà không ai thấy.
+     */
+    `measured_at`    DATE          NOT NULL,
+    `store_id`       CHAR(36)      NULL,
+    `note`           VARCHAR(255)  NULL,
+    -- Nhân viên đã nhập. SET NULL: người nghỉ việc bị xoá tài khoản thì số đo
+    -- vẫn phải còn.
+    `created_by`     CHAR(36)      NULL,
+    `created_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                   ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    -- Cột đầu user_id, cột hai ngày đo giảm dần: trang chi tiết luôn hỏi đúng
+    -- một câu "số đo của người này, mới nhất trước".
+    KEY `idx_cpres_user_date` (`user_id`, `measured_at` DESC),
+    KEY `idx_cpres_appointment` (`appointment_id`),
+    KEY `idx_cpres_store` (`store_id`),
+    KEY `idx_cpres_author` (`created_by`),
+    CONSTRAINT `fk_cpres_user` FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_cpres_appointment` FOREIGN KEY (`appointment_id`)
+        REFERENCES `appointments` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_cpres_store` FOREIGN KEY (`store_id`)
+        REFERENCES `stores` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_cpres_author` FOREIGN KEY (`created_by`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- GHI CHÚ NỘI BỘ VỀ KHÁCH
+--
+-- Khách KHÔNG BAO GIỜ đọc được bảng này. Không có route nào bên site bán hàng
+-- chạm tới nó, và cũng đừng thêm.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `customer_notes` (
+    `id`          CHAR(36)     NOT NULL DEFAULT (UUID()),
+    `user_id`     CHAR(36)     NOT NULL,
+    `body`        TEXT         NOT NULL,
+    `author_id`   CHAR(36)     NULL,
+    -- CHÉP LẠI tên người viết tại thời điểm viết, y như `order_items`.`product_name`.
+    -- Nhân viên nghỉ việc và bị xoá tài khoản thì author_id thành NULL, nhưng
+    -- ghi chú vẫn phải trả lời được "ai đã viết câu này".
+    `author_name` VARCHAR(255) NULL,
+    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                               ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_cnotes_user` (`user_id`, `created_at`),
+    KEY `idx_cnotes_author` (`author_id`),
+    CONSTRAINT `fk_cnotes_user` FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_cnotes_author` FOREIGN KEY (`author_id`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- VẾT THAO TÁC TRÊN DỮ LIỆU KHÁCH
+--
+-- CLAUDE.md mục 5: dữ liệu đơn thuốc kính là dữ liệu y tế, MỌI thao tác đọc và
+-- ghi đều phải có vết. Bảng này là chỗ chứa vết đó, cộng các thao tác nặng tay
+-- khác trên tài khoản khách (khoá, xoá mềm, phát liên kết đổi mật khẩu, xuất
+-- danh sách).
+--
+-- Hai khoá ngoại đều SET NULL chứ không CASCADE: xoá một tài khoản không được
+-- xoá bằng chứng về những gì đã làm với tài khoản đó. Tên người thao tác vì
+-- thế phải chép lại vào `actor_name`.
+--
+-- KHÔNG lưu nội dung số đo vào `detail`. Bảng vết mà chứa chính dữ liệu y tế
+-- thì nó thành bản sao thứ hai của thứ đang cần bảo vệ, và bản sao đó không
+-- được ai canh.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `customer_audit_logs` (
+    `id`         CHAR(36)     NOT NULL DEFAULT (UUID()),
+    `user_id`    CHAR(36)     NULL,
+    `actor_id`   CHAR(36)     NULL,
+    `actor_name` VARCHAR(255) NULL,
+    -- 'rx.read' | 'rx.create' | 'rx.update' | 'rx.delete' | 'profile.update'
+    -- 'address.save' | 'address.delete' | 'note.save' | 'note.delete'
+    -- 'lock' | 'unlock' | 'soft_delete' | 'restore' | 'reset_email' | 'export'
+    `action`     VARCHAR(32)  NOT NULL,
+    `detail`     VARCHAR(255) NULL,
+    -- 45 ký tự: đủ cho IPv6 dạng dài nhất.
+    `ip`         VARCHAR(45)  NULL,
+    `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_calog_user` (`user_id`, `created_at`),
+    KEY `idx_calog_action` (`action`, `created_at`),
+    KEY `idx_calog_actor` (`actor_id`, `created_at`),
+    CONSTRAINT `fk_calog_user` FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_calog_actor` FOREIGN KEY (`actor_id`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- 8. DỮ LIỆU KHỞI TẠO
 --
 -- Chỉ KHUNG để trang chạy được ngay sau khi cài: cơ sở (form đặt lịch và trang
 -- Liên hệ cần có) và danh mục (bộ lọc và điều hướng cần có).

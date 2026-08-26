@@ -73,6 +73,11 @@ const ICONS = [
     'percent'     => '<path d="M5 19L19 5"/><circle cx="7.5" cy="7.5" r="2.2"/><circle cx="16.5" cy="16.5" r="2.2"/>',
     'star'        => '<path d="M12 3l2.7 5.5 6 .9-4.3 4.3 1 6-5.4-2.9-5.4 2.9 1-6L3.3 9.4l6-.9L12 3z"/>',
     'users'       => '<circle cx="9" cy="8" r="3.5"/><path d="M3 20a6.2 6.2 0 0 1 12 0M15.5 5a3.5 3.5 0 0 1 0 6.6M16.5 14.6a6 6 0 0 1 4.5 5.4"/>',
+    /* MỘT người, khác hẳn 'users' (nhóm) ngay trên. Hai mục trong thanh bên
+       quản trị nói về người: "Khách hàng" và "Tài khoản nội bộ". Đeo chung một
+       icon thì nhìn lướt không phân biệt được, mà đó đúng là hai danh sách
+       không được nhầm với nhau. */
+    'user'        => '<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>',
     'key'         => '<circle cx="8" cy="15" r="4"/><path d="M11.2 11.8L19 4M16 5.5L18.5 8M13.5 8L15.5 10"/>',
 
     'badge-check' =>'<path d="M12 3l2.2 1.8 2.8-.2.6 2.8 2.3 1.7-1.3 2.5 1.3 2.5-2.3 1.7-.6 2.8-2.8-.2L12 21l-2.2-1.8-2.8.2-.6-2.8L4.1 15l1.3-2.5L4.1 10l2.3-1.7.6-2.8 2.8.2z"/><path d="M9 12l2 2 4-4"/>',

@@ -55,13 +55,35 @@ class ContactModel extends BaseModel
             return ['ok' => false, 'error' => 'Nội dung phải từ 5 đến 1000 ký tự.'];
         }
 
+        $ban = [
+            'full_name' => $fullName,
+            'phone'     => $phone,
+            'email'     => $email ?: null,
+            'message'   => $message,
+        ];
+
+        /* GHI LẠI AI ĐANG ĐĂNG NHẬP LÚC GỬI.
+
+           Module Khách hàng cần biết một khách đã gửi những yêu cầu liên hệ
+           nào (tab "Hoạt động"). Nối ngược bằng số điện thoại lúc đọc thì
+           không đáng tin: cột `phone` ngay trên lưu NGUYÊN VĂN khách gõ, còn
+           `profiles`.`phone` đã qua normalizePhone() — "0912 345 678" và
+           "+84912345678" là hai chuỗi khác nhau với MySQL.
+
+           NULL khi khách chưa đăng nhập, và đó là phần lớn: form liên hệ mở
+           cho mọi người, không bắt đăng nhập. Migration 2026-08-26 nối ngược
+           những dòng cũ bằng chín chữ số cuối, nhưng từ đây thì ghi thẳng.
+
+           Hỏi cột có tồn tại không trước khi ghi: máy chưa chạy migration mà
+           nhét khoá lạ vào INSERT là lỗi 1054 — và nó rơi đúng vào form liên
+           hệ của khách, một trong vài đường khách nói chuyện được với cửa
+           hàng. Thà thiếu một liên kết còn hơn mất cả cái form. */
+        if (Database::columnExists('contact_requests', 'user_id')) {
+            $ban['user_id'] = AuthMiddleware::customerId();
+        }
+
         try {
-            static::insert([
-                'full_name' => $fullName,
-                'phone'     => $phone,
-                'email'     => $email ?: null,
-                'message'   => $message,
-            ]);
+            static::insert($ban);
         } catch (Throwable $e) {
             error_log('[ContactModel] Không lưu được liên hệ: ' . $e->getMessage());
 
