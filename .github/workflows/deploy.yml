@@ -82,6 +82,28 @@ jobs:
           dangerous-clean-slate: false
           timeout: 60000 # Tăng thời gian chờ response lên 60 giây để tránh đứt kết nối
 
+          # KHÔNG ĐẨY BỐN FILE CÔNG CỤ LÊN HOSTING — thêm 2026-08-27.
+          #
+          # install.php · kiem-tra-db.php · kiem-tra-sepay.php ·
+          # chan-doan-quan-tri.php đều là công cụ dùng MỘT LẦN lúc cài đặt hoặc
+          # lúc chẩn đoán, và cả bốn đều tự dặn "XOÁ NGAY SAU KHI XEM XONG" ở
+          # đầu file. Nhưng lời dặn ấy chỉ nhắc được người đọc nó.
+          #
+          # install.php TẠO ĐƯỢC TÀI KHOẢN QUẢN TRỊ. Cả bốn mở bằng cùng một
+          # INSTALL_TOKEN trong .env — một chuỗi đi qua thanh địa chỉ trình
+          # duyệt, nên nó nằm trong lịch sử duyệt web, trong access log của
+          # hosting, và trong bất kỳ ảnh chụp màn hình nào.
+          #
+          # Ngày 2026-08-26 cả bốn lên hosting cùng lúc: lần đẩy toàn bộ (đổi
+          # state-name sang v3) không phân biệt file nào là công cụ. Xoá tay
+          # thì lần đẩy toàn bộ SAU lại đưa chúng lên. Chặn ở đây là chặn được
+          # cả lớp vấn đề, không phải một lần.
+          #
+          # Vẫn GIỮ trong repo: chúng cần cho lần cài trên máy mới, và cho
+          # chính việc chẩn đoán ở máy phát triển. Chỉ là không lên máy chủ
+          # thật nữa. Cần chạy trên hosting thì tải tay lên rồi xoá tay đi —
+          # một thao tác có chủ ý, không phải thứ tự động xảy ra.
+
           # KHÔNG ĐẨY relay/ LÊN HOSTING.
           #
           # Thư mục đó là mã Node.js của cầu nối SePay, chạy trên Render chứ
@@ -98,3 +120,7 @@ jobs:
             **/node_modules/**
             relay/**
             render.yaml
+            install.php
+            kiem-tra-db.php
+            kiem-tra-sepay.php
+            chan-doan-quan-tri.php
