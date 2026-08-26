@@ -552,9 +552,11 @@ class AuthController extends BaseController
         return [
             'phone'   => $signup['phone'],
             'display' => Otp::displayPhone($signup['phone']),
-            // Chữ khách vừa gõ ở ô email, giữ lại khi màn tạo mật khẩu phải
-            // hiện lại vì lỗi. Nằm trong session chứ không phải trên URL —
-            // cùng lý do với số điện thoại, xem khối chú thích đầu mục này.
+            // Chữ khách vừa gõ ở ô họ tên và ô email, giữ lại khi màn tạo
+            // mật khẩu phải hiện lại vì lỗi. Nằm trong session chứ không phải
+            // trên URL — cùng lý do với số điện thoại, xem khối chú thích đầu
+            // mục này.
+            'name'    => $signup['name'] ?? '',
             'email'   => $signup['email'] ?? '',
             'method'  => $signup['method'] ?? 'zalo',
             'sentVia' => Otp::sentVia($signup['method'] ?? 'zalo'),
@@ -722,13 +724,21 @@ class AuthController extends BaseController
             redirect('/auth?tab=dang-ky');
         }
 
+        $fullName = trim((string) ($_POST['full_name'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
+        $confirm  = (string) ($_POST['password_confirm'] ?? '');
         $email    = trim((string) ($_POST['email'] ?? ''));
         $dongY    = !empty($_POST['dong_y']);
 
         /* Ô email KHÔNG bắt buộc — xem auth/_signup.php. Giữ lại chữ vừa gõ
            ngay từ đây, để mọi lối thoát lỗi bên dưới đều hiện lại nó thay vì
-           bắt khách gõ lại địa chỉ. */
+           bắt khách gõ lại địa chỉ.
+
+           Họ tên đi cùng, cùng một lẽ: quay về vì hai ô mật khẩu lệch nhau mà
+           mất luôn cái tên vừa gõ là bắt làm lại một việc đã làm đúng. Hai ô
+           mật khẩu thì KHÔNG giữ lại — không cất mật khẩu vào phiên, và ô mật
+           khẩu điền sẵn thì khách không biết mình đang gửi lại chuỗi nào. */
+        $signup['name']      = $fullName;
         $signup['email']     = $email;
         $_SESSION['_signup'] = $signup;
 
@@ -745,11 +755,45 @@ class AuthController extends BaseController
          * phép chỉ sống ở trình duyệt — cả điểm của nó là ghi nhận một hành vi
          * có thật của người dùng.
          *
-         * Đứng TRƯỚC mọi phép kiểm khác vì nó rẻ nhất và vì thứ tự này khớp
-         * với thứ tự trên màn hình.
+         * Đứng TRƯỚC mọi phép kiểm khác vì nó rẻ nhất, và vì đây là cái cổng
+         * pháp lý: không có nó thì mọi thứ gõ vào bên trên đều không được phép
+         * đem đi làm gì. (Trên màn hình ô tick lại nằm cuối cùng — thứ tự kiểm
+         * ở đây cố tình không chạy theo thứ tự nhìn thấy.)
          */
         if (!$dongY) {
             flash('auth_error', 'Vui lòng đồng ý với Chính sách bảo mật để tiếp tục.');
+            redirect('/auth?tab=dang-ky&buoc=mat-khau');
+        }
+
+        /* HỌ TÊN BẮT BUỘC — `required` trên ô chỉ là lớp thứ nhất, gọi thẳng
+           POST /auth/dang-ky/mat-khau là bỏ qua được.
+
+           Mốc hai ký tự lấy đúng của form đặt lịch (BookingController::store):
+           tên người Việt ngắn nhất cũng hai chữ cái, còn một ký tự thì gần như
+           chắc chắn là gõ nhầm hoặc gõ cho xong. Đo bằng utf8Length() chứ không
+           strlen(): "Lê" là hai ký tự nhưng ba byte. */
+        if (utf8Length($fullName) < 2) {
+            flash('auth_error', 'Vui lòng nhập họ tên.');
+            redirect('/auth?tab=dang-ky&buoc=mat-khau');
+        }
+
+        /* Chặn trên khớp maxlength="120" của ô. Cột profiles.full_name rộng
+           255 nên đây không phải để cứu câu INSERT, mà để một cái tên dài bất
+           thường bị chặn ngay chỗ nó được gõ ra. */
+        if (utf8Length($fullName) > 120) {
+            flash('auth_error', 'Họ tên quá dài (tối đa 120 ký tự).');
+            redirect('/auth?tab=dang-ky&buoc=mat-khau');
+        }
+
+        /* HAI LẦN NHẬP PHẢI KHỚP — nguyên văn câu của hai màn đặt lại mật khẩu
+           (xem resetVerify/resetSave), vì cùng một tình huống thì không nên có
+           hai cách nói.
+
+           Kiểm TRƯỚC bộ quy tắc bên dưới: gõ lệch tay thì cả hai ô đều sai,
+           mà báo "thiếu chữ hoa" trong khi vấn đề thật là hai ô khác nhau thì
+           khách sửa nhầm chỗ. */
+        if ($password !== $confirm) {
+            flash('auth_error', 'Hai lần nhập mật khẩu không khớp.');
             redirect('/auth?tab=dang-ky&buoc=mat-khau');
         }
 
@@ -766,9 +810,6 @@ class AuthController extends BaseController
             redirect('/auth?tab=dang-ky&buoc=mat-khau');
         }
 
-        /* Họ tên rỗng: bản thiết kế không hỏi tên ở bước nào cả. Cột
-           profiles.full_name cho phép NULL, và trang tài khoản cho khách điền
-           sau. */
         /* Email đi vào register() để nó tự kiểm định dạng và tính duy nhất —
            cùng một bộ luật với luồng Google, không viết lại ở đây.
 
@@ -779,7 +820,7 @@ class AuthController extends BaseController
         $result = UserModel::register(
             $signup['phone'],
             $password,
-            '',
+            $fullName,
             $email,
             (string) config('auth.consent.version', '')
         );

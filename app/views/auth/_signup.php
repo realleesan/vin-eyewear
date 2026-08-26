@@ -66,8 +66,8 @@ $backTo = static function (string $href): void { ?>
 
     <!-- ══════════ 1. NHẬP SỐ ĐIỆN THOẠI ══════════ -->
     <?php /* Chỉ MỘT ô. Bản thiết kế bỏ cả họ tên lẫn mật khẩu khỏi màn này:
-             mật khẩu hỏi sau khi xác minh xong, còn tên thì không hỏi ở đâu
-             cả — khách điền sau ở trang tài khoản nếu muốn. */ ?>
+             cả hai hỏi ở chặng cuối, sau khi số điện thoại đã xác minh xong —
+             gõ tên với mật khẩu trước rồi kẹt ở màn nhập mã là mất công vô ích. */ ?>
     <form class="authform" method="post" action="/auth/dang-ky">
         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
 
@@ -263,8 +263,27 @@ $backTo = static function (string $href): void { ?>
     <form class="authform" method="post" action="/auth/dang-ky/mat-khau" data-pw-rules>
         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
 
+        <?php /* HỌ TÊN ĐỨNG ĐẦU, và bắt buộc.
+
+                 Bản thiết kế không có ô này. Thêm vào vì tài khoản không tên
+                 thì mọi chỗ xưng hô với khách — lời chào ở trang tài khoản,
+                 tên người nhận điền sẵn khi đặt hàng, danh sách khách bên
+                 quản trị — đều chỉ còn một dãy số điện thoại.
+
+                 Bắt buộc chứ không tuỳ chọn như ô email bên dưới: email còn
+                 có đường lấy lại (khách tự điền sau ở trang Hồ sơ khi cần
+                 dùng tới), còn tên thì không ai đi điền vì chẳng thiếu gì
+                 ngay lúc ấy — nên hỏi một lần ở đây là rẻ nhất. */ ?>
         <label class="authfield">
-            <span class="sr-only">Mật khẩu</span>
+            <span class="authfield__label">Họ và tên</span>
+            <input class="authfield__input" type="text" name="full_name" required
+                   maxlength="120" autocomplete="name" autofocus
+                   placeholder="Nguyễn Văn A"
+                   value="<?= e($signup['name'] ?? '') ?>">
+        </label>
+
+        <label class="authfield">
+            <span class="authfield__label">Mật khẩu</span>
             <?php partial('auth/_password', [
                 'pw_name'     => 'password',
                 'pw_auto'     => 'new-password',
@@ -274,6 +293,30 @@ $backTo = static function (string $href): void { ?>
             ]); ?>
         </label>
 
+        <?php /* Ô NHẬP LẠI — cùng khuôn với màn đặt lại mật khẩu (auth/reset.php).
+
+                 Nhãn chuyển từ sr-only sang hiện rõ ở CẢ HAI ô: một mình ô mật
+                 khẩu thì chữ mờ trong ô là đủ, nhưng hai ô giống hệt nhau nằm
+                 sát nhau mà chữ mờ lại biến mất ngay khi gõ ký tự đầu thì
+                 không còn gì phân biệt ô trên với ô dưới.
+
+                 Chốt thật nằm ở signupFinish() — trình duyệt không có cách nào
+                 tự so hai ô này, và gọi thẳng POST thì bỏ qua được cả form. */ ?>
+        <label class="authfield">
+            <span class="authfield__label">Nhập lại mật khẩu</span>
+            <?php partial('auth/_password', [
+                'pw_name'     => 'password_confirm',
+                'pw_auto'     => 'new-password',
+                'pw_holder'   => '••••••••',
+                'pw_min'      => 8,
+                'pw_required' => true,
+            ]); ?>
+        </label>
+
+        <?php /* Bốn dòng quy tắc đứng SAU cả hai ô, đúng lối của auth/reset.php:
+                 chúng nói về mật khẩu nói chung chứ không riêng ô nào, mà kẹp
+                 vào giữa thì trông như chỉ ràng buộc ô phía trên.
+                 auth.js chấm xanh theo ô ĐẦU TIÊN — xem chú thích ở đó. */ ?>
         <?php partial('auth/_password-rules'); ?>
 
         <!-- EMAIL LÀ TUỲ CHỌN, VÀ ĐỨNG SAU MẬT KHẨU.
