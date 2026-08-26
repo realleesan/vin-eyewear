@@ -130,6 +130,10 @@ MIGRATIONS=(
     # cột này thêm vào, còn `status` thì bị xoá, nên KHÔNG lấy 'status' làm mốc
     # được (kiểu 'column' sẽ báo "chưa áp" mãi mãi sau khi cột đã biến mất).
     "2026-08-26-lien-he-qua-zalo.sql|column|contact_requests|zalo_sent_at"
+    # Bỏ hẳn cột `contact_requests`.`status`. File chỉ XOÁ, không tạo ra thứ gì
+    # để làm cột mốc — kiểu 'data', chỉ sổ ghi chặn chạy lại. Mà chạy lại cũng
+    # vô hại: cả ba bước đều hỏi information_schema trước.
+    "2026-08-27-bo-cot-status-lien-he.sql|data||"
 )
 
 # ---------------------------------------------------------------------------
