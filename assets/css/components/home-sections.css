@@ -332,97 +332,9 @@
 .hero__ar:hover,
 .hero__ar:focus-visible { color: var(--brand); }
 
-.hero__divider {
-    height: 1px;
-    margin: 6px 0 0;
-    border: 0;
-    background: var(--h-blush-line);
-}
-
-/* --- Dải ưu đãi + đồng hồ đếm ngược ------------------------- */
-
-.hero__promo {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding-left: 22px;
-    border-left: 3px solid var(--brand);
-}
-
-.hero__promo-title {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--brand);
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.hero__promo-title svg {
-    flex: none;
-    width: 14px;
-    height: 14px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-}
-
-.hero__promo-title:hover,
-.hero__promo-title:focus-visible { color: var(--brand-strong); }
-
-.hcd {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.hcd__cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-    width: 66px;
-    padding: 11px 0 9px;
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-    border-radius: var(--h-radius-sm);
-}
-
-/* tabular-nums: chữ số cùng bề ngang, nếu không thì mỗi giây trôi qua là bốn
-   ô nhích qua nhích lại theo bề ngang của chữ số vừa đổi. */
-.hcd__num {
-    font-family: var(--font-serif);
-    font-size: 25px;
-    font-weight: 600;
-    line-height: 1;
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-}
-
-/* Ô cuối là GIÂY — ô duy nhất đổi mỗi giây, nên tô màu thương hiệu để mắt
-   biết chỗ nào đang chạy. Nó là <li> cuối của .hcd (dấu ":" xen giữa). */
-.hcd__cell:last-child .hcd__num { color: var(--brand); }
-
-.hcd__label {
-    font-size: 9.5px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--h-note);
-}
-
-.hcd__sep {
-    color: #c9b8ac;
-    font-weight: 600;
-}
+/* Dải ưu đãi + đồng hồ đếm ngược (.hero__divider · .hero__promo · .hcd) ĐÃ BỎ
+   2026-08-26, cùng với tính năng sự kiện: dải đó lấy bài ưu đãi đang chạy từ
+   bảng `events` và trỏ sang /su-kien/{slug}. Xem app/views/_layout/home/hero.php. */
 
 /* --- Bộ điều khiển băng ảnh --------------------------------- */
 
@@ -606,13 +518,6 @@
     .hero__text { gap: 20px; padding: 36px var(--page-edge) 32px; }
     .hero__btn { flex: 1 1 auto; text-align: center; }
     .hero__media { min-height: 320px; }
-
-    /* Bốn ô đếm ngược phải ở CÙNG MỘT HÀNG mới đọc ra là một cái đồng hồ;
-       xuống dòng 3+1 thì ô "giây" trông như một con số lạc. Thu ô và khoảng
-       cách lại vừa đủ cho màn 360px. */
-    .hcd { gap: 6px; }
-    .hcd__cell { width: 56px; }
-    .hcd__num { font-size: 22px; }
 
     /* Ba vạch xuống hàng riêng: cùng hàng với nút thì mỗi vạch còn ~20px */
     .hero__nav { flex-wrap: wrap; }

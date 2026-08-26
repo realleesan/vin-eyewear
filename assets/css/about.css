@@ -17,7 +17,7 @@
 
    RIÊNG lưới giá trị cốt lõi (khối 02) KHÔNG theo bản vẽ: bản vẽ tô các ô
    bằng chính --brand, ở đây dùng --h-dark (#3b1219) — sắc đỏ đô đậm mà site
-   dành cho MẢNG NỀN TỐI (ba dải tối trang chủ, thẻ tối trang sự kiện), còn
+   dành cho MẢNG NỀN TỐI (ba dải tối trang chủ), còn
    --brand là màu của nút và chi tiết nhấn. Kéo theo cả bộ chữ trên nền tối
    đi cùng nó (--h-on-dark / --h-on-dark-muted / --h-on-dark-num), vì
    --on-brand-* được chỉnh cho nền #8a2432 sáng hơn hẳn.

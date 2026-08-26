@@ -68,10 +68,10 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
     /*
      * Trang nào truyền 'noindex' => true thì xin máy tìm kiếm bỏ qua. Hiện chỉ
      * trang kết quả tìm kiếm dùng: mỗi từ khoá là một URL, lập chỉ mục hết thì
-     * sinh ra vô số trang mỏng trùng nội dung với /san-pham và /su-kien.
+     * sinh ra vô số trang mỏng trùng nội dung với /san-pham.
      *
      * `follow` chứ không phải `nofollow`: đừng lập chỉ mục TRANG NÀY, nhưng cứ
-     * đi theo các liên kết trong đó tới sản phẩm và bài viết thật.
+     * đi theo các liên kết trong đó tới sản phẩm thật.
      */
     if (!empty($noindex)) {
         echo '    <meta name="robots" content="noindex, follow">' . "\n";
@@ -147,10 +147,6 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
         // /san-pham?collection=… chứ không sang trang riêng — xem
         // app/controllers/CollectionController.php.
         'collection/index' => ['collection.css'],
-        'event/index'    => ['event.css'],
-        // Trang chi tiết nay dựng theo "Vin Eyewear Article.dc.html" và có bộ
-        // lớp riêng (.art*); nó không còn mượn .section-h2 của trang chủ.
-        'event/detail'   => ['event.css'],
         'about/index'    => ['about.css'],
         // Trang liên hệ nay dựng theo "Vin Eyewear Contact.dc.html" và có bộ
         // lớp riêng; nó không còn mượn .section-h2/.eyebrow của trang chủ.
@@ -167,7 +163,7 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
         'order/transfer' => ['components/bare-shell.css', 'checkout.css'],
         // Trang xác nhận đơn nay dựng theo "Vin Eyewear Order Complete.dc.html"
         // và có bộ lớp riêng (.ocomp*); nó không còn mượn .section-h2 của trang
-        // chủ hay .edetail__cta của trang sự kiện. order.css đã bỏ — trang đặt
+        // chủ. order.css đã bỏ — trang đặt
         // lịch (bộ lớp .b* trong file đó) từ lâu đã có booking.css riêng.
         'order/success'  => ['order-complete.css'],
         // Biên nhận thanh toán — ở chung file CSS với trang xác nhận đơn, hai
@@ -348,9 +344,6 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         // đặt đúng bộ lớp .authpw mà file này tìm. Thiếu nó thì nút tự ẩn và
         // ô mật khẩu vẫn gõ bình thường.
         'admin/login'   => 'auth.js',
-        // Cũng chỉ là tăng cường: nút "sao chép liên kết" ở cột chia sẻ.
-        // Không có file này thì nút tự ẩn, nút Facebook bên cạnh vẫn chạy.
-        'event/detail'  => 'share.js',
         // Đếm ngược rồi tự sang mục "Đơn hàng của tôi". Không có file này thì
         // không có đếm ngược nào và nút "Xem đơn hàng của tôi" vẫn ở đó.
         'order/success' => 'order-success.js',

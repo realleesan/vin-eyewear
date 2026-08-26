@@ -19,7 +19,7 @@ class NewsletterModel extends BaseModel
      * THÊM Ô ĐĂNG KÝ Ở TRANG MỚI THÌ PHẢI THÊM MỘT DÒNG VÀO ĐÂY — không thì
      * cột `source` ghi sai chỗ và mất hẳn ý nghĩa thống kê.
      */
-    public const SOURCES = ['home', 'footer', 'su-kien'];
+    public const SOURCES = ['home', 'footer'];   // 'su-kien' bỏ 2026-08-26
 
     /**
      * Ghi một địa chỉ vào danh sách.

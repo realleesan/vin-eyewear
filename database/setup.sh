@@ -18,7 +18,7 @@
 #
 # schema.sql mở đầu bằng DROP TABLE cho cả 13 bảng, nên nạp lại nó lên
 # database đang chạy sẽ xoá sạch đơn hàng, khách hàng, VÀ cả nội dung site
-# (sản phẩm, danh mục, sự kiện, cơ sở — những thứ admin nhập qua trang quản
+# (sản phẩm, danh mục, bộ sưu tập, cơ sở — những thứ admin nhập qua trang quản
 # trị). Vì vậy chỉ --force mới nạp lại schema, và nó liệt kê từng bảng cùng
 # số bản ghi sắp mất trước khi làm.
 #
@@ -136,9 +136,9 @@ randpass() {
 #
 # Bản trước của script quyết định bằng cách đếm bản ghi ở 4 bảng nghiệp vụ
 # (orders/appointments/contact_requests/users) và cố ý BỎ QUA products,
-# categories, events, stores với lý do "schema seed sẵn chúng". Đó là lỗ hổng:
+# categories, stores với lý do "schema seed sẵn chúng". Đó là lỗ hổng:
 # bốn bảng bị bỏ qua ấy chính là nội dung sống của site — danh mục sản phẩm,
-# sự kiện, địa chỉ cơ sở đều do admin nhập qua trang quản trị. Một cửa hàng đã
+# bộ sưu tập, địa chỉ cơ sở đều do admin nhập qua trang quản trị. Một cửa hàng đã
 # dựng xong catalog nhưng chưa phát sinh đơn nào sẽ bị coi là "cài dở" và bị
 # xoá sạch.
 #
@@ -152,7 +152,7 @@ randpass() {
 # lần cài trước chết ngay giữa lúc nạp, để lại vài bảng đầu tiên.
 EXPECTED_TABLES=(
     users profiles user_roles prescriptions
-    categories products events stores
+    categories products stores
     favorites appointments orders order_items contact_requests
 )
 
@@ -181,7 +181,7 @@ missingTables() {
 # ---------------------------------------------------------------------------
 # Tổng số bản ghi trên các bảng ĐANG tồn tại.
 #
-# Đếm CẢ bảng nội dung (products, categories, events, stores) — chúng là dữ
+# Đếm CẢ bảng nội dung (products, categories, stores) — chúng là dữ
 # liệu thật do admin nhập qua trang quản trị, không phải "chỉ là dữ liệu mẫu".
 # Bảng chưa tồn tại thì bỏ qua thay vì làm hỏng cả câu lệnh.
 # ---------------------------------------------------------------------------

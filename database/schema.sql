@@ -52,7 +52,6 @@ DROP TABLE IF EXISTS `addresses`;
 DROP TABLE IF EXISTS `lens_prices`;
 DROP TABLE IF EXISTS `prescriptions`;
 DROP TABLE IF EXISTS `stores`;
-DROP TABLE IF EXISTS `events`;
 DROP TABLE IF EXISTS `product_variants`;
 DROP TABLE IF EXISTS `products`;
 DROP TABLE IF EXISTS `categories`;
@@ -550,27 +549,11 @@ CREATE TABLE `collections` (
 
 
 -- ============================================================================
--- 3. SỰ KIỆN & CƠ SỞ
+-- 3. CƠ SỞ
+--
+-- Bảng `events` từng đứng đầu mục này. Bỏ 2026-08-26 cùng cả tính năng sự
+-- kiện; máy đang chạy dọn bằng database/migrations/2026-08-26-bo-su-kien.sql.
 -- ============================================================================
-
--- Cột `category` do migration 20260805090053 thêm sau, đã gộp thẳng vào đây.
-CREATE TABLE `events` (
-    `id`          CHAR(36)     NOT NULL DEFAULT (UUID()),
-    `slug`        VARCHAR(160) NOT NULL,
-    `title`       VARCHAR(255) NOT NULL,
-    `category`    VARCHAR(60)  NULL,
-    `excerpt`     TEXT         NULL,
-    `content`     TEXT         NULL,
-    `cover_image` VARCHAR(500) NULL,
-    `location`    VARCHAR(255) NULL,
-    `starts_at`   DATETIME     NULL,
-    `ends_at`     DATETIME     NULL,
-    `is_visible`  TINYINT(1)   NOT NULL DEFAULT 1,
-    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uq_events_slug` (`slug`),
-    KEY `idx_events_visible_starts` (`is_visible`, `starts_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `stores` (
     `id`         CHAR(36)     NOT NULL DEFAULT (UUID()),
@@ -944,8 +927,7 @@ CREATE TABLE `contact_requests` (
 -- 7. DỮ LIỆU KHỞI TẠO
 --
 -- Chỉ KHUNG để trang chạy được ngay sau khi cài: cơ sở (form đặt lịch và trang
--- Liên hệ cần có), danh mục (bộ lọc và điều hướng cần có) và vài bài sự kiện
--- làm mẫu bố cục.
+-- Liên hệ cần có) và danh mục (bộ lọc và điều hướng cần có).
 --
 -- KHÔNG có sản phẩm nào — xem ghi chú "KHÔNG SEED SẢN PHẨM" bên dưới. Catalog
 -- nhập ở /quan-tri/san-pham.
@@ -972,65 +954,12 @@ INSERT INTO `categories` (`slug`, `name`, `description`, `sort_order`) VALUES
 --   2. Sửa giá/tên hàng mẫu trong admin xong, lần cài lại nào cũng quay về giá
 --      cũ — vì nguồn thật của chúng nằm trong file này chứ không phải DB.
 --
--- Cơ sở, danh mục và sự kiện thì VẪN seed: đó là khung để trang chạy được
--- ngay (form đặt lịch cần cơ sở, bộ lọc cần danh mục), không phải hàng bán.
+-- Cơ sở và danh mục thì VẪN seed: đó là khung để trang chạy được ngay (form
+-- đặt lịch cần cơ sở, bộ lọc cần danh mục), không phải hàng bán.
 --
 -- Bản cài cũ đã có 5 món đó thì database/migrations/2026-08-20-bo-san-pham-mau.sql
 -- dọn giúp.
 -- ----------------------------------------------------------------------------
-
--- 3 sự kiện gốc dùng thời gian tương đối (now() + interval) để luôn có sự kiện
--- sắp diễn ra dù chạy seed vào ngày nào.
-INSERT INTO `events` (`slug`, `title`, `category`, `excerpt`, `content`, `location`, `starts_at`, `ends_at`) VALUES
-('kham-mat-mien-phi-thang-8', 'Khám mắt miễn phí cùng chuyên gia', 'SỰ KIỆN',
-    'Đo khúc xạ và tư vấn tròng kính miễn phí tại cả hai cơ sở Vin Eyewear.',
-    'Trong suốt chương trình, khách hàng được đo khúc xạ bằng thiết bị tự động, tư vấn 1-1 với kỹ thuật viên khúc xạ và nhận voucher 10% cho đơn tròng kính.',
-    'Cả 2 cơ sở Vin Eyewear',
-    DATE_ADD(NOW(), INTERVAL 5 DAY), DATE_ADD(NOW(), INTERVAL 20 DAY)),
-
-('uu-dai-gong-0-dong', 'Ưu đãi Gọng 0 đồng khi mua tròng cao cấp', 'TIN ƯU ĐÃI',
-    'Tặng gọng kính trị giá tới 1.500.000đ khi mua tròng kính cao cấp.',
-    'Áp dụng cho các dòng tròng chiết suất từ 1.60 trở lên. Số lượng gọng ưu đãi có hạn tại từng cơ sở.',
-    'Cơ sở Tây Hồ',
-    DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_ADD(NOW(), INTERVAL 12 DAY)),
-
-('workshop-chon-gong-theo-khuon-mat', 'Workshop: Chọn gọng theo khuôn mặt', 'SỰ KIỆN',
-    'Buổi workshop hướng dẫn chọn gọng kính phù hợp từng dáng khuôn mặt.',
-    'Chuyên gia hình ảnh của Vin Eyewear sẽ phân tích tỉ lệ khuôn mặt và hướng dẫn cách chọn gọng, màu sắc phù hợp. Có thử kính AR trực tiếp.',
-    'Cơ sở Long Biên',
-    DATE_ADD(NOW(), INTERVAL 25 DAY), DATE_ADD(NOW(), INTERVAL 25 DAY));
-
--- 6 sự kiện biên tập bổ sung ở migration 20260805090053 — mốc thời gian cố định.
-INSERT INTO `events` (`slug`, `title`, `category`, `excerpt`, `content`, `location`, `starts_at`, `ends_at`, `is_visible`, `cover_image`) VALUES
-('uu-dai-mua-he-di-san', 'Chương Trình Ưu Đãi Mùa Hè: Giảm 20% Bộ Sưu Tập Di Sản', 'TIN ƯU ĐÃI',
-    'Toàn bộ Bộ Sưu Tập Di Sản giảm 20% trong mùa hè này, kèm dịch vụ đo khúc xạ và tinh chỉnh gọng miễn phí.',
-    'Trong suốt tháng 7 và tháng 8, Vin Eyewear dành tặng ưu đãi 20% cho toàn bộ Bộ Sưu Tập Di Sản.\nƯu đãi áp dụng tại cả hai cơ sở, kèm dịch vụ đo khúc xạ, tinh chỉnh gọng và vệ sinh kính miễn phí trọn đời.',
-    'Cả 2 cơ sở Vin Eyewear', '2026-07-15 09:00:00', '2026-08-15 19:00:00', 1, '/assets/images/product-1.jpg'),
-
-('cham-soc-kinh-nhua-nhap-khau', 'Buổi Chia Sẻ: Nghệ Thuật Chăm Sóc Và Bảo Quản Kính Nhựa Nhập Khẩu', 'SỰ KIỆN',
-    'Kỹ thuật viên Vin Eyewear hướng dẫn cách vệ sinh, bảo quản và phục hồi độ bóng cho gọng acetate nhập khẩu.',
-    'Một buổi chiều dành riêng cho những người yêu gọng acetate.\nChúng tôi chia sẻ quy trình vệ sinh chuẩn, cách tránh biến dạng gọng và mẹo giữ độ bóng bền lâu.',
-    'Cơ sở 46 Hoàng Hoa Thám, Tây Hồ', '2026-07-26 14:00:00', NULL, 1, '/assets/images/product-2.jpg'),
-
-('ra-mat-kinh-titan-sieu-nhe', 'Ra Mắt Dòng Kính Titan Siêu Nhẹ Mới Mùa Thu 2026', 'SẢN PHẨM MỚI',
-    'Dòng gọng titan nguyên khối chỉ 9 gram, thiết kế tối giản dành cho người đeo kính cả ngày.',
-    'Bộ sưu tập titan mùa thu 2026 tập trung vào sự nhẹ nhàng gần như vô hình.\nGọng nguyên khối, khớp bản lề không ốc, hoàn thiện nhám mờ với bốn sắc độ trung tính.',
-    'Cả 2 cơ sở Vin Eyewear', '2026-09-05 10:00:00', NULL, 1, '/assets/images/product-3.jpg'),
-
-('trien-lam-khung-kinh-qua-cac-thap-ky', 'Triển Lãm: Khung Kính Qua Các Thập Kỷ Ký Ức', 'TRIỂN LÃM',
-    'Hơn 60 mẫu gọng từ thập niên 1950 đến nay, kể lại lịch sử thiết kế kính mắt bằng hiện vật.',
-    'Triển lãm trưng bày hơn 60 mẫu gọng sưu tầm, sắp đặt theo từng thập kỷ.\nKhách tham quan có thể thử một số phiên bản phục dựng và nghe câu chuyện phía sau từng thiết kế.',
-    'Cơ sở 261 Ngọc Lâm, Long Biên', '2026-09-18 09:00:00', '2026-09-30 19:00:00', 1, '/assets/images/product-4.jpg'),
-
-('kham-thi-luc-tu-van-dang-kinh', 'Chương Trình Khám Thị Lực Và Tư Vấn Dáng Kính Miễn Phí', 'SỰ KIỆN',
-    'Đo khúc xạ bằng thiết bị chuyên sâu và tư vấn dáng gọng theo khuôn mặt, hoàn toàn miễn phí.',
-    'Đội ngũ kỹ thuật viên khúc xạ của Vin Eyewear thực hiện quy trình đo 8 bước.\nSau khi đo, bạn được tư vấn dáng gọng phù hợp với tỉ lệ khuôn mặt và nhu cầu sử dụng.',
-    'Cả 2 cơ sở Vin Eyewear', '2026-08-20 09:00:00', '2026-08-31 19:00:00', 1, '/assets/images/product-5.jpg'),
-
-('dem-tiec-nhuom-mau-trong-kinh', 'Đêm Tiệc Trải Nghiệm: Nhuộm Màu Tròng Kính Thủ Công', 'SỰ KIỆN',
-    'Tự tay chọn sắc độ và nhuộm màu tròng kính của riêng bạn cùng kỹ thuật viên Vin Eyewear.',
-    'Một buổi tối giới hạn 20 khách, nơi bạn tự chọn sắc độ và theo dõi toàn bộ quy trình nhuộm tròng thủ công.\nMỗi khách mang về một cặp tròng màu độc bản.',
-    'Cơ sở 46 Hoàng Hoa Thám, Tây Hồ', '2026-10-10 19:00:00', NULL, 1, '/assets/images/product-6.jpg');
 
 -- ============================================================================
 -- 8. TÀI KHOẢN QUẢN TRỊ
@@ -1063,8 +992,6 @@ INSERT INTO `events` (`slug`, `title`, `category`, `excerpt`, `content`, `locati
 --   categories       | public (is_visible)     | CategoryModel::visible()
 --                    | admin all               | AuthMiddleware: admin|manager
 --   products         | public (is_visible)     | ProductModel: mặc định lọc is_visible
---                    | admin all               | AuthMiddleware: admin|manager
---   events           | public (is_visible)     | EventModel: mặc định lọc is_visible
 --                    | admin all               | AuthMiddleware: admin|manager
 --   stores           | public (is_active)      | StoreModel::active()
 --                    | admin all               | AuthMiddleware: admin|manager

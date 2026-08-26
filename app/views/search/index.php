@@ -3,14 +3,17 @@
 /**
  * search/index.php — kết quả tìm kiếm toàn site (/tim-kiem?q=...).
  *
- * Bốn nhóm, mỗi nhóm một dáng riêng vì bốn loại nội dung khác nhau:
+ * Ba nhóm, mỗi nhóm một dáng riêng vì ba loại nội dung khác nhau:
  *
  *   sản phẩm   lưới thẻ .pcard dùng chung với trang chủ
- *   bài viết   danh sách ngang có ảnh bìa
  *   cơ sở      thẻ địa chỉ kèm nút chỉ đường
  *   chính sách hỏi–đáp, bấm vào nhảy đúng nhóm trong /chinh-sach
  *
- * Nhóm rỗng thì KHÔNG in ra — kể cả tiêu đề. Bốn tiêu đề với ba khối trống
+ * NHÓM "Bài viết & sự kiện" ĐÃ BỎ (2026-08-26) cùng với tính năng sự kiện —
+ * nó tìm trong bảng `events`. Lớp .srchitem* KHÔNG bỏ theo: nhóm chính sách
+ * dùng chung đúng bộ lớp ấy.
+ *
+ * Nhóm rỗng thì KHÔNG in ra — kể cả tiêu đề. Ba tiêu đề với hai khối trống
  * bên dưới đọc như trang hỏng, trong khi thứ người dùng cần biết chỉ là "có
  * gì khớp không".
  *
@@ -22,8 +25,8 @@
     'head_crumbs' => [['label' => 'Tìm kiếm']],
     'head_title'  => $q === '' ? 'Tìm kiếm' : 'Kết quả cho “' . $q . '”',
     'head_lead'   => $q === ''
-        ? 'Nhập từ khoá để tìm sản phẩm, bài viết, cơ sở và chính sách.'
-        : sprintf('%d kết quả trong sản phẩm, bài viết, cơ sở và chính sách.', $total),
+        ? 'Nhập từ khoá để tìm sản phẩm, cơ sở và chính sách.'
+        : sprintf('%d kết quả trong sản phẩm, cơ sở và chính sách.', $total),
 ]); ?>
 
 <section class="srch">
@@ -37,7 +40,7 @@
             <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
         <input class="srch__input" type="search" id="srch-q" name="q"
-               value="<?= e($q) ?>" placeholder="Gọng titan, bảo hành, workshop…">
+               value="<?= e($q) ?>" placeholder="Gọng titan, bảo hành, tròng đa tròng…">
         <button type="submit" class="srch__go">Tìm</button>
     </form>
 
@@ -50,7 +53,7 @@
             <p class="srch__empty-note">
                 Thử từ khoá ngắn hơn, hoặc xem
                 <a href="/san-pham">toàn bộ sản phẩm</a> và
-                <a href="/su-kien">bài viết mới nhất</a>.
+                <a href="/bo-suu-tap">các bộ sưu tập</a>.
             </p>
         </div>
 
@@ -74,45 +77,6 @@
                 <ul class="pcard__grid" role="list">
                     <?php foreach ($products as $p): ?>
                         <?php partial('_layout/product-card', ['product' => $p]); ?>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        <?php endif; ?>
-
-        <!-- ── Bài viết & sự kiện ── -->
-        <?php if ($articles !== []): ?>
-            <div class="srch__group">
-                <div class="section-head">
-                    <div>
-                        <p class="eyebrow"><?= count($articles) ?> bài viết</p>
-                        <h2 class="section-h2 section-h2--plain">Bài viết &amp; sự kiện</h2>
-                    </div>
-                    <a class="pill-link" href="/su-kien">Xem tất cả →</a>
-                </div>
-
-                <ul class="srch__list" role="list">
-                    <?php foreach ($articles as $a): ?>
-                        <li class="srchitem">
-                            <a class="srchitem__link" href="/su-kien/<?= e(rawurlencode($a['slug'])) ?>">
-                                <?php if (!empty($a['cover_image'])): ?>
-                                    <span class="srchitem__media">
-                                        <img src="<?= e(asset($a['cover_image'])) ?>" alt=""
-                                             width="200" height="140" loading="lazy" decoding="async">
-                                    </span>
-                                <?php endif; ?>
-
-                                <span class="srchitem__body">
-                                    <span class="srchitem__meta">
-                                        <?php if (!empty($a['category'])): ?>
-                                            <span class="srchitem__tag"><?= e($a['category']) ?></span>
-                                        <?php endif; ?>
-                                        <?= e(dateRange($a['starts_at'] ?? null, $a['ends_at'] ?? null)) ?>
-                                    </span>
-                                    <span class="srchitem__title"><?= e($a['title']) ?></span>
-                                    <span class="srchitem__excerpt"><?= e(excerpt($a['excerpt'] ?? '', 140)) ?></span>
-                                </span>
-                            </a>
-                        </li>
                     <?php endforeach; ?>
                 </ul>
             </div>

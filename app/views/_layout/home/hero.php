@@ -21,17 +21,14 @@
  * dưới. Băng dừng lại khi con trỏ hoặc tiêu điểm bàn phím ở trong hero: ảnh tự
  * trôi đi giữa lúc người ta đang nhìn là một cách gây bực.
  *
- * KHÔNG CÓ JS THÌ VẪN ĐỌC ĐƯỢC: ảnh đầu tiên hiện sẵn, đồng hồ đếm ngược đã
- * được PHP tính trước ở phía máy chủ (JS chỉ chạy tiếp từng giây), hai mũi tên
- * và ba vạch chỉ là điều khiển phụ.
+ * KHÔNG CÓ JS THÌ VẪN ĐỌC ĐƯỢC: ảnh đầu tiên hiện sẵn, hai mũi tên và ba vạch
+ * chỉ là điều khiển phụ.
  *
- * Nhận qua partial():
- *   $promo — sự kiện ưu đãi đang chạy (EventModel::currentPromo()) hoặc null.
- *            Không có ưu đãi nào còn hạn thì cả dải đếm ngược ẩn đi: một chiếc
- *            đồng hồ đếm ngược tới hư không còn tệ hơn là không có nó.
+ * DẢI ƯU ĐÃI CÓ ĐỒNG HỒ ĐẾM NGƯỢC ĐÃ BỎ (2026-08-26) cùng với cả tính năng
+ * sự kiện: nó lấy bài ưu đãi đang chạy từ EventModel::currentPromo() rồi trỏ
+ * sang /su-kien/{slug}, mà cả hai thứ đó không còn. Muốn dựng lại một dải đếm
+ * ngược cho khuyến mãi thì phải có nguồn dữ liệu riêng, không phải bảng bài viết.
  */
-
-$promo = $promo ?? null;
 
 /*
  * Ba ảnh của băng. Ô "hero-photo · hero-slide-2 · hero-slide-3" trong bản
@@ -53,48 +50,6 @@ $slides = [
         'alt'     => 'Gọng titan siêu nhẹ vừa lên kệ',
         'caption' => 'Gọng titan siêu nhẹ 9 gram · Vừa lên kệ',
     ],
-];
-
-/*
- * ĐỒNG HỒ ĐẾM NGƯỢC — tính SẴN ở máy chủ.
- *
- * Bản thiết kế để JavaScript tính từ con số 0; ở đây bốn ô đã mang đúng giá
- * trị ngay trong HTML, nên trang không JS vẫn nói đúng còn bao lâu, và trang
- * có JS không nhấp nháy "00:00:00:00" trong khung hình đầu tiên.
- *
- * Mốc kết thúc: ends_at của ưu đãi, thiếu thì lấy starts_at (sự kiện một ngày).
- */
-$deadline = null;
-$parts    = ['d' => '00', 'h' => '00', 'm' => '00', 's' => '00'];
-
-if ($promo !== null) {
-    $raw = $promo['ends_at'] ?? $promo['starts_at'] ?? null;
-
-    // ?: null — strtotime() trả false cho chuỗi ngày hỏng; để nguyên false thì
-    // date() bên dưới in ra mốc 1970 và đồng hồ đứng ở 00:00:00:00.
-    $deadline = $raw !== null ? (strtotime((string) $raw) ?: null) : null;
-
-    if ($deadline !== null) {
-        // Mốc đã qua giữa lúc truy vấn và lúc vẽ -> coi như hết giờ, không âm
-        $left = max(0, $deadline - time());
-
-        $parts = [
-            'd' => str_pad((string) intdiv($left, 86400),      2, '0', STR_PAD_LEFT),
-            'h' => str_pad((string) intdiv($left % 86400, 3600), 2, '0', STR_PAD_LEFT),
-            'm' => str_pad((string) intdiv($left % 3600, 60),  2, '0', STR_PAD_LEFT),
-            's' => str_pad((string) ($left % 60),              2, '0', STR_PAD_LEFT),
-        ];
-    }
-}
-
-$hasCountdown = $promo !== null && $deadline !== null;
-
-// Bốn ô đếm ngược, ô cuối (giây) tô màu thương hiệu như bản thiết kế
-$cells = [
-    ['key' => 'd', 'label' => 'Ngày'],
-    ['key' => 'h', 'label' => 'Giờ'],
-    ['key' => 'm', 'label' => 'Phút'],
-    ['key' => 's', 'label' => 'Giây'],
 ];
 
 /*
@@ -153,34 +108,6 @@ $trust = [
                      Tính năng còn tắt thì không mời người ta bấm vào. */ ?>
             <?php if (config('ar.nav_enabled')): ?>
                 <a class="hero__ar" href="/thu-ar">Hoặc thử kính ảo bằng camera (AR) →</a>
-            <?php endif; ?>
-
-            <?php if ($hasCountdown): ?>
-                <hr class="hero__divider">
-
-                <div class="hero__promo">
-                    <a class="hero__promo-title" href="/su-kien/<?= e(rawurlencode($promo['slug'])) ?>">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <circle cx="12" cy="13" r="8"/>
-                            <path d="M12 9.5V13l2.5 1.5M9 2h6"/>
-                        </svg>
-                        <?= e($promo['title']) ?>
-                    </a>
-
-                    <?php /* datetime ISO-8601 để JS đọc lại đúng mốc mà PHP đã dùng */ ?>
-                    <ul class="hcd" role="list"
-                        data-countdown="<?= e(date(DATE_ATOM, $deadline)) ?>">
-                        <?php foreach ($cells as $i => $cell): ?>
-                            <?php if ($i > 0): ?>
-                                <li class="hcd__sep" aria-hidden="true">:</li>
-                            <?php endif; ?>
-                            <li class="hcd__cell">
-                                <span class="hcd__num" data-cd="<?= e($cell['key']) ?>"><?= e($parts[$cell['key']]) ?></span>
-                                <span class="hcd__label"><?= e($cell['label']) ?></span>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
             <?php endif; ?>
 
             <?php /* Bộ điều khiển băng ảnh. Ẩn khi chỉ có một ảnh — hai mũi tên

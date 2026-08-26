@@ -22,7 +22,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * NĂM MỤC, MỘT TRONG SỐ ĐÓ LÀ BẢNG XỔ
  *
- *     Trang chủ · Sản phẩm ▾ · [Thử kính ảo] · Sự kiện · Liên hệ
+ *     Trang chủ · Sản phẩm ▾ · [Thử kính ảo] · Giới thiệu · Bộ sưu tập · Liên hệ
  *
  * "Sản phẩm" không phải một liên kết thường: nó là _layout/mega-menu.php, tự
  * dựng <li> của mình. Ba mục danh mục cũ (Kính mát · Gọng kính · Tròng kính)
@@ -69,18 +69,12 @@ $navItems = [
     ['label' => t('nav.tryon'),  'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
     ['label' => t('nav.about'),  'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
     /*
-     * BỘ SƯU TẬP THAY CHỖ SỰ KIỆN — 2026-08-25.
+     * BỘ SƯU TẬP THAY CHỖ SỰ KIỆN — 2026-08-25, rồi sự kiện bỏ hẳn 2026-08-26.
      *
-     * Sự kiện KHÔNG bị bỏ: /su-kien, /su-kien/{slug}, CRUD quản trị và nút
-     * "Đặt lịch tham dự" (/dat-lich?su-kien=…) đều còn nguyên. Nó chỉ mất ô
-     * trên thanh điều hướng chính, vì cửa hàng muốn chỗ đó dành cho hàng đang
-     * bán chứ không phải cho tin tức.
-     *
-     * Vì thế 'match' vẫn KHÔNG chứa 'su-kien': đang đọc một bài sự kiện thì
-     * không ô nào trên thanh nav sáng lên, đúng như các trang khác không có
-     * chỗ trên nav (xem $extraLinks bên dưới). Nhét 'su-kien' vào đây sẽ làm
-     * sáng "Bộ sưu tập" khi người ta đang xem một bài viết — chỉ vì hai thứ
-     * từng dùng chung một ô.
+     * Ô này ban đầu là "Sự kiện". Bước một chỉ đổi nhãn trên thanh nav vì cửa
+     * hàng muốn chỗ đó dành cho hàng đang bán chứ không phải tin tức; bước hai
+     * bỏ luôn cả tính năng (trang, CRUD quản trị, bảng `events`). Ghi lại đây
+     * để ai đọc git blame thấy hai bước là hai quyết định khác nhau.
      */
     ['label' => t('nav.collections'), 'url' => '/bo-suu-tap', 'match' => ['bo-suu-tap']],
     ['label' => t('nav.contact'),'url' => '/lien-he',    'match' => ['lien-he']],
@@ -96,8 +90,6 @@ $navItems = [
  */
 $mobileExtra = [
     ['label' => t('nav.booking'), 'url' => '/dat-lich',   'match' => ['dat-lich']],
-    // Vào đây khi Bộ sưu tập lấy chỗ của nó trên thanh nav — xem $navItems.
-    ['label' => t('nav.events'),  'url' => '/su-kien',    'match' => ['su-kien']],
     ['label' => t('nav.policy'),  'url' => '/chinh-sach', 'match' => ['chinh-sach']],
 ];
 
@@ -120,7 +112,7 @@ $keyword = $_GET['q'] ?? '';
 
 /**
  * Mục đang mở? So theo đoạn đầu URL, để route con vẫn sáng đúng mục cha —
- * ví dụ /su-kien/{slug} vẫn làm sáng "Sự kiện".
+ * ví dụ /san-pham/{slug} vẫn làm sáng "Sản phẩm".
  *
  * Riêng "Trang chủ" khớp chuỗi rỗng: currentSegment() trả '' cho đường dẫn '/'.
  */

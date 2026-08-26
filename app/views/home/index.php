@@ -36,7 +36,7 @@
  */
 ?>
 
-<?php partial('_layout/home/hero', ['promo' => $promo]); ?>
+<?php partial('_layout/home/hero'); ?>
 
 <?php partial('_layout/home/categories', ['categories' => $categories]); ?>
 

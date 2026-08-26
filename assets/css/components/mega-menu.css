@@ -89,7 +89,7 @@
    bản thiết kế, vốn dùng JavaScript.
 
    Chỉ nằm dưới viên thuốc chứ không trải hết bề ngang: một dải vô hình chạy
-   ngang cả header sẽ giữ bảng mở khi chuột chỉ đang đi qua để tới "Sự kiện". */
+   ngang cả header sẽ giữ bảng mở khi chuột chỉ đang đi qua để tới "Bộ sưu tập". */
 .mega__trigger::after {
     content: "";
     position: absolute;
@@ -343,7 +343,7 @@
    MENU TRƯỢT (dưới 1101px) — khối <details> "Sản phẩm"
 
    Dáng phải khớp các liên kết thẳng của .mobile-nav__links, để hàng "Sản
-   phẩm" trông là một mục cùng cấp với "Sự kiện", không phải một hộp lạ.
+   phẩm" trông là một mục cùng cấp với "Bộ sưu tập", không phải một hộp lạ.
    ============================================================ */
 
 .mobile-nav__group summary {

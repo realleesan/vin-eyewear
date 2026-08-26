@@ -27,15 +27,17 @@
  *
  * Trang này để TRẢ LỜI NHANH "có gì liên quan không", không phải để duyệt.
  * Mỗi nhóm cắt ở vài kết quả đầu và kèm một liên kết sang đúng trang chuyên
- * dụng của nó (/san-pham?q=, /su-kien) — nơi đã có sẵn bộ lọc và phân trang.
- * Nhồi phân trang vào đây là dựng lại hai trang đó lần thứ hai.
+ * dụng của nó (/san-pham?q=) — nơi đã có sẵn bộ lọc và phân trang. Nhồi phân
+ * trang vào đây là dựng lại trang đó lần thứ hai.
  */
 
 class SearchController extends BaseController
 {
-    /** Trần mỗi nhóm. Đủ để thấy "có gì", chưa đủ để phải cuộn. */
+    /* Trần mỗi nhóm. Đủ để thấy "có gì", chưa đủ để phải cuộn.
+
+       MAX_ARTICLES đã bỏ cùng nhóm "Bài viết & sự kiện" (2026-08-26) — nhóm
+       đó tìm trong bảng `events`, mà bảng ấy không còn. */
     private const MAX_PRODUCTS = 8;
-    private const MAX_ARTICLES = 6;
     private const MAX_POLICIES = 6;
 
     public function index(): void
@@ -50,35 +52,32 @@ class SearchController extends BaseController
         $q = utf8Substr($q, 0, 120);
 
         $products = ['items' => [], 'total' => 0];
-        $articles = [];
         $stores   = [];
         $policies = [];
 
         if ($q !== '') {
             $products = ProductModel::filter(['q' => $q], 1, self::MAX_PRODUCTS);
-            $articles = EventModel::search($q, self::MAX_ARTICLES);
             $stores   = $this->searchStores($q);
             $policies = $this->searchPolicies($q);
         }
 
-        $total = $products['total'] + count($articles) + count($stores) + count($policies);
+        $total = $products['total'] + count($stores) + count($policies);
 
         $this->renderView('search/index', [
             'pageTitle' => $q === ''
                 ? 'Tìm kiếm — Vin Eyewear'
                 : sprintf('Tìm "%s" — Vin Eyewear', $q),
-            'metaDesc'  => 'Tìm sản phẩm, bài viết, cơ sở và chính sách của Vin Eyewear.',
+            'metaDesc'  => 'Tìm sản phẩm, cơ sở và chính sách của Vin Eyewear.',
 
             /*
              * noindex: mỗi từ khoá là một URL, để máy tìm kiếm lập chỉ mục thì
-             * sinh ra vô số trang mỏng trùng nội dung với /san-pham và /su-kien.
+             * sinh ra vô số trang mỏng trùng nội dung với /san-pham.
              */
             'noindex'   => true,
 
             'q'         => $q,
             'products'  => $products['items'],
             'productTotal' => $products['total'],
-            'articles'  => $articles,
             'stores'    => $stores,
             'policies'  => $policies,
             'total'     => $total,

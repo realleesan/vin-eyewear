@@ -3,7 +3,7 @@
 /**
  * admin/vouchers/index.php — mã giảm giá
  *
- * Cùng khuôn với các màn hình CRUD quản trị khác (danh mục, cơ sở, sự kiện):
+ * Cùng khuôn với các màn hình CRUD quản trị khác (danh mục, cơ sở, bộ sưu tập):
  * bảng danh sách ở trên, form thêm/sửa neo ở #form bên dưới.
  */
 

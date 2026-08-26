@@ -1,22 +1,23 @@
 /**
  * assets/js/home.js — phần động của trang chủ.
  *
- * Năm việc, gói trong một file vì cả năm đều chỉ chạy ở đúng một trang:
+ * Bốn việc, gói trong một file vì cả bốn đều chỉ chạy ở đúng một trang:
  *
  *   1. băng ảnh hero (ba ảnh) — TỰ CHẠY
- *   2. đồng hồ đếm ngược của dải ưu đãi
- *   3. hộp thoại "kiểm tra 5 phút" (chọn tròng · chọn gọng)
- *   4. băng trượt khối đánh giá — TỰ CHẠY
- *   5. hai băng trượt sản phẩm ("mới về" và "bán chạy") — chỉ đổi khi bấm
+ *   2. hộp thoại "kiểm tra 5 phút" (chọn tròng · chọn gọng)
+ *   3. băng trượt khối đánh giá — TỰ CHẠY
+ *   4. hai băng trượt sản phẩm ("mới về" và "bán chạy") — chỉ đổi khi bấm
  *
- * HAI BĂNG TỰ CHẠY (1 và 4) đều lấy nhịp từ thuộc tính data-autoplay trong
+ * ĐỒNG HỒ ĐẾM NGƯỢC của dải ưu đãi từng là việc số 2, bỏ cùng tính năng sự
+ * kiện (2026-08-26) — nó đếm tới ends_at của một bài trong bảng `events`.
+ *
+ * HAI BĂNG TỰ CHẠY (1 và 3) đều lấy nhịp từ thuộc tính data-autoplay trong
  * HTML, không gõ cứng ở đây: đổi tốc độ là việc của người dựng trang. Cả hai
  * cũng đứng lại khi con trỏ hoặc tiêu điểm bàn phím ở trong khối, và không bật
  * tự chạy trên máy đặt "giảm chuyển động".
  *
  * TẤT CẢ ĐỀU LÀ TĂNG CƯỜNG. Không có file này thì:
  *   · hero đứng ở ảnh đầu tiên, hai mũi tên không làm gì;
- *   · đồng hồ vẫn hiện đúng số PHP đã tính lúc dựng trang, chỉ không đếm tiếp;
  *   · hai thẻ "chọn tròng / chọn gọng" là liên kết thường sang trang danh mục;
  *   · băng đánh giá đứng ở năm thẻ đầu, hai băng sản phẩm đứng ở bốn thẻ đầu.
  * Không khối nào biến mất, không lối đi nào gãy.
@@ -570,47 +571,7 @@
     })();
 
     /* ============================================================
-       2. ĐỒNG HỒ ĐẾM NGƯỢC
-       ============================================================ */
-
-    (function countdown() {
-        var box = document.querySelector('[data-countdown]');
-        if (!box) return;
-
-        var deadline = Date.parse(box.getAttribute('data-countdown'));
-        if (isNaN(deadline)) return;
-
-        var cells = {};
-        ['d', 'h', 'm', 's'].forEach(function (key) {
-            cells[key] = box.querySelector('[data-cd="' + key + '"]');
-        });
-
-        var timer = null;
-
-        function tick() {
-            var left = Math.max(0, Math.floor((deadline - Date.now()) / 1000));
-
-            var value = {
-                d: Math.floor(left / 86400),
-                h: Math.floor((left % 86400) / 3600),
-                m: Math.floor((left % 3600) / 60),
-                s: left % 60
-            };
-
-            Object.keys(value).forEach(function (key) {
-                if (cells[key]) cells[key].textContent = pad(value[key]);
-            });
-
-            // Hết giờ thì dừng hẳn: đếm tiếp cũng chỉ ra 00:00:00:00 mỗi giây.
-            if (left === 0 && timer !== null) clearInterval(timer);
-        }
-
-        tick();
-        timer = setInterval(tick, 1000);
-    })();
-
-    /* ============================================================
-       3. HỘP THOẠI "KIỂM TRA 5 PHÚT"
+       2. HỘP THOẠI "KIỂM TRA 5 PHÚT"
        ============================================================ */
 
     (function quickCheck() {
@@ -689,7 +650,7 @@
     })();
 
     /* ============================================================
-       4. BĂNG TRƯỢT KHỐI ĐÁNH GIÁ
+       3. BĂNG TRƯỢT KHỐI ĐÁNH GIÁ
        ============================================================ */
 
     (function reviews() {
@@ -709,7 +670,7 @@
     })();
 
     /* ============================================================
-       5. BĂNG TRƯỢT HAI KHỐI SẢN PHẨM ("mới về" và "bán chạy")
+       4. BĂNG TRƯỢT HAI KHỐI SẢN PHẨM ("mới về" và "bán chạy")
 
        querySelectorAll chứ không querySelector như khối đánh giá: trang chủ có
        HAI băng loại này và mỗi băng cần một bộ đếm vị trí riêng — dùng chung

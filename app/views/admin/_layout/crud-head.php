@@ -33,7 +33,7 @@ $search = $search ?? null;
  * $addLabel vốn đã được khai trong khối tài liệu trên từ lâu, nhưng thân file
  * lại in cứng "+ Thêm mới" nên không nơi gọi nào truyền nó. Bản thiết kế đặt
  * cho mỗi trang một nhãn riêng: "+ Thêm sản phẩm", "+ Thêm danh mục",
- * "+ Thêm cơ sở", "+ Thêm sự kiện", "+ Tạo mã mới".
+ * "+ Thêm cơ sở", "+ Thêm bộ sưu tập", "+ Tạo mã mới".
  *
  * Không phải chuyện chữ nghĩa: nút này neo xuống #form ở cuối trang, tức là
  * bấm xong màn hình nhảy tới một biểu mẫu nằm ngoài tầm nhìn. Nhãn cụ thể là

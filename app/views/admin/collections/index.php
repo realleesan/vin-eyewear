@@ -3,7 +3,7 @@
 /**
  * admin/collections/index.php — bộ sưu tập (/quan-tri/bo-suu-tap).
  *
- * Cùng lối với admin/events/index.php: một trang vừa là bảng vừa là form,
+ * Cùng lối với admin/categories/index.php: một trang vừa là bảng vừa là form,
  * mở form sửa bằng ?sua=<id>.
  *
  * Cột "Sản phẩm" không chỉ để biết — nó GIẢI THÍCH TẠI CHỖ vì sao ô slug và

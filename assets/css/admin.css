@@ -480,14 +480,16 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 /* --- Dải trạng thái kho / nội dung -------------------------- */
 
-/* MỘT thẻ chia bốn ô, không phải bốn thẻ.
+/* MỘT thẻ chia nhiều ô, không phải nhiều thẻ rời.
    Đây là điểm khác nhau giữa hai tầng số liệu: hàng trên là bốn việc riêng
    biệt nên là bốn thẻ rời; dải này là một câu tóm tắt tình trạng nên đứng
-   chung một khung, ngăn bằng vạch mảnh. Tách nó ra thành bốn thẻ nữa là tám
+   chung một khung, ngăn bằng vạch mảnh. Tách nó ra thành ba thẻ nữa là bảy
    thẻ bằng nhau — đúng cái bản thiết kế bỏ đi. */
 .afacts {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* BA cột, không phải bốn: dải này có đúng ba ô kể từ khi bỏ ô "bài sự
+       kiện" (2026-08-26). Xem app/views/admin/dashboard/index.php. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin: 0 0 14px;
     padding: 0;
     list-style: none;
@@ -1055,7 +1057,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
  * `.js .astatus__save`, tức là MỌI nút mang lớp ấy, ở mọi nơi — mà lớp ấy là
  * lớp nút chính của cả khu quản trị. Hệ quả: bật JavaScript lên (tức là luôn
  * luôn) thì "+ Thêm mới", "Huỷ sửa", "Tìm" và nút "Lưu thay đổi" của các form
- * sản phẩm · danh mục · sự kiện · cơ sở · mã giảm giá · biến thể · tồn kho đều
+ * sản phẩm · danh mục · bộ sưu tập · cơ sở · mã giảm giá · biến thể · tồn kho đều
  * biến mất. Thêm `a.astatus__save { display: inline-grid }` ở dưới cũng không
  * cứu được: (0,2,0) của luật này thắng (0,1,1) của nó.
  *
@@ -1463,24 +1465,8 @@ a.astatus__save {
     color: #a2937f;
 }
 
-/* Bảng ký hiệu Markdown dưới ô "Nội dung" của sự kiện. Dấu chấm nằm trong lề
-   (list-position: inside) để danh sách thẳng hàng với dòng chú thích ở trên
-   thay vì thụt ra ngoài. */
-.field__hint--list {
-    margin-top: 2px;
-    padding-left: 2px;
-    list-style-position: inside;
-    line-height: 1.9;
-}
-
-.field__hint--list code {
-    padding: 1px 6px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-sunken, #f3efec);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: .95em;
-    color: var(--ink, #33272a);
-}
+/* .field__hint--list — bảng ký hiệu Markdown dưới ô "Nội dung" — đã bỏ
+   2026-08-26 cùng màn quản trị sự kiện, màn duy nhất có ô soạn Markdown. */
 
 .field__opt {
     text-transform: none;
@@ -1642,7 +1628,7 @@ a.astatus__save {
     accent-color: var(--brand);
 }
 
-/* Ảnh bìa sự kiện: đúng MỘT ảnh nên không cần lưới, chỉ cần chặn nó phình
+/* Ảnh bìa bộ sưu tập: đúng MỘT ảnh nên không cần lưới, chỉ cần chặn nó phình
    hết chiều ngang form. 132px trùng với ô nhỏ nhất của lưới .aimgs để hai màn
    quản trị nhìn cùng một cỡ. */
 .aimgs__one {

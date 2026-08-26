@@ -52,7 +52,6 @@ $navGroups = [
     ]],
     ['label' => 'Marketing', 'items' => [
         ['url' => '/quan-tri/bo-suu-tap',  'label' => 'Bộ sưu tập',  'icon' => 'layers'],
-        ['url' => '/quan-tri/su-kien',     'label' => 'Sự kiện',     'icon' => 'calendar'],
         ['url' => '/quan-tri/ma-giam-gia', 'label' => 'Mã giảm giá', 'icon' => 'percent'],
         ['url' => '/quan-tri/danh-gia',    'label' => 'Đánh giá',    'icon' => 'star', 'badge' => $pendingReviews],
     ]],

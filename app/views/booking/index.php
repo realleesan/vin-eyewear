@@ -41,23 +41,8 @@
 $company = config('company');
 $old     = $old ?? [];
 
-/* Đến từ nút "Đặt lịch tham dự" của một bài sự kiện. Ngày giờ ghép ở đây chứ
-   không dùng thẳng dateRange(): chương trình có giờ khai mạc thì giờ đó mới là
-   thứ khách cần đối chiếu với khung giờ vừa được chọn hộ bên dưới. */
-$event      = $event ?? null;
-$eventWhen  = $eventWhen ?? '';   // 'fit' | 'later' | 'over', do controller tính
-$eventDates = '';
-
-if ($event !== null) {
-    $eventDates = dateRange($event['starts_at'] ?? null, $event['ends_at'] ?? null);
-    $eventAt    = formatDate($event['starts_at'] ?? null, 'H:i');
-
-    // Nửa đêm nghĩa là bài chỉ ghi NGÀY, giờ 00:00 là do DATETIME phải có đủ
-    // phần giờ chứ không phải chương trình mở lúc nửa đêm — in ra là sai.
-    if ($eventAt !== '' && $eventAt !== '00:00') {
-        $eventDates = $eventDates === '' ? $eventAt : $eventDates . ' · ' . $eventAt;
-    }
-}
+/* Dòng nhắc "Đang đặt lịch tham dự …" cùng ô ẩn event_slug đã bỏ 2026-08-26,
+   theo tính năng sự kiện — xem chú thích trong app/controllers/BookingController.php. */
 
 partial('_layout/page-head', [
     'head_crumbs' => [['label' => 'Đặt lịch đo mắt']],
@@ -94,13 +79,6 @@ $steps = [
         <form class="bk__grid" method="post" action="/dat-lich/gui">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
 
-            <?php if ($event !== null): ?>
-                <?php /* Slug đi cùng form để lần gửi hụt còn quay về đúng bài sự
-                         kiện. Server KHÔNG lưu gì từ ô này — nội dung đăng ký nằm
-                         ở ô ghi chú đã điền sẵn. */ ?>
-                <input type="hidden" name="event_slug" value="<?= e($event['slug']) ?>">
-            <?php endif; ?>
-
             <!-- ══════════ CỘT TRÁI: BỐN BƯỚC ══════════ -->
             <div class="bk__steps">
 
@@ -112,33 +90,6 @@ $steps = [
                             <path d="M12 7.5V13M12 16.5h.01"></path>
                         </svg>
                         <?= e($error) ?>
-                    </p>
-                <?php endif; ?>
-
-                <?php if ($event !== null): ?>
-                    <p class="bknotice">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
-                            <rect x="3" y="5" width="18" height="16" rx="3"></rect>
-                            <path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"></path>
-                        </svg>
-                        <span>
-                            Đang đặt lịch tham dự <strong><?= e($event['title']) ?></strong><?=
-                                $eventDates === '' ? '' : ' · ' . e($eventDates) ?>.
-                            <?php if ($eventWhen === 'fit'): ?>
-                                Cơ sở, ngày và khung giờ bên dưới đã chọn sẵn theo chương trình —
-                                bạn đổi lại nếu muốn đến vào lúc khác.
-                            <?php elseif ($eventWhen === 'later'): ?>
-                                Chương trình nằm ngoài 7 ngày đang mở lịch nên chưa chọn ngày hộ được.
-                                Bạn chọn giúp một ngày bên dưới, hoặc gọi
-                                <a href="<?= e($company['hotline_href']) ?>"><?= e($company['hotline']) ?></a>
-                                để được giữ chỗ đúng hôm diễn ra.
-                            <?php else: ?>
-                                Chương trình này đã kết thúc, nhưng bạn vẫn đặt được lịch đo mắt
-                                miễn phí bên dưới. Cần hỏi về chương trình tương tự, gọi
-                                <a href="<?= e($company['hotline_href']) ?>"><?= e($company['hotline']) ?></a>.
-                            <?php endif; ?>
-                        </span>
                     </p>
                 <?php endif; ?>
 

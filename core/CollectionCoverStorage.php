@@ -8,19 +8,19 @@
  * Phần kiểm tra và cất file nằm ở core/ImageUploader.php — xem đầu file đó để
  * biết vì sao một cái ảnh cần bốn lớp chặn. Ở đây chỉ có tham số riêng.
  *
- * VÌ SAO KHÔNG DÙNG LẠI EventCoverStorage
- *
- * Hai lớp giống nhau tới từng con số, khác đúng một thứ: THƯ MỤC LƯU. Gộp lại
- * thì ảnh bộ sưu tập nằm trong assets/uploads/su-kien — và ngày nào đó có
- * người dọn ảnh của sự kiện đã xoá sẽ quét luôn cả ảnh bộ sưu tập đang dùng.
- * Một hằng số trùng nhau rẻ hơn nhiều so với lần dọn nhầm đó.
+ * Lớp này từng là bản sao của EventCoverStorage, khác đúng một thứ: THƯ MỤC
+ * LƯU. Giữ riêng chứ không gộp, vì gộp thì ảnh bộ sưu tập nằm chung trong
+ * assets/uploads/su-kien và một lần dọn ảnh sự kiện cũ sẽ quét nhầm cả ảnh
+ * đang dùng. Sự kiện đã bỏ hẳn (2026-08-26) nên chỉ còn lớp này — ghi lại để
+ * ai thấy nó "thừa giống ProductImageStorage" biết rằng nó không phải bản sao
+ * bỏ quên.
  *
  * Mỗi bộ đúng MỘT ảnh bìa (cột collections.cover_image là VARCHAR), nên lớp
  * này không có storeMany().
  *
- * Trần dung lượng và định dạng để BẰNG ảnh sự kiện và ảnh sản phẩm: cùng là
- * ảnh do cửa hàng chụp và tải lên, đặt ba con số khác nhau chỉ tạo ra câu hỏi
- * "vì sao chỗ này khác chỗ kia" mà không ai trả lời được.
+ * Trần dung lượng và định dạng để BẰNG ảnh sản phẩm: cùng là ảnh do cửa hàng
+ * chụp và tải lên, đặt hai con số khác nhau chỉ tạo ra câu hỏi "vì sao chỗ này
+ * khác chỗ kia" mà không ai trả lời được.
  */
 
 class CollectionCoverStorage

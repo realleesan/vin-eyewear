@@ -33,7 +33,6 @@ return [
     'nav.products'      => 'Sản phẩm',
     'nav.tryon'         => 'Thử kính ảo',
     'nav.about'         => 'Giới thiệu',
-    'nav.events'        => 'Sự kiện',
     'nav.collections'   => 'Bộ sưu tập',
     'nav.contact'       => 'Liên hệ',
     'nav.booking'       => 'Đặt lịch đo mắt',

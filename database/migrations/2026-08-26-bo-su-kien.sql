@@ -1,0 +1,41 @@
+-- ============================================================================
+-- NÂNG CẤP 2026-08-26
+-- Bỏ hẳn tính năng sự kiện — xoá bảng `events`
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- VÌ SAO XOÁ CHỨ KHÔNG ẨN
+--
+-- Ẩn từng bài (is_visible = 0) là cách đúng khi một chương trình kết thúc mà
+-- tính năng vẫn còn: bài cũ tra ngược được, bật lại được. Ở đây tính năng bị
+-- bỏ, không phải nội dung hết hạn — mã đọc bảng này đã xoá hết trong cùng
+-- commit (EventModel, EventController, EventDetailController,
+-- EventAdminController, EventCoverStorage và các route /su-kien*). Giữ lại một
+-- bảng không ai đọc chỉ tạo ra câu hỏi "cái này còn dùng không" cho người sau,
+-- và `php database/schema-check.php` sẽ báo lệch mãi vì schema.sql không còn
+-- khai nó.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- KHÔNG CÓ KHOÁ NGOẠI NÀO TRỎ TỚI `events`
+--
+-- Đã đối chiếu trước khi viết file này: bảng `appointments` KHÔNG có cột nào
+-- trỏ sang sự kiện — nút "Đặt lịch tham dự" chỉ chép tên chương trình vào ô
+-- ghi chú dạng chữ (xem BookingController::eventNote() trong lịch sử git).
+-- Nên lịch hẹn cũ giữ nguyên cả dòng lẫn ghi chú, không dòng nào bị cascade.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- CHẠY LẠI ĐƯỢC NHIỀU LẦN
+--
+-- DROP TABLE IF EXISTS: lần thứ hai không có gì để xoá và cũng không báo lỗi.
+-- Khai trong database/migrate.sh với kiểu 'data' vì file này không TẠO ra thứ
+-- gì để làm cột mốc — sổ ghi `schema_migrations` là thứ duy nhất chặn chạy lại.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ẢNH BÌA CŨ KHÔNG BỊ XOÁ THEO
+--
+-- Ảnh nằm trong assets/uploads/su-kien trên đĩa, ngoài tầm với của SQL. Deploy
+-- bằng FTP cũng không xoá file thừa trên hosting, nên thư mục đó ở lại cho tới
+-- khi có người dọn tay. Không tự động hoá việc dọn: một câu lệnh xoá đệ quy
+-- chạy nhầm thư mục thì không lùi được, mà chỗ này chỉ tốn vài trăm KB.
+-- ============================================================================
+
+DROP TABLE IF EXISTS `events`;

@@ -18,7 +18,7 @@
  * với mọi link /san-pham?collection=… đã phát ra ngoài — đổi slug của một bộ
  * đã phát hành là làm chết cả hai cùng lúc.
  *
- * Cùng lối với EventModel: mọi hàm cho trang công khai đều lọc is_visible = 1;
+ * Mọi hàm cho trang công khai đều lọc is_visible = 1;
  * khu quản trị dùng all() để thấy cả bản đang ẩn.
  * ─────────────────────────────────────────────────────────────────────────────
  */

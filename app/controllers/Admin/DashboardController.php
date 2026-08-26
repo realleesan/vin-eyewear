@@ -18,7 +18,6 @@ class DashboardController extends AdminController
                 (SELECT COUNT(*) FROM products WHERE is_visible = 1)              AS products,
                 (SELECT COUNT(*) FROM products WHERE stock_quantity <= 5)         AS low_stock,
                 (SELECT COUNT(*) FROM categories WHERE is_visible = 1)            AS categories,
-                (SELECT COUNT(*) FROM events WHERE is_visible = 1)                AS events,
                 (SELECT COUNT(*) FROM orders)                                      AS orders,
                 (SELECT COUNT(*) FROM orders WHERE status = 'new')                 AS new_orders,
                 (SELECT COUNT(*) FROM appointments WHERE status = 'pending')       AS pending_appointments,

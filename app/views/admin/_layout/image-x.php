@@ -3,7 +3,7 @@
 /**
  * admin/_layout/image-x.php — nút "×" xoá một ảnh đã tải lên.
  *
- * Dùng ở cả ba màn có ảnh: bộ sưu tập, sự kiện, sản phẩm.
+ * Dùng ở cả hai màn có ảnh: bộ sưu tập và sản phẩm.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * KHÔNG PHẢI NÚT JAVASCRIPT — LÀ MỘT Ô TICK ĐƯỢC VẼ THÀNH DẤU ×
@@ -25,7 +25,7 @@
  * HAI CHIỀU NGƯỢC NHAU, GIỮ NGUYÊN DÂY GỬI LÊN
  *
  * Sản phẩm gửi `image_keep[]` — TICK NGHĨA LÀ GIỮ, bỏ tick mới là xoá.
- * Sự kiện và bộ sưu tập gửi `cover_remove` — tick nghĩa là XOÁ.
+ * Bộ sưu tập gửi `cover_remove` — tick nghĩa là XOÁ.
  *
  * Đã cân nhắc thống nhất về một chiều rồi bỏ: đổi ý nghĩa của `image_keep[]`
  * bắt phải sửa cả đoạn so sánh danh sách ảnh trong ProductAdminController, mà

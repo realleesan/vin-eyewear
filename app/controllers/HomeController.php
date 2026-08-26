@@ -25,13 +25,6 @@ class HomeController extends BaseController
                           . 'Đo khúc xạ miễn phí, thử kính AR trực tuyến, bảo hành trọn đời.',
 
             /*
-             * Ưu đãi đang chạy — dải đếm ngược trong hero. Trả null khi không
-             * còn ưu đãi nào trong hạn, và hero tự ẩn dải đó đi: một chiếc
-             * đồng hồ đếm ngược tới hư không còn tệ hơn là không có nó.
-             */
-            'promo' => EventModel::currentPromo(),
-
-            /*
              * Hàng vừa lên kệ. 8 chứ không phải 4 (bản thiết kế xếp đúng một
              * hàng 4 thẻ): hai lưới sản phẩm của trang chủ nay là BĂNG TRƯỢT
              * có mũi tên tới/lui, mà một băng chỉ đủ lấp đúng một khung nhìn

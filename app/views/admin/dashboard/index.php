@@ -48,8 +48,10 @@ $facts = [
      'url'   => '/quan-tri/ton-kho', 'warn' => true],
     ['value' => (int) $stats['categories'], 'label' => 'danh mục',
      'url'   => '/quan-tri/danh-muc'],
-    ['value' => (int) $stats['events'],     'label' => 'bài sự kiện',
-     'url'   => '/quan-tri/su-kien'],
+    /* Ô thứ tư từng là "bài sự kiện" -> /quan-tri/su-kien, bỏ 2026-08-26 cùng
+       tính năng sự kiện. Dải nay còn BA ô và .afacts trong admin.css đã đổi
+       sang lưới 3 cột — bốn cột với ba ô để lại một phần tư trống bên phải,
+       trông như trang tải hụt. Thêm ô thứ tư thì nhớ chỉnh lại lưới. */
 ];
 ?>
 <header class="ahead">

@@ -119,6 +119,10 @@ MIGRATIONS=(
     # lại cũng chỉ in ra một dòng "đã bỏ, bỏ qua".
     "2026-08-25-bo-han-cot-khung-gio.sql|data||"
     "2026-08-25-bang-bo-suu-tap.sql|table|collections|"
+    # Bỏ hẳn tính năng sự kiện: file này XOÁ bảng `events`, không tạo ra thứ gì
+    # để làm mốc. Kiểu 'data' — DROP TABLE IF EXISTS chạy lại bao nhiêu lần
+    # cũng ra cùng một kết quả.
+    "2026-08-26-bo-su-kien.sql|data||"
 )
 
 # ---------------------------------------------------------------------------

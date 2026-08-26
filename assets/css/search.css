@@ -116,10 +116,10 @@
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.2s;
 }
 
-/* Bài không có ảnh bìa, và mọi mục hỏi–đáp: một cột chữ chiếm hết bề ngang,
-   không chừa lại một ô 200px trống. */
-.srchitem--faq .srchitem__link,
-.srchitem__link:not(:has(.srchitem__media)) {
+/* Mọi mục hỏi–đáp: một cột chữ chiếm hết bề ngang, không chừa lại một ô 200px
+   trống. Nhánh :not(:has(.srchitem__media)) đi cùng nhóm "Bài viết & sự kiện"
+   đã bỏ 2026-08-26 — nay mọi mục còn lại đều không có ảnh bìa. */
+.srchitem--faq .srchitem__link {
     grid-template-columns: minmax(0, 1fr);
 }
 
@@ -130,20 +130,8 @@
     box-shadow: var(--h-shadow-lift);
 }
 
-.srchitem__media {
-    display: block;
-    height: 140px;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background: var(--h-shell);
-}
-
-.srchitem__media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
+/* .srchitem__media (ảnh bìa) và .srchitem__tag (nhãn phân loại) đã bỏ cùng
+   nhóm "Bài viết & sự kiện" 2026-08-26 — chỉ bài viết mới có hai thứ đó. */
 
 .srchitem__body {
     display: flex;
@@ -159,15 +147,6 @@
     gap: 10px;
     font-size: 12px;
     color: var(--h-note);
-}
-
-.srchitem__tag {
-    padding: 4px 11px;
-    border-radius: var(--radius-sm);
-    background: var(--brand-subtle);
-    color: var(--brand);
-    font-weight: 600;
-    letter-spacing: 0.04em;
 }
 
 .srchitem__title {
@@ -260,5 +239,4 @@
     .srch { padding-bottom: 64px; }
     .srch__form { flex-wrap: wrap; }
     .srchitem__link { grid-template-columns: minmax(0, 1fr); }
-    .srchitem__media { height: 180px; }
 }

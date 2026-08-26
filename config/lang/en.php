@@ -20,7 +20,6 @@ return [
     'nav.products'      => 'Products',
     'nav.tryon'         => 'Virtual try-on',
     'nav.about'         => 'About us',
-    'nav.events'        => 'Events',
     'nav.collections'   => 'Collections',
     'nav.contact'       => 'Contact',
     'nav.booking'       => 'Book an eye test',

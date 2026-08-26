@@ -260,27 +260,11 @@ function formatDate(?string $datetime, string $format = 'd/m/Y'): string
     return $timestamp === false ? '' : date($format, $timestamp);
 }
 
-/**
- * Khoảng thời gian diễn ra sự kiện, gộp gọn khi cùng ngày:
- *   (20/08, 31/08) -> "20/08/2026 – 31/08/2026"
- *   (05/09, null)  -> "05/09/2026"
- *   (18/09, 18/09) -> "18/09/2026"
- */
-function dateRange(?string $startsAt, ?string $endsAt): string
-{
-    $start = formatDate($startsAt);
-    $end   = formatDate($endsAt);
-
-    if ($start === '') {
-        return '';
-    }
-
-    if ($end === '' || $end === $start) {
-        return $start;
-    }
-
-    return $start . ' – ' . $end;
-}
+/* dateRange() ĐÃ BỎ 2026-08-26. Nó ghép "20/08/2026 – 31/08/2026" cho khoảng
+   ngày của một bài sự kiện, và cả bốn nơi gọi (trang danh sách, trang chi
+   tiết, dòng nhắc ở /dat-lich, thẻ kết quả tìm kiếm) đều đi cùng tính năng sự
+   kiện. Bỏ luôn thay vì để lại: một helper không ai gọi thì lần sau có người
+   sửa formatDate() sẽ phải cân nhắc cả nó mà không biết nó dùng ở đâu. */
 
 // ============================================================================
 // CHUỖI

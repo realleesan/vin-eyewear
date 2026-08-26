@@ -3,7 +3,7 @@
 /**
  * CollectionAdminController — bộ sưu tập (/quan-tri/bo-suu-tap).
  *
- * Dựng theo đúng lối của EventAdminController: một trang vừa là danh sách vừa
+ * Dựng theo đúng lối của CategoryAdminController: một trang vừa là danh sách vừa
  * là form, mở form sửa bằng ?sua=<id>.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -194,7 +194,7 @@ class CollectionAdminController extends AdminController
     /**
      * Ảnh bìa cuối cùng của bộ sưu tập.
      *
-     * Ba tình huống, đúng thứ tự ưu tiên — giống EventAdminController::cover():
+     * Ba tình huống, đúng thứ tự ưu tiên:
      *   1. Có chọn file mới  -> dùng file mới, xoá file cũ.
      *   2. Tick "Bỏ ảnh bìa" -> về null, xoá file cũ.
      *   3. Không đụng gì     -> giữ nguyên ảnh đang có.

@@ -66,7 +66,7 @@ class Router
     }
 
     /**
-     * Đối chiếu URL với các route dạng 'su-kien/{slug}'.
+     * Đối chiếu URL với các route dạng 'san-pham/{slug}'.
      *
      * Giá trị bắt được truyền vào action theo đúng thứ tự xuất hiện.
      * Trả về true nếu đã xử lý xong.
@@ -88,7 +88,7 @@ class Router
 
             foreach ($patternSegments as $i => $segment) {
                 if (str_starts_with($segment, '{') && str_ends_with($segment, '}')) {
-                    // Đoạn rỗng không tính là khớp: '/su-kien/' không phải
+                    // Đoạn rỗng không tính là khớp: '/san-pham/' không phải
                     // là một slug hợp lệ, phải để nó rơi xuống 404.
                     if ($uriSegments[$i] === '') {
                         $matched = false;

@@ -8,8 +8,8 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * ĐƯỜNG DẪN TIẾNG VIỆT
  *
- * Bản Lovable dùng URL tiếng Việt (/san-pham, /su-kien, /gioi-thieu…), bản PHP
- * cũ dùng tiếng Anh (/product, /event, /about…). Port frontend thì lấy theo
+ * Bản Lovable dùng URL tiếng Việt (/san-pham, /bo-suu-tap, /gioi-thieu…), bản
+ * PHP cũ dùng tiếng Anh (/product, /collection, /about…). Port frontend thì lấy theo
  * Lovable, vì hai lý do:
  *
  *   1. Toàn bộ liên kết trong 22 trang nguồn đều trỏ URL tiếng Việt. Giữ URL
@@ -56,15 +56,6 @@ return [
      * đầy đủ ghi ở đầu app/controllers/CollectionController.php.
      */
     'bo-suu-tap'       => 'CollectionController@index',
-
-    /*
-     * SỰ KIỆN vẫn chạy đủ (danh sách, chi tiết, CRUD quản trị, nút "Đặt lịch
-     * tham dự" ở /dat-lich?su-kien=…), chỉ KHÔNG còn ô trên thanh điều hướng
-     * chính — chỗ đó nay là Bộ sưu tập. Link đã chia sẻ và link trong bài vẫn
-     * mở được bình thường.
-     */
-    'su-kien'          => 'EventController@index',
-    'su-kien/{slug}'   => 'EventDetailController@show',
 
     'gioi-thieu'       => 'AboutController@index',
     'lien-he'          => 'ContactController@index',
@@ -249,10 +240,6 @@ return [
     'quan-tri/bo-suu-tap/luu' => 'CollectionAdminController@save',      // POST
     'quan-tri/bo-suu-tap/xoa' => 'CollectionAdminController@delete',    // POST
 
-    'quan-tri/su-kien'      => 'EventAdminController@index',
-    'quan-tri/su-kien/luu'  => 'EventAdminController@save',        // POST
-    'quan-tri/su-kien/xoa'  => 'EventAdminController@delete',      // POST
-
     'quan-tri/bien-the'     => 'VariantAdminController@index',
     'quan-tri/bien-the/luu' => 'VariantAdminController@save',    // POST
     'quan-tri/bien-the/xoa' => 'VariantAdminController@delete',  // POST
@@ -310,8 +297,11 @@ return [
     'category'         => 'redirect:/san-pham',
     'danh-muc'         => 'redirect:/san-pham',   // Lovable không có trang danh mục riêng
     'about'            => 'redirect:/gioi-thieu',
-    'event'            => 'redirect:/su-kien',
-    'event/detail'     => 'redirect:/su-kien',
+    /* 'event' và 'event/detail' ĐÃ BỎ cùng với tính năng sự kiện (2026-08-26).
+       Không trỏ chúng sang /bo-suu-tap hay trang chủ: nội dung đã biến mất
+       thật, mà chuyển hướng sang một trang không liên quan là "soft 404" —
+       máy tìm kiếm coi đó là lừa và giữ URL cũ trong chỉ mục lâu hơn. Để 404
+       là nói đúng sự thật, và /su-kien/{slug} cũng vậy. */
     'contact'          => 'redirect:/lien-he',
     'ar'               => 'redirect:/thu-ar',
     'cart'             => 'redirect:/gio-hang',

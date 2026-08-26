@@ -439,8 +439,8 @@ body {
  *   neo theo vùng cuộn ấy thay vì theo màn hình — cuộn trang là chúng trôi đi
  *   mất.
  *
- * Đã dính thật ở hai chỗ: cột lọc chuyên mục trang /su-kien và cột điều hướng
- * trang /tai-khoan, cả hai khai `position: sticky` mà không dính.
+ * Đã dính thật ở hai chỗ: cột lọc của trang danh mục và cột điều hướng trang
+ * /tai-khoan, cả hai khai `position: sticky` mà không dính.
  *
  * Để trên <html> thì trang vẫn không trượt ngang được, mà <html> vẫn là vùng
  * cuộn của cả trang nên sticky neo đúng theo màn hình.

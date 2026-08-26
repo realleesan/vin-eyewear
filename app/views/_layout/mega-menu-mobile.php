@@ -14,7 +14,7 @@
  * CHỈ danh mục, không có các lát cắt lọc (dáng gọng, chất liệu, thương hiệu)
  * và không có thẻ sản phẩm. Menu trượt là để ĐI TỚI một trang, không phải để
  * duyệt kho — nhồi cả năm cột của bản desktop vào đây thì người dùng phải
- * cuộn qua bốn chục dòng mới tới "Sự kiện". Lọc sâu đã có cột lọc ở chính
+ * cuộn qua bốn chục dòng mới tới "Liên hệ". Lọc sâu đã có cột lọc ở chính
  * trang /san-pham, rộng rãi hơn nhiều.
  *
  * Nhận từ header.php: $categories, $isProductActive.

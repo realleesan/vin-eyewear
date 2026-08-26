@@ -130,6 +130,9 @@ abstract class AdminController extends BaseController
      *
      * Khớp policy gốc: "admin products/categories/events/stores" giới hạn ở
      * admin và manager, còn staff chỉ xem được đơn hàng và lịch hẹn.
+     *
+     * Trích nguyên văn policy nên vẫn có chữ "events" — bảng đó đã bỏ
+     * 2026-08-26, luật còn lại áp cho ba nhóm kia và cho bộ sưu tập.
      */
     protected function requireManager(string $fallback): void
     {
