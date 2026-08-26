@@ -88,6 +88,15 @@ class AuthMiddleware
     /** Đã thử khôi phục từ cookie "ghi nhớ" trong request này chưa. */
     private static bool $rememberChecked = false;
 
+    /**
+     * Nhớ kết quả "tài khoản này còn đăng nhập được không" trong suốt request.
+     *
+     * Khoá là id, giá trị là bool. Một trang gọi customerId() hàng chục lần —
+     * header, giỏ hàng, mỗi khối cần biết đã đăng nhập chưa — và không có ô
+     * nhớ này thì mỗi lần gọi là một lượt đi về cơ sở dữ liệu.
+     */
+    private static array $conSong = [];
+
     // ========================================================================
     // KHU KHÁCH HÀNG
     // ========================================================================
@@ -116,6 +125,56 @@ class AuthMiddleware
         }
 
         if ($userId === null || UserModel::isStaff($userId)) {
+            return null;
+        }
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * TÀI KHOẢN BỊ KHOÁ HOẶC ĐÃ XOÁ THÌ PHIÊN ĐANG MỞ CŨNG PHẢI CHẾT.
+         *
+         * Không có dòng này thì nút "Khoá tài khoản" trong khu quản trị chỉ
+         * chặn được LẦN ĐĂNG NHẬP SAU. Người đang mở sẵn một tab vẫn mua hàng,
+         * vẫn đổi hồ sơ, vẫn đọc đơn thuốc của mình — cho tới khi phiên PHP hết
+         * hạn, mà phiên thì sống hàng tuần. Ba cửa kia (mật khẩu, Google,
+         * cookie ghi nhớ) đã chặn rồi; đây là cửa thứ tư.
+         *
+         * ─────────────────────────────────────────────────────────────────────
+         * ĐÂY LÀ ĐÚNG CHỖ ĐÃ LÀM TRẮNG CẢ SITE NGÀY 2026-08-22.
+         *
+         * Bản đó (commit 0628170, bị revert bằng 7e14d0d sau bốn phút) cũng đặt
+         * một phép kiểm "tài khoản còn sống không" ngay trên đường mà MỌI
+         * request đều đi qua. Nguyên nhân không được ghi lại, nhưng hình dạng
+         * hỏng thì rõ: một câu SELECT nhắc tới cột `deleted_at` trên cơ sở dữ
+         * liệu chưa chạy migration là lỗi 1054, và vì nó nằm ở đây nên nó không
+         * làm hỏng một trang mà hỏng tất cả.
+         *
+         * Ba thứ khiến bản này không lặp lại chuyện đó:
+         *
+         *   1. UserModel::coTheDangNhap() HỎI CỘT CÓ TỒN TẠI KHÔNG trước khi
+         *      nhắc tới nó (Database::columnExists, có nhớ đệm), và trả TRUE
+         *      khi không có cột — chưa nâng cấp thì mọi người vào bình thường.
+         *   2. try/catch bọc ngoài, hỏng thì CHO QUA. Một tài khoản bị khoá vẫn
+         *      vào được trong vài phút là chuyện phải gọi điện xử lý; cả site
+         *      trắng trang thì không.
+         *   3. Nhớ kết quả trong suốt request: một trang gọi customerId() hàng
+         *      chục lần, không hỏi cơ sở dữ liệu chừng ấy lần.
+         *
+         * VÀ NÓ KHÔNG GHI GÌ RA NGOÀI — không setcookie, không redirect, không
+         * echo. Chỉ trả null, tức là "không có ai đăng nhập". Hàm này được gọi
+         * ở giữa lúc dựng trang, nên bất cứ thứ gì chạm tới header ở đây đều là
+         * một cảnh báo "headers already sent" chờ sẵn.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        if (!isset(self::$conSong[$userId])) {
+            try {
+                self::$conSong[$userId] = UserModel::coTheDangNhap($userId);
+            } catch (Throwable $e) {
+                error_log('AuthMiddleware: không kiểm được trạng thái tài khoản — ' . $e->getMessage());
+                self::$conSong[$userId] = true;
+            }
+        }
+
+        if (!self::$conSong[$userId]) {
             return null;
         }
 

@@ -146,6 +146,24 @@ class RememberModel extends BaseModel
 
         $userId = (string) $row['user_id'];
 
+        /* CỬA VÀO THỨ BA — cookie này không đi qua UserModel::attempt() lẫn
+           ::findOrCreateGoogle() một dòng nào.
+
+           CustomerModel::lock() và ::softDelete() đã gọi forgetAllFor() nên
+           token cũ chết ngay lúc bấm nút; kiểm thêm ở đây là để phòng đường
+           khác — ai đó sửa thẳng cột `status` bằng phpMyAdmin chẳng hạn, đúng
+           việc đã phải làm ngày 2026-08-23 để lấy lại quyền trên hosting.
+
+           Huỷ luôn token thay vì chỉ từ chối: để nó sống thì mỗi lượt tải
+           trang lại tra cơ sở dữ liệu một lần cho một cookie không bao giờ
+           dùng được nữa. */
+        if (!UserModel::coTheDangNhap($userId)) {
+            self::forgetById((string) $row['id']);
+            self::clearCookie();
+
+            return null;
+        }
+
         // Xoay: dùng xong là bỏ, cấp cái mới
         self::forgetById((string) $row['id']);
         self::issue($userId);

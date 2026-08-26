@@ -192,6 +192,18 @@ class UserModel extends BaseModel
         $existing = Database::fetchOne('SELECT id FROM users WHERE google_id = :g', ['g' => $sub]);
 
         if ($existing !== null) {
+            /* KHOÁ VÀ XOÁ MỀM PHẢI CHẶN CẢ ĐƯỜNG GOOGLE.
+
+               attempt() ở trên đã chặn đường mật khẩu, nhưng đây là một cửa
+               khác vào cùng một tài khoản — và nó không đi qua attempt() một
+               dòng nào. Bỏ sót chỗ này thì nút khoá chỉ khoá được nửa số
+               khách, đúng nửa mà người bấm nút không nghĩ tới. */
+            $chan = self::chanNeuKhongVaoDuoc($existing['id']);
+
+            if ($chan !== null) {
+                return $chan;
+            }
+
             return ['ok' => true, 'id' => $existing['id'], 'created' => false];
         }
 
@@ -206,6 +218,15 @@ class UserModel extends BaseModel
                 // ghi đè là đá tài khoản Google cũ ra khỏi chính tài khoản đó.
                 if (($byEmail['google_id'] ?? null) !== null) {
                     return ['ok' => false, 'error' => 'Email này đã liên kết với một tài khoản Google khác.'];
+                }
+
+                // Cùng lý do với nhánh trên — và ở đây còn quan trọng hơn:
+                // nhánh này NỐI một tài khoản Google vào một tài khoản mật khẩu
+                // sẵn có, tức là mở thêm một chìa cho một cánh cửa đang khoá.
+                $chan = self::chanNeuKhongVaoDuoc($byEmail['id']);
+
+                if ($chan !== null) {
+                    return $chan;
                 }
 
                 Database::execute(
@@ -314,6 +335,21 @@ class UserModel extends BaseModel
             return null;
         }
 
+        /* LOẠI TÀI KHOẢN ĐÃ XOÁ MỀM NGAY TẠI ĐÂY, không phải ở nơi gọi.
+
+           Hàm này là cửa duy nhất mà mọi đường "tìm người dùng theo thứ họ gõ"
+           đi qua: đăng nhập, quên mật khẩu, tra cứu ở quầy. Lọc ở đây thì thêm
+           một đường mới sau này cũng tự được lọc; lọc ở từng nơi gọi thì chỉ
+           cần một chỗ quên là tài khoản đã xoá vẫn đăng nhập được — mà không
+           có gì báo cho ai biết.
+
+           Cột `deleted_at` chỉ có từ migration 2026-08-26. Máy chưa chạy file
+           đó thì nhắc tới nó là lỗi 1054 và KHÔNG AI ĐĂNG NHẬP ĐƯỢC NỮA — nên
+           phải hỏi trước. Xem Database::columnExists(). */
+        $locXoa = Database::columnExists('users', 'deleted_at')
+            ? ' AND u.deleted_at IS NULL'
+            : '';
+
         if (looksLikePhone($login)) {
             $phone = normalizePhone($login);
 
@@ -325,7 +361,7 @@ class UserModel extends BaseModel
                 'SELECT u.*, p.full_name, p.phone
                    FROM profiles p
                    JOIN users u ON u.id = p.id
-                  WHERE p.phone = :phone',
+                  WHERE p.phone = :phone' . $locXoa,
                 ['phone' => $phone]
             );
         }
@@ -334,9 +370,59 @@ class UserModel extends BaseModel
             'SELECT u.*, p.full_name, p.phone
                FROM users u
                LEFT JOIN profiles p ON p.id = u.id
-              WHERE u.email = :email',
+              WHERE u.email = :email' . $locXoa,
             ['email' => strtolower($login)]
         );
+    }
+
+    /**
+     * Tài khoản này có bị chặn không (khoá hoặc đã xoá mềm)?
+     *
+     * @return array|null Mảng lỗi để trả thẳng ra, hoặc null nếu vào được.
+     *
+     * MỘT CHỖ ĐỊNH NGHĨA "KHÔNG VÀO ĐƯỢC", dùng cho mọi cửa vào. Chép điều
+     * kiện này ra từng nhánh thì mỗi lần thêm một trạng thái mới lại phải nhớ
+     * hết các nhánh — và cái quên sẽ là một cánh cửa mở.
+     *
+     * Câu chữ trả về giống hệt nhau cho cả hai ca: khách bị xoá không cần biết
+     * mình bị xoá hay bị khoá, họ chỉ cần biết phải gọi cho cửa hàng.
+     */
+    private static function chanNeuKhongVaoDuoc(string $userId): ?array
+    {
+        return self::coTheDangNhap($userId)
+            ? null
+            : ['ok' => false, 'error' => 'Tài khoản đã bị khoá. Vui lòng liên hệ cửa hàng.'];
+    }
+
+    /**
+     * Tài khoản còn đăng nhập được không (chưa khoá, chưa xoá mềm)?
+     *
+     * Công khai vì RememberModel cũng phải hỏi: cookie "ghi nhớ đăng nhập" là
+     * một cửa vào thứ ba, không đi qua attempt() lẫn findOrCreateGoogle().
+     *
+     * Trả TRUE khi không tra được: cột `status` chỉ có từ migration
+     * 2026-08-26, và trên máy chưa chạy file đó thì không có trạng thái nào để
+     * kiểm. Mở cửa trong ca đó là đúng — đóng lại nghĩa là một file nâng cấp
+     * chưa chạy sẽ khoá toàn bộ khách hàng ra khỏi tài khoản của họ.
+     */
+    public static function coTheDangNhap(string $userId): bool
+    {
+        // Hỏi trước khi nhắc tới cột: thiếu nó thì câu SELECT đổ lỗi 1054 ngay
+        // trên đường đăng nhập, và cả site đóng cửa chứ không riêng một tính năng.
+        if (!Database::columnExists('users', 'status')) {
+            return true;
+        }
+
+        $row = Database::fetchOne(
+            'SELECT status, deleted_at FROM users WHERE id = :id',
+            ['id' => $userId]
+        );
+
+        if ($row === null) {
+            return true;
+        }
+
+        return $row['deleted_at'] === null && ($row['status'] ?? 'active') !== 'locked';
     }
 
     /**
@@ -365,6 +451,20 @@ class UserModel extends BaseModel
 
         if (!password_verify($password, $user['password_hash'])) {
             return ['ok' => false, 'error' => 'Thông tin đăng nhập không đúng.'];
+        }
+
+        /* TÀI KHOẢN BỊ KHOÁ — KIỂM SAU password_verify, KHÔNG PHẢI TRƯỚC.
+
+           Đặt trước thì ô đăng nhập thành công cụ dò: gõ một email bất kỳ, thấy
+           câu "đã bị khoá" là biết địa chỉ đó có tài khoản ở đây và đang bị
+           khoá — thông tin không nên cho người chưa chứng minh được mình là
+           chủ. Đặt sau thì chỉ người gõ ĐÚNG mật khẩu mới đọc được câu đó.
+
+           Câu chữ CỐ TÌNH không nói lý do khoá: lý do là ghi chú nội bộ, và
+           người quyết định nên nói gì với khách là người nhấc điện thoại chứ
+           không phải màn hình đăng nhập. */
+        if (($user['status'] ?? 'active') === 'locked') {
+            return ['ok' => false, 'error' => 'Tài khoản đã bị khoá. Vui lòng liên hệ cửa hàng.'];
         }
 
         // Nâng cấp hash khi PHP đổi thuật toán mặc định hoặc đổi độ khó.
