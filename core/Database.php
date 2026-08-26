@@ -170,6 +170,9 @@ class Database
 
     /** @var array<string, bool> Nhớ kết quả trong một request, xem tableExists() */
     private static array $tableCache = [];
+    
+    /** Nhớ kết quả columnExists() trong suốt request. Khoá: 'bang.cot'. */
+    private static array $columnCache = [];
 
     /**
      * Bảng này đã tồn tại chưa?
@@ -200,6 +203,40 @@ class Database
             return self::$tableCache[$table] = $n > 0;
         } catch (Throwable) {
             return self::$tableCache[$table] = false;
+        }
+    }
+    /**
+     * Cột này đã tồn tại trong bảng chưa?
+     *
+     * Cùng lý do với tableExists() ngay trên, nhưng cho trường hợp hay gặp
+     * hơn: một file nâng cấp THÊM CỘT vào bảng đã có. Máy chưa chạy file đó
+     * thì câu SELECT nhắc tới cột mới sẽ đổ lỗi 1054 — và nếu câu ấy nằm trên
+     * đường ĐĂNG NHẬP thì cả site đóng cửa, không riêng một tính năng.
+     *
+     * Đúng chuyện đã xảy ra ngày 2026-08-22 với năm cột wear_* của bảng
+     * `prescriptions`: khách bấm "Xác nhận độ kính" rồi bị đá về giỏ hàng,
+     * không một lời giải thích.
+     */
+    public static function columnExists(string $table, string $column): bool
+    {
+        $khoa = $table . '.' . $column;
+
+        if (isset(self::$columnCache[$khoa])) {
+            return self::$columnCache[$khoa];
+        }
+
+        try {
+            $n = (int) self::fetchValue(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = DATABASE()
+                    AND TABLE_NAME   = :t
+                    AND COLUMN_NAME  = :c',
+                ['t' => $table, 'c' => $column]
+            );
+
+            return self::$columnCache[$khoa] = $n > 0;
+        } catch (Throwable) {
+            return self::$columnCache[$khoa] = false;
         }
     }
 }

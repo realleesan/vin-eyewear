@@ -264,6 +264,18 @@ if (in_array('admin', $adminRoles, true)) {
 
 <script src="<?= asset('assets/js/admin.js') ?>" defer></script>
 <script src="<?= asset('assets/js/confirm-dialog.js') ?>" defer></script>
+
+<?php /* SCRIPT RIÊNG CỦA TỪNG TRANG QUẢN TRỊ.
+
+         Khung của site bán hàng có bảng $pageScripts tra theo tên route; ở đây
+         thì controller truyền thẳng mảng đường dẫn qua renderAdmin(). Khác cách
+         làm vì lý do khác: khu quản trị có ít trang cần JS riêng, mà một bảng
+         tra cứu đặt ở khung thì mỗi lần thêm trang lại phải sửa hai file.
+
+         Trang nào không khai thì vòng lặp này chạy 0 vòng. */ ?>
+<?php foreach ($adminScripts ?? [] as $adminScript): ?>
+    <script src="<?= asset($adminScript) ?>" defer></script>
+<?php endforeach; ?>
 </body>
 
 </html>
