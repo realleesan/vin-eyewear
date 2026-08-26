@@ -42,7 +42,7 @@ jobs:
           # Đổi tên file trạng thái là cách bảo action "chưa từng deploy bao giờ":
           # nó không tìm thấy trạng thái cũ nên đẩy lại TẤT CẢ, ghi đè file hỏng.
           #
-          # Đổi tên chứ không xoá file cũ: `dangerous-clean-up: false` nên bản cũ
+          # Đổi tên chứ không xoá file cũ: `dangerous-clean-slate` để false nên bản cũ
           # cứ nằm đó, và nếu lần này hỏng thì đổi tên ngược lại là quay về đúng
           # trạng thái trước.
           #
@@ -59,7 +59,27 @@ jobs:
           # trang thật thì nhận 404 của ứng dụng, nghĩa là file không có trên
           # đĩa — mà .htaccess chỉ đẩy về index.php khi REQUEST_FILENAME !-f.
           state-name: .ftp-deploy-sync-state-v3.json
-          dangerous-clean-up: false # Không tự ý xóa nhầm file không có trong Git trên hosting
+          # THAM SỐ NÀY TỪNG GÕ SAI TÊN VÀ BỊ BỎ QUA IM LẶNG.
+          #
+          # Trước đây viết `dangerous-clean-up`, mà action không có input nào
+          # tên vậy — tên đúng là `dangerous-clean-slate`. Action chỉ in một
+          # dòng Warning giữa hàng trăm dòng log rồi chạy tiếp, nên suốt nhiều
+          # lần deploy không ai thấy:
+          #
+          #   Warning: Unexpected input(s) 'dangerous-clean-up', valid inputs
+          #   are [... 'dangerous-clean-slate' ...]
+          #
+          # May là mặc định của nó vốn đã là false, nên hành vi thật vẫn đúng
+          # với ý định. Nhưng một dòng cấu hình KHÔNG LÀM GÌ CẢ trong khi chú
+          # thích ngay cạnh nói nó đang bảo vệ mình thì nguy hiểm hơn là không
+          # có dòng nào: lần sau ai đó cần tắt/bật thật sẽ sửa đúng dòng này và
+          # tưởng đã xong.
+          #
+          # false = KHÔNG xoá file trên hosting chỉ vì nó không có trong Git.
+          # Trên server có những thứ Git không giữ và không được phép mất:
+          # .env (mật khẩu CSDL), assets/uploads/ (ảnh sản phẩm nhân viên tải
+          # lên), storage/ (token Zalo, log thư).
+          dangerous-clean-slate: false
           timeout: 60000 # Tăng thời gian chờ response lên 60 giây để tránh đứt kết nối
 
           # KHÔNG ĐẨY relay/ LÊN HOSTING.
