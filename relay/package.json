@@ -1,0 +1,14 @@
+{
+  "name": "vin-eyewear-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cầu nối webhook SePay -> website Vin Eyewear trên InfinityFree",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

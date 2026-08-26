@@ -48,3 +48,20 @@ jobs:
           state-name: .ftp-deploy-sync-state-v2.json
           dangerous-clean-up: false # Không tự ý xóa nhầm file không có trong Git trên hosting
           timeout: 60000 # Tăng thời gian chờ response lên 60 giây để tránh đứt kết nối
+
+          # KHÔNG ĐẨY relay/ LÊN HOSTING.
+          #
+          # Thư mục đó là mã Node.js của cầu nối SePay, chạy trên Render chứ
+          # không phải ở đây — InfinityFree không chạy Node. Đẩy lên thì nó nằm
+          # chết trong htdocs, tốn dung lượng của gói miễn phí, và phơi cấu trúc
+          # bên trong của tích hợp ra ngoài mà chẳng đổi lấy được gì.
+          #
+          # Ba dòng đầu là danh sách loại trừ MẶC ĐỊNH của action. Khai `exclude`
+          # là GHI ĐÈ mặc định chứ không cộng thêm, nên phải chép lại — bỏ sót
+          # là .git/ của repo được đẩy nguyên lên hosting.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            relay/**
+            render.yaml

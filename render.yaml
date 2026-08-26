@@ -1,0 +1,65 @@
+# =============================================================================
+# render.yaml — bản thiết kế dịch vụ trên Render
+#
+# CÁCH DÙNG: Render -> New -> Blueprint -> chọn repo này. Render đọc file này,
+# tự dựng dịch vụ với đúng cấu hình dưới đây, rồi HỎI bốn khoá bí mật.
+#
+# VÌ SAO FILE NÀY NẰM Ở GỐC REPO CHỨ KHÔNG PHẢI TRONG relay/
+#
+# Render CHỈ tìm render.yaml ở gốc repository, không dò thư mục con. Để trong
+# relay/ thì màn Blueprint báo "no render.yaml found" mà không nói thiếu ở đâu.
+# Mã của cầu nối vẫn nằm trong relay/ — dòng `rootDir` bên dưới trỏ tới đó.
+#
+# File này KHÔNG được đẩy lên InfinityFree (xem `exclude` trong
+# .github/workflows/deploy.yml), và .htaccess cũng chặn sẵn mọi đuôi .yml.
+#
+# Không có file này thì vẫn dựng tay được (New -> Web Service), chỉ là phải nhớ
+# đặt Root Directory = relay và Start Command = node server.js. Quên Root
+# Directory là Render tìm package.json ở gốc repo — mà gốc repo là dự án PHP
+# không có package.json nào — và build hỏng với thông báo không liên quan gì.
+# =============================================================================
+
+services:
+  - type: web
+    name: vin-eyewear-relay
+    runtime: node
+
+    # Mã của cầu nối nằm trong thư mục con, chung repo với website. Chung repo
+    # là cố ý: cấu hình hai đầu phải khớp nhau từng khoá, để hai nơi thì ngày
+    # đổi khoá sẽ sửa một bên quên bên kia.
+    rootDir: relay
+
+    # Không có phụ thuộc nào để cài, nhưng Render vẫn đòi một lệnh build.
+    buildCommand: "echo 'Không có phụ thuộc — bỏ qua bước cài.'"
+    startCommand: node server.js
+
+    plan: free
+    region: singapore   # gần Việt Nam nhất trong các vùng của Render
+
+    # Render coi dịch vụ là sống khi đường này trả 200. Đây cũng là đường để
+    # một dịch vụ ping bên ngoài đánh thức máy chủ trước giờ mở cửa — xem
+    # mục "Gói miễn phí ngủ" trong README.md.
+    healthCheckPath: /
+
+    envVars:
+      # sync: false = Render hỏi lúc tạo, KHÔNG lưu vào git. Bốn giá trị dưới
+      # đây là khoá bí mật và địa chỉ thật, không thứ nào được nằm trong repo.
+      - key: SEPAY_WEBHOOK_KEY
+        sync: false
+      - key: SITE_WEBHOOK_URL
+        sync: false
+      - key: SITE_WEBHOOK_KEY
+        sync: false
+      - key: PULL_KEY
+        sync: false
+
+      # Hàng đợi ghi xuống đây. Trên gói free đây là đĩa TẠM — mất sau mỗi lần
+      # deploy và mỗi lần máy chủ tỉnh dậy. Xem khối chú thích đầu hang-doi.js.
+      - key: DATA_DIR
+        value: /tmp/vin-eyewear-relay
+
+      # Giao hỏng thì trả 500 cho SePay để SePay còn gửi lại — tầng bền vững
+      # duy nhất không phụ thuộc đĩa. Chỉ đổi thành true khi đã hiểu đánh đổi
+      # (đọc `ackKhiXepHang` trong lib/cau-hinh.js).
+      - key: QUEUE_ACK
+        value: "false"
