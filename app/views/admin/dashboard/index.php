@@ -28,9 +28,46 @@
    mở ra một hàng chờ để xử lý, còn doanh thu thì không dẫn tới việc gì.
    Trỏ nó sang danh sách đơn hàng chỉ làm người ta bấm nhầm khi định xem
    đơn mới. */
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THẺ TIỀN MANG HAI CON SỐ, KHÔNG PHẢI MỘT
+ *
+ * DOANH THU là tiền đã về đủ. TẠM THU là tiền cọc đang giữ của đơn mới trả
+ * 30% — có thật trong tài khoản, nhưng chưa phải doanh thu vì hàng chưa giao
+ * và đơn còn huỷ được.
+ *
+ * VÌ SAO KHÔNG TÁCH THÀNH THẺ THỨ NĂM: .astats là lưới CỐ ĐỊNH 4 cột (xem
+ * admin.css). Thẻ thứ năm rơi xuống hàng dưới một mình, và đó đúng là lỗi bố
+ * cục mà bản thiết kế đã sửa khi gom tám con số thành 4 + 3.
+ *
+ * Cho tạm thu làm dòng phụ CÙNG THẺ lại hợp nghĩa hơn là một thẻ riêng: người
+ * đọc cần thấy hai con số CẠNH NHAU mới hiểu ra ranh giới giữa chúng. Tách ra
+ * hai đầu bảng thì chúng thành hai chỉ số không liên quan.
+ *
+ * HIỆN CẢ KHI BẰNG 0, cố ý. "Tạm thu 0 ₫" nói một điều có ích: không còn đơn
+ * nào đang nợ phần còn lại. Ẩn đi thì thẻ đổi hình dạng theo dữ liệu, và người
+ * dùng không học được là có hai loại tiền khác nhau.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+$soDonDaThu = (int) ($tien['so_don_da_thu'] ?? 0);
+$soDonCoc   = (int) ($tien['so_don_coc'] ?? 0);
+
 $cards = [
-    ['label' => 'Doanh thu',    'value' => money((int) $stats['revenue']),
-     'note'  => 'không tính đơn đã huỷ', 'url' => null],
+    ['label' => 'Doanh thu',
+     'value' => money((int) ($tien['doanh_thu'] ?? 0)),
+     /* Ghi chú nói RÕ ĐIỀU KIỆN, không phải một câu xã giao. Người nhìn một
+        con số tiền câu đầu tiên hỏi là "gồm những gì" — trả lời ngay ở đây thì
+        không ai phải đi hỏi lại. */
+     'note'  => $soDonDaThu > 0
+         ? 'từ ' . $soDonDaThu . ' đơn đã thu đủ tiền'
+         : 'chưa có đơn nào thu đủ tiền',
+     'url'   => null,
+     'extra' => [
+         'label' => 'Tạm thu (tiền cọc)',
+         'value' => money((int) ($tien['tam_thu'] ?? 0)),
+         'note'  => $soDonCoc > 0 ? $soDonCoc . ' đơn mới trả cọc' : 'không có đơn nào',
+     ]],
     ['label' => 'Đơn hàng mới', 'value' => (int) $stats['new_orders'],
      'note'  => 'chờ xác nhận',  'url' => '/quan-tri/don-hang'],
     ['label' => 'Lịch hẹn chờ', 'value' => (int) $stats['pending_appointments'],
@@ -69,7 +106,9 @@ $facts = [
              câu hỏi đầu tiên của người nhìn một bảng số: "số này tính tới lúc
              nào?" — nhất là khi trang được mở lại từ một tab để quên từ hôm
              qua. */ ?>
-    <p class="ahead__lead">Số liệu tính trên toàn bộ dữ liệu hiện có · <?= e(date('d/m/Y')) ?></p>
+    <p class="ahead__lead">
+        Số liệu thật trên toàn bộ dữ liệu, không tính đơn đã huỷ · <?= e(date('d/m/Y')) ?>
+    </p>
 </header>
 
 <!-- ============ HÀNG TRÊN — VIỆC ĐANG CHỜ ============ -->
@@ -88,6 +127,18 @@ $facts = [
                 <span class="astat__label"><?= e($card['label']) ?></span>
                 <span class="astat__value"><?= e((string) $card['value']) ?></span>
                 <span class="astat__note"><?= e($card['note']) ?></span>
+
+                <?php /* Dòng phụ chỉ thẻ tiền mới có. Ngăn bằng một đường kẻ
+                         mảnh chứ không bằng khoảng trắng: hai con số cùng đơn
+                         vị nghìn đồng đứng sát nhau mà không có ranh giới thì
+                         mắt đọc thành một cụm. */ ?>
+                <?php if (!empty($card['extra'])): ?>
+                    <span class="astat__extra">
+                        <span class="astat__extra-label"><?= e($card['extra']['label']) ?></span>
+                        <span class="astat__extra-value"><?= e($card['extra']['value']) ?></span>
+                    </span>
+                    <span class="astat__note"><?= e($card['extra']['note']) ?></span>
+                <?php endif; ?>
 
             <?= $card['url'] !== null ? '</a>' : '</div>' ?>
         </li>

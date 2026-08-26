@@ -2189,3 +2189,37 @@ a.astatus__save {
     border-color: var(--brand);
     box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
 }
+
+/* ── Dòng phụ trong thẻ số liệu (thẻ "Doanh thu" mang thêm "Tạm thu") ──────
+   Đường kẻ trên là ranh giới thật giữa hai loại tiền: doanh thu đã chốt và
+   tiền cọc còn đang giữ hộ. Không có nó thì hai con số cùng đơn vị nghìn đồng
+   đứng sát nhau và mắt đọc thành một cụm — đúng cái nhầm mà cả thay đổi này
+   sinh ra để chấm dứt. */
+.astat__extra {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--a-row-line);
+}
+
+.astat__extra-label {
+    font-size: var(--fs-label);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+}
+
+/* Nhỏ hơn hẳn .astat__value ở trên. Tạm thu là con số phụ, và cỡ chữ phải nói
+   ra điều đó — bằng cỡ nhau thì thẻ có hai con số ngang hàng, người đọc lại
+   phải tự đoán cái nào là doanh thu. */
+.astat__extra-value {
+    font-size: 17px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    white-space: nowrap;
+}
