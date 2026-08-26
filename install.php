@@ -90,7 +90,7 @@ if ($fatal === null) {
 // ---------------------------------------------------------------------------
 $expectedTables = [
     'users', 'profiles', 'user_roles', 'prescriptions',
-    'categories', 'products', 'events', 'stores',
+    'categories', 'products', 'stores',
     'favorites', 'appointments', 'orders', 'order_items', 'contact_requests',
     // Thêm ở bản 2026-08-14 (ghi nhớ đăng nhập / quên mật khẩu). Cơ sở dữ
     // liệu cũ thiếu hai bảng này -> chạy file trong database/migrations/.

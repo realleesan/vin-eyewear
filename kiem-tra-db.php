@@ -126,7 +126,7 @@ echo '   ✓ ', count($tables), " bảng: ", implode(', ', array_slice($tables, 
      count($tables) > 8 ? ', …' : '', "\n";
 
 $need    = ['users', 'profiles', 'user_roles', 'prescriptions', 'categories',
-            'products', 'events', 'stores', 'favorites', 'appointments',
+            'products', 'stores', 'favorites', 'appointments',
             'orders', 'order_items', 'contact_requests', 'remember_tokens',
             'password_resets'];
 $missing = array_diff($need, $tables);
