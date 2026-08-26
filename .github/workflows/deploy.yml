@@ -45,7 +45,20 @@ jobs:
           # Đổi tên chứ không xoá file cũ: `dangerous-clean-up: false` nên bản cũ
           # cứ nằm đó, và nếu lần này hỏng thì đổi tên ngược lại là quay về đúng
           # trạng thái trước.
-          state-name: .ftp-deploy-sync-state-v2.json
+          #
+          # LẦN THỨ HAI — v2 -> v3, ngày 2026-08-26.
+          #
+          # Khu quản trị trả 500 trên trang thật trong khi trang bán hàng vẫn
+          # chạy. Hình dạng đó chỉ đúng một nguyên nhân: file trong core/ hoặc
+          # app/models/ lên hosting thiếu hay lên dở. Trang bán hàng không đụng
+          # tới chúng nên nó không việc gì, còn AdminController::renderAdmin()
+          # thì gọi ContactModel và Database::columnExists() ở MỌI trang quản
+          # trị — thiếu một mắt là 500 sạch cả khu.
+          #
+          # Bằng chứng: tải một file .php mới lên bằng deploy rồi mở nó trên
+          # trang thật thì nhận 404 của ứng dụng, nghĩa là file không có trên
+          # đĩa — mà .htaccess chỉ đẩy về index.php khi REQUEST_FILENAME !-f.
+          state-name: .ftp-deploy-sync-state-v3.json
           dangerous-clean-up: false # Không tự ý xóa nhầm file không có trong Git trên hosting
           timeout: 60000 # Tăng thời gian chờ response lên 60 giây để tránh đứt kết nối
 
