@@ -997,10 +997,34 @@ CREATE TABLE `contact_requests` (
     `phone`      VARCHAR(32)  NOT NULL,
     `email`      VARCHAR(255) NULL,
     `message`    TEXT         NOT NULL,
-    `status`     VARCHAR(32)  NOT NULL DEFAULT 'new',
+    /*
+     * MỐC ĐẨY SANG ZALO CSKH. NULL = chưa tới tay ai.
+     *
+     * ĐÂY LÀ THỨ THAY CHO CỘT `status` cũ (Mới -> Đang xử lý -> Đã xử lý), bỏ
+     * ngày 2026-08-26. Cột kia là một hàng chờ mà không ai đứng canh: nhân
+     * viên cửa hàng kính ngồi ở quầy và trả lời khách bằng Zalo, không ngồi
+     * trước bảng quản trị chờ có dòng mới. Một hàng chờ không người trực thì
+     * TRÔNG như đã có người lo, mà thật ra không.
+     *
+     * Nay yêu cầu chạy thẳng sang Zalo của CSKH ngay lúc khách bấm gửi, đúng
+     * đường lịch hẹn và đơn hàng đã đi — xem Zalo::contact().
+     *
+     * Cột này là một SỰ KIỆN (đã xảy ra lúc nào), không phải một TRẠNG THÁI
+     * (ai đó tự đặt): không có ô chọn nào ghi vào nó, chỉ có việc gửi thành
+     * công. Cần nó vì ZNS hỏng IM LẶNG — token hết hạn, mẫu tin bị gỡ, mạng
+     * ra ngoài bị chặn đều chỉ để lại một dòng error log không ai đọc, trong
+     * khi khách ngồi chờ một cuộc gọi không bao giờ tới. Đây là chỗ duy nhất
+     * nhìn ra điều đó, và nó nuôi huy hiệu "Liên hệ" trên thanh bên.
+     *
+     * Xem database/migrations/2026-08-26-lien-he-qua-zalo.sql.
+     */
+    `zalo_sent_at` DATETIME   NULL,
     `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    KEY `idx_contact_requests_status` (`status`, `created_at`),
+    KEY `idx_contact_requests_created` (`created_at`),
+    -- "Yêu cầu nào chưa đẩy sang Zalo" chạy ở MỌI lượt tải trang quản trị,
+    -- vì nó nuôi huy hiệu trên thanh bên.
+    KEY `idx_contact_requests_zalo` (`zalo_sent_at`),
     KEY `idx_contact_user` (`user_id`, `created_at`),
     CONSTRAINT `fk_contact_user` FOREIGN KEY (`user_id`)
         REFERENCES `users` (`id`) ON DELETE SET NULL

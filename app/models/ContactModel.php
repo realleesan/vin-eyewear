@@ -14,11 +14,22 @@ class ContactModel extends BaseModel
 {
     protected static string $table = 'contact_requests';
 
-    public const STATUSES = [
-        'new'      => 'Mới',
-        'handling' => 'Đang xử lý',
-        'done'     => 'Đã xử lý',
-    ];
+    /*
+     * KHÔNG CÒN HẰNG STATUSES — bỏ ngày 2026-08-26 cùng cột `status`.
+     *
+     * Nó là một hàng chờ ba nấc (Mới -> Đang xử lý -> Đã xử lý) mà không ai
+     * đứng canh: nhân viên cửa hàng kính ngồi ở quầy và trả lời khách bằng
+     * Zalo, không ngồi trước bảng quản trị chờ có dòng mới. Một hàng chờ không
+     * người trực thì TRÔNG như đã có người lo, mà thật ra không — tệ hơn là
+     * không có gì.
+     *
+     * Nay yêu cầu chạy thẳng sang Zalo của CSKH ngay lúc khách bấm gửi (xem
+     * submit() ngay dưới), và việc theo dõi nằm trong chính cuộc trò chuyện
+     * Zalo, nơi có người thật đang nhìn.
+     *
+     * Thứ còn lại ở phía CSDL là `zalo_sent_at` — một SỰ KIỆN, không phải một
+     * trạng thái ai đó tự đặt. Xem database/migrations/2026-08-26-lien-he-qua-zalo.sql.
+     */
 
     /**
      * Nhận một yêu cầu liên hệ.
@@ -83,11 +94,36 @@ class ContactModel extends BaseModel
         }
 
         try {
-            static::insert($ban);
+            $id = static::insert($ban);
         } catch (Throwable $e) {
             error_log('[ContactModel] Không lưu được liên hệ: ' . $e->getMessage());
 
             return ['ok' => false, 'error' => 'Không gửi được, vui lòng thử lại.'];
+        }
+
+        /*
+         * ĐẨY SANG ZALO CSKH NGAY, và đây là đường đi chính của yêu cầu này —
+         * không phải một thông báo chạy kèm cho vui.
+         *
+         * Từ 2026-08-26, /quan-tri/lien-he không còn cột trạng thái và thành
+         * sổ lưu trữ thuần: không ai ngồi canh nó. Tin Zalo này CHÍNH LÀ thứ
+         * đưa yêu cầu tới một con người.
+         *
+         * KHÔNG bọc thêm try/catch ở đây: Zalo::contact() đã nuốt mọi ngoại lệ
+         * bên trong và trả false. Thêm một lớp nữa chỉ làm người đọc tưởng nó
+         * ném ra được.
+         *
+         * Gửi hỏng thì `zalo_sent_at` ở nguyên NULL, huy hiệu "Liên hệ" trên
+         * thanh bên sáng lên, và nhân viên bấm "Gửi sang Zalo" để đẩy lại. Đó
+         * là lý do cột kia tồn tại — ZNS hỏng im lặng, không có nó thì khách
+         * ngồi chờ một cuộc gọi mà phía cửa hàng không ai biết là có người chờ.
+         *
+         * VÀ DÙ HỎNG THÌ VẪN TRẢ ok=true: yêu cầu đã nằm trong CSDL, khách đã
+         * làm xong phần của họ. Báo "không gửi được" lúc này là bảo họ gõ lại
+         * một lần nữa vào cùng cái bảng đã có bản ghi đầu tiên.
+         */
+        if (Zalo::contact($ban + ['id' => $id])) {
+            self::markZaloSent($id);
         }
 
         return ['ok' => true];
@@ -95,19 +131,47 @@ class ContactModel extends BaseModel
 
     /**
      * Danh sách cho khu quản trị.
+     *
+     * KHÔNG CÒN THAM SỐ LỌC. Trang này nay chỉ có một cách đọc — mới nhất
+     * trước — vì không còn trạng thái nào để lọc theo.
      */
-    public static function paginateAdmin(string $status = '', int $page = 1, int $perPage = 20): array
+    public static function paginateAdmin(int $page = 1, int $perPage = 20): array
     {
-        $conditions = $status === '' ? [] : ['status' => $status];
-
-        return static::paginate($conditions, $page, $perPage, 'created_at DESC');
+        return static::paginate([], $page, $perPage, 'created_at DESC');
     }
 
     /**
-     * Số yêu cầu chưa xử lý — hiện thành huy hiệu trên menu quản trị.
+     * Số yêu cầu CHƯA tới tay CSKH — hiện thành huy hiệu trên thanh bên.
+     *
+     * Thay cho countNew() cũ (đếm status = 'new'), và khác nó về bản chất:
+     * con số cũ đếm việc CHƯA AI BẤM, con số này đếm việc HỆ THỐNG CHƯA LÀM
+     * ĐƯỢC. Bình thường nó phải là 0 và huy hiệu tự ẩn — khác 0 nghĩa là ZNS
+     * đang hỏng, và đó là thứ đáng gây chú ý.
      */
-    public static function countNew(): int
+    public static function countChuaDayZalo(): int
     {
-        return static::count(['status' => 'new']);
+        // Cột chỉ có từ migration 2026-08-26-lien-he-qua-zalo. Chưa chạy thì
+        // câu đếm này nằm trên đường MỌI trang quản trị đi qua (huy hiệu thanh
+        // bên) và một lỗi 1054 ở đó đóng cửa cả khu quản trị.
+        if (!Database::columnExists('contact_requests', 'zalo_sent_at')) {
+            return 0;
+        }
+
+        return (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM contact_requests WHERE zalo_sent_at IS NULL'
+        );
+    }
+
+    /** Đánh dấu đã đẩy sang Zalo thành công. */
+    public static function markZaloSent(string $id): void
+    {
+        if (!Database::columnExists('contact_requests', 'zalo_sent_at')) {
+            return;
+        }
+
+        Database::execute(
+            'UPDATE contact_requests SET zalo_sent_at = NOW() WHERE id = :id',
+            ['id' => $id]
+        );
     }
 }

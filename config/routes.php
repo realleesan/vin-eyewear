@@ -223,7 +223,10 @@ return [
     'quan-tri/lich-hen/trang-thai'=> 'AppointmentAdminController@updateStatus', // POST
 
     'quan-tri/lien-he'            => 'ContactAdminController@index',
-    'quan-tri/lien-he/trang-thai' => 'ContactAdminController@updateStatus',     // POST
+    /* Đường ĐẨY SANG ZALO, thay cho 'lien-he/trang-thai' bỏ ngày 2026-08-26.
+       Trang liên hệ không còn trạng thái để đổi — nó thành sổ lưu trữ, và thao
+       tác duy nhất còn lại là đẩy lại một tin Zalo đã nuốt mất. */
+    'quan-tri/lien-he/zalo'       => 'ContactAdminController@sendZalo',         // POST
 
     'quan-tri/ton-kho'            => 'InventoryAdminController@index',
     'quan-tri/ton-kho/cap-nhat'   => 'InventoryAdminController@updateStock',    // POST

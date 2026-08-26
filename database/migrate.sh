@@ -126,6 +126,10 @@ MIGRATIONS=(
     # Module Khách hàng. Mốc là bảng `customer_prescriptions` — bảng đầu tiên
     # file đó tạo ra, và không có gì khác tạo ra nó.
     "2026-08-26-module-khach-hang.sql|table|customer_prescriptions|"
+    # Bỏ trạng thái liên hệ, đẩy sang Zalo CSKH. Mốc là cột `zalo_sent_at` —
+    # cột này thêm vào, còn `status` thì bị xoá, nên KHÔNG lấy 'status' làm mốc
+    # được (kiểu 'column' sẽ báo "chưa áp" mãi mãi sau khi cột đã biến mất).
+    "2026-08-26-lien-he-qua-zalo.sql|column|contact_requests|zalo_sent_at"
 )
 
 # ---------------------------------------------------------------------------

@@ -13,6 +13,24 @@ class DashboardController extends AdminController
         // Đếm gộp trong MỘT câu lệnh thay vì 8 câu riêng.
         // Mỗi truy vấn là một vòng đi-về tới DB; trang tổng quan mở rất
         // thường xuyên nên gộp lại là đáng.
+        /*
+         * Ô "Liên hệ chưa đẩy" đọc `contact_requests`.`zalo_sent_at`, cột chỉ
+         * có từ migration 2026-08-26-lien-he-qua-zalo.
+         *
+         * PHẢI HỎI TRƯỚC KHI NHẮC TỚI NÓ. Cả tám con số dưới đây đi trong MỘT
+         * câu lệnh, nên một cột thiếu không làm hụt một ô mà đổ nguyên câu với
+         * lỗi 1054 — và đây là trang đầu tiên mọi nhân viên nhìn thấy sau khi
+         * đăng nhập. Khu quản trị coi như đóng cửa vì một file nâng cấp chưa
+         * chạy.
+         *
+         * Chưa có cột thì ô đó đọc 0, đúng nghĩa "không biết có gì tồn đọng" —
+         * và trang /quan-tri/lien-he có sẵn một dải cảnh báo nói rõ phải chạy
+         * file nào.
+         */
+        $demChuaDay = Database::columnExists('contact_requests', 'zalo_sent_at')
+            ? '(SELECT COUNT(*) FROM contact_requests WHERE zalo_sent_at IS NULL)'
+            : '0';
+
         $stats = Database::fetchOne(
             "SELECT
                 (SELECT COUNT(*) FROM products WHERE is_visible = 1)              AS products,
@@ -21,7 +39,7 @@ class DashboardController extends AdminController
                 (SELECT COUNT(*) FROM orders)                                      AS orders,
                 (SELECT COUNT(*) FROM orders WHERE status = 'new')                 AS new_orders,
                 (SELECT COUNT(*) FROM appointments WHERE status = 'pending')       AS pending_appointments,
-                (SELECT COUNT(*) FROM contact_requests WHERE status = 'new')       AS new_contacts,
+                {$demChuaDay}                                                      AS contacts_chua_day,
                 (SELECT COALESCE(SUM(total), 0) FROM orders
                   WHERE status <> 'cancelled')                                     AS revenue"
         );

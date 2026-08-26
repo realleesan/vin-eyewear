@@ -5,9 +5,10 @@
  *
  * Đẩy thông báo lịch hẹn qua Zalo — xem core/Zalo.php để biết luồng và giới hạn.
  *
- * File này khai BA việc đi chung một đường ZNS:
+ * File này khai BỐN việc đi chung một đường ZNS:
  *   · thông báo lịch hẹn cho cửa hàng
  *   · thông báo đơn hàng mới cho cửa hàng
+ *   · yêu cầu liên hệ cho CSKH
  *   · mã OTP lúc khách đăng ký / quên mật khẩu
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -125,6 +126,39 @@ return [
      * xuống error log nguyên văn, nhân viên vẫn thấy đơn ở /quan-tri/don-hang.
      */
     'template_order' => env('ZALO_ZNS_TEMPLATE_ORDER', ''),
+
+    /*
+     * Mẫu tin YÊU CẦU LIÊN HỆ — gửi CSKH.
+     *
+     * Bốn ô: khach_hang, dien_thoai, email, noi_dung. Đặt đúng bốn tên đó lúc
+     * soạn mẫu thì không phải sửa mã; đặt khác thì sửa ở Zalo::contactParams().
+     *
+     * ⚠️ ĐỂ TRỐNG CÓ HẬU QUẢ KHÁC HẲN ba mẫu trên. Lịch hẹn, đơn hàng và OTP
+     * đều còn đường lui: lịch và đơn nằm trong khu quản trị với hàng chờ riêng
+     * để nhân viên mở ra xem, còn quên mật khẩu rơi về /quan-tri/quen-mat-khau.
+     *
+     * Yêu cầu liên hệ thì KHÔNG. Từ 2026-08-26 trang /quan-tri/lien-he bỏ cột
+     * trạng thái và thành sổ lưu trữ thuần — không ai ngồi canh nó nữa. Chưa
+     * khai mẫu này nghĩa là mọi yêu cầu chỉ nằm trong error log.
+     *
+     * Cái đỡ cho khoảng đó là cột `zalo_sent_at`: chưa gửi được thì huy hiệu
+     * "Liên hệ" trên thanh bên sáng lên với đúng số yêu cầu chưa tới tay ai,
+     * và trang quản trị có nút "Gửi sang Zalo" để đẩy lại từng cái. Nhưng đó
+     * là lưới an toàn, không phải cách vận hành — khai mẫu này sớm.
+     */
+    'template_contact' => env('ZALO_ZNS_TEMPLATE_CONTACT', ''),
+
+    /*
+     * Số Zalo của CSKH — nơi nhận yêu cầu liên hệ.
+     *
+     * ĐỂ TRỐNG THÌ RƠI VỀ 'shop_phone' ở đầu file, không phải tắt tính năng.
+     * Cửa hàng một cơ sở thì hai số là một, và bắt khai hai lần cùng một con
+     * số là cách chắc chắn để một trong hai bị khai sai rồi không ai nhận ra.
+     *
+     * Tách ra khi bộ phận CSKH có máy trực riêng: lúc đó thông báo lịch hẹn và
+     * đơn hàng vẫn về máy quầy, còn câu hỏi của khách về máy CSKH.
+     */
+    'cskh_phone' => env('ZALO_CSKH_PHONE', ''),
 
     /*
      * Mẫu tin OTP — thứ chặn giữa "khách đăng ký được" và "không".

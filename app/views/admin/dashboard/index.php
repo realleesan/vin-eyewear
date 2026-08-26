@@ -35,8 +35,17 @@ $cards = [
      'note'  => 'chờ xác nhận',  'url' => '/quan-tri/don-hang'],
     ['label' => 'Lịch hẹn chờ', 'value' => (int) $stats['pending_appointments'],
      'note'  => 'chờ xác nhận',  'url' => '/quan-tri/lich-hen'],
-    ['label' => 'Liên hệ mới',  'value' => (int) $stats['new_contacts'],
-     'note'  => 'chưa xử lý',    'url' => '/quan-tri/lien-he'],
+    /* Ô này từng là "Liên hệ mới · chưa xử lý", đọc cột `contact_requests`.`status`
+       — bỏ ngày 2026-08-26 cùng cả cột đó. Yêu cầu liên hệ nay chạy thẳng sang
+       Zalo CSKH lúc khách bấm gửi, nên "chưa xử lý" không còn nghĩa gì: không
+       ai xử lý nó trong bảng quản trị nữa.
+
+       Thứ thay vào là một con số ĐÁNG LO HƠN HẲN: yêu cầu chưa tới được Zalo.
+       Nó phải luôn bằng 0; khác 0 nghĩa là ZNS đang hỏng và có người thật đang
+       chờ gọi lại mà CSKH chưa biết. Vì thế nó đeo 'warn' — cùng lý do với ô
+       "sắp hết hàng" ở dải dưới: một con số lớn ở đây là tin xấu. */
+    ['label' => 'Liên hệ chưa đẩy', 'value' => (int) $stats['contacts_chua_day'],
+     'note'  => 'chưa tới Zalo CSKH', 'url' => '/quan-tri/lien-he'],
 ];
 
 /* Dải trạng thái. 'warn' tô con số màu hổ phách — chỉ dùng cho "sắp hết

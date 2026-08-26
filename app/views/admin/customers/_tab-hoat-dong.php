@@ -4,7 +4,7 @@
  * _tab-hoat-dong.php — tab 4: bốn danh sách CHỈ ĐỌC.
  *
  * Biến: $activity, $orderStatuses, $paymentStatuses, $apptStatuses,
- *       $contactStatuses, $reviewStatuses, $khach.
+ *       $reviewStatuses, $khach.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * KHÔNG CÓ MỘT NÚT SỬA NÀO TRONG FILE NÀY, VÀ ĐỪNG THÊM.
@@ -128,11 +128,13 @@ $khong = '<p class="apanel__empty">Chưa có.</p>';
             <ul class="acus__feed" role="list">
                 <?php foreach ($activity['contacts'] as $lh): ?>
                     <li>
+                        <?php /* KHÔNG CÒN VIÊN TRẠNG THÁI. Module Liên hệ bỏ hẳn
+                                 cột `status` ngày 2026-08-26 — yêu cầu chạy
+                                 thẳng sang Zalo CSKH lúc khách bấm gửi, và việc
+                                 theo dõi nằm trong cuộc trò chuyện Zalo. Ở đây
+                                 chỉ cần trả lời "khách này đã nhắn gì, lúc nào". */ ?>
                         <p class="acus__feed-meta">
                             <?= e(formatDate($lh['created_at'], 'd/m/Y H:i')) ?>
-                            <span class="badge badge--<?= e($lh['status']) ?>">
-                                <?= e($contactStatuses[$lh['status']] ?? $lh['status']) ?>
-                            </span>
                         </p>
                         <p class="acus__feed-body"><?= e(excerpt($lh['message'], 160)) ?></p>
                     </li>

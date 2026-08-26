@@ -263,11 +263,14 @@ class CustomerAdminController extends AdminController
                 $data['orderStatuses']   = OrderModel::STATUSES;
                 $data['paymentStatuses'] = OrderModel::PAYMENT_STATUSES;
                 $data['apptStatuses']    = BookingModel::STATUSES;
-                /* Nhãn của cả bốn module đều lấy từ HẰNG CỦA CHÍNH MODULE ĐÓ,
-                   không gõ lại ở đây. Gõ lại nghĩa là khi bên kia đổi chữ
-                   "Đang hiện" thành "Đã duyệt" thì màn hình này vẫn nói chữ cũ
-                   — và người đọc hai màn hình sẽ tưởng đó là hai trạng thái. */
-                $data['contactStatuses'] = ContactModel::STATUSES;
+                /* Nhãn lấy từ HẰNG CỦA CHÍNH MODULE ĐÓ, không gõ lại ở đây.
+                   Gõ lại nghĩa là khi bên kia đổi chữ "Đang hiện" thành "Đã
+                   duyệt" thì màn hình này vẫn nói chữ cũ — và người đọc hai
+                   màn hình sẽ tưởng đó là hai trạng thái.
+
+                   KHÔNG có nhãn cho liên hệ: module đó bỏ hẳn trạng thái ngày
+                   2026-08-26, yêu cầu chạy thẳng sang Zalo CSKH. Khối liên hệ
+                   ở tab Hoạt động nay chỉ còn ngày gửi và nội dung. */
                 $data['reviewStatuses']  = ReviewModel::STATUSES;
                 break;
 

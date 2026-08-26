@@ -3,12 +3,18 @@
 /**
  * core/Zalo.php — đường ra Zalo của dự án.
  *
- * Ba việc đi chung một đường vì cùng dùng ZNS, cùng một access_token và cùng
+ * Bốn việc đi chung một đường vì cùng dùng ZNS, cùng một access_token và cùng
  * một chỗ gọi HTTP:
  *
  *   1. THÔNG BÁO LỊCH HẸN cho cửa hàng — appointment().
  *   2. THÔNG BÁO ĐƠN HÀNG MỚI cho cửa hàng — order().
- *   3. MÃ OTP khi khách đăng ký / quên mật khẩu — sendOtp(), do core/Otp.php gọi.
+ *   3. YÊU CẦU LIÊN HỆ cho CSKH — contact().
+ *   4. MÃ OTP khi khách đăng ký / quên mật khẩu — sendOtp(), do core/Otp.php gọi.
+ *
+ * Việc thứ ba là việc DUY NHẤT không còn màn hình dự phòng nào phía sau: từ
+ * 2026-08-26, trang /quan-tri/lien-he bỏ cột trạng thái và thành sổ lưu trữ
+ * thuần, không ai ngồi canh. Vì thế contact() trả bool chứ không trả void, và
+ * nơi gọi ghi lại kết quả vào `contact_requests`.`zalo_sent_at`.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * BA THỨ PHẢI CÓ TRƯỚC KHI TIN ĐI ĐƯỢC — VÀ CẢ BA LÀ VIỆC ĐĂNG KÝ, KHÔNG PHẢI
@@ -177,6 +183,137 @@ class Zalo
             // Nuốt MỌI thứ. Đơn đã nằm trong CSDL — xem khối chú thích đầu file.
             error_log('[Zalo] Không đẩy được thông báo đơn hàng: ' . $e->getMessage());
         }
+    }
+
+    // ========================================================================
+    // ĐIỂM VÀO — YÊU CẦU LIÊN HỆ
+    // ========================================================================
+
+    /**
+     * Đẩy một yêu cầu liên hệ vừa gửi sang Zalo của CSKH.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * KHÁC HAI ĐIỂM VÀO TRÊN Ở CHỖ NÓ TRẢ VỀ bool, VÀ ĐÓ LÀ CHỦ Ý
+     *
+     * appointment() và order() trả void: lịch hẹn và đơn hàng đều nằm sẵn
+     * trong khu quản trị với hàng chờ riêng, nên tin Zalo hỏng thì vẫn còn một
+     * màn hình có người mở ra xem.
+     *
+     * Yêu cầu liên hệ thì KHÔNG còn cái đó nữa. Từ 2026-08-26, cột `status`
+     * bị bỏ và trang /quan-tri/lien-he thành sổ lưu trữ thuần — không ai ngồi
+     * canh nó. Nếu tin này hỏng im lặng thì khách ngồi chờ một cuộc gọi không
+     * bao giờ tới, và không một ai ở phía cửa hàng biết là có người đang chờ.
+     *
+     * Nên nơi gọi phải BIẾT SỰ THẬT để còn ghi `zalo_sent_at`, và cột đó nuôi
+     * huy hiệu "Liên hệ" trên thanh bên — thứ duy nhất còn lại chỉ ra một yêu
+     * cầu chưa tới tay ai. Cùng lý lẽ với sendOtp() ngay dưới.
+     *
+     * VẪN NUỐT MỌI NGOẠI LỆ như hai hàm kia: yêu cầu đã nằm trong CSDL rồi,
+     * và Zalo sập không được phép biến thành trang lỗi cho người vừa bấm gửi.
+     * Nuốt xong thì trả false, không trả true.
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * @param array $contact dòng `contact_requests`
+     * @return bool Zalo đã nhận tin chưa
+     */
+    public static function contact(array $contact): bool
+    {
+        try {
+            $cskh = self::cskhPhone();
+
+            if ($cskh === null) {
+                return false;
+            }
+
+            $template = (string) config('zalo.template_contact', '');
+
+            if ($template === '' || !self::hasCredentials()) {
+                /* Chưa khai mẫu thì tin vẫn phải ĐI ĐÂU ĐÓ — cùng lý lẽ với
+                   order(). Nội dung dạng chữ trong error log vẫn cứu được một
+                   yêu cầu bị bỏ quên; im lặng thì không. */
+                error_log(sprintf(
+                    "[Zalo] Chưa khai mẫu tin liên hệ — tin chỉ nằm ở log:\n%s",
+                    self::composeContact($contact)
+                ));
+
+                return false;
+            }
+
+            return self::sendZns($cskh, $template, self::contactParams($contact), 'cskh');
+        } catch (Throwable $e) {
+            error_log('[Zalo] Không đẩy được yêu cầu liên hệ: ' . $e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
+     * Bản chữ của tin liên hệ — dùng cho error log khi chưa khai mẫu.
+     */
+    private static function composeContact(array $contact): string
+    {
+        $lines = [
+            'YÊU CẦU LIÊN HỆ MỚI',
+            'Khách:      ' . (string) ($contact['full_name'] ?? '—'),
+            'Điện thoại: ' . (string) ($contact['phone'] ?? '—'),
+        ];
+
+        $email = trim((string) ($contact['email'] ?? ''));
+
+        if ($email !== '') {
+            $lines[] = 'Email:      ' . $email;
+        }
+
+        $lines[] = 'Nội dung:   ' . trim((string) ($contact['message'] ?? ''));
+        $lines[] = 'Vui lòng gọi lại cho khách.';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Các ô của mẫu tin liên hệ.
+     *
+     * TÊN Ô PHẢI KHỚP MẪU ĐÃ DUYỆT — cùng ràng buộc như appointmentParams() và
+     * orderParams(). Bốn ô: khach_hang · dien_thoai · email · noi_dung.
+     *
+     * `email` KHÔNG được để rỗng dù khách bỏ trống: ZNS từ chối cả tin nếu một
+     * ô là chuỗi rỗng hay null, và từ chối bằng một mã lỗi không nói ra ô nào.
+     * Điền dấu gạch ngang — người đọc tin hiểu ngay là "khách không để lại".
+     *
+     * `noi_dung` cắt ngắn hơn mặc định: ô nội dung là ô duy nhất khách gõ tự
+     * do (tới 1000 ký tự, xem ContactModel::submit) và nó chắc chắn sẽ vượt
+     * giới hạn độ dài của ZNS. Thà mất mấy chữ cuối còn hơn mất cả tin — số
+     * điện thoại ở ô trên vẫn đủ để gọi lại và hỏi phần còn lại.
+     */
+    private static function contactParams(array $contact): array
+    {
+        $email = trim((string) ($contact['email'] ?? ''));
+
+        return [
+            'khach_hang' => self::clip((string) ($contact['full_name'] ?? '—')),
+            'dien_thoai' => (string) ($contact['phone'] ?? '—'),
+            'email'      => $email !== '' ? self::clip($email) : '—',
+            'noi_dung'   => self::clip(trim((string) ($contact['message'] ?? '—')), 200),
+        ];
+    }
+
+    /**
+     * Số Zalo của CSKH — nơi nhận yêu cầu liên hệ.
+     *
+     * MẶC ĐỊNH RƠI VỀ số cửa hàng, chứ không phải để trống. Cửa hàng một cơ sở
+     * thì hai số là một, và bắt người triển khai khai hai lần cùng một con số
+     * là cách chắc chắn để một trong hai bị khai sai. Tách được khi cần: mở
+     * config/zalo.php và khai ZALO_CSKH_PHONE.
+     */
+    private static function cskhPhone(): ?string
+    {
+        $phone = self::normalize((string) config('zalo.cskh_phone', ''));
+
+        if ($phone === null) {
+            $phone = self::shopPhone();
+        }
+
+        return $phone;
     }
 
     // ========================================================================

@@ -57,8 +57,17 @@ abstract class AdminController extends BaseController
         $data['pendingOrders']       = (int) ($queues['orders'] ?? 0);
         $data['pendingAppointments'] = (int) ($queues['appointments'] ?? 0);
 
-        // Huy hiệu "liên hệ chưa xử lý" trên menu — tính một lần cho mọi trang
-        $data['pendingContacts'] = ContactModel::countNew();
+        /* HUY HIỆU "LIÊN HỆ" ĐỔI NGHĨA ngày 2026-08-26.
+
+           Trước: số yêu cầu ở trạng thái 'new' — tức việc CHƯA AI BẤM.
+           Nay:   số yêu cầu chưa đẩy được sang Zalo CSKH — tức việc HỆ THỐNG
+                  CHƯA LÀM ĐƯỢC.
+
+           Bình thường con số này là 0 và huy hiệu tự ẩn. Khác 0 nghĩa là ZNS
+           đang hỏng và có người thật đang chờ gọi lại mà CSKH chưa biết — đúng
+           định nghĩa "hàng chờ có NGƯỜI ĐANG ĐỢI ở đầu bên kia" mà thanh bên
+           dùng để quyết định mục nào được đeo số. */
+        $data['pendingContacts'] = ContactModel::countChuaDayZalo();
         // Yêu cầu quên mật khẩu chưa xử lý — trả 0 khi chưa chạy file nâng cấp
         $data['pendingResets']   = PasswordResetModel::countPending();
         // Đánh giá chờ duyệt — trả 0 khi chưa chạy file nâng cấp
