@@ -42,6 +42,42 @@ if ($expected === '' || !hash_equals($expected, $given)) {
     exit("Thiếu hoặc sai token. Mở kèm ?token=<INSTALL_TOKEN trong .env>\n");
 }
 
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ * LƯỚI AN TOÀN RIÊNG CHO TRANG NÀY — ĐÈ LÊN BỘ XỬ LÝ CHUNG CỦA core/App.php
+ *
+ * App::boot() cài một bộ bắt exception in ra errors/500.php ("Hệ thống đang
+ * gặp sự cố") khi APP_DEBUG tắt — đúng cho mọi trang KHÁCH, sai hoàn toàn cho
+ * trang này. Cả lý do tồn tại của file là ĐỌC ĐƯỢC MÃ LỖI; nuốt nó rồi thay
+ * bằng một câu xin lỗi lịch sự là biến công cụ chẩn đoán thành thứ cần được
+ * chẩn đoán.
+ *
+ * Đã dính thật: mở trang trên hosting ngày 26/08/2026 ra đúng trang "Hệ thống
+ * đang gặp sự cố", không một chữ nào cho biết hỏng ở đâu.
+ *
+ * IN MESSAGE, KHÔNG IN STACK TRACE. Thông điệp của PDOException chỉ có mã lỗi
+ * và câu chữ của MySQL. Còn getTraceAsString() in ra cả ĐỐI SỐ của lời gọi —
+ * tức là mật khẩu CSDL nằm ở tham số thứ ba của new PDO(). Trang này có token
+ * chặn, nhưng token đi trong URL nên nằm sẵn trong lịch sử trình duyệt và log
+ * máy chủ; đừng đặt cược mật khẩu vào đó.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+set_exception_handler(static function (Throwable $e): void {
+    if (!headers_sent()) {
+        http_response_code(500);
+        header('Content-Type: text/plain; charset=utf-8');
+    }
+
+    printf(
+        "\n✗ DỪNG VÌ LỖI KHÔNG AI BẮT\n%s\n%s: %s\n   tại %s dòng %d\n",
+        str_repeat('-', 62),
+        $e::class,
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    );
+});
+
 $host = (string) config('database.host');
 $port = (string) config('database.port');
 $name = (string) config('database.name');
@@ -57,12 +93,23 @@ printf("DB_USER  %s\n", $user);
 printf("DB_PASS  (%d ký tự)\n\n", strlen($pass));
 
 // --- 1. Tên host có phân giải được từ chính máy chủ này không? -------------
-$ip = gethostbyname($host);
+//
+// function_exists() chứ không gọi thẳng: hosting chia sẻ hay tắt bớt hàm mạng
+// qua disable_functions trong php.ini, và gọi một hàm đã bị tắt ném Error chứ
+// không phải warning — cả trang chết ngay ở bước 1, trước khi thử được thứ
+// thật sự cần biết là kết nối CSDL. Không phân giải được tên host cũng KHÔNG
+// phải lỗi chí mạng: bước 2 vẫn nối thử được.
 echo "1. Phân giải tên host\n";
-echo $ip !== $host
-    ? "   ✓ $host -> $ip\n\n"
-    : "   ✗ Không phân giải được '$host'.\n"
-    . "     => DB_HOST gõ sai. Lấy lại đúng chuỗi ở panel -> MySQL Databases.\n\n";
+
+if (!function_exists('gethostbyname')) {
+    echo "   ? Hosting đã tắt gethostbyname() — bỏ qua bước này.\n\n";
+} else {
+    $ip = gethostbyname($host);
+    echo $ip !== $host
+        ? "   ✓ $host -> $ip\n\n"
+        : "   ✗ Không phân giải được '$host'.\n"
+        . "     => DB_HOST gõ sai. Lấy lại đúng chuỗi ở panel -> MySQL Databases.\n\n";
+}
 
 // --- 2. Kết nối KHÔNG kèm tên database ------------------------------------
 echo "2. Kết nối tới máy chủ MySQL (chưa chọn database)\n";
@@ -90,32 +137,56 @@ try {
 }
 
 // --- 3. Tài khoản này thật sự có những database nào? ----------------------
+//
+// SHOW DATABASES là quyền hosting chia sẻ HAY THU HỒI (nó để lộ tên database
+// của khách khác trên cùng máy chủ). Bị từ chối thì PDO ném — mà bước này chỉ
+// là tiện nghi "hết phải đoán tên", không phải phép kiểm bắt buộc. Nuốt lỗi,
+// nói rõ đã bỏ qua, rồi đi tiếp xuống bước 4 — nơi câu trả lời thật nằm.
 echo "3. Database mà tài khoản này đang có\n";
-$found = $pdo->query('SHOW DATABASES')->fetchAll(PDO::FETCH_COLUMN);
-$mine  = array_values(array_filter(
-    $found,
-    static fn ($d): bool => !in_array($d, ['information_schema', 'mysql', 'performance_schema', 'sys'], true)
-));
+$mine = null;
 
-if ($mine === []) {
+try {
+    $found = $pdo->query('SHOW DATABASES')->fetchAll(PDO::FETCH_COLUMN);
+    $mine  = array_values(array_filter(
+        $found,
+        static fn ($d): bool => !in_array($d, ['information_schema', 'mysql', 'performance_schema', 'sys'], true)
+    ));
+} catch (PDOException $e) {
+    echo "   ? Không liệt kê được [", $e->getCode(), ']: ', $e->getMessage(), "\n";
+    echo "     (hosting chia sẻ hay chặn quyền này — không sao, đi tiếp bước 4.)\n\n";
+}
+
+if ($mine === null) {
+    // Bỏ qua bước 3, nhảy thẳng sang mở database theo DB_NAME.
+} elseif ($mine === []) {
     echo "   ✗ KHÔNG CÓ database nào.\n";
     exit("\n     => Chưa tạo database. Vào panel -> MySQL Databases -> tạo mới,\n"
        . "        rồi sửa DB_NAME trong .env cho khớp tên panel cấp.\n");
 }
 
-foreach ($mine as $d) {
+foreach ($mine ?? [] as $d) {
     echo '   ', ($d === $name ? '✓' : ' '), ' ', $d, ($d === $name ? '   <- khớp DB_NAME' : ''), "\n";
 }
 
-if (!in_array($name, $mine, true)) {
+if ($mine !== null && !in_array($name, $mine, true)) {
     echo "\n   ✗ DB_NAME '$name' KHÔNG nằm trong danh sách trên.\n";
     exit("     => Sửa DB_NAME trong .env thành đúng một tên ở trên.\n");
 }
 
 // --- 4. Mở đúng database và đếm bảng --------------------------------------
 echo "\n4. Bảng trong '$name'\n";
-$pdo->exec('USE `' . str_replace('`', '``', $name) . '`');
-$tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+try {
+    $pdo->exec('USE `' . str_replace('`', '``', $name) . '`');
+    $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
+} catch (PDOException $e) {
+    // Đây MỚI là lỗi chí mạng: không mở được đúng database thì không kiểm
+    // được gì nữa. 1044/1049 là hai mã hay gặp và mỗi mã một nguyên nhân.
+    $code = (string) $e->getCode();
+    echo '   ✗ Lỗi [', $code, ']: ', $e->getMessage(), "\n";
+    exit(str_contains($code, '1049')
+        ? "     => DB_NAME '$name' không tồn tại. Lấy đúng tên ở panel -> MySQL Databases.\n"
+        : "     => Tài khoản không có quyền trên '$name'. Đối chiếu DB_USER với database ở panel.\n");
+}
 
 if ($tables === []) {
     echo "   ✗ Database rỗng, chưa có bảng nào.\n";
