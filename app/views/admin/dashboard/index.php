@@ -59,9 +59,18 @@ $cards = [
      /* Ghi chú nói RÕ ĐIỀU KIỆN, không phải một câu xã giao. Người nhìn một
         con số tiền câu đầu tiên hỏi là "gồm những gì" — trả lời ngay ở đây thì
         không ai phải đi hỏi lại. */
+     /* Ghi chú nói rõ ĐIỀU KIỆN, không phải một câu xã giao. Người nhìn một
+        con số tiền câu đầu tiên hỏi là "gồm những gì" — và khi có mốc thì câu
+        thứ hai là "từ bao giờ". Trả lời cả hai ngay tại chỗ.
+
+        Đếm 0 đơn KHÔNG in ra "từ 0 đơn": đó là câu đọc lên đã thấy sai. Nó là
+        trạng thái riêng, và với bảng vừa đặt mốc thì đây là trạng thái BÌNH
+        THƯỜNG chứ không phải hỏng — chữ nghĩa phải nói ra điều đó. */
      'note'  => $soDonDaThu > 0
          ? 'từ ' . $soDonDaThu . ' đơn đã thu đủ tiền'
-         : 'chưa có đơn nào thu đủ tiền',
+         : ($mocThongKe !== null
+             ? 'chưa có đơn nào thu đủ tiền từ mốc này'
+             : 'chưa có đơn nào thu đủ tiền'),
      'url'   => null,
      'extra' => [
          'label' => 'Tạm thu (tiền cọc)',
@@ -106,8 +115,20 @@ $facts = [
              câu hỏi đầu tiên của người nhìn một bảng số: "số này tính tới lúc
              nào?" — nhất là khi trang được mở lại từ một tab để quên từ hôm
              qua. */ ?>
+    <?php /* DÒNG NÀY PHẢI NÓI RA MỐC ĐANG ÁP.
+
+             Không có nó thì đặt STATS_SINCE trong .env xong chẳng có cách nào
+             biết nó đã ăn chưa — con số tụt xuống, mà tụt vì mốc hay vì tính
+             sai thì nhìn không ra. Đây cũng là câu trả lời cho câu hỏi đầu
+             tiên của bất kỳ ai nhìn một bảng số: "tính từ bao giờ tới bao
+             giờ?" */ ?>
     <p class="ahead__lead">
-        Số liệu thật trên toàn bộ dữ liệu, không tính đơn đã huỷ · <?= e(date('d/m/Y')) ?>
+        <?php if ($mocThongKe !== null): ?>
+            Tiền tính từ <strong><?= e(formatDate($mocThongKe, 'd/m/Y')) ?></strong>,
+            không tính đơn đã huỷ · <?= e(date('d/m/Y')) ?>
+        <?php else: ?>
+            Số liệu trên toàn bộ dữ liệu, không tính đơn đã huỷ · <?= e(date('d/m/Y')) ?>
+        <?php endif; ?>
     </p>
 </header>
 

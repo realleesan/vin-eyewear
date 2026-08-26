@@ -23,6 +23,43 @@ return [
     // Số sản phẩm mỗi trang ở danh sách sản phẩm.
     'per_page' => 12,
 
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * MỐC TÍNH DOANH THU — bảng Tổng quan chỉ cộng tiền của đơn đặt TỪ mốc này.
+     *
+     * VÌ SAO CẦN: cửa hàng chạy thử nhiều tháng trước khi mở thật, và đơn thử
+     * nằm lẫn trong cùng một bảng với đơn thật. Riêng đơn COD thì chỉ cần bấm
+     * sang "Hoàn tất" là OrderModel::changeStatus() tự đánh dấu đã thu tiền —
+     * nên vài lần bấm thử đủ dựng ra một con số doanh thu không có thật.
+     *
+     * CHỌN MỐC THAY VÌ XOÁ ĐƠN, và đây là điểm chính:
+     *
+     *   · Không mất gì. Đơn cũ vẫn nằm nguyên ở /quan-tri/don-hang, vẫn tra
+     *     cứu được, vẫn gắn với lịch sử mua của khách trong module Khách hàng.
+     *   · Đảo ngược được. Đặt sai mốc thì sửa một dòng .env, không phải khôi
+     *     phục từ bản sao lưu.
+     *   · Không có lệnh DELETE nào chạy trên máy chủ thật — thao tác mà một
+     *     ký tự gõ thiếu là mất vĩnh viễn lịch sử mua của khách.
+     *
+     * ĐỂ TRỐNG = tính toàn bộ dữ liệu, đúng như trước khi có tuỳ chọn này.
+     *
+     * Định dạng: 'YYYY-MM-DD' hoặc 'YYYY-MM-DD HH:MM:SS'. Chỉ ngày thì tính từ
+     * 00:00:00 hôm đó.
+     *
+     * LỌC THEO `created_at` CHỨ KHÔNG PHẢI `paid_at` — một luật cho cả doanh
+     * thu lẫn tạm thu, và nó đọc ra được thành một câu: "đơn đặt từ ngày X trở
+     * đi". Đánh đổi có thật và phải biết: một đơn đặt TRƯỚC mốc mà khách trả
+     * tiền SAU mốc thì không vào doanh thu. Đó là cái giá của việc bắt đầu lại
+     * từ 0 — tiền ấy vẫn thấy đủ ở module Đơn hàng.
+     *
+     * CHỈ ÁP CHO HAI Ô TIỀN. Các ô hàng chờ (đơn mới, lịch hẹn chờ, liên hệ
+     * chưa đẩy) KHÔNG lọc theo mốc: chúng đếm VIỆC CÒN PHẢI LÀM, và một đơn từ
+     * tháng trước chưa ai xác nhận thì vẫn là việc chưa xong. Giấu nó đi vì
+     * ngày tháng là giấu mất một khách đang chờ.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    'thong_ke_tu' => env('STATS_SINCE', ''),
+
     // Phí giao hàng cố định (VND) khi khách chọn giao tận nơi thay vì nhận
     // tại cửa hàng. Đặt ở đây để đổi một chỗ, không rải rác trong checkout.
     'shipping_fee' => 30000,

@@ -83,6 +83,20 @@ class DashboardController extends AdminController
          * bảng là để chủ cửa hàng thấy một khoản thu không bao giờ đối chiếu
          * được với sổ ngân hàng.
          */
+        /*
+         * MỐC TÍNH DOANH THU — xem config/app.php ['thong_ke_tu'].
+         *
+         * Để trống thì cộng toàn bộ, đúng như trước. Có giá trị thì chỉ cộng
+         * đơn đặt TỪ mốc đó — cách bắt đầu lại từ 0 mà không xoá một dòng nào.
+         *
+         * Đi qua THAM SỐ RÀNG BUỘC chứ không nối vào chuỗi SQL. Giá trị này
+         * đến từ .env, tức là từ một file người ta sửa tay lúc nửa đêm trên
+         * File Manager của hosting — chính xác loại nguồn không được tin.
+         */
+        $mocThongKe = self::mocThongKe();
+        $locMoc     = $mocThongKe !== null ? ' AND created_at >= :moc' : '';
+        $thamSo     = $mocThongKe !== null ? ['moc' => $mocThongKe] : [];
+
         $tien = Database::fetchOne(
             "SELECT
                 COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN total END), 0)
@@ -94,13 +108,16 @@ class DashboardController extends AdminController
                 COUNT(CASE WHEN payment_status = 'deposit_paid' THEN 1 END)
                     AS so_don_coc
                FROM orders
-              WHERE status <> 'cancelled'"
+              WHERE status <> 'cancelled'" . $locMoc,
+            $thamSo
         ) ?? [];
 
         $this->renderAdmin('admin/dashboard/index', [
             'pageTitle'    => 'Tổng quan — Quản trị Vin Eyewear',
             'stats'        => $stats,
             'tien'         => $tien,
+            // null = không đặt mốc; view dùng để nói rõ số liệu tính từ đâu.
+            'mocThongKe'   => $mocThongKe,
             'recentOrders' => Database::fetchAll(
                 'SELECT * FROM orders ORDER BY created_at DESC LIMIT 8'
             ),
@@ -138,5 +155,43 @@ class DashboardController extends AdminController
             'orderStatuses'   => OrderModel::STATUSES,
             'bookingStatuses' => BookingModel::STATUSES,
         ]);
+    }
+    /**
+     * Mốc tính doanh thu, dạng 'YYYY-MM-DD HH:MM:SS', hoặc null nếu không đặt.
+     *
+     * KIỂM ĐỊNH DẠNG RỒI MỚI DÙNG, và trả null khi sai thay vì ném lỗi.
+     *
+     * Giá trị này đến từ .env — file mà trên hosting người ta sửa tay bằng
+     * File Manager, không qua bước kiểm nào. Gõ nhầm "26/08/2026" (kiểu Việt
+     * Nam) thay vì "2026-08-26" là chuyện sẽ xảy ra. Ném lỗi ở đó nghĩa là
+     * TRANG ĐẦU TIÊN sau khi đăng nhập trả 500 vì một dấu gạch chéo — mà lỗi
+     * ấy lại không nói ra nguyên nhân.
+     *
+     * Trả null thì bảng hiện số liệu toàn bộ, dòng dẫn ghi rõ "trên toàn bộ dữ
+     * liệu", và người đặt mốc nhìn ra ngay là nó chưa ăn.
+     */
+    private static function mocThongKe(): ?string
+    {
+        $raw = trim((string) config('app.thong_ke_tu', ''));
+
+        if ($raw === '') {
+            return null;
+        }
+
+        // Chỉ có ngày thì lấy từ đầu ngày hôm đó.
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw) === 1) {
+            $raw .= ' 00:00:00';
+        }
+
+        $d = DateTime::createFromFormat('Y-m-d H:i:s', $raw);
+        $loi = DateTime::getLastErrors();
+
+        if ($d === false || ($loi !== false && ($loi['warning_count'] ?? 0) > 0)) {
+            error_log('[Tổng quan] STATS_SINCE sai định dạng, bỏ qua mốc: ' . $raw);
+
+            return null;
+        }
+
+        return $d->format('Y-m-d H:i:s');
     }
 }
