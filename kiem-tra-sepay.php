@@ -198,7 +198,23 @@ muc('4. ĐỊA CHỈ ĐỂ DÁN VÀO SEPAY');
 
 $goc = rtrim((string) config('app.url', ''), '/');
 
-echo "  URL nhận webhook   " . ($goc !== '' ? $goc . '/webhook/sepay' : '(APP_URL chưa khai trong .env)') . "\n";
+$urlCau = trim((string) config('sepay.relay_url', ''));
+
+if ($urlCau !== '') {
+    /*
+     * CÓ CẦU NỐI THÌ ĐỊA CHỈ DÁN VÀO SEPAY LÀ ĐỊA CHỈ CỦA CẦU NỐI, KHÔNG PHẢI
+     * CỦA WEBSITE.
+     *
+     * Đây là chỗ dễ dán nhầm nhất sau khi dựng cầu nối: địa chỉ website vẫn
+     * còn đó, vẫn đúng cú pháp, vẫn có vẻ hợp lý — nhưng SePay gọi vào đó thì
+     * đụng lớp chống bot của InfinityFree và không bao giờ tới nơi.
+     */
+    echo "  ⚠ ĐÃ CÓ CẦU NỐI. Dán địa chỉ CỦA CẦU NỐI vào SePay, không phải của website:\n\n";
+    echo "  URL nhận webhook   " . rtrim($urlCau, '/') . "/webhook/sepay\n";
+} else {
+    echo "  URL nhận webhook   " . ($goc !== '' ? $goc . '/webhook/sepay' : '(APP_URL chưa khai trong .env)') . "\n";
+}
+
 echo "  Kiểu xác thực      API Key\n";
 echo "  Sự kiện            Có tiền vào\n";
 echo "  Bộ lọc tiền tố     ĐỂ TRỐNG\n\n";
@@ -355,6 +371,75 @@ if (!$coBang) {
 }
 
 // ---------------------------------------------------------------------------
+// 7. CẦU NỐI TRÊN RENDER
+//
+// InfinityFree bản miễn phí đặt một lớp chống bot TRƯỚC Apache: máy chủ SePay
+// không chạy JavaScript nên không qua nổi, và webhook gửi thẳng vào đây không
+// bao giờ tới PHP. Cầu nối (relay/, chạy trên Render) nhận thay rồi đưa giao
+// dịch về bằng hai đường — nó ĐẨY sang, và website tự KÉO về.
+//
+// Mục này kiểm ĐƯỜNG KÉO, tức chiều website gọi ra ngoài. Đường đẩy thì phải
+// kiểm từ phía cầu nối:  GET <cầu nối>/kiem-tra?thu=1
+// ---------------------------------------------------------------------------
+muc('7. CẦU NỐI TRÊN RENDER  (đường kéo)');
+
+$khoaCau = trim((string) config('sepay.relay_key', ''));
+
+if ($urlCau === '' && $khoaCau === '') {
+    echo "  Chưa khai cầu nối — đường kéo đang tắt.\n\n";
+    echo "  Không sao nếu webhook gửi thẳng vào website vẫn tới nơi (mục 6 có dòng mới).\n";
+    echo "  Nhưng trên InfinityFree bản miễn phí thì gần như chắc chắn là KHÔNG:\n";
+    echo "  lớp chống bot chặn mọi khách không phải trình duyệt. Xem relay/README.md.\n";
+} else {
+    ok('SEPAY_RELAY_URL', $urlCau !== '',
+        $urlCau !== '' ? $urlCau : 'CHƯA KHAI',
+        'Thêm SEPAY_RELAY_URL=<địa chỉ Render> vào .env trên hosting');
+
+    ok('SEPAY_RELAY_KEY', $khoaCau !== '',
+        $khoaCau !== ''
+            ? sprintf('%d ký tự · vân tay %s', strlen($khoaCau), substr(hash('sha256', $khoaCau), 0, 8))
+            : 'CHƯA KHAI',
+        'Thêm SEPAY_RELAY_KEY=<PULL_KEY bên Render> vào .env trên hosting');
+
+    if ($khoaCau !== '' && $khoa !== '' && hash_equals($khoa, $khoaCau)) {
+        echo "\n  ⚠ SEPAY_RELAY_KEY đang TRÙNG SEPAY_WEBHOOK_KEY. Chạy được, nhưng đó là\n";
+        echo "    hai chặng khác nhau — lộ một chặng thành lộ cả hai. Sinh khoá riêng.\n";
+    }
+
+    echo "\n  Vân tay trên phải trùng PULL_KEY khai ở Render -> Environment.\n";
+    echo "  So bằng cách gọi:  curl \"" . ($urlCau !== '' ? rtrim($urlCau, '/') : '<cầu nối>')
+        . "/kiem-tra?thu=1\" -H \"Authorization: Apikey <PULL_KEY>\"\n";
+
+    // ── Kéo thử một phát ──────────────────────────────────────────────
+    if (SepayRelay::batDuoc() && $coBang) {
+        echo "\n  Đang kéo thử...\n";
+
+        $kq = SepayRelay::keo(true);   // true = bỏ qua nhịp nghỉ
+
+        if ($kq['bo_qua'] !== null) {
+            printf("  → bỏ qua (%s)\n", $kq['bo_qua']);
+        } elseif ($kq['loi'] !== null) {
+            echo "  ✗ " . $kq['loi'] . "\n\n";
+            echo "    Ba nguyên nhân, theo thứ tự hay gặp:\n";
+            echo "      1. Render gói miễn phí đang NGỦ (15 phút không ai gọi là ngủ,\n";
+            echo "         tỉnh dậy mất ~50 giây). Chờ một phút rồi chạy lại file này.\n";
+            echo "      2. SEPAY_RELAY_KEY lệch với PULL_KEY bên Render -> cầu nối trả 401.\n";
+            echo "      3. SEPAY_RELAY_URL sai, hoặc hosting chặn gọi ra ngoài.\n";
+            echo "    Nguyên văn lỗi nằm trong error log của hosting, tiền tố [SePay].\n";
+        } else {
+            printf("  ✓ Nối được cầu nối. Kéo về %d giao dịch lần này.\n", $kq['keo']);
+
+            if ($kq['keo'] === 0) {
+                echo "    (0 là bình thường: hộp thư bên đó rỗng, hoặc đường đẩy đã\n";
+                echo "     giao hết từ trước.)\n";
+            }
+        }
+    } elseif (!$coBang) {
+        echo "\n  Không kéo thử được: chưa có bảng sepay_transactions (mục 3).\n";
+    }
+}
+
+// ---------------------------------------------------------------------------
 // KẾT LUẬN
 // ---------------------------------------------------------------------------
 muc('KẾT LUẬN');
@@ -378,6 +463,14 @@ if ($sanSang) {
 }
 
 echo "\n";
+
+if ($urlCau !== '') {
+    echo "  CÓ CẦU NỐI THÌ NHẬT KÝ ĐỌC THEO THỨ TỰ NÀY — dừng ở chặng đầu tiên trống:\n";
+    echo "    1. my.sepay.vn -> Nhật ký WebHooks   SePay có gọi được cầu nối không\n";
+    echo "    2. Render -> dịch vụ -> Logs         cầu nối nhận và đẩy được không\n";
+    echo "    3. error log của hosting, [SePay]    website ghi sổ được không\n\n";
+}
+
 echo "  Vẫn không thấy gì tới dù đã làm hết: mở Nhật ký WebHooks ở my.sepay.vn\n";
 echo "  xem SePay nhận về mã HTTP nào. Không có dòng nào trong nhật ký nghĩa là\n";
 echo "  request chưa tới được PHP — thủ phạm thường là lớp chống bot của hosting\n";

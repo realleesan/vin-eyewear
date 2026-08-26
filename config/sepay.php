@@ -83,4 +83,50 @@ return [
      * thoại khó bắt — cùng lý do đã ghi ở order/transfer.php.
      */
     'qr_template' => env('SEPAY_QR_TEMPLATE', 'qronly'),
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * CẦU NỐI TRÊN RENDER — vì InfinityFree không nhận được webhook
+     *
+     * Hosting này đặt một lớp chống bot TRƯỚC Apache: ai gọi vào mà không phải
+     * trình duyệt thì nhận một trang HTML đố JavaScript chứ không tới được
+     * index.php. Máy chủ SePay không chạy JS, nên webhook gửi thẳng vào
+     * /webhook/sepay KHÔNG BAO GIỜ tới nơi — và không để lại dấu vết nào.
+     *
+     * Nên có một máy chủ trung gian đứng ở giữa (mã nguồn trong relay/, chạy
+     * trên Render). Nó nhận webhook thay, rồi đưa giao dịch về đây hai đường:
+     *
+     *   ĐẨY  cầu nối tự giải lời đố rồi POST vào /webhook/sepay. Nhanh, nhưng
+     *        hỏng ngày InfinityFree đổi cách chặn.
+     *   KÉO  website gọi RA cầu nối lấy về (core/SepayRelay.php). Chiều này
+     *        không có tường nào chắn — đây là đường không hỏng.
+     *
+     * Hai giá trị dưới đây chỉ phục vụ đường KÉO. Để trống cả hai thì website
+     * vẫn nhận được đường đẩy như thường, chỉ là mất lưới an toàn.
+     *
+     * Hướng dẫn dựng cầu nối từng bước: relay/README.md.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+
+    /* Địa chỉ gốc của cầu nối, ví dụ https://vin-eyewear-relay.onrender.com
+       KHÔNG kèm /api/keo — SepayRelay tự nối. */
+    'relay_url' => env('SEPAY_RELAY_URL', ''),
+
+    /* Khoá đường kéo. Bằng PULL_KEY khai bên Render. KHÁC với webhook_key ở
+       trên: hai chặng khác nhau thì khoá phải khác nhau, lộ chặng này không
+       được mở chặng kia. */
+    'relay_key' => env('SEPAY_RELAY_KEY', ''),
+
+    /*
+     * Giây nghỉ tối thiểu giữa hai lượt kéo.
+     *
+     * pay-watch.js hỏi trạng thái đơn mỗi 4 giây trong hai phút đầu, và mỗi
+     * lượt hỏi đều kéo một phát. Đặt 3 giây là gần như lượt nào cũng kéo — cố
+     * ý, vì hai phút đầu chính là lúc tiền đang về. Sau đó pay-watch tự thưa
+     * dần nên số lượt kéo cũng thưa theo.
+     *
+     * Gọi hỏng thì SepayRelay tự gấp đôi nhịp này, tối đa 2 phút — Render gói
+     * miễn phí ngủ sau 15 phút và tỉnh dậy mất gần một phút.
+     */
+    'relay_interval' => (int) env('SEPAY_RELAY_INTERVAL', 3),
 ];

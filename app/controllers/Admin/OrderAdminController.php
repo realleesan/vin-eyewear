@@ -13,6 +13,17 @@ class OrderAdminController extends AdminController
 {
     public function index(): void
     {
+        /*
+         * Nhân viên mở danh sách đơn là lúc thứ hai đáng kéo hàng đợi về —
+         * chỗ thứ nhất là màn QR của khách (OrderController::payStatus).
+         *
+         * Hosting không có cron, nên "định kỳ" chỉ có thể ăn theo lượt truy
+         * cập có sẵn. Mà lượt truy cập đúng nhất là lượt này: người mở trang
+         * đang định đối chiếu xem tiền về chưa, nên danh sách phải mới nhất
+         * có thể vào đúng khoảnh khắc họ nhìn. Xem core/SepayRelay.php.
+         */
+        SepayRelay::keo();
+
         $status = (string) ($_GET['status'] ?? '');
 
         // Chỉ nhận trạng thái có thật; giá trị lạ coi như không lọc

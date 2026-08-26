@@ -652,6 +652,25 @@ class OrderController extends BaseController
             self::payJson(['paid' => false, 'stop' => true]);
         }
 
+        /*
+         * KÉO HÀNG ĐỢI VỀ TRƯỚC KHI ĐỌC TRẠNG THÁI ĐƠN.
+         *
+         * Webhook của SePay không tới thẳng được website: lớp chống bot của
+         * InfinityFree chặn mọi khách không phải trình duyệt. Cầu nối trên
+         * Render nhận thay và cố đẩy sang, nhưng đường đẩy có thể hỏng — nên
+         * ở đây website tự đi lấy. Xem core/SepayRelay.php.
+         *
+         * Đặt ĐÚNG chỗ này chứ không đâu khác: khách đang đứng trước mã QR,
+         * pay-watch.js hỏi mỗi 4 giây, và câu trả lời sắp đọc ra ngay dưới đây
+         * chỉ đúng nếu tiền vừa về đã kịp vào sổ. Kéo sau khi đọc là trả lời
+         * bằng dữ liệu cũ hơn đúng một nhịp.
+         *
+         * SepayRelay tự điều nhịp và tự khoá, nên gọi mỗi lượt hỏi không sinh
+         * ra một lượt gọi Render mỗi lượt hỏi. Chưa khai cầu nối thì hàm này
+         * trả về ngay, không tốn gì.
+         */
+        SepayRelay::keo();
+
         // findByCode kiểm chủ sở hữu — mã của người khác trả về null.
         $order = OrderModel::findByCode($code, $userId);
 
