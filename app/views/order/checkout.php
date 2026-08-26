@@ -45,14 +45,48 @@ $total = max(0, $subtotal - $discount) + $shippingFee;
  *   1. $old       dữ liệu khách vừa gõ, khi form quay lại vì báo lỗi.
  *                 Luôn thắng: không ai muốn gõ lại thứ mình vừa gõ.
  *   2. $address   địa chỉ MẶC ĐỊNH trong sổ địa chỉ (/tai-khoan?muc=dia-chi).
- *   3. $profile   hồ sơ tài khoản — chỉ còn lo ô email, vì sổ địa chỉ không
- *                 giữ email.
+ *   3. $profile   hồ sơ tài khoản — họ tên, SỐ ĐIỆN THOẠI và email. Đây là
+ *                 lưới đỡ cuối: sổ địa chỉ trống (khách chưa từng lưu địa chỉ
+ *                 nào) thì hai ô tên và điện thoại vẫn phải có sẵn chữ, vì
+ *                 tài khoản nào cũng đã khai số lúc đăng ký. Email thì chỉ có
+ *                 ở đây, sổ địa chỉ không giữ email.
  *
  * Vì sao sổ địa chỉ đứng trên hồ sơ ở hai ô tên và điện thoại: xem ghi chú ở
  * OrderController::checkout().
  */
 $fill = static fn (string $key, ?string $fallback = null): string =>
     (string) ($old[$key] ?? $fallback ?? '');
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ * CHUỖI RỖNG CŨNG LÀ "CHƯA CÓ" — dùng cho hai ô BẮT BUỘC (tên, điện thoại).
+ *
+ * `??` chỉ bắt NULL, mà `addresses.recipient_name` và `addresses.phone` là
+ * cột NOT NULL: một địa chỉ lưu thiếu số nằm trong CSDL dưới dạng '' chứ
+ * không phải NULL, và chuỗi rỗng đó THẮNG ở `??` — tài khoản có sẵn số điện
+ * thoại trong hồ sơ mà ô vẫn hiện ra trống. Cùng chuyện đó với $old: form
+ * quay lại vì lỗi ở ô khác thì $old['customerPhone'] = '' cũng đè mất số của
+ * hồ sơ, và khách phải tự gõ lại thứ hệ thống đã biết.
+ *
+ * Nên ở đây lấy giá trị ĐẦU TIÊN THỰC SỰ CÓ CHỮ, không phải giá trị đầu tiên
+ * khác NULL.
+ *
+ * CHỈ ÁP CHO Ô BẮT BUỘC. Ô email để nguyên $fill: nó không bắt buộc, nên xoá
+ * trắng là một lựa chọn có chủ ý — điền lại giúp là giành quyền quyết định
+ * của khách.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+$fillCo = static function (string $key, ?string ...$nguon) use ($old): string {
+    array_unshift($nguon, $old[$key] ?? null);
+
+    foreach ($nguon as $gt) {
+        if ($gt !== null && trim($gt) !== '') {
+            return trim($gt);
+        }
+    }
+
+    return '';
+};
 
 $address = $address ?? null;
 
@@ -156,14 +190,14 @@ $storeId  = $old['storeId'] ?? '';
                         <input class="cofield__input" type="text" name="customer_name" required
                                minlength="2" maxlength="120" autocomplete="name"
                                placeholder="Nguyễn Văn A"
-                               value="<?= e($fill('customerName', $address['recipient_name'] ?? $profile['full_name'] ?? null)) ?>">
+                               value="<?= e($fillCo('customerName', $address['recipient_name'] ?? null, $profile['full_name'] ?? null)) ?>">
                     </label>
 
                     <label class="cofield">
                         <span class="cofield__label">Số điện thoại *</span>
                         <input class="cofield__input" type="tel" name="customer_phone" required
                                autocomplete="tel" inputmode="tel" placeholder="09xx xxx xxx"
-                               value="<?= e($fill('customerPhone', $address['phone'] ?? $profile['phone'] ?? null)) ?>">
+                               value="<?= e($fillCo('customerPhone', $address['phone'] ?? null, $profile['phone'] ?? null)) ?>">
                     </label>
                 </div>
 
