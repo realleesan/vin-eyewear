@@ -96,15 +96,11 @@ return [
      * với đơn sau này, nên đừng đổi sang gì khác.
      */
     'bank' => [
-        'name'    => 'Vietcombank',
-        'branch'  => 'VCB Thăng Long – PGD Thuỵ Khuê',
-        'number'  => '1007128686',
+        'name'    => 'TPBank',
+        // 'branch'  => 'TPBank - CN Hà Nội',
+        'number'  => '10031999222',
         /*
          * TÊN CHỦ TÀI KHOẢN PHẢI KHỚP TỪNG CHỮ VỚI TÊN NGÂN HÀNG GHI.
-         *
-         * Đây là tài khoản HỘ KINH DOANH, không phải tài khoản công ty — trước
-         * bản này ô này ghi "CONG TY TNHH VIN EYEWEAR VIET NAM" trong khi ngân
-         * hàng ghi tên hộ kinh doanh.
          *
          * Vì sao lệch một cái tên lại đáng sửa: mã QR chỉ mang SỐ tài khoản,
          * còn TÊN thì app ngân hàng tự tra từ phía ngân hàng rồi hiện ra. Nên
@@ -113,15 +109,22 @@ return [
          * ta sẽ dừng lại vì tưởng bị lừa.
          *
          * IN HOA, KHÔNG DẤU: chép đúng cách ngân hàng hiển thị.
+         *
+         * ⚠️ HIỆN ĐANG LÀ TÀI KHOẢN CÁ NHÂN, DÙNG ĐỂ CHẠY THỬ SEPAY — 26/08/2026.
+         * Bản trước ở đây là hộ kinh doanh: Vietcombank · 1007128686 ·
+         * HO KINH DOANH PHAM TIEN MANH · bin 970436. Trả lại đúng bộ đó trước
+         * khi trang nhận đơn thật, nếu không tiền của khách chảy vào tài khoản
+         * cá nhân và sổ sách của cửa hàng không khớp được với gì cả.
          */
-        'holder'  => 'HO KINH DOANH PHAM TIEN MANH',
+        'holder'  => 'TA THI THUY LINH',
 
         /*
          * MÃ NGÂN HÀNG THEO CHUẨN NAPAS (BIN) — dùng để dựng ảnh mã QR ở màn
          * "Thanh toán QR" (/thanh-toan/chuyen-khoan).
          *
-         * 970436 = Vietcombank. Đổi ngân hàng thì phải đổi CẢ 'name' và mã này;
-         * tra bảng mã tại https://qr.sepay.vn/banks.json (cột `bin`).
+         * 970423 = TPBank (970436 = Vietcombank). Đổi ngân hàng thì phải đổi
+         * CẢ 'name' và mã này; tra bảng mã tại https://qr.sepay.vn/banks.json
+         * (cột `bin`). Đã đối chiếu 26/08/2026: cả hai đều `supported: true`.
          *
          * ⚠️ NGÂN HÀNG PHẢI CÓ `supported: true` TRONG BẢNG ĐÓ. SePay chỉ đọc
          * được biến động số dư của những ngân hàng nó kết nối; chọn ngân hàng
@@ -131,7 +134,7 @@ return [
          * Để TRỐNG thì màn QR tự bỏ ảnh mã đi và chỉ in số tài khoản — thà vậy
          * còn hơn hiện một mã QR trỏ sai nơi nhận tiền.
          */
-        'bin'     => '970436',
+        'bin'     => '970423',
     ],
 
     'stores' => [
