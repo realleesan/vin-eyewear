@@ -54,6 +54,14 @@ const ICONS = [
     'check'       => '<path d="M4.5 12.5l5 5 10-10"/>',
     // Hai tờ giấy xếp lệch — nút "sao chép mã đơn" ở trang xác nhận đặt hàng
     'copy'        => '<rect x="9" y="9" width="12" height="12" rx="1.5"/><path d="M5 15V4.5A1.5 1.5 0 016.5 3H15"/>',
+    // Khay hứng + mũi tên xuống — nút "Tải biên nhận" ở trang biên nhận.
+    // Mũi tên CẮM XUỐNG khay chứ không nổi lơ lửng: cùng hình này quay ngược
+    // lên là "tải lên", và hai nghĩa trái nhau thì không được nhìn giống nhau.
+    'download'    => '<path d="M4 15.5V19a1.5 1.5 0 001.5 1.5h13A1.5 1.5 0 0020 19v-3.5"/><path d="M8 11l4 4 4-4"/><path d="M12 15V3.5"/>',
+    // Ba nút nối nhau — nút "Chia sẻ". Không dùng biểu tượng chia sẻ của iOS
+    // (hộp có mũi tên bay lên): nó trùng gần hết với icon 'download' lật ngược,
+    // mà hai nút này đứng cạnh nhau trên cùng một hàng.
+    'share'       => '<circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-3.6M8.2 13.2l7.6 3.6"/>',
     'layers'      => '<path d="M12 3.5l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16.5l8 4 8-4"/>',
     'ruler'       => '<path d="M4 14.5L14.5 4l5.5 5.5L9.5 20z"/><path d="M8 10.5l1.8 1.8M11 7.5l1.8 1.8M13.8 13.3l1.8 1.8"/>',
     'filter'      => '<path d="M3.5 5.5h17l-6.5 7.5V19l-4 2v-8z"/>',

@@ -359,6 +359,15 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         // nhận — thứ thay cho nút "Tôi đã chuyển khoản" đã bỏ. Thiếu nó thì
         // khối chờ vẫn đọc được và lối ra hiện sẵn ngay bên dưới.
         'order/transfer' => ['copy-btn.js', 'pay-watch.js'],
+        // Biên nhận thanh toán. copy-btn.js: nút chép mã đơn — thiếu nó thì mã
+        // vẫn in ra dạng chữ để bôi đen chép tay, y như ở màn QR.
+        //
+        // paid-receipt.js NGƯỢC với nếp chung: thiếu nó thì hai nút "Tải biên
+        // nhận" / "Chia sẻ" KHÔNG hiện ra. Cả hai việc ấy chỉ làm được bằng JS
+        // (window.print, navigator.share) nên không có đường lui nào — vẽ nút
+        // bấm vào không có gì xảy ra còn tệ hơn không vẽ. Lý do đầy đủ ở đầu
+        // assets/js/paid-receipt.js.
+        'order/paid'     => ['copy-btn.js', 'paid-receipt.js'],
         // Hộp thoại hỏi lại trước khi xoá dòng giỏ hàng. Thiếu file này thì
         // mỗi nút xoá vẫn còn onclick="return confirm(...)" của trình duyệt —
         // xấu hơn, nhưng khách vẫn được hỏi. Xem confirm-dialog.js.

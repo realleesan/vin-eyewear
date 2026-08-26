@@ -520,10 +520,10 @@
    BIÊN NHẬN THANH TOÁN — /thanh-toan/thanh-cong
    Markup: app/views/order/paid.php
 
-   Dựng theo "Thanh toán thành công.dc.html": MỘT CỘT HẸP, khác hẳn trang xác
-   nhận đơn ở trên (ba khối rộng). Chủ ý của bản vẽ: đây là thứ khách liếc một
-   lượt rồi rời đi, không phải hoá đơn để đọc kỹ — hoá đơn đầy đủ nằm ở thẻ đơn
-   trong trang tài khoản.
+   Dựng theo "Thanh toan thanh cong.dc.html" (bản redesign 2026-08-26): MỘT
+   CỘT HẸP 520px, khác hẳn trang xác nhận đơn ở trên (ba khối rộng). Chủ ý của
+   bản vẽ: đây là thứ khách liếc một lượt rồi rời đi, không phải hoá đơn để đọc
+   kỹ — hoá đơn đầy đủ nằm ở thẻ đơn trong trang tài khoản.
 
    Ở CHUNG FILE với trang xác nhận đơn vì hai trang là anh em: cùng là điểm
    cuối của một luồng, cùng khung rút gọn, và sửa dáng một chỗ thì thường phải
@@ -531,15 +531,44 @@
 
    MÀU và ĐỘ BO theo token của site, không theo con số trong bản vẽ (bo 12–16px)
    — xem khối "ĐỘ BO GÓC" trong layout.css.
+
+   MỘT CHỖ CỐ Ý KHÔNG THEO BẢN VẼ: huy hiệu "Đã thanh toán" trong bản vẽ bo
+   999px thành viên thuốc. layout.css cấm dáng đó cho phần tử chữ nhật, và
+   danh sách ngoại lệ ở đó có đúng bốn huy hiệu SỐ do cửa hàng chốt — thêm cái
+   thứ năm là việc phải hỏi chứ không phải việc tự quyết. Giữ --radius-sm.
    ============================================================ */
 
 .opaid {
     width: 100%;
-    max-width: 620px;
+    /* Bản vẽ thu từ 620px xuống 520px. Hẹp hơn thì mắt đi hết chiều ngang
+       không cần liếc ngang — đúng ý "liếc một lượt rồi đi" ở trên. */
+    max-width: 520px;
     margin: 0 auto;
     padding: 56px var(--page-edge) 88px;
     box-sizing: border-box;
 }
+
+/* ── Vào trang: các khối trồi lên lần lượt ───────────────────────────────
+   Không phải trang trí. Thứ tự trồi chính là thứ tự cần đọc — tick mừng
+   trước, biên nhận sau, việc-tiếp-theo sau nữa — nên nó dẫn mắt thay cho
+   một tiêu đề phụ. Độ trễ giữ dưới 0.3s: quá đó là bắt người ta chờ. */
+@keyframes opaid-rise {
+    from { transform: translateY(14px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.opaid__hero,
+.opaid__receipt,
+.opaid__tools,
+.opaid__gift,
+.opaid__next,
+.opaid__acts { animation: opaid-rise 0.5s ease both; }
+
+.opaid__receipt { animation-delay: 0.15s; }
+.opaid__tools   { animation-delay: 0.2s; }
+.opaid__gift    { animation-delay: 0.25s; }
+.opaid__next    { animation-delay: 0.25s; }
+.opaid__acts    { animation-delay: 0.3s; }
 
 /* --- Cụm mừng --- */
 
@@ -552,26 +581,54 @@
 .opaid__seal {
     display: grid;
     place-items: center;
-    width: 74px;
-    height: 74px;
+    width: 80px;
+    height: 80px;
     margin: 0 auto;
     border-radius: var(--radius-round);
     background: #3d7a4f;
     color: #fff;
-    box-shadow: 0 0 0 10px #e6f2ea;
-    animation: opaid-pop 0.45s ease-out;
+    box-shadow: 0 0 0 10px #e6f2ea, 0 10px 24px rgba(61, 122, 79, 0.22);
+    animation: opaid-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 @keyframes opaid-pop {
-    0%   { transform: scale(0.6); opacity: 0; }
+    0%   { transform: scale(0.4); opacity: 0; }
     70%  { transform: scale(1.08); }
     100% { transform: scale(1); opacity: 1; }
 }
 
+/* Nét tick TỰ VẼ, không hiện sẵn. Vòng tròn nảy ra trước rồi nét chạy sau
+   (trễ 0.3s) — hai việc nối nhau đọc thành một câu "xong rồi", còn bật ra
+   cùng lúc thì chỉ là một hình tĩnh xuất hiện.
+
+   24 là độ dài xấp xỉ của nét trong icon 'check' (M4.5 12.5l5 5 10-10 ≈ 21.2),
+   làm tròn LÊN: thiếu một chút thì nét đứt đoạn ở cuối, thừa một chút thì
+   không ai thấy. */
+.opaid__sealtick {
+    stroke-dasharray: 24;
+    animation: opaid-tick 0.5s 0.3s ease both;
+}
+
+@keyframes opaid-tick {
+    from { stroke-dashoffset: 24; }
+    to   { stroke-dashoffset: 0; }
+}
+
 /* Người bật "giảm chuyển động" trong hệ điều hành đang nói rõ họ không muốn
-   thứ này. Cùng luật đã áp ở account.css và header.css. */
+   thứ này. Cùng luật đã áp ở account.css và header.css.
+
+   Tick phải được TẮT DASH hẳn chứ không chỉ tắt animation: bỏ mỗi animation
+   thì dashoffset giữ nguyên giá trị đầu và dấu tick biến mất sạch. */
 @media (prefers-reduced-motion: reduce) {
+    .opaid__hero,
+    .opaid__receipt,
+    .opaid__tools,
+    .opaid__gift,
+    .opaid__next,
+    .opaid__acts,
     .opaid__seal { animation: none; }
+
+    .opaid__sealtick { animation: none; stroke-dasharray: none; }
 }
 
 .opaid__title {
@@ -594,10 +651,14 @@
 
 /* --- Thẻ biên nhận --- */
 
+.opaid__receipt { margin-top: 32px; }
+
 .opaid__card {
-    margin-top: 32px;
     border: 1px solid var(--h-card-line);
-    border-radius: var(--radius);
+    /* Đáy KHÔNG bo và KHÔNG viền: mép răng cưa ngay dưới nối tiếp vào đây,
+       viền đáy còn sót lại sẽ thành một gạch ngang cắt qua chân răng. */
+    border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0;
     background: var(--surface-raised);
     /* Dải tổng tiền có nền riêng, phải bị bo theo góc thẻ */
     overflow: hidden;
@@ -609,7 +670,9 @@
     justify-content: space-between;
     gap: 14px;
     padding: 16px 24px;
-    border-bottom: 1px solid var(--h-rule);
+    /* Kẻ ĐỨT như dải tổng tiền bên dưới — cả thẻ đọc ra một tờ biên lai giấy
+       có các phần xé rời, chứ không phải một bảng dữ liệu. */
+    border-bottom: 1px dashed var(--h-rule);
 }
 
 .opaid__cardtitle {
@@ -619,6 +682,194 @@
     font-weight: 600;
     color: var(--ink);
 }
+
+.opaid__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid #bcd8c6;
+    border-radius: var(--radius-sm);
+    background: #eef7f0;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #3d6633;
+}
+
+.opaid__badgeico { flex: none; }
+
+/* MÉP RĂNG CƯA — đáy thẻ xé ra như cuống biên lai.
+   Cao 10px và dính liền thân thẻ (display:block bỏ khoảng trắng dòng chữ mà
+   SVG inline vốn mang theo). Tô bằng chính màu thẻ, viền bằng chính viền thẻ,
+   nên nhìn ra là một khối liền chứ không phải một hình dán thêm. */
+.opaid__tear {
+    display: block;
+    width: 100%;
+    height: 10px;
+    fill: var(--surface-raised);
+    stroke: var(--h-card-line);
+    stroke-width: 1;
+}
+
+/* Bảng hai cột nhãn · giá trị. <dl> thật chứ không phải hai cột <div>: đây
+   đúng là danh sách cặp thuật ngữ–định nghĩa, và trình đọc màn hình đọc ra
+   được quan hệ đó. */
+.opaid__rows {
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    row-gap: 11px;
+    column-gap: 16px;
+    margin: 0;
+    padding: 20px 24px;
+    font-size: 14px;
+}
+
+.opaid__rows dt { color: var(--h-note); }
+
+.opaid__rows dd {
+    margin: 0;
+    font-weight: 500;
+    color: var(--ink);
+    word-break: break-word;
+}
+
+/* Mã đơn + nút chép nằm cùng dòng, xuống dòng được khi hẹp. */
+.opaid__codewrap {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.opaid__code {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    /* Chữ số đều bề ngang: mã đơn là thứ khách dò từng ký tự để đọc cho nhân
+       viên qua điện thoại. */
+    font-variant-numeric: tabular-nums;
+}
+
+.opaid__copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border: 1px solid var(--h-line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+}
+
+.opaid__copy:hover,
+.opaid__copy:focus-visible {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+/* copy-btn.js thay TOÀN BỘ nội dung nút bằng chữ "Đã chép ✓" — icon bên trong
+   bị nuốt mất theo. Không cứu icon: nút lúc đó đang nói một việc vừa xảy ra,
+   và chữ một mình nói rõ hơn chữ kèm hình cái kẹp giấy. */
+.opaid__copy.is-done {
+    border-color: #bcd8c6;
+    background: #eef7f0;
+    color: #3d6633;
+}
+
+.opaid__copyico { flex: none; }
+
+/* Đơn nhiều món: mỗi món một dòng */
+.opaid__item { display: block; }
+.opaid__item + .opaid__item { margin-top: 5px; }
+
+.opaid__lens {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--h-note);
+}
+
+.opaid__total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    /* Kẻ ĐỨT, đúng bản vẽ: nó nói "phần dưới là kết luận của phần trên", khác
+       với đường kẻ liền vốn chỉ ngăn hai khối ngang hàng nhau. */
+    border-top: 1px dashed var(--h-line);
+    background: var(--h-shell);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.opaid__totalnum {
+    font-family: var(--font-serif);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--brand);
+    white-space: nowrap;
+}
+
+/* Vế thứ hai của đơn đặt cọc — nhạt hơn dòng trên một nấc: nó là số CHƯA trả,
+   không phải số vừa nhận. */
+.opaid__rest {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 24px 16px;
+    background: var(--h-shell);
+    font-size: 13.5px;
+    color: var(--h-note);
+}
+
+.opaid__restnum { font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+/* --- Hai nút chữ: tải · chia sẻ --- */
+
+/* Cố ý KHÔNG viền, không nền: đây là việc phụ. Vẽ chúng thành nút thật thì
+   chúng tranh mắt với "Xem đơn hàng" bên dưới — mà giữa "lưu lại tờ giấy" và
+   "đi xem đơn của mình" thì việc sau mới là việc khách cần làm tiếp. */
+.opaid__tools {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 14px;
+}
+
+/* [hidden] phải nói lại: .opaid__tools đặt display:flex sẽ đè lên display:none
+   mặc định của thuộc tính hidden, và hai nút JS-only sẽ hiện ra ngay cả khi
+   không có JS — đúng thứ khối chú thích ở đầu paid.php muốn tránh. */
+.opaid__tools[hidden] { display: none; }
+
+.opaid__tool {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.opaid__tool:hover,
+.opaid__tool:focus-visible {
+    background: var(--h-blush);
+    color: var(--brand);
+}
+
+.opaid__toolico { flex: none; }
 
 /* ============================================================
    QUÀ CẢM ƠN — mã tặng khách chuyển khoản đủ
@@ -669,113 +920,31 @@
     color: #3d6a30;
 }
 
-.opaid__badge {
-    padding: 5px 12px;
-    border: 1px solid #bcd8c6;
-    border-radius: var(--radius-sm);
-    background: #eef7f0;
-    font-size: 12px;
-    font-weight: 600;
-    white-space: nowrap;
-    color: #3d6633;
-}
-
-/* Bảng hai cột nhãn · giá trị. <dl> thật chứ không phải hai cột <div>: đây
-   đúng là danh sách cặp thuật ngữ–định nghĩa, và trình đọc màn hình đọc ra
-   được quan hệ đó. */
-.opaid__rows {
-    display: grid;
-    grid-template-columns: 132px minmax(0, 1fr);
-    row-gap: 11px;
-    column-gap: 16px;
-    margin: 0;
-    padding: 20px 24px;
-    font-size: 14px;
-}
-
-.opaid__rows dt { color: var(--h-note); }
-
-.opaid__rows dd {
-    margin: 0;
-    font-weight: 500;
-    color: var(--ink);
-    word-break: break-word;
-}
-
-.opaid__code { font-weight: 600; letter-spacing: 0.02em; }
-
-/* Đơn nhiều món: mỗi món một dòng */
-.opaid__item { display: block; }
-.opaid__item + .opaid__item { margin-top: 5px; }
-
-.opaid__lens {
-    font-style: normal;
-    font-weight: 400;
-    color: var(--h-note);
-}
-
-.opaid__total {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 16px 24px;
-    /* Kẻ ĐỨT, đúng bản vẽ: nó nói "phần dưới là kết luận của phần trên", khác
-       với đường kẻ liền vốn chỉ ngăn hai khối ngang hàng nhau. */
-    border-top: 1px dashed var(--h-line);
-    background: var(--h-shell);
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.opaid__totalnum {
-    font-family: var(--font-serif);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--brand);
-    white-space: nowrap;
-}
-
-/* Vế thứ hai của đơn đặt cọc — nhạt hơn dòng trên một nấc: nó là số CHƯA trả,
-   không phải số vừa nhận. */
-.opaid__rest {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 0 24px 16px;
-    background: var(--h-shell);
-    font-size: 13.5px;
-    color: var(--h-note);
-}
-
-.opaid__restnum { font-weight: 600; color: var(--ink); white-space: nowrap; }
-
 /* --- Khối "tiếp theo" --- */
 
 .opaid__next {
     display: flex;
-    gap: 14px;
+    gap: 12px;
     align-items: flex-start;
-    margin-top: 20px;
-    padding: 18px 24px;
+    margin-top: 18px;
+    padding: 16px 18px;
     border: 1px solid var(--h-card-line);
     border-radius: var(--radius);
-    background: var(--surface-raised);
+    background: var(--h-shell);
 }
 
-.opaid__arrow {
+/* Bản vẽ để icon xe tải trần trên nền. Giữ vòng tròn nhạt của bản trước:
+   nó neo icon vào một khối tròn cùng cỡ với các icon khác của site, còn icon
+   trần thì trôi lơ lửng cạnh chữ ở cỡ chữ 13.5px. */
+.opaid__nextico {
     display: grid;
     place-items: center;
     flex: none;
     width: 34px;
     height: 34px;
     border-radius: var(--radius-round);
-    background: var(--h-blush);
+    background: var(--surface-raised);
     color: var(--brand);
-    font-size: 15px;
-    font-weight: 700;
 }
 
 .opaid__next p {
@@ -790,13 +959,13 @@
 /* --- Hai nút --- */
 
 .opaid__acts {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
-    margin-top: 28px;
+    margin-top: 20px;
 }
 
 .opaid__btn {
-    flex: 1;
     box-sizing: border-box;
     /* Site gạch chân mọi <a> nằm trong dòng chữ (xem `.ocomp a`). Hai thẻ này
        là NÚT, không phải liên kết giữa câu — phải nói lại. */
@@ -834,9 +1003,9 @@
 }
 
 .opaid__help {
-    margin: 24px 0 0;
+    margin: 32px 0 0;
     font-size: 12.5px;
-    line-height: 1.65;
+    line-height: 1.7;
     text-align: center;
     color: var(--h-note);
 }
@@ -846,11 +1015,64 @@
 @media (max-width: 560px) {
     .opaid { padding-top: 40px; }
 
-    /* Nhãn lên dòng riêng: 132px nhãn + giá trị trên điện thoại thì dòng
+    /* Nhãn lên dòng riêng: 108px nhãn + giá trị trên điện thoại thì dòng
        "Sản phẩm" vắt thành bốn dòng. */
     .opaid__rows { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
     .opaid__rows dt { margin-top: 10px; font-size: 12.5px; }
     .opaid__rows dt:first-child { margin-top: 0; }
 
-    .opaid__acts { flex-direction: column; }
+    .opaid__acts { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ============================================================
+   BẢN IN — nút "Tải biên nhận" gọi window.print()
+
+   Không có tệp PDF nào được dựng ra: "tải" ở đây là hộp thoại in của trình
+   duyệt, nơi khách chọn "Lưu thành PDF". Đổi lại là không thêm thư viện nào —
+   ràng buộc "không phụ thuộc ngoài" trong CLAUDE.md.
+
+   Nên trang in phải RA DÁNG một tờ biên nhận: bỏ mọi thứ bấm được (in ra giấy
+   thì chúng chỉ là chữ thừa), bỏ nền tô để không ngốn mực, và mở khoá bề rộng
+   cho vừa khổ A4.
+   ============================================================ */
+
+@media print {
+    .opaid {
+        max-width: none;
+        padding: 0;
+    }
+
+    /* Hoạt ảnh trong bản in là vô nghĩa, mà tệ hơn: trình duyệt có thể chụp
+       khung hình ở giữa chừng và in ra một trang mờ hoặc lệch. */
+    .opaid__hero,
+    .opaid__receipt,
+    .opaid__gift,
+    .opaid__next,
+    .opaid__seal,
+    .opaid__sealtick { animation: none; }
+
+    .opaid__sealtick { stroke-dasharray: none; }
+
+    /* Bấm không được trên giấy thì không in ra. */
+    .opaid__tools,
+    .opaid__acts,
+    .opaid__copy { display: none; }
+
+    .opaid__card,
+    .opaid__next {
+        border-color: #999;
+        background: #fff;
+    }
+
+    .opaid__total,
+    .opaid__rest { background: #fff; }
+
+    /* Vòng tròn xanh đặc ngốn mực mà không nói thêm gì so với chữ tiêu đề
+       ngay dưới nó. */
+    .opaid__seal { display: none; }
+
+    .opaid__tear { fill: #fff; stroke: #999; }
+
+    /* Thẻ biên nhận không được cắt làm đôi qua hai trang giấy. */
+    .opaid__receipt { break-inside: avoid; }
 }
