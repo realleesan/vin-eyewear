@@ -138,6 +138,20 @@ if (in_array('admin', $adminRoles, true)) {
              một nút xoá, và một file 2KB rẻ hơn nhiều so với việc nhớ thêm
              nó mỗi lần dựng trang mới. */ ?>
     <link rel="stylesheet" href="<?= asset('assets/css/components/confirm.css') ?>">
+
+    <?php /* CSS RIÊNG CỦA TỪNG TRANG QUẢN TRỊ — cùng lối với $adminScripts ở
+             cuối file: controller truyền thẳng mảng đường dẫn qua renderAdmin().
+
+             Có nó thì trang nào cần nhiều luật riêng (bảng đơn hàng: ngăn kéo,
+             thanh chọn hàng loạt, thanh hoàn tác) không phải nhồi tiếp vào
+             admin.css — file đó đang là CSS DÙNG CHUNG cho mười tám trang, và
+             mỗi lần thêm một khối chỉ một trang dùng là mười bảy trang kia
+             phải tải theo.
+
+             Trang nào không khai thì vòng lặp này chạy 0 vòng. */ ?>
+    <?php foreach ($adminStyles ?? [] as $adminStyle): ?>
+        <link rel="stylesheet" href="<?= asset($adminStyle) ?>">
+    <?php endforeach; ?>
 </head>
 
 <body class="admin">
