@@ -56,8 +56,13 @@ echo "\n=== FILE ĐÃ LÊN ĐỦ CHƯA (lớp + phương thức) ===\n";
 foreach ([
     ['Database',       'columnExists'],
     ['Database',       'tableExists'],
+    /* countNew() đã BỎ ngày 2026-08-26 cùng cột `contact_requests`.`status`:
+       trang liên hệ không còn hàng chờ ba nấc, chỉ còn "đã đẩy Zalo chưa".
+       Danh sách này quên gỡ nó theo, nên bản chẩn đoán in "*** THIẾU ***" cho
+       một hàm KHÔNG CÒN TỒN TẠI THEO Ý ĐỒ — và người đang dò lỗi thì mất công
+       đi tìm một thứ vốn không có. Một bản chẩn đoán báo động giả là bản chẩn
+       đoán tệ hơn không có. */
     ['ContactModel',   'countChuaDayZalo'],
-    ['ContactModel',   'countNew'],
     ['CustomerModel',  'ready'],
     ['UserModel',      'coTheDangNhap'],
     ['AuditLogModel',  'write'],
@@ -109,9 +114,9 @@ $buoc = [
         "SELECT (SELECT COUNT(*) FROM orders WHERE status = 'new') AS a,
                 (SELECT COUNT(*) FROM appointments WHERE status = 'pending') AS b"
     ),
-    'ContactModel (huy hiệu liên hệ)' => static fn () => method_exists('ContactModel', 'countChuaDayZalo')
-        ? ContactModel::countChuaDayZalo()
-        : ContactModel::countNew(),
+    /* Không còn nhánh dự phòng gọi countNew(): hàm đó đã bỏ, và gọi tới một
+       hàm không tồn tại thì chính bản chẩn đoán sẽ chết giữa chừng. */
+    'ContactModel (huy hiệu liên hệ)' => static fn () => ContactModel::countChuaDayZalo(),
     'PasswordResetModel::countPending' => static fn () => PasswordResetModel::countPending(),
     'ReviewModel::countPending'        => static fn () => ReviewModel::countPending(),
     'truy vấn trang Tổng quan'         => static fn () => Database::fetchOne(
@@ -137,5 +142,92 @@ foreach ($buoc as $ten => $chay) {
 echo "\n", $hong === 0
     ? "Không mảnh nào ở trên hỏng. Lỗi nằm ngoài renderAdmin() — gửi kết quả này\nrồi bật APP_DEBUG=true đúng một phút để lấy vết gọi hàm đầy đủ.\n"
     : "Đã tìm ra {$hong} chỗ hỏng — xem dòng *** HỎNG *** bên trên.\n";
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * KHUNG THÔNG TIN BỘ SƯU TẬP — HỎI HAI ĐƯỜNG, RỒI SO HAI CÂU TRẢ LỜI
+ *
+ * Khối này thêm ngày 2026-08-28 sau một ca mất cả buổi: nhóm ô "Nội dung trang
+ * chi tiết" trong khu quản trị không chịu hiện ra, mà chạy migration bao nhiêu
+ * lần cũng thế.
+ *
+ * Nguyên nhân có thể là MỘT TRONG HAI, và nhìn từ trình duyệt thì chúng giống
+ * hệt nhau:
+ *
+ *   1. migration CHƯA CHẠY      -> cột chưa có thật, ẩn ô là đúng
+ *   2. không đọc được information_schema (hosting dùng chung hay cắt quyền
+ *      này) -> cột CÓ nhưng Database::columnExists() không thấy, và tính năng
+ *      bị ẩn vĩnh viễn
+ *
+ * Nên ở đây hỏi cả hai đường cho cùng một cột: information_schema, và SHOW
+ * COLUMNS (chỉ cần quyền trên chính bảng ấy). Hai câu trả lời KHÁC NHAU là dấu
+ * hiệu của tình huống 2 — và cũng là lý do Database::columnExists() nay có
+ * nhánh dự phòng.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+echo "\n=== KHUNG THÔNG TIN BỘ SƯU TẬP ===\n";
+
+$hoiHaiDuong = static function (string $bang, string $cot) use ($in): void {
+    try {
+        $a = (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND COLUMN_NAME = :c",
+            ['t' => $bang, 'c' => $cot]
+        ) > 0 ? 'CÓ' : 'không';
+    } catch (Throwable $e) {
+        $a = 'LỖI: ' . $e->getMessage();
+    }
+
+    try {
+        $b = Database::fetchOne(sprintf(
+            'SHOW COLUMNS FROM `%s` LIKE %s',
+            $bang,
+            Database::connection()->quote($cot)
+        )) !== null ? 'CÓ' : 'không';
+    } catch (Throwable $e) {
+        $b = 'LỖI: ' . $e->getMessage();
+    }
+
+    $c = Database::columnExists($bang, $cot) ? 'CÓ' : 'không';
+
+    $canh = ($a !== $b) ? '   <<< HAI ĐƯỜNG TRẢ LỜI KHÁC NHAU' : '';
+    $in("  {$bang}.{$cot}", "info_schema={$a} · SHOW={$b} · columnExists={$c}{$canh}");
+};
+
+// Mỗi migration một cột đại diện — cả loạt cột trong một file cùng ra đời.
+$hoiHaiDuong('collections', 'story');        // 2026-08-27-bo-suu-tap-trang-chi-tiet
+$hoiHaiDuong('collections', 'season_code');  // 2026-08-27-bo-suu-tap-khung-ba-lop
+$hoiHaiDuong('products',    'eyewear_type'); // (cùng file trên)
+$hoiHaiDuong('product_variants', 'swatch_hex');
+
+foreach (['collection_faqs', 'site_texts'] as $bang) {
+    try {
+        $a = (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM information_schema.TABLES
+              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t",
+            ['t' => $bang]
+        ) > 0 ? 'CÓ' : 'không';
+    } catch (Throwable $e) {
+        $a = 'LỖI: ' . $e->getMessage();
+    }
+
+    try {
+        $b = Database::fetchOne('SHOW TABLES LIKE ' . Database::connection()->quote($bang)) !== null ? 'CÓ' : 'không';
+    } catch (Throwable $e) {
+        $b = 'LỖI: ' . $e->getMessage();
+    }
+
+    $in("  bảng {$bang}", "info_schema={$a} · SHOW={$b} · tableExists="
+        . (Database::tableExists($bang) ? 'CÓ' : 'không')
+        . (($a !== $b) ? '   <<< HAI ĐƯỜNG TRẢ LỜI KHÁC NHAU' : ''));
+}
+
+echo "\n  Đọc thế nào:\n";
+echo "    · tất cả 'không'          -> migration chưa chạy. Chạy database/migrate.sh.\n";
+echo "    · info_schema khác SHOW   -> hosting cắt quyền information_schema.\n";
+echo "                                 Database::columnExists() đã có nhánh dự phòng\n";
+echo "                                 từ 2026-08-28; nếu vẫn hỏng thì mã trên máy\n";
+echo "                                 chủ còn cũ, deploy lại.\n";
+echo "    · tất cả 'CÓ'             -> dữ liệu đủ, lỗi nằm chỗ khác.\n";
 
 echo "\nXOÁ FILE NÀY SAU KHI XEM XONG.\n";

@@ -200,9 +200,66 @@ class Database
                 ['t' => $table]
             );
 
-            return self::$tableCache[$table] = $n > 0;
+            if ($n > 0) {
+                return self::$tableCache[$table] = true;
+            }
         } catch (Throwable) {
-            return self::$tableCache[$table] = false;
+            // rơi xuống phép hỏi dự phòng bên dưới
+        }
+
+        return self::$tableCache[$table] = self::hoiTrucTiep('SHOW TABLES LIKE', $table);
+    }
+
+    /**
+     * Phép hỏi DỰ PHÒNG khi information_schema không trả lời được.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO CẦN NÓ — MỘT LỖI ĐÃ XẢY RA THẬT
+     *
+     * Hai hàm trên trước đây nuốt mọi lỗi rồi trả về false. Ý đồ thì đúng
+     * (thiếu thông tin thì coi như chưa có, tính năng tự ẩn, trang không chết),
+     * nhưng nó gộp hai chuyện rất khác nhau vào một câu trả lời:
+     *
+     *   · cột CHƯA CÓ THẬT          -> ẩn là đúng
+     *   · KHÔNG HỎI ĐƯỢC information_schema -> ẩn là SAI
+     *
+     * Trên hosting dùng chung, quyền đọc information_schema hay bị cắt bớt.
+     * Khi đó vế thứ hai xảy ra ở MỌI lượt tải, và tính năng bị ẩn VĨNH VIỄN —
+     * chạy migration bao nhiêu lần cũng không đổi được gì, mà cũng chẳng có
+     * dòng lỗi nào để lần ra. Đúng cái đã xảy ra với nhóm ô "Nội dung trang
+     * chi tiết" của khu quản trị bộ sưu tập.
+     *
+     * SHOW TABLES / SHOW COLUMNS không cần quyền gì ngoài quyền trên chính
+     * bảng ấy, thứ mà tài khoản ứng dụng luôn có. Bảng không tồn tại thì
+     * SHOW COLUMNS ném 1146 và ta vẫn trả false — đúng như cũ.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * TÊN BẢNG NỐI THẲNG VÀO CÂU LỆNH, VÀ VÌ SAO VẪN AN TOÀN
+     *
+     * SHOW không nhận tham số ràng buộc ở vị trí tên bảng — đó chính là lý do
+     * hai hàm trên chọn information_schema ngay từ đầu. Nên ở đây tên bảng
+     * phải đi qua assertSafeIdentifier() của BaseModel: chỉ chữ, số và gạch
+     * dưới mới lọt, mọi thứ khác bị chặn trước khi chạm tới câu lệnh.
+     */
+    private static function hoiTrucTiep(string $lenh, string $ten, string $bang = ''): bool
+    {
+        // Chỉ nhận tên định danh sạch. Không dùng lại assertSafeIdentifier của
+        // BaseModel vì nó NÉM lỗi, mà ở đây tên bẩn nghĩa là "không có", không
+        // phải "trang phải chết".
+        foreach (array_filter([$ten, $bang]) as $dinhDanh) {
+            if (preg_match('/^[A-Za-z0-9_]+$/', $dinhDanh) !== 1) {
+                return false;
+            }
+        }
+
+        try {
+            $sql = $bang === ''
+                ? sprintf('%s %s', $lenh, self::connection()->quote($ten))
+                : sprintf('SHOW COLUMNS FROM `%s` LIKE %s', $bang, self::connection()->quote($ten));
+
+            return self::fetchOne($sql) !== null;
+        } catch (Throwable) {
+            return false;
         }
     }
     /**
@@ -234,9 +291,13 @@ class Database
                 ['t' => $table, 'c' => $column]
             );
 
-            return self::$columnCache[$khoa] = $n > 0;
+            if ($n > 0) {
+                return self::$columnCache[$khoa] = true;
+            }
         } catch (Throwable) {
-            return self::$columnCache[$khoa] = false;
+            // rơi xuống phép hỏi dự phòng — xem hoiTrucTiep()
         }
+
+        return self::$columnCache[$khoa] = self::hoiTrucTiep('', $column, $table);
     }
 }
