@@ -278,10 +278,59 @@ $dongSignature = implode("\n", array_map(
                      2026-08-27-bo-suu-tap-trang-chi-tiet: gõ vào một ô không có
                      cột nào đỡ thì bấm Lưu xong chữ bốc hơi không một lời nào
                      — xem khối chú thích trong CollectionAdminController::save(). */ ?>
-            <div class="aform__sect">
-                <span class="aform__sect-name">Nội dung trang chi tiết</span>
-                <span class="aform__sect-note">CHỈ hiện ở /bo-suu-tap/&lt;slug&gt;, không hiện ở đâu khác</span>
-            </div>
+            <?php
+            /*
+             * TIÊU ĐỀ NHÓM PHẢI ĐI THEO ĐIỀU KIỆN CỦA CÁC Ô DƯỚI NÓ.
+             *
+             * Năm ô trong nhóm này đến từ HAI migration khác nhau (`story` từ
+             * bản trang-chi-tiet, bốn ô còn lại từ bản khung-ba-lop), nên máy
+             * chưa chạy nâng cấp thì cả năm cùng ẩn — mà tiêu đề thì vẫn hiện,
+             * và người dùng nhìn thấy một dòng chữ nói "nội dung trang chi
+             * tiết" với đúng khoảng trắng bên dưới.
+             *
+             * Đó là chuyện ĐÃ XẢY RA THẬT trên hosting: mã lên bằng FTP tự
+             * động, migration bấm tay, và trong khoảng giữa hai việc đó trang
+             * quản trị nói mình có một mục mà không có ô nào để nhập.
+             *
+             * Ba nhóm còn lại (Mùa và xuất xứ · Ưu đãi · SEO) nằm gọn trong
+             * một khối if nên không dính; nhóm này là nhóm DUY NHẤT vắt qua
+             * hai điều kiện, và đó là lý do nó là nhóm duy nhất hỏng.
+             */
+            ?>
+            <?php
+            /*
+             * CHƯA CHẠY NÂNG CẤP THÌ NÓI RA, ĐỪNG IM LẶNG.
+             *
+             * Trước bản vá này, máy thiếu cột chỉ đơn giản không hiện ô nào —
+             * người dùng thấy một form ngắn hơn bình thường mà không có gì
+             * giải thích, và cách duy nhất để biết là đi đọc mã. Khối câu hỏi
+             * thường gặp ở cuối trang đã nói ra từ đầu; nhóm này thì quên.
+             */
+            ?>
+            <?php if (!$hasStory || !$hasFrame): ?>
+                <div class="aform__sect">
+                    <span class="aform__sect-name">Nội dung trang chi tiết</span>
+                </div>
+                <p class="field__hint field--wide">
+                    Nhóm ô này cần nâng cấp cơ sở dữ liệu, chạy xong thì hiện ra:
+                    <?php if (!$hasStory): ?>
+                        <code>2026-08-27-bo-suu-tap-trang-chi-tiet.sql</code>
+                    <?php endif; ?>
+                    <?php if (!$hasFrame): ?>
+                        <code>2026-08-27-bo-suu-tap-khung-ba-lop.sql</code>
+                    <?php endif; ?>
+                </p>
+            <?php endif; ?>
+
+            <?php if ($hasStory || $hasFrame): ?>
+                <div class="aform__sect">
+                    <span class="aform__sect-name">Nội dung trang chi tiết</span>
+                    <span class="aform__sect-note">
+                        chỉ hiện ở trang riêng của bộ này. Chữ cho thẻ ngoài
+                        /bo-suu-tap và cho mega menu thì nằm ở nhóm "Chữ ngắn" bên trên.
+                    </span>
+                </div>
+            <?php endif; ?>
 
             <?php if ($hasStory): ?>
             <div class="field field--wide">
@@ -321,6 +370,8 @@ $dongSignature = implode("\n", array_map(
                        value="<?= e($ed['design_style'] ?? '') ?>">
                 <p class="field__hint">Một câu: phong cách chung của bộ (retro, tối giản, thể thao…).</p>
             </div>
+
+            <div class="field field--wide">
                 <label for="audience">Bộ này hợp với ai <span class="field__opt">(mỗi dòng một ô)</span></label>
                 <textarea id="audience" name="audience" rows="5"
                           placeholder="Độ tuổi | 25 – 45 | Đã qua tuổi chạy theo mốt&#10;Phong cách | Tối giản ấm | Linen, da bò mộc&#10;Nhu cầu | Ngoài trời | Lái xe ban ngày, đi biển&#10;Không hợp nếu | Nhìn màn hình | Tròng phân cực làm màn hình tối đi"><?= e($dongAudience) ?></textarea>
@@ -330,6 +381,8 @@ $dongSignature = implode("\n", array_map(
                     hàng nhiều lượt đổi trả hơn ba ô đầu cộng lại.
                 </p>
             </div>
+
+            <div class="field field--wide">
                 <label for="palette">Bảng màu chủ đạo <span class="field__opt">(mỗi dòng một màu)</span></label>
                 <textarea id="palette" name="palette" rows="4"
                           placeholder="Cát ướt | #d8c3ac&#10;San hô | #c96f5c&#10;Nước sâu | #2f4858"><?= e($dongPalette) ?></textarea>
@@ -338,6 +391,8 @@ $dongSignature = implode("\n", array_map(
                     thì bị BỎ khi lưu — giá trị này vẽ thẳng ra ô màu trên trang.
                 </p>
             </div>
+
+            <div class="field field--wide">
                 <label for="signature">Chi tiết nhận diện <span class="field__opt">(mỗi dòng một ý)</span></label>
                 <textarea id="signature" name="signature" rows="4"
                           placeholder="Cạnh vát tay ba lớp ở mặt trước gọng&#10;Đinh tán đồng ở khớp càng"><?= e($dongSignature) ?></textarea>
@@ -395,10 +450,6 @@ $dongSignature = implode("\n", array_map(
                     <input type="text" id="made_in" name="made_in" maxlength="120"
                            value="<?= e($ed['made_in'] ?? '') ?>">
                 </div>
-
-                <div class="field field--wide">
-                <div class="field field--wide">
-                <div class="field field--wide">
 
                 <div class="aform__sect">
                     <span class="aform__sect-name">Ưu đãi và phân phối</span>
