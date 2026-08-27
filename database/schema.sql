@@ -55,6 +55,7 @@ DROP TABLE IF EXISTS `user_vouchers`;
 DROP TABLE IF EXISTS `vouchers`;
 DROP TABLE IF EXISTS `addresses`;
 DROP TABLE IF EXISTS `lens_prices`;
+DROP TABLE IF EXISTS `lens_packages`;
 DROP TABLE IF EXISTS `prescriptions`;
 DROP TABLE IF EXISTS `stores`;
 DROP TABLE IF EXISTS `product_variants`;
@@ -370,6 +371,34 @@ CREATE TABLE `prescriptions` (
 -- Không cột `id`: khoá chính là chính cặp mã, nên DB tự chặn việc tạo hai giá
 -- cho cùng một lựa chọn.
 -- ----------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------
+-- GÓI CHIẾT SUẤT
+--
+-- Danh mục gói tròng khách chọn khi cắt kèm gọng. Ở trong CSDL chứ không ở
+-- config vì cửa hàng tự thêm/sửa/xoá tại /quan-tri/gia-trong/goi — nhập phôi
+-- mới hay ngừng bán một loại là việc của cửa hàng, không phải việc phải sửa mã
+-- rồi triển khai lại.
+--
+-- `id` là MÃ DẠNG CHỮ ('clear-150'…), không phải UUID: order_items.lens_id và
+-- lens_prices.lens_package đã lưu sẵn đúng những mã này. Xem
+-- database/migrations/2026-08-27-bang-goi-trong.sql.
+--
+-- Không có khoá ngoại nào trỏ vào đây, cũng cố ý — lý do đầy đủ ở file trên.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `lens_packages` (
+    `id`          VARCHAR(40)  NOT NULL,
+    -- 160 để khớp order_items.lens_name, chỗ tên này được chép sang lúc đặt hàng
+    `name`        VARCHAR(160) NOT NULL,
+    `description` VARCHAR(255) NULL,
+    -- Thứ tự hiện cho khách; cách nhau 10 để chèn vào giữa không phải đánh số lại
+    `sort_order`  SMALLINT     NOT NULL DEFAULT 0,
+    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                               ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_lens_packages_sort` (`sort_order`, `id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE `lens_prices` (
     `lens_type`    VARCHAR(32) NOT NULL,
     `lens_package` VARCHAR(40) NOT NULL,
@@ -1208,6 +1237,25 @@ INSERT INTO `categories` (`slug`, `name`, `description`, `sort_order`) VALUES
 ('gong-kinh',      'Gọng kính',      'Gọng kính cận chính hãng nhiều kiểu dáng',        1),
 ('kinh-mat',       'Kính mát',       'Kính mát chống tia UV cho mọi khuôn mặt',         2),
 ('trong-kinh',     'Tròng kính',     'Tròng kính chiết suất cao, chống ánh sáng xanh',  3);
+
+-- ----------------------------------------------------------------------------
+-- GÓI CHIẾT SUẤT — SEED, cùng lý lẽ với cơ sở và danh mục ở trên
+--
+-- Không phải hàng mẫu: thiếu bảng này thì bước "Chọn loại tròng kính" của hộp
+-- mua hàng không có gì để chọn, tức là luồng mua kính có độ đứt ngay sau khi
+-- cài. Cửa hàng sửa lại ở /quan-tri/gia-trong/goi.
+--
+-- Mã ('clear-150'…) phải giữ nguyên: chúng là thứ order_items.lens_id và
+-- lens_prices.lens_package lưu lại. GIÁ thì không seed ở đây — bảng
+-- `lens_prices` để trống, mọi lựa chọn hiện "Báo giá sau" cho tới khi cửa hàng
+-- nhập giá thật.
+-- ----------------------------------------------------------------------------
+INSERT INTO `lens_packages` (`id`, `name`, `description`, `sort_order`) VALUES
+('clear-150', 'Tròng trắng 1.50',          'Phù hợp độ cận/viễn nhẹ đến trung bình (dưới -4.00)',     10),
+('clear-156', 'Tròng trắng 1.56',          'Mỏng hơn, phù hợp cận trung bình (-4.00 → -6.00)',        20),
+('blue-161',  'Chống sáng xanh 1.61',      'Bảo vệ mắt khi làm việc máy tính nhiều giờ',              30),
+('blue-167',  'Chống sáng xanh 1.67',      'Siêu mỏng, thẩm mỹ cao, cận nặng (trên -6.00)',           40),
+('photo-156', 'Đổi màu Photochromic 1.56', 'Tự điều chỉnh theo ánh sáng, tiện dùng trong/ngoài trời', 50);
 
 -- ----------------------------------------------------------------------------
 -- KHÔNG SEED SẢN PHẨM — CỐ Ý

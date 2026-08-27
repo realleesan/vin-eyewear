@@ -201,23 +201,33 @@ return [
      * mình thì chọn cái nào", không phải "chiết suất 1.61 nghĩa là gì".
      *
      * ─────────────────────────────────────────────────────────────────────────
-     * KHÔNG CÓ `price` Ở ĐÂY NỮA — GIÁ NẰM TRONG BẢNG `lens_prices`.
+     * ⚠️ MẢNG NÀY KHÔNG CÒN LÀ NGUỒN CHÍNH — TỪ 2026-08-27 NÓ CHỈ LÀ ĐƯỜNG LÙI.
      *
-     * Một gói không còn MỘT giá: giá là của giao điểm (kiểu tròng × gói), vì
-     * mài đa tròng trên phôi 1.67 đắt hơn nhiều lần đơn tròng trên phôi 1.50.
-     * Ba kiểu có bảng giá × năm gói = mười lăm ô, và cửa hàng sửa chúng ở
-     * /quan-tri/gia-trong chứ không sửa file này — giá đổi hằng tháng, mà mỗi
-     * lần đổi phải sửa file rồi triển khai lại là việc không ai ở cửa hàng làm
-     * được.
+     * Nguồn thật là bảng `lens_packages` trong CSDL, sửa ở
+     * /quan-tri/gia-trong/goi. Giá thì đã xuống bảng `lens_prices` từ trước
+     * (một gói không còn MỘT giá — giá là của giao điểm kiểu tròng × gói).
      *
-     * Còn lại ở đây là DANH MỤC: mã, tên, mô tả. Chúng ở lại config vì mã
-     * nguồn tham chiếu tới chúng bằng id (`order_items.lens_id` chép lại mã
-     * này), và vì thêm một gói là một quyết định về sản phẩm chứ không phải
-     * một lần chỉnh giá.
+     * Mảng dưới đây còn lại đúng hai việc, cả hai đều không phải "nơi khai báo
+     * danh mục":
+     *
+     *   1. ĐƯỜNG LÙI khi bảng chưa tồn tại — deploy là FTP đẩy file còn CSDL
+     *      nâng cấp bằng tay, hai việc rời nhau và đã có ngày lệch pha thật.
+     *      Không có nó thì mã lên trước bảng là trang chủ và hộp mua hàng
+     *      trắng xoá. Xem khối chú thích ở LensModel::packages().
+     *   2. DỮ LIỆU SEED — migration 2026-08-27-bang-goi-trong.sql và mục 8 của
+     *      database/schema.sql chép đúng năm mục này vào bảng.
+     *
+     * NÊN: sửa ở đây KHÔNG đổi được gì trên máy đã chạy file nâng cấp. Muốn
+     * thêm/sửa/xoá gói thì vào /quan-tri/gia-trong/goi.
+     *
+     * Và nếu có sửa (ví dụ đổi câu mô tả mặc định cho máy cài mới) thì phải sửa
+     * ĐỦ BA CHỖ — file này, file migration, mục 8 của schema.sql — nếu không
+     * máy cài mới và máy nâng cấp sẽ ra hai danh mục khác nhau.
      * ─────────────────────────────────────────────────────────────────────────
      *
      * Đọc qua LensModel::packages() — đừng gọi thẳng config() ở view, vì nơi đó
-     * còn lo cả việc tra id (LensModel::find) khi form gửi lên.
+     * mới biết khi nào phải đọc CSDL và khi nào phải lùi về đây, và còn lo cả
+     * việc tra id (LensModel::find) khi form gửi lên.
      */
     'lens_packages' => [
         [

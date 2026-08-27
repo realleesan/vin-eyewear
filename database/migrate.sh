@@ -134,6 +134,9 @@ MIGRATIONS=(
     # để làm cột mốc — kiểu 'data', chỉ sổ ghi chặn chạy lại. Mà chạy lại cũng
     # vô hại: cả ba bước đều hỏi information_schema trước.
     "2026-08-27-bo-cot-status-lien-he.sql|data||"
+    # Gói chiết suất rời config xuống CSDL. Mốc là chính bảng `lens_packages` —
+    # không có gì khác tạo ra nó.
+    "2026-08-27-bang-goi-trong.sql|table|lens_packages|"
 )
 
 # ---------------------------------------------------------------------------

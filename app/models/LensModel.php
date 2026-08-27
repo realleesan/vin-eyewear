@@ -315,8 +315,12 @@ class LensModel
      *   2. GIÁ LÀ THỨ CỬA HÀNG SỬA. Mười lăm ô mà mỗi lần đổi phải sửa file
      *      rồi triển khai lại là một việc không ai ở cửa hàng làm được.
      *
-     * Nên giá xuống bảng `lens_prices`, sửa ở /quan-tri/gia-trong; còn mã, tên
-     * và mô tả ở lại config vì mã nguồn tham chiếu tới chúng bằng id.
+     * Nên giá xuống bảng `lens_prices`, sửa ở /quan-tri/gia-trong.
+     *
+     * TỪ 2026-08-27 DANH MỤC GÓI CŨNG XUỐNG CSDL (bảng `lens_packages`), vì lẽ
+     * thứ hai ở trên đúng với cả nó: nhập phôi 1.74 hay ngừng bán Photochromic
+     * cũng là quyết định của cửa hàng. Mảng trong config/taxonomy.php ở lại
+     * làm ĐƯỜNG LÙI cho máy chưa chạy file nâng cấp — xem packages().
      * ─────────────────────────────────────────────────────────────────────────
      */
 
@@ -448,10 +452,180 @@ class LensModel
     // GÓI TRÒNG
     // ========================================================================
 
-    /** Các gói chiết suất đang bán, theo đúng thứ tự trong config. */
+    /** @var array<int, array{id:string,name:string,desc:string}>|null Nhớ trong request. */
+    private static ?array $packages = null;
+
+    /**
+     * Bảng `lens_packages` đã có trên máy này chưa.
+     *
+     * Sửa được gói hay không phụ thuộc câu trả lời: chưa có bảng thì màn quản
+     * trị phải NÓI RA thay vì bày một cái form ghi đi đâu không rõ.
+     */
+    public static function packagesEditable(): bool
+    {
+        return Database::tableExists('lens_packages');
+    }
+
+    /**
+     * Các gói chiết suất đang bán, theo thứ tự cửa hàng đã xếp.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CÒN ĐƯỜNG LÙI VỀ config, VÀ ĐÓ KHÔNG PHẢI SỰ THẬN TRỌNG THỪA
+     *
+     * Deploy của dự án là FTP đẩy file, còn CSDL thì nâng cấp bằng tay ở
+     * phpMyAdmin — hai việc rời nhau, và đã có ngày chúng lệch pha thật
+     * (26/08/2026: CSDL đi trước mã một bước, mọi trang quản trị trả 500).
+     *
+     * Lần này lệch theo chiều ngược lại: mã lên trước, bảng chưa có. Hàm này
+     * chạy trên TRANG CHỦ và trong HỘP MUA HÀNG, nên để nó ném lỗi 1146 nghĩa
+     * là cả mặt tiền cửa hàng trắng xoá cho tới khi có người mở phpMyAdmin.
+     *
+     * Rơi về mảng trong config thì khách vẫn mua được đúng năm gói như hôm
+     * qua — không ai ngoài kia nhận ra điều gì. Khu quản trị thì có nhận ra, và
+     * nó chỉ dẫn cách chạy file nâng cấp (xem packagesEditable()).
+     *
+     * tableExists() tự nhớ kết quả nên không tốn thêm truy vấn nào mỗi lượt.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return array<int, array{id:string,name:string,desc:string}>
+     */
     public static function packages(): array
     {
+        if (self::$packages !== null) {
+            return self::$packages;
+        }
+
+        if (!self::packagesEditable()) {
+            return self::$packages = self::packagesFromConfig();
+        }
+
+        $rows = Database::fetchAll(
+            'SELECT id, name, description FROM lens_packages ORDER BY sort_order ASC, id ASC'
+        );
+
+        /* Bảng RỖNG thì cũng lùi về config. Không phải chuyện lý thuyết: xoá
+           nốt gói cuối cùng là bước "chọn tròng" không còn lựa chọn nào và
+           khách không mua nổi một cặp kính có độ. Màn quản trị đã cảnh báo
+           trước khi xoá cái cuối, đây là lưới thứ hai. */
+        if ($rows === []) {
+            return self::$packages = self::packagesFromConfig();
+        }
+
+        $out = [];
+
+        foreach ($rows as $r) {
+            /* Đổi tên khoá `description` -> `desc` để giữ nguyên hình dạng mà
+               ba nơi đang đọc (hộp mua hàng, trang chủ, bảng giá quản trị) vẫn
+               chờ đợi. Đổi ở đây một chỗ rẻ hơn đổi ở ba chỗ kia. */
+            $out[] = [
+                'id'   => (string) $r['id'],
+                'name' => (string) $r['name'],
+                'desc' => (string) ($r['description'] ?? ''),
+            ];
+        }
+
+        return self::$packages = $out;
+    }
+
+    /** Bản trong config — đường lùi, và cũng là dữ liệu seed của migration. */
+    private static function packagesFromConfig(): array
+    {
         return config('taxonomy.lens_packages') ?? [];
+    }
+
+    /**
+     * Một gói kèm cả cột `sort_order`, cho form sửa ở khu quản trị.
+     *
+     * Khác find() ở chỗ nó đọc THẲNG bảng: find() trả về hình dạng đã rút gọn
+     * cho phía khách và có thể đang lùi về config, mà form sửa thì chỉ có
+     * nghĩa khi bảng thật sự tồn tại.
+     */
+    public static function findPackageRow(?string $id): ?array
+    {
+        if ($id === null || $id === '' || !self::packagesEditable()) {
+            return null;
+        }
+
+        return Database::fetchOne('SELECT * FROM lens_packages WHERE id = :id', ['id' => $id]);
+    }
+
+    /** Thêm một gói mới. Gọi sau khi controller đã kiểm dữ liệu. */
+    public static function createPackage(string $id, string $name, string $desc, int $sort): void
+    {
+        Database::execute(
+            'INSERT INTO lens_packages (id, name, description, sort_order)
+             VALUES (:id, :name, :desc, :sort)',
+            ['id' => $id, 'name' => $name, 'desc' => $desc !== '' ? $desc : null, 'sort' => $sort]
+        );
+
+        self::$packages = null;
+    }
+
+    /**
+     * Sửa tên · mô tả · thứ tự của một gói. MÃ KHÔNG SỬA ĐƯỢC.
+     *
+     * Mã là thứ `lens_prices.lens_package` và `order_items.lens_id` đang trỏ
+     * vào. Cho sửa nó nghĩa là một cú bấm làm mồ côi ba ô giá và cắt đứt đường
+     * lần về gói của mọi đơn đã bán — mà không có gì báo cho ai biết. Muốn đổi
+     * mã thì thêm gói mới rồi xoá gói cũ, và lúc đó việc mất giá là chuyện
+     * người bấm nhìn thấy.
+     */
+    public static function updatePackage(string $id, string $name, string $desc, int $sort): void
+    {
+        Database::execute(
+            'UPDATE lens_packages SET name = :name, description = :desc, sort_order = :sort
+              WHERE id = :id',
+            ['id' => $id, 'name' => $name, 'desc' => $desc !== '' ? $desc : null, 'sort' => $sort]
+        );
+
+        self::$packages = null;
+    }
+
+    /**
+     * Xoá một gói và MỌI Ô GIÁ của nó, trong cùng một transaction.
+     *
+     * Không có khoá ngoại nào lo việc này (xem migration
+     * 2026-08-27-bang-goi-trong.sql), nên phải dọn bằng tay. Bỏ sót thì ba
+     * dòng giá mồ côi nằm lại trong `lens_prices`, không màn nào vẽ ra và
+     * không ai xoá được — rồi sống dậy với một con số không ai còn nhớ nếu mã
+     * ấy được dùng lại.
+     *
+     * ĐƠN CŨ KHÔNG ĐỤNG TỚI. `order_items` đã chép cứng tên và giá gói lúc
+     * khách đặt, y như product_name và unit_price; hoá đơn phải đọc được
+     * nguyên vẹn kể cả khi gói đã ngừng bán từ lâu.
+     */
+    public static function deletePackage(string $id): void
+    {
+        Database::transaction(static function () use ($id): void {
+            Database::execute('DELETE FROM lens_prices WHERE lens_package = :id', ['id' => $id]);
+            Database::execute('DELETE FROM lens_packages WHERE id = :id', ['id' => $id]);
+        });
+
+        self::$packages   = null;
+        self::$priceTable = null;
+    }
+
+    /** Số ô giá đang gắn với một gói — để câu hỏi trước khi xoá nói ra con số. */
+    public static function countPricesOf(string $id): int
+    {
+        if (!self::packagesEditable()) {
+            return 0;
+        }
+
+        return (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM lens_prices WHERE lens_package = :id',
+            ['id' => $id]
+        );
+    }
+
+    /** Số thứ tự gợi ý cho gói kế tiếp: cách gói cuối 10 nấc. */
+    public static function nextPackageSort(): int
+    {
+        if (!self::packagesEditable()) {
+            return 10;
+        }
+
+        return ((int) Database::fetchValue('SELECT COALESCE(MAX(sort_order), 0) FROM lens_packages')) + 10;
     }
 
     /**

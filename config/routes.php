@@ -274,6 +274,14 @@ return [
     'quan-tri/gia-trong'     => 'LensPriceAdminController@index',
     'quan-tri/gia-trong/luu' => 'LensPriceAdminController@save',   // POST
 
+    /* DANH MỤC gói chiết suất — trang riêng, vào từ nút trên bảng giá. Tách
+       khỏi lưới giá vì hai việc khác nhịp: giá đổi hằng tháng và sửa hàng loạt
+       trong một lưới, còn thêm một gói là việc vài tháng một lần và đi từng
+       bản ghi. Xem LensPriceAdminController::packages(). */
+    'quan-tri/gia-trong/goi'     => 'LensPriceAdminController@packages',
+    'quan-tri/gia-trong/goi/luu' => 'LensPriceAdminController@savePackage',   // POST
+    'quan-tri/gia-trong/goi/xoa' => 'LensPriceAdminController@deletePackage', // POST
+
     /*
      * KHÁCH HÀNG
      *

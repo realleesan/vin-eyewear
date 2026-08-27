@@ -4,10 +4,13 @@
  * admin/lens-prices/index.php — bảng giá tròng (/quan-tri/gia-trong).
  *
  * MỘT LƯỚI, MỘT NÚT LƯU. Không có nút "+ Thêm mới" và không có cột "Thao tác"
- * như các màn quản trị khác: lưới này có hình dạng cố định (kiểu tròng × gói
- * chiết suất, cả hai khai trong config/taxonomy.php), nên không ai thêm hay
- * xoá một ô — người ta mở ra, sửa vài con số, rồi lưu. Lý do đầy đủ ghi ở
- * LensPriceAdminController.
+ * như các màn quản trị khác: hình dạng lưới do hai danh mục quyết định (kiểu
+ * tròng × gói chiết suất), nên không ai thêm hay xoá một Ô — người ta mở ra,
+ * sửa vài con số, rồi lưu. Lý do đầy đủ ghi ở LensPriceAdminController.
+ *
+ * Thêm hay bớt một HÀNG thì có: đó là thêm/bớt một gói chiết suất, và nó có
+ * trang riêng — nút "Quản lý gói" ở đầu trang, /quan-tri/gia-trong/goi. Kiểu
+ * tròng (các CỘT) thì vẫn khai trong config/taxonomy.php.
  *
  * Vì thế trang này KHÔNG dùng partial crud-head: nó không có $editing, không
  * có nút thêm mới, và dòng dẫn phải nói một chuyện khác hẳn.
@@ -45,10 +48,35 @@ foreach ($types as $t) {
         </p>
     </div>
 
-    <?php if (!$canEdit): ?>
-        <p class="ahead__note">Bạn chỉ có quyền xem. Cần quyền quản lý để chỉnh sửa.</p>
-    <?php endif; ?>
+    <div class="ahead__tools">
+        <?php /* Đường sang danh mục gói. Đặt ở đây chứ không thành một mục
+                 riêng trên thanh bên: thêm một gói bắt đầu từ chỗ nhìn thấy
+                 bảng giá thiếu hàng, và kết thúc bằng việc quay lại đúng bảng
+                 này để điền giá cho hàng vừa mọc ra. Hai trang là một việc.
+
+                 Thanh bên chỉ đeo thêm mục cho những thứ mở hằng ngày; danh mục
+                 gói thì vài tháng một lần. */ ?>
+        <a href="/quan-tri/gia-trong/goi" class="astatus__save astatus__save--ghost">Quản lý gói</a>
+
+        <?php if (!$canEdit): ?>
+            <p class="ahead__note">Bạn chỉ có quyền xem. Cần quyền quản lý để chỉnh sửa.</p>
+        <?php endif; ?>
+    </div>
 </header>
+
+<?php if (!$pkgEditable): ?>
+    <?php /* Danh mục đang đọc từ đường lùi trong config. Nói ra ở ĐÂY chứ không
+             chỉ ở trang kia: người mở bảng giá cần biết vì sao nút "Quản lý gói"
+             bấm vào lại ra một trang hướng dẫn chạy file nâng cấp. */ ?>
+    <div class="anote anote--alert">
+        <p>
+            Danh mục gói đang đọc từ <code>config/taxonomy.php</code> vì bảng
+            <code>lens_packages</code> chưa được tạo — <strong>bảng giá bên dưới vẫn sửa
+            và lưu bình thường</strong>, chỉ chưa thêm/sửa/xoá gói được.
+            <a href="/quan-tri/gia-trong/goi">Xem cách nâng cấp</a>.
+        </p>
+    </div>
+<?php endif; ?>
 
 <div class="anote">
     <p>
