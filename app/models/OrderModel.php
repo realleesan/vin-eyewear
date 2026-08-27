@@ -58,6 +58,22 @@ class OrderModel extends BaseModel
         'paid'         => 'Đã thanh toán',
     ];
 
+    /**
+     * Khoảng NGÀY TẠO ĐƠN dùng cho bộ lọc ở khu quản trị.
+     *
+     * Khai ở model chứ không ở controller vì chính câu SQL trong paginateAdmin() đọc nó:
+     * để hai nơi cùng giữ một danh sách khoá thì sớm muộn view hiện một lựa
+     * chọn mà truy vấn không hiểu, và người dùng bấm vào thấy "tất cả".
+     *
+     * Khoá '' luôn là "không lọc" — cùng nếp với $status.
+     */
+    public const DATE_RANGES = [
+        ''      => 'Tất cả ngày',
+        'today' => 'Hôm nay',
+        '7d'    => '7 ngày qua',
+        '30d'   => '30 ngày qua',
+    ];
+
     // ========================================================================
     // TẠO ĐƠN
     // ========================================================================
@@ -972,23 +988,102 @@ class OrderModel extends BaseModel
     }
 
     /**
-     * Danh sách cho khu quản trị, lọc theo trạng thái.
+     * Danh sách cho khu quản trị: lọc theo trạng thái, theo từ khoá và theo
+     * khoảng ngày.
      *
      * KHÔNG dùng static::paginate() được: hàm đó chạy `SELECT * FROM orders`
      * nên không kèm được tên cơ sở, mà nhân viên cần đúng cột đó để biết soạn
      * hàng ở đâu. Giữ nguyên hình dạng mảng trả về của paginate() để nơi gọi
      * và view không phải đổi gì.
+     *
+     * @param string $status khoá trong STATUSES, '' = mọi trạng thái
+     * @param string $q      mã đơn / tên khách / số điện thoại, '' = không tìm
+     * @param string $range  khoá trong DATE_RANGES, '' = mọi ngày
      */
-    public static function paginateAdmin(string $status = '', int $page = 1, int $perPage = 20): array
-    {
+    public static function paginateAdmin(
+        string $status = '',
+        int $page = 1,
+        int $perPage = 20,
+        string $q = '',
+        string $range = ''
+    ): array {
         $page    = max(1, $page);
         $perPage = max(1, $perPage);
 
-        $where  = $status === '' ? '' : ' WHERE o.status = :status';
-        $params = $status === '' ? [] : ['status' => $status];
+        $dieuKien = [];
+        $params   = [];
 
-        $total  = static::count($status === '' ? [] : ['status' => $status]);
-        $offset = ($page - 1) * $perPage;
+        if ($status !== '') {
+            $dieuKien[]       = 'o.status = :status';
+            $params['status'] = $status;
+        }
+
+        $q = trim($q);
+
+        if ($q !== '') {
+            /*
+             * BA CỘT, MỘT Ô TÌM.
+             *
+             * Nhân viên cầm điện thoại nghe khách đọc thứ gì thì gõ thứ đó:
+             * lúc là mã đơn trong tin nhắn, lúc là tên, lúc là số điện thoại
+             * hiện trên màn hình cuộc gọi. Bắt chọn "tìm theo cột nào" trước
+             * là bắt họ trả lời một câu hỏi mà chính ô tìm trả lời được.
+             *
+             * Không đụng tới `shipping_address`: gõ "Hà Nội" mà ra ba trăm đơn
+             * thì ô tìm thành vô dụng đúng lúc cần nó nhất.
+             */
+            /* BA THAM SỐ RIÊNG cho cùng một giá trị, không phải một `:q` dùng
+               ba lần. PDO ở chế độ prepare thật (dự án tắt emulate) đếm tham
+               số theo vị trí, nên một tên lặp lại ném thẳng
+               "SQLSTATE[HY093]: Invalid parameter number". */
+            $dieuKien[] = '(o.code LIKE :q1 OR o.customer_name LIKE :q2 OR o.customer_phone LIKE :q3)';
+
+            $mau = self::likeChua($q);
+            $params['q1'] = $mau;
+            $params['q2'] = $mau;
+            $params['q3'] = $mau;
+        }
+
+        /*
+         * MỐC NGÀY GHÉP THẲNG VÀO SQL, KHÔNG QUA THAM SỐ.
+         *
+         * Đây là ngoại lệ duy nhất trong hàm, và nó an toàn vì match() chỉ trả
+         * về được một trong ba chuỗi HẰNG viết ngay tại đây — giá trị người
+         * dùng gửi lên không đi tiếp được quá dòng này. Dùng tham số thì phải
+         * tự tính ngày trong PHP, tức là múi giờ của PHP và của MySQL phải
+         * khớp nhau; ở hosting miễn phí thì không có gì bảo đảm chuyện đó.
+         *
+         * '7 ngày qua' = hôm nay + 6 ngày trước đó, tức bảy ngày lịch, không
+         * phải "168 giờ tính ngược từ bây giờ".
+         */
+        $moc = match ($range) {
+            'today' => 'CURDATE()',
+            '7d'    => 'DATE_SUB(CURDATE(), INTERVAL 6 DAY)',
+            '30d'   => 'DATE_SUB(CURDATE(), INTERVAL 29 DAY)',
+            default => null,
+        };
+
+        if ($moc !== null) {
+            $dieuKien[] = 'o.created_at >= ' . $moc;
+        }
+
+        $where = $dieuKien === [] ? '' : ' WHERE ' . implode(' AND ', $dieuKien);
+
+        // Không dùng static::count() được nữa: nó chỉ ghép được điều kiện
+        // "cột = giá trị", còn ở đây có LIKE và có mốc ngày.
+        $total = (int) Database::fetchValue('SELECT COUNT(*) FROM orders o' . $where, $params);
+
+        /*
+         * ÍT NHẤT LÀ MỘT TRANG, kể cả khi không có đơn nào.
+         *
+         * Bản cũ trả 0 và view in ra "trang 1/0". Và vì `page` không bị chặn
+         * trên, gõ ?page=99 rồi bấm một nút đổi trạng thái là quay về đúng
+         * trang 99 trống trơn — nhân viên đọc ra là "thao tác vừa rồi làm mất
+         * hết đơn".
+         */
+        $totalPages = max(1, (int) ceil($total / $perPage));
+        $page       = min($page, $totalPages);
+        $offset     = ($page - 1) * $perPage;
 
         $items = Database::fetchAll(
             'SELECT o.*, s.name AS store_name
@@ -1005,7 +1100,53 @@ class OrderModel extends BaseModel
             'total'      => $total,
             'page'       => $page,
             'perPage'    => $perPage,
-            'totalPages' => (int) ceil($total / $perPage),
+            'totalPages' => $totalPages,
         ];
+    }
+
+    /**
+     * Gói một từ khoá thành mẫu LIKE '%…%' đã vô hiệu hoá ký tự đại diện.
+     *
+     * Khách đặt tên sản phẩm có dấu gạch dưới, và mã đơn thì không — nhưng
+     * '%' và '_' người ta gõ nhầm vào ô tìm thì có. Để nguyên, '_' khớp MỌI ký
+     * tự và '%' khớp mọi thứ: gõ đúng một dấu '%' ra toàn bộ bảng đơn hàng.
+     *
+     * Dấu '\' phải thoát TRƯỚC hai dấu kia, không thì chính những dấu '\' vừa
+     * thêm vào lại bị thoát thêm lần nữa.
+     */
+    private static function likeChua(string $tuKhoa): string
+    {
+        return '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $tuKhoa) . '%';
+    }
+
+    /**
+     * Số đơn theo từng trạng thái, cho dải viên lọc ở đầu trang.
+     *
+     * KHÔNG ăn theo ô tìm và bộ lọc ngày — cố ý. Con số cạnh tên viên lọc trả
+     * lời câu "bấm vào đây thì có gì", nên nó phải là số đơn của TOÀN bảng.
+     * Cho nó co theo từ khoá đang gõ thì mọi con số đổi mỗi lần gõ thêm một
+     * chữ, và không con số nào còn nói được điều gì.
+     *
+     * @return array [khoá trạng thái => số đơn], khoá '' là tổng
+     */
+    public static function statusCounts(): array
+    {
+        $counts = ['' => 0];
+
+        foreach (array_keys(self::STATUSES) as $key) {
+            $counts[$key] = 0;
+        }
+
+        foreach (Database::fetchAll('SELECT status, COUNT(*) AS n FROM orders GROUP BY status') as $row) {
+            // Trạng thái lạ (dữ liệu cũ, hoặc ai đó sửa tay trong CSDL) vẫn
+            // được cộng vào TỔNG nhưng không tạo thêm viên lọc nào.
+            if (isset($counts[$row['status']])) {
+                $counts[$row['status']] = (int) $row['n'];
+            }
+
+            $counts[''] += (int) $row['n'];
+        }
+
+        return $counts;
     }
 }

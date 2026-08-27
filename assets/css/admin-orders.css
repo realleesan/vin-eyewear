@@ -1,0 +1,832 @@
+/* ============================================================
+   admin-orders.css — bảng đơn hàng (/quan-tri/don-hang)
+
+   Dựng theo "Tab Đơn hàng.dc.html" (Claude Design).
+
+   VÌ SAO LÀ MỘT FILE RIÊNG CHỨ KHÔNG NHỒI TIẾP VÀO admin.css:
+   admin.css là CSS dùng chung cho mười tám trang quản trị, và bốn khối trong
+   file này (thanh công cụ dính, thanh chọn hàng loạt, thanh hoàn tác, ngăn
+   kéo chi tiết) chỉ trang này dùng. Nạp qua $adminStyles — xem
+   app/views/admin/_layout/master.php.
+
+   Tiền tố `ao` = admin/orders. Ba lớp mượn của admin.css vẫn giữ tên cũ
+   (.aship, .amoney, .apay) vì chúng đã đúng như bản thiết kế cần.
+
+   MỌI MÀU LẤY TỪ TOKEN của body.admin trong admin.css, trừ hai cặp nhãn khai
+   thêm ngay dưới đây và có ghi lý do tại chỗ.
+   ============================================================ */
+
+/* ============================================================
+   1. VIÊN TRẠNG THÁI — Ô CHỌN ĐEO MÀU
+   ============================================================ */
+
+/*
+ * SÁU TRẠNG THÁI, SÁU MÀU — mà bảng chung chỉ có năm.
+ *
+ * admin.css khai năm cặp --pill-* (thương hiệu · trung tính · xong · chờ ·
+ * huỷ) và nhãn .badge dùng chúng: "Đã xác nhận" và "Đang chuẩn bị" cùng đeo
+ * cặp TRUNG TÍNH. Ở một viên nhãn chỉ-đọc thì chấp nhận được.
+ *
+ * Ở ĐÂY thì không. Ô chọn này là thứ nhân viên nhìn để biết đơn nào đang ở
+ * bước nào giữa hai mươi dòng, và hai bước liền kề trong vòng đời mà cùng một
+ * màu thì phải đọc chữ mới phân biệt — tức là mất hẳn tác dụng của màu.
+ *
+ * Nên hai cặp còn thiếu khai TẠI ĐÂY chứ không thêm vào bảng chung: chúng chỉ
+ * có nghĩa trong vòng đời đơn hàng ("đã nhận việc" xanh mòng két, "đang làm"
+ * tím), không phải hai vai trò dùng lại được ở trang khác. Sắc lấy đúng bản
+ * thiết kế, đã ngả ấm cho hợp nền ngà.
+ */
+body.admin {
+    --pill-teal-bg:   #e2f1ec; --pill-teal-ink:   #0e6357;
+    --pill-purple-bg: #ece8f8; --pill-purple-ink: #5b4aa6;
+    --pill-blue-bg:   #e3edf8; --pill-blue-ink:   #245e9e;
+}
+
+/*
+ * Ô CHỌN, KHÔNG PHẢI NHÃN + NÚT SỬA.
+ *
+ * Bản thiết kế để nguyên <select> và sơn nó thành viên thuốc. Đổi trạng thái
+ * là thao tác thường xuyên nhất trên trang này; bắt bấm "sửa" rồi mới hiện ô
+ * chọn là thêm một cú bấm vào việc làm vài chục lần mỗi ngày.
+ *
+ * appearance:none bỏ mũi tên mặc định của hệ điều hành — nó vẽ trên nền xám
+ * và phá dáng viên thuốc. Mũi tên thay thế vẽ bằng HAI VỆT GRADIENT chứ không
+ * phải ảnh SVG nền: gradient nhận được currentColor, nên một luật duy nhất
+ * chạy đúng cho cả sáu tông màu bên dưới. Ảnh nền thì không đọc được màu chữ,
+ * và sẽ thành sáu bản chép của cùng một hình.
+ *
+ * BỘ CHỌN PHẢI CÓ CẢ `.astatus` LẪN `select`. admin.css có luật
+ * `.astatus select { … }` với độ ưu tiên (0,1,1); một lớp trần `.astatus__pick`
+ * chỉ (0,1,0) nên THUA, và ô chọn ở lại dáng hộp vuông trắng của bảng chung —
+ * đúng như nó đã ở lại lần đầu dựng trang này. Đừng rút gọn lại.
+ */
+.astatus select.astatus__pick {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 30px;
+    padding: 0 26px 0 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-round);
+    background-color: var(--pill-neutral-bg);
+    background-image:
+        linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right 13px center, right 8px center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--pill-neutral-ink);
+    cursor: pointer;
+}
+
+/* Ô chọn trong ngăn kéo — cùng dáng, to hơn một nấc vì nó đứng một mình chứ
+   không nằm trong một cột hẹp. */
+.astatus select.astatus__pick--lg {
+    height: 36px;
+    padding: 0 30px 0 15px;
+    background-position: right 15px center, right 10px center;
+    background-size: 6px 6px, 6px 6px;
+    font-size: var(--fs-note);
+}
+
+.astatus select.astatus__pick:focus-visible {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.12);
+}
+
+/* Danh sách xổ ra do hệ điều hành vẽ, không nhận màu của ô — trả nó về nền
+   trắng chữ đen, nếu không thì trên nền viên đỏ chữ đỏ là không đọc được. */
+.astatus select.astatus__pick option {
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-weight: 500;
+}
+
+.astatus select.astatus__pick--new       { background-color: var(--pill-warn-bg);   color: var(--pill-warn-ink);   border-color: #e9d6ac; }
+.astatus select.astatus__pick--confirmed { background-color: var(--pill-teal-bg);   color: var(--pill-teal-ink);   border-color: #c2e0d6; }
+.astatus select.astatus__pick--preparing { background-color: var(--pill-purple-bg); color: var(--pill-purple-ink); border-color: #d5cdef; }
+.astatus select.astatus__pick--shipping  { background-color: var(--pill-blue-bg);   color: var(--pill-blue-ink);   border-color: #c6dbf0; }
+.astatus select.astatus__pick--completed { background-color: var(--pill-ok-bg);     color: var(--pill-ok-ink);     border-color: #c8e2c4; }
+.astatus select.astatus__pick--cancelled { background-color: var(--pill-danger-bg); color: var(--pill-danger-ink); border-color: #ebc9c2; }
+
+/*
+ * Nút "Lưu" cạnh ô chọn — dáng của .astatus__save nhưng LỚP KHÁC.
+ *
+ * Không dùng lại lớp ấy được: luật ẩn nó trong admin.css là
+ * `.js form:has(select[data-autosubmit]) .astatus__save`, tức nó tìm ô chọn
+ * NẰM TRONG form. Ở trang này ô chọn nằm ngoài form của nó và nối vào bằng
+ * thuộc tính form= (lý do ở đầu app/views/admin/orders/index.php), nên :has()
+ * không bao giờ khớp và nút Lưu sẽ hiện suốt bên cạnh cả hai mươi ô chọn.
+ */
+.aosave {
+    height: 30px;
+    padding-inline: 12px;
+    border: 1px solid var(--brand);
+    border-radius: var(--a-btn-radius);
+    background: var(--brand);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--on-brand);
+    cursor: pointer;
+}
+
+.aosave:hover { background: var(--brand-strong); }
+
+/* Có JavaScript thì ô chọn tự gửi (và tự hỏi lại) -> nút Lưu thành thừa. */
+.js .aosave { display: none; }
+
+/* Form vệ tinh của từng dòng: chỉ chứa ô ẩn nên không có gì để bày ra, nhưng
+   vẫn phải nằm trong cây DOM để thuộc tính form= của ô chọn trỏ tới được.
+   display:contents để nó không dựng thêm một hộp trống nào giữa bảng và chân
+   trang. */
+.aoghost { display: contents; }
+
+/* ============================================================
+   2. THANH CÔNG CỤ DÍNH ĐẦU MÀN HÌNH
+   ============================================================ */
+
+.aotools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+/*
+ * TỪ MÁY BẢNG NGANG TRỞ LÊN THÌ DÍNH LẠI KHI CUỘN.
+ *
+ * `.admin__main` KHÔNG phải khung cuộn riêng (cả trang cuộn), nên top:0 là so
+ * với cửa sổ — đúng thứ cần. Nền phải ĐỤC: nội dung phía trên trượt ngay bên
+ * dưới thanh này. margin âm bù đúng padding, không có nó thì lúc chưa cuộn có
+ * một dải nền thừa 12px nằm dưới tiêu đề.
+ *
+ * Màn hẹp thì KHÔNG dính: ở đó các viên lọc xuống dòng thành ba hàng, thanh
+ * này cao gần một phần ba màn hình, và dính lại là ăn mất chỗ đọc bảng.
+ */
+@media (min-width: 901px) {
+    .aotools {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        margin-block: -12px 10px;
+        padding-block: 12px;
+        background: var(--surface);
+    }
+}
+
+/* Dải viên lọc do partial dùng chung dựng ra (.atabs) — bỏ khoảng cách dưới
+   của nó vì ở đây thanh công cụ đã có margin riêng.
+
+   min-width:0 là dòng quan trọng: không có nó, phần tử flex lấy bề rộng nội
+   dung làm bề rộng nhỏ nhất, nên bảy viên lọc đẩy ô tìm xuống hàng thứ hai
+   ngay cả khi màn hình còn thừa chỗ. Có nó thì dải viên co lại và tự cuộn
+   ngang trong chính nó (.atabs vốn đã có overflow-x: auto). */
+.aotools .atabs {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+@media (min-width: 901px) {
+    /* Từ mốc này thì bảy viên lọc nằm gọn MỘT HÀNG và tự cuộn ngang nếu thiếu
+       chỗ, thay vì xuống dòng thành ba hàng.
+
+       Bản thiết kế xếp cả viên lọc lẫn ô tìm trên cùng một hàng; ở đây chúng
+       thành HAI HÀNG và đó là chủ ý. Khung quản trị chặn nội dung ở 1160px
+       (xem .admin__main trong admin.css) chứ không phải 1240px như bản vẽ, nên
+       ép một hàng thì dải viên lọc phải co lại tới mức "Đã huỷ" bị cắt mất một
+       nửa — mất một bộ lọc để đổi lấy 40px chiều cao. */
+    .aotools .atabs { flex-wrap: nowrap; }
+}
+
+.aofind {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+@media (min-width: 901px) {
+    .aofind { width: auto; }
+}
+
+.aofind__range,
+.aofind__input {
+    height: 36px;
+    padding-inline: 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: var(--fs-note);
+    color: var(--ink);
+}
+
+.aofind__range { color: #6b5b4e; cursor: pointer; }
+
+/* Ở màn hẹp thì chiếm hết chỗ còn lại của dòng; từ 901px trở lên thì đủ rộng
+   cho một mã đơn đầy đủ ("DH-260826-5E03") cộng vài ký tự — gõ mã mà không
+   đọc lại được cả mã vừa gõ thì không soát được lỗi đánh máy. */
+.aofind__input { flex: 1 1 160px; width: auto; }
+
+@media (min-width: 901px) {
+    .aofind__input { flex: 0 0 auto; width: 270px; }
+}
+
+.aofind__range:focus,
+.aofind__input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
+}
+
+.aofind__go {
+    height: 36px;
+    padding-inline: 16px;
+    border: 1px solid var(--brand);
+    border-radius: var(--a-btn-radius);
+    background: var(--brand);
+    font-family: var(--font-sans);
+    font-size: var(--fs-note);
+    font-weight: 600;
+    color: var(--on-brand);
+    cursor: pointer;
+}
+
+.aofind__go:hover { background: var(--brand-strong); }
+
+/* Ô lọc ngày tự gửi khi có JS, nên nút "Tìm" chỉ còn việc của ô gõ chữ — vẫn
+   giữ nguyên, không ẩn: Enter trong ô tìm và bấm nút là hai thói quen khác
+   nhau của hai người khác nhau. */
+
+.aofind__clear {
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.aofind__clear:hover { color: var(--brand); text-decoration: underline; }
+
+/* ============================================================
+   3. BẢNG
+   ============================================================ */
+
+/* Rộng hơn .atable--full (860px) vì có thêm cột tick và cột số đo. Dưới mức
+   này thì .atable-wrap cho cuộn ngang trong khung, không đẩy cả trang trượt. */
+.aotable { min-width: 1040px; }
+
+/* Cột tick hẹp hết mức: nó không mang thông tin nào, chỉ là chỗ để bấm. */
+.aotable th.aotable__tick,
+.aotable td.aotable__tick { width: 34px; padding-right: 0; }
+
+.aopick {
+    width: 15px;
+    height: 15px;
+    margin: 0;
+    accent-color: var(--brand);
+    cursor: pointer;
+}
+
+/* Dòng đang tick tô nền vàng nhạt — cùng lối với bản thiết kế. Phải đè lên
+   luật :hover của .atable, nếu không rê chuột qua là mất dấu vừa tick. */
+.aotable tbody tr:has(.aopick:checked),
+.aotable tbody tr:has(.aopick:checked):hover { background: #fbf3e4; }
+
+/* Dòng của đơn đang mở trong ngăn kéo — một vạch đỏ ở mép trái, không tô nền:
+   nền đã dành cho việc tick, và một đơn vừa mở vừa tick thì hai dấu hiệu phải
+   đọc được cùng lúc. */
+.aorow.is-open td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
+
+/* Cả dòng bấm được (JS gắn sự kiện) — con trỏ phải nói ra điều đó. Không có
+   JS thì mã đơn vẫn là một thẻ <a> thật, nên chỉ đổi con trỏ khi có JS. */
+.js .aorow { cursor: pointer; }
+
+.aocode {
+    font-family: var(--font-mono);
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    color: var(--brand);
+    text-decoration: none;
+}
+
+.aocode:hover { text-decoration: underline; }
+
+.aoname { display: block; font-weight: 600; }
+
+/* Ngày giờ tạo đơn KHÔNG xuống dòng: "27/08/2026 10:12" gãy làm đôi thì cột
+   mã đơn cao thêm một dòng cho cả hai mươi hàng, và ngày với giờ đọc thành
+   hai mẩu rời. Cột tự nới ra vừa đủ. */
+.aowhen { white-space: nowrap; }
+
+/* Cột sản phẩm là cột dày nhất — cho nó phần lớn chỗ trống còn lại. */
+.aoitems { width: 30%; }
+
+/* --- Số đo trong bảng --------------------------------------- */
+
+/*
+ * MỘT MẮT MỘT DÒNG, mở đầu bằng viên MP/MT.
+ *
+ * Chuỗi gộp cũ ("MP −2.00 / −1.25 × 180° · MT −1.75 / −0.50 × 175°") vốn dựng
+ * cho phiếu in, một dòng dài đọc từ trái sang. Nhét vào một ô bảng rộng 30%
+ * thì nó tự xuống dòng ở chỗ ngẫu nhiên, và tìm chỗ sang mắt kia là phải dò
+ * mắt kiếm dấu chấm giữa.
+ *
+ * Viên MP/MT màu thương hiệu làm mốc neo: liếc dọc cột là đếm được ngay đơn
+ * nào có số đo cả hai mắt.
+ */
+.aorx {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+}
+
+.aorx__eye {
+    flex-shrink: 0;
+    padding: 1px 6px;
+    border-radius: 5px;
+    background: var(--pill-brand-bg);
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.aorx__num {
+    font-size: var(--fs-label);
+    color: #6b5b4e;
+    white-space: nowrap;
+}
+
+/* --- Chân bảng ---------------------------------------------- */
+
+.aofoot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.aofoot__count {
+    margin: 0;
+    font-size: var(--fs-caption);
+    color: var(--muted);
+}
+
+/* ============================================================
+   4. THANH CHỌN HÀNG LOẠT
+   ============================================================ */
+
+/*
+ * NỔI Ở ĐÁY MÀN HÌNH, HIỆN KHI CÓ Ô ĐƯỢC TICK.
+ *
+ * Luật viết theo chiều ẨN (`:not(:has(…))`) chứ không theo chiều HIỆN là cố
+ * ý: trình duyệt không hiểu :has() bỏ nguyên luật này, thanh hiện suốt — xấu
+ * hơn nhưng vẫn bấm được, và bấm khi chưa tick gì thì controller trả lời
+ * "Chưa chọn đơn hàng nào.". Viết ngược lại thì ở đúng những trình duyệt ấy
+ * thanh không bao giờ hiện ra, tức mất hẳn tính năng.
+ *
+ * Không cần một dòng JavaScript nào.
+ */
+.aobulk {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 45;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 11px 16px;
+    border-radius: 13px;
+    background: var(--a-sidebar);
+    box-shadow: 0 10px 34px rgba(38, 18, 14, 0.35);
+    animation: aoFade 0.18s ease;
+}
+
+.aoform:not(:has(.aopick:checked)) .aobulk { display: none; }
+
+/* Từ máy bảng ngang trở lên thì thu về giữa màn hình, đúng bản thiết kế. Ở màn
+   hẹp thì một thanh rộng 500px căn giữa sẽ tràn ra ngoài hai mép. */
+@media (min-width: 901px) {
+    .aobulk {
+        left: 50%;
+        right: auto;
+        bottom: 22px;
+        justify-content: flex-start;
+        transform: translateX(-50%);
+        animation: aoUp 0.18s ease;
+    }
+}
+
+/* Trồi lên kèm mờ dần, GIỮ NGUYÊN translateX(-50%) ở khung cuối: animation ghi
+   đè transform của luật tĩnh, nên một keyframe thiếu nó là thanh nhảy sang
+   phải nửa bề rộng đúng lúc chạy xong. */
+@keyframes aoUp {
+    from { transform: translate(-50%, 10px); opacity: 0; }
+    to   { transform: translateX(-50%); opacity: 1; }
+}
+
+.aobulk__count {
+    font-size: var(--fs-note);
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--on-ink);
+}
+
+.aobulk__sel {
+    height: 34px;
+    padding-inline: 12px;
+    border: 1px solid rgba(246, 237, 226, 0.25);
+    border-radius: var(--radius-sm);
+    background: #3a211c;
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    color: var(--on-ink);
+    cursor: pointer;
+}
+
+.aobulk__sel option { background: var(--surface-raised); color: var(--ink); }
+
+.aobulk__go,
+.aobulk__pay,
+.aobulk__clear {
+    height: 34px;
+    padding-inline: 14px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.aobulk__go,
+.aobulk__pay {
+    border: none;
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.aobulk__go:hover,
+.aobulk__pay:hover { filter: brightness(1.15); }
+
+/* "Áp dụng" chỉ cần khi KHÔNG có JavaScript — có JS thì ô chọn tự gửi. Cùng
+   lối với .aosave ở trên. */
+.js .aobulk__go { display: none; }
+
+.aobulk__clear {
+    border: 1px solid rgba(246, 237, 226, 0.25);
+    background: transparent;
+    color: var(--a-sidebar-ink);
+}
+
+.aobulk__clear:hover { color: var(--on-ink); }
+
+/* ============================================================
+   5. THANH HOÀN TÁC
+   ============================================================ */
+
+/*
+ * Góc TRÁI dưới, không phải giữa — thanh hàng loạt đã chiếm chỗ giữa, và hai
+ * thanh chồng nhau là chuyện xảy ra thật: đổi trạng thái cả loạt xong, các ô
+ * tick vẫn còn nguyên.
+ */
+.aoundo {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    z-index: 44;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border-radius: 11px;
+    background: var(--a-sidebar);
+    box-shadow: 0 10px 34px rgba(38, 18, 14, 0.35);
+    animation: aoFade 0.18s ease;
+}
+
+@keyframes aoFade {
+    from { transform: translateY(10px); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+}
+
+/* Hai thanh cùng nằm ở đáy. Màn hẹp thì cả hai trải hết bề ngang nên phải xếp
+   chồng — đẩy thanh hoàn tác lên trên khi thanh hàng loạt đang hiện. Từ 901px
+   thì thanh hàng loạt ở giữa còn thanh này về góc trái, không đụng nhau. */
+.aoform:has(.aopick:checked) ~ .aoundo { bottom: 74px; }
+
+@media (min-width: 901px) {
+    .aoundo,
+    .aoform:has(.aopick:checked) ~ .aoundo {
+        left: 24px;
+        right: auto;
+        bottom: 22px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .aobulk,
+    .aoundo,
+    .aodraw { animation: none; }
+}
+
+.aoundo__msg { font-size: var(--fs-note); color: var(--on-ink); }
+
+.aoundo__go {
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: var(--fs-note);
+    font-weight: 700;
+    color: var(--brand-light);
+    cursor: pointer;
+}
+
+.aoundo__go:hover { text-decoration: underline; }
+
+/* ============================================================
+   6. NGĂN KÉO CHI TIẾT
+   ============================================================ */
+
+/* Nền mờ LÀ MỘT THẺ <a> trỏ về trang không có ?xem= — bấm ra ngoài để đóng,
+   không cần JavaScript. Xem app/views/admin/orders/_drawer.php. */
+.aodim {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(38, 18, 14, 0.32);
+}
+
+.aodraw {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 41;
+    display: flex;
+    flex-direction: column;
+    width: min(460px, 92vw);
+    background: var(--surface-raised);
+    box-shadow: -14px 0 44px rgba(38, 18, 14, 0.2);
+    animation: aoSlide 0.22s ease;
+}
+
+@keyframes aoSlide {
+    from { transform: translateX(36px); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+}
+
+.aodraw__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+}
+
+.aodraw__code {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+.aodraw__when {
+    margin: 4px 0 0;
+    font-size: var(--fs-caption);
+    color: var(--muted);
+}
+
+.aodraw__x {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    background: #f3ebdb;
+    font-size: 17px;
+    line-height: 1;
+    color: #6b5b4e;
+    text-decoration: none;
+}
+
+.aodraw__x:hover { background: var(--line); color: var(--ink); }
+
+.aodraw__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 24px 32px;
+}
+
+.aodraw__state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Trạng thái TIỀN trong ngăn kéo đeo thêm một cái khung, khác hẳn viên trạng
+   thái đơn ngay cạnh: cùng một lý lẽ đã ghi ở .amoney__pay trong admin.css —
+   hai trục khác nhau thì phải khác dáng, không chỉ khác chữ. */
+.aodraw__paid {
+    padding: 7px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-round);
+    background: var(--surface-sunken);
+    font-size: var(--fs-caption);
+}
+
+.aodraw__sec { margin-top: 24px; }
+
+.aodraw__label {
+    margin: 0 0 10px;
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.aodraw__name { margin: 0; font-size: var(--fs-body-sm); font-weight: 600; }
+
+.aodraw__line { margin: 4px 0 0; font-size: var(--fs-note); color: #6b5b4e; }
+
+.aodraw__addr { margin: 4px 0 0; font-size: var(--fs-note); line-height: 1.5; color: #6b5b4e; }
+
+.aodraw__meta { margin: 8px 0 0; font-size: var(--fs-caption); color: var(--muted); }
+
+.aodraw__note {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    font-size: var(--fs-note);
+    line-height: 1.6;
+    color: #6b5b4e;
+}
+
+/* --- Dòng hàng ---------------------------------------------- */
+
+.aoline { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
+.aoline__item {
+    padding: 13px 15px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-sunken);
+}
+
+.aoline__top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0;
+    font-size: var(--fs-note);
+    font-weight: 600;
+}
+
+.aoline__qty { flex-shrink: 0; font-weight: 500; color: var(--muted); }
+
+.aoline__sub { margin: 5px 0 0; font-size: var(--fs-caption); color: #8a7a6e; }
+
+.aoline__rx { margin: 8px 0 0; font-size: var(--fs-caption); color: #6b5b4e; }
+
+/* --- Bảng số đo --------------------------------------------- */
+
+/*
+ * BỐN CỘT, HAI HÀNG — mắt so theo cột thì bắt được ngay chỗ hai mắt lệch nhau.
+ * Con số dùng font đều nét (--font-mono) để dấu trừ và dấu chấm thập phân xếp
+ * thẳng hàng; ở font thường, "−10.75" và "−9.75" không so được bằng mắt.
+ */
+.aorxtb {
+    width: 100%;
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    border-collapse: collapse;
+    overflow: hidden;
+    background: var(--surface-raised);
+}
+
+.aorxtb thead th {
+    padding: 7px 11px;
+    background: var(--surface);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-align: left;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.aorxtb tbody th,
+.aorxtb tbody td {
+    padding: 8px 11px;
+    border-top: 1px solid var(--a-row-line);
+    text-align: left;
+}
+
+.aorxtb tbody th {
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: #6b5b4e;
+}
+
+.aorxtb tbody td {
+    font-family: var(--font-mono);
+    font-size: var(--fs-caption);
+    color: var(--ink);
+}
+
+/* Ghi chú của khách cho MỘT mắt — một dòng trải hết bảng, không phải một ô
+   thứ năm: nó là câu chữ tự do, ép vào cột thì xuống dòng be bét. */
+.aorxtb__note td {
+    font-family: var(--font-sans);
+    font-style: italic;
+    color: var(--muted);
+}
+
+/* --- Tổng tiền ---------------------------------------------- */
+
+.aosum {
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-sunken);
+}
+
+.aosum__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.aosum__row + .aosum__row { margin-top: 8px; }
+
+.aosum__row dt { font-size: var(--fs-note); color: #6b5b4e; }
+.aosum__row dd { margin: 0; font-size: var(--fs-note); font-weight: 600; }
+
+.aosum__row--total {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+}
+
+.aosum__row--total dt { font-weight: 600; color: var(--ink); }
+.aosum__row--total dd { font-size: 19px; font-weight: 700; color: var(--ink); }
+
+/* Cọc đứng sau tổng và lặng hơn: nó không làm đơn rẻ đi, chỉ nói phần nào đã
+   trả trước. Xem chú thích trong _drawer.php. */
+.aosum__row--dep dt,
+.aosum__row--dep dd { font-size: var(--fs-caption); color: var(--muted); }
+
+.aodraw__pay {
+    width: 100%;
+    height: 42px;
+    margin-top: 12px;
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    color: var(--on-brand);
+    cursor: pointer;
+}
+
+.aodraw__pay:hover { background: var(--brand-strong); }
+
+.aodraw__pay--ghost {
+    border-color: var(--line-strong);
+    background: transparent;
+    color: var(--muted);
+}
+
+.aodraw__pay--ghost:hover {
+    border-color: var(--danger);
+    background: transparent;
+    color: var(--danger);
+}

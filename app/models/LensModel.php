@@ -797,6 +797,91 @@ class LensModel
     }
 
     /**
+     * Đường NGƯỢC của formatRx(): bóc chuỗi số đo đã gói ra thành bảng.
+     *
+     * "MP −2.00 / −1.25 × 180° · MT −1.75" trả về hai dòng, mỗi dòng bốn ô:
+     *
+     *   [['abbr'=>'MP', 'eye'=>'Mắt phải', 'sph'=>'−2.00', 'cyl'=>'−1.25',
+     *     'axis'=>'180°', 'note'=>null], …]
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO PHẢI BÓC LẠI THAY VÌ LƯU SẴN BỐN CỘT
+     *
+     * `order_items.prescription` là MỘT cột VARCHAR, cố ý: số đo trên hoá đơn
+     * phải đứng yên đúng như lúc khách đặt, y hệt `product_name` và
+     * `unit_price`. Tách thành sph/cyl/axis × hai mắt là thêm sáu cột vào một
+     * bảng mà 90% số dòng để trống cả sáu.
+     *
+     * Chỗ DUY NHẤT cần bốn ô rời là bảng số đo trong ngăn kéo chi tiết đơn ở
+     * khu quản trị — nơi nhân viên đối chiếu trước khi mài tròng. Bóc lại lúc
+     * hiển thị rẻ hơn nhiều so với đổi lược đồ.
+     *
+     * Không khớp được thì trả về mảng RỖNG, không đoán bừa: view có sẵn đường
+     * lùi là in nguyên văn chuỗi gốc. Dữ liệu y tế mà đoán sai một dấu trừ là
+     * mài hỏng một cặp tròng.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return array<int, array{abbr:string, eye:string, sph:?string, cyl:?string, axis:?string, note:?string}>
+     */
+    public static function parseRx(?string $rx): array
+    {
+        $rx = trim((string) $rx);
+
+        if ($rx === '') {
+            return [];
+        }
+
+        $ten = ['MP' => 'Mắt phải', 'MT' => 'Mắt trái'];
+
+        /* Tách ở dấu chấm giữa, nhưng CHỈ chỗ mở đầu một mắt mới. Ghi chú của
+           khách đi kèm trong ngoặc và có thể chứa chính dấu ấy — cắt bừa thì
+           nửa câu ghi chú biến thành một mắt thứ ba. */
+        $doan = preg_split('/\s·\s(?=(?:MP|MT)\s)/u', $rx) ?: [];
+        $ket  = [];
+
+        foreach ($doan as $mot) {
+            if (!preg_match('/^(MP|MT)\s+(.*)$/u', trim($mot), $m)) {
+                continue;
+            }
+
+            $con  = trim($m[2]);
+            $note = null;
+
+            // Ghi chú luôn ở CUỐI và trong ngoặc đơn — xem eyeText().
+            if (preg_match('/\s*\(([^)]*)\)$/u', $con, $g)) {
+                $note = trim($g[1]) !== '' ? trim($g[1]) : null;
+                $con  = trim(substr($con, 0, strlen($con) - strlen($g[0])));
+            }
+
+            $sph = $cyl = $axis = null;
+
+            if ($con !== '') {
+                // "cầu / trụ × trục°" — trụ và trục chỉ có khi mắt bị loạn,
+                // nên hai ô sau thường trống và đó là chuyện bình thường.
+                $doi = array_map('trim', explode('/', $con, 2));
+                $sph = $doi[0] !== '' ? $doi[0] : null;
+
+                if (($doi[1] ?? '') !== '') {
+                    $tru  = array_map('trim', explode('×', $doi[1], 2));
+                    $cyl  = $tru[0] !== '' ? $tru[0] : null;
+                    $axis = ($tru[1] ?? '') !== '' ? $tru[1] : null;
+                }
+            }
+
+            $ket[] = [
+                'abbr' => $m[1],
+                'eye'  => $ten[$m[1]],
+                'sph'  => $sph,
+                'cyl'  => $cyl,
+                'axis' => $axis,
+                'note' => $note,
+            ];
+        }
+
+        return $ket;
+    }
+
+    /**
      * Một mắt thành một mẩu chữ: "MP −2.00 / −1.25 × 180° (ghi chú)".
      *
      * Cách viết "sph / cyl × axis°" giống hệt formatSavedRx() dùng cho hồ sơ

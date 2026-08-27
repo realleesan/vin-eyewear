@@ -218,6 +218,14 @@ return [
     // trang-thai vì trạng thái GIAO VẬN và trạng thái TIỀN là hai trục khác
     // nhau — xem OrderModel::PAYMENT_STATUSES.
     'quan-tri/don-hang/thanh-toan'=> 'OrderAdminController@updatePayment',      // POST
+    /* Thao tác trên NHIỀU đơn đã tick cùng lúc. Một đường cho cả đổi trạng
+       thái lẫn ghi nhận tiền, phân việc bằng trường `act` — vì cả hai nút nằm
+       trong cùng một <form> mang danh sách id, mà một form chỉ có một action.
+       Lý do đầy đủ ở OrderAdminController::bulk(). */
+    'quan-tri/don-hang/hang-loat' => 'OrderAdminController@bulk',               // POST
+    // Trả loạt đơn vừa đổi về trạng thái cũ. Trạng thái cũ đi trong chính form
+    // chứ không nằm trong session — xem OrderAdminController::undoStatus().
+    'quan-tri/don-hang/hoan-tac'  => 'OrderAdminController@undoStatus',         // POST
 
     'quan-tri/lich-hen'           => 'AppointmentAdminController@index',
     'quan-tri/lich-hen/trang-thai'=> 'AppointmentAdminController@updateStatus', // POST
