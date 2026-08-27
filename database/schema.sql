@@ -65,6 +65,7 @@ DROP TABLE IF EXISTS `stores`;
 -- DROP sẽ làm câu CREATE của chính nó đổ "table already exists" và dừng cả lần
 -- cài lại. Không ai gặp vì chưa ai chạy setup.sh lần hai trên máy đã có dữ
 -- liệu. Thêm vào đây cùng lúc với bảng FAQ trỏ vào nó.
+DROP TABLE IF EXISTS `site_texts`;
 DROP TABLE IF EXISTS `collection_faqs`;
 DROP TABLE IF EXISTS `collections`;
 DROP TABLE IF EXISTS `product_variants`;
@@ -767,6 +768,27 @@ CREATE TABLE `collection_faqs` (
     KEY `idx_collection_faqs` (`collection_id`, `sort_order`),
     CONSTRAINT `fk_collection_faqs_collection` FOREIGN KEY (`collection_id`)
         REFERENCES `collections` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ----------------------------------------------------------------------------
+-- CHỮ TRÊN TRANG DO CỬA HÀNG TỰ SỬA
+--
+-- Khoá dạng `<trang>.<chỗ>` ('bo-suu-tap.tieu_de'), một DÒNG cho mỗi câu chữ
+-- thay vì một CỘT — thêm chữ cho trang khác không cần migration đổi lược đồ.
+--
+-- Nơi đọc luôn truyền sẵn câu mặc định (xem SiteTextModel), nên bảng trống hay
+-- khoá gõ sai thì trang vẫn hiện đúng chữ cũ chứ không để lại khoảng trắng.
+--
+-- Cột tên `text_key` vì `KEY` là từ khoá của MySQL — xem
+-- migrations/2026-08-27-noi-dung-trang-tong-quan.sql.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `site_texts` (
+    `text_key`   VARCHAR(64) NOT NULL,
+    `value`      TEXT        NOT NULL,
+    `updated_at` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
+                             ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`text_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

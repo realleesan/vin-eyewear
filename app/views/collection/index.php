@@ -36,11 +36,23 @@ $ngayRaMat = static function (?string $date): string {
 };
 ?>
 
+<?php
+/*
+ * TIÊU ĐỀ VÀ ĐOẠN DẪN NAY DO CỬA HÀNG SỬA, không còn gõ cứng ở đây.
+ *
+ * Chúng tới từ bảng `site_texts` qua CollectionController::index(), và khi
+ * bảng im lặng thì controller đã thay bằng đúng hai câu vẫn đang hiện — xem
+ * hằng DAU_TRANG trong đó. Nên chỗ này không cần phòng thủ thêm lần nữa.
+ *
+ * Breadcrumb thì VẪN cứng: nó là vị trí trong cây điều hướng, không phải nội
+ * dung. Đổi chữ "Bộ sưu tập" ở đó là đổi tên một mục điều hướng có mặt trên
+ * mọi trang, không phải sửa lời giới thiệu của một trang.
+ */
+?>
 <?php partial('_layout/page-head', [
     'head_crumbs' => [['label' => 'Bộ sưu tập']],
-    'head_title'  => 'Bộ sưu tập',
-    'head_lead'   => 'Mỗi bộ là một cách chọn gọng và tròng cho một kiểu ngày. '
-                   . 'Mở bộ nào nghe hợp với bạn để xem kỹ, rồi lọc thẳng sang danh mục.',
+    'head_title'  => $headTitle,
+    'head_lead'   => $headLead,
 ]); ?>
 
 <section class="colls">

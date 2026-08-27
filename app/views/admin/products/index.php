@@ -339,7 +339,13 @@ if ($ed !== null) {
                 );
                 ?>
 
-                <p class="field__label field--wide" style="margin-top: 8px;">Thông số kính</p>
+                <?php /* Bốn nhóm dưới đây xếp ĐÚNG thứ tự ngăn kéo thông số trên
+                         trang bộ sưu tập đọc chúng, để người nhập liệu thấy được cái
+                         mình đang gõ sẽ hiện ra ở đâu và cạnh cái gì. */ ?>
+                <div class="aform__sect">
+                    <span class="aform__sect-name">Gọng</span>
+                    <span class="aform__sect-note">sáu dòng đầu của ngăn kéo thông số</span>
+                </div>
 
                 <div class="field">
                     <label for="eyewear_type">Phân loại</label>
@@ -381,6 +387,11 @@ if ($ed !== null) {
                     <input type="number" id="weight_g" name="weight_g" min="0" max="500" step="1"
                            value="<?= !empty($ed['weight_g']) ? (int) $ed['weight_g'] : '' ?>">
                     <p class="field__hint">Cả tròng. Dưới 25g là mốc đeo được cả ngày.</p>
+                </div>
+
+                <div class="aform__sect">
+                    <span class="aform__sect-name">Kích thước</span>
+                    <span class="aform__sect-note">cột "Kích thước" của bảng so sánh, và bảng quy đổi cỡ S/M/L</span>
                 </div>
 
                 <div class="field">
@@ -437,6 +448,11 @@ if ($ed !== null) {
                         đây, gộp của cả bộ. Không tick gì thì mẫu này không xuất hiện
                         trong bảng đó.
                     </p>
+                </div>
+
+                <div class="aform__sect">
+                    <span class="aform__sect-name">Tròng kính</span>
+                    <span class="aform__sect-note">cột "Tròng" của bảng so sánh, và nhóm thứ ba của ngăn kéo</span>
                 </div>
 
                 <div class="field">
@@ -520,6 +536,11 @@ if ($ed !== null) {
                         Câu này thay chỗ ô tick ở trên khi in ra trang. "Lắp được độ"
                         suông là câu khách sẽ hỏi lại qua Zalo — ghi thẳng con số.
                     </p>
+                </div>
+
+                <div class="aform__sect">
+                    <span class="aform__sect-name">Thương mại và chứng nhận</span>
+                    <span class="aform__sect-note">hai nhóm cuối của ngăn kéo — bốn ô chính sách để TRỐNG là đúng</span>
                 </div>
 
                 <div class="field">

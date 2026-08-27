@@ -1514,6 +1514,56 @@ a.astatus__save {
 .aform__grid > button { grid-column: 1 / -1; justify-self: start; }
 
 /* ============================================================
+   TIÊU ĐỀ NHÓM TRONG FORM
+
+   Form sản phẩm có gần bốn mươi ô và form bộ sưu tập hai mươi. Không có
+   vạch ngăn thì người nhập phải đọc từng nhãn để biết mình đang ở phần
+   nào, và ô cuối cùng của một nhóm trông y hệt ô đầu của nhóm sau.
+
+   Nằm ở file DÙNG CHUNG này chứ không ở CSS riêng của một trang: hai form
+   đã dùng, và mọi form dài về sau cũng sẽ cần.
+
+   `:first-child` bỏ đường kẻ và khoảng đệm trên — nhóm đầu tiên đứng ngay
+   dưới tiêu đề panel rồi, thêm một vạch nữa là hai vạch sát nhau.
+   ============================================================ */
+
+.aform__sect {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.aform__sect:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+}
+
+.aform__sect-name {
+    font-size: var(--fs-label);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink);
+}
+
+/* Câu giải thích cạnh tên nhóm: nói nhóm này hiện ở ĐÂU trên trang công
+   khai. Đó là thông tin người nhập liệu không đoán được từ tên ô, và là
+   thứ quyết định họ có nên bỏ công điền hay không. */
+.aform__sect-note {
+    font-size: 11.5px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    color: #a2937f;
+}
+
+/* ============================================================
    LIÊN KẾT ĐẶT LẠI MẬT KHẨU — hiện đúng một lần
 
    Cố ý làm nổi bật và khác hẳn phần còn lại của trang: đây là thứ nhân viên

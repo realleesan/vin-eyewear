@@ -54,15 +54,41 @@ class CollectionController extends BaseController
     /** Số dáng gọng in ra ở cụm "lọc nhanh" dưới bảng so sánh. */
     private const SHAPES = 6;
 
+    /**
+     * Câu mặc định của đầu trang /bo-suu-tap.
+     *
+     * Đây là chữ đang hiện trước khi bảng `site_texts` ra đời, và nó vẫn là
+     * nguồn chân lý mỗi khi CSDL im lặng — bảng chưa tồn tại, dòng bị xoá, hay
+     * nhân viên lưu một ô trống. Xem SiteTextModel::get().
+     */
+    /* public: CollectionAdminController đọc lại đúng hai câu này để ô nhập
+       trong khu quản trị hiện y hệt chữ khách đang thấy. Hai bản chép tay ở
+       hai file là hai bản sẽ lệch nhau. */
+    public const DAU_TRANG = [
+        'tieu_de'  => 'Bộ sưu tập',
+        'doan_dan' => 'Mỗi bộ là một cách chọn gọng và tròng cho một kiểu ngày. '
+                    . 'Mở bộ nào nghe hợp với bạn để xem kỹ, rồi lọc thẳng sang danh mục.',
+    ];
+
     public function index(): void
     {
         $collections = CollectionModel::visible();
 
+        $tieuDe  = SiteTextModel::get(SiteTextModel::BST_TIEU_DE, self::DAU_TRANG['tieu_de']);
+        $doanDan = SiteTextModel::get(SiteTextModel::BST_DOAN_DAN, self::DAU_TRANG['doan_dan']);
+
         $this->renderView('collection/index', [
-            'pageTitle'   => 'Bộ sưu tập — Vin Eyewear',
-            'metaDesc'    => 'Các bộ sưu tập kính mắt theo mùa của Vin Eyewear: '
-                           . 'gọng, tròng và phong cách được chọn theo từng nhu cầu.',
+            // Thẻ <title> đi theo tiêu đề cửa hàng đặt, không còn gõ cứng: đổi
+            // tiêu đề trang mà tên trên tab trình duyệt vẫn nói câu cũ thì hai
+            // chỗ nói khác nhau về cùng một trang.
+            'pageTitle'   => $tieuDe . ' — Vin Eyewear',
+            // metaDesc lấy luôn đoạn dẫn, cùng một lý do: đoạn dẫn LÀ câu giới
+            // thiệu trang, và giữ hai bản khác nhau nghĩa là kết quả tìm kiếm
+            // hứa một đằng còn trang mở ra một nẻo.
+            'metaDesc'    => excerpt($doanDan, 155),
             'collections' => $collections,
+            'headTitle'   => $tieuDe,
+            'headLead'    => $doanDan,
         ]);
     }
 

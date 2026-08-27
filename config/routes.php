@@ -265,6 +265,10 @@ return [
     /* CÂU HỎI THƯỜNG GẶP của một bộ — hai đường riêng, không gộp vào /luu.
        Form bộ sưu tập là MỘT <form>, mà mỗi câu hỏi cần nút xoá của riêng nó,
        và HTML không cho lồng <form> vào nhau. */
+    /* Chữ đầu trang /bo-suu-tap (tiêu đề + đoạn dẫn). Đường riêng vì nó là nội
+       dung của TRANG DANH SÁCH, không thuộc bộ sưu tập nào — gộp vào /luu thì
+       sửa bộ nào cũng ghi đè được nó. */
+    'quan-tri/bo-suu-tap/tong-quan' => 'CollectionAdminController@saveTexts', // POST
     'quan-tri/bo-suu-tap/faq/luu' => 'CollectionAdminController@saveFaq',   // POST
     'quan-tri/bo-suu-tap/faq/xoa' => 'CollectionAdminController@deleteFaq', // POST
 

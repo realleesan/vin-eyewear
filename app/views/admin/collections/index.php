@@ -47,6 +47,67 @@ $dongSignature = implode("\n", array_map(
     'addLabel' => '+ Thêm bộ sưu tập',
 ]); ?>
 
+<?php
+/*
+ * NỘI DUNG TRANG TỔNG QUAN — panel riêng, đứng TRƯỚC bảng danh sách.
+ *
+ * Đây là chữ của trang /bo-suu-tap nói chung, không thuộc bộ nào. Đặt nó ở
+ * đầu trang quản trị này là đúng chỗ: người vào đây để sửa bộ sưu tập cũng
+ * chính là người viết câu giới thiệu cho cả mục ấy, và họ không phải nhớ ra
+ * một trang cài đặt thứ hai ở đâu đó.
+ *
+ * Form RIÊNG chứ không gộp vào form sửa bộ bên dưới — gộp thì sửa bộ nào cũng
+ * ghi đè được chữ này, mà giao diện chẳng có gì nói ra điều đó.
+ */
+?>
+<?php if ($canEdit && $hasTexts): ?>
+    <section class="aform" id="tong-quan" aria-labelledby="tong-quan-title">
+        <h2 id="tong-quan-title" class="apanel__title">Nội dung trang tổng quan</h2>
+
+        <form method="post" action="/quan-tri/bo-suu-tap/tong-quan" class="aform__grid">
+            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+
+            <div class="aform__sect">
+                <span class="aform__sect-name">Đầu trang</span>
+                <span class="aform__sect-note">
+                    hiện ở <a href="/bo-suu-tap" target="_blank" rel="noopener">/bo-suu-tap</a>,
+                    trên khối nền hồng phía trên danh sách các bộ
+                </span>
+            </div>
+
+            <div class="field field--wide">
+                <label for="head_title">Tiêu đề trang</label>
+                <input type="text" id="head_title" name="head_title" maxlength="120"
+                       value="<?= e($headTitle) ?>">
+                <p class="field__hint">
+                    Cũng là tên hiện trên tab trình duyệt. Để trống thì quay về câu
+                    mặc định, không phải để trống tiêu đề.
+                </p>
+            </div>
+
+            <div class="field field--wide">
+                <label for="head_lead">Đoạn dẫn</label>
+                <textarea id="head_lead" name="head_lead" rows="3"><?= e($headLead) ?></textarea>
+                <p class="field__hint">
+                    Đoạn chữ nhỏ bên phải tiêu đề, và cũng là mô tả trang gửi cho
+                    công cụ tìm kiếm. Viết cho người vừa vào trang và chưa biết nên
+                    bấm bộ nào.
+                </p>
+            </div>
+
+            <button type="submit" class="astatus__save">Lưu nội dung trang</button>
+        </form>
+    </section>
+<?php elseif ($canEdit && !$hasTexts): ?>
+    <section class="aform">
+        <p class="field__hint">
+            Phần sửa nội dung trang tổng quan cần nâng cấp cơ sở dữ liệu
+            (<code>2026-08-27-noi-dung-trang-tong-quan.sql</code>) — chạy xong thì
+            khối này hiện ra.
+        </p>
+    </section>
+<?php endif; ?>
+
 <div class="atable-wrap">
     <table class="atable atable--full">
         <thead>
@@ -134,6 +195,11 @@ $dongSignature = implode("\n", array_map(
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
+            <div class="aform__sect">
+                <span class="aform__sect-name">Cơ bản</span>
+                <span class="aform__sect-note">tên, đường dẫn và thứ tự trưng bày</span>
+            </div>
+
             <div class="field field--wide">
                 <label for="name">Tên bộ sưu tập *</label>
                 <input type="text" id="name" name="name" required maxlength="160"
@@ -181,6 +247,11 @@ $dongSignature = implode("\n", array_map(
                 </p>
             </div>
 
+            <div class="aform__sect">
+                <span class="aform__sect-name">Chữ ngắn</span>
+                <span class="aform__sect-note">hiện ở trang chủ, mega menu, thẻ trên /bo-suu-tap và đầu trang chi tiết</span>
+            </div>
+
             <div class="field field--wide">
                 <label for="tagline">Câu dẫn <span class="field__opt">(một dòng)</span></label>
                 <input type="text" id="tagline" name="tagline" maxlength="255"
@@ -207,6 +278,11 @@ $dongSignature = implode("\n", array_map(
                      2026-08-27-bo-suu-tap-trang-chi-tiet: gõ vào một ô không có
                      cột nào đỡ thì bấm Lưu xong chữ bốc hơi không một lời nào
                      — xem khối chú thích trong CollectionAdminController::save(). */ ?>
+            <div class="aform__sect">
+                <span class="aform__sect-name">Nội dung trang chi tiết</span>
+                <span class="aform__sect-note">CHỈ hiện ở /bo-suu-tap/&lt;slug&gt;, không hiện ở đâu khác</span>
+            </div>
+
             <?php if ($hasStory): ?>
             <div class="field field--wide">
                 <label for="story">Câu chuyện <span class="field__opt">(nhiều đoạn)</span></label>
@@ -239,6 +315,41 @@ $dongSignature = implode("\n", array_map(
             <?php endif; ?>
 
             <?php if ($hasFrame): ?>
+            <div class="field field--wide">
+                <label for="design_style">Ngôn ngữ thiết kế</label>
+                <input type="text" id="design_style" name="design_style" maxlength="160"
+                       value="<?= e($ed['design_style'] ?? '') ?>">
+                <p class="field__hint">Một câu: phong cách chung của bộ (retro, tối giản, thể thao…).</p>
+            </div>
+                <label for="audience">Bộ này hợp với ai <span class="field__opt">(mỗi dòng một ô)</span></label>
+                <textarea id="audience" name="audience" rows="5"
+                          placeholder="Độ tuổi | 25 – 45 | Đã qua tuổi chạy theo mốt&#10;Phong cách | Tối giản ấm | Linen, da bò mộc&#10;Nhu cầu | Ngoài trời | Lái xe ban ngày, đi biển&#10;Không hợp nếu | Nhìn màn hình | Tròng phân cực làm màn hình tối đi"><?= e($dongAudience) ?></textarea>
+                <p class="field__hint">
+                    Dạng <code>Tiêu đề | Giá trị | Ghi chú</code>, ngăn bằng dấu gạch
+                    đứng. Ô CUỐI nên nói ai ĐỪNG mua bộ này — nó tiết kiệm cho cửa
+                    hàng nhiều lượt đổi trả hơn ba ô đầu cộng lại.
+                </p>
+            </div>
+                <label for="palette">Bảng màu chủ đạo <span class="field__opt">(mỗi dòng một màu)</span></label>
+                <textarea id="palette" name="palette" rows="4"
+                          placeholder="Cát ướt | #d8c3ac&#10;San hô | #c96f5c&#10;Nước sâu | #2f4858"><?= e($dongPalette) ?></textarea>
+                <p class="field__hint">
+                    Dạng <code>Tên | #rrggbb</code>. Dòng nào mã màu không đúng dạng
+                    thì bị BỎ khi lưu — giá trị này vẽ thẳng ra ô màu trên trang.
+                </p>
+            </div>
+                <label for="signature">Chi tiết nhận diện <span class="field__opt">(mỗi dòng một ý)</span></label>
+                <textarea id="signature" name="signature" rows="4"
+                          placeholder="Cạnh vát tay ba lớp ở mặt trước gọng&#10;Đinh tán đồng ở khớp càng"><?= e($dongSignature) ?></textarea>
+            </div>
+            <?php endif; ?>
+
+            <?php if ($hasFrame): ?>
+                <div class="aform__sect">
+                    <span class="aform__sect-name">Mùa và xuất xứ</span>
+                    <span class="aform__sect-note">dòng chữ nhỏ và bốn ô ngay dưới tên bộ ở trang chi tiết</span>
+                </div>
+
                 <?php /* Mười bốn ô dưới đây nuôi trang chi tiết /bo-suu-tap/<slug>.
                          Ô nào bỏ trống thì khối tương ứng KHÔNG hiện ra ngoài —
                          không có ô nào bắt buộc, và một bộ chỉ nhập tên với ảnh
@@ -286,37 +397,12 @@ $dongSignature = implode("\n", array_map(
                 </div>
 
                 <div class="field field--wide">
-                    <label for="design_style">Ngôn ngữ thiết kế</label>
-                    <input type="text" id="design_style" name="design_style" maxlength="160"
-                           value="<?= e($ed['design_style'] ?? '') ?>">
-                    <p class="field__hint">Một câu: phong cách chung của bộ (retro, tối giản, thể thao…).</p>
-                </div>
-
                 <div class="field field--wide">
-                    <label for="audience">Bộ này hợp với ai <span class="field__opt">(mỗi dòng một ô)</span></label>
-                    <textarea id="audience" name="audience" rows="5"
-                              placeholder="Độ tuổi | 25 – 45 | Đã qua tuổi chạy theo mốt&#10;Phong cách | Tối giản ấm | Linen, da bò mộc&#10;Nhu cầu | Ngoài trời | Lái xe ban ngày, đi biển&#10;Không hợp nếu | Nhìn màn hình | Tròng phân cực làm màn hình tối đi"><?= e($dongAudience) ?></textarea>
-                    <p class="field__hint">
-                        Dạng <code>Tiêu đề | Giá trị | Ghi chú</code>, ngăn bằng dấu gạch
-                        đứng. Ô CUỐI nên nói ai ĐỪNG mua bộ này — nó tiết kiệm cho cửa
-                        hàng nhiều lượt đổi trả hơn ba ô đầu cộng lại.
-                    </p>
-                </div>
-
                 <div class="field field--wide">
-                    <label for="palette">Bảng màu chủ đạo <span class="field__opt">(mỗi dòng một màu)</span></label>
-                    <textarea id="palette" name="palette" rows="4"
-                              placeholder="Cát ướt | #d8c3ac&#10;San hô | #c96f5c&#10;Nước sâu | #2f4858"><?= e($dongPalette) ?></textarea>
-                    <p class="field__hint">
-                        Dạng <code>Tên | #rrggbb</code>. Dòng nào mã màu không đúng dạng
-                        thì bị BỎ khi lưu — giá trị này vẽ thẳng ra ô màu trên trang.
-                    </p>
-                </div>
 
-                <div class="field field--wide">
-                    <label for="signature">Chi tiết nhận diện <span class="field__opt">(mỗi dòng một ý)</span></label>
-                    <textarea id="signature" name="signature" rows="4"
-                              placeholder="Cạnh vát tay ba lớp ở mặt trước gọng&#10;Đinh tán đồng ở khớp càng"><?= e($dongSignature) ?></textarea>
+                <div class="aform__sect">
+                    <span class="aform__sect-name">Ưu đãi và phân phối</span>
+                    <span class="aform__sect-note">dải ưu đãi dưới khoảng giá, và câu cuối ở khối kêu gọi</span>
                 </div>
 
                 <div class="field field--wide">
@@ -335,21 +421,12 @@ $dongSignature = implode("\n", array_map(
                            value="<?= e($ed['channels'] ?? '') ?>">
                     <p class="field__hint">Một câu, hiện ở khối kêu gọi cuối trang.</p>
                 </div>
-
-                <div class="field">
-                    <label for="meta_title">SEO — tiêu đề</label>
-                    <input type="text" id="meta_title" name="meta_title" maxlength="255"
-                           value="<?= e($ed['meta_title'] ?? '') ?>">
-                    <p class="field__hint">Bỏ trống thì tự dựng: "&lt;tên bộ&gt; — Bộ sưu tập — Vin Eyewear".</p>
-                </div>
-
-                <div class="field">
-                    <label for="meta_description">SEO — mô tả</label>
-                    <input type="text" id="meta_description" name="meta_description" maxlength="320"
-                           value="<?= e($ed['meta_description'] ?? '') ?>">
-                    <p class="field__hint">Bỏ trống thì lấy câu dẫn, không có nữa thì lấy phần đầu ô Giới thiệu.</p>
-                </div>
             <?php endif; ?>
+
+            <div class="aform__sect">
+                <span class="aform__sect-name">Ảnh bìa và hiển thị</span>
+                <span class="aform__sect-note">ảnh dùng chung cho thẻ, mega menu và đầu trang chi tiết</span>
+            </div>
 
             <div class="field field--wide">
                 <span class="field__label">Ảnh bìa</span>
@@ -395,6 +472,27 @@ $dongSignature = implode("\n", array_map(
                     hàng vào bộ đang ẩn vẫn được — dùng khi chuẩn bị bộ sắp ra mắt.
                 </p>
             </div>
+
+            <?php if ($hasFrame): ?>
+                <div class="aform__sect">
+                    <span class="aform__sect-name">SEO</span>
+                    <span class="aform__sect-note">chỉ ảnh hưởng kết quả tìm kiếm — bỏ trống thì trang tự dựng, xem gợi ý dưới mỗi ô</span>
+                </div>
+
+                <div class="field">
+                    <label for="meta_title">SEO — tiêu đề</label>
+                    <input type="text" id="meta_title" name="meta_title" maxlength="255"
+                           value="<?= e($ed['meta_title'] ?? '') ?>">
+                    <p class="field__hint">Bỏ trống thì tự dựng: "&lt;tên bộ&gt; — Bộ sưu tập — Vin Eyewear".</p>
+                </div>
+
+                <div class="field">
+                    <label for="meta_description">SEO — mô tả</label>
+                    <input type="text" id="meta_description" name="meta_description" maxlength="320"
+                           value="<?= e($ed['meta_description'] ?? '') ?>">
+                    <p class="field__hint">Bỏ trống thì lấy câu dẫn, không có nữa thì lấy phần đầu ô Giới thiệu.</p>
+                </div>
+            <?php endif; ?>
 
             <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm bộ sưu tập' ?></button>
         </form>

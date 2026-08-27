@@ -144,6 +144,8 @@ MIGRATIONS=(
     # trong file chỉ có thể do file này tạo ra, còn 43 cột kia thì mỗi cột đều
     # có thể bị ai đó thêm tay lẻ tẻ, không cột nào đại diện cho cả file.
     "2026-08-27-bo-suu-tap-khung-ba-lop.sql|table|collection_faqs|"
+    # Chữ trên trang do cửa hàng tự sửa. Mốc là chính bảng `site_texts`.
+    "2026-08-27-noi-dung-trang-tong-quan.sql|table|site_texts|"
 )
 
 # ---------------------------------------------------------------------------

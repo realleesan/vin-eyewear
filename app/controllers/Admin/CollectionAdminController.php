@@ -64,6 +64,14 @@ class CollectionAdminController extends AdminController
              */
             'hasFrame'    => Database::columnExists('collections', 'season_code'),
             'hasFaq'      => Database::tableExists('collection_faqs'),
+            'hasTexts'    => Database::tableExists('site_texts'),
+            /*
+             * Chữ đầu trang /bo-suu-tap. Đọc qua SiteTextModel::get() với đúng
+             * câu mặc định mà CollectionController dùng, nên ô nhập luôn hiện
+             * ĐÚNG chữ khách đang thấy — kể cả khi chưa ai sửa lần nào.
+             */
+            'headTitle'   => SiteTextModel::get(SiteTextModel::BST_TIEU_DE, CollectionController::DAU_TRANG['tieu_de']),
+            'headLead'    => SiteTextModel::get(SiteTextModel::BST_DOAN_DAN, CollectionController::DAU_TRANG['doan_dan']),
             'faqs'        => $this->faqsOf(isset($_GET['sua']) ? (string) $_GET['sua'] : ''),
         ]);
     }
@@ -236,6 +244,34 @@ class CollectionAdminController extends AdminController
         CollectionCoverStorage::remove($row['cover_image'] ?? null);
 
         flash('admin_success', 'Đã xoá bộ sưu tập.');
+        redirect(self::BASE);
+    }
+
+    /**
+     * Lưu chữ đầu trang /bo-suu-tap (POST riêng, không đi chung form của bộ).
+     *
+     * Đây là nội dung của TRANG DANH SÁCH, không thuộc bộ sưu tập nào — gộp
+     * vào form sửa một bộ thì sửa bộ nào cũng ghi đè được nó, và người dùng
+     * không có cách nào đoán ra điều đó từ giao diện.
+     */
+    public function saveTexts(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        if (!Database::tableExists('site_texts')) {
+            flash('admin_error', 'Chưa chạy nâng cấp cơ sở dữ liệu cho phần nội dung trang.');
+            redirect(self::BASE);
+        }
+
+        SiteTextModel::saveMany([
+            SiteTextModel::BST_TIEU_DE  => (string) ($_POST['head_title'] ?? ''),
+            SiteTextModel::BST_DOAN_DAN => (string) ($_POST['head_lead'] ?? ''),
+        ]);
+
+        // Nói rõ ô trống nghĩa là gì, vì đó là thứ người dùng vừa làm mà chưa
+        // chắc đã hiểu hậu quả — xem SiteTextModel::get().
+        flash('admin_success', 'Đã lưu nội dung trang tổng quan. Ô để trống sẽ quay về câu mặc định.');
         redirect(self::BASE);
     }
 
