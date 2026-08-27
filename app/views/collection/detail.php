@@ -194,6 +194,34 @@ if ($minPrice !== null) {
         </div>
     </section>
 
+    <!-- ══════════ LỚP 1 · DẢI LOOKBOOK ══════════ -->
+    <?php if ($gallery !== []): ?>
+        <?php
+        /*
+         * Ảnh SAU ảnh đại diện. Ảnh đại diện đã đứng ở khối giới thiệu ngay
+         * trên, nên in lại nó ở đây là cùng một tấm hiện hai lần cách nhau một
+         * màn hình — CollectionModel::gallery() cắt sẵn phần tử đầu.
+         *
+         * Lưới tự giãn theo số ảnh chứ không cố định số cột: một bộ có ba ảnh
+         * và một bộ có mười lăm ảnh dùng chung khối này, mà ép ba cột thì bộ
+         * mười lăm ảnh thành năm hàng cao ngoằng.
+         */
+        ?>
+        <section class="cdet__look" aria-label="Ảnh bộ sưu tập <?= e($collection['name']) ?>">
+            <ul class="cdet__look-grid" role="list">
+                <?php foreach ($gallery as $i => $anh): ?>
+                    <li class="cdet__look-item">
+                        <?php /* loading="lazy" cho MỌI ảnh ở đây: cả dải nằm dưới
+                                 màn hình đầu, khác ảnh đại diện phía trên. */ ?>
+                        <img class="cdet__look-img" src="<?= e(asset($anh)) ?>"
+                             alt="<?= e($collection['name']) ?> — ảnh <?= $i + 2 ?>"
+                             width="600" height="450" loading="lazy" decoding="async">
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+    <?php endif; ?>
+
     <!-- ══════════ LỚP 1 · CÂU CHUYỆN, BẢNG MÀU, NHẬN DIỆN ══════════ -->
     <?php if ($paras !== [] || $palette !== [] || $signature !== []): ?>
         <section class="cdet__story-wrap" aria-labelledby="cdet-story-title">

@@ -65,6 +65,9 @@ class CollectionAdminController extends AdminController
             'hasFrame'    => Database::columnExists('collections', 'season_code'),
             'hasFaq'      => Database::tableExists('collection_faqs'),
             'hasTexts'    => Database::tableExists('site_texts'),
+            // Cột `images` ra đời 2026-08-28. Chưa chạy nâng cấp thì form lùi
+            // về ô một-ảnh như cũ — xem khối ảnh trong view.
+            'hasImages'   => Database::columnExists('collections', 'images'),
             /*
              * Chữ đầu trang /bo-suu-tap. Đọc qua SiteTextModel::get() với đúng
              * câu mặc định mà CollectionController dùng, nên ô nhập luôn hiện
@@ -139,20 +142,44 @@ class CollectionAdminController extends AdminController
             }
         }
 
-        // Ảnh bìa xử lý SAU mọi phép kiểm có redirect: file đã move_uploaded_file()
+        // Ảnh xử lý SAU mọi phép kiểm có redirect: file đã move_uploaded_file()
         // thì nằm lại trên đĩa, mà redirect không quay lại đây để dọn.
-        [$cover, $coverError] = $this->cover($id);
+        /*
+         * Trần số ảnh: 1 khi máy chưa có cột `images`.
+         *
+         * Không có phép chặn này thì trên máy chưa nâng cấp, nhân viên chọn
+         * mười ảnh -> cả mười được cất xuống đĩa, rồi chỉ ảnh đầu đi vào
+         * `cover_image` và chín cái còn lại nằm lại làm rác không ai biết.
+         */
+        $tran = Database::columnExists('collections', 'images')
+            ? CollectionCoverStorage::MAX_FILES
+            : 1;
+
+        [$images, $imageErrors] = $this->images($id, $tran);
 
         $data = [
             'slug'        => $slug,
             'name'        => $name,
             'tagline'     => trim((string) ($_POST['tagline'] ?? '')) ?: null,
             'intro'       => trim((string) ($_POST['intro'] ?? '')) ?: null,
-            'cover_image' => $cover,
             'launched_at' => $this->toDate($_POST['launched_at'] ?? ''),
             'sort_order'  => (int) ($_POST['sort_order'] ?? 0),
             'is_visible'  => isset($_POST['is_visible']) ? 1 : 0,
         ];
+
+        /*
+         * Cột `images` ra đời cùng migration 2026-08-28-bo-suu-tap-nhieu-anh.
+         * Máy chưa chạy nâng cấp thì vẫn ghi vào `cover_image` như cũ, và form
+         * cũng chỉ hiện ô một-ảnh — xem $hasImages ở index() và view.
+         *
+         * KHÔNG ghi cả hai cột cùng lúc khi cột mới đã có: `cover_image` là
+         * cột chết kể từ hôm đó, và giữ hai bản là để chúng lệch nhau.
+         */
+        if (Database::columnExists('collections', 'images')) {
+            $data['images'] = $images === [] ? null : json_encode($images, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        } else {
+            $data['cover_image'] = $images[0] ?? null;
+        }
 
         /*
          * `story` CHỈ ghi khi cột đã có thật.
@@ -198,8 +225,10 @@ class CollectionAdminController extends AdminController
         }
 
         // Ảnh hỏng KHÔNG huỷ cả lần lưu: mọi thứ khác đã hợp lệ và đã ghi xuống.
-        if ($coverError !== null) {
-            flash('admin_error', $coverError);
+        // Gộp mọi lỗi vào MỘT thông báo — chọn một lượt mười sáu ảnh mà hỏng
+        // ba cái thì ba dòng flash chồng lên nhau, người dùng chỉ thấy dòng cuối.
+        if ($imageErrors !== []) {
+            flash('admin_error', implode(' · ', $imageErrors));
         }
 
         redirect(self::BASE);
@@ -240,8 +269,20 @@ class CollectionAdminController extends AdminController
             redirect(self::BASE);
         }
 
+        /*
+         * Xoá bản ghi TRƯỚC, dọn file SAU — và dọn CẢ BỘ ảnh, không chỉ ảnh
+         * đại diện. Trước 2026-08-28 mỗi bộ đúng một ảnh nên ở đây chỉ có một
+         * lệnh remove(); nay bỏ sót nghĩa là mỗi lần xoá một bộ là bỏ lại mươi
+         * lăm file mồ côi trên hosting, mà dung lượng ở đó thì có hạn.
+         *
+         * Đọc qua CollectionModel::images() nên nó tự lo cả cột mới lẫn lưới
+         * an toàn `cover_image` của dòng cũ.
+         */
         CollectionModel::delete($id);
-        CollectionCoverStorage::remove($row['cover_image'] ?? null);
+
+        foreach (CollectionModel::images($row) as $anh) {
+            CollectionCoverStorage::remove($anh);
+        }
 
         flash('admin_success', 'Đã xoá bộ sưu tập.');
         redirect(self::BASE);
@@ -466,43 +507,100 @@ class CollectionAdminController extends AdminController
     }
 
     /**
-     * Ảnh bìa cuối cùng của bộ sưu tập.
+     * Danh sách ảnh cuối cùng của bộ: ảnh cũ được giữ + ảnh vừa tải lên.
      *
-     * Ba tình huống, đúng thứ tự ưu tiên:
-     *   1. Có chọn file mới  -> dùng file mới, xoá file cũ.
-     *   2. Tick "Bỏ ảnh bìa" -> về null, xoá file cũ.
-     *   3. Không đụng gì     -> giữ nguyên ảnh đang có.
+     * Chép đúng lối của ProductAdminController::images(), và cố ý chép chứ
+     * không gộp thành một hàm dùng chung: hai bên khác trần số ảnh, khác lớp
+     * lưu, khác thư mục, và khác câu báo lỗi. Gộp lại sẽ là một hàm nhận bốn
+     * tham số để phân biệt hai chỗ gọi — dài hơn cả hai bản cộng lại.
      *
-     * @return array{0: string|null, 1: string|null} [đường dẫn ảnh, lỗi để báo lại]
+     * @return array{0: string[], 1: string[]} [đường dẫn ảnh, lỗi để báo lại]
      */
-    private function cover(string $id): array
+    private function images(string $id, int $tran): array
     {
-        // Ảnh hiện tại đọc TỪ CSDL, không lấy từ form: form chỉ được quyền nói
-        // "thay" hoặc "bỏ". Nhận thẳng đường dẫn do form gửi thì ai vào được
-        // trang này cũng nhét được URL lạ vào cột in ra <img src>.
-        $old = $id !== '' ? (CollectionModel::find($id)['cover_image'] ?? null) : null;
+        /*
+         * Ảnh hiện có đọc TỪ CSDL chứ không lấy từ form.
+         *
+         * Form chỉ được quyền nói "giữ cái nào". Nhận thẳng đường dẫn do form
+         * gửi thì bất cứ ai vào được trang này cũng nhét được một URL lạ vào
+         * cột `images`, mà cột đó in thẳng ra <img src> ở trang bán hàng.
+         *
+         * Đọc bằng CollectionModel::images() nên dòng cũ chỉ có `cover_image`
+         * cũng ra đúng danh sách một phần tử — không phải xử riêng ở đây.
+         */
+        $dangCo = [];
 
-        $stored = CollectionCoverStorage::store($_FILES['cover_file'] ?? []);
-
-        if ($stored['ok']) {
-            CollectionCoverStorage::remove($old);
-
-            return [$stored['path'], null];
+        if ($id !== '') {
+            $row    = CollectionModel::find($id);
+            $dangCo = $row !== null ? CollectionModel::images($row) : [];
         }
 
-        // error = null nghĩa là KHÔNG CHỌN file nào — không phải lỗi.
-        if (($stored['error'] ?? null) !== null) {
-            // Ảnh mới hỏng thì giữ nguyên ảnh cũ: người dùng định thay, không định xoá.
-            return [$old, $stored['error']];
+        /*
+         * FORM CŨ GỬI LÊN THÌ ĐỪNG ĐỘNG VÀO ẢNH.
+         *
+         * Trước 2026-08-28 khối ảnh của form này gửi `cover_file` /
+         * `cover_remove`; nay nó gửi `image_keep[]` / `image_main` /
+         * `image_files[]`. Hai bộ tên khác nhau, và ở đây "không có
+         * image_keep[] nào" nghĩa là "bỏ tick hết" — tức là XOÁ SẠCH ẢNH.
+         *
+         * Một tab quản trị mở sẵn từ trước lúc deploy, bấm Lưu sau đó, sẽ rơi
+         * đúng vào ca ấy: nó gửi form cũ, controller mới đọc ra danh sách giữ
+         * rỗng, và bộ sưu tập mất ảnh mà không ai bấm nút xoá nào.
+         *
+         * Trường ẩn `image_form` là dấu hiệu phân biệt: form MỚI luôn gửi nó.
+         * Không có nó -> form cũ -> giữ nguyên ảnh đang có, không đọc gì thêm.
+         *
+         * KHÔNG suy đoán bằng "không có ảnh nào được giữ và cũng không tải lên
+         * ảnh mới": đó CHÍNH LÀ hình dạng của thao tác hợp lệ "bỏ tick hết ảnh
+         * rồi lưu để xoá sạch".
+         */
+        if (!isset($_POST['image_form'])) {
+            return [$dangCo, []];
         }
 
-        if (isset($_POST['cover_remove'])) {
-            CollectionCoverStorage::remove($old);
+        $xin = array_map('strval', (array) ($_POST['image_keep'] ?? []));
 
-            return [null, null];
+        /*
+         * Lọc trên $dangCo (chứ không lặp $xin) để GIỮ NGUYÊN THỨ TỰ CŨ.
+         *
+         * Thứ tự chính là ý nghĩa — ảnh đầu là ảnh đại diện, đi vào thẻ ngoài
+         * /bo-suu-tap, mega menu và khối trang chủ — mà thứ tự checkbox trình
+         * duyệt gửi lên thì không có gì bảo đảm.
+         */
+        $giu = array_values(array_filter(
+            $dangCo,
+            static fn (string $duongDan): bool => in_array($duongDan, $xin, true)
+        ));
+
+        $giu    = array_slice($giu, 0, $tran);
+        $con    = max(0, $tran - count($giu));
+        $themVao = CollectionCoverStorage::storeMany($_FILES['image_files'] ?? [], $con);
+        $images  = array_merge($giu, $themVao['paths']);
+
+        /*
+         * Ảnh đại diện: đưa ảnh được chọn lên ĐẦU danh sách.
+         *
+         * Chỉ nhận giá trị CÓ THẬT trong danh sách vừa dựng, nên nút radio bị
+         * sửa tay hoặc trỏ vào ảnh vừa bị bỏ tick đều rơi vào im lặng chứ
+         * không sinh ra một đường dẫn ma trong cột.
+         */
+        $daiDien = (string) ($_POST['image_main'] ?? '');
+
+        if ($daiDien !== '' && in_array($daiDien, $images, true)) {
+            $images = array_merge([$daiDien], array_values(array_filter(
+                $images,
+                static fn (string $duongDan): bool => $duongDan !== $daiDien
+            )));
         }
 
-        return [$old, null];
+        // Ảnh bị gỡ khỏi danh sách thì xoá khỏi đĩa luôn — nhưng chỉ ảnh do
+        // chính khu quản trị tải lên; remove() tự bỏ qua đường dẫn nằm ngoài
+        // thư mục upload (ảnh đi kèm mã nguồn, như ba bộ gieo sẵn).
+        foreach (array_diff($dangCo, $images) as $boDi) {
+            CollectionCoverStorage::remove($boDi);
+        }
+
+        return [$images, $themVao['errors']];
     }
 
     /**

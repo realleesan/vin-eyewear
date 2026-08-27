@@ -728,7 +728,15 @@ CREATE TABLE `collections` (
     `meta_title`       VARCHAR(255) NULL,
     `meta_description` VARCHAR(320) NULL,
 
+    -- `cover_image` LÀ CỘT CHẾT từ 2026-08-28. Mã không ghi vào nó nữa; nó chỉ
+    -- còn là lưới an toàn cho dòng có ảnh bìa mà `images` lại rỗng. Giữ lại
+    -- một thời gian rồi dọn bằng một migration riêng — xem
+    -- migrations/2026-08-28-bo-suu-tap-nhieu-anh.sql.
     `cover_image` VARCHAR(500) NULL,
+    -- images: mảng đường dẫn ảnh lookbook, PHẦN TỬ ĐẦU là ảnh đại diện —
+    -- cùng quy ước với `products`.`images`. Không có cột "ảnh nào là bìa"
+    -- riêng: đổi bìa là đưa ảnh đó lên đầu mảng.
+    `images`      JSON         NULL,
     `launched_at` DATE         NULL,
     `sort_order`  SMALLINT     NOT NULL DEFAULT 0,
     `is_visible`  TINYINT(1)   NOT NULL DEFAULT 1,

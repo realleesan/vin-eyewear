@@ -146,6 +146,8 @@ MIGRATIONS=(
     "2026-08-27-bo-suu-tap-khung-ba-lop.sql|table|collection_faqs|"
     # Chữ trên trang do cửa hàng tự sửa. Mốc là chính bảng `site_texts`.
     "2026-08-27-noi-dung-trang-tong-quan.sql|table|site_texts|"
+    # Bộ sưu tập chuyển từ một ảnh bìa sang một bộ ảnh. Mốc là cột `images`.
+    "2026-08-28-bo-suu-tap-nhieu-anh.sql|column|collections|images"
 )
 
 # ---------------------------------------------------------------------------

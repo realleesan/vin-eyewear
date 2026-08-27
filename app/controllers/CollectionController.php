@@ -142,6 +142,9 @@ class CollectionController extends BaseController
             'pageTitle'  => $this->metaTitle($collection),
             'metaDesc'   => $this->metaDesc($collection),
             'collection' => $collection,
+            // Ảnh sau ảnh đại diện — dải lookbook. Rỗng ở bộ chỉ có một ảnh,
+            // và view bỏ hẳn khối đó chứ không vẽ dải trống.
+            'gallery'    => CollectionModel::gallery($collection),
             'products'   => $products,
             'total'      => $stats['count'],
             'minPrice'   => $stats['minPrice'],

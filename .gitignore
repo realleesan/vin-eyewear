@@ -33,6 +33,12 @@ storage/
 assets/uploads/avatars/
 assets/uploads/san-pham/
 assets/uploads/su-kien/
+# bo-suu-tap: thêm 2026-08-28. Tới trước hôm đó mỗi bộ chỉ có một ảnh bìa và
+# ba bộ gieo sẵn đều trỏ vào assets/images/, nên thư mục này chưa bao giờ có
+# file và không ai nhận ra nó thiếu ở đây. Nay bộ sưu tập nhận ảnh tải lên
+# thật — thiếu dòng này là ảnh lookbook của cửa hàng đi thẳng vào Git rồi ra
+# hosting qua deploy, tức là repo phình ra vì dữ liệu chứ không phải vì mã.
+assets/uploads/bo-suu-tap/
 
 # Cầu nối SePay chạy trên Render — cấu hình thật và hàng đợi tạm, không lên git.
 relay/.env

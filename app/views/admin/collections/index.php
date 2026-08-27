@@ -12,6 +12,14 @@
 
 $ed = $editing;
 
+/*
+ * Ảnh của bộ đang sửa, đã lọc bỏ đường dẫn trỏ tới file không còn tồn tại.
+ *
+ * Đọc qua CollectionModel::images() nên bộ cũ chỉ có `cover_image` cũng ra
+ * đúng một phần tử — form không phải biết cột nào đang được dùng.
+ */
+$edImages = $ed === null ? [] : CollectionModel::images($ed);
+
 /* Còn bao nhiêu sản phẩm đang thuộc bộ đang sửa. 0 nghĩa là slug đổi được. */
 $dangDung = $ed === null ? 0 : (int) ($counts[$ed['slug']] ?? 0);
 
@@ -475,41 +483,100 @@ $dongSignature = implode("\n", array_map(
             <?php endif; ?>
 
             <div class="aform__sect">
-                <span class="aform__sect-name">Ảnh bìa và hiển thị</span>
-                <span class="aform__sect-note">ảnh dùng chung cho thẻ, mega menu và đầu trang chi tiết</span>
+                <span class="aform__sect-name">Ảnh và hiển thị</span>
+                <span class="aform__sect-note">
+                    ảnh đại diện đi vào thẻ, mega menu và đầu trang chi tiết;
+                    ảnh còn lại thành dải lookbook trên trang chi tiết
+                </span>
             </div>
 
+            <?php
+            /*
+             * KHỐI ẢNH — chép đúng lối của form sản phẩm.
+             *
+             * Ba điều khiển, và cả ba là điều khiển form THUẦN: tắt JavaScript
+             * thì mọi thứ vẫn chạy nguyên vẹn qua một lần POST.
+             *
+             *   image_keep[]  tick sẵn = GIỮ. Bấm × sẽ BỎ tick, tức là chiều
+             *                 NGƯỢC với ô "xoá ảnh" thường thấy — nên truyền
+             *                 x_keep = true để CSS biết trạng thái nào là
+             *                 "đang đánh dấu xoá". Mở form rồi bấm Lưu mà
+             *                 không đụng gì thì ảnh phải còn nguyên.
+             *   image_main    ảnh nào lên đầu mảng, tức ảnh đại diện.
+             *   image_files[] ảnh chọn thêm từ máy.
+             *
+             * KHÔNG có nút kéo-thả sắp xếp: nó cần JavaScript, và thứ tự
+             * ngoài ảnh đại diện thì chưa chỗ nào đọc tới.
+             */
+            ?>
             <div class="field field--wide">
-                <span class="field__label">Ảnh bìa</span>
+                <?php /* Dấu hiệu "form này là bản MỚI của khối ảnh". Thiếu nó,
+                         controller giữ nguyên ảnh thay vì đọc image_keep[] —
+                         xem khối chú thích trong CollectionAdminController::images(). */ ?>
+                <input type="hidden" name="image_form" value="1">
 
-                <?php if (!empty($ed['cover_image'])): ?>
-                    <div class="aimgs__one">
-                        <?php partial('admin/_layout/image-x', [
-                            'x_id' => 'x-cover', 'x_name' => 'cover_remove', 'x_value' => '1',
-                            'x_label' => 'Xoá ảnh bìa khi lưu',
-                        ]); ?>
-                        <img class="aimgs__thumb" src="<?= e(asset($ed['cover_image'])) ?>" alt="" loading="lazy">
-                        <?php partial('admin/_layout/image-x-btn', [
-                            'x_id' => 'x-cover', 'x_label' => 'Xoá ảnh bìa khi lưu',
-                        ]); ?>
-                    </div>
+                <span class="field__label"><?= $hasImages ? 'Ảnh của bộ' : 'Ảnh bìa' ?></span>
+
+                <?php if ($edImages !== []): ?>
+                    <ul class="aimgs" role="list">
+                        <?php foreach ($edImages as $i => $duongDan): ?>
+                            <li class="aimgs__item">
+                                <?php partial('admin/_layout/image-x', [
+                                    'x_id' => 'x-img-' . $i, 'x_name' => 'image_keep[]',
+                                    'x_value' => $duongDan, 'x_checked' => true, 'x_keep' => true,
+                                    'x_label' => 'Xoá ảnh này khi lưu',
+                                ]); ?>
+
+                                <img class="aimgs__thumb" src="<?= e(asset($duongDan)) ?>" alt="" loading="lazy">
+
+                                <?php partial('admin/_layout/image-x-btn', [
+                                    'x_id' => 'x-img-' . $i, 'x_label' => 'Xoá ảnh này khi lưu',
+                                ]); ?>
+
+                                <?php if ($hasImages): ?>
+                                    <label class="aimgs__main">
+                                        <input type="radio" name="image_main"
+                                               value="<?= e($duongDan) ?>" <?= $i === 0 ? 'checked' : '' ?>>
+                                        Ảnh đại diện
+                                    </label>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
                 <?php endif; ?>
 
-                <label class="aimgs__pick" for="cover_file">
-                    <?= !empty($ed['cover_image']) ? 'Chọn ảnh khác để thay' : 'Chọn ảnh từ máy' ?>
+                <label class="aimgs__pick" for="image_files">
+                    <?php if ($edImages === []): ?>
+                        Chọn ảnh từ máy
+                    <?php elseif ($hasImages): ?>
+                        Thêm ảnh từ máy
+                    <?php else: ?>
+                        Chọn ảnh khác để thay
+                    <?php endif; ?>
                 </label>
 
                 <?php /* MAX_FILE_SIZE phải đứng TRƯỚC ô file mới có tác dụng. Chỉ
                          là gợi ý để PHP dừng sớm; máy chủ vẫn đo lại trong
                          ImageUploader. */ ?>
                 <input type="hidden" name="MAX_FILE_SIZE" value="<?= (int) CollectionCoverStorage::MAX_BYTES ?>">
-                <input type="file" id="cover_file" name="cover_file"
+                <input type="file" id="image_files" name="image_files[]" <?= $hasImages ? 'multiple' : '' ?>
                        accept="<?= e(CollectionCoverStorage::accept()) ?>">
 
                 <p class="field__hint">
-                    Ảnh LOOKBOOK — người đeo kính, không phải ảnh sản phẩm nền
-                    trắng. Định dạng <?= e(CollectionCoverStorage::formatLabel()) ?>,
+                    Ảnh LOOKBOOK — người đeo kính, không phải ảnh sản phẩm nền trắng.
+                    Định dạng <?= e(CollectionCoverStorage::formatLabel()) ?>, mỗi ảnh
                     tối đa <?= e(CollectionCoverStorage::limitLabel()) ?>.
+                    <?php if ($hasImages): ?>
+                        Tối đa <?= (int) CollectionCoverStorage::MAX_FILES ?> ảnh cho một bộ.
+                        <strong>Ảnh đại diện</strong> là ảnh đi vào thẻ ngoài /bo-suu-tap,
+                        mega menu và khối ở trang chủ; những ảnh còn lại xếp thành dải
+                        lookbook trên trang chi tiết. Ảnh mới xếp theo thứ tự chọn — lưu
+                        xong mở lại form này để đổi ảnh đại diện.
+                    <?php else: ?>
+                        Nhận nhiều ảnh cho một bộ cần nâng cấp cơ sở dữ liệu
+                        (<code>2026-08-28-bo-suu-tap-nhieu-anh.sql</code>); trước mắt
+                        mỗi bộ vẫn chỉ một ảnh.
+                    <?php endif; ?>
                 </p>
             </div>
 

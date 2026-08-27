@@ -116,29 +116,90 @@ class CollectionModel extends BaseModel
     }
 
     /**
-     * Ảnh bìa của một bộ — RỖNG nếu không dùng được.
+     * MỌI ảnh dùng được của một bộ, theo thứ tự đã sắp.
      *
-     * Kiểm cả sự TỒN TẠI của file, không chỉ kiểm chuỗi khác rỗng. Đường dẫn
-     * trong CSDL là chữ nhân viên gõ (hoặc dữ liệu gieo sẵn), nên nó trỏ tới
-     * một file đã bị xoá hay gõ sai là chuyện thường. Trả nguyên đường dẫn
+     * ─────────────────────────────────────────────────────────────────────────
+     * LỌC THEO FILE CÓ THẬT, KHÔNG CHỈ THEO CHUỖI KHÁC RỖNG
+     *
+     * Đường dẫn trong CSDL là chữ nhân viên tải lên hoặc dữ liệu gieo sẵn, nên
+     * nó trỏ tới một file đã bị xoá là chuyện thường. Trả nguyên đường dẫn
      * hỏng ra view thì trình duyệt vẽ icon ảnh vỡ — xấu hơn hẳn ô giữ chỗ mà
-     * chính view đã có sẵn.
+     * view đã có sẵn. Đây là luật cũ của cover(), nay áp cho cả danh sách.
      *
-     * Đây cũng là chỗ thay cho cặp 'image' / 'image_sample' của
-     * config/collections.php cũ: một cột ảnh, một phép kiểm, thay vì hai khoá
-     * mà nhân viên không bao giờ nhìn thấy khoá thứ hai.
+     * ─────────────────────────────────────────────────────────────────────────
+     * CÒN ĐỌC `cover_image` — NHƯNG CHỈ NHƯ LƯỚI AN TOÀN
+     *
+     * Từ 2026-08-28 ảnh nằm ở cột `images`; migration cùng ngày đã chép ảnh bìa
+     * cũ sang. Nhánh đọc `cover_image` bên dưới chỉ cứu dòng nào có ảnh bìa mà
+     * `images` lại rỗng — tình huống migration đã dọn, nhưng vẫn xuất hiện
+     * được nếu ai đó sửa tay trong phpMyAdmin.
+     *
+     * BỎ NHÁNH ẤY ĐI khi nào cột `cover_image` được xoá hẳn. Hai thứ đó phải
+     * đi cùng nhau: bỏ nhánh mà giữ cột thì cột thành rác không ai đọc, bỏ cột
+     * mà giữ nhánh thì đây là một câu truy cập vào cột không tồn tại.
+     *
+     * @return string[]
+     */
+    public static function images(array $collection): array
+    {
+        $tho = $collection['images'] ?? null;
+
+        if (is_string($tho)) {
+            $tho = json_decode($tho, true);
+        }
+
+        $danhSach = is_array($tho) ? $tho : [];
+
+        // Lưới an toàn — xem khối chú thích trên.
+        if ($danhSach === []) {
+            $bia = trim((string) ($collection['cover_image'] ?? ''));
+
+            if ($bia !== '') {
+                $danhSach = [$bia];
+            }
+        }
+
+        $ra = [];
+
+        foreach ($danhSach as $duongDan) {
+            if (!is_string($duongDan) || trim($duongDan) === '') {
+                continue;
+            }
+
+            if (is_file(ROOT_PATH . '/' . ltrim($duongDan, '/'))) {
+                $ra[] = $duongDan;
+            }
+        }
+
+        return $ra;
+    }
+
+    /**
+     * Ảnh ĐẠI DIỆN của một bộ — RỖNG nếu không có ảnh nào dùng được.
+     *
+     * Là phần tử đầu của images(), không phải một cột riêng: đổi ảnh đại diện
+     * nghĩa là đưa ảnh đó lên đầu mảng, đúng quy ước của `products`.`images`.
+     * Một cột "ảnh nào là bìa" riêng sẽ là thứ thứ hai phải giữ cho khớp, và
+     * nó sẽ lệch vào đúng ngày ai đó xoá tấm ảnh mà nó đang trỏ tới.
      *
      * Nơi gọi tự quyết làm gì với chuỗi rỗng — trang /bo-suu-tap vẽ ô giữ chỗ,
      * mega menu thì ẩn hẳn cả thẻ.
      */
     public static function cover(array $collection): string
     {
-        $duongDan = trim((string) ($collection['cover_image'] ?? ''));
+        return self::images($collection)[0] ?? '';
+    }
 
-        if ($duongDan === '') {
-            return '';
-        }
-
-        return is_file(ROOT_PATH . '/' . ltrim($duongDan, '/')) ? $duongDan : '';
+    /**
+     * Ảnh còn lại sau ảnh đại diện — dải lookbook trên trang chi tiết.
+     *
+     * Tách khỏi images() để view không phải tự cắt phần tử đầu ở mỗi chỗ dùng;
+     * cắt sai một chỗ là ảnh bìa hiện hai lần liền nhau trên cùng một trang.
+     *
+     * @return string[]
+     */
+    public static function gallery(array $collection): array
+    {
+        return array_slice(self::images($collection), 1);
     }
 }

@@ -258,6 +258,36 @@
 .cdet__soon a { font-weight: 600; color: var(--brand); }
 
 /* ============================================================
+   LỚP 1 — DẢI LOOKBOOK
+
+   Lưới TỰ GIÃN theo số ảnh: auto-fill với minmax nên một bộ ba ảnh ra ba
+   ô rộng, một bộ mười lăm ảnh ra nhiều hàng ô nhỏ hơn — mà không cần biết
+   trước số ảnh. Ép số cột cố định thì bộ ít ảnh để lại ô trống, bộ nhiều
+   ảnh thì cao ngoằng.
+
+   260px là mốc để ảnh còn đọc được mặt người trong khung lookbook; dưới
+   mức đó nên để ít cột hơn và ảnh to hơn.
+   ============================================================ */
+
+.cdet__look-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cdet__look-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius);
+}
+
+/* ============================================================
    LỚP 1 — CÂU CHUYỆN + CỘT BÊN
 
    Cột chữ hẹp cố ý (68ch): đây là khối duy nhất trên trang có nhiều đoạn
@@ -1225,6 +1255,9 @@
 
 @media (max-width: 600px) {
     .cdet { gap: 48px; }
+
+    /* Một cột: hai ô 150px cạnh nhau thì không còn nhìn ra cái gì trong ảnh. */
+    .cdet__look-grid { grid-template-columns: 1fr; }
 
     .cdet__h2 { font-size: 23px; }
 
