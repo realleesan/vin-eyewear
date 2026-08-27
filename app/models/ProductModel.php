@@ -472,6 +472,71 @@ class ProductModel extends BaseModel
         return array_map([self::class, 'decode'], $rows);
     }
 
+    /**
+     * Sản phẩm của MỘT bộ sưu tập, theo slug.
+     *
+     * `products.collection` lưu thẳng SLUG của bộ (xem CollectionModel), nên
+     * đây là một phép so khớp bằng, không phải đi qua ProductTaxonomy như
+     * catalog(). Hai đường cho ra cùng một tập: taxonomy chỉ slugify lại đúng
+     * chuỗi đang nằm trong cột này.
+     *
+     * Thứ tự giống related()/featured(): hàng nổi bật trước, rồi hàng mới.
+     * Trang chi tiết bộ sưu tập chỉ lấy vài món làm mẫu nên thứ tự này quyết
+     * định cửa hàng khoe món nào — dùng đúng cái cần đánh dấu is_featured.
+     */
+    public static function inCollection(string $slug, int $limit = 8): array
+    {
+        if ($slug === '') {
+            return [];
+        }
+
+        $rows = Database::fetchAll(
+            'SELECT * FROM products
+              WHERE is_visible = 1
+                AND collection = :s
+              ORDER BY is_featured DESC, created_at DESC
+              LIMIT ' . max(1, $limit),
+            ['s' => $slug]
+        );
+
+        return array_map([self::class, 'decode'], $rows);
+    }
+
+    /**
+     * Số lượng và giá thấp nhất của một bộ sưu tập — MỘT câu lệnh.
+     *
+     * Không đếm bằng count(inCollection()): hàm kia có LIMIT, nên đếm trên kết
+     * quả của nó là đếm số món ĐANG KHOE chứ không phải số món có thật. Nút
+     * "Xem tất cả N sản phẩm" mà nói sai con số thì người bấm vào đếm được
+     * ngay, và từ đó không tin con số nào trên trang nữa.
+     *
+     * Giá thấp nhất bỏ qua hàng chưa nhập giá (price = 0): "từ 0₫" là câu
+     * không ai muốn đọc trên một trang bán kính.
+     *
+     * @return array{count:int, minPrice:int|null}
+     */
+    public static function collectionStats(string $slug): array
+    {
+        if ($slug === '') {
+            return ['count' => 0, 'minPrice' => null];
+        }
+
+        $row = Database::fetchOne(
+            'SELECT COUNT(*) AS n, MIN(NULLIF(price, 0)) AS min_price
+               FROM products
+              WHERE is_visible = 1
+                AND collection = :s',
+            ['s' => $slug]
+        );
+
+        return [
+            'count'    => (int) ($row['n'] ?? 0),
+            'minPrice' => isset($row['min_price']) && $row['min_price'] !== null
+                ? (int) $row['min_price']
+                : null,
+        ];
+    }
+
     // ========================================================================
     // THỬ KÍNH AR
     //

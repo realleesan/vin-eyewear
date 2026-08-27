@@ -631,6 +631,10 @@ CREATE TABLE `collections` (
     `name`        VARCHAR(160) NOT NULL,
     `tagline`     VARCHAR(255) NULL,
     `intro`       TEXT         NULL,
+    -- `intro` là MỘT đoạn (thẻ ở /bo-suu-tap), `story` là NHIỀU đoạn và chỉ
+    -- hiện ở trang chi tiết /bo-suu-tap/{slug}. Tách ra vì hai chỗ có kích
+    -- thước khác hẳn nhau — xem migrations/2026-08-27-bo-suu-tap-trang-chi-tiet.sql.
+    `story`       TEXT         NULL,
     `cover_image` VARCHAR(500) NULL,
     `launched_at` DATE         NULL,
     `sort_order`  SMALLINT     NOT NULL DEFAULT 0,

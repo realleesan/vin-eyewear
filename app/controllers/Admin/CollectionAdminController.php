@@ -52,6 +52,9 @@ class CollectionAdminController extends AdminController
             'canEdit'     => UserModel::hasRole($this->userId, 'admin')
                           || UserModel::hasRole($this->userId, 'manager'),
             'editing'     => isset($_GET['sua']) ? CollectionModel::find((string) $_GET['sua']) : null,
+            // Cột `story` có thể chưa tồn tại trên máy chưa chạy migration —
+            // xem khối chú thích trong save(). Form giấu ô nhập khi chưa có.
+            'hasStory'    => Database::columnExists('collections', 'story'),
         ]);
     }
 
@@ -132,6 +135,30 @@ class CollectionAdminController extends AdminController
             'sort_order'  => (int) ($_POST['sort_order'] ?? 0),
             'is_visible'  => isset($_POST['is_visible']) ? 1 : 0,
         ];
+
+        /*
+         * `story` CHỈ ghi khi cột đã có thật.
+         *
+         * Cột này ra đời cùng migration 2026-08-27-bo-suu-tap-trang-chi-tiet,
+         * mà mã lên máy chủ bằng FTP TỰ ĐỘNG còn migration thì phải mở
+         * phpMyAdmin bấm tay — khoảng giữa hai việc đó dài hàng giờ là chuyện
+         * thường. Trong khoảng ấy, nhét 'story' vào câu INSERT/UPDATE là lỗi
+         * 1054 và nhân viên không lưu nổi một bộ sưu tập nào, kể cả những thứ
+         * chẳng liên quan gì tới trang chi tiết.
+         *
+         * Cùng lối mà ProductModel dùng cho cột `collection` (xem chỗ gọi
+         * SHOW COLUMNS trong đó). Bỏ được đoạn này khi mọi máy đã chạy xong
+         * migration — nhưng đừng vội, giá của việc quên là cả trang quản trị
+         * bộ sưu tập.
+         *
+         * Form cũng tự giấu ô nhập trong cùng tình huống, nên không có ca
+         * "gõ xong bấm lưu rồi chữ biến mất".
+         */
+        if (Database::columnExists('collections', 'story')) {
+            // ?: null chứ không để chuỗi rỗng: view công khai ẩn cả khối khi
+            // rỗng, mà "chưa ai viết" nói bằng NULL thì đọc lại trong CSDL rõ hơn.
+            $data['story'] = trim((string) ($_POST['story'] ?? '')) ?: null;
+        }
 
         if ($id !== '' && CollectionModel::exists(['id' => $id])) {
             CollectionModel::update($id, $data);

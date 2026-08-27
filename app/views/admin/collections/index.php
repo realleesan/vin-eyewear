@@ -38,9 +38,16 @@ $dangDung = $ed === null ? 0 : (int) ($counts[$ed['slug']] ?? 0);
                 <?php $soHang = (int) ($counts[$c['slug']] ?? 0); ?>
                 <tr>
                     <td>
-                        <?php /* Link mở thẳng danh mục ĐÃ LỌC — đúng cái mà nút
-                                 "Xem chi tiết" ngoài trang công khai làm, nên
-                                 nhân viên kiểm được ngay bộ này ra hàng gì. */ ?>
+                        <?php /* Link mở thẳng danh mục ĐÃ LỌC, để nhân viên kiểm
+                                 được ngay bộ này ra hàng gì.
+
+                                 KHÔNG trỏ sang /bo-suu-tap/<slug> dù đó mới là
+                                 nơi nút "Xem chi tiết" ngoài trang công khai
+                                 dẫn tới: trang đó trả 404 cho bộ đang ẩn, mà
+                                 bảng này thì hiện CẢ bộ ẩn — nửa số dòng sẽ là
+                                 link chết. Đường xem trang chi tiết nằm trong
+                                 ô "Câu chuyện" của form, chỗ chỉ mở ra khi
+                                 đang sửa đúng một bộ. */ ?>
                         <a href="/san-pham?collection=<?= e(rawurlencode($c['slug'])) ?>"
                            target="_blank" rel="noopener"><?= e($c['name']) ?></a>
                         <span class="atable__sub"><code><?= e($c['slug']) ?></code></span>
@@ -124,8 +131,9 @@ $dangDung = $ed === null ? 0 : (int) ($counts[$ed['slug']] ?? 0);
                     </p>
                 <?php else: ?>
                     <p class="field__hint">
-                        Nằm trong địa chỉ: /san-pham?collection=<strong>slug</strong>.
-                        Đặt xong thì đừng đổi nữa.
+                        Nằm trong HAI địa chỉ: /bo-suu-tap/<strong>slug</strong>
+                        (trang chi tiết) và /san-pham?collection=<strong>slug</strong>
+                        (danh mục đã lọc). Đặt xong thì đừng đổi nữa.
                     </p>
                 <?php endif; ?>
             </div>
@@ -158,14 +166,51 @@ $dangDung = $ed === null ? 0 : (int) ($counts[$ed['slug']] ?? 0);
             </div>
 
             <div class="field field--wide">
-                <label for="intro">Giới thiệu</label>
+                <label for="intro">Giới thiệu <span class="field__opt">(một đoạn)</span></label>
                 <textarea id="intro" name="intro" rows="4"><?= e($ed['intro'] ?? '') ?></textarea>
                 <p class="field__hint">
-                    Đoạn dài, chỉ hiện ở trang <a href="/bo-suu-tap" target="_blank"
-                    rel="noopener">/bo-suu-tap</a>. Viết cho người đang phân vân bộ
-                    nào hợp với mình.
+                    Hiện trên thẻ ở <a href="/bo-suu-tap" target="_blank"
+                    rel="noopener">/bo-suu-tap</a> và ở đầu trang chi tiết của bộ.
+                    Viết cho người đang phân vân bộ nào hợp với mình. Dài quá thì
+                    thẻ cao hơn ảnh và hàng thẻ so le bị gãy nhịp — chuyện dài
+                    để dành cho ô ngay dưới.
                 </p>
             </div>
+
+            <?php /* Ô này biến mất trên máy chưa chạy migration
+                     2026-08-27-bo-suu-tap-trang-chi-tiet: gõ vào một ô không có
+                     cột nào đỡ thì bấm Lưu xong chữ bốc hơi không một lời nào
+                     — xem khối chú thích trong CollectionAdminController::save(). */ ?>
+            <?php if ($hasStory): ?>
+            <div class="field field--wide">
+                <label for="story">Câu chuyện <span class="field__opt">(nhiều đoạn)</span></label>
+                <textarea id="story" name="story" rows="10"><?= e($ed['story'] ?? '') ?></textarea>
+                <p class="field__hint">
+                    Chỉ hiện ở trang chi tiết của chính bộ này
+                    <?php /* Chỉ trỏ link khi bộ ĐANG HIỆN: trang chi tiết trả
+                             404 cho bộ ẩn (cố ý — xem CollectionController::show),
+                             nên với bộ đang chuẩn bị thì in đường dẫn ra dưới
+                             dạng chữ, đủ để biết nó sẽ nằm ở đâu. */ ?>
+                    <?php if (!empty($ed['slug'])): ?>
+                        <?php if (!empty($ed['is_visible'])): ?>
+                            (<a href="/bo-suu-tap/<?= e(rawurlencode($ed['slug'])) ?>"
+                                target="_blank" rel="noopener">/bo-suu-tap/<?= e($ed['slug']) ?></a>)
+                        <?php else: ?>
+                            (<code>/bo-suu-tap/<?= e($ed['slug']) ?></code>, mở được
+                            khi bật "Đang hiển thị")
+                        <?php endif; ?>
+                    <?php endif; ?>
+                    — nơi duy nhất có đủ chỗ để kể: bộ này ra đời từ đâu, hợp với
+                    ai, chọn chất liệu và dáng gọng thế vì lý do gì.
+                    <?php /* Nói rõ luật ngắt đoạn NGAY Ở ĐÂY: nếp gõ tự nhiên
+                             trong <textarea> là xuống dòng liên tục, mà trang
+                             công khai chỉ ngắt đoạn ở DÒNG TRỐNG — không nói
+                             thì cả bài ra thành một khối chữ liền. */ ?>
+                    Cách nhau một <strong>dòng trống</strong> để sang đoạn mới.
+                    Bỏ trống thì trang chi tiết không hiện khối này.
+                </p>
+            </div>
+            <?php endif; ?>
 
             <div class="field field--wide">
                 <span class="field__label">Ảnh bìa</span>

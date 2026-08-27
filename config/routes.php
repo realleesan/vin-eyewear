@@ -51,11 +51,18 @@ return [
     'san-pham/{slug}'  => 'ProductDetailController@show',
 
     /*
-     * BỘ SƯU TẬP — KHÔNG có route con /bo-suu-tap/{slug}, cố ý.
-     * Nút "Xem chi tiết" dẫn thẳng sang /san-pham?collection=<slug>; lý do
-     * đầy đủ ghi ở đầu app/controllers/CollectionController.php.
+     * BỘ SƯU TẬP — danh sách, rồi trang chi tiết của từng bộ.
+     *
+     * Trang chi tiết KHÔNG dựng lại lưới hàng: nó kể câu chuyện của bộ rồi đẩy
+     * người xem sang /san-pham?collection=<slug>. Lý do đầy đủ (kể cả vì sao
+     * route này từng bị bỏ hôm 2026-08-25 rồi dựng lại) ghi ở đầu
+     * app/controllers/CollectionController.php.
+     *
+     * {slug} là slug trong bảng `collections`, cũng chính là chuỗi nằm ở cột
+     * products.collection — một giá trị, đừng sinh thêm giá trị thứ hai.
      */
-    'bo-suu-tap'       => 'CollectionController@index',
+    'bo-suu-tap'         => 'CollectionController@index',
+    'bo-suu-tap/{slug}'  => 'CollectionController@show',
 
     'gioi-thieu'       => 'AboutController@index',
     'lien-he'          => 'ContactController@index',

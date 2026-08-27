@@ -4,14 +4,19 @@
  * collection/index.php — Bộ sưu tập (/bo-suu-tap).
  *
  * Một thẻ cho mỗi bộ: ảnh bìa · ngày ra mắt · tên · giới thiệu · nút
- * "Xem chi tiết" dẫn sang /san-pham?collection=<slug>.
+ * "Xem chi tiết" dẫn sang /bo-suu-tap/<slug>.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * NÚT DẪN SANG DANH MỤC ĐÃ LỌC SẴN, KHÔNG PHẢI SANG TRANG CHI TIẾT
+ * NÚT ĐÃ ĐỔI ĐÍCH (2026-08-27)
  *
- * Không có /bo-suu-tap/{slug} — lý do đầy đủ ở đầu CollectionController. Khi
- * sửa chỗ này chỉ cần nhớ: `slug` trong URL phải khớp `products.collection`,
- * nên đừng tự dựng lại chuỗi truy vấn hay bọc mã hoá hai lần.
+ * Trước đó nó dẫn thẳng sang /san-pham?collection=<slug>, tức là bỏ qua hẳn
+ * trang chi tiết. Nay có trang chi tiết thật — lý do vì sao nó đáng tồn tại
+ * ghi ở đầu CollectionController; chính trang đó mới là nơi đặt nút sang danh
+ * mục đã lọc sẵn.
+ *
+ * `slug` đi vào ĐƯỜNG DẪN chứ không còn vào chuỗi truy vấn, nên mã hoá bằng
+ * rawurlencode() (đúng như trang chi tiết sản phẩm làm), không phải
+ * http_build_query().
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -35,7 +40,7 @@ $ngayRaMat = static function (?string $date): string {
     'head_crumbs' => [['label' => 'Bộ sưu tập']],
     'head_title'  => 'Bộ sưu tập',
     'head_lead'   => 'Mỗi bộ là một cách chọn gọng và tròng cho một kiểu ngày. '
-                   . 'Xem bộ nào hợp bạn nhất rồi lọc thẳng sang danh mục.',
+                   . 'Mở bộ nào nghe hợp với bạn để xem kỹ, rồi lọc thẳng sang danh mục.',
 ]); ?>
 
 <section class="colls">
@@ -99,7 +104,7 @@ $ngayRaMat = static function (?string $date): string {
                             <p class="coll__intro"><?= e($c['intro']) ?></p>
                         <?php endif; ?>
 
-                        <a class="coll__cta" href="/san-pham?collection=<?= e(rawurlencode($c['slug'])) ?>">
+                        <a class="coll__cta" href="/bo-suu-tap/<?= e(rawurlencode($c['slug'])) ?>">
                             Xem chi tiết
                             <?= icon('arrow-right', 'coll__cta-ico', 18) ?>
                         </a>

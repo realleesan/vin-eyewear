@@ -137,6 +137,8 @@ MIGRATIONS=(
     # Gói chiết suất rời config xuống CSDL. Mốc là chính bảng `lens_packages` —
     # không có gì khác tạo ra nó.
     "2026-08-27-bang-goi-trong.sql|table|lens_packages|"
+    # Trang chi tiết bộ sưu tập. Mốc là cột `story` — cột duy nhất file đó thêm.
+    "2026-08-27-bo-suu-tap-trang-chi-tiet.sql|column|collections|story"
 )
 
 # ---------------------------------------------------------------------------

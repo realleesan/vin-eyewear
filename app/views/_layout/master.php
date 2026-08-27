@@ -143,10 +143,11 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
         // riêng (.nw*); nó không còn mượn .section-h2/.eyebrow của trang chủ.
         // Trang CHI TIẾT thì vẫn theo bản Lovable nên giữ nguyên.
         // Trang bộ sưu tập có bộ lớp riêng (.coll*), không mượn của trang chủ.
-        // KHÔNG có 'collection/detail': nút "Xem chi tiết" dẫn sang
-        // /san-pham?collection=… chứ không sang trang riêng — xem
-        // app/controllers/CollectionController.php.
-        'collection/index' => ['collection.css'],
+        // Trang CHI TIẾT của một bộ là file CSS RIÊNG với tiền tố riêng (.cdet*)
+        // chứ không dùng chung collection.css: hai trang chỉ giống nhau ở khối
+        // đầu, phần còn lại khác hẳn — xem đầu assets/css/collection-detail.css.
+        'collection/index'  => ['collection.css'],
+        'collection/detail' => ['collection-detail.css'],
         'about/index'    => ['about.css'],
         // Trang liên hệ nay dựng theo "Vin Eyewear Contact.dc.html" và có bộ
         // lớp riêng; nó không còn mượn .section-h2/.eyebrow của trang chủ.
