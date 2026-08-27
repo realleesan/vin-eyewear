@@ -60,6 +60,35 @@ class BookingModel extends BaseModel
     ];
 
     /**
+     * Hai trạng thái nhân viên ĐẶT ĐƯỢC bằng ô chọn ở /quan-tri/lich-hen.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO KHÔNG PHẢI CẢ BỐN
+     *
+     * STATUSES ở trên là VÒNG ĐỜI — bốn chỗ một cái hẹn có thể đứng. Hằng này
+     * là VIỆC NHÂN VIÊN LÀM, và hai thứ đó không trùng nhau:
+     *
+     *   pending    không ai "đặt" nó cả. Nó là chỗ mọi cái hẹn bắt đầu, do
+     *              khách bấm đặt lịch mà thành (DEFAULT của cột trong CSDL).
+     *              Bày nó trong ô chọn là mời nhân viên đẩy một buổi đã gọi xác
+     *              nhận rồi quay ngược về hàng chờ — thao tác không có nghĩa
+     *              nghiệp vụ nào, mà lại làm huy hiệu thanh bên đếm sai.
+     *   cancelled  là NGÃ RẼ RA KHỎI vòng đời, không phải một bước tiến tới.
+     *              Nó đi bằng nút "Huỷ lịch" riêng có hỏi lại — cùng lẽ với nút
+     *              "Đã nhận tiền" ở bảng đơn hàng: việc khác loại thì phải khác
+     *              dáng, đừng để lẫn vào một danh sách xổ xuống nơi trượt tay
+     *              một nấc là huỷ mất buổi hẹn của khách.
+     *
+     * Cả bốn trạng thái VẪN CÒN NGUYÊN trong dữ liệu và trong dải viên lọc —
+     * lọc là để TÌM, không phải để đổi. Bỏ viên "Chờ xác nhận" đi thì không còn
+     * cách nào lọc ra đúng những buổi cần gọi, việc chính của trang này mỗi sáng.
+     *
+     * ĐÂY LÀ LUẬT DO KHÁCH HÀNG CHỐT ngày 2026-08-27, chưa nằm trong SRS.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public const STAFF_STATUSES = ['confirmed', 'done'];
+
+    /**
      * Tạo lịch hẹn.
      *
      * @return array ['ok'=>true,'code'=>...] | ['ok'=>false,'error'=>...]

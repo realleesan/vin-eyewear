@@ -56,17 +56,69 @@
                         </td>
                         <td><?= e($a['service_type']) ?></td>
                         <td>
+                            <?php
+                            /*
+                             * Ô CHỌN CHỈ CÓ HAI VIỆC NHÂN VIÊN LÀM ĐƯỢC.
+                             *
+                             * Bốn trạng thái của vòng đời vẫn còn nguyên trong
+                             * dữ liệu và trong dải viên lọc phía trên; chỉ ô
+                             * chọn này rút xuống còn "Đã xác nhận" và "Đã hoàn
+                             * tất". Vì sao — xem BookingModel::STAFF_STATUSES.
+                             *
+                             * MỘT LỊCH ĐANG 'pending' HAY 'cancelled' THÌ SAO?
+                             *
+                             * Nó vẫn phải ĐỌC RA đúng trạng thái đang có, nếu
+                             * không thì mọi lịch chờ xác nhận đều hiện chữ "Đã
+                             * xác nhận" (giá trị đầu danh sách) trong khi CSDL
+                             * nói ngược lại — bảng nói dối, và đó là kiểu sai
+                             * không ai phát hiện ra cho tới lúc gọi nhầm khách.
+                             *
+                             * Nên trạng thái hiện tại được chèn thành một
+                             * <option> ĐÃ KHOÁ đứng đầu: hiện đúng chữ, mà bấm
+                             * vào không chọn lại được. Bỏ `disabled` đi thì nó
+                             * thành tuỳ chọn thứ ba và luật vừa chốt hỏng ngay.
+                             */
+                            $khopDatDuoc = in_array($a['status'], $staffStatuses, true);
+                            ?>
                             <form method="post" action="/quan-tri/lich-hen/trang-thai" class="astatus">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="id" value="<?= e($a['id']) ?>">
                                 <label class="sr-only" for="st-<?= e($a['id']) ?>">Trạng thái lịch <?= e($a['code']) ?></label>
                                 <select id="st-<?= e($a['id']) ?>" name="status" data-autosubmit>
-                                    <?php foreach ($statuses as $key => $label): ?>
-                                        <option value="<?= e($key) ?>"<?= $a['status'] === $key ? ' selected' : '' ?>><?= e($label) ?></option>
+                                    <?php if (!$khopDatDuoc): ?>
+                                        <option value="" selected disabled><?= e($statuses[$a['status']] ?? $a['status']) ?></option>
+                                    <?php endif; ?>
+                                    <?php foreach ($staffStatuses as $key): ?>
+                                        <option value="<?= e($key) ?>"<?= $a['status'] === $key ? ' selected' : '' ?>><?= e($statuses[$key]) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                                 <button type="submit" class="astatus__save">Lưu</button>
                             </form>
+
+                            <?php if ($a['status'] !== 'cancelled'): ?>
+                                <?php
+                                /* Câu hỏi lại do CÙNG một biến sinh ra cho cả
+                                   data-confirm lẫn onsubmit, nên hộp thoại của
+                                   dự án và hộp confirm() của trình duyệt không
+                                   thể nói hai câu khác nhau. confirm-dialog.js
+                                   gỡ onsubmit khi nó sẵn sàng thay thế — xem
+                                   khối chú thích đầu file đó.
+
+                                   Đây là chỗ hiếm hoi "tăng cường" không được
+                                   phép làm mất một lớp bảo vệ: huỷ lịch là việc
+                                   khách hàng ở đầu bên kia chịu hậu quả. */
+                                $hoiHuy = sprintf('Huỷ lịch hẹn %s của %s?', $a['code'], $a['full_name']);
+                                ?>
+                                <form method="post" action="/quan-tri/lich-hen/huy" class="ahuy"
+                                      data-confirm="<?= e($hoiHuy) ?>"
+                                      data-confirm-title="Huỷ lịch hẹn?"
+                                      data-confirm-ok="Huỷ lịch"
+                                      onsubmit="return confirm('<?= e($hoiHuy) ?>')">
+                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                    <input type="hidden" name="id" value="<?= e($a['id']) ?>">
+                                    <button type="submit" class="ahuy__btn">Huỷ lịch</button>
+                                </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

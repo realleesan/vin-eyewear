@@ -229,6 +229,11 @@ return [
 
     'quan-tri/lich-hen'           => 'AppointmentAdminController@index',
     'quan-tri/lich-hen/trang-thai'=> 'AppointmentAdminController@updateStatus', // POST
+    /* Huỷ lịch đi đường RIÊNG, không phải một giá trị của ô chọn trạng thái:
+       huỷ là ngã rẽ ra khỏi vòng đời chứ không phải một bước tiến tới, và ô
+       chọn thì tự gửi form nên trượt tay một nấc là mất buổi hẹn của khách.
+       Lý do đầy đủ ở AppointmentAdminController::cancel(). */
+    'quan-tri/lich-hen/huy'       => 'AppointmentAdminController@cancel',       // POST
 
     'quan-tri/lien-he'            => 'ContactAdminController@index',
     /* Đường ĐẨY SANG ZALO, thay cho 'lien-he/trang-thai' bỏ ngày 2026-08-26.

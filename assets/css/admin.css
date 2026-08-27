@@ -1070,6 +1070,43 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
  */
 .js form:has(select[data-autosubmit]) .astatus__save { display: none; }
 
+/* --- Nút huỷ lịch hẹn --------------------------------------- */
+
+/*
+ * Đứng DƯỚI ô chọn trạng thái trong cùng một ô bảng, không đứng cạnh.
+ *
+ * Hai form khác nhau: một cái đẩy lịch tới bước tiếp theo, một cái đưa nó ra
+ * khỏi vòng đời. Xếp ngang hàng thì mắt đọc thành một cụm ba nút cùng loại, và
+ * "Huỷ lịch" nằm ngay cạnh "Lưu" là chỗ tay trượt tới. Xuống dòng và lặng hẳn
+ * đi thì nó vẫn ở đó khi cần mà không mời gọi ai cả.
+ *
+ * KHÔNG dùng .astatus__save dù dáng gần giống: lớp đó bị ẩn trong mọi form có
+ * ô chọn tự gửi (luật ngay trên), mà nút này thì luôn phải bấm được — cùng cái
+ * bẫy đã ghi ở .apay__btn.
+ */
+.ahuy { margin-top: 6px; }
+
+.ahuy__btn {
+    height: 28px;
+    padding-inline: 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--a-btn-radius);
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+/* Chỉ ĐỎ khi rê chuột tới. Sơn đỏ sẵn thì cả cột thành một dãy cảnh báo, và
+   mắt học cách bỏ qua màu đỏ — đúng lý lẽ đã ghi ở .amoney__pay. */
+.ahuy__btn:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
 .ainv.is-low  td { background: color-mix(in srgb, var(--brand) 5%, transparent); }
 .ainv.is-out  td { background: color-mix(in srgb, var(--danger) 6%, transparent); }
 
