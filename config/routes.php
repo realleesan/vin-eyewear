@@ -262,6 +262,11 @@ return [
     'quan-tri/bo-suu-tap'     => 'CollectionAdminController@index',
     'quan-tri/bo-suu-tap/luu' => 'CollectionAdminController@save',      // POST
     'quan-tri/bo-suu-tap/xoa' => 'CollectionAdminController@delete',    // POST
+    /* CÂU HỎI THƯỜNG GẶP của một bộ — hai đường riêng, không gộp vào /luu.
+       Form bộ sưu tập là MỘT <form>, mà mỗi câu hỏi cần nút xoá của riêng nó,
+       và HTML không cho lồng <form> vào nhau. */
+    'quan-tri/bo-suu-tap/faq/luu' => 'CollectionAdminController@saveFaq',   // POST
+    'quan-tri/bo-suu-tap/faq/xoa' => 'CollectionAdminController@deleteFaq', // POST
 
     'quan-tri/bien-the'     => 'VariantAdminController@index',
     'quan-tri/bien-the/luu' => 'VariantAdminController@save',    // POST

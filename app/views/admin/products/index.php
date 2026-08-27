@@ -317,6 +317,268 @@ if ($ed !== null) {
                 </p>
             </div>
 
+            <?php if ($hasSpecs): ?>
+                <?php
+                /*
+                 * 27 Ô THÔNG SỐ KÍNH — nuôi bảng so sánh và ngăn kéo thông số
+                 * trên trang chi tiết bộ sưu tập.
+                 *
+                 * Không ô nào bắt buộc. Ô trống thì DÒNG tương ứng biến mất
+                 * khỏi trang chứ không in dấu gạch, nên nhập được tới đâu thì
+                 * trang đẹp tới đó — xem EyewearSpecs.
+                 *
+                 * Ô "Thông số" tự do ở cuối form vẫn còn và vẫn dùng được cho
+                 * những gì không có ô riêng ở đây (ví dụ chất liệu càng kính).
+                 * Đừng gõ lại vào đó những thứ đã có ô riêng: hai chỗ cùng nói
+                 * một điều là hai chỗ sẽ lệch nhau.
+                 */
+                $cs = static fn (string $cot, string $khoa): bool => in_array(
+                    $khoa,
+                    preg_split('/\s*,\s*/', (string) ($ed[$cot] ?? ''), -1, PREG_SPLIT_NO_EMPTY) ?: [],
+                    true
+                );
+                ?>
+
+                <p class="field__label field--wide" style="margin-top: 8px;">Thông số kính</p>
+
+                <div class="field">
+                    <label for="eyewear_type">Phân loại</label>
+                    <select id="eyewear_type" name="eyewear_type">
+                        <option value="">— Chưa xếp loại —</option>
+                        <?php foreach ((array) config('eyewear.types') as $v => $l): ?>
+                            <option value="<?= e($v) ?>"<?= ($ed['eyewear_type'] ?? '') === $v ? ' selected' : '' ?>><?= e($l) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="field__hint">
+                        Quyết định cách đọc dòng giá: gọng cận bán RỜI tròng, kính râm
+                        thì giá đã gồm tròng. Khác với Danh mục ở trên.
+                    </p>
+                </div>
+
+                <div class="field">
+                    <label for="frame_finish">Hoàn thiện bề mặt</label>
+                    <input type="text" id="frame_finish" name="frame_finish" maxlength="120"
+                           placeholder="Đánh bóng tay, cạnh vát ba lớp"
+                           value="<?= e($ed['frame_finish'] ?? '') ?>">
+                </div>
+
+                <div class="field">
+                    <label for="hinge_type">Loại bản lề</label>
+                    <input type="text" id="hinge_type" name="hinge_type" maxlength="120"
+                           placeholder="Lò xo giấu trong thân càng"
+                           value="<?= e($ed['hinge_type'] ?? '') ?>">
+                </div>
+
+                <div class="field">
+                    <label for="nose_pad">Đệm mũi</label>
+                    <input type="text" id="nose_pad" name="nose_pad" maxlength="120"
+                           placeholder="Silicone, chỉnh được"
+                           value="<?= e($ed['nose_pad'] ?? '') ?>">
+                </div>
+
+                <div class="field">
+                    <label for="weight_g">Trọng lượng (gram)</label>
+                    <input type="number" id="weight_g" name="weight_g" min="0" max="500" step="1"
+                           value="<?= !empty($ed['weight_g']) ? (int) $ed['weight_g'] : '' ?>">
+                    <p class="field__hint">Cả tròng. Dưới 25g là mốc đeo được cả ngày.</p>
+                </div>
+
+                <div class="field">
+                    <label for="lens_width_mm">Rộng tròng (mm)</label>
+                    <input type="number" id="lens_width_mm" name="lens_width_mm" min="0" max="99" step="1"
+                           value="<?= !empty($ed['lens_width_mm']) ? (int) $ed['lens_width_mm'] : '' ?>">
+                    <p class="field__hint">Số ĐẦU của chuẩn ghi 52□18-145.</p>
+                </div>
+
+                <div class="field">
+                    <label for="bridge_mm">Cầu kính (mm)</label>
+                    <input type="number" id="bridge_mm" name="bridge_mm" min="0" max="99" step="1"
+                           value="<?= !empty($ed['bridge_mm']) ? (int) $ed['bridge_mm'] : '' ?>">
+                    <p class="field__hint">Số GIỮA.</p>
+                </div>
+
+                <div class="field">
+                    <label for="temple_mm">Dài càng (mm)</label>
+                    <input type="number" id="temple_mm" name="temple_mm" min="0" max="250" step="1"
+                           value="<?= !empty($ed['temple_mm']) ? (int) $ed['temple_mm'] : '' ?>">
+                    <p class="field__hint">Số CUỐI. Thiếu một trong ba thì trang không in chuẩn ghi.</p>
+                </div>
+
+                <div class="field">
+                    <label for="frame_width_mm">Tổng rộng gọng (mm)</label>
+                    <input type="number" id="frame_width_mm" name="frame_width_mm" min="0" max="250" step="1"
+                           value="<?= !empty($ed['frame_width_mm']) ? (int) $ed['frame_width_mm'] : '' ?>">
+                    <p class="field__hint">
+                        Ô QUAN TRỌNG NHẤT trong nhóm: cỡ S/M/L trên trang quy ra từ đây,
+                        không phải từ rộng tròng. Bỏ trống là mất huy hiệu cỡ và mất luôn
+                        dòng của mẫu này trong bảng quy đổi.
+                    </p>
+                </div>
+
+                <div class="field">
+                    <label for="lens_height_mm">Cao tròng (mm)</label>
+                    <input type="number" id="lens_height_mm" name="lens_height_mm" min="0" max="99" step="1"
+                           value="<?= !empty($ed['lens_height_mm']) ? (int) $ed['lens_height_mm'] : '' ?>">
+                </div>
+
+                <div class="field field--wide">
+                    <span class="field__label">Hợp dáng mặt</span>
+                    <div class="afacets">
+                        <?php foreach ((array) config('eyewear.face_shapes') as $v => $l): ?>
+                            <label class="afacets__one">
+                                <input type="checkbox" name="face_shapes[]" value="<?= e($v) ?>"
+                                       <?= $cs('face_shapes', $v) ? 'checked' : '' ?>>
+                                <?= e($l) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <p class="field__hint">
+                        Bảng "gọng nào hợp dáng mặt nào" trên trang bộ sưu tập dựng từ
+                        đây, gộp của cả bộ. Không tick gì thì mẫu này không xuất hiện
+                        trong bảng đó.
+                    </p>
+                </div>
+
+                <div class="field">
+                    <label for="lens_material">Chất liệu tròng</label>
+                    <input type="text" id="lens_material" name="lens_material" maxlength="120"
+                           placeholder="CR-39 phân cực" value="<?= e($ed['lens_material'] ?? '') ?>">
+                </div>
+
+                <div class="field">
+                    <label for="lens_index">Chiết suất</label>
+                    <input type="number" id="lens_index" name="lens_index" min="1" max="9.99" step="0.01"
+                           placeholder="1.61"
+                           value="<?= ($ed['lens_index'] ?? null) !== null ? e((string) $ed['lens_index']) : '' ?>">
+                </div>
+
+                <div class="field field--wide">
+                    <span class="field__label">Lớp phủ và tính năng tròng</span>
+                    <div class="afacets">
+                        <?php foreach ((array) config('eyewear.coatings') as $v => $l): ?>
+                            <label class="afacets__one">
+                                <input type="checkbox" name="lens_coatings[]" value="<?= e($v) ?>"
+                                       <?= $cs('lens_coatings', $v) ? 'checked' : '' ?>>
+                                <?= e($l) ?>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div class="field field--check">
+                    <label>
+                        <input type="checkbox" name="is_polarized" <?= !empty($ed['is_polarized']) ? 'checked' : '' ?>>
+                        Tròng phân cực
+                    </label>
+                    <label>
+                        <input type="checkbox" name="is_photochromic" <?= !empty($ed['is_photochromic']) ? 'checked' : '' ?>>
+                        Tròng đổi màu
+                    </label>
+                    <p class="field__hint">
+                        Hai dòng này in ra trang CẢ KHI không tick ("Không") — chúng là
+                        câu người mua kính râm hỏi đầu tiên, bỏ trống thì im lặng bị đọc
+                        thành "chắc là có".
+                    </p>
+                </div>
+
+                <div class="field">
+                    <label for="lens_vlt">Truyền sáng VLT</label>
+                    <input type="text" id="lens_vlt" name="lens_vlt" maxlength="40"
+                           placeholder="12% hoặc 18% → 62%" value="<?= e($ed['lens_vlt'] ?? '') ?>">
+                    <p class="field__hint">Ô CHỮ chứ không phải số: tròng đổi màu có hai đầu.</p>
+                </div>
+
+                <div class="field">
+                    <label for="lens_category">Cấp độ tối</label>
+                    <select id="lens_category" name="lens_category">
+                        <option value="">— Chưa xác định —</option>
+                        <?php foreach ((array) config('eyewear.lens_categories') as $v => $l): ?>
+                            <option value="<?= (int) $v ?>"<?= ($ed['lens_category'] ?? null) !== null && (int) $ed['lens_category'] === (int) $v ? ' selected' : '' ?>><?= e($l) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="base_curve">Base curve</label>
+                    <input type="text" id="base_curve" name="base_curve" maxlength="20"
+                           value="<?= e($ed['base_curve'] ?? '') ?>">
+                </div>
+
+                <div class="field field--check">
+                    <label>
+                        <input type="checkbox" name="rx_ready" <?= !empty($ed['rx_ready']) ? 'checked' : '' ?>>
+                        Lắp được độ
+                    </label>
+                </div>
+
+                <div class="field field--wide">
+                    <label for="rx_note">Lắp độ — nói rõ tới đâu</label>
+                    <input type="text" id="rx_note" name="rx_note" maxlength="255"
+                           placeholder="Cận và loạn tới -6.00; chưa lắp được đa tròng"
+                           value="<?= e($ed['rx_note'] ?? '') ?>">
+                    <p class="field__hint">
+                        Câu này thay chỗ ô tick ở trên khi in ra trang. "Lắp được độ"
+                        suông là câu khách sẽ hỏi lại qua Zalo — ghi thẳng con số.
+                    </p>
+                </div>
+
+                <div class="field">
+                    <label for="price_with_lens">Giá kèm tròng đổi độ (VND)</label>
+                    <input type="number" id="price_with_lens" name="price_with_lens" min="0" step="1000"
+                           value="<?= !empty($ed['price_with_lens']) ? (int) $ed['price_with_lens'] : '' ?>">
+                    <p class="field__hint">Chốt sẵn ở đây, KHÔNG cộng từ bảng giá tròng.</p>
+                </div>
+
+                <div class="field">
+                    <label for="barcode">Barcode</label>
+                    <input type="text" id="barcode" name="barcode" maxlength="40"
+                           value="<?= e($ed['barcode'] ?? '') ?>">
+                </div>
+
+                <?php
+                /*
+                 * BỐN Ô CHÍNH SÁCH — để trống là ĐÚNG ở hầu hết mặt hàng.
+                 *
+                 * Trống nghĩa là "theo chính sách chung" trong config/eyewear.php,
+                 * và trang in bản chung đó ra. Điền vào đây là tự tay tách mặt
+                 * hàng này khỏi chính sách chung — sửa chính sách sau này sẽ
+                 * không chạm tới nó nữa.
+                 */
+                ?>
+                <div class="field field--wide">
+                    <label for="accessories">Phụ kiện đi kèm <span class="field__opt">(trống = theo chính sách chung)</span></label>
+                    <input type="text" id="accessories" name="accessories" maxlength="255"
+                           placeholder="<?= e((string) config('eyewear.defaults.accessories')) ?>"
+                           value="<?= e($ed['accessories'] ?? '') ?>">
+                </div>
+
+                <div class="field">
+                    <label for="warranty">Bảo hành <span class="field__opt">(trống = chung)</span></label>
+                    <input type="text" id="warranty" name="warranty" maxlength="255"
+                           placeholder="<?= e((string) config('eyewear.defaults.warranty')) ?>"
+                           value="<?= e($ed['warranty'] ?? '') ?>">
+                </div>
+
+                <div class="field">
+                    <label for="return_policy">Đổi trả <span class="field__opt">(trống = chung)</span></label>
+                    <input type="text" id="return_policy" name="return_policy" maxlength="255"
+                           placeholder="<?= e((string) config('eyewear.defaults.return_policy')) ?>"
+                           value="<?= e($ed['return_policy'] ?? '') ?>">
+                    <p class="field__hint">
+                        Điền khi mặt hàng phải nói KHÁC — ví dụ gọng cận đã cắt tròng
+                        theo đơn thì không đổi trả được.
+                    </p>
+                </div>
+
+                <div class="field field--wide">
+                    <label for="certifications">Chứng nhận <span class="field__opt">(trống = chung)</span></label>
+                    <input type="text" id="certifications" name="certifications" maxlength="255"
+                           placeholder="<?= e((string) config('eyewear.defaults.certifications')) ?>"
+                           value="<?= e($ed['certifications'] ?? '') ?>">
+                    <p class="field__hint">Ngăn bằng dấu phẩy: CE, ISO 12312-1, ANSI Z87.1, CO/CQ.</p>
+                </div>
+            <?php endif; ?>
+
             <div class="field field--wide">
                 <label for="specs">Thông số — mỗi dòng "Nhãn: giá trị"</label>
                 <textarea id="specs" name="specs" rows="4"

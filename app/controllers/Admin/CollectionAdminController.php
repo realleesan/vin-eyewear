@@ -55,6 +55,16 @@ class CollectionAdminController extends AdminController
             // Cột `story` có thể chưa tồn tại trên máy chưa chạy migration —
             // xem khối chú thích trong save(). Form giấu ô nhập khi chưa có.
             'hasStory'    => Database::columnExists('collections', 'story'),
+            /*
+             * MỘT PHÉP THĂM DÒ CHO CẢ 14 CỘT của khung ba lớp.
+             *
+             * Cả 14 ra đời trong cùng một migration nên chúng có hoặc không có
+             * cùng lúc — hỏi từng cột là 14 lượt truy vấn để trả lời cùng một
+             * câu. `season_code` là cột đầu tiên trong câu ALTER ấy.
+             */
+            'hasFrame'    => Database::columnExists('collections', 'season_code'),
+            'hasFaq'      => Database::tableExists('collection_faqs'),
+            'faqs'        => $this->faqsOf(isset($_GET['sua']) ? (string) $_GET['sua'] : ''),
         ]);
     }
 
@@ -160,6 +170,17 @@ class CollectionAdminController extends AdminController
             $data['story'] = trim((string) ($_POST['story'] ?? '')) ?: null;
         }
 
+        /*
+         * 14 CỘT CỦA KHUNG BA LỚP — cùng phép thăm dò, cùng lý do như `story`.
+         *
+         * Gộp bằng array_merge chứ không viết thẳng vào $data ở trên: máy chưa
+         * chạy migration thì $data giữ nguyên đúng hình dạng cũ, và câu
+         * INSERT/UPDATE vẫn chạy như trước ngày hôm nay.
+         */
+        if (Database::columnExists('collections', 'season_code')) {
+            $data = array_merge($data, $this->khungBaLop());
+        }
+
         if ($id !== '' && CollectionModel::exists(['id' => $id])) {
             CollectionModel::update($id, $data);
             flash('admin_success', 'Đã cập nhật bộ sưu tập.');
@@ -216,6 +237,196 @@ class CollectionAdminController extends AdminController
 
         flash('admin_success', 'Đã xoá bộ sưu tập.');
         redirect(self::BASE);
+    }
+
+    // ========================================================================
+    // KHUNG THÔNG TIN BA LỚP — 14 cột thêm ngày 2026-08-27
+    // ========================================================================
+
+    /**
+     * Mười một ô chữ thường + ba cột JSON, đọc từ $_POST.
+     *
+     * @return array<string,mixed>
+     */
+    private function khungBaLop(): array
+    {
+        $chu = static fn (string $key): ?string => trim((string) ($_POST[$key] ?? '')) ?: null;
+
+        return [
+            'season_code'      => $chu('season_code'),
+            'season_label'     => $chu('season_label'),
+            'brand'            => $chu('brand'),
+            'product_line'     => $chu('product_line'),
+            'designed_in'      => $chu('designed_in'),
+            'made_in'          => $chu('made_in'),
+            'design_style'     => $chu('design_style'),
+            'launch_offer'     => $chu('launch_offer'),
+            'channels'         => $chu('channels'),
+            'meta_title'       => $chu('meta_title'),
+            'meta_description' => $chu('meta_description'),
+
+            'audience'  => $this->jsonCot($this->docAudience((string) ($_POST['audience'] ?? ''))),
+            'palette'   => $this->jsonCot($this->docPalette((string) ($_POST['palette'] ?? ''))),
+            'signature' => $this->jsonCot(
+                preg_split('/\R+/', trim((string) ($_POST['signature'] ?? '')), -1, PREG_SPLIT_NO_EMPTY) ?: []
+            ),
+        ];
+    }
+
+    /**
+     * Mảng rỗng -> NULL, chứ không phải chuỗi "[]".
+     *
+     * View phân biệt hai thứ đó: NULL là "chưa ai viết" nên cả khối không ra
+     * đời, còn "[]" cũng cho ra khối rỗng nhưng đọc lại trong CSDL thì không
+     * ai biết là cố ý hay hỏng. Cùng luật với `story` và `tagline`.
+     */
+    private function jsonCot(array $items): ?string
+    {
+        return $items === [] ? null : json_encode($items, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Ô "Bộ này hợp với ai": mỗi dòng "Tiêu đề | Giá trị | Ghi chú".
+     *
+     * Dấu gạch đứng chứ không dấu hai chấm, khác ô Thông số của sản phẩm: ghi
+     * chú ở đây là câu văn ("Đã qua tuổi chạy theo mốt, nhưng...") và câu văn
+     * thì có dấu hai chấm trong đó. Gạch đứng gần như không bao giờ xuất hiện
+     * trong tiếng Việt viết thường.
+     *
+     * Thiếu vế nào thì vế đó rỗng — view tự bỏ. Dòng KHÔNG có tiêu đề lẫn giá
+     * trị thì bỏ hẳn: một ô chỉ có ghi chú không đọc ra cái gì.
+     */
+    private function docAudience(string $tho): array
+    {
+        $ra = [];
+
+        foreach (preg_split('/\R+/', trim($tho), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $dong) {
+            $ve = array_map('trim', explode('|', $dong, 3));
+
+            $tieuDe = $ve[0] ?? '';
+            $giaTri = $ve[1] ?? '';
+
+            if ($tieuDe === '' && $giaTri === '') {
+                continue;
+            }
+
+            $ra[] = [
+                'tieu_de' => $tieuDe,
+                'gia_tri' => $giaTri,
+                'ghi_chu' => $ve[2] ?? '',
+            ];
+        }
+
+        return $ra;
+    }
+
+    /**
+     * Ô "Bảng màu": mỗi dòng "Tên | #rrggbb".
+     *
+     * MÃ MÀU SAI THÌ BỎ CẢ DÒNG, không cứu vãn. Giá trị này đi thẳng vào
+     * thuộc tính style của thẻ in ra, nên nó phải là mã màu và chỉ là mã màu —
+     * view cũng kiểm lại lần nữa, nhưng chặn ngay từ lúc ghi thì cột không bao
+     * giờ chứa thứ phải đi kiểm.
+     */
+    private function docPalette(string $tho): array
+    {
+        $ra = [];
+
+        foreach (preg_split('/\R+/', trim($tho), -1, PREG_SPLIT_NO_EMPTY) ?: [] as $dong) {
+            $ve = array_map('trim', explode('|', $dong, 2));
+            $ma = $ve[1] ?? '';
+
+            if (!preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/', $ma)) {
+                continue;
+            }
+
+            $ra[] = ['ten' => $ve[0] !== '' ? $ve[0] : $ma, 'ma_mau' => $ma];
+        }
+
+        return $ra;
+    }
+
+    /** Câu hỏi của bộ đang sửa — rỗng khi chưa chạy migration hoặc đang thêm mới. */
+    private function faqsOf(string $collectionId): array
+    {
+        if ($collectionId === '' || !Database::tableExists('collection_faqs')) {
+            return [];
+        }
+
+        return CollectionFaqModel::forCollection($collectionId);
+    }
+
+    // ========================================================================
+    // CÂU HỎI THƯỜNG GẶP
+    //
+    // Đường riêng chứ không gộp vào save(): form bộ sưu tập là một <form>, mà
+    // mỗi câu hỏi cần nút xoá riêng của nó — HTML không cho lồng <form>. Cùng
+    // hoàn cảnh mà giỏ hàng đã gặp với bốn nút trên một dòng (xem routes.php).
+    // ========================================================================
+
+    public function saveFaq(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        $collectionId = (string) ($_POST['collection_id'] ?? '');
+        $quay         = self::BASE . '?sua=' . rawurlencode($collectionId) . '#faq';
+
+        if (!Database::tableExists('collection_faqs')) {
+            flash('admin_error', 'Chưa chạy nâng cấp cơ sở dữ liệu cho phần câu hỏi thường gặp.');
+            redirect(self::BASE);
+        }
+
+        if (!CollectionModel::exists(['id' => $collectionId])) {
+            flash('admin_error', 'Không tìm thấy bộ sưu tập.');
+            redirect(self::BASE);
+        }
+
+        $hoi  = trim((string) ($_POST['question'] ?? ''));
+        $dap  = trim((string) ($_POST['answer'] ?? ''));
+
+        if (utf8Length($hoi) < 5 || utf8Length($dap) < 5) {
+            flash('admin_error', 'Câu hỏi và câu trả lời đều phải có ít nhất 5 ký tự.');
+            redirect($quay);
+        }
+
+        $data = [
+            'collection_id' => $collectionId,
+            'question'      => $hoi,
+            'answer'        => $dap,
+            'sort_order'    => (int) ($_POST['sort_order'] ?? 0),
+        ];
+
+        $id = (string) ($_POST['id'] ?? '');
+
+        if ($id !== '' && CollectionFaqModel::exists(['id' => $id])) {
+            CollectionFaqModel::update($id, $data);
+            flash('admin_success', 'Đã cập nhật câu hỏi.');
+        } else {
+            CollectionFaqModel::insert($data);
+            flash('admin_success', 'Đã thêm câu hỏi.');
+        }
+
+        redirect($quay);
+    }
+
+    public function deleteFaq(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        $id  = (string) ($_POST['id'] ?? '');
+        $row = Database::tableExists('collection_faqs') ? CollectionFaqModel::find($id) : null;
+
+        if ($row === null) {
+            flash('admin_error', 'Không tìm thấy câu hỏi.');
+            redirect(self::BASE);
+        }
+
+        CollectionFaqModel::delete($id);
+        flash('admin_success', 'Đã xoá câu hỏi.');
+
+        redirect(self::BASE . '?sua=' . rawurlencode((string) $row['collection_id']) . '#faq');
     }
 
     /**

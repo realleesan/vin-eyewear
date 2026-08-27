@@ -75,6 +75,18 @@ class ProductAdminController extends AdminController
             'canEdit'    => UserModel::hasRole($this->userId, 'admin')
                          || UserModel::hasRole($this->userId, 'manager'),
             'editing'    => isset($_GET['sua']) ? ProductModel::find((string) $_GET['sua']) : null,
+            /*
+             * MỘT PHÉP THĂM DÒ CHO CẢ 27 CỘT thông số kính.
+             *
+             * Cả 27 ra đời trong cùng migration 2026-08-27-bo-suu-tap-khung-ba-lop
+             * nên chúng có hoặc không có cùng lúc; `eyewear_type` là cột đầu
+             * trong câu ALTER ấy. Chưa chạy nâng cấp thì khối 27 ô tự ẩn và
+             * form vẫn lưu được như trước — xem save().
+             */
+            'hasSpecs'   => Database::columnExists('products', 'eyewear_type'),
+            // Lưới ô tick của hai nhóm "Hợp dáng mặt" / "Lớp phủ tròng".
+            // Chỉ trang này dùng — xem đầu assets/css/admin-products.css.
+            'adminStyles' => ['assets/css/admin-products.css'],
         ]);
     }
 
@@ -182,6 +194,18 @@ class ProductAdminController extends AdminController
             'is_visible'       => isset($_POST['is_visible']) ? 1 : 0,
         ];
 
+        /*
+         * 27 CỘT THÔNG SỐ KÍNH — chỉ ghi khi cột đã có thật.
+         *
+         * Mã lên hosting bằng FTP tự động, migration thì bấm tay: giữa hai
+         * việc đó có một khoảng dài hàng giờ, và trong khoảng ấy một câu
+         * INSERT nhắc tới cột chưa tồn tại là lỗi 1054 — nhân viên không lưu
+         * nổi một mặt hàng nào, kể cả khi chỉ định sửa giá.
+         */
+        if (Database::columnExists('products', 'eyewear_type')) {
+            $data = array_merge($data, $this->thongSoKinh());
+        }
+
         if ($id !== '' && ProductModel::exists(['id' => $id])) {
             ProductModel::update($id, $data);
             flash('admin_success', 'Đã cập nhật sản phẩm.');
@@ -198,6 +222,106 @@ class ProductAdminController extends AdminController
         }
 
         redirect(self::BASE);
+    }
+
+    /**
+     * 27 cột thông số kính, đọc từ $_POST.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * BA KIỂU Ô, BA CÁCH DỌN
+     *
+     *   chữ    trim rồi ?: null — trống nghĩa là "chưa nhập", và trang bỏ hẳn
+     *          dòng đó thay vì in dấu gạch.
+     *   số     0 hoặc âm cũng về null: một gọng nặng 0 gram là ô bỏ trống chứ
+     *          không phải một phép đo. Ép trần trên để một cú gõ nhầm
+     *          ("1450" thay vì "145") không lọt xuống cột TINYINT rồi bị MySQL
+     *          cắt cụt thành số khác hẳn mà không ai biết.
+     *   khoá   chỉ nhận giá trị có trong config/eyewear.php; giá trị lạ về
+     *          null. Không có phép này thì cột `eyewear_type` sẽ dần chứa
+     *          "kính râm", "Kinh ram", "sunglasses" — và bảng so sánh in ra ba
+     *          phân loại cho cùng một thứ.
+     *
+     * @return array<string,mixed>
+     */
+    private function thongSoKinh(): array
+    {
+        $chu = static fn (string $key): ?string => trim((string) ($_POST[$key] ?? '')) ?: null;
+
+        // Trần theo đúng kiểu cột trong CSDL, xem migration.
+        $so = static function (string $key, int $tran): ?int {
+            $v = (int) ($_POST[$key] ?? 0);
+
+            return $v > 0 && $v <= $tran ? $v : null;
+        };
+
+        $loai = (string) ($_POST['eyewear_type'] ?? '');
+        $cap  = (string) ($_POST['lens_category'] ?? '');
+
+        // Chiết suất: DECIMAL(3,2) nên dải hợp lệ là 1.00–9.99. Ngoài dải thì
+        // null — kính không có tròng chiết suất 15.
+        $chietSuat = (float) str_replace(',', '.', (string) ($_POST['lens_index'] ?? '0'));
+
+        return [
+            'eyewear_type'    => isset(((array) config('eyewear.types'))[$loai]) ? $loai : null,
+            'frame_finish'    => $chu('frame_finish'),
+            'hinge_type'      => $chu('hinge_type'),
+            'nose_pad'        => $chu('nose_pad'),
+            'weight_g'        => $so('weight_g', 500),
+
+            'lens_width_mm'   => $so('lens_width_mm', 99),
+            'bridge_mm'       => $so('bridge_mm', 99),
+            'temple_mm'       => $so('temple_mm', 250),
+            'frame_width_mm'  => $so('frame_width_mm', 250),
+            'lens_height_mm'  => $so('lens_height_mm', 99),
+            'face_shapes'     => $this->khoaCsv($_POST['face_shapes'] ?? [], 'face_shapes'),
+
+            'lens_material'   => $chu('lens_material'),
+            'lens_index'      => $chietSuat >= 1 && $chietSuat < 10
+                                    ? number_format($chietSuat, 2, '.', '') : null,
+            'lens_coatings'   => $this->khoaCsv($_POST['lens_coatings'] ?? [], 'coatings'),
+            'is_polarized'    => isset($_POST['is_polarized']) ? 1 : 0,
+            'is_photochromic' => isset($_POST['is_photochromic']) ? 1 : 0,
+            'lens_vlt'        => $chu('lens_vlt'),
+            // Cấp 0 là giá trị THẬT (tròng trong suốt), nên so với chuỗi rỗng
+            // chứ không dùng phép ép số như mấy ô trên — (int) '' cũng ra 0.
+            'lens_category'   => $cap !== '' && isset(((array) config('eyewear.lens_categories'))[(int) $cap])
+                                    ? (int) $cap : null,
+            'base_curve'      => $chu('base_curve'),
+            'rx_ready'        => isset($_POST['rx_ready']) ? 1 : 0,
+            'rx_note'         => $chu('rx_note'),
+
+            'price_with_lens' => max(0, (int) ($_POST['price_with_lens'] ?? 0)) ?: null,
+            // Bốn ô dưới TRỐNG là đúng ở hầu hết mặt hàng: trống nghĩa là
+            // "theo chính sách chung" trong config/eyewear.php. Chỉ điền khi
+            // mặt hàng phải nói KHÁC.
+            'accessories'     => $chu('accessories'),
+            'warranty'        => $chu('warranty'),
+            'return_policy'   => $chu('return_policy'),
+            'certifications'  => $chu('certifications'),
+            'barcode'         => $chu('barcode'),
+        ];
+    }
+
+    /**
+     * Ô chọn-nhiều (dáng mặt, lớp phủ) -> chuỗi CSV khoá chuẩn, hoặc null.
+     *
+     * Nhận MẢNG từ các ô tick, lọc theo bảng trong config rồi ghép lại. Lọc
+     * chứ không tin: form gửi cái gì là chuyện của trình duyệt, mà cột này
+     * được đọc ngược lại thành nhãn hiển thị.
+     */
+    private function khoaCsv(mixed $raw, string $bang): ?string
+    {
+        $tho   = is_array($raw) ? $raw : preg_split('/\s*,\s*/', (string) $raw, -1, PREG_SPLIT_NO_EMPTY);
+        $bangK = (array) config('eyewear.' . $bang);
+        $ra    = [];
+
+        foreach ($tho ?: [] as $khoa) {
+            if (is_scalar($khoa) && isset($bangK[(string) $khoa])) {
+                $ra[] = (string) $khoa;
+            }
+        }
+
+        return $ra === [] ? null : implode(',', array_unique($ra));
     }
 
     /**

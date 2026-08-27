@@ -139,6 +139,11 @@ MIGRATIONS=(
     "2026-08-27-bang-goi-trong.sql|table|lens_packages|"
     # Trang chi tiết bộ sưu tập. Mốc là cột `story` — cột duy nhất file đó thêm.
     "2026-08-27-bo-suu-tap-trang-chi-tiet.sql|column|collections|story"
+    # Khung thông tin ba lớp của trang chi tiết bộ sưu tập: 43 cột mới trên ba
+    # bảng, cộng bảng `collection_faqs`. Mốc là BẢNG đó — nó là thứ duy nhất
+    # trong file chỉ có thể do file này tạo ra, còn 43 cột kia thì mỗi cột đều
+    # có thể bị ai đó thêm tay lẻ tẻ, không cột nào đại diện cho cả file.
+    "2026-08-27-bo-suu-tap-khung-ba-lop.sql|table|collection_faqs|"
 )
 
 # ---------------------------------------------------------------------------

@@ -130,6 +130,27 @@ $base = '/quan-tri/bien-the';
                     <p class="field__hint">Dòng nhỏ dưới nhãn, giúp khách chọn đúng.</p>
                 </div>
 
+                <?php if ($hasSwatch): ?>
+                    <?php /* Hai ô CHỈ dành cho phương án MÀU. Phương án chiết suất
+                             tròng hay cỡ thì bỏ trống — trang bộ sưu tập chỉ vẽ ô màu
+                             cho biến thể nào có mã màu. */ ?>
+                    <div class="field">
+                        <label for="swatch_hex">Mã màu <span class="field__opt">(chỉ phương án màu)</span></label>
+                        <input type="text" id="swatch_hex" name="swatch_hex" maxlength="7"
+                               placeholder="#d8c3ac" value="<?= e($ed['swatch_hex'] ?? '') ?>">
+                        <p class="field__hint">
+                            Dạng <code>#rrggbb</code>. Sai dạng thì bị bỏ khi lưu — giá trị
+                            này vẽ thẳng ra ô màu tròn trong ngăn kéo thông số.
+                        </p>
+                    </div>
+
+                    <div class="field">
+                        <label for="image">Ảnh phối màu <span class="field__opt">(đường dẫn)</span></label>
+                        <input type="text" id="image" name="image" maxlength="500"
+                               placeholder="/assets/images/…" value="<?= e($ed['image'] ?? '') ?>">
+                    </div>
+                <?php endif; ?>
+
                 <div class="field">
                     <label for="price_delta">Chênh giá (₫)</label>
                     <input type="number" id="price_delta" name="price_delta" step="1000"

@@ -1,14 +1,15 @@
 /* ============================================================
    TRANG CHI TIẾT BỘ SƯU TẬP (/bo-suu-tap/{slug})
 
-   Tiền tố .cdet — KHÔNG dùng chung với .coll* của trang danh sách
-   (collection.css). Hai trang trông giống nhau ở khối đầu nhưng khác hẳn
-   về sau: bên kia là ba–năm thẻ so le, bên này là một khối giới thiệu rồi
-   tới câu chuyện, hàng mẫu và các lối dẫn sang danh mục. Dùng chung lớp
-   thì mỗi lần chỉnh một trang lại phải thử lại trang kia.
+   Hai tiền tố, KHÔNG dùng chung với .coll* của trang danh sách
+   (collection.css):
 
-   Lưới thẻ sản phẩm ở đây dùng .pcard trong components/product.css (đã nạp
-   cho mọi trang); file này chỉ khai phần vỏ lưới.
+     .cdet*    thân trang — giới thiệu bộ, câu chuyện, bảng so sánh,
+               chọn cỡ, dáng mặt, bảo quản, câu hỏi thường gặp
+     .cdraw*   ngăn kéo thông số một mẫu (collection/_drawer.php)
+
+   Hai trang chỉ giống nhau ở khối đầu; phần còn lại khác hẳn, nên dùng
+   chung lớp thì mỗi lần chỉnh một trang lại phải thử lại trang kia.
 
    Màu và cỡ chữ lấy từ token trong layout.css — xem quy ước ở CLAUDE.md.
    ============================================================ */
@@ -16,19 +17,72 @@
 .cdet {
     max-width: var(--container, 1600px);
     margin: 0 auto;
-    padding: 48px 32px 96px;
+    padding: 48px var(--page-edge) 96px;
     display: flex;
     flex-direction: column;
-    gap: 72px;
+    gap: 76px;
 }
 
+/* --- Mẩu dùng lại trong nhiều khối --- */
+
+.cdet__eyebrow {
+    margin: 0 0 12px;
+    font-size: var(--fs-label, 11px);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.cdet__h2 {
+    margin: 0 0 18px;
+    font-family: var(--font-serif);
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--ink);
+}
+
+.cdet__h3 {
+    margin: 0 0 16px;
+    font-size: var(--fs-subhead);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.cdet__dot { color: var(--line-strong); }
+
+/* Huy hiệu cỡ S/M/L — dùng ở cả bảng so sánh lẫn bảng quy đổi, nên hai chỗ
+   không bao giờ lệch dáng nhau. */
+.cdet__badge {
+    display: inline-block;
+    min-width: 22px;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--brand-subtle);
+    font-size: 10.5px;
+    font-weight: 600;
+    text-align: center;
+    color: var(--brand);
+}
+
+/* Số đo luôn dùng font đều nét: 52□18-145 và 138 mm phải thẳng cột với nhau
+   khi mắt lướt dọc bảng, mà font chữ thường thì chữ số rộng hẹp khác nhau. */
+.cdet__size {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink);
+}
+
+.cdet__none { color: var(--h-meta); font-style: italic; }
+
 /* ============================================================
-   KHỐI GIỚI THIỆU — ảnh lookbook bên trái, chữ bên phải
+   LỚP 1 — KHỐI GIỚI THIỆU
    ============================================================ */
 
 .cdet__hero {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
     align-items: center;
     gap: 56px;
 }
@@ -58,7 +112,11 @@
     gap: 14px;
 }
 
-.cdet__when {
+.cdet__season {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
     margin: 0;
     font-size: var(--fs-label, 11px);
     font-weight: 600;
@@ -67,14 +125,23 @@
     color: var(--eyebrow);
 }
 
+.cdet__season-tag {
+    padding: 5px 11px;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    color: var(--on-brand);
+    letter-spacing: 0.1em;
+}
+
 .cdet__name {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 46px;
+    font-size: clamp(28px, calc(13.2px + 2.56vw), 46px);
     font-weight: 600;
     line-height: 1.1;
     letter-spacing: normal;
     color: var(--ink);
+    text-wrap: pretty;
 }
 
 .cdet__tagline {
@@ -91,37 +158,60 @@
     color: var(--muted);
 }
 
-/* Hai con số đứng ngay trên nút — cùng một cụm với nút, nên khoảng cách
-   trên rộng hơn khoảng cách dưới. */
+/* Xuất xứ: bốn cặp nhãn-giá trị chạy ngang, kẹp giữa hai đường kẻ. Không
+   dùng lưới cột — số ô thay đổi theo bộ nào nhập được mấy ô. */
+.cdet__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 26px;
+    width: 100%;
+    margin: 6px 0 0;
+    padding: 14px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-note, 13px);
+    color: var(--muted);
+}
+
+.cdet__meta-row { display: flex; gap: 7px; }
+.cdet__meta-row dt { font-weight: 600; color: var(--ink); }
+.cdet__meta-row dd { margin: 0; }
+
 .cdet__stats {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
-    margin: 10px 0 0;
+    margin: 8px 0 0;
     font-size: var(--fs-note, 13px);
     font-weight: 600;
     letter-spacing: 0.02em;
     color: var(--ink);
 }
 
-.cdet__dot { color: var(--line-strong); }
-
-.cdet__soon {
-    margin: 6px 0 0;
+.cdet__offer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    background: var(--brand-subtle);
     font-size: var(--fs-body-sm);
-    line-height: 1.7;
-    color: var(--muted);
-}
-
-.cdet__soon a {
     font-weight: 600;
-    color: var(--brand);
+    color: var(--brand-strong);
 }
 
-/* --- Nút chính: sang danh mục đã lọc sẵn --- */
+.cdet__offer-ico { flex-shrink: 0; }
 
-.cdet__cta,
-.cdet__more {
+.cdet__cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+.cdet__cta {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -135,46 +225,53 @@
     transition: background-color 0.2s, transform 0.2s;
 }
 
-.cdet__cta { margin-top: 4px; }
-
-.cdet__cta:hover,
-.cdet__more:hover {
+.cdet__cta:hover {
     background: var(--brand-strong);
     transform: translateX(3px);
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .cdet__cta:hover,
-    .cdet__more:hover { transform: none; }
+/* Nút phụ: cùng dáng, khác trọng lượng thị giác. Hai nút đặc cạnh nhau thì
+   không nút nào là nút chính nữa. */
+.cdet__cta--ghost {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
 }
+
+.cdet__cta--ghost:hover {
+    background: var(--brand-subtle);
+    border-color: var(--brand);
+    color: var(--brand-strong);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cdet__cta:hover { transform: none; }
+}
+
+.cdet__soon {
+    margin: 6px 0 0;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+.cdet__soon a { font-weight: 600; color: var(--brand); }
 
 /* ============================================================
-   CÂU CHUYỆN CỦA BỘ
+   LỚP 1 — CÂU CHUYỆN + CỘT BÊN
 
-   Cột hẹp cố ý (68ch): đây là khối DUY NHẤT trên trang có nhiều đoạn văn
-   liền nhau, mà dòng dài hơn chừng đó thì mắt lạc hàng khi xuống dòng.
-   Phần còn lại của trang là thẻ và nút nên rộng hết khung vẫn đọc được.
+   Cột chữ hẹp cố ý (68ch): đây là khối duy nhất trên trang có nhiều đoạn
+   văn liền nhau, mà dòng dài hơn chừng đó thì mắt lạc hàng khi xuống dòng.
    ============================================================ */
 
-.cdet__story {
-    max-width: 68ch;
+.cdet__story-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 64px;
+    align-items: start;
 }
 
-.cdet__h2 {
-    margin: 0 0 18px;
-    font-family: var(--font-serif);
-    font-size: 28px;
-    font-weight: 600;
-    line-height: 1.2;
-    color: var(--ink);
-}
-
-.cdet__h3 {
-    margin: 0 0 16px;
-    font-size: var(--fs-subhead);
-    font-weight: 600;
-    color: var(--ink);
-}
+.cdet__story { max-width: 68ch; }
 
 .cdet__para {
     margin: 0 0 16px;
@@ -185,43 +282,306 @@
 
 .cdet__para:last-child { margin-bottom: 0; }
 
+.cdet__aside {
+    padding-left: 32px;
+    border-left: 1px solid var(--line);
+}
+
+.cdet__aside-lead {
+    margin: 0 0 26px;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: var(--muted);
+}
+
+.cdet__palette {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 26px;
+    padding: 0;
+    list-style: none;
+}
+
+.cdet__swatch { display: flex; flex-direction: column; gap: 7px; }
+
+.cdet__chip-color {
+    display: block;
+    height: 62px;
+    border-radius: var(--radius);
+    /* Viền mảnh để ô màu trắng hoặc rất nhạt không tan vào nền trang. */
+    border: 1px solid var(--line);
+}
+
+.cdet__swatch-name {
+    font-size: 11.5px;
+    line-height: 1.35;
+    color: var(--muted);
+}
+
+.cdet__sign {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cdet__sign-item {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+.cdet__sign-ico { flex-shrink: 0; margin-top: 3px; color: var(--brand); }
+
 /* ============================================================
-   VÀI MÓN TRONG BỘ
+   LỚP 1 — BỘ NÀY HỢP VỚI AI
    ============================================================ */
 
-.cdet__picks {
+.cdet__aud {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cdet__aud-card {
+    padding: 22px 24px;
+    background: var(--surface-raised);
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius);
+}
+
+.cdet__aud-label {
+    margin: 0 0 8px;
+    font-size: var(--fs-label, 11px);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--h-meta);
+}
+
+.cdet__aud-value {
+    margin: 0 0 6px;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.cdet__aud-note {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--muted);
+}
+
+.cdet__aud-note a { font-weight: 600; }
+
+/* ============================================================
+   LỚP 2 — BẢNG SO SÁNH
+   ============================================================ */
+
+.cdet__cmp {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 28px;
+    gap: 18px;
 }
 
-.cdet__picks-head { max-width: 68ch; }
+.cdet__cmp-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 40px;
+    width: 100%;
+}
 
-.cdet__picks-head .cdet__h2 { margin-bottom: 10px; }
+.cdet__cmp-head .cdet__h2 { margin-bottom: 10px; }
 
-.cdet__picks-note {
+.cdet__cmp-note {
+    max-width: 62ch;
     margin: 0;
     font-size: var(--fs-body-sm);
     line-height: 1.7;
     color: var(--muted);
 }
 
-/* Bốn cột — bằng số thẻ controller lấy về, nên hàng mẫu luôn là MỘT hàng
-   đầy trên màn hình rộng, không bao giờ để lại một thẻ lẻ ở hàng hai. */
-.cdet__grid {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 24px;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+.cdet__cmp-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--brand);
+    text-decoration: none;
+    white-space: nowrap;
 }
 
-/* ============================================================
-   LỌC NHANH TRONG BỘ
-   ============================================================ */
+.cdet__cmp-all:hover { color: var(--brand-strong); }
+
+/* Bảng rộng hơn màn thì CUỘN TRONG KHUNG CỦA NÓ, không đẩy cả trang trượt
+   ngang. Tám cột không co xuống dưới 900px được mà vẫn đọc nổi. */
+.cdet__table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--surface-raised);
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius);
+}
+
+.cdet__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-body-sm);
+}
+
+/* <caption> giữ lại cho trình đọc màn hình — nó nói bảng này về cái gì trước
+   khi đọc tới hàng đầu — nhưng giấu khỏi mắt, vì tiêu đề khối ngay trên đã
+   nói đúng câu đó rồi. */
+.cdet__caption {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.cdet__table thead th {
+    padding: 13px 14px;
+    background: var(--surface-sunken);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-label, 11px);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.cdet__table thead th:first-child { padding-left: 20px; }
+.cdet__table thead th:last-child  { padding-right: 20px; }
+.cdet__table .num { text-align: right; }
+
+.cdet__table tbody td,
+.cdet__table tbody th {
+    padding: 14px;
+    border-bottom: 1px solid var(--h-rule);
+    font-weight: 400;
+    text-align: left;
+    color: var(--muted);
+    vertical-align: middle;
+}
+
+.cdet__table tbody tr:last-child td,
+.cdet__table tbody tr:last-child th { border-bottom: 0; }
+
+.cdet__row { transition: background-color 0.15s; }
+
+/* focus-within chứ không chỉ hover: dòng sáng lên khi người dùng bàn phím
+   Tab vào một trong hai liên kết của nó. */
+.cdet__row:hover,
+.cdet__row:focus-within { background: var(--surface-sunken); }
+
+/* Dòng của mẫu ĐANG mở trong ngăn kéo — người dùng phải thấy ngay mình vừa
+   bấm dòng nào, kể cả sau khi đóng ngăn kéo lại. */
+.cdet__row--on { background: var(--brand-subtle); }
+.cdet__row--on:hover { background: var(--brand-subtle); }
+
+.cdet__cell-name { padding-left: 20px !important; }
+
+/* CẢ Ô là đích bấm, không riêng cái tên: dòng cao 68px mà đích bấm chỉ rộng
+   bằng chữ thì trên máy tính bảng gần như không trúng. */
+.cdet__cell-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    text-decoration: none;
+}
+
+.cdet__thumb {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    color: var(--line-strong);
+    overflow: hidden;
+}
+
+.cdet__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.cdet__cell-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+
+.cdet__cell-title { font-weight: 600; color: var(--ink); }
+
+.cdet__cell-sku {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--h-meta);
+}
+
+.cdet__cell-lens { font-size: var(--fs-note, 13px); }
+
+.cdet__price {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* Mũi chevron xoay 270° thành mũi tên sang phải: bộ icon chỉ có
+   chevron-down, và thêm một icon nữa chỉ để quay 90° là thừa. */
+.cdet__price-ico {
+    transform: rotate(-90deg);
+    color: var(--h-meta);
+    transition: transform 0.2s;
+}
+
+.cdet__row:hover .cdet__price-ico { transform: rotate(-90deg) translateY(3px); }
+
+@media (prefers-reduced-motion: reduce) {
+    .cdet__row:hover .cdet__price-ico { transform: rotate(-90deg); }
+}
+
+/* --- Lọc nhanh --- */
+
+.cdet__ways {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.cdet__ways-label {
+    font-size: var(--fs-label, 11px);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--h-meta);
+    margin-right: 4px;
+}
 
 .cdet__chips {
     display: flex;
@@ -253,10 +613,274 @@
 }
 
 /* ============================================================
-   BỘ SƯU TẬP KHÁC
+   LỚP 3 — CHỌN ĐÚNG CỠ
+   ============================================================ */
 
-   Đường kẻ trên: dải này KHÔNG còn nói về bộ đang xem nữa, nên nó cần một
-   dấu ngắt rõ ràng — không có kẻ thì nó đọc như một mục nữa của bộ này.
+.cdet__size-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: 56px;
+    align-items: start;
+}
+
+.cdet__guide .cdet__h2 { margin-bottom: 12px; }
+
+.cdet__guide-lead {
+    margin: 0 0 22px;
+    font-size: 14.5px;
+    line-height: 1.75;
+    color: var(--muted);
+}
+
+.cdet__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cdet__step { display: flex; gap: 14px; align-items: flex-start; }
+
+.cdet__step-n {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    border-radius: var(--radius-round);
+    background: var(--brand);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--on-brand);
+}
+
+.cdet__step-body { display: flex; flex-direction: column; gap: 3px; }
+
+.cdet__step-title { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+
+.cdet__step-text { font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+
+.cdet__panel {
+    background: var(--surface-raised);
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.cdet__panel-head {
+    margin: 0;
+    padding: 14px 22px;
+    background: var(--surface-sunken);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-label, 11px);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* Bảng nhỏ nằm trong panel: bỏ nền tiêu đề (panel đã có dải riêng) và thu
+   đệm lại một bậc. */
+.cdet__table--sm { font-size: 13.5px; }
+
+.cdet__table--sm thead th {
+    padding: 11px 14px;
+    background: transparent;
+    border-bottom: 1px solid var(--h-rule);
+    letter-spacing: 0.08em;
+    color: var(--h-meta);
+}
+
+.cdet__table--sm thead th:first-child,
+.cdet__table--sm tbody th { padding-left: 22px; }
+
+.cdet__table--sm tbody td:last-child { padding-right: 22px; }
+
+.cdet__panel-foot {
+    margin: 0;
+    padding: 13px 22px;
+    border-top: 1px solid var(--h-rule);
+    background: var(--surface);
+    font-size: var(--fs-caption, 12px);
+    line-height: 1.6;
+    color: var(--h-note);
+}
+
+.cdet__panel-foot a { font-weight: 600; }
+
+/* ============================================================
+   LỚP 3 — GỌNG THEO DÁNG MẶT
+   ============================================================ */
+
+.cdet__face-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cdet__face-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--h-rule);
+    font-size: var(--fs-body-sm);
+}
+
+.cdet__face-name { font-weight: 600; color: var(--ink); }
+.cdet__face-models { text-align: right; color: var(--muted); }
+
+/* ============================================================
+   LỚP 3 — BẢO QUẢN + CÂU HỎI THƯỜNG GẶP
+   ============================================================ */
+
+.cdet__help {
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr);
+    gap: 64px;
+    align-items: start;
+}
+
+.cdet__care-list {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cdet__care-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--muted);
+}
+
+.cdet__care-ico { flex-shrink: 0; margin-top: 2px; color: var(--brand); }
+
+.cdet__faq {
+    background: var(--surface-raised);
+    border: 1px solid var(--h-card-line);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.cdet__q { border-bottom: 1px solid var(--h-rule); }
+.cdet__q:last-child { border-bottom: 0; }
+
+.cdet__q-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 16px 22px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+}
+
+/* Tam giác mặc định của <summary> bị bỏ ở cả hai họ trình duyệt; mũi chevron
+   bên phải thay chỗ nó. */
+.cdet__q-head::-webkit-details-marker { display: none; }
+.cdet__q-head::marker { content: ''; }
+
+.cdet__q-head:hover { color: var(--brand); }
+
+.cdet__q-ico {
+    flex-shrink: 0;
+    color: var(--brand);
+    transition: transform 0.2s;
+}
+
+.cdet__q[open] .cdet__q-ico { transform: rotate(180deg); }
+
+@media (prefers-reduced-motion: reduce) {
+    .cdet__q-ico { transition: none; }
+}
+
+.cdet__q-body {
+    margin: 0;
+    padding: 0 22px 18px;
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: var(--muted);
+}
+
+/* ============================================================
+   CTA CUỐI — khối tối, dấu ngắt trước hai dải phụ cuối trang
+   ============================================================ */
+
+.cdet__end {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 32px;
+    padding: 44px 52px;
+    border-radius: var(--radius);
+    background: var(--h-dark);
+}
+
+.cdet__end-text { max-width: 52ch; }
+
+.cdet__end-title {
+    margin: 0 0 8px;
+    font-family: var(--font-serif);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--h-on-dark);
+}
+
+.cdet__end-lead {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: var(--h-on-dark-muted);
+}
+
+.cdet__end-btns { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.cdet__end-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 24px;
+    border: 1px solid var(--h-on-dark-muted);
+    border-radius: var(--radius-sm);
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--h-on-dark);
+    text-decoration: none;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.cdet__end-btn:hover {
+    background: var(--h-on-dark);
+    color: var(--h-dark);
+}
+
+.cdet__end-btn--main {
+    padding-inline: 26px;
+    background: var(--h-on-dark);
+    border-color: var(--h-on-dark);
+    color: var(--h-dark);
+}
+
+.cdet__end-btn--main:hover { background: var(--brand-light); border-color: var(--brand-light); }
+
+/* ============================================================
+   BỘ SƯU TẬP KHÁC
    ============================================================ */
 
 .cdet__others {
@@ -312,16 +936,274 @@
 .cdet__olink:hover .cdet__oname { color: var(--brand); }
 
 /* ============================================================
+   NGĂN KÉO THÔNG SỐ (.cdraw*)
+
+   Nằm NGOÀI .cdet trong HTML và position: fixed, nên nó không bị bất kỳ
+   khối nào của thân trang cắt hay đẩy. Đóng mở bằng ?mau= trên địa chỉ —
+   xem app/views/collection/_drawer.php.
+   ============================================================ */
+
+.cdraw__dim {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(51, 39, 42, 0.42);
+    /* Là một <a> phủ kín màn: bấm ra ngoài để đóng. Không chữ nào bên trong
+       nên phải tự khai display, thẻ <a> mặc định là inline. */
+    display: block;
+}
+
+.cdraw {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 61;
+    display: flex;
+    flex-direction: column;
+    width: 560px;
+    max-width: 100vw;
+    height: 100vh;
+    background: var(--surface-raised);
+    box-shadow: -18px 0 44px rgba(90, 40, 40, 0.22);
+}
+
+.cdraw__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-shrink: 0;
+    padding: 20px 24px;
+    background: var(--surface-sunken);
+    border-bottom: 1px solid var(--line);
+}
+
+.cdraw__head-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.cdraw__sku {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--h-meta);
+}
+
+.cdraw__name {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 23px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--ink);
+}
+
+.cdraw__type { margin: 0; font-size: var(--fs-note, 13px); color: var(--muted); }
+
+.cdraw__x {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-size: 19px;
+    line-height: 1;
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.cdraw__x:hover { border-color: var(--brand); color: var(--brand); }
+
+/* Chỉ THÂN ngăn kéo cuộn; đầu và chân dính lại. Chân giữ nút sang trang sản
+   phẩm luôn nhìn thấy — đó là lối ra duy nhất dẫn tới chỗ mua được. */
+.cdraw__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 24px 26px;
+}
+
+.cdraw__shots {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 0 0 22px;
+    padding: 0;
+    list-style: none;
+}
+
+.cdraw__shot {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-sm);
+    background: var(--surface-sunken);
+    overflow: hidden;
+}
+
+.cdraw__shot img { width: 100%; height: 100%; object-fit: contain; }
+
+.cdraw__group {
+    margin: 0 0 10px;
+    font-size: var(--fs-label, 11px);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.cdraw__rows { margin: 0 0 22px; }
+
+.cdraw__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--h-rule);
+    font-size: 13.5px;
+}
+
+.cdraw__row dt { color: var(--h-note); flex-shrink: 0; }
+.cdraw__row dd { margin: 0; text-align: right; color: var(--ink); }
+
+.cdraw__size {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 10px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    background: var(--surface-sunken);
+}
+
+.cdraw__size-num {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--ink);
+}
+
+.cdraw__size-tag {
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--on-brand);
+}
+
+.cdraw__size-hint { font-size: var(--fs-caption, 12px); color: var(--muted); }
+
+.cdraw__colors,
+.cdraw__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 22px;
+    padding: 0;
+    list-style: none;
+}
+
+.cdraw__color {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 7px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-round);
+    font-size: var(--fs-caption, 12px);
+    color: var(--ink);
+}
+
+.cdraw__dot {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--line);
+}
+
+.cdraw__chips { gap: 8px; }
+
+.cdraw__chip {
+    display: inline-block;
+    padding: 5px 11px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: var(--fs-caption, 12px);
+    color: var(--muted);
+}
+
+.cdraw__foot {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+}
+
+.cdraw__go,
+.cdraw__alt {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.cdraw__go {
+    flex: 1;
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.cdraw__go:hover { background: var(--brand-strong); }
+
+.cdraw__alt {
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+}
+
+.cdraw__alt:hover { border-color: var(--brand); color: var(--brand); }
+
+/* ============================================================
    MÀN HÌNH HẸP
+
+   Ba mốc chuẩn của dự án (601 / 901 / 1101) — xem layout.css.
    ============================================================ */
 
 @media (max-width: 1100px) {
-    .cdet__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cdet { gap: 64px; }
+
+    .cdet__story-wrap,
+    .cdet__size-wrap,
+    .cdet__help {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 40px;
+    }
+
+    /* Cột bên mất đường kẻ dọc khi nó không còn đứng bên cạnh cái gì. */
+    .cdet__aside {
+        padding-left: 0;
+        border-left: 0;
+        padding-top: 32px;
+        border-top: 1px solid var(--line);
+    }
+
+    .cdet__aud { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cdet__face-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 900px) {
     .cdet {
-        padding: 32px 20px 72px;
+        padding-top: 32px;
+        padding-bottom: 72px;
         gap: 56px;
     }
 
@@ -330,25 +1212,46 @@
         gap: 28px;
     }
 
-    .cdet__name { font-size: 34px; }
+    .cdet__cmp-head { flex-direction: column; align-items: flex-start; gap: 14px; }
 
     .cdet__olist { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .cdet__end { padding: 32px 28px; }
+
+    /* Ngăn kéo tràn gần kín màn, chừa một dải để còn thấy có trang phía sau
+       và biết bấm vào đâu để đóng. */
+    .cdraw { width: min(560px, 92vw); }
 }
 
-@media (max-width: 560px) {
-    .cdet { padding-inline: 16px; }
+@media (max-width: 600px) {
+    .cdet { gap: 48px; }
 
-    .cdet__name    { font-size: 28px; }
-    .cdet__h2      { font-size: 23px; }
+    .cdet__h2 { font-size: 23px; }
 
-    .cdet__grid,
-    .cdet__olist   { grid-template-columns: 1fr; }
+    .cdet__aud,
+    .cdet__face-list,
+    .cdet__olist { grid-template-columns: 1fr; }
 
-    /* Nút tràn ngang ở màn hình hẹp: đích bấm rộng bằng cả cột, không phải
-       một hình chữ nhật lửng giữa trang. */
+    .cdet__palette { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* Nút tràn ngang: đích bấm rộng bằng cả cột, cao 48px — không phải một
+       hình chữ nhật lửng giữa trang. */
+    .cdet__cta-row { width: 100%; }
+
     .cdet__cta,
-    .cdet__more {
+    .cdet__end-btn {
         width: 100%;
         justify-content: center;
+        padding-block: 15px;
     }
+
+    .cdet__end-btns { width: 100%; }
+
+    /* Bảng dáng mặt: trên một cột thì kiểu "nhãn trái, mẫu phải" ép chữ vào
+       hai mép xa nhau, đọc như hai danh sách rời. Xếp dọc lại. */
+    .cdet__face-row { flex-direction: column; gap: 2px; }
+    .cdet__face-models { text-align: left; }
+
+    .cdraw { width: 100vw; }
+    .cdraw__shots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }

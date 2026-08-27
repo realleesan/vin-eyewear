@@ -17,42 +17,41 @@
  * Chỗ sai của lý lẽ đó là nó coi bộ sưu tập chỉ là một BỘ LỌC. Với kính thời
  * trang thì không: một bộ có ngày ra mắt, có ảnh lookbook, có câu chuyện về
  * việc nó dành cho kiểu ngày nào — những thứ không có ô nào trên trang danh
- * mục chứa nổi, và cũng không phải thứ người ta vừa cuộn lưới hàng vừa đọc.
+ * mục chứa nổi.
  *
- * Nên trang này KHÔNG dựng lại lưới hàng. Nó làm ba việc mà
- * /san-pham?collection= không làm được, rồi giao lại:
+ * ─────────────────────────────────────────────────────────────────────────────
+ * BA LỚP THÔNG TIN, VÀ RANH GIỚI VỚI TRANG SẢN PHẨM
  *
- *   1. KỂ — ảnh bìa lớn, ngày ra mắt, câu dẫn, và cột `story` nhiều đoạn dành
- *      riêng cho trang này (xem migration 2026-08-27-bo-suu-tap-trang-chi-tiet).
- *   2. TÓM TẮT — bộ này có bao nhiêu món, rẻ nhất từ bao nhiêu, đang có những
- *      dáng gọng nào. Trang danh mục chỉ trả lời được sau khi người dùng đã
- *      bấm vào và đọc cột lọc.
- *   3. DẪN ĐI — mọi nút trên trang đều đổ về /san-pham?collection=<slug>,
- *      trong đó cụm dáng gọng còn kèm sẵn ?shape= tương ứng.
+ *   Lớp 1  cấp BỘ — mùa, xuất xứ, câu chuyện, đối tượng, bảng màu, quy mô.
+ *          Không trang nào khác có chỗ cho chúng.
+ *   Lớp 2  cấp MẪU — nhưng ở đây là một BẢNG SO SÁNH, không phải sáu bản sao
+ *          của trang sản phẩm. Bảng trả lời câu "mẫu nào hợp tôi"; trang sản
+ *          phẩm trả lời câu "tôi mua cái này". Ngăn kéo thông số là chỗ nối
+ *          hai câu đó, và nó KẾT THÚC bằng nút sang trang sản phẩm.
+ *   Lớp 3  hỗ trợ — chọn cỡ, dáng mặt, bảo quản, FAQ, CTA. Ba khối đầu là
+ *          kiến thức chung nên nằm ở config/eyewear.php; FAQ theo bộ nên nằm
+ *          ở bảng collection_faqs.
  *
- * Vài thẻ sản phẩm ở giữa trang là HÀNG MẪU (tối đa self::PREVIEW món, hàng
- * nổi bật trước), không phải danh sách đầy đủ và cố ý không có phân trang —
- * đủ để tin là bộ này có hàng thật, không đủ để thay trang danh mục.
+ * Hệ quả cho người sửa sau: trang này KHÔNG được có nút thêm-vào-giỏ, không
+ * chọn phương án, không phân trang, không ô sắp xếp. Mỗi thứ đó là một bước
+ * tiến tới đúng bản sao nghèo hơn mà quyết định 2026-08-25 đã lo.
  *
- * `slug` TRÊN URL LÀ SLUG CỦA BẢNG `collections`, cũng chính là chuỗi nằm
- * trong `products.collection`. Đổi slug của một bộ đã phát hành là làm chết cả
- * trang này lẫn mọi liên kết đã chia sẻ — CollectionAdminController chặn sẵn.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * NGĂN KÉO MỞ BẰNG ĐỊA CHỈ (?mau=<slug>), KHÔNG BẰNG JAVASCRIPT
+ *
+ * Cùng cơ chế mà ngăn kéo đơn hàng của khu quản trị dùng (?xem=<id>): nút ✕ và
+ * lớp nền mờ đều là thẻ <a> trỏ về chính trang này khi bỏ tham số ấy. Tắt JS
+ * thì đóng mở vẫn chạy, chỉ là mỗi lần tải lại trang.
+ *
+ * Cái giá: mở một mẫu là một lượt tải. Đổi lại, mỗi mẫu có một địa chỉ gửi cho
+ * nhau được, nút Lùi của trình duyệt làm đúng việc người dùng chờ đợi, và
+ * trang giữ được lời hứa "tắt JS mọi luồng vẫn chạy" của cả dự án.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 class CollectionController extends BaseController
 {
-    /**
-     * Số sản phẩm mẫu trên trang chi tiết.
-     *
-     * Bốn là một hàng thẻ trên màn hình rộng và hai hàng trên máy tính bảng —
-     * hết hàng mẫu là mắt gặp ngay nút "Xem tất cả", đúng lúc người xem vừa
-     * tin là bộ này có hàng. Tám thì lấp đầy màn hình thứ hai và người ta bắt
-     * đầu cuộn như thể đây là trang danh mục, mà nó thì không có bộ lọc nào.
-     */
-    private const PREVIEW = 4;
-
-    /** Số dáng gọng in ra ở cụm "lọc nhanh". */
+    /** Số dáng gọng in ra ở cụm "lọc nhanh" dưới bảng so sánh. */
     private const SHAPES = 6;
 
     public function index(): void
@@ -87,73 +86,217 @@ class CollectionController extends BaseController
             return;
         }
 
-        $stats    = ProductModel::collectionStats($slug);
-        $products = $stats['count'] > 0 ? ProductModel::inCollection($slug, self::PREVIEW) : [];
+        // Cả bộ, không phân trang — xem ProductModel::inCollection.
+        $products = ProductModel::inCollection($slug);
 
         /*
-         * Các bộ KHÁC, cho dải cuối trang. Lọc chính nó ra bằng slug chứ không
-         * bằng id: cùng một giá trị mà URL đang dùng, nên đọc lại thấy ngay
-         * quan hệ, và không phụ thuộc vào việc find() có trả cột id hay không.
+         * Mẫu đang mở trong ngăn kéo. Slug lạ thì coi như KHÔNG mở ngăn kéo
+         * nào, chứ không 404: cả trang vẫn đúng và vẫn đọc được, chỉ thiếu một
+         * lớp phủ. Trả 404 cho cả trang vì một tham số phụ sai là phạt người
+         * dùng vì một liên kết cũ mà chính cửa hàng phát ra.
+         *
+         * Tìm trong $products chứ không truy vấn lại: mẫu phải THUỘC BỘ NÀY
+         * thì ngăn kéo mới có nghĩa. Không có phép kiểm đó thì
+         * /bo-suu-tap/nang-he?mau=<một mẫu bộ khác> vẽ ra một ngăn kéo nói về
+         * mặt hàng không nằm trong bảng phía sau nó.
          */
-        $others = array_values(array_filter(
-            CollectionModel::visible(),
-            static fn (array $c): bool => $c['slug'] !== $collection['slug']
-        ));
+        $mauSlug = trim((string) ($_GET['mau'] ?? ''));
+        $open    = null;
+
+        foreach ($products as $p) {
+            if ($p['slug'] === $mauSlug) {
+                $open = $p;
+                break;
+            }
+        }
+
+        $stats = ProductModel::collectionStats($slug);
 
         $this->renderView('collection/detail', [
-            'pageTitle'  => $collection['name'] . ' — Bộ sưu tập — Vin Eyewear',
-            'metaDesc'   => excerpt(
-                (string) ($collection['tagline'] ?? '') !== ''
-                    ? (string) $collection['tagline']
-                    : (string) ($collection['intro'] ?? ''),
-                155
-            ),
+            'pageTitle'  => $this->metaTitle($collection),
+            'metaDesc'   => $this->metaDesc($collection),
             'collection' => $collection,
             'products'   => $products,
             'total'      => $stats['count'],
             'minPrice'   => $stats['minPrice'],
+            'maxPrice'   => $this->maxPrice($products),
+            'skuCount'   => $this->skuCount($products),
+
+            // Lớp 1 — ba cột JSON, giải mã một lần ở đây thay vì trong view.
+            'audience'   => CollectionModel::jsonField($collection, 'audience'),
+            'palette'    => CollectionModel::jsonField($collection, 'palette'),
+            'signature'  => CollectionModel::jsonField($collection, 'signature'),
+
+            // Lớp 2 — ngăn kéo và lối tắt vào danh mục đã lọc.
+            'open'       => $open,
+            'openVariants' => $open === null ? [] : VariantModel::forProduct($open['id']),
             'shapes'     => $this->shapes($products, $slug),
-            'others'     => $others,
+
+            // Lớp 3 — hai bảng dựng từ chính hàng của bộ, cộng nội dung chung.
+            'sizeTable'  => EyewearSpecs::sizeTable($products),
+            'faceTable'  => EyewearSpecs::faceTable($products),
+            'sizeGuide'  => (array) config('eyewear.size_guide'),
+            'care'       => (array) config('eyewear.care'),
+            'faqs'       => $this->faqs((string) $collection['id']),
+
+            'others'     => $this->others($collection),
         ]);
     }
 
+    // ========================================================================
+    // NHỮNG PHÉP NHỎ, TÁCH RA CHO show() ĐỌC ĐƯỢC TRONG MỘT MÀN HÌNH
+    // ========================================================================
+
     /**
-     * Dáng gọng có mặt trong bộ, cho cụm "lọc nhanh".
+     * Tiêu đề thẻ <title>: cột meta_title nếu cửa hàng đã viết, không thì dựng.
      *
-     * ĐỌC TỪ HÀNG MẪU, không phải từ cả bộ. Đó là một đánh đổi cố ý: đọc cả bộ
-     * là kéo thêm mọi dòng sản phẩm về RAM chỉ để dựng vài con chip, mà chip
-     * này không hứa "đây là toàn bộ dáng gọng của bộ" — nó là lối tắt vào
-     * trang danh mục, nơi cột lọc bên trái mới là danh sách đầy đủ và có số
-     * đếm. Bộ nào có nhiều dáng hơn thì người dùng gặp chúng ở đó.
+     * Bản dựng có kèm "Bộ sưu tập" vì tên bộ một mình ("Nắng hè") không nói
+     * được đây là trang gì khi nó nằm giữa mười kết quả tìm kiếm.
+     */
+    private function metaTitle(array $c): string
+    {
+        $rieng = trim((string) ($c['meta_title'] ?? ''));
+
+        return $rieng !== '' ? $rieng : $c['name'] . ' — Bộ sưu tập — Vin Eyewear';
+    }
+
+    /**
+     * Thẻ <meta description>: cột riêng, rồi tagline, rồi intro.
      *
-     * Cắt ở self::SHAPES: quá số đó thì cụm chip dài bằng một cột lọc thật,
-     * và nó không phải cột lọc thật.
+     * Ba mức chứ không hai: bộ nào cũng có ít nhất một trong ba, nên trang
+     * không bao giờ ra đời với ô mô tả rỗng — thứ mà công cụ tìm kiếm sẽ tự
+     * bịa bằng cách cắt một đoạn bất kỳ trên trang.
+     */
+    private function metaDesc(array $c): string
+    {
+        foreach (['meta_description', 'tagline', 'intro'] as $cot) {
+            $v = trim((string) ($c[$cot] ?? ''));
+
+            if ($v !== '') {
+                return excerpt($v, 155);
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Câu hỏi thường gặp của bộ — RỖNG khi bảng chưa tồn tại.
+     *
+     * `collection_faqs` ra đời cùng migration 2026-08-27-bo-suu-tap-khung-ba-lop,
+     * mà mã lên hosting bằng FTP tự động còn migration thì phải bấm tay: giữa
+     * hai việc đó có một khoảng dài hàng giờ. Hỏi thẳng một bảng chưa tồn tại
+     * trong khoảng ấy là lỗi 1146 và cả trang bộ sưu tập trả 500 — mất luôn
+     * chín khối không liên quan gì tới FAQ.
+     *
+     * Cùng lối mà CollectionAdminController dùng cho cột `story`, và cùng lối
+     * mà Database::tableExists() sinh ra để phục vụ (xem chú thích trong đó).
+     */
+    private function faqs(string $collectionId): array
+    {
+        if (!Database::tableExists('collection_faqs')) {
+            return [];
+        }
+
+        return CollectionFaqModel::forCollection($collectionId);
+    }
+
+    /** Giá cao nhất của bộ, hoặc null. Cặp với minPrice để in một khoảng. */
+    private function maxPrice(array $products): ?int
+    {
+        $gia = array_filter(array_map(static fn ($p) => (int) ($p['price'] ?? 0), $products));
+
+        return $gia === [] ? null : max($gia);
+    }
+
+    /**
+     * Tổng SKU của bộ: mỗi mẫu tính bằng số phương án của nó, tối thiểu 1.
+     *
+     * Tối thiểu 1 vì mặt hàng KHÔNG có phương án nào vẫn là một SKU bán được
+     * (xem chú thích bảng product_variants trong schema.sql). Đếm 0 cho những
+     * mặt hàng ấy thì con số "22 SKU" trên trang sẽ nhỏ hơn số hàng thật.
+     */
+    private function skuCount(array $products): int
+    {
+        if ($products === []) {
+            return 0;
+        }
+
+        $ids = array_column($products, 'id');
+        $cho = implode(',', array_fill(0, count($ids), '?'));
+
+        $dem = array_column(
+            Database::fetchAll(
+                "SELECT product_id, COUNT(*) AS n
+                   FROM product_variants
+                  WHERE is_active = 1 AND product_id IN ({$cho})
+                  GROUP BY product_id",
+                $ids
+            ),
+            'n',
+            'product_id'
+        );
+
+        $tong = 0;
+
+        foreach ($ids as $id) {
+            $tong += max(1, (int) ($dem[$id] ?? 0));
+        }
+
+        return $tong;
+    }
+
+    /**
+     * Dáng gọng có mặt trong bộ, cho cụm "lọc nhanh" dưới bảng so sánh.
+     *
+     * Mỗi chip là trang danh mục ĐÃ bật sẵn hai tiêu chí: bộ này và dáng gọng
+     * đó. Đây là việc trang này làm mà một đường /san-pham?collection= trơn
+     * không làm được — nó tiết kiệm cho người dùng đúng một cú bấm mò trong
+     * cột lọc, và nó biết trước là bấm vào sẽ có hàng.
+     *
+     * Cắt ở self::SHAPES: quá số đó thì cụm chip dài bằng một cột lọc thật, mà
+     * nó không phải cột lọc thật — danh sách đầy đủ và số đếm nằm ở trang danh
+     * mục.
      *
      * @return array<int, array{key:string, label:string, url:string}>
      */
     private function shapes(array $products, string $slug): array
     {
-        $found = [];
+        $thay = [];
 
         foreach ($products as $product) {
             foreach (ProductTaxonomy::of($product)['shape'] as $key => $label) {
-                $found[$key] = $label;
+                $thay[$key] = $label;
             }
         }
 
-        $out = [];
+        $ra = [];
 
-        foreach (array_slice($found, 0, self::SHAPES, true) as $key => $label) {
-            $out[] = [
+        foreach (array_slice($thay, 0, self::SHAPES, true) as $key => $label) {
+            $ra[] = [
                 'key'   => $key,
                 'label' => $label,
                 // http_build_query lo phần mã hoá — tự nối chuỗi ở đây là chỗ
-                // slug có dấu gạch hay ký tự lạ sẽ lọt ra ngoài chưa mã hoá.
+                // slug có ký tự lạ sẽ lọt ra ngoài chưa mã hoá.
                 'url'   => '/san-pham?' . http_build_query(['collection' => $slug, 'shape' => $key]),
             ];
         }
 
-        return $out;
+        return $ra;
+    }
+
+    /**
+     * Các bộ KHÁC, cho dải cuối trang.
+     *
+     * Lọc chính nó ra bằng slug chứ không bằng id: cùng một giá trị mà URL
+     * đang dùng, nên đọc lại thấy ngay quan hệ.
+     */
+    private function others(array $collection): array
+    {
+        return array_values(array_filter(
+            CollectionModel::visible(),
+            static fn (array $c): bool => $c['slug'] !== $collection['slug']
+        ));
     }
 
     /**

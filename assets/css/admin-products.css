@@ -1,0 +1,48 @@
+/* ============================================================
+   FORM SẢN PHẨM (/quan-tri/san-pham) — chỉ phần THÔNG SỐ KÍNH
+
+   Một khối duy nhất: lưới ô tick cho "Hợp dáng mặt" và "Lớp phủ tròng".
+   Hai nhóm đó có sáu lựa chọn mỗi nhóm, mà .field--check trong admin.css
+   xếp dọc một cột — mười hai dòng tick liên tiếp làm form dài thêm gần
+   một màn hình và mắt không gom được chúng thành hai nhóm.
+
+   File RIÊNG chứ không nhồi vào admin.css: file đó là CSS dùng chung cho
+   mười tám trang quản trị, và mười bảy trang còn lại không có ô tick nào
+   xếp lưới. Xem khối $adminStyles trong admin/_layout/master.php.
+   ============================================================ */
+
+.afacets {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 20px;
+    margin-top: 6px;
+}
+
+.afacets__one {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.afacets__one input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--brand);
+    flex-shrink: 0;
+}
+
+/* Dưới 900px cột form đã hẹp lại; ba cột tick thành hai để nhãn dài
+   ("Lọc ánh sáng xanh") không xuống dòng giữa chừng. */
+@media (max-width: 900px) {
+    .afacets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+    .afacets { grid-template-columns: 1fr; }
+}

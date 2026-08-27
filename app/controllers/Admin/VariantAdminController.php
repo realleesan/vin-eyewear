@@ -39,6 +39,9 @@ class VariantAdminController extends AdminController
             'canEdit'   => UserModel::hasRole($this->userId, 'admin')
                         || UserModel::hasRole($this->userId, 'manager'),
             'editing'   => isset($_GET['sua']) ? VariantModel::find((string) $_GET['sua']) : null,
+            // Hai cột phối màu thêm ngày 2026-08-27; chưa chạy nâng cấp thì
+            // hai ô nhập tự ẩn — xem save().
+            'hasSwatch' => Database::columnExists('product_variants', 'swatch_hex'),
         ]);
     }
 
@@ -88,6 +91,25 @@ class VariantAdminController extends AdminController
             'position'       => max(0, (int) ($_POST['position'] ?? 0)),
             'is_active'      => isset($_POST['is_active']) ? 1 : 0,
         ];
+
+        /*
+         * PHỐI MÀU — hai cột chỉ có nghĩa với phương án MÀU.
+         *
+         * Phương án chiết suất tròng hay cỡ thì để trống, và ngăn kéo thông số
+         * trên trang bộ sưu tập chỉ vẽ ô màu cho biến thể nào CÓ mã màu (xem
+         * collection/_drawer.php). Nên không có phép kiểm "phải điền" nào ở
+         * đây — trống là một câu trả lời hợp lệ.
+         *
+         * Mã màu sai dạng thì về NULL chứ không lưu nguyên: giá trị này đi
+         * thẳng vào thuộc tính style của thẻ in ra. View kiểm lại lần nữa,
+         * nhưng chặn từ lúc ghi thì cột không bao giờ chứa thứ phải đi kiểm.
+         */
+        if (Database::columnExists('product_variants', 'swatch_hex')) {
+            $ma = trim((string) ($_POST['swatch_hex'] ?? ''));
+
+            $data['swatch_hex'] = preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/', $ma) ? $ma : null;
+            $data['image']      = trim((string) ($_POST['image'] ?? '')) ?: null;
+        }
 
         // Giá bán sau khi cộng chênh lệch không được âm — âm thì hoá đơn thành
         // khoản cửa hàng nợ khách.

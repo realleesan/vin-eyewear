@@ -83,6 +83,39 @@ class CollectionModel extends BaseModel
     }
 
     /**
+     * Một cột JSON của bộ sưu tập, đã giải mã thành mảng.
+     *
+     * Ba cột dùng tới: `audience` · `palette` · `signature`. Chúng là JSON chứ
+     * không phải ba bảng con vì mỗi cái chỉ có vài dòng, không dòng nào được
+     * truy vấn riêng, và không dòng nào có ý nghĩa ngoài bộ chứa nó — đúng ba
+     * điều kiện để một danh sách nên nằm trong cột thay vì trong bảng.
+     *
+     * KHÔNG giải mã sẵn trong visible()/allOrdered(): mega menu và khối trang
+     * chủ gọi hai hàm đó ở mọi lượt tải mà không đụng tới ba cột này, nên giải
+     * mã sẵn là ba lượt json_decode cho mỗi bộ, mỗi trang, để không ai dùng.
+     *
+     * Trả RỖNG khi cột trống hoặc JSON hỏng — cột do form quản trị ghi nên
+     * hỏng là chuyện hiếm, nhưng dữ liệu gieo tay thì không hứa gì cả, và một
+     * khối biến mất vẫn hơn một trang 500.
+     */
+    public static function jsonField(array $collection, string $key): array
+    {
+        $tho = $collection[$key] ?? null;
+
+        if (is_array($tho)) {
+            return $tho;
+        }
+
+        if (!is_string($tho) || trim($tho) === '') {
+            return [];
+        }
+
+        $ra = json_decode($tho, true);
+
+        return is_array($ra) ? $ra : [];
+    }
+
+    /**
      * Ảnh bìa của một bộ — RỖNG nếu không dùng được.
      *
      * Kiểm cả sự TỒN TẠI của file, không chỉ kiểm chuỗi khác rỗng. Đường dẫn

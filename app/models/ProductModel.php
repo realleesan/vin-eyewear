@@ -481,21 +481,31 @@ class ProductModel extends BaseModel
      * chuỗi đang nằm trong cột này.
      *
      * Thứ tự giống related()/featured(): hàng nổi bật trước, rồi hàng mới.
-     * Trang chi tiết bộ sưu tập chỉ lấy vài món làm mẫu nên thứ tự này quyết
-     * định cửa hàng khoe món nào — dùng đúng cái cần đánh dấu is_featured.
+     * Đó là thứ tự bảng so sánh trên trang chi tiết bộ sưu tập in ra, nên nó
+     * quyết định mẫu nào đập vào mắt trước — dùng đúng cái cần đánh dấu
+     * is_featured.
+     *
+     * `$limit = null` là LẤY HẾT, và đó là cách trang chi tiết gọi: bảng so
+     * sánh phải có đủ mọi mẫu thì mới so được, và một bộ sưu tập có sáu tới
+     * mươi lăm mẫu chứ không có nghìn. Phân trang ở đây sẽ biến bảng so sánh
+     * thành một trang danh mục thứ hai — thứ mà cả trang này cố ý không làm.
      */
-    public static function inCollection(string $slug, int $limit = 8): array
+    public static function inCollection(string $slug, ?int $limit = null): array
     {
         if ($slug === '') {
             return [];
         }
 
+        // LIMIT nối thẳng vào chuỗi (không ràng buộc tham số) vì MySQL không
+        // nhận placeholder ở vị trí LIMIT khi prepare thật. An toàn nhờ ép
+        // (int) ngay tại đây — cùng lối mà filter() và related() đang dùng.
+        $chan = $limit === null ? '' : ' LIMIT ' . max(1, (int) $limit);
+
         $rows = Database::fetchAll(
             'SELECT * FROM products
               WHERE is_visible = 1
                 AND collection = :s
-              ORDER BY is_featured DESC, created_at DESC
-              LIMIT ' . max(1, $limit),
+              ORDER BY is_featured DESC, created_at DESC' . $chan,
             ['s' => $slug]
         );
 

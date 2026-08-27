@@ -58,6 +58,15 @@ DROP TABLE IF EXISTS `lens_prices`;
 DROP TABLE IF EXISTS `lens_packages`;
 DROP TABLE IF EXISTS `prescriptions`;
 DROP TABLE IF EXISTS `stores`;
+-- `collections` VÀ `collection_faqs` — con trước, cha sau.
+--
+-- `collections` ĐÃ THIẾU Ở DANH SÁCH NÀY từ lúc nó ra đời (2026-08-25): file
+-- mở đầu bằng DROP cho mọi bảng rồi CREATE lại từ đầu, nên một bảng không được
+-- DROP sẽ làm câu CREATE của chính nó đổ "table already exists" và dừng cả lần
+-- cài lại. Không ai gặp vì chưa ai chạy setup.sh lần hai trên máy đã có dữ
+-- liệu. Thêm vào đây cùng lúc với bảng FAQ trỏ vào nó.
+DROP TABLE IF EXISTS `collection_faqs`;
+DROP TABLE IF EXISTS `collections`;
 DROP TABLE IF EXISTS `product_variants`;
 DROP TABLE IF EXISTS `products`;
 DROP TABLE IF EXISTS `categories`;
@@ -559,6 +568,57 @@ CREATE TABLE `products` (
     `status`           VARCHAR(32)  NOT NULL DEFAULT 'in_stock',
     `is_featured`      TINYINT(1)   NOT NULL DEFAULT 0,
     `is_visible`       TINYINT(1)   NOT NULL DEFAULT 1,
+
+    -- ┌─ THÔNG SỐ KÍNH MẮT ─────────────────────────────────────────────────
+    -- │ Thêm 2026-08-27 cho trang chi tiết bộ sưu tập (khung ba lớp).
+    -- │ Xem migrations/2026-08-27-bo-suu-tap-khung-ba-lop.sql.
+    -- │
+    -- │ Cột nào TRỐNG thì trang bỏ hẳn dòng đó, không in dấu gạch — nên một
+    -- │ mặt hàng chưa nhập gì vẫn hiện bình thường, chỉ ngắn hơn.
+    -- └────────────────────────────────────────────────────────────────────
+    -- eyewear_type: 'gong-can' | 'kinh-ram' | 'da-dung' (config/eyewear.php).
+    --               KHÔNG phải categories — xem chú thích trong file đó.
+    `eyewear_type`     VARCHAR(20)  NULL,
+    `frame_finish`     VARCHAR(120) NULL,
+    `hinge_type`       VARCHAR(120) NULL,
+    `nose_pad`         VARCHAR(120) NULL,
+    `weight_g`         SMALLINT UNSIGNED NULL,
+    -- Ba số của chuẩn ghi 52□18-145. Lưu RỜI để so sánh và lọc được;
+    -- chuỗi hiển thị do EyewearSpecs::size() ghép lại, không có cột riêng.
+    `lens_width_mm`    TINYINT UNSIGNED  NULL,
+    `bridge_mm`        TINYINT UNSIGNED  NULL,
+    `temple_mm`        TINYINT UNSIGNED  NULL,
+    -- frame_width_mm nuôi phép quy đổi cỡ S/M/L (ngưỡng ở config/eyewear.php)
+    `frame_width_mm`   SMALLINT UNSIGNED NULL,
+    `lens_height_mm`   TINYINT UNSIGNED  NULL,
+    -- face_shapes: CSV khoá chuẩn — 'tron,trai-xoan'. Bảng "gọng theo dáng
+    --              mặt" trên trang bộ sưu tập dựng từ cột này của cả bộ.
+    `face_shapes`      VARCHAR(160) NULL,
+    `lens_material`    VARCHAR(120) NULL,
+    -- DECIMAL chứ không VARCHAR: "1,61" và "1.610" là hai cách gõ sai cùng
+    -- một số, và bảng so sánh sắp theo cột này.
+    `lens_index`       DECIMAL(3,2) NULL,
+    -- lens_coatings: CSV khoá chuẩn — 'uv400,chong-loa,chong-tray'
+    `lens_coatings`    VARCHAR(255) NULL,
+    `is_polarized`     TINYINT(1)   NOT NULL DEFAULT 0,
+    `is_photochromic`  TINYINT(1)   NOT NULL DEFAULT 0,
+    -- VARCHAR chứ không số: tròng đổi màu có hai đầu ("18% → 62%")
+    `lens_vlt`         VARCHAR(40)  NULL,
+    -- lens_category: 0..4 theo ISO 12312-1. Cấp 4 KHÔNG được lái xe.
+    `lens_category`    TINYINT UNSIGNED NULL,
+    `base_curve`       VARCHAR(20)  NULL,
+    -- rx_ready là CỜ để lọc, rx_note là câu để giải thích ("tới -6.00")
+    `rx_ready`         TINYINT(1)   NOT NULL DEFAULT 0,
+    `rx_note`          VARCHAR(255) NULL,
+    `price_with_lens`  BIGINT       NULL,
+    -- Bốn cột dưới TRỐNG nghĩa là "theo chính sách chung"
+    -- (config/eyewear.php → defaults). Chỉ điền khi mặt hàng phải nói KHÁC.
+    `accessories`      VARCHAR(255) NULL,
+    `warranty`         VARCHAR(255) NULL,
+    `return_policy`    VARCHAR(255) NULL,
+    `certifications`   VARCHAR(255) NULL,
+    `barcode`          VARCHAR(40)  NULL,
+
     `ar_model_url`     VARCHAR(500) NULL,
     `rating`           DECIMAL(2,1) NOT NULL DEFAULT 5.0,
     `review_count`     INT          NOT NULL DEFAULT 0,
@@ -597,6 +657,10 @@ CREATE TABLE `product_variants` (
     `product_id`     CHAR(36)     NOT NULL,
     `label`          VARCHAR(60)  NOT NULL,
     `note`           VARCHAR(120) NULL,
+    -- Hai cột dưới chỉ có nghĩa với phương án MÀU; phương án chiết suất tròng
+    -- hay cỡ thì để NULL, và ngăn kéo thông số chỉ vẽ ô màu khi có mã màu.
+    `swatch_hex`     VARCHAR(7)   NULL,
+    `image`          VARCHAR(500) NULL,
     `price_delta`    BIGINT       NOT NULL DEFAULT 0,
     `stock_quantity` INT          NOT NULL DEFAULT 0,
     `is_active`      TINYINT(1)   NOT NULL DEFAULT 1,
@@ -635,6 +699,34 @@ CREATE TABLE `collections` (
     -- hiện ở trang chi tiết /bo-suu-tap/{slug}. Tách ra vì hai chỗ có kích
     -- thước khác hẳn nhau — xem migrations/2026-08-27-bo-suu-tap-trang-chi-tiet.sql.
     `story`       TEXT         NULL,
+
+    -- ┌─ KHUNG THÔNG TIN CẤP BỘ ────────────────────────────────────────────
+    -- │ Thêm 2026-08-27 cùng trang chi tiết. Mọi cột đều NULL được: bộ chưa
+    -- │ nhập gì thì trang bỏ hẳn khối tương ứng chứ không vẽ ô rỗng.
+    -- └────────────────────────────────────────────────────────────────────
+    -- season_code là mã ngắn cho huy hiệu ("SS26"), season_label là dòng chữ
+    -- đọc được ("Xuân–Hè 2026"). Hai chỗ hiển thị khác nhau, hai cột.
+    `season_code`  VARCHAR(12)  NULL,
+    `season_label` VARCHAR(60)  NULL,
+    -- brand ở đây là hãng đứng tên CẢ BỘ, khác products.brand của từng mẫu.
+    `brand`        VARCHAR(120) NULL,
+    `product_line` VARCHAR(120) NULL,
+    `designed_in`  VARCHAR(120) NULL,
+    `made_in`      VARCHAR(120) NULL,
+    -- audience: [{"tieu_de","gia_tri","ghi_chu"}] — bốn ô "bộ này hợp với ai",
+    --           trong đó ô cuối cố ý nói ai ĐỪNG mua.
+    `audience`     JSON         NULL,
+    `design_style` VARCHAR(160) NULL,
+    -- palette: [{"ten","ma_mau"}] — ô màu chủ đạo
+    `palette`      JSON         NULL,
+    -- signature: ["câu ngắn", ...] — chi tiết nhận diện đặc trưng
+    `signature`    JSON         NULL,
+    `launch_offer` VARCHAR(255) NULL,
+    `channels`     VARCHAR(255) NULL,
+    -- Trống thì trang tự suy từ name/tagline — xem CollectionController::show
+    `meta_title`       VARCHAR(255) NULL,
+    `meta_description` VARCHAR(320) NULL,
+
     `cover_image` VARCHAR(500) NULL,
     `launched_at` DATE         NULL,
     `sort_order`  SMALLINT     NOT NULL DEFAULT 0,
@@ -645,6 +737,36 @@ CREATE TABLE `collections` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_collections_slug` (`slug`),
     KEY `idx_collections_visible` (`is_visible`, `sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ----------------------------------------------------------------------------
+-- CÂU HỎI THƯỜNG GẶP CỦA MỘT BỘ SƯU TẬP
+--
+-- Thứ DUY NHẤT trong "lớp nội dung hỗ trợ" của trang chi tiết phải có bảng.
+-- Ba khối còn lại (cách đo gọng cũ, hướng dẫn bảo quản, ngưỡng cỡ S/M/L)
+-- giống hệt nhau ở mọi bộ nên nằm ở config/eyewear.php.
+--
+-- FAQ thì không: "kính râm bộ này lắp được độ cận không" chỉ có nghĩa với một
+-- bộ toàn kính râm, và câu trả lời nhắc đích danh mẫu nào lắp được tới bao
+-- nhiêu độ. Để trong config là bắt người viết nội dung sửa mã và deploy mỗi
+-- lần cửa hàng ra bộ mới — đúng cái mà bảng `collections` đã bỏ đi hôm
+-- 2026-08-25.
+--
+-- CASCADE: xoá bộ là xoá câu hỏi của nó. Không còn bộ thì câu trả lời "bốn
+-- trong sáu mẫu lắp được" không còn gì để nói về.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `collection_faqs` (
+    `id`            CHAR(36)     NOT NULL DEFAULT (UUID()),
+    `collection_id` CHAR(36)     NOT NULL,
+    `question`      VARCHAR(255) NOT NULL,
+    `answer`        TEXT         NOT NULL,
+    `sort_order`    SMALLINT     NOT NULL DEFAULT 0,
+    `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_collection_faqs` (`collection_id`, `sort_order`),
+    CONSTRAINT `fk_collection_faqs_collection` FOREIGN KEY (`collection_id`)
+        REFERENCES `collections` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
