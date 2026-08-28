@@ -3556,12 +3556,23 @@ a.astatus__save { text-decoration: none; }
 
    Không có luật này thì ô ấy trông y hệt ô sửa được ngay bên cạnh, và người
    dùng gõ vào rồi mới phát hiện không gõ được. */
+/* [readonly] đi kèm :disabled — hai cách khoá một ô, cùng một dáng.
+
+   Khác nhau ở chỗ ô readonly vẫn chọn và chép được chữ trong nó, còn ô disabled
+   thì không (và cũng không được gửi lên). Ô "Mã gói" ở hộp gói chiết suất dùng
+   readonly vì mã đó là thứ người ta hay chép đi tra đơn cũ; ô "Email đăng nhập"
+   ở Tài khoản nội bộ dùng disabled vì ở đó việc KHÔNG gửi lên mới là điều đáng
+   giá. Người dùng nhìn thấy cùng một thứ: ô này khoá. */
 .aform__grid input:disabled,
 .aform__grid select:disabled,
 .aform__grid textarea:disabled,
+.aform__grid input[readonly],
+.aform__grid textarea[readonly],
 .apf input:disabled,
 .apf select:disabled,
-.apf textarea:disabled {
+.apf textarea:disabled,
+.apf input[readonly],
+.apf textarea[readonly] {
     background: #f2e9d9;
     color: #8a7a6b;
     cursor: not-allowed;
@@ -4307,3 +4318,26 @@ a.astatus__save { text-decoration: none; }
 /* Dòng phụ của thẻ số liệu (.astat__extra*) khai ở khối THẺ SỐ LIỆU phía
    trên — trước đây có một bản thứ hai ở đây, và bản dưới đè bản trên nên con
    số tạm thu trên thẻ nền tối lấy màu chữ nền sáng: nâu đen trên nâu đen. */
+
+/* --- Thanh đầu hộp danh mục gói chiết suất (.algp) -------------- */
+
+/*
+ * Bản vẽ đặt nút "+ Thêm gói" cạnh nút ✕ trên nhan đề hộp. modal-head.php dùng
+ * chung cho mười mấy màn và chỉ nhận nhan đề với dòng phụ, nên nút nằm ở dòng
+ * đầu RUỘT hộp thay vì trong đầu hộp — vẫn là thứ thấy ngay khi mở, mà không
+ * phải nhét một tham số "nút phụ" vào partial dùng chung.
+ */
+.algp__bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.algp__count {
+    margin: 0;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}

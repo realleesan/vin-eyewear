@@ -56,7 +56,8 @@ foreach ($types as $t) {
 
                  Thanh bên chỉ đeo thêm mục cho những thứ mở hằng ngày; danh mục
                  gói thì vài tháng một lần. */ ?>
-        <a href="/quan-tri/gia-trong/goi" class="astatus__save astatus__save--ghost">Quản lý gói</a>
+        <a href="/quan-tri/gia-trong/goi" class="astatus__save astatus__save--ghost"
+           data-modal>Quản lý gói</a>
 
         <?php if (!$canEdit): ?>
             <p class="ahead__note">Bạn chỉ có quyền xem. Cần quyền quản lý để chỉnh sửa.</p>
@@ -177,3 +178,51 @@ foreach ($types as $t) {
         </div>
     <?php endif; ?>
 </form>
+
+<?php
+/*
+ * HAI HỘP THOẠI CHỒNG NHAU — theo bản thiết kế "Giá tròng.dc.html".
+ *
+ *   hộp 1  danh mục gói chiết suất, nổi trên bảng giá  (?showPackages)
+ *   hộp 2  form thêm/sửa MỘT gói, nổi trên hộp 1       (?them=1 · ?sua=<mã>)
+ *
+ * Chúng là ANH EM trong DOM, không lồng nhau: hộp 2 đứng sau nên nó nằm trên
+ * theo thứ tự xếp lớp tự nhiên, không phải bịa thêm một tầng z-index thứ ba.
+ * admin-modal.js gắp cả hai cùng lúc (querySelectorAll), nên bấm "Sửa" trong
+ * hộp 1 vẫn mở tại chỗ chứ không tải lại trang.
+ *
+ * $showPackages chỉ bật khi controller đi qua packages() — cùng một view dựng
+ * cả hai cảnh, xem khối chú thích ở LensPriceAdminController::packages().
+ */
+?>
+<?php if ($showPackages): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => 'Gói chiết suất',
+        'phu'     => 'Thêm một gói là bảng giá mọc thêm một hàng — nhớ quay lại điền giá.',
+        'dongUrl' => '/quan-tri/gia-trong',
+        'rong'    => 'xxl',
+    ]); ?>
+
+        <?php
+        /* require thẳng chứ không partial(): ruột hộp cần $packages,
+           $priceCounts, $canEdit, $editing — liệt kê lại từng cái cho partial
+           là một danh sách sẽ lệch với thực tế ngay lần sửa đầu. require giữ
+           nguyên phạm vi biến của file này. */
+        require VIEWS_PATH . '/admin/lens-prices/packages.php';
+        ?>
+
+        </div>
+
+        <?php /* Chân hộp CHỈ có lối ra: mọi thao tác (thêm, sửa, xoá, đổi thứ
+                 tự) đều có nút riêng trong bảng và tự gửi ngay, nên không có
+                 gì để "lưu" ở cấp hộp. Dùng modal-foot sẽ đẻ ra một nút Lưu
+                 không trỏ vào form nào. */ ?>
+        <div class="amodal__foot">
+            <a class="astatus__save astatus__save--ghost" href="/quan-tri/gia-trong"
+               data-modal-close>Đóng</a>
+        </div>
+    </div>
+</div>
+
+    <?php require VIEWS_PATH . '/admin/lens-prices/_goi-form.php'; ?>
+<?php endif; ?>

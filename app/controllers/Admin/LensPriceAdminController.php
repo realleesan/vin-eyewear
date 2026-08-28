@@ -30,6 +30,20 @@ class LensPriceAdminController extends AdminController
 
     public function index(): void
     {
+        $this->renderAdmin('admin/lens-prices/index', $this->duLieuBangGia());
+    }
+
+    /**
+     * Dữ liệu của BẢNG GIÁ — tách ra vì packages() cũng dựng chính view ấy.
+     *
+     * Xem khối chú thích trong packages(): danh mục gói là một hộp thoại NỔI
+     * TRÊN bảng giá, không phải một trang khác, nên cả hai đường đều phải có
+     * đủ dữ liệu vẽ bảng giá.
+     *
+     * @return array<string,mixed>
+     */
+    private function duLieuBangGia(): array
+    {
         /* Chỉ những kiểu CÓ bảng giá mới thành cột. "Mắt đặt" không có ô nào —
            tròng đặt riêng theo đơn thì cửa hàng báo giá sau khi xem thông số,
            nên vẽ cho nó một cột ô trống là mời người ta điền vào chỗ hệ thống
@@ -39,7 +53,7 @@ class LensPriceAdminController extends AdminController
             static fn (array $t): bool => LensModel::typeTakesPackage($t)
         ));
 
-        $this->renderAdmin('admin/lens-prices/index', [
+        return [
             'pageTitle' => 'Bảng giá tròng — Quản trị',
             'types'     => $types,
             'packages'  => LensModel::packages(),
@@ -57,7 +71,10 @@ class LensPriceAdminController extends AdminController
                 LensModel::types(),
                 static fn (array $t): bool => !LensModel::typeTakesPackage($t)
             )),
-        ]);
+            /* Mặc định KHÔNG mở hộp danh mục gói. packages() ghi đè khoá này —
+               view đọc nó để quyết định có vẽ hộp hay không. */
+            'showPackages' => false,
+        ];
     }
 
     public function save(): void
@@ -93,6 +110,31 @@ class LensPriceAdminController extends AdminController
      * giá — thứ được mở nhiều hơn hẳn — phải cuộn qua một cái form không liên
      * quan mỗi lần.
      */
+    /**
+     * Danh mục gói chiết suất — HỘP THOẠI NỔI TRÊN BẢNG GIÁ, không phải trang riêng.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO KHÔNG PHẢI MỘT TRANG
+     *
+     * Bản vẽ "Giá tròng.dc.html" vẽ nó là một lớp phủ lên chính bảng giá, và
+     * đó không phải lựa chọn thẩm mỹ: người ta mở danh mục gói VÌ đang nhìn
+     * bảng giá và thấy thiếu một hàng. Thêm gói xong là quay lại đúng bảng ấy
+     * để điền giá cho hàng vừa mọc ra — hai việc là một mạch.
+     *
+     * Trang riêng cắt mạch đó làm đôi: bấm "Quản lý gói" là mất bảng giá khỏi
+     * màn hình, thêm xong phải bấm quay lại, và lúc đó bảng giá tải lại từ đầu.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CÙNG MỘT VIEW DỰNG CẢ HAI CẢNH
+     *
+     * Hàm này trả về dữ liệu BẢNG GIÁ cộng dữ liệu DANH MỤC, rồi dựng chính
+     * admin/lens-prices/index — view đó tự vẽ hộp khi thấy $showPackages.
+     *
+     * Nhờ vậy có JavaScript thì bấm là hộp bật lên tại chỗ (admin-modal.js
+     * fetch /quan-tri/gia-trong/goi rồi bóc riêng phần .amodal ra), còn tắt
+     * JavaScript thì trình duyệt tải cả trang và thấy hộp nằm sẵn trên bảng.
+     * Cùng một HTML, hai đường tới — cùng cách đã dùng cho hồ sơ khách hàng.
+     */
     public function packages(): void
     {
         /* Chưa chạy file nâng cấp thì KHÔNG vẽ form. Bày một cái form ghi vào
@@ -118,17 +160,32 @@ class LensPriceAdminController extends AdminController
             $priceCounts[$row['lens_package']] = (int) $row['n'];
         }
 
-        $this->renderAdmin('admin/lens-prices/packages', [
-            'pageTitle'   => 'Gói chiết suất — Quản trị',
-            'packages'    => Database::fetchAll(
+        /*
+         * $pkgRows CHỨ KHÔNG PHẢI $packages — hai danh sách gói KHÁC HÌNH DẠNG.
+         *
+         * Bảng giá đọc qua LensModel::packages(), hàm đó đổi tên khoá
+         * `description` thành `desc`. Hộp danh mục thì cần bản thô đầy đủ
+         * (`sort_order`, `created_at`…) nên đọc thẳng bảng.
+         *
+         * Dùng chung một khoá 'packages' thì bên nào thắng cũng hỏng bên kia:
+         * đưa bản thô cho bảng giá là mọi hàng mất dòng mô tả (và một warning
+         * "Undefined array key desc" cho mỗi hàng), còn đưa bản đã đổi tên cho
+         * hộp là mất cột Mô tả với cả nút ↑↓. Hai tên, hết chuyện.
+         */
+        $duLieu = $this->duLieuBangGia();
+        /* Nhan đề trang phải nói đúng thứ đang mở. duLieuBangGia() đặt "Bảng
+           giá tròng" và phép cộng mảng giữ vế TRÁI, nên phải ghi đè hẳn. */
+        $duLieu['pageTitle'] = 'Gói chiết suất — Quản trị';
+
+        $this->renderAdmin('admin/lens-prices/index', $duLieu + [
+            'pageTitle'    => 'Gói chiết suất — Quản trị',
+            'showPackages' => true,
+            'pkgRows'      => Database::fetchAll(
                 'SELECT * FROM lens_packages ORDER BY sort_order ASC, id ASC'
             ),
-            'priceCounts' => $priceCounts,
-            'editing'     => $editing,
-            'nextSort'    => LensModel::nextPackageSort(),
-            // Cùng mức quyền với bảng giá: đây vẫn là dữ liệu catalog.
-            'canEdit'     => UserModel::hasRole($this->userId, 'admin')
-                          || UserModel::hasRole($this->userId, 'manager'),
+            'priceCounts'  => $priceCounts,
+            'editing'      => $editing,
+            'nextSort'     => LensModel::nextPackageSort(),
         ]);
     }
 

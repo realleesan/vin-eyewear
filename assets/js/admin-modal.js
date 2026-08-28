@@ -36,12 +36,19 @@
 
     /* Trang đơn hàng không dùng .amodal mà có cặp .aodim + .aodraw riêng (nền
        mờ và khung, hai thẻ anh em). Gom cả hai kiểu vào một chỗ để phần còn lại
-       của file không phải biết sự khác nhau đó. */
-    function bocHopThoai(doc) {
-        var hop = doc.querySelector('.amodal');
+       của file không phải biết sự khác nhau đó.
 
-        if (hop !== null) {
-            return [hop];
+       LẤY TẤT CẢ .amodal, không phải cái đầu tiên. Trang Giá tròng có hai hộp
+       chồng nhau — danh mục gói, rồi form một gói nổi lên trên nó — và chúng là
+       anh em trong DOM chứ không lồng nhau. Chỉ gắp cái đầu thì bấm "Sửa" trong
+       danh mục sẽ mở lại đúng cái danh mục, không thấy form đâu.
+
+       Thứ tự trong DOM được giữ nguyên, nên hộp đứng sau vẫn nằm trên. */
+    function bocHopThoai(doc) {
+        var hop = doc.querySelectorAll('.amodal');
+
+        if (hop.length > 0) {
+            return [].slice.call(hop);
         }
 
         var dim  = doc.querySelector('.aodim');
@@ -68,14 +75,13 @@
         return el !== null && el.childNodes.length > 0;
     }
 
-    /* Địa chỉ để quay về khi đóng — lấy từ chính nút đóng trong hộp, vì mỗi
-       trang có một cách bỏ tham số riêng (có trang còn phải giữ ?q= và ?status=
-       đang lọc). Không có thì về địa chỉ trước lúc mở. */
-    function urlDong() {
-        var nut = document.querySelector('#' + MO_HOST + ' [data-modal-close]');
+    /* KHÔNG có hàm đọc "địa chỉ để quay về khi đóng".
 
-        return nut !== null ? nut.getAttribute('href') : null;
-    }
+       Bản đầu có một hàm như thế (urlDong) nhưng chưa bao giờ được gọi: đóng
+       hộp đi qua history.back(), tức là trình duyệt tự trả về đúng địa chỉ
+       trước lúc mở, chính xác hơn bất cứ phép đọc href nào. Xoá 2026-08-29 —
+       mã chết kèm một khối chú thích giải thích cặn kẽ còn tệ hơn không có,
+       vì người đọc sau sẽ tin là nó đang chạy. */
 
     var truocKhiMo = null;
 
