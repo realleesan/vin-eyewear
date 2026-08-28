@@ -21,7 +21,6 @@
  *
  *   xem danh sách · xem chi tiết         mọi tài khoản nội bộ
  *   khoá · mở khoá · xoá · khôi phục     quản lý trở lên
- *   gửi liên kết đặt lại mật khẩu        quản lý trở lên
  *   xuất danh sách                       quản lý trở lên
  *   ĐƠN THUỐC KÍNH (kể cả CHỈ XEM)       CHỈ quản trị
  *
@@ -45,6 +44,12 @@
  *
  * GHI CHÚ NỘI BỘ ĐÃ BỎ ngày 2026-08-28. Bảng `customer_notes` vẫn còn trong
  * CSDL nhưng không còn đường nào đọc hay ghi nó từ đây.
+ *
+ * GỬI EMAIL ĐẶT LẠI MẬT KHẨU CŨNG ĐÃ BỎ, cùng ngày. Việc giúp khách lấy lại
+ * mật khẩu nay chỉ còn MỘT đường và nó có bước xác minh: /quan-tri/quen-mat-khau,
+ * nơi nhân viên gọi điện cho khách rồi mới đọc liên kết. Nút cũ ở module này
+ * không xác minh gì cả — mở được hồ sơ là bấm được, nên hai đường song song
+ * thì đường yếu hơn quyết định mức bảo mật thật.
  *
  * Đơn thuốc kính là dữ liệu sức khoẻ nên đứng riêng một bậc. Chặn ở HAI TẦNG
  * theo CLAUDE.md quy tắc 4: view ẩn tab, VÀ mọi action tự hỏi lại canRx().
@@ -361,34 +366,6 @@ class CustomerAdminController extends AdminController
         $this->veTab($id, 'ho-so');
     }
 
-    /**
-     * Gửi email đặt lại mật khẩu.
-     *
-     * KHÔNG có nút "đặt mật khẩu mới" trong module này, cố ý. Nhân viên không
-     * được biết mật khẩu của khách — kể cả một mật khẩu tạm do máy sinh, vì nó
-     * vẫn mở được tài khoản và nó sẽ đi qua một tin nhắn hay một mẩu giấy.
-     * Liên kết gửi thẳng vào hòm thư của khách thì chỉ người cầm hòm thư dùng
-     * được. Chi tiết ở PasswordResetModel::issueForUser().
-     */
-    public function sendReset(): void
-    {
-        $id = $this->batDauPost('ho-so');
-        $this->requireManager(self::BASE . '/' . rawurlencode($id));
-
-        $ket = PasswordResetModel::issueForUser($id, $this->userId);
-
-        if ($ket['ok']) {
-            AuditLogModel::write($id, 'reset_email');
-        }
-
-        flash($ket['ok'] ? 'admin_success' : 'admin_error',
-            $ket['ok']
-                ? 'Đã gửi email đặt lại mật khẩu cho khách hàng.'
-                : $ket['error']);
-
-        $this->veTab($id, 'ho-so');
-    }
-
     // ========================================================================
     // KHÔNG CÓ ACTION NÀO CHO HỒ SƠ VÀ SỔ ĐỊA CHỈ
     //
@@ -444,7 +421,7 @@ class CustomerAdminController extends AdminController
      * Mở đầu MỌI action POST: kiểm phương thức, kiểm CSDL đã nâng cấp chưa,
      * và lấy ra id khách hợp lệ.
      *
-     * Gom vào một hàm vì bốn bước này phải chạy ở CẢ BẢY action ghi còn lại. Để
+     * Gom vào một hàm vì bốn bước này phải chạy ở CẢ SÁU action ghi còn lại. Để
      * mỗi action tự gọi bốn dòng thì chỉ cần một lần quên là có một đường ghi
      * không kiểm gì — mà không có gì báo cho ai biết. Cùng lý lẽ với việc
      * AdminController đặt requireStaff() ở constructor.

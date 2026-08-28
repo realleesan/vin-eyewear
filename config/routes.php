@@ -305,12 +305,12 @@ return [
      * không phải bốn route con. Tab dựng bằng địa chỉ (không phải JavaScript)
      * nên sau mỗi POST còn quay về đúng chỗ vừa đứng — xem CustomerAdminController::TABS.
      *
-     * BẢY ĐƯỜNG POST ĐỀU ĐẶT TRƯỚC 'khach-hang/{id}'. Router khớp chính xác
+     * SÁU ĐƯỜNG POST ĐỀU ĐẶT TRƯỚC 'khach-hang/{id}'. Router khớp chính xác
      * trước rồi mới tới route có tham số nên thứ tự khai không đổi kết quả,
      * nhưng đọc theo thứ tự này thì thấy ngay cái nào là trang, cái nào là
-     * thao tác — và người thêm route thứ tám sẽ đặt nó đúng chỗ.
+     * thao tác — và người thêm route thứ bảy sẽ đặt nó đúng chỗ.
      *
-     * SÁU ĐƯỜNG GHI ĐÃ BỎ ngày 2026-08-28, đừng thêm lại mà chưa đọc đầu
+     * BẢY ĐƯỜNG GHI ĐÃ BỎ ngày 2026-08-28, đừng thêm lại mà chưa đọc đầu
      * CustomerAdminController:
      *   · 'khach-hang/ho-so'            hồ sơ khách nay chỉ xem
      *   · 'khach-hang/dia-chi/luu'      sổ địa chỉ nay chỉ xem
@@ -318,6 +318,9 @@ return [
      *   · 'khach-hang/dia-chi/mac-dinh'
      *   · 'khach-hang/ghi-chu/luu'      bỏ hẳn phần ghi chú nội bộ
      *   · 'khach-hang/ghi-chu/xoa'
+     *   · 'khach-hang/dat-lai'          gửi email đặt lại mật khẩu; đường duy
+     *                                   nhất còn lại là /quan-tri/quen-mat-khau,
+     *                                   đường có bước gọi điện xác minh
      */
     'quan-tri/khach-hang'                  => 'CustomerAdminController@index',
     'quan-tri/khach-hang/xuat'             => 'CustomerAdminController@export',
@@ -326,7 +329,6 @@ return [
     'quan-tri/khach-hang/mo-khoa'          => 'CustomerAdminController@unlock',            // POST
     'quan-tri/khach-hang/xoa'              => 'CustomerAdminController@softDelete',        // POST
     'quan-tri/khach-hang/khoi-phuc'        => 'CustomerAdminController@restore',           // POST
-    'quan-tri/khach-hang/dat-lai'          => 'CustomerAdminController@sendReset',         // POST
 
     'quan-tri/khach-hang/don-thuoc/luu'    => 'CustomerAdminController@savePrescription',  // POST
     'quan-tri/khach-hang/don-thuoc/xoa'    => 'CustomerAdminController@deletePrescription',// POST

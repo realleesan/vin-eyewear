@@ -53,6 +53,8 @@ class AuditLogModel extends BaseModel
         'unlock'         => 'Mở khoá tài khoản',
         'soft_delete'    => 'Xoá tài khoản (xoá mềm)',
         'restore'        => 'Khôi phục tài khoản',
+        // Cùng loại với năm khoá trên: bỏ nút gửi email đặt lại mật khẩu
+        // ngày 2026-08-28, nhưng vết đã ghi thì phải còn đọc được.
         'reset_email'    => 'Gửi liên kết đặt lại mật khẩu',
         'export'         => 'Xuất danh sách khách hàng',
     ];

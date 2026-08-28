@@ -519,153 +519,18 @@ class PasswordResetModel extends BaseModel
              . "Nếu bạn không yêu cầu việc này, hãy bỏ qua email.\n"
              . "Đừng đưa mã cho bất kỳ ai, kể cả người tự xưng là nhân viên Vin Eyewear.\n";
     }
-    /**
-     * Phát liên kết đặt lại mật khẩu cho MỘT TÀI KHOẢN CỤ THỂ và gửi qua email.
+
+    /*
+     * KHÔNG CÓ issueForUser() / mailResetLink() Ở ĐÂY NỮA — bỏ 2026-08-28.
      *
-     * Khác issueByStaff() ngay trên: hàm kia xử lý một YÊU CẦU đã có trong
-     * hàng chờ (khách tự bấm "Quên mật khẩu" ở /quen-mat-khau nhưng không nhận
-     * được mã), nên nó nhận id của dòng yêu cầu. Hàm này đi từ chiều ngược
-     * lại — nhân viên đang mở hồ sơ một khách và muốn giúp họ, chưa có yêu cầu
-     * nào cả — nên nó tự tạo dòng yêu cầu rồi mới gắn token.
+     * Hai hàm đó phục vụ đúng một nút: "Gửi email đặt lại mật khẩu" trong hồ
+     * sơ khách ở khu quản trị. Nút ấy đã bỏ, vì nó KHÔNG có bước xác minh
+     * nào — ai mở được hồ sơ là bấm được — trong khi issueByStaff() ngay trên
+     * làm cùng một việc mà bắt gọi điện cho khách trước. Hai đường song song
+     * thì đường yếu hơn quyết định mức bảo mật thật, nên giữ đường mạnh.
      *
-     * ─────────────────────────────────────────────────────────────────────────
-     * KHÔNG TRẢ LIÊN KẾT RA CHO NƠI GỌI — CỐ Ý.
-     *
-     * issueByStaff() có trả, và màn /quan-tri/quen-mat-khau in nó lên để nhân
-     * viên đọc cho khách qua điện thoại. Ở đó việc ấy chính đáng vì luồng kia
-     * BẮT gọi điện xác minh trước — chính cuộc gọi là bước bảo mật.
-     *
-     * Module Khách hàng không có bước xác minh nào. Trả liên kết ra màn hình ở
-     * đây là biến mỗi hồ sơ khách thành một nút "chiếm tài khoản này": ai mở
-     * được khu quản trị cũng đọc được liên kết, và liên kết đó đổi được mật
-     * khẩu mà không cần biết mật khẩu cũ. Gửi thẳng vào hòm thư của khách thì
-     * chỉ người cầm hòm thư đó dùng được.
-     *
-     * Cần đường có xác minh thì đã có sẵn ở /quan-tri/quen-mat-khau — giao
-     * diện của module Khách hàng trỏ sang đó khi hàm này báo không gửi được.
-     * ─────────────────────────────────────────────────────────────────────────
-     *
-     * @return array{ok:bool, error?:string, sent?:bool}
+     * Việc giúp khách lấy lại mật khẩu nay chỉ đi qua /quan-tri/quen-mat-khau.
+     * Luồng khách tự bấm "Quên mật khẩu" không liên quan và không đổi: nó dùng
+     * mã OTP qua mailOtp(), một đường thư khác hẳn.
      */
-    public static function issueForUser(string $userId, string $staffId): array
-    {
-        if (!self::available()) {
-            return ['ok' => false, 'error' => 'Bảng password_resets chưa tồn tại.'];
-        }
-
-        $user = Database::fetchOne(
-            'SELECT u.id, u.email, p.full_name
-               FROM users u
-               LEFT JOIN profiles p ON p.id = u.id
-              WHERE u.id = :id',
-            ['id' => $userId]
-        );
-
-        if ($user === null) {
-            return ['ok' => false, 'error' => 'Không tìm thấy khách hàng.'];
-        }
-
-        $email = trim((string) ($user['email'] ?? ''));
-
-        if ($email === '') {
-            /* Không có email thì không có chỗ nào để gửi. Đừng lùi về gửi SMS:
-               dự án chưa nối cổng SMS nào, và một hàm im lặng không làm gì rồi
-               báo "đã gửi" là kiểu hỏng khó phát hiện nhất. */
-            return ['ok' => false, 'error' =>
-                'Khách hàng chưa có email nên không gửi được liên kết. '
-                . 'Dùng mục "Quên mật khẩu" — ở đó có đường xử lý qua điện thoại.'];
-        }
-
-        /* Kiểm hạn mức TRƯỚC khi ghi dòng mới: không thì chính lần bấm này làm
-           đầy hạn mức của lần bấm sau, và nhân viên bấm hai lần liên tiếp sẽ
-           thấy lần thứ hai bị từ chối vì lần thứ nhất. */
-        if (self::tooMany($email)) {
-            return ['ok' => false, 'error' =>
-                'Đã gửi quá nhiều liên kết cho địa chỉ này trong một giờ. Thử lại sau.'];
-        }
-
-        $id   = self::record($email, $userId, 'pending');
-        $link = self::attachToken($id);
-
-        $sent = self::mailResetLink($email, $link, (string) ($user['full_name'] ?? ''));
-
-        if (!$sent) {
-            /* Gửi hỏng thì HUỶ LUÔN token vừa cấp. Để nó sống thì có một chìa
-               khoá đổi mật khẩu đang tồn tại mà không ai cầm — vô ích với
-               khách, nhưng vẫn là một chìa khoá. */
-            Database::execute(
-                "UPDATE password_resets
-                    SET status = 'used', used_at = NOW(), selector = NULL, validator = NULL
-                  WHERE id = :id",
-                ['id' => $id]
-            );
-
-            return ['ok' => false, 'error' =>
-                'Không gửi được email (máy chủ hosting đang chặn đường gửi thư). '
-                . 'Dùng mục "Quên mật khẩu" để lấy liên kết đọc cho khách qua điện thoại.'];
-        }
-
-        Database::execute(
-            "UPDATE password_resets SET status = 'sent', handled_by = :by WHERE id = :id",
-            ['by' => $staffId, 'id' => $id]
-        );
-
-        return ['ok' => true, 'sent' => true];
-    }
-
-    /**
-     * Gửi thư chứa liên kết đặt lại.
-     *
-     * Cùng luật với mailOtp(): MAIL_DRIVER='log' KHÔNG tính là gửi được — nó
-     * chỉ ghi thư xuống storage/mail để người phát triển đọc lại. Trả true cho
-     * nó trên production thì nhân viên thấy "đã gửi" còn khách thì chờ mãi.
-     */
-    private static function mailResetLink(string $to, string $link, string $name): bool
-    {
-        $deliverable = Mailer::canDeliver();
-
-        if (!$deliverable && !config('app.debug')) {
-            return false;
-        }
-
-        $mins  = (int) (self::LIFETIME / 60);
-        $chao  = $name !== '' ? 'Chào ' . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . ',' : 'Chào bạn,';
-        $an    = htmlspecialchars($link, ENT_QUOTES, 'UTF-8');
-
-        $html = <<<HTML
-            <div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
-                        max-width:520px;margin:0 auto;padding:24px;color:#2b2224">
-              <p style="font-size:15px">{$chao}</p>
-              <p style="font-size:15px">
-                Nhân viên Vin Eyewear vừa tạo một liên kết đặt lại mật khẩu cho tài
-                khoản của bạn. Bấm vào nút dưới đây để đặt mật khẩu mới.
-              </p>
-              <p style="margin:24px 0">
-                <a href="{$an}"
-                   style="display:inline-block;background:#801a20;color:#fff;
-                          text-decoration:none;padding:12px 22px;border-radius:8px;
-                          font-weight:600">Đặt mật khẩu mới</a>
-              </p>
-              <p style="color:#5c4f52;font-size:13px">
-                Liên kết có hiệu lực trong {$mins} phút và chỉ dùng được một lần.<br>
-                Nếu bạn không yêu cầu việc này, hãy bỏ qua email — mật khẩu hiện tại
-                của bạn không thay đổi.
-              </p>
-              <p style="color:#8a7a7d;font-size:12px;word-break:break-all">{$an}</p>
-            </div>
-            HTML;
-
-        /* In cả liên kết dạng chữ ở cuối: một số ứng dụng thư chặn nút bấm
-           hoặc hiện thư ở chế độ chữ thuần, và khi đó cái nút phía trên là
-           một dòng chữ không bấm được. */
-        $text = "Vin Eyewear\n\n"
-              . "Nhân viên vừa tạo một liên kết đặt lại mật khẩu cho tài khoản của bạn.\n\n"
-              . "{$link}\n\n"
-              . "Liên kết có hiệu lực trong {$mins} phút và chỉ dùng được một lần.\n"
-              . "Nếu bạn không yêu cầu việc này, hãy bỏ qua email.\n";
-
-        $sent = Mailer::send($to, 'Đặt lại mật khẩu Vin Eyewear', $html, $text);
-
-        return $deliverable && $sent;
-    }
 }

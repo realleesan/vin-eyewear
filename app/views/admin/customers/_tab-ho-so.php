@@ -131,7 +131,7 @@
 
         <?php if (!$canManage): ?>
             <p class="ahead__note">
-                Bạn xem được hồ sơ nhưng không khoá / xoá / gửi lại mật khẩu được —
+                Bạn xem được hồ sơ nhưng không khoá hay xoá tài khoản được —
                 những việc đó cần vai trò <strong>Quản lý</strong> trở lên.
             </p>
         <?php else: ?>
@@ -184,26 +184,14 @@
 
                 <?php if (!$daXoa): ?>
                     <div class="acus__act-row">
-                        <?php /* GỬI EMAIL, KHÔNG PHẢI ĐẶT MẬT KHẨU.
+                        <?php /* KHÔNG CÓ NÚT "GỬI EMAIL ĐẶT LẠI MẬT KHẨU" Ở ĐÂY
+                                 — bỏ ngày 2026-08-28.
 
-                                 Nhân viên không được biết mật khẩu của khách, kể
-                                 cả một chuỗi tạm do máy sinh — nó vẫn mở được tài
-                                 khoản và nó sẽ đi qua một tin nhắn hay một mẩu
-                                 giấy. Liên kết gửi thẳng vào hòm thư thì chỉ
-                                 người cầm hòm thư dùng được. Lý do đầy đủ ở
-                                 PasswordResetModel::issueForUser(). */ ?>
-                        <form method="post" action="/quan-tri/khach-hang/dat-lai"
-                              data-confirm="Gửi email đặt lại mật khẩu tới <?= e((string) ($khach['email'] ?? '')) ?>?"
-                              data-confirm-title="Gửi email đặt lại mật khẩu?"
-                              data-confirm-ok="Gửi">
-                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                            <input type="hidden" name="id" value="<?= e($khach['id']) ?>">
-                            <button type="submit" class="astatus__save astatus__save--ghost"
-                                <?= (string) ($khach['email'] ?? '') === '' ? 'disabled' : '' ?>>
-                                Gửi email đặt lại mật khẩu
-                            </button>
-                        </form>
-
+                                 Đường giúp khách lấy lại mật khẩu vẫn còn, nhưng
+                                 chỉ còn MỘT đường và nó có bước xác minh:
+                                 /quan-tri/quen-mat-khau, nơi nhân viên gọi điện
+                                 cho khách rồi mới đọc liên kết. Nút cũ ở đây thì
+                                 không xác minh gì cả — mở hồ sơ là bấm được. */ ?>
                         <form class="acus__del" method="post" action="/quan-tri/khach-hang/xoa"
                               data-confirm="Xoá tài khoản của <?= e($ten) ?>? Khách không đăng nhập được nữa. Đơn hàng cũ vẫn giữ nguyên, và khôi phục lại được ở tab &quot;Đã xoá&quot;."
                               data-confirm-title="Xoá tài khoản khách hàng?"
@@ -221,12 +209,11 @@
                         </form>
                     </div>
 
-                    <?php if ((string) ($khach['email'] ?? '') === ''): ?>
-                        <p class="field__hint">
-                            Khách chưa có email nên không gửi được liên kết. Đường xử lý qua
-                            điện thoại nằm ở <a href="/quan-tri/quen-mat-khau">Quên mật khẩu</a>.
-                        </p>
-                    <?php endif; ?>
+                    <p class="field__hint">
+                        Khách quên mật khẩu thì xử lý ở
+                        <a href="/quan-tri/quen-mat-khau">Quên mật khẩu</a> — ở đó có
+                        bước gọi điện xác minh trước khi cấp liên kết.
+                    </p>
                 <?php endif; ?>
 
             </div>
