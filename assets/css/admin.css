@@ -1829,7 +1829,11 @@ a.alist__name:hover { color: var(--brand); }
 /* --- Trang Tài khoản nội bộ ---------------------------------- */
 
 .antable {
-    min-width: 880px;
+    /* 960 chứ không 880 như bản vẽ: bảng ở đây có thêm cột "Trạng thái", và ô
+       thao tác mang tới BA nút (Sửa · Đặt lại mật khẩu · Khoá) thay vì hai —
+       nút thứ ba là thứ bản vẽ không có, giữ lại vì đó là lý do trang này ra
+       đời (xem StaffAdminController). */
+    min-width: 960px;
     table-layout: fixed;
 }
 
@@ -1846,7 +1850,20 @@ a.alist__name:hover { color: var(--brand); }
 
 .antable th:nth-child(2), .antable td:nth-child(2) { width: 150px; }
 .antable th:nth-child(3), .antable td:nth-child(3) { width: 170px; }
-.antable th:nth-child(4), .antable td:nth-child(4) { width: 190px; text-align: right; }
+.antable th:nth-child(4), .antable td:nth-child(4) { width: 130px; }
+.antable th:nth-child(5), .antable td:nth-child(5) { width: 230px; text-align: right; }
+
+/* Ba nút không lọt một dòng 230px thì XUỐNG DÒNG, không cắt cụt và không đẩy
+   bảng rộng thêm. Nới cột đủ cho ba nút nằm ngang sẽ ăn mất chỗ của cột "Người"
+   — cột duy nhất có nội dung dài thật.
+
+   .arow-actions LÀ CHÍNH Ô <td>, không phải một thẻ bọc bên trong nó. Bản đầu
+   viết `td:nth-child(5) .arow-actions` (hậu duệ) nên không khớp gì cả, và ba
+   nút tràn ngang đè lên cột Trạng thái bên cạnh. */
+.antable td.arow-actions {
+    flex-wrap: wrap;
+    row-gap: 6px;
+}
 
 /* Ô "Người" là vòng tròn chữ cái đầu + hai dòng chữ cạnh nhau. */
 .anperson { display: flex; align-items: flex-start; gap: 12px; }
@@ -3366,19 +3383,27 @@ a.astatus__save { text-decoration: none; }
     white-space: nowrap;
 }
 
-.arow-actions a {
+/* .arow-btn đi kèm: cùng dáng "Sửa", nhưng cho một <button> nằm trong <form>
+   POST thay vì một <a>. Thao tác nào ĐỔI DỮ LIỆU thì phải là POST — "Đặt lại
+   mật khẩu" ở trang Tài khoản nội bộ là một cái, và nó không được trông khác
+   nút "Sửa" ngay cạnh chỉ vì khác thẻ HTML. */
+.arow-actions a,
+.arow-actions .arow-btn {
     padding: 5px 12px;
     border: 1px solid var(--line-strong);
     border-radius: var(--a-btn-radius);
     background: var(--surface-raised);
+    font-family: var(--font-sans);
     font-size: var(--fs-caption);
     font-weight: 600;
     color: #5c4f42;
     text-decoration: none;
+    cursor: pointer;
     transition: border-color 0.15s, color 0.15s;
 }
 
-.arow-actions a:hover { border-color: var(--brand); color: var(--brand); }
+.arow-actions a:hover,
+.arow-actions .arow-btn:hover { border-color: var(--brand); color: var(--brand); }
 
 .arow-del {
     border: 0;
@@ -3462,6 +3487,11 @@ a.astatus__save { text-decoration: none; }
    rơi về kiểu mặc định của trình duyệt, cao và hẹp hơn hẳn mọi ô khác quanh
    nó — trông như một mẩu dán vào từ trang khác. */
 .aform__grid input[type="password"],
+/* Thêm khi trang Tài khoản nội bộ có ô "Email đăng nhập": thiếu dòng này thì ô
+   ấy rơi về dáng mặc định của trình duyệt — hẹp bằng nửa ô bên cạnh, viền
+   xám, bo góc vuông — trông như một mẩu dán vào từ trang khác. Cùng loại sót
+   với ô mật khẩu ngay trên. */
+.aform__grid input[type="email"],
 .aform__grid input[type="url"],
 .aform__grid input[type="tel"],
 .aform__grid input[type="search"],
@@ -3473,6 +3503,7 @@ a.astatus__save { text-decoration: none; }
 /* .apf — hộp thoại sản phẩm sáu tab. Liệt kê đúng những kiểu ô CÓ khung; ô
    tick, ô radio và ô chọn file cố ý không nằm trong danh sách này. */
 .apf input[type="text"],
+.apf input[type="email"],
 .apf input[type="url"],
 .apf input[type="number"],
 .apf input[type="date"],
@@ -3503,6 +3534,38 @@ a.astatus__save { text-decoration: none; }
 /* Ô nhập có cấu trúc theo dòng ("nhãn: giá trị") — chữ đẳng khoảng để cột
    thẳng hàng, soát bằng mắt được. */
 .field--code textarea { font-family: var(--font-mono); }
+
+/* Ô nhập một CHUỖI MÃ: SKU, mật khẩu tạm, mã vạch.
+
+   Phông đều bề ngang vì đây là chuỗi người ta ĐỐI CHIẾU từng ký tự — với nhãn
+   dán trên hộp, hoặc với thứ vừa đọc cho đồng nghiệp qua điện thoại. Chữ
+   thường thì "l" và "1", "O" và "0" nhìn gần như nhau.
+
+   Ở admin.css chứ không ở CSS riêng của một trang: form sản phẩm và form tài
+   khoản nội bộ đều cần, và chúng nạp hai file khác nhau. */
+.amono {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+}
+
+/* Ô BỊ KHOÁ PHẢI TRÔNG RA KHOÁ.
+
+   Trình duyệt chỉ làm con trỏ đổi khi rê tới, mà không ai rê chuột lên một ô
+   mình không định gõ. Nền ngà và chữ nhạt là cách bản vẽ nói điều đó — ô "Email
+   đăng nhập" khi sửa tài khoản nội bộ là chỗ đầu tiên cần nó.
+
+   Không có luật này thì ô ấy trông y hệt ô sửa được ngay bên cạnh, và người
+   dùng gõ vào rồi mới phát hiện không gõ được. */
+.aform__grid input:disabled,
+.aform__grid select:disabled,
+.aform__grid textarea:disabled,
+.apf input:disabled,
+.apf select:disabled,
+.apf textarea:disabled {
+    background: #f2e9d9;
+    color: #8a7a6b;
+    cursor: not-allowed;
+}
 
 .aform__grid input:focus,
 .aform__grid select:focus,

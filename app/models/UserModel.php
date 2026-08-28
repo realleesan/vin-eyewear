@@ -562,13 +562,23 @@ class UserModel extends BaseModel
             $params['r' . $i] = $role;
         }
 
+        /* Cột khoá đọc qua columnExists: chúng ra đời cùng module Khách hàng
+           (migration 2026-08-26), sau trang này. Máy chưa nâng cấp thì bảng vẫn
+           dựng được và mọi dòng coi như đang hoạt động — thiếu một cột nhãn còn
+           hơn cả trang đổ lỗi 1054. */
+        $coKhoa = Database::columnExists('users', 'status');
+        $cotKhoa = $coKhoa
+            ? "u.status, u.locked_at, u.locked_reason,"
+            : "'active' AS status, NULL AS locked_at, NULL AS locked_reason,";
+        $gomKhoa = $coKhoa ? ', u.status, u.locked_at, u.locked_reason' : '';
+
         return Database::fetchAll(
-            'SELECT u.id, u.email, u.last_login_at, p.full_name,
+            'SELECT u.id, u.email, u.last_login_at, ' . $cotKhoa . ' p.full_name,
                     GROUP_CONCAT(r.role ORDER BY r.role SEPARATOR \', \') AS roles
                FROM users u
                JOIN user_roles r ON r.user_id = u.id AND r.role IN (' . implode(', ', $keys) . ')
                LEFT JOIN profiles p ON p.id = u.id
-              GROUP BY u.id, u.email, u.last_login_at, p.full_name
+              GROUP BY u.id, u.email, u.last_login_at, p.full_name' . $gomKhoa . '
               ORDER BY p.full_name IS NULL, p.full_name, u.email',
             $params
         );
@@ -1149,4 +1159,212 @@ class UserModel extends BaseModel
             'os_axis' => $os['axis'] ?? '',
         ]);
     }
+
+    /**
+     * Tạo MỘT tài khoản nội bộ — email + mật khẩu tạm + đúng một vai trò.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * KHÔNG DÙNG LẠI register()
+     *
+     * Hàm đó dựng tài khoản KHÁCH: nó bắt buộc có số điện thoại (thứ để khách
+     * đăng nhập), gán vai trò 'customer', và ghi mốc đồng ý điều khoản. Ba thứ
+     * đó đều sai ở đây — nhân viên đăng nhập bằng email ở cổng riêng, không mua
+     * hàng, và không có điều khoản nào để đồng ý.
+     *
+     * Nhồi thêm nhánh vào register() thì hàm ấy phải mang theo hai bộ quy tắc
+     * trái nhau, và mỗi lần sửa một bộ là phải nhớ tới bộ kia.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * MẬT KHẨU DO NƠI GỌI ĐƯA VÀO, KHÔNG SINH Ở ĐÂY
+     *
+     * Khác resetPasswordFor() ngay dưới. Ở đó người bấm không được chọn mật
+     * khẩu — sinh sẵn để không ai đặt cùng một chuỗi cho cả cửa hàng. Ở đây thì
+     * bản vẽ in sẵn một chuỗi ngẫu nhiên vào ô nhưng vẫn cho sửa, vì tài khoản
+     * mới hay được lập trong lúc người sắp dùng nó đang đứng ngay cạnh.
+     *
+     * @return array{ok:bool, error?:string, id?:string}
+     */
+    public static function createStaff(
+        string $email,
+        string $password,
+        string $fullName,
+        string $role
+    ): array {
+        $email    = strtolower(trim($email));
+        $fullName = trim($fullName);
+
+        if (!in_array($role, self::STAFF_ROLES, true)) {
+            return ['ok' => false, 'error' => 'Vai trò không hợp lệ.'];
+        }
+
+        if ($fullName === '') {
+            return ['ok' => false, 'error' => 'Vui lòng nhập tên hiển thị.'];
+        }
+
+        if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+            return ['ok' => false, 'error' => 'Email không hợp lệ.'];
+        }
+
+        if (strlen($password) < 8) {
+            return ['ok' => false, 'error' => 'Mật khẩu tạm phải có ít nhất 8 ký tự.'];
+        }
+
+        /* Email trùng thì DỪNG, không âm thầm gắn thêm vai trò cho tài khoản
+           sẵn có: địa chỉ đó có thể đang là tài khoản KHÁCH, và biến một khách
+           thành nhân viên bằng cách gõ trùng email là cách tệ nhất để việc đó
+           xảy ra. Muốn nâng quyền cho một tài khoản có sẵn thì đó là thao tác
+           khác, và phải nhìn thấy mình đang làm gì. */
+        if (Database::fetchValue('SELECT id FROM users WHERE email = :e', ['e' => $email]) !== null) {
+            return ['ok' => false, 'error' => 'Email này đã có tài khoản.'];
+        }
+
+        $id = uuid();
+
+        Database::transaction(static function () use ($id, $email, $password, $fullName, $role): void {
+            Database::execute(
+                'INSERT INTO users (id, email, password_hash, email_verified)
+                 VALUES (:id, :email, :hash, 1)',
+                [
+                    'id'    => $id,
+                    'email' => $email,
+                    'hash'  => password_hash($password, PASSWORD_DEFAULT),
+                ]
+            );
+
+            Database::execute(
+                'INSERT INTO profiles (id, full_name) VALUES (:id, :ten)',
+                ['id' => $id, 'ten' => utf8Substr($fullName, 0, 120)]
+            );
+
+            Database::execute(
+                'INSERT INTO user_roles (id, user_id, role) VALUES (:rid, :uid, :role)',
+                ['rid' => uuid(), 'uid' => $id, 'role' => $role]
+            );
+        });
+
+        return ['ok' => true, 'id' => $id];
+    }
+
+    /**
+     * Sửa tên hiển thị và vai trò của một tài khoản nội bộ.
+     *
+     * KHÔNG sửa email: nó là thứ người ta dùng để đăng nhập, và đổi nó ở đây
+     * nghĩa là một người đang ngồi trước máy có thể lặng lẽ chuyển tài khoản
+     * quản trị sang một hòm thư khác. Bản vẽ khoá ô email khi sửa, đúng vậy.
+     *
+     * VAI TRÒ ĐƯỢC THAY, KHÔNG PHẢI THÊM: xoá mọi vai trò nội bộ cũ rồi ghi
+     * một cái mới. Chỉ thêm thì một tài khoản hạ từ Quản trị xuống Nhân viên
+     * vẫn giữ nguyên vai trò cũ và vẫn làm được mọi thứ — đúng thứ người bấm
+     * tưởng mình vừa ngăn.
+     *
+     * @return array{ok:bool, error?:string}
+     */
+    public static function updateStaff(string $userId, string $fullName, string $role): array
+    {
+        $fullName = trim($fullName);
+
+        if (!in_array($role, self::STAFF_ROLES, true)) {
+            return ['ok' => false, 'error' => 'Vai trò không hợp lệ.'];
+        }
+
+        if ($fullName === '') {
+            return ['ok' => false, 'error' => 'Vui lòng nhập tên hiển thị.'];
+        }
+
+        if (!self::isStaff($userId)) {
+            return ['ok' => false, 'error' => 'Không tìm thấy tài khoản nội bộ này.'];
+        }
+
+        Database::transaction(static function () use ($userId, $fullName, $role): void {
+            /* Hồ sơ có thể chưa tồn tại — tài khoản dựng bằng make-admin.php
+               trước bản này không chắc đã có dòng `profiles`. */
+            Database::execute(
+                'INSERT INTO profiles (id, full_name) VALUES (:id, :ten)
+                 ON DUPLICATE KEY UPDATE full_name = VALUES(full_name)',
+                ['id' => $userId, 'ten' => utf8Substr($fullName, 0, 120)]
+            );
+
+            $keys   = [];
+            $params = ['uid' => $userId];
+
+            foreach (self::STAFF_ROLES as $i => $r) {
+                $keys[] = ':r' . $i;
+                $params['r' . $i] = $r;
+            }
+
+            Database::execute(
+                'DELETE FROM user_roles
+                  WHERE user_id = :uid AND role IN (' . implode(', ', $keys) . ')',
+                $params
+            );
+
+            Database::execute(
+                'INSERT INTO user_roles (id, user_id, role) VALUES (:rid, :uid2, :role)',
+                ['rid' => uuid(), 'uid2' => $userId, 'role' => $role]
+            );
+        });
+
+        return ['ok' => true];
+    }
+
+    /**
+     * Khoá hoặc mở khoá một tài khoản nội bộ.
+     *
+     * Dùng CHUNG cột `users`.`status` với tài khoản khách, nên coTheDangNhap()
+     * đã chặn sẵn cả hai cổng đăng nhập — không phải viết thêm chốt nào.
+     *
+     * KHÁC CustomerModel::lock ở hai chỗ, cả hai đều theo bản vẽ:
+     *
+     *   · KHÔNG bắt buộc lý do. Hộp xác nhận của bản vẽ chỉ hỏi có/không.
+     *     Khoá một khách là việc phải giải trình được về sau (khách sẽ gọi
+     *     điện hỏi); khoá một đồng nghiệp thì người khoá đang ngồi cùng phòng
+     *     với người bị khoá.
+     *   · KHÔNG ghi vào customer_audit_logs — bảng đó dành cho dữ liệu khách,
+     *     và một dòng "xem hồ sơ nhân viên" lẫn vào đó làm nhiễu chính thứ nó
+     *     sinh ra để soi.
+     *
+     * @return array{ok:bool, error?:string}
+     */
+    public static function setStaffLock(string $userId, bool $khoa, string $actorId): array
+    {
+        if (!self::isStaff($userId)) {
+            return ['ok' => false, 'error' => 'Không tìm thấy tài khoản nội bộ này.'];
+        }
+
+        if ($userId === $actorId) {
+            return ['ok' => false, 'error' => 'Không tự khoá tài khoản của chính mình được.'];
+        }
+
+        if (!Database::columnExists('users', 'status')) {
+            return ['ok' => false, 'error' => 'Cơ sở dữ liệu chưa có cột trạng thái — chạy database/migrate.sh.'];
+        }
+
+        if ($khoa) {
+            Database::execute(
+                "UPDATE users
+                    SET status = 'locked', locked_at = NOW(), locked_by = :boi,
+                        locked_reason = NULL
+                  WHERE id = :id",
+                ['boi' => $actorId, 'id' => $userId]
+            );
+
+            /* CẮT MỌI PHIÊN "GHI NHỚ ĐĂNG NHẬP". Không có dòng này thì khoá chỉ
+               chặn được người chưa đăng nhập: ai đang giữ cookie ghi nhớ vẫn
+               vào thẳng, và vào được hàng tháng. Đúng cái nút khoá phải ngăn. */
+            RememberModel::forgetAllFor($userId);
+
+            return ['ok' => true];
+        }
+
+        Database::execute(
+            "UPDATE users
+                SET status = 'active', locked_at = NULL, locked_by = NULL,
+                    locked_reason = NULL
+              WHERE id = :id",
+            ['id' => $userId]
+        );
+
+        return ['ok' => true];
+    }
+
 }

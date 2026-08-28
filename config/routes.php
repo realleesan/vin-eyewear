@@ -377,6 +377,8 @@ return [
      * Lý do đầy đủ ghi ở đầu Admin/StaffAdminController.
      */
     'quan-tri/nhan-vien'          => 'StaffAdminController@index',
+    'quan-tri/nhan-vien/luu'      => 'StaffAdminController@save',              // POST
+    'quan-tri/nhan-vien/khoa'     => 'StaffAdminController@toggleLock',        // POST
     'quan-tri/nhan-vien/dat-lai'  => 'StaffAdminController@resetPassword',     // POST
 
     // Đổi mật khẩu của CHÍNH MÌNH — mọi nhân viên đều vào được.

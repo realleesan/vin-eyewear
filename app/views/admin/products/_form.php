@@ -180,7 +180,7 @@ $soDongTrong = 3;
                              quy tắc đặt mã ghi ngay dưới. */ ?>
                     <div class="apf__pair" data-sku-pair>
                         <input type="text" id="sku" name="sku" required maxlength="64"
-                               class="apf__mono" value="<?= e($ky('sku')) ?>">
+                               class="amono" value="<?= e($ky('sku')) ?>">
                     </div>
                     <p class="field__hint">
                         Quy tắc: THƯƠNG HIỆU-MẪU-MÀU-SIZE, ví dụ RAYB-2140-BLK-52.
@@ -570,7 +570,7 @@ $soDongTrong = 3;
                                 <?php endforeach; ?>
                             </select>
                             <input type="text" name="variant_sku[<?= $dong ?>]" maxlength="64"
-                                   class="apf__mono" value="<?= e((string) ($v['sku'] ?? '')) ?>"
+                                   class="amono" value="<?= e((string) ($v['sku'] ?? '')) ?>"
                                    aria-label="SKU riêng">
                             <input type="number" name="variant_price[<?= $dong ?>]" min="0" step="1000"
                                    value="<?= e((string) ($v['price'] ?? '')) ?>" aria-label="Giá riêng">
@@ -602,7 +602,7 @@ $soDongTrong = 3;
                                 <?php endforeach; ?>
                             </select>
                             <input type="text" name="variant_sku[<?= $dong ?>]" maxlength="64"
-                                   class="apf__mono" aria-label="SKU riêng">
+                                   class="amono" aria-label="SKU riêng">
                             <input type="number" name="variant_price[<?= $dong ?>]" min="0" step="1000"
                                    aria-label="Giá riêng">
                             <input type="number" name="variant_stock[<?= $dong ?>]" min="0" step="1"

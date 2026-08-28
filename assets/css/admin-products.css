@@ -145,13 +145,6 @@
     text-align: center;
 }
 
-/* SKU và mã vạch dùng phông đều bề ngang: đây là chuỗi người ta ĐỐI CHIẾU
-   từng ký tự với nhãn dán trên hộp, không phải chuỗi để đọc. */
-.apf__mono {
-    font-family: var(--font-mono);
-    letter-spacing: 0.02em;
-}
-
 /* Ô nhập kèm một nút bên phải (SKU + "Tự sinh" do JS chèn). Không có JS thì
    chỉ còn ô nhập, và flex một con thì nó chiếm trọn chiều ngang. */
 .apf__pair {
