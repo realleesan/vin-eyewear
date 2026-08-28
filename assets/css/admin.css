@@ -1353,7 +1353,25 @@ a.alist__name:hover { color: var(--brand); }
 /* Dáng lấy của .astatus__save nhưng KHÔNG dùng lại lớp đó: nó có luật
    `.js .astatus__save { display: none }` (ẩn nút "Lưu" khi ô chọn tự gửi form),
    còn nút này thì luôn phải bấm được. */
-.apay { margin-top: 6px; }
+/* Bọc nút bằng flex thay vì để nó là một <button> inline trong div: chỉ có
+   flex mới dồn được nó về một phía không phụ thuộc text-align — xem
+   .amoney .apay ngay dưới. Mặc định vẫn dồn trái, đúng cho hộp chi tiết yêu
+   cầu liên hệ (.alczalo) nơi cả cột canh trái. */
+.apay { display: flex; margin-top: 6px; }
+
+/*
+ * TRONG CỘT TIỀN THÌ NÚT DỒN PHẢI, cùng lề với số tiền ngay trên nó.
+ *
+ * Tưởng là đã có sẵn: ô này khai `.amoney { text-align: right }`. Nhưng luật
+ * chung `.atable th, .atable td { text-align: left }` gồm cả TÊN THẺ nên ưu
+ * tiên cao hơn một bậc và thắng — ô tiền thật ra vẫn canh trái. Mấy dòng số
+ * phía trên trông thẳng lề phải là nhờ .amoney__inner (flex, align-items:
+ * flex-end), chứ không phải nhờ text-align.
+ *
+ * Mà .apay nằm NGOÀI khối flex ấy, nên nó là thứ duy nhất trong ô còn dính
+ * mép trái — lệch hẳn khỏi cột số nó đang nói về, lệch 126px ở bề rộng 140px.
+ */
+.amoney .apay { justify-content: flex-end; }
 
 .apay__btn {
     height: 30px;

@@ -308,9 +308,22 @@
 
 .aotable thead th { padding-block: 12px; }
 
-/* Cột tick hẹp hết mức: nó không mang thông tin nào, chỉ là chỗ để bấm. */
+/*
+ * CỘT TICK PHẢI ĐỦ CHỖ CHO CHÍNH Ô ĐÁNH DẤU.
+ *
+ * Trước đây khai 34px, mà ô này là cột đầu nên nhận 22px đệm trái — còn đúng
+ * 12px cho một ô đánh dấu rộng 15px. Ô ấy tràn ra khỏi cột, lấn sang ô bên
+ * cạnh, và mã đơn chỉ còn cách nó 4px: đọc ra như hai thứ dính vào nhau.
+ *
+ * 46px = 22px đệm trái + 15px ô đánh dấu + 9px thở. Cộng 7px đệm trái của ô
+ * mã đơn là hở 16px — đủ để mắt tách hai thứ mà không phí một cột rộng.
+ *
+ * Không bỏ đệm trái xuống cho hẹp lại: 22px là lề chung của cả khung bảng
+ * (đầu bảng, chân bảng, mọi ô đầu dòng đều bắt đầu ở đó), và một ô đánh dấu
+ * thụt ra trước lề ấy trông như lỗi in.
+ */
 .aotable th.aotable__tick,
-.aotable td.aotable__tick { width: 34px; padding-right: 0; }
+.aotable td.aotable__tick { width: 46px; padding-right: 0; }
 
 /*
  * BỀ RỘNG CỘT GHIM CỨNG, chỉ cột "Sản phẩm" được co giãn.
