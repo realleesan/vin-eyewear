@@ -3425,7 +3425,14 @@ a.astatus__save { text-decoration: none; }
 
 .aform__grid .field--wide { grid-column: 1 / -1; }
 
-.aform__grid label {
+/* .apf .field label đi kèm: hộp thoại sản phẩm (2026-08-29) dùng bố cục
+   flex sáu tab chứ không phải lưới .aform__grid, nhưng TRƯỜNG bên trong phải
+   trông y hệt mọi form khác của khu quản trị. Nới bộ chọn thay vì chép lại cả
+   khối sang admin-products.css — chép là hai bản sẽ lệch nhau ngay lần sửa
+   màu đầu tiên. Giới hạn trong .field để không đụng vào nhãn của mặt tab, ô
+   tick và khung ảnh, những thứ có dáng riêng. */
+.aform__grid label,
+.apf .field label {
     display: block;
     margin-bottom: 6px;
     font-size: 10.5px;
@@ -3462,7 +3469,15 @@ a.astatus__save { text-decoration: none; }
 .aform__grid input[type="datetime-local"],
 .aform__grid input[type="date"],
 .aform__grid select,
-.aform__grid textarea {
+.aform__grid textarea,
+/* .apf — hộp thoại sản phẩm sáu tab. Liệt kê đúng những kiểu ô CÓ khung; ô
+   tick, ô radio và ô chọn file cố ý không nằm trong danh sách này. */
+.apf input[type="text"],
+.apf input[type="url"],
+.apf input[type="number"],
+.apf input[type="date"],
+.apf select,
+.apf textarea {
     width: 100%;
     padding: 9px 12px;
     border: 1px solid var(--line-strong);
@@ -3482,7 +3497,8 @@ a.astatus__save { text-decoration: none; }
    thưa, rời rạc, khó đọc hơn hẳn.
 
    Ô nào thật sự cần thì đeo .field--code (xem ngay dưới). */
-.aform__grid textarea { resize: vertical; line-height: 1.6; }
+.aform__grid textarea,
+.apf textarea { resize: vertical; line-height: 1.6; }
 
 /* Ô nhập có cấu trúc theo dòng ("nhãn: giá trị") — chữ đẳng khoảng để cột
    thẳng hàng, soát bằng mắt được. */
@@ -3490,14 +3506,23 @@ a.astatus__save { text-decoration: none; }
 
 .aform__grid input:focus,
 .aform__grid select:focus,
-.aform__grid textarea:focus {
+.aform__grid textarea:focus,
+.apf input:focus,
+.apf select:focus,
+.apf textarea:focus {
     outline: none;
     border-color: var(--brand);
     box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
 }
 
-/* Ô tick — nhãn nằm cùng dòng với ô, không viết hoa như nhãn trường khác */
-.field--check label {
+/* Ô tick — nhãn nằm cùng dòng với ô, không viết hoa như nhãn trường khác.
+
+   .apf .field--check label phải viết ra: bộ chọn nới ở trên (.apf .field
+   label) có độ đặc hiệu 0,2,1 và sẽ THẮNG .field--check label (0,1,1) — ô
+   tick trong hộp sản phẩm sẽ bị viết hoa và xuống dòng. Cùng loại bẫy đã ghi
+   ở khối nút chính. */
+.field--check label,
+.apf .field--check label {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -3916,7 +3941,8 @@ a.astatus__save { text-decoration: none; }
 /* Khung nét đứt bao lấy ô chọn file — bản thiết kế vẽ một vùng "kéo thả hoặc
    bấm để chọn". Cái nút "Browse…" bên trong <input type=file> thì trình duyệt
    tự vẽ và không tạo kiểu được, nên phần khung phải nằm ở chính ô input. */
-.aform__grid input[type="file"] {
+.aform__grid input[type="file"],
+.apf input[type="file"] {
     width: 100%;
     margin-top: 2px;
     padding: 18px;
@@ -3929,7 +3955,8 @@ a.astatus__save { text-decoration: none; }
     cursor: pointer;
 }
 
-.aform__grid input[type="file"]:focus {
+.aform__grid input[type="file"]:focus,
+.apf input[type="file"]:focus {
     outline: none;
     border-color: var(--brand);
     box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);

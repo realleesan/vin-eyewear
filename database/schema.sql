@@ -550,24 +550,53 @@ CREATE TABLE `products` (
     `category_id`      CHAR(36)     NULL,
     `brand`            VARCHAR(120) NULL,
     `frame_shape`      VARCHAR(60)  NULL,
+    -- Kiểu viền: full-rim / half-rim / rimless. Tách khỏi `frame_shape` vì
+    -- "gọng vuông không viền" là hai thuộc tính, không phải một.
+    `rim_type`         VARCHAR(20)  NULL,
     `material`         VARCHAR(120) NULL,
     `color`            VARCHAR(120) NULL,
+    -- `color` ở trên là MÀU GỌNG. Kính râm luôn có cả hai màu.
+    `lens_color`       VARCHAR(120) NULL,
     `gender`           VARCHAR(20)  NULL,
     -- collection: bộ sưu tập theo mùa (S09). Khớp 'slug' trong
     --             config/collections.php. NULL = không thuộc bộ nào.
     `collection`       VARCHAR(64)  NULL,
+    -- Nhãn tự do, ngăn bằng dấu phẩy: "bestseller, mùa hè, quà tặng".
+    `tags`             VARCHAR(255) NULL,
     `description`      TEXT         NULL,
+    -- Đoạn 2 dòng cho thẻ sản phẩm, tách khỏi `description` (đoạn dài cho
+    -- trang chi tiết): cắt cụt đoạn dài để làm đoạn ngắn thì luôn cắt giữa câu.
+    `description_short` VARCHAR(500) NULL,
     -- specs: cặp nhãn-giá trị hiển thị ở bảng thông số trang chi tiết
     --        vd {"Vật liệu":"Titan","Kích thước":"52-18-140"}
     `specs`            JSON         NULL,
     -- images: mảng đường dẫn ảnh, phần tử đầu là ảnh đại diện
     `images`           JSON         NULL,
+    -- Alt text để RIÊNG, ánh xạ đường-dẫn → chữ. Không nhét vào `images`:
+    -- cột ấy được đọc ở rất nhiều chỗ, chỗ nào cũng coi phần tử là một chuỗi.
+    `image_alts`       JSON         NULL,
+    `video_url`        VARCHAR(500) NULL,
     `price`            BIGINT       NOT NULL DEFAULT 0,
     `compare_at_price` BIGINT       NULL,
+    -- Giá vốn CHỈ để tính lãi, không bao giờ in ra trang bán hàng. Mọi câu
+    -- SELECT * đều kéo nó theo — chỗ nào in dữ liệu sản phẩm ra ngoài phải tự loại.
+    `cost_price`       BIGINT       NULL,
+    -- Khuyến mãi CÓ HẠN: sale_price một mình thì không ai biết bao giờ tắt.
+    `sale_price`       BIGINT       NULL,
+    `sale_from`        DATE         NULL,
+    `sale_to`          DATE         NULL,
     `stock_quantity`   INT          NOT NULL DEFAULT 0,
+    -- Ngưỡng "sắp hết" riêng từng mặt hàng; NULL = dùng ngưỡng chung trang Tồn kho.
+    `low_stock_at`     INT          NULL,
+    `allow_backorder`  TINYINT(1)   NOT NULL DEFAULT 0,
     `status`           VARCHAR(32)  NOT NULL DEFAULT 'in_stock',
     `is_featured`      TINYINT(1)   NOT NULL DEFAULT 0,
     `is_visible`       TINYINT(1)   NOT NULL DEFAULT 1,
+    -- Hiện / Ẩn / Nháp — quyết định của người biên tập, KHÁC `status` ở trên
+    -- (in_stock/out_of_stock, suy ra từ tồn kho và không cho nhập tay).
+    -- `is_visible` được đồng bộ theo cột này: visible → 1, hidden và draft → 0.
+    -- Trang bán hàng vẫn lọc theo `is_visible` nên không phải biết cột này.
+    `publish_status`   VARCHAR(16)  NOT NULL DEFAULT 'visible',
 
     -- ┌─ THÔNG SỐ KÍNH MẮT ─────────────────────────────────────────────────
     -- │ Thêm 2026-08-27 cho trang chi tiết bộ sưu tập (khung ba lớp).
@@ -588,6 +617,10 @@ CREATE TABLE `products` (
     `lens_width_mm`    TINYINT UNSIGNED  NULL,
     `bridge_mm`        TINYINT UNSIGNED  NULL,
     `temple_mm`        TINYINT UNSIGNED  NULL,
+    -- S/M/L do người nhập CHỌN. Bảng quy đổi ở config/eyewear.php cần
+    -- `frame_width_mm` mà form không còn hỏi, và nó cố ý bỏ trống khi số đo
+    -- ngoài dải — nên vẫn phải có chỗ để nói thẳng.
+    `size_class`       CHAR(1)      NULL,
     -- frame_width_mm nuôi phép quy đổi cỡ S/M/L (ngưỡng ở config/eyewear.php)
     `frame_width_mm`   SMALLINT UNSIGNED NULL,
     `lens_height_mm`   TINYINT UNSIGNED  NULL,
@@ -598,9 +631,19 @@ CREATE TABLE `products` (
     -- DECIMAL chứ không VARCHAR: "1,61" và "1.610" là hai cách gõ sai cùng
     -- một số, và bảng so sánh sắp theo cột này.
     `lens_index`       DECIMAL(3,2) NULL,
+    -- CSV chiết suất ĐẶT THÊM được: 1.56,1.61,1.67,1.74. Khác `lens_index`
+    -- ở trên — cột đó tả chiết suất của tròng đi kèm sẵn trong hộp.
+    `lens_indexes`     VARCHAR(60)  NULL,
+    -- Chuỗi chứ không DECIMAL: người nhập gõ "-8.00" và dấu âm là phần không
+    -- được mất. Số đo mắt luôn viết kèm dấu.
+    `sph_max`          VARCHAR(10)  NULL,
+    `cyl_max`          VARCHAR(10)  NULL,
     -- lens_coatings: CSV khoá chuẩn — 'uv400,chong-loa,chong-tray'
     `lens_coatings`    VARCHAR(255) NULL,
     `is_polarized`     TINYINT(1)   NOT NULL DEFAULT 0,
+    -- Trước nằm trong CSV `lens_coatings`. Tách ra cột riêng để lọc bằng SQL:
+    -- UV400 và phân cực là hai thứ khách hỏi nhiều nhất về kính râm.
+    `is_uv400`         TINYINT(1)   NOT NULL DEFAULT 0,
     `is_photochromic`  TINYINT(1)   NOT NULL DEFAULT 0,
     -- VARCHAR chứ không số: tròng đổi màu có hai đầu ("18% → 62%")
     `lens_vlt`         VARCHAR(40)  NULL,
@@ -609,6 +652,12 @@ CREATE TABLE `products` (
     `base_curve`       VARCHAR(20)  NULL,
     -- rx_ready là CỜ để lọc, rx_note là câu để giải thích ("tới -6.00")
     `rx_ready`         TINYINT(1)   NOT NULL DEFAULT 0,
+    -- KHÁC `rx_ready`: cột trên là "gọng lắp được tròng cận" (thuộc tính vật
+    -- lý), cột này là "cửa hàng có nhận đặt kèm tròng cho mẫu này không"
+    -- (quyết định kinh doanh). Lắp được nhưng hết tròng phù hợp thì 1 và 0.
+    `rx_order_enabled` TINYINT(1)   NOT NULL DEFAULT 0,
+    -- CSV: don-trong, da-trong, doi-mau, anh-sang-xanh.
+    `lens_types`       VARCHAR(120) NULL,
     `rx_note`          VARCHAR(255) NULL,
     `price_with_lens`  BIGINT       NULL,
     -- Bốn cột dưới TRỐNG nghĩa là "theo chính sách chung"
@@ -656,12 +705,21 @@ CREATE TABLE `product_variants` (
     `id`             CHAR(36)     NOT NULL DEFAULT (UUID()),
     `product_id`     CHAR(36)     NOT NULL,
     `label`          VARCHAR(60)  NOT NULL,
+    -- Bản vẽ cho mỗi biến thể một dòng màu · size · SKU · giá · tồn · ảnh.
+    -- `label` vẫn NOT NULL và vẫn là khoá UNIQUE — form tự ghép nó từ hai
+    -- cột dưới ("Đen nhám · M") thay vì bắt gõ lại.
+    `color`          VARCHAR(60)  NULL,
+    `size`           CHAR(1)      NULL,
+    `sku`            VARCHAR(64)  NULL,
     `note`           VARCHAR(120) NULL,
     -- Hai cột dưới chỉ có nghĩa với phương án MÀU; phương án chiết suất tròng
     -- hay cỡ thì để NULL, và ngăn kéo thông số chỉ vẽ ô màu khi có mã màu.
     `swatch_hex`     VARCHAR(7)   NULL,
     `image`          VARCHAR(500) NULL,
     `price_delta`    BIGINT       NOT NULL DEFAULT 0,
+    -- Giá TUYỆT ĐỐI, khác `price_delta` là CHÊNH LỆCH. NULL = không đặt giá
+    -- riêng, vẫn tính theo products.price + price_delta như cũ.
+    `price`          BIGINT       NULL,
     `stock_quantity` INT          NOT NULL DEFAULT 0,
     `is_active`      TINYINT(1)   NOT NULL DEFAULT 1,
     `position`       INT          NOT NULL DEFAULT 0,

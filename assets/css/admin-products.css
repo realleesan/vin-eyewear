@@ -1,24 +1,230 @@
 /* ============================================================
-   FORM SẢN PHẨM (/quan-tri/san-pham) — chỉ phần THÔNG SỐ KÍNH
+   FORM SẢN PHẨM (/quan-tri/san-pham) — hộp thoại sáu tab
 
-   Một khối duy nhất: lưới ô tick cho "Hợp dáng mặt" và "Lớp phủ tròng".
-   Hai nhóm đó có sáu lựa chọn mỗi nhóm, mà .field--check trong admin.css
-   xếp dọc một cột — mười hai dòng tick liên tiếp làm form dài thêm gần
-   một màn hình và mắt không gom được chúng thành hai nhóm.
+   Dựng 2026-08-29 theo "Quản lý sản phẩm.dc.html". Bản trước là một cột
+   dọc 45 ô; bản vẽ chia làm sáu tab: Thông tin · Giá & kho · Thuộc tính
+   kính · Biến thể · Hình ảnh · Đơn kính.
 
    File RIÊNG chứ không nhồi vào admin.css: file đó là CSS dùng chung cho
-   mười tám trang quản trị, và mười bảy trang còn lại không có ô tick nào
-   xếp lưới. Xem khối $adminStyles trong admin/_layout/master.php.
+   mười tám trang quản trị, và mười bảy trang còn lại không có form nào
+   chia tab. Xem khối $adminStyles trong admin/_layout/master.php.
+
+   Lớp .afacets (lưới ô tick của form cũ) đã xoá cùng lúc — form mới có
+   .apf__ticks làm đúng việc ấy, đặt trong <fieldset> có nhan đề.
    ============================================================ */
 
-.afacets {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px 20px;
-    margin-top: 6px;
+.apf {
+    display: flex;
+    flex-direction: column;
 }
 
-.afacets__one {
+/*
+ * SÁU TAB CHẠY BẰNG CSS THUẦN.
+ *
+ * Sáu ô radio ẩn đứng đầu <form>, sáu <label> là mặt tab. Không có dòng JS
+ * nào dính vào — tắt JavaScript thì cả sáu tab vẫn bấm được, còn nếu là nút
+ * JS thì năm trong sáu tấm biến mất và form chỉ nhập được một phần sáu.
+ *
+ * Radio ẩn bằng cách CẮT (clip) chứ không display:none: display:none gỡ
+ * chúng khỏi thứ tự Tab, mà một nhóm radio thì điều hướng bằng phím mũi tên
+ * là hành vi sẵn có của trình duyệt — đúng thứ một dải tab cần.
+ */
+.apf__radio {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/*
+ * DẢI TAB DÍNH ĐẦU VÙNG CUỘN.
+ *
+ * Ruột hộp cuộn được, và tab mà cuộn mất thì người dùng đang ở tấm thứ sáu
+ * phải cuộn ngược lên đầu mới đổi được tấm. Margin âm để dải tràn ra sát mép
+ * hộp như bản vẽ (thân hộp có padding 22px 26px).
+ */
+.apf__tabs {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: -22px -26px 20px;
+    padding: 14px 26px 0;
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--a-panel-line);
+}
+
+.apf__tab {
+    padding: 9px 13px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    font-size: var(--fs-note);
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+}
+
+.apf__tab:hover { color: var(--ink); }
+
+/*
+ * Tấm nào hiện, mặt tab nào sáng — phải viết đủ sáu cặp.
+ *
+ * Không có bộ chọn "cái thứ n trong nhóm" nào ghép được radio với đúng tấm
+ * của nó, và nth-of-type thì đếm cả <input type="hidden"> của CSRF lẫn id ở
+ * đầu form. Sáu cặp gõ tay dài nhưng đọc ra ngay cặp nào hỏng.
+ */
+#apf-t1:checked ~ .apf__tabs [for="apf-t1"],
+#apf-t2:checked ~ .apf__tabs [for="apf-t2"],
+#apf-t3:checked ~ .apf__tabs [for="apf-t3"],
+#apf-t4:checked ~ .apf__tabs [for="apf-t4"],
+#apf-t5:checked ~ .apf__tabs [for="apf-t5"],
+#apf-t6:checked ~ .apf__tabs [for="apf-t6"] {
+    color: var(--brand);
+    box-shadow: inset 0 -2px 0 var(--brand);
+}
+
+/* Radio ẩn thì vòng tiêu điểm cũng ẩn theo — vẽ lại trên chính mặt tab, nếu
+   không người dùng bàn phím bấm mũi tên mà không thấy mình đang ở đâu. */
+#apf-t1:focus-visible ~ .apf__tabs [for="apf-t1"],
+#apf-t2:focus-visible ~ .apf__tabs [for="apf-t2"],
+#apf-t3:focus-visible ~ .apf__tabs [for="apf-t3"],
+#apf-t4:focus-visible ~ .apf__tabs [for="apf-t4"],
+#apf-t5:focus-visible ~ .apf__tabs [for="apf-t5"],
+#apf-t6:focus-visible ~ .apf__tabs [for="apf-t6"] {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+.apf__pane { display: none; }
+
+#apf-t1:checked ~ .apf__body .apf__pane--t1,
+#apf-t2:checked ~ .apf__body .apf__pane--t2,
+#apf-t3:checked ~ .apf__body .apf__pane--t3,
+#apf-t4:checked ~ .apf__body .apf__pane--t4,
+#apf-t5:checked ~ .apf__body .apf__pane--t5,
+#apf-t6:checked ~ .apf__body .apf__pane--t6 {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* --- Lưới ô trong một tấm ------------------------------------ */
+
+.apf__row {
+    display: grid;
+    gap: 16px;
+    align-items: start;
+}
+
+.apf__row--2   { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.apf__row--3   { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.apf__row--2-1 { grid-template-columns: 2fr 1fr; }
+
+/* .apf__row lồng trong .apf__row (cột phải của hàng 2-1) không được thừa
+   hưởng khoảng cách dọc của tấm — nó là một ô, không phải một hàng. */
+.apf__row .apf__row { gap: 16px; }
+
+.apf__lead {
+    margin: 0;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+.apf__empty {
+    margin: 0;
+    padding: 18px 16px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-sm);
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+    text-align: center;
+}
+
+/* SKU và mã vạch dùng phông đều bề ngang: đây là chuỗi người ta ĐỐI CHIẾU
+   từng ký tự với nhãn dán trên hộp, không phải chuỗi để đọc. */
+.apf__mono {
+    font-family: var(--font-mono);
+    letter-spacing: 0.02em;
+}
+
+/* Ô nhập kèm một nút bên phải (SKU + "Tự sinh" do JS chèn). Không có JS thì
+   chỉ còn ô nhập, và flex một con thì nó chiếm trọn chiều ngang. */
+.apf__pair {
+    display: flex;
+    gap: 6px;
+}
+
+.apf__pair > input { flex: 1; min-width: 0; }
+
+/* --- Ba ô số đo gọng ----------------------------------------- */
+
+.apf__size {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Ba ô bằng nhau và HẸP: chúng chứa số hai tới ba chữ số, để rộng bằng ô chữ
+   thì dải "52 – 18 – 140" giãn ra thành ba ô rời rạc không đọc ra là một
+   phép đo. */
+.apf__size > input {
+    width: 0;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+
+.apf__size-sep {
+    flex: none;
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
+}
+
+/* Dòng "52□18-145" do admin-product-form.js chèn vào cuối dải. Không có JS
+   thì không có dòng này, và ba ô số vẫn nhập bình thường. */
+.apf__size-out {
+    flex: none;
+    padding-left: 4px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-note);
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+/* --- Nhóm ô tick có nhan đề ---------------------------------- */
+
+.apf__set {
+    margin: 0;
+    padding: 14px 16px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+}
+
+.apf__set > legend {
+    padding: 0 6px;
+    font-size: var(--fs-label);
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* Khối kính râm tô nền nhạt: bốn ô của nó chỉ có nghĩa với kính râm, và một
+   người đang nhập gọng cận cần nhìn ra ngay là mình bỏ qua được cả khối. */
+.apf__set--sun { background: rgba(143, 43, 60, 0.03); }
+
+.apf__ticks {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 18px;
+}
+
+.apf__ticks > label {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -30,21 +236,166 @@
     cursor: pointer;
 }
 
-.afacets__one input {
-    width: 16px;
-    height: 16px;
+.apf__ticks input {
+    flex: none;
+    width: 15px;
+    height: 15px;
     accent-color: var(--brand);
-    flex-shrink: 0;
 }
 
-/* Dưới 900px cột form đã hẹp lại; ba cột tick thành hai để nhãn dài
-   ("Lọc ánh sáng xanh") không xuống dòng giữa chừng. */
+/* Ô chọn trong khối kính râm nằm dưới hai ô tick, cách ra cho rõ hai tầng. */
+.apf__set .field { margin-top: 14px; }
+
+/* --- Lưới biến thể (tab 4) ----------------------------------- */
+
+/*
+ * Bảy cột đúng bản vẽ: màu · size · SKU · giá · tồn · ảnh · xoá.
+ *
+ * Dùng grid chứ không <table>: mỗi ô là một <input>, và trong một bảng thật
+ * thì mỗi ô phải bọc thêm <td> — thừa một tầng thẻ cho đúng một điều khiển.
+ * Grid cũng cho phép cả dải xuống một cột trên màn hẹp, việc mà <table>
+ * không làm được nếu không đổi display của chính nó.
+ */
+.apf__vgrid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-x: auto;
+}
+
+.apf__vhead,
+.apf__vrow {
+    display: grid;
+    grid-template-columns: minmax(120px, 1.4fr) 72px minmax(110px, 1fr) minmax(110px, 1fr) 72px minmax(96px, 0.8fr) 64px;
+    gap: 8px;
+    align-items: center;
+    min-width: 720px;
+}
+
+.apf__vhead > span {
+    font-size: var(--fs-label);
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+/* Dòng trống nhạt hơn dòng đã có: người sửa một biến thể cần phân biệt ngay
+   dòng nào là dữ liệu thật, dòng nào chỉ là chỗ để thêm. */
+.apf__vrow--new { opacity: 0.72; }
+.apf__vrow--new:focus-within { opacity: 1; }
+
+/* Ô chọn file trong lưới biến thể KHÔNG dùng khung kéo-thả 18px của
+   admin.css: khung đó cao gần 60px, mà đây là một ô trong hàng bảy cột cao
+   36px. Đè lại thành một ô nhỏ vừa dòng. */
+.apf__vrow input[type="file"] {
+    padding: 5px 6px;
+    border-width: 1px;
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+}
+
+.apf__vdel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-note);
+    color: var(--danger);
+    cursor: pointer;
+}
+
+.apf__vdel input { accent-color: var(--danger); }
+
+/* Dòng đã tick xoá gạch ngang ngay: xác nhận bằng mắt rằng bấm Lưu là mất
+   nó, trước khi bấm Lưu. */
+.apf__vrow:has(.apf__vdel input:checked) {
+    opacity: 0.45;
+    text-decoration: line-through;
+}
+
+/* --- Ảnh (tab 5) --------------------------------------------- */
+
+.apf__imgs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+    margin-top: 4px;
+}
+
+.apf__img {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+}
+
+/* Ảnh chính viền màu thương hiệu — nó là tấm hiện to nhất ngoài trang bán
+   hàng, và cần nhận ra được mà không phải đọc nhãn dưới mỗi tấm. */
+.apf__img.is-main {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 1px var(--brand);
+}
+
+.apf__img img {
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+    display: block;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.apf__img-acts {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: var(--fs-note);
+}
+
+.apf__img-acts label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.apf__img-acts input { accent-color: var(--brand); }
+
+.apf__img-alt {
+    width: 100%;
+    font-size: var(--fs-note);
+}
+
+/* --- Màn hẹp -------------------------------------------------- */
+
 @media (max-width: 900px) {
-    .afacets { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .apf__row--3,
+    .apf__row--2-1 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .apf__ticks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 560px) {
-    .afacets { grid-template-columns: 1fr; }
+    .apf__row--2,
+    .apf__row--3,
+    .apf__row--2-1 { grid-template-columns: 1fr; }
+
+    .apf__ticks { grid-template-columns: 1fr; }
+
+    /* Dải tab cuộn ngang thay vì xuống ba dòng: xuống dòng thì nó cao gần
+       bằng một phần tư màn hình điện thoại, mà nó dính đầu vùng cuộn. */
+    .apf__tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
 }
 
 /* ============================================================
@@ -129,4 +480,39 @@
     color: #a99a88;
     text-decoration: line-through;
     font-variant-numeric: tabular-nums;
+}
+
+/* Ô tick "Xoá" sau khi admin-product-form.js đổi nó thành nút ✕. Vẫn là một
+   <label> bọc ô tick thật — nút chỉ LẬT ô đó, không gỡ dòng khỏi DOM. */
+.apf__vdel--x {
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    font-size: 18px;
+    line-height: 1;
+}
+
+.apf__vdel--x:hover { background: rgba(176, 58, 58, 0.1); }
+
+/* Ô tick thật ẩn đi nhưng vẫn ở trong luồng tiêu điểm — cùng lý do với
+   .apf__radio ở đầu file. */
+.apf__vdel--x input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+
+.apf__vdel--x:focus-within {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}
+
+/* Nút "Tự sinh" do JS chèn cạnh ô SKU: thấp bằng ô nhập, không cao hơn. */
+.apf__gen {
+    flex: none;
+    padding: 0 10px;
+    font-size: var(--fs-note);
 }

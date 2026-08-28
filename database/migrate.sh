@@ -160,6 +160,10 @@ MIGRATIONS=(
     "2026-08-28-bo-suu-tap-thu-tu-trung-bay.sql|data||"
     # Phản hồi công khai của cửa hàng dưới mỗi đánh giá. Mốc là cột `reply`.
     "2026-08-28-phan-hoi-danh-gia.sql|column|reviews|reply"
+    # Form thêm/sửa sản phẩm dựng lại theo bản vẽ: 20 cột mới trên `products`,
+    # 4 cột trên `product_variants`. Mốc là `publish_status` — cột đầu tiên
+    # trong câu ALTER và không có gì khác tạo ra nó.
+    "2026-08-29-san-pham-theo-ban-ve.sql|column|products|publish_status"
 )
 
 # ---------------------------------------------------------------------------

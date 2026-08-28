@@ -39,13 +39,17 @@ if (!is_file($schemaFile)) {
  * UNIQUE KEY, CONSTRAINT) không khớp mẫu đó nên tự bị loại, và ở đây cũng
  * không cần đối chiếu khoá: cột thiếu mới là thứ làm câu truy vấn đổ lỗi.
  */
-preg_match_all('/CREATE TABLE `([a-z_]+)` \((.*?)\n\) ENGINE/s', file_get_contents($schemaFile), $matches, PREG_SET_ORDER);
+preg_match_all('/CREATE TABLE `([a-z0-9_]+)` \((.*?)\n\) ENGINE/s', file_get_contents($schemaFile), $matches, PREG_SET_ORDER);
 
 $want = [];
 foreach ($matches as $table) {
     $columns = [];
     foreach (explode("\n", $table[2]) as $line) {
-        if (preg_match('/^\s+`([a-z_]+)`\s+[A-Za-z]/', $line, $col)) {
+        /* [a-z0-9_] chứ KHÔNG phải [a-z_]: mẫu cũ bỏ sót mọi cột có chữ số
+           trong tên. Lộ ra 2026-08-29 với `is_uv400` — cột thiếu hẳn trong CSDL
+           mà script báo "khớp", tức là đúng cái nó sinh ra để bắt. Không có cột
+           nào như thế trước đó nên lỗi nằm im từ ngày viết. */
+        if (preg_match('/^\s+`([a-z0-9_]+)`\s+[A-Za-z]/', $line, $col)) {
             $columns[] = $col[1];
         }
     }

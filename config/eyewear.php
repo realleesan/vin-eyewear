@@ -92,6 +92,10 @@ return [
         'chu-nhat'   => 'Mặt chữ nhật',
         'tam-giac'   => 'Mặt tam giác',
         'mat-dai'    => 'Mặt dài',
+        // Thêm 2026-08-29 theo "Quản lý sản phẩm.dc.html". Bốn khoá bản vẽ
+        // dùng trong form là tron · vuong · trai-xoan · tim; ba khoá còn lại ở
+        // trên vẫn giữ để đọc được dữ liệu đã nhập trước đó.
+        'tim'        => 'Mặt tim',
     ],
 
     /*
@@ -164,6 +168,91 @@ return [
         'Gấp càng trái trước — bản lề được lắp theo chiều đó, gấp ngược lâu ngày làm rơ khớp.',
         'Siết ốc và cân gọng miễn phí trọn đời tại mọi cơ sở, kể cả kính mua đã lâu.',
     ],
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * DANH SÁCH CHỌN CỦA FORM THÊM/SỬA SẢN PHẨM
+     *
+     * Thêm 2026-08-29, đúng bộ lựa chọn trong "Quản lý sản phẩm.dc.html".
+     *
+     * KHOÁ LÀ THỨ LƯU XUỐNG CSDL, nhãn chỉ để hiện. Bản vẽ viết thẳng nhãn
+     * tiếng Việt vào <option> không kèm value, tức là lưu chính chữ hiển thị —
+     * làm thế thì đổi một chữ trong nhãn là mọi dòng cũ ngừng khớp bộ lọc.
+     *
+     * Khoá chọn theo ProductTaxonomy (app/services) chứ không đặt mới: bộ lọc
+     * của trang bán hàng đối chiếu qua bảng đồng nghĩa ở đó, và một khoá lạ thì
+     * lọc ra 0 sản phẩm mà trong khu quản trị nhìn vẫn như đã gán xong.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+
+    /* Ba trạng thái xuất bản — cột `products`.`publish_status`.
+       "Nháp" khác "Ẩn": ẩn là hàng làm xong nhưng chưa tới lượt bày, nháp là
+       hàng chưa nhập đủ thông tin. Cả hai đều không hiện ra trang bán hàng, nên
+       `is_visible` = 0 cho cả hai — nhưng người trong cửa hàng cần phân biệt
+       được để biết cái nào còn thiếu việc. */
+    'publish_statuses' => [
+        'visible' => 'Hiện',
+        'hidden'  => 'Ẩn',
+        'draft'   => 'Nháp',
+    ],
+
+    /* Chất liệu gọng — khoá của ProductTaxonomy::MATERIALS.
+       'stainless-steel' là ĐỒNG NGHĨA của 'metal' ở đó, nên chọn nó vẫn lọc ra
+       cùng nhóm "Kim loại"; giữ riêng vì thép không gỉ và kim loại nói chung là
+       hai thứ người mua phân biệt được. */
+    'frame_materials' => [
+        'acetate'         => 'Acetate',
+        'metal'           => 'Kim loại',
+        'titanium'        => 'Titanium',
+        'tr90'            => 'TR90',
+        'stainless-steel' => 'Thép không gỉ',
+    ],
+
+    /* Kiểu viền gọng — cột `rim_type`. */
+    'rim_types' => [
+        'full-rim' => 'Full rim (gọng đầy)',
+        'half-rim' => 'Half rim (nửa gọng)',
+        'rimless'  => 'Rimless (không gọng)',
+    ],
+
+    /* Hình dáng gọng — khoá của ProductTaxonomy::SHAPES.
+       Bảy mục đúng bằng bản vẽ. ProductTaxonomy còn biết thêm sáu dáng nữa
+       (wayfarer, butterfly, wraparound…) — dữ liệu cũ mang khoá đó vẫn đọc và
+       lọc được, chỉ là form không đề nghị chúng nữa. */
+    'frame_shapes' => [
+        'square'    => 'Vuông',
+        'round'     => 'Tròn',
+        'oval'      => 'Oval',
+        'cat-eye'   => 'Mắt mèo',
+        'aviator'   => 'Phi công',
+        'browline'  => 'Browline',
+        'geometric' => 'Đa giác',
+    ],
+
+    /* Giới tính — khoá của ProductTaxonomy::AUDIENCE.
+       Bản vẽ bỏ 'kids'; khoá đó vẫn đọc được nếu có dòng cũ mang nó. */
+    'genders' => [
+        'unisex' => 'Unisex',
+        'male'   => 'Nam',
+        'female' => 'Nữ',
+    ],
+
+    /* Size tổng quát — cột `size_class`. Cùng ba khoá với bảng 'sizes' ở đầu
+       file, nơi có ngưỡng mm tương ứng. */
+    'size_classes' => ['S' => 'S', 'M' => 'M', 'L' => 'L'],
+
+    /* Loại tròng nhận đặt kèm — CSV trong cột `lens_types`. */
+    'rx_lens_types' => [
+        'don-trong'      => 'Đơn tròng',
+        'da-trong'       => 'Đa tròng',
+        'doi-mau'        => 'Đổi màu',
+        'anh-sang-xanh'  => 'Chống ánh sáng xanh',
+    ],
+
+    /* Chiết suất đặt thêm được — CSV trong cột `lens_indexes`.
+       Khoá là chính con số: nó vừa là giá trị vừa là nhãn, và bảng giá tròng
+       (`lens_prices`) cũng khoá theo chuỗi này. */
+    'rx_indexes' => ['1.56' => '1.56', '1.61' => '1.61', '1.67' => '1.67', '1.74' => '1.74'],
 
     /*
      * CHÍNH SÁCH CHUNG — dùng khi cột tương ứng của `products` để trống.
