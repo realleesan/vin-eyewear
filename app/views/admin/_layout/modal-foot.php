@@ -26,7 +26,7 @@ $ghiChu = $ghiChu ?? '';
                 <p class="amodal__note"><?= e($ghiChu) ?></p>
             <?php endif; ?>
 
-            <a class="astatus__save astatus__save--ghost" href="<?= e($dongUrl) ?>">Huỷ</a>
+            <a class="astatus__save astatus__save--ghost" href="<?= e($dongUrl) ?>" data-modal-close>Huỷ</a>
             <button type="submit" form="<?= e($luuForm) ?>" class="astatus__save"><?= e($luuNhan) ?></button>
         </div>
     </div>

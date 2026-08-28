@@ -166,7 +166,7 @@ $statusLabel = [
                                              .aqgo chứ không .astatus__save: nút chính cao
                                              38px và có quầng bóng, quá nặng cho một ô
                                              bảng — bản thiết kế cho nó nhỏ hơn một nấc. */ ?>
-                                    <a class="aqgo" href="/quan-tri/quen-mat-khau?tao=<?= e($r['id']) ?>">
+                                    <a class="aqgo" href="/quan-tri/quen-mat-khau?tao=<?= e($r['id']) ?>" data-modal>
                                         <?= $r['status'] === 'sent' ? 'Tạo liên kết mới' : 'Tạo liên kết' ?>
                                     </a>
                                 <?php elseif ($r['user_id'] !== null): ?>

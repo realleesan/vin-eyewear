@@ -18,7 +18,15 @@ $base = '/quan-tri/bien-the';
         </p>
     </div>
 
-    <?php if (!$canEdit): ?>
+    <?php if ($canEdit): ?>
+        <?php /* Chỉ có nút khi ĐÃ chọn được một mặt hàng: phương án luôn thuộc
+                 về một sản phẩm cụ thể (product_id NOT NULL), nên "thêm phương
+                 án" lúc chưa có sản phẩm nào là một cái nút không gắn vào đâu. */ ?>
+        <?php if ($product !== null): ?>
+            <a href="<?= e($base) ?>?sp=<?= e($product['id']) ?>&amp;them=1"
+               class="astatus__save" data-modal>+ Thêm phương án</a>
+        <?php endif; ?>
+    <?php else: ?>
         <p class="ahead__note">Bạn chỉ có quyền xem. Cần quyền quản lý để chỉnh sửa.</p>
     <?php endif; ?>
 </header>
@@ -105,13 +113,32 @@ $base = '/quan-tri/bien-the';
         </table>
     </div>
 
-    <?php if ($canEdit): ?>
-        <section class="aform" id="form" aria-labelledby="form-title">
-            <h2 id="form-title" class="apanel__title">
-                <?= $ed !== null ? 'Sửa phương án: ' . e($ed['label']) : 'Thêm phương án cho ' . e($product['name']) ?>
-            </h2>
+    <?php
+    /*
+     * FORM THÊM/SỬA LÀ MỘT HỘP THOẠI NỔI — cùng lối với mọi màn CRUD khác của
+     * khu quản trị (xem .amodal trong admin.css).
+     *
+     * Màn này KHÔNG có bản thiết kế riêng: nó đã bị gỡ khỏi thanh bên và chỉ
+     * còn vào được bằng địa chỉ. Nhưng nó vẫn dùng chung mọi thành phần với các
+     * màn kia, nên để lại một cái form dán cuối trang thì nó là chỗ DUY NHẤT
+     * trong khu quản trị còn theo lối cũ — và người mở nó ra sẽ tưởng mình vừa
+     * lạc sang một phần chưa làm xong.
+     *
+     * Địa chỉ đóng phải giữ ?sp=<id>: bỏ nó đi là bảng nhảy về mặt hàng đầu
+     * tiên trong danh sách.
+     */
+    $moHop   = $canEdit && ($ed !== null || isset($_GET['them']));
+    $dongUrl = $base . '?sp=' . rawurlencode((string) $product['id']);
+    ?>
+    <?php if ($moHop): ?>
+        <?php partial('admin/_layout/modal-head', [
+            'tieuDe'  => $ed !== null ? 'Sửa phương án' : 'Thêm phương án',
+            'phu'     => $ed !== null ? $ed['label'] : $product['name'],
+            'dongUrl' => $dongUrl,
+            'rong'    => 'sm',
+        ]); ?>
 
-            <form method="post" action="<?= e($base) ?>/luu" class="aform__grid">
+            <form method="post" action="<?= e($base) ?>/luu" class="aform__grid" id="bt-form">
                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
                 <input type="hidden" name="product_id" value="<?= e($product['id']) ?>">
@@ -183,10 +210,12 @@ $base = '/quan-tri/bien-the';
                     </label>
                 </div>
 
-                <button type="submit" class="astatus__save">
-                    <?= $ed !== null ? 'Lưu thay đổi' : 'Thêm phương án' ?>
-                </button>
             </form>
-        </section>
+
+        <?php partial('admin/_layout/modal-foot', [
+            'dongUrl' => $dongUrl,
+            'luuNhan' => $ed !== null ? 'Lưu thay đổi' : 'Thêm phương án',
+            'luuForm' => 'bt-form',
+        ]); ?>
     <?php endif; ?>
 <?php endif; ?>

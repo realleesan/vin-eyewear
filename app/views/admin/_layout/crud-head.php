@@ -83,7 +83,7 @@ $addLabel = $addLabel ?? '+ Thêm mới';
                      Vẫn hiện nút kể cả khi đang sửa: hộp thoại phủ kín màn
                      hình nên không ai nhìn thấy nó lúc đó, mà bỏ đi thì dòng
                      tiêu đề co lại rồi giãn ra mỗi lần đóng mở hộp. */ ?>
-            <a href="<?= e($base) ?>?them=1" class="astatus__save"><?= e($addLabel) ?></a>
+            <a href="<?= e($base) ?>?them=1" class="astatus__save" data-modal><?= e($addLabel) ?></a>
         <?php else: ?>
             <p class="ahead__note">Bạn chỉ có quyền xem. Cần quyền quản lý để chỉnh sửa.</p>
         <?php endif; ?>

@@ -62,7 +62,7 @@ $giuLoc = array_filter(['q' => $q, 'co-so' => $coSo]);
                  lấy kính — hai đường vào không đi qua trang đặt lịch của khách.
                  Không có nút này thì nhân viên ghi ra giấy, hoặc tệ hơn là vào
                  trang khách đặt hộ bằng số điện thoại của chính mình. */ ?>
-        <a href="/quan-tri/lich-hen?them=1" class="astatus__save">+ Tạo lịch hẹn</a>
+        <a href="/quan-tri/lich-hen?them=1" class="astatus__save" data-modal>+ Tạo lịch hẹn</a>
     </div>
 </header>
 

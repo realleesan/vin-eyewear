@@ -200,7 +200,7 @@ $dongSignature = implode("\n", array_map(
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
-                            <a href="/quan-tri/bo-suu-tap?sua=<?= e($c['id']) ?>">Sửa</a>
+                            <a href="/quan-tri/bo-suu-tap?sua=<?= e($c['id']) ?>" data-modal>Sửa</a>
 
                             <?php if ($soHang > 0): ?>
                                 <?php /* KHÔNG in nút Xoá khi còn hàng. Máy chủ vẫn

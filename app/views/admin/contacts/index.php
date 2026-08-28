@@ -176,7 +176,7 @@ $duongDanZalo = static function (string $key) use ($q): string {
                                  Vẫn giữ title= làm lối tắt cho người đã quen rê
                                  chuột. */ ?>
                         <td class="atable__msg">
-                            <a class="alcmsg" title="<?= e($c['message']) ?>"
+                            <a class="alcmsg" data-modal title="<?= e($c['message']) ?>"
                                href="<?= e($duongDanZalo($zalo)) ?><?= str_contains($duongDanZalo($zalo), '?') ? '&amp;' : '?' ?>xem=<?= e($c['id']) ?>"><?= e($c['message']) ?></a>
                         </td>
 

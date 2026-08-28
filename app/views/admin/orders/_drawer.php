@@ -26,7 +26,7 @@
 
 $paid = $order['payment_status'] === 'paid';
 ?>
-<a class="aodim" href="<?= e($dongUrl) ?>" aria-label="Đóng chi tiết đơn hàng"></a>
+<a class="aodim" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng chi tiết đơn hàng"></a>
 
 <aside class="aodraw" aria-label="Chi tiết đơn <?= e($order['code']) ?>">
     <header class="aodraw__head">
@@ -37,7 +37,7 @@ $paid = $order['payment_status'] === 'paid';
             <h2 class="aodraw__code">Đơn <?= e($order['code']) ?></h2>
             <p class="aodraw__when">Đặt lúc <?= e(formatDate($order['created_at'], 'd/m/Y H:i')) ?></p>
         </div>
-        <a class="aodraw__x" href="<?= e($dongUrl) ?>" aria-label="Đóng">&times;</a>
+        <a class="aodraw__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>
     </header>
 
     <div class="aodraw__body">

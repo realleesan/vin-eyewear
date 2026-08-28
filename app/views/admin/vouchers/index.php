@@ -82,7 +82,7 @@ $whyOff = static function (array $v) use ($today): string {
         <p class="aempty__title">Chưa có mã giảm giá nào</p>
         <p class="aempty__note">Tạo mã đầu tiên để chạy chương trình ưu đãi cho khách.</p>
         <?php if ($canEdit): ?>
-            <a href="/quan-tri/ma-giam-gia?them=1" class="astatus__save">Tạo mã đầu tiên</a>
+            <a href="/quan-tri/ma-giam-gia?them=1" class="astatus__save" data-modal>Tạo mã đầu tiên</a>
         <?php endif; ?>
     </div>
 <?php else: ?>
@@ -220,7 +220,7 @@ $hienThi = array_values(array_filter($vouchers, $khop));
                         </button>
                     </form>
 
-                    <a href="/quan-tri/ma-giam-gia?sua=<?= e($v['id']) ?>">Sửa</a>
+                    <a href="/quan-tri/ma-giam-gia?sua=<?= e($v['id']) ?>" data-modal>Sửa</a>
 
                     <?php if ((int) $v['is_public'] !== 1): ?>
                         <?php

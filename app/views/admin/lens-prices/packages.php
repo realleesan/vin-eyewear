@@ -98,7 +98,7 @@
 
                         <?php if ($canEdit): ?>
                             <td class="arow-actions">
-                                <a href="/quan-tri/gia-trong/goi?sua=<?= e($p['id']) ?>">Sửa</a>
+                                <a href="/quan-tri/gia-trong/goi?sua=<?= e($p['id']) ?>" data-modal>Sửa</a>
 
                                 <?php
                                 /* Câu hỏi lại NÓI RA SỐ MỨC GIÁ SẼ MẤT THEO.

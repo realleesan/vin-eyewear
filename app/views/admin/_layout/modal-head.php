@@ -25,7 +25,7 @@ $rong  = ($rong ?? '') !== '' ? ' amodal--' . $rong : '';
     <?php /* Lớp nền mờ là một <a> phủ kín — bấm ra ngoài để đóng, chạy cả khi
              tắt JS. aria-hidden vì nút ✕ ngay bên trong đã nói đúng việc ấy
              cho trình đọc màn hình; hai lối "đóng" liền nhau thì thừa. */ ?>
-    <a class="amodal__dim" href="<?= e($dongUrl) ?>" aria-hidden="true" tabindex="-1"></a>
+    <a class="amodal__dim" href="<?= e($dongUrl) ?>" data-modal-close aria-hidden="true" tabindex="-1"></a>
 
     <div class="amodal__panel">
         <div class="amodal__head">
@@ -36,7 +36,7 @@ $rong  = ($rong ?? '') !== '' ? ' amodal--' . $rong : '';
                 <?php endif; ?>
             </div>
 
-            <a class="amodal__x" href="<?= e($dongUrl) ?>" aria-label="Đóng">&times;</a>
+            <a class="amodal__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>
         </div>
 
         <div class="amodal__body">

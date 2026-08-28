@@ -161,7 +161,7 @@ $duongDanCat = static function (string $id) use ($giuQ): string {
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
-                            <a href="/quan-tri/san-pham?sua=<?= e($p['id']) ?>">Sửa</a>
+                            <a href="/quan-tri/san-pham?sua=<?= e($p['id']) ?>" data-modal>Sửa</a>
                             <?php $hoi = sprintf('Xoá sản phẩm “%s”?', $p['name']); ?>
                             <form method="post" action="/quan-tri/san-pham/xoa"
                                   data-confirm="<?= e($hoi) ?>"

@@ -177,7 +177,7 @@
                          Nhãn đổi theo việc đã có phản hồi hay chưa: "Phản hồi"
                          và "Sửa phản hồi" dẫn tới hai kỳ vọng khác nhau. */ ?>
                 <?php if ($coCotReply): ?>
-                    <a class="arv__btn" href="/quan-tri/danh-gia?tra-loi=<?= e($rv['id']) ?>">
+                    <a class="arv__btn" href="/quan-tri/danh-gia?tra-loi=<?= e($rv['id']) ?>" data-modal>
                         <?= trim((string) ($rv['reply'] ?? '')) !== '' ? 'Sửa phản hồi' : 'Phản hồi' ?>
                     </a>
                 <?php endif; ?>

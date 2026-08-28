@@ -175,7 +175,7 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
                                          bấm được khi tắt JS phải là một thẻ <a>
                                          thật — và nó cũng là thứ mở được bằng
                                          bàn phím. */ ?>
-                                <a class="aocode" href="<?= e($urlXem) ?>"><?= e($o['code']) ?></a>
+                                <a class="aocode" href="<?= e($urlXem) ?>" data-modal><?= e($o['code']) ?></a>
                                 <span class="atable__sub aowhen"><?= e(formatDate($o['created_at'], 'd/m/Y H:i')) ?></span>
                             </td>
 

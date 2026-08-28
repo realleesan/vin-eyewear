@@ -109,7 +109,7 @@ $ed = $editing;
                         </button>
                     </form>
 
-                    <a href="/quan-tri/co-so?sua=<?= e($s['id']) ?>">Sửa</a>
+                    <a href="/quan-tri/co-so?sua=<?= e($s['id']) ?>" data-modal>Sửa</a>
                     <?php $hoi = sprintf('Xoá cơ sở “%s”?', $s['name']); ?>
                     <form method="post" action="/quan-tri/co-so/xoa"
                           data-confirm="<?= e($hoi) ?>"

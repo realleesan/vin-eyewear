@@ -92,7 +92,7 @@ $ed = $editing;
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
-                            <a href="/quan-tri/danh-muc?sua=<?= e($c['id']) ?>">Sửa</a>
+                            <a href="/quan-tri/danh-muc?sua=<?= e($c['id']) ?>" data-modal>Sửa</a>
                             <?php $hoi = sprintf('Xoá danh mục “%s”?', $c['name']); ?>
                             <form method="post" action="/quan-tri/danh-muc/xoa"
                                   data-confirm="<?= e($hoi) ?>"

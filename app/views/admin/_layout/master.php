@@ -296,6 +296,15 @@ if (in_array('admin', $adminRoles, true)) {
 <script src="<?= asset('assets/js/admin.js') ?>" defer></script>
 <script src="<?= asset('assets/js/confirm-dialog.js') ?>" defer></script>
 
+<?php /* Mở hộp thoại NGAY TẠI CHỖ thay vì tải lại trang. Nạp cho mọi trang
+         quản trị vì gần như trang danh sách nào cũng có ít nhất một nút mở
+         hộp, và một file 4KB rẻ hơn việc nhớ khai thêm nó mỗi lần dựng trang
+         mới — cùng lẽ với confirm-dialog ở trên.
+
+         Không có file này thì mọi nút ấy vẫn là thẻ <a> thường: bấm là tải
+         lại trang và máy chủ dựng sẵn hộp trong HTML. Xem đầu file. */ ?>
+<script src="<?= asset('assets/js/admin-modal.js') ?>" defer></script>
+
 <?php /* SCRIPT RIÊNG CỦA TỪNG TRANG QUẢN TRỊ.
 
          Khung của site bán hàng có bảng $pageScripts tra theo tên route; ở đây
