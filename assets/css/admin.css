@@ -1429,7 +1429,27 @@ a.alist__name:hover { color: var(--brand); }
  * sáng thì bản thiết kế cho 9px, bằng đúng ô nhập đứng cạnh nó trên dòng
  * tiêu đề — hai thứ cùng chiều cao mà khác độ bo thì dòng ấy gãy nhịp.
  */
+/*
+ * CANH GIỮA CHỮ BẰNG FLEX, KHÔNG DỰA VÀO NÉT MẶC ĐỊNH CỦA <button>.
+ *
+ * Lớp này đeo cho CẢ <button> lẫn <a> ("+ Thêm sản phẩm", "Tạo mã đầu tiên",
+ * "+ Tạo lịch hẹn" đều là thẻ <a> vì chúng mở hộp thoại theo địa chỉ). Trình
+ * duyệt tự canh giữa nhãn của <button>, nhưng <a> chỉ là một hộp inline: gặp
+ * `height: 38px` thì chữ nằm nguyên ở dòng đầu, tức là dính lên mép trên và
+ * hở ra một khoảng trắng phía dưới.
+ *
+ * Đo được 8px lệch lên — đủ để nhìn ra ngay khi nút <a> đứng cạnh một nút
+ * <button> cùng lớp, và đó đúng là cảnh ở dòng tiêu đề mọi trang danh sách.
+ *
+ * Biến thể --ghost trước đây tự chữa bằng inline-grid nên "Huỷ" và "Tìm" vẫn
+ * ngay ngắn, còn nút chính thì không — vì thế lỗi chỉ lộ ra ở một nửa số nút.
+ * Đưa luật canh giữa lên đây thì cả hai nhánh cùng đúng, và --ghost không phải
+ * khai lại nữa.
+ */
 .astatus__save {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     height: 38px;
     padding-inline: 18px;
     border: 1px solid var(--brand);
@@ -2065,6 +2085,9 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
    nút nằm trong thẻ. */
 .arv__go,
 .arv__btn {
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    color: #5c4f42;
     padding: 6px 14px;
     border-radius: var(--a-btn-radius);
     font-family: var(--font-sans);
@@ -2082,11 +2105,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
 
 .arv__go:hover { background: var(--brand-strong); }
 
-.arv__btn {
-    border: 1px solid var(--line-strong);
-    background: var(--surface-raised);
-    color: #5c4f42;
-}
+
 
 .arv__btn:hover { border-color: var(--brand); color: var(--brand); }
 
@@ -3169,8 +3188,7 @@ body.admin:has(.amodal) { overflow: hidden; }
    TRẮNG với viền ngà và chữ nâu, không phải nút rỗng viền đỏ. Viền đỏ đọc như
    một nút chính bị vô hiệu hoá, mà đây là hành động bình thường. */
 .astatus__save--ghost {
-    display: inline-grid;
-    place-items: center;
+    /* Không khai lại display/canh giữa: .astatus__save đã lo — xem khối trên. */
     border-color: var(--line-strong);
     background: var(--surface-raised);
     /* Phẳng, không quầng bóng: quầng là dấu hiệu của HÀNH ĐỘNG CHÍNH, và mỗi
@@ -3183,12 +3201,23 @@ body.admin:has(.amodal) { overflow: hidden; }
 
 .astatus__save--ghost:hover { background: #f6f0e6; }
 
-/* Nút "Thêm mới" là thẻ <a> nhưng trông như nút */
-a.astatus__save {
-    display: inline-grid;
-    place-items: center;
-    text-decoration: none;
-}
+/*
+ * Thẻ <a> mang dáng nút chính ("+ Thêm sản phẩm", "Huỷ" trong hộp thoại,
+ * "Đổi mật khẩu"…) — chỉ cần bỏ gạch chân. Việc canh giữa chữ do chính
+ * .astatus__save lo bằng inline-flex, xem khối khai lớp đó.
+ *
+ * TỪNG CÓ HAI LUẬT `a.astatus__save` TRONG FILE NÀY và đó là cả một cái bẫy:
+ * luật ở đây đặt inline-grid + place-items:center (canh giữa đúng), rồi mãi
+ * phía dưới có thêm một luật nữa đặt inline-block + text-align:center cho nút
+ * "Đổi mật khẩu". Cùng tên chọn, cái sau thắng — và inline-block thì không
+ * canh giữa theo chiều dọc, nên MỌI nút chính dạng <a> có chữ dính lên mép
+ * trên, lệch 8px so với tâm nút. Nút dạng <button> cùng lớp thì vẫn đúng, nên
+ * lỗi chỉ lộ ra ở một nửa số nút và rất dễ tưởng là do trang này trang kia.
+ *
+ * Gộp về một luật duy nhất, và luật canh giữa nằm ở lớp gốc để cả <a> lẫn
+ * <button> cùng đi theo.
+ */
+a.astatus__save { text-decoration: none; }
 
 .asearch {
     display: flex;
@@ -3314,10 +3343,17 @@ a.astatus__save {
 
 /* Phần trong ngoặc của nhãn ("(bỏ trống để tự sinh)") là câu giải thích, không
    phải tên trường: gỡ chữ hoa và giãn chữ để nó đọc như một câu. */
+/* Phần trong ngoặc của nhãn ("(bỏ trống để tự sinh)") là câu giải thích, không
+   phải tên trường: gỡ chữ hoa và giãn chữ để nó đọc như một câu.
+
+   KHAI ĐÚNG MỘT LẦN. Trước đây lớp này có hai khối trong file, khác nhau ở
+   font-weight (500 và 400) — cái sau thắng, nên khối đầu chỉ để lại ấn tượng
+   sai cho người đọc mã. Cùng loại bẫy vừa làm hỏng canh giữa nút chính, xem
+   khối a.astatus__save. */
 .field__opt {
-    font-weight: 500;
+    font-weight: 400;
     text-transform: none;
-    letter-spacing: 0;
+    letter-spacing: normal;
 }
 
 .aform__grid input[type="text"],
@@ -3390,12 +3426,6 @@ a.astatus__save {
 
 /* .field__hint--list — bảng ký hiệu Markdown dưới ô "Nội dung" — đã bỏ
    2026-08-26 cùng màn quản trị sự kiện, màn duy nhất có ô soạn Markdown. */
-
-.field__opt {
-    text-transform: none;
-    letter-spacing: normal;
-    font-weight: 400;
-}
 
 .aform__grid > button { grid-column: 1 / -1; justify-self: start; }
 
@@ -3524,14 +3554,6 @@ a.astatus__save {
     font-size: var(--fs-body-sm);
     line-height: 1.65;
     color: var(--muted);
-}
-
-/* Nút "Đổi mật khẩu" ở dòng của chính mình là một <a>, không phải <button>.
-   .astatus__save dựng cho <button> nên thiếu mấy thứ mà thẻ <a> không tự có. */
-a.astatus__save {
-    display: inline-block;
-    text-align: center;
-    text-decoration: none;
 }
 
 /* ============================================================
