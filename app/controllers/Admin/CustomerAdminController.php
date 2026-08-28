@@ -42,8 +42,8 @@
  * cửa hàng đo ra, không phải thứ khách tự nhập được ở trang tài khoản. Đổi
  * lại nó đứng sau một bậc quyền riêng và ghi vết cả lần chỉ đọc.
  *
- * GHI CHÚ NỘI BỘ ĐÃ BỎ ngày 2026-08-28. Bảng `customer_notes` vẫn còn trong
- * CSDL nhưng không còn đường nào đọc hay ghi nó từ đây.
+ * GHI CHÚ NỘI BỘ ĐÃ BỎ ngày 2026-08-28 — cả mã lẫn bảng `customer_notes`
+ * (migration 2026-08-28-bo-bang-ghi-chu-noi-bo.sql).
  *
  * GỬI EMAIL ĐẶT LẠI MẬT KHẨU CŨNG ĐÃ BỎ, cùng ngày. Việc giúp khách lấy lại
  * mật khẩu nay chỉ còn MỘT đường và nó có bước xác minh: /quan-tri/quen-mat-khau,

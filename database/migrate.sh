@@ -148,6 +148,10 @@ MIGRATIONS=(
     "2026-08-27-noi-dung-trang-tong-quan.sql|table|site_texts|"
     # Bộ sưu tập chuyển từ một ảnh bìa sang một bộ ảnh. Mốc là cột `images`.
     "2026-08-28-bo-suu-tap-nhieu-anh.sql|column|collections|images"
+    # Bỏ hẳn phần ghi chú nội bộ: file này XOÁ bảng `customer_notes`, không tạo
+    # ra thứ gì để làm mốc. Kiểu 'data' — DROP TABLE IF EXISTS chạy lại bao
+    # nhiêu lần cũng ra cùng một kết quả.
+    "2026-08-28-bo-bang-ghi-chu-noi-bo.sql|data||"
 )
 
 # ---------------------------------------------------------------------------

@@ -36,10 +36,9 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Ba bảng của module Khách hàng (mục 7) — xoá trước vì chúng trỏ sang
+-- Hai bảng của module Khách hàng (mục 7) — xoá trước vì chúng trỏ sang
 -- `users`, `appointments` và `stores`.
 DROP TABLE IF EXISTS `customer_audit_logs`;
-DROP TABLE IF EXISTS `customer_notes`;
 DROP TABLE IF EXISTS `customer_prescriptions`;
 DROP TABLE IF EXISTS `password_resets`;
 DROP TABLE IF EXISTS `remember_tokens`;
@@ -1306,33 +1305,6 @@ CREATE TABLE `customer_prescriptions` (
     CONSTRAINT `fk_cpres_store` FOREIGN KEY (`store_id`)
         REFERENCES `stores` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_cpres_author` FOREIGN KEY (`created_by`)
-        REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------------------------------------------------------
--- GHI CHÚ NỘI BỘ VỀ KHÁCH
---
--- Khách KHÔNG BAO GIỜ đọc được bảng này. Không có route nào bên site bán hàng
--- chạm tới nó, và cũng đừng thêm.
--- ----------------------------------------------------------------------------
-CREATE TABLE `customer_notes` (
-    `id`          CHAR(36)     NOT NULL DEFAULT (UUID()),
-    `user_id`     CHAR(36)     NOT NULL,
-    `body`        TEXT         NOT NULL,
-    `author_id`   CHAR(36)     NULL,
-    -- CHÉP LẠI tên người viết tại thời điểm viết, y như `order_items`.`product_name`.
-    -- Nhân viên nghỉ việc và bị xoá tài khoản thì author_id thành NULL, nhưng
-    -- ghi chú vẫn phải trả lời được "ai đã viết câu này".
-    `author_name` VARCHAR(255) NULL,
-    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
-                               ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_cnotes_user` (`user_id`, `created_at`),
-    KEY `idx_cnotes_author` (`author_id`),
-    CONSTRAINT `fk_cnotes_user` FOREIGN KEY (`user_id`)
-        REFERENCES `users` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_cnotes_author` FOREIGN KEY (`author_id`)
         REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

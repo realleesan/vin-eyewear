@@ -1,0 +1,51 @@
+-- ============================================================================
+-- NÂNG CẤP 2026-08-28
+-- Bỏ hẳn phần ghi chú nội bộ về khách — xoá bảng `customer_notes`
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- VÌ SAO CÓ FILE NÀY, TRONG KHI MÃ ĐÃ XOÁ TỪ COMMIT TRƯỚC
+--
+-- Commit "khách hàng — hồ sơ và địa chỉ chỉ còn xem, bỏ hẳn ghi chú nội bộ" đã
+-- gỡ toàn bộ đường đi tới bảng này: tab, view, CustomerNoteModel, hai action và
+-- hai route. Nhưng nó CỐ Ý không đụng vào CSDL — xoá bảng là mất hẳn thứ nhân
+-- viên đã viết, không lùi được, mà đẩy lên main là deploy thẳng trang thật.
+--
+-- Nay chủ dự án đã quyết dọn hẳn, nên tách ra đúng một file riêng: một commit
+-- một chủ đề, và người đọc lịch sử thấy được rằng "gỡ mã" và "xoá dữ liệu" là
+-- hai quyết định ở hai thời điểm, không phải một.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ĐÂY LÀ VIỆC KHÔNG LÙI ĐƯỢC
+--
+-- Không có bản sao nào của những dòng này ở chỗ khác. `customer_audit_logs`
+-- chỉ ghi lại rằng CÓ người lưu hay xoá một ghi chú (`note.save`,
+-- `note.delete`) — nó không giữ nội dung. Chạy file này trên hosting là mất
+-- luôn phần chữ. Máy phát triển lúc viết file này đang có 0 dòng; máy chủ thật
+-- thì phải tự kiểm trước nếu còn muốn giữ:
+--
+--     SELECT COUNT(*) FROM `customer_notes`;
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- KHÔNG CÓ KHOÁ NGOẠI NÀO TRỎ TỚI `customer_notes`
+--
+-- Đã đối chiếu schema.sql trước khi viết: bảng này CHỈ trỏ ĐI (user_id sang
+-- `users`, author_id sang `users`), không bảng nào trỏ ngược lại nó. Nên xoá
+-- nó không kéo theo dòng nào của bảng khác, và cũng không cần
+-- SET FOREIGN_KEY_CHECKS = 0.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- CHẠY LẠI ĐƯỢC NHIỀU LẦN
+--
+-- DROP TABLE IF EXISTS: lần thứ hai không có gì để xoá và cũng không báo lỗi.
+-- Khai trong database/migrate.sh với kiểu 'data' vì file này không TẠO ra thứ
+-- gì để làm cột mốc — sổ ghi `schema_migrations` là thứ duy nhất chặn chạy lại.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- NĂM NHÃN AUDIT VẪN Ở LẠI
+--
+-- `note.save` và `note.delete` vẫn còn trong AuditLogModel::ACTIONS dù không
+-- còn ai ghi mới. Bảng `customer_audit_logs` KHÔNG bị đụng tới: những dòng đã
+-- ghi vẫn phải đọc ra được chữ tiếng Việt, chứ không phải mã thô.
+-- ============================================================================
+
+DROP TABLE IF EXISTS `customer_notes`;
