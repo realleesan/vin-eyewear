@@ -27,69 +27,91 @@
 
 body.admin {
     /* Đỏ mận của bản thiết kế — trầm hơn đỏ của trang bán hàng một chút */
-    --brand: #7d2434;
-    --brand-strong: #641b29;
+    --brand: #8f2b3c;
+    --brand-strong: #6e1f2d;
     --brand-light: #dd9c8b;
-    --brand-subtle: #f7e8ea;
+    --brand-subtle: #f6e9ec;
     --on-brand: #ffffff;
 
-    /* Nền ngà, thẻ trắng, đầu bảng ngà nhạt */
-    --surface: #f6f2ea;
-    --surface-raised: #ffffff;
-    --surface-sunken: #faf6ee;
+    /* SERIF CỦA KHU QUẢN TRỊ LÀ PLAYFAIR, KHÔNG PHẢI LORA.
 
-    --ink: #28211c;
-    --on-ink: #f0e6da;
-    --muted: #8d8072;
+       layout.css đặt --font-serif: 'Lora' cho trang bán hàng, nhưng khung
+       quản trị (app/views/admin/_layout/master.php) chỉ nạp Playfair Display
+       + Be Vietnam Pro + JetBrains Mono — không có Lora. Nên mọi chỗ dùng
+       var(--font-serif) trong khu này trước đây rơi thẳng xuống Georgia của
+       hệ điều hành, tức là chữ ký thương hiệu ở thanh bên KHÔNG PHẢI phông
+       mà bản thiết kế vẽ. Khai lại ở đây để token trỏ đúng phông đã nạp. */
+    --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
 
-    --line: #e7dfd2;
-    --line-strong: #d9cec0;
+    /* Nền ngà, thẻ ngà rất nhạt (KHÔNG phải trắng), đầu bảng ngà nhạt */
+    --surface: #f6f1e7;
+    --surface-raised: #fffdf8;
+    --surface-sunken: #f9f4ea;
+
+    --ink: #2b1a15;
+    --on-ink: #f4ece2;
+    --muted: #8a7a6b;
+
+    --line: #e8ddcb;
+    --line-strong: #d8c9b0;
 
     /* Đỏ/xanh của nhãn trạng thái trong bản thiết kế — đã ngả nâu cho hợp nền
        ngà, không phải đỏ/xanh nguyên bản của trang bán hàng. */
-    --danger: #a03245;
-    --success: #2f6b4b;
-    --warn: #96631a;
+    --danger: #a63232;
+    --success: #2f6b3a;
+    --warn: #96700f;
 
-    /* Thẻ 12px, ô nhập 8px — theo bản thiết kế. Ghi đè token chung (6px/4px)
+    /* Thẻ 14px, ô nhập 8px — theo bản thiết kế. Ghi đè token chung (6px/4px)
        chứ không thêm tên mới, để mọi luật cũ tự đi theo. */
-    --radius: 12px;
+    --radius: 14px;
     --radius-sm: 8px;
 
-    /* NÚT thì lấy đúng độ bo của nút trang chủ, không lấy 8px của bản thiết
-       kế. Nút là thứ duy nhất trong khu quản trị có anh em song sinh ở trang
-       bán hàng — người dùng đi qua đi lại giữa hai khu trong cùng một phiên,
-       và hai cái nút cùng màu đỏ mà bo khác nhau thì đọc ra là hai sản phẩm
-       khác nhau. Ô nhập, thẻ, viên lọc thì không có chuyện đó: trang bán hàng
-       không có thứ tương đương để so.
+    /* Nút của khu quản trị bo 7px — đúng bản thiết kế, và cố ý KHÁC 8px của
+       ô nhập ngay cạnh nó. Một pixel thì không ai đo được, nhưng nó giữ cho
+       nút và ô nhập không đọc ra thành cùng một loài khi đứng cạnh nhau
+       trong cụm "Đổi mật khẩu / Đăng xuất" ở chân thanh bên.
 
-       4px = --radius-sm gốc của layout.css, chính là --h-radius-sm mà
-       .hlens__cta và .hexam__cta ở home-sections.css đang dùng. Viết thẳng số
-       vì trong khối này --radius-sm ĐÃ bị ghi đè thành 8px cho ô nhập. */
-    --a-btn-radius: 4px;
+       Khai tên riêng chứ không dùng --radius-sm: trong khối này --radius-sm
+       ĐÃ bị ghi đè thành 8px cho ô nhập, và hai thứ này phải đổi độc lập. */
+    --a-btn-radius: 7px;
 
-    /* Nền riêng của thanh bên: sẫm hơn --ink một chút. Bản thiết kế để hai
-       giá trị khác nhau (#251c1e cho thanh bên, #28211c cho chữ) nên không
-       gộp làm một được. */
-    --a-sidebar: #251c1e;
-    --a-sidebar-ink: #c4b4aa;
-    --a-sidebar-dim: #7b6a61;
-    --a-badge: #b05a4b;
-    /* Nền hàng bảng khi rê chuột và đường kẻ giữa các hàng */
-    --a-row-hover: #fcfaf4;
-    --a-row-line: #f5efe4;
+    /* Nền riêng của thanh bên: sẫm hơn --ink hẳn một quãng. Bản thiết kế để
+       hai giá trị khác nhau (#241518 cho thanh bên, #2b1a15 cho chữ) nên
+       không gộp làm một được. */
+    --a-sidebar: #241518;
+    --a-sidebar-ink: #cbb9ae;
+    /* Nhãn nhóm ("VẬN HÀNH"…) — mờ nhất trong thanh bên */
+    --a-sidebar-dim: #7d675c;
+    /* Dòng phụ dưới logo và email dưới tên — mờ vừa, vẫn đọc được */
+    --a-sidebar-mute: #8a7368;
+    /* Huy hiệu số ĐEO ĐÚNG MÀU THƯƠNG HIỆU, không phải một sắc gạch riêng:
+       trên nền #241518 thì #8f2b3c là điểm đỏ duy nhất, mắt bắt ngay. */
+    --a-badge: #8f2b3c;
+
+    /* Nền hàng bảng khi rê chuột và hai mức đường kẻ trong thẻ.
+       --a-panel-line đậm hơn --a-row-line một nấc: nó ngăn ĐẦU THẺ với ruột
+       thẻ (một ranh giới thật), còn --a-row-line chỉ ngăn hàng với hàng. */
+    --a-row-hover: #faf5ea;
+    --a-row-line: #f2e9d9;
+    --a-panel-line: #eee3d0;
     --a-chip-on: #2b2124;
 
-    /* NĂM CẶP MÀU NHÃN của bản thiết kế, khai một lần ở đây.
+    /* Thẻ nổi nhẹ khỏi nền ngà — bản thiết kế đặt đúng một mức đổ bóng cho
+       mọi thẻ, rất mờ. Khai một lần để không có thẻ nào quên. */
+    --a-card-shadow: 0 1px 3px rgba(60, 40, 20, 0.05);
+
+    /* BẢY CẶP MÀU NHÃN của bản thiết kế, khai một lần ở đây.
        Trước đây chúng nằm rải trong khối .badge--*; từ khi ô chọn trạng thái ở
-       bảng đơn hàng cũng phải mang đúng năm cặp ấy (xem .astatus__pick), có hai
-       nơi cùng chép một bảng màu — và hai bản chép thì sớm muộn lệch nhau.
+       bảng đơn hàng cũng phải mang đúng bảng màu ấy (xem .astatus__pick), có
+       hai nơi cùng chép một bảng màu — và hai bản chép thì sớm muộn lệch nhau.
        Nghĩa cố định của từng cặp ghi ở khối .badge bên dưới. */
-    --pill-brand-bg:   #f7e8ea; --pill-brand-ink:   #7d2434;
+    --pill-brand-bg:   #f6e9ec; --pill-brand-ink:   #8f2b3c;
     --pill-neutral-bg: #efe9de; --pill-neutral-ink: #6f6355;
-    --pill-ok-bg:      #e6f1e9; --pill-ok-ink:      #2f6b4b;
-    --pill-warn-bg:    #fbf0dc; --pill-warn-ink:    #96631a;
-    --pill-danger-bg:  #f9e7e9; --pill-danger-ink:  #a03245;
+    --pill-wait-bg:    #f3ead3; --pill-wait-ink:    #8a6d1f;
+    --pill-blue-bg:    #e4ecf4; --pill-blue-ink:    #3a5a7d;
+    --pill-ok-bg:      #e2efe2; --pill-ok-ink:      #2f6b3a;
+    --pill-warn-bg:    #f7edd6; --pill-warn-ink:    #96700f;
+    --pill-danger-bg:  #f7e3e0; --pill-danger-ink:  #a63232;
 
     margin: 0;
     background: var(--surface);
@@ -106,7 +128,7 @@ body.admin ::-webkit-scrollbar { width: 10px; height: 10px; }
 body.admin ::-webkit-scrollbar-thumb {
     border: 3px solid var(--surface);
     border-radius: var(--radius-round);
-    background: #d9cebc;
+    background: #ddd0ba;
 }
 body.admin ::-webkit-scrollbar-track { background: transparent; }
 
@@ -143,7 +165,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 @media (min-width: 901px) {
-    .admin__shell { grid-template-columns: 240px minmax(0, 1fr); }
+    .admin__shell { grid-template-columns: 234px minmax(0, 1fr); }
 }
 
 /* Nội dung KHÔNG tràn hết bề ngang màn hình rộng: bản thiết kế chặn ở
@@ -154,7 +176,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     width: 100%;
     max-width: 1160px;
     margin-inline: auto;
-    padding: 30px clamp(18px, 3vw, 36px) 70px;
+    padding: 30px clamp(18px, 3vw, 38px) 60px;
 }
 
 /* --- Thanh bên --------------------------------------------- */
@@ -172,8 +194,8 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .asidebar__head {
-    padding: 22px 20px 16px;
-    border-bottom: 1px solid color-mix(in srgb, var(--on-ink) 12%, transparent);
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 /* CHỖ DUY NHẤT trong trang quản trị còn dùng serif — và cố ý như vậy.
@@ -182,47 +204,57 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
    sang phong cách công cụ. Đừng đổi sang sans cho "đồng bộ". */
 .asidebar__logo {
     font-family: var(--font-serif);
-    font-size: 22px;
-    font-weight: 600;
+    font-size: 21px;
+    font-weight: 700;
     color: var(--on-ink);
     text-decoration: none;
 }
 
-.asidebar__logo em { font-style: italic; color: var(--brand-light); }
+/* "Eyewear" chỉ khác "Vin" ở NÉT NGHIÊNG, không khác màu — đúng bản thiết kế.
+   Bản trước tô nó bằng --brand-light, tức là một điểm đỏ nhạt ngay cạnh
+   huy hiệu đỏ đậm của mục "Đơn hàng" ở dưới. Hai sắc đỏ cách nhau ba dòng
+   trên nền tối đọc ra như hai mức cảnh báo, mà logo thì không cảnh báo gì. */
+.asidebar__logo em { font-style: italic; font-weight: 600; color: inherit; }
 
 .asidebar__sub {
     margin: 4px 0 0;
-    font-size: 9.5px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.24em;
-    color: #8e7a71;
+    letter-spacing: 0.22em;
+    color: var(--a-sidebar-mute);
 }
 
-.asidebar__nav { flex: 1; overflow-y: auto; padding: 4px 10px 16px; }
+.asidebar__nav { flex: 1; overflow-y: auto; padding: 14px 12px 16px; }
 .asidebar__nav ul { list-style: none; margin: 0; padding: 0; }
 
 /* Nhãn nhóm ("VẬN HÀNH", "SẢN PHẨM"…). Cỡ 9.5px là cố ý nhỏ hơn mọi thứ
    khác trong thanh bên: nó là vách ngăn, không phải một mục bấm được, nên
    không được tranh chú ý với các đường dẫn ngay dưới nó. */
 .asidebar__group {
-    margin: 18px 8px 6px;
-    font-size: 9.5px;
-    font-weight: 700;
+    margin: 0;
+    padding: 14px 10px 5px;
+    font-size: 10px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.18em;
     color: var(--a-sidebar-dim);
 }
 
-/* Nhóm đầu tiên sát ngay dưới logo thì không cần khoảng thở 18px */
-.asidebar__nav > .asidebar__group:first-child { margin-top: 10px; }
+/* Nhóm đầu tiên sát ngay dưới logo thì không cần khoảng thở 14px */
+.asidebar__nav > .asidebar__group:first-child { padding-top: 8px; }
 
+/* space-between chứ không phải gap: nhãn ở mép trái, huy hiệu số ở mép PHẢI.
+   Cả bốn huy hiệu xếp thẳng một cột dọc theo mép phải thanh bên, nên liếc
+   một cái là đếm được hôm nay có mấy hàng chờ — chứ không phải dò từng dòng
+   xem con số nằm sau chữ nào. */
 .asidebar__link {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 8px;
     margin-bottom: 2px;
-    padding: 8px 12px;
+    padding: 8px 10px;
     border-radius: var(--radius-sm);
     font-size: var(--fs-note);
     font-weight: 500;
@@ -232,13 +264,14 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .asidebar__link:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: var(--on-ink);
+    background: rgba(255, 255, 255, 0.06);
+    color: #f0e6da;
 }
 
 .asidebar__link.is-active {
     background: var(--brand);
     color: var(--on-brand);
+    font-weight: 600;
 }
 
 /* CHỈ nhãn chữ được giãn, và phải gọi đúng tên lớp của nó.
@@ -246,7 +279,6 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
    (nó cũng là <span>): huy hiệu bị kéo dài ra hết chỗ trống, con số 2 nằm
    giữa một viên thuốc rộng bằng nửa thanh bên. */
 .asidebar__label { flex: 1; }
-.asidebar__ico { flex-shrink: 0; }
 
 .asidebar__badge {
     display: grid;
@@ -254,14 +286,14 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     /* flex: 0 0 auto — huy hiệu luôn ôm sát con số, dù luật nào ở trên có
        ngỏ ý giãn nó ra. Đây là chốt chặn cho đúng lỗi vừa sửa ở .asidebar__label. */
     flex: 0 0 auto;
-    min-width: 19px;
+    min-width: 18px;
     padding: 1px 7px;
     /* --radius-round: xem khối "HUY HIỆU SỐ" trong assets/css/account.css. */
     border-radius: var(--radius-round);
     background: var(--a-badge);
     color: #fff;
     font-size: 10.5px;
-    font-weight: 700;
+    font-weight: 600;
 }
 
 .asidebar__link.is-active .asidebar__badge {
@@ -271,7 +303,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 .asidebar__foot {
     padding: 14px 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .asidebar__me { display: flex; align-items: center; gap: 10px; }
@@ -287,8 +319,8 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     height: 34px;
     border-radius: var(--radius-round);
     background: var(--brand);
-    color: #f5dfd6;
-    font-size: 12.5px;
+    color: #fff;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -302,23 +334,27 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--fs-note);
+    font-size: 12.5px;
     font-weight: 600;
     color: #f0e6da;
 }
 
-/* Email dưới tên — chữ đẳng khoảng, nhỏ, mờ, đúng bản thiết kế.
-   Cắt bằng ellipsis: địa chỉ nội bộ dài hơn 240px của thanh bên là chuyện
-   bình thường, mà tràn ra thì nó chồng lên vòng tròn chữ cái đầu. */
+/* Email dưới tên — chữ thường, nhỏ, mờ, đúng bản thiết kế.
+
+   TRƯỚC ĐÂY LÀ CHỮ ĐẲNG KHOẢNG GIÃN 0.1em, và đó là chỗ hỏng: một địa chỉ
+   như admin@vineyewear.vn dài thêm chừng 18% so với cùng cỡ chữ thường, nên
+   trong 234px của thanh bên nó gần như luôn bị cắt bằng dấu ba chấm — tức là
+   dòng đặt ở đây để trả lời "tôi đang đăng nhập bằng tài khoản nào" lại không
+   đọc hết được. Bản thiết kế để chữ thường 11px, vừa đủ chỗ.
+
+   Vẫn giữ ellipsis làm chốt chặn cho địa chỉ thật sự dài. */
 .asidebar__mail {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
-    letter-spacing: 0.1em;
-    color: #8e7a71;
+    font-size: 11px;
+    color: var(--a-sidebar-mute);
 }
 
 /* Hai nút chia đôi bề ngang — bản thiết kế xếp "Đổi mật khẩu" và "Đăng xuất"
@@ -331,20 +367,23 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     flex: 1;
     display: grid;
     place-items: center;
-    padding: 7px 8px;
+    padding: 6px 8px;
     border: 1px solid rgba(255, 255, 255, 0.18);
     border-radius: var(--a-btn-radius);
     background: transparent;
     font-family: var(--font-sans);
     font-size: 11.5px;
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
-    color: #d8c9bf;
+    color: var(--a-sidebar-ink);
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
 }
 
-.asidebar__act:hover { background: rgba(255, 255, 255, 0.08); color: var(--on-ink); }
+/* Bản thiết kế chỉ SÁNG VIỀN khi rê chuột, không tô nền. Nút này nằm sát
+   chân một thanh bên đã tối sẵn; đổ thêm một mảng nền sáng vào đó thì nó
+   nhảy ra như một khối mới xuất hiện. Viền sáng lên là đủ. */
+.asidebar__act:hover { border-color: var(--a-sidebar-ink); color: #f0e6da; }
 
 /* Đăng xuất là thao tác kết thúc phiên: nhuốm đỏ khi rê chuột để nó không bị
    bấm nhầm thay cho nút bên cạnh. */
@@ -354,23 +393,54 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 .ahead { margin-bottom: 20px; }
 
-/* Sans, cỡ CỐ ĐỊNH, không co giãn.
+/* SERIF, nhưng cỡ CỐ ĐỊNH 28px và không co giãn.
 
-   Trang quản trị không phải trang bán hàng: người dùng mở nó cả ngày trên
-   cùng một màn hình, và cái họ cần là nhìn thấy nhiều dòng dữ liệu cùng
-   lúc chứ không phải một tiêu đề đẹp. Serif 36px ăn mất gần một dòng bảng
-   mà không mang thêm thông tin nào. */
+   Hai quyết định tách bạch, đừng gộp lại:
+
+   Serif là của bản thiết kế — cùng phông với chữ ký "Vin Eyewear" ở thanh bên
+   và với các con số lớn trong thẻ số liệu. Ba chỗ đó là bộ khung nhận diện
+   của khu quản trị; để tiêu đề trang ở sans thì nó rơi ra ngoài bộ ấy.
+
+   Cỡ cố định thì vẫn giữ như cũ, và lý do cũ vẫn đúng: trang quản trị mở cả
+   ngày trên cùng một màn hình, cái người dùng cần là nhiều dòng dữ liệu cùng
+   lúc. Thang --fs-h* của trang bán hàng đẩy tiêu đề lên 36–48px ở màn rộng,
+   ăn mất gần một dòng bảng mà không mang thêm thông tin nào. 28px là con số
+   của bản thiết kế và nó đứng yên ở mọi bề ngang. */
 .ahead__title {
     margin: 0;
-    font-size: 22px;
+    font-family: var(--font-serif);
+    font-size: 28px;
     font-weight: 700;
-    letter-spacing: -0.01em;
     color: var(--ink);
 }
 
 .ahead__lead {
     margin: 4px 0 0;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-note);
+    color: var(--muted);
+}
+
+/* Chữ đậm trong dòng dẫn (mốc tính doanh thu, số trang…) — sẫm hơn phần còn
+   lại một nấc chứ không đen hẳn. Nó là một giá trị nằm giữa câu, không phải
+   một tiêu đề con; đen hẳn thì mắt đọc dòng dẫn thành hai mẩu rời. */
+.ahead__lead strong {
+    font-weight: 600;
+    color: #5c4f42;
+}
+
+/* Ngày hôm nay, viên thuốc ở mép phải dòng tiêu đề (bảng Tổng quan).
+
+   Nó KHÔNG bấm được và cố ý trông không giống nút: nền thẻ, viền ngà, chữ
+   mờ — cùng bảng màu với thẻ số liệu ngay dưới, để đọc ra là một mẩu thông
+   tin chứ không phải một bộ lọc ngày đang chờ được mở ra. */
+.ahead__today {
+    flex-shrink: 0;
+    margin: 0;
+    padding: 7px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-round);
+    background: var(--surface-raised);
+    font-size: 12.5px;
     color: var(--muted);
 }
 
@@ -424,14 +494,49 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .astat {
+    /* align-content: start — thẻ nào ít dòng hơn thì dồn nội dung lên đầu,
+       không giãn đều ra cho kín chiều cao. Bốn thẻ trong hàng cao bằng nhau
+       (lưới kéo theo thẻ cao nhất là thẻ tiền, nó có thêm dòng tạm thu), nên
+       thiếu dòng này thì nhãn của ba thẻ kia tụt xuống lệch với nhãn thẻ đầu. */
     display: grid;
-    gap: 3px;
+    align-content: start;
     padding: 18px 20px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface-raised);
+    box-shadow: var(--a-card-shadow);
     text-decoration: none;
     transition: border-color 0.15s, background-color 0.15s;
+}
+
+/*
+ * THẺ TIỀN ĐEO NỀN TỐI — đúng bản thiết kế, và đây là toàn bộ hệ thống phân
+ * cấp của hàng thẻ này.
+ *
+ * Bản trước phân biệt nó bằng cách tô con số màu đỏ thương hiệu. Cách ấy hỏng
+ * ở chỗ: màu đỏ trong khu quản trị đã mang nghĩa "bấm được" (mọi liên kết đều
+ * đỏ), nên một con số đỏ KHÔNG bấm được là một lời hứa hụt — mà thẻ Doanh thu
+ * thì cố ý không dẫn đi đâu cả.
+ *
+ * Đảo nền thì nói đúng thứ cần nói: thẻ này khác loài với ba thẻ kia. Ba thẻ
+ * kia là HÀNG CHỜ (bấm vào để làm việc), thẻ này là KẾT QUẢ (đọc rồi thôi).
+ * Nó cũng nối thẳng về màu thanh bên, nên đọc ra là một mảng "của hệ thống"
+ * chứ không phải một mục trong danh sách việc.
+ *
+ * Không dùng .astats > li:first-child như trước: lớp .astat còn được dùng lại
+ * ở trang hồ sơ khách hàng (customers/detail.php), nơi thẻ đầu tiên là "Tổng
+ * chi tiêu" và KHÔNG được đổi nền. Gắn vào vị trí thì mọi trang dùng chung
+ * lớp này đều bị vạ lây.
+ */
+.astat--money {
+    border-color: var(--a-sidebar);
+    background: var(--a-sidebar);
+    box-shadow: none;
+    /* Màu chữ đặt ở CHÍNH THẺ, không chỉ ở từng dòng con: dòng nào thêm vào
+       thẻ này về sau cũng tự thừa hưởng đúng màu, không phải nhớ khai thêm.
+       Những lớp có khai color thẳng (.astat__value) vẫn phải kể tên riêng —
+       xem cuối khối. */
+    color: var(--on-ink);
 }
 
 /* KHÔNG nhún lên khi rê chuột. Trên trang bán hàng cú nhún là phản hồi dễ
@@ -442,7 +547,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
    chú ở dashboard/index.php); cho nó phản ứng khi rê chuột là hứa một cú bấm
    không tồn tại. */
 .astat--link:hover {
-    border-color: #c9b8a2;
+    border-color: var(--line-strong);
 }
 
 .astat__label {
@@ -450,107 +555,152 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #98897b;
+    color: var(--muted);
 }
 
-/* 25px theo bản thiết kế. Con số dài nhất ở hàng này là doanh thu dạng
-   "11.840.000đ" — 12 ký tự. Với bốn cột trên 1160px thì mỗi thẻ rộng ~275px,
-   thừa chỗ; nhưng ở nhánh hai cột của màn hẹp thì không, nên vẫn giữ
-   tabular-nums và letter-spacing âm để nó không tràn mép. Đây là loại lỗi
-   chỉ xuất hiện khi cửa hàng bán được nhiều, tức là đúng lúc không ai muốn
-   nhìn thấy nó. */
+/* Serif 30px theo bản thiết kế — cùng phông với tiêu đề trang và với chữ ký
+   ở thanh bên. Con số dài nhất ở hàng này là doanh thu dạng "11.840.000₫" —
+   12 ký tự. Với bốn cột trên 1160px thì mỗi thẻ rộng ~275px, thừa chỗ; nhưng
+   ở nhánh hai cột của màn hẹp thì không, nên vẫn giữ tabular-nums và
+   letter-spacing âm để nó không tràn mép. Đây là loại lỗi chỉ xuất hiện khi
+   cửa hàng bán được nhiều, tức là đúng lúc không ai muốn nhìn thấy nó. */
 .astat__value {
-    font-size: 25px;
+    margin-top: 8px;
+    font-family: var(--font-serif);
+    font-size: 30px;
     font-weight: 700;
     line-height: 1.15;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
 }
 
-/* CHỈ thẻ đầu tiên (doanh thu) mang màu thương hiệu — đúng bản thiết kế.
-   Tô đỏ cả tám con số thì không con nào nổi hơn con nào, mà doanh thu mới là
-   thứ người mở bảng điều khiển nhìn trước tiên. */
-.astats > li:first-child .astat__value { color: var(--brand); }
-
 .astat__note {
+    margin-top: 4px;
     font-size: 11.5px;
-    color: #a2937f;
+    color: #98897b;
 }
+
+/* Lời mời bấm ở chân ba thẻ hàng chờ ("Xử lý ngay →"). Không phải nút: cả thẻ
+   đã là một liên kết rồi, dòng này chỉ nói ra cú bấm ấy DẪN TỚI VIỆC GÌ. Một
+   thẻ ghi "Đơn hàng mới · 33" thì bấm vào ra đâu cũng đoán được; thẻ "Liên hệ
+   chưa đẩy" thì không — "Đẩy sang Zalo" mới là thứ trả lời. */
+.astat__cta {
+    margin-top: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+/* Dòng phụ của thẻ tiền (tạm thu). Ngăn bằng một đường kẻ mảnh chứ không bằng
+   khoảng trắng: hai con số cùng đơn vị nghìn đồng đứng sát nhau mà không có
+   ranh giới thì mắt đọc thành một cụm. */
+.astat__extra {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.astat__extra-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.astat__extra-value {
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* Chữ trên nền tối — khai gộp cuối khối để các luật màu nằm cạnh nhau, đổi
+   tông thẻ tiền là sửa đúng một chỗ.
+
+   .astat__value PHẢI ĐƯỢC KỂ TÊN Ở ĐÂY dù .astat--money đã đặt color cho cả
+   thẻ: luật .astat__value ở trên khai thẳng color: var(--ink), mà khai thẳng
+   thì luôn thắng thừa kế. Bỏ dòng này là con số doanh thu thành nâu đen trên
+   nền nâu đen. */
+.astat--money .astat__value { color: var(--on-ink); }
+
+.astat--money .astat__label,
+.astat--money .astat__note,
+.astat--money .astat__extra-label { color: #a98f82; }
 
 /* --- Dải trạng thái kho / nội dung -------------------------- */
 
-/* MỘT thẻ chia nhiều ô, không phải nhiều thẻ rời.
-   Đây là điểm khác nhau giữa hai tầng số liệu: hàng trên là bốn việc riêng
-   biệt nên là bốn thẻ rời; dải này là một câu tóm tắt tình trạng nên đứng
-   chung một khung, ngăn bằng vạch mảnh. Tách nó ra thành ba thẻ nữa là bảy
-   thẻ bằng nhau — đúng cái bản thiết kế bỏ đi. */
+/*
+ * BA THẺ RỜI, KHÔNG PHẢI MỘT THẺ CHIA BA Ô — đổi theo bản thiết kế mới.
+ *
+ * Bản trước gom ba con số vào một khung, ngăn bằng vạch dọc, với lý lẽ là
+ * "một câu tóm tắt tình trạng thì đứng chung một khung". Lý lẽ ấy đúng khi
+ * dải này có bốn ô và nằm ngay dưới bốn thẻ lớn cùng bề rộng — lúc đó một
+ * khung liền là cách duy nhất để nó không đọc ra thành tầng thẻ thứ hai.
+ *
+ * Còn ba ô thì khung liền lại sinh ra lỗi khác: ba vùng bấm được nằm trong
+ * một hộp trông như một khối duy nhất, nên chỗ bấm chỉ lộ ra khi rê chuột
+ * tới đúng ô. Bản thiết kế tách hẳn làm ba thẻ và hạ bo xuống 12px so với
+ * 14px của thẻ lớn — nhỏ hơn một nấc là đủ để hai tầng không lẫn nhau, mà
+ * mỗi ô vẫn tự nói ra ranh giới của nó.
+ *
+ * flex-wrap + min-width: hết chỗ thì thẻ tự xuống dòng theo bề ngang thật,
+ * không cần mốc @media riêng.
+ */
 .afacts {
-    display: grid;
-    /* BA cột, không phải bốn: dải này có đúng ba ô kể từ khi bỏ ô "bài sự
-       kiện" (2026-08-26). Xem app/views/admin/dashboard/index.php. */
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
     margin: 0 0 14px;
     padding: 0;
     list-style: none;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    /* hidden để nền hover của ô đầu/cuối không thò ra khỏi góc bo */
-    overflow: hidden;
 }
 
-.afacts__cell + .afacts__cell {
-    border-left: 1px solid #f0e9dc;
-}
-
-@media (max-width: 1100px) {
-    .afacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-    /* Ở hai cột thì vạch dọc của ô thứ ba lại rơi vào mép trái thẻ. Vẽ lại
-       theo vị trí trong lưới thay vì theo thứ tự anh em. */
-    .afacts__cell { border-left: 0; }
-    .afacts__cell:nth-child(even) { border-left: 1px solid #f0e9dc; }
-    .afacts__cell:nth-child(n + 3) { border-top: 1px solid #f0e9dc; }
-}
-
-@media (max-width: 560px) {
-    .afacts { grid-template-columns: 1fr; }
-    .afacts__cell { border-left: 0; }
-    .afacts__cell:nth-child(even) { border-left: 0; }
-    .afacts__cell + .afacts__cell { border-top: 1px solid #f0e9dc; }
+.afacts__cell {
+    flex: 1;
+    min-width: 200px;
 }
 
 .afacts__link {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
-    padding: 14px 20px;
+    align-items: center;
+    gap: 12px;
+    height: 100%;
+    padding: 13px 18px;
+    border: 1px solid var(--line);
+    /* 12px, KHÔNG phải var(--radius) 14px — xem khối ghi chú ở trên. */
+    border-radius: 12px;
+    background: var(--surface-raised);
     text-decoration: none;
-    transition: background-color 0.15s;
+    transition: border-color 0.15s;
 }
 
-/* Nền hiện ra khi rê chuột là TẤT CẢ dấu hiệu bấm được mà ô này có. Bản
-   thiết kế vẽ nó là chữ thường; gạch chân hay tô đỏ sẽ biến một dải tóm tắt
-   thành bốn cái nút và kéo mắt khỏi hàng thẻ ở trên. */
+/* Viền sáng lên là TẤT CẢ dấu hiệu bấm được mà ô này có — cùng cách với thẻ
+   số liệu ở hàng trên. Bản thiết kế vẽ nó là chữ thường; gạch chân hay tô đỏ
+   sẽ biến một dải tóm tắt thành ba cái nút và kéo mắt khỏi hàng thẻ ở trên. */
 .afacts__link:hover {
-    background: #fcfaf4;
+    border-color: var(--line-strong);
 }
 
 .afacts__num {
-    font-size: 18px;
+    font-family: var(--font-serif);
+    font-size: 22px;
     font-weight: 700;
+    line-height: 1.1;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
 }
 
 /* Hổ phách chỉ dành cho "sắp hết hàng" — ô duy nhất trong dải mà số càng
-   lớn càng đáng lo. Ba ô kia số lớn là chuyện bình thường. */
-.afacts__num--warn { color: #96631a; }
+   lớn càng đáng lo. Hai ô kia số lớn là chuyện bình thường. */
+.afacts__num--warn { color: var(--warn); }
 
 .afacts__label {
     font-size: 12.5px;
-    color: #8d8072;
+    color: #5c4f42;
 }
 
 /* --- Khối nội dung ----------------------------------------- */
@@ -560,25 +710,50 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     gap: 14px;
 }
 
-/* 1.15fr / 1fr, không phải chia đôi — theo bản thiết kế.
-   Cột trái là đơn hàng: mã đơn, tên khách, trạng thái, số tiền. Cột phải là
-   lịch hẹn: ngày giờ, tên, trạng thái. Chia đôi đều thì tên khách bên trái bị
-   cắt bằng dấu ba chấm trong khi bên phải còn chỗ trống. */
-@media (min-width: 1281px) {
-    .agrid { grid-template-columns: 1.15fr 1fr; }
-    .apanel--wide { grid-column: 1 / -1; }
-
-    /* Không kéo cao bằng cột trái — xem ghi chú ở dashboard/index.php. */
-    .apanel--side { align-self: start; }
+/*
+ * 1.55fr / 1fr, không phải chia đôi — theo bản thiết kế.
+ *
+ * Cột trái là đơn hàng: mã đơn, tên khách, nhãn trạng thái, số tiền — bốn
+ * mẩu trên một dòng. Cột phải chỉ có hai mẩu mỗi dòng. Chia đôi đều thì tên
+ * khách bên trái bị cắt bằng dấu ba chấm trong khi bên phải còn chỗ trống.
+ *
+ * Mốc 1101px là mốc CHÍNH của dự án (xem đầu layout.css), không phải một con
+ * số riêng cho trang này. Dưới mốc đó ba thẻ xếp dọc thành một cột.
+ */
+@media (min-width: 1101px) {
+    .agrid { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
 }
+
+/* Cột phải gộp HAI thẻ (lịch hẹn + sắp hết hàng) thành một ô lưới.
+
+   Không cho chúng làm hai ô lưới riêng: lưới sẽ tự chia đôi chiều cao của
+   cột trái cho hai thẻ, mà thẻ lịch hẹn có ba dòng còn thẻ tồn kho có bốn —
+   cả hai đều thừa ra một mảng trắng ở giữa. Gộp vào một khối flex thì thẻ
+   lịch hẹn chỉ cao bằng nội dung của nó, và thẻ tồn kho (flex: 1, xem dưới)
+   nhận hết phần còn lại. */
+.agrid__col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+/* Thẻ cuối cột phải kéo dài chạm đáy để hai cột kết thúc bằng nhau — nếu
+   không thì góc dưới bên phải hụt lên một quãng bằng đúng phần chênh, trông
+   như trang tải thiếu. */
+.agrid__col > .apanel:last-child { flex: 1; }
 
 .apanel {
     min-width: 0;
+    /* flex column: để .apanel__foot dùng được margin-top: auto mà dính đáy */
+    display: flex;
+    flex-direction: column;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     /* hidden để bảng bên trong không thò góc vuông ra khỏi góc bo của thẻ */
     overflow: hidden;
     background: var(--surface-raised);
+    box-shadow: var(--a-card-shadow);
 }
 
 .apanel__head {
@@ -586,16 +761,19 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 18px;
-    border-bottom: 1px solid #f0e9dc;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--a-panel-line);
 }
 
+/* Đầu thẻ KHÔNG kẻ — dùng khi ngay dưới nó là dòng tiêu đề cột của một bảng.
+   Dòng ấy đã có nền ngà riêng, tức là đã tự vạch ranh giới; để thêm đường kẻ
+   nữa thì thành hai vạch cách nhau một pixel, đọc ra như một nét vẽ lỗi. */
+.apanel__head--plain { border-bottom: 0; }
+
 .apanel__title {
-    /* serif -> sans: xem lý do ở .ahead__title */
     margin: 0;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: -0.01em;
     color: var(--ink);
 }
 
@@ -607,6 +785,32 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .apanel__more:hover { text-decoration: underline; }
+
+/*
+ * CHÂN THẺ — dải ngà ở đáy, hai đầu hai câu.
+ *
+ * Bên trái nói thẻ đang bày CÁI GÌ ("Đang hiện 6 đơn mới nhất"), bên phải
+ * dẫn tới TẤT CẢ ("Xem tất cả 33 đơn →"). Đôi câu này trả lời câu hỏi mà
+ * mọi danh sách bị cắt ngắn đều gây ra và trước đây không chỗ nào trả lời:
+ * sáu dòng này là sáu dòng đầu, hay là tất cả những gì đang có?
+ *
+ * margin-top: auto — dính đáy thẻ kể cả khi thẻ bị lưới kéo cao hơn nội dung
+ * (xem .agrid__col > .apanel:last-child).
+ */
+.apanel__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+    padding: 12px 20px;
+    background: var(--surface-sunken);
+}
+
+.apanel__count {
+    font-size: 12px;
+    color: #98897b;
+}
 
 .apanel__empty {
     padding: 36px 16px;
@@ -624,6 +828,112 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     border-radius: var(--radius);
     background: var(--surface-raised);
 }
+
+/* --- Danh sách hai đầu (.alist) ------------------------------ */
+
+/*
+ * DÒNG DANH SÁCH, KHÔNG PHẢI HÀNG BẢNG — theo bản thiết kế.
+ *
+ * Hai thẻ "Đơn hàng gần đây" và "Sắp hết hàng" trước đây là <table> bốn cột.
+ * Trong một thẻ rộng chừng 600px, bốn cột nghĩa là cột nào cũng hẹp: mã đơn
+ * và tên khách tranh nhau chỗ, tên khách dài bị cắt, mà cột trạng thái thì
+ * thừa khoảng trắng vì nhãn ngắn hơn tên cột.
+ *
+ * Bản thiết kế xếp lại thành hai cụm trên MỘT dòng: cụm định danh dồn trái
+ * (mã đơn trên, tên khách dưới — hai dòng chồng nhau nên không tranh chỗ với
+ * nhau), cụm kết quả dồn phải (nhãn trạng thái rồi tới số tiền). Mắt quét
+ * dọc mép phải là đọc được cả cột tiền, quét dọc mép trái là đọc được cả cột
+ * mã — đúng hai thao tác người ta thật sự làm với danh sách này.
+ *
+ * KHÔNG có dòng tiêu đề cột, cũng cố ý: "DH-260827-6138" và "31.000₫" không
+ * cần ai gắn nhãn mới hiểu, mà một dòng tiêu đề lại chiếm mất đúng chiều cao
+ * của một đơn hàng nữa.
+ *
+ * Thẻ "Lịch hẹn sắp tới" thì VẪN LÀ BẢNG (.atable): ba cột ngắn đều nhau,
+ * trong đó cột ngày là dãy số cần xếp thẳng hàng để so — đó đúng là việc mà
+ * bảng làm tốt hơn danh sách.
+ */
+.alist {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.alist__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 11px 20px;
+    border-bottom: 1px solid var(--a-row-line);
+    transition: background-color 0.15s;
+}
+
+/* Hàng cuối không kẻ: dưới nó đã là dải ngà của .apanel__foot rồi, hai vạch
+   sát nhau thành một nét dày lệch. */
+.alist__row:last-child { border-bottom: 0; }
+
+.alist__row:hover { background: var(--a-row-hover); }
+
+/* min-width: 0 — chốt chặn cho ellipsis ở .alist__name. Thiếu nó thì cụm
+   trái phình theo tên khách dài nhất và đẩy số tiền tràn khỏi thẻ. */
+.alist__main { min-width: 0; }
+
+.alist__side {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* Mã đơn / SKU — chữ đẳng khoảng, màu thương hiệu. Cả dòng không phải liên
+   kết nên màu đỏ ở đây KHÔNG hứa một cú bấm: nó chỉ đánh dấu "đây là định
+   danh để đọc cho nhau nghe qua điện thoại". */
+.alist__code {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+.alist__name {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12.5px;
+    color: var(--ink);
+}
+
+/* Tên đứng TRÊN mã (thẻ Sắp hết hàng) thì nó là thứ đọc trước — in đậm.
+   Ở thẻ Đơn hàng thì ngược lại: mã đứng trên, tên là dòng phụ. */
+.alist__name--lead { font-weight: 600; }
+
+a.alist__name { text-decoration: none; }
+a.alist__name:hover { color: var(--brand); }
+
+.alist__code + .alist__name,
+.alist__name + .alist__code { margin-top: 2px; }
+
+/* min-width để cột tiền xếp thẳng hàng đơn vị: các số 31.000₫ / 3.890.000₫
+   dài ngắn khác nhau, không ghim bề rộng thì nhãn trạng thái bên trái chúng
+   nhảy tới nhảy lui theo từng dòng. */
+.alist__num {
+    min-width: 76px;
+    text-align: right;
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Cột tồn kho chỉ là một con số một tới hai chữ số — không cần ghim 76px */
+.alist__num--tight { min-width: 0; }
+
+/* Tồn bằng 0 — cùng cách đánh dấu với .num.is-danger ở bảng tồn kho. Lớp
+   riêng chứ không dùng lại .num: .num còn kéo theo text-align/nowrap của cột
+   bảng, mà ở đây bề rộng do .alist__num quyết định. */
+.alist__num--danger { color: var(--danger); }
 
 /* --- Trang rỗng LẦN ĐẦU (.aempty) --------------------------- */
 
@@ -750,7 +1060,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 .atable th,
 .atable td {
-    padding: 13px 18px;
+    padding: 12px 20px;
     text-align: left;
     vertical-align: middle;
 }
@@ -773,14 +1083,14 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     /* z-index: dòng đầu bảng phải đè lên nội dung cuộn qua bên dưới nó,
        nếu không chữ của dòng dữ liệu sẽ chồng lên tên cột. */
     z-index: 1;
-    padding-block: 11px;
-    border-bottom: 1px solid var(--line);
+    padding-block: 10px;
+    border-bottom: 1px solid var(--a-panel-line);
     background: var(--surface-sunken);
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.09em;
-    color: #98897b;
+    letter-spacing: 0.1em;
+    color: var(--muted);
     white-space: nowrap;
 }
 
@@ -826,28 +1136,48 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 /* --- Nhãn trạng thái ---------------------------------------- */
 
-/* Năm màu nhãn của bản thiết kế, mỗi màu một NGHĨA cố định:
-     brand  (#f7e8ea/#7d2434) — mới tới, chờ người xử lý
-     neutral(#efe9de/#6f6355) — đang chạy, không cần ai làm gì
-     ok     (#e6f1e9/#2f6b4b) — đã xong, đã đủ hàng
-     warn   (#fbf0dc/#96631a) — sắp cạn, cần để mắt
-     danger (#f9e7e9/#a03245) — đã huỷ, đã hết
-   Nền và chữ luôn đi thành cặp — nhãn nào cũng có CHỮ, màu chỉ là lớp đọc
-   thứ hai, để người phân biệt màu kém vẫn dùng được bảng. */
+/*
+ * Màu nhãn của bản thiết kế, mỗi màu một NGHĨA cố định:
+ *   wait   (#f3ead3/#8a6d1f) — mới tới, ĐANG CHỜ NGƯỜI XỬ LÝ
+ *   blue   (#e4ecf4/#3a5a7d) — đang chạy, không cần ai làm gì lúc này
+ *   ok     (#e2efe2/#2f6b3a) — đã nhận / đã xong / đã đủ hàng
+ *   warn   (#f7edd6/#96700f) — sắp cạn, cần để mắt
+ *   danger (#f7e3e0/#a63232) — đã huỷ, đã hết
+ *   neutral(#efe9de/#6f6355) — không rơi vào nhóm nào ở trên
+ *
+ * ĐỔI SO VỚI BẢN TRƯỚC — "Mới" không còn đeo đỏ thương hiệu:
+ *
+ * Trong khu quản trị, đỏ thương hiệu đã mang nghĩa "bấm được" (mọi liên kết,
+ * mọi nút chính đều đỏ). Một viên nhãn đỏ chỉ-đọc nằm giữa bảng vì thế đọc ra
+ * như một cú bấm hụt. Bản thiết kế chuyển "Mới" và "Chờ xác nhận" sang hổ
+ * phách — cùng họ với "Sắp hết hàng", và cùng một nghĩa: có việc đang chờ.
+ * Ô chọn trạng thái ở bảng đơn hàng đã sơn "Mới" bằng hổ phách từ trước
+ * (.astatus__pick--new trong admin-orders.css), nên đây cũng là bỏ nốt chỗ
+ * cuối cùng còn lệch giữa hai màn.
+ *
+ * "Đã xác nhận" chuyển từ trung tính sang XANH LÁ: nhân viên đã nhận việc là
+ * một bước tiến có thật, để nó cùng màu với "Đang chuẩn bị" thì hai bước liền
+ * nhau không phân biệt được. "Đang giao" lấy xanh dương — bước cuối trước khi
+ * hoàn tất, và là bước duy nhất mà quả bóng đang ở sân người khác.
+ *
+ * Nền và chữ luôn đi thành cặp — nhãn nào cũng có CHỮ, màu chỉ là lớp đọc
+ * thứ hai, để người phân biệt màu kém vẫn dùng được bảng.
+ */
 .badge {
     display: inline-block;
-    padding: 3px 10px;
+    padding: 3px 9px;
     border-radius: var(--radius-round);
     background: var(--pill-neutral-bg);
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 600;
     white-space: nowrap;
     color: var(--pill-neutral-ink);
 }
 
-.badge--new,       .badge--pending      { background: var(--pill-brand-bg);   color: var(--pill-brand-ink); }
-.badge--confirmed, .badge--handling,
+.badge--new,       .badge--pending      { background: var(--pill-wait-bg);    color: var(--pill-wait-ink); }
+.badge--shipping,  .badge--handling     { background: var(--pill-blue-bg);    color: var(--pill-blue-ink); }
 .badge--neutral                         { background: var(--pill-neutral-bg); color: var(--pill-neutral-ink); }
+.badge--confirmed,
 .badge--completed, .badge--done,
 .badge--in_stock                        { background: var(--pill-ok-bg);      color: var(--pill-ok-ink); }
 .badge--low_stock                       { background: var(--pill-warn-bg);    color: var(--pill-warn-ink); }
@@ -2225,36 +2555,6 @@ a.astatus__save {
     box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
 }
 
-/* ── Dòng phụ trong thẻ số liệu (thẻ "Doanh thu" mang thêm "Tạm thu") ──────
-   Đường kẻ trên là ranh giới thật giữa hai loại tiền: doanh thu đã chốt và
-   tiền cọc còn đang giữ hộ. Không có nó thì hai con số cùng đơn vị nghìn đồng
-   đứng sát nhau và mắt đọc thành một cụm — đúng cái nhầm mà cả thay đổi này
-   sinh ra để chấm dứt. */
-.astat__extra {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--a-row-line);
-}
-
-.astat__extra-label {
-    font-size: var(--fs-label);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-}
-
-/* Nhỏ hơn hẳn .astat__value ở trên. Tạm thu là con số phụ, và cỡ chữ phải nói
-   ra điều đó — bằng cỡ nhau thì thẻ có hai con số ngang hàng, người đọc lại
-   phải tự đoán cái nào là doanh thu. */
-.astat__extra-value {
-    font-size: 17px;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink);
-    white-space: nowrap;
-}
+/* Dòng phụ của thẻ số liệu (.astat__extra*) khai ở khối THẺ SỐ LIỆU phía
+   trên — trước đây có một bản thứ hai ở đây, và bản dưới đè bản trên nên con
+   số tạm thu trên thẻ nền tối lấy màu chữ nền sáng: nâu đen trên nâu đen. */

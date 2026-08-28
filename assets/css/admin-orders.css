@@ -35,11 +35,16 @@
  * có nghĩa trong vòng đời đơn hàng ("đã nhận việc" xanh mòng két, "đang làm"
  * tím), không phải hai vai trò dùng lại được ở trang khác. Sắc lấy đúng bản
  * thiết kế, đã ngả ấm cho hợp nền ngà.
+ *
+ * XANH DƯƠNG ("đang giao") TRƯỚC ĐÂY CŨNG KHAI Ở ĐÂY, nay đã chuyển sang bảng
+ * chung trong admin.css. Lý do: từ khi bảng Tổng quan bày nhãn trạng thái đơn
+ * hàng, "Đang giao" xuất hiện ở HAI màn — và hai bản chép của cùng một sắc
+ * xanh đã kịp lệch nhau một nấc (#e3edf8 ở đây, #e4ecf4 ở bản thiết kế mới).
+ * Nó là vai trò dùng lại được, nên nó thuộc về bảng chung.
  */
 body.admin {
     --pill-teal-bg:   #e2f1ec; --pill-teal-ink:   #0e6357;
     --pill-purple-bg: #ece8f8; --pill-purple-ink: #5b4aa6;
-    --pill-blue-bg:   #e3edf8; --pill-blue-ink:   #245e9e;
 }
 
 /*

@@ -10,6 +10,21 @@ class DashboardController extends AdminController
 {
     public function index(): void
     {
+        /*
+         * HAI CON SỐ CHỈ DÙNG CHO CHÂN THẺ — `orders_total` và
+         * `upcoming_appointments`.
+         *
+         * Chúng không lên thẻ số liệu nào cả; chúng là vế "xem tất cả 33 đơn"
+         * ở đáy hai danh sách bị cắt ngắn. Nếu không đếm thì chân thẻ chỉ ghi
+         * được "Xem tất cả →", và câu hỏi mà cái chân ấy sinh ra để trả lời —
+         * "sáu dòng này là sáu dòng đầu, hay là tất cả?" — lại bỏ ngỏ.
+         *
+         * `upcoming_appointments` đếm ĐÚNG tập mà thẻ đang cắt từ đó
+         * (>= CURDATE()), không phải tổng số lịch hẹn trong bảng: chân thẻ ghi
+         * "xem tất cả N lịch" mà N gồm cả buổi hẹn năm ngoái thì nó nói dối.
+         * Nó cũng KHÔNG trùng `pending_appointments` — lịch đã xác nhận vẫn là
+         * lịch sắp tới, chỉ là không còn phải xác nhận nữa.
+         */
         // Đếm gộp trong MỘT câu lệnh thay vì 8 câu riêng.
         // Mỗi truy vấn là một vòng đi-về tới DB; trang tổng quan mở rất
         // thường xuyên nên gộp lại là đáng.
@@ -37,7 +52,10 @@ class DashboardController extends AdminController
                 (SELECT COUNT(*) FROM products WHERE stock_quantity <= 5)         AS low_stock,
                 (SELECT COUNT(*) FROM categories WHERE is_visible = 1)            AS categories,
                 (SELECT COUNT(*) FROM orders WHERE status = 'new')                 AS new_orders,
+                (SELECT COUNT(*) FROM orders)                                       AS orders_total,
                 (SELECT COUNT(*) FROM appointments WHERE status = 'pending')       AS pending_appointments,
+                (SELECT COUNT(*) FROM appointments
+                  WHERE appointment_date >= CURDATE())                              AS upcoming_appointments,
                 {$demChuaDay}                                                      AS contacts_chua_day"
         );
 
@@ -74,9 +92,16 @@ class DashboardController extends AdminController
          * ─────────────────────────────────────────────────────────────────────
          * MỘT LƯỢT QUÉT BẢNG, KHÔNG PHẢI BỐN
          *
-         * Bốn con số dưới đây đều đọc cùng một tập dòng (mọi đơn chưa huỷ), nên
-         * chúng đi bằng CASE WHEN trong một câu lệnh thay vì bốn truy vấn con
-         * quét `orders` bốn lượt. Trang này là trang mở nhiều nhất khu quản trị.
+         * Ba con số dưới đây đều đọc cùng một tập dòng (mọi đơn chưa huỷ), nên
+         * chúng đi bằng CASE WHEN trong một câu lệnh thay vì ba truy vấn con
+         * quét `orders` ba lượt. Trang này là trang mở nhiều nhất khu quản trị.
+         *
+         * TỪNG CÓ CON SỐ THỨ TƯ — `so_don_coc`, đếm số đơn đang giữ cọc. Nó in
+         * ra dòng "2 đơn mới trả cọc" dưới ô Tạm thu, và bản thiết kế mới bỏ
+         * dòng đó (xem app/views/admin/dashboard/index.php). Bỏ luôn ở đây chứ
+         * không để lại một cột không ai đọc: cần lại thì thêm một CASE WHEN
+         * nữa, rẻ hơn nhiều so với việc lần sau phải đoán xem nó còn dùng
+         * ở đâu không.
          *
          * Đơn ĐÃ HUỶ loại ở mệnh đề WHERE chung — kể cả đơn đã trả tiền rồi mới
          * huỷ. Tiền đó phải hoàn lại, nên nó không phải doanh thu; giữ nó trong
@@ -104,9 +129,7 @@ class DashboardController extends AdminController
                 COUNT(CASE WHEN payment_status = 'paid' THEN 1 END)
                     AS so_don_da_thu,
                 COALESCE(SUM(CASE WHEN payment_status = 'deposit_paid' THEN deposit_amount END), 0)
-                    AS tam_thu,
-                COUNT(CASE WHEN payment_status = 'deposit_paid' THEN 1 END)
-                    AS so_don_coc
+                    AS tam_thu
                FROM orders
               WHERE status <> 'cancelled'" . $locMoc,
             $thamSo

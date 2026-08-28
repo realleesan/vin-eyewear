@@ -22,8 +22,17 @@ $segment = currentPath();
  * ngày (Vận hành) — hàng hoá (Sản phẩm) — nội dung (Marketing) — cấu hình
  * (Hệ thống).
  *
- * Mỗi mục một icon RIÊNG, cũng theo bản thiết kế. Trước đây "Tổng quan" và
- * "Sản phẩm" cùng đeo 'layers', nhìn lướt không phân biệt được.
+ * KHÔNG CÒN ICON — bản thiết kế mới ("Tổng quan.dc.html") bỏ hẳn cột icon.
+ *
+ * Bản trước đeo cho mỗi mục một hình 17px ở đầu dòng. Ở một danh sách ĐÃ chia
+ * nhóm thì chúng không còn việc gì để làm: người dùng tìm mục bằng cách nhảy
+ * tới nhóm rồi đọc ba tới bốn chữ, chứ không nhận ra "Giá tròng" qua hình cặp
+ * kính. Mà mười sáu hình nhỏ xếp dọc một cột lại là mười sáu vệt sáng cạnh
+ * chữ, làm cái duy nhất đáng nhìn trong thanh bên — huy hiệu số ở mép phải —
+ * khó bắt hơn hẳn.
+ *
+ * Chỗ 27px tiết kiệm được chuyển hết cho nhãn chữ, nên tên dài như "Tài khoản
+ * nội bộ" không còn phải cắt.
  *
  * 'exact' => true chỉ dành cho Tổng quan: mọi mục khác khớp theo tiền tố để
  * trang con (vd /quan-tri/san-pham/sua) vẫn sáng đúng mục cha.
@@ -37,12 +46,12 @@ $segment = currentPath();
  */
 $navGroups = [
     ['label' => 'Vận hành', 'items' => [
-        ['url' => '/quan-tri',          'label' => 'Tổng quan', 'icon' => 'grid', 'exact' => true],
-        ['url' => '/quan-tri/don-hang', 'label' => 'Đơn hàng',  'icon' => 'cart',
+        ['url' => '/quan-tri',          'label' => 'Tổng quan', 'exact' => true],
+        ['url' => '/quan-tri/don-hang', 'label' => 'Đơn hàng',
          'badge' => $pendingOrders],
-        ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',  'icon' => 'clock',
+        ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',
          'badge' => $pendingAppointments],
-        ['url' => '/quan-tri/lien-he',  'label' => 'Liên hệ',   'icon' => 'chat', 'badge' => $pendingContacts],
+        ['url' => '/quan-tri/lien-he',  'label' => 'Liên hệ', 'badge' => $pendingContacts],
         /* KHÔNG ĐEO HUY HIỆU — đúng luật đã ghi ở khối trên: huy hiệu chỉ dành
            cho hàng chờ có NGƯỜI ĐANG ĐỢI ở đầu bên kia. Có bao nhiêu khách
            hàng cũng không ai phải làm gì cả.
@@ -51,24 +60,24 @@ $navGroups = [
            tra hồ sơ khách là việc làm mỗi ngày ở quầy, còn cấp tài khoản cho
            nhân viên thì vài tháng một lần. Nhóm theo TẦN SUẤT DÙNG, không theo
            việc cả hai đều là "danh sách người". */
-        ['url' => '/quan-tri/khach-hang', 'label' => 'Khách hàng', 'icon' => 'user'],
+        ['url' => '/quan-tri/khach-hang', 'label' => 'Khách hàng'],
     ]],
     ['label' => 'Sản phẩm', 'items' => [
-        ['url' => '/quan-tri/san-pham',  'label' => 'Sản phẩm',  'icon' => 'box'],
-        ['url' => '/quan-tri/ton-kho',   'label' => 'Tồn kho',   'icon' => 'crate'],
-        ['url' => '/quan-tri/danh-muc',  'label' => 'Danh mục',  'icon' => 'tag'],
-        ['url' => '/quan-tri/gia-trong', 'label' => 'Giá tròng', 'icon' => 'glasses'],
+        ['url' => '/quan-tri/san-pham',  'label' => 'Sản phẩm'],
+        ['url' => '/quan-tri/ton-kho',   'label' => 'Tồn kho'],
+        ['url' => '/quan-tri/danh-muc',  'label' => 'Danh mục'],
+        ['url' => '/quan-tri/gia-trong', 'label' => 'Giá tròng'],
     ]],
     ['label' => 'Marketing', 'items' => [
-        ['url' => '/quan-tri/bo-suu-tap',  'label' => 'Bộ sưu tập',  'icon' => 'layers'],
-        ['url' => '/quan-tri/ma-giam-gia', 'label' => 'Mã giảm giá', 'icon' => 'percent'],
-        ['url' => '/quan-tri/danh-gia',    'label' => 'Đánh giá',    'icon' => 'star', 'badge' => $pendingReviews],
+        ['url' => '/quan-tri/bo-suu-tap',  'label' => 'Bộ sưu tập'],
+        ['url' => '/quan-tri/ma-giam-gia', 'label' => 'Mã giảm giá'],
+        ['url' => '/quan-tri/danh-gia',    'label' => 'Đánh giá', 'badge' => $pendingReviews],
     ]],
     ['label' => 'Hệ thống', 'items' => [
-        ['url' => '/quan-tri/co-so', 'label' => 'Cơ sở', 'icon' => 'map-pin'],
+        ['url' => '/quan-tri/co-so', 'label' => 'Cơ sở'],
         // Chỉ hiện huy hiệu khi có yêu cầu chờ: trên hosting gửi được email thì
         // mục này gần như luôn rỗng, không nên gây chú ý vô cớ.
-        ['url' => '/quan-tri/quen-mat-khau', 'label' => 'Quên mật khẩu', 'icon' => 'key',
+        ['url' => '/quan-tri/quen-mat-khau', 'label' => 'Quên mật khẩu',
          'badge' => $pendingResets],
     ]],
 ];
@@ -103,7 +112,7 @@ if (in_array('admin', $adminRoles, true)) {
     // Chèn TRƯỚC "Quên mật khẩu" để hai mục về người dùng nằm cạnh nhau,
     // đúng thứ tự của bản thiết kế.
     array_splice($navGroups[3]['items'], 1, 0, [
-        ['url' => '/quan-tri/nhan-vien', 'label' => 'Tài khoản nội bộ', 'icon' => 'users'],
+        ['url' => '/quan-tri/nhan-vien', 'label' => 'Tài khoản nội bộ'],
     ]);
 }
 ?>
@@ -192,7 +201,6 @@ if (in_array('admin', $adminRoles, true)) {
                             <a href="<?= e($item['url']) ?>"
                                class="asidebar__link<?= $active ? ' is-active' : '' ?>"
                                <?= $active ? 'aria-current="page"' : '' ?>>
-                                <?= icon($item['icon'], 'asidebar__ico', 17) ?>
                                 <span class="asidebar__label"><?= e($item['label']) ?></span>
                                 <?php if (!empty($item['badge'])): ?>
                                     <span class="asidebar__badge"><?= (int) $item['badge'] ?></span>

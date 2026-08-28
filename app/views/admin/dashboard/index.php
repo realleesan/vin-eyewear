@@ -2,32 +2,34 @@
 
 /**
  * admin/dashboard/index.php — tổng quan
- * Port từ src/routes/_authenticated/quan-tri/index.tsx.
+ * Dựng theo "Tổng quan.dc.html" (Claude Design).
  */
 
 /*
- * HAI HÀNG SỐ LIỆU, KHÔNG PHẢI TÁM THẺ BẰNG NHAU — theo "Vin Eyewear Admin.dc.html".
+ * BA TẦNG, KHÔNG PHẢI MỘT ĐỐNG THẺ BẰNG NHAU — theo bản thiết kế.
  *
- * Bản trước đổ cả tám con số vào một lưới auto-fill, nên ở 1440px chúng rơi
- * thành 6 + 2 lẻ: hai thẻ mồ côi ở hàng dưới, và mắt không đọc ra được thứ
- * nào quan trọng hơn thứ nào — doanh thu nằm ngang hàng với "số danh mục".
+ * Bản đầu tiên đổ cả tám con số vào một lưới auto-fill, nên ở 1440px chúng
+ * rơi thành 6 + 2 lẻ: hai thẻ mồ côi ở hàng dưới, và mắt không đọc ra được
+ * thứ nào quan trọng hơn thứ nào — doanh thu nằm ngang hàng với "số danh mục".
  *
- * Bản thiết kế tách làm hai tầng, và sự tách đó chính là nội dung:
+ * Bản thiết kế tách làm ba tầng, và sự tách đó chính là nội dung:
  *
- *   HÀNG TRÊN — bốn thẻ lớn, đều là VIỆC ĐANG CHỜ NGƯỜI LÀM. Đơn mới, lịch
- *   hẹn chờ, liên hệ chưa xử lý: mở bảng quản trị buổi sáng là nhìn bốn ô
- *   này rồi bắt tay vào việc. Doanh thu đứng cùng hàng vì nó là thước đo của
- *   chính mấy việc đó.
+ *   HÀNG TRÊN — bốn thẻ lớn. Thẻ đầu NỀN TỐI là KẾT QUẢ (tiền), ba thẻ nền
+ *   sáng còn lại là VIỆC ĐANG CHỜ NGƯỜI LÀM. Mở bảng quản trị buổi sáng là
+ *   nhìn hàng này rồi bắt tay vào việc. Vì sao thẻ tiền đảo nền chứ không tô
+ *   chữ đỏ như trước: xem .astat--money trong admin.css.
  *
- *   DẢI DƯỚI — bốn con số TRẠNG THÁI KHO/NỘI DUNG. Biết để đấy, không ai
- *   "xử lý" số danh mục cả. Nó là một dải mảnh chia bốn ô, không phải bốn
- *   cái thẻ, nên không tranh chỗ với hàng trên.
+ *   DẢI GIỮA — ba con số TRẠNG THÁI KHO/NỘI DUNG. Biết để đấy, không ai
+ *   "xử lý" số danh mục cả. Thẻ thấp hơn, bo nhỏ hơn một nấc, nên không
+ *   tranh chỗ với hàng trên.
+ *
+ *   KHỐI DƯỚI — ba danh sách thật, chia hai cột 1.55 / 1.
  */
 
 /* Doanh thu KHÔNG có liên kết — đúng bản thiết kế, và có lý do: ba thẻ kia
    mở ra một hàng chờ để xử lý, còn doanh thu thì không dẫn tới việc gì.
    Trỏ nó sang danh sách đơn hàng chỉ làm người ta bấm nhầm khi định xem
-   đơn mới. */
+   đơn mới. Bù lại nó là thẻ DUY NHẤT không có dòng "→" ở chân. */
 
 /*
  * ─────────────────────────────────────────────────────────────────────────────
@@ -48,17 +50,18 @@
  * HIỆN CẢ KHI BẰNG 0, cố ý. "Tạm thu 0 ₫" nói một điều có ích: không còn đơn
  * nào đang nợ phần còn lại. Ẩn đi thì thẻ đổi hình dạng theo dữ liệu, và người
  * dùng không học được là có hai loại tiền khác nhau.
+ *
+ * DÒNG TẠM THU KHÔNG CÒN GHI CHÚ PHỤ ("2 đơn mới trả cọc") — bản thiết kế bỏ.
+ * Thẻ này đã dày hơn ba thẻ bên cạnh vì có thêm cả một dòng kẻ; thêm dòng thứ
+ * năm nữa thì nó cao hơn hẳn và kéo cả hàng giãn theo. Con số đơn cọc vẫn đọc
+ * được ở /quan-tri/don-hang, nơi lọc được theo trạng thái tiền.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 $soDonDaThu = (int) ($tien['so_don_da_thu'] ?? 0);
-$soDonCoc   = (int) ($tien['so_don_coc'] ?? 0);
 
 $cards = [
     ['label' => 'Doanh thu',
      'value' => money((int) ($tien['doanh_thu'] ?? 0)),
-     /* Ghi chú nói RÕ ĐIỀU KIỆN, không phải một câu xã giao. Người nhìn một
-        con số tiền câu đầu tiên hỏi là "gồm những gì" — trả lời ngay ở đây thì
-        không ai phải đi hỏi lại. */
      /* Ghi chú nói rõ ĐIỀU KIỆN, không phải một câu xã giao. Người nhìn một
         con số tiền câu đầu tiên hỏi là "gồm những gì" — và khi có mốc thì câu
         thứ hai là "từ bao giờ". Trả lời cả hai ngay tại chỗ.
@@ -72,15 +75,21 @@ $cards = [
              ? 'chưa có đơn nào thu đủ tiền từ mốc này'
              : 'chưa có đơn nào thu đủ tiền'),
      'url'   => null,
+     'class' => 'astat--money',
      'extra' => [
          'label' => 'Tạm thu (tiền cọc)',
          'value' => money((int) ($tien['tam_thu'] ?? 0)),
-         'note'  => $soDonCoc > 0 ? $soDonCoc . ' đơn mới trả cọc' : 'không có đơn nào',
      ]],
+
+    /* 'cta' — dòng "→" ở chân thẻ. Nó nói cú bấm DẪN TỚI VIỆC GÌ, không lặp
+       lại tên thẻ: "Liên hệ chưa đẩy" bấm vào ra đâu thì không ai đoán được,
+       "Đẩy sang Zalo" mới là câu trả lời. */
     ['label' => 'Đơn hàng mới', 'value' => (int) $stats['new_orders'],
-     'note'  => 'chờ xác nhận',  'url' => '/quan-tri/don-hang'],
+     'note'  => 'chờ xác nhận', 'url' => '/quan-tri/don-hang',
+     'cta'   => 'Xử lý ngay →'],
     ['label' => 'Lịch hẹn chờ', 'value' => (int) $stats['pending_appointments'],
-     'note'  => 'chờ xác nhận',  'url' => '/quan-tri/lich-hen'],
+     'note'  => 'chờ xác nhận', 'url' => '/quan-tri/lich-hen',
+     'cta'   => 'Xem lịch hẹn →'],
     /* Ô này từng là "Liên hệ mới · chưa xử lý", đọc cột `contact_requests`.`status`
        — bỏ ngày 2026-08-26 cùng cả cột đó. Yêu cầu liên hệ nay chạy thẳng sang
        Zalo CSKH lúc khách bấm gửi, nên "chưa xử lý" không còn nghĩa gì: không
@@ -88,10 +97,10 @@ $cards = [
 
        Thứ thay vào là một con số ĐÁNG LO HƠN HẲN: yêu cầu chưa tới được Zalo.
        Nó phải luôn bằng 0; khác 0 nghĩa là ZNS đang hỏng và có người thật đang
-       chờ gọi lại mà CSKH chưa biết. Vì thế nó đeo 'warn' — cùng lý do với ô
-       "sắp hết hàng" ở dải dưới: một con số lớn ở đây là tin xấu. */
+       chờ gọi lại mà CSKH chưa biết. */
     ['label' => 'Liên hệ chưa đẩy', 'value' => (int) $stats['contacts_chua_day'],
-     'note'  => 'chưa tới Zalo CSKH', 'url' => '/quan-tri/lien-he'],
+     'note'  => 'chưa tới Zalo CSKH', 'url' => '/quan-tri/lien-he',
+     'cta'   => 'Đẩy sang Zalo →'],
 ];
 
 /* Dải trạng thái. 'warn' tô con số màu hổ phách — chỉ dùng cho "sắp hết
@@ -104,35 +113,34 @@ $facts = [
     ['value' => (int) $stats['categories'], 'label' => 'danh mục',
      'url'   => '/quan-tri/danh-muc'],
     /* Ô thứ tư từng là "bài sự kiện" -> /quan-tri/su-kien, bỏ 2026-08-26 cùng
-       tính năng sự kiện. Dải nay còn BA ô và .afacts trong admin.css đã đổi
-       sang lưới 3 cột — bốn cột với ba ô để lại một phần tư trống bên phải,
-       trông như trang tải hụt. Thêm ô thứ tư thì nhớ chỉnh lại lưới. */
+       tính năng sự kiện. Dải nay còn BA ô; .afacts là flex nên thêm hay bớt ô
+       không phải chỉnh lưới, chúng tự chia đều. */
 ];
 ?>
-<header class="ahead">
-    <h1 class="ahead__title">Tổng quan</h1>
-    <?php /* Ngày hôm nay đứng cuối dòng dẫn, đúng bản thiết kế. Nó trả lời
-             câu hỏi đầu tiên của người nhìn một bảng số: "số này tính tới lúc
-             nào?" — nhất là khi trang được mở lại từ một tab để quên từ hôm
-             qua. */ ?>
-    <?php /* DÒNG NÀY PHẢI NÓI RA MỐC ĐANG ÁP.
+<?php /* ahead--row: tiêu đề bên trái, ngày hôm nay bên phải — đúng bản thiết
+         kế. Ngày đứng cuối dòng dẫn vì nó trả lời câu hỏi đầu tiên của người
+         nhìn một bảng số: "số này tính tới lúc nào?" — nhất là khi trang được
+         mở lại từ một tab để quên từ hôm qua. */ ?>
+<header class="ahead ahead--row">
+    <div>
+        <h1 class="ahead__title">Tổng quan</h1>
+        <?php /* DÒNG NÀY PHẢI NÓI RA MỐC ĐANG ÁP.
 
-             Không có nó thì đặt STATS_SINCE trong .env xong chẳng có cách nào
-             biết nó đã ăn chưa — con số tụt xuống, mà tụt vì mốc hay vì tính
-             sai thì nhìn không ra. Đây cũng là câu trả lời cho câu hỏi đầu
-             tiên của bất kỳ ai nhìn một bảng số: "tính từ bao giờ tới bao
-             giờ?" */ ?>
-    <p class="ahead__lead">
-        <?php if ($mocThongKe !== null): ?>
-            Tiền tính từ <strong><?= e(formatDate($mocThongKe, 'd/m/Y')) ?></strong>,
-            không tính đơn đã huỷ · <?= e(date('d/m/Y')) ?>
-        <?php else: ?>
-            Số liệu trên toàn bộ dữ liệu, không tính đơn đã huỷ · <?= e(date('d/m/Y')) ?>
-        <?php endif; ?>
-    </p>
+                 Không có nó thì đặt STATS_SINCE trong .env xong chẳng có cách
+                 nào biết nó đã ăn chưa — con số tụt xuống, mà tụt vì mốc hay
+                 vì tính sai thì nhìn không ra. */ ?>
+        <p class="ahead__lead">
+            <?php if ($mocThongKe !== null): ?>
+                Tiền tính từ <strong><?= e(formatDate($mocThongKe, 'd/m/Y')) ?></strong>, không tính đơn đã huỷ
+            <?php else: ?>
+                Số liệu trên toàn bộ dữ liệu, không tính đơn đã huỷ
+            <?php endif; ?>
+        </p>
+    </div>
+    <p class="ahead__today">Hôm nay · <?= e(date('d/m/Y')) ?></p>
 </header>
 
-<!-- ============ HÀNG TRÊN — VIỆC ĐANG CHỜ ============ -->
+<!-- ============ HÀNG TRÊN — TIỀN + VIỆC ĐANG CHỜ ============ -->
 <ul class="astats" role="list">
     <?php foreach ($cards as $card): ?>
         <li>
@@ -142,7 +150,7 @@ $facts = [
             <?php if ($card['url'] !== null): ?>
                 <a class="astat astat--link" href="<?= e($card['url']) ?>">
             <?php else: ?>
-                <div class="astat">
+                <div class="astat <?= e($card['class'] ?? '') ?>">
             <?php endif; ?>
 
                 <span class="astat__label"><?= e($card['label']) ?></span>
@@ -158,7 +166,10 @@ $facts = [
                         <span class="astat__extra-label"><?= e($card['extra']['label']) ?></span>
                         <span class="astat__extra-value"><?= e($card['extra']['value']) ?></span>
                     </span>
-                    <span class="astat__note"><?= e($card['extra']['note']) ?></span>
+                <?php endif; ?>
+
+                <?php if (!empty($card['cta'])): ?>
+                    <span class="astat__cta"><?= e($card['cta']) ?></span>
                 <?php endif; ?>
 
             <?= $card['url'] !== null ? '</a>' : '</div>' ?>
@@ -166,12 +177,12 @@ $facts = [
     <?php endforeach; ?>
 </ul>
 
-<!-- ============ DẢI DƯỚI — TRẠNG THÁI KHO / NỘI DUNG ============ -->
+<!-- ============ DẢI GIỮA — TRẠNG THÁI KHO / NỘI DUNG ============ -->
 <?php /* Bản thiết kế vẽ dải này là chữ thường, không phải nút. Ở đây vẫn cho
-         bấm được — bốn ô đều có một trang tương ứng, và người đọc "3 sản phẩm
+         bấm được — ba ô đều có một trang tương ứng, và người đọc "4 sản phẩm
          sắp hết hàng" thì việc kế tiếp gần như chắc chắn là mở trang tồn kho.
          Vẻ ngoài giữ nguyên như thiết kế: không gạch chân, không đổi màu; chỉ
-         khi rê chuột mới hiện nền để lộ ra là bấm được. */ ?>
+         khi rê chuột mới sáng viền để lộ ra là bấm được. */ ?>
 <ul class="afacts" role="list">
     <?php foreach ($facts as $fact): ?>
         <li class="afacts__cell">
@@ -190,6 +201,9 @@ $facts = [
 <div class="agrid">
 
     <!-- ============ ĐƠN HÀNG GẦN ĐÂY ============ -->
+    <?php /* DANH SÁCH, KHÔNG PHẢI BẢNG — xem khối ghi chú ở .alist trong
+             admin.css. Bốn cột trong một thẻ rộng 600px thì tên khách bị cắt
+             trong khi cột trạng thái thừa khoảng trắng. */ ?>
     <section class="apanel" aria-labelledby="recent-orders">
         <div class="apanel__head">
             <h2 id="recent-orders" class="apanel__title">Đơn hàng gần đây</h2>
@@ -199,100 +213,129 @@ $facts = [
         <?php if ($recentOrders === []): ?>
             <p class="apanel__empty">Chưa có đơn hàng nào.</p>
         <?php else: ?>
-            <table class="atable">
-                <thead>
-                    <tr>
-                        <th scope="col">Mã đơn</th>
-                        <th scope="col">Khách</th>
-                        <th scope="col">Trạng thái</th>
-                        <th scope="col">Tổng</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($recentOrders as $o): ?>
-                        <tr>
-                            <td><code><?= e($o['code']) ?></code></td>
-                            <td><?= e($o['customer_name']) ?></td>
-                            <td><span class="badge badge--<?= e($o['status']) ?>"><?= e($orderStatuses[$o['status']] ?? $o['status']) ?></span></td>
-                            <td class="num"><?= money((int) $o['total']) ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <ul class="alist" role="list">
+                <?php foreach ($recentOrders as $o): ?>
+                    <li class="alist__row">
+                        <div class="alist__main">
+                            <span class="alist__code"><?= e($o['code']) ?></span>
+                            <span class="alist__name"><?= e($o['customer_name']) ?></span>
+                        </div>
+                        <div class="alist__side">
+                            <span class="badge badge--<?= e($o['status']) ?>"><?= e($orderStatuses[$o['status']] ?? $o['status']) ?></span>
+                            <span class="alist__num"><?= money((int) $o['total']) ?></span>
+                        </div>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+
+            <?php /* Chân thẻ trả lời câu hỏi mà mọi danh sách bị cắt ngắn đều
+                     gây ra: mấy dòng này là mấy dòng đầu, hay là tất cả những
+                     gì đang có? Con số bên phải là TỔNG SỐ ĐƠN, không phải số
+                     đơn mới — "xem tất cả" thì phải là tất cả. */ ?>
+            <div class="apanel__foot">
+                <span class="apanel__count">Đang hiện <?= count($recentOrders) ?> đơn mới nhất</span>
+                <a href="/quan-tri/don-hang" class="apanel__more">Xem tất cả <?= (int) $stats['orders_total'] ?> đơn →</a>
+            </div>
         <?php endif; ?>
     </section>
 
-    <!-- ============ LỊCH HẸN GẦN ĐÂY ============ -->
-    <?php /* apanel--side: KHÔNG kéo cao bằng panel bên trái.
-             Danh sách đơn hàng bên trái luôn dài hơn, nên để lưới tự giãn thì
-             thẻ này thừa ra một mảng trắng bằng đúng phần chênh — trông như
-             mất nội dung. Bản thiết kế cho nó align-self:start. */ ?>
-    <section class="apanel apanel--side" aria-labelledby="recent-bookings">
-        <div class="apanel__head">
-            <?php /* Bản thiết kế đặt tên "Lịch hẹn sắp tới", nên DỮ LIỆU phải
-                     đổi theo chứ không chỉ đổi cái tiêu đề: BookingModel
-                     ::withStore() sắp xếp ngày GIẢM DẦN, tức là bày cả buổi hẹn
-                     hôm qua. Một thẻ tên "sắp tới" mà liệt kê chuyện đã qua thì
-                     tên ấy là nói dối, và người trực quầy sẽ chuẩn bị nhầm.
-                     Truy vấn riêng nằm ở DashboardController::index(). */ ?>
-            <h2 id="recent-bookings" class="apanel__title">Lịch hẹn sắp tới</h2>
-            <a href="/quan-tri/lich-hen" class="apanel__more">Xem tất cả →</a>
-        </div>
+    <?php /* Cột phải gộp hai thẻ vào MỘT ô lưới — xem .agrid__col trong
+             admin.css. Để chúng làm hai ô riêng thì lưới chia đôi chiều cao
+             của cột trái cho hai thẻ, cả hai đều thừa ra một mảng trắng. */ ?>
+    <div class="agrid__col">
 
-        <?php if ($recentBookings === []): ?>
-            <p class="apanel__empty">Không có lịch hẹn nào sắp tới.</p>
-        <?php else: ?>
-            <table class="atable">
-                <thead>
-                    <tr>
-                        <th scope="col">Ngày</th>
-                        <th scope="col">Khách</th>
-                        <th scope="col">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($recentBookings as $a): ?>
+        <!-- ============ LỊCH HẸN SẮP TỚI ============ -->
+        <?php /* Thẻ này VẪN LÀ BẢNG: ba cột ngắn đều nhau, trong đó cột ngày là
+                 dãy số cần xếp thẳng hàng để so — việc mà bảng làm tốt hơn
+                 danh sách. */ ?>
+        <section class="apanel" aria-labelledby="recent-bookings">
+            <?php /* head--plain: ngay dưới là dòng tiêu đề cột đã có nền ngà
+                     riêng, thêm đường kẻ nữa thành hai vạch sát nhau. */ ?>
+            <div class="apanel__head apanel__head--plain">
+                <?php /* Bản thiết kế đặt tên "Lịch hẹn sắp tới", nên DỮ LIỆU phải
+                         đổi theo chứ không chỉ đổi cái tiêu đề: BookingModel
+                         ::withStore() sắp xếp ngày GIẢM DẦN, tức là bày cả buổi hẹn
+                         hôm qua. Một thẻ tên "sắp tới" mà liệt kê chuyện đã qua thì
+                         tên ấy là nói dối, và người trực quầy sẽ chuẩn bị nhầm.
+                         Truy vấn riêng nằm ở DashboardController::index(). */ ?>
+                <h2 id="recent-bookings" class="apanel__title">Lịch hẹn sắp tới</h2>
+                <a href="/quan-tri/lich-hen" class="apanel__more">Xem tất cả →</a>
+            </div>
+
+            <?php if ($recentBookings === []): ?>
+                <p class="apanel__empty">Không có lịch hẹn nào sắp tới.</p>
+            <?php else: ?>
+                <table class="atable">
+                    <thead>
                         <tr>
-                            <td><?= e(formatDate($a['appointment_date'])) ?></td>
-                            <td><?= e($a['full_name']) ?></td>
-                            <td><span class="badge badge--<?= e($a['status']) ?>"><?= e($bookingStatuses[$a['status']] ?? $a['status']) ?></span></td>
+                            <th scope="col">Ngày</th>
+                            <th scope="col">Khách</th>
+                            <th scope="col">Trạng thái</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
-    </section>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($recentBookings as $a): ?>
+                            <tr>
+                                <td><?= e(formatDate($a['appointment_date'])) ?></td>
+                                <td><?= e($a['full_name']) ?></td>
+                                <td><span class="badge badge--<?= e($a['status']) ?>"><?= e($bookingStatuses[$a['status']] ?? $a['status']) ?></span></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
 
-    <!-- ============ SẮP HẾT HÀNG ============ -->
-    <section class="apanel apanel--wide" aria-labelledby="low-stock">
-        <div class="apanel__head">
-            <h2 id="low-stock" class="apanel__title">Sắp hết hàng</h2>
-            <a href="/quan-tri/ton-kho" class="apanel__more">Quản lý tồn kho →</a>
-        </div>
+                <div class="apanel__foot">
+                    <span class="apanel__count"><?= count($recentBookings) ?> lịch gần nhất</span>
+                    <a href="/quan-tri/lich-hen" class="apanel__more">Xem tất cả <?= (int) $stats['upcoming_appointments'] ?> lịch →</a>
+                </div>
+            <?php endif; ?>
+        </section>
 
-        <?php if ($lowStock === []): ?>
-            <p class="apanel__empty">Không có sản phẩm nào tồn ≤ 5.</p>
-        <?php else: ?>
-            <table class="atable">
-                <thead>
-                    <tr>
-                        <th scope="col">SKU</th>
-                        <th scope="col">Sản phẩm</th>
-                        <th scope="col">Tồn</th>
-                        <th scope="col">Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
+        <!-- ============ SẮP HẾT HÀNG ============ -->
+        <section class="apanel" aria-labelledby="low-stock">
+            <div class="apanel__head">
+                <h2 id="low-stock" class="apanel__title">Sắp hết hàng</h2>
+                <a href="/quan-tri/ton-kho" class="apanel__more">Quản lý tồn kho →</a>
+            </div>
+
+            <?php if ($lowStock === []): ?>
+                <p class="apanel__empty">Không có sản phẩm nào tồn ≤ 5.</p>
+            <?php else: ?>
+                <ul class="alist" role="list">
                     <?php foreach ($lowStock as $p): ?>
-                        <tr>
-                            <td><code><?= e($p['sku']) ?></code></td>
-                            <td><a href="/san-pham/<?= e(rawurlencode($p['slug'])) ?>"><?= e($p['name']) ?></a></td>
-                            <td class="num<?= (int) $p['stock_quantity'] === 0 ? ' is-danger' : '' ?>"><?= (int) $p['stock_quantity'] ?></td>
-                            <td><span class="badge badge--<?= e($p['status']) ?>"><?= $p['status'] === 'in_stock' ? 'Còn hàng' : 'Hết hàng' ?></span></td>
-                        </tr>
+                        <?php
+                        /* NHÃN ĐỌC CỘT `status`, KHÔNG TỰ SUY TỪ SỐ TỒN.
+                           Một sản phẩm còn 1 cái trong kho vẫn có thể đã bị tắt
+                           bán (hàng lỗi, hàng giữ cho khách đặt riêng) — lúc đó
+                           `status` là 'out_of_stock' dù số tồn khác 0, và người
+                           trực quầy cần thấy đúng điều đó chứ không thấy "Sắp
+                           hết" rồi hứa với khách.
+
+                           Chỉ có HAI nhãn ở thẻ này: cả danh sách đã lọc sẵn
+                           tồn ≤ 5, nên "Còn hàng" là câu vô nghĩa ở đây. */
+                        $conBan = ($p['status'] ?? '') !== 'out_of_stock';
+                        ?>
+                        <li class="alist__row">
+                            <div class="alist__main">
+                                <?php /* Trỏ về TỒN KHO, không về trang bán hàng của sản
+                                         phẩm. Người đọc thẻ "Sắp hết hàng" đang định
+                                         sửa số tồn, không định xem ảnh sản phẩm. */ ?>
+                                <a class="alist__name alist__name--lead" href="/quan-tri/ton-kho"><?= e($p['name']) ?></a>
+                                <span class="alist__code"><?= e($p['sku']) ?></span>
+                            </div>
+                            <div class="alist__side">
+                                <span class="alist__num alist__num--tight<?= (int) $p['stock_quantity'] === 0 ? ' alist__num--danger' : '' ?>"><?= (int) $p['stock_quantity'] ?></span>
+                                <span class="badge badge--<?= $conBan ? 'low_stock' : 'out_of_stock' ?>"><?= $conBan ? 'Sắp hết' : 'Hết hàng' ?></span>
+                            </div>
+                        </li>
                     <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
-    </section>
+                </ul>
+
+                <div class="apanel__foot">
+                    <span class="apanel__count">Ưu tiên tồn thấp nhất</span>
+                    <a href="/quan-tri/ton-kho" class="apanel__more">Xem tất cả →</a>
+                </div>
+            <?php endif; ?>
+        </section>
+    </div>
 </div>
