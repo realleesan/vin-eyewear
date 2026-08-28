@@ -152,6 +152,12 @@ MIGRATIONS=(
     # ra thứ gì để làm mốc. Kiểu 'data' — DROP TABLE IF EXISTS chạy lại bao
     # nhiêu lần cũng ra cùng một kết quả.
     "2026-08-28-bo-bang-ghi-chu-noi-bo.sql|data||"
+    # Lấp `collections`.`sort_order` bằng thứ tự đang trưng bày, để nút ↑↓ ở khu
+    # quản trị có chỗ bấu víu mà thứ tự ngoài mặt tiền không xê dịch lúc deploy.
+    # Kiểu 'data': cột đã có sẵn từ lược đồ gốc nên không có mốc nào để tra, và
+    # phép đánh số dựa trên `launched_at`/`name` chứ không dựa vào chính
+    # `sort_order` — chạy lại ra cùng kết quả.
+    "2026-08-28-bo-suu-tap-thu-tu-trung-bay.sql|data||"
 )
 
 # ---------------------------------------------------------------------------
