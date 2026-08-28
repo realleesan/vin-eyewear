@@ -6,9 +6,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * RANH GIỚI CỦA MODULE — ĐỌC TRƯỚC KHI THÊM BẤT KỲ ACTION NÀO
  *
- * Module này SỞ HỮU:  hồ sơ · trạng thái tài khoản · sổ địa chỉ ·
- *                     đơn thuốc kính · ghi chú nội bộ
- * Module này MƯỢN:    đơn hàng · lịch hẹn · liên hệ · đánh giá
+ * Module này SỞ HỮU:     trạng thái tài khoản · đơn thuốc kính
+ * Module này CHỈ CHO XEM: hồ sơ · sổ địa chỉ
+ * Module này MƯỢN:        đơn hàng · lịch hẹn · liên hệ · đánh giá
  *
  * Thứ mượn thì CHỈ HIỂN THỊ, kèm một đường dẫn sang module gốc. Ở đây KHÔNG có
  * action nào đổi trạng thái đơn, duyệt đánh giá hay xác nhận lịch hẹn — và
@@ -20,11 +20,31 @@
  * AI LÀM ĐƯỢC GÌ
  *
  *   xem danh sách · xem chi tiết         mọi tài khoản nội bộ
- *   sửa hồ sơ · địa chỉ · ghi chú        mọi tài khoản nội bộ (việc ở quầy)
  *   khoá · mở khoá · xoá · khôi phục     quản lý trở lên
  *   gửi liên kết đặt lại mật khẩu        quản lý trở lên
  *   xuất danh sách                       quản lý trở lên
  *   ĐƠN THUỐC KÍNH (kể cả CHỈ XEM)       CHỈ quản trị
+ *
+ * DỮ LIỆU CỦA KHÁCH LÀ CHỈ XEM — hồ sơ và sổ địa chỉ, không ai trong khu quản
+ * trị sửa được, kể cả quản trị viên.
+ *
+ *   · hồ sơ    — số điện thoại và email trong đó là thứ khách dùng để ĐĂNG
+ *                NHẬP. Gõ nhầm một chữ số là khách mất đường vào tài khoản
+ *                của chính mình. Khách tự sửa ở /tai-khoan?muc=ho-so.
+ *   · địa chỉ  — đây là CHÍNH sổ dùng để giao hàng. Gõ nhầm là gói hàng tới
+ *                đi sai nhà. Khách tự sửa ở /tai-khoan?muc=dia-chi.
+ *
+ * Điểm chung: người gõ nhầm không bao giờ thấy hậu quả, còn người chịu hậu quả
+ * thì không biết vì sao. Nên module này KHÔNG có action ghi cho hai thứ đó, và
+ * không có route nào trỏ tới một action như thế — ẩn form đi mà để endpoint
+ * sống là đúng cái lỗi CLAUDE.md quy tắc 4 nói tới.
+ *
+ * ĐƠN THUỐC KÍNH THÌ NGƯỢC LẠI, VẪN SỬA ĐƯỢC: số đo là do kỹ thuật viên của
+ * cửa hàng đo ra, không phải thứ khách tự nhập được ở trang tài khoản. Đổi
+ * lại nó đứng sau một bậc quyền riêng và ghi vết cả lần chỉ đọc.
+ *
+ * GHI CHÚ NỘI BỘ ĐÃ BỎ ngày 2026-08-28. Bảng `customer_notes` vẫn còn trong
+ * CSDL nhưng không còn đường nào đọc hay ghi nó từ đây.
  *
  * Đơn thuốc kính là dữ liệu sức khoẻ nên đứng riêng một bậc. Chặn ở HAI TẦNG
  * theo CLAUDE.md quy tắc 4: view ẩn tab, VÀ mọi action tự hỏi lại canRx().
@@ -37,7 +57,7 @@ class CustomerAdminController extends AdminController
     private const BASE = '/quan-tri/khach-hang';
 
     /**
-     * Năm tab của trang chi tiết.
+     * Bốn tab của trang chi tiết.
      *
      * Khoá là giá trị ?tab= trên địa chỉ — TIẾNG VIỆT KHÔNG DẤU theo quy ước
      * đặt tên URL của dự án.
@@ -53,7 +73,6 @@ class CustomerAdminController extends AdminController
         'dia-chi'   => 'Địa chỉ',
         'don-thuoc' => 'Đơn thuốc kính',
         'hoat-dong' => 'Hoạt động',
-        'ghi-chu'   => 'Ghi chú nội bộ',
     ];
 
     // ========================================================================
@@ -229,19 +248,17 @@ class CustomerAdminController extends AdminController
          * CHỈ NẠP DỮ LIỆU CỦA TAB ĐANG MỞ.
          *
          * Không phải để tiết kiệm truy vấn — mà vì tab Đơn thuốc PHẢI GHI VẾT
-         * mỗi lần có người đọc (CLAUDE.md mục 5, dữ liệu y tế). Nạp sẵn cả năm
+         * mỗi lần có người đọc (CLAUDE.md mục 5, dữ liệu y tế). Nạp sẵn cả bốn
          * tab thì mỗi lần ai đó mở hồ sơ để xem số điện thoại cũng sinh một
          * dòng "đã xem đơn thuốc kính" — và một sổ vết đầy những lần đọc không
          * có thật thì không ai đọc nổi nó nữa, đúng lúc cần tra thì chịu.
          */
         switch ($tab) {
             case 'dia-chi':
-                $data['addresses']   = AddressModel::forUser($id);
-                $data['addrEditing'] = $this->diaChiDangSua($id);
-                // address-picker.js đổi hai ô gõ tay thành danh sách chọn
-                // tỉnh/phường. Không có nó thì vẫn gõ tay lưu được — xem đầu
-                // file JS đó.
-                $data['adminScripts'] = ['assets/js/address-picker.js'];
+                // CHỈ danh sách, tab này không còn form nào. Cũng vì thế không
+                // nạp address-picker.js nữa: nó chỉ tồn tại để nâng hai ô gõ
+                // tay tỉnh/phường trong form thêm địa chỉ, mà form đó đã bỏ.
+                $data['addresses'] = AddressModel::forUser($id);
                 break;
 
             case 'don-thuoc':
@@ -273,34 +290,16 @@ class CustomerAdminController extends AdminController
                    ở tab Hoạt động nay chỉ còn ngày gửi và nội dung. */
                 $data['reviewStatuses']  = ReviewModel::STATUSES;
                 break;
-
-            case 'ghi-chu':
-                $data['notes']      = CustomerNoteModel::forUser($id);
-                $data['noteEditing'] = $this->ghiChuDangSua($id);
-                break;
         }
 
         $this->renderAdmin('admin/customers/detail', $data);
     }
 
     // ========================================================================
-    // HỒ SƠ
-    // ========================================================================
-
-    public function saveProfile(): void
-    {
-        $id = $this->batDauPost('ho-so');
-
-        $ket = CustomerModel::saveProfile($id, $_POST);
-
-        flash($ket['ok'] ? 'admin_success' : 'admin_error',
-            $ket['ok'] ? 'Đã lưu hồ sơ khách hàng.' : $ket['error']);
-
-        $this->veTab($id, 'ho-so');
-    }
-
-    // ========================================================================
     // TRẠNG THÁI TÀI KHOẢN
+    //
+    // KHÔNG có action sửa hồ sơ ở trên — xem khối "HỒ SƠ KHÁCH LÀ CHỈ XEM" ở
+    // đầu file trước khi thêm lại một cái.
     // ========================================================================
 
     public function lock(): void
@@ -391,61 +390,14 @@ class CustomerAdminController extends AdminController
     }
 
     // ========================================================================
-    // SỔ ĐỊA CHỈ
+    // KHÔNG CÓ ACTION NÀO CHO HỒ SƠ VÀ SỔ ĐỊA CHỈ
     //
-    // Ba action này KHÔNG tự kiểm dữ liệu: AddressModel đã có đủ luật (tên
-    // người nhận, chuẩn hoá số điện thoại, bắt buộc tỉnh và phường, trần số
-    // địa chỉ mỗi người, không cho xoá địa chỉ mặc định khi còn cái khác) và
-    // câu thông báo tiếng Việt của nó đã nghiệm thu ở trang tài khoản khách.
-    // Cùng một sổ địa chỉ thì phải cùng một bộ luật, dù mở từ đâu.
+    // Cả hai là chỉ xem — đọc khối "DỮ LIỆU CỦA KHÁCH LÀ CHỈ XEM" ở đầu file
+    // trước khi thêm lại. AddressModel vẫn có đủ create / updateOwned /
+    // deleteOwned / setDefault và vẫn đang chạy cho đường của khách ở
+    // /tai-khoan?muc=dia-chi; mở lại cho nhân viên thì gọi đúng chúng, đừng
+    // chép luật sang đây — và nhớ thêm cả route lẫn vết audit.
     // ========================================================================
-
-    public function saveAddress(): void
-    {
-        $id = $this->batDauPost('dia-chi');
-
-        $diaChiId = trim((string) ($_POST['dia_chi_id'] ?? ''));
-
-        $ket = $diaChiId !== ''
-            ? AddressModel::updateOwned($diaChiId, $id, $_POST)
-            : AddressModel::create($id, $_POST);
-
-        if ($ket['ok']) {
-            AuditLogModel::write($id, 'address.save');
-        }
-
-        flash($ket['ok'] ? 'admin_success' : 'admin_error',
-            $ket['ok'] ? 'Đã lưu địa chỉ.' : $ket['error']);
-
-        $this->veTab($id, 'dia-chi');
-    }
-
-    public function deleteAddress(): void
-    {
-        $id = $this->batDauPost('dia-chi');
-
-        $ket = AddressModel::deleteOwned((string) ($_POST['dia_chi_id'] ?? ''), $id);
-
-        if ($ket['ok']) {
-            AuditLogModel::write($id, 'address.delete');
-        }
-
-        flash($ket['ok'] ? 'admin_success' : 'admin_error',
-            $ket['ok'] ? 'Đã xoá địa chỉ.' : $ket['error']);
-
-        $this->veTab($id, 'dia-chi');
-    }
-
-    public function defaultAddress(): void
-    {
-        $id = $this->batDauPost('dia-chi');
-
-        AddressModel::setDefault((string) ($_POST['dia_chi_id'] ?? ''), $id);
-        AuditLogModel::write($id, 'address.save', 'Đổi địa chỉ mặc định');
-
-        flash('admin_success', 'Đã đổi địa chỉ mặc định.');
-        $this->veTab($id, 'dia-chi');
-    }
 
     // ========================================================================
     // ĐƠN THUỐC KÍNH — CHỈ QUẢN TRỊ
@@ -485,41 +437,6 @@ class CustomerAdminController extends AdminController
     }
 
     // ========================================================================
-    // GHI CHÚ NỘI BỘ
-    // ========================================================================
-
-    public function saveNote(): void
-    {
-        $id = $this->batDauPost('ghi-chu');
-
-        $noteId = trim((string) ($_POST['ghi_chu_id'] ?? ''));
-
-        $ket = CustomerNoteModel::save(
-            $noteId !== '' ? $noteId : null,
-            $id,
-            (string) ($_POST['body'] ?? ''),
-            $this->userId
-        );
-
-        flash($ket['ok'] ? 'admin_success' : 'admin_error',
-            $ket['ok'] ? 'Đã lưu ghi chú.' : $ket['error']);
-
-        $this->veTab($id, 'ghi-chu');
-    }
-
-    public function deleteNote(): void
-    {
-        $id = $this->batDauPost('ghi-chu');
-
-        $ket = CustomerNoteModel::deleteOwned((string) ($_POST['ghi_chu_id'] ?? ''), $id);
-
-        flash($ket['ok'] ? 'admin_success' : 'admin_error',
-            $ket['ok'] ? 'Đã xoá ghi chú.' : $ket['error']);
-
-        $this->veTab($id, 'ghi-chu');
-    }
-
-    // ========================================================================
     // NỘI BỘ
     // ========================================================================
 
@@ -527,7 +444,7 @@ class CustomerAdminController extends AdminController
      * Mở đầu MỌI action POST: kiểm phương thức, kiểm CSDL đã nâng cấp chưa,
      * và lấy ra id khách hợp lệ.
      *
-     * Gom vào một hàm vì bốn bước này phải chạy ở CẢ MƯỜI ba action ghi. Để
+     * Gom vào một hàm vì bốn bước này phải chạy ở CẢ BẢY action ghi còn lại. Để
      * mỗi action tự gọi bốn dòng thì chỉ cần một lần quên là có một đường ghi
      * không kiểm gì — mà không có gì báo cho ai biết. Cùng lý lẽ với việc
      * AdminController đặt requireStaff() ở constructor.
@@ -611,32 +528,12 @@ class CustomerAdminController extends AdminController
         $this->veTab($id, 'ho-so');
     }
 
-    /** Địa chỉ đang mở trong form sửa (?sua=<id>), hoặc null. */
-    private function diaChiDangSua(string $userId): ?array
-    {
-        $id = trim((string) ($_GET['sua'] ?? ''));
-
-        return $id !== '' ? AddressModel::findOwned($id, $userId) : null;
-    }
-
     /** Bản ghi đơn thuốc đang mở trong form sửa (?sua=<id>), hoặc null. */
     private function rxDangSua(string $userId): ?array
     {
         $id = trim((string) ($_GET['sua'] ?? ''));
 
         return $id !== '' ? PrescriptionRecordModel::findOwned($id, $userId) : null;
-    }
-
-    /** Ghi chú đang mở trong form sửa (?sua=<id>), hoặc null. */
-    private function ghiChuDangSua(string $userId): ?array
-    {
-        $id = trim((string) ($_GET['sua'] ?? ''));
-
-        if ($id === '') {
-            return null;
-        }
-
-        return CustomerNoteModel::findOwned($id, $userId);
     }
 
     /** Quay về đúng tab vừa đứng sau một POST. */

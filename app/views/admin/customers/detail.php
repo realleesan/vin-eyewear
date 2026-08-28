@@ -1,12 +1,12 @@
 <?php
 
 /**
- * admin/customers/detail.php — hồ sơ một khách hàng, năm tab.
+ * admin/customers/detail.php — hồ sơ một khách hàng, bốn tab.
  *
  * Controller: Admin/CustomerAdminController::show()
  *
  * File này chỉ dựng KHUNG: tiêu đề, dải số liệu, thanh tab. Nội dung từng tab
- * nằm ở _tab-*.php ngay cạnh — mỗi tab một file vì gộp cả năm vào đây thì file
+ * nằm ở _tab-*.php ngay cạnh — mỗi tab một file vì gộp cả bốn vào đây thì file
  * dài hơn tám trăm dòng và không ai tìm nổi cái mình cần sửa.
  *
  * Controller CHỈ NẠP DỮ LIỆU CỦA TAB ĐANG MỞ, nên biến của tab khác không tồn
@@ -66,7 +66,7 @@ $duongDan = '/quan-tri/khach-hang/' . rawurlencode($khach['id']);
 
          Ba con số này là thứ trả lời câu "khách này quan trọng tới đâu", và câu
          đó cần trả lời dù đang đứng ở tab nào. Đẩy chúng vào tab Hoạt động thì
-         người đang sửa địa chỉ không còn biết mình đang sửa cho ai. */ ?>
+         người đang đọc sổ địa chỉ không còn biết mình đang đọc của ai. */ ?>
 <ul class="astats" role="list">
     <li>
         <div class="astat">
@@ -103,9 +103,9 @@ $duongDan = '/quan-tri/khach-hang/' . rawurlencode($khach['id']);
     </li>
 </ul>
 
-<?php /* THANH TAB LÀ NĂM ĐƯỜNG DẪN THẬT, không phải nút JavaScript.
+<?php /* THANH TAB LÀ BỐN ĐƯỜNG DẪN THẬT, không phải nút JavaScript.
 
-         Không có file JS nào thì trang vẫn đủ năm tab — đúng quy ước "JS chỉ
+         Không có file JS nào thì trang vẫn đủ bốn tab — đúng quy ước "JS chỉ
          là tăng cường" của dự án. Và vì tab nằm trên địa chỉ, mọi form bên
          trong sau khi POST xong đều quay về đúng tab vừa đứng; làm bằng JS thì
          cứ lưu xong là bật về tab đầu tiên. */ ?>
@@ -138,6 +138,6 @@ $duongDan = '/quan-tri/khach-hang/' . rawurlencode($khach['id']);
  * biến của file này, nên tab nào cần gì thì dùng thẳng cái đó.
  */
 /* $tab ĐÃ ĐƯỢC ĐỐI CHIẾU với CustomerAdminController::TABS trước khi tới đây,
-   nên nó chỉ có thể là một trong năm chuỗi gõ sẵn. Đừng bỏ bước đối chiếu ấy:
+   nên nó chỉ có thể là một trong bốn chuỗi gõ sẵn. Đừng bỏ bước đối chiếu ấy:
    ghép thẳng ?tab= vào đường dẫn file là mở đường cho '../../..'. */
 require __DIR__ . '/_tab-' . $tab . '.php';

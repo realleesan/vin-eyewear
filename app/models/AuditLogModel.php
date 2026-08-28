@@ -39,6 +39,11 @@ class AuditLogModel extends BaseModel
         'rx.create'      => 'Thêm đơn thuốc kính',
         'rx.update'      => 'Sửa đơn thuốc kính',
         'rx.delete'      => 'Xoá đơn thuốc kính',
+        // NĂM KHOÁ DƯỚI ĐÂY GIỮ LẠI CHO VẾT CŨ, không còn ai ghi mới: ngày
+        // 2026-08-28 khu quản trị bỏ quyền sửa hồ sơ và sổ địa chỉ của khách,
+        // và bỏ hẳn phần ghi chú nội bộ. Xoá chúng đi thì những dòng đã ghi
+        // trước đó in ra mã thô — mà đó đúng là loại vết cần đọc được nhất:
+        // ai đã đổi số điện thoại hay địa chỉ của khách, hồi nào.
         'profile.update' => 'Sửa hồ sơ',
         'address.save'   => 'Lưu địa chỉ',
         'address.delete' => 'Xoá địa chỉ',

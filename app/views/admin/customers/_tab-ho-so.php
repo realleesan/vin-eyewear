@@ -30,70 +30,68 @@
             <h2 class="apanel__title">Thông tin cá nhân</h2>
         </div>
 
-        <form class="aform" method="post" action="/quan-tri/khach-hang/ho-so">
-            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-            <input type="hidden" name="id" value="<?= e($khach['id']) ?>">
+        <?php /* CHỈ XEM, KHÔNG CÓ FORM — và đây là một quyết định, không phải
+                 việc chưa làm xong.
 
-            <div class="aform__grid">
-                <div class="field field--wide">
-                    <label for="ten">Họ và tên</label>
-                    <input type="text" id="ten" name="full_name" maxlength="255"
-                           value="<?= e((string) ($khach['full_name'] ?? '')) ?>">
-                </div>
+                 Trước 2026-08-28 chỗ này là một form sửa đủ năm ô. Bỏ đi vì hai
+                 trong năm ô đó (số điện thoại, email) LÀ THỨ KHÁCH DÙNG ĐỂ ĐĂNG
+                 NHẬP: nhân viên gõ nhầm một chữ số là khách mất đường vào tài
+                 khoản của chính mình, mà người gõ thì không thấy hậu quả gì ngay
+                 lúc đó. Khách tự sửa được ở /tai-khoan?muc=ho-so, nơi họ đang
+                 cầm sẵn quyền vào hòm thư và số điện thoại ấy.
 
-                <div class="field">
-                    <label for="sdt">Số điện thoại</label>
-                    <input type="tel" id="sdt" name="phone"
-                           value="<?= e((string) ($khach['phone'] ?? '')) ?>">
-                    <?php /* Số điện thoại là MỘT trong hai cách khách đăng nhập
-                             và cột `profiles`.`phone` có khoá duy nhất. Nói ra ở
-                             đây vì người sửa hộ khách không có cách nào tự biết
-                             điều đó, và họ sẽ gặp lỗi "số đã gắn với tài khoản
-                             khác" mà không hiểu vì sao. */ ?>
-                    <p class="field__hint">Khách dùng số này để đăng nhập. Mỗi số chỉ thuộc một tài khoản.</p>
-                </div>
-
-                <div class="field">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email"
-                           value="<?= e((string) ($khach['email'] ?? '')) ?>">
-                    <p class="field__hint">
-                        <?php if ((string) ($khach['email'] ?? '') === ''): ?>
-                            Chưa có — không gửi được liên kết đặt lại mật khẩu.
-                        <?php elseif ((int) $khach['email_verified'] === 1): ?>
-                            Đã xác minh. Đổi địa chỉ sẽ đưa nó về trạng thái chưa xác minh.
-                        <?php else: ?>
-                            Chưa xác minh.
-                        <?php endif; ?>
-                    </p>
-                </div>
-
-                <div class="field">
-                    <label for="ngay-sinh">Ngày sinh</label>
-                    <input type="date" id="ngay-sinh" name="date_of_birth"
-                           max="<?= e(date('Y-m-d')) ?>"
-                           value="<?= e((string) ($khach['date_of_birth'] ?? '')) ?>">
-                </div>
-
-                <div class="field">
-                    <label for="gioi-tinh">Giới tính</label>
-                    <select id="gioi-tinh" name="gender">
-                        <?php /* Lựa chọn rỗng là BẮT BUỘC PHẢI CÓ: ba nút giới
-                                 tính không có nút "bỏ chọn", nên đây là đường duy
-                                 nhất quay về trạng thái chưa chọn. */ ?>
-                        <option value="">— chưa chọn —</option>
-                        <?php foreach ($genders as $ma => $nhan): ?>
-                            <option value="<?= e($ma) ?>"
-                                <?= ($khach['gender'] ?? '') === $ma ? 'selected' : '' ?>>
-                                <?= e($nhan) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <button type="submit" class="astatus__save">Lưu hồ sơ</button>
+                 Cần đổi hộ khách thì đường đi là: khách tự sửa, hoặc xoá tài
+                 khoản rồi lập lại. Đừng thêm form vào đây mà không đổi cả dòng
+                 "AI LÀM ĐƯỢC GÌ" ở đầu CustomerAdminController. */ ?>
+        <dl class="acus__facts">
+            <div>
+                <dt>Họ và tên</dt>
+                <dd><?= ($khach['full_name'] ?? '') !== ''
+                        ? e((string) $khach['full_name'])
+                        : '<span class="atable__sub">chưa có</span>' ?></dd>
             </div>
-        </form>
+            <div>
+                <dt>Số điện thoại</dt>
+                <dd><?= ($khach['phone'] ?? '') !== ''
+                        ? e((string) $khach['phone'])
+                        : '<span class="atable__sub">chưa có</span>' ?></dd>
+            </div>
+            <div>
+                <dt>Email</dt>
+                <dd>
+                    <?php if ((string) ($khach['email'] ?? '') === ''): ?>
+                        <span class="atable__sub">chưa có — không gửi được liên kết đặt lại mật khẩu</span>
+                    <?php else: ?>
+                        <?= e((string) $khach['email']) ?>
+                        <span class="atable__sub">
+                            <?= (int) $khach['email_verified'] === 1 ? 'đã xác minh' : 'chưa xác minh' ?>
+                        </span>
+                    <?php endif; ?>
+                </dd>
+            </div>
+            <div>
+                <dt>Ngày sinh</dt>
+                <dd><?= ($khach['date_of_birth'] ?? null) !== null && $khach['date_of_birth'] !== ''
+                        ? e(formatDate($khach['date_of_birth']))
+                        : '<span class="atable__sub">chưa có</span>' ?></dd>
+            </div>
+            <div>
+                <dt>Giới tính</dt>
+                <?php /* Nhãn lấy từ $genders (UserModel::GENDERS) chứ không gõ
+                         lại: mã lạ còn sót trong CSDL thì in ra nguyên mã, đọc
+                         vẫn hơn một ô trống. */ ?>
+                <dd><?= ($khach['gender'] ?? '') !== ''
+                        ? e($genders[$khach['gender']] ?? (string) $khach['gender'])
+                        : '<span class="atable__sub">chưa chọn</span>' ?></dd>
+            </div>
+        </dl>
+
+        <p class="field__hint">
+            Khu quản trị chỉ XEM phần này. Số điện thoại và email là thứ khách
+            dùng để đăng nhập, nên chỉ chính khách sửa được, ở trang
+            <a href="/tai-khoan?muc=ho-so" target="_blank" rel="noopener">tài khoản</a>
+            của họ.
+        </p>
     </section>
 
     <!-- ======================= TÀI KHOẢN ======================= -->
@@ -133,7 +131,7 @@
 
         <?php if (!$canManage): ?>
             <p class="ahead__note">
-                Bạn sửa được hồ sơ nhưng không khoá / xoá / gửi lại mật khẩu được —
+                Bạn xem được hồ sơ nhưng không khoá / xoá / gửi lại mật khẩu được —
                 những việc đó cần vai trò <strong>Quản lý</strong> trở lên.
             </p>
         <?php else: ?>

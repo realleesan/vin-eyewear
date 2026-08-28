@@ -347,66 +347,20 @@ class CustomerModel extends BaseModel
     // HÀNH ĐỘNG
     // ========================================================================
 
-    /**
-     * Sửa hồ sơ.
+    /*
+     * KHÔNG CÓ saveProfile() Ở ĐÂY — bỏ ngày 2026-08-28, cố ý.
      *
-     * KHÔNG tự viết lại phần kiểm tra: UserModel::updateProfile() và
-     * ::updateEmail() đã có đủ luật (chuẩn hoá số điện thoại, chặn trùng số,
-     * chặn trùng email, dập cờ email_verified khi đổi địa chỉ) và câu thông
-     * báo tiếng Việt của chúng đã nghiệm thu với khách hàng. Chép lại ở đây là
-     * tạo phiên bản thứ hai của cùng một luật, rồi hai bên sẽ lệch nhau.
+     * Hồ sơ khách (họ tên, số điện thoại, email, ngày sinh, giới tính) nay là
+     * CHỈ XEM trong khu quản trị. Hai trong năm ô đó là thứ khách dùng để đăng
+     * nhập, nên nhân viên gõ nhầm là khách mất đường vào tài khoản của chính
+     * mình mà người gõ không thấy hậu quả gì ngay lúc đó. Khách tự sửa ở
+     * /tai-khoan?muc=ho-so — nơi họ đang cầm sẵn hòm thư và số điện thoại ấy.
      *
-     * Ở đây chỉ thêm đúng thứ hai hàm kia không có: kiểm ngày sinh.
-     *
-     * @return array{ok:bool, error?:string}
+     * Luật kiểm tra vẫn còn nguyên và vẫn đang chạy cho đường của khách:
+     * UserModel::updateProfile() và ::updateEmail(). Cần mở lại đường cho
+     * nhân viên thì gọi hai hàm đó, đừng chép luật sang đây — và nhớ thêm cả
+     * route lẫn vết audit, xem đầu CustomerAdminController.
      */
-    public static function saveProfile(string $id, array $input): array
-    {
-        if (self::detail($id) === null) {
-            return ['ok' => false, 'error' => 'Không tìm thấy khách hàng.'];
-        }
-
-        $dob = trim((string) ($input['date_of_birth'] ?? ''));
-
-        if ($dob !== '') {
-            $d = DateTime::createFromFormat('Y-m-d', $dob);
-
-            // checkdate qua getLastErrors: createFromFormat nhận cả '2026-02-31'
-            // rồi tự trôi sang 03/03. Không bắt ở đây thì một ngày gõ nhầm được
-            // lưu thành một ngày khác hẳn mà không ai báo gì.
-            $loi = DateTime::getLastErrors();
-
-            if ($d === false || ($loi !== false && ($loi['warning_count'] ?? 0) > 0)) {
-                return ['ok' => false, 'error' => 'Ngày sinh không hợp lệ.'];
-            }
-
-            if ($d > new DateTime('today')) {
-                return ['ok' => false, 'error' => 'Ngày sinh không được ở tương lai.'];
-            }
-        }
-
-        // Email đi trước: nó có thể bị từ chối vì trùng, và khi đó KHÔNG nên
-        // đã kịp ghi tên với số điện thoại rồi mới báo lỗi — người bấm Lưu sẽ
-        // thấy nửa form đã đổi, nửa kia thì không.
-        $mail = UserModel::updateEmail($id, (string) ($input['email'] ?? ''));
-
-        if (!$mail['ok']) {
-            return $mail;
-        }
-
-        $ket = UserModel::updateProfile($id, [
-            'full_name'     => trim((string) ($input['full_name'] ?? '')) ?: null,
-            'phone'         => (string) ($input['phone'] ?? ''),
-            'date_of_birth' => $dob !== '' ? $dob : null,
-            'gender'        => (string) ($input['gender'] ?? ''),
-        ]);
-
-        if ($ket['ok']) {
-            AuditLogModel::write($id, 'profile.update');
-        }
-
-        return $ket;
-    }
 
     /**
      * Khoá tài khoản. Lý do là BẮT BUỘC.

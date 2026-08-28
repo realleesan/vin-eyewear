@@ -2109,29 +2109,6 @@ a.astatus__save {
 .acus__addr-name { margin: 0 0 4px; font-weight: 600; }
 .acus__addr-line { margin: 0; font-size: 13px; color: var(--muted); }
 
-.acus__addr-acts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center;
-    font-size: 13px;
-}
-
-.acus__addr-acts form { margin: 0; }
-
-/* Nút trông như đường dẫn. Phải là <button> vì nó gửi một form POST — dùng
-   thẻ <a> cho thao tác đổi dữ liệu thì một thẻ <img> trên trang bất kỳ cũng
-   kích hoạt được nó. */
-.acus__linkbtn {
-    border: 0;
-    padding: 0;
-    background: none;
-    font: inherit;
-    color: var(--brand);
-    cursor: pointer;
-}
-
-.acus__linkbtn:hover { text-decoration: underline; text-underline-offset: 3px; }
 
 /* ── Bảng đơn thuốc kính ──────────────────────────────────────────────── */
 
@@ -2221,35 +2198,6 @@ a.astatus__save {
 }
 
 .acus__feed-body { margin: 0; font-size: 14px; line-height: 1.6; }
-
-/* ── Ghi chú nội bộ ───────────────────────────────────────────────────── */
-.acus__notes {
-    margin: 0;
-    padding: 0 18px 18px;
-    list-style: none;
-    display: grid;
-    gap: 12px;
-}
-
-.acus__note {
-    padding: 12px 14px;
-    border: 1px solid var(--a-row-line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-sunken);
-}
-
-.acus__note-meta { margin: 0 0 6px; font-size: 12px; color: var(--muted); }
-.acus__note-body { margin: 0; font-size: 14px; line-height: 1.65; }
-
-.acus__note-acts {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin: 8px 0 0;
-    font-size: 13px;
-}
-
-.acus__note-acts form { margin: 0; }
 
 /* Ô lý do xoá đứng cùng dòng với nút. Ngắn — nó không bắt buộc, nên không nên
    chiếm chỗ ngang với ô lý do khoá phía trên (ô đó thì bắt buộc). */
