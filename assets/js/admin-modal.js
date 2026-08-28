@@ -128,6 +128,13 @@
                     return;
                 }
 
+                /* Đang mở sẵn rồi mà bấm tiếp (đổi tab trong hồ sơ khách, bấm
+                   Sửa một bản ghi đo) thì THAY địa chỉ chứ không đẩy thêm mục
+                   lịch sử. Đẩy thêm thì một lần đóng chỉ lùi được một tab, và
+                   hộp biến mất trong khi địa chỉ vẫn còn tham số của nó — F5
+                   lại bật hộp lên. Cả phiên mở hộp chỉ nên tốn đúng một mục. */
+                var daMo = dangMo();
+
                 var el = host();
                 el.innerHTML = '';
 
@@ -135,21 +142,43 @@
                     el.appendChild(document.importNode(n, true));
                 });
 
-                truocKhiMo = nut;
-                history.pushState({ vinModal: href }, '', href);
+                if (!daMo) {
+                    truocKhiMo = nut;
+                    history.pushState({ vinModal: href }, '', href);
+                } else {
+                    history.replaceState({ vinModal: href }, '', href);
+                }
+
+                /* Địa chỉ có neo (#form-don-thuoc) thì cuộn tới đó: thân hộp
+                   vừa được dựng lại nên nó đang ở đầu, mà thứ người ta vừa bấm
+                   để xem có thể nằm tận cuối. */
+                var neo = href.indexOf('#') >= 0 ? href.slice(href.indexOf('#') + 1) : '';
+                var dich = neo !== '' ? document.getElementById(neo) : null;
+
+                if (dich !== null) {
+                    dich.scrollIntoView();
+                }
 
                 /* Tiêu điểm vào ô nhập đầu tiên — người bấm "Thêm mới" định gõ
-                   ngay, và bắt họ bấm thêm một cái nữa vào ô đầu là thừa. Không
-                   có ô nào thì lấy chính khung hộp, để phím Esc và trình đọc
-                   màn hình bắt đúng chỗ. */
-                var oDau = el.querySelector(
-                    'input:not([type="hidden"]), select, textarea'
-                );
+                   ngay, và bắt họ bấm thêm một cái nữa vào ô đầu là thừa.
+
+                   CHỈ với hộp CÓ nút lưu ở chân. Hộp chỉ để xem (hồ sơ khách,
+                   ngăn kéo đơn hàng) vẫn có ô nhập nằm đâu đó giữa trang — hồ
+                   sơ khách có ô "lý do khoá" — và nhảy tiêu điểm vào đó là cuộn
+                   thân hộp xuống giữa chừng ngay khi vừa mở. Không có ô nào thì
+                   lấy chính khung hộp, để phím Esc và trình đọc màn hình bắt
+                   đúng chỗ. */
+                var coLuu = el.querySelector(
+                    '.amodal__foot button[type="submit"], .aodraw button[type="submit"]'
+                ) !== null;
+                var oDau = coLuu
+                    ? el.querySelector('input:not([type="hidden"]), select, textarea')
+                    : null;
                 var khung = el.querySelector('.amodal__panel, .aodraw');
 
                 if (oDau !== null) {
                     oDau.focus();
-                } else if (khung !== null) {
+                } else if (dich === null && khung !== null) {
                     khung.setAttribute('tabindex', '-1');
                     khung.focus();
                 }

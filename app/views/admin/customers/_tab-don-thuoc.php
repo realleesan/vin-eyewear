@@ -68,7 +68,7 @@ $so = static function (mixed $v): string {
     <div class="apanel__head">
         <h2 class="apanel__title">Lịch sử đo (<?= count($rxRecords) ?> lần)</h2>
         <?php if ($sua !== null): ?>
-            <a class="apanel__more" href="<?= e($veTab) ?>">Huỷ sửa</a>
+            <a class="apanel__more" href="<?= e($veTab) ?>" data-modal>Huỷ sửa</a>
         <?php endif; ?>
     </div>
 
@@ -201,7 +201,12 @@ $so = static function (mixed $v): string {
                             </td>
 
                             <td class="arow-actions">
-                                <a href="<?= e($veTab . '&sua=' . rawurlencode($rx['id'])) ?>">Sửa</a>
+                                <?php /* Neo #form-don-thuoc: form sửa nằm DƯỚI bảng, mà mỗi
+                                         lần đổi địa chỉ là thân hộp thoại cuộn về
+                                         đầu — không có neo thì bấm "Sửa" trông như
+                                         không có gì xảy ra. */ ?>
+                                <a href="<?= e($veTab . '&sua=' . rawurlencode($rx['id'])) ?>#form-don-thuoc"
+                                   data-modal>Sửa</a>
                                 <form method="post" action="/quan-tri/khach-hang/don-thuoc/xoa"
                                       data-confirm="Xoá bản ghi đo ngày <?= e(formatDate($rx['measured_at'])) ?>? Lịch sử độ kính sẽ mất một mốc và không khôi phục được."
                                       data-confirm-title="Xoá bản ghi đo?"
