@@ -42,10 +42,8 @@
  * xanh đã kịp lệch nhau một nấc (#e3edf8 ở đây, #e4ecf4 ở bản thiết kế mới).
  * Nó là vai trò dùng lại được, nên nó thuộc về bảng chung.
  */
-body.admin {
-    --pill-teal-bg:   #e2f1ec; --pill-teal-ink:   #0e6357;
-    --pill-purple-bg: #ece8f8; --pill-purple-ink: #5b4aa6;
-}
+/* Bảng màu sáu trạng thái đã chuyển sang admin.css — nó nay dùng chung với
+   ô chọn của trang Lịch hẹn. Xem khối --st-* ở đó. */
 
 /*
  * Ô CHỌN, KHÔNG PHẢI NHÃN + NÚT SỬA.
@@ -65,26 +63,8 @@ body.admin {
  * chỉ (0,1,0) nên THUA, và ô chọn ở lại dáng hộp vuông trắng của bảng chung —
  * đúng như nó đã ở lại lần đầu dựng trang này. Đừng rút gọn lại.
  */
-.astatus select.astatus__pick {
-    appearance: none;
-    -webkit-appearance: none;
-    height: 30px;
-    padding: 0 26px 0 12px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-round);
-    background-color: var(--pill-neutral-bg);
-    background-image:
-        linear-gradient(45deg, transparent 50%, currentColor 50%),
-        linear-gradient(135deg, currentColor 50%, transparent 50%);
-    background-position: right 13px center, right 8px center;
-    background-size: 5px 5px, 5px 5px;
-    background-repeat: no-repeat;
-    font-family: var(--font-sans);
-    font-size: var(--fs-caption);
-    font-weight: 600;
-    color: var(--pill-neutral-ink);
-    cursor: pointer;
-}
+/* Dáng viên thuốc của ô chọn trạng thái đã chuyển sang admin.css — trang
+   Lịch hẹn dùng chung. Ở đây chỉ còn ánh xạ màu cho sáu trạng thái đơn. */
 
 /* Ô chọn trong ngăn kéo — cùng dáng, to hơn một nấc vì nó đứng một mình chứ
    không nằm trong một cột hẹp. */
@@ -102,20 +82,14 @@ body.admin {
     box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.12);
 }
 
-/* Danh sách xổ ra do hệ điều hành vẽ, không nhận màu của ô — trả nó về nền
-   trắng chữ đen, nếu không thì trên nền viên đỏ chữ đỏ là không đọc được. */
-.astatus select.astatus__pick option {
-    background: var(--surface-raised);
-    color: var(--ink);
-    font-weight: 500;
-}
+/* Luật cho <option> đã chuyển sang admin.css cùng dáng viên thuốc. */
 
-.astatus select.astatus__pick--new       { background-color: var(--pill-warn-bg);   color: var(--pill-warn-ink);   border-color: #e9d6ac; }
-.astatus select.astatus__pick--confirmed { background-color: var(--pill-teal-bg);   color: var(--pill-teal-ink);   border-color: #c2e0d6; }
-.astatus select.astatus__pick--preparing { background-color: var(--pill-purple-bg); color: var(--pill-purple-ink); border-color: #d5cdef; }
-.astatus select.astatus__pick--shipping  { background-color: var(--pill-blue-bg);   color: var(--pill-blue-ink);   border-color: #c6dbf0; }
-.astatus select.astatus__pick--completed { background-color: var(--pill-ok-bg);     color: var(--pill-ok-ink);     border-color: #c8e2c4; }
-.astatus select.astatus__pick--cancelled { background-color: var(--pill-danger-bg); color: var(--pill-danger-ink); border-color: #ebc9c2; }
+.astatus select.astatus__pick--new       { background-color: var(--st-new-bg);  color: var(--st-new-ink);  border-color: var(--st-new-line); }
+.astatus select.astatus__pick--confirmed { background-color: var(--st-conf-bg); color: var(--st-conf-ink); border-color: var(--st-conf-line); }
+.astatus select.astatus__pick--preparing { background-color: var(--st-prep-bg); color: var(--st-prep-ink); border-color: var(--st-prep-line); }
+.astatus select.astatus__pick--shipping  { background-color: var(--st-ship-bg); color: var(--st-ship-ink); border-color: var(--st-ship-line); }
+.astatus select.astatus__pick--completed { background-color: var(--st-done-bg); color: var(--st-done-ink); border-color: var(--st-done-line); }
+.astatus select.astatus__pick--cancelled { background-color: var(--st-canc-bg); color: var(--st-canc-ink); border-color: var(--st-canc-line); }
 
 /*
  * Nút "Lưu" cạnh ô chọn — dáng của .astatus__save nhưng LỚP KHÁC.
@@ -151,16 +125,21 @@ body.admin {
 .aoghost { display: contents; }
 
 /* ============================================================
-   2. THANH CÔNG CỤ DÍNH ĐẦU MÀN HÌNH
+   2. DẢI VIÊN LỌC, DÍNH ĐẦU MÀN HÌNH
    ============================================================ */
 
+/*
+ * TRƯỚC ĐÂY THANH NÀY CHỨA CẢ VIÊN LỌC LẪN Ô TÌM, nay chỉ còn viên lọc: bản
+ * thiết kế mới đưa ô lọc ngày và ô tìm lên nằm cùng dòng tiêu đề (xem
+ * orders/index.php). Nhờ vậy dải viên lọc được trọn một hàng và cái lý do
+ * phải ép nó `nowrap` ở 901px — sợ nó giành chỗ với ô tìm — không còn nữa.
+ */
 .aotools {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
     gap: 12px;
-    margin-bottom: 10px;
+    margin-bottom: 16px;
 }
 
 /*
@@ -179,7 +158,7 @@ body.admin {
         position: sticky;
         top: 0;
         z-index: 20;
-        margin-block: -12px 10px;
+        margin-block: -12px 16px;
         padding-block: 12px;
         background: var(--surface);
     }
@@ -188,10 +167,8 @@ body.admin {
 /* Dải viên lọc do partial dùng chung dựng ra (.atabs) — bỏ khoảng cách dưới
    của nó vì ở đây thanh công cụ đã có margin riêng.
 
-   min-width:0 là dòng quan trọng: không có nó, phần tử flex lấy bề rộng nội
-   dung làm bề rộng nhỏ nhất, nên bảy viên lọc đẩy ô tìm xuống hàng thứ hai
-   ngay cả khi màn hình còn thừa chỗ. Có nó thì dải viên co lại và tự cuộn
-   ngang trong chính nó (.atabs vốn đã có overflow-x: auto). */
+   min-width:0 để dải viên co lại và tự cuộn ngang trong chính nó (.atabs vốn
+   đã có overflow-x: auto) thay vì đẩy thanh công cụ rộng ra. */
 .aotools .atabs {
     flex: 1 1 auto;
     min-width: 0;
@@ -200,14 +177,10 @@ body.admin {
 }
 
 @media (min-width: 901px) {
-    /* Từ mốc này thì bảy viên lọc nằm gọn MỘT HÀNG và tự cuộn ngang nếu thiếu
-       chỗ, thay vì xuống dòng thành ba hàng.
-
-       Bản thiết kế xếp cả viên lọc lẫn ô tìm trên cùng một hàng; ở đây chúng
-       thành HAI HÀNG và đó là chủ ý. Khung quản trị chặn nội dung ở 1160px
-       (xem .admin__main trong admin.css) chứ không phải 1240px như bản vẽ, nên
-       ép một hàng thì dải viên lọc phải co lại tới mức "Đã huỷ" bị cắt mất một
-       nửa — mất một bộ lọc để đổi lấy 40px chiều cao. */
+    /* Từ mốc này thì bảy viên lọc nằm gọn MỘT HÀNG và tự cuộn ngang trong
+       chính nó nếu thiếu chỗ, thay vì xuống dòng thành ba hàng chồng nhau.
+       Từ khi ô tìm chuyển lên dòng tiêu đề thì cả hàng này là của riêng
+       chúng, nên gần như không bao giờ phải cuộn thật. */
     .aotools .atabs { flex-wrap: nowrap; }
 }
 
@@ -228,7 +201,10 @@ body.admin {
     height: 36px;
     padding-inline: 12px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    /* 9px là con số của bản thiết kế, giữa 8px của ô nhập và 7px của nút.
+       Ba giá trị sát nhau nghe như thừa, nhưng đây là ba thứ đứng cạnh nhau
+       trên cùng một dòng và bản vẽ cố ý cho ô lọc bo mềm nhất. */
+    border-radius: 9px;
     background: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: var(--fs-note);
@@ -287,11 +263,72 @@ body.admin {
 
 /* Rộng hơn .atable--full (860px) vì có thêm cột tick và cột số đo. Dưới mức
    này thì .atable-wrap cho cuộn ngang trong khung, không đẩy cả trang trượt. */
-.aotable { min-width: 1040px; }
+/*
+ * table-layout: fixed — BỀ RỘNG CỘT DO CSS QUYẾT, KHÔNG DO NỘI DUNG.
+ *
+ * Với thuật toán mặc định (auto), trình duyệt chia chỗ theo nội dung dài nhất
+ * của mỗi cột và coi mọi `width` chỉ là gợi ý. Ở bảng này cột dài nhất luôn là
+ * cột sản phẩm (tên gọng + gói tròng + hai dòng số đo), nên nó nuốt phần lớn
+ * bề ngang, còn cột "Nhận / Trả" bị ép xuống chừng 80px — đủ để "Giao tận nơi"
+ * và "Chuyển khoản" mỗi cụm gãy làm hai dòng, và hàng nào cũng cao thêm 20px.
+ *
+ * Fixed thì năm cột ghim cứng đúng con số bên dưới, cột sản phẩm ăn phần còn
+ * lại, và bảng đứng yên giữa các trang thay vì nhảy bề rộng theo việc trang
+ * này có đơn kính hay không. Đổi lại, mọi thứ dài quá cột PHẢI tự cắt — xem
+ * các luật ellipsis ở dưới.
+ */
+.aotable {
+    min-width: 1040px;
+    table-layout: fixed;
+}
+
+/*
+ * 22px Ở HAI MÉP BẢNG, 7px GIỮA CÁC CỘT — không phải 22px đều khắp.
+ *
+ * Bản thiết kế dựng hàng này bằng CSS grid: một khung đệm 22px hai bên và
+ * `gap: 14px` giữa các ô. Dịch sang <table> thì khoảng cách giữa hai cột phải
+ * chia đôi cho hai ô kề nhau, thành 7px mỗi bên.
+ *
+ * Chép thẳng 22px vào mọi ô là chỗ đã sai một lần: cột "Tổng / Thanh toán"
+ * ghim 140px, trừ 44px đệm chỉ còn 96px cho chữ — đủ để nhan đề cột bị cắt
+ * mất chữ "toán" và con số tiền phải xuống dòng. Bốn mươi tư pixel đệm trong
+ * một cột rộng 140px là gần một phần ba cột.
+ *
+ * 14px trên dưới thì giữ: mỗi ô ở bảng này mang hai tới bốn dòng chữ chồng
+ * nhau, không phải một.
+ */
+.aotable th,
+.aotable td { padding: 14px 7px; }
+
+.aotable th:first-child,
+.aotable td:first-child { padding-left: 22px; }
+
+.aotable th:last-child,
+.aotable td:last-child { padding-right: 22px; }
+
+.aotable thead th { padding-block: 12px; }
 
 /* Cột tick hẹp hết mức: nó không mang thông tin nào, chỉ là chỗ để bấm. */
 .aotable th.aotable__tick,
 .aotable td.aotable__tick { width: 34px; padding-right: 0; }
+
+/*
+ * BỀ RỘNG CỘT GHIM CỨNG, chỉ cột "Sản phẩm" được co giãn.
+ *
+ * Để trình duyệt tự chia thì nó chia theo NỘI DUNG DÀI NHẤT của mỗi cột, mà
+ * ở bảng này cột dài nhất luôn là cột sản phẩm (tên gọng + gói tròng + hai
+ * dòng số đo). Kết quả: cột ấy nuốt hết chỗ, còn cột "Nhận / Trả" co lại tới
+ * mức "Nhận tại cửa hàng" xuống ba dòng. Ghim năm cột kia rồi cho cột sản
+ * phẩm ăn phần còn lại thì bảng đứng yên giữa các trang, không nhảy bề rộng
+ * theo việc trang này có đơn kính hay không.
+ *
+ * Con số lấy của bản thiết kế; nth-child bắt đầu từ 2 vì cột 1 là ô tick.
+ */
+.aotable th:nth-child(2), .aotable td:nth-child(2) { width: 145px; }
+.aotable th:nth-child(3), .aotable td:nth-child(3) { width: 145px; }
+.aotable th:nth-child(5), .aotable td:nth-child(5) { width: 135px; }
+.aotable th:nth-child(6), .aotable td:nth-child(6) { width: 140px; }
+.aotable th:nth-child(7), .aotable td:nth-child(7) { width: 140px; }
 
 .aopick {
     width: 15px;
@@ -325,15 +362,34 @@ body.admin {
 
 .aocode:hover { text-decoration: underline; }
 
-.aoname { display: block; font-weight: 600; }
+/* Cắt bằng ellipsis chứ không xuống dòng: từ khi bảng chạy table-layout:fixed
+   thì cột khách hàng ghim 145px, và "Nguyễn Thị Thảo Yến" xuống ba dòng sẽ
+   kéo cao cả hàng. Tên đầy đủ vẫn đọc được trong ngăn kéo chi tiết. */
+.aoname {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
 
 /* Ngày giờ tạo đơn KHÔNG xuống dòng: "27/08/2026 10:12" gãy làm đôi thì cột
    mã đơn cao thêm một dòng cho cả hai mươi hàng, và ngày với giờ đọc thành
    hai mẩu rời. Cột tự nới ra vừa đủ. */
 .aowhen { white-space: nowrap; }
 
-/* Cột sản phẩm là cột dày nhất — cho nó phần lớn chỗ trống còn lại. */
-.aoitems { width: 30%; }
+/* Cột sản phẩm KHÔNG khai width: nó là cột duy nhất không ghim, nên dưới
+   table-layout:fixed nó tự nhận hết phần còn lại. */
+
+/* Tên sản phẩm cắt bằng ellipsis — cùng lý do với .aoname. Dòng này có thể
+   dài tuỳ ý ("Tròng kính chống ánh sáng xanh 1.61 × 1") và nó chỉ là nhãn
+   nhận dạng; bản đầy đủ nằm trong ngăn kéo. */
+.aoitems .atable__line {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 /* --- Số đo trong bảng --------------------------------------- */
 
@@ -345,8 +401,15 @@ body.admin {
  * thì nó tự xuống dòng ở chỗ ngẫu nhiên, và tìm chỗ sang mắt kia là phải dò
  * mắt kiếm dấu chấm giữa.
  *
- * Viên MP/MT màu thương hiệu làm mốc neo: liếc dọc cột là đếm được ngay đơn
- * nào có số đo cả hai mắt.
+ * Viên MP/MT làm mốc neo: liếc dọc cột là đếm được ngay đơn nào có số đo cả
+ * hai mắt.
+ *
+ * MÀU TÍM, KHÔNG PHẢI ĐỎ THƯƠNG HIỆU. Trước đây hai viên này đeo
+ * --pill-brand-*, tức là cùng sắc với mã đơn ở cột đầu và với nút "Đã nhận
+ * tiền" ở cột tiền — ba thứ đỏ trong một hàng, mà chỉ một trong ba là bấm
+ * được. Bản thiết kế gom mọi thứ thuộc về đơn kính vào một sắc tím riêng
+ * (--pill-lens-* trong admin.css), dùng chung với viên "Kèm đơn kính" ngay
+ * trên nó — nên nhìn màu là biết cả cụm nói về cùng một chuyện.
  */
 .aorx {
     display: flex;
@@ -357,13 +420,48 @@ body.admin {
 
 .aorx__eye {
     flex-shrink: 0;
-    padding: 1px 6px;
+    padding: 2px 6px;
     border-radius: 5px;
-    background: var(--pill-brand-bg);
+    background: var(--pill-lens-bg);
     font-family: var(--font-mono);
-    font-size: 9.5px;
+    font-size: 10px;
     font-weight: 700;
-    color: var(--brand);
+    color: var(--pill-lens-ink);
+}
+
+/*
+ * "Kèm đơn kính" — dòng báo đơn này phải qua khâu mài tròng.
+ *
+ * Viên nhãn ĐỨNG TRƯỚC tên gói chứ không bọc cả câu: tên gói dài ngắn tuỳ đơn
+ * ("Đơn tròng · Tròng trắng 1.50" so với "Mắt đợt"), mà một viên thuốc dài
+ * bằng cả cột thì không còn là viên thuốc nữa. Tách làm hai thì viên giữ
+ * nguyên bề rộng ở mọi dòng và mắt quét dọc bắt được nó ngay.
+ */
+.aolens {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    min-width: 0;
+}
+
+.aolens__tag {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border-radius: var(--radius-round);
+    background: var(--pill-lens-bg);
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--pill-lens-ink);
+}
+
+.aolens__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-label);
+    color: #9a8a79;
 }
 
 .aorx__num {
@@ -374,20 +472,9 @@ body.admin {
 
 /* --- Chân bảng ---------------------------------------------- */
 
-.aofoot {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin-top: 14px;
-}
-
-.aofoot__count {
-    margin: 0;
-    font-size: var(--fs-caption);
-    color: var(--muted);
-}
+/* Dáng chung của dải chân bảng khai ở admin.css (.aofoot) — ở đây chỉ ghim
+   bề rộng cho khớp bảng đơn hàng. Xem lý do tại luật chung. */
+.aotable + .aofoot { min-width: 1040px; }
 
 /* ============================================================
    4. THANH CHỌN HÀNG LOẠT

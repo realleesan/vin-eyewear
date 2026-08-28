@@ -94,7 +94,7 @@ body.admin {
     --a-row-hover: #faf5ea;
     --a-row-line: #f2e9d9;
     --a-panel-line: #eee3d0;
-    --a-chip-on: #2b2124;
+    --a-chip-on: #2b1a15;
 
     /* Thẻ nổi nhẹ khỏi nền ngà — bản thiết kế đặt đúng một mức đổ bóng cho
        mọi thẻ, rất mờ. Khai một lần để không có thẻ nào quên. */
@@ -112,6 +112,31 @@ body.admin {
     --pill-ok-bg:      #e2efe2; --pill-ok-ink:      #2f6b3a;
     --pill-warn-bg:    #f7edd6; --pill-warn-ink:    #96700f;
     --pill-danger-bg:  #f7e3e0; --pill-danger-ink:  #a63232;
+
+    /* TÍM = ĐƠN KÍNH, không phải một trạng thái.
+
+       Số đo mắt là thứ duy nhất trong khu quản trị vừa là dữ liệu y tế vừa
+       phải bắt mắt giữa một bảng dày chữ. Bản thiết kế cấp cho nó một sắc
+       riêng, KHÔNG nằm trong dải trạng thái, nên nó không bao giờ bị đọc nhầm
+       thành "đơn đang ở bước nào". Dùng ở viên "Kèm đơn kính" và hai viên
+       MP/MT. */
+    --pill-lens-bg:    #efe7f0; --pill-lens-ink:    #6d4a72;
+
+    /* Sáu sắc lấy nguyên của bản thiết kế "Đơn hàng.dc.html". Đọc theo cặp
+       nền/chữ, và mỗi cặp có thêm một viền đậm hơn nền một nấc — ô chọn là
+       thứ BẤM ĐƯỢC, nó phải tự vạch ranh giới chứ không hoà vào hàng bảng.
+
+       "Đã xác nhận" và "Hoàn tất" cùng họ xanh lá nhưng KHÁC ĐỘ ĐẬM (#eef3ee
+       với #e2efe2): chúng là hai đầu của cùng một chiều tiến triển, nên cùng
+       màu là đúng, còn phân biệt được là nhờ đậm nhạt. "Đang chuẩn bị" là nâu
+       ấm — bản trước để tím, mà tím trong khu này nay đã có nghĩa khác hẳn
+       (đơn kính, xem --pill-lens-* trong admin.css). */
+    --st-new-bg:   #f9f0d9; --st-new-ink:   #8a6d1f; --st-new-line:   #e8d9ac;
+    --st-conf-bg:  #eef3ee; --st-conf-ink:  #2f6b3a; --st-conf-line:  #cfe0cf;
+    --st-prep-bg:  #f4eee4; --st-prep-ink:  #7a5a2f; --st-prep-line:  #e2d3ba;
+    --st-ship-bg:  #e9eff5; --st-ship-ink:  #3a5a7d; --st-ship-line:  #c9d8e6;
+    --st-done-bg:  #e2efe2; --st-done-ink:  #2f6b3a; --st-done-line:  #bcd9bc;
+    --st-canc-bg:  #f7e3e0; --st-canc-ink:  #a63232; --st-canc-line:  #e8c3bd;
 
     margin: 0;
     background: var(--surface);
@@ -296,9 +321,13 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     font-weight: 600;
 }
 
+/* Trên mục đang chọn, huy hiệu là một mảng TRẮNG MỜ trên nền đỏ — không phải
+   trắng đặc chữ đỏ như trước. Trắng đặc tạo ra một hình khối thứ hai nằm
+   trong mục, sáng hơn cả chữ, nên mắt đọc con số trước rồi mới đọc tên mục
+   đang đứng. Bản thiết kế cho nó chìm vào nền đỏ và để chữ trắng dẫn. */
 .asidebar__link.is-active .asidebar__badge {
-    background: var(--on-brand);
-    color: var(--brand);
+    background: rgba(255, 255, 255, 0.22);
+    color: #fff;
 }
 
 .asidebar__foot {
@@ -1009,13 +1038,17 @@ a.alist__name:hover { color: var(--brand); }
     align-items: center;
     gap: 7px;
     padding: 7px 14px;
-    border: 1px solid var(--line-strong);
+    border: 1px solid #d8ccb8;
     border-radius: var(--radius-round);
-    background: var(--surface-raised);
+    /* TRONG SUỐT, không phải nền thẻ. Dải này nằm giữa dòng tiêu đề và khung
+       bảng — cả hai đều là mảng sáng — nên viên lọc nền trắng biến khoảng
+       giữa thành một tầng thẻ thứ ba. Để nền ngà lộ qua thì nó đọc ra là mấy
+       cái nút thả trên trang, đúng như bản thiết kế. */
+    background: transparent;
     font-size: 12.5px;
     font-weight: 600;
     text-decoration: none;
-    color: #5f5448;
+    color: #5c4f42;
     transition: border-color 0.2s, background-color 0.2s, color 0.2s;
 }
 
@@ -1027,14 +1060,30 @@ a.alist__name:hover { color: var(--brand); }
 .atabs__item.is-active {
     border-color: var(--a-chip-on);
     background: var(--a-chip-on);
-    color: #fff;
+    color: var(--on-ink);
 }
 
+/*
+ * CON SỐ LÀ MỘT VIÊN NHỎ TRONG VIÊN LỚN, không phải chữ mờ đi.
+ *
+ * Bản trước làm mờ nó bằng opacity: 0.55. Cách ấy hỏng ở viên ĐANG CHỌN —
+ * nền sẫm, chữ sáng, hạ opacity xuống 0.55 thì con số tụt còn ~2.6:1 so với
+ * nền, dưới ngưỡng đọc được. Cho nó một nền riêng thì tương phản do CẶP MÀU
+ * quyết định chứ không do độ trong, và nó đúng bản thiết kế.
+ */
 .atabs__num {
-    font-size: 12.5px;
-    font-weight: 500;
+    padding: 1px 7px;
+    border-radius: var(--radius-round);
+    background: #ece2d0;
+    font-size: 11px;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
-    opacity: 0.55;
+    color: #7a6a5f;
+}
+
+.atabs__item.is-active .atabs__num {
+    background: rgba(255, 255, 255, 0.18);
+    color: var(--on-ink);
 }
 
 /* --- Bảng --------------------------------------------------- */
@@ -1046,6 +1095,10 @@ a.alist__name:hover { color: var(--brand); }
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface-raised);
+    /* Khung bảng cũng là một thẻ — bản thiết kế cho nó cùng một mức đổ bóng
+       với thẻ số liệu và thẻ danh sách. Thiếu nó thì bảng là thứ DUY NHẤT
+       trong khu quản trị nằm bẹt trên nền ngà. */
+    box-shadow: var(--a-card-shadow);
 }
 
 .atable {
@@ -1340,8 +1393,11 @@ a.alist__name:hover { color: var(--brand); }
     gap: 6px;
 }
 
-.astatus select,
-.ainv__form input {
+/* .ainv__form ĐÃ RỜI KHỎI NHÓM NÀY. Ô nhập tồn kho nay nằm trong bộ đếm
+   .aistep và mang dáng riêng (không viền, không bo, rộng 46px); để nó dùng
+   chung luật ở đây thì `width: 88px` và cái viền bo 8px của khối này đè lên,
+   và ô nhập mọc thêm một cái khung thứ hai bên trong khung của bộ đếm. */
+.astatus select {
     height: 36px;
     padding-inline: 10px;
     border: 1px solid var(--line-strong);
@@ -1352,23 +1408,34 @@ a.alist__name:hover { color: var(--brand); }
     color: var(--ink);
 }
 
-.ainv__form input { width: 88px; text-align: center; }
-
 /* Viền đổi màu + một vòng sáng mảnh bên ngoài, thay cho outline dày 2px của
    bản cũ. Đây là dáng focus của bản thiết kế và nó không làm ô nhảy chỗ. */
-.astatus select:focus,
-.ainv__form input:focus {
+.astatus select:focus {
     outline: none;
     border-color: var(--brand);
     box-shadow: 0 0 0 3px rgba(125, 36, 52, 0.1);
 }
 
+/*
+ * NÚT CHÍNH — bo 9px và có một quầng đỏ rất mờ dưới chân.
+ *
+ * Quầng bóng là thứ duy nhất phân biệt nó với viên nhãn trạng thái: cả hai
+ * cùng nền đỏ đặc, cùng cỡ chữ, và trên trang danh sách chúng đứng cách nhau
+ * chưa tới một gang tay. Bóng nói "cái này nhô lên, bấm được"; viên nhãn thì
+ * phẳng.
+ *
+ * KHÔNG dùng --a-btn-radius (7px): con số đó là của mấy nút viền mảnh ở chân
+ * thanh bên, nơi bo mềm hơn sẽ làm chúng nhoè vào nền tối. Nút đặc trên nền
+ * sáng thì bản thiết kế cho 9px, bằng đúng ô nhập đứng cạnh nó trên dòng
+ * tiêu đề — hai thứ cùng chiều cao mà khác độ bo thì dòng ấy gãy nhịp.
+ */
 .astatus__save {
-    height: 36px;
-    padding-inline: 16px;
+    height: 38px;
+    padding-inline: 18px;
     border: 1px solid var(--brand);
-    border-radius: var(--a-btn-radius);
+    border-radius: 9px;
     background: var(--brand);
+    box-shadow: 0 2px 8px rgba(143, 43, 60, 0.28);
     font-family: var(--font-sans);
     font-size: var(--fs-note);
     font-weight: 600;
@@ -1417,34 +1484,654 @@ a.alist__name:hover { color: var(--brand); }
 .ahuy { margin-top: 6px; }
 
 .ahuy__btn {
-    height: 28px;
-    padding-inline: 10px;
+    /* Bản thiết kế cho nó VIỀN, không để chữ trần: nó đứng ngay dưới một ô
+       chọn đã có viền, và hai thứ cùng cột mà một cái có khung một cái không
+       thì cái không khung đọc ra như một dòng chữ chú thích, không phải nút.
+       Sắc đỏ vẫn dịu (#b03a3a) chứ không phải đỏ cảnh báo đặc. */
+    height: 26px;
+    padding-inline: 12px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--a-btn-radius);
-    background: transparent;
+    border-radius: 6px;
+    background: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: var(--fs-label);
     font-weight: 600;
-    color: var(--muted);
+    color: #b03a3a;
     cursor: pointer;
     transition: border-color 0.2s, color 0.2s;
 }
 
-/* Chỉ ĐỎ khi rê chuột tới. Sơn đỏ sẵn thì cả cột thành một dãy cảnh báo, và
-   mắt học cách bỏ qua màu đỏ — đúng lý lẽ đã ghi ở .amoney__pay. */
+/* ĐỎ SẴN, không phải chỉ đỏ khi rê chuột — đổi theo bản thiết kế, và cùng
+   luật với nút "Xoá" ở cột thao tác các trang khác (.arow-del).
+
+   Lý lẽ cũ ở đây là "sơn đỏ sẵn thì cả cột thành một dãy cảnh báo". Nó đúng
+   khi nút này là thứ duy nhất trong cột. Nay cột ấy còn một ô chọn trạng thái
+   ĐEO MÀU nằm ngay trên, nên nút không tô gì lại thành thứ nhạt nhất trong ô
+   — và thứ nhạt nhất không nên là thao tác duy nhất mà khách hàng ở đầu bên
+   kia chịu hậu quả. */
 .ahuy__btn:hover {
-    border-color: var(--danger);
-    color: var(--danger);
+    border-color: #b03a3a;
 }
 
-.ainv.is-low  td { background: color-mix(in srgb, var(--brand) 5%, transparent); }
-.ainv.is-out  td { background: color-mix(in srgb, var(--danger) 6%, transparent); }
+/*
+ * KHÔNG CÒN TÔ NỀN CẢ HÀNG cho dòng sắp hết / hết hàng — bỏ theo bản thiết kế.
+ *
+ * Từ khi cột "Tồn hiện tại" đeo viên nhãn ba mức (Còn hàng · Sắp hết · Hết
+ * hàng), nền hàng chỉ nói LẠI đúng điều viên nhãn đã nói — bằng một tín hiệu
+ * mờ hơn hẳn và không có chữ đi kèm. Hai lớp mã hoá cho cùng một thông tin thì
+ * lớp yếu hơn không thêm gì, mà nó phá nền rê chuột (--a-row-hover): trên một
+ * hàng đã tô sẵn, nền hover gần như không đổi màu, nên mất luôn dấu hiệu "con
+ * trỏ đang ở dòng nào" — thứ thật sự cần khi cả cột toàn ô nhập giống nhau.
+ *
+ * Lớp .ainv, .is-low, .is-out vẫn còn trong view: chúng đánh dấu trạng thái
+ * hàng cho bất kỳ luật nào cần sau này, chỉ là hiện không luật nào dùng.
+ */
 
 .ainv__hint {
     margin-top: 12px;
     font-size: var(--fs-body-sm);
     color: var(--muted);
 }
+
+.astatus select.astatus__pick {
+    appearance: none;
+    -webkit-appearance: none;
+    height: 30px;
+    padding: 0 26px 0 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-round);
+    background-color: var(--pill-neutral-bg);
+    background-image:
+        linear-gradient(45deg, transparent 50%, currentColor 50%),
+        linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right 13px center, right 8px center;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--pill-neutral-ink);
+    cursor: pointer;
+}
+
+/*
+ * BỐN TRẠNG THÁI CỦA LỊCH HẸN, dùng lại đúng bảng --st-* của đơn hàng.
+ *
+ * "Đã xác nhận" ở đây là XANH NHẠT chứ không phải xanh dương như bản thiết kế
+ * "Lịch hẹn.dc.html" vẽ. Lý do: cùng một buổi hẹn còn hiện trên thẻ "Lịch hẹn
+ * sắp tới" của trang Tổng quan, nơi bản thiết kế lại tô nó xanh lá. Hai bản
+ * vẽ mâu thuẫn nhau, mà một trạng thái đổi màu theo trang là kiểu sai người
+ * dùng không bao giờ báo — họ chỉ thôi tin vào màu.
+ *
+ * Chọn xanh lá cho cả hai chỗ, và phân biệt với "Đã hoàn tất" bằng ĐỘ ĐẬM —
+ * đúng cách bảng đơn hàng phân biệt "Đã xác nhận" với "Hoàn tất".
+ */
+.astatus select.astatus__pick--pending   { background-color: var(--st-new-bg);  color: var(--st-new-ink);  border-color: var(--st-new-line); }
+.astatus select.astatus__pick--confirmed { background-color: var(--st-conf-bg); color: var(--st-conf-ink); border-color: var(--st-conf-line); }
+.astatus select.astatus__pick--done      { background-color: var(--st-done-bg); color: var(--st-done-ink); border-color: var(--st-done-line); }
+.astatus select.astatus__pick--cancelled { background-color: var(--st-canc-bg); color: var(--st-canc-ink); border-color: var(--st-canc-line); }
+
+/* Danh sách xổ ra do hệ điều hành vẽ, không nhận màu của ô — trả nó về nền
+   sáng chữ đậm, nếu không thì trên nền viên đỏ chữ đỏ là không đọc được. */
+.astatus select.astatus__pick option {
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-weight: 500;
+}
+
+/* --- Dải chân bảng (.aofoot) --------------------------------- */
+
+/*
+ * DẢI NGÀ Ở ĐÁY KHUNG BẢNG — bao nhiêu dòng đang hiện, và lối sang trang.
+ *
+ * Nó thuộc về cái bảng chứ không thuộc về trang: "đang hiện 8 / 33 đơn" chỉ
+ * có nghĩa khi đọc cùng mấy dòng ngay trên nó. Thả ra ngoài khung, trên nền
+ * ngà, thì nó trôi lửng và đọc ra như một câu chú thích của cả trang.
+ *
+ * ĐẶT TRONG .atable-wrap nghĩa là nó CUỘN NGANG cùng bảng. Vì thế mỗi trang
+ * phải ghim cho nó đúng min-width của bảng mình (xem .aitable + .aofoot dưới
+ * đây, và .aotable + .aofoot trong admin-orders.css): hẹp hơn bảng thì lúc
+ * trượt sang phải nó tự co lại và để hở một mảng nền trắng dưới bảng.
+ */
+.aofoot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 22px;
+    background: var(--surface-sunken);
+}
+
+.aofoot__count {
+    margin: 0;
+    font-size: var(--fs-caption);
+    color: #98897b;
+}
+
+/* Trong dải chân thì cụm phân trang dồn phải và bỏ khoảng thở phía trên —
+   .pager mặc định căn giữa với margin-top: 20px vì nó vốn đứng một mình dưới
+   bảng ở các trang khác. */
+.aofoot .pager { justify-content: flex-end; margin-top: 0; }
+
+.aitable + .aofoot { min-width: 900px; }
+
+/* --- Trang Mã giảm giá (thẻ, không phải bảng) ---------------- */
+
+/* 360px hẹp hơn thẻ cơ sở (400px): thẻ mã không có dòng địa chỉ dài nào, nên
+   ba mã nằm được một hàng ở màn rộng thay vì hai. */
+.avc {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 14px;
+}
+
+.avc__card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    box-shadow: var(--a-card-shadow);
+    padding: 16px 20px;
+}
+
+/* Mã không còn chạy được thì mờ đi — hết hạn, hết lượt, hoặc đã tắt. Vẫn đọc
+   được (đây là chỗ vào để gia hạn), chỉ là không tranh chú ý với mã đang chạy. */
+.avc__card.is-off { opacity: 0.72; }
+
+.avc__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.avc__id { min-width: 0; }
+
+.avc__codeline {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 14px — to hơn mọi chữ khác trong thẻ, vì ĐÂY LÀ DANH TÍNH của cả thẻ: cái
+   chuỗi khách gõ vào ô "mã giảm giá" lúc thanh toán. Giãn chữ nhẹ cho dễ đọc
+   to nhỏ ("VIN10" so với "VINIO"), thứ có thật khi đọc mã qua điện thoại. */
+.avc__code {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--brand);
+}
+
+/* Nhãn ngắn khách nhìn thấy trong ví mã. Hổ phách, bo 6px — cố ý KHÁC viên
+   thuốc trạng thái tròn hẳn ở góc phải, để hai thứ không đọc lẫn nhau. */
+.avc__tag {
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--pill-wait-bg);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--pill-wait-ink);
+}
+
+.avc__title {
+    margin: 6px 0 0;
+    font-size: var(--fs-note);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.avc__cond {
+    margin: 2px 0 0;
+    font-size: var(--fs-caption);
+    color: #9a8a79;
+}
+
+/* Dải số vận hành: xuống dòng tự do thay vì ép một hàng — bốn mẩu dài ngắn
+   khác nhau tuỳ mã, ép một hàng thì mã nào cũng phải cắt một mẩu. */
+.avc__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--a-row-line);
+    font-size: var(--fs-caption);
+    color: #5c4f42;
+}
+
+.avc__stats strong { font-size: var(--fs-note); }
+
+/* Dồn TRÁI (ghi đè .arow-actions) — cùng lý do với .acs__acts ở thẻ cơ sở. */
+.avc__card .avc__acts {
+    justify-content: flex-start;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+/* --- Trang Cơ sở (thẻ, không phải bảng) ---------------------- */
+
+/* auto-fill minmax(400px,1fr): hai cơ sở nằm cạnh nhau trên màn rộng, xếp dọc
+   trên màn hẹp, và thêm cơ sở thứ ba thì lưới tự lo. 400px là bề rộng nhỏ
+   nhất còn đọc được một địa chỉ Hà Nội đầy đủ trên một dòng. */
+.acs {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 14px;
+}
+
+.acs__card {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    box-shadow: var(--a-card-shadow);
+    padding: 18px 22px;
+}
+
+/* Cơ sở tạm đóng: mờ cả thẻ chứ không đổi màu viền. Nó vẫn phải đọc được —
+   đây đúng là chỗ người ta vào để mở lại — nhưng không nên tranh chú ý với
+   cơ sở đang nhận khách. */
+.acs__card.is-off { opacity: 0.72; }
+
+.acs__top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Mã cơ sở là một mẩu mã thật (LONGBIEN, TAYHO) — chữ đẳng khoảng, có nền
+   riêng để tách hẳn khỏi tên tiếng Việt ngay dưới nó. */
+.acs__code {
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #f7ecec;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--brand);
+}
+
+/* Serif — chỗ thứ hai trong khu quản trị dùng phông chữ ký, sau tiêu đề
+   trang. Đây là TÊN MỘT ĐỊA ĐIỂM THẬT của cửa hàng, không phải nhãn của một
+   bản ghi; bản thiết kế cho nó cùng phông với "Vin Eyewear" ở thanh bên. */
+.acs__name {
+    margin: 8px 0 0;
+    font-family: var(--font-serif);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.acs__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 12px 0 0;
+    font-size: var(--fs-note);
+    color: #5c4f42;
+}
+
+/* Nhãn ghim một bề rộng để bốn giá trị thẳng một lề — đọc dọc xuống là so
+   được ngay thẻ này với thẻ bên cạnh, dù không còn là bảng.
+
+   72px chứ không phải 64px như bản thiết kế: nhãn dài nhất là "ĐIỆN THOẠI",
+   và ở 10.5px in hoa có giãn chữ thì nó vừa đúng 70px. Ở 64px nó gãy làm hai
+   dòng, kéo lệch giá trị bên cạnh xuống nửa dòng so với ba hàng kia — mất
+   chính cái lề thẳng mà con số này sinh ra để giữ. */
+.acs__row { display: flex; gap: 10px; }
+
+.acs__row dt {
+    flex-shrink: 0;
+    width: 72px;
+    padding-top: 2px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a99a88;
+}
+
+.acs__row dd { margin: 0; min-width: 0; }
+
+.acs__tel { font-weight: 600; text-decoration: none; }
+
+/* Có bản đồ thì xanh và đậm, chưa có thì mờ — một trạng thái nhị phân đọc
+   được bằng liếc mắt, không phải một câu phải đọc hết. */
+.acs__map { font-size: 12.5px; color: #a99a88; }
+.acs__map.is-on { font-weight: 600; color: var(--success); }
+
+/* Cụm nút tách bằng một đường kẻ: nó là phần THAO TÁC, khác loài với bốn dòng
+   dữ liệu ở trên. Dồn TRÁI (ghi đè .arow-actions) — trong một thẻ hẹp thì mép
+   trái là chỗ mắt vừa dừng lại sau khi đọc xong nhãn cuối. */
+/* Chọn tên kép để thắng .arow-actions — lớp đó khai justify-content: flex-end
+   (cột thao tác của bảng luôn là cột cuối, dồn phải) và nó nằm sau khối này
+   trong file, nên cùng độ ưu tiên thì nó thắng theo thứ tự. */
+.acs__card .acs__acts {
+    justify-content: flex-start;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--a-row-line);
+}
+
+/* --- Trang Danh mục ------------------------------------------ */
+
+/* Bảy cột, hai cột co giãn (Tên và Mô tả). Con số lấy của bản thiết kế; cột 7
+   chỉ tồn tại khi người dùng có quyền sửa nên nth-child(7) không khớp gì khi
+   thiếu — không cần luật riêng. */
+.admtable {
+    min-width: 920px;
+    table-layout: fixed;
+}
+
+.admtable th,
+.admtable td { padding: 13px 7px; }
+
+.admtable th:first-child,
+.admtable td:first-child { padding-left: 22px; }
+
+.admtable th:last-child,
+.admtable td:last-child { padding-right: 22px; }
+
+.admtable thead th { padding-block: 12px; }
+
+.admtable th:nth-child(1), .admtable td:nth-child(1) { width: 80px; text-align: right; }
+.admtable th:nth-child(3), .admtable td:nth-child(3) { width: 180px; }
+.admtable th:nth-child(5), .admtable td:nth-child(5) { width: 90px; text-align: right; }
+.admtable th:nth-child(6), .admtable td:nth-child(6) { width: 130px; }
+.admtable th:nth-child(7), .admtable td:nth-child(7) { width: 110px; }
+
+.admname {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+/* Slug và mô tả cắt một dòng: cả hai dài tuỳ ý và cả hai đều chỉ để nhận
+   dạng. Bản đầy đủ nằm trong form sửa (slug) và trong title (mô tả). */
+.admtable code,
+.admtable .atable__msg {
+    display: block;
+    max-width: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --- Trang Liên hệ ------------------------------------------- */
+
+/* Bốn cột, chỉ cột "Nội dung" co giãn — nó là cột duy nhất mang chữ dài tuỳ ý,
+   nên nếu không ghim ba cột kia thì nó ép chúng lại tới mức số điện thoại
+   phải xuống dòng. Con số lấy của bản thiết kế. */
+.alctable {
+    min-width: 900px;
+    table-layout: fixed;
+}
+
+.alctable th,
+.alctable td { padding: 15px 7px; vertical-align: top; }
+
+.alctable th:first-child,
+.alctable td:first-child { padding-left: 22px; }
+
+.alctable th:last-child,
+.alctable td:last-child { padding-right: 22px; }
+
+.alctable thead th { padding-block: 12px; vertical-align: middle; }
+
+.alctable th:nth-child(1), .alctable td:nth-child(1) { width: 150px; font-weight: 600; }
+.alctable th:nth-child(2), .alctable td:nth-child(2) { width: 230px; }
+.alctable th:nth-child(4), .alctable td:nth-child(4) { width: 170px; }
+
+.alcname {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-note);
+    font-weight: 600;
+}
+
+/* Viên nhãn tình trạng và nút đẩy lại xếp DỌC — cột chỉ rộng 170px, đặt cạnh
+   nhau thì nút bị cắt mất chữ. */
+.alczalo {
+    display: table-cell;
+}
+
+.alczalo .apay { margin-top: 6px; }
+
+/*
+ * NỘI DUNG YÊU CẦU CẮT MỘT DÒNG, không xuống dòng tự do.
+ *
+ * .atable__msg vốn để `white-space: pre-wrap` — giữ nguyên xuống dòng người
+ * gửi gõ. Ở một bảng bốn cột thì một tin nhắn năm dòng kéo cao cả hàng gấp
+ * bốn lần hàng bên cạnh, và mắt mất luôn cảm giác "mỗi hàng là một yêu cầu".
+ * Bản thiết kế cắt nó thành một dòng.
+ *
+ * Nội dung đầy đủ KHÔNG mất: nó vẫn nằm nguyên trong thuộc tính title (xem
+ * view), tức là rê chuột lên là đọc được.
+ */
+.alctable .atable__msg {
+    max-width: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12.5px;
+    color: #5c4f42;
+}
+
+/* --- Trang Lịch hẹn ------------------------------------------ */
+
+/* Cùng lý do table-layout:fixed với các bảng khác: cột "Khách hàng" mang ba
+   dòng chồng nhau (tên · SĐT · ghi chú) nên nó luôn là cột dài nhất và sẽ
+   nuốt chỗ của cột "Dịch vụ" nếu để trình duyệt tự chia. Con số cột lấy của
+   bản thiết kế. */
+.alhtable {
+    min-width: 1020px;
+    table-layout: fixed;
+}
+
+.alhtable th,
+.alhtable td { padding: 13px 7px; vertical-align: top; }
+
+.alhtable th:first-child,
+.alhtable td:first-child { padding-left: 22px; }
+
+.alhtable th:last-child,
+.alhtable td:last-child { padding-right: 22px; }
+
+.alhtable thead th { padding-block: 12px; vertical-align: middle; }
+
+.alhtable th:nth-child(1), .alhtable td:nth-child(1) { width: 140px; }
+.alhtable th:nth-child(2), .alhtable td:nth-child(2) { width: 105px; font-weight: 600; }
+.alhtable th:nth-child(3), .alhtable td:nth-child(3) { width: 170px; }
+.alhtable th:nth-child(5), .alhtable td:nth-child(5) { width: 175px; }
+.alhtable th:nth-child(6), .alhtable td:nth-child(6) { width: 165px; }
+
+.alhname {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-note);
+    font-weight: 600;
+}
+
+/* Lời của KHÁCH, không phải một trường dữ liệu của cửa hàng — nghiêng, mờ,
+   và view đặt sẵn ngoặc kép quanh nó. Không đánh dấu thì một ghi chú như
+   "abc" nằm ngay dưới số điện thoại đọc ra như một mã nội bộ nào đó. */
+.alhnote {
+    display: block;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-label);
+    font-style: italic;
+    color: #a99a88;
+}
+
+/* Ô chọn trạng thái và nút Huỷ lịch xếp DỌC trong cột 165px — bản thiết kế
+   để chúng chồng nhau chứ không cạnh nhau. Cạnh nhau thì cột phải rộng gấp
+   đôi, mà nó đã là cột cuối cùng của một bảng đang cuộn ngang. */
+.alhtable .astatus { margin-bottom: 6px; }
+
+/* --- Ô chọn nằm trong cụm tìm kiếm --------------------------- */
+
+/* Cùng chiều cao và độ bo với ô nhập bên cạnh (xem .asearch input): hai thứ
+   đứng sát nhau trên một dòng mà lệch nhau vài pixel thì cả cụm trông so le. */
+.asearch__pick {
+    height: 38px;
+    padding-inline: 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: 9px;
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: var(--fs-note);
+    color: #5c4f42;
+    cursor: pointer;
+}
+
+.asearch__pick:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(143, 43, 60, 0.12);
+}
+
+/* --- Trang Tồn kho ------------------------------------------ */
+
+/* Cùng lý do table-layout:fixed với hai bảng kia (xem .aotable trong
+   admin-orders.css): cột "Cập nhật" chứa một bộ đếm rộng 220px, và nếu để
+   trình duyệt tự chia thì cột tên sản phẩm sẽ giành mất chỗ của nó, đẩy nút
+   Lưu xuống dòng dưới ô nhập. Con số cột lấy của bản thiết kế. */
+.aitable {
+    min-width: 900px;
+    table-layout: fixed;
+}
+
+.aitable th,
+.aitable td { padding: 14px 7px; }
+
+.aitable th:first-child,
+.aitable td:first-child { padding-left: 22px; }
+
+.aitable th:last-child,
+.aitable td:last-child { padding-right: 22px; }
+
+.aitable thead th { padding-block: 12px; }
+
+.aitable th:nth-child(1), .aitable td:nth-child(1) { width: 110px; }
+.aitable th:nth-child(3), .aitable td:nth-child(3) { width: 120px; text-align: right; }
+.aitable th:nth-child(4), .aitable td:nth-child(4) { width: 130px; }
+.aitable th:nth-child(5), .aitable td:nth-child(5) { width: 220px; }
+
+/* Tên sản phẩm cắt bằng ellipsis — cột co giãn nhưng vẫn có hạn. */
+.ainame {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-note);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.ainame:hover { color: var(--brand); }
+
+.aistock { display: flex; align-items: center; gap: 8px; }
+
+.aistock__num {
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/*
+ * BỘ ĐẾM — ba ô ghép thành MỘT khung, không phải ba nút rời.
+ *
+ * Khung ngoài mang viền và bo góc; ba thứ bên trong (nút trừ, ô số, nút cộng)
+ * bỏ hết viền của riêng chúng và chỉ ngăn nhau bằng một vạch mảnh. Nhờ vậy nó
+ * đọc ra là MỘT ô nhập có hai tay cầm, chứ không phải một ô nhập bị kẹp giữa
+ * hai cái nút — hai cách đọc dẫn tới hai kỳ vọng khác nhau về việc bấm + rồi
+ * có phải bấm Lưu nữa không.
+ */
+.aistep {
+    display: inline-flex;
+    align-items: center;
+    height: 36px;
+    border: 1px solid var(--line-strong);
+    border-radius: 9px;
+    background: var(--surface-raised);
+    overflow: hidden;
+}
+
+.aistep__btn {
+    width: 34px;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.aistep__btn:hover { background: #f4ede1; color: var(--brand); }
+
+/* Vạch ngăn vẽ bằng viền của Ô NHẬP chứ không của hai nút: khi tắt JS thì hai
+   nút biến mất, và nếu vạch thuộc về chúng thì ô nhập còn trơ ra không viền,
+   trông như một mảng trắng lọt giữa khung. Thuộc về ô nhập thì nó luôn có
+   ranh giới, dù hàng xóm còn hay mất. */
+.aistep__input {
+    width: 46px;
+    height: 100%;
+    border: 0;
+    border-inline: 1px solid var(--a-panel-line);
+    border-radius: 0;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--ink);
+}
+
+.aistep__input:focus {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: none;
+}
+
+/* Nút Lưu của trang này thấp hơn nút chính chung (36px thay vì 38px) để cao
+   bằng đúng bộ đếm đứng cạnh nó — hai thứ lệch nhau 2px trên hai mươi dòng
+   thì cả cột trông như bị so le. */
+.aisave {
+    height: 36px;
+    margin-left: 4px;
+    padding-inline: 16px;
+}
+
+/*
+ * DÁNG "CHƯA SỬA GÌ" — do admin-inventory.js gắn vào.
+ *
+ * Vẫn bấm được, chỉ là hết nổi bật: một cột hai mươi nút đỏ rực thì không nút
+ * nào còn nghĩa "cái này đang chờ bạn bấm". Khi người dùng sửa một ô, đúng
+ * một nút đỏ lên và mắt bắt được ngay dòng đang dở.
+ */
+.aisave.is-clean {
+    border-color: var(--a-row-line);
+    background: var(--a-row-line);
+    box-shadow: none;
+    color: #a99a88;
+}
+
+.aisave.is-clean:hover { background: #e9dfca; }
 
 /* --- Bảng giá tròng ------------------------------------------ */
 
@@ -1489,14 +2176,20 @@ a.alist__name:hover { color: var(--brand); }
    đang hỏng và người đọc phải bù bằng tay (xem admin/resets/index.php).
    Vẫn là hộp chữ chứ không phải .alert: .alert dựng cho thông báo một dòng
    hiện rồi mất, còn cái này nằm lại trang cho tới khi ai đó sửa cấu hình. */
+/* Viền ĐỀU BỐN CẠNH, không còn vạch đỏ dày bên trái — theo bản thiết kế.
+
+   Vạch trái là lối của dải thông báo thoáng qua (.alert), thứ xuất hiện rồi
+   biến mất sau một thao tác. Hộp này thì ngược lại: nó ở lại chừng nào lỗi
+   còn đó, và nó là một KHỐI NỘI DUNG có tiêu đề, có hướng dẫn, có tên biến
+   môi trường. Một khối như vậy đọc ra là cái hộp, không phải một dòng nhấp
+   nháy — nên nó có khung riêng như mọi thẻ khác trên trang. */
 .anote--alert {
-    border-color: #eed3cb;
-    border-left-color: var(--danger);
-    background: #fdf2ef;
+    border-color: #eccfc7;
+    background: #fdf1ee;
 }
 
 .anote--alert p { line-height: 1.7; color: #5b4038; }
-.anote--alert code { background: #f7e4de; }
+.anote--alert code { background: #f4e4df; color: var(--danger); }
 
 /* Cột đầu là tên gói (co giãn), các cột giá bằng nhau và không co: một ô số
    bị bóp còn 60px thì "1400000" bị cắt mất chữ số cuối, mà đây là bảng giá. */
@@ -1571,18 +2264,24 @@ a.alist__name:hover { color: var(--brand); }
     margin-top: 20px;
 }
 
+/* 30px, KHÔNG phải 38px — bản thiết kế thu nhỏ nút phân trang từ khi nó
+   chuyển vào nằm trong dải chân bảng. Ở đó nó đứng cạnh một dòng chữ 12px;
+   một nút cao 38px bên cạnh đẩy cả dải chân cao lên gần gấp rưỡi, và dải ấy
+   lặp lại ở đáy mọi bảng trong khu quản trị. Vẫn trên 24px — ngưỡng vùng bấm
+   nhỏ nhất mà WCAG 2.5.8 đòi. */
 .pager__link {
     display: grid;
     place-items: center;
-    min-width: 38px;
-    height: 38px;
-    padding-inline: 10px;
+    min-width: 30px;
+    height: 30px;
+    padding-inline: 8px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--a-btn-radius);
+    border-radius: var(--radius-sm);
     background: var(--surface-raised);
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-caption);
+    font-weight: 600;
     text-decoration: none;
-    color: var(--ink);
+    color: #5c4f42;
 }
 
 .pager__link:hover { border-color: var(--brand); color: var(--brand); }
@@ -1602,7 +2301,26 @@ a.alist__name:hover { color: var(--brand); }
     flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 12px;
+    gap: 20px;
+}
+
+/*
+ * CỤM TIÊU ĐỀ ĐƯỢC PHÉP CO LẠI, và đó là cả vấn đề.
+ *
+ * Mặc định một mục flex không co nhỏ hơn nội dung của nó. Dòng dẫn ở vài
+ * trang là cả một câu dài ("Cập nhật số lượng sau khi nhập hàng hoặc kiểm
+ * kê. Đặt tồn về 0 sẽ…"), nên cụm bên trái đòi nguyên bề ngang và đẩy ô tìm
+ * xuống hàng dưới — đúng thứ bản thiết kế tránh bằng cách xếp chúng cùng
+ * hàng.
+ *
+ * flex: 1 1 380px + min-width: 0 cho phép câu ấy XUỐNG DÒNG trong chính nó
+ * thay vì đẩy hàng xóm đi. 380px là chỗ đủ cho tiêu đề dài nhất
+ * ("Bảng giá tròng") cộng vài chữ của dòng dẫn; hẹp hơn nữa thì tiêu đề mới
+ * là thứ bị gãy, mà tiêu đề gãy đôi thì trang trông như hỏng.
+ */
+.ahead--row > :first-child {
+    flex: 1 1 380px;
+    min-width: 0;
 }
 
 .ahead__note {
@@ -1642,7 +2360,7 @@ a.alist__name:hover { color: var(--brand); }
    Đặt width thì con số ấy vào được phép đo, cụm xin đủ chỗ ngay từ đầu. */
 .ahead__tools .asearch input {
     flex: 0 1 auto;
-    width: 270px;
+    width: 280px;
     min-width: 0;
     max-width: 100%;
 }
@@ -1655,7 +2373,11 @@ a.alist__name:hover { color: var(--brand); }
     place-items: center;
     border-color: var(--line-strong);
     background: var(--surface-raised);
-    color: #4f4438;
+    /* Phẳng, không quầng bóng: quầng là dấu hiệu của HÀNH ĐỘNG CHÍNH, và mỗi
+       dòng tiêu đề chỉ được có một. Hai nút cùng nhô lên thì không nút nào
+       nhô cả. */
+    box-shadow: none;
+    color: #5c4f42;
     text-decoration: none;
 }
 
@@ -1681,9 +2403,10 @@ a.astatus__save {
     min-width: 200px;
     max-width: 360px;
     height: 38px;
-    padding-inline: 12px;
+    padding-inline: 14px;
     border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
+    /* 9px — cùng độ bo với nút bên cạnh, xem .astatus__save. */
+    border-radius: 9px;
     background: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: var(--fs-note);
@@ -1697,38 +2420,58 @@ a.astatus__save {
 }
 
 /* Cột thao tác trong bảng */
+/*
+ * CỘT THAO TÁC — MỘT NÚT VIỀN VÀ MỘT CHỮ ĐỎ, KHÔNG PHẢI HAI LIÊN KẾT.
+ *
+ * Bản trước để cả "Sửa" lẫn "Xoá" là chữ, phân biệt bằng mỗi màu. Hai chữ
+ * cùng cỡ, cùng đậm, sát nhau 10px, mà một cái sửa được và một cái xoá vĩnh
+ * viễn — khoảng cách giữa "bấm nhầm" và "mất dữ liệu" chỉ là 10px và một sắc
+ * đỏ.
+ *
+ * Bản thiết kế cho chúng HAI HÌNH DẠNG khác hẳn: "Sửa" là nút có viền (nhìn
+ * ra ngay là một ô bấm), "Xoá" vẫn là chữ trần và chỉ hiện nền hồng khi rê
+ * chuột tới. Không phải để "Xoá" khó bấm hơn — nó vẫn một cú bấm — mà để hai
+ * thứ không còn đọc ra như hai lựa chọn ngang hàng.
+ *
+ * Dồn phải: cột này luôn là cột cuối, và mép phải bảng là chỗ mắt tìm nút.
+ */
 .arow-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: flex-end;
+    gap: 6px;
     white-space: nowrap;
 }
 
-/* Gạch chân CHỈ khi rê chuột — theo lối liên kết của bản thiết kế. Một cột
-   thao tác 9 dòng mà dòng nào cũng gạch chân thì cả cột thành một vệt sọc,
-   nhìn nặng hơn hẳn phần dữ liệu bên trái nó. */
 .arow-actions a {
-    font-size: 12.5px;
+    padding: 5px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--a-btn-radius);
+    background: var(--surface-raised);
+    font-size: var(--fs-caption);
     font-weight: 600;
-    color: var(--brand);
+    color: #5c4f42;
     text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
 }
 
-.arow-actions a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.arow-actions a:hover { border-color: var(--brand); color: var(--brand); }
 
 .arow-del {
     border: 0;
     background: none;
-    padding: 0;
+    padding: 5px 8px;
+    border-radius: var(--a-btn-radius);
     font-family: var(--font-sans);
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     font-weight: 600;
-    color: var(--danger);
+    color: #b03a3a;
     text-decoration: none;
     cursor: pointer;
+    transition: background-color 0.15s;
 }
 
-.arow-del:hover { text-decoration: underline; text-underline-offset: 3px; }
+.arow-del:hover { background: #f9e8e6; }
 
 /* Nút hàng ngang KHÔNG phá huỷ gì — "Phát cho tất cả" ở màn hình mã giảm giá.
    Nó mượn dáng của .arow-del để nằm cùng hàng cho đều, nhưng màu đỏ ở đó là

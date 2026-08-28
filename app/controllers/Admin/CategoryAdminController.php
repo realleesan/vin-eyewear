@@ -18,7 +18,24 @@ class CategoryAdminController extends AdminController
     {
         $this->renderAdmin('admin/categories/index', [
             'pageTitle'  => 'Danh mục — Quản trị',
-            'categories' => CategoryModel::all('sort_order ASC, name ASC'),
+            /*
+             * ĐẾM SẢN PHẨM TRONG TỪNG DANH MỤC — thêm theo bản thiết kế
+             * "Danh mục.dc.html".
+             *
+             * Không dùng CategoryModel::all() nữa vì con số ấy không nằm trong
+             * bảng `categories`. Truy vấn con thay cho LEFT JOIN + GROUP BY:
+             * bảng này có bốn tới mười dòng, nên bốn tới mười lượt đếm rẻ hơn
+             * là gom nhóm cả bảng products — và câu lệnh đọc ra ngay được.
+             *
+             * Con số này trả lời đúng câu người ta hỏi trước khi bấm Xoá: xoá
+             * danh mục thì mấy sản phẩm mất chỗ đứng?
+             */
+            'categories' => Database::fetchAll(
+                'SELECT c.*,
+                        (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) AS product_count
+                   FROM categories c
+                  ORDER BY c.sort_order ASC, c.name ASC'
+            ),
             'canEdit'    => UserModel::hasRole($this->userId, 'admin')
                          || UserModel::hasRole($this->userId, 'manager'),
             'editing'    => isset($_GET['sua']) ? CategoryModel::find((string) $_GET['sua']) : null,

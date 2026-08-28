@@ -2,7 +2,7 @@
 
 /**
  * admin/inventory/index.php — tồn kho
- * Port từ src/routes/_authenticated/quan-tri/ton-kho.tsx.
+ * Dựng theo "Tồn kho.dc.html" (Claude Design).
  *
  * Mỗi dòng là một form riêng để sửa được từng sản phẩm mà không phải gửi cả
  * bảng. Đổi một dòng chỉ ảnh hưởng dòng đó — hai người cùng nhập hàng không
@@ -14,16 +14,57 @@ $tabs = [
     'low' => ['Sắp hết (≤' . $low . ')', (int) $counts['low_stock']],
     'out' => ['Hết hàng',     (int) $counts['out_stock']],
 ];
+
+/* Giữ từ khoá khi bấm sang viên lọc khác — gõ "titan" rồi bấm "Sắp hết" phải
+   ra gọng titan sắp hết, không phải toàn bộ hàng sắp hết của cửa hàng. */
+$giuQ = $q !== '' ? ['q' => $q] : [];
+
+$duongDanLoc = static function (string $key) use ($giuQ): string {
+    $tham = $giuQ + ($key !== '' ? ['loc' => $key] : []);
+
+    return '/quan-tri/ton-kho' . ($tham !== [] ? '?' . http_build_query($tham) : '');
+};
 ?>
-<header class="ahead">
-    <h1 class="ahead__title">Tồn kho</h1>
-    <p class="ahead__lead">Cập nhật số lượng sau khi nhập hàng hoặc kiểm kê.</p>
+<?php /* CÂU CẢNH BÁO VỀ SỐ 0 NẰM NGAY DÒNG DẪN, không còn là một dòng chữ
+         dưới đáy bảng.
+
+         Ở đáy bảng nó chỉ được đọc bởi người đã cuộn hết trang — tức là gần
+         như không ai, vì thao tác ở đây là sửa một dòng rồi gửi luôn. Mà điều
+         nó nói là một HẬU QUẢ KHÔNG LÙI ĐƯỢC bằng chính cái nút bên cạnh: đặt
+         0 là sản phẩm biến mất khỏi trang bán hàng. Câu đó phải đọc được
+         TRƯỚC khi gõ, không phải sau. */ ?>
+<header class="ahead ahead--row">
+    <div>
+        <h1 class="ahead__title">Tồn kho</h1>
+        <p class="ahead__lead">
+            Cập nhật số lượng sau khi nhập hàng hoặc kiểm kê. Đặt tồn về
+            <strong>0</strong> sẽ tự chuyển sang <em>hết hàng</em> và ẩn nút mua
+            ở trang bán hàng.
+        </p>
+    </div>
+
+    <div class="ahead__tools">
+        <?php /* Form GET, không JS: gõ rồi Enter là trang tải lại với ?q=… trên
+                 địa chỉ — chia sẻ được, quay lại được, F5 không hỏi gửi lại. */ ?>
+        <form class="asearch" method="get" action="/quan-tri/ton-kho" role="search">
+            <?php if ($filter !== ''): ?>
+                <input type="hidden" name="loc" value="<?= e($filter) ?>">
+            <?php endif; ?>
+            <label class="sr-only" for="invQ">Tìm sản phẩm trong kho</label>
+            <input type="search" id="invQ" name="q" value="<?= e($q) ?>"
+                   placeholder="Tìm theo tên, SKU, thương hiệu…">
+            <button type="submit" class="astatus__save astatus__save--ghost">Tìm</button>
+            <?php if ($q !== ''): ?>
+                <a href="<?= e($duongDanLoc($filter)) ?>" class="apanel__more">Xoá tìm kiếm</a>
+            <?php endif; ?>
+        </form>
+    </div>
 </header>
 
 <nav class="atabs" aria-label="Lọc tồn kho">
     <?php foreach ($tabs as $key => [$label, $count]): ?>
         <a class="atabs__item<?= $filter === $key ? ' is-active' : '' ?>"
-           href="/quan-tri/ton-kho<?= $key === '' ? '' : '?loc=' . e($key) ?>"
+           href="<?= e($duongDanLoc((string) $key)) ?>"
            <?= $filter === $key ? 'aria-current="true"' : '' ?>>
             <?= e($label) ?> <span class="atabs__num"><?= $count ?></span>
         </a>
@@ -31,10 +72,14 @@ $tabs = [
 </nav>
 
 <?php if ($products === []): ?>
-    <p class="apanel__empty">Không có sản phẩm nào khớp bộ lọc.</p>
+    <p class="apanel__empty">
+        <?= $q !== '' || $filter !== ''
+            ? 'Không có sản phẩm nào khớp bộ lọc.'
+            : 'Chưa có sản phẩm nào.' ?>
+    </p>
 <?php else: ?>
     <div class="atable-wrap">
-        <table class="atable atable--full">
+        <table class="atable aitable">
             <thead>
                 <tr>
                     <th scope="col">SKU</th>
@@ -47,43 +92,93 @@ $tabs = [
             <tbody>
                 <?php foreach ($products as $p): ?>
                     <?php
-                    $qty     = (int) $p['stock_quantity'];
-                    $rowFlag = $qty <= 0 ? ' is-out' : ($qty <= $low ? ' is-low' : '');
+                    $qty = (int) $p['stock_quantity'];
+
+                    /* BA MỨC, cùng ngưỡng với dải viên lọc ngay trên bảng và với
+                       thẻ "Sắp hết hàng" ở trang Tổng quan. Đọc số tồn chứ không
+                       đọc cột `status`: ở ĐÂY câu hỏi là "còn bao nhiêu cái",
+                       còn `status` trả lời câu khác ("có đang bán không") và
+                       chính cái nút Lưu bên cạnh mới là thứ đặt lại nó. */
+                    [$nhan, $lopNhan] = $qty <= 0
+                        ? ['Hết hàng', 'out_of_stock']
+                        : ($qty <= $low ? ['Sắp hết', 'low_stock'] : ['Còn hàng', 'in_stock']);
                     ?>
-                    <tr class="ainv<?= $rowFlag ?>">
+                    <tr class="ainv<?= $qty <= 0 ? ' is-out' : ($qty <= $low ? ' is-low' : '') ?>">
                         <td><code><?= e($p['sku']) ?></code></td>
                         <td>
-                            <a href="/san-pham/<?= e(rawurlencode($p['slug'])) ?>" target="_blank" rel="noopener"><?= e($p['name']) ?></a>
+                            <?php /* Mở TAB MỚI sang trang bán hàng: người đang sửa
+                                     tồn của mười dòng không muốn rời bảng. Kiểm tra
+                                     xem khách nhìn thấy gì là việc phụ, làm xong thì
+                                     đóng tab và bảng vẫn còn nguyên chỗ cũ. */ ?>
+                            <a class="ainame" href="/san-pham/<?= e(rawurlencode($p['slug'])) ?>"
+                               target="_blank" rel="noopener"><?= e($p['name']) ?></a>
                             <span class="atable__sub"><?= e($p['brand'] ?? '—') ?></span>
                         </td>
                         <td class="num"><?= money((int) $p['price']) ?></td>
-                        <td class="num<?= $qty <= 0 ? ' is-danger' : '' ?>">
-                            <?= $qty ?>
-                            <?php if ($qty <= 0): ?>
-                                <span class="atable__sub">Hết hàng</span>
-                            <?php elseif ($qty <= $low): ?>
-                                <span class="atable__sub">Sắp hết</span>
-                            <?php endif; ?>
+                        <td>
+                            <?php /* Con số VÀ viên nhãn cạnh nhau, không phải con số
+                                     với một dòng chữ nhỏ bên dưới — theo bản thiết
+                                     kế. Số trả lời "còn mấy cái", viên nhãn trả lời
+                                     "thế là nhiều hay ít"; hai câu khác nhau nên
+                                     đứng cạnh nhau chứ không chồng lên nhau. */ ?>
+                            <span class="aistock">
+                                <span class="aistock__num"><?= $qty ?></span>
+                                <span class="badge badge--<?= e($lopNhan) ?>"><?= e($nhan) ?></span>
+                            </span>
                         </td>
                         <td>
                             <form method="post" action="/quan-tri/ton-kho/cap-nhat" class="ainv__form">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="id" value="<?= e($p['id']) ?>">
                                 <input type="hidden" name="loc" value="<?= e($filter) ?>">
-                                <label class="sr-only" for="q-<?= e($p['id']) ?>">Tồn kho mới cho <?= e($p['name']) ?></label>
-                                <input type="number" id="q-<?= e($p['id']) ?>" name="stock_quantity"
-                                       value="<?= $qty ?>" min="0" max="99999" step="1">
-                                <button type="submit" class="astatus__save">Lưu</button>
+                                <input type="hidden" name="q" value="<?= e($q) ?>">
+
+                                <?php
+                                /*
+                                 * BỘ ĐẾM − / + CHỈ MỌC RA KHI CÓ JAVASCRIPT.
+                                 *
+                                 * Bản thiết kế vẽ ô nhập nằm giữa hai nút trừ và
+                                 * cộng. Hai nút ấy không làm được bằng HTML thuần:
+                                 * chúng phải sửa giá trị ô nhập tại chỗ, không gửi
+                                 * form. Cho chúng là nút submit thì mỗi lần bấm là
+                                 * một lượt tải trang — nhập một thùng 24 cái thành
+                                 * 24 lượt tải.
+                                 *
+                                 * Nên chúng ra đời `hidden` và admin-inventory.js
+                                 * mở ra, đúng nếp đã ghi ở assets/js/admin.js: thà
+                                 * không có gì còn hơn để lại một ô bấm vào không
+                                 * làm gì. Tắt JS thì còn đúng ô số với nút tăng
+                                 * giảm sẵn có của trình duyệt — vẫn nhập được.
+                                 */
+                                ?>
+                                <div class="aistep">
+                                    <button class="aistep__btn" type="button" data-step="-1"
+                                            hidden aria-label="Giảm một">−</button>
+
+                                    <label class="sr-only" for="q-<?= e($p['id']) ?>">Tồn kho mới cho <?= e($p['name']) ?></label>
+                                    <input class="aistep__input" type="number" id="q-<?= e($p['id']) ?>"
+                                           name="stock_quantity" value="<?= $qty ?>"
+                                           min="0" max="99999" step="1" inputmode="numeric">
+
+                                    <button class="aistep__btn" type="button" data-step="1"
+                                            hidden aria-label="Tăng một">+</button>
+                                </div>
+
+                                <button type="submit" class="astatus__save aisave">Lưu</button>
                             </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
-    </div>
 
-    <p class="ainv__hint">
-        Đặt tồn về <strong>0</strong> sẽ tự chuyển sản phẩm sang trạng thái
-        <em>hết hàng</em> và ẩn nút mua ở trang bán hàng.
-    </p>
+        <?php /* Chân bảng nói RÕ CÁCH SẮP XẾP. Bảng này không sắp theo tên hay
+                 theo mã mà theo tồn thấp nhất trước — trật tự duy nhất có ích ở
+                 đây, nhưng cũng là trật tự không ai đoán ra nếu không nói. */ ?>
+        <div class="aofoot">
+            <p class="aofoot__count">
+                Đang hiện <?= count($products) ?> sản phẩm · sắp theo tồn thấp nhất trước
+            </p>
+        </div>
+    </div>
 <?php endif; ?>

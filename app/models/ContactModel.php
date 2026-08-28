@@ -135,9 +135,104 @@ class ContactModel extends BaseModel
      * KHÔNG CÒN THAM SỐ LỌC. Trang này nay chỉ có một cách đọc — mới nhất
      * trước — vì không còn trạng thái nào để lọc theo.
      */
-    public static function paginateAdmin(int $page = 1, int $perPage = 20): array
+    public static function paginateAdmin(
+        int $page = 1,
+        int $perPage = 20,
+        string $q = '',
+        string $zalo = ''
+    ): array {
+        /* Hai bộ lọc thêm 2026-08-28 theo bản thiết kế "Liên hệ.dc.html": ô
+           tìm và dải viên "Chưa gửi / Đã gửi". Để mặc định rỗng nên mọi nơi
+           gọi cũ vẫn chạy y như trước.
+
+           KHÔNG dùng static::paginate() nữa: hàm đó nhận điều kiện dạng
+           cột => giá trị, không diễn đạt được LIKE trên ba cột lẫn "cột này
+           IS NULL". Viết thẳng SQL, đúng nếp CLAUDE.md cho truy vấn phức tạp. */
+        [$where, $params] = self::locAdmin($q, $zalo);
+
+        $total   = (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM contact_requests {$where}",
+            $params
+        );
+        $perPage = max(1, $perPage);
+        $page    = max(1, $page);
+        $offset  = ($page - 1) * $perPage;
+
+        return [
+            'items' => Database::fetchAll(
+                "SELECT * FROM contact_requests {$where}
+                  ORDER BY created_at DESC
+                  LIMIT {$perPage} OFFSET {$offset}",
+                $params
+            ),
+            'total'      => $total,
+            'page'       => $page,
+            'totalPages' => (int) ceil($total / $perPage),
+        ];
+    }
+
+    /**
+     * Đếm yêu cầu theo tình trạng đẩy Zalo, TRONG PHẠM VI ô tìm.
+     *
+     * Dải viên lọc đứng ngay trên bảng, nên "Chưa gửi 3" mà bên dưới chỉ có 1
+     * dòng thì con số ấy nói về một danh sách người dùng không nhìn thấy.
+     *
+     * @return array{'': int, 'chua': int, 'da': int}
+     */
+    public static function zaloCounts(string $q = ''): array
     {
-        return static::paginate([], $page, $perPage, 'created_at DESC');
+        // Chưa chạy migration thì không có cột nào để phân loại: trả tổng vào
+        // ô "Tất cả" và để hai ô kia bằng 0, đúng như view đang ẩn cột ấy đi.
+        [$where, $params] = self::locAdmin($q, '');
+        $tong = (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM contact_requests {$where}",
+            $params
+        );
+
+        if (!Database::columnExists('contact_requests', 'zalo_sent_at')) {
+            return ['' => $tong, 'chua' => 0, 'da' => 0];
+        }
+
+        $chua = (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM contact_requests '
+            . ($where !== '' ? $where . ' AND ' : 'WHERE ') . 'zalo_sent_at IS NULL',
+            $params
+        );
+
+        return ['' => $tong, 'chua' => $chua, 'da' => $tong - $chua];
+    }
+
+    /**
+     * Mệnh đề WHERE + tham số dùng chung cho paginateAdmin() và zaloCounts().
+     *
+     * @return array{0: string, 1: array<string, string>}
+     */
+    private static function locAdmin(string $q, string $zalo): array
+    {
+        $dieuKien = [];
+        $params   = [];
+
+        if ($q !== '') {
+            /* Bốn cột người ta gõ vào ô tìm: tên, số điện thoại, email và cả
+               nội dung — "khách nào hỏi về tròng đổi màu" là câu có thật, mà
+               tên thì không nhớ. */
+            $dieuKien[] = '(full_name LIKE :tim_ten OR phone LIKE :tim_sdt'
+                . ' OR email LIKE :tim_mail OR message LIKE :tim_nd)';
+            $needle = '%' . addcslashes($q, '%_\\') . '%';
+            $params += [
+                'tim_ten'  => $needle, 'tim_sdt' => $needle,
+                'tim_mail' => $needle, 'tim_nd'  => $needle,
+            ];
+        }
+
+        // Lọc theo tình trạng đẩy chỉ có nghĩa khi cột ấy tồn tại.
+        if ($zalo !== '' && Database::columnExists('contact_requests', 'zalo_sent_at')) {
+            $dieuKien[] = $zalo === 'chua'
+                ? 'zalo_sent_at IS NULL'
+                : 'zalo_sent_at IS NOT NULL';
+        }
+
+        return [$dieuKien !== [] ? 'WHERE ' . implode(' AND ', $dieuKien) : '', $params];
     }
 
     /**

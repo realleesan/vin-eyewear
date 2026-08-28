@@ -41,26 +41,24 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
     return '/quan-tri/don-hang?' . http_build_query($locHienTai + ($so > 1 ? ['page' => $so] : []));
 };
 ?>
-<header class="ahead">
-    <h1 class="ahead__title">Đơn hàng</h1>
-    <p class="ahead__lead"><?= (int) $total ?> đơn · trang <?= (int) $page ?>/<?= (int) $totalPages ?></p>
-</header>
+<?php /* Ô LỌC NGÀY VÀ Ô TÌM NẰM NGAY TRÊN DÒNG TIÊU ĐỀ, không phải một dải
+         riêng bên dưới — theo bản thiết kế. Chúng cao 36px; cho chúng một dòng
+         của riêng mình là mất 48px đầu trang trên MỌI lần mở, kể cả những lần
+         không định lọc gì. Dòng tiêu đề thì lúc nào cũng có và bên phải nó
+         đang trống.
 
-<?php
-/* THANH CÔNG CỤ DÍNH ĐẦU MÀN HÌNH.
-
-   Bảng đơn dài 20 dòng, và thao tác thường gặp nhất là "lọc rồi cuộn tìm".
-   Cuộn xuống mà dải viên lọc trôi mất thì đổi bộ lọc phải cuộn ngược lên —
-   bản thiết kế dính nó lại đúng vì thế. Xem .aotools trong admin-orders.css. */
-?>
-<div class="aotools">
-    <?php partial('admin/_layout/filter-tabs', [
-        'base' => '/quan-tri/don-hang', 'statuses' => $statuses,
-        'counts' => $counts, 'current' => $status,
-        // Giữ từ khoá và khoảng ngày khi bấm sang viên lọc khác — không có nó,
-        // gõ "0915" rồi bấm "Đang giao" là mất luôn từ vừa gõ.
-        'keep' => ['q' => $q, 'ngay' => $range],
-    ]); ?>
+         Dòng dẫn nay đếm ĐƠN MỚI CHỜ XÁC NHẬN thay vì số trang: số trang đã
+         chuyển xuống chân bảng, nơi người ta thật sự cần nó (lúc bấm sang
+         trang khác), còn đầu trang thì câu hỏi là "hôm nay có gì phải làm". */ ?>
+<header class="ahead ahead--row">
+    <div>
+        <h1 class="ahead__title">Đơn hàng</h1>
+        <p class="ahead__lead">
+            <?= (int) $total ?> đơn<?php if ((int) ($counts['new'] ?? 0) > 0): ?>
+                · <?= (int) $counts['new'] ?> đơn mới chờ xác nhận
+            <?php endif; ?>
+        </p>
+    </div>
 
     <?php /* GET chứ không POST: bộ lọc phải nằm trên địa chỉ để bấm F5, bấm
              quay lại, hay gửi đường dẫn cho đồng nghiệp đều ra đúng danh sách
@@ -92,7 +90,25 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
             <a class="aofind__clear" href="/quan-tri/don-hang<?= $status !== '' ? '?status=' . e($status) : '' ?>">Xoá lọc</a>
         <?php endif; ?>
     </form>
+</header>
+
+<?php
+/* THANH CÔNG CỤ DÍNH ĐẦU MÀN HÌNH.
+
+   Bảng đơn dài 20 dòng, và thao tác thường gặp nhất là "lọc rồi cuộn tìm".
+   Cuộn xuống mà dải viên lọc trôi mất thì đổi bộ lọc phải cuộn ngược lên —
+   bản thiết kế dính nó lại đúng vì thế. Xem .aotools trong admin-orders.css. */
+?>
+<div class="aotools">
+    <?php partial('admin/_layout/filter-tabs', [
+        'base' => '/quan-tri/don-hang', 'statuses' => $statuses,
+        'counts' => $counts, 'current' => $status,
+        // Giữ từ khoá và khoảng ngày khi bấm sang viên lọc khác — không có nó,
+        // gõ "0915" rồi bấm "Đang giao" là mất luôn từ vừa gõ.
+        'keep' => ['q' => $q, 'ngay' => $range],
+    ]); ?>
 </div>
+
 
 <?php if ($orders === []): ?>
     <?php /* Câu chữ khác nhau theo lý do rỗng: bảng chưa có đơn nào là chuyện
@@ -182,7 +198,25 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
                                     </span>
 
                                     <?php if (!empty($item['lens_name'])): ?>
-                                        <span class="atable__sub">+ <?= e($item['lens_name']) ?></span>
+                                        <?php /* VIÊN NHÃN "Kèm đơn kính" chứ không phải dấu
+                                                 cộng dẫn đầu — theo bản thiết kế.
+
+                                                 Trong một cột dày ba tới bốn dòng chữ nhỏ,
+                                                 "+ Hai tròng · Tròng trắng 1.50" đọc lướt
+                                                 không khác gì dòng tên sản phẩm ngay trên
+                                                 nó. Mà đây là dấu hiệu DUY NHẤT cho biết
+                                                 đơn này phải qua khâu mài tròng, tức là
+                                                 khâu duy nhất có thể làm sai số đo của một
+                                                 người thật. Nó phải bắt mắt được.
+
+                                                 Sắc tím là màu riêng của "đơn kính" trong
+                                                 bản thiết kế, không dùng lại ở đâu khác —
+                                                 nên nó không lẫn với sáu màu trạng thái
+                                                 đơn ở cột bên cạnh. */ ?>
+                                        <span class="aolens">
+                                            <span class="aolens__tag">Kèm đơn kính</span>
+                                            <span class="aolens__name"><?= e($item['lens_name']) ?></span>
+                                        </span>
                                     <?php endif; ?>
 
                                     <?php if (!empty($item['lens_name']) || !empty($item['prescription'])): ?>
@@ -329,6 +363,39 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php
+            /* CHÂN BẢNG NẰM TRONG KHUNG, KHÔNG PHẢI DƯỚI KHUNG — theo bản
+               thiết kế.
+
+               Nó thuộc về cái bảng chứ không thuộc về trang: "đang hiện 8 /
+               33 đơn" chỉ có nghĩa khi đọc cùng mấy dòng ngay trên nó. Thả ra
+               ngoài, trên nền ngà, thì nó trôi lửng giữa bảng và thanh hàng
+               loạt và đọc ra như một câu chú thích của cả trang.
+
+               Nằm trong .atable-wrap nghĩa là nó CUỘN NGANG cùng bảng — cũng
+               đúng bản thiết kế (min-width bằng bảng, xem .aofoot trong
+               admin-orders.css). Nếu để nó đứng yên trong khi bảng trượt thì
+               ở màn hẹp con số phân trang rời khỏi cột nó đang nói về. */
+            ?>
+            <div class="aofoot">
+                <p class="aofoot__count">
+                    Đang hiện <?= count($orders) ?> / <?= (int) $total ?> đơn
+                    <?php if ($totalPages > 1): ?>· trang <?= (int) $page ?>/<?= (int) $totalPages ?><?php endif; ?>
+                </p>
+
+                <?php if ($totalPages > 1): ?>
+                    <nav class="pager" aria-label="Phân trang">
+                        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                            <?php if ($i === $page): ?>
+                                <span class="pager__link is-current" aria-current="page"><?= $i ?></span>
+                            <?php else: ?>
+                                <a class="pager__link" href="<?= e($duongDanTrang($i)) ?>"><?= $i ?></a>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                    </nav>
+                <?php endif; ?>
+            </div>
         </div>
 
         <?php
@@ -392,21 +459,6 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
         <?php endif; ?>
     <?php endforeach; ?>
 
-    <div class="aofoot">
-        <p class="aofoot__count"><?= count($orders) ?> đơn hiển thị</p>
-
-        <?php if ($totalPages > 1): ?>
-            <nav class="pager" aria-label="Phân trang">
-                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                    <?php if ($i === $page): ?>
-                        <span class="pager__link is-current" aria-current="page"><?= $i ?></span>
-                    <?php else: ?>
-                        <a class="pager__link" href="<?= e($duongDanTrang($i)) ?>"><?= $i ?></a>
-                    <?php endif; ?>
-                <?php endfor; ?>
-            </nav>
-        <?php endif; ?>
-    </div>
 <?php endif; ?>
 
 <?php if ($undo !== null): ?>

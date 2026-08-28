@@ -20,52 +20,92 @@ $ed = $editing;
     'addLabel' => '+ Thêm cơ sở',
 ]); ?>
 
-<div class="atable-wrap">
-    <table class="atable atable--full">
-        <thead>
-            <tr>
-                <th scope="col">Mã</th>
-                <th scope="col">Tên</th>
-                <th scope="col">Địa chỉ</th>
-                <th scope="col">Liên hệ</th>
-                <th scope="col">Hoạt động</th>
-                <?php if ($canEdit): ?><th scope="col">Thao tác</th><?php endif; ?>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($stores as $s): ?>
-                <tr>
-                    <td><code><?= e($s['code']) ?></code></td>
-                    <td><?= e($s['name']) ?></td>
-                    <td class="atable__msg"><?= e($s['address']) ?></td>
-                    <td>
-                        <?= e($s['phone'] ?? '—') ?>
-                        <span class="atable__sub"><?= e($s['open_hours'] ?? '') ?></span>
-                    </td>
-                    <td>
-                        <span class="badge badge--<?= $s['is_active'] ? 'in_stock' : 'cancelled' ?>">
-                            <?= $s['is_active'] ? 'Đang mở' : 'Đã đóng' ?>
-                        </span>
-                    </td>
-                    <?php if ($canEdit): ?>
-                        <td class="arow-actions">
-                            <a href="/quan-tri/co-so?sua=<?= e($s['id']) ?>#form">Sửa</a>
-                            <?php $hoi = sprintf('Xoá cơ sở “%s”?', $s['name']); ?>
-                            <form method="post" action="/quan-tri/co-so/xoa"
-                                  data-confirm="<?= e($hoi) ?>"
-                                  data-confirm-title="Xoá cơ sở?"
-                                  data-confirm-ok="Xoá"
-                                  onsubmit="return confirm('<?= e($hoi) ?>')">
-                                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                <input type="hidden" name="id" value="<?= e($s['id']) ?>">
-                                <button type="submit" class="arow-del">Xoá</button>
-                            </form>
-                        </td>
-                    <?php endif; ?>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+<?php
+/*
+ * THẺ, KHÔNG PHẢI BẢNG — đổi theo bản thiết kế "Cơ sở.dc.html".
+ *
+ * Cửa hàng có hai cơ sở. Một cái bảng sáu cột cho hai dòng là hình thức sai
+ * ngay từ đầu: bảng dựng ra để SO SÁNH nhiều dòng theo cột, mà ở đây không ai
+ * so địa chỉ cơ sở này với cơ sở kia — người ta ĐỌC một cơ sở, trọn vẹn, để
+ * kiểm xem số điện thoại và giờ mở cửa in ra ngoài có đúng không.
+ *
+ * Thẻ cho phép mỗi trường có nhãn riêng đứng cạnh ("ĐỊA CHỈ", "GIỜ MỞ"), thứ
+ * mà bảng phải nhét hết lên một hàng tiêu đề ở tận trên cùng — đọc tới dòng
+ * thứ hai là đã phải nhớ lại cột nào là cột nào.
+ *
+ * auto-fill minmax(400px,1fr): hai cơ sở nằm cạnh nhau trên màn rộng, xếp dọc
+ * trên màn hẹp, và thêm cơ sở thứ ba thứ tư thì lưới tự lo — không phải chỉnh
+ * gì cả.
+ */
+?>
+<div class="acs">
+    <?php foreach ($stores as $s): ?>
+        <?php /* is-off làm mờ cả thẻ. Cơ sở tạm đóng vẫn phải đọc được (đó là
+                 chỗ người ta vào để mở lại), nhưng nó không nên tranh chú ý
+                 với cơ sở đang nhận khách. */ ?>
+        <article class="acs__card<?= $s['is_active'] ? '' : ' is-off' ?>">
+            <div class="acs__top">
+                <span class="acs__code"><?= e($s['code']) ?></span>
+                <span class="badge badge--<?= $s['is_active'] ? 'in_stock' : 'neutral' ?>">
+                    <?= $s['is_active'] ? 'Đang mở' : 'Tạm đóng' ?>
+                </span>
+            </div>
+
+            <h2 class="acs__name"><?= e($s['name']) ?></h2>
+
+            <dl class="acs__rows">
+                <div class="acs__row">
+                    <dt>Địa chỉ</dt>
+                    <dd><?= e($s['address']) ?></dd>
+                </div>
+
+                <div class="acs__row">
+                    <dt>Điện thoại</dt>
+                    <dd>
+                        <?php if (!empty($s['phone'])): ?>
+                            <?php /* Bấm gọi thẳng từ máy ở quầy — cùng lối với cột
+                                     điện thoại ở bảng yêu cầu liên hệ. */ ?>
+                            <a class="acs__tel" href="tel:<?= e(preg_replace('/\D/', '', $s['phone'])) ?>"><?= e($s['phone']) ?></a>
+                        <?php else: ?>
+                            —
+                        <?php endif; ?>
+                    </dd>
+                </div>
+
+                <div class="acs__row">
+                    <dt>Giờ mở</dt>
+                    <dd><?= e($s['open_hours'] ?: '—') ?></dd>
+                </div>
+
+                <?php /* DÒNG BẢN ĐỒ nói CÓ HAY KHÔNG, không in ra địa chỉ nhúng.
+                         Chuỗi nhúng của Google dài vài trăm ký tự và không ai đọc
+                         nó bằng mắt; thứ người ta cần biết ở đây chỉ là trang cơ sở
+                         bên phía khách có bản đồ hay đang trống một mảng. */ ?>
+                <div class="acs__row">
+                    <dt>Bản đồ</dt>
+                    <dd class="acs__map<?= !empty($s['map_url']) ? ' is-on' : '' ?>">
+                        <?= !empty($s['map_url']) ? 'Đã nhúng Google Maps' : 'Chưa có bản đồ' ?>
+                    </dd>
+                </div>
+            </dl>
+
+            <?php if ($canEdit): ?>
+                <div class="acs__acts arow-actions">
+                    <a href="/quan-tri/co-so?sua=<?= e($s['id']) ?>#form">Sửa</a>
+                    <?php $hoi = sprintf('Xoá cơ sở “%s”?', $s['name']); ?>
+                    <form method="post" action="/quan-tri/co-so/xoa"
+                          data-confirm="<?= e($hoi) ?>"
+                          data-confirm-title="Xoá cơ sở?"
+                          data-confirm-ok="Xoá"
+                          onsubmit="return confirm('<?= e($hoi) ?>')">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="id" value="<?= e($s['id']) ?>">
+                        <button type="submit" class="arow-del">Xoá</button>
+                    </form>
+                </div>
+            <?php endif; ?>
+        </article>
+    <?php endforeach; ?>
 </div>
 
 <?php if ($canEdit): ?>

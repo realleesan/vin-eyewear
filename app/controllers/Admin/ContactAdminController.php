@@ -30,8 +30,19 @@ class ContactAdminController extends AdminController
 
     public function index(): void
     {
-        $page   = max(1, (int) ($_GET['page'] ?? 1));
-        $result = ContactModel::paginateAdmin($page, 20);
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+
+        /* Ô tìm và dải viên lọc thêm theo bản thiết kế "Liên hệ.dc.html".
+           Giá trị lạ ở ?zalo= thì coi như không lọc — một đường dẫn bị sửa tay
+           nên trả về danh sách đầy đủ, không nên trả về trang lỗi. */
+        $q    = trim((string) ($_GET['q'] ?? ''));
+        $zalo = (string) ($_GET['zalo'] ?? '');
+
+        if (!in_array($zalo, ['chua', 'da'], true)) {
+            $zalo = '';
+        }
+
+        $result = ContactModel::paginateAdmin($page, 20, $q, $zalo);
 
         $this->renderAdmin('admin/contacts/index', [
             'pageTitle'  => 'Liên hệ — Quản trị',
@@ -39,6 +50,9 @@ class ContactAdminController extends AdminController
             'total'      => $result['total'],
             'page'       => $result['page'],
             'totalPages' => $result['totalPages'],
+            'q'          => $q,
+            'zalo'       => $zalo,
+            'zaloCounts' => ContactModel::zaloCounts($q),
             'chuaDay'    => ContactModel::countChuaDayZalo(),
             // Chưa chạy migration thì cả trang vẫn đọc được, chỉ là không có
             // cột nào để biết tin đã đi chưa — view ẩn cột đó đi thay vì đổ lỗi.

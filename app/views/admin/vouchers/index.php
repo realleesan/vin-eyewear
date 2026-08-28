@@ -54,7 +54,13 @@ $whyOff = static function (array $v) use ($today): string {
 ?>
 
 <?php partial('admin/_layout/crud-head', [
-    'title' => 'Mã giảm giá', 'lead' => count($vouchers) . ' mã',
+    'title' => 'Mã giảm giá',
+    /* Đếm luôn số ĐANG CHẠY — theo bản thiết kế. Tổng số mã một mình không nói
+       được gì; con số đáng đọc là bao nhiêu chương trình khách đang dùng được
+       ngay lúc này, vì mã hết hạn thì vẫn nằm trong bảng. */
+    'lead' => count($vouchers) . ' mã · '
+        . count(array_filter($vouchers, static fn (array $v): bool => $whyOff($v) === ''))
+        . ' đang chạy',
     'base' => '/quan-tri/ma-giam-gia', 'canEdit' => $canEdit, 'editing' => $ed,
     'addLabel' => '+ Tạo mã mới',
 ]); ?>
@@ -81,99 +87,164 @@ $whyOff = static function (array $v) use ($today): string {
     </div>
 <?php else: ?>
 
-<div class="atable-wrap">
-    <table class="atable atable--full">
-        <thead>
-            <tr>
-                <th scope="col">Mã</th>
-                <th scope="col">Chương trình</th>
-                <th scope="col">Giảm</th>
-                <th scope="col">Đơn tối thiểu</th>
-                <th scope="col">Hạn dùng</th>
-                <th scope="col">Đã dùng</th>
-                <th scope="col">Trạng thái</th>
-                <?php if ($canEdit): ?><th scope="col">Thao tác</th><?php endif; ?>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($vouchers as $v): ?>
-                <?php $off = $whyOff($v); ?>
-                <tr>
-                    <td>
-                        <code><?= e($v['code']) ?></code>
-                        <span class="atable__sub"><?= e($v['tag']) ?></span>
-                    </td>
-                    <td class="atable__msg">
-                        <?= e($v['title']) ?>
-                        <?php if (!empty($v['condition_text'])): ?>
-                            <span class="atable__sub"><?= e($v['condition_text']) ?></span>
-                        <?php endif; ?>
-                        <?php if ((int) $v['is_public'] !== 1): ?>
-                            <span class="atable__sub">
-                                Mã riêng · đã phát cho <?= (int) $v['holder_count'] ?> khách
-                            </span>
-                        <?php endif; ?>
-                    </td>
-                    <td><?= e($amountText($v)) ?></td>
-                    <td><?= (int) $v['min_order'] > 0 ? money((int) $v['min_order']) : '—' ?></td>
-                    <td><?= $v['expires_at'] !== null ? e(formatDate($v['expires_at'])) : 'Không hạn' ?></td>
-                    <td>
-                        <?= (int) $v['used_count'] ?><?= $v['max_uses'] !== null ? ' / ' . (int) $v['max_uses'] : '' ?>
-                        <?php if ((int) $v['order_count'] > 0): ?>
-                            <span class="atable__sub"><?= (int) $v['order_count'] ?> đơn</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <span class="badge badge--<?= $off === '' ? 'in_stock' : 'cancelled' ?>">
-                            <?= $off === '' ? 'Đang chạy' : e($off) ?>
-                        </span>
-                    </td>
-                    <?php if ($canEdit): ?>
-                        <td class="arow-actions">
-                            <a href="/quan-tri/ma-giam-gia?sua=<?= e($v['id']) ?>#form">Sửa</a>
+<?php
+/*
+ * THẺ, KHÔNG PHẢI BẢNG — đổi theo bản thiết kế "Mã giảm giá.dc.html".
+ *
+ * Bảng cũ có tám cột, trong đó năm cột ("Giảm", "Đơn tối thiểu", "Hạn dùng",
+ * "Đã dùng", "Trạng thái") đều là những mẩu ngắn thuộc về CÙNG MỘT chương
+ * trình khuyến mãi. Xé chúng ra tám ô rời rồi bắt mắt ghép lại theo hàng
+ * ngang là việc thừa: không ai so "đơn tối thiểu của VIN10" với "đơn tối
+ * thiểu của FREESHIP" — người ta đọc trọn một mã rồi quyết định bật hay tắt.
+ *
+ * Thẻ gom trọn một mã vào một khối, mã in to bằng chữ đẳng khoảng ở góc trên
+ * (đó là thứ khách gõ vào ô nhập, nên nó là danh tính của cả thẻ), và ba con
+ * số vận hành xếp thành một dải dưới đường kẻ.
+ *
+ * Bộ lọc theo trạng thái LỌC NGAY TRONG PHP: cả bảng mã của một cửa hàng
+ * kính chưa tới vài chục dòng và controller đã nạp hết, nên thêm một vòng
+ * lặp rẻ hơn hẳn một truy vấn nữa — mà trạng thái "hết lượt" thì cũng chỉ
+ * tính được sau khi đã có `used_count` trong tay.
+ */
+$loc = (string) ($_GET['loc'] ?? '');
 
-                            <?php if ((int) $v['is_public'] !== 1): ?>
-                                <?php
-                                /* KHÔNG phải thao tác xoá, nên nút đồng ý không
-                                   ghi "Xoá" mà ghi đúng việc sắp làm. Phát mã
-                                   cho toàn bộ khách cũng không lùi lại được —
-                                   mã đã vào ví của hàng nghìn người. */
-                                $hoiPhat = sprintf(
-                                    'Phát mã “%s” cho TẤT CẢ khách hàng? Việc này không thu hồi lại được.',
-                                    $v['code']
-                                );
-                                ?>
-                                <form method="post" action="/quan-tri/ma-giam-gia/phat"
-                                      data-confirm="<?= e($hoiPhat) ?>"
-                                      data-confirm-title="Phát mã cho tất cả?"
-                                      data-confirm-ok="Phát mã"
-                                      data-confirm-cancel="Không phát"
-                                      onsubmit="return confirm('<?= e($hoiPhat) ?>')">
-                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                    <input type="hidden" name="id" value="<?= e($v['id']) ?>">
-                                    <button type="submit" class="arow-del arow-del--calm">Phát cho tất cả</button>
-                                </form>
-                            <?php endif; ?>
+if (!in_array($loc, ['chay', 'tat', 'het'], true)) {
+    $loc = '';
+}
 
-                            <?php if ((int) $v['order_count'] === 0): ?>
-                                <?php $hoiXoaMa = sprintf('Xoá mã “%s”?', $v['code']); ?>
-                                <form method="post" action="/quan-tri/ma-giam-gia/xoa"
-                                      data-confirm="<?= e($hoiXoaMa) ?>"
-                                      data-confirm-title="Xoá mã giảm giá?"
-                                      data-confirm-ok="Xoá"
-                                      onsubmit="return confirm('<?= e($hoiXoaMa) ?>')">
-                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                    <input type="hidden" name="id" value="<?= e($v['id']) ?>">
-                                    <button type="submit" class="arow-del">Xoá</button>
-                                </form>
-                            <?php endif; ?>
-                        </td>
+$khop = static function (array $v) use ($whyOff, $loc): bool {
+    $off = $whyOff($v);
+
+    return match ($loc) {
+        'chay' => $off === '',
+        'tat'  => $off === 'Đã tắt',
+        'het'  => $off === 'Hết hạn' || $off === 'Hết lượt',
+        default => true,
+    };
+};
+
+$dem = static function (string $key) use ($vouchers, $whyOff): int {
+    $n = 0;
+
+    foreach ($vouchers as $v) {
+        $off = $whyOff($v);
+        $n  += match ($key) {
+            'chay' => $off === '' ? 1 : 0,
+            'tat'  => $off === 'Đã tắt' ? 1 : 0,
+            'het'  => ($off === 'Hết hạn' || $off === 'Hết lượt') ? 1 : 0,
+            default => 1,
+        };
+    }
+
+    return $n;
+};
+
+$hienThi = array_values(array_filter($vouchers, $khop));
+?>
+<nav class="atabs" aria-label="Lọc theo trạng thái mã">
+    <?php foreach (['' => 'Tất cả', 'chay' => 'Đang chạy', 'tat' => 'Đang tắt', 'het' => 'Hết hạn / hết lượt'] as $key => $nhan): ?>
+        <a class="atabs__item<?= $loc === $key ? ' is-active' : '' ?>"
+           href="/quan-tri/ma-giam-gia<?= $key === '' ? '' : '?loc=' . e((string) $key) ?>"
+           <?= $loc === $key ? 'aria-current="true"' : '' ?>>
+            <?= e($nhan) ?> <span class="atabs__num"><?= $dem((string) $key) ?></span>
+        </a>
+    <?php endforeach; ?>
+</nav>
+
+<?php if ($hienThi === []): ?>
+    <p class="apanel__empty">Không có mã nào khớp bộ lọc.</p>
+<?php else: ?>
+<div class="avc">
+    <?php foreach ($hienThi as $v): ?>
+        <?php
+        $off     = $whyOff($v);
+        $dangChay = $off === '';
+        ?>
+        <article class="avc__card<?= $dangChay ? '' : ' is-off' ?>">
+            <div class="avc__top">
+                <div class="avc__id">
+                    <div class="avc__codeline">
+                        <span class="avc__code"><?= e($v['code']) ?></span>
+                        <?php /* Nhãn ngắn ("-10%", "Free ship") là thứ khách nhìn thấy
+                                 trong ví mã của họ — hổ phách để nó tách khỏi mã đỏ
+                                 ngay bên trái mà vẫn không đọc ra là một trạng thái. */ ?>
+                        <span class="avc__tag"><?= e($v['tag']) ?></span>
+                    </div>
+
+                    <p class="avc__title"><?= e($v['title']) ?></p>
+
+                    <?php /* Câu điều kiện là CHỮ CHO KHÁCH ĐỌC; con số thật nằm ở dải
+                             bên dưới và trong form sửa. Không có câu nào thì in gạch
+                             ngang chứ không bỏ trống — một khoảng trống ở đây đọc ra
+                             như "quên điền", mà "không có điều kiện" là hợp lệ. */ ?>
+                    <p class="avc__cond"><?= e($v['condition_text'] ?: '—') ?></p>
+                </div>
+
+                <span class="badge badge--<?= $dangChay ? 'in_stock' : ($off === 'Đã tắt' ? 'neutral' : 'out_of_stock') ?>">
+                    <?= $dangChay ? 'Đang chạy' : e($off) ?>
+                </span>
+            </div>
+
+            <?php /* Ba con số vận hành: đã dùng bao nhiêu, còn hạn tới bao giờ, ai
+                     dùng được. Đây là thứ người ta liếc trước khi quyết định tắt
+                     hay gia hạn một chương trình. */ ?>
+            <div class="avc__stats">
+                <span>
+                    <strong><?= (int) $v['used_count'] ?></strong> lượt dùng<?= $v['max_uses'] !== null ? ' / ' . (int) $v['max_uses'] : '' ?>
+                </span>
+                <span><?= $v['expires_at'] !== null ? 'HSD ' . e(formatDate($v['expires_at'])) : 'Không hạn' ?></span>
+                <span><?= (int) $v['is_public'] === 1
+                    ? 'Công khai'
+                    : 'Mã riêng · đã phát cho ' . (int) $v['holder_count'] . ' khách' ?></span>
+                <span><?= e($amountText($v)) ?><?= (int) $v['min_order'] > 0
+                    ? ' · đơn từ ' . money((int) $v['min_order'])
+                    : '' ?></span>
+            </div>
+
+            <?php if ($canEdit): ?>
+                <div class="avc__acts arow-actions">
+                    <a href="/quan-tri/ma-giam-gia?sua=<?= e($v['id']) ?>#form">Sửa</a>
+
+                    <?php if ((int) $v['is_public'] !== 1): ?>
+                        <?php
+                        /* KHÔNG phải thao tác xoá, nên nút đồng ý không ghi "Xoá"
+                           mà ghi đúng việc sắp làm. Phát mã cho toàn bộ khách cũng
+                           không lùi lại được — mã đã vào ví của hàng nghìn người. */
+                        $hoiPhat = sprintf(
+                            'Phát mã “%s” cho TẤT CẢ khách hàng? Việc này không thu hồi lại được.',
+                            $v['code']
+                        );
+                        ?>
+                        <form method="post" action="/quan-tri/ma-giam-gia/phat"
+                              data-confirm="<?= e($hoiPhat) ?>"
+                              data-confirm-title="Phát mã cho tất cả?"
+                              data-confirm-ok="Phát mã"
+                              data-confirm-cancel="Không phát"
+                              onsubmit="return confirm('<?= e($hoiPhat) ?>')">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="id" value="<?= e($v['id']) ?>">
+                            <button type="submit" class="arow-del arow-del--calm">Phát cho tất cả</button>
+                        </form>
                     <?php endif; ?>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+
+                    <?php if ((int) $v['order_count'] === 0): ?>
+                        <?php $hoiXoaMa = sprintf('Xoá mã “%s”?', $v['code']); ?>
+                        <form method="post" action="/quan-tri/ma-giam-gia/xoa"
+                              data-confirm="<?= e($hoiXoaMa) ?>"
+                              data-confirm-title="Xoá mã giảm giá?"
+                              data-confirm-ok="Xoá"
+                              onsubmit="return confirm('<?= e($hoiXoaMa) ?>')">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="id" value="<?= e($v['id']) ?>">
+                            <button type="submit" class="arow-del">Xoá</button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        </article>
+    <?php endforeach; ?>
 </div>
+<?php endif; ?>
 
 <?php endif; ?>
 

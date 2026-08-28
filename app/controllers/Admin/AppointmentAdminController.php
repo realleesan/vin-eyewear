@@ -16,17 +16,40 @@ class AppointmentAdminController extends AdminController
             $status = '';
         }
 
+        /*
+         * Ô TÌM VÀ Ô LỌC CƠ SỞ — thêm theo bản thiết kế "Lịch hẹn.dc.html".
+         *
+         * Trang này bày 200 lịch gần nhất, không phân trang. Hai câu hỏi có
+         * thật ở quầy mà dải viên lọc theo trạng thái không trả lời được:
+         * "khách vừa gọi tên X, lịch của họ hôm nào?" và "hôm nay cơ sở Tây
+         * Hồ có ai đến?". Một ô gõ và một ô chọn là đủ cho cả hai.
+         *
+         * Mã cơ sở KHÔNG kiểm ở đây mà để nguyên chuỗi đi vào tham số ràng
+         * buộc: gõ bậy trên thanh địa chỉ thì truy vấn trả 0 dòng và danh
+         * sách rỗng — đúng thứ nên xảy ra, và rẻ hơn một lượt truy vấn chỉ để
+         * hỏi xem cơ sở ấy có thật không.
+         */
+        $q     = trim((string) ($_GET['q'] ?? ''));
+        $coSo  = trim((string) ($_GET['co-so'] ?? ''));
+
         $this->renderAdmin('admin/appointments/index', [
             'pageTitle'    => 'Lịch hẹn — Quản trị',
-            'appointments' => BookingModel::withStore($status, 200),
+            'appointments' => BookingModel::withStore($status, 200, $q, $coSo),
             'status'       => $status,
+            'q'            => $q,
+            'coSo'         => $coSo,
+            'stores'       => StoreModel::all('name ASC'),
             'statuses'     => BookingModel::STATUSES,
             /* Hai danh sách khác nhau, cố ý: `statuses` là NHÃN của cả bốn
                trạng thái (dải viên lọc và viên nhãn cần đủ bốn), còn
                `staffStatuses` là hai thứ ô chọn được phép đặt. Xem khối chú
                thích của BookingModel::STAFF_STATUSES. */
             'staffStatuses' => BookingModel::STAFF_STATUSES,
-            'counts'       => $this->statusCounts(),
+            /* Đếm TRONG PHẠM VI ô tìm và ô cơ sở — xem BookingModel::statusCounts().
+               Trước đây phép đếm nằm ngay trong controller này và luôn đếm cả
+               bảng; chuyển vào model để nó dùng chung đúng mệnh đề WHERE với
+               truy vấn danh sách, thay vì hai bản chép sớm muộn lệch nhau. */
+            'counts'       => BookingModel::statusCounts($q, $coSo),
         ]);
     }
 
@@ -95,22 +118,5 @@ class AppointmentAdminController extends AdminController
 
         flash('admin_success', 'Đã huỷ lịch hẹn.');
         redirect('/quan-tri/lich-hen');
-    }
-
-    private function statusCounts(): array
-    {
-        $rows   = Database::fetchAll('SELECT status, COUNT(*) AS n FROM appointments GROUP BY status');
-        $counts = ['' => 0];
-
-        foreach (array_keys(BookingModel::STATUSES) as $key) {
-            $counts[$key] = 0;
-        }
-
-        foreach ($rows as $row) {
-            $counts[$row['status']] = (int) $row['n'];
-            $counts['']            += (int) $row['n'];
-        }
-
-        return $counts;
     }
 }

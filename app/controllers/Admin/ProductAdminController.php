@@ -16,10 +16,34 @@ class ProductAdminController extends AdminController
         $q      = trim((string) ($_GET['q'] ?? ''));
         $page   = max(1, (int) ($_GET['page'] ?? 1));
 
+        /*
+         * LỌC THEO DANH MỤC BẰNG DẢI VIÊN — thêm theo bản thiết kế
+         * "Quản lý sản phẩm.dc.html".
+         *
+         * Ô tìm chữ đã có, nhưng nó trả lời câu hỏi khác: gõ chữ là khi đã
+         * biết mình tìm cái gì. Dải viên trả lời câu "cửa hàng đang có những
+         * gì trong mục gọng kính" — thao tác mở đầu, không phải thao tác tra
+         * cứu, và nó phải bấm được chứ không phải gõ được.
+         *
+         * Tên tham số tiếng Việt không dấu theo quy ước URL của dự án.
+         * ctype_digit chặn mọi thứ không phải số trước khi nó tới truy vấn;
+         * giá trị rỗng hoặc rác thì coi như không lọc, KHÔNG báo lỗi — một
+         * đường dẫn hỏng do sửa tay trên thanh địa chỉ nên trả về danh sách
+         * đầy đủ, không nên trả về một trang lỗi.
+         */
+        $cat = trim((string) ($_GET['danh-muc'] ?? ''));
+
+        if (!ctype_digit($cat)) {
+            $cat = '';
+        }
+
         // Khu quản trị thấy CẢ sản phẩm đang ẩn — khác trang bán hàng.
         // ProductModel::filter() luôn lọc is_visible nên ở đây truy vấn riêng.
-        $where  = '';
-        $params = [];
+        /* Gom điều kiện vào một mảng rồi mới ghép: hai bộ lọc (chữ và danh
+           mục) cộng được với nhau, và mỗi cái thêm vào sau này chỉ phải đẩy
+           thêm một phần tử chứ không phải viết lại chuỗi WHERE. */
+        $dieuKien = [];
+        $params   = [];
 
         if ($q !== '') {
             // Tách từ, khớp TẤT CẢ các từ — giống hệt tìm kiếm ở trang bán hàng
@@ -46,9 +70,16 @@ class ProductAdminController extends AdminController
             }
 
             if ($groups !== []) {
-                $where = 'WHERE ' . implode(' AND ', $groups);
+                $dieuKien[] = '(' . implode(' AND ', $groups) . ')';
             }
         }
+
+        if ($cat !== '') {
+            $dieuKien[]    = 'p.category_id = :danh_muc';
+            $params['danh_muc'] = (int) $cat;
+        }
+
+        $where = $dieuKien !== [] ? 'WHERE ' . implode(' AND ', $dieuKien) : '';
 
         $total   = (int) Database::fetchValue("SELECT COUNT(*) FROM products p {$where}", $params);
         $perPage = 20;
@@ -72,6 +103,8 @@ class ProductAdminController extends AdminController
             'page'       => $page,
             'totalPages' => (int) ceil($total / $perPage),
             'q'          => $q,
+            // '' = không lọc danh mục nào; view dùng để tô viên đang chọn.
+            'cat'        => $cat,
             'canEdit'    => UserModel::hasRole($this->userId, 'admin')
                          || UserModel::hasRole($this->userId, 'manager'),
             'editing'    => isset($_GET['sua']) ? ProductModel::find((string) $_GET['sua']) : null,

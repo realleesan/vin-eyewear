@@ -41,8 +41,41 @@ if ($ed !== null) {
     ],
 ]); ?>
 
+<?php
+/*
+ * DẢI VIÊN LỌC THEO DANH MỤC — theo bản thiết kế.
+ *
+ * Không dùng partial admin/_layout/filter-tabs: partial ấy bắt buộc có $counts
+ * và in một con số trong mỗi viên. Ở đây bản thiết kế cố ý KHÔNG có số, và
+ * đếm sản phẩm theo từng danh mục là thêm một truy vấn GROUP BY cho mỗi lần
+ * mở trang — trả giá cho một con số mà bản vẽ đã quyết là không cần.
+ *
+ * Giữ ?q= khi bấm: gõ "titan" rồi bấm "Gọng kính" phải ra gọng titan, không
+ * phải ra toàn bộ gọng kính.
+ */
+$giuQ = $q !== '' ? ['q' => $q] : [];
+
+$duongDanCat = static function (string $id) use ($giuQ): string {
+    $tham = $giuQ + ($id !== '' ? ['danh-muc' => $id] : []);
+
+    return '/quan-tri/san-pham' . ($tham !== [] ? '?' . http_build_query($tham) : '');
+};
+?>
+<nav class="atabs" aria-label="Lọc theo danh mục">
+    <a class="atabs__item<?= $cat === '' ? ' is-active' : '' ?>"
+       href="<?= e($duongDanCat('')) ?>"
+       <?= $cat === '' ? 'aria-current="true"' : '' ?>>Tất cả</a>
+
+    <?php foreach ($categories as $c): ?>
+        <?php $id = (string) $c['id']; ?>
+        <a class="atabs__item<?= $cat === $id ? ' is-active' : '' ?>"
+           href="<?= e($duongDanCat($id)) ?>"
+           <?= $cat === $id ? 'aria-current="true"' : '' ?>><?= e($c['name']) ?></a>
+    <?php endforeach; ?>
+</nav>
+
 <div class="atable-wrap">
-    <table class="atable atable--full">
+    <table class="atable aptable">
         <thead>
             <tr>
                 <th scope="col">SKU</th>
@@ -63,17 +96,60 @@ if ($ed !== null) {
                         <span class="atable__sub"><?= e($p['brand'] ?? '—') ?> · <?= e($p['frame_shape'] ?? '—') ?></span>
                     </td>
                     <td><?= e($p['category_name'] ?? '—') ?></td>
-                    <td class="num">
-                        <?= money((int) $p['price']) ?>
+                    <?php /* Giá CANH TRÁI, không canh phải — theo bản thiết kế, và
+                             khác cột "Tồn" ngay bên cạnh (cột đó canh phải).
+
+                             Canh phải chỉ đáng khi các con số cần so với nhau theo
+                             cột dọc. Ở đây thì không: giá bán và giá gạch ngang là
+                             hai dòng CHỒNG NHAU trong cùng một ô, và cái người ta so
+                             là hai dòng ấy với nhau chứ không phải giá của hàng này
+                             với hàng kia. Canh trái thì hai dòng thẳng lề, đọc ra
+                             ngay là "giá này thay cho giá kia". */ ?>
+                    <td class="apprice">
+                        <span class="apprice__now"><?= money((int) $p['price']) ?></span>
                         <?php if (!empty($p['compare_at_price'])): ?>
-                            <span class="atable__sub"><?= money((int) $p['compare_at_price']) ?></span>
+                            <span class="apprice__was"><?= money((int) $p['compare_at_price']) ?></span>
                         <?php endif; ?>
                     </td>
                     <td class="num<?= (int) $p['stock_quantity'] <= 0 ? ' is-danger' : '' ?>"><?= (int) $p['stock_quantity'] ?></td>
+                    <?php
+                    /*
+                     * BA MỨC, KHÔNG PHẢI HAI — theo bản thiết kế.
+                     *
+                     * Trước đây cột này chỉ đọc `status`: còn hàng hoặc hết hàng.
+                     * Nhưng "còn 2 cái" và "còn 200 cái" cùng đeo một nhãn xanh,
+                     * nên nhìn cả bảng không ra chỗ nào sắp cạn — muốn biết phải
+                     * đọc sang cột Tồn từng dòng một.
+                     *
+                     * `status` VẪN LÀ CHÂN LÝ cho mức "Hết hàng": một sản phẩm có
+                     * thể bị tắt bán dù kho còn hàng (hàng lỗi, hàng giữ cho khách
+                     * đặt riêng). Chỉ mức giữa mới suy từ số tồn.
+                     *
+                     * Ngưỡng 5 lấy đúng của thẻ "Sắp hết hàng" ở trang Tổng quan
+                     * (DashboardController) — hai chỗ nói về cùng một tập sản phẩm
+                     * thì phải cùng một ngưỡng, nếu không bảng này bảo "sắp hết"
+                     * mà bảng kia không kể tên.
+                     */
+                    $conBan = $p['status'] === 'in_stock';
+                    $sapHet = $conBan && (int) $p['stock_quantity'] <= 5;
+                    ?>
                     <td>
-                        <span class="badge badge--<?= e($p['status']) ?>"><?= $p['status'] === 'in_stock' ? 'Còn hàng' : 'Hết hàng' ?></span>
+                        <span class="apstatus">
+                        <?php if (!$conBan): ?>
+                            <span class="badge badge--out_of_stock">Hết hàng</span>
+                        <?php elseif ($sapHet): ?>
+                            <span class="badge badge--low_stock">Sắp hết</span>
+                        <?php else: ?>
+                            <span class="badge badge--in_stock">Còn hàng</span>
+                        <?php endif; ?>
+
+                        <?php /* "Đang ẩn" là TRUNG TÍNH, không phải đỏ. Trước đây nó
+                                 đeo .badge--cancelled — cùng sắc với "Đã huỷ" ở bảng
+                                 đơn hàng, tức là đọc ra như một sự cố. Ẩn một sản
+                                 phẩm là việc bình thường và cố ý: hàng chưa lên kệ,
+                                 hàng theo mùa. Bản thiết kế cho nó màu xám. */ ?>
                         <?php if (!$p['is_visible']): ?>
-                            <span class="badge badge--cancelled">Đang ẩn</span>
+                            <span class="badge badge--neutral">Đang ẩn</span>
                         <?php endif; ?>
                         <?php /* .badge--featured, KHÔNG phải .badge--new: xem khối
                                  "Nổi bật" trong admin.css. Đỏ thương hiệu đứng cạnh
@@ -81,6 +157,7 @@ if ($ed !== null) {
                         <?php if ($p['is_featured']): ?>
                             <span class="badge badge--featured">Nổi bật</span>
                         <?php endif; ?>
+                        </span>
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">

@@ -465,15 +465,18 @@ class BookingModel extends BaseModel
     /**
      * Danh sách cho khu quản trị, kèm tên cơ sở.
      */
-    public static function withStore(string $status = '', int $limit = 100): array
-    {
-        $where  = '';
-        $params = [];
+    public static function withStore(
+        string $status = '',
+        int $limit = 100,
+        string $q = '',
+        string $storeId = ''
+    ): array {
+        /* Ba bộ lọc CỘNG ĐƯỢC với nhau, nên gom điều kiện vào mảng rồi mới
+           ghép — thêm bộ lọc thứ tư sau này chỉ là đẩy thêm một phần tử.
 
-        if ($status !== '') {
-            $where = ' WHERE a.status = :status';
-            $params['status'] = $status;
-        }
+           $q và $storeId thêm 2026-08-28 cho bản thiết kế "Lịch hẹn.dc.html";
+           để mặc định rỗng nên mọi nơi gọi cũ vẫn chạy y như trước. */
+        [$where, $params] = self::locWithStore($status, $q, $storeId);
 
         return Database::fetchAll(
             "SELECT a.*, s.name AS store_name, s.code AS store_code
@@ -484,5 +487,75 @@ class BookingModel extends BaseModel
               LIMIT " . max(1, $limit),
             $params
         );
+    }
+
+    /**
+     * Đếm lịch hẹn theo từng trạng thái, TRONG PHẠM VI hai bộ lọc kia.
+     *
+     * Vì sao không đếm toàn bảng cho gọn: dải viên lọc đứng ngay trên danh
+     * sách, nên "Chờ xác nhận 10" mà bên dưới chỉ có 2 dòng thì con số ấy nói
+     * về một danh sách người dùng không nhìn thấy. Đếm cùng phạm vi thì hai
+     * thứ luôn khớp nhau.
+     *
+     * Trả về mảng có ĐỦ mọi khoá trạng thái (giá trị 0 nếu không có dòng nào),
+     * cộng khoá '' là tổng — để view khỏi phải tự phòng khoá thiếu.
+     */
+    public static function statusCounts(string $q = '', string $storeId = ''): array
+    {
+        [$where, $params] = self::locWithStore('', $q, $storeId);
+
+        $rows   = Database::fetchAll(
+            "SELECT a.status, COUNT(*) AS n
+               FROM appointments a
+               JOIN stores s ON s.id = a.store_id
+               {$where}
+              GROUP BY a.status",
+            $params
+        );
+
+        $counts = ['' => 0];
+
+        foreach (array_keys(self::STATUSES) as $key) {
+            $counts[$key] = 0;
+        }
+
+        foreach ($rows as $row) {
+            $counts[$row['status']] = (int) $row['n'];
+            $counts['']            += (int) $row['n'];
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Mệnh đề WHERE + tham số dùng chung cho withStore() và statusCounts().
+     *
+     * @return array{0: string, 1: array<string, string>}
+     */
+    private static function locWithStore(string $status, string $q, string $storeId): array
+    {
+        $dieuKien = [];
+        $params   = [];
+
+        if ($status !== '') {
+            $dieuKien[]       = 'a.status = :status';
+            $params['status'] = $status;
+        }
+
+        if ($storeId !== '') {
+            $dieuKien[]      = 'a.store_id = :co_so';
+            $params['co_so'] = $storeId;
+        }
+
+        if ($q !== '') {
+            /* Ba cột người ta thật sự gõ vào ô tìm: mã lịch đọc qua điện
+               thoại, tên khách, số điện thoại. addcslashes để dấu % hay _
+               trong từ khoá không thành ký tự đại diện của LIKE. */
+            $dieuKien[] = '(a.code LIKE :tim_code OR a.full_name LIKE :tim_ten OR a.phone LIKE :tim_sdt)';
+            $needle     = '%' . addcslashes($q, '%_\\') . '%';
+            $params += ['tim_code' => $needle, 'tim_ten' => $needle, 'tim_sdt' => $needle];
+        }
+
+        return [$dieuKien !== [] ? 'WHERE ' . implode(' AND ', $dieuKien) : '', $params];
     }
 }

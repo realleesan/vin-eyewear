@@ -12,11 +12,43 @@
  * Cột cuối nay là "Zalo CSKH": tin đã tới chưa, và nút đẩy lại nếu chưa.
  */
 ?>
-<header class="ahead">
-    <h1 class="ahead__title">Yêu cầu liên hệ</h1>
-    <p class="ahead__lead">
-        <?= (int) $total ?> yêu cầu<?= $totalPages > 1 ? ' · trang ' . (int) $page . '/' . (int) $totalPages : '' ?>
-    </p>
+<?php
+/* Đường dẫn cho từng viên lọc, giữ nguyên từ khoá đang gõ. Không mang `page`
+   theo: đổi bộ lọc thì phải về trang 1, chứ không phải trang 3 của kết quả cũ. */
+$duongDanZalo = static function (string $key) use ($q): string {
+    $tham = array_filter(['q' => $q, 'zalo' => $key]);
+
+    return '/quan-tri/lien-he' . ($tham !== [] ? '?' . http_build_query($tham) : '');
+};
+?>
+<header class="ahead ahead--row">
+    <div>
+        <h1 class="ahead__title">Yêu cầu liên hệ</h1>
+        <?php /* Dòng dẫn đếm luôn số CHƯA TỚI ZALO — theo bản thiết kế. Tổng
+                 số yêu cầu một mình không nói được gì để làm; con số đáng đọc
+                 là bao nhiêu người đang chờ gọi lại mà CSKH chưa biết. Số trang
+                 chuyển xuống chân bảng. */ ?>
+        <p class="ahead__lead">
+            <?= (int) $total ?> yêu cầu<?php if ($coCotZalo && $chuaDay > 0): ?>
+                · <?= (int) $chuaDay ?> chưa tới Zalo CSKH
+            <?php endif; ?>
+        </p>
+    </div>
+
+    <div class="ahead__tools">
+        <form class="asearch" method="get" action="/quan-tri/lien-he" role="search">
+            <?php if ($zalo !== ''): ?>
+                <input type="hidden" name="zalo" value="<?= e($zalo) ?>">
+            <?php endif; ?>
+            <label class="sr-only" for="lhTim">Tìm yêu cầu liên hệ</label>
+            <input type="search" id="lhTim" name="q" value="<?= e($q) ?>"
+                   placeholder="Tìm tên, SĐT, email, nội dung…">
+            <button type="submit" class="astatus__save astatus__save--ghost">Tìm</button>
+            <?php if ($q !== ''): ?>
+                <a class="apanel__more" href="<?= e($duongDanZalo($zalo)) ?>">Xoá tìm kiếm</a>
+            <?php endif; ?>
+        </form>
+    </div>
 </header>
 
 <?php if ($coCotZalo && $chuaDay > 0): ?>
@@ -49,11 +81,32 @@
     </div>
 <?php endif; ?>
 
+<?php /* Dải viên lọc theo tình trạng đẩy Zalo. Chỉ hiện khi CSDL có cột ấy —
+         chưa chạy migration thì cả ba viên đều đếm cùng một tập, tức là ba
+         cái nút không phân biệt được gì, và dải cảnh báo ngay trên đã nói rõ
+         phải chạy file nào. */ ?>
+<?php if ($coCotZalo): ?>
+    <nav class="atabs" aria-label="Lọc theo tình trạng gửi Zalo">
+        <?php foreach (['' => 'Tất cả', 'chua' => 'Chưa gửi', 'da' => 'Đã gửi'] as $key => $nhan): ?>
+            <a class="atabs__item<?= $zalo === $key ? ' is-active' : '' ?>"
+               href="<?= e($duongDanZalo((string) $key)) ?>"
+               <?= $zalo === $key ? 'aria-current="true"' : '' ?>>
+                <?= e($nhan) ?>
+                <span class="atabs__num"><?= (int) ($zaloCounts[$key === '' ? '' : $key] ?? 0) ?></span>
+            </a>
+        <?php endforeach; ?>
+    </nav>
+<?php endif; ?>
+
 <?php if ($contacts === []): ?>
-    <p class="apanel__empty">Chưa có yêu cầu liên hệ nào.</p>
+    <p class="apanel__empty">
+        <?= $q !== '' || $zalo !== ''
+            ? 'Không có yêu cầu nào khớp bộ lọc.'
+            : 'Chưa có yêu cầu liên hệ nào.' ?>
+    </p>
 <?php else: ?>
     <div class="atable-wrap">
-        <table class="atable atable--full">
+        <table class="atable alctable">
             <thead>
                 <tr>
                     <th scope="col">Gửi lúc</th>
@@ -69,7 +122,7 @@
                         <td><?= e(formatDate($c['created_at'], 'd/m/Y H:i')) ?></td>
 
                         <td>
-                            <?= e($c['full_name']) ?>
+                            <span class="alcname"><?= e($c['full_name']) ?></span>
                             <?php /* Số điện thoại là đường trả lời chính — bấm được
                                      để gọi thẳng từ máy ở quầy. */ ?>
                             <span class="atable__sub">
@@ -82,9 +135,13 @@
                             <?php endif; ?>
                         </td>
 
-                        <td class="atable__msg"><?= e($c['message']) ?></td>
+                        <?php /* title= giữ nguyên văn cả tin: ô này cắt còn một dòng
+                                 (xem .alctable .atable__msg), nên rê chuột lên phải
+                                 đọc được phần bị cắt — nếu không thì một yêu cầu dài
+                                 coi như không đọc được ở đâu cả. */ ?>
+                        <td class="atable__msg" title="<?= e($c['message']) ?>"><?= e($c['message']) ?></td>
 
-                        <td>
+                        <td class="alczalo">
                             <?php if ($daDay): ?>
                                 <span class="badge badge--completed">Đã gửi</span>
                                 <span class="atable__sub">
@@ -115,17 +172,32 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
-    </div>
 
-    <?php if ($totalPages > 1): ?>
-        <nav class="pager" aria-label="Phân trang">
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <?php if ($i === $page): ?>
-                    <span class="pager__link is-current" aria-current="page"><?= $i ?></span>
-                <?php else: ?>
-                    <a class="pager__link" href="/quan-tri/lien-he?page=<?= $i ?>"><?= $i ?></a>
-                <?php endif; ?>
-            <?php endfor; ?>
-        </nav>
-    <?php endif; ?>
+        <?php /* Chân bảng nằm TRONG khung, cùng lối với các bảng khác. Đường
+                 dẫn phân trang phải mang theo cả bộ lọc, nếu không bấm sang
+                 trang 2 là mất từ khoá vừa gõ. */ ?>
+        <div class="aofoot">
+            <p class="aofoot__count">
+                Đang hiện <?= count($contacts) ?> / <?= (int) $total ?> yêu cầu
+                <?php if ($totalPages > 1): ?>· trang <?= (int) $page ?>/<?= (int) $totalPages ?><?php endif; ?>
+            </p>
+
+            <?php if ($totalPages > 1): ?>
+                <nav class="pager" aria-label="Phân trang">
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <?php
+                        $thamTrang = array_filter(['q' => $q, 'zalo' => $zalo])
+                            + ($i > 1 ? ['page' => $i] : []);
+                        ?>
+                        <?php if ($i === $page): ?>
+                            <span class="pager__link is-current" aria-current="page"><?= $i ?></span>
+                        <?php else: ?>
+                            <a class="pager__link"
+                               href="/quan-tri/lien-he<?= $thamTrang !== [] ? '?' . e(http_build_query($thamTrang)) : '' ?>"><?= $i ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+                </nav>
+            <?php endif; ?>
+        </div>
+    </div>
 <?php endif; ?>

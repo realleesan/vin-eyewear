@@ -8,19 +8,25 @@
 $ed = $editing;
 ?>
 <?php partial('admin/_layout/crud-head', [
-    'title' => 'Danh mục', 'lead' => count($categories) . ' danh mục',
+    'title' => 'Danh mục',
+    /* Dòng dẫn nói ra Ý NGHĨA CỦA CỘT THỨ TỰ — theo bản thiết kế. Con số ở cột
+       ấy trông như một mã nội bộ; thật ra nó quyết định thứ tự các mục trên
+       menu trang bán hàng, và đó là thứ duy nhất trên bảng này mà khách hàng
+       nhìn thấy. Không nói ra thì không ai đoán được. */
+    'lead' => count($categories) . ' danh mục · thứ tự trên bảng chính là thứ tự hiện trên menu trang bán hàng',
     'base' => '/quan-tri/danh-muc', 'canEdit' => $canEdit, 'editing' => $ed,
     'addLabel' => '+ Thêm danh mục',
 ]); ?>
 
 <div class="atable-wrap">
-    <table class="atable atable--full">
+    <table class="atable admtable">
         <thead>
             <tr>
                 <th scope="col">Thứ tự</th>
                 <th scope="col">Tên</th>
                 <th scope="col">Slug</th>
                 <th scope="col">Mô tả</th>
+                <th scope="col">Sản phẩm</th>
                 <th scope="col">Hiển thị</th>
                 <?php if ($canEdit): ?><th scope="col">Thao tác</th><?php endif; ?>
             </tr>
@@ -29,12 +35,19 @@ $ed = $editing;
             <?php foreach ($categories as $c): ?>
                 <tr>
                     <td class="num"><?= (int) $c['sort_order'] ?></td>
-                    <td><?= e($c['name']) ?></td>
+                    <td class="admname"><?= e($c['name']) ?></td>
                     <td><code><?= e($c['slug']) ?></code></td>
-                    <td class="atable__msg"><?= e(excerpt($c['description'] ?? '', 60)) ?></td>
+                    <td class="atable__msg" title="<?= e($c['description'] ?? '') ?>"><?= e(excerpt($c['description'] ?? '', 60)) ?></td>
+                    <?php /* Số sản phẩm đang thuộc danh mục — câu người ta hỏi ngay
+                             trước khi bấm Xoá. */ ?>
+                    <td class="num"><?= (int) ($c['product_count'] ?? 0) ?></td>
                     <td>
-                        <span class="badge badge--<?= $c['is_visible'] ? 'in_stock' : 'cancelled' ?>">
-                            <?= $c['is_visible'] ? 'Hiện' : 'Ẩn' ?>
+                        <?php /* "Đang ẩn" là TRUNG TÍNH, không phải đỏ — cùng luật với
+                                 nhãn ẩn ở bảng sản phẩm. Ẩn một danh mục là việc bình
+                                 thường và cố ý (mục theo mùa, mục chưa đủ hàng), không
+                                 phải một sự cố. */ ?>
+                        <span class="badge badge--<?= $c['is_visible'] ? 'in_stock' : 'neutral' ?>">
+                            <?= $c['is_visible'] ? 'Đang hiện' : 'Đang ẩn' ?>
                         </span>
                     </td>
                     <?php if ($canEdit): ?>
