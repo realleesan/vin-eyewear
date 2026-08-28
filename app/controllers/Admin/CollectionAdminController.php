@@ -163,7 +163,6 @@ class CollectionAdminController extends AdminController
             'tagline'     => trim((string) ($_POST['tagline'] ?? '')) ?: null,
             'intro'       => trim((string) ($_POST['intro'] ?? '')) ?: null,
             'launched_at' => $this->toDate($_POST['launched_at'] ?? ''),
-            'sort_order'  => (int) ($_POST['sort_order'] ?? 0),
             'is_visible'  => isset($_POST['is_visible']) ? 1 : 0,
         ];
 

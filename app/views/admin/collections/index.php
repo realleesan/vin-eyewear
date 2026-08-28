@@ -122,7 +122,6 @@ $dongSignature = implode("\n", array_map(
             <tr>
                 <th scope="col">Tên</th>
                 <th scope="col">Ra mắt</th>
-                <th scope="col">Thứ tự</th>
                 <th scope="col">Sản phẩm</th>
                 <th scope="col">Hiển thị</th>
                 <?php if ($canEdit): ?><th scope="col">Thao tác</th><?php endif; ?>
@@ -148,7 +147,6 @@ $dongSignature = implode("\n", array_map(
                         <span class="atable__sub"><code><?= e($c['slug']) ?></code></span>
                     </td>
                     <td><?= !empty($c['launched_at']) ? e(formatDate($c['launched_at'])) : '—' ?></td>
-                    <td class="num"><?= (int) $c['sort_order'] ?></td>
                     <td class="num">
                         <?php /* 0 in gạch trần chứ không in số 0: bộ chưa gắn
                                  hàng nào là chuyện bình thường lúc mới tạo, còn
@@ -205,7 +203,7 @@ $dongSignature = implode("\n", array_map(
 
             <div class="aform__sect">
                 <span class="aform__sect-name">Cơ bản</span>
-                <span class="aform__sect-note">tên, đường dẫn và thứ tự trưng bày</span>
+                <span class="aform__sect-note">tên, đường dẫn và ngày ra mắt</span>
             </div>
 
             <div class="field field--wide">
@@ -242,16 +240,10 @@ $dongSignature = implode("\n", array_map(
                 <label for="launched_at">Ngày ra mắt</label>
                 <input type="date" id="launched_at" name="launched_at"
                        value="<?= e($ed['launched_at'] ?? '') ?>">
-                <p class="field__hint">Trang công khai chỉ hiện tháng/năm.</p>
-            </div>
-
-            <div class="field">
-                <label for="sort_order">Thứ tự trưng bày</label>
-                <input type="number" id="sort_order" name="sort_order" step="10"
-                       value="<?= e((string) ($ed['sort_order'] ?? 0)) ?>">
                 <p class="field__hint">
-                    Số nhỏ đứng trước. Nhảy 10 một bậc để sau này chèn thêm bộ vào
-                    giữa mà không phải đánh số lại cả bảng.
+                    Trang công khai chỉ hiện tháng/năm. Đây cũng là thứ QUYẾT ĐỊNH
+                    thứ tự trưng bày: bộ ra mắt gần nhất đứng trước. Bỏ trống thì
+                    bộ đó rơi xuống cuối.
                 </p>
             </div>
 

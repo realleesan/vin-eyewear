@@ -28,17 +28,19 @@ class CollectionModel extends BaseModel
     protected static string $table = 'collections';
 
     /**
-     * Thứ tự trưng bày dùng CHUNG cho mọi nơi.
+     * Thứ tự sắp xếp dùng CHUNG cho mọi nơi: bộ ra mắt gần nhất lên đầu.
      *
-     * sort_order trước, rồi mới tới ngày ra mắt mới nhất. Chỉ sắp theo ngày
-     * là không đủ: hai bộ ra cùng ngày thì thứ tự thành hên xui, và cửa hàng
-     * không có cách nào đẩy một bộ cũ lên đầu khi bộ đó còn hàng.
+     * TRƯỚC ĐÂY còn một cột `sort_order` do nhân viên tự đánh số đứng trước
+     * ngày ra mắt. Đã bỏ khỏi giao diện quản trị: nó bắt người nhập phải nhớ
+     * số của cả bảng để chèn một bộ mới, trong khi thứ tự theo ngày ra mắt là
+     * thứ cửa hàng thực sự muốn. Cột vẫn còn trong CSDL nhưng KHÔNG còn chỗ
+     * nào đọc — đừng đưa nó trở lại câu ORDER BY mà không đưa lại cả ô nhập,
+     * vì dữ liệu cũ trong đó nay là số chết.
      *
-     * `name` chốt cuối để hai bộ trùng cả sort_order lẫn ngày vẫn ra thứ tự
-     * ổn định giữa các lần tải — không thì phân trang và ảnh chụp màn hình
-     * đều nhảy lung tung.
+     * `name` chốt cuối để hai bộ trùng ngày vẫn ra thứ tự ổn định giữa các
+     * lần tải — không thì phân trang và ảnh chụp màn hình đều nhảy lung tung.
      */
-    private const ORDER = 'sort_order ASC, launched_at DESC, name ASC';
+    private const ORDER = 'launched_at DESC, name ASC';
 
     /** Bộ sưu tập đang hiển thị, cho trang /bo-suu-tap và trang chủ. */
     public static function visible(): array
