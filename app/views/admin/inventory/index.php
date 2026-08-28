@@ -20,7 +20,21 @@ $tabs = [
 $giuQ = $q !== '' ? ['q' => $q] : [];
 
 $duongDanLoc = static function (string $key) use ($giuQ): string {
+    /* KHÔNG mang `page` sang: đổi viên lọc là đổi hẳn tập đang xem, và "trang
+       3 của Sắp hết" không liên quan gì tới trang 3 của Tất cả. Giữ lại số
+       trang thì bấm sang một viên chỉ có hai trang là rơi vào trang rỗng. */
     $tham = $giuQ + ($key !== '' ? ['loc' => $key] : []);
+
+    return '/quan-tri/ton-kho' . ($tham !== [] ? '?' . http_build_query($tham) : '');
+};
+
+/* Địa chỉ của MỘT trang, giữ nguyên viên lọc và từ khoá đang xem. */
+$duongDanTrang = static function (int $so) use ($q, $filter): string {
+    $tham = array_filter([
+        'q'    => $q,
+        'loc'  => $filter,
+        'page' => $so > 1 ? (string) $so : '',
+    ], static fn (string $v): bool => $v !== '');
 
     return '/quan-tri/ton-kho' . ($tham !== [] ? '?' . http_build_query($tham) : '');
 };
@@ -132,6 +146,11 @@ $duongDanLoc = static function (string $key) use ($giuQ): string {
                                 <input type="hidden" name="id" value="<?= e($p['id']) ?>">
                                 <input type="hidden" name="loc" value="<?= e($filter) ?>">
                                 <input type="hidden" name="q" value="<?= e($q) ?>">
+                                <?php /* Giữ số trang qua lượt lưu — xem chú thích ở
+                                         InventoryAdminController::updateStock, kể cả
+                                         chuyện dòng vừa sửa có thể nhảy sang trang
+                                         khác vì bảng sắp theo tồn. */ ?>
+                                <input type="hidden" name="page" value="<?= (int) $page ?>">
 
                                 <?php
                                 /*
@@ -177,8 +196,22 @@ $duongDanLoc = static function (string $key) use ($giuQ): string {
                  đây, nhưng cũng là trật tự không ai đoán ra nếu không nói. */ ?>
         <div class="aofoot">
             <p class="aofoot__count">
-                Đang hiện <?= count($products) ?> sản phẩm · sắp theo tồn thấp nhất trước
+                Đang hiện <?= count($products) ?> / <?= (int) $total ?> sản phẩm<?php
+                    if ($totalPages > 1): ?> · trang <?= (int) $page ?>/<?= (int) $totalPages ?><?php
+                    endif; ?> · sắp theo tồn thấp nhất trước
             </p>
+
+            <?php if ($totalPages > 1): ?>
+                <nav class="pager" aria-label="Phân trang">
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <?php if ($i === $page): ?>
+                            <span class="pager__link is-current" aria-current="page"><?= $i ?></span>
+                        <?php else: ?>
+                            <a class="pager__link" href="<?= e($duongDanTrang($i)) ?>"><?= $i ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+                </nav>
+            <?php endif; ?>
         </div>
     </div>
 <?php endif; ?>
