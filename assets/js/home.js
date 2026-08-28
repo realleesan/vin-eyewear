@@ -1,12 +1,14 @@
 /**
  * assets/js/home.js — phần động của trang chủ.
  *
- * Bốn việc, gói trong một file vì cả bốn đều chỉ chạy ở đúng một trang:
+ * Năm việc, gói trong một file vì cả năm đều chỉ chạy ở đúng một trang:
  *
  *   1. băng ảnh hero (ba ảnh) — TỰ CHẠY
  *   2. hộp thoại "kiểm tra 5 phút" (chọn tròng · chọn gọng)
  *   3. băng trượt khối đánh giá — TỰ CHẠY
  *   4. hai băng trượt sản phẩm ("mới về" và "bán chạy") — chỉ đổi khi bấm
+ *   5. băng trượt khối danh mục — chỉ đổi khi bấm, và CHỈ TỒN TẠI khi có quá
+ *      ba danh mục (dưới mức đó view in ra lưới tĩnh, không có gì để nối vào)
  *
  * ĐỒNG HỒ ĐẾM NGƯỢC của dải ưu đãi từng là việc số 2, bỏ cùng tính năng sự
  * kiện (2026-08-26) — nó đếm tới ends_at của một bài trong bảng `events`.
@@ -19,8 +21,12 @@
  * TẤT CẢ ĐỀU LÀ TĂNG CƯỜNG. Không có file này thì:
  *   · hero đứng ở ảnh đầu tiên, hai mũi tên không làm gì;
  *   · hai thẻ "chọn tròng / chọn gọng" là liên kết thường sang trang danh mục;
- *   · băng đánh giá đứng ở năm thẻ đầu, hai băng sản phẩm đứng ở bốn thẻ đầu.
- * Không khối nào biến mất, không lối đi nào gãy.
+ *   · băng đánh giá đứng ở năm thẻ đầu, hai băng sản phẩm đứng ở bốn thẻ đầu,
+ *     băng danh mục đứng ở ba thẻ đầu.
+ * Không khối nào biến mất, không lối đi nào gãy. Thẻ nằm ngoài cửa sổ bị vùng
+ * cắt overflow:hidden che đi chứ không mất khỏi DOM, nên trình đọc màn hình và
+ * máy tìm kiếm vẫn thấy đủ; còn người dùng bằng mắt thì mỗi khối đều có một
+ * đường đi tới trang danh sách đầy đủ ngay dưới ("Tất cả sản phẩm →").
  *
  * Nạp qua bảng $pageScripts trong _layout/master.php ('home/index'), có defer.
  */
@@ -692,6 +698,37 @@
                 prev:   '[data-strip="prev"]',
                 next:   '[data-strip="next"]'
             });
+        });
+    })();
+
+    /* ============================================================
+       5. BĂNG TRƯỢT DANH MỤC
+
+       querySelector (số ít) chứ không querySelectorAll: trang chủ chỉ có MỘT
+       khối danh mục, khác hai băng sản phẩm ở trên.
+
+       KHỐI NÀY CÓ THỂ KHÔNG TỒN TẠI, và đó là trạng thái bình thường chứ
+       không phải lỗi: _layout/home/categories.php chỉ dựng băng khi có QUÁ BA
+       danh mục. Từ ba trở xuống nó in ra một lưới tĩnh không mũi tên, vì trên
+       màn hẹp băng trượt chỉ hiện một thẻ một lúc — ba thẻ mà bắt bấm mũi tên
+       mới thấy thì tệ hơn là để chúng xuống hàng. Lý do đầy đủ ở đầu file view
+       đó.
+
+       KHÔNG truyền autoplay: cùng lý lẽ với hai băng sản phẩm — khách đang cân
+       nhắc vào danh mục nào, thứ họ đang nhìn mà tự trôi đi là một cách gây
+       bực.
+       ============================================================ */
+
+    (function categoryStrip() {
+        var strip = document.querySelector('[data-category-strip]');
+
+        if (!strip) return;
+
+        makeStrip(strip, {
+            window: '.hcat__window',
+            track:  '.hcat__track',
+            prev:   '[data-category="prev"]',
+            next:   '[data-category="next"]'
         });
     })();
 })();

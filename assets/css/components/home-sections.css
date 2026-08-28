@@ -642,18 +642,61 @@
    Markup: app/views/_layout/home/categories.php
    ============================================================ */
 
-/* --hcat-cols do categories.php đặt nội tuyến theo SỐ danh mục có thật (3 hoặc
-   4). Khoá cứng 3 cột như bản thiết kế thì danh mục thứ tư rơi xuống một hàng
-   riêng, bỏ trống hai phần ba chiều ngang — xem chú thích trong file view đó.
-   Giá trị dự phòng 3 là con số của bản thiết kế, dùng khi thiếu style nội tuyến. */
+/* BA CỘT CỐ ĐỊNH, đúng bản thiết kế.
+
+   Trước đây số cột chạy theo số danh mục qua biến --hcat-cols đặt nội tuyến
+   (4 khi chia hết cho 4, còn lại 3). Bỏ đi vì nó chỉ vá được đúng con số 4:
+   5 danh mục là thẻ mồ côi quay lại, mà cỡ thẻ thì nhảy mỗi lần quản trị viên
+   thêm bớt một danh mục. Nay thừa ra bao nhiêu thì đẩy sang .hcat__track —
+   xem đầu app/views/_layout/home/categories.php.
+
+   .hcat__grid chỉ còn dùng cho trường hợp TỪ BA DANH MỤC TRỞ XUỐNG. */
 .hcat__grid {
     display: grid;
-    grid-template-columns: repeat(var(--hcat-cols, 3), minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 24px;
     margin: 0;
     padding: 0;
     list-style: none;
 }
+
+/* ── Băng trượt, dùng khi có QUÁ BA danh mục ──────────────────────────────
+   Markup: _layout/home/categories.php · Hành vi: makeStrip() trong home.js
+
+   Cùng cấu trúc ba lớp với .pstrip và .hrev: khung ngoài định vị hai mũi tên ·
+   cửa sổ cắt · đường ray trượt. Không gộp selector với .pstrip vì hai băng
+   khác nhau ở số thẻ mỗi khung nhìn (3 và 4) và ở khoảng cột (24px và 20px) —
+   gộp lại thì mỗi lần chỉnh một bên phải nhớ cả bên kia. */
+.hcat__strip { position: relative; }
+
+/* margin 56px chừa chỗ cho hai mũi tên (rộng 44px), còn 6px thở hai bên —
+   cùng con số với .pstrip__window và .hrev__window.
+
+   ĐỆM DỌC KHÔNG ĐỐI XỨNG: thẻ danh mục nhấc lên 4px khi rê chuột và đổ bóng
+   --h-shadow-lift toả xuống (xem .ccat__link:hover ngay trên). overflow:hidden
+   của cửa sổ sẽ xén mất cái bóng đó nếu không chừa chỗ; margin-bottom âm kéo
+   lại phần đệm thừa để khoảng cách xuống nút "Tất cả sản phẩm" không đội lên. */
+.hcat__window {
+    overflow: hidden;
+    margin: 0 56px -18px;
+    padding: 6px 0 26px;
+}
+
+.hcat__track {
+    display: flex;
+    align-items: stretch;
+    gap: 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* 0.35s, cùng nhịp với .pstrip__track — băng này cũng KHÔNG tự chạy. */
+    transition: transform 0.35s ease;
+}
+
+/* Ba thẻ một khung nhìn: (100% − hai khoảng 24px) ÷ 3.
+   Con số 3 này đi cặp với $truot trong categories.php — sửa một chỗ mà quên
+   chỗ kia thì mũi tên hiện ra trong khi mọi thẻ đã nằm sẵn trong khung. */
+.hcat__track > * { flex: 0 0 calc((100% - 48px) / 3); }
 
 .ccat { display: flex; }
 
@@ -756,11 +799,22 @@
 
 @media (max-width: 1024px) {
     .hcat__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .hcat__track > * { flex: 0 0 calc((100% - 24px) / 2); }
     .ccat__media { height: 240px; }
 }
 
 @media (max-width: 720px) {
     .hcat__grid { grid-template-columns: 1fr; gap: 18px; }
+    .hcat__track { gap: 18px; }
+    .hcat__track > * { flex: 0 0 100%; }
+
+    /* Màn hẹp không còn chỗ cho hai lề 56px: chúng ăn mất 112px trên một bề
+       ngang chỉ 360px. Mũi tên chuyển sang NẰM ĐÈ lên hai mép thẻ và nhích ra
+       ngoài 6px — đúng cách .pstrip xử lý ở mốc 560px. */
+    .hcat__window { margin-inline: 8px; }
+
+    .hcat__arrow--prev { left: -6px; }
+    .hcat__arrow--next { right: -6px; }
 }
 
 /* ============================================================
@@ -1160,7 +1214,8 @@ body.is-modal-open { overflow: hidden; }
 
 .qface__arrow,
 .hrev__arrow,
-.pstrip__arrow {
+.pstrip__arrow,
+.hcat__arrow {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
@@ -1180,7 +1235,8 @@ body.is-modal-open { overflow: hidden; }
 
 .qface__arrow svg,
 .hrev__arrow svg,
-.pstrip__arrow svg {
+.pstrip__arrow svg,
+.hcat__arrow svg {
     width: 17px;
     height: 17px;
     fill: none;
@@ -1192,18 +1248,22 @@ body.is-modal-open { overflow: hidden; }
 
 .qface__arrow--prev,
 .hrev__arrow--prev,
-.pstrip__arrow--prev { left: 0; }
+.pstrip__arrow--prev,
+.hcat__arrow--prev { left: 0; }
 
 .qface__arrow--next,
 .hrev__arrow--next,
-.pstrip__arrow--next { right: 0; }
+.pstrip__arrow--next,
+.hcat__arrow--next { right: 0; }
 
 .qface__arrow:hover:not(:disabled),
 .qface__arrow:focus-visible:not(:disabled),
 .hrev__arrow:hover:not(:disabled),
 .hrev__arrow:focus-visible:not(:disabled),
 .pstrip__arrow:hover:not(:disabled),
-.pstrip__arrow:focus-visible:not(:disabled) {
+.pstrip__arrow:focus-visible:not(:disabled),
+.hcat__arrow:hover:not(:disabled),
+.hcat__arrow:focus-visible:not(:disabled) {
     border-color: var(--brand);
     color: var(--brand);
 }
@@ -1212,7 +1272,8 @@ body.is-modal-open { overflow: hidden; }
    nhảy ra nhảy vào mỗi lần trượt còn khó chịu hơn. */
 .qface__arrow:disabled,
 .hrev__arrow:disabled,
-.pstrip__arrow:disabled {
+.pstrip__arrow:disabled,
+.hcat__arrow:disabled {
     border-color: var(--h-card-line);
     color: #d8c7ba;
     cursor: default;
@@ -1230,8 +1291,8 @@ body.is-modal-open { overflow: hidden; }
    vì hai băng khác nhau ở số thẻ mỗi khung nhìn, khoảng cột và chiều cao —
    gộp lại thì mỗi lần chỉnh một bên phải nhớ cả bên kia.
 
-   MŨI TÊN thì có gộp: xem cụm .hrev__arrow phía trên, ba băng của trang chủ
-   dùng đúng một dáng nút.
+   MŨI TÊN thì có gộp: xem cụm .hrev__arrow phía trên, bốn băng của trang chủ
+   (kể cả .hcat của khối danh mục) dùng đúng một dáng nút.
    ============================================================ */
 
 .pstrip { position: relative; }
