@@ -49,6 +49,27 @@ class ReviewAdminController extends AdminController
             'diemTrungBinh' => Database::fetchValue(
                 "SELECT AVG(rating) FROM reviews WHERE status = 'published'"
             ),
+            /*
+             * Cột `reply` chỉ có từ migration 2026-08-28-phan-hoi-danh-gia.
+             *
+             * PHẢI HỎI TRƯỚC KHI DÙNG, cùng lý do với `zalo_sent_at` ở trang
+             * Liên hệ: chưa chạy file nâng cấp mà cứ đọc cột đó thì cả trang
+             * đổ lỗi 1054. Chưa có cột thì view ẩn hẳn phần phản hồi và nói rõ
+             * phải chạy file nào — trang vẫn duyệt được đánh giá như thường.
+             */
+            'coCotReply' => Database::columnExists('reviews', 'reply'),
+            /* ?tra-loi=<id> mở hộp soạn phản hồi. Truy vấn riêng: đánh giá đang
+               mở có thể nằm ở trang khác của phân trang hoặc bị dải lọc loại
+               ra, mà đường dẫn thì vẫn phải mở được. */
+            'dangTraLoi' => isset($_GET['tra-loi'])
+                ? Database::fetchOne(
+                    'SELECT r.*, p.name AS product_name
+                       FROM reviews r
+                       JOIN products p ON p.id = r.product_id
+                      WHERE r.id = :id',
+                    ['id' => (string) $_GET['tra-loi']]
+                )
+                : null,
         ]);
     }
 
@@ -94,5 +115,64 @@ class ReviewAdminController extends AdminController
         }
 
         return $out;
+    }
+
+    /**
+     * Ghi phản hồi công khai của cửa hàng cho một đánh giá
+     * (POST /quan-tri/danh-gia/phan-hoi).
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CÂU NÀY HIỆN CHO KHÁCH ĐỌC, KHÔNG PHẢI GHI CHÚ NỘI BỘ
+     *
+     * Nó nằm ngay dưới đánh giá ở trang sản phẩm, ký tên cửa hàng. Vì thế:
+     *
+     *   · lưu cả `replied_at` — khách cần biết cửa hàng trả lời lúc nào; trả
+     *     lời sau ba ngày và sau ba tháng là hai chuyện khác nhau, mà
+     *     `updated_at` thì đổi theo cả những lần bấm Duyệt nên không nói được
+     *     điều đó;
+     *   · XOÁ TRẮNG được: gửi chuỗi rỗng thì gỡ luôn cả `replied_at` về NULL,
+     *     tức là "chưa từng trả lời". Để lại một mốc thời gian không có nội
+     *     dung thì trang sản phẩm vẽ ra một khối phản hồi trống.
+     *
+     * KHÔNG đòi đánh giá phải ở trạng thái 'published': soạn sẵn câu trả lời
+     * rồi mới bấm Duyệt là thứ tự làm việc hợp lý — cả hai cùng hiện ra một
+     * lượt với khách.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function reply(): void
+    {
+        $this->requirePost(self::BASE);
+
+        if (!Database::columnExists('reviews', 'reply')) {
+            flash('admin_error', 'Chưa lưu được phản hồi — cơ sở dữ liệu còn thiếu cột. '
+                . 'Chạy database/migrations/2026-08-28-phan-hoi-danh-gia.sql.');
+            redirect(self::BASE);
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
+
+        if (ReviewModel::find($id) === null) {
+            flash('admin_error', 'Không tìm thấy đánh giá.');
+            redirect(self::BASE);
+        }
+
+        $noiDung = trim((string) ($_POST['reply'] ?? ''));
+
+        Database::execute(
+            'UPDATE reviews
+                SET reply = :reply, replied_at = :luc
+              WHERE id = :id',
+            [
+                'reply' => $noiDung !== '' ? $noiDung : null,
+                'luc'   => $noiDung !== '' ? date('Y-m-d H:i:s') : null,
+                'id'    => $id,
+            ]
+        );
+
+        flash('admin_success', $noiDung !== ''
+            ? 'Đã lưu phản hồi — khách đọc được ngay dưới đánh giá ở trang sản phẩm.'
+            : 'Đã gỡ phản hồi khỏi trang sản phẩm.');
+
+        redirect(self::BASE);
     }
 }

@@ -1114,6 +1114,13 @@ CREATE TABLE `reviews` (
     `author_name`   VARCHAR(255) NOT NULL,
     `rating`        TINYINT      NOT NULL,
     `body`          TEXT         NOT NULL,
+    -- Phản hồi CÔNG KHAI của cửa hàng, hiện ngay dưới đánh giá ở trang sản
+    -- phẩm. NULL = chưa từng trả lời; chuỗi rỗng = đã trả lời rồi xoá chữ đi.
+    -- Hai chuyện khác nhau, nên chỗ hiển thị kiểm cả hai.
+    `reply`         TEXT         NULL,
+    -- Mốc trả lời — KHÔNG suy từ `updated_at` được: cột đó đổi theo mọi lần
+    -- sửa dòng, kể cả lúc nhân viên bấm Duyệt.
+    `replied_at`    DATETIME     NULL,
     `variant_label` VARCHAR(60)  NULL,
     `status`        VARCHAR(16)  NOT NULL DEFAULT 'pending',
     `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,

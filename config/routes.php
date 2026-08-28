@@ -236,6 +236,9 @@ return [
 
     'quan-tri/lich-hen'           => 'AppointmentAdminController@index',
     'quan-tri/lich-hen/trang-thai'=> 'AppointmentAdminController@updateStatus', // POST
+    // Khách gọi điện đặt, hoặc đang đứng ở quầy hẹn hôm sau quay lại — hai
+    // đường vào không đi qua trang đặt lịch của khách.
+    'quan-tri/lich-hen/tao'       => 'AppointmentAdminController@store',        // POST
     /* Huỷ lịch đi đường RIÊNG, không phải một giá trị của ô chọn trạng thái:
        huỷ là ngã rẽ ra khỏi vòng đời chứ không phải một bước tiến tới, và ô
        chọn thì tự gửi form nên trượt tay một nấc là mất buổi hẹn của khách.
@@ -286,6 +289,8 @@ return [
 
     'quan-tri/danh-gia'     => 'ReviewAdminController@index',
     'quan-tri/danh-gia/sua' => 'ReviewAdminController@update',   // POST
+    // Phản hồi CÔNG KHAI của cửa hàng, hiện dưới đánh giá ở trang sản phẩm.
+    'quan-tri/danh-gia/phan-hoi' => 'ReviewAdminController@reply', // POST
 
     'quan-tri/ma-giam-gia'      => 'VoucherAdminController@index',
     'quan-tri/ma-giam-gia/luu'  => 'VoucherAdminController@save',   // POST

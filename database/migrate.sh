@@ -158,6 +158,8 @@ MIGRATIONS=(
     # phép đánh số dựa trên `launched_at`/`name` chứ không dựa vào chính
     # `sort_order` — chạy lại ra cùng kết quả.
     "2026-08-28-bo-suu-tap-thu-tu-trung-bay.sql|data||"
+    # Phản hồi công khai của cửa hàng dưới mỗi đánh giá. Mốc là cột `reply`.
+    "2026-08-28-phan-hoi-danh-gia.sql|column|reviews|reply"
 )
 
 # ---------------------------------------------------------------------------

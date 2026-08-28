@@ -39,6 +39,9 @@ class AppointmentAdminController extends AdminController
             'q'            => $q,
             'coSo'         => $coSo,
             'stores'       => StoreModel::all('name ASC'),
+            // Ô chọn dịch vụ của hộp "Tạo lịch hẹn" — dùng chung danh sách với
+            // trang đặt lịch của khách, xem BookingModel::SERVICES.
+            'services'     => BookingModel::SERVICES,
             'statuses'     => BookingModel::STATUSES,
             /* Hai danh sách khác nhau, cố ý: `statuses` là NHÃN của cả bốn
                trạng thái (dải viên lọc và viên nhãn cần đủ bốn), còn
@@ -117,6 +120,78 @@ class AppointmentAdminController extends AdminController
         BookingModel::update($id, ['status' => 'cancelled']);
 
         flash('admin_success', 'Đã huỷ lịch hẹn.');
+        redirect('/quan-tri/lich-hen');
+    }
+
+    /**
+     * Tạo một lịch hẹn ngay trong khu quản trị (POST /quan-tri/lich-hen/tao).
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO KHU QUẢN TRỊ CẦN TẠO ĐƯỢC LỊCH
+     *
+     * Phần lớn lịch tới từ trang đặt lịch của khách. Nhưng có hai đường vào
+     * khác, và cả hai đều có thật ở một cửa hàng kính: khách GỌI ĐIỆN đặt, và
+     * khách ĐANG ĐỨNG Ở QUẦY hẹn quay lại lấy kính hôm sau. Không tạo được ở
+     * đây thì nhân viên hoặc ghi ra giấy, hoặc tự vào trang khách đặt hộ bằng
+     * số điện thoại của chính mình — cách thứ hai làm hỏng cả cột `phone` lẫn
+     * mọi thống kê sau này.
+     *
+     * DÙNG LẠI BookingModel::create(), không viết INSERT riêng: hàm đó đã chặn
+     * ngày quá khứ và cơ sở không nhận khách, và nó sinh mã lịch theo đúng một
+     * cách. Một đường ghi thứ hai là một bộ luật thứ hai sẽ lệch dần.
+     *
+     * `userId` để NULL: lịch này không thuộc tài khoản nào cả. Gắn bừa vào tài
+     * khoản nhân viên thì nó hiện trong trang "Lịch hẹn của tôi" của người đó.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function store(): void
+    {
+        $this->requirePost('/quan-tri/lich-hen');
+
+        $ten   = trim((string) ($_POST['full_name'] ?? ''));
+        $sdt   = trim((string) ($_POST['phone'] ?? ''));
+        $ngay  = trim((string) ($_POST['appointment_date'] ?? ''));
+        $coSo  = (string) ($_POST['store_id'] ?? '');
+        $dv    = (string) ($_POST['service_type'] ?? '');
+        $ghi   = trim((string) ($_POST['note'] ?? ''));
+
+        /* Mở lại hộp thoại khi thiếu ô — nếu chỉ đá về danh sách thì người
+           dùng mất hết những gì vừa gõ và không biết ô nào sai. */
+        $quayLaiHop = '/quan-tri/lich-hen?them=1';
+
+        if ($ten === '' || $sdt === '' || $ngay === '') {
+            flash('admin_error', 'Vui lòng nhập tên khách, số điện thoại và ngày hẹn.');
+            redirect($quayLaiHop);
+        }
+
+        /* Kiểm dịch vụ có trong danh sách: ô chọn chỉ bày bốn giá trị, nhưng ai
+           gửi thẳng POST vẫn ghi được chuỗi bất kỳ vào `service_type` — mà cột
+           đó là thứ nhân viên đọc để chuẩn bị máy đo. */
+        if (!in_array($dv, BookingModel::SERVICES, true)) {
+            flash('admin_error', 'Dịch vụ không hợp lệ.');
+            redirect($quayLaiHop);
+        }
+
+        $ket = BookingModel::create([
+            'userId'      => null,
+            'storeId'     => $coSo,
+            'date'        => $ngay,
+            'serviceType' => $dv,
+            'fullName'    => $ten,
+            'phone'       => $sdt,
+            'note'        => $ghi,
+        ]);
+
+        if (!$ket['ok']) {
+            flash('admin_error', $ket['error']);
+            redirect($quayLaiHop);
+        }
+
+        /* Lịch tạo ở quầy vẫn để 'pending' như lịch khách tự đặt — BookingModel
+           đặt mặc định đó. Nghe hơi thừa (nhân viên vừa nói chuyện với khách
+           xong), nhưng "đã xác nhận" ở đây nghĩa là ĐÃ GỌI LẠI CHỐT GIỜ, mà
+           việc ấy chưa xảy ra. Người tạo bấm thêm một cái nếu muốn. */
+        flash('admin_success', sprintf('Đã tạo lịch hẹn %s cho %s.', $ket['code'], $ten));
         redirect('/quan-tri/lich-hen');
     }
 }

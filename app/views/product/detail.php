@@ -354,6 +354,27 @@ $stars = static function (float $score): string {
                             </span>
                         </div>
                         <p class="pdreview__body"><?= e($rv['body']) ?></p>
+
+                        <?php /* PHẢN HỒI CỦA CỬA HÀNG — cột `reply`, do khu quản trị
+                                 soạn (xem ReviewAdminController::reply()).
+
+                                 Kiểm cả isset lẫn chuỗi rỗng: cột chỉ có từ migration
+                                 2026-08-28-phan-hoi-danh-gia, và trên máy chưa chạy
+                                 file đó thì khoá này không tồn tại — trang sản phẩm là
+                                 trang khách xem, không được đổ lỗi vì một cột thiếu.
+                                 Rỗng thì cũng không vẽ: nó nghĩa là đã trả lời rồi xoá
+                                 chữ đi, không phải một khối trống cần bày ra. */ ?>
+                        <?php if (trim((string) ($rv['reply'] ?? '')) !== ''): ?>
+                            <div class="pdreply">
+                                <p class="pdreply__from">
+                                    Phản hồi của <?= e(config('company.short_name', 'cửa hàng')) ?>
+                                    <?php if (!empty($rv['replied_at'])): ?>
+                                        <span class="pdreply__when"><?= e(formatDate($rv['replied_at'])) ?></span>
+                                    <?php endif; ?>
+                                </p>
+                                <p class="pdreply__body"><?= e($rv['reply']) ?></p>
+                            </div>
+                        <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
             <?php endif; ?>

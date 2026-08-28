@@ -1797,6 +1797,118 @@ a.alist__name:hover { color: var(--brand); }
 
 .annote strong { color: #5c4f42; }
 
+/* --- Phản hồi đánh giá (khu quản trị) ------------------------ */
+
+/* Cùng hình dạng với khối phản hồi ở trang sản phẩm (.pdreply trong
+   product-detail.css): thụt vào, vạch màu bên trái. Người soạn nhìn thấy đúng
+   thứ khách sẽ thấy, không phải một bản xem trước khác kiểu. */
+.arvrep {
+    margin-top: 10px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--brand);
+    border-radius: 0 8px 8px 0;
+    background: var(--surface-sunken);
+}
+
+.arvrep__label {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand);
+}
+
+.arvrep__text {
+    margin: 4px 0 0;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: #5c4f42;
+    white-space: pre-wrap;
+}
+
+/* Nguyên văn đánh giá bày lại trong hộp soạn phản hồi — người viết trả lời cần
+   đọc lại câu khách nói, mà hộp thoại thì che mất thẻ đánh giá phía sau. */
+.arvquote {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #faf5ea;
+    font-size: var(--fs-note);
+    line-height: 1.55;
+    color: #5c4f42;
+}
+
+.arvquote .arv__stars { margin-right: 6px; }
+
+/* .arv__btn dùng cho cả <button> lẫn <a> (nút "Phản hồi" mở hộp thoại). */
+a.arv__btn {
+    display: inline-block;
+    text-decoration: none;
+}
+
+/* --- Hộp chi tiết yêu cầu liên hệ ---------------------------- */
+
+/* Ô nội dung trong bảng là một đường dẫn mở hộp chi tiết — giữ nguyên dáng chữ
+   thường của ô bảng, chỉ đổi màu khi rê chuột. Gạch chân hay tô đỏ sẵn thì cả
+   cột thành một dãy liên kết và mắt không còn đọc nó như nội dung nữa. */
+.alcmsg {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-decoration: none;
+    color: inherit;
+}
+
+.alcmsg:hover { color: var(--brand); }
+
+.alcdet { display: flex; gap: 24px; flex-wrap: wrap; margin: 0 0 16px; }
+
+.alcdet__row dt {
+    margin-bottom: 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #7a6a5f;
+}
+
+.alcdet__row dd { margin: 0; font-size: 13.5px; font-weight: 600; }
+
+.alcdet__label {
+    margin: 0 0 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #7a6a5f;
+}
+
+/* pre-wrap: giữ nguyên chỗ khách xuống dòng. Gộp thành một khối chữ liền thì
+   một yêu cầu có gạch đầu dòng đọc ra thành một câu dài lê thê. */
+.alcdet__msg {
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 10px;
+    background: #faf5ea;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    white-space: pre-wrap;
+}
+
+.alcdet__zalo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0 0;
+    font-size: 12.5px;
+    color: #5c4f42;
+}
+
+.alcdet__when { color: var(--muted); }
+
 /* --- Trang Quên mật khẩu ------------------------------------- */
 
 /* Năm cột, chỉ cột "Tài khoản khớp" co giãn — nó mang ba dòng chồng nhau (tên,
@@ -1851,6 +1963,28 @@ a.alist__name:hover { color: var(--brand); }
 }
 
 .aqgo:hover { background: var(--brand-strong); }
+
+/*
+ * .aqgo nay là thẻ <a> chứ không còn là <button> — nó mở hộp thoại xác minh
+ * thay vì gửi thẳng.
+ *
+ * TÊN CHỌN PHẢI KỂ CẢ .arow-actions: nút này nằm trong ô thao tác của bảng, mà
+ * ở đó có luật `.arow-actions a` (nút "Sửa" viền trắng) — cùng một thẻ <a>, và
+ * luật ấy có độ ưu tiên CAO HƠN `.aqgo` một bậc vì nó gồm cả tên thẻ. Không kể
+ * ra thì nút "Tạo liên kết" mất nền đỏ và trông y hệt nút "Sửa" ở mọi bảng
+ * khác — đúng thứ không nên xảy ra với nút cấp lại mật khẩu cho một tài khoản.
+ */
+.arow-actions a.aqgo,
+a.aqgo {
+    display: inline-block;
+    border-color: var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    text-decoration: none;
+}
+
+.arow-actions a.aqgo:hover,
+a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong); color: var(--on-brand); }
 
 /* --- Trang Đánh giá (thẻ xếp dọc) ---------------------------- */
 

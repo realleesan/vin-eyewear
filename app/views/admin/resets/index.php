@@ -156,19 +156,19 @@ $statusLabel = [
 
                             <td class="arow-actions">
                                 <?php if ($r['user_id'] !== null && $canIssue): ?>
-                                    <form method="post" action="/quan-tri/quen-mat-khau/tao">
-                                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                        <input type="hidden" name="id" value="<?= e($r['id']) ?>">
-                                        <input type="hidden" name="contact" value="<?= e($r['contact']) ?>">
-                                        <?php /* .aqgo chứ không .astatus__save: nút chính
-                                                 cao 38px và có quầng bóng, quá nặng cho một
-                                                 ô bảng — bản thiết kế cho nó dáng nhỏ hơn
-                                                 một nấc, ngang với nút "Sửa" ở các bảng
-                                                 khác. */ ?>
-                                        <button type="submit" class="aqgo">
-                                            <?= $r['status'] === 'sent' ? 'Tạo liên kết mới' : 'Tạo liên kết' ?>
-                                        </button>
-                                    </form>
+                                    <?php /* MỞ HỘP THOẠI, không gửi thẳng — theo bản thiết
+                                             kế. Cấp liên kết là thao tác nguy hiểm nhất
+                                             của cả khu quản trị: ai cầm được nó là đổi
+                                             được mật khẩu của khách. Hộp bắt tick "đã gọi
+                                             xác minh", và controller kiểm lại ô tick ấy ở
+                                             máy chủ.
+
+                                             .aqgo chứ không .astatus__save: nút chính cao
+                                             38px và có quầng bóng, quá nặng cho một ô
+                                             bảng — bản thiết kế cho nó nhỏ hơn một nấc. */ ?>
+                                    <a class="aqgo" href="/quan-tri/quen-mat-khau?tao=<?= e($r['id']) ?>">
+                                        <?= $r['status'] === 'sent' ? 'Tạo liên kết mới' : 'Tạo liên kết' ?>
+                                    </a>
                                 <?php elseif ($r['user_id'] !== null): ?>
                                     <span class="atable__sub">Cần quyền quản lý</span>
                                 <?php endif; ?>
@@ -181,4 +181,74 @@ $statusLabel = [
 
     <?php endif; ?>
 
+<?php endif; ?>
+
+<?php
+/*
+ * HỘP THOẠI CẤP LIÊN KẾT — theo bản thiết kế "Quên mật khẩu.dc.html".
+ *
+ * Đây là thao tác nguy hiểm nhất của cả khu quản trị: liên kết nó sinh ra đổi
+ * được mật khẩu của khách, mà yêu cầu đặt lại thì bất kỳ ai gõ đúng email của
+ * người khác cũng tạo ra được. Bước gọi điện hỏi thông tin chỉ chủ tài khoản
+ * biết là chốt chặn DUY NHẤT của cả luồng.
+ *
+ * Nên hộp này không chỉ hỏi "có chắc không" — nó bày ra SỐ ĐIỆN THOẠI để gọi
+ * ngay tại chỗ, và bắt tick một câu khẳng định đã gọi. Ô tick được kiểm LẠI ở
+ * PasswordResetAdminController::issue(), không chỉ ở đây: ai gửi thẳng POST
+ * vẫn bỏ qua được ô tick, mà ẩn nút trên giao diện thì không phải là chốt
+ * chặn (CLAUDE.md mục 4).
+ */
+$dangTao = null;
+
+if (isset($_GET['tao']) && $available && $canIssue) {
+    foreach ($requests as $r) {
+        if ((string) $r['id'] === (string) $_GET['tao'] && $r['user_id'] !== null) {
+            $dangTao = $r;
+            break;
+        }
+    }
+}
+?>
+<?php if ($dangTao !== null): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => 'Tạo liên kết đặt lại mật khẩu',
+        'phu'     => trim(($dangTao['full_name'] ?: '(chưa đặt tên)') . ' · ' . ($dangTao['email'] ?? '')),
+        'dongUrl' => '/quan-tri/quen-mat-khau',
+        'rong'    => 'sm',
+    ]); ?>
+
+        <div class="anote anote--alert" role="alert">
+            <p>
+                <strong>Đã gọi xác minh chưa?</strong>
+                <?php if (!empty($dangTao['phone'])): ?>
+                    Gọi <a href="tel:<?= e(preg_replace('/\D/', '', $dangTao['phone'])) ?>"><?= e($dangTao['phone']) ?></a>
+                <?php else: ?>
+                    Tài khoản này chưa có số điện thoại — liên hệ qua email
+                <?php endif; ?>
+                và hỏi thông tin chỉ chủ tài khoản biết (đơn gần nhất, địa chỉ giao)
+                trước khi tạo. Ai cầm được liên kết này là đổi được mật khẩu.
+            </p>
+        </div>
+
+        <form method="post" action="/quan-tri/quen-mat-khau/tao" class="aform__grid" id="reset-form">
+            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+            <input type="hidden" name="id" value="<?= e($dangTao['id']) ?>">
+            <input type="hidden" name="contact" value="<?= e($dangTao['contact']) ?>">
+
+            <div class="field field--check field--wide">
+                <label>
+                    <?php /* required: trình duyệt chặn ngay tại chỗ, khỏi phải gửi
+                             đi rồi mới biết. Máy chủ vẫn kiểm lại — xem issue(). */ ?>
+                    <input type="checkbox" name="da_xac_minh" value="1" required>
+                    Tôi đã gọi và xác minh đúng chủ tài khoản
+                </label>
+            </div>
+        </form>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => '/quan-tri/quen-mat-khau',
+        'luuNhan' => 'Tạo liên kết',
+        'luuForm' => 'reset-form',
+        'ghiChu'  => 'Liên kết sống 60 phút và chỉ dùng được một lần.',
+    ]); ?>
 <?php endif; ?>

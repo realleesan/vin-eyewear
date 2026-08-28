@@ -52,6 +52,24 @@ class PasswordResetAdminController extends AdminController
         // giới hạn ở quản lý/quản trị — nhân viên bán hàng chỉ xem danh sách.
         $this->requireManager(self::BASE);
 
+        /*
+         * PHẢI TICK "ĐÃ GỌI XÁC MINH" — kiểm Ở ĐÂY, không chỉ ở giao diện.
+         *
+         * Bản thiết kế "Quên mật khẩu.dc.html" đặt một ô tick trước nút tạo, và
+         * nó không phải thủ tục hình thức: gọi điện hỏi thông tin chỉ chủ tài
+         * khoản biết là BƯỚC BẢO MẬT DUY NHẤT của cả luồng này. Ai cầm được
+         * liên kết là đổi được mật khẩu, mà yêu cầu đặt lại thì bất kỳ ai gõ
+         * đúng email của người khác cũng tạo ra được.
+         *
+         * Ô tick ở giao diện chỉ là lời nhắc; ai gửi thẳng POST vẫn bỏ qua
+         * được. Nên chốt thật nằm ở dòng này — đúng nếp CLAUDE.md mục 4: ẩn nút
+         * trên giao diện không phải là phân quyền.
+         */
+        if ((string) ($_POST['da_xac_minh'] ?? '') !== '1') {
+            flash('admin_error', 'Cần xác nhận đã gọi kiểm tra đúng chủ tài khoản trước khi tạo liên kết.');
+            redirect(self::BASE . '?tao=' . rawurlencode((string) ($_POST['id'] ?? '')));
+        }
+
         $result = PasswordResetModel::issueByStaff(
             (string) ($_POST['id'] ?? ''),
             $this->userId

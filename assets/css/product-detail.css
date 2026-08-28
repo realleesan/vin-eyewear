@@ -621,6 +621,49 @@
     color: var(--muted);
 }
 
+/*
+ * PHẢN HỒI CỦA CỬA HÀNG dưới một đánh giá.
+ *
+ * THỤT VÀO và có vạch màu bên trái, không phải một đoạn ngang hàng: nó là lời
+ * của BÊN KIA trong cùng một cuộc trao đổi. Ngang hàng thì người đọc lướt qua
+ * tưởng là đánh giá thứ hai của một khách khác — và một "đánh giá" ký tên cửa
+ * hàng nằm lẫn giữa đánh giá của khách là thứ làm mất lòng tin nhanh nhất.
+ */
+.pdreply {
+    margin-top: 12px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--brand);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--surface-sunken);
+}
+
+.pdreply__from {
+    margin: 0;
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--brand);
+}
+
+/* Ngày trả lời — chữ thường, mờ, đứng sau tên cửa hàng. Trả lời sau ba ngày và
+   sau ba tháng là hai chuyện khác nhau, và khách đọc ra điều đó ngay. */
+.pdreply__when {
+    margin-left: 6px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--muted);
+}
+
+.pdreply__body {
+    margin: 6px 0 0;
+    font-size: var(--fs-body-sm);
+    line-height: 1.65;
+    color: var(--ink);
+    white-space: pre-wrap;
+}
+
 .pdreview__flash {
     margin: 0 0 8px;
     padding: 12px 16px;

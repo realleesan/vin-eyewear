@@ -57,6 +57,12 @@ $giuLoc = array_filter(['q' => $q, 'co-so' => $coSo]);
                    href="/quan-tri/lich-hen<?= $status !== '' ? '?status=' . e($status) : '' ?>">Xoá lọc</a>
             <?php endif; ?>
         </form>
+
+        <?php /* Khách gọi điện đặt, hoặc đang đứng ở quầy hẹn hôm sau quay lại
+                 lấy kính — hai đường vào không đi qua trang đặt lịch của khách.
+                 Không có nút này thì nhân viên ghi ra giấy, hoặc tệ hơn là vào
+                 trang khách đặt hộ bằng số điện thoại của chính mình. */ ?>
+        <a href="/quan-tri/lich-hen?them=1" class="astatus__save">+ Tạo lịch hẹn</a>
     </div>
 </header>
 
@@ -185,4 +191,89 @@ $giuLoc = array_filter(['q' => $q, 'co-so' => $coSo]);
             </p>
         </div>
     </div>
+<?php endif; ?>
+
+<?php
+/*
+ * HỘP THOẠI TẠO LỊCH HẸN — theo bản thiết kế "Lịch hẹn.dc.html".
+ *
+ * Mở theo địa chỉ (?them=1), không theo JavaScript — xem .amodal trong
+ * admin.css. Chỉ có đường TẠO, không có đường sửa: một lịch đã đặt thì thứ
+ * nhân viên đổi là TRẠNG THÁI, và việc đó làm ngay trên dòng bằng ô chọn.
+ * Sửa tên hay ngày của lịch khách tự đặt là sửa lời của người khác — nếu
+ * khách muốn đổi ngày thì họ đổi ở trang tài khoản, và cột `updated_at` ghi
+ * lại việc đó.
+ */
+$moHop   = isset($_GET['them']);
+$dongUrl = '/quan-tri/lich-hen';
+?>
+<?php if ($moHop): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => 'Tạo lịch hẹn mới',
+        'phu'     => 'Lịch tạo ở đây vẫn ở trạng thái chờ xác nhận — gọi lại chốt giờ rồi hãy đổi.',
+        'dongUrl' => $dongUrl,
+        'rong'    => '',
+    ]); ?>
+
+        <form method="post" action="/quan-tri/lich-hen/tao" class="aform__grid" id="lh-form">
+            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+
+            <div class="field">
+                <label for="lh-ten">Tên khách hàng *</label>
+                <input type="text" id="lh-ten" name="full_name" required maxlength="255"
+                       placeholder="Nguyễn Thu Trang">
+            </div>
+
+            <div class="field">
+                <label for="lh-sdt">Số điện thoại *</label>
+                <input type="tel" id="lh-sdt" name="phone" required maxlength="32"
+                       placeholder="0901 234 567">
+            </div>
+
+            <div class="field">
+                <label for="lh-ngay">Ngày hẹn *</label>
+                <?php /* min = hôm nay: BookingModel::create() chặn ngày quá khứ ở
+                         máy chủ, ô này chỉ nói trước để người dùng khỏi gõ xong
+                         mới bị trả về. Hẹn cho hôm nay vẫn hợp lệ — cửa hàng mở
+                         tới 21:00. */ ?>
+                <input type="date" id="lh-ngay" name="appointment_date" required
+                       min="<?= e(date('Y-m-d')) ?>" value="<?= e(date('Y-m-d')) ?>">
+            </div>
+
+            <div class="field">
+                <label for="lh-coso">Cơ sở *</label>
+                <select id="lh-coso" name="store_id" required>
+                    <?php foreach ($stores as $st): ?>
+                        <?php /* Cơ sở đang tạm đóng vẫn hiện nhưng ghi rõ: nó không
+                                 nhận lịch được (BookingModel::create chặn), mà giấu
+                                 hẳn đi thì người tạo không hiểu vì sao cơ sở quen
+                                 thuộc biến mất khỏi danh sách. */ ?>
+                        <option value="<?= e($st['id']) ?>"<?= empty($st['is_active']) ? ' disabled' : '' ?>>
+                            <?= e($st['name']) ?><?= empty($st['is_active']) ? ' — đang tạm đóng' : '' ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="field field--wide">
+                <label for="lh-dv">Dịch vụ *</label>
+                <select id="lh-dv" name="service_type" required>
+                    <?php foreach ($services as $dv): ?>
+                        <option value="<?= e($dv) ?>"><?= e($dv) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="field field--wide">
+                <label for="lh-ghi">Ghi chú</label>
+                <textarea id="lh-ghi" name="note" rows="3"
+                          placeholder="Yêu cầu riêng của khách, tình trạng kính mang tới…"></textarea>
+            </div>
+        </form>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => $dongUrl,
+        'luuNhan' => 'Tạo lịch hẹn',
+        'luuForm' => 'lh-form',
+    ]); ?>
 <?php endif; ?>

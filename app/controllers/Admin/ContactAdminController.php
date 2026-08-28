@@ -53,6 +53,13 @@ class ContactAdminController extends AdminController
             'q'          => $q,
             'zalo'       => $zalo,
             'zaloCounts' => ContactModel::zaloCounts($q),
+            /* ?xem=<id> mở hộp chi tiết. Truy vấn riêng chứ không lọc trong
+               $result['items']: yêu cầu đang mở có thể nằm ở trang khác của
+               phân trang, hoặc bị bộ lọc hiện tại loại ra — mà đường dẫn
+               ?xem= thì vẫn phải mở được. */
+            'detail'     => isset($_GET['xem'])
+                ? ContactModel::find((string) $_GET['xem'])
+                : null,
             'chuaDay'    => ContactModel::countChuaDayZalo(),
             // Chưa chạy migration thì cả trang vẫn đọc được, chỉ là không có
             // cột nào để biết tin đã đi chưa — view ẩn cột đó đi thay vì đổ lỗi.

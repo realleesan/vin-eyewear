@@ -52,6 +52,27 @@ class BookingModel extends BaseModel
 {
     protected static string $table = 'appointments';
 
+    /**
+     * Dịch vụ nhận đặt lịch.
+     *
+     * Ở ĐÂY chứ không ở BookingController: từ 2026-08-28 khu quản trị cũng tạo
+     * được lịch hẹn (bản thiết kế "Lịch hẹn.dc.html"), nên danh sách này có hai
+     * nơi đọc. Để nguyên trong controller thì nơi thứ hai phải chép lại, và hai
+     * bản chép thì sớm muộn lệch nhau — mà chuỗi này được ghi THẲNG vào
+     * `appointments.service_type`, nên lệch nghĩa là dữ liệu cũ và mới không
+     * lọc chung được nữa.
+     *
+     * GIỮ NGUYÊN danh sách của cửa hàng, không lấy 4 dịch vụ trong bản thiết
+     * kế: tên dịch vụ là chuyện của cửa hàng, và đổi chữ ở đây là làm lệch mọi
+     * lịch hẹn đã có.
+     */
+    public const SERVICES = [
+        'Đo mắt cận/loạn',
+        'Tư vấn & Thử gọng',
+        'Cắt tròng lấy liền',
+        'Bảo hành / Vệ sinh kính',
+    ];
+
     public const STATUSES = [
         'pending'   => 'Chờ xác nhận',
         'confirmed' => 'Đã xác nhận',

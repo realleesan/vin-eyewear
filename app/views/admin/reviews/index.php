@@ -29,6 +29,19 @@
     'counts' => $counts, 'current' => $status,
 ]); ?>
 
+<?php /* Thiếu cột thì nói rõ phải chạy file nào, thay vì để phần phản hồi
+         lặng lẽ biến mất và người dùng tưởng tính năng chưa làm. Trang vẫn
+         duyệt và từ chối đánh giá bình thường. */ ?>
+<?php if (!$coCotReply): ?>
+    <div class="anote anote--alert">
+        <p>
+            <strong>Chưa phản hồi đánh giá được.</strong> Bảng <code>reviews</code>
+            còn thiếu cột <code>reply</code>.
+        </p>
+        <p>Chạy <code>database/migrations/2026-08-28-phan-hoi-danh-gia.sql</code>.</p>
+    </div>
+<?php endif; ?>
+
 <?php /*
  * TRANG CHƯA CÓ ĐÁNH GIÁ NÀO — bản thiết kế vẽ hẳn một khối riêng, xem .aempty
  * trong admin.css. Trước đây chỗ này in cái bảng rỗng kèm một dòng
@@ -105,6 +118,16 @@
                 </a>
 
                 <p class="arv__text"><?= e($rv['body']) ?></p>
+
+                <?php /* Phản hồi đã lưu hiện ngay tại đây, đúng chỗ khách sẽ thấy
+                         nó ở trang sản phẩm — người soạn nhìn được kết quả mà
+                         không phải mở trang bán hàng ra đối chiếu. */ ?>
+                <?php if ($coCotReply && trim((string) ($rv['reply'] ?? '')) !== ''): ?>
+                    <div class="arvrep">
+                        <p class="arvrep__label">Phản hồi của cửa hàng</p>
+                        <p class="arvrep__text"><?= e($rv['reply']) ?></p>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="arv__side">
@@ -148,9 +171,67 @@
                             data-confirm-ok="Xoá"
                             onclick="return confirm('<?= e($hoiXoaDG) ?>')">Xoá</button>
                 </form>
+
+                <?php /* NGOÀI <form> ở trên — nó là một đường dẫn mở hộp soạn
+                         phản hồi, không phải một nút gửi của form duyệt/xoá.
+                         Nhãn đổi theo việc đã có phản hồi hay chưa: "Phản hồi"
+                         và "Sửa phản hồi" dẫn tới hai kỳ vọng khác nhau. */ ?>
+                <?php if ($coCotReply): ?>
+                    <a class="arv__btn" href="/quan-tri/danh-gia?tra-loi=<?= e($rv['id']) ?>">
+                        <?= trim((string) ($rv['reply'] ?? '')) !== '' ? 'Sửa phản hồi' : 'Phản hồi' ?>
+                    </a>
+                <?php endif; ?>
             </div>
         </article>
     <?php endforeach; ?>
 </div>
 
+<?php endif; ?>
+
+<?php
+/*
+ * HỘP SOẠN PHẢN HỒI — theo bản thiết kế "Đánh giá.dc.html".
+ *
+ * Bày lại nguyên văn đánh giá ngay trên ô soạn: người viết trả lời cần đọc lại
+ * câu khách nói trong lúc gõ, mà hộp thoại thì che mất thẻ đánh giá phía sau.
+ *
+ * Ô soạn để TRỐNG rồi lưu là gỡ phản hồi khỏi trang sản phẩm — nói ra ở câu
+ * nhắc dưới chân hộp, vì không ai đoán được điều đó.
+ */
+$traLoi = ($coCotReply && ($dangTraLoi ?? null) !== null) ? $dangTraLoi : null;
+?>
+<?php if ($traLoi !== null): ?>
+    <?php $saoTL = max(0, min(5, (int) $traLoi['rating'])); ?>
+
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => 'Phản hồi đánh giá',
+        'phu'     => $traLoi['author_name'] . ' · ' . $traLoi['product_name'],
+        'dongUrl' => '/quan-tri/danh-gia',
+        'rong'    => 'sm',
+    ]); ?>
+
+        <p class="arvquote">
+            <span class="arv__stars" aria-label="<?= $saoTL ?> trên 5 sao">
+                <?= str_repeat('★', $saoTL) . str_repeat('☆', 5 - $saoTL) ?>
+            </span>
+            <?= e($traLoi['body']) ?>
+        </p>
+
+        <form method="post" action="/quan-tri/danh-gia/phan-hoi" class="aform__grid" id="rv-form">
+            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+            <input type="hidden" name="id" value="<?= e($traLoi['id']) ?>">
+
+            <div class="field field--wide">
+                <label for="rv-reply">Câu trả lời của cửa hàng</label>
+                <textarea id="rv-reply" name="reply" rows="4"
+                          placeholder="Cảm ơn anh/chị đã tin tưởng Vin Eyewear…"><?= e($traLoi['reply'] ?? '') ?></textarea>
+            </div>
+        </form>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => '/quan-tri/danh-gia',
+        'luuNhan' => 'Gửi phản hồi',
+        'luuForm' => 'rv-form',
+        'ghiChu'  => 'Hiện công khai dưới đánh giá. Để trống rồi lưu là gỡ phản hồi đi.',
+    ]); ?>
 <?php endif; ?>

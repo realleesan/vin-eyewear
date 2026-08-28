@@ -43,12 +43,10 @@ class BookingController extends BaseController
      * dữ liệu cũ, mà tên dịch vụ là chuyện của cửa hàng chứ không phải của
      * bản thiết kế.
      */
-    private const SERVICES = [
-        'Đo mắt cận/loạn',
-        'Tư vấn & Thử gọng',
-        'Cắt tròng lấy liền',
-        'Bảo hành / Vệ sinh kính',
-    ];
+    /* Danh sách thật nằm ở BookingModel::SERVICES — khu quản trị cũng đọc nó
+       để dựng ô chọn dịch vụ khi tạo lịch hộ khách. Bí danh này giữ nguyên mọi
+       chỗ gọi self::SERVICES bên dưới. */
+    private const SERVICES = BookingModel::SERVICES;
 
     /** Số ngày hiện trên dải chọn ngày, đúng bản thiết kế. */
     private const DAYS = 7;

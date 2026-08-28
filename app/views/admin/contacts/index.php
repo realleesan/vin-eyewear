@@ -165,11 +165,20 @@ $duongDanZalo = static function (string $key) use ($q): string {
                             <?php endif; ?>
                         </td>
 
-                        <?php /* title= giữ nguyên văn cả tin: ô này cắt còn một dòng
-                                 (xem .alctable .atable__msg), nên rê chuột lên phải
-                                 đọc được phần bị cắt — nếu không thì một yêu cầu dài
-                                 coi như không đọc được ở đâu cả. */ ?>
-                        <td class="atable__msg" title="<?= e($c['message']) ?>"><?= e($c['message']) ?></td>
+                        <?php /* Ô nội dung LÀ MỘT ĐƯỜNG DẪN mở hộp chi tiết.
+
+                                 Ô này cắt còn một dòng để hàng không cao gấp bốn
+                                 hàng bên cạnh. Trước đây phần bị cắt chỉ đọc được
+                                 bằng cách rê chuột chờ tooltip — thao tác không ai
+                                 đoán ra, và không dùng được bằng bàn phím hay trên
+                                 điện thoại. Nay bấm vào là mở trọn nội dung.
+
+                                 Vẫn giữ title= làm lối tắt cho người đã quen rê
+                                 chuột. */ ?>
+                        <td class="atable__msg">
+                            <a class="alcmsg" title="<?= e($c['message']) ?>"
+                               href="<?= e($duongDanZalo($zalo)) ?><?= str_contains($duongDanZalo($zalo), '?') ? '&amp;' : '?' ?>xem=<?= e($c['id']) ?>"><?= e($c['message']) ?></a>
+                        </td>
 
                         <td class="alczalo">
                             <?php if ($daDay): ?>
@@ -230,4 +239,80 @@ $duongDanZalo = static function (string $key) use ($q): string {
             <?php endif; ?>
         </div>
     </div>
+<?php endif; ?>
+
+<?php
+/*
+ * HỘP CHI TIẾT MỘT YÊU CẦU — theo bản thiết kế "Liên hệ.dc.html".
+ *
+ * Mở theo địa chỉ (?xem=<id>) như mọi hộp khác của khu quản trị. Nội dung đầy
+ * đủ để nguyên xuống dòng của người gửi — đây là chỗ DUY NHẤT đọc được trọn
+ * một yêu cầu, nên nó không cắt gì cả.
+ *
+ * Chân hộp KHÔNG có nút Lưu: không có gì để sửa ở đây. Thay vào đó là nút đẩy
+ * Zalo (nếu chưa đi được) và nút Đóng — nên hộp này tự dựng chân riêng thay vì
+ * gọi modal-foot.
+ */
+$chiTiet = $detail ?? null;
+$dongXem = currentUrlWithout(['xem']);
+?>
+<?php if ($chiTiet !== null): ?>
+    <?php $daDayCT = $coCotZalo && ($chiTiet['zalo_sent_at'] ?? null) !== null; ?>
+
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => $chiTiet['full_name'],
+        'phu'     => 'Gửi lúc ' . formatDate($chiTiet['created_at'], 'd/m/Y H:i'),
+        'dongUrl' => $dongXem,
+        'rong'    => 'sm',
+    ]); ?>
+
+        <dl class="alcdet">
+            <div class="alcdet__row">
+                <dt>Điện thoại</dt>
+                <dd><a href="tel:<?= e(preg_replace('/\D/', '', $chiTiet['phone'])) ?>"><?= e($chiTiet['phone']) ?></a></dd>
+            </div>
+
+            <?php if (!empty($chiTiet['email'])): ?>
+                <div class="alcdet__row">
+                    <dt>Email</dt>
+                    <dd><a href="mailto:<?= e($chiTiet['email']) ?>"><?= e($chiTiet['email']) ?></a></dd>
+                </div>
+            <?php endif; ?>
+        </dl>
+
+        <p class="alcdet__label">Nội dung yêu cầu</p>
+        <?php /* white-space: pre-wrap trong CSS — giữ nguyên chỗ khách xuống
+                 dòng. Gộp thành một khối chữ liền thì một yêu cầu có gạch đầu
+                 dòng đọc ra thành một câu dài lê thê. */ ?>
+        <p class="alcdet__msg"><?= e($chiTiet['message']) ?></p>
+
+        <?php if ($coCotZalo): ?>
+            <p class="alcdet__zalo">
+                Zalo CSKH:
+                <span class="badge badge--<?= $daDayCT ? 'completed' : 'out_of_stock' ?>">
+                    <?= $daDayCT ? 'Đã gửi' : 'Chưa gửi' ?>
+                </span>
+                <?php if ($daDayCT): ?>
+                    <span class="alcdet__when"><?= e(formatDate($chiTiet['zalo_sent_at'], 'd/m/Y H:i')) ?></span>
+                <?php endif; ?>
+            </p>
+        <?php endif; ?>
+
+        </div>
+
+        <div class="amodal__foot">
+            <?php /* Nút đẩy Zalo hiện CẢ KHI đã gửi — cùng luật với nút ở bảng:
+                     ca thật là tin đã tới máy CSKH rồi máy đó hỏng. */ ?>
+            <form method="post" action="/quan-tri/lien-he/zalo">
+                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                <input type="hidden" name="id" value="<?= e($chiTiet['id']) ?>">
+                <button type="submit" class="astatus__save<?= $daDayCT ? ' astatus__save--ghost' : '' ?>">
+                    <?= $daDayCT ? 'Gửi lại sang Zalo' : 'Gửi sang Zalo' ?>
+                </button>
+            </form>
+
+            <a class="astatus__save astatus__save--ghost" href="<?= e($dongXem) ?>">Đóng</a>
+        </div>
+    </div>
+</div>
 <?php endif; ?>
