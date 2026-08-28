@@ -292,10 +292,21 @@ class CustomerModel extends BaseModel
            Cơ sở dữ liệu chưa chạy file đó thì câu lệnh này đổ lỗi 1054 và cả
            trang chi tiết trắng — nên hỏi trước, và khuyết một khối còn hơn mất
            cả trang. Ba khối kia không cần lối thoát này: `user_id` của chúng
-           có từ lược đồ gốc. */
+           có từ lược đồ gốc.
+
+           KHÔNG HỎI CỘT `status`. Nó đã bị xoá bởi migration
+           2026-08-27-bo-cot-status-lien-he.sql — module Liên hệ bỏ hẳn trạng
+           thái, mọi yêu cầu chạy thẳng sang Zalo CSKH. Câu này vẫn hỏi cột đó
+           tới tận 2026-08-28 và làm CẢ TAB HOẠT ĐỘNG đổ lỗi 1054 trên trang
+           thật: view đã bỏ chỗ hiển thị trạng thái từ hôm bỏ cột, nhưng câu
+           SELECT thì không ai sờ tới.
+
+           Bài học để lại đây: coCotLienHe() chỉ canh cột `user_id`, nó KHÔNG
+           bảo vệ được những cột khác trong cùng câu lệnh. Thêm cột nào vào
+           danh sách dưới thì phải tự hỏi cột đó có thể bị xoá không. */
         $contacts = self::coCotLienHe()
             ? Database::fetchAll(
-                'SELECT id, message, status, created_at
+                'SELECT id, message, created_at
                    FROM contact_requests
                   WHERE user_id = :id
                   ORDER BY created_at DESC
