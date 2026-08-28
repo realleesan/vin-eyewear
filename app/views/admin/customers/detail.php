@@ -1,11 +1,17 @@
 <?php
 
 /**
- * admin/customers/detail.php — hồ sơ một khách hàng, bốn tab.
+ * admin/customers/detail.php — RUỘT hộp thoại hồ sơ một khách hàng, bốn tab.
  *
  * Controller: Admin/CustomerAdminController::show()
  *
- * File này chỉ dựng KHUNG: tiêu đề, dải số liệu, thanh tab. Nội dung từng tab
+ * KHÔNG PHẢI MỘT TRANG. Từ 2026-08-28 hồ sơ khách là hộp thoại nổi trên bảng
+ * danh sách, đúng bản thiết kế: file này được admin/customers/index.php require
+ * vào giữa modal-head và chân hộp. Vì thế ở đây không còn tiêu đề trang và
+ * không còn đường "quay lại danh sách" — hộp đã có nhan đề cùng nút ✕ của nó,
+ * mà bảng thì nằm ngay phía sau.
+ *
+ * File này dựng KHUNG của hộp: dải số liệu và thanh tab. Nội dung từng tab
  * nằm ở _tab-*.php ngay cạnh — mỗi tab một file vì gộp cả bốn vào đây thì file
  * dài hơn tám trăm dòng và không ai tìm nổi cái mình cần sửa.
  *
@@ -19,32 +25,24 @@ $ten     = $khach['full_name'] ?: '(chưa đặt tên)';
 $duongDan = '/quan-tri/khach-hang/' . rawurlencode($khach['id']);
 ?>
 
-<?php /* Đường quay lại đứng TRÊN tiêu đề, không nằm trong cụm nút bên phải:
-         nó không phải một hành động trên khách hàng này mà là lối ra khỏi
-         trang, và mắt tìm lối ra ở góc trên bên trái. */ ?>
-<p class="acus__back">
-    <a href="/quan-tri/khach-hang"><?= icon('arrow-left', '', 14) ?> Danh sách khách hàng</a>
-</p>
 
-<header class="ahead ahead--row">
-    <div>
-        <h1 class="ahead__title"><?= e($ten) ?></h1>
-        <p class="ahead__lead">
-            <?php if ($daXoa): ?>
-                <span class="badge badge--cancelled">Đã xoá</span>
-                <?= e(formatDate($khach['deleted_at'], 'd/m/Y H:i')) ?>
-            <?php elseif ($daKhoa): ?>
-                <span class="badge badge--out_of_stock">Đã khoá</span>
-                <?php if ($khach['locked_at'] !== null): ?>
-                    từ <?= e(formatDate($khach['locked_at'], 'd/m/Y')) ?>
-                <?php endif; ?>
-            <?php else: ?>
-                <span class="badge badge--in_stock">Hoạt động</span>
-            <?php endif; ?>
-            · Khách từ <?= e(formatDate($khach['created_at'], 'd/m/Y')) ?>
-        </p>
-    </div>
-</header>
+<?php /* Trạng thái tài khoản đứng ngay đầu ruột hộp — nhan đề hộp chỉ có tên
+         khách, mà "đang khoá" hay "đã xoá" là thứ phải đọc được trước khi đọc
+         bất cứ dòng nào khác. */ ?>
+<p class="acus__state">
+    <?php if ($daXoa): ?>
+        <span class="badge badge--cancelled">Đã xoá</span>
+        <?= e(formatDate($khach['deleted_at'], 'd/m/Y H:i')) ?>
+    <?php elseif ($daKhoa): ?>
+        <span class="badge badge--out_of_stock">Đã khoá</span>
+        <?php if ($khach['locked_at'] !== null): ?>
+            từ <?= e(formatDate($khach['locked_at'], 'd/m/Y')) ?>
+        <?php endif; ?>
+    <?php else: ?>
+        <span class="badge badge--in_stock">Hoạt động</span>
+    <?php endif; ?>
+    · Khách từ <?= e(formatDate($khach['created_at'], 'd/m/Y')) ?>
+</p>
 
 <?php if ($daKhoa && !$daXoa): ?>
     <?php /* LÝ DO KHOÁ HIỆN TO NGAY DƯỚI TIÊU ĐỀ, không giấu trong tab Hồ sơ.
@@ -119,8 +117,11 @@ $duongDan = '/quan-tri/khach-hang/' . rawurlencode($khach['id']);
         }
         $dangMo = $tab === $key;
         ?>
+        <?php /* data-modal: đổi tab cũng mở tại chỗ, không tải lại trang —
+                 admin-modal.js fetch địa chỉ này rồi thay ruột hộp. Tắt JS thì
+                 vẫn là bốn đường dẫn thật như trước. */ ?>
         <a class="atabs__item<?= $dangMo ? ' is-active' : '' ?>"
-           href="<?= e($duongDan) ?>?tab=<?= e(rawurlencode($key)) ?>"
+           href="<?= e($duongDan) ?>?tab=<?= e(rawurlencode($key)) ?>" data-modal
            <?= $dangMo ? 'aria-current="true"' : '' ?>>
             <?= e($label) ?>
         </a>

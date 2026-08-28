@@ -498,6 +498,55 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 .alert--ok  { border-color: var(--success); background: color-mix(in srgb, var(--success) 10%, transparent); }
 .alert--err { border-color: var(--danger);  background: color-mix(in srgb, var(--danger) 10%, transparent); }
 
+/* --- Thông báo nổi (.atoast) --------------------------------- */
+
+/*
+ * Dải chữ sẫm bo tròn ở giữa đáy màn hình — theo bản thiết kế.
+ *
+ * z-index 90 là CỐ Ý cao hơn hộp thoại (60) và ngăn kéo chi tiết đơn (61):
+ * mọi thao tác sinh ra thông báo đều bắt đầu từ trong một cái hộp, nên nếu
+ * toast nằm dưới lớp phủ thì nó chỉ hiện cho những thao tác duy nhất không
+ * cần nó.
+ *
+ * Đáy chứ không phải đỉnh: đỉnh là chỗ nhan đề hộp thoại và nút ✕, che vào đó
+ * là che đúng lối ra.
+ */
+.atoast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 90;
+    max-width: min(560px, calc(100vw - 48px));
+    margin: 0;
+    padding: 11px 22px;
+    border-radius: var(--radius-round);
+    background: var(--ink);
+    box-shadow: 0 8px 24px rgba(30, 15, 10, 0.35);
+    font-size: var(--fs-note);
+    font-weight: 500;
+    text-align: center;
+    color: var(--on-ink);
+    animation: atoast-up 0.25s ease;
+}
+
+/* Hỏng thì đổi NỀN sang đỏ, không chỉ đổi màu chữ: trên nền sẫm, chữ đỏ tụt
+   xuống dưới ngưỡng đọc được. */
+.atoast--err { background: var(--danger); }
+
+/* Hai thông báo cùng lúc (hiếm: một thành công một lỗi) thì cái thứ hai nhích
+   lên, không đè lên nhau. */
+.atoast--ok + .atoast--err { bottom: 78px; }
+
+@keyframes atoast-up {
+    from { opacity: 0; transform: translate(-50%, 10px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .atoast { animation: none; }
+}
+
 /* --- Thẻ số liệu ------------------------------------------- */
 
 /* BỐN CỘT CỐ ĐỊNH, không phải auto-fill.
@@ -1668,6 +1717,18 @@ a.alist__name:hover { color: var(--brand); }
 .aofoot .pager { justify-content: flex-end; margin-top: 0; }
 
 .aitable + .aofoot { min-width: 900px; }
+
+/* Dòng trạng thái ở đầu hộp hồ sơ khách — thay cho dòng dẫn dưới tiêu đề hồi
+   hồ sơ còn là một trang riêng. */
+.acus__state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 0 0 16px;
+    font-size: var(--fs-note);
+    color: var(--muted);
+}
 
 /* --- Trang Khách hàng (danh sách) ---------------------------- */
 
@@ -3906,22 +3967,9 @@ a.astatus__save { text-decoration: none; }
    tiền không co giãn theo độ dài tên khách ở cột đầu. */
 .acus__num-col { text-align: right; white-space: nowrap; }
 
-/* Lối ra khỏi trang chi tiết. Đứng trên tiêu đề vì mắt tìm lối ra ở góc trên
-   bên trái, không tìm trong cụm nút hành động bên phải. */
-.acus__back {
-    margin: 0 0 10px;
-    font-size: 13px;
-}
-
-.acus__back a {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--muted);
-    text-decoration: none;
-}
-
-.acus__back a:hover { color: var(--brand); }
+/* .acus__back ĐÃ BỎ: đường "quay lại danh sách" chỉ có nghĩa khi hồ sơ khách
+   là một trang riêng. Từ khi nó là hộp thoại nổi ngay trên bảng thì lối ra là
+   nút ✕ của hộp, còn bảng thì vẫn nằm đó phía sau. */
 
 /* Con số ngày/giờ trong dải .astats — nhỏ hơn hai ô tiền và số đơn bên cạnh.
    Một chuỗi "26/08/2026" đặt ở cỡ chữ của "12.500.000 đ" sẽ tràn ô trên màn

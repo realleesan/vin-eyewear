@@ -280,11 +280,31 @@ if (in_array('admin', $adminRoles, true)) {
         $flashOk  = flash('admin_success');
         $flashErr = flash('admin_error');
         ?>
+        <?php
+        /*
+         * THÔNG BÁO SAU THAO TÁC LÀ TOAST NỔI Ở ĐÁY, không phải dải chữ chèn
+         * vào đầu nội dung — theo bản thiết kế, và vì một lý do cụ thể.
+         *
+         * Từ khi form thêm/sửa và hồ sơ khách là HỘP THOẠI phủ kín màn hình,
+         * một dải thông báo nằm trong dòng chảy của trang sẽ bị lớp phủ che
+         * mất. Khoá một tài khoản khách xong, câu "Đã khoá tài khoản khách
+         * hàng." in ra ở đúng chỗ không ai nhìn thấy.
+         *
+         * Toast nổi ở z-index cao hơn hộp thoại nên nó luôn đọc được, và nó
+         * nằm ở đáy nên không che nhan đề hay nút của hộp.
+         *
+         * KHÔNG TỰ BIẾN MẤT: bản vẽ cho nó tắt sau 2,4 giây, nhưng việc đó cần
+         * JavaScript, mà thông báo là thứ phải đọc được cả khi tắt JS. Nó ở lại
+         * tới lượt tải trang kế tiếp — mà thao tác kế tiếp bất kỳ cũng sinh ra
+         * một lượt tải. Đổi lại là không có câu nào biến mất trước khi người ta
+         * kịp đọc.
+         */
+        ?>
         <?php if ($flashOk !== null): ?>
-            <p class="alert alert--ok" role="status"><?= e($flashOk) ?></p>
+            <p class="atoast atoast--ok" role="status"><?= e($flashOk) ?></p>
         <?php endif; ?>
         <?php if ($flashErr !== null): ?>
-            <p class="alert alert--err" role="alert"><?= e($flashErr) ?></p>
+            <p class="atoast atoast--err" role="alert"><?= e($flashErr) ?></p>
         <?php endif; ?>
 
         <?php require VIEWS_PATH . '/' . $viewName . '.php'; ?>

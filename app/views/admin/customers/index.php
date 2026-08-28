@@ -96,7 +96,7 @@
                                      đích bấm phải to chứ không phải một chữ
                                      "Xem" bé ở cột cuối. Cột cuối vẫn có nút
                                      cho người quen tìm nút ở đó. */ ?>
-                            <a href="<?= e($chiTiet) ?>">
+                            <a href="<?= e($chiTiet) ?>" data-modal>
                                 <?= e($kh['full_name'] ?: '(chưa đặt tên)') ?>
                             </a>
                         </td>
@@ -144,7 +144,7 @@
                         </td>
 
                         <td class="arow-actions">
-                            <a href="<?= e($chiTiet) ?>">Xem chi tiết</a>
+                            <a href="<?= e($chiTiet) ?>" data-modal>Xem chi tiết</a>
 
                             <?php /* NÚT KHOÁ / MỞ KHOÁ KHÔNG NẰM Ở ĐÂY, cố ý.
 
@@ -190,4 +190,48 @@
         </div>
     </div>
 
+<?php endif; ?>
+
+<?php
+/*
+ * HỘP THOẠI HỒ SƠ KHÁCH — theo bản thiết kế "Khách hàng.dc.html".
+ *
+ * Trước đây hồ sơ là một TRANG RIÊNG: bấm "Xem chi tiết" là rời bảng, xem
+ * xong phải bấm quay lại và mất chỗ đang đứng (trang mấy, đang lọc gì, vừa
+ * gõ tìm gì). Bản vẽ để nó nổi lên trên chính bảng ấy.
+ *
+ * $khach chỉ tồn tại khi controller đi qua show() — cùng một view dựng ra cả
+ * hai cảnh, nên với JavaScript thì admin-modal.js fetch địa chỉ
+ * /quan-tri/khach-hang/<id> rồi bóc riêng phần .amodal ra gắn tại chỗ, còn
+ * không có JavaScript thì trình duyệt tải cả trang và thấy hộp nằm sẵn trên
+ * bảng. Cùng một HTML, hai đường tới.
+ *
+ * KHÔNG dùng modal-foot: chân hộp đó có nút Lưu, mà hồ sơ khách không có gì
+ * để lưu ở cấp hộp — mọi thao tác (khoá, xoá, sửa đơn thuốc) nằm trong tab và
+ * có nút riêng của nó. Ở đây chỉ cần một lối ra.
+ */
+?>
+<?php if (isset($khach) && $khach !== null): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => $khach['full_name'] ?: '(chưa đặt tên)',
+        'phu'     => $khach['email'] ?: ($khach['phone'] ?: ''),
+        'dongUrl' => '/quan-tri/khach-hang',
+        'rong'    => 'xxl',
+    ]); ?>
+
+        <?php
+        /* require thẳng chứ không partial(): hồ sơ cần rất nhiều biến khác
+           nhau tuỳ tab ($addresses, $rxRecords, $activity…). Liệt kê lại từng
+           cái cho partial là một danh sách sẽ lệch với thực tế ngay lần sửa
+           đầu. require giữ nguyên phạm vi biến của file này. */
+        require VIEWS_PATH . '/admin/customers/detail.php';
+        ?>
+
+        </div>
+
+        <div class="amodal__foot">
+            <a class="astatus__save astatus__save--ghost" href="/quan-tri/khach-hang" data-modal-close>Đóng</a>
+        </div>
+    </div>
+</div>
 <?php endif; ?>

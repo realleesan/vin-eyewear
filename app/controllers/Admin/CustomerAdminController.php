@@ -90,12 +90,26 @@ class CustomerAdminController extends AdminController
             return;
         }
 
+        /* Giá trị lạ ở ?status= coi như không lọc, không phải lỗi — xử lý
+           trong duLieuDanhSach(). */
+        $this->renderAdmin('admin/customers/index', $this->duLieuDanhSach());
+    }
+
+    /**
+     * Dữ liệu của bảng danh sách — dùng chung cho index() và show().
+     *
+     * Tách ra từ 2026-08-28, khi hồ sơ khách chuyển từ TRANG RIÊNG sang HỘP
+     * THOẠI nổi trên chính bảng này. Hộp thoại thì phải có bảng ở phía sau nó,
+     * kể cả khi người dùng vào thẳng bằng địa chỉ /quan-tri/khach-hang/<id> —
+     * nếu không thì tắt JavaScript sẽ thấy một cái hộp lơ lửng trên nền trống.
+     *
+     * @return array<string, mixed>
+     */
+    private function duLieuDanhSach(): array
+    {
         $q      = trim((string) ($_GET['q'] ?? ''));
         $filter = (string) ($_GET['status'] ?? '');
 
-        // Giá trị lạ coi như không lọc, không phải lỗi: ?trang-thai=abc là
-        // người gõ tay địa chỉ, và trả về danh sách đầy đủ dễ hiểu hơn một
-        // trang lỗi.
         if (!isset(CustomerModel::FILTERS[$filter])) {
             $filter = '';
         }
@@ -103,7 +117,7 @@ class CustomerAdminController extends AdminController
         $page = max(1, (int) ($_GET['page'] ?? 1));
         $ket  = CustomerModel::paginateList($q, $filter, $page);
 
-        $this->renderAdmin('admin/customers/index', [
+        return [
             'pageTitle'  => 'Khách hàng — Quản trị',
             'customers'  => $ket['items'],
             'total'      => $ket['total'],
@@ -114,7 +128,7 @@ class CustomerAdminController extends AdminController
             'filters'    => CustomerModel::FILTERS,
             'counts'     => CustomerModel::counts(),
             'canManage'  => $this->laQuanLy(),
-        ]);
+        ];
     }
 
     /**
@@ -238,6 +252,20 @@ class CustomerAdminController extends AdminController
             $tab = 'ho-so';
         }
 
+        /*
+         * HỒ SƠ KHÁCH LÀ HỘP THOẠI NỔI TRÊN BẢNG, không phải một trang riêng.
+         *
+         * Vì thế payload là dữ liệu bảng CỘNG dữ liệu hồ sơ, và view dựng ra
+         * chính là admin/customers/index — nó tự vẽ hộp khi thấy $khach.
+         *
+         * Nhờ vậy có JavaScript thì bấm "Xem chi tiết" là hộp bật lên tại chỗ
+         * (admin-modal.js fetch đúng địa chỉ này rồi bóc phần .amodal ra), còn
+         * tắt JavaScript thì tải lại trang và thấy hộp nằm sẵn trên bảng —
+         * cùng một HTML, hai đường tới.
+         */
+        /* Thứ tự toán hạng của `+` có nghĩa: khoá TRÙNG thì vế TRÁI thắng. Đặt
+           dữ liệu hồ sơ bên trái để `pageTitle` là tên khách chứ không phải
+           "Khách hàng — Quản trị" của bảng. */
         $data = [
             'pageTitle' => trim(($khach['full_name'] ?? '') . ' — Khách hàng — Quản trị'),
             'khach'     => $khach,
@@ -247,7 +275,7 @@ class CustomerAdminController extends AdminController
             'canManage' => $this->laQuanLy(),
             'canRx'     => $this->canRx(),
             'genders'   => UserModel::GENDERS,
-        ];
+        ] + $this->duLieuDanhSach();
 
         /*
          * CHỈ NẠP DỮ LIỆU CỦA TAB ĐANG MỞ.
@@ -297,7 +325,7 @@ class CustomerAdminController extends AdminController
                 break;
         }
 
-        $this->renderAdmin('admin/customers/detail', $data);
+        $this->renderAdmin('admin/customers/index', $data);
     }
 
     // ========================================================================
