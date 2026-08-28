@@ -82,7 +82,7 @@ $whyOff = static function (array $v) use ($today): string {
         <p class="aempty__title">Chưa có mã giảm giá nào</p>
         <p class="aempty__note">Tạo mã đầu tiên để chạy chương trình ưu đãi cho khách.</p>
         <?php if ($canEdit): ?>
-            <a href="#form" class="astatus__save">Tạo mã đầu tiên</a>
+            <a href="/quan-tri/ma-giam-gia?them=1" class="astatus__save">Tạo mã đầu tiên</a>
         <?php endif; ?>
     </div>
 <?php else: ?>
@@ -220,7 +220,7 @@ $hienThi = array_values(array_filter($vouchers, $khop));
                         </button>
                     </form>
 
-                    <a href="/quan-tri/ma-giam-gia?sua=<?= e($v['id']) ?>#form">Sửa</a>
+                    <a href="/quan-tri/ma-giam-gia?sua=<?= e($v['id']) ?>">Sửa</a>
 
                     <?php if ((int) $v['is_public'] !== 1): ?>
                         <?php
@@ -265,13 +265,26 @@ $hienThi = array_values(array_filter($vouchers, $khop));
 
 <?php endif; ?>
 
-<?php if ($canEdit): ?>
-    <section class="aform" id="form" aria-labelledby="form-title">
-        <h2 id="form-title" class="apanel__title">
-            <?= $ed !== null ? 'Sửa mã: ' . e($ed['code']) : 'Tạo mã giảm giá mới' ?>
-        </h2>
+<?php
+/*
+ * FORM THÊM/SỬA LÀ MỘT HỘP THOẠI NỔI — theo bản thiết kế.
+ *
+ * Hộp mở ra theo ĐỊA CHỈ chứ không theo JavaScript: ?them=1 mở form trống,
+ * ?sua=<id> mở form đã điền. Nút ✕, nút Huỷ và lớp nền mờ đều là <a> trỏ về
+ * chính trang này. Lý do đầy đủ ở khối .amodal trong admin.css.
+ */
+$moHop   = $canEdit && ($ed !== null || isset($_GET['them']));
+$dongUrl = '/quan-tri/ma-giam-gia';
+?>
+<?php if ($moHop): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => $ed !== null ? 'Sửa mã giảm giá' : 'Tạo mã giảm giá mới',
+        'phu'     => $ed !== null ? $ed['code'] : 'Ba ô đầu là thứ khách nhìn thấy — điền xong ba ô là mã dùng được.',
+        'dongUrl' => $dongUrl,
+        'rong'    => 'lg',
+    ]); ?>
 
-        <form method="post" action="/quan-tri/ma-giam-gia/luu" class="aform__grid">
+        <form method="post" action="/quan-tri/ma-giam-gia/luu" class="aform__grid" id="voucher-form">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -403,5 +416,10 @@ $hienThi = array_values(array_filter($vouchers, $khop));
                 <?= $ed !== null ? 'Lưu thay đổi' : 'Tạo mã' ?>
             </button>
         </form>
-    </section>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => $dongUrl,
+        'luuNhan' => $ed !== null ? 'Lưu thay đổi' : 'Tạo mã',
+        'luuForm' => 'voucher-form',
+    ]); ?>
 <?php endif; ?>

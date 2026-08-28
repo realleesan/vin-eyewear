@@ -2162,6 +2162,184 @@ a.alist__name:hover { color: var(--brand); }
     border-top: 1px solid var(--a-row-line);
 }
 
+/* ============================================================
+   HỘP THOẠI (.amodal) — khung dùng chung cho mọi form thêm/sửa
+   ============================================================ */
+
+/*
+ * ĐÂY LÀ MỘT TRANG, KHÔNG PHẢI MỘT HỘP THOẠI JAVASCRIPT.
+ *
+ * Cùng lối với ngăn kéo đơn hàng (xem admin/orders/_drawer.php): hộp hiện ra
+ * vì ĐỊA CHỈ có ?them hoặc ?sua=<id>, nên nút ✕, nút Huỷ và lớp nền mờ đều là
+ * thẻ <a> trỏ về chính trang này khi bỏ tham số ấy — không phải nút gọi JS.
+ *
+ * Tắt JavaScript thì mở và đóng vẫn chạy, chỉ là mỗi lần tải lại trang. Đúng
+ * ràng buộc của dự án: mọi luồng phải đi được bằng form POST và chuyển hướng
+ * thật (CLAUDE.md, mục "Framework frontend").
+ *
+ * Cái giá phải trả: mở form sửa là một lượt tải trang. Đổi lại, mỗi bản ghi
+ * đang sửa có đường dẫn riêng để gửi cho nhau, bấm "quay lại" của trình duyệt
+ * làm đúng việc người dùng chờ đợi, và bấm F5 giữa chừng không mất form.
+ */
+.amodal {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(28, 16, 12, 0.5);
+    backdrop-filter: blur(3px);
+    animation: amodal-fade 0.16s ease;
+}
+
+/* Khoá cuộn trang nền khi có hộp thoại. :has() làm được việc này mà không cần
+   JS; trình duyệt không hiểu thì bỏ qua luật và trang nền cuộn được — xấu hơn
+   một chút, không hỏng gì. */
+body.admin:has(.amodal) { overflow: hidden; }
+
+/* Lớp nền mờ LÀ MỘT LIÊN KẾT phủ kín, không phải một div bắt sự kiện. Bấm ra
+   ngoài để đóng là thói quen của mọi hộp thoại; làm bằng <a> thì nó còn chạy
+   khi tắt JS, và trình đọc màn hình đọc ra là "đóng". */
+.amodal__dim {
+    position: absolute;
+    inset: 0;
+    display: block;
+}
+
+.amodal__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(620px, 96vw);
+    max-height: 92vh;
+    border-radius: 16px;
+    background: var(--surface-raised);
+    /* Bóng SÂU HƠN HẲN thẻ thường (0 1px 3px): hộp thoại phải đọc ra là đang
+       nổi trên tất cả, không phải một thẻ nữa trong dòng chảy của trang. */
+    box-shadow: 0 28px 70px rgba(30, 15, 10, 0.4);
+    overflow: hidden;
+    animation: amodal-up 0.22s ease;
+}
+
+.amodal--sm  .amodal__panel { width: min(560px, 96vw); }
+.amodal--lg  .amodal__panel { width: min(720px, 96vw); }
+.amodal--xl  .amodal__panel { width: min(880px, 96vw); }
+.amodal--xxl .amodal__panel { width: min(1040px, 96vw); }
+
+.amodal__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 26px 16px;
+    border-bottom: 1px solid var(--a-panel-line);
+}
+
+/* Serif — chỗ thứ ba trong khu quản trị dùng phông chữ ký, sau tiêu đề trang
+   và tên cơ sở. Hộp thoại là một "trang trong trang", nên nhan đề của nó theo
+   luật của nhan đề trang, chỉ nhỏ hơn một nấc. */
+.amodal__title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.amodal__sub {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    color: #9a8a79;
+}
+
+.amodal__x {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 22px;
+    line-height: 1;
+    text-decoration: none;
+    color: #9a8a79;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.amodal__x:hover { background: #f2e9d9; color: var(--ink); }
+
+/* Ruột cuộn riêng, không đẩy cả hộp cao ra: form sản phẩm dài hơn màn hình,
+   mà đầu hộp (biết đang sửa cái gì) và chân hộp (nút Lưu) phải luôn thấy. */
+.amodal__body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 26px;
+}
+
+/*
+ * Lưới trường trong hộp thoại: bỏ khoảng thở trên, và cột HẸP HƠN.
+ *
+ * Ngoài trang, lưới dùng minmax(300px) để ở bề ngang 1160px ra đúng ba cột.
+ * Trong hộp thoại thì chỗ chỉ còn ~510px, nên 300px ra ĐÚNG MỘT cột — mỗi
+ * trường một dòng, hộp dài gấp đôi và người điền phải cuộn. Bản thiết kế xếp
+ * hai trường ngắn (Tên · Slug) cạnh nhau.
+ *
+ * 210px cho hai cột trong hộp nhỏ và ba cột trong hộp rộng, tự rút về một cột
+ * trên điện thoại — không cần mốc @media nào.
+ */
+.amodal .aform__grid {
+    margin-top: 0;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+
+/* Khối phụ trong hộp thoại (câu hỏi thường gặp của bộ sưu tập) — giữ khung
+   thẻ để nó tách khỏi cụm trường bên trên, chỉ bỏ nền cho nhẹ mắt: hai lớp
+   nền sáng lồng nhau trong một hộp đã nổi sẵn thì tầng nào cũng nhạt như
+   tầng nào. */
+.amodal .aform {
+    margin-top: 18px;
+    background: transparent;
+}
+
+.amodal__foot {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 26px;
+    border-top: 1px solid var(--a-panel-line);
+    background: #faf5ea;
+}
+
+/* Câu nhắc ở chân hộp ("Trạng thái Nháp thì khách chưa thấy…") — dồn trái, để
+   cụm nút ở lại mép phải. */
+.amodal__note {
+    flex: 1;
+    margin: 0;
+    font-size: 12px;
+    color: #98897b;
+}
+
+@keyframes amodal-fade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes amodal-up {
+    from { opacity: 0; transform: translateY(16px) scale(0.985); }
+    to   { opacity: 1; transform: none; }
+}
+
+/* Người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành thì đừng trượt gì
+   cả — hộp thoại bật ra tại chỗ. */
+@media (prefers-reduced-motion: reduce) {
+    .amodal,
+    .amodal__panel { animation: none; }
+}
+
 /* --- Cặp nút đổi thứ tự (.aord) ------------------------------ */
 
 /*
@@ -3031,7 +3209,20 @@ a.astatus__save {
     color: var(--ink);
 }
 
-.aform__grid textarea { resize: vertical; line-height: 1.6; font-family: var(--font-mono); }
+/* CHỮ THƯỜNG, không phải chữ đẳng khoảng — đổi theo bản thiết kế.
+
+   Trước đây mọi <textarea> trong khu quản trị đều mono. Nó hợp lý cho đúng một
+   ô: bảng thông số sản phẩm, nơi mỗi dòng là "nhãn: giá trị" và cột thẳng hàng
+   thì soát nhanh hơn. Còn lại là văn xuôi tiếng Việt — mô tả danh mục, câu
+   chuyện bộ sưu tập, ghi chú — và chữ đẳng khoảng làm tiếng Việt có dấu trông
+   thưa, rời rạc, khó đọc hơn hẳn.
+
+   Ô nào thật sự cần thì đeo .field--code (xem ngay dưới). */
+.aform__grid textarea { resize: vertical; line-height: 1.6; }
+
+/* Ô nhập có cấu trúc theo dòng ("nhãn: giá trị") — chữ đẳng khoảng để cột
+   thẳng hàng, soát bằng mắt được. */
+.field--code textarea { font-family: var(--font-mono); }
 
 .aform__grid input:focus,
 .aform__grid select:focus,

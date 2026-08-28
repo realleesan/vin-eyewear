@@ -200,7 +200,7 @@ $dongSignature = implode("\n", array_map(
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
-                            <a href="/quan-tri/bo-suu-tap?sua=<?= e($c['id']) ?>#form">Sửa</a>
+                            <a href="/quan-tri/bo-suu-tap?sua=<?= e($c['id']) ?>">Sửa</a>
 
                             <?php if ($soHang > 0): ?>
                                 <?php /* KHÔNG in nút Xoá khi còn hàng. Máy chủ vẫn
@@ -228,15 +228,34 @@ $dongSignature = implode("\n", array_map(
     </table>
 </div>
 
-<?php if ($canEdit): ?>
-    <section class="aform" id="form" aria-labelledby="form-title">
-        <h2 id="form-title" class="apanel__title">
-            <?= $ed !== null ? 'Sửa bộ sưu tập: ' . e($ed['name']) : 'Thêm bộ sưu tập mới' ?>
-        </h2>
+<?php
+/*
+ * FORM THÊM/SỬA LÀ MỘT HỘP THOẠI NỔI — theo bản thiết kế.
+ *
+ * Hộp mở theo ĐỊA CHỈ chứ không theo JavaScript: ?them=1 mở form trống,
+ * ?sua=<id> mở form đã điền. Xem khối .amodal trong admin.css.
+ *
+ * KHỐI CÂU HỎI THƯỜNG GẶP NẰM LUÔN TRONG HỘP, ngay dưới form chính. Nó chỉ
+ * hiện khi đang sửa một bộ đã lưu; để nó ở ngoài thì hộp thoại phủ kín màn
+ * hình sẽ che mất và người dùng không có cách nào chạm tới. Ruột hộp cuộn
+ * riêng nên thêm một khối vào đây không làm hộp tràn ra khỏi màn hình.
+ */
+$moHop   = $canEdit && ($ed !== null || isset($_GET['them']));
+$dongUrl = '/quan-tri/bo-suu-tap';
+?>
+<?php if ($moHop): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => $ed !== null ? 'Sửa bộ sưu tập' : 'Thêm bộ sưu tập mới',
+        'phu'     => $ed !== null
+            ? $ed['name']
+            : 'Điền tên và đường dẫn là lưu được nháp — phần còn lại bổ sung dần.',
+        'dongUrl' => $dongUrl,
+        'rong'    => 'xl',
+    ]); ?>
 
         <?php /* enctype BẮT BUỘC: thiếu nó thì trình duyệt gửi mỗi TÊN file dưới
                  dạng text, $_FILES rỗng, và form "chạy" mà ảnh không lên. */ ?>
-        <form method="post" action="/quan-tri/bo-suu-tap/luu" class="aform__grid"
+        <form method="post" action="/quan-tri/bo-suu-tap/luu" class="aform__grid" id="coll-form"
               enctype="multipart/form-data">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
@@ -644,9 +663,7 @@ $dongSignature = implode("\n", array_map(
                 </div>
             <?php endif; ?>
 
-            <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm bộ sưu tập' ?></button>
         </form>
-    </section>
 
     <?php
     /*
@@ -755,4 +772,11 @@ $dongSignature = implode("\n", array_map(
             </p>
         </section>
     <?php endif; ?>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => $dongUrl,
+        'luuNhan' => $ed !== null ? 'Lưu thay đổi' : 'Thêm bộ sưu tập',
+        'luuForm' => 'coll-form',
+        'ghiChu'  => 'Bộ đang ẩn thì khách chưa thấy ở trang bán hàng.',
+    ]); ?>
 <?php endif; ?>

@@ -92,7 +92,7 @@ $ed = $editing;
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
-                            <a href="/quan-tri/danh-muc?sua=<?= e($c['id']) ?>#form">Sửa</a>
+                            <a href="/quan-tri/danh-muc?sua=<?= e($c['id']) ?>">Sửa</a>
                             <?php $hoi = sprintf('Xoá danh mục “%s”?', $c['name']); ?>
                             <form method="post" action="/quan-tri/danh-muc/xoa"
                                   data-confirm="<?= e($hoi) ?>"
@@ -111,13 +111,35 @@ $ed = $editing;
     </table>
 </div>
 
-<?php if ($canEdit): ?>
-    <section class="aform" id="form" aria-labelledby="form-title">
-        <h2 id="form-title" class="apanel__title">
-            <?= $ed !== null ? 'Sửa danh mục: ' . e($ed['name']) : 'Thêm danh mục mới' ?>
-        </h2>
+<?php
+/*
+ * FORM THÊM/SỬA LÀ MỘT HỘP THOẠI NỔI — theo bản thiết kế "Danh mục.dc.html".
+ *
+ * Trước đây nó nằm cuối trang, bấm "+ Thêm" là màn hình nhảy xuống một biểu
+ * mẫu ngoài tầm nhìn. Với bảng bốn dòng thì còn đọc được; với bảng hai mươi
+ * dòng thì người bấm mất luôn ngữ cảnh, và sửa xong không biết mình vừa sửa
+ * dòng nào.
+ *
+ * Hộp mở ra theo ĐỊA CHỈ, không theo JavaScript: ?them=1 mở form trống,
+ * ?sua=<id> mở form đã điền. Nút ✕, nút Huỷ và lớp nền mờ đều là <a> trỏ về
+ * chính trang này. Xem khối .amodal trong admin.css.
+ */
+$moHop  = $canEdit && ($ed !== null || isset($_GET['them']));
+$dongUrl = '/quan-tri/danh-muc';
+?>
+<?php if ($moHop): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => $ed !== null ? 'Sửa danh mục' : 'Thêm danh mục mới',
+        'phu'     => $ed !== null
+            ? $ed['name']
+            : 'Danh mục mới đứng cuối menu — đổi vị trí bằng nút ↑↓ trên bảng.',
+        'dongUrl' => $dongUrl,
+        'rong'    => 'sm',
+    ]); ?>
 
-        <form method="post" action="/quan-tri/danh-muc/luu" class="aform__grid">
+        <?php /* id="cat-form" để nút Lưu ở chân hộp trỏ tới bằng thuộc tính
+                 form= — nút ấy nằm ngoài vùng cuộn của ruột hộp. */ ?>
+        <form method="post" action="/quan-tri/danh-muc/luu" class="aform__grid" id="cat-form">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -133,25 +155,28 @@ $ed = $editing;
                        value="<?= e($ed['slug'] ?? '') ?>">
             </div>
 
-            <div class="field">
-                <label for="sort_order">Thứ tự sắp xếp</label>
-                <input type="number" id="sort_order" name="sort_order" step="1"
-                       value="<?= (int) ($ed['sort_order'] ?? 0) ?>">
+            <?php /* Ô "Thứ tự sắp xếp" ĐÃ BỎ khỏi form: cột ấy nay do cặp nút ↑↓
+                     trên bảng ghi, và ghi lại cho CẢ bảng mỗi lần bấm (xem
+                     ThuTuService). Để lại một ô cho người ta gõ tay vào thì hai
+                     cơ chế cùng viết một cột — gõ số 5 vào đây rồi bấm ↑ một
+                     lần là con số ấy bị ghi đè, không dấu vết. */ ?>
+
+            <div class="field field--wide">
+                <label for="description">Mô tả</label>
+                <textarea id="description" name="description" rows="3"><?= e($ed['description'] ?? '') ?></textarea>
             </div>
 
-            <div class="field field--check">
+            <div class="field field--check field--wide">
                 <label>
                     <input type="checkbox" name="is_visible" <?= ($ed === null || $ed['is_visible']) ? 'checked' : '' ?>>
                     Hiển thị trên trang bán hàng
                 </label>
             </div>
-
-            <div class="field field--wide">
-                <label for="description">Mô tả</label>
-                <textarea id="description" name="description" rows="2"><?= e($ed['description'] ?? '') ?></textarea>
-            </div>
-
-            <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm danh mục' ?></button>
         </form>
-    </section>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => $dongUrl,
+        'luuNhan' => $ed !== null ? 'Lưu thay đổi' : 'Thêm danh mục',
+        'luuForm' => 'cat-form',
+    ]); ?>
 <?php endif; ?>

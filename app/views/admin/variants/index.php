@@ -86,7 +86,7 @@ $base = '/quan-tri/bien-the';
                         </td>
                         <?php if ($canEdit): ?>
                             <td class="arow-actions">
-                                <a href="<?= e($base) ?>?sp=<?= e($product['id']) ?>&amp;sua=<?= e($v['id']) ?>#form">Sửa</a>
+                                <a href="<?= e($base) ?>?sp=<?= e($product['id']) ?>&amp;sua=<?= e($v['id']) ?>">Sửa</a>
                                 <?php $hoi = sprintf('Xoá phương án “%s”?', $v['label']); ?>
                                 <form method="post" action="<?= e($base) ?>/xoa"
                                       data-confirm="<?= e($hoi) ?>"

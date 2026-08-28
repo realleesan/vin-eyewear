@@ -98,7 +98,7 @@
 
                         <?php if ($canEdit): ?>
                             <td class="arow-actions">
-                                <a href="/quan-tri/gia-trong/goi?sua=<?= e($p['id']) ?>#form">Sửa</a>
+                                <a href="/quan-tri/gia-trong/goi?sua=<?= e($p['id']) ?>">Sửa</a>
 
                                 <?php
                                 /* Câu hỏi lại NÓI RA SỐ MỨC GIÁ SẼ MẤT THEO.
@@ -134,13 +134,26 @@
     </div>
 <?php endif; ?>
 
-<?php if ($canEdit): ?>
-    <section class="aform" id="form" aria-labelledby="form-title">
-        <h2 id="form-title" class="apanel__title">
-            <?= $editing !== null ? 'Sửa gói: ' . e($editing['name']) : 'Thêm gói chiết suất' ?>
-        </h2>
+<?php
+/*
+ * FORM THÊM/SỬA LÀ MỘT HỘP THOẠI NỔI — theo bản thiết kế.
+ *
+ * Hộp mở ra theo ĐỊA CHỈ chứ không theo JavaScript: ?them=1 mở form trống,
+ * ?sua=<id> mở form đã điền. Nút ✕, nút Huỷ và lớp nền mờ đều là <a> trỏ về
+ * chính trang này. Lý do đầy đủ ở khối .amodal trong admin.css.
+ */
+$moHop   = $canEdit && ($editing !== null || isset($_GET['them']));
+$dongUrl = '/quan-tri/gia-trong/goi';
+?>
+<?php if ($moHop): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => $editing !== null ? 'Sửa gói chiết suất' : 'Thêm gói chiết suất',
+        'phu'     => $editing !== null ? $editing['name'] : 'Gói mới đứng cuối danh sách — đổi vị trí bằng nút ↑↓ trên bảng.',
+        'dongUrl' => $dongUrl,
+        'rong'    => 'sm',
+    ]); ?>
 
-        <form method="post" action="/quan-tri/gia-trong/goi/luu" class="aform__grid">
+        <form method="post" action="/quan-tri/gia-trong/goi/luu" class="aform__grid" id="pkg-form">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <?php /* Ô này phân biệt SỬA với THÊM, và controller chốt ở nó chứ
                      không ở ô `id` bên dưới — readonly là chuyện của trình duyệt,
@@ -200,5 +213,10 @@
                 <?= $editing !== null ? 'Lưu thay đổi' : 'Thêm gói' ?>
             </button>
         </form>
-    </section>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => $dongUrl,
+        'luuNhan' => $editing !== null ? 'Lưu thay đổi' : 'Thêm gói',
+        'luuForm' => 'pkg-form',
+    ]); ?>
 <?php endif; ?>

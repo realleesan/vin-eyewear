@@ -161,7 +161,7 @@ $duongDanCat = static function (string $id) use ($giuQ): string {
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
-                            <a href="/quan-tri/san-pham?sua=<?= e($p['id']) ?>#form">Sửa</a>
+                            <a href="/quan-tri/san-pham?sua=<?= e($p['id']) ?>">Sửa</a>
                             <?php $hoi = sprintf('Xoá sản phẩm “%s”?', $p['name']); ?>
                             <form method="post" action="/quan-tri/san-pham/xoa"
                                   data-confirm="<?= e($hoi) ?>"
@@ -193,16 +193,29 @@ $duongDanCat = static function (string $id) use ($giuQ): string {
     </nav>
 <?php endif; ?>
 
-<?php if ($canEdit): ?>
-    <section class="aform" id="form" aria-labelledby="form-title">
-        <h2 id="form-title" class="apanel__title">
-            <?= $ed !== null ? 'Sửa sản phẩm: ' . e($ed['name']) : 'Thêm sản phẩm mới' ?>
-        </h2>
+<?php
+/*
+ * FORM THÊM/SỬA LÀ MỘT HỘP THOẠI NỔI — theo bản thiết kế.
+ *
+ * Hộp mở ra theo ĐỊA CHỈ chứ không theo JavaScript: ?them=1 mở form trống,
+ * ?sua=<id> mở form đã điền. Nút ✕, nút Huỷ và lớp nền mờ đều là <a> trỏ về
+ * chính trang này. Lý do đầy đủ ở khối .amodal trong admin.css.
+ */
+$moHop   = $canEdit && ($ed !== null || isset($_GET['them']));
+$dongUrl = '/quan-tri/san-pham';
+?>
+<?php if ($moHop): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => $ed !== null ? 'Sửa sản phẩm' : 'Thêm sản phẩm mới',
+        'phu'     => $ed !== null ? $ed['name'] : 'Điền tên, SKU và giá là lưu được — phần sau bổ sung dần.',
+        'dongUrl' => $dongUrl,
+        'rong'    => 'xxl',
+    ]); ?>
 
         <?php /* enctype BẮT BUỘC: thiếu nó thì trình duyệt gửi mỗi TÊN file
                  dưới dạng text, $_FILES rỗng, và form "chạy" mà không ảnh nào
                  lên — không có lỗi nào để lần ra. */ ?>
-        <form method="post" action="/quan-tri/san-pham/luu" class="aform__grid"
+        <form method="post" action="/quan-tri/san-pham/luu" class="aform__grid" id="product-form"
               enctype="multipart/form-data">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
@@ -677,7 +690,11 @@ $duongDanCat = static function (string $id) use ($giuQ): string {
                 </div>
             <?php endif; ?>
 
-            <div class="field field--wide">
+            <?php /* field--code: ô này giữ chữ đẳng khoảng (xem admin.css). Mỗi
+                     dòng là "nhãn: giá trị", cột thẳng hàng thì soát nhanh hơn —
+                     đây là ô duy nhất trong khu quản trị đáng đánh đổi như vậy,
+                     mọi ô còn lại là văn xuôi tiếng Việt. */ ?>
+            <div class="field field--wide field--code">
                 <label for="specs">Thông số — mỗi dòng "Nhãn: giá trị"</label>
                 <textarea id="specs" name="specs" rows="4"
                           placeholder="Vật liệu: Titan&#10;Kích thước: 52-18-140"><?= e($edSpecs) ?></textarea>
@@ -685,5 +702,10 @@ $duongDanCat = static function (string $id) use ($giuQ): string {
 
             <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm sản phẩm' ?></button>
         </form>
-    </section>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => $dongUrl,
+        'luuNhan' => $ed !== null ? 'Lưu thay đổi' : 'Thêm sản phẩm',
+        'luuForm' => 'product-form',
+    ]); ?>
 <?php endif; ?>

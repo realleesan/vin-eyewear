@@ -72,13 +72,18 @@ $addLabel = $addLabel ?? '+ Thêm mới';
         <?php endif; ?>
 
         <?php if ($canEdit): ?>
-            <?php if ($editing !== null): ?>
-                <a href="<?= e($base) ?>" class="astatus__save astatus__save--ghost">Huỷ sửa</a>
-            <?php else: ?>
-                <!-- Neo tới form bên dưới thay vì mở trang riêng: danh sách ở đây
-                     ngắn, giữ cả hai trên một màn hình đỡ một lượt tải trang. -->
-                <a href="#form" class="astatus__save"><?= e($addLabel) ?></a>
-            <?php endif; ?>
+            <?php /* ?them=1 MỞ HỘP THOẠI, không còn neo #form xuống cuối trang.
+
+                     Form thêm/sửa nay là một hộp nổi (xem .amodal trong
+                     admin.css) và nó mở ra theo ĐỊA CHỈ chứ không theo
+                     JavaScript. Nên cái nút này chỉ là một liên kết thường —
+                     bấm giữa chuột mở tab mới, gửi đường dẫn cho đồng nghiệp
+                     cũng ra đúng cái form đang mở.
+
+                     Vẫn hiện nút kể cả khi đang sửa: hộp thoại phủ kín màn
+                     hình nên không ai nhìn thấy nó lúc đó, mà bỏ đi thì dòng
+                     tiêu đề co lại rồi giãn ra mỗi lần đóng mở hộp. */ ?>
+            <a href="<?= e($base) ?>?them=1" class="astatus__save"><?= e($addLabel) ?></a>
         <?php else: ?>
             <p class="ahead__note">Bạn chỉ có quyền xem. Cần quyền quản lý để chỉnh sửa.</p>
         <?php endif; ?>

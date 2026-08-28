@@ -31,8 +31,11 @@ $paid = $order['payment_status'] === 'paid';
 <aside class="aodraw" aria-label="Chi tiết đơn <?= e($order['code']) ?>">
     <header class="aodraw__head">
         <div>
-            <p class="aodraw__code"><?= e($order['code']) ?></p>
-            <p class="aodraw__when"><?= e(formatDate($order['created_at'], 'd/m/Y H:i')) ?></p>
+            <?php /* "Đơn DH-…" chứ không phải mã trần — theo bản thiết kế. Từ khi
+                     đây là hộp thoại giữa màn hình chứ không còn là ngăn kéo dán
+                     vào mép, nhan đề phải tự nói ra nó là nhan đề của cái gì. */ ?>
+            <h2 class="aodraw__code">Đơn <?= e($order['code']) ?></h2>
+            <p class="aodraw__when">Đặt lúc <?= e(formatDate($order['created_at'], 'd/m/Y H:i')) ?></p>
         </div>
         <a class="aodraw__x" href="<?= e($dongUrl) ?>" aria-label="Đóng">&times;</a>
     </header>

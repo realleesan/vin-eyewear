@@ -109,7 +109,7 @@ $ed = $editing;
                         </button>
                     </form>
 
-                    <a href="/quan-tri/co-so?sua=<?= e($s['id']) ?>#form">Sửa</a>
+                    <a href="/quan-tri/co-so?sua=<?= e($s['id']) ?>">Sửa</a>
                     <?php $hoi = sprintf('Xoá cơ sở “%s”?', $s['name']); ?>
                     <form method="post" action="/quan-tri/co-so/xoa"
                           data-confirm="<?= e($hoi) ?>"
@@ -126,13 +126,26 @@ $ed = $editing;
     <?php endforeach; ?>
 </div>
 
-<?php if ($canEdit): ?>
-    <section class="aform" id="form" aria-labelledby="form-title">
-        <h2 id="form-title" class="apanel__title">
-            <?= $ed !== null ? 'Sửa cơ sở: ' . e($ed['name']) : 'Thêm cơ sở mới' ?>
-        </h2>
+<?php
+/*
+ * FORM THÊM/SỬA LÀ MỘT HỘP THOẠI NỔI — theo bản thiết kế.
+ *
+ * Hộp mở ra theo ĐỊA CHỈ chứ không theo JavaScript: ?them=1 mở form trống,
+ * ?sua=<id> mở form đã điền. Nút ✕, nút Huỷ và lớp nền mờ đều là <a> trỏ về
+ * chính trang này. Lý do đầy đủ ở khối .amodal trong admin.css.
+ */
+$moHop   = $canEdit && ($ed !== null || isset($_GET['them']));
+$dongUrl = '/quan-tri/co-so';
+?>
+<?php if ($moHop): ?>
+    <?php partial('admin/_layout/modal-head', [
+        'tieuDe'  => $ed !== null ? 'Sửa cơ sở' : 'Thêm cơ sở mới',
+        'phu'     => $ed !== null ? $ed['name'] : 'Cơ sở đang hoạt động sẽ hiện trong bước chọn nơi hẹn của khách.',
+        'dongUrl' => $dongUrl,
+        'rong'    => 'lg',
+    ]); ?>
 
-        <form method="post" action="/quan-tri/co-so/luu" class="aform__grid">
+        <form method="post" action="/quan-tri/co-so/luu" class="aform__grid" id="store-form">
             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
             <input type="hidden" name="id" value="<?= e($ed['id'] ?? '') ?>">
 
@@ -184,5 +197,10 @@ $ed = $editing;
 
             <button type="submit" class="astatus__save"><?= $ed !== null ? 'Lưu thay đổi' : 'Thêm cơ sở' ?></button>
         </form>
-    </section>
+
+    <?php partial('admin/_layout/modal-foot', [
+        'dongUrl' => $dongUrl,
+        'luuNhan' => $ed !== null ? 'Lưu thay đổi' : 'Thêm cơ sở',
+        'luuForm' => 'store-form',
+    ]); ?>
 <?php endif; ?>

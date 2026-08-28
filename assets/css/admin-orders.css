@@ -635,6 +635,7 @@
 @media (prefers-reduced-motion: reduce) {
     .aobulk,
     .aoundo,
+    .aodim,
     .aodraw { animation: none; }
 }
 
@@ -654,35 +655,49 @@
 .aoundo__go:hover { text-decoration: underline; }
 
 /* ============================================================
-   6. NGĂN KÉO CHI TIẾT
+   6. CHI TIẾT ĐƠN — HỘP THOẠI GIỮA MÀN HÌNH
    ============================================================ */
 
-/* Nền mờ LÀ MỘT THẺ <a> trỏ về trang không có ?xem= — bấm ra ngoài để đóng,
-   không cần JavaScript. Xem app/views/admin/orders/_drawer.php. */
+/*
+ * TRƯỚC ĐÂY LÀ NGĂN KÉO TRƯỢT VÀO TỪ MÉP PHẢI, nay là hộp thoại giữa màn hình
+ * — đổi theo bản thiết kế "Đơn hàng.dc.html".
+ *
+ * Ngăn kéo hợp lý khi nội dung của nó là một cột hẹp mà người dùng vừa đọc vừa
+ * đối chiếu với bảng phía sau. Nội dung ở đây không phải vậy: nó là một tờ đơn
+ * đầy đủ (khách, giao nhận, sản phẩm kèm số đo, tiền), và cột 460px ép mọi
+ * dòng xuống hai ba hàng. Hộp giữa màn hình rộng 680px cho phép xếp thông tin
+ * khách và thông tin giao nhận thành hai cột cạnh nhau, đúng như bản vẽ.
+ *
+ * Cơ chế thì KHÔNG đổi: vẫn mở theo ?xem=<id> trên địa chỉ, nút ✕ và nền mờ
+ * vẫn là thẻ <a>. Xem app/views/admin/orders/_drawer.php.
+ */
 .aodim {
     position: fixed;
     inset: 0;
-    z-index: 40;
-    background: rgba(38, 18, 14, 0.32);
+    z-index: 60;
+    background: rgba(28, 16, 12, 0.5);
+    backdrop-filter: blur(3px);
+    animation: amodal-fade 0.16s ease;
 }
 
+/* Canh giữa bằng inset:0 + margin:auto chứ không bằng translate(-50%,-50%):
+   cách kia ghim chiều cao vào tâm màn hình, nên hộp cao hơn cửa sổ sẽ thò cả
+   hai đầu ra ngoài và phần đầu — nơi có mã đơn — không cuộn tới được. */
 .aodraw {
     position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 41;
+    inset: 0;
+    z-index: 61;
+    margin: auto;
     display: flex;
     flex-direction: column;
-    width: min(460px, 92vw);
+    width: min(680px, 96vw);
+    max-height: 90vh;
+    height: fit-content;
+    border-radius: 16px;
     background: var(--surface-raised);
-    box-shadow: -14px 0 44px rgba(38, 18, 14, 0.2);
-    animation: aoSlide 0.22s ease;
-}
-
-@keyframes aoSlide {
-    from { transform: translateX(36px); opacity: 0; }
-    to   { transform: none; opacity: 1; }
+    box-shadow: 0 28px 70px rgba(30, 15, 10, 0.4);
+    overflow: hidden;
+    animation: amodal-up 0.22s ease;
 }
 
 .aodraw__head {
@@ -690,39 +705,49 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--line);
+    padding: 20px 26px 16px;
+    border-bottom: 1px solid var(--a-panel-line);
 }
 
+/* SERIF, không phải chữ đẳng khoảng đỏ — theo bản thiết kế, và cùng luật với
+   nhan đề của mọi hộp thoại khác (xem .amodal__title trong admin.css).
+
+   Mã đơn vẫn là chữ đẳng khoảng ở BẢNG, nơi nó là một định danh nằm giữa hai
+   mươi định danh khác và mắt quét dọc để tìm. Ở đây nó là NHAN ĐỀ của cái đang
+   mở — chỉ có một, không phải tìm — nên nó theo luật nhan đề. */
 .aodraw__code {
     margin: 0;
-    font-family: var(--font-mono);
-    font-size: 15px;
+    font-family: var(--font-serif);
+    font-size: 19px;
     font-weight: 700;
-    color: var(--brand);
+    color: var(--ink);
 }
 
 .aodraw__when {
-    margin: 4px 0 0;
-    font-size: var(--fs-caption);
-    color: var(--muted);
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    color: #9a8a79;
 }
 
+/* Cùng dáng với .amodal__x: chữ × trần, chỉ hiện nền khi rê chuột. Nền đặc
+   sẵn làm nó thành nút nặng nhất trong cả hộp, trong khi việc nó làm là đóng
+   lại — thứ người ta bấm sau cùng, không phải trước tiên. */
 .aodraw__x {
-    display: grid;
     flex-shrink: 0;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: var(--radius-sm);
-    background: #f3ebdb;
-    font-size: 17px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: transparent;
+    font-size: 22px;
     line-height: 1;
-    color: #6b5b4e;
+    color: #9a8a79;
     text-decoration: none;
+    transition: background-color 0.15s, color 0.15s;
 }
 
-.aodraw__x:hover { background: var(--line); color: var(--ink); }
+.aodraw__x:hover { background: #f2e9d9; color: var(--ink); }
+
+/* Khoá cuộn trang nền — cùng luật với .amodal trong admin.css. */
+body.admin:has(.aodraw) { overflow: hidden; }
 
 .aodraw__body {
     flex: 1;
