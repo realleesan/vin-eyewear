@@ -166,11 +166,7 @@ $soDongTrong = 3;
                 <div class="field">
                     <label for="publish_status">Trạng thái</label>
                     <select id="publish_status" name="publish_status">
-                        <?php foreach ($trangThais as $ma => $nhan): ?>
-                            <option value="<?= e($ma) ?>" <?= $trangThai === $ma ? 'selected' : '' ?>>
-                                <?= e($nhan) ?>
-                            </option>
-                        <?php endforeach; ?>
+                        <?php $doOption($trangThais, $trangThai); ?>
                     </select>
                 </div>
             </div>
@@ -520,13 +516,7 @@ $soDongTrong = 3;
                     <label for="lens_category">Độ đậm tròng</label>
                     <select id="lens_category" name="lens_category">
                         <option value="">— Chưa xác định —</option>
-                        <?php foreach ($capTrongs as $cap => $nhan): ?>
-                            <option value="<?= (int) $cap ?>"
-                                <?= $ky('lens_category') !== '' && (int) $ky('lens_category') === (int) $cap
-                                    ? 'selected' : '' ?>>
-                                <?= e($nhan) ?>
-                            </option>
-                        <?php endforeach; ?>
+                        <?php $doOption($capTrongs, $ky('lens_category')); ?>
                     </select>
                 </div>
             </fieldset>
