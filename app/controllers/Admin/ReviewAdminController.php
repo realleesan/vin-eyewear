@@ -34,6 +34,21 @@ class ReviewAdminController extends AdminController
             'status'    => $status,
             'statuses'  => ReviewModel::STATUSES,
             'counts'    => $this->counts(),
+            /*
+             * ĐIỂM TRUNG BÌNH — chỉ tính đánh giá ĐANG HIỆN.
+             *
+             * Gộp cả bài chờ duyệt vào thì con số nhảy mỗi lần có khách viết
+             * bài mới, trong khi thứ nó phải mô tả là điểm mà người lạ vào
+             * trang bán hàng NHÌN THẤY. Một bài 1 sao đang nằm chờ duyệt không
+             * hạ điểm của cửa hàng cho tới lúc ai đó bấm Duyệt.
+             *
+             * Trả null khi chưa có bài nào hiện — view bỏ hẳn vế câu đó thay vì
+             * in "0.0★", con số đọc lên là sai (không phải điểm 0, mà là chưa
+             * có điểm).
+             */
+            'diemTrungBinh' => Database::fetchValue(
+                "SELECT AVG(rating) FROM reviews WHERE status = 'published'"
+            ),
         ]);
     }
 

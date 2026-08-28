@@ -117,13 +117,13 @@ $dongSignature = implode("\n", array_map(
 <?php endif; ?>
 
 <div class="atable-wrap">
-    <table class="atable atable--full">
+    <table class="atable abstable">
         <thead>
             <tr>
-                <th scope="col">Tên</th>
-                <th scope="col">Ra mắt</th>
+                <th scope="col">Bộ sưu tập</th>
+                <th scope="col">Lên kệ</th>
                 <th scope="col">Sản phẩm</th>
-                <th scope="col">Hiển thị</th>
+                <th scope="col">Trạng thái</th>
                 <?php if ($canEdit): ?><th scope="col">Thao tác</th><?php endif; ?>
             </tr>
         </thead>
@@ -142,9 +142,13 @@ $dongSignature = implode("\n", array_map(
                                  link chết. Đường xem trang chi tiết nằm trong
                                  ô "Câu chuyện" của form, chỗ chỉ mở ra khi
                                  đang sửa đúng một bộ. */ ?>
-                        <a href="/san-pham?collection=<?= e(rawurlencode($c['slug'])) ?>"
+                        <a class="absname" href="/san-pham?collection=<?= e(rawurlencode($c['slug'])) ?>"
                            target="_blank" rel="noopener"><?= e($c['name']) ?></a>
-                        <span class="atable__sub"><code><?= e($c['slug']) ?></code></span>
+                        <?php /* Slug là chữ đẳng khoảng ĐỎ, không bọc <code> có nền:
+                                 nó là một mẩu đường dẫn, và bản thiết kế cho nó dáng
+                                 giống mã đơn / SKU ở các bảng khác — cùng loài thì
+                                 cùng dáng. */ ?>
+                        <span class="absslug"><?= e($c['slug']) ?></span>
                     </td>
                     <td><?= !empty($c['launched_at']) ? e(formatDate($c['launched_at'])) : '—' ?></td>
                     <td class="num">
@@ -154,8 +158,11 @@ $dongSignature = implode("\n", array_map(
                         <?= $soHang > 0 ? (int) $soHang : '—' ?>
                     </td>
                     <td>
-                        <span class="badge badge--<?= $c['is_visible'] ? 'in_stock' : 'cancelled' ?>">
-                            <?= $c['is_visible'] ? 'Hiện' : 'Ẩn' ?>
+                        <?php /* "Đang ẩn" TRUNG TÍNH, không đỏ — cùng luật với bảng
+                                 sản phẩm và danh mục. Ẩn một bộ sưu tập hết mùa là
+                                 việc bình thường, không phải sự cố. */ ?>
+                        <span class="badge badge--<?= $c['is_visible'] ? 'in_stock' : 'neutral' ?>">
+                            <?= $c['is_visible'] ? 'Đang bán' : 'Đang ẩn' ?>
                         </span>
                     </td>
                     <?php if ($canEdit): ?>

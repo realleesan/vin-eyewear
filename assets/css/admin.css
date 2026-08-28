@@ -1616,6 +1616,341 @@ a.alist__name:hover { color: var(--brand); }
 
 .aitable + .aofoot { min-width: 900px; }
 
+/* --- Trang Khách hàng (danh sách) ---------------------------- */
+
+/* Bảy cột, hai cột đầu co giãn (tên và cụm liên hệ) — chúng mang chữ dài tuỳ
+   ý, năm cột còn lại đều là ngày, số hoặc viên nhãn. Con số của bản vẽ. */
+.acustable {
+    min-width: 1020px;
+    table-layout: fixed;
+}
+
+.acustable th,
+.acustable td { padding: 14px 7px; vertical-align: top; }
+
+.acustable th:first-child,
+.acustable td:first-child { padding-left: 22px; }
+
+.acustable th:last-child,
+.acustable td:last-child { padding-right: 22px; }
+
+.acustable thead th { padding-block: 12px; vertical-align: middle; }
+
+.acustable th:nth-child(3), .acustable td:nth-child(3) { width: 150px; }
+.acustable th:nth-child(4), .acustable td:nth-child(4) { width: 80px; }
+.acustable th:nth-child(5), .acustable td:nth-child(5) { width: 130px; }
+.acustable th:nth-child(6), .acustable td:nth-child(6) { width: 110px; }
+.acustable th:nth-child(7), .acustable td:nth-child(7) { width: 110px; }
+
+/* Hai cột đầu cắt bằng ellipsis: một địa chỉ email dài hoặc một cái tên bốn
+   từ không được kéo cao cả hàng — bảng này thường dài hai mươi dòng. */
+.acustable td:nth-child(1) > *,
+.acustable td:nth-child(2) > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --- Trang Bộ sưu tập ---------------------------------------- */
+
+.abstable {
+    min-width: 880px;
+    table-layout: fixed;
+}
+
+.abstable th,
+.abstable td { padding: 13px 7px; vertical-align: top; }
+
+.abstable th:first-child,
+.abstable td:first-child { padding-left: 22px; }
+
+.abstable th:last-child,
+.abstable td:last-child { padding-right: 22px; }
+
+.abstable thead th { padding-block: 12px; vertical-align: middle; }
+
+.abstable th:nth-child(2), .abstable td:nth-child(2) { width: 130px; }
+.abstable th:nth-child(3), .abstable td:nth-child(3) { width: 100px; text-align: right; }
+.abstable th:nth-child(4), .abstable td:nth-child(4) { width: 130px; }
+.abstable th:nth-child(5), .abstable td:nth-child(5) { width: 190px; text-align: right; }
+
+.absname {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-note);
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink);
+}
+
+.absname:hover { color: var(--brand); }
+
+/* Slug — cùng dáng với mã đơn và SKU ở các bảng khác: chữ đẳng khoảng, màu
+   thương hiệu, KHÔNG có nền xám như <code> mặc định. Ở đây nó là một phần của
+   dòng chứ không phải một mẩu mã trích ra. */
+.absslug {
+    display: block;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--brand);
+}
+
+/* --- Trang Tài khoản nội bộ ---------------------------------- */
+
+.antable {
+    min-width: 880px;
+    table-layout: fixed;
+}
+
+.antable th,
+.antable td { padding: 14px 7px; vertical-align: top; }
+
+.antable th:first-child,
+.antable td:first-child { padding-left: 22px; }
+
+.antable th:last-child,
+.antable td:last-child { padding-right: 22px; }
+
+.antable thead th { padding-block: 12px; vertical-align: middle; }
+
+.antable th:nth-child(2), .antable td:nth-child(2) { width: 150px; }
+.antable th:nth-child(3), .antable td:nth-child(3) { width: 170px; }
+.antable th:nth-child(4), .antable td:nth-child(4) { width: 190px; text-align: right; }
+
+/* Ô "Người" là vòng tròn chữ cái đầu + hai dòng chữ cạnh nhau. */
+.anperson { display: flex; align-items: flex-start; gap: 12px; }
+
+.anwho { min-width: 0; }
+
+/* ĐỎ cho quản trị, ngà cho nhân viên. Bảng này thường chỉ ba tới năm dòng, và
+   câu hỏi duy nhất khi mở nó ra là "ai đang có toàn quyền" — màu trả lời trước
+   cả khi mắt đọc tới cột vai trò. */
+.anavatar {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-round);
+    background: #ece2d0;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #7a6a5f;
+}
+
+.anavatar.is-admin { background: var(--brand); color: var(--on-brand); }
+
+/*
+ * VIÊN VAI TRÒ — lớp RIÊNG, không mượn .badge--* của trạng thái.
+ *
+ * Bản thiết kế tô "Quản trị" xanh lá và "Nhân viên" xanh dương. Cả hai sắc ấy
+ * đã có trong bảng nhãn trạng thái, nhưng mượn lại là dạy sai một quy ước còn
+ * dùng ở bảng đơn hàng: ở đó xanh lá nghĩa là "đã xong" và xanh dương nghĩa là
+ * "đang giao". Vai trò thì không phải một bước nào cả — nó không đổi theo thời
+ * gian, và nó không phải việc phải làm.
+ */
+.anrole {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: var(--radius-round);
+    background: var(--pill-blue-bg);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--pill-blue-ink);
+}
+
+.anrole--admin { background: var(--pill-ok-bg); color: var(--pill-ok-ink); }
+
+.anname {
+    font-size: var(--fs-note);
+    font-weight: 600;
+}
+
+/* Câu giải nghĩa hai vai trò, đứng dưới bảng. Cỡ nhỏ và mờ: nó là chú thích
+   đọc một lần rồi nhớ, không phải dữ liệu phải đọc mỗi lần mở trang. */
+.annote {
+    max-width: 760px;
+    margin: 14px 0 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #98897b;
+}
+
+.annote strong { color: #5c4f42; }
+
+/* --- Trang Quên mật khẩu ------------------------------------- */
+
+/* Năm cột, chỉ cột "Tài khoản khớp" co giãn — nó mang ba dòng chồng nhau (tên,
+   email, số điện thoại) nên là cột duy nhất cần chỗ thở. Con số của bản vẽ. */
+.aqtable {
+    min-width: 960px;
+    table-layout: fixed;
+}
+
+.aqtable th,
+.aqtable td { padding: 14px 7px; vertical-align: top; }
+
+.aqtable th:first-child,
+.aqtable td:first-child { padding-left: 22px; }
+
+.aqtable th:last-child,
+.aqtable td:last-child { padding-right: 22px; }
+
+.aqtable thead th { padding-block: 12px; vertical-align: middle; }
+
+.aqtable th:nth-child(1), .aqtable td:nth-child(1) { width: 150px; }
+.aqtable th:nth-child(2), .aqtable td:nth-child(2) { width: 190px; }
+.aqtable th:nth-child(4), .aqtable td:nth-child(4) { width: 130px; }
+.aqtable th:nth-child(5), .aqtable td:nth-child(5) { width: 200px; text-align: right; }
+
+.aqwhen { font-size: 12.5px; font-weight: 600; }
+
+.aqname {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-note);
+    font-weight: 600;
+}
+
+/* Nút "Tạo liên kết" — dáng nút chính nhưng nhỏ hơn một nấc, vì nó nằm trong
+   một ô bảng chứ không trên dòng tiêu đề. Giữ quầng bóng: đây là hành động
+   duy nhất trên trang và nó cấp ra một chìa khoá đổi mật khẩu. */
+.aqgo {
+    padding: 7px 14px;
+    border: 1px solid var(--brand);
+    border-radius: var(--a-btn-radius);
+    background: var(--brand);
+    box-shadow: 0 2px 8px rgba(143, 43, 60, 0.28);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--on-brand);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.aqgo:hover { background: var(--brand-strong); }
+
+/* --- Trang Đánh giá (thẻ xếp dọc) ---------------------------- */
+
+.arv { display: flex; flex-direction: column; gap: 12px; }
+
+/* Bài viết bên trái, cụm quyết định bên phải. wrap để ở màn hẹp cụm nút rơi
+   xuống dưới bài chứ không bóp bài còn một cột hẹp. */
+.arv__card {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    box-shadow: var(--a-card-shadow);
+    padding: 18px 22px;
+}
+
+.arv__body { flex: 1; min-width: 0; }
+
+.arv__meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Vàng hổ phách, KHÔNG phải đỏ thương hiệu: năm sao là thứ khách chấm, không
+   phải một nút hay một trạng thái của cửa hàng. Giãn chữ 2px để năm ký tự
+   đếm được bằng mắt mà không phải nhìn kỹ. */
+.arv__stars {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: #c9a227;
+    white-space: nowrap;
+}
+
+.arv__who { font-size: var(--fs-note); font-weight: 600; }
+.arv__when { font-size: var(--fs-caption); color: #9a8a79; }
+
+.arv__product {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+/* line-height rộng hơn phần còn lại của khu quản trị: đây là đoạn văn xuôi
+   DUY NHẤT trong cả khu này mà người ta đọc từ đầu đến cuối, không phải liếc. */
+.arv__text {
+    margin: 8px 0 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink);
+    white-space: pre-wrap;
+}
+
+.arv__side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.arv__acts {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+/* "Duyệt" đặc, hai nút kia viền mảnh — xem lý do ở view. Không dùng
+   .astatus__save: nút đó cao 38px và có quầng bóng, quá nặng cho một cụm ba
+   nút nằm trong thẻ. */
+.arv__go,
+.arv__btn {
+    padding: 6px 14px;
+    border-radius: var(--a-btn-radius);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.arv__go {
+    border: 1px solid var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.arv__go:hover { background: var(--brand-strong); }
+
+.arv__btn {
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    color: #5c4f42;
+}
+
+.arv__btn:hover { border-color: var(--brand); color: var(--brand); }
+
+/* Nút xoá: chữ đỏ sẵn và viền sáng đỏ khi rê chuột — cùng luật với .arow-del
+   ở cột thao tác các trang khác. */
+.arv__btn--del { color: #b03a3a; }
+.arv__btn--del:hover { border-color: #b03a3a; color: #b03a3a; }
+
 /* --- Trang Mã giảm giá (thẻ, không phải bảng) ---------------- */
 
 /* 360px hẹp hơn thẻ cơ sở (400px): thẻ mã không có dòng địa chỉ dài nào, nên
@@ -2192,10 +2527,44 @@ a.alist__name:hover { color: var(--brand); }
 .anote--alert code { background: #f4e4df; color: var(--danger); }
 
 /* Cột đầu là tên gói (co giãn), các cột giá bằng nhau và không co: một ô số
-   bị bóp còn 60px thì "1400000" bị cắt mất chữ số cuối, mà đây là bảng giá. */
+   bị bóp còn 60px thì "1400000" bị cắt mất chữ số cuối, mà đây là bảng giá.
+
+   table-layout: fixed để 170px là con số THẬT chứ không phải gợi ý — với thuật
+   toán mặc định, cột tên gói (có cả dòng mô tả dài) giành hết chỗ và ba cột giá
+   co lại theo. Cùng lý do với các bảng khác của khu quản trị. */
+.aprice {
+    min-width: 860px;
+    table-layout: fixed;
+}
+
 .aprice th[scope="col"]:not(:first-child) { width: 170px; }
 
+.aprice th,
+.aprice td { padding: 15px 7px; }
+
+.aprice th:first-child,
+.aprice td:first-child { padding-left: 22px; }
+
+.aprice th:last-child,
+.aprice td:last-child { padding-right: 22px; }
+
+.aprice thead th { padding-block: 12px; }
+
 .aprice__cell { vertical-align: top; }
+
+/* Dòng nhắc dưới ô CHƯA CÓ GIÁ — nói ra hậu quả, không chỉ nói "trống".
+
+   Một ô trống trong bảng giá đọc như "quên điền", nhưng nó có nghĩa thật và
+   khách nhìn thấy nghĩa ấy: hộp mua hàng hiện "Báo giá sau khi tư vấn". Nói
+   ra thì người điền biết mình đang để lại điều gì trên trang bán hàng, và
+   phân biệt được với ô điền số 0 (miễn phí thật). */
+.aprice__hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 11px;
+    text-align: right;
+    color: #a99a88;
+}
 
 .aprice__cell input[type="number"] {
     width: 100%;

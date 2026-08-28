@@ -12,7 +12,16 @@
 ?>
 <header class="ahead">
     <h1 class="ahead__title">Đánh giá</h1>
-    <p class="ahead__lead"><?= (int) ($counts['pending'] ?? 0) ?> đánh giá đang chờ duyệt</p>
+    <?php /* Điểm trung bình chỉ tính đánh giá ĐANG HIỆN, và nói rõ điều đó ngay
+             trong câu. Gộp cả bài chờ duyệt vào thì con số này nhảy mỗi lần có
+             khách viết bài mới — trong khi thứ nó phải mô tả là điểm mà người
+             lạ vào trang bán hàng NHÌN THẤY. */ ?>
+    <p class="ahead__lead">
+        <?= (int) ($counts['pending'] ?? 0) ?> đánh giá đang chờ duyệt
+        <?php if ($diemTrungBinh !== null): ?>
+            · điểm trung bình <?= e(number_format($diemTrungBinh, 1)) ?>★ (chỉ tính đánh giá đang hiện)
+        <?php endif; ?>
+    </p>
 </header>
 
 <?php partial('admin/_layout/filter-tabs', [
@@ -48,79 +57,100 @@
     </div>
 <?php else: ?>
 
-<div class="atable-wrap">
-    <table class="atable atable--full">
-        <thead>
-            <tr>
-                <th scope="col">Sản phẩm</th>
-                <th scope="col">Người viết</th>
-                <th scope="col">Sao</th>
-                <th scope="col">Nhận xét</th>
-                <th scope="col">Trạng thái</th>
-                <th scope="col">Thao tác</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($reviews as $rv): ?>
-                <tr>
-                    <td>
-                        <a href="/san-pham/<?= e(rawurlencode($rv['product_slug'])) ?>#danh-gia">
-                            <?= e($rv['product_name']) ?>
-                        </a>
-                        <?php if (!empty($rv['variant_label'])): ?>
-                            <span class="atable__sub"><?= e($rv['variant_label']) ?></span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <?= e($rv['author_name']) ?>
-                        <span class="atable__sub">
-                            <?= $rv['order_id'] !== null ? 'Đã mua' : 'Nhân viên nhập' ?>
-                            · <?= e(formatDate($rv['created_at'])) ?>
-                        </span>
-                    </td>
-                    <td><?= str_repeat('★', max(0, min(5, (int) $rv['rating']))) ?></td>
-                    <td class="atable__msg"><?= e($rv['body']) ?></td>
-                    <td>
-                        <span class="badge badge--<?= $rv['status'] === 'published' ? 'in_stock'
-                            : ($rv['status'] === 'rejected' ? 'cancelled' : 'pending') ?>">
-                            <?= e($statuses[$rv['status']] ?? $rv['status']) ?>
-                        </span>
-                    </td>
-                    <td class="arow-actions">
-                        <form method="post" action="/quan-tri/danh-gia/sua">
-                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                            <input type="hidden" name="id" value="<?= e($rv['id']) ?>">
+<?php
+/*
+ * THẺ XẾP DỌC, KHÔNG PHẢI BẢNG — đổi theo bản thiết kế "Đánh giá.dc.html".
+ *
+ * Bảng cũ nhét cả bài nhận xét vào một ô của cột "Nhận xét". Đó là chỗ hỏng:
+ * nội dung đánh giá là thứ DUY NHẤT trên trang này cần đọc hết mới quyết định
+ * được duyệt hay từ chối, mà một ô bảng thì hoặc bóp nó lại còn hai dòng,
+ * hoặc kéo cao cả hàng gấp bốn lần hàng bên cạnh.
+ *
+ * Thẻ cho bài viết trọn bề ngang và xuống dòng thoải mái, còn năm sao, tên
+ * khách và ngày dồn lên một dòng đầu — đúng thứ tự người ta đọc: nhìn sao
+ * trước, đọc bài sau, rồi mới bấm.
+ *
+ * Xếp DỌC một cột (không phải lưới nhiều cột như thẻ cơ sở hay mã giảm giá):
+ * mấy thẻ kia mang dữ liệu ngắn, thẻ này mang văn xuôi — hai thẻ cạnh nhau
+ * thì mắt phải nhảy ngang giữa hai bài đọc dở.
+ */
+?>
+<div class="arv">
+    <?php foreach ($reviews as $rv): ?>
+        <?php $sao = max(0, min(5, (int) $rv['rating'])); ?>
+        <article class="arv__card">
+            <div class="arv__body">
+                <div class="arv__meta">
+                    <?php /* Năm sao LUÔN in đủ năm ký tự, sao trống dùng ☆ — chỉ in
+                             số sao đã cho thì "★★★" và "★★★★★" khác nhau về BỀ NGANG
+                             chứ không về hình, nên liếc cả cột không so được. */ ?>
+                    <span class="arv__stars" aria-label="<?= $sao ?> trên 5 sao">
+                        <?= str_repeat('★', $sao) . str_repeat('☆', 5 - $sao) ?>
+                    </span>
+                    <span class="arv__who"><?= e($rv['author_name']) ?></span>
+                    <span class="arv__when">· <?= e(formatDate($rv['created_at'])) ?></span>
 
-                            <?php if ($rv['status'] !== 'published'): ?>
-                                <button type="submit" name="act" value="duyet" class="arow-del arow-del--calm">Duyệt</button>
-                            <?php endif; ?>
+                    <?php /* "Đã mua hàng" là thứ quyết định trọng lượng của một đánh
+                             giá — nên nó là viên nhãn, không phải một dòng chữ nhỏ.
+                             Đánh giá do nhân viên nhập hộ thì không có viên này. */ ?>
+                    <?php if ($rv['order_id'] !== null): ?>
+                        <span class="badge badge--in_stock">Đã mua hàng</span>
+                    <?php endif; ?>
+                </div>
 
-                            <?php if ($rv['status'] !== 'rejected'): ?>
-                                <button type="submit" name="act" value="tu-choi" class="arow-del arow-del--calm">Từ chối</button>
-                            <?php endif; ?>
+                <a class="arv__product" href="/san-pham/<?= e(rawurlencode($rv['product_slug'])) ?>#danh-gia">
+                    <?= e($rv['product_name']) ?><?php if (!empty($rv['variant_label'])): ?>
+                        · <?= e($rv['variant_label']) ?>
+                    <?php endif; ?>
+                </a>
 
-                            <!-- Xoá hẳn, không phải "từ chối": đánh giá spam hay
-                                 bôi nhọ không có lý do gì phải giữ lại. -->
-                            <?php
-                            /* data-confirm đặt trên NÚT chứ không trên form: form
-                               này còn hai nút khác (duyệt, ẩn) và chúng không cần
-                               hỏi lại. Đặt trên form là hỏi cả ba. */
-                            $hoiXoaDG = sprintf(
-                                'Xoá hẳn đánh giá của %s? Việc này không lùi lại được.',
-                                trim((string) ($rv['author_name'] ?? '')) !== '' ? $rv['author_name'] : 'khách'
-                            );
-                            ?>
-                            <button type="submit" name="act" value="xoa" class="arow-del"
-                                    data-confirm="<?= e($hoiXoaDG) ?>"
-                                    data-confirm-title="Xoá đánh giá?"
-                                    data-confirm-ok="Xoá"
-                                    onclick="return confirm('<?= e($hoiXoaDG) ?>')">Xoá</button>
-                        </form>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
+                <p class="arv__text"><?= e($rv['body']) ?></p>
+            </div>
+
+            <div class="arv__side">
+                <span class="badge badge--<?= $rv['status'] === 'published' ? 'in_stock'
+                    : ($rv['status'] === 'rejected' ? 'cancelled' : 'pending') ?>">
+                    <?= e($statuses[$rv['status']] ?? $rv['status']) ?>
+                </span>
+
+                <?php /* Ba nút trong CÙNG một <form>, phân biệt bằng `act`: HTML
+                         không cho lồng <form>. */ ?>
+                <form class="arv__acts" method="post" action="/quan-tri/danh-gia/sua">
+                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                    <input type="hidden" name="id" value="<?= e($rv['id']) ?>">
+
+                    <?php /* "Duyệt" là NÚT ĐẶC — nó là việc chính của trang này, và
+                             là việc duy nhất ở đây làm nội dung hiện ra với khách.
+                             Hai nút kia viền mảnh: chúng chỉ giữ nguyên hiện trạng
+                             hoặc lùi lại. */ ?>
+                    <?php if ($rv['status'] !== 'published'): ?>
+                        <button type="submit" name="act" value="duyet" class="arv__go">Duyệt</button>
+                    <?php endif; ?>
+
+                    <?php if ($rv['status'] !== 'rejected'): ?>
+                        <button type="submit" name="act" value="tu-choi" class="arv__btn">Từ chối</button>
+                    <?php endif; ?>
+
+                    <!-- Xoá hẳn, không phải "từ chối": đánh giá spam hay bôi nhọ
+                         không có lý do gì phải giữ lại. -->
+                    <?php
+                    /* data-confirm đặt trên NÚT chứ không trên form: form này còn
+                       hai nút khác (duyệt, từ chối) và chúng không cần hỏi lại.
+                       Đặt trên form là hỏi cả ba. */
+                    $hoiXoaDG = sprintf(
+                        'Xoá hẳn đánh giá của %s? Việc này không lùi lại được.',
+                        trim((string) ($rv['author_name'] ?? '')) !== '' ? $rv['author_name'] : 'khách'
+                    );
+                    ?>
+                    <button type="submit" name="act" value="xoa" class="arv__btn arv__btn--del"
+                            data-confirm="<?= e($hoiXoaDG) ?>"
+                            data-confirm-title="Xoá đánh giá?"
+                            data-confirm-ok="Xoá"
+                            onclick="return confirm('<?= e($hoiXoaDG) ?>')">Xoá</button>
+                </form>
+            </div>
+        </article>
+    <?php endforeach; ?>
 </div>
 
 <?php endif; ?>

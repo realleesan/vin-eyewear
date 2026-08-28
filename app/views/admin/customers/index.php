@@ -71,7 +71,7 @@
 <?php else: ?>
 
     <div class="atable-wrap">
-        <table class="atable atable--full">
+        <table class="atable acustable">
             <thead>
                 <tr>
                     <th scope="col">Khách hàng</th>
@@ -164,21 +164,30 @@
                 <?php endforeach; ?>
             </tbody>
         </table>
-    </div>
 
-    <?php if ($totalPages > 1): ?>
-        <nav class="pager" aria-label="Phân trang">
-            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                <?php $url = '/quan-tri/khach-hang?' . http_build_query(
-                    array_filter(['q' => $q, 'status' => $filter, 'page' => $i])
-                ); ?>
-                <?php if ($i === $page): ?>
-                    <span class="pager__link is-current" aria-current="page"><?= $i ?></span>
-                <?php else: ?>
-                    <a class="pager__link" href="<?= e($url) ?>"><?= $i ?></a>
-                <?php endif; ?>
-            <?php endfor; ?>
-        </nav>
-    <?php endif; ?>
+        <?php /* Chân bảng nằm TRONG khung, cùng lối với mọi bảng khác của khu
+                 quản trị — xem .aofoot trong admin.css. */ ?>
+        <div class="aofoot">
+            <p class="aofoot__count">
+                Đang hiện <?= count($customers) ?> / <?= (int) $total ?> khách
+                <?php if ($totalPages > 1): ?>· trang <?= (int) $page ?>/<?= (int) $totalPages ?><?php endif; ?>
+            </p>
+
+            <?php if ($totalPages > 1): ?>
+                <nav class="pager" aria-label="Phân trang">
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <?php $url = '/quan-tri/khach-hang?' . http_build_query(
+                            array_filter(['q' => $q, 'status' => $filter, 'page' => $i])
+                        ); ?>
+                        <?php if ($i === $page): ?>
+                            <span class="pager__link is-current" aria-current="page"><?= $i ?></span>
+                        <?php else: ?>
+                            <a class="pager__link" href="<?= e($url) ?>"><?= $i ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+                </nav>
+            <?php endif; ?>
+        </div>
+    </div>
 
 <?php endif; ?>

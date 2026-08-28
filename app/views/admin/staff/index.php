@@ -54,21 +54,49 @@ $nhanVaiTro = [
 <?php else: ?>
 
     <div class="atable-wrap">
-        <table class="atable atable--full">
+        <table class="atable antable">
             <thead>
                 <tr>
-                    <th>Người</th>
-                    <th>Vai trò</th>
-                    <th>Đăng nhập gần nhất</th>
-                    <th></th>
+                    <th scope="col">Người</th>
+                    <th scope="col">Vai trò</th>
+                    <th scope="col">Đăng nhập gần nhất</th>
+                    <?php /* Cột cuối CÓ TÊN, không để trống — trình đọc màn hình đọc
+                             một ô trống thành khoảng lặng, và người mới nhận bàn giao
+                             không biết mấy cái nút ấy thuộc về việc gì. */ ?>
+                    <th scope="col">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($accounts as $a): ?>
                     <?php $laToi = $a['id'] === $me; ?>
+                    <?php
+                    /*
+                     * VÒNG TRÒN CHỮ CÁI ĐẦU — theo bản thiết kế.
+                     *
+                     * Cùng cách dựng với ảnh đại diện ở chân thanh bên: lấy chữ đầu
+                     * của HAI TỪ CUỐI trong họ tên ("Phạm Duy Anh" -> "DA"), vì người
+                     * Việt gọi nhau bằng tên chứ không bằng họ. Viết hoa để CSS lo —
+                     * strtoupper() làm việc trên byte nên hỏng chữ Việt có dấu.
+                     *
+                     * Vòng tròn ĐỎ cho quản trị, ngà cho nhân viên: bảng này thường
+                     * chỉ ba tới năm dòng, và câu hỏi duy nhất khi mở nó ra là "ai
+                     * đang có toàn quyền" — màu trả lời trước cả khi đọc tới cột vai
+                     * trò.
+                     */
+                    $tenDayDu = trim((string) ($a['full_name'] ?? ''));
+                    $tu       = $tenDayDu !== '' ? preg_split('/\s+/', $tenDayDu) : [];
+                    $chuDau   = count($tu) >= 2
+                        ? utf8Substr($tu[count($tu) - 2], 0, 1) . utf8Substr($tu[count($tu) - 1], 0, 1)
+                        : ($tenDayDu !== ''
+                            ? utf8Substr($tenDayDu, 0, 2)
+                            : utf8Substr((string) ($a['email'] ?? '?'), 0, 2));
+                    $laQuanTri = str_contains((string) $a['roles'], 'admin');
+                    ?>
                     <tr>
-                        <td>
-                            <?= e($a['full_name'] ?: '(chưa đặt tên)') ?>
+                        <td class="anperson">
+                            <span class="anavatar<?= $laQuanTri ? ' is-admin' : '' ?>" aria-hidden="true"><?= e($chuDau) ?></span>
+                            <span class="anwho">
+                            <span class="anname"><?= e($a['full_name'] ?: '(chưa đặt tên)') ?></span>
                             <?php if ($laToi): ?>
                                 <?php /* .atag chứ không phải .badge: xem admin.css.
                                          Nó không nói dòng này đang ở trạng thái gì,
@@ -86,15 +114,17 @@ $nhanVaiTro = [
                                     ? e($a['email'])
                                     : '<em>không có email — không đăng nhập được ở /quan-tri/dang-nhap</em>' ?>
                             </span>
+                            </span>
                         </td>
 
                         <td>
                             <?php foreach (explode(', ', (string) $a['roles']) as $vt): ?>
-                                <?php /* Nền đặc, KHÔNG phải .badge--paid. Viên viền
-                                         rỗng trong hệ này dành riêng cho trạng thái
-                                         TIỀN (xem admin.css) — mượn nó cho vai trò là
-                                         dạy sai một quy ước còn dùng ở bảng đơn hàng. */ ?>
-                                <span class="badge badge--<?= $vt === 'admin' ? 'in_stock' : 'neutral' ?>">
+                                <?php /* .anrole — LỚP RIÊNG, không mượn .badge--* của
+                                         trạng thái. Vai trò không phải một bước trong
+                                         vòng đời nào cả: nó không đổi theo thời gian và
+                                         không phải việc phải làm. Lý do đầy đủ ở khối
+                                         .anrole trong admin.css. */ ?>
+                                <span class="anrole<?= $vt === 'admin' ? ' anrole--admin' : '' ?>">
                                     <?= e($nhanVaiTro[$vt] ?? $vt) ?>
                                 </span>
                             <?php endforeach; ?>
@@ -108,9 +138,7 @@ $nhanVaiTro = [
 
                         <td class="arow-actions">
                             <?php if ($laToi): ?>
-                                <a class="astatus__save astatus__save--ghost" href="/quan-tri/doi-mat-khau">
-                                    Đổi mật khẩu
-                                </a>
+                                <a href="/quan-tri/doi-mat-khau">Đổi mật khẩu</a>
                             <?php elseif ($canReset): ?>
                                 <?php /* data-confirm: hộp xác nhận dùng chung của khu
                                          quản trị (assets/js/confirm-dialog.js). Không có
@@ -120,7 +148,12 @@ $nhanVaiTro = [
                                       data-confirm="Đặt lại mật khẩu của <?= e($a['email'] ?: $a['full_name'] ?: 'tài khoản này') ?>? Mật khẩu cũ sẽ hết tác dụng ngay.">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                     <input type="hidden" name="id" value="<?= e($a['id']) ?>">
-                                    <button type="submit" class="astatus__save">Đặt lại mật khẩu</button>
+                                    <?php /* .aqgo — dáng nút chính nhưng nhỏ hơn một
+                                             nấc, cùng lớp với nút "Tạo liên kết" ở
+                                             trang Quên mật khẩu: cả hai đều cấp lại
+                                             chìa khoá cho một tài khoản, và cả hai đều
+                                             nằm trong một ô bảng. */ ?>
+                                    <button type="submit" class="aqgo">Đặt lại mật khẩu</button>
                                 </form>
                             <?php endif; ?>
                         </td>
@@ -129,5 +162,18 @@ $nhanVaiTro = [
             </tbody>
         </table>
     </div>
+
+<?php /* GHI CHÚ VAI TRÒ Ở CHÂN TRANG — theo bản thiết kế.
+
+         Cột "Vai trò" in ra hai chữ "Quản trị" / "Nhân viên" và dừng ở đó, nhưng
+         câu người ta thật sự hỏi khi cấp tài khoản là "cho vai trò này thì nó
+         làm được gì". Không trả lời ở đây thì câu trả lời nằm trong ma trận
+         quyền của tài liệu đặc tả — chỗ mà người trực quầy không mở bao giờ. */ ?>
+<p class="annote">
+    Tài khoản nội bộ chỉ vào được khu quản trị, không mua hàng được. Vai trò
+    <strong>Quản trị</strong> làm được mọi thứ kể cả trang này;
+    <strong>Nhân viên</strong> xử lý đơn, lịch hẹn và liên hệ nhưng không sửa
+    được giá, tài khoản hay cơ sở.
+</p>
 
 <?php endif; ?>

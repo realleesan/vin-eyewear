@@ -144,7 +144,15 @@ foreach ($types as $t) {
                                              một số 0 trong bảng giá là chuyện phải thấy
                                              ngay. Chỉ hiện khi đã có giá đã lưu. */ ?>
                                     <?php if ($val !== null): ?>
-                                        <span class="aprice__echo"><?= money((int) $val) ?></span>
+                                        <span class="aprice__echo"><?= (int) $val === 0 ? 'miễn phí' : money((int) $val) ?></span>
+                                    <?php else: ?>
+                                        <?php /* Ô trống KHÔNG im lặng — theo bản thiết kế.
+                                                 Nó đọc như "quên điền", nhưng nó có nghĩa
+                                                 thật và khách nhìn thấy nghĩa ấy. Nói ra
+                                                 thì người điền biết mình đang để lại điều
+                                                 gì trên trang bán hàng, và phân biệt được
+                                                 với ô điền số 0 (miễn phí thật). */ ?>
+                                        <span class="aprice__hint">khách thấy “Báo giá sau khi tư vấn”</span>
                                     <?php endif; ?>
                                 <?php else: ?>
                                     <span class="aprice__ro">

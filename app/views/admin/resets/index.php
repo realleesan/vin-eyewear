@@ -100,20 +100,24 @@ $statusLabel = [
     <?php else: ?>
 
         <div class="atable-wrap">
-            <table class="atable atable--full">
+            <table class="atable aqtable">
                 <thead>
                     <tr>
-                        <th>Lúc</th>
-                        <th>Khách nhập</th>
-                        <th>Tài khoản khớp</th>
-                        <th>Trạng thái</th>
-                        <th></th>
+                        <th scope="col">Lúc</th>
+                        <th scope="col">Khách nhập</th>
+                        <th scope="col">Tài khoản khớp</th>
+                        <th scope="col">Trạng thái</th>
+                        <?php /* Cột cuối CÓ TÊN ("Xử lý"), không để trống như trước —
+                                 theo bản thiết kế. Một cột không tên thì trình đọc màn
+                                 hình đọc lên là khoảng lặng, và người mới nhận bàn giao
+                                 không biết mấy cái nút ấy thuộc về việc gì. */ ?>
+                        <th scope="col">Xử lý</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($requests as $r): ?>
                         <tr>
-                            <td><?= e(formatDate($r['created_at'], 'd/m/Y H:i')) ?></td>
+                            <td class="aqwhen"><?= e(formatDate($r['created_at'], 'd/m/Y H:i')) ?></td>
 
                             <td><code><?= e($r['contact']) ?></code></td>
 
@@ -124,10 +128,17 @@ $statusLabel = [
                                          liên kết cho dòng này. -->
                                     <span class="badge badge--cancelled">Không khớp tài khoản nào</span>
                                 <?php else: ?>
-                                    <?= e($r['full_name'] ?: '(chưa đặt tên)') ?>
+                                    <span class="aqname"><?= e($r['full_name'] ?: '(chưa đặt tên)') ?></span>
                                     <span class="atable__sub"><?= e($r['email']) ?></span>
+                                    <?php /* Số điện thoại BẤM GỌI ĐƯỢC — theo bản thiết kế.
+                                             Gọi xác minh đúng người là bước bảo mật DUY NHẤT
+                                             của cả luồng này (xem dải cảnh báo trên đầu
+                                             trang), nên nó phải là một cú bấm chứ không
+                                             phải một dãy số phải chép tay sang máy. */ ?>
                                     <?php if (!empty($r['phone'])): ?>
-                                        <span class="atable__line"><?= e($r['phone']) ?></span>
+                                        <span class="atable__line">
+                                            <a href="tel:<?= e(preg_replace('/\D/', '', $r['phone'])) ?>"><?= e($r['phone']) ?></a>
+                                        </span>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </td>
@@ -149,7 +160,12 @@ $statusLabel = [
                                         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                         <input type="hidden" name="id" value="<?= e($r['id']) ?>">
                                         <input type="hidden" name="contact" value="<?= e($r['contact']) ?>">
-                                        <button type="submit" class="astatus__save">
+                                        <?php /* .aqgo chứ không .astatus__save: nút chính
+                                                 cao 38px và có quầng bóng, quá nặng cho một
+                                                 ô bảng — bản thiết kế cho nó dáng nhỏ hơn
+                                                 một nấc, ngang với nút "Sửa" ở các bảng
+                                                 khác. */ ?>
+                                        <button type="submit" class="aqgo">
                                             <?= $r['status'] === 'sent' ? 'Tạo liên kết mới' : 'Tạo liên kết' ?>
                                         </button>
                                     </form>
