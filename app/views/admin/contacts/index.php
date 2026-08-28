@@ -58,15 +58,45 @@ $duongDanZalo = static function (string $key) use ($q): string {
              mà CSKH chưa biết là có ai chờ. Đó là hỏng hóc duy nhất trang này
              còn báo được, nên nó phải to bằng mức nghiêm trọng của nó — và
              bình thường thì khối này không tồn tại. */ ?>
-    <div class="anote anote--alert" role="alert">
-        <p>
-            <strong><?= (int) $chuaDay ?> yêu cầu chưa tới được Zalo CSKH.</strong>
-            Khách đang chờ gọi lại mà đầu bên kia chưa biết.
-        </p>
-        <p>
-            Gần như luôn là do chưa khai <code>ZALO_ZNS_TEMPLATE_CONTACT</code> hoặc
-            token OA hết hạn. Bấm <strong>Gửi sang Zalo</strong> ở từng dòng để đẩy lại.
-        </p>
+    <div class="anote anote--alert anote--act" role="alert">
+        <div>
+            <p>
+                <strong><?= (int) $chuaDay ?> yêu cầu chưa tới được Zalo CSKH.</strong>
+                Khách đang chờ gọi lại mà đầu bên kia chưa biết.
+            </p>
+            <p>
+                Gần như luôn là do chưa khai <code>ZALO_ZNS_TEMPLATE_CONTACT</code> hoặc
+                token OA hết hạn. Sửa xong thì bấm nút bên cạnh để đẩy lại cả loạt.
+            </p>
+        </div>
+
+        <?php
+        /*
+         * NÚT ĐẨY CẢ LOẠT, đặt ngay trong dải cảnh báo.
+         *
+         * Yêu cầu kẹt lại gần như luôn kẹt theo LÔ: token hết hạn hay thiếu
+         * khai template thì mọi yêu cầu trong quãng đó đều nằm lại. Sửa xong
+         * cấu hình mà phải bấm từng dòng là lặp một thao tác mười lăm lần, và
+         * lần thứ mười hai thì người ta bỏ dở — để lại đúng những khách chưa
+         * ai gọi.
+         *
+         * Có hỏi lại: nó gửi tin ra ngoài cho người thật, và số lượng thì
+         * người bấm chỉ ước chừng qua con số trong câu trên. Nút từng dòng thì
+         * KHÔNG hỏi (một tin, gửi lại vô hại) — khác nhau ở chỗ đó.
+         */
+        $hoiDayHet = sprintf(
+            'Đẩy cả %d yêu cầu sang Zalo CSKH?',
+            (int) $chuaDay
+        );
+        ?>
+        <form method="post" action="/quan-tri/lien-he/zalo-tat-ca"
+              data-confirm="<?= e($hoiDayHet) ?>"
+              data-confirm-title="Gửi tất cả sang Zalo?"
+              data-confirm-ok="Gửi tất cả"
+              onsubmit="return confirm('<?= e($hoiDayHet) ?>')">
+            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+            <button type="submit" class="astatus__save">Gửi tất cả sang Zalo</button>
+        </form>
     </div>
 <?php endif; ?>
 

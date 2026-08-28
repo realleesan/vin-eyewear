@@ -91,6 +91,24 @@ $ed = $editing;
 
             <?php if ($canEdit): ?>
                 <div class="acs__acts arow-actions">
+                    <?php /* NÚT ĐỔI TRẠNG THÁI ĐỨNG ĐẦU CỤM, trước cả "Sửa".
+
+                             Đó là thao tác duy nhất ở màn này làm hằng tuần: cơ sở
+                             sửa chữa vài hôm thì tạm đóng, xong thì mở lại. Sửa địa
+                             chỉ hay số điện thoại thì vài năm một lần.
+
+                             Dáng nút đảo theo trạng thái — xem .atoggle trong
+                             admin.css: đang mở thì nút lặng (việc nó làm là ĐÓNG),
+                             đang đóng thì nút đỏ (việc nó làm là MỞ LẠI, và đó gần
+                             như luôn là thứ người mở trang đang tìm). */ ?>
+                    <form method="post" action="/quan-tri/co-so/hoat-dong">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="id" value="<?= e($s['id']) ?>">
+                        <button type="submit" class="atoggle<?= $s['is_active'] ? '' : ' atoggle--on' ?>">
+                            <?= $s['is_active'] ? 'Tạm đóng' : 'Mở lại' ?>
+                        </button>
+                    </form>
+
                     <a href="/quan-tri/co-so?sua=<?= e($s['id']) ?>#form">Sửa</a>
                     <?php $hoi = sprintf('Xoá cơ sở “%s”?', $s['name']); ?>
                     <form method="post" action="/quan-tri/co-so/xoa"

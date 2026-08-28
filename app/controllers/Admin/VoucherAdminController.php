@@ -246,4 +246,40 @@ class VoucherAdminController extends AdminController
         flash('admin_error', $message);
         redirect(self::BASE);
     }
+
+    /**
+     * Bật hoặc tắt một mã giảm giá (POST .../bat-tat).
+     *
+     * Tắt KHÔNG phải xoá: mã đã tắt vẫn còn trong bảng, đơn cũ đã áp nó vẫn
+     * tra ngược được, và bật lại là một cú bấm. Đó là thứ cần khi một chương
+     * trình tạm dừng — còn xoá thì chỉ dành cho mã gõ nhầm, và nút Xoá cũng
+     * chỉ hiện khi mã chưa đơn nào dùng.
+     *
+     * Bật lại một mã ĐÃ HẾT HẠN cũng cho phép: cột `is_active` và ngày hết hạn
+     * là hai điều kiện độc lập, và người bấm có thể đang định gia hạn ngay sau
+     * đó. Chặn ở đây chỉ bắt họ làm hai việc theo đúng một thứ tự.
+     */
+    public function toggle(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        $id = (string) ($_POST['id'] ?? '');
+        $ma = VoucherModel::find($id);
+
+        if ($ma === null) {
+            flash('admin_error', 'Không tìm thấy mã giảm giá.');
+            redirect(self::BASE);
+        }
+
+        $bat = (int) $ma['is_active'] !== 1;
+        VoucherModel::update($id, ['is_active' => $bat ? 1 : 0]);
+
+        flash(
+            'admin_success',
+            sprintf($bat ? 'Đã bật mã %s.' : 'Đã tắt mã %s.', $ma['code'])
+        );
+
+        redirect(self::BASE);
+    }
 }

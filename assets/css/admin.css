@@ -1669,10 +1669,20 @@ a.alist__name:hover { color: var(--brand); }
 
 .abstable thead th { padding-block: 12px; vertical-align: middle; }
 
+/* Không quyền sửa: 4 cột (bộ · lên kệ · sản phẩm · trạng thái). */
 .abstable th:nth-child(2), .abstable td:nth-child(2) { width: 130px; }
 .abstable th:nth-child(3), .abstable td:nth-child(3) { width: 100px; text-align: right; }
 .abstable th:nth-child(4), .abstable td:nth-child(4) { width: 130px; }
-.abstable th:nth-child(5), .abstable td:nth-child(5) { width: 190px; text-align: right; }
+
+/* Có quyền sửa: thêm cột "Thứ tự" ở đầu và cột "Thao tác" ở cuối, nên mọi con
+   số dịch sang phải một nấc. Khai lại cả bộ thay vì cộng thêm — hai bảng khác
+   nhau về số cột thì luật của chúng cũng nên đọc rời nhau. */
+.abstable--ord th:nth-child(1), .abstable--ord td:nth-child(1) { width: 80px; }
+.abstable--ord th:nth-child(2), .abstable--ord td:nth-child(2) { width: auto; }
+.abstable--ord th:nth-child(3), .abstable--ord td:nth-child(3) { width: 130px; text-align: left; }
+.abstable--ord th:nth-child(4), .abstable--ord td:nth-child(4) { width: 100px; text-align: right; }
+.abstable--ord th:nth-child(5), .abstable--ord td:nth-child(5) { width: 130px; text-align: left; }
+.abstable--ord th:nth-child(6), .abstable--ord td:nth-child(6) { width: 190px; text-align: right; }
 
 .absname {
     display: block;
@@ -2152,6 +2162,97 @@ a.alist__name:hover { color: var(--brand); }
     border-top: 1px solid var(--a-row-line);
 }
 
+/* --- Cặp nút đổi thứ tự (.aord) ------------------------------ */
+
+/*
+ * Hai nút vuông nhỏ, cạnh nhau, trong cột "Thứ tự".
+ *
+ * Cố ý KHÔNG mượn .arow-actions: mấy nút đó mở ra một trang khác hoặc xoá một
+ * dòng, còn hai nút này chỉ nhích dòng lên xuống một bậc và người ta bấm liên
+ * tiếp bốn năm lần. Vì vậy chúng nhỏ, vuông, sát nhau — dáng của một cặp điều
+ * khiển, không phải dáng của một hành động.
+ */
+.aord { display: flex; gap: 6px; }
+
+.aord__btn {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--a-btn-radius);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1;
+    color: #5c4f42;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.aord__btn:hover:not(:disabled) { border-color: var(--brand); color: var(--brand); }
+
+/* Dòng đầu không nhích lên được, dòng cuối không nhích xuống được. Vẫn để nút
+   ở đó chứ không ẩn: ẩn đi thì cột "Thứ tự" của dòng đầu và dòng cuối hụt mất
+   một nút, và cả cột trông so le. Mờ hẳn là đủ nói "hết đường". */
+.aord__btn:disabled {
+    border-color: #f0e8d8;
+    color: #d8ccb8;
+    cursor: default;
+}
+
+/* --- Nút bật/tắt tại chỗ (.atoggle) -------------------------- */
+
+/*
+ * Nút đổi trạng thái ngay trên dòng / trong thẻ: ẩn ↔ hiện, đóng ↔ mở,
+ * bật ↔ tắt.
+ *
+ * HAI DÁNG NGƯỢC NHAU, và đó là cả ý tưởng: khi đang BẬT thì nút mang dáng
+ * lặng (nền ngà, chữ nâu) vì việc nó làm là TẮT — một hành động không nên mời
+ * gọi. Khi đang TẮT thì nút mang màu thương hiệu vì việc nó làm là BẬT LẠI,
+ * và đó gần như luôn là thứ người mở trang đang tìm.
+ *
+ * Nói cách khác: nút luôn nổi bật đúng lúc nó là lối ra khỏi trạng thái bất
+ * thường, và luôn lặng đi khi mọi thứ đang chạy bình thường.
+ */
+.atoggle {
+    padding: 6px 14px;
+    border: 0;
+    border-radius: var(--a-btn-radius);
+    background: var(--a-row-line);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    white-space: nowrap;
+    color: #7a6a5f;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.atoggle:hover { background: #e9dfca; }
+
+.atoggle--on {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+.atoggle--on:hover { background: var(--brand-strong); }
+
+/* Biến thể VIÊN THUỐC — dùng ở bảng danh mục và bộ sưu tập, nơi cột này vốn
+   là một viên nhãn trạng thái chứ không phải một nút. Giữ nguyên hình viên
+   thuốc để cột không đổi dáng, chỉ thêm con trỏ và phản hồi khi rê chuột. */
+.atoggle--pill {
+    padding: 3px 10px;
+    border-radius: var(--radius-round);
+    background: var(--pill-ok-bg);
+    font-size: 11px;
+    color: var(--pill-ok-ink);
+}
+
+.atoggle--pill:hover { background: #d5e7d5; }
+
+.atoggle--pill.is-off { background: var(--pill-neutral-bg); color: var(--pill-neutral-ink); }
+.atoggle--pill.is-off:hover { background: #e5ddcd; }
+
 /* --- Trang Danh mục ------------------------------------------ */
 
 /* Bảy cột, hai cột co giãn (Tên và Mô tả). Con số lấy của bản thiết kế; cột 7
@@ -2173,7 +2274,10 @@ a.alist__name:hover { color: var(--brand); }
 
 .admtable thead th { padding-block: 12px; }
 
-.admtable th:nth-child(1), .admtable td:nth-child(1) { width: 80px; text-align: right; }
+/* Cột "Thứ tự" canh TRÁI: nó chứa cặp nút ↑↓, không phải một con số. Canh
+   phải là luật của cột số — dồn hai cái nút về mép phải thì chúng rời khỏi
+   tên danh mục mà chúng đang nói về. */
+.admtable th:nth-child(1), .admtable td:nth-child(1) { width: 80px; }
 .admtable th:nth-child(3), .admtable td:nth-child(3) { width: 180px; }
 .admtable th:nth-child(5), .admtable td:nth-child(5) { width: 90px; text-align: right; }
 .admtable th:nth-child(6), .admtable td:nth-child(6) { width: 130px; }
@@ -2524,6 +2628,21 @@ a.alist__name:hover { color: var(--brand); }
 }
 
 .anote--alert p { line-height: 1.7; color: #5b4038; }
+
+/* Biến thể có NÚT ở mép phải — dải cảnh báo "yêu cầu chưa tới Zalo".
+
+   Nút phải nằm TRONG dải chứ không dưới nó: câu chữ mô tả một sự cố và nút là
+   cách sửa sự cố ấy, hai thứ tách ra thì cái nút mất mất chủ ngữ. wrap để ở
+   màn hẹp nó xuống dòng thay vì bóp câu chữ còn một cột hẹp. */
+.anote--act {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.anote--act > div { min-width: 0; flex: 1 1 420px; }
 .anote--alert code { background: #f4e4df; color: var(--danger); }
 
 /* Cột đầu là tên gói (co giãn), các cột giá bằng nhau và không co: một ô số

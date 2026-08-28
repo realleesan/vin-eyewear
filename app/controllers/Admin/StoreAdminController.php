@@ -113,4 +113,38 @@ class StoreAdminController extends AdminController
         flash('admin_success', 'Đã xoá cơ sở.');
         redirect(self::BASE);
     }
+
+    /**
+     * Tạm đóng hoặc mở lại một cơ sở (POST .../hoat-dong).
+     *
+     * KHÔNG phải xoá: cơ sở tạm đóng vẫn còn trong bảng, lịch hẹn đã đặt ở đó
+     * vẫn tra được, chỉ là nó biến mất khỏi bước "chọn nơi hẹn" của khách. Đó
+     * đúng là việc cần làm khi một cửa hàng sửa chữa vài tuần — và là lý do
+     * nút này đứng cạnh nút Xoá chứ không thay nó.
+     */
+    public function toggle(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        $id    = (string) ($_POST['id'] ?? '');
+        $store = StoreModel::find($id);
+
+        if ($store === null) {
+            flash('admin_error', 'Không tìm thấy cơ sở.');
+            redirect(self::BASE);
+        }
+
+        $mo = (int) $store['is_active'] !== 1;
+        StoreModel::update($id, ['is_active' => $mo ? 1 : 0]);
+
+        flash(
+            'admin_success',
+            $mo
+                ? sprintf('Đã mở lại %s — khách đặt hẹn được ở đây.', $store['name'])
+                : sprintf('Đã tạm đóng %s — khách không đặt hẹn được ở đây nữa.', $store['name'])
+        );
+
+        redirect(self::BASE);
+    }
 }

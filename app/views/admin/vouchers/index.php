@@ -203,6 +203,23 @@ $hienThi = array_values(array_filter($vouchers, $khop));
 
             <?php if ($canEdit): ?>
                 <div class="avc__acts arow-actions">
+                    <?php /* Bật/tắt đứng đầu cụm: đó là thao tác thường gặp nhất ở
+                             màn này (dừng một chương trình, chạy lại mã cũ theo mùa),
+                             và nó là việc duy nhất ở đây lùi lại được bằng đúng cú
+                             bấm vừa rồi. Sửa thì mở form, xoá thì mất hẳn.
+
+                             Đọc `is_active` chứ không đọc $off: một mã HẾT HẠN vẫn
+                             đang "bật", và nút phải nói đúng cái nó sắp làm. Tắt một
+                             mã hết hạn nghe thừa nhưng có thật — người ta dọn bảng
+                             trước khi gia hạn. */ ?>
+                    <form method="post" action="/quan-tri/ma-giam-gia/bat-tat">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="id" value="<?= e($v['id']) ?>">
+                        <button type="submit" class="atoggle<?= (int) $v['is_active'] === 1 ? '' : ' atoggle--on' ?>">
+                            <?= (int) $v['is_active'] === 1 ? 'Tắt mã' : 'Bật mã' ?>
+                        </button>
+                    </form>
+
                     <a href="/quan-tri/ma-giam-gia?sua=<?= e($v['id']) ?>#form">Sửa</a>
 
                     <?php if ((int) $v['is_public'] !== 1): ?>

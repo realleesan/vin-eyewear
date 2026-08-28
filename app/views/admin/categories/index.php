@@ -32,9 +32,30 @@ $ed = $editing;
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($categories as $c): ?>
+            <?php $soDong = count($categories); ?>
+            <?php foreach ($categories as $i => $c): ?>
                 <tr>
-                    <td class="num"><?= (int) $c['sort_order'] ?></td>
+                    <?php /* CỘT THỨ TỰ LÀ HAI CÁI NÚT, không phải con số.
+
+                             Con số `sort_order` không nói được gì cho người
+                             đọc: nó có thể là 0 ở cả bốn dòng (giá trị mặc
+                             định của cột) trong khi bảng vẫn đang sắp theo
+                             tên. Mà thứ người ta muốn làm với cột này không
+                             phải đọc — là ĐỔI. Hai cái nút trả lời đúng nhu
+                             cầu ấy và bỏ luôn một con số gây hiểu nhầm. */ ?>
+                    <td>
+                        <?php if ($canEdit): ?>
+                            <?php partial('admin/_layout/thu-tu', [
+                                'base' => '/quan-tri/danh-muc/thu-tu',
+                                'id'   => $c['id'],
+                                'dau'  => $i === 0,
+                                'cuoi' => $i === $soDong - 1,
+                                'ten'  => $c['name'],
+                            ]); ?>
+                        <?php else: ?>
+                            <span class="num"><?= $i + 1 ?></span>
+                        <?php endif; ?>
+                    </td>
                     <td class="admname"><?= e($c['name']) ?></td>
                     <td><code><?= e($c['slug']) ?></code></td>
                     <td class="atable__msg" title="<?= e($c['description'] ?? '') ?>"><?= e(excerpt($c['description'] ?? '', 60)) ?></td>
@@ -42,13 +63,32 @@ $ed = $editing;
                              trước khi bấm Xoá. */ ?>
                     <td class="num"><?= (int) ($c['product_count'] ?? 0) ?></td>
                     <td>
-                        <?php /* "Đang ẩn" là TRUNG TÍNH, không phải đỏ — cùng luật với
-                                 nhãn ẩn ở bảng sản phẩm. Ẩn một danh mục là việc bình
-                                 thường và cố ý (mục theo mùa, mục chưa đủ hàng), không
-                                 phải một sự cố. */ ?>
-                        <span class="badge badge--<?= $c['is_visible'] ? 'in_stock' : 'neutral' ?>">
-                            <?= $c['is_visible'] ? 'Đang hiện' : 'Đang ẩn' ?>
-                        </span>
+                        <?php /* VIÊN NHÃN BẤM ĐƯỢC, không phải nhãn chỉ-đọc.
+
+                                 Ẩn/hiện một danh mục là thao tác một-bit và làm
+                                 thường xuyên (mục theo mùa, mục chưa đủ hàng).
+                                 Bắt mở form sửa ở cuối trang, tick một ô rồi bấm
+                                 Lưu là bốn bước cho một cú bấm.
+
+                                 Giữ nguyên HÌNH VIÊN THUỐC để cột không đổi dáng
+                                 — xem .atoggle--pill trong admin.css. "Đang ẩn"
+                                 vẫn trung tính chứ không đỏ: ẩn là việc bình
+                                 thường và cố ý, không phải sự cố. */ ?>
+                        <?php if ($canEdit): ?>
+                            <form method="post" action="/quan-tri/danh-muc/hien">
+                                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                <input type="hidden" name="id" value="<?= e($c['id']) ?>">
+                                <button type="submit"
+                                        class="atoggle atoggle--pill<?= $c['is_visible'] ? '' : ' is-off' ?>"
+                                        title="<?= $c['is_visible'] ? 'Bấm để ẩn khỏi trang bán hàng' : 'Bấm để hiện trên trang bán hàng' ?>">
+                                    <?= $c['is_visible'] ? 'Đang hiện' : 'Đang ẩn' ?>
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <span class="badge badge--<?= $c['is_visible'] ? 'in_stock' : 'neutral' ?>">
+                                <?= $c['is_visible'] ? 'Đang hiện' : 'Đang ẩn' ?>
+                            </span>
+                        <?php endif; ?>
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">

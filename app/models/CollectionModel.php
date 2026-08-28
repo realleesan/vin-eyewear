@@ -39,8 +39,26 @@ class CollectionModel extends BaseModel
      *
      * `name` chốt cuối để hai bộ trùng ngày vẫn ra thứ tự ổn định giữa các
      * lần tải — không thì phân trang và ảnh chụp màn hình đều nhảy lung tung.
+     *
+     * `sort_order` DẪN ĐẦU, thêm 2026-08-28 cùng nút ↑↓ ở khu quản trị.
+     *
+     * Cột ấy vốn có trong lược đồ nhưng chưa nơi nào ĐỌC tới. Đừng suy ra từ
+     * đó là "mọi dòng đang bằng 0 nên thêm vào cũng như không" — CSDL đang
+     * chạy có ba bộ mang 0, 20, 30, sót lại từ đợt nhập liệu đầu. Thêm cột này
+     * vào ORDER BY mà không làm gì nữa là thứ tự bộ sưu tập ở TRANG BÁN HÀNG
+     * nhảy ngay lúc deploy, theo một dãy số không ai cố ý đặt.
+     *
+     * Vì thế đi kèm một file lấp giá trị:
+     * database/migrations/2026-08-28-bo-suu-tap-thu-tu-trung-bay.sql ghi
+     * `sort_order` = đúng vị trí mỗi bộ ĐANG đứng theo luật cũ. Chạy xong thì
+     * đổi mệnh đề này không xê dịch một dòng nào; chỉ từ lần đầu ai đó bấm ↑↓
+     * thì tay người mới thắng ngày ra mắt.
+     *
+     * Đó cũng là điều kiện để mấy cái nút kia nói thật: thứ tự trên bảng quản
+     * trị và thứ tự khách nhìn thấy phải là MỘT, nếu không thì bấm ↑↓ chỉ xáo
+     * lại cái bảng chứ không đổi gì ngoài mặt tiền.
      */
-    private const ORDER = 'launched_at DESC, name ASC';
+    private const ORDER = 'sort_order ASC, launched_at DESC, name ASC';
 
     /** Bộ sưu tập đang hiển thị, cho trang /bo-suu-tap và trang chủ. */
     public static function visible(): array

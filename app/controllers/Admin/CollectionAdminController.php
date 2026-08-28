@@ -619,4 +619,60 @@ class CollectionAdminController extends AdminController
 
         return $value;
     }
+
+    /**
+     * Đổi chỗ một bộ sưu tập với bộ liền trên/dưới (POST .../thu-tu).
+     *
+     * Dãy id lấy đúng thứ tự CollectionModel dùng để hiện ở trang bán hàng —
+     * xem hằng ORDER của model. Nhờ vậy thứ tự trên bảng quản trị và thứ tự
+     * khách nhìn thấy luôn là một; nếu hai chỗ sắp khác nhau thì mấy cái nút
+     * này không nói lên điều gì cả.
+     */
+    public function move(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        $huong = ThuTuService::huongTuRequest($_POST['huong'] ?? null);
+
+        if ($huong === '') {
+            flash('admin_error', 'Hướng di chuyển không hợp lệ.');
+            redirect(self::BASE);
+        }
+
+        $ids = array_column(CollectionModel::allOrdered(), 'id');
+
+        if (ThuTuService::doiCho('collections', $ids, (string) ($_POST['id'] ?? ''), $huong)) {
+            flash('admin_success', 'Đã đổi thứ tự bộ sưu tập.');
+        }
+
+        redirect(self::BASE);
+    }
+
+    /** Bật/tắt hiển thị một bộ sưu tập (POST .../hien). Xem CategoryAdminController::toggle(). */
+    public function toggle(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        $id  = (string) ($_POST['id'] ?? '');
+        $bst = CollectionModel::find($id);
+
+        if ($bst === null) {
+            flash('admin_error', 'Không tìm thấy bộ sưu tập.');
+            redirect(self::BASE);
+        }
+
+        $hien = (int) $bst['is_visible'] !== 1;
+        CollectionModel::update($id, ['is_visible' => $hien ? 1 : 0]);
+
+        flash(
+            'admin_success',
+            $hien
+                ? sprintf('Đã hiện “%s” trên trang bán hàng.', $bst['name'])
+                : sprintf('Đã ẩn “%s” khỏi trang bán hàng.', $bst['name'])
+        );
+
+        redirect(self::BASE);
+    }
 }

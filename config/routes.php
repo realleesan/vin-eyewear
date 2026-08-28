@@ -247,6 +247,8 @@ return [
        Trang liên hệ không còn trạng thái để đổi — nó thành sổ lưu trữ, và thao
        tác duy nhất còn lại là đẩy lại một tin Zalo đã nuốt mất. */
     'quan-tri/lien-he/zalo'       => 'ContactAdminController@sendZalo',         // POST
+    // Đẩy CẢ hàng chờ một lượt — yêu cầu kẹt lại gần như luôn kẹt theo lô.
+    'quan-tri/lien-he/zalo-tat-ca' => 'ContactAdminController@sendZaloAll',    // POST
 
     'quan-tri/ton-kho'            => 'InventoryAdminController@index',
     'quan-tri/ton-kho/cap-nhat'   => 'InventoryAdminController@updateStock',    // POST
@@ -258,10 +260,16 @@ return [
     'quan-tri/danh-muc'     => 'CategoryAdminController@index',
     'quan-tri/danh-muc/luu' => 'CategoryAdminController@save',     // POST
     'quan-tri/danh-muc/xoa' => 'CategoryAdminController@delete',   // POST
+    // Thứ tự danh mục = thứ tự trên menu trang bán hàng, nên nó là dữ liệu
+    // khách nhìn thấy chứ không phải chuyện sắp cho gọn mắt.
+    'quan-tri/danh-muc/thu-tu' => 'CategoryAdminController@move',   // POST
+    'quan-tri/danh-muc/hien'   => 'CategoryAdminController@toggle', // POST
 
     'quan-tri/bo-suu-tap'     => 'CollectionAdminController@index',
     'quan-tri/bo-suu-tap/luu' => 'CollectionAdminController@save',      // POST
     'quan-tri/bo-suu-tap/xoa' => 'CollectionAdminController@delete',    // POST
+    'quan-tri/bo-suu-tap/thu-tu' => 'CollectionAdminController@move',   // POST
+    'quan-tri/bo-suu-tap/hien'   => 'CollectionAdminController@toggle', // POST
     /* CÂU HỎI THƯỜNG GẶP của một bộ — hai đường riêng, không gộp vào /luu.
        Form bộ sưu tập là MỘT <form>, mà mỗi câu hỏi cần nút xoá của riêng nó,
        và HTML không cho lồng <form> vào nhau. */
@@ -283,6 +291,8 @@ return [
     'quan-tri/ma-giam-gia/luu'  => 'VoucherAdminController@save',   // POST
     'quan-tri/ma-giam-gia/xoa'  => 'VoucherAdminController@delete', // POST
     'quan-tri/ma-giam-gia/phat' => 'VoucherAdminController@grant',  // POST
+    // Tắt KHÁC xoá: mã tắt vẫn tra ngược được từ đơn cũ, bật lại một cú bấm.
+    'quan-tri/ma-giam-gia/bat-tat' => 'VoucherAdminController@toggle', // POST
 
     // Bảng giá tròng — một LƯỚI kiểu tròng × gói chiết suất, không phải CRUD:
     // không có route xoá, và route lưu ghi cả bảng một lượt. Xem
@@ -297,6 +307,9 @@ return [
     'quan-tri/gia-trong/goi'     => 'LensPriceAdminController@packages',
     'quan-tri/gia-trong/goi/luu' => 'LensPriceAdminController@savePackage',   // POST
     'quan-tri/gia-trong/goi/xoa' => 'LensPriceAdminController@deletePackage', // POST
+    // Thứ tự gói = thứ tự khách thấy ở bước chọn loại tròng; gói đầu được
+    // chọn sẵn, nên nó quyết định gói nào bán chạy.
+    'quan-tri/gia-trong/goi/thu-tu' => 'LensPriceAdminController@movePackage', // POST
 
     /*
      * KHÁCH HÀNG
@@ -342,6 +355,9 @@ return [
     'quan-tri/co-so'        => 'StoreAdminController@index',
     'quan-tri/co-so/luu'    => 'StoreAdminController@save',        // POST
     'quan-tri/co-so/xoa'    => 'StoreAdminController@delete',      // POST
+    // Tạm đóng KHÁC xoá: lịch hẹn đã đặt ở cơ sở đó vẫn tra được, chỉ là khách
+    // không đặt thêm được nữa.
+    'quan-tri/co-so/hoat-dong' => 'StoreAdminController@toggle',   // POST
 
     // Yêu cầu đặt lại mật khẩu — đường dự phòng khi hosting không gửi được
     // mail. Nhân viên gọi xác minh rồi mới bấm tạo liên kết.

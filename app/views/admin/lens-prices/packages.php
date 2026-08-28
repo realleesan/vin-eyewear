@@ -51,10 +51,29 @@
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($packages as $p): ?>
+                <?php $soGoi = count($packages); ?>
+                <?php foreach ($packages as $i => $p): ?>
                     <?php $soGia = $priceCounts[$p['id']] ?? 0; ?>
                     <tr>
-                        <td><?= (int) $p['sort_order'] ?></td>
+                        <?php /* Thứ tự ở đây là thứ tự khách thấy ở bước "Chọn loại
+                                 tròng kính", và gói đứng đầu là gói được chọn sẵn —
+                                 nên nó quyết định gói nào bán chạy, không phải chuyện
+                                 sắp cho gọn mắt. Con số sort_order thô không nói được
+                                 điều đó (cả cột có thể cùng bằng 0), hai cái nút thì
+                                 nói. */ ?>
+                        <td>
+                            <?php if ($canEdit): ?>
+                                <?php partial('admin/_layout/thu-tu', [
+                                    'base' => '/quan-tri/gia-trong/goi/thu-tu',
+                                    'id'   => $p['id'],
+                                    'dau'  => $i === 0,
+                                    'cuoi' => $i === $soGoi - 1,
+                                    'ten'  => $p['name'],
+                                ]); ?>
+                            <?php else: ?>
+                                <span class="num"><?= $i + 1 ?></span>
+                            <?php endif; ?>
+                        </td>
                         <td><code><?= e($p['id']) ?></code></td>
                         <td><?= e($p['name']) ?></td>
                         <td>

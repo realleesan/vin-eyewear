@@ -262,4 +262,39 @@ class LensPriceAdminController extends AdminController
             : 'Đã xoá gói chiết suất.');
         redirect(self::PKG);
     }
+
+    /**
+     * Đổi chỗ một gói chiết suất với gói liền trên/dưới
+     * (POST /quan-tri/gia-trong/goi/thu-tu).
+     *
+     * Thứ tự này là thứ tự khách thấy ở bước "Chọn loại tròng kính" trong hộp
+     * mua hàng — gói đứng đầu là gói được chọn sẵn. Nên nó quyết định gói nào
+     * bán được nhiều nhất, không phải chuyện sắp xếp cho gọn mắt.
+     *
+     * Bảng `lens_packages` dùng khoá chính là MÃ gói (chuỗi) chứ không phải id
+     * số, nên dãy truyền vào ThuTuService là dãy mã.
+     */
+    public function movePackage(): void
+    {
+        $this->requirePost(self::PKG);
+        $this->requireManager(self::PKG);
+
+        $huong = ThuTuService::huongTuRequest($_POST['huong'] ?? null);
+
+        if ($huong === '') {
+            flash('admin_error', 'Hướng di chuyển không hợp lệ.');
+            redirect(self::PKG);
+        }
+
+        $ids = array_column(
+            Database::fetchAll('SELECT id FROM lens_packages ORDER BY sort_order ASC, id ASC'),
+            'id'
+        );
+
+        if (ThuTuService::doiCho('lens_packages', $ids, (string) ($_POST['id'] ?? ''), $huong)) {
+            flash('admin_success', 'Đã đổi thứ tự gói chiết suất.');
+        }
+
+        redirect(self::PKG);
+    }
 }

@@ -96,4 +96,86 @@ class ContactAdminController extends AdminController
             . 'và token OA trong .env — chi tiết nằm ở error log.');
         redirect(self::BASE);
     }
+
+    /**
+     * Đẩy MỌI yêu cầu chưa tới Zalo sang CSKH một lượt
+     * (POST /quan-tri/lien-he/zalo-tat-ca).
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO CÓ NÚT NÀY
+     *
+     * Yêu cầu kẹt lại gần như luôn kẹt theo LÔ, không lẻ tẻ: token OA hết hạn
+     * hoặc thiếu khai template thì mọi yêu cầu trong quãng đó đều nằm lại. Sửa
+     * xong cấu hình mà phải bấm "Gửi sang Zalo" từng dòng một là bắt người ta
+     * lặp đúng một thao tác mười lăm lần, và lần thứ mười hai thì họ bỏ dở.
+     *
+     * KHÔNG DỪNG Ở LỖI ĐẦU TIÊN. Mỗi yêu cầu là một lượt gọi độc lập tới Zalo;
+     * một cái hỏng (số điện thoại rác chẳng hạn) không nói gì về mười cái sau.
+     * Dừng lại ở đó là bỏ lại mười khách vẫn đang chờ.
+     *
+     * CHỈ ĐÁNH DẤU CÁI NÀO GỬI ĐƯỢC. Cái nào trượt vẫn nguyên trạng thái "chưa
+     * gửi" và vẫn còn nút riêng ở dòng của nó — đánh dấu bừa cả loạt là xoá mất
+     * dấu vết duy nhất cho biết ai chưa được gọi lại.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function sendZaloAll(): void
+    {
+        $this->requirePost(self::BASE);
+
+        if (!Database::columnExists('contact_requests', 'zalo_sent_at')) {
+            flash('admin_error', 'Chưa ghi nhận được việc đẩy Zalo — cơ sở dữ liệu còn thiếu cột.');
+            redirect(self::BASE);
+        }
+
+        /* Giới hạn 200: nút này chạy đồng bộ trong một request, mỗi yêu cầu là
+           một lượt gọi mạng. Hàng chờ mà dài hơn thế thì bấm thêm một lần nữa
+           — chậm hơn một cú bấm, nhưng không có lượt tải nào chết giữa chừng
+           vì hết thời gian và để lại một nửa số dòng đã đánh dấu. */
+        $chuaDay = Database::fetchAll(
+            'SELECT * FROM contact_requests
+              WHERE zalo_sent_at IS NULL
+              ORDER BY created_at ASC
+              LIMIT 200'
+        );
+
+        if ($chuaDay === []) {
+            flash('admin_success', 'Không còn yêu cầu nào đang chờ đẩy.');
+            redirect(self::BASE);
+        }
+
+        $xong = 0;
+
+        foreach ($chuaDay as $contact) {
+            if (Zalo::contact($contact)) {
+                ContactModel::markZaloSent((string) $contact['id']);
+                $xong++;
+            }
+        }
+
+        $truot = count($chuaDay) - $xong;
+
+        if ($xong === 0) {
+            /* Không cái nào đi được nghĩa là cấu hình vẫn hỏng, không phải dữ
+               liệu xấu. Nói thẳng ra chỗ phải kiểm thay vì "gửi thất bại". */
+            flash(
+                'admin_error',
+                'Không đẩy được yêu cầu nào. Kiểm ZALO_ZNS_TEMPLATE_CONTACT trong .env '
+                . 'và hạn token OA ở config/zalo.php.'
+            );
+            redirect(self::BASE);
+        }
+
+        flash(
+            'admin_success',
+            $truot === 0
+                ? sprintf('Đã đẩy %d yêu cầu sang Zalo CSKH.', $xong)
+                : sprintf(
+                    'Đã đẩy %d yêu cầu sang Zalo CSKH. Còn %d yêu cầu chưa đi được — bấm "Gửi sang Zalo" ở từng dòng để xem lý do.',
+                    $xong,
+                    $truot
+                )
+        );
+
+        redirect(self::BASE);
+    }
 }

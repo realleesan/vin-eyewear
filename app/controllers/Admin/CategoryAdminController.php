@@ -120,4 +120,76 @@ class CategoryAdminController extends AdminController
         flash('admin_success', 'Đã xoá danh mục.');
         redirect(self::BASE);
     }
+
+    /**
+     * Đổi chỗ một danh mục với danh mục liền trên/dưới (POST .../thu-tu).
+     *
+     * Thứ tự ở bảng này KHÔNG phải chuyện trang trí: nó là thứ tự các mục hiện
+     * trên menu trang bán hàng, tức là thứ duy nhất ở màn này mà khách nhìn
+     * thấy. Vì thế nó cần quyền quản lý như mọi thao tác sửa khác.
+     *
+     * Dãy id truyền vào lấy ĐÚNG truy vấn mà bảng đang hiện (sort_order rồi
+     * tên) — xem ThuTuService::doiCho() để biết vì sao service không tự đọc.
+     */
+    public function move(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        $huong = ThuTuService::huongTuRequest($_POST['huong'] ?? null);
+
+        if ($huong === '') {
+            flash('admin_error', 'Hướng di chuyển không hợp lệ.');
+            redirect(self::BASE);
+        }
+
+        $ids = array_column(
+            Database::fetchAll('SELECT id FROM categories ORDER BY sort_order ASC, name ASC'),
+            'id'
+        );
+
+        /* Bấm lên ở dòng đầu (hoặc xuống ở dòng cuối) thì KHÔNG báo lỗi: nút
+           đã bị khoá sẵn trên giao diện, nên tới được đây nghĩa là ai đó gửi
+           thẳng POST — và với họ thì "không có gì để đổi" là câu trả lời đúng,
+           không phải một thông báo đỏ. */
+        if (ThuTuService::doiCho('categories', $ids, (string) ($_POST['id'] ?? ''), $huong)) {
+            flash('admin_success', 'Đã đổi thứ tự danh mục.');
+        }
+
+        redirect(self::BASE);
+    }
+
+    /**
+     * Bật/tắt hiển thị một danh mục (POST .../hien).
+     *
+     * KHÔNG nhận trạng thái mới từ request mà tự đảo giá trị đang có: gửi lên
+     * "đặt thành ẩn" thì hai người bấm cùng lúc sẽ ghi đè nhau mà không ai
+     * biết. Đảo tại chỗ thì cú bấm thứ hai đảo ngược cú thứ nhất — vẫn không
+     * lý tưởng, nhưng nó nói đúng thứ vừa xảy ra.
+     */
+    public function toggle(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireManager(self::BASE);
+
+        $id  = (string) ($_POST['id'] ?? '');
+        $cat = CategoryModel::find($id);
+
+        if ($cat === null) {
+            flash('admin_error', 'Không tìm thấy danh mục.');
+            redirect(self::BASE);
+        }
+
+        $hien = (int) $cat['is_visible'] !== 1;
+        CategoryModel::update($id, ['is_visible' => $hien ? 1 : 0]);
+
+        flash(
+            'admin_success',
+            $hien
+                ? sprintf('Đã hiện “%s” trên trang bán hàng.', $cat['name'])
+                : sprintf('Đã ẩn “%s” khỏi trang bán hàng.', $cat['name'])
+        );
+
+        redirect(self::BASE);
+    }
 }

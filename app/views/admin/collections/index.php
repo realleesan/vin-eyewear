@@ -117,9 +117,16 @@ $dongSignature = implode("\n", array_map(
 <?php endif; ?>
 
 <div class="atable-wrap">
-    <table class="atable abstable">
+    <?php /* --ord: có thêm cột "Thứ tự" ở đầu, nên mọi con số bề rộng cột dịch
+             sang phải một nấc. Hai bộ luật thay vì một vì cột ấy chỉ tồn tại khi
+             người dùng có quyền sửa — xem .abstable trong admin.css. */ ?>
+    <table class="atable abstable<?= $canEdit ? ' abstable--ord' : '' ?>">
         <thead>
             <tr>
+                <?php /* Cột thứ tự CHỈ hiện khi có quyền sửa: nó không mang thông
+                         tin nào để đọc, chỉ là chỗ đặt hai cái nút. Người xem-thôi
+                         mà thấy một cột trống thì đó là một cột thừa. */ ?>
+                <?php if ($canEdit): ?><th scope="col">Thứ tự</th><?php endif; ?>
                 <th scope="col">Bộ sưu tập</th>
                 <th scope="col">Lên kệ</th>
                 <th scope="col">Sản phẩm</th>
@@ -128,9 +135,21 @@ $dongSignature = implode("\n", array_map(
             </tr>
         </thead>
         <tbody>
-            <?php foreach ($collections as $c): ?>
+            <?php $soBo = count($collections); ?>
+            <?php foreach ($collections as $i => $c): ?>
                 <?php $soHang = (int) ($counts[$c['slug']] ?? 0); ?>
                 <tr>
+                    <?php if ($canEdit): ?>
+                        <td>
+                            <?php partial('admin/_layout/thu-tu', [
+                                'base' => '/quan-tri/bo-suu-tap/thu-tu',
+                                'id'   => $c['id'],
+                                'dau'  => $i === 0,
+                                'cuoi' => $i === $soBo - 1,
+                                'ten'  => $c['name'],
+                            ]); ?>
+                        </td>
+                    <?php endif; ?>
                     <td>
                         <?php /* Link mở thẳng danh mục ĐÃ LỌC, để nhân viên kiểm
                                  được ngay bộ này ra hàng gì.
@@ -158,12 +177,26 @@ $dongSignature = implode("\n", array_map(
                         <?= $soHang > 0 ? (int) $soHang : '—' ?>
                     </td>
                     <td>
-                        <?php /* "Đang ẩn" TRUNG TÍNH, không đỏ — cùng luật với bảng
-                                 sản phẩm và danh mục. Ẩn một bộ sưu tập hết mùa là
-                                 việc bình thường, không phải sự cố. */ ?>
-                        <span class="badge badge--<?= $c['is_visible'] ? 'in_stock' : 'neutral' ?>">
-                            <?= $c['is_visible'] ? 'Đang bán' : 'Đang ẩn' ?>
-                        </span>
+                        <?php /* Viên nhãn BẤM ĐƯỢC — cùng lối với bảng danh mục, xem
+                                 .atoggle--pill trong admin.css. Ẩn một bộ hết mùa là
+                                 việc làm vài lần một năm nhưng luôn gấp (bộ hết hàng
+                                 mà vẫn trưng ở trang chủ), nên nó phải là một cú bấm
+                                 chứ không phải bốn bước qua form. */ ?>
+                        <?php if ($canEdit): ?>
+                            <form method="post" action="/quan-tri/bo-suu-tap/hien">
+                                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                <input type="hidden" name="id" value="<?= e($c['id']) ?>">
+                                <button type="submit"
+                                        class="atoggle atoggle--pill<?= $c['is_visible'] ? '' : ' is-off' ?>"
+                                        title="<?= $c['is_visible'] ? 'Bấm để ẩn khỏi trang bán hàng' : 'Bấm để hiện trên trang bán hàng' ?>">
+                                    <?= $c['is_visible'] ? 'Đang bán' : 'Đang ẩn' ?>
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <span class="badge badge--<?= $c['is_visible'] ? 'in_stock' : 'neutral' ?>">
+                                <?= $c['is_visible'] ? 'Đang bán' : 'Đang ẩn' ?>
+                            </span>
+                        <?php endif; ?>
                     </td>
                     <?php if ($canEdit): ?>
                         <td class="arow-actions">
