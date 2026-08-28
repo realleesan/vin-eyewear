@@ -529,6 +529,21 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
        thiếu dòng này thì nhãn của ba thẻ kia tụt xuống lệch với nhãn thẻ đầu. */
     display: grid;
     align-content: start;
+    /*
+     * LẤP ĐẦY Ô LƯỚI, không chỉ cao bằng nội dung.
+     *
+     * Lưới .astats đặt trên <ul>, nên phần tử lưới là các <li> — chúng tự giãn
+     * bằng nhau theo hàng. Nhưng cái THẺ nằm bên trong <li>, và một khối con
+     * thì chỉ cao bằng nội dung của nó.
+     *
+     * Hậu quả: thẻ Doanh thu có thêm dòng "Tạm thu" nên cao hơn ba thẻ kia
+     * chừng 16px, và ba thẻ kia treo lơ lửng ở nửa trên ô của mình — nhìn ra
+     * ngay là một hàng thẻ so le. Đúng lỗi người dùng chụp màn hình chỉ ra.
+     *
+     * height: 100% ăn theo chiều cao <li> đã được lưới ấn định, nên bốn thẻ
+     * luôn bằng nhau dù thẻ nào có thêm bớt một dòng.
+     */
+    height: 100%;
     padding: 18px 20px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
