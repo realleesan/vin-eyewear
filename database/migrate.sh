@@ -164,6 +164,9 @@ MIGRATIONS=(
     # 4 cột trên `product_variants`. Mốc là `publish_status` — cột đầu tiên
     # trong câu ALTER và không có gì khác tạo ra nó.
     "2026-08-29-san-pham-theo-ban-ve.sql|column|products|publish_status"
+    # Danh sách khách chờ hàng về. Mốc là chính bảng `stock_waitlist` — không
+    # có gì khác tạo ra nó, và file cũng chỉ tạo đúng một bảng.
+    "2026-08-29-danh-sach-cho-hang.sql|table|stock_waitlist|"
 )
 
 # ---------------------------------------------------------------------------

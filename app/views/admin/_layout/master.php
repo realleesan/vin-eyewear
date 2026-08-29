@@ -65,6 +65,10 @@ $navGroups = [
     ['label' => 'Sản phẩm', 'items' => [
         ['url' => '/quan-tri/san-pham',  'label' => 'Sản phẩm'],
         ['url' => '/quan-tri/ton-kho',   'label' => 'Tồn kho'],
+        /* Ngay dưới Tồn kho, không phải trong nhóm Marketing: người mở nó là
+           người vừa nhập hàng xong, và câu hỏi tiếp theo của họ là "ai đang
+           chờ món này". */
+        ['url' => '/quan-tri/cho-hang',  'label' => 'Chờ hàng'],
         ['url' => '/quan-tri/danh-muc',  'label' => 'Danh mục'],
         ['url' => '/quan-tri/gia-trong', 'label' => 'Giá tròng'],
     ]],

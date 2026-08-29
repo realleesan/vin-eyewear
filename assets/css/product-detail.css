@@ -993,3 +993,126 @@
 .pdgal__video:hover { border-color: var(--brand, #8f2b3c); }
 
 .pdgal__video-ico { flex-shrink: 0; }
+
+
+/* ============================================================
+   CHỖ XIN BÁO KHI CÓ HÀNG — chỉ hiện khi mặt hàng đã hết
+
+   Markup: app/views/product/detail.php, ngay dưới hàng nút mua (lúc đó hai nút
+   ấy đang bị tắt). Đặt đúng chỗ mắt vừa nhìn tới rồi hụt: khách bấm không được
+   "Thêm vào giỏ" thì thứ tiếp theo họ thấy phải là lối đi khác, không phải một
+   khoảng trống rồi tới danh sách cam kết bảo hành.
+
+   Nền be nhạt --brand-subtle chứ không phải khung viền đỏ: đây là một lời mời,
+   không phải một cảnh báo. Hàng hết đã là tin xấu rồi, không cần tô thêm.
+   ============================================================ */
+
+.pdwait {
+    margin-top: 22px;
+    padding: 18px 20px 20px;
+    border-radius: var(--radius-sm);
+    background: var(--brand-subtle, #f2e4dc);
+}
+
+.pdwait__title {
+    margin: 0 0 4px;
+    font-family: var(--font-serif);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.pdwait__lead {
+    margin: 0 0 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+/* Câu trả lời sau khi gửi. Dùng chung một kiểu cho cả "đã ghi nhận" lẫn "email
+   không hợp lệ": phân biệt bằng chính câu chữ, không bằng màu — một dải đỏ cho
+   lỗi nhập liệu ở đây nặng nề hơn mức cần thiết. */
+.pdwait__msg {
+    margin: 0 0 12px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink);
+}
+
+.pdwait__label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.pdwait__select {
+    width: 100%;
+    height: 42px;
+    margin-bottom: 10px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--ink);
+}
+
+/* Ba ô một hàng ở khổ rộng, xuống dòng khi hẹp — flex-wrap chứ không media
+   query: cụm này nằm trong cột phải của trang chi tiết, bề rộng của nó không
+   đi theo bề rộng màn hình một cách thẳng thớm. */
+.pdwait__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pdwait__input {
+    flex: 1 1 160px;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    color: var(--ink);
+}
+
+.pdwait__input:focus-visible,
+.pdwait__select:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -1px;
+}
+
+.pdwait__go {
+    flex: 0 0 auto;
+    height: 42px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--brand);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--on-brand);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.pdwait__go:hover,
+.pdwait__go:focus-visible {
+    background: var(--brand-strong);
+}
+
+/* Câu trả lời đứng MỘT MÌNH — khi hàng vừa về đúng lúc khách gửi form, khối
+   đăng ký đã biến mất nên câu này không còn nền be của .pdwait đỡ phía sau. */
+.pdwait__msg--loi {
+    margin-top: 16px;
+    border: 1px solid var(--line);
+}

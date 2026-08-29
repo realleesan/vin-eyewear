@@ -70,6 +70,29 @@ class ProductModel extends BaseModel
         return 'COALESCE(NULLIF(low_stock_at, 0), ' . self::NGUONG_SAP_HET . ')';
     }
 
+    /**
+     * Ngưỡng "sắp hết" của MỘT dòng đã đọc lên — bản PHP của biểu thức trên.
+     *
+     * Trang chi tiết sản phẩm cần con số này để quyết định hiện "Còn hàng" hay
+     * "Chỉ còn N sản phẩm". Nó đã có sẵn cả mặt hàng trong tay nên không việc
+     * gì phải hỏi CSDL thêm một câu nữa — nhưng LUẬT thì phải là một, không
+     * được chép lại: trước bản này trang đó gõ cứng số 10, trong khi khu quản
+     * trị dùng 5 (hoặc ngưỡng riêng của mặt hàng). Cùng một cái gọng, trang
+     * bán hàng bảo "sắp hết" còn bảng Tồn kho bảo chưa — hoặc ngược lại.
+     *
+     * NULLIF ở bản SQL tương ứng với phép so > 0 ở đây: số 0 trong ô ấy nghĩa
+     * là "không đặt riêng", trùng ý với để trống.
+     *
+     * Không phải hỏi cột có tồn tại không như bản SQL: mảng đọc từ `products`
+     * thiếu khoá thì `?? null` lo, không có lỗi 1054 nào cả.
+     */
+    public static function nguongSapHet(array $product): int
+    {
+        $rieng = (int) ($product['low_stock_at'] ?? 0);
+
+        return $rieng > 0 ? $rieng : self::NGUONG_SAP_HET;
+    }
+
     protected static string $table = 'products';
 
     /**

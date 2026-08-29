@@ -48,6 +48,8 @@ return [
     // Đặt TRƯỚC 'san-pham/{slug}': router khớp theo thứ tự khai, để sau thì
     // 'danh-gia' bị hiểu thành slug của một sản phẩm.
     'san-pham/danh-gia' => 'ProductDetailController@review',   // POST
+    // Cùng lý do đặt trước 'san-pham/{slug}' như dòng trên.
+    'san-pham/cho-hang' => 'ProductDetailController@waitlist', // POST
     'san-pham/{slug}'  => 'ProductDetailController@show',
 
     /*
@@ -253,6 +255,8 @@ return [
     // Đẩy CẢ hàng chờ một lượt — yêu cầu kẹt lại gần như luôn kẹt theo lô.
     'quan-tri/lien-he/zalo-tat-ca' => 'ContactAdminController@sendZaloAll',    // POST
 
+    'quan-tri/cho-hang'           => 'WaitlistAdminController@index',
+    'quan-tri/cho-hang/da-bao'    => 'WaitlistAdminController@markNotified',   // POST
     'quan-tri/ton-kho'            => 'InventoryAdminController@index',
     'quan-tri/ton-kho/cap-nhat'   => 'InventoryAdminController@updateStock',    // POST
 

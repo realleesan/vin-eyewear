@@ -732,6 +732,47 @@ CREATE TABLE `product_variants` (
         REFERENCES `products` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ----------------------------------------------------------------------------
+-- DANH SÁCH CHỜ HÀNG — khách để lại liên lạc để được báo khi hàng về.
+--
+-- GẮN THEO BIẾN THỂ, KHÔNG PHẢI THEO CẢ MẶT HÀNG. Người chờ gọng màu đen size
+-- 52 không quan tâm màu nâu vừa về; gắn theo mặt hàng thì phần lớn tin nhắn
+-- gửi đi là tin không liên quan tới người nhận, và vài lần như thế là không ai
+-- đọc nữa. `variant_id` để NULL khi mặt hàng KHÔNG có biến thể nào — đó là
+-- trường hợp thật, không phải dữ liệu thiếu.
+--
+-- HAI CÁCH LIÊN LẠC, CẦN ÍT NHẤT MỘT (tầng ứng dụng bắt — xem
+-- ProductDetailController::waitlist). Phải có số điện thoại chứ không chỉ
+-- email vì hosting hiện tại KHÔNG GỬI ĐƯỢC EMAIL: InfinityFree bản miễn phí
+-- vô hiệu hoá mail() và chặn cổng SMTP, .env.production để MAIL_DRIVER=log.
+-- Việc báo tin hôm nay là việc của người — nhân viên mở /quan-tri/cho-hang rồi
+-- gọi hoặc nhắn Zalo. Bảng dựng sẵn đúng hình để ngày có kênh tự động thì chỉ
+-- thêm chỗ gửi, không phải đổi lược đồ.
+--
+-- KHÔNG DÙNG UNIQUE KEY ĐỂ CHỐNG TRÙNG: MySQL coi mỗi NULL là một giá trị
+-- khác nhau trong khoá duy nhất, mà cả `variant_id` lẫn một trong hai cột liên
+-- lạc đều có thể NULL — khoá ấy sẽ cho cùng một người đăng ký lại vô số lần.
+-- Phép chống trùng ở WaitlistModel::daDangKy(), dùng COALESCE.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `stock_waitlist` (
+    `id`          CHAR(36)     NOT NULL DEFAULT (UUID()),
+    `product_id`  CHAR(36)     NOT NULL,
+    `variant_id`  CHAR(36)     NULL,
+    `email`       VARCHAR(190) NULL,
+    `phone`       VARCHAR(20)  NULL,
+    -- Đã báo cho người này chưa, và lúc nào. NULL = đang chờ.
+    `notified_at` DATETIME     NULL,
+    `created_at`  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    KEY `idx_waitlist_cho` (`notified_at`, `created_at`),
+    KEY `idx_waitlist_product` (`product_id`),
+    KEY `idx_waitlist_variant` (`variant_id`),
+    CONSTRAINT `fk_waitlist_product` FOREIGN KEY (`product_id`)
+        REFERENCES `products` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_waitlist_variant` FOREIGN KEY (`variant_id`)
+        REFERENCES `product_variants` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Bộ sưu tập theo mùa.
 --
 -- `slug` là thứ nối bảng này với `products.collection` và với mọi link

@@ -4402,3 +4402,37 @@ a.astatus__save { text-decoration: none; }
 /* Dòng phụ của thẻ số liệu (.astat__extra*) khai ở khối THẺ SỐ LIỆU phía
    trên — trước đây có một bản thứ hai ở đây, và bản dưới đè bản trên nên con
    số tạm thu trên thẻ nền tối lấy màu chữ nền sáng: nâu đen trên nâu đen. */
+
+/* ============================================================
+   MÀN CHỜ HÀNG — app/views/admin/waitlist/index.php
+
+   KHÔNG mượn .admtable. Nhìn tên tưởng là "admin table" dùng chung, thật ra
+   `adm` là tiền tố riêng của màn DANH MỤC: nó đặt table-layout: fixed và gõ
+   cứng bề rộng cho cột 1, 3, 5, 6, 7 theo đúng các cột của màn ấy. Mượn về
+   đây thì cột "Sản phẩm" ăn phải bề rộng 80px của cột "Thứ tự" bên kia — tên
+   hàng bị bẻ làm đôi và đè lên tiêu đề cột bên cạnh. Thấy trên ảnh chụp.
+
+   Nếp của khu quản trị là MỘT MÀN MỘT TIỀN TỐ: .aitable cho Tồn kho, .admtable
+   cho Danh mục, .achtable cho màn này. Chỉ .atable là dùng chung.
+
+   Mọi thứ khác vẫn mượn lớp có sẵn: .atabs cho viên lọc, .arow-actions +
+   .arow-btn cho nút, .atag cho huy hiệu "đã về", .atable__sub cho dòng phụ.
+   ============================================================ */
+
+.achtable {
+    min-width: 900px;
+}
+
+.achtable th,
+.achtable td { padding: 13px 10px; }
+
+.achtable th:first-child,
+.achtable td:first-child { padding-left: 22px; }
+
+.achtable th:last-child,
+.achtable td:last-child { padding-right: 22px; }
+
+/* Cột đầu chứa tên hàng CỘNG mã SKU trên hai dòng. Không đặt bề rộng tối
+   thiểu thì bảng co nó lại bằng chữ dài nhất và tên bị bẻ giữa chừng. */
+.achtable td:first-child,
+.achtable th:first-child { min-width: 220px; }

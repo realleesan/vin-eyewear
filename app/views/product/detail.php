@@ -66,10 +66,26 @@ $stockLeft = $variants === []
     ? (int) ($product['stock_quantity'] ?? 0)
     : array_sum(array_map(static fn ($v) => (int) $v['stock_quantity'], $variants));
 
-/* Số nhỏ mới đáng nói. Còn 80 cái mà in "còn 80" thì con số đó không giúp ai
-   quyết định gì, chỉ làm dòng thông tin dài thêm; còn 3 cái thì đó là thứ
-   khách cần biết trước khi chọn số lượng. */
-$stockLow = $inStock && $stockLeft > 0 && $stockLeft <= 10;
+/*
+ * SẮP HẾT HAY CHƯA — HỎI NGƯỠNG CỦA CHÍNH MẶT HÀNG, KHÔNG GÕ CỨNG
+ *
+ * Số nhỏ mới đáng nói. Còn 80 cái mà in "còn 80" thì con số đó không giúp ai
+ * quyết định gì, chỉ làm dòng thông tin dài thêm; còn 3 cái thì đó là thứ
+ * khách cần biết trước khi chọn số lượng.
+ *
+ * Nhưng "nhỏ" là bao nhiêu thì TUỲ MẶT HÀNG. Ba cái gọng bán một tháng chưa
+ * hết là chuyện thường; ba hộp tròng thông dụng thì hết trong hai ngày. Cửa
+ * hàng đặt riêng cho từng mã ở ô "Ngưỡng cảnh báo hết hàng" (cột
+ * `low_stock_at`), để trống thì rơi về mốc chung 5.
+ *
+ * Trước bản này chỗ đây gõ cứng số 10, trong khi khu quản trị dùng đúng cơ
+ * chế trên. Cùng một cái gọng còn 7 chiếc: trang bán hàng kêu "Chỉ còn 7",
+ * bảng Tồn kho bảo vẫn bình thường. Nay cả hai hỏi cùng một nguồn —
+ * ProductModel::nguongSapHet() và ::nguongSapHetSql() dùng chung hằng số.
+ */
+$stockLow = $inStock
+    && $stockLeft > 0
+    && $stockLeft <= ProductModel::nguongSapHet($product);
 
 /*
  * TRẦN CỦA Ô SỐ LƯỢNG — theo tồn kho thật, không phải một con số gõ cứng.
@@ -211,14 +227,30 @@ $stars = static function (float $score): string {
                     <span class="pdinfo__dot" aria-hidden="true">·</span>
                     <span class="pdinfo__stock<?= $inStock ? '' : ' is-out' ?>">
                         <?php
-                        /* Ba câu chứ không hai: hết hàng · còn ít (kèm số) · còn
-                           hàng. Xem $stockLow ở đầu file. */
+                        /*
+                         * BA CÂU, VÀ CHỈ MỘT CÂU CÓ CON SỐ.
+                         *
+                         *   hết hàng   -> "Hết hàng"
+                         *   sắp hết    -> "Chỉ còn 3 sản phẩm"   (xem $stockLow)
+                         *   còn nhiều  -> "Còn hàng"             (KHÔNG kèm số)
+                         *
+                         * Vế cuối trước đây in "Còn hàng · 42 sản phẩm". Con số
+                         * đó không giúp ai quyết định gì — người ta chỉ cần biết
+                         * mua được hay không — mà lại làm hỏng chính chỗ con số
+                         * có ích: nếu lúc nào cũng có số thì "Chỉ còn 3" không
+                         * còn khác gì "Còn hàng · 42" trong mắt người lướt qua.
+                         * Để dành con số cho đúng lúc nó nói được điều gì đó.
+                         *
+                         * "Hết hàng" chứ không phải "Tạm hết hàng": thẻ sản phẩm
+                         * ngoài trang danh sách đang dùng đúng chữ này, hai chỗ
+                         * nói về cùng một trạng thái thì phải cùng một chữ.
+                         */
                         if (!$inStock) {
-                            echo 'Tạm hết hàng';
+                            echo 'Hết hàng';
                         } elseif ($stockLow) {
                             echo 'Chỉ còn ' . $stockLeft . ' sản phẩm';
                         } else {
-                            echo 'Còn hàng · ' . $stockLeft . ' sản phẩm';
+                            echo 'Còn hàng';
                         }
                         ?>
                     </span>
@@ -375,6 +407,82 @@ $stars = static function (float $score): string {
                 ?>
                 <p class="pdqty__note" data-qty-note role="status" aria-live="polite" hidden></p>
             </form>
+
+            <?php
+            /*
+             * ══════════════════════════════════════════════════════════════
+             * HẾT HÀNG -> CHỖ ĐỂ KHÁCH XIN ĐƯỢC BÁO KHI HÀNG VỀ
+             *
+             * Nằm NGOÀI form mua ở trên: hai form lồng nhau là HTML không hợp
+             * lệ, và trình duyệt sẽ vứt cái bên trong đi mà không báo gì.
+             *
+             * GẮN THEO BIẾN THỂ. Mặt hàng có phương án thì phải hỏi khách chờ
+             * phương án nào — người chờ màu đen không quan tâm màu nâu vừa về.
+             * Ô chọn ở đây là ô RIÊNG, không dùng lại bộ chọn phía trên: bộ
+             * kia đã bị disabled vì hết hàng, mà thẻ disabled thì không gửi
+             * giá trị nào theo form.
+             *
+             * KHÔNG HỨA EMAIL. Hosting hiện tại không gửi được thư (xem
+             * WaitlistModel), nên chữ trên nút và câu xác nhận đều nói "liên
+             * hệ" — nhân viên gọi hoặc nhắn Zalo. Ô số điện thoại vì thế đứng
+             * TRƯỚC ô email: nó là kênh chắc chắn tới được.
+             * ══════════════════════════════════════════════════════════════
+             */
+            $waitMsg = flash('waitlist_msg');
+            ?>
+            <?php
+            /*
+             * CÂU TRẢ LỜI HIỆN CẢ KHI HÀNG VỪA VỀ.
+             *
+             * Khối đăng ký chỉ vẽ khi mặt hàng đang hết. Nhưng giữa lúc khách
+             * bấm gửi và lúc trang vẽ lại, nhân viên có thể vừa nhập hàng —
+             * lúc đó $inStock thành true, khối biến mất, và câu "Đã ghi nhận"
+             * bị nuốt: khách thấy trang tải lại mà không có gì xảy ra, rồi gửi
+             * thêm lần nữa. Hiếm, nhưng im lặng là kiểu hỏng tệ nhất.
+             */
+            ?>
+            <?php if ($inStock && $waitMsg !== null): ?>
+                <p class="pdwait__msg pdwait__msg--loi" role="status"><?= e($waitMsg) ?></p>
+            <?php endif; ?>
+
+            <?php if (!$inStock): ?>
+                <section class="pdwait" id="cho-hang" aria-labelledby="pdwait-title">
+                    <h2 class="pdwait__title" id="pdwait-title">Thông báo khi có hàng</h2>
+                    <p class="pdwait__lead">
+                        Để lại số điện thoại hoặc email — cửa hàng sẽ liên hệ ngay khi mẫu này về.
+                    </p>
+
+                    <?php if ($waitMsg !== null): ?>
+                        <p class="pdwait__msg" role="status"><?= e($waitMsg) ?></p>
+                    <?php endif; ?>
+
+                    <form class="pdwait__form" method="post" action="/san-pham/cho-hang">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="slug" value="<?= e($product['slug']) ?>">
+
+                        <?php if ($variants !== []): ?>
+                            <label class="pdwait__label" for="cho-pa">Phương án bạn đang chờ</label>
+                            <select class="pdwait__select" id="cho-pa" name="variant_id" required>
+                                <?php foreach ($variants as $v): ?>
+                                    <option value="<?= e($v['id']) ?>"><?= e($v['label']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
+
+                        <div class="pdwait__row">
+                            <label class="sr-only" for="cho-phone">Số điện thoại</label>
+                            <input class="pdwait__input" type="tel" id="cho-phone" name="phone"
+                                   placeholder="Số điện thoại" inputmode="tel" autocomplete="tel">
+
+                            <label class="sr-only" for="cho-email">Email</label>
+                            <input class="pdwait__input" type="email" id="cho-email" name="email"
+                                   placeholder="Email (không bắt buộc)" autocomplete="email">
+
+                            <button type="submit" class="pdwait__go">Báo cho tôi</button>
+                        </div>
+                    </form>
+                </section>
+            <?php endif; ?>
 
             <ul class="pdcommit" role="list">
                 <?php foreach ($commitments as [$ico, $title, $desc]): ?>
