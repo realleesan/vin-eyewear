@@ -196,11 +196,23 @@ foreach ($types as $t) {
  */
 ?>
 <?php if ($showPackages): ?>
-    <?php partial('admin/_layout/modal-head', [
+    <?php
+    /* Dòng phụ nói SỐ GÓI và ý nghĩa của thứ tự — theo bản vẽ. Đó là hai thứ
+       người mở hộp cần biết trước khi chạm vào gì: bảng đang có bao nhiêu
+       hàng, và mấy cái nút ↑↓ kia đổi thứ gì ở phía khách. */
+    partial('admin/_layout/modal-head', [
         'tieuDe'  => 'Gói chiết suất',
-        'phu'     => 'Thêm một gói là bảng giá mọc thêm một hàng — nhớ quay lại điền giá.',
+        'phu'     => sprintf(
+            '%d gói đang bán · thứ tự là thứ tự khách thấy ở bước “Chọn loại tròng kính” — đổi bằng nút ↑↓',
+            count($pkgRows)
+        ),
         'dongUrl' => '/quan-tri/gia-trong',
         'rong'    => 'xxl',
+        /* Nút thêm nằm ngay trên nhan đề hộp, cạnh nút ✕ — đúng bản vẽ. Chỉ
+           hiện cho người có quyền sửa; người chỉ có quyền xem vẫn mở được hộp
+           để tra mã gói. */
+        'nutUrl'  => $canEdit ? '/quan-tri/gia-trong/goi?them=1' : '',
+        'nutNhan' => $canEdit ? '+ Thêm gói' : '',
     ]); ?>
 
         <?php
@@ -213,14 +225,15 @@ foreach ($types as $t) {
 
         </div>
 
-        <?php /* Chân hộp CHỈ có lối ra: mọi thao tác (thêm, sửa, xoá, đổi thứ
-                 tự) đều có nút riêng trong bảng và tự gửi ngay, nên không có
-                 gì để "lưu" ở cấp hộp. Dùng modal-foot sẽ đẻ ra một nút Lưu
-                 không trỏ vào form nào. */ ?>
-        <div class="amodal__foot">
-            <a class="astatus__save astatus__save--ghost" href="/quan-tri/gia-trong"
-               data-modal-close>Đóng</a>
-        </div>
+        <?php /* KHÔNG CÓ CHÂN HỘP — bản vẽ không vẽ, và ở đây nó thật sự không
+                 có việc gì: mọi thao tác (thêm, sửa, xoá, đổi thứ tự) đều có
+                 nút riêng trong bảng và tự gửi ngay, nên không có gì để "lưu"
+                 ở cấp hộp. Lối ra vẫn đủ ba đường như mọi hộp khác — nút ✕,
+                 bấm ra nền mờ, phím Esc.
+
+                 Vì thế cũng không gọi được modal-foot: nó luôn đẻ ra một nút
+                 Lưu trỏ vào một form không tồn tại. Hai thẻ đóng dưới đây là
+                 .amodal__panel và .amodal mà modal-head đã mở. */ ?>
     </div>
 </div>
 

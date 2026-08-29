@@ -6,10 +6,10 @@
  * Controller: Admin/LensPriceAdminController::packages()
  *
  * KHÔNG PHẢI MỘT TRANG. Từ 2026-08-29 danh mục gói là hộp thoại nổi trên bảng
- * giá, đúng bản vẽ "Giá tròng.dc.html": file này được
- * admin/lens-prices/index.php require vào giữa modal-head và chân hộp. Vì thế
- * ở đây không còn tiêu đề trang và không còn nút "+ Thêm gói" của crud-head —
- * hộp đã có nhan đề cùng nút ✕, còn nút thêm nằm ở thanh ngay dưới.
+ * giá, đúng bản vẽ "Giá tròng.dc.html": file này là RUỘT hộp, được
+ * admin/lens-prices/index.php require vào ngay sau modal-head. Vì thế ở đây
+ * không còn tiêu đề trang và không còn nút "+ Thêm gói" của crud-head — đầu
+ * hộp đã mang cả nhan đề, số gói, nút "+ Thêm gói" lẫn nút ✕.
  *
  * Form thêm/sửa MỘT gói tách sang _goi-form.php và được index.php dựng như một
  * hộp thoại THỨ HAI, anh em với hộp này chứ không nằm trong nó — xem chú thích
@@ -20,22 +20,13 @@
  * tên khoá `description` thành `desc`. Hai tên vì hai hình dạng.
  */
 ?>
-<?php /* THANH ĐẦU HỘP: số gói bên trái, nút thêm bên phải — bản vẽ đặt nút
-         "+ Thêm gói" cạnh nút ✕ trên nhan đề hộp, nhưng modal-head.php dùng
-         chung cho mười mấy màn và chỉ nhận nhan đề với dòng phụ. Đặt ở đây
-         giữ nguyên ý (nút thêm nằm trên cùng, thấy ngay khi mở hộp) mà không
-         phải nhét một tham số "nút phụ" vào partial dùng chung. */ ?>
-<div class="algp__bar">
-    <p class="algp__count">
-        <?= count($pkgRows) ?> gói đang bán · thứ tự là thứ tự khách thấy ở bước
-        “Chọn loại tròng kính” — đổi bằng nút ↑↓
-    </p>
+<?php /* SỐ GÓI VÀ NÚT "+ Thêm gói" KHÔNG Ở ĐÂY. Cả hai nằm trên nhan đề hộp —
+         số gói thành dòng phụ, nút thành nút chính của modal-head — đúng bản
+         vẽ "Giá tròng.dc.html". Xem chỗ gọi modal-head trong index.php.
 
-    <?php if ($canEdit): ?>
-        <a href="/quan-tri/gia-trong/goi?them=1" class="astatus__save" data-modal>+ Thêm gói</a>
-    <?php endif; ?>
-</div>
-
+         Bản trước dựng chúng thành một thanh riêng ở đầu ruột hộp vì modal-head
+         chưa nhận nút phụ; nay nó nhận ($nutUrl/$nutNhan), nên thanh ấy chỉ còn
+         là một dòng lặp lại thứ ở ngay phía trên. */ ?>
 <div class="anote">
     <p>
         Đây là <strong>danh mục</strong>: mã, tên và mô tả. Còn <strong>giá</strong> thì
@@ -101,15 +92,25 @@
                         </td>
 
                         <td>
-                            <?php /* Gói chưa có ô giá nào thì đeo nhãn, không in
-                                     số 0: nhìn lướt cả cột là thấy ngay gói nào
-                                     đang bày ra cho khách mà chưa định giá — khách
-                                     chọn đúng nó sẽ thấy "Báo giá sau khi tư vấn". */ ?>
-                            <?php if ($soGia === 0): ?>
-                                <span class="badge badge--cancelled">Chưa có giá</span>
-                            <?php else: ?>
-                                <?= (int) $soGia ?> mức giá
-                            <?php endif; ?>
+                            <?php
+                            /* MẪU SỐ LÀ SỐ LOẠI TRÒNG CÓ BẢNG GIÁ ($types, tức
+                               các CỘT của bảng giá) — theo bản vẽ, viên này đọc
+                               "2/3 mức giá" chứ không phải "2 mức giá". Con số
+                               trần không nói được là còn thiếu hay đã đủ, mà đó
+                               chính là câu hỏi người ta mở hộp này để trả lời:
+                               gói nào đang bày cho khách mà chưa định giá xong
+                               thì khách chọn đúng nó sẽ thấy "Báo giá sau khi
+                               tư vấn".
+
+                               Xanh khi đủ, vàng khi thiếu. Mượn thẳng hai lớp
+                               trạng thái kho: cùng cặp màu, cùng nghĩa "xong"
+                               với "còn việc" — đặt thêm một cặp lớp riêng chỉ
+                               để đổi tên là hai bảng màu phải nhớ giữ cho khớp. */
+                            $duGia = $soGia >= $cols;
+                            ?>
+                            <span class="badge <?= $duGia ? 'badge--in_stock' : 'badge--low_stock' ?>">
+                                <?= $duGia ? (int) $soGia . ' mức giá' : (int) $soGia . '/' . $cols . ' mức giá' ?>
+                            </span>
                         </td>
 
                         <?php if ($canEdit): ?>

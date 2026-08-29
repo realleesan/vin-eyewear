@@ -172,12 +172,17 @@ class LensPriceAdminController extends AdminController
          * "Undefined array key desc" cho mỗi hàng), còn đưa bản đã đổi tên cho
          * hộp là mất cột Mô tả với cả nút ↑↓. Hai tên, hết chuyện.
          */
-        $duLieu = $this->duLieuBangGia();
-        /* Nhan đề trang phải nói đúng thứ đang mở. duLieuBangGia() đặt "Bảng
-           giá tròng" và phép cộng mảng giữ vế TRÁI, nên phải ghi đè hẳn. */
-        $duLieu['pageTitle'] = 'Gói chiết suất — Quản trị';
-
-        $this->renderAdmin('admin/lens-prices/index', $duLieu + [
+        /*
+         * array_merge CHỨ KHÔNG PHẢI `+`. Hai khoá ở đây CỐ Ý đè lên thứ
+         * duLieuBangGia() đã đặt — 'pageTitle' và 'showPackages' — mà phép
+         * cộng mảng thì giữ vế TRÁI, tức là giữ nguyên bản của bảng giá.
+         *
+         * Bản trước dùng `+` và hộp danh mục KHÔNG BAO GIỜ hiện: showPackages
+         * ở lại false, nên bấm "Quản lý gói" ra đúng bảng giá vừa rời khỏi,
+         * không có gì nổi lên và cũng không có lỗi nào. Chỉ nhan đề trang đổi
+         * — chính vì thế nó lọt qua được mắt người kiểm.
+         */
+        $this->renderAdmin('admin/lens-prices/index', array_merge($this->duLieuBangGia(), [
             'pageTitle'    => 'Gói chiết suất — Quản trị',
             'showPackages' => true,
             'pkgRows'      => Database::fetchAll(
@@ -185,8 +190,7 @@ class LensPriceAdminController extends AdminController
             ),
             'priceCounts'  => $priceCounts,
             'editing'      => $editing,
-            'nextSort'     => LensModel::nextPackageSort(),
-        ]);
+        ]));
     }
 
     /** Thêm mới hoặc sửa một gói (POST /quan-tri/gia-trong/goi/luu). */
@@ -207,7 +211,6 @@ class LensPriceAdminController extends AdminController
         $cu   = trim((string) ($_POST['cu'] ?? ''));
         $name = trim((string) ($_POST['name'] ?? ''));
         $desc = trim((string) ($_POST['description'] ?? ''));
-        $sort = (int) ($_POST['sort_order'] ?? 0);
 
         if (utf8Length($name) < 2 || utf8Length($name) > 160) {
             flash('admin_error', 'Tên gói phải từ 2 đến 160 ký tự.');
@@ -219,12 +222,6 @@ class LensPriceAdminController extends AdminController
             redirect(self::PKG);
         }
 
-        // SMALLINT của cột, chặn ở đây để không nhận lỗi tràn số từ MySQL
-        if ($sort < 0 || $sort > 32767) {
-            flash('admin_error', 'Thứ tự phải là số từ 0 đến 32767.');
-            redirect(self::PKG);
-        }
-
         // ---- Sửa ----
         if ($cu !== '') {
             if (LensModel::findPackageRow($cu) === null) {
@@ -232,7 +229,7 @@ class LensPriceAdminController extends AdminController
                 redirect(self::PKG);
             }
 
-            LensModel::updatePackage($cu, $name, $desc, $sort);
+            LensModel::updatePackage($cu, $name, $desc);
 
             flash('admin_success', 'Đã cập nhật gói chiết suất.');
             redirect(self::PKG);
@@ -261,7 +258,11 @@ class LensPriceAdminController extends AdminController
             redirect(self::PKG);
         }
 
-        LensModel::createPackage($id, $name, $desc, $sort);
+        /* GÓI MỚI XUỐNG CUỐI, không hỏi người dùng đứng thứ mấy — form không có
+           ô thứ tự nữa (xem _goi-form.php). Cuối danh sách là chỗ duy nhất an
+           toàn: chen vào giữa là đổi luôn gói được chọn sẵn ở hộp mua hàng,
+           trong khi gói vừa thêm còn chưa có giá nào. */
+        LensModel::createPackage($id, $name, $desc, LensModel::nextPackageSort());
 
         flash('admin_success', 'Đã thêm gói chiết suất mới.');
         redirect(self::PKG);

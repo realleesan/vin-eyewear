@@ -12,7 +12,14 @@
  * về bảng giá. Đóng form gói mà văng thẳng ra bảng giá thì thêm hai gói liên
  * tiếp phải mở lại danh mục mỗi lần.
  *
- * Biến cần có: $editing, $canEdit, $nextSort.
+ * KHÔNG CÓ Ô "THỨ TỰ" — bản vẽ không vẽ, và đó là chủ ý: thứ tự đã có hai cái
+ * nút ↑↓ ngay trên bảng, nơi người ta NHÌN THẤY dãy gói trong lúc đổi. Một ô số
+ * trong form thì bắt người dùng tự dịch "20" ra thành "đứng thứ mấy" bằng cách
+ * nhớ lại cả cột — và hai gói cùng số thì không có gì báo. Gói mới xuống cuối
+ * (LensModel::nextPackageSort), sửa gói thì giữ nguyên chỗ cũ; xem
+ * LensPriceAdminController::savePackage().
+ *
+ * Biến cần có: $editing, $canEdit.
  */
 ?>
 <?php
@@ -63,13 +70,6 @@ $dongUrl = '/quan-tri/gia-trong/goi';
                        value="<?= e($editing['name'] ?? '') ?>"
                        placeholder="Tròng trắng 1.74">
                 <p class="field__hint">Tên này được chép vào hoá đơn lúc khách đặt.</p>
-            </div>
-
-            <div class="field">
-                <label for="pkg-sort">Thứ tự</label>
-                <input type="number" id="pkg-sort" name="sort_order" min="0" max="32767"
-                       value="<?= (int) ($editing['sort_order'] ?? $nextSort) ?>">
-                <p class="field__hint">Số nhỏ đứng trước. Cách nhau 10 để sau này chèn vào giữa.</p>
             </div>
 
             <div class="field field--wide">

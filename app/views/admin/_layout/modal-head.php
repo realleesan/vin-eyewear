@@ -12,6 +12,12 @@
  *   $phu     — dòng phụ dưới nhan đề (tuỳ chọn)
  *   $dongUrl — địa chỉ khi đóng: chính trang này, bỏ ?them / ?sua
  *   $rong    — '' | 'sm' | 'lg' | 'xl' | 'xxl' (tuỳ chọn)
+ *   $nutUrl  — địa chỉ của nút chính ở đầu hộp (tuỳ chọn)
+ *   $nutNhan — nhãn nút ấy; phải có nếu đã truyền $nutUrl
+ *
+ * NÚT CHÍNH Ở ĐẦU HỘP là một <a> có sẵn `data-modal`, tức là nó mở hộp tiếp
+ * theo tại chỗ khi có JavaScript và tải trang thật khi không. Nó nhận URL với
+ * nhãn chứ không nhận HTML dựng sẵn — xem lý do ngay dưới đây.
  *
  * VÌ SAO TÁCH LÀM HAI FILE thay vì một partial nhận sẵn nội dung: dự án không
  * có template engine tự escape, nên một tham số "HTML dựng sẵn" là cái lỗ duy
@@ -20,6 +26,10 @@
  */
 $phu   = $phu ?? '';
 $rong  = ($rong ?? '') !== '' ? ' amodal--' . $rong : '';
+/* Nút chính là TUỲ CHỌN: mười mấy hộp còn lại chỉ có nhan đề với nút ✕, và
+   thêm một khối rỗng cho chúng là thêm một chỗ để bố cục lệch đi. */
+$nutUrl  = $nutUrl ?? '';
+$nutNhan = $nutNhan ?? '';
 ?>
 <div class="amodal<?= e($rong) ?>" role="dialog" aria-modal="true" aria-label="<?= e($tieuDe) ?>">
     <?php /* Lớp nền mờ là một <a> phủ kín — bấm ra ngoài để đóng, chạy cả khi
@@ -36,7 +46,13 @@ $rong  = ($rong ?? '') !== '' ? ' amodal--' . $rong : '';
                 <?php endif; ?>
             </div>
 
-            <a class="amodal__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>
+            <div class="amodal__acts">
+                <?php if ($nutUrl !== '' && $nutNhan !== ''): ?>
+                    <a class="astatus__save" href="<?= e($nutUrl) ?>" data-modal><?= e($nutNhan) ?></a>
+                <?php endif; ?>
+
+                <a class="amodal__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>
+            </div>
         </div>
 
         <div class="amodal__body">

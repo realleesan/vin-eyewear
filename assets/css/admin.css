@@ -2535,6 +2535,30 @@ body.admin:has(.amodal) { overflow: hidden; }
 
 .amodal__x:hover { background: #f2e9d9; color: var(--ink); }
 
+/*
+ * Ô hành động ở góc phải đầu hộp: nút chính (tuỳ chọn) rồi tới nút ✕.
+ *
+ * Luôn có mặt kể cả khi chỉ chứa mỗi ✕ — .amodal__head là flex với
+ * justify-content: space-between, nên một khối con ở vế phải cho ra đúng chỗ
+ * cũ của ✕. align-items: flex-start của đầu hộp làm nhan đề nhiều dòng đẩy hai
+ * nút này lên ngang dòng đầu, đúng bản vẽ "Giá tròng.dc.html".
+ */
+.amodal__acts {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Nút chính ở đầu hộp thấp hơn nút Lưu ở chân hộp một chút: nó đứng cạnh dòng
+   nhan đề chứ không đứng một mình trên nền riêng, nên cỡ nút mặc định sẽ cao
+   hơn cả khối chữ bên trái. */
+.amodal__acts .astatus__save {
+    padding: 8px 16px;
+    font-size: var(--fs-body-sm);
+    white-space: nowrap;
+}
+
 /* Ruột cuộn riêng, không đẩy cả hộp cao ra: form sản phẩm dài hơn màn hình,
    mà đầu hộp (biết đang sửa cái gì) và chân hộp (nút Lưu) phải luôn thấy. */
 .amodal__body {
@@ -4318,26 +4342,3 @@ a.astatus__save { text-decoration: none; }
 /* Dòng phụ của thẻ số liệu (.astat__extra*) khai ở khối THẺ SỐ LIỆU phía
    trên — trước đây có một bản thứ hai ở đây, và bản dưới đè bản trên nên con
    số tạm thu trên thẻ nền tối lấy màu chữ nền sáng: nâu đen trên nâu đen. */
-
-/* --- Thanh đầu hộp danh mục gói chiết suất (.algp) -------------- */
-
-/*
- * Bản vẽ đặt nút "+ Thêm gói" cạnh nút ✕ trên nhan đề hộp. modal-head.php dùng
- * chung cho mười mấy màn và chỉ nhận nhan đề với dòng phụ, nên nút nằm ở dòng
- * đầu RUỘT hộp thay vì trong đầu hộp — vẫn là thứ thấy ngay khi mở, mà không
- * phải nhét một tham số "nút phụ" vào partial dùng chung.
- */
-.algp__bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-}
-
-.algp__count {
-    margin: 0;
-    font-size: var(--fs-body-sm);
-    color: var(--muted);
-}

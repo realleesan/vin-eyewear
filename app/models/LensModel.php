@@ -562,7 +562,7 @@ class LensModel
     }
 
     /**
-     * Sửa tên · mô tả · thứ tự của một gói. MÃ KHÔNG SỬA ĐƯỢC.
+     * Sửa tên và mô tả của một gói. MÃ VÀ THỨ TỰ KHÔNG SỬA ĐƯỢC ở đây.
      *
      * Mã là thứ `lens_prices.lens_package` và `order_items.lens_id` đang trỏ
      * vào. Cho sửa nó nghĩa là một cú bấm làm mồ côi ba ô giá và cắt đứt đường
@@ -570,12 +570,15 @@ class LensModel
      * mã thì thêm gói mới rồi xoá gói cũ, và lúc đó việc mất giá là chuyện
      * người bấm nhìn thấy.
      */
-    public static function updatePackage(string $id, string $name, string $desc, int $sort): void
+    public static function updatePackage(string $id, string $name, string $desc): void
     {
+        /* KHÔNG ĐỤNG `sort_order`. Thứ tự chỉ đổi qua nút ↑↓ trên bảng
+           (movePackage → ThuTuService), nên form sửa gói không có ô nào cho nó
+           — và nhận thêm một tham số $sort ở đây là mở đường cho một lần gọi
+           quên truyền giá trị cũ, đẩy gói về đầu danh sách mà không ai thấy. */
         Database::execute(
-            'UPDATE lens_packages SET name = :name, description = :desc, sort_order = :sort
-              WHERE id = :id',
-            ['id' => $id, 'name' => $name, 'desc' => $desc !== '' ? $desc : null, 'sort' => $sort]
+            'UPDATE lens_packages SET name = :name, description = :desc WHERE id = :id',
+            ['id' => $id, 'name' => $name, 'desc' => $desc !== '' ? $desc : null]
         );
 
         self::$packages = null;
