@@ -190,12 +190,41 @@ class VariantModel extends BaseModel
         if ($variantId === null) {
             // Mặt hàng không có biến thể: trừ ở products và tự đánh dấu hết
             // hàng khi về 0, y như bản trước khi có biến thể.
+            /*
+             * ─────────────────────────────────────────────────────────────
+             * TRỪ MỘT LẦN, KHÔNG PHẢI HAI — chỗ này từng trừ hai lần
+             *
+             * Bản trước viết:
+             *     SET stock_quantity = stock_quantity - :q,
+             *         status = CASE WHEN stock_quantity - :q2 <= 0 …
+             *
+             * MySQL tính các vế của SET theo THỨ TỰ TRÁI SANG PHẢI, và vế sau
+             * đọc được giá trị vế trước VỪA GHI (khác chuẩn SQL, nhưng đó là
+             * hành vi của MySQL lẫn MariaDB). Nên `stock_quantity` trong CASE
+             * đã là tồn MỚI, rồi lại bị trừ thêm :q2 lần nữa. Điều kiện thật
+             * sự đang chạy là `tồn_cũ - 2×số_bán <= 0`.
+             *
+             * Hậu quả đo được: bán từ MỘT NỬA kho trở lên là phần còn lại bị
+             * đánh dấu hết hàng.
+             *     kho 10, bán 5 -> còn 5  mà status = out_of_stock
+             *     kho 3,  bán 2 -> còn 1  mà status = out_of_stock
+             *     kho 2,  bán 1 -> còn 1  mà status = out_of_stock
+             * Số hàng còn lại đó thành hàng chết: trang sản phẩm hiện "Tạm hết
+             * hàng", nút thêm vào giỏ bị tắt, và OrderModel::place() từ chối —
+             * cửa hàng mất doanh thu cho tới khi có người vào sửa tay.
+             *
+             * Nay CASE không trừ nữa, chỉ hỏi thẳng `stock_quantity <= 0`:
+             * tới lượt nó thì cột ĐÃ mang tồn mới, nên câu hỏi đúng nghĩa là
+             * "bán xong còn 0 chứ?". Giữ nguyên thứ tự hai vế — đảo lại là
+             * CASE đọc phải tồn cũ và luật sai theo chiều ngược lại.
+             * ─────────────────────────────────────────────────────────────
+             */
             $ok = Database::execute(
                 'UPDATE products
                     SET stock_quantity = stock_quantity - :q,
-                        status = CASE WHEN stock_quantity - :q2 <= 0 THEN :oos ELSE status END
-                  WHERE id = :id AND stock_quantity >= :q3',
-                ['q' => $quantity, 'q2' => $quantity, 'q3' => $quantity,
+                        status = CASE WHEN stock_quantity <= 0 THEN :oos ELSE status END
+                  WHERE id = :id AND stock_quantity >= :q2',
+                ['q' => $quantity, 'q2' => $quantity,
                  'oos' => 'out_of_stock', 'id' => $productId]
             ) > 0;
 
@@ -266,12 +295,17 @@ class VariantModel extends BaseModel
         }
 
         if ($variantId === null) {
+            /* Cùng cái bẫy trừ-hai-lần như reserve(), chỉ đổi dấu: vế sau
+               đọc `stock_quantity` đã là tồn MỚI nên cộng thêm :q2 nữa là
+               cộng hai lần. Ở chiều trả hàng nó rộng tay chứ không chặt tay —
+               mở cờ bán sớm hơn mức đáng — nhưng vẫn là một câu hỏi sai, và
+               để nguyên thì hai hàm anh em nói hai luật khác nhau. */
             Database::execute(
                 'UPDATE products
                     SET stock_quantity = stock_quantity + :q,
-                        status = CASE WHEN stock_quantity + :q2 > 0 THEN :ok ELSE status END
+                        status = CASE WHEN stock_quantity > 0 THEN :ok ELSE status END
                   WHERE id = :id',
-                ['q' => $quantity, 'q2' => $quantity, 'ok' => 'in_stock', 'id' => $productId]
+                ['q' => $quantity, 'ok' => 'in_stock', 'id' => $productId]
             );
 
             return;
