@@ -490,13 +490,24 @@ class BookingModel extends BaseModel
         string $status = '',
         int $limit = 100,
         string $q = '',
-        string $storeId = ''
+        string $storeId = '',
+        int $offset = 0
     ): array {
         /* Ba bộ lọc CỘNG ĐƯỢC với nhau, nên gom điều kiện vào mảng rồi mới
            ghép — thêm bộ lọc thứ tư sau này chỉ là đẩy thêm một phần tử.
 
            $q và $storeId thêm 2026-08-28 cho bản thiết kế "Lịch hẹn.dc.html";
-           để mặc định rỗng nên mọi nơi gọi cũ vẫn chạy y như trước. */
+           để mặc định rỗng nên mọi nơi gọi cũ vẫn chạy y như trước.
+
+           $offset thêm 2026-08-29 cùng lúc với phân trang. Cũng để mặc định 0
+           vì trang Tổng quan gọi hàm này chỉ để lấy vài buổi hẹn gần nhất —
+           nó không phân trang và không nên phải biết tới chuyện đó.
+
+           LIMIT/OFFSET ghép thẳng vào câu chứ KHÔNG qua tham số ràng buộc: dự
+           án tắt EMULATE_PREPARES, mà MySQL không nhận tham số ở vị trí LIMIT
+           khi dùng prepared statement thật. An toàn vì cả hai đã qua max() và
+           là số nguyên do controller tính ra — cùng cách làm với
+           InventoryAdminController::index. */
         [$where, $params] = self::locWithStore($status, $q, $storeId);
 
         return Database::fetchAll(
@@ -505,7 +516,7 @@ class BookingModel extends BaseModel
                JOIN stores s ON s.id = a.store_id
                {$where}
               ORDER BY a.appointment_date DESC, a.created_at DESC
-              LIMIT " . max(1, $limit),
+              LIMIT " . max(1, $limit) . " OFFSET " . max(0, $offset),
             $params
         );
     }

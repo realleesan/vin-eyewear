@@ -8,6 +8,15 @@
 
 class AppointmentAdminController extends AdminController
 {
+    /**
+     * Số dòng mỗi trang.
+     *
+     * 20 như Đơn hàng, Sản phẩm và Tồn kho. Ba bảng ấy người ta lướt bằng cùng
+     * một thói quen, và một bảng nhảy trang sớm hơn ba bảng kia chỉ làm người
+     * dùng đếm nhầm mình đang ở đâu.
+     */
+    private const PER_PAGE = 20;
+
     public function index(): void
     {
         $status = (string) ($_GET['status'] ?? '');
@@ -32,9 +41,41 @@ class AppointmentAdminController extends AdminController
         $q     = trim((string) ($_GET['q'] ?? ''));
         $coSo  = trim((string) ($_GET['co-so'] ?? ''));
 
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * PHÂN TRANG — trước đây là một con số 200 cắt cứng
+         *
+         * Bản cũ gọi withStore($status, 200, …) rồi in hết ra. Nó hỏng theo
+         * kiểu tệ nhất: quá 200 buổi hẹn thì những buổi CŨ NHẤT lặng lẽ biến
+         * mất khỏi màn hình, không có "trang 2" nào để đi tiếp và cũng không
+         * có gì trên trang nói rằng còn thứ chưa hiện. Lịch hẹn thì mỗi lượt
+         * khách đặt là một dòng và không bao giờ vơi đi.
+         *
+         * TỔNG SỐ DÒNG LẤY TỪ DẢI VIÊN LỌC, không hỏi thêm một câu COUNT.
+         * BookingModel::statusCounts() đã đếm đúng phạm vi ô tìm và ô cơ sở
+         * đang bật, và có sẵn khoá cho từng trạng thái cộng khoá '' là tổng —
+         * tức là nó CHÍNH LÀ tổng số dòng của viên đang chọn. Hỏi lại bằng một
+         * câu COUNT riêng vừa thừa một lượt đi CSDL, vừa mở đường cho hai con
+         * số lệch nhau. Cùng cách làm với trang Tồn kho.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $counts = BookingModel::statusCounts($q, $coSo);
+        $tong   = (int) ($counts[$status] ?? 0);
+
+        $soTrang = max(1, (int) ceil($tong / self::PER_PAGE));
+
+        /* Kẹp vào dải hợp lệ thay vì trả trang rỗng: ?page=99 hay ?page=abc đều
+           là địa chỉ sửa tay hoặc một liên kết cũ sau khi lịch cũ bị lọc đi, mà
+           một bảng trống không nói được điều đó. */
+        $trang  = min(max(1, (int) ($_GET['page'] ?? 1)), $soTrang);
+        $offset = ($trang - 1) * self::PER_PAGE;
+
         $this->renderAdmin('admin/appointments/index', [
             'pageTitle'    => 'Lịch hẹn — Quản trị',
-            'appointments' => BookingModel::withStore($status, 200, $q, $coSo),
+            'appointments' => BookingModel::withStore($status, self::PER_PAGE, $q, $coSo, $offset),
+            'total'        => $tong,
+            'page'         => $trang,
+            'totalPages'   => $soTrang,
             'status'       => $status,
             'q'            => $q,
             'coSo'         => $coSo,
@@ -51,9 +92,38 @@ class AppointmentAdminController extends AdminController
             /* Đếm TRONG PHẠM VI ô tìm và ô cơ sở — xem BookingModel::statusCounts().
                Trước đây phép đếm nằm ngay trong controller này và luôn đếm cả
                bảng; chuyển vào model để nó dùng chung đúng mệnh đề WHERE với
-               truy vấn danh sách, thay vì hai bản chép sớm muộn lệch nhau. */
-            'counts'       => BookingModel::statusCounts($q, $coSo),
+               truy vấn danh sách, thay vì hai bản chép sớm muộn lệch nhau.
+               Từ 2026-08-29 nó còn là nguồn của tổng số dòng cho phân trang. */
+            'counts'       => $counts,
         ]);
+    }
+
+    /**
+     * Địa chỉ danh sách GIỮ NGUYÊN CHỖ NGƯỜI DÙNG ĐANG ĐỨNG.
+     *
+     * Mọi thao tác trên trang này (đổi trạng thái, huỷ) đều là POST rồi chuyển
+     * hướng thật. Trước khi có phân trang, chuyển về '/quan-tri/lich-hen' trần
+     * chỉ mất bộ lọc — khó chịu nhưng còn tìm lại được. Có phân trang rồi thì
+     * xác nhận một lịch ở trang 4 là bị ném về đầu danh sách, và muốn xác nhận
+     * cái kế bên phải lật lại bốn trang.
+     *
+     * Bốn tham số lấy từ chính form vừa gửi (ô ẩn trong view), không đoán lại
+     * từ Referer: Referer có thể bị trình duyệt hay proxy cắt, còn ô ẩn thì
+     * luôn đi kèm.
+     *
+     * Trang 1 không nằm trên địa chỉ — ?page=1 và không có ?page là cùng một
+     * chỗ, mà địa chỉ ngắn thì dễ đọc và dễ gửi cho nhau hơn.
+     */
+    private function veDanhSach(): string
+    {
+        $tham = array_filter([
+            'status' => (string) ($_POST['status_loc'] ?? ''),
+            'co-so'  => (string) ($_POST['co_so_loc'] ?? ''),
+            'q'      => (string) ($_POST['q_loc'] ?? ''),
+            'page'   => ($tr = max(1, (int) ($_POST['page'] ?? 1))) > 1 ? (string) $tr : '',
+        ], static fn (string $v): bool => $v !== '');
+
+        return '/quan-tri/lich-hen' . ($tham !== [] ? '?' . http_build_query($tham) : '');
     }
 
     /**
@@ -69,27 +139,35 @@ class AppointmentAdminController extends AdminController
      */
     public function updateStatus(): void
     {
-        $this->requirePost('/quan-tri/lich-hen');
+        $ve = $this->veDanhSach();
+
+        $this->requirePost($ve);
 
         $id     = (string) ($_POST['id'] ?? '');
         $status = (string) ($_POST['status'] ?? '');
 
         if (!in_array($status, BookingModel::STAFF_STATUSES, true)) {
             flash('admin_error', 'Trạng thái không hợp lệ.');
-            redirect('/quan-tri/lich-hen');
+            redirect($ve);
         }
 
         if (!BookingModel::exists(['id' => $id])) {
             flash('admin_error', 'Không tìm thấy lịch hẹn.');
-            redirect('/quan-tri/lich-hen');
+            redirect($ve);
         }
 
         BookingModel::update($id, ['status' => $status]);
 
-        // Không còn khung giờ nào để "trả lại": cửa hàng đã bỏ giới hạn số
-        // người trên một khung — xem khối chú thích đầu BookingModel.
+        /* Không còn khung giờ nào để "trả lại": cửa hàng đã bỏ giới hạn số
+           người trên một khung — xem khối chú thích đầu BookingModel.
+
+           LƯU Ý dòng vừa sửa CÓ THỂ RỜI KHỎI TRANG ĐANG XEM: nếu đang đứng ở
+           một viên lọc trạng thái thì đổi trạng thái là đẩy nó sang viên khác.
+           Đó là hệ quả của việc lọc, không phải lỗi — và quay về đúng trang cũ
+           vẫn đúng hơn quay về trang 1, vì người ta đang làm dở những dòng
+           khác ở đây. */
         flash('admin_success', 'Đã cập nhật trạng thái lịch hẹn.');
-        redirect('/quan-tri/lich-hen');
+        redirect($ve);
     }
 
     /**
@@ -108,19 +186,21 @@ class AppointmentAdminController extends AdminController
      */
     public function cancel(): void
     {
-        $this->requirePost('/quan-tri/lich-hen');
+        $ve = $this->veDanhSach();
+
+        $this->requirePost($ve);
 
         $id = (string) ($_POST['id'] ?? '');
 
         if (!BookingModel::exists(['id' => $id])) {
             flash('admin_error', 'Không tìm thấy lịch hẹn.');
-            redirect('/quan-tri/lich-hen');
+            redirect($ve);
         }
 
         BookingModel::update($id, ['status' => 'cancelled']);
 
         flash('admin_success', 'Đã huỷ lịch hẹn.');
-        redirect('/quan-tri/lich-hen');
+        redirect($ve);
     }
 
     /**

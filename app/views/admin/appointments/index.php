@@ -10,6 +10,38 @@
    cơ sở · từ khoá) cộng được với nhau, nên bấm một cái không được xoá hai cái
    kia. */
 $giuLoc = array_filter(['q' => $q, 'co-so' => $coSo]);
+
+/* Địa chỉ của MỘT trang, giữ nguyên cả ba bộ lọc đang bật.
+
+   Trang 1 không nằm trên địa chỉ: ?page=1 và không có ?page là cùng một chỗ,
+   mà địa chỉ ngắn thì dễ đọc và dễ gửi cho nhau hơn. */
+$duongDanTrang = static function (int $so) use ($q, $coSo, $status): string {
+    $tham = array_filter([
+        'status' => $status,
+        'co-so'  => $coSo,
+        'q'      => $q,
+        'page'   => $so > 1 ? (string) $so : '',
+    ], static fn (string $v): bool => $v !== '');
+
+    return '/quan-tri/lich-hen' . ($tham !== [] ? '?' . http_build_query($tham) : '');
+};
+
+/* Ô ẩn mang CHỖ ĐANG ĐỨNG theo mọi form POST của trang này, để lưu xong quay
+   về đúng trang và đúng bộ lọc thay vì bị ném về đầu danh sách. Tên có đuôi
+   `_loc` để không đụng ô `status` thật của form đổi trạng thái — xem
+   AppointmentAdminController::veDanhSach(). */
+$oAn = static function () use ($q, $coSo, $status, $page): string {
+    $ra = '';
+
+    foreach (['status_loc' => $status, 'co_so_loc' => $coSo, 'q_loc' => $q,
+              'page' => $page > 1 ? (string) $page : ''] as $ten => $gt) {
+        if ($gt !== '') {
+            $ra .= '<input type="hidden" name="' . e($ten) . '" value="' . e((string) $gt) . '">';
+        }
+    }
+
+    return $ra;
+};
 ?>
 <header class="ahead ahead--row">
     <div>
@@ -20,7 +52,10 @@ $giuLoc = array_filter(['q' => $q, 'co-so' => $coSo]);
              từ $counts mà thanh lọc bên dưới vẫn đang dùng, không thêm truy
              vấn nào. */ ?>
     <p class="ahead__lead">
-        <?= count($appointments) ?> lịch hẹn
+        <?php /* "12 lịch hẹn" khi bảng có 340 dòng là một câu SAI kể từ lúc có
+                 phân trang — nó đọc như tổng số, mà thật ra là số dòng của một
+                 trang. Nói cả hai con số thì không hiểu nhầm được. */ ?>
+        <?= count($appointments) ?><?= $total > count($appointments) ? ' / ' . (int) $total : '' ?> lịch hẹn
         <?php if (!empty($counts['pending'])): ?>
             · <?= (int) $counts['pending'] ?> đang chờ xác nhận
         <?php endif; ?>
@@ -135,6 +170,7 @@ $giuLoc = array_filter(['q' => $q, 'co-so' => $coSo]);
                             <form method="post" action="/quan-tri/lich-hen/trang-thai" class="astatus">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="id" value="<?= e($a['id']) ?>">
+                                <?= $oAn() ?>
                                 <label class="sr-only" for="st-<?= e($a['id']) ?>">Trạng thái lịch <?= e($a['code']) ?></label>
                                 <select class="astatus__pick astatus__pick--<?= e($a['status']) ?>"
                                         id="st-<?= e($a['id']) ?>" name="status" data-autosubmit>
@@ -176,6 +212,7 @@ $giuLoc = array_filter(['q' => $q, 'co-so' => $coSo]);
                                       onsubmit="return confirm('<?= e($hoiHuy) ?>')">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                     <input type="hidden" name="id" value="<?= e($a['id']) ?>">
+                                    <?= $oAn() ?>
                                     <button type="submit" class="ahuy__btn">Huỷ lịch</button>
                                 </form>
                             <?php endif; ?>
@@ -185,10 +222,32 @@ $giuLoc = array_filter(['q' => $q, 'co-so' => $coSo]);
             </tbody>
         </table>
 
+        <?php /* Chân bảng nói RÕ CÁCH SẮP XẾP. Bảng này sắp theo ngày hẹn giảm
+                 dần — buổi gần nhất lên đầu — chứ không theo lúc khách đặt, và
+                 đó là trật tự không ai đoán ra nếu không nói. */ ?>
         <div class="aofoot">
             <p class="aofoot__count">
-                Đang hiện <?= count($appointments) ?> / <?= (int) $counts[''] ?> lịch hẹn
+                <?php /* MẪU SỐ LÀ TỔNG CỦA VIÊN LỌC ĐANG CHỌN ($total), không
+                         phải tổng cả bảng ($counts['']). Đứng ở viên "Chờ xác
+                         nhận" mà chân bảng đọc "20 / 340" thì con số 340 nói về
+                         một danh sách đang không hiện ra — đúng cái lẫn lộn mà
+                         dải viên lọc sinh ra để tránh. */ ?>
+                Đang hiện <?= count($appointments) ?> / <?= (int) $total ?> lịch hẹn<?php
+                    if ($totalPages > 1): ?> · trang <?= (int) $page ?>/<?= (int) $totalPages ?><?php
+                    endif; ?> · sắp theo ngày hẹn gần nhất trước
             </p>
+
+            <?php if ($totalPages > 1): ?>
+                <nav class="pager" aria-label="Phân trang">
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <?php if ($i === $page): ?>
+                            <span class="pager__link is-current" aria-current="page"><?= $i ?></span>
+                        <?php else: ?>
+                            <a class="pager__link" href="<?= e($duongDanTrang($i)) ?>"><?= $i ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+                </nav>
+            <?php endif; ?>
         </div>
     </div>
 <?php endif; ?>
