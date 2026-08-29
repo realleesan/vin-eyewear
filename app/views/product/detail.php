@@ -265,7 +265,13 @@ $stars = static function (float $score): string {
                             <?php foreach ($variants as $v): ?>
                                 <?php $vStock = (int) $v['stock_quantity']; ?>
                                 <label class="pdopt<?= $vStock > 0 ? '' : ' is-out' ?>">
+                                    <?php /* data-stock: tồn của ĐÚNG phương án này, để
+                                             assets/js/product-detail.js hạ trần ô số lượng
+                                             khi khách đổi phương án. Không có nó thì trần
+                                             đứng nguyên ở phương án dồi dào nhất, và nút "+"
+                                             mờ ở một con số không đúng với thứ đang chọn. */ ?>
                                     <input type="radio" name="variant_id" value="<?= e($v['id']) ?>"
+                                           data-stock="<?= $vStock ?>"
                                            required <?= $vStock > 0 ? '' : 'disabled' ?>
                                            <?= $activeVariant === $v['id'] && $vStock > 0 ? 'checked' : '' ?>>
                                     <span class="pdopt__body">
@@ -304,14 +310,40 @@ $stars = static function (float $score): string {
                 <?php endif; ?>
 
                 <div class="pdbuy__row">
+                    <?php
+                    /*
+                     * HAI NÚT − / + QUANH MỘT Ô SỐ — đúng bản thiết kế gốc.
+                     *
+                     * Trước đây chỗ này chỉ có mỗi ô số, và chú thích cũ giải
+                     * thích vì sao: "không JS nên hai nút ± sẽ phải gửi form,
+                     * tức mỗi lần đổi số lượng là một vòng tải lại trang". Lý
+                     * do đó hết hiệu lực từ khi trang có assets/js/product-detail.js.
+                     *
+                     * Ô SỐ THẬT VẪN Ở LẠI, không thay bằng một ô chữ: tắt JS thì
+                     * hai nút biến mất (CSS chỉ hiện chúng khi <html> có lớp .js
+                     * — cùng cách mà nút "Áp dụng" của bộ lọc tự ẩn khi có JS,
+                     * chỉ ngược chiều) và khách vẫn còn mũi tên lên/xuống của
+                     * trình duyệt cùng bàn phím. Không có trạng thái nào mà cả
+                     * hai lối đều mất.
+                     *
+                     * type="button" chứ không để mặc định: nút trong <form> mà
+                     * không khai type thì là nút GỬI FORM — bấm "+" một cái là
+                     * mua hàng.
+                     */
+                    ?>
                     <div class="pdqty">
-                        <!-- Không JS nên hai nút ± ở đây sẽ phải gửi form; thay
-                             vào đó là một ô số thật. Trình duyệt cho mũi tên
-                             lên/xuống và bàn phím, không cần thêm gì. -->
+                        <button type="button" class="pdqty__btn" data-qty-step="-1"
+                                aria-label="Giảm số lượng" aria-controls="so-luong"
+                                <?= $inStock ? '' : 'disabled' ?>><span aria-hidden="true">−</span></button>
+
                         <label class="sr-only" for="so-luong">Số lượng</label>
                         <input class="pdqty__num" type="number" id="so-luong" name="quantity"
                                value="1" min="1" max="<?= $maxMua ?>" step="1" inputmode="numeric"
                                <?= $inStock ? '' : 'disabled' ?>>
+
+                        <button type="button" class="pdqty__btn" data-qty-step="1"
+                                aria-label="Tăng số lượng" aria-controls="so-luong"
+                                <?= $inStock ? '' : 'disabled' ?>><span aria-hidden="true">+</span></button>
                     </div>
 
                     <button type="submit" name="action" value="buy" class="pdbtn pdbtn--buy"

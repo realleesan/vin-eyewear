@@ -366,10 +366,79 @@
     flex-shrink: 0;
 }
 
-/* Bản thiết kế vẽ hai nút − và + quanh một con số. Ở đây là MỘT ô số thật:
-   hai nút kia sẽ phải gửi form (không JS), tức mỗi lần đổi số lượng là một
-   vòng tải lại trang — đắt hơn hẳn việc gõ thẳng con số. Ô giữ đúng chiều cao
-   và hình viên thuốc của bản thiết kế. */
+/* ============================================================
+   HAI NÚT − / + — CHỈ TỒN TẠI KHI CÓ JAVASCRIPT
+
+   Bản thiết kế vẽ chúng ngay từ đầu. Trước đây chỗ này chỉ có mỗi ô số vì
+   trang chưa có JS, mà hai nút không JS thì phải gửi form — mỗi lần đổi số
+   lượng là một vòng tải lại trang. Nay trang có assets/js/product-detail.js.
+
+   ẨN MẶC ĐỊNH, HIỆN KHI <html> CÓ LỚP .js. Lớp đó do master.php gắn ngay đầu
+   <head>. Cùng cơ chế với nút "Áp dụng" của bộ lọc, chỉ ngược chiều: bên kia
+   ẩn đi KHI có JS, bên này hiện ra khi có JS.
+
+   Thiếu nhánh này thì người tắt JS thấy hai cái nút bấm không ra gì — tệ hơn
+   hẳn so với không có nút.
+   ============================================================ */
+
+.pdqty__btn {
+    display: none;
+}
+
+.js .pdqty__btn {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    font-family: var(--font-sans);
+    /* 20px cho dấu − và + đứng một mình: nhỏ hơn thì hai ký hiệu này trông
+       như dấu câu lạc chỗ, chứ không ra nút bấm. */
+    font-size: 20px;
+    line-height: 1;
+    color: var(--ink);
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.js .pdqty__btn:hover,
+.js .pdqty__btn:focus-visible {
+    background: var(--brand-subtle, #f2e4dc);
+    color: var(--brand);
+}
+
+/* CHẠM TRẦN TỒN KHO THÌ "+" MỜ HẲN — trạng thái này là thông tin, không phải
+   trang trí: nó nói "cửa hàng chỉ còn ngần này" mà không cần một dòng chữ.
+   Dùng thuộc tính disabled thật nên con trỏ, bàn phím và trình đọc màn hình
+   đều biết; CSS ở đây chỉ làm cho mắt thấy. */
+.js .pdqty__btn:disabled {
+    opacity: 0.32;
+    cursor: not-allowed;
+}
+
+.js .pdqty__btn:disabled:hover {
+    background: none;
+    color: var(--ink);
+}
+
+/* MŨI TÊN MẶC ĐỊNH CỦA TRÌNH DUYỆT chỉ ẩn KHI ĐÃ CÓ hai nút thay thế. Ẩn vô
+   điều kiện là người tắt JS mất cả hai lối đổi số lượng, chỉ còn cách gõ tay.
+   Firefox cần -moz-appearance, WebKit cần hai lớp giả riêng. */
+.js .pdqty__num {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.js .pdqty__num::-webkit-outer-spin-button,
+.js .pdqty__num::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Ô số giữ đúng chiều cao và hình viên thuốc của bản thiết kế. */
 .pdqty__num {
     width: 84px;
     height: 38px;
@@ -381,6 +450,13 @@
     font-weight: 600;
     text-align: center;
     color: var(--ink);
+}
+
+/* Có hai nút kèm hai bên thì ô không cần rộng 84px nữa — cả cụm giữ nguyên bề
+   ngang cũ, chỉ chia lại chỗ. Không đổi .pdqty__num gốc vì bản không JS vẫn
+   cần đủ chỗ cho mũi tên của trình duyệt. */
+.js .pdqty__num {
+    width: 52px;
 }
 
 .pdqty__num:focus-visible {

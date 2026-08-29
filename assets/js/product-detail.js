@@ -92,8 +92,118 @@
     /* 'input' bắt cả gõ phím lẫn bấm mũi tên; 'change' bắt nốt đường dán chuột
        phải và vài trình duyệt bắn muộn. Kẹp hai lần không hại gì — lần sau
        thấy số đã đúng thì không làm gì cả. */
-    o.addEventListener('input', kep);
-    o.addEventListener('change', kep);
+    o.addEventListener('input', function () { kep(); dongBoNut(); });
+    o.addEventListener('change', function () { kep(); dongBoNut(); });
+
+    /* ------------------------------------------------------------------
+       HAI NÚT − / +
+
+       Chúng chỉ tồn tại khi có JS (CSS giấu chúng cho tới khi <html> mang lớp
+       .js), nên toàn bộ đoạn này không cần nhánh dự phòng nào.
+       ------------------------------------------------------------------ */
+
+    var nut = Array.prototype.slice.call(
+        document.querySelectorAll('[data-qty-step]')
+    );
+
+    nut.forEach(function (b) {
+        b.addEventListener('click', function () {
+            var buoc = parseInt(b.getAttribute('data-qty-step'), 10) || 0;
+            var hienTai = parseInt(o.value, 10);
+
+            if (isNaN(hienTai)) hienTai = min;
+
+            /* Kẹp NGAY ở đây chứ không nhờ kep(): kep() còn kèm việc hiện lời
+               nhắc, mà bấm vào một nút ĐANG MỜ thì không xảy ra — nút mờ không
+               nhận cú bấm. Bấm nút sáng thì luôn ra số hợp lệ, không có gì để
+               nhắc. */
+            var moi = Math.min(max, Math.max(min, hienTai + buoc));
+
+            if (moi === hienTai) return;
+
+            o.value = moi;
+            dongBoNut();
+
+            /* Báo cho phần còn lại của trang biết giá trị vừa đổi bằng mã.
+               Gán .value KHÔNG tự phát sự kiện 'input' — thiếu dòng này thì
+               bất kỳ thứ gì nghe ô số (nay chưa có, mai thì có) sẽ im lặng bỏ
+               qua mọi lần bấm ± mà không ai hiểu vì sao. */
+            o.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+    });
+
+    /**
+     * Mờ nút nào không còn chỗ để đi.
+     *
+     * "+" mờ khi đã chạm trần tồn kho — đúng thứ khách cần thấy: không phải
+     * bấm thêm một cái nữa rồi mới biết là hết. "−" mờ ở số 1 vì dưới nữa là
+     * số 0, mà bỏ món khỏi giỏ là việc của trang giỏ hàng, không phải của ô
+     * số lượng ở đây.
+     *
+     * Dùng thuộc tính `disabled` thật chứ không chỉ tô nhạt bằng CSS: nút mờ
+     * mà vẫn bấm được là lời nói dối, và người dùng bàn phím sẽ Tab vào một
+     * nút không làm gì cả.
+     */
+    function dongBoNut() {
+        if (o.disabled) return;   // hết hàng: máy chủ đã tắt cả ba, đừng bật lại
+
+        var v = parseInt(o.value, 10);
+
+        if (isNaN(v)) v = min;
+
+        nut.forEach(function (b) {
+            var buoc = parseInt(b.getAttribute('data-qty-step'), 10) || 0;
+
+            b.disabled = buoc > 0 ? v >= max : v <= min;
+        });
+    }
+
+    dongBoNut();
+
+    /* ------------------------------------------------------------------
+       ĐỔI PHƯƠNG ÁN -> ĐỔI TRẦN
+
+       Trần in ra từ máy chủ là tồn của phương án DỒI DÀO NHẤT, vì trang tĩnh
+       không biết khách sẽ chọn cái nào (xem $maxMua trong product/detail.php).
+       Có JS thì biết: mỗi ô chọn mang sẵn data-stock của chính nó.
+
+       Không làm bước này thì nút "+" mờ ở một con số không đúng với phương án
+       đang chọn — hứa 12 chiếc trong khi màu khách chọn chỉ còn 2.
+       ------------------------------------------------------------------ */
+
+    var pa = Array.prototype.slice.call(
+        document.querySelectorAll('input[name="variant_id"][data-stock]')
+    );
+
+    if (pa.length) {
+        pa.forEach(function (r) {
+            r.addEventListener('change', function () {
+                if (!r.checked) return;
+
+                var ton = parseInt(r.getAttribute('data-stock'), 10);
+
+                if (isNaN(ton) || ton < 1) return;
+
+                max = ton;
+                o.setAttribute('max', ton);
+
+                /* Đang chọn 5 chiếc màu này rồi đổi sang màu chỉ còn 2: hạ số
+                   xuống 2 và NÓI RA. Im lặng sửa số của khách ở đây khác hẳn
+                   lúc gõ — họ không đụng vào ô số, họ đổi màu. */
+                if (parseInt(o.value, 10) > ton) {
+                    o.value = ton;
+                    noi('Phương án này chỉ còn ' + ton + ' sản phẩm.');
+                }
+
+                dongBoNut();
+            });
+        });
+
+        // Phương án đang chọn sẵn lúc mở trang cũng phải áp trần của nó.
+        var dangChon = pa.filter(function (r) { return r.checked; })[0];
+
+        if (dangChon) dangChon.dispatchEvent(new Event('change'));
+    }
 
     /* Lưới cuối: ô trống hoặc số lạ lúc bấm mua. Không chặn form — chỉ sửa giá
        trị rồi để nó đi tiếp, vì tới đây khách đã bấm mua và việc của mình là
