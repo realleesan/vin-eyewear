@@ -509,3 +509,240 @@
     padding: 0 10px;
     font-size: var(--fs-note);
 }
+
+/* ============================================================
+   TAB HÌNH ẢNH (.apfimg) — dựng theo "Quản lý sản phẩm.dc.html"
+
+   Hai khối: một ô cho ẢNH CHÍNH, một vùng cho BỘ ẢNH. Chúng là hai lát cắt
+   của cùng một mảng `images` (ảnh chính = phần tử đầu), không phải hai cột
+   trong CSDL — xem chú thích ở _form.php.
+   ============================================================ */
+
+.apfimg {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.apfimg__head {
+    margin: 0;
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted-strong, #7a6a5f);
+}
+
+/* Vạch ngăn giữa hai khối: chúng là hai việc khác nhau (một ảnh đại diện, và
+   một bộ ảnh phụ), đứng liền nhau không có gì phân cách thì đọc thành một
+   danh sách dài. */
+.apfimg__head--sep {
+    padding-top: 18px;
+    margin-top: 4px;
+    border-top: 1px solid var(--a-panel-line);
+}
+
+/* ── Vùng kéo thả ─────────────────────────────────────────── */
+
+.apfimg__drop {
+    padding: 20px;
+    border: 1.5px dashed #d3c4ac;
+    border-radius: 12px;
+    background: var(--surface-raised);
+    text-align: center;
+}
+
+/* Trạng thái đang rê file qua — do JS đặt. Không có JS thì lớp này không bao
+   giờ xuất hiện và vùng thả chỉ là một cái khung tĩnh, vẫn chọn file được
+   bằng nút bên trong. */
+.apfimg__drop.is-over {
+    border-color: var(--brand);
+    background: color-mix(in srgb, var(--brand) 5%, var(--surface-raised));
+}
+
+.apfimg__drop-title {
+    margin: 0;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
+    color: var(--ink-soft, #5c4f42);
+}
+
+.apfimg__or {
+    margin: 6px 0 12px;
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+.apfimg__or-in { font-weight: 400; color: var(--muted); }
+
+.apfimg__hint {
+    margin: 12px 0 0;
+    font-size: var(--fs-caption);
+    color: var(--muted);
+    line-height: 1.55;
+}
+
+/* ── Nút chọn file ────────────────────────────────────────────
+   Là <label> bọc lấy <input type=file>. Ô file thật bị ẩn vì trình duyệt vẽ
+   nó mỗi hãng một kiểu và không tạo kiểu được; <label> thì tạo kiểu thoải mái
+   mà bấm vào vẫn mở hộp chọn file, kể cả khi tắt JS. */
+
+.apfimg__pick,
+.apfimg__btn {
+    position: relative;
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.apfimg__pick {
+    border: 1px solid transparent;
+    background: var(--brand);
+    color: #fff;
+}
+
+.apfimg__pick:hover { background: var(--brand-dark, #7a2333); }
+
+.apfimg__pick--ghost {
+    margin-top: 10px;
+    border-color: #ded2bf;
+    background: var(--surface-raised);
+    color: var(--brand);
+}
+
+.apfimg__pick--ghost:hover { border-color: var(--brand); background: var(--surface-raised); }
+
+/* Ô file thật: ẩn khỏi mắt, KHÔNG khỏi bàn phím — display:none sẽ gỡ nó khỏi
+   thứ tự Tab và người dùng bàn phím mất hẳn đường tải ảnh. */
+.apfimg__pick input[type="file"],
+.apfimg__btn input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* ── Ảnh chính đã có ──────────────────────────────────────── */
+
+.apfimg__main {
+    position: relative;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.apfimg__thumb {
+    position: relative;
+    flex-shrink: 0;
+    width: 180px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--a-panel-line);
+    border-radius: 10px;
+    background: var(--surface-raised);
+}
+
+.apfimg__thumb img {
+    display: block;
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+}
+
+.apfimg__badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    padding: 2px 7px;
+    border-radius: var(--radius-round);
+    background: var(--brand);
+    color: #fff;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.apfimg__acts {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.apfimg__btn {
+    border: 1px solid #ded2bf;
+    background: var(--surface-raised);
+    color: var(--brand);
+    padding: 7px 14px;
+    font-size: var(--fs-caption);
+}
+
+.apfimg__btn:hover { border-color: var(--brand); }
+
+.apfimg__btn--xoa { color: var(--danger); }
+.apfimg__btn--xoa:hover { border-color: var(--danger); }
+
+/* Nhãn nút đổi theo trạng thái ô tick "giữ": còn tick thì đọc "Xoá ảnh", bỏ
+   tick rồi thì đọc "Hoàn tác" — vì bấm lần nữa chính là hoàn tác, không phải
+   xoá thêm lần nữa. */
+.apfimg__btn-hoan { display: none; }
+
+.apfimg__main .aimgx__box--keep:not(:checked) ~ .apfimg__acts .apfimg__btn-xoa { display: none; }
+.apfimg__main .aimgx__box--keep:not(:checked) ~ .apfimg__acts .apfimg__btn-hoan { display: inline; }
+
+.apfimg__main .aimgx__box--keep:not(:checked) ~ .apfimg__thumb {
+    opacity: 0.35;
+    filter: grayscale(1);
+}
+
+.apfimg__main .aimgx__flag { display: none; }
+
+.apfimg__main .aimgx__box--keep:not(:checked) ~ .apfimg__acts .aimgx__flag {
+    display: block;
+    width: 100%;
+    margin-top: 2px;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--danger);
+}
+
+/* ── Lưới bộ ảnh ──────────────────────────────────────────── */
+
+.apfimg__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.apfimg__cell {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--a-panel-line);
+    border-radius: 10px;
+    background: var(--surface-raised);
+}
+
+/* KHÔNG mượn .aimgs__thumb của màn Bộ sưu tập cho ô ảnh ở đây, dù nó có sẵn
+   bộ trạng thái "đã đánh dấu xoá". Lớp đó mang aspect-ratio: 1/1, nên ô lưới
+   bị kéo thành hình vuông cao gấp đôi chiều cao ảnh và dưới mỗi tấm hở ra một
+   mảng trắng. Chỉ mượn phần TRẠNG THÁI (xem .apfimg__cell trong admin.css),
+   còn kích thước thì khai riêng ở đây — bản vẽ để ảnh cao 110px. */
+.apfimg__cell-anh img {
+    display: block;
+    width: 100%;
+    height: 110px;
+    object-fit: cover;
+}
+
+@media (max-width: 720px) {
+    .apfimg__grid { grid-template-columns: repeat(2, 1fr); }
+    .apfimg__main { flex-direction: column; }
+    .apfimg__thumb { width: 100%; }
+}

@@ -631,79 +631,152 @@ $soDongTrong = 3;
 
         <!-- ══ TAB 5 · HÌNH ẢNH ═══════════════════════════════════════════ -->
         <div class="apf__pane apf__pane--t5">
-            <?php /* MỘT KHỐI CHỨ KHÔNG HAI.
+            <?php
+            /*
+             * HAI KHỐI, ĐÚNG BẢN VẼ "Quản lý sản phẩm.dc.html".
+             *
+             * Bản trước gộp làm một danh sách phẳng kèm nút radio "Ảnh chính",
+             * với lý do: ảnh chính KHÔNG phải một cột riêng trong CSDL, nó là
+             * ảnh ĐỨNG ĐẦU mảng `images`. Lý do ấy đúng về dữ liệu nhưng không
+             * bắt buộc về giao diện — hai khối vẫn là hai LÁT CẮT của cùng một
+             * mảng, không cần bịa thêm cột nào:
+             *
+             *     $anhChinh = images[0]
+             *     $boAnh    = images[1..]
+             *
+             * Nên vẽ đúng bản vẽ mà dữ liệu bên dưới không đổi một chữ.
+             */
+            $anhChinh = $edImages[0] ?? null;
+            $boAnh    = array_slice($edImages, 1);
+            ?>
 
-                     Bản vẽ tách "Ảnh chính của kính" và "Bộ ảnh của kính"
-                     thành hai vùng thả riêng. Ở đây không tách được mà vẫn
-                     đúng: ảnh chính KHÔNG phải một cột riêng, nó là ảnh ĐỨNG
-                     ĐẦU mảng `images` (xem ProductAdminController::images).
-                     Dựng hai vùng thả tách biệt sẽ phải bịa ra một cột thứ hai
-                     rồi tự đồng bộ hai chỗ — và hai chỗ thì có ngày lệch.
+            <div class="apfimg">
+                <p class="apfimg__head">Ảnh chính của kính *</p>
 
-                     Nút tròn dưới mỗi tấm làm đúng việc bản vẽ định làm, và nó
-                     nói rõ hơn: đổi ảnh chính là chọn một tấm đã có, không phải
-                     tải lên lần nữa. */ ?>
-            <fieldset class="apf__set">
-                <legend>Ảnh sản phẩm</legend>
+                <?php if ($anhChinh === null): ?>
+                    <?php /* Vùng thả: `data-apf-drop` là móc cho JS kéo-thả.
+                             Không có JS thì nó chỉ là một cái khung có nút chọn
+                             file bên trong — vẫn tải ảnh lên được đủ. */ ?>
+                    <div class="apfimg__drop" data-apf-drop>
+                        <p class="apfimg__drop-title">Kéo thả 1 ảnh vào đây</p>
+                        <p class="apfimg__or">hoặc</p>
 
-                <?php if ($edImages === []): ?>
-                    <p class="apf__empty">
-                        Chưa có ảnh nào. Chọn ảnh ở ô bên dưới — ảnh đầu tiên tải lên
-                        sẽ thành ảnh chính.
-                    </p>
+                        <label class="apfimg__pick">
+                            Chọn ảnh từ máy
+                            <input type="file" name="image_main_file" accept="image/*">
+                        </label>
+
+                        <p class="apfimg__hint">
+                            Ảnh giới thiệu kính — hiện to nhất trên trang sản phẩm và ngoài
+                            danh sách. Nền sạch, chụp nghiêng nhẹ. JPEG, PNG hoặc WEBP ·
+                            tối đa <?= (int) (ProductImageStorage::MAX_BYTES / 1048576) ?> MB.
+                        </p>
+                    </div>
                 <?php else: ?>
-                    <?php /* Ảnh chính = ảnh ĐỨNG ĐẦU mảng `images`, không phải một
-                             cột riêng. Nút radio dưới mỗi ảnh chỉ nói "đưa cái này
-                             lên đầu" — xem ProductAdminController::images(). */ ?>
-                    <p class="field__hint">
-                        Ảnh chính hiện to nhất ở trang sản phẩm và là tấm đại diện
-                        ngoài danh sách. Bỏ tick "Giữ" là ảnh bị xoá khi lưu.
+                    <?php /* Ô tick đứng TRƯỚC ảnh: CSS dùng bộ chọn anh-em `~`
+                             để làm mờ ảnh và đổi nhãn nút khi đã đánh dấu xoá.
+                             Xem admin/_layout/image-x.php. */ ?>
+                    <div class="apfimg__main">
+                        <?php partial('admin/_layout/image-x', [
+                            'x_id'      => 'apf-keep-chinh',
+                            'x_name'    => 'image_keep[]',
+                            'x_value'   => $anhChinh,
+                            'x_checked' => true,
+                            'x_keep'    => true,
+                            'x_label'   => 'Xoá ảnh chính khi lưu',
+                        ]); ?>
+
+                        <figure class="apfimg__thumb">
+                            <img src="<?= e($anhChinh) ?>" alt="" loading="lazy">
+                            <span class="apfimg__badge">Ảnh chính</span>
+                        </figure>
+
+                        <div class="apfimg__acts">
+                            <label class="apfimg__btn">
+                                Đổi ảnh
+                                <input type="file" name="image_main_file" accept="image/*">
+                            </label>
+
+                            <?php /* "Xoá ảnh" là NHÃN của ô tick ngay trên, không
+                                     phải nút JS: bấm nó là bỏ tick "giữ", và ảnh
+                                     chỉ thật sự mất khi bấm Lưu. Bấm lần nữa là
+                                     hoàn tác. */ ?>
+                            <label class="apfimg__btn apfimg__btn--xoa" for="apf-keep-chinh">
+                                <span class="apfimg__btn-xoa">Xoá ảnh</span>
+                                <span class="apfimg__btn-hoan">Hoàn tác</span>
+                            </label>
+
+                            <span class="aimgx__flag">Sẽ xoá khi lưu</span>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <p class="apfimg__head apfimg__head--sep">Bộ ảnh của kính</p>
+
+                <div class="apfimg__drop" data-apf-drop>
+                    <p class="apfimg__drop-title">
+                        Kéo thả nhiều ảnh vào đây <span class="apfimg__or-in">hoặc</span>
                     </p>
 
-                    <div class="apf__imgs">
-                        <?php foreach ($edImages as $i => $duongDan): ?>
-                            <figure class="apf__img<?= $i === 0 ? ' is-main' : '' ?>">
-                                <img src="<?= e($duongDan) ?>" alt="" loading="lazy">
+                    <label class="apfimg__pick apfimg__pick--ghost">
+                        Chọn ảnh từ máy
+                        <input type="file" name="image_files[]" accept="image/*" multiple>
+                    </label>
 
-                                <div class="apf__img-acts">
-                                    <label class="apf__img-main">
-                                        <input type="radio" name="image_main" value="<?= e($duongDan) ?>"
-                                               <?= $i === 0 ? 'checked' : '' ?>>
-                                        Ảnh chính
-                                    </label>
+                    <p class="apfimg__hint">
+                        Bộ ảnh hiện thành dãy thumbnail dưới ảnh chính: các góc chụp khác và
+                        ảnh chi tiết — nghiêng, gấp lại, bản lề, đệm mũi, đeo trên người.
+                        Tối đa <?= (int) ProductImageStorage::MAX_FILES ?> ảnh, kéo thả được
+                        nhiều ảnh cùng lúc.
+                    </p>
+                </div>
 
-                                    <?php /* GIỮ lại là mặc định, bỏ tick là XOÁ.
-                                             Ngược lại (tick để xoá) thì một cú
-                                             bấm nhầm làm mất ảnh, còn cách này
-                                             bấm nhầm chỉ làm mất một cú bấm. */ ?>
-                                    <label class="apf__img-keep">
-                                        <input type="checkbox" name="image_keep[]"
-                                               value="<?= e($duongDan) ?>" checked>
-                                        Giữ
-                                    </label>
+                <?php if ($boAnh !== []): ?>
+                    <div class="apfimg__grid">
+                        <?php foreach ($boAnh as $k => $duongDan): ?>
+                            <div class="apfimg__cell">
+                                <?php partial('admin/_layout/image-x', [
+                                    'x_id'      => 'apf-keep-' . $k,
+                                    'x_name'    => 'image_keep[]',
+                                    'x_value'   => $duongDan,
+                                    'x_checked' => true,
+                                    'x_keep'    => true,
+                                    'x_label'   => 'Xoá ảnh này khi lưu',
+                                ]); ?>
+
+                                <div class="apfimg__cell-anh">
+                                    <img src="<?= e($duongDan) ?>" alt="" loading="lazy">
                                 </div>
 
-                                <input type="text" class="apf__img-alt"
-                                       name="image_alts[<?= e($duongDan) ?>]"
-                                       maxlength="160" placeholder="Alt text…"
-                                       value="<?= e((string) ($edAlts[$duongDan] ?? '')) ?>"
-                                       aria-label="Alt text cho ảnh">
-                            </figure>
+                                <?php partial('admin/_layout/image-x-btn', [
+                                    'x_id'    => 'apf-keep-' . $k,
+                                    'x_label' => 'Xoá ảnh này khi lưu',
+                                ]); ?>
+                            </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
-            </fieldset>
 
-            <div class="field">
-                <label for="image_files">Thêm ảnh từ máy</label>
-                <input type="file" id="image_files" name="image_files[]" accept="image/*" multiple>
-                <p class="field__hint">
-                    Các góc chụp khác và ảnh chi tiết — nghiêng, gấp lại, bản lề, đệm
-                    mũi, đeo trên người. Tối đa <?= (int) ProductImageStorage::MAX_FILES ?>
-                    ảnh cho một sản phẩm · JPEG, PNG hoặc WEBP.
-                </p>
+                <?php /* ALT TEXT ĐI KÈM NGẦM, KHÔNG CÓ Ô NHẬP.
+
+                         Bản vẽ không vẽ ô alt nào, nên bỏ khỏi giao diện. Nhưng
+                         controller lưu cột `image_alts` từ CHÍNH $_POST — không
+                         gửi lên là xoá sạch alt của mọi ảnh ngay lần lưu đầu.
+                         Mấy ô ẩn này giữ nguyên giá trị đang có, để việc bỏ ô
+                         nhập chỉ mất chỗ SỬA chứ không mất DỮ LIỆU. */ ?>
+                <?php foreach ($edImages as $duongDan): ?>
+                    <?php if (($edAlts[$duongDan] ?? '') !== ''): ?>
+                        <input type="hidden" name="image_alts[<?= e($duongDan) ?>]"
+                               value="<?= e((string) $edAlts[$duongDan]) ?>">
+                    <?php endif; ?>
+                <?php endforeach; ?>
             </div>
 
+            <?php /* Ô này KHÔNG có trong bản vẽ, nhưng giữ lại: cột `video_url`
+                     đang có dữ liệu thật và trang sản phẩm đang đọc nó. Bỏ ô đi
+                     là người dùng không còn đường sửa một thứ vẫn hiện với
+                     khách. Bản vẽ cũng còn khoá `video` trong state của nó,
+                     chỉ là không vẽ ra ô nào. */ ?>
             <div class="field">
                 <label for="video_url">Ảnh 360 hoặc video <span class="field__opt">(tuỳ chọn)</span></label>
                 <input type="url" id="video_url" name="video_url" maxlength="500"

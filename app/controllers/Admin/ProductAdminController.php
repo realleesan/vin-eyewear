@@ -701,21 +701,40 @@ class ProductAdminController extends AdminController
             static fn (string $path): bool => in_array($path, $asked, true)
         ));
 
-        $room   = max(0, ProductImageStorage::MAX_FILES - count($keep));
-        $upload = ProductImageStorage::storeMany($_FILES['image_files'] ?? [], $room);
-        $images = array_merge($keep, $upload['paths']);
+        /*
+         * Ô "Ảnh chính của kính" là một ô file RIÊNG (`image_main_file`), theo
+         * bản vẽ. Nó THAY tấm đang đứng đầu chứ không nối vào cuối:
+         *
+         *   · chưa có ảnh nào  -> tấm vừa chọn thành ảnh chính;
+         *   · đã có ảnh chính  -> nút ghi "Đổi ảnh", nên tấm cũ phải rời đi.
+         *
+         * Loại tấm cũ khỏi $keep chứ không xoá thẳng: mọi ảnh rơi khỏi $images
+         * đều được dọn ở vòng array_diff cuối hàm, một chỗ duy nhất.
+         */
+        $mainUp = ProductImageStorage::storeMany($_FILES['image_main_file'] ?? [], 1);
 
-        // Ảnh đại diện: đưa ảnh được chọn lên đầu danh sách. Chỉ nhận giá trị
-        // CÓ THẬT trong danh sách vừa dựng, nên nút radio bị sửa tay hoặc trỏ
-        // vào ảnh vừa bị bỏ tick đều rơi vào im lặng chứ không sinh ảnh ma.
-        $main = (string) ($_POST['image_main'] ?? '');
-
-        if ($main !== '' && in_array($main, $images, true)) {
-            $images = array_merge([$main], array_values(array_filter(
-                $images,
-                static fn (string $path): bool => $path !== $main
-            )));
+        if ($mainUp['paths'] !== [] && ($current[0] ?? null) !== null) {
+            $keep = array_values(array_filter(
+                $keep,
+                static fn (string $path): bool => $path !== $current[0]
+            ));
         }
+
+        $room   = max(0, ProductImageStorage::MAX_FILES - count($keep) - count($mainUp['paths']));
+        $upload = ProductImageStorage::storeMany($_FILES['image_files'] ?? [], $room);
+
+        /*
+         * THỨ TỰ Ở ĐÂY CHÍNH LÀ Ý NGHĨA: phần tử đầu là ảnh chính.
+         *
+         * Không còn nút radio "Ảnh chính" nào cả — bản vẽ không có nó, ô ảnh
+         * chính đứng thành khối riêng ở trên cùng. Nên ảnh chính được quyết
+         * bằng đúng một luật: tấm vừa tải vào ô ảnh chính, nếu không có thì
+         * tấm đầu tiên còn được giữ lại.
+         *
+         * Hệ quả cố ý: xoá ảnh chính thì tấm kế tiếp trong bộ ảnh tự lên thay,
+         * không để sản phẩm rơi vào cảnh có ảnh mà không có ảnh đại diện.
+         */
+        $images = array_merge($mainUp['paths'], $keep, $upload['paths']);
 
         // Ảnh bị gỡ khỏi danh sách thì xoá khỏi đĩa luôn — nhưng chỉ ảnh do
         // chính khu quản trị tải lên; ProductImageStorage::remove() tự bỏ qua
@@ -724,7 +743,7 @@ class ProductAdminController extends AdminController
             ProductImageStorage::remove($gone);
         }
 
-        return [$images, $upload['errors']];
+        return [$images, array_merge($mainUp['errors'], $upload['errors'])];
     }
 
     /**

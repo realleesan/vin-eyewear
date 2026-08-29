@@ -10,6 +10,8 @@
  *   2. slug tự chạy theo tên        → gõ tay, hoặc để trống cho máy chủ tự sinh
  *   3. dòng xem trước "52□18-140"   → ba ô số vẫn nhập bình thường
  *   4. nút ✕ xoá dòng biến thể      → còn ô tick "Xoá", gửi lên rồi save() xoá
+ *   5. KÉO THẢ ảnh vào tab Hình ảnh → bấm nút "Chọn ảnh từ máy" ngay trong
+ *                                     chính cái khung ấy, vẫn tải lên đủ
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * VÌ SAO GẮN THEO SỰ KIỆN NỔI LÊN document
@@ -216,4 +218,94 @@
     if (document.readyState !== 'loading') {
         dung();
     }
+
+    /*
+     * ════════════════════════════════════════════════════════════════════
+     * 5 · KÉO THẢ ẢNH VÀO HAI KHUNG CỦA TAB HÌNH ẢNH
+     *
+     * Bản vẽ "Quản lý sản phẩm.dc.html" vẽ cả hai khung là vùng thả được.
+     * Đây là TĂNG CƯỜNG thuần: mỗi khung đã có sẵn một <input type="file">
+     * bên trong, nên tắt JS thì vẫn chọn được ảnh bằng nút, chỉ là phải qua
+     * hộp chọn file của hệ điều hành.
+     *
+     * KHÔNG tự gửi form sau khi thả. Ảnh chỉ thật sự lên máy chủ khi bấm
+     * "Lưu" — giống hệt mọi ô khác trong form này. Thả xong mà form tự gửi
+     * thì người dùng mất những gì đang gõ dở ở năm tab kia.
+     *
+     * DataTransfer để gán file vào input: đây là cách duy nhất đặt được
+     * `input.files` bằng script. Trình duyệt nào không có nó thì khối này im
+     * lặng bỏ qua và nút chọn file vẫn nguyên đó.
+     * ════════════════════════════════════════════════════════════════════
+     */
+    function oFile(khung) {
+        return khung.querySelector('input[type="file"]');
+    }
+
+    function chanMacDinh(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    document.addEventListener('dragover', function (e) {
+        var khung = e.target.closest && e.target.closest('[data-apf-drop]');
+
+        if (khung === null || oFile(khung) === null) {
+            return;
+        }
+
+        /* preventDefault ở dragover mới là thứ cho phép thả — thiếu nó thì
+           trình duyệt giữ hành vi mặc định: mở luôn tấm ảnh trong tab hiện
+           tại, và người dùng mất cả cái form đang điền dở. */
+        chanMacDinh(e);
+        khung.classList.add('is-over');
+    });
+
+    document.addEventListener('dragleave', function (e) {
+        var khung = e.target.closest && e.target.closest('[data-apf-drop]');
+
+        if (khung !== null) {
+            khung.classList.remove('is-over');
+        }
+    });
+
+    document.addEventListener('drop', function (e) {
+        var khung = e.target.closest && e.target.closest('[data-apf-drop]');
+
+        if (khung === null) {
+            return;
+        }
+
+        var o = oFile(khung);
+
+        if (o === null || typeof DataTransfer === 'undefined') {
+            return;
+        }
+
+        chanMacDinh(e);
+        khung.classList.remove('is-over');
+
+        var tep = (e.dataTransfer && e.dataTransfer.files) || [];
+        var kho = new DataTransfer();
+        /* Ô ảnh chính KHÔNG có `multiple`: thả năm tấm vào đó thì lấy tấm đầu
+           chứ không phải im lặng bỏ hết. */
+        var toiDa = o.multiple ? tep.length : Math.min(1, tep.length);
+
+        for (var i = 0; i < toiDa; i++) {
+            if (tep[i].type.indexOf('image/') === 0) {
+                kho.items.add(tep[i]);
+            }
+        }
+
+        if (kho.files.length === 0) {
+            return;
+        }
+
+        o.files = kho.files;
+
+        /* Báo cho phần còn lại của trang biết ô vừa đổi. Không có dòng này thì
+           gán `files` bằng script là một thay đổi câm — không sự kiện nào nổi
+           lên, và bất cứ thứ gì nghe `change` trên form đều bỏ lỡ. */
+        o.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
 }());

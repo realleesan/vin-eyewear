@@ -3935,7 +3935,8 @@ a.astatus__save { text-decoration: none; }
 }
 
 .aimgs__one .aimgx,
-.aimgs__item .aimgx {
+.aimgs__item .aimgx,
+.apfimg__cell .aimgx {
     position: absolute;
     top: 14px;
     right: 14px;
@@ -3955,7 +3956,8 @@ a.astatus__save { text-decoration: none; }
 }
 
 .aimgs__one .aimgx:hover,
-.aimgs__item .aimgx:hover { background: var(--danger); }
+.aimgs__item .aimgx:hover,
+.apfimg__cell .aimgx:hover { background: var(--danger); }
 
 /* Vòng focus vẽ trên cái NHÌN THẤY, vì ô tick thật đã ẩn đi */
 .aimgx__box:focus-visible + .aimgs__thumb + .aimgx,
@@ -3968,7 +3970,8 @@ a.astatus__save { text-decoration: none; }
 
 /* Dòng "Sẽ xoá khi lưu" — mặc định ẩn, chỉ hiện khi đã đánh dấu. */
 .aimgs__one .aimgx__flag,
-.aimgs__item .aimgx__flag {
+.aimgs__item .aimgx__flag,
+.apfimg__cell .aimgx__flag {
     display: none;
     margin-top: 8px;
     font-size: var(--fs-caption);
@@ -3977,16 +3980,28 @@ a.astatus__save { text-decoration: none; }
 }
 
 /* ── TRẠNG THÁI ĐÃ ĐÁNH DẤU XOÁ ─────────────────────────────
-   Hai bộ chọn cho hai chiều ngược nhau, gộp chung một khối kiểu. */
+   Hai bộ chọn cho hai chiều ngược nhau, gộp chung một khối kiểu.
 
-.aimgx__box:checked ~ .aimgs__thumb,
-.aimgx__box--keep:not(:checked) ~ .aimgs__thumb {
+   `:not(.aimgx__box--keep)` LÀ BẮT BUỘC ở mọi vế `:checked`, không phải cho
+   gọn mắt. Ô tick chiều "giữ" cũng mang lớp .aimgx__box, nên một vế `:checked`
+   trần khớp luôn cả nó — mà ở chiều ấy, ĐANG TICK nghĩa là GIỮ LẠI, tức trạng
+   thái bình thường. Thiếu :not() thì mọi ảnh vừa mở form đã hiện dấu ↺ và câu
+   "Sẽ xoá khi lưu", trong khi chưa ai bấm gì.
+
+   Lỗi này nằm im từ đầu vì màn Bộ sưu tập — nơi duy nhất dùng partial này —
+   chạy chiều ngược lại (`cover_remove`, tick = xoá). Tab Hình ảnh của sản phẩm
+   là chỗ đầu tiên dùng chiều "giữ", và nó lộ ra ngay. */
+
+.aimgx__box:not(.aimgx__box--keep):checked ~ .aimgs__thumb,
+.aimgx__box--keep:not(:checked) ~ .aimgs__thumb,
+.apfimg__cell .aimgx__box--keep:not(:checked) ~ .apfimg__cell-anh {
     opacity: 0.35;
     filter: grayscale(1);
 }
 
-.aimgs__one .aimgx__box:checked ~ .aimgx,
-.aimgs__item .aimgx__box:checked ~ .aimgx,
+.aimgs__one .aimgx__box:not(.aimgx__box--keep):checked ~ .aimgx,
+.aimgs__item .aimgx__box:not(.aimgx__box--keep):checked ~ .aimgx,
+.apfimg__cell .aimgx__box--keep:not(:checked) ~ .aimgx,
 .aimgs__one .aimgx__box--keep:not(:checked) ~ .aimgx,
 .aimgs__item .aimgx__box--keep:not(:checked) ~ .aimgx {
     background: var(--danger);
@@ -3994,11 +4009,12 @@ a.astatus__save { text-decoration: none; }
 }
 
 /* × thành ↺: nói rằng bấm lần nữa là hoàn tác, chứ không phải xoá thêm lần nữa */
-.aimgx__box:checked ~ .aimgx .aimgx__mark::before,
+.aimgx__box:not(.aimgx__box--keep):checked ~ .aimgx .aimgx__mark::before,
 .aimgx__box--keep:not(:checked) ~ .aimgx .aimgx__mark::before { content: "\21BA"; }
 
-.aimgs__one .aimgx__box:checked ~ .aimgx__flag,
-.aimgs__item .aimgx__box:checked ~ .aimgx__flag,
+.aimgs__one .aimgx__box:not(.aimgx__box--keep):checked ~ .aimgx__flag,
+.aimgs__item .aimgx__box:not(.aimgx__box--keep):checked ~ .aimgx__flag,
+.apfimg__cell .aimgx__box--keep:not(:checked) ~ .aimgx__flag,
 .aimgs__one .aimgx__box--keep:not(:checked) ~ .aimgx__flag,
 .aimgs__item .aimgx__box--keep:not(:checked) ~ .aimgx__flag { display: block; }
 
