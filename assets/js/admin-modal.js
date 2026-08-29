@@ -30,14 +30,21 @@
  *
  * Nay HTML được cất vào `kho` và lấy trước khi cần:
  *
- *   · rê chuột / chạm / tab tới một nút mở hộp  → nạp ngay lúc đó. Người ta
- *     mất ít nhất một phần mười giây từ lúc chuột tới nút đến lúc bấm, thường
- *     lâu hơn nhiều — thừa cho một lượt đi về;
- *   · lúc trình duyệt rảnh, nạp trước NHỮNG NÚT KHÔNG NẰM TRONG DÒNG BẢNG —
- *     "Quản lý gói", "+ Thêm gói", "+ Thêm mới". Mỗi trang chỉ có một hai cái,
- *     nên đây là một hai lượt tải thêm, không phải hai mươi. Nút của TỪNG DÒNG
- *     (Sửa, Xem) thì đợi rê chuột tới, vì hai mươi dòng nạp trước hết là đúng
- *     cái giá mà lối fetch sinh ra để tránh.
+ *   · rê chuột / chạm / tab tới một nút mở hộp → nạp NGAY, chen lên trước cả
+ *     hàng đợi. Người ta mất ít nhất một phần mười giây từ lúc chuột tới nút
+ *     đến lúc bấm, thường lâu hơn nhiều — thừa cho một lượt đi về;
+ *   · ngoài ra, lúc trình duyệt rảnh thì xếp hàng nạp trước MỌI nút mở hộp
+ *     trên trang, nút đầu trang trước rồi tới nút của từng dòng.
+ *
+ * HÀNG ĐỢI CHỨ KHÔNG PHẢI BẮN MỘT LOẠT: mỗi lúc đúng một lượt đang bay, và
+ * lượt sau chỉ đi khi trình duyệt lại rảnh. Đây là việc nền, nó không được
+ * giành đường truyền với thứ người dùng đang thật sự chờ. Có trần
+ * TRAN_NAP_TRUOC để một bảng hai trăm dòng không thành hai trăm lượt tải; quá
+ * trần thì phần còn lại vẫn nạp được khi rê chuột tới.
+ *
+ * Rẻ hơn hẳn kể từ khi AdminController bỏ khung trang cho lượt lấy hộp thoại:
+ * mỗi lượt nay là ruột trang, không thanh bên, không năm câu COUNT cho huy
+ * hiệu. Xem khối chú thích ở AdminController::renderAdmin().
  *
  * Có sẵn trong kho thì hộp được dựng NGAY TRONG HÀM XỬ LÝ CÚ BẤM, không qua
  * một Promise nào — mở là thấy, không nháy.
@@ -77,10 +84,14 @@
 
     var MO_HOST = 'amodal-host';
 
-    /* Trần kho: một phiên làm việc thật không mở tới hai chục hộp khác nhau,
-       con số này chỉ để một trang bị dựng lạ (hay ai đó rê chuột dọc cả bảng)
-       không giữ mãi vài megabyte HTML. */
-    var GIOI_HAN_KHO = 20;
+    /* Trần kho: chặn trên cho lượng HTML giữ trong bộ nhớ. Rộng hơn trần hàng
+       đợi vì kho còn nhận cả những địa chỉ nạp theo đường rê chuột. */
+    var GIOI_HAN_KHO = 40;
+
+    /* Trần hàng đợi nạp trước: đủ cho một bảng hai mươi dòng cộng vài nút ở
+       đầu trang và đầu hộp. Bảng dài hơn thì phần đuôi đợi rê chuột tới —
+       người ta cũng phải cuộn xuống mới bấm được tới đó. */
+    var TRAN_NAP_TRUOC = 30;
 
     var kho     = {};   // địa chỉ -> HTML đã nạp
     var dangNap = {};   // địa chỉ -> lượt fetch đang bay, để không nạp hai lần
@@ -221,19 +232,9 @@
         var href = a.getAttribute('href');
 
         if (href !== null && href !== '') {
+            // Rê chuột tới là CHEN NGANG hàng đợi: cú bấm sắp tới rồi.
             nap(href).catch(function () {});
         }
-    }
-
-    /* Nút mở hộp KHÔNG nằm trong dòng bảng: nút hành động ở đầu trang hay đầu
-       hộp. Một trang có một hai cái, nạp trước hết cũng rẻ — xem khối "NẠP
-       TRƯỚC" ở đầu file. */
-    function napTruocNutChinh(goc) {
-        [].forEach.call(goc.querySelectorAll('a[data-modal]'), function (a) {
-            if (a.closest('td') === null) {
-                napTruoc(a);
-            }
-        });
     }
 
     function lucRanh(viec) {
@@ -242,6 +243,103 @@
         } else {
             setTimeout(viec, 400);
         }
+    }
+
+    // ── Hàng đợi nạp trước ──────────────────────────────────────────────────
+
+    var hangDoi  = [];
+    var daXep    = {};
+    var soDaXep  = 0;
+    var dangChay = false;
+
+    /* Sâu bao nhiêu lớp thì thôi đào tiếp. 2 là đủ cho chồng sâu nhất đang có
+       (bảng giá → danh mục gói → form một gói); để sâu hơn thì một trang có
+       hộp trỏ vòng về chính nó sẽ đào mãi tới khi chạm trần. */
+    var SAU_TOI_DA = 2;
+
+    function chayHangDoi() {
+        if (dangChay || hangDoi.length === 0) {
+            return;
+        }
+
+        dangChay = true;
+
+        var muc = hangDoi.shift();
+
+        nap(muc.href)
+            .then(function (html) {
+                /*
+                 * ĐÀO TIẾP NÚT NẰM TRONG CHÍNH CÁI HỘP VỪA NẠP.
+                 *
+                 * Không có bước này thì nút trong hộp chỉ được xếp hàng SAU khi
+                 * người dùng mở hộp ra — mà lúc ấy họ đã đứng trước nó rồi, và
+                 * cú bấm tiếp theo vẫn phải đợi mạng. Đo trên đường trễ 600ms:
+                 * mở "Quản lý gói" tức thì, nhưng bấm "+ Thêm gói" ngay sau đó
+                 * vẫn mất 1,2 giây.
+                 *
+                 * Nạp ngay từ lúc rảnh thì cả chồng hộp đã nằm sẵn trong kho
+                 * trước khi người dùng chạm vào cái đầu tiên. Không tốn thêm
+                 * lượt nào so với trước — chỉ là xếp sớm hơn, và vẫn chung một
+                 * trần TRAN_NAP_TRUOC.
+                 *
+                 * CHỈ ĐÀO TRONG .amodal: phần còn lại của trang trả về là ruột
+                 * trang nền (bảng giá, danh sách sản phẩm), mà những nút ở đó
+                 * đã được xếp hàng từ chính trang người dùng đang đứng.
+                 */
+                if (muc.sau < SAU_TOI_DA) {
+                    var doc = new DOMParser().parseFromString(html, 'text/html');
+
+                    [].forEach.call(
+                        doc.querySelectorAll('.amodal a[data-modal], .aodraw a[data-modal]'),
+                        function (a) { xepHang(a.getAttribute('href'), muc.sau + 1); }
+                    );
+                }
+            })
+            .catch(function () {})
+            .then(function () {
+                dangChay = false;
+
+                /* Nghỉ tới lượt rảnh kế tiếp mới chạy tiếp. Nối đuôi liên tục
+                   thì hàng đợi nền chiếm hết chỗ trong sáu kết nối của trình
+                   duyệt, và cú bấm thật phải xếp sau nó. */
+                if (hangDoi.length > 0) {
+                    lucRanh(chayHangDoi);
+                }
+            });
+    }
+
+    function xepHang(href, sau) {
+        if (href === null || href === '' || soDaXep >= TRAN_NAP_TRUOC
+            || Object.prototype.hasOwnProperty.call(daXep, href)
+            || Object.prototype.hasOwnProperty.call(kho, href)) {
+            return;
+        }
+
+        daXep[href] = true;
+        soDaXep++;
+        hangDoi.push({ href: href, sau: sau || 0 });
+    }
+
+    /* Xếp cả trang (hoặc cả hộp vừa mở) vào hàng đợi. NÚT NGOÀI DÒNG BẢNG ĐI
+       TRƯỚC — "Quản lý gói", "+ Thêm gói", "+ Thêm mới" là thứ được bấm nhiều
+       nhất và bấm sớm nhất; nút Sửa của từng dòng thì người ta còn phải đọc
+       bảng đã. */
+    function xepHangCaTrang(goc) {
+        var ds = goc.querySelectorAll('a[data-modal]');
+
+        [].forEach.call(ds, function (a) {
+            if (a.closest('td') === null) {
+                xepHang(a.getAttribute('href'), 0);
+            }
+        });
+
+        [].forEach.call(ds, function (a) {
+            if (a.closest('td') !== null) {
+                xepHang(a.getAttribute('href'), 0);
+            }
+        });
+
+        chayHangDoi();
     }
 
     // ── Dựng hộp ────────────────────────────────────────────────────────────
@@ -348,7 +446,7 @@
         }
 
         // Nút mở hộp NẰM TRONG hộp vừa mở cũng nạp trước, cùng luật với ngoài trang.
-        lucRanh(function () { napTruocNutChinh(tren); });
+        lucRanh(function () { xepHangCaTrang(tren); });
     }
 
     function mo(href, nut, theoLichSu) {
@@ -471,5 +569,5 @@
         mo(href, null, false);
     });
 
-    lucRanh(function () { napTruocNutChinh(document); });
+    lucRanh(function () { xepHangCaTrang(document); });
 }());

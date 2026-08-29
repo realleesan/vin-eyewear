@@ -33,6 +33,40 @@ abstract class AdminController extends BaseController
      */
     protected function renderAdmin(string $viewName, array $data = []): void
     {
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * LƯỢT LẤY HỘP THOẠI: DỰNG MỖI RUỘT TRANG, KHÔNG DỰNG KHUNG
+         *
+         * admin-modal.js lấy trang này về chỉ để bóc ra đúng thẻ .amodal trong
+         * đó — thanh bên, huy hiệu, thẻ <head>, đống <script> ở cuối đều bị nó
+         * vứt đi. Dựng chúng ra là làm không công, mà lại là phần tốn nhất:
+         * năm câu COUNT cho huy hiệu, cộng khoảng mười KB HTML mỗi lượt.
+         *
+         * Nặng gấp bội từ khi JS nạp trước cả nút "Sửa" của từng dòng — một
+         * bảng hai mươi dòng là hai mươi lượt, và hai mươi cái thanh bên không
+         * ai nhìn thấy.
+         *
+         * Nhận ra bằng header 'X-Requested-With: fetch' do chính admin-modal.js
+         * gửi, và CHỈ với GET. Ai gọi tay bằng curl mà đặt header ấy thì nhận
+         * về ruột trang không khung — không lộ thêm gì, vì quyền đã kiểm ở
+         * constructor và view vẫn là view ấy.
+         *
+         * Trả về mảnh HTML chứ không phải tài liệu đầy đủ là CỐ Ý: DOMParser
+         * phía JS bọc lại thành tài liệu hợp lệ, còn khi có gì sai (hết phiên,
+         * mất quyền, bản ghi vừa bị xoá) thì trang trả về không có .amodal nào
+         * và JS chuyển hướng thật — lúc ấy trình duyệt đi một lượt mới, không
+         * kèm header này, nên người dùng thấy trang đầy đủ.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET'
+            && ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'fetch') {
+            extract($data);
+
+            require VIEWS_PATH . '/' . $viewName . '.php';
+
+            return;
+        }
+
         $data['viewName']    = $viewName;
         $data['adminUser']   = UserModel::profile($this->userId);
         $data['adminRoles']  = UserModel::roles($this->userId);
