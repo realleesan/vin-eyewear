@@ -105,13 +105,36 @@ class ReviewAdminController extends AdminController
         redirect(self::BASE);
     }
 
-    /** Số đánh giá theo từng trạng thái, hiện cạnh tên bộ lọc. */
+    /**
+     * Số đánh giá theo từng trạng thái, hiện cạnh tên bộ lọc.
+     *
+     * MỘT CÂU GOM NHÓM, không phải bốn câu COUNT.
+     *
+     * Bản trước gọi ReviewModel::count() một lần cho tổng rồi thêm một lần cho
+     * mỗi trạng thái — bốn lượt đi về CSDL mỗi lần mở trang, để lấy ra bốn con
+     * số mà một câu GROUP BY trả về trọn vẹn. Cùng lỗi đã sửa ở bảng giá tròng
+     * (LensPriceAdminController::packages) và ở dải viên của trang Tồn kho.
+     *
+     * Trạng thái nào chưa có bài nào thì GROUP BY không trả dòng, nên phải mồi
+     * sẵn 0 cho cả ba: thiếu bước này thì viên lọc "Đã từ chối" biến mất khỏi
+     * dải ngay khi cửa hàng chưa từ chối bài nào.
+     */
     private function counts(): array
     {
-        $out = ['' => ReviewModel::count()];
+        $out = ['' => 0];
 
         foreach (array_keys(ReviewModel::STATUSES) as $key) {
-            $out[$key] = ReviewModel::count(['status' => $key]);
+            $out[$key] = 0;
+        }
+
+        foreach (Database::fetchAll(
+            'SELECT status, COUNT(*) AS n FROM reviews GROUP BY status'
+        ) as $dong) {
+            $out[''] += (int) $dong['n'];
+
+            if (isset($out[$dong['status']])) {
+                $out[$dong['status']] = (int) $dong['n'];
+            }
         }
 
         return $out;

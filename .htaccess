@@ -108,7 +108,93 @@
 </IfModule>
 
 # ----------------------------------------------------------------------------
-# 4. KHÁC
+# 4. NÉN VÀ BỘ NHỚ ĐỆM
+#
+# Trước khối này KHÔNG CÓ GÌ CẢ: không nén, không header đệm. Mỗi lần mở một
+# trang quản trị là tải lại từ đầu khoảng 258 KB, trong đó riêng admin.css đã
+# 161 KB. Trên gói hosting miễn phí, quãng ấy dài hơn hẳn phần máy chủ dựng
+# trang — tức là tối ưu truy vấn bao nhiêu cũng không thấy, vì nút thắt nằm ở
+# đường truyền.
+#
+# Đo trên chính các file của dự án:
+#
+#     admin.css        161,5 KB → 45,2 KB   (−72%)
+#     admin-orders.css  34,3 KB → 10,8 KB   (−69%)
+#     admin-modal.js    29,6 KB →  9,0 KB   (−70%)
+#     layout.css        26,5 KB →  9,3 KB   (−65%)
+#     một trang HTML    29,5 KB →  3,5 KB   (−89%)
+#
+# CSS viết tay kèm chú thích dài thì nén rất tốt — đó là lý do con số ở đây
+# lớn hơn mức thường thấy, và cũng là lý do KHÔNG cần rút gọn (minify) file:
+# thêm một bước build là phá ràng buộc "kéo mã về là chạy" của dự án, mà đổi
+# lại chỉ vài KB sau khi đã nén.
+#
+# Mọi thứ bọc trong <IfModule>: hosting nào không bật hai module này thì các
+# luật bị bỏ qua, trang vẫn chạy y như trước.
+# ----------------------------------------------------------------------------
+
+# KIỂU NỘI DUNG CỦA .js PHẢI KHAI LẠI Ở ĐÂY.
+#
+# Bộ mime.types của Apache trong XAMPP (và của không ít hosting chia sẻ) vẫn
+# khai `.js` là `application/x-javascript` — một tên cũ từ trước khi có chuẩn.
+# Hai khối bên dưới lọc theo KIỂU NỘI DUNG, nên tên lạ là JS không được nén và
+# không được đệm: đo thật trên Apache 2.4.58 của máy này, admin-modal.js ra
+# đúng 30.310 byte cả khi trình duyệt đã xin gzip.
+#
+# Khai lại ở đây thì mọi máy chủ đều trả cùng một tên, và hai khối kia bắt
+# được. Vẫn liệt kê cả tên cũ ở dưới phòng khi host cấm AddType.
+<IfModule mod_mime.c>
+    AddType text/javascript .js
+    AddType image/svg+xml   .svg
+    AddType font/woff2      .woff2
+</IfModule>
+
+<IfModule mod_deflate.c>
+    # Chỉ nén văn bản. Ảnh JPEG/PNG/WebP đã nén sẵn, nén lần nữa chỉ tốn CPU
+    # mà file còn to hơn.
+    <IfModule mod_filter.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+        AddOutputFilterByType DEFLATE text/javascript application/javascript
+        AddOutputFilterByType DEFLATE application/x-javascript
+        AddOutputFilterByType DEFLATE application/json application/xml
+        AddOutputFilterByType DEFLATE image/svg+xml
+        AddOutputFilterByType DEFLATE font/ttf font/otf
+    </IfModule>
+</IfModule>
+
+# ĐỆM BẰNG mod_headers, KHÔNG PHẢI mod_expires.
+#
+# Hai module cho ra cùng kết quả, nhưng chúng nằm ở HAI NHÓM AllowOverride khác
+# nhau: ExpiresActive thuộc nhóm `Indexes`, còn `Header set` thuộc nhóm
+# `FileInfo`. Trên hosting chia sẻ, một directive nằm ngoài nhóm được cho phép
+# KHÔNG bị bỏ qua — nó làm cả site trả 500. Mà .htaccess này đã dùng `Header
+# set` ở mục 3 và site đang chạy thật, tức là `FileInfo` chắc chắn được phép;
+# `Indexes` thì chưa có gì chứng minh. Không đánh đổi cả site lấy một header.
+<IfModule mod_headers.c>
+    # MỘT NĂM CHO CSS VÀ JS LÀ AN TOÀN, vì asset() gắn ?v=<filemtime> vào mọi
+    # đường dẫn (core/helpers.php) — sửa file là đường dẫn đổi, trình duyệt coi
+    # như một file khác và tải lại ngay. Không có chỗ nào trong app/views trỏ
+    # thẳng /assets/... mà không đi qua asset(); đã soát lại khi thêm khối này.
+    # Nếu sau này có, phải hạ con số dưới đây xuống.
+    <FilesMatch "\.(css|js)$">
+        Header set Cache-Control "public, max-age=31536000"
+    </FilesMatch>
+
+    # ẢNH VÀ FONT CHỈ 30 NGÀY, không phải một năm: ảnh được CSS gọi thẳng bằng
+    # url(...) nên KHÔNG có ?v= nào cả. Thay một tấm ảnh mà đệm cả năm thì máy
+    # đã từng mở trang sẽ giữ ảnh cũ tới hết năm, và không có cách nào bảo nó
+    # tải lại ngoài việc đổi tên file.
+    <FilesMatch "\.(jpg|jpeg|png|webp|avif|gif|ico|svg|woff2|woff|ttf|otf)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+
+    # KHÔNG có luật nào cho HTML. Mọi trang ở đây đều dựng theo phiên đăng
+    # nhập — một trang quản trị nằm lại trong đệm là dữ liệu của người này hiện
+    # ra cho lượt xem sau.
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 5. KHÁC
 # ----------------------------------------------------------------------------
 
 # Không liệt kê nội dung thư mục khi không có index
