@@ -395,6 +395,31 @@
     transform: translateY(0);
 }
 
+/* ĐÓNG DÙ ĐANG :hover HAY :focus-within — lớp do assets/js/header.js gắn.
+
+   Ba dòng bên trên là ba điều kiện ĐỘC LẬP mở bảng, và trước đây JS không có
+   cách nào đè được hai cái đầu. Hậu quả đo được:
+
+     · bấm kính lúp lần hai để đóng -> con trỏ vẫn nằm trên nút nên :hover giữ
+       bảng lại; aria-expanded đã là "false" mà mắt vẫn thấy bảng mở;
+     · bấm Esc -> handler đóng rồi trả tiêu điểm về nút, mà nút nằm TRONG cụm
+       nên :focus-within mở lại ngay lập tức.
+
+   Lớp này là đường lui cho JS: "người dùng vừa chủ động đóng cụm này, đừng mở
+   lại cho tới khi họ rời ra rồi quay lại". JS gỡ nó khi con trỏ vào lại cụm
+   (mouseenter) hoặc khi tiêu điểm rời hẳn khỏi cụm (focusout) — xem closePop.
+
+   ĐẶT NGAY SAU KHỐI TRÊN LÀ BẮT BUỘC: `.hpop.is-closed .hpop__panel` và
+   `.hpop:hover .hpop__panel` có ĐỘ ĐẶC HIỆU BẰNG NHAU (đều 3 lớp — lớp giả
+   đếm như lớp). Bằng nhau thì luật đứng sau thắng. Chuyển khối này lên trên
+   là nó mất tác dụng, im lặng, không báo gì. */
+.hpop.is-closed .hpop__panel {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+}
+
 .hpop__panel--search {
     /* Ô nhập + nút "Tìm" cần chỗ; 380px là bề ngang tối thiểu để câu gợi ý
        "Tìm gọng, tròng kính..." không bị cắt. */
