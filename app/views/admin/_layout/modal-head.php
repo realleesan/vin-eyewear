@@ -14,6 +14,18 @@
  *   $rong    — '' | 'sm' | 'lg' | 'xl' | 'xxl' (tuỳ chọn)
  *   $nutUrl  — địa chỉ của nút chính ở đầu hộp (tuỳ chọn)
  *   $nutNhan — nhãn nút ấy; phải có nếu đã truyền $nutUrl
+ *   $khoa    — DANH TÍNH của hộp, để JS biết hai lần dựng có phải cùng một hộp
+ *              không (tuỳ chọn)
+ *   $cao     — true: khoá chiều cao hộp, ruột tự cuộn (tuỳ chọn)
+ *
+ * $KHOA LÀ THỨ LÀM ĐỔI TAB KHÔNG GIẬT. admin-modal.js so khoá của bản vừa nạp
+ * với hộp đang mở: trùng thì nó chỉ thay RUỘT hộp, giữ nguyên khung — nên
+ * khung không chạy lại hiệu ứng hiện ra và không nhảy kích thước. Khác (hoặc
+ * không có khoá) thì dựng lại cả hộp như cũ.
+ *
+ * Khoá phải giống nhau giữa các cảnh của CÙNG một hộp và khác nhau giữa hai
+ * hộp khác nhau — hồ sơ khách hàng lấy 'khach-<id>', nên bốn tab của một người
+ * là một hộp, còn hai người là hai hộp.
  *
  * NÚT CHÍNH Ở ĐẦU HỘP là một <a> có sẵn `data-modal`, tức là nó mở hộp tiếp
  * theo tại chỗ khi có JavaScript và tải trang thật khi không. Nó nhận URL với
@@ -30,8 +42,14 @@ $rong  = ($rong ?? '') !== '' ? ' amodal--' . $rong : '';
    thêm một khối rỗng cho chúng là thêm một chỗ để bố cục lệch đi. */
 $nutUrl  = $nutUrl ?? '';
 $nutNhan = $nutNhan ?? '';
+$khoa    = $khoa ?? '';
+/* Chiều cao cố định là NGOẠI LỆ, không phải mặc định: hộp một form ngắn mà
+   cao bằng màn hình thì phần dưới trống hoác. Chỉ hộp nhiều cảnh — hồ sơ khách
+   với bốn tab dài ngắn khác nhau — mới cần đứng yên một cỡ. */
+$rong   .= ($cao ?? false) ? ' amodal--cao' : '';
 ?>
-<div class="amodal<?= e($rong) ?>" role="dialog" aria-modal="true" aria-label="<?= e($tieuDe) ?>">
+<div class="amodal<?= e($rong) ?>" role="dialog" aria-modal="true" aria-label="<?= e($tieuDe) ?>"
+     <?php if ($khoa !== ''): ?>data-modal-key="<?= e($khoa) ?>"<?php endif; ?>>
     <?php /* Lớp nền mờ là một <a> phủ kín — bấm ra ngoài để đóng, chạy cả khi
              tắt JS. aria-hidden vì nút ✕ ngay bên trong đã nói đúng việc ấy
              cho trình đọc màn hình; hai lối "đóng" liền nhau thì thừa. */ ?>

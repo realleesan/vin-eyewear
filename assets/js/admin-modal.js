@@ -72,6 +72,23 @@
  * hộp vừa mở.
  *
  * ─────────────────────────────────────────────────────────────────────────────
+ * CÙNG MỘT HỘP THÌ ĐỪNG DỰNG LẠI — ĐỔI TAB PHẢI THẤY NHƯ ĐỔI TAB
+ *
+ * Hồ sơ khách hàng có bốn tab, mỗi tab là một địa chỉ (?tab=ho-so, ?tab=dia-chi
+ * …). Bản trước dựng lại CẢ hộp cho mỗi lần đổi: thẻ .amodal cũ bị vứt, thẻ mới
+ * chạy lại amodal-fade với amodal-up, và hộp nảy một cái theo chiều cao của tab
+ * mới. Nhìn ra đúng như trang vừa tải lại — mà đó lại là thứ cả module này sinh
+ * ra để tránh.
+ *
+ * Nay modal-head in ra `data-modal-key`, và khi bản vừa nạp có cùng khoá với
+ * hộp đang mở thì chỉ thay RUỘT (.amodal__panel), giữ nguyên khung. Không thẻ
+ * nào bị thay nên không hiệu ứng nào chạy lại. Cộng với .amodal--cao khoá chiều
+ * cao, đổi tab nay chỉ có phần nội dung đổi.
+ *
+ * Không có khoá thì dựng lại cả hộp như cũ — hai hộp trông giống nhau chưa chắc
+ * là một, mà dựng lại thì bao giờ cũng đúng.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
  * ĐỊA CHỈ VẪN ĐỔI THEO
  *
  * Mở hộp thì pushState sang đúng địa chỉ của nó, đóng thì history.back(). Nhờ
@@ -369,6 +386,20 @@
         var cu = cacLop();
         var giu = 0;
 
+        /* ĐỔI TAB TRONG CÙNG MỘT HỘP: thay ruột, giữ khung.
+           Xem khối "CÙNG MỘT HỘP THÌ ĐỪNG DỰNG LẠI" ở đầu file. */
+        if (cu.length > 0 && moi.length === cu.length
+            && thayRuotDuoc(cu[cu.length - 1], moi[moi.length - 1][0])) {
+            if (theoLichSu !== false) {
+                history.replaceState({ vinModal: href }, '', href);
+            }
+
+            hienTai = href;
+            sauKhiVe(el, href, false, nut);
+
+            return;
+        }
+
         if (moi.length > cu.length && cu.length > 0) {
             /* Mở sâu thêm: giữ nguyên lớp dưới, chỉ đắp lớp mới lên trên. Lớp
                dưới trong bản vừa nạp và lớp dưới đang hiện là cùng một thứ —
@@ -410,6 +441,56 @@
 
         hienTai = href;
 
+        sauKhiVe(el, href, true, nut);
+    }
+
+    /**
+     * KHUNG GIỮ NGUYÊN, RUỘT THAY MỚI — trả về true nếu đã thay được.
+     *
+     * Chỉ thay khi hai bên cùng một khoá: `data-modal-key` do modal-head in ra.
+     * Không có khoá thì không thay, vì hai hộp trông giống nhau chưa chắc là
+     * một — dựng lại cả hộp bao giờ cũng đúng, chỉ là giật.
+     *
+     * Thay .amodal__panel là đủ: đầu hộp, thanh tab và ruột đều nằm trong đó,
+     * còn hiệu ứng hiện ra thì gắn trên chính .amodal và .amodal__panel — giữ
+     * hai thẻ ấy nghĩa là không có gì chạy lại.
+     */
+    function thayRuotDuoc(bocCu, hopMoi) {
+        var hopCu = bocCu.querySelector('.amodal');
+
+        if (hopCu === null || !hopMoi.classList || !hopMoi.classList.contains('amodal')) {
+            return false;
+        }
+
+        var khoa = hopCu.getAttribute('data-modal-key');
+
+        if (khoa === null || khoa === '' || khoa !== hopMoi.getAttribute('data-modal-key')) {
+            return false;
+        }
+
+        var khungCu  = hopCu.querySelector('.amodal__panel');
+        var khungMoi = hopMoi.querySelector('.amodal__panel');
+
+        if (khungCu === null || khungMoi === null) {
+            return false;
+        }
+
+        /* Lớp nền mờ nằm NGOÀI panel và mang địa chỉ đóng — cảnh mới có thể
+           đóng về chỗ khác, nên chép lại href của nó. */
+        var dimCu  = hopCu.querySelector('.amodal__dim');
+        var dimMoi = hopMoi.querySelector('.amodal__dim');
+
+        if (dimCu !== null && dimMoi !== null) {
+            dimCu.setAttribute('href', dimMoi.getAttribute('href') || '');
+        }
+
+        khungCu.innerHTML = document.importNode(khungMoi, true).innerHTML;
+
+        return true;
+    }
+
+    /** Cuộn tới neo và đặt tiêu điểm — chung cho cả dựng mới lẫn thay ruột. */
+    function sauKhiVe(el, href, dungMoi, nut) {
         var tren = el.lastElementChild;
 
         /* Địa chỉ có neo (#form-don-thuoc) thì cuộn tới đó: thân hộp vừa được
@@ -422,27 +503,53 @@
             dich.scrollIntoView();
         }
 
-        /* Tiêu điểm vào ô nhập đầu tiên — người bấm "Thêm mới" định gõ ngay, và
-           bắt họ bấm thêm một cái nữa vào ô đầu là thừa.
+        /* TIÊU ĐIỂM CHỈ ĐỘNG VÀO KHI VỪA DỰNG HỘP MỚI.
 
-           CHỈ với hộp CÓ nút lưu ở chân. Hộp chỉ để xem (hồ sơ khách, ngăn kéo
-           đơn hàng) vẫn có ô nhập nằm đâu đó giữa trang — hồ sơ khách có ô "lý
-           do khoá" — và nhảy tiêu điểm vào đó là cuộn thân hộp xuống giữa chừng
-           ngay khi vừa mở. Không có ô nào thì lấy chính khung hộp, để phím Esc
-           và trình đọc màn hình bắt đúng chỗ. */
-        var coLuu = tren.querySelector(
-            '.amodal__foot button[type="submit"], .aodraw button[type="submit"]'
-        ) !== null;
-        var oDau = coLuu
-            ? tren.querySelector('input:not([type="hidden"]), select, textarea')
-            : null;
-        var khung = tren.querySelector('.amodal__panel, .aodraw');
+           Đổi tab thì không: người dùng vừa bấm một tab và rất có thể bấm tiếp
+           tab kế bên, giật tiêu điểm xuống ô nhập đầu tiên trong ruột là bắt họ
+           Shift+Tab ngược lên. Thanh tab vẫn còn nguyên trên màn hình nên tiêu
+           điểm cứ để yên tại chỗ vừa bấm là đúng nhất. */
+        if (!dungMoi) {
+            /* THAY RUỘT: TRẢ TIÊU ĐIỂM VỀ CHÍNH CÁI LINK VỪA BẤM.
 
-        if (oDau !== null) {
-            oDau.focus();
-        } else if (dich === null && khung !== null) {
-            khung.setAttribute('tabindex', '-1');
-            khung.focus();
+               Cái tab người dùng vừa bấm nằm trong phần ruột vừa bị thay, nên
+               thẻ ấy đã biến mất và tiêu điểm rơi về <body> — bấm Tab tiếp theo
+               là đi lại từ đầu trang. Bản mới có đúng một thẻ cùng địa chỉ ấy
+               (chính nó, vừa được dựng lại), tìm theo href rồi đặt tiêu điểm
+               vào đó là người dùng bàn phím đi tiếp được ngay sang tab kế bên. */
+            if (nut && !document.contains(nut)) {
+                var ds = tren.querySelectorAll('a[data-modal]');
+
+                for (var i = 0; i < ds.length; i++) {
+                    if (ds[i].getAttribute('href') === href) {
+                        ds[i].focus();
+                        break;
+                    }
+                }
+            }
+        } else {
+            /* Tiêu điểm vào ô nhập đầu tiên — người bấm "Thêm mới" định gõ
+               ngay, và bắt họ bấm thêm một cái nữa vào ô đầu là thừa.
+
+               CHỈ với hộp CÓ nút lưu ở chân. Hộp chỉ để xem (hồ sơ khách, ngăn
+               kéo đơn hàng) vẫn có ô nhập nằm đâu đó giữa trang — hồ sơ khách
+               có ô "lý do khoá" — và nhảy tiêu điểm vào đó là cuộn thân hộp
+               xuống giữa chừng ngay khi vừa mở. Không có ô nào thì lấy chính
+               khung hộp, để phím Esc và trình đọc màn hình bắt đúng chỗ. */
+            var coLuu = tren.querySelector(
+                '.amodal__foot button[type="submit"], .aodraw button[type="submit"]'
+            ) !== null;
+            var oDau = coLuu
+                ? tren.querySelector('input:not([type="hidden"]), select, textarea')
+                : null;
+            var khung = tren.querySelector('.amodal__panel, .aodraw');
+
+            if (oDau !== null) {
+                oDau.focus();
+            } else if (dich === null && khung !== null) {
+                khung.setAttribute('tabindex', '-1');
+                khung.focus();
+            }
         }
 
         // Nút mở hộp NẰM TRONG hộp vừa mở cũng nạp trước, cùng luật với ngoài trang.

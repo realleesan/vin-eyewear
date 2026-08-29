@@ -141,4 +141,16 @@ $duongDan = '/quan-tri/khach-hang/' . rawurlencode($khach['id']);
 /* $tab ĐÃ ĐƯỢC ĐỐI CHIẾU với CustomerAdminController::TABS trước khi tới đây,
    nên nó chỉ có thể là một trong bốn chuỗi gõ sẵn. Đừng bỏ bước đối chiếu ấy:
    ghép thẳng ?tab= vào đường dẫn file là mở đường cho '../../..'. */
-require __DIR__ . '/_tab-' . $tab . '.php';
+?>
+<?php /* RUỘT TAB CÓ VÙNG CUỘN RIÊNG.
+
+         Hộp này khoá chiều cao (.amodal--cao) để bốn tab đứng cùng một cỡ, nên
+         tab dài phải cuộn ở đâu đó. Cuộn CẢ thân hộp thì tên khách, dải số liệu
+         và chính thanh tab đều trôi lên mất — đọc tới cuối sổ địa chỉ rồi muốn
+         sang tab khác lại phải cuộn ngược lên tìm. Mà dải số liệu thì đã ghi rõ
+         ở trên là thứ "cần trả lời dù đang đứng ở tab nào".
+
+         Cho nên: mọi thứ trên thanh tab đứng yên, chỉ khối này cuộn. */ ?>
+<div class="acus__pane">
+    <?php require __DIR__ . '/_tab-' . $tab . '.php'; ?>
+</div>

@@ -2492,6 +2492,50 @@ body.admin:has(.amodal) { overflow: hidden; }
 .amodal--xl  .amodal__panel { width: min(880px, 96vw); }
 .amodal--xxl .amodal__panel { width: min(1040px, 96vw); }
 
+/*
+ * CHIỀU CAO KHOÁ CỨNG — cho hộp có nhiều cảnh, hiện chỉ hồ sơ khách hàng.
+ *
+ * Mặc định hộp cao theo nội dung (max-height 92vh). Với hộp bốn tab thì mỗi
+ * tab một chiều cao: Hồ sơ vài dòng, Hoạt động vài chục. Đổi tab là hộp nảy
+ * một cái, và cái thanh tab người ta đang nhắm bắn tiếp cũng nhảy theo — bấm
+ * hai tab liền nhau thành phải ngắm lại.
+ *
+ * height chứ không phải min-height: tab ngắn cũng phải chiếm đủ chỗ, nếu không
+ * thì "cố định" chỉ đúng một chiều. Ruột hộp (.amodal__body) vốn đã flex:1 kèm
+ * overflow-y:auto nên tab dài tự cuộn bên trong, đầu hộp và chân hộp đứng yên.
+ *
+ * 760px là mức cao nhất mà 1366×768 — màn hình của máy quầy — vẫn còn thấy
+ * viền hộp trên dưới; màn cao hơn thì 92vh nhường chỗ cho con số này.
+ */
+.amodal--cao .amodal__panel { height: min(92vh, 760px); }
+
+/*
+ * Thân hộp KHÔNG tự cuộn khi chiều cao bị khoá — vùng cuộn nằm sâu hơn một
+ * tầng, ở .acus__pane. Nhờ vậy tên khách, dải số liệu và thanh tab đứng yên,
+ * chỉ nội dung tab trôi. Cuộn ở tầng này thì đọc tới cuối sổ địa chỉ rồi muốn
+ * sang tab khác phải cuộn ngược lên tìm lại thanh tab.
+ *
+ * min-height: 0 là bắt buộc: mục flex mặc định không co xuống dưới kích thước
+ * nội dung của nó, nên thiếu dòng này thì thân hộp cứ phình ra và tràn khỏi
+ * khung thay vì nhường chỗ cho vùng cuộn bên trong.
+ */
+.amodal--cao .amodal__body {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.acus__pane {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    /* Chừa chỗ cho thanh cuộn để chữ không dính sát mép, và chống cho nội dung
+       khỏi nhảy ngang một nhịp khi đổi từ tab ngắn sang tab dài. */
+    padding-right: 4px;
+    scrollbar-gutter: stable;
+}
+
 .amodal__head {
     display: flex;
     align-items: flex-start;

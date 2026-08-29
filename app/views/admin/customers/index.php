@@ -217,6 +217,14 @@
         'phu'     => $khach['email'] ?: ($khach['phone'] ?: ''),
         'dongUrl' => '/quan-tri/khach-hang',
         'rong'    => 'xxl',
+        /* Bốn tab = bốn lần dựng CÙNG một hộp. Khoá này để đổi tab chỉ thay
+           ruột chứ không dựng lại khung — xem modal-head.php. Lấy theo id
+           khách: mở người khác là hộp khác, dựng lại là đúng. */
+        'khoa'    => 'khach-' . $khach['id'],
+        /* Bốn tab dài ngắn rất khác nhau — Hồ sơ vài dòng, Hoạt động vài chục.
+           Không khoá chiều cao thì mỗi lần đổi tab hộp lại nhảy một cỡ, và cái
+           thanh tab người ta đang nhắm bắn cũng chạy theo. */
+        'cao'     => true,
     ]); ?>
 
         <?php
