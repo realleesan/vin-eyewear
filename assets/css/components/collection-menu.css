@@ -1,306 +1,75 @@
 /* ============================================================
-   collection-menu.css — bảng xổ của mục "Bộ sưu tập" trên thanh điều hướng.
+   collection-menu.css — phần RIÊNG của bảng xổ "Bộ sưu tập".
 
-   Đi kèm app/views/_layout/collection-menu.php (desktop). Bản cho menu trượt
-   (_layout/collection-menu-mobile.php) KHÔNG có kiểu riêng ở đây: nó dùng lại
-   nguyên .mobile-nav__group / .mobile-nav__sub của components/mega-menu.css,
-   vì nó phải trông giống hệt khối "Sản phẩm" nằm ngay trên nó.
-
-   master.php nạp cho MỌI trang, ngay sau mega-menu.css — header có mặt ở mọi
-   trang, và ở đây cũng phải đứng SAU header.css vì .bstm__trigger chỉnh lại
-   .header-nav__list > li > a.
+   Đi kèm app/views/_layout/collection-menu.php.
 
    ─────────────────────────────────────────────────────────────
-   VÌ SAO KHÔNG DÙNG LẠI .mega
+   FILE NÀY NGẮN LÀ ĐÚNG, KHÔNG PHẢI LÀM DỞ
 
-   Mega menu neo panel vào <header> và trải từ --page-edge bên này sang
-   --page-edge bên kia (xem đầu mega-menu.css). Bảng này thì hẹp: một danh
-   sách ba, bốn dòng. Trải nó ra 1400px là một cái hộp khổng lồ chứa ba dòng
-   chữ nằm lệch một góc trái.
+   Bảng "Bộ sưu tập" phải giống y hệt bảng "Sản phẩm", nên nó DÙNG LẠI nguyên
+   bộ lớp .mega__* của components/mega-menu.css: viên thuốc, mũi nhọn hình
+   thoi, vùng bắt chuột phủ khoảng trống, bảng trải từ --page-edge bên này
+   sang --page-edge bên kia, lưới `repeat(--mega-cols, 1fr) 1.15fr`, và cả
+   .mega-feature cho từng thẻ. Chép các số đo ấy sang một bộ lớp thứ hai là
+   đặt hẹn giờ cho ngày ai đó chỉnh padding của một bên rồi hai bảng lệch nhau
+   mà không ai thấy.
 
-   Nên nó neo vào chính <li> (position: relative) và tự căn giữa dưới viên
-   thuốc. Bù lại phải tự lo phần nền/viền/bóng — đó là toàn bộ khối 3 bên
-   dưới, cố ý lấy đúng các con số của .hpop trong header.css để hai loại bảng
-   xổ trên cùng một header trông là một họ.
+   Ở đây chỉ còn đúng thứ mega KHÔNG có: thẻ "Tất cả bộ sưu tập" ở ô cuối.
 
-   Hai thứ VẪN dùng chung ngôn ngữ hình khối với mega: mũi nhọn hình thoi và
-   nền be #f1e7dd lúc mở.
+   .mega--bst là móc để sau này nhắm riêng bảng này — hiện chưa luật nào cần
+   tới nó, nhưng markup vẫn mang, vì thêm một lớp vào HTML rẻ hơn nhiều so với
+   việc đi tìm cách phân biệt hai bảng khi đã cần.
+
+   master.php nạp file này ngay SAU mega-menu.css: .mega-feature--all chỉ đè
+   vài thuộc tính của .mega-feature, nên phải đến sau mới thắng.
    ============================================================ */
-
-/* KHOẢNG TRỐNG từ đáy viên thuốc xuống mép trên bảng — vùng bắt chuột và mũi
-   nhọn đều đo theo nó.
-
-   Lấy thẳng --header-pad-y của header.css, KHÔNG gõ lại số: viên thuốc là
-   phần tử cao nhất trong hàng nên khoảng trống dưới nó bằng đúng đệm dưới của
-   .header-main. Gõ lại chính là cách nó hỏng hai lần ở mega menu (xem ghi chú
-   --mega-gap). Đây cũng đúng là giá trị mega đang dùng, nên hai bảng mở ra
-   cùng một độ cao. */
-.bstm {
-    position: relative;
-    --bstm-gap: var(--header-pad-y, 20px);
-}
 
 /* ============================================================
-   1. VIÊN THUỐC "Bộ sưu tập ▾"
+   THẺ "TẤT CẢ BỘ SƯU TẬP" — Ô CUỐI CỦA LƯỚI
+
+   KHÔNG CÓ ẢNH, và đó là chủ ý: ảnh duy nhất có thể lấy cho nó là ảnh của một
+   trong mấy bộ đang đứng ngay cạnh, mà cùng một tấm hiện hai lần trên một
+   hàng thì trông như lỗi kết xuất. Lý do đầy đủ ghi ở collection-menu.php.
+
+   Nền brand đặc thay cho tấm ảnh: ô vẫn đủ nặng để không bị hẫng cạnh mấy thẻ
+   có ảnh, và nổi hẳn lên đúng như vai trò lối-ra-trang-đầy-đủ của nó.
    ============================================================ */
 
-/* Kế thừa đệm, bo và cỡ chữ từ .header-nav__list > li > a trong header.css.
-   Viết 2 lớp (`.bstm > .bstm__trigger`) để thắng bộ chọn 1 lớp + 2 thẻ đó ở
-   dòng display — cùng lý do đã ghi ở .mega > .mega__trigger. */
-.bstm > .bstm__trigger {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+.mega-feature--all {
+    /* Không có .mega-feature__media nên phần thân tự căn giữa chiều dọc, để
+       thẻ này cao bằng mấy thẻ kia mà chữ không dồn lên đỉnh. */
+    justify-content: center;
+    background: var(--brand);
 }
 
-/* VÙNG BẮT CHUỘT PHỦ KHOẢNG TRỐNG. Không có nó thì chuột đi từ viên thuốc
-   xuống bảng rời khỏi .bstm giữa đường và bảng đóng sập trước khi con trỏ tới
-   nơi. Chỉ rộng bằng viên thuốc, không trải ngang: một dải vô hình chạy suốt
-   header sẽ giữ bảng mở khi chuột chỉ đang đi ngang qua để tới "Liên hệ". */
-.bstm__trigger::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    height: var(--bstm-gap);
+.mega-feature--all:hover,
+.mega-feature--all:focus-visible {
+    /* .mega-feature bình thường sáng lên khi rê chuột (#f2e4dc -> #eeddd2);
+       nền đặc thì phải TỐI đi mới thấy, nên dùng --brand-strong. */
+    background: var(--brand-strong);
 }
 
-.bstm__chevron {
-    width: 12px;
-    height: 12px;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
+/* Hai dòng chữ đổi màu theo nền: --on-brand cho tên (thứ cần nổi),
+   --on-brand-soft cho dòng phụ. Cả hai đều là cặp đã đo tương phản với
+   --brand — xem layout.css, đừng thay bằng màu trắng pha trong suốt. */
+.mega-feature--all .mega-feature__name {
+    color: var(--on-brand);
 }
 
-/* Mở = nền be, cùng cặp màu với .is-active — đang đứng ở /bo-suu-tap thì viên
-   thuốc không đổi gì lúc mở, đúng ý đồ: hai trạng thái đều nghĩa là "phần Bộ
-   sưu tập đang được nói tới". */
-.bstm:hover .bstm__trigger,
-.bstm:focus-within .bstm__trigger {
-    background: #f1e7dd;
-    color: var(--brand);
+.mega-feature--all .mega-feature__note {
+    color: var(--on-brand-soft);
 }
 
-.bstm:hover .bstm__chevron,
-.bstm:focus-within .bstm__chevron {
-    transform: rotate(180deg);
+/* Đệm rộng hơn thẻ thường một chút: thẻ kia có 140px ảnh đỡ phần trên, thẻ
+   này chỉ có chữ nên cần khoảng thở trên dưới mới ra dáng một ô ngang hàng. */
+.mega-feature--all .mega-feature__body {
+    padding: 22px 20px;
 }
 
-/* ============================================================
-   2. MŨI NHỌN — hình vuông 16px xoay 45°
-
-   Chỉ tô hai cạnh TRÊN và TRÁI: sau khi xoay, đúng hai cạnh đó thành hai cạnh
-   trên của mũi nhọn và nối liền viền bảng. Tô cả bốn thì hai cạnh dưới vẽ một
-   chữ V thừa nằm trong lòng bảng.
-
-   margin-top đẩy tâm hình thoi xuống ĐÚNG mép trên bảng: xuống hết khoảng
-   trống rồi lùi lên nửa cạnh (8px), nên nửa trên nhô vào header, nửa dưới
-   chìm trong bảng và che kín đoạn viền nó cắt qua.
-   ============================================================ */
-
-.bstm__caret {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    z-index: 2;
-    width: 16px;
-    height: 16px;
-    margin-top: calc(var(--bstm-gap) - 8px);
-    background: var(--surface-raised);
-    /* #eee0d4 gõ thẳng, giống header.css, footer.css và mega-menu.css: sắc
-       đường kẻ nhạt của bản thiết kế, nhạt hơn --line một nấc, chưa có token. */
-    border-left: 1px solid #eee0d4;
-    border-top: 1px solid #eee0d4;
-    transform: translateX(-50%) rotate(45deg);
-    transform-origin: center;
-    pointer-events: none;
-
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.bstm:hover .bstm__caret,
-.bstm:focus-within .bstm__caret {
-    opacity: 1;
-}
-
-/* ============================================================
-   3. BẢNG XỔ
-   ============================================================ */
-
-/* CĂN GIỮA DƯỚI VIÊN THUỐC, không căn mép trái: nhãn "Bộ sưu tập" hẹp hơn
-   bảng nhiều, căn trái thì bảng lệch hẳn sang phải và trông như của mục bên
-   cạnh.
-
-   translateX(-50%) là phần định vị, translateY(-6px) là phần hoạt cảnh — gộp
-   vào một transform vì hai cái không cộng dồn được, đặt riêng thì cái sau xoá
-   cái trước. Trạng thái mở chỉ đổi phần Y.
-
-   280px: đủ cho ảnh 48px + hai dòng chữ đọc được. Hẹp hơn thì câu giới thiệu
-   vỡ thành ba dòng; rộng hơn thì bảng bắt đầu tràn ra ngoài lề phải ở 1101px,
-   nơi thanh nav gần sát mép nhất. */
-.bstm__panel {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    z-index: 60;
-    width: 280px;
-    padding-top: var(--bstm-gap);
-
-    /* Ẩn bằng visibility chứ không display:none — phần tử display:none bị loại
-       khỏi thứ tự Tab nên :focus-within không bao giờ kích hoạt được, và người
-       dùng bàn phím mất hẳn cách mở bảng. Cùng lý do đã ghi ở .mega__panel. */
-    visibility: hidden;
-    opacity: 0;
-    transform: translate(-50%, -6px);
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
-}
-
-.bstm:hover .bstm__panel,
-.bstm:focus-within .bstm__panel {
-    visibility: visible;
-    opacity: 1;
-    transform: translate(-50%, 0);
-}
-
-/* Cái hộp thật: nền, viền, bóng — gộp ba mảnh (đầu bảng · danh sách · chân
-   bảng) thành một khung bo --radius-sm. Chia ba mảnh thay vì bọc một <div>
-   ngoài cùng là để .bstm__panel giữ được phần đệm trong suốt ở trên
-   (padding-top) làm cầu cho chuột, đúng lối .hpop đang dùng. */
-.bstm__head,
-.bstm__list,
-.bstm__all {
-    background: var(--surface-raised);
-}
-
-.bstm__head {
-    margin: 0;
-    padding: 11px 16px 9px;
-    border: 1px solid var(--line);
-    border-bottom: 0;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    box-shadow: 0 -2px 10px rgba(90, 40, 40, 0.05);
-    font-size: 10.5px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--h-note);
-}
-
-.bstm__list {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-inline: 1px solid var(--line);
-}
-
-/* --- Một dòng: ảnh · (tên + câu giới thiệu) ------------------ */
-
-.bstm__item {
-    display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
-    align-items: center;
-    gap: 12px;
-    padding: 9px 14px;
-    text-decoration: none;
-    transition: background-color 0.2s;
-}
-
-.bstm__item:hover,
-.bstm__item:focus-visible {
-    background: #f7efe9;
-}
-
-.bstm__thumb {
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
-    overflow: hidden;
-    border: 1px solid var(--h-card-line);
-    border-radius: var(--radius-sm);
-    /* Nền chờ cho bộ chưa có ảnh dùng được: ô trống vẫn giữ đúng khổ nên hàng
-       không xô lệch. Cùng cách .cartpop__thumb xử lý món chưa có ảnh. */
-    background: var(--h-shell);
-}
-
-.bstm__thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.bstm__text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.bstm__name {
-    font-family: var(--font-serif);
-    font-size: 14.5px;
-    font-weight: 600;
-    line-height: 1.3;
-    color: var(--ink);
-}
-
-/* Hai dòng là hết. Câu giới thiệu đã cắt 48 ký tự ở PHP, nhưng một từ dài
-   không ngắt được vẫn có thể nong ra dòng thứ ba; kẹp cứng ở đây để mọi hàng
-   cao bằng nhau. */
-.bstm__note {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    font-size: 12px;
-    line-height: 1.4;
-    color: var(--muted);
-}
-
-/* --- Chân bảng: lối ra trang đầy đủ ------------------------- */
-
-.bstm__all {
-    display: block;
-    padding: 10px 14px 11px;
-    border: 1px solid var(--line);
-    border-top: 1px solid var(--line);
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    box-shadow: 0 14px 34px rgba(90, 40, 40, 0.16);
-    font-size: 12.5px;
-    letter-spacing: 0.04em;
-    color: var(--h-note);
-    text-decoration: none;
-    transition: background-color 0.2s, color 0.2s;
-}
-
-.bstm__all:hover,
-.bstm__all:focus-visible {
-    background: #f1e7dd;
-    color: var(--brand);
-}
-
-/* ============================================================
-   TẮT CHUYỂN ĐỘNG
-
-   Giữ ĐÚNG opacity: bỏ nốt thì bảng nhảy phựt ra, mà chuyển mờ không gây
-   chóng mặt cho ai. Mũi nhọn VẪN CÒN — nó là thông tin (cái nút này mở cái
-   bảng kia), không phải hiệu ứng.
-
-   transform vẫn phải giữ translateX(-50%): nó là phần ĐỊNH VỊ, không phải
-   hoạt cảnh. Ghi `transform: none` ở đây là bảng lệch hẳn nửa bề ngang sang
-   phải với đúng những người đã xin bớt chuyển động.
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-    .bstm__panel {
-        transform: translate(-50%, 0);
-        transition: opacity 0.12s linear, visibility 0.12s;
+@media (max-width: 1279px) {
+    /* Bảng hẹp lại thì ảnh của mấy thẻ kia còn 110px (xem mega-menu.css),
+       nên ô này cũng phải thu theo, không thì nó cao hơn cả hàng. */
+    .mega-feature--all .mega-feature__body {
+        padding: 16px;
     }
-
-    .bstm__chevron { transition: none; }
 }

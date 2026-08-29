@@ -7,32 +7,41 @@
  * gốc phải là <li>. Nhận từ header.php: $collectionsNav, $isCollectionActive.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * DROPDOWN HẸP, KHÔNG PHẢI MEGA MENU THỨ HAI
+ * DÙNG LẠI NGUYÊN KHUNG CỦA MEGA MENU — CỐ Ý, KHÔNG PHẢI SAO CHÉP CẨU THẢ
  *
- * "Sản phẩm" cần bảng trải hết bề ngang vì nó có bốn cột lát cắt lọc và một
- * thẻ ảnh. Bộ sưu tập thì chỉ có một danh sách phẳng — ba, bốn mục, mỗi mục
- * một cái tên và một câu. Trải nó ra 1400px là một bảng khổng lồ chứa ba dòng
- * chữ nằm lệch một góc.
+ * Bảng này mang chính các lớp .mega__* của _layout/mega-menu.php: cùng viên
+ * thuốc, cùng mũi nhọn hình thoi, cùng bảng trải từ --page-edge bên này sang
+ * --page-edge bên kia, cùng một lượt mờ dần 0.2s. Yêu cầu là "giống y hệt
+ * dropdown Sản phẩm", nên cách đúng là DÙNG LẠI bộ lớp đó chứ không chép số
+ * đo sang một bộ lớp mới — chép là hai bảng lệch nhau ngay lần đầu ai đó chỉnh
+ * padding của một bên.
  *
- * Nên đây là bảng hẹp neo ngay dưới viên thuốc, cùng khuôn hình với bảng xổ
- * của cụm icon bên phải (.hpop trong components/header.css): viền một nét,
- * bo --radius-sm, bóng đổ nhẹ. Khác một điểm: mỗi dòng có ảnh nhỏ, vì bộ sưu
- * tập là thứ người ta nhận ra bằng mắt chứ không bằng tên.
+ * Vì thế components/collection-menu.css nay chỉ còn đúng phần KHÁC: thẻ
+ * "Tất cả bộ sưu tập" ở ô cuối. Mọi thứ còn lại nằm ở components/mega-menu.css.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * MỞ BẰNG CSS, KHÔNG BẰNG JAVASCRIPT — y hệt mega-menu.php
+ * RUỘT BẢNG LÀ THẺ ẢNH, KHÔNG PHẢI CỘT CHỮ — VÀ ĐÂY LÀ CHỖ KHÁC MEGA
  *
- * :hover mở, :focus-within giữ mở khi Tab vào trong. Viên thuốc VẪN là <a>
- * thật tới /bo-suu-tap, nên màn hình cảm ứng (không có "rê chuột") chạm vào
- * là đi thẳng tới trang danh sách đầy đủ — không có ngõ cụt nào.
+ * Mega "Sản phẩm" có ba cột chữ, mỗi cột bốn liên kết lọc. Bảng này không lấp
+ * được ba cột đó: dưới một bộ sưu tập thì bốn dòng ấy phải là các lát cắt CÓ
+ * HÀNG THẬT trong chính bộ đó, mà bảng `products` hiện chưa có dòng nào và ba
+ * cột mô tả của bộ sưu tập (`audience`, `palette`, `signature`) đều đang NULL.
+ * Bịa bốn dòng cho đủ chỗ là dựng bốn ngõ cụt — đúng thứ mega-menu.php đã từ
+ * chối làm khi bỏ bốn nhãn gõ cứng của bản thiết kế.
+ *
+ * Nên mỗi Ô của lưới là MỘT BỘ dạng thẻ ảnh, dùng lại .mega-feature — chính
+ * cái thẻ đang nằm ở cột cuối của mega. Lưới không phải sửa gì: --mega-cols
+ * đếm số thẻ bộ sưu tập, còn cột 1.15fr có sẵn ở cuối là chỗ của thẻ "Tất cả".
+ *
+ * Ngày ai đó nhập hàng và gắn vào bộ sưu tập, đổi sang cột chữ là việc của một
+ * commit khác — lúc đó liên kết mới dẫn tới chỗ có thứ để xem.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * KHÔNG CÓ BỘ NÀO ĐANG HIỆN -> IN LIÊN KẾT TRƠN
  *
  * Cửa hàng có lúc ẩn hết để chuẩn bị mùa mới (trang /bo-suu-tap đã lường
- * trước chuyện đó — xem .colls__empty). Lúc ấy mũi tên chevron mở ra một
- * bảng rỗng là lời hứa suông, nên mục này quay về đúng cái nó vốn là: một
- * liên kết thường.
+ * trước — xem .colls__empty). Lúc ấy chevron mở ra một bảng rỗng là lời hứa
+ * suông, nên mục này quay về đúng cái nó vốn là: một liên kết thường.
  */
 
 /* Tự đọc được nếu nơi gọi không truyền — cùng lối phòng thủ của mega-menu.php,
@@ -40,16 +49,46 @@
 $collectionsNav = $collectionsNav ?? CollectionModel::visible();
 
 /*
- * CẮT CÒN 6 MỤC.
+ * CẮT CÒN 5 THẺ.
  *
- * Bảng xổ không phải trang danh sách: quá số này thì nó dài hơn cả thanh nav
- * và người dùng phải cuộn trong một cái hộp đang mở bằng hover — cuộn là rời
- * chuột, rời chuột là bảng đóng. Dòng "Tất cả bộ sưu tập" ở chân bảng lo phần
- * còn lại. Sáu mục vì thứ tự đã do cửa hàng sắp (sort_order), nên sáu cái đầu
- * đúng là sáu cái cửa hàng muốn khoe nhất.
+ * Cộng thẻ "Tất cả" là 6 ô trên một hàng — bằng số ô tối đa mà lưới của mega
+ * chịu được ở 1101px trước khi mỗi ô hẹp hơn cái ảnh trong nó. Thứ tự đã do
+ * cửa hàng sắp (sort_order) nên năm cái đầu đúng là năm cái muốn khoe nhất;
+ * phần còn lại nằm sau thẻ "Tất cả".
  */
-$bstToiDa = 6;
+$bstToiDa = 5;
 $bstDanhSach = array_slice($collectionsNav, 0, $bstToiDa);
+
+/**
+ * Dòng chữ nhỏ dưới tên bộ.
+ *
+ * Ưu tiên câu giới thiệu của cửa hàng; bộ chưa có câu nào thì lấy THÁNG/NĂM ra
+ * mắt. Hai thứ này không thay thế nhau về nghĩa, nhưng ô nào cũng cần một dòng
+ * thứ hai — thiếu nó thì thẻ đó thấp hơn hẳn mấy thẻ bên cạnh và cả hàng trông
+ * như xếp hỏng.
+ *
+ * CHỈ tháng/năm, không ngày đầy đủ: bộ sưu tập là chuyện theo mùa, "Ra mắt
+ * 03/2026" nói đúng nhịp cửa hàng làm việc, còn "14/03/2026" gợi ý một sự kiện
+ * diễn ra đúng hôm đó — điều không có thật. Cùng luật với trang /bo-suu-tap
+ * (xem $ngayRaMat trong collection/index.php).
+ *
+ * Cắt 30 ký tự vì thẻ chỉ rộng ~220px, giống thẻ ở mega.
+ */
+$bstDongPhu = static function (array $bst): string {
+    $cau = excerpt($bst['tagline'] ?? '', 30);
+
+    if ($cau !== '') {
+        return $cau;
+    }
+
+    $ngay = (string) ($bst['launched_at'] ?? '');
+
+    if (preg_match('/^(\d{4})-(\d{2})-/', $ngay, $m)) {
+        return 'Ra mắt ' . $m[2] . '/' . $m[1];
+    }
+
+    return '';
+};
 ?>
 <?php if ($bstDanhSach === []): ?>
     <li>
@@ -57,62 +96,87 @@ $bstDanhSach = array_slice($collectionsNav, 0, $bstToiDa);
            <?= $isCollectionActive ? 'class="is-active" aria-current="page"' : '' ?>><?= e(t('nav.collections')) ?></a>
     </li>
 <?php else: ?>
-<li class="bstm">
+<li class="mega mega--bst">
 
     <a href="/bo-suu-tap"
-       class="bstm__trigger<?= $isCollectionActive ? ' is-active' : '' ?>"
+       class="mega__trigger<?= $isCollectionActive ? ' is-active' : '' ?>"
        <?= $isCollectionActive ? 'aria-current="page"' : '' ?>>
         <?= e(t('nav.collections')) ?>
-        <svg class="bstm__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <svg class="mega__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
 
-        <?php /* Mũi nhọn hình thoi cắm vào mép trên bảng — cùng ngôn ngữ hình
-                 khối với mega menu, để hai bảng xổ trên cùng một thanh nav
-                 không nói hai thứ tiếng khác nhau. */ ?>
-        <span class="bstm__caret" aria-hidden="true"></span>
+        <?php /* Mũi nhọn hình thoi cắm vào mép trên bảng — thứ trả lời câu
+                 "cái nút này mở ra cái gì". Là <span> thật chứ không phải
+                 ::after vì trigger đã dùng ::after cho vùng bắt chuột phủ
+                 khoảng trống; xem mega-menu.css. */ ?>
+        <span class="mega__caret" aria-hidden="true"></span>
     </a>
 
-    <div class="bstm__panel">
-        <p class="bstm__head"><?= e(t('nav.collections')) ?></p>
+    <?php /* --mega-cols: số thẻ BỘ SƯU TẬP, chưa tính thẻ "Tất cả" — cột
+             1.15fr cuối cùng của .mega__grid chính là chỗ của nó. */ ?>
+    <div class="mega__panel">
+        <div class="mega__grid" style="--mega-cols: <?= count($bstDanhSach) ?>">
 
-        <ul class="bstm__list" role="list">
             <?php foreach ($bstDanhSach as $bst): ?>
                 <?php
-                /* cover() đã tự kiểm file có thật hay không và trả '' khi
-                   không có ảnh dùng được, nên ở đây chỉ cần hỏi chuỗi rỗng. */
+                /* cover() đã tự kiểm file có thật hay không và trả '' khi không
+                   có ảnh dùng được, nên ở đây chỉ cần hỏi chuỗi rỗng. Ô ảnh vẫn
+                   giữ đúng khổ khi trống, để hàng thẻ không xô lệch. */
                 $bstAnh = CollectionModel::cover($bst);
+                $bstCau = $bstDongPhu($bst);
                 ?>
-                <li>
-                    <a class="bstm__item" href="/bo-suu-tap/<?= e(rawurlencode($bst['slug'])) ?>">
-                        <span class="bstm__thumb">
-                            <?php if ($bstAnh !== ''): ?>
-                                <img src="<?= e(asset($bstAnh)) ?>" alt=""
-                                     width="48" height="48" loading="lazy" decoding="async">
-                            <?php endif; ?>
-                        </span>
+                <a class="mega-feature" href="/bo-suu-tap/<?= e(rawurlencode($bst['slug'])) ?>">
+                    <span class="mega-feature__media">
+                        <?php if ($bstAnh !== ''): ?>
+                            <img src="<?= e(asset($bstAnh)) ?>" alt=""
+                                 width="400" height="280" loading="lazy" decoding="async">
+                        <?php endif; ?>
+                    </span>
 
-                        <span class="bstm__text">
-                            <span class="bstm__name"><?= e($bst['name']) ?></span>
-                            <?php /* Câu giới thiệu do người nhập nội dung viết,
-                                     dài ngắn tuỳ ý; cắt 48 ký tự để dòng thứ hai
-                                     không đẩy hàng cao gấp đôi. Bộ chưa có câu
-                                     nào thì bỏ hẳn thẻ, không in dòng rỗng. */ ?>
-                            <?php $bstCau = excerpt($bst['tagline'] ?? '', 48); ?>
-                            <?php if ($bstCau !== ''): ?>
-                                <span class="bstm__note"><?= e($bstCau) ?></span>
-                            <?php endif; ?>
+                    <span class="mega-feature__body">
+                        <span class="mega-feature__name"><?= e($bst['name']) ?></span>
+                        <?php /* "· Xem ngay →" bọc riêng và cấm ngắt dòng, nếu
+                                 không mũi tên hay rơi xuống một dòng của riêng
+                                 nó khi câu giới thiệu dài. */ ?>
+                        <span class="mega-feature__note">
+                            <?= e($bstCau) ?>
+                            <span class="mega-feature__more">· Xem ngay &rarr;</span>
                         </span>
-                    </a>
-                </li>
+                    </span>
+                </a>
             <?php endforeach; ?>
-        </ul>
 
-        <?php /* Chân bảng: lối ra trang đầy đủ. Cần thiết cả khi chưa cắt bớt
-                 mục nào — trang /bo-suu-tap có ảnh lớn, ngày ra mắt và phần
-                 FAQ, tức là nhiều hơn hẳn cái danh sách này. */ ?>
-        <a class="bstm__all" href="/bo-suu-tap"><?= e(t('nav.all_collections')) ?> &rarr;</a>
+            <?php
+            /*
+             * Ô CUỐI: THẺ "TẤT CẢ BỘ SƯU TẬP" — CỐ Ý KHÔNG CÓ ẢNH.
+             *
+             * Đã thử cho nó một tấm ảnh cho giống ba thẻ bên cạnh. Không có tấm
+             * nào dùng được mà trung thực: ảnh duy nhất có thể lấy là ảnh của
+             * một trong ba bộ đang đứng ngay cạnh, và cùng một tấm hiện hai lần
+             * trên một hàng thì trông như lỗi kết xuất chứ không như chủ ý.
+             *
+             * Nên nó là một tấm nền brand đặc — vẫn đúng khổ ô, vẫn là một thẻ
+             * bấm được, và nổi hẳn lên đúng như vai trò của nó: lối ra trang đầy
+             * đủ, nơi có ảnh lớn, ngày ra mắt và phần FAQ mà bảng xổ không chứa
+             * nổi.
+             *
+             * Số bộ ĐẾM CẢ phần đã bị cắt khỏi bảng, vì đó chính là thứ nó hứa:
+             * bấm vào là thấy đủ.
+             */
+            ?>
+            <a class="mega-feature mega-feature--all" href="/bo-suu-tap">
+                <span class="mega-feature__body">
+                    <span class="mega-feature__name"><?= e(t('nav.all_collections')) ?></span>
+                    <span class="mega-feature__note">
+                        <?= e(sprintf(t('nav.collections_count'), count($collectionsNav))) ?>
+                        <span class="mega-feature__more">&rarr;</span>
+                    </span>
+                </span>
+            </a>
+
+        </div>
     </div>
 </li>
 <?php endif; ?>

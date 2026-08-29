@@ -29,16 +29,18 @@ return [
     'announce'          => 'Miễn phí giao hàng toàn quốc cho đơn từ 1.000.000₫',
 
     // Thanh điều hướng
-    'nav.home'            => 'Trang chủ',
-    'nav.products'        => 'Sản phẩm',
-    'nav.tryon'           => 'Thử kính ảo',
-    'nav.about'           => 'Giới thiệu',
-    'nav.collections'     => 'Bộ sưu tập',
-    'nav.contact'         => 'Liên hệ',
-    'nav.booking'         => 'Đặt lịch đo mắt',
-    'nav.policy'          => 'Chính sách & FAQ',
-    'nav.all_products'    => 'Tất cả sản phẩm',
-    'nav.all_collections' => 'Tất cả bộ sưu tập',
+    'nav.home'              => 'Trang chủ',
+    'nav.products'          => 'Sản phẩm',
+    'nav.tryon'             => 'Thử kính ảo',
+    'nav.about'             => 'Giới thiệu',
+    'nav.collections'       => 'Bộ sưu tập',
+    'nav.contact'           => 'Liên hệ',
+    'nav.booking'           => 'Đặt lịch đo mắt',
+    'nav.policy'            => 'Chính sách & FAQ',
+    'nav.all_products'      => 'Tất cả sản phẩm',
+    'nav.all_collections'   => 'Tất cả bộ sưu tập',
+    // %d = số bộ đang trưng bày; đếm cả bộ không lọt vào bảng xổ
+    'nav.collections_count' => '%d bộ đang trưng bày',
 
     // Cụm tác vụ bên phải đầu trang
     'action.search'     => 'Tìm kiếm sản phẩm',

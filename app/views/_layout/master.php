@@ -110,9 +110,9 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
     <link rel="stylesheet" href="<?= asset('assets/css/components/header.css') ?>">
     <!-- Phải đứng SAU header.css: .mega__trigger chỉnh lại .header-nav__list > li > a -->
     <link rel="stylesheet" href="<?= asset('assets/css/components/mega-menu.css') ?>">
-    <!-- Cũng phải đứng SAU header.css, cùng lý do: .bstm__trigger chỉnh lại
-         .header-nav__list > li > a. Bảng xổ "Bộ sưu tập" — dùng lại
-         .mobile-nav__group của mega-menu.css nên đứng sau file đó luôn. -->
+    <!-- Bảng xổ "Bộ sưu tập". Phải đứng SAU mega-menu.css: nó dùng lại nguyên
+         bộ lớp .mega__* / .mega-feature của file đó và chỉ đè vài thuộc tính
+         cho thẻ "Tất cả bộ sưu tập" ở ô cuối. -->
     <link rel="stylesheet" href="<?= asset('assets/css/components/collection-menu.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/footer.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/page-head.css') ?>">
