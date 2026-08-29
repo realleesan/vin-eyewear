@@ -46,6 +46,12 @@ class DashboardController extends AdminController
             ? '(SELECT COUNT(*) FROM contact_requests WHERE zalo_sent_at IS NULL)'
             : '0';
 
+        /* Cùng lối với $demChuaDay ngay trên: tính biểu thức RA BIẾN rồi nội
+           suy, vì câu này là chuỗi nháy KÉP — viết ' . ... . ' trong đó thì nó
+           thành chữ thường nằm giữa câu SQL chứ không phải phép nối, và php -l
+           vẫn báo sạch. */
+        $nguongSapHet = ProductModel::nguongSapHetSql();
+
         $stats = Database::fetchOne(
             "SELECT
                 (SELECT COUNT(*) FROM products WHERE is_visible = 1)              AS products,
@@ -54,7 +60,7 @@ class DashboardController extends AdminController
                 -- dẫn thẳng sang trang ấy nên hai con số phải khớp; lệch nhau
                 -- thì bấm vào thẻ ghi 3 sắp hết lại ra một bảng 7 dòng.
                 (SELECT COUNT(*) FROM products
-                  WHERE stock_quantity <= COALESCE(NULLIF(low_stock_at, 0), 5)) AS low_stock,
+                  WHERE stock_quantity <= {$nguongSapHet})                          AS low_stock,
                 (SELECT COUNT(*) FROM categories WHERE is_visible = 1)            AS categories,
                 (SELECT COUNT(*) FROM orders WHERE status = 'new')                 AS new_orders,
                 (SELECT COUNT(*) FROM orders)                                       AS orders_total,
@@ -176,7 +182,7 @@ class DashboardController extends AdminController
             'lowStock'     => Database::fetchAll(
                 'SELECT id, slug, name, sku, stock_quantity, status
                    FROM products
-                  WHERE stock_quantity <= COALESCE(NULLIF(low_stock_at, 0), 5)
+                  WHERE stock_quantity <= ' . ProductModel::nguongSapHetSql() . '
                   ORDER BY stock_quantity ASC
                   LIMIT 8'
             ),

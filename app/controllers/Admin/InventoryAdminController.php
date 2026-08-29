@@ -27,16 +27,10 @@ class InventoryAdminController extends AdminController
      */
     private const LOW = 5;
 
-    /**
-     * Biểu thức SQL của ngưỡng "sắp hết" cho MỘT dòng products.
-     *
-     * Gói thành hằng để ba câu lệnh bên dưới không có ba bản chép — lệch một
-     * bản là dải viên lọc đếm một kiểu còn bảng lọc một kiểu.
-     *
-     * NULLIF(...,0) để ngưỡng 0 không biến thành "sắp hết khi tồn <= 0": số 0
-     * ở ô ấy nghĩa là "không cảnh báo riêng", trùng ý với để trống.
-     */
-    private const NGUONG = 'COALESCE(NULLIF(low_stock_at, 0), ' . self::LOW . ')';
+    /* Biểu thức ngưỡng chuyển sang ProductModel::nguongSapHetSql() — nó phải
+       HỎI cột `low_stock_at` có tồn tại không, mà hằng số thì tính lúc biên
+       dịch nên không hỏi được. Máy chưa chạy migration là không có cột, và ba
+       câu lệnh dưới đây đổ lỗi 1054. Xem khối chú thích ở hàm ấy. */
 
     /**
      * Số dòng mỗi trang.
@@ -70,7 +64,7 @@ class InventoryAdminController extends AdminController
         $q = trim((string) ($_GET['q'] ?? ''));
 
         $dieuKien = match ($filter) {
-            'low' => ['stock_quantity > 0 AND stock_quantity <= ' . self::NGUONG],
+            'low' => ['stock_quantity > 0 AND stock_quantity <= ' . ProductModel::nguongSapHetSql()],
             'out' => ['stock_quantity <= 0'],
             default => [],
         };
@@ -97,7 +91,7 @@ class InventoryAdminController extends AdminController
         $counts = Database::fetchOne(
             'SELECT
                 COUNT(*)                                                       AS total,
-                SUM(stock_quantity > 0 AND stock_quantity <= ' . self::NGUONG . ') AS low_stock,
+                SUM(stock_quantity > 0 AND stock_quantity <= ' . ProductModel::nguongSapHetSql() . ') AS low_stock,
                 SUM(stock_quantity <= 0)                                       AS out_stock
                FROM products ' . $whereDem,
             $thamSo

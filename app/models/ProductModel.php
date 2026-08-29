@@ -28,6 +28,48 @@
 
 class ProductModel extends BaseModel
 {
+    /** Ngưỡng "sắp hết" mặc định khi mặt hàng không đặt riêng. */
+    public const NGUONG_SAP_HET = 5;
+
+    /**
+     * Biểu thức SQL của ngưỡng "sắp hết" cho MỘT dòng products.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * PHẢI HỎI CỘT CÓ TỒN TẠI KHÔNG, KHÔNG ĐƯỢC GIẢ ĐỊNH
+     *
+     * `low_stock_at` là cột MỚI, thêm ở migration
+     * database/migrations/2026-08-29-san-pham-theo-ban-ve.sql. Máy cài từ trước
+     * mà chưa chạy file ấy thì chưa có cột — và hosting là đúng một máy như
+     * thế, vì InfinityFree không có SSH nên migration phải nạp tay qua
+     * phpMyAdmin, dễ quên.
+     *
+     * Ngày 2026-08-29 ba câu lệnh đọc thẳng tên cột này đã làm trang Tổng quan
+     * và trang Tồn kho trên hosting đổ lỗi 1054 "Unknown column 'low_stock_at'".
+     * Không phải 404 như thoạt nhìn — là 500 của PDO.
+     *
+     * Chưa có cột thì lui về con số chung, y như mọi mặt hàng để trống ngưỡng.
+     * Cùng cách làm với `reply` ở Đánh giá và `zalo_sent_at` ở Liên hệ.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * MỘT HÀM CHO CẢ BA CHỖ
+     *
+     * Trang Tồn kho, thẻ "Sắp hết hàng" ở Tổng quan và viên trạng thái ở bảng
+     * Sản phẩm cùng nói về một tập mặt hàng. Ba bản chép biểu thức thì lệch một
+     * bản là ba màn trả lời khác nhau về cùng một cái gọng — mà chú thích cũ ở
+     * bảng Sản phẩm đã dặn đúng điều đó rồi vẫn lệch. Nay chỉ có một nguồn.
+     *
+     * NULLIF(...,0): số 0 ở ô ấy nghĩa là "không đặt riêng", trùng ý với để
+     * trống; thiếu nó thì ngưỡng 0 thành "sắp hết khi tồn <= 0".
+     */
+    public static function nguongSapHetSql(): string
+    {
+        if (!Database::columnExists('products', 'low_stock_at')) {
+            return (string) self::NGUONG_SAP_HET;
+        }
+
+        return 'COALESCE(NULLIF(low_stock_at, 0), ' . self::NGUONG_SAP_HET . ')';
+    }
+
     protected static string $table = 'products';
 
     /**
