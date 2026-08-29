@@ -722,6 +722,48 @@
     border-bottom: 1px solid var(--a-panel-line);
 }
 
+/* Ô hành động ở góc phải đầu hộp: ô chọn trạng thái rồi tới nút ×.
+   align-items:center để ô chọn (cao hơn chữ) không kéo lệch nút × xuống. */
+.aodraw__acts {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Hai thẻ "Khách hàng" và "Giao nhận & thanh toán" đứng cạnh nhau — theo bản
+   vẽ. Dưới 640px thì xếp dọc: hai cột 300px cạnh nhau trên điện thoại thì
+   không cột nào đủ chỗ cho một địa chỉ. */
+.aodraw__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.aodraw__card {
+    padding: 14px 16px;
+    border: 1px solid var(--a-panel-line);
+    border-radius: 10px;
+}
+
+/* Chân hộp NGOÀI vùng cuộn: nút đánh dấu tiền và lối ra phải luôn thấy được,
+   kể cả với đơn có bảng số đo dài. Cùng luật với .amodal__foot của các hộp
+   khác — space-between vì bản vẽ đặt nút tiền bên trái, "Đóng" bên phải. */
+.aodraw__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 26px;
+    border-top: 1px solid var(--a-panel-line);
+    background: #faf5ea;
+}
+
+@media (max-width: 640px) {
+    .aodraw__grid { grid-template-columns: 1fr; }
+}
+
+
 /* SERIF, không phải chữ đẳng khoảng đỏ — theo bản thiết kế, và cùng luật với
    nhan đề của mọi hộp thoại khác (xem .amodal__title trong admin.css).
 
@@ -768,23 +810,11 @@ body.admin:has(.aodraw) { overflow: hidden; }
     padding: 22px 24px 32px;
 }
 
-.aodraw__state {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Trạng thái TIỀN trong ngăn kéo đeo thêm một cái khung, khác hẳn viên trạng
-   thái đơn ngay cạnh: cùng một lý lẽ đã ghi ở .amoney__pay trong admin.css —
-   hai trục khác nhau thì phải khác dáng, không chỉ khác chữ. */
-.aodraw__paid {
-    padding: 7px 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-round);
-    background: var(--surface-sunken);
-    font-size: var(--fs-caption);
-}
+/* .aodraw__state và .aodraw__paid ĐÃ XOÁ 2026-08-29. Chúng tạo kiểu cho dải
+   "ô chọn trạng thái + viên trạng thái tiền" từng nằm ở đầu ruột hộp; nay ô
+   chọn lên đầu hộp (.aodraw__acts) còn trạng thái tiền vào thẻ "Giao nhận &
+   thanh toán", đúng bản vẽ. Để lại thì thành hai khối kiểu không selector nào
+   trong HTML chạm tới. */
 
 .aodraw__sec { margin-top: 24px; }
 

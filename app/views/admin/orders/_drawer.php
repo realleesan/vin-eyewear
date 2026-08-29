@@ -1,9 +1,16 @@
 <?php
 
 /**
- * admin/orders/_drawer.php — ngăn kéo chi tiết một đơn, trượt vào từ mép phải.
+ * admin/orders/_drawer.php — HỘP THOẠI chi tiết một đơn, nổi giữa màn hình.
  *
- * Dựng theo "Tab Đơn hàng.dc.html". Nhận qua partial():
+ * TÊN LỚP CSS `aodraw`/`aodim` LÀ DẤU VẾT CŨ, đừng đọc nó thành "drawer":
+ * bản đầu đúng là một ngăn kéo trượt từ mép phải, nhưng nó đã thành hộp giữa
+ * màn hình từ lâu (xem .aodraw trong admin-orders.css: inset:0 + margin:auto +
+ * width:min(680px,96vw) + max-height:90vh). Câu mở đầu của file này vẫn ghi
+ * "ngăn kéo … trượt vào từ mép phải" cho tới 2026-08-29, và nó đủ để một lượt
+ * soát kết luận sai rằng màn này lệch bản vẽ.
+ *
+ * Dựng theo "Đơn hàng.dc.html". Nhận qua partial():
  *   $order          — dòng `orders` kèm `store_name` và `items`
  *   $statuses       — [khoá => nhãn] trạng thái giao vận
  *   $payStatuses    — [khoá => nhãn] trạng thái tiền
@@ -25,6 +32,11 @@
  */
 
 $paid = $order['payment_status'] === 'paid';
+
+/* Cùng một luật với nút trong bảng — xem chú thích ở orders/index.php.
+   Tính ở ĐẦU file vì nút dùng nó nay nằm ở chân hộp, sau cả vùng cuộn. */
+$canMark = !$paid
+    && ($order['payment_method'] === 'bank_transfer' || $order['status'] === 'completed');
 ?>
 <a class="aodim" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng chi tiết đơn hàng"></a>
 
@@ -37,22 +49,24 @@ $paid = $order['payment_status'] === 'paid';
             <h2 class="aodraw__code">Đơn <?= e($order['code']) ?></h2>
             <p class="aodraw__when">Đặt lúc <?= e(formatDate($order['created_at'], 'd/m/Y H:i')) ?></p>
         </div>
-        <a class="aodraw__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>
-    </header>
+        <?php /* Ô CHỌN TRẠNG THÁI NẰM Ở ĐẦU HỘP, cạnh nút × — theo bản vẽ.
 
-    <div class="aodraw__body">
-        <div class="aodraw__state">
-            <?php /* Form vệ tinh riêng của ngăn kéo. Id KHÁC form cùng đơn ở
-                     trong bảng ("aost-<id>"): đơn đang mở thường cũng đang hiện
-                     trên bảng, và hai form trùng id thì thuộc tính form= của cả
-                     hai ô chọn cùng trỏ về form đầu tiên — bấm Lưu ở ngăn kéo
-                     lại gửi giá trị của ô trong bảng. */ ?>
-            <form class="aoghost" method="post" action="/quan-tri/don-hang/trang-thai" id="aodrawst">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
-                <input type="hidden" name="id" value="<?= e($order['id']) ?>">
-            </form>
+                 Nó là thao tác chính của cả hộp này: mở một đơn ra gần như
+                 luôn là để đẩy nó sang bước tiếp theo. Để tuốt trong ruột thì
+                 với đơn có bảng số đo dài, người dùng phải cuộn ngược lên tìm.
 
+                 Form vệ tinh id "aodrawst" KHÁC form cùng đơn ở trong bảng
+                 ("aost-<id>"): đơn đang mở thường cũng đang hiện trên bảng, mà
+                 hai form trùng id thì thuộc tính form= của cả hai ô chọn cùng
+                 trỏ về form đầu tiên — bấm Lưu ở đây lại gửi giá trị của ô
+                 trong bảng. */ ?>
+        <form class="aoghost" method="post" action="/quan-tri/don-hang/trang-thai" id="aodrawst">
+            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+            <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
+            <input type="hidden" name="id" value="<?= e($order['id']) ?>">
+        </form>
+
+        <div class="aodraw__acts">
             <div class="astatus">
                 <label class="sr-only" for="aodraw-st">Trạng thái đơn <?= e($order['code']) ?></label>
                 <select class="astatus__pick astatus__pick--lg astatus__pick--<?= e($order['status']) ?>"
@@ -67,35 +81,49 @@ $paid = $order['payment_status'] === 'paid';
                 <button type="submit" form="aodrawst" class="aosave">Lưu</button>
             </div>
 
-            <span class="aodraw__paid amoney__pay amoney__pay--<?= $paid ? 'paid' : 'unpaid' ?>">
-                <?= e($payStatuses[$order['payment_status']] ?? $order['payment_status']) ?>
-            </span>
+            <a class="aodraw__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>
         </div>
+    </header>
 
-        <section class="aodraw__sec">
-            <h2 class="aodraw__label">Khách hàng</h2>
-            <p class="aodraw__name"><?= e($order['customer_name']) ?></p>
-            <p class="aodraw__line"><?= e($order['customer_phone']) ?></p>
-            <?php if (!empty($order['customer_email'])): ?>
-                <p class="aodraw__line"><?= e($order['customer_email']) ?></p>
-            <?php endif; ?>
-
-            <?php /* ĐỊA CHỈ NGUYÊN VẸN, KHÔNG CẮT — đây là chỗ nó được đọc để
-                     ghi lên phiếu gửi hàng. Bảng ngoài kia cố tình không in nó
-                     vì cắt ngắn một địa chỉ là bỏ mất đúng phần phân biệt hai
-                     đơn của cùng một khách. */ ?>
-            <?php if (!empty($order['shipping_address'])): ?>
-                <p class="aodraw__addr"><?= e($order['shipping_address']) ?></p>
-            <?php endif; ?>
-
-            <p class="aodraw__meta">
-                <?= e($deliveryLabels[$order['delivery_method']] ?? $order['delivery_method']) ?>
-                <?php if (!empty($order['store_name'])): ?>
-                    · <?= e($order['store_name']) ?>
+    <div class="aodraw__body">
+        <?php /* HAI THẺ CẠNH NHAU — theo bản vẽ: "Khách hàng" và "Giao nhận &
+                 thanh toán". Xếp dọc thì hai nhóm này đọc thành một khối dài,
+                 mà chúng trả lời hai câu khác nhau: gọi ai, và giao thế nào. */ ?>
+        <div class="aodraw__grid">
+            <section class="aodraw__card">
+                <h2 class="aodraw__label">Khách hàng</h2>
+                <p class="aodraw__name"><?= e($order['customer_name']) ?></p>
+                <p class="aodraw__line"><?= e($order['customer_phone']) ?></p>
+                <?php if (!empty($order['customer_email'])): ?>
+                    <p class="aodraw__line"><?= e($order['customer_email']) ?></p>
                 <?php endif; ?>
-                · <?= e($paymentLabels[$order['payment_method']] ?? $order['payment_method']) ?>
-            </p>
-        </section>
+
+                <?php /* ĐỊA CHỈ NGUYÊN VẸN, KHÔNG CẮT — đây là chỗ nó được đọc
+                         để ghi lên phiếu gửi hàng. Bảng ngoài kia cố tình không
+                         in nó vì cắt ngắn một địa chỉ là bỏ mất đúng phần phân
+                         biệt hai đơn của cùng một khách. */ ?>
+                <?php if (!empty($order['shipping_address'])): ?>
+                    <p class="aodraw__addr"><?= e($order['shipping_address']) ?></p>
+                <?php endif; ?>
+            </section>
+
+            <section class="aodraw__card">
+                <h2 class="aodraw__label">Giao nhận &amp; thanh toán</h2>
+                <p class="aodraw__name">
+                    <?= e($deliveryLabels[$order['delivery_method']] ?? $order['delivery_method']) ?>
+                    <?php if (!empty($order['store_name'])): ?>
+                        · <?= e($order['store_name']) ?>
+                    <?php endif; ?>
+                </p>
+                <p class="aodraw__line">
+                    <?= e($paymentLabels[$order['payment_method']] ?? $order['payment_method']) ?>
+                    ·
+                    <span class="amoney__pay amoney__pay--<?= $paid ? 'paid' : 'unpaid' ?>">
+                        <?= e($payStatuses[$order['payment_status']] ?? $order['payment_status']) ?>
+                    </span>
+                </p>
+            </section>
+        </div>
 
         <?php if (!empty($order['note'])): ?>
             <section class="aodraw__sec">
@@ -221,22 +249,34 @@ $paid = $order['payment_status'] === 'paid';
                 <p class="aodraw__meta">Tiền về lúc <?= e(formatDate($order['paid_at'], 'd/m/Y H:i')) ?></p>
             <?php endif; ?>
 
-            <?php
-            // Cùng một luật với nút trong bảng — xem chú thích ở orders/index.php.
-            $canMark = !$paid
-                && ($order['payment_method'] === 'bank_transfer' || $order['status'] === 'completed');
-            ?>
-            <?php if ($canMark || $paid): ?>
-                <form method="post" action="/quan-tri/don-hang/thanh-toan">
-                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                    <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
-                    <input type="hidden" name="id" value="<?= e($order['id']) ?>">
-                    <input type="hidden" name="paid" value="<?= $paid ? '0' : '1' ?>">
-                    <button type="submit" class="aodraw__pay<?= $paid ? ' aodraw__pay--ghost' : '' ?>">
-                        <?= $paid ? 'Gỡ đánh dấu đã thanh toán' : 'Đã nhận tiền' ?>
-                    </button>
-                </form>
-            <?php endif; ?>
         </section>
+    </div>
+
+    <?php /* CHÂN HỘP — theo bản vẽ: nút tiền bên trái, "Đóng" bên phải.
+
+             Nút đánh dấu tiền trước đây nằm cuối mục Thanh toán, tức là cuối
+             một vùng cuộn: với đơn có bảng số đo dài thì phải cuộn hết mới
+             thấy. Đưa xuống chân hộp thì nó đứng yên ngoài vùng cuộn, cạnh
+             lối ra — đúng chỗ người ta tìm sau khi đọc xong.
+
+             Chân hộp vẫn dựng cả khi không có nút tiền nào (đơn COD chưa giao
+             thì chưa đánh dấu được): lúc ấy nó còn nút "Đóng", mà một lối ra
+             luôn thấy được thì đáng giữ. */ ?>
+    <div class="aodraw__foot">
+        <?php if ($canMark || $paid): ?>
+            <form method="post" action="/quan-tri/don-hang/thanh-toan">
+                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
+                <input type="hidden" name="id" value="<?= e($order['id']) ?>">
+                <input type="hidden" name="paid" value="<?= $paid ? '0' : '1' ?>">
+                <button type="submit" class="aodraw__pay<?= $paid ? ' aodraw__pay--ghost' : '' ?>">
+                    <?= $paid ? 'Gỡ đánh dấu đã thanh toán' : 'Đã nhận tiền' ?>
+                </button>
+            </form>
+        <?php else: ?>
+            <span></span>
+        <?php endif; ?>
+
+        <a class="astatus__save astatus__save--ghost" href="<?= e($dongUrl) ?>" data-modal-close>Đóng</a>
     </div>
 </aside>
