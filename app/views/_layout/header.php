@@ -20,14 +20,19 @@
  *     không còn lối vào nào trên điện thoại.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * NĂM MỤC, MỘT TRONG SỐ ĐÓ LÀ BẢNG XỔ
+ * NĂM MỤC, HAI TRONG SỐ ĐÓ LÀ BẢNG XỔ
  *
- *     Trang chủ · Sản phẩm ▾ · [Thử kính ảo] · Giới thiệu · Bộ sưu tập · Liên hệ
+ *     Trang chủ · Sản phẩm ▾ · [Thử kính ảo] · Giới thiệu · Bộ sưu tập ▾ · Liên hệ
  *
- * "Sản phẩm" không phải một liên kết thường: nó là _layout/mega-menu.php, tự
- * dựng <li> của mình. Ba mục danh mục cũ (Kính mát · Gọng kính · Tròng kính)
- * và "Thương hiệu" nay nằm TRONG bảng đó — và lấy thẳng từ CSDL, nên admin
- * thêm danh mục là tự có mặt, không phải sửa file này.
+ * HAI trong năm mục là bảng xổ, và cả hai đều tự dựng <li> của mình:
+ *
+ *   · "Sản phẩm" -> _layout/mega-menu.php. Ba mục danh mục cũ (Kính mát ·
+ *     Gọng kính · Tròng kính) và "Thương hiệu" nay nằm TRONG bảng đó — và lấy
+ *     thẳng từ CSDL, nên admin thêm danh mục là tự có mặt, không phải sửa file
+ *     này.
+ *   · "Bộ sưu tập" -> _layout/collection-menu.php. Bảng hẹp liệt kê các bộ
+ *     đang trưng bày, cũng đọc từ CSDL. Cả hai mục vẫn là <a> thật tới trang
+ *     của mình, nên chạm trên điện thoại là đi thẳng chứ không kẹt ở bảng xổ.
  *
  * "Thử kính ảo" chỉ hiện khi config('ar.nav_enabled') bật. Tính năng còn dở;
  * ẩn bằng cách KHÔNG in ra HTML chứ không phải display:none. Xem ghi chú dài
@@ -49,6 +54,18 @@ $segment = currentSegment();
 $categories = CategoryModel::withProductCounts();
 
 /*
+ * Bộ sưu tập đang trưng bày — ĐỌC MỘT LẦN, dùng ở BA chỗ: bảng xổ "Bộ sưu
+ * tập" (desktop và menu trượt) và thẻ ảnh ở cột cuối của mega menu.
+ *
+ * Trước đây chỉ mega-menu.php cần nó nên nó tự gọi CollectionModel::visible().
+ * Thêm bảng xổ mới mà cứ để mỗi file tự gọi là ba câu truy vấn giống hệt nhau
+ * trên MỌI trang của site. Đọc ở đây rồi truyền xuống qua phạm vi của
+ * `require`; ba file kia vẫn giữ nhánh tự đọc để không phụ thuộc ngầm vào
+ * đúng một nơi gọi.
+ */
+$collectionsNav = CollectionModel::visible();
+
+/*
  * "Sản phẩm" đang mở khi đứng ở trang danh sách HOẶC trang chi tiết — cả hai
  * đều nằm dưới /san-pham, nên so đoạn đầu là đủ. Biến này do mega-menu.php và
  * mega-menu-mobile.php đọc.
@@ -56,10 +73,21 @@ $categories = CategoryModel::withProductCounts();
 $isProductActive = $segment === 'san-pham';
 
 /*
- * Thứ tự hiển thị của thanh nav, một mảng duy nhất. Mục mang 'mega' => true là
- * chỗ chèn bảng xổ; nó không có 'url' vì _layout/mega-menu.php tự dựng cả <li>
- * lẫn liên kết của mình. Để cái mốc đó NẰM TRONG danh sách (thay vì in riêng
- * trước/sau vòng lặp) nên đọc file là thấy ngay thứ tự thật của năm mục.
+ * "Bộ sưu tập" sáng ở CẢ /bo-suu-tap lẫn /bo-suu-tap/{slug} — cùng một đoạn
+ * đầu nên so segment là đủ. Do collection-menu.php và collection-menu-mobile.php
+ * đọc.
+ *
+ * KHÔNG tính /san-pham?collection=<slug> vào đây: đó là trang danh sách sản
+ * phẩm đã lọc sẵn, mục đang mở ở đấy phải là "Sản phẩm".
+ */
+$isCollectionActive = $segment === 'bo-suu-tap';
+
+/*
+ * Thứ tự hiển thị của thanh nav, một mảng duy nhất. Mục mang 'mega' => true
+ * hoặc 'bst' => true là chỗ chèn một bảng xổ; chúng không có 'url' vì file
+ * partial tương ứng tự dựng cả <li> lẫn liên kết của mình. Để hai cái mốc đó
+ * NẰM TRONG danh sách (thay vì in riêng trước/sau vòng lặp) nên đọc file là
+ * thấy ngay thứ tự thật của năm mục.
  */
 $navItems = [
     ['label' => t('nav.home'),   'url' => '/',           'match' => ['', 'home']],
@@ -75,8 +103,12 @@ $navItems = [
      * hàng muốn chỗ đó dành cho hàng đang bán chứ không phải tin tức; bước hai
      * bỏ luôn cả tính năng (trang, CRUD quản trị, bảng `events`). Ghi lại đây
      * để ai đọc git blame thấy hai bước là hai quyết định khác nhau.
+     *
+     * Từ 2026-08-29 ô này thành BẢNG XỔ, nên nó không còn 'url' và 'match' —
+     * _layout/collection-menu.php tự dựng cả <li> lẫn liên kết của mình, y
+     * như mốc 'mega' ở trên. Trạng thái đang mở đọc từ $isCollectionActive.
      */
-    ['label' => t('nav.collections'), 'url' => '/bo-suu-tap', 'match' => ['bo-suu-tap']],
+    ['bst'   => true],
     ['label' => t('nav.contact'),'url' => '/lien-he',    'match' => ['lien-he']],
 ];
 
@@ -160,6 +192,8 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                 <?php foreach ($navItems as $item): ?>
                     <?php if (!empty($item['mega'])): ?>
                         <?php require VIEWS_PATH . '/_layout/mega-menu.php'; ?>
+                    <?php elseif (!empty($item['bst'])): ?>
+                        <?php require VIEWS_PATH . '/_layout/collection-menu.php'; ?>
                     <?php else: ?>
                         <?php $on = $isActive($item); ?>
                         <li>
@@ -441,6 +475,8 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             <?php foreach (array_merge($navItems, $mobileExtra) as $item): ?>
                 <?php if (!empty($item['mega'])): ?>
                     <?php require VIEWS_PATH . '/_layout/mega-menu-mobile.php'; ?>
+                <?php elseif (!empty($item['bst'])): ?>
+                    <?php require VIEWS_PATH . '/_layout/collection-menu-mobile.php'; ?>
                 <?php else: ?>
                     <a href="<?= e($item['url']) ?>"<?= $isActive($item) ? ' class="is-active" aria-current="page"' : '' ?>><?= e($item['label']) ?></a>
                 <?php endif; ?>

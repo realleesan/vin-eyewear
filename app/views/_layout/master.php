@@ -110,6 +110,10 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
     <link rel="stylesheet" href="<?= asset('assets/css/components/header.css') ?>">
     <!-- Phải đứng SAU header.css: .mega__trigger chỉnh lại .header-nav__list > li > a -->
     <link rel="stylesheet" href="<?= asset('assets/css/components/mega-menu.css') ?>">
+    <!-- Cũng phải đứng SAU header.css, cùng lý do: .bstm__trigger chỉnh lại
+         .header-nav__list > li > a. Bảng xổ "Bộ sưu tập" — dùng lại
+         .mobile-nav__group của mega-menu.css nên đứng sau file đó luôn. -->
+    <link rel="stylesheet" href="<?= asset('assets/css/components/collection-menu.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/footer.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/page-head.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/product.css') ?>">

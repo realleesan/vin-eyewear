@@ -96,8 +96,15 @@ $filterUrl = static fn (string $slug, array $search): string =>
  */
 /* Bộ đầu tiên theo thứ tự trưng bày của cửa hàng (sort_order), lấy từ CSDL
    thay cho config/collections.php. CollectionModel::cover() đã tự kiểm file có
-   thật hay không, nên ở đây không cần is_file() nữa. */
-$feature = CollectionModel::visible()[0] ?? null;
+   thật hay không, nên ở đây không cần is_file() nữa.
+
+   DANH SÁCH DO header.php ĐỌC rồi truyền xuống — cùng danh sách mà bảng xổ
+   "Bộ sưu tập" đang dùng, nên thẻ ảnh ở đây luôn là bộ đứng đầu bảng xổ đó,
+   không phải hai lần truy vấn cho hai kết quả có thể lệch nhau. Vẫn tự đọc
+   được nếu thiếu, giống $categories ngay trên. */
+$collectionsNav = $collectionsNav ?? CollectionModel::visible();
+
+$feature = $collectionsNav[0] ?? null;
 
 if ($feature !== null) {
     $featureImage = CollectionModel::cover($feature);
