@@ -18,9 +18,60 @@ class VariantAdminController extends AdminController
 {
     private const BASE = '/quan-tri/bien-the';
 
+    /**
+     * Số mặt hàng nhiều nhất đổ vào ô chọn một lượt.
+     *
+     * Không phải phân trang — ô chọn không lật trang được. Đây là cái trần để
+     * ô chọn không phình theo danh mục, còn đường đi tới mặt hàng thứ 51 là ô
+     * tìm ngay bên cạnh.
+     */
+    private const TRAN_CHON = 50;
+
     public function index(): void
     {
-        $products  = ProductModel::all('name ASC');
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * Ô CHỌN MẶT HÀNG: TÌM RỒI CHỌN, KHÔNG ĐỔ CẢ DANH MỤC
+         *
+         * Bản cũ gọi ProductModel::all('name ASC') — tức là SELECT * trên bảng
+         * `products`, 72 CỘT cho MỌI mặt hàng, mỗi lần mở trang. Trong khi ô
+         * chọn chỉ hiển thị hai thứ: tên và mã. Cửa hàng vài trăm mặt hàng thì
+         * đó là vài trăm dòng đầy đủ (kể cả mô tả dài) đi qua CSDL, qua PHP,
+         * rồi thành vài trăm thẻ <option> trong HTML — để người dùng cuộn tìm
+         * bằng mắt.
+         *
+         * Nay: chỉ ba cột, có ô tìm, và tối đa TRAN_CHON dòng.
+         *
+         * Ô tìm là một ô GET trong chính form đổi mặt hàng, nên không có JS
+         * vẫn chạy: gõ rồi Enter là trang tải lại với danh sách đã lọc.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $tim = trim((string) ($_GET['tim'] ?? ''));
+
+        $where  = '';
+        $thamSo = [];
+
+        if ($tim !== '') {
+            // addcslashes để '%' và '_' người dùng gõ vào được hiểu là ký tự
+            // thật, không phải ký tự đại diện của LIKE — cùng cách làm ở
+            // InventoryAdminController::index().
+            $where  = 'WHERE (name LIKE :t1 OR sku LIKE :t2 OR brand LIKE :t3)';
+            $needle = '%' . addcslashes($tim, '%_\\') . '%';
+            $thamSo = ['t1' => $needle, 't2' => $needle, 't3' => $needle];
+        }
+
+        $products = Database::fetchAll(
+            "SELECT id, name, sku FROM products {$where}
+              ORDER BY name ASC LIMIT " . self::TRAN_CHON,
+            $thamSo
+        );
+
+        // Tổng số mặt hàng KHỚP ô tìm, để nói thẳng khi danh sách bị cắt bớt.
+        $tongSp = (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM products {$where}",
+            $thamSo
+        );
+
         $productId = (string) ($_GET['sp'] ?? '');
 
         // Chưa chọn mặt hàng nào thì lấy cái đầu — trang trống với một ô chọn
@@ -31,9 +82,37 @@ class VariantAdminController extends AdminController
 
         $product = $productId !== '' ? ProductModel::find($productId) : null;
 
+        /*
+         * MẶT HÀNG ĐANG XEM LUÔN CÓ TRONG Ô CHỌN, kể cả khi nó rơi ngoài trần
+         * hoặc không khớp ô tìm.
+         *
+         * Thiếu bước này thì gõ tìm một chữ khác là ô chọn nhảy sang mặt hàng
+         * đầu danh sách trong khi bảng bên dưới vẫn là biến thể của mặt hàng
+         * cũ — hai thứ nói hai chuyện, và cú bấm "Xem" kế tiếp sẽ đổi mặt hàng
+         * ngoài ý muốn.
+         */
+        $daGhim = false;
+
+        if ($product !== null && !in_array($product['id'], array_column($products, 'id'), true)) {
+            array_unshift($products, [
+                'id'   => $product['id'],
+                'name' => $product['name'],
+                'sku'  => $product['sku'],
+            ]);
+
+            $daGhim = true;
+        }
+
         $this->renderAdmin('admin/variants/index', [
             'pageTitle' => 'Biến thể — Quản trị',
             'products'  => $products,
+            'tim'       => $tim,
+            'tongSp'    => $tongSp,
+            /* Ô chọn có nhiều hơn số khớp đúng một dòng: mặt hàng đang xem.
+               View phải nói ra, không thì "15 mặt hàng khớp" mà đếm được 16
+               dòng là một con số sai trước mắt người dùng. */
+            'daGhim'    => $daGhim,
+            'tranChon'  => self::TRAN_CHON,
             'product'   => $product,
             'variants'  => $product !== null ? VariantModel::allForProduct($product['id']) : [],
             'canEdit'   => UserModel::hasRole($this->userId, 'admin')

@@ -32,7 +32,12 @@ $base = '/quan-tri/bien-the';
 </header>
 
 <!-- Đổi mặt hàng bằng GET: không có JS thì vẫn còn nút "Xem". admin.js gửi
-     form ngay khi đổi ô chọn, giống ô lọc trạng thái ở các trang khác. -->
+     form ngay khi đổi ô chọn, giống ô lọc trạng thái ở các trang khác.
+
+     Ô TÌM VÀ Ô CHỌN ĐI CHUNG MỘT FORM. Gõ vào ô tìm rồi Enter là lọc lại danh
+     sách trong ô chọn; ô chọn vẫn giữ mặt hàng đang xem (controller ghim nó
+     vào đầu danh sách) nên lọc không làm đổi bảng bên dưới. Hai form riêng thì
+     tìm xong là mất mặt hàng đang mở. -->
 <form class="aform" method="get" action="<?= e($base) ?>">
     <div class="aform__grid">
         <div class="field">
@@ -45,13 +50,51 @@ $base = '/quan-tri/bien-the';
                     </option>
                 <?php endforeach; ?>
             </select>
+
+            <?php /* NÓI THẲNG KHI DANH SÁCH BỊ CẮT. Một ô chọn có đúng 50 dòng
+                     trong khi cửa hàng có 312 mặt hàng thì trông y như đủ —
+                     người dùng cuộn hết mà không thấy mặt hàng mình cần sẽ kết
+                     luận là nó chưa được tạo. */ ?>
+            <?php if ($tongSp > count($products)): ?>
+                <p class="field__hint">
+                    Đang hiện <?= count($products) ?> / <?= (int) $tongSp ?> mặt hàng
+                    <?= $tim !== '' ? 'khớp từ khoá' : '' ?> — gõ vào ô tìm để thu hẹp.
+                </p>
+            <?php elseif ($tim !== ''): ?>
+                <p class="field__hint">
+                    <?= (int) $tongSp ?> mặt hàng khớp “<?= e($tim) ?>”<?php
+                    if ($daGhim): ?>, cộng mặt hàng đang xem<?php
+                    endif; ?>.
+                </p>
+            <?php endif; ?>
         </div>
+
+        <div class="field">
+            <label for="sp-tim">Tìm mặt hàng</label>
+            <input type="search" id="sp-tim" name="tim" value="<?= e($tim) ?>"
+                   placeholder="Tên, mã SKU hoặc thương hiệu">
+            <p class="field__hint">Gõ rồi Enter. Để trống là xem <?= (int) $tranChon ?> mặt hàng đầu theo tên.</p>
+        </div>
+
         <button type="submit" class="astatus__save astatus__save--ghost">Xem</button>
+
+        <?php if ($tim !== ''): ?>
+            <a class="apanel__more"
+               href="<?= e($base) ?><?= $product !== null ? '?sp=' . e($product['id']) : '' ?>">Xoá tìm</a>
+        <?php endif; ?>
     </div>
 </form>
 
 <?php if ($product === null): ?>
-    <p class="ahead__note">Chưa có sản phẩm nào.</p>
+    <?php /* Phân biệt hai cảnh KHÁC HẲN nhau mà bản cũ nói chung một câu: cửa
+             hàng chưa có mặt hàng nào, và ô tìm không khớp gì. Câu "Chưa có sản
+             phẩm nào" cho cảnh thứ hai là sai và làm người dùng đi tạo lại một
+             mặt hàng đã có. */ ?>
+    <?php if ($tim !== ''): ?>
+        <p class="ahead__note">Không có mặt hàng nào khớp “<?= e($tim) ?>”.</p>
+    <?php else: ?>
+        <p class="ahead__note">Chưa có sản phẩm nào.</p>
+    <?php endif; ?>
 <?php else: ?>
 
     <div class="atable-wrap">
