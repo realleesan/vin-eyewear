@@ -914,26 +914,6 @@
     color: var(--brand);
 }
 
-.mobile-nav__search {
-    margin-top: 16px;
-}
-
-.mobile-nav__search input {
-    width: 100%;
-    height: 44px;
-    padding-inline: 12px;
-    border: 1px solid var(--line-strong);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: var(--fs-body);
-    color: var(--ink);
-}
-
-.mobile-nav__search input:focus {
-    outline: 2px solid var(--brand);
-    outline-offset: -2px;
-}
-
 /* Nút hành động dính đáy panel */
 .mobile-nav__foot {
     position: sticky;
