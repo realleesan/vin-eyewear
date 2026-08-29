@@ -162,11 +162,33 @@ $chipGroup = static function (string $key, string $legend, array $options, ?arra
                      *
                      * Mục ĐANG BẬT luôn còn liên kết dù đếm ra bao nhiêu —
                      * nếu không sẽ không còn cách nào tắt nó đi.
+                     *
+                     * ─────────────────────────────────────────────────────
+                     * SỐ ĐẾM VẪN TÍNH, NHƯNG KHÔNG CÒN IN RA (2026-08-29)
+                     *
+                     * Trước đây mỗi tiêu chí kèm một con số: "Acetate 2".
+                     * Cửa hàng thấy nó không giúp gì cho việc chọn — người ta
+                     * lọc theo thứ mình cần, không theo chỗ nào đông hàng — mà
+                     * lại làm mỗi dòng thêm một cụm số nhấp nháy đổi sau mỗi
+                     * cú bấm. Nay bỏ khỏi giao diện, ở cả ba nhóm: huy hiệu,
+                     * danh sách tick, và khoảng giá.
+                     *
+                     * `count` thì VẪN PHẢI TÍNH, vì nó là thứ quyết định mục
+                     * nào bị làm mờ. Đừng thấy "không ai in ra nữa" mà bỏ luôn
+                     * phép đếm — bỏ là mọi tiêu chí đều bấm được, kể cả những
+                     * cái dẫn tới lưới rỗng.
+                     *
+                     * Mục bị mờ nay mang thêm một câu sr-only "không có sản
+                     * phẩm nào": số 0 từng là dấu hiệu duy nhất cho người dùng
+                     * trình đọc màn hình, bỏ nó đi mà không thay gì là lấy mất
+                     * thông tin của đúng nhóm người không nhìn thấy màu mờ.
+                     * ─────────────────────────────────────────────────────
                      */
                     $dead = $opt['count'] === 0 && !$opt['on'];
                     ?>
                     <?php if ($dead): ?>
-                        <span class="pchip is-off" aria-disabled="true"><?= e($opt['label']) ?><span class="pchip__n">0</span></span>
+                        <span class="pchip is-off" aria-disabled="true"><?= e($opt['label']) ?><span
+                            class="sr-only"> — không có sản phẩm nào</span></span>
                     <?php else: ?>
                         <?php /* aria-current chứ không phải aria-pressed: aria-pressed
                                  chỉ hợp lệ trên nút, còn đây là <a>. Kèm một câu chỉ
@@ -176,8 +198,7 @@ $chipGroup = static function (string $key, string $legend, array $options, ?arra
                         <a class="pchip<?= $opt['on'] ? ' is-on' : '' ?>"
                            href="<?= e($toggleUrl($group, $opt['key'])) ?>"
                            <?= $opt['on'] ? 'aria-current="true"' : '' ?>
-                           rel="nofollow"><?= e($opt['label']) ?><span
-                               class="pchip__n"><span class="sr-only"> — </span><?= (int) $opt['count'] ?><span class="sr-only"> sản phẩm</span></span><?php
+                           rel="nofollow"><?= e($opt['label']) ?><?php
                             if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif;
                         ?></a>
                     <?php endif; ?>
@@ -249,7 +270,7 @@ $checkGroup = static function (string $key, string $legend, array $options, bool
                           data-brand-plain="<?= e(slugify($opt['label'])) ?>"<?php endif; ?>>
                         <span class="pcheck__box" aria-hidden="true"></span>
                         <span class="pcheck__label"><?= e($opt['label']) ?></span>
-                        <span class="pcheck__count">0</span>
+                        <span class="sr-only"> — không có sản phẩm nào</span>
                     </span>
                 <?php else: ?>
                     <a class="pcheck<?= $opt['on'] ? ' is-on' : '' ?>"
@@ -264,9 +285,6 @@ $checkGroup = static function (string $key, string $legend, array $options, bool
                        data-brand-plain="<?= e(slugify($opt['label'])) ?>"<?php endif; ?>>
                         <span class="pcheck__box" aria-hidden="true"><?= $opt['on'] ? '✓' : '' ?></span>
                         <span class="pcheck__label"><?= e($opt['label']) ?></span>
-                        <span class="pcheck__count">
-                            <span class="sr-only">có </span><?= (int) $opt['count'] ?><span class="sr-only"> sản phẩm</span>
-                        </span>
                         <?php if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif; ?>
                     </a>
                 <?php endif; ?>
@@ -403,7 +421,7 @@ partial('_layout/page-head', [
                                     <span class="pradio is-off" aria-disabled="true">
                                         <span class="pradio__dot" aria-hidden="true"></span>
                                         <span class="pradio__label"><?= e($opt['label']) ?></span>
-                                        <span class="pcheck__count">0</span>
+                                        <span class="sr-only"> — không có sản phẩm nào</span>
                                     </span>
                                 <?php else: ?>
                                     <?php /* Bấm lại chính ô đang chọn là BỎ chọn: nhóm này
@@ -414,9 +432,6 @@ partial('_layout/page-head', [
                                        href="<?= e($buildUrl(['price' => $opt['on'] ? null : (int) $opt['key'], 'page' => null])) ?>">
                                         <span class="pradio__dot" aria-hidden="true"></span>
                                         <span class="pradio__label"><?= e($opt['label']) ?></span>
-                                        <span class="pcheck__count">
-                                            <span class="sr-only">có </span><?= (int) $opt['count'] ?><span class="sr-only"> sản phẩm</span>
-                                        </span>
                                         <?php if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif; ?>
                                     </a>
                                 <?php endif; ?>

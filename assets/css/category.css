@@ -454,12 +454,6 @@
     text-overflow: ellipsis;
 }
 
-.pcheck__count {
-    flex: none;
-    font-size: 12px;
-    color: var(--c-meta);
-}
-
 /* --- Dòng có nút tròn (khoảng giá) --- */
 
 .pradio {
@@ -500,31 +494,17 @@
 
 /* --- Số đếm động --- */
 
-/*
- * Con số bên phải mỗi huy hiệu ("Oval 16").
- *
- * Nhỏ hơn và mờ hơn nhãn một bậc: nó là thông tin PHỤ giúp người dùng đoán
- * trước cú bấm sẽ ra bao nhiêu món, không phải một phần của tên dáng gọng.
- * Cùng cỡ chữ thì đọc lướt qua thành "Oval 16" như thể đó là tên mẫu.
- *
- * font-variant-numeric: tabular-nums để chữ số rộng bằng nhau — không có nó,
- * một cột toàn số hai chữ số vẫn so le vì '1' hẹp hơn '8'.
- */
-.pchip__n {
-    margin-left: 6px;
-    font-size: 11.5px;
-    font-variant-numeric: tabular-nums;
-    color: var(--c-meta);
-}
+/* Ở ĐÂY TỪNG CÓ .pchip__n VÀ .pcheck__count — con số bên cạnh mỗi tiêu chí
+   lọc ("Acetate 2"). Bỏ 2026-08-29 theo yêu cầu của cửa hàng: nó không giúp
+   người ta chọn, mà mỗi cú bấm lại đổi một loạt số nhấp nháy trong cột lọc.
 
-.pchip.is-on .pchip__n {
-    /* Nền huy hiệu bật là màu thương hiệu, --c-meta trên nền đó gần như không
-       đọc được. Mượn màu chữ của chính huy hiệu rồi hạ độ đục. */
-    color: inherit;
-    opacity: 0.72;
-}
+   Xoá luôn CSS chứ không để lại: markup đã không còn in hai lớp này, giữ lại
+   là hai khối kiểu không ai với tới, và người sửa sau sẽ tưởng chúng đang
+   được dùng ở đâu đó.
 
-.pcheck__count { font-variant-numeric: tabular-nums; }
+   Phép ĐẾM thì vẫn còn trong app/views/product/index.php — nó quyết định tiêu
+   chí nào bị làm mờ. Xem khối chú thích ở $dead trong file đó. */
+
 
 /* --- Lựa chọn không lọc ra sản phẩm nào --- */
 
