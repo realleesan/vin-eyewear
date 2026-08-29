@@ -71,6 +71,32 @@ $stockLeft = $variants === []
    khách cần biết trước khi chọn số lượng. */
 $stockLow = $inStock && $stockLeft > 0 && $stockLeft <= 10;
 
+/*
+ * TRẦN CỦA Ô SỐ LƯỢNG — theo tồn kho thật, không phải một con số gõ cứng.
+ *
+ * Ô này từng ghi cứng max="20": hàng còn 3 cái mà mũi tên vẫn chạy tới 20, và
+ * khách chỉ biết mình chọn hụt khi máy chủ trả lời. Con số 20 còn là tàn dư
+ * của luật "trần 20" mà CartController đã bỏ từ lâu (trần tuyệt đối nay là
+ * 999, và giới hạn thật là tồn kho).
+ *
+ * KHÔNG DÙNG $stockLeft: nó là TỔNG tồn của mọi phương án, mà một dòng giỏ chỉ
+ * mua được MỘT phương án. Lấy tổng làm trần thì mặt hàng có hai phương án mỗi
+ * cái 2 chiếc sẽ cho chọn 4 — nhiều hơn bất kỳ phương án nào có thật.
+ *
+ * Lấy phương án DỒI DÀO NHẤT chứ không phải phương án đang chọn sẵn: trang này
+ * không có JavaScript nào cập nhật lại `max` khi khách đổi phương án, nên một
+ * trần tính theo phương án đang chọn sẽ CHẶN NHẦM khi họ chuyển sang phương án
+ * còn nhiều hàng hơn. Chặn nhầm một lượt mua có thật thì tệ hơn là cho gõ một
+ * số hơi cao rồi bị kẹp — mà kẹp thì nay có báo (xem CartController::add).
+ */
+$maxMua = $variants === []
+    ? (int) ($product['stock_quantity'] ?? 0)
+    : (int) max(array_map(static fn ($v) => (int) $v['stock_quantity'], $variants));
+
+/* Sàn 1 để không in ra max="0" — thuộc tính đó làm ô số vô dụng ngay cả khi
+   nó đang bị disabled vì hết hàng. */
+$maxMua = max(1, $maxMua);
+
 $commitments = [
     ['shield', 'Bảo hành 24 tháng',   'Lỗi nhà sản xuất, đổi mới trong 7 ngày đầu'],
     ['eye',    'Đo mắt miễn phí',     'Quy trình khúc xạ chuẩn, kể cả khi không mua'],
@@ -284,7 +310,7 @@ $stars = static function (float $score): string {
                              lên/xuống và bàn phím, không cần thêm gì. -->
                         <label class="sr-only" for="so-luong">Số lượng</label>
                         <input class="pdqty__num" type="number" id="so-luong" name="quantity"
-                               value="1" min="1" max="20" step="1" inputmode="numeric"
+                               value="1" min="1" max="<?= $maxMua ?>" step="1" inputmode="numeric"
                                <?= $inStock ? '' : 'disabled' ?>>
                     </div>
 

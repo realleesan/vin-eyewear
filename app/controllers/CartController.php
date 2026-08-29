@@ -192,7 +192,24 @@ class CartController extends BaseController
             $variantId = null;
         }
 
-        if (!VariantModel::inStock($product, $variant, $qty)) {
+        /*
+         * CHỈ CHẶN KHI KHÔNG CÒN GÌ ĐỂ THÊM — hết hàng, ngừng bán, hoặc tồn 0.
+         *
+         * TRƯỚC ĐÂY chỗ này hỏi `inStock($product, $variant, $qty)`, tức là
+         * "có đủ ĐÚNG SỐ KHÁCH XIN không", và thiếu thì từ chối sạch cả cú
+         * bấm. Hệ quả là cùng một ý muốn lại nhận hai kết quả khác nhau:
+         *
+         *   tồn 3, xin thẳng 5      -> không thêm gì, báo lỗi
+         *   tồn 3, xin 2 rồi xin 2  -> âm thầm kẹp về 3
+         *
+         * Cửa hàng đã chốt MỘT cách cho cả hai đường: luôn kẹp về tồn kho và
+         * nói ra. Khách vẫn mua được phần cửa hàng có, không phải bấm lại lần
+         * nữa chỉ để đổi một con số mà chính trang đã biết.
+         *
+         * Phép kẹp nằm ở khối "KẸP THEO TỒN KHO" phía dưới — chỗ duy nhất biết
+         * trong giỏ đã có sẵn mấy cái của đúng dòng này.
+         */
+        if (!VariantModel::inStock($product, $variant, 1)) {
             flash('cart_error', sprintf('"%s" không đủ tồn kho.', $product['name']));
             redirect('/gio-hang');
         }
@@ -347,12 +364,21 @@ class CartController extends BaseController
          * Trước đây trần 20 che mất chuyện đó với hàng tồn nhiều; từ khi giới
          * hạn thật là tồn kho thì nó lộ ra ở mọi mặt hàng.
          *
-         * Kẹp im lặng chứ không báo lỗi: khách vừa bấm "thêm vào giỏ" và món
-         * ĐÃ vào giỏ, chỉ là ít hơn số họ xin. Dòng giỏ hiện ngay số thật cùng
-         * với cảnh báo tồn kho, nên không có gì bị giấu.
+         * KẸP THÌ PHẢI NÓI RA. Bản trước kẹp im lặng, lý do khi đó là "dòng
+         * giỏ hiện ngay số thật nên không có gì bị giấu" — nhưng "Thêm vào
+         * giỏ" nay giữ khách Ở LẠI trang sản phẩm và chỉ hiện một dải báo, nên
+         * họ không nhìn thấy dòng giỏ nào cả. Không nói thì họ tưởng đã có 5
+         * cái trong giỏ, và chỉ biết sự thật ở bước thanh toán.
          */
         $stock   = VariantModel::stockOf($product, $variant);
-        $new     = min(self::ABS_MAX_QTY, $stock, $current + $qty);
+        $muon    = $current + $qty;                       // số khách muốn có trong giỏ
+        $new     = min(self::ABS_MAX_QTY, $stock, $muon);
+
+        /* Dải báo "ok" chứ không phải "err": món ĐÃ vào giỏ, chỉ ít hơn số
+           xin. Tô đỏ một việc vừa làm xong là nói sai chuyện đã xảy ra.
+           flash() ghi sau sẽ đè lên câu này, nên nó phải đứng SAU dòng
+           'Đã thêm vào giỏ hàng!' ở cuối hàm — xem chỗ đó. */
+        $daKep = $new < $muon;
 
         /*
          * SỐ THỨ TỰ THÊM VÀO — để bảng xổ ở thanh nav biết "5 món mới nhất".
@@ -430,7 +456,12 @@ class CartController extends BaseController
            xanh vào giỏ hàng.' — đúng hơn, nhưng dài và ở màn hẹp thì dải báo
            xuống ba dòng. Khách vừa bấm nút trên đúng cái thẻ đó nên tên hàng
            không phải thứ họ cần đọc lại; cái họ cần biết là việc đã xong. */
-        flash('cart_success', 'Đã thêm vào giỏ hàng!');
+        /* Kẹp theo tồn thì nói luôn còn bao nhiêu — câu này thay hẳn câu
+           "Đã thêm vào giỏ hàng!", không nối thêm: hai vế trong một dải báo ở
+           màn hẹp là ba dòng chữ, mà vế quan trọng lại nằm sau. */
+        flash('cart_success', $daKep
+            ? sprintf('"%s" chỉ còn %d sản phẩm. Đã thêm tối đa vào giỏ hàng.', $product['name'], $stock)
+            : 'Đã thêm vào giỏ hàng!');
 
         /*
          * "MUA NGAY" đi thẳng tới thanh toán. "THÊM VÀO GIỎ" thì Ở LẠI ĐÚNG
