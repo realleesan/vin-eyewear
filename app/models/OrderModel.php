@@ -197,8 +197,15 @@ class OrderModel extends BaseModel
                        chỉ để tách ra khi cần in "gọng + tròng" — xem ghi chú ở
                        schema.sql. */
                     $lensPrice = (int) ($lens['price'] ?? 0);
-                    $unit = max(0, (int) $product['price'] + (int) ($variant['price_delta'] ?? 0))
-                          + $lensPrice;
+
+                    /* GỌI VariantModel::priceOf, KHÔNG chép lại công thức.
+                       Chỗ này từng tự cộng `price` với `price_delta` — đúng
+                       kết quả ở thời điểm viết, nhưng là bản chép thứ hai của
+                       một phép tính tiền. Nó lệch ngay khi giá bán có thêm
+                       luật: khuyến mãi có hạn thêm 2026-08-29 làm giỏ hàng
+                       hiện giá giảm trong khi hoá đơn vẫn ghi giá thường —
+                       thu sai tiền mà không có lỗi nào báo. */
+                    $unit = VariantModel::priceOf($product, $variant) + $lensPrice;
 
                     // Chép lại tên, NHÃN BIẾN THỂ, TÊN GÓI TRÒNG và giá tại
                     // thời điểm mua — đơn cũ không được đổi theo khi sản phẩm

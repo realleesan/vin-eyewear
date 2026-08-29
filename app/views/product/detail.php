@@ -25,9 +25,12 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-$price    = (int) $product['price'];
-$compare  = $product['compare_at_price'] !== null ? (int) $product['compare_at_price'] : null;
+/* Xem chú thích cùng nội dung ở _layout/product-card.php: giá hiện ra phải là
+   giá GIỎ HÀNG SẼ TÍNH, nên cả hai chỗ cùng đi qua ProductPricing. */
+$price    = ProductPricing::giaBan($product);
+$compare  = ProductPricing::giaGach($product);
 $percent  = discount($price, $compare);
+$hanKM    = ProductPricing::hanKhuyenMai($product);
 $rating   = (float) ($product['rating'] ?? 5);
 $reviewN  = (int) ($product['review_count'] ?? 0);
 $images   = $product['images'] ?: [ProductModel::image($product)];
@@ -135,6 +138,34 @@ $stars = static function (float $score): string {
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
+
+            <?php
+            /*
+             * ẢNH 360 / VIDEO — mở ở TAB MỚI, không nhúng iframe.
+             *
+             * Cột `video_url` có ô nhập trong form quản trị từ lâu mà không
+             * trang nào đọc; nối dây 2026-08-29.
+             *
+             * Nhúng thẳng <iframe> YouTube thì kéo theo script của bên thứ ba
+             * vào mọi lượt mở trang sản phẩm — chậm hơn hẳn phần còn lại của
+             * trang, và đặt cookie theo dõi của họ lên khách của mình. Một
+             * đường dẫn thì khách nào muốn xem mới trả cái giá đó.
+             *
+             * Chỉ nhận http/https. Cột này người trong cửa hàng gõ vào, nhưng
+             * nó in thẳng ra href — mà "javascript:" trong href là chạy mã
+             * ngay trên phiên của khách. Một tài khoản quản trị bị chiếm là đủ
+             * để biến mọi trang sản phẩm thành bẫy.
+             */
+            $video = trim((string) ($product['video_url'] ?? ''));
+            $video = preg_match('#^https?://#i', $video) ? $video : '';
+            ?>
+            <?php if ($video !== ''): ?>
+                <a class="pdgal__video" href="<?= e($video) ?>"
+                   target="_blank" rel="noopener noreferrer">
+                    <?= icon('play', 'pdgal__video-ico', 18) ?>
+                    Xem ảnh 360 / video của mẫu này
+                </a>
+            <?php endif; ?>
         </div>
 
         <!-- ══════════ THÔNG TIN ══════════ -->
@@ -174,6 +205,19 @@ $stars = static function (float $score): string {
                     <span class="pdinfo__old"><?= money($compare) ?></span>
                 <?php endif; ?>
             </div>
+
+            <?php /* HẠN KHUYẾN MÃI NÓI RA, không để khách tự đoán.
+
+                     Chỉ hiện khi chương trình ĐANG chạy và CÓ mốc kết thúc —
+                     ProductPricing::hanKhuyenMai() lo cả hai điều kiện. Giá
+                     giảm mà không nói tới bao giờ thì người đang phân vân
+                     không có gì để quyết, còn in hạn của một chương trình đã
+                     tắt thì tệ hơn cả không in. */ ?>
+            <?php if ($hanKM !== null): ?>
+                <p class="pdinfo__sale-han">
+                    Giá khuyến mãi tới hết ngày <?= e(formatDate($hanKM, 'd/m/Y')) ?>.
+                </p>
+            <?php endif; ?>
 
             <?php if (!empty($product['description'])): ?>
                 <p class="pdinfo__desc"><?= e($product['description']) ?></p>

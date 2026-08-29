@@ -35,6 +35,11 @@ const ICONS = [
     // Giao diện
     'search'      => '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L20 20"/>',
     'chevron-down' => '<path d="M7 10l5 5 5-5"/>',
+
+    /* Nút tam giác trong khung tròn — dùng cho đường dẫn "xem ảnh 360 / video"
+       ở trang sản phẩm. Vẽ bằng path chứ không polygon để cùng một stroke-width
+       và cùng bo góc với mọi icon khác trong bảng này. */
+    'play' => '<circle cx="12" cy="12" r="9"/><path d="M10 8.5l6 3.5-6 3.5z"/>',
     'phone'       => '<path d="M6.5 4h3l1.5 3.5-2 1.5a10 10 0 006 6l1.5-2 3.5 1.5v3a1.5 1.5 0 01-1.7 1.5A16 16 0 015 6.7 1.5 1.5 0 016.5 4z"/>',
     'message'     => '<path d="M20.5 12a8 8 0 01-8.5 8 9 9 0 01-3.7-.8L3.5 20.5l1.3-4.6A8 8 0 0112 4a8 8 0 018.5 8z"/>',
     'map-pin'     => '<path d="M12 21s-6.5-5.6-6.5-10a6.5 6.5 0 1113 0c0 4.4-6.5 10-6.5 10z"/><circle cx="12" cy="11" r="2.4"/>',

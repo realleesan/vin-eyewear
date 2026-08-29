@@ -49,7 +49,12 @@ class DashboardController extends AdminController
         $stats = Database::fetchOne(
             "SELECT
                 (SELECT COUNT(*) FROM products WHERE is_visible = 1)              AS products,
-                (SELECT COUNT(*) FROM products WHERE stock_quantity <= 5)         AS low_stock,
+                -- Cùng ngưỡng với trang Tồn kho, và cùng lý do: mỗi mặt hàng
+                -- có mốc riêng ở `low_stock_at`, để trống mới rơi về 5. Thẻ này
+                -- dẫn thẳng sang trang ấy nên hai con số phải khớp; lệch nhau
+                -- thì bấm vào thẻ ghi 3 sắp hết lại ra một bảng 7 dòng.
+                (SELECT COUNT(*) FROM products
+                  WHERE stock_quantity <= COALESCE(NULLIF(low_stock_at, 0), 5)) AS low_stock,
                 (SELECT COUNT(*) FROM categories WHERE is_visible = 1)            AS categories,
                 (SELECT COUNT(*) FROM orders WHERE status = 'new')                 AS new_orders,
                 (SELECT COUNT(*) FROM orders)                                       AS orders_total,
@@ -171,7 +176,7 @@ class DashboardController extends AdminController
             'lowStock'     => Database::fetchAll(
                 'SELECT id, slug, name, sku, stock_quantity, status
                    FROM products
-                  WHERE stock_quantity <= 5
+                  WHERE stock_quantity <= COALESCE(NULLIF(low_stock_at, 0), 5)
                   ORDER BY stock_quantity ASC
                   LIMIT 8'
             ),

@@ -140,7 +140,11 @@ class VariantModel extends BaseModel
      */
     public static function priceOf(array $product, ?array $variant): int
     {
-        $price = (int) $product['price'] + (int) ($variant['price_delta'] ?? 0);
+        /* Giá NỀN đi qua ProductPricing chứ không đọc thẳng cột `price`: mặt
+           hàng đang khuyến mãi có hạn thì giá nền là giá khuyến mãi. Đây là
+           đường tiền — giỏ hàng và lúc tạo đơn đều gọi hàm này — nên nó phải
+           dùng đúng công thức mà thẻ sản phẩm đang hiện cho khách xem. */
+        $price = ProductPricing::giaBan($product) + (int) ($variant['price_delta'] ?? 0);
 
         // Chặn sàn 0: một price_delta âm quá tay sẽ thành giá âm, và giá âm
         // biến hoá đơn thành khoản cửa hàng nợ khách.

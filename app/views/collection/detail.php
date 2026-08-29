@@ -405,7 +405,7 @@ if ($minPrice !== null) {
                                 <td class="cdet__cell-lens"><?= e(implode(' · ', $trong)) ?></td>
                                 <td class="num">
                                     <a class="cdet__price" href="<?= e($mauUrl) ?>">
-                                        <?= e(money((int) $p['price'])) ?>
+                                        <?= e(money(ProductPricing::giaBan($p))) ?>
                                         <?= icon('chevron-down', 'cdet__price-ico', 16) ?>
                                     </a>
                                 </td>

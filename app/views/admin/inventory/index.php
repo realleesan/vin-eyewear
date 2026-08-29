@@ -11,7 +11,12 @@
 
 $tabs = [
     ''    => ['Tất cả',       (int) $counts['total']],
-    'low' => ['Sắp hết (≤' . $low . ')', (int) $counts['low_stock']],
+    /* NHÃN KHÔNG CÒN KÈM CON SỐ. Từ 2026-08-29 ngưỡng "sắp hết" là của TỪNG
+       mặt hàng (cột low_stock_at), chỉ những mặt hàng để trống mới rơi về mốc
+       chung. In "≤5" lên viên lọc là nói một con số không còn đúng cho cả
+       bảng — mà nó đứng ngay trên chính cái bảng ấy. Mốc chung nói ở dòng dẫn
+       bên dưới, chỗ có đủ chỗ để nói cho hết ý. */
+    'low' => ['Sắp hết', (int) $counts['low_stock']],
     'out' => ['Hết hàng',     (int) $counts['out_stock']],
 ];
 
@@ -54,6 +59,15 @@ $duongDanTrang = static function (int $so) use ($q, $filter): string {
             Cập nhật số lượng sau khi nhập hàng hoặc kiểm kê. Đặt tồn về
             <strong>0</strong> sẽ tự chuyển sang <em>hết hàng</em> và ẩn nút mua
             ở trang bán hàng.
+        </p>
+        <?php /* Mốc chung nói ở đây chứ không nhét vào viên lọc: ngưỡng nay là
+                 của từng mặt hàng, nên câu này phải nói được cả hai vế — mốc
+                 chung là bao nhiêu, và đổi riêng thì đổi ở đâu. Viên lọc không
+                 đủ chỗ cho một câu như thế. */ ?>
+        <p class="ahead__note">
+            “Sắp hết” tính theo ngưỡng riêng của từng mặt hàng — ô
+            <em>Ngưỡng cảnh báo hết hàng</em> trong form sản phẩm. Để trống thì
+            dùng mốc chung <strong><?= (int) $low ?></strong>.
         </p>
     </div>
 

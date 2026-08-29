@@ -258,8 +258,11 @@ class EyewearSpecs
             // Nhãn đổi theo phân loại: gọng cận bán RỜI tròng, kính râm thì
             // giá đã gồm tròng sẵn. Một nhãn dùng chung cho cả hai là chỗ
             // khách hiểu nhầm rồi tới cửa hàng mới biết phải trả thêm.
+            /* ProductPricing chứ không phải cột `price` trần: bảng thông số
+               nằm ngay dưới nút mua, hai con số lệch nhau là chỗ khách hỏi
+               ngay. */
             ($laGong ? 'Giá gọng (chưa tròng)' : 'Giá lẻ (đã gồm tròng)')
-                             => money((int) ($p['price'] ?? 0)),
+                             => money(ProductPricing::giaBan($p)),
             'Kèm tròng đổi độ' => self::co($p['price_with_lens'] ?? null)
                                     ? money((int) $p['price_with_lens']) : null,
             'Ưu đãi ra mắt'  => $uuDai,

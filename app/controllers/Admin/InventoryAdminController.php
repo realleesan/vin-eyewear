@@ -12,7 +12,31 @@
 class InventoryAdminController extends AdminController
 {
     /** Ngưỡng cảnh báo sắp hết hàng. */
+    /**
+     * Ngưỡng "sắp hết" MẶC ĐỊNH, dùng khi mặt hàng không đặt riêng.
+     *
+     * Từ 2026-08-29 mỗi mặt hàng đặt được ngưỡng của mình ở ô "Ngưỡng cảnh báo
+     * hết hàng" trong form sản phẩm (cột `low_stock_at`). Ba cái gọng bán một
+     * tháng vài chiếc và cái kính râm bán chạy nhất mùa hè không thể cùng một
+     * mốc: đặt 5 cho cả hai thì hoặc là báo động giả suốt, hoặc là biết tin
+     * khi đã hết hàng thật.
+     *
+     * Cột ấy đã có ô nhập từ lâu nhưng KHÔNG AI ĐỌC — màn này vẫn so với hằng
+     * số. Nay COALESCE(low_stock_at, LOW): mặt hàng nào để trống thì rơi về
+     * con số chung, nên không phải đi điền lại cho cả kho.
+     */
     private const LOW = 5;
+
+    /**
+     * Biểu thức SQL của ngưỡng "sắp hết" cho MỘT dòng products.
+     *
+     * Gói thành hằng để ba câu lệnh bên dưới không có ba bản chép — lệch một
+     * bản là dải viên lọc đếm một kiểu còn bảng lọc một kiểu.
+     *
+     * NULLIF(...,0) để ngưỡng 0 không biến thành "sắp hết khi tồn <= 0": số 0
+     * ở ô ấy nghĩa là "không cảnh báo riêng", trùng ý với để trống.
+     */
+    private const NGUONG = 'COALESCE(NULLIF(low_stock_at, 0), ' . self::LOW . ')';
 
     /**
      * Số dòng mỗi trang.
@@ -46,7 +70,7 @@ class InventoryAdminController extends AdminController
         $q = trim((string) ($_GET['q'] ?? ''));
 
         $dieuKien = match ($filter) {
-            'low' => ['stock_quantity > 0 AND stock_quantity <= ' . self::LOW],
+            'low' => ['stock_quantity > 0 AND stock_quantity <= ' . self::NGUONG],
             'out' => ['stock_quantity <= 0'],
             default => [],
         };
@@ -73,7 +97,7 @@ class InventoryAdminController extends AdminController
         $counts = Database::fetchOne(
             'SELECT
                 COUNT(*)                                                       AS total,
-                SUM(stock_quantity > 0 AND stock_quantity <= ' . self::LOW . ') AS low_stock,
+                SUM(stock_quantity > 0 AND stock_quantity <= ' . self::NGUONG . ') AS low_stock,
                 SUM(stock_quantity <= 0)                                       AS out_stock
                FROM products ' . $whereDem,
             $thamSo

@@ -28,9 +28,11 @@ class ArController extends BaseController
 
             $frames[] = $frame + [
                 'productId' => $product['id'],
-                'price'     => (int) $product['price'],
-                'compareAt' => $product['compare_at_price'] !== null
-                    ? (int) $product['compare_at_price'] : null,
+                /* Qua ProductPricing như mọi chỗ khác: màn thử AR có nút
+                   "Mua" dẫn thẳng sang giỏ, nên con số ở đây mà khác con số
+                   giỏ hàng tính là khách thấy giá nhảy giữa hai bước. */
+                'price'     => ProductPricing::giaBan($product),
+                'compareAt' => ProductPricing::giaGach($product),
                 'inStock'   => ProductModel::inStock($product),
                 'url'       => '/san-pham/' . rawurlencode($product['slug']),
             ];

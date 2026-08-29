@@ -227,6 +227,17 @@
     text-decoration: line-through;
 }
 
+/* Hạn khuyến mãi: một dòng nhỏ ngay dưới giá, không phải một cái nhãn nhấp
+   nháy. Nó là thông tin để quyết, không phải thứ phải giành sự chú ý với
+   chính con số giá ngay trên nó. */
+.pdinfo__sale-han {
+    margin: 6px 0 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand, #8f2b3c);
+}
+
+
 .pdinfo__desc {
     margin: 0;
     font-size: 15px;
@@ -837,3 +848,24 @@
     .pdqty { width: 100%; justify-content: center; }
     .pdbtn { flex: 1 1 100%; }
 }
+
+/* Đường dẫn ảnh 360 / video, nằm dưới dãy thumbnail. Trông như một nút phụ
+   chứ không phải nút mua: nó dẫn ra khỏi trang, và thứ phải nổi nhất trong
+   cột này vẫn là nút thêm vào giỏ. */
+.pdgal__video {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 9px 16px;
+    border: 1px solid var(--d-line, #e2d9c8);
+    border-radius: 10px;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--brand, #8f2b3c);
+    text-decoration: none;
+}
+
+.pdgal__video:hover { border-color: var(--brand, #8f2b3c); }
+
+.pdgal__video-ico { flex-shrink: 0; }

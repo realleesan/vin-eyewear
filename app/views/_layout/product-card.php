@@ -47,8 +47,11 @@ $showCompare = $showCompare ?? true;
 $eager       = $eager       ?? false;
 
 $url     = '/san-pham/' . rawurlencode($product['slug']);
-$price   = (int) $product['price'];
-$compare = $product['compare_at_price'] !== null ? (int) $product['compare_at_price'] : null;
+/* Giá qua ProductPricing: đang khuyến mãi có hạn thì $price là giá khuyến mãi
+   và $compare là giá thường bị gạch. Không đọc thẳng hai cột nữa — xem khối
+   "MỘT NƠI QUYẾT ĐỊNH GIÁ" ở app/services/ProductPricing.php. */
+$price   = ProductPricing::giaBan($product);
+$compare = ProductPricing::giaGach($product);
 $percent = discount($price, $compare);
 $inStock = ProductModel::inStock($product);
 
