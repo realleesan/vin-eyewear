@@ -108,7 +108,42 @@
 </IfModule>
 
 # ----------------------------------------------------------------------------
-# 4. KHÁC
+# 4. NÉN — BƯỚC 1: CHỈ HTML VÀ CSS
+#
+# Ngày 2026-08-29 khối "nén và đệm" đầy đủ từng được thêm vào đây và làm CẢ
+# TRANG THẬT trả 404: luật rewrite ở mục 2 ngừng chạy, mọi đường trừ '/' rơi
+# xuống trang lỗi của hosting. Xem commit "htaccess — bỏ khối nén và đệm".
+# Khối ấy chạy đúng trên Apache 2.4.58 dựng riêng ở máy phát triển, nên vấn đề
+# nằm ở chỗ InfinityFree cho phép directive nào — thứ chỉ biết được bằng cách
+# thử trên chính nó.
+#
+# Vì thế lần này ĐI TỪNG BƯỚC, mỗi lần đẩy đúng một thứ rồi mở trang thật kiểm.
+# Bước 1 là dòng có giá trị nhất và cũng là dòng đáng ngờ nhất.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# BA THỨ ĐÃ ĐO TRÊN TRANG THẬT TRƯỚC KHI VIẾT KHỐI NÀY
+#
+#   · Máy chủ trước Apache là openresty. Nó TỰ đặt
+#     `Cache-Control: max-age=2592000` cho css, js và ảnh — nên phần "đệm" của
+#     khối cũ là thừa, bỏ hẳn, không đẩy lại nữa.
+#   · X-Content-Type-Options và X-Frame-Options của mục 3 CÓ về tới trình
+#     duyệt, tức mod_headers chạy và .htaccess này đang được đọc.
+#   · KHÔNG có Content-Encoding nào, kể cả khi trình duyệt xin gzip. Đây là
+#     chỗ trống duy nhất còn lại, và admin.css là 165 KB.
+# ─────────────────────────────────────────────────────────────────────────────
+
+<IfModule mod_deflate.c>
+    <IfModule mod_filter.c>
+        # HAI KIỂU THÔI. JavaScript để bước sau: mime.types của mỗi máy chủ
+        # khai `.js` một tên khác nhau (XAMPP ở máy này khai
+        # application/x-javascript), nên nó cần một phép thử riêng chứ không
+        # phải đoán thêm một tên vào đây.
+        AddOutputFilterByType DEFLATE text/html text/css
+    </IfModule>
+</IfModule>
+
+# ----------------------------------------------------------------------------
+# 5. KHÁC
 # ----------------------------------------------------------------------------
 
 # Không liệt kê nội dung thư mục khi không có index
