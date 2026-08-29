@@ -369,6 +369,10 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         // Chỉ là tăng cường: đổi ô sắp xếp là gửi form luôn, và lọc danh sách
         // thương hiệu ngay khi gõ. Không có file này trang vẫn lọc được.
         'product/index' => 'catalog.js',
+        // Kẹp ô số lượng về đúng khoảng ngay khi gõ, và nói bằng tiếng Việt.
+        // Thiếu file này thì min/max của ô vẫn còn nguyên tác dụng, chỉ là gõ
+        // quá tồn sẽ gặp bong bóng mặc định của trình duyệt.
+        'product/detail' => 'product-detail.js',
         // Cũng chỉ là tăng cường: đổi cơ sở trên bản đồ không cần tải lại trang.
         'contact/index' => 'contact.js',
         // Cũng chỉ là tăng cường: chọn ảnh đại diện xong là gửi luôn, khỏi

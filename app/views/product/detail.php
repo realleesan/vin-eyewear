@@ -323,6 +323,25 @@ $stars = static function (float $score): string {
                         Thêm vào giỏ
                     </button>
                 </div>
+
+                <?php
+                /*
+                 * CHỖ CHO LỜI NHẮC VỀ SỐ LƯỢNG — assets/js/product-detail.js điền.
+                 *
+                 * Thay cho bong bóng "Value must be less than or equal to 3." của
+                 * trình duyệt: tiếng Anh, kiểu dáng của hệ điều hành, CSS không với
+                 * tới, và nó CHẶN LUÔN form nên câu báo tiếng Việt của máy chủ
+                 * không bao giờ hiện ra được.
+                 *
+                 * In sẵn thẻ rỗng ở đây chứ không để JS tự dựng: chỗ của nó trong
+                 * luồng đọc phải cố định — ngay sau hàng nút mua, trước danh sách
+                 * cam kết — chứ không phải nơi nào script chạy tới.
+                 *
+                 * aria-live="polite": trình đọc màn hình đọc câu mới khi nó xuất
+                 * hiện, mà không cắt ngang thứ đang đọc dở.
+                 */
+                ?>
+                <p class="pdqty__note" data-qty-note role="status" aria-live="polite" hidden></p>
             </form>
 
             <ul class="pdcommit" role="list">

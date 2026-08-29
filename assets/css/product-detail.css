@@ -389,6 +389,54 @@
     border-radius: var(--radius-sm);
 }
 
+/* ============================================================
+   LỜI NHẮC VỀ SỐ LƯỢNG — thay bong bóng mặc định của trình duyệt
+
+   Markup: app/views/product/detail.php · chữ do assets/js/product-detail.js
+   điền. Bong bóng kia là "Value must be less than or equal to 3." — tiếng Anh,
+   kiểu dáng của hệ điều hành, và CSS không với tới được.
+
+   NHẸ, KHÔNG PHẢI MỘT DẢI BÁO LỖI ĐỎ. Người dùng không làm gì sai: họ gõ một
+   con số, cửa hàng chỉ còn ít hơn thế, và số đã được sửa hộ ngay trước mắt.
+   Một khung đỏ có viền cho việc đó là phản ứng thái quá — nó nằm ngay trên nút
+   "Mua ngay", đủ sức làm người ta ngần ngừ không bấm nữa.
+
+   Nên: chữ nhỏ, màu nâu trầm của --muted, một dấu chấm tròn brand làm mốc mắt.
+   ============================================================ */
+
+/* PHẢI CÓ DÒNG NÀY, và nó phải đứng TRƯỚC .pdqty__note.
+
+   `hidden` chỉ là `display: none` trong bảng kiểu mặc định của trình duyệt,
+   nên BẤT KỲ khai báo `display` nào của mình cũng đè lên nó. Thiếu dòng này
+   thì lúc JS ẩn dòng nhắc đi, chữ biến mất nhưng CÁI CHẤM brand ở ::before
+   vẫn nằm lại giữa trang — một dấu tròn đỏ vô nghĩa treo dưới nút mua. Nhìn
+   thấy trên ảnh chụp trước khi vá. */
+.pdqty__note[hidden] {
+    display: none;
+}
+
+.pdqty__note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0 0;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--muted);
+}
+
+/* Dấu chấm dẫn: đủ để mắt biết đây là một lời nhắn mới xuất hiện chứ không
+   phải một dòng mô tả vẫn nằm sẵn ở đó. Dùng ::before nên trình đọc màn hình
+   không đọc phải một ký tự vô nghĩa. */
+.pdqty__note::before {
+    content: "";
+    flex-shrink: 0;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brand);
+}
+
 .pdbtn {
     flex: 1;
     min-width: 150px;
