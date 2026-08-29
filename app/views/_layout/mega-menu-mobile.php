@@ -21,7 +21,9 @@
  */
 ?>
 <details class="mobile-nav__group"<?= $isProductActive ? ' open' : '' ?>>
-    <summary>
+    <?php /* Đứng ở /san-pham thì hàng này sáng lên như mọi mục khác của menu trượt —
+             xem .mobile-nav__links > details > summary.is-active trong header.css. */ ?>
+    <summary<?= $isProductActive ? ' class="is-active"' : '' ?>>
         <span><?= e(t('nav.products')) ?></span>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8"

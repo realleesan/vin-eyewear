@@ -24,7 +24,9 @@ $collectionsNav = $collectionsNav ?? CollectionModel::visible();
     <a href="/bo-suu-tap"<?= $isCollectionActive ? ' class="is-active" aria-current="page"' : '' ?>><?= e(t('nav.collections')) ?></a>
 <?php else: ?>
 <details class="mobile-nav__group"<?= $isCollectionActive ? ' open' : '' ?>>
-    <summary>
+    <?php /* Đứng ở /bo-suu-tap thì hàng này sáng lên như mọi mục khác của menu trượt —
+             xem .mobile-nav__links > details > summary.is-active trong header.css. */ ?>
+    <summary<?= $isCollectionActive ? ' class="is-active"' : '' ?>>
         <span><?= e(t('nav.collections')) ?></span>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8"

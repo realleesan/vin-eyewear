@@ -795,6 +795,125 @@
     height: 22px;
 }
 
+/* --- Danh sách liên kết -------------------------------------
+
+   KHỐI NÀY TRƯỚC ĐÂY KHÔNG TỒN TẠI. Bản port thiết kế (ff0c201) dựng markup
+   .mobile-nav__links nhưng không kèm luật nào cho nó, nên suốt từ đó tới nay
+   menu trượt hiện link mặc định của trình duyệt: chữ xanh gạch chân, các mục
+   nằm tràn ngang một dòng vì <a> là inline. Không ai thấy vì nó chỉ lộ ra
+   dưới 1101px, mà bảng xổ desktop thì luôn được ngó tới trước.
+
+   Chú thích ở đầu khối "MENU TRƯỢT" trong components/mega-menu.css có câu
+   "dáng phải khớp các liên kết thẳng của .mobile-nav__links" — nay câu đó mới
+   có thứ để khớp vào.
+   ------------------------------------------------------------
+
+   MỘT LUẬT CHO CẢ <a> LẪN <summary>
+
+   Trong danh sách này có hai loại hàng: liên kết thẳng, và <summary> của hai
+   khối <details> ("Sản phẩm", "Bộ sưu tập"). Chúng phải trông y như nhau —
+   người dùng không cần biết cái nào bung ra được, chỉ cần thấy sáu mục cùng
+   cấp. Nên đệm, cỡ chữ và màu khai chung ở đây; mega-menu.css chỉ thêm phần
+   riêng của <summary> (bỏ tam giác mặc định, xếp chevron sang phải).
+
+   LUẬT DÙNG CHUNG KHÔNG ĐỤNG TỚI `display` — đã dính một lần rồi.
+
+   Bản đầu khai `display: block` ở luật chung cho gọn, nghĩ rằng mega-menu.css
+   nạp sau sẽ thắng. Sai: thứ tự nạp chỉ phân định khi độ đặc hiệu BẰNG nhau,
+   mà `.mobile-nav__links > details > summary` (1 lớp + 2 thẻ) đặc hiệu hơn
+   `.mobile-nav__group summary` (1 lớp + 1 thẻ). Kết quả là summary mất
+   display:flex, chevron thôi không bị đẩy ra mép phải mà dính ngay sau chữ.
+
+   Nên `display: block` nay khai riêng cho <a>, còn <summary> giữ nguyên flex
+   của mega-menu.css. */
+
+.mobile-nav__links {
+    display: flex;
+    flex-direction: column;
+    /* 2px chứ không 0: hai hàng liền nhau vẫn cần một vạch hở để nền lúc
+       :hover không dính thành một mảng. Khoảng cách thật giữa hai dòng chữ do
+       đệm 12px của hàng lo. */
+    gap: 2px;
+    margin-top: 12px;
+    padding-bottom: 16px;
+}
+
+/* Hàng cao 12 + 21 + 12 = 45px, qua ngưỡng chạm 44px của .tap-target mà không
+   phải khai min-height — ngón tay ở màn 320px to đúng bằng ở màn 430px.
+
+   Đệm ngang 8px là để nền lúc :hover và lúc .is-active không ôm sát chữ; nó
+   ăn vào đệm 20px của .mobile-nav__panel nên chữ vẫn thẳng hàng với wordmark
+   ở trên và cụm nút ở dưới. */
+.mobile-nav__links > a,
+.mobile-nav__links > details > summary {
+    padding: 12px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--ink);
+    text-decoration: none;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.mobile-nav__links > a {
+    display: block;
+}
+
+/* Rê chuột / tiêu điểm CHỈ đổi màu chữ, không đổ nền — cùng quy ước với
+   .header-nav__list > li > a ở trên: nền be dành riêng cho "đang ở trang này". */
+.mobile-nav__links > a:hover,
+.mobile-nav__links > a:focus-visible,
+.mobile-nav__links > details > summary:hover,
+.mobile-nav__links > details > summary:focus-visible {
+    color: var(--brand);
+}
+
+/* Trang đang mở — cùng bộ ba (nền be, chữ đỏ, in đậm) với mục .is-active của
+   thanh nav desktop, để hai khổ màn hình nói cùng một thứ tiếng.
+
+   ÁP CHO CẢ <summary>: đứng ở /san-pham hay /bo-suu-tap thì hàng tương ứng
+   cũng phải sáng lên. Không có nó thì đúng hai trang đó là hai trang duy nhất
+   mà menu trượt không cho biết mình đang ở đâu — mà chúng lại là hai mục có
+   nhiều trang con nhất, tức là nơi cần chỉ đường nhất.
+
+   Lớp .is-active của <summary> do hai partial mega-menu-mobile.php và
+   collection-menu-mobile.php gắn, đọc từ $isProductActive / $isCollectionActive
+   — cùng hai biến mà thanh nav desktop đang dùng. Không dùng [open] thay thế:
+   khối đang bung ra không có nghĩa là đang đứng ở trang đó. */
+.mobile-nav__links > a.is-active,
+.mobile-nav__links > details > summary.is-active {
+    background: #f1e7dd;
+    color: var(--brand);
+    font-weight: 600;
+}
+
+/* --- Mục con trong khối <details> ---------------------------
+   Khung của .mobile-nav__sub (thụt vào, vạch dọc bên trái) nằm ở
+   mega-menu.css — đó là chuyện của khối <details>. Ở đây chỉ là dáng chữ của
+   từng dòng, để nó không rơi lại về link mặc định như cả danh sách vừa rồi.
+
+   Nhỏ hơn hàng cha một nấc (14px so với 15px) và dùng cùng màu chữ với
+   .mega__links a bên bảng xổ desktop: cùng là "lát cắt hẹp hơn của mục ngay
+   trên nó" thì phải cùng sắc.
+
+   40px chiều cao chứ không 45px như hàng cha: đây là mục con, và 40px vẫn qua
+   WCAG 2.5.8 — cùng con số đã dùng cho bốn nút .header-action. */
+.mobile-nav__sub a {
+    display: block;
+    padding: 10px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    line-height: 1.4;
+    color: #4a3b38;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.mobile-nav__sub a:hover,
+.mobile-nav__sub a:focus-visible {
+    color: var(--brand);
+}
+
 .mobile-nav__search {
     margin-top: 16px;
 }
