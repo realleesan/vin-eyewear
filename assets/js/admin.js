@@ -8,9 +8,11 @@
 (function () {
     'use strict';
 
-    // Báo cho CSS biết JS đã chạy -> ẩn nút "Lưu" thừa cạnh ô chọn.
-    // Đặt trên <html> chứ không phải <body> để CSS áp dụng ngay từ đầu.
-    document.documentElement.classList.add('js');
+    /* LỚP `js` KHÔNG ĐẶT Ở ĐÂY NỮA.
+       File này nạp bằng `defer`, tức là chạy sau khi cả trang đã dựng xong —
+       đặt lớp ở đây thì mấy cái nút mà CSS định ẩn đã kịp hiện ra rồi mới biến
+       mất. Nay một dòng inline ở đầu <head> của khung quản trị lo việc ấy; xem
+       khối chú thích tại chỗ đó. */
 
     /* Ô chọn trạng thái: đổi là gửi luôn, không phải bấm Lưu. */
     document.querySelectorAll('select[data-autosubmit]').forEach(function (select) {

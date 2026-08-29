@@ -124,6 +124,32 @@ if (in_array('admin', $adminRoles, true)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
 
+    <?php /*
+     * ĐÁNH DẤU "CÓ JAVASCRIPT" NGAY ĐẦU <head>, KHÔNG ĐỢI admin.js.
+     *
+     * Khu quản trị có một loạt luật CSS chỉ bật khi có JS, và tất cả đều để
+     * ẩn thứ gì đó đi:
+     *
+     *     .js form:has(select[data-autosubmit]) .astatus__save   nút "Lưu" cạnh ô chọn tự gửi
+     *     .js .aosave                                            nút lưu của từng dòng đơn hàng
+     *     .js .aobulk__go                                        nút "Áp dụng" của thao tác hàng loạt
+     *
+     * Trước đây lớp `js` do admin.js đặt, mà file ấy nạp bằng `defer` ở cuối
+     * <body> — tức là chỉ chạy SAU KHI trình duyệt đã dựng và vẽ xong cả
+     * trang. Nên mỗi lần mở một màn quản trị, mấy cái nút ấy hiện ra thật rồi
+     * mới biến mất: nhìn như trang đang tải nhầm một bản cũ, và trên đường
+     * truyền chậm thì nó hiện đủ lâu để người dùng kịp bấm vào một cái nút
+     * sắp không còn ở đó.
+     *
+     * Một dòng inline ở đây chạy TRƯỚC khi <body> được dựng, nên lớp `js` đã
+     * có mặt ngay từ khung hình đầu tiên và không có gì nhấp nháy. Cùng cách
+     * đã dùng ở khung trang bán hàng (app/views/_layout/master.php).
+     *
+     * Inline chứ không phải file rời: một file rời dù đặt ở <head> vẫn là một
+     * lượt tải nữa, và trong quãng chờ đó thì vẫn nhấp nháy y như cũ.
+     */ ?>
+    <script>document.documentElement.classList.add('js');</script>
+
     <title><?= e($pageTitle ?? 'Quản trị — Vin Eyewear') ?></title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
