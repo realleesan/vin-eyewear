@@ -108,7 +108,34 @@
 </IfModule>
 
 # ----------------------------------------------------------------------------
-# 4. NÉN — BƯỚC 1: CHỈ HTML VÀ CSS
+# 4. NÉN — KHÔNG CÓ TÁC DỤNG TRÊN HOSTING NÀY (đo 2026-08-29)
+#
+# ĐỌC DÒNG NÀY TRƯỚC KHI TIN LÀ ASSET ĐANG ĐƯỢC NÉN: nó KHÔNG được nén.
+# Directive dưới đây đúng và chạy tốt trên Apache 2.4.58 ở máy phát triển
+# (admin.css 165.351 → 46.759 byte), nhưng trên InfinityFree thì không có gì
+# đổi cả — hoặc Apache của họ không nạp mod_deflate (khi ấy <IfModule> nuốt
+# lặng lẽ), hoặc lớp openresty đứng trước cắt mất Content-Encoding.
+#
+# Đo sau khi đã deploy đúng dòng này, bằng Chrome thật (curl vô dụng:
+# InfinityFree trả trang đố JavaScript), đọc header của CHÍNH tài liệu:
+#
+#     /quan-tri            (không nén)  text/html
+#     layout.css           (không nén)  text/css
+#     admin-login.css      (không nén)  text/css
+#
+# Thử cả URL gắn ?cachebust= để loại khả năng proxy trả bản cũ trong đệm —
+# vẫn 165.351 byte, vẫn không có Content-Encoding.
+#
+# GIỮ LẠI CHỨ KHÔNG XOÁ: directive không sai, không rủi ro (đã kiểm trang thật
+# sau khi đẩy — /quan-tri, /san-pham vẫn vào được), và sẽ tự có tác dụng nếu
+# dự án chuyển sang hosting khác. Nhưng phải ghi rõ ở đây là hiện nay nó không
+# làm gì, kẻo người sau đọc thấy chữ "nén" rồi đi tối ưu chỗ khác.
+#
+# MỘT KẾT LUẬN PHỤ, ĐÁNG GIÁ: dòng này KHÔNG phải thủ phạm của lần cả site trả
+# 404 hôm nay. Đẩy riêng nó lên thì trang vẫn sống. Thủ phạm nằm ở hai thứ còn
+# lại của khối cũ — `AddType` hoặc khối <FilesMatch> + `Header set` cho
+# Cache-Control. Cả hai nay đều không cần nữa: openresty đã tự đặt
+# `Cache-Control: max-age=2592000` cho css, js và ảnh.
 #
 # Ngày 2026-08-29 khối "nén và đệm" đầy đủ từng được thêm vào đây và làm CẢ
 # TRANG THẬT trả 404: luật rewrite ở mục 2 ngừng chạy, mọi đường trừ '/' rơi
@@ -134,10 +161,9 @@
 
 <IfModule mod_deflate.c>
     <IfModule mod_filter.c>
-        # HAI KIỂU THÔI. JavaScript để bước sau: mime.types của mỗi máy chủ
-        # khai `.js` một tên khác nhau (XAMPP ở máy này khai
-        # application/x-javascript), nên nó cần một phép thử riêng chứ không
-        # phải đoán thêm một tên vào đây.
+        # KHÔNG thêm kiểu của JavaScript vào đây nữa. Bước sau lẽ ra là thử
+        # `.js`, nhưng khi cả text/html lẫn text/css đều không nén được thì
+        # thêm một kiểu thứ ba chỉ là thêm chữ, không đổi được gì.
         AddOutputFilterByType DEFLATE text/html text/css
     </IfModule>
 </IfModule>
