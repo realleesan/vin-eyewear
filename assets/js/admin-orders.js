@@ -215,8 +215,39 @@
             var chon = window.getSelection && window.getSelection();
             if (chon && String(chon).length > 0) return;
 
+            /*
+             * ĐI QUA ĐÚNG THẺ <a> CỦA MÃ ĐƠN, KHÔNG NHẢY THẲNG ĐỊA CHỈ.
+             *
+             * Thẻ ấy có data-modal, nên admin-modal.js bắt cú bấm và mở ngăn
+             * kéo tại chỗ bằng bản HTML đã nạp sẵn — mở là thấy. Gán
+             * location.href thì bỏ qua hết: một lượt tải lại cả trang quản
+             * trị, đúng thứ chậm nhất trên hosting, và mất luôn vị trí cuộn.
+             *
+             * Bấm vào THÂN DÒNG là lối mở đơn thường dùng nhất, nên nó không
+             * được là lối chậm nhất.
+             *
+             * Không có thẻ ấy (JS của module hộp thoại chưa nạp, hoặc bảng đổi
+             * hình) thì vẫn còn data-open để đi đường thường.
+             */
+            var ma  = dong.querySelector('a.aocode[data-modal]');
             var url = dong.getAttribute('data-open');
-            if (url) window.location.href = url;
+
+            if (ma !== null) {
+                ma.click();
+            } else if (url) {
+                window.location.href = url;
+            }
+        });
+
+        /* Rê chuột lên DÒNG cũng là dấu hiệu sắp mở đơn đó — báo cho
+           admin-modal.js nạp trước, y như rê thẳng lên mã đơn. Nó tự gộp một
+           lượt cho mỗi địa chỉ nên hai đường không nạp thành hai lần. */
+        dong.addEventListener('mouseenter', function () {
+            var ma = dong.querySelector('a.aocode[data-modal]');
+
+            if (ma !== null) {
+                ma.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+            }
         });
     });
 
