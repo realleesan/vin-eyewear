@@ -565,6 +565,28 @@
     gap: 24px;
 }
 
+/* ĐANG NẠP KẾT QUẢ MỚI — assets/js/catalog.js đặt aria-busy trong lúc chờ.
+
+   Chỉ mờ đi, KHÔNG thay bằng khung xương hay vòng quay: kết quả cũ vẫn đúng
+   cho tới lúc kết quả mới về, và giữ nó trên màn hình thì lưới không sập
+   xuống rồi bung lên — mắt người dùng không mất chỗ đang nhìn.
+
+   Không chặn cú bấm trong lúc chờ (không pointer-events: none): bấm thêm một
+   tiêu chí nữa là chuyện bình thường, và JS đã lo phần lượt cũ về muộn bằng
+   số thứ tự lượt nạp.
+
+   Chọn aria-busy làm móc thay cho một lớp riêng vì nó vừa là thuộc tính trợ
+   năng thật (trình đọc màn hình biết vùng này đang thay đổi), vừa đủ để CSS
+   bắt — thêm một lớp nữa là hai nguồn sự thật cho cùng một trạng thái. */
+.catmain[aria-busy="true"] {
+    opacity: 0.55;
+    transition: opacity 0.12s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .catmain[aria-busy="true"] { transition: none; }
+}
+
 /* --- Thanh trên: số kết quả + ô sắp xếp --- */
 
 .catbar {

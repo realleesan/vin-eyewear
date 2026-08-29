@@ -40,6 +40,41 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
 
     return;
 }
+
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CHẾ ĐỘ MẢNH THỨ HAI — trả lời cú bấm vào bộ lọc trang /san-pham
+ *
+ * assets/js/catalog.js bấm một tiêu chí lọc thì nạp ngầm URL mới rồi thay ĐÚNG
+ * HAI MẢNH của trang: cột lọc (.cfilter) và lưới kết quả (.catmain). Cả trang
+ * không tải lại, nên vị trí cuộn còn nguyên và bảng bộ lọc trên điện thoại
+ * không bị đóng sập sau mỗi lần tick.
+ *
+ * VÌ SAO KHÔNG ĐỂ NÓ NẠP CẢ TRANG RỒI TỰ BÓC HAI MẢNH RA: đo trên chính trang
+ * này với 18 sản phẩm — cả trang 80.246 byte, mà hai mảnh cần dùng chỉ 38.917
+ * byte, đúng 48%. Tức là hơn 41KB head, thanh nav, hai bảng mega và chân trang
+ * bị kéo về rồi vứt đi trong MỖI cú bấm tiêu chí. Đây cũng là bài học đã rút
+ * ở buy-flow (xem khối chú thích ngay trên).
+ *
+ * Ở đây in NGUYÊN VIEW, không phải hai mảnh riêng lẻ: view /san-pham vốn chỉ
+ * gồm mẩu đầu trang cộng đúng hai khối ấy, nên cắt thêm nữa chỉ đổi lấy vài
+ * trăm byte mà phải xẻ một file view 540 dòng thành ba mảnh — dễ vỡ hơn nhiều
+ * so với thứ nó tiết kiệm được.
+ *
+ * TẮT JAVASCRIPT THÌ NHÁNH NÀY KHÔNG BAO GIỜ CHẠY: mọi tiêu chí lọc vẫn là
+ * <a href> thật, bấm vào là điều hướng như xưa.
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+if (($_SERVER['HTTP_X_CATALOG'] ?? '') === '1') {
+    /* Cùng một URL trả hai thứ khác nhau tuỳ header — phải nói cho mọi tầng
+       đệm ở giữa biết, không thì một proxy có thể đem mảnh phát cho người mở
+       trang bằng đường dẫn thường và họ nhận về trang trắng không có nav. */
+    header('Vary: X-Catalog');
+
+    require VIEWS_PATH . '/' . $viewName . '.php';
+
+    return;
+}
 ?>
 <!DOCTYPE html>
 <?php /* lang động: trình đọc màn hình chọn giọng đọc theo thuộc tính này,
