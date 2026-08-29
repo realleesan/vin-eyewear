@@ -201,7 +201,7 @@ class BaseController
 
         // MỌI mặt hàng đều đi qua đủ luồng. Khác nhau đúng một chỗ: nhánh
         // "theo số đo" của gọng và kính mát có thêm bước chọn GÓI TRÒNG rời,
-        // còn tròng rời và kính áp tròng thì không — chúng đã là tròng rồi.
+        // còn tròng rời thì không — bản thân nó đã là tròng rồi.
         $takesPackage = LensModel::takesLensPackage($product);
 
         /*
@@ -241,7 +241,7 @@ class BaseController
         }
 
         /* Hai bước chọn tròng không tồn tại với mặt hàng ĐÃ LÀ tròng (tròng
-           rời, kính áp tròng) — gõ tay ?buoc=trong cũng không mở ra được. */
+           rời) — gõ tay ?buoc=trong cũng không mở ra được. */
         if (!$takesPackage && in_array($step, ['kieu-trong', 'trong'], true)) {
             $step = 'xac-nhan';
         }

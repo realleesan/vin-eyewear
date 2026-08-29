@@ -43,17 +43,24 @@ class LensModel
      * tròng rời không?
      *
      * Gọng và kính mát thì CÓ — tròng là món thứ hai, lắp vào chúng.
-     * Tròng rời và kính áp tròng thì KHÔNG — bản thân chúng đã là tròng, cộng
-     * thêm một gói tròng nữa là bán hai cặp tròng cho một đơn và tính tiền cả
-     * hai. Nhánh đó của chúng chỉ lấy số đo rồi sang bước xác nhận.
+     * Tròng rời thì KHÔNG — bản thân nó đã là tròng, cộng thêm một gói tròng
+     * nữa là bán hai cặp tròng cho một đơn và tính tiền cả hai. Nhánh đó của
+     * nó chỉ lấy số đo rồi sang bước xác nhận.
      */
     public const LENS_PACKAGE_CATEGORIES = ['gong-kinh', 'kinh-mat'];
 
     /**
      * Chữ trong hộp thoại, đổi theo loại hàng.
      *
-     * Bản mẫu viết cứng "gọng". Dùng nguyên chữ đó cho một hộp kính áp tròng
-     * thì hai lựa chọn đọc thành "Chỉ mua gọng" cho món không ai gọi là gọng.
+     * Bản mẫu viết cứng "gọng". Dùng nguyên chữ đó cho một chiếc tròng rời thì
+     * hai lựa chọn đọc thành "Chỉ mua gọng" cho món không ai gọi là gọng.
+     *
+     * CHỈ KHAI BA DANH MỤC CÓ THẬT. Ở đây từng có mục thứ tư 'kinh-ap-trong',
+     * viết sẵn cho một loại hàng cửa hàng chưa bao giờ bán — bảng `categories`
+     * chưa lúc nào có slug đó, kể cả trong dữ liệu gieo. Đã bỏ 2026-08-29:
+     * một mục không đường nào chạm tới vẫn kịp làm người đọc mã tin rằng cửa
+     * hàng có bán kính áp tròng. Thêm danh mục mới thì thêm mục mới ở đây,
+     * đừng để sẵn cho thứ chưa tồn tại.
      *
      * Mỗi mục: [tên món, ghi chú lựa chọn "chỉ mua", nhãn lựa chọn "theo số đo",
      *           ghi chú lựa chọn đó]
@@ -76,12 +83,6 @@ class LensModel
             'Mua tròng chưa mài, lắp sau',
             'Mua tròng + mài theo độ',
             'Mài đúng số đo khúc xạ của bạn',
-        ],
-        'kinh-ap-trong' => [
-            'kính áp tròng',
-            'Mua hộp không độ (0.00)',
-            'Mua theo độ của tôi',
-            'Chọn hộp đúng số đo khúc xạ của bạn',
         ],
     ];
 

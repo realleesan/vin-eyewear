@@ -224,14 +224,14 @@ class CartController extends BaseController
         // ── Chưa qua hộp thoại -> mở hộp thoại thay vì thêm thẳng vào giỏ ──
         //
         // MỌI mặt hàng đều đi qua đây, không riêng gọng và kính mát. Trước đây
-        // chỉ hai danh mục đó bị chặn, nên bấm "Mua ngay" một hộp kính áp tròng
+        // chỉ hai danh mục đó bị chặn, nên bấm "Mua ngay" một chiếc tròng rời
         // là nhảy thẳng sang trang thanh toán — khách chưa kịp thấy mình vừa
         // mua gì, mua mấy cái.
         //
         // Khác nhau ở chỗ hộp thoại MỞ Ở BƯỚC NÀO, không phải ở chỗ có mở hay
         // không: gọng và kính mát bắt đầu từ "Chọn hình thức mua", còn tròng
-        // rời và kính áp tròng vào thẳng "Xác nhận sản phẩm" — hỏi một hộp
-        // kính áp tròng "chỉ mua gọng hay cắt thêm tròng?" là câu vô nghĩa.
+        // rời vào thẳng "Xác nhận sản phẩm" — hỏi một chiếc tròng "chỉ mua
+        // gọng hay cắt thêm tròng?" là câu vô nghĩa.
         if ($mode === '') {
             // Cất Ý ĐỊNH chứ không nhét vào URL: số lượng, phương án và việc
             // khách bấm "Mua ngay" hay "Thêm vào giỏ" đều phải sống qua hai
@@ -263,10 +263,10 @@ class CartController extends BaseController
         $rx       = null;
 
         if ($mode === 'trong') {
-            /* GÓI TRÒNG chỉ áp cho gọng và kính mát. Tròng rời và kính áp tròng
-               đi qua đúng nhánh này (cũng lấy số đo), nhưng bản thân chúng ĐÃ LÀ
-               tròng — cộng thêm một gói tròng nữa là bán hai cặp tròng cho một
-               đơn và tính tiền cả hai. */
+            /* GÓI TRÒNG chỉ áp cho gọng và kính mát. Tròng rời đi qua đúng
+               nhánh này (cũng lấy số đo), nhưng bản thân nó ĐÃ LÀ tròng — cộng
+               thêm một gói tròng nữa là bán hai cặp tròng cho một đơn và tính
+               tiền cả hai. */
             if (LensModel::takesLensPackage($product)) {
                 /* KIỂU TRÒNG đọc từ ý định chứ không từ $_POST: nó được chốt ở
                    bước "Chọn loại tròng kính" và bước xác nhận không hỏi lại.
@@ -574,7 +574,7 @@ class CartController extends BaseController
                  *     hình thức → số đo → kiểu tròng → gói chiết suất → xác nhận
                  *                          └ "Mắt đặt" ─────────────────┘
                  *
-                 * Mặt hàng KHÔNG có gói tròng (tròng rời, kính áp tròng) thì
+                 * Mặt hàng KHÔNG có gói tròng (tròng rời) thì
                  * không có tròng nào để chọn — số đo xong là sang xác nhận.
                  * ─────────────────────────────────────────────────────────────
                  */

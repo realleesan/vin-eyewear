@@ -48,9 +48,6 @@ $covers = [
     'gong-kinh'     => ['cat-gong',     'assets/images/product-1.jpg'],
     'kinh-mat'      => ['cat-mat',      'assets/images/product-3.jpg'],
     'trong-kinh'    => ['cat-trong',    'assets/images/product-5.jpg'],
-    // Thiếu dòng này thì "Kính áp tròng" rơi vào ảnh dự phòng chung và đi
-    // mượn ảnh một cái GỌNG — sai hẳn mặt hàng ngay trên thẻ danh mục.
-    'kinh-ap-trong' => ['cat-ap-trong', 'assets/images/product-6.jpg'],
 ];
 
 /*

@@ -44,8 +44,9 @@
  * viền", "Kính thể thao"…) không có giá trị tương ứng nào trong CSDL, bấm vào
  * là ra trang rỗng. Một liên kết dẫn tới chỗ trống tệ hơn là không có nó.
  *
- * Số cột chạy theo số danh mục có thật (xem --mega-cols), nên danh mục thứ tư
- * "Kính áp tròng" không bị rơi ra ngoài như khi khoá cứng ba cột.
+ * Số cột chạy theo số danh mục CÓ THẬT trong bảng `categories` (xem
+ * --mega-cols), nên cửa hàng thêm danh mục thứ tư là nó tự có chỗ, không bị
+ * rơi ra ngoài như khi khoá cứng ba cột.
  */
 
 $taxonomy = config('taxonomy');
@@ -68,10 +69,9 @@ $maxLinks = 4;
  * được cho mọi thứ đeo lên mặt.
  */
 $sliceBySlug = [
-    'gong-kinh'     => $taxonomy['materials'],
-    'kinh-mat'      => $taxonomy['frame_styles'],
-    'trong-kinh'    => $taxonomy['lens_functions'],
-    'kinh-ap-trong' => $taxonomy['audiences'],
+    'gong-kinh'  => $taxonomy['materials'],
+    'kinh-mat'   => $taxonomy['frame_styles'],
+    'trong-kinh' => $taxonomy['lens_functions'],
 ];
 
 /**

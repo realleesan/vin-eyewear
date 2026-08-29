@@ -69,12 +69,12 @@
  * chốt số lượng trước khi món hàng vào giỏ.
  *
  * Khác nhau đúng MỘT chỗ: bước 4 "Chọn loại tròng kính" chỉ có với gọng và
- * kính mát. Tròng rời và kính áp tròng bỏ qua nó — bản thân chúng đã là tròng,
- * cộng thêm một gói tròng nữa là bán hai cặp tròng cho một đơn và tính tiền cả
- * hai. Nhánh "theo số đo" của chúng đi thẳng từ số đo sang xác nhận.
+ * kính mát. Tròng rời bỏ qua nó — bản thân nó đã là tròng, cộng thêm một gói
+ * tròng nữa là bán hai cặp tròng cho một đơn và tính tiền cả hai. Nhánh "theo
+ * số đo" của nó đi thẳng từ số đo sang xác nhận.
  *
  * Chữ trên hai lựa chọn ở bước 1 cũng đổi theo loại hàng — xem
- * LensModel::wording(). "Chỉ mua gọng" cho một hộp kính áp tròng là câu vô nghĩa.
+ * LensModel::wording(). "Chỉ mua gọng" cho một chiếc tròng rời là câu vô nghĩa.
  *
  * Nhận qua partial(): $buyModal — mảng do BaseController::renderView dựng.
  *   product · step · takesPackage · intent
@@ -131,7 +131,7 @@ $titles = [
  * và kiểu tròng đang chọn có đi tiếp sang bảng giá không.
  */
 $rxPrev = !$takesPkg
-    ? 'so-do'                              // tròng rời, kính áp tròng
+    ? 'so-do'                              // tròng rời
     : ($typeTakesPkg ? 'trong' : 'kieu-trong');
 
 $prev = [
@@ -272,7 +272,7 @@ $stepForm = static function (string $buoc): void {
                     </span>
                     <span class="bopt__body">
                         <?php /* Nhãn đổi theo loại hàng: "Mua gọng + cắt tròng" cho
-                                 gọng, nhưng "Mua theo độ của tôi" cho kính áp tròng
+                                 gọng, nhưng "Mua tròng + mài theo độ" cho tròng rời
                                  — xem LensModel::wording(). */ ?>
                         <span class="bopt__name"><?= e($wording['rxName']) ?></span>
                         <span class="bopt__note"><?= e($wording['rxNote']) ?></span>

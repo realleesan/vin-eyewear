@@ -179,9 +179,9 @@ $count = count($lines);
                                         </span>
                                     <?php endif; ?>
                                     <?php /* Số đo hiện KỂ CẢ khi không có gói tròng kèm:
-                                             kính áp tròng và tròng rời cũng đi qua nhánh
-                                             "theo số đo" nhưng không cộng thêm gói nào,
-                                             mà con số vẫn là thứ quyết định hàng giao ra. */ ?>
+                                             tròng rời cũng đi qua nhánh "theo số đo"
+                                             nhưng không cộng thêm gói nào, mà con số vẫn
+                                             là thứ quyết định hàng giao ra. */ ?>
                                     <span class="clens__rx">
                                         <?= $line['rx'] !== null
                                             ? e($line['rx'])
