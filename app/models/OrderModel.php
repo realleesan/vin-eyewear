@@ -157,6 +157,35 @@ class OrderModel extends BaseModel
                         throw new RuntimeException('Sản phẩm không còn khả dụng.');
                     }
 
+                    /*
+                     * SỐ LƯỢNG PHẢI DƯƠNG — chốt này từng KHÔNG có, và đó là lỗ.
+                     *
+                     * Phép kiểm tồn kho ngay dưới hỏi `$stock < $quantity`. Với
+                     * một số ÂM thì câu đó luôn sai, nên nó cho qua; rồi
+                     * VariantModel::reserve() chạy `stock_quantity - (-5)` và
+                     * TỒN KHO TĂNG LÊN. Đo được trước khi vá: đặt một đơn với
+                     * quantity = -5 trên mặt hàng còn 5 cái trả về ok = true và
+                     * kho nhảy lên 10.
+                     *
+                     * Đường web hiện không tới được đây với số âm — CartController
+                     * ép max(1, …) lúc thêm và từ chối số < 1 lúc sửa. Nhưng đây
+                     * đúng là tầng nhận việc kiểm lại mọi thứ đọc từ session, mà
+                     * session thì sửa được; dựa vào tầng trên đã lọc sạch là bỏ
+                     * đúng cái lưới cuối cùng.
+                     *
+                     * Số 0 cũng chặn ở đây. Trước bản này nó vẫn bị từ chối,
+                     * nhưng bằng một đường vòng: reserve() trừ đi 0 nên không
+                     * dòng nào đổi, MySQL trả về 0 dòng bị ảnh hưởng, và khách
+                     * nhận câu "Sản phẩm vừa hết hàng." — sai sự thật, hàng còn
+                     * nguyên.
+                     */
+                    if ($quantity < 1) {
+                        throw new RuntimeException(sprintf(
+                            'Số lượng của "%s" phải là số nguyên lớn hơn 0.',
+                            $product['name']
+                        ));
+                    }
+
                     $variant = null;
 
                     if ($row['variant_id'] !== null) {
