@@ -136,13 +136,19 @@ $duongDanCat = static function (string $id) use ($giuQ): string {
                      * thể bị tắt bán dù kho còn hàng (hàng lỗi, hàng giữ cho khách
                      * đặt riêng). Chỉ mức giữa mới suy từ số tồn.
                      *
-                     * Ngưỡng 5 lấy đúng của thẻ "Sắp hết hàng" ở trang Tổng quan
-                     * (DashboardController) — hai chỗ nói về cùng một tập sản phẩm
-                     * thì phải cùng một ngưỡng, nếu không bảng này bảo "sắp hết"
-                     * mà bảng kia không kể tên.
+                     * NGƯỠNG LÀ CỦA TỪNG MẶT HÀNG (cột `low_stock_at`), để trống
+                     * mới rơi về 5 — cùng luật với trang Tồn kho và thẻ "Sắp hết
+                     * hàng" ở Tổng quan. Ba chỗ nói về cùng một tập sản phẩm thì
+                     * phải cùng một ngưỡng, nếu không bảng này bảo "sắp hết" mà
+                     * bảng kia không kể tên.
+                     *
+                     * Bản trước gõ thẳng số 5 ở đây; giữ nguyên thì mặt hàng đặt
+                     * ngưỡng 10 sẽ hiện "Sắp hết" ở màn Tồn kho mà vẫn "Còn hàng"
+                     * ở màn này.
                      */
                     $conBan = $p['status'] === 'in_stock';
-                    $sapHet = $conBan && (int) $p['stock_quantity'] <= 5;
+                    $nguong = (int) ($p['low_stock_at'] ?? 0) ?: 5;
+                    $sapHet = $conBan && (int) $p['stock_quantity'] <= $nguong;
                     ?>
                     <td>
                         <span class="apstatus">

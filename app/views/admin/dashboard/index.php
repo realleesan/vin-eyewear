@@ -299,7 +299,12 @@ $facts = [
             </div>
 
             <?php if ($lowStock === []): ?>
-                <p class="apanel__empty">Không có sản phẩm nào tồn ≤ 5.</p>
+                <?php /* KHÔNG in con số ngưỡng ra câu này nữa. Từ 2026-08-29
+                         ngưỡng "sắp hết" là của TỪNG mặt hàng (cột
+                         low_stock_at, để trống mới rơi về 5), nên "tồn ≤ 5" là
+                         một câu chỉ đúng với phần kho không đặt ngưỡng riêng —
+                         mà đọc lên thì như thể đúng với cả kho. */ ?>
+                <p class="apanel__empty">Không có sản phẩm nào sắp hết hàng.</p>
             <?php else: ?>
                 <ul class="alist" role="list">
                     <?php foreach ($lowStock as $p): ?>
@@ -312,7 +317,8 @@ $facts = [
                            hết" rồi hứa với khách.
 
                            Chỉ có HAI nhãn ở thẻ này: cả danh sách đã lọc sẵn
-                           tồn ≤ 5, nên "Còn hàng" là câu vô nghĩa ở đây. */
+                           theo ngưỡng sắp-hết của từng mặt hàng, nên "Còn hàng"
+                           là câu vô nghĩa ở đây. */
                         $conBan = ($p['status'] ?? '') !== 'out_of_stock';
                         ?>
                         <li class="alist__row">
