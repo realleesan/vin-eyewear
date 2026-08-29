@@ -365,13 +365,26 @@ $soDongTrong = 3;
                     <p class="field__hint">Tồn dưới mức này sẽ gắn nhãn "Sắp hết".</p>
                 </div>
 
-                <div class="field field--check">
-                    <label>
-                        <input type="checkbox" name="allow_backorder" value="1"
-                               <?= $tick('allow_backorder') ? 'checked' : '' ?>>
-                        Cho phép đặt khi hết hàng
-                    </label>
-                </div>
+                <?php
+                /*
+                 * Ở ĐÂY TỪNG CÓ Ô "Cho phép đặt khi hết hàng" — đã gỡ 2026-08-29.
+                 *
+                 * Ô đó lưu xuống cột `products.allow_backorder`, nhưng KHÔNG một
+                 * chỗ nào ở trang bán hàng đọc cột ấy: tick hay không tick thì
+                 * khách vẫn bị chặn y hệt khi mua quá tồn (kiểm ở CartController
+                 * lúc thêm/sửa giỏ và ở OrderModel::place lúc ghi đơn). Nó là một
+                 * cái nút hứa suông, và người nhập hàng không có cách nào biết.
+                 *
+                 * CỘT TRONG CSDL GIỮ NGUYÊN, cố ý: mặt hàng nào đã tick vẫn còn
+                 * dấu vết đó, không mất dữ liệu vì một lần dọn giao diện. Việc
+                 * ghi cột này ở ProductAdminController cũng đã gỡ — để lại thì
+                 * mỗi lần lưu sản phẩm là đặt về 0 cho tất cả.
+                 *
+                 * Bán đặt trước là một tính năng thật, không phải một ô tick: nó
+                 * kéo theo ngày giao dự kiến, tiền cọc và trạng thái đơn riêng.
+                 * Làm thì làm đủ, và phải hỏi BA trước.
+                 */
+                ?>
             </div>
         </div>
 

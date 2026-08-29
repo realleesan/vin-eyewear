@@ -429,7 +429,11 @@ class ProductAdminController extends AdminController
             'sale_from'         => $saleFrom !== '' ? $saleFrom : null,
             'sale_to'           => $saleTo !== '' ? $saleTo : null,
             'low_stock_at'      => ($v = (int) ($_POST['low_stock_at'] ?? 0)) > 0 ? $v : null,
-            'allow_backorder'   => isset($_POST['allow_backorder']) ? 1 : 0,
+            /* 'allow_backorder' ĐÃ RA KHỎI DANH SÁCH NÀY — 2026-08-29.
+               Ô tick tương ứng đã gỡ khỏi form (lý do đầy đủ ở
+               admin/products/_form.php). Giữ dòng này lại thì mỗi lần lưu bất
+               kỳ sản phẩm nào cũng ghi 0 đè lên giá trị cũ, vì $_POST không
+               còn mang khoá đó nữa — dọn giao diện mà xoá sạch dữ liệu. */
 
             'rim_type'          => $this->khoa('rim_type', 'rim_types', $cu['rim_type'] ?? null),
             'lens_color'        => $chu('lens_color'),
