@@ -25,6 +25,32 @@ return [
 
     /*
      * ─────────────────────────────────────────────────────────────────────────
+     * SONG NGỮ — MÃ WIDGET ELFSIGHT WEBSITE TRANSLATOR
+     *
+     * ĐỂ TRỐNG = KHÔNG NHÚNG GÌ CẢ. Không thẻ <script>, không thẻ <div>, không
+     * một request nào ra static.elfsight.com. Site chạy y như trước, chỉ là
+     * thuần tiếng Việt. Đây là mặc định có chủ ý: một máy dev quên khai .env
+     * thì không được phép tự đi gọi dịch vụ ngoài.
+     *
+     * LẤY MÃ Ở ĐÂU: elfsight.com -> tạo widget "Website Translator" -> mã nhúng
+     * họ sinh ra có dạng
+     *     <div class="elfsight-app-1ac7608f-e549-4325-bed8-08f5b5..."></div>
+     * Chép ĐÚNG phần sau "elfsight-app-" (chuỗi UUID), không chép cả class.
+     *
+     * VÌ SAO NẰM Ở .env CHỨ KHÔNG GÕ THẲNG VÀO VIEW: mã này gắn với MỘT tài
+     * khoản Elfsight và MỘT tên miền. Máy dev, máy thử và hosting thật không
+     * nên cùng đốt vào một hạn mức lượt xem — gói miễn phí chỉ có 200 lượt/tháng
+     * và vượt là widget bị tắt tạm. Để trống trên máy dev là cách rẻ nhất.
+     *
+     * ĐÂY KHÔNG PHẢI BÍ MẬT. Mã widget hiện nguyên trong HTML mà ai xem nguồn
+     * cũng đọc được; nó ở .env vì khác nhau theo môi trường, không phải vì cần
+     * giấu. Đừng đối xử với nó như SEPAY_WEBHOOK_KEY.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    'elfsight_translator' => env('ELFSIGHT_WIDGET_ID', ''),
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
      * MỐC TÍNH DOANH THU — bảng Tổng quan chỉ cộng tiền của đơn đặt TỪ mốc này.
      *
      * VÌ SAO CẦN: cửa hàng chạy thử nhiều tháng trước khi mở thật, và đơn thử

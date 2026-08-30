@@ -452,6 +452,30 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         })();
     </script>
 
+    <?php
+    /*
+     * SONG NGỮ — widget dịch Elfsight. Đọc chú thích dài trong file đó trước
+     * khi đụng vào; ở đây chỉ giải thích VỊ TRÍ gọi.
+     *
+     * NGOÀI khối if (!$bare) ở trên, tức là in cho CẢ khung rút gọn (thanh
+     * toán, đăng nhập, chuyển khoản) chứ không riêng trang thường. Cố ý:
+     * widget nhớ ngôn ngữ khách đã chọn giữa các trang, nên thiếu nó ở bước
+     * thanh toán là khách đang đọc tiếng Anh bỗng gặp một biểu mẫu tiền nong
+     * toàn tiếng Việt — và đó đúng là bước không được phép để họ đọc mò.
+     *
+     * Đánh đổi đã cân nhắc: bản dịch máy có thể làm lệch nhãn ô nhập ở trang
+     * thanh toán. Chấp nhận, vì mất hẳn ngôn ngữ giữa chừng còn tệ hơn nhãn
+     * dịch vụng. Muốn tắt riêng ở khung rút gọn thì bọc dòng dưới vào
+     * if (!$bare) — nhưng hãy thử thật trên /thanh-toan trước khi quyết.
+     *
+     * KHU QUẢN TRỊ TỰ LOẠI MÌNH RA, và việc đó nằm bên trong partial chứ
+     * không phải ở đây: /quan-tri/dang-nhap dựng bằng chính file này (chỉ
+     * thay đầu trang qua $bareHeader), nên một điều kiện đặt ở đây sẽ phải
+     * lặp lại đúng cái kiểm tra ấy. Xem chú thích đầu _layout/translator.php.
+     */
+    partial('_layout/translator');
+    ?>
+
 </body>
 
 </html>
