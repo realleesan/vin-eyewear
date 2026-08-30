@@ -1000,6 +1000,47 @@ class UserModel extends BaseModel
      *   số nguyên axis            — kẹp về 0..180, ngoài khoảng là NULL
      *   chuỗi    va, recommendation, measured_at, store_id
      */
+    /**
+     * Thị lực có đúng dạng phân số hợp lệ không — "9/10", "10/10", "6/10"…
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO CHẶN Ở TRÊN 10
+     *
+     * Thang thập phân dùng ở Việt Nam đọc "mấy phần mười": 10/10 là thị lực
+     * tối đa. Một con số lớn hơn 10 ở vế nào cũng là gõ nhầm — thường là thừa
+     * một chữ số ("100/10") hoặc gõ theo thang Snellen của Mỹ ("20/20").
+     *
+     * ĐÂY LÀ DỮ LIỆU Y TẾ, nên gõ nhầm không được phép lọt: nhân viên đọc con
+     * số này để tư vấn, và "100/10" nằm im trong hồ sơ thì không ai đoán được
+     * ý người nhập là gì.
+     *
+     * SỐ NGUYÊN, KHÔNG NHẬN THẬP PHÂN. Thang này vốn đi theo bước một phần
+     * mười; "8.5/10" không phải cách viết của nó. Nếu cửa hàng cần thì nới
+     * biểu thức dưới đây, KHÔNG phải bỏ hẳn phép kiểm.
+     *
+     * Chuỗi RỖNG là hợp lệ: khách chưa đo thì để trống, không phải điền bừa.
+     *
+     * CHƯA PHỦ được các ký hiệu thị lực rất thấp mà ngành mắt vẫn dùng — ĐNT
+     * (đếm ngón tay), BBT (bóng bàn tay), ST(+). Chúng không phải phân số nên
+     * không lọt qua đây. Ngày cửa hàng cần ghi chúng thì thêm một danh sách
+     * giá trị cho phép bên cạnh biểu thức, đừng nới biểu thức cho lỏng.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public static function vaHopLe(string $raw): bool
+    {
+        $raw = trim($raw);
+
+        if ($raw === '') {
+            return true;
+        }
+
+        /* 0..10 ở CẢ HAI vế. Viết '10|[0-9]' chứ không '\d{1,2}': dạng sau cho
+           lọt 11..99, mà đó đúng là thứ cần chặn. Dấu "/" bắt buộc và không
+           cho khoảng trắng quanh nó — một chuỗi đã chuẩn hoá thì bảng thông số
+           in ra đều một kiểu. */
+        return preg_match('#^(10|[0-9])/(10|[0-9])$#', $raw) === 1;
+    }
+
     public static function savePrescription(string $userId, array $values): void
     {
         $params = ['user_id' => $userId];
@@ -1030,9 +1071,23 @@ class UserModel extends BaseModel
                 ? null : (int) $raw;
         }
 
-        foreach (['od_va', 'os_va', 'recommendation', 'measured_at', 'store_id', 'wear_note'] as $f) {
+        foreach (['recommendation', 'measured_at', 'store_id', 'wear_note'] as $f) {
             $raw = trim((string) ($values[$f] ?? ''));
             $params[$f] = $raw === '' ? null : $raw;
+        }
+
+        /*
+         * THỊ LỰC — kiểm dạng phân số, xem vaHopLe() ở trên.
+         *
+         * Controller đã chặn và báo lỗi cho người dùng TRƯỚC khi gọi tới đây
+         * (xem AuthController::updatePrescription), nên nhánh null bên dưới
+         * gần như không bao giờ chạy. Vẫn giữ, vì model là tầng cuối trước
+         * CSDL: một chỗ gọi mới quên kiểm thì hồ sơ mất giá trị lạ chứ không
+         * nhận nó vào — mất một ô còn hơn lưu một con số y tế sai.
+         */
+        foreach (['od_va', 'os_va'] as $f) {
+            $raw = trim((string) ($values[$f] ?? ''));
+            $params[$f] = ($raw === '' || !self::vaHopLe($raw)) ? null : $raw;
         }
 
         /*

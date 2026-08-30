@@ -131,11 +131,33 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
                            quyết vấn đề nào.
 
                            step 0.25 — độ kính đi theo bước 0.25 diop.
-                           Thị lực là phân số ("10/10") nên phải là ô chữ. */
+                           Thị lực là phân số ("10/10") nên phải là ô chữ.
+
+                           PATTERN CHO Ô THỊ LỰC — trình duyệt tự chặn trước khi
+                           gửi, KHÔNG cần một dòng JavaScript nào. Cùng biểu thức
+                           với UserModel::vaHopLe(); hai bên phải khớp nhau, đổi
+                           một chỗ thì đổi cả chỗ kia.
+
+                           '10|[0-9]' ở cả hai vế chứ không '\d{1,2}': dạng sau
+                           cho lọt 11..99, mà thị lực không bao giờ quá 10/10.
+
+                           `title` là câu trình duyệt hiện ra khi chặn — không
+                           đặt thì Chrome chỉ nói "Vui lòng khớp định dạng được
+                           yêu cầu", một câu không nói được định dạng ấy là gì.
+
+                           Máy chủ VẪN kiểm lại: pattern sửa được bằng công cụ
+                           nhà phát triển nên nó là gợi ý, không phải hàng rào —
+                           xem AuthController::updatePrescription. */
                         $cells = [
                             ['cyl',  'number', ['step' => '0.25', 'min' => '-20', 'max' => '20', 'placeholder' => '0.00']],
                             ['axis', 'number', ['step' => '1', 'min' => '0', 'max' => '180', 'placeholder' => '0']],
-                            ['va',   'text',   ['maxlength' => '16', 'placeholder' => '10/10']],
+                            ['va',   'text',   [
+                                'maxlength'   => '5',
+                                'placeholder' => '10/10',
+                                'pattern'     => '(10|[0-9])/(10|[0-9])',
+                                'inputmode'   => 'numeric',
+                                'title'       => 'Viết dạng phân số như 9/10. Hai số đều không quá 10.',
+                            ]],
                         ];
                         ?>
                         <?php foreach ($cells as [$kind, $type, $attrs]): ?>

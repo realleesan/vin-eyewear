@@ -1502,6 +1502,28 @@ class AuthController extends BaseController
         $userId = AuthMiddleware::requireLogin();
         $this->requirePost('/tai-khoan?muc=do-mat');
 
+        /*
+         * THỊ LỰC — CHẶN VÀ BÁO LỖI, không lặng lẽ bỏ.
+         *
+         * Model cũng kiểm (UserModel::vaHopLe) nhưng ở đó giá trị lạ thành
+         * NULL. Với một ô người dùng vừa gõ thì im lặng là sai: họ bấm Lưu,
+         * thấy "Đã lưu thông số đo mắt.", rồi ô thị lực trống trơn mà không có
+         * lời giải thích nào. Chặn ở đây để câu thông báo nói đúng thứ cần sửa.
+         *
+         * Kiểm CẢ HAI MẮT trước khi báo, và nêu đích danh mắt sai: người nhập
+         * gõ nhầm một bên thì phải biết bên nào, chứ không phải soi lại cả
+         * bảng.
+         */
+        foreach (['od_va' => 'mắt phải (OD)', 'os_va' => 'mắt trái (OS)'] as $o => $ten) {
+            if (!UserModel::vaHopLe((string) ($_POST[$o] ?? ''))) {
+                flash('account_error', sprintf(
+                    'Thị lực %s phải viết dạng phân số như 9/10, và hai số đều không quá 10.',
+                    $ten
+                ));
+                redirect('/tai-khoan?muc=do-mat');
+            }
+        }
+
         /* ĐỘ CẦU TỚI ĐÂY LÀ HAI Ô: dấu (`*_dau`) và độ lớn (`*_sph`).
            Ghép bằng LensModel::joinSph() — đúng hàm mà luồng thêm tròng vào giỏ
            đang dùng, nên một con số nhập ở hai nơi ra cùng một chuỗi trong CSDL.
