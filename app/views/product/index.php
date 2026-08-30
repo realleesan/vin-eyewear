@@ -136,11 +136,14 @@ $hiddenFilters = static function (array $except = []) use ($state): void {
 /**
  * MỘT huy hiệu lọc.
  *
- * Tách riêng khỏi $chipGroup vì có hai nơi cần nó: các nhóm huy hiệu bên
- * dưới, và chip "Chất liệu tái chế / bio" đi kèm ô chọn chất liệu — chip đó
- * thuộc nhóm lọc riêng (?eco[]=recycled) nhưng người dùng đọc nó như một chất
- * liệu nữa, nên nó ở chung khối với ô chọn chứ không thành một khối có tiêu đề
- * riêng (thừa một dòng chữ hoa cho đúng một mục).
+ * NAY CHỈ CÒN MỘT CHỖ GỌI: chip "Chất liệu tái chế / bio" đi kèm ô chọn chất
+ * liệu. Chip đó thuộc nhóm lọc riêng (?eco[]=recycled) nhưng người dùng đọc nó
+ * như một chất liệu nữa, nên nó ở chung khối với ô chọn chứ không thành một
+ * khối có tiêu đề riêng (thừa một dòng chữ hoa cho đúng một mục).
+ *
+ * Vẫn để rời thành hàm chứ không nội tuyến: nó là chỗ duy nhất còn giữ luật
+ * "mục lọc ra 0 sản phẩm thì in nhưng bỏ liên kết", và luật đó dài hơn hẳn
+ * đoạn markup nó sinh ra.
  */
 $chip = static function (string $group, array $opt) use ($toggleUrl): void {
     /*
@@ -191,30 +194,29 @@ $chip = static function (string $group, array $opt) use ($toggleUrl): void {
     <?php
 };
 
-/**
- * Một nhóm huy hiệu. Nay chỉ còn MỘT nhóm dùng: Tính năng tròng.
+/*
+ * ĐÃ BỎ $chipGroup — 2026-08-30.
  *
- * Kiểu dáng, Chất liệu, Khoảng giá và Giới tính đều đã thành ô chọn xổ xuống —
- * xem $pick ngay bên dưới. Giữ $chipGroup lại chứ không nội tuyến vào chỗ gọi:
- * "Tính năng tròng" là nhóm mà một sản phẩm mang NHIỀU giá trị cùng lúc (một
- * tròng vừa chống ánh sáng xanh vừa đổi màu), nên nó phải giữ chọn-nhiều, và
- * hàng huy hiệu là dạng duy nhất trong cột lọc diễn tả được điều đó.
+ * Hàm này vẽ cả một nhóm thành hàng huy hiệu. Ba nhóm từng dùng nó — Kiểu dáng,
+ * Chất liệu, Giới tính — nay là ô chọn xổ xuống, còn nhóm thứ tư ("Tính năng
+ * tròng") thì cửa hàng bỏ hẳn khỏi cột lọc, nên không còn ai gọi.
+ *
+ * $chip (một huy hiệu lẻ) thì GIỮ: chip "Chất liệu tái chế / bio" vẫn dùng.
+ *
+ * TÍNH NĂNG TRÒNG VẪN LỌC ĐƯỢC BẰNG URL. Chỉ giao diện bị bỏ; 'lens' vẫn nằm
+ * trong ProductFacets::GROUPS và MULTI, controller vẫn nhận ?lens[]=blue-light.
+ * Bắt buộc phải thế, vì HAI chỗ ngoài trang này còn trỏ vào đó:
+ *   _layout/mega-menu.php        cột "Tròng kính" (5 liên kết, qua
+ *                                config/taxonomy.php -> 'lens_functions')
+ *   _layout/home/quick-check.php ba lựa chọn của thẻ "Chọn tròng"
+ *
+ * HỆ QUẢ ĐÃ BIẾT, chưa xử lý vì cửa hàng chưa quyết: khách đi từ hai lối đó
+ * tới đây sẽ có một tiêu chí đang bật mà KHÔNG nhìn thấy nó ở đâu. Trên điện
+ * thoại còn huy hiệu số trên nút "Bộ lọc"; từ 1101px trở lên nút đó bị ẩn nên
+ * dấu hiệu duy nhất là chữ "Xoá tất cả" sáng lên. Muốn dứt điểm thì hoặc đổi
+ * hai lối kia sang tiêu chí khác, hoặc in một chip "đang lọc: …" ở đầu cột kết
+ * quả — cả hai đều là việc riêng, không phải phần của lần bỏ này.
  */
-$chipGroup = static function (string $key, string $legend, array $options) use ($chip): void {
-    if ($options === []) {
-        return;
-    }
-    ?>
-    <div class="pfacet">
-        <p class="pfacet__legend"><?= e($legend) ?></p>
-        <div class="pfacet__chips">
-            <?php foreach ($options as $opt): ?>
-                <?php $chip($key, $opt); ?>
-            <?php endforeach; ?>
-        </div>
-    </div>
-    <?php
-};
 
 /**
  * Một nhóm lọc dạng Ô CHỌN XỔ XUỐNG (Kiểu dáng · Chất liệu).
@@ -544,8 +546,6 @@ partial('_layout/page-head', [
                 <?php /* Đứng ở đây chứ không dưới cùng để "Giới tính" luôn là
                          nhóm chốt cột lọc. */ ?>
                 <?php $checkGroup('collection', 'Bộ sưu tập', $collectionOptions); ?>
-
-                <?php $chipGroup('lens', 'Tính năng tròng', $groups['lens']); ?>
 
                 <?php
                 /*
