@@ -34,7 +34,7 @@ $company = config('company');
 $products = array_map(
     static fn (array $c): array => [
         'label' => $c['name'],
-        'url'   => '/san-pham?category=' . rawurlencode($c['slug']),
+        'url'   => danhMucUrl($c['slug']),
     ],
     array_slice(CategoryModel::visible(), 0, 6)
 );

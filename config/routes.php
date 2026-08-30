@@ -46,6 +46,22 @@ return [
     'san-pham/danh-gia' => 'ProductDetailController@review',   // POST
     // Cùng lý do đặt trước 'san-pham/{slug}' như dòng trên.
     'san-pham/cho-hang' => 'ProductDetailController@waitlist', // POST
+
+    /*
+     * HAI TRANG CON CỦA DANH MỤC. Cũng phải đứng TRƯỚC 'san-pham/{slug}', vì
+     * nếu để sau thì router coi 'gong-kinh' là slug sản phẩm và trả 404.
+     *
+     * Khai đích danh chứ không dùng 'san-pham/{slug}' => ProductController:
+     * đường có tham số ấy đã thuộc về trang CHI TIẾT sản phẩm, không chia được.
+     * Danh sách slug hợp lệ nằm ở ProductController::SUB_PAGES — thêm dòng ở
+     * đây thì phải thêm cả bên đó, lý do đầy đủ ghi tại chỗ ấy.
+     *
+     * Danh mục thứ ba ('kinh-mat') cố ý chưa có trang con, vẫn duyệt được qua
+     * /san-pham?category=kinh-mat.
+     */
+    'san-pham/gong-kinh'  => 'ProductController@category',
+    'san-pham/trong-kinh' => 'ProductController@category',
+
     'san-pham/{slug}'  => 'ProductDetailController@show',
 
     /*

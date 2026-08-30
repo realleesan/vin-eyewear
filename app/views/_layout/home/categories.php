@@ -103,7 +103,7 @@ $truot = count($categories) > 3;
                 $count = (int) ($c['product_count'] ?? 0);
                 ?>
                 <li class="ccat">
-                    <a class="ccat__link" href="/san-pham?category=<?= e(rawurlencode($c['slug'])) ?>">
+                    <a class="ccat__link" href="<?= e(danhMucUrl($c['slug'])) ?>">
                         <span class="ccat__media">
                             <img src="<?= e($cover) ?>" alt=""
                                  width="600" height="600"

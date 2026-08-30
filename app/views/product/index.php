@@ -40,6 +40,14 @@
 $state = $filters;
 $state['price'] = $priceIndex;
 
+/*
+ * ĐƯỜNG GỐC CỦA TRANG — '/san-pham' hoặc '/san-pham/gong-kinh'.
+ * Controller luôn truyền vào; cái ?? chỉ để một chỗ gọi view này quên truyền
+ * thì ra trang cả kho chứ không phải một chuỗi rỗng làm mọi liên kết lọc trỏ
+ * về gốc site.
+ */
+$catalogBase = $catalogBase ?? '/san-pham';
+
 /**
  * Dựng URL giữ nguyên bộ lọc hiện tại, chỉ đổi/bỏ vài tham số.
  *
@@ -47,7 +55,7 @@ $state['price'] = $priceIndex;
  * đầu tiên ("Dưới 2 triệu"), empty(0) là true nên nó sẽ bị vứt khỏi URL và ô
  * đó không bao giờ chọn được.
  */
-$buildUrl = static function (array $patch = []) use ($state): string {
+$buildUrl = static function (array $patch = []) use ($state, $catalogBase): string {
     $clean = [];
 
     foreach (array_merge($state, $patch) as $key => $value) {
@@ -70,7 +78,19 @@ $buildUrl = static function (array $patch = []) use ($state): string {
         unset($clean['sort']);
     }
 
-    return '/san-pham' . ($clean === [] ? '' : '?' . http_build_query($clean));
+    /*
+     * TRÊN TRANG CON, 'category' KHÔNG ĐI VÀO QUERY — đường dẫn đã mang nó
+     * rồi. In cả hai thì ra /san-pham/gong-kinh?category=gong-kinh: thừa, xấu,
+     * và tệ hơn là nó khiến cùng một lưới có hai địa chỉ.
+     *
+     * Ở /san-pham (cả kho hoặc danh mục chưa có trang con) thì giữ nguyên như
+     * cũ, vì lúc đó query là chỗ DUY NHẤT mang được danh mục.
+     */
+    if ($catalogBase !== '/san-pham') {
+        unset($clean['category']);
+    }
+
+    return $catalogBase . ($clean === [] ? '' : '?' . http_build_query($clean));
 };
 
 /** URL bật/tắt một giá trị trong nhóm lọc chọn-nhiều. Luôn về trang 1. */
@@ -112,9 +132,15 @@ $resetPatch['price'] = null;
  * số. Không mang phần còn lại theo thì bấm vào là mất sạch bộ lọc đang bật mà
  * chẳng có gì báo.
  */
-$hiddenFilters = static function (array $except = []) use ($state): void {
+$hiddenFilters = static function (array $except = []) use ($state, $catalogBase): void {
     foreach ($state as $key => $value) {
         if (in_array($key, $except, true)) {
+            continue;
+        }
+
+        /* Cùng lý do với $buildUrl: trên trang con, danh mục nằm ở ĐƯỜNG DẪN
+           (action của form), không phải ở một input ẩn. */
+        if ($key === 'category' && $catalogBase !== '/san-pham') {
             continue;
         }
 
@@ -268,7 +294,7 @@ $pick = static function (
     array $options,
     string $tatCa,
     bool $mang = true
-) use ($hiddenFilters): void {
+) use ($hiddenFilters, $catalogBase): void {
     $id  = 'f-' . $key;
     $ten = $key . ($mang ? '[]' : '');
 
@@ -287,7 +313,7 @@ $pick = static function (
              LÀ nhãn của ô chọn, nên bấm vào chữ tiêu đề là mở được danh sách. */ ?>
     <label class="pfacet__legend" for="<?= e($id) ?>"><?= e($legend) ?></label>
 
-    <form class="pfacet__pick" method="get" action="/san-pham">
+    <form class="pfacet__pick" method="get" action="<?= e($catalogBase) ?>">
         <?php $hiddenFilters([$key, 'page']); ?>
         <span class="catpick">
             <select class="catpick__select" id="<?= e($id) ?>"
@@ -332,7 +358,7 @@ $pick = static function (
  * $search = true thì có thêm ô "Tìm thương hiệu" phía trên.
  */
 $checkGroup = static function (string $key, string $legend, array $options, bool $search = false)
-    use ($state, $filters, $hiddenFilters, $toggleUrl): void {
+    use ($state, $filters, $hiddenFilters, $toggleUrl, $catalogBase): void {
     if ($options === []) {
         return;
     }
@@ -368,7 +394,7 @@ $checkGroup = static function (string $key, string $legend, array $options, bool
         <p class="pfacet__legend" id="<?= e($legendId) ?>"><?= e($legend) ?></p>
 
         <?php if ($search): ?>
-            <form class="pfacet__search" method="get" action="/san-pham" data-brand-filter>
+            <form class="pfacet__search" method="get" action="<?= e($catalogBase) ?>" data-brand-filter>
                 <?php $hiddenFilters(['bq', 'page']); ?>
                 <label class="sr-only" for="f-bq">Tìm trong danh sách thương hiệu</label>
                 <input class="pfacet__input" type="text" id="f-bq" name="bq"
@@ -621,7 +647,7 @@ partial('_layout/page-head', [
                     <?php endif; ?>
                 </p>
 
-                <form class="catsort" method="get" action="/san-pham">
+                <form class="catsort" method="get" action="<?= e($catalogBase) ?>">
                     <?php $hiddenFilters(['sort', 'page']); ?>
                     <label class="catsort__label" for="f-sort">Sắp xếp theo</label>
                     <span class="catpick">

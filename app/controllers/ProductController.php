@@ -107,13 +107,136 @@ class ProductController extends BaseController
         ['label' => '7 – 10 triệu',       'min' => 7000000, 'max' => 10000000],
     ];
 
+    /**
+     * Danh mục có TRANG CON riêng: /san-pham/gong-kinh · /san-pham/trong-kinh
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * KHAI HAI CHỖ, VÀ HAI CHỖ ĐÓ PHẢI KHỚP NHAU
+     *
+     * Mảng này và config/routes.php. Thêm một danh mục vào đây mà quên thêm
+     * route thì catalog() vẫn chạy nhưng URL trả 404; thêm route mà quên mảng
+     * này thì trang con vẫn mở được nhưng ?category=<slug> không chuyển hướng
+     * về nó, và site có hai địa chỉ cho cùng một nội dung.
+     *
+     * VÌ SAO KHÔNG DÙNG MỘT ROUTE CÓ THAM SỐ: 'san-pham/{slug}' đã là trang
+     * CHI TIẾT SẢN PHẨM. Router khớp route chính xác trước rồi mới tới route
+     * có tham số (xem core/Router.php), nên hai dòng khai đích danh ở
+     * config/routes.php chặn đúng hai đường này lại trước khi chúng rơi xuống
+     * trang chi tiết — cùng cách 'san-pham/danh-gia' đang làm.
+     *
+     * HỆ QUẢ: sản phẩm nào có slug đúng bằng 'gong-kinh' hay 'trong-kinh' sẽ
+     * KHÔNG mở được trang chi tiết. Kho hiện đặt slug dạng
+     * 'gong-kinh-titan-vin-t01' nên không đụng, nhưng ai thêm danh mục vào đây
+     * thì kiểm lại điều đó trước.
+     *
+     * DANH MỤC THỨ BA — 'kinh-mat' — CỐ Ý KHÔNG CÓ trang con, vì cửa hàng chỉ
+     * yêu cầu hai. Nó vẫn duyệt được qua /san-pham?category=kinh-mat như cũ.
+     * Muốn nó cũng có trang con thì thêm một dòng ở đây và một dòng ở routes.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    /* public vì helper danhMucUrl() trong core/helpers.php đọc nó — đó là chỗ
+       DUY NHẤT dựng liên kết danh mục cho cả site, và nó phải biết danh mục
+       nào đã có trang con. */
+    public const SUB_PAGES = ['gong-kinh', 'trong-kinh'];
+
+    /**
+     * /san-pham — cả kho, hoặc lọc theo ?category= với danh mục chưa có trang con.
+     */
     public function index(): void
     {
+        $category = (string) ($_GET['category'] ?? '');
+
+        /*
+         * ?category=<slug> CỦA DANH MỤC CÓ TRANG CON -> chuyển hướng về trang
+         * con, giữ nguyên mọi tham số khác.
+         *
+         * Không phải để cho đẹp. Nếu để cả hai địa chỉ cùng phục vụ một nội
+         * dung thì máy tìm kiếm thấy hai trang trùng nhau và tự chọn một cái
+         * để lập chỉ mục — thường là cái ta không muốn. Chuyển hướng làm trang
+         * con thành địa chỉ DUY NHẤT, mà liên kết cũ (bookmark của khách, thẻ
+         * chia sẻ đã gửi đi) vẫn tới đúng nơi.
+         *
+         * 301 chứ không 302: đây là đổi địa chỉ vĩnh viễn, và 301 mới chuyển
+         * được thứ hạng của liên kết cũ sang địa chỉ mới.
+         */
+        if (in_array($category, self::SUB_PAGES, true)) {
+            $rest = $_GET;
+            unset($rest['category']);
+
+            redirect('/san-pham/' . rawurlencode($category)
+                . ($rest === [] ? '' : '?' . http_build_query($rest)), 301);
+        }
+
+        $this->catalog($category);
+    }
+
+    /**
+     * /san-pham/gong-kinh và /san-pham/trong-kinh — trang con của một danh mục.
+     *
+     * MỘT HÀM CHO CẢ HAI ROUTE, đọc slug từ chính đường dẫn. Router chỉ truyền
+     * tham số cho route dạng 'san-pham/{slug}', mà hai đường này là route KHỚP
+     * CHÍNH XÁC (bắt buộc thế, xem chú thích ở SUB_PAGES) nên action không
+     * nhận được gì — phải tự lấy.
+     *
+     * An toàn vì đoạn ngay dưới đối chiếu với SUB_PAGES: chuỗi lấy từ URL
+     * không đi tới đâu nếu không nằm trong danh sách cho phép.
+     */
+    public function category(): void
+    {
+        $parts = explode('/', trim(currentPath(), '/'));
+        $slug  = (string) end($parts);
+
+        /*
+         * Đối chiếu với SUB_PAGES TRƯỚC KHI hỏi CSDL. Slug tới từ URL, và
+         * không có bước này thì /san-pham/kinh-mat cũng mở ra một trang con
+         * mà không có route nào khai — tức là địa chỉ chạy được nhưng không ai
+         * biết nó tồn tại, và ?category=kinh-mat thì không chuyển hướng về đó.
+         * Hai đường vào một nội dung, đúng thứ vừa bỏ công tránh.
+         */
+        if (!in_array($slug, self::SUB_PAGES, true)) {
+            $this->notFound();
+
+            return;
+        }
+
+        /*
+         * Danh mục bị ẩn trong khu quản trị thì trang con phải 404, không phải
+         * hiện ra một lưới rỗng: ẩn một danh mục là quyết định của cửa hàng,
+         * và một trang trống mang tiêu đề "Tròng kính" trông như site hỏng.
+         */
+        if (CategoryModel::findVisibleBySlug($slug) === null) {
+            $this->notFound();
+
+            return;
+        }
+
+        $this->catalog($slug);
+    }
+
+    /**
+     * Thân chung của /san-pham và hai trang con.
+     *
+     * @param string $category slug danh mục, '' là cả kho
+     */
+    private function catalog(string $category): void
+    {
+        /*
+         * ĐƯỜNG GỐC CỦA TRANG. Mọi liên kết lọc, mọi form GET trong view đều
+         * dựng từ đây. Trên trang con nó là '/san-pham/gong-kinh' và tham số
+         * 'category' KHÔNG được in vào query nữa — đường dẫn đã nói rồi. Thiếu
+         * chỗ này thì bấm một tiêu chí lọc bất kỳ là văng ngược về
+         * /san-pham?category=gong-kinh, tức là ra khỏi trang con ngay ở cú bấm
+         * đầu tiên.
+         */
+        $base = in_array($category, self::SUB_PAGES, true)
+            ? '/san-pham/' . rawurlencode($category)
+            : '/san-pham';
+
         // Chỉ nhận đúng các khoá đã biết. Không đổ nguyên $_GET vào model:
         // tham số lạ sẽ lọt xuống tầng dựng câu lệnh và là mặt tấn công thừa.
         $filters = [
             'q'        => trim((string) ($_GET['q'] ?? '')),
-            'category' => (string) ($_GET['category'] ?? ''),
+            'category' => $category,
         ];
 
         // Các nhóm chọn-nhiều. Luôn là MẢNG kể từ đây, kể cả khi URL chỉ có
@@ -168,7 +291,14 @@ class ProductController extends BaseController
          */
         if ($page > 1 && $result['items'] === [] && $result['totalPages'] > 0) {
             $_GET['page'] = $result['totalPages'];
-            redirect('/san-pham?' . http_build_query($_GET));
+
+            /* $base chứ không phải '/san-pham' cố định: trên trang con thì
+               chuyển hướng phải ở lại trang con, không ném khách về cả kho.
+               Và 'category' bỏ khỏi query vì đường dẫn đã mang nó rồi. */
+            $rest = $_GET;
+            unset($rest['category']);
+
+            redirect($base . ($rest === [] ? '' : '?' . http_build_query($rest)));
         }
 
         /*
@@ -244,7 +374,20 @@ class ProductController extends BaseController
             'heading'     => $heading,
             'crumbs'      => $crumbs,
             'lead'        => $lead,
+            'catalogBase' => $base,
         ]);
+    }
+
+    /**
+     * Trả 404 qua ErrorController để trang lỗi đồng nhất với phần còn lại.
+     * Cùng một hàm với ProductDetailController — hai controller, một trang lỗi.
+     */
+    private function notFound(): void
+    {
+        http_response_code(404);
+
+        $controller = new ErrorController();
+        $controller->notFound();
     }
 
     /**

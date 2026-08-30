@@ -142,7 +142,7 @@ $stars = static function (float $score): string {
     if ($category !== null) {
         $crumbs[] = [
             'label' => $category['name'],
-            'url'   => '/san-pham?category=' . rawurlencode($category['slug']),
+            'url'   => danhMucUrl($category['slug']),
         ];
     }
     $crumbs[] = ['label' => $product['name']];

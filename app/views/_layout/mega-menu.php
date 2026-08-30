@@ -76,12 +76,22 @@ $sliceBySlug = [
 
 /**
  * Dựng URL lọc, LUÔN kèm danh mục của cột:
- *   ['q' => 'titanium'] trong cột "Gọng kính" -> /san-pham?category=gong-kinh&q=titanium
+ *   ['q' => 'titanium'] trong cột "Gọng kính" -> /san-pham/gong-kinh?q=titanium
  *
- * category đứng TRƯỚC để chuỗi truy vấn đọc được từ rộng tới hẹp.
+ * Danh mục CÓ TRANG CON thì nằm ở đường dẫn, không ở query — danhMucUrl() lo
+ * việc đó. Danh mục chưa có trang con thì rơi về ?category=<slug>, và lúc ấy
+ * tham số lọc phải nối bằng '&' chứ không phải '?'.
+ *
+ * Không ghép tay '/san-pham?category=…' như trước: làm thế thì mỗi cú bấm
+ * trong mega menu ăn một chuyển hướng 301 sang trang con — chạy đúng nên
+ * không ai phát hiện ra, chỉ chậm thêm một vòng mạng.
  */
-$filterUrl = static fn (string $slug, array $search): string =>
-    '/san-pham?' . http_build_query(['category' => $slug] + $search);
+$filterUrl = static function (string $slug, array $search): string {
+    $base = danhMucUrl($slug);
+    $noi  = str_contains($base, '?') ? '&' : '?';
+
+    return $search === [] ? $base : $base . $noi . http_build_query($search);
+};
 
 /*
  * Thẻ ảnh ở cột cuối — ô "mega-featured" của bản thiết kế.
@@ -141,7 +151,7 @@ if ($feature !== null) {
                 <div class="mega__col">
                     <?php /* Tiêu đề cột bấm được: nó là lối vào cả danh mục, còn
                              bốn dòng dưới chỉ là lát cắt hẹp hơn của chính nó. */ ?>
-                    <a class="mega__label" href="/san-pham?category=<?= e(rawurlencode($cat['slug'])) ?>">
+                    <a class="mega__label" href="<?= e(danhMucUrl($cat['slug'])) ?>">
                         <?= e($cat['name']) ?>
                     </a>
 

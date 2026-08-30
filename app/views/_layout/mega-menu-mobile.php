@@ -34,7 +34,7 @@
     <div class="mobile-nav__sub">
         <a href="/san-pham">Tất cả sản phẩm</a>
         <?php foreach ($categories as $cat): ?>
-            <a href="/san-pham?category=<?= e(rawurlencode($cat['slug'])) ?>"><?= e($cat['name']) ?></a>
+            <a href="<?= e(danhMucUrl($cat['slug'])) ?>"><?= e($cat['name']) ?></a>
         <?php endforeach; ?>
     </div>
 </details>
