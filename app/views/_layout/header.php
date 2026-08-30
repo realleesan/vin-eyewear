@@ -237,6 +237,28 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
 
             <?php
             /*
+             * ĐỔI NGÔN NGỮ — widget Elfsight, đặt ngay trước nút tìm kiếm.
+             *
+             * Đây đúng chỗ nút "VI ▾" cũ từng đứng, và đó là lý do chọn chỗ
+             * này: khách quen tìm nút ngôn ngữ ở đầu cụm tác vụ, không phải ở
+             * một nút nổi góc màn hình.
+             *
+             * PHẢI CHỌN KIỂU INLINE trong trình soạn của Elfsight. Chọn kiểu
+             * nổi (floating) thì widget tự neo mình vào một góc màn hình và
+             * thẻ div ở đây thành một khoảng trống — nút ngôn ngữ vẫn hiện,
+             * nhưng không hiện ở chỗ này.
+             *
+             * Ruột thẻ do bên thứ ba dựng nên KHÔNG dùng .hpop như ba nút bên
+             * cạnh: bảng xổ của .hpop mở bằng :hover/:focus-within trên markup
+             * của chính mình, mà markup đó nay là của Elfsight. Bọc nó vào
+             * .hpop chỉ tạo ra một lớp vỏ có luật CSS không bao giờ khớp thứ
+             * bên trong. Xem .header-lang trong components/header.css.
+             */
+            partial('_layout/translator');
+            ?>
+
+            <?php
+            /*
              * TÌM KIẾM — bảng xổ chứa nguyên ô nhập, không phải một khay riêng
              * nữa. Bản thiết kế chỉ vẽ một icon kính lúp; ô nhập là phần bản
              * thiết kế không vẽ tới (nó chỉ có một trạng thái tĩnh).

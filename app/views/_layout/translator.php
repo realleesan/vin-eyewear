@@ -20,6 +20,26 @@
  * tiếng Anh với thanh nav tiếng Việt, bấm nút kia thì ngược lại.
  *
  * ─────────────────────────────────────────────────────────────────────────────
+ * AI GỌI FILE NÀY, VÀ VÌ SAO ĐÚNG BA CHỖ
+ *
+ *   _layout/header.php          cụm tác vụ, ngay trước nút tìm kiếm
+ *   _layout/checkout-header.php đầu trang rút gọn của luồng thanh toán
+ *   _layout/auth-header.php     đầu trang rút gọn của luồng tài khoản
+ *
+ * MỘT TRANG CHỈ ĐƯỢC MỘT THẺ. Ba chỗ trên loại trừ nhau: master.php dựng hoặc
+ * header đầy đủ, hoặc đúng một đầu trang rút gọn. In hai thẻ cùng class trên
+ * một trang thì Elfsight vẽ hai widget và tính hai lượt xem vào hạn mức.
+ *
+ * VÌ SAO CẢ HAI ĐẦU TRANG RÚT GỌN CŨNG CÓ: widget nhớ ngôn ngữ khách đã chọn
+ * giữa các trang, nhưng chỉ dịch được trang nào có thẻ này. Thiếu ở bước thanh
+ * toán là khách đang đọc tiếng Anh bỗng gặp một biểu mẫu tiền nong toàn tiếng
+ * Việt — đúng cái bước không được phép để họ đọc mò. Bản dịch máy làm lệch vài
+ * nhãn ô nhập vẫn hơn mất hẳn ngôn ngữ giữa chừng.
+ *
+ * KHÔNG có ở _layout/admin-login-header.php, và cũng không cần nhớ điều đó:
+ * điều kiện /quan-tri ngay dưới đây tự chặn.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
  * BA ĐIỀU PHẢI BIẾT TRƯỚC KHI SỬA FILE NÀY
  *
  * 1. MẢNH HTML NẠP NGẦM KHÔNG TỰ CÓ BẢN DỊCH.
@@ -39,9 +59,10 @@
  *
  * 3. HẠN MỨC LƯỢT XEM LÀ THẬT.
  *    Gói miễn phí 200 lượt/tháng; vượt là Elfsight tắt widget cho tới đầu
- *    tháng sau. Widget tắt thì trang vẫn chạy bình thường, chỉ mất nút đổi
- *    ngôn ngữ — không có màn hình lỗi nào. Xem config/app.php để biết vì sao
- *    mã widget nằm ở .env và vì sao máy dev nên để trống.
+ *    tháng sau. Widget tắt thì trang vẫn chạy, chỗ này còn lại một khoảng
+ *    trống rộng 40px trong cụm tác vụ — không có màn hình lỗi nào. Xem
+ *    config/app.php để biết vì sao mã widget nằm ở .env và vì sao máy dev nên
+ *    để trống.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -75,6 +96,9 @@ $elfsightId = trim((string) config('app.elfsight_translator', ''));
  * `<div class="elfsight-app-abc">` vào .env — lỗi rất dễ mắc khi chép từ trang
  * của họ — thì trượt điều kiện dưới đây và widget lặng lẽ không hiện, thay vì
  * in ra một thẻ div hỏng mà không ai để ý.
+ *
+ * KHÔNG khai mã thì không in gì cả, kể cả thẻ bọc: một ô rỗng rộng 40px nằm
+ * giữa cụm tác vụ là thứ không ai giải thích được khi nhìn vào giao diện.
  */
 if ($elfsightId === '' || !preg_match('/^[A-Za-z0-9-]+$/', $elfsightId)) {
     return;
@@ -85,24 +109,28 @@ if ($elfsightId === '' || !preg_match('/^[A-Za-z0-9-]+$/', $elfsightId)) {
  * defer + data-use-service-core: đúng nguyên văn đoạn nhúng Elfsight sinh ra.
  * defer để script của bên thứ ba không chặn lúc trang vẽ ra — nó là tiện ích
  * phụ, không phải nội dung.
+ *
+ * Thẻ script nằm CẠNH thẻ div chứ không ở cuối <body>: cả hai luôn đi cùng
+ * nhau, và tách ra thì thêm một chỗ gọi nữa phải nhớ. defer đã bảo đảm nó
+ * không chặn dù đứng ở giữa <header>.
  */
 ?>
 <script src="https://static.elfsight.com/platform/platform.js" data-use-service-core defer></script>
 <?php
 /*
- * KHÔNG có data-elfsight-app-lazy, dù đoạn mẫu của Elfsight luôn kèm.
+ * THẺ BỌC .header-lang GIỮ CHỖ SẴN, xem components/header.css.
  *
- * Lazy nghĩa là widget chỉ khởi động khi thẻ div này cuộn vào tầm nhìn. Thẻ
- * nằm cuối <body> nên trên trang dài nó ở tận đáy: khách vào trang chủ, nhìn
- * đúng màn hình đầu rồi bỏ đi sẽ KHÔNG BAO GIỜ thấy nút đổi ngôn ngữ. Với một
- * widget nổi phải có mặt ngay từ đầu thì lazy là sai.
+ * Ruột thẻ div dưới đây do Elfsight dựng, và nó chỉ xuất hiện SAU khi
+ * platform.js tải xong — tức là sau khi trang đã vẽ ra một lượt. Không giữ
+ * chỗ trước thì cụm tác vụ nở ra giữa chừng và wordmark bên trái bị đẩy, ngay
+ * trước mắt người đang đọc.
  *
- * ĐẶT CUỐI <body> CHỨ KHÔNG NHÉT VÀO ĐẦU TRANG: cụm nút bên phải header là một
- * hàng flex có JS bảng xổ riêng (assets/js/header.js) — chèn một khối do bên
- * thứ ba dựng vào giữa đó thì kích thước nhảy sau khi trang đã vẽ xong. Nên
- * trong trình soạn của Elfsight phải chọn kiểu hiển thị NỔI (floating), để
- * widget tự neo mình vào một góc màn hình. Chọn kiểu inline thì nó rơi xuống
- * đáy trang, dưới cả chân trang, và gần như không ai thấy.
+ * KHÔNG có data-elfsight-app-lazy, dù đoạn mẫu của Elfsight luôn kèm. Lazy
+ * nghĩa là widget chỉ khởi động khi thẻ cuộn vào tầm nhìn; thẻ này nằm trong
+ * thanh nav dính trên đỉnh nên luôn trong tầm nhìn, và lazy chỉ thêm một nhịp
+ * chờ trước khi nút hiện ra.
  */
 ?>
-<div class="elfsight-app-<?= e($elfsightId) ?>"></div>
+<div class="header-lang">
+    <div class="elfsight-app-<?= e($elfsightId) ?>"></div>
+</div>

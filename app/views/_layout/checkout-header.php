@@ -32,6 +32,21 @@
 <header class="barebar">
     <a class="barebar__logo" href="/">Vin <em>Eyewear</em></a>
 
+    <?php
+    /*
+     * ĐỔI NGÔN NGỮ — cùng widget với đầu trang đầy đủ, xem _layout/translator.php.
+     *
+     * Có mặt ở đây dù bản thiết kế "Vin Eyewear Checkout.dc.html" không vẽ:
+     * widget chỉ dịch được trang nào có thẻ của nó, nên thiếu ở bước này là
+     * khách đang đọc tiếng Anh bỗng gặp một biểu mẫu tiền nong toàn tiếng
+     * Việt. Đây đúng là bước không được phép để họ đọc mò.
+     *
+     * Đặt TRƯỚC cụm "Thanh toán an toàn" để ổ khoá vẫn là thứ sát mép phải —
+     * đó là chỗ khách quen liếc tới để yên tâm, đừng đẩy nó vào giữa.
+     */
+    partial('_layout/translator');
+    ?>
+
     <span class="barebar__help barebar__help--pay">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4d7a3f"
              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

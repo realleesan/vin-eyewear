@@ -37,6 +37,9 @@ return [
      *     <div class="elfsight-app-1ac7608f-e549-4325-bed8-08f5b5..."></div>
      * Chép ĐÚNG phần sau "elfsight-app-" (chuỗi UUID), không chép cả class.
      *
+     * Trong trình soạn của họ chọn kiểu hiển thị INLINE, không phải nổi: thẻ
+     * div nằm trong cụm nút của thanh nav (xem _layout/translator.php).
+     *
      * VÌ SAO NẰM Ở .env CHỨ KHÔNG GÕ THẲNG VÀO VIEW: mã này gắn với MỘT tài
      * khoản Elfsight và MỘT tên miền. Máy dev, máy thử và hosting thật không
      * nên cùng đốt vào một hạn mức lượt xem — gói miễn phí chỉ có 200 lượt/tháng
