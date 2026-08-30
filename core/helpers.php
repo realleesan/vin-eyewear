@@ -478,10 +478,44 @@ function generateCode(string $prefix): string
  * code phía dưới. Thiếu exit thì một trang "đã redirect" vẫn có thể lỡ tay
  * chạy tiếp lệnh xoá/ghi dữ liệu.
  */
-function redirect(string $url): never
+function redirect(string $url, int $status = 302): never
 {
+    /*
+     * MẶC ĐỊNH 302 vì gần hết chỗ gọi là chuyển hướng SAU MỘT THAO TÁC (đặt
+     * hàng xong, đăng nhập xong, đổi ngôn ngữ) — địa chỉ cũ vẫn còn nghĩa, chỉ
+     * là lần này đi tiếp chỗ khác.
+     *
+     * 301 dành cho ĐỔI ĐỊA CHỈ VĨNH VIỄN, và phải cân nhắc trước khi dùng:
+     * trình duyệt CACHE 301 rất lâu, có bản còn không hỏi lại server cho tới
+     * khi người dùng xoá dữ liệu duyệt web. Đặt nhầm 301 lên một đường tạm là
+     * tự khoá mình, sửa mã cũng không gỡ được cho những người đã ghé.
+     */
+    http_response_code($status);
     header('Location: ' . $url);
     exit;
+}
+
+/**
+ * Đường dẫn tới trang danh mục sản phẩm.
+ *
+ *   danhMucUrl('gong-kinh')  ->  /san-pham/gong-kinh      (có trang con)
+ *   danhMucUrl('kinh-mat')   ->  /san-pham?category=kinh-mat
+ *
+ * VÌ SAO CẦN MỘT HÀM CHO MỘT DÒNG NỐI CHUỖI: bốn chỗ trong site dựng liên kết
+ * danh mục từ một vòng lặp (chân trang, mega menu, mega menu mobile, khối danh
+ * mục ngoài trang chủ) cộng hai chỗ gõ cứng slug. Không gom lại thì mỗi lần
+ * một danh mục được lên trang con là sáu chỗ phải nhớ sửa, và chỗ nào quên sẽ
+ * đẻ ra một chuyển hướng 301 thừa ở mỗi cú bấm — chạy đúng nên không ai phát
+ * hiện ra.
+ *
+ * Danh sách slug có trang con nằm ở ProductController::SUB_PAGES; đọc qua
+ * hằng đó chứ không chép lại ở đây.
+ */
+function danhMucUrl(string $slug): string
+{
+    return in_array($slug, ProductController::SUB_PAGES, true)
+        ? '/san-pham/' . rawurlencode($slug)
+        : '/san-pham?category=' . rawurlencode($slug);
 }
 
 /**
