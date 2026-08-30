@@ -248,12 +248,24 @@ $chipGroup = static function (string $key, string $legend, array $options) use (
  * đúng một giá trị.
  *
  * @param string $tatCa nhãn của mục "bỏ lọc" — viết đủ ("Tất cả kiểu dáng")
- *                      chứ không dùng chung một chữ "Tất cả": ba ô chọn đứng
+ *                      chứ không dùng chung một chữ "Tất cả": bốn ô chọn đứng
  *                      gần nhau, mà một danh sách mở ra chỉ ghi "Tất cả" thì
  *                      không tự nói được nó thuộc nhóm nào.
+ * @param bool   $mang  nhóm này lên URL dưới dạng mảng (?shape[]=round) hay số
+ *                      đơn (?price=2). KHOẢNG GIÁ là ngoại lệ duy nhất: nó vốn
+ *                      đã chọn-một từ trước, và trên URL là ?price=2 — đổi
+ *                      thành price[]=2 là làm hỏng mọi liên kết đã có người
+ *                      lưu, xem chú thích ở $state đầu file.
  */
-$pick = static function (string $key, string $legend, array $options, string $tatCa) use ($hiddenFilters): void {
-    $id = 'f-' . $key;
+$pick = static function (
+    string $key,
+    string $legend,
+    array $options,
+    string $tatCa,
+    bool $mang = true
+) use ($hiddenFilters): void {
+    $id  = 'f-' . $key;
+    $ten = $key . ($mang ? '[]' : '');
 
     if ($options === []) {
         /* Không còn tiêu chí nào để chọn (kho hết sạch nhóm này) thì chỉ in
@@ -274,7 +286,7 @@ $pick = static function (string $key, string $legend, array $options, string $ta
         <?php $hiddenFilters([$key, 'page']); ?>
         <span class="catpick">
             <select class="catpick__select" id="<?= e($id) ?>"
-                    name="<?= e($key) ?>[]" data-pick="<?= e($key) ?>[]">
+                    name="<?= e($ten) ?>" data-pick="<?= e($ten) ?>">
                 <?php /* value rỗng = bỏ lọc. multi() ở controller slugify rồi
                          loại chuỗi rỗng, nên không cần nhánh riêng. */ ?>
                 <option value=""><?= e($tatCa) ?></option>
@@ -532,35 +544,28 @@ partial('_layout/page-head', [
 
                 <?php $chipGroup('lens', 'Tính năng tròng', $groups['lens']); ?>
 
-                <?php /* Khoảng giá — chọn MỘT, và chỉ hiện khi kho đã có giá.
-                         Bốn ô tròn không lọc ra được gì thì thà đừng vẽ: người
-                         dùng bấm rồi thấy lưới không đổi sẽ tưởng trang hỏng. */ ?>
+                <?php
+                /*
+                 * KHOẢNG GIÁ — ô xổ xuống, giống ba ô còn lại.
+                 *
+                 * Chỉ hiện khi kho đã có giá: một ô chọn không lọc ra được gì
+                 * thì thà đừng vẽ, người dùng bấm rồi thấy lưới không đổi sẽ
+                 * tưởng trang hỏng.
+                 *
+                 * $mang = false. Đây là nhóm DUY NHẤT không lên URL dạng mảng:
+                 * nó vốn đã chọn-một từ trước và địa chỉ là ?price=2. Đổi sang
+                 * price[]=2 chỉ để cho giống ba ô kia là làm hỏng mọi liên kết
+                 * đã có người lưu — xem chú thích ở $state đầu file.
+                 *
+                 * Ô chọn còn HƠN dãy ô tròn cũ một chỗ: dãy cũ không có mục
+                 * "tất cả" nên phải bấm lại chính ô đang chọn để bỏ lọc, một
+                 * cử chỉ không ai đoán ra nếu chưa từng thử. Nay có hẳn một
+                 * dòng "Tất cả mức giá".
+                 */
+                ?>
                 <?php if ($hasPrices && $groups['price'] !== []): ?>
                     <div class="pfacet">
-                        <p class="pfacet__legend">Khoảng giá</p>
-                        <div class="pfacet__list">
-                            <?php foreach ($groups['price'] as $opt): ?>
-                                <?php $dead = $opt['count'] === 0 && !$opt['on']; ?>
-                                <?php if ($dead): ?>
-                                    <span class="pradio is-off" aria-disabled="true">
-                                        <span class="pradio__dot" aria-hidden="true"></span>
-                                        <span class="pradio__label"><?= e($opt['label']) ?></span>
-                                        <span class="sr-only"> — không có sản phẩm nào</span>
-                                    </span>
-                                <?php else: ?>
-                                    <?php /* Bấm lại chính ô đang chọn là BỎ chọn: nhóm này
-                                             không có ô "tất cả", không cho bỏ thì chọn nhầm
-                                             một khoảng giá là mắc kẹt trong đó. */ ?>
-                                    <a class="pradio<?= $opt['on'] ? ' is-on' : '' ?>" rel="nofollow"
-                                       <?= $opt['on'] ? 'aria-current="true"' : '' ?>
-                                       href="<?= e($buildUrl(['price' => $opt['on'] ? null : (int) $opt['key'], 'page' => null])) ?>">
-                                        <span class="pradio__dot" aria-hidden="true"></span>
-                                        <span class="pradio__label"><?= e($opt['label']) ?></span>
-                                        <?php if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif; ?>
-                                    </a>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </div>
+                        <?php $pick('price', 'Khoảng giá', $groups['price'], 'Tất cả mức giá', false); ?>
                     </div>
                 <?php endif; ?>
 

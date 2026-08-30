@@ -32,24 +32,61 @@
 class ProductController extends BaseController
 {
     /**
-     * Bốn khoảng giá trong ô "Khoảng giá" của bộ lọc.
+     * Các khoảng giá trong ô "Khoảng giá" của bộ lọc.
      *
      * Gõ cứng chứ không tính từ dữ liệu: đây là những mốc người mua kính tự
-     * nghĩ trong đầu ("dưới 2 triệu"), không phải phân vị của kho hàng. Kho
+     * nghĩ trong đầu ("dưới 1 triệu"), không phải phân vị của kho hàng. Kho
      * đổi giá thì mấy mốc này vẫn đúng.
      *
-     * `max` là chặn TRÊN KHÔNG bao gồm — nếu không thì hàng đúng 2.000.000₫
-     * rơi vào cả hai khoảng đầu. `max = null` là khoảng cuối, không chặn trên.
+     * `max` là chặn TRÊN KHÔNG bao gồm — nếu không thì hàng đúng 1.000.000₫
+     * rơi vào cả hai khoảng đầu.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CHIA DÀY Ở DƯỚI, THƯA DẦN LÊN TRÊN (2026-08-30, theo yêu cầu)
+     *
+     * Bản cũ có bốn mốc: dưới 2tr · 2–5 · 5–10 · trên 10. Khoảng "dưới 2 triệu"
+     * ôm gần hết hàng phổ thông, tức là tiêu chí đó gần như không lọc được gì —
+     * ai bấm vào cũng nhận lại đúng cái lưới họ vừa nhìn.
+     *
+     * Nay sáu mốc, và bước nhảy to dần: 1 · 1 · 1 · 2 · 2 · 3 (triệu). Người
+     * mua ở phân khúc dưới cân nhắc từng vài trăm nghìn, còn người mua gọng 7
+     * triệu thì 500 nghìn không đổi quyết định — chia đều tăm tắp là dồn hết
+     * độ phân giải vào chỗ không ai cần.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * TRẦN LÀ 10 TRIỆU, VÀ ĐÓ LÀ MỘT ĐÁNH ĐỔI CÓ THẬT
+     *
+     * Không còn khoảng "Trên 10 triệu" như bản cũ, nên hàng từ 10.000.000₫ trở
+     * lên KHÔNG rơi vào khoảng nào: nó vẫn hiện bình thường khi chưa lọc giá,
+     * nhưng chọn bất kỳ khoảng nào cũng làm nó biến mất, và không có cách nào
+     * lọc riêng nó ra.
+     *
+     * Chấp nhận được chừng nào cửa hàng chưa bán tới mức đó. Ngày có hàng trên
+     * 10 triệu thì thêm lại một dòng ['label' => 'Trên 10 triệu', 'min' =>
+     * 10000000, 'max' => null] vào CUỐI mảng — thêm ở cuối chứ không chèn giữa,
+     * xem đoạn về chỉ số ngay dưới.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ĐỔI MẢNG NÀY LÀ ĐỔI Ý NGHĨA CỦA MỌI LIÊN KẾT ĐÃ LƯU
+     *
+     * URL mang CHỈ SỐ (?price=2), không mang khoảng. Bản cũ ?price=2 là
+     * "5 – 10 triệu"; trong mảng mới nó là "2 – 3 triệu". Không có cách nào cứu
+     * những liên kết đó, và cũng không đáng dựng bảng quy đổi cho một tham số
+     * lọc — nhưng phải biết là nó xảy ra, và đừng chèn thêm dòng vào GIỮA mảng
+     * nếu không muốn lặp lại chuyện này.
+     * ─────────────────────────────────────────────────────────────────────────
      *
      * Cả NHÓM này tự ẩn khi chưa hàng nào có giá (xem 'hasPrices' bên dưới):
-     * bốn ô tròn không lọc ra được gì chỉ làm người dùng bấm rồi tưởng trang
+     * một ô chọn không lọc ra được gì chỉ làm người dùng bấm rồi tưởng trang
      * hỏng. Nhập giá cho một sản phẩm là nhóm hiện lại, không phải sửa code.
      */
     private const PRICE_RANGES = [
-        ['label' => 'Dưới 2 triệu',  'min' => 0,        'max' => 2000000],
-        ['label' => '2 – 5 triệu',   'min' => 2000000,  'max' => 5000000],
-        ['label' => '5 – 10 triệu',  'min' => 5000000,  'max' => 10000000],
-        ['label' => 'Trên 10 triệu', 'min' => 10000000, 'max' => null],
+        ['label' => 'Dưới 1 triệu', 'min' => 0,       'max' => 1000000],
+        ['label' => '1 – 2 triệu',  'min' => 1000000, 'max' => 2000000],
+        ['label' => '2 – 3 triệu',  'min' => 2000000, 'max' => 3000000],
+        ['label' => '3 – 5 triệu',  'min' => 3000000, 'max' => 5000000],
+        ['label' => '5 – 7 triệu',  'min' => 5000000, 'max' => 7000000],
+        ['label' => '7 – 10 triệu', 'min' => 7000000, 'max' => 10000000],
     ];
 
     public function index(): void
@@ -81,7 +118,7 @@ class ProductController extends BaseController
         }
 
         // Model coi khoảng giá như mọi nhóm khác (mảng khoá), view thì cần một
-        // số để đánh dấu ô tròn đang chọn. Giữ cả hai, cùng một nguồn.
+        // số để đánh dấu <option> đang chọn. Giữ cả hai, cùng một nguồn.
         $filters['price'] = $priceIndex === null ? [] : [(string) $priceIndex];
 
         // Sắp xếp — chỉ bốn giá trị bản thiết kế vẽ, cộng 'rating' vẫn đỡ cho

@@ -454,43 +454,16 @@
     text-overflow: ellipsis;
 }
 
-/* --- Dòng có nút tròn (khoảng giá) --- */
+/* Ở ĐÂY TỪNG CÓ .pradio* — dãy nút tròn của nhóm "Khoảng giá". Bỏ 2026-08-30
+   khi nhóm đó thành ô xổ xuống dùng chung .catpick với ba nhóm còn lại.
 
-.pradio {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 6px 0;
-    text-decoration: none;
-    cursor: pointer;
-}
+   Xoá luôn CSS chứ không để lại: markup đã không còn in bộ lớp này, giữ lại là
+   một khối kiểu không ai với tới, và người sửa sau sẽ tưởng nó đang được dùng
+   ở đâu đó. Cần lại thì lấy trong git.
 
-/* Chấm đặc dựng bằng chính viền: viền dày 5px trên hình tròn 16px chỉ chừa
-   lại một lõi trắng 6px ở giữa. Một phần tử, không cần ::after. */
-.pradio__dot {
-    flex-shrink: 0;
-    box-sizing: border-box;
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid var(--c-box);
-    border-radius: var(--radius-round);
-    background: var(--surface-raised);
-    transition: border-color 0.2s, border-width 0.2s;
-}
-
-.pradio.is-on .pradio__dot {
-    border: 5px solid var(--brand);
-}
-
-.pradio:hover .pradio__dot,
-.pradio:focus-visible .pradio__dot { border-color: var(--brand); }
-
-.pradio__label {
-    flex: 1;
-    min-width: 0;
-    font-size: 14px;
-    color: var(--c-item);
-}
+   Trang này KHÔNG còn nút tròn nào. Đừng dựng lại .pradio cho một nhóm mới mà
+   không đọc trước lý do bốn nhóm kia thành ô chọn — xem $pick trong
+   app/views/product/index.php. */
 
 /* --- Số đếm động --- */
 
@@ -518,8 +491,7 @@
  * hàng nào".
  */
 .pchip.is-off,
-.pcheck.is-off,
-.pradio.is-off {
+.pcheck.is-off {
     opacity: 0.38;
     cursor: not-allowed;
 }
@@ -530,8 +502,7 @@
     display: inline-block;
 }
 
-.pcheck.is-off,
-.pradio.is-off {
+.pcheck.is-off {
     display: flex;
 }
 
