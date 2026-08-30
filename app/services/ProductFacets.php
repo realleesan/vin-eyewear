@@ -206,11 +206,49 @@ class ProductFacets
      *                       xếp theo số sản phẩm giảm dần, hoà thì theo nhãn.
      * @return array<int, array{key:string,label:string,count:int,total:int,on:bool}>
      */
-    public static function group(array $products, array $selected, string $group, array $order = []): array
-    {
+    public static function group(
+        array $products,
+        array $selected,
+        string $group,
+        array $order = [],
+        array $seed = []
+    ): array {
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * $seed — MỤC LUÔN CÓ MẶT DÙ KHO CHƯA CÓ HÀNG NÀO (2026-08-30)
+         *
+         * Mặc định danh sách lựa chọn dựng TỪ HÀNG ĐANG BÁN: nhóm nào không sản
+         * phẩm nào có giá trị thì rỗng, và cột lọc tự bỏ qua nó. Đúng cho tám
+         * nhóm dựng từ dữ liệu người nhập gõ tự do — bày một tiêu chí chưa món
+         * nào có là mời người ta bấm vào một lưới rỗng.
+         *
+         * BỐN NHÓM TRÒNG KÍNH thì ngược lại, vì danh sách của chúng do CỬA HÀNG
+         * KHAI ở /quan-tri/thuoc-tinh-trong. Khai xong mà bộ lọc vẫn trống cho
+         * tới khi có người đi tick từng sản phẩm là một khoảng im lặng dài, và
+         * nó trông y như hỏng — đã xảy ra thật ngay ngày đầu bật tính năng.
+         *
+         * Seed đưa cả danh sách khai vào, mỗi mục count = 0. Mục không có hàng
+         * vì thế hiện MỜ (xem $dead/$tat ở product/index.php) chứ không biến
+         * mất — đúng luật đang áp cho mọi nhóm khác, chỉ khác ở chỗ mục ấy
+         * chưa từng có hàng thay vì vừa bị một tiêu chí khác loại ra.
+         *
+         * Nhãn của hàng thật ĐÈ LÊN nhãn seed: cùng một khoá thì lấy cách viết
+         * gặp trong kho, giữ nguyên nếp "nhãn theo cách viết gặp đầu tiên" ở
+         * ngay dưới.
+         * ─────────────────────────────────────────────────────────────────────
+         */
         $labels = [];
         $counts = [];
         $totals = [];
+
+        foreach ($seed as $key => $label) {
+            $labels[$key] = $label;
+            $counts[$key] = 0;
+            $totals[$key] = 0;
+        }
+
+        /* Khoá nào đã lấy nhãn từ hàng thật — xem chú thích ở vòng lặp dưới. */
+        $daDeNhan = [];
 
         foreach ($products as $p) {
             $have = $p['_facets'][$group] ?? [];
@@ -227,7 +265,15 @@ class ProductFacets
                 // "Ray-Ban" và "RAY-BAN" cho ra cùng một khoá; in cả hai dòng
                 // thì cột lọc có hai thương hiệu y hệt nhau, mỗi dòng một nửa
                 // số hàng.
-                $labels[$key] ??= $label;
+                /* Hàng thật ĐÈ nhãn seed đúng một lần: seed đã đặt sẵn khoá
+                   nên ??= sẽ không bao giờ ghi, và bộ lọc mãi mang nhãn của
+                   bảng quản trị kể cả khi kho viết khác. Dùng cờ riêng thay
+                   vì bỏ ??=, để vẫn giữ nếp "lấy cách viết gặp ĐẦU TIÊN". */
+                if (!isset($daDeNhan[$key])) {
+                    $labels[$key]    = $label;
+                    $daDeNhan[$key]  = true;
+                }
+
                 $counts[$key] ??= 0;
                 $totals[$key] = ($totals[$key] ?? 0) + 1;
 

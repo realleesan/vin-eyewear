@@ -410,14 +410,50 @@ class ProductModel extends BaseModel
         // 3. Danh sách lựa chọn + số đếm — dựng TRƯỚC khi lọc, vì mỗi nhóm
         //    đếm với một bộ điều kiện khác nhau (bỏ qua chính nó).
         $groups = [];
+
+        /*
+         * BỐN NHÓM TRÒNG KÍNH LẤY DANH SÁCH TỪ BẢNG QUẢN TRỊ, không dựng từ kho.
+         *
+         * Khác tám nhóm kia ở hai điểm, và cả hai đều vì danh sách này do cửa
+         * hàng khai ở /quan-tri/thuoc-tinh-trong chứ không rút ra từ chữ người
+         * nhập gõ:
+         *
+         *   THỨ TỰ  theo đúng thứ tự cửa hàng xếp bằng nút ↑↓, không theo số
+         *           lượng hàng. Hai cái nút ấy sinh ra để quyết định thứ tự
+         *           khách nhìn thấy; xếp lại theo tồn kho là vô hiệu hoá chúng.
+         *   SEED    cả danh sách luôn có mặt, mục chưa có hàng thì đếm 0 và
+         *           hiện mờ. Khai xong mà bộ lọc vẫn trống cho tới khi có
+         *           người đi tick từng sản phẩm là một khoảng im lặng dài, và
+         *           nó trông y như hỏng.
+         *
+         * visible() chứ không ofGroup(): mục cửa hàng đã ẩn thì không được
+         * dựng lại ở đây. Hàng cũ còn mang khoá đó vẫn lọc được qua URL, nó
+         * chỉ thôi xuất hiện như một lựa chọn.
+         */
+        $nhomTrong = [
+            'lens_type'  => 'loai-trong',
+            'lens_index' => 'chiet-suat',
+            'lens_coat'  => 'lop-phu',
+            'lens_color' => 'mau-trong',
+        ];
+
         foreach (ProductFacets::GROUPS as $group) {
-            $order = match ($group) {
-                'gender' => ProductTaxonomy::GENDER_ORDER,
-                'price'  => array_map('strval', array_keys($priceRanges)),
-                default  => [],
+            $seed = [];
+
+            if (isset($nhomTrong[$group])) {
+                foreach (LensOptionModel::visible($nhomTrong[$group]) as $o) {
+                    $seed[(string) $o['option_key']] = (string) $o['label'];
+                }
+            }
+
+            $order = match (true) {
+                $group === 'gender'          => ProductTaxonomy::GENDER_ORDER,
+                $group === 'price'           => array_map('strval', array_keys($priceRanges)),
+                isset($nhomTrong[$group])    => array_keys($seed),
+                default                      => [],
             };
 
-            $groups[$group] = ProductFacets::group($all, $selected, $group, $order);
+            $groups[$group] = ProductFacets::group($all, $selected, $group, $order, $seed);
         }
 
         // 4. Kết quả thật
