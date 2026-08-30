@@ -415,6 +415,10 @@
     overflow: hidden;
 }
 
+/* Lớp này do home.js gắn vào, không in sẵn trong view: tắt JS thì bấm vào ảnh
+   không có gì xảy ra, mà con trỏ hình bàn tay lại hứa là có. */
+.hero__media.is-clickable { cursor: pointer; }
+
 /* inset:0 chứ không phải height:100% — .hero__media chỉ có min-height, mà
    phần trăm chiều cao không tính được từ min-height. */
 .hero__track {

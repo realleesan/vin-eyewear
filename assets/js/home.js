@@ -3,7 +3,7 @@
  *
  * Năm việc, gói trong một file vì cả năm đều chỉ chạy ở đúng một trang:
  *
- *   1. băng ảnh hero (ba ảnh) — TỰ CHẠY
+ *   1. băng ảnh hero (ba ảnh) — TỰ CHẠY, bấm vào ảnh là sang ảnh sau
  *   2. hộp thoại "kiểm tra 5 phút" (chọn tròng · chọn gọng)
  *   3. băng trượt khối đánh giá — TỰ CHẠY
  *   4. hai băng trượt sản phẩm ("mới về" và "bán chạy") — chỉ đổi khi bấm
@@ -19,7 +19,7 @@
  * tự chạy trên máy đặt "giảm chuyển động".
  *
  * TẤT CẢ ĐỀU LÀ TĂNG CƯỜNG. Không có file này thì:
- *   · hero đứng ở ảnh đầu tiên, hai mũi tên không làm gì;
+ *   · hero đứng ở ảnh đầu tiên, hai mũi tên và cú bấm vào ảnh không làm gì;
  *   · hai thẻ "chọn tròng / chọn gọng" là liên kết thường sang trang danh mục;
  *   · băng đánh giá đứng ở năm thẻ đầu, hai băng sản phẩm đứng ở bốn thẻ đầu,
  *     băng danh mục đứng ở ba thẻ đầu.
@@ -514,6 +514,28 @@
                cuối một nhịp sẽ bị máy đổi ảnh tiếp ngay sau đó — người dùng vừa
                chọn ảnh mình muốn xem đã bị đẩy sang ảnh khác. */
             restart();
+        });
+
+        /*
+         * BẤM THẲNG VÀO ẢNH cũng sang ảnh sau — cùng nghĩa với mũi tên "sau".
+         * Tấm ảnh là chỗ mắt người ta đang nhìn, còn hai mũi tên nằm mãi bên cột
+         * chữ; bắt di chuột sang tận đó chỉ để xem ảnh tiếp theo là bắt đi đường
+         * vòng.
+         *
+         * Ảnh KHÔNG phải là <button>: nó không dẫn đi đâu, cũng không có nhãn
+         * nào đọc lên cho ra nghĩa ("ảnh sau" đã có sẵn ở mũi tên, thêm một nút
+         * nữa cùng việc chỉ làm rối luồng Tab của trình đọc màn hình). Đây là
+         * lối tắt cho chuột/cảm ứng, còn lối đi chính thức vẫn là hai mũi tên —
+         * chúng vẫn nhận được tiêu điểm bàn phím như cũ.
+         *
+         * .hero__caption đã có pointer-events:none nên bấm trúng thẻ chú thích
+         * cũng tính là bấm vào ảnh.
+         */
+        media.classList.add('is-clickable');   // chỉ đổi con trỏ khi JS thật sự chạy
+
+        media.addEventListener('click', function () {
+            go(1);
+            restart();   // lý do giống cú bấm mũi tên ở trên
         });
 
         render();

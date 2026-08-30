@@ -150,7 +150,11 @@ $trust = [
                  lại thì tăng đúng con số này, không cần sửa JavaScript.
 
                  Máy đặt "giảm chuyển động" (prefers-reduced-motion) thì home.js
-                 KHÔNG bật tự chạy, dù có thuộc tính này. */ ?>
+                 KHÔNG bật tự chạy, dù có thuộc tính này.
+
+                 BẤM VÀO ẢNH LÀ SANG ẢNH SAU: home.js gắn thẳng vào thẻ này, ở
+                 đây không cần thuộc tính nào. Nó cũng tự gắn lớp .is-clickable
+                 để đổi con trỏ, nên đừng in sẵn lớp đó trong view. */ ?>
         <?php /* aria-live=off: chú thích đổi theo ảnh, đọc lại mỗi lần đổi chỉ
                  làm phiền — nhất là khi băng tự chạy. */ ?>
         <div class="hero__media" data-hero-slider data-autoplay="2000">
