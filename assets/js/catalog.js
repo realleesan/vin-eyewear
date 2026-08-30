@@ -5,7 +5,8 @@
  * trang này là liên kết và form GET thật; tắt JavaScript thì mọi thứ vẫn lọc
  * được, chỉ mất bốn chỗ tiện tay:
  *
- *   1. Đổi ô "Sắp xếp theo" là lọc luôn, không phải bấm "Áp dụng".
+ *   1. Đổi ô "Sắp xếp theo" hoặc ô "Chất liệu" là lọc luôn, không phải bấm
+ *      "Áp dụng".
  *   2. Gõ vào ô "Tìm thương hiệu" là danh sách lọc ngay tại chỗ, không phải
  *      tải lại trang.
  *   3. Bấm một tiêu chí lọc thì chỉ hai mảnh của trang được thay, cả trang
@@ -25,11 +26,14 @@
     /* ------------------------------------------------------------------
        1 + 2. HAI TIỆN ÍCH NÀY PHẢI GẮN LẠI ĐƯỢC
 
-       Mục 3 thay RUỘT của cột lọc và lưới kết quả bằng HTML mới, nên ô "Sắp
-       xếp theo" và ô "Tìm thương hiệu" sau mỗi cú lọc là hai phần tử KHÁC với
-       lúc trang mới tải. Nghe sự kiện đúng một lần lúc đầu thì cú lọc đầu tiên
-       là mất sạch — ô sắp xếp thành ô chết, gõ vào ô thương hiệu không lọc gì
-       nữa.
+       Mục 3 thay RUỘT của cột lọc và lưới kết quả bằng HTML mới, nên hai ô
+       chọn ([data-pick]) và ô "Tìm thương hiệu" sau mỗi cú lọc là những phần
+       tử KHÁC với lúc trang mới tải. Nghe sự kiện đúng một lần lúc đầu thì cú
+       lọc đầu tiên là mất sạch — hai ô chọn thành ô chết, gõ vào ô thương
+       hiệu không lọc gì nữa.
+
+       Ô "Chất liệu" nằm TRONG cột lọc nên nó bị thay sau MỌI cú lọc, kể cả
+       cú lọc do chính nó gây ra.
 
        Gom vào một hàm để mục 3 gọi lại sau mỗi lần thay. Không sợ gắn chồng:
        phần tử cũ bị thay hẳn, listener cũ đi theo nó.
@@ -38,19 +42,27 @@
     ganTienIch();
 
     function ganTienIch() {
-        // 1. Đổi ô sắp xếp -> lọc luôn
-        var sortSelect = document.getElementById('f-sort');
+        /* 1. Đổi một ô chọn -> lọc luôn, không phải bấm "Áp dụng"
 
-        if (sortSelect && sortSelect.form) {
-            sortSelect.addEventListener('change', function () {
+           HAI ô dùng chung đoạn này: "Sắp xếp theo" ở cột kết quả và "Chất
+           liệu" trong cột lọc. Quét theo [data-pick] chứ không theo id: hồi
+           chỉ có một ô thì getElementById('f-sort') là đủ, nhưng thêm ô thứ
+           hai bằng cách chép lại cả khối là hai chỗ phải nhớ sửa cùng lúc.
+           Giá trị của data-pick chính là TÊN THAM SỐ URL mà ô đó điều khiển. */
+        var picks = document.querySelectorAll('[data-pick]');
+
+        Array.prototype.forEach.call(picks, function (select) {
+            if (!select.form) return;
+
+            select.addEventListener('change', function () {
                 /* Rẽ nhánh NGAY TẠI ĐÂY chứ không chặn sự kiện 'submit' của
                    form: form.submit() gọi bằng mã KHÔNG phát sự kiện 'submit',
                    nên một listener trên form sẽ không bao giờ chạy. */
-                if (!diToiTaiCho(urlSapXep(sortSelect))) {
-                    sortSelect.form.submit();
+                if (!diToiTaiCho(urlChonLoc(select))) {
+                    select.form.submit();
                 }
             });
-        }
+        });
 
         // 2. Lọc danh sách thương hiệu ngay khi gõ
         var brandForm = document.querySelector('[data-brand-filter]');
@@ -70,16 +82,42 @@
         }
     }
 
-    /** URL cho một lựa chọn sắp xếp, hoặc null nếu trình duyệt thiếu URL API. */
-    function urlSapXep(select) {
+    /** URL cho một lựa chọn của ô [data-pick], hoặc null nếu thiếu URL API. */
+    function urlChonLoc(select) {
         if (!window.URL) return null;
 
         try {
-            var u = new URL(window.location.href);
+            var u     = new URL(window.location.href);
+            var ten   = select.getAttribute('data-pick');   // 'sort' | 'material[]'
+            var goc   = ten.replace(/\[\]$/, '');           // 'sort' | 'material'
 
-            u.searchParams.set('sort', select.value);
-            // Đổi cách sắp xếp thì phải về trang 1: trang 7 của thứ tự cũ
-            // không có nghĩa gì trong thứ tự mới.
+            /* XOÁ MỌI BIẾN THỂ của tham số trước khi đặt lại, chứ không
+               searchParams.set(ten, ...).
+
+               Lý do: tham số chọn-nhiều xuất hiện trong URL dưới ba dạng khác
+               nhau tuỳ ai dựng ra nó — http_build_query() của PHP ghi
+               material%5B0%5D, form GET của trình duyệt ghi material%5B%5D, và
+               liên kết viết tay có thể chỉ ghi material. set() chỉ thay đúng
+               một khoá, nên đang ở ?material[0]=titanium mà set('material[]')
+               sẽ để lại CẢ HAI và lưới lọc theo hai chất liệu.
+
+               Chụp danh sách khoá ra mảng trước khi xoá: xoá trong lúc đang
+               duyệt iterator của searchParams thì nhảy cóc qua phần tử. */
+            var khoa = [];
+
+            u.searchParams.forEach(function (_, k) { khoa.push(k); });
+
+            khoa.forEach(function (k) {
+                if (k === goc || k.indexOf(goc + '[') === 0) u.searchParams.delete(k);
+            });
+
+            // Giá trị rỗng = "Tất cả", tức là không có tham số nào cả.
+            if (select.value !== '') {
+                u.searchParams.append(ten, select.value);
+            }
+
+            /* Đổi tiêu chí thì phải về trang 1: trang 7 của kết quả cũ không
+               có nghĩa gì trong kết quả mới. Đúng với cả sắp xếp lẫn lọc. */
             u.searchParams.delete('page');
 
             return u.toString();

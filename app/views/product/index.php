@@ -134,75 +134,79 @@ $hiddenFilters = static function (array $except = []) use ($state): void {
 };
 
 /**
- * Một nhóm huy hiệu (Dáng gọng · Chất liệu · Tính năng tròng · Đối tượng).
+ * MỘT huy hiệu lọc.
  *
- * $extra là một nhóm PHỤ vẽ chung hàng huy hiệu — chỉ dùng cho chip "Chất
- * liệu tái chế / bio" nằm nối đuôi nhóm Chất liệu. Nó thuộc một nhóm lọc
- * riêng (?eco[]=recycled) nhưng người dùng đọc nó như một chất liệu nữa, nên
- * tách ra thành khối có tiêu đề riêng là thừa một dòng chữ hoa.
+ * Tách riêng khỏi $chipGroup vì có hai nơi cần nó: các nhóm huy hiệu bên
+ * dưới, và chip "Chất liệu tái chế / bio" đi kèm ô chọn chất liệu — chip đó
+ * thuộc nhóm lọc riêng (?eco[]=recycled) nhưng người dùng đọc nó như một chất
+ * liệu nữa, nên nó ở chung khối với ô chọn chứ không thành một khối có tiêu đề
+ * riêng (thừa một dòng chữ hoa cho đúng một mục).
  */
-$chipGroup = static function (string $key, string $legend, array $options, ?array $extra = null) use ($toggleUrl): void {
-    $extraKey     = $extra['key']     ?? '';
-    $extraOptions = $extra['options'] ?? [];
+$chip = static function (string $group, array $opt) use ($toggleUrl): void {
+    /*
+     * Mục lọc ra 0 sản phẩm: vẫn in nhưng bỏ liên kết và làm mờ. Giấu hẳn thì
+     * cột lọc co giãn sau mỗi cú bấm và người dùng mất dấu tiêu chí vừa nhìn
+     * thấy ở đó một giây trước.
+     *
+     * Mục ĐANG BẬT luôn còn liên kết dù đếm ra bao nhiêu — nếu không sẽ không
+     * còn cách nào tắt nó đi.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * SỐ ĐẾM VẪN TÍNH, NHƯNG KHÔNG CÒN IN RA (2026-08-29)
+     *
+     * Trước đây mỗi tiêu chí kèm một con số: "Acetate 2". Cửa hàng thấy nó
+     * không giúp gì cho việc chọn — người ta lọc theo thứ mình cần, không
+     * theo chỗ nào đông hàng — mà lại làm mỗi dòng thêm một cụm số nhấp nháy
+     * đổi sau mỗi cú bấm. Nay bỏ khỏi giao diện, ở cả ba nhóm: huy hiệu, danh
+     * sách tick, và khoảng giá.
+     *
+     * `count` thì VẪN PHẢI TÍNH, vì nó là thứ quyết định mục nào bị làm mờ.
+     * Đừng thấy "không ai in ra nữa" mà bỏ luôn phép đếm — bỏ là mọi tiêu chí
+     * đều bấm được, kể cả những cái dẫn tới lưới rỗng.
+     *
+     * Mục bị mờ nay mang thêm một câu sr-only "không có sản phẩm nào": số 0
+     * từng là dấu hiệu duy nhất cho người dùng trình đọc màn hình, bỏ nó đi
+     * mà không thay gì là lấy mất thông tin của đúng nhóm người không nhìn
+     * thấy màu mờ.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    $dead = $opt['count'] === 0 && !$opt['on'];
+    ?>
+    <?php if ($dead): ?>
+        <span class="pchip is-off" aria-disabled="true"><?= e($opt['label']) ?><span
+            class="sr-only"> — không có sản phẩm nào</span></span>
+    <?php else: ?>
+        <?php /* aria-current chứ không phải aria-pressed: aria-pressed chỉ hợp
+                 lệ trên nút, còn đây là <a>. Kèm một câu chỉ trình đọc màn hình
+                 nghe được — không có nó thì trạng thái "đang chọn" chỉ nằm ở màu
+                 nền, người không nhìn thấy màu sẽ nghe hai huy hiệu bật và tắt
+                 giống hệt nhau. */ ?>
+        <a class="pchip<?= $opt['on'] ? ' is-on' : '' ?>"
+           href="<?= e($toggleUrl($group, $opt['key'])) ?>"
+           <?= $opt['on'] ? 'aria-current="true"' : '' ?>
+           rel="nofollow"><?= e($opt['label']) ?><?php
+            if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif;
+        ?></a>
+    <?php endif; ?>
+    <?php
+};
 
-    if ($options === [] && $extraOptions === []) {
+/**
+ * Một nhóm huy hiệu (Dáng gọng · Tính năng tròng · Đối tượng).
+ *
+ * Chất liệu KHÔNG còn dùng hàm này — nó là ô chọn xổ xuống, xem khối "CHẤT
+ * LIỆU" trong cột lọc bên dưới.
+ */
+$chipGroup = static function (string $key, string $legend, array $options) use ($chip): void {
+    if ($options === []) {
         return;
     }
     ?>
     <div class="pfacet">
         <p class="pfacet__legend"><?= e($legend) ?></p>
         <div class="pfacet__chips">
-            <?php foreach ([[$key, $options], [$extraKey, $extraOptions]] as [$group, $list]): ?>
-                <?php foreach ($list as $opt): ?>
-                    <?php
-                    /*
-                     * Mục lọc ra 0 sản phẩm: vẫn in nhưng bỏ liên kết và làm
-                     * mờ. Giấu hẳn thì cột lọc co giãn sau mỗi cú bấm và người
-                     * dùng mất dấu tiêu chí vừa nhìn thấy ở đó một giây trước.
-                     *
-                     * Mục ĐANG BẬT luôn còn liên kết dù đếm ra bao nhiêu —
-                     * nếu không sẽ không còn cách nào tắt nó đi.
-                     *
-                     * ─────────────────────────────────────────────────────
-                     * SỐ ĐẾM VẪN TÍNH, NHƯNG KHÔNG CÒN IN RA (2026-08-29)
-                     *
-                     * Trước đây mỗi tiêu chí kèm một con số: "Acetate 2".
-                     * Cửa hàng thấy nó không giúp gì cho việc chọn — người ta
-                     * lọc theo thứ mình cần, không theo chỗ nào đông hàng — mà
-                     * lại làm mỗi dòng thêm một cụm số nhấp nháy đổi sau mỗi
-                     * cú bấm. Nay bỏ khỏi giao diện, ở cả ba nhóm: huy hiệu,
-                     * danh sách tick, và khoảng giá.
-                     *
-                     * `count` thì VẪN PHẢI TÍNH, vì nó là thứ quyết định mục
-                     * nào bị làm mờ. Đừng thấy "không ai in ra nữa" mà bỏ luôn
-                     * phép đếm — bỏ là mọi tiêu chí đều bấm được, kể cả những
-                     * cái dẫn tới lưới rỗng.
-                     *
-                     * Mục bị mờ nay mang thêm một câu sr-only "không có sản
-                     * phẩm nào": số 0 từng là dấu hiệu duy nhất cho người dùng
-                     * trình đọc màn hình, bỏ nó đi mà không thay gì là lấy mất
-                     * thông tin của đúng nhóm người không nhìn thấy màu mờ.
-                     * ─────────────────────────────────────────────────────
-                     */
-                    $dead = $opt['count'] === 0 && !$opt['on'];
-                    ?>
-                    <?php if ($dead): ?>
-                        <span class="pchip is-off" aria-disabled="true"><?= e($opt['label']) ?><span
-                            class="sr-only"> — không có sản phẩm nào</span></span>
-                    <?php else: ?>
-                        <?php /* aria-current chứ không phải aria-pressed: aria-pressed
-                                 chỉ hợp lệ trên nút, còn đây là <a>. Kèm một câu chỉ
-                                 trình đọc màn hình nghe được — không có nó thì trạng
-                                 thái "đang chọn" chỉ nằm ở màu nền, người không nhìn
-                                 thấy màu sẽ nghe hai huy hiệu bật và tắt giống hệt nhau. */ ?>
-                        <a class="pchip<?= $opt['on'] ? ' is-on' : '' ?>"
-                           href="<?= e($toggleUrl($group, $opt['key'])) ?>"
-                           <?= $opt['on'] ? 'aria-current="true"' : '' ?>
-                           rel="nofollow"><?= e($opt['label']) ?><?php
-                            if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif;
-                        ?></a>
-                    <?php endif; ?>
-                <?php endforeach; ?>
+            <?php foreach ($options as $opt): ?>
+                <?php $chip($key, $opt); ?>
             <?php endforeach; ?>
         </div>
     </div>
@@ -394,10 +398,114 @@ partial('_layout/page-head', [
 
                 <?php $chipGroup('shape', 'Dáng gọng', $groups['shape']); ?>
 
-                <?php $chipGroup('material', 'Chất liệu', $groups['material'], [
-                    'key'     => 'eco',
-                    'options' => $groups['eco'],
-                ]); ?>
+                <?php
+                /*
+                 * ─────────────────────────────────────────────────────────
+                 * CHẤT LIỆU — Ô CHỌN XỔ XUỐNG, KHÔNG PHẢI HÀNG HUY HIỆU
+                 *
+                 * Tám chất liệu vẽ thành huy hiệu thì chiếm ba, bốn dòng của
+                 * một cột chỉ rộng 280px — nhóm dài nhất cột lọc, mà lại là
+                 * nhóm người ta ít đổi nhất. Ô chọn thu nó về một dòng, và
+                 * dùng ĐÚNG bộ lớp .catpick của ô "Sắp xếp theo" ở cột kết
+                 * quả: hai ô nhìn thấy cùng lúc trên một màn hình nên phải
+                 * giống hệt nhau.
+                 *
+                 * CHỌN-MỘT, ĐỔI TỪ CHỌN-NHIỀU (2026-08-30, theo yêu cầu).
+                 * Máy chủ thì KHÔNG đổi: 'material' vẫn nằm trong
+                 * ProductFacets::MULTI và controller vẫn nhận mảng, nên
+                 * name="material[]" gửi lên một phần tử là khớp sẵn. Muốn
+                 * quay lại chọn-nhiều thì chỉ phải dựng lại giao diện ở đây,
+                 * không đụng tới tầng lọc.
+                 *
+                 * MỘT ĐƯỜNG CŨ CÒN SỐNG: liên kết đã lưu từ hồi chọn-nhiều
+                 * (?material[]=titanium&material[]=acetate) vẫn lọc đúng cả
+                 * hai, vì controller không đổi — lưới ra hai sản phẩm. Ô chọn
+                 * không diễn tả nổi trạng thái đó, nên $daChon chỉ cho đánh
+                 * dấu MỘT mục: cái đứng trước trong DANH SÁCH (không phải cái
+                 * đứng trước trong URL — thứ tự URL không tới được view). Bỏ
+                 * $daChon đi thì hai <option> cùng mang selected và trình
+                 * duyệt lặng lẽ lấy cái cuối, tức là vẫn một giá trị nhưng
+                 * không ai đoán được là cái nào. Đụng vào ô một lần là trạng
+                 * thái tự về đúng một giá trị.
+                 *
+                 * CHIP "TÁI CHẾ / BIO" Ở NGAY DƯỚI, trong cùng khối. Nó là
+                 * nhóm lọc riêng (?eco[]=recycled) nên không nhét vào ô chọn
+                 * được, nhưng người dùng đọc nó như một chất liệu nữa — tách
+                 * thành khối có tiêu đề riêng là thừa một dòng chữ hoa cho
+                 * đúng một mục.
+                 * ─────────────────────────────────────────────────────────
+                 */
+                $daChon = false;
+                ?>
+                <?php if ($groups['material'] !== [] || $groups['eco'] !== []): ?>
+                    <div class="pfacet">
+                        <?php if ($groups['material'] !== []): ?>
+                            <?php /* <label> chứ không <p> như các nhóm khác: ở
+                                     đây tiêu đề nhóm CHÍNH LÀ nhãn của ô chọn,
+                                     nên bấm vào chữ "CHẤT LIỆU" là mở được danh
+                                     sách. */ ?>
+                            <label class="pfacet__legend" for="f-material">Chất liệu</label>
+                        <?php else: ?>
+                            <?php /* Kho chỉ còn hàng "tái chế / bio" thì không có
+                                     ô chọn nào để trỏ tới — một <label for> nhắm
+                                     vào id không tồn tại là thứ trình đọc màn
+                                     hình đọc ra rồi bỏ lửng. */ ?>
+                            <p class="pfacet__legend">Chất liệu</p>
+                        <?php endif; ?>
+
+                        <?php if ($groups['material'] !== []): ?>
+                            <form class="pfacet__pick" method="get" action="/san-pham">
+                                <?php $hiddenFilters(['material', 'page']); ?>
+                                <span class="catpick">
+                                    <select class="catpick__select" id="f-material"
+                                            name="material[]" data-pick="material[]">
+                                        <?php /* value rỗng = bỏ lọc. multi() ở
+                                                 controller slugify rồi loại chuỗi
+                                                 rỗng, nên không cần nhánh riêng. */ ?>
+                                        <option value="">Tất cả chất liệu</option>
+                                        <?php foreach ($groups['material'] as $opt): ?>
+                                            <?php
+                                            /* disabled thay cho lớp .is-off của huy
+                                               hiệu: <option> vô hiệu hoá được thật,
+                                               và trình đọc màn hình tự nói ra —
+                                               không phải chêm câu sr-only như bên
+                                               kia. Mục ĐANG BẬT không bao giờ bị
+                                               tắt, cùng luật với huy hiệu. */
+                                            $tat  = $opt['count'] === 0 && !$opt['on'];
+                                            $chon = $opt['on'] && !$daChon;
+
+                                            if ($chon) {
+                                                $daChon = true;
+                                            }
+                                            ?>
+                                            <option value="<?= e($opt['key']) ?>"
+                                                <?= $chon ? ' selected' : '' ?><?= $tat ? ' disabled' : '' ?>><?= e($opt['label']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <?php /* Cùng chữ V với ô "Sắp xếp theo" — xem
+                                             chú thích ở khối đó. */ ?>
+                                    <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
+                                              stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </span>
+                                <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn
+                                         là lọc luôn). Không có JS thì đây là cách
+                                         duy nhất để chốt lựa chọn, nên không được
+                                         bỏ. */ ?>
+                                <button type="submit" class="catpick__go">Áp dụng</button>
+                            </form>
+                        <?php endif; ?>
+
+                        <?php if ($groups['eco'] !== []): ?>
+                            <div class="pfacet__chips">
+                                <?php foreach ($groups['eco'] as $opt): ?>
+                                    <?php $chip('eco', $opt); ?>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
 
                 <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
                 <?php $checkGroup('collab', 'Bộ sưu tập hợp tác', $collabOptions); ?>
@@ -474,8 +582,8 @@ partial('_layout/page-head', [
                 <form class="catsort" method="get" action="/san-pham">
                     <?php $hiddenFilters(['sort', 'page']); ?>
                     <label class="catsort__label" for="f-sort">Sắp xếp theo</label>
-                    <span class="catsort__field">
-                        <select class="catsort__select" id="f-sort" name="sort">
+                    <span class="catpick">
+                        <select class="catpick__select" id="f-sort" name="sort" data-pick="sort">
                             <?php foreach ([
                                 'newest'     => 'Mới nhất',
                                 'popular'    => 'Bán chạy',
@@ -491,7 +599,7 @@ partial('_layout/page-head', [
                            nhỏ xíu, Android ra một hình khác hẳn, và không chỉnh
                            được độ dày nét cho khớp phần còn lại của site. */
                         ?>
-                        <svg class="catsort__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
                                   stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
@@ -499,7 +607,7 @@ partial('_layout/page-head', [
                     <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn là gửi
                              luôn). Không có JS thì đây là cách duy nhất để
                              chốt lựa chọn, nên không được bỏ. */ ?>
-                    <button type="submit" class="catsort__go">Áp dụng</button>
+                    <button type="submit" class="catpick__go">Áp dụng</button>
                 </form>
             </div>
 

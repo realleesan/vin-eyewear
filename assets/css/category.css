@@ -605,10 +605,28 @@
     white-space: nowrap;
 }
 
-.catsort__field { position: relative; }
+/* ─────────────────────────────────────────────────────────────────────────
+   Ô CHỌN XỔ XUỐNG (.catpick) — DÙNG CHUNG CHO HAI CHỖ
+
+   HAI nơi trên trang này dùng chung một ô: "Sắp xếp theo" ở đầu cột kết quả,
+   và "Chất liệu" trong cột lọc. Hai chỗ đó PHẢI giống hệt nhau — người dùng
+   nhìn thấy chúng cùng lúc trên một màn hình, lệch 1px hay lệch một sắc là
+   thấy ngay.
+
+   VÌ SAO TÊN LÀ .catpick CHỨ KHÔNG PHẢI .catsort__*: bộ lớp này trước đây
+   thuộc riêng khối "sắp xếp theo" và mang tên .catsort__field / __select /
+   __caret / __go. Bộ lọc chất liệu nay mượn đúng bộ ấy, mà một ô LỌC mang tên
+   "sort" thì đọc mã sẽ hiểu sai chỗ nó thuộc về. Đổi tên chứ không nhân đôi
+   luật CSS: hai bản sao là hai chỗ phải nhớ sửa cùng lúc.
+
+   .catsort và .catsort__label thì GIỮ NGUYÊN tên — chúng là bố cục và nhãn
+   riêng của khối sắp xếp, không dùng lại ở đâu.
+   ───────────────────────────────────────────────────────────────────────── */
+
+.catpick { position: relative; }
 
 /* appearance:none để bỏ mũi tên mặc định của trình duyệt — bản thiết kế vẽ
-   mũi tên riêng — một SVG chữ V đặt đè lên bằng .catsort__caret. Cùng hình
+   mũi tên riêng — một SVG chữ V đặt đè lên bằng .catpick__caret. Cùng hình
    và cùng màu với nút đổi ngôn ngữ trên thanh nav.
 
    BO GÓC THEO THẺ SẢN PHẨM (--radius, 6px) chứ không phải --radius-sm (4px)
@@ -618,7 +636,7 @@
 
    Danh sách bung ra khi bấm thì KHÔNG bo được: nó do hệ điều hành vẽ, không
    phải HTML trong trang, nên border-radius ở đây không với tới. */
-.catsort__select {
+.catpick__select {
     appearance: none;
     -webkit-appearance: none;
     padding: 10px 40px 10px 20px;
@@ -631,7 +649,7 @@
     cursor: pointer;
 }
 
-.catsort__select:focus-visible {
+.catpick__select:focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: -2px;
 }
@@ -646,7 +664,7 @@
 
    Đỏ thương hiệu để dành cho lúc RÊ VÀO, y như nút ngôn ngữ: mũi tên đứng yên
    thì là một dấu hiệu tĩnh, đổi màu khi chuột tới mới là lời mời bấm. */
-.catsort__caret {
+.catpick__caret {
     position: absolute;
     top: 50%;
     right: 16px;
@@ -660,14 +678,14 @@
 
 /* Bám theo cả ô, không riêng thẻ <select>: mũi tên có pointer-events:none nên
    chính nó không bao giờ nhận :hover. :focus-within để bàn phím cũng thấy. */
-.catsort__field:hover .catsort__caret,
-.catsort__field:focus-within .catsort__caret { color: var(--brand); }
+.catpick:hover .catpick__caret,
+.catpick:focus-within .catpick__caret { color: var(--brand); }
 
 /* ─────────────────────────────────────────────────────────────────────────
    BO GÓC CẢ PHẦN XỔ XUỐNG.
 
    Danh sách bung ra của một <select> gốc do TRÌNH DUYỆT vẽ chứ không phải HTML
-   trong trang, nên border-radius ở .catsort__select không với tới nó — góc
+   trong trang, nên border-radius ở .catpick__select không với tới nó — góc
    vuông là góc do hệ điều hành quyết định.
 
    `appearance: base-select` mở cửa cho việc đó: nó bảo trình duyệt vẽ cả ô chọn
@@ -680,13 +698,13 @@
    bung ra vẫn góc vuông. Chrome/Edge (từ 135) thì thấy góc bo.
    ───────────────────────────────────────────────────────────────────────── */
 @supports (appearance: base-select) {
-    .catsort__select { appearance: base-select; }
+    .catpick__select { appearance: base-select; }
 
     /* base-select tự vẽ thêm một mũi tên riêng, mà trang đã có ▼ của
-       .catsort__caret đè lên sẵn — để cả hai thì ô chọn có hai mũi tên. */
-    .catsort__select::picker-icon { display: none; }
+       .catpick__caret đè lên sẵn — để cả hai thì ô chọn có hai mũi tên. */
+    .catpick__select::picker-icon { display: none; }
 
-    .catsort__select::picker(select) {
+    .catpick__select::picker(select) {
         appearance: base-select;
         /* XỔ XUỐNG DƯỚI ô chọn.
            Cần CẢ BA dòng, không phải chỉ position-area: mặc định trình duyệt đặt
@@ -708,7 +726,7 @@
         box-shadow: var(--c-shadow);
     }
 
-    .catsort__select option {
+    .catpick__select option {
         padding: 9px 14px;
         /* Dòng bo nhỏ hơn hộp một nấc, đúng lối thẻ trong thẻ của cả site */
         border-radius: var(--radius-sm);
@@ -724,18 +742,18 @@
        đặt tiêu điểm lên dòng đang chọn, nên với :focus sẽ có HAI dòng cùng đỏ
        lúc rê chuột sang dòng khác — đã đo được, không phải phỏng đoán. Dòng đang
        chọn đã có dấu ✓ và chữ đậm để nhận ra, không cần nền. */
-    .catsort__select option:hover,
-    .catsort__select option:focus-visible {
+    .catpick__select option:hover,
+    .catpick__select option:focus-visible {
         background: var(--brand);
         color: var(--on-brand);
         outline: none;
     }
 
-    .catsort__select option:checked { font-weight: 600; }
+    .catpick__select option:checked { font-weight: 600; }
 }
 
-/* Cùng độ bo với ô chọn ngay bên trái — xem chú thích ở .catsort__select. */
-.catsort__go {
+/* Cùng độ bo với ô chọn ngay bên trái — xem chú thích ở .catpick__select. */
+.catpick__go {
     padding: 10px 18px;
     border: 1px solid var(--line);
     border-radius: var(--radius);
@@ -746,7 +764,27 @@
     cursor: pointer;
 }
 
-.js .catsort__go { display: none; }
+.js .catpick__go { display: none; }
+
+/* --- Ô chọn trong CỘT LỌC (chất liệu) ---
+   Khác khối "sắp xếp theo" ở đúng bề ngang: ở đó ô chọn nằm ngang hàng với
+   nhãn và nút nên rộng theo nội dung, còn ở đây cột lọc chỉ có ~228px lọt
+   lòng (280px trừ 26px đệm mỗi bên) — để ô co theo nội dung thì "Nylon &
+   Bio-nylon" tràn ra ngoài thẻ. */
+.pfacet__pick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pfacet__pick .catpick { flex: 1 1 100%; }
+
+.pfacet__pick .catpick__select {
+    width: 100%;
+    /* Đệm trái 14px thay cho 20px của ô sắp xếp: cột hẹp, 20px ăn mất gần
+       một phần mười bề ngang mà không đổi lấy gì. */
+    padding-inline: 14px 40px;
+}
 
 /* --- Lưới ---
    THẺ SẢN PHẨM Ở ĐÂY LÀ .pcard, DÙNG CHUNG VỚI TRANG CHỦ.
