@@ -55,6 +55,7 @@ DROP TABLE IF EXISTS `vouchers`;
 DROP TABLE IF EXISTS `addresses`;
 DROP TABLE IF EXISTS `lens_prices`;
 DROP TABLE IF EXISTS `lens_packages`;
+DROP TABLE IF EXISTS `lens_options`;
 DROP TABLE IF EXISTS `prescriptions`;
 DROP TABLE IF EXISTS `stores`;
 -- `collections` VÀ `collection_faqs` — con trước, cha sau.
@@ -406,6 +407,51 @@ CREATE TABLE `lens_packages` (
                                ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY `idx_lens_packages_sort` (`sort_order`, `id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- THUỘC TÍNH TRÒNG KÍNH DO QUẢN TRỊ QUẢN LÝ
+--
+-- Bốn danh sách lựa chọn của bộ lọc trang /san-pham/trong-kinh: loại tròng,
+-- chiết suất, màu tròng, tính năng/lớp phủ. Trước 2026-08-30 cả bốn là mảng gõ
+-- cứng trong config/eyewear.php và config/taxonomy.php — cửa hàng muốn thêm
+-- một màu tròng phải nhờ người sửa mã rồi deploy.
+--
+-- KHÔNG có cột nào thêm vào `products`: chỗ lưu LỰA CHỌN của từng sản phẩm đã
+-- có sẵn từ trước (lens_types · lens_indexes · lens_color · lens_coatings).
+-- Bảng này chỉ định nghĩa DANH SÁCH CHỌN.
+--
+-- MỘT BẢNG CHO CẢ BỐN NHÓM vì cấu trúc y hệt nhau. Thêm nhóm thứ năm sau này
+-- chỉ là thêm một hằng trong LensOptionModel::GROUPS, không phải đổi lược đồ.
+-- CSDL không tự chặn được việc gán nhầm nhóm; chặn ở tầng mã là đủ vì không có
+-- đường nào ghi vào bảng này ngoài màn quản trị.
+--
+-- `option_key` LÀ THỨ ĐI VÀO CỘT CỦA `products` NÊN KHÔNG ĐƯỢC ĐỔI. Đổi khoá
+-- của một lựa chọn đã có hàng gắn vào là làm mồ côi toàn bộ số hàng ấy — chúng
+-- giữ khoá cũ trong CSV rồi biến mất khỏi bộ lọc mà không báo gì. Màn quản trị
+-- chỉ cho sửa NHÃN. Cùng lý do, gỡ một mục là ẨN (`is_visible = 0`) chứ không
+-- xoá.
+--
+-- Dữ liệu khởi tạo nằm ở cuối file, cùng chỗ với seed của lens_packages.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `lens_options` (
+    `id`         CHAR(36)     NOT NULL DEFAULT (UUID()),
+    -- 'loai-trong' · 'chiet-suat' · 'mau-trong' · 'lop-phu'
+    `group_key`  VARCHAR(32)  NOT NULL,
+    `option_key` VARCHAR(64)  NOT NULL,
+    `label`      VARCHAR(120) NOT NULL,
+    -- Câu mô tả ngắn, chỉ dùng ở form quản trị để người nhập biết chọn cái nào.
+    `note`       VARCHAR(255) NULL,
+    -- Cách nhau 10 để chèn vào giữa không phải đánh số lại.
+    `sort_order` SMALLINT     NOT NULL DEFAULT 0,
+    `is_visible` TINYINT(1)   NOT NULL DEFAULT 1,
+    `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                              ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    -- Duy nhất TRONG một nhóm, không phải trên cả bảng.
+    UNIQUE KEY `uniq_lens_options_key` (`group_key`, `option_key`),
+    KEY `idx_lens_options_sort` (`group_key`, `sort_order`, `id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `lens_prices` (
@@ -1490,6 +1536,51 @@ INSERT INTO `lens_packages` (`id`, `name`, `description`, `sort_order`) VALUES
 ('blue-161',  'Chống sáng xanh 1.61',      'Bảo vệ mắt khi làm việc máy tính nhiều giờ',              30),
 ('blue-167',  'Chống sáng xanh 1.67',      'Siêu mỏng, thẩm mỹ cao, cận nặng (trên -6.00)',           40),
 ('photo-156', 'Đổi màu Photochromic 1.56', 'Tự điều chỉnh theo ánh sáng, tiện dùng trong/ngoài trời', 50);
+
+-- ----------------------------------------------------------------------------
+-- THUỘC TÍNH TRÒNG — SEED, cùng lý lẽ với gói chiết suất ở trên
+--
+-- Không phải hàng mẫu: đây đúng là bốn danh sách site đang chạy, chép từ
+-- config/eyewear.php và config/taxonomy.php vào CSDL để cửa hàng sửa được.
+-- Bảng rỗng thì bộ lọc trang tròng kính không có mục nào để chọn.
+--
+-- LOẠI TRÒNG lấy bộ BỐN của config/taxonomy.php (Đơn · Hai · Đa · Mắt đặt),
+-- không lấy bộ 'rx_lens_types' của config/eyewear.php (Đơn · Đa · Đổi màu ·
+-- Chống ánh sáng xanh). Hai bộ ấy khác nhau và đó là mâu thuẫn có sẵn: bộ sau
+-- trộn hai TÍNH NĂNG vào một nhóm nói về LOẠI, và thiếu "Hai tròng". Hai khoá
+-- lạc ấy được seed vào nhóm 'lop-phu' bên dưới nên hàng đã nhập không mất bộ
+-- lọc, chỉ hiện ở đúng nhóm hơn.
+--
+-- MÀU TRÒNG chưa từng có danh sách — cột `lens_color` là ô chữ tự do. Sáu mục
+-- dưới đây là bộ khởi đầu để cửa hàng sửa lại theo hàng thật, không phải chuẩn.
+-- ----------------------------------------------------------------------------
+INSERT INTO `lens_options` (`group_key`, `option_key`, `label`, `note`, `sort_order`) VALUES
+('loai-trong', 'don-trong', 'Đơn tròng', 'Một độ duy nhất trên cả mặt tròng — nhìn xa hoặc nhìn gần', 10),
+('loai-trong', 'hai-trong', 'Hai tròng', 'Hai vùng nhìn tách nhau bằng một đường ranh: xa ở trên, gần ở dưới', 20),
+('loai-trong', 'da-trong',  'Đa tròng',  'Độ chuyển dần từ xa sang gần, không có đường ranh trên mặt tròng', 30),
+('loai-trong', 'mat-dat',   'Mắt đặt',   'Độ quá cao hoặc thông số đặc biệt, phải đặt riêng — cửa hàng báo giá sau', 40),
+
+('chiet-suat', '1.50', '1.50', 'Tròng trắng cơ bản, độ nhẹ',            10),
+('chiet-suat', '1.56', '1.56', 'Mỏng hơn 1.50, phù hợp cận trung bình', 20),
+('chiet-suat', '1.61', '1.61', 'Mỏng, nhẹ — cận từ -4.00 trở lên',      30),
+('chiet-suat', '1.67', '1.67', 'Siêu mỏng, cận nặng trên -6.00',        40),
+('chiet-suat', '1.74', '1.74', 'Mỏng nhất, dành cho độ rất cao',        50),
+
+('lop-phu', 'uv400',         'UV400',                  'Chặn 100% tia UVA/UVB', 10),
+('lop-phu', 'chong-loa',     'Chống phản quang',       'Giảm loá đèn xe, đèn màn hình', 20),
+('lop-phu', 'anh-sang-xanh', 'Lọc ánh sáng xanh',      'Cho người làm việc máy tính nhiều giờ', 30),
+('lop-phu', 'doi-mau',       'Đổi màu (Photochromic)', 'Tự sẫm lại khi ra nắng', 40),
+('lop-phu', 'phan-cuc',      'Phân cực (Polarized)',   'Cắt chói mặt nước, mặt đường', 50),
+('lop-phu', 'chong-tray',    'Chống trầy',             NULL, 60),
+('lop-phu', 'chong-nuoc',    'Chống bám nước',         NULL, 70),
+('lop-phu', 'chong-bui',     'Chống bám bụi',          NULL, 80),
+
+('mau-trong', 'trong-suot',  'Trong suốt',            'Tròng cận thường, không màu', 10),
+('mau-trong', 'xam-khoi',    'Xám khói',              NULL, 20),
+('mau-trong', 'nau-tra',     'Nâu trà',               NULL, 30),
+('mau-trong', 'xanh-reu',    'Xanh rêu',              NULL, 40),
+('mau-trong', 'gradient',    'Gradient (chuyển màu)', 'Đậm ở trên, nhạt dần xuống dưới', 50),
+('mau-trong', 'trang-guong', 'Tráng gương',           'Mặt ngoài phản quang', 60);
 
 -- ----------------------------------------------------------------------------
 -- KHÔNG SEED SẢN PHẨM — CỐ Ý

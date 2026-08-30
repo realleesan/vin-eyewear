@@ -167,6 +167,9 @@ MIGRATIONS=(
     # Danh sách khách chờ hàng về. Mốc là chính bảng `stock_waitlist` — không
     # có gì khác tạo ra nó, và file cũng chỉ tạo đúng một bảng.
     "2026-08-29-danh-sach-cho-hang.sql|table|stock_waitlist|"
+    # Bốn danh sách thuộc tính tròng rời config xuống CSDL để sửa được từ khu
+    # quản trị. Mốc là chính bảng `lens_options` — không có gì khác tạo ra nó.
+    "2026-08-30-thuoc-tinh-trong-do-quan-tri-quan-ly.sql|table|lens_options|"
 )
 
 # ---------------------------------------------------------------------------
