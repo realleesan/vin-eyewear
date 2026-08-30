@@ -117,7 +117,7 @@ if ($feature !== null) {
     <a href="/san-pham"
        class="mega__trigger<?= $isProductActive ? ' is-active' : '' ?>"
        <?= $isProductActive ? 'aria-current="page"' : '' ?>>
-        <?= e(t('nav.products')) ?>
+        Sản phẩm
         <svg class="mega__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round"/>

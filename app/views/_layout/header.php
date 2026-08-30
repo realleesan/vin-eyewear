@@ -90,12 +90,12 @@ $isCollectionActive = $segment === 'bo-suu-tap';
  * thấy ngay thứ tự thật của năm mục.
  */
 $navItems = [
-    ['label' => t('nav.home'),   'url' => '/',           'match' => ['', 'home']],
+    ['label' => 'Trang chủ',   'url' => '/',           'match' => ['', 'home']],
     ['mega'  => true],
     // Ngay sau "Sản phẩm": thử kính là một cách xem hàng, không phải một
     // trang giới thiệu. Đứng cạnh thứ nó phục vụ.
-    ['label' => t('nav.tryon'),  'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
-    ['label' => t('nav.about'),  'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
+    ['label' => 'Thử kính ảo',  'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
+    ['label' => 'Giới thiệu',  'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
     /*
      * BỘ SƯU TẬP THAY CHỖ SỰ KIỆN — 2026-08-25, rồi sự kiện bỏ hẳn 2026-08-26.
      *
@@ -109,7 +109,7 @@ $navItems = [
      * như mốc 'mega' ở trên. Trạng thái đang mở đọc từ $isCollectionActive.
      */
     ['bst'   => true],
-    ['label' => t('nav.contact'),'url' => '/lien-he',    'match' => ['lien-he']],
+    ['label' => 'Liên hệ','url' => '/lien-he',    'match' => ['lien-he']],
 ];
 
 /*
@@ -121,8 +121,8 @@ $navItems = [
  * menu trượt hiện nó hai lần.
  */
 $mobileExtra = [
-    ['label' => t('nav.booking'), 'url' => '/dat-lich',   'match' => ['dat-lich']],
-    ['label' => t('nav.policy'),  'url' => '/chinh-sach', 'match' => ['chinh-sach']],
+    ['label' => 'Đặt lịch đo mắt', 'url' => '/dat-lich',   'match' => ['dat-lich']],
+    ['label' => 'Chính sách & FAQ',  'url' => '/chinh-sach', 'match' => ['chinh-sach']],
 ];
 
 /**
@@ -151,7 +151,7 @@ $keyword = $_GET['q'] ?? '';
 $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?? [], true);
 ?>
 
-<a class="skip-link" href="#noi-dung-chinh"><?= e(t('action.skip')) ?></a>
+<a class="skip-link" href="#noi-dung-chinh">Bỏ qua điều hướng, tới nội dung chính</a>
 
 <!-- ============================================================
      1. DẢI THÔNG BÁO — NẰM NGOÀI <header>, VÀ ĐÓ LÀ CHỦ Ý
@@ -173,7 +173,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
      khỏi màn hình.
      ============================================================ -->
 <div class="header-announce">
-    <p class="header-announce__text"><?= e(t('announce')) ?></p>
+    <p class="header-announce__text">Miễn phí giao hàng toàn quốc cho đơn từ 1.000.000₫</p>
 </div>
 
 <header class="site-header" id="siteHeader">
@@ -208,92 +208,32 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
         <?php
         /*
          * ─────────────────────────────────────────────────────────────────────
-         * BỐN NÚT TÁC VỤ — MỘT KHUÔN DUY NHẤT (.hpop)
+         * BA NÚT TÁC VỤ — MỘT KHUÔN DUY NHẤT (.hpop)
          *
-         * Ngôn ngữ · Tìm kiếm · Tài khoản · Giỏ hàng. Cả bốn nay KHÔNG còn
-         * khung viền trắng bao quanh — chúng nằm thẳng trên nền của thanh điều
-         * hướng, chỉ đổi màu khi rê chuột, đúng như các mục nav ngay bên cạnh.
+         * Tìm kiếm · Tài khoản · Giỏ hàng. Cả ba nay KHÔNG còn khung viền
+         * trắng bao quanh — chúng nằm thẳng trên nền của thanh điều hướng, chỉ
+         * đổi màu khi rê chuột, đúng như các mục nav ngay bên cạnh.
          *
-         * Cả bốn cùng bung một bảng xổ khi rê chuột (và khi tiêu điểm bàn phím
-         * đi vào cụm, nhờ :focus-within). Trước đây chỉ bảng ngôn ngữ có bảng
-         * xổ, mà lại mở bằng cách bấm.
+         * TRƯỚC ĐÂY LÀ BỐN: nút đầu tiên là bảng đổi ngôn ngữ VI/EN, gỡ ngày
+         * 2026-08-30 khi phần song ngữ chuyển sang widget Elfsight. Widget đó
+         * tự vẽ nút nổi của riêng nó ở cuối <body> — xem _layout/translator.php.
+         * Đừng dựng lại một nút ngôn ngữ ở đây: hai nút cùng đổi ngôn ngữ mà
+         * không nút nào biết nút kia đã đổi gì là cách chắc chắn để khách gặp
+         * một trang nửa Việt nửa Anh.
          *
-         * VÌ SAO KHÔNG CÒN <details> Ở NÚT NGÔN NGỮ
-         *   <details> mở/đóng bằng thuộc tính `open`, CSS không với tới được,
-         *   nên không thể cho nó bung ra khi rê chuột mà không viết JS điều
-         *   khiển state. Nay bảng xổ hiện bằng :hover/:focus-within — thuần
-         *   CSS, chạy cả khi tắt JavaScript.
+         * Cả ba cùng bung một bảng xổ khi rê chuột (và khi tiêu điểm bàn phím
+         * đi vào cụm, nhờ :focus-within).
          *
          * MÀN HÌNH CẢM ỨNG không có "rê chuột". Nên:
          *   - Tài khoản và Giỏ hàng vẫn là <a> thật: chạm là đi thẳng tới
          *     /tai-khoan và /gio-hang, y như trước.
-         *   - Ngôn ngữ và Tìm kiếm là <button>: assets/js/header.js bắt cú bấm
-         *     và bật lớp .is-open. Không có JS thì nút ngôn ngữ vẫn mở được
-         *     bằng phím Tab (focus-within), còn ô tìm kiếm luôn có lối khác ở
-         *     trang danh sách sản phẩm.
+         *   - Tìm kiếm là <button>: assets/js/header.js bắt cú bấm và bật lớp
+         *     .is-open. Không có JS thì ô tìm kiếm vẫn luôn có lối khác ở trang
+         *     danh sách sản phẩm.
          * ─────────────────────────────────────────────────────────────────────
          */
         ?>
         <div class="header-actions">
-
-            <?php
-            /*
-             * ĐỔI NGÔN NGỮ (VI / EN)
-             *
-             * Hai lựa chọn là LIÊN KẾT THẬT tới /ngon-ngu, nên tắt JS vẫn đổi
-             * được. rel="nofollow": máy tìm kiếm không cần đi theo, và đi theo
-             * thì cùng một trang bị lập chỉ mục hai lần.
-             *
-             * PHẠM VI DỊCH rất hẹp — chỉ khung giao diện. Xem ghi chú dài ở
-             * đầu config/lang/vi.php trước khi hứa với ai là site có tiếng Anh.
-             */
-            $lang = currentLang();
-
-            /*
-             * Đường quay lại GIỮ CẢ chuỗi truy vấn: đang lọc
-             * /san-pham?category=gong-kinh&material=Titanium mà đổi ngôn ngữ
-             * thì phải về đúng danh sách đó, không phải về cả kho.
-             *
-             * Ghép tay từ currentPath() + QUERY_STRING chứ không lấy thẳng
-             * REQUEST_URI: chuỗi kia đến từ trình duyệt và còn mang cả fragment
-             * lẫn ký tự lạ, mà giá trị này đi vào một tham số chuyển hướng.
-             */
-            $back = currentPath();
-            $query = (string) ($_SERVER['QUERY_STRING'] ?? '');
-
-            if ($query !== '') {
-                $back .= '?' . $query;
-            }
-            ?>
-            <div class="hpop hpop--lang" data-hpop>
-                <button type="button"
-                        class="hpop__trigger hpop__trigger--text"
-                        data-hpop-trigger
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                        title="<?= e(t('lang.label')) ?>">
-                    <?= e(strtoupper($lang)) ?>
-                    <svg class="hpop__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
-                              stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </button>
-
-                <div class="hpop__panel">
-                    <p class="hpop__head"><?= e(t('lang.label')) ?></p>
-                    <ul class="hpop__list" role="list">
-                        <?php foreach (['vi' => t('lang.vi'), 'en' => t('lang.en')] as $code => $label): ?>
-                            <li>
-                                <a class="hpop__item<?= $lang === $code ? ' is-on' : '' ?>"
-                                   lang="<?= e($code) ?>"
-                                   rel="nofollow"
-                                   <?= $lang === $code ? 'aria-current="true"' : '' ?>
-                                   href="/ngon-ngu?<?= e(http_build_query(['lang' => $code, 'redirect' => $back])) ?>"><?= e($label) ?></a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-            </div>
 
             <?php
             /*
@@ -308,7 +248,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                     class="hpop__trigger header-action"
                     id="headerSearchToggle"
                     data-hpop-trigger
-                    aria-label="<?= e(t('action.search')) ?>"
+                    aria-label="Tìm kiếm sản phẩm"
                     aria-haspopup="true"
                     aria-expanded="false"
                     aria-controls="headerSearchPanel"
@@ -320,9 +260,9 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                 </button>
 
                 <div class="hpop__panel hpop__panel--search" id="headerSearchPanel">
-                    <p class="hpop__head"><?= e(t('action.search')) ?></p>
+                    <p class="hpop__head">Tìm kiếm sản phẩm</p>
                     <form class="header-search__form" role="search" action="/tim-kiem" method="get">
-                        <label class="sr-only" for="headerSearch"><?= e(t('action.search')) ?></label>
+                        <label class="sr-only" for="headerSearch">Tìm kiếm sản phẩm</label>
                         <svg class="header-search__ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                             <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
                             <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -332,10 +272,10 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                             id="headerSearch"
                             name="q"
                             class="header-search__input"
-                            placeholder="<?= e(t('search.placeholder')) ?>"
+                            placeholder="Tìm gọng, tròng kính..."
                             value="<?= e($keyword) ?>"
                         >
-                        <button type="submit" class="header-search__submit"><?= e(t('search.submit')) ?></button>
+                        <button type="submit" class="header-search__submit">Tìm</button>
                     </form>
                 </div>
             </div>
@@ -380,7 +320,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             <div class="hpop" data-hpop>
                 <a href="<?= e($accountUrl) ?>" class="hpop__trigger header-action"
                    data-hpop-trigger
-                   aria-label="<?= e($isLoggedIn ? t('action.account') : t('action.login')) ?>">
+                   aria-label="<?= e($isLoggedIn ? 'Tài khoản của tôi' : 'Đăng nhập') ?>">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/>
                         <path d="M4 20.5c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -389,9 +329,9 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
 
                 <div class="hpop__panel">
                     <?php /* Luôn là "Tài khoản", kể cả khi chưa đăng nhập: lấy
-                             t('action.login') làm nhãn đầu bảng thì nó lặp lại
+                             'Đăng nhập' làm nhãn đầu bảng thì nó lặp lại
                              đúng chữ của mục ngay bên dưới. */ ?>
-                    <p class="hpop__head"><?= e(t('pop.account')) ?></p>
+                    <p class="hpop__head">Tài khoản</p>
                     <ul class="hpop__list" role="list">
                         <?php /* KHÔNG CÒN MỤC "Khu quản trị" TRONG BẢNG NÀY.
                                  Nó từng nằm ở đây kèm một nút Đăng xuất POST sang
@@ -401,20 +341,20 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                                  quản trị sẽ từ chối. Nhân viên đăng xuất khu quản trị
                                  bằng nút trong chính khu đó. */ ?>
                         <?php if ($isLoggedIn): ?>
-                            <li><a class="hpop__item" href="/tai-khoan"><?= e(t('pop.profile')) ?></a></li>
-                            <li><a class="hpop__item" href="/tai-khoan?muc=don-hang"><?= e(t('pop.orders')) ?></a></li>
-                            <li><a class="hpop__item" href="/tai-khoan?muc=lich-hen"><?= e(t('pop.bookings')) ?></a></li>
+                            <li><a class="hpop__item" href="/tai-khoan">Thông tin tài khoản</a></li>
+                            <li><a class="hpop__item" href="/tai-khoan?muc=don-hang">Đơn hàng của tôi</a></li>
+                            <li><a class="hpop__item" href="/tai-khoan?muc=lich-hen">Lịch hẹn đo mắt</a></li>
                             <li>
                                 <?php /* Đăng xuất qua POST: một thẻ <img src="/auth/dang-xuat"> trên
                                          trang khác cũng đủ để đá khách ra nếu dùng GET. */ ?>
                                 <form method="post" action="/auth/dang-xuat">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                    <button type="submit" class="hpop__item hpop__item--btn"><?= e(t('pop.logout')) ?></button>
+                                    <button type="submit" class="hpop__item hpop__item--btn">Đăng xuất</button>
                                 </form>
                             </li>
                         <?php else: ?>
-                            <li><a class="hpop__item" href="/auth"><?= e(t('action.login')) ?></a></li>
-                            <li><a class="hpop__item" href="/auth?tab=dang-ky"><?= e(t('pop.register')) ?></a></li>
+                            <li><a class="hpop__item" href="/auth">Đăng nhập</a></li>
+                            <li><a class="hpop__item" href="/auth?tab=dang-ky">Đăng ký</a></li>
                         <?php endif; ?>
                     </ul>
                 </div>
@@ -430,7 +370,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                 type="button"
                 class="header-burger tap-target"
                 id="navToggle"
-                aria-label="<?= e(t('action.open_menu')) ?>"
+                aria-label="Mở menu điều hướng"
                 aria-expanded="false"
                 aria-controls="mobileNav"
             >
@@ -453,7 +393,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
 
         <div class="mobile-nav__head">
             <span class="mobile-nav__logo">Vin <em>Eyewear</em></span>
-            <button type="button" class="mobile-nav__close tap-target" data-close-nav aria-label="<?= e(t('action.close_menu')) ?>">
+            <button type="button" class="mobile-nav__close tap-target" data-close-nav aria-label="Đóng menu">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                 </svg>
@@ -484,33 +424,6 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
         </nav>
 
         <div class="mobile-nav__foot">
-            <?php
-            /*
-             * ĐỔI NGÔN NGỮ — bản cho menu trượt.
-             *
-             * Dưới 700px nút "VI" ở đầu trang bị ẩn: cụm tác vụ rộng cố định
-             * 247px, wordmark chỉ còn phần thừa lại nên bị cắt còn "Vin E…"
-             * (xem khối cuối components/header.css). Nút ngôn ngữ là thứ DUY
-             * NHẤT trong cụm chưa có lối đi khác, nên nó chuyển vào đây chứ
-             * không bị bỏ đi.
-             *
-             * $lang và $back tính ở cụm .header-actions phía trên — cùng một
-             * file nên vẫn còn trong phạm vi.
-             */
-            ?>
-            <div class="mobile-nav__lang">
-                <span class="mobile-nav__langlabel"><?= e(t('lang.label')) ?></span>
-                <div class="mobile-nav__langopts">
-                    <?php foreach (['vi' => t('lang.vi'), 'en' => t('lang.en')] as $code => $label): ?>
-                        <a class="mobile-nav__langopt<?= $lang === $code ? ' is-on' : '' ?>"
-                           lang="<?= e($code) ?>"
-                           rel="nofollow"
-                           <?= $lang === $code ? 'aria-current="true"' : '' ?>
-                           href="/ngon-ngu?<?= e(http_build_query(['lang' => $code, 'redirect' => $back])) ?>"><?= e($label) ?></a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
             <a href="/dat-lich" class="btn-primary">Đặt Lịch Đo Mắt</a>
             <a href="<?= e($company['hotline_href']) ?>" class="btn-outline">Gọi <?= e($company['hotline']) ?></a>
         </div>

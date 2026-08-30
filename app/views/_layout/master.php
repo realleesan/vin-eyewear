@@ -77,10 +77,16 @@ if (($_SERVER['HTTP_X_CATALOG'] ?? '') === '1') {
 }
 ?>
 <!DOCTYPE html>
-<?php /* lang động: trình đọc màn hình chọn giọng đọc theo thuộc tính này,
-         và trình duyệt dùng nó để gợi ý dịch trang. Khoá cứng "vi" thì khách
-         chọn English vẫn bị đọc bằng giọng tiếng Việt. */ ?>
-<html lang="<?= e(currentLang()) ?>">
+<?php /* lang="vi" CỐ ĐỊNH, và đó là điều đúng kể cả khi khách đang xem bản
+         tiếng Anh. Thuộc tính này khai ngôn ngữ của HTML MÁY CHỦ TRẢ VỀ, mà
+         máy chủ luôn trả tiếng Việt — widget Elfsight dịch về sau, trong trình
+         duyệt, và tự sửa lấy thuộc tính này nếu nó cần.
+         Trước đây giá trị lấy từ currentLang() vì cookie vin_lang cho máy chủ
+         biết khách chọn gì; hàm đó đã gỡ cùng hệ dịch cũ (xem core/helpers.php
+         mục NGÔN NGỮ). Đừng đoán ngôn ngữ ở đây bằng cách khác: khai "en" cho
+         một trang chữ vẫn là tiếng Việt thì trình đọc màn hình đọc tiếng Việt
+         bằng giọng Anh — tệ hơn hẳn khai sai một chiều. */ ?>
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">

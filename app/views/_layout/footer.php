@@ -50,13 +50,13 @@ $products = array_map(
  * ba chỗ; để footer tự quyết thì bật tính năng lên sẽ sót đúng chỗ này.
  */
 $services = array_values(array_filter([
-    ['label' => t('nav.about'),       'url' => '/gioi-thieu'],
-    ['label' => t('footer.exam'),     'url' => '/dat-lich'],
+    ['label' => 'Giới thiệu',       'url' => '/gioi-thieu'],
+    ['label' => 'Đặt lịch đo mắt',     'url' => '/dat-lich'],
     config('ar.nav_enabled')
-        ? ['label' => t('nav.tryon'), 'url' => '/thu-ar']
+        ? ['label' => 'Thử kính ảo', 'url' => '/thu-ar']
         : null,
-    ['label' => t('footer.warranty'), 'url' => '/chinh-sach#doi-tra'],
-    ['label' => t('nav.policy'),      'url' => '/chinh-sach'],
+    ['label' => 'Bảo hành & đổi trả', 'url' => '/chinh-sach#doi-tra'],
+    ['label' => 'Chính sách & FAQ',      'url' => '/chinh-sach'],
 ]));
 
 /**
@@ -80,7 +80,7 @@ $socialPaths = [
         <div class="footer-brand">
             <p class="footer-logo">Vin <em>Eyewear</em></p>
 
-            <p class="footer-blurb"><?= e(t('footer.blurb')) ?></p>
+            <p class="footer-blurb">Kính thời trang và tròng kính chính hãng. Đo mắt miễn phí tại hệ thống cửa hàng.</p>
 
             <ul class="footer-socials" role="list">
                 <?php foreach ($company['socials'] as $social): ?>
@@ -102,7 +102,7 @@ $socialPaths = [
 
         <!-- Cột 2: Sản phẩm -->
         <div class="footer-col">
-            <h2 class="footer-heading"><?= e(t('footer.products')) ?></h2>
+            <h2 class="footer-heading">Sản phẩm</h2>
             <ul class="footer-links" role="list">
                 <?php foreach ($products as $item): ?>
                     <li><a href="<?= e($item['url']) ?>"><?= e($item['label']) ?></a></li>
@@ -112,7 +112,7 @@ $socialPaths = [
 
         <!-- Cột 3: Về Vin Eyewear — xem ghi chú ở $services đầu file -->
         <div class="footer-col">
-            <h2 class="footer-heading"><?= e(t('footer.about')) ?></h2>
+            <h2 class="footer-heading">Về Vin Eyewear</h2>
             <ul class="footer-links" role="list">
                 <?php foreach ($services as $item): ?>
                     <li><a href="<?= e($item['url']) ?>"><?= e($item['label']) ?></a></li>
@@ -122,15 +122,15 @@ $socialPaths = [
 
         <!-- Cột 4: Liên hệ -->
         <div class="footer-col">
-            <h2 class="footer-heading"><?= e(t('footer.contact')) ?></h2>
+            <h2 class="footer-heading">Liên hệ</h2>
             <ul class="footer-contact" role="list">
                 <li>
-                    <?= e(t('footer.hotline')) ?>
+                    Hotline:
                     <a class="footer-phone" href="<?= e($company['hotline_href']) ?>"><?= e($company['hotline']) ?></a>
                 </li>
                 <li><?= e($company['open_hours'] ?? '8:30 – 21:30, cả tuần') ?></li>
                 <li><a class="footer-break" href="mailto:<?= e($company['email']) ?>"><?= e($company['email']) ?></a></li>
-                <li><a href="/lien-he"><?= e(t('footer.stores')) ?></a></li>
+                <li><a href="/lien-he">Hệ thống cửa hàng</a></li>
             </ul>
         </div>
     </div>
@@ -153,9 +153,9 @@ $socialPaths = [
             $termsUrl = (string) config('auth.consent.terms_url', '');
             ?>
             <nav aria-label="Liên kết pháp lý" class="footer-bottom__nav">
-                <a href="<?= e((string) config('auth.consent.privacy_url', '/chinh-sach#bao-mat')) ?>"><?= e(t('footer.privacy')) ?></a>
+                <a href="<?= e((string) config('auth.consent.privacy_url', '/chinh-sach#bao-mat')) ?>">Chính sách bảo mật</a>
                 <?php if ($termsUrl !== ''): ?>
-                    <a href="<?= e($termsUrl) ?>"><?= e(t('footer.terms')) ?></a>
+                    <a href="<?= e($termsUrl) ?>">Điều khoản</a>
                 <?php endif; ?>
             </nav>
         </div>

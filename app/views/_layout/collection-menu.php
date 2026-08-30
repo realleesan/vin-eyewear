@@ -100,7 +100,7 @@ $bstDongPhu = static function (array $bst): string {
 <?php if ($bstDanhSach === []): ?>
     <li>
         <a href="/bo-suu-tap"
-           <?= $isCollectionActive ? 'class="is-active" aria-current="page"' : '' ?>><?= e(t('nav.collections')) ?></a>
+           <?= $isCollectionActive ? 'class="is-active" aria-current="page"' : '' ?>>Bộ sưu tập</a>
     </li>
 <?php else: ?>
 <li class="mega mega--bst">
@@ -108,7 +108,7 @@ $bstDongPhu = static function (array $bst): string {
     <a href="/bo-suu-tap"
        class="mega__trigger<?= $isCollectionActive ? ' is-active' : '' ?>"
        <?= $isCollectionActive ? 'aria-current="page"' : '' ?>>
-        <?= e(t('nav.collections')) ?>
+        Bộ sưu tập
         <svg class="mega__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round"/>
@@ -175,9 +175,9 @@ $bstDongPhu = static function (array $bst): string {
             ?>
             <a class="mega-feature mega-feature--all" href="/bo-suu-tap">
                 <span class="mega-feature__body">
-                    <span class="mega-feature__name"><?= e(t('nav.all_collections')) ?></span>
+                    <span class="mega-feature__name">Tất cả bộ sưu tập</span>
                     <span class="mega-feature__note">
-                        <?= e(sprintf(t('nav.collections_count'), count($collectionsNav))) ?>
+                        <?= (int) count($collectionsNav) ?> bộ đang trưng bày
                         <span class="mega-feature__more">&rarr;</span>
                     </span>
                 </span>

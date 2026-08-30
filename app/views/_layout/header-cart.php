@@ -57,7 +57,7 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
 <div class="hpop" data-hpop data-cart>
     <a href="/gio-hang" class="hpop__trigger header-action"
        data-hpop-trigger
-       aria-label="<?= e(t('action.cart')) ?>, <?= (int) $cartCount ?>">
+       aria-label="Giỏ hàng, <?= (int) $cartCount ?>">
         <?php
         /* XE ĐẨY chứ không phải cái túi. Túi xách là biểu tượng của thời
            trang; xe đẩy là biểu tượng của "đang mua sắm", và đó mới là việc
@@ -79,10 +79,10 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
 
     <div class="hpop__panel hpop__panel--cart">
         <?php if ($recent['lines'] === []): ?>
-            <p class="hpop__head"><?= e(t('action.cart')) ?></p>
-            <p class="hpop__note"><?= e(t('pop.cart_empty')) ?></p>
+            <p class="hpop__head">Giỏ hàng</p>
+            <p class="hpop__note">Giỏ hàng đang trống</p>
             <ul class="hpop__list" role="list">
-                <li><a class="hpop__item" href="/san-pham"><?= e(t('pop.shop')) ?></a></li>
+                <li><a class="hpop__item" href="/san-pham">Xem sản phẩm</a></li>
             </ul>
         <?php else: ?>
             <p class="hpop__head">Sản phẩm mới thêm</p>

@@ -1,6 +1,6 @@
 /**
- * header.js — Bóng đổ của header khi cuộn, bảng xổ của cụm tác vụ (ngôn ngữ ·
- * tìm kiếm · tài khoản · giỏ hàng) và menu trượt mobile.
+ * header.js — Bóng đổ của header khi cuộn, bảng xổ của cụm tác vụ (tìm kiếm ·
+ * tài khoản · giỏ hàng) và menu trượt mobile.
  *
  * Port hành vi từ src/components/site-header.tsx.
  * Không phụ thuộc thư viện nào; chạy được với thuộc tính `defer`.
@@ -64,16 +64,21 @@
     }
 
     /* ====================================================================
-       2. BẢNG XỔ CỦA CỤM TÁC VỤ (ngôn ngữ · tìm kiếm · tài khoản · giỏ hàng)
+       2. BẢNG XỔ CỦA CỤM TÁC VỤ (tìm kiếm · tài khoản · giỏ hàng)
 
        PHẦN CHÍNH NẰM Ở CSS, KHÔNG PHẢI Ở ĐÂY. Bảng bung ra khi rê chuột
        (:hover) và khi tiêu điểm bàn phím đi vào cụm (:focus-within) — cả hai
        đều là selector thuần CSS, xem khối .hpop trong components/header.css.
-       Tắt JavaScript thì bốn bảng vẫn mở được bằng chuột và bằng phím Tab.
+       Tắt JavaScript thì ba bảng vẫn mở được bằng chuột và bằng phím Tab.
 
        Đoạn dưới đây chỉ THÊM một thứ CSS không làm được: màn hình cảm ứng
-       không có động tác "rê chuột". Nên hai nút KHÔNG phải liên kết (ngôn ngữ
-       và kính lúp) được gắn thêm cú bấm để bật/tắt lớp .is-open.
+       không có động tác "rê chuột". Nên nút KHÔNG phải liên kết (kính lúp)
+       được gắn thêm cú bấm để bật/tắt lớp .is-open.
+
+       Vòng lặp dưới vẫn quét [data-hpop] chung chứ không nhắm riêng nút tìm
+       kiếm: cụm này từng có bốn thành viên (nút thứ tư là bảng đổi ngôn ngữ
+       VI/EN, gỡ 2026-08-30) và có thể lại có thêm. Nhắm đích danh một nút là
+       tự đặt bẫy cho lần thêm sau.
 
        Tài khoản và giỏ hàng không cần: chúng là <a> thật, chạm là đi thẳng
        tới /tai-khoan và /gio-hang — đúng hành vi cũ, không mất gì.
@@ -86,7 +91,7 @@
             /* CHỈ ĐÁNH DẤU CỤM THẬT SỰ ĐANG MỞ.
 
                .is-closed nghĩa là "vừa bị đóng chủ động", nên nó chỉ hợp lý
-               với cụm đang mang .is-open. Gắn bừa cho cả bốn cụm thì hai cụm
+               với cụm đang mang .is-open. Gắn bừa cho mọi cụm thì hai cụm
                chỉ mở bằng rê chuột (tài khoản, giỏ hàng) sẽ mang một lớp cấm
                mở mà chẳng ai gỡ đúng lúc — người dùng bàn phím Tab tới đó
                không thấy bảng đâu nữa. */

@@ -271,67 +271,23 @@ function formatDate(?string $datetime, string $format = 'd/m/Y'): string
 // ============================================================================
 
 // ============================================================================
-// NGÔN NGỮ
+// NGÔN NGỮ — ĐÃ GỠ 2026-08-30
 //
-// PHẠM VI RẤT HẸP, đọc trước khi dùng: chỉ KHUNG giao diện (đầu trang, chân
-// trang, bảng xổ, cụm nút nổi) có bản tiếng Anh. Nội dung từng trang và dữ
-// liệu CSDL vẫn là tiếng Việt ở cả hai ngôn ngữ — xem ghi chú dài ở đầu
-// config/lang/vi.php.
+// Ở đây từng có LANG_CODES, LANG_DEFAULT, LANG_COOKIE, currentLang() và t():
+// một hệ dịch viết tay đọc bảng chuỗi trong config/lang/. Nó chỉ phủ được
+// KHUNG giao diện, nên nội dung trang và dữ liệu CSDL vẫn tiếng Việt kể cả khi
+// khách đã chọn English.
+//
+// Phần song ngữ nay là widget Elfsight — xem app/views/_layout/translator.php.
+// Widget dịch trong trình duyệt khách nên KHÔNG có hàm PHP nào tương đương
+// currentLang(): máy chủ không còn biết khách đang đọc ngôn ngữ nào, và không
+// cần biết.
+//
+// AI ĐỊNH DỰNG LẠI t(): đừng nửa vời. Hai hệ chạy song song thì khách được một
+// trang nửa Việt nửa Anh, đúng lý do đã gỡ hệ này đi. Nếu cần bản tiếng Anh
+// máy chủ dựng thật (cho SEO — thứ widget không làm được), thì đó là làm lại
+// từ đầu với URL riêng cho từng ngôn ngữ, không phải hồi sinh chỗ này.
 // ============================================================================
-
-/** Mã ngôn ngữ được phép. Danh sách CHO PHÉP, không phải danh sách cấm. */
-const LANG_CODES = ['vi', 'en'];
-
-/** Ngôn ngữ mặc định khi khách chưa chọn gì. */
-const LANG_DEFAULT = 'vi';
-
-/** Tên cookie ghi lựa chọn ngôn ngữ. */
-const LANG_COOKIE = 'vin_lang';
-
-/**
- * Ngôn ngữ đang dùng.
- *
- * Đọc từ cookie và ĐỐI CHIẾU với danh sách cho phép: giá trị này đi thẳng vào
- * thuộc tính lang của thẻ <html> và vào khoá tra config, nên một chuỗi bịa từ
- * cookie mà lọt qua là mở đường cho cả hai chỗ đó.
- */
-function currentLang(): string
-{
-    $lang = (string) ($_COOKIE[LANG_COOKIE] ?? '');
-
-    return in_array($lang, LANG_CODES, true) ? $lang : LANG_DEFAULT;
-}
-
-/**
- * Dịch một khoá của khung giao diện.
- *
- *     t('nav.products')            -> "Sản phẩm" / "Products"
- *     t('fab.call', $hotline)      -> "Gọi 0366 599 711" / "Call 0366 599 711"
- *
- * BA TẦNG DỰ PHÒNG, cố ý không bao giờ ném lỗi: chuỗi của ngôn ngữ đang chọn
- * -> chuỗi tiếng Việt -> chính cái khoá. Một khoá gõ sai sẽ hiện ra màn hình
- * dưới dạng "nav.prodcuts" — xấu nhưng thấy ngay, hơn hẳn việc trang trắng
- * hoặc một khoảng trống im lặng ở giữa thanh điều hướng.
- *
- * Tham số phụ đi qua sprintf, nên chuỗi dịch dùng %s để chừa chỗ.
- */
-function t(string $key, string|int|float ...$args): string
-{
-    /*
-     * Lấy NGUYÊN bảng rồi tự tra, KHÔNG gọi config('lang.en.nav.home'):
-     * config() tách khoá theo dấu chấm và đi sâu từng tầng mảng, trong khi
-     * khoá ở đây là chuỗi phẳng có dấu chấm ('nav.home'). Gọi kiểu kia thì
-     * config() tìm $table['nav']['home'] và luôn trượt.
-     *
-     * Khoá phẳng là cố ý: grep 'nav.home' ra đúng một chỗ khai và mọi chỗ dùng.
-     */
-    $table    = config('lang.' . currentLang(), []);
-    $fallback = config('lang.' . LANG_DEFAULT, []);
-
-    $text = $table[$key] ?? $fallback[$key] ?? $key;
-
-    return $args === [] ? (string) $text : sprintf((string) $text, ...$args);
-}
 
 /**
  * Bảng bỏ dấu tiếng Việt: ký tự đích => mọi biến thể có dấu của nó.

@@ -236,12 +236,12 @@
 }
 
 /* ============================================================
-   BỐN NÚT TÁC VỤ — KHÔNG CÒN KHUNG BAO
+   BA NÚT TÁC VỤ — KHÔNG CÒN KHUNG BAO
 
-   Bản trước vẽ ba nút tròn viền mảnh nền trắng + một nút ngôn ngữ cùng dáng,
-   lấy theo "Vin Eyewear Home.dc.html". Nay bỏ hẳn viền và nền: bốn nút nằm
-   thẳng trên nền của thanh điều hướng, đúng như các mục nav ngay bên trái
-   chúng — cụm tác vụ không còn là bốn cái hộp trắng chen vào giữa dải pearl.
+   Bản trước vẽ ba nút tròn viền mảnh nền trắng, lấy theo
+   "Vin Eyewear Home.dc.html". Nay bỏ hẳn viền và nền: chúng nằm thẳng trên
+   nền của thanh điều hướng, đúng như các mục nav ngay bên trái — cụm tác vụ
+   không còn là mấy cái hộp trắng chen vào giữa dải pearl.
 
    RÊ CHUỘT CHỈ ĐỔI MÀU, KHÔNG ĐỔ NỀN — cùng quy ước với .header-nav__list > a
    ở cuối file: nền be dành riêng cho trạng thái "đang mở".
@@ -304,14 +304,14 @@
    BẢNG XỔ DÙNG CHUNG (.hpop)
    Markup: app/views/_layout/header.php
 
-   Một khuôn cho cả bốn nút tác vụ: ngôn ngữ · tìm kiếm · tài khoản · giỏ hàng.
-   Trước đây chỉ nút ngôn ngữ có bảng xổ (.langsw, dựng bằng <details> nên chỉ
-   mở được khi BẤM); nay cả bốn cùng bung ra khi RÊ CHUỘT.
+   Một khuôn cho cả ba nút tác vụ: tìm kiếm · tài khoản · giỏ hàng. (Từng là
+   bốn — nút đầu là bảng đổi ngôn ngữ VI/EN, gỡ ngày 2026-08-30 cùng hệ dịch
+   viết tay; phần song ngữ nay là widget Elfsight, xem _layout/translator.php.)
 
    MỞ BẰNG CSS, KHÔNG PHẢI JS: :hover cho chuột, :focus-within cho bàn phím —
    Tab tới nút là bảng hiện ra, Tab hết mục cuối là bảng đóng, không cần một
    dòng script nào. .is-open là phần JS thêm vào cho màn hình cảm ứng (chạm
-   nút ngôn ngữ / kính lúp), xem assets/js/header.js.
+   kính lúp), xem assets/js/header.js.
 
    ĐỘ BO GÓC lấy theo nút của trang chủ — var(--radius-sm), 4px. Xem khối
    "ĐỘ BO GÓC" đầu assets/css/layout.css.
@@ -323,46 +323,11 @@
     align-items: center;
 }
 
-/* Nút ngôn ngữ: chữ "VI ▾" nên rộng hơn ô vuông 40px của ba nút icon, nhưng
-   vẫn cùng chiều cao để bốn nút thẳng hàng. */
-.hpop__trigger--text {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    height: 40px;
-    padding: 0 10px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-weight: 600;
-    color: #4a3b38;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-
-.hpop__trigger--text:hover,
-.hpop__trigger--text:focus-visible,
-.hpop:hover .hpop__trigger--text,
-.hpop:focus-within .hpop__trigger--text { color: var(--brand); }
-
 /* Nút icon cũng sáng lên khi con trỏ ở bất kỳ đâu trong cụm — kể cả khi đã
    trôi xuống bảng xổ. Thiếu dòng này thì lúc đang chọn trong bảng, cái nút
    sinh ra nó lại tắt màu, trông như bảng không thuộc về nút nào. */
 .hpop:hover .header-action,
 .hpop:focus-within .header-action { color: var(--brand); }
-
-.hpop__chevron {
-    width: 11px;
-    height: 11px;
-    flex-shrink: 0;
-    transition: transform 0.2s ease;
-}
-
-.hpop:hover .hpop__chevron,
-.hpop:focus-within .hpop__chevron,
-.hpop.is-open .hpop__chevron { transform: rotate(180deg); }
 
 /*
  * Neo MÉP PHẢI: cụm tác vụ nằm sát cạnh phải màn hình, neo trái thì bảng rộng
@@ -522,7 +487,7 @@
 
    Dùng chung khung của .hpop (nền, viền, bóng, hoạt cảnh mở) nên ở đây chỉ
    có phần ruột: hàng sản phẩm và chân bảng. Nhờ vậy bảng giỏ hàng và bảng
-   ngôn ngữ mở ra giống hệt nhau, chỉ khác thứ nằm bên trong.
+   tài khoản mở ra giống hệt nhau, chỉ khác thứ nằm bên trong.
    ============================================================ */
 
 .cartpop {
@@ -637,18 +602,6 @@
 .hpop__item--btn {
     border-top: 1px solid var(--line);
     color: var(--muted);
-}
-
-/* Ngôn ngữ đang dùng — đổ nền thương hiệu, giống mục đang mở trên thanh nav */
-.hpop__item.is-on {
-    background: var(--brand);
-    color: var(--on-brand);
-    font-weight: 600;
-}
-
-/* Dưới 1101px cụm tác vụ chật hơn vì có thêm nút hamburger */
-@media (max-width: 1100px) {
-    .hpop__trigger--text { height: 36px; padding: 0 7px; gap: 5px; }
 }
 
 /* Hamburger */
@@ -961,99 +914,42 @@
 /* ============================================================
    MÀN HẸP — TRẢ CHỖ CHO WORDMARK
 
-   Đo trên máy: .header-actions rộng 247px và KHÔNG co (các nút bên trong đều
-   flex:none), nên wordmark chỉ được phần thừa lại — đúng bằng `bề ngang màn
-   hình − 291px`. Ở 24px wordmark cần 137px, tức phải từ 428px trở lên mới đủ;
-   dưới mức đó text-overflow cắt dần thành "Vin Eye…", "Vin E…", "V…".
+   .header-actions KHÔNG co (mọi nút bên trong đều flex:none), nên wordmark chỉ
+   được phần bề ngang còn thừa. Hết chỗ thì text-overflow cắt dần thành
+   "Vin Eye…", "Vin E…", "V…".
 
-   BA CÁCH LẤY LẠI CHỖ, chọn theo thứ tự ít thiệt hại nhất:
+   CÁC CON SỐ ĐO ĐƯỢC BÊN DƯỚI ĐÃ CŨ — đọc trước khi tin. Chúng đo hồi cụm còn
+   NĂM nút (ngôn ngữ · tìm kiếm · tài khoản · giỏ · hamburger), khi .header-actions
+   rộng 247px và wordmark được `bề ngang màn hình − 291px`. Ngày 2026-08-30 nút
+   ngôn ngữ bị gỡ hẳn cùng hệ dịch viết tay (phần song ngữ nay là widget
+   Elfsight, tự vẽ nút nổi riêng — xem _layout/translator.php), nên cụm nay còn
+   BỐN nút và hẹp hơn khoảng 53px. Tức là mọi ngưỡng dưới đây ĐỠ CĂNG hơn con
+   số ghi ra, không căng hơn. Ai đụng tới khối này thì đo lại bằng thước của
+   trình duyệt, đừng cộng trừ từ mấy số cũ.
 
-   1. Bỏ nút ngôn ngữ khỏi cụm (−53px). Trong năm nút thì bốn nút kia đều còn
-      lối đi khác (ô tìm kiếm ở trang sản phẩm, tài khoản và giỏ trong menu
-      trượt, menu trượt là chính cái hamburger) — riêng nút ngôn ngữ thì không,
-      nên nó CHUYỂN vào menu trượt chứ không biến mất. Xem .mobile-nav__lang
-      và ghi chú trong _layout/header.php.
-   2. Thu khe (−28px). Khe không phải ngưỡng chạm, thu được.
-   3. Hạ cỡ chữ wordmark. Để sau cùng, và chỉ ở màn hẹp nhất.
+   HAI CÁCH LẤY LẠI CHỖ CÒN LẠI, theo thứ tự ít thiệt hại nhất:
 
-   Sau (1) và (2), wordmark được `bề ngang − 210px`: đủ cho 24px từ 347px trở
-   lên. Nấc chữ nhỏ dưới đây chỉ còn để lo mấy màn 320px.
+   1. Thu khe (−28px). Khe không phải ngưỡng chạm, thu được.
+   2. Hạ cỡ chữ wordmark. Để sau cùng, và chỉ ở màn hẹp nhất.
+
+   (Cách thứ nhất trước đây là "bỏ nút ngôn ngữ khỏi cụm ở màn hẹp, chuyển nó
+   vào menu trượt". Không còn nút nào để bỏ nữa.)
 
    KHÔNG hạ 40px của nút icon: ngón tay ở màn 320px to đúng bằng ở màn 430px,
    thu nút lại là thu ở chỗ không được phép thu.
 
-   ĐẶT CUỐI FILE là có chủ ý: @media không cộng độ đặc hiệu, mà .header-actions
-   (gap 10px) và khối @media (max-width:1100px) chỉnh .hpop__trigger--text đều
-   nằm phía trên. Chuyển khối này lên trên chúng là nó mất tác dụng — im lặng,
-   không báo lỗi gì.
+   ĐẶT CUỐI FILE là có chủ ý: @media không cộng độ đặc hiệu, mà luật
+   .header-actions (gap 10px) nằm phía trên. Chuyển khối này lên trên nó là mất
+   tác dụng — im lặng, không báo lỗi gì.
    ============================================================ */
 
 @media (max-width: 700px) {
-    .hpop--lang { display: none; }
-
     .header-main    { gap: 8px; }
     .header-actions { gap: 2px; }
-}
-
-/* Trên 700px nút ngôn ngữ vẫn ở đầu trang, menu trượt không cần nhắc lại */
-@media (min-width: 701px) {
-    .mobile-nav__lang { display: none; }
 }
 
 /* Màn hẹp nhất (320–346px) — chỗ còn lại tụt xuống dưới 137px.
    19px cần 108px, vừa chỗ trống 110px của màn 320px. */
 @media (max-width: 346px) {
     .header-logo__text { font-size: 19px; }
-}
-
-/* --- Đổi ngôn ngữ trong menu trượt -------------------------- */
-
-.mobile-nav__lang {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.mobile-nav__langlabel {
-    font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--h-note);
-}
-
-.mobile-nav__langopts {
-    display: flex;
-    gap: 6px;
-}
-
-/* Cùng dáng với .hpop__item ở bảng xổ đầu trang: mục đang dùng đổ nền thương
-   hiệu, mục kia chỉ là chữ. */
-.mobile-nav__langopt {
-    display: grid;
-    place-items: center;
-    min-width: 44px;
-    height: 36px;
-    padding-inline: 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    font-size: var(--fs-note);
-    font-weight: 600;
-    color: var(--muted);
-    text-decoration: none;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-}
-
-.mobile-nav__langopt:hover,
-.mobile-nav__langopt:focus-visible {
-    border-color: var(--brand);
-    color: var(--brand);
-}
-
-.mobile-nav__langopt.is-on {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
 }

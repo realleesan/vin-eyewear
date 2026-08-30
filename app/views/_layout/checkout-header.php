@@ -21,13 +21,13 @@
  * DẢI THÔNG BÁO ở trên cùng là thứ DUY NHẤT bản thiết kế giữ lại từ đầu trang
  * đầy đủ. Nó không phải liên kết nên không kéo ai ra khỏi luồng, mà lại trả lời
  * đúng câu hỏi khách đang có ở bước này: "có mất phí ship không?". Chữ dùng
- * chung với dải trên trang thường (t('announce')) để hai nơi không nói lệch nhau.
+ * chung với dải trên trang thường ('Miễn phí giao hàng toàn quốc cho đơn từ 1.000.000₫') để hai nơi không nói lệch nhau.
  *
  * Dùng qua $bareLayout trong _layout/master.php, không gọi trực tiếp.
  */
 ?>
 
-<p class="barepromo"><?= e(t('announce')) ?></p>
+<p class="barepromo">Miễn phí giao hàng toàn quốc cho đơn từ 1.000.000₫</p>
 
 <header class="barebar">
     <a class="barebar__logo" href="/">Vin <em>Eyewear</em></a>

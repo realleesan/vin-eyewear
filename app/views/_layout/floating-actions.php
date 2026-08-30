@@ -37,14 +37,14 @@ $actions = [
     [
         'key'   => 'call',
         'href'  => $channels['hotline'],
-        'label' => t('fab.call', $hotline),
+        'label' => sprintf('Gọi %s', $hotline),
         'svg'   => icon('phone', 'fab__ico', 20),
         'blank' => false,
     ],
     [
         'key'   => 'zalo',
         'href'  => $channels['zalo'],
-        'label' => t('fab.zalo'),
+        'label' => 'Nhắn Zalo',
         /*
          * LOGO ZALO THẬT, không phải bong bóng chat chung chung.
          *
@@ -73,7 +73,7 @@ $actions = [
     [
         'key'   => 'messenger',
         'href'  => $channels['messenger'],
-        'label' => t('fab.messenger'),
+        'label' => 'Chat Messenger',
         'svg'   => sprintf(
             '<svg class="fab__ico" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" '
             . 'aria-hidden="true" focusable="false">%s</svg>',
@@ -116,7 +116,7 @@ $actions = [
     -->
     <button type="button" class="fab__toggle tap-target" id="fabToggle"
             aria-expanded="false" aria-controls="fabList"
-            aria-label="<?= e(t('fab.open')) ?>" hidden>
+            aria-label="Mở kênh hỗ trợ" hidden>
         <span class="fab__toggle-ico fab__toggle-ico--open"><?= icon('message', '', 22) ?></span>
         <span class="fab__toggle-ico fab__toggle-ico--close"><?= icon('close', '', 22) ?></span>
     </button>

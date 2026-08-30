@@ -486,8 +486,7 @@ partial('_layout/page-head', [
                             <?php endforeach; ?>
                         </select>
                         <?php
-                        /* SVG chữ V, đúng cái ở nút đổi ngôn ngữ trên thanh nav
-                           (.hpop__chevron). Trước đây là ký tự ▼ — mà ký tự thì
+                        /* SVG chữ V vẽ tay. Trước đây là ký tự ▼ — mà ký tự thì
                            mỗi hệ điều hành vẽ một kiểu: Windows ra tam giác đặc
                            nhỏ xíu, Android ra một hình khác hẳn, và không chỉnh
                            được độ dày nét cho khớp phần còn lại của site. */

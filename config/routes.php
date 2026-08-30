@@ -36,10 +36,6 @@ return [
     ''                 => 'HomeController@index',
     '/'                => 'HomeController@index',
 
-    // Đổi ngôn ngữ giao diện rồi trả về đúng trang đang đọc. GET chứ không
-    // phải POST — lý do ghi ở đầu app/controllers/LangController.php.
-    'ngon-ngu'         => 'LangController@switch',
-
     // Tìm kiếm toàn site: sản phẩm + bài viết + cơ sở + chính sách.
     // Ô tìm kiếm trên đầu trang trỏ vào đây, KHÔNG còn trỏ /san-pham?q=.
     'tim-kiem'         => 'SearchController@index',

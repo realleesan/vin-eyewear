@@ -21,13 +21,13 @@ $collectionsNav = $collectionsNav ?? CollectionModel::visible();
 <?php if ($collectionsNav === []): ?>
     <?php /* Không có bộ nào đang hiện: một mục thường, không phải cái nút bung
              ra khoảng trắng. Cùng lý do đã ghi ở collection-menu.php. */ ?>
-    <a href="/bo-suu-tap"<?= $isCollectionActive ? ' class="is-active" aria-current="page"' : '' ?>><?= e(t('nav.collections')) ?></a>
+    <a href="/bo-suu-tap"<?= $isCollectionActive ? ' class="is-active" aria-current="page"' : '' ?>>Bộ sưu tập</a>
 <?php else: ?>
 <details class="mobile-nav__group"<?= $isCollectionActive ? ' open' : '' ?>>
     <?php /* Đứng ở /bo-suu-tap thì hàng này sáng lên như mọi mục khác của menu trượt —
              xem .mobile-nav__links > details > summary.is-active trong header.css. */ ?>
     <summary<?= $isCollectionActive ? ' class="is-active"' : '' ?>>
-        <span><?= e(t('nav.collections')) ?></span>
+        <span>Bộ sưu tập</span>
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8"
                   stroke-linecap="round" stroke-linejoin="round"/>
@@ -35,7 +35,7 @@ $collectionsNav = $collectionsNav ?? CollectionModel::visible();
     </summary>
 
     <div class="mobile-nav__sub">
-        <a href="/bo-suu-tap"><?= e(t('nav.all_collections')) ?></a>
+        <a href="/bo-suu-tap">Tất cả bộ sưu tập</a>
         <?php foreach ($collectionsNav as $bst): ?>
             <a href="/bo-suu-tap/<?= e(rawurlencode($bst['slug'])) ?>"><?= e($bst['name']) ?></a>
         <?php endforeach; ?>
