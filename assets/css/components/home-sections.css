@@ -851,7 +851,9 @@
     list-style: none;
 }
 
+/* position:relative để nút bên dưới trải vùng bấm ra cả thẻ — xem .qcard__btn::after */
 .qcard {
+    position: relative;
     display: flex;
     flex-direction: column;
     background: var(--surface-raised);
@@ -923,6 +925,34 @@
     transition: border-color 0.2s, color 0.2s;
 }
 
+/*
+ * BẤM VÀO CHỖ NÀO TRONG THẺ CŨNG NHƯ BẤM CÁI NÚT — kể cả tấm ảnh.
+ *
+ * Cả thẻ trông đã như một chỗ bấm được (ảnh to, nhấc lên khi rê chuột), mà chỉ
+ * cái nút nhỏ dưới cùng mới ăn cú bấm; người ta bấm vào ảnh rồi tưởng khối này
+ * hỏng.
+ *
+ * Làm bằng lớp phủ trong suốt của CHÍNH thẻ <a> chứ không bằng JavaScript, vì
+ * ba lẽ:
+ *   · tắt JS vẫn chạy — thẻ thứ ba ("Đặt lịch") không mở hộp thoại nào, nó là
+ *     liên kết thật sang /dat-lich, và cú bấm vào ảnh cũng đưa đi đúng chỗ đó;
+ *   · phần JS mở hộp thoại không phải sửa một dòng: cú bấm trúng lớp phủ có
+ *     ev.target là chính thẻ <a>, nên [data-qcheck-open] vẫn khớp như thường;
+ *   · không sinh thêm chỗ nhận tiêu điểm bàn phím — Tab vẫn dừng đúng một lần
+ *     ở cái nút, đúng như trước.
+ *
+ * Đổi lại: không bôi đen được chữ trong thẻ. Với ba thẻ quảng bá này thì không
+ * mất gì. Thẻ nào về sau có thêm liên kết thứ hai bên trong thì phải cho liên
+ * kết đó position:relative để nó nổi lên trên lớp phủ.
+ */
+.qcard__btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+}
+
+/* Rê chuột vào bất kỳ đâu trong thẻ cũng làm nút sáng lên: lớp phủ ở trên là
+   một phần của chính thẻ <a> nên :hover bắt được cả vùng đó. */
 .qcard__btn:hover,
 .qcard__btn:focus-visible {
     border-color: var(--brand);

@@ -19,6 +19,11 @@
  * Hộp thoại chỉ được in ra MỘT lần và chứa cả hai bảng (tròng · gọng); JS đổi
  * tiêu đề và bảng đang mở. Hai hộp thoại song song sẽ phải chép đôi phần khung,
  * nút đóng và bẫy tiêu điểm bàn phím.
+ *
+ * BẤM VÀO CHỖ NÀO TRONG THẺ CŨNG ĂN, kể cả tấm ảnh — làm bằng lớp phủ CSS
+ * .qcard__btn::after trải kín thẻ, xem ghi chú tại chỗ trong home-sections.css.
+ * Ở view không có gì phải khai thêm; chỉ nhớ một điều: thẻ nào về sau có thêm
+ * liên kết thứ hai bên trong thì liên kết đó bị lớp phủ che mất.
  */
 
 /*
