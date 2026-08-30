@@ -238,18 +238,40 @@ class ProductTaxonomy
     }
 
     /**
-     * Tính năng / lớp phủ — HAI NGUỒN GỘP LẠI, và đó là chỗ tinh tế nhất.
+     * Tính năng / lớp phủ — BA NGUỒN GỘP LẠI, và đó là chỗ tinh tế nhất.
      *
      *   1. cột `lens_coatings`  — CSV khoá, do form nhập hàng ghi. Nguồn THẬT.
      *   2. ba cột 0/1 sẵn có    — is_uv400, is_polarized, is_photochromic.
+     *   3. cột `lens_types`     — nhưng CHỈ những khoá thuộc nhóm 'lop-phu'.
      *
-     * Vì sao cần cả hai: `lens_coatings` mới có ô nhập từ 2026-08-30 nên nó
-     * RỖNG ở toàn bộ hàng đã nhập trước đó, trong khi ba ô tick kia dùng đã lâu
-     * và đang mang thông tin thật. Chỉ đọc nguồn 1 thì ngày bật bộ lọc lên, mọi
-     * hàng cũ biến mất khỏi nhóm này cùng một lúc.
+     * Vì sao cần nguồn 1 và 2: `lens_coatings` mới có ô nhập từ 2026-08-30 nên
+     * nó RỖNG ở toàn bộ hàng đã nhập trước đó, trong khi ba ô tick kia dùng đã
+     * lâu và đang mang thông tin thật. Chỉ đọc nguồn 1 thì ngày bật bộ lọc lên,
+     * mọi hàng cũ biến mất khỏi nhóm này cùng một lúc.
      *
-     * Ba cột 0/1 ánh xạ về ĐÚNG khoá của nhóm 'lop-phu', nên sản phẩm vừa tick
-     * is_uv400 vừa tick 'uv400' trong CSV chỉ ra MỘT mục — mảng có khoá, không
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO CẦN NGUỒN 3 — MỘT LỜI HỨA TÔI ĐÃ GHI VÀO TÀI LIỆU MÀ MÃ KHÔNG GIỮ
+     *
+     * Cột `lens_types` từng được form nhập hàng ghi bằng danh sách
+     * config/eyewear.php 'rx_lens_types', mà danh sách ấy TRỘN hai tính năng
+     * vào một nhóm nói về loại: don-trong · da-trong · doi-mau · anh-sang-xanh.
+     *
+     * Nhóm 'loai-trong' mới chỉ nhận hai khoá đầu, nên hai khoá sau bị
+     * tuOption() bỏ qua — và chúng KHÔNG tự sang nhóm lớp phủ, vì nhóm ấy đọc
+     * một cột khác. Nghĩa là mọi sản phẩm cũ được tick "Đổi màu" hay "Chống ánh
+     * sáng xanh" sẽ mất hẳn thông tin đó khỏi bộ lọc.
+     *
+     * Chú thích trong database/schema.sql và trong file migration đã hứa ngược
+     * lại ("hàng đã nhập không mất bộ lọc, chỉ hiện ở đúng nhóm hơn"). Đoạn
+     * dưới đây làm cho lời hứa ấy thành sự thật thay vì đi sửa tài liệu cho
+     * khớp một hành vi kém hơn.
+     *
+     * Lọc theo NHÓM chứ không liệt kê hai khoá: cửa hàng có thể thêm khoá vào
+     * 'lop-phu' bất cứ lúc nào, và một danh sách gõ cứng ở đây sẽ lạc hậu ngay.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * Cả ba nguồn ánh xạ về ĐÚNG khoá của nhóm 'lop-phu', nên sản phẩm vừa tick
+     * is_uv400 vừa có 'uv400' trong CSV chỉ ra MỘT mục — mảng có khoá, không
      * cộng dồn.
      *
      * @return array<string,string>
@@ -258,6 +280,9 @@ class ProductTaxonomy
     {
         $out  = self::tuOption((string) ($p['lens_coatings'] ?? ''), 'lop-phu');
         $nhan = LensOptionModel::labels('lop-phu');
+
+        // Nguồn 3: khoá lớp phủ lạc trong cột `lens_types` của hàng cũ.
+        $out += self::tuOption((string) ($p['lens_types'] ?? ''), 'lop-phu');
 
         $co = [
             'uv400'    => !empty($p['is_uv400']),
