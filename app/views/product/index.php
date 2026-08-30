@@ -25,8 +25,8 @@
  *
  * Bảy nhóm lọc đều nhận nguyên mảng $groups[...] mà ProductModel::catalog()
  * dựng từ hàng đang bán, mỗi mục đã kèm nhãn và số đếm. View chỉ còn việc vẽ.
- * Kho thêm một dáng gọng là cột lọc có thêm huy hiệu; hãng nào bán hết hàng
- * thì huy hiệu của hãng đó tự biến mất — không phải sửa file này.
+ * Kho thêm một kiểu dáng là ô chọn "Kiểu dáng" có thêm một dòng; hãng nào bán
+ * hết hàng thì huy hiệu của hãng đó tự biến mất — không phải sửa file này.
  */
 
 /**
@@ -192,10 +192,10 @@ $chip = static function (string $group, array $opt) use ($toggleUrl): void {
 };
 
 /**
- * Một nhóm huy hiệu (Dáng gọng · Tính năng tròng · Đối tượng).
+ * Một nhóm huy hiệu (Tính năng tròng · Đối tượng).
  *
- * Chất liệu KHÔNG còn dùng hàm này — nó là ô chọn xổ xuống, xem khối "CHẤT
- * LIỆU" trong cột lọc bên dưới.
+ * Kiểu dáng và Chất liệu KHÔNG còn dùng hàm này — hai nhóm đó là ô chọn xổ
+ * xuống, xem $pick ngay bên dưới.
  */
 $chipGroup = static function (string $key, string $legend, array $options) use ($chip): void {
     if ($options === []) {
@@ -210,6 +210,102 @@ $chipGroup = static function (string $key, string $legend, array $options) use (
             <?php endforeach; ?>
         </div>
     </div>
+    <?php
+};
+
+/**
+ * Một nhóm lọc dạng Ô CHỌN XỔ XUỐNG (Kiểu dáng · Chất liệu).
+ *
+ * In NHÃN + FORM, KHÔNG in thẻ .pfacet bọc ngoài — nơi gọi tự bọc, vì khối
+ * "Chất liệu" còn phải nhét thêm chip "Tái chế / bio" vào cùng thẻ đó.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * VÌ SAO Ô CHỌN CHỨ KHÔNG PHẢI HÀNG HUY HIỆU NHƯ CÁC NHÓM CÒN LẠI
+ *
+ * Hai nhóm này dài nhất cột lọc — tám chất liệu, và kiểu dáng thì tuỳ kho, có
+ * thể hơn — mà lại là hai nhóm người ta ít đổi nhất. Vẽ thành huy hiệu thì mỗi
+ * nhóm ăn ba, bốn dòng của một cột chỉ rộng 280px, đẩy "Thương hiệu" và
+ * "Khoảng giá" xuống dưới nếp gấp. Ô chọn thu mỗi nhóm về một dòng.
+ *
+ * Dùng ĐÚNG bộ lớp .catpick của ô "Sắp xếp theo" ở cột kết quả: ba ô nhìn thấy
+ * cùng lúc trên một màn hình nên phải giống hệt nhau.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * CHỌN-MỘT, ĐỔI TỪ CHỌN-NHIỀU (2026-08-30, theo yêu cầu)
+ *
+ * MÁY CHỦ KHÔNG ĐỔI. 'shape' và 'material' vẫn nằm trong ProductFacets::MULTI
+ * và controller vẫn nhận mảng, nên name="<khoá>[]" gửi lên đúng một phần tử là
+ * khớp sẵn. Muốn quay lại chọn-nhiều thì chỉ phải dựng lại giao diện ở đây,
+ * không đụng tới tầng lọc.
+ *
+ * MỘT ĐƯỜNG CŨ CÒN SỐNG: liên kết đã lưu từ hồi chọn-nhiều
+ * (?material[]=titanium&material[]=acetate) vẫn lọc đúng cả hai — lưới ra hai
+ * sản phẩm. Ô chọn không diễn tả nổi trạng thái đó, nên $daChon chỉ cho đánh
+ * dấu MỘT mục: cái đứng trước trong DANH SÁCH (không phải cái đứng trước trong
+ * URL — thứ tự URL không tới được view). Bỏ $daChon đi thì hai <option> cùng
+ * mang selected và trình duyệt lặng lẽ lấy cái cuối, tức là vẫn một giá trị
+ * nhưng không ai đoán được là cái nào. Đụng vào ô một lần là trạng thái tự về
+ * đúng một giá trị.
+ *
+ * @param string $tatCa nhãn của mục "bỏ lọc" — viết đủ ("Tất cả kiểu dáng")
+ *                      chứ không dùng chung một chữ "Tất cả": ba ô chọn đứng
+ *                      gần nhau, mà một danh sách mở ra chỉ ghi "Tất cả" thì
+ *                      không tự nói được nó thuộc nhóm nào.
+ */
+$pick = static function (string $key, string $legend, array $options, string $tatCa) use ($hiddenFilters): void {
+    $id = 'f-' . $key;
+
+    if ($options === []) {
+        /* Không còn tiêu chí nào để chọn (kho hết sạch nhóm này) thì chỉ in
+           tiêu đề. <p> chứ không <label>: một <label for> nhắm vào id không tồn
+           tại là thứ trình đọc màn hình đọc ra rồi bỏ lửng. */
+        printf('<p class="pfacet__legend">%s</p>', e($legend));
+
+        return;
+    }
+
+    $daChon = false;
+    ?>
+    <?php /* <label> chứ không <p> như nhóm huy hiệu: ở đây tiêu đề nhóm CHÍNH
+             LÀ nhãn của ô chọn, nên bấm vào chữ tiêu đề là mở được danh sách. */ ?>
+    <label class="pfacet__legend" for="<?= e($id) ?>"><?= e($legend) ?></label>
+
+    <form class="pfacet__pick" method="get" action="/san-pham">
+        <?php $hiddenFilters([$key, 'page']); ?>
+        <span class="catpick">
+            <select class="catpick__select" id="<?= e($id) ?>"
+                    name="<?= e($key) ?>[]" data-pick="<?= e($key) ?>[]">
+                <?php /* value rỗng = bỏ lọc. multi() ở controller slugify rồi
+                         loại chuỗi rỗng, nên không cần nhánh riêng. */ ?>
+                <option value=""><?= e($tatCa) ?></option>
+                <?php foreach ($options as $opt): ?>
+                    <?php
+                    /* disabled thay cho lớp .is-off của huy hiệu: <option> vô
+                       hiệu hoá được thật, và trình đọc màn hình tự nói ra —
+                       không phải chêm câu sr-only như bên kia. Mục ĐANG BẬT
+                       không bao giờ bị tắt, cùng luật với huy hiệu. */
+                    $tat  = $opt['count'] === 0 && !$opt['on'];
+                    $chon = $opt['on'] && !$daChon;
+
+                    if ($chon) {
+                        $daChon = true;
+                    }
+                    ?>
+                    <option value="<?= e($opt['key']) ?>"
+                        <?= $chon ? ' selected' : '' ?><?= $tat ? ' disabled' : '' ?>><?= e($opt['label']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <?php /* Cùng chữ V với ô "Sắp xếp theo" — xem chú thích ở khối đó. */ ?>
+            <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </span>
+        <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn là lọc luôn).
+                 Không có JS thì đây là cách duy nhất để chốt lựa chọn, nên
+                 không được bỏ. */ ?>
+        <button type="submit" class="catpick__go">Áp dụng</button>
+    </form>
     <?php
 };
 
@@ -396,107 +492,27 @@ partial('_layout/page-head', [
                     <?php endif; ?>
                 </div>
 
-                <?php $chipGroup('shape', 'Dáng gọng', $groups['shape']); ?>
+                <?php if ($groups['shape'] !== []): ?>
+                    <div class="pfacet">
+                        <?php /* "Kiểu dáng" chứ không "Dáng gọng" (2026-08-30):
+                                 kho bán cả tròng kính và phụ kiện, mà "gọng" thì
+                                 chỉ đúng với một phần hàng. Bảng thông số ở trang
+                                 chi tiết vẫn ghi "Dáng gọng" — đó là dòng nói về
+                                 riêng cái gọng nên vẫn đúng nghĩa. */ ?>
+                        <?php $pick('shape', 'Kiểu dáng', $groups['shape'], 'Tất cả kiểu dáng'); ?>
+                    </div>
+                <?php endif; ?>
 
-                <?php
-                /*
-                 * ─────────────────────────────────────────────────────────
-                 * CHẤT LIỆU — Ô CHỌN XỔ XUỐNG, KHÔNG PHẢI HÀNG HUY HIỆU
-                 *
-                 * Tám chất liệu vẽ thành huy hiệu thì chiếm ba, bốn dòng của
-                 * một cột chỉ rộng 280px — nhóm dài nhất cột lọc, mà lại là
-                 * nhóm người ta ít đổi nhất. Ô chọn thu nó về một dòng, và
-                 * dùng ĐÚNG bộ lớp .catpick của ô "Sắp xếp theo" ở cột kết
-                 * quả: hai ô nhìn thấy cùng lúc trên một màn hình nên phải
-                 * giống hệt nhau.
-                 *
-                 * CHỌN-MỘT, ĐỔI TỪ CHỌN-NHIỀU (2026-08-30, theo yêu cầu).
-                 * Máy chủ thì KHÔNG đổi: 'material' vẫn nằm trong
-                 * ProductFacets::MULTI và controller vẫn nhận mảng, nên
-                 * name="material[]" gửi lên một phần tử là khớp sẵn. Muốn
-                 * quay lại chọn-nhiều thì chỉ phải dựng lại giao diện ở đây,
-                 * không đụng tới tầng lọc.
-                 *
-                 * MỘT ĐƯỜNG CŨ CÒN SỐNG: liên kết đã lưu từ hồi chọn-nhiều
-                 * (?material[]=titanium&material[]=acetate) vẫn lọc đúng cả
-                 * hai, vì controller không đổi — lưới ra hai sản phẩm. Ô chọn
-                 * không diễn tả nổi trạng thái đó, nên $daChon chỉ cho đánh
-                 * dấu MỘT mục: cái đứng trước trong DANH SÁCH (không phải cái
-                 * đứng trước trong URL — thứ tự URL không tới được view). Bỏ
-                 * $daChon đi thì hai <option> cùng mang selected và trình
-                 * duyệt lặng lẽ lấy cái cuối, tức là vẫn một giá trị nhưng
-                 * không ai đoán được là cái nào. Đụng vào ô một lần là trạng
-                 * thái tự về đúng một giá trị.
-                 *
-                 * CHIP "TÁI CHẾ / BIO" Ở NGAY DƯỚI, trong cùng khối. Nó là
-                 * nhóm lọc riêng (?eco[]=recycled) nên không nhét vào ô chọn
-                 * được, nhưng người dùng đọc nó như một chất liệu nữa — tách
-                 * thành khối có tiêu đề riêng là thừa một dòng chữ hoa cho
-                 * đúng một mục.
-                 * ─────────────────────────────────────────────────────────
-                 */
-                $daChon = false;
-                ?>
                 <?php if ($groups['material'] !== [] || $groups['eco'] !== []): ?>
                     <div class="pfacet">
-                        <?php if ($groups['material'] !== []): ?>
-                            <?php /* <label> chứ không <p> như các nhóm khác: ở
-                                     đây tiêu đề nhóm CHÍNH LÀ nhãn của ô chọn,
-                                     nên bấm vào chữ "CHẤT LIỆU" là mở được danh
-                                     sách. */ ?>
-                            <label class="pfacet__legend" for="f-material">Chất liệu</label>
-                        <?php else: ?>
-                            <?php /* Kho chỉ còn hàng "tái chế / bio" thì không có
-                                     ô chọn nào để trỏ tới — một <label for> nhắm
-                                     vào id không tồn tại là thứ trình đọc màn
-                                     hình đọc ra rồi bỏ lửng. */ ?>
-                            <p class="pfacet__legend">Chất liệu</p>
-                        <?php endif; ?>
+                        <?php $pick('material', 'Chất liệu', $groups['material'], 'Tất cả chất liệu'); ?>
 
-                        <?php if ($groups['material'] !== []): ?>
-                            <form class="pfacet__pick" method="get" action="/san-pham">
-                                <?php $hiddenFilters(['material', 'page']); ?>
-                                <span class="catpick">
-                                    <select class="catpick__select" id="f-material"
-                                            name="material[]" data-pick="material[]">
-                                        <?php /* value rỗng = bỏ lọc. multi() ở
-                                                 controller slugify rồi loại chuỗi
-                                                 rỗng, nên không cần nhánh riêng. */ ?>
-                                        <option value="">Tất cả chất liệu</option>
-                                        <?php foreach ($groups['material'] as $opt): ?>
-                                            <?php
-                                            /* disabled thay cho lớp .is-off của huy
-                                               hiệu: <option> vô hiệu hoá được thật,
-                                               và trình đọc màn hình tự nói ra —
-                                               không phải chêm câu sr-only như bên
-                                               kia. Mục ĐANG BẬT không bao giờ bị
-                                               tắt, cùng luật với huy hiệu. */
-                                            $tat  = $opt['count'] === 0 && !$opt['on'];
-                                            $chon = $opt['on'] && !$daChon;
-
-                                            if ($chon) {
-                                                $daChon = true;
-                                            }
-                                            ?>
-                                            <option value="<?= e($opt['key']) ?>"
-                                                <?= $chon ? ' selected' : '' ?><?= $tat ? ' disabled' : '' ?>><?= e($opt['label']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <?php /* Cùng chữ V với ô "Sắp xếp theo" — xem
-                                             chú thích ở khối đó. */ ?>
-                                    <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
-                                              stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </span>
-                                <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn
-                                         là lọc luôn). Không có JS thì đây là cách
-                                         duy nhất để chốt lựa chọn, nên không được
-                                         bỏ. */ ?>
-                                <button type="submit" class="catpick__go">Áp dụng</button>
-                            </form>
-                        <?php endif; ?>
-
+                        <?php /* CHIP "TÁI CHẾ / BIO" ngay dưới ô chọn, trong cùng
+                                 khối. Nó là nhóm lọc riêng (?eco[]=recycled) nên
+                                 không nhét vào ô chọn được, nhưng người dùng đọc
+                                 nó như một chất liệu nữa — tách thành khối có tiêu
+                                 đề riêng là thừa một dòng chữ hoa cho đúng một
+                                 mục. */ ?>
                         <?php if ($groups['eco'] !== []): ?>
                             <div class="pfacet__chips">
                                 <?php foreach ($groups['eco'] as $opt): ?>
