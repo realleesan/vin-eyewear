@@ -436,7 +436,14 @@ class ProductAdminController extends AdminController
                còn mang khoá đó nữa — dọn giao diện mà xoá sạch dữ liệu. */
 
             'rim_type'          => $this->khoa('rim_type', 'rim_types', $cu['rim_type'] ?? null),
-            'lens_color'        => $chu('lens_color'),
+            /* Ô CHỌN, KHÔNG CÒN Ô CHỮ TỰ DO (2026-08-30). Trước đây người
+               nhập gõ tay "Xám khói", nên mỗi cách gõ thành một giá trị riêng
+               và không lọc theo màu được. Nay cột lưu KHOÁ của một mục trong
+               nhóm 'mau-trong'. Dữ liệu cũ (chữ tiếng Việt có dấu) không khớp
+               khoá nào nên rơi về null — form sẽ hiện "— chưa chọn —" và cửa
+               hàng chọn lại; không có cách nào đoán đúng tự động vì "Xám khói"
+               và "xám khói đậm" là hai thứ khác nhau. */
+            'lens_color'        => $this->khoaTrong($_POST['lens_color'] ?? '', 'mau-trong'),
             'size_class'        => $this->khoa('size_class', 'size_classes', $cu['size_class'] ?? null),
             'is_uv400'          => isset($_POST['is_uv400']) ? 1 : 0,
 
@@ -448,8 +455,14 @@ class ProductAdminController extends AdminController
             'video_url'         => $this->duongDanNgoai((string) ($_POST['video_url'] ?? '')),
 
             'rx_order_enabled'  => isset($_POST['rx_order_enabled']) ? 1 : 0,
-            'lens_types'        => $this->khoaCsv($_POST['lens_types'] ?? [], 'rx_lens_types'),
-            'lens_indexes'      => $this->khoaCsv($_POST['lens_indexes'] ?? [], 'rx_indexes'),
+            /* Ba cột này nay đối chiếu với `lens_options` (quản trị sửa
+               được) thay vì với mảng gõ cứng trong config. `lens_coatings`
+               lần đầu có ô nhập — cột đã có từ lâu nhưng không form nào ghi
+               vào nó, nên bộ lọc "Tính năng / lớp phủ" trước đây phải đoán
+               bằng biểu thức chính quy trên mô tả sản phẩm. */
+            'lens_types'        => $this->khoaCsvTrong($_POST['lens_types'] ?? [], 'loai-trong'),
+            'lens_indexes'      => $this->khoaCsvTrong($_POST['lens_indexes'] ?? [], 'chiet-suat'),
+            'lens_coatings'     => $this->khoaCsvTrong($_POST['lens_coatings'] ?? [], 'lop-phu'),
             // Giữ nguyên văn kể cả dấu âm — xem chú thích cột trong schema.sql.
             // Chỉ chặn ký tự không thuộc một số đo: chữ, dấu chấm, dấu cộng trừ.
             'sph_max'           => $this->doKinh((string) ($_POST['sph_max'] ?? '')),
@@ -659,6 +672,40 @@ class ProductAdminController extends AdminController
      * chứ không tin: form gửi cái gì là chuyện của trình duyệt, mà cột này
      * được đọc ngược lại thành nhãn hiển thị.
      */
+    /**
+     * Như khoaCsv() nhưng bảng khoá đọc từ `lens_options` (quản trị sửa được)
+     * thay vì từ config.
+     *
+     * NHẬN CẢ MỤC ĐANG ẨN — ofGroup() chứ không visible(). Một sản phẩm đã gắn
+     * mục nào đó rồi thì mục ấy bị ẩn đi vẫn phải giữ được: lọc mất nó ở đây
+     * nghĩa là mỗi lần cửa hàng mở một sản phẩm cũ ra sửa gì đó rồi bấm Lưu,
+     * thuộc tính ấy lặng lẽ biến mất. Ẩn là "thôi đề nghị cho hàng mới", không
+     * phải "xoá khỏi hàng cũ".
+     */
+    private function khoaCsvTrong(mixed $raw, string $nhom): ?string
+    {
+        $tho = is_array($raw) ? $raw : preg_split('/\s*,\s*/', (string) $raw, -1, PREG_SPLIT_NO_EMPTY);
+        $hop = array_column(LensOptionModel::ofGroup($nhom), 'option_key');
+        $ra  = [];
+
+        foreach ($tho ?: [] as $khoa) {
+            if (is_scalar($khoa) && in_array((string) $khoa, $hop, true)) {
+                $ra[] = (string) $khoa;
+            }
+        }
+
+        return $ra === [] ? null : implode(',', array_unique($ra));
+    }
+
+    /** Một khoá đơn của `lens_options`. Không khớp danh sách thì trả null. */
+    private function khoaTrong(mixed $raw, string $nhom): ?string
+    {
+        $khoa = is_scalar($raw) ? (string) $raw : '';
+        $hop  = array_column(LensOptionModel::ofGroup($nhom), 'option_key');
+
+        return in_array($khoa, $hop, true) ? $khoa : null;
+    }
+
     private function khoaCsv(mixed $raw, string $bang): ?string
     {
         $tho   = is_array($raw) ? $raw : preg_split('/\s*,\s*/', (string) $raw, -1, PREG_SPLIT_NO_EMPTY);

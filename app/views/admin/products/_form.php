@@ -58,6 +58,7 @@ $csv = static function (string $cot) use ($ed): array {
 $daChon      = $csv('face_shapes');
 $daChonTrong = $csv('lens_types');
 $daChonIndex = $csv('lens_indexes');
+$daChonPhu   = $csv('lens_coatings');
 
 $eyewear      = config('eyewear');
 $dangGocs     = $eyewear['frame_shapes'];
@@ -67,8 +68,28 @@ $gioiTinhs    = $eyewear['genders'];
 $cos          = $eyewear['size_classes'];
 $trangThais   = $eyewear['publish_statuses'];
 $capTrongs    = $eyewear['lens_categories'];
-$loaiTrongs   = $eyewear['rx_lens_types'];
-$chietSuats   = $eyewear['rx_indexes'];
+
+/*
+ * BỐN DANH SÁCH THUỘC TÍNH TRÒNG ĐỌC TỪ CSDL, không từ config nữa —
+ * /quan-tri/thuoc-tinh-trong sửa được chúng (2026-08-30).
+ *
+ * ofGroup() chứ không visible(): form phải in CẢ mục đang ẩn. Một sản phẩm đã
+ * gắn mục nào đó rồi thì mục ấy bị ẩn đi vẫn phải nhìn thấy được ở đây, nếu
+ * không người sửa hàng tưởng ô trống rồi bấm Lưu — và thuộc tính lặng lẽ biến
+ * mất. Mục ẩn được đánh dấu ngay trên nhãn.
+ *
+ * Chưa chạy file nâng cấp thì LensOptionModel lùi về đúng mảng config cũ, nên
+ * form vẫn y như hôm qua — trừ nhóm màu, nhóm đó trả rỗng và ô chọn màu chỉ
+ * còn dòng "chưa chọn".
+ */
+$loaiTrongs  = LensOptionModel::ofGroup('loai-trong');
+$chietSuats  = LensOptionModel::ofGroup('chiet-suat');
+$lopPhus     = LensOptionModel::ofGroup('lop-phu');
+$mauTrongs   = LensOptionModel::ofGroup('mau-trong');
+
+/* Nhãn kèm dấu "(đã ẩn)" cho mục không còn đề nghị cho hàng mới. */
+$nhanTrong = static fn (array $o): string =>
+    $o['label'] . (empty($o['is_visible']) ? ' (đã ẩn)' : '');
 
 /* Bốn dáng mặt bản vẽ hỏi. config/eyewear.php còn ba khoá nữa (chữ nhật, tam
    giác, mặt dài) — dữ liệu cũ mang chúng vẫn đọc được ở trang bán hàng, form
@@ -430,8 +451,33 @@ $soDongTrong = 3;
 
                 <div class="field">
                     <label for="lens_color">Màu tròng</label>
-                    <input type="text" id="lens_color" name="lens_color" maxlength="120"
-                           placeholder="Xám khói" value="<?= e($ky('lens_color')) ?>">
+                    <?php
+                    /* Ô CHỌN, KHÔNG CÒN Ô CHỮ (2026-08-30). Gõ tay thì mỗi cách
+                       viết thành một giá trị riêng ("Xám khói" / "xám khói" /
+                       "Khói xám") và không lọc theo màu được. Danh sách sửa ở
+                       /quan-tri/thuoc-tinh-trong.
+
+                       DỮ LIỆU CŨ gõ tay không khớp khoá nào nên ô hiện "chưa
+                       chọn" — giá trị cũ in ngay dưới để người sửa biết mình
+                       đang thay thứ gì, thay vì thấy một ô trống không lời
+                       giải thích. */
+                    $mauCu = $ky('lens_color');
+                    $khopMau = false;
+                    ?>
+                    <select id="lens_color" name="lens_color">
+                        <option value="">— chưa chọn —</option>
+                        <?php foreach ($mauTrongs as $o): ?>
+                            <?php $chon = $mauCu === $o['option_key']; ?>
+                            <?php $khopMau = $khopMau || $chon; ?>
+                            <option value="<?= e($o['option_key']) ?>"<?= $chon ? ' selected' : '' ?>><?= e($nhanTrong($o)) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?php if ($mauCu !== '' && !$khopMau): ?>
+                        <p class="field__hint">
+                            Giá trị cũ: <strong><?= e($mauCu) ?></strong> — gõ tay từ trước khi có
+                            danh sách màu. Chọn một màu ở trên rồi Lưu để thay nó.
+                        </p>
+                    <?php endif; ?>
                 </div>
 
                 <div class="field">
@@ -815,11 +861,11 @@ $soDongTrong = 3;
             <fieldset class="apf__set">
                 <legend>Loại tròng áp dụng được</legend>
                 <div class="apf__ticks">
-                    <?php foreach ($loaiTrongs as $ma => $nhan): ?>
+                    <?php foreach ($loaiTrongs as $o): ?>
                         <label>
-                            <input type="checkbox" name="lens_types[]" value="<?= e($ma) ?>"
-                                   <?= in_array($ma, $daChonTrong, true) ? 'checked' : '' ?>>
-                            <?= e($nhan) ?>
+                            <input type="checkbox" name="lens_types[]" value="<?= e($o['option_key']) ?>"
+                                   <?= in_array((string) $o['option_key'], $daChonTrong, true) ? 'checked' : '' ?>>
+                            <?= e($nhanTrong($o)) ?>
                         </label>
                     <?php endforeach; ?>
                 </div>
@@ -828,11 +874,39 @@ $soDongTrong = 3;
             <fieldset class="apf__set">
                 <legend>Chiết suất hỗ trợ</legend>
                 <div class="apf__ticks">
-                    <?php foreach ($chietSuats as $ma => $nhan): ?>
+                    <?php foreach ($chietSuats as $o): ?>
                         <label>
-                            <input type="checkbox" name="lens_indexes[]" value="<?= e($ma) ?>"
-                                   <?= in_array($ma, $daChonIndex, true) ? 'checked' : '' ?>>
-                            <?= e($nhan) ?>
+                            <input type="checkbox" name="lens_indexes[]" value="<?= e($o['option_key']) ?>"
+                                   <?= in_array((string) $o['option_key'], $daChonIndex, true) ? 'checked' : '' ?>>
+                            <?= e($nhanTrong($o)) ?>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </fieldset>
+
+            <?php
+            /*
+             * TÍNH NĂNG / LỚP PHỦ — Ô NHẬP MỚI (2026-08-30).
+             *
+             * Cột `lens_coatings` có từ lâu nhưng CHƯA FORM NÀO GHI VÀO NÓ, nên
+             * nó rỗng ở mọi sản phẩm. Vì thế bộ lọc "Tính năng tròng" trước
+             * đây phải đoán bằng biểu thức chính quy quét tên + mô tả + specs
+             * (ProductTaxonomy::lens) — đoán được nhiều nhưng không bao giờ
+             * chắc, và cửa hàng không có cách nào sửa khi nó đoán sai.
+             *
+             * Từ nay đây là nguồn thật. Hàng cũ vẫn rỗng cột này cho tới khi có
+             * người mở ra tick — bộ lọc đọc CẢ hai nguồn nên không ai mất gì
+             * trong lúc chuyển, xem ProductTaxonomy.
+             */
+            ?>
+            <fieldset class="apf__set">
+                <legend>Tính năng / lớp phủ</legend>
+                <div class="apf__ticks">
+                    <?php foreach ($lopPhus as $o): ?>
+                        <label>
+                            <input type="checkbox" name="lens_coatings[]" value="<?= e($o['option_key']) ?>"
+                                   <?= in_array((string) $o['option_key'], $daChonPhu, true) ? 'checked' : '' ?>>
+                            <?= e($nhanTrong($o)) ?>
                         </label>
                     <?php endforeach; ?>
                 </div>
