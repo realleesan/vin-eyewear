@@ -193,7 +193,7 @@ class ProductFacets
     /**
      * Danh sách lựa chọn của MỘT nhóm.
      *
-     * @param  array $order  Thứ tự khoá muốn ép (nhóm Đối tượng). Rỗng =
+     * @param  array $order  Thứ tự khoá muốn ép (nhóm Giới tính). Rỗng =
      *                       xếp theo số sản phẩm giảm dần, hoà thì theo nhãn.
      * @return array<int, array{key:string,label:string,count:int,total:int,on:bool}>
      */

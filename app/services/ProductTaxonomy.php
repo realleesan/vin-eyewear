@@ -143,7 +143,8 @@ class ProductTaxonomy
     public const ECO_LABEL = 'Chất liệu tái chế / bio';
 
     /**
-     * Thứ tự cố định của nhóm Đối tượng.
+     * Thứ tự cố định của nhóm Giới tính (cột lọc gọi tên này từ 2026-08-30;
+     * trước đó là "Đối tượng").
      *
      * Nhóm DUY NHẤT không xếp theo số lượng: bốn huy hiệu này là bốn ô quen
      * mắt, đảo chỗ theo tồn kho thì mỗi lần vào trang chúng lại nằm một nơi.

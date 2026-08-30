@@ -192,10 +192,13 @@ $chip = static function (string $group, array $opt) use ($toggleUrl): void {
 };
 
 /**
- * Một nhóm huy hiệu (Tính năng tròng · Đối tượng).
+ * Một nhóm huy hiệu. Nay chỉ còn MỘT nhóm dùng: Tính năng tròng.
  *
- * Kiểu dáng và Chất liệu KHÔNG còn dùng hàm này — hai nhóm đó là ô chọn xổ
- * xuống, xem $pick ngay bên dưới.
+ * Kiểu dáng, Chất liệu, Khoảng giá và Giới tính đều đã thành ô chọn xổ xuống —
+ * xem $pick ngay bên dưới. Giữ $chipGroup lại chứ không nội tuyến vào chỗ gọi:
+ * "Tính năng tròng" là nhóm mà một sản phẩm mang NHIỀU giá trị cùng lúc (một
+ * tròng vừa chống ánh sáng xanh vừa đổi màu), nên nó phải giữ chọn-nhiều, và
+ * hàng huy hiệu là dạng duy nhất trong cột lọc diễn tả được điều đó.
  */
 $chipGroup = static function (string $key, string $legend, array $options) use ($chip): void {
     if ($options === []) {
@@ -538,7 +541,7 @@ partial('_layout/page-head', [
                 <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
                 <?php $checkGroup('collab', 'Bộ sưu tập hợp tác', $collabOptions); ?>
 
-                <?php /* Đứng ở đây chứ không dưới cùng để "Đối tượng" luôn là
+                <?php /* Đứng ở đây chứ không dưới cùng để "Giới tính" luôn là
                          nhóm chốt cột lọc. */ ?>
                 <?php $checkGroup('collection', 'Bộ sưu tập', $collectionOptions); ?>
 
@@ -569,7 +572,25 @@ partial('_layout/page-head', [
                     </div>
                 <?php endif; ?>
 
-                <?php $chipGroup('gender', 'Đối tượng', $groups['gender']); ?>
+                <?php
+                /*
+                 * GIỚI TÍNH — ô xổ xuống, và nay là nhóm CUỐI của cột lọc.
+                 *
+                 * Tên cũ là "Đối tượng" (2026-08-30 đổi theo yêu cầu). Danh
+                 * sách vẫn nguyên bốn mục Nam · Nữ · Unisex · Trẻ em, tức là
+                 * "Trẻ em" nay nằm dưới một tiêu đề nói về giới tính trong khi
+                 * nó là nhóm tuổi. Biết và chấp nhận: đây là cách gần như mọi
+                 * trang bán kính ở Việt Nam đặt tên, và khách tìm bằng chữ
+                 * "giới tính" chứ không phải "đối tượng". Muốn chuẩn hơn thì
+                 * phải TÁCH thành hai nhóm lọc — thêm cột và thêm khoá trong
+                 * ProductTaxonomy::GENDERS, không phải đổi mỗi cái nhãn ở đây.
+                 */
+                ?>
+                <?php if ($groups['gender'] !== []): ?>
+                    <div class="pfacet">
+                        <?php $pick('gender', 'Giới tính', $groups['gender'], 'Tất cả giới tính'); ?>
+                    </div>
+                <?php endif; ?>
 
                 <?php /* Chốt của bottom-sheet trên màn hình hẹp: sheet che gần
                          hết màn hình nên nút đóng phải nằm TRONG nó, không thể
