@@ -173,6 +173,30 @@
         border: 1px solid var(--line);
     }
 
+    /*
+     * KHOÁ CUỘN TRANG NỀN KHI SHEET MỞ — bản CSS, SONG SONG với bản JS.
+     *
+     * assets/js/catalog.js đã làm đúng việc này từ trước bằng một listener
+     * 'toggle' đặt document.body.style.overflow. Dòng dưới đây KHÔNG thay thế
+     * nó và cũng không thừa: nó vá đúng khoảng mà bản JS không với tới —
+     * TẮT JAVASCRIPT.
+     *
+     * Tắt JS thì <details> vẫn mở được (đó là hành vi gốc của thẻ) và CSS vẫn
+     * vẽ sheet trượt lên, nhưng không có ai khoá trang nền: vuốt trên vùng nền
+     * mờ là lưới sản phẩm phía sau trôi đi, đóng sheet ra thì người dùng đứng
+     * ở một chỗ khác hẳn. Mọi luồng phải chạy được khi tắt JS (CLAUDE.md), và
+     * "chạy được" gồm cả chuyện này.
+     *
+     * Hai bản cùng bật thì cùng đặt overflow:hidden — không đá nhau.
+     *
+     * NẰM TRONG @media LÀ BẮT BUỘC. Từ 1101px trở lên, cột lọc không còn là
+     * sheet nữa nhưng thuộc tính `open` thì vẫn còn nguyên nếu người dùng đã
+     * mở nó lúc màn hình còn hẹp — để luật này ra ngoài @media là khoá chết
+     * cả trang ở desktop, không ai hiểu vì sao. (Bản JS chặn đúng ca ấy bằng
+     * một listener 'resize'; bản CSS chặn bằng chính cái @media này.)
+     */
+    body:has(.cfilter[open]) { overflow: hidden; }
+
     .cfilter[open] > .cfilter__scrim {
         position: fixed;
         inset: 0;

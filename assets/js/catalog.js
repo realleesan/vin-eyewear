@@ -484,6 +484,13 @@
      *
      * <details> không phát sự kiện riêng cho việc mở/đóng ở mọi trình duyệt,
      * nên nghe 'toggle' — sự kiện chuẩn của chính nó.
+     *
+     * CÓ MỘT BẢN CSS SONG SONG: `body:has(.cfilter[open])` trong
+     * components/category.css, nằm trong @media (max-width: 1100px). Bản đó lo
+     * ca TẮT JAVASCRIPT — lúc ấy đoạn này không chạy nhưng <details> vẫn mở
+     * được và sheet vẫn hiện. Đừng xoá bên nào vì thấy bên kia đã làm rồi:
+     * bản JS còn xử một ca mà CSS không thấy (xem listener 'resize' ngay dưới),
+     * và bản CSS xử một ca mà JS không có mặt.
      */
     sheet.addEventListener('toggle', function () {
         document.body.style.overflow = (sheet.open && isSheetMode()) ? 'hidden' : '';
