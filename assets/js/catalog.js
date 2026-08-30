@@ -1,5 +1,9 @@
 /**
- * catalog.js — bốn tiện ích cho trang danh sách sản phẩm (/san-pham).
+ * catalog.js — bốn tiện ích cho trang danh sách sản phẩm.
+ *
+ * BA ĐỊA CHỈ dùng chung file này, vì cả ba dựng từ một view (product/index):
+ * /san-pham · /san-pham/gong-kinh · /san-pham/trong-kinh. Đừng gõ cứng
+ * '/san-pham' ở bất cứ đâu trong file — dùng duongCatalog.
  *
  * CẢ BỐN ĐỀU LÀ TĂNG CƯỜNG, KHÔNG PHẢI ĐIỀU KIỆN ĐỂ TRANG CHẠY. Bộ lọc của
  * trang này là liên kết và form GET thật; tắt JavaScript thì mọi thứ vẫn lọc
@@ -229,6 +233,16 @@
     var coTaiCho = !!(catbody && window.fetch && window.DOMParser &&
                       window.history && window.history.pushState && window.URL);
 
+    /*
+      * ĐƯỜNG CỦA TRANG CATALOG NÀY — '/san-pham' hoặc '/san-pham/gong-kinh'…
+      *
+      * Ghi lại MỘT LẦN lúc nạp thay vì gõ cứng '/san-pham': từ 2026-08-30
+      * catalog có ba địa chỉ (cả kho + hai trang con), và có thể thêm nữa.
+      * Lọc tại chỗ chỉ đổi chuỗi truy vấn, không bao giờ đổi đường dẫn, nên
+      * giá trị này đúng suốt vòng đời của trang.
+      */
+    var duongCatalog = window.location.pathname;
+
     var luot     = 0;     // số thứ tự lượt nạp — để bỏ qua câu trả lời đến muộn
     var dangChay = null;  // AbortController của lượt đang chạy
     var loa      = null;  // vùng thông báo cho trình đọc màn hình
@@ -276,9 +290,16 @@
         });
 
         window.addEventListener('popstate', function () {
-            /* Chỉ nhận việc khi vẫn còn ở trang danh sách. Người dùng lùi về
-               một trang khác hẳn thì trình duyệt lo, không phải mình. */
-            if (window.location.pathname !== '/san-pham') return;
+            /* Chỉ nhận việc khi vẫn còn ở ĐÚNG trang danh sách này. Người dùng
+               lùi về một trang khác hẳn — kể cả một trang con catalog khác —
+               thì trình duyệt lo, không phải mình.
+
+               So với duongCatalog chứ không với '/san-pham' gõ cứng: xem chú
+               thích dài ở laDuongLoc(). Chỗ này cũng dính đúng lỗi ấy, và bỏ
+               sót nó khi sửa chỗ kia còn tệ hơn để nguyên cả hai — lọc tại chỗ
+               sẽ chạy trên trang con và đẩy lịch sử, nhưng bấm Lùi thì địa chỉ
+               đổi mà nội dung đứng im. */
+            if (window.location.pathname !== duongCatalog) return;
 
             napManh(window.location.href, false);
         });
@@ -293,7 +314,36 @@
      */
     function laDuongLoc(a) {
         if (a.origin !== window.location.origin) return false;
-        if (a.pathname !== '/san-pham') return false;
+
+        /*
+         * PHẢI Ở LẠI ĐÚNG TRANG ĐANG ĐỨNG, so với location.pathname chứ không
+         * so với chuỗi '/san-pham' gõ cứng.
+         *
+         * ─────────────────────────────────────────────────────────────────
+         * MỘT LỖI THẬT ĐÃ SỐNG Ở ĐÂY — 2026-08-30
+         *
+         * Bản trước viết `a.pathname !== '/san-pham'`. Đúng khi catalog chỉ
+         * có một địa chỉ. Ngày tách hai trang con (/san-pham/gong-kinh và
+         * /san-pham/trong-kinh) thì mọi liên kết lọc trên hai trang ấy mang
+         * pathname của chính chúng, không khớp chuỗi gõ cứng — hàm này trả
+         * false, cú bấm không bị chặn, và CẢ TRANG TẢI LẠI.
+         *
+         * Hỏng im lặng theo đúng nghĩa xấu nhất: bộ lọc vẫn ra kết quả đúng
+         * (liên kết là <a href> thật), chỉ mất phần "không tải lại trang" —
+         * nên không có lỗi nào để thấy, chỉ có cảm giác trang giật một nhịp
+         * và bảng lọc trên điện thoại đóng sập sau mỗi lần tick.
+         *
+         * So với duongCatalog (ghi lúc nạp trang) thì đúng cho cả ba trang hôm
+         * nay lẫn trang con thêm sau này, và tự động TỪ CHỐI những liên kết dẫn
+         * sang một catalog KHÁC — thứ đó phải điều hướng thật, vì cả tiêu đề,
+         * đường dẫn lẫn bộ nhóm lọc đều đổi (trang tròng kính có sáu nhóm khác
+         * hẳn trang gọng).
+         *
+         * CHỖ THỨ HAI DÍNH CÙNG LỖI NÀY là listener 'popstate' bên trên — sửa
+         * một chỗ mà bỏ chỗ kia thì còn tệ hơn để nguyên cả hai.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if (a.pathname !== duongCatalog) return false;
 
         return !!(a.closest('.cfilter') ||
                   a.closest('.catpager') ||
