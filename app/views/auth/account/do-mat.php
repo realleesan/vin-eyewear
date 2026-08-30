@@ -319,20 +319,60 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
 
         <div class="acct-field">
             <span class="acct-field__label" id="nhan-tinh-chat">Tính chất tròng đang dùng</span>
-            <?php /* Ô NHIỀU LỰA CHỌN: một cặp tròng thường có vài tính chất
-                     cùng lúc (siêu mỏng + chống ánh sáng xanh + chống trầy).
-                     Dùng <select multiple> thì trên điện thoại nó thu về một
-                     danh sách cuộn tí hon mà nhiều người không biết là bấm giữ
-                     được nhiều mục. */ ?>
-            <div class="acct-choice" role="group" aria-labelledby="nhan-tinh-chat">
-                <?php foreach ($wearFeatures as $ft): ?>
-                    <label class="acct-choice__opt">
-                        <input type="checkbox" name="wear_lens_features[]" value="<?= e($ft) ?>"
-                               <?= in_array($ft, $wearOn, true) ? 'checked' : '' ?>>
-                        <span><?= e($ft) ?></span>
-                    </label>
-                <?php endforeach; ?>
-            </div>
+
+            <?php
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * BẢNG XỔ CHỌN NHIỀU — <details> BỌC CHÍNH CÁC Ô TICK
+             *
+             * Một cặp tròng thường có vài tính chất cùng lúc (siêu mỏng + chống
+             * ánh sáng xanh + chống trầy), nên đây bắt buộc là ô chọn nhiều.
+             *
+             * VÌ SAO KHÔNG PHẢI <select multiple>, dù cửa hàng nói "dropdown":
+             * trên điện thoại nó thu về một danh sách cuộn tí hon mà nhiều
+             * người không biết là bấm giữ được nhiều mục, và trên máy tính thì
+             * phải giữ Ctrl — một cử chỉ không ai đoán ra. Lý lẽ này có từ bản
+             * trước và vẫn đúng.
+             *
+             * <details> cho đúng thứ cửa hàng muốn — một ô đóng lại, bấm mới xổ
+             * — mà bên trong vẫn là ô tick thật: nhìn là biết chọn được nhiều,
+             * và KHÔNG CẦN một dòng JavaScript nào để mở/đóng. Cùng thẻ mà cột
+             * lọc trang sản phẩm và nhóm "Tài khoản của tôi" ở cột trái đang
+             * dùng.
+             *
+             * DÒNG TÓM TẮT do MÁY CHỦ in ra, đúng ở lúc tải trang. Tắt JS thì
+             * tick xong nó chưa đổi cho tới khi Lưu — chấp nhận được vì lúc ấy
+             * bảng đang mở và người dùng nhìn thẳng vào các ô tick. Có JS thì
+             * account.js cập nhật ngay; xem khối "BẢNG XỔ CHỌN NHIỀU" ở đó.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            $tomTat = $wearOn === [] ? '— Chưa chọn —' : implode(' · ', $wearOn);
+            ?>
+            <details class="acct-multi" data-multi>
+                <summary class="acct-multi__btn">
+                    <span class="acct-multi__val" data-multi-val><?= e($tomTat) ?></span>
+                    <?php /* Chữ V vẽ tay, cùng hình với mũi tên của các ô chọn
+                             khác trên site — xem .catpick__caret. Ký tự ▼ thì
+                             mỗi hệ điều hành vẽ một kiểu và không chỉnh được
+                             độ dày nét. */ ?>
+                    <svg class="acct-multi__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </summary>
+
+                <div class="acct-multi__panel">
+                    <div class="acct-choice" role="group" aria-labelledby="nhan-tinh-chat">
+                        <?php foreach ($wearFeatures as $ft): ?>
+                            <label class="acct-choice__opt">
+                                <input type="checkbox" name="wear_lens_features[]" value="<?= e($ft) ?>"
+                                       <?= in_array($ft, $wearOn, true) ? 'checked' : '' ?>>
+                                <span><?= e($ft) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </details>
         </div>
 
         <div class="acct-form__row">

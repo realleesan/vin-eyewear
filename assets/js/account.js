@@ -124,7 +124,69 @@ function ganChiTietDon() {
     });
 }
 
-/* Chạy lần đầu cho HTML máy chủ vừa in ra. */
+/* ── BẢNG XỔ CHỌN NHIỀU: cập nhật dòng tóm tắt, đóng khi bấm ra ngoài ───────
+ *
+ * Thẻ <details> tự lo phần mở/đóng, nên KHÔNG có file này thì bảng vẫn xổ được
+ * và vẫn tick được — mất đúng hai thứ:
+ *   · dòng tóm tắt trên nút chỉ đúng tới lúc tải trang, tick xong phải Lưu mới
+ *     thấy nó đổi (lúc ấy bảng đang mở, người dùng nhìn thẳng vào các ô tick
+ *     nên không mất thông tin gì)
+ *   · bảng ở lại mở tới khi bấm lại chính nó
+ *
+ * Uỷ quyền trên document chứ không gắn vào từng bảng: vùng nội dung tài khoản
+ * bị thay mới sau mỗi lần đổi mục, mà uỷ quyền thì không có gì để gắn lại.
+ * Nhờ vậy khối này KHÔNG cần nằm trong danh sách gọi lại của gan().
+ */
+function ganBangXo() {
+    document.addEventListener('change', function (ev) {
+        var hop = ev.target && ev.target.closest ? ev.target.closest('[data-multi]') : null;
+
+        if (!hop) return;
+
+        var o   = hop.querySelector('[data-multi-val]');
+        var tic = hop.querySelectorAll('input[type="checkbox"]:checked');
+
+        if (!o) return;
+
+        var ten = [];
+
+        Array.prototype.forEach.call(tic, function (i) {
+            var nhan = i.nextElementSibling;
+
+            ten.push(nhan ? nhan.textContent.trim() : i.value);
+        });
+
+        /* Cùng một câu với thứ máy chủ in ra — hai chỗ lệch nhau thì tải lại
+           trang là dòng chữ đổi mà chẳng ai chạm vào gì. */
+        o.textContent = ten.length ? ten.join(' · ') : '— Chưa chọn —';
+    });
+
+    /* Bấm ra ngoài thì đóng. <details> không tự làm việc này, mà một bảng xổ
+       cứ nằm mở sau khi người dùng đã đi chỗ khác thì che mất phần form dưới
+       nó — bảng này NỔI LÊN TRÊN chứ không đẩy form xuống. */
+    document.addEventListener('click', function (ev) {
+        var trong = ev.target && ev.target.closest ? ev.target.closest('[data-multi]') : null;
+
+        Array.prototype.forEach.call(document.querySelectorAll('[data-multi][open]'), function (d) {
+            if (d !== trong) d.open = false;
+        });
+    });
+
+    /* Esc đóng bảng đang mở — thói quen của mọi thứ nổi lên trên. */
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Escape') return;
+
+        Array.prototype.forEach.call(document.querySelectorAll('[data-multi][open]'), function (d) {
+            d.open = false;
+        });
+    });
+}
+
+/* Chạy lần đầu cho HTML máy chủ vừa in ra.
+
+   ganBangXo() KHÔNG nằm trong gan() ở cuối file: nó uỷ quyền trên document nên
+   gọi lại là gắn chồng listener, mỗi lần đổi mục thêm một bộ. */
+ganBangXo();
 ganDoiAnh();
 ganChiTietDon();
 

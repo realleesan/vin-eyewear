@@ -696,6 +696,88 @@ select.acct-field__input {
    Ô radio thật nằm dưới, nhãn phủ lên trên: giữ được bàn phím và trình đọc
    màn hình mà vẫn ra đúng hình dạng viên thuốc của bản thiết kế. */
 
+/* --- BẢNG XỔ CHỌN NHIỀU (.acct-multi) ---
+   Markup: app/views/auth/account/do-mat.php
+
+   Một <details> trông như ô chọn, mà ruột là các ô tick thật. Mở/đóng do chính
+   thẻ <details> lo — không một dòng JavaScript nào, nên tắt JS vẫn xổ được.
+   account.js chỉ thêm hai thứ: cập nhật dòng tóm tắt ngay khi tick, và đóng
+   bảng khi bấm ra ngoài. */
+
+.acct-multi {
+    position: relative;
+}
+
+/* Đóng vai ô chọn: cùng viền, cùng nền, cùng cỡ chữ với .acct-field__input để
+   nó đứng chung hàng với "Loại tròng" và "Loại gọng" mà không lệch một pixel. */
+.acct-multi__btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: 13.5px;
+    color: var(--ink);
+    cursor: pointer;
+    /* Bỏ tam giác mặc định của <summary>: bản thiết kế dùng chữ V riêng, và
+       hai mũi tên cạnh nhau thì thành một ô chọn hỏng. */
+    list-style: none;
+}
+
+.acct-multi__btn::-webkit-details-marker { display: none; }
+
+.acct-multi__btn:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+/* Danh sách đã chọn có thể dài hơn ô — cắt bằng ba chấm chứ không cho nó đẩy
+   mũi tên ra khỏi khung. Người cần đọc đủ thì mở bảng ra. */
+.acct-multi__val {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.acct-multi__caret {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    color: var(--muted);
+    transition: transform 0.2s ease;
+}
+
+.acct-multi[open] .acct-multi__caret { transform: rotate(180deg); }
+
+/* NỔI LÊN TRÊN, không đẩy form xuống. Đây là điểm khác giữa "bảng xổ" và "khối
+   thu gọn": mở ra mà cả form nhảy xuống 80px thì người dùng mất chỗ đang nhìn,
+   và nút Lưu ở cuối form cũng chạy đi. */
+.acct-multi__panel {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + 6px);
+    right: 0;
+    left: 0;
+    box-sizing: border-box;
+    /* Danh sách dài thì tự cuộn trong bảng, không kéo bảng dài quá màn hình.
+       overscroll-behavior chặn cú cuộn lan ra trang nền — cùng luật với hộp
+       mua hàng và bảng lọc trên điện thoại. */
+    max-height: 260px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    box-shadow: var(--elev-3);
+}
+
 .acct-choice {
     display: flex;
     gap: 8px;
