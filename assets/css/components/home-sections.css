@@ -1048,20 +1048,42 @@ body.is-modal-open { overflow: hidden; }
     text-align: center;
 }
 
+/*
+ * BA LỰA CHỌN DÀN HÀNG NGANG (theo yêu cầu), không xếp chồng dọc như trước.
+ *
+ * width:100% là bắt buộc: .qlens ở trên là flex cột có align-items:center, nên
+ * mặc định khối này chỉ rộng bằng nội dung — ba nút sẽ dồn cục vào giữa thay vì
+ * trải đều hết bề ngang hộp thoại.
+ *
+ * align-items:stretch cho ba nút cao bằng nhau. Ba nhãn dài ngắn khác nhau
+ * (nhãn A xuống hai dòng, nhãn C một dòng), để mặc định thì ba nút so le nhau
+ * ở mép dưới, nhìn như lỗi bố cục.
+ *
+ * flex-wrap + min-width lo phần màn hình hẹp, KHÔNG cần media query riêng: còn
+ * đủ chỗ cho 220px một nút thì ba nút ở yên trên một hàng, hẹp hơn nữa thì tự
+ * rớt xuống thành từng hàng một — về đúng dáng dọc cũ.
+ */
 .qlens__options {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-wrap: wrap;
+    align-items: stretch;
+    justify-content: center;
     gap: 12px;
+    width: 100%;
 }
 
 .qlens__option {
-    padding: 13px 28px;
+    /* flex-basis:0 chứ không phải auto: chia đều bề ngang theo SỐ NÚT, không
+       theo độ dài nhãn — nếu không thì nút A rộng gấp đôi nút C. */
+    flex: 1 1 0;
+    min-width: 220px;
+    padding: 15px 20px;
     border: 1.5px solid var(--h-line);
     border-radius: var(--h-radius-sm);
     background: var(--surface-raised);
     font: inherit;
     font-size: 14px;
+    line-height: 1.5;
     color: var(--ink);
     text-align: center;
     cursor: pointer;
