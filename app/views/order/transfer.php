@@ -195,7 +195,7 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
             <?php foreach ($items as $item): ?>
                 <div class="coqr__line">
                     <span>
-                        <?= e($item['product_name']) ?> × <?= (int) $item['quantity'] ?>
+                        <span class="notranslate" translate="no"><?= e($item['product_name']) ?></span> × <?= (int) $item['quantity'] ?>
                         <?php if (!empty($item['lens_name'])): ?>
                             <?php /* Tròng cắt kèm đã nằm trong line_total — nói tên nó
                                      ra để khách không thấy con số cao hơn giá gọng mà

@@ -217,7 +217,7 @@ $stars = static function (float $score): string {
                 <span class="pdinfo__eyebrow">
                     <?= e($product['brand'] ?? 'Vin Eyewear') ?> · SKU <?= e($product['sku']) ?>
                 </span>
-                <h1 class="pdinfo__title"><?= e($product['name']) ?></h1>
+                <h1 class="pdinfo__title notranslate" translate="no"><?= e($product['name']) ?></h1>
 
                 <div class="pdinfo__rate">
                     <span class="pdstars" aria-hidden="true"><?= $stars($rating) ?></span>

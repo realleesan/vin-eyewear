@@ -129,7 +129,7 @@ if (!$inStock) {
     <div class="pcard__body">
         <p class="pcard__brand"><?= e($product['brand'] ?? 'Vin Eyewear') ?></p>
 
-        <h3 class="pcard__name">
+        <h3 class="pcard__name notranslate" translate="no">
             <a href="<?= e($url) ?>"><?= e($product['name']) ?></a>
         </h3>
 

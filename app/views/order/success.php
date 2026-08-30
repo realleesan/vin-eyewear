@@ -230,7 +230,7 @@ $mineHref = $order !== null
                                 <?php endif; ?>
                             </span>
                             <div>
-                                <span class="ocomp__itemname"><?= e($item['product_name']) ?></span>
+                                <span class="ocomp__itemname notranslate" translate="no"><?= e($item['product_name']) ?></span>
                                 <?php if (!empty($item['lens_name']) || !empty($item['prescription'])): ?>
                                     <?php /* Tròng cắt kèm + số đo. Trang này là thứ
                                              khách CHỤP MÀN HÌNH lại, và là thứ nhân

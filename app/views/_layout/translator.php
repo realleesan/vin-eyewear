@@ -40,6 +40,29 @@
  * điều kiện /quan-tri ngay dưới đây tự chặn.
  *
  * ─────────────────────────────────────────────────────────────────────────────
+ * TÊN SẢN PHẨM KHÔNG ĐƯỢC DỊCH
+ *
+ * Mọi chỗ in tên một món hàng đều mang class="notranslate" và translate="no".
+ * Grep 'notranslate' trong app/views/ ra đủ 14 chỗ; thêm chỗ in tên sản phẩm
+ * mới thì thêm cả hai vào.
+ *
+ * VÌ SAO: "Vin T01 Titan" dịch sang tiếng Anh không ra thứ gì tốt hơn, mà lại
+ * ra thứ khách đọc xong không tìm thấy trên hoá đơn, trong tin nhắn của cửa
+ * hàng, hay khi gọi điện hỏi. Tên riêng thì để nguyên là đúng, ở mọi ngôn ngữ.
+ *
+ * HAI CÁCH ĐÁNH DẤU VÌ HAI BÊN ĐỌC KHÁC NHAU, không phải viết thừa:
+ *   translate="no"        thuộc tính chuẩn HTML — trình dịch cài sẵn trong
+ *                         Chrome/Safari đọc cái này
+ *   class="notranslate"   Elfsight loại trừ THEO TÊN LỚP, khai trong trình
+ *                         soạn widget (Settings -> exclusions). Phải vào đó
+ *                         gõ "notranslate" MỘT LẦN, không thì phía Elfsight
+ *                         vẫn dịch dù markup đã đánh dấu.
+ *
+ * TÊN TRÒNG KÍNH THÌ NGƯỢC LẠI — CỐ Ý ĐỂ DỊCH. "Tròng trắng 1.50", "Chống
+ * sáng xanh 1.61" là câu mô tả chứ không phải tên riêng; khách nước ngoài cần
+ * đọc hiểu để chọn đúng. Kiểu tròng ("Đơn tròng", "Đa tròng") cũng vậy.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
  * BA ĐIỀU PHẢI BIẾT TRƯỚC KHI SỬA FILE NÀY
  *
  * 1. MẢNH HTML NẠP NGẦM KHÔNG TỰ CÓ BẢN DỊCH.

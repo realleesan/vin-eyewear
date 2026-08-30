@@ -200,7 +200,7 @@ $stepForm = static function (string $buoc): void {
             </span>
 
             <div class="bmodal__itembody">
-                <span class="bmodal__name"><?= e($product['name']) ?></span>
+                <span class="bmodal__name notranslate" translate="no"><?= e($product['name']) ?></span>
                 <span class="bmodal__meta">
                     <?= e($product['brand'] ?? 'Vin Eyewear') ?>
                     <?php if (!empty($product['sku'])): ?>

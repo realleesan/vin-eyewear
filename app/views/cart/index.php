@@ -153,7 +153,7 @@ $count = count($lines);
 
                         <div class="citem__body">
                             <span class="citem__brand"><?= e($p['brand'] ?? 'Vin Eyewear') ?></span>
-                            <h2 class="citem__name"><a href="<?= e($slug) ?>"><?= e($p['name']) ?></a></h2>
+                            <h2 class="citem__name notranslate" translate="no"><a href="<?= e($slug) ?>"><?= e($p['name']) ?></a></h2>
                             <?php if ($variant !== ''): ?>
                                 <span class="citem__variant"><?= e($variant) ?></span>
                             <?php endif; ?>

@@ -394,7 +394,7 @@ $storeId  = $old['storeId'] ?? '';
                                      width="60" height="60" loading="lazy" decoding="async">
                             </span>
                             <span class="coitem__body">
-                                <span class="coitem__name"><?= e($p['name']) ?></span>
+                                <span class="coitem__name notranslate" translate="no"><?= e($p['name']) ?></span>
                                 <span class="coitem__meta">
                                     <?= $variant !== '' ? e($variant) . ' · ' : '' ?>x<?= (int) $line['quantity'] ?>
                                 </span>

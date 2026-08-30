@@ -125,7 +125,7 @@ partial('_layout/page-head', [
                                    <?= $i === 0 ? 'checked' : '' ?>>
                             <label class="arframe" for="fr-<?= e($f['id']) ?>">
                                 <img src="<?= e($f['image']) ?>" alt="" width="120" height="60" loading="lazy">
-                                <span class="arframe__name"><?= e($f['name']) ?></span>
+                                <span class="arframe__name notranslate" translate="no"><?= e($f['name']) ?></span>
                                 <span class="arframe__meta"><?= e($f['brand']) ?> · <?= e($f['shape']) ?></span>
                                 <span class="arframe__price"><?= money($f['price']) ?></span>
                             </label>
@@ -224,7 +224,7 @@ partial('_layout/page-head', [
 
                 <!-- --- Mua --- -->
                 <section class="arblock arblock--buy">
-                    <p class="arbuy__name" id="arBuyName"><?= e($first['name']) ?></p>
+                    <p class="arbuy__name notranslate" translate="no" id="arBuyName"><?= e($first['name']) ?></p>
                     <p class="arbuy__price">
                         <span id="arBuyPrice"><?= money($first['price']) ?></span>
                         <?php if ($first['compareAt'] !== null): ?>

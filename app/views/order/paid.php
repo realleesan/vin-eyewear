@@ -123,7 +123,7 @@ $paidAt = $order['paid_at'] ?: ($order['updated_at'] ?? null);
                     <?php /* ĐỦ CẢ DANH SÁCH — xem ghi chú 3 ở đầu file. */ ?>
                     <?php foreach ($items as $item): ?>
                         <span class="opaid__item">
-                            <?= e($item['product_name']) ?> × <?= (int) $item['quantity'] ?>
+                            <span class="notranslate" translate="no"><?= e($item['product_name']) ?></span> × <?= (int) $item['quantity'] ?>
                             <?php if (!empty($item['lens_name'])): ?>
                                 <em class="opaid__lens">+ <?= e($item['lens_name']) ?></em>
                             <?php endif; ?>

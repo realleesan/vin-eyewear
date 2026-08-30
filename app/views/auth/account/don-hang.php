@@ -250,7 +250,7 @@ $paymentShort  = [
                         <?php if (!empty($lead['brand'])): ?>
                             <span class="acct-order__brand"><?= e($lead['brand']) ?></span>
                         <?php endif; ?>
-                        <span class="acct-order__name">
+                        <span class="acct-order__name notranslate" translate="no">
                             <?= e($lead['product_name'] ?? 'Sản phẩm đã gỡ khỏi cửa hàng') ?>
                         </span>
                         <span class="acct-order__variant">
@@ -371,9 +371,9 @@ $paymentShort  = [
                                 <div class="acct-order__sum">
                                     <span>
                                         <?php if (!empty($ln['slug'])): ?>
-                                            <a href="/san-pham/<?= e($ln['slug']) ?>"><?= e($ln['product_name']) ?></a>
+                                            <a class="notranslate" translate="no" href="/san-pham/<?= e($ln['slug']) ?>"><?= e($ln['product_name']) ?></a>
                                         <?php else: ?>
-                                            <?= e($ln['product_name']) ?>
+                                            <span class="notranslate" translate="no"><?= e($ln['product_name']) ?></span>
                                         <?php endif; ?>
                                         × <?= (int) $ln['quantity'] ?>
                                         <?php if (!empty($ln['lens_name']) || !empty($ln['prescription'])): ?>

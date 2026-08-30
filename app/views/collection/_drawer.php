@@ -95,7 +95,7 @@ $nhom = static function (string $tieuDe, array $rows): void {
     <header class="cdraw__head">
         <div class="cdraw__head-text">
             <p class="cdraw__sku"><?= e($product['sku']) ?></p>
-            <h2 class="cdraw__name"><?= e($product['name']) ?></h2>
+            <h2 class="cdraw__name notranslate" translate="no"><?= e($product['name']) ?></h2>
             <p class="cdraw__type">
                 <?= $loai !== '' ? e($loai) : e((string) ($product['frame_shape'] ?? '')) ?>
                 <?php if ($phoiMau !== []): ?>
