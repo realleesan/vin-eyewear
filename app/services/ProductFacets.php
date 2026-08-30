@@ -38,7 +38,13 @@ class ProductFacets
      * (mega menu, khối "chọn theo khuôn mặt" ở trang chủ). 'shape', 'material'
      * cũng vậy. Ba tên còn lại là mới.
      */
-    public const GROUPS = ['shape', 'material', 'eco', 'brand', 'collab', 'collection', 'lens', 'gender', 'price'];
+    public const GROUPS = [
+        'shape', 'material', 'eco', 'brand', 'collab', 'collection', 'lens', 'gender', 'price',
+        // Bốn nhóm chỉ dùng ở trang /san-pham/trong-kinh (2026-08-30). Vẫn khai
+        // chung một danh sách vì tầng đếm động không phân biệt trang nào — nhóm
+        // nào không có hàng thì tự vắng mặt. Xem cột lọc trong product/index.php.
+        'lens_type', 'lens_index', 'lens_coat', 'lens_color',
+    ];
 
     /**
      * Nhóm chọn-nhiều — tất cả trừ 'price'.
@@ -48,7 +54,10 @@ class ProductFacets
      * chọn xổ xuống chọn-một, nên controller chỉ nhận đúng một giá trị — và
      * trên URL nó là ?price=2 chứ không phải price[]=2.
      */
-    public const MULTI = ['shape', 'material', 'eco', 'brand', 'collab', 'collection', 'lens', 'gender'];
+    public const MULTI = [
+        'shape', 'material', 'eco', 'brand', 'collab', 'collection', 'lens', 'gender',
+        'lens_type', 'lens_index', 'lens_coat', 'lens_color',
+    ];
 
     /**
      * Gắn bảng khoá lọc vào từng sản phẩm, một lần cho cả request.

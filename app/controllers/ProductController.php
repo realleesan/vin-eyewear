@@ -140,6 +140,28 @@ class ProductController extends BaseController
     public const SUB_PAGES = ['gong-kinh', 'trong-kinh'];
 
     /**
+     * Nhóm lọc mà giá trị trên URL KHÔNG được đưa qua slugify().
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO CÓ NGOẠI LỆ NÀY — MỘT LỖI ĐÃ BẮT ĐƯỢC LÚC CHẠY THỬ
+     *
+     * multi() hạ mọi giá trị về slug để cứu các liên kết cũ: mega menu trỏ tới
+     * ?shape=Round trong khi khoá chuẩn là 'round'. Đúng cho tám nhóm kia, vì
+     * khoá của chúng luôn là chữ và gạch nối.
+     *
+     * Khoá của nhóm CHIẾT SUẤT là con số có dấu chấm — '1.56'. slugify() đổi
+     * dấu chấm thành gạch nối, ra '1-56', và giá trị ấy không khớp khoá nào:
+     * bấm "1.56" trong bộ lọc cho ra lưới RỖNG, im lặng, không lỗi nào.
+     *
+     * Ba nhóm còn lại không có dấu chấm hôm nay, nhưng khoá của chúng do CỬA
+     * HÀNG tự đặt ở /quan-tri/thuoc-tinh-trong (nơi dấu chấm là ký tự hợp lệ),
+     * nên chúng cũng phải nằm ngoài. Bốn nhóm này không cần slugify để cứu
+     * liên kết cũ: chúng mới có từ 2026-08-30, chưa có liên kết cũ nào.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    private const KHOA_NGUYEN_VAN = ['lens_type', 'lens_index', 'lens_coat', 'lens_color'];
+
+    /**
      * /san-pham — cả kho, hoặc lọc theo ?category= với danh mục chưa có trang con.
      */
     public function index(): void
@@ -242,7 +264,7 @@ class ProductController extends BaseController
         // Các nhóm chọn-nhiều. Luôn là MẢNG kể từ đây, kể cả khi URL chỉ có
         // một giá trị — view và model không phải phân biệt hai dạng.
         foreach (ProductFacets::MULTI as $group) {
-            $filters[$group] = $this->multi($group);
+            $filters[$group] = $this->multi($group, !in_array($group, self::KHOA_NGUYEN_VAN, true));
         }
 
         /*
@@ -375,6 +397,11 @@ class ProductController extends BaseController
             'crumbs'      => $crumbs,
             'lead'        => $lead,
             'catalogBase' => $base,
+            /* Slug danh mục đang xem, để cột lọc biết vẽ bộ nhóm nào. Truyền
+               slug chứ không để view tự đoán từ $catalogBase: đoán bằng cách
+               so chuỗi đường dẫn là một luật ẩn nằm ở tầng vẽ, và nó sai ngay
+               lần đầu ai đó đổi tiền tố URL. */
+            'catalogSlug' => $category,
         ]);
     }
 
@@ -402,7 +429,7 @@ class ProductController extends BaseController
      * 'round' và 'cat-eye'. Không hạ về slug thì cả hai khối điều hướng đó
      * dẫn tới một lưới rỗng.
      */
-    private function multi(string $key): array
+    private function multi(string $key, bool $hanhSlug = true): array
     {
         $raw   = $_GET[$key] ?? null;
         $items = is_array($raw) ? $raw : [$raw];
@@ -413,7 +440,18 @@ class ProductController extends BaseController
                 continue;
             }
 
-            $value = slugify((string) $item);
+            /*
+             * $hanhSlug = false thì giữ NGUYÊN VĂN, nhưng vẫn phải siết ký tự:
+             * giá trị này đi vào phép so khoá và vào các liên kết bộ lọc in
+             * ngược ra trang. Bộ ký tự đúng bằng bộ mà màn quản trị cho phép
+             * đặt khoá (chữ thường, số, dấu chấm, gạch nối) — xem
+             * LensOptionAdminController::save().
+             */
+            $value = $hanhSlug
+                ? slugify((string) $item)
+                : (preg_match('/^[a-z0-9][a-z0-9.-]{0,63}$/', strtolower(trim((string) $item)))
+                    ? strtolower(trim((string) $item))
+                    : '');
 
             if ($value !== '') {
                 $out[] = $value;

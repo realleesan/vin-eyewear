@@ -162,7 +162,9 @@ class ProductTaxonomy
      *   shape: array<string,string>, material: array<string,string>,
      *   gender: array<string,string>, lens: array<string,string>,
      *   brand: array<string,string>, collab: array<string,string>,
-     *   collection: array<string,string>, eco: array<string,string>
+     *   collection: array<string,string>, eco: array<string,string>,
+     *   lens_type: array<string,string>, lens_index: array<string,string>,
+     *   lens_coat: array<string,string>, lens_color: array<string,string>
      * }  mỗi nhóm là bảng khoá => nhãn hiển thị
      */
     public static function of(array $p): array
@@ -179,7 +181,100 @@ class ProductTaxonomy
             'brand'      => $brands,
             'collab'     => $collab,
             'collection' => self::collection($p, $collab !== []),
+
+            /*
+             * BỐN NHÓM CỦA TRANG TRÒNG KÍNH (2026-08-30).
+             *
+             * Khác hẳn tám nhóm trên ở CHỖ LẤY DỮ LIỆU: tám nhóm kia đọc một ô
+             * chữ do người nhập gõ rồi quy về khoá chuẩn bằng bảng đồng nghĩa
+             * (hoặc, với 'lens', bằng biểu thức chính quy quét cả mô tả). Bốn
+             * nhóm này đọc CSV KHOÁ CÓ SẴN từ các cột lens_*, vì form nhập hàng
+             * nay bắt chọn từ danh sách chứ không cho gõ tự do — xem
+             * LensOptionModel và /quan-tri/thuoc-tinh-trong.
+             *
+             * Nghĩa là chúng KHÔNG đoán gì cả. Sản phẩm chưa được tick thì vắng
+             * mặt khỏi nhóm, và cách chữa là mở sản phẩm ra tick — không phải
+             * sửa một biểu thức chính quy rồi mong nó đoán trúng hơn.
+             */
+            'lens_type'  => self::tuOption((string) ($p['lens_types'] ?? ''), 'loai-trong'),
+            'lens_index' => self::tuOption((string) ($p['lens_indexes'] ?? ''), 'chiet-suat'),
+            'lens_coat'  => self::lopPhu($p),
+            'lens_color' => self::tuOption((string) ($p['lens_color'] ?? ''), 'mau-trong'),
         ];
+    }
+
+    /**
+     * CSV khoá => bảng khoá + nhãn, đối chiếu với một nhóm của `lens_options`.
+     *
+     * Khoá lạ (mục bị xoá tay khỏi bảng, hoặc chữ gõ tay từ trước khi có danh
+     * sách) bị BỎ QUA chứ không in nguyên văn: một bộ lọc mọc thêm dòng "Xám
+     * khói" viết hoa bên cạnh dòng "Xám khói" viết thường là đúng thứ mà danh
+     * sách chuẩn sinh ra để tránh.
+     *
+     * Nhãn lấy từ labels() nên GỒM CẢ mục đang ẩn — hàng cũ vẫn còn khoá đó, in
+     * ra "xam-khoi" thay vì "Xám khói" thì trông như dữ liệu hỏng. Việc rút mục
+     * ẩn khỏi bộ lọc là của tầng trên.
+     *
+     * @return array<string,string>
+     */
+    private static function tuOption(string $csv, string $nhom): array
+    {
+        $csv = trim($csv);
+
+        if ($csv === '') {
+            return [];
+        }
+
+        $nhan = LensOptionModel::labels($nhom);
+        $out  = [];
+
+        foreach (preg_split('/\s*,\s*/', $csv, -1, PREG_SPLIT_NO_EMPTY) ?: [] as $khoa) {
+            if (isset($nhan[$khoa])) {
+                $out[$khoa] = $nhan[$khoa];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Tính năng / lớp phủ — HAI NGUỒN GỘP LẠI, và đó là chỗ tinh tế nhất.
+     *
+     *   1. cột `lens_coatings`  — CSV khoá, do form nhập hàng ghi. Nguồn THẬT.
+     *   2. ba cột 0/1 sẵn có    — is_uv400, is_polarized, is_photochromic.
+     *
+     * Vì sao cần cả hai: `lens_coatings` mới có ô nhập từ 2026-08-30 nên nó
+     * RỖNG ở toàn bộ hàng đã nhập trước đó, trong khi ba ô tick kia dùng đã lâu
+     * và đang mang thông tin thật. Chỉ đọc nguồn 1 thì ngày bật bộ lọc lên, mọi
+     * hàng cũ biến mất khỏi nhóm này cùng một lúc.
+     *
+     * Ba cột 0/1 ánh xạ về ĐÚNG khoá của nhóm 'lop-phu', nên sản phẩm vừa tick
+     * is_uv400 vừa tick 'uv400' trong CSV chỉ ra MỘT mục — mảng có khoá, không
+     * cộng dồn.
+     *
+     * @return array<string,string>
+     */
+    private static function lopPhu(array $p): array
+    {
+        $out  = self::tuOption((string) ($p['lens_coatings'] ?? ''), 'lop-phu');
+        $nhan = LensOptionModel::labels('lop-phu');
+
+        $co = [
+            'uv400'    => !empty($p['is_uv400']),
+            'phan-cuc' => !empty($p['is_polarized']),
+            'doi-mau'  => !empty($p['is_photochromic']),
+        ];
+
+        foreach ($co as $khoa => $bat) {
+            /* Chỉ thêm khi khoá ấy CÓ trong danh sách quản trị: cửa hàng đổi
+               khoá 'phan-cuc' đi thì ô tick is_polarized không được phép tự
+               dựng lại một mục không còn tên. */
+            if ($bat && isset($nhan[$khoa])) {
+                $out[$khoa] = $nhan[$khoa];
+            }
+        }
+
+        return $out;
     }
 
     // ========================================================================

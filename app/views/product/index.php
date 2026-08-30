@@ -48,6 +48,20 @@ $state['price'] = $priceIndex;
  */
 $catalogBase = $catalogBase ?? '/san-pham';
 
+/*
+ * TRANG TRÒNG KÍNH DÙNG MỘT BỘ NHÓM LỌC KHÁC HẲN.
+ *
+ * Kiểu dáng · Chất liệu · Giới tính là thuộc tính của GỌNG; đặt chúng trên
+ * trang tròng kính là mời khách lọc theo những tiêu chí mà không tròng nào có,
+ * và mỗi nhóm ấy sẽ hiện ra rỗng hoặc gần rỗng. Đổi lại, tròng có bốn thuộc
+ * tính riêng mà gọng không có: loại tròng, chiết suất, lớp phủ, màu tròng.
+ *
+ * Hai bộ nhóm, một cột lọc — xem khối rẽ nhánh trong .cfilter__panel bên dưới.
+ * Thương hiệu và Khoảng giá thì CHUNG cho cả hai: chúng không thuộc về gọng
+ * hay tròng, chúng thuộc về việc mua hàng.
+ */
+$laTrongKinh = ($catalogSlug ?? '') === 'trong-kinh';
+
 /**
  * Dựng URL giữ nguyên bộ lọc hiện tại, chỉ đổi/bỏ vài tham số.
  *
@@ -535,87 +549,154 @@ partial('_layout/page-head', [
                     <?php endif; ?>
                 </div>
 
+                <?php if ($laTrongKinh): ?>
+                    <?php
+                    /*
+                     * ─────────────────────────────────────────────────────
+                     * CỘT LỌC CỦA TRANG TRÒNG KÍNH
+                     *
+                     * Sáu nhóm, theo yêu cầu cửa hàng: loại tròng · chiết
+                     * suất · tính năng/lớp phủ · màu tròng · thương hiệu ·
+                     * khoảng giá.
+                     *
+                     * BỐN NHÓM ĐẦU đọc từ `lens_options` — cửa hàng tự thêm
+                     * mục ở /quan-tri/thuoc-tinh-trong, không phải sửa mã.
+                     * Nhóm nào chưa hàng nào được tick thì tự vắng mặt, nên
+                     * cột lọc lớn dần theo lúc cửa hàng nhập đủ thuộc tính
+                     * chứ không bày sẵn bốn ô rỗng.
+                     *
+                     * LỚP PHỦ LÀ DANH SÁCH TICK, không phải ô chọn — cửa
+                     * hàng yêu cầu chọn nhiều. Đó cũng là nhóm duy nhất mà
+                     * một sản phẩm mang NHIỀU giá trị cùng lúc (một tròng
+                     * vừa chống ánh sáng xanh vừa đổi màu), nên ô chọn-một
+                     * không diễn tả nổi. Ba nhóm kia mỗi tròng chỉ có một
+                     * giá trị thật sự, nên ô chọn là đúng.
+                     *
+                     * "Màu tròng" gộp luôn phần ĐẶC TÍNH QUANG HỌC theo cách
+                     * cửa hàng đặt tên: Gradient và Tráng gương nằm trong
+                     * danh sách màu, còn Phân cực và Đổi màu nằm ở nhóm lớp
+                     * phủ — chúng là lớp phủ thật, và để cả hai chỗ thì cùng
+                     * một tròng đếm hai lần.
+                     * ─────────────────────────────────────────────────────
+                     */
+                    ?>
+                    <?php if ($groups['lens_type'] !== []): ?>
+                        <div class="pfacet">
+                            <?php $pick('lens_type', 'Loại tròng', $groups['lens_type'], 'Tất cả loại tròng'); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if ($groups['lens_index'] !== []): ?>
+                        <div class="pfacet">
+                            <?php $pick('lens_index', 'Chiết suất', $groups['lens_index'], 'Tất cả chiết suất'); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php $checkGroup('lens_coat', 'Tính năng / lớp phủ', $groups['lens_coat']); ?>
+
+                    <?php if ($groups['lens_color'] !== []): ?>
+                        <div class="pfacet">
+                            <?php $pick('lens_color', 'Màu tròng', $groups['lens_color'], 'Tất cả màu tròng'); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
+
+                    <?php /* KHOẢNG GIÁ dùng CHUNG hàm với trang gọng, kể cả cờ
+                             $mang = false — nó vẫn là ?price=<chỉ số>, một
+                             thang giá cho cả kho. Tròng và gọng cùng một dải
+                             giá thì hai thang riêng chỉ là hai chỗ phải nhớ
+                             sửa cùng lúc. */ ?>
+                    <?php if ($hasPrices && $groups['price'] !== []): ?>
+                        <div class="pfacet">
+                            <?php $pick('price', 'Khoảng giá', $groups['price'], 'Tất cả mức giá', false); ?>
+                        </div>
+                    <?php endif; ?>
+
+                <?php else: ?>
                 <?php if ($groups['shape'] !== []): ?>
-                    <div class="pfacet">
-                        <?php /* "Kiểu dáng" chứ không "Dáng gọng" (2026-08-30):
-                                 kho bán cả tròng kính và phụ kiện, mà "gọng" thì
-                                 chỉ đúng với một phần hàng. Bảng thông số ở trang
-                                 chi tiết vẫn ghi "Dáng gọng" — đó là dòng nói về
-                                 riêng cái gọng nên vẫn đúng nghĩa. */ ?>
-                        <?php $pick('shape', 'Kiểu dáng', $groups['shape'], 'Tất cả kiểu dáng'); ?>
-                    </div>
-                <?php endif; ?>
+                        <div class="pfacet">
+                            <?php /* "Kiểu dáng" chứ không "Dáng gọng" (2026-08-30):
+                                     kho bán cả tròng kính và phụ kiện, mà "gọng" thì
+                                     chỉ đúng với một phần hàng. Bảng thông số ở trang
+                                     chi tiết vẫn ghi "Dáng gọng" — đó là dòng nói về
+                                     riêng cái gọng nên vẫn đúng nghĩa. */ ?>
+                            <?php $pick('shape', 'Kiểu dáng', $groups['shape'], 'Tất cả kiểu dáng'); ?>
+                        </div>
+                    <?php endif; ?>
 
-                <?php if ($groups['material'] !== [] || $groups['eco'] !== []): ?>
-                    <div class="pfacet">
-                        <?php $pick('material', 'Chất liệu', $groups['material'], 'Tất cả chất liệu'); ?>
+                    <?php if ($groups['material'] !== [] || $groups['eco'] !== []): ?>
+                        <div class="pfacet">
+                            <?php $pick('material', 'Chất liệu', $groups['material'], 'Tất cả chất liệu'); ?>
 
-                        <?php /* CHIP "TÁI CHẾ / BIO" ngay dưới ô chọn, trong cùng
-                                 khối. Nó là nhóm lọc riêng (?eco[]=recycled) nên
-                                 không nhét vào ô chọn được, nhưng người dùng đọc
-                                 nó như một chất liệu nữa — tách thành khối có tiêu
-                                 đề riêng là thừa một dòng chữ hoa cho đúng một
-                                 mục. */ ?>
-                        <?php if ($groups['eco'] !== []): ?>
-                            <div class="pfacet__chips">
-                                <?php foreach ($groups['eco'] as $opt): ?>
-                                    <?php $chip('eco', $opt); ?>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
+                            <?php /* CHIP "TÁI CHẾ / BIO" ngay dưới ô chọn, trong cùng
+                                     khối. Nó là nhóm lọc riêng (?eco[]=recycled) nên
+                                     không nhét vào ô chọn được, nhưng người dùng đọc
+                                     nó như một chất liệu nữa — tách thành khối có tiêu
+                                     đề riêng là thừa một dòng chữ hoa cho đúng một
+                                     mục. */ ?>
+                            <?php if ($groups['eco'] !== []): ?>
+                                <div class="pfacet__chips">
+                                    <?php foreach ($groups['eco'] as $opt): ?>
+                                        <?php $chip('eco', $opt); ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
 
-                <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
-                <?php $checkGroup('collab', 'Bộ sưu tập hợp tác', $collabOptions); ?>
+                    <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
+                    <?php $checkGroup('collab', 'Bộ sưu tập hợp tác', $collabOptions); ?>
 
-                <?php /* Đứng ở đây chứ không dưới cùng để "Giới tính" luôn là
-                         nhóm chốt cột lọc. */ ?>
-                <?php $checkGroup('collection', 'Bộ sưu tập', $collectionOptions); ?>
+                    <?php /* Đứng ở đây chứ không dưới cùng để "Giới tính" luôn là
+                             nhóm chốt cột lọc. */ ?>
+                    <?php $checkGroup('collection', 'Bộ sưu tập', $collectionOptions); ?>
 
-                <?php
-                /*
-                 * KHOẢNG GIÁ — ô xổ xuống, giống ba ô còn lại.
-                 *
-                 * Chỉ hiện khi kho đã có giá: một ô chọn không lọc ra được gì
-                 * thì thà đừng vẽ, người dùng bấm rồi thấy lưới không đổi sẽ
-                 * tưởng trang hỏng.
-                 *
-                 * $mang = false. Đây là nhóm DUY NHẤT không lên URL dạng mảng:
-                 * nó vốn đã chọn-một từ trước và địa chỉ là ?price=2. Đổi sang
-                 * price[]=2 chỉ để cho giống ba ô kia là làm hỏng mọi liên kết
-                 * đã có người lưu — xem chú thích ở $state đầu file.
-                 *
-                 * Ô chọn còn HƠN dãy ô tròn cũ một chỗ: dãy cũ không có mục
-                 * "tất cả" nên phải bấm lại chính ô đang chọn để bỏ lọc, một
-                 * cử chỉ không ai đoán ra nếu chưa từng thử. Nay có hẳn một
-                 * dòng "Tất cả mức giá".
-                 */
-                ?>
-                <?php if ($hasPrices && $groups['price'] !== []): ?>
-                    <div class="pfacet">
-                        <?php $pick('price', 'Khoảng giá', $groups['price'], 'Tất cả mức giá', false); ?>
-                    </div>
-                <?php endif; ?>
+                    <?php
+                    /*
+                     * KHOẢNG GIÁ — ô xổ xuống, giống ba ô còn lại.
+                     *
+                     * Chỉ hiện khi kho đã có giá: một ô chọn không lọc ra được gì
+                     * thì thà đừng vẽ, người dùng bấm rồi thấy lưới không đổi sẽ
+                     * tưởng trang hỏng.
+                     *
+                     * $mang = false. Đây là nhóm DUY NHẤT không lên URL dạng mảng:
+                     * nó vốn đã chọn-một từ trước và địa chỉ là ?price=2. Đổi sang
+                     * price[]=2 chỉ để cho giống ba ô kia là làm hỏng mọi liên kết
+                     * đã có người lưu — xem chú thích ở $state đầu file.
+                     *
+                     * Ô chọn còn HƠN dãy ô tròn cũ một chỗ: dãy cũ không có mục
+                     * "tất cả" nên phải bấm lại chính ô đang chọn để bỏ lọc, một
+                     * cử chỉ không ai đoán ra nếu chưa từng thử. Nay có hẳn một
+                     * dòng "Tất cả mức giá".
+                     */
+                    ?>
+                    <?php if ($hasPrices && $groups['price'] !== []): ?>
+                        <div class="pfacet">
+                            <?php $pick('price', 'Khoảng giá', $groups['price'], 'Tất cả mức giá', false); ?>
+                        </div>
+                    <?php endif; ?>
 
-                <?php
-                /*
-                 * GIỚI TÍNH — ô xổ xuống, và nay là nhóm CUỐI của cột lọc.
-                 *
-                 * Tên cũ là "Đối tượng" (2026-08-30 đổi theo yêu cầu). Danh
-                 * sách vẫn nguyên bốn mục Nam · Nữ · Unisex · Trẻ em, tức là
-                 * "Trẻ em" nay nằm dưới một tiêu đề nói về giới tính trong khi
-                 * nó là nhóm tuổi. Biết và chấp nhận: đây là cách gần như mọi
-                 * trang bán kính ở Việt Nam đặt tên, và khách tìm bằng chữ
-                 * "giới tính" chứ không phải "đối tượng". Muốn chuẩn hơn thì
-                 * phải TÁCH thành hai nhóm lọc — thêm cột và thêm khoá trong
-                 * ProductTaxonomy::GENDERS, không phải đổi mỗi cái nhãn ở đây.
-                 */
-                ?>
-                <?php if ($groups['gender'] !== []): ?>
-                    <div class="pfacet">
-                        <?php $pick('gender', 'Giới tính', $groups['gender'], 'Tất cả giới tính'); ?>
-                    </div>
+                    <?php
+                    /*
+                     * GIỚI TÍNH — ô xổ xuống, và nay là nhóm CUỐI của cột lọc.
+                     *
+                     * Tên cũ là "Đối tượng" (2026-08-30 đổi theo yêu cầu). Danh
+                     * sách vẫn nguyên bốn mục Nam · Nữ · Unisex · Trẻ em, tức là
+                     * "Trẻ em" nay nằm dưới một tiêu đề nói về giới tính trong khi
+                     * nó là nhóm tuổi. Biết và chấp nhận: đây là cách gần như mọi
+                     * trang bán kính ở Việt Nam đặt tên, và khách tìm bằng chữ
+                     * "giới tính" chứ không phải "đối tượng". Muốn chuẩn hơn thì
+                     * phải TÁCH thành hai nhóm lọc — thêm cột và thêm khoá trong
+                     * ProductTaxonomy::GENDERS, không phải đổi mỗi cái nhãn ở đây.
+                     */
+                    ?>
+                    <?php if ($groups['gender'] !== []): ?>
+                        <div class="pfacet">
+                            <?php $pick('gender', 'Giới tính', $groups['gender'], 'Tất cả giới tính'); ?>
+                        </div>
+                    <?php endif; ?>
+
                 <?php endif; ?>
 
                 <?php /* Chốt của bottom-sheet trên màn hình hẹp: sheet che gần
