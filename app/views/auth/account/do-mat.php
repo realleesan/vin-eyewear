@@ -130,34 +130,10 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
                            để "cho đồng bộ" là thêm hai ô chọn dài mà không giải
                            quyết vấn đề nào.
 
-                           step 0.25 — độ kính đi theo bước 0.25 diop.
-                           Thị lực là phân số ("10/10") nên phải là ô chữ.
-
-                           PATTERN CHO Ô THỊ LỰC — trình duyệt tự chặn trước khi
-                           gửi, KHÔNG cần một dòng JavaScript nào. Cùng biểu thức
-                           với UserModel::vaHopLe(); hai bên phải khớp nhau, đổi
-                           một chỗ thì đổi cả chỗ kia.
-
-                           '10|[0-9]' ở cả hai vế chứ không '\d{1,2}': dạng sau
-                           cho lọt 11..99, mà thị lực không bao giờ quá 10/10.
-
-                           `title` là câu trình duyệt hiện ra khi chặn — không
-                           đặt thì Chrome chỉ nói "Vui lòng khớp định dạng được
-                           yêu cầu", một câu không nói được định dạng ấy là gì.
-
-                           Máy chủ VẪN kiểm lại: pattern sửa được bằng công cụ
-                           nhà phát triển nên nó là gợi ý, không phải hàng rào —
-                           xem AuthController::updatePrescription. */
+                           step 0.25 — độ kính đi theo bước 0.25 diop. */
                         $cells = [
                             ['cyl',  'number', ['step' => '0.25', 'min' => '-20', 'max' => '20', 'placeholder' => '0.00']],
                             ['axis', 'number', ['step' => '1', 'min' => '0', 'max' => '180', 'placeholder' => '0']],
-                            ['va',   'text',   [
-                                'maxlength'   => '5',
-                                'placeholder' => '10/10',
-                                'pattern'     => '(10|[0-9])/(10|[0-9])',
-                                'inputmode'   => 'numeric',
-                                'title'       => 'Viết dạng phân số như 9/10. Hai số đều không quá 10.',
-                            ]],
                         ];
                         ?>
                         <?php foreach ($cells as [$kind, $type, $attrs]): ?>
@@ -174,6 +150,79 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
                                        value="<?= e($prescription[$field] ?? '') ?>">
                             </td>
                         <?php endforeach; ?>
+
+                        <?php
+                        /*
+                         * ─────────────────────────────────────────────────────
+                         * THỊ LỰC — HAI Ô SỐ VỚI DẤU "/" CỐ ĐỊNH Ở GIỮA
+                         *
+                         * Trước đây là MỘT ô chữ và người dùng tự gõ cả "9/10".
+                         * Ba thứ hỏng theo cách đó: xoá mất dấu "/" lúc nào
+                         * không hay, không có mũi tên tăng giảm, và trần 10 chỉ
+                         * là một biểu thức `pattern` — thứ chỉ nói "sai" sau khi
+                         * đã gõ xong.
+                         *
+                         * Nay dấu "/" là CHỮ TRONG MARKUP, không nằm trong ô
+                         * nhập nào nên không có cách nào xoá nó. Hai số là
+                         * <input type="number" min="0" max="10">: mũi tên lên
+                         * xuống chạy sẵn của trình duyệt, bàn phím ↑↓ cũng chạy,
+                         * và trần 10 là hàng rào của chính ô chứ không phải một
+                         * lời nhắc.
+                         *
+                         * CSDL KHÔNG ĐỔI: cột vẫn là chuỗi "9/10". Controller
+                         * ghép hai ô lại — xem AuthController::updatePrescription.
+                         *
+                         * GIÁ TRỊ CŨ KHÔNG ĐÚNG DẠNG (hàng nhập từ trước khi có
+                         * phép kiểm: "20/20", "ĐNT 3m"…) thì hai ô để TRỐNG và
+                         * in nguyên văn giá trị ấy ngay dưới. Nhét bừa vào ô số
+                         * thì hoặc trình duyệt tự bỏ (mất dữ liệu không dấu
+                         * vết), hoặc hiện một số vượt trần mà người dùng không
+                         * biết nó từ đâu ra. Cùng lối đã dùng cho ô "Màu tròng"
+                         * ở form sản phẩm.
+                         * ─────────────────────────────────────────────────────
+                         */
+                        $vaCu   = trim((string) ($prescription[$eye . '_va'] ?? ''));
+                        $vaSo   = '';
+                        $vaThang = '';
+                        $vaLa   = $vaCu !== '';
+
+                        if ($vaCu !== '' && preg_match('#^(10|[0-9])/(10|[0-9])$#', $vaCu, $m)) {
+                            $vaSo    = $m[1];
+                            $vaThang = $m[2];
+                            $vaLa    = false;
+                        }
+                        ?>
+                        <td>
+                            <span class="acct-rxva">
+                                <label class="sr-only" for="<?= e($eye) ?>_va_so">
+                                    <?= e($label) ?> thị lực — số đo
+                                </label>
+                                <input class="acct-rx__input acct-rxva__num" type="number"
+                                       id="<?= e($eye) ?>_va_so" name="<?= e($eye) ?>_va_so"
+                                       min="0" max="10" step="1" inputmode="numeric"
+                                       placeholder="9" value="<?= e($vaSo) ?>">
+
+                                <?php /* aria-hidden: trình đọc màn hình đã nghe hai
+                                         nhãn "số đo" và "thang đo", đọc thêm một dấu
+                                         gạch chéo ở giữa chỉ thành tiếng ồn. */ ?>
+                                <span class="acct-rxva__slash" aria-hidden="true">/</span>
+
+                                <label class="sr-only" for="<?= e($eye) ?>_va_thang">
+                                    <?= e($label) ?> thị lực — thang đo
+                                </label>
+                                <input class="acct-rx__input acct-rxva__num" type="number"
+                                       id="<?= e($eye) ?>_va_thang" name="<?= e($eye) ?>_va_thang"
+                                       min="0" max="10" step="1" inputmode="numeric"
+                                       placeholder="10" value="<?= e($vaThang) ?>">
+                            </span>
+
+                            <?php if ($vaLa): ?>
+                                <p class="acct-rxva__cu">
+                                    Giá trị cũ: <strong><?= e($vaCu) ?></strong> — không đúng dạng
+                                    phân số. Nhập lại hai số rồi Lưu để thay nó.
+                                </p>
+                            <?php endif; ?>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

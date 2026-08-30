@@ -1885,6 +1885,56 @@ select.acct-field__input {
     background: var(--surface-focus);
 }
 
+/* --- Ô THỊ LỰC: hai ô số với dấu "/" cố định ở giữa ---
+   Markup: app/views/auth/account/do-mat.php
+
+   Dấu "/" là CHỮ TRONG MARKUP, không phải một ô nhập — nên không có cách nào
+   xoá nó, và đó chính là điều cửa hàng yêu cầu. Hai ô còn lại là
+   <input type="number" max="10">, tức mũi tên tăng giảm là của trình duyệt,
+   không phải thứ phải tự viết bằng JavaScript. */
+
+.acct-rxva {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Hai ô chia đều phần còn lại sau dấu gạch. min-width:0 là bắt buộc: mục flex
+   mặc định không co xuống dưới bề rộng nội dung của nó, nên thiếu dòng này thì
+   cột "Thị lực" phình ra và đẩy cả bảng tràn ngang trên điện thoại. */
+.acct-rxva__num {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 6px;
+}
+
+/* Mũi tên tăng giảm CỐ Ý ĐỂ HIỆN, khác các ô số khác của bảng này (chúng đặt
+   appearance:none). Cửa hàng yêu cầu bấm mũi tên đổi số được, mà ẩn đi thì chỉ
+   còn bàn phím ↑↓ — không ai đoán ra. Chrome/Safari chỉ hiện mũi tên khi ô
+   được trỏ tới hoặc có tiêu điểm, nên lúc bình thường bảng vẫn gọn. */
+.acct-rxva__num::-webkit-inner-spin-button,
+.acct-rxva__num::-webkit-outer-spin-button {
+    opacity: 1;
+}
+
+.acct-rxva__slash {
+    flex: none;
+    font-size: 14px;
+    color: var(--muted);
+    /* Không cho con trỏ chọn chữ: nó trông như một ký tự gõ được, mà bôi đen
+       rồi gõ đè lên thì không có gì xảy ra — một khoảnh khắc bối rối vô ích. */
+    user-select: none;
+}
+
+/* Câu nhắc giá trị cũ không đúng dạng. Chữ nhỏ và nằm dưới ô, không phải một
+   dải cảnh báo: đây là việc cần làm khi tiện tay, không phải sự cố. */
+.acct-rxva__cu {
+    margin: 6px 0 0;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--muted);
+}
+
 /* --- Thẻ tròn thông tin thêm (PD, khuyến nghị, cách giao hàng…) --- */
 
 .acct-chips {

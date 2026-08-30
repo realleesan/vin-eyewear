@@ -1503,21 +1503,39 @@ class AuthController extends BaseController
         $this->requirePost('/tai-khoan?muc=do-mat');
 
         /*
-         * THỊ LỰC — CHẶN VÀ BÁO LỖI, không lặng lẽ bỏ.
+         * THỊ LỰC ĐẾN ĐÂY LÀ HAI Ô SỐ, ghép lại thành chuỗi "9/10".
          *
-         * Model cũng kiểm (UserModel::vaHopLe) nhưng ở đó giá trị lạ thành
-         * NULL. Với một ô người dùng vừa gõ thì im lặng là sai: họ bấm Lưu,
-         * thấy "Đã lưu thông số đo mắt.", rồi ô thị lực trống trơn mà không có
-         * lời giải thích nào. Chặn ở đây để câu thông báo nói đúng thứ cần sửa.
+         * Form không còn ô chữ nào cho người dùng gõ cả phân số — dấu "/" là
+         * chữ trong markup, hai số là <input type="number" max="10">. Xem khối
+         * chú thích dài trong app/views/auth/account/do-mat.php.
          *
-         * Kiểm CẢ HAI MẮT trước khi báo, và nêu đích danh mắt sai: người nhập
-         * gõ nhầm một bên thì phải biết bên nào, chứ không phải soi lại cả
-         * bảng.
+         * CỘT TRONG CSDL KHÔNG ĐỔI: vẫn là chuỗi "9/10". Ghép ở đây chứ không
+         * đổi lược đồ, vì bảng thông số, trang quản trị và bản in đều đang đọc
+         * một chuỗi — tách thành hai cột là sửa cả bốn chỗ để đổi lấy đúng một
+         * phép nối chuỗi.
+         *
+         * VẪN KIỂM LẠI bằng vaHopLe() sau khi ghép, và đó không phải phép thừa:
+         * thuộc tính min/max của ô số là hàng rào của TRÌNH DUYỆT, mà request
+         * gửi tay thì không đi qua trình duyệt nào cả. Đây là dữ liệu y tế.
+         *
+         * MỘT Ô TRỐNG MỘT Ô CÓ là gõ dở, không phải "chưa khai" — ghép ra "9/"
+         * hoặc "/10", và vaHopLe() chặn đúng nó rồi báo cho người dùng. Trống
+         * cả hai mới là chưa khai.
+         *
+         * Kiểm CẢ HAI MẮT và nêu đích danh mắt sai: người nhập gõ nhầm một bên
+         * thì phải biết bên nào, chứ không phải soi lại cả bảng.
          */
-        foreach (['od_va' => 'mắt phải (OD)', 'os_va' => 'mắt trái (OS)'] as $o => $ten) {
-            if (!UserModel::vaHopLe((string) ($_POST[$o] ?? ''))) {
+        $va = [];
+
+        foreach (['od' => 'mắt phải (OD)', 'os' => 'mắt trái (OS)'] as $mat => $ten) {
+            $so    = trim((string) ($_POST[$mat . '_va_so'] ?? ''));
+            $thang = trim((string) ($_POST[$mat . '_va_thang'] ?? ''));
+
+            $va[$mat] = ($so === '' && $thang === '') ? '' : $so . '/' . $thang;
+
+            if (!UserModel::vaHopLe($va[$mat])) {
                 flash('account_error', sprintf(
-                    'Thị lực %s phải viết dạng phân số như 9/10, và hai số đều không quá 10.',
+                    'Thị lực %s phải là hai số từ 0 đến 10, điền đủ cả hai ô.',
                     $ten
                 ));
                 redirect('/tai-khoan?muc=do-mat');
@@ -1532,11 +1550,11 @@ class AuthController extends BaseController
             'od_sph'         => LensModel::joinSph($_POST['od_dau'] ?? null, $_POST['od_sph'] ?? null),
             'od_cyl'         => $_POST['od_cyl'] ?? '',
             'od_axis'        => $_POST['od_axis'] ?? '',
-            'od_va'          => $_POST['od_va'] ?? '',
+            'od_va'          => $va['od'],
             'os_sph'         => LensModel::joinSph($_POST['os_dau'] ?? null, $_POST['os_sph'] ?? null),
             'os_cyl'         => $_POST['os_cyl'] ?? '',
             'os_axis'        => $_POST['os_axis'] ?? '',
-            'os_va'          => $_POST['os_va'] ?? '',
+            'os_va'          => $va['os'],
             'pd'             => $_POST['pd'] ?? '',
             'measured_at'    => $_POST['measured_at'] ?? '',
             'store_id'       => $_POST['store_id'] ?? '',
