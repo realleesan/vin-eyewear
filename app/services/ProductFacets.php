@@ -44,8 +44,9 @@ class ProductFacets
      * Nhóm chọn-nhiều — tất cả trừ 'price'.
      *
      * Khoảng giá đi chung bộ máy với các nhóm khác (xem attach) để nó cũng
-     * được đếm động và cũng theo luật VÀ/HOẶC, nhưng giao diện của nó là ô
-     * tròn chọn-một, nên controller chỉ nhận đúng một giá trị.
+     * được đếm động và cũng theo luật VÀ/HOẶC, nhưng giao diện của nó là một ô
+     * chọn xổ xuống chọn-một, nên controller chỉ nhận đúng một giá trị — và
+     * trên URL nó là ?price=2 chứ không phải price[]=2.
      */
     public const MULTI = ['shape', 'material', 'eco', 'brand', 'collab', 'collection', 'lens', 'gender'];
 
@@ -227,7 +228,26 @@ class ProductFacets
             }
         }
 
-        $on      = $selected[$group] ?? [];
+        /*
+         * SO SÁNH BẰNG CHUỖI Ở CẢ HAI VẾ, và đây là chỗ đã có lỗi thật.
+         *
+         * $key đến từ khoá của mảng $labels, mà PHP TỰ ÉP khoá dạng số về int:
+         * nhóm "Khoảng giá" đánh số các mốc 0..5 nên $key ở đó là int, trong
+         * khi $selected['price'] là ['2'] — chuỗi, vì controller dựng nó từ
+         * tham số URL. in_array(2, ['2'], true) trả false.
+         *
+         * Hậu quả trước 2026-08-30: khoảng giá LỌC đúng nhưng không bao giờ
+         * được đánh dấu là đang chọn. Phép lọc chạy qua matches() dùng
+         * array_intersect() — hàm đó so bằng chuỗi nên không dính lỗi, và
+         * chính vì thế lỗi sống lâu: lưới ra đúng kết quả, chỉ có giao diện
+         * nói sai. Dãy nút tròn cũ thì chỉ mất một chấm đỏ; đổi sang ô chọn xổ
+         * xuống là nó lộ hẳn — ô luôn hiện "Tất cả mức giá" trong lúc đang lọc.
+         *
+         * Ép chuỗi cả hai vế chứ không bỏ cờ `true`: so lỏng thì '0' == 'abc'
+         * ra true ở vài phiên bản PHP cũ, và khoá của các nhóm khác đều là
+         * chuỗi do người nhập gõ.
+         */
+        $on      = array_map('strval', $selected[$group] ?? []);
         $options = [];
 
         foreach ($labels as $key => $label) {
@@ -236,7 +256,7 @@ class ProductFacets
                 'label' => $label,
                 'count' => $counts[$key],
                 'total' => $totals[$key],
-                'on'    => in_array($key, $on, true),
+                'on'    => in_array((string) $key, $on, true),
             ];
         }
 
