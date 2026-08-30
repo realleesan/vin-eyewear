@@ -35,10 +35,30 @@
     justify-content: center;
     padding: 24px 16px;
     box-sizing: border-box;
-    /* Cuộn được khi màn hình thấp hơn nội dung — bước nhập số đo có bốn thẻ
-       tật khúc xạ cộng hai ô chọn, ở điện thoại nằm ngang là vượt chiều cao. */
-    overflow-y: auto;
+    /*
+     * LỚP PHỦ KHÔNG CUỘN — vùng cuộn nằm trong .bmodal__panel (2026-08-30).
+     *
+     * Trước đây chính lớp này mang overflow-y:auto, nên lăn chuột ở BẤT KỲ đâu
+     * — kể cả trên vùng nền mờ quanh hộp — đều cuộn, và cuộn hết thì lan sang
+     * trang nền phía sau. Nay đi đúng lối của hộp thoại khu quản trị (.amodal
+     * trong admin.css): lớp phủ đứng yên, hộp tự cuộn ruột nó.
+     */
+    overflow: hidden;
 }
+
+/*
+ * KHOÁ CUỘN TRANG NỀN KHI HỘP ĐANG MỞ — chép nguyên cách của khu quản trị,
+ * xem `body.admin:has(.amodal)` trong admin.css.
+ *
+ * :has() làm được việc này mà KHÔNG cần JavaScript, nên nó còn đúng cả khi tắt
+ * JS — mà luồng mua hàng phải chạy được khi tắt JS (CLAUDE.md). Trình duyệt
+ * không hiểu :has() thì bỏ qua luật và trang nền cuộn được: xấu hơn một chút,
+ * không hỏng gì.
+ *
+ * KHÔNG khoá bằng position:fixed trên body — cách đó làm mất vị trí cuộn, và
+ * đóng hộp là trang nhảy về đầu. overflow:hidden giữ nguyên chỗ đang đọc.
+ */
+body:has(.bmodal) { overflow: hidden; }
 
 /* Nền mờ là một <a> phủ kín, không phải <div> nghe click — bấm ra ngoài để
    đóng mà không cần script. Nằm dưới panel nhờ thứ tự trong DOM. */
@@ -61,6 +81,30 @@
     border-radius: var(--radius);
     background: var(--surface-raised);
     box-shadow: var(--elev-3);
+
+    /*
+     * VÙNG CUỘN NẰM Ở ĐÂY, không ở lớp phủ. Bước nhập số đo có bốn thẻ tật
+     * khúc xạ cộng hai ô chọn — ở điện thoại nằm ngang là vượt chiều cao màn
+     * hình, nên hộp BẮT BUỘC phải cuộn được, nếu không thì không với tới nút
+     * ở đáy.
+     *
+     * max-height trừ đi đúng 48px padding trên dưới của .bmodal, để hộp không
+     * bao giờ cao hơn khoảng trống nó được phép chiếm.
+     *
+     * 100dvh chứ không 100vh: trên trình duyệt di động, vh tính theo khung
+     * nhìn KHI ĐÃ THU thanh địa chỉ, nên hộp cao hơn chỗ thật sự nhìn thấy và
+     * nút ở đáy bị thanh địa chỉ che — cùng lý do đã ghi ở .cfilter__panel
+     * trong category.css.
+     */
+    max-height: calc(100dvh - 48px);
+    overflow-y: auto;
+
+    /*
+     * Cuộn hết ruột hộp thì DỪNG, không lan ra lớp phủ hay trang nền. Trang
+     * nền đã bị khoá bằng :has() ở trên, nhưng dòng này vẫn cần: nó là thứ
+     * duy nhất còn đúng ở trình duyệt không hiểu :has().
+     */
+    overscroll-behavior: contain;
 }
 
 /* --- Đầu hộp thoại: [← lùi] tiêu đề … [✕] --- */
@@ -795,6 +839,12 @@
     .bmodal { padding: 12px; }
 
     .bmodal__panel { padding: 18px 16px 22px; }
+
+    /* Đệm lớp phủ ở đây là 12px chứ không 24px, nên hộp được cao thêm 24px.
+       Không khai lại thì hộp tự chừa một dải trống bằng đệm của màn rộng —
+       ở màn 360px cao 640px thì 24px ấy là gần bốn phần trăm chiều cao, đủ để
+       nút ở đáy phải cuộn mới tới. Xem max-height gốc ở .bmodal__panel. */
+    .bmodal__panel { max-height: calc(100dvh - 24px); }
 
     .bmodal__title { font-size: 16px; }
 
