@@ -35,23 +35,36 @@ class ProductController extends BaseController
      * Các khoảng giá trong ô "Khoảng giá" của bộ lọc.
      *
      * Gõ cứng chứ không tính từ dữ liệu: đây là những mốc người mua kính tự
-     * nghĩ trong đầu ("dưới 1 triệu"), không phải phân vị của kho hàng. Kho
+     * nghĩ trong đầu ("dưới 500 nghìn"), không phải phân vị của kho hàng. Kho
      * đổi giá thì mấy mốc này vẫn đúng.
      *
-     * `max` là chặn TRÊN KHÔNG bao gồm — nếu không thì hàng đúng 1.000.000₫
-     * rơi vào cả hai khoảng đầu.
+     * `max` là chặn TRÊN KHÔNG bao gồm — nếu không thì hàng đúng 500.000₫ rơi
+     * vào cả hai khoảng đầu.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * CHIA DÀY Ở DƯỚI, THƯA DẦN LÊN TRÊN (2026-08-30, theo yêu cầu)
      *
-     * Bản cũ có bốn mốc: dưới 2tr · 2–5 · 5–10 · trên 10. Khoảng "dưới 2 triệu"
-     * ôm gần hết hàng phổ thông, tức là tiêu chí đó gần như không lọc được gì —
-     * ai bấm vào cũng nhận lại đúng cái lưới họ vừa nhìn.
+     * Bước nhảy to dần: 0,5 ×6 · 1 ×2 · 2 · 3 (triệu). Người mua ở phân khúc
+     * dưới cân nhắc từng vài trăm nghìn, còn người mua gọng 7 triệu thì 500
+     * nghìn không đổi quyết định — chia đều tăm tắp là dồn hết độ phân giải
+     * vào chỗ không ai cần.
      *
-     * Nay sáu mốc, và bước nhảy to dần: 1 · 1 · 1 · 2 · 2 · 3 (triệu). Người
-     * mua ở phân khúc dưới cân nhắc từng vài trăm nghìn, còn người mua gọng 7
-     * triệu thì 500 nghìn không đổi quyết định — chia đều tăm tắp là dồn hết
-     * độ phân giải vào chỗ không ai cần.
+     * Đã qua ba đời trong một ngày, ghi lại để khỏi ai đi vòng lại:
+     *   4 mốc  dưới 2tr · 2–5 · 5–10 · trên 10.  "Dưới 2 triệu" ôm gần hết
+     *          hàng phổ thông nên bấm vào cũng nhận lại đúng cái lưới vừa nhìn.
+     *   6 mốc  1 · 1 · 1 · 2 · 2 · 3 triệu.  Đỡ hơn, vẫn thô ở đáy thang.
+     *   10 mốc bản hiện tại.
+     *
+     * CHIA DÀY KHÔNG SINH RA MỘT DANH SÁCH TOÀN DÒNG MỜ, và đây là chỗ dễ đoán
+     * sai nên phải nói rõ. ProductFacets::group() chỉ dựng mốc nào CÓ ÍT NHẤT
+     * MỘT sản phẩm trong phạm vi đang xét; mốc rỗng hoàn toàn thì không in ra.
+     * Chỉ mốc nào có hàng nhưng chọi với tiêu chí khác đang bật mới hiện mờ.
+     * Đã đo: /san-pham?q=6tr chỉ còn đúng hai dòng — "Tất cả mức giá" và
+     * "5 – 7 triệu".
+     *
+     * Nghĩa là thang mịn tự co theo kho: kho mỏng thì danh sách ngắn, kho dày
+     * thì mịn tới đâu dùng tới đó. Thêm mốc ở đây không phải trả giá bằng một
+     * danh sách dài ngoằng cho cửa hàng chưa có hàng.
      *
      * ─────────────────────────────────────────────────────────────────────────
      * TRẦN LÀ 10 TRIỆU, VÀ ĐÓ LÀ MỘT ĐÁNH ĐỔI CÓ THẬT
@@ -69,8 +82,9 @@ class ProductController extends BaseController
      * ─────────────────────────────────────────────────────────────────────────
      * ĐỔI MẢNG NÀY LÀ ĐỔI Ý NGHĨA CỦA MỌI LIÊN KẾT ĐÃ LƯU
      *
-     * URL mang CHỈ SỐ (?price=2), không mang khoảng. Bản cũ ?price=2 là
-     * "5 – 10 triệu"; trong mảng mới nó là "2 – 3 triệu". Không có cách nào cứu
+     * URL mang CHỈ SỐ (?price=2), không mang khoảng. Bản bốn mốc ?price=2 là
+     * "5 – 10 triệu", bản sáu mốc là "2 – 3 triệu", nay là "1 – 1,5 triệu" —
+     * cùng một địa chỉ, ba nghĩa khác nhau. Không có cách nào cứu
      * những liên kết đó, và cũng không đáng dựng bảng quy đổi cho một tham số
      * lọc — nhưng phải biết là nó xảy ra, và đừng chèn thêm dòng vào GIỮA mảng
      * nếu không muốn lặp lại chuyện này.
@@ -81,12 +95,16 @@ class ProductController extends BaseController
      * hỏng. Nhập giá cho một sản phẩm là nhóm hiện lại, không phải sửa code.
      */
     private const PRICE_RANGES = [
-        ['label' => 'Dưới 1 triệu', 'min' => 0,       'max' => 1000000],
-        ['label' => '1 – 2 triệu',  'min' => 1000000, 'max' => 2000000],
-        ['label' => '2 – 3 triệu',  'min' => 2000000, 'max' => 3000000],
-        ['label' => '3 – 5 triệu',  'min' => 3000000, 'max' => 5000000],
-        ['label' => '5 – 7 triệu',  'min' => 5000000, 'max' => 7000000],
-        ['label' => '7 – 10 triệu', 'min' => 7000000, 'max' => 10000000],
+        ['label' => 'Dưới 500 nghìn',     'min' => 0,       'max' => 500000],
+        ['label' => '500 nghìn – 1 triệu','min' => 500000,  'max' => 1000000],
+        ['label' => '1 – 1,5 triệu',      'min' => 1000000, 'max' => 1500000],
+        ['label' => '1,5 – 2 triệu',      'min' => 1500000, 'max' => 2000000],
+        ['label' => '2 – 2,5 triệu',      'min' => 2000000, 'max' => 2500000],
+        ['label' => '2,5 – 3 triệu',      'min' => 2500000, 'max' => 3000000],
+        ['label' => '3 – 4 triệu',        'min' => 3000000, 'max' => 4000000],
+        ['label' => '4 – 5 triệu',        'min' => 4000000, 'max' => 5000000],
+        ['label' => '5 – 7 triệu',        'min' => 5000000, 'max' => 7000000],
+        ['label' => '7 – 10 triệu',       'min' => 7000000, 'max' => 10000000],
     ];
 
     public function index(): void
