@@ -49,14 +49,21 @@
 $collectionsNav = $collectionsNav ?? CollectionModel::visible();
 
 /*
- * CẮT CÒN 5 THẺ.
+ * CẮT CÒN 3 THẺ — CỐ ĐỊNH, cộng thẻ "Tất cả" là 4 ô trên một hàng.
  *
- * Cộng thẻ "Tất cả" là 6 ô trên một hàng — bằng số ô tối đa mà lưới của mega
- * chịu được ở 1101px trước khi mỗi ô hẹp hơn cái ảnh trong nó. Thứ tự đã do
- * cửa hàng sắp (sort_order) nên năm cái đầu đúng là năm cái muốn khoe nhất;
- * phần còn lại nằm sau thẻ "Tất cả".
+ * ĐÃ TỪ 5 XUỐNG 3 (theo yêu cầu). Con số cũ chọn theo mức TỐI ĐA lưới chịu
+ * được (6 ô ở 1101px trước khi ô hẹp hơn cái ảnh trong nó), tức là nhồi cho
+ * đầy chỗ. Nay chọn theo thứ khách đọc được trong một cái liếc: ba bộ để cân
+ * nhắc, một lối ra xem đủ.
+ *
+ * Số này ăn khớp với bề rộng trần của bảng trong components/collection-menu.css
+ * — trần đó tính cho ĐÚNG bốn ô. Đổi số ở đây thì sửa cả công thức bên đó,
+ * không thì bảng lại phình ra hoặc bị bóp.
+ *
+ * Thứ tự đã do cửa hàng sắp (sort_order) nên ba cái đầu đúng là ba cái muốn
+ * khoe nhất; phần còn lại nằm sau thẻ "Tất cả".
  */
-$bstToiDa = 5;
+$bstToiDa = 3;
 $bstDanhSach = array_slice($collectionsNav, 0, $bstToiDa);
 
 /**

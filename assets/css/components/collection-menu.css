@@ -16,13 +16,57 @@
 
    Ở đây chỉ còn đúng thứ mega KHÔNG có: thẻ "Tất cả bộ sưu tập" ở ô cuối.
 
-   .mega--bst là móc để sau này nhắm riêng bảng này — hiện chưa luật nào cần
-   tới nó, nhưng markup vẫn mang, vì thêm một lớp vào HTML rẻ hơn nhiều so với
-   việc đi tìm cách phân biệt hai bảng khi đã cần.
+   .mega--bst là móc để nhắm riêng bảng này. Nay có đúng một luật dùng tới nó:
+   bề rộng trần của bảng — xem mục ngay dưới đây.
 
    master.php nạp file này ngay SAU mega-menu.css: .mega-feature--all chỉ đè
    vài thuộc tính của .mega-feature, nên phải đến sau mới thắng.
    ============================================================ */
+
+/* ============================================================
+   BẢNG RỘNG VỪA ĐỦ RUỘT, KHÔNG TRẢI HẾT BỀ NGANG TRANG
+
+   Mega "Sản phẩm" trải từ --page-edge bên này sang --page-edge bên kia vì nó
+   có ba cột chữ mười hai liên kết — đủ ruột để lấp chỗ ấy. Bảng này chỉ có
+   BỐN ô (ba bộ sưu tập cố định + thẻ "Tất cả", xem collection-menu.php), nên
+   cùng khung đó nghĩa là bốn thẻ bị kéo dãn: trên màn hình 1920px mỗi thẻ
+   phình tới ~355px, ảnh 140px nằm trên một khối rộng gần gấp ba chiều cao nó,
+   nhìn như bảng bị hỏng bố cục chứ không như một hàng thẻ.
+
+   Nên bảng này có TRẦN bề rộng, tính cho đúng bốn ô ở khổ thẻ mà bản thiết kế
+   nhắm tới (~220px — cùng con số mà collection-menu.php lấy để cắt câu giới
+   thiệu còn 30 ký tự):
+
+       3 thẻ x 1fr + thẻ "Tất cả" x 1.15fr  =  4.15 x 220px
+       + 3 khe 40px (gap của .mega__grid)
+       + 2 lần đệm ngang 44px của .mega__panel
+
+   left:auto để bảng neo theo mép PHẢI. Đặt cả left lẫn right rồi thêm
+   max-width là ràng buộc thừa: trình duyệt bỏ `right` và bảng dạt sang trái,
+   rời hẳn khỏi cái nút vừa mở nó. Neo phải giữ đúng nếp cũ — mép bảng thẳng
+   hàng với cụm icon bên phải header — và viên thuốc "Bộ sưu tập" (mục thứ năm
+   trong sáu) luôn nằm trong lòng bảng, nên mũi nhọn vẫn cắm đúng chỗ.
+
+   width PHẢI KHAI RÕ, đây là chỗ dễ hụt nhất. Bỏ left mà không khai width thì
+   bảng rơi vào lối "co theo ruột": bề rộng thành khoảng trống còn lại tính từ
+   mép phải, tức mép trái bảng chạy tuốt ra sát cạnh màn hình và mất luôn lề
+   --page-edge bên đó. Khai width bằng đúng công thức khung cũ (trọn bề ngang
+   trừ hai lề) thì trần bên dưới chỉ còn việc cắt bớt phần thừa.
+
+   Dưới ~1310px trần không còn tác dụng: khung trang đã hẹp hơn nó, nên bảng
+   chạy y như trước — cùng bề rộng, cùng hai lề, các cột 1fr tự co. Vì thế
+   @media (max-width:1279px) của mega-menu.css (đệm 28px, gap 26px) không cần
+   bản riêng ở đây: trần đâu có bám vào mấy số đó nữa.
+   ============================================================ */
+
+.mega--bst .mega__panel {
+    left: auto;
+    right: var(--page-edge);
+    /* 100% = bề ngang .site-header, tức bề ngang màn hình — chính là khung mà
+       cặp left/right của .mega__panel vẽ ra. Giữ nguyên nó làm mức trên. */
+    width: calc(100% - var(--page-edge) * 2);
+    max-width: calc(4.15 * 220px + 3 * 40px + 2 * 44px);   /* ~1121px */
+}
 
 /* ============================================================
    THẺ "TẤT CẢ BỘ SƯU TẬP" — Ô CUỐI CỦA LƯỚI
