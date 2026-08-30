@@ -318,6 +318,14 @@ return [
     // Bảng giá tròng — một LƯỚI kiểu tròng × gói chiết suất, không phải CRUD:
     // không có route xoá, và route lưu ghi cả bảng một lượt. Xem
     // LensPriceAdminController.
+    /* Bốn danh sách thuộc tính tròng (loại · chiết suất · lớp phủ · màu) —
+       chúng dựng nên bộ lọc của /san-pham/trong-kinh. Đặt ngay trên "Giá tròng"
+       vì hai màn cùng nói về tròng và người mở cái này thường mở luôn cái kia. */
+    'quan-tri/thuoc-tinh-trong'         => 'LensOptionAdminController@index',
+    'quan-tri/thuoc-tinh-trong/luu'     => 'LensOptionAdminController@save',   // POST
+    'quan-tri/thuoc-tinh-trong/hien'    => 'LensOptionAdminController@toggle', // POST
+    'quan-tri/thuoc-tinh-trong/thu-tu'  => 'LensOptionAdminController@move',   // POST
+
     'quan-tri/gia-trong'     => 'LensPriceAdminController@index',
     'quan-tri/gia-trong/luu' => 'LensPriceAdminController@save',   // POST
 

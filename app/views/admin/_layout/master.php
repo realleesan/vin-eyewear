@@ -71,6 +71,9 @@ $navGroups = [
         ['url' => '/quan-tri/cho-hang',  'label' => 'Chờ hàng'],
         ['url' => '/quan-tri/danh-muc',  'label' => 'Danh mục'],
         ['url' => '/quan-tri/gia-trong', 'label' => 'Giá tròng'],
+        /* Ngay dưới "Giá tròng": hai màn cùng nói về tròng, và người sửa bảng
+           giá thường là người vừa thêm một lựa chọn mới ở đây. */
+        ['url' => '/quan-tri/thuoc-tinh-trong', 'label' => 'Thuộc tính tròng'],
     ]],
     ['label' => 'Marketing', 'items' => [
         ['url' => '/quan-tri/bo-suu-tap',  'label' => 'Bộ sưu tập'],

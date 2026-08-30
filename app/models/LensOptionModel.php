@@ -71,6 +71,20 @@ class LensOptionModel extends BaseModel
     private static ?array $cache = null;
 
     /**
+     * Quên bảng nhớ. Mọi hàm GHI bên dưới đều gọi.
+     *
+     * Trong một request web thì gần như thừa — màn quản trị ghi xong là
+     * redirect, request sau nạp lại từ đầu. Nhưng nó KHÔNG thừa ở hai chỗ:
+     * script CLI (nhập liệu, kiểm thử) đọc rồi ghi rồi đọc lại trong cùng một
+     * tiến trình, và bất kỳ ai sau này gộp hai thao tác vào một request. Đã
+     * đâm phải khi kiểm: thêm một mục xong đọc lại vẫn ra danh sách cũ.
+     */
+    private static function quenCache(): void
+    {
+        self::$cache = null;
+    }
+
+    /**
      * Bảng đã dựng chưa. Màn quản trị hỏi câu này để biết nên vẽ form sửa hay
      * vẽ hướng dẫn chạy file nâng cấp.
      */
@@ -143,8 +157,12 @@ class LensOptionModel extends BaseModel
             return self::tuConfig();
         }
 
+        /* PHẢI CÓ `id`: màn quản trị dựng liên kết Sửa và hai nút ↑↓ từ nó.
+           Bản đầu liệt kê thiếu cột này và cả trang gãy ở dòng đầu tiên với
+           "Undefined array key id" — bắt được lúc chạy thử, không phải lúc
+           đọc lại. */
         $rows = Database::fetchAll(
-            'SELECT group_key, option_key, label, note, sort_order, is_visible
+            'SELECT id, group_key, option_key, label, note, sort_order, is_visible
                FROM lens_options
               ORDER BY group_key, sort_order, label'
         );
@@ -196,10 +214,198 @@ class LensOptionModel extends BaseModel
         return $out;
     }
 
+    // ========================================================================
+    // GHI — chỉ màn /quan-tri/thuoc-tinh-trong gọi tới
+    // ========================================================================
+
+    /**
+     * Một lựa chọn theo id, kể cả đang ẩn. null nếu không có.
+     *
+     * Đọc THẲNG bảng chứ không lọc trong self::$cache: màn quản trị vừa ghi
+     * xong là đọc lại ngay, mà cache thì chụp từ đầu request.
+     */
+    public static function findRow(string $id): ?array
+    {
+        if (!self::editable()) {
+            return null;
+        }
+
+        return Database::fetchOne('SELECT * FROM lens_options WHERE id = :id', [':id' => $id]);
+    }
+
+    /** Một lựa chọn theo cặp (nhóm, khoá) — dùng để chặn khoá trùng. */
+    public static function findByKey(string $group, string $key): ?array
+    {
+        if (!self::editable()) {
+            return null;
+        }
+
+        return Database::fetchOne(
+            'SELECT * FROM lens_options WHERE group_key = :g AND option_key = :k',
+            [':g' => $group, ':k' => $key]
+        );
+    }
+
+    /**
+     * Thứ tự cho mục thêm mới: xuống CUỐI nhóm.
+     *
+     * Không hỏi người dùng đứng thứ mấy — form không có ô thứ tự. Cuối danh
+     * sách là chỗ duy nhất an toàn: chen vào giữa là đổi thứ tự bộ lọc mà
+     * khách đang nhìn, vì một mục vừa thêm và chưa gắn hàng nào.
+     */
+    public static function nextSort(string $group): int
+    {
+        $max = (int) Database::fetchValue(
+            'SELECT COALESCE(MAX(sort_order), 0) FROM lens_options WHERE group_key = :g',
+            [':g' => $group]
+        );
+
+        return $max + 10;
+    }
+
+    public static function create(string $group, string $key, string $label, ?string $note): void
+    {
+        Database::execute(
+            'INSERT INTO lens_options (group_key, option_key, label, note, sort_order)
+             VALUES (:g, :k, :l, :n, :s)',
+            [':g' => $group, ':k' => $key, ':l' => $label, ':n' => $note, ':s' => self::nextSort($group)]
+        );
+
+        self::quenCache();
+    }
+
+    /**
+     * Sửa NHÃN và ghi chú. KHÔNG đụng tới option_key, và đó là điều kiện của
+     * cả cơ chế: khoá ấy nằm trong CSV của mọi sản phẩm đã gắn mục này, đổi nó
+     * là làm mồ côi toàn bộ số hàng đó — chúng giữ khoá cũ rồi biến mất khỏi
+     * bộ lọc mà không báo gì. Xem chú thích ở database/schema.sql.
+     */
+    public static function updateLabel(string $id, string $label, ?string $note): void
+    {
+        Database::execute(
+            'UPDATE lens_options SET label = :l, note = :n WHERE id = :id',
+            [':l' => $label, ':n' => $note, ':id' => $id]
+        );
+
+        self::quenCache();
+    }
+
+    /** Ẩn / hiện. Thay cho xoá — xem chú thích ở schema.sql. */
+    public static function setVisible(string $id, bool $hien): void
+    {
+        Database::execute(
+            'UPDATE lens_options SET is_visible = :v WHERE id = :id',
+            [':v' => $hien ? 1 : 0, ':id' => $id]
+        );
+
+        self::quenCache();
+    }
+
+    /**
+     * Đổi chỗ một mục với mục liền kề trong CÙNG nhóm.
+     *
+     * Hoán vị hai sort_order chứ không cộng/trừ một hằng số: hai mục có thể
+     * cách nhau 10 hoặc cách nhau 3 (sau vài lần chèn), nên cộng trừ sẽ có lúc
+     * nhảy qua đầu nhau và có lúc không nhúc nhích.
+     */
+    public static function move(string $id, string $huong): void
+    {
+        $row = self::findRow($id);
+
+        if ($row === null) {
+            return;
+        }
+
+        /*
+          * HAI TÊN THAM SỐ CHO CÙNG MỘT GIÁ TRỊ (:s1 và :s2), không phải một
+          * :s dùng hai lần.
+          *
+          * PDO của dự án tắt chế độ giả lập prepare, và ở chế độ thật thì mỗi
+          * tên chỉ được xuất hiện ĐÚNG MỘT LẦN trong câu lệnh — dùng lại là
+          * lỗi HY093 "Invalid parameter number" ngay lúc execute. Đã đâm phải
+          * khi viết hàm này.
+          *
+          * Điều kiện có hai vế vì sort_order KHÔNG duy nhất: hai mục cùng số
+          * thì phải lấy id ra phân xử, nếu không nút ↑↓ sẽ không nhúc nhích
+          * đúng ở cặp đó.
+          */
+        $ke = Database::fetchOne(
+            $huong === 'len'
+                ? 'SELECT * FROM lens_options
+                     WHERE group_key = :g AND (sort_order < :s1 OR (sort_order = :s2 AND id < :id))
+                     ORDER BY sort_order DESC, id DESC LIMIT 1'
+                : 'SELECT * FROM lens_options
+                     WHERE group_key = :g AND (sort_order > :s1 OR (sort_order = :s2 AND id > :id))
+                     ORDER BY sort_order ASC, id ASC LIMIT 1',
+            [
+                ':g'  => $row['group_key'],
+                ':s1' => $row['sort_order'],
+                ':s2' => $row['sort_order'],
+                ':id' => $id,
+            ]
+        );
+
+        // Đã ở đầu (hoặc cuối) nhóm — không có gì để đổi chỗ, im lặng bỏ qua.
+        if ($ke === null) {
+            return;
+        }
+
+        Database::transaction(static function () use ($row, $ke): void {
+            Database::execute('UPDATE lens_options SET sort_order = :s WHERE id = :id',
+                [':s' => $ke['sort_order'],  ':id' => $row['id']]);
+            Database::execute('UPDATE lens_options SET sort_order = :s WHERE id = :id',
+                [':s' => $row['sort_order'], ':id' => $ke['id']]);
+        });
+
+        self::quenCache();
+    }
+
+    /**
+     * Số sản phẩm đang gắn một khoá — hiện ở màn quản trị để người sửa biết
+     * hậu quả trước khi ẩn một mục.
+     *
+     * LIKE trên CSV chứ không bảng nối: xem lý do ở chú thích 'coatings' trong
+     * config/eyewear.php. Bọc cả cột lẫn mẫu bằng dấu phẩy để 'uv' không khớp
+     * nhầm vào 'uv400'.
+     */
+    public static function usageCount(string $group, string $key): int
+    {
+        $cot = self::COLUMNS[$group]['column'] ?? null;
+
+        if ($cot === null) {
+            return 0;
+        }
+
+        /* $cot đi thẳng vào câu SQL vì tên cột KHÔNG ràng buộc tham số được.
+           Nó chỉ có thể là một trong bốn giá trị của hằng COLUMNS ngay trên,
+           nên đã an toàn — gọi assertSafeIdentifier() vẫn là đúng nếp của dự
+           án: ngày ai đó cho hằng ấy nhận giá trị từ nơi khác, chỗ này ném lỗi
+           thay vì lặng lẽ nối chuỗi. */
+        self::assertSafeIdentifier($cot);
+
+        if (empty(self::COLUMNS[$group]['multi'])) {
+            return (int) Database::fetchValue(
+                "SELECT COUNT(*) FROM products WHERE `$cot` = :k",
+                [':k' => $key]
+            );
+        }
+
+        return (int) Database::fetchValue(
+            "SELECT COUNT(*) FROM products
+              WHERE CONCAT(',', REPLACE(`$cot`, ' ', ''), ',') LIKE :k",
+            [':k' => '%,' . $key . ',%']
+        );
+    }
+
     /** Một hàng giả cùng hình dạng với hàng thật, cho đường lùi ở trên. */
     private static function gia(string $key, string $label, int $sort, string $note = ''): array
     {
         return [
+            /* `id` rỗng: hàng giả không có bản ghi nào để sửa. Vẫn phải CÓ
+               khoá này để hình dạng khớp hàng thật — thiếu nó thì mọi chỗ đọc
+               $o['id'] ném warning ở đúng lúc CSDL chưa nâng cấp, tức là lúc
+               người ta đang bối rối nhất. */
+            'id'         => '',
             'group_key'  => '',
             'option_key' => $key,
             'label'      => $label,
