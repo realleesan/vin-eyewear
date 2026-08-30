@@ -215,11 +215,10 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
          * đổi màu khi rê chuột, đúng như các mục nav ngay bên cạnh.
          *
          * TRƯỚC ĐÂY LÀ BỐN: nút đầu tiên là bảng đổi ngôn ngữ VI/EN, gỡ ngày
-         * 2026-08-30 khi phần song ngữ chuyển sang widget Elfsight. Widget đó
-         * tự vẽ nút nổi của riêng nó ở cuối <body> — xem _layout/translator.php.
-         * Đừng dựng lại một nút ngôn ngữ ở đây: hai nút cùng đổi ngôn ngữ mà
-         * không nút nào biết nút kia đã đổi gì là cách chắc chắn để khách gặp
-         * một trang nửa Việt nửa Anh.
+         * 2026-08-30. Site hiện chỉ có tiếng Việt — đọc mục NGÔN NGỮ trong
+         * core/helpers.php trước khi đặt lại bất cứ thứ gì vào chỗ đó, kể cả
+         * một widget dịch cắm sẵn: chỗ này đã thử một cái rồi và đã gỡ, lý do
+         * ghi đủ ở đấy.
          *
          * Cả ba cùng bung một bảng xổ khi rê chuột (và khi tiêu điểm bàn phím
          * đi vào cụm, nhờ :focus-within).
@@ -234,28 +233,6 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
          */
         ?>
         <div class="header-actions">
-
-            <?php
-            /*
-             * ĐỔI NGÔN NGỮ — widget Elfsight, đặt ngay trước nút tìm kiếm.
-             *
-             * Đây đúng chỗ nút "VI ▾" cũ từng đứng, và đó là lý do chọn chỗ
-             * này: khách quen tìm nút ngôn ngữ ở đầu cụm tác vụ, không phải ở
-             * một nút nổi góc màn hình.
-             *
-             * PHẢI CHỌN KIỂU INLINE trong trình soạn của Elfsight. Chọn kiểu
-             * nổi (floating) thì widget tự neo mình vào một góc màn hình và
-             * thẻ div ở đây thành một khoảng trống — nút ngôn ngữ vẫn hiện,
-             * nhưng không hiện ở chỗ này.
-             *
-             * Ruột thẻ do bên thứ ba dựng nên KHÔNG dùng .hpop như ba nút bên
-             * cạnh: bảng xổ của .hpop mở bằng :hover/:focus-within trên markup
-             * của chính mình, mà markup đó nay là của Elfsight. Bọc nó vào
-             * .hpop chỉ tạo ra một lớp vỏ có luật CSS không bao giờ khớp thứ
-             * bên trong. Xem .header-lang trong components/header.css.
-             */
-            partial('_layout/translator');
-            ?>
 
             <?php
             /*

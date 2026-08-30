@@ -278,15 +278,24 @@ function formatDate(?string $datetime, string $format = 'd/m/Y'): string
 // KHUNG giao diện, nên nội dung trang và dữ liệu CSDL vẫn tiếng Việt kể cả khi
 // khách đã chọn English.
 //
-// Phần song ngữ nay là widget Elfsight — xem app/views/_layout/translator.php.
-// Widget dịch trong trình duyệt khách nên KHÔNG có hàm PHP nào tương đương
-// currentLang(): máy chủ không còn biết khách đang đọc ngôn ngữ nào, và không
-// cần biết.
+// SITE HIỆN CHỈ CÓ TIẾNG VIỆT. Không còn hàm nào cho ngôn ngữ, và đó là
+// trạng thái đã chọn chứ không phải việc bỏ dở.
 //
-// AI ĐỊNH DỰNG LẠI t(): đừng nửa vời. Hai hệ chạy song song thì khách được một
-// trang nửa Việt nửa Anh, đúng lý do đã gỡ hệ này đi. Nếu cần bản tiếng Anh
-// máy chủ dựng thật (cho SEO — thứ widget không làm được), thì đó là làm lại
-// từ đầu với URL riêng cho từng ngôn ngữ, không phải hồi sinh chỗ này.
+// Giữa 30/08/2026 có thử một widget dịch của bên thứ ba (Elfsight) thay cho
+// hệ này, và đã gỡ trong cùng ngày. Lý do đáng ghi lại vì nó áp cho MỌI widget
+// dịch chạy phía trình duyệt, không riêng Elfsight:
+//
+//   · Bản tiếng Anh sinh ra sau khi DOM đã dựng, không có URL riêng, không có
+//     hreflang — Google không lập chỉ mục được. Với một site bán hàng, index
+//     được bản dịch chính là toàn bộ lý do làm song ngữ.
+//   · Một script bên thứ ba gánh chức năng cốt lõi. Khác hẳn Google Fonts:
+//     font hỏng thì trang xấu, dịch hỏng thì mất hẳn một ngôn ngữ.
+//   · Bản miễn phí có trần lượt xem hàng tháng, vượt là widget tự tắt.
+//
+// LÀM SONG NGỮ THẬT thì phải là máy chủ dựng: mỗi ngôn ngữ một URL, hreflang
+// đầy đủ, và chuỗi dịch cho cả nội dung trang lẫn dữ liệu CSDL. Đó là làm lại
+// từ đầu, không phải hồi sinh t() — hàm cũ chỉ phủ được khung giao diện và
+// cũng dùng chung một URL cho cả hai ngôn ngữ, tức là cũng không index được.
 // ============================================================================
 
 /**

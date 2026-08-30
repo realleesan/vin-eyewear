@@ -236,43 +236,6 @@
 }
 
 /* ============================================================
-   Ô ĐỔI NGÔN NGỮ — RUỘT DO ELFSIGHT DỰNG
-   Markup: app/views/_layout/translator.php
-
-   Đây là thẻ BỌC, và nó tồn tại vì đúng một lý do: GIỮ CHỖ. Ruột bên trong
-   chỉ xuất hiện sau khi platform.js của Elfsight tải xong, tức là sau khi
-   trang đã vẽ ra một lượt. Không giữ chỗ trước thì cụm tác vụ nở ra giữa
-   chừng và wordmark bên trái bị đẩy, ngay trước mắt người đang đọc.
-
-   min-height 40px KHỚP CHIỀU CAO ba nút icon bên cạnh (.header-action), nên
-   thanh nav không cao lên khi widget hiện ra.
-
-   BỀ NGANG THÌ CHƯA GIỮ ĐƯỢC, và đó là chỗ còn thiếu — không phải chỗ quên.
-   Bề ngang của widget phụ thuộc kiểu hiển thị chọn trong trình soạn của
-   Elfsight (chữ "Tiếng Việt ▾" rộng khác hẳn một lá cờ), mà cái đó chỉ đo
-   được khi widget thật đã chạy. Đo xong thì thêm một dòng min-width vào đây;
-   đừng đoán một con số bây giờ, đoán thiếu thì vẫn giật, đoán thừa thì cụm
-   tác vụ ăn mất chỗ của wordmark suốt ngày.
-
-   KHÔNG DÙNG .hpop như ba nút bên cạnh: bảng xổ của .hpop mở bằng
-   :hover/:focus-within trên markup của chính nó, mà markup ở đây là của
-   Elfsight. Bọc vào .hpop chỉ tạo ra một lớp vỏ có luật CSS không bao giờ
-   khớp thứ bên trong.
-
-   KHÔNG ẨN Ở MÀN HẸP. Nút "VI ▾" cũ bị ẩn dưới 700px và chuyển vào menu
-   trượt, nhưng cách đó nay không làm được: gói Elfsight cho đúng MỘT widget,
-   mà in hai thẻ cùng class trên một trang là vẽ hai widget và tính hai lượt
-   xem. Nên nó ở lại đầu trang ở mọi bề ngang, và wordmark chịu hẹp hơn — xem
-   khối "MÀN HẸP" ở cuối file.
-   ============================================================ */
-
-.header-lang {
-    display: flex;
-    align-items: center;
-    min-height: 40px;
-}
-
-/* ============================================================
    BA NÚT TÁC VỤ — KHÔNG CÒN KHUNG BAO
 
    Bản trước vẽ ba nút tròn viền mảnh nền trắng, lấy theo
@@ -343,7 +306,8 @@
 
    Một khuôn cho cả ba nút tác vụ: tìm kiếm · tài khoản · giỏ hàng. (Từng là
    bốn — nút đầu là bảng đổi ngôn ngữ VI/EN, gỡ ngày 2026-08-30 cùng hệ dịch
-   viết tay; phần song ngữ nay là widget Elfsight, xem _layout/translator.php.)
+   viết tay. Site hiện chỉ có tiếng Việt; xem mục NGÔN NGỮ trong
+   core/helpers.php trước khi dựng lại bất cứ thứ gì ở đây.)
 
    MỞ BẰNG CSS, KHÔNG PHẢI JS: :hover cho chuột, :focus-within cho bàn phím —
    Tab tới nút là bảng hiện ra, Tab hết mục cuối là bảng đóng, không cần một
@@ -955,32 +919,22 @@
    được phần bề ngang còn thừa. Hết chỗ thì text-overflow cắt dần thành
    "Vin Eye…", "Vin E…", "V…".
 
-   CÁC CON SỐ ĐO ĐƯỢC BÊN DƯỚI ĐÃ CŨ, VÀ LẦN NÀY CÓ THỂ CŨ THEO CHIỀU XẤU —
-   đọc kỹ trước khi tin. Chúng đo hồi cụm còn NĂM thành viên (nút ngôn ngữ
-   "VI ▾" · tìm kiếm · tài khoản · giỏ · hamburger), khi .header-actions rộng
-   247px và wordmark được `bề ngang màn hình − 291px`.
-
-   Ngày 2026-08-30 nút "VI ▾" viết tay bị thay bằng widget Elfsight đặt đúng
-   chỗ cũ (xem .header-lang phía trên). Bề ngang của widget CHƯA AI ĐO: nó tuỳ
-   kiểu hiển thị chọn trong trình soạn của Elfsight, và một ô "Tiếng Việt ▾"
-   rộng hơn hẳn 53px của nút "VI ▾" cũ. Nếu nó rộng hơn thật thì mọi ngưỡng
-   dưới đây CĂNG HƠN con số ghi ra, và wordmark bị cắt sớm hơn.
-
-   VIỆC PHẢI LÀM khi widget thật đã chạy: mở thước của trình duyệt, đo lại
-   .header-actions ở 700px và 320px. Rộng quá thì chọn kiểu hiển thị gọn hơn
-   bên Elfsight (một lá cờ, hoặc mã hai chữ) — chỉnh ở đó rẻ hơn hẳn so với
-   thêm một nấc @media nữa vào đây.
+   CÁC CON SỐ ĐO ĐƯỢC BÊN DƯỚI ĐÃ CŨ — đọc trước khi tin. Chúng đo hồi cụm còn
+   NĂM thành viên (nút ngôn ngữ "VI ▾" · tìm kiếm · tài khoản · giỏ ·
+   hamburger), khi .header-actions rộng 247px và wordmark được `bề ngang màn
+   hình − 291px`. Nút ngôn ngữ gỡ ngày 2026-08-30, nên cụm nay hẹp hơn khoảng
+   53px và mọi ngưỡng dưới đây ĐỠ CĂNG hơn con số ghi ra, không căng hơn. Ai
+   đụng tới khối này thì đo lại bằng thước của trình duyệt, đừng cộng trừ từ
+   mấy số cũ.
 
    HAI CÁCH LẤY LẠI CHỖ CÒN LẠI, theo thứ tự ít thiệt hại nhất:
 
    1. Thu khe (−28px). Khe không phải ngưỡng chạm, thu được.
    2. Hạ cỡ chữ wordmark. Để sau cùng, và chỉ ở màn hẹp nhất.
 
-   CÒN MỘT CÁCH THỨ BA ĐÃ MẤT: trước đây nút ngôn ngữ bị ẩn dưới 700px và
-   chuyển vào menu trượt, lấy lại 53px. Nay không làm được — gói Elfsight cho
-   đúng MỘT widget, in hai thẻ cùng class trên một trang là vẽ hai widget và
-   tính hai lượt xem vào hạn mức. Nên ô ngôn ngữ ở lại đầu trang ở mọi bề
-   ngang, kể cả 320px.
+   (Cách thứ nhất trước đây là "bỏ nút ngôn ngữ khỏi cụm ở màn hẹp, chuyển nó
+   vào menu trượt". Không còn nút nào để bỏ nữa. Ngày làm song ngữ thật, nếu
+   đặt lại một nút đổi ngôn ngữ vào đây thì phải dựng lại cả cách này.)
 
    KHÔNG hạ 40px của nút icon: ngón tay ở màn 320px to đúng bằng ở màn 430px,
    thu nút lại là thu ở chỗ không được phép thu.

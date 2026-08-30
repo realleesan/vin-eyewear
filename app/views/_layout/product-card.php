@@ -129,6 +129,35 @@ if (!$inStock) {
     <div class="pcard__body">
         <p class="pcard__brand"><?= e($product['brand'] ?? 'Vin Eyewear') ?></p>
 
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * TÊN SẢN PHẨM KHÔNG ĐƯỢC DỊCH — quy ước của cả site, ghi ở đây vì đây
+         * là chỗ in tên sản phẩm được dùng lại nhiều nhất (trang chủ, danh mục,
+         * tìm kiếm, bộ sưu tập đều nạp file này).
+         *
+         * Grep 'notranslate' trong app/views/ ra đủ 14 chỗ. Thêm một view in
+         * tên sản phẩm mới thì thêm cả hai thuộc tính dưới đây vào.
+         *
+         * VÌ SAO: "Vin T01 Titan" dịch sang tiếng Anh không ra thứ gì tốt hơn,
+         * mà lại ra thứ khách đọc xong không tìm thấy trên hoá đơn, trong tin
+         * nhắn của cửa hàng, hay khi gọi điện hỏi. Tên riêng để nguyên là đúng
+         * ở mọi ngôn ngữ.
+         *
+         * HAI CÁCH ĐÁNH DẤU VÌ HAI BÊN ĐỌC KHÁC NHAU, không phải viết thừa:
+         *   translate="no"        thuộc tính chuẩn HTML — trình dịch cài sẵn
+         *                         trong Chrome/Safari đọc cái này, và đó là
+         *                         thứ ĐANG có tác dụng thật ngay lúc này
+         *   class="notranslate"   quy ước của các công cụ dịch bên ngoài. Chưa
+         *                         ai dùng tới, giữ vì nó là tên lớp mà mọi thứ
+         *                         từ Google Translate trở đi đều hiểu.
+         *
+         * TÊN TRÒNG KÍNH THÌ NGƯỢC LẠI — CỐ Ý ĐỂ DỊCH. "Tròng trắng 1.50",
+         * "Chống sáng xanh 1.61" là câu mô tả chứ không phải tên riêng; người
+         * đọc bằng ngôn ngữ khác cần hiểu mới chọn đúng được.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        ?>
         <h3 class="pcard__name notranslate" translate="no">
             <a href="<?= e($url) ?>"><?= e($product['name']) ?></a>
         </h3>

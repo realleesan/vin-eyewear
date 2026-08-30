@@ -77,15 +77,15 @@ if (($_SERVER['HTTP_X_CATALOG'] ?? '') === '1') {
 }
 ?>
 <!DOCTYPE html>
-<?php /* lang="vi" CỐ ĐỊNH, và đó là điều đúng kể cả khi khách đang xem bản
-         tiếng Anh. Thuộc tính này khai ngôn ngữ của HTML MÁY CHỦ TRẢ VỀ, mà
-         máy chủ luôn trả tiếng Việt — widget Elfsight dịch về sau, trong trình
-         duyệt, và tự sửa lấy thuộc tính này nếu nó cần.
-         Trước đây giá trị lấy từ currentLang() vì cookie vin_lang cho máy chủ
-         biết khách chọn gì; hàm đó đã gỡ cùng hệ dịch cũ (xem core/helpers.php
-         mục NGÔN NGỮ). Đừng đoán ngôn ngữ ở đây bằng cách khác: khai "en" cho
-         một trang chữ vẫn là tiếng Việt thì trình đọc màn hình đọc tiếng Việt
-         bằng giọng Anh — tệ hơn hẳn khai sai một chiều. */ ?>
+<?php /* lang="vi" CỐ ĐỊNH vì site hiện chỉ có tiếng Việt. Thuộc tính này
+         khai ngôn ngữ của HTML MÁY CHỦ TRẢ VỀ, không phải ngôn ngữ khách muốn
+         đọc — trình đọc màn hình chọn giọng theo nó.
+         NGÀY LÀM SONG NGỮ THẬT thì đây là một trong những chỗ phải sửa, cùng
+         với thẻ <link rel="alternate" hreflang>: mỗi ngôn ngữ một URL riêng do
+         máy chủ dựng, và lang phải khớp thứ thật sự in ra trang đó. Đừng đoán
+         ngôn ngữ bằng cookie rồi khai "en" cho một trang chữ vẫn tiếng Việt —
+         trình đọc màn hình sẽ đọc tiếng Việt bằng giọng Anh, tệ hơn hẳn khai
+         sai một chiều. */ ?>
 <html lang="vi">
 
 <head>
