@@ -63,13 +63,33 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
  *
  * TẮT JAVASCRIPT THÌ NHÁNH NÀY KHÔNG BAO GIỜ CHẠY: mọi tiêu chí lọc vẫn là
  * <a href> thật, bấm vào là điều hướng như xưa.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ * NAY DÙNG CHUNG VỚI TRANG TÀI KHOẢN (2026-08-30)
+ *
+ * assets/js/account.js làm y hệt cho cột điều hướng /tai-khoan: bấm một mục là
+ * nạp ngầm rồi thay hai khối .acct-nav và .acct-main. Nhu cầu giống nhau tới
+ * từng chi tiết — in nguyên view, không in khung — nên hai bên dùng chung đúng
+ * một nhánh này thay vì chép ra một khối thứ hai gần y hệt.
+ *
+ * HAI TÊN HEADER chứ không một: mỗi bên tự khai tên của mình, nên đọc log máy
+ * chủ là biết mảnh nào của trang nào, và tắt một bên không đụng bên kia.
  * ═══════════════════════════════════════════════════════════════════════════
  */
-if (($_SERVER['HTTP_X_CATALOG'] ?? '') === '1') {
+$manhCua = null;
+
+foreach (['X-Catalog' => 'HTTP_X_CATALOG', 'X-Account' => 'HTTP_X_ACCOUNT'] as $ten => $bien) {
+    if (($_SERVER[$bien] ?? '') === '1') {
+        $manhCua = $ten;
+        break;
+    }
+}
+
+if ($manhCua !== null) {
     /* Cùng một URL trả hai thứ khác nhau tuỳ header — phải nói cho mọi tầng
        đệm ở giữa biết, không thì một proxy có thể đem mảnh phát cho người mở
        trang bằng đường dẫn thường và họ nhận về trang trắng không có nav. */
-    header('Vary: X-Catalog');
+    header('Vary: ' . $manhCua);
 
     require VIEWS_PATH . '/' . $viewName . '.php';
 

@@ -32,12 +32,36 @@
  *
  * HAI CẤP, KHÔNG PHẢI BA: từ 01/07/2025 Việt Nam bỏ cấp huyện. API v2 trả 34
  * tỉnh thành, và `p/<mã>?depth=2` cho thẳng danh sách phường/xã của tỉnh đó.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * GỌI LẠI ĐƯỢC, VÀ VÌ SAO
+ *
+ * Từ 2026-08-30, đổi mục ở /tai-khoan không tải lại trang nữa: account.js thay
+ * ruột .acct-main bằng HTML mới. Cụm này gắn thẳng vào hai thẻ <select> nên
+ * chúng chết theo phần tử cũ — vào mục "Sổ địa chỉ" bằng cột trái sẽ ra hai ô
+ * gõ tay trơ, không có gợi ý nào, mà cũng không có lỗi nào để thấy.
+ *
+ * Nên thân hàm chạy lại được, và nghe sự kiện 'vin:acct-moi' account.js phát
+ * ra sau mỗi lần thay. Trang /thanh-toan không phát sự kiện đó nên ở đấy hàm
+ * chạy đúng một lần như trước — không đổi gì.
+ *
+ * CHỐT CHỐNG DỰNG HAI LẦN: thoát ngay nếu khối đã có <select>. Không có nó thì
+ * một lần thay ruột mà .acct-main không đổi (bấm lại đúng mục đang xem) sẽ
+ * chèn thêm một cặp ô chọn nữa lên trên cặp cũ.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
-(function () {
+document.addEventListener('vin:acct-moi', khoiDongVnAddr);
+
+khoiDongVnAddr();
+
+function khoiDongVnAddr() {
     'use strict';
 
     var box = document.querySelector('[data-vnaddr]');
     if (!box || !window.fetch) return;
+
+    /* Đã dựng rồi thì thôi — xem "CHỐT CHỐNG DỰNG HAI LẦN" ở trên. */
+    if (box.querySelector('select[data-vnaddr-select]')) return;
 
     var API = 'https://provinces.open-api.vn/api/v2/';
 
@@ -96,6 +120,11 @@
         select.className = input.className;
         select.required  = input.required;
         select.innerHTML = '<option value="">' + placeholder + '</option>';
+
+        /* Dấu để lần khởi động sau biết khối này đã dựng rồi — xem "CHỐT CHỐNG
+           DỰNG HAI LẦN" ở đầu file. Đặt bằng thuộc tính chứ không bằng class:
+           class ở đây chép nguyên từ ô chữ và có thể trùng với thứ khác. */
+        select.setAttribute('data-vnaddr-select', '');
 
         input.parentNode.insertBefore(select, input);
         input.type = 'hidden';
@@ -205,4 +234,4 @@
             field.province.required = true;
             field.ward.required = true;
         });
-}());
+}
