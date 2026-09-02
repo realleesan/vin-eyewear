@@ -45,8 +45,20 @@ class Otp
     /** Số chữ số của mã. Đúng số ô trên màn hình nhập mã. */
     public const LENGTH = 6;
 
-    /** Mã sống bao lâu (giây). */
-    public const TTL = 300;
+    /**
+     * Mã sống bao lâu (giây).
+     *
+     * 120 GIÂY, KHÔNG PHẢI 300. Con số này do SRS chốt (mục 3.3.2, SNFR-06:
+     * "OTP có hiệu lực 120 giây"), không phải lựa chọn kỹ thuật — đừng nới ra
+     * cho "khách đỡ vội" mà chưa hỏi BA. Trước đây để 300 giây, tức mã sống
+     * gấp rưỡi thời gian đặc tả cho phép: một mã 6 số nằm chờ 5 phút là 5 phút
+     * để máy dò, trong khi chốt MAX_TRIES chỉ chặn được theo phiên.
+     *
+     * PasswordResetModel dựng câu "Mã có hiệu lực trong N phút" bằng cách chia
+     * hằng số này cho 60, nên sửa ở đây là câu chữ trong email/ZNS tự đúng theo.
+     * Giữ giá trị chia hết cho 60 để câu đó không ra số lẻ.
+     */
+    public const TTL = 120;
 
     /** Chờ bao lâu mới được bấm "Gửi lại" — cùng con số 60 giây của bản thiết kế. */
     public const RESEND_AFTER = 60;
