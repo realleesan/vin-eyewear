@@ -151,7 +151,18 @@ class AdminAuthController extends BaseController
         $chung = 'Email hoặc mật khẩu không đúng, hoặc tài khoản không có quyền quản trị.';
 
         if (!$result['ok']) {
-            $this->fail($chung, $email, $to);
+            /* MỘT NGOẠI LỆ CHO CÂU CHUNG: BỊ KHOÁ TẠM THỜI.
+
+               Lý lẽ gộp câu ở trên là để không rò rỉ "địa chỉ này có phải tài
+               khoản nội bộ không". Câu khoá tạm không rò rỉ điều đó, vì
+               LoginAttemptModel đếm theo CHUỖI ĐỊNH DANH: gõ sai 5 lần vào một
+               email không tồn tại cũng nhận đúng câu này.
+
+               Và nó phải được nói ra. Nhân viên đang vội ở quầy, gõ sai vài
+               lần rồi bỗng "sai mật khẩu" mãi dù gõ đúng, sẽ gọi cho IT chứ
+               không đợi 15 phút — đúng cái tình huống mà một câu báo rõ ràng
+               giải quyết xong trong hai giây. */
+            $this->fail(($result['locked'] ?? false) ? $result['error'] : $chung, $email, $to);
         }
 
         /*

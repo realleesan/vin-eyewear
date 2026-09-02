@@ -41,6 +41,19 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `customer_audit_logs`;
 DROP TABLE IF EXISTS `customer_prescriptions`;
 DROP TABLE IF EXISTS `password_resets`;
+-- Ba dòng dưới: không có bảng nào trỏ tới chúng nên vị trí trong danh sách này
+-- không quan trọng — nhưng CÓ MẶT thì quan trọng. Thiếu một dòng DROP là câu
+-- CREATE của chính bảng đó đổ "table already exists" và dừng cả lần cài lại,
+-- đúng cái bẫy đã ghi ở đầu khối.
+--
+-- `stock_waitlist` và `sepay_transactions` bị SÓT từ trước — phát hiện ngày
+-- 2026-09-02 khi chạy lại schema.sql lần thứ hai trên một CSDL đã cài: nó dừng
+-- ở dòng 849 với lỗi 'stock_waitlist' already exists. Tức là từ lúc hai bảng ấy
+-- ra đời, `schema.sql` KHÔNG còn cài lại được trên máy đã có dữ liệu; máy cài
+-- mới thì không lộ ra vì chưa có bảng nào để đụng.
+DROP TABLE IF EXISTS `login_attempts`;
+DROP TABLE IF EXISTS `stock_waitlist`;
+DROP TABLE IF EXISTS `sepay_transactions`;
 DROP TABLE IF EXISTS `remember_tokens`;
 DROP TABLE IF EXISTS `newsletter_subscribers`;
 DROP TABLE IF EXISTS `contact_requests`;
@@ -266,6 +279,48 @@ CREATE TABLE `remember_tokens` (
     KEY `idx_remember_expires` (`expires_at`),
     CONSTRAINT `fk_remember_user` FOREIGN KEY (`user_id`)
         REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- ĐẾM ĐĂNG NHẬP HỎNG VÀ KHOÁ TẠM THỜI (SNFR-06)
+--
+-- SNFR-06: "tài khoản tạm thời bị khóa 15 phút nếu nhập sai mật khẩu quá 5 lần
+-- liên tiếp". Áp cho CẢ HAI cổng đăng nhập, vì cả hai đi qua UserModel::attempt.
+--
+-- VÌ SAO LÀ MỘT BẢNG RIÊNG CHỨ KHÔNG PHẢI HAI CỘT THÊM VÀO `users`
+--
+-- Đây là điểm dễ làm sai nhất. Đếm trên `users` thì chỉ đếm được cho tài khoản
+-- CÓ THẬT: kẻ dò gõ 5 lần sai vào một email bất kỳ, thấy câu "tạm khoá" là biết
+-- email đó có tài khoản ở đây, thấy "sai thông tin" là biết không có. Cái khoá
+-- dựng lên để chặn dò mật khẩu lại tặng không một máy tra cứu danh sách khách
+-- hàng — đúng thứ mà UserModel::attempt() và AdminAuthController::login() đã
+-- cẩn thận tránh bằng cách dùng chung một câu báo lỗi cho mọi ca hỏng.
+--
+-- Đếm theo chuỗi định danh thì email không tồn tại cũng bị khoá y hệt, nên câu
+-- trả lời của hệ thống không nói lên điều gì về việc tài khoản có tồn tại.
+--
+-- KHOÁ CHÍNH LÀ BĂM SHA-256 của định danh đã hạ chữ thường, không phải định
+-- danh nguyên văn: bảng này sẽ chứa email và số điện thoại của những người GÕ
+-- NHẦM, tức phần lớn là khách hàng thật. Cất nguyên văn là dựng thêm một bản
+-- danh sách liên hệ nữa nằm ngoài `profiles`, với đúng một công dụng là đếm.
+--
+-- KHÔNG có khoá ngoại sang `users`: cả điểm của bảng này là ghi được cả những
+-- định danh không ứng với tài khoản nào.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `login_attempts` (
+    -- sha256 của strtolower(trim(<định danh>)) — KHÔNG dùng mb_*, máy chủ không có mbstring — xem LoginAttemptModel::khoa()
+    `login_key`    CHAR(64)          NOT NULL,
+    -- Số lần sai LIÊN TIẾP. Về 0 ngay khi đặt khoá, để hết 15 phút là người ta
+    -- có lại đủ 5 lần thử chứ không bị khoá lại ở lần sai đầu tiên.
+    `fails`        TINYINT UNSIGNED  NOT NULL DEFAULT 0,
+    -- NULL = đang được phép thử.
+    `locked_until` DATETIME          NULL,
+    `updated_at`   DATETIME          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`login_key`),
+    -- Cho LoginAttemptModel::donCu() quét theo mốc cập nhật mà không phải đọc
+    -- cả bảng. Hosting không có cron nên việc dọn ăn theo lượt truy cập, và nó
+    -- phải rẻ.
+    KEY `idx_login_attempts_updated` (`updated_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------

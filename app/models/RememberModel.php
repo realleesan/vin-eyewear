@@ -32,8 +32,18 @@ class RememberModel extends BaseModel
     /** Tên cookie. Khác session_name để hai thứ không giẫm lên nhau. */
     public const COOKIE = 'vin_remember';
 
-    /** Nhớ trong bao lâu (giây) — 30 ngày. */
-    public const LIFETIME = 2592000;
+    /**
+     * Nhớ trong bao lâu (giây) — 7 ngày.
+     *
+     * 7 NGÀY LÀ CON SỐ CỦA SRS, KHÔNG PHẢI CỦA CHÚNG TA. SNFR-10 (Quyết định
+     * C7) chốt phiên khách: access token 2 giờ, refresh token 7 ngày. Cookie
+     * ghi nhớ chính là refresh token của bản này, nên nó phải chết cùng mốc ấy.
+     *
+     * Trước đây để 30 ngày. Nghe thì tiện, nhưng nó có nghĩa là một máy khách
+     * mượn ở quán net giữ được đường vào tài khoản suốt một tháng, và mọi lần
+     * đổi mật khẩu trong tháng đó không cắt được nó nếu quên gọi forgetAllFor.
+     */
+    public const LIFETIME = 604800;
 
     /**
      * Tính năng này chỉ chạy khi bảng đã có.

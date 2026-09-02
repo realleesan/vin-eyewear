@@ -448,18 +448,66 @@ class UserModel extends BaseModel
      */
     public static function attempt(string $login, string $password): array
     {
-        $user = static::findByLogin($login);
+        /* KHOÁ TẠM THỜI SAU 5 LẦN SAI — SNFR-06.
 
-        // Vẫn băm một chuỗi giả khi không tìm thấy tài khoản, để thời gian
-        // phản hồi của hai nhánh xấp xỉ nhau. Trả về ngay lập tức sẽ nhanh
-        // hơn hẳn nhánh có password_verify, và chênh lệch đó đủ để dò email.
-        if ($user === null) {
-            password_verify($password, '$2y$12$' . str_repeat('.', 53));
+           Kiểm TRƯỚC password_verify, khác hẳn nhánh kiểm status = 'locked' ở
+           dưới. Hai cái khoá này phục vụ hai việc khác nhau:
 
-            return ['ok' => false, 'error' => 'Thông tin đăng nhập không đúng.'];
+             · status = 'locked' là quyết định của cửa hàng về một con người,
+               nên chỉ người chứng minh được mình là chủ (gõ đúng mật khẩu)
+               mới đáng được nghe. Kiểm sau.
+             · khoá tạm thời là chốt chặn máy dò. Kiểm sau password_verify thì
+               nó không chặn gì cả — mỗi lượt dò vẫn được băm và so khớp đầy
+               đủ, tức là vẫn dò được, chỉ tốn thêm một câu báo lỗi.
+
+           Chỗ này KHÔNG rò rỉ việc tài khoản có tồn tại hay không, vì
+           LoginAttemptModel đếm theo chuỗi định danh chứ không theo hàng trong
+           `users`: gõ sai 6 lần vào một email không tồn tại cũng nhận đúng câu
+           trả lời này. Lý do đầy đủ ghi ở đầu app/models/LoginAttemptModel.php. */
+        $conKhoa = LoginAttemptModel::conKhoa($login);
+
+        if ($conKhoa > 0) {
+            $phut = (int) ceil($conKhoa / 60);
+
+            return [
+                'ok'     => false,
+                // Cờ riêng để nơi gọi phân biệt "bị khoá tạm" với "sai thông
+                // tin". Cổng quản trị cố tình gộp mọi ca hỏng vào một câu để
+                // không rò rỉ danh sách nhân viên — nhưng câu khoá tạm thì
+                // KHÔNG rò rỉ gì (bộ đếm chạy theo chuỗi định danh, kể cả
+                // định danh không có tài khoản), nên nó đáng được nói thẳng.
+                'locked' => true,
+                'error'  => "Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau {$phut} phút.",
+            ];
         }
 
-        if (!password_verify($password, $user['password_hash'])) {
+        $user = static::findByLogin($login);
+
+        /* HAI CA HỎNG, MỘT CHỖ GHI NHẬN.
+
+           Ghi nhận ở hai chỗ riêng thì dễ sót một chỗ — và lần đầu viết hàm
+           này đã sót thật: phép dọn thưa thớt chỉ nằm ở nhánh "không tìm thấy
+           tài khoản", nên trên site chạy ổn định (nơi phần lớn lượt hỏng là
+           khách gõ nhầm mật khẩu của chính mình) bảng đếm gần như không bao
+           giờ được dọn. Hosting không có cron nên đây là cơ chế dọn DUY NHẤT. */
+        $hong = $user === null || !password_verify($password, $user['password_hash']);
+
+        if ($user === null) {
+            // Vẫn băm một chuỗi giả khi không tìm thấy tài khoản, để thời gian
+            // phản hồi của hai nhánh xấp xỉ nhau. Trả về ngay lập tức sẽ nhanh
+            // hơn hẳn nhánh có password_verify, và chênh lệch đó đủ để dò email.
+            password_verify($password, '$2y$12$' . str_repeat('.', 53));
+        }
+
+        if ($hong) {
+            LoginAttemptModel::ghiNhanHong($login);
+
+            // Dọn thưa thớt, 1/50 lượt hỏng — cùng nếp với
+            // RememberModel::purgeExpired().
+            if (random_int(1, 50) === 1) {
+                LoginAttemptModel::donCu();
+            }
+
             return ['ok' => false, 'error' => 'Thông tin đăng nhập không đúng.'];
         }
 
@@ -490,6 +538,10 @@ class UserModel extends BaseModel
             'UPDATE users SET last_login_at = NOW() WHERE id = :id',
             ['id' => $user['id']]
         );
+
+        // Vào được thì xoá bộ đếm: SNFR-06 nói "5 lần sai LIÊN TIẾP", nên một
+        // lần đúng cắt đứt chuỗi đó.
+        LoginAttemptModel::xoa($login);
 
         return ['ok' => true, 'id' => $user['id']];
     }
