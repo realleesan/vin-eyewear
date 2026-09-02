@@ -132,7 +132,7 @@
         }
     }
 
-    /* ── 3. BỐN QUY TẮC MẬT KHẨU, chấm ngay khi gõ ──────────────────────── */
+    /* ── 3. NĂM QUY TẮC MẬT KHẨU, chấm ngay khi gõ ──────────────────────── */
 
     var form = document.querySelector('form[data-pw-rules]');
 
@@ -142,11 +142,22 @@
            ĐẦU TIÊN theo thứ tự tài liệu, nên ở màn có thêm ô "nhập lại" thì
            vẫn đúng ô trên. */
         var input = form.querySelector('input[name="password"], input[name="new_password"]');
+        /* NĂM quy tắc này phải KHỚP passwordProblem() trong core/helpers.php —
+           đó mới là nơi quyết định, đây chỉ là bản chấm được của nó. Thêm
+           'special' và siết 'len' thành 8–32 ngày 2026-09-02 theo SNFR-09.
+
+           'len' đếm bằng Array.from(v).length chứ không phải v.length: chuỗi
+           JavaScript đếm theo UTF-16 code unit, nên emoji hay vài ký tự hiếm
+           bị tính thành 2 trong khi PHP utf8Length() tính thành 1. Với tiếng
+           Việt thì hai cách cho cùng kết quả, nhưng để lệch là có ngày chấm
+           xanh mà máy chủ vẫn từ chối — đúng thứ khối chú thích ở
+           auth/_password-rules.php cảnh báo. */
         var rules = {
-            len:   function (v) { return v.length >= 8; },
-            upper: function (v) { return /[A-Z]/.test(v); },
-            lower: function (v) { return /[a-z]/.test(v); },
-            digit: function (v) { return /[0-9]/.test(v); }
+            len:     function (v) { var n = Array.from(v).length; return n >= 8 && n <= 32; },
+            upper:   function (v) { return /[A-Z]/.test(v); },
+            lower:   function (v) { return /[a-z]/.test(v); },
+            digit:   function (v) { return /[0-9]/.test(v); },
+            special: function (v) { return /[^A-Za-z0-9]/.test(v); }
         };
 
         if (input) {

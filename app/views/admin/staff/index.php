@@ -360,9 +360,16 @@ $moHop = $canReset && ($ed !== null || isset($_GET['them']));
                              Để trống thì người ta gõ "123456" cho nhanh, và chuỗi ấy
                              mở thẳng khu quản trị. Chuỗi do controller sinh, không
                              phải view. */ ?>
+                    <?php /* maxlength 32, KHÔNG PHẢI 72. Con số cũ là trần byte của
+                             bcrypt; nay createStaff() kiểm bằng passwordProblem() và
+                             hàm đó chốt ở 32 KÝ TỰ theo SNFR-09. Để 72 thì trình
+                             duyệt cho gõ một chuỗi mà máy chủ sẽ đá về — form hứa
+                             nhẹ hơn thứ máy chủ thật sự đòi là cách chắc nhất để
+                             người dùng bị từ chối mà không hiểu vì sao. */ ?>
                     <input type="text" id="nv-mk" name="password" required minlength="8"
-                           maxlength="72" class="amono" value="<?= e($newPass) ?>">
+                           maxlength="32" class="amono" value="<?= e($newPass) ?>">
                     <p class="field__hint">
+                        8–32 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
                         Gửi riêng cho nhân viên — bảo họ vào mục <strong>Đổi mật khẩu</strong>
                         đặt lại ngay ở lần đăng nhập đầu.
                     </p>

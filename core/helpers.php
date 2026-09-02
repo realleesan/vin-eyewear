@@ -749,12 +749,52 @@ function looksLikePhone(string $login): bool
  */
 function passwordProblem(string $password): ?string
 {
+    /*
+     * BỐN ĐIỀU KIỆN + TRẦN 32 KÝ TỰ LÀ NGUYÊN VĂN SRS, KHÔNG PHẢI Ý CHÚNG TA.
+     * UC-3.2.1.1 (Business rule) và SNFR-09 chốt: "Độ dài từ 8 - 32 ký tự,
+     * chứa ít nhất 1 chữ hoa, 1 chữ thường, 1 số và 1 ký tự đặc biệt."
+     *
+     * Bản cũ thiếu vế ký tự đặc biệt và lấy trần 72 — 72 là giới hạn kỹ thuật
+     * của bcrypt (nó cắt cụt từ byte thứ 73), không phải quy định nghiệp vụ.
+     * Giữ 32 thì vừa đúng đặc tả vừa nằm an toàn dưới ngưỡng cắt cụt ấy.
+     *
+     * Đếm bằng utf8Length() chứ không phải strlen(): khách gõ mật khẩu có dấu
+     * thì mỗi chữ cái ăn 2-3 byte, "Mật_khẩu1" mới 9 ký tự đã bị strlen tính
+     * thành 13 — trần 32 sẽ chặn nhầm những mật khẩu hoàn toàn hợp lệ.
+     *
+     * utf8Length() CHỨ KHÔNG PHẢI mb_strlen(): máy chủ của cửa hàng không nạp
+     * extension mbstring, gọi hàm mb_* là lỗi 500 — xem ghi chú ở utf8Length()
+     * ngay trên trong file này. Hàm này nằm trên đường đăng ký, quên mật khẩu,
+     * đổi mật khẩu và thêm nhân viên, nên một lỗi 500 ở đây là chặn cả bốn.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * HAI TRẦN ĐỘ DÀI, VÀ CẢ HAI ĐỀU CẦN
+     *
+     *   32 KÝ TỰ   luật nghiệp vụ, nguyên văn SNFR-09 và UC-3.2.1.1.
+     *   72 BYTE    chốt kỹ thuật của bcrypt: password_hash() CẮT CỤT từ byte
+     *              thứ 73 và không báo gì.
+     *
+     * Bỏ vế byte đi thì mật khẩu 32 ký tự tiếng Việt có dấu = 96 byte, và
+     * bcrypt chỉ băm 72 byte đầu — tức gõ đúng 24 ký tự đầu là đăng nhập được,
+     * còn mọi mật khẩu trùng 72 byte đầu thì tương đương nhau. Mật khẩu càng
+     * dài, càng có dấu, càng yếu. Đã thử trên PHP 8.4 để chắc.
+     *
+     * Hai vế dùng CHUNG một câu báo lỗi: người dùng không cần biết bcrypt là
+     * gì, và câu "tối đa 32 ký tự" là câu đã nghiệm thu theo SRS.
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * Ký tự đặc biệt = mọi thứ không phải chữ cái ASCII và không phải chữ số.
+     * Cố ý KHÔNG liệt kê một danh sách trắng: liệt kê thì bàn phím tiếng Việt
+     * gõ ra ký tự ngoài danh sách sẽ bị báo sai một cách khó hiểu.
+     */
     return match (true) {
-        strlen($password) < 8             => 'Mật khẩu phải có ít nhất 8 ký tự.',
-        strlen($password) > 72            => 'Mật khẩu quá dài (tối đa 72 ký tự).',
-        !preg_match('/[A-Z]/', $password) => 'Mật khẩu phải có ít nhất một chữ hoa.',
-        !preg_match('/[a-z]/', $password) => 'Mật khẩu phải có ít nhất một chữ thường.',
-        !preg_match('/[0-9]/', $password) => 'Mật khẩu phải có ít nhất một chữ số.',
-        default                           => null,
+        utf8Length($password) < 8                => 'Mật khẩu phải có ít nhất 8 ký tự.',
+        utf8Length($password) > 32               => 'Mật khẩu quá dài (tối đa 32 ký tự).',
+        strlen($password) > 72                   => 'Mật khẩu quá dài (tối đa 32 ký tự).',
+        !preg_match('/[A-Z]/', $password)        => 'Mật khẩu phải có ít nhất một chữ hoa.',
+        !preg_match('/[a-z]/', $password)        => 'Mật khẩu phải có ít nhất một chữ thường.',
+        !preg_match('/[0-9]/', $password)        => 'Mật khẩu phải có ít nhất một chữ số.',
+        !preg_match('/[^A-Za-z0-9]/', $password) => 'Mật khẩu phải có ít nhất một ký tự đặc biệt.',
+        default                                  => null,
     };
 }

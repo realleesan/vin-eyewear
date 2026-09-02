@@ -71,8 +71,18 @@ class UserModel extends BaseModel
             return ['ok' => false, 'error' => 'Email không hợp lệ.'];
         }
 
-        if (strlen($password) < 8) {
-            return ['ok' => false, 'error' => 'Mật khẩu phải có ít nhất 8 ký tự.'];
+        /* CHỐT TẦNG MODEL, dùng ĐÚNG hàm kiểm mà controller dùng.
+
+           AuthController::signupFinish() đã gọi passwordProblem() trước khi
+           tới đây, nên trước mắt không lộ ra gì. Nhưng đây là chốt SÂU NHẤT —
+           chốt mà đường đặt mật khẩu thứ tư thêm sau này sẽ dựa vào — và để nó
+           yếu hơn tầng trên thì hai tầng nói hai luật khác nhau: chỗ này nhận
+           một mật khẩu 40 ký tự không có ký tự đặc biệt mà controller từ chối.
+
+           Cùng một lý lẽ đã ghi ở changePassword() và createStaff(): mọi đường
+           đặt mật khẩu phải đi qua đúng một hàm kiểm. */
+        if (($loiMatKhau = passwordProblem($password)) !== null) {
+            return ['ok' => false, 'error' => $loiMatKhau];
         }
 
         if ($email !== '' && static::exists(['email' => $email])) {
@@ -495,8 +505,14 @@ class UserModel extends BaseModel
             return ['ok' => false, 'error' => 'Mật khẩu hiện tại không đúng.'];
         }
 
-        if (strlen($new) < 8) {
-            return ['ok' => false, 'error' => 'Mật khẩu mới phải có ít nhất 8 ký tự.'];
+        /* DÙNG CHUNG passwordProblem() VỚI LUỒNG ĐĂNG KÝ.
+
+           Trước đây chỗ này chỉ đo độ dài 8 ký tự, nên đăng ký thì bị bắt đủ
+           bốn điều kiện của SNFR-09 còn đổi mật khẩu thì lọt: gõ "12345678" là
+           qua. Một chính sách mật khẩu có một cửa hậu thì không phải chính
+           sách. Mọi đường đặt mật khẩu phải đi qua đúng một hàm kiểm. */
+        if (($loi = passwordProblem($new)) !== null) {
+            return ['ok' => false, 'error' => $loi];
         }
 
         Database::execute(
@@ -508,14 +524,37 @@ class UserModel extends BaseModel
     }
 
     /**
-     * Sinh mật khẩu ngẫu nhiên chỉ gồm chữ và số.
+     * Sinh mật khẩu ngẫu nhiên ĐẠT ĐỦ bốn điều kiện của SNFR-09.
      *
      * random_int() lấy từ nguồn ngẫu nhiên của hệ điều hành và phân bố đều.
      * KHÔNG dùng rand()/mt_rand() (sinh dãy đoán được nếu biết seed), cũng
      * không dùng `random_bytes() % 62` (lệch về các ký tự đầu bảng chữ).
      *
-     * Bỏ ký tự đặc biệt để mật khẩu đọc qua điện thoại hay chép tay không bị
-     * nhầm — 20 ký tự chữ-số đã là ~119 bit, thừa sức.
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO NAY CÓ KÝ TỰ ĐẶC BIỆT, DÙ TRƯỚC ĐÂY CỐ Ý BỎ
+     *
+     * Bản cũ chỉ dùng chữ và số, với lý do chính đáng: mật khẩu tạm hay được
+     * đọc qua điện thoại hoặc chép tay cho đồng nghiệp, mà ký tự đặc biệt thì
+     * dễ nghe nhầm. Về mặt độ mạnh thì 20 ký tự chữ-số đã là ~119 bit, thừa.
+     *
+     * Nhưng SNFR-09 áp cho TÀI KHOẢN NỘI BỘ: "tối thiểu 8 ký tự, bao gồm ít
+     * nhất 01 chữ hoa, 01 chữ thường, 01 chữ số và 01 ký tự đặc biệt". Từ khi
+     * createStaff() kiểm bằng passwordProblem(), một mật khẩu chỉ chữ-số sinh
+     * ra từ đây sẽ bị chính hệ thống từ chối ngay ở form thêm nhân viên — hàm
+     * sinh và hàm kiểm không được phép nói hai thứ khác nhau.
+     *
+     * Bộ ký tự đặc biệt CỐ TÌNH HẸP (!@#$%*-_): bỏ những ký tự đọc lên dễ
+     * nhầm hoặc gõ khác nhau giữa các bố cục bàn phím — dấu nháy, gạch chéo,
+     * ngoặc, dấu chấm câu. Giữ lại phần lớn lợi ích của bản cũ.
+     *
+     * BẢNG CHỮ CÁI CŨNG BỎ KÝ TỰ NHÌN GIỐNG NHAU (0/O, 1/l/I): chép tay sai
+     * một ký tự là gọi lại hỏi, và đó là chi phí thật ở quầy.
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * GHÉP MỖI NHÓM MỘT KÝ TỰ RỒI XÁO, chứ không sinh ngẫu nhiên rồi cầu may:
+     * rút 12 ký tự từ một rổ trộn sẵn thì vẫn có xác suất khác 0 là không có
+     * chữ số nào — hiếm, nhưng "hiếm" nghĩa là một ngày nào đó form thêm nhân
+     * viên báo lỗi không ai hiểu vì sao.
      *
      * ĐÂY LÀ ĐỊNH NGHĨA DUY NHẤT của "mật khẩu do hệ thống sinh".
      * database/make-admin.php từng có bản sao riêng; nay nó gọi hàm này, để
@@ -523,15 +562,40 @@ class UserModel extends BaseModel
      */
     public static function randomPassword(int $length = 20): string
     {
-        $abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        $max = strlen($abc) - 1;
-        $out = '';
+        $hoa      = 'ABCDEFGHJKLMNPQRSTUVWXYZ';   // bỏ I, O
+        $thuong   = 'abcdefghijkmnpqrstuvwxyz';   // bỏ l, o
+        $so       = '23456789';                   // bỏ 0, 1
+        $dacBiet  = '!@#$%*-_';
 
-        for ($i = 0; $i < $length; $i++) {
-            $out .= $abc[random_int(0, $max)];
+        // Ngắn hơn 8 thì không thể vừa đủ bốn nhóm vừa đúng SNFR-09; nâng lên
+        // thay vì trả về một chuỗi mà hàm kiểm sẽ từ chối.
+        $length = max(8, $length);
+
+        $kho = $hoa . $thuong . $so . $dacBiet;
+        $max = strlen($kho) - 1;
+
+        // Bốn ký tự bắt buộc trước, phần còn lại rút tự do.
+        $kyTu = [
+            $hoa[random_int(0, strlen($hoa) - 1)],
+            $thuong[random_int(0, strlen($thuong) - 1)],
+            $so[random_int(0, strlen($so) - 1)],
+            $dacBiet[random_int(0, strlen($dacBiet) - 1)],
+        ];
+
+        for ($i = count($kyTu); $i < $length; $i++) {
+            $kyTu[] = $kho[random_int(0, $max)];
         }
 
-        return $out;
+        /* Xáo Fisher-Yates bằng random_int, KHÔNG dùng shuffle(): shuffle()
+           chạy trên bộ sinh giả ngẫu nhiên của PHP, nên thứ tự bốn ký tự bắt
+           buộc — vốn luôn nằm ở bốn vị trí đầu trước khi xáo — đoán được nếu
+           biết seed. Ở đây thì đó là thông tin về chính mật khẩu. */
+        for ($i = count($kyTu) - 1; $i > 0; $i--) {
+            $j = random_int(0, $i);
+            [$kyTu[$i], $kyTu[$j]] = [$kyTu[$j], $kyTu[$i]];
+        }
+
+        return implode('', $kyTu);
     }
 
     /**
@@ -1260,8 +1324,20 @@ class UserModel extends BaseModel
             return ['ok' => false, 'error' => 'Email không hợp lệ.'];
         }
 
-        if (strlen($password) < 8) {
-            return ['ok' => false, 'error' => 'Mật khẩu tạm phải có ít nhất 8 ký tự.'];
+        /* SNFR-09 ÁP CHO CẢ TÀI KHOẢN NỘI BỘ, không riêng khách: "Mật khẩu tài
+           khoản nội bộ tối thiểu 8 ký tự, bao gồm ít nhất 01 chữ hoa, 01 chữ
+           thường, 01 chữ số và 01 ký tự đặc biệt."
+
+           Trước đây chỗ này chỉ đo độ dài, nên tài khoản có quyền vào khu quản
+           trị lại được đặt mật khẩu YẾU HƠN tài khoản khách — ngược hẳn mức độ
+           nhạy cảm của hai bên. Một nhân viên xoá ô mật khẩu tạm rồi gõ
+           "vineyewear2026" là qua.
+
+           randomPassword() đã được sửa cùng lần này để mật khẩu tạm in sẵn
+           trong form luôn thoả bốn điều kiện — nếu không thì chính ô điền sẵn
+           của hệ thống sẽ bị hàm kiểm từ chối. */
+        if (($loiMatKhau = passwordProblem($password)) !== null) {
+            return ['ok' => false, 'error' => 'Mật khẩu tạm: ' . lcfirst($loiMatKhau)];
         }
 
         /* Email trùng thì DỪNG, không âm thầm gắn thêm vai trò cho tài khoản
