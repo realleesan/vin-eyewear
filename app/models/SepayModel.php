@@ -141,12 +141,32 @@ class SepayModel extends BaseModel
             }
         }
 
-        /* ── GHI SỔ TRƯỚC ─────────────────────────────────────────────────
-           Trùng `sepay_id` = SePay gửi lại thứ đã xử lý xong. Trả về ngay,
-           KHÔNG đụng lại vào đơn. Xem khối chú thích đầu file. */
+        /* ── GHI SỔ VÀ ĐỔI ĐƠN TRONG MỘT TRANSACTION ──────────────────────
+           SNFR-06 / SW_02: "cập nhật trạng thái + trừ kho + xác nhận cọc
+           trong 1 transaction".
+
+           TRƯỚC ĐÂY HAI VIỆC NÀY LÀ HAI LỆNH RỜI, và đó là lỗ hổng tiền thật:
+           ghi sổ xong, chết trước khi kịp đổi đơn (mất kết nối CSDL, hết bộ
+           nhớ, PHP bị giết vì quá thời gian) thì dòng sổ đã nằm đó với
+           `applied = 'paid'` trong khi đơn vẫn `unpaid`. Lần SePay gửi lại bị
+           chính khoá UNIQUE `sepay_id` chặn ở ngay câu INSERT, nên hệ thống
+           KHÔNG BAO GIỜ tự chữa được: tiền đã về tài khoản mà đơn đứng im,
+           cho tới khi có người đọc sao kê và bấm tay.
+
+           Bọc hai việc vào một transaction thì nhánh chết đó cuộn lại cả dòng
+           sổ, khoá UNIQUE trống trở lại, và lần gửi lại của SePay chạy sạch từ
+           đầu. Tính idempotent KHÔNG mất đi: lần xử lý THÀNH CÔNG mới commit
+           dòng sổ, nên bản gửi lại của một giao dịch đã xong vẫn đâm vào khoá
+           UNIQUE và dừng đúng như cũ.
+
+           Thứ tự trong transaction vẫn là ghi sổ trước, đổi đơn sau — giữ
+           nguyên vì khoá UNIQUE phải là thứ chặn sớm nhất. */
         try {
-            Database::execute(
-                'INSERT INTO sepay_transactions
+            Database::transaction(static function () use (
+                $sepayId, $order, $code, $txn, $type, $amount, $status
+            ): void {
+                Database::execute(
+                    'INSERT INTO sepay_transactions
                     (id, sepay_id, order_id, order_code, gateway, account_number,
                      transfer_type, amount, content, reference_code,
                      transaction_date, applied)
@@ -154,39 +174,75 @@ class SepayModel extends BaseModel
                     (:id, :sepay_id, :order_id, :order_code, :gateway, :account_number,
                      :transfer_type, :amount, :content, :reference_code,
                      :transaction_date, :applied)',
-                [
-                    'id'               => uuid(),
-                    'sepay_id'         => $sepayId,
-                    'order_id'         => $order['id'] ?? null,
-                    'order_code'       => $code,
-                    'gateway'          => self::clip($txn['gateway'] ?? null, 64),
-                    'account_number'   => self::clip($txn['accountNumber'] ?? null, 64),
-                    'transfer_type'    => $type === 'out' ? 'out' : 'in',
-                    'amount'           => $amount,
-                    'content'          => $txn['content'] ?? null,
-                    'reference_code'   => self::clip($txn['referenceCode'] ?? null, 64),
-                    'transaction_date' => self::date($txn['transactionDate'] ?? null),
-                    'applied'          => $status,
-                ]
-            );
+                    [
+                        'id'               => uuid(),
+                        'sepay_id'         => $sepayId,
+                        'order_id'         => $order['id'] ?? null,
+                        'order_code'       => $code,
+                        'gateway'          => self::clip($txn['gateway'] ?? null, 64),
+                        'account_number'   => self::clip($txn['accountNumber'] ?? null, 64),
+                        'transfer_type'    => $type === 'out' ? 'out' : 'in',
+                        'amount'           => $amount,
+                        'content'          => $txn['content'] ?? null,
+                        'reference_code'   => self::clip($txn['referenceCode'] ?? null, 64),
+                        'transaction_date' => self::date($txn['transactionDate'] ?? null),
+                        'applied'          => $status,
+                    ]
+                );
+
+                // ── RỒI MỚI ĐỔI ĐƠN, VẪN TRONG CÙNG TRANSACTION ──────────
+                if ($order !== null && $status === 'paid') {
+                    OrderModel::markPaid($order['id']);
+                } elseif ($order !== null && $status === 'deposit_paid') {
+                    OrderModel::markDepositPaid($order['id']);
+                }
+            });
         } catch (Throwable $e) {
-            /* Gần như chắc chắn là trùng khoá UNIQUE, tức đã xử lý rồi. Vẫn ghi
-               log để một lỗi THẬT (mất bảng, sai kiểu cột) không lặng lẽ đội lốt
-               "trùng" — nếu không thì ngày CSDL hỏng, webhook vẫn trả 200 vui vẻ
-               và tiền về mà đơn không đổi, không ai biết. */
-            error_log('[SePay] Không ghi được giao dịch #' . $sepayId . ': ' . $e->getMessage());
+            error_log('[SePay] Không xử lý được giao dịch #' . $sepayId . ': ' . $e->getMessage());
 
-            return ['status' => $status, 'order_code' => $code, 'duplicate' => true];
-        }
+            /* TRÙNG HAY HỎNG THẬT? HAI CA NÀY PHẢI TRẢ LỜI KHÁC NHAU.
 
-        // ── RỒI MỚI ĐỔI ĐƠN ─────────────────────────────────────────────
-        if ($order !== null && $status === 'paid') {
-            OrderModel::markPaid($order['id']);
-        } elseif ($order !== null && $status === 'deposit_paid') {
-            OrderModel::markDepositPaid($order['id']);
+               Trước đây mọi lỗi ở đây đều bị coi là "trùng" và webhook trả 200
+               — tức là một lỗi THẬT (mất bảng, sai kiểu cột, CSDL sập giữa
+               chừng) cũng khiến SePay thôi gửi lại, và tiền về mà đơn không
+               đổi. Không có gì nổ ra, không ai biết.
+
+               Phân biệt bằng cách hỏi lại CSDL chứ không đọc mã lỗi của
+               driver: mã lỗi phụ thuộc PDO/MySQL/MariaDB và cách bọc ngoại lệ,
+               còn "dòng ấy đã có trong sổ chưa" thì luôn đúng. Transaction đã
+               cuộn lại rồi nên câu hỏi này chỉ thấy dữ liệu đã commit thật.
+
+               Ném tiếp khi KHÔNG phải trùng: SepayController bắt Throwable và
+               trả 500, đó là tín hiệu để SePay gửi lại — lần sau có cơ hội
+               thành công vì transaction đã dọn sạch dấu vết lần hỏng. */
+            if (self::daGhiSo($sepayId)) {
+                return ['status' => $status, 'order_code' => $code, 'duplicate' => true];
+            }
+
+            throw $e;
         }
 
         return ['status' => $status, 'order_code' => $code];
+    }
+
+    /**
+     * Giao dịch này đã nằm trong sổ chưa?
+     *
+     * Chỉ dùng ở nhánh hỏng của handle() để tách "SePay gửi lại" khỏi "CSDL
+     * đang hỏng". Nuốt lỗi và trả false: không tra được thì coi như CHƯA ghi,
+     * để handle() ném tiếp và SePay gửi lại — thà xử lý lại một giao dịch (đã
+     * có khoá UNIQUE chặn) còn hơn bỏ rơi một khoản tiền đã về.
+     */
+    private static function daGhiSo(int $sepayId): bool
+    {
+        try {
+            return (int) Database::fetchValue(
+                'SELECT COUNT(*) FROM sepay_transactions WHERE sepay_id = :s',
+                ['s' => $sepayId]
+            ) > 0;
+        } catch (Throwable) {
+            return false;
+        }
     }
 
     /**
