@@ -1539,6 +1539,12 @@ CREATE TABLE `customer_audit_logs` (
     -- 'rx.read' | 'rx.create' | 'rx.update' | 'rx.delete' | 'profile.update'
     -- 'address.save' | 'address.delete' | 'note.save' | 'note.delete'
     -- 'lock' | 'unlock' | 'soft_delete' | 'restore' | 'reset_email' | 'export'
+    -- Thêm 2026-09-02 theo SNFR-11 (cập nhật trạng thái cọc, điều chỉnh kho ảo,
+    -- huỷ đơn hàng — ba nhóm trước đây không để lại vết nào):
+    -- 'payment.paid' | 'payment.unpaid' | 'payment.deposit'
+    -- 'order.status' | 'order.cancel' | 'stock.adjust'
+    -- Với các vết này, `user_id` mang id CHỦ ĐƠN (NULL với khách vãng lai và
+    -- với thao tác kho); `actor_id` mới là người bấm.
     `action`     VARCHAR(32)  NOT NULL,
     `detail`     VARCHAR(255) NULL,
     -- 45 ký tự: đủ cho IPv6 dạng dài nhất.

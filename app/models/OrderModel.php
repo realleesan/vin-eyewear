@@ -819,10 +819,39 @@ class OrderModel extends BaseModel
              * huỷ từ trước, nhân viên bấm lại nút Lưu" — và bấm lại là chuyện
              * xảy ra thường xuyên.
              */
-            $truoc = (string) (self::find($id)['status'] ?? '');
+            $donCu = self::find($id);
+            $truoc = (string) ($donCu['status'] ?? '');
 
             self::update($id, ['status' => $status]);
             self::logStatus($id, $status, $changedBy);
+
+            /* VẾT ĐỔI TRẠNG THÁI — SNFR-11 gọi đích danh "huỷ đơn hàng".
+
+               `order_status_history` (do logStatus ghi) đã lưu chuỗi trạng
+               thái, nhưng nó là sổ NGHIỆP VỤ của riêng đơn: không có IP, và
+               người đọc nó là nhân viên xử lý đơn. SNFR-11 đòi một vết KIỂM
+               TOÁN đọc được cùng chỗ với các thao tác nhạy cảm khác, lọc được
+               theo người thực hiện. Hai bảng, hai mục đích — giữ cả hai.
+
+               Chỉ ghi khi trạng thái THẬT SỰ đổi: nhân viên bấm Lưu lại đúng
+               trạng thái cũ là chuyện xảy ra suốt, và một bảng vết đầy dòng
+               "không đổi gì" thì không ai đọc nữa.
+
+               Huỷ đơn tách riêng thành order.cancel: đây là hành động duy nhất
+               trong nhóm này làm mất doanh thu và trả hàng về kho, nên nó đáng
+               có bộ lọc riêng ở màn xem vết. */
+            if ($truoc !== $status) {
+                self::ghiVetTien(
+                    $id,
+                    $status === 'cancelled' ? 'order.cancel' : 'order.status',
+                    sprintf(
+                        'Trạng thái %s -> %s',
+                        self::STATUSES[$truoc] ?? ($truoc !== '' ? $truoc : '(chưa có)'),
+                        self::STATUSES[$status] ?? $status
+                    ),
+                    $donCu
+                );
+            }
 
             /*
              * ─────────────────────────────────────────────────────────────
@@ -923,9 +952,47 @@ class OrderModel extends BaseModel
 
         if ($doi) {
             self::grantFullPaymentReward($id);
+            self::ghiVetTien($id, 'payment.paid', 'Đánh dấu đã thanh toán đủ');
         }
 
         return $doi;
+    }
+
+    /**
+     * Ghi vết một thao tác tiền lên đơn — SNFR-11.
+     *
+     * ĐẶT TRONG MODEL, KHÔNG Ở CONTROLLER — cùng lý lẽ đã ghi dài ở
+     * grantFullPaymentReward(): có ba đường đưa một đơn sang 'paid' (webhook
+     * SePay, nhân viên bấm ở /quan-tri/don-hang, đơn COD đánh dấu đã giao).
+     * Rải lời gọi ra ba chỗ thì đường thứ tư thêm sau này sẽ thiếu vết, và
+     * không có lỗi nào nổ ra để ai biết.
+     *
+     * Chỉ chạy khi trạng thái THẬT SỰ đổi (nơi gọi đã lọc), nên webhook gửi
+     * lại bảy lần cũng chỉ một dòng vết.
+     *
+     * actor_id do AuditLogModel::write() tự lấy từ phiên quản trị: nhân viên
+     * bấm thì có tên, webhook SePay chạy thì NULL — và NULL ở đây đọc đúng
+     * nghĩa "hệ thống tự làm", không phải thiếu dữ liệu.
+     *
+     * NUỐT LỖI: write() đã tự nuốt và error_log. Không để một bảng vết thiếu
+     * làm hỏng việc ghi nhận tiền — tiền mới là việc chính.
+     */
+    private static function ghiVetTien(
+        string $id,
+        string $action,
+        string $moTa,
+        ?array $order = null
+    ): void {
+        // Nhận sẵn bản ghi đơn khi nơi gọi đã đọc rồi. changeStatus() vừa
+        // find() ở ngay trên, và các thao tác hàng loạt chạy hàm này tối đa
+        // BULK_MAX lần — mỗi lần một SELECT * thừa là thấy được trên đồng hồ.
+        $order ??= self::find($id);
+
+        AuditLogModel::write(
+            $order['user_id'] ?? null,
+            $action,
+            sprintf('%s — đơn %s', $moTa, (string) ($order['code'] ?? $id))
+        );
     }
 
     /**
@@ -999,12 +1066,19 @@ class OrderModel extends BaseModel
      */
     public static function markDepositPaid(string $id): bool
     {
-        return Database::execute(
+        $doi = Database::execute(
             "UPDATE orders
                 SET payment_status = 'deposit_paid'
               WHERE id = :id AND payment_status = 'unpaid'",
             ['id' => $id]
         ) > 0;
+
+        // SNFR-11 gọi đích danh "cập nhật trạng thái cọc" — xem ghiVetTien().
+        if ($doi) {
+            self::ghiVetTien($id, 'payment.deposit', 'Ghi nhận tiền cọc 30%');
+        }
+
+        return $doi;
     }
 
     /**
@@ -1015,12 +1089,21 @@ class OrderModel extends BaseModel
      */
     public static function markUnpaid(string $id): bool
     {
-        return Database::execute(
+        $doi = Database::execute(
             "UPDATE orders
                 SET payment_status = 'unpaid', paid_at = NULL
               WHERE id = :id AND payment_status <> 'unpaid'",
             ['id' => $id]
         ) > 0;
+
+        /* Gỡ đánh dấu thanh toán là thao tác CẦN VẾT NHẤT trong ba cái: nó
+           lùi một khoản tiền đã ghi nhận về không. "Bấm nhầm" và "cố tình" ở
+           đây trông giống hệt nhau trên bảng đơn, chỉ vết mới phân biệt được. */
+        if ($doi) {
+            self::ghiVetTien($id, 'payment.unpaid', 'Gỡ đánh dấu đã thanh toán');
+        }
+
+        return $doi;
     }
 
     /**

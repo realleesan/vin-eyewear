@@ -161,10 +161,22 @@ class InventoryAdminController extends AdminController
         $id  = (string) ($_POST['id'] ?? '');
         $qty = max(0, (int) ($_POST['stock_quantity'] ?? 0));
 
-        if (!ProductModel::exists(['id' => $id])) {
+        /* find() chứ không exists(): một truy vấn thay vì hai, và bản ghi đọc
+           về còn cần cho vết ở dưới — SKU và tên là thứ người đối soát kiểm kê
+           tra được, còn UUID thì không. */
+        $sp = ProductModel::find($id);
+
+        if ($sp === null) {
             flash('admin_error', 'Không tìm thấy sản phẩm.');
             redirect('/quan-tri/ton-kho');
         }
+
+        /* Tồn CŨ, đọc trước khi ghi đè — cần cho vết ở dưới.
+
+           Một vết chỉ nói "đã sửa tồn thành 40" thì không đối soát được: câu
+           hỏi khi kiểm kê lệch luôn là "40 này từ mấy lên?". Ghi cả hai đầu
+           thì đọc vết là dựng lại được đường đi của con số. */
+        $truoc = (int) ($sp['stock_quantity'] ?? 0);
 
         // Đồng bộ luôn cột status: để tồn 0 mà status vẫn 'in_stock' thì
         // trang bán hàng vẫn cho thêm vào giỏ rồi mới báo lỗi lúc đặt.
@@ -172,6 +184,27 @@ class InventoryAdminController extends AdminController
             'stock_quantity' => $qty,
             'status'         => $qty > 0 ? 'in_stock' : 'out_of_stock',
         ]);
+
+        /* VẾT ĐIỀU CHỈNH KHO — SNFR-11 gọi đích danh "điều chỉnh Kho ảo".
+
+           user_id để NULL: bảng vết viết cho dữ liệu khách hàng, mà tồn kho
+           không thuộc về khách nào. actor_id (do write() tự lấy từ phiên) mới
+           là thứ cần ở đây.
+
+           Ghi cả khi $truoc === $qty: nhân viên bấm Lưu mà không đổi gì vẫn là
+           một lần chạm vào kho, và lúc đối soát thì biết người đó đã xem qua
+           dòng này cũng là thông tin. */
+        AuditLogModel::write(
+            null,
+            'stock.adjust',
+            sprintf(
+                'Sản phẩm %s (%s): tồn %d -> %d',
+                (string) ($sp['sku'] ?? $id),
+                (string) ($sp['name'] ?? ''),
+                $truoc,
+                $qty
+            )
+        );
 
         flash('admin_success', 'Đã cập nhật tồn kho.');
 

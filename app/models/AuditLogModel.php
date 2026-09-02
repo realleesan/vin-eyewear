@@ -57,6 +57,24 @@ class AuditLogModel extends BaseModel
         // ngày 2026-08-28, nhưng vết đã ghi thì phải còn đọc được.
         'reset_email'    => 'Gửi liên kết đặt lại mật khẩu',
         'export'         => 'Xuất danh sách khách hàng',
+
+        /* ── VẾT CHO THAO TÁC TIỀN VÀ KHO — SNFR-11 ────────────────────────
+           SNFR-11 liệt kê đích danh bốn nhóm phải có vết: tạo/sửa/xoá hồ sơ
+           khúc xạ, CẬP NHẬT TRẠNG THÁI CỌC, ĐIỀU CHỈNH KHO ẢO, HUỶ ĐƠN HÀNG.
+           Bốn khoá rx.* ở trên lo nhóm đầu; ba nhóm còn lại trước bản này
+           không để lại vết nào — đánh dấu "đã thu tiền" của một đơn là thao
+           tác ra tiền thật mà không ai biết ai bấm, lúc nào.
+
+           Bảng vết vốn viết cho dữ liệu khách hàng nên cột tên là `user_id`;
+           với các vết dưới đây nó mang id CHỦ ĐƠN (NULL với khách vãng lai và
+           với thao tác kho, vì kho không thuộc về khách nào). Cột `actor_id`
+           mới là thứ trả lời "ai bấm", và nó đã đúng sẵn. */
+        'payment.paid'    => 'Đánh dấu đã thanh toán',
+        'payment.unpaid'  => 'Gỡ đánh dấu thanh toán',
+        'payment.deposit' => 'Ghi nhận tiền cọc',
+        'order.status'    => 'Đổi trạng thái đơn hàng',
+        'order.cancel'    => 'Huỷ đơn hàng',
+        'stock.adjust'    => 'Điều chỉnh tồn kho',
     ];
 
     public static function available(): bool
