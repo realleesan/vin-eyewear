@@ -79,7 +79,12 @@ class AuditLogModel extends BaseModel
         }
 
         try {
-            $actorId = AuthMiddleware::staffId();
+            /* false = CHỈ HỎI, không huỷ phiên và không gia hạn phiên.
+
+               Ghi log mà đăng xuất được người dùng thì sai vai; và hàm này có
+               thể chạy giữa lúc dựng trang, lúc đó huỷ phiên là phần view còn
+               lại mất flash lẫn token CSRF. Xem chú thích ở staffId(). */
+            $actorId = AuthMiddleware::staffId(false);
 
             /* Tên người thao tác CHÉP LẠI tại đây, không join lúc đọc: người
                này có thể nghỉ việc và bị xoá tài khoản, lúc đó actor_id thành

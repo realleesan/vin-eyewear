@@ -85,6 +85,28 @@ class AuthMiddleware
     /** Khoá phiên của khu quản trị — chỉ có trong cookie `vin_admin`. */
     private const O_NOI_BO = 'admin_id';
 
+    /**
+     * Phiên quản trị chết sau bao lâu KHÔNG THAO TÁC (giây) — 30 phút.
+     *
+     * SNFR-10 (Quyết định C7) tách chính sách phiên theo nhóm người dùng, và
+     * đây là vế nghiêm hơn: khách ưu tiên trải nghiệm, nhân viên ưu tiên bảo
+     * mật vì thao tác của họ đụng tiền cọc và hồ sơ khúc xạ.
+     *
+     * ĐO THEO LƯỢT THAO TÁC CUỐI, KHÔNG PHẢI LÚC ĐĂNG NHẬP. Đo từ lúc đăng
+     * nhập thì người đang xử lý đơn giữa chừng bị đá ra — 30 phút là quá ngắn
+     * cho một ca trực. Đo theo thao tác cuối thì chỉ máy bỏ quên mới hết hạn,
+     * đúng thứ điều khoản này muốn chặn: máy quầy dùng chung, nhân viên đứng
+     * dậy tiếp khách rồi quên khoá màn hình.
+     *
+     * $_SESSION['logged_at'] ĐÃ TỒN TẠI TỪ TRƯỚC nhưng chưa từng có ai đọc —
+     * nó ghi mốc đăng nhập, không phải mốc thao tác. Giữ nguyên nó (còn dùng
+     * để hiển thị) và ghi mốc thao tác vào một ô riêng.
+     */
+    private const NOI_BO_HET_HAN_SAU = 1800;
+
+    /** Ô ghi mốc thao tác cuối của phiên quản trị. */
+    private const O_NOI_BO_THAO_TAC = 'admin_active_at';
+
     /** Đã thử khôi phục từ cookie "ghi nhớ" trong request này chưa. */
     private static bool $rememberChecked = false;
 
@@ -293,13 +315,75 @@ class AuthMiddleware
      * Vai trò đọc lại từ DB mỗi lượt chứ không cất vào phiên: cùng lý do đã
      * ghi ở requireStaff().
      */
-    public static function staffId(): ?string
+    /**
+     * @param bool $huyNeuHetHan Phiên quá hạn thì có được HUỶ luôn không.
+     *
+     * Đặt false ở những nơi CHỈ HỎI "ai đang đăng nhập" mà không quyết định
+     * cho đi tiếp hay không — cụ thể là AuditLogModel::write(). Một hàm ghi
+     * log không nên có quyền đăng xuất người dùng, và nó có thể chạy giữa lúc
+     * dựng trang: huỷ phiên ở đó là phần view còn lại đọc phải một $_SESSION
+     * rỗng, mất flash và mất token CSRF của những form nằm phía dưới.
+     *
+     * Chốt headers_sent() bên dưới KHÔNG đủ để chặn ca đó: hosting chia sẻ
+     * thường bật output_buffering, nên headers_sent() vẫn trả false giữa lúc
+     * dựng trang.
+     *
+     * Phiên vẫn vô hiệu ngay lập tức dù không huỷ: hàm này trả null, và MỌI
+     * đường vào khu quản trị đều đọc qua đây. Lượt bấm kế tiếp dọn nốt cookie.
+     */
+    public static function staffId(bool $huyNeuHetHan = true): ?string
     {
         $userId = $_SESSION[self::O_NOI_BO] ?? null;
 
         if ($userId === null || !UserModel::isStaff($userId)) {
             return null;
         }
+
+        /* HẾT HẠN DO KHÔNG THAO TÁC — SNFR-10, 30 phút.
+
+           Kiểm ở ĐÂY chứ không ở requireStaff(): staffId() là cửa duy nhất mà
+           mọi đường trong khu quản trị đi qua để biết "ai đang đăng nhập", kể
+           cả những chỗ chỉ hỏi mà không bắt buộc. Đặt ở requireStaff() thì một
+           trang nào đó gọi thẳng staffId() sẽ bỏ lọt.
+
+           Phiên quá hạn bị HUỶ chứ không chỉ bị coi là chưa đăng nhập: để lại
+           thì cookie phiên cũ vẫn nằm trên máy quầy, và lần bấm sau lại tính
+           là một phiên "vừa hết hạn" nữa. Huỷ xong mới đặt flash, vì huyPhien()
+           dọn sạch $_SESSION. */
+        $thaoTacCuoi = $_SESSION[self::O_NOI_BO_THAO_TAC] ?? ($_SESSION['logged_at'] ?? 0);
+
+        if (time() - (int) $thaoTacCuoi > self::NOI_BO_HET_HAN_SAU) {
+            /* CHỈ HUỶ PHIÊN KHI CHƯA GỬI HEADER.
+
+               huyPhien() gọi setcookie() rồi session_start() — cả hai đều cần
+               header chưa đi. Đường bình thường thì an toàn: AdminController
+               kiểm quyền ngay ở constructor, tức trước khi view in ra chữ nào.
+               Nhưng staffId() còn được gọi từ AuditLogModel::write(), và chỗ
+               đó có thể chạy giữa lúc dựng trang.
+
+               Gặp ca ấy thì bỏ qua việc huỷ và chỉ trả null: phiên vẫn vô hiệu
+               ngay lập tức vì MỌI đường vào khu quản trị đều đọc qua hàm này,
+               và lượt bấm kế tiếp sẽ dọn nốt cookie. Thà mất một câu thông báo
+               còn hơn đổ một dòng cảnh báo "headers already sent" ra giữa
+               trang quản trị. */
+            if ($huyNeuHetHan && !headers_sent()) {
+                self::logoutStaff();
+                flash('admin_auth_error', 'Phiên làm việc đã hết hạn do không thao tác. Vui lòng đăng nhập lại.');
+            }
+
+            return null;
+        }
+
+        // Chỉ chạm lại mốc khi đây là một lượt thao tác THẬT, không phải một
+        // lời hỏi phụ từ AuditLogModel: nếu không thì mỗi dòng vết ghi ra lại
+        // gia hạn phiên thêm 30 phút, và cái timeout không bao giờ tới.
+        if (!$huyNeuHetHan) {
+            return $userId;
+        }
+
+        // Chạm lại mốc mỗi lượt: đây là thứ biến 30 phút thành "không thao
+        // tác" chứ không phải "kể từ khi đăng nhập".
+        $_SESSION[self::O_NOI_BO_THAO_TAC] = time();
 
         return $userId;
     }
@@ -385,8 +469,9 @@ class AuthMiddleware
     {
         session_regenerate_id(true);
 
-        $_SESSION[self::O_NOI_BO] = $userId;
-        $_SESSION['logged_at']    = time();
+        $_SESSION[self::O_NOI_BO]           = $userId;
+        $_SESSION['logged_at']              = time();
+        $_SESSION[self::O_NOI_BO_THAO_TAC]  = time();
     }
 
     /**
