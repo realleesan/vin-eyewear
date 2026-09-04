@@ -107,6 +107,28 @@ class AuthMiddleware
     /** Ô ghi mốc thao tác cuối của phiên quản trị. */
     private const O_NOI_BO_THAO_TAC = 'admin_active_at';
 
+    /**
+     * Phiên KHÁCH chết sau bao lâu KHÔNG THAO TÁC (giây) — 24 giờ.
+     *
+     * SRS SNFR-10 viết 2 giờ; BA nới lên 24 giờ ngày 04/09/2026 (câu Q14.1) vì
+     * 2 giờ cắt ngang đúng thói quen mua sắm: chọn gọng buổi sáng, hỏi ý kiến
+     * người nhà, chiều quay lại đặt.
+     *
+     * ĐO THEO LƯỢT XEM TRANG CUỐI, cùng lối với phiên quản trị ở trên — không
+     * phải đo từ lúc đăng nhập. Đo từ lúc đăng nhập thì người mua hàng liên
+     * tục vẫn bị đá ra đúng 24 giờ sau, mà đó không phải thứ điều khoản này
+     * muốn chặn.
+     *
+     * HẾT HẠN KHÔNG PHẢI LÀ ĐĂNG XUẤT HẲN. Hết hạn xong hàm này vẫn thử tiếp
+     * cookie "ghi nhớ đăng nhập" (7 ngày, Quyết định C7) — nên khách đã tích ô
+     * đó chỉ thấy phiên được dựng lại lặng lẽ, đúng như hai con số 24 giờ và 7
+     * ngày ngụ ý. Khách KHÔNG tích ô đó thì phải đăng nhập lại.
+     */
+    private const KHACH_HET_HAN_SAU = 86400;
+
+    /** Ô ghi mốc thao tác cuối của phiên khách. */
+    private const O_KHACH_THAO_TAC = 'user_active_at';
+
     /** Đã thử khôi phục từ cookie "ghi nhớ" trong request này chưa. */
     private static bool $rememberChecked = false;
 
@@ -141,6 +163,30 @@ class AuthMiddleware
     public static function customerId(): ?string
     {
         $userId = $_SESSION[self::O_KHACH] ?? null;
+
+        /*
+         * HẾT HẠN DO KHÔNG THAO TÁC — 24 giờ, xem KHACH_HET_HAN_SAU.
+         *
+         * Chỉ DỌN Ô PHIÊN, không gọi logout(): logout() setcookie() và huỷ cả
+         * token ghi nhớ, mà hàm này chạy giữa lúc dựng trang (xem khối cảnh
+         * báo "headers already sent" bên dưới) và token ghi nhớ thì phải được
+         * giữ — nó chính là đường dựng lại phiên ngay dòng sau.
+         *
+         * Đặt TRƯỚC nhánh cookie chứ không sau: để sau thì phiên cũ đã quá hạn
+         * vẫn được dùng, và cái trần 24 giờ không bao giờ có hiệu lực.
+         */
+        if ($userId !== null) {
+            $thaoTacCuoi = $_SESSION[self::O_KHACH_THAO_TAC] ?? ($_SESSION['logged_at'] ?? 0);
+
+            if (time() - (int) $thaoTacCuoi > self::KHACH_HET_HAN_SAU) {
+                unset(
+                    $_SESSION[self::O_KHACH],
+                    $_SESSION[self::O_KHACH_THAO_TAC],
+                    $_SESSION['via_cookie']
+                );
+                $userId = null;
+            }
+        }
 
         if ($userId === null) {
             $userId = self::tuCookieGhiNho();
@@ -199,6 +245,14 @@ class AuthMiddleware
         if (!self::$conSong[$userId]) {
             return null;
         }
+
+        /* Chạm lại mốc thao tác — thứ biến 24 giờ thành "không thao tác" chứ
+           không phải "kể từ khi đăng nhập". Ghi vào $_SESSION là thao tác
+           trong bộ nhớ, không đụng header, nên an toàn ở giữa lúc dựng trang.
+
+           Không có nhánh "chỉ hỏi phụ" như staffId(): phía khách không có chỗ
+           nào gọi customerId() ngoài luồng phục vụ một lượt xem trang thật. */
+        $_SESSION[self::O_KHACH_THAO_TAC] = time();
 
         return $userId;
     }
@@ -262,8 +316,9 @@ class AuthMiddleware
     {
         session_regenerate_id(true);
 
-        $_SESSION[self::O_KHACH] = $userId;
-        $_SESSION['logged_at']   = time();
+        $_SESSION[self::O_KHACH]         = $userId;
+        $_SESSION['logged_at']           = time();
+        $_SESSION[self::O_KHACH_THAO_TAC] = time();
         unset($_SESSION['via_cookie']);
 
         if ($remember) {
@@ -539,9 +594,10 @@ class AuthMiddleware
         // via_cookie để những thao tác nhạy cảm (đổi mật khẩu, đổi email) có
         // thể yêu cầu nhập lại mật khẩu nếu sau này cần siết thêm.
         session_regenerate_id(true);
-        $_SESSION[self::O_KHACH] = $userId;
-        $_SESSION['logged_at']   = time();
-        $_SESSION['via_cookie']  = true;
+        $_SESSION[self::O_KHACH]          = $userId;
+        $_SESSION['logged_at']            = time();
+        $_SESSION[self::O_KHACH_THAO_TAC] = time();
+        $_SESSION['via_cookie']           = true;
 
         // Dọn token chết, thưa thớt thôi — 1/50 lượt khôi phục là đủ để bảng
         // không phình, mà không biến mỗi lần vào trang thành một lệnh DELETE.

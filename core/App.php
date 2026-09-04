@@ -193,7 +193,24 @@ class App
         $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
             || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
 
-        ini_set('session.gc_maxlifetime', (string) config('app.session_lifetime', 1209600));
+        /*
+         * TRẦN 24 GIỜ CHO DỮ LIỆU PHIÊN — BA chốt ngày 04/09/2026, câu Q14.1.
+         *
+         * SRS SNFR-10 (Quyết định C7) viết 2 giờ. BA nới lên 24 giờ với lý do
+         * trải nghiệm: khách đang chọn gọng, bỏ máy đi ăn trưa, quay lại mà
+         * phải đăng nhập lại thì mất luôn giỏ đang chọn dở.
+         *
+         * min() chứ không gán thẳng: SESSION_LIFETIME trong .env vẫn là thứ
+         * người vận hành chỉnh, nhưng nó KHÔNG được phép nới quá trần nghiệp
+         * vụ. Đặt cứng 86400 ở đây thì một dòng .env sai không âm thầm kéo
+         * phiên về lại 14 ngày như trước.
+         *
+         * Đây mới chỉ là tuổi thọ DỮ LIỆU phiên trên máy chủ. Vế "hết hạn do
+         * không thao tác" — thứ người dùng thực sự cảm thấy — nằm ở
+         * AuthMiddleware::customerId(), cùng lối với phiên quản trị 30 phút.
+         */
+        $tuoiPhien = (int) config('app.session_lifetime', 86400);
+        ini_set('session.gc_maxlifetime', (string) min($tuoiPhien, 86400));
 
         $khuQuanTri = self::laDuongQuanTri();
 
