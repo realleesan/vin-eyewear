@@ -3,11 +3,17 @@
 /**
  * home/index.php — trang chủ.
  *
- * Dựng theo "Vin Eyewear Home.dc.html" (Claude Design), CHỈ mười khối của bản
+ * Dựng theo "Vin Eyewear Home.dc.html" (Claude Design), CHỈ các khối của bản
  * thiết kế:
  *
  *   hero → danh mục → bộ sưu tập → sản phẩm mới về → bán chạy
- *   → kiểm tra 5 phút → cắt lắp tròng → đo mắt → đánh giá → kêu gọi hành động
+ *   → kiểm tra 5 phút → cắt lắp tròng → đo mắt → đánh giá
+ *
+ * KHỐI "KÊU GỌI HÀNH ĐỘNG" CUỐI TRANG ĐÃ XOÁ theo yêu cầu (03/09/2026):
+ * hai nút của nó ("Mua ngay" → /san-pham, "Tìm cửa hàng" → /lien-he) trùng
+ * với lối đi đã có ở header, ở khối danh mục và ở chân trang. Trang chủ nay
+ * kết thúc bằng khối đánh giá; chân trang tự chừa khoảng trước nó — xem
+ * .page-home-index trong components/footer.css.
  *
  * BỐN KHỐI ĐẦU KHÔNG THEO THỨ TỰ CỦA BẢN THIẾT KẾ. Bản thiết kế xếp
  * bộ sưu tập → mới về → danh mục → bán chạy; ở đây danh mục lên trước.
@@ -53,5 +59,3 @@
 <?php partial('_layout/home/eye-exam'); ?>
 
 <?php partial('_layout/home/reviews'); ?>
-
-<?php partial('_layout/home/cta'); ?>

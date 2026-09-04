@@ -1,11 +1,14 @@
 /* ============================================================
    home-sections.css — Các section của trang chủ
 
-   Dựng theo "Vin Eyewear Home.dc.html" (Claude Design), đúng mười khối mà
+   Dựng theo "Vin Eyewear Home.dc.html" (Claude Design), đúng các khối mà
    app/views/home/index.php include:
 
      hero · bộ sưu tập · sản phẩm mới về · danh mục · bán chạy
-     · kiểm tra 5 phút · cắt lắp tròng · đo mắt · đánh giá · CTA
+     · kiểm tra 5 phút · cắt lắp tròng · đo mắt · đánh giá
+
+   Khối CTA cuối trang đã xoá (03/09/2026) — xem chú thích trong
+   app/views/home/index.php. Cụm .hcta* theo đó cũng đi khỏi file này.
 
    MÀU VÀ FONT dùng nguyên bộ token của dự án (--brand, --ink,
    --font-serif…), KHÔNG lấy bảng màu riêng của file thiết kế.
@@ -47,14 +50,14 @@
    Markup: app/views/_layout/home/*.php · Thứ tự: app/views/home/index.php
 
      hero → bộ sưu tập mới → sản phẩm mới về → danh mục → bán chạy
-     → kiểm tra 5 phút → cắt lắp tròng → đo mắt → đánh giá → kêu gọi hành động
+     → kiểm tra 5 phút → cắt lắp tròng → đo mắt → đánh giá
 
    ĐÃ ĐỔI NGÔN NGỮ HÌNH KHỐI so với bản trước, đây là thay đổi lớn nhất:
 
      · GÓC BO 999px/36px/32px  ->  6px cho thẻ, 4px cho nút và huy hiệu.
        Không còn viên thuốc, không còn hình vòm, không còn khối bo lớn nổi
        trên nền. Bản thiết kế mới vẽ mọi thứ bằng góc gần vuông.
-     · KHỐI NỔI CÓ LỀ  ->  DẢI TRÀN CẠNH. Hero, đo mắt và CTA trước đây là
+     · KHỐI NỔI CÓ LỀ  ->  DẢI TRÀN CẠNH. Hero và đo mắt trước đây là
        những khối bo góc cách mép trang 32px; nay chúng chạy sát hai mép.
      · VIỀN THAY BÓNG. Thẻ đứng yên có viền 1px #eee0d4 và không bóng; bóng
        chỉ xuất hiện lúc rê chuột.
@@ -70,7 +73,7 @@
    thiết kế ghi 36px, 24.1px chỗ thiết kế ghi 19px. Sai số 1–5px ở mọi dòng
    chữ thì cộng lại thành một trang khác hẳn. Bản thiết kế cũng ghi nhiều cỡ
    nửa pixel (12.5 · 13.5 · 15.5 · 16.5 · 21 · 23) mà thang không có nấc nào
-   trùng. Riêng TIÊU ĐỀ hero và CTA vẫn dùng clamp, nhưng clamp được tính lại
+   trùng. Riêng TIÊU ĐỀ hero vẫn dùng clamp, nhưng clamp được tính lại
    để chạm đúng cỡ của thiết kế ở 1280px rồi dừng.
 
    BỀ NGANG: bản thiết kế KHÔNG đặt max-width — mọi khối chạy hết bề ngang
@@ -91,7 +94,7 @@
    trang chủ — gắn trên danh sách selector thì ngoài đó var() không phân giải
    được và mọi màu rơi về giá trị rỗng. */
 
-/* Lề ngang chung. Hero, đo mắt và CTA tự lo lấy vì chúng có nền tràn cạnh và
+/* Lề ngang chung. Hero và đo mắt tự lo lấy vì chúng có nền tràn cạnh và
    chỉ phần chữ mới thụt vào. */
 .hcoll,
 .hnew,
@@ -109,7 +112,12 @@
    Ràng buộc là hai khối phải đứng LIỀN NHAU, không phải .hcoll phải đứng đầu:
    khối đầu tiên sau hero nay là "danh mục" (xem app/views/home/index.php). */
 .hcoll { padding-bottom: 24px; }
-.hrev  { padding-bottom: 64px; }
+
+/* ĐÁNH GIÁ KHÔNG CÒN ĐỆM DƯỚI vì từ khi khối CTA bị xoá, nó là khối CUỐI của
+   trang chủ và phía dưới nó chỉ còn chân trang. Khoảng trước chân trang do
+   .site-footer { margin-top } lo — MỘT nguồn cho mọi trang, xem
+   components/footer.css. Để lại 64px ở đây thì cộng dồn thành 152px. */
+.hrev  { padding-bottom: 0; }
 
 /* Cột nội dung — xem chú thích "BỀ NGANG" ở đầu cụm */
 .hcoll__inner,
@@ -1847,120 +1855,4 @@ body.is-modal-open { overflow: hidden; }
     /* Mũi tên hết chỗ đứng ngoài khung -> đè lên mép hai thẻ */
     .hrev__arrow--prev { left: -6px; }
     .hrev__arrow--next { right: -6px; }
-}
-
-/* ============================================================
-   KÊU GỌI HÀNH ĐỘNG (CTA)
-   Markup: app/views/_layout/home/cta.php
-
-   Dải nâu sẫm tràn hai mép: chữ bên trái, ảnh tràn cạnh phải.
-   ============================================================ */
-
-.hcta {
-    display: grid;
-    grid-template-columns: 1.1fr 1fr;
-    align-items: center;
-    gap: 48px;
-    padding-left: var(--page-edge);
-    background: var(--h-dark);
-    overflow: hidden;
-}
-
-.hcta__text {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding: 64px 0;
-}
-
-/* 38px ở 1280px — nhỉnh hơn 36px của các tiêu đề khối khác đúng như bản
-   thiết kế. clamp neo qua 600px → 1280px giống .hero__title. */
-.hcta__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: clamp(26px, calc(15.4px + 1.76vw), 38px);
-    font-weight: 600;
-    line-height: 1.16;
-    color: #fff;
-    text-wrap: pretty;
-}
-
-.hcta__lead {
-    margin: 0;
-    max-width: 420px;
-    font-size: 15.5px;
-    line-height: 1.7;
-    color: #d9bcb3;
-}
-
-.hcta__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-    margin-top: 6px;
-}
-
-.hcta__btn {
-    padding: 14px 32px;
-    border: 1.5px solid transparent;
-    border-radius: var(--h-radius-sm);
-    font-size: 14.5px;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-}
-
-.hcta__btn--solid {
-    background: #fff;
-    border-color: #fff;
-    color: var(--h-dark);
-    font-weight: 600;
-}
-
-.hcta__btn--solid:hover,
-.hcta__btn--solid:focus-visible {
-    background: var(--h-blush);
-    border-color: var(--h-blush);
-    color: var(--h-dark);
-}
-
-.hcta__btn--ghost {
-    background: transparent;
-    border-color: rgba(255, 255, 255, 0.45);
-    color: #fff;
-    font-weight: 500;
-}
-
-.hcta__btn--ghost:hover,
-.hcta__btn--ghost:focus-visible {
-    background: var(--h-on-dark);
-    border-color: var(--h-on-dark);
-    color: var(--h-dark);
-}
-
-.hcta__media {
-    height: 100%;
-    min-height: 340px;
-}
-
-.hcta__media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-@media (max-width: 1024px) {
-    .hcta {
-        grid-template-columns: 1fr;
-        gap: 0;
-        padding-left: 0;
-    }
-
-    .hcta__text { padding: 48px var(--page-edge); }
-    .hcta__media { min-height: 260px; }
-}
-
-@media (max-width: 720px) {
-    .hcta__btn { flex: 1 1 auto; text-align: center; }
 }

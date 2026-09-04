@@ -44,11 +44,12 @@
    "Vin Eyewear Category.dc.html" và "Vin Eyewear Contact.dc.html" không đặt
    margin-top cho footer; thay vào đó khối cuối của chúng có sẵn 96px đệm
    dưới. Cộng cả hai thành 184px trống trước chân trang — gấp đôi thiết kế. */
-/* Trang chủ cũng vậy, vì lý do khác: khối cuối của nó (.hcta) là một dải
-   nền nâu sẫm tràn hai mép, và bản thiết kế cho chân trang bắt đầu ngay dưới
-   dải đó. Chừa 88px thì giữa hai vùng có một băng pearl trống không thuộc về
-   khối nào. */
-.page-home-index .site-footer,
+/* TRANG CHỦ ĐÃ RỜI DANH SÁCH NÀY. Nó vào đây khi khối cuối của trang là
+   .hcta — một dải nâu sẫm tràn hai mép mà thiết kế cho chân trang bắt đầu
+   ngay dưới. Xoá khối đó (03/09/2026) thì trang kết thúc bằng khối đánh giá,
+   nền pearl như mọi trang thường, nên nó cần đúng 88px như mọi trang thường.
+   Đệm dưới của .hrev đã hạ về 0 để 88px này là khoảng DUY NHẤT — xem
+   components/home-sections.css. */
 /* Trang giới thiệu: khối cuối (.about-start) cũng là một dải nền tràn hai
    mép, bản thiết kế cho chân trang bắt đầu ngay dưới nó. */
 .page-about-index .site-footer,
