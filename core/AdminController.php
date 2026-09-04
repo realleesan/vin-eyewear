@@ -145,6 +145,17 @@ abstract class AdminController extends BaseController
         // Đánh giá chờ duyệt — trả 0 khi chưa chạy file nâng cấp
         $data['pendingReviews']  = ReviewModel::countPending();
 
+        /* GIAO DỊCH CHƯA KHỚP — X13, thêm 09/09/2026.
+
+           Đây là hàng chờ ĐÁNG ĐEO SỐ NHẤT trong cả thanh bên, theo đúng luật
+           đã ghi ở trên: đầu bên kia là một khách hàng đã CHUYỂN TIỀN THẬT mà
+           đơn vẫn ghi "chưa thanh toán". Họ không chờ một cuộc gọi lại — họ
+           chờ hàng, và họ tin rằng mình đã trả xong.
+
+           Con số này bình thường là 0 (webhook tự khớp gần hết) nên huy hiệu
+           tự ẩn; khác 0 nghĩa là có tiền nằm không thuộc về đơn nào. */
+        $data['pendingSepay']    = SepayModel::demCanDoiSoat();
+
         extract($data);
 
         require VIEWS_PATH . '/admin/_layout/master.php';

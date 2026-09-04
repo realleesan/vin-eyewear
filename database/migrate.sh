@@ -219,6 +219,12 @@ MIGRATIONS=(
     # Cột mốc là `addresses.ghi_chu` — cột đầu tiên file này thêm, và là thứ
     # AddressModel::coTruongQ751() hỏi để biết CSDL đã nâng cấp chưa.
     "2026-09-08-so-dia-chi-va-xac-thuc-sdt.sql|column|addresses|ghi_chu"
+
+    # ── X13 · đối soát tay tiền về, quy trình hai bước ──────────────────────
+    #
+    # Cột mốc là `sepay_transactions.gan_boi` — cột đầu tiên file này thêm, và
+    # là thứ SepayModel::coHaiBuoc() hỏi để biết CSDL đã nâng cấp chưa.
+    "2026-09-09-giao-dich-chua-khop.sql|column|sepay_transactions|gan_boi"
 )
 
 # ---------------------------------------------------------------------------

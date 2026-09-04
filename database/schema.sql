@@ -1399,12 +1399,52 @@ CREATE TABLE `sepay_transactions` (
     `transaction_date` DATETIME     NULL,
     -- paid | deposit_paid | partial | no_order | ignored
     `applied`          VARCHAR(32)  NOT NULL DEFAULT 'no_order',
+    /*
+     * ─────────────────────────────────────────────────────────────────────
+     * ĐỐI SOÁT TAY HAI BƯỚC — X13, chốt lại 04/09/2026
+     *
+     * Tiền về mà nội dung chuyển khoản không mang mã đơn nào thì `applied`
+     * là 'no_order' và hệ thống đứng im. Ai đó phải nhìn sao kê, đoán ra nó
+     * thuộc đơn nào, và gán tay. X13 tách việc ấy làm hai người:
+     *
+     *   bước 1  nhân viên GÁN vào một đơn, kèm lý do -> 'cho_xac_nhan'
+     *   bước 2  Quản lý cơ sở XÁC NHẬN, kèm lý do -> tiền mới vào đơn
+     *
+     * Người gán KHÔNG được tự xác nhận. Gán tiền vào đơn là thao tác duy
+     * nhất trong hệ thống mà một người tự tay biến một khoản tiền lạ thành
+     * "đơn này đã trả đủ"; bốn con mắt là mức tối thiểu, và nó bảo vệ chính
+     * người gán khi có tranh chấp.
+     *
+     * Lý do lưu ở ĐÂY chứ không chỉ ở bảng vết: người đối soát đọc nó ngay
+     * trên dòng giao dịch, không phải mở màn Nhật ký rồi tự khớp dấu thời
+     * gian. Bảng vết vẫn ghi song song (SNFR-11).
+     *
+     * Cả hai khoá ngoại SET NULL: người nghỉ việc bị xoá tài khoản thì bằng
+     * chứng về việc đã gán vẫn phải còn.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    `gan_boi`          CHAR(36)     NULL,
+    `gan_luc`          DATETIME     NULL,
+    `gan_ly_do`        VARCHAR(255) NULL,
+    `xac_nhan_boi`     CHAR(36)     NULL,
+    `xac_nhan_luc`     DATETIME     NULL,
+    `xac_nhan_ly_do`   VARCHAR(255) NULL,
     `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_sepay_txn` (`sepay_id`),
     KEY `idx_sepay_order` (`order_id`),
+    -- Màn "Giao dịch chưa khớp" hỏi đúng một câu: dòng đang chờ xử lý, mới
+    -- nhất trước. Bảng này chỉ có thêm chứ không bớt nên nó lớn dần theo
+    -- doanh thu — thiếu chỉ mục là quét cả bảng ở mỗi lần mở màn.
+    KEY `idx_sepay_applied` (`applied`, `transaction_date`),
+    KEY `idx_sepay_gan_boi` (`gan_boi`),
+    KEY `idx_sepay_xac_nhan_boi` (`xac_nhan_boi`),
     CONSTRAINT `fk_sepay_order` FOREIGN KEY (`order_id`)
-        REFERENCES `orders` (`id`) ON DELETE SET NULL
+        REFERENCES `orders` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_sepay_gan_boi` FOREIGN KEY (`gan_boi`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_sepay_xac_nhan_boi` FOREIGN KEY (`xac_nhan_boi`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
