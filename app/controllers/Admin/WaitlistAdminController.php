@@ -30,6 +30,12 @@ class WaitlistAdminController extends AdminController
             'rows'      => WaitlistModel::danhSach(!$tatCa),
             'tatCa'     => $tatCa,
             'dangCho'   => WaitlistModel::demDangCho(),
+            /* Bảng thiếu thì chỉ hiện một dải nhắc, không để trang đổ — cùng
+               cách làm với màn Nhật ký thao tác. Xem WaitlistModel::available().
+               Không có cờ này thì danh sách rỗng vì THIẾU BẢNG trông y hệt danh
+               sách rỗng vì KHÔNG AI ĐANG CHỜ, mà hai thứ đó cần hai hành động
+               khác hẳn nhau. */
+            'coBang'    => WaitlistModel::available(),
         ]);
     }
 

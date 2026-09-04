@@ -180,6 +180,21 @@ class ProductDetailController extends BaseController
             redirect($back);
         }
 
+        /* BẢNG CHƯA CÓ THÌ NÓI THẲNG, ĐỪNG ĐỔ 500 VÀO MẶT KHÁCH.
+
+           Mã lên hosting bằng FTP tự động còn migration thì bấm tay, nên có
+           những quãng mã mới chạy trên lược đồ cũ. Trước 09/09/2026 quãng ấy
+           biến nút "Thông báo khi có hàng" thành một trang lỗi — khách không
+           làm gì sai mà vẫn hỏng.
+
+           KHÔNG hứa hão: câu dưới đây không nói "đã ghi nhận", vì không có gì
+           được ghi cả. Nó chỉ đường khác cho người đang thật sự muốn mua. */
+        if (!WaitlistModel::available()) {
+            flash('waitlist_msg',
+                'Tính năng báo hàng về đang tạm ngưng. Vui lòng liên hệ cửa hàng để được giữ hàng.');
+            redirect($back);
+        }
+
         $moi = WaitlistModel::dangKy(
             $product['id'],
             $variantId,

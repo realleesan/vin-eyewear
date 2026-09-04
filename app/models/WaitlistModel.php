@@ -30,6 +30,32 @@ class WaitlistModel extends BaseModel
     protected static string $table = 'stock_waitlist';
 
     /**
+     * Bảng đã tồn tại chưa — máy chưa chạy 2026-08-29-danh-sach-cho-hang.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * MỘT BẢNG THIẾU KHÔNG ĐƯỢC PHÉP LÀM ĐỔ TRANG
+     *
+     * Cho tới 09/09/2026 lớp này không có chốt nào, và hậu quả đã xảy ra trên
+     * trang thật: mở /quan-tri/cho-hang trên hosting chưa chạy migration thì
+     * nhận PDOException 1146 kèm nguyên vết gọi.
+     *
+     * Chỗ đau hơn nằm ở PHÍA KHÁCH. ProductDetailController gọi dangKy() khi
+     * khách bấm "Thông báo khi có hàng" — tức một nút trên trang bán hàng đổ
+     * 500 vào mặt người mua, vì một bảng của khu quản trị chưa được tạo.
+     *
+     * Mã lên hosting bằng FTP tự động còn migration thì phải bấm tay, nên
+     * khoảng lệch giữa hai thứ là chuyện BÌNH THƯỜNG chứ không phải sự cố —
+     * xem chú thích cùng ý ở CollectionController. Mọi lớp đọc bảng mới đều
+     * phải chịu được khoảng lệch đó; đây là chốt ấy, cùng khuôn với
+     * AuditLogModel::available() và SepayModel::available().
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public static function available(): bool
+    {
+        return Database::tableExists(static::$table);
+    }
+
+    /**
      * Người này đã đăng ký chờ đúng món này chưa?
      *
      * COALESCE cả hai vế chứ không so thẳng: `variant_id` NULL (mặt hàng không
@@ -43,6 +69,10 @@ class WaitlistModel extends BaseModel
      */
     public static function daDangKy(string $productId, ?string $variantId, ?string $email, ?string $phone): bool
     {
+        if (!self::available()) {
+            return false;
+        }
+
         return (int) Database::fetchValue(
             'SELECT COUNT(*) FROM stock_waitlist
               WHERE product_id = :pid
@@ -54,7 +84,14 @@ class WaitlistModel extends BaseModel
         ) > 0;
     }
 
-    /** Ghi một lượt chờ. Trả false nếu người này đã đăng ký rồi. */
+    /**
+     * Ghi một lượt chờ. Trả false nếu người này đã đăng ký rồi.
+     *
+     * ⚠ KHÔNG tự chặn khi thiếu bảng, và đó là chủ ý. Trả false ở đây thì nơi
+     * gọi in ra "Bạn đã trong danh sách chờ rồi" — một câu SAI SỰ THẬT nói với
+     * khách, tệ hơn cả việc im lặng. Nơi gọi phải hỏi available() TRƯỚC và tự
+     * quyết định nói gì; xem ProductDetailController::waitlist().
+     */
     public static function dangKy(string $productId, ?string $variantId, ?string $email, ?string $phone): bool
     {
         if (self::daDangKy($productId, $variantId, $email, $phone)) {
@@ -85,6 +122,10 @@ class WaitlistModel extends BaseModel
      */
     public static function danhSach(bool $chiDangCho = true): array
     {
+        if (!self::available()) {
+            return [];
+        }
+
         $loc = $chiDangCho ? 'WHERE w.notified_at IS NULL' : '';
 
         return Database::fetchAll(
@@ -102,6 +143,10 @@ class WaitlistModel extends BaseModel
     /** Số người đang chờ — cho huy hiệu trên thanh điều hướng quản trị. */
     public static function demDangCho(): int
     {
+        if (!self::available()) {
+            return 0;
+        }
+
         return (int) Database::fetchValue(
             'SELECT COUNT(*) FROM stock_waitlist WHERE notified_at IS NULL'
         );

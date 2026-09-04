@@ -41,7 +41,19 @@
     </a>
 </nav>
 
-<?php if ($rows === []): ?>
+<?php /* BẢNG THIẾU KHÁC HẲN DANH SÁCH RỖNG — phải kiểm TRƯỚC.
+
+         Cả hai đều cho $rows === [], nhưng "chưa có ai đăng ký" là tin tốt còn
+         "chưa có bảng" là việc phải làm ngay: nút chờ hàng ở trang bán hàng
+         đang từ chối khách. Gộp hai thứ vào một câu là giấu mất cái thứ hai.
+         Cùng cách làm với màn Nhật ký thao tác. */ ?>
+<?php if (!$coBang): ?>
+    <p class="apanel__empty">
+        Chưa có bảng danh sách chờ trong cơ sở dữ liệu. Chạy
+        <code>sudo bash database/migrate.sh</code> rồi mở lại trang này.
+        Tới lúc đó nút “Thông báo khi có hàng” ở trang sản phẩm cũng đang tạm ngưng.
+    </p>
+<?php elseif ($rows === []): ?>
     <p class="ahead__note">Chưa có ai đăng ký chờ hàng.</p>
 <?php else: ?>
 <div class="atable-wrap">
