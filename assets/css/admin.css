@@ -3057,6 +3057,31 @@ body.admin:has(.amodal) { overflow: hidden; }
     box-shadow: none;
 }
 
+/* ẨN MŨI TÊN LÊN/XUỐNG CỦA TRÌNH DUYỆT — nhưng CHỈ KHI hai nút đã hiện.
+ *
+ * Bộ đếm này có hai tay cầm do ta vẽ (+ và −) và một cặp mũi tên do trình
+ * duyệt vẽ, chồng lên nhau trong một ô rộng 46px: bốn cách bấm cho cùng một
+ * việc, và cặp mũi tên thì nhỏ tới mức trượt tay là chuyện thường.
+ *
+ * KHÔNG ẩn vô điều kiện. Hai nút mang sẵn `hidden` trong HTML và
+ * admin-inventory.js mới gỡ ra (nut.hidden = false), nên mũi tên gốc chính là
+ * phương án dự phòng khi tắt JS — xem chú thích ở .aistep__input trên và ở
+ * chính view. Ẩn thẳng thì máy không chạy JS còn trơ một ô số không có cách
+ * nào tăng giảm ngoài gõ tay.
+ *
+ * Nên điều kiện gắn vào chính cái nút: có nút hiện thì mới bỏ mũi tên. Ô nhập
+ * đứng sau nút − trong DOM nên `~` với tới được, không cần JS đụng thêm gì. */
+.aistep__btn:not([hidden]) ~ .aistep__input {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.aistep__btn:not([hidden]) ~ .aistep__input::-webkit-outer-spin-button,
+.aistep__btn:not([hidden]) ~ .aistep__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 /* Nút Lưu của trang này thấp hơn nút chính chung (36px thay vì 38px) để cao
    bằng đúng bộ đếm đứng cạnh nó — hai thứ lệch nhau 2px trên hai mươi dòng
    thì cả cột trông như bị so le. */
