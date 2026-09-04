@@ -73,6 +73,23 @@ class BookingModel extends BaseModel
         'Bảo hành / Vệ sinh kính',
     ];
 
+    /**
+     * ĐẶT TRƯỚC TỐI ĐA BAO NHIÊU NGÀY — X16, chốt 04/09/2026.
+     *
+     * X16 chốt hai vế: CÓ nhận lịch trong ngày, và đặt trước tối đa 30 ngày.
+     * Vế đầu đã đúng sẵn (create() chỉ chặn ngày đã qua); vế sau tới 08/09/2026
+     * mới có chỗ nào chặn.
+     *
+     * Vì sao cần trần: một lịch hẹn cách đây tám tháng gần như chắc chắn không
+     * ai tới, nhưng nó vẫn nằm trong danh sách chờ xác nhận và vẫn được nhân
+     * viên gọi điện. Trần 30 ngày giữ danh sách ấy là danh sách của những buổi
+     * hẹn có thật.
+     *
+     * Áp ở CẢ HAI đường ghi ngày — create() và rescheduleAdmin(). Chỉ áp một
+     * bên thì bên kia thành đường vòng: đặt lịch ngày mai rồi dời sang năm sau.
+     */
+    public const DAT_TRUOC_TOI_DA = 30;
+
     public const STATUSES = [
         'pending'   => 'Chờ xác nhận',
         'confirmed' => 'Đã xác nhận',
@@ -127,6 +144,12 @@ class BookingModel extends BaseModel
         $today = date('Y-m-d');
         if ($data['date'] < $today) {
             return ['ok' => false, 'error' => 'Không thể đặt lịch trong quá khứ.'];
+        }
+
+        /* TRẦN ĐẶT TRƯỚC — X16. Xem chú thích ở DAT_TRUOC_TOI_DA về lý do. */
+        if ($data['date'] > date('Y-m-d', strtotime('+' . self::DAT_TRUOC_TOI_DA . ' days'))) {
+            return ['ok' => false, 'error' =>
+                'Chỉ đặt trước tối đa ' . self::DAT_TRUOC_TOI_DA . ' ngày.'];
         }
 
         if (!StoreModel::isBookable($data['storeId'])) {
