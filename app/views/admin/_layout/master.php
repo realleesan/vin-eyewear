@@ -121,6 +121,21 @@ if (in_array('admin', $adminRoles, true)) {
     array_splice($navGroups[3]['items'], 1, 0, [
         ['url' => '/quan-tri/nhan-vien', 'label' => 'Tài khoản nội bộ'],
     ]);
+
+    /*
+     * "LỊCH SỬ THAO TÁC" — cũng chỉ vai trò 'admin', và đặt CUỐI nhóm Hệ thống.
+     *
+     * Khác "Tài khoản nội bộ" ở một điểm: mục kia giấu đi cho gọn mắt còn
+     * trang thì vẫn mở được, mục này thì controller CHẶN THẬT bằng 403. Nhật
+     * ký cho biết ai đã xem hồ sơ khúc xạ của khách nào — bày cho mọi nhân
+     * viên là biến bảng vết thành một bảng theo dõi lẫn nhau.
+     *
+     * KHÔNG ĐEO HUY HIỆU: huy hiệu chỉ dành cho hàng chờ có người đang đợi ở
+     * đầu bên kia (xem luật ở đầu file). Nhật ký có bao nhiêu dòng cũng không
+     * ai phải làm gì cả — và một con số cứ tăng mãi thì mắt sẽ quen bỏ qua nó,
+     * rồi bỏ qua luôn bốn con số đáng đọc.
+     */
+    $navGroups[3]['items'][] = ['url' => '/quan-tri/nhat-ky', 'label' => 'Lịch sử thao tác'];
 }
 ?>
 <!DOCTYPE html>

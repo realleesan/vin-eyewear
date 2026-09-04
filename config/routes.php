@@ -417,6 +417,23 @@ return [
     'quan-tri/quen-mat-khau'      => 'PasswordResetAdminController@index',
     'quan-tri/quen-mat-khau/tao'  => 'PasswordResetAdminController@issue',  // POST
 
+    /*
+     * LỊCH SỬ THAO TÁC — UC-3.2.10.2 và vế "đọc được" của SNFR-11.
+     *
+     * Hệ thống đã ghi vết vào bảng `customer_audit_logs` từ lâu, nhưng cho tới
+     * 03/09/2026 không có màn nào ĐỌC nó — trừ tab Hoạt động của một khách cụ
+     * thể. Vết của thao tác tiền và thao tác kho thì không có đường nào xem.
+     *
+     * '/nhat-ky/xuat' là GET chứ không POST dù nó sinh ra một file: nó chỉ
+     * đọc, không đổi gì, nên phải chia sẻ được và bấm F5 được. Đặt sau đường
+     * cha để router khớp đúng thứ tự khai.
+     *
+     * Chỉ vai trò 'admin' — chốt trong controller, không chỉ giấu khỏi thanh
+     * bên. Lý do tạm siết ở 'admin' ghi ở đầu Admin/AuditLogAdminController.
+     */
+    'quan-tri/nhat-ky'            => 'AuditLogAdminController@index',
+    'quan-tri/nhat-ky/xuat'       => 'AuditLogAdminController@xuat',
+
     // -----------------------------------------------------------------------
     // CHUYỂN HƯỚNG TỪ URL TIẾNG ANH CŨ
     //
