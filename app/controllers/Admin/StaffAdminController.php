@@ -59,9 +59,20 @@ class StaffAdminController extends AdminController
      * nữa mà không có gì báo.
      */
     private const VAI_TRO = [
-        'staff'   => 'Nhân viên',
-        'manager' => 'Quản lý',
-        'admin'   => 'Quản trị',
+        'staff'      => 'Nhân viên',
+        /* VAI TRÒ THỨ NĂM — X31, chốt 04/09/2026.
+
+           Kỹ thuật viên khúc xạ. Có việc thật kể cả sau khi X07 chốt người bấm
+           "Bắt đầu mài" là Quản lý cơ sở: Q77.2 quy định CHỈ Kỹ thuật viên và
+           Quản lý cơ sở được tạo và sửa hồ sơ khúc xạ, tức vai trò này là thứ
+           cho phép một nhân viên chạm vào dữ liệu y tế mà không phải nâng họ
+           lên thành Quản lý.
+
+           Xếp giữa 'staff' và 'manager' vì thứ tự trong mảng này là thứ tự
+           hiện trên ô chọn, và người dùng đọc nó như một thang quyền. */
+        'technician' => 'Kỹ thuật viên',
+        'manager'    => 'Quản lý',
+        'admin'      => 'Quản trị',
     ];
 
     public function index(): void
@@ -89,10 +100,24 @@ class StaffAdminController extends AdminController
             ]);
         }
 
+        /* PHÂN CÔNG CƠ SỞ — Q12.1, Q12.2, Q12.3.
+
+           Lấy một lượt cho cả bảng thay vì hỏi trong vòng lặp: mười tài khoản
+           là mười câu lệnh, và trang này vốn đã có một vòng lặp hỏi khoá đăng
+           nhập ở trên. */
+        $coSoTheoNguoi = [];
+
+        foreach ($accounts as $a) {
+            $coSoTheoNguoi[$a['id']] = StaffStoreModel::forUser($a['id']);
+        }
+
         $this->renderAdmin('admin/staff/index', [
             'pageTitle' => 'Tài khoản nội bộ — Quản trị',
             'accounts'  => $accounts,
             'khoaDangNhap' => $khoaDangNhap,
+            'stores'       => StoreModel::all('name ASC'),
+            'coSoTheoNguoi' => $coSoTheoNguoi,
+            'coBangCoSo'    => StaffStoreModel::available(),
             'me'        => $this->userId,
             'canReset'  => UserModel::hasRole($this->userId, 'admin'),
             /* Bản ghi đang sửa. Đọc qua staffAccounts() chứ không find() thẳng:
@@ -238,6 +263,55 @@ class StaffAdminController extends AdminController
         flash('admin_success', $khoa
             ? 'Đã khoá tài khoản ' . $ten
             : 'Đã mở khoá tài khoản ' . $ten);
+
+        redirect(self::BASE);
+    }
+
+    /**
+     * GÁN CƠ SỞ cho một tài khoản nội bộ — Q12.1, Q12.2, Q12.3.
+     *
+     * requireAdmin(): đây là thao tác PHÂN QUYỀN. Cho Quản lý cơ sở tự gán
+     * thêm cơ sở cho mình là bỏ luôn ý nghĩa của phạm vi — người bị giới hạn
+     * không được là người quyết định giới hạn của chính mình.
+     *
+     * BỎ TRỐNG HẾT LÀ HỢP LỆ, và nó có nghĩa "người này không thấy dữ liệu của
+     * cơ sở nào" theo đúng Q12.3 — không phải "thấy tất cả". Form vì thế luôn
+     * gửi kèm một ô ẩn rỗng, để trình duyệt không lược mất trường khi không ô
+     * nào được tick; thiếu nó thì $_POST['co_so'] vắng mặt và ta không phân
+     * biệt được "bỏ tick hết" với "form gửi thiếu".
+     */
+    public function saveStores(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireAdmin();
+
+        if (!StaffStoreModel::available()) {
+            flash('admin_error',
+                'Chưa nâng cấp cơ sở dữ liệu nên chưa gán cơ sở được. '
+                . 'Chạy database/migrations/2026-09-05-phan-quyen-theo-co-so.sql rồi thử lại.');
+            redirect(self::BASE);
+        }
+
+        $id = (string) ($_POST['id'] ?? '');
+        $ai = $this->timTaiKhoan($id);
+
+        if ($ai === null) {
+            flash('admin_error', 'Không tìm thấy tài khoản nội bộ này.');
+            redirect(self::BASE);
+        }
+
+        $chon = array_filter((array) ($_POST['co_so'] ?? []), static fn ($v): bool => trim((string) $v) !== '');
+
+        StaffStoreModel::setForUser($id, $chon, $this->userId);
+
+        $ten = (string) ($ai['full_name'] ?? $ai['email'] ?? 'tài khoản');
+
+        AuditLogModel::write($id, 'staff.set_stores',
+            'Gán ' . count($chon) . ' cơ sở cho ' . $ten);
+
+        flash('admin_success', $chon === []
+            ? 'Đã gỡ hết cơ sở của ' . $ten . '. Họ sẽ không thấy đơn hàng và lịch hẹn nào.'
+            : 'Đã gán ' . count($chon) . ' cơ sở cho ' . $ten . '.');
 
         redirect(self::BASE);
     }

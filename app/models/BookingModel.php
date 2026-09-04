@@ -491,7 +491,8 @@ class BookingModel extends BaseModel
         int $limit = 100,
         string $q = '',
         string $storeId = '',
-        int $offset = 0
+        int $offset = 0,
+        ?array $phamViCoSo = null
     ): array {
         /* Ba bộ lọc CỘNG ĐƯỢC với nhau, nên gom điều kiện vào mảng rồi mới
            ghép — thêm bộ lọc thứ tư sau này chỉ là đẩy thêm một phần tử.
@@ -508,7 +509,7 @@ class BookingModel extends BaseModel
            khi dùng prepared statement thật. An toàn vì cả hai đã qua max() và
            là số nguyên do controller tính ra — cùng cách làm với
            InventoryAdminController::index. */
-        [$where, $params] = self::locWithStore($status, $q, $storeId);
+        [$where, $params] = self::locWithStore($status, $q, $storeId, $phamViCoSo);
 
         return Database::fetchAll(
             "SELECT a.*, s.name AS store_name, s.code AS store_code
@@ -532,9 +533,15 @@ class BookingModel extends BaseModel
      * Trả về mảng có ĐỦ mọi khoá trạng thái (giá trị 0 nếu không có dòng nào),
      * cộng khoá '' là tổng — để view khỏi phải tự phòng khoá thiếu.
      */
-    public static function statusCounts(string $q = '', string $storeId = ''): array
-    {
-        [$where, $params] = self::locWithStore('', $q, $storeId);
+    public static function statusCounts(
+        string $q = '',
+        string $storeId = '',
+        ?array $phamViCoSo = null
+    ): array {
+        /* Đếm cũng phải theo phạm vi, không chỉ danh sách. Bỏ sót chỗ này thì
+           các tab trạng thái hiện "Chờ xác nhận (12)" trong khi bấm vào chỉ
+           thấy 4 — và con số 12 kia chính là thứ vừa rò rỉ ra ngoài. */
+        [$where, $params] = self::locWithStore('', $q, $storeId, $phamViCoSo);
 
         $rows   = Database::fetchAll(
             "SELECT a.status, COUNT(*) AS n
@@ -564,10 +571,35 @@ class BookingModel extends BaseModel
      *
      * @return array{0: string, 1: array<string, string>}
      */
-    private static function locWithStore(string $status, string $q, string $storeId): array
-    {
+    private static function locWithStore(
+        string $status,
+        string $q,
+        string $storeId,
+        ?array $phamViCoSo = null
+    ): array {
         $dieuKien = [];
         $params   = [];
+
+        /*
+         * HAI THỨ CÙNG NÓI VỀ CƠ SỞ, ĐỪNG NHẦM CHÚNG VỚI NHAU.
+         *
+         *   $phamViCoSo   RÀNG BUỘC QUYỀN. Máy chủ áp, người dùng không gỡ
+         *                 được, đọc từ bảng phân công của chính họ (SNFR-07b).
+         *   $storeId      BỘ LỌC. Người dùng chọn trong ô "Cơ sở" trên màn
+         *                 hình, bỏ chọn là thôi lọc.
+         *
+         * Cả hai cùng áp: nhân viên chỉ thuộc Long Biên mà chọn lọc Tây Hồ thì
+         * ra danh sách rỗng, đúng như phải thế. Ô lọc KHÔNG nới được phạm vi.
+         *
+         * Trước lần sửa này chỉ có $storeId, và đó là toàn bộ lỗ hổng: một ô
+         * lọc bỏ trống nghĩa là thấy lịch hẹn của cả hai cơ sở.
+         */
+        [$loc, $locParams] = StaffStoreModel::menhDe($phamViCoSo, 'a.store_id', 'pv');
+
+        if ($loc !== null) {
+            $dieuKien[] = $loc;
+            $params    += $locParams;
+        }
 
         if ($status !== '') {
             $dieuKien[]       = 'a.status = :status';

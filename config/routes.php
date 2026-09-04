@@ -409,6 +409,12 @@ return [
        người đặt và không có hạn, còn đây là khoá kỹ thuật do hệ thống đặt và
        tự tan sau 15 phút. Lý do đầy đủ ở StaffAdminController::moKhoaDangNhap. */
     'quan-tri/nhan-vien/mo-khoa-dang-nhap' => 'StaffAdminController@moKhoaDangNhap', // POST
+    /* GÁN CƠ SỞ cho tài khoản nội bộ — SNFR-07b, Q12.1 đến Q12.3.
+       Đường riêng chứ không gộp vào 'nhan-vien/luu': lưu hồ sơ là sửa thông tin
+       một con người, còn đây là sửa PHẠM VI QUYỀN của họ. Gộp hai việc vào một
+       form nghĩa là mỗi lần sửa số điện thoại cũng ghi đè luôn phân công cơ sở,
+       và vết trong nhật ký không phân biệt được hai thao tác đó. */
+    'quan-tri/nhan-vien/co-so'    => 'StaffAdminController@saveStores',        // POST
 
     // Đổi mật khẩu của CHÍNH MÌNH — mọi nhân viên đều vào được.
     'quan-tri/doi-mat-khau'       => 'AccountAdminController@index',

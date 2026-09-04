@@ -1124,13 +1124,33 @@ class OrderModel extends BaseModel
         int $page = 1,
         int $perPage = 20,
         string $q = '',
-        string $range = ''
+        string $range = '',
+        ?array $phamViCoSo = null
     ): array {
         $page    = max(1, $page);
         $perPage = max(1, $perPage);
 
         $dieuKien = [];
         $params   = [];
+
+        /*
+         * PHẠM VI CƠ SỞ — SNFR-07b, ràng buộc quyền chứ không phải bộ lọc.
+         *
+         * Đặt Ở ĐẦU danh sách điều kiện, trước cả trạng thái và ô tìm: thứ tự
+         * không đổi kết quả SQL, nhưng người đọc hàm này thấy ngay rằng phạm
+         * vi được áp trước mọi thứ khác, và người thêm điều kiện thứ tư sẽ
+         * thêm vào sau nó thay vì chen lên trên.
+         *
+         * $phamViCoSo === null nghĩa là KHÔNG giới hạn (Quản trị viên), không
+         * phải "không có cơ sở nào". Phân biệt hai thứ đó nằm ở
+         * StaffStoreModel::menhDe().
+         */
+        [$loc, $locParams] = StaffStoreModel::menhDe($phamViCoSo, 'o.store_id', 'pv');
+
+        if ($loc !== null) {
+            $dieuKien[] = $loc;
+            $params    += $locParams;
+        }
 
         if ($status !== '') {
             $dieuKien[]       = 'o.status = :status';
@@ -1248,15 +1268,37 @@ class OrderModel extends BaseModel
      *
      * @return array [khoá trạng thái => số đơn], khoá '' là tổng
      */
-    public static function statusCounts(): array
+    public static function statusCounts(?array $phamViCoSo = null): array
     {
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * ĐẾM CŨNG PHẢI THEO PHẠM VI CƠ SỞ — SNFR-07b
+         *
+         * Sót từ đợt phân quyền 05/09/2026: paginateAdmin() đã lọc theo cơ sở
+         * nhưng hàm đếm này thì không, nên nhân viên bị giới hạn ở một cơ sở
+         * vẫn thấy viên "Đang giao (47)" của TOÀN hệ thống rồi bấm vào chỉ ra
+         * 6 dòng.
+         *
+         * Hai cái sai trong một chỗ: người dùng không hiểu vì sao hai con số
+         * cãi nhau, và con số 47 kia chính là dữ liệu kinh doanh vừa rò ra
+         * ngoài phạm vi — thứ mà cả đợt phân quyền sinh ra để chặn. Một bộ lọc
+         * mà bộ đếm của nó không lọc thì phạm vi chỉ tồn tại một nửa.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        [$menhDe, $params] = StaffStoreModel::menhDe($phamViCoSo, 'store_id', 'sc');
+
+        $where = $menhDe !== null ? ' WHERE ' . $menhDe : '';
+
         $counts = ['' => 0];
 
         foreach (array_keys(self::STATUSES) as $key) {
             $counts[$key] = 0;
         }
 
-        foreach (Database::fetchAll('SELECT status, COUNT(*) AS n FROM orders GROUP BY status') as $row) {
+        foreach (Database::fetchAll(
+            'SELECT status, COUNT(*) AS n FROM orders' . $where . ' GROUP BY status',
+            $params
+        ) as $row) {
             // Trạng thái lạ (dữ liệu cũ, hoặc ai đó sửa tay trong CSDL) vẫn
             // được cộng vào TỔNG nhưng không tạo thêm viên lọc nào.
             if (isset($counts[$row['status']])) {

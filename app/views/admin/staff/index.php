@@ -27,7 +27,13 @@ $base = '/quan-tri/nhan-vien';
  * một tài khoản vẫn còn vai trò admin là nói sai về quyền nó đang có.
  */
 $vaiTroCao = static function (string $roles): string {
-    foreach (['admin', 'manager', 'staff'] as $vt) {
+    /* 'technician' phải nằm trong danh sách này, nếu không một Kỹ thuật viên
+       in ra thành "Nhân viên" — sai về quyền họ đang có, vì Q77.2 cho vai trò
+       này chạm vào hồ sơ khúc xạ còn Nhân viên thì không.
+
+       Xếp giữa manager và staff theo đúng thứ tự thang quyền ở
+       StaffAdminController::VAI_TRO. */
+    foreach (['admin', 'manager', 'technician', 'staff'] as $vt) {
         if (str_contains($roles, $vt)) {
             return $vt;
         }
@@ -287,6 +293,49 @@ $chuDauCua = static function (array $a): string {
                                        nút biến mất — đúng như nó nên thế: việc duy
                                        nhất nó làm là rút ngắn quãng chờ. */
                                     ?>
+                                    <?php
+                                    /* GÁN CƠ SỞ — Q12.1, Q12.2, Q12.3.
+
+                                       Ô tick chứ không phải ô chọn một: Q12.2
+                                       chốt một người gán được nhiều cơ sở.
+
+                                       Ô ẩn `co_so[]` rỗng đứng TRƯỚC các ô tick
+                                       là bắt buộc: trình duyệt không gửi trường
+                                       nào cả khi không ô nào được tick, và khi
+                                       đó máy chủ không phân biệt được "bỏ tick
+                                       hết" với "form gửi thiếu". Bỏ tick hết là
+                                       một ý muốn hợp lệ — nó nghĩa là người này
+                                       không thấy dữ liệu cơ sở nào. */
+                                    ?>
+                                    <?php if ($coBangCoSo && $stores !== []): ?>
+                                        <?php $daGan = $coSoTheoNguoi[$a['id']] ?? []; ?>
+                                        <form method="post" action="<?= e($base) ?>/co-so" class="astores">
+                                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                            <input type="hidden" name="id" value="<?= e($a['id']) ?>">
+                                            <input type="hidden" name="co_so[]" value="">
+
+                                            <span class="atable__sub">Cơ sở làm việc</span>
+                                            <?php foreach ($stores as $cs): ?>
+                                                <label class="astores__item">
+                                                    <input type="checkbox" name="co_so[]"
+                                                           value="<?= e($cs['id']) ?>"
+                                                           <?= in_array($cs['id'], $daGan, true) ? 'checked' : '' ?>>
+                                                    <?= e($cs['name']) ?>
+                                                </label>
+                                            <?php endforeach; ?>
+
+                                            <button type="submit" class="arow-btn">Lưu cơ sở</button>
+                                        </form>
+
+                                        <?php if ($daGan === [] && $vt !== 'admin'): ?>
+                                            <?php /* Nói thẳng hậu quả. Một ô tick trống không tự nó
+                                                     giải thích rằng người này đang không thấy gì. */ ?>
+                                            <span class="atable__sub" style="color:var(--danger,#9c2a1e)">
+                                                Chưa gán cơ sở — tài khoản này không thấy đơn hàng và lịch hẹn nào.
+                                            </span>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+
                                     <?php if ($conKhoa > 0): ?>
                                         <?php $hoiMo = sprintf(
                                             '%s vừa nhập sai mật khẩu 5 lần nên bị khoá đăng nhập. Mở ngay để họ thử lại?',

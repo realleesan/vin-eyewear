@@ -4436,3 +4436,44 @@ a.astatus__save { text-decoration: none; }
    thiểu thì bảng co nó lại bằng chữ dài nhất và tên bị bẻ giữa chừng. */
 .achtable td:first-child,
 .achtable th:first-child { min-width: 220px; }
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GÁN CƠ SỞ CHO TÀI KHOẢN NỘI BỘ — SNFR-07b, Q12.1 đến Q12.3
+   ═══════════════════════════════════════════════════════════════════════════
+
+   Khối này nằm TRONG ô "Thao tác" của bảng Tài khoản nội bộ, cạnh các nút Sửa
+   và Khoá. Nó là thứ duy nhất ở đó không phải một nút — nên nó cần một đường
+   kẻ tách ra, nếu không mắt đọc nó thành phần tiếp theo của cụm nút.
+
+   KHÔNG dùng .aform__grid của hộp thoại: lưới đó tính theo bề rộng hộp thoại,
+   còn đây là một ô bảng vốn đã hẹp và còn co theo nội dung các cột khác. */
+
+.astores {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--line, #dae1e6);
+}
+
+/* Ô tick và nhãn phải nằm cùng dòng và bấm được cả vào chữ — nhãn ngắn
+   ("Vin Eyewear Tây Hồ") mà bắt bấm đúng ô vuông 13px là khó chịu ở màn hình
+   cảm ứng của máy tính bảng tại quầy. */
+.astores__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--ink-2, #41535f);
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.astores__item input { cursor: pointer; }
+
+/* Nút Lưu tách khỏi cụm ô tick một chút: không có khoảng này thì nó dính vào
+   ô tick cuối và trông như một lựa chọn thứ tư trong danh sách. */
+.astores button { margin-top: 4px; }

@@ -84,6 +84,7 @@ DROP TABLE IF EXISTS `collections`;
 DROP TABLE IF EXISTS `product_variants`;
 DROP TABLE IF EXISTS `products`;
 DROP TABLE IF EXISTS `categories`;
+DROP TABLE IF EXISTS `staff_stores`;
 DROP TABLE IF EXISTS `user_roles`;
 DROP TABLE IF EXISTS `profiles`;
 DROP TABLE IF EXISTS `users`;
@@ -244,13 +245,18 @@ CREATE TABLE `profiles` (
 CREATE TABLE `user_roles` (
     `id`         CHAR(36) NOT NULL DEFAULT (UUID()),
     `user_id`    CHAR(36) NOT NULL,
-    `role`       ENUM('customer','staff','manager','admin') NOT NULL,
+    -- 'technician' — vai trò thứ năm, X31 chốt 04/09/2026. Kỹ thuật viên khúc
+    -- xạ: Q77.2 cho vai trò này tạo và sửa hồ sơ khúc xạ mà không phải nâng
+    -- người đó lên thành Quản lý. X31 cũng BỎ vai trò "Chủ doanh nghiệp" —
+    -- chủ dùng chung quyền 'admin'.
+    `role`       ENUM('customer','staff','technician','manager','admin') NOT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_user_roles` (`user_id`, `role`),
     CONSTRAINT `fk_user_roles_user` FOREIGN KEY (`user_id`)
         REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- ----------------------------------------------------------------------------
 -- GHI NHỚ ĐĂNG NHẬP
@@ -1018,6 +1024,45 @@ CREATE TABLE `stores` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_stores_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ----------------------------------------------------------------------------
+-- PHÂN CÔNG TÀI KHOẢN NỘI BỘ THEO CƠ SỞ
+--
+-- SNFR-07b (SRS v1.3.1): phạm vi cơ sở là RÀNG BUỘC QUYỀN, cưỡng chế ở máy chủ,
+-- không phải một bộ lọc để người dùng tự chọn. `user_roles` nói một người LÀM
+-- ĐƯỢC GÌ; bảng này nói họ làm được điều đó VỚI DỮ LIỆU CỦA AI.
+--
+-- BẢNG NỐI vì Q12.2 chốt một tài khoản gán được NHIỀU cơ sở. Nối tới `users`
+-- chứ không tới `user_roles`: phạm vi là thuộc tính của con người, không phải
+-- của từng vai trò họ giữ.
+--
+-- KHÔNG có dòng nào cho vai trò 'admin' — Quản trị viên thấy toàn hệ thống, và
+-- điều đó do StaffStoreModel::KHONG_GIOI_HAN quyết định chứ không do dữ liệu.
+--
+-- Tài khoản nội bộ KHÔNG có dòng nào ở đây thì KHÔNG THẤY GÌ (Q12.3), không
+-- phải thấy tất cả. Xem khối "BA TRẠNG THÁI" ở đầu app/models/StaffStoreModel.php.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `staff_stores` (
+    `id`         CHAR(36) NOT NULL DEFAULT (UUID()),
+    `user_id`    CHAR(36) NOT NULL,
+    `store_id`   CHAR(36) NOT NULL,
+    -- Ai gán, lúc nào. Thao tác phân quyền phải truy được người chịu trách
+    -- nhiệm; SET NULL để người nghỉ việc không kéo mất bản ghi phân công.
+    `granted_by` CHAR(36) NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_staff_store` (`user_id`, `store_id`),
+    KEY `idx_staff_stores_store` (`store_id`),
+    CONSTRAINT `fk_staff_stores_user` FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`) ON DELETE CASCADE,
+    -- Đóng một cơ sở thì gỡ luôn phân công vào đó; không để phạm vi trỏ vào
+    -- chỗ không còn tồn tại.
+    CONSTRAINT `fk_staff_stores_store` FOREIGN KEY (`store_id`)
+        REFERENCES `stores` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_staff_stores_by` FOREIGN KEY (`granted_by`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- Khoá ngoại của `prescriptions.store_id` — khai ở đây vì `stores` tới bây giờ
 -- mới tồn tại. SET NULL: cơ sở đóng cửa không làm kết quả đo mất giá trị.

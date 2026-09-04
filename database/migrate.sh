@@ -192,6 +192,14 @@ MIGRATIONS=(
     # Hai nơi cùng nhìn một cột thì không có cảnh script bảo "đã chạy" trong
     # khi mã nguồn vẫn tưởng là chưa.
     "2026-09-04-ho-so-khuc-xa-chi-them.sql|column|customer_prescriptions|ban_goc_id"
+
+    # ── SNFR-07b · phân quyền theo cơ sở cho tài khoản nội bộ ───────────────
+    #
+    # Cột mốc là chính bảng nối. Không dùng giá trị 'technician' của ENUM làm
+    # mốc: information_schema không cho hỏi "ENUM có chứa giá trị này không"
+    # bằng một câu đơn giản như hỏi bảng hay cột, mà file này còn tạo bảng nên
+    # đã có sẵn một mốc sạch.
+    "2026-09-05-phan-quyen-theo-co-so.sql|table|staff_stores|"
 )
 
 # ---------------------------------------------------------------------------

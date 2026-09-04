@@ -22,9 +22,47 @@ abstract class AdminController extends BaseController
     /** Id nhân viên đang đăng nhập. */
     protected string $userId;
 
+    /**
+     * Phạm vi cơ sở của người đang đăng nhập — null · [] · [id, …].
+     *
+     * Nhớ trong suốt request: một trang quản trị hỏi phạm vi ở vài chỗ (đếm
+     * theo trạng thái, danh sách, phân trang) và mỗi lần hỏi là một lượt đọc
+     * vai trò cộng một lượt đọc bảng phân công.
+     *
+     * DÙNG === null ĐỂ KIỂM. Xem khối chú thích "BA TRẠNG THÁI" ở đầu
+     * StaffStoreModel: `if (!$phamVi)` gộp null với [] và biến "chưa gán nên
+     * không thấy gì" thành "thấy tất cả".
+     *
+     * @var string[]|null|false false = chưa hỏi lần nào
+     */
+    private array|null|false $phamViCoSo = false;
+
     public function __construct()
     {
         $this->userId = AuthMiddleware::requireStaff();
+    }
+
+    /**
+     * Phạm vi cơ sở để lọc đơn hàng và lịch hẹn — SNFR-07b, Q12.1–Q12.3.
+     *
+     * @return string[]|null
+     */
+    protected function phamViCoSo(): ?array
+    {
+        if ($this->phamViCoSo === false) {
+            $this->phamViCoSo = StaffStoreModel::phamVi($this->userId);
+        }
+
+        return $this->phamViCoSo;
+    }
+
+    /**
+     * Người này có bị giới hạn phạm vi không — để view quyết định có hiện
+     * dòng "Bạn chỉ thấy dữ liệu của cơ sở …" hay không.
+     */
+    protected function biGioiHanCoSo(): bool
+    {
+        return $this->phamViCoSo() !== null;
     }
 
     /**

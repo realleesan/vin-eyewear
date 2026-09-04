@@ -84,6 +84,10 @@ class AuditLogModel extends BaseModel
            vết — không có thì một quản trị viên tự mở khoá cho mình rồi tiếp
            tục dò mật khẩu là chuyện không ai đọc lại được. */
         'staff.unlock_login' => 'Mở khoá đăng nhập nội bộ',
+        /* Gán cơ sở cho tài khoản nội bộ — Q12.1. Đây là thao tác PHÂN QUYỀN:
+           nó quyết định người đó nhìn thấy dữ liệu của cơ sở nào. Q80.1 xếp
+           thay đổi phân quyền vào nhóm bắt buộc ghi vết. */
+        'staff.set_stores'   => 'Gán cơ sở cho tài khoản nội bộ',
     ];
 
     /**
@@ -109,7 +113,7 @@ class AuditLogModel extends BaseModel
             'payment.paid', 'payment.unpaid', 'payment.deposit', 'order.status', 'order.cancel',
         ]],
         'kho'      => ['nhan' => 'Tồn kho', 'actions' => ['stock.adjust']],
-        'noi-bo'   => ['nhan' => 'Tài khoản nội bộ', 'actions' => ['staff.unlock_login']],
+        'noi-bo'   => ['nhan' => 'Tài khoản nội bộ', 'actions' => ['staff.unlock_login', 'staff.set_stores']],
     ];
 
     public static function available(): bool

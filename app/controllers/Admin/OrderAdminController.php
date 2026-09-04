@@ -54,7 +54,14 @@ class OrderAdminController extends AdminController
 
         $q      = trim((string) ($_GET['q'] ?? ''));
         $page   = max(1, (int) ($_GET['page'] ?? 1));
-        $result = OrderModel::paginateAdmin($status, $page, self::PER_PAGE, $q, $range);
+        /* Phạm vi cơ sở đi vào TRUY VẤN, không đi vào view.
+
+           Lọc ở PHP sau khi đã lấy về là sai theo cả hai nghĩa: phân trang
+           đếm nhầm (trang 1 hiện 6 đơn vì 14 đơn bị loại sau khi đếm), và dữ
+           liệu của cơ sở khác vẫn rời khỏi cơ sở dữ liệu — chỉ là không in ra. */
+        $result = OrderModel::paginateAdmin(
+            $status, $page, self::PER_PAGE, $q, $range, $this->phamViCoSo()
+        );
 
         // Dòng hàng của các đơn đang hiện, gộp MỘT câu lệnh thay vì truy vấn
         // trong vòng lặp (N+1) — 20 đơn sẽ thành 21 câu lệnh.
@@ -63,6 +70,8 @@ class OrderAdminController extends AdminController
         $this->renderAdmin('admin/orders/index', [
             'pageTitle' => 'Đơn hàng — Quản trị',
             'orders'    => $result['items'],
+            // View dùng cờ này để nói rõ vì sao danh sách ngắn hơn mong đợi.
+            'gioiHanCoSo' => $this->biGioiHanCoSo(),
             'items'     => $itemsByOrder,
             'total'     => $result['total'],
             'page'      => $result['page'],
@@ -72,7 +81,10 @@ class OrderAdminController extends AdminController
             // Nhãn trạng thái TIỀN. Truyền vào như 'statuses' thay vì để view gọi
             // thẳng hằng của model — cùng một lối cho cả hai trục trạng thái.
             'payStatuses' => OrderModel::PAYMENT_STATUSES,
-            'counts'    => OrderModel::statusCounts(),
+            /* Đếm TRONG PHẠM VI, cùng phạm vi với paginateAdmin() ở trên —
+               nếu không thì viên lọc hiện số của toàn hệ thống trong khi bấm
+               vào chỉ ra vài dòng. Xem OrderModel::statusCounts(). */
+            'counts'    => OrderModel::statusCounts($this->phamViCoSo()),
             'q'         => $q,
             'range'     => $range,
             'ranges'    => OrderModel::DATE_RANGES,

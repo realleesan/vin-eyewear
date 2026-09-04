@@ -59,7 +59,10 @@ class AppointmentAdminController extends AdminController
          * số lệch nhau. Cùng cách làm với trang Tồn kho.
          * ─────────────────────────────────────────────────────────────────────
          */
-        $counts = BookingModel::statusCounts($q, $coSo);
+        /* Phạm vi cơ sở áp cho CẢ bộ đếm lẫn danh sách — xem
+           StaffStoreModel và BookingModel::locWithStore(). */
+        $phamVi = $this->phamViCoSo();
+        $counts = BookingModel::statusCounts($q, $coSo, $phamVi);
         $tong   = (int) ($counts[$status] ?? 0);
 
         $soTrang = max(1, (int) ceil($tong / self::PER_PAGE));
@@ -72,14 +75,18 @@ class AppointmentAdminController extends AdminController
 
         $this->renderAdmin('admin/appointments/index', [
             'pageTitle'    => 'Lịch hẹn — Quản trị',
-            'appointments' => BookingModel::withStore($status, self::PER_PAGE, $q, $coSo, $offset),
+            'appointments' => BookingModel::withStore($status, self::PER_PAGE, $q, $coSo, $offset, $phamVi),
             'total'        => $tong,
             'page'         => $trang,
             'totalPages'   => $soTrang,
             'status'       => $status,
             'q'            => $q,
             'coSo'         => $coSo,
-            'stores'       => StoreModel::all('name ASC'),
+            /* Ô lọc CHỈ liệt kê cơ sở người này thuộc về. Liệt kê đủ hai cơ
+               sở rồi chặn ở truy vấn cũng an toàn, nhưng nó mời người ta chọn
+               một thứ luôn trả về rỗng — và họ sẽ báo đó là lỗi. */
+            'stores'       => $this->coSoChonDuoc(),
+            'gioiHanCoSo'  => $this->biGioiHanCoSo(),
             // Ô chọn dịch vụ của hộp "Tạo lịch hẹn" — dùng chung danh sách với
             // trang đặt lịch của khách, xem BookingModel::SERVICES.
             'services'     => BookingModel::SERVICES,
@@ -224,6 +231,24 @@ class AppointmentAdminController extends AdminController
      * khoản nhân viên thì nó hiện trong trang "Lịch hẹn của tôi" của người đó.
      * ─────────────────────────────────────────────────────────────────────────
      */
+    /**
+     * Danh sách cơ sở hiện trong ô lọc — đã cắt theo phạm vi của người xem.
+     */
+    private function coSoChonDuoc(): array
+    {
+        $tatCa  = StoreModel::all('name ASC');
+        $phamVi = $this->phamViCoSo();
+
+        if ($phamVi === null) {
+            return $tatCa;
+        }
+
+        return array_values(array_filter(
+            $tatCa,
+            static fn (array $s): bool => in_array($s['id'], $phamVi, true)
+        ));
+    }
+
     public function store(): void
     {
         $this->requirePost('/quan-tri/lich-hen');
