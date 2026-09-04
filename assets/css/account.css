@@ -2212,3 +2212,25 @@ select.acct-field__input {
     font-size: 12px;
     color: var(--brand, #8a2432);
 }
+
+/* ============================================================
+   NHÃN ĐỊA CHỈ VÀ GHI CHÚ GIAO HÀNG — Q75.1 (08/09/2026)
+   ============================================================ */
+
+/* Viên nhạt hơn .acct-tag thường. "Mặc định" quyết định form thanh toán điền
+   gì; nhãn Nhà riêng/Công ty chỉ là chú thích. Hai viên cùng đậm cạnh nhau thì
+   cái quan trọng không còn nổi lên. */
+.acct-tag--soft {
+    background: transparent;
+    border: 1px solid var(--a-line, #e2dcd3);
+    color: var(--a-note);
+    font-weight: 500;
+}
+
+/* Ghi chú giao hàng KHÔNG phải một phần của địa chỉ. Người chép địa chỉ lên
+   phiếu gửi hàng phải thấy ngay ranh giới, nên nó nghiêng và nhạt hơn. */
+.acct-addr__note {
+    color: var(--a-note);
+    font-size: 13px;
+    font-style: italic;
+}

@@ -34,6 +34,14 @@
                             <?php if ($macDinh): ?>
                                 <span class="atag">Mặc định</span>
                             <?php endif; ?>
+                            <?php /* Nhãn Q75.1. Ở khu quản trị nó đáng giá hơn ở
+                                     trang khách: người sắp lịch giao cần biết
+                                     "Công ty" trước khi hẹn giờ, vì toà nhà văn
+                                     phòng không nhận hàng lúc bảy giờ tối. */ ?>
+                            <?php $tenNhan = AddressModel::tenNhan($dc); ?>
+                            <?php if ($tenNhan !== ''): ?>
+                                <span class="atag atag--soft"><?= e($tenNhan) ?></span>
+                            <?php endif; ?>
                         </p>
                         <p class="acus__addr-line"><?= e(groupPhone($dc['phone'])) ?></p>
                         <p class="acus__addr-line">
@@ -45,6 +53,15 @@
                             $khuVuc = AddressModel::areaText($dc);
                             echo $khuVuc !== '' ? ', ' . e($khuVuc) : ''; ?>
                         </p>
+                        <?php /* Ghi chú giao hàng — Q75.1. Đây là thứ nhân viên
+                                 đọc cho khách nghe khi họ gọi hỏi "sao chưa thấy
+                                 ai giao", nên nó phải hiện ở đây chứ không chỉ ở
+                                 trang của khách. */ ?>
+                        <?php if (trim((string) ($dc['ghi_chu'] ?? '')) !== ''): ?>
+                            <p class="acus__addr-line acus__addr-note">
+                                <?= e($dc['ghi_chu']) ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
 
                 </li>

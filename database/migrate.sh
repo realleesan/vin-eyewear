@@ -213,6 +213,12 @@ MIGRATIONS=(
     # cùng nhìn một cột thì không có cảnh script bảo "đã chạy" trong khi mã
     # nguồn vẫn tưởng là chưa.
     "2026-09-07-moc-mai-trong-va-ly-do.sql|column|orders|mai_bat_dau_luc"
+
+    # ── Q75.1 · Q72 · sổ địa chỉ đủ trường và mốc xác thực SĐT ──────────────
+    #
+    # Cột mốc là `addresses.ghi_chu` — cột đầu tiên file này thêm, và là thứ
+    # AddressModel::coTruongQ751() hỏi để biết CSDL đã nâng cấp chưa.
+    "2026-09-08-so-dia-chi-va-xac-thuc-sdt.sql|column|addresses|ghi_chu"
 )
 
 # ---------------------------------------------------------------------------

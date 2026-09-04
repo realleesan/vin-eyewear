@@ -19,10 +19,22 @@ class UserModel extends BaseModel
 {
     protected static string $table = 'users';
 
-    public const ROLES = ['customer', 'staff', 'manager', 'admin'];
+    /*
+     * NĂM VAI TRÒ — X31, chốt 04/09/2026.
+     *
+     * 'technician' thêm vào 05/09 cùng migration phân quyền theo cơ sở; vai
+     * trò "Chủ doanh nghiệp" bị BỎ và dùng chung quyền Quản trị viên.
+     *
+     * ⚠ HAI HẰNG NÀY PHẢI KHỚP với ENUM `user_roles.role` trong CSDL. Thêm một
+     * vai trò ở đây mà quên ALTER ENUM thì gán vai trò đó ném lỗi 1265; thêm
+     * vào ENUM mà quên ở đây thì người mang vai trò ấy KHÔNG vào được khu quản
+     * trị và cũng không có thông báo nào nói vì sao — isStaff() chỉ lặng lẽ
+     * trả false. Chuyện thứ hai đúng là điều suýt xảy ra với 'technician'.
+     */
+    public const ROLES = ['customer', 'staff', 'technician', 'manager', 'admin'];
 
     /** Vai trò được vào khu quản trị. */
-    public const STAFF_ROLES = ['staff', 'manager', 'admin'];
+    public const STAFF_ROLES = ['staff', 'technician', 'manager', 'admin'];
 
     /**
      * Giới tính — khoá lưu vào `profiles.gender`, giá trị là nhãn hiện ra.
@@ -765,6 +777,70 @@ class UserModel extends BaseModel
               WHERE p.id = :id',
             ['id' => $userId]
         );
+    }
+
+    // ========================================================================
+    // "HỒ SƠ ĐÃ HOÀN THIỆN" — Q72, chốt 04/09/2026
+    // ========================================================================
+
+    /**
+     * Đã có kênh xác thực số điện thoại nào chạy được chưa.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ĐÂY LÀ MỘT LỐI THOÁT CÓ CHỦ Ý, KHÔNG PHẢI MỘT CHỖ CHƯA LÀM XONG
+     *
+     * Q72 định nghĩa hồ sơ hoàn thiện = HỌ TÊN + SỐ ĐIỆN THOẠI ĐÃ XÁC THỰC.
+     * Vế thứ hai đòi Zalo OTP (mục 3.2.1), mà luồng ấy chưa nối — nên hôm nay
+     * KHÔNG bản ghi nào có `profiles.phone_verified_at`.
+     *
+     * Áp Q72 nguyên văn lúc này nghĩa là mọi khách đều "chưa hoàn thiện" mãi
+     * mãi: đúng từng chữ của quyết định, và làm hỏng website. Một quy tắc mà
+     * không ai có đường thoả mãn thì không phải quy tắc, nó là một cái bẫy.
+     *
+     * Nên chừng nào chưa có kênh xác thực nào, một số điện thoại HỢP LỆ được
+     * tính là đủ. Khi Zalo OTP lên, đổi hằng này thành true là luật Q72 có
+     * hiệu lực đầy đủ — không phải sửa chỗ nào khác.
+     *
+     * ⚠ Đây là lựa chọn của nhóm phát triển, ghi lại để BA xác nhận.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public const CO_KENH_XAC_THUC = false;
+
+    /**
+     * Hồ sơ đã hoàn thiện chưa — Q72.
+     *
+     * Điều kiện gồm ĐÚNG HAI thứ: họ tên và số điện thoại đã xác thực. Email,
+     * ngày sinh và địa chỉ mặc định KHÔNG nằm trong điều kiện — Q72 nói rõ, và
+     * đó là chỗ dễ tự tiện thêm vào nhất ("có địa chỉ nữa thì mới thật là đầy
+     * đủ chứ"). Thêm một điều kiện ở đây là giữ khách lại một màn hình nữa cho
+     * một thứ họ chưa cần.
+     *
+     * @param array|null $profile kết quả profile(), truyền vào khi nơi gọi đã đọc
+     */
+    public static function hoSoDayDu(string $userId, ?array $profile = null): bool
+    {
+        $profile ??= self::profile($userId);
+
+        if ($profile === null) {
+            return false;
+        }
+
+        if (utf8Length(trim((string) ($profile['full_name'] ?? ''))) < 2) {
+            return false;
+        }
+
+        $phone = trim((string) ($profile['phone'] ?? ''));
+
+        if ($phone === '' || normalizePhone($phone) === null) {
+            return false;
+        }
+
+        // Chưa có kênh xác thực nào -> số hợp lệ là đủ. Xem CO_KENH_XAC_THUC.
+        if (!self::CO_KENH_XAC_THUC) {
+            return true;
+        }
+
+        return trim((string) ($profile['phone_verified_at'] ?? '')) !== '';
     }
 
     /**

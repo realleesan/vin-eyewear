@@ -101,6 +101,48 @@ $open = $adding || $editing !== null;
         </div>
 
         <?php
+        /* ─────────────────────────────────────────────────────────────────────
+           GHI CHÚ GIAO HÀNG VÀ NHÃN — Q75.1, chốt 04/09/2026
+
+           Ghi chú TÁCH khỏi ô "Địa chỉ" phía trên là cả điểm của việc này.
+           Không có ô riêng thì khách gõ "gọi trước khi tới nhé" vào cuối ô địa
+           chỉ, và đúng dòng ấy là dòng được in lên phiếu gửi hàng — người giao
+           nhận một địa chỉ lẫn với lời dặn.
+
+           Nhãn không bắt buộc: phần lớn địa chỉ là nhà riêng, và bắt chọn một
+           thứ hiển nhiên ở mọi lần thêm là một bước thừa. Bỏ trống thì thẻ địa
+           chỉ đơn giản không in nhãn nào.
+
+           Cả khối CHỈ HIỆN khi CSDL đã có hai cột — chưa chạy migration mà vẫn
+           vẽ ô thì khách gõ vào rồi bấm Lưu và không hiểu vì sao chữ biến mất.
+           ───────────────────────────────────────────────────────────────────── */
+        ?>
+        <?php if (AddressModel::coTruongQ751()): ?>
+            <div class="acct-form__row">
+                <label class="acct-field">
+                    <span class="acct-field__label">Ghi chú giao hàng</span>
+                    <input class="acct-field__input" type="text" name="ghi_chu"
+                           maxlength="255"
+                           placeholder="Ví dụ: gọi trước 15 phút, gửi bảo vệ toà nhà"
+                           value="<?= e((string) ($form['ghi_chu'] ?? '')) ?>">
+                </label>
+
+                <label class="acct-field">
+                    <span class="acct-field__label">Loại địa chỉ</span>
+                    <select class="acct-field__input" name="nhan">
+                        <option value="">— Không ghi —</option>
+                        <?php foreach (AddressModel::NHAN as $ma => $nhan): ?>
+                            <option value="<?= e($ma) ?>"
+                                <?= (string) ($form['nhan'] ?? '') === $ma ? 'selected' : '' ?>>
+                                <?= e($nhan) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+            </div>
+        <?php endif; ?>
+
+        <?php
         /* Địa chỉ mặc định đang sửa thì không cho bỏ tick: bỏ đi nghĩa là
            khách không còn địa chỉ mặc định nào, mà không có chỗ nào chọn lại
            trong chính form này. Muốn đổi thì bấm "Đặt làm mặc định" ở thẻ khác. */
@@ -151,11 +193,25 @@ $open = $adding || $editing !== null;
                         <?php if ($isDefault): ?>
                             <span class="acct-tag">Mặc định</span>
                         <?php endif; ?>
+                        <?php /* Nhãn Q75.1 — viên nhạt hơn viên "Mặc định":
+                                 mặc định là thứ quyết định form thanh toán
+                                 điền gì, nhãn chỉ là chú thích. Hai viên cùng
+                                 đậm thì cái quan trọng không nổi lên nữa. */ ?>
+                        <?php $tenNhan = AddressModel::tenNhan($ad); ?>
+                        <?php if ($tenNhan !== ''): ?>
+                            <span class="acct-tag acct-tag--soft"><?= e($tenNhan) ?></span>
+                        <?php endif; ?>
                     </div>
                     <span class="acct-addr__lines">
                         <?= e($ad['line1']) ?>
                         <?php $area = AddressModel::areaText($ad); ?>
                         <?php if ($area !== ''): ?><br><?= e($area) ?><?php endif; ?>
+                        <?php /* Ghi chú in NGHIÊNG và tách dòng: nó không phải
+                                 một phần của địa chỉ, và người chép địa chỉ
+                                 lên phiếu gửi hàng phải thấy ngay ranh giới. */ ?>
+                        <?php if (trim((string) ($ad['ghi_chu'] ?? '')) !== ''): ?>
+                            <br><em class="acct-addr__note"><?= e($ad['ghi_chu']) ?></em>
+                        <?php endif; ?>
                     </span>
                 </div>
 

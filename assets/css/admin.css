@@ -4477,3 +4477,26 @@ a.astatus__save { text-decoration: none; }
 /* Nút Lưu tách khỏi cụm ô tick một chút: không có khoảng này thì nó dính vào
    ô tick cuối và trông như một lựa chọn thứ tư trong danh sách. */
 .astores button { margin-top: 4px; }
+
+/* ---------------------------------------------------------------------------
+   NHÃN ĐỊA CHỈ VÀ GHI CHÚ GIAO HÀNG — Q75.1 (08/09/2026)
+
+   Ở khu quản trị hai thứ này đáng giá hơn ở trang khách: người sắp lịch giao
+   cần biết "Công ty" trước khi hẹn giờ (toà nhà văn phòng không nhận hàng lúc
+   bảy giờ tối), và nhân viên đọc ghi chú cho khách nghe khi họ gọi hỏi sao
+   chưa thấy ai giao.
+   --------------------------------------------------------------------------- */
+
+/* Nhạt hơn .atag thường: "Mặc định" quyết định form thanh toán điền gì, còn
+   nhãn Nhà riêng/Công ty chỉ là chú thích. */
+.atag--soft {
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.acus__addr-note {
+    color: var(--muted);
+    font-style: italic;
+}

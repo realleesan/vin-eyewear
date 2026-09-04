@@ -1033,7 +1033,30 @@ class AuthController extends BaseController
         $userId = AuthMiddleware::requireLogin($known ? '/tai-khoan?muc=' . $section : null);
 
         if (!$known) {
-            $section = self::DEFAULT_SECTION;
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * MỤC MỞ SẴN PHỤ THUỘC HỒ SƠ ĐÃ HOÀN THIỆN CHƯA — Q72, 04/09/2026
+             *
+             * Trước đây mọi người vào /tai-khoan trần đều rơi vào 'ho-so', kể
+             * cả khách đã điền xong từ lâu — họ phải bấm thêm một lần nữa để
+             * tới thứ mình định xem.
+             *
+             * Q72 chốt: điều kiện để KHÔNG bị điều hướng về trang Hồ sơ là họ
+             * tên + số điện thoại đã xác thực. Luật ấy nằm gọn ở
+             * UserModel::hoSoDayDu() — đừng viết lại điều kiện ở đây, vì khi
+             * Zalo OTP lên thì chỉ một chỗ được đổi.
+             *
+             * Chưa đủ -> 'ho-so' như cũ, và đó chính là điều hướng mà Q72 nói
+             * tới. Đủ rồi -> 'don-hang', thứ khách hay tới xem nhất.
+             *
+             * ?muc= có thật thì KHÔNG đụng tới: người bấm thẳng vào một mục là
+             * người đã biết mình muốn gì, và đá họ về Hồ sơ vì hồ sơ thiếu một
+             * dòng là phạt họ giữa chừng một việc khác.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            $section = UserModel::hoSoDayDu($userId)
+                ? 'don-hang'
+                : self::DEFAULT_SECTION;
         }
 
         /*

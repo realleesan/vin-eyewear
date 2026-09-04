@@ -31,6 +31,28 @@ class AddressModel extends BaseModel
     /** Trần số địa chỉ mỗi khách. Sổ địa chỉ không phải chỗ chứa ghi chú. */
     public const MAX_PER_USER = 10;
 
+    /**
+     * NHÃN ĐỊA CHỈ — Q75.1, chốt 04/09/2026.
+     *
+     * Hai giá trị cho giai đoạn 1. Không phải trang trí: địa chỉ công ty chỉ
+     * nhận hàng trong giờ hành chính, và người sắp lịch giao cần biết điều đó
+     * trước khi gọi xe — chứ không phải sau khi shipper đã tới nơi lúc 7 giờ
+     * tối và gọi lại báo "toà nhà đóng cửa rồi".
+     *
+     * Cột trong CSDL là VARCHAR nên thêm mục về sau ("Nhà bố mẹ", "Kho") chỉ
+     * là thêm vào mảng này.
+     */
+    public const NHAN = [
+        'nha'     => 'Nhà riêng',
+        'cong_ty' => 'Công ty',
+    ];
+
+    /** Nhãn để hiển thị; địa chỉ chưa gắn nhãn thì không in gì. */
+    public static function tenNhan(?array $address): string
+    {
+        return self::NHAN[(string) ($address['nhan'] ?? '')] ?? '';
+    }
+
     // ========================================================================
     // ĐỌC
     // ========================================================================
@@ -158,13 +180,22 @@ class AddressModel extends BaseModel
 
         $values = $data['values'];
 
+        /* Câu SET dựng TỪ CHÍNH mảng values chứ không viết cứng danh sách cột.
+
+           Trước 08/09/2026 danh sách ấy viết tay, và thêm hai cột Q75.1 nghĩa
+           là phải nhớ sửa đúng chỗ này nữa — quên thì thêm địa chỉ mới lưu
+           được ghi chú, còn SỬA địa chỉ cũ thì lặng lẽ không lưu, và không có
+           lỗi nào báo. Dựng từ mảng thì cột nào validate() trả về là cột ấy
+           được ghi, ở cả hai đường. */
+        $dat = [];
+
+        foreach (array_keys($values) as $cot) {
+            $dat[] = '`' . $cot . '` = :' . $cot;
+        }
+
         Database::execute(
-            'UPDATE addresses
-                SET recipient_name = :recipient_name, phone = :phone,
-                    line1 = :line1,
-                    province_code = :province_code, province_name = :province_name,
-                    ward_code = :ward_code, ward_name = :ward_name
-              WHERE id = :id AND user_id = :uid',
+            'UPDATE addresses SET ' . implode(', ', $dat)
+            . ' WHERE id = :id AND user_id = :uid',
             $values + ['id' => $id, 'uid' => $userId]
         );
 
@@ -343,8 +374,41 @@ class AddressModel extends BaseModel
                 'province_name'  => utf8Substr($province, 0, 120),
                 'ward_code'      => self::code($input['ward_code'] ?? null),
                 'ward_name'      => utf8Substr($ward, 0, 120),
-            ],
+            ] + self::truongQ751($input),
         ];
+    }
+
+    /**
+     * Hai trường Q75.1 — ghi chú giao hàng và nhãn.
+     *
+     * TÁCH RA để cả create() lẫn updateOwned() cùng gọi, và để nơi này là chỗ
+     * DUY NHẤT quyết định "CSDL đã có hai cột ấy chưa". Nhét thẳng vào mảng
+     * trên thì trên một máy chưa chạy migration, câu INSERT nhắc tới `ghi_chu`
+     * và ném 1054 đúng lúc khách bấm Lưu địa chỉ — mất cả thao tác để đổi lấy
+     * hai ô phụ.
+     */
+    private static function truongQ751(array $input): array
+    {
+        if (!self::coTruongQ751()) {
+            return [];
+        }
+
+        $ghiChu = trim((string) ($input['ghi_chu'] ?? ''));
+        $nhan   = (string) ($input['nhan'] ?? '');
+
+        return [
+            'ghi_chu' => $ghiChu !== '' ? utf8Substr($ghiChu, 0, 255) : null,
+            /* Nhãn lạ -> NULL, không phải -> 'nha'. Ô này là <select> nên giá
+               trị lạ chỉ đến từ một form dựng tay; im lặng đổi nó thành một
+               giá trị hợp lệ là ghi vào sổ một điều khách không chọn. */
+            'nhan'    => isset(self::NHAN[$nhan]) ? $nhan : null,
+        ];
+    }
+
+    /** CSDL đã có hai cột Q75.1 chưa (migration 2026-09-08). */
+    public static function coTruongQ751(): bool
+    {
+        return Database::columnExists('addresses', 'ghi_chu');
     }
 
     /** Mã hành chính hợp lệ (số nguyên dương) hoặc NULL. */

@@ -211,6 +211,21 @@ CREATE TABLE `profiles` (
     `id`             CHAR(36)     NOT NULL,
     `full_name`      VARCHAR(255) NULL,
     `phone`          VARCHAR(32)  NULL,
+    /*
+     * MỐC XÁC THỰC SỐ ĐIỆN THOẠI — Q72, chốt 04/09/2026.
+     *
+     * Q72: "Hồ sơ đã hoàn thiện" = HỌ TÊN + SỐ ĐIỆN THOẠI ĐÃ XÁC THỰC. Email,
+     * ngày sinh và địa chỉ mặc định KHÔNG nằm trong điều kiện.
+     *
+     * Luồng ghi vào cột này là Zalo OTP (mục 3.2.1) — CHƯA NỐI. Chừng nào chưa
+     * có, không bản ghi nào mang mốc này, nên luật Q72 chạy nguyên vẹn sẽ giữ
+     * MỌI khách ở trang Hồ sơ vĩnh viễn. Lối thoát nằm ở mã nguồn, không ở
+     * lược đồ: xem UserModel::CO_KENH_XAC_THUC và ::hoSoDayDu().
+     *
+     * DATETIME chứ không TINYINT: "xác thực lúc nào" là thứ phải trả lời được
+     * khi có tranh chấp đơn hàng, mà một cờ 0/1 thì không.
+     */
+    `phone_verified_at` DATETIME  NULL,
     -- Bản sao của địa chỉ mặc định trong bảng `addresses`, giữ lại vì trang
     -- thanh toán đang đọc cột này. AddressModel::syncProfileAddress() ghi đè.
     `address`        TEXT         NULL,
@@ -560,6 +575,23 @@ CREATE TABLE `addresses` (
     `province_name`  VARCHAR(120)       NULL,
     `ward_code`      MEDIUMINT UNSIGNED NULL,
     `ward_name`      VARCHAR(120)       NULL,
+    /*
+     * GHI CHÚ GIAO HÀNG — Q75.1, chốt 04/09/2026.
+     *
+     * "Gọi trước 15 phút", "cổng sau", "bảo vệ nhận giúp". Không có ô này thì
+     * khách nhét chúng vào `line1`, làm hỏng đúng cái dòng được in lên phiếu
+     * gửi hàng — và người giao đọc một địa chỉ lẫn với lời dặn.
+     */
+    `ghi_chu`        VARCHAR(255)       NULL,
+    /*
+     * NHÃN — 'nha' | 'cong_ty' (Q75.1). VARCHAR chứ không ENUM: danh sách này
+     * hay được xin thêm mục ("Nhà bố mẹ", "Kho"), và mỗi lần thêm vào ENUM là
+     * một ALTER TABLE khoá bảng. Cùng lý lẽ với `orders.payment_status`.
+     *
+     * Không phải trang trí: địa chỉ công ty chỉ nhận hàng trong giờ hành
+     * chính, và người sắp lịch giao cần biết trước khi gọi xe.
+     */
+    `nhan`           VARCHAR(16)        NULL,
     `is_default`     TINYINT(1)   NOT NULL DEFAULT 0,
     `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
