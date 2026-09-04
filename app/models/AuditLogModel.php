@@ -107,14 +107,6 @@ class AuditLogModel extends BaseModel
         'booking.status'     => 'Đổi trạng thái lịch hẹn',
         'booking.reschedule' => 'Dời ngày lịch hẹn',
         'booking.cancel'     => 'Huỷ lịch hẹn',
-        /* MÃ RIÊNG, không gộp vào 'booking.status' — thêm 04/09/2026.
-
-           Đổi trạng thái bình thường chỉ dịch một buổi hẹn tới bước sau và sửa
-           lại được ngay. Ghi nhận khách không đến là một KẾT LUẬN về hành vi của
-           một người thật, và nó đi thẳng vào một tỉ lệ trên bảng Tổng quan —
-           tức là vào một con số người ta dùng để ra quyết định. Lọc riêng được
-           nó là cần, đúng như 'order.lens_start' / 'order.lens_undo' đã tách. */
-        'booking.no_show'    => 'Ghi nhận khách không đến',
     ];
 
     /**
@@ -142,7 +134,7 @@ class AuditLogModel extends BaseModel
         ]],
         'kho'      => ['nhan' => 'Tồn kho', 'actions' => ['stock.adjust']],
         'lich-hen' => ['nhan' => 'Lịch hẹn', 'actions' => [
-            'booking.status', 'booking.reschedule', 'booking.cancel', 'booking.no_show',
+            'booking.status', 'booking.reschedule', 'booking.cancel',
         ]],
         'noi-bo'   => ['nhan' => 'Tài khoản nội bộ', 'actions' => ['staff.unlock_login', 'staff.set_stores']],
     ];

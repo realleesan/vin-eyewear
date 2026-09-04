@@ -32,17 +32,6 @@ $tones = [
     'pending'   => 'wait',
     'confirmed' => 'sure',
     'done'      => 'done',
-    /* 'no_show' thêm 04/09/2026 cùng trạng thái mới bên khu quản trị.
-
-       PHẢI KHAI Ở ĐÂY dù nhánh `$quaHan` bên dưới thường thắng: thiếu nó thì
-       `?? 'wait'` cho ra viên HỔ PHÁCH — màu của "đang chờ" — trên một buổi hẹn
-       đã kết thúc. Khách mở trang thấy màu chờ đợi và tưởng vẫn còn một cuộc
-       gọi sẽ tới. (BookingModel::isExpired() trả false với 'no_show', nên nhánh
-       $quaHan KHÔNG che được trường hợp này.)
-
-       Tông 'gone' (xám) chứ không 'stop' (đỏ): buổi hẹn đã trôi qua, không phải
-       bị cửa hàng từ chối. */
-    'no_show'   => 'gone',
     'cancelled' => 'stop',
 ];
 

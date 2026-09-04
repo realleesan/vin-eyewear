@@ -105,207 +105,6 @@ class OrderModel extends BaseModel
         '30d'   => '30 ngày qua',
     ];
 
-    /**
-     * THỨ TỰ TIẾN CỦA VÒNG ĐỜI GIAO VẬN — để biết một cú đổi là TIẾN hay LÙI.
-     *
-     * ─────────────────────────────────────────────────────────────────────────
-     * VÌ SAO PHẢI KHAI RA THÀNH SỐ, KHÔNG DỰA VÀO THỨ TỰ CỦA MẢNG `STATUSES`
-     *
-     * `STATUSES` là danh sách để HIỆN RA, và thứ tự của nó là thứ tự đọc cho dễ.
-     * Dùng array_search() trên đó để suy ra chiều đi thì luật nghiệp vụ "không
-     * cho lùi từ Hoàn tất" phụ thuộc vào việc không ai sắp xếp lại một mảng
-     * hiển thị — mà sắp xếp lại một mảng hiển thị là việc trông vô hại.
-     *
-     * 'cancelled' KHÔNG CÓ TRONG BẢNG NÀY, cố ý. Huỷ là ngã rẽ RA KHỎI vòng đời
-     * chứ không phải một nấc trên đó: huỷ một đơn đang "Đang giao" không phải
-     * "lùi", và cho nó một con số nghĩa là buộc phải trả lời một câu hỏi vô
-     * nghĩa — huỷ đứng trước hay sau "Hoàn tất". Đường huỷ có luật riêng, xem
-     * OrderAdminController::updateStatus().
-     * ─────────────────────────────────────────────────────────────────────────
-     */
-    public const THU_TU = [
-        'new'       => 1,
-        'confirmed' => 2,
-        'preparing' => 3,
-        'shipping'  => 4,
-        'completed' => 5,
-    ];
-
-    /**
-     * Đơn vị giao hàng chọn được.
-     *
-     * DANH SÁCH CỐ ĐỊNH TRONG MÃ, KHÔNG PHẢI MỘT BẢNG — chốt 04/09/2026: cửa
-     * hàng thuê ngoài và KHÔNG nối API hãng nào. Nhân viên đọc mã vận đơn trên
-     * tờ biên nhận rồi gõ vào; không có gì để đồng bộ, không có trạng thái nào
-     * tự về. Một bảng `carriers` kèm màn quản trị riêng chỉ thêm một mục menu
-     * phải trông coi mà không trả lời thêm câu hỏi nào.
-     *
-     * Ô chữ tự do cũng đã cân nhắc và bỏ: "GHTK", "ghtk" và "Giao hàng tiết
-     * kiệm" là ba giá trị khác nhau với CSDL, nên sau vài tháng không lọc hay
-     * đếm được theo hãng nữa.
-     *
-     * Thêm hãng = thêm một dòng ở đây. Cùng nếp với BookingModel::SERVICES.
-     * Giá trị đã lưu trên đơn cũ vẫn hiện nguyên kể cả khi gỡ khỏi danh sách —
-     * xem tenDonViGiao().
-     */
-    public const DON_VI_GIAO = [
-        'ghtk'    => 'Giao Hàng Tiết Kiệm',
-        'ghn'     => 'Giao Hàng Nhanh',
-        'viettel' => 'Viettel Post',
-        'vnpost'  => 'VNPost',
-        'shop'    => 'Cửa hàng tự giao',
-    ];
-
-    /** Tên hãng để hiện; mã lạ (hãng đã gỡ khỏi danh sách) thì in nguyên mã. */
-    public static function tenDonViGiao(?string $ma): string
-    {
-        $ma = trim((string) $ma);
-
-        return $ma === '' ? '' : (self::DON_VI_GIAO[$ma] ?? $ma);
-    }
-
-    /**
-     * Đổi từ $tu sang $den có phải là đi LÙI không.
-     *
-     * Trạng thái ngoài bảng THU_TU (tức 'cancelled', hoặc một giá trị lạ trong
-     * dữ liệu cũ) trả false: không xếp được lên trục thì không nói được chiều,
-     * và đoán bừa ở đây sẽ chặn nhầm một thao tác hợp lệ.
-     */
-    public static function laLuiTrangThai(string $tu, string $den): bool
-    {
-        return isset(self::THU_TU[$tu], self::THU_TU[$den])
-            && self::THU_TU[$den] < self::THU_TU[$tu];
-    }
-
-    // ========================================================================
-    // TIỀN CỦA MỘT ĐƠN — MỘT CHỖ TÍNH DUY NHẤT
-    // ========================================================================
-
-    /** CSDL đã chạy migration 2026-09-11 chưa (bộ cột đối chiếu tiền + giao hàng). */
-    public static function coDoiSoat(): bool
-    {
-        return Database::columnExists('orders', 'tax_amount');
-    }
-
-    /** Thuế suất VAT theo phần trăm; 0 = chưa xuất hoá đơn VAT. */
-    public static function thueSuat(): int
-    {
-        return max(0, (int) config('app.thue_suat', 0));
-    }
-
-    /**
-     * Bóc tách toàn bộ tiền của một đơn — nguồn DUY NHẤT cho khối Thanh toán,
-     * cho phiếu in và cho bản xuất Excel.
-     *
-     * ─────────────────────────────────────────────────────────────────────────
-     * TỔNG ĐƯỢC TÍNH LẠI Ở ĐÂY, KHÔNG ĐỌC THẲNG `orders`.`total`
-     *
-     * Yêu cầu: "Tổng cộng phải được tính lại ở phía máy chủ, không tin số gửi
-     * lên từ trình duyệt." Hôm nay chưa có màn nào cho sửa tiền bằng tay, nên
-     * chỗ nguy hiểm không phải là một con số giả gửi lên — mà là `total` ĐÃ LƯU
-     * lệch khỏi các thành phần của nó: một dòng hàng bị sửa tay trong
-     * phpMyAdmin, một migration cũ chạy dở, một đơn nhập từ hệ thống trước.
-     *
-     * Nên hàm này tính lại từ các thành phần VÀ trả về `lech` = chênh lệch với
-     * số đã lưu. Khác 0 nghĩa là hoá đơn đang tự mâu thuẫn, và giao diện phải
-     * nói ra thay vì lặng lẽ chọn một trong hai con số. Đó chính là "đối chiếu
-     * được với tiền thật thu về".
-     *
-     * CÔNG THỨC PHẢI KHỚP TỪNG CHỮ VỚI place():
-     *     total = max(0, subtotal − discount) + shipping_fee
-     * Mã giảm giá cho miễn phí ship thì place() đã ghi thẳng shipping_fee = 0
-     * (không trừ vào `discount`), nên ở đây không cần trường hợp riêng nào.
-     *
-     * ─────────────────────────────────────────────────────────────────────────
-     * TIỀN TRÒNG TÁCH RA TỪ DÒNG HÀNG, KHÔNG PHẢI MỘT CỘT TRÊN ĐƠN
-     *
-     * `order_items`.`unit_price` ĐÃ GỒM tiền tròng (xem place(): $unit = giá
-     * gọng + $lensPrice), và `lens_price` lưu riêng đúng để tách lại được khi
-     * cần in "gọng 2.890.000₫ + tròng 450.000₫". Nên:
-     *     tiền tròng = Σ(lens_price × quantity)
-     *     tiền gọng  = subtotal − tiền tròng
-     * Cộng hai dòng lại luôn bằng "Tiền hàng" cũ, nên không có đồng nào xuất
-     * hiện hay biến mất khi khối Thanh toán tách làm hai dòng.
-     *
-     * @param  array $order đúng một dòng bảng `orders`
-     * @param  array $items dòng hàng của đơn đó (order_items)
-     * @return array{tienGong:int, tienTrong:int, giamGia:int, phiShip:int,
-     *               thue:int, tong:int, tongDaLuu:int, lech:int,
-     *               daThu:int, conPhaiThu:int, gomThue:bool}
-     */
-    public static function tinhTien(array $order, array $items = []): array
-    {
-        $subtotal = (int) ($order['subtotal'] ?? 0);
-        $giamGia  = (int) ($order['discount'] ?? 0);
-        $phiShip  = (int) ($order['shipping_fee'] ?? 0);
-
-        $tienTrong = 0;
-
-        foreach ($items as $d) {
-            $tienTrong += (int) ($d['lens_price'] ?? 0) * (int) ($d['quantity'] ?? 0);
-        }
-
-        /* Kẹp lại trong khoảng [0, subtotal]. Dữ liệu cũ có thể có lens_price
-           lớn hơn cả dòng hàng (nhập tay sai), và một "tiền gọng" ÂM trên hoá
-           đơn thì vô nghĩa hơn hẳn một con số làm tròn. */
-        $tienTrong = max(0, min($tienTrong, $subtotal));
-
-        $goc = max(0, $subtotal - $giamGia) + $phiShip;
-
-        /*
-         * VAT — hai chế độ, và chỉ MỘT trong hai đụng tới tổng.
-         *
-         *   giá đã gồm thuế  thuế được BÓC RA từ tổng để in cho khách xem;
-         *                    tổng KHÔNG đổi. Đây là cách bán lẻ ở Việt Nam vẫn
-         *                    làm, và là mặc định.
-         *   thuế cộng thêm   tổng = gốc + thuế.
-         *
-         * Cờ đọc từ chính ĐƠN (`price_includes_tax`), không đọc config: cấu
-         * hình sẽ bị đổi, còn hoá đơn đã phát hành phải đứng yên. Xem chú thích
-         * cột đó trong migration 2026-09-11.
-         *
-         * Đơn cũ chưa chạy migration thì `tax_amount` không tồn tại -> 0, và
-         * dòng VAT tự ẩn. Không có nhánh lỗi nào.
-         */
-        $gomThue = (bool) ($order['price_includes_tax'] ?? 1);
-        $thue    = (int) ($order['tax_amount'] ?? 0);
-        $tong    = $gomThue ? $goc : $goc + $thue;
-
-        /*
-         * ĐÃ THU — theo `payment_status`, không cộng dồn.
-         *
-         * Ba trạng thái tiền là RỜI NHAU (một đơn mang đúng một giá trị), nên
-         * đây là một phép chọn chứ không phải một phép cộng:
-         *   paid          đã thu ĐỦ, kể cả phần cọc trước đó -> thu = tổng
-         *   deposit_paid  mới thu phần cọc                   -> thu = cọc
-         *   unpaid        chưa thu đồng nào                  -> 0
-         *
-         * Cộng `deposit_amount` vào đơn đã 'paid' là ĐẾM HAI LẦN chính khoản
-         * cọc ấy, và "Còn phải thu" sẽ ra số âm.
-         */
-        $coc   = (int) ($order['deposit_amount'] ?? 0);
-        $daThu = match ((string) ($order['payment_status'] ?? 'unpaid')) {
-            'paid'         => $tong,
-            'deposit_paid' => $coc,
-            default        => 0,
-        };
-
-        return [
-            'tienGong'   => max(0, $subtotal - $tienTrong),
-            'tienTrong'  => $tienTrong,
-            'giamGia'    => $giamGia,
-            'phiShip'    => $phiShip,
-            'thue'       => $thue,
-            'gomThue'    => $gomThue,
-            'tong'       => $tong,
-            'tongDaLuu'  => (int) ($order['total'] ?? 0),
-            // Khác 0 = hoá đơn tự mâu thuẫn. Giao diện PHẢI nói ra.
-            'lech'       => $tong - (int) ($order['total'] ?? 0),
-            'daThu'      => $daThu,
-            'conPhaiThu' => max(0, $tong - $daThu),
-        ];
-    }
-
     // ========================================================================
     // TẠO ĐƠN
     // ========================================================================
@@ -1001,8 +800,7 @@ class OrderModel extends BaseModel
         string $orderId,
         string $status,
         ?string $changedBy = null,
-        ?string $lyDo = null,
-        ?string $tuTrangThai = null
+        ?string $lyDo = null
     ): void {
         $ban = [
             'id'         => uuid(),
@@ -1010,20 +808,6 @@ class OrderModel extends BaseModel
             'status'     => $status,
             'changed_by' => $changedBy,
         ];
-
-        /* TRẠNG THÁI CŨ — cùng lối phòng thủ với `ly_do` ngay dưới: cột này chỉ
-           có từ migration 2026-09-11, và câu INSERT nằm trong cùng transaction
-           với việc đổi trạng thái. Nhắc tới một cột chưa có là lỗi 1054, tức là
-           trên máy chưa nâng cấp thì MỌI thao tác đổi trạng thái đơn sẽ đổ.
-
-           null là một giá trị CÓ NGHĨA ở đây, không phải "không biết": mốc đầu
-           tiên của mỗi đơn (place() gọi với $tuTrangThai = null) không có trạng
-           thái nào trước nó, vì trước đó đơn chưa tồn tại. */
-        if (self::coFromStatus()) {
-            $ban['from_status'] = $tuTrangThai !== null && $tuTrangThai !== ''
-                ? $tuTrangThai
-                : null;
-        }
 
         /* CHƯA CHẠY MIGRATION THÌ BỎ LÝ DO, ĐỪNG BỎ CẢ MỐC.
 
@@ -1048,12 +832,6 @@ class OrderModel extends BaseModel
     public static function coLyDoTrangThai(): bool
     {
         return Database::columnExists('order_status_history', 'ly_do');
-    }
-
-    /** CSDL đã có cột trạng thái CŨ trên bảng lịch sử chưa (migration 2026-09-11). */
-    public static function coFromStatus(): bool
-    {
-        return Database::columnExists('order_status_history', 'from_status');
     }
 
     /** CSDL đã có bộ cột mốc mài chưa (migration 2026-09-07). */
@@ -1110,10 +888,7 @@ class OrderModel extends BaseModel
             $truoc = (string) ($donCu['status'] ?? '');
 
             self::update($id, ['status' => $status]);
-            /* $truoc đã đọc ngay trên, TRƯỚC khi ghi đè — nên nó là trạng thái
-               thật lúc bắt đầu thao tác. Đọc lại sau update thì from_status
-               luôn bằng to_status và cả cột thành vô dụng. */
-            self::logStatus($id, $status, $changedBy, $lyDo, $truoc !== '' ? $truoc : null);
+            self::logStatus($id, $status, $changedBy, $lyDo);
 
             /* VẾT ĐỔI TRẠNG THÁI — SNFR-11 gọi đích danh "huỷ đơn hàng".
 
@@ -1639,28 +1414,15 @@ class OrderModel extends BaseModel
      *
      * KHÔNG chạm `paid_at`: cột đó là mốc "tiền về ĐỦ", dùng cho sổ sách. Đặt
      * nó ở đây thì một đơn mới cọc 30% trông như đã thanh toán xong khi nhìn
-     * bằng cột thời gian.
-     *
-     * MỐC NHẬN CỌC nay có cột riêng `deposit_paid_at` (migration 2026-09-11).
-     * Trước đó nó chỉ nằm ở `sepay_transactions`, tức là một đơn thu cọc bằng
-     * TIỀN MẶT tại quầy không có mốc nào cả — mà đó đúng là cách phần lớn khách
-     * đặt cọc ở cửa hàng kính. Ghi vào đây thì mọi đường nhận cọc đều để lại
-     * mốc, không riêng đường chuyển khoản qua SePay.
+     * bằng cột thời gian. Thời điểm nhận cọc nằm ở `sepay_transactions`.
      *
      * @return bool có đổi gì không
      */
     public static function markDepositPaid(string $id): bool
     {
-        /* Đặt mốc TRONG CÙNG câu UPDATE với việc đổi trạng thái, không tách
-           thành câu thứ hai: điều kiện `payment_status = 'unpaid'` là thứ chặn
-           webhook SePay gửi lại mười lần cùng một giao dịch. Một câu UPDATE
-           riêng cho mốc sẽ chạy KỂ CẢ khi câu đầu không đổi gì, và mỗi lần gửi
-           lại sẽ đẩy mốc nhận cọc muộn thêm một chút. */
-        $datMoc = self::coDoiSoat() ? ', deposit_paid_at = NOW()' : '';
-
         $doi = Database::execute(
             "UPDATE orders
-                SET payment_status = 'deposit_paid'{$datMoc}
+                SET payment_status = 'deposit_paid'
               WHERE id = :id AND payment_status = 'unpaid'",
             ['id' => $id]
         ) > 0;

@@ -235,7 +235,7 @@ $oAn = static function () use ($q, $coSo, $status, $page): string {
                                      có thật ở cửa hàng, chỉ làm hỏng một dòng sổ sách.
                                      Sửa nhầm một lịch đã hoàn tất vẫn làm được bằng ô
                                      chọn trạng thái ngay trên. */ ?>
-                            <?php if (!in_array($a['status'], ['cancelled', 'done', 'no_show'], true)): ?>
+                            <?php if (!in_array($a['status'], ['cancelled', 'done'], true)): ?>
                                 <?php
                                 /* Câu hỏi lại do CÙNG một biến sinh ra cho cả
                                    data-confirm lẫn onsubmit, nên hộp thoại của
@@ -258,53 +258,6 @@ $oAn = static function () use ($q, $coSo, $status, $page): string {
                                     <input type="hidden" name="id" value="<?= e($a['id']) ?>">
                                     <?= $oAn() ?>
                                     <button type="submit" class="ahuy__btn">Huỷ lịch</button>
-                                </form>
-                            <?php endif; ?>
-
-                            <?php
-                            /*
-                             * ─────────────────────────────────────────────────
-                             * "KHÁCH KHÔNG ĐẾN" — NÚT RIÊNG, CHỈ HIỆN KHI ĐÃ QUA
-                             * NGÀY HẸN
-                             *
-                             * Không nhét vào ô chọn trạng thái ngay trên: ô đó
-                             * tự gửi form khi đổi, mà đây là một lời ghi vào sổ
-                             * về hành vi của một người thật và nó đi thẳng vào
-                             * tỉ lệ trên bảng Tổng quan. Cùng lý lẽ với nút Huỷ.
-                             *
-                             * Ẩn với buổi hẹn CHƯA TỚI NGÀY: "khách không đến"
-                             * của một buổi hẹn ngày mai là câu vô nghĩa. Ẩn nút
-                             * KHÔNG PHẢI là phân quyền — máy chủ kiểm lại đúng
-                             * điều kiện này ở
-                             * AppointmentAdminController::markNoShow().
-                             *
-                             * Ẩn luôn với lịch đã huỷ (khách đã báo trước, không
-                             * phải "không đến") và với lịch đã chốt kết quả rồi.
-                             * ─────────────────────────────────────────────────
-                             */
-                            $ghiKhongDenDuoc = $a['appointment_date'] < date('Y-m-d')
-                                && in_array($a['status'], ['pending', 'confirmed'], true);
-                            ?>
-                            <?php if ($ghiKhongDenDuoc): ?>
-                                <?php $hoiKhongDen = sprintf(
-                                    'Ghi nhận %s không đến buổi hẹn %s ngày %s?',
-                                    $a['full_name'],
-                                    $a['code'],
-                                    formatDate($a['appointment_date'])
-                                ); ?>
-                                <form method="post" action="/quan-tri/lich-hen/khong-den" class="ahuy"
-                                      data-confirm="<?= e($hoiKhongDen) ?>"
-                                      data-confirm-title="Khách không đến?"
-                                      data-confirm-ok="Ghi nhận"
-                                      onsubmit="return confirm('<?= e($hoiKhongDen) ?>')">
-                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                    <input type="hidden" name="id" value="<?= e($a['id']) ?>">
-                                    <?= $oAn() ?>
-                                    <?php /* Không tô đỏ như nút Huỷ: đây không phải thao
-                                             tác phá huỷ gì cả, chỉ là ghi lại chuyện đã
-                                             xảy ra. Tô đỏ cả hai thì nút Huỷ mất đi cái
-                                             sức cảnh báo của riêng nó. */ ?>
-                                    <button type="submit" class="ahuy__btn ahuy__btn--ghi">Khách không đến</button>
                                 </form>
                             <?php endif; ?>
                         </td>

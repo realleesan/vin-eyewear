@@ -166,115 +166,11 @@ class OrderAdminController extends AdminController
             }
         }
 
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * LÙI TRẠNG THÁI TỪ "HOÀN TẤT" — cùng hai điều kiện với mở lại đơn huỷ
-         *
-         * "Hoàn tất" không chỉ là một nhãn: changeStatus() dùng nó để đánh dấu
-         * ĐÃ THU TIỀN với đơn COD (giao xong và thu tiền là cùng một hành động
-         * của shipper). Nên kéo một đơn từ Hoàn tất về "Đang giao" là nói rằng
-         * hàng chưa tới tay khách trong khi sổ tiền đã ghi nhận thu đủ — hai
-         * cuốn sổ nói ngược nhau, và không có gì tự sửa lại.
-         *
-         * Ai   chỉ Quản trị viên. Nhân viên bấm nhầm có THANH HOÀN TÁC ngay sau
-         *      thao tác (Q3.2) — nó sống vài phút và chỉ cho chính người ấy.
-         * Lý do bắt buộc, tối thiểu LY_DO_TOI_THIEU ký tự. Dùng LẠI đúng hằng số
-         *      của luật mở-lại-đơn-huỷ chứ không gõ số 10: hai luật cùng một
-         *      tính chất thì phải đổi cùng nhau, và một con số gõ cứng ở đây sẽ
-         *      lặng lẽ tách ra khỏi cái kia.
-         *
-         * CHỈ tính là "lùi" khi cả hai đầu nằm trên trục vòng đời — huỷ một đơn
-         * đã hoàn tất KHÔNG đi qua nhánh này, nó là ngã rẽ ra khỏi trục và có
-         * luật riêng ngay dưới. Xem OrderModel::THU_TU.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        $luiTuHoanTat = (string) $order['status'] === 'completed'
-            && OrderModel::laLuiTrangThai((string) $order['status'], $status);
-
-        if ($luiTuHoanTat) {
-            if (!UserModel::hasRole($this->userId, 'admin')) {
-                flash('admin_error',
-                    'Chỉ Quản trị viên mới lùi được đơn đã Hoàn tất. '
-                    . 'Nếu vừa bấm nhầm, dùng thanh Hoàn tác ngay sau thao tác.');
-                redirect($back);
-            }
-
-            if (utf8Length($lyDo) < OrderModel::LY_DO_TOI_THIEU) {
-                flash('admin_error',
-                    'Lùi một đơn đã Hoàn tất thì phải ghi lý do, tối thiểu '
-                    . OrderModel::LY_DO_TOI_THIEU . ' ký tự.');
-                redirect($back);
-            }
-        }
-
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * HUỶ ĐƠN ĐÃ BẮT ĐẦU MÀI — XÁC NHẬN LẦN HAI, Ở MÁY CHỦ
-         *
-         * FR-25: huỷ SAU khi đã bấm "Bắt đầu mài" thì khách KHÔNG còn được hoàn
-         * 100% cọc — tròng đã cắt theo số đo của riêng người đó và không bán lại
-         * cho ai khác được. Đây là thao tác duy nhất ở màn này lấy mất tiền của
-         * một người thứ ba, và nó đi qua một ô chọn TỰ GỬI FORM khi đổi.
-         *
-         * Nên bước xác nhận phải nằm ở MÁY CHỦ, không phải ở hộp thoại JS: hộp
-         * thoại chỉ là lớp tăng cường, tắt JS là mất sạch. Không có ô `xn_mai`
-         * thì cú POST đầu tiên KHÔNG huỷ gì cả — nó chỉ mở ra tấm thẻ xác nhận
-         * trong ngăn kéo (?xac-nhan-huy=<id>), nơi ghi rõ hệ quả về tiền cọc và
-         * có một nút riêng để bấm lần hai.
-         *
-         * Hai lượt đi-về, không JavaScript, và người bấm đọc được hệ quả bằng
-         * chữ trước khi bấm lần thứ hai.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        $huyDon  = $status === 'cancelled' && (string) $order['status'] !== 'cancelled';
-        $theXacNhan = $this->themThamSo($back, 'xac-nhan-huy', $id);
-
-        if ($huyDon) {
-            /* BƯỚC MỘT — ô chọn trạng thái tự gửi form, nên cú POST đầu tiên
-               KHÔNG huỷ gì cả. Nó chỉ mở tấm thẻ xác nhận, nơi có ô ghi lý do
-               (bắt buộc) và, với đơn đã mài, thêm một ô tick về tiền cọc. */
-            if ((string) ($_POST['xn_huy'] ?? '') !== '1') {
-                redirect($theXacNhan);
-            }
-
-            /* LÝ DO BẮT BUỘC VỚI MỌI ĐƠN HUỶ, không riêng đơn đã mài. Huỷ là
-               thao tác cắt mất doanh thu và trả hàng về kho; sáu tháng sau, một
-               dòng "Đã huỷ" không kèm chữ nào là một khoảng trống không ai lấp
-               lại được. */
-            if (utf8Length($lyDo) < OrderModel::LY_DO_TOI_THIEU) {
-                flash('admin_error',
-                    'Huỷ đơn thì phải ghi lý do, tối thiểu '
-                    . OrderModel::LY_DO_TOI_THIEU . ' ký tự.');
-                redirect($theXacNhan);
-            }
-
-            /* BƯỚC HAI, chỉ với đơn ĐÃ BẮT ĐẦU MÀI — FR-25: từ mốc ấy khách
-               không còn được hoàn 100% cọc, vì tròng đã cắt theo số đo của
-               riêng người đó và không bán lại cho ai khác được.
-
-               Một ô tick riêng chứ không gộp vào nút bấm: người bấm phải chạm
-               vào đúng câu nói ra hệ quả về tiền, không phải lướt qua nó. */
-            if (OrderModel::daBatDauMai($order)
-                && (string) ($_POST['xn_mai'] ?? '') !== '1') {
-                flash('admin_error',
-                    'Đơn này đã bắt đầu mài tròng nên khách KHÔNG còn được hoàn 100% tiền cọc. '
-                    . 'Phải tick vào ô xác nhận điều đó rồi mới huỷ được.');
-                redirect($theXacNhan);
-            }
-        }
-
         // Mọi luật đi kèm việc đổi trạng thái nằm trong model: ghi lịch sử
         // (thanh tiến trình của khách đọc bảng đó), hoàn kho khi huỷ, và đánh
         // dấu đã thu tiền khi đơn COD hoàn tất. Xem OrderModel::changeStatus.
         OrderModel::changeStatus(
-            $id,
-            $status,
-            AuthMiddleware::staffId(),
-            /* Lý do đi kèm ở CẢ BA đường bắt buộc nó. Trước đây chỉ truyền khi
-               mở lại đơn huỷ, nên một lý do gõ đúng cho việc lùi trạng thái sẽ
-               bị vứt đi ngay trước khi ghi — và bảng lịch sử để lại một cú lùi
-               không ai giải thích được. */
-            ($moLaiDon || $luiTuHoanTat || $huyDon) && $lyDo !== '' ? $lyDo : null
+            $id, $status, AuthMiddleware::staffId(), $moLaiDon ? $lyDo : null
         );
 
         $this->ghiHoanTac([$id => (string) $order['status']], $status);
@@ -744,22 +640,10 @@ class OrderAdminController extends AdminController
             return null;
         }
 
-        /* MÃ GIẢM GIÁ LẤY QUA JOIN, không thêm một cột `voucher_code` trên đơn.
-           Khối Thanh toán phải ghi "Giảm giá (HE2026)" chứ không chỉ một con
-           số — câu đầu tiên người đọc hoá đơn hỏi là "giảm theo cái gì".
-
-           LEFT JOIN chứ không JOIN: `voucher_id` là ON DELETE SET NULL, và đơn
-           không dùng mã nào thì nó vốn đã NULL. JOIN thường làm biến mất chính
-           cái đơn đang muốn xem.
-
-           Mã đã bị xoá khỏi bảng `vouchers` cho ra `voucher_code` NULL trong
-           khi `discount` vẫn khác 0. View in "mã đã xoá" chứ không giấu dòng
-           ấy đi: số tiền đã trừ là có thật. */
         $order = Database::fetchOne(
-            'SELECT o.*, s.name AS store_name, v.code AS voucher_code
+            'SELECT o.*, s.name AS store_name
                FROM orders o
-               LEFT JOIN stores s   ON s.id = o.store_id
-               LEFT JOIN vouchers v ON v.id = o.voucher_id
+               LEFT JOIN stores s ON s.id = o.store_id
               WHERE o.id = :id',
             ['id' => $id]
         );
@@ -782,11 +666,6 @@ class OrderAdminController extends AdminController
         $order['da_mai']      = OrderModel::daBatDauMai($order);
         $order['rut_lai_duoc'] = OrderModel::trongCuaSoRutLai($order, $this->userId);
         $order['la_admin']    = UserModel::hasRole($this->userId, 'admin');
-        /* Bước hai của việc huỷ đơn: máy chủ vừa từ chối cú POST đầu tiên và
-           quay về đây kèm ?xac-nhan-huy=<id>. So khớp với ĐÚNG đơn đang mở —
-           một tham số còn sót lại từ đơn khác không được phép mở thẻ xác nhận
-           trên đơn này. Xem updateStatus(). */
-        $order['xac_nhan_huy'] = (string) ($_GET['xac-nhan-huy'] ?? '') === $id;
         $order['la_quan_ly']  = $order['la_admin'] || UserModel::hasRole($this->userId, 'manager');
 
         /*
@@ -839,28 +718,5 @@ class OrderAdminController extends AdminController
     {
         flash('admin_error', $message);
         redirect($back);
-    }
-
-    /**
-     * Thêm (hoặc thay) một tham số trên đường dẫn quay về, GIỮ NGUYÊN phần còn lại.
-     *
-     * Dùng cho bước xác nhận lần hai khi huỷ đơn đã mài. Nối thẳng '&x=y' vào
-     * chuỗi thì hỏng theo hai đường: đường dẫn chưa có '?' nào sẽ thành
-     * '/quan-tri/don-hang&xac-nhan-huy=…' (tham số biến mất), và bấm nhầm hai
-     * lần sẽ dán hai bản cùng tên vào một địa chỉ.
-     *
-     * Bộ lọc, số trang và ?xem= đang mở PHẢI còn nguyên: người bấm huỷ đang
-     * đứng ở trang 3 của một danh sách đã lọc, và ném họ về đầu danh sách giữa
-     * chừng một thao tác hai bước là mất luôn chỗ đang làm dở.
-     */
-    private function themThamSo(string $url, string $ten, string $giaTri): string
-    {
-        $phan  = explode('?', $url, 2);
-        $duong = $phan[0];
-
-        parse_str($phan[1] ?? '', $thamSo);
-        $thamSo[$ten] = $giaTri;
-
-        return $duong . '?' . http_build_query($thamSo);
     }
 }
