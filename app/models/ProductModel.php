@@ -179,6 +179,51 @@ class ProductModel extends BaseModel
     }
 
     /**
+     * TÊN sản phẩm khớp từ khoá — cho ô gợi ý khi đang gõ (X29 / Q10).
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * TRẢ VỀ CHUỖI, KHÔNG TRẢ VỀ SẢN PHẨM
+     *
+     * filter() có sẵn và cũng tìm được, nhưng nó SELECT p.* rồi decode() từng
+     * dòng — ảnh, biến thể, thông số kỹ thuật. Ô gợi ý gọi lại sau mỗi vài ký
+     * tự người dùng gõ, nên mỗi lần gọi kéo về cả bản ghi sản phẩm là làm cho
+     * chính thao tác gõ chậm đi. Ở đây chỉ cần đúng cột `name`.
+     *
+     * DISTINCT vì hai sản phẩm có thể trùng tên ở hai màu khác nhau, và hai
+     * dòng giống hệt trong danh sách gợi ý trông như một lỗi.
+     *
+     * Vẫn giữ `is_visible = 1`: gợi ý một cái tên rồi bấm vào ra trang trắng
+     * là tệ hơn không gợi ý gì.
+     *
+     * @return string[]
+     */
+    public static function goiYTen(string $q, int $limit = 6): array
+    {
+        $q = trim($q);
+
+        if ($q === '') {
+            return [];
+        }
+
+        /* LIKE '%q%' chứ không phải 'q%': người ta gõ "mát" để tìm "Kính mát",
+           và neo đầu chuỗi thì đúng cái trường hợp thường gặp nhất không ra gì.
+           Đánh đổi là không dùng được chỉ mục — chấp nhận được vì $limit nhỏ
+           và bảng sản phẩm của một cửa hàng kính thì không lớn. */
+        $like = '%' . str_replace(['%', '_'], ['\%', '\_'], $q) . '%';
+
+        return array_column(
+            Database::fetchAll(
+                'SELECT DISTINCT name FROM products
+                  WHERE is_visible = 1 AND name LIKE :q
+                  ORDER BY CHAR_LENGTH(name) ASC
+                  LIMIT ' . max(1, min(20, $limit)),
+                ['q' => $like]
+            ),
+            'name'
+        );
+    }
+
+    /**
      * Dựng mệnh đề WHERE từ tham số lọc trên URL.
      *
      * Ngữ nghĩa khớp bản Lovable (san-pham.index.tsx):

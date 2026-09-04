@@ -40,6 +40,11 @@ class SearchController extends BaseController
     private const MAX_PRODUCTS = 8;
     private const MAX_POLICIES = 6;
 
+    /* Trần cho DANH SÁCH GỢI Ý (X29). Nhỏ hơn hẳn hai trần trên: gợi ý hiện
+       ra trong lúc người ta đang gõ, và một danh sách dài đọc chậm hơn tự gõ
+       nốt từ còn lại. */
+    private const MAX_SUGGEST = 8;
+
     public function index(): void
     {
         $q = trim((string) ($_GET['q'] ?? ''));
@@ -82,6 +87,97 @@ class SearchController extends BaseController
             'policies'  => $policies,
             'total'     => $total,
         ]);
+    }
+
+    /**
+     * GỢI Ý TỪ KHOÁ KHI ĐANG GÕ — X29 / Q10, chốt 04/09/2026 (GET /tim-kiem/goi-y).
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * PHẠM VI ĐÚNG BẰNG QUYẾT ĐỊNH, KHÔNG HƠN
+     *
+     * X29 chốt "tìm kiếm gần đúng" của giai đoạn 1 gồm ba thứ: bỏ dấu, không
+     * phân biệt hoa thường, CỘNG THÊM gợi ý từ khoá khi đang gõ. Hai thứ đầu
+     * đã có sẵn nhờ collation utf8mb4_unicode_ci; đây là thứ ba.
+     *
+     * KHÔNG làm dung sai lỗi gõ sai chính tả (fuzzy thật) — X29 nói rõ hạng
+     * mục đó để giai đoạn sau. Ghi ra đây vì đó chính là thứ dễ bị "tiện tay
+     * làm luôn": thêm một phép Levenshtein vào vòng lặp trông vô hại, nhưng nó
+     * biến một quyết định đã chốt thành một quyết định đã bị lặng lẽ đổi.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * TẠI SAO GỢI Ý CHỈ LÀ CHỮ, KHÔNG PHẢI LIÊN KẾT
+     *
+     * Trả về danh sách CHUỖI để đổ vào <datalist> của chính ô tìm kiếm. Chọn
+     * một gợi ý là điền chữ đó vào ô rồi gửi form như thường — không có đường
+     * đi tắt nào riêng, nên không có luồng thứ hai phải bảo trì, và tắt
+     * JavaScript thì ô tìm kiếm vẫn hoạt động y như trước.
+     *
+     * Trộn cả tên sản phẩm, tên cơ sở và câu hỏi chính sách vì trang kết quả
+     * cũng tìm cả ba nhóm — gợi ý mà hẹp hơn kết quả thì nó dạy người dùng một
+     * bản đồ sai về thứ tìm được.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function suggest(): void
+    {
+        $q = utf8Substr(trim((string) ($_GET['q'] ?? '')), 0, 60);
+
+        /* NGƯỠNG HAI KÝ TỰ. Một ký tự khớp gần như mọi thứ, nên danh sách trả
+           về là ngẫu nhiên trong mắt người đọc — và nó tốn một lượt gọi máy
+           chủ cho mỗi lần chạm phím đầu tiên của mọi người dùng. */
+        $goiY = utf8Length($q) < 2 ? [] : $this->gomGoiY($q);
+
+        /* Không đệm ở proxy hay trình duyệt: danh sách sản phẩm đổi theo tồn
+           kho và trạng thái hiện, mà một gợi ý cũ dẫn tới trang trắng thì tệ
+           hơn không gợi ý. Cho phép đệm riêng tư 30 giây để người gõ nhanh
+           không bắn hai lượt giống hệt nhau. */
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: private, max-age=30');
+
+        echo json_encode(['goi_y' => $goiY], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Gom gợi ý từ ba nguồn, bỏ trùng, cắt ở MAX_SUGGEST.
+     *
+     * @return string[]
+     */
+    private function gomGoiY(string $q): array
+    {
+        $ra = ProductModel::goiYTen($q, self::MAX_SUGGEST);
+
+        foreach ($this->searchStores($q) as $s) {
+            $ra[] = (string) ($s['name'] ?? '');
+        }
+
+        foreach ($this->searchPolicies($q) as $p) {
+            $ra[] = (string) ($p['question'] ?? '');
+        }
+
+        /* Bỏ trùng KHÔNG PHÂN BIỆT HOA THƯỜNG, giữ dạng viết đầu tiên gặp:
+           "Kính mát" và "kính mát" là một gợi ý, và hiện cả hai trông như
+           hệ thống không biết mình đang nói gì. array_unique() thẳng thì
+           không bắt được cặp đó. */
+        $thay = [];
+        $sach = [];
+
+        foreach ($ra as $chuoi) {
+            $chuoi = trim($chuoi);
+            $khoa  = mb_strtolower($chuoi, 'UTF-8');
+
+            if ($chuoi === '' || isset($thay[$khoa])) {
+                continue;
+            }
+
+            $thay[$khoa] = true;
+            $sach[]      = $chuoi;
+
+            if (count($sach) >= self::MAX_SUGGEST) {
+                break;
+            }
+        }
+
+        return $sach;
     }
 
     /**

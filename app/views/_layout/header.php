@@ -266,14 +266,31 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                             <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
                             <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                         </svg>
+                        <?php /* GỢI Ý TỪ KHOÁ KHI ĐANG GÕ — X29, chốt 04/09/2026.
+
+                                 <datalist> chứ không phải một hộp thả tự vẽ.
+                                 Trình duyệt lo phần khó: bàn phím lên/xuống,
+                                 trình đọc màn hình, chạm ra ngoài để đóng, và
+                                 vị trí hộp khi ô nằm sát mép màn hình. Tự vẽ
+                                 là viết lại bốn thứ ấy rồi làm sai một trong
+                                 bốn.
+
+                                 Danh sách RỖNG khi trang được máy chủ vẽ ra,
+                                 và search-suggest.js đổ vào sau mỗi lần gõ.
+                                 Tắt JavaScript thì ô này vẫn là một ô tìm
+                                 kiếm bình thường — đúng nếp cả site. */ ?>
                         <input
                             type="search"
                             id="headerSearch"
                             name="q"
                             class="header-search__input"
                             placeholder="Tìm gọng, tròng kính..."
+                            list="headerSearchSuggest"
+                            autocomplete="off"
+                            data-suggest="/tim-kiem/goi-y"
                             value="<?= e($keyword) ?>"
                         >
+                        <datalist id="headerSearchSuggest"></datalist>
                         <button type="submit" class="header-search__submit">Tìm</button>
                     </form>
                 </div>

@@ -39,6 +39,11 @@ return [
     // Tìm kiếm toàn site: sản phẩm + bài viết + cơ sở + chính sách.
     // Ô tìm kiếm trên đầu trang trỏ vào đây, KHÔNG còn trỏ /san-pham?q=.
     'tim-kiem'         => 'SearchController@index',
+    /* Gợi ý từ khoá khi đang gõ — X29. Trả JSON, KHÔNG trả trang; ô tìm kiếm
+       ở đầu trang đổ kết quả vào <datalist> của chính nó. GET và không đụng
+       gì tới dữ liệu, nên không cần token — nhưng cũng vì thế nó chỉ được đọc
+       những thứ vốn đã công khai (sản phẩm đang hiện, cơ sở, chính sách). */
+    'tim-kiem/goi-y'   => 'SearchController@suggest',
 
     'san-pham'         => 'ProductController@index',
     // Đặt TRƯỚC 'san-pham/{slug}': router khớp theo thứ tự khai, để sau thì

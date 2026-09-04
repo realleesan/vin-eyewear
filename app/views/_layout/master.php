@@ -365,6 +365,15 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         <?php partial('_layout/floating-actions'); ?>
 
         <script src="<?= asset('assets/js/header.js') ?>" defer></script>
+        <?php /* Gợi ý từ khoá cho ô tìm kiếm ở đầu trang — X29.
+
+                 Nạp cạnh header.js vì ô tìm kiếm nằm trong chính đầu trang
+                 ấy, tức là có mặt ở MỌI trang khung đầy đủ. Không xếp vào
+                 $pageScripts: ô này không thuộc trang nào cả.
+
+                 File tự thoát khi không tìm thấy ô hoặc <datalist>, nên trang
+                 khung rút gọn (checkout) không cần loại trừ gì. */ ?>
+        <script src="<?= asset('assets/js/search-suggest.js') ?>" defer></script>
         <script src="<?= asset('assets/js/floating.js') ?>" defer></script>
         <?php /* Mua hàng không tải lại trang. Nạp cho MỌI trang khung đầy đủ
                  chứ không theo $pageScripts: nút "Thêm vào giỏ" có mặt ở trang
