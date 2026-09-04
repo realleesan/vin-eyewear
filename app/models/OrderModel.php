@@ -982,9 +982,28 @@ class OrderModel extends BaseModel
 
             $order = self::find($id);
 
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * ĐIỀU KIỆN LÀ "CHƯA TRẢ ĐỦ", KHÔNG PHẢI "CHƯA TRẢ GÌ" — sửa 09/09
+             *
+             * Trước đó chốt ở `=== 'unpaid'`, tức bỏ sót đúng nấc giữa
+             * 'deposit_paid'. Chính docblock của markPaid() ngay dưới đã cảnh
+             * báo điều này, và bản thân câu UPDATE trong markPaid() dùng
+             * `payment_status <> 'paid'` — nên hai chỗ nói hai luật khác nhau.
+             *
+             * Kịch bản đã dựng lại được: đơn COD 4.400.000đ có cắt tròng, khách
+             * chuyển cọc 1.320.000đ nên đơn ở 'deposit_paid'. Shipper giao hàng
+             * và thu nốt 3.080.000đ tiền mặt. Nhân viên chuyển đơn sang "Hoàn
+             * tất" — nhánh này không chạy, đơn nằm mãi ở 'deposit_paid'.
+             *
+             * Khách mở trang tài khoản thấy huy hiệu "Đã đặt cọc" và câu "Cảm
+             * ơn bạn — đã nhận tiền cọc" trên một đơn đã giao xong và đã trả
+             * đủ. Bảng tổng quan thì vẫn xếp 3.080.000đ ấy vào cột chưa thu.
+             * ─────────────────────────────────────────────────────────────────
+             */
             if ($order !== null
                 && $order['payment_method'] === 'cod'
-                && $order['payment_status'] === 'unpaid'
+                && $order['payment_status'] !== 'paid'
             ) {
                 self::markPaid($id);
             }
