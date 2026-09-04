@@ -166,7 +166,18 @@ class OrderController extends BaseController
 
         // Phí giao hàng phụ thuộc hình thức nhận hàng khách chọn — hiện theo
         // lựa chọn đang có để con số trên màn hình khớp với lúc bấm đặt.
-        $delivery = $old['deliveryMethod'] ?? 'pickup';
+        /* MẶC ĐỊNH PHẢI KHỚP Ô RADIO ĐANG ĐƯỢC TICK SẴN — sửa 09/09/2026.
+
+           View tick sẵn "Giao tận nơi" (checkout.php), còn chỗ này tính phí
+           theo 'pickup'. Lần đầu vào trang (chưa có $old) là hai bên nói hai
+           chuyện: khối tóm tắt in "Phí vận chuyển — Miễn phí" và một tổng cộng
+           thấp hơn số sẽ thật sự ghi vào đơn, vì place() tính lại theo phương
+           thức thật khách gửi lên.
+
+           Kèm theo đó, mã MIỄN PHÍ VẬN CHUYỂN cũng vô hiệu ở trang này:
+           VoucherModel::apply() chỉ giảm khi phí ship > 0, mà ở đây nó đang
+           là 0. Khách thấy mã "đã áp dụng" nhưng giảm 0 đồng. */
+        $delivery = $old['deliveryMethod'] ?? 'shipping';
 
         // Mã giảm giá theo khách từ giỏ sang. Tính lại từ bảng `vouchers`, không
         // lấy con số nào từ session — xem ghi chú đầu CartController.
