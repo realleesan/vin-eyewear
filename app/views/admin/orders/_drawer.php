@@ -109,25 +109,117 @@ $canMark = !$paid
                      cách bỏ qua. Máy chủ vẫn kiểm lại
                      (OrderAdminController::updateStatus) — ô này biến mất
                      không có nghĩa là luật biến mất. */ ?>
-            <?php if ($order['status'] === 'cancelled'): ?>
+            <?php
+            /*
+             * HAI THAO TÁC ĐI NGƯỢC CHIỀU VÒNG ĐỜI, CÙNG MỘT Ô LÝ DO.
+             *
+             *   đơn đang 'cancelled'  -> mọi cú đổi là MỞ LẠI (Q3.1)
+             *   đơn đang 'completed'  -> có thể LÙI về một nấc trước
+             *
+             * Cả hai đều chỉ Quản trị viên làm được và đều bắt lý do tối thiểu
+             * LY_DO_TOI_THIEU ký tự, nên chúng dùng chung đúng một ô — hai ô
+             * riêng cho hai luật giống hệt nhau chỉ làm người dùng phải đoán
+             * xem lần này phải điền ô nào.
+             *
+             * Nhãn thì PHẢI khác nhau: "Lý do mở lại đơn đã huỷ" đặt trên một
+             * đơn đang Hoàn tất là một câu sai.
+             */
+            $diNguoc = in_array((string) $order['status'], ['cancelled', 'completed'], true);
+            $laHuy   = (string) $order['status'] === 'cancelled';
+            ?>
+            <?php if ($diNguoc): ?>
                 <?php if (!empty($order['la_admin'])): ?>
                     <div class="aomolai">
                         <label class="aomolai__lb" for="aodraw-lydo">
-                            Lý do mở lại đơn đã huỷ
+                            <?= $laHuy ? 'Lý do mở lại đơn đã huỷ' : 'Lý do lùi đơn đã Hoàn tất' ?>
                         </label>
                         <input class="aomolai__in" type="text" id="aodraw-lydo"
                                name="ly_do" form="aodrawst" maxlength="255"
-                               placeholder="Ví dụ: nhân viên bấm nhầm, khách vẫn lấy hàng">
+                               placeholder="<?= $laHuy
+                                   ? 'Ví dụ: nhân viên bấm nhầm, khách vẫn lấy hàng'
+                                   : 'Ví dụ: giao nhầm địa chỉ, hàng đang lấy về đổi lại' ?>">
                         <p class="aomolai__hint">
-                            Bắt buộc, tối thiểu <?= (int) OrderModel::LY_DO_TOI_THIEU ?> ký tự.
+                            <?= $laHuy
+                                ? 'Bắt buộc khi mở lại đơn, tối thiểu '
+                                : 'Bắt buộc khi lùi về một nấc trước, tối thiểu ' ?>
+                            <?= (int) OrderModel::LY_DO_TOI_THIEU ?> ký tự.
                             Lý do lưu cùng mốc trạng thái và vào nhật ký thao tác.
+                            <?php if (!$laHuy): ?>
+                                Đơn COD đã Hoàn tất thì hệ thống đã ghi nhận thu đủ tiền —
+                                lùi lại không hoàn tiền, phải đối chiếu sổ bằng tay.
+                            <?php endif; ?>
                         </p>
                     </div>
                 <?php else: ?>
                     <p class="aomolai__hint aomolai__hint--block">
-                        Đơn đã huỷ — chỉ Quản trị viên mở lại được, kèm lý do (Q3.1).
+                        <?= $laHuy
+                            ? 'Đơn đã huỷ — chỉ Quản trị viên mở lại được, kèm lý do (Q3.1).'
+                            : 'Đơn đã Hoàn tất — chỉ Quản trị viên lùi lại được, kèm lý do.' ?>
                     </p>
                 <?php endif; ?>
+            <?php endif; ?>
+
+            <?php
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * THẺ XÁC NHẬN HUỶ — BƯỚC HAI, DO MÁY CHỦ MỞ RA
+             *
+             * Ô chọn trạng thái TỰ GỬI FORM khi đổi, nên chọn "Đã huỷ" là xong
+             * ngay — không có khoảnh khắc nào để đọc lại. Mà huỷ đơn là thao tác
+             * duy nhất ở màn này có người thứ ba chịu hậu quả, và với đơn đã mài
+             * thì hậu quả ấy là TIỀN CỦA KHÁCH (FR-25).
+             *
+             * Nên cú POST đầu tiên không huỷ gì cả: nó quay về đây với
+             * ?xac-nhan-huy=<id> và mở tấm thẻ này. Toàn bộ bước xác nhận nằm ở
+             * MÁY CHỦ, nên tắt JavaScript vẫn còn nguyên — khác hẳn một hộp
+             * confirm() vốn biến mất cùng JS.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            ?>
+            <?php if (!empty($order['xac_nhan_huy'])): ?>
+                <div class="aohuy">
+                    <p class="aohuy__tieu">Xác nhận huỷ đơn <?= e($order['code']) ?></p>
+
+                    <?php if (!empty($order['da_mai'])): ?>
+                        <p class="aohuy__canh">
+                            Đơn này <strong>đã bắt đầu mài tròng</strong>. Tròng đã cắt theo số đo
+                            riêng của khách nên không bán lại cho ai khác được — huỷ bây giờ thì
+                            khách <strong>không còn được hoàn 100% tiền cọc</strong>
+                            (<?= money((int) $order['deposit_amount']) ?>).
+                        </p>
+                    <?php endif; ?>
+
+                    <form method="post" action="/quan-tri/don-hang/trang-thai" class="aohuy__form">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
+                        <input type="hidden" name="id" value="<?= e($order['id']) ?>">
+                        <input type="hidden" name="status" value="cancelled">
+                        <input type="hidden" name="xn_huy" value="1">
+
+                        <label class="aomolai__lb" for="aohuy-lydo">Lý do huỷ đơn</label>
+                        <input class="aomolai__in" type="text" id="aohuy-lydo"
+                               name="ly_do" maxlength="255" required
+                               placeholder="Ví dụ: khách báo không lấy nữa, đã gọi xác nhận">
+                        <p class="aomolai__hint">
+                            Bắt buộc, tối thiểu <?= (int) OrderModel::LY_DO_TOI_THIEU ?> ký tự.
+                        </p>
+
+                        <?php /* Ô TICK RIÊNG, không gộp vào nút bấm: người huỷ
+                                 phải chạm vào đúng câu nói ra hệ quả về tiền,
+                                 không phải lướt qua nó. */ ?>
+                        <?php if (!empty($order['da_mai'])): ?>
+                            <label class="aohuy__tick">
+                                <input type="checkbox" name="xn_mai" value="1" required>
+                                <span>Tôi hiểu khách không còn được hoàn 100% tiền cọc.</span>
+                            </label>
+                        <?php endif; ?>
+
+                        <div class="aohuy__nut">
+                            <button type="submit" class="aohuy__ok">Huỷ đơn này</button>
+                            <a class="aohuy__thoi" href="<?= e($dongUrl) ?>">Thôi, không huỷ</a>
+                        </div>
+                    </form>
+                </div>
             <?php endif; ?>
 
             <a class="aodraw__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>
@@ -343,50 +435,150 @@ $canMark = !$paid
         <section class="aodraw__sec">
             <h2 class="aodraw__label">Thanh toán</h2>
 
-            <?php /* Bản thiết kế chỉ vẽ một dòng "Tổng cộng". Ở đây có thêm ba
-                     dòng phụ vì đơn thật có phí giao hàng, mã giảm giá và tiền
-                     cọc — mà "tổng 3.890.000₫" không giải thích được vì sao nó
-                     khác tổng tiền hàng, và đó đúng là câu khách gọi điện lên
-                     hỏi. Dòng nào bằng 0 thì không in. */ ?>
+            <?php
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * MỌI CON SỐ Ở KHỐI NÀY ĐẾN TỪ OrderModel::tinhTien(), KHÔNG TỰ
+             * CỘNG TRỪ TRONG VIEW
+             *
+             * Khối này, phiếu in và bản xuất Excel đều phải nói cùng một con số.
+             * Ba nơi cùng gõ lại một công thức thì sớm muộn có một nơi quên
+             * `max(0, …)` hay quên phần cọc, và hai tờ giấy in ra từ cùng một
+             * đơn sẽ ghi hai số khác nhau — thứ chỉ lộ ra khi khách cầm cả hai.
+             *
+             * Tổng cũng ĐƯỢC TÍNH LẠI ở đó chứ không đọc thẳng `orders`.`total`;
+             * lý do đầy đủ nằm trong docblock của tinhTien().
+             *
+             * DÒNG BẰNG 0 THÌ ẨN, TRỪ HAI DÒNG LUÔN HIỆN: Tổng cộng và Còn phải
+             * thu. "Còn phải thu 0₫" không phải một ô trống mà là một câu trả
+             * lời — nó nói đơn này đã thu xong. Ẩn nó đi thì người trực quầy
+             * phải tự trừ nhẩm để biết còn phải đòi khách bao nhiêu, và đó đúng
+             * là phép trừ mà khối này sinh ra để khỏi phải làm.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            $t = OrderModel::tinhTien($order, $order['items'] ?? []);
+            ?>
             <dl class="aosum">
+                <?php /* TÁCH "Tiền hàng" thành gọng + tròng. Tiền tròng nằm sẵn
+                         trong `order_items`.`lens_price`, chỉ là trước nay không
+                         ai cộng nó ra: khách nhìn "Tiền hàng 3.340.000₫" cho một
+                         cái gọng niêm yết 2.890.000₫ thì gọi điện lên hỏi, và
+                         nhân viên phải mở từng dòng hàng ra cộng tay để trả lời.
+
+                         Dòng tròng ẩn khi đơn chỉ mua gọng — lúc đó "Tiền hàng"
+                         một mình đã đúng nghĩa và không thiếu gì. */ ?>
                 <div class="aosum__row">
-                    <dt>Tiền hàng</dt>
-                    <dd><?= money((int) $order['subtotal']) ?></dd>
+                    <dt><?= $t['tienTrong'] > 0 ? 'Tiền gọng' : 'Tiền hàng' ?></dt>
+                    <dd><?= money($t['tienGong']) ?></dd>
                 </div>
 
-                <?php if ((int) $order['shipping_fee'] > 0): ?>
+                <?php if ($t['tienTrong'] > 0): ?>
                     <div class="aosum__row">
-                        <dt>Phí giao hàng</dt>
-                        <dd><?= money((int) $order['shipping_fee']) ?></dd>
+                        <dt>Tiền tròng</dt>
+                        <dd><?= money($t['tienTrong']) ?></dd>
                     </div>
                 <?php endif; ?>
 
-                <?php if ((int) $order['discount'] > 0): ?>
+                <?php if ($t['giamGia'] > 0): ?>
                     <div class="aosum__row">
-                        <dt>Giảm giá</dt>
-                        <dd>−<?= money((int) $order['discount']) ?></dd>
+                        <dt>
+                            Giảm giá
+                            <?php /* Mã đi kèm ngay trong nhãn. Mã đã bị xoá khỏi
+                                     bảng `vouchers` thì nói thẳng là đã xoá —
+                                     KHÔNG giấu cả dòng đi, vì số tiền đã trừ là
+                                     có thật và tổng sẽ không cộng ra được nếu
+                                     thiếu nó. */ ?>
+                            <span class="aosum__ma"><?= e($order['voucher_code'] ?? '') !== ''
+                                ? e($order['voucher_code'])
+                                : 'mã đã xoá' ?></span>
+                        </dt>
+                        <dd>−<?= money($t['giamGia']) ?></dd>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($t['phiShip'] > 0): ?>
+                    <div class="aosum__row">
+                        <dt>Phí vận chuyển</dt>
+                        <dd><?= money($t['phiShip']) ?></dd>
+                    </div>
+                <?php endif; ?>
+
+                <?php /* VAT ẩn khi cửa hàng chưa xuất hoá đơn VAT (thuế suất 0
+                         trong config/app.php) — hiện một dòng "VAT 0₫" trên mọi
+                         đơn là dạy người đọc lướt qua nó.
+
+                         Khi giá ĐÃ GỒM thuế thì dòng này KHÔNG cộng vào tổng, nó
+                         chỉ bóc ra cho thấy phần thuế nằm trong đó — nên nhãn
+                         phải nói rõ, nếu không người cộng tay sẽ ra thừa. */ ?>
+                <?php if ($t['thue'] > 0): ?>
+                    <div class="aosum__row">
+                        <dt>VAT<?= $t['gomThue'] ? ' (đã gồm trong giá)' : '' ?></dt>
+                        <dd><?= $t['gomThue'] ? '' : '+' ?><?= money($t['thue']) ?></dd>
                     </div>
                 <?php endif; ?>
 
                 <div class="aosum__row aosum__row--total">
                     <dt>Tổng cộng</dt>
-                    <dd><?= money((int) $order['total']) ?></dd>
+                    <dd><?= money($t['tong']) ?></dd>
                 </div>
 
-                <?php if ((int) $order['deposit_amount'] > 0): ?>
-                    <?php /* Tiền cọc đứng SAU tổng cộng chứ không trừ vào nó:
-                             nó không làm đơn rẻ đi, nó chỉ nói phần nào đã trả
-                             trước. Xem khối chú thích `deposit_amount` trong
+                <?php if ($t['daThu'] > 0): ?>
+                    <?php /* "Đã cọc" đứng SAU tổng cộng chứ không trừ vào nó: nó
+                             không làm đơn rẻ đi, nó chỉ nói phần nào đã trả
+                             trước. Xem chú thích `deposit_amount` trong
                              database/schema.sql. */ ?>
                     <div class="aosum__row aosum__row--dep">
-                        <dt>Đặt cọc (<?= (int) $order['deposit_rate'] ?>%)</dt>
-                        <dd><?= money((int) $order['deposit_amount']) ?></dd>
+                        <dt>
+                            <?= (string) $order['payment_status'] === 'paid'
+                                ? 'Đã thanh toán'
+                                : 'Đã cọc (' . (int) $order['deposit_rate'] . '%)' ?>
+                        </dt>
+                        <dd>−<?= money($t['daThu']) ?></dd>
                     </div>
                 <?php endif; ?>
+
+                <?php /* LUÔN HIỆN, kể cả bằng 0 — xem khối chú thích ở trên. */ ?>
+                <div class="aosum__row aosum__row--con<?= $t['conPhaiThu'] > 0 ? ' aosum__row--no' : '' ?>">
+                    <dt>Còn phải thu</dt>
+                    <dd><?= money($t['conPhaiThu']) ?></dd>
+                </div>
             </dl>
 
+            <?php
+            /*
+             * HOÁ ĐƠN TỰ MÂU THUẪN THÌ PHẢI NÓI RA, KHÔNG ĐƯỢC LẶNG LẼ CHỌN MỘT
+             * TRONG HAI CON SỐ.
+             *
+             * `lech` khác 0 nghĩa là tổng đã lưu trên đơn không khớp với chính
+             * các thành phần của nó. Nguyên nhân thật đã gặp: sửa tay trong
+             * phpMyAdmin, dữ liệu nhập từ hệ thống cũ, một migration chạy dở.
+             *
+             * Khối này in ra con số TÍNH LẠI (đó là con số đúng theo các thành
+             * phần), nên nếu im lặng thì nó khác với con số ở bảng danh sách và
+             * ở trang tài khoản của khách — mà không ai biết vì sao. Dải cảnh
+             * báo này là chỗ duy nhất phát hiện ra.
+             */
+            ?>
+            <?php if ($t['lech'] !== 0): ?>
+                <p class="aodraw__meta aosum__lech">
+                    ⚠ Tổng lưu trên đơn là <?= money($t['tongDaLuu']) ?>, lệch
+                    <?= money(abs($t['lech'])) ?> so với tổng tính lại từ các dòng ở trên.
+                    Số hiển thị là số tính lại. Cần đối chiếu trước khi thu tiền.
+                </p>
+            <?php endif; ?>
+
+            <?php if (!empty($order['deposit_paid_at'])): ?>
+                <p class="aodraw__meta">Nhận cọc lúc <?= e(formatDate($order['deposit_paid_at'], 'd/m/Y H:i')) ?></p>
+            <?php elseif ((int) $order['deposit_amount'] > 0): ?>
+                <?php /* Đơn cũ nhận cọc trước migration 2026-09-11 không có mốc
+                         nào truy được. Nói thẳng là chưa rõ, đừng in một mốc suy
+                         ra từ updated_at — không ai phân biệt được nó với mốc
+                         thật. */ ?>
+                <p class="aodraw__meta">Chưa rõ mốc nhận cọc (đơn có trước khi hệ thống ghi mốc này).</p>
+            <?php endif; ?>
+
             <?php if (!empty($order['paid_at'])): ?>
-                <p class="aodraw__meta">Tiền về lúc <?= e(formatDate($order['paid_at'], 'd/m/Y H:i')) ?></p>
+                <p class="aodraw__meta">Tiền về đủ lúc <?= e(formatDate($order['paid_at'], 'd/m/Y H:i')) ?></p>
             <?php endif; ?>
 
         </section>
