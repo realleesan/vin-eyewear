@@ -123,10 +123,53 @@ class OrderAdminController extends AdminController
             redirect($back);
         }
 
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * MỞ LẠI ĐƠN ĐÃ HUỶ — Q3.1, chốt 04/09/2026
+         *
+         * Quyết định này SỬA yêu cầu ST-16 vốn đặt "Đã huỷ" là trạng thái kết
+         * thúc. Lý do BA đưa ra: nhân viên bấm nhầm nút Huỷ là chuyện xảy ra
+         * thật ở quầy, và bắt tạo đơn mới thì mất luôn số đo, mã giảm giá và
+         * mốc thời gian của đơn cũ.
+         *
+         * Nhưng "mở lại được" không có nghĩa là "mở lại như mọi thao tác
+         * khác". Huỷ đơn đã trả hàng về kho và đã cắt doanh thu; đi ngược lại
+         * là chạm vào cả hai con số đó. Nên Q3.1 kèm hai điều kiện, và cả hai
+         * đều kiểm ở đây:
+         *
+         *   ai      chỉ Quản trị viên. Đường của người vừa bấm nhầm là THANH
+         *           HOÀN TÁC ngay dưới (Q3.2) — nó không đòi lý do vì nó chỉ
+         *           sống vài phút và chỉ cho chính người ấy.
+         *   lý do   bắt buộc. Không phải để làm khó: một đơn có một lần huỷ
+         *           rồi mở lại mà không kèm chữ nào thì người đọc sổ sáu tháng
+         *           sau chỉ thấy hai dòng mâu thuẫn nhau.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $moLaiDon = (string) $order['status'] === 'cancelled' && $status !== 'cancelled';
+        $lyDo     = trim((string) ($_POST['ly_do'] ?? ''));
+
+        if ($moLaiDon) {
+            if (!UserModel::hasRole($this->userId, 'admin')) {
+                flash('admin_error',
+                    'Chỉ Quản trị viên mở lại được đơn đã huỷ. '
+                    . 'Nếu vừa bấm nhầm, dùng thanh Hoàn tác ngay sau thao tác.');
+                redirect($back);
+            }
+
+            if (utf8Length($lyDo) < OrderModel::LY_DO_TOI_THIEU) {
+                flash('admin_error',
+                    'Mở lại đơn đã huỷ thì phải ghi lý do, tối thiểu '
+                    . OrderModel::LY_DO_TOI_THIEU . ' ký tự.');
+                redirect($back);
+            }
+        }
+
         // Mọi luật đi kèm việc đổi trạng thái nằm trong model: ghi lịch sử
         // (thanh tiến trình của khách đọc bảng đó), hoàn kho khi huỷ, và đánh
         // dấu đã thu tiền khi đơn COD hoàn tất. Xem OrderModel::changeStatus.
-        OrderModel::changeStatus($id, $status, AuthMiddleware::staffId());
+        OrderModel::changeStatus(
+            $id, $status, AuthMiddleware::staffId(), $moLaiDon ? $lyDo : null
+        );
 
         $this->ghiHoanTac([$id => (string) $order['status']], $status);
 
@@ -244,6 +287,24 @@ class OrderAdminController extends AdminController
         $truoc = (array) ($_POST['truoc'] ?? []);
         $soDon = 0;
 
+        /* CỬA SỔ ĐƯỢC KIỂM Ở MÁY CHỦ, KHÔNG CHỈ Ở CHỖ VẼ THANH — Q3.2.
+
+           Ẩn thanh đi là đủ cho người dùng thật, nhưng từ 07/09/2026 đường
+           này còn là một lối MỞ LẠI ĐƠN ĐÃ HUỶ mà không phải ghi lý do. Q3.1
+           chỉ cho Quản trị viên làm việc đó và bắt kèm lý do; nếu cửa sổ chỉ
+           tồn tại ở lớp giao diện thì một cú POST dựng tay đi vòng qua cả hai
+           điều kiện ấy. Trong cửa sổ thì miễn lý do là ĐÚNG Ý Q3.2 — nhưng
+           đúng ý ấy chỉ kéo dài vài phút. */
+        $luc = (int) ($_POST['luc'] ?? 0);
+
+        if ($luc <= 0 || (time() - $luc) > OrderModel::RUT_LAI_GIAY) {
+            flash('admin_error',
+                'Đã quá cửa sổ hoàn tác ' . (int) (OrderModel::RUT_LAI_GIAY / 60)
+                . ' phút. Đổi trạng thái bằng ô chọn trên bảng; '
+                . 'riêng đơn đã huỷ thì cần Quản trị viên mở lại kèm lý do.');
+            redirect($back);
+        }
+
         foreach (array_slice($truoc, 0, self::BULK_MAX, true) as $id => $status) {
             if (!is_string($id) || !is_string($status) || !isset(OrderModel::STATUSES[$status])) {
                 continue;
@@ -349,12 +410,93 @@ class OrderAdminController extends AdminController
 
         flash('don_hang_hoan_tac', (string) json_encode([
             'truoc' => $truoc,
+            /* MỐC THỜI GIAN LÀM THANH NÀY THÀNH MỘT CỬA SỔ THẬT — Q3.2.
+
+               Trước 07/09/2026 thanh hoàn tác sống tới khi người dùng tải lại
+               trang, không giới hạn. Một tab để quên qua đêm rồi sáng hôm sau
+               ai đó bấm Hoàn tác là lùi một trạng thái đã cũ mười hai tiếng,
+               và không có gì trên màn hình nói rằng nó cũ.
+
+               Dấu thời gian đi kèm ngay trong gói, không nằm trong session:
+               cùng lý lẽ với danh sách `truoc` — xem chú thích undoStatus(). */
+            'luc'   => time(),
             'msg'   => sprintf(
                 'Đã chuyển %d đơn sang «%s»',
                 count($truoc),
                 OrderModel::STATUSES[$moi] ?? $moi
             ),
         ], JSON_UNESCAPED_UNICODE));
+    }
+
+    // ========================================================================
+    // MỐC "BẮT ĐẦU MÀI" — Q2.2 · X07
+    // ========================================================================
+
+    /**
+     * Bấm "Bắt đầu mài" (POST /quan-tri/don-hang/bat-dau-mai).
+     *
+     * X07: Quản lý cơ sở TRỞ LÊN, không phải Kỹ thuật viên. Cửa hàng tự mài
+     * tại chỗ và người trực tiếp mài chính là Quản lý cơ sở; vai trò Kỹ thuật
+     * viên vẫn tồn tại theo X31 nhưng phạm vi của nó là hồ sơ khúc xạ (Q77.2).
+     */
+    public function startLens(): void
+    {
+        $this->requirePost('/quan-tri/don-hang');
+
+        $back = $this->back();
+
+        $this->requireManager($back);
+
+        $ket = OrderModel::batDauMai(
+            (string) ($_POST['id'] ?? ''),
+            $this->userId
+        );
+
+        flash($ket['ok'] ? 'admin_success' : 'admin_error',
+            $ket['ok']
+                ? 'Đã ghi mốc bắt đầu mài. Rút lại được trong '
+                  . (int) (OrderModel::RUT_LAI_GIAY / 60) . ' phút.'
+                : $ket['error']);
+
+        redirect($back);
+    }
+
+    /**
+     * Gỡ mốc "Bắt đầu mài" (POST /quan-tri/don-hang/huy-mai).
+     *
+     * MỘT ACTION, HAI ĐƯỜNG. Tách thành hai route thì hai chỗ cùng phải nhớ
+     * luật "trong cửa sổ thì khỏi lý do", và chỗ quên là chỗ Q2.2 lặng lẽ mất.
+     *
+     *   trong cửa sổ  chính người vừa bấm, không cần lý do, không cần chức vụ
+     *                 — họ vừa bấm được thì cũng vừa gỡ được
+     *   quá cửa sổ    Quản lý cơ sở trở lên, BẮT BUỘC ghi lý do
+     *
+     * Model kiểm lại luật lý do một lần nữa (OrderModel::daoMai) để một đường
+     * gọi mới trong tương lai không đi vòng qua chỗ này.
+     */
+    public function undoLens(): void
+    {
+        $this->requirePost('/quan-tri/don-hang');
+
+        $back  = $this->back();
+        $id    = (string) ($_POST['id'] ?? '');
+        $order = OrderModel::find($id);
+
+        if ($order === null) {
+            flash('admin_error', 'Không tìm thấy đơn hàng.');
+            redirect($back);
+        }
+
+        if (!OrderModel::trongCuaSoRutLai($order, $this->userId)) {
+            $this->requireManager($back);
+        }
+
+        $ket = OrderModel::daoMai($id, $this->userId, (string) ($_POST['ly_do'] ?? ''));
+
+        flash($ket['ok'] ? 'admin_success' : 'admin_error',
+            $ket['ok'] ? 'Đã gỡ mốc bắt đầu mài.' : $ket['error']);
+
+        redirect($back);
     }
 
     /** Đọc lại gói hoàn tác của thao tác vừa rồi, hoặc null. */
@@ -368,9 +510,20 @@ class OrderAdminController extends AdminController
 
         $goi = json_decode($raw, true);
 
-        return is_array($goi) && is_array($goi['truoc'] ?? null) && $goi['truoc'] !== []
-            ? $goi
-            : null;
+        if (!is_array($goi) || !is_array($goi['truoc'] ?? null) || $goi['truoc'] === []) {
+            return null;
+        }
+
+        /* QUÁ CỬA SỔ THÌ KHÔNG HIỆN THANH — Q3.2.
+
+           Gói cũ (sinh trước 07/09/2026) không có khoá 'luc'. Coi nó là hết
+           hạn chứ không phải còn hạn: một gói không biết mình sinh lúc nào thì
+           không chứng minh được là còn ngắn, và mặc định an toàn ở đây là
+           không cho lùi. Cùng lắm người dùng mất một thanh hoàn tác đúng một
+           lần, ngay sau khi triển khai. */
+        $luc = (int) ($goi['luc'] ?? 0);
+
+        return $luc > 0 && (time() - $luc) <= OrderModel::RUT_LAI_GIAY ? $goi : null;
     }
 
     /**
@@ -416,6 +569,16 @@ class OrderAdminController extends AdminController
         }
 
         $order['items'] = OrderModel::items($id);
+
+        /* Bốn câu trả lời mà ngăn kéo cần để biết vẽ những nút nào. Tính ở đây
+           chứ không trong view: view mà tự hỏi UserModel::hasRole() thì phép
+           kiểm quyền nằm rải ở lớp vẽ, và lớp vẽ là chỗ dễ quên nhất. Đây chỉ
+           là để VẼ — chặn thật nằm ở startLens()/undoLens()/updateStatus(). */
+        $order['co_trong']    = OrderModel::coTrong($id);
+        $order['da_mai']      = OrderModel::daBatDauMai($order);
+        $order['rut_lai_duoc'] = OrderModel::trongCuaSoRutLai($order, $this->userId);
+        $order['la_admin']    = UserModel::hasRole($this->userId, 'admin');
+        $order['la_quan_ly']  = $order['la_admin'] || UserModel::hasRole($this->userId, 'manager');
 
         /*
          * ─────────────────────────────────────────────────────────────────────

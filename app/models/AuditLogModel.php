@@ -74,6 +74,15 @@ class AuditLogModel extends BaseModel
         'payment.deposit' => 'Ghi nhận tiền cọc',
         'order.status'    => 'Đổi trạng thái đơn hàng',
         'order.cancel'    => 'Huỷ đơn hàng',
+        /* MỐC MÀI TRÒNG — hai mã, không phải một.
+
+           Bắt đầu mài là mốc sau đó khách KHÔNG còn được hoàn 100% cọc
+           (Q52.1, FR-25), nên nó là một thao tác về tiền dù không đụng tới
+           đồng nào ngay lúc bấm. Gỡ mốc thì lại chuyển khách ngược về phía
+           được hoàn — đúng cái mà một người muốn làm sai sẽ nhắm tới. Hai
+           chiều có hệ quả trái ngược nhau nên lọc riêng được là cần. */
+        'order.lens_start' => 'Bắt đầu mài tròng',
+        'order.lens_undo'  => 'Gỡ mốc bắt đầu mài',
         'stock.adjust'    => 'Điều chỉnh tồn kho',
 
         /* TÀI KHOẢN NỘI BỘ — mở theo Quyết định Q80.1 (04/09/2026), vế "mở
@@ -111,6 +120,7 @@ class AuditLogModel extends BaseModel
         ]],
         'tien'     => ['nhan' => 'Đơn hàng và tiền', 'actions' => [
             'payment.paid', 'payment.unpaid', 'payment.deposit', 'order.status', 'order.cancel',
+            'order.lens_start', 'order.lens_undo',
         ]],
         'kho'      => ['nhan' => 'Tồn kho', 'actions' => ['stock.adjust']],
         'noi-bo'   => ['nhan' => 'Tài khoản nội bộ', 'actions' => ['staff.unlock_login', 'staff.set_stores']],

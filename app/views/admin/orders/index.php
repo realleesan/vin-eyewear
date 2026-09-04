@@ -474,6 +474,10 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
     <form class="aoundo" method="post" action="/quan-tri/don-hang/hoan-tac">
         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
         <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
+        <?php /* Mốc sinh thanh này. Máy chủ kiểm lại nó (undoStatus): từ khi
+                 có Q3.1, hoàn tác cũng là một lối mở lại đơn đã huỷ, nên cửa
+                 sổ không được chỉ tồn tại ở lớp vẽ. */ ?>
+        <input type="hidden" name="luc" value="<?= e((string) ($undo['luc'] ?? 0)) ?>">
         <?php foreach ($undo['truoc'] as $id => $cu): ?>
             <input type="hidden" name="truoc[<?= e((string) $id) ?>]" value="<?= e((string) $cu) ?>">
         <?php endforeach; ?>

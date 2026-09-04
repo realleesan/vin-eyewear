@@ -205,6 +205,14 @@ MIGRATIONS=(
     #
     # File chỉ thêm ĐÚNG MỘT cột, nên cột đó vừa là nội dung vừa là mốc.
     "2026-09-06-nguoi-duoc-do.sql|column|customer_prescriptions|nguoi_duoc_do"
+
+    # ── Q2.2 · Q3.1 · Q3.2 · mốc mài tròng và lý do đổi trạng thái ──────────
+    #
+    # Cột mốc là `orders.mai_bat_dau_luc` — cột đầu tiên file này thêm, và là
+    # thứ OrderModel::coMocMai() hỏi để biết CSDL đã nâng cấp chưa. Hai nơi
+    # cùng nhìn một cột thì không có cảnh script bảo "đã chạy" trong khi mã
+    # nguồn vẫn tưởng là chưa.
+    "2026-09-07-moc-mai-trong-va-ly-do.sql|column|orders|mai_bat_dau_luc"
 )
 
 # ---------------------------------------------------------------------------

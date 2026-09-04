@@ -81,6 +81,34 @@ $canMark = !$paid
                 <button type="submit" form="aodrawst" class="aosave">Lưu</button>
             </div>
 
+            <?php /* Ô LÝ DO CHỈ HIỆN KHI ĐƠN ĐANG Ở "ĐÃ HUỶ" — Q3.1.
+
+                     Hiện thường trực thì nó là một ô trống bên cạnh mọi đơn,
+                     và một ô bắt buộc chỉ đôi khi bắt buộc là thứ người ta học
+                     cách bỏ qua. Máy chủ vẫn kiểm lại
+                     (OrderAdminController::updateStatus) — ô này biến mất
+                     không có nghĩa là luật biến mất. */ ?>
+            <?php if ($order['status'] === 'cancelled'): ?>
+                <?php if (!empty($order['la_admin'])): ?>
+                    <div class="aomolai">
+                        <label class="aomolai__lb" for="aodraw-lydo">
+                            Lý do mở lại đơn đã huỷ
+                        </label>
+                        <input class="aomolai__in" type="text" id="aodraw-lydo"
+                               name="ly_do" form="aodrawst" maxlength="255"
+                               placeholder="Ví dụ: nhân viên bấm nhầm, khách vẫn lấy hàng">
+                        <p class="aomolai__hint">
+                            Bắt buộc, tối thiểu <?= (int) OrderModel::LY_DO_TOI_THIEU ?> ký tự.
+                            Lý do lưu cùng mốc trạng thái và vào nhật ký thao tác.
+                        </p>
+                    </div>
+                <?php else: ?>
+                    <p class="aomolai__hint aomolai__hint--block">
+                        Đơn đã huỷ — chỉ Quản trị viên mở lại được, kèm lý do (Q3.1).
+                    </p>
+                <?php endif; ?>
+            <?php endif; ?>
+
             <a class="aodraw__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>
         </div>
     </header>
@@ -124,6 +152,97 @@ $canMark = !$paid
                 </p>
             </section>
         </div>
+
+        <?php
+        /* ─────────────────────────────────────────────────────────────────────
+           MỐC "BẮT ĐẦU MÀI" — Q2.2 · X07, chốt 04/09/2026
+
+           Khối này CHỈ hiện với đơn có dịch vụ mài lắp tròng. Đơn mua gọng
+           trần không bao giờ đi qua mốc này, và một nút vô nghĩa vẫn là một
+           nút người ta sẽ bấm.
+
+           Đặt ngay trên danh sách sản phẩm, không nhét xuống cuối: đây là mốc
+           quyết định tiền cọc có hoàn hay không, tức là thứ người mở đơn ra
+           cần thấy trước khi trả lời khách "huỷ thì em có được hoàn không".
+           ───────────────────────────────────────────────────────────────────── */
+        ?>
+        <?php if (!empty($order['co_trong'])): ?>
+            <section class="aodraw__sec aomai<?= !empty($order['da_mai']) ? ' aomai--on' : '' ?>">
+                <h2 class="aodraw__label">Mài lắp tròng</h2>
+
+                <?php if (empty($order['da_mai'])): ?>
+                    <p class="aomai__state">
+                        Chưa bắt đầu mài — huỷ bây giờ thì khách còn được hoàn 100% cọc.
+                    </p>
+
+                    <?php if (!empty($order['la_quan_ly'])): ?>
+                        <form class="aomai__form" method="post"
+                              action="/quan-tri/don-hang/bat-dau-mai">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
+                            <input type="hidden" name="id" value="<?= e($order['id']) ?>">
+                            <button class="aomai__go" type="submit">Bắt đầu mài</button>
+                        </form>
+                        <p class="aomai__hint">
+                            Rút lại được trong <?= (int) (OrderModel::RUT_LAI_GIAY / 60) ?> phút.
+                            Sau đó phải ghi lý do.
+                        </p>
+                    <?php else: ?>
+                        <?php /* X07: người bấm là Quản lý cơ sở trở lên. Kỹ thuật
+                                 viên vẫn có vai trò riêng nhưng phạm vi của nó là
+                                 hồ sơ khúc xạ (Q77.2), không phải nút này. */ ?>
+                        <p class="aomai__hint">
+                            Chỉ Quản lý cơ sở trở lên bấm được nút này.
+                        </p>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <p class="aomai__state">
+                        Đã bắt đầu mài lúc
+                        <?= e(formatDate($order['mai_bat_dau_luc'], 'd/m/Y H:i')) ?>
+                        — huỷ từ đây thì <strong>không hoàn 100% cọc</strong>.
+                    </p>
+
+                    <?php if (!empty($order['rut_lai_duoc'])): ?>
+                        <?php /* CÒN TRONG CỬA SỔ và ĐÚNG NGƯỜI VỪA BẤM: gỡ thẳng,
+                                 không hỏi lý do. Đây là đường sửa cái bấm nhầm,
+                                 mà bắt viết một câu giải thích cho cái bấm nhầm
+                                 vừa xảy ra ba mươi giây trước chỉ khiến người ta
+                                 gõ bừa cho qua. */ ?>
+                        <form class="aomai__form" method="post"
+                              action="/quan-tri/don-hang/huy-mai">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
+                            <input type="hidden" name="id" value="<?= e($order['id']) ?>">
+                            <button class="aomai__undo" type="submit">Rút lại</button>
+                        </form>
+                        <p class="aomai__hint">
+                            Bấm nhầm? Rút lại được trong
+                            <?= (int) (OrderModel::RUT_LAI_GIAY / 60) ?> phút đầu.
+                        </p>
+                    <?php elseif (!empty($order['la_quan_ly'])): ?>
+                        <form class="aomai__form" method="post"
+                              action="/quan-tri/don-hang/huy-mai">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
+                            <input type="hidden" name="id" value="<?= e($order['id']) ?>">
+                            <label class="sr-only" for="aomai-lydo">Lý do đảo ngược</label>
+                            <input class="aomai__in" type="text" id="aomai-lydo"
+                                   name="ly_do" maxlength="255"
+                                   placeholder="Lý do đảo ngược mốc mài">
+                            <button class="aomai__undo" type="submit">Đảo ngược</button>
+                        </form>
+                        <p class="aomai__hint">
+                            Quá cửa sổ rút lại nên bắt buộc ghi lý do, tối thiểu
+                            <?= (int) OrderModel::LY_DO_TOI_THIEU ?> ký tự.
+                        </p>
+                    <?php else: ?>
+                        <p class="aomai__hint">
+                            Quá cửa sổ rút lại — chỉ Quản lý cơ sở trở lên đảo ngược được.
+                        </p>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </section>
+        <?php endif; ?>
 
         <?php if (!empty($order['note'])): ?>
             <section class="aodraw__sec">

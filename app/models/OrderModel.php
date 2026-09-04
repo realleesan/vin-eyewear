@@ -765,18 +765,48 @@ class OrderModel extends BaseModel
      * KHÔNG tự UPDATE cột orders.status — nơi gọi làm việc đó. Tách ra để việc
      * ghi lịch sử nằm gọn trong cùng transaction với thao tác đã gây ra nó.
      */
-    public static function logStatus(string $orderId, string $status, ?string $changedBy = null): void
-    {
+    public static function logStatus(
+        string $orderId,
+        string $status,
+        ?string $changedBy = null,
+        ?string $lyDo = null
+    ): void {
+        $ban = [
+            'id'         => uuid(),
+            'order_id'   => $orderId,
+            'status'     => $status,
+            'changed_by' => $changedBy,
+        ];
+
+        /* CHƯA CHẠY MIGRATION THÌ BỎ LÝ DO, ĐỪNG BỎ CẢ MỐC.
+
+           Nhắc tới một cột chưa có là lỗi 1054, mà câu này nằm trong cùng
+           transaction với việc đổi trạng thái — tức là trên một máy chưa nâng
+           cấp, mọi thao tác đổi trạng thái đơn sẽ đổ. Mất một dòng lý do thì
+           chỉ mất chú thích; mất cả transaction thì mất việc. */
+        if ($lyDo !== null && $lyDo !== '' && self::coLyDoTrangThai()) {
+            $ban['ly_do'] = utf8Substr($lyDo, 0, 255);
+        }
+
+        $cot = array_keys($ban);
+
         Database::execute(
-            'INSERT INTO order_status_history (id, order_id, status, changed_by)
-             VALUES (:id, :order_id, :status, :changed_by)',
-            [
-                'id'         => uuid(),
-                'order_id'   => $orderId,
-                'status'     => $status,
-                'changed_by' => $changedBy,
-            ]
+            'INSERT INTO order_status_history (`' . implode('`, `', $cot) . '`)'
+            . ' VALUES (:' . implode(', :', $cot) . ')',
+            $ban
         );
+    }
+
+    /** CSDL đã có cột lý do trên bảng lịch sử trạng thái chưa. */
+    public static function coLyDoTrangThai(): bool
+    {
+        return Database::columnExists('order_status_history', 'ly_do');
+    }
+
+    /** CSDL đã có bộ cột mốc mài chưa (migration 2026-09-07). */
+    public static function coMocMai(): bool
+    {
+        return Database::columnExists('orders', 'mai_bat_dau_luc');
     }
 
     // ========================================================================
@@ -807,9 +837,13 @@ class OrderModel extends BaseModel
      * vô nghĩa. Đơn chuyển khoản thì KHÔNG suy luận gì — tiền về hay chưa chỉ
      * sao kê biết.
      */
-    public static function changeStatus(string $id, string $status, ?string $changedBy = null): void
-    {
-        Database::transaction(static function () use ($id, $status, $changedBy): void {
+    public static function changeStatus(
+        string $id,
+        string $status,
+        ?string $changedBy = null,
+        ?string $lyDo = null
+    ): void {
+        Database::transaction(static function () use ($id, $status, $changedBy, $lyDo): void {
             /*
              * ĐỌC TRẠNG THÁI CŨ TRƯỚC KHI GHI ĐÈ.
              *
@@ -823,7 +857,7 @@ class OrderModel extends BaseModel
             $truoc = (string) ($donCu['status'] ?? '');
 
             self::update($id, ['status' => $status]);
-            self::logStatus($id, $status, $changedBy);
+            self::logStatus($id, $status, $changedBy, $lyDo);
 
             /* VẾT ĐỔI TRẠNG THÁI — SNFR-11 gọi đích danh "huỷ đơn hàng".
 
@@ -848,7 +882,7 @@ class OrderModel extends BaseModel
                         'Trạng thái %s -> %s',
                         self::STATUSES[$truoc] ?? ($truoc !== '' ? $truoc : '(chưa có)'),
                         self::STATUSES[$status] ?? $status
-                    ),
+                    ) . ($lyDo !== null && $lyDo !== '' ? ' — lý do: ' . utf8Substr($lyDo, 0, 180) : ''),
                     $donCu
                 );
             }
@@ -924,6 +958,197 @@ class OrderModel extends BaseModel
                 self::markPaid($id);
             }
         });
+    }
+
+    // ========================================================================
+    // MỐC "BẮT ĐẦU MÀI" — TRỤC THỨ BA
+    //
+    // Đơn hàng có ba trục độc lập, không phải hai:
+    //
+    //   status          đơn ĐANG ở đâu trong vòng giao vận
+    //   payment_status  tiền đã về tới đâu
+    //   mai_bat_dau_luc tròng đã bắt đầu cắt CHƯA — và một khi đã, thì mãi mãi
+    //
+    // Trục thứ ba là trục quyết định TIỀN HOÀN (Q52.1, Q56.2, FR-25). Nó không
+    // gộp được vào `status` vì trạng thái đi tiếp: đơn mài xong sang "Đang
+    // giao" thì `status` không còn nói gì về việc đã mài, trong khi tròng đã
+    // cắt và vật tư đã mất. Chi tiết trong khối chú thích ở schema.sql.
+    //
+    // BAO NHIÊU tiền được giữ lại khi huỷ sau mốc này thì X10 CHƯA CHỐT. Ở đây
+    // chỉ trả lời câu đã chốt: còn đủ điều kiện hoàn 100% hay không.
+    // ========================================================================
+
+    /**
+     * Cửa sổ RÚT LẠI cho chính người vừa bấm — Q2.2, Q3.2.
+     *
+     * SRS nói "cửa sổ ngắn" mà không cho con số. 5 phút là lựa chọn của nhóm
+     * phát triển, ghi lại để BA xác nhận hoặc đổi: đủ dài cho người nhận ra
+     * mình bấm nhầm dòng ngay tại quầy, đủ ngắn để không ai coi nó là đường
+     * sửa đơn thông thường. Quá hạn thì còn đúng một lối — Quản lý cơ sở đảo
+     * ngược kèm lý do.
+     */
+    public const RUT_LAI_GIAY = 300;
+
+    /** Lý do bắt buộc dài tối thiểu bao nhiêu ký tự. Cùng mức với hồ sơ khúc xạ. */
+    public const LY_DO_TOI_THIEU = 10;
+
+    /**
+     * Đơn này CÓ dịch vụ mài lắp tròng theo độ không.
+     *
+     * `lens_id` khác NULL nghĩa là dòng hàng ấy có gói tròng đi kèm. Đơn chỉ
+     * mua gọng thì không bao giờ đi qua mốc mài, nên nút "Bắt đầu mài" không
+     * được hiện ra ở đó — một nút vô nghĩa vẫn là một nút người ta sẽ bấm.
+     */
+    public static function coTrong(string $orderId): bool
+    {
+        return (int) Database::fetchValue(
+            'SELECT COUNT(*) FROM order_items
+              WHERE order_id = :id AND lens_id IS NOT NULL AND lens_id <> ""',
+            ['id' => $orderId]
+        ) > 0;
+    }
+
+    /** Đã bấm "Bắt đầu mài" chưa. Nhận sẵn bản ghi đơn để khỏi đọc lại. */
+    public static function daBatDauMai(array $order): bool
+    {
+        return trim((string) ($order['mai_bat_dau_luc'] ?? '')) !== '';
+    }
+
+    /**
+     * Còn đủ điều kiện HOÀN 100% nếu huỷ bây giờ — Q52.1.
+     *
+     * Chỉ trả lời câu đã chốt. Huỷ sau mốc thì giữ lại BAO NHIÊU là X10, chưa
+     * gỡ được, nên hàm này cố tình không trả về số tiền: một con số bịa ở đây
+     * sẽ đi thẳng vào màn hình nhân viên và thành cam kết với khách.
+     */
+    public static function hoanCoc100(array $order): bool
+    {
+        return !self::daBatDauMai($order);
+    }
+
+    /**
+     * Bấm "Bắt đầu mài" — X07: Quản lý cơ sở trở lên. Quyền kiểm ở controller.
+     *
+     * ĐẶT MỐC, KHÔNG ĐỔI TRẠNG THÁI. Trạng thái giao vận vẫn do ô chọn trên
+     * bảng điều khiển; gộp hai việc vào một nút thì người bấm không còn phân
+     * biệt được mình đang khai báo "đã cắt tròng" hay "đã chuẩn bị xong hàng",
+     * mà hai điều đó có hệ quả tiền khác hẳn nhau.
+     *
+     * @return array{ok: bool, error?: string}
+     */
+    public static function batDauMai(string $id, string $actorId): array
+    {
+        if (!self::coMocMai()) {
+            return ['ok' => false, 'error' =>
+                'Chưa nâng cấp cơ sở dữ liệu. Chạy '
+                . 'database/migrations/2026-09-07-moc-mai-trong-va-ly-do.sql rồi thử lại.'];
+        }
+
+        $don = self::find($id);
+
+        if ($don === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy đơn hàng.'];
+        }
+
+        if (self::daBatDauMai($don)) {
+            return ['ok' => false, 'error' => 'Đơn này đã bắt đầu mài rồi.'];
+        }
+
+        if (!self::coTrong($id)) {
+            return ['ok' => false, 'error' =>
+                'Đơn này không có dịch vụ mài lắp tròng nên không có mốc bắt đầu mài.'];
+        }
+
+        /* KHÔNG BẮT ĐẦU MÀI MỘT ĐƠN ĐÃ HUỶ. Không phải để giữ luật cho đẹp:
+           đơn huỷ đã trả hàng về kho, mà bấm nút này là cam kết đã cắt vật tư
+           thật — hai điều đó cùng đúng thì sổ kho sai và không ai biết. */
+        if ($don['status'] === 'cancelled') {
+            return ['ok' => false, 'error' =>
+                'Đơn đang ở trạng thái Đã huỷ. Mở lại đơn trước khi bắt đầu mài.'];
+        }
+
+        Database::transaction(static function () use ($id, $actorId, $don): void {
+            self::update($id, [
+                'mai_bat_dau_luc' => date('Y-m-d H:i:s'),
+                'mai_bat_dau_boi' => $actorId,
+            ]);
+
+            self::ghiVetTien($id, 'order.lens_start',
+                'Bắt đầu mài tròng — từ đây huỷ đơn không còn hoàn 100% cọc', $don);
+        });
+
+        return ['ok' => true];
+    }
+
+    /**
+     * Đảo ngược mốc mài.
+     *
+     * Hai đường tới đây, và chúng khác nhau ở chỗ AI được đi:
+     *
+     *   trong cửa sổ RUT_LAI_GIAY   chính người vừa bấm, không cần lý do
+     *   quá cửa sổ                  Quản lý cơ sở trở lên, BẮT BUỘC ghi lý do
+     *
+     * Cả hai phép kiểm ấy nằm ở controller vì chúng cần biết ai đang đăng nhập.
+     * Hàm này chỉ giữ một luật: quá cửa sổ mà không có lý do thì từ chối — để
+     * một đường gọi mới trong tương lai không lặng lẽ bỏ qua Q2.2.
+     *
+     * @return array{ok: bool, error?: string}
+     */
+    public static function daoMai(string $id, string $actorId, ?string $lyDo = null): array
+    {
+        if (!self::coMocMai()) {
+            return ['ok' => false, 'error' => 'Chưa nâng cấp cơ sở dữ liệu.'];
+        }
+
+        $don = self::find($id);
+
+        if ($don === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy đơn hàng.'];
+        }
+
+        if (!self::daBatDauMai($don)) {
+            return ['ok' => false, 'error' => 'Đơn này chưa bắt đầu mài.'];
+        }
+
+        $lyDo    = trim((string) $lyDo);
+        $trongCs = self::trongCuaSoRutLai($don, $actorId);
+
+        if (!$trongCs && utf8Length($lyDo) < self::LY_DO_TOI_THIEU) {
+            return ['ok' => false, 'error' =>
+                'Đã quá cửa sổ rút lại nên phải ghi lý do, tối thiểu '
+                . self::LY_DO_TOI_THIEU . ' ký tự.'];
+        }
+
+        Database::transaction(static function () use ($id, $don, $lyDo, $trongCs): void {
+            self::update($id, ['mai_bat_dau_luc' => null, 'mai_bat_dau_boi' => null]);
+
+            self::ghiVetTien($id, 'order.lens_undo',
+                ($trongCs ? 'Rút lại mốc bắt đầu mài (trong cửa sổ)' : 'Đảo ngược mốc bắt đầu mài')
+                . ($lyDo !== '' ? ' — lý do: ' . utf8Substr($lyDo, 0, 180) : ''),
+                $don);
+        });
+
+        return ['ok' => true];
+    }
+
+    /**
+     * Còn trong cửa sổ rút lại VÀ đúng người đã bấm — Q2.2.
+     *
+     * Hai điều kiện, không phải một. Chỉ kiểm thời gian thì đồng nghiệp ngồi
+     * cạnh gỡ được mốc của người khác mà không phải ghi lý do gì, tức là cái
+     * cửa sổ ngắn trở thành một lỗ hổng ngắn.
+     */
+    public static function trongCuaSoRutLai(array $order, string $actorId): bool
+    {
+        $luc = trim((string) ($order['mai_bat_dau_luc'] ?? ''));
+
+        if ($luc === '' || (string) ($order['mai_bat_dau_boi'] ?? '') !== $actorId) {
+            return false;
+        }
+
+        $moc = strtotime($luc);
+
+        return $moc !== false && (time() - $moc) <= self::RUT_LAI_GIAY;
     }
 
     /**

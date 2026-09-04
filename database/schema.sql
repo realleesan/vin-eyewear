@@ -1186,6 +1186,30 @@ CREATE TABLE `orders` (
     -- Mốc kế toán, tách khỏi updated_at: updated_at đổi theo mọi lần sửa đơn,
     -- còn "tiền về lúc nào" thì phải đứng yên.
     `paid_at`          DATETIME     NULL,
+    /*
+     * ─────────────────────────────────────────────────────────────────────
+     * MỐC "BẮT ĐẦU MÀI" — Q2.2 · Q52.1 · Q56.2 · X07, chốt 04/09/2026
+     *
+     * Đây là CỘT MỐC, không phải trạng thái. Mọi quy tắc về tiền đều hỏi
+     * "đã từng bấm Bắt đầu mài chưa", chứ không hỏi "đơn đang ở đâu":
+     *
+     *   huỷ TRƯỚC khi bấm, khách đã trả 100%  -> hoàn 100% (Q52.1)
+     *   huỷ SAU khi bấm                        -> giữ cọc  (FR-25)
+     *   mốc chặn tự huỷ đơn quá hạn            -> chính nó (Q56.2)
+     *
+     * Đơn mài xong đi tiếp sang "Đang giao" thì trạng thái hiện tại không
+     * còn nói gì về việc đã mài — nhưng tròng đã cắt và tiền vật tư đã mất.
+     * Đọc mốc từ `status` là trả lời sai câu hỏi. Cùng lối nghĩ đã tách
+     * `payment_status` khỏi `status`: trạng thái nói đơn ĐANG ở đâu, cột mốc
+     * nói chuyện gì ĐÃ xảy ra.
+     *
+     * Chỉ MỘT đường xoá được nó: Quản lý cơ sở đảo ngược kèm lý do (Q2.2).
+     * Xem OrderModel::batDauMai() và ::daoMai().
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    `mai_bat_dau_luc`  DATETIME     NULL,
+    -- SET NULL: người bấm nghỉ việc và bị xoá tài khoản thì MỐC vẫn phải còn.
+    `mai_bat_dau_boi`  CHAR(36)     NULL,
     `note`             TEXT         NULL,
     `subtotal`         BIGINT       NOT NULL DEFAULT 0,
     `shipping_fee`     BIGINT       NOT NULL DEFAULT 0,
@@ -1225,6 +1249,9 @@ CREATE TABLE `orders` (
     KEY `idx_orders_payment` (`payment_status`),
     KEY `idx_orders_voucher` (`voucher_id`),
     KEY `idx_orders_store` (`store_id`),
+    KEY `idx_orders_mai_boi` (`mai_bat_dau_boi`),
+    CONSTRAINT `fk_orders_mai_boi` FOREIGN KEY (`mai_bat_dau_boi`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`)
         REFERENCES `users` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_orders_voucher` FOREIGN KEY (`voucher_id`)
@@ -1295,6 +1322,19 @@ CREATE TABLE `order_status_history` (
     `order_id`   CHAR(36)    NOT NULL,
     `status`     VARCHAR(32) NOT NULL,
     `changed_by` CHAR(36)    NULL,
+    /*
+     * LÝ DO — bắt buộc ở hai chỗ, để trống ở mọi chỗ còn lại.
+     *
+     * Q3.1 buộc ghi lý do khi mở lại đơn đã huỷ; Q2.2 buộc ghi lý do khi đảo
+     * ngược mốc "Bắt đầu mài". Cả hai đều là thao tác đi NGƯỢC chiều vòng đời,
+     * và người mở đơn ra sáu tháng sau cần biết vì sao — họ đang nhìn ngăn kéo
+     * đơn hàng, không nhìn màn Nhật ký thao tác. Nên lý do nằm ở đây, cạnh
+     * chính mốc trạng thái nó giải thích.
+     *
+     * Vết kiểm toán trong `customer_audit_logs` vẫn ghi như cũ (SNFR-11). Chép
+     * sang cả hai là cố ý: hai bảng phục vụ hai người đọc khác nhau.
+     */
+    `ly_do`      VARCHAR(255) NULL,
     `created_at` DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY `idx_osh_order` (`order_id`, `created_at`),

@@ -247,6 +247,17 @@ return [
     // Trả loạt đơn vừa đổi về trạng thái cũ. Trạng thái cũ đi trong chính form
     // chứ không nằm trong session — xem OrderAdminController::undoStatus().
     'quan-tri/don-hang/hoan-tac'  => 'OrderAdminController@undoStatus',         // POST
+    /* MỐC MÀI TRÒNG — TRỤC THỨ BA, tách hẳn khỏi trang-thai.
+
+       Cùng lý lẽ đã tách thanh-toan: "đơn đang ở đâu" và "tròng đã cắt chưa"
+       là hai câu hỏi khác nhau với hai hệ quả khác nhau, mà chỉ câu thứ hai
+       quyết định tiền cọc có hoàn hay không (Q52.1, Q56.2). Gộp vào ô chọn
+       trạng thái thì người bấm không còn phân biệt được mình đang khai báo
+       cái nào. Xem OrderModel::batDauMai(). */
+    'quan-tri/don-hang/bat-dau-mai' => 'OrderAdminController@startLens',        // POST
+    // Một đường cho cả hai lối gỡ mốc — trong cửa sổ (chính người bấm, khỏi lý
+    // do) và quá cửa sổ (Quản lý cơ sở, bắt buộc lý do). Q2.2.
+    'quan-tri/don-hang/huy-mai'   => 'OrderAdminController@undoLens',           // POST
 
     'quan-tri/lich-hen'           => 'AppointmentAdminController@index',
     'quan-tri/lich-hen/trang-thai'=> 'AppointmentAdminController@updateStatus', // POST
