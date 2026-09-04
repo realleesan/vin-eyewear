@@ -64,6 +64,12 @@ class BaseController
             [$data['toast'], $data['toastTone']] = self::toastFromFlash();
         }
 
+        /* Bản sao dưới tên riêng cho khung — master.php vẽ trang trong phạm vi
+           riêng và cần đúng mảng này. Lý do đầy đủ ở chính chỗ nó gọi closure;
+           tóm tắt: require trần cho trang thừa hưởng cả biến vòng lặp của
+           khung. Hai dấu gạch dưới để extract() không đụng tới. */
+        $__pageData = $data;
+
         // Extract data array to individual variables
         extract($data);
 

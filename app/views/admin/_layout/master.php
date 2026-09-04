@@ -355,7 +355,43 @@ if (in_array('admin', $adminRoles, true)) {
             <p class="atoast atoast--err" role="alert"><?= e($flashErr) ?></p>
         <?php endif; ?>
 
-        <?php require VIEWS_PATH . '/' . $viewName . '.php'; ?>
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * TRANG ĐƯỢC VẼ TRONG PHẠM VI RIÊNG, KHÔNG DÙNG CHUNG VỚI KHUNG
+         *
+         * Trước 09/09/2026 chỗ này là `require` trần. Mà require chạy trong
+         * ĐÚNG phạm vi biến của file gọi nó — tức trang view thừa hưởng mọi
+         * biến của khung, KỂ CẢ biến vòng lặp còn sót lại sau khi lặp xong.
+         *
+         * Đó không phải chuyện lý thuyết. `foreach ($navGroups as $group)` ở
+         * thanh bên phía trên kết thúc với $group mang giá trị cuối — một MẢNG
+         * ['label' => …, 'items' => …]. Màn Thuộc tính tròng truyền xuống một
+         * biến cũng tên $group (mã nhóm, một chuỗi), và nó bị ghi đè trước khi
+         * view kịp đọc. Kết quả trên trang thật:
+         *
+         *     TypeError: rawurlencode(): Argument #1 ($string) must be of
+         *     type string, array given
+         *
+         * ĐỔI TÊN BIẾN VÒNG LẶP CHỈ CHỮA ĐƯỢC LẦN NÀY. Cái sai là hai vùng mã
+         * khác nhau — khung và trang — dùng chung một túi biến, nên bất kỳ tên
+         * nào trùng cũng nổ, và nổ ở nơi không ai nghi. Đóng hẳn cái túi thì
+         * cả lớp lỗi ấy biến mất, và người viết view mới không phải thuộc lòng
+         * danh sách tên mà khung đang chiếm.
+         *
+         * Closure static nhận ĐÚNG $data mà controller truyền vào (renderAdmin
+         * đã bổ sung các con số huy hiệu vào chính mảng ấy trước khi extract).
+         * EXTR_SKIP để $__file và $__data không bị một khoá cùng tên đè mất.
+         *
+         * Đã đối chiếu: không trang quản trị nào đọc biến của khung
+         * ($navGroups · $segment · $viewName · $adminRoles) — 0 file.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        (static function (string $__file, array $__data): void {
+            extract($__data, EXTR_SKIP);
+            require $__file;
+        })(VIEWS_PATH . '/' . $viewName . '.php', $__pageData);
+        ?>
     </main>
 </div>
 

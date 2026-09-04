@@ -145,6 +145,14 @@ abstract class AdminController extends BaseController
         // Đánh giá chờ duyệt — trả 0 khi chưa chạy file nâng cấp
         $data['pendingReviews']  = ReviewModel::countPending();
 
+        /* Bản sao dưới TÊN RIÊNG cho khung dùng — master.php vẽ trang trong một
+           phạm vi riêng và cần đúng mảng này (xem khối chú thích ở chỗ nó gọi
+           closure). Không đọc thẳng $data ở đó: controller nào lỡ truyền khoá
+           'data' là extract() bên dưới ghi đè mất, và lỗi sinh ra sẽ nằm cách
+           nguyên nhân một quãng rất xa. Hai dấu gạch dưới để chính extract()
+           không đụng tới nó. */
+        $__pageData = $data;
+
         extract($data);
 
         require VIEWS_PATH . '/admin/_layout/master.php';

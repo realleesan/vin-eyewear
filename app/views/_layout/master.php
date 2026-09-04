@@ -332,7 +332,22 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
 
     <!-- id là đích của .skip-link trong header.php — đổi tên là link đó gãy -->
     <main class="main-content" id="noi-dung-chinh" tabindex="-1">
-        <?php require VIEWS_PATH . '/' . $viewName . '.php'; ?>
+        <?php
+        /* TRANG VẼ TRONG PHẠM VI RIÊNG — cùng lý do và cùng cách làm với khung
+           quản trị (xem khối chú thích dài ở admin/_layout/master.php).
+
+           Ở khung này biến rò ra là $css của vòng lặp nạp CSS phía trên, và
+           $ten/$bien của vòng lặp header. Chưa trang nào trùng tên với chúng,
+           nên đây là vá TRƯỚC KHI đau chứ không phải sau: khung quản trị đã
+           dính đúng lỗi ấy với $group và nó chỉ lộ ra trên trang thật.
+
+           Đã đối chiếu: không trang khách nào đọc biến của khung ($css ·
+           $viewName · $pageStyles · $pageScripts · $bareFoot) — 0 file. */
+        (static function (string $__file, array $__data): void {
+            extract($__data, EXTR_SKIP);
+            require $__file;
+        })(VIEWS_PATH . '/' . $viewName . '.php', $__pageData);
+        ?>
     </main>
 
     <?php partial($bare ? $bareFoot : '_layout/footer'); ?>
