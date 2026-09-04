@@ -1,0 +1,383 @@
+/* ============================================================
+   admin-dashboard.css — trang Tổng quan (/quan-tri)
+
+   Chỉ những gì RIÊNG của trang này. Thẻ số liệu (.astat), dải ô đếm
+   (.afacts), khung nội dung (.apanel, .alist, .atable, .badge) dùng chung
+   với cả khu quản trị và vẫn nằm ở admin.css — trang này chỉ mượn lại.
+
+   Mọi màu lấy từ token của body.admin (--brand, --ink, --line, --surface…).
+   Không gõ mã màu thẳng, trừ hai ngoại lệ có ghi lý do tại chỗ.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   THANH LỌC — KỲ VÀ CƠ SỞ
+   ------------------------------------------------------------ */
+
+/*
+ * flex-wrap, KHÔNG phải grid cố định cột.
+ *
+ * Thanh này có bốn ô chiều rộng rất khác nhau (ô chọn kỳ ngắn, hai ô ngày
+ * trung bình, ô cơ sở dài vì tên cơ sở là địa danh). Lưới cột đều làm ô kỳ
+ * thừa một mảng trắng bằng đúng nửa nó, còn tên cơ sở dài thì bị cắt.
+ *
+ * Với flex-wrap thì trên điện thoại chúng tự rơi xuống thành hai hàng hai ô
+ * — không cần một mốc @media nào, và cũng không có bề ngang nào tràn ra.
+ */
+.adash__loc {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 14px;
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    box-shadow: var(--a-card-shadow);
+}
+
+.adash__loc-nhom {
+    display: flex;
+    flex: 1 1 160px;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.adash__loc-nhan {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+}
+
+/* Cùng dáng với ô nhập của khu quản trị: bo 8px (--radius-sm đã bị body.admin
+   ghi đè cho ô nhập), viền ngà, nền thẻ. */
+.adash__loc-o {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--ink);
+}
+
+.adash__loc-o:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+}
+
+.adash__loc-nut {
+    flex: 0 0 auto;
+    padding: 9px 18px;
+    border: 0;
+    border-radius: var(--a-btn-radius);
+    background: var(--brand);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--on-brand);
+    cursor: pointer;
+}
+
+.adash__loc-nut:hover { background: var(--brand-strong); }
+
+/* Dòng nhắc chiếm TRỌN một hàng riêng (flex-basis 100%) chứ không chen vào
+   cuối hàng ô chọn: chen vào thì ở bề ngang trung bình nó đẩy nút Áp dụng
+   xuống một mình, trông như hai thanh công cụ rời nhau. */
+.adash__loc-nhac {
+    flex: 1 0 100%;
+    margin: 0;
+    font-size: 11.5px;
+    color: var(--muted);
+}
+
+.adash__loc-nhac strong { color: #5c4f42; }
+
+/* JS thu hai ô ngày lại khi kỳ không phải "Tuỳ chọn" — xem admin-dashboard.js.
+
+   ẨN BẰNG THUỘC TÍNH hidden, KHÔNG BẰNG MỘT LỚP CSS: không có JS thì hai ô
+   vẫn hiện nguyên và người tắt JS vẫn chọn được khoảng ngày riêng. Một lớp
+   .is-an mặc định trong CSS sẽ khoá hẳn tính năng đó với họ. */
+.adash__loc [hidden] { display: none; }
+
+/* ------------------------------------------------------------
+   HÀNG CHỈ SỐ
+   ------------------------------------------------------------ */
+
+/*
+ * auto-fit chứ không phải 5 cột cố định — khác .astats ở admin.css, và khác
+ * có lý do.
+ *
+ * .astats khoá 4 cột vì bản thiết kế vẽ đúng bốn thẻ và một hàng bốn cột không
+ * bao giờ được phép gãy nửa chừng. Hàng này có NĂM thẻ, mà 5 là số không chia
+ * hết cho bất kỳ bố cục nào — khoá 5 cột thì mỗi thẻ còn 210px ở màn 1160px và
+ * con số tiền tràn mép; khoá 4 thì thẻ thứ năm mồ côi một mình ở hàng dưới.
+ *
+ * auto-fit + minmax(210px, 1fr) để bề ngang thật quyết định: 3 thẻ một hàng ở
+ * màn hẹp, 5 thẻ ở màn rộng, và không có hàng nào chỉ có một thẻ lẻ trừ khi
+ * màn hình đúng bằng chừng ấy.
+ */
+.adash__kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    margin: 0 0 14px;
+    padding: 0;
+    list-style: none;
+}
+
+/*
+ * DÒNG PHỤ TRONG THẺ XẾP DỌC, KHÔNG XẾP NGANG — chỉ ở hàng thẻ này.
+ *
+ * .astat__extra ở admin.css là một hàng flex "nhãn trái · số phải". Nó vừa vặn
+ * ở lưới BỐN cột của bản thiết kế gốc, nơi mỗi thẻ rộng ~275px. Hàng chỉ số này
+ * có NĂM thẻ nên mỗi thẻ chỉ còn ~220px, và ở bề ngang đó nhãn bị bóp lại tới
+ * mức gãy đôi giữa chừng: "TẠM THU (TIỀN / CỌC)", "SO VỚI KỲ / TRƯỚC". Chữ hoa
+ * có giãn khoảng gãy dòng đọc ra như hai nhãn rời nhau.
+ *
+ * Xếp dọc thì nhãn có trọn bề ngang và không bao giờ gãy. Thẻ cao thêm chừng
+ * 14px, không tốn gì: lưới đã kéo mọi thẻ cao bằng thẻ cao nhất, và ba thẻ
+ * không có dòng phụ vẫn còn thừa chỗ trống.
+ *
+ * KHÔNG sửa .astat__extra ở admin.css: nó còn dùng ở lưới bốn cột nơi cách xếp
+ * ngang vẫn đúng và vẫn vừa.
+ */
+.adash__kpis .astat__extra {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+/* Phần trăm so với kỳ trước. Tô màu theo CHIỀU, và chỉ ở đây — hàng này chỉ có
+   doanh thu mang dấu so sánh, nên không có ô nào mà "tăng" lại là tin xấu. */
+.adash__delta--len   { color: #7fdca0; }
+.adash__delta--xuong { color: #f0a99e; }
+
+/*
+ * HAI MÃ MÀU VIẾT THẲNG Ở TRÊN — NGOẠI LỆ CÓ LÝ DO.
+ *
+ * Chúng nằm trên thẻ .astat--money, tức trên nền #241518 của thanh bên.
+ * var(--success) (#2f6b3a) và var(--danger) (#a63232) là hai màu chọn cho nền
+ * NGÀ; đặt lên nền sẫm thì tỉ lệ tương phản tụt xuống dưới 3:1 và con số phần
+ * trăm gần như biến mất. Hai giá trị ở đây là chính hai màu ấy đã kéo sáng lên
+ * cho đủ đọc, không phải một cặp màu mới.
+ */
+
+/* Ghi chú CẢNH BÁO trong thẻ số liệu — độ phủ giá vốn thiếu, lịch quá hạn chưa
+   chốt. Khác .astat__note thường ở chỗ nó nói ra một GIỚI HẠN của con số ngay
+   trên, nên nó phải bắt mắt hơn một dòng chú thích. */
+.astat__note--canh {
+    margin-top: 6px;
+    color: var(--warn);
+}
+
+.astat__note--canh a { color: inherit; font-weight: 600; }
+
+/* Trên thẻ nền tối thì hổ phách của nền ngà không đọc được — kéo sáng lên,
+   cùng lý lẽ với hai mã màu của .adash__delta ngay trên. */
+.astat--money .astat__note--canh { color: #e8c46a; }
+
+/* Dòng cảnh báo trong phần tiêu đề trang (mốc STATS_SINCE, kỳ bị cắt ngắn). */
+.adash__canhbao { color: var(--warn); }
+
+/* ------------------------------------------------------------
+   CẦN XỬ LÝ GẤP
+   ------------------------------------------------------------ */
+
+.adash__gap { margin-bottom: 14px; }
+
+/* Huy hiệu số cạnh tiêu đề khối — cùng màu thương hiệu với huy hiệu thanh bên,
+   để hai chỗ đếm việc tồn đọng đọc ra là một hệ. */
+.adash__dem {
+    display: inline-block;
+    min-width: 20px;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: var(--radius-round);
+    background: var(--a-badge);
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--on-brand);
+    vertical-align: 2px;
+}
+
+/*
+ * BỐN HÀNG ĐỢI XẾP LƯỚI, KHÔNG XẾP DỌC.
+ *
+ * Xếp dọc thì khối này cao gấp bốn và đẩy biểu đồ ra khỏi màn đầu — mà cả điểm
+ * của việc đặt nó lên trên biểu đồ là để nó nằm trong màn đầu.
+ *
+ * minmax(260px, 1fr): mỗi hàng đợi cần đủ chỗ cho một dòng "mã đơn · tên khách"
+ * bên trái và một số tiền bên phải. Hẹp hơn 260px thì tên khách bị cắt, mà tên
+ * khách chính là thứ người trực quầy đọc để gọi điện.
+ */
+.adash__hangdoi {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0;
+}
+
+.adash__doi {
+    padding: 14px 18px 16px;
+    border-top: 1px solid var(--a-row-line);
+}
+
+/* Vạch dọc ngăn hai cột cạnh nhau. Chỉ vẽ khi lưới thật sự có hai cột — dưới
+   mốc đó các khối xếp dọc và một vạch bên trái sẽ thành một nét thừa. */
+@media (min-width: 720px) {
+    .adash__doi { border-left: 1px solid var(--a-row-line); }
+    .adash__doi:nth-child(odd) { border-left: 0; }
+}
+
+.adash__doi-tieu {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.adash__doi-so {
+    display: inline-block;
+    margin-left: 4px;
+    padding: 0 6px;
+    border-radius: var(--radius-round);
+    background: var(--pill-warn-bg);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--pill-warn-ink);
+}
+
+/* Câu nói HỆ QUẢ, không mô tả tính năng — "khách đang chờ một cuộc gọi" chứ
+   không "danh sách đơn ở trạng thái mới". Cỡ nhỏ và mờ để nó không tranh chỗ
+   với chính danh sách bên dưới. */
+.adash__doi-mo {
+    margin: 3px 0 8px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--muted);
+}
+
+/* Danh sách trong hàng đợi hẹp hơn danh sách trong thẻ lớn, nên bỏ bớt đệm
+   ngang: .alist__row của admin.css có đệm dành cho thẻ rộng 600px. */
+.adash__doi .alist__row { padding-left: 0; padding-right: 0; }
+
+.adash__doi .apanel__more { display: inline-block; margin-top: 8px; }
+
+/* Câu xác nhận đã sạch việc. KHÔNG tô xanh thành công: nó là trạng thái bình
+   thường của một cửa hàng chạy tốt, không phải một thành tích vừa đạt được. */
+.adash__sach { line-height: 1.55; }
+
+.adash__nhac {
+    padding-top: 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: var(--muted);
+}
+
+/* ------------------------------------------------------------
+   BIỂU ĐỒ
+   ------------------------------------------------------------ */
+
+/*
+ * ────────────────────────────────────────────────────────────
+ * TOKEN RIÊNG CHO BIỂU ĐỒ — ĐỌC ĐƯỢC TRÊN CẢ NỀN SÁNG LẪN NỀN TỐI
+ *
+ * SVG ở view không mang một mã màu nào: chữ và vạch trục vẽ bằng
+ * `currentColor`, cột tô bằng --adash-cot. Nên đổi nền của thẻ chứa là biểu đồ
+ * tự đảo theo, không phải sửa một dòng nào trong PHP.
+ *
+ * Ba giá trị dưới đây là bản cho NỀN SÁNG (khu quản trị hiện chỉ có nền sáng).
+ * Khối @media ngay sau là bản cho nền tối. Nó CHƯA CHẠY hôm nay và điều đó là
+ * cố ý: body.admin khai bảng màu sáng tường minh nên chế độ tối của hệ điều
+ * hành không đổi được trang. Giữ khối ấy để ngày khu quản trị có chủ đề tối —
+ * hoặc ngày biểu đồ này được đặt vào một thẻ nền sẫm — thì trục và nhãn không
+ * phải sửa lại từ đầu. Sáu dòng, và nó là thứ duy nhất chặn được cái lỗi "chữ
+ * đen trên nền đen" mà không ai thấy cho tới lúc đổi chủ đề.
+ * ────────────────────────────────────────────────────────────
+ */
+.adash__chart {
+    --adash-cot: var(--brand);
+    --adash-cot-rong: var(--line-strong);
+    --adash-luoi: var(--line);
+
+    /* CUỘN NGANG TRONG KHUNG NÀY, không để trang tràn ngang.
+
+       SVG bên trong có min-width 520px: hẹp hơn thế thì nhãn trục co xuống dưới
+       ngưỡng đọc được (xem khối chú thích về kích thước khung nhìn ở view).
+       Trên điện thoại khung này cuộn được, còn TRANG thì không tràn — đúng cách
+       .atable-wrap của dự án đã làm với bảng rộng. */
+    overflow-x: auto;
+    padding: 12px 16px 4px;
+    color: var(--muted);
+
+    /* CHIẾM HẾT PHẦN CÒN LẠI CỦA THẺ, và căn giữa hình theo chiều dọc.
+
+       .apanel là một flex column, còn .agrid kéo mọi thẻ trong một hàng cao
+       bằng thẻ cao nhất. Thẻ biểu đồ đứng cạnh một cột có hai thẻ chồng lên
+       nhau nên nó luôn là thẻ thấp hơn — thiếu `flex: 1` thì hình vẽ dính lên
+       mép trên và bỏ lại một mảng trắng cao gần 200px ngay giữa trang, đọc ra
+       như biểu đồ tải hỏng.
+
+       Căn giữa chứ không kéo giãn: SVG giữ tỉ lệ khung nhìn (height: auto), kéo
+       nó cao ra sẽ méo chữ trên hai trục. */
+    display: flex;
+    flex: 1;
+    align-items: center;
+}
+
+@media (prefers-color-scheme: dark) {
+    .adash__chart {
+        --adash-cot: var(--brand-light);
+        --adash-cot-rong: rgba(255, 255, 255, 0.16);
+        --adash-luoi: rgba(255, 255, 255, 0.14);
+    }
+}
+
+.adash__svg {
+    display: block;
+    width: 100%;
+    min-width: 520px;
+    height: auto;
+}
+
+/* Chữ trục thừa hưởng màu của .adash__chart qua currentColor — không khai
+   `fill` bằng mã màu nào ở đây. 10 đơn vị khung nhìn ≈ 10px trên màn làm việc;
+   vì sao lại là con số đó, xem chú thích kích thước khung nhìn ở view. */
+.adash__truc {
+    fill: currentColor;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.adash__luoi {
+    stroke: var(--adash-luoi);
+    stroke-width: 1;
+}
+
+.adash__cot { fill: var(--adash-cot); }
+
+/* Ngày bán được 0₫ vẫn có một vệt mỏng, nhưng tô xám: nó nói "ngày này có tồn
+   tại", không nói "ngày này bán được ít". Cùng màu với cột thật thì một dãy
+   ngày nghỉ đọc ra như một dãy ngày bán kém. */
+.adash__cot--rong { fill: var(--adash-cot-rong); }
+
+/* ------------------------------------------------------------
+   BẢNG TOP SẢN PHẨM
+   ------------------------------------------------------------ */
+
+/* Số liệu canh phải và chữ số đều bề ngang — quy ước chung của dự án cho mọi
+   cột số trong bảng. */
+.adash__so {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
