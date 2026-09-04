@@ -366,6 +366,28 @@ class AppointmentAdminController extends AdminController
             redirect($quayLaiHop);
         }
 
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * TẠO LỊCH CŨNG PHẢI TRONG PHẠM VI CƠ SỞ — bổ sung 09/09/2026
+         *
+         * Ba thao tác ghi kia (đổi trạng thái, huỷ, dời ngày) đã siết từ 09/09,
+         * nhưng TẠO thì không. Ô chọn cơ sở trong hộp thoại có lọc theo phạm vi
+         * (coSoChonDuoc), nhưng đó là HTML — một cú POST đặt store_id của cơ sở
+         * khác đi lọt thẳng.
+         *
+         * Lỗi này KHÔNG BAO GIỜ TỰ LỘ RA, và đó là chỗ nguy hiểm: tạo xong thì
+         * chính người tạo cũng không nhìn thấy lịch ấy nữa (danh sách có lọc
+         * phạm vi), nên quầy bên kia nhận một buổi hẹn không ai biết từ đâu tới
+         * và không ai nhận là mình đã tạo.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $phamVi = $this->phamViCoSo();
+
+        if ($phamVi !== null && !in_array($coSo, $phamVi, true)) {
+            flash('admin_error', 'Bạn chỉ tạo được lịch hẹn cho cơ sở mình phụ trách.');
+            redirect($quayLaiHop);
+        }
+
         $ket = BookingModel::create([
             'userId'      => null,
             'storeId'     => $coSo,
