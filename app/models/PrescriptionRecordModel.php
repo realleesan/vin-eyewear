@@ -209,6 +209,38 @@ class PrescriptionRecordModel extends BaseModel
         return Database::columnExists('customer_prescriptions', 'ban_goc_id');
     }
 
+    /**
+     * CSDL đã có cột `nguoi_duoc_do` chưa (X24).
+     *
+     * Cột này đến ở một file migration KHÁC với bộ cột phiên bản, nên nó cần
+     * phép hỏi riêng. Gộp vào coPhienBan() thì trên một máy đã chạy migration
+     * 04/09 mà chưa chạy 06/09, câu INSERT sẽ nhắc tới một cột chưa tồn tại và
+     * ném 1054 đúng lúc kỹ thuật viên bấm Lưu.
+     */
+    public static function coNguoiDuocDo(): bool
+    {
+        return Database::columnExists('customer_prescriptions', 'nguoi_duoc_do');
+    }
+
+    /**
+     * Tên hiển thị cho một bản ghi — X24.
+     *
+     * Cột trống nghĩa là CHÍNH CHỦ, nên nơi hiển thị lùi về tên tài khoản chứ
+     * không in dấu gạch. Gom vào đây thay vì để mỗi view tự lùi: mỗi chỗ tự lùi
+     * là mỗi chỗ có cơ hội quên, và cái quên đó biến "mẹ" thành "—" trên đúng
+     * cái bảng mà cột này sinh ra để làm rõ.
+     */
+    public static function tenNguoiDuocDo(array $ban, ?string $tenChu = null): string
+    {
+        $nguoi = trim((string) ($ban['nguoi_duoc_do'] ?? ''));
+
+        if ($nguoi !== '') {
+            return $nguoi;
+        }
+
+        return ($tenChu !== null && trim($tenChu) !== '') ? trim($tenChu) : 'Chính chủ';
+    }
+
     /** Một bản ghi, nhưng CHỈ khi nó thuộc về đúng khách đang mở. */
     public static function findOwned(string $id, string $userId): ?array
     {
@@ -271,12 +303,35 @@ class PrescriptionRecordModel extends BaseModel
         $ket = [];
         $n   = count($lichSu);
 
-        for ($i = 0; $i < $n; $i++) {
-            // Bản cuối cùng của mảng là bản CŨ NHẤT — không có gì trước nó để
-            // so, nên nó không có chênh lệch. Đó là dữ liệu thiếu chứ không
-            // phải chênh lệch bằng 0, và hai thứ đó phải hiện khác nhau.
-            $truoc = $lichSu[$i + 1] ?? null;
+        /* CHỈ TRỪ TRONG CÙNG MỘT NGƯỜI — X24.
 
+           Trước 06/09/2026 dòng này là `$lichSu[$i + 1]`, tức bản kề dưới bất
+           kể của ai. Từ khi có cột `nguoi_duoc_do`, một tài khoản có thể chứa
+           số đo của mẹ và của hai đứa con, và bản kề dưới rất hay là của người
+           khác. Trừ hai người cho nhau ra một con số trông y hệt một con số
+           thật: "P -1.50 sau 0 tháng" đọc như mắt xấu đi trong một buổi chiều.
+
+           Khoá nhóm dùng đúng giá trị thô của cột (NULL = chính chủ, gộp về
+           chuỗi rỗng) chứ không dùng tenNguoiDuocDo(): hàm kia lùi về tên chủ
+           tài khoản để HIỂN THỊ, và nếu ai đó gõ đúng tên chủ vào ô người được
+           đo thì hai nhóm khác nhau sẽ bị gộp làm một. */
+        $ai = static function (array $ban): string {
+            return trim((string) ($ban['nguoi_duoc_do'] ?? ''));
+        };
+
+        for ($i = 0; $i < $n; $i++) {
+            $truoc = null;
+
+            for ($j = $i + 1; $j < $n; $j++) {
+                if ($ai($lichSu[$j]) === $ai($lichSu[$i])) {
+                    $truoc = $lichSu[$j];
+                    break;
+                }
+            }
+
+            // Không tìm được bản cũ hơn của CÙNG người — không có gì để so.
+            // Đó là dữ liệu thiếu chứ không phải chênh lệch bằng 0, và hai thứ
+            // đó phải hiện khác nhau.
             if ($truoc === null) {
                 continue;
             }
@@ -839,6 +894,22 @@ class PrescriptionRecordModel extends BaseModel
         $tech = trim((string) ($in['tech_note'] ?? ''));
         $gia['tech_note'] = $tech !== '' ? utf8Substr($tech, 0, 500) : null;
 
+        /* NGƯỜI ĐƯỢC ĐO — X24.
+
+           Để TRỐNG nghĩa là chính chủ tài khoản, và đó là mặc định đúng với
+           gần hết dữ liệu. Không tự điền tên chủ vào đây: một bản sao họ tên
+           nằm trong bảng y tế sẽ lệch ngay lần khách đổi tên đầu tiên, mà lúc
+           đó không ai phân được dòng nào là tên thật. Nơi hiển thị tự lùi về
+           tên chủ tài khoản khi cột trống — xem tenNguoiDuocDo(). */
+        $nguoi = trim((string) ($in['nguoi_duoc_do'] ?? ''));
+
+        if ($nguoi !== '' && utf8Length($nguoi) < 2) {
+            return ['ok' => false, 'error' =>
+                'Tên người được đo quá ngắn. Bỏ trống nếu là chính chủ tài khoản.'];
+        }
+
+        $gia['nguoi_duoc_do'] = $nguoi !== '' ? utf8Substr($nguoi, 0, 120) : null;
+
         /* CỘT MỚI CHỈ GỬI KHI CSDL ĐÃ CÓ CHÚNG.
 
            Chưa chạy migration mà câu INSERT nhắc tới `pd_od` là lỗi 1054, và
@@ -850,6 +921,11 @@ class PrescriptionRecordModel extends BaseModel
                       'os_seg_height', 'od_va_num', 'os_va_num', 'tech_note'] as $c) {
                 unset($gia[$c]);
             }
+        }
+
+        // Cùng lý lẽ, nhưng cột này đến ở migration 06/09 nên hỏi riêng.
+        if (!self::coNguoiDuocDo()) {
+            unset($gia['nguoi_duoc_do']);
         }
 
         return ['ok' => true, 'values' => $gia];

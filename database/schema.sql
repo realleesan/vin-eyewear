@@ -1564,6 +1564,21 @@ CREATE TABLE `customer_prescriptions` (
      */
     `measured_at`    DATE          NOT NULL,
     `store_id`       CHAR(36)      NULL,
+    /*
+     * NGƯỜI ĐƯỢC ĐO — X24, chốt 04/09/2026.
+     *
+     * Cả nhà dùng chung một số điện thoại, mẹ dẫn hai con đi đo cùng buổi, và
+     * ba lần đo rơi vào cùng một tài khoản. Không có cột này thì lịch sử trông
+     * như một người thoái hoá mắt trong ba ngày.
+     *
+     * NULL nghĩa là CHÍNH CHỦ TÀI KHOẢN — nghĩa mặc định, không backfill tên
+     * chủ vào đây (bản sao họ tên trong bảng y tế sẽ lệch khi khách đổi tên).
+     *
+     * Đây là cột ĐỂ ĐỌC, không phải lớp dữ liệu: không sinh Customer_ID mới,
+     * không tách chuỗi lịch sử, không tách huy hiệu hiệu lực. Q67 (mỗi thành
+     * viên một hồ sơ riêng) nằm ở giai đoạn 2.
+     */
+    `nguoi_duoc_do`  VARCHAR(120)  NULL,
     -- Ghi chú KHÁCH ĐỌC ĐƯỢC. Q65.3 cho khách xem lịch sử đo của mình, nên cột
     -- này hiện ra ngoài — đừng viết nhận định chuyên môn hay ghi chú nội bộ vào
     -- đây, đã có `tech_note` cho việc đó.

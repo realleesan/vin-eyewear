@@ -39,6 +39,30 @@ $so = static function (mixed $v): string {
 
     return ($f > 0 ? '+' : '') . number_format($f, 2, '.', '');
 };
+
+/* NGƯỜI ĐƯỢC ĐO — X24.
+
+   Cột "Người được đo" CHỈ HIỆN khi tài khoản này thật sự có nhiều hơn một
+   người. Với đại đa số tài khoản, ô đó luôn trống và cột chỉ lặp lại tên chủ
+   xuống mười dòng — một cột nhiễu trong cái bảng vốn đã mười hai cột, và nhiễu
+   thì làm người đọc lướt nhanh hơn chứ không kỹ hơn.
+
+   $daDo gom các tên ĐÃ TỪNG gõ để đổ vào <datalist> dưới form: gõ tay "Bé Na"
+   lần thứ hai mà lỡ thành "Bé na" là hai người khác nhau trong mắt phép trừ
+   chênh lệch (PrescriptionRecordModel::chenhLech so khớp chuỗi thô). */
+$daDo = [];
+
+foreach ($rxRecords as $rx) {
+    $ten = trim((string) ($rx['nguoi_duoc_do'] ?? ''));
+
+    if ($ten !== '') {
+        $daDo[$ten] = true;
+    }
+}
+
+$daDo    = array_keys($daDo);
+$coNhieu = $daDo !== [];
+$tenChu  = trim((string) ($khach['full_name'] ?? ''));
 ?>
 
 <?php if (!$auditReady): ?>
@@ -80,6 +104,9 @@ $so = static function (mixed $v): string {
                 <thead>
                     <tr>
                         <th scope="col">Ngày đo</th>
+                        <?php if ($coNhieu): ?>
+                            <th scope="col">Người được đo</th>
+                        <?php endif; ?>
                         <th scope="col">Nguồn</th>
                         <?php /* Gộp tiêu đề "Mắt phải (OD)" cho ba cột con: ba
                                  nhãn SPH/CYL/AXIS lặp lại hai lần trong cùng
@@ -94,6 +121,9 @@ $so = static function (mixed $v): string {
                     </tr>
                     <tr class="acus__rx-sub">
                         <th scope="col"></th>
+                        <?php if ($coNhieu): ?>
+                            <th scope="col"></th>
+                        <?php endif; ?>
                         <th scope="col"></th>
                         <th scope="col" class="acus__rx-od">SPH</th>
                         <th scope="col" class="acus__rx-od">CYL</th>
@@ -124,6 +154,17 @@ $so = static function (mixed $v): string {
                                     </span>
                                 <?php endif; ?>
                             </td>
+
+                            <?php if ($coNhieu): ?>
+                                <td>
+                                    <?php /* Ô trống nghĩa là chính chủ, nên in
+                                             tên tài khoản chứ không in gạch —
+                                             một dấu "—" cạnh "Bé Na" đọc như
+                                             thiếu dữ liệu, trong khi nó là câu
+                                             trả lời đầy đủ. */ ?>
+                                    <?= e(PrescriptionRecordModel::tenNguoiDuocDo($rx, $tenChu)) ?>
+                                </td>
+                            <?php endif; ?>
 
                             <td>
                                 <?php /* Nguồn 'store' dùng viên nền xanh, hai
@@ -342,6 +383,38 @@ $so = static function (mixed $v): string {
                 <input type="date" id="ngay-do" name="measured_at" required
                        max="<?= e(date('Y-m-d')) ?>"
                        value="<?= e((string) ($form['measured_at'] ?? date('Y-m-d'))) ?>">
+            </div>
+
+            <?php /* NGƯỜI ĐƯỢC ĐO — X24, chốt 04/09/2026.
+
+                     Cả nhà dùng chung một số điện thoại là chuyện thường, và
+                     ba lần đo của ba người rơi vào cùng một tài khoản thì lịch
+                     sử trông như một người thoái hoá mắt trong ba ngày.
+
+                     Ô này KHÔNG bắt buộc: bỏ trống nghĩa là chính chủ, đúng với
+                     gần hết bản ghi. Bắt buộc nó là bắt kỹ thuật viên gõ lại
+                     tên khách vào mọi lần đo bình thường.
+
+                     <datalist> đổ các tên đã từng gõ cho tài khoản này: phép
+                     trừ chênh lệch so khớp CHUỖI THÔ, nên "Bé Na" và "Bé na" là
+                     hai người khác nhau và mỗi người sẽ mất đường so sánh. */ ?>
+            <div class="field">
+                <label for="nguoi-duoc-do">Người được đo</label>
+                <input type="text" id="nguoi-duoc-do" name="nguoi_duoc_do" maxlength="120"
+                       list="ds-nguoi-duoc-do"
+                       placeholder="<?= e($tenChu !== '' ? $tenChu : 'Chính chủ') ?>"
+                       value="<?= e((string) ($form['nguoi_duoc_do'] ?? '')) ?>">
+                <?php if ($daDo !== []): ?>
+                    <datalist id="ds-nguoi-duoc-do">
+                        <?php foreach ($daDo as $ten): ?>
+                            <option value="<?= e($ten) ?>"></option>
+                        <?php endforeach; ?>
+                    </datalist>
+                <?php endif; ?>
+                <p class="field__hint">
+                    Bỏ trống nếu đo cho chính chủ tài khoản. Chỉ điền khi đo hộ
+                    người thân dùng chung số điện thoại.
+                </p>
             </div>
 
             <div class="field">

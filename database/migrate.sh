@@ -200,6 +200,11 @@ MIGRATIONS=(
     # bằng một câu đơn giản như hỏi bảng hay cột, mà file này còn tạo bảng nên
     # đã có sẵn một mốc sạch.
     "2026-09-05-phan-quyen-theo-co-so.sql|table|staff_stores|"
+
+    # ── X24 · trường "Người được đo" trên hồ sơ khúc xạ ─────────────────────
+    #
+    # File chỉ thêm ĐÚNG MỘT cột, nên cột đó vừa là nội dung vừa là mốc.
+    "2026-09-06-nguoi-duoc-do.sql|column|customer_prescriptions|nguoi_duoc_do"
 )
 
 # ---------------------------------------------------------------------------
