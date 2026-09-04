@@ -1460,7 +1460,31 @@ class CartController extends BaseController
                 }
             }
 
-            $subtotal += VariantModel::priceOf($products[$pid], $variant)
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * PHẢI CỘNG CẢ TIỀN TRÒNG — sửa 09/09/2026
+             *
+             * Ba nơi khác cùng tính tạm tính đều cộng gói tròng: lines() (số
+             * hiện trên trang giỏ hàng), OrderController::checkout() (số hiện ở
+             * trang thanh toán) và OrderModel::place() (số ghi vào hoá đơn).
+             * Riêng hàm này bỏ — mà nó lại là hàm DUY NHẤT dùng để kiểm điều
+             * kiện "đơn tối thiểu" của mã giảm giá.
+             *
+             * Kịch bản đã dựng lại được: giỏ có gọng 1.500.000đ + gói tròng
+             * 900.000đ. Trang giỏ in "Tạm tính 2.400.000đ". Khách gõ mã yêu cầu
+             * đơn từ 2.000.000đ và nhận câu "Đơn của bạn còn thiếu 500.000đ" —
+             * in ngay cạnh con số 2.400.000đ của chính trang đó. Hai con số cãi
+             * nhau trong cùng một khung nhìn, và khách bị từ chối một mã họ đủ
+             * điều kiện dùng.
+             *
+             * Tra lại giá tròng từ bảng giá, không lấy từ phiên: cùng nguyên
+             * tắc với giá gọng ngay trên — phiên chỉ nhớ ID, không nhớ tiền.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            $lens = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
+
+            $subtotal += (VariantModel::priceOf($products[$pid], $variant)
+                          + (int) ($lens['price'] ?? 0))
                        * min($row['quantity'], self::ABS_MAX_QTY);
         }
 
