@@ -839,3 +839,42 @@
    đây. Nó đã chuyển sang bộ .csum__row / .csum__rule / .csum__grand mới —
    xem app/views/order/checkout.php. Ba lớp cũ vì thế không còn ai dùng.
    ============================================================ */
+
+/* ============================================================
+   CẢNH BÁO SAU KHI PHIÊN HẾT HẠN — Q14.2 (08/09/2026)
+
+   Q14.2 giữ giỏ hàng qua phiên hết hạn, và bắt kèm cảnh báo dòng nào vừa đổi
+   giá hoặc hết hàng. Dải này là vế thứ hai ấy.
+
+   KHÔNG dùng .cart__flash--err: đây không phải một lỗi, không ai làm sai điều
+   gì. Tô đỏ một chuyện bình thường (giá thay đổi sau một đêm) là dạy khách
+   rằng màu đỏ trên trang này không có nghĩa gì.
+   ============================================================ */
+
+.cart__notice {
+    margin: 0 0 16px;
+    padding: 12px 22px;
+    border-left: 3px solid var(--brand);
+    border-radius: var(--radius);
+    background: #f6f2ec;
+}
+
+.cart__notice-line {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--ink);
+}
+
+.cart__notice-line + .cart__notice-line { margin-top: 6px; }
+
+/* Ghi chú đổi giá ở TỪNG dòng. Tăng thì cảnh báo, giảm thì không — giảm giá là
+   tin tốt, và tô đỏ nó là nói sai chuyện vừa xảy ra. */
+.citem__pricechg {
+    margin-top: 4px;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.citem__pricechg.is-up   { color: var(--danger); }
+.citem__pricechg.is-down { color: #3d6633; }

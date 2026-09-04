@@ -85,12 +85,35 @@ class CartController extends BaseController
          */
         $picked = 0;   // số MÓN đang tick
 
+        /* Đếm hai loại thay đổi kể từ lần khách nhìn giỏ này — Q14.2. Đếm ở
+           đây chứ không để view tự lặp: dải cảnh báo đứng TRÊN danh sách, nên
+           nó phải biết con số trước khi dòng đầu tiên được vẽ. */
+        $soDoiGia  = 0;
+        $soHetHang = 0;
+
         foreach ($lines as $line) {
+            if (!empty($line['giaDoi'])) {
+                $soDoiGia++;
+            }
+
+            if (empty($line['available'])) {
+                $soHetHang++;
+            }
+
             if ($line['selected']) {
                 $subtotal += $line['lineTotal'];
                 $picked++;
             }
         }
+
+        /* CỜ DÙNG MỘT LẦN — đọc rồi xoá ngay.
+
+           AuthMiddleware cắm cờ này khi dọn một phiên hết hạn mà giỏ vẫn còn
+           hàng (Q14.2). Không xoá thì dải "phiên đã hết hạn" hiện lại ở mọi
+           lần mở giỏ về sau, và một cảnh báo hiện mãi là một cảnh báo không ai
+           đọc nữa. */
+        $quaPhien = !empty($_SESSION['gio_qua_phien']);
+        unset($_SESSION['gio_qua_phien']);
 
         $threshold   = (int) config('app.free_shipping_threshold');
         $shippingFee = ($subtotal > 0 && $subtotal < $threshold) ? (int) config('app.shipping_fee') : 0;
@@ -120,6 +143,10 @@ class CartController extends BaseController
             'maxQty'      => self::ABS_MAX_QTY,
             'success'     => flash('cart_success'),
             'error'       => flash('cart_error'),
+            // Q14.2 — giỏ giữ qua phiên hết hạn, kèm cảnh báo dòng nào vừa đổi.
+            'quaPhien'    => $quaPhien,
+            'soDoiGia'    => $soDoiGia,
+            'soHetHang'   => $soHetHang,
         ]);
     }
 
@@ -405,6 +432,25 @@ class CartController extends BaseController
             'lens_id'    => $lens['id'] ?? null,
             'lens_type'  => $lensType['id'] ?? null,
             'rx'         => $rx,
+            /*
+             * GIÁ TẠI LÚC BỎ VÀO GIỎ — Q14.2, chốt 04/09/2026.
+             *
+             * ĐỌC KỸ: đây KHÔNG phải giá dùng để tính tiền. Giỏ hàng vẫn tra
+             * lại giá thật ở mỗi lần vẽ trang (xem lines()), và nguyên tắc
+             * "phiên chỉ nhớ ID, không bao giờ nhớ tiền" vẫn nguyên vẹn — nếu
+             * cột này biến mất thì không con số nào trên hoá đơn đổi.
+             *
+             * Nó chỉ để TRẢ LỜI MỘT CÂU: giá đã đổi kể từ lúc khách bỏ vào giỏ
+             * chưa. Q14.2 giữ giỏ hàng qua phiên hết hạn, và một giỏ để qua
+             * đêm rồi thanh toán ở một mức giá khác mà không ai nói gì là cách
+             * chắc chắn nhất để mất niềm tin của khách.
+             *
+             * GÁN LẠI mỗi lần thêm, cùng nhịp với added_seq: khách vừa nhìn
+             * thấy giá hiện tại trên trang sản phẩm và vẫn bấm thêm, nên mốc
+             * so sánh phải là con số họ vừa thấy.
+             */
+            'gia_luc_them' => VariantModel::priceOf($product, $variant)
+                              + (int) ($lens['price'] ?? 0),
         ];
 
         $buyNow = ($_POST['action'] ?? '') === 'buy';
@@ -1082,6 +1128,14 @@ class CartController extends BaseController
                     'lens_id'    => $row['lens_id'] ?? null,
                     'lens_type'  => $row['lens_type'] ?? null,
                     'rx'         => $row['rx'] ?? null,
+                    /* Giá lúc bỏ vào giỏ — Q14.2. Giỏ cũ (trước 08/09/2026)
+                       không có khoá này -> null, và lines() hiểu null là
+                       "không có mốc để so", tức không cảnh báo gì. Đúng: một
+                       dòng không biết giá cũ thì không chứng minh được là giá
+                       đã đổi, và cảnh báo bừa còn tệ hơn im lặng. */
+                    'gia_luc_them' => isset($row['gia_luc_them'])
+                        ? (int) $row['gia_luc_them']
+                        : null,
                     /* Số thứ tự thêm vào — recent() sắp theo nó. PHẢI chép ra
                        đây: hàm này dựng một mảng MỚI với danh sách khoá cố
                        định, nên khoá nào quên là mất hẳn ở mọi nơi đọc giỏ
@@ -1342,6 +1396,18 @@ class CartController extends BaseController
                    là nút lại mời khách bấm vào chỗ máy chủ sẽ từ chối. */
                 'canAdd'    => $lineQty < self::ABS_MAX_QTY
                                && VariantModel::inStock($product, $variant, $lineQty + 1),
+                /* GIÁ ĐÃ ĐỔI CHƯA — Q14.2.
+
+                   `giaCu` là giá lúc khách bỏ vào giỏ, `unitPrice` ngay trên
+                   là giá thật lúc này. Chỉ so khi có mốc: giỏ cũ không mang
+                   mốc nào, và "không biết" phải khác "không đổi".
+
+                   Không tự sửa gì cả — chỉ nói ra. Tự bỏ dòng ra khỏi giỏ vì
+                   giá tăng là quyết định thay khách; tự giữ giá cũ là bán lỗ
+                   theo một con số nằm trong phiên của trình duyệt. */
+                'giaCu'     => $row['gia_luc_them'],
+                'giaDoi'    => $row['gia_luc_them'] !== null
+                               && $row['gia_luc_them'] !== $unit,
             ];
         }
 

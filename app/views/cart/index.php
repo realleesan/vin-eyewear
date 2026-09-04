@@ -50,6 +50,53 @@ $count = count($lines);
         <p class="cart__flash cart__flash--err" role="alert"><?= e($error) ?></p>
     <?php endif; ?>
 
+    <?php
+    /* ─────────────────────────────────────────────────────────────────────────
+       DẢI CẢNH BÁO SAU KHI PHIÊN HẾT HẠN — Q14.2, chốt 04/09/2026
+
+       Giỏ hàng được GIỮ LẠI khi phiên đăng nhập hết hạn. Nhưng giữ lại mà
+       không nói gì là chỗ sinh chuyện: một giỏ để qua đêm rồi thanh toán ở một
+       mức giá khác, hoặc với một món đã hết hàng, mà khách chỉ biết ở bước
+       cuối — đó là cách chắc chắn nhất để mất niềm tin.
+
+       Ba câu, không phải một, vì ba tình huống khác nhau:
+         · phiên vừa hết hạn        -> giải thích vì sao phải đăng nhập lại
+         · có dòng đổi giá          -> nói bao nhiêu dòng, chi tiết ở từng dòng
+         · có dòng hết / thiếu hàng -> như trên
+
+       Chỉ hiện khi CÓ chuyện. Một dải "mọi thứ vẫn ổn" thường trực là thứ
+       người ta thôi đọc sau lần thứ ba.
+       ───────────────────────────────────────────────────────────────────────── */
+    $canhBao = [];
+
+    if (!empty($quaPhien)) {
+        $canhBao[] = 'Phiên đăng nhập đã hết hạn nên bạn cần đăng nhập lại, '
+                   . 'nhưng giỏ hàng vẫn được giữ nguyên.';
+    }
+
+    if (!empty($soDoiGia)) {
+        $canhBao[] = sprintf(
+            '%d sản phẩm đã thay đổi giá kể từ lúc bạn thêm vào giỏ — xem ghi chú ở từng dòng.',
+            (int) $soDoiGia
+        );
+    }
+
+    if (!empty($soHetHang)) {
+        $canhBao[] = sprintf(
+            '%d sản phẩm không còn đủ tồn kho.',
+            (int) $soHetHang
+        );
+    }
+    ?>
+
+    <?php if ($canhBao !== []): ?>
+        <div class="cart__notice" role="status">
+            <?php foreach ($canhBao as $cau): ?>
+                <p class="cart__notice-line"><?= e($cau) ?></p>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
     <?php if ($lines === []): ?>
 
         <div class="cart__empty">
@@ -191,6 +238,24 @@ $count = count($lines);
                             <?php endif; ?>
 
                             <span class="citem__unit"><?= money($line['unitPrice']) ?></span>
+
+                            <?php /* GIÁ ĐÃ ĐỔI KỂ TỪ LÚC BỎ VÀO GIỎ — Q14.2.
+
+                                     In cả giá cũ chứ không chỉ nói "giá đã
+                                     thay đổi": khách cần tự thấy chênh bao
+                                     nhiêu để quyết định, và một câu cảnh báo
+                                     không kèm con số chỉ làm họ lo mà không
+                                     giúp họ chọn.
+
+                                     Giá TĂNG tô cảnh báo, giá GIẢM thì không —
+                                     giảm giá là tin tốt, tô đỏ nó là nói sai
+                                     chuyện vừa xảy ra. */ ?>
+                            <?php if (!empty($line['giaDoi'])): ?>
+                                <span class="citem__pricechg<?= $line['unitPrice'] > $line['giaCu'] ? ' is-up' : ' is-down' ?>">
+                                    <?= $line['unitPrice'] > $line['giaCu'] ? 'Giá đã tăng' : 'Giá đã giảm' ?>
+                                    — trước là <?= money((int) $line['giaCu']) ?>
+                                </span>
+                            <?php endif; ?>
 
                             <?php if (!$line['available']): ?>
                                 <span class="citem__warn">

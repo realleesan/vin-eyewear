@@ -185,6 +185,20 @@ class AuthMiddleware
                     $_SESSION['via_cookie']
                 );
                 $userId = null;
+
+                /* GIỎ HÀNG SỐNG QUA PHIÊN — Q14.2, chốt 04/09/2026.
+
+                   Nó vốn đã sống: nhánh này chỉ dọn ba ô trên, không đụng tới
+                   $_SESSION['cart']. Nhưng Q14.2 đòi thêm vế thứ hai — CẢNH
+                   BÁO dòng nào vừa đổi giá hoặc hết hàng — và trang giỏ hàng
+                   không có cách nào tự biết phiên vừa hết hạn.
+
+                   Cắm một lá cờ ở đây là chỗ DUY NHẤT biết điều đó. Cờ được
+                   trang giỏ hàng đọc rồi xoá ngay (dùng một lần), nên nó không
+                   nằm lại làm dải cảnh báo hiện mãi. */
+                if (!empty($_SESSION['cart'])) {
+                    $_SESSION['gio_qua_phien'] = true;
+                }
             }
         }
 
