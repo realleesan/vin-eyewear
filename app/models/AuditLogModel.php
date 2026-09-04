@@ -126,6 +126,89 @@ class AuditLogModel extends BaseModel
         'noi-bo'   => ['nhan' => 'Tài khoản nội bộ', 'actions' => ['staff.unlock_login', 'staff.set_stores']],
     ];
 
+    // ========================================================================
+    // GIỮ TỐI THIỂU 24 THÁNG — X28 / Q80.3, chốt 04/09/2026
+    // ========================================================================
+
+    /**
+     * Số tháng BẮT BUỘC giữ nhật ký thao tác.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ĐÂY LÀ MỘT SÀN, KHÔNG PHẢI MỘT LỊCH DỌN
+     *
+     * X28 nói "giữ TỐI THIỂU 24 tháng". Đọc nhầm thành "xoá sau 24 tháng" là
+     * đổi một cam kết bảo vệ dữ liệu thành một máy huỷ tài liệu — và với vết
+     * thao tác trên dữ liệu y tế thì cái nhầm đó không sửa lại được.
+     *
+     * Nên hệ thống KHÔNG tự xoá gì cả. Hằng số này tồn tại để:
+     *
+     *   1. donCu() từ chối xoá bất cứ dòng nào trẻ hơn nó — sàn được cưỡng chế
+     *      ở mã nguồn, không phải ở trí nhớ của người gõ lệnh;
+     *   2. màn Lịch sử thao tác nói ra chính sách cho người đọc, để không ai
+     *      phải mở SRS mới biết dữ liệu còn tới bao giờ.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public const GIU_TOI_THIEU_THANG = 24;
+
+    /** Mốc ngày mà mọi dòng CŨ HƠN nó mới được phép dọn. */
+    public static function mocGiuToiThieu(): string
+    {
+        return (new DateTimeImmutable('-' . self::GIU_TOI_THIEU_THANG . ' months'))
+            ->format('Y-m-d H:i:s');
+    }
+
+    /** Dòng cũ nhất còn trong bảng — để màn hình nói được "đang giữ từ bao giờ". */
+    public static function vetCuNhat(): ?string
+    {
+        if (!self::available()) {
+            return null;
+        }
+
+        $gia = Database::fetchValue('SELECT MIN(created_at) FROM customer_audit_logs');
+
+        return $gia !== null && $gia !== false ? (string) $gia : null;
+    }
+
+    /**
+     * Dọn nhật ký CŨ HƠN sàn 24 tháng.
+     *
+     * KHÔNG CÓ ĐƯỜNG NÀO GỌI HÀM NÀY TỰ ĐỘNG, và đó là chủ ý — không route,
+     * không nút, không tác vụ định giờ. Nó tồn tại để khi doanh nghiệp thật sự
+     * cần dọn (dung lượng hosting, hay một yêu cầu pháp lý về xoá dữ liệu),
+     * việc đó đi qua một chỗ đã cân nhắc sẵn thay vì một câu DELETE gõ tay
+     * lúc nửa đêm trên phpMyAdmin.
+     *
+     * $truocNgay chỉ được LÙI XA HƠN sàn, không bao giờ gần hơn: đó là toàn bộ
+     * lý do hàm này nhận tham số mà vẫn tự kẹp lại.
+     *
+     * @param  string|null $truocNgay 'Y-m-d H:i:s'; null = đúng sàn 24 tháng
+     * @return array{ok: bool, so_dong?: int, moc?: string, error?: string}
+     */
+    public static function donCu(?string $truocNgay = null): array
+    {
+        if (!self::available()) {
+            return ['ok' => false, 'error' => 'Bảng customer_audit_logs chưa tồn tại.'];
+        }
+
+        $san = self::mocGiuToiThieu();
+        $moc = $truocNgay !== null ? trim($truocNgay) : $san;
+
+        /* KẸP VỀ SÀN. Không trả lỗi mà lặng lẽ dùng sàn: nơi gọi xin xoá nhiều
+           hơn mức cho phép thì thứ đúng là xoá đúng mức cho phép, chứ không
+           phải không xoá gì (người gọi sẽ thử lại bằng SQL tay) và cũng không
+           phải xoá theo ý họ. */
+        if (strtotime($moc) === false || $moc > $san) {
+            $moc = $san;
+        }
+
+        $so = Database::execute(
+            'DELETE FROM customer_audit_logs WHERE created_at < :moc',
+            ['moc' => $moc]
+        );
+
+        return ['ok' => true, 'so_dong' => (int) $so, 'moc' => $moc];
+    }
+
     public static function available(): bool
     {
         return Database::tableExists(static::$table);

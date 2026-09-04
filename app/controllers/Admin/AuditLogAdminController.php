@@ -128,6 +128,17 @@ class AuditLogAdminController extends AdminController
                chỉ hiện một dải cảnh báo. Cùng cách làm với cột zalo_sent_at ở
                màn Liên hệ: một bảng thiếu không được phép làm đổ trang. */
             'coBang'     => AuditLogModel::available(),
+            /* CHÍNH SÁCH LƯU GIỮ NÓI RA TRÊN MÀN HÌNH — X28 / Q80.3.
+
+               Người mở màn này thường đang trả lời một câu hỏi có mốc thời
+               gian ("hồi tháng 3 ai sửa cái này?"), và câu trả lời phụ thuộc
+               vào việc dữ liệu tháng 3 còn hay không. Bắt họ mở SRS để biết là
+               bắt họ đoán. Hai con số, một chính sách một thực tế:
+
+                 giữ tối thiểu   cam kết — 24 tháng
+                 vết cũ nhất     thực tế đang có trong bảng */
+            'giuThang'   => AuditLogModel::GIU_TOI_THIEU_THANG,
+            'vetCuNhat'  => AuditLogModel::vetCuNhat(),
         ]);
     }
 

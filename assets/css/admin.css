@@ -4500,3 +4500,13 @@ a.astatus__save { text-decoration: none; }
     color: var(--muted);
     font-style: italic;
 }
+
+/* Dòng dẫn phụ dưới tiêu đề — chính sách lưu giữ nhật ký (X28, 08/09/2026).
+   Nhạt hơn dòng dẫn chính vì nó là bối cảnh, không phải con số người ta tới
+   để đọc; nhưng vẫn phải đọc được, vì thiếu nó thì "tìm không thấy" và "không
+   còn dữ liệu" trông giống hệt nhau. */
+.ahead__lead--muted {
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: var(--fs-caption);
+}

@@ -48,6 +48,33 @@ $dangLoc = $loc['nhom'] !== '' || $loc['action'] !== '' || $loc['actor'] !== ''
         <p class="ahead__lead">
             <?= number_format((int) $total, 0, ',', '.') ?> thao tác<?= $dangLoc ? ' khớp bộ lọc' : '' ?>
         </p>
+
+        <?php
+        /* ─────────────────────────────────────────────────────────────────────
+           CHÍNH SÁCH LƯU GIỮ, NÓI THẲNG RA — X28 / Q80.3, chốt 04/09/2026
+
+           Người mở màn này gần như luôn đang trả lời một câu hỏi CÓ MỐC THỜI
+           GIAN: "hồi tháng 3 ai sửa hồ sơ này?". Câu trả lời phụ thuộc vào
+           việc dữ liệu tháng 3 còn hay không — và nếu màn hình không nói, họ
+           sẽ tìm không thấy rồi kết luận "không ai làm gì cả", thay vì "dữ
+           liệu đó không còn".
+
+           Hai con số cạnh nhau vì chúng khác nhau: CAM KẾT (24 tháng) và THỰC
+           TẾ (vết cũ nhất đang có). Hệ thống không tự xoá gì, nên thực tế
+           thường xa hơn cam kết — và đúng cái khoảng cách ấy là thứ người đọc
+           cần thấy.
+           ───────────────────────────────────────────────────────────────────── */
+        ?>
+        <?php if ($coBang): ?>
+            <p class="ahead__lead ahead__lead--muted">
+                Chính sách: giữ tối thiểu <?= (int) $giuThang ?> tháng.
+                <?php if ($vetCuNhat !== null): ?>
+                    Hiện đang giữ từ <?= e(formatDate($vetCuNhat, 'd/m/Y')) ?>.
+                <?php else: ?>
+                    Chưa có vết nào được ghi.
+                <?php endif; ?>
+            </p>
+        <?php endif; ?>
     </div>
 
     <div class="ahead__tools">
