@@ -291,10 +291,16 @@ class AddressModel extends BaseModel
             return ['error' => 'Vui lòng nhập tên người nhận.'];
         }
 
-        // Số người nhận KHÁC số đăng nhập, nên chỉ chuẩn hoá cho gọn chứ không
-        // đòi phải là số chưa ai dùng — hai người cùng nhà dùng chung một số
-        // là chuyện bình thường.
-        $normalized = normalizePhone($phone);
+        /* Số người nhận KHÁC số đăng nhập, nên chỉ chuẩn hoá cho gọn chứ không
+           đòi phải là số chưa ai dùng — hai người cùng nhà dùng chung một số
+           là chuyện bình thường.
+
+           normalizeContactPhone() chứ KHÔNG normalizePhone(): từ 04/09/2026
+           hàm sau chỉ còn nhận di động (Quyết định Q8), vì số đăng nhập phải
+           nhận được Zalo OTP. Ô này thì không — nó để shipper gọi, và giao tới
+           văn phòng rồi để số bàn lễ tân là chuyện thường. Lý do đầy đủ ghi ở
+           đầu normalizeContactPhone() trong core/helpers.php. */
+        $normalized = normalizeContactPhone($phone);
 
         if ($normalized === null) {
             return ['error' => 'Số điện thoại người nhận không hợp lệ.'];

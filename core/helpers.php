@@ -651,7 +651,19 @@ function currentSegment(): string
  *
  * Đầu số hợp lệ (theo quy hoạch sau đợt chuyển đổi 11 -> 10 số):
  *   03, 05, 07, 08, 09  di động, tổng 10 chữ số
- *   02                  cố định, tổng 10 hoặc 11 chữ số
+ *
+ * SỐ CỐ ĐỊNH (đầu 02) KHÔNG CÒN ĐƯỢC NHẬN — BA chốt ngày 04/09/2026, câu Q8.
+ *
+ * Trước đây hàm này nhận cả 02x. Nó rộng hơn quy tắc SRS mục 3.2.1.1 (chỉ nêu
+ * 03/05/07/08/09), và cái rộng đó không vô hại: số điện thoại là kênh xác thực
+ * DUY NHẤT của tài khoản khách — Zalo OTP gửi tới đó, và đơn hàng gọi tới đó.
+ * Máy bàn không nhận được tin Zalo, nên một tài khoản đăng ký bằng số cố định
+ * là một tài khoản KHÔNG BAO GIỜ kích hoạt được, và cũng không đặt lại được
+ * mật khẩu. Nhận vào rồi chặn ở bước sau là để người ta gõ xong mới biết hỏng.
+ *
+ * Số cố định vẫn NHẬP ĐƯỢC ở những chỗ không dùng để đăng nhập — số điện thoại
+ * cửa hàng trong cấu hình, số người nhận trên đơn giao hàng — vì các chỗ đó
+ * không gọi hàm này để kiểm tính hợp lệ của một danh tính.
  */
 function normalizePhone(?string $raw): ?string
 {
@@ -685,10 +697,53 @@ function normalizePhone(?string $raw): ?string
         $digits = '0' . $digits;
     }
 
-    $isMobile   = (bool) preg_match('/^0[35789]\d{8}$/', $digits);
-    $isLandline = (bool) preg_match('/^02\d{8,9}$/', $digits);
+    // CHỈ di động. Xem khối chú thích trên về việc bỏ đầu số 02.
+    return preg_match('/^0[35789]\d{8}$/', $digits) ? $digits : null;
+}
 
-    return ($isMobile || $isLandline) ? $digits : null;
+/**
+ * Chuẩn hoá số điện thoại LIÊN HỆ — nhận cả số cố định.
+ *
+ * VÌ SAO CẦN HÀM THỨ HAI. Ngày 04/09/2026 normalizePhone() bị siết chỉ còn
+ * nhận di động (Quyết định Q8), và đó là đúng cho DANH TÍNH: số đăng nhập
+ * phải nhận được Zalo OTP. Nhưng cùng một hàm ấy còn được gọi ở chỗ hoàn toàn
+ * khác — SỐ NGƯỜI NHẬN HÀNG trong sổ địa chỉ. Số đó không đăng nhập, không
+ * nhận OTP; nó để shipper gọi. Giao hàng tới văn phòng và để lại số bàn của
+ * lễ tân là chuyện bình thường, và chặn nó đi là siết nhầm chỗ: khách mất một
+ * cách giao hàng mà chẳng đổi lấy được điều gì về bảo mật.
+ *
+ * Cùng một phép chuẩn hoá dạng (+84 -> 0, bỏ dấu cách và dấu chấm) nên hai
+ * hàm cho ra cùng một chuỗi với cùng một số di động; chỉ khác ở tập số được
+ * chấp nhận.
+ *
+ * Đầu số nhận thêm: 02 — cố định, tổng 10 hoặc 11 chữ số.
+ */
+function normalizeContactPhone(?string $raw): ?string
+{
+    if ($raw === null) {
+        return null;
+    }
+
+    // Di động thì đã xong: normalizePhone() lo trọn phần chuẩn hoá dạng.
+    if (($mobile = normalizePhone($raw)) !== null) {
+        return $mobile;
+    }
+
+    $s       = trim($raw);
+    $hasPlus = str_starts_with($s, '+');
+    $digits  = preg_replace('/\D+/', '', $s) ?? '';
+
+    if ($digits === '') {
+        return null;
+    }
+
+    if (str_starts_with($digits, '84') && !str_starts_with($digits, '840')) {
+        if ($hasPlus || strlen($digits) === 11 || strlen($digits) === 12) {
+            $digits = '0' . substr($digits, 2);
+        }
+    }
+
+    return preg_match('/^02\d{8,9}$/', $digits) ? $digits : null;
 }
 
 /**
