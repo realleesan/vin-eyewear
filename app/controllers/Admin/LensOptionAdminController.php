@@ -72,6 +72,16 @@ class LensOptionAdminController extends AdminController
             'rows'      => $rows,
             'usage'     => $usage,
             'editing'   => isset($_GET['sua']) ? LensOptionModel::findRow((string) $_GET['sua']) : null,
+            /* View đọc $canEdit từ đầu nhưng controller này chưa bao giờ truyền
+               — thiếu sót có từ ngày dựng màn, chỉ không lộ ra vì một TypeError
+               ở dòng ngay trên đã giết trang trước khi chạy tới.
+
+               Cùng mức quyền với ba đường ghi bên dưới (requireManager) và với
+               màn Giá tròng: đây là dữ liệu catalog, Quản lý cơ sở sửa được.
+               Đây CHỈ để vẽ — chặn thật vẫn nằm ở requireManager() trong từng
+               action, đúng luật hai tầng ở mục 3.A.2 của spec. */
+            'canEdit'   => UserModel::hasRole($this->userId, 'admin')
+                        || UserModel::hasRole($this->userId, 'manager'),
         ]);
     }
 
