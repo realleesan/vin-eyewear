@@ -60,6 +60,36 @@ return [
      */
     'thong_ke_tu' => env('STATS_SINCE', ''),
 
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * VAT — THUẾ SUẤT VÀ CÁCH DIỄN GIẢI GIÁ NIÊM YẾT
+     *
+     * 0 = CHƯA XUẤT HOÁ ĐƠN VAT, và đó là trạng thái hiện tại (chốt 04/09/2026).
+     * Với thuế suất 0 thì `orders`.`tax_amount` luôn bằng 0 và dòng VAT trong
+     * khối Thanh toán tự ẩn — không có nhánh riêng nào phải viết.
+     *
+     * KHÔNG CÓ MỤC "CÀI ĐẶT" TRONG KHU QUẢN TRỊ, nên hai giá trị này nằm ở đây
+     * cùng chỗ với `shipping_fee`, `deposit_rate` và `thong_ke_tu` — đúng nếp
+     * dự án đang dùng cho mọi con số nghiệp vụ chỉnh bằng tay. Dựng một màn
+     * Cài đặt chỉ để chứa hai dòng là thêm một mục menu, một bảng và một màn
+     * phân quyền nữa để trông coi.
+     *
+     * `gia_gom_thue` chỉ là MẶC ĐỊNH CHO ĐƠN MỚI. Mỗi đơn chép lại giá trị này
+     * vào cột `price_includes_tax` của chính nó tại thời điểm đặt, nên đổi ở
+     * đây KHÔNG làm hoá đơn đã phát hành đổi cách diễn giải — cùng lý lẽ với
+     * `deposit_rate`.
+     *
+     *   true   giá niêm yết ĐÃ GỒM thuế; thuế được bóc ra để in, tổng không đổi
+     *   false  thuế CỘNG THÊM lên tổng
+     *
+     * ⚠ ĐỔI SANG false TRÊN MỘT CSDL ĐANG CHẠY LÀ MỘT VIỆC CÓ HẬU QUẢ: đơn cũ
+     * có `total` không gồm thuế, đơn mới thì có, và hai nhóm không cộng chung
+     * được cho tới khi có người tính lại toàn bộ. Đọc kỹ trước khi bật.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    'thue_suat'    => (int) env('VAT_RATE', 0),
+    'gia_gom_thue' => (bool) env('PRICE_INCLUDES_TAX', true),
+
     // Phí giao hàng cố định (VND) khi khách chọn giao tận nơi thay vì nhận
     // tại cửa hàng. Đặt ở đây để đổi một chỗ, không rải rác trong checkout.
     'shipping_fee' => 30000,

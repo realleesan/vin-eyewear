@@ -1199,11 +1199,55 @@ CREATE TABLE `orders` (
     `customer_phone`   VARCHAR(32)  NOT NULL,
     `customer_email`   VARCHAR(255) NULL,
     `shipping_address` TEXT         NULL,
+    /*
+     * GIAO HÀNG THUÊ NGOÀI — hai cột ghi tay, KHÔNG nối API hãng nào.
+     *
+     * Cửa hàng đưa hàng cho hãng vận chuyển rồi nhân viên gõ lại mã vận đơn từ
+     * tờ biên nhận. Không có gì đồng bộ về, không có trạng thái nào tự đổi.
+     *
+     * `carrier` là MÃ hãng, khớp khoá trong OrderModel::DON_VI_GIAO — VARCHAR
+     * chứ không khoá ngoại tới một bảng `carriers`: thêm một hãng là sửa một
+     * dòng PHP, và một bảng ba dòng kèm màn quản trị riêng chỉ là thêm một mục
+     * menu phải trông coi. Cùng nếp với BookingModel::SERVICES.
+     */
+    `carrier`          VARCHAR(40)  NULL,
+    `tracking_code`    VARCHAR(64)  NULL,
+    /*
+     * NGÀY hẹn giao, hoặc ngày hẹn khách tới lấy. Đơn có cắt tròng luôn có mốc
+     * này — đó là lời hứa cửa hàng đưa ra ở quầy.
+     *
+     * DATE chứ không DATETIME, cùng quyết định đã áp cho `appointments`: bảng
+     * đó bỏ hẳn cột giờ ngày 2026-08-25 vì cửa hàng chốt giờ cụ thể qua điện
+     * thoại. Ghi 14:00:00 vào đây là dựng lên một lời hứa chính xác hơn lời hứa
+     * thật, và khách sẽ đọc nó đúng như thế.
+     */
+    `promised_at`      DATE         NULL,
     `delivery_method`  VARCHAR(32)  NOT NULL DEFAULT 'pickup',
     -- Cơ sở nhận hàng. CHỈ có nghĩa khi delivery_method = 'pickup'; đơn giao
     -- tận nơi để NULL. Thiếu cột này thì đơn "nhận tại cửa hàng" không nói được
     -- nhận ở đâu và nhân viên phải gọi hỏi từng đơn.
     `store_id`         CHAR(36)     NULL,
+    /*
+     * ─────────────────────────────────────────────────────────────────────
+     * `branch_id` KHÔNG PHẢI `store_id` ĐỔI TÊN — HAI CÂU HỎI KHÁC NHAU
+     *
+     *   store_id   KHÁCH TỚI LẤY Ở ĐÂU. NULL với đơn giao tận nơi, vì không
+     *              có ai tới lấy cả.
+     *   branch_id  CƠ SỞ NÀO LÀM ĐƠN NÀY — mài tròng, lắp gọng, đóng gói. Đơn
+     *              giao tận nơi VẪN có một cơ sở làm nó; đó chính là chỗ
+     *              store_id không trả lời được.
+     *
+     * Gộp hai thứ vào một cột thì mất một trong hai: hoặc không biết khách tới
+     * cơ sở nào, hoặc không biết ai làm đơn giao hàng.
+     *
+     * PHẠM VI QUYỀN CỦA NHÂN VIÊN ĐỌC CỘT NÀY (chốt 04/09/2026): họ thấy đơn
+     * cơ sở mình LÀM, kể cả đơn giao tận nơi. Xem StaffStoreModel.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    `branch_id`        CHAR(36)     NULL,
+    -- Nhân viên phụ trách đơn. SET NULL: người nghỉ việc và bị xoá tài khoản
+    -- thì đơn đã phát sinh giao dịch thật không được hỏng theo.
+    `assigned_staff_id` CHAR(36)    NULL,
     `payment_method`   VARCHAR(32)  NOT NULL DEFAULT 'cod',
     -- CÁCH trả tiền (payment_method) và VIỆC tiền đã về hay chưa
     -- (payment_status) là hai chuyện khác nhau, và cũng khác cả cột `status` bên
@@ -1242,13 +1286,39 @@ CREATE TABLE `orders` (
     `mai_bat_dau_luc`  DATETIME     NULL,
     -- SET NULL: người bấm nghỉ việc và bị xoá tài khoản thì MỐC vẫn phải còn.
     `mai_bat_dau_boi`  CHAR(36)     NULL,
+    /*
+     * HAI Ô GHI CHÚ, HAI NGƯỜI VIẾT, HAI NGƯỜI ĐỌC — đừng gộp lại.
+     *
+     *   note           chữ KHÁCH gõ lúc đặt hàng, và khách ĐỌC LẠI ĐƯỢC ở trang
+     *                  tài khoản.
+     *   internal_note  chữ nhân viên ghi cho nhau, khách không bao giờ thấy.
+     *
+     * Nhân viên ghi "khách hay đổi ý, gọi xác nhận trước khi mài" vào `note`
+     * thì chính khách sẽ đọc được câu đó.
+     */
     `note`             TEXT         NULL,
+    `internal_note`    TEXT         NULL,
     `subtotal`         BIGINT       NOT NULL DEFAULT 0,
     `shipping_fee`     BIGINT       NOT NULL DEFAULT 0,
     -- discount là SỐ TIỀN, không phải phần trăm. Phần trăm là cách TÍNH ra nó
     -- và cách tính ấy nằm ở bảng `vouchers`; hoá đơn chỉ giữ kết quả — cùng lý
     -- do với product_name/unit_price trong order_items.
     `discount`         BIGINT       NOT NULL DEFAULT 0,
+    /*
+     * VAT — 0 với mọi đơn cho tới khi có người đặt `thue_suat` trong
+     * config/app.php. Cửa hàng hiện chưa xuất hoá đơn VAT (chốt 04/09/2026).
+     *
+     * `price_includes_tax` CHÉP LẠI cấu hình tại thời điểm đặt, cùng lý lẽ với
+     * `deposit_rate` ngay dưới: cấu hình sẽ bị đổi, còn hoá đơn đã phát hành thì
+     * phải đứng yên. Đọc config lúc in hoá đơn nghĩa là ngày cửa hàng đổi cách
+     * tính thuế, MỌI hoá đơn cũ đổi cách diễn giải theo — kể cả những tờ đã đưa
+     * cho khách.
+     *
+     *   1  giá niêm yết ĐÃ GỒM thuế; thuế bóc ra để in, tổng không đổi
+     *   0  thuế CỘNG THÊM lên tổng
+     */
+    `tax_amount`       BIGINT       NOT NULL DEFAULT 0,
+    `price_includes_tax` TINYINT(1) NOT NULL DEFAULT 1,
     -- Chỉ để tra cứu "chương trình này đã dùng bao nhiêu lần". SET NULL khi
     -- chương trình bị xoá: đơn đã phát sinh không được hỏng theo.
     `voucher_id`       CHAR(36)     NULL,
@@ -1270,6 +1340,18 @@ CREATE TABLE `orders` (
      */
     `deposit_amount`   BIGINT       NOT NULL DEFAULT 0,
     `deposit_rate`     SMALLINT     NOT NULL DEFAULT 0,
+    /*
+     * LÚC THU ĐƯỢC CỌC — tách khỏi `paid_at`, và tách có lý do.
+     *
+     * `paid_at` là mốc thu ĐỦ. Một đơn cắt tròng đi qua HAI lần nhận tiền cách
+     * nhau nhiều ngày (cọc 30% để bắt đầu mài, phần còn lại lúc giao), và sổ
+     * sách cần cả hai mốc chứ không chỉ mốc cuối.
+     *
+     * Trước migration 2026-09-11 mốc này chỉ nằm ở `sepay_transactions`, tức là
+     * đơn nhận cọc bằng TIỀN MẶT tại quầy không có mốc nào cả — mà đó là cách
+     * phần lớn khách đặt cọc ở cửa hàng kính.
+     */
+    `deposit_paid_at`  DATETIME     NULL,
     `status`           VARCHAR(32)  NOT NULL DEFAULT 'new',
     `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -1281,8 +1363,16 @@ CREATE TABLE `orders` (
     KEY `idx_orders_payment` (`payment_status`),
     KEY `idx_orders_voucher` (`voucher_id`),
     KEY `idx_orders_store` (`store_id`),
+    KEY `idx_orders_branch` (`branch_id`),
+    KEY `idx_orders_assigned` (`assigned_staff_id`),
     KEY `idx_orders_mai_boi` (`mai_bat_dau_boi`),
     CONSTRAINT `fk_orders_mai_boi` FOREIGN KEY (`mai_bat_dau_boi`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL,
+    -- Đóng một cơ sở, hay xoá tài khoản một nhân viên nghỉ việc, KHÔNG được
+    -- xoá theo đơn hàng đã phát sinh giao dịch thật.
+    CONSTRAINT `fk_orders_branch` FOREIGN KEY (`branch_id`)
+        REFERENCES `stores` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_orders_assigned` FOREIGN KEY (`assigned_staff_id`)
         REFERENCES `users` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_orders_user` FOREIGN KEY (`user_id`)
         REFERENCES `users` (`id`) ON DELETE SET NULL,
@@ -1352,6 +1442,19 @@ CREATE TABLE `order_items` (
 CREATE TABLE `order_status_history` (
     `id`         CHAR(36)    NOT NULL DEFAULT (UUID()),
     `order_id`   CHAR(36)    NOT NULL,
+    /*
+     * TRẠNG THÁI TRƯỚC CÚ ĐỔI. NULL ở mốc ĐẦU TIÊN của mỗi đơn — trước nó đơn
+     * chưa tồn tại, nên đó là NULL CÓ NGHĨA, không phải dữ liệu thiếu.
+     *
+     * Suy được từ dòng liền trước, nhưng suy thì mọi nơi đọc bảng đều phải tự
+     * suy — và luật "không cho lùi từ Hoàn tất" cần biết chiều đi ngay tại dòng
+     * đó, không phải sau một lượt quét cả chuỗi.
+     *
+     * `status` là trạng thái ĐÍCH (to_status trong yêu cầu gốc); `changed_by`
+     * là người thực hiện; `ly_do` là lý do. Ba cái tên khác nhau cho cùng ba
+     * cột — đừng thêm cột mới trùng nghĩa.
+     */
+    `from_status` VARCHAR(32) NULL,
     `status`     VARCHAR(32) NOT NULL,
     `changed_by` CHAR(36)    NULL,
     /*
