@@ -170,6 +170,20 @@ MIGRATIONS=(
     # Bốn danh sách thuộc tính tròng rời config xuống CSDL để sửa được từ khu
     # quản trị. Mốc là chính bảng `lens_options` — không có gì khác tạo ra nó.
     "2026-08-30-thuoc-tinh-trong-do-quan-tri-quan-ly.sql|table|lens_options|"
+
+    # ── SNFR-06 · khoá đăng nhập 15 phút sau 5 lần sai ──────────────────────
+    #
+    # ĐÃ BỊ BỎ QUÊN Ở ĐÂY TỪ 02/09/2026. File migration được viết và commit,
+    # nhưng không ai thêm dòng này, nên script lặng lẽ bỏ qua nó ở mọi lần
+    # chạy — và cái bỏ qua đó KHÔNG gây lỗi gì mà cũng không ai thấy:
+    # LoginAttemptModel::available() thấy bảng chưa có thì cho qua mọi lượt
+    # đăng nhập, đúng như thiết kế ("một cái khoá gãy không được phép biến
+    # thành cửa đóng với cả cửa hàng"). Hệ quả là SNFR-06 coi như chưa có
+    # hiệu lực suốt hai ngày, trong khi tài liệu ghi là đã xong.
+    #
+    # Cột mốc là chính bảng đếm — chỉ file này tạo ra nó.
+    "2026-09-02-khoa-dang-nhap-sau-5-lan-sai.sql|table|login_attempts|"
+
 )
 
 # ---------------------------------------------------------------------------

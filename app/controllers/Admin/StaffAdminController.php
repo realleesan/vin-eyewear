@@ -66,9 +66,33 @@ class StaffAdminController extends AdminController
 
     public function index(): void
     {
+        $accounts = UserModel::staffAccounts();
+
+        /*
+         * CÒN BỊ KHOÁ ĐĂNG NHẬP BAO LÂU — Quyết định Q13.
+         *
+         * Tính ở controller chứ không ở view: view không nên gọi model, và
+         * quan trọng hơn là chỗ này cần biết một tài khoản có MẤY đường vào.
+         * Cổng quản trị đăng nhập bằng email, nhưng cùng con người ấy còn có
+         * thể gõ số điện thoại ở trang khách; bộ đếm khoá tách theo từng chuỗi
+         * định danh nên phải hỏi cả hai.
+         *
+         * Bảng chưa có (chưa chạy migration) thì conKhoaBatKy() trả 0 cho mọi
+         * dòng — trang vẫn hiện bình thường, chỉ là không có gì để mở khoá.
+         */
+        $khoaDangNhap = [];
+
+        foreach ($accounts as $a) {
+            $khoaDangNhap[$a['id']] = LoginAttemptModel::conKhoaBatKy([
+                $a['email'] ?? '',
+                $a['phone'] ?? '',
+            ]);
+        }
+
         $this->renderAdmin('admin/staff/index', [
             'pageTitle' => 'Tài khoản nội bộ — Quản trị',
-            'accounts'  => UserModel::staffAccounts(),
+            'accounts'  => $accounts,
+            'khoaDangNhap' => $khoaDangNhap,
             'me'        => $this->userId,
             'canReset'  => UserModel::hasRole($this->userId, 'admin'),
             /* Bản ghi đang sửa. Đọc qua staffAccounts() chứ không find() thẳng:
@@ -215,6 +239,56 @@ class StaffAdminController extends AdminController
             ? 'Đã khoá tài khoản ' . $ten
             : 'Đã mở khoá tài khoản ' . $ten);
 
+        redirect(self::BASE);
+    }
+
+    /**
+     * MỞ KHOÁ ĐĂNG NHẬP sau 5 lần nhập sai — Quyết định Q13, 04/09/2026.
+     *
+     * KHÁC HẲN toggleLock() ngay bên trên, dù hai nút nằm cạnh nhau:
+     *
+     *   toggleLock()      khoá HÀNH CHÍNH. Quản trị viên chủ động cấm một
+     *                     người vào hệ thống, không có thời hạn, ghi ở cột
+     *                     `users.locked_at`. Mở ra cũng bằng tay.
+     *   moKhoaDangNhap()  khoá KỸ THUẬT. Hệ thống tự đặt sau 5 lần sai mật
+     *                     khẩu (SNFR-06), tự hết sau 15 phút, nằm ở bảng
+     *                     `login_attempts`. Nút này chỉ để khỏi phải chờ.
+     *
+     * Gộp hai thứ vào một nút là mở nhầm: bấm "Mở khoá" cho người vừa bị cấm
+     * vì lý do kỷ luật, chỉ vì họ cũng đang gõ sai mật khẩu.
+     *
+     * requireAdmin() chứ không requireManager(): đây là đường vòng qua một
+     * biện pháp bảo mật. Người dò mật khẩu mà mở được khoá của chính mình thì
+     * cái trần 5 lần không còn nghĩa gì.
+     */
+    public function moKhoaDangNhap(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireAdmin();
+
+        $id = (string) ($_POST['id'] ?? '');
+        $ai = $this->timTaiKhoan($id);
+
+        /* timTaiKhoan() lọc qua staffAccounts(), nên một id khách hàng gửi vào
+           đây không mở được gì — cùng lối phòng thủ với ?sua= ở index(). */
+        if ($ai === null) {
+            flash('admin_error', 'Không tìm thấy tài khoản nội bộ này.');
+            redirect(self::BASE);
+        }
+
+        LoginAttemptModel::moKhoa([
+            $ai['email'] ?? '',
+            $ai['phone'] ?? '',
+        ]);
+
+        $ten = (string) ($ai['full_name'] ?? $ai['email'] ?? 'tài khoản');
+
+        /* Chủ thể của vết là TÀI KHOẢN ĐƯỢC MỞ KHOÁ, không phải người bấm:
+           người bấm đã nằm ở cột actor_id do write() tự điền. Ghi ngược lại
+           thì tra "ai đụng vào tài khoản này" sẽ không ra dòng nào. */
+        AuditLogModel::write($id, 'staff.unlock_login', 'Mở khoá đăng nhập cho ' . $ten);
+
+        flash('admin_success', 'Đã mở khoá đăng nhập cho ' . $ten . '. Họ thử lại được ngay.');
         redirect(self::BASE);
     }
 

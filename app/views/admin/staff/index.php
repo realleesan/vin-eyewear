@@ -182,6 +182,25 @@ $chuDauCua = static function (array $a): string {
                             <?php else: ?>
                                 <span class="badge badge--in_stock">Hoạt động</span>
                             <?php endif; ?>
+
+                            <?php
+                            /* KHOÁ ĐĂNG NHẬP 15 PHÚT — hiện DƯỚI trạng thái hành
+                               chính, không thay thế nó.
+
+                               Hai thứ khác hẳn nhau và có thể cùng đúng một lúc:
+                               "Hoạt động" nói tài khoản không bị cấm, còn dòng này
+                               nói ngay bây giờ họ không gõ mật khẩu vào được vì
+                               vừa sai 5 lần. Gộp làm một nhãn thì người trực quầy
+                               đọc "Hoạt động" rồi bảo đồng nghiệp "tài khoản anh
+                               bình thường mà", trong khi người kia đang đứng trước
+                               màn hình báo lỗi. */
+                            $conKhoa = (int) ($khoaDangNhap[$a['id']] ?? 0);
+                            ?>
+                            <?php if ($conKhoa > 0): ?>
+                                <span class="atable__sub" style="color:var(--danger,#9c2a1e)">
+                                    Đang khoá đăng nhập, còn <?= (int) ceil($conKhoa / 60) ?> phút
+                                </span>
+                            <?php endif; ?>
                         </td>
 
                         <td class="arow-actions">
@@ -258,6 +277,30 @@ $chuDauCua = static function (array $a): string {
                                             <button type="submit" class="arow-del">Khoá</button>
                                         <?php endif; ?>
                                     </form>
+
+                                    <?php
+                                    /* MỞ KHOÁ ĐĂNG NHẬP — chỉ hiện KHI ĐANG BỊ KHOÁ.
+
+                                       Nút này đi vòng qua một biện pháp bảo mật, nên
+                                       nó không nên nằm sẵn trên mọi dòng chờ người ta
+                                       bấm nhầm. Hết 15 phút là khoá tự tan, và lúc đó
+                                       nút biến mất — đúng như nó nên thế: việc duy
+                                       nhất nó làm là rút ngắn quãng chờ. */
+                                    ?>
+                                    <?php if ($conKhoa > 0): ?>
+                                        <?php $hoiMo = sprintf(
+                                            '%s vừa nhập sai mật khẩu 5 lần nên bị khoá đăng nhập. Mở ngay để họ thử lại?',
+                                            $tenHien
+                                        ); ?>
+                                        <form method="post" action="<?= e($base) ?>/mo-khoa-dang-nhap"
+                                              data-confirm="<?= e($hoiMo) ?>"
+                                              data-confirm-title="Mở khoá đăng nhập?"
+                                              data-confirm-ok="Mở khoá đăng nhập">
+                                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                            <input type="hidden" name="id" value="<?= e($a['id']) ?>">
+                                            <button type="submit" class="arow-btn">Mở khoá đăng nhập</button>
+                                        </form>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </td>

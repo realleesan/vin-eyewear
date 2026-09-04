@@ -404,6 +404,11 @@ return [
     'quan-tri/nhan-vien/luu'      => 'StaffAdminController@save',              // POST
     'quan-tri/nhan-vien/khoa'     => 'StaffAdminController@toggleLock',        // POST
     'quan-tri/nhan-vien/dat-lai'  => 'StaffAdminController@resetPassword',     // POST
+    /* MỞ KHOÁ ĐĂNG NHẬP sau 5 lần sai (SNFR-06) — Quyết định Q13, 04/09/2026.
+       Đường RIÊNG, không gộp vào 'nhan-vien/khoa': đó là khoá hành chính do
+       người đặt và không có hạn, còn đây là khoá kỹ thuật do hệ thống đặt và
+       tự tan sau 15 phút. Lý do đầy đủ ở StaffAdminController::moKhoaDangNhap. */
+    'quan-tri/nhan-vien/mo-khoa-dang-nhap' => 'StaffAdminController@moKhoaDangNhap', // POST
 
     // Đổi mật khẩu của CHÍNH MÌNH — mọi nhân viên đều vào được.
     'quan-tri/doi-mat-khau'       => 'AccountAdminController@index',

@@ -210,6 +210,61 @@ class LoginAttemptModel extends BaseModel
     }
 
     /**
+     * Trong danh sách định danh này, cái nào đang bị khoá thì còn bao nhiêu giây?
+     *
+     * VÌ SAO NHẬN MỘT DANH SÁCH: bộ đếm khoá theo CHUỖI ĐỊNH DANH đã băm, chứ
+     * không theo id tài khoản — đó là chủ ý, để kẻ dò gõ vào một số không tồn
+     * tại cũng bị khoá y hệt (xem khối chú thích đầu file). Hệ quả là một
+     * người có hai đường vào — số điện thoại và email — thì có HAI bộ đếm
+     * riêng, và màn quản trị muốn trả lời "tài khoản này có đang bị khoá
+     * không" thì phải hỏi cả hai.
+     *
+     * Trả về số giây LỚN NHẤT trong nhóm: người ta cần biết còn phải chờ bao
+     * lâu nữa mới vào được, mà vào được nghĩa là mọi đường đều đã mở.
+     */
+    public static function conKhoaBatKy(array $logins): int
+    {
+        $lau = 0;
+
+        foreach ($logins as $login) {
+            $login = trim((string) $login);
+
+            if ($login === '') {
+                continue;
+            }
+
+            $lau = max($lau, self::conKhoa($login));
+        }
+
+        return $lau;
+    }
+
+    /**
+     * Mở khoá ngay lập tức cho một nhóm định danh — Quyết định Q13, 04/09/2026.
+     *
+     * SNFR-06 khoá 15 phút sau 5 lần sai. Điều khoản ấy có một mặt trái mà BA
+     * đã chấp nhận có điều kiện: bộ đếm theo tài khoản nghĩa là NGƯỜI NGOÀI
+     * cũng khoá được tài khoản của nhân viên, chỉ bằng cách gõ sai năm lần.
+     * BA chọn giữ nguyên cách đếm (đơn giản, không lộ việc tài khoản có tồn
+     * tại hay không) và bù lại bằng đường mở khoá tay ngay trong khu quản trị.
+     *
+     * Dùng lại xoa() thay vì viết câu DELETE mới: xoa() đã lo phần chuẩn hoá
+     * số điện thoại trước khi băm, và đó chính là chỗ dễ sai nhất — mở khoá
+     * cho "0912 345 678" mà bộ đếm nằm ở "0912345678" thì nút bấm không làm gì
+     * cả, và không ai biết vì nó cũng không báo lỗi.
+     */
+    public static function moKhoa(array $logins): void
+    {
+        foreach ($logins as $login) {
+            $login = trim((string) $login);
+
+            if ($login !== '') {
+                self::xoa($login);
+            }
+        }
+    }
+
+    /**
      * Dọn các dòng đã hết hạn khoá và lâu không đụng tới.
      *
      * Gọi thưa thớt từ nơi ghi nhận hỏng (xem UserModel::attempt), theo đúng
