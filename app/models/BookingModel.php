@@ -482,6 +482,21 @@ class BookingModel extends BaseModel
             return ['ok' => false, 'error' => 'Vui lòng chọn một ngày hẹn từ ngày mai trở đi.'];
         }
 
+        /* TRẦN ĐẶT TRƯỚC — X16. Bổ sung 09/09/2026.
+
+           create() và rescheduleAdmin() đã áp trần này từ 08/09, nhưng đường
+           KHÁCH TỰ ĐỔI thì không — đúng cái đường vòng mà chú thích ở
+           DAT_TRUOC_TOI_DA đã cảnh báo: đặt lịch ngày mai (qua được trần) rồi
+           dời sang hai tháng sau (không ai chặn).
+
+           Không phải chuyện lý thuyết: ô chọn ngày trong form đổi lịch của
+           khách còn để max = +60 ngày, tức giao diện chủ động mời họ làm việc
+           đó. Ô ấy đã sửa cùng lần này. */
+        if ($date > date('Y-m-d', strtotime('+' . self::DAT_TRUOC_TOI_DA . ' days'))) {
+            return ['ok' => false, 'error' =>
+                'Chỉ đổi được sang ngày trong vòng ' . self::DAT_TRUOC_TOI_DA . ' ngày tới.'];
+        }
+
         try {
             $changed = Database::execute(
                 "UPDATE appointments

@@ -35,10 +35,17 @@
  * tổng đài. Để min là hôm nay thì trình duyệt cho chọn một ngày mà máy chủ
  * chắc chắn từ chối.
  *
- * Cận trên giữ nguyên ý cũ — nhận lịch xa hơn hai tháng thì cửa hàng không giữ
- * nổi cam kết. */
+ * CẬN TRÊN LẤY TỪ BookingModel::DAT_TRUOC_TOI_DA — sửa 09/09/2026.
+ *
+ * Trước đó ô này để cứng +60 ngày, trong khi X16 chốt trần đặt trước là 30
+ * ngày. Hai con số lệch nhau nghĩa là trình duyệt mời khách chọn một ngày mà
+ * máy chủ sẽ từ chối — và tệ hơn, cho tới cùng lần sửa này thì máy chủ KHÔNG
+ * từ chối ở đường đổi lịch, nên +60 ngày thật sự lọt.
+ *
+ * Đọc từ hằng số chứ không gõ lại 30: một con số nghiệp vụ nằm ở hai chỗ là
+ * hai chỗ phải nhớ sửa cùng lúc, mà chỗ trong view thì không ai đọc lại. */
 $minDate = date('Y-m-d', strtotime('+1 day'));
-$maxDate = date('Y-m-d', strtotime('+60 days'));
+$maxDate = date('Y-m-d', strtotime('+' . BookingModel::DAT_TRUOC_TOI_DA . ' days'));
 ?>
 
 <div class="acct-resched" id="doi-<?= e($appointment['code']) ?>">
