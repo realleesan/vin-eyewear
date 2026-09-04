@@ -364,7 +364,8 @@ class OrderAdminController extends AdminController
             $this->bad('Trạng thái không hợp lệ.', $back);
         }
 
-        $truoc = [];
+        $truoc  = [];
+        $boQua  = 0;
 
         foreach ($ids as $id) {
             $order = OrderModel::find($id);
@@ -375,12 +376,53 @@ class OrderAdminController extends AdminController
                 continue;
             }
 
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * ĐƠN ĐÃ HUỶ KHÔNG MỞ LẠI ĐƯỢC BẰNG THAO TÁC HÀNG LOẠT — Q3.1
+             *
+             * Bổ sung 09/09/2026. updateStatus() (đường đơn lẻ) kiểm rất kỹ:
+             * chỉ Quản trị viên, và bắt buộc lý do tối thiểu 10 ký tự. Đường
+             * hàng loạt này thì không kiểm gì — nên tick 20 đơn ở viên lọc "Đã
+             * huỷ" rồi chọn "Đang chuẩn bị" là mở lại cả 20 đơn, KHÔNG cần
+             * quyền quản trị và KHÔNG một dòng lý do nào.
+             *
+             * Hậu quả không chỉ là sổ sách: changeStatus() chạy nhánh mở-huỷ
+             * và TRỪ LẠI TỒN KHO cho từng đơn (xem khối chú thích ở đó), nên
+             * một cú bấm nhầm dời kho đi 20 lần.
+             *
+             * BỎ QUA chứ không từ chối cả lô: người bấm gần như luôn đang định
+             * xử lý những đơn CHƯA huỷ, và phạt cả 20 vì 2 đơn lẫn vào là bắt
+             * họ làm lại từ đầu. Đơn đã huỷ có đường riêng — mở từng đơn kèm
+             * lý do — và câu báo dưới đây chỉ thẳng tới đó.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            if ((string) $order['status'] === 'cancelled' && $status !== 'cancelled') {
+                $boQua++;
+                continue;
+            }
+
             OrderModel::changeStatus($id, $status, AuthMiddleware::staffId());
             $truoc[$id] = (string) $order['status'];
         }
 
+        if ($boQua > 0) {
+            /* Nói ra NGAY CẢ KHI phần còn lại thành công. Im lặng làm 18 trên
+               20 đơn rồi báo thành công là để người dùng tin rằng cả 20 đã
+               xong — và hai đơn kia nằm lại mà không ai biết. */
+            flash('admin_error', sprintf(
+                'Bỏ qua %d đơn ĐÃ HUỶ. Mở lại đơn đã huỷ phải làm từng đơn, '
+                . 'do Quản trị viên và kèm lý do (Q3.1).',
+                $boQua
+            ));
+        }
+
         if ($truoc === []) {
-            $this->bad('Không tìm thấy đơn hàng.', $back);
+            $this->bad(
+                $boQua > 0
+                    ? 'Tất cả đơn đã chọn đều ở trạng thái Đã huỷ — xem hướng dẫn ở trên.'
+                    : 'Không tìm thấy đơn hàng.',
+                $back
+            );
         }
 
         $this->ghiHoanTac($truoc, $status);
