@@ -126,7 +126,51 @@ $oAn = static function () use ($q, $coSo, $status, $page): string {
                 <?php foreach ($appointments as $a): ?>
                     <tr>
                         <td><code><?= e($a['code']) ?></code></td>
-                        <td><?= e(formatDate($a['appointment_date'])) ?></td>
+                        <td>
+                            <?= e(formatDate($a['appointment_date'])) ?>
+
+                            <?php
+                            /* ─────────────────────────────────────────────────
+                               DỜI NGÀY NGAY TẠI Ô NGÀY — X19, chốt 04/09/2026
+
+                               Ô chọn ngày nằm ngay dưới con số nó sẽ thay, chứ
+                               không nằm trong cột thao tác cuối bảng: người
+                               đang nghe khách xin dời lịch đọc ngày cũ và gõ
+                               ngày mới trong cùng một chỗ mắt đang nhìn.
+
+                               KHÔNG tự gửi khi chọn (khác ô trạng thái ngay
+                               bên): trượt tay trên một ô ngày là dời buổi hẹn
+                               của khách sang một ngày ngẫu nhiên. Phải bấm
+                               "Dời".
+
+                               Ẩn với lịch ĐÃ HUỶ và ĐÃ HOÀN TẤT — cùng lý lẽ
+                               với nút Huỷ ở cột bên. Máy chủ vẫn kiểm lại
+                               (BookingModel::rescheduleAdmin). */
+                            $doiDuoc = !in_array($a['status'], ['cancelled', 'done'], true);
+                            ?>
+                            <?php if ($doiDuoc): ?>
+                                <form method="post" action="/quan-tri/lich-hen/doi-ngay" class="alhdoi">
+                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                    <input type="hidden" name="id" value="<?= e($a['id']) ?>">
+                                    <?= $oAn() ?>
+                                    <label class="sr-only" for="ng-<?= e($a['id']) ?>">
+                                        Dời ngày lịch <?= e($a['code']) ?>
+                                    </label>
+                                    <?php /* min = HÔM NAY, không phải ngày mai: khách gọi
+                                             buổi sáng xin dời xuống buổi chiều là chuyện
+                                             thường ở quầy, và đường của nhân viên tồn tại
+                                             chính là để làm được thứ khách không tự làm
+                                             được nữa. max theo X16 — trần đặt trước 30
+                                             ngày, áp cho cả dời lịch. */ ?>
+                                    <input class="alhdoi__in" type="date" id="ng-<?= e($a['id']) ?>"
+                                           name="appointment_date" required
+                                           value="<?= e($a['appointment_date']) ?>"
+                                           min="<?= e(date('Y-m-d')) ?>"
+                                           max="<?= e(date('Y-m-d', strtotime('+' . BookingModel::DAT_TRUOC_TOI_DA . ' days'))) ?>">
+                                    <button type="submit" class="alhdoi__btn">Dời</button>
+                                </form>
+                            <?php endif; ?>
+                        </td>
 
                         <td><?= e($a['store_name']) ?></td>
                         <td>

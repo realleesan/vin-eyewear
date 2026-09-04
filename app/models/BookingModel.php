@@ -506,6 +506,152 @@ class BookingModel extends BaseModel
         return ['ok' => true];
     }
 
+    // ========================================================================
+    // ĐƯỜNG CỦA NHÂN VIÊN — X19, chốt 04/09/2026
+    // ========================================================================
+
+    /**
+     * Lịch hẹn này có nằm trong PHẠM VI CƠ SỞ của người đang thao tác không.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * PHẠM VI PHẢI CHẶN CẢ ĐƯỜNG GHI, KHÔNG CHỈ ĐƯỜNG ĐỌC
+     *
+     * Đợt phân quyền 05/09 lọc DANH SÁCH theo cơ sở, nhưng ba thao tác ghi
+     * (đổi trạng thái, huỷ, và nay là đổi ngày) chỉ hỏi `exists(['id' => …])`
+     * — tức là một cú POST mang id của lịch bên cơ sở khác vẫn đi lọt.
+     *
+     * Không phải chuyện lý thuyết: id lịch hẹn hiện trong HTML của chính trang
+     * đó, và một người từng được gán cơ sở khác rồi bị gỡ vẫn còn id trong tab
+     * đang mở. Lọc danh sách mà không chặn ghi là khoá cửa trước rồi để ngỏ
+     * cửa sau.
+     *
+     * @param string[]|null $phamVi kết quả StaffStoreModel::phamVi()
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public static function trongPhamVi(string $id, ?array $phamVi): bool
+    {
+        $coSo = Database::fetchValue(
+            'SELECT store_id FROM appointments WHERE id = :id',
+            ['id' => $id]
+        );
+
+        if ($coSo === null || $coSo === false) {
+            return false;   // không có lịch nào mang id đó
+        }
+
+        // Không giới hạn (Quản trị viên) thì mọi lịch đều trong phạm vi.
+        if ($phamVi === null) {
+            return true;
+        }
+
+        return in_array((string) $coSo, $phamVi, true);
+    }
+
+    /**
+     * Id CHỦ TÀI KHOẢN của một lịch, hoặc null với khách vãng lai.
+     *
+     * Vết thao tác cần nó để dòng vết gắn được vào đúng khách. Khách vãng lai
+     * (X17: đặt lịch không cần đăng nhập) thì không có tài khoản nào để gắn —
+     * cột `user_id` của bảng vết cho NULL đúng vì thế.
+     */
+    public static function chuLich(string $id): ?string
+    {
+        $uid = Database::fetchValue(
+            'SELECT user_id FROM appointments WHERE id = :id',
+            ['id' => $id]
+        );
+
+        return ($uid === null || $uid === false || $uid === '') ? null : (string) $uid;
+    }
+
+    /**
+     * NHÂN VIÊN đổi NGÀY của một lịch hẹn — X19.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CHỈ NGÀY. Đổi cơ sở hoặc đổi dịch vụ thì HUỶ RỒI ĐẶT LẠI — X19 nói rõ.
+     * Không phải để làm khó: đổi cơ sở là đổi cả người phục vụ, thiết bị và
+     * lịch làm việc của một nơi khác, còn mã lịch thì giữ nguyên — nhìn vào sổ
+     * sẽ thấy một lịch "vẫn thế" mà thực chất đã thành một buổi hẹn khác hẳn.
+     *
+     * KHÁC ĐƯỜNG CỦA KHÁCH Ở ĐÚNG MỘT ĐIỂM, VÀ ĐÓ LÀ ĐIỂM QUAN TRỌNG NHẤT:
+     *
+     * rescheduleOwned() chặn khách đổi khi đã tới ngày hẹn, và câu báo lỗi
+     * bảo họ "gọi tổng đài để đổi hoặc huỷ". Tổng đài chính là người dùng hàm
+     * NÀY. Áp lại cùng cái hạn ấy lên nhân viên thì lối thoát mà hệ thống vừa
+     * hứa với khách không tồn tại — nhân viên nhấc máy lên và không làm được
+     * đúng việc khách vừa được bảo là gọi để làm.
+     *
+     * Nên nhân viên đổi được cả sang HÔM NAY (khách gọi buổi sáng xin dời
+     * xuống buổi chiều là chuyện thường ở quầy). Chỉ ngày ĐÃ QUA là không —
+     * ghi một buổi hẹn vào quá khứ không mô tả việc gì có thật.
+     *
+     * KHÔNG ĐẶT LẠI VỀ 'pending' như đường của khách. Khách đổi ngày thì cửa
+     * hàng phải gọi xác nhận lại nên lịch lùi về chờ; còn ở đây chính nhân
+     * viên đang nói chuyện với khách là người đổi, nên trạng thái giữ nguyên.
+     * Bắt họ xác nhận lại thứ mình vừa tự tay chốt là một bước thừa.
+     *
+     * @return array{ok: bool, error?: string, truoc?: string}
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public static function rescheduleAdmin(string $id, string $date): array
+    {
+        $lich = self::find($id);
+
+        if ($lich === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy lịch hẹn.'];
+        }
+
+        $trangThai = (string) ($lich['status'] ?? '');
+
+        /* Lịch ĐÃ HUỶ hoặc ĐÃ HOÀN TẤT thì không dời. Đã hoàn tất nghĩa là
+           khách đã tới và đã được phục vụ — dời nó sang ngày khác là viết lại
+           một việc đã xảy ra. Đã huỷ thì đặt lại là đúng, không phải dời. */
+        if ($trangThai === 'cancelled') {
+            return ['ok' => false, 'error' =>
+                'Lịch này đã huỷ. Tạo lịch mới thay vì dời lịch đã huỷ.'];
+        }
+
+        if ($trangThai === 'done') {
+            return ['ok' => false, 'error' => 'Lịch này đã hoàn tất, không dời được.'];
+        }
+
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            return ['ok' => false, 'error' => 'Ngày hẹn không hợp lệ.'];
+        }
+
+        if ($date < date('Y-m-d')) {
+            return ['ok' => false, 'error' => 'Không thể hẹn vào một ngày đã qua.'];
+        }
+
+        $truoc = (string) ($lich['appointment_date'] ?? '');
+
+        if ($date === $truoc) {
+            return ['ok' => false, 'error' => 'Ngày mới trùng với ngày hẹn hiện tại.'];
+        }
+
+        /* TRẦN ĐẶT TRƯỚC 30 NGÀY — X16, áp cho cả đường này.
+
+           create() đã có luật ấy cho lịch mới. Không áp ở đây thì đổi ngày trở
+           thành đường vòng qua nó: tạo lịch ngày mai rồi dời sang năm sau. */
+        if ($date > date('Y-m-d', strtotime('+' . self::DAT_TRUOC_TOI_DA . ' days'))) {
+            return ['ok' => false, 'error' =>
+                'Chỉ dời được trong vòng ' . self::DAT_TRUOC_TOI_DA . ' ngày tới.'];
+        }
+
+        $doi = Database::execute(
+            "UPDATE appointments SET appointment_date = :date
+              WHERE id = :id AND status IN ('pending', 'confirmed')",
+            ['date' => $date, 'id' => $id]
+        );
+
+        if ($doi === 0) {
+            return ['ok' => false, 'error' =>
+                'Lịch hẹn vừa được cập nhật ở nơi khác, vui lòng tải lại trang.'];
+        }
+
+        return ['ok' => true, 'truoc' => $truoc];
+    }
+
     /**
      * Danh sách cho khu quản trị, kèm tên cơ sở.
      */

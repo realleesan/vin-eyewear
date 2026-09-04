@@ -273,6 +273,12 @@ return [
        huỷ là ngã rẽ ra khỏi vòng đời chứ không phải một bước tiến tới, và ô
        chọn thì tự gửi form nên trượt tay một nấc là mất buổi hẹn của khách.
        Lý do đầy đủ ở AppointmentAdminController::cancel(). */
+    /* Dời NGÀY một lịch hẹn — X19. Đường riêng chứ không gộp vào trang-thai:
+       ngày và trạng thái là hai trục khác nhau, và đây là đường DUY NHẤT dời
+       được lịch sau khi khách đã quá hạn tự đổi (họ được bảo "gọi tổng đài",
+       tổng đài chính là người bấm nút này). Chỉ ngày; đổi cơ sở hoặc dịch vụ
+       thì huỷ rồi đặt lại. */
+    'quan-tri/lich-hen/doi-ngay'  => 'AppointmentAdminController@reschedule',   // POST
     'quan-tri/lich-hen/huy'       => 'AppointmentAdminController@cancel',       // POST
 
     'quan-tri/lien-he'            => 'ContactAdminController@index',

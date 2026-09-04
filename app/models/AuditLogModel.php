@@ -97,6 +97,16 @@ class AuditLogModel extends BaseModel
            nó quyết định người đó nhìn thấy dữ liệu của cơ sở nào. Q80.1 xếp
            thay đổi phân quyền vào nhóm bắt buộc ghi vết. */
         'staff.set_stores'   => 'Gán cơ sở cho tài khoản nội bộ',
+
+        /* LỊCH HẸN — thêm 08/09/2026 cùng lúc mở đường cho nhân viên đổi ngày
+           (X19). Trước đó ba thao tác trên lịch hẹn không để lại vết nào, kể
+           cả huỷ — mà huỷ lịch là thao tác duy nhất ở màn đó có người thứ ba,
+           là khách hàng, chịu hậu quả. Khách gọi hỏi "sao lịch của tôi bị đổi
+           ngày" mà không có dòng nào trả lời được là chuyện đã có thể xảy ra
+           suốt từ đầu. */
+        'booking.status'     => 'Đổi trạng thái lịch hẹn',
+        'booking.reschedule' => 'Dời ngày lịch hẹn',
+        'booking.cancel'     => 'Huỷ lịch hẹn',
     ];
 
     /**
@@ -123,6 +133,9 @@ class AuditLogModel extends BaseModel
             'order.lens_start', 'order.lens_undo',
         ]],
         'kho'      => ['nhan' => 'Tồn kho', 'actions' => ['stock.adjust']],
+        'lich-hen' => ['nhan' => 'Lịch hẹn', 'actions' => [
+            'booking.status', 'booking.reschedule', 'booking.cancel',
+        ]],
         'noi-bo'   => ['nhan' => 'Tài khoản nội bộ', 'actions' => ['staff.unlock_login', 'staff.set_stores']],
     ];
 

@@ -4510,3 +4510,53 @@ a.astatus__save { text-decoration: none; }
     color: var(--muted);
     font-size: var(--fs-caption);
 }
+
+/* ---------------------------------------------------------------------------
+   DỜI NGÀY LỊCH HẸN — X19 (08/09/2026)
+
+   Nằm ngay dưới ngày hẹn, trong cùng một ô bảng: người đang nghe khách xin dời
+   lịch đọc ngày cũ và gõ ngày mới ở đúng chỗ mắt đang nhìn, không phải chạy
+   sang cột thao tác cuối bảng rồi quay lại đối chiếu.
+
+   Nhỏ và nhạt hơn hẳn con số ngày phía trên — đây là công cụ, còn ngày hẹn mới
+   là dữ liệu người ta tới bảng này để đọc.
+   --------------------------------------------------------------------------- */
+
+.alhdoi {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.alhdoi__in {
+    width: 130px;
+    height: 28px;
+    padding: 0 6px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    color: var(--ink);
+}
+
+.alhdoi__in:focus { outline: none; border-color: var(--brand); }
+
+/* Nút viền, không phải nút đặc: dời lịch của khách không phải thao tác thường
+   ngày và không nên mời gọi bằng một mảng màu — cùng lối với .aomai__undo. */
+.alhdoi__btn {
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.alhdoi__btn:hover { border-color: var(--brand); color: var(--brand); }

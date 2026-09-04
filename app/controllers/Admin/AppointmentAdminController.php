@@ -158,12 +158,17 @@ class AppointmentAdminController extends AdminController
             redirect($ve);
         }
 
-        if (!BookingModel::exists(['id' => $id])) {
-            flash('admin_error', 'Không tìm thấy lịch hẹn.');
-            redirect($ve);
+        if (!$this->trongPhamVi($id, $ve)) {
+            return;
         }
 
         BookingModel::update($id, ['status' => $status]);
+
+        AuditLogModel::write(
+            BookingModel::chuLich($id),
+            'booking.status',
+            'Đổi trạng thái lịch hẹn sang ' . (BookingModel::STATUSES[$status] ?? $status)
+        );
 
         /* Không còn khung giờ nào để "trả lại": cửa hàng đã bỏ giới hạn số
            người trên một khung — xem khối chú thích đầu BookingModel.
@@ -199,14 +204,98 @@ class AppointmentAdminController extends AdminController
 
         $id = (string) ($_POST['id'] ?? '');
 
-        if (!BookingModel::exists(['id' => $id])) {
-            flash('admin_error', 'Không tìm thấy lịch hẹn.');
-            redirect($ve);
+        if (!$this->trongPhamVi($id, $ve)) {
+            return;
         }
+
+        $chu = BookingModel::chuLich($id);
 
         BookingModel::update($id, ['status' => 'cancelled']);
 
+        AuditLogModel::write($chu, 'booking.cancel', 'Huỷ lịch hẹn');
+
         flash('admin_success', 'Đã huỷ lịch hẹn.');
+        redirect($ve);
+    }
+
+    /**
+     * ĐỔI NGÀY một lịch hẹn (POST /quan-tri/lich-hen/doi-ngay) — X19.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO ĐƯỜNG NÀY PHẢI TỒN TẠI
+     *
+     * Khách tự đổi được ngày, nhưng chỉ tới HẾT NGÀY HÔM TRƯỚC ngày hẹn — quá
+     * hạn thì hệ thống bảo họ "gọi tổng đài để đổi hoặc huỷ". Tổng đài chính
+     * là người ngồi ở màn hình này. Cho tới 08/09/2026 họ không có nút nào để
+     * làm đúng cái việc khách vừa được bảo là gọi để làm; cách duy nhất là huỷ
+     * rồi tạo lại, tức là mất mã lịch, mất ghi chú của khách và mất luôn dấu
+     * vết rằng đây là cùng một buổi hẹn được dời.
+     *
+     * CHỈ NGÀY. Đổi cơ sở hoặc dịch vụ thì huỷ rồi đặt lại — X19 nói rõ, và
+     * BookingModel::rescheduleAdmin() giải thích vì sao.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function reschedule(): void
+    {
+        $ve = $this->veDanhSach();
+
+        $this->requirePost($ve);
+
+        $id = (string) ($_POST['id'] ?? '');
+
+        if (!$this->trongPhamVi($id, $ve)) {
+            return;
+        }
+
+        $ket = BookingModel::rescheduleAdmin($id, trim((string) ($_POST['appointment_date'] ?? '')));
+
+        if (!$ket['ok']) {
+            flash('admin_error', $ket['error']);
+            redirect($ve);
+        }
+
+        $lich = BookingModel::find($id);
+
+        AuditLogModel::write(
+            $lich['user_id'] ?? null,
+            'booking.reschedule',
+            sprintf(
+                'Dời lịch hẹn %s: %s -> %s',
+                (string) ($lich['code'] ?? $id),
+                formatDate($ket['truoc']),
+                formatDate((string) ($lich['appointment_date'] ?? ''))
+            )
+        );
+
+        /* BÁO CHO KHÁCH — cùng lý lẽ với đường khách tự đổi: tin Zalo cũ nay
+           ghi sai ngày, và một tin sai còn tệ hơn không có tin nào. Lịch tạo ở
+           quầy cho khách vãng lai vẫn có số điện thoại nên vẫn gửi được. */
+        if ($lich !== null) {
+            Zalo::appointment($lich, 'rescheduled');
+        }
+
+        flash('admin_success', 'Đã dời lịch hẹn sang ngày mới.');
+        redirect($ve);
+    }
+
+    /**
+     * Chặn thao tác ghi lên lịch hẹn NGOÀI phạm vi cơ sở của người bấm.
+     *
+     * Gộp cả phép kiểm tồn tại vào đây và trả về false thay vì ném: ba action
+     * đều cần đúng một câu hỏi, và ba chỗ tự hỏi là ba cơ hội quên — mà cái
+     * quên đó không gây lỗi, nó chỉ lặng lẽ cho người ta sửa dữ liệu của cơ sở
+     * khác. Xem BookingModel::trongPhamVi().
+     *
+     * MỘT CÂU BÁO CHO CẢ HAI TRƯỜNG HỢP (không tồn tại · ngoài phạm vi): trả
+     * lời khác nhau là nói cho người dò biết id nào có thật.
+     */
+    private function trongPhamVi(string $id, string $ve): bool
+    {
+        if ($id !== '' && BookingModel::trongPhamVi($id, $this->phamViCoSo())) {
+            return true;
+        }
+
+        flash('admin_error', 'Không tìm thấy lịch hẹn trong phạm vi cơ sở của bạn.');
         redirect($ve);
     }
 
