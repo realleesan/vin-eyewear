@@ -220,11 +220,16 @@ MIGRATIONS=(
     # AddressModel::coTruongQ751() hỏi để biết CSDL đã nâng cấp chưa.
     "2026-09-08-so-dia-chi-va-xac-thuc-sdt.sql|column|addresses|ghi_chu"
 
-    # ── X13 · đối soát tay tiền về, quy trình hai bước ──────────────────────
+    # ── GỠ X13 · đối soát hai bước bị bỏ khỏi sản phẩm ──────────────────────
     #
-    # Cột mốc là `sepay_transactions.gan_boi` — cột đầu tiên file này thêm, và
-    # là thứ SepayModel::coHaiBuoc() hỏi để biết CSDL đã nâng cấp chưa.
-    "2026-09-09-giao-dich-chua-khop.sql|column|sepay_transactions|gan_boi"
+    # File ĐI NGƯỢC: nó BỎ sáu cột chứ không thêm gì, nên không có thứ nào để
+    # làm cột mốc — mốc kiểu `column` sẽ báo "chưa chạy" mãi mãi sau khi đã
+    # chạy xong, vì cột thì đã biến mất.
+    #
+    # Loại `data` giao toàn bộ quyết định cho sổ ghi, và điều đó an toàn ở đây
+    # vì mỗi bước trong file đều hỏi information_schema trước: chạy lần hai chỉ
+    # in ra "khong co, bo qua".
+    "2026-09-10-go-doi-soat-hai-buoc.sql|data||"
 )
 
 # ---------------------------------------------------------------------------

@@ -264,16 +264,6 @@ return [
     // do) và quá cửa sổ (Quản lý cơ sở, bắt buộc lý do). Q2.2.
     'quan-tri/don-hang/huy-mai'   => 'OrderAdminController@undoLens',           // POST
 
-    /* ĐỐI SOÁT TAY TIỀN VỀ — X13. Ba đường cho hai bước:
-       gan (nhân viên) -> xac-nhan HOẶC tu-choi (người KHÁC duyệt).
-       Tách ba route chứ không gộp bằng một trường `act`: ba thao tác này có ba
-       hệ quả khác hẳn nhau lên tiền, và gộp lại là để ngỏ khả năng một chỗ
-       quên phân nhánh rồi cộng tiền vào đơn mà không ai duyệt. */
-    'quan-tri/giao-dich'          => 'SepayAdminController@index',
-    'quan-tri/giao-dich/gan'      => 'SepayAdminController@assign',            // POST
-    'quan-tri/giao-dich/xac-nhan' => 'SepayAdminController@confirm',           // POST
-    'quan-tri/giao-dich/tu-choi'  => 'SepayAdminController@reject',            // POST
-
     'quan-tri/lich-hen'           => 'AppointmentAdminController@index',
     'quan-tri/lich-hen/trang-thai'=> 'AppointmentAdminController@updateStatus', // POST
     // Khách gọi điện đặt, hoặc đang đứng ở quầy hẹn hôm sau quay lại — hai

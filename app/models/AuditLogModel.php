@@ -107,16 +107,6 @@ class AuditLogModel extends BaseModel
         'booking.status'     => 'Đổi trạng thái lịch hẹn',
         'booking.reschedule' => 'Dời ngày lịch hẹn',
         'booking.cancel'     => 'Huỷ lịch hẹn',
-
-        /* ĐỐI SOÁT TAY TIỀN VỀ — X13, thêm 09/09/2026.
-
-           Ba mã cho hai bước, và chúng phải TÁCH RIÊNG nhau: gán là một đề
-           xuất, xác nhận là lúc tiền thật sự vào đơn, từ chối là bác đề xuất.
-           Gộp thành một mã 'sepay.reconcile' thì đúng cái câu hỏi mà kiểm toán
-           sẽ hỏi — "ai duyệt khoản này" — lại không lọc ra được. */
-        'sepay.assign'       => 'Gán giao dịch vào đơn (bước 1)',
-        'sepay.confirm'      => 'Xác nhận gán giao dịch (bước 2)',
-        'sepay.reject'       => 'Từ chối gán giao dịch',
     ];
 
     /**
@@ -141,7 +131,6 @@ class AuditLogModel extends BaseModel
         'tien'     => ['nhan' => 'Đơn hàng và tiền', 'actions' => [
             'payment.paid', 'payment.unpaid', 'payment.deposit', 'order.status', 'order.cancel',
             'order.lens_start', 'order.lens_undo',
-            'sepay.assign', 'sepay.confirm', 'sepay.reject',
         ]],
         'kho'      => ['nhan' => 'Tồn kho', 'actions' => ['stock.adjust']],
         'lich-hen' => ['nhan' => 'Lịch hẹn', 'actions' => [

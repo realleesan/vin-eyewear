@@ -51,10 +51,6 @@ $navGroups = [
          'badge' => $pendingOrders],
         ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',
          'badge' => $pendingAppointments],
-        /* GIAO DỊCH CHƯA KHỚP — X13. Ngay dưới Đơn hàng và Lịch hẹn vì nó là
-           hàng chờ có người đợi ở đầu bên kia đúng nghĩa nhất: khách đã CHUYỂN
-           TIỀN THẬT mà đơn vẫn ghi chưa thanh toán. Mục này chỉ hiện với Quản
-           lý cơ sở trở lên — xem khối gán quyền ở cuối phần điều hướng. */
         ['url' => '/quan-tri/lien-he',  'label' => 'Liên hệ', 'badge' => $pendingContacts],
         /* KHÔNG ĐEO HUY HIỆU — đúng luật đã ghi ở khối trên: huy hiệu chỉ dành
            cho hàng chờ có NGƯỜI ĐANG ĐỢI ở đầu bên kia. Có bao nhiêu khách
@@ -106,25 +102,6 @@ $navGroups = [
  * Muốn dùng lại: thêm một dòng vào nhóm "Sản phẩm" ở trên, không phải dựng
  * lại gì cả.
  */
-
-/*
- * MỤC "GIAO DỊCH CHƯA KHỚP" — QUẢN LÝ CƠ SỞ TRỞ LÊN (X13).
- *
- * KHÁC hai mục 'admin' bên dưới ở một điểm quan trọng: hai mục kia giấu đi
- * cho gọn mắt, còn mục này thì SepayAdminController CHẶN THẬT bằng
- * requireManager(). Nên ẩn ở đây không phải để bảo mật — nó chỉ tránh bày một
- * cánh cửa khoá trước mặt nhân viên mỗi ngày.
- *
- * Chèn NGAY SAU "Lịch hẹn", tức vị trí thứ ba trong nhóm Vận hành: ba mục đầu
- * của nhóm này đều là hàng chờ có người thật đang đợi, và người mở khu quản
- * trị buổi sáng đọc chúng lần lượt từ trên xuống.
- */
-if (array_intersect($adminRoles, ['admin', 'manager']) !== []) {
-    array_splice($navGroups[0]['items'], 3, 0, [
-        ['url' => '/quan-tri/giao-dich', 'label' => 'Giao dịch chưa khớp',
-         'badge' => $pendingSepay],
-    ]);
-}
 
 /*
  * MỤC "TÀI KHOẢN NỘI BỘ" CHỈ HIỆN VỚI VAI TRÒ 'admin'.
