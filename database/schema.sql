@@ -1481,7 +1481,35 @@ CREATE TABLE `customer_prescriptions` (
     `os_cyl`         DECIMAL(4,2)  NULL,
     `os_axis`        SMALLINT      NULL,
     `os_va`          VARCHAR(16)   NULL,
+    /*
+     * PD HAI MẮT — CỘT DI SẢN, giữ cho bản ghi tạo trước 04/09/2026.
+     *
+     * Q63.4 chốt PD lưu TÁCH THEO TỪNG MẮT (pd_od / pd_os, 20–40 mm mỗi bên).
+     * Cột này không bị xoá và không backfill sang hai cột kia: PD hai mắt hiếm
+     * khi cân bằng nên chia đôi là bịa dữ liệu y tế, mà số bịa trông y hệt số
+     * đo thật. Nơi đọc lùi về cột này khi hai cột mắt còn trống.
+     */
     `pd`             DECIMAL(4,1)  NULL,
+    -- Q63.4 — PD từng mắt, 20–40 mm. Đây là số đi vào máy mài tròng.
+    `pd_od`          DECIMAL(4,1)  NULL,
+    `pd_os`          DECIMAL(4,1)  NULL,
+    -- Q63.7 — độ cộng cho khách lão thị, 0.00–3.50 bước 0.25.
+    `od_add`         DECIMAL(3,2)  NULL,
+    `os_add`         DECIMAL(3,2)  NULL,
+    -- Q63.7 — chiều cao tâm tròng, cần khi mài tròng đa tròng.
+    `od_seg_height`  DECIMAL(4,1)  NULL,
+    `os_seg_height`  DECIMAL(4,1)  NULL,
+    /*
+     * THỊ LỰC — HAI CỘT CHO MỘT SỐ, cố ý.
+     *
+     * Q63.6: nhập và hiển thị dạng 10/10 (thứ kỹ thuật viên đọc quen), lưu
+     * chuẩn hoá dạng thập phân (thứ so sánh và vẽ biểu đồ được). `od_va` giữ
+     * NGUYÊN VĂN người gõ, `od_va_num` là số đã quy đổi. Chỉ giữ cột số thì
+     * "10/10" và "1.0" in ra giống nhau, mà chúng không giống nhau trong mắt
+     * người đọc bệnh án.
+     */
+    `od_va_num`      DECIMAL(3,2)  NULL,
+    `os_va_num`      DECIMAL(3,2)  NULL,
     /*
      * NGÀY ĐO, BẮT BUỘC — khác created_at (lúc gõ vào máy).
      *
@@ -1491,7 +1519,34 @@ CREATE TABLE `customer_prescriptions` (
      */
     `measured_at`    DATE          NOT NULL,
     `store_id`       CHAR(36)      NULL,
+    -- Ghi chú KHÁCH ĐỌC ĐƯỢC. Q65.3 cho khách xem lịch sử đo của mình, nên cột
+    -- này hiện ra ngoài — đừng viết nhận định chuyên môn hay ghi chú nội bộ vào
+    -- đây, đã có `tech_note` cho việc đó.
     `note`           VARCHAR(255)  NULL,
+    -- Ghi chú KỸ THUẬT VIÊN — NỘI BỘ, không hiện cho khách (Q63.7).
+    `tech_note`      VARCHAR(500)  NULL,
+    /*
+     * ─────────────────────────────────────────────────────────────────────
+     * MÔ HÌNH CHỈ-THÊM — X21 = A, chốt 04/09/2026
+     *
+     * Sửa một bản ghi khúc xạ KHÔNG ghi đè: nó chèn một PHIÊN BẢN mới, bản cũ
+     * giữ nguyên và vẫn đọc lại được. Nhân viên không có đường xoá dưới bất kỳ
+     * hình thức nào, kể cả xoá mềm — nên bảng này KHÔNG CÓ `deleted_at`. Bản
+     * ghi chỉ biến mất khi khách yêu cầu xoá tài khoản (X25 = A), lúc đó
+     * fk_cpres_user ON DELETE CASCADE dọn theo.
+     *
+     *   ban_goc_id  nối mọi phiên bản của CÙNG MỘT LẦN ĐO về bản đầu tiên;
+     *               bản đầu tiên tự trỏ vào chính nó nên không dòng nào mồ côi.
+     *   phien_ban   số thứ tự trong nhóm, từ 1. Cần cả nó lẫn ban_goc_id: hai
+     *               phiên bản sinh trong cùng một giây thì created_at không
+     *               phân được thứ tự, mà thứ tự là thứ người đọc cần.
+     *   ly_do       lý do sửa, bắt buộc từ 10 ký tự. Chặn ở mã nguồn chứ không
+     *               ở CSDL — thông báo lỗi phải bằng tiếng Việt cho người nhập.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    `ly_do`          VARCHAR(255)  NULL,
+    `ban_goc_id`     CHAR(36)      NULL,
+    `phien_ban`      SMALLINT      NOT NULL DEFAULT 1,
     -- Nhân viên đã nhập. SET NULL: người nghỉ việc bị xoá tài khoản thì số đo
     -- vẫn phải còn.
     `created_by`     CHAR(36)      NULL,
@@ -1502,6 +1557,9 @@ CREATE TABLE `customer_prescriptions` (
     -- Cột đầu user_id, cột hai ngày đo giảm dần: trang chi tiết luôn hỏi đúng
     -- một câu "số đo của người này, mới nhất trước".
     KEY `idx_cpres_user_date` (`user_id`, `measured_at` DESC),
+    -- Lấy "phiên bản mới nhất của từng lần đo" và "mọi phiên bản của lần đo
+    -- này" — hai câu duy nhất màn lịch sử hỏi. Thiếu chỉ mục là quét cả bảng.
+    KEY `idx_cpres_bangoc` (`user_id`, `ban_goc_id`, `phien_ban`),
     KEY `idx_cpres_appointment` (`appointment_id`),
     KEY `idx_cpres_store` (`store_id`),
     KEY `idx_cpres_author` (`created_by`),

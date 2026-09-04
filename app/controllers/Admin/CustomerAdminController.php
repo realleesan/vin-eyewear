@@ -305,6 +305,23 @@ class CustomerAdminController extends AdminController
                 $data['rxEditing']    = $this->rxDangSua($id);
                 $data['auditReady']   = AuditLogModel::available();
 
+                /* LỊCH SỬ PHIÊN BẢN CỦA MỘT LẦN ĐO — chỉ nạp khi có ?phien-ban=.
+
+                   Từ 04/09/2026 sửa một bản ghi sinh phiên bản mới thay vì ghi
+                   đè (X21), nên mỗi lần đo có thể có nhiều bản. Bảng chính chỉ
+                   hiện bản mới nhất; muốn xem đường đi thì bấm vào "Đã sửa N
+                   lần" và nó quay lại đây với tham số này.
+
+                   Nạp CÓ ĐIỀU KIỆN chứ không nạp sẵn cho mọi dòng: một khách
+                   đo mười lần là mười câu truy vấn cho thứ gần như không ai
+                   mở. phienBan() tự kiểm quyền sở hữu bằng user_id nên tham số
+                   trên URL có bị sửa cũng không lộ hồ sơ của khách khác. */
+                $xemPb = trim((string) ($_GET['phien-ban'] ?? ''));
+
+                $data['rxPhienBan'] = $xemPb !== ''
+                    ? PrescriptionRecordModel::phienBan($xemPb, $id)
+                    : [];
+
                 AuditLogModel::write($id, 'rx.read');
                 break;
 

@@ -207,15 +207,25 @@ $so = static function (mixed $v): string {
                                          không có gì xảy ra. */ ?>
                                 <a href="<?= e($veTab . '&sua=' . rawurlencode($rx['id'])) ?>#form-don-thuoc"
                                    data-modal>Sửa</a>
-                                <form method="post" action="/quan-tri/khach-hang/don-thuoc/xoa"
-                                      data-confirm="Xoá bản ghi đo ngày <?= e(formatDate($rx['measured_at'])) ?>? Lịch sử độ kính sẽ mất một mốc và không khôi phục được."
-                                      data-confirm-title="Xoá bản ghi đo?"
-                                      data-confirm-ok="Xoá">
-                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                    <input type="hidden" name="id" value="<?= e($khach['id']) ?>">
-                                    <input type="hidden" name="rx_id" value="<?= e($rx['id']) ?>">
-                                    <button type="submit" class="arow-del">Xoá</button>
-                                </form>
+                                <?php
+                                /* NÚT XOÁ ĐÃ BỎ — X21 = A, chốt 04/09/2026.
+                                
+                                   BA chọn phương án chặt nhất: nhân viên không có
+                                   đường xoá hồ sơ khúc xạ dưới bất kỳ hình thức
+                                   nào, kể cả xoá mềm. Sai sót xử lý bằng ĐÍNH
+                                   CHÍNH — bấm Sửa, nhập lý do, hệ thống lưu thành
+                                   phiên bản mới và giữ nguyên bản cũ.
+                                
+                                   Route /don-thuoc/xoa vẫn còn và vẫn trả về một
+                                   câu tiếng Việt giải thích, cố ý: một tab đang mở
+                                   từ trước lần nâng cấp này vẫn có nút cũ, và một
+                                   lỗi 404 không nói cho ai biết vì sao. */
+                                $soPb = (int) ($rx['so_phien_ban'] ?? 1);
+                                ?>
+                                <?php if ($soPb > 1): ?>
+                                    <a href="<?= e($veTab . '&phien-ban=' . rawurlencode((string) ($rx['ban_goc_id'] ?? $rx['id']))) ?>#lich-su-phien-ban"
+                                       data-modal>Đã sửa <?= $soPb - 1 ?> lần</a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -224,6 +234,88 @@ $so = static function (mixed $v): string {
         </div>
     <?php endif; ?>
 </div>
+
+<?php
+/* ─────────────────────────────────────────────────────────────────────────────
+   LỊCH SỬ PHIÊN BẢN CỦA MỘT LẦN ĐO — X21 = A, chốt 04/09/2026.
+
+   Chỉ hiện khi người dùng bấm "Đã sửa N lần" trên một dòng. Đọc XUÔI (cũ nhất
+   trước), khác mọi danh sách khác trong module: đây là thứ người ta mở ra để
+   hiểu "đã sửa gì, vì sao", và câu chuyện đó chỉ đọc xuôi mới hiểu được.
+
+   KHÔNG in ghi chú kỹ thuật viên ở đây — bảng này chỉ trả lời câu hỏi "con số
+   đã đổi thế nào", còn nhận định chuyên môn thì đọc ở form bên dưới.
+   ───────────────────────────────────────────────────────────────────────────── */
+?>
+<?php if (!empty($rxPhienBan)): ?>
+    <section class="apanel" id="lich-su-phien-ban">
+        <div class="apanel__head">
+            <h2 class="apanel__title">Các phiên bản của lần đo này</h2>
+            <a href="<?= e($veTab) ?>" data-modal>Đóng</a>
+        </div>
+
+        <div class="atable-wrap">
+            <table class="atable">
+                <thead>
+                    <tr>
+                        <th>Phiên bản</th>
+                        <th>Mắt phải</th>
+                        <th>Mắt trái</th>
+                        <th>Lý do sửa</th>
+                        <th>Người nhập</th>
+                        <th>Lúc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($rxPhienBan as $pb): ?>
+                        <?php
+                        /* Dựng chuỗi số đo ngay tại đây thay vì gọi một helper:
+                           bảng này in số THÔ, không làm tròn và không bỏ cột
+                           trống — người đối chiếu cần thấy đúng thứ đã lưu,
+                           kể cả một ô rỗng. */
+                        $doc = static function (array $r, string $mat): string {
+                            $phan = [];
+
+                            foreach (['sph' => 'SPH', 'cyl' => 'CYL', 'axis' => 'AXIS'] as $k => $nhan) {
+                                $v = $r[$mat . '_' . $k] ?? null;
+                                $phan[] = $nhan . ' ' . ($v !== null && $v !== '' ? $v : '—');
+                            }
+
+                            return implode(' · ', $phan);
+                        };
+                        ?>
+                        <tr>
+                            <td>
+                                <strong><?= (int) ($pb['phien_ban'] ?? 1) ?></strong>
+                                <?php if ((int) ($pb['phien_ban'] ?? 1) === 1): ?>
+                                    <span class="atable__sub">bản gốc</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?= e($doc($pb, 'od')) ?></td>
+                            <td><?= e($doc($pb, 'os')) ?></td>
+                            <td>
+                                <?= ($pb['ly_do'] ?? '') !== ''
+                                    ? e((string) $pb['ly_do'])
+                                    : '<span class="atable__sub">—</span>' ?>
+                            </td>
+                            <td>
+                                <?= ($pb['author_name'] ?? null) !== null
+                                    ? e((string) $pb['author_name'])
+                                    : '<span class="atable__sub">không rõ</span>' ?>
+                            </td>
+                            <td><?= e(formatDate((string) $pb['created_at'], 'd/m/Y H:i')) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <p class="apanel__note">
+            Bản ghi khúc xạ không xoá được. Mọi lần sửa đều nằm lại ở bảng này —
+            đó là bằng chứng đối chiếu khi có tranh chấp về số đo đã dùng để mài tròng.
+        </p>
+    </section>
+<?php endif; ?>
 
 <section class="apanel" id="form-don-thuoc">
     <div class="apanel__head">
@@ -307,11 +399,65 @@ $so = static function (mixed $v): string {
                 </fieldset>
             <?php endforeach; ?>
 
+            <?php
+            /* PD TÁCH THEO TỪNG MẮT — Q63.4, chốt 04/09/2026.
+            
+               Ô "PD hai mắt" cũ VẪN CÒN ngay dưới, không bị bỏ: bản ghi tạo
+               trước lần nâng cấp này chỉ có con số hai mắt, và mở ra sửa mà
+               ô đó biến mất thì con số cũ lặng lẽ bị xoá. Hai ô mắt để trống
+               nghĩa là "chưa đo tách" — hệ thống KHÔNG tự chia đôi số hai mắt,
+               vì PD hai bên hiếm khi cân nhau và số bịa thì trông y hệt số thật. */
+            ?>
             <div class="field">
-                <label for="pd">PD — khoảng cách đồng tử (mm)</label>
+                <label for="pd-od">PD mắt phải (mm)</label>
+                <input type="number" id="pd-od" name="pd_od" step="0.5" min="20" max="40"
+                       placeholder="31.5"
+                       value="<?= e((string) ($form['pd_od'] ?? '')) ?>">
+            </div>
+
+            <div class="field">
+                <label for="pd-os">PD mắt trái (mm)</label>
+                <input type="number" id="pd-os" name="pd_os" step="0.5" min="20" max="40"
+                       placeholder="31.5"
+                       value="<?= e((string) ($form['pd_os'] ?? '')) ?>">
+            </div>
+
+            <div class="field">
+                <label for="pd">PD hai mắt (mm)</label>
                 <input type="number" id="pd" name="pd" step="0.5" min="30" max="90"
                        placeholder="63"
                        value="<?= e((string) ($form['pd'] ?? '')) ?>">
+                <p class="field__hint">Chỉ điền khi không đo tách từng mắt.</p>
+            </div>
+
+            <?php /* ĐỘ CỘNG (ADD) — Q63.7. Chỉ khách lão thị mới có, nên để
+                     trống là bình thường và không có dấu sao bắt buộc. */ ?>
+            <div class="field">
+                <label for="od-add">Độ cộng ADD — mắt phải</label>
+                <input type="number" id="od-add" name="od_add" step="0.25" min="0" max="3.5"
+                       placeholder="+1.50"
+                       value="<?= e((string) ($form['od_add'] ?? '')) ?>">
+            </div>
+
+            <div class="field">
+                <label for="os-add">Độ cộng ADD — mắt trái</label>
+                <input type="number" id="os-add" name="os_add" step="0.25" min="0" max="3.5"
+                       placeholder="+1.50"
+                       value="<?= e((string) ($form['os_add'] ?? '')) ?>">
+            </div>
+
+            <?php /* CHIỀU CAO TÂM TRÒNG — Q63.7. Chỉ cần khi mài tròng đa
+                     tròng, và phụ thuộc gọng khách chọn nên thường nhập sau. */ ?>
+            <div class="field">
+                <label for="od-seg">Chiều cao tâm tròng — mắt phải (mm)</label>
+                <input type="number" id="od-seg" name="od_seg_height" step="0.5" min="10" max="40"
+                       value="<?= e((string) ($form['od_seg_height'] ?? '')) ?>">
+            </div>
+
+            <div class="field">
+                <label for="os-seg">Chiều cao tâm tròng — mắt trái (mm)</label>
+                <input type="number" id="os-seg" name="os_seg_height" step="0.5" min="10" max="40"
+                       value="<?= e((string) ($form['os_seg_height'] ?? '')) ?>">
             </div>
 
             <div class="field">
@@ -351,11 +497,46 @@ $so = static function (mixed $v): string {
             </div>
 
             <div class="field field--wide">
-                <label for="ghi-chu-rx">Ghi chú</label>
+                <label for="ghi-chu-rx">Ghi chú — KHÁCH ĐỌC ĐƯỢC</label>
                 <input type="text" id="ghi-chu-rx" name="note" maxlength="255"
                        placeholder="Ví dụ: khuyến nghị tròng chống ánh sáng xanh"
                        value="<?= e((string) ($form['note'] ?? '')) ?>">
+                <p class="field__hint">
+                    Khách xem được ô này trong trang tài khoản của họ.
+                </p>
             </div>
+
+            <?php /* GHI CHÚ NỘI BỘ — tách khỏi ô trên vì Q65.3 cho khách xem
+                     lại lịch sử đo của mình. Một ô duy nhất nghĩa là nhận định
+                     chuyên môn ("nghi đục thuỷ tinh thể, khuyên đi khám") hiện
+                     thẳng cho khách đọc mà không có ai giải thích bên cạnh. */ ?>
+            <div class="field field--wide">
+                <label for="ghi-chu-kt">Ghi chú kỹ thuật viên — NỘI BỘ</label>
+                <textarea id="ghi-chu-kt" name="tech_note" maxlength="500" rows="2"
+                          placeholder="Chỉ nhân viên đọc được"><?= e((string) ($form['tech_note'] ?? '')) ?></textarea>
+            </div>
+
+            <?php
+            /* LÝ DO SỬA — chỉ hiện khi ĐANG SỬA, và khi đó là bắt buộc.
+            
+               Không hiện ở form thêm mới: bản ghi đầu tiên không sửa gì cả nên
+               không có lý do nào để ghi, và một ô bắt buộc vô nghĩa là thứ
+               người ta học cách gõ bừa cho qua. */
+            ?>
+            <?php if ($sua !== null): ?>
+                <div class="field field--wide">
+                    <label for="ly-do-sua">Lý do sửa <span aria-hidden="true">*</span></label>
+                    <input type="text" id="ly-do-sua" name="ly_do" maxlength="255" required
+                           minlength="10"
+                           placeholder="Ví dụ: nhập nhầm trục mắt phải, đối chiếu lại phiếu đo"
+                           value="<?= e((string) ($form['ly_do'] ?? '')) ?>">
+                    <p class="field__hint">
+                        Tối thiểu 10 ký tự. Bản ghi cũ được GIỮ NGUYÊN — lần lưu này
+                        tạo một phiên bản mới, và lý do là thứ duy nhất giải thích
+                        vì sao cùng một ngày đo lại có hai con số.
+                    </p>
+                </div>
+            <?php endif; ?>
 
             <button type="submit" class="astatus__save">
                 <?= $sua !== null ? 'Lưu bản ghi' : 'Thêm bản ghi' ?>

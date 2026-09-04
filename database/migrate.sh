@@ -184,6 +184,14 @@ MIGRATIONS=(
     # Cột mốc là chính bảng đếm — chỉ file này tạo ra nó.
     "2026-09-02-khoa-dang-nhap-sau-5-lan-sai.sql|table|login_attempts|"
 
+    # ── X21 · hồ sơ khúc xạ chuyển sang mô hình chỉ-thêm ────────────────────
+    #
+    # Cột mốc là `ban_goc_id` chứ không phải một trong mười một cột số đo cùng
+    # đợt: nó là cột DUY NHẤT không thể do file khác tạo ra, và nó cũng là thứ
+    # PrescriptionRecordModel::coPhienBan() hỏi để biết CSDL đã nâng cấp chưa.
+    # Hai nơi cùng nhìn một cột thì không có cảnh script bảo "đã chạy" trong
+    # khi mã nguồn vẫn tưởng là chưa.
+    "2026-09-04-ho-so-khuc-xa-chi-them.sql|column|customer_prescriptions|ban_goc_id"
 )
 
 # ---------------------------------------------------------------------------
