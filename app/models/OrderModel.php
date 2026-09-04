@@ -1043,6 +1043,85 @@ class OrderModel extends BaseModel
     public const LY_DO_TOI_THIEU = 10;
 
     /**
+     * Đơn này có nằm trong PHẠM VI CƠ SỞ của người đang thao tác không.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * PHẠM VI PHẢI CHẶN CẢ ĐƯỜNG GHI, KHÔNG CHỈ ĐƯỜNG ĐỌC
+     *
+     * Đợt phân quyền 05/09 lọc DANH SÁCH đơn theo cơ sở, và 09/09 sửa nốt bộ
+     * ĐẾM trên các viên lọc. Nhưng sáu thao tác GHI — đổi trạng thái, ghi nhận
+     * thanh toán, hai thao tác hàng loạt, hoàn tác, và hai nút mốc mài — chỉ
+     * hỏi `exists(['id' => …])`. Một cú POST mang id đơn của cơ sở khác đi lọt
+     * qua tất cả.
+     *
+     * Không phải chuyện lý thuyết: id đơn hàng nằm ngay trong HTML của chính
+     * trang đó, và người từng được gán cơ sở khác rồi bị gỡ vẫn còn id trong
+     * tab đang mở. Lọc danh sách mà không chặn ghi là khoá cửa trước rồi để
+     * ngỏ cửa sau — và ở đây cửa sau dẫn thẳng vào việc đánh dấu một đơn của
+     * cơ sở khác là ĐÃ THU TIỀN.
+     *
+     * ĐƠN KHÔNG GẮN CƠ SỞ (giao tận nơi) VẪN TRONG PHẠM VI của mọi người đã
+     * được gán ít nhất một cơ sở — cùng luật với đường đọc, xem
+     * StaffStoreModel::menhDe(). Hai đường mà trả lời khác nhau thì nhân viên
+     * nhìn thấy một đơn nhưng bấm vào lại bị từ chối.
+     *
+     * @param string[]|null $phamVi kết quả StaffStoreModel::phamVi()
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public static function trongPhamVi(string $id, ?array $phamVi): bool
+    {
+        if ($id === '' || !self::exists(['id' => $id])) {
+            return false;
+        }
+
+        // Không giới hạn (Quản trị viên) thì mọi đơn đều trong phạm vi.
+        if ($phamVi === null) {
+            return true;
+        }
+
+        // Chưa được gán cơ sở nào thì không thao tác được gì — Q12.3.
+        if ($phamVi === []) {
+            return false;
+        }
+
+        $coSo = Database::fetchValue(
+            'SELECT store_id FROM orders WHERE id = :id',
+            ['id' => $id]
+        );
+
+        // NULL = đơn giao tận nơi, không thuộc cơ sở nào. Xem chú thích trên.
+        if ($coSo === null || $coSo === false || $coSo === '') {
+            return true;
+        }
+
+        return in_array((string) $coSo, $phamVi, true);
+    }
+
+    /**
+     * Lọc một danh sách id, giữ lại những đơn TRONG phạm vi.
+     *
+     * Dùng cho hai thao tác hàng loạt. Lọc rồi làm tiếp, không phải từ chối cả
+     * lô: người tick 20 đơn trên một trang đã lọc thì mọi đơn đều trong phạm
+     * vi, nên lô bị lẫn id lạ gần như chắc chắn là một cú POST dựng tay — và
+     * lúc ấy việc đúng là bỏ qua phần lạ chứ không phạt phần hợp lệ.
+     *
+     * @param  string[]      $ids
+     * @param  string[]|null $phamVi
+     * @return string[]
+     */
+    public static function locTheoPhamVi(array $ids, ?array $phamVi): array
+    {
+        if ($phamVi === null) {
+            return $ids;
+        }
+
+        return array_values(array_filter(
+            $ids,
+            static fn (string $id): bool => self::trongPhamVi($id, $phamVi)
+        ));
+    }
+
+    /**
      * Đơn này CÓ dịch vụ mài lắp tròng theo độ không.
      *
      * `lens_id` khác NULL nghĩa là dòng hàng ấy có gói tròng đi kèm. Đơn chỉ

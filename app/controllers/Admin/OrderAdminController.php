@@ -116,6 +116,8 @@ class OrderAdminController extends AdminController
             redirect($back);
         }
 
+        $this->chanNgoaiPhamVi($id, $back);
+
         $order = OrderModel::find($id);
 
         if ($order === null) {
@@ -198,10 +200,7 @@ class OrderAdminController extends AdminController
         $id   = (string) ($_POST['id'] ?? '');
         $paid = ($_POST['paid'] ?? '') === '1';
 
-        if (!OrderModel::exists(['id' => $id])) {
-            flash('admin_error', 'Không tìm thấy đơn hàng.');
-            redirect($back);
-        }
+        $this->chanNgoaiPhamVi($id, $back);
 
         $changed = $paid ? OrderModel::markPaid($id) : OrderModel::markUnpaid($id);
 
@@ -255,6 +254,28 @@ class OrderAdminController extends AdminController
         }
 
         $ids = array_slice(array_unique($ids), 0, self::BULK_MAX);
+
+        /* PHẠM VI CƠ SỞ ÁP TRƯỚC KHI PHÂN VIỆC — SNFR-07b.
+
+           Lọc ở ĐÂY chứ không trong từng nhánh: hai nhánh tự lọc là hai chỗ có
+           thể quên, và nhánh quên thì thao tác hàng loạt trở thành đúng cái lỗ
+           mà thao tác đơn lẻ vừa bịt. Lọc chứ không từ chối cả lô — xem
+           OrderModel::locTheoPhamVi(). */
+        $truoc = count($ids);
+        $ids   = OrderModel::locTheoPhamVi($ids, $this->phamViCoSo());
+
+        if ($ids === []) {
+            flash('admin_error', 'Không có đơn nào trong phạm vi cơ sở của bạn.');
+            redirect($back);
+        }
+
+        if (count($ids) < $truoc) {
+            /* NÓI RA số đơn bị bỏ. Im lặng làm 6 trên 20 đơn rồi báo thành
+               công là để người dùng tin rằng cả 20 đã xong. */
+            flash('admin_error', sprintf(
+                'Bỏ qua %d đơn ngoài phạm vi cơ sở của bạn.', $truoc - count($ids)
+            ));
+        }
 
         match ((string) ($_POST['act'] ?? '')) {
             'trang-thai' => $this->bulkStatus($ids, (string) ($_POST['status'] ?? ''), $back),
@@ -310,7 +331,9 @@ class OrderAdminController extends AdminController
                 continue;
             }
 
-            if (!OrderModel::exists(['id' => $id])) {
+            /* Phạm vi cơ sở — SNFR-07b. Hoàn tác cũng là một đường GHI, và
+               danh sách `truoc[]` đi trong chính form nên sửa được. */
+            if (!OrderModel::trongPhamVi($id, $this->phamViCoSo())) {
                 continue;
             }
 
@@ -402,6 +425,27 @@ class OrderAdminController extends AdminController
      *
      * @param array<string, string> $truoc [id đơn => trạng thái cũ]
      */
+    /**
+     * Chặn thao tác ghi lên một đơn NGOÀI phạm vi cơ sở của người bấm.
+     *
+     * Gộp cả phép kiểm tồn tại vào đây và ĐI THẲNG tới redirect: bốn action
+     * đơn lẻ đều cần đúng một câu hỏi, và bốn chỗ tự hỏi là bốn cơ hội quên —
+     * mà cái quên đó không gây lỗi, nó chỉ lặng lẽ cho người ta sửa đơn của
+     * cơ sở khác. Đây chính là chỗ đã bị bỏ sót suốt từ 05/09 tới 09/09.
+     *
+     * MỘT CÂU BÁO CHO CẢ HAI TRƯỜNG HỢP (không tồn tại · ngoài phạm vi): trả
+     * lời khác nhau là nói cho người dò biết id nào có thật.
+     */
+    private function chanNgoaiPhamVi(string $id, string $back): void
+    {
+        if (OrderModel::trongPhamVi($id, $this->phamViCoSo())) {
+            return;
+        }
+
+        flash('admin_error', 'Không tìm thấy đơn hàng trong phạm vi cơ sở của bạn.');
+        redirect($back);
+    }
+
     private function ghiHoanTac(array $truoc, string $moi): void
     {
         if ($truoc === []) {
@@ -444,13 +488,12 @@ class OrderAdminController extends AdminController
         $this->requirePost('/quan-tri/don-hang');
 
         $back = $this->back();
+        $id   = (string) ($_POST['id'] ?? '');
 
         $this->requireManager($back);
+        $this->chanNgoaiPhamVi($id, $back);
 
-        $ket = OrderModel::batDauMai(
-            (string) ($_POST['id'] ?? ''),
-            $this->userId
-        );
+        $ket = OrderModel::batDauMai($id, $this->userId);
 
         flash($ket['ok'] ? 'admin_success' : 'admin_error',
             $ket['ok']
@@ -478,8 +521,11 @@ class OrderAdminController extends AdminController
     {
         $this->requirePost('/quan-tri/don-hang');
 
-        $back  = $this->back();
-        $id    = (string) ($_POST['id'] ?? '');
+        $back = $this->back();
+        $id   = (string) ($_POST['id'] ?? '');
+
+        $this->chanNgoaiPhamVi($id, $back);
+
         $order = OrderModel::find($id);
 
         if ($order === null) {
