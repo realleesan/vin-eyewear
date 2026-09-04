@@ -81,6 +81,27 @@ $canMark = !$paid
                 <button type="submit" form="aodrawst" class="aosave">Lưu</button>
             </div>
 
+            <?php
+            /* KHÁCH ĐANG ĐỌC CHỮ GÌ — B9.
+
+               Ô chọn bên trên luôn hiện nhãn nội bộ ("Đang giao"), nhưng với đơn
+               NHẬN TẠI QUẦY thì trang tài khoản của khách hiện "Chờ khách nhận".
+               Không nói ra thì nhân viên nghe khách đọc một chữ lạ qua điện
+               thoại và không đối chiếu được với màn hình của mình.
+
+               Chỉ hiện khi HAI CHỮ KHÁC NHAU — thêm một dòng lặp lại đúng chữ
+               vừa đọc ở trên là nhiễu. */
+            $nhanKhach = OrderModel::nhanTrangThai(
+                (string) $order['status'],
+                $order['delivery_method'] ?? null
+            );
+            ?>
+            <?php if ($nhanKhach !== ($statuses[$order['status']] ?? '')): ?>
+                <p class="aomolai__hint aomolai__hint--block">
+                    Khách đang thấy trạng thái này là «<strong><?= e($nhanKhach) ?></strong>».
+                </p>
+            <?php endif; ?>
+
             <?php /* Ô LÝ DO CHỈ HIỆN KHI ĐƠN ĐANG Ở "ĐÃ HUỶ" — Q3.1.
 
                      Hiện thường trực thì nó là một ô trống bên cạnh mọi đơn,

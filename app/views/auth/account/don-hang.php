@@ -226,8 +226,12 @@ $paymentShort  = [
                             </span>
                         <?php endif; ?>
 
+                        <?php /* Nhãn qua OrderModel::nhanTrangThai() — đơn nhận
+                                 tại quầy đọc là "Chờ khách nhận", không phải
+                                 "Đang giao" (B9). Ngăn kéo đơn của nhân viên gọi
+                                 cùng hàm này nên hai bên luôn cùng một chữ. */ ?>
                         <span class="acct-badge acct-badge--<?= e($badgeTones[$o['status']] ?? 'wait') ?>">
-                            <?= e($statuses[$o['status']] ?? $o['status']) ?>
+                            <?= e(OrderModel::nhanTrangThai($o['status'], $o['delivery_method'] ?? null)) ?>
                         </span>
                     </div>
                 </div>
@@ -288,6 +292,8 @@ $paymentShort  = [
                             $state = $i < $step ? 2
                                 : ($i === $step ? ($o['status'] === 'completed' ? 2 : 1) : 0);
                             $at    = $marks[$key] ?? null;
+                            /* Mốc "Đang giao" đổi chữ với đơn nhận tại quầy — B9. */
+                            $label = OrderModel::nhanTrangThai($key, $o['delivery_method'] ?? null);
                             ?>
                             <li class="acct-track__step acct-track__step--<?= $state ?>">
                                 <span class="acct-track__bar" aria-hidden="true"></span>
@@ -649,8 +655,20 @@ $paymentShort  = [
                            tức ngay dưới bốn ô số tài khoản — đúng chỗ khách
                            đang nhìn khi họ quyết định quét mã thay vì gõ tay. */
                         ?>
-                        <?php if (isset($primaryLabels[$o['status']])): ?>
-                            <?php if ($primaryLabels[$o['status']] === 'Mua lại'): ?>
+                        <?php
+                        /* NÚT CHÍNH — đơn NHẬN TẠI QUẦY không mời "Theo dõi vận
+                           chuyển" (B9). Không có ai đang giao gì cả; việc của
+                           khách là ra cửa hàng lấy kính, nên nút đổi thành lời
+                           mời xem địa chỉ cơ sở. */
+                        $nhanNut = $primaryLabels[$o['status']] ?? null;
+
+                        if ($nhanNut === 'Theo dõi vận chuyển'
+                            && ($o['delivery_method'] ?? '') === 'pickup') {
+                            $nhanNut = 'Xem địa chỉ cửa hàng';
+                        }
+                        ?>
+                        <?php if ($nhanNut !== null): ?>
+                            <?php if ($nhanNut === 'Mua lại'): ?>
                                 <form method="post" action="/tai-khoan/mua-lai">
                                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                     <input type="hidden" name="code" value="<?= e($o['code']) ?>">
@@ -660,7 +678,7 @@ $paymentShort  = [
                                 </form>
                             <?php else: ?>
                                 <a class="acct-btn acct-btn--primary acct-btn--sm" href="/lien-he">
-                                    <?= e($primaryLabels[$o['status']]) ?>
+                                    <?= e($nhanNut) ?>
                                 </a>
                             <?php endif; ?>
                         <?php endif; ?>

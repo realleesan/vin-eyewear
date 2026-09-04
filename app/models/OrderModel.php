@@ -36,6 +36,37 @@ class OrderModel extends BaseModel
     ];
 
     /**
+     * NHÃN TRẠNG THÁI KHÁCH ĐỌC ĐƯỢC — Quyết định B9.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * MỘT TRẠNG THÁI, HAI CÁCH GỌI, TUỲ HÌNH THỨC NHẬN HÀNG
+     *
+     * B9 chốt: đơn giao tận nơi và đơn nhận tại quầy DÙNG CHUNG trạng thái
+     * 'shipping', nhưng hiện ra hai nhãn khác nhau. Lý do đơn giản: với đơn
+     * nhận tại quầy thì không có ai đang giao gì cả — kính nằm trên quầy chờ
+     * khách tới lấy.
+     *
+     * Trước 09/09/2026 cả hai cùng in "Đang giao", và trang tài khoản còn mời
+     * khách bấm nút "Theo dõi vận chuyển". Khách đặt nhận tại Cầu Giấy ngồi
+     * nhà đợi shipper, trong khi nhân viên nhìn cùng đơn đó chỉ thấy ô chọn
+     * ghi "Đang giao" nên không đoán được khách đang đọc gì.
+     *
+     * ĐỂ Ở MODEL, KHÔNG ĐỂ Ở VIEW. Hai màn hình — trang tài khoản của khách và
+     * ngăn kéo đơn của nhân viên — phải nói cùng một chữ, và cách duy nhất bảo
+     * đảm điều đó là chúng cùng gọi một hàm. Chép luật sang view thứ hai là
+     * tạo ra chỗ để hai bên lệch nhau lần nữa.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public static function nhanTrangThai(string $status, ?string $deliveryMethod): string
+    {
+        if ($status === 'shipping' && $deliveryMethod === 'pickup') {
+            return 'Chờ khách nhận';
+        }
+
+        return self::STATUSES[$status] ?? $status;
+    }
+
+    /**
      * Trạng thái TIỀN — không liên quan tới STATUSES ở trên.
      *
      * STATUSES là vòng đời giao vận (đã xác nhận → đang giao → hoàn tất);
