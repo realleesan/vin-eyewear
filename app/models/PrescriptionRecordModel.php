@@ -267,12 +267,69 @@ class PrescriptionRecordModel extends BaseModel
             return null;
         }
 
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * CHỈ LẤY BẢN CỦA CHÍNH CHỦ TÀI KHOẢN — sửa 09/09/2026
+         *
+         * Hàm này trả lời câu "độ hiện tại của người này", và kết quả của nó
+         * được mirrorLatest() chép sang bảng `prescriptions` — tức là con số
+         * hiện trên trang "Thông số đo mắt" của KHÁCH và con số điền sẵn khi
+         * họ mua kính.
+         *
+         * Từ 06/09 một tài khoản chứa được số đo của NHIỀU NGƯỜI (X24, cột
+         * `nguoi_duoc_do`). Câu lệnh cũ không lọc cột đó, nên bản đo mới nhất
+         * của BẤT KỲ AI cũng thành "độ hiện tại" của chủ tài khoản.
+         *
+         * Kịch bản đã dựng lại được: mẹ dẫn con đi đo, kỹ thuật viên nhập bản
+         * cho "Bé Na" OD -5.50 hôm nay. Mẹ mở trang tài khoản và thấy -5.50
+         * dưới dòng "Kết quả đo khúc xạ gần nhất tại Vin Eyewear". Nếu mẹ đặt
+         * kính, số của con đi thẳng vào đơn cắt tròng.
+         *
+         * chenhLech() đã lọc theo người từ 06/09; chỗ này bị bỏ sót. Cùng một
+         * cột, hai nơi đọc, chỉ một nơi được sửa — đó là lý do nó lọt.
+         *
+         * NULL VÀ CHUỖI RỖNG ĐỀU LÀ "CHÍNH CHỦ". Bản ghi tạo trước 06/09 mang
+         * NULL, bản mới nhập mà để trống ô cũng thành NULL — nhưng một form
+         * gửi chuỗi rỗng vẫn lọt qua validate() ở vài đường cũ. So bằng
+         * COALESCE để cả hai cùng rơi vào một nhóm.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $loc = self::coNguoiDuocDo() ? " AND COALESCE(nguoi_duoc_do, '') = ''" : '';
+
         return Database::fetchOne(
             'SELECT * FROM customer_prescriptions
-              WHERE user_id = :uid
+              WHERE user_id = :uid' . $loc . '
               ORDER BY measured_at DESC, created_at DESC
               LIMIT 1',
             ['uid' => $userId]
+        );
+    }
+
+    /**
+     * Bản mới nhất của MỘT người được đo cụ thể — dùng khi cần đích danh.
+     *
+     * Tách khỏi latest() thay vì thêm tham số: latest() được gọi ở nhiều nơi
+     * hỏi đúng một câu ("độ hiện tại của chủ tài khoản"), và thêm một tham số
+     * mặc định vào đó là mở đường cho nơi gọi mới vô tình truyền sai.
+     *
+     * @param string $nguoi chuỗi rỗng = chính chủ
+     */
+    public static function latestCua(string $userId, string $nguoi): ?array
+    {
+        if (!self::available()) {
+            return null;
+        }
+
+        if (!self::coNguoiDuocDo()) {
+            return self::latest($userId);
+        }
+
+        return Database::fetchOne(
+            "SELECT * FROM customer_prescriptions
+              WHERE user_id = :uid AND COALESCE(nguoi_duoc_do, '') = :nguoi
+              ORDER BY measured_at DESC, created_at DESC
+              LIMIT 1",
+            ['uid' => $userId, 'nguoi' => trim($nguoi)]
         );
     }
 
