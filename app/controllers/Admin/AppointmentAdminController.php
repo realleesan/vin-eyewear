@@ -219,6 +219,80 @@ class AppointmentAdminController extends AdminController
     }
 
     /**
+     * Ghi nhận KHÁCH KHÔNG ĐẾN (POST /quan-tri/lich-hen/khong-den).
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ĐƯỜNG RIÊNG, KHÔNG PHẢI MỘT GIÁ TRỊ THÊM VÀO Ô CHỌN TRẠNG THÁI
+     *
+     * Cùng lý lẽ đã dùng cho nút "Huỷ lịch" ngay trên. Ô chọn ở cột trạng thái
+     * TỰ GỬI FORM khi đổi (data-autosubmit), nên trượt tay một nấc là xong —
+     * không có bước nào để dừng lại. Với hai bước tiến tới bình thường
+     * (Đã xác nhận / Đã hoàn tất) thì bấm nhầm sửa lại được ngay; còn "Khách
+     * không đến" là một lời ghi vào sổ về hành vi của một người thật, và nó đi
+     * thẳng vào tỉ lệ trên bảng Tổng quan.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CHỈ BUỔI HẸN ĐÃ QUA MỚI GHI ĐƯỢC — KIỂM Ở ĐÂY, KHÔNG CHỈ ẨN NÚT
+     *
+     * "Khách không đến" của một buổi hẹn ngày mai là câu vô nghĩa, và nó ghi đè
+     * lên một lịch còn đang chờ phục vụ. View đã ẩn nút với lịch chưa tới ngày,
+     * nhưng ẩn nút KHÔNG PHẢI là phân quyền: một cú POST dựng tay vẫn tới được
+     * đây. Đây là chỗ luật ấy được cưỡng chế.
+     *
+     * Lịch ĐÃ HUỶ cũng không ghi được: khách đã báo trước thì họ không "không
+     * đến", và cho ghi đè sẽ làm tỉ lệ trên bảng Tổng quan đếm cả những buổi
+     * đã được huỷ đúng cách.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function markNoShow(): void
+    {
+        $ve = $this->veDanhSach();
+
+        $this->requirePost($ve);
+
+        $id = (string) ($_POST['id'] ?? '');
+
+        if (!$this->trongPhamVi($id, $ve)) {
+            return;
+        }
+
+        $lich = BookingModel::find($id);
+
+        if ($lich === null) {
+            flash('admin_error', 'Không tìm thấy lịch hẹn.');
+            redirect($ve);
+        }
+
+        if ((string) $lich['appointment_date'] >= date('Y-m-d')) {
+            flash('admin_error',
+                'Chỉ ghi nhận khách không đến sau khi buổi hẹn đã qua ngày.');
+            redirect($ve);
+        }
+
+        if ((string) $lich['status'] === 'cancelled') {
+            flash('admin_error',
+                'Lịch này đã huỷ nên không tính là khách không đến.');
+            redirect($ve);
+        }
+
+        BookingModel::update($id, ['status' => 'no_show']);
+
+        /* GHI VẾT — CLAUDE.md mục 4, và SNFR-11 với nhóm lịch hẹn. Mã riêng chứ
+           không dùng chung 'booking.status': hai chiều có hệ quả khác nhau và
+           lọc riêng được là cần. Đổi trạng thái bình thường chỉ dịch một buổi
+           hẹn tới bước sau; ghi nhận không đến là kết luận về hành vi của một
+           người thật, và nó nuôi một con số trên bảng Tổng quan. */
+        AuditLogModel::write(
+            BookingModel::chuLich($id),
+            'booking.no_show',
+            'Ghi nhận khách không đến — lịch ' . (string) $lich['code']
+        );
+
+        flash('admin_success', 'Đã ghi nhận khách không đến.');
+        redirect($ve);
+    }
+
+    /**
      * ĐỔI NGÀY một lịch hẹn (POST /quan-tri/lich-hen/doi-ngay) — X19.
      *
      * ─────────────────────────────────────────────────────────────────────────

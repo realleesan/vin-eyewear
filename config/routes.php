@@ -280,6 +280,12 @@ return [
        thì huỷ rồi đặt lại. */
     'quan-tri/lich-hen/doi-ngay'  => 'AppointmentAdminController@reschedule',   // POST
     'quan-tri/lich-hen/huy'       => 'AppointmentAdminController@cancel',       // POST
+    /* KHÁCH KHÔNG ĐẾN — đường riêng, cùng lý lẽ với 'huy' ngay trên: ô chọn
+       trạng thái tự gửi form, mà đây là một lời ghi vào sổ về hành vi của một
+       người thật và nó nuôi thẳng một tỉ lệ trên bảng Tổng quan. Chỉ bấm được
+       sau khi buổi hẹn đã qua ngày; luật ấy cưỡng chế ở máy chủ, xem
+       AppointmentAdminController::markNoShow(). */
+    'quan-tri/lich-hen/khong-den' => 'AppointmentAdminController@markNoShow',   // POST
 
     'quan-tri/lien-he'            => 'ContactAdminController@index',
     /* Đường ĐẨY SANG ZALO, thay cho 'lien-he/trang-thai' bỏ ngày 2026-08-26.

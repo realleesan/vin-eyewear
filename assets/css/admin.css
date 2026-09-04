@@ -1300,6 +1300,14 @@ a.alist__name:hover { color: var(--brand); }
 .badge--low_stock                       { background: var(--pill-warn-bg);    color: var(--pill-warn-ink); }
 .badge--cancelled, .badge--out_of_stock { background: var(--pill-danger-bg);  color: var(--pill-danger-ink); }
 
+/* "Khách không đến" — TRUNG TÍNH, KHÔNG ĐỎ. Thêm 04/09/2026.
+
+   Đỏ trong bảng màu này nghĩa là "hỏng, phải sửa" (đơn huỷ, hết hàng). Khách
+   không tới thì chẳng có gì để sửa cả — buổi hẹn đã kết thúc, ghi vào sổ rồi
+   thôi. Tô đỏ nó là mời nhân viên đi xử lý một dòng không có việc gì phía sau,
+   và làm loãng đúng cái màu dùng để gọi họ tới chỗ thật sự hỏng. */
+.badge--no_show                         { background: var(--pill-neutral-bg); color: var(--pill-neutral-ink); }
+
 /* "Nổi bật" — hổ phách riêng của bản thiết kế (#f8efd9/#8a6a20), KHÔNG dùng
    chung với năm màu trạng thái ở trên. Nó không phải trạng thái: sản phẩm nổi
    bật hay không thì cũng đang bán bình thường, không ai phải làm gì cả. Trước
@@ -1615,6 +1623,18 @@ a.alist__name:hover { color: var(--brand); }
     border-color: #b03a3a;
 }
 
+/* "Khách không đến" — CÙNG DÁNG NÚT, KHÁC MÀU CHỮ. Thêm 04/09/2026.
+
+   Nó đứng ngay dưới nút "Huỷ lịch" nên phải cùng kích thước, cùng bo, cùng
+   viền — hai nút lệch nhau một nấc trong một ô hẹp đọc ra như một lỗi dựng
+   trang. Nhưng KHÔNG đỏ: huỷ lịch là thao tác khách hàng ở đầu bên kia chịu
+   hậu quả, còn ghi nhận không đến chỉ là chép lại chuyện đã xảy ra. Sơn đỏ cả
+   hai thì sắc đỏ thôi có nghĩa, và nút Huỷ mất đúng cái sức cảnh báo mà nó
+   được sơn đỏ để có. */
+.ahuy__btn--ghi { color: var(--muted); }
+
+.ahuy__btn--ghi:hover { border-color: var(--ink); color: var(--ink); }
+
 /*
  * KHÔNG CÒN TÔ NỀN CẢ HÀNG cho dòng sắp hết / hết hàng — bỏ theo bản thiết kế.
  *
@@ -1672,6 +1692,12 @@ a.alist__name:hover { color: var(--brand); }
 .astatus select.astatus__pick--confirmed { background-color: var(--st-conf-bg); color: var(--st-conf-ink); border-color: var(--st-conf-line); }
 .astatus select.astatus__pick--done      { background-color: var(--st-done-bg); color: var(--st-done-ink); border-color: var(--st-done-line); }
 .astatus select.astatus__pick--cancelled { background-color: var(--st-canc-bg); color: var(--st-canc-ink); border-color: var(--st-canc-line); }
+/* NĂM, không còn bốn: 'no_show' thêm 04/09/2026. Trung tính chứ không đỏ —
+   cùng lý do đã ghi ở .badge--no_show. Ô chọn không bao giờ ĐẶT được giá trị
+   này (nó đi bằng nút riêng), nhưng vẫn phải ĐỌC RA đúng nó: thiếu luật này thì
+   một lịch đã ghi khách không đến hiện ra với viên xám mặc định, lẫn với những
+   trạng thái không có màu nào. */
+.astatus select.astatus__pick--no_show   { background-color: var(--pill-neutral-bg); color: var(--pill-neutral-ink); border-color: var(--line-strong); }
 
 /* Danh sách xổ ra do hệ điều hành vẽ, không nhận màu của ô — trả nó về nền
    sáng chữ đậm, nếu không thì trên nền viên đỏ chữ đỏ là không đọc được. */

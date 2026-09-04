@@ -90,12 +90,51 @@ class BookingModel extends BaseModel
      */
     public const DAT_TRUOC_TOI_DA = 30;
 
+    /**
+     * Vòng đời một lịch hẹn.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * 'no_show' — THÊM 04/09/2026, VÀ VÌ SAO NÓ KHÔNG CẦN MỘT FILE NÂNG CẤP NÀO
+     *
+     * Bảng Tổng quan cần "tỉ lệ khách không đến trong kỳ". Trước bản này dữ liệu
+     * KHÔNG PHÂN BIỆT ĐƯỢC hai chuyện hoàn toàn khác nhau:
+     *
+     *   khách không tới    lỗi ở phía khách, và đó là con số cửa hàng muốn đo
+     *   nhân viên chưa chốt lỗi ở phía cửa hàng — buổi hẹn đã qua mà không ai
+     *                      bấm gì, nên nó nằm mãi ở 'pending'
+     *
+     * Suy tỉ lệ từ "lịch quá ngày còn pending" là gộp cả hai lại và luôn cho ra
+     * con số cao hơn sự thật, mà không có cách nào biết cao hơn bao nhiêu. Nên
+     * nó phải là một trạng thái do NGƯỜI GHI NHẬN, không phải một phép suy.
+     *
+     * `appointments.status` là VARCHAR(32), không phải ENUM — chính vì lý do
+     * này (xem cùng lối nghĩ ở `orders.payment_status` trong schema.sql, nơi
+     * 'deposit_paid' cũng được thêm mà không phải ALTER TABLE). Thêm một giá trị
+     * ở đây KHÔNG đụng tới lược đồ, nên không có migration nào đi kèm và cũng
+     * không cần script chuyển đổi dữ liệu cũ: mọi dòng đang có giữ nguyên trạng
+     * thái của nó, và 'no_show' chỉ xuất hiện khi có người bấm nút.
+     *
+     * HỆ QUẢ ĐÃ LƯỜNG TRƯỚC: trong vài tuần đầu tỉ lệ sẽ là 0% vì chưa ai bấm.
+     * Thẻ chỉ số trên bảng Tổng quan nói ra số buổi "quá ngày mà chưa ai chốt"
+     * ngay bên dưới, để không ai đọc 0% ấy như một thành tích.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
     public const STATUSES = [
         'pending'   => 'Chờ xác nhận',
         'confirmed' => 'Đã xác nhận',
         'done'      => 'Đã hoàn tất',
+        'no_show'   => 'Khách không đến',
         'cancelled' => 'Đã huỷ',
     ];
+
+    /**
+     * Trạng thái CHỈ ĐẶT ĐƯỢC KHI BUỔI HẸN ĐÃ QUA.
+     *
+     * "Khách không đến" của một buổi hẹn ngày mai là một câu vô nghĩa, và tệ
+     * hơn là nó ghi đè lên một lịch còn đang chờ phục vụ. Kiểm ở máy chủ chứ
+     * không chỉ ẩn nút — xem AppointmentAdminController::markNoShow().
+     */
+    public const CHI_KHI_DA_QUA = ['no_show'];
 
     /**
      * Hai trạng thái nhân viên ĐẶT ĐƯỢC bằng ô chọn ở /quan-tri/lich-hen.
