@@ -26,7 +26,8 @@ $path = '/' . ltrim($path, '/');
 // ---------------------------------------------------------------------------
 
 /** Thư mục mã nguồn — không bao giờ phục vụ trực tiếp. */
-$blockedDirs = ['app', 'core', 'config', 'database', 'docs', 'scripts', 'errors', 'storage'];
+$blockedDirs = ['app', 'core', 'config', 'database', 'docs', 'scripts', 'errors',
+                 'storage', 'tools'];
 
 /** Đuôi file không bao giờ phục vụ trực tiếp. */
 $blockedExts = ['php', 'sql', 'md', 'sh', 'log', 'lock', 'example', 'ini',

@@ -39,12 +39,34 @@
     </IfModule>
 </FilesMatch>
 
+# ----------------------------------------------------------------------------
+# TỆP CHẨN ĐOÁN VÀ TRÌNH CÀI ĐẶT — SRS v2.1.0, dọn mã chết đợt 1
+#
+# Bốn tệp dưới đây nằm ở thư mục gốc và chạy được bằng URL. Cả bốn đều có khoá
+# token, nhưng cả bốn cũng đều in ra cấu trúc CSDL, tên bảng, tên cột và trạng
+# thái cấu hình — tức là một bản đồ hệ thống chỉ cách kẻ dò đúng một chuỗi.
+#
+# ĐÂY LÀ HÀNG RÀO THỨ HAI, KHÔNG PHẢI HÀNG RÀO DUY NHẤT. Việc đúng là XOÁ HẲN
+# bốn tệp này khỏi máy chủ thật; khối này chỉ đóng cửa ngay lập tức trong lúc
+# chờ điều đó. Cần chạy lại install.php thì tạm bỏ tên nó ra khỏi danh sách,
+# chạy xong thì đặt lại.
+# ----------------------------------------------------------------------------
+<FilesMatch "^(install|kiem-tra-db|kiem-tra-sepay|chan-doan-quan-tri)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 # Thư mục mã nguồn — chỉ index.php ở gốc được chạy trực tiếp.
 # Chặn cả .php: file trong core/ và app/ được include từ index.php, gọi thẳng
 # qua URL chỉ gây lỗi (thiếu hằng ROOT_PATH) hoặc chạy code ngoài ngữ cảnh.
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(app|core|config|database|docs|scripts|storage)/ - [F,L]
+    RewriteRule ^(app|core|config|database|docs|scripts|storage|tools)/ - [F,L]
 </IfModule>
 
 # ----------------------------------------------------------------------------
