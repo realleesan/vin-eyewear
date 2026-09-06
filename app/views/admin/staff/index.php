@@ -27,13 +27,12 @@ $base = '/quan-tri/nhan-vien';
  * một tài khoản vẫn còn vai trò admin là nói sai về quyền nó đang có.
  */
 $vaiTroCao = static function (string $roles): string {
-    /* 'technician' phải nằm trong danh sách này, nếu không một Kỹ thuật viên
-       in ra thành "Nhân viên" — sai về quyền họ đang có, vì Q77.2 cho vai trò
-       này chạm vào hồ sơ khúc xạ còn Nhân viên thì không.
-
-       Xếp giữa manager và staff theo đúng thứ tự thang quyền ở
-       StaffAdminController::VAI_TRO. */
-    foreach (['admin', 'manager', 'technician', 'staff'] as $vt) {
+    /* Chỉ còn hai bậc trong khu quản trị — SRS v2.1.0. Vẫn giữ vòng lặp thay
+       vì một phép so sánh: dữ liệu cũ có thể còn dòng 'manager' hay
+       'technician' trên máy chưa chạy migration đợt 2, và khi đó chúng không
+       khớp bậc nào nên rơi về 'staff' ở cuối — đúng hơn là in ra một chữ
+       không còn nghĩa. */
+    foreach (['admin', 'staff'] as $vt) {
         if (str_contains($roles, $vt)) {
             return $vt;
         }

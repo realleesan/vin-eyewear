@@ -1399,6 +1399,119 @@ class AuthController extends BaseController
         redirect('/tai-khoan?muc=lich-hen');
     }
 
+    /**
+     * Khách tự huỷ đơn của mình (POST /tai-khoan/don-hang/huy) — UC-02.
+     *
+     * Mọi phép kiểm nằm ở OrderModel::khachHuy(): view đã ẩn nút với đơn không
+     * đủ điều kiện, nhưng mã đơn nằm ngay trong HTML của trang đó và một tab mở
+     * từ trước khi nhân viên đổi trạng thái vẫn còn nút cũ (E3 của UC-02).
+     */
+    public function cancelOrder(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost('/tai-khoan?muc=don-hang');
+
+        $code = (string) ($_POST['code'] ?? '');
+
+        $ket = OrderModel::khachHuy(
+            $code,
+            $userId,
+            (string) ($_POST['ly_do'] ?? ''),
+            (string) ($_POST['ly_do_khac'] ?? '')
+        );
+
+        if (!$ket['ok']) {
+            /* MỞ LẠI ĐÚNG HỘP XÁC NHẬN VỪA BỊ TỪ CHỐI — `&huy=<mã>`.
+
+               Không có tham số này thì $moHuy sai với mọi thẻ đơn, hộp xác nhận
+               đóng lại, và khách đọc một dòng đỏ ở đầu trang mà không còn thấy
+               cái form nó nói về. Lỗi hay gặp nhất ở đây là chọn "Lý do khác"
+               rồi bỏ trống ô ghi rõ — tức khách phải tìm lại đơn, bấm lại Huỷ
+               đơn, chọn lại lý do, chỉ để sửa một ô.
+
+               Cùng lối với saveAddress (`?sua=`) và rescheduleBooking (`?doi=`). */
+            flash('account_error', $ket['error'] ?? 'Không huỷ được đơn hàng.');
+            redirect('/tai-khoan?muc=don-hang&huy=' . rawurlencode($code));
+        }
+
+        /* NÓI RÕ CHUYỆN TIỀN NGAY TRONG CÂU BÁO THÀNH CÔNG.
+
+           Khách vừa huỷ một đơn đã đặt cọc thì câu hỏi tiếp theo trong đầu họ
+           là "tiền của tôi thì sao". Bắt họ đi tìm câu trả lời ở một trang khác
+           là để họ gọi điện cho cửa hàng — đúng việc mà cả ca dùng này sinh ra
+           để khỏi phải làm. */
+        flash('account_success', $ket['refund'] !== null
+            ? 'Đã huỷ đơn ' . ($ket['code'] ?? '') . '. Cửa hàng sẽ xem xét hoàn tiền cọc '
+              . 'và liên hệ lại với bạn.'
+            : 'Đã huỷ đơn ' . ($ket['code'] ?? '') . '.');
+
+        redirect('/tai-khoan?muc=don-hang');
+    }
+
+    /**
+     * Khách tự yêu cầu xoá tài khoản (POST /tai-khoan/xoa) — UC-01.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * BA Ô PHẢI ĐỦ: MẬT KHẨU, TÍCH ĐỒNG Ý, VÀ (KHI CÓ LỊCH HẸN) XÁC NHẬN LẦN HAI
+     *
+     * Ô tích đồng ý kiểm Ở ĐÂY chứ không chỉ bằng `required` trong HTML: một cú
+     * POST dựng tay không đi qua trình duyệt. Với một thao tác không lùi lại
+     * được bằng một cú bấm thì lớp chặn ở máy chủ là lớp duy nhất đáng tin.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function deleteAccount(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost('/tai-khoan?muc=ho-so');
+
+        if (($_POST['dong_y'] ?? '') !== '1') {
+            flash('account_error', 'Vui lòng tích ô xác nhận trước khi xoá tài khoản.');
+            redirect('/tai-khoan?muc=ho-so&xoa=1');
+        }
+
+        $ket = CustomerModel::khachTuXoa(
+            $userId,
+            (string) ($_POST['mat_khau'] ?? ''),
+            ($_POST['xac_nhan_lich'] ?? '') === '1'
+        );
+
+        if (!$ket['ok']) {
+            /* CẢNH BÁO KHÁC TỪ CHỐI.
+ 
+               `canhBao` là ca lịch hẹn sắp tới (E4): khách vẫn xoá được, chỉ
+               cần bấm thêm một lần. Mở lại form kèm cờ `?canh-bao=1` để nó vẽ
+               nút xác nhận lần hai thay vì chỉ in một dòng đỏ rồi thôi. */
+            if (isset($ket['canhBao'])) {
+                flash('account_error', $ket['canhBao']);
+                redirect('/tai-khoan?muc=ho-so&xoa=1&canh-bao=1');
+            }
+
+            flash('account_error', $ket['error'] ?? 'Không xoá được tài khoản.');
+            redirect('/tai-khoan?muc=ho-so&xoa=1');
+        }
+
+        /* CHẤM DỨT PHIÊN NGAY.
+ 
+           Tài khoản đã ở trạng thái xoá mềm nên requireLogin() sẽ chặn ở lượt
+           bấm sau, nhưng để phiên sống thêm một nhịp nghĩa là khách bấm Xoá
+           xong vẫn thấy trang tài khoản của mình — đúng thứ làm người ta tưởng
+           thao tác chưa chạy và bấm lại. */
+        AuthMiddleware::logout();
+
+        /* DẢI BÁO TOÀN SITE, không phải một khoá tự đặt.
+
+           Bản đầu dùng flash('success', …) — một khoá KHÔNG CÓ AI ĐỌC: khung
+           trang chỉ lấy dải báo qua BaseController::toastFromFlash(). Khách bấm
+           một thao tác không lùi lại được rồi bị đưa về trang chủ đã đăng xuất,
+           không một chữ nào xác nhận nó đã chạy — đúng thứ làm người ta tưởng
+           hỏng rồi bấm lại (mà lần này họ không đăng nhập được nữa).
+
+           'site_success' chứ không 'cart_success': dòng này không dính gì tới
+           giỏ hàng, và toastFromFlash() nay đọc khoá trung tính ấy trước. */
+        flash('site_success', 'Đã tiếp nhận yêu cầu xoá tài khoản. Cảm ơn bạn đã dùng Vin Eyewear.');
+        redirect('/');
+    }
+
     public function rescheduleBooking(): void
     {
         $userId = AuthMiddleware::requireLogin();
@@ -1547,7 +1660,7 @@ class AuthController extends BaseController
            Ghép bằng LensModel::joinSph() — đúng hàm mà luồng thêm tròng vào giỏ
            đang dùng, nên một con số nhập ở hai nơi ra cùng một chuỗi trong CSDL.
            Tự nối chuỗi ở đây là mở đường cho hai chỗ lệch nhau ở lần sửa sau. */
-        UserModel::savePrescription($userId, [
+        $ket = UserModel::savePrescription($userId, [
             'od_sph'         => LensModel::joinSph($_POST['od_dau'] ?? null, $_POST['od_sph'] ?? null),
             'od_cyl'         => $_POST['od_cyl'] ?? '',
             'od_axis'        => $_POST['od_axis'] ?? '',
@@ -1561,6 +1674,40 @@ class AuthController extends BaseController
             'store_id'       => $_POST['store_id'] ?? '',
             'recommendation' => $_POST['recommendation'] ?? '',
         ]);
+
+        /* ĐƯỜNG GHI MỚI TỪ CHỐI ĐƯỢC — SRS v2.1.0, FR-DM-01.
+
+           Từ khi số đo của khách đi chung một đường ghi với số đo của nhân
+           viên (PrescriptionRecordModel::save), nó chịu đủ bộ kiểm miền giá
+           trị: bước nhảy 0,25, quan hệ trụ/trục, ngày đo không ở tương lai.
+
+           Bản cũ trả void nên không có gì để kiểm. Bỏ qua kết quả ở đây là để
+           khách bấm Lưu, thấy trang tải lại y như thành công, và tin rằng số
+           đo đã vào hồ sơ — trong khi nó bị từ chối. */
+        if (!$ket['ok']) {
+            /* LỌC THÔNG BÁO: LỖI CỦA NGƯỜI NHẬP THÌ HIỆN, LỖI HẠ TẦNG THÌ KHÔNG.
+ 
+               Đường ghi này dùng chung với khu quản trị, và vài câu lỗi của nó
+               viết cho nhân viên kỹ thuật — có cả tên file .sql và đường dẫn
+               thư mục nội bộ ("Chạy database/migrations/… rồi thử lại"). Đổ
+               nguyên văn ra trang tài khoản là vừa vô nghĩa với khách vừa phơi
+               cấu trúc dự án.
+ 
+               Nhận ra lỗi hạ tầng bằng chính dấu hiệu ấy: câu nào nhắc tới
+               migration thì thay bằng một câu chung và ghi bản thật vào log.
+               Lỗi miền giá trị ("Độ trụ phải nằm trong khoảng…") thì hiện
+               nguyên văn — chúng viết cho người đang nhập, và đó là thứ duy
+               nhất nói cho khách biết phải sửa ô nào. */
+            $loi = (string) ($ket['error'] ?? '');
+
+            if ($loi === '' || str_contains($loi, 'migration')) {
+                error_log('updatePrescription: ' . ($loi !== '' ? $loi : 'không rõ lý do'));
+                $loi = 'Chưa lưu được thông số đo mắt. Vui lòng thử lại hoặc liên hệ cửa hàng.';
+            }
+
+            flash('account_error', $loi);
+            redirect('/tai-khoan?muc=do-mat&sua=1');
+        }
 
         flash('account_success', 'Đã lưu thông số đo mắt.');
         redirect('/tai-khoan?muc=do-mat');

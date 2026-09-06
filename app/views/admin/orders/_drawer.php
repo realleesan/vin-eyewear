@@ -181,26 +181,27 @@ $canMark = !$paid
                         Chưa bắt đầu mài — huỷ bây giờ thì khách còn được hoàn 100% cọc.
                     </p>
 
-                    <?php if (!empty($order['la_quan_ly'])): ?>
-                        <form class="aomai__form" method="post"
-                              action="/quan-tri/don-hang/bat-dau-mai">
-                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                            <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
-                            <input type="hidden" name="id" value="<?= e($order['id']) ?>">
-                            <button class="aomai__go" type="submit">Bắt đầu mài</button>
-                        </form>
-                        <p class="aomai__hint">
-                            Rút lại được trong <?= (int) (OrderModel::RUT_LAI_GIAY / 60) ?> phút.
-                            Sau đó phải ghi lý do.
-                        </p>
-                    <?php else: ?>
-                        <?php /* X07: người bấm là Quản lý cơ sở trở lên. Kỹ thuật
-                                 viên vẫn có vai trò riêng nhưng phạm vi của nó là
-                                 hồ sơ khúc xạ (Q77.2), không phải nút này. */ ?>
-                        <p class="aomai__hint">
-                            Chỉ Quản lý cơ sở trở lên bấm được nút này.
-                        </p>
-                    <?php endif; ?>
+                    <?php /* MỌI NHÂN VIÊN BẤM ĐƯỢC — SRS v2.1.0, ma trận 5.2.2.
+
+                             Trước đây nút này gác sau vai trò Quản lý cơ sở.
+                             Người BẤM phải là người đang cầm phôi tròng, tức
+                             nhân viên trực — xem khối chú thích ở
+                             OrderAdminController::startLens().
+
+                             Không còn điều kiện nào ở đây. Đường LÙI mới là
+                             chỗ siết: rút lại trong 5 phút thì đúng người bấm,
+                             quá cửa sổ đó thì Quản trị viên kèm lý do. */ ?>
+                    <form class="aomai__form" method="post"
+                          action="/quan-tri/don-hang/bat-dau-mai">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="quay_lai" value="<?= e($quayLai) ?>">
+                        <input type="hidden" name="id" value="<?= e($order['id']) ?>">
+                        <button class="aomai__go" type="submit">Bắt đầu mài</button>
+                    </form>
+                    <p class="aomai__hint">
+                        Rút lại được trong <?= (int) (OrderModel::RUT_LAI_GIAY / 60) ?> phút.
+                        Sau đó phải ghi lý do và cần Quản trị viên.
+                    </p>
                 <?php else: ?>
                     <p class="aomai__state">
                         Đã bắt đầu mài lúc
@@ -225,7 +226,7 @@ $canMark = !$paid
                             Bấm nhầm? Rút lại được trong
                             <?= (int) (OrderModel::RUT_LAI_GIAY / 60) ?> phút đầu.
                         </p>
-                    <?php elseif (!empty($order['la_quan_ly'])): ?>
+                    <?php elseif (!empty($order['la_admin'])): ?>
                         <form class="aomai__form" method="post"
                               action="/quan-tri/don-hang/huy-mai">
                             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
@@ -243,7 +244,7 @@ $canMark = !$paid
                         </p>
                     <?php else: ?>
                         <p class="aomai__hint">
-                            Quá cửa sổ rút lại — chỉ Quản lý cơ sở trở lên đảo ngược được.
+                            Quá cửa sổ rút lại — chỉ Quản trị viên đảo ngược được.
                         </p>
                     <?php endif; ?>
                 <?php endif; ?>

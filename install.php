@@ -89,7 +89,10 @@ if ($fatal === null) {
 // KIỂM TRA SCHEMA
 // ---------------------------------------------------------------------------
 $expectedTables = [
-    'users', 'profiles', 'user_roles', 'prescriptions',
+    // 'prescriptions' bỏ khỏi danh sách từ đợt 3 (SRS v2.1.0, FR-DM-01):
+    // số đo mắt nay chỉ nằm ở `customer_prescriptions`, và bảng tóm tắt sẽ
+    // được gỡ sau một tuần chạy ổn định.
+    'users', 'profiles', 'user_roles',
     'categories', 'products', 'stores',
     // 'favorites' đã gỡ 2026-09-06 (SRS v2.1.0) — bảng chưa từng có màn hình
     // nào dùng. Để lại đây thì trang này báo đỏ vĩnh viễn và chặn cả bước tạo

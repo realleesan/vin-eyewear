@@ -49,8 +49,7 @@ class CollectionAdminController extends AdminController
             'pageTitle'   => 'Bộ sưu tập — Quản trị',
             'collections' => $collections,
             'counts'      => $counts,
-            'canEdit'     => UserModel::hasRole($this->userId, 'admin')
-                          || UserModel::hasRole($this->userId, 'manager'),
+            'canEdit'     => UserModel::hasRole($this->userId, 'admin'),
             'editing'     => isset($_GET['sua']) ? CollectionModel::find((string) $_GET['sua']) : null,
             // Cột `story` có thể chưa tồn tại trên máy chưa chạy migration —
             // xem khối chú thích trong save(). Form giấu ô nhập khi chưa có.
@@ -83,7 +82,7 @@ class CollectionAdminController extends AdminController
     {
         $this->guardPostSize(self::BASE);
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id   = (string) ($_POST['id'] ?? '');
         $name = trim((string) ($_POST['name'] ?? ''));
@@ -236,7 +235,7 @@ class CollectionAdminController extends AdminController
     public function delete(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id  = (string) ($_POST['id'] ?? '');
         $row = CollectionModel::find($id);
@@ -297,7 +296,7 @@ class CollectionAdminController extends AdminController
     public function saveTexts(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         if (!Database::tableExists('site_texts')) {
             flash('admin_error', 'Chưa chạy nâng cấp cơ sở dữ liệu cho phần nội dung trang.');
@@ -443,7 +442,7 @@ class CollectionAdminController extends AdminController
     public function saveFaq(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $collectionId = (string) ($_POST['collection_id'] ?? '');
         $quay         = self::BASE . '?sua=' . rawurlencode($collectionId) . '#faq';
@@ -489,7 +488,7 @@ class CollectionAdminController extends AdminController
     public function deleteFaq(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id  = (string) ($_POST['id'] ?? '');
         $row = Database::tableExists('collection_faqs') ? CollectionFaqModel::find($id) : null;
@@ -631,7 +630,7 @@ class CollectionAdminController extends AdminController
     public function move(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $huong = ThuTuService::huongTuRequest($_POST['huong'] ?? null);
 
@@ -653,7 +652,7 @@ class CollectionAdminController extends AdminController
     public function toggle(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id  = (string) ($_POST['id'] ?? '');
         $bst = CollectionModel::find($id);

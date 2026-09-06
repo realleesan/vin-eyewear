@@ -44,10 +44,17 @@ class WaitlistAdminController extends AdminController
     {
         $this->requirePost('/quan-tri/cho-hang');
 
-        /* requireManager chứ không chỉ requireStaff: đánh dấu "đã báo" là xoá
-           một việc khỏi danh sách việc phải làm. Cùng mức quyền với sửa tồn
-           kho — xem InventoryAdminController::updateStock. */
-        $this->requireManager('/quan-tri/cho-hang');
+        /* MỌI NHÂN VIÊN — SRS v2.1.0, ma trận 5.2.2.
+
+           Trước đây thao tác này đòi Quản lý cơ sở, xếp cùng mức với sửa tồn
+           kho. Nhưng hai việc khác hẳn nhau: sửa tồn kho là đổi một con số
+           kinh doanh, còn đánh dấu "đã báo" chỉ là ghi nhận rằng chính người
+           đang bấm vừa gọi điện cho khách xong. Bắt họ đi tìm Quản trị viên
+           để ghi lại việc mình vừa làm là đặt một cánh cửa giữa người làm và
+           việc họ vừa làm.
+
+           Không còn phép kiểm nào ở đây — constructor của lớp cha đã chặn
+           người ngoài khu quản trị. */
 
         $id = (string) ($_POST['id'] ?? '');
 

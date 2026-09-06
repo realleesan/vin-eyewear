@@ -198,7 +198,8 @@ echo '   ✓ ', count($tables), " bảng: ", implode(', ', array_slice($tables, 
 
 // 'favorites' đã gỡ 2026-09-06 (SRS v2.1.0) — bảng chưa từng có màn hình nào
 // dùng, và schema.sql mới không tạo nó nữa.
-$need    = ['users', 'profiles', 'user_roles', 'prescriptions', 'categories',
+// 'prescriptions' bỏ khỏi danh sách từ đợt 3 — xem install.php.
+$need    = ['users', 'profiles', 'user_roles', 'categories',
             'products', 'stores', 'appointments',
             'orders', 'order_items', 'contact_requests', 'remember_tokens',
             'password_resets'];

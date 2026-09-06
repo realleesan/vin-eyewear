@@ -76,12 +76,11 @@ class LensOptionAdminController extends AdminController
                — thiếu sót có từ ngày dựng màn, chỉ không lộ ra vì một TypeError
                ở dòng ngay trên đã giết trang trước khi chạy tới.
 
-               Cùng mức quyền với ba đường ghi bên dưới (requireManager) và với
-               màn Giá tròng: đây là dữ liệu catalog, Quản lý cơ sở sửa được.
-               Đây CHỈ để vẽ — chặn thật vẫn nằm ở requireManager() trong từng
-               action, đúng luật hai tầng ở mục 3.A.2 của spec. */
-            'canEdit'   => UserModel::hasRole($this->userId, 'admin')
-                        || UserModel::hasRole($this->userId, 'manager'),
+               Cùng mức quyền với ba đường ghi bên dưới và với màn Giá tròng:
+               đây là dữ liệu catalog, chỉ Quản trị viên sửa được (SRS v2.1.0,
+               ma trận 5.2.2). Đây CHỈ để vẽ — chặn thật vẫn nằm ở
+               requireAdmin() trong từng action. */
+            'canEdit'   => UserModel::hasRole($this->userId, 'admin'),
         ]);
     }
 
@@ -89,7 +88,7 @@ class LensOptionAdminController extends AdminController
     public function save(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         if (!LensOptionModel::editable()) {
             flash('admin_error', 'Cơ sở dữ liệu chưa được nâng cấp cho phần này.');
@@ -170,7 +169,7 @@ class LensOptionAdminController extends AdminController
     public function toggle(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         /* Kiểm bảng TRƯỚC khi kiểm bản ghi. findRow() trả null cho cả hai
            trường hợp, nên bỏ bước này thì máy chưa nâng cấp nhận câu "Không
@@ -199,7 +198,7 @@ class LensOptionAdminController extends AdminController
     public function move(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         if (!LensOptionModel::editable()) {
             flash('admin_error', 'Cơ sở dữ liệu chưa được nâng cấp cho phần này.');

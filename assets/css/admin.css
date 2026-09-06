@@ -4585,3 +4585,68 @@ a.astatus__save { text-decoration: none; }
 }
 
 .alhdoi__btn:hover { border-color: var(--brand); color: var(--brand); }
+
+
+/* ============================================================================
+   HOÀN TIỀN CỌC — UC-04, màn /quan-tri/hoan-tien (đợt 4)
+
+   Chỉ ba lớp. Bảng, dải viên lọc, ngăn kéo và ô nhập đều mượn nguyên các lớp
+   chung đã có (.atable, .anote--alert, .amodal__*, .field) — màn này không có
+   nhu cầu trình bày nào riêng ngoài hai chỗ dưới đây.
+   ============================================================================ */
+
+/* BỐN CĂN CỨ TÍNH TIỀN, xếp ngang ở đầu ngăn kéo.
+
+   Là <dl> chứ không phải bảng: đây là bốn cặp nhãn–giá trị của MỘT yêu cầu,
+   không phải bốn dòng so sánh được với nhau. auto-fit để trên màn hẹp chúng
+   rơi xuống hai hàng thay vì bị nén thành bốn cột không đọc nổi. */
+.arefund__facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px 20px;
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border: 1px solid var(--a-panel-line);
+    border-radius: 10px;
+    background: #faf5ea;
+}
+
+.arefund__facts dt {
+    margin-bottom: 3px;
+    font-size: var(--fs-caption);
+    color: var(--muted);
+}
+
+.arefund__facts dd {
+    margin: 0;
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* Dòng kể lại quyết định đã chốt — đọc, không bấm. Nền ngà cùng họ với .anote:
+   cùng một quy ước của khu quản trị, hộp ngà là chỗ đọc chữ. */
+.arefund__done {
+    margin: 0 0 18px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    background: #fdf9f1;
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    color: #5b4f42;
+}
+
+.arefund__done strong { color: var(--ink); }
+
+/* Khối TỪ CHỐI tách khỏi khối duyệt bằng một đường kẻ.
+
+   Hai form nằm cạnh nhau trong cùng một ngăn kéo, và chúng dẫn tới hai kết quả
+   trái ngược nhau cho cùng một khoản tiền. Đường kẻ là thứ nói rằng từ đây trở
+   xuống là một ý định khác — thiếu nó thì ô "Lý do duyệt lệch" và ô "Từ chối
+   hoàn tiền — lý do" trông như hai ô của một form. */
+.arefund__reject {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--a-panel-line);
+}

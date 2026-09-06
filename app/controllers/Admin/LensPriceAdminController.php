@@ -64,8 +64,7 @@ class LensPriceAdminController extends AdminController
                đâu cả. Xem LensModel::packages(). */
             'pkgEditable' => LensModel::packagesEditable(),
             // Bảng giá là dữ liệu catalog, cùng mức quyền với sản phẩm và cơ sở.
-            'canEdit'   => UserModel::hasRole($this->userId, 'admin')
-                        || UserModel::hasRole($this->userId, 'manager'),
+            'canEdit'   => UserModel::hasRole($this->userId, 'admin'),
             // Kiểu không có bảng giá, để view giải thích vì sao nó vắng mặt.
             'quotedTypes' => array_values(array_filter(
                 LensModel::types(),
@@ -80,7 +79,7 @@ class LensPriceAdminController extends AdminController
     public function save(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         /* Ô nhập tên là gia[<mã kiểu>][<mã gói>], nên $_POST['gia'] tới đây đã
            đúng hình dạng mà savePriceTable() nhận. Ép về mảng chứ không tin
@@ -197,7 +196,7 @@ class LensPriceAdminController extends AdminController
     public function savePackage(): void
     {
         $this->requirePost(self::PKG);
-        $this->requireManager(self::PKG);
+        $this->requireAdmin(self::PKG);
 
         if (!LensModel::packagesEditable()) {
             flash('admin_error', 'Cơ sở dữ liệu chưa được nâng cấp cho phần này.');
@@ -272,7 +271,7 @@ class LensPriceAdminController extends AdminController
     public function deletePackage(): void
     {
         $this->requirePost(self::PKG);
-        $this->requireManager(self::PKG);
+        $this->requireAdmin(self::PKG);
 
         /* Kiểm bảng TRƯỚC khi kiểm bản ghi. findPackageRow() trả null cho cả
            hai trường hợp, nên bỏ qua bước này thì máy chưa nâng cấp sẽ nhận câu
@@ -335,7 +334,7 @@ class LensPriceAdminController extends AdminController
     public function movePackage(): void
     {
         $this->requirePost(self::PKG);
-        $this->requireManager(self::PKG);
+        $this->requireAdmin(self::PKG);
 
         $huong = ThuTuService::huongTuRequest($_POST['huong'] ?? null);
 

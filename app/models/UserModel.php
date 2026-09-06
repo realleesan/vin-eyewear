@@ -20,21 +20,26 @@ class UserModel extends BaseModel
     protected static string $table = 'users';
 
     /*
-     * NĂM VAI TRÒ — X31, chốt 04/09/2026.
+     * BA VAI TRÒ — SRS v2.1.0, mục 5.2.
      *
-     * 'technician' thêm vào 05/09 cùng migration phân quyền theo cơ sở; vai
-     * trò "Chủ doanh nghiệp" bị BỎ và dùng chung quyền Quản trị viên.
+     * Khách hàng · Nhân viên · Quản trị viên. Khu quản trị chỉ còn HAI bậc.
      *
-     * ⚠ HAI HẰNG NÀY PHẢI KHỚP với ENUM `user_roles.role` trong CSDL. Thêm một
-     * vai trò ở đây mà quên ALTER ENUM thì gán vai trò đó ném lỗi 1265; thêm
-     * vào ENUM mà quên ở đây thì người mang vai trò ấy KHÔNG vào được khu quản
-     * trị và cũng không có thông báo nào nói vì sao — isStaff() chỉ lặng lẽ
-     * trả false. Chuyện thứ hai đúng là điều suýt xảy ra với 'technician'.
+     * 'technician' (Kỹ thuật viên) và 'manager' (Quản lý cơ sở) đã gỡ. Việc
+     * của Kỹ thuật viên — nhập và đính chính hồ sơ đo mắt — nay là việc của
+     * mọi Nhân viên; quyền của Quản lý cơ sở phần lớn chuyển lên Quản trị
+     * viên, trừ ba thao tác đi ngược xuống Nhân viên (bấm mốc mài, đánh dấu đã
+     * báo hàng về, và nhóm hồ sơ đo mắt). Xem ma trận ở mục 5.2.2 của SRS.
+     *
+     * ⚠ HAI HẰNG NÀY PHẢI KHỚP với ENUM `user_roles.role` trong CSDL. Bỏ một
+     * vai trò ở đây mà quên ALTER ENUM thì dữ liệu cũ vẫn mang giá trị đó và
+     * người ấy KHÔNG vào được khu quản trị mà không có thông báo nào nói vì
+     * sao — isStaff() chỉ lặng lẽ trả false. Vì thế migration đợt 2 phải
+     * CHUYỂN DỮ LIỆU TRƯỚC rồi mới thu ENUM.
      */
-    public const ROLES = ['customer', 'staff', 'technician', 'manager', 'admin'];
+    public const ROLES = ['customer', 'staff', 'admin'];
 
     /** Vai trò được vào khu quản trị. */
-    public const STAFF_ROLES = ['staff', 'technician', 'manager', 'admin'];
+    public const STAFF_ROLES = ['staff', 'admin'];
 
     /**
      * Giới tính — khoá lưu vào `profiles.gender`, giá trị là nhãn hiện ra.
@@ -1066,19 +1071,59 @@ class UserModel extends BaseModel
     // ========================================================================
 
     /**
-     * Thông số đo mắt gần nhất, kèm tên cơ sở đã đo.
+     * Thông số đo mắt gần nhất của khách, kèm tên cơ sở đã đo.
      *
-     * LEFT JOIN chứ không JOIN: `store_id` được phép NULL (đo ở nơi khác, hoặc
-     * cơ sở cũ đã đóng cửa và khoá ngoại đã SET NULL). JOIN thường sẽ làm cả
-     * bản ghi biến mất trong đúng những trường hợp đó.
+     * ─────────────────────────────────────────────────────────────────────────
+     * ĐỌC TỪ SỔ CHỈ-THÊM, KHÔNG CÒN BẢNG TÓM TẮT — SRS v2.1.0, FR-DM-01
+     *
+     * Trước đây số đo nằm ở HAI nơi: bảng `prescriptions` giữ đúng một dòng mỗi
+     * khách (bản tóm tắt phía khách đọc), và bảng `customer_prescriptions` giữ
+     * toàn bộ lịch sử theo cơ chế chỉ-thêm. Một hàm mirrorLatest() chép từ sổ
+     * sang bảng tóm tắt sau mỗi lần ghi.
+     *
+     * Hai nơi lưu cùng một sự thật thì sớm muộn lệch nhau, và khi lệch thì
+     * không có cách nào biết bên nào đúng — trong khi đây là con số đem đi mài
+     * tròng. Chủ đầu tư đã bỏ bảng tóm tắt; sổ chỉ-thêm là nguồn duy nhất.
+     *
+     * LẤY BẢN MỚI NHẤT theo ngày đo, rồi tới thời điểm ghi. Hai mức sắp xếp
+     * chứ không một: hai bản cùng ngày đo (đo lại trong ngày, hoặc một lần
+     * đính chính) thì `created_at` mới là thứ phân định.
+     *
+     * LEFT JOIN chứ không JOIN: `store_id` được phép NULL (khách tự khai, toa
+     * từ nơi khác, hoặc cơ sở cũ đã đóng cửa và khoá ngoại đã SET NULL). JOIN
+     * thường sẽ làm cả bản ghi biến mất trong đúng những trường hợp đó.
+     * ─────────────────────────────────────────────────────────────────────────
      */
     public static function prescription(string $userId): ?array
     {
+        if (!PrescriptionRecordModel::available()) {
+            return null;
+        }
+
+        /* LIỆT KÊ CỘT, KHÔNG DÙNG `c.*`.
+ 
+           Sổ chỉ-thêm có hai cột NỘI BỘ mà khách không được đọc: `tech_note`
+           (nhận định chuyên môn — schema ghi rõ "không hiện cho khách") và
+           `ly_do` (lý do đính chính). `c.*` đổ cả hai vào biến mà view khách
+           dùng; hôm nay chưa in ra nên chưa lộ, nhưng một vòng lặp in bảng
+           thêm vào sau là lộ ngay, và người thêm nó sẽ không biết.
+ 
+           `note` xuất ra dưới tên `recommendation` để view khách không phải
+           đổi: hai cột này cùng một thứ — ô ghi chú KHÁCH ĐỌC ĐƯỢC — chỉ khác
+           tên giữa bảng tóm tắt cũ và sổ. */
         return Database::fetchOne(
-            'SELECT p.*, s.name AS store_name
-               FROM prescriptions p
-               LEFT JOIN stores s ON s.id = p.store_id
-              WHERE p.user_id = :id',
+            'SELECT c.id, c.source, c.measured_at, c.store_id,
+                    c.od_sph, c.od_cyl, c.od_axis, c.od_va,
+                    c.os_sph, c.os_cyl, c.os_axis, c.os_va,
+                    c.pd, c.pd_od, c.pd_os, c.od_add, c.os_add,
+                    c.note AS recommendation, c.note,
+                    c.created_at, c.updated_at,
+                    s.name AS store_name
+               FROM customer_prescriptions c
+               LEFT JOIN stores s ON s.id = c.store_id
+              WHERE c.user_id = :id
+              ORDER BY c.measured_at DESC, c.created_at DESC
+              LIMIT 1',
             ['id' => $userId]
         );
     }
@@ -1118,15 +1163,6 @@ class UserModel extends BaseModel
      * ─────────────────────────────────────────────────────────────────────────
      */
 
-    /**
-     * Lưu hồ sơ khúc xạ. Mỗi khách đúng một bản ghi nên dùng
-     * INSERT ... ON DUPLICATE KEY UPDATE thay vì tự kiểm tồn tại rồi rẽ nhánh.
-     *
-     * Ba nhóm cột được xử lý khác nhau nên không gộp thành một vòng lặp:
-     *   số thực  sph, cyl, pd     — (float), ô trống thành NULL
-     *   số nguyên axis            — kẹp về 0..180, ngoài khoảng là NULL
-     *   chuỗi    va, recommendation, measured_at, store_id
-     */
     /**
      * Thị lực có đúng dạng phân số hợp lệ không — "9/10", "10/10", "6/10"…
      *
@@ -1168,75 +1204,85 @@ class UserModel extends BaseModel
         return preg_match('#^(10|[0-9])/(10|[0-9])$#', $raw) === 1;
     }
 
-    public static function savePrescription(string $userId, array $values): void
+    /**
+     * Khách TỰ KHAI số đo — ghi thẳng vào sổ chỉ-thêm.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * MỘT ĐƯỜNG GHI DUY NHẤT — SRS v2.1.0, FR-DM-01 và FR-DM-03
+     *
+     * Trước đây hàm này dựng lấy câu INSERT ... ON DUPLICATE KEY UPDATE của
+     * riêng nó vào bảng tóm tắt `prescriptions`, kèm một bộ kiểm giá trị riêng.
+     * Tức là hệ thống có HAI đường ghi số đo với HAI bộ luật:
+     *
+     *   · đường của khách   ghi đè bản cũ, kiểm sơ (chỉ ép kiểu và chặn trục
+     *                       ngoài 0–180)
+     *   · đường của nhân viên  chỉ-thêm, kiểm đầy đủ miền giá trị và bước nhảy
+     *
+     * Hai bộ luật cho cùng một loại dữ liệu y tế là thứ sẽ lệch: một con số bị
+     * đường này từ chối lại lọt qua đường kia, và không ai biết cho tới khi nó
+     * đi vào một đơn cắt tròng.
+     *
+     * Nay chỉ còn PrescriptionRecordModel::save() — nó kiểm đủ miền giá trị,
+     * bước nhảy 0,25, quan hệ trụ/trục, dạng thị lực, và ngày đo không ở tương
+     * lai (FR-DM-13). Hàm này còn lại đúng việc gắn nhãn NGUỒN.
+     *
+     * NGUỒN LÀ 'customer', KHÔNG PHẢI 'store'. Con số khách chép từ tờ đơn
+     * thuốc cũ không đáng tin bằng con số kỹ thuật viên vừa đo, và người đọc
+     * bảng phải phân biệt được trước khi đem đi mài — CLAUDE.md điểm A1.
+     *
+     * KHÔNG CÒN GHI ĐÈ. Mỗi lần khách lưu là một bản ghi MỚI trong sổ, không
+     * phải một lần sửa bản cũ: đó là hai lần khai khác nhau ở hai thời điểm,
+     * và giữ cả hai thì còn đối chiếu được. Muốn ĐÍNH CHÍNH một bản đã khai
+     * thì truyền $id — nhưng trang tài khoản hiện không mở đường đó.
+     *
+     * `actorId` = chính khách. Vết kiểm toán nhờ đó phân biệt được "khách tự
+     * khai" với "nhân viên nhập hộ", dù cả hai cùng nằm trên một tài khoản.
+     *
+     * TRẢ VỀ MẢNG chứ không void như trước: đường ghi mới TỪ CHỐI được, và nơi
+     * gọi phải nói lại cho người dùng biết vì sao. Bỏ qua giá trị trả về ở đây
+     * là để khách bấm Lưu, thấy trang tải lại, và tin rằng đã lưu xong.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return array{ok:bool, error?:string, id?:string}
+     */
+    public static function savePrescription(string $userId, array $values): array
     {
-        $params = ['user_id' => $userId];
+        $values['source'] = 'customer';
 
-        /*
-         * THỨ KHÔNG PHẢI SỐ THÌ THÀNH NULL, không phải 0.
-         *
-         * Trước đây chỗ này ép thẳng `(float)`, và PHP biến mọi chuỗi lạ thành
-         * 0.0 — không cảnh báo gì. Với cột độ kính thì đó là kiểu hỏng tệ
-         * nhất: 0.00 diop là "không độ", một giá trị HỢP LỆ trong đơn thuốc,
-         * nên nó nằm im trong hồ sơ và không ai biết số đo thật đã mất.
-         *
-         * Bắt được đúng chuyện này khi chạy thử bảng số đo mới: dấu trừ thật
-         * (U+2212) trong "−2.00" khiến (float) trả 0.0. Chuỗi đó nay đã được
-         * chuẩn hoá từ LensModel::joinSph(), nhưng chốt ở đây là lưới thứ hai
-         * — cột này còn nhận dữ liệu từ chỗ khác về sau.
-         */
-        foreach (['od_sph', 'od_cyl', 'os_sph', 'os_cyl', 'pd'] as $f) {
-            $raw = trim((string) ($values[$f] ?? ''));
-            $params[$f] = is_numeric($raw) ? (float) $raw : null;
-        }
-
-        foreach (['od_axis', 'os_axis'] as $f) {
-            $raw = $values[$f] ?? '';
-            // Trục loạn thị chỉ có nghĩa trong 0..180 độ; số ngoài khoảng là
-            // gõ nhầm, và lưu vào thì bảng thông số in ra một góc không tồn tại.
-            $params[$f] = ($raw === '' || (int) $raw < 0 || (int) $raw > 180)
-                ? null : (int) $raw;
-        }
-
-        foreach (['recommendation', 'measured_at', 'store_id'] as $f) {
-            $raw = trim((string) ($values[$f] ?? ''));
-            $params[$f] = $raw === '' ? null : $raw;
+        /* TÊN Ô GHI CHÚ KHÁC NHAU GIỮA HAI BÊN.
+ 
+           Bảng tóm tắt cũ gọi ô "khách đọc được" là `recommendation`; sổ
+           chỉ-thêm gọi nó là `note` (và dành `tech_note` cho ghi chú nội bộ).
+           Không ánh xạ ở đây thì khoá `recommendation` rơi vào khoảng không:
+           validate() bỏ qua khoá lạ không một tiếng động, nên khách gõ khuyến
+           nghị, thấy báo "đã lưu", và chữ đó không vào CSDL ở đâu cả. */
+        if (!isset($values['note']) && isset($values['recommendation'])) {
+            $values['note'] = $values['recommendation'];
         }
 
         /*
-         * THỊ LỰC — kiểm dạng phân số, xem vaHopLe() ở trên.
+         * ─────────────────────────────────────────────────────────────────────
+         * LƯU LẠI LÀ ĐÍNH CHÍNH BẢN TỰ KHAI CŨ, KHÔNG PHẢI KHAI THÊM MỘT LẦN
          *
-         * Controller đã chặn và báo lỗi cho người dùng TRƯỚC khi gọi tới đây
-         * (xem AuthController::updatePrescription), nên nhánh null bên dưới
-         * gần như không bao giờ chạy. Vẫn giữ, vì model là tầng cuối trước
-         * CSDL: một chỗ gọi mới quên kiểm thì hồ sơ mất giá trị lạ chứ không
-         * nhận nó vào — mất một ô còn hơn lưu một con số y tế sai.
+         * Trang tài khoản là màn SỬA: form điền sẵn số cũ, có nút Huỷ. Người
+         * dùng đang sửa. Nếu mỗi lần bấm Lưu đều CHÈN một bản ghi mới thì sửa
+         * một lỗi gõ trục sinh ra hai "lần đo" cùng ngày với số khác nhau, và
+         * nhân viên đọc sổ trước khi mài tròng không có cách nào biết bản nào
+         * thay bản nào. Sửa năm lần là năm dòng.
+         *
+         * Nên truyền id của bản TỰ KHAI mới nhất của chính khách: sổ ghi nó
+         * thành một PHIÊN BẢN trong cùng nhóm (FR-DM-04), bản cũ vẫn tra cứu
+         * được đầy đủ, và bảng lịch sử hiện đúng một dòng "đã sửa N lần".
+         *
+         * CHỈ nhóm với bản do CHÍNH KHÁCH khai. Bản do kỹ thuật viên đo là một
+         * phép đo khác của một người khác, ở một thời điểm khác — chồng phiên
+         * bản của khách lên đó là ghi đè lời của người có chuyên môn bằng lời
+         * khách tự nhớ, đúng thứ CLAUDE.md điểm A1 cấm.
+         * ─────────────────────────────────────────────────────────────────────
          */
-        foreach (['od_va', 'os_va'] as $f) {
-            $raw = trim((string) ($values[$f] ?? ''));
-            $params[$f] = ($raw === '' || !self::vaHopLe($raw)) ? null : $raw;
-        }
+        $banTuKhai = PrescriptionRecordModel::banTuKhaiMoiNhat($userId);
 
-        /* Năm ô "kính đang đeo" đã gỡ — SRS v2.1.0, A20. */
-
-        Database::execute(
-            'INSERT INTO prescriptions
-                (user_id, od_sph, od_cyl, od_axis, od_va,
-                         os_sph, os_cyl, os_axis, os_va,
-                         pd, measured_at, store_id, recommendation)
-             VALUES
-                (:user_id, :od_sph, :od_cyl, :od_axis, :od_va,
-                           :os_sph, :os_cyl, :os_axis, :os_va,
-                           :pd, :measured_at, :store_id, :recommendation)
-             ON DUPLICATE KEY UPDATE
-                od_sph = VALUES(od_sph), od_cyl = VALUES(od_cyl),
-                od_axis = VALUES(od_axis), od_va = VALUES(od_va),
-                os_sph = VALUES(os_sph), os_cyl = VALUES(os_cyl),
-                os_axis = VALUES(os_axis), os_va = VALUES(os_va),
-                pd = VALUES(pd), measured_at = VALUES(measured_at),
-                store_id = VALUES(store_id), recommendation = VALUES(recommendation)',
-            $params
-        );
+        return PrescriptionRecordModel::save($banTuKhai, $userId, $values, $userId);
     }
 
     /**
@@ -1261,10 +1307,11 @@ class UserModel extends BaseModel
      * vội giữa lúc mua hàng đè lên nó là xoá một bản ghi có nguồn gốc bằng một
      * bản ghi không có, mà không hỏi ai.
      *
-     * `measured_at` để NULL: đây là số khách chép từ đơn thuốc, không phải kết
-     * quả một buổi đo, nên không có ngày đo nào để ghi. Trang tài khoản in ra
-     * "Chưa ghi ngày đo" — đúng, vì cửa hàng chưa từng đo cho người này.
-     * (Huy hiệu "Còn hiệu lực / Nên đo lại" đã gỡ theo SRS v2.1.0, H09.)
+     * `measured_at` = HÔM NAY, không để trống. FR-DM-13 bắt buộc phải có ngày
+     * đo, mà luồng mua hàng không hỏi ngày — khách chỉ gõ độ vào hộp thoại chọn
+     * tròng. Hôm nay là câu trả lời trung thực nhất có thể cho một bản TỰ KHAI:
+     * nó nói đúng "khách khai con số này vào ngày này". Lý do đầy đủ ở chỗ
+     * truyền tham số trong thân hàm.
      * ─────────────────────────────────────────────────────────────────────────
      *
      * Khách vãng lai ($userId null) và số đo rỗng đều là no-op.
@@ -1289,14 +1336,40 @@ class UserModel extends BaseModel
             return;
         }
 
-        self::savePrescription($userId, [
-            'od_sph'  => $od['sph']  ?? '',
-            'od_cyl'  => $od['cyl']  ?? '',
-            'od_axis' => $od['axis'] ?? '',
-            'os_sph'  => $os['sph']  ?? '',
-            'os_cyl'  => $os['cyl']  ?? '',
-            'os_axis' => $os['axis'] ?? '',
+        /* NGÀY ĐO = HÔM NAY.
+ 
+           FR-DM-13 bắt buộc phải có ngày đo, mà luồng mua hàng không hỏi ngày:
+           khách gõ độ vào hộp thoại chọn tròng, không khai mình đo hôm nào.
+ 
+           Hôm nay là câu trả lời trung thực nhất có thể cho một bản TỰ KHAI:
+           nó nói đúng "khách khai con số này vào ngày này", chứ không giả vờ
+           biết buổi đo thật diễn ra lúc nào. Để trống thì bản ghi bị đường ghi
+           từ chối; đoán một ngày trong quá khứ thì tệ hơn — đó là bịa ra một
+           dữ kiện y tế. */
+        $ket = self::savePrescription($userId, [
+            'od_sph'      => $od['sph']  ?? '',
+            'od_cyl'      => $od['cyl']  ?? '',
+            'od_axis'     => $od['axis'] ?? '',
+            'os_sph'      => $os['sph']  ?? '',
+            'os_cyl'      => $os['cyl']  ?? '',
+            'os_axis'     => $os['axis'] ?? '',
+            'measured_at' => date('Y-m-d'),
         ]);
+
+        /* GHI LOG KHI HỎNG — đường ghi mới TRẢ VỀ lỗi chứ không NÉM.
+ 
+           CartController bọc lời gọi này trong try/catch và ghi error_log, với
+           lời hứa "vẫn ghi log để còn biết". Từ đợt 3 đường ghi không ném nữa
+           nên khối catch đó thành mã chết, và ba tình huống hỏng thật — bảng
+           chưa tồn tại, giá trị rớt miền, ngày sai định dạng — trở nên hoàn
+           toàn im lặng: hồ sơ không được dựng và không ai biết.
+ 
+           Vẫn KHÔNG chặn luồng mua hàng: dựng sẵn hồ sơ là việc phụ, mất nó thì
+           khách vẫn khai lại được ở trang tài khoản, còn mất đơn hàng thì không
+           lấy lại được. Cùng lý lẽ với khối catch bên CartController. */
+        if (!$ket['ok']) {
+            error_log('seedPrescription: ' . ($ket['error'] ?? 'không rõ lý do'));
+        }
     }
 
     /**
@@ -1435,10 +1508,32 @@ class UserModel extends BaseModel
                 ['id' => $userId, 'ten' => utf8Substr($fullName, 0, 120)]
             );
 
+            /*
+             * ─────────────────────────────────────────────────────────────
+             * XOÁ THEO DANH SÁCH CÓ CẢ HAI VAI TRÒ ĐÃ GỠ — SRS v2.1.0
+             *
+             * Trước đây câu này dựng danh sách từ STAFF_ROLES. Sau khi hằng đó
+             * thu còn ['staff','admin'], một dòng 'manager' hay 'technician'
+             * còn sót trong CSDL sẽ KHÔNG bị xoá — và người vừa được hạ xuống
+             * "Nhân viên" vẫn giữ nguyên dòng cũ bên cạnh.
+             *
+             * Hậu quả không lộ ra ngay: migration đợt 2 sau đó đổi 'manager'
+             * thành 'admin', nên người vừa bị hạ quyền lại thành Quản trị
+             * viên. Không lỗi, không cảnh báo, và phép đếm tổng số tài khoản
+             * nội bộ cũng không bắt được vì số người không đổi.
+             *
+             * Nên danh sách ở đây gõ thẳng và có cả hai giá trị di sản. Nó trả
+             * lời câu "dọn sạch mọi vai trò nội bộ của người này", không phải
+             * "liệt kê những vai trò hệ thống còn dùng" — hai câu khác nhau,
+             * và chỉ câu đầu mới đúng việc câu lệnh này đang làm.
+             * ─────────────────────────────────────────────────────────────
+             */
+            $moiVaiTroNoiBo = ['staff', 'technician', 'manager', 'admin'];
+
             $keys   = [];
             $params = ['uid' => $userId];
 
-            foreach (self::STAFF_ROLES as $i => $r) {
+            foreach ($moiVaiTroNoiBo as $i => $r) {
                 $keys[] = ':r' . $i;
                 $params['r' . $i] = $r;
             }

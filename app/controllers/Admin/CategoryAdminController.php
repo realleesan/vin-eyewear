@@ -36,8 +36,7 @@ class CategoryAdminController extends AdminController
                    FROM categories c
                   ORDER BY c.sort_order ASC, c.name ASC'
             ),
-            'canEdit'    => UserModel::hasRole($this->userId, 'admin')
-                         || UserModel::hasRole($this->userId, 'manager'),
+            'canEdit'    => UserModel::hasRole($this->userId, 'admin'),
             'editing'    => isset($_GET['sua']) ? CategoryModel::find((string) $_GET['sua']) : null,
         ]);
     }
@@ -45,7 +44,7 @@ class CategoryAdminController extends AdminController
     public function save(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id   = (string) ($_POST['id'] ?? '');
         $name = trim((string) ($_POST['name'] ?? ''));
@@ -95,7 +94,7 @@ class CategoryAdminController extends AdminController
     public function delete(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id = (string) ($_POST['id'] ?? '');
 
@@ -134,7 +133,7 @@ class CategoryAdminController extends AdminController
     public function move(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $huong = ThuTuService::huongTuRequest($_POST['huong'] ?? null);
 
@@ -170,7 +169,7 @@ class CategoryAdminController extends AdminController
     public function toggle(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id  = (string) ($_POST['id'] ?? '');
         $cat = CategoryModel::find($id);

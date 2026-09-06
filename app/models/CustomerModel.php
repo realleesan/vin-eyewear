@@ -21,8 +21,8 @@
  * Là tài khoản KHÔNG giữ vai trò nội bộ nào (staff · manager · admin), chứ
  * không phải "tài khoản có vai trò customer".
  *
- * Nghe thì ngược, nhưng đây là cách duy nhất đúng: một quản lý cửa hàng cũng
- * mua kính cho vợ nên tài khoản của họ có CẢ 'customer' lẫn 'manager'. Lọc
+ * Nghe thì ngược, nhưng đây là cách duy nhất đúng: một nhân viên cũng mua
+ * kính cho vợ nên tài khoản của họ có CẢ 'customer' lẫn 'staff'. Lọc
  * theo "có customer" sẽ kéo người đó vào danh sách khách, và rồi ai đó sẽ bấm
  * khoá tài khoản ngay trước giờ mở cửa. Lọc theo "không có vai trò nội bộ" thì
  * không bao giờ xảy ra chuyện đó — và danh sách khách với danh sách tài khoản
@@ -447,6 +447,199 @@ class CustomerModel extends BaseModel
      * lệnh DELETE thật sẽ làm toàn bộ đơn hàng của khách mất chủ vĩnh viễn —
      * không có đường nào nối lại, và sổ sách kế toán không cho phép.
      */
+    /**
+     * KHÁCH TỰ YÊU CẦU XOÁ TÀI KHOẢN — SRS v2.1.0, UC-01 · FR-TK-17.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * XOÁ MỀM, KHÔNG XOÁ VẬT LÝ — BR-TK-17.1
+     *
+     * Tài khoản biến mất khỏi mọi giao diện và mọi đường đăng nhập, nhưng đơn
+     * hàng, hồ sơ đo mắt và vết kiểm toán GIỮ NGUYÊN trong cơ sở dữ liệu.
+     *
+     * Đó không phải sự nửa vời. Đơn hàng cũ là chứng từ kế toán của cửa hàng,
+     * không phải tài sản riêng của khách — xoá chúng đi là làm hỏng sổ sách của
+     * một bên thứ ba. Hồ sơ đo mắt là dữ liệu y tế đã dùng để cắt tròng, và nếu
+     * khách quay lại khiếu nại "các anh mài sai độ" thì không còn gì đối chiếu.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * BA ĐIỀU KIỆN CHẶN — BR-TK-17.2, cùng E2/E3/E4 của UC-01
+     *
+     *   đơn chưa kết thúc   từ chối. Xoá tài khoản giữa lúc còn đơn đang giao
+     *                       là để lại một đơn không liên hệ được với ai.
+     *   cọc chưa xử lý      từ chối. Đây là tiền của khách đang nằm ở cửa hàng.
+     *   lịch hẹn sắp tới    CẢNH BÁO, không chặn — khách xác nhận tiếp thì xoá,
+     *                       và lịch hẹn bị huỷ theo.
+     *
+     * Ba mức khác nhau vì hậu quả khác nhau: hai cái đầu có bên thứ ba (cửa
+     * hàng, hoặc tiền) chịu ảnh hưởng, cái cuối chỉ ảnh hưởng chính khách.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return array{ok:bool, error?:string, canhBao?:string}
+     */
+    public static function khachTuXoa(string $userId, string $matKhau, bool $daXacNhanLich): array
+    {
+        $user = UserModel::find($userId);
+
+        if ($user === null || $user['deleted_at'] !== null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy tài khoản.'];
+        }
+
+        /* E1 — SAI MẬT KHẨU.
+ 
+           Kiểm danh tính bằng chính mật khẩu chứ không dựa vào việc "đang đăng
+           nhập": phiên có thể là của một máy để quên ở quán cà phê, và xoá tài
+           khoản là thao tác không lùi lại được bằng một cú bấm.
+ 
+           Tài khoản đăng ký bằng Google không có mật khẩu để nhập — bản này
+           chưa mở đường xoá cho họ, và nói thẳng ra thay vì báo "sai mật khẩu"
+           cho một ô mà họ chưa bao giờ đặt.
+
+           ─────────────────────────────────────────────────────────────────────
+           THỬ MẬT KHẨU TRƯỚC, RỒI MỚI HỎI GOOGLE — thứ tự này là bản sửa
+
+           Bản đầu hỏi ngược: google_id có VÀ password_hash rỗng thì báo câu
+           Google. Vế thứ hai không bao giờ đúng — UserModel::findOrCreateGoogle()
+           đặt một mật khẩu ngẫu nhiên 32 byte cho tài khoản tạo qua Google, nên
+           `password_hash` luôn là một chuỗi bcrypt thật dài 60 ký tự và phép so
+           với '' không bao giờ khớp. Người dùng Google vì thế rơi thẳng xuống
+           password_verify(), vốn cũng không bao giờ khớp vì không ai biết cái
+           mật khẩu ngẫu nhiên ấy. Kết quả: họ gõ gì cũng nhận đúng câu "Mật khẩu
+           không đúng", mãi mãi — đúng câu mà khối này viết ra để tránh.
+
+           Đảo lại thì đúng cả hai chiều, kể cả ca lai: người đăng ký bằng Google
+           rồi sau đó ĐẶT mật khẩu qua "quên mật khẩu" sẽ qua vế đầu như mọi
+           khách khác, còn người chưa từng đặt thì nhận đúng câu Google.
+           ───────────────────────────────────────────────────────────────────── */
+        if (!password_verify($matKhau, (string) ($user['password_hash'] ?? ''))) {
+            if (($user['google_id'] ?? null) !== null) {
+                return ['ok' => false, 'error' =>
+                    'Tài khoản đăng nhập bằng Google chưa tự xoá được ở đây. '
+                    . 'Vui lòng liên hệ cửa hàng để được hỗ trợ.'];
+            }
+
+            return ['ok' => false, 'error' => 'Mật khẩu không đúng.'];
+        }
+
+        // E2 — còn đơn chưa kết thúc.
+        $soDon = OrderModel::countActive($userId);
+
+        if ($soDon > 0) {
+            return ['ok' => false, 'error' => sprintf(
+                'Bạn còn %d đơn hàng chưa kết thúc nên chưa xoá tài khoản được. '
+                . 'Vui lòng chờ đơn hoàn tất, hoặc liên hệ cửa hàng.',
+                $soDon
+            )];
+        }
+
+        /* E3 — CÒN TIỀN CỌC CHƯA XỬ LÝ.
+
+           HỎI available() TRƯỚC KHI CHẠY CÂU LỆNH, không phải sau: câu dưới
+           nhắc tới `refund_requests`, và trên một máy chưa chạy migration đợt 4
+           thì đó là lỗi 1146 ném thẳng vào giữa luồng xoá tài khoản. Kiểm sau
+           là kiểm một kết quả không bao giờ tới. */
+        $soCoc = 0;
+
+        if (RefundRequestModel::available()) {
+            $soCoc = (int) Database::fetchValue(
+                /* KHÔNG kèm `deposit_amount > 0` — bỏ ở bản sửa đợt 4.
+
+                   `deposit_amount` là phần cọc PHẢI trả, và đơn chỉ mua gọng để
+                   nó bằng 0 vì gọng không cần cọc. Nhưng khách vẫn chuyển khoản
+                   đủ tiền cho một đơn như thế được, và khi ấy cửa hàng đang giữ
+                   TRỌN số tiền ấy. Điều kiện cũ bỏ sót đúng ca đó: khách xoá
+                   được tài khoản trong khi cửa hàng còn giữ tiền của họ và
+                   không còn hồ sơ nào để liên hệ.
+
+                   `payment_status` mới là cột trả lời "tiền đã về chưa" — cùng
+                   một luật với RefundRequestModel::daNhan(). */
+                "SELECT COUNT(*) FROM orders o
+                  WHERE o.user_id = :uid
+                    AND o.payment_status IN ('deposit_paid', 'paid')
+                    AND o.status = 'cancelled'
+                    AND NOT EXISTS (SELECT 1 FROM refund_requests r
+                                     WHERE r.order_id = o.id
+                                       AND r.status IN ('refunded', 'rejected'))",
+                ['uid' => $userId]
+            );
+        }
+
+        if ($soCoc > 0) {
+            return ['ok' => false, 'error' =>
+                'Bạn còn tiền cọc đang chờ cửa hàng xử lý hoàn trả nên chưa xoá '
+                . 'tài khoản được. Vui lòng liên hệ cửa hàng.'];
+        }
+
+        /* E4 — LỊCH HẸN SẮP TỚI: cảnh báo một lần, không chặn.
+ 
+           Trả về `canhBao` thay vì `error` để nơi gọi phân biệt được hai thứ:
+           lần gửi thứ nhất hiện lời cảnh báo và một nút xác nhận, lần thứ hai
+           mang cờ $daXacNhanLich và đi tiếp. */
+        if (!$daXacNhanLich) {
+            $soLich = (int) Database::fetchValue(
+                "SELECT COUNT(*) FROM appointments
+                  WHERE user_id = :uid
+                    AND status NOT IN ('cancelled', 'done')
+                    AND appointment_date >= CURDATE()",
+                ['uid' => $userId]
+            );
+
+            if ($soLich > 0) {
+                return ['ok' => false, 'canhBao' => sprintf(
+                    'Bạn còn %d lịch hẹn sắp tới. Xoá tài khoản sẽ huỷ luôn %s. '
+                    . 'Bấm xác nhận lần nữa nếu bạn vẫn muốn xoá.',
+                    $soLich,
+                    $soLich > 1 ? 'các lịch này' : 'lịch này'
+                )];
+            }
+        }
+
+        Database::transaction(static function () use ($userId): void {
+            Database::execute(
+                "UPDATE users
+                    SET deleted_at = NOW(),
+                        deletion_reason = 'Khách tự yêu cầu xoá tài khoản'
+                  WHERE id = :id AND deleted_at IS NULL",
+                ['id' => $userId]
+            );
+
+            /* NGUỒN YÊU CẦU — BR-TK-17.3.
+ 
+               Bọc riêng vì cột đến ở migration đợt 4: máy chưa nâng cấp thì mất
+               phần phân biệt "khách tự xoá / nhân viên xoá", không mất cả thao
+               tác xoá mà khách vừa yêu cầu. */
+            if (Database::columnExists('users', 'deleted_source')) {
+                Database::execute(
+                    "UPDATE users SET deleted_source = 'customer' WHERE id = :id",
+                    ['id' => $userId]
+                );
+            }
+
+            /* HUỶ LỊCH HẸN SẮP TỚI. Khách đã được cảnh báo ở E4 và đã xác nhận.
+ 
+               Không xoá dòng: lịch hẹn đã huỷ vẫn là dữ liệu vận hành của cửa
+               hàng (ai đặt, đặt rồi bỏ). Chỉ đổi trạng thái. */
+            Database::execute(
+                "UPDATE appointments
+                    SET status = 'cancelled'
+                  WHERE user_id = :uid
+                    AND status NOT IN ('cancelled', 'done')
+                    AND appointment_date >= CURDATE()",
+                ['uid' => $userId]
+            );
+        });
+
+        /* CẮT MỌI ĐƯỜNG VÀO CÒN LẠI.
+ 
+           Không có dòng này thì "đã xoá" chỉ đúng với người chưa đăng nhập: ai
+           đang giữ cookie ghi nhớ vẫn vào thẳng như thường, và vào được hàng
+           tháng trời. Cùng lý lẽ với lock() và softDelete(). */
+        RememberModel::forgetAllFor($userId);
+
+        AuditLogModel::write($userId, 'soft_delete', 'Khách tự yêu cầu xoá tài khoản');
+
+        return ['ok' => true];
+    }
+
     public static function softDelete(string $id, string $reason = ''): array
     {
         if (self::detail($id) === null) {
@@ -505,14 +698,26 @@ class CustomerModel extends BaseModel
      * NOT EXISTS chứ không LEFT JOIN ... IS NULL: một người có hai vai trò sẽ
      * ra hai dòng trong phép nối, và câu đếm ở counts() đếm gấp đôi họ.
      *
-     * Ba vai trò gõ thẳng vào chuỗi được vì chúng là hằng trong chính file
-     * này, không đến từ dữ liệu — nhưng nếu có ngày chúng chuyển sang đọc từ
-     * cấu hình thì phải đổi sang tham số ràng buộc ngay.
+     * Vai trò gõ thẳng vào chuỗi được vì chúng là hằng trong chính file này,
+     * không đến từ dữ liệu — nhưng nếu có ngày chúng chuyển sang đọc từ cấu
+     * hình thì phải đổi sang tham số ràng buộc ngay.
+     *
+     * GIỮ 'manager' VÀ 'technician' DÙ HAI VAI TRÒ ĐÓ ĐÃ GỠ — SRS v2.1.0.
+     *
+     * Danh sách này trả lời "ai KHÔNG phải khách hàng", và nó phải đúng cả
+     * trong khoảng giữa lúc deploy mã và lúc chạy migration đợt 2. Bỏ hai giá
+     * trị cũ ra sớm thì một tài khoản nội bộ chưa được chuyển vai trò sẽ hiện
+     * trong danh sách khách hàng, kèm số điện thoại và lịch sử đơn của chính
+     * nhân viên đó.
+     *
+     * Thừa hai giá trị không khớp dòng nào thì không hại gì; thiếu một giá trị
+     * còn khớp thì rò một tài khoản. Hai chiều sai không cân nhau, nên chọn
+     * chiều thừa.
      */
     private const KHONG_NOI_BO =
         "NOT EXISTS (SELECT 1 FROM user_roles r
                       WHERE r.user_id = u.id
-                        AND r.role IN ('staff', 'manager', 'admin'))";
+                        AND r.role IN ('staff', 'technician', 'manager', 'admin'))";
 
     /**
      * Dựng mệnh đề WHERE dùng chung cho đếm, phân trang và xuất file.

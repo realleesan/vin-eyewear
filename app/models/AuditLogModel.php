@@ -109,6 +109,21 @@ class AuditLogModel extends BaseModel
         'booking.status'     => 'Đổi trạng thái lịch hẹn',
         'booking.reschedule' => 'Dời ngày lịch hẹn',
         'booking.cancel'     => 'Huỷ lịch hẹn',
+
+        /* HOÀN TIỀN CỌC — UC-04, thêm 06/09/2026 cùng đợt 4.
+           SNFR-11 buộc ghi vết mọi thao tác ra tiền. Ba mã này là thao tác ra
+           tiền RÕ RÀNG NHẤT trong cả hệ thống: chúng chốt một con số rồi tuyên
+           bố nó đã rời tài khoản cửa hàng. Hệ thống không tự chuyển khoản
+           (BR-DH-14.5), nên dòng nhật ký NÀY là bằng chứng duy nhất trong phần
+           mềm rằng có người đã quyết định chi và có người đã xác nhận chi xong.
+
+           Tách 'refund.approve' khỏi 'refund.paid' vì hai việc khác nhau và có
+           thể do hai người làm, cách nhau nhiều ngày: duyệt là hứa, hoàn là
+           trả. Khoảng cách giữa hai dòng chính là thứ cần đọc được khi khách
+           gọi hỏi "duyệt rồi sao chưa thấy tiền". */
+        'refund.approve' => 'Duyệt hoàn tiền cọc',
+        'refund.reject'  => 'Từ chối hoàn tiền cọc',
+        'refund.paid'    => 'Đã hoàn tiền cọc cho khách',
     ];
 
     /**
@@ -133,6 +148,10 @@ class AuditLogModel extends BaseModel
         'tien'     => ['nhan' => 'Đơn hàng và tiền', 'actions' => [
             'payment.paid', 'payment.unpaid', 'payment.deposit', 'order.status', 'order.cancel',
             'order.lens_start', 'order.lens_undo',
+            /* Hoàn tiền nằm chung nhóm "Đơn hàng và tiền" chứ không thành nhóm
+               riêng: người mở màn nhật ký hỏi "tuần này ai đụng vào tiền của
+               đơn X", và câu trả lời đầy đủ phải có cả cọc vào lẫn cọc ra. */
+            'refund.approve', 'refund.reject', 'refund.paid',
         ]],
         'kho'      => ['nhan' => 'Tồn kho', 'actions' => ['stock.adjust']],
         'lich-hen' => ['nhan' => 'Lịch hẹn', 'actions' => [

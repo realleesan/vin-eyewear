@@ -123,6 +123,16 @@ class InventoryAdminController extends AdminController
 
         $this->renderAdmin('admin/inventory/index', [
             'pageTitle' => 'Tồn kho — Quản trị',
+            /* CỜ VẼ PHẢI KHỚP PHÉP CHẶN — thiếu từ ngày dựng màn.
+
+               updateStock() đòi Quản trị viên (ma trận 5.2.2), nhưng view vẫn
+               vẽ ô nhập và nút Lưu cho mọi người vào được trang. Nhân viên gõ
+               số, bấm Lưu, bị đá về đúng trang đó kèm câu từ chối, và con số
+               vừa gõ mất — lặp lại được vô hạn vì nút không bao giờ biến mất.
+
+               Cùng lối với tám màn danh mục còn lại. Đây CHỈ để vẽ; chặn thật
+               vẫn nằm ở requireAdmin() trong updateStock(). */
+            'canEdit'   => UserModel::hasRole($this->userId, 'admin'),
             /* LIMIT/OFFSET ghép thẳng, KHÔNG qua tham số ràng buộc: dự án tắt
                EMULATE_PREPARES, và MySQL không nhận tham số ở vị trí LIMIT khi
                dùng prepared statement thật. An toàn vì cả hai đều là số nguyên
@@ -156,7 +166,7 @@ class InventoryAdminController extends AdminController
     public function updateStock(): void
     {
         $this->requirePost('/quan-tri/ton-kho');
-        $this->requireManager('/quan-tri/ton-kho');
+        $this->requireAdmin('/quan-tri/ton-kho');
 
         $id  = (string) ($_POST['id'] ?? '');
         $qty = max(0, (int) ($_POST['stock_quantity'] ?? 0));

@@ -22,7 +22,8 @@
  *   xem danh sách · xem chi tiết         mọi tài khoản nội bộ
  *   khoá · mở khoá · xoá · khôi phục     quản lý trở lên
  *   xuất danh sách                       quản lý trở lên
- *   ĐƠN THUỐC KÍNH (kể cả CHỈ XEM)       CHỈ quản trị
+ *   ĐƠN THUỐC KÍNH — đọc, tạo, đính chính  MỌI nhân viên (SRS v2.1.0)
+ *   ĐƠN THUỐC KÍNH — xoá                   CHỈ quản trị
  *
  * DỮ LIỆU CỦA KHÁCH LÀ CHỈ XEM — hồ sơ và sổ địa chỉ, không ai trong khu quản
  * trị sửa được, kể cả quản trị viên.
@@ -151,7 +152,7 @@ class CustomerAdminController extends AdminController
             return;
         }
 
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $q      = trim((string) ($_GET['q'] ?? ''));
         $filter = (string) ($_GET['status'] ?? '');
@@ -354,7 +355,7 @@ class CustomerAdminController extends AdminController
     public function lock(): void
     {
         $id = $this->batDauPost('ho-so');
-        $this->requireManager(self::BASE . '/' . rawurlencode($id));
+        $this->requireAdmin(self::BASE . '/' . rawurlencode($id));
 
         $ket = CustomerModel::lock($id, (string) ($_POST['ly_do'] ?? ''), $this->userId);
 
@@ -367,7 +368,7 @@ class CustomerAdminController extends AdminController
     public function unlock(): void
     {
         $id = $this->batDauPost('ho-so');
-        $this->requireManager(self::BASE . '/' . rawurlencode($id));
+        $this->requireAdmin(self::BASE . '/' . rawurlencode($id));
 
         $ket = CustomerModel::unlock($id);
 
@@ -380,7 +381,7 @@ class CustomerAdminController extends AdminController
     public function softDelete(): void
     {
         $id = $this->batDauPost('ho-so');
-        $this->requireManager(self::BASE . '/' . rawurlencode($id));
+        $this->requireAdmin(self::BASE . '/' . rawurlencode($id));
 
         $ket = CustomerModel::softDelete($id, (string) ($_POST['ly_do_xoa'] ?? ''));
 
@@ -400,7 +401,7 @@ class CustomerAdminController extends AdminController
     public function restore(): void
     {
         $id = $this->batDauPost('ho-so');
-        $this->requireManager(self::BASE . '/' . rawurlencode($id));
+        $this->requireAdmin(self::BASE . '/' . rawurlencode($id));
 
         $ket = CustomerModel::restore($id);
 
@@ -421,7 +422,7 @@ class CustomerAdminController extends AdminController
     // ========================================================================
 
     // ========================================================================
-    // ĐƠN THUỐC KÍNH — CHỈ QUẢN TRỊ
+    // ĐƠN THUỐC KÍNH — MỌI NHÂN VIÊN (riêng xoá vẫn chỉ Quản trị viên)
     // ========================================================================
 
     public function savePrescription(): void
@@ -447,7 +448,19 @@ class CustomerAdminController extends AdminController
     public function deletePrescription(): void
     {
         $id = $this->batDauPost('don-thuoc');
-        $this->chanNeuKhongXemDuocRx($id);
+
+        /*
+         * XOÁ LÀ NGOẠI LỆ — CHỈ QUẢN TRỊ VIÊN.
+         *
+         * Ma trận 5.2.2 của SRS mở cho Nhân viên đúng ba việc trên hồ sơ đo
+         * mắt: ĐỌC, TẠO, ĐÍNH CHÍNH. Xoá không có trong danh sách đó, và đó
+         * không phải chuyện sót: ba việc kia đều CỘNG thêm vào sổ chỉ-thêm nên
+         * sai thì còn đối chiếu được, còn xoá thì lấy đi một bản ghi y tế mà
+         * vết kiểm toán chỉ nói "đã xoá" chứ không dựng lại được con số.
+         *
+         * Vì thế đường này KHÔNG dùng chung canRx() với ba đường kia.
+         */
+        $this->requireAdmin(self::BASE . '/' . rawurlencode($id) . '?tab=don-thuoc');
 
         $ket = PrescriptionRecordModel::deleteOwned((string) ($_POST['rx_id'] ?? ''), $id);
 
@@ -514,22 +527,52 @@ class CustomerAdminController extends AdminController
         return false;
     }
 
-    /** Quản lý hoặc quản trị. */
+    /**
+     * Được thao tác lên tài khoản khách (khoá, mở khoá, xoá, khôi phục, xuất
+     * tệp) — chỉ Quản trị viên, SRS v2.1.0 ma trận 5.2.2.
+     *
+     * Tên hàm giữ nguyên vì nó là chỗ duy nhất trả lời câu ấy và có hai nơi
+     * gọi để vẽ nút; nội dung thì hẹp lại còn 'admin' cùng lúc với việc gỡ vai
+     * trò Quản lý cơ sở. Chặn thật nằm ở requireAdmin() trong từng action —
+     * đây chỉ để quyết định có vẽ nút hay không.
+     */
     private function laQuanLy(): bool
     {
-        return UserModel::hasRole($this->userId, 'admin')
-            || UserModel::hasRole($this->userId, 'manager');
+        return UserModel::hasRole($this->userId, 'admin');
     }
 
     /**
-     * Chỉ 'admin' đọc được đơn thuốc kính.
+     * MỌI TÀI KHOẢN NỘI BỘ đọc và nhập được hồ sơ đo mắt — SRS v2.1.0,
+     * ma trận 5.2.2.
      *
-     * KHÔNG dùng laQuanLy(): quản lý cửa hàng điều hành được mọi việc bán
-     * hàng, nhưng độ cận của khách là dữ liệu sức khoẻ và nó chỉ nên nằm trong
-     * tay số người ít nhất có thể. Đây là yêu cầu nghiệp vụ, không phải một
-     * bậc quyền tiện tay đặt thêm.
+     * ĐỔI HẲN CHIỀU so với trước. Bản cũ giới hạn ở 'admin' với lý lẽ "dữ liệu
+     * sức khoẻ chỉ nên nằm trong tay số người ít nhất có thể". Lý lẽ đó đúng
+     * về nguyên tắc nhưng sai về vận hành: người ĐO MẮT là nhân viên, và bắt
+     * họ đọc số cho Quản trị viên gõ hộ vừa chậm vừa thêm một chỗ chép sai một
+     * con số y tế. Vai trò Kỹ thuật viên sinh ra để giải quyết đúng chuyện này
+     * đã bị gỡ, nên việc của nó về tay Nhân viên.
+     *
+     * CÁI THAY THẾ CHO PHÉP CHẶN LÀ VẾT KIỂM TOÁN. Mọi lượt ĐỌC hồ sơ đo mắt
+     * đều ghi một dòng 'rx.read' kèm người đọc và thời điểm (xem
+     * chanNeuKhongXemDuocRx và AuditLogModel). Không ai bị chặn, nhưng ai xem
+     * hồ sơ của ai thì tra lại được — kiểm soát bằng truy vết thay vì bằng
+     * cánh cửa.
+     *
+     * Hàm giữ nguyên thay vì xoá: nó là chỗ duy nhất trả lời câu "ai đọc được
+     * hồ sơ đo mắt", và giữ nó lại thì lần sau muốn siết lại chỉ phải sửa một
+     * chỗ. Constructor lớp cha đã chặn người ngoài khu quản trị.
      */
     private function canRx(): bool
+    {
+        return true;
+    }
+
+    /**
+     * XOÁ hồ sơ đo mắt — chỉ Quản trị viên. Xem khối chú thích ở
+     * deletePrescription(). Dùng để quyết định có VẼ nút xoá hay không; chặn
+     * thật nằm ở chính action đó.
+     */
+    private function canRxDelete(): bool
     {
         return UserModel::hasRole($this->userId, 'admin');
     }

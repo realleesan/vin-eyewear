@@ -49,6 +49,20 @@ $navGroups = [
         ['url' => '/quan-tri',          'label' => 'Tổng quan', 'exact' => true],
         ['url' => '/quan-tri/don-hang', 'label' => 'Đơn hàng',
          'badge' => $pendingOrders],
+        /* HOÀN TIỀN CỌC — UC-04, ngay dưới Đơn hàng.
+
+           Nằm ở "Vận hành" và MỌI NHÂN VIÊN đều thấy: khách gọi hỏi "tiền của
+           tôi đến đâu rồi" là câu hỏi ở quầy, không phải câu hỏi của quản trị.
+           Xem thì ai cũng được, duyệt thì chỉ Quản trị viên — phép chặn nằm ở
+           ba action ghi của RefundAdminController, không ở dòng này.
+
+           HUY HIỆU CHỈ HIỆN VỚI QUẢN TRỊ VIÊN. Đúng luật đã ghi ở khối trên:
+           huy hiệu dành cho hàng chờ mà NGƯỜI ĐANG NHÌN NÓ làm được gì đó. Với
+           nhân viên, con số này không bao giờ về 0 do việc họ làm — đeo vào chỉ
+           là dạy mắt bỏ qua các con số. Số 0 tự ẩn nên quản trị viên cũng chỉ
+           thấy nó khi thật sự có người đang chờ tiền. */
+        ['url' => '/quan-tri/hoan-tien', 'label' => 'Hoàn tiền cọc',
+         'badge' => in_array('admin', $adminRoles, true) ? $pendingRefunds : 0],
         ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',
          'badge' => $pendingAppointments],
         ['url' => '/quan-tri/lien-he',  'label' => 'Liên hệ', 'badge' => $pendingContacts],

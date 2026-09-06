@@ -132,7 +132,7 @@
         <?php if (!$canManage): ?>
             <p class="ahead__note">
                 Bạn xem được hồ sơ nhưng không khoá hay xoá tài khoản được —
-                những việc đó cần vai trò <strong>Quản lý</strong> trở lên.
+                những việc đó cần vai trò <strong>Quản trị viên</strong>.
             </p>
         <?php else: ?>
 

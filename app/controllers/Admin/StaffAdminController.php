@@ -26,9 +26,9 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * AI ĐƯỢC ĐẶT LẠI CHO AI
  *
- *   · CHỈ vai trò 'admin'. Không phải 'manager' như trang "Quên mật khẩu" của
- *     khách — mật khẩu ở đây mở ra chính khu quản trị, còn mật khẩu bên kia
- *     chỉ mở tài khoản mua hàng của một người khách.
+ *   · CHỈ vai trò 'admin'. Hai trang vẫn tách nhau dù nay cùng đòi 'admin':
+ *     mật khẩu ở đây mở ra chính khu quản trị, còn mật khẩu bên trang "Quên
+ *     mật khẩu" chỉ mở tài khoản mua hàng của một người khách.
  *
  *   · CHỈ tài khoản NỘI BỘ (staff · manager · admin). Khách hàng đi đường
  *     riêng: /quen-mat-khau, và PasswordResetAdminController cho ca không
@@ -50,29 +50,19 @@ class StaffAdminController extends AdminController
 {
     private const BASE = '/quan-tri/nhan-vien';
 
-    /**
-     * Ba vai trò nội bộ, nhãn tiếng Việt.
+    /*
+     * HAI VAI TRÒ TRONG KHU QUẢN TRỊ — SRS v2.1.0, mục 5.2.
      *
-     * Bản vẽ chỉ vẽ hai ('Nhân viên' và 'Quản trị') nhưng 'manager' đã tồn tại
-     * trong ENUM của `user_roles` và trong ma trận quyền ở mục 3.A.2 của đặc
-     * tả — bỏ nó khỏi ô chọn thì tài khoản quản lý đang có sẽ không sửa được
-     * nữa mà không có gì báo.
+     * 'technician' (Kỹ thuật viên) và 'manager' (Quản lý) đã gỡ. Việc của Kỹ
+     * thuật viên — nhập và đính chính hồ sơ đo mắt — nay mọi Nhân viên làm
+     * được; quyền của Quản lý phần lớn lên Quản trị viên.
+     *
+     * Thứ tự trong mảng là thứ tự hiện trên ô chọn, và người dùng đọc nó như
+     * một thang quyền — nên 'staff' đứng trước.
      */
     private const VAI_TRO = [
-        'staff'      => 'Nhân viên',
-        /* VAI TRÒ THỨ NĂM — X31, chốt 04/09/2026.
-
-           Kỹ thuật viên khúc xạ. Có việc thật kể cả sau khi X07 chốt người bấm
-           "Bắt đầu mài" là Quản lý cơ sở: Q77.2 quy định CHỈ Kỹ thuật viên và
-           Quản lý cơ sở được tạo và sửa hồ sơ khúc xạ, tức vai trò này là thứ
-           cho phép một nhân viên chạm vào dữ liệu y tế mà không phải nâng họ
-           lên thành Quản lý.
-
-           Xếp giữa 'staff' và 'manager' vì thứ tự trong mảng này là thứ tự
-           hiện trên ô chọn, và người dùng đọc nó như một thang quyền. */
-        'technician' => 'Kỹ thuật viên',
-        'manager'    => 'Quản lý',
-        'admin'      => 'Quản trị',
+        'staff' => 'Nhân viên',
+        'admin' => 'Quản trị',
     ];
 
     public function index(): void
@@ -86,7 +76,8 @@ class StaffAdminController extends AdminController
            Đặt ngay đầu index() chứ không ở constructor: constructor của lớp cha
            chặn theo "là nhân viên", còn đây là luật riêng của màn hình này.
 
-           TRẢ 403, KHÔNG DÙNG requireAdmin(). Hàm đó chuyển hướng về self::BASE
+           TRẢ 403, KHÔNG DÙNG requireAdmin(). Hàm đó chuyển hướng về chỗ được
+           truyền vào, mà ở đây chỗ đó chính là trang này
            — mà self::BASE CHÍNH LÀ trang này. Gọi nó ở đây là dựng một vòng lặp
            chuyển hướng vô hạn: người không đủ quyền nhận ERR_TOO_MANY_REDIRECTS,
            một trang trắng không nói gì cả. requireAdmin() vẫn đúng cho ba action
@@ -153,7 +144,7 @@ class StaffAdminController extends AdminController
     {
         $this->requirePost(self::BASE);
 
-        /* requireManager() KHÔNG đủ ở đây — xem khối "AI ĐƯỢC ĐẶT LẠI CHO AI"
+        /* Phải là 'admin' — xem khối "AI ĐƯỢC ĐẶT LẠI CHO AI"
            đầu file. Quản lý cửa hàng cấp lại được mật khẩu cho khách, nhưng
            không nên cấp lại được mật khẩu mở chính khu quản trị. */
         if (!UserModel::hasRole($this->userId, 'admin')) {
@@ -194,7 +185,7 @@ class StaffAdminController extends AdminController
     public function save(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireAdmin();
+        $this->requireAdmin(self::BASE);
 
         $id    = trim((string) ($_POST['id'] ?? ''));
         $ten   = trim((string) ($_POST['full_name'] ?? ''));
@@ -253,7 +244,7 @@ class StaffAdminController extends AdminController
     public function toggleLock(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireAdmin();
+        $this->requireAdmin(self::BASE);
 
         $id   = (string) ($_POST['id'] ?? '');
         $khoa = (string) ($_POST['khoa'] ?? '') === '1';
@@ -303,14 +294,14 @@ class StaffAdminController extends AdminController
      * Gộp hai thứ vào một nút là mở nhầm: bấm "Mở khoá" cho người vừa bị cấm
      * vì lý do kỷ luật, chỉ vì họ cũng đang gõ sai mật khẩu.
      *
-     * requireAdmin() chứ không requireManager(): đây là đường vòng qua một
+     * Phải là Quản trị viên: đây là đường vòng qua một
      * biện pháp bảo mật. Người dò mật khẩu mà mở được khoá của chính mình thì
      * cái trần 5 lần không còn nghĩa gì.
      */
     public function moKhoaDangNhap(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireAdmin();
+        $this->requireAdmin(self::BASE);
 
         $id = (string) ($_POST['id'] ?? '');
         $ai = $this->timTaiKhoan($id);
@@ -338,20 +329,17 @@ class StaffAdminController extends AdminController
         redirect(self::BASE);
     }
 
-    /**
-     * Chốt quyền dùng chung cho ba thao tác ghi.
+    /*
+     * requireAdmin() RIÊNG CỦA LỚP NÀY ĐÃ GỠ — SRS v2.1.0.
      *
-     * requireManager() KHÔNG đủ — xem khối "AI ĐƯỢC ĐẶT LẠI CHO AI" đầu file.
-     * Quản lý cửa hàng cấp lại được mật khẩu cho khách, nhưng không nên tự tạo
-     * cho mình một tài khoản quản trị mới.
+     * Lớp cha AdminController nay có requireAdmin(string $fallback) với đúng
+     * luật ấy (đổi tên từ requireManager() và thu hẹp còn 'admin'). Giữ thêm
+     * một bản private ở đây là lỗi biên dịch — PHP không cho lớp con thu hẹp
+     * tầm nhìn của một phương thức protected — và cũng là hai bộ luật cho một
+     * câu hỏi.
+     *
+     * Ba nơi gọi bên trên nay truyền self::BASE làm chỗ quay về.
      */
-    private function requireAdmin(): void
-    {
-        if (!UserModel::hasRole($this->userId, 'admin')) {
-            flash('admin_error', 'Chỉ tài khoản quản trị mới quản lý được tài khoản nội bộ.');
-            redirect(self::BASE);
-        }
-    }
 
     /**
      * Vai trò nội bộ CAO NHẤT của một tài khoản.
@@ -364,7 +352,7 @@ class StaffAdminController extends AdminController
      */
     private function vaiTroChinh(string $userId): string
     {
-        foreach (['admin', 'manager', 'staff'] as $vt) {
+        foreach (['admin', 'staff'] as $vt) {
             if (UserModel::hasRole($userId, $vt)) {
                 return $vt;
             }

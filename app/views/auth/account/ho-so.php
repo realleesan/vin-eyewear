@@ -85,3 +85,86 @@ $gender = $profile['gender'] ?? null;
 
     <button type="submit" class="acct-btn acct-btn--primary acct-btn--start">Lưu thay đổi</button>
 </form>
+
+<?php
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * XOÁ TÀI KHOẢN — SRS v2.1.0, UC-01 · FR-TK-17
+ *
+ * ĐẶT CUỐI TRANG, TÁCH KHỎI FORM HỒ SƠ, VÀ ĐÓNG SẴN.
+ *
+ * Ba quyết định trình bày, đều có lý do:
+ *
+ *   cuối trang    đây là việc làm một lần trong đời tài khoản, không phải một
+ *                 ô người ta sửa hằng tháng. Đặt nó cạnh ô "Ngày sinh" là mời
+ *                 một cú bấm nhầm.
+ *   form riêng    gộp vào form hồ sơ thì mỗi lần lưu ngày sinh cũng gửi kèm
+ *                 trường xoá, và chỉ cần một lỗi ở tầng đọc là mất tài khoản.
+ *   đóng sẵn      mở bằng ?xoa=1 trên địa chỉ, cùng lối với ?sua= của sổ địa
+ *                 chỉ. Không có JS thì vẫn mở được.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+$moXoa   = isset($_GET['xoa']);
+$canhBao = isset($_GET['canh-bao']);
+?>
+
+<section class="acct-card acct-danger">
+    <h2 class="acct-form__title">Xoá tài khoản</h2>
+
+    <?php if (!$moXoa): ?>
+        <p class="acct-danger__lead">
+            Bạn có thể yêu cầu xoá tài khoản Vin Eyewear của mình. Đơn hàng đã đặt
+            vẫn được cửa hàng xử lý bình thường.
+        </p>
+        <a class="acct-btn acct-btn--outline acct-btn--sm"
+           href="/tai-khoan?muc=ho-so&amp;xoa=1">Tôi muốn xoá tài khoản</a>
+    <?php else: ?>
+        <?php
+        /* NÊU RÕ HẬU QUẢ TRƯỚC KHI HỎI MẬT KHẨU — bước 2 của UC-01.
+ 
+           Cả ba dòng đều là điều khách sẽ chỉ phát hiện SAU khi xoá nếu không
+           nói trước, và dòng thứ ba là dòng quan trọng nhất: nó trả lời câu
+           "đơn tôi đang đặt thì sao", tức nỗi lo thật sự của người sắp bấm. */
+        ?>
+        <p class="acct-danger__lead">Sau khi xoá, bạn sẽ:</p>
+        <ul class="acct-danger__list">
+            <li>Không đăng nhập được nữa, kể cả bằng Google.</li>
+            <li>Mất quyền tra cứu đơn hàng và hồ sơ đo mắt trên website.</li>
+            <li>
+                <strong>Đơn hàng đã đặt vẫn được cửa hàng xử lý bình thường</strong> —
+                cửa hàng liên hệ với bạn qua số điện thoại đã đăng ký.
+            </li>
+        </ul>
+
+        <form class="acct-form" method="post" action="/tai-khoan/xoa">
+            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+
+            <?php if ($canhBao): ?>
+                <?php /* E4 — khách đã đọc cảnh báo về lịch hẹn ở dòng flash phía
+                         trên; ô ẩn này là "đã xác nhận lần hai". Chỉ xuất hiện
+                         sau lần gửi bị chặn, nên không có đường nào tích sẵn nó
+                         từ lần bấm đầu. */ ?>
+                <input type="hidden" name="xac_nhan_lich" value="1">
+            <?php endif; ?>
+
+            <label class="acct-field">
+                <span class="acct-field__label">Mật khẩu hiện tại <span aria-hidden="true">*</span></span>
+                <input class="acct-field__input" type="password" name="mat_khau"
+                       required autocomplete="current-password">
+            </label>
+
+            <label class="acct-check">
+                <input type="checkbox" name="dong_y" value="1" required>
+                <span>Tôi hiểu và đồng ý xoá tài khoản của mình.</span>
+            </label>
+
+            <div class="acct-danger__acts">
+                <button type="submit" class="acct-btn acct-btn--danger acct-btn--sm">
+                    <?= $canhBao ? 'Vẫn xoá tài khoản' : 'Xoá tài khoản' ?>
+                </button>
+                <a class="acct-btn acct-btn--quiet acct-btn--sm"
+                   href="/tai-khoan?muc=ho-so">Không xoá nữa</a>
+            </div>
+        </form>
+    <?php endif; ?>
+</section>

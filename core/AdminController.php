@@ -126,6 +126,13 @@ abstract class AdminController extends BaseController
         // Đánh giá chờ duyệt — trả 0 khi chưa chạy file nâng cấp
         $data['pendingReviews']  = ReviewModel::countPending();
 
+        /* YÊU CẦU HOÀN TIỀN CHỜ DUYỆT — UC-04.
+           Hàng chờ có người đang đợi ĐÚNG NGHĨA NHẤT trong cả thanh bên: đầu
+           bên kia là một khách đã bị huỷ đơn và đang chờ tiền về tài khoản.
+           demTheoTrangThai() tự trả 0 khi chưa chạy migration đợt 4, cùng lối
+           với ba dòng trên. */
+        $data['pendingRefunds']  = (int) (RefundRequestModel::demTheoTrangThai()['pending'] ?? 0);
+
         /* Bản sao dưới TÊN RIÊNG cho khung dùng — master.php vẽ trang trong một
            phạm vi riêng và cần đúng mảng này (xem khối chú thích ở chỗ nó gọi
            closure). Không đọc thẳng $data ở đó: controller nào lỡ truyền khoá
@@ -196,19 +203,26 @@ abstract class AdminController extends BaseController
     }
 
     /**
-     * Chỉ admin/manager mới được sửa dữ liệu catalog.
+     * Chốt quyền QUẢN TRỊ VIÊN cho một thao tác — SRS v2.1.0, ma trận 5.2.2.
      *
-     * Khớp policy gốc: "admin products/categories/events/stores" giới hạn ở
-     * admin và manager, còn staff chỉ xem được đơn hàng và lịch hẹn.
+     * ĐỔI TÊN TỪ requireManager() và THU HẸP: trước đây hàm này cho qua cả
+     * 'admin' lẫn 'manager'. Vai trò Quản lý cơ sở đã gỡ, và ma trận phân
+     * quyền chuyển phần lớn quyền của họ LÊN Quản trị viên — nên hàm giữ
+     * nguyên vị trí trong mã, chỉ hẹp lại một bậc và mang tên đúng việc nó làm.
      *
-     * Trích nguyên văn policy nên vẫn có chữ "events" — bảng đó đã bỏ
-     * 2026-08-26, luật còn lại áp cho ba nhóm kia và cho bộ sưu tập.
+     * Đổi tên chứ không thêm hàm mới là cố ý: mọi nơi từng gọi requireManager()
+     * đều phải được rà lại, và một cái tên không còn tồn tại thì lỗi hiện ra
+     * ngay. Thêm requireAdmin() song song thì những chỗ quên sẽ im lặng chạy
+     * tiếp với luật cũ.
+     *
+     * BA THAO TÁC ĐI NGƯỢC XUỐNG NHÂN VIÊN — bấm mốc bắt đầu mài, đánh dấu đã
+     * báo hàng về, và nhóm hồ sơ đo mắt — KHÔNG gọi hàm này nữa; chúng chỉ cần
+     * phép kiểm "là nhân viên" ở constructor. Xem chú thích tại từng chỗ.
      */
-    protected function requireManager(string $fallback): void
+    protected function requireAdmin(string $fallback): void
     {
-        if (!UserModel::hasRole($this->userId, 'admin')
-            && !UserModel::hasRole($this->userId, 'manager')) {
-            flash('admin_error', 'Bạn không có quyền thực hiện thao tác này.');
+        if (!UserModel::hasRole($this->userId, 'admin')) {
+            flash('admin_error', 'Chỉ Quản trị viên thực hiện được thao tác này.');
             redirect($fallback);
         }
     }

@@ -501,9 +501,8 @@ class OrderAdminController extends AdminController
     /**
      * Bấm "Bắt đầu mài" (POST /quan-tri/don-hang/bat-dau-mai).
      *
-     * X07: Quản lý cơ sở TRỞ LÊN, không phải Kỹ thuật viên. Cửa hàng tự mài
-     * tại chỗ và người trực tiếp mài chính là Quản lý cơ sở; vai trò Kỹ thuật
-     * viên vẫn tồn tại theo X31 nhưng phạm vi của nó là hồ sơ khúc xạ (Q77.2).
+     * MỌI NHÂN VIÊN — SRS v2.1.0, ma trận 5.2.2. Trước đây là Quản lý cơ sở
+     * trở lên; lý do đổi ghi trong thân hàm.
      */
     public function startLens(): void
     {
@@ -512,7 +511,17 @@ class OrderAdminController extends AdminController
         $back = $this->back();
         $id   = (string) ($_POST['id'] ?? '');
 
-        $this->requireManager($back);
+        /* MỌI NHÂN VIÊN — SRS v2.1.0, ma trận 5.2.2.
+
+           Trước đây mốc này đòi Quản lý cơ sở, vì bấm nó là cắt quyền hoàn
+           100% tiền cọc của khách. Nhưng người BẤM phải là người đang cầm
+           phôi tròng, và ở một cửa hàng hai cơ sở thì đó là nhân viên trực,
+           không phải người quản lý ngồi chỗ khác. Bắt chờ duyệt nghĩa là mốc
+           được bấm muộn hơn lúc mài thật, và khi đó con số nó bảo vệ cũng sai.
+
+           Đường LÙI vẫn siết: gỡ mốc trong 5 phút thì đúng người bấm mới làm
+           được, quá cửa sổ đó thì phải Quản trị viên kèm lý do — xem
+           undoLens() bên dưới. Chiều dễ làm dễ sửa, chiều khó mới cần duyệt. */
         $this->chanDonKhongTonTai($id, $back);
 
         $ket = OrderModel::batDauMai($id, $this->userId);
@@ -534,7 +543,7 @@ class OrderAdminController extends AdminController
      *
      *   trong cửa sổ  chính người vừa bấm, không cần lý do, không cần chức vụ
      *                 — họ vừa bấm được thì cũng vừa gỡ được
-     *   quá cửa sổ    Quản lý cơ sở trở lên, BẮT BUỘC ghi lý do
+     *   quá cửa sổ    CHỈ Quản trị viên, BẮT BUỘC ghi lý do
      *
      * Model kiểm lại luật lý do một lần nữa (OrderModel::daoMai) để một đường
      * gọi mới trong tương lai không đi vòng qua chỗ này.
@@ -556,7 +565,7 @@ class OrderAdminController extends AdminController
         }
 
         if (!OrderModel::trongCuaSoRutLai($order, $this->userId)) {
-            $this->requireManager($back);
+            $this->requireAdmin($back);
         }
 
         $ket = OrderModel::daoMai($id, $this->userId, (string) ($_POST['ly_do'] ?? ''));
@@ -645,11 +654,9 @@ class OrderAdminController extends AdminController
         $order['co_trong']    = OrderModel::coTrong($id);
         $order['da_mai']      = OrderModel::daBatDauMai($order);
         $order['rut_lai_duoc'] = OrderModel::trongCuaSoRutLai($order, $this->userId);
-        /* Chỉ còn phục vụ nút đảo ngược mốc mài quá cửa sổ rút lại. Cờ
-           `la_admin` trước đây còn dùng để vẽ ô "mở lại đơn đã huỷ"; chức năng
-           đó đã gỡ (SRS v2.1.0, F10). */
-        $order['la_quan_ly']  = UserModel::hasRole($this->userId, 'admin')
-                             || UserModel::hasRole($this->userId, 'manager');
+        /* Chỉ còn phục vụ nút đảo ngược mốc mài quá cửa sổ rút lại — thao tác
+           duy nhất trên màn này còn đòi Quản trị viên (ma trận 5.2.2). */
+        $order['la_admin']    = UserModel::hasRole($this->userId, 'admin');
 
         /*
          * ─────────────────────────────────────────────────────────────────────

@@ -181,6 +181,20 @@ CREATE TABLE `users` (
      */
     `deletion_reason` VARCHAR(500) NULL,
     /*
+     * AI XOÁ — 'customer' | 'staff'. NULL với những dòng xoá trước đợt 4.
+     *
+     * `deletion_reason` ở trên trả lời "vì sao"; cột này trả lời "do ai khởi
+     * xướng", và hai câu đó không suy ra được từ nhau. Khách tự bấm Xoá tài
+     * khoản trong trang cá nhân (UC-01) và nhân viên xoá hộ từ khu quản trị
+     * đều để lại cùng một dấu vết ở `deleted_at` — mà hậu quả pháp lý thì
+     * khác hẳn: một bên là quyền của khách, một bên là hành vi của cửa hàng.
+     *
+     * Đọc lại được gần đúng từ `customer_audit_logs` (so `actor_id` với
+     * `user_id`), nhưng nhật ký chỉ giữ tối thiểu 24 tháng còn tài khoản xoá
+     * mềm thì nằm mãi. Một cột 16 ký tự rẻ hơn một cuộc tranh cãi.
+     */
+    `deleted_source`  VARCHAR(16)  NULL,
+    /*
      * ĐỒNG Ý ĐIỀU KHOẢN — mốc bấm nút đăng ký với ô tick đã bật, và phiên bản
      * văn bản lúc đó (config/auth.php ['consent']['version']).
      *
@@ -264,11 +278,18 @@ CREATE TABLE `profiles` (
 CREATE TABLE `user_roles` (
     `id`         CHAR(36) NOT NULL DEFAULT (UUID()),
     `user_id`    CHAR(36) NOT NULL,
-    -- 'technician' — vai trò thứ năm, X31 chốt 04/09/2026. Kỹ thuật viên khúc
-    -- xạ: Q77.2 cho vai trò này tạo và sửa hồ sơ khúc xạ mà không phải nâng
-    -- người đó lên thành Quản lý. X31 cũng BỎ vai trò "Chủ doanh nghiệp" —
-    -- chủ dùng chung quyền 'admin'.
-    `role`       ENUM('customer','staff','technician','manager','admin') NOT NULL,
+    -- BA VAI TRÒ — SRS v2.1.0, mục 5.2. Khu quản trị chỉ còn hai bậc.
+    --
+    -- 'technician' (Kỹ thuật viên) và 'manager' (Quản lý cơ sở) đã gỡ: việc
+    -- của Kỹ thuật viên — nhập và đính chính hồ sơ đo mắt — nay mọi Nhân viên
+    -- làm được, còn quyền của Quản lý phần lớn lên Quản trị viên.
+    --
+    -- ⚠ PHẢI KHỚP UserModel::ROLES. Lệch một giá trị thì hoặc gán vai trò ném
+    -- lỗi 1265, hoặc người mang vai trò ấy lặng lẽ không vào được khu quản trị.
+    --
+    -- Cơ sở dữ liệu đang chạy thu ENUM bằng
+    -- database/migrations/2026-09-06-dot-2-ba-vai-tro.sql
+    `role`       ENUM('customer','staff','admin') NOT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_user_roles` (`user_id`, `role`),
@@ -394,6 +415,17 @@ CREATE TABLE `password_resets` (
 --   measured_at  NGÀY ĐO — khác updated_at (lúc gõ vào máy). Huy hiệu "Còn
 --                hiệu lực" tính từ ngày này; dùng updated_at thay thì sửa một
 --                lỗi chính tả sẽ làm đơn thuốc hai năm tuổi trông như mới đo.
+-- ⚠ BẢNG NÀY SẮP GỠ — SRS v2.1.0, FR-DM-01.
+--
+-- Số đo mắt nay có nguồn DUY NHẤT là `customer_prescriptions` (sổ chỉ-thêm).
+-- Bảng tóm tắt này không còn dòng mã nào đọc hay ghi từ đợt 3.
+--
+-- Giữ lại tạm vì kịch bản chuyển đổi (mục 6.7.3 bước 6) buộc chờ hệ thống chạy
+-- ổn định một tuần rồi mới gỡ — chừng nào nó còn thì đợt 3 còn đường lùi thật.
+--
+-- KHI CHẠY database/migrations/2026-09-06-dot-3-go-bang-tom-tat.sql thì XOÁ
+-- luôn khối CREATE TABLE này và lệnh ALTER TABLE thêm khoá ngoại store_id ở
+-- phần sau, cùng dòng DROP TABLE ở khối dọn đầu file.
 CREATE TABLE `prescriptions` (
     `user_id`        CHAR(36)      NOT NULL,
     `od_sph`         DECIMAL(4,2)  NULL,
@@ -1237,6 +1269,19 @@ CREATE TABLE `orders` (
     `deposit_amount`   BIGINT       NOT NULL DEFAULT 0,
     `deposit_rate`     SMALLINT     NOT NULL DEFAULT 0,
     `status`           VARCHAR(32)  NOT NULL DEFAULT 'new',
+    /*
+     * AI HUỶ — 'customer' | 'staff' | 'system'. NULL với đơn chưa huỷ.
+     *
+     * Từ UC-02 khách tự huỷ được đơn khi còn ở Mới / Đã xác nhận / Đang chuẩn
+     * bị, nên "đơn này bị huỷ" không còn kéo theo "có nhân viên nào đó đã bấm
+     * huỷ". Ba nguồn dẫn tới ba cuộc gọi lại khác nhau, và màn hoàn tiền đọc
+     * cột này để biết nên hỏi ai.
+     *
+     * 'system' để dành cho tự huỷ đơn quá hạn (Q56.2); chưa ai ghi giá trị đó.
+     *
+     * VARCHAR chứ không ENUM, cùng lẽ với `payment_status`.
+     */
+    `cancelled_by`     VARCHAR(16)  NULL,
     `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
                                     ON UPDATE CURRENT_TIMESTAMP,
@@ -1339,6 +1384,102 @@ CREATE TABLE `order_status_history` (
     CONSTRAINT `fk_osh_order` FOREIGN KEY (`order_id`)
         REFERENCES `orders` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_osh_user` FOREIGN KEY (`changed_by`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- HOÀN TIỀN CỌC — UC-04 · FR-DH-14, thêm 06/09/2026 (đợt 4)
+--
+-- SỔ QUYẾT ĐỊNH CHI TIỀN, KHÔNG PHẢI CỔNG THANH TOÁN (BR-DH-14.5). Bảng này
+-- ghi số tiền phải hoàn, ai duyệt, vì sao lệch số đề nghị, và ngày tiền rời
+-- tài khoản cửa hàng. Hệ thống KHÔNG tự chuyển tiền — việc ấy làm ở ngân hàng
+-- rồi Quản trị viên quay lại bấm "Đã hoàn tiền".
+--
+-- Đừng thêm cột số tài khoản hay móc nối cổng thanh toán vào đây: một cột như
+-- thế khiến người đọc tin rằng hệ thống tự chuyển được, và khi đó không ai đi
+-- chuyển tay nữa.
+--
+-- Xem app/models/RefundRequestModel.php để biết công thức đầy đủ.
+-- ============================================================================
+CREATE TABLE `refund_requests` (
+    `id`             CHAR(36)    NOT NULL DEFAULT (UUID()),
+    `order_id`       CHAR(36)    NOT NULL,
+
+    -- ── SỐ TIỀN ────────────────────────────────────────────────────────────
+    -- Ba con số, cố ý giữ cả ba thay vì chỉ giữ số cuối cùng.
+    --
+    --   received_amount  tiền cửa hàng ĐANG GIỮ của đơn, chép lại lúc tạo
+    --   lens_amount      tiền tròng của đơn, chép lại cùng lúc
+    --   suggested_amount số hệ thống đề nghị = received − lens, chặn sàn 0
+    --
+    -- TÊN LÀ `received_amount`, KHÔNG PHẢI `deposit_amount` — cố ý.
+    -- `orders`.`deposit_amount` là số cọc PHẢI trả (30% tổng), chốt lúc đặt
+    -- đơn; nó không nói tiền đã về hay chưa, cũng không nói về bao nhiêu. Khách
+    -- chuyển khoản thường trả ĐỦ một lần, SePay đối soát đủ tổng thì đẩy đơn
+    -- sang 'paid', và khi ấy cửa hàng đang giữ `total` chứ không phải 30%. Chép
+    -- nhầm cột là ghi sổ thiếu 70% một khoản nợ khách mà không ai thấy.
+    -- Xem RefundRequestModel::daNhan().
+    --
+    -- Chép lại chứ không đọc lại từ `orders` lúc hiển thị: giá tròng sửa được
+    -- trong khu quản trị, và một yêu cầu duyệt tháng trước phải giải thích
+    -- được bằng con số của tháng trước. Cùng lý lẽ với `order_items.unit_price`
+    -- và `orders.deposit_rate`.
+    `received_amount` BIGINT      NOT NULL DEFAULT 0,
+    `lens_amount`     BIGINT      NOT NULL DEFAULT 0,
+    `suggested_amount` BIGINT     NOT NULL DEFAULT 0,
+
+    -- Số người duyệt CHỐT. NULL khi chưa duyệt. Khác `suggested_amount` thì
+    -- `decision_note` bắt buộc có — BR-DH-14.6, ép ở tầng PHP.
+    `approved_amount` BIGINT      NULL DEFAULT NULL,
+
+    -- Đã bấm ô "lỗi cửa hàng" chưa (A1 của UC-04). Bật thì số đề nghị bằng
+    -- TOÀN BỘ tiền cọc bất kể đã mài hay chưa — BR-DH-14.3.
+    `shop_fault`      TINYINT(1)  NOT NULL DEFAULT 0,
+
+    -- Đơn đã bấm mốc bắt đầu mài lúc huỷ chưa. Đây là CĂN CỨ TÍNH, chép lại vì
+    -- cùng lý do với ba cột tiền: mốc mài gỡ được (trong 5 phút, hoặc Quản trị
+    -- viên gỡ sau), và khi ấy căn cứ của một quyết định đã duyệt không được đổi
+    -- theo.
+    `lens_started`    TINYINT(1)  NOT NULL DEFAULT 0,
+
+    -- ── VÒNG ĐỜI ───────────────────────────────────────────────────────────
+    -- 'pending' chờ duyệt · 'approved' đã duyệt, chờ chuyển tiền
+    -- 'refunded' đã chuyển tiền · 'rejected' từ chối hoàn
+    --
+    -- Tách 'approved' khỏi 'refunded' vì hai việc xảy ra ở hai thời điểm và do
+    -- hai hành động khác nhau: duyệt là quyết định trong hệ thống, còn chuyển
+    -- tiền là việc làm ở ngân hàng rồi quay lại bấm xác nhận. Gộp làm một thì
+    -- không trả lời được câu "đã duyệt nhưng chưa chuyển" — đúng cái khoảng mà
+    -- khách đang chờ tiền.
+    `status`          VARCHAR(16) NOT NULL DEFAULT 'pending',
+
+    -- Lý do khi số duyệt khác số đề nghị, hoặc khi từ chối hoàn.
+    `decision_note`   VARCHAR(500) NULL DEFAULT NULL,
+    `decided_by`      CHAR(36)    NULL DEFAULT NULL,
+    `decided_at`      DATETIME    NULL DEFAULT NULL,
+
+    -- Ngày tiền thật sự rời tài khoản cửa hàng, do người bấm nhập — KHÔNG lấy
+    -- NOW(). Chuyển khoản làm ở ngân hàng có thể trước lúc bấm vài giờ hoặc
+    -- vài ngày, và đối soát sau này đọc cột này.
+    `refunded_on`     DATE        NULL DEFAULT NULL,
+    `refund_note`     VARCHAR(500) NULL DEFAULT NULL,
+
+    `created_at`      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                  ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_refund_order` (`order_id`),
+    KEY `idx_refund_status` (`status`),
+
+    -- CASCADE theo đơn: đơn bị xoá vật lý thì yêu cầu hoàn tiền của nó cũng
+    -- không còn nghĩa. Trên thực tế đơn không bao giờ bị xoá vật lý.
+    CONSTRAINT `fk_refund_order` FOREIGN KEY (`order_id`)
+        REFERENCES `orders` (`id`) ON DELETE CASCADE,
+
+    -- SET NULL cho người duyệt: nhân sự nghỉ việc không được kéo mất một quyết
+    -- định chi tiền. Tên người duyệt lúc đó vẫn tra được ở nhật ký thao tác.
+    CONSTRAINT `fk_refund_decided_by` FOREIGN KEY (`decided_by`)
         REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

@@ -170,6 +170,19 @@ return [
     'tai-khoan/anh'     => 'AuthController@updateAvatar',       // POST (multipart)
     'tai-khoan/mua-lai' => 'AuthController@reorder',            // POST
 
+    /* KHÁCH TỰ HUỶ ĐƠN — SRS v2.1.0, UC-02.
+       Đường RIÊNG, không gộp vào một action "đổi trạng thái" chung: khách chỉ
+       có đúng một thao tác trạng thái là huỷ, và một action chung nghĩa là
+       phải kiểm giá trị gửi lên nằm trong danh sách cho phép — thêm một chỗ
+       để quên. */
+    'tai-khoan/don-hang/huy' => 'AuthController@cancelOrder',   // POST
+
+    /* KHÁCH TỰ YÊU CẦU XOÁ TÀI KHOẢN — SRS v2.1.0, UC-01.
+       Xoá MỀM: tài khoản biến mất khỏi mọi giao diện và mọi đường đăng nhập,
+       nhưng đơn hàng, hồ sơ đo mắt và vết kiểm toán giữ nguyên. Lý do đầy đủ ở
+       CustomerModel::khachTuXoa(). */
+    'tai-khoan/xoa'     => 'AuthController@deleteAccount',      // POST
+
     // Sổ địa chỉ. Cả ba đều POST: xoá và đổi mặc định qua GET nghĩa là một
     // thẻ <img src="/tai-khoan/dia-chi/xoa?id=..."> trên trang khác cũng xoá
     // được địa chỉ của khách đang đăng nhập.
@@ -415,7 +428,8 @@ return [
      *   nhan-vien      mật khẩu của NHÂN VIÊN, cấp lại ngay tại chỗ vì người
      *                  đó ngồi cùng phòng. Chỉ vai trò 'admin'.
      *   quen-mat-khau  mật khẩu của KHÁCH, phát ra một liên kết đặt lại, và
-     *                  bắt gọi điện xác minh trước. Vai trò 'manager' trở lên.
+     *                  bắt gọi điện xác minh trước. Cũng chỉ vai trò 'admin'
+     *                  từ SRS v2.1.0 — trước đây là 'manager' trở lên.
      *
      * Lý do đầy đủ ghi ở đầu Admin/StaffAdminController.
      */
@@ -451,6 +465,29 @@ return [
      */
     'quan-tri/nhat-ky'            => 'AuditLogAdminController@index',
     'quan-tri/nhat-ky/xuat'       => 'AuditLogAdminController@xuat',
+
+    /*
+     * HOÀN TIỀN CỌC — UC-04, FR-DH-14.
+     *
+     * Bốn đường, ba mức quyền khác nhau nhưng chỉ hai chốt:
+     *
+     *   /hoan-tien        MỌI nhân viên xem được. Khách gọi hỏi "tiền của tôi
+     *                     đến đâu rồi" thì người trực quầy phải trả lời được
+     *                     ngay, không phải đi tìm Quản trị viên để ĐỌC một con
+     *                     số. Chỉ đọc nên không cần chốt gì thêm.
+     *   /duyet /tu-choi
+     *   /da-hoan          Chỉ Quản trị viên — BR-DH-14.4. Chốt bằng
+     *                     requireAdmin() trong từng action, không giấu ở thanh
+     *                     bên: giấu nút không phải là phân quyền.
+     *
+     * Ba đường sau đều POST. Chúng chốt một con số tiền và tuyên bố nó đã rời
+     * tài khoản cửa hàng — thứ tuyệt đối không được xảy ra vì ai đó bấm F5 hay
+     * dán lại một cái link.
+     */
+    'quan-tri/hoan-tien'          => 'RefundAdminController@index',
+    'quan-tri/hoan-tien/duyet'    => 'RefundAdminController@approve',        // POST
+    'quan-tri/hoan-tien/tu-choi'  => 'RefundAdminController@reject',         // POST
+    'quan-tri/hoan-tien/da-hoan'  => 'RefundAdminController@markRefunded',   // POST
 
     // -----------------------------------------------------------------------
     // CHUYỂN HƯỚNG TỪ URL TIẾNG ANH CŨ

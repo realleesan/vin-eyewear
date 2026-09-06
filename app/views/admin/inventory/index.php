@@ -155,6 +155,12 @@ $duongDanTrang = static function (int $so) use ($q, $filter): string {
                             </span>
                         </td>
                         <td>
+                            <?php if (!$canEdit): ?>
+                                <?php /* Chỉ Quản trị viên sửa được tồn kho — SRS
+                                         v2.1.0, ma trận 5.2.2. Hiện con số thay vì
+                                         một ô nhập bấm Lưu là hỏng. */ ?>
+                                <span class="atable__sub">Chỉ Quản trị viên sửa được</span>
+                            <?php else: ?>
                             <form method="post" action="/quan-tri/ton-kho/cap-nhat" class="ainv__form">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                                 <input type="hidden" name="id" value="<?= e($p['id']) ?>">
@@ -199,6 +205,7 @@ $duongDanTrang = static function (int $so) use ($q, $filter): string {
 
                                 <button type="submit" class="astatus__save aisave">Lưu</button>
                             </form>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -115,8 +115,7 @@ class VariantAdminController extends AdminController
             'tranChon'  => self::TRAN_CHON,
             'product'   => $product,
             'variants'  => $product !== null ? VariantModel::allForProduct($product['id']) : [],
-            'canEdit'   => UserModel::hasRole($this->userId, 'admin')
-                        || UserModel::hasRole($this->userId, 'manager'),
+            'canEdit'   => UserModel::hasRole($this->userId, 'admin'),
             'editing'   => isset($_GET['sua']) ? VariantModel::find((string) $_GET['sua']) : null,
             // Hai cột phối màu thêm ngày 2026-08-27; chưa chạy nâng cấp thì
             // hai ô nhập tự ẩn — xem save().
@@ -127,7 +126,7 @@ class VariantAdminController extends AdminController
     public function save(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id        = (string) ($_POST['id'] ?? '');
         $productId = (string) ($_POST['product_id'] ?? '');
@@ -216,7 +215,7 @@ class VariantAdminController extends AdminController
     public function delete(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id      = (string) ($_POST['id'] ?? '');
         $variant = VariantModel::find($id);

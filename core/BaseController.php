@@ -84,13 +84,34 @@ class BaseController
      */
     protected static function toastFromFlash(): array
     {
-        $toast = flash('cart_success');
+        /* HAI CẶP KHOÁ, ĐỌC KHOÁ TRUNG TÍNH TRƯỚC.
 
-        if ($toast !== null) {
-            return [$toast, 'ok'];
+           'cart_*' có trước và mang đúng nghĩa giỏ hàng. Nhưng đây là dải báo
+           DUY NHẤT của khung trang khách, nên mọi thao tác kết thúc bằng một cú
+           chuyển hướng ra ngoài khu tài khoản đều phải mượn nó — thao tác xoá
+           tài khoản (UC-01) là ca đầu tiên như thế: nó đăng xuất rồi đưa về
+           trang chủ, nơi không còn dải báo riêng nào của khu ấy.
+
+           Thêm khoá trung tính thay vì nhét thông báo xoá tài khoản vào
+           'cart_success': người đọc mã sau này sẽ tin cái tên, và một dòng
+           'cart_success' mang nội dung về tài khoản là một cái bẫy. */
+        foreach (['site_success', 'cart_success'] as $khoa) {
+            $toast = flash($khoa);
+
+            if ($toast !== null) {
+                return [$toast, 'ok'];
+            }
         }
 
-        return [flash('cart_error'), 'err'];
+        foreach (['site_error', 'cart_error'] as $khoa) {
+            $toast = flash($khoa);
+
+            if ($toast !== null) {
+                return [$toast, 'err'];
+            }
+        }
+
+        return [null, 'err'];
     }
 
     /**

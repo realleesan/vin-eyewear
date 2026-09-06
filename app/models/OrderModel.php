@@ -679,6 +679,169 @@ class OrderModel extends BaseModel
     }
 
     /**
+     * ─────────────────────────────────────────────────────────────────────────
+     * BA TRẠNG THÁI KHÁCH TỰ HUỶ ĐƯỢC — SRS v2.1.0, BR-HS-13.1
+     *
+     * Mới · Đã xác nhận · Đang chuẩn bị. Từ "Đang giao" trở đi phải liên hệ
+     * cửa hàng: hàng có thể đã nằm trên xe, và website không đồng bộ trạng thái
+     * vận chuyển thời gian thực với ai cả — một nút huỷ ở đó đổi trạng thái
+     * trong CSDL trong khi hàng vẫn đang đi, và hai bên hiểu khác nhau về cùng
+     * một đơn.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public const KHACH_HUY_DUOC = ['new', 'confirmed', 'preparing'];
+
+    /**
+     * Lý do huỷ khách chọn — BR-HS-13.5, bắt buộc chọn một.
+     *
+     * DANH SÁCH CÓ SẴN chứ không phải ô chữ tự do: cửa hàng cần đếm được vì sao
+     * khách bỏ đơn, mà một cột chữ tự do thì không đếm được gì. Mục "khác" mở
+     * ô nhập tay để không ép người ta chọn bừa một lý do sai.
+     */
+    public const LY_DO_HUY = [
+        'doi-y'       => 'Đổi ý, không mua nữa',
+        'sai-thong-so'=> 'Đặt nhầm thông số',
+        'tim-duoc-re' => 'Tìm được nơi khác phù hợp hơn',
+        'cho-lau'     => 'Chờ lâu quá',
+        'khac'        => 'Lý do khác',
+    ];
+
+    /**
+     * Khách có tự huỷ được đơn này không — trả null nếu ĐƯỢC, hoặc câu từ chối.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * MỐC BẮT ĐẦU MÀI PHỦ QUYẾT TRẠNG THÁI — BR-HS-13.2
+     *
+     * Đây là phần dễ bỏ sót nhất của cả ca dùng. Đơn vẫn ở "Đang chuẩn bị" —
+     * tức nằm trong ba trạng thái cho phép — nhưng nếu đã bấm mốc bắt đầu mài
+     * thì phôi tròng ĐÃ ĐƯỢC CẮT THEO SỐ ĐO CỦA CHÍNH KHÁCH NÀY. Vật tư ấy
+     * không bán lại cho ai được, nên nó không còn là chuyện đổi ý nữa.
+     *
+     * Kiểm cả hai điều kiện, và kiểm mốc mài TRƯỚC: câu từ chối vì đã mài nói
+     * đúng lý do thật, còn câu từ chối vì trạng thái thì sai và khách sẽ gọi
+     * điện hỏi lại.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public static function khachHuyDuoc(array $order): ?string
+    {
+        if (self::daBatDauMai($order)) {
+            return 'Đơn này đã bắt đầu cắt tròng theo số đo của bạn nên không tự huỷ được. '
+                 . 'Vui lòng liên hệ cửa hàng để được hỗ trợ.';
+        }
+
+        $tt = (string) ($order['status'] ?? '');
+
+        if (!in_array($tt, self::KHACH_HUY_DUOC, true)) {
+            return 'Đơn đang ở trạng thái «' . (self::STATUSES[$tt] ?? $tt)
+                 . '» nên không tự huỷ được. Vui lòng liên hệ cửa hàng.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Khách tự huỷ đơn của mình — UC-02.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * KIỂM LẠI ĐIỀU KIỆN Ở ĐÂY, KHÔNG TIN VIEW
+     *
+     * View đã ẩn nút huỷ với đơn không đủ điều kiện, nhưng mã đơn nằm ngay
+     * trong HTML của chính trang đó, và một tab mở từ trước khi nhân viên đổi
+     * trạng thái vẫn còn nút cũ (E3 của UC-02). Đọc lại bản ghi và hỏi lại
+     * khachHuyDuoc() là thứ duy nhất chặn thật.
+     *
+     * BỌC TRONG TRANSACTION cùng với việc hoàn kho: nửa vời ở đây nghĩa là đơn
+     * đã huỷ mà hàng chưa về kho, hoặc ngược lại. changeStatus() lo cả hai và
+     * đã tự bọc transaction — nên ở đây chỉ cần gọi nó chứ không dựng thêm một
+     * lớp nữa.
+     *
+     * YÊU CẦU HOÀN TIỀN TẠO NGOÀI transaction đó, và CỐ Ý không chặn: xem khối
+     * chú thích ở RefundRequestModel::taoChoDonHuy(). Việc huỷ đã xong và
+     * khách đã thấy nó xong; một trục trặc ở bước ghi sổ hoàn tiền không được
+     * phép cuộn ngược điều đó.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return array{ok:bool, error?:string, refund?:?string, code?:string}
+     */
+    public static function khachHuy(
+        string $code,
+        string $userId,
+        string $lyDoMa,
+        string $lyDoKhac
+    ): array {
+        $order = self::findByCode($code, $userId);
+
+        if ($order === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy đơn hàng này.'];
+        }
+
+        /* ĐƠN CỦA KHÁCH VÃNG LAI KHÔNG TỰ HUỶ ĐƯỢC.
+
+           findByCode() cho qua khi `user_id` là NULL — cố ý, để trang xác nhận
+           đơn mở được bằng mã. Nhưng "mở xem được" khác "huỷ được": ai có mã
+           đơn cũng huỷ được thì mã đơn thành một cái nút phá hoại. */
+        if (($order['user_id'] ?? null) !== $userId) {
+            return ['ok' => false, 'error' => 'Đơn này không thuộc tài khoản của bạn.'];
+        }
+
+        $chan = self::khachHuyDuoc($order);
+
+        if ($chan !== null) {
+            return ['ok' => false, 'error' => $chan];
+        }
+
+        if (!isset(self::LY_DO_HUY[$lyDoMa])) {
+            return ['ok' => false, 'error' => 'Vui lòng chọn lý do huỷ đơn.'];
+        }
+
+        $lyDo = self::LY_DO_HUY[$lyDoMa];
+
+        if ($lyDoMa === 'khac') {
+            $lyDoKhac = trim($lyDoKhac);
+
+            if ($lyDoKhac === '') {
+                return ['ok' => false, 'error' => 'Chọn "Lý do khác" thì vui lòng ghi rõ lý do.'];
+            }
+
+            $lyDo = utf8Substr($lyDoKhac, 0, 200);
+        }
+
+        $id = (string) $order['id'];
+
+        /* MỌI LUẬT ĐI KÈM VIỆC HUỶ NẰM TRONG changeStatus():
+
+             · ghi `order_status_history` (thanh tiến trình của khách đọc bảng đó)
+             · ghi vết kiểm toán 'order.cancel'
+             · hoàn kho, đúng một lần
+             · ghi `cancelled_by` — tham số thứ năm, 'customer' thay cho mặc định
+             · tạo yêu cầu hoàn tiền nếu cửa hàng đang giữ tiền của đơn
+
+           Ở đây KHÔNG ghi thêm vết 'order.cancel' nào nữa. Bản đầu có, và mỗi
+           lần khách huỷ một đơn thì nhật ký hiện "Huỷ đơn hàng" hai lần cho một
+           thao tác — dòng thứ hai còn mang actor_id NULL vì đường của khách
+           không có phiên quản trị. Lý do huỷ đã nằm trong dòng do changeStatus
+           ghi, kèm cả trạng thái trước và sau. */
+        self::changeStatus($id, 'cancelled', $userId, $lyDo, 'customer');
+
+        /* CÓ SINH RA YÊU CẦU HOÀN TIỀN KHÔNG — hỏi lại sổ, không đoán.
+
+           Nơi gọi dùng câu trả lời này để quyết định có nói chuyện tiền trong
+           dòng báo thành công hay không, và câu ấy phải đúng: hứa hoàn tiền cho
+           một đơn chưa trả đồng nào thì khách sẽ chờ một khoản không tồn tại,
+           còn im lặng về một đơn đã cọc thì họ gọi điện hỏi — đúng cuộc gọi mà
+           cả ca dùng này sinh ra để khỏi phải nhận. */
+        $refund = RefundRequestModel::available()
+            ? RefundRequestModel::firstWhere(['order_id' => $id])
+            : null;
+
+        return [
+            'ok'     => true,
+            'refund' => $refund !== null ? (string) $refund['id'] : null,
+            'code'   => (string) $order['code'],
+        ];
+    }
+
+    /**
      * Các dòng hàng của một đơn.
      */
     public static function items(string $orderId): array
@@ -872,19 +1035,52 @@ class OrderModel extends BaseModel
         string $id,
         string $status,
         ?string $changedBy = null,
-        ?string $lyDo = null
+        ?string $lyDo = null,
+        string $nguonHuy = 'staff'
     ): void {
-        Database::transaction(static function () use ($id, $status, $changedBy, $lyDo): void {
+        /* "VỪA HUỶ LẦN ĐẦU" — cờ mang ra NGOÀI transaction.
+
+           Việc ghi sổ hoàn tiền cố ý chạy ngoài: nó không được phép cuộn ngược
+           một thao tác huỷ đã xong (xem RefundRequestModel::taoChoDonHuy).
+           Nhưng nó chỉ được chạy đúng MỘT lần cho mỗi đơn, và câu trả lời "lần
+           này có phải lần đầu không" chỉ bên trong transaction mới biết. */
+        $vuaHuy = false;
+
+        Database::transaction(static function () use (
+            $id, $status, $changedBy, $lyDo, $nguonHuy, &$vuaHuy
+        ): void {
             /*
-             * ĐỌC TRẠNG THÁI CŨ TRƯỚC KHI GHI ĐÈ.
+             * ĐỌC TRẠNG THÁI CŨ TRƯỚC KHI GHI ĐÈ, VÀ KHOÁ DÒNG LẠI.
              *
              * Việc hoàn kho phụ thuộc vào CHIỀU đi chứ không phải vào trạng
              * thái đích: chỉ lần ĐẦU sang 'cancelled' mới trả hàng về kho. Đọc
              * sau khi update thì không còn phân biệt được "vừa huỷ" với "đã
              * huỷ từ trước, nhân viên bấm lại nút Lưu" — và bấm lại là chuyện
              * xảy ra thường xuyên.
+             *
+             * ─────────────────────────────────────────────────────────────
+             * FOR UPDATE — thêm ở đợt 4, và không phải để phòng xa
+             *
+             * Từ UC-02, khách tự huỷ được đơn. Nghĩa là từ nay CÓ HAI NGƯỜI
+             * khác nhau, ở hai phiên khác nhau, cùng bấm huỷ một đơn được:
+             * khách bấm trên trang tài khoản đúng lúc nhân viên chọn "Đã huỷ"
+             * trong khu quản trị vì khách vừa gọi điện. Trước đợt 4 chuyện đó
+             * không xảy ra được — chỉ nhân viên mới huỷ được, và hai lần bấm
+             * của cùng một người thì PHP đã xếp hàng sẵn bằng khoá file phiên.
+             *
+             * Không có FOR UPDATE, cả hai đọc thấy 'preparing', cả hai thấy
+             * "chưa huỷ", và cả hai chạy vòng hoàn kho: một đơn 2 gọng trả về
+             * kho 4 chiếc. Không lỗi, không dòng log nào, và số tồn kho sai
+             * vĩnh viễn cho tới lần kiểm kê tay.
+             *
+             * FOR UPDATE bắt người thứ hai chờ tới khi người thứ nhất commit
+             * rồi mới đọc — và khi ấy đọc thấy 'cancelled' nên bỏ qua đúng.
+             * ─────────────────────────────────────────────────────────────
              */
-            $donCu = self::find($id);
+            $donCu = Database::fetchOne(
+                'SELECT * FROM orders WHERE id = :id FOR UPDATE',
+                ['id' => $id]
+            );
             $truoc = (string) ($donCu['status'] ?? '');
 
             self::update($id, ['status' => $status]);
@@ -944,6 +1140,29 @@ class OrderModel extends BaseModel
              * ─────────────────────────────────────────────────────────────
              */
             if ($status === 'cancelled' && $truoc !== 'cancelled') {
+                $vuaHuy = true;
+
+                /* AI HUỶ — cột riêng, không suy ra từ `changed_by`.
+
+                   `changed_by` mang id tài khoản. Khi khách tự huỷ, id ấy chính
+                   là khách; nhưng khi NHÂN VIÊN huỷ hộ một khách gọi điện thì id
+                   là của nhân viên, và không có gì phân biệt với việc nhân viên
+                   tự quyết huỷ. Cột này trả lời thẳng câu hỏi nghiệp vụ.
+
+                   Đặt ở ĐÂY chứ không ở khachHuy(): đây là cửa duy nhất đổi
+                   `status`, nên mọi đường huỷ — khách, nhân viên, và sau này là
+                   đường tự huỷ đơn quá hạn — đều đi qua và đều được ghi nguồn.
+                   Để ở nơi gọi thì đường nào quên gọi sẽ lặng lẽ ghi NULL.
+
+                   Bọc trong columnExists vì cột đến ở migration đợt 4: máy chưa
+                   nâng cấp thì mất một dòng ngữ cảnh, không mất cả thao tác huỷ. */
+                if (Database::columnExists('orders', 'cancelled_by')) {
+                    Database::execute(
+                        'UPDATE orders SET cancelled_by = :nguon WHERE id = :id',
+                        ['nguon' => $nguonHuy, 'id' => $id]
+                    );
+                }
+
                 foreach (self::items($id) as $dong) {
                     $sl  = (int) ($dong['quantity'] ?? 0);
                     $spId = (string) ($dong['product_id'] ?? '');
@@ -992,6 +1211,39 @@ class OrderModel extends BaseModel
                 self::markPaid($id);
             }
         });
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * SỔ HOÀN TIỀN — NGOÀI transaction, và ở ĐÂY chứ không ở khachHuy()
+         *
+         * Đặt ở nơi gọi thì chỉ đường khách tự huỷ mới sinh ra yêu cầu hoàn
+         * tiền. Nhưng đường huỷ đông hơn hẳn lại là nhân viên huỷ trong khu
+         * quản trị — và nó bao trọn cả nhánh mà công thức BR-DH-14.1 sinh ra
+         * để xử lý: khách gọi điện xin huỷ SAU khi đã bấm mốc mài. Khách không
+         * tự huỷ được ca đó (khachHuyDuoc() chặn, đúng), nên nếu chỉ móc vào
+         * khachHuy() thì `lens_amount`, cờ `lens_started` và cả phép trừ tiền
+         * tròng đều là mã chết: mọi yêu cầu trong sổ đều là "huỷ trước khi
+         * mài", và mọi lần hoàn có trừ tiền tròng đều làm tay ngoài hệ thống.
+         *
+         * Đặt ở đây thì mọi đường huỷ đều đi qua, vì đây là cửa duy nhất đổi
+         * `status` (xem khối chú thích trên hàm).
+         *
+         * NGOÀI transaction, và KHÔNG chặn: xem RefundRequestModel::taoChoDonHuy().
+         * Việc huỷ đã xong và người bấm đã thấy nó xong; một trục trặc ở bước
+         * ghi sổ không được phép cuộn ngược điều đó. Đơn rơi qua khe ấy tìm lại
+         * được ở dải cảnh báo màn Hoàn tiền cọc (RefundRequestModel::demSot).
+         *
+         * Đọc LẠI bản ghi: vừa có thể đánh dấu đã thu tiền ở nhánh COD trên, và
+         * công thức đọc `payment_status` cùng `mai_bat_dau_luc`.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        if ($vuaHuy) {
+            $don = self::find($id);
+
+            if ($don !== null) {
+                RefundRequestModel::taoChoDonHuy($don);
+            }
+        }
     }
 
     // ========================================================================
@@ -1061,7 +1313,7 @@ class OrderModel extends BaseModel
     }
 
     /**
-     * Bấm "Bắt đầu mài" — X07: Quản lý cơ sở trở lên. Quyền kiểm ở controller.
+     * Bấm "Bắt đầu mài" — mọi Nhân viên (SRS v2.1.0). Quyền kiểm ở controller.
      *
      * ĐẶT MỐC, KHÔNG ĐỔI TRẠNG THÁI. Trạng thái giao vận vẫn do ô chọn trên
      * bảng điều khiển; gộp hai việc vào một nút thì người bấm không còn phân
@@ -1120,7 +1372,7 @@ class OrderModel extends BaseModel
      * Hai đường tới đây, và chúng khác nhau ở chỗ AI được đi:
      *
      *   trong cửa sổ RUT_LAI_GIAY   chính người vừa bấm, không cần lý do
-     *   quá cửa sổ                  Quản lý cơ sở trở lên, BẮT BUỘC ghi lý do
+     *   quá cửa sổ                  CHỈ Quản trị viên, BẮT BUỘC ghi lý do
      *
      * Cả hai phép kiểm ấy nằm ở controller vì chúng cần biết ai đang đăng nhập.
      * Hàm này chỉ giữ một luật: quá cửa sổ mà không có lý do thì từ chối — để

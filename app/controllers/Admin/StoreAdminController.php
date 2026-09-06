@@ -19,8 +19,7 @@ class StoreAdminController extends AdminController
         $this->renderAdmin('admin/stores/index', [
             'pageTitle' => 'Cơ sở — Quản trị',
             'stores'    => StoreModel::all('code ASC'),
-            'canEdit'   => UserModel::hasRole($this->userId, 'admin')
-                        || UserModel::hasRole($this->userId, 'manager'),
+            'canEdit'   => UserModel::hasRole($this->userId, 'admin'),
             'editing'   => isset($_GET['sua']) ? StoreModel::find((string) $_GET['sua']) : null,
         ]);
     }
@@ -28,7 +27,7 @@ class StoreAdminController extends AdminController
     public function save(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id      = (string) ($_POST['id'] ?? '');
         $code    = strtoupper(trim((string) ($_POST['code'] ?? '')));
@@ -88,7 +87,7 @@ class StoreAdminController extends AdminController
     public function delete(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id = (string) ($_POST['id'] ?? '');
 
@@ -125,7 +124,7 @@ class StoreAdminController extends AdminController
     public function toggle(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id    = (string) ($_POST['id'] ?? '');
         $store = StoreModel::find($id);

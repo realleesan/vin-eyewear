@@ -50,7 +50,7 @@ class PasswordResetAdminController extends AdminController
 
         // Tạo được liên kết đặt lại nghĩa là chiếm được tài khoản bất kỳ, nên
         // giới hạn ở quản lý/quản trị — nhân viên bán hàng chỉ xem danh sách.
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         /*
          * PHẢI TICK "ĐÃ GỌI XÁC MINH" — kiểm Ở ĐÂY, không chỉ ở giao diện.
@@ -89,9 +89,9 @@ class PasswordResetAdminController extends AdminController
         redirect(self::BASE);
     }
 
+    /** Tạo liên kết đặt lại mật khẩu — chỉ Quản trị viên (ma trận 5.2.2). */
     private function canIssue(): bool
     {
-        return UserModel::hasRole($this->userId, 'admin')
-            || UserModel::hasRole($this->userId, 'manager');
+        return UserModel::hasRole($this->userId, 'admin');
     }
 }

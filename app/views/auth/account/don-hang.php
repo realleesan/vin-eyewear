@@ -91,11 +91,18 @@ $primaryLabels = [
     'cancelled' => 'Mua lại',
 ];
 
-/* Trạng thái mà khách còn kịp đổi ý.
-   'shipping' KHÔNG có trong này: hàng đã rời cửa hàng thì việc cần làm là gọi
-   hotline nói chuyện với người đang giao, không phải nhắn tin rồi chờ đọc.
-   'completed' và 'cancelled' thì không còn gì để huỷ. */
-$canStillCancel = ['new' => true, 'confirmed' => true, 'preparing' => true];
+/* KHÔNG CÒN $canStillCancel Ở ĐÂY — gỡ ở đợt 4.
+
+   Nó từng liệt kê ba trạng thái khách còn kịp đổi ý, và cả file dùng nó để
+   quyết định vẽ lối liên hệ huỷ đơn. Nay câu trả lời ấy do
+   OrderModel::khachHuyDuoc() đưa ra, cho từng đơn một, và nó biết cả thứ mà
+   một danh sách trạng thái không biết được: đơn vẫn ở "Đang chuẩn bị" nhưng ĐÃ
+   BẤM MỐC MÀI thì tròng đã cắt theo số đo của chính khách này, và đó không còn
+   là chuyện đổi ý nữa.
+
+   Giữ cả hai nghĩa là hai chỗ trả lời cùng một câu hỏi bằng hai luật khác nhau
+   — và chúng đã lệch thật: bản đầu của đợt 4 nối hai vế bằng AND, khiến đơn
+   'shipping' trượt cả hai và mất luôn lối Zalo vốn viết ra cho đúng nó. */
 
 $deliveryLabels = ['pickup' => 'Nhận tại cửa hàng', 'shipping' => 'Giao tận nơi'];
 
@@ -698,11 +705,76 @@ $paymentShort  = [
                             </a>
                         <?php endif; ?>
 
-                        <?php if (isset($canStillCancel[$o['status']])): ?>
+                        <?php
+                        /* ─────────────────────────────────────────────────────
+                           NÚT HUỶ ĐƠN — SRS v2.1.0, UC-02
+
+                           Chỉ hiện khi đơn thật sự huỷ được. OrderModel::
+                           khachHuyDuoc() trả null nghĩa là được; trả một câu
+                           thì đó là lý do từ chối, và ta không vẽ nút.
+
+                           HAI ĐIỀU KIỆN, KHÔNG PHẢI MỘT: ba trạng thái đầu, VÀ
+                           chưa bấm mốc bắt đầu mài. Đơn ở "Đang chuẩn bị" mà
+                           tròng đã cắt theo số đo riêng của khách thì vật tư
+                           đã mất — xem BR-HS-13.2.
+
+                           Máy chủ kiểm lại y hệt (OrderModel::khachHuy). Ẩn nút
+                           là chuyện gọn mắt; chặn mới là nghiệp vụ. */
+                        $chanHuy = OrderModel::khachHuyDuoc($o);
+
+                        /* Mở hộp xác nhận bằng ĐỊA CHỈ (?huy=<mã>), không bằng
+                           JavaScript — cùng lối với ?doi= của lịch hẹn và ?sua=
+                           của sổ địa chỉ. Gửi link được, F5 không mất chỗ, và
+                           không có JS thì vẫn huỷ được.
+
+                           Tính NGOÀI nhánh $chanHuy để biến luôn có giá trị ở
+                           mọi vòng lặp: hộp xác nhận nằm ở cuối thẻ và đọc lại
+                           nó, và một biến chỉ tồn tại trong vài vòng lặp là thứ
+                           rò giá trị từ đơn này sang đơn khác. */
+                        $moHuy = ($_GET['huy'] ?? '') === $o['code'];
+                        ?>
+                        <?php if ($chanHuy === null): ?>
+                            <?php /* --outline chứ không --ghost: lớp sau không có
+                                     trong account.css, nút sẽ hiện ra không viền
+                                     không nền, lẫn hẳn vào chân thẻ đơn. */ ?>
+                            <a class="acct-btn acct-btn--outline acct-btn--sm"
+                               href="/tai-khoan?muc=don-hang&amp;huy=<?= e(rawurlencode($o['code'])) ?>#<?= e($o['code']) ?>">
+                                Huỷ đơn
+                            </a>
+                        <?php endif; ?>
+
+                        <?php
+                        /* LỐI ZALO CHỈ CÒN CHO ĐƠN KHÔNG TỰ HUỶ ĐƯỢC — UC-02.
+
+                           Trước SRS v2.1.0 đây là lối duy nhất, kể cả với đơn
+                           vừa đặt xong. Nay ba trạng thái đầu có nút Huỷ đơn
+                           thật ở ngay trên, nên bày thêm một liên kết Zalo cùng
+                           nghĩa là bắt khách dừng lại đoán xem hai thứ khác gì
+                           nhau.
+
+                           $chanHuy khác null nghĩa là không tự huỷ được — đơn
+                           đã sang Đang giao, hoặc đã bấm mốc mài. Đúng lúc đó
+                           lối Zalo mới là câu trả lời. */
+                        ?>
+                        <?php
+                        /* ĐIỀU KIỆN CHỈ CÒN $chanHuy — bỏ isset($canStillCancel[…]).
+
+                           Hai vế cũ loại trừ nhau: $chanHuy khác null nghĩa là đơn
+                           KHÔNG nằm trong ba trạng thái tự huỷ được (hoặc đã bấm mốc
+                           mài), còn $canStillCancel chính là ba trạng thái ấy. Đơn
+                           'shipping' — ca mà cả khối chú thích trên viết ra để phục
+                           vụ — trượt cả hai, nên liên kết Zalo chưa bao giờ hiện ở
+                           đúng chỗ nó cần hiện.
+
+                           Loại 'completed' và 'cancelled': đơn đã xong hoặc đã huỷ
+                           thì không còn gì để nhắn tin xin huỷ. */
+                        ?>
+                        <?php if ($chanHuy !== null
+                                  && !in_array($o['status'], ['completed', 'cancelled'], true)): ?>
                             <?php
                             /*
-                                ĐÂY LÀ CHỖ KHÁCH ĐI TÌM NÚT "HUỶ ĐƠN" — và cố ý
-                                không có nút đó.
+                                ĐÂY LÀ CHỖ KHÁCH ĐI TÌM NÚT "HUỶ ĐƠN" khi đơn đã
+                                qua mốc không tự huỷ được nữa.
 
                                 Cửa hàng tự đi giao, không đồng bộ trạng thái
                                 vận chuyển thời gian thực với đơn vị vận chuyển
@@ -754,6 +826,96 @@ $paymentShort  = [
                             <?= $isOpen ? 'Thu gọn' : 'Xem chi tiết' ?>
                         </a>
                     </div>
+
+                    <?php
+                    /* ─────────────────────────────────────────────────────────
+                       HỘP XÁC NHẬN HUỶ ĐƠN — bước 2 và 3 của UC-02
+
+                       Mở bằng ?huy=<mã>, nên nó nằm NGAY TRONG thẻ đơn đó chứ
+                       không phải một hộp thoại nổi ở giữa màn hình: khách đang
+                       nhìn đúng đơn mình sắp huỷ, kèm số tiền và trạng thái
+                       của nó.
+
+                       NÓI RÕ CHUYỆN TIỀN TRƯỚC KHI HỎI. Bước 2 của ca dùng bắt
+                       nêu hệ quả về tiền, và đó là phần khách thật sự cần: đơn
+                       chưa trả gì thì không phát sinh, đơn đã cọc thì nêu số
+                       tiền sẽ được xem xét hoàn. Hỏi "bạn chắc chứ" mà không
+                       nói tiền đi đâu là hỏi một câu vô nghĩa. */
+                    ?>
+                    <?php if ($chanHuy === null && $moHuy): ?>
+                        <form class="acct-cancel" method="post"
+                              action="/tai-khoan/don-hang/huy">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="code" value="<?= e($o['code']) ?>">
+
+                            <p class="acct-cancel__lead">
+                                <strong>Huỷ đơn <?= e($o['code']) ?>?</strong>
+                            </p>
+
+                            <?php
+                            /* SỐ TIỀN PHẢI LÀ SỐ CỬA HÀNG ĐANG GIỮ, không phải
+                               `deposit_amount`.
+
+                               `deposit_amount` là phần cọc PHẢI trả, chốt lúc đặt
+                               đơn. Khách chuyển khoản thường trả đủ một lần, đơn
+                               sang 'paid', và khi ấy cửa hàng đang giữ cả tổng đơn.
+                               In `deposit_amount` ở đó là nói với khách một con số
+                               nhỏ hơn nhiều số họ đã chuyển — với đơn chỉ mua gọng
+                               (không cần cọc) thì con số ấy còn là 0đ tròn.
+
+                               Cùng một phép tính với RefundRequestModel::daNhan(),
+                               là thứ sẽ thật sự được ghi vào sổ hoàn tiền ngay sau
+                               khi khách bấm. Hai chỗ nói lệch nhau còn tệ hơn không
+                               nói. */
+                            $daNhan = RefundRequestModel::daNhan($o);
+                            ?>
+                            <?php if ($daNhan > 0): ?>
+                                <p class="acct-cancel__money">
+                                    Cửa hàng đã nhận
+                                    <strong><?= e(money($daNhan)) ?></strong>
+                                    của đơn này. Sau khi huỷ, cửa hàng sẽ xem xét hoàn lại và
+                                    liên hệ với bạn. Số tiền hoàn phụ thuộc việc tròng đã
+                                    được cắt theo số đo của bạn hay chưa.
+                                </p>
+                            <?php else: ?>
+                                <p class="acct-cancel__money">
+                                    Đơn này chưa phát sinh khoản thanh toán nào, nên huỷ
+                                    không ảnh hưởng gì tới tiền của bạn.
+                                </p>
+                            <?php endif; ?>
+
+                            <label class="acct-field">
+                                <span class="acct-field__label">Vì sao bạn huỷ đơn? <span aria-hidden="true">*</span></span>
+                                <select class="acct-field__input" name="ly_do" required
+                                        data-cancel-reason>
+                                    <option value="">— Chọn lý do —</option>
+                                    <?php foreach (OrderModel::LY_DO_HUY as $ma => $nhan): ?>
+                                        <option value="<?= e($ma) ?>"><?= e($nhan) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </label>
+
+                            <?php /* Ô tự do LUÔN HIỆN, không ẩn theo JS: không có
+                                     JavaScript thì khách chọn "Lý do khác" vẫn
+                                     phải gõ được. Máy chủ chỉ đọc ô này khi mã lý
+                                     do là 'khac'. */ ?>
+                            <label class="acct-field">
+                                <span class="acct-field__label">
+                                    Ghi rõ hơn <span class="field__opt">(bắt buộc nếu chọn "Lý do khác")</span>
+                                </span>
+                                <input class="acct-field__input" type="text" name="ly_do_khac"
+                                       maxlength="200" placeholder="Ví dụ: đặt nhầm màu gọng">
+                            </label>
+
+                            <div class="acct-cancel__acts">
+                                <button type="submit" class="acct-btn acct-btn--danger acct-btn--sm">
+                                    Xác nhận huỷ đơn
+                                </button>
+                                <a class="acct-btn acct-btn--quiet acct-btn--sm"
+                                   href="/tai-khoan?muc=don-hang">Không huỷ nữa</a>
+                            </div>
+                        </form>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>

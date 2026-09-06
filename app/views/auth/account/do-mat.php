@@ -123,9 +123,17 @@
                            để "cho đồng bộ" là thêm hai ô chọn dài mà không giải
                            quyết vấn đề nào.
 
-                           step 0.25 — độ kính đi theo bước 0.25 diop. */
+                           step 0.25 — độ kính đi theo bước 0.25 diop.
+
+                           CYL: ±6.00, KHỚP ĐÚNG miền máy chủ nhận.
+                           PrescriptionRecordModel kiểm độ trụ trong [-6, +6]
+                           (Q63.2). Trước đợt 3 ô này để ±20 vì đường ghi của
+                           khách lỏng hơn và nhận mọi con số; nay hai đường ghi
+                           đã gộp làm một, nên để ±20 là mời khách gõ một giá
+                           trị chắc chắn bị từ chối — và họ mất sạch những gì
+                           vừa nhập khi trang tải lại. */
                         $cells = [
-                            ['cyl',  'number', ['step' => '0.25', 'min' => '-20', 'max' => '20', 'placeholder' => '0.00']],
+                            ['cyl',  'number', ['step' => '0.25', 'min' => '-6', 'max' => '6', 'placeholder' => '0.00']],
                             ['axis', 'number', ['step' => '1', 'min' => '0', 'max' => '180', 'placeholder' => '0']],
                         ];
                         ?>
@@ -230,9 +238,9 @@
             </label>
 
             <label class="acct-field">
-                <span class="acct-field__label">Ngày đo</span>
+                <span class="acct-field__label">Ngày đo <span aria-hidden="true">*</span></span>
                 <input class="acct-field__input" type="date" name="measured_at"
-                       max="<?= e(date('Y-m-d')) ?>"
+                       required max="<?= e(date('Y-m-d')) ?>"
                        value="<?= e($prescription['measured_at'] ?? '') ?>">
             </label>
         </div>

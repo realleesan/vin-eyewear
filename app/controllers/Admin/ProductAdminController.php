@@ -110,8 +110,7 @@ class ProductAdminController extends AdminController
             'q'          => $q,
             // '' = không lọc danh mục nào; view dùng để tô viên đang chọn.
             'cat'        => $cat,
-            'canEdit'    => UserModel::hasRole($this->userId, 'admin')
-                         || UserModel::hasRole($this->userId, 'manager'),
+            'canEdit'    => UserModel::hasRole($this->userId, 'admin'),
             'editing'    => $dangSua,
             /* Lưới biến thể ở tab 4. allForProduct chứ không forProduct: khu
                quản trị phải thấy CẢ biến thể đang tắt, nếu không thì một
@@ -176,7 +175,7 @@ class ProductAdminController extends AdminController
     {
         $this->guardPostSize(self::BASE);
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id   = (string) ($_POST['id'] ?? '');
         $name = trim((string) ($_POST['name'] ?? ''));
@@ -828,7 +827,7 @@ class ProductAdminController extends AdminController
     public function delete(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id = (string) ($_POST['id'] ?? '');
 

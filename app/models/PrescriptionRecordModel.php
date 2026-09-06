@@ -4,24 +4,18 @@
  * PrescriptionRecordModel — lịch sử đơn thuốc kính (`customer_prescriptions`).
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * HAI BẢNG, MỘT NGUỒN CHÂN LÝ
+ * MỘT NGUỒN DUY NHẤT — SRS v2.1.0, FR-DM-01
  *
- *   customer_prescriptions   NHIỀU dòng một khách, không bao giờ ghi đè.
- *                            ĐÂY LÀ NGUỒN CHÂN LÝ.
- *   prescriptions            MỘT dòng một khách. Từ 2026-08-26 nó chỉ còn là
- *                            BẢN SAO của bản ghi mới nhất bên trên.
+ * Bảng này là nơi DUY NHẤT lưu số đo mắt. Trước đợt 3 còn một bảng thứ hai
+ * (`prescriptions`) giữ bản tóm tắt một-dòng-một-khách cho phía khách đọc, và
+ * một hàm mirrorLatest() chép qua lại. Cả hai đã gỡ: hai nơi lưu cùng một sự
+ * thật thì sớm muộn lệch nhau, và khi lệch thì không có cách nào biết bên nào
+ * đúng — trong khi đây là con số đem đi mài tròng.
  *
- * Vì sao không dẹp bảng cũ đi: bốn chỗ đang đọc nó đều nằm trên luồng mua hàng
- * (CartController bước 'so-do', UserModel::seedPrescription, trang
- * /tai-khoan/do-mat, hộp mua hàng). Luồng đó đã gãy đúng một lần vì bảng này —
- * ngày 2026-08-22, khi hosting chưa chạy migration nên năm cột wear_* không
- * tồn tại; khách bấm "Xác nhận độ kính" rồi thấy mình đứng ở giỏ hàng, không
- * một lời giải thích. Không đem luồng mua hàng ra đổi lược đồ lần nữa chỉ để
- * lấy một tính năng của khu quản trị.
- *
- * Nếp "bảng chính + một bản sao để bên kia đọc" đã có sẵn trong dự án:
- * `addresses` -> `profiles`.`address`, xem AddressModel::syncProfileAddress().
- * ─────────────────────────────────────────────────────────────────────────────
+ * Mọi màn hình đọc số đo — trang tài khoản của khách, bước chọn hồ sơ khi mua
+ * kính, tab hồ sơ trong khu quản trị — đều đọc từ đây. Đường đọc của khách đi
+ * qua UserModel::prescription(), đường ghi của khách qua
+ * UserModel::savePrescription(); cả hai chỉ là lớp mỏng bọc lớp này.
  */
 
 class PrescriptionRecordModel extends BaseModel
@@ -235,47 +229,41 @@ class PrescriptionRecordModel extends BaseModel
     }
 
     /**
-     * Bản ghi mới nhất — thứ mọi nơi khác nên đọc khi hỏi "độ hiện tại".
+     * Id bản TỰ KHAI mới nhất của khách, hoặc null nếu chưa có bản nào.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * DÙNG ĐỂ BIẾN "LƯU LẠI" Ở TRANG TÀI KHOẢN THÀNH MỘT PHIÊN BẢN
+     *
+     * Thay cho latest() cũ — hàm đó trả bản mới nhất BẤT KỂ nguồn, và nơi gọi
+     * duy nhất của nó là mirrorLatest(), đã gỡ cùng bảng tóm tắt.
+     *
+     * Lọc `source = 'customer'` là phần quan trọng: khách bấm Lưu ở trang tài
+     * khoản thì đó là đính chính lời KHAI CỦA CHÍNH HỌ, không phải sửa kết quả
+     * đo của kỹ thuật viên. Bỏ mệnh đề đó đi là mở đường cho khách chồng một
+     * phiên bản lên bản ghi y tế do người có chuyên môn nhập.
+     *
+     * Lấy bản gốc của nhóm (`ban_goc_id`) chứ không lấy id của chính dòng mới
+     * nhất: save() nhận id nào trong nhóm cũng ra cùng kết quả, nhưng trả về
+     * gốc thì ý định đọc rõ hơn — "nhóm phiên bản này", không phải "dòng này".
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    public static function latest(string $userId): ?array
+    public static function banTuKhaiMoiNhat(string $userId): ?string
     {
         if (!self::available()) {
             return null;
         }
 
-        /* Không còn lọc theo người được đo — SRS v2.1.0, H07: một tài khoản
-           ứng với một người, nên bản mới nhất của tài khoản CHÍNH LÀ độ hiện
-           tại của chủ tài khoản. */
-        return Database::fetchOne(
-            'SELECT * FROM customer_prescriptions
-              WHERE user_id = :uid
+        $id = Database::fetchValue(
+            "SELECT COALESCE(ban_goc_id, id)
+               FROM customer_prescriptions
+              WHERE user_id = :uid AND source = 'customer'
               ORDER BY measured_at DESC, created_at DESC
-              LIMIT 1',
+              LIMIT 1",
             ['uid' => $userId]
         );
+
+        return ($id === false || $id === null || $id === '') ? null : (string) $id;
     }
-
-    /* conHieuLuc() ĐÃ GỠ cùng UserModel::prescriptionIsValid() — SRS v2.1.0,
-       H09. Hệ thống không kết luận một số đo còn dùng được hay không. */
-
-    /*
-     * ─────────────────────────────────────────────────────────────────────────
-     * CẢNH BÁO CHÊNH LỆCH ĐỘ ĐÃ GỠ — SRS v2.1.0, H08
-     *
-     * Trước đây chenhLech() trừ cầu (SPH) của bản ghi này với bản liền trước
-     * của cùng người, kèm số tháng cách nhau, và bảng lịch sử tô đỏ ô nào tăng
-     * độ.
-     *
-     * Chủ đầu tư đã bỏ: một con số chênh lệch do máy tính ra, đứng cạnh dữ liệu
-     * y tế mà không có người diễn giải, dễ bị đọc thành một kết luận về sức
-     * khoẻ. Bảng lịch sử vẫn in đủ mọi lần đo theo thứ tự thời gian — người có
-     * chuyên môn tự so được.
-     * ─────────────────────────────────────────────────────────────────────────
-     */
-
-    // ========================================================================
-    // GHI
-    // ========================================================================
 
     /**
      * Thêm mới hoặc sửa một bản ghi.
@@ -363,7 +351,6 @@ class PrescriptionRecordModel extends BaseModel
                 'ly_do'      => $lyDo === '' ? null : utf8Substr($lyDo, 0, 255),
             ]);
 
-            self::mirrorLatest($userId);
             AuditLogModel::write($userId, 'rx.update',
                 'Bản ghi đo ngày ' . formatDate($gia['measured_at'])
                 . ' — phiên bản ' . ($pbMax + 1));
@@ -380,7 +367,6 @@ class PrescriptionRecordModel extends BaseModel
             'ly_do'      => null,
         ]);
 
-        self::mirrorLatest($userId);
         AuditLogModel::write($userId, 'rx.create',
             'Bản ghi đo ngày ' . formatDate($gia['measured_at']));
 
@@ -500,7 +486,6 @@ class PrescriptionRecordModel extends BaseModel
             );
         }
 
-        self::mirrorLatest($userId);
         AuditLogModel::write($userId, 'rx.delete',
             'Khách tự xoá số đo tự khai ngày ' . formatDate((string) $ban['measured_at']));
 
@@ -511,71 +496,23 @@ class PrescriptionRecordModel extends BaseModel
     // NỘI BỘ
     // ========================================================================
 
-    /**
-     * Chép bản ghi MỚI NHẤT sang bảng `prescriptions` để phía khách đọc.
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * mirrorLatest() ĐÃ GỠ — SRS v2.1.0, FR-DM-01
      *
-     * KHÔNG XOÁ dòng `prescriptions` khi lịch sử rỗng: bảng đó là thứ phía
-     * khách đọc, và xoá một dòng ở đó để rồi ghi lại là mở ra một khoảng thời
-     * gian ngắn mà khách nhìn thấy "chưa có số đo".
+     * Hàm này chép bản ghi mới nhất của sổ sang bảng tóm tắt `prescriptions`
+     * sau mỗi lần ghi, để phía khách đọc từ bảng đó.
      *
-     * (Trước đây khối chú thích này còn nói về năm cột wear_* phải giữ lại;
-     * mục "kính đang đeo" đã gỡ theo SRS v2.1.0, A20.)
+     * Không còn bảng thứ hai để chép sang: sổ chỉ-thêm này là nguồn duy nhất,
+     * và UserModel::prescription() đọc thẳng từ đây.
+     *
+     * Việc gỡ nó cũng đóng lại một lớp hỏng âm thầm. mirrorLatest() bọc
+     * try/catch và chỉ ghi log khi chép hỏng — đúng cho một bản sao phụ, nhưng
+     * nó nghĩa là bảng tóm tắt có thể tụt lại sau sổ mà không ai biết, và khi
+     * ấy khách nhìn thấy một con số còn nhân viên nhìn thấy con số khác trên
+     * cùng một hồ sơ.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    private static function mirrorLatest(string $userId): void
-    {
-        $moi = self::latest($userId);
-
-        if ($moi === null) {
-            return;
-        }
-
-        try {
-            Database::execute(
-                'INSERT INTO prescriptions
-                     (user_id, od_sph, od_cyl, od_axis, od_va,
-                      os_sph, os_cyl, os_axis, os_va,
-                      pd, measured_at, store_id, recommendation)
-                 VALUES
-                     (:user_id, :od_sph, :od_cyl, :od_axis, :od_va,
-                      :os_sph, :os_cyl, :os_axis, :os_va,
-                      :pd, :measured_at, :store_id, :note)
-                 ON DUPLICATE KEY UPDATE
-                      od_sph = VALUES(od_sph), od_cyl = VALUES(od_cyl),
-                      od_axis = VALUES(od_axis), od_va = VALUES(od_va),
-                      os_sph = VALUES(os_sph), os_cyl = VALUES(os_cyl),
-                      os_axis = VALUES(os_axis), os_va = VALUES(os_va),
-                      pd = VALUES(pd), measured_at = VALUES(measured_at),
-                      store_id = VALUES(store_id), recommendation = VALUES(recommendation)',
-                [
-                    'user_id'     => $userId,
-                    'od_sph'      => $moi['od_sph'],
-                    'od_cyl'      => $moi['od_cyl'],
-                    'od_axis'     => $moi['od_axis'],
-                    'od_va'       => $moi['od_va'],
-                    'os_sph'      => $moi['os_sph'],
-                    'os_cyl'      => $moi['os_cyl'],
-                    'os_axis'     => $moi['os_axis'],
-                    'os_va'       => $moi['os_va'],
-                    'pd'          => $moi['pd'],
-                    'measured_at' => $moi['measured_at'],
-                    'store_id'    => $moi['store_id'],
-                    'note'        => $moi['note'],
-                ]
-            );
-        } catch (Throwable $e) {
-            /* NUỐT LỖI Ở ĐÂY LÀ ĐÚNG, và đây là lý do.
-
-               Việc chính vừa xong rồi: bản ghi đã nằm trong bảng lịch sử —
-               bảng nguồn chân lý. Chép sang bản sao chỉ là để trang tài khoản
-               của khách hiện số mới. Để nó ném ra ngoài thì một cột thiếu
-               trong `prescriptions` (máy chưa chạy migration cũ) sẽ làm nhân
-               viên KHÔNG NHẬP ĐƯỢC SỐ ĐO, dù chỗ cần ghi đã ghi xong.
-
-               Cùng cách xử lý và cùng lý lẽ với UserModel::seedPrescription()
-               ở CartController — xem chú thích dài tại đó. */
-            error_log('PrescriptionRecordModel::mirrorLatest: ' . $e->getMessage());
-        }
-    }
 
     /**
      * Kiểm dữ liệu nhập.

@@ -1,0 +1,79 @@
+-- ============================================================================
+-- 2026-09-06 — ĐỢT 3, BƯỚC HAI: GỠ BẢNG TÓM TẮT `prescriptions`
+--
+-- Căn cứ: SRS v2.1.0, kịch bản chuyển đổi mục 6.7.3 bước 6.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ⚠ ĐỪNG CHẠY FILE NÀY CÙNG NGÀY VỚI 2026-09-06-dot-3-hop-nhat-so-do.sql
+--
+-- SRS ghi rõ: *"gỡ bảng và cột không còn dùng — chỉ thực hiện sau khi năm bước
+-- trên đã được kiểm và hệ thống chạy ổn định ít nhất MỘT TUẦN."*
+--
+-- Lý do không phải sự thận trọng chung chung. Chừng nào bảng `prescriptions`
+-- còn nguyên thì đợt 3 có đường lùi THẬT: deploy ngược mã nguồn cũ là chạy
+-- lại được ngay, vì bảng nó đọc vẫn còn và vẫn mang đúng dữ liệu như trước.
+--
+-- Chạy file này là ĐÓNG đường lùi đó lại. Sau đây, quay về mã cũ nghĩa là
+-- trang "Thông số đo mắt" của mọi khách đổ lỗi 1146 "Table doesn't exist", và
+-- cách duy nhất còn lại là nạp bản sao lưu.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BA ĐIỀU KIỆN, ĐỦ CẢ BA MỚI CHẠY
+--
+--   1. Đã chạy 2026-09-06-dot-3-hop-nhat-so-do.sql và bốn câu hậu kiểm ở cuối
+--      file đó đều đúng.
+--   2. Hệ thống chạy ít nhất MỘT TUẦN với mã đợt 3, không có báo lỗi nào liên
+--      quan tới hồ sơ đo mắt.
+--   3. Chạy lại câu này ngay trước khi gỡ, và nó phải ra 0:
+--
+--        SELECT COUNT(*) FROM prescriptions p
+--         WHERE p.updated_at > COALESCE(
+--                 (SELECT MAX(c.created_at) FROM customer_prescriptions c
+--                   WHERE c.user_id = p.user_id), '1000-01-01 00:00:00');
+--
+--      Khác 0 nghĩa là bảng sắp xoá còn giữ dữ liệu mới hơn sổ — DỪNG LẠI và
+--      chạy lại file hợp nhất trước.
+--
+--   4. Sửa ba nơi còn khai `prescriptions` là bảng bắt buộc, nếu chưa làm:
+--      database/schema.sql (khối CREATE TABLE, lệnh ALTER thêm khoá ngoại
+--      store_id, và dòng DROP ở khối dọn đầu file). install.php và
+--      kiem-tra-db.php đã bỏ tên bảng này từ đợt 3.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SAO LƯU TRƯỚC — NFR-R08
+--
+--   mysqldump -u <user> -p <ten_csdl> > vin-eyewear-truoc-go-bang-tom-tat.sql
+--
+-- Đây là lệnh DROP TABLE trên một bảng chứa dữ liệu y tế. Không có ngoại lệ.
+-- ============================================================================
+
+
+-- ----------------------------------------------------------------------------
+-- Gỡ bảng tóm tắt
+--
+-- Khoá ngoại `fk_prescriptions_store` (trỏ sang `stores`) và
+-- `fk_prescriptions_user` (trỏ sang `users`) đi theo bảng, không cần DROP
+-- riêng. Không bảng nào khác trỏ VÀO bảng này, nên không có ràng buộc nào
+-- chặn lệnh dưới đây.
+-- ----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `prescriptions`;
+
+
+-- ----------------------------------------------------------------------------
+-- KIỂM TRA SAU KHI CHẠY
+--
+--   SHOW TABLES LIKE 'prescriptions';   -- không ra dòng nào
+--   SHOW TABLES LIKE 'customer_prescriptions';  -- CÓ (đây mới là sổ thật)
+--
+-- Rồi mở /tai-khoan?muc=do-mat bằng một tài khoản khách có số đo: phải hiện
+-- đúng như trước khi chạy.
+--
+-- ----------------------------------------------------------------------------
+-- QUAY LUI
+--
+-- KHÔNG CÓ. Đó là toàn bộ lý do file này tách riêng và phải chờ một tuần.
+--
+-- Dựng lại bảng rỗng thì mã cũ chạy được nhưng MỌI khách đều "chưa có số đo" —
+-- tệ hơn là để nguyên, vì nó trông như dữ liệu đã mất chứ không như một lỗi.
+-- Đường về duy nhất là nạp bản sao lưu tạo ở đầu file này.
+-- ----------------------------------------------------------------------------

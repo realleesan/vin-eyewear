@@ -35,8 +35,7 @@ class VoucherAdminController extends AdminController
             'pageTitle' => 'Mã giảm giá — Quản trị',
             'vouchers'  => VoucherModel::adminList(),
             'types'     => VoucherModel::TYPES,
-            'canEdit'   => UserModel::hasRole($this->userId, 'admin')
-                        || UserModel::hasRole($this->userId, 'manager'),
+            'canEdit'   => UserModel::hasRole($this->userId, 'admin'),
             'editing'   => isset($_GET['sua']) ? VoucherModel::find((string) $_GET['sua']) : null,
         ]);
     }
@@ -44,7 +43,7 @@ class VoucherAdminController extends AdminController
     public function save(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id   = (string) ($_POST['id'] ?? '');
         $code = strtoupper(trim((string) ($_POST['code'] ?? '')));
@@ -165,7 +164,7 @@ class VoucherAdminController extends AdminController
     public function delete(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id      = (string) ($_POST['id'] ?? '');
         $voucher = VoucherModel::find($id);
@@ -209,7 +208,7 @@ class VoucherAdminController extends AdminController
     public function grant(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $voucher = VoucherModel::find((string) ($_POST['id'] ?? ''));
 
@@ -262,7 +261,7 @@ class VoucherAdminController extends AdminController
     public function toggle(): void
     {
         $this->requirePost(self::BASE);
-        $this->requireManager(self::BASE);
+        $this->requireAdmin(self::BASE);
 
         $id = (string) ($_POST['id'] ?? '');
         $ma = VoucherModel::find($id);
