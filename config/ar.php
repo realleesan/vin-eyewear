@@ -23,15 +23,19 @@ return [
     //   - menu trượt mobile         (_layout/header.php)
     //   - cột "Về Vin Eyewear"      (_layout/footer.php)
     //
-    // Xong tính năng thì đổi đúng dòng này thành true, không phải sửa chỗ nào
-    // khác. Ẩn bằng cách KHÔNG in ra HTML chứ không phải display:none — mục
+    // BẬT TỪ FR-SP-05... đúng hơn là FR-SP-22, ngày 06/09/2026. Trang thử AR
+    // chạy được từ lâu nhưng không có đường nào dẫn tới — nó nằm đó cho riêng
+    // người biết gõ /thu-ar. Cờ này bật thanh điều hướng và mục ở chân trang;
+    // nút trên trang chi tiết sản phẩm cũng đọc nó (xem product/detail.php).
+    //
+    // Tắt lại thì đổi đúng dòng này thành false, không phải sửa chỗ nào khác. Ẩn bằng cách KHÔNG in ra HTML chứ không phải display:none — mục
     // ẩn bằng CSS thì trình đọc màn hình vẫn đọc, Google vẫn lập chỉ mục, và
     // người dùng bàn phím vẫn Tab vào được một liên kết họ không nhìn thấy.
     //
     // Đường /thu-ar VẪN vào thẳng được khi cờ tắt — để còn phát triển và xem
     // thử. Cờ chỉ quyết định có dẫn khách tới đó hay không.
     // ------------------------------------------------------------------
-    'nav_enabled' => false,
+    'nav_enabled' => true,
 
     // ------------------------------------------------------------------
     // GỌNG THỬ

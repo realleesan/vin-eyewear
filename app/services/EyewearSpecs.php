@@ -79,30 +79,11 @@ class EyewearSpecs
         return $rong . '□' . $cau . '-' . $cang;
     }
 
-    /**
-     * Cỡ S / M / L, hoặc null.
-     *
-     * Quy từ TỔNG BỀ RỘNG GỌNG chứ không từ bề rộng tròng — lý do đầy đủ ở
-     * config/eyewear.php. Ngoài dải thì trả null: gọng thể thao ôm mặt rộng
-     * 160mm mà gọi là "cỡ L" thì người mua theo cỡ L nhận về thứ không giống
-     * mấy mẫu L còn lại.
-     */
-    public static function sizeKey(array $p): ?string
-    {
-        $rong = (int) ($p['frame_width_mm'] ?? 0);
+    /* sizeKey() ĐÃ GỠ — FR-SP-09, cùng với sizeTable() bên dưới.
 
-        if ($rong <= 0) {
-            return null;
-        }
-
-        foreach ((array) config('eyewear.sizes') as $khoa => $dai) {
-            if ($rong >= (int) $dai['min'] && $rong <= (int) $dai['max']) {
-                return (string) $khoa;
-            }
-        }
-
-        return null;
-    }
+       Nó quy tổng bề rộng gọng thành S/M/L theo config('eyewear.sizes'), và cả
+       hai đều đã rời khỏi dự án. Cột `size_class` do nhân viên tự chọn trong
+       form sản phẩm là thứ KHÁC và vẫn còn — nó không hiện ra trang bán hàng. */
 
     /** Nhãn phân loại ("Kính râm"), hoặc rỗng. */
     public static function typeLabel(array $p): string
@@ -183,13 +164,22 @@ class EyewearSpecs
     /** @return array<string,string> Kích thước */
     public static function sizeRows(array $p): array
     {
-        $khoaCo = self::sizeKey($p);
-        $mat    = self::faceShapes($p);
+        $mat = self::faceShapes($p);
 
+        /* KHÔNG CÒN DÒNG "Quy đổi → Cỡ M" — FR-SP-09.
+
+           Hạng cỡ S/M/L quy từ tổng bề rộng gọng đã gỡ khỏi cả trang bán hàng.
+           Nó hứa một chuẩn chung mà ngành kính không có: 138mm là "M" ở bảng
+           này, "L" ở bảng của hãng khác, và khách mua theo chữ cái sẽ nhận về
+           thứ không vừa. Ba con số milimét thật thì không mơ hồ như thế, và
+           chúng vẫn ở đây.
+
+           Chuỗi cỡ gọng 52□18-145 (EyewearSpecs::size) cũng giữ nguyên — đó là
+           ký hiệu quốc tế in trên chính càng kính, khách đối chiếu được với cặp
+           kính đang đeo. */
         return self::gon([
             'Tổng rộng gọng'  => self::co($p['frame_width_mm'] ?? null) ? $p['frame_width_mm'] . ' mm' : null,
             'Chiều cao tròng' => self::co($p['lens_height_mm'] ?? null) ? $p['lens_height_mm'] . ' mm' : null,
-            'Quy đổi'         => $khoaCo !== null ? 'Cỡ ' . $khoaCo : null,
             'Gợi ý dáng mặt'  => $mat === [] ? null : implode(', ', $mat),
         ]);
     }
@@ -301,42 +291,15 @@ class EyewearSpecs
     // BẢNG DỰNG TỪ CẢ MỘT BỘ
     // ========================================================================
 
-    /**
-     * Bảng quy đổi cỡ, kèm những mẫu THẬT của bộ rơi vào từng cỡ.
-     *
-     * Dựng từ dữ liệu chứ không gõ tay: bộ thay hàng là bảng đổi theo, và
-     * không bao giờ có chuyện bảng mời người ta xem một mẫu đã hết.
-     *
-     * Cỡ nào không có mẫu nào thì VẪN in ra, chỉ bỏ trống cột mẫu. Giấu đi thì
-     * người đọc mất mốc so sánh — biết bộ này không có cỡ S cũng là một thông
-     * tin, và là thông tin họ cần trước khi đặt.
-     *
-     * @param  array $products các mẫu của bộ
-     * @return array<int, array{key:string, range:string, faces:string, models:array}>
-     */
-    public static function sizeTable(array $products): array
-    {
-        $ra = [];
+    /* sizeTable() ĐÃ GỠ — FR-SP-09.
 
-        foreach ((array) config('eyewear.sizes') as $khoa => $dai) {
-            $mau = [];
+       Nó dựng bảng "Quy đổi cỡ và gợi ý dáng mặt" ở trang bộ sưu tập: ba dòng
+       S/M/L, mỗi dòng một dải milimét và các mẫu rơi vào dải đó. Cả bảng ấy chỉ
+       tồn tại để dạy một hạng cỡ mà phần còn lại của trang không dùng nữa.
 
-            foreach ($products as $p) {
-                if (self::sizeKey($p) === $khoa) {
-                    $mau[] = ['name' => (string) $p['name'], 'slug' => (string) $p['slug']];
-                }
-            }
-
-            $ra[] = [
-                'key'    => (string) $khoa,
-                'range'  => $dai['min'] . ' – ' . $dai['max'] . ' mm',
-                'faces'  => (string) $dai['faces'],
-                'models' => $mau,
-            ];
-        }
-
-        return $ra;
-    }
+       Phần ĐÁNG GIỮ của nó — mẫu nào hợp dáng mặt nào — không mất: faceTable()
+       ngay dưới đây làm đúng việc ấy, và làm tốt hơn vì nó nhóm theo dáng mặt
+       thay vì theo một chữ cái. */
 
     /**
      * Dáng mặt nào hợp với mẫu nào trong bộ này.

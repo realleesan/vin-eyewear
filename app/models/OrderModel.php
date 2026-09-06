@@ -60,7 +60,13 @@ class OrderModel extends BaseModel
     public static function nhanTrangThai(string $status, ?string $deliveryMethod): string
     {
         if ($status === 'shipping' && $deliveryMethod === 'pickup') {
-            return 'Chờ khách nhận';
+            /* "SẴN SÀNG TẠI CỬA HÀNG", không phải "Chờ khách nhận" — FR-QT-05.
+
+               Hai câu nói cùng một sự việc nhưng đặt trách nhiệm ở hai phía.
+               "Chờ khách nhận" đọc như một lời trách: cửa hàng xong việc rồi,
+               còn khách thì chưa tới. "Sẵn sàng tại cửa hàng" nói đúng thứ
+               khách cần biết — hàng có ở đó rồi, tới lúc nào cũng lấy được. */
+            return 'Sẵn sàng tại cửa hàng';
         }
 
         return self::STATUSES[$status] ?? $status;
@@ -125,7 +131,7 @@ class OrderModel extends BaseModel
         }
 
         try {
-            return Database::transaction(static function () use ($data, $cart): array {
+            $ket = Database::transaction(static function () use ($data, $cart): array {
 
                 // Khoá các dòng sản phẩm liên quan tới hết transaction.
                 //
@@ -141,7 +147,10 @@ class OrderModel extends BaseModel
                 }
 
                 $rows = Database::fetchAll(
-                    'SELECT id, name, price, stock_quantity, status, is_visible
+                    /* `cost_price` — GIÁ VỐN, chép vào dòng đơn — FR-DH-13.
+                       Đọc ngay trong câu đã khoá dòng, không hỏi lại sau: giá
+                       vốn phải là con số đúng tại đúng khoảnh khắc bán. */
+                    'SELECT id, name, price, cost_price, stock_quantity, status, is_visible
                        FROM products
                       WHERE id IN (' . implode(', ', $ph) . ')
                       FOR UPDATE',
@@ -249,7 +258,8 @@ class OrderModel extends BaseModel
                        "Mắt đặt" trả về id = null và price = 0: hoá đơn ghi tên
                        kiểu tròng, còn tiền tròng cửa hàng báo sau khi xem thông
                        số — xem LensModel::combo(). */
-                    $lens = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
+                    $lensType = LensModel::findType($row['lens_type'] ?? null);
+                    $lens     = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
 
                     /* Tiền tròng CỘNG VÀO unit_price chứ không thành một dòng
                        riêng, để line_total = unit_price × quantity giữ nguyên
@@ -270,11 +280,50 @@ class OrderModel extends BaseModel
                     // Chép lại tên, NHÃN BIẾN THỂ, TÊN GÓI TRÒNG và giá tại
                     // thời điểm mua — đơn cũ không được đổi theo khi sản phẩm
                     // đổi giá, đổi tên hay bị gỡ.
+                    /* ─────────────────────────────────────────────────────
+                       GIÁ VỐN CHÉP TẠI THỜI ĐIỂM BÁN — FR-DH-13
+
+                       Hồ sơ sản phẩm có `cost_price`, nhưng nó là giá vốn HÔM
+                       NAY. Nhập lô mới với giá khác là mọi đơn cũ đổi lợi nhuận
+                       theo — tức không đơn nào tính lại được. SRS nói thẳng:
+                       *"phải làm ngay dù chưa có báo cáo, vì lịch sử đã trôi
+                       qua thì không dựng lại được."*
+
+                       Cùng lý lẽ đã chép `product_name`, `unit_price`,
+                       `variant_label` và `lens_name` vào dòng đơn.
+
+                       LÀ GIÁ VỐN CỦA GỌNG, MỖI ĐƠN VỊ. Không gồm tiền tròng:
+                       gói tròng không có cột giá vốn nào (bảng giá chỉ có giá
+                       bán), và biến thể cũng không — chênh giá bán theo màu/cỡ
+                       không kéo theo chênh giá nhập. Đọc con số này để tính lãi
+                       thì nhớ nhân với `quantity` và nhớ rằng phần tròng chưa
+                       trừ.
+
+                       NULL khi sản phẩm chưa điền giá vốn. Không ép về 0: 0 là
+                       "nhập không mất tiền", còn NULL là "không biết" — hai
+                       điều rất khác nhau trong một bảng tính lãi. */
                     $lines[] = [
                         'product_id'    => $product['id'],
+                        'cost_price'    => $product['cost_price'] !== null
+                            ? (int) $product['cost_price'] : null,
                         'variant_id'    => $variant['id'] ?? null,
                         'variant_label' => $variant['label'] ?? null,
                         'lens_id'       => $lens['id'] ?? null,
+                        /* KIỂU TRÒNG, chép riêng — thêm ở đợt 5 cho FR-HS-10.
+
+                           LensModel::combo() cố ý gộp kiểu + gói thành một
+                           chuỗi tên, và chú thích ở đó giải thích vì sao: mọi
+                           nơi in phần tròng chỉ cần một tên và một con số.
+
+                           Nhưng MUA LẠI thì cần dựng lại lựa chọn, không phải
+                           in nó — và giá nằm ở giao điểm kiểu × gói, nên một
+                           mình `lens_id` không tra được giá. Không có cột này
+                           thì nút "Mua lại" hoặc bỏ mất phần tròng, hoặc phải
+                           đoán kiểu bằng cách tách ngược chuỗi `lens_name` —
+                           một chuỗi hiển thị, đổi lúc nào cũng được.
+
+                           NULL với đơn đặt trước đợt 5; reorder() xử lý riêng. */
+                        'lens_type'     => $lensType['id'] ?? null,
                         'lens_name'     => $lens['name'] ?? null,
                         'lens_price'    => $lensPrice,
                         // null = khách chưa biết độ, đo tại cửa hàng
@@ -420,15 +469,30 @@ class OrderModel extends BaseModel
                     VoucherModel::consume($voucher['id'], $data['userId'] ?? null);
                 }
 
+                /* Cột `cost_price` đến ở migration đợt 5. Máy chưa nâng cấp thì
+                   bỏ nó khỏi câu INSERT thay vì ném lỗi 1054 vào giữa một giao
+                   dịch đặt hàng — mất một con số kế toán còn hơn mất cả cái đơn.
+                   Hỏi MỘT lần trước vòng lặp: columnExists() có cache riêng,
+                   nhưng gọi nó cho từng dòng hàng vẫn là thói quen xấu. */
+                $coGiaVon   = self::coGiaVon();
+                $coKieuTrong = self::coKieuTrong();
+
                 foreach ($lines as $line) {
+                    if (!$coGiaVon) {
+                        unset($line['cost_price']);
+                    }
+
+                    if (!$coKieuTrong) {
+                        unset($line['lens_type']);
+                    }
+
+                    $cot = array_keys($line);
+                    $ten = implode(', ', $cot);
+                    $val = ':' . implode(', :', $cot);
+
                     Database::execute(
-                        'INSERT INTO order_items
-                            (id, order_id, product_id, variant_id, variant_label,
-                             lens_id, lens_name, lens_price, prescription,
-                             product_name, unit_price, quantity, line_total)
-                         VALUES (:id, :order_id, :product_id, :variant_id, :variant_label,
-                                 :lens_id, :lens_name, :lens_price, :prescription,
-                                 :product_name, :unit_price, :quantity, :line_total)',
+                        'INSERT INTO order_items (id, order_id, ' . $ten . ')
+                         VALUES (:id, :order_id, ' . $val . ')',
                         ['id' => uuid(), 'order_id' => $orderId] + $line
                     );
 
@@ -449,8 +513,25 @@ class OrderModel extends BaseModel
 
                 // 'items' để nơi gọi biết đúng những dòng nào đã thành đơn mà
                 // dọn khỏi giỏ — dòng khách chưa tick phải được giữ lại.
-                return ['ok' => true, 'code' => $code, 'total' => $total, 'items' => $cart];
+                return ['ok' => true, 'id' => $orderId, 'code' => $code,
+                        'total' => $total, 'items' => $cart];
             });
+
+            /* THƯ "ĐÃ NHẬN ĐƠN" — FR-EM-01, mốc thứ nhất.
+
+               NGOÀI transaction, sau khi nó đã commit: transaction ở đây trừ
+               kho và ghi hoá đơn, và một lá thư không được phép đứng trong
+               đường đó (FR-EM-06). Đọc lại bản ghi vì $data là dữ liệu form,
+               chưa có mã đơn lẫn tổng tiền đã chốt. */
+            if (($ket['ok'] ?? false) && isset($ket['id'])) {
+                $don = self::find((string) $ket['id']);
+
+                if ($don !== null) {
+                    EmailEvents::donHang($don, 'tao');
+                }
+            }
+
+            return $ket;
         } catch (PDOException $e) {
             /*
              * PHẢI ĐỨNG TRƯỚC RuntimeException — PDOException KẾ THỪA TỪ NÓ.
@@ -841,6 +922,249 @@ class OrderModel extends BaseModel
         ];
     }
 
+    // ========================================================================
+    // TỰ HUỶ ĐƠN CHUYỂN KHOẢN QUÁ HẠN — FR-TT-11
+    // ========================================================================
+
+    /** Bao nhiêu giờ kể từ lúc đặt thì đơn chưa trả tiền bị huỷ. */
+    public const QUA_HAN_SAU_GIO = 24;
+
+    /** Hai lượt quét cách nhau tối thiểu bao nhiêu giây. */
+    private const QUET_CACH_NHAU = 600;
+
+    /** Một lượt quét huỷ tối đa bao nhiêu đơn. */
+    private const QUET_TOI_DA = 20;
+
+    /**
+     * Quét và huỷ đơn chuyển khoản quá hạn chưa thanh toán.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * BÁM THEO LƯỢT TRUY CẬP, KHÔNG THEO ĐỒNG HỒ — SRS nói đích danh
+     *
+     * Hosting là InfinityFree gói miễn phí: không SSH, không cron, không tiến
+     * trình chạy nền. Cách duy nhất để một việc định kỳ xảy ra là mượn một lượt
+     * truy cập nào đó của khách. Đổi lại, "24 giờ" ở đây là "24 giờ VÀ có người
+     * ghé trang sau đó" — với một cửa hàng đang bán thì chênh lệch tính bằng
+     * phút, và đơn quá hạn thêm vài phút không hại ai.
+     *
+     * BA CÁI PHANH, vì hàm này chạy trên lượt duyệt trang của một người thật:
+     *
+     *   1. Giãn cách 10 phút, chốt bằng mtime của một tệp trong storage/ —
+     *      KHÔNG bằng CSDL. Hàm này chạy trước router ở mọi lượt GET, kể cả
+     *      trang tĩnh; hỏi CSDL để biết "đã tới giờ chưa" là mở một kết nối ở
+     *      gần như mọi lượt, phá đúng tính lười mà core/Database.php dựng ra.
+     *   2. Trần 20 đơn mỗi lượt. Ngày đầu bật tính năng có thể có hàng trăm đơn
+     *      cũ đủ điều kiện; huỷ hết trong một lượt là một người xui xẻo phải
+     *      chờ hàng trăm transaction chạy xong mới thấy trang.
+     *   3. Nuốt mọi ngoại lệ. Đây là việc dọn dẹp đi nhờ; nó không được phép
+     *      làm hỏng trang của người đang chở nó.
+     *
+     * GHI MỐC TRƯỚC KHI LÀM, không phải sau: hai lượt truy cập gần nhau cùng
+     * vào được đây thì lượt thứ hai phải thấy mốc mới ngay, kể cả khi lượt đầu
+     * còn đang huỷ dở.
+     *
+     * VẾ "BÁO KHÁCH TRƯỚC 2 GIỜ" của FR-TT-11 làm ở canhBaoSapQuaHan(), gọi ở
+     * cuối hàm này. Nó KHÔNG nằm trong vòng lặp huỷ — hai tập đơn rời nhau.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return int số đơn đã huỷ
+     */
+    public static function quetDonQuaHan(): int
+    {
+        try {
+            /* ─────────────────────────────────────────────────────────────
+               PHANH ĐẦU TIÊN LÀ MỘT TỆP, KHÔNG PHẢI CƠ SỞ DỮ LIỆU
+
+               Hàm này chạy TRƯỚC router ở mọi lượt GET, kể cả những trang xưa
+               nay không đụng tới CSDL: /chinh-sach, /gioi-thieu, và cả trang
+               404. core/Database.php mở kết nối theo kiểu lười chính vì thế —
+               "các trang tĩnh không đụng tới DB thì không tốn một kết nối
+               nào".
+
+               Hỏi `app_settings` để biết đã tới lượt quét chưa là phá đúng
+               tính chất đó: 999 trên 1000 lượt sẽ mở một kết nối, chạy hai câu
+               lệnh, rồi kết luận "chưa tới giờ". Và khi MySQL trục trặc thì
+               mọi trang tĩnh cùng đứng chờ hết thời gian kết nối.
+
+               Một tệp mtime trả lời cùng câu hỏi mà không rời đĩa cục bộ. Dự
+               án đã có đúng khuôn mẫu này ở storage/sepay/nhip-keo.json.
+
+               KHÔNG GHI ĐƯỢC storage/ (hosting đặt chỉ đọc) thì THÔI QUÉT, chứ
+               không lùi về CSDL: không có phanh nghĩa là mọi lượt truy cập đều
+               quét, và cái giá đó lớn hơn hẳn việc đơn quá hạn nằm lại. Ghi
+               error_log một lần để người vận hành thấy.
+               ───────────────────────────────────────────────────────────── */
+            $tep = ROOT_PATH . '/storage/quet';
+
+            if (!is_dir($tep) && !@mkdir($tep, 0770, true) && !is_dir($tep)) {
+                error_log('OrderModel::quetDonQuaHan: không tạo được ' . $tep);
+
+                return 0;
+            }
+
+            $tep .= '/don-qua-han.txt';
+
+            if (is_file($tep) && time() - (int) @filemtime($tep) < self::QUET_CACH_NHAU) {
+                return 0;
+            }
+
+            /* CHẠM TỆP TRƯỚC KHI LÀM. Hai lượt truy cập gần nhau cùng lọt qua
+               phép so mtime thì lượt sau phải thấy mốc mới ngay, kể cả khi lượt
+               đầu còn đang huỷ dở. Cả hai cùng quét cũng không hại — changeStatus()
+               khoá dòng bằng FOR UPDATE nên không đơn nào bị hoàn kho hai lần —
+               nhưng không nên để xảy ra. */
+            if (@file_put_contents($tep, (string) time(), LOCK_EX) === false) {
+                error_log('OrderModel::quetDonQuaHan: không ghi được ' . $tep);
+
+                return 0;
+            }
+
+            /* CHỈ ĐƠN CHƯA NHẬN ĐỒNG NÀO. 'deposit_paid' KHÔNG nằm trong đây:
+               khách đã chuyển cọc là đã cam kết, và huỷ đơn của họ vì chưa trả
+               nốt là một quyết định của con người, không phải của đồng hồ. */
+            $dons = Database::fetchAll(
+                "SELECT id, code FROM orders
+                  WHERE payment_method = 'bank_transfer'
+                    AND status = 'new'
+                    AND payment_status = 'unpaid'
+                    AND created_at < (NOW() - INTERVAL " . self::QUA_HAN_SAU_GIO . " HOUR)
+                  ORDER BY created_at ASC
+                  LIMIT " . self::QUET_TOI_DA
+            );
+
+            foreach ($dons as $don) {
+                // 'system' vào cột `cancelled_by` — phân biệt với khách tự huỷ
+                // và nhân viên huỷ. changeStatus() lo hoàn kho và ghi vết.
+                self::changeStatus(
+                    (string) $don['id'],
+                    'cancelled',
+                    null,
+                    'Quá hạn thanh toán ' . self::QUA_HAN_SAU_GIO . ' giờ',
+                    'system'
+                );
+
+            }
+
+            // Vế thứ hai của FR-TT-11 — xem hàm ngay dưới.
+            self::canhBaoSapQuaHan();
+
+            return count($dons);
+        } catch (Throwable $e) {
+            error_log('OrderModel::quetDonQuaHan: ' . $e->getMessage());
+
+            return 0;
+        }
+    }
+
+    /** Báo trước bao nhiêu giờ so với mốc tự huỷ. */
+    private const BAO_TRUOC_GIO = 2;
+
+    /**
+     * Thư nhắc những đơn SẮP bị huỷ vì quá hạn — FR-TT-11 vế thứ hai.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * MỘT CÂU QUÉT RIÊNG, KHÔNG PHẢI MỘT DÒNG TRONG VÒNG LẶP HUỶ
+     *
+     * Thư này gửi HAI GIỜ TRƯỚC khi đơn bị huỷ, nên nó nói về những đơn mà
+     * vòng lặp trên KHÔNG chạm tới: đơn 22–24 giờ tuổi, vẫn còn sống, vẫn còn
+     * kịp trả tiền. Hai tập hợp rời nhau hoàn toàn.
+     *
+     * ĐI NHỜ ĐÚNG CÁI PHANH CỦA VÒNG LẶP HUỶ — gọi từ trong quetDonQuaHan(),
+     * sau khi tệp mốc đã được chạm. Nghĩa là không có tệp thứ hai để quản, và
+     * hai việc cùng nhịp 10 phút. Sai số 10 phút trên một lời báo trước 2 giờ
+     * là thứ không ai đo được.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * "HAI GIỜ" KHÔNG PHẢI LÚC NÀO CŨNG ĐỦ HAI GIỜ, VÀ ĐÓ LÀ GIỚI HẠN THẬT
+     *
+     * Việc định kỳ ở đây đi nhờ lượt truy cập. Một đêm không ai vào trang thì
+     * đơn 22 giờ tuổi lúc nửa đêm có thể mãi tới 23 giờ 50 tuổi mới nhận được
+     * thư — và mười phút sau thì bị huỷ. Lá thư vẫn đúng (đơn CHƯA bị huỷ lúc
+     * gửi), chỉ là lời báo trước ngắn hơn hứa hẹn.
+     *
+     * Không có cách sửa nào trong khuôn khổ hosting không cron. Đổi lại, khoá
+     * chống trùng theo id đơn bảo đảm mỗi đơn nhận đúng một thư, nên đường
+     * hỏng tệ nhất là thư tới muộn — không phải khách bị làm phiền nhiều lần.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return int số thư đã xếp hàng
+     */
+    private static function canhBaoSapQuaHan(): int
+    {
+        if (!EmailQueueModel::available()) {
+            return 0;
+        }
+
+        $tu  = self::QUA_HAN_SAU_GIO - self::BAO_TRUOC_GIO;
+
+        /* CÙNG BỘ ĐIỀU KIỆN với câu quét huỷ, chỉ khác cửa sổ thời gian. Phải
+           cùng: báo cho một đơn mà vòng lặp kia sẽ không bao giờ huỷ là một
+           lời doạ suông, và đó là cách nhanh nhất để khách mất tin vào thư của
+           cửa hàng. */
+        /* ĐỊA CHỈ NHẬN LẤY NGAY TRONG CÂU QUÉT, không gọi lại từng đơn một.
+
+           EmailEvents::donHang() lùi về email tài khoản khi `customer_email`
+           rỗng (đơn đặt trước ngày form thanh toán hỏi email), và nó làm việc
+           ấy bằng một truy vấn cho MỖI đơn. Ở đường nóng thì được — mỗi lần
+           đúng một đơn. Ở đây thì tới hai mươi đơn một lượt, trên lượt duyệt
+           trang của một người thật. Một LEFT JOIN trả lời cùng câu hỏi cho cả
+           lô. */
+        $dons = Database::fetchAll(
+            "SELECT o.id, o.code, o.customer_name, o.user_id, o.total,
+                    COALESCE(NULLIF(o.customer_email, ''), u.email) AS email_nhan
+               FROM orders o
+               LEFT JOIN users u ON u.id = o.user_id
+              WHERE o.payment_method = 'bank_transfer'
+                AND o.status = 'new'
+                AND o.payment_status = 'unpaid'
+                AND o.created_at <  (NOW() - INTERVAL " . $tu . " HOUR)
+                AND o.created_at >= (NOW() - INTERVAL " . self::QUA_HAN_SAU_GIO . " HOUR)
+              ORDER BY o.created_at ASC
+              LIMIT " . self::QUET_TOI_DA
+        );
+
+        $n = 0;
+
+        foreach ($dons as $don) {
+            $id = EmailQueueModel::xepHang(
+                'don.sap_qua_han',
+                trim((string) ($don['email_nhan'] ?? '')) ?: null,
+                [
+                    'ten_khach' => (string) ($don['customer_name'] ?? 'bạn'),
+                    'ma_don'    => (string) $don['code'],
+                    'tong_tien' => money((int) ($don['total'] ?? 0)),
+                    'so_gio'    => (string) self::BAO_TRUOC_GIO,
+                    'link_don'  => rtrim((string) config('app.url', ''), '/')
+                        . '/tai-khoan?muc=don-hang&don=' . rawurlencode((string) $don['code']),
+                ],
+                // Một đơn một lá, mãi mãi — kể cả khi hai lượt quét cùng thấy nó.
+                'don.sap_qua_han:' . $don['id'],
+                null,
+                $don['user_id'] ?? null,
+                'order',
+                (string) $don['id']
+            );
+
+            if ($id !== null) {
+                $n++;
+            }
+        }
+
+        return $n;
+    }
+
+    /** CSDL đã có cột `order_items`.`cost_price` chưa — migration đợt 5. */
+    public static function coGiaVon(): bool
+    {
+        return Database::columnExists('order_items', 'cost_price');
+    }
+
+    /** CSDL đã có cột `order_items`.`lens_type` chưa — migration đợt 5. */
+    public static function coKieuTrong(): bool
+    {
+        return Database::columnExists('order_items', 'lens_type');
+    }
+
     /**
      * Các dòng hàng của một đơn.
      */
@@ -1046,8 +1370,13 @@ class OrderModel extends BaseModel
            này có phải lần đầu không" chỉ bên trong transaction mới biết. */
         $vuaHuy = false;
 
+        /* "TRẠNG THÁI CÓ THẬT SỰ ĐỔI KHÔNG" — mang ra ngoài để phần gửi thư ở
+           cuối hàm đọc được. Bên trong transaction nó là $truoc !== $status. */
+        $daDoi = false;
+        $don   = null;
+
         Database::transaction(static function () use (
-            $id, $status, $changedBy, $lyDo, $nguonHuy, &$vuaHuy
+            $id, $status, $changedBy, $lyDo, $nguonHuy, &$vuaHuy, &$daDoi
         ): void {
             /*
              * ĐỌC TRẠNG THÁI CŨ TRƯỚC KHI GHI ĐÈ, VÀ KHOÁ DÒNG LẠI.
@@ -1101,16 +1430,34 @@ class OrderModel extends BaseModel
                Huỷ đơn tách riêng thành order.cancel: đây là hành động duy nhất
                trong nhóm này làm mất doanh thu và trả hàng về kho, nên nó đáng
                có bộ lọc riêng ở màn xem vết. */
+            $daDoi = $truoc !== $status;
+
             if ($truoc !== $status) {
+                /* KHÁCH TỰ HUỶ CÓ MÃ RIÊNG — FR-NK-07.
+
+                   Trước đợt 5 mọi lần huỷ đều ghi 'order.cancel', nên câu hỏi
+                   "tháng này bao nhiêu đơn khách tự bỏ" — câu duy nhất trong
+                   nhóm này nói lên điều gì đó về sản phẩm và về giá — không lọc
+                   ra được. Nguồn huỷ đã có sẵn ở tham số, chỉ là chưa ai dùng.
+
+                   'system' (tự huỷ quá hạn) vẫn ghi 'order.cancel': nó là hành
+                   vi của cửa hàng, chỉ khác là do đồng hồ chứ không do người. */
+                $maHuy = $nguonHuy === 'customer' ? 'order.cancel_customer' : 'order.cancel';
+
                 self::ghiVetTien(
                     $id,
-                    $status === 'cancelled' ? 'order.cancel' : 'order.status',
+                    $status === 'cancelled' ? $maHuy : 'order.status',
                     sprintf(
                         'Trạng thái %s -> %s',
                         self::STATUSES[$truoc] ?? ($truoc !== '' ? $truoc : '(chưa có)'),
                         self::STATUSES[$status] ?? $status
                     ) . ($lyDo !== null && $lyDo !== '' ? ' — lý do: ' . utf8Substr($lyDo, 0, 180) : ''),
-                    $donCu
+                    $donCu,
+                    /* Tự huỷ đơn quá hạn chạy bám theo lượt truy cập của một
+                       người bất kỳ — thường là chính nhân viên đang mở khu quản
+                       trị. Không đánh dấu thì vết ghi tên họ cho một việc họ
+                       không làm. Xem AuditLogModel::write(). */
+                    $status === 'cancelled' && $nguonHuy === 'system'
                 );
             }
 
@@ -1242,6 +1589,41 @@ class OrderModel extends BaseModel
 
             if ($don !== null) {
                 RefundRequestModel::taoChoDonHuy($don);
+            }
+        }
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * THƯ BÁO MỐC ĐƠN HÀNG — FR-EM-01
+         *
+         * NGOÀI transaction, cùng chỗ với sổ hoàn tiền và vì cùng lý do
+         * (FR-EM-06): việc đổi trạng thái đã xong và người bấm đã thấy nó xong;
+         * một trục trặc ở bước soạn thư không được phép cuộn ngược điều đó.
+         * xepHang() tự bọc try/catch nên không đường nào ném ra tới đây.
+         *
+         * CHỈ KHI TRẠNG THÁI THẬT SỰ ĐỔI. Nhân viên bấm Lưu lại đúng trạng thái
+         * cũ là chuyện xảy ra suốt, và khách không nên nhận một lá thư cho một
+         * việc không xảy ra. Khoá chống trùng ở EmailEvents là lưới thứ hai.
+         *
+         * ĐỌC LẠI bản ghi: nhánh COD ở trên vừa có thể đánh dấu đã thu tiền, và
+         * thư "hoàn tất" in tổng tiền.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        if ($daDoi) {
+            $moc = match ($status) {
+                'confirmed' => 'xac_nhan',
+                'shipping'  => 'giao',
+                'completed' => 'hoan_tat',
+                'cancelled' => 'huy',
+                default     => null,
+            };
+
+            if ($moc !== null) {
+                $don ??= self::find($id);
+
+                if ($don !== null) {
+                    EmailEvents::donHang($don, $moc, $lyDo);
+                }
             }
         }
     }
@@ -1464,6 +1846,16 @@ class OrderModel extends BaseModel
         if ($doi) {
             self::grantFullPaymentReward($id);
             self::ghiVetTien($id, 'payment.paid', 'Đánh dấu đã thanh toán đủ');
+
+            /* THƯ BÁO ĐÃ NHẬN ĐỦ TIỀN — FR-EM-02.
+
+               Trong nhánh $doi nên webhook SePay gửi lại bảy lần cũng chỉ một
+               thư; khoá chống trùng ở EmailEvents là lưới thứ hai. */
+            $don = self::find($id);
+
+            if ($don !== null) {
+                EmailEvents::tien($don, 'du', (int) ($don['total'] ?? 0));
+            }
         }
 
         return $doi;
@@ -1492,7 +1884,8 @@ class OrderModel extends BaseModel
         string $id,
         string $action,
         string $moTa,
-        ?array $order = null
+        ?array $order = null,
+        bool $heThong = false
     ): void {
         // Nhận sẵn bản ghi đơn khi nơi gọi đã đọc rồi. changeStatus() vừa
         // find() ở ngay trên, và các thao tác hàng loạt chạy hàm này tối đa
@@ -1502,7 +1895,8 @@ class OrderModel extends BaseModel
         AuditLogModel::write(
             $order['user_id'] ?? null,
             $action,
-            sprintf('%s — đơn %s', $moTa, (string) ($order['code'] ?? $id))
+            sprintf('%s — đơn %s', $moTa, (string) ($order['code'] ?? $id)),
+            $heThong
         );
     }
 
@@ -1587,6 +1981,13 @@ class OrderModel extends BaseModel
         // SNFR-11 gọi đích danh "cập nhật trạng thái cọc" — xem ghiVetTien().
         if ($doi) {
             self::ghiVetTien($id, 'payment.deposit', 'Ghi nhận tiền cọc 30%');
+
+            // Thư báo đã nhận cọc — FR-EM-02.
+            $don = self::find($id);
+
+            if ($don !== null) {
+                EmailEvents::tien($don, 'coc', (int) ($don['deposit_amount'] ?? 0));
+            }
         }
 
         return $doi;

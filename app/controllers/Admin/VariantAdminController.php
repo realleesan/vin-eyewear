@@ -209,6 +209,18 @@ class VariantAdminController extends AdminController
             flash('admin_success', sprintf('Đã thêm phương án %s.', $label));
         }
 
+        /* THƯ BÁO HÀNG CÓ LẠI — FR-EM-04, FR-SP-18.
+
+           Vô điều kiện, và cho CẢ MẶT HÀNG chứ không riêng phương án vừa
+           lưu. Lý do đầy đủ ở InventoryAdminController::updateStock(); tóm
+           tắt: hàm này tự-lũy-đẳng (chỉ báo cho ai đang thật sự mua được, và
+           mỗi lượt chờ đúng một lá trong cả đời nó), nên gọi thừa vô hại còn
+           gọi thiếu thì im lặng.
+
+           Đặt SAU cả hai nhánh: thêm mới một phương án kèm tồn cũng là một
+           lần hàng về, không chỉ sửa phương án cũ. */
+        EmailEvents::hangCoLaiCaMatHang($product);
+
         redirect($back);
     }
 

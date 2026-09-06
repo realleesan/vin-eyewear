@@ -146,11 +146,99 @@ class Database
         try {
             $result = $callback();
             $pdo->commit();
-
-            return $result;
         } catch (Throwable $e) {
-            $pdo->rollBack();
+            /* CUỘN LẠI THÌ VỨT LUÔN HÀNG ĐỢI SAU-COMMIT. Những việc trong đó
+               nói về dữ liệu vừa bị xoá dấu vết — gửi một lá thư "đã nhận đơn
+               VE-1234" cho một đơn không tồn tại là tệ hơn không gửi gì. */
+            self::$sauCommit = [];
+
+            /* HỎI LẠI inTransaction() TRƯỚC KHI CUỘN.
+
+               Khối try này bọc cả commit(). Nếu chính commit() ném — mất kết
+               nối, hoặc máy chủ đã tự cuộn transaction vì deadlock — thì không
+               còn transaction nào để cuộn, và rollBack() sẽ ném một ngoại lệ
+               THỨ HAI che mất nguyên nhân thật. */
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+
             throw $e;
+        }
+
+        self::chayHangSauCommit();
+
+        return $result;
+    }
+
+    /**
+     * @var list<callable> Việc phải làm SAU khi transaction ngoài cùng commit.
+     */
+    private static array $sauCommit = [];
+
+    /**
+     * Hoãn một việc tới sau khi transaction ngoài cùng commit xong.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO CẦN — thêm 06/09/2026 cùng đợt 6
+     *
+     * Module thư xếp một dòng vào `email_queue` ở mỗi mốc đơn hàng, và vài mốc
+     * ấy nằm SÂU TRONG một transaction về tiền. SepayModel bọc "ghi sổ giao
+     * dịch + đổi trạng thái đơn" làm một, và OrderModel::markPaid() — nơi
+     * soạn thư — được gọi từ trong đúng cái bọc đó.
+     *
+     * Ghi thư ở trong ấy hỏng theo hai đường, cả hai đều về tiền thật:
+     *
+     *   1. FR-EM-06 cấm việc gửi thư chặn nghiệp vụ chính. Ở trong transaction
+     *      thì câu INSERT của lá thư đang GIỮ KHOÁ trên hàng `orders` suốt
+     *      thời gian nó chạy.
+     *   2. Tệ hơn: một deadlock hay lock-wait timeout khi chèn thư sẽ cuộn lại
+     *      CẢ TRANSACTION ở phía máy chủ. EmailQueueModel::xepHang() nuốt mọi
+     *      ngoại lệ (đúng theo FR-EM-06), nên không ai biết — và commit() sau
+     *      đó commit một transaction đã chết. Webhook SePay trả 200, SePay thôi
+     *      gửi lại, tiền về mà đơn vẫn 'unpaid'.
+     *
+     * Hoãn ra ngoài thì lá thư chỉ được ghi khi tiền đã chốt xong thật, và mọi
+     * trục trặc của nó không còn đường nào chạm tới transaction ấy nữa.
+     *
+     * NGOÀI TRANSACTION THÌ HÀM NÀY KHÔNG LÀM GÌ và trả false — nơi gọi tự
+     * chạy ngay. Không tự chạy hộ: nơi gọi mới biết cách bọc lỗi của mình.
+     *
+     * @return bool true = đã hoãn; false = không có transaction nào, hãy tự chạy
+     */
+    public static function sauKhiCommit(callable $viec): bool
+    {
+        if (!self::$connection?->inTransaction()) {
+            return false;
+        }
+
+        self::$sauCommit[] = $viec;
+
+        return true;
+    }
+
+    /**
+     * Chạy hết hàng đợi sau-commit.
+     *
+     * MỖI VIỆC BỌC RIÊNG try/catch: một lá thư hỏng không được làm lá kế tiếp
+     * không chạy, và tuyệt đối không được ném ngược vào nơi vừa commit xong —
+     * ở đó dữ liệu đã ghi thật rồi, một ngoại lệ chỉ làm người dùng thấy báo
+     * lỗi cho việc đã thành công.
+     *
+     * DỌN MẢNG TRƯỚC KHI CHẠY: một việc trong hàng đợi có thể tự mở
+     * transaction mới, và transaction ấy commit sẽ gọi lại đúng hàm này. Không
+     * dọn trước thì nó chạy lại chính những việc đang chạy dở.
+     */
+    private static function chayHangSauCommit(): void
+    {
+        $viecs            = self::$sauCommit;
+        self::$sauCommit = [];
+
+        foreach ($viecs as $viec) {
+            try {
+                $viec();
+            } catch (Throwable $e) {
+                error_log('Database::sauKhiCommit: ' . $e->getMessage());
+            }
         }
     }
 

@@ -1116,3 +1116,49 @@
     margin-top: 16px;
     border: 1px solid var(--line);
 }
+
+
+/* ============================================================================
+   THỬ ẢO — FR-SP-22
+
+   Nút thứ ba dưới "Mua ngay" và "Thêm vào giỏ", chỉ hiện với mẫu có trong
+   config('ar.frames').
+   ============================================================================ */
+
+/* HÀNG RIÊNG, không chen vào hàng hai nút mua.
+
+   .pdbtn có flex:1 nên nhét nó vào cùng hàng là ép ba nút mỗi cái một phần ba
+   — "Mua ngay" mất chỗ đúng lúc nó cần nhất. Đây cũng là việc làm TRƯỚC khi
+   mua chứ không cạnh tranh với nút mua, nên nó đứng dưới và nhẹ hơn cả hai.
+
+   Là thẻ <a> nên phải tự khai display + căn giữa: .pdbtn viết cho <button>. */
+.pdbtn--ar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 13px 0;
+    border: 1px solid var(--line-strong, #d8cfc4);
+    background: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.pdbtn--ar:hover,
+.pdbtn--ar:focus-visible {
+    border-color: var(--brand);
+    color: var(--brand);
+}
+
+/* Lời mời đăng nhập ở khối chờ hàng dùng lại .pdwait__go, mà lớp đó viết cho
+   <button> (height + padding, không có display). Thẻ <a> cần hai dòng này để
+   chữ không dính mép trên. */
+a.pdwait__go {
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}

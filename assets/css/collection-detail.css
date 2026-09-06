@@ -1288,3 +1288,19 @@
     .cdraw { width: 100vw; }
     .cdraw__shots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+
+/* Lời mời thử AR ở cuối bảng dáng mặt — chuyển từ bảng quy đổi cỡ sang, FR-SP-09.
+
+   Lấy đúng dáng của .cdet__panel-foot cũ (đường kẻ trên, chữ nhạt) để phần
+   trình bày không đổi khi chỗ đứng đổi. */
+.cdet__face-foot {
+    margin: 18px 0 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--line, #e7ddd2);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--muted, #7a6d5f);
+}
+
+.cdet__face-foot a { color: var(--brand); text-underline-offset: 3px; }

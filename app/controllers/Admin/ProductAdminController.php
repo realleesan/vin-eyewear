@@ -332,6 +332,21 @@ class ProductAdminController extends AdminController
            sản phẩm mới cũng không hiện lưới biến thể vì lý do ấy. */
         $loiBienThe = $this->luuBienThe($id);
 
+        /* THƯ BÁO HÀNG CÓ LẠI — FR-EM-04, FR-SP-18.
+
+           Form sản phẩm là đường ghi tồn kho THỨ BA, sau màn Kho online và
+           màn Biến thể: ô "Tồn kho" ở trên và cột tồn của từng dòng trong
+           lưới biến thể đều ghi thẳng vào cùng những cột ấy. Nhập một lô hàng
+           bằng cách sửa sản phẩm — việc hoàn toàn bình thường — mà không có
+           dòng này thì không ai đang chờ được báo, và không có dấu hiệu nào
+           cho thấy điều đó đã không xảy ra.
+
+           SAU luuBienThe(), không phải trước: tồn của biến thể ghi ở trong
+           đó, và dangChoMuaDuoc() đọc tồn THẬT trong CSDL.
+
+           Vô điều kiện, cùng lý lẽ đã ghi ở InventoryAdminController. */
+        EmailEvents::hangCoLaiCaMatHang(ProductModel::find($id) ?? ['id' => $id]);
+
         // Một ảnh hỏng KHÔNG huỷ cả lần lưu: mọi thứ khác đã hợp lệ và đã ghi
         // xuống. Báo riêng để người dùng biết ảnh nào chưa lên, khu quản trị
         // hiện được cả hai dòng thông báo cùng lúc (xem admin/_layout/master).

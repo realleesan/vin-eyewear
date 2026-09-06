@@ -161,8 +161,8 @@ class CollectionController extends BaseController
             'openVariants' => $open === null ? [] : VariantModel::forProduct($open['id']),
             'shapes'     => $this->shapes($products, $slug),
 
-            // Lớp 3 — hai bảng dựng từ chính hàng của bộ, cộng nội dung chung.
-            'sizeTable'  => EyewearSpecs::sizeTable($products),
+            // Lớp 3 — bảng dáng mặt dựng từ chính hàng của bộ, cộng nội dung
+            // chung. Bảng quy đổi cỡ S/M/L đã gỡ ở FR-SP-09 — xem EyewearSpecs.
             'faceTable'  => EyewearSpecs::faceTable($products),
             'sizeGuide'  => (array) config('eyewear.size_guide'),
             'care'       => (array) config('eyewear.care'),

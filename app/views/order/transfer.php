@@ -310,6 +310,41 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                     </span>
                 </p>
 
+                <?php
+                /* ─────────────────────────────────────────────────────────────
+                   "TÔI ĐÃ CHUYỂN KHOẢN — KIỂM TRA GIÚP TÔI" — FR-TT-05
+
+                   SRS viết yêu cầu này khi trang còn một nút dẫn thẳng sang
+                   trang biên nhận, tức website tự khẳng định đã nhận tiền trong
+                   khi chưa ai đối chiếu sao kê. Nút ấy đã gỡ từ trước (xem khối
+                   trên) và thay bằng khối chờ tự hỏi máy chủ.
+
+                   Phần CÒN THIẾU là chỗ dành cho người sốt ruột: khách chuyển
+                   xong, nhìn một dấu chấm nhấp nháy, và không biết mình còn phải
+                   làm gì nữa. Nút này trả lời đúng câu đó — nó KHÔNG hứa đã nhận
+                   tiền, chỉ đưa họ sang trang đơn hàng kèm đúng câu SRS yêu cầu:
+                   "Đơn của bạn đã được ghi nhận. Chúng tôi đang chờ tiền về và
+                   sẽ báo lại ngay."
+
+                   Là một liên kết chứ không phải nút gửi form: nó không ghi gì
+                   cả. Bấm nhầm, bấm lại, hay mở ở tab mới đều vô hại. */
+                ?>
+                <?php
+                /* KHÔNG nối "&da-chuyen=1" vào $orderHref — nó KẾT THÚC BẰNG
+                   MỘT NEO (#<mã đơn>, xem OrderController::transfer). Nối thêm
+                   thì tham số rơi vào PHẦN NEO, trình duyệt không gửi lên máy
+                   chủ, $_GET['da-chuyen'] không bao giờ có, và câu trấn an ở
+                   trang đơn hàng không bao giờ hiện. Neo cũng hỏng theo.
+
+                   Dựng lại địa chỉ từ mã đơn: tham số trước, neo sau. */
+                $veDon = '/tai-khoan?muc=don-hang&da-chuyen=1&don='
+                       . rawurlencode((string) $order['code'])
+                       . '#' . rawurlencode((string) $order['code']);
+                ?>
+                <a class="coqr__checked" href="<?= e($veDon) ?>">
+                    Tôi đã chuyển khoản — kiểm tra giúp tôi
+                </a>
+
                 <?php /* Lối ra khi chờ mãi không thấy. pay-watch.js ẩn khối này
                          đi lúc trang mở và chỉ đưa nó ra sau vài phút — không
                          có JS thì nó hiện sẵn, và đó đúng là lúc cần nó nhất. */ ?>

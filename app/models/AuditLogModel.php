@@ -93,6 +93,23 @@ class AuditLogModel extends BaseModel
            vết — không có thì một quản trị viên tự mở khoá cho mình rồi tiếp
            tục dò mật khẩu là chuyện không ai đọc lại được. */
         'staff.unlock_login' => 'Mở khoá đăng nhập nội bộ',
+
+        /* MODULE THƯ — thêm 06/09/2026 cùng đợt 6.
+
+           Ba mã cho ba thao tác mà người ngoài KHÔNG thấy được hậu quả:
+
+             email.resend    một lá thư đã hỏng được đẩy đi lần nữa. Nếu địa
+                             chỉ nhận sai thì lần nữa là gửi dữ liệu của khách
+                             tới nhầm người thêm một lần.
+             email.discard   một lá thư khách ĐÁNG được nhận bị chặn lại. Không
+                             có vết thì "sao tôi không nhận được thư báo huỷ
+                             đơn" là câu không ai trả lời được.
+             email.template  đổi câu chữ hàng nghìn khách sẽ đọc, không qua
+                             bước duyệt nào. Vết ở đây trả lời "ai đổi, hồi
+                             nào" — bảng mẫu chỉ giữ được người sửa GẦN NHẤT. */
+        'email.resend'   => 'Gửi lại thư',
+        'email.discard'  => 'Bỏ thư trong hàng chờ',
+        'email.template' => 'Sửa mẫu thư',
         /* VẾT CŨ, KHÔNG CÒN AI GHI MỚI — cùng loại với nhóm profile / address
            ở trên. Phân quyền theo cơ sở đã gỡ (SRS v2.1.0, K06), nhưng những
            dòng đã ghi trước đó phải còn đọc được: chúng trả lời câu "ai đã đổi
@@ -124,6 +141,37 @@ class AuditLogModel extends BaseModel
         'refund.approve' => 'Duyệt hoàn tiền cọc',
         'refund.reject'  => 'Từ chối hoàn tiền cọc',
         'refund.paid'    => 'Đã hoàn tiền cọc cho khách',
+
+        /* ── ĐỢT 5 — FR-NK-07 ────────────────────────────────────────────
+           SRS liệt kê đích danh các mã phải bổ sung. Bốn mã dưới đây đã có
+           nơi ghi ngay trong đợt này.
+
+           KHÁCH TỰ HUỶ khác NHÂN VIÊN HUỶ, nên tách khỏi 'order.cancel'.
+           Trước đợt 5 cả hai dùng chung một mã, và câu hỏi "tháng này có bao
+           nhiêu đơn khách tự bỏ" — câu duy nhất nói lên điều gì đó về sản
+           phẩm — không lọc ra được. changeStatus() chọn mã theo nguồn huỷ.
+
+           KHÁCH TỰ XOÁ TÀI KHOẢN tách khỏi 'soft_delete' vì cùng lý lẽ, và
+           thêm một lý do nặng hơn: đó là khách thực hiện quyền của họ, còn
+           'soft_delete' là hành vi của cửa hàng. Gộp hai thứ vào một dòng
+           nhật ký là xoá mất phần phân biệt duy nhất giữa chúng. */
+        'order.cancel_customer'  => 'Khách tự huỷ đơn hàng',
+        'account.self_delete'    => 'Khách tự xoá tài khoản',
+        'customer.unlock_login'  => 'Gỡ khoá đăng nhập tài khoản khách',
+        'stats.since'            => 'Đổi mốc tính doanh thu',
+
+        /* ── CHƯA CÓ NƠI GHI — cố ý khai trước ───────────────────────────
+           Hai mã còn lại của danh sách FR-NK-07 thuộc về hai tính năng chưa
+           làm: màn đối soát giao dịch ngân hàng (FR-SG, đợt 7) và nhập dữ
+           liệu hàng loạt (UC-05, đợt 8).
+
+           Khai trước chứ không đợi, vì bảng này là DANH MỤC NHÃN chứ không
+           phải danh sách những gì đã xảy ra: một mã thừa không sinh ra dòng
+           nào, còn một mã thiếu thì làm dòng vết đầu tiên của tính năng mới
+           in ra mã thô. Và người làm đợt 7 sẽ tìm thấy cái tên đã chốt ở đây
+           thay vì tự đặt một tên khác. */
+        'sepay.link_order'       => 'Gắn giao dịch ngân hàng vào đơn',
+        'import.rows'            => 'Nhập dữ liệu hàng loạt từ tệp',
     ];
 
     /**
@@ -142,12 +190,14 @@ class AuditLogModel extends BaseModel
     public const NHOM = [
         'khuc-xa'  => ['nhan' => 'Hồ sơ khúc xạ', 'actions' => ['rx.read', 'rx.create', 'rx.update', 'rx.delete']],
         'tai-khoan' => ['nhan' => 'Tài khoản khách', 'actions' => [
-            'lock', 'unlock', 'soft_delete', 'restore', 'reset_email', 'export',
+            'lock', 'unlock', 'soft_delete', 'account.self_delete', 'restore',
+            'reset_email', 'export', 'customer.unlock_login',
             'profile.update', 'address.save', 'address.delete', 'note.save', 'note.delete',
         ]],
         'tien'     => ['nhan' => 'Đơn hàng và tiền', 'actions' => [
             'payment.paid', 'payment.unpaid', 'payment.deposit', 'order.status', 'order.cancel',
-            'order.lens_start', 'order.lens_undo',
+            'order.cancel_customer', 'order.lens_start', 'order.lens_undo',
+            'sepay.link_order',
             /* Hoàn tiền nằm chung nhóm "Đơn hàng và tiền" chứ không thành nhóm
                riêng: người mở màn nhật ký hỏi "tuần này ai đụng vào tiền của
                đơn X", và câu trả lời đầy đủ phải có cả cọc vào lẫn cọc ra. */
@@ -157,7 +207,16 @@ class AuditLogModel extends BaseModel
         'lich-hen' => ['nhan' => 'Lịch hẹn', 'actions' => [
             'booking.status', 'booking.reschedule', 'booking.cancel',
         ]],
-        'noi-bo'   => ['nhan' => 'Tài khoản nội bộ', 'actions' => ['staff.unlock_login', 'staff.set_stores']],
+        'noi-bo'   => ['nhan' => 'Tài khoản nội bộ', 'actions' => [
+            'staff.unlock_login', 'staff.set_stores', 'stats.since', 'import.rows',
+        ]],
+        /* NHÓM RIÊNG, không nhét vào 'noi-bo'. Hai trong ba mã ở đây nói về
+           một KHÁCH cụ thể (thư của họ bị bỏ, thư của họ được gửi lại), nên
+           chúng thuộc về câu hỏi "chuyện gì đã xảy ra với khách này" chứ không
+           phải "nhân viên đã làm gì trong hệ thống". */
+        'thu'      => ['nhan' => 'Thư gửi khách', 'actions' => [
+            'email.resend', 'email.discard', 'email.template',
+        ]],
     ];
 
     // ========================================================================
@@ -482,8 +541,16 @@ class AuditLogModel extends BaseModel
      * không được ai canh. Viết "Đã sửa bản ghi đo ngày 12/03/2026", đừng viết
      * "OD -2.25".
      */
-    public static function write(?string $userId, string $action, ?string $detail = null): void
-    {
+    /**
+     * @param bool $heThong true = việc do HỆ THỐNG làm, không phải người đang
+     *                      đăng nhập. Xem khối chú thích ngay dưới.
+     */
+    public static function write(
+        ?string $userId,
+        string $action,
+        ?string $detail = null,
+        bool $heThong = false
+    ): void {
         if (!self::available()) {
             return;
         }
@@ -494,7 +561,22 @@ class AuditLogModel extends BaseModel
                Ghi log mà đăng xuất được người dùng thì sai vai; và hàm này có
                thể chạy giữa lúc dựng trang, lúc đó huỷ phiên là phần view còn
                lại mất flash lẫn token CSRF. Xem chú thích ở staffId(). */
-            $actorId = AuthMiddleware::staffId(false);
+            /* ─────────────────────────────────────────────────────────────
+               VIỆC CỦA HỆ THỐNG KHÔNG ĐƯỢC MANG TÊN NGƯỜI
+
+               Mặc định actor_id lấy từ phiên quản trị đang mở, và với mọi thao
+               tác do người bấm thì đó là câu trả lời đúng.
+
+               Nhưng từ FR-TT-11 có những việc chạy BÁM THEO LƯỢT TRUY CẬP:
+               quét đơn chuyển khoản quá hạn mượn một lượt duyệt trang bất kỳ,
+               rất thường là lượt của chính một quản trị viên đang mở
+               /quan-tri/don-hang. Không có cờ này thì hai mươi đơn tự huỷ được
+               ghi tên người đó — SNFR-11 hỏi "ai huỷ đơn này" và nhật ký trả
+               lời sai, chỉ vào một người không làm gì cả.
+
+               NULL nghĩa là "hệ thống", đúng như cột `orders`.`cancelled_by`
+               ghi 'system' cho cùng những đơn ấy. */
+            $actorId = $heThong ? null : AuthMiddleware::staffId(false);
 
             /* Tên người thao tác CHÉP LẠI tại đây, không join lúc đọc: người
                này có thể nghỉ việc và bị xoá tài khoản, lúc đó actor_id thành

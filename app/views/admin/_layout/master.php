@@ -78,8 +78,8 @@ $navGroups = [
     ]],
     ['label' => 'Sản phẩm', 'items' => [
         ['url' => '/quan-tri/san-pham',  'label' => 'Sản phẩm'],
-        ['url' => '/quan-tri/ton-kho',   'label' => 'Tồn kho'],
-        /* Ngay dưới Tồn kho, không phải trong nhóm Marketing: người mở nó là
+        ['url' => '/quan-tri/ton-kho',   'label' => 'Kho online'],
+        /* Ngay dưới Kho online, không phải trong nhóm Marketing: người mở nó là
            người vừa nhập hàng xong, và câu hỏi tiếp theo của họ là "ai đang
            chờ món này". */
         ['url' => '/quan-tri/cho-hang',  'label' => 'Chờ hàng'],
@@ -150,6 +150,21 @@ if (in_array('admin', $adminRoles, true)) {
      * rồi bỏ qua luôn bốn con số đáng đọc.
      */
     $navGroups[3]['items'][] = ['url' => '/quan-tri/nhat-ky', 'label' => 'Lịch sử thao tác'];
+
+    /*
+     * MODULE THƯ — hai mục, cũng chỉ vai trò 'admin' và cũng chặn thật bằng
+     * 403 ở controller. Lý do ở đầu Admin/EmailAdminController.php.
+     *
+     * "Hàng chờ thư" ĐEO HUY HIỆU, và nó đếm số thư GỬI HỎNG chứ không phải số
+     * thư đang chờ — lý do đầy đủ ở chỗ dựng $emailHong trong AdminController.
+     * Tóm tắt: số đang chờ trên hosting này chỉ tăng, còn số gửi hỏng là việc
+     * người mở thanh bên làm được gì đó.
+     *
+     * "Mẫu thư" thì không: có bao nhiêu mẫu cũng không ai phải làm gì cả.
+     */
+    $navGroups[3]['items'][] = ['url' => '/quan-tri/email', 'label' => 'Hàng chờ thư',
+                                'badge' => $emailHong];
+    $navGroups[3]['items'][] = ['url' => '/quan-tri/mau-thu', 'label' => 'Mẫu thư'];
 }
 ?>
 <!DOCTYPE html>

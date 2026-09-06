@@ -351,7 +351,6 @@ if ($minPrice !== null) {
                         <?php foreach ($products as $p): ?>
                             <?php
                             $size    = EyewearSpecs::size($p);
-                            $coKey   = EyewearSpecs::sizeKey($p);
                             $loai    = EyewearSpecs::typeLabel($p);
                             $phu     = EyewearSpecs::coatings($p);
                             $dangMo  = $open !== null && $open['slug'] === $p['slug'];
@@ -394,9 +393,6 @@ if ($minPrice !== null) {
                                 <td>
                                     <?php if ($size !== ''): ?>
                                         <span class="cdet__size"><?= e($size) ?></span>
-                                    <?php endif; ?>
-                                    <?php if ($coKey !== null): ?>
-                                        <span class="cdet__badge"><?= e($coKey) ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td><?= e((string) ($p['frame_shape'] ?? '')) ?></td>
@@ -452,46 +448,18 @@ if ($minPrice !== null) {
                 </ol>
             </div>
 
-            <div class="cdet__panel">
-                <p class="cdet__panel-head">Quy đổi cỡ và gợi ý dáng mặt</p>
-                <table class="cdet__table cdet__table--sm">
-                    <thead>
-                        <tr>
-                            <th scope="col">Cỡ</th>
-                            <th scope="col">Tổng rộng gọng</th>
-                            <th scope="col">Hợp dáng mặt</th>
-                            <th scope="col">Mẫu trong bộ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($sizeTable as $dong): ?>
-                            <tr>
-                                <th scope="row"><span class="cdet__badge"><?= e($dong['key']) ?></span></th>
-                                <td><span class="cdet__size"><?= e($dong['range']) ?></span></td>
-                                <td><?= e($dong['faces']) ?></td>
-                                <td>
-                                    <?php if ($dong['models'] === []): ?>
-                                        <?php /* Cỡ này bộ không có mẫu nào. Nói ra chứ
-                                                 không để trống: "bộ này không có cỡ S"
-                                                 cũng là thông tin, và là thông tin cần
-                                                 biết TRƯỚC khi đặt. */ ?>
-                                        <span class="cdet__none">bộ này không có</span>
-                                    <?php else: ?>
-                                        <?php foreach ($dong['models'] as $k => $mau): ?>
-                                            <?= $k > 0 ? ', ' : '' ?><a href="/san-pham/<?= e(rawurlencode($mau['slug'])) ?>"><?= e($mau['name']) ?></a>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <p class="cdet__panel-foot">
-                    Không chắc dáng mặt mình thuộc nhóm nào?
-                    <a href="/thu-ar">Thử ảo trên khuôn mặt</a> đo giúp bạn ngay trên
-                    trình duyệt, không cần cài gì.
-                </p>
-            </div>
+            <?php /* BẢNG "QUY ĐỔI CỠ VÀ GỢI Ý DÁNG MẶT" ĐÃ GỠ — FR-SP-09.
+
+                     Ba dòng S/M/L kèm dải milimét. Cả bảng chỉ tồn tại để dạy
+                     một hạng cỡ mà trang bán hàng không còn dùng ở đâu nữa —
+                     giữ lại là dạy khách một chuẩn rồi không cho họ chỗ nào áp
+                     dụng nó.
+
+                     Lời mời thử AR đi kèm bảng ấy đã chuyển xuống CUỐI BẢNG
+                     DÁNG MẶT: câu "không chắc dáng mặt mình thuộc nhóm nào" hỏi
+                     về DÁNG MẶT, nên nó phải đứng cạnh bảng dáng mặt và phải
+                     tắt cùng bảng đó. Để lại đây thì nó bị gác bởi $sizeGuide và
+                     mời khách xem một bảng có thể không có trên trang. */ ?>
         </section>
     <?php endif; ?>
 
@@ -511,6 +479,16 @@ if ($minPrice !== null) {
                     </li>
                 <?php endforeach; ?>
             </ul>
+
+            <?php /* LỜI MỜI THỬ AR — chuyển từ bảng quy đổi cỡ sang đây ở
+                     FR-SP-09. Nó hỏi về dáng mặt, nên nó thuộc về bảng dáng mặt;
+                     và nằm trong cùng khối `if ($faceTable !== [])` nghĩa là nó
+                     chỉ hiện khi thật sự CÓ một bảng dáng mặt để nói tới. */ ?>
+            <p class="cdet__face-foot">
+                Không chắc dáng mặt mình thuộc nhóm nào?
+                <a href="/thu-ar">Thử ảo trên khuôn mặt</a> đo giúp bạn ngay trên
+                trình duyệt, không cần cài gì.
+            </p>
         </section>
     <?php endif; ?>
 

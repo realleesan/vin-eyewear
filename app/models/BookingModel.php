@@ -189,6 +189,21 @@ class BookingModel extends BaseModel
             return ['ok' => false, 'error' => 'Không đặt được lịch, vui lòng thử lại.'];
         }
 
+        /* THƯ "ĐÃ NHẬN LỊCH HẸN" — FR-EM-03, FR-LH-08.
+
+           Ngoài khối try ghi CSDL: lịch đã nằm trong bảng và khách đã thấy nó
+           thành công; một trục trặc ở bước soạn thư không được phép cuộn ngược
+           điều đó (FR-EM-06). xepHang() tự bọc try/catch.
+
+           Đọc lại bản ghi thay vì dựng từ $data: thư cần TÊN cơ sở và id lịch,
+           mà $data chỉ có id cơ sở. Chỉ khách ĐÃ ĐĂNG NHẬP nhận được thư —
+           bảng này không có cột email, xem EmailEvents::lichHen(). */
+        $lich = self::findByCode($code);
+
+        if ($lich !== null) {
+            EmailEvents::lichHen($lich, 'dat');
+        }
+
         return ['ok' => true, 'code' => $code];
     }
 
@@ -424,6 +439,14 @@ class BookingModel extends BaseModel
             return ['ok' => false, 'error' => 'Lịch hẹn vừa được cập nhật, vui lòng tải lại trang.'];
         }
 
+        // Thư báo huỷ — FR-EM-03. Khách tự huỷ cũng nhận: nó là biên nhận cho
+        // thao tác của chính họ, và là thứ duy nhất họ có nếu bấm nhầm.
+        $lich = self::findByCode($code);
+
+        if ($lich !== null) {
+            EmailEvents::lichHen($lich, 'huy');
+        }
+
         return ['ok' => true];
     }
 
@@ -516,6 +539,19 @@ class BookingModel extends BaseModel
 
         if ($changed === 0) {
             return ['ok' => false, 'error' => 'Lịch hẹn vừa được cập nhật, vui lòng tải lại trang.'];
+        }
+
+        /* Thư báo đổi ngày — FR-EM-03. Thư in CẢ HAI ngày để khách đối chiếu
+           với thứ họ đang nhớ trong đầu.
+
+           Ngày cũ phải lấy từ $appointment — bản ghi đọc TRƯỚC câu UPDATE.
+           Đọc lại sau khi cập nhật thì cột `appointment_date` đã mang ngày
+           mới, và thư sẽ nói "đổi từ 20/09 sang 20/09". */
+        $truoc = (string) ($appointment['appointment_date'] ?? '');
+        $lich  = self::findByCode($code);
+
+        if ($lich !== null) {
+            EmailEvents::lichHen($lich, 'doi_ngay', $truoc);
         }
 
         return ['ok' => true];
@@ -625,6 +661,15 @@ class BookingModel extends BaseModel
         if ($doi === 0) {
             return ['ok' => false, 'error' =>
                 'Lịch hẹn vừa được cập nhật ở nơi khác, vui lòng tải lại trang.'];
+        }
+
+        // Thư báo đổi ngày — FR-EM-03. Đường của nhân viên cũng gửi, và ở đây
+        // nó cần thiết hơn hẳn đường của khách: khách KHÔNG biết lịch của mình
+        // vừa bị dời nếu không có ai nói.
+        $moi = self::find($id);
+
+        if ($moi !== null) {
+            EmailEvents::lichHen($moi, 'doi_ngay', $truoc);
         }
 
         return ['ok' => true, 'truoc' => $truoc];
@@ -750,5 +795,124 @@ class BookingModel extends BaseModel
         }
 
         return [$dieuKien !== [] ? 'WHERE ' . implode(' AND ', $dieuKien) : '', $params];
+    }
+
+    // ========================================================================
+    // THƯ NHẮC LỊCH HẸN — FR-EM-03, FR-LH-08
+    // ========================================================================
+
+    /** Hai lượt quét nhắc lịch cách nhau tối thiểu bao nhiêu giây. */
+    private const NHAC_CACH_NHAU = 3600;
+
+    /** Một lượt quét nhắc tối đa bao nhiêu lịch. */
+    private const NHAC_TOI_DA = 50;
+
+    /**
+     * Xếp hàng thư nhắc cho những lịch hẹn VÀO NGÀY MAI.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO "NGÀY MAI" CHỨ KHÔNG PHẢI "24 GIỜ NỮA"
+     *
+     * Bảng `appointments` chỉ có NGÀY, không có giờ — cửa hàng bỏ khung giờ từ
+     * 25/08/2026 vì đo mắt và cắt kính hết chừng 30 phút và họ tự xếp người
+     * qua điện thoại. Không có giờ thì không có mốc "trước 24 tiếng" nào để
+     * tính; thứ duy nhất nói được là "buổi hẹn của bạn là ngày mai".
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * ĐI NHỜ LƯỢT TRUY CẬP, PHANH BẰNG MTIME — cùng khuôn với
+     * OrderModel::quetDonQuaHan(); lý do đầy đủ nằm ở đó và không chép lại.
+     *
+     * Nhịp ở đây là MỘT GIỜ chứ không mười phút: tập hợp "lịch hẹn ngày mai"
+     * chỉ đổi khi có người đặt hoặc đổi lịch, và một thư nhắc tới sớm hay muộn
+     * một giờ thì không khác gì nhau. Nhân với số lượt GET của cả ngày, chênh
+     * lệch là vài trăm câu truy vấn.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CHỈ KHÁCH CÓ TÀI KHOẢN — và đó là giới hạn của DỮ LIỆU
+     *
+     * `appointments` không có cột email; form đặt lịch chỉ hỏi tên và số điện
+     * thoại (X17: đặt lịch không cần đăng nhập). Khách vãng lai đặt lịch
+     * KHÔNG có địa chỉ nào để gửi tới. Câu JOIN dưới đây vì thế lọc thẳng
+     * `u.email` khác rỗng thay vì xếp hàng rồi để xepHang() bỏ đi — cùng kết
+     * quả, ít hơn hàng chục lượt gọi vô ích mỗi đêm.
+     *
+     * Muốn nhắc được cả khách vãng lai thì phải thêm ô email vào form đặt
+     * lịch trước; không có đường vòng nào từ đây.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return int số thư đã xếp hàng
+     */
+    public static function quetNhacLichHen(): int
+    {
+        try {
+            /* TỆP TRƯỚC, CSDL SAU — thứ tự này là cả điểm của khối chú thích
+               trên, và bản đầu đã viết ngược.
+
+               EmailQueueModel::available() gọi Database::tableExists(), tức
+               MỞ KẾT NỐI và chạy một câu information_schema. Đặt nó trên phép
+               so mtime nghĩa là mọi lượt GET — kể cả /chinh-sach, /gioi-thieu
+               và cả trang 404 — đều mở một kết nối rồi mới kết luận "chưa tới
+               giờ". Đúng thứ tính lười mà core/Database.php dựng ra để tránh,
+               và khi MySQL chậm thì mọi trang tĩnh cùng đứng chờ. */
+            $tep = ROOT_PATH . '/storage/quet';
+
+            if (!is_dir($tep) && !@mkdir($tep, 0770, true) && !is_dir($tep)) {
+                error_log('BookingModel::quetNhacLichHen: không tạo được ' . $tep);
+
+                return 0;
+            }
+
+            $tep .= '/nhac-lich.txt';
+
+            if (is_file($tep) && time() - (int) @filemtime($tep) < self::NHAC_CACH_NHAU) {
+                return 0;
+            }
+
+            // Chạm tệp TRƯỚC khi làm — xem OrderModel::quetDonQuaHan().
+            if (@file_put_contents($tep, (string) time(), LOCK_EX) === false) {
+                error_log('BookingModel::quetNhacLichHen: không ghi được ' . $tep);
+
+                return 0;
+            }
+
+            // Tới đây mới được hỏi CSDL — phanh đã qua.
+            if (!EmailQueueModel::available()) {
+                return 0;
+            }
+
+            /* CHỈ 'pending' VÀ 'confirmed'. Lịch đã huỷ thì nhắc là sai hẳn,
+               và lịch đã 'done' vào ngày mai là dữ liệu hỏng — nhắc nó cũng
+               không sửa được gì. */
+            $lich = Database::fetchAll(
+                "SELECT a.*, s.name AS store_name, u.email AS email_nhan
+                   FROM appointments a
+                   JOIN users u  ON u.id = a.user_id AND u.email <> ''
+                   LEFT JOIN stores s ON s.id = a.store_id
+                  WHERE a.appointment_date = (CURDATE() + INTERVAL 1 DAY)
+                    AND a.status IN ('pending', 'confirmed')
+                  ORDER BY a.created_at ASC
+                  LIMIT " . self::NHAC_TOI_DA
+            );
+
+            $n = 0;
+
+            foreach ($lich as $l) {
+                /* Không tự dựng lời gọi xepHang() ở đây: khoá chống trùng của
+                   thư nhắc có mang NGÀY HẸN (lịch dời sang tuần sau đáng được
+                   nhắc lần nữa), và luật ấy nằm trong EmailEvents::lichHen().
+                   Chép nó ra chỗ thứ hai là để hai bản lệch nhau về sau. */
+                EmailEvents::lichHen($l, 'nhac');
+                $n++;
+            }
+
+            /* ĐẾM SỐ LỊCH ĐÃ XÉT, không phải số thư đã đi. lichHen() không trả
+               về gì — nó nuốt mọi lỗi theo FR-EM-06 — nên con số thật chỉ đọc
+               được ở màn Hàng chờ thư. Ở đây nó chỉ dùng cho nhật ký lỗi. */
+            return $n;
+        } catch (Throwable $e) {
+            error_log('BookingModel::quetNhacLichHen: ' . $e->getMessage());
+
+            return 0;
+        }
     }
 }

@@ -216,6 +216,34 @@ class InventoryAdminController extends AdminController
             )
         );
 
+        /* ─────────────────────────────────────────────────────────────────
+           THƯ BÁO HÀNG CÓ LẠI — FR-EM-04, FR-SP-18.
+
+           GỌI VÔ ĐIỀU KIỆN, KHÔNG DÒ LẰN RANH 0 → CÓ HÀNG.
+
+           Bản đầu dò lằn ranh ($truoc <= 0 && $qty > 0), và đó là chỗ sai —
+           không phải sai ở phép so, mà sai ở CÁCH ĐẶT VẤN ĐỀ. Dò lằn ranh
+           bắt mỗi nơi ghi tồn kho phải tự nhớ ra rằng mình cũng là một nơi
+           báo tin, và dự án có bốn nơi như thế: màn Kho online, màn Biến thể,
+           form sản phẩm, và lưới biến thể trong chính form ấy. Ba trong bốn
+           chỗ đó đã quên.
+
+           hangCoLaiCaMatHang() vốn đã tự-lũy-đẳng: dangChoMuaDuoc() chỉ trả
+           về những lượt chờ mà thứ họ chờ ĐANG THẬT SỰ MUA ĐƯỢC, và
+           `notified_at` bảo đảm mỗi lượt chờ nhận đúng một lá thư trong cả
+           đời nó. Nên gọi thừa là vô hại, còn gọi thiếu thì im lặng — và
+           trong hai lối hỏng ấy chỉ có một lối người dùng phát hiện được.
+
+           Cả mặt hàng chứ không riêng phương án nào: câu lệnh trên vừa lật
+           `products`.`status`, mà cột ấy là cổng chặn đứng trước MỌI biến thể
+           (VariantModel::inStock là phép VÀ). Thứ vừa mở ra gồm cả những
+           phương án vốn đã có tồn riêng.
+
+           Hàm tự nuốt mọi lỗi (FR-EM-06), nên không có đường nào từ đây làm
+           hỏng việc nhập kho.
+           ───────────────────────────────────────────────────────────────── */
+        EmailEvents::hangCoLaiCaMatHang(ProductModel::find($id) ?? $sp);
+
         flash('admin_success', 'Đã cập nhật tồn kho.');
 
         /* Giữ nguyên bộ lọc, TỪ KHOÁ và SỐ TRANG đang xem để người nhập hàng

@@ -320,9 +320,26 @@ class Mailer
     /**
      * Tiêu đề tiếng Việt phải mã hoá: header của email chỉ được chứa ASCII.
      * Không mã hoá thì "Đặt lại mật khẩu" tới nơi thành một chuỗi rác.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CẮT XUỐNG DÒNG TRƯỚC ĐÃ — CHỐNG CHÈN HEADER
+     *
+     * Một ký tự \r hoặc \n lọt vào đây là chèn được một dòng header MỚI vào
+     * lá thư: "Subject: Xin chào\r\nBcc: ke@xau.com" gửi âm thầm một bản sao
+     * cho người thứ ba — kèm mã đơn, số tiền và tên khách.
+     *
+     * Nhánh base64 ở dưới vô tình che được lỗ này, nhưng CHỈ KHI chuỗi có ít
+     * nhất một byte ≥ 0x80. Một tiêu đề thuần ASCII đi thẳng vào khối DATA của
+     * SMTP y nguyên. Chỗ hiểm nằm đúng ở đó, và nó không dễ thấy.
+     *
+     * CHẶN Ở ĐÂY, không chặn ở từng nơi gọi. Đây là cửa duy nhất mọi header đi
+     * qua — tiêu đề thư, tên người gửi, và bất kỳ header nào thêm về sau. Rải
+     * phép cắt ra các nơi gọi thì nơi gọi thứ tư sẽ quên.
      */
     private static function encodeHeader(string $text): string
     {
+        $text = trim((string) preg_replace('/[\r\n]+/', ' ', $text));
+
         return preg_match('/[\x80-\xFF]/', $text) === 1
             ? '=?UTF-8?B?' . base64_encode($text) . '?='
             : $text;

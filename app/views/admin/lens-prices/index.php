@@ -85,17 +85,33 @@ foreach ($types as $t) {
         cắt tròng — không phải giá bán lẻ của cả cặp kính.
     </p>
     <p>
-        Ô để trống nghĩa là <em>chưa định giá</em>: khách chọn đúng lựa chọn đó sẽ thấy
-        “Báo giá sau khi tư vấn” và phần tròng không cộng tiền vào đơn. Muốn miễn phí
-        thật thì điền số <code>0</code>.
+        Ô để trống nghĩa là <em>chưa định giá</em>, và từ nay lựa chọn đó
+        <strong>không hiện ra cho khách</strong> — hộp mua hàng bỏ qua nó. Muốn
+        miễn phí thật thì điền số <code>0</code>; để trống là ẩn mất một lựa chọn.
     </p>
-    <?php foreach ($quotedTypes as $qt): ?>
-        <p>
-            <strong><?= e($qt['name']) ?></strong> không có trong bảng này —
-            <?= e(lcfirst($qt['desc'])) ?>.
-        </p>
-    <?php endforeach; ?>
 </div>
+
+<?php
+/* ─────────────────────────────────────────────────────────────────────────────
+   ĐẾM Ô TRỐNG NGAY TRÊN BẢNG — FR-GH-09, FR-HH-06
+
+   Trước bản này ô trống vẫn bán được, chỉ hiện chữ "Báo giá sau khi tư vấn".
+   SRS bỏ hẳn trạng thái ấy, nên ô trống nay có hệ quả im lặng: lựa chọn biến mất
+   khỏi hộp mua hàng và không ai được báo.
+
+   Dải này đứng TRÊN bảng vì nó nói về thứ người đọc sắp phải sửa; đặt xuống dưới
+   thì người điền xong một cột rồi đóng trang mà không biết còn thiếu.
+   ───────────────────────────────────────────────────────────────────────────── */
+?>
+<?php if ($soOTrong > 0): ?>
+    <div class="anote anote--alert">
+        <p>
+            Còn <strong><?= (int) $soOTrong ?></strong> ô chưa có giá. Mỗi ô trống là
+            một lựa chọn <strong>khách không thấy</strong> khi mua kính. Điền đủ để
+            khách chọn được mọi gói, hoặc điền <code>0</code> nếu gói đó miễn phí.
+        </p>
+    </div>
+<?php endif; ?>
 
 <form method="post" action="/quan-tri/gia-trong/luu">
     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
@@ -147,13 +163,14 @@ foreach ($types as $t) {
                                     <?php if ($val !== null): ?>
                                         <span class="aprice__echo"><?= (int) $val === 0 ? 'miễn phí' : money((int) $val) ?></span>
                                     <?php else: ?>
-                                        <?php /* Ô trống KHÔNG im lặng — theo bản thiết kế.
-                                                 Nó đọc như "quên điền", nhưng nó có nghĩa
-                                                 thật và khách nhìn thấy nghĩa ấy. Nói ra
-                                                 thì người điền biết mình đang để lại điều
-                                                 gì trên trang bán hàng, và phân biệt được
-                                                 với ô điền số 0 (miễn phí thật). */ ?>
-                                        <span class="aprice__hint">khách thấy “Báo giá sau khi tư vấn”</span>
+                                        <?php /* Ô trống KHÔNG im lặng. Nó đọc như "quên
+                                                 điền", và từ FR-GH-09 hệ quả của nó cũng
+                                                 im lặng nốt: lựa chọn biến mất khỏi hộp
+                                                 mua hàng. Nói ra ngay tại ô thì người điền
+                                                 biết mình đang giấu đi cái gì, và phân
+                                                 biệt được với ô điền số 0 (miễn phí
+                                                 thật). */ ?>
+                                        <span class="aprice__hint">khách KHÔNG chọn được gói này</span>
                                     <?php endif; ?>
                                 <?php else: ?>
                                     <span class="aprice__ro">

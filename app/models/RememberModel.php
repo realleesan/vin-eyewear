@@ -33,17 +33,48 @@ class RememberModel extends BaseModel
     public const COOKIE = 'vin_remember';
 
     /**
-     * Nhớ trong bao lâu (giây) — 7 ngày.
+     * Hạn LƯU TRỮ của một dòng token — 10 năm. KHÔNG phải chính sách phiên.
      *
-     * 7 NGÀY LÀ CON SỐ CỦA SRS, KHÔNG PHẢI CỦA CHÚNG TA. SNFR-10 (Quyết định
-     * C7) chốt phiên khách: access token 2 giờ, refresh token 7 ngày. Cookie
-     * ghi nhớ chính là refresh token của bản này, nên nó phải chết cùng mốc ấy.
+     * ─────────────────────────────────────────────────────────────────────────
+     * GHI NHỚ ĐĂNG NHẬP KHÔNG CÒN HẾT HẠN THEO THỜI GIAN — FR-TK-08
      *
-     * Trước đây để 30 ngày. Nghe thì tiện, nhưng nó có nghĩa là một máy khách
-     * mượn ở quán net giữ được đường vào tài khoản suốt một tháng, và mọi lần
-     * đổi mật khẩu trong tháng đó không cắt được nó nếu quên gọi forgetAllFor.
+     * Trước bản này là 7 ngày, lấy theo SNFR-10 cũ. Khách tích ô "ghi nhớ" rồi
+     * một tuần sau vẫn bị hỏi lại mật khẩu — mà cả ý nghĩa của cái ô ấy là để
+     * không bị hỏi. Người dùng đọc ra là "trang này hay đăng xuất tôi", và cách
+     * họ đối phó là đặt mật khẩu dễ nhớ hơn.
+     *
+     * SRS v2.1.0 chốt lại: thiết bị đã tích ô giữ trạng thái đăng nhập cho tới
+     * khi xảy ra MỘT TRONG BỐN việc, và cả bốn đều là hành động chứ không phải
+     * thời gian:
+     *
+     *   · khách tự đăng xuất          AuthMiddleware::logout → forget()
+     *   · khách đổi mật khẩu          UserModel::changePassword → forgetAllFor()
+     *   · tài khoản bị khoá hoặc xoá  CustomerModel::lock/softDelete/khachTuXoa
+     *   · quản trị viên đặt lại MK    PasswordResetModel + AccountAdminController
+     *
+     * Cộng thêm hai đường cắt vốn đã có và KHÔNG đổi: token xoay sau mỗi lần
+     * dùng, và cả chùm bị huỷ ngay khi phát hiện dấu hiệu đánh cắp (một
+     * validator sai với selector đúng — xem consume()).
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VẬY VÌ SAO CÒN MỘT CON SỐ Ở ĐÂY
+     *
+     * Vì `expires_at` là NOT NULL, và vì một bảng chỉ-thêm không có ai dọn sẽ
+     * phình mãi: mỗi lần đăng nhập trên một máy mới là một dòng, và những máy
+     * người ta không bao giờ dùng lại thì không có sự kiện nào ở trên chạm tới.
+     *
+     * 10 năm là RANH GIỚI DỌN RÁC, không phải một lời hứa với người dùng. Đừng
+     * rút nó xuống để "tăng bảo mật" — làm thế là lặng lẽ dựng lại đúng cái hạn
+     * mà yêu cầu này vừa bỏ. Muốn siết bảo mật thì thêm một đường CẮT (một sự
+     * kiện), không phải một cái đồng hồ.
+     *
+     * Trình duyệt cũng có tiếng nói: theo chuẩn hiện hành, cookie sống tối đa
+     * khoảng 400 ngày dù ta khai bao nhiêu. Nghĩa là thực tế khách vẫn phải
+     * đăng nhập lại sau chừng ấy — nhưng đó là luật của trình duyệt, và ta
+     * không thêm một cái hạn thứ hai chặt hơn ở phía mình.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    public const LIFETIME = 604800;
+    public const HAN_LUU_TRU = 315360000;
 
     /**
      * Tính năng này chỉ chạy khi bảng đã có.
@@ -77,7 +108,7 @@ class RememberModel extends BaseModel
                     'uid' => $userId,
                     'sel' => $selector,
                     'val' => hash('sha256', $validator),
-                    'exp' => date('Y-m-d H:i:s', time() + self::LIFETIME),
+                    'exp' => date('Y-m-d H:i:s', time() + self::HAN_LUU_TRU),
                     'ua'  => utf8Substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255) ?: null,
                 ]
             );
@@ -85,7 +116,7 @@ class RememberModel extends BaseModel
             return false;
         }
 
-        self::setCookie($selector . ':' . $validator, time() + self::LIFETIME);
+        self::setCookie($selector . ':' . $validator, time() + self::HAN_LUU_TRU);
 
         return true;
     }
@@ -134,6 +165,13 @@ class RememberModel extends BaseModel
             return null;
         }
 
+        /* PHÉP KIỂM HẠN VẪN CÒN, và vẫn phải còn — FR-TK-08 bỏ cái HẠN NGẮN,
+           không bỏ việc tôn trọng cột `expires_at`.
+
+           Dòng mới sinh ra với hạn 10 năm nên nhánh này gần như không bao giờ
+           chạy. Nhưng những dòng tạo TRƯỚC bản này mang hạn 7 ngày thật, và
+           chúng phải chết đúng hạn đã ghi: một token đã hết hạn mà nay bỗng
+           dùng lại được là nới quyền cho những cookie cũ đang nằm ở đâu đó. */
         if (strtotime((string) $row['expires_at']) < time()) {
             self::forgetById((string) $row['id']);
             self::clearCookie();

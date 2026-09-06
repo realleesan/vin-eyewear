@@ -184,6 +184,43 @@
                     </form>
                 <?php endif; ?>
 
+                <?php
+                /* ─────────────────────────────────────────────────────────────
+                   GỠ KHOÁ ĐĂNG NHẬP 15 PHÚT — FR-KH-08
+
+                   Chỉ hiện KHI ĐANG BỊ KHOÁ. Một nút luôn có mặt cho một tình
+                   huống hiếm là một nút người ta học cách bỏ qua; nút chỉ xuất
+                   hiện đúng lúc thì bản thân nó đã là câu trả lời cho "vì sao
+                   khách không đăng nhập được".
+
+                   In SỐ PHÚT CÒN LẠI ngay trên nút: nhân viên đang nghe điện
+                   thoại cần đúng con số đó để nói với khách, và rất thường thì
+                   câu trả lời đúng là "còn 2 phút nữa thôi, anh chờ chút" chứ
+                   không phải gỡ khoá.
+
+                   KHÁC nút "Mở khoá tài khoản" ở trên — xem khối chú thích ở
+                   CustomerModel::conKhoaDangNhap(). Đứng tách ra ở hàng riêng
+                   để không ai bấm nhầm cái này khi định bấm cái kia. */
+                ?>
+                <?php if (!$daXoa && ($khoaDangNhap ?? 0) > 0): ?>
+                    <div class="acus__act-row">
+                        <form method="post" action="/quan-tri/khach-hang/mo-khoa-dang-nhap"
+                              data-confirm="Gỡ khoá đăng nhập cho <?= e($ten) ?>? Khách thử lại mật khẩu được ngay, không phải chờ hết 15 phút."
+                              data-confirm-title="Gỡ khoá đăng nhập?"
+                              data-confirm-ok="Gỡ khoá">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="id" value="<?= e($khach['id']) ?>">
+                            <p class="acus__locknote">
+                                Đang bị khoá đăng nhập do gõ sai mật khẩu quá nhiều lần —
+                                còn <strong><?= (int) ceil($khoaDangNhap / 60) ?> phút</strong>.
+                            </p>
+                            <button type="submit" class="astatus__save astatus__save--ghost">
+                                Gỡ khoá đăng nhập ngay
+                            </button>
+                        </form>
+                    </div>
+                <?php endif; ?>
+
                 <?php if (!$daXoa): ?>
                     <div class="acus__act-row">
                         <?php /* KHÔNG CÓ NÚT "GỬI EMAIL ĐẶT LẠI MẬT KHẨU" Ở ĐÂY

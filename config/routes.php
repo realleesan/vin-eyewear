@@ -250,6 +250,8 @@ return [
     'quan-tri/dang-xuat'          => 'AdminAuthController@logout',             // POST
 
     'quan-tri'                    => 'DashboardController@index',
+    // Đặt mốc tính doanh thu — FR-NK-04. POST, chỉ Quản trị viên.
+    'quan-tri/moc-doanh-thu'      => 'DashboardController@setMoc',            // POST
 
     'quan-tri/don-hang'           => 'OrderAdminController@index',
     'quan-tri/don-hang/trang-thai'=> 'OrderAdminController@updateStatus',       // POST
@@ -401,6 +403,15 @@ return [
 
     'quan-tri/khach-hang/khoa'             => 'CustomerAdminController@lock',              // POST
     'quan-tri/khach-hang/mo-khoa'          => 'CustomerAdminController@unlock',            // POST
+    /* GỠ KHOÁ ĐĂNG NHẬP 15 PHÚT — FR-KH-08. Đường RIÊNG, không gộp vào
+       'mo-khoa' ngay trên: đó là khoá hành chính do người đặt và không có hạn,
+       còn đây là khoá kỹ thuật do hệ thống đặt sau 5 lần gõ sai và tự tan sau
+       15 phút. Gộp hai đường là để một cú bấm huỷ mất quyết định của người
+       khác. Cùng lối với 'nhan-vien/mo-khoa-dang-nhap' của khu nội bộ.
+
+       PHẢI ĐỨNG TRƯỚC 'quan-tri/khach-hang/{id}' — router khớp theo thứ tự
+       khai, để sau thì 'mo-khoa-dang-nhap' bị hiểu thành id của một khách. */
+    'quan-tri/khach-hang/mo-khoa-dang-nhap' => 'CustomerAdminController@unlockLogin',       // POST
     'quan-tri/khach-hang/xoa'              => 'CustomerAdminController@softDelete',        // POST
     'quan-tri/khach-hang/khoi-phuc'        => 'CustomerAdminController@restore',           // POST
 
@@ -488,6 +499,35 @@ return [
     'quan-tri/hoan-tien/duyet'    => 'RefundAdminController@approve',        // POST
     'quan-tri/hoan-tien/tu-choi'  => 'RefundAdminController@reject',         // POST
     'quan-tri/hoan-tien/da-hoan'  => 'RefundAdminController@markRefunded',   // POST
+
+    /*
+     * MODULE THƯ — FR-EM-05 (hàng chờ) và FR-EM-09 (mẫu thư), đợt 6.
+     *
+     * Năm đường, MỘT mức quyền: chỉ Quản trị viên, và chặn thật bằng 403 chứ
+     * không chỉ giấu khỏi thanh bên.
+     *
+     *   /email      `email_queue` chứa NGUYÊN VĂN mọi lá thư đã gửi cho khách
+     *               — địa chỉ, tên, mã đơn, số tiền — và mở trang ra là thấy
+     *               trăm lá gần nhất, không qua ô tìm kiếm nào. Đó là bản sao
+     *               dữ liệu khách hàng dưới dạng dễ đọc nhất có thể, cùng mức
+     *               nhạy cảm với /nhat-ky.
+     *   /mau-thu    sửa một mẫu là đổi thứ hàng nghìn khách sẽ đọc, và không
+     *               có bước duyệt nào ở giữa.
+     *
+     * Ba đường ghi đều POST: gửi lại một lá thư là gửi dữ liệu khách đi thật,
+     * bỏ một lá là chặn thứ khách đáng nhận, và cả hai không được xảy ra vì ai
+     * đó bấm F5 hay dán lại một cái link.
+     *
+     * KHÔNG dùng mẫu {key} cho màn sửa mẫu: mã sự kiện có dấu chấm ('don.tao'),
+     * và một đoạn đường dẫn mang dấu chấm là thứ vừa dễ va với luật viết lại
+     * của Apache vừa khó đọc. '?sua=<key>' cũng đúng lối ngăn kéo mà mọi màn
+     * khác trong khu quản trị đang dùng.
+     */
+    'quan-tri/email'              => 'EmailAdminController@index',
+    'quan-tri/email/gui-lai'      => 'EmailAdminController@guiLai',          // POST
+    'quan-tri/email/bo'           => 'EmailAdminController@bo',              // POST
+    'quan-tri/mau-thu'            => 'EmailAdminController@mau',
+    'quan-tri/mau-thu/luu'        => 'EmailAdminController@luuMau',          // POST
 
     // -----------------------------------------------------------------------
     // CHUYỂN HƯỚNG TỪ URL TIẾNG ANH CŨ

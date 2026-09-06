@@ -111,9 +111,8 @@ class CustomerAdminController extends AdminController
         $q      = trim((string) ($_GET['q'] ?? ''));
         $filter = (string) ($_GET['status'] ?? '');
 
-        if (!isset(CustomerModel::FILTERS[$filter])) {
-            $filter = '';
-        }
+        // Nhận cả khoá cũ 'deleted' (không còn tab) — xem CustomerModel::locHopLe().
+        $filter = CustomerModel::locHopLe($filter);
 
         $page = max(1, (int) ($_GET['page'] ?? 1));
         $ket  = CustomerModel::paginateList($q, $filter, $page);
@@ -157,9 +156,8 @@ class CustomerAdminController extends AdminController
         $q      = trim((string) ($_GET['q'] ?? ''));
         $filter = (string) ($_GET['status'] ?? '');
 
-        if (!isset(CustomerModel::FILTERS[$filter])) {
-            $filter = '';
-        }
+        // Nhận cả khoá cũ 'deleted' (không còn tab) — xem CustomerModel::locHopLe().
+        $filter = CustomerModel::locHopLe($filter);
 
         $rows = CustomerModel::exportRows($q, $filter);
 
@@ -276,6 +274,13 @@ class CustomerAdminController extends AdminController
             'canManage' => $this->laQuanLy(),
             'canRx'     => $this->canRx(),
             'genders'   => UserModel::GENDERS,
+            /* CÒN BỊ KHOÁ ĐĂNG NHẬP BAO NHIÊU GIÂY — FR-KH-08, 0 nghĩa là không.
+
+               Tính ở ĐÂY chứ không trong view: view của tab hồ sơ được nạp qua
+               cả đường tải trang đầy đủ lẫn đường fetch của hộp thoại, và cả
+               hai đều đi qua show(). Để view tự gọi model thì nó thành view duy
+               nhất của màn này chạm vào CSDL. */
+            'khoaDangNhap' => CustomerModel::conKhoaDangNhap($khach),
         ] + $this->duLieuDanhSach();
 
         /*
@@ -374,6 +379,28 @@ class CustomerAdminController extends AdminController
 
         flash($ket['ok'] ? 'admin_success' : 'admin_error',
             $ket['ok'] ? 'Đã mở khoá tài khoản khách hàng.' : $ket['error']);
+
+        $this->veTab($id, 'ho-so');
+    }
+
+    /**
+     * Gỡ khoá đăng nhập 15 phút cho khách — FR-KH-08.
+     *
+     * CHỈ QUẢN TRỊ VIÊN, cùng mức với mở khoá tài khoản: nó đi vòng qua một
+     * biện pháp bảo mật (SNFR-06) TRƯỚC HẠN, và thứ đi vòng qua bảo mật thì
+     * phải có người chịu trách nhiệm chứ không phải ai trực quầy cũng bấm được.
+     */
+    public function unlockLogin(): void
+    {
+        $id = $this->batDauPost('ho-so');
+        $this->requireAdmin(self::BASE . '/' . rawurlencode($id));
+
+        $ket = CustomerModel::moKhoaDangNhap($id);
+
+        flash($ket['ok'] ? 'admin_success' : 'admin_error',
+            $ket['ok']
+                ? 'Đã gỡ khoá đăng nhập. Khách thử lại mật khẩu được ngay.'
+                : $ket['error']);
 
         $this->veTab($id, 'ho-so');
     }

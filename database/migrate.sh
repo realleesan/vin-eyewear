@@ -307,12 +307,68 @@ MIGRATIONS=(
     # quyết định chi tiền đã duyệt. Đọc khối cảnh báo ở đầu file ấy trước khi
     # nghĩ tới chuyện chạy nó.
     "2026-09-06-dot-4-khach-chu-dong.sql|table|refund_requests|"
+
+    # ── Đợt 5 · dọn màn hình và luật nhỏ ────────────────────────────────────
+    #
+    # Một file làm bốn việc: hai cột cho `order_items` (giá vốn, kiểu tròng),
+    # một cột cho `stock_waitlist` (chủ tài khoản), và bảng `app_settings`.
+    #
+    # Mốc là BẢNG `app_settings` chứ không phải một cột: nó là thứ nặng nhất
+    # trong bốn, và là thứ mã nguồn hỏi trước khi chạy ở MỌI lượt truy cập
+    # (SettingModel::available, qua OrderModel::quetDonQuaHan). Ba cột kia đi
+    # qua PREPARE/EXECUTE có hỏi information_schema nên chạy lại cũng không sao.
+    "2026-09-06-dot-5-don-man-hinh.sql|table|app_settings|"
+
+    # ── Đợt 6 · module thư ──────────────────────────────────────────────────
+    #
+    # Hai bảng: `email_templates` (mẫu thư, nạp sẵn 15 mẫu tiếng Việt) và
+    # `email_queue` (hàng chờ và sổ kết quả gửi).
+    #
+    # Mốc là `email_queue` chứ không phải `email_templates`, dù bảng mẫu được
+    # tạo trước trong file. Lý do là ở chỗ MÃ NGUỒN hỏi bảng nào:
+    # EmailQueueModel::available() đứng gác trước MỌI đường sinh thư, và
+    # EmailTemplateModel chỉ được hỏi sau khi nó đã cho qua. Lấy bảng mẫu làm
+    # mốc thì một lần chạy dở dang — tạo xong bảng mẫu rồi đứt — sẽ được ghi
+    # là "đã xong", và hàng chờ vĩnh viễn không có bảng.
+    #
+    # Chọn bảng cuối cùng file tạo ra làm mốc là luật chung cho mọi migration
+    # nhiều bảng, không riêng file này.
+    #
+    # File *-QUAY-LUI.sql đi kèm CỐ Ý KHÔNG KHAI: nó DROP cả hai bảng, tức xoá
+    # sổ mọi lá thư đã gửi cho khách — thứ duy nhất trả lời được câu "cửa hàng
+    # đã báo cho khách chưa".
+    "2026-09-06-dot-6-email.sql|table|email_queue|"
 )
 
 # ---------------------------------------------------------------------------
 # Kiểm tra điều kiện chạy
 # ---------------------------------------------------------------------------
 command -v mysql >/dev/null 2>&1 || { echo "✗ Thiếu lệnh mysql." >&2; exit 1; }
+
+# ---------------------------------------------------------------------------
+# GỌI mysql QUA MỘT HÀM, ĐỂ ÉP BẢNG MÃ utf8mb4 — thêm 06/09/2026 (đợt 6)
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# VÌ SAO CHUYỆN NÀY CHỈ LỘ RA Ở ĐỢT 6
+#
+# Trình khách mysql lấy bảng mã từ my.cnf của MÁY ĐANG CHẠY, không phải từ CSDL.
+# Nhiều bản cài để 'latin1'. Khi đó mọi ký tự tiếng Việt trong file .sql bị
+# hiểu là latin1 rồi mã hoá LẠI sang utf8mb4 lúc ghi — cột đúng utf8mb4, dữ
+# liệu bên trong hỏng, và không có lỗi nào báo ra.
+#
+# Tới trước đợt 6, không migration nào CHÈN chữ tiếng Việt: chúng chỉ đổi cấu
+# trúc, hoặc chép dữ liệu trong nội bộ CSDL (đợt 3) — việc chép ấy chạy hẳn
+# trong máy chủ nên bảng mã trình khách không đụng tới.
+#
+# Đợt 6 chèn 15 mẫu thư tiếng Việt. Không có dòng này thì trên một máy cấu hình
+# latin1, mọi lá thư gửi cho khách sẽ đầy "Ä‘Æ¡n hÃ ng" — và người vận hành chỉ
+# phát hiện khi khách gọi điện hỏi.
+#
+# ĐẶT Ở MỌI LỜI GỌI, không chỉ ở chỗ nạp file: các câu đếm information_schema
+# trả về tên bảng ASCII nên không đổi gì, còn dòng ghi vào `schema_migrations`
+# thì có mang tên file. Một quy tắc áp khắp nơi thì không có chỗ nào để quên.
+# ---------------------------------------------------------------------------
+mysql() { command mysql --default-character-set=utf8mb4 "$@"; }
 
 if [[ ! -f "${ROOT_DIR}/.env" ]]; then
     echo "✗ Chưa có .env — chạy 'sudo bash database/setup.sh' trước." >&2

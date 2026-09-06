@@ -31,7 +31,6 @@
  */
 
 $size    = EyewearSpecs::size($product);
-$coKey   = EyewearSpecs::sizeKey($product);
 $loai    = EyewearSpecs::typeLabel($product);
 
 $nhomGong  = EyewearSpecs::frameRows($product);
@@ -126,9 +125,6 @@ $nhom = static function (string $tieuDe, array $rows): void {
             <?php if ($size !== ''): ?>
                 <p class="cdraw__size">
                     <span class="cdraw__size-num"><?= e($size) ?></span>
-                    <?php if ($coKey !== null): ?>
-                        <span class="cdraw__size-tag">Cỡ <?= e($coKey) ?></span>
-                    <?php endif; ?>
                     <span class="cdraw__size-hint">rộng tròng – cầu – dài càng</span>
                 </p>
             <?php endif; ?>

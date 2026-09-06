@@ -105,7 +105,7 @@ $base = '/quan-tri/bien-the';
                     <th scope="col">Ghi chú</th>
                     <th scope="col">Chênh giá</th>
                     <th scope="col">Giá bán</th>
-                    <th scope="col">Tồn kho</th>
+                    <th scope="col">Kho online</th>
                     <th scope="col">Thứ tự</th>
                     <th scope="col">Trạng thái</th>
                     <?php if ($canEdit): ?><th scope="col">Thao tác</th><?php endif; ?>
@@ -116,7 +116,7 @@ $base = '/quan-tri/bien-the';
                     <tr>
                         <td colspan="<?= $canEdit ? 8 : 7 ?>">
                             Mặt hàng này chưa có phương án nào — nó được bán như một sản phẩm đơn,
-                            dùng tồn kho <?= (int) $product['stock_quantity'] ?> của chính nó.
+                            dùng kho online <?= (int) $product['stock_quantity'] ?> của chính nó.
                         </td>
                     </tr>
                 <?php endif; ?>
@@ -233,10 +233,10 @@ $base = '/quan-tri/bien-the';
                 </div>
 
                 <div class="field">
-                    <label for="stock_quantity">Tồn kho</label>
+                    <label for="stock_quantity">Kho online</label>
                     <input type="number" id="stock_quantity" name="stock_quantity" min="0" step="1"
                            value="<?= e($ed['stock_quantity'] ?? '0') ?>">
-                    <p class="field__hint">Riêng cho phương án này, không phải tồn kho chung.</p>
+                    <p class="field__hint">Riêng cho phương án này, không phải kho chung của sản phẩm.</p>
                 </div>
 
                 <div class="field">

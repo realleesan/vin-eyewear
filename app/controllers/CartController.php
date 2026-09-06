@@ -321,6 +321,21 @@ class CartController extends BaseController
                         redirect($back . (str_contains($back, '?') ? '&' : '?')
                             . 'mua=' . rawurlencode($product['id']) . '&buoc=trong');
                     }
+
+                    /* LỚP CHẶN CUỐI TRƯỚC KHI VÀO GIỎ — FR-GH-09.
+
+                       Lặp lại phép kiểm của buyStep vì đây là cửa cuối: hộp
+                       thoại nhiều bước đi qua buyStep, còn form "Thêm vào giỏ"
+                       trên trang chi tiết sản phẩm thì POST thẳng vào đây. Một
+                       dòng giỏ không có giá tròng sẽ thành một `order_items`
+                       với `lens_price` = 0 mà không ai thấy. */
+                    if (LensModel::priceOf($lensType['id'], $lens['id']) === null) {
+                        flash('cart_error',
+                            'Gói tròng này chưa có giá cho loại tròng bạn chọn. '
+                            . 'Vui lòng chọn gói khác hoặc liên hệ cửa hàng.');
+                        redirect($back . (str_contains($back, '?') ? '&' : '?')
+                            . 'mua=' . rawurlencode($product['id']) . '&buoc=trong');
+                    }
                 }
             }
 
@@ -449,8 +464,21 @@ class CartController extends BaseController
              * thấy giá hiện tại trên trang sản phẩm và vẫn bấm thêm, nên mốc
              * so sánh phải là con số họ vừa thấy.
              */
+            /* TIỀN TRÒNG QUA combo(), KHÔNG QUA $lens['price'].
+
+               $lens là một dòng của LensModel::find() — danh mục gói, và nó
+               KHÔNG có khoá `price` từ khi giá dời xuống bảng `lens_prices`
+               (giá nằm ở giao điểm kiểu × gói). `?? 0` vì thế luôn ra 0, nên
+               mốc so sánh này thiếu đúng phần tiền tròng, và giỏ hàng báo "Giá
+               đã tăng" cho một dòng vừa mới bỏ vào — chưa ai đổi giá cả.
+
+               lines() tính đơn giá bằng combo(); mốc so sánh phải tính y hệt,
+               nếu không thì hai bên không bao giờ bằng nhau. */
             'gia_luc_them' => VariantModel::priceOf($product, $variant)
-                              + (int) ($lens['price'] ?? 0),
+                              + (int) (LensModel::combo(
+                                  $lens['id'] ?? null,
+                                  $lensType['id'] ?? null
+                              )['price'] ?? 0),
         ];
 
         $buyNow = ($_POST['action'] ?? '') === 'buy';
@@ -800,8 +828,20 @@ class CartController extends BaseController
                    thông số. Bỏ luôn gói của lần chọn trước, nếu khách vừa quay
                    lui đổi từ "Đa tròng" sang "Mắt đặt" — để lại thì đơn mang
                    theo một khoản tiền tròng của kiểu đã bị thay. */
+                /* ĐỔI KIỂU TRÒNG LÀ BỎ GÓI CŨ, KHÔNG ĐIỀU KIỆN — FR-GH-09.
+
+                   Bản trước chỉ xoá `lens_id` khi kiểu mới không nhận gói. Đổi
+                   giữa hai kiểu ĐỀU nhận gói thì gói cũ ở lại — mà giá tròng
+                   nằm ở GIAO ĐIỂM kiểu × gói, nên gói ấy có thể không có giá
+                   dưới kiểu mới. Bước chọn gói (nay đã ẩn ô trống) không hiện
+                   nó ra, nhưng ý định vẫn mang nó, và một cú bấm Lùi/Tiến của
+                   trình duyệt đưa thẳng sang bước xác nhận với một gói 0đ.
+
+                   Bỏ gói mỗi lần đổi kiểu thì khách phải chọn lại một bước —
+                   đúng, vì đó là một lựa chọn khác. */
+                $intent['lens_id'] = null;
+
                 if (!LensModel::typeTakesPackage($type)) {
-                    $intent['lens_id'] = null;
                     $next = 'xac-nhan';
                     break;
                 }
@@ -815,6 +855,21 @@ class CartController extends BaseController
 
                 if ($lens === null) {
                     flash('cart_error', 'Vui lòng chọn một gói tròng kính.');
+                    $this->buyStepDone(self::stepUrl($back, $intent['product_id'], 'trong'));
+                }
+
+                /* GÓI PHẢI CÓ GIÁ DƯỚI ĐÚNG KIỂU ĐANG CHỌN — FR-GH-09.
+
+                   Bước này đã ẩn những gói chưa có giá, nhưng ẩn là chuyện của
+                   giao diện. Một ý định còn sót gói cũ, một nút Lùi/Tiến, hay
+                   một POST dựng tay đều tới được đây với `lens` không có giá —
+                   và trước bản này nó đi thẳng vào đơn với `lens_price` = 0.
+                   "Báo giá sau" đã bỏ, nên 0đ ở đây không còn nghĩa gì ngoài
+                   một hoá đơn ghi thiếu tiền. */
+                if (LensModel::priceOf($intent['lens_type'] ?? null, $lens['id']) === null) {
+                    flash('cart_error',
+                        'Gói tròng này chưa có giá cho loại tròng bạn chọn. '
+                        . 'Vui lòng chọn gói khác hoặc liên hệ cửa hàng.');
                     $this->buyStepDone(self::stepUrl($back, $intent['product_id'], 'trong'));
                 }
 
@@ -1276,7 +1331,7 @@ class CartController extends BaseController
      * đó. Nay ba mảnh — kiểu tròng, gói, số đo — mỗi mảnh vào khoá một cách
      * độc lập.
      */
-    private static function key(
+    public static function key(
         string $productId,
         ?string $variantId,
         ?string $lensId = null,

@@ -133,6 +133,31 @@ abstract class AdminController extends BaseController
            với ba dòng trên. */
         $data['pendingRefunds']  = (int) (RefundRequestModel::demTheoTrangThai()['pending'] ?? 0);
 
+        /* THƯ GỬI HỎNG — đợt 6.
+
+           ĐẾM 'hong', KHÔNG ĐẾM 'cho'. Hai con số nói hai chuyện khác hẳn:
+
+             'cho'   trên hosting hiện tại là con số CHỈ TĂNG — không có đường
+                     gửi nên không lá nào rời hàng chờ được (xem khối đầu
+                     EmailQueueModel). Đeo nó lên thanh bên là treo một con số
+                     không bao giờ về 0 do việc ai làm, và dạy mắt bỏ qua các
+                     con số — rồi bỏ qua luôn năm cái đáng đọc.
+             'hong'  là thứ đã thử bốn lần và đứng lại. Nó chỉ khác 0 khi có
+                     đường gửi và đường ấy đang trục trặc, tức đúng định nghĩa
+                     "hàng chờ mà người đang nhìn nó làm được gì đó".
+
+           demTheoTrangThai() tự trả 0 khi chưa chạy migration đợt 6, cùng lối
+           với bốn dòng trên.
+
+           CHỈ HỎI KHI NGƯỜI XEM LÀ QUẢN TRỊ VIÊN. Mục "Hàng chờ thư" chỉ hiện
+           với vai trò 'admin' (xem master.php), nên với mọi nhân viên khác thì
+           câu GROUP BY này chạy rồi bị vứt đi ở mỗi lượt tải trang — trên đúng
+           cái bảng duy nhất ở đây chỉ có lớn lên. $adminRoles đã đọc sẵn ở
+           trên nên phép hỏi này không tốn gì. */
+        $data['emailHong'] = in_array('admin', $data['adminRoles'], true)
+            ? (int) (EmailQueueModel::demTheoTrangThai()['hong'] ?? 0)
+            : 0;
+
         /* Bản sao dưới TÊN RIÊNG cho khung dùng — master.php vẽ trang trong một
            phạm vi riêng và cần đúng mảng này (xem khối chú thích ở chỗ nó gọi
            closure). Không đọc thẳng $data ở đó: controller nào lỡ truyền khoá

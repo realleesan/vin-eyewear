@@ -48,10 +48,22 @@ class CustomerModel extends BaseModel
      * trạng tài khoản"; việc chúng nằm ở hai cột khác nhau là chuyện của CSDL.
      */
     public const FILTERS = [
-        'active'  => 'Hoạt động',
-        'locked'  => 'Đã khoá',
-        'deleted' => 'Đã xoá',
+        'active'           => 'Hoạt động',
+        'locked'           => 'Đã khoá',
+        'deleted-customer' => 'Khách tự xoá',
+        'deleted-staff'    => 'Nhân viên xoá',
     ];
+
+    /**
+     * Ba bộ lọc đọc `deleted_at IS NOT NULL`.
+     *
+     * 'deleted' KHÔNG còn là một tab — FR-KH-02 tách nó làm hai — nhưng vẫn
+     * nhận, vì nó đã nằm trong đường dẫn suốt từ khi có màn này: liên kết dán
+     * trong tin nhắn, dấu trang của nhân viên, và mọi địa chỉ đã chia sẻ.
+     * Không nhận nữa thì locHopLe() hạ nó về '' và người bấm nhận được danh
+     * sách khách ĐANG HOẠT ĐỘNG dưới một cái nhãn nói "đã xoá".
+     */
+    private const LOC_DA_XOA = ['deleted', 'deleted-customer', 'deleted-staff'];
 
     /**
      * Đơn ở trạng thái này KHÔNG tính vào "tổng chi tiêu".
@@ -65,6 +77,35 @@ class CustomerModel extends BaseModel
      * `payment_status`.
      */
     private const KHONG_TINH_TIEN = 'cancelled';
+
+    /**
+     * CSDL đã có cột `users`.`deleted_source` chưa — migration đợt 4.
+     *
+     * Chưa có thì hai tab xoá vẫn hiện và vẫn liệt kê được, chỉ là cả hai cùng
+     * ra toàn bộ tài khoản đã xoá. Thà trùng nhau còn hơn để một trang quản trị
+     * ném lỗi 1054 vì một cột chưa nâng cấp.
+     */
+    public static function coNguonXoa(): bool
+    {
+        return Database::columnExists('users', 'deleted_source');
+    }
+
+    /**
+     * Chuẩn hoá giá trị `?status=` — trả '' nếu không nhận ra.
+     *
+     * Gộp ở model chứ không lặp ở hai action của controller: danh sách và xuất
+     * file phải hiểu cùng một tập khoá, nếu không thì nút Xuất sẽ lặng lẽ xuất
+     * một tập khác với bảng đang xem.
+     */
+    public static function locHopLe(string $filter): string
+    {
+        if (isset(self::FILTERS[$filter])) {
+            return $filter;
+        }
+
+        // Khoá cũ: giữ nguyên nghĩa "mọi tài khoản đã xoá", không có tab.
+        return in_array($filter, self::LOC_DA_XOA, true) ? $filter : '';
+    }
 
     // ========================================================================
     // SẴN SÀNG CHƯA
@@ -122,7 +163,14 @@ class CustomerModel extends BaseModel
            trên trang — 20 khách là 20 lượt. Bảng dẫn xuất gom một lần rồi ghép,
            và `idx_orders_user` lo phần gom. Cùng lý do với chỗ gom order_items
            trong OrderAdminController::index(). */
+        /* `deleted_source` CHỈ CHỌN KHI CỘT CÓ — huy hiệu ở bảng đọc nó để nói
+           "Khách tự xoá" hay "Nhân viên xoá". Máy chưa chạy migration đợt 4 thì
+           khoá này vắng và view lùi về nhãn "Đã xoá" trần (nó đọc bằng ?? null).
+           Chọn thẳng là lỗi 1054 ngay ở màn danh sách. */
+        $cotNguon = self::coNguonXoa() ? 'u.deleted_source,' : '';
+
         $sql = 'SELECT u.id, u.email, u.status, u.deleted_at, u.created_at, u.last_login_at,
+                       ' . $cotNguon . '
                        p.full_name, p.phone,
                        COALESCE(o.so_don, 0)   AS so_don,
                        COALESCE(o.tong_tien, 0) AS tong_tien
@@ -149,14 +197,49 @@ class CustomerModel extends BaseModel
         ];
     }
 
-    /** Số lượng cho dải lọc. Một câu lệnh chứ không bốn. */
+    /** Số lượng cho dải lọc. Một câu lệnh chứ không năm. */
     public static function counts(): array
     {
+        /* HAI Ô ĐẾM CUỐI GHÉP THEO CỘT CÓ HAY KHÔNG.
+
+           `deleted_source` đến ở migration đợt 4. Nhắc tên nó trong một câu
+           chạy ở MỌI lượt mở trang khách hàng nghĩa là một máy chưa nâng cấp sẽ
+           gặp lỗi 1054 ngay ở màn danh sách — không phải ở một góc ít ai vào.
+
+           Chưa có cột thì cả hai ô đếm cùng ra tổng số tài khoản đã xoá, khớp
+           với việc buildFilter() lúc ấy cũng không lọc được theo nguồn. Con số
+           trên tab và số dòng trong bảng nói cùng một điều, dù điều đó là
+           "chưa phân biệt được". */
+        $coNguon = self::coNguonXoa();
+
+        $khach = $coNguon
+            ? "SUM(u.deleted_at IS NOT NULL AND u.deleted_source = 'customer')"
+            : 'SUM(u.deleted_at IS NOT NULL)';
+
+        /* NULL XẾP VÀO "NHÂN VIÊN XOÁ" — cố ý, và đây là chỗ duy nhất suy đoán.
+
+           Migration đợt 4 KHÔNG backfill `deleted_source` cho những dòng xoá
+           trước nó: viết một giá trị đoán vào cột kiểm toán thì sáu tháng sau
+           không ai phân biệt được nó với dữ liệu thật.
+
+           Nhưng một BỘ LỌC thì khác một cột lưu trữ: nó chỉ là cách nhìn, sửa
+           lại được bất cứ lúc nào. Và nếu NULL không thuộc tab nào thì những
+           tài khoản ấy biến mất khỏi cả bốn tab — không còn đường nào mở chúng
+           trong khu quản trị nữa. Mất hẳn một lối vào tệ hơn hẳn một phép suy
+           đoán, nhất là khi phép suy đoán này gần như chắc đúng: trước đợt 4
+           chỉ nhân viên mới xoá được tài khoản khách. */
+        $nhanVien = $coNguon
+            ? "SUM(u.deleted_at IS NOT NULL AND (u.deleted_source <> 'customer'
+                                                 OR u.deleted_source IS NULL))"
+            : 'SUM(u.deleted_at IS NOT NULL)';
+
         $row = Database::fetchOne(
             'SELECT COUNT(*)                                            AS tat_ca,
                     SUM(u.deleted_at IS NULL AND u.status = \'active\')  AS active,
                     SUM(u.deleted_at IS NULL AND u.status = \'locked\')  AS locked,
-                    SUM(u.deleted_at IS NOT NULL)                       AS deleted
+                    SUM(u.deleted_at IS NOT NULL)                       AS deleted,
+                    ' . $khach . '                                      AS deleted_customer,
+                    ' . $nhanVien . '                                   AS deleted_staff
                FROM users u
               WHERE ' . self::KHONG_NOI_BO
         ) ?? [];
@@ -164,10 +247,14 @@ class CustomerModel extends BaseModel
         return [
             // Khoá '' là "Tất cả" của admin/_layout/filter-tabs.php. Nó KHÔNG
             // đếm tài khoản đã xoá mềm — xem buildFilter().
-            ''        => (int) ($row['active'] ?? 0) + (int) ($row['locked'] ?? 0),
-            'active'  => (int) ($row['active'] ?? 0),
-            'locked'  => (int) ($row['locked'] ?? 0),
-            'deleted' => (int) ($row['deleted'] ?? 0),
+            ''                 => (int) ($row['active'] ?? 0) + (int) ($row['locked'] ?? 0),
+            'active'           => (int) ($row['active'] ?? 0),
+            'locked'           => (int) ($row['locked'] ?? 0),
+            // Khoá cũ, không còn tab nào đọc. Giữ để đường dẫn '?status=deleted'
+            // đã chia sẻ vẫn hiện đúng con số — xem LOC_DA_XOA.
+            'deleted'          => (int) ($row['deleted'] ?? 0),
+            'deleted-customer' => (int) ($row['deleted_customer'] ?? 0),
+            'deleted-staff'    => (int) ($row['deleted_staff'] ?? 0),
         ];
     }
 
@@ -372,6 +459,71 @@ class CustomerModel extends BaseModel
      * nhân viên thì gọi hai hàm đó, đừng chép luật sang đây — và nhớ thêm cả
      * route lẫn vết audit, xem đầu CustomerAdminController.
      */
+
+    // ========================================================================
+    // KHOÁ ĐĂNG NHẬP 15 PHÚT — FR-KH-08
+    //
+    // KHÁC HẲN "Khoá tài khoản" ngay dưới. Hai thứ chồng lên nhau nên rất dễ
+    // lẫn, và lẫn ở đây thì nhân viên mở nhầm cánh cửa:
+    //
+    //   Khoá tài khoản   do NGƯỜI đặt, không hạn, có lý do, là biện pháp hành
+    //                    chính. Cột `users`.`status`.
+    //   Khoá đăng nhập   do HỆ THỐNG đặt sau 5 lần gõ sai mật khẩu, tự tan sau
+    //                    15 phút, không có lý do nào để đọc. Bảng
+    //                    `login_attempts`, bám theo chuỗi định danh đã gõ.
+    //
+    // Cái thứ hai là thứ khách gọi điện phàn nàn: gõ sai vài lần, bị chặn, và
+    // câu duy nhất nhân viên nói được là "anh chờ 15 phút". Khu nội bộ đã có nút
+    // gỡ từ đợt 2 (StaffAdminController::moKhoaDangNhap); đây là bản cho khách.
+    // ========================================================================
+
+    /**
+     * Còn bị khoá đăng nhập bao nhiêu giây — 0 nghĩa là không bị khoá.
+     *
+     * Hỏi theo CẢ email lẫn số điện thoại: bộ đếm bám vào chuỗi khách đã gõ ở ô
+     * đăng nhập, mà ô đó nhận cả hai. Khách gõ sai bằng số điện thoại thì khoá
+     * nằm ở chuỗi số, và hỏi mỗi email sẽ trả "không bị khoá" cho một người
+     * đang bị chặn.
+     */
+    public static function conKhoaDangNhap(array $khach): int
+    {
+        $chuoi = array_values(array_filter([
+            (string) ($khach['email'] ?? ''),
+            (string) ($khach['phone'] ?? ''),
+        ], static fn (string $v): bool => $v !== ''));
+
+        return $chuoi === [] ? 0 : LoginAttemptModel::conKhoaBatKy($chuoi);
+    }
+
+    /**
+     * Gỡ khoá đăng nhập cho một khách.
+     *
+     * KHÔNG đụng tới `users`.`status`: một tài khoản vừa bị khoá hành chính vừa
+     * bị khoá đăng nhập thì gỡ cái sau không được mở cái trước. Nhân viên tưởng
+     * mình vừa giúp khách mà khách vẫn không vào được — thà thế còn hơn một cú
+     * bấm lặng lẽ huỷ quyết định khoá của người khác.
+     */
+    public static function moKhoaDangNhap(string $id): array
+    {
+        $khach = self::detail($id);
+
+        if ($khach === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy khách hàng.'];
+        }
+
+        LoginAttemptModel::moKhoa([
+            (string) ($khach['email'] ?? ''),
+            (string) ($khach['phone'] ?? ''),
+        ]);
+
+        /* Chủ thể của vết là TÀI KHOẢN ĐƯỢC MỞ, không phải người bấm — người
+           bấm đã nằm ở cột actor_id do write() tự điền. Cùng quy ước với
+           StaffAdminController::moKhoaDangNhap(). */
+        AuditLogModel::write($id, 'customer.unlock_login',
+            'Gỡ khoá đăng nhập cho ' . (string) ($khach['full_name'] ?? $khach['email'] ?? 'khách'));
+
+        return ['ok' => true];
+    }
 
     /**
      * Khoá tài khoản. Lý do là BẮT BUỘC.
@@ -635,7 +787,13 @@ class CustomerModel extends BaseModel
            tháng trời. Cùng lý lẽ với lock() và softDelete(). */
         RememberModel::forgetAllFor($userId);
 
-        AuditLogModel::write($userId, 'soft_delete', 'Khách tự yêu cầu xoá tài khoản');
+        /* MÃ RIÊNG, không dùng lại 'soft_delete' — FR-NK-07.
+
+           'soft_delete' là hành vi của CỬA HÀNG (nhân viên dọn tài khoản trùng
+           lặp); đây là KHÁCH thực hiện quyền của họ. Gộp hai thứ vào một dòng
+           nhật ký là xoá mất phần phân biệt duy nhất giữa chúng — và đó đúng là
+           phần có hệ quả pháp lý. */
+        AuditLogModel::write($userId, 'account.self_delete', 'Khách tự yêu cầu xoá tài khoản');
 
         return ['ok' => true];
     }
@@ -733,7 +891,25 @@ class CustomerModel extends BaseModel
            "Tất cả" ở đây nghĩa là "mọi khách hàng", và một tài khoản đã xoá
            thì không còn là khách hàng — nó nằm lại chỉ để đơn hàng cũ còn chủ.
            Muốn xem thì có tab riêng. */
-        $dieuKien[] = $filter === 'deleted' ? 'u.deleted_at IS NOT NULL' : 'u.deleted_at IS NULL';
+        $daXoa      = in_array($filter, self::LOC_DA_XOA, true);
+        $dieuKien[] = $daXoa ? 'u.deleted_at IS NOT NULL' : 'u.deleted_at IS NULL';
+
+        /* TÁCH HAI NGUỒN XOÁ — FR-KH-02.
+
+           Chỉ siết thêm khi cột có. Chưa chạy migration đợt 4 thì hai tab cùng
+           ra toàn bộ tài khoản đã xoá — trùng nhau, nhưng không mất dòng nào và
+           không ném lỗi 1054 vào giữa màn danh sách.
+
+           Vế 'nhân viên xoá' viết là "khác 'customer' hoặc NULL" chứ không phải
+           "= 'staff'": lý do đầy đủ ở counts(). Tóm tắt — NULL là những dòng xoá
+           TRƯỚC đợt 4 và migration cố ý không đoán giá trị cho chúng; nếu ở đây
+           cũng không nhận chúng thì chúng rơi ra ngoài cả bốn tab và không còn
+           đường nào mở được trong khu quản trị. */
+        if ($daXoa && $filter !== 'deleted' && self::coNguonXoa()) {
+            $dieuKien[] = $filter === 'deleted-customer'
+                ? "u.deleted_source = 'customer'"
+                : "(u.deleted_source <> 'customer' OR u.deleted_source IS NULL)";
+        }
 
         if (isset(self::STATUSES[$filter])) {
             $dieuKien[]      = 'u.status = :trang_thai';

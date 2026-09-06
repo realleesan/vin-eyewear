@@ -65,15 +65,44 @@ class LensPriceAdminController extends AdminController
             'pkgEditable' => LensModel::packagesEditable(),
             // Bảng giá là dữ liệu catalog, cùng mức quyền với sản phẩm và cơ sở.
             'canEdit'   => UserModel::hasRole($this->userId, 'admin'),
-            // Kiểu không có bảng giá, để view giải thích vì sao nó vắng mặt.
-            'quotedTypes' => array_values(array_filter(
-                LensModel::types(),
-                static fn (array $t): bool => !LensModel::typeTakesPackage($t)
-            )),
+            /* Ô CHƯA CÓ GIÁ — FR-GH-09, FR-HH-06.
+
+               Thay cho 'quotedTypes' của bản cũ, vốn liệt kê những kiểu tròng
+               không có bảng giá. Từ đợt 1 không còn kiểu nào như thế (chỉ "Mắt
+               đặt" từng vậy, và nó đã gỡ), nên danh sách ấy luôn rỗng.
+
+               Con số dưới đây thì ngược lại — nó nói một điều đang thật sự sai:
+               mỗi ô trống là một lựa chọn KHÁCH KHÔNG THẤY trong hộp mua hàng.
+               Trước bản này ô trống vẫn bán được kèm chữ "Báo giá sau"; nay nó
+               lặng lẽ biến mất khỏi trang bán hàng, nên người điền bảng giá phải
+               được nói cho biết. */
+            'soOTrong' => self::demOTrong($types, LensModel::packages(), LensModel::priceTable()),
             /* Mặc định KHÔNG mở hộp danh mục gói. packages() ghi đè khoá này —
                view đọc nó để quyết định có vẽ hộp hay không. */
             'showPackages' => false,
         ];
+    }
+
+    /**
+     * Đếm ô kiểu × gói chưa có giá.
+     *
+     * Đếm ở controller chứ không ở view: view đã lặp qua đúng lưới ấy để vẽ
+     * bảng, nhưng dải cảnh báo nằm TRÊN bảng — muốn in con số ở đó thì phải
+     * biết nó trước khi vòng lặp chạy.
+     */
+    private static function demOTrong(array $types, array $packages, array $prices): int
+    {
+        $n = 0;
+
+        foreach ($types as $t) {
+            foreach ($packages as $p) {
+                if (($prices[$t['id']][$p['id']] ?? null) === null) {
+                    $n++;
+                }
+            }
+        }
+
+        return $n;
     }
 
     public function save(): void

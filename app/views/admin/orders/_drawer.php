@@ -98,7 +98,8 @@ $canMark = !$paid
             /* KHÁCH ĐANG ĐỌC CHỮ GÌ — B9.
 
                Ô chọn bên trên luôn hiện nhãn nội bộ ("Đang giao"), nhưng với đơn
-               NHẬN TẠI QUẦY thì trang tài khoản của khách hiện "Chờ khách nhận".
+               NHẬN TẠI QUẦY thì trang tài khoản của khách hiện "Sẵn sàng tại
+               cửa hàng".
                Không nói ra thì nhân viên nghe khách đọc một chữ lạ qua điện
                thoại và không đối chiếu được với màn hình của mình.
 

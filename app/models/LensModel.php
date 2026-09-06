@@ -280,13 +280,24 @@ class LensModel
         /*
          * GIÁ LÀ CỦA GIAO ĐIỂM, không phải của riêng gói.
          *
-         * priceOf() trả null cho ba trường hợp, và cả ba đều ra "báo giá sau":
-         *   · kiểu "Mắt đặt" — không có ô nào, đúng thiết kế
-         *   · gói mới thêm vào config mà cửa hàng chưa nhập giá
-         *   · dòng giỏ cũ có lens_id nhưng chưa có lens_type
+         * ─────────────────────────────────────────────────────────────────
+         * 'quoted' ĐÃ ĐỔI TÊN THÀNH 'thieu_gia' — FR-GH-09, FR-HH-06
          *
-         * Nói "báo giá sau" thay vì cộng 0đ: cả ba đều là "chưa biết giá", mà
-         * in "+0₫" thì khách đọc ra thành "phần tròng miễn phí".
+         * Cái tên cũ mô tả một TRẠNG THÁI KINH DOANH: "chưa báo giá, sẽ báo
+         * sau khi tư vấn". SRS bỏ hẳn trạng thái ấy — mọi ô kiểu × gói đều
+         * phải có giá.
+         *
+         * Cờ vẫn còn vì priceOf() vẫn trả null được, nhưng nghĩa của nó nay
+         * là MỘT LỖI DỮ LIỆU:
+         *   · gói mới thêm vào config mà cửa hàng chưa nhập giá
+         *   · dòng giỏ cũ trỏ tới ô vừa bị xoá giá
+         *
+         * (Trường hợp thứ ba của bản cũ — kiểu "Mắt đặt" không có ô nào — đã
+         * hết từ đợt 1: kiểu ấy gỡ rồi.)
+         *
+         * Đổi tên chứ không xoá cờ, vì nơi gọi vẫn phải phân biệt được "chưa
+         * biết giá" với "giá bằng 0". In "+0₫" cho ô trống thì khách đọc ra
+         * thành "phần tròng miễn phí" — và đó là một đơn hàng ghi sai tiền.
          */
         $price = self::priceOf($type['id'] ?? null, $pkg['id'] ?? null);
 
@@ -295,7 +306,7 @@ class LensModel
             'type_id'   => $type['id'] ?? null,
             'name'      => $name,
             'price'     => (int) ($price ?? 0),
-            'quoted'    => $price === null,
+            'thieu_gia' => $price === null,
         ];
     }
 

@@ -25,6 +25,40 @@ class OrderAdminController extends AdminController
      */
     private const BULK_MAX = 100;
 
+    /**
+     * Số đơn bị CẮT khỏi lô vì vượt trần — FR-QT-14.
+     *
+     * Tĩnh vì nó phải sống từ lúc cắt (bulk/undoBulk) tới lúc hàm xử lý cuối
+     * cùng dựng câu thông báo, mà giữa hai chỗ đó là một chuỗi gọi hàm nhiều
+     * tầng. Truyền tham số qua từng tầng cũng được, nhưng bốn hàm đều phải nhận
+     * thêm một đối số mà chỉ dùng ở đúng dòng cuối.
+     *
+     * Một lượt truy cập chỉ xử lý một lô, nên không có chuyện hai giá trị chồng
+     * lên nhau.
+     */
+    private static int $duLo = 0;
+
+    /**
+     * Nối phần "còn N đơn chưa xử lý" vào câu kết quả.
+     *
+     * flash() GÁN chứ không nối, nên hai câu không thể là hai lần flash cùng
+     * khoá; và hai khoá khác nhau thì bulkStatus() vẫn ghi đè phần cảnh báo
+     * bằng câu 'admin_error' của riêng nó. Cách chắc chắn duy nhất là ghép
+     * chúng thành MỘT chuỗi trước khi flash.
+     */
+    private static function themDuLo(string $cau): string
+    {
+        if (self::$duLo <= 0) {
+            return $cau;
+        }
+
+        return $cau . sprintf(
+            ' Chỉ xử lý %d đơn đầu — còn %d đơn chưa xử lý, chọn lại rồi bấm thêm một lượt.',
+            self::BULK_MAX,
+            self::$duLo
+        );
+    }
+
     public function index(): void
     {
         /*
@@ -224,7 +258,27 @@ class OrderAdminController extends AdminController
             redirect($back);
         }
 
-        $ids = array_slice(array_unique($ids), 0, self::BULK_MAX);
+        /* ─────────────────────────────────────────────────────────────────
+           CẮT THÌ PHẢI NÓI — FR-QT-14
+
+           Trần 100 đơn vẫn giữ; cái đổi là nó không còn im lặng. Trước bản này
+           chọn 250 đơn rồi bấm là 100 đơn đổi trạng thái và 150 đơn không, mà
+           màn hình báo thành công — nhân viên đóng trang, tin là xong, và 150
+           đơn kia nằm lại cho tới khi có khách gọi hỏi.
+
+           Đếm TRƯỚC khi cắt, rồi CẤT vào self::$duLo — KHÔNG flash ngay.
+
+           Bản đầu flash thẳng vào 'admin_error' với lý lẽ "hai khoá là hai dải
+           riêng nên không ghi đè nhau". Sai: bulkStatus() và bad() cũng ghi
+           'admin_error' (bỏ qua đơn đã huỷ, không có đơn nào hợp lệ…), và
+           flash() GÁN chứ không nối. Câu cảnh báo bị nuốt, và im lặng đúng chỗ
+           FR-QT-14 sinh ra để phá.
+
+           Cất lại rồi để themDuLo() nối vào chính câu kết quả: một thao tác,
+           một câu, kể đủ cả phần làm được lẫn phần không. */
+        $tongChon = count(array_unique($ids));
+        $ids      = array_slice(array_unique($ids), 0, self::BULK_MAX);
+        self::$duLo = $tongChon - count($ids);
 
         /* KHÔNG CÒN LỌC THEO PHẠM VI CƠ SỞ — SRS v2.1.0, K06. Mọi nhân viên
            thao tác được trên mọi đơn, nên lô gửi lên đi thẳng vào phần phân
@@ -276,6 +330,12 @@ class OrderAdminController extends AdminController
             redirect($back);
         }
 
+        /* Hoàn tác cũng cắt ở cùng trần, và cũng phải nói — FR-QT-14. Lô hoàn
+           tác sinh ra từ chính lô vừa đổi nên hiếm khi vượt 100, nhưng "hiếm"
+           không phải "không": form hoàn tác sửa được. Cùng cơ chế với bulk() —
+           cất vào $duLo rồi nối vào câu kết quả, xem themDuLo(). */
+        self::$duLo = max(0, count($truoc) - self::BULK_MAX);
+
         foreach (array_slice($truoc, 0, self::BULK_MAX, true) as $id => $status) {
             if (!is_string($id) || !is_string($status) || !isset(OrderModel::STATUSES[$status])) {
                 continue;
@@ -319,26 +379,26 @@ class OrderAdminController extends AdminController
         }
 
         if ($soDon === 0) {
-            flash('admin_error', $boQuaHuy > 0
+            flash('admin_error', self::themDuLo($boQuaHuy > 0
                 ? 'Đơn đã huỷ không lùi lại được — huỷ đơn là chung cuộc. '
                   . 'Nếu khách vẫn lấy hàng thì tạo đơn mới.'
-                : 'Không còn gì để hoàn tác.');
+                : 'Không còn gì để hoàn tác.'));
             redirect($back);
         }
 
         if ($boQuaHuy > 0) {
             /* Nói ra NGAY CẢ KHI phần còn lại thành công: im lặng lùi 3 trên 4
                đơn rồi báo thành công là để người dùng tin rằng cả 4 đã lùi. */
-            flash('admin_error', sprintf(
+            flash('admin_error', self::themDuLo(sprintf(
                 'Bỏ qua %d đơn ĐÃ HUỶ — huỷ đơn là chung cuộc, không lùi lại được.',
                 $boQuaHuy
-            ));
+            )));
         }
 
         /* KHÔNG ghi hoàn tác cho chính cú hoàn tác. Một thanh "Hoàn tác" hiện
            lên ngay sau khi vừa hoàn tác thì bấm hai lần là quay về đúng chỗ
            xuất phát, và không ai biết mình đang ở đâu trong chuỗi ấy. */
-        flash('admin_success', sprintf('Đã hoàn tác %d đơn hàng.', $soDon));
+        flash('admin_success', self::themDuLo(sprintf('Đã hoàn tác %d đơn hàng.', $soDon)));
         redirect($back);
     }
 
@@ -391,11 +451,11 @@ class OrderAdminController extends AdminController
             /* Nói ra NGAY CẢ KHI phần còn lại thành công. Im lặng làm 18 trên
                20 đơn rồi báo thành công là để người dùng tin rằng cả 20 đã
                xong — và hai đơn kia nằm lại mà không ai biết. */
-            flash('admin_error', sprintf(
+            flash('admin_error', self::themDuLo(sprintf(
                 'Bỏ qua %d đơn ĐÃ HUỶ. Đơn đã huỷ không mở lại được; '
                 . 'nếu cần xử lý tiếp thì tạo đơn mới.',
                 $boQua
-            ));
+            )));
         }
 
         if ($truoc === []) {
@@ -409,11 +469,11 @@ class OrderAdminController extends AdminController
 
         $this->ghiHoanTac($truoc, $status);
 
-        flash('admin_success', sprintf(
+        flash('admin_success', self::themDuLo(sprintf(
             'Đã chuyển %d đơn sang «%s».',
             count($truoc),
             OrderModel::STATUSES[$status]
-        ));
+        )));
         redirect($back);
     }
 
@@ -436,7 +496,7 @@ class OrderAdminController extends AdminController
             $this->bad('Các đơn đã chọn đều đã được ghi nhận thanh toán.', $back);
         }
 
-        flash('admin_success', sprintf('Đã ghi nhận thanh toán cho %d đơn.', $doi));
+        flash('admin_success', self::themDuLo(sprintf('Đã ghi nhận thanh toán cho %d đơn.', $doi)));
         redirect($back);
     }
 
@@ -706,7 +766,9 @@ class OrderAdminController extends AdminController
     /** Báo lỗi rồi quay lại — gói lại vì bốn nhánh ở trên đều làm đúng hai việc này. */
     private function bad(string $message, string $back): never
     {
-        flash('admin_error', $message);
+        // themDuLo() nối phần "còn N đơn chưa xử lý" nếu lô vừa bị cắt vì vượt
+        // trần — kể cả khi phần xử lý được lại hỏng. Xem FR-QT-14.
+        flash('admin_error', self::themDuLo($message));
         redirect($back);
     }
 }

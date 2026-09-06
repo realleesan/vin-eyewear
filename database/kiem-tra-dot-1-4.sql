@@ -119,13 +119,23 @@ UNION ALL SELECT 'dot 4 · cot users.deleted_source',
 -- năm giá trị thì cả đợt 2 lẫn đợt 3 đều chưa chạy.
 --
 -- Phải > Trái là bình thường: khách mới khai số đo sau khi đợt 3 chạy.
--- Bỏ qua phần này nếu bảng `prescriptions` đã bị gỡ (sau 13/09).
+--
+-- ĐI QUA PREPARE/EXECUTE, cùng lý do với phần C: sau ngày gỡ bảng tóm tắt
+-- (2026-09-06-dot-3-go-bang-tom-tat.sql, chạy từ 13/09) thì `prescriptions`
+-- không còn, và một câu nhắc thẳng tên nó sẽ báo lỗi 1146 rồi kéo theo phần C
+-- không chạy nữa. Đúng lúc ấy phần B cũng hết việc — sổ hợp nhất là nguồn duy
+-- nhất thì không còn gì để đối chiếu.
 -- ----------------------------------------------------------------------------
-SELECT (SELECT COUNT(DISTINCT user_id) FROM prescriptions)           AS khach_o_bang_cu,
-       (SELECT COUNT(DISTINCT user_id) FROM customer_prescriptions)  AS khach_o_so_moi,
-       IF((SELECT COUNT(DISTINCT user_id) FROM customer_prescriptions)
-          >= (SELECT COUNT(DISTINCT user_id) FROM prescriptions), 'OK', 'KIEM LAI')
-                                                                     AS ket_qua;
+SET @co := (SELECT COUNT(*) FROM information_schema.TABLES
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prescriptions');
+SET @sql := IF(@co = 1,
+    "SELECT (SELECT COUNT(DISTINCT user_id) FROM prescriptions)          AS khach_o_bang_cu,
+            (SELECT COUNT(DISTINCT user_id) FROM customer_prescriptions) AS khach_o_so_moi,
+            IF((SELECT COUNT(DISTINCT user_id) FROM customer_prescriptions)
+               >= (SELECT COUNT(DISTINCT user_id) FROM prescriptions), 'OK', 'KIEM LAI')
+                                                                         AS ket_qua",
+    "SELECT 'da go bang tom tat - khong con gi de doi chieu' AS ghi_chu");
+PREPARE b FROM @sql; EXECUTE b; DEALLOCATE PREPARE b;
 
 
 -- PHẦN C — TỒN ĐỌNG HOÀN TIỀN.

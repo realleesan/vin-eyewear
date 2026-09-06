@@ -125,6 +125,30 @@ $paymentShort  = [
     <p class="acct-head__lead">Theo dõi trạng thái và lịch sử mua kính của bạn.</p>
 </div>
 
+<?php
+/* ─────────────────────────────────────────────────────────────────────────────
+   "ĐÃ CHUYỂN KHOẢN, ĐANG CHỜ TIỀN VỀ" — FR-TT-05
+
+   Đến đây từ nút "Tôi đã chuyển khoản — kiểm tra giúp tôi" ở trang QR. Câu chữ
+   lấy đúng của SRS, và nó cố ý KHÔNG nói "đã nhận được tiền": chỉ sao kê ngân
+   hàng mới trả lời được câu đó, và trang biên nhận vẫn chỉ mở khi tiền về thật.
+
+   Không dùng flash vì đây là một liên kết GET — khách bấm F5 hay chia sẻ link
+   thì câu này vẫn đúng, không như một flash chỉ sống một lượt.
+
+   Chỉ in khi tham số có mặt. Không kiểm đơn nào, không kiểm trạng thái tiền: đây
+   là một câu trấn an chung, và làm nó phụ thuộc vào trạng thái nghĩa là khách
+   bấm nút xong tiền vừa về thì câu biến mất — đúng lúc họ đang tìm nó. Thẻ đơn
+   ngay dưới đã nói trạng thái thật.
+   ───────────────────────────────────────────────────────────────────────────── */
+?>
+<?php if (isset($_GET['da-chuyen'])): ?>
+    <p class="acct-notice" role="status">
+        <strong>Đơn của bạn đã được ghi nhận.</strong>
+        Chúng tôi đang chờ tiền về và sẽ báo lại ngay.
+    </p>
+<?php endif; ?>
+
 <div class="acct-tabs">
     <?php
     /* Số trong ngoặc CHỈ hiện khi khác 0, đúng bản thiết kế: "Đã huỷ (0)" là
@@ -234,9 +258,10 @@ $paymentShort  = [
                         <?php endif; ?>
 
                         <?php /* Nhãn qua OrderModel::nhanTrangThai() — đơn nhận
-                                 tại quầy đọc là "Chờ khách nhận", không phải
-                                 "Đang giao" (B9). Ngăn kéo đơn của nhân viên gọi
-                                 cùng hàm này nên hai bên luôn cùng một chữ. */ ?>
+                                 tại quầy đọc là "Sẵn sàng tại cửa hàng", không
+                                 phải "Đang giao" (B9, FR-QT-05). Ngăn kéo đơn của
+                                 nhân viên gọi cùng hàm này nên hai bên luôn cùng
+                                 một chữ. */ ?>
                         <span class="acct-badge acct-badge--<?= e($badgeTones[$o['status']] ?? 'wait') ?>">
                             <?= e(OrderModel::nhanTrangThai($o['status'], $o['delivery_method'] ?? null)) ?>
                         </span>

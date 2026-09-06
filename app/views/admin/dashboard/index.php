@@ -135,7 +135,49 @@ $facts = [
             <?php else: ?>
                 Số liệu trên toàn bộ dữ liệu, không tính đơn đã huỷ
             <?php endif; ?>
+
+            <?php
+            /* ─────────────────────────────────────────────────────────────────
+               ĐẶT MỐC NGAY TẠI ĐÂY — FR-NK-04
+
+               Trước bản này mốc nằm ở STATS_SINCE trong .env: muốn đổi thì mở
+               FTP, sửa một tệp ẩn, rồi hy vọng lần deploy sau không ghi đè.
+               Thực tế nghĩa là chủ cửa hàng phải nhờ người kỹ thuật, và mốc ấy
+               gần như không bao giờ được đổi.
+
+               Đặt liên kết NGAY CẠNH câu đang nói về mốc, không phải trong một
+               trang Cài đặt nào đó: người muốn đổi mốc là người vừa đọc dòng
+               này và thấy nó sai. Bắt họ đi tìm là bắt họ bỏ cuộc.
+
+               Chỉ Quản trị viên thấy — nhân viên đọc được mốc nhưng không đổi
+               được, đúng như chốt ở DashboardController::setMoc(). */
+            ?>
+            <?php if ($mocSuaDuoc): ?>
+                · <a class="ahead__link" href="/quan-tri?moc=1">Đổi mốc</a>
+            <?php endif; ?>
         </p>
+
+        <?php if ($mocSuaDuoc && $moMoc): ?>
+            <form class="amoc" method="post" action="/quan-tri/moc-doanh-thu">
+                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+
+                <label for="moc-ngay">Tính doanh thu từ ngày</label>
+                <input type="date" id="moc-ngay" name="moc" max="<?= e(date('Y-m-d')) ?>"
+                       value="<?= e($mocThoRaw) ?>">
+
+                <button type="submit" class="astatus__save">Lưu mốc</button>
+                <a class="astatus__save astatus__save--ghost" href="/quan-tri">Huỷ</a>
+
+                <?php /* Ô TRỐNG LÀ MỘT LỰA CHỌN THẬT, không phải quên điền —
+                         nói ra, vì một ô ngày trống trông y hệt một ô chưa
+                         điền xong. */ ?>
+                <p class="field__hint">
+                    Để trống rồi Lưu = bỏ mốc, tính trên toàn bộ dữ liệu.
+                    Dùng khi cửa hàng nhập dữ liệu cũ vào hệ thống và không muốn
+                    những đơn ấy lẫn vào doanh thu đang theo dõi.
+                </p>
+            </form>
+        <?php endif; ?>
     </div>
     <p class="ahead__today">Hôm nay · <?= e(date('d/m/Y')) ?></p>
 </header>
@@ -295,7 +337,7 @@ $facts = [
         <section class="apanel" aria-labelledby="low-stock">
             <div class="apanel__head">
                 <h2 id="low-stock" class="apanel__title">Sắp hết hàng</h2>
-                <a href="/quan-tri/ton-kho" class="apanel__more">Quản lý tồn kho →</a>
+                <a href="/quan-tri/ton-kho" class="apanel__more">Quản lý kho online →</a>
             </div>
 
             <?php if ($lowStock === []): ?>

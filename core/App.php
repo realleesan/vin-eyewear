@@ -259,8 +259,65 @@ class App
      */
     public static function run(): void
     {
+        self::viecDinhKy();
+
         $routes = require CONFIG_PATH . '/routes.php';
 
         (new Router($routes))->dispatch();
+    }
+
+    /**
+     * Việc định kỳ đi nhờ lượt truy cập — FR-TT-11.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO Ở ĐÂY, VÀ VÌ SAO CHỈ VỚI GET
+     *
+     * Hosting không có cron (InfinityFree gói miễn phí), nên việc định kỳ duy
+     * nhất chạy được là việc mượn một lượt duyệt trang. Đặt ở đây vì đây là cửa
+     * duy nhất mọi lượt đi qua — móc vào một controller nào đó thì việc dọn dẹp
+     * chỉ chạy khi có người vào đúng trang ấy.
+     *
+     * CHỈ GET, và đó không phải chuyện hiệu năng. Một POST là lúc người dùng
+     * vừa bấm Lưu, Đặt hàng hay Thanh toán: thêm bất kỳ việc gì vào trước nó là
+     * kéo dài đúng khoảnh khắc mà một cú chạm tay có thể thành hai lần gửi. Lượt
+     * GET thì lúc nào cũng có, và nhiều hơn hẳn.
+     *
+     * KHÔNG ném ngoại lệ ra ngoài: quetDonQuaHan() đã tự bọc try/catch, nhưng
+     * dòng dưới đây chạy TRƯỚC cả router — một lỗi ở đây là trang trắng, không
+     * phải một màn hình hỏng.
+     *
+     * Bản thân hàm quét tự giãn cách 10 phút và tự chặn trần số đơn; lý do đầy
+     * đủ ở OrderModel::quetDonQuaHan().
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * BA VIỆC, BA CÁI PHANH RIÊNG — đợt 6
+     *
+     * Mỗi hàm dưới đây tự giữ mốc của mình bằng một tệp riêng trong
+     * storage/quet/, nên chúng có nhịp khác nhau và không hàm nào làm hàm nào
+     * chạy sớm hay muộn đi:
+     *
+     *   don-qua-han.txt   10 phút — huỷ đơn quá hạn, kèm thư báo trước 2 giờ
+     *   nhac-lich.txt     60 phút — thư nhắc lịch hẹn ngày mai
+     *   email.txt          2 phút — đẩy hàng chờ thư đi
+     *
+     * THỨ TỰ CÓ NGHĨA: hai hàm đầu SINH thư, hàm cuối GỬI. Xếp ngược lại thì
+     * một lá thư vừa sinh phải đợi tới lượt truy cập sau mới đi — hai phút với
+     * thư nhắc thì không sao, nhưng với thư "đơn sắp bị huỷ" thì mỗi phút đều
+     * là phút khách còn kịp trả tiền.
+     *
+     * KHÔNG hàm nào ném lỗi ra ngoài: cả ba tự bọc try/catch, và cả ba chạy
+     * TRƯỚC router — một lỗi ở đây là trang trắng, không phải một màn hình
+     * hỏng.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    private static function viecDinhKy(): void
+    {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+            return;
+        }
+
+        OrderModel::quetDonQuaHan();
+        BookingModel::quetNhacLichHen();
+        EmailQueueModel::quetGui();
     }
 }

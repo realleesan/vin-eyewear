@@ -2343,3 +2343,21 @@ select.acct-field__input {
     border-color: #8f3535;
     color: #fff;
 }
+
+
+/* Dải trấn an "đơn đã được ghi nhận, đang chờ tiền về" — FR-TT-05.
+
+   Trung tính, không xanh "thành công": tiền CHƯA về, và một dải xanh ở đây đọc
+   thành xác nhận đã thanh toán — đúng điều cả yêu cầu này sinh ra để tránh. */
+.acct-notice {
+    margin: 0 0 20px;
+    padding: 14px 18px;
+    border-left: 3px solid var(--brand);
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: var(--a-note);
+}
+
+.acct-notice strong { color: var(--ink); }

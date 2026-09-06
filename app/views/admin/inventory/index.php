@@ -54,9 +54,23 @@ $duongDanTrang = static function (int $so) use ($q, $filter): string {
          TRƯỚC khi gõ, không phải sau. */ ?>
 <header class="ahead ahead--row">
     <div>
-        <h1 class="ahead__title">Tồn kho</h1>
+        <h1 class="ahead__title">Kho online</h1>
+        <?php
+        /* "KHO ONLINE", KHÔNG PHẢI "TỒN KHO" — FR-HH-09.
+
+           Con số ở màn này là SỐ LƯỢNG HỆ THỐNG CHO PHÉP BÁN TRÊN WEBSITE, không
+           phải số hàng đang nằm trên kệ. Cửa hàng không quản lý kho vật lý ở đây:
+           không nhập kho, không xuất kho, không điều chuyển, và không ai kỳ vọng
+           nhân viên quầy trừ đi một chiếc sau mỗi lần bán trực tiếp.
+
+           Cái tên cũ hứa điều ngược lại, và lời hứa đó tốn tiền thật: nhìn thấy
+           "Tồn kho 3" rồi bán tay hai chiếc ở quầy mà không sửa gì, thì website
+           vẫn nhận ba đơn nữa. Đổi tên là cách rẻ nhất để không ai còn đọc con số
+           này như một bản kiểm kê. */
+        ?>
         <p class="ahead__lead">
-            Cập nhật số lượng sau khi nhập hàng hoặc kiểm kê. Đặt tồn về
+            Số lượng cho phép bán trên website — không phải hàng thực tế tại quầy.
+            Cập nhật sau khi nhập hàng hoặc kiểm kê. Đặt số về
             <strong>0</strong> sẽ tự chuyển sang <em>hết hàng</em> và ẩn nút mua
             ở trang bán hàng.
         </p>
@@ -89,7 +103,7 @@ $duongDanTrang = static function (int $so) use ($q, $filter): string {
     </div>
 </header>
 
-<nav class="atabs" aria-label="Lọc tồn kho">
+<nav class="atabs" aria-label="Lọc kho online">
     <?php foreach ($tabs as $key => [$label, $count]): ?>
         <a class="atabs__item<?= $filter === $key ? ' is-active' : '' ?>"
            href="<?= e($duongDanLoc((string) $key)) ?>"
@@ -194,7 +208,7 @@ $duongDanTrang = static function (int $so) use ($q, $filter): string {
                                     <button class="aistep__btn" type="button" data-step="-1"
                                             hidden aria-label="Giảm một">−</button>
 
-                                    <label class="sr-only" for="q-<?= e($p['id']) ?>">Tồn kho mới cho <?= e($p['name']) ?></label>
+                                    <label class="sr-only" for="q-<?= e($p['id']) ?>">Số kho online mới cho <?= e($p['name']) ?></label>
                                     <input class="aistep__input" type="number" id="q-<?= e($p['id']) ?>"
                                            name="stock_quantity" value="<?= $qty ?>"
                                            min="0" max="99999" step="1" inputmode="numeric">

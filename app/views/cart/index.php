@@ -216,11 +216,13 @@ $count = count($lines);
                                         <span class="clens__name">
                                             + <?= e($line['lens']['name']) ?>
                                             <span class="clens__price">
-                                                <?php /* "Mắt đặt" chưa có giá — cửa hàng báo sau
-                                                         khi xem thông số. In "0₫" ở đây thì khách
-                                                         đọc ra thành "phần tròng miễn phí". */ ?>
-                                                <?= !empty($line['lens']['quoted'])
-                                                    ? 'Báo giá sau'
+                                                <?php /* THIẾU GIÁ LÀ LỖI DỮ LIỆU, không phải một
+                                                         bước bán hàng — FR-GH-09. Chỉ dòng giỏ cũ
+                                                         mới rơi vào đây; hộp mua hàng nay không
+                                                         cho chọn gói chưa có giá nữa. In "0₫" thì
+                                                         khách đọc ra thành "tròng miễn phí". */ ?>
+                                                <?= !empty($line['lens']['thieu_gia'])
+                                                    ? 'Liên hệ cửa hàng'
                                                     : money((int) $line['lens']['price']) ?>
                                             </span>
                                         </span>

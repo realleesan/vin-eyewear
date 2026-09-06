@@ -26,8 +26,8 @@ class OrderController extends BaseController
      * chuyển thẳng vào tài khoản cửa hàng, SePay chỉ đọc biến động số dư rồi
      * báo về để đơn tự đổi trạng thái — xem config/sepay.php.
      *
-     * Bật thẻ lên sau: bỏ 'soon' => true ở đây và thêm 'card' vào
-     * OrderModel::PAYMENT_METHODS, rồi nối cổng ở place().
+     * Bật thẻ lên sau: chuyển khối PAYMENTS_CHUA_MO bên dưới lên mảng này và
+     * thêm 'card' vào OrderModel::PAYMENT_METHODS, rồi nối cổng ở place().
      */
     private const PAYMENTS = [
         'cod' => [
@@ -41,10 +41,32 @@ class OrderController extends BaseController
             // tiếp theo — khách chọn phương thức dựa vào việc họ sắp phải làm gì.
             'note' => 'Quét mã QR ngay ở bước sau, hoặc chuyển tay theo số tài khoản',
         ],
+    ];
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * THẺ ATM / VISA — GIỮ MÃ, KHÔNG VẼ RA. FR-DH-03.
+     *
+     * Trước bản này 'card' nằm trong PAYMENTS với cờ 'soon' => true, và giao
+     * diện vẽ nó thành một ô radio mờ kèm nhãn "Sắp có". SRS cấm đúng điều đó:
+     * *"Lựa chọn thẻ phải được ẩn hoàn toàn khỏi giao diện — không hiện dưới
+     * dạng nút mờ hay nút khoá."*
+     *
+     * Lý do không phải thẩm mỹ. Một ô khoá ở bước thanh toán là một lời hứa
+     * không có ngày: khách muốn trả bằng thẻ nhìn thấy nó, hiểu là cửa hàng
+     * sắp có, rồi bỏ giỏ hàng để quay lại sau — một lần. Hai hình thức đang
+     * chạy thật thì không cần một hình thức thứ ba đứng đó nhắc rằng nó thiếu.
+     *
+     * GIỮ KHỐI DƯỚI ĐÂY, ĐỪNG XOÁ. Nối cổng thanh toán là việc đã có kế hoạch;
+     * lúc ấy chỉ cần chuyển hai dòng này lên PAYMENTS và thêm 'card' vào
+     * OrderModel::PAYMENT_METHODS. Xoá đi thì người làm sau phải đoán lại cả
+     * cách đặt tên lẫn câu mô tả.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    private const PAYMENTS_CHUA_MO = [
         'card' => [
             'name' => 'Thẻ ATM / Visa / Mastercard',
             'note' => 'Thanh toán online qua cổng bảo mật',
-            'soon' => true,
         ],
     ];
 
@@ -296,10 +318,10 @@ class OrderController extends BaseController
             $this->fail('Hình thức nhận hàng không hợp lệ.', $data);
         }
 
-        // 'card' nằm trong self::PAYMENTS (để vẽ ra) nhưng KHÔNG nằm trong
-        // OrderModel::PAYMENT_METHODS, nên phép kiểm này chặn nó. Ô radio đã
-        // disabled ở giao diện, nhưng disabled chỉ là thuộc tính HTML — một
-        // request gửi tay không đi qua nó.
+        /* Từ FR-DH-03, 'card' không còn được vẽ ra nữa (xem PAYMENTS_CHUA_MO).
+           Phép kiểm này vẫn phải còn: nó chặn giá trị gửi tay, và nó là lớp
+           duy nhất còn lại từ khi ô radio disabled biến mất. Một request dựng
+           bằng curl không đi qua bất kỳ thuộc tính HTML nào. */
         if (!in_array($data['paymentMethod'], OrderModel::PAYMENT_METHODS, true)) {
             $this->fail('Hình thức thanh toán không hợp lệ.', $data);
         }

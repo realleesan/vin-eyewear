@@ -8,6 +8,80 @@
 
 class DashboardController extends AdminController
 {
+    private const BASE = '/quan-tri';
+
+    /**
+     * Đặt mốc tính doanh thu (POST /quan-tri/moc-doanh-thu) — FR-NK-04.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO MỘT MÀN HÌNH, KHÔNG PHẢI MỘT DÒNG TRONG .env
+     *
+     * Mốc này quyết định mọi con số tiền trên bảng tổng quan. Trước đây nó nằm
+     * ở `STATS_SINCE` trong .env: đổi được thì phải mở FTP, sửa một tệp ẩn, và
+     * hy vọng lần deploy sau không ghi đè. Trên thực tế nghĩa là chủ cửa hàng
+     * phải nhờ người kỹ thuật, và mốc ấy gần như không bao giờ đổi.
+     *
+     * CHỈ QUẢN TRỊ VIÊN. Nó không ghi một đồng nào, nhưng nó đổi mọi con số
+     * tiền mà cả cửa hàng đọc — và một con số doanh thu tụt đi mà không ai biết
+     * vì sao là thứ ăn mòn niềm tin vào cả bảng.
+     *
+     * CÓ GHI VẾT, đúng như SRS đòi: dòng vết ghi cả mốc CŨ lẫn mốc MỚI, vì câu
+     * hỏi sáu tháng sau không phải "mốc là ngày nào" (nhìn màn hình là thấy) mà
+     * "trước đó nó là ngày nào, và ai đổi".
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public function setMoc(): void
+    {
+        $this->requirePost(self::BASE);
+        $this->requireAdmin(self::BASE);
+
+        $moi = trim((string) ($_POST['moc'] ?? ''));
+
+        /* Ô trống = bỏ mốc, tính trên toàn bộ dữ liệu. Đó là một lựa chọn thật
+           chứ không phải người dùng quên điền, nên nó phải lưu được. */
+        if ($moi !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $moi) !== 1) {
+            flash('admin_error', 'Ngày không hợp lệ.');
+            redirect(self::BASE . '?moc=1');
+        }
+
+        if ($moi !== '') {
+            $d   = DateTime::createFromFormat('!Y-m-d', $moi);
+            $loi = DateTime::getLastErrors();
+
+            if ($d === false || ($loi !== false && ($loi['warning_count'] ?? 0) > 0)) {
+                flash('admin_error', 'Ngày không hợp lệ.');
+                redirect(self::BASE . '?moc=1');
+            }
+
+            // Mốc ở tương lai làm mọi ô tiền về 0 — gần như chắc chắn là gõ nhầm.
+            if ($d > new DateTime('today')) {
+                flash('admin_error', 'Mốc tính doanh thu không được ở tương lai.');
+                redirect(self::BASE . '?moc=1');
+            }
+        }
+
+        $cu = (string) SettingModel::get(SettingModel::MOC_DOANH_THU, '');
+
+        if (!SettingModel::set(SettingModel::MOC_DOANH_THU, $moi !== '' ? $moi : null, $this->userId)) {
+            flash('admin_error',
+                'Chưa nâng cấp cơ sở dữ liệu nên chưa lưu được mốc. '
+                . 'Chạy database/migrations/2026-09-06-dot-5-don-man-hinh.sql rồi thử lại.');
+            redirect(self::BASE);
+        }
+
+        AuditLogModel::write(null, 'stats.since', sprintf(
+            'Đổi mốc tính doanh thu: %s -> %s',
+            $cu !== '' ? formatDate($cu) : 'toàn bộ dữ liệu',
+            $moi !== '' ? formatDate($moi) : 'toàn bộ dữ liệu'
+        ));
+
+        flash('admin_success', $moi !== ''
+            ? 'Đã đặt mốc tính doanh thu từ ' . formatDate($moi) . '.'
+            : 'Đã bỏ mốc — các ô tiền tính trên toàn bộ dữ liệu.');
+
+        redirect(self::BASE);
+    }
+
     public function index(): void
     {
         /*
@@ -152,6 +226,10 @@ class DashboardController extends AdminController
             'tien'         => $tien,
             // null = không đặt mốc; view dùng để nói rõ số liệu tính từ đâu.
             'mocThongKe'   => $mocThongKe,
+            // Giá trị thô trong ô nhập, và ai được sửa — FR-NK-04.
+            'mocThoRaw'    => (string) SettingModel::get(SettingModel::MOC_DOANH_THU, ''),
+            'mocSuaDuoc'   => UserModel::hasRole($this->userId, 'admin') && SettingModel::available(),
+            'moMoc'        => isset($_GET['moc']),
             'recentOrders' => Database::fetchAll(
                 'SELECT * FROM orders ORDER BY created_at DESC LIMIT 8'
             ),
@@ -206,7 +284,12 @@ class DashboardController extends AdminController
      */
     private static function mocThongKe(): ?string
     {
-        $raw = trim((string) config('app.thong_ke_tu', ''));
+        /* ĐỌC TỪ BẢNG `app_settings`, KHÔNG TỪ .env NỮA — FR-NK-04.
+
+           SettingModel::mocDoanhThu() vẫn lùi về config('app.thong_ke_tu') khi
+           chưa ai đặt mốc trên màn hình, nên mốc cũ trong .env không mất và các
+           con số không nhảy vọt trong im lặng ở lần deploy này. */
+        $raw = trim((string) SettingModel::mocDoanhThu());
 
         if ($raw === '') {
             return null;
@@ -221,7 +304,7 @@ class DashboardController extends AdminController
         $loi = DateTime::getLastErrors();
 
         if ($d === false || ($loi !== false && ($loi['warning_count'] ?? 0) > 0)) {
-            error_log('[Tổng quan] STATS_SINCE sai định dạng, bỏ qua mốc: ' . $raw);
+            error_log('[Tổng quan] Mốc doanh thu sai định dạng, bỏ qua: ' . $raw);
 
             return null;
         }

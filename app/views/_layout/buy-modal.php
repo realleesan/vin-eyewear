@@ -500,12 +500,6 @@ $stepForm = static function (string $buoc): void {
                             <span class="blens__name"><?= e($ty['name']) ?></span>
                             <span class="blens__desc"><?= e($ty['desc']) ?></span>
                         </span>
-                        <?php if (empty($ty['takes_package'])): ?>
-                            <?php /* Không có bảng giá nào để chọn tiếp — nói ra ở
-                                     đây thay vì để khách bấm vào rồi mới thấy bước
-                                     kế biến mất. */ ?>
-                            <span class="blens__price blens__price--soft">Báo giá sau</span>
-                        <?php endif; ?>
                     </button>
                 <?php endforeach; ?>
             </form>
@@ -529,16 +523,34 @@ $stepForm = static function (string $buoc): void {
             <form class="blens" method="post" action="/gio-hang/chon">
                 <?php $stepForm('trong'); ?>
 
+                <?php
+                /* ─────────────────────────────────────────────────────────────
+                   GÓI CHƯA CÓ GIÁ THÌ KHÔNG BÀY RA — FR-GH-09, FR-HH-06
+
+                   Trước bản này, ô trống trong bảng giá vẫn hiện thành một lựa
+                   chọn bấm được kèm chữ "Báo giá sau". SRS bỏ hẳn trạng thái ấy:
+                   *"Mọi ô đều phải có giá — không còn trạng thái báo giá sau."*
+
+                   Vì sao không giữ nó như một lựa chọn khoá lại: một dòng hàng
+                   không có giá đi qua giỏ, qua bước đặt cọc (30% của cái gì?),
+                   rồi vào `order_items` với `lens_price` = 0. Từ đó nó là một
+                   đơn hàng ghi sai tiền, và không ai phát hiện cho tới lúc đối
+                   chiếu. "Báo giá sau" nghe như một lời hứa lịch sự nhưng thứ
+                   nó thật sự tạo ra là một khoản 0đ trong sổ.
+
+                   Ô trống là LỖI DỮ LIỆU, không phải một lựa chọn kinh doanh —
+                   màn /quan-tri/gia-trong đếm và cảnh báo đúng những ô ấy. */
+                ?>
+                <?php $coGoiNao = false; ?>
                 <?php foreach (LensModel::packages() as $pk): ?>
                     <?php
-                    /* GIÁ CỦA CHÍNH KIỂU TRÒNG KHÁCH VỪA CHỌN, không phải một
-                       giá chung của gói: bước này đứng SAU bước chọn kiểu, nên
-                       ở đây đã biết đủ hai vế để tra đúng ô trong bảng giá.
-
-                       null = cửa hàng chưa định giá ô đó. Vẫn cho chọn — cắt
-                       được tròng đó thì vẫn bán được — nhưng nói rõ là chưa có
-                       giá, thay vì in "+0₫" thành ra hứa miễn phí. */
                     $pkPrice = LensModel::priceOf($intent['lens_type'], $pk['id']);
+
+                    if ($pkPrice === null) {
+                        continue;
+                    }
+
+                    $coGoiNao = true;
                     ?>
                     <button type="submit" class="blens__item<?= $intent['lens_id'] === $pk['id'] ? ' is-on' : '' ?>"
                             name="lens" value="<?= e($pk['id']) ?>">
@@ -546,13 +558,21 @@ $stepForm = static function (string $buoc): void {
                             <span class="blens__name"><?= e($pk['name']) ?></span>
                             <span class="blens__desc"><?= e($pk['desc']) ?></span>
                         </span>
-                        <?php if ($pkPrice === null): ?>
-                            <span class="blens__price blens__price--soft">Báo giá sau</span>
-                        <?php else: ?>
-                            <span class="blens__price">+<?= money($pkPrice) ?></span>
-                        <?php endif; ?>
+                        <span class="blens__price">+<?= money($pkPrice) ?></span>
                     </button>
                 <?php endforeach; ?>
+
+                <?php if (!$coGoiNao): ?>
+                    <?php /* KHÔNG Ô NÀO CỦA KIỂU NÀY CÓ GIÁ — bảng giá thiếu cả
+                             một cột. Khách không có gì để bấm, nên phải nói ra
+                             thay vì bày một bước trống rồi để họ tưởng trang
+                             hỏng. Đây là tình huống chỉ xảy ra khi bảng giá chưa
+                             điền xong; màn quản trị cảnh báo đúng việc đó. */ ?>
+                    <p class="blens__empty">
+                        Kiểu tròng này chưa có bảng giá. Vui lòng chọn kiểu khác
+                        hoặc liên hệ cửa hàng để được tư vấn.
+                    </p>
+                <?php endif; ?>
             </form>
 
         <?php else: ?>
@@ -576,14 +596,20 @@ $stepForm = static function (string $buoc): void {
                 <?php if ($lens !== null): ?>
                     <div class="bsum__row">
                         <span>Tròng kính · <?= e($lens['name']) ?>:</span>
-                        <?php if (!empty($lens['quoted'])): ?>
-                            <?php /* Kiểu tròng KHÔNG CÓ BẢNG GIÁ. Từ SRS v2.1.0
-                                     (C08) không còn kiểu nào như vậy — kiểu duy
-                                     nhất từng rơi vào đây là "Mắt đặt", đã gỡ.
-                                     Giữ nhánh để dữ liệu cũ và kiểu thêm sau này
-                                     không in ra "+0₫", vì khách sẽ đọc thành
-                                     "phần tròng miễn phí". */ ?>
-                            <span class="bsum__val bsum__val--soft">Báo giá sau khi tư vấn</span>
+                        <?php if (!empty($lens['thieu_gia'])): ?>
+                            <?php /* CHỈ CÒN LÀ LỐI THOÁT CHO DỮ LIỆU CŨ.
+
+                                     Từ FR-GH-09 không gói nào chưa có giá lọt được
+                                     vào đây nữa — bước chọn gói đã ẩn chúng. Nhưng
+                                     một giỏ hàng lưu trong phiên từ trước bản này,
+                                     hoặc một dòng giỏ trỏ tới gói mà cửa hàng vừa
+                                     xoá giá, vẫn đi qua đúng chỗ này.
+
+                                     Nói "liên hệ cửa hàng" chứ không "báo giá sau":
+                                     câu sau là một lời hứa của quy trình bán hàng,
+                                     và quy trình ấy đã bỏ. Đây là một dòng hỏng cần
+                                     người xử lý, không phải một bước bình thường. */ ?>
+                            <span class="bsum__val bsum__val--soft">Liên hệ cửa hàng</span>
                         <?php else: ?>
                             <span class="bsum__val bsum__val--price">+<?= money($lensPrice) ?></span>
                         <?php endif; ?>

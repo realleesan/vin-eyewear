@@ -96,23 +96,32 @@ class ProductModel extends BaseModel
     protected static string $table = 'products';
 
     /**
-     * Số sản phẩm mỗi trang.
+     * Số sản phẩm mỗi trang — 9.
      *
-     * 12 KHÔNG PHẢI SỐ TUỲ Ý — nó là bội chung của cả ba bề rộng lưới ở trang
-     * danh mục (assets/css/category.css → .catgrid):
+     * Con số này ăn khớp với ba bề rộng lưới ở trang danh mục
+     * (assets/css/category.css → .catgrid):
      *
-     *   ≥ 901px  3 cột  ->  12 / 3 = 4 hàng chẵn
-     *   ≤ 900px  2 cột  ->  12 / 2 = 6 hàng chẵn
-     *   ≤ 560px  1 cột  ->  12 hàng
+     *   ≥ 901px  3 cột  ->  9 / 3 = 3 hàng chẵn
+     *   ≤ 900px  2 cột  ->  9 / 2 = 4 hàng rưỡi, hàng cuối một thẻ
+     *   ≤ 560px  1 cột  ->  9 hàng
      *
-     * Nhờ vậy hàng cuối của mọi trang luôn ĐẦY, không bao giờ còn một hai thẻ
-     * lẻ nằm trơ giữa khoảng trống. Kho có bao nhiêu hàng cũng vậy: đủ 12 là
-     * sang trang 2, không có chuyện lưới dài ra mãi.
+     * ─────────────────────────────────────────────────────────────────────
+     * 9 CHỨ KHÔNG PHẢI 12 — FR-SP-03, và nó PHÁ luật bội-chung ở trên
      *
-     * ĐỔI SỐ NÀY THÌ PHẢI CHỌN BỘI CHUNG CỦA 3 VÀ 2 — 6, 12, 18, 24, 30…
-     * Chọn 10 chẳng hạn thì lưới 3 cột có hàng cuối chỉ một thẻ.
+     * Luật cũ đòi bội chung của 3 và 2 để hàng cuối luôn đầy ở cả hai bề
+     * ngang. 9 chia hết cho 3 nhưng không chia hết cho 2, nên ở khổ 2 cột
+     * hàng cuối còn đúng một thẻ.
+     *
+     * Vẫn chọn 9 vì đó là con số bản thiết kế chốt, và cái giá của nó nhỏ
+     * hơn cái được: 12 thẻ ở khổ 3 cột là bốn hàng, đủ dài để người xem phải
+     * cuộn hai lần trước khi thấy thanh phân trang. Một thẻ lẻ ở khổ tablet
+     * là một khoảng trống; bốn hàng ở khổ máy tính là một danh sách người ta
+     * bỏ giữa chừng.
+     *
+     * ĐỔI SỐ NÀY THÌ NHỚ: bội của 3 giữ cho khổ máy tính (3 cột) luôn đầy —
+     * đó là khổ đông người dùng nhất. Bội của 6 thì đầy cả hai.
      */
-    public const PER_PAGE = 12;
+    public const PER_PAGE = 9;
 
     /**
      * Các kiểu sắp xếp được phép.

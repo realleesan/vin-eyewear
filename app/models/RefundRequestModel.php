@@ -582,6 +582,29 @@ class RefundRequestModel extends BaseModel
                 'Yêu cầu này vừa được người khác đánh dấu đã hoàn. Tải lại trang để xem.'];
         }
 
+        /* Thư báo đã hoàn tiền — FR-EM-02, mốc thứ ba của nhóm tiền.
+
+           ĐỌC LẠI ĐƠN chứ không dùng $yc: chiTiet() lấy mã đơn và tên khách,
+           nhưng KHÔNG lấy `customer_email` — mà đó lại là địa chỉ nhận duy
+           nhất của khách vãng lai (chính là những người hay có đơn cọc bị
+           huỷ nhất). Thêm một câu truy vấn ở đây là rẻ: nút này bấm vài lần
+           một ngày, không phải vài lần một giây.
+
+           SỐ TIỀN LẤY Ở `approved_amount`, không phải `received_amount`.
+           Hai cột khác nhau đúng ở những ca cửa hàng duyệt hoàn MỘT PHẦN, và
+           lá thư phải nói con số thật sự chuyển đi. NULL thì lùi về số đã
+           nhận — nhưng trạng thái 'approved' luôn có cột này, vì duyet() ghi
+           nó cùng lúc với trạng thái. */
+        $don = OrderModel::find((string) $yc['order_id']);
+
+        if ($don !== null) {
+            $soTien = $yc['approved_amount'] !== null
+                ? (int) $yc['approved_amount']
+                : (int) $yc['received_amount'];
+
+            EmailEvents::tien($don, 'hoan', $soTien, $ngay);
+        }
+
         return ['ok' => true];
     }
 

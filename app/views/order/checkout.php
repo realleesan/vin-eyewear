@@ -320,16 +320,19 @@ $storeId  = $old['storeId'] ?? '';
                 </div>
 
                 <div class="cocards" role="radiogroup" aria-labelledby="co-b3">
+                    <?php
+                    /* HAI LỰA CHỌN, KHÔNG BA — FR-DH-03.
+
+                       Ô "Thẻ ATM / Visa" mờ kèm nhãn "Sắp có" đã gỡ hẳn. Nhánh
+                       $soon và lớp .is-soon không còn dữ liệu nào kích hoạt vì
+                       'card' đã rời khỏi OrderController::PAYMENTS; giữ lại là
+                       giữ một nhánh chết ngay giữa bước thanh toán. Lý do đầy
+                       đủ ở khối PAYMENTS_CHUA_MO trong controller. */
+                    ?>
                     <?php foreach ($payments as $value => $pm): ?>
-                        <?php $soon = !empty($pm['soon']); ?>
-                        <label class="cocard<?= $soon ? ' is-soon' : '' ?>">
-                            <!-- Khoá lại chứ không bỏ đi: bản thiết kế có ba lựa
-                                 chọn, mà một cái bấm được rồi không trả tiền được
-                                 thì tệ hơn hẳn. place() cũng từ chối giá trị này
-                                 nếu ai gửi thẳng lên. -->
+                        <label class="cocard">
                             <input type="radio" name="payment_method" value="<?= e($value) ?>"
-                                   required <?= $soon ? 'disabled' : '' ?>
-                                   <?= (!$soon && $payment === $value) ? 'checked' : '' ?>>
+                                   required <?= $payment === $value ? 'checked' : '' ?>>
                             <span class="cocard__dot" aria-hidden="true"></span>
                             <span class="cocard__body">
                                 <span class="cocard__name">
@@ -360,9 +363,6 @@ $storeId  = $old['storeId'] ?? '';
                                     <?php endif; ?>
                                 </span>
                             </span>
-                            <?php if ($soon): ?>
-                                <span class="cocard__soon">Sắp có</span>
-                            <?php endif; ?>
                         </label>
                     <?php endforeach; ?>
                 </div>

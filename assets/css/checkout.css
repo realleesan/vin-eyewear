@@ -1481,3 +1481,24 @@ select.cofield__input {
 
     .cohead__title { font-size: 26px; }
 }
+
+
+/* Nút "Tôi đã chuyển khoản — kiểm tra giúp tôi" — FR-TT-05.
+
+   Viền, không đặc: nút đặc ở cột này là hành động chính, mà hành động chính của
+   khách lúc đó là CHỜ, không phải bấm. Đây chỉ là lối đi cho người sốt ruột. */
+.coqr__checked {
+    display: block;
+    margin-top: 12px;
+    padding: 11px 16px;
+    border: 1px solid var(--line-strong, #d8cfc4);
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink);
+    text-align: center;
+    text-decoration: none;
+}
+
+.coqr__checked:hover,
+.coqr__checked:focus-visible { border-color: var(--brand); color: var(--brand); }

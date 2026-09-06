@@ -20,8 +20,13 @@ return [
     // Thời gian sống cookie phiên, tính bằng giây. Mặc định 14 ngày.
     'session_lifetime' => (int) env('SESSION_LIFETIME', 1209600),
 
-    // Số sản phẩm mỗi trang ở danh sách sản phẩm.
-    'per_page' => 12,
+    /* Số sản phẩm mỗi trang ở danh sách sản phẩm.
+
+       KHÔNG CÓ MÃ NÀO ĐỌC KHOÁ NÀY — nguồn thật là ProductModel::PER_PAGE,
+       nơi con số đi kèm phép tính bố cục lưới giải thích vì sao nó là nó.
+       Giữ ở đây để hai chỗ không nói hai số khác nhau: người sửa cấu hình
+       sẽ tin dòng này và đổi nó, rồi không hiểu vì sao trang không đổi. */
+    'per_page' => 9,
 
     /*
      * ─────────────────────────────────────────────────────────────────────────

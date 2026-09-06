@@ -389,6 +389,37 @@ $stars = static function (float $score): string {
                 </div>
 
                 <?php
+                /* ─────────────────────────────────────────────────────────────
+                   THỬ ẢO — FR-SP-22, chỉ hiện với mẫu THẬT SỰ thử được
+
+                   config('ar.frames') liệt kê những gọng có ảnh PNG và toạ độ
+                   bản lề để vẽ lên khuôn mặt. Mẫu nào không nằm trong đó thì
+                   trang thử AR không có gì để đội lên — dẫn khách tới đó là dẫn
+                   họ tới một danh sách gọng khác hẳn thứ họ đang xem.
+
+                   NẰM TRONG form mua hàng, ngay dưới hai nút. <a> lồng trong
+                   <form> là HTML hợp lệ và không gửi form; đặt nó ở đây vì thử
+                   ảo là việc người ta làm TRƯỚC khi bấm mua, nên nó phải ở
+                   trong tầm mắt của người đang cân nhắc hai nút kia. */
+                $arThuDuoc = false;
+
+                if (config('ar.nav_enabled')) {
+                    foreach ((array) config('ar.frames') as $gong) {
+                        if (($gong['slug'] ?? null) === ($product['slug'] ?? '')) {
+                            $arThuDuoc = true;
+                            break;
+                        }
+                    }
+                }
+                ?>
+                <?php if ($arThuDuoc): ?>
+                    <a class="pdbtn pdbtn--ar"
+                       href="/thu-ar?gong=<?= e(rawurlencode((string) $product['slug'])) ?>">
+                        Thử ảo trên khuôn mặt
+                    </a>
+                <?php endif; ?>
+
+                <?php
                 /*
                  * CHỖ CHO LỜI NHẮC VỀ SỐ LƯỢNG — assets/js/product-detail.js điền.
                  *
@@ -448,39 +479,69 @@ $stars = static function (float $score): string {
             <?php if (!$inStock): ?>
                 <section class="pdwait" id="cho-hang" aria-labelledby="pdwait-title">
                     <h2 class="pdwait__title" id="pdwait-title">Thông báo khi có hàng</h2>
-                    <p class="pdwait__lead">
-                        Để lại số điện thoại hoặc email — cửa hàng sẽ liên hệ ngay khi mẫu này về.
-                    </p>
 
                     <?php if ($waitMsg !== null): ?>
                         <p class="pdwait__msg" role="status"><?= e($waitMsg) ?></p>
                     <?php endif; ?>
 
-                    <form class="pdwait__form" method="post" action="/san-pham/cho-hang">
-                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                        <input type="hidden" name="slug" value="<?= e($product['slug']) ?>">
+                    <?php
+                    /* ══════════════════════════════════════════════════════════
+                       CHỈ KHÁCH ĐÃ ĐĂNG NHẬP — FR-SP-17
 
-                        <?php if ($variants !== []): ?>
-                            <label class="pdwait__label" for="cho-pa">Phương án bạn đang chờ</label>
-                            <select class="pdwait__select" id="cho-pa" name="variant_id" required>
-                                <?php foreach ($variants as $v): ?>
-                                    <option value="<?= e($v['id']) ?>"><?= e($v['label']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        <?php endif; ?>
+                       Hai ô "Số điện thoại" và "Email" đã gỡ; thông tin liên hệ
+                       nay lấy từ chính tài khoản.
 
-                        <div class="pdwait__row">
-                            <label class="sr-only" for="cho-phone">Số điện thoại</label>
-                            <input class="pdwait__input" type="tel" id="cho-phone" name="phone"
-                                   placeholder="Số điện thoại" inputmode="tel" autocomplete="tel">
+                       Không phải để bắt người ta đăng ký. Ô liên hệ tự do biến
+                       danh sách chờ thành một hộp thư ai gõ gì cũng được: số sai,
+                       số của người khác, cùng một người để lại bốn số khác nhau
+                       cho bốn mẫu, và không có cách nào gộp hay đối chiếu. Tới
+                       lúc hàng về, nhân viên cầm một danh sách không tra được ai
+                       là ai.
 
-                            <label class="sr-only" for="cho-email">Email</label>
-                            <input class="pdwait__input" type="email" id="cho-email" name="email"
-                                   placeholder="Email (không bắt buộc)" autocomplete="email">
+                       Gắn vào tài khoản thì mỗi lượt chờ có một chủ thật: gọi
+                       đúng người, biết họ đã mua gì, và khi module email chạy
+                       (FR-EM-04) thì địa chỉ gửi đi là địa chỉ đã có chủ. */
+                    ?>
+                    <?php if ($daDangNhap): ?>
+                        <p class="pdwait__lead">
+                            Cửa hàng sẽ liên hệ theo số điện thoại và email trong tài khoản
+                            của bạn ngay khi mẫu này về.
+                        </p>
 
-                            <button type="submit" class="pdwait__go">Báo cho tôi</button>
-                        </div>
-                    </form>
+                        <form class="pdwait__form" method="post" action="/san-pham/cho-hang">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="slug" value="<?= e($product['slug']) ?>">
+
+                            <?php if ($variants !== []): ?>
+                                <label class="pdwait__label" for="cho-pa">Phương án bạn đang chờ</label>
+                                <select class="pdwait__select" id="cho-pa" name="variant_id" required>
+                                    <?php foreach ($variants as $v): ?>
+                                        <option value="<?= e($v['id']) ?>"><?= e($v['label']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
+
+                            <div class="pdwait__row">
+                                <button type="submit" class="pdwait__go">Báo cho tôi khi có hàng</button>
+                            </div>
+                        </form>
+                    <?php else: ?>
+                        <?php
+                        /* LỜI MỜI ĐĂNG NHẬP, KHÔNG PHẢI MỘT DÒNG TỪ CHỐI.
+
+                           ?redirect= đưa khách quay lại đúng mặt hàng này kèm neo
+                           #cho-hang — đăng nhập xong là thấy ngay cái nút họ vừa
+                           định bấm, không phải tự tìm đường về. */
+                        $veLai = '/san-pham/' . rawurlencode((string) $product['slug']) . '#cho-hang';
+                        ?>
+                        <p class="pdwait__lead">
+                            Đăng nhập để cửa hàng báo cho bạn khi mẫu này về — thông tin liên hệ
+                            lấy sẵn từ tài khoản, bạn không phải gõ lại.
+                        </p>
+                        <a class="pdwait__go" href="/auth?redirect=<?= e(rawurlencode($veLai)) ?>">
+                            Đăng nhập để nhận thông báo
+                        </a>
+                    <?php endif; ?>
                 </section>
             <?php endif; ?>
 

@@ -161,6 +161,20 @@ class AppointmentAdminController extends AdminController
             'Đổi trạng thái lịch hẹn sang ' . (BookingModel::STATUSES[$status] ?? $status)
         );
 
+        /* Thư xác nhận — FR-EM-03. CHỈ mốc 'confirmed'.
+
+           STAFF_STATUSES có hai giá trị, và 'done' không sinh thư: khách vừa
+           rời cửa hàng sau buổi khám, một lá thư báo "buổi hẹn đã hoàn tất"
+           không nói với họ điều gì họ chưa biết. 'confirmed' thì ngược lại —
+           đó là câu trả lời cho việc họ đặt lịch rồi ngồi đợi cửa hàng gọi. */
+        if ($status === 'confirmed') {
+            $lich = BookingModel::find($id);
+
+            if ($lich !== null) {
+                EmailEvents::lichHen($lich, 'xac_nhan');
+            }
+        }
+
         /* Không còn khung giờ nào để "trả lại": cửa hàng đã bỏ giới hạn số
            người trên một khung — xem khối chú thích đầu BookingModel.
 
@@ -204,6 +218,15 @@ class AppointmentAdminController extends AdminController
         BookingModel::update($id, ['status' => 'cancelled']);
 
         AuditLogModel::write($chu, 'booking.cancel', 'Huỷ lịch hẹn');
+
+        /* Thư báo huỷ — FR-EM-03, và ở đường NÀY nó quan trọng hơn hẳn đường
+           khách tự huỷ: khách không hề biết buổi hẹn của mình vừa mất nếu
+           không có ai nói. Họ vẫn sẽ tới cửa hàng vào đúng ngày ấy. */
+        $lich = BookingModel::find($id);
+
+        if ($lich !== null) {
+            EmailEvents::lichHen($lich, 'huy');
+        }
 
         flash('admin_success', 'Đã huỷ lịch hẹn.');
         redirect($ve);

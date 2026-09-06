@@ -135,7 +135,28 @@
 
                         <td>
                             <?php if ($daXoa): ?>
-                                <span class="badge badge--cancelled">Đã xoá</span>
+                                <?php
+                                /* NÓI RÕ AI XOÁ NGAY TRÊN HUY HIỆU — FR-KH-02.
+
+                                   Hai trường hợp xử lý khác nhau: tài khoản
+                                   khách tự xoá thì khôi phục phải hỏi chính
+                                   khách, còn tài khoản nhân viên xoá (trùng
+                                   lặp, dọn dẹp) thì Quản trị viên tự quyết. Bắt
+                                   người đọc bấm sang tab khác để biết mình đang
+                                   nhìn loại nào là bắt họ nhớ một thứ mà chính
+                                   dòng này nói được.
+
+                                   NULL — dòng xoá trước đợt 4 — in "Đã xoá"
+                                   trần, không đoán. Ở dải lọc thì NULL BUỘC
+                                   phải xếp vào một tab, nếu không nó rơi ra
+                                   ngoài cả bốn; ở đây không có sức ép đó, nên
+                                   chỗ nào không biết thì nói là không biết. */
+                                $nguonXoa = $kh['deleted_source'] ?? null;
+                                ?>
+                                <span class="badge badge--cancelled">
+                                    <?= $nguonXoa === 'customer' ? 'Khách tự xoá'
+                                        : ($nguonXoa === 'staff' ? 'Nhân viên xoá' : 'Đã xoá') ?>
+                                </span>
                             <?php elseif ($kh['status'] === 'locked'): ?>
                                 <span class="badge badge--out_of_stock">Đã khoá</span>
                             <?php else: ?>

@@ -51,6 +51,8 @@ class ProductDetailController extends BaseController
             'canReview'  => ReviewModel::canReview($userId, $product['id']),
             'reviewMsg'  => flash('review_msg'),
             'reviewOk'   => flash('review_ok') !== null,
+            // Danh sách chờ hàng chỉ mở cho khách đã đăng nhập — FR-SP-17.
+            'daDangNhap' => $userId !== null,
         ]);
     }
 
@@ -132,6 +134,16 @@ class ProductDetailController extends BaseController
             redirect($back);
         }
 
+        /* PHẢI ĐĂNG NHẬP — FR-SP-17, và chốt Ở ĐÂY chứ không chỉ ở view.
+
+           View đã thay biểu mẫu bằng lời mời đăng nhập, nhưng đó là chuyện của
+           trình duyệt. Một POST dựng tay không đi qua view nào cả, và nếu chỗ
+           này không chặn thì cột user_id nhận NULL — đúng cái mà cả yêu cầu
+           này sinh ra để không còn nữa.
+
+           requireLogin() tự chuyển hướng sang /auth kèm đường quay lại. */
+        $userId = AuthMiddleware::requireLogin($back);
+
         $product = $slug === '' ? null : ProductModel::findVisibleBySlug($slug);
 
         if ($product === null) {
@@ -155,31 +167,16 @@ class ProductDetailController extends BaseController
             redirect($back);
         }
 
-        $email = trim((string) ($_POST['email'] ?? ''));
-        $phone = trim((string) ($_POST['phone'] ?? ''));
+        /* KHÔNG CÒN ĐỌC $_POST['email'] VÀ $_POST['phone'] — FR-SP-17.
 
-        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            flash('waitlist_msg', 'Địa chỉ email không hợp lệ.');
-            redirect($back);
-        }
+           Cùng với chúng, cả phần kiểm định dạng email và chuẩn hoá số điện
+           thoại cũng đi theo: không còn ô nào để gõ sai. Thông tin liên hệ do
+           WaitlistModel::dangKy() chép từ hồ sơ tài khoản, và hồ sơ thì đã qua
+           phép kiểm của riêng nó lúc khách đăng ký.
 
-        /* Số điện thoại: giữ đúng thứ khách gõ, chỉ bỏ khoảng trắng và dấu nối
-           để đối chiếu trùng lặp cho khớp. Không ép về một định dạng chuẩn —
-           nhân viên gọi bằng mắt, không phải bằng máy. */
-        if ($phone !== '') {
-            $phone = preg_replace('/[\s.\-()]/', '', $phone) ?? $phone;
-
-            if (!preg_match('/^\+?\d{9,15}$/', $phone)) {
-                flash('waitlist_msg', 'Số điện thoại không hợp lệ.');
-                redirect($back);
-            }
-        }
-
-        if ($email === '' && $phone === '') {
-            flash('waitlist_msg', 'Vui lòng để lại email hoặc số điện thoại.');
-            redirect($back);
-        }
-
+           Tài khoản chưa có số điện thoại lẫn email vẫn đăng ký chờ được: dòng
+           chờ mang user_id, nên nhân viên vẫn mở được hồ sơ khách từ màn Chờ
+           hàng. Chặn ở đây là chặn nhầm người — họ đã có tài khoản thật. */
         /* BẢNG CHƯA CÓ THÌ NÓI THẲNG, ĐỪNG ĐỔ 500 VÀO MẶT KHÁCH.
 
            Mã lên hosting bằng FTP tự động còn migration thì bấm tay, nên có
@@ -195,12 +192,7 @@ class ProductDetailController extends BaseController
             redirect($back);
         }
 
-        $moi = WaitlistModel::dangKy(
-            $product['id'],
-            $variantId,
-            $email !== '' ? $email : null,
-            $phone !== '' ? $phone : null
-        );
+        $moi = WaitlistModel::dangKy($product['id'], $variantId, $userId);
 
         /* Đăng ký lại lần hai KHÔNG phải lỗi — người ta chỉ không nhớ mình đã
            đăng ký. Nói cho họ yên tâm thay vì báo một cái lỗi họ không gây ra. */

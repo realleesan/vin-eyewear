@@ -1573,8 +1573,32 @@ class AuthController extends BaseController
             redirect('/tai-khoan?muc=don-hang');
         }
 
-        $added = 0;
+        /* ─────────────────────────────────────────────────────────────────────
+           MUA LẠI PHẢI DỰNG LẠI ĐÚNG DÒNG HÀNG CŨ — FR-HS-10
+
+           Bản trước ghi vào giỏ đúng một khoá: ['quantity' => n], dưới khoá là
+           product_id trần. Ba thứ mất trắng mỗi lần bấm "Mua lại":
+
+             · TICK. Dòng giỏ không có 'selected' nên lines() đọc ra false —
+               khách bấm Mua lại, sang giỏ, và không món nào được chọn. Nút
+               Thanh toán không làm gì cả, và không có chữ nào nói vì sao.
+             · PHƯƠNG ÁN màu/cỡ. Khoá là product_id trần nên hai biến thể khác
+               nhau của cùng mặt hàng đè lên nhau, và biến thể đã mua thì biến
+               mất — khách mua lại chiếc gọng đen size 52 và nhận về "mặc định".
+             · TRÒNG. lens_id, kiểu tròng và số đo đều không được chép, nên một
+               đơn kính cận mua lại thành một cái gọng không tròng.
+
+           Nay dựng đúng khuôn dòng giỏ mà CartController::add() sinh ra, và
+           dùng chính CartController::key() để tính khoá — chép luật khoá sang
+           đây là tạo ra chỗ cho hai bên lệch nhau.
+
+           BIẾN THỂ KHÔNG CÒN BÁN thì bỏ QUA CẢ DÒNG, không lùi về sản phẩm
+           trần: khách chọn màu đó vì họ muốn màu đó, và lặng lẽ đổi sang màu
+           khác là một cách làm sai đơn mà không ai kịp nhận ra.
+           ───────────────────────────────────────────────────────────────────── */
+        $added   = 0;
         $skipped = 0;
+        $mattrong = 0;
 
         foreach (OrderModel::items($order['id']) as $line) {
             $product = $line['product_id'] === null ? null : ProductModel::find($line['product_id']);
@@ -1586,8 +1610,83 @@ class AuthController extends BaseController
                 continue;
             }
 
-            $current = (int) ($_SESSION['cart'][$product['id']]['quantity'] ?? 0);
-            $_SESSION['cart'][$product['id']] = ['quantity' => $current + $qty];
+            $variantId = $line['variant_id'] ?? null;
+            $variant   = null;
+
+            if ($variantId !== null) {
+                $variant = VariantModel::findForProduct($variantId, $product['id']);
+
+                if ($variant === null || (int) $variant['is_active'] !== 1) {
+                    $skipped++;
+                    continue;
+                }
+            }
+
+            /* TỒN KHO CỦA ĐÚNG THỨ SẼ BÁN, không phải của mặt hàng cha.
+
+               VariantModel::reserve() trừ kho của BIẾN THỂ và không đụng tới
+               `products`.`stock_quantity`, nên con số ở mặt hàng cha đứng yên
+               ở bất kỳ giá trị nào nhân viên gõ. Kiểm mỗi nó thì một phương
+               án đã hết hàng vẫn lọt vào giỏ, được TICK SẴN, cộng vào tổng
+               tiền, và khách chỉ bị chặn ở bước đặt hàng.
+
+               VariantModel::inStock() hỏi đúng chỗ — cùng hàm mà
+               CartController::add() dùng. */
+            if (!VariantModel::inStock($product, $variant, $qty)) {
+                $skipped++;
+                continue;
+            }
+
+            /* PHẦN TRÒNG — chỉ dựng lại khi biết ĐỦ kiểu và gói.
+
+               Giá tròng nằm ở giao điểm kiểu × gói, nên thiếu một vế là không
+               tra được giá. Đơn đặt TRƯỚC đợt 5 không có cột `lens_type`, và
+               với chúng thì bỏ phần tròng ra rồi NÓI cho khách biết còn hơn
+               đoán một kiểu tròng rồi mài sai. */
+            $lensId   = $line['lens_id'] ?? null;
+            $lensType = $line['lens_type'] ?? null;
+            $rx       = $line['prescription'] ?? null;
+
+            if ($lensId !== null && $lensType === null) {
+                $lensId = null;
+                $rx     = null;
+                $mattrong++;
+            }
+
+            $key = CartController::key(
+                (string) $product['id'],
+                $variantId,
+                $lensId,
+                $rx,
+                $lensType
+            );
+
+            $_SESSION['cart_seq'] = (int) ($_SESSION['cart_seq'] ?? 0) + 1;
+
+            /* CHẶN TRẦN SỐ LƯỢNG. Bấm "Mua lại" bốn lần trên một đơn 3 chiếc
+               mà không chặn thì dòng giỏ thành 12 chiếc trên một kho còn 5 —
+               và khách chỉ biết ở bước đặt hàng. Cùng trần mà giỏ hàng dùng. */
+            $sanCo = (int) ($_SESSION['cart'][$key]['quantity'] ?? 0);
+            $tran  = VariantModel::stockOf($product, $variant);
+            $soMoi = $tran > 0 ? min($sanCo + $qty, $tran) : $sanCo + $qty;
+            $lensPk = $lensId !== null || $lensType !== null
+                ? LensModel::combo($lensId, $lensType)
+                : null;
+
+            $_SESSION['cart'][$key] = [
+                'product_id' => $product['id'],
+                'variant_id' => $variantId,
+                'quantity'   => $soMoi,
+                'added_seq'  => $_SESSION['cart_seq'],
+                // Tick sẵn — khách vừa chủ động bấm "Mua lại" cho cả đơn này.
+                'selected'   => true,
+                'lens_id'    => $lensId,
+                'lens_type'  => $lensType,
+                'rx'         => $rx,
+                'gia_luc_them' => VariantModel::priceOf($product, $variant)
+                                  + (int) ($lensPk['price'] ?? 0),
+            ];
+
             $added++;
         }
 
@@ -1596,9 +1695,21 @@ class AuthController extends BaseController
             redirect('/tai-khoan?muc=don-hang');
         }
 
-        flash('cart_success', $skipped === 0
+        $cau = $skipped === 0
             ? 'Đã thêm lại sản phẩm của đơn ' . $order['code'] . ' vào giỏ hàng.'
-            : sprintf('Đã thêm %d sản phẩm vào giỏ. %d sản phẩm không còn bán nên đã bỏ qua.', $added, $skipped));
+            : sprintf('Đã thêm %d sản phẩm vào giỏ. %d sản phẩm không còn bán nên đã bỏ qua.', $added, $skipped);
+
+        /* NÓI RA phần tròng bị bỏ, đừng để khách phát hiện ở bước thanh toán.
+           Chỉ xảy ra với đơn đặt trước đợt 5 (chưa có cột `lens_type`), nên câu
+           này sẽ tự hết theo thời gian. */
+        if ($mattrong > 0) {
+            $cau .= sprintf(
+                ' Riêng %d sản phẩm có cắt tròng: vui lòng chọn lại kiểu tròng và số đo trong giỏ.',
+                $mattrong
+            );
+        }
+
+        flash('cart_success', $cau);
 
         redirect('/gio-hang');
     }

@@ -923,6 +923,16 @@ CREATE TABLE `stock_waitlist` (
     `id`          CHAR(36)     NOT NULL DEFAULT (UUID()),
     `product_id`  CHAR(36)     NOT NULL,
     `variant_id`  CHAR(36)     NULL,
+    /* CHỦ CỦA LƯỢT CHỜ — FR-SP-17, thêm ở đợt 5.
+
+       Đăng ký chờ hàng nay chỉ mở cho khách đã đăng nhập, và `email`/`phone`
+       bên dưới là bản CHỤP lấy từ hồ sơ lúc đăng ký chứ không còn là hai ô tự
+       do. Chép lại vì màn Chờ hàng phải đọc được cả khi khách đã xoá tài khoản.
+
+       ON DELETE SET NULL chứ không CASCADE: khách xoá tài khoản thì lượt chờ
+       vẫn là dữ liệu vận hành ("mẫu này có mấy người hỏi"). CASCADE là lặng lẽ
+       xoá mất một phần nhu cầu thị trường. */
+    `user_id`     CHAR(36)     NULL DEFAULT NULL,
     `email`       VARCHAR(190) NULL,
     `phone`       VARCHAR(20)  NULL,
     -- Đã báo cho người này chưa, và lúc nào. NULL = đang chờ.
@@ -932,6 +942,9 @@ CREATE TABLE `stock_waitlist` (
     KEY `idx_waitlist_cho` (`notified_at`, `created_at`),
     KEY `idx_waitlist_product` (`product_id`),
     KEY `idx_waitlist_variant` (`variant_id`),
+    KEY `idx_waitlist_user` (`user_id`),
+    CONSTRAINT `fk_waitlist_user` FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL,
     CONSTRAINT `fk_waitlist_product` FOREIGN KEY (`product_id`)
         REFERENCES `products` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_waitlist_variant` FOREIGN KEY (`variant_id`)
@@ -1330,11 +1343,35 @@ CREATE TABLE `order_items` (
     --
     -- `prescription` NULL = khách chưa biết độ, đo tại cửa hàng.
     `lens_id`       VARCHAR(40)  NULL,
+    /* KIỂU tròng (đơn/hai/đa) — FR-HS-10, thêm ở đợt 5.
+
+       LensModel::combo() gộp kiểu và gói thành một chuỗi `lens_name` để hiển
+       thị, và với việc IN thì thế là đủ. Nhưng nút "Mua lại" phải DỰNG LẠI
+       lựa chọn, mà giá tròng nằm ở giao điểm kiểu × gói — một mình `lens_id`
+       không tra được giá. Không có cột này thì mua lại hoặc bỏ mất phần tròng,
+       hoặc phải tách ngược một chuỗi hiển thị.
+
+       Cũng lấp một lỗ hổng báo cáo: trước đợt 5 không câu SQL nào trả lời được
+       "tháng này bán bao nhiêu tròng đa tròng".
+
+       Không khoá ngoại — cùng lý do với `lens_id` ngay trên. */
+    `lens_type`     VARCHAR(32)  NULL DEFAULT NULL,
     `lens_name`     VARCHAR(160) NULL,
     `lens_price`    BIGINT       NOT NULL DEFAULT 0,
     `prescription`  VARCHAR(255) NULL,
     `product_name` VARCHAR(255) NOT NULL,
     `unit_price`   BIGINT       NOT NULL,
+    /* GIÁ VỐN TẠI THỜI ĐIỂM BÁN — FR-DH-13.
+
+       `products`.`cost_price` là giá vốn HÔM NAY; nhập lô mới với giá khác là
+       mọi đơn cũ đổi lợi nhuận theo, tức không đơn nào tính lại được. Cùng lý
+       lẽ đã chép `product_name` và `unit_price` vào đây.
+
+       Giá vốn của GỌNG, MỖI ĐƠN VỊ — không gồm tiền tròng (bảng giá tròng chỉ
+       có giá bán) và không gồm chênh giá theo biến thể.
+
+       NULL = chưa biết, khác hẳn 0 = nhập không mất tiền. */
+    `cost_price`   BIGINT       NULL DEFAULT NULL,
     `quantity`     INT          NOT NULL DEFAULT 1,
     `line_total`   BIGINT       NOT NULL,
     PRIMARY KEY (`id`),
@@ -1483,6 +1520,33 @@ CREATE TABLE `refund_requests` (
         REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================================
+-- CẤU HÌNH CỬA HÀNG TỰ SỬA ĐƯỢC — FR-NK-04, FR-TT-11, thêm 06/09/2026 (đợt 5)
+--
+-- Chỗ cho những giá trị NGƯỜI VẬN HÀNH quyết định, khác hẳn config/*.php vốn là
+-- chỗ cho những giá trị LẬP TRÌNH VIÊN quyết định. Ranh giới ấy đáng giữ: một
+-- khoá vào nhầm nơi thì hoặc chủ cửa hàng không sửa được thứ họ nên sửa, hoặc họ
+-- sửa được thứ đủ sức làm hỏng trang.
+--
+-- Xem app/models/SettingModel.php.
+-- ============================================================================
+CREATE TABLE `app_settings` (
+    `name`       VARCHAR(64)  NOT NULL,
+    `value`      TEXT         NULL DEFAULT NULL,
+
+    -- Ai sửa lần cuối. SET NULL: người sửa nghỉ việc và bị xoá tài khoản thì
+    -- giá trị vẫn phải còn — nó đang chi phối những con số cả cửa hàng đọc.
+    -- Vết đầy đủ (cũ -> mới, ai, lúc nào) nằm ở `customer_audit_logs`.
+    `updated_by` CHAR(36)     NULL DEFAULT NULL,
+    `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                              ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`name`),
+    KEY `idx_settings_by` (`updated_by`),
+    CONSTRAINT `fk_settings_by` FOREIGN KEY (`updated_by`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Sổ giao dịch chuyển khoản do SePay báo về qua webhook.
 -- Xem migration 2026-08-22-sepay-doi-soat và config/sepay.php.
 --
@@ -1512,6 +1576,124 @@ CREATE TABLE `sepay_transactions` (
     KEY `idx_sepay_order` (`order_id`),
     CONSTRAINT `fk_sepay_order` FOREIGN KEY (`order_id`)
         REFERENCES `orders` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ----------------------------------------------------------------------------
+-- MẪU THƯ VÀ HÀNG CHỜ GỬI — đợt 6, FR-EM-01..09
+--
+-- Nguồn gốc: database/migrations/2026-09-06-dot-6-email.sql. File ấy còn nạp
+-- 15 mẫu thư tiếng Việt bằng INSERT IGNORE — KHÔNG chép phần dữ liệu ấy xuống
+-- đây, cùng lối với mọi bảng khác trong file này: schema.sql mô tả CẤU TRÚC.
+-- Một CSDL dựng từ file này sẽ có hai bảng rỗng, và EmailQueueModel::xepHang()
+-- ghi error_log "không có mẫu thư" cho tới khi migration đợt 6 được chạy.
+--
+-- VÌ SAO XẾP HÀNG CHỨ KHÔNG GỬI THẲNG — FR-EM-06 cấm việc gửi thư chặn nghiệp
+-- vụ chính, và hosting hiện tại (InfinityFree miễn phí) không gửi được lá nào:
+-- mail() bị vô hiệu hoá, cổng SMTP ra ngoài bị chặn. Thư nằm lại ở trạng thái
+-- 'cho' cho tới ngày cửa hàng nối được một đường gửi thật, rồi cả hàng chờ tự
+-- chảy đi. Lý lẽ đầy đủ nằm trong migration và trong app/models/EmailQueueModel.php.
+--
+-- NỘI DUNG DỰNG NGAY LÚC SỰ KIỆN, không dựng lúc gửi: một lá thư "đơn VE-1234
+-- đã xác nhận" nằm chờ ba ngày rồi đơn ấy bị huỷ — dựng lại lúc gửi là gửi đi
+-- một câu nói về hiện tại dưới tên một sự kiện quá khứ.
+-- ----------------------------------------------------------------------------
+CREATE TABLE `email_templates` (
+    `key`        VARCHAR(48)  NOT NULL,
+    `nhan`       VARCHAR(120) NOT NULL,
+    `mo_ta`      VARCHAR(255) NULL DEFAULT NULL,
+    -- Danh sách biến dùng được, phân tách bằng dấu phẩy. Màn sửa mẫu in ra.
+    `bien`       VARCHAR(500) NULL DEFAULT NULL,
+
+    `subject_vi` VARCHAR(200) NOT NULL,
+    `body_vi`    TEXT         NOT NULL,
+    `subject_en` VARCHAR(200) NULL DEFAULT NULL,
+    `body_en`    TEXT         NULL DEFAULT NULL,
+
+    /* TẮT ĐƯỢC TỪNG MẪU. Cửa hàng có thể thấy thư "đơn đang chuẩn bị" là thừa
+       mà vẫn muốn giữ bốn mốc còn lại. Không có cờ này thì lựa chọn duy nhất
+       của họ là xoá mẫu — và xoá xong thì không dựng lại được câu chữ. */
+    `bat`        TINYINT(1)   NOT NULL DEFAULT 1,
+
+    `updated_by` CHAR(36)     NULL DEFAULT NULL,
+    `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                              ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`key`),
+    KEY `idx_tpl_by` (`updated_by`),
+    CONSTRAINT `fk_tpl_by` FOREIGN KEY (`updated_by`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `email_queue` (
+    `id`             CHAR(36)     NOT NULL DEFAULT (UUID()),
+
+    -- Mã sự kiện, khớp `email_templates`.`key`. KHÔNG khoá ngoại: xoá một mẫu
+    -- thư không được xoá theo lịch sử đã gửi.
+    `loai`           VARCHAR(48)  NOT NULL,
+
+    `nguoi_nhan`     VARCHAR(190) NOT NULL,
+    -- Chủ tài khoản, nếu thư gửi cho khách có tài khoản. NULL với khách vãng lai.
+    `user_id`        CHAR(36)     NULL DEFAULT NULL,
+
+    /* NGÔN NGỮ TẠI THỜI ĐIỂM PHÁT SINH SỰ KIỆN — FR-EM-07, FR-SN-19.
+       Đợt 6 luôn ghi 'vi'. Cột có sẵn để đợt 9 không phải đụng lại bảng này,
+       và để một lá thư nằm trong hàng chờ qua ngày đổi ngôn ngữ vẫn gửi đi
+       bằng thứ tiếng khách đang dùng lúc đặt hàng. */
+    `ngon_ngu`       VARCHAR(5)   NOT NULL DEFAULT 'vi',
+
+    `lien_quan_loai` VARCHAR(24)  NULL DEFAULT NULL,
+    `lien_quan_id`   CHAR(36)     NULL DEFAULT NULL,
+
+    `subject`        VARCHAR(255) NOT NULL,
+    `body`           MEDIUMTEXT   NOT NULL,
+
+    /* 'cho' chờ gửi · 'xong' đã gửi · 'hong' thử đủ số lần vẫn không được
+       · 'bo' người vận hành chủ động bỏ.
+
+       'hong' KHÁC 'bo': cái đầu là hệ thống bó tay, cái sau là quyết định của
+       con người. Gộp làm một thì màn quản trị không phân biệt được "cần xem
+       lại cấu hình" với "việc này thôi không gửi nữa". */
+    `trang_thai`     VARCHAR(12)  NOT NULL DEFAULT 'cho',
+    `so_lan_thu`     SMALLINT     NOT NULL DEFAULT 0,
+    `loi_gan_nhat`   VARCHAR(500) NULL DEFAULT NULL,
+
+    /* Sớm nhất lúc nào được thử (lại). Dùng cho cả hai việc:
+         · giãn cách giữa các lần thử sau khi hỏng
+         · THƯ HẸN GIỜ — nhắc lịch hẹn trước 1 ngày, cảnh báo đơn sắp tự huỷ
+           trước 2 giờ. Xếp hàng ngay lúc biết, đặt giờ gửi ở tương lai. */
+    `gui_sau`        DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `gui_luc`        DATETIME     NULL DEFAULT NULL,
+
+    `khoa_chong_trung` VARCHAR(120) NULL DEFAULT NULL,
+
+    `created_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                  ON UPDATE CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_email_chong_trung` (`khoa_chong_trung`),
+    /* Chỉ mục của BỘ QUÉT: nó luôn hỏi đúng một câu — "thư nào đang chờ và đã
+       tới giờ gửi chưa". Hai cột theo đúng thứ tự ấy. */
+    KEY `idx_email_quet` (`trang_thai`, `gui_sau`),
+    KEY `idx_email_loai` (`loai`),
+    KEY `idx_email_user` (`user_id`),
+    KEY `idx_email_lien_quan` (`lien_quan_loai`, `lien_quan_id`),
+    /* Sắp xếp của MÀN QUẢN TRỊ, không phải của bộ quét.
+
+       EmailQueueModel::danhSach() sắp `FIELD(trang_thai, …), created_at DESC`.
+       FIELD() thì không chỉ mục nào giúp được, nhưng `created_at` thì có — và
+       đây là bảng duy nhất trong đợt này chỉ có lớn lên, nên không có chỉ mục
+       thì màn Hàng chờ thư là câu truy vấn xuống cấp đầu tiên: quét toàn bảng
+       rồi filesort ở mỗi lần mở trang.
+
+       Cột đầu là `trang_thai` để viên lọc (WHERE trang_thai = …) dùng chung
+       được đúng chỉ mục này thay vì cần thêm một cái nữa. */
+    KEY `idx_email_so` (`trang_thai`, `created_at`),
+
+    -- SET NULL: khách xoá tài khoản thì sổ thư đã gửi vẫn là dữ liệu vận hành.
+    CONSTRAINT `fk_email_user` FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------

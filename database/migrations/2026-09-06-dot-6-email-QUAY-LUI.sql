@@ -1,0 +1,45 @@
+-- ============================================================================
+-- QUAY LUI đợt 6 — gỡ hai bảng email
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- MẤT GÌ
+--
+--   email_templates  MẤT câu chữ cửa hàng đã sửa. Bản mặc định dựng lại được
+--                    bằng cách chạy lại migration, nhưng mọi chỉnh sửa thì
+--                    không.
+--   email_queue      MẤT sổ thư đã gửi và cả hàng chờ chưa gửi. Với hosting
+--                    hiện tại (không gửi được thư) thì hàng chờ chính là TOÀN
+--                    BỘ nội dung của bảng — gỡ nó là vứt đi mọi lá thư đang
+--                    đợi ngày cửa hàng nối được đường gửi.
+--
+-- ĐẾM TRƯỚC KHI CHẠY:
+--
+--   SELECT trang_thai, COUNT(*) FROM email_queue GROUP BY trang_thai;
+--   SELECT COUNT(*) FROM email_templates WHERE updated_by IS NOT NULL;
+--
+-- Khác 0 thì XUẤT RA TRƯỚC:
+--
+--   mysqldump -u <user> -p <ten_csdl> email_queue email_templates > email-luu.sql
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- MÃ NGUỒN ĐỢT 6 VẪN CHẠY ĐƯỢC SAU KHI QUAY LUI
+--
+-- Mọi chỗ đụng tới hai bảng này đều hỏi EmailQueueModel::available() hoặc
+-- EmailTemplateModel::available() trước. Chạy file này KHÔNG bắt buộc phải
+-- deploy ngược mã nguồn: trang vẫn chạy, chỉ là không thư nào được xếp hàng
+-- nữa và màn Email trong khu quản trị nói "chưa nâng cấp cơ sở dữ liệu".
+--
+-- DROP TABLE IF EXISTS là idempotent.
+-- ============================================================================
+
+DROP TABLE IF EXISTS `email_queue`;
+DROP TABLE IF EXISTS `email_templates`;
+
+-- ----------------------------------------------------------------------------
+-- SAU KHI CHẠY
+--
+--   SHOW TABLES LIKE 'email_%';   -- không ra dòng nào
+--
+-- Rồi mở /quan-tri/email: phải hiện câu "chưa nâng cấp cơ sở dữ liệu", không
+-- phải một trang lỗi.
+-- ----------------------------------------------------------------------------

@@ -4650,3 +4650,89 @@ a.astatus__save { text-decoration: none; }
     padding-top: 18px;
     border-top: 1px dashed var(--a-panel-line);
 }
+
+
+/* Dòng nói vì sao khách chưa đăng nhập được — FR-KH-08.
+
+   Nền ngà cùng họ với .anote: quy ước của khu quản trị là hộp ngà để đọc chữ.
+   Nó chỉ hiện khi tài khoản ĐANG bị khoá 15 phút, nên không có nguy cơ nhiễu. */
+.acus__locknote {
+    margin: 0 0 10px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--brand);
+    border-radius: 8px;
+    background: #fdf9f1;
+    font-size: var(--fs-body-sm);
+    line-height: 1.65;
+    color: #5b4f42;
+}
+
+.acus__locknote strong { color: var(--ink); }
+
+
+/* Hộp đặt mốc tính doanh thu — FR-NK-04.
+
+   Bung ra ngay dưới dòng dẫn của bảng tổng quan khi có ?moc=1, không phải một
+   trang riêng: người muốn đổi mốc là người vừa đọc dòng ấy và thấy nó sai. */
+.amoc {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--a-panel-line);
+    border-radius: 10px;
+    background: #faf5ea;
+}
+
+.amoc label {
+    font-size: var(--fs-body-sm);
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.amoc input[type="date"] {
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-family: var(--font-sans);
+    font-size: var(--fs-body-sm);
+    color: var(--ink);
+}
+
+/* Câu nhắc chiếm trọn một hàng dưới cụm nút — nó là một câu để đọc, không phải
+   một nhãn đứng cạnh ô. */
+.amoc .field__hint { flex: 1 0 100%; margin: 0; }
+
+.ahead__link { color: var(--brand); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ===========================================================================
+   MODULE THƯ — đợt 6
+   =========================================================================== */
+
+/* KHUNG XEM RUỘT MỘT LÁ THƯ.
+
+   Là <iframe sandbox srcdoc> chứ không phải một <div> in HTML vào: ruột thư là
+   chuỗi trong CSDL có mang tên và ghi chú do khách tự nhập, và nhả nó thẳng
+   vào trang quản trị là cho nó chạy trong cùng ngữ cảnh với phiên đăng nhập
+   của quản trị viên. Lý do đầy đủ ở admin/email/index.php.
+
+   Nền TRẮNG chứ không nền ngà của khu quản trị: đây là cửa sổ nhìn sang một
+   trang khác, và thư thật đến hộp thư của khách trên nền trắng. Cho nó mang
+   màu của trang quản trị là vẽ ra một thứ không giống cái khách sẽ thấy.
+
+   Chiều cao cố định vì nội dung nằm trong iframe: trình duyệt không co khung
+   theo ruột của nó, và không có cách nào đo ruột ấy mà không chạy script bên
+   trong — thứ sandbox vừa cấm. 420px vừa đủ cho một lá thư giao dịch điển
+   hình; dài hơn thì cuộn trong khung. */
+.amail__xem {
+    display: block;
+    width: 100%;
+    height: 420px;
+    border: 1px solid var(--a-panel-line);
+    border-radius: 10px;
+    background: #fff;
+}

@@ -40,27 +40,22 @@
 
 return [
 
-    /*
-     * QUY ĐỔI CỠ GỌNG — theo TỔNG BỀ RỘNG GỌNG, không theo bề rộng tròng.
-     *
-     * Bề rộng tròng (số đầu của 52□18-145) là thứ ai cũng nhìn thấy, nhưng nó
-     * không nói được gọng có vừa mặt hay không: một gọng tròng 52 với cầu 20
-     * rộng hơn hẳn gọng tròng 54 với cầu 15. Tổng bề rộng gộp cả hai tròng,
-     * cầu kính và hai bản lề — đó mới là con số so với bề ngang khuôn mặt.
-     *
-     * Ngưỡng lấy theo bảng thông dụng của ngành. `max` là chặn TRÊN CÓ BAO GỒM
-     * (khác PRICE_RANGES của ProductController, nơi max là chặn hở) vì đây là
-     * số nguyên mm: 132 và 133 là hai giá trị liền nhau, không có gì lọt giữa.
-     *
-     * Ngoài dải thì KHÔNG ép vào cỡ gần nhất — trang bỏ trống huy hiệu. Một
-     * gọng rộng 160mm là gọng thể thao ôm mặt, gọi nó là "cỡ L" thì người mua
-     * theo cỡ L sẽ nhận về thứ không giống mấy mẫu L còn lại.
-     */
-    'sizes' => [
-        'S' => ['min' => 125, 'max' => 132, 'faces' => 'Trái xoan nhỏ, tam giác'],
-        'M' => ['min' => 133, 'max' => 140, 'faces' => 'Tròn, trái xoan, vuông nhẹ'],
-        'L' => ['min' => 141, 'max' => 148, 'faces' => 'Vuông, chữ nhật, mặt dài'],
-    ],
+    /* KHÔNG CÒN BẢNG 'sizes' Ở ĐÂY — gỡ ở FR-SP-09 cùng EyewearSpecs::sizeKey()
+       và ::sizeTable().
+
+       Nó quy tổng bề rộng gọng thành ba hạng S/M/L kèm gợi ý dáng mặt. Hạng cỡ
+       ấy hứa một chuẩn chung mà ngành kính không có: 138mm là "M" ở bảng này và
+       "L" ở bảng của hãng khác, nên khách mua theo chữ cái nhận về thứ không
+       vừa. Ba con số milimét thật và chuỗi 52□18-145 in trên càng kính thì
+       không mơ hồ như thế, và chúng vẫn còn nguyên.
+
+       Phần gợi ý dáng mặt KHÔNG mất theo: nó nay đọc từ cột `face_shapes` của
+       từng mẫu (config 'face_shapes' bên dưới), tức do người bán chọn cho đúng
+       mẫu chứ không suy ra từ một con số milimét.
+
+       ĐỪNG NHẦM VỚI 'size_classes' ở cuối file — đó là cột `size_class` do nhân
+       viên tự chọn trong form sản phẩm, không hiện ra trang bán hàng, và không
+       liên quan tới bảng đã gỡ này. */
 
     /*
      * PHÂN LOẠI KÍNH — ba nhóm, và chúng KHÔNG phải danh mục.
@@ -242,8 +237,11 @@ return [
         'female' => 'Nữ',
     ],
 
-    /* Size tổng quát — cột `size_class`. Cùng ba khoá với bảng 'sizes' ở đầu
-       file, nơi có ngưỡng mm tương ứng. */
+    /* Size tổng quát — cột `size_class`, nhân viên tự chọn trong form sản phẩm.
+
+       KHÔNG hiện ra trang bán hàng ở đâu cả, và không còn bảng ngưỡng mm nào đi
+       kèm: bảng 'sizes' quy từ bề rộng gọng đã gỡ ở FR-SP-09 (xem khối đầu
+       file). Ba khoá dưới đây chỉ là ba chữ cái để lọc nội bộ. */
     'size_classes' => ['S' => 'S', 'M' => 'M', 'L' => 'L'],
 
     /* Loại tròng nhận đặt kèm — CSV trong cột `lens_types`. */

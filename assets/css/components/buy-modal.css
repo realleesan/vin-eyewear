@@ -913,3 +913,21 @@ body:has(.bmodal) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
     .is-buy-busy::after { display: none; }
 }
+
+
+/* Bước chọn gói tròng không có gói nào để chọn — FR-GH-09.
+
+   Chỉ xảy ra khi bảng giá thiếu cả một cột (mọi ô của kiểu tròng ấy còn trống).
+   Trước đây bước này không bao giờ rỗng vì ô trống vẫn hiện thành "Báo giá sau";
+   nay chúng bị ẩn, nên phải có chữ thay vào chỗ trống — một bước trắng đọc như
+   trang hỏng. */
+.blens__empty {
+    margin: 4px 0 0;
+    padding: 14px 16px;
+    border: 1px dashed var(--line-strong, #d8cfc4);
+    border-radius: 10px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--muted, #7a6d5f);
+    text-align: center;
+}
