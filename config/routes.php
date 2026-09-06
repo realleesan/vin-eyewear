@@ -495,6 +495,26 @@ return [
      * tài khoản cửa hàng — thứ tuyệt đối không được xảy ra vì ai đó bấm F5 hay
      * dán lại một cái link.
      */
+    /*
+     * SỔ GIAO DỊCH NGÂN HÀNG — FR-SG-01..07, Quyết định E06.
+     *
+     * Hai đường, MỘT mức quyền: MỌI NHÂN VIÊN, cả xem lẫn gắn. SRS mục 5.2.2
+     * ghi hai dòng riêng và cả hai đều là "NV"; dòng gắn kèm ghi chú "Có ghi
+     * vết".
+     *
+     * Khác hẳn /hoan-tien ngay dưới, nơi xem là NV còn duyệt là QT — và sự
+     * khác nhau ấy đúng: duyệt hoàn tiền là quyết định CHI tiền ra khỏi tài
+     * khoản cửa hàng, còn gắn giao dịch chỉ là nhận ra một khoản ĐÃ VỀ thuộc
+     * về ai. Việc sau là đối chiếu sổ sách, và người làm nó là người trực quầy
+     * đang nghe khách nói "em chuyển rồi mà".
+     *
+     * '/gan' là POST: nó cộng tiền vào một đơn và có thể đẩy đơn sang "đã
+     * thanh toán". Thứ đó không được xảy ra vì ai đó bấm F5.
+     */
+    'quan-tri/doi-soat'           => 'SepayAdminController@index',
+    'quan-tri/doi-soat/gan'       => 'SepayAdminController@gan',            // POST
+    'quan-tri/doi-soat/bo-qua'    => 'SepayAdminController@boQua',          // POST
+
     'quan-tri/hoan-tien'          => 'RefundAdminController@index',
     'quan-tri/hoan-tien/duyet'    => 'RefundAdminController@approve',        // POST
     'quan-tri/hoan-tien/tu-choi'  => 'RefundAdminController@reject',         // POST

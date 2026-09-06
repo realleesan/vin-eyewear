@@ -527,7 +527,23 @@ class PrescriptionRecordModel extends BaseModel
             return ['ok' => false, 'error' => 'Phải nhập ngày đo.'];
         }
 
-        $d   = DateTime::createFromFormat('Y-m-d', $ngay);
+        /* DẤU CHẤM THAN TRONG '!Y-m-d' LÀ THỨ QUAN TRỌNG NHẤT Ở KHỐI NÀY.
+
+           Không có nó, createFromFormat() lấp giờ-phút-giây bằng ĐỒNG HỒ HIỆN
+           TẠI. Ngày hôm nay khi ấy thành "hôm nay 14:37:12", lớn hơn
+           new DateTime('today') vốn là "hôm nay 00:00:00" — và phép chặn ngày
+           tương lai ngay dưới sẽ từ chối MỌI bản ghi đề ngày HÔM NAY, trừ đúng
+           giây đầu tiên sau nửa đêm.
+
+           Lỗi này nằm im từ khi module hồ sơ ra đời (26/08/2026) vì kỹ thuật
+           viên nhập liệu gần như luôn đề ngày đo là một ngày đã qua. Đợt 7 mới
+           chạm vào nó: UC-03 luồng A1 lưu số khách vừa khai với ngày đo là
+           HÔM NAY, và ô tick ấy sẽ không bao giờ hoạt động.
+
+           ĐÚNG CÙNG MỘT LỖI đã sửa ở RefundRequestModel::danhDauDaHoan() hồi
+           đợt 4 — khối chú thích ở đó giải thích dài hơn. Hai chỗ, cùng một
+           bẫy của DateTime, cách nhau hai tuần. */
+        $d   = DateTime::createFromFormat('!Y-m-d', $ngay);
         $loi = DateTime::getLastErrors();
 
         if ($d === false || ($loi !== false && ($loi['warning_count'] ?? 0) > 0)) {

@@ -338,6 +338,25 @@ MIGRATIONS=(
     # sổ mọi lá thư đã gửi cho khách — thứ duy nhất trả lời được câu "cửa hàng
     # đã báo cho khách chưa".
     "2026-09-06-dot-6-email.sql|table|email_queue|"
+
+    # ── Đợt 7 · sổ đối soát ngân hàng và hồ sơ đo mắt trên đơn ─────────────
+    #
+    # Bốn việc, hai bảng: hai cột dấu vết gắn tay và một chỉ mục cho
+    # `sepay_transactions`, cùng cột `prescription_id` cho `order_items`.
+    #
+    # Mốc là CỘT `order_items`.`prescription_id` — việc CUỐI CÙNG file tạo ra,
+    # theo đúng luật chung "lấy thứ sau cùng làm mốc" đã ghi ở đợt 6. Một lần
+    # chạy dở dang (đứt giữa hai câu ALTER, và DDL của MySQL không nằm trong
+    # transaction) sẽ không bị ghi nhầm là đã xong.
+    #
+    # KHÔNG bảng nào được tạo mới ở đợt này: `sepay_transactions` đã ghi đủ
+    # mọi giao dịch từ 22/08/2026, chỉ là chưa màn hình nào đọc ra. Đó là cả
+    # nội dung của Quyết định E06.
+    #
+    # HAI file *-QUAY-LUI.sql đi kèm và CỐ Ý KHÔNG KHAI, cũng cố ý TÁCH ĐÔI:
+    # phần sổ đối soát và phần UC-03 hỏng độc lập với nhau, nên lùi cái này
+    # không được kéo theo cái kia. Đọc đầu mỗi file trước khi chạy.
+    "2026-09-06-dot-7-doi-soat.sql|column|order_items|prescription_id"
 )
 
 # ---------------------------------------------------------------------------

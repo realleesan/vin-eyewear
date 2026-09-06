@@ -365,6 +365,32 @@ class AuthMiddleware
         // nhưng giỏ đang chọn dở thì không có lý do gì phải xoá.
         $cart = $_SESSION['cart'] ?? null;
 
+        /* ─────────────────────────────────────────────────────────────────
+           NHƯNG BỎ MÃ HỒ SƠ ĐO MẮT KHỎI MỌI DÒNG — thêm 06/09/2026, đợt 7.
+
+           `rx_ho_so` (UC-03) trỏ vào một bản ghi Y TẾ thuộc về tài khoản vừa
+           đăng xuất. Giỏ thì ở lại, và câu chú thích ngay trên nói đúng ca
+           dùng nguy hiểm nhất: MÁY DÙNG CHUNG.
+
+           Người A chọn hồ sơ của mình rồi thêm vào giỏ, đăng xuất; người B
+           đăng nhập trên cùng trình duyệt và thanh toán chính giỏ ấy.
+           OrderModel::place() ghi thẳng `prescription_id` xuống mà không hỏi
+           ai là chủ, và khoá ngoại chỉ trỏ tới bảng hồ sơ chứ không ràng buộc
+           theo người — nên đơn của B mang vĩnh viễn một liên kết tới hồ sơ
+           của A.
+
+           SỐ ĐO THÌ Ở LẠI, và đó là chủ ý: cột `rx` là thứ B nhìn thấy trong
+           giỏ và có thể sửa hoặc xoá dòng. Thứ phải cắt đứt là LIÊN KẾT tới
+           sổ y tế của người khác, không phải giỏ hàng.
+           ───────────────────────────────────────────────────────────────── */
+        if (is_array($cart)) {
+            foreach ($cart as $khoa => $dong) {
+                if (is_array($dong) && array_key_exists('rx_ho_so', $dong)) {
+                    $cart[$khoa]['rx_ho_so'] = null;
+                }
+            }
+        }
+
         self::huyPhien();
 
         if ($cart !== null) {

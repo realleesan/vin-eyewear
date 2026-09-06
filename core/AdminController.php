@@ -133,6 +133,18 @@ abstract class AdminController extends BaseController
            với ba dòng trên. */
         $data['pendingRefunds']  = (int) (RefundRequestModel::demTheoTrangThai()['pending'] ?? 0);
 
+        /* GIAO DỊCH NGÂN HÀNG CHƯA XỬ LÝ — FR-SG-06.
+
+           Hàng chờ có người đang đợi theo nghĩa đen nhất: mỗi dòng là một
+           khoản tiền ĐÃ VÀO tài khoản cửa hàng mà đơn của khách vẫn hiện chưa
+           thanh toán. Khách đã trả tiền và đang chờ hàng.
+
+           demChuaXuLy() KHÔNG phải phép đếm thuần 'partial' + 'no_order' — nó
+           hỏi thêm đơn của dòng ấy còn chờ tiền không, để con số này về được 0.
+           Lý do đầy đủ ở SepayModel::demChuaXuLy(). Hàm tự trả 0 khi chưa chạy
+           migration, cùng lối với năm dòng trên. */
+        $data['sepayChuaXuLy'] = SepayModel::demChuaXuLy();
+
         /* THƯ GỬI HỎNG — đợt 6.
 
            ĐẾM 'hong', KHÔNG ĐẾM 'cho'. Hai con số nói hai chuyện khác hẳn:

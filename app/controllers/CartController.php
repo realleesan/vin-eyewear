@@ -277,6 +277,7 @@ class CartController extends BaseController
                 'mode'       => null,   // 'frame' | 'combo'
                 'rx'         => null,   // chuỗi số đo đã gói (để hiển thị)
                 'rx_raw'     => null,   // đúng thứ khách đã chọn (để điền lại)
+                'rx_ho_so'   => null,   // hồ sơ đo mắt khách đã chọn (UC-03)
                 'lens_type'  => null,   // kiểu tròng: đơn/hai/đa tròng, mắt đặt
                 'lens_id'    => null,   // gói chiết suất (Mắt đặt thì null)
             ];
@@ -288,6 +289,7 @@ class CartController extends BaseController
         $lens     = null;
         $lensType = null;
         $rx       = null;
+        $rxHoSo   = null;
 
         if ($mode === 'trong') {
             /* GÓI TRÒNG chỉ áp cho gọng và kính mát. Tròng rời đi qua đúng
@@ -351,6 +353,10 @@ class CartController extends BaseController
                là làm hỏng một giỏ hàng đang dở vì một chuyện không phải lỗi
                của khách. */
             $rx = $_SESSION['_buy_intent']['rx'] ?? null;
+            // Hồ sơ nguồn đi kèm số đo — UC-03 bước 5. Chỉ có khi khách chọn
+            // từ sổ và KHÔNG sửa gì sau đó; nhánh 'so-do' của buyStep() đã bỏ
+            // nó đi khi số bị sửa.
+            $rxHoSo = $_SESSION['_buy_intent']['rx_ho_so'] ?? null;
         }
 
         // Khoá gồm cả gói tròng và số đo: cùng một chiếc gọng mua trần và mua
@@ -447,6 +453,12 @@ class CartController extends BaseController
             'lens_id'    => $lens['id'] ?? null,
             'lens_type'  => $lensType['id'] ?? null,
             'rx'         => $rx,
+            /* Hồ sơ đo mắt nguồn — UC-03. KHÔNG nằm trong khoá gộp dòng: hai
+               lần mua cùng một chiếc gọng với cùng số đo là cùng một dòng, dù
+               lần này khách gõ tay còn lần trước chọn từ sổ. Cái quyết định
+               "hai chiếc kính có giống nhau không" là SỐ ĐO, không phải nơi
+               khách lấy nó ra. */
+            'rx_ho_so'   => $rxHoSo,
             /*
              * GIÁ TẠI LÚC BỎ VÀO GIỎ — Q14.2, chốt 04/09/2026.
              *
@@ -626,6 +638,10 @@ class CartController extends BaseController
                     $intent['lens_type'] = null;
                     $intent['rx']        = null;
                     $intent['rx_raw']    = null;
+                    // Mã hồ sơ đi cùng số đo — bỏ số mà giữ mã thì quay lại
+                    // bước Số đo sẽ thấy một bảng trắng với một hồ sơ vẫn
+                    // đang được đánh dấu "đang chọn".
+                    $intent['rx_ho_so']  = null;
                 }
 
                 /*
@@ -657,6 +673,150 @@ class CartController extends BaseController
 
             // ── Bước 2: số đo gõ tay ─────────────────────────────────────
             case 'so-do':
+                /*
+                 * ═════════════════════════════════════════════════════════
+                 * NHÁNH RẼ: "DÙNG HỒ SƠ ĐÃ LƯU" — UC-03 bước 3.
+                 *
+                 * Khách bấm một dòng trong danh sách hồ sơ đo mắt của mình.
+                 * Nhánh này KHÔNG đi tiếp sang bước sau: nó điền sẵn sáu ô rồi
+                 * vẽ lại chính bước này, đúng như UC-03 mô tả — *"hệ thống điền
+                 * sẵn toàn bộ ô số đo và vẫn cho phép sửa từng ô"*. Khách xem
+                 * lại, sửa nếu cần, rồi mới bấm xác nhận.
+                 *
+                 * ─────────────────────────────────────────────────────────
+                 * MỘT LƯỢT POST RIÊNG, KHÔNG PHẢI MỘT NÚT JAVASCRIPT
+                 *
+                 * Cả luồng mua hàng chạy được khi tắt JS — đó là nguyên tắc
+                 * của hộp thoại này, và mọi bước khác đều là form POST thật.
+                 * Điền sẵn bằng JS thì khách tắt JS chỉ thấy một danh sách hồ
+                 * sơ bấm vào không có gì xảy ra.
+                 *
+                 * ─────────────────────────────────────────────────────────
+                 * KHÔNG GHI VẾT KIỂM TOÁN — BR-GH-15.5 nói thẳng: *"Mỗi lần
+                 * đọc hồ sơ đo mắt ở luồng này không ghi vết kiểm toán, vì
+                 * khách đang đọc dữ liệu của chính mình."*
+                 *
+                 * findOwned() đã chốt "của chính mình" ngay trong câu lệnh, nên
+                 * gõ tay id của người khác không đọc ra gì.
+                 * ═════════════════════════════════════════════════════════
+                 */
+                $chonHoSo = trim((string) ($_POST['chon_ho_so'] ?? ''));
+
+                if ($chonHoSo !== '') {
+                    $khachId = AuthMiddleware::customerId();
+                    $hs      = $khachId !== null
+                        ? PrescriptionRecordModel::findOwned($chonHoSo, $khachId)
+                        : null;
+
+                    if ($hs === null) {
+                        flash('cart_error', 'Không tìm thấy hồ sơ đo mắt này.');
+                        $this->buyStepDone(self::stepUrl($back, $intent['product_id'], 'so-do'));
+                    }
+
+                    /* ĐỔ SỐ RA ĐÚNG DẠNG SÁU Ô CỦA BẢNG, không đổ dạng CSDL.
+
+                       Bảng dùng ô chọn, và một ô chọn chỉ đánh dấu được dòng
+                       nào khi giá trị khớp CHÍNH XÁC chuỗi trong thẻ option.
+                       CSDL trả DECIMAL nên "-2.00" về tay PHP có thể là
+                       "-2.00" hoặc "-2" tuỳ driver và tuỳ cột — number_format
+                       ép cả hai về một dạng.
+
+                       ĐỘ TRỤ 0 PHẢI THÀNH "0.00", KHÔNG THÀNH RỖNG: "không
+                       loạn" là một câu trả lời THẬT và có sẵn dòng để chọn.
+                       Để rỗng thì phép kiểm "phải điền đủ" ở dưới bắt khách
+                       chọn lại một thứ hồ sơ đã trả lời rồi.
+
+                       TRỤC NULL thì để RỖNG: trục của một mắt không loạn là
+                       con số vô nghĩa, và ô ấy đang bị khoá.
+
+                       GHI CHÚ KHÔNG CHÉP SANG. `note` của hồ sơ là ghi chú của
+                       KỸ THUẬT VIÊN về lần đo ("đeo thử 15 phút thấy ổn"), còn
+                       ô ghi chú ở bảng này là lời khách nhắn cho người mài
+                       tròng. Chép sang là gán lời của người này vào miệng
+                       người kia. */
+                    $so = static fn ($v): string => $v === null || $v === ''
+                        ? '' : number_format((float) $v, 2, '.', '');
+
+                    $intent['rx_raw'] = [
+                        'od' => [
+                            'sph'  => $so($hs['od_sph'] ?? null),
+                            'cyl'  => $so($hs['od_cyl'] ?? null),
+                            'axis' => $hs['od_axis'] === null ? '' : (string) (int) $hs['od_axis'],
+                            'note' => '',
+                        ],
+                        'os' => [
+                            'sph'  => $so($hs['os_sph'] ?? null),
+                            'cyl'  => $so($hs['os_cyl'] ?? null),
+                            'axis' => $hs['os_axis'] === null ? '' : (string) (int) $hs['os_axis'],
+                            'note' => '',
+                        ],
+                    ];
+
+                    $intent['rx_ho_so'] = (string) $hs['id'];
+
+                    /* E1 — HỒ SƠ THIẾU TRƯỜNG BẮT BUỘC: *"hệ thống điền phần
+                       có và yêu cầu khách bổ sung phần thiếu trước khi đi
+                       tiếp."* Không chặn ở đây; bảng vẽ lại với ô trống và
+                       phép kiểm ở nhánh xác nhận bên dưới sẽ gọi tên đúng ô
+                       còn thiếu. Nói trước một câu để khách khỏi tưởng hệ
+                       thống điền hụt. */
+                    /* "ĐIỀN ĐƯỢC" NGHĨA LÀ Ô CHỌN CÓ DÒNG ẤY, không phải cột
+                       CSDL có giá trị. Hai chuyện đó lệch nhau ở hai chỗ:
+
+                         · Độ cầu ngoài ±12: hồ sơ nhận tới ±20 (MIEN của
+                           PrescriptionRecordModel) nhưng ô chọn chỉ dựng tới
+                           ±12 (LensModel::SPH_MAX), vì đó là dải cửa hàng cắt
+                           được. Số ngoài dải rơi về "— Chọn —".
+                         · Trục 0°: hồ sơ nhận, nhưng danh sách trục cố ý bỏ
+                           dòng 0 đi (0° và 180° là cùng một kinh tuyến).
+
+                       Nên phép kiểm phải hỏi CÓ DÒNG NÀO KHỚP KHÔNG. Không thì
+                       màn hình báo "đã điền số đo từ hồ sơ" trong khi một ô
+                       đang trống trơ — và khách không biết mình phải sửa gì.
+
+                       Trục chỉ tính khi có độ trụ thật: ô trục của một mắt
+                       không loạn đang bị khoá, để trống là đúng. */
+                    $coDong = static function (array $ops, string $v): bool {
+                        foreach ($ops as $op) {
+                            if ((string) $op['value'] === $v) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    };
+
+                    $sphOps  = LensModel::sphSignedOptions();
+                    $axisOps = LensModel::axisOptions();
+                    $thieuHs = false;
+
+                    foreach (['od', 'os'] as $ben) {
+                        $o = $intent['rx_raw'][$ben];
+
+                        if ($o['sph'] === '' || !$coDong($sphOps, $o['sph'])) {
+                            $intent['rx_raw'][$ben]['sph'] = '';
+                            $thieuHs = true;
+                        }
+
+                        if ($o['cyl'] !== '' && (float) $o['cyl'] !== 0.0
+                            && ($o['axis'] === '' || !$coDong($axisOps, $o['axis']))
+                        ) {
+                            $intent['rx_raw'][$ben]['axis'] = '';
+                            $thieuHs = true;
+                        }
+                    }
+
+                    $_SESSION['_buy_intent'] = $intent;
+
+                    flash('cart_success', $thieuHs
+                        ? 'Đã điền số đo từ hồ sơ ngày ' . formatDate((string) $hs['measured_at'])
+                            . '. Vài ô cửa hàng không cắt được theo giá trị cũ — vui lòng chọn lại.'
+                        : 'Đã điền số đo từ hồ sơ ngày '
+                            . formatDate((string) $hs['measured_at']) . '.');
+
+                    $this->buyStepDone(self::stepUrl($back, $intent['product_id'], 'so-do'));
+                }
+
                 /*
                  * MỖI MẮT MỘT BỘ: độ cầu (dấu + độ lớn), độ trụ, trục, ghi chú.
                  *
@@ -779,6 +939,176 @@ class CartController extends BaseController
                 $os = $eye('os');
 
                 $intent['rx'] = LensModel::formatRx($od, $os);
+
+                /* ═════════════════════════════════════════════════════════
+                   MỌI Ô ĐỀU PHẢI NẰM TRONG DẢI LensModel CHẤP NHẬN.
+
+                   Phép kiểm "phải điền đủ" ở trên chỉ hỏi ô có RỖNG không.
+                   Nhưng LensModel::diopter() còn có dải riêng (±12 điốp), và
+                   nó trả null lặng lẽ với mọi số ngoài dải — formatRx() khi ấy
+                   BỎ HẲN cả một mắt khỏi chuỗi kết quả.
+
+                   Hậu quả nếu không chặn: một lượt POST mang od=-15.00 (ô chọn
+                   không có dòng ấy, nhưng bước này nhận POST thẳng nên sửa DOM
+                   hay gửi bằng curl đều tới được) sinh ra một dòng hàng có
+                   `prescription` chỉ còn MỘT MẮT. Phiếu mài in ra thiếu một
+                   bên, và không có dòng lỗi nào ở bất kỳ đâu.
+
+                   Lỗ này có từ trước đợt 7 và không liên quan tới UC-03; chặn
+                   ở đây vì đây là chỗ duy nhất biết cả hai mắt vừa được gói
+                   thành gì. null nghĩa là KHÔNG mắt nào qua được; thiếu một
+                   mắt thì chuỗi không chứa đủ hai nhãn.
+                   ═════════════════════════════════════════════════════════ */
+                if ($intent['rx'] === null
+                    || strpos($intent['rx'], 'MP') === false
+                    || strpos($intent['rx'], 'MT') === false
+                ) {
+                    $_SESSION['_buy_intent'] = $intent;
+
+                    flash('cart_error',
+                        'Số đo nằm ngoài khoảng cửa hàng cắt được (±' . LensModel::SPH_MAX
+                        . ' điốp). Vui lòng chọn lại, hoặc đặt lịch để cửa hàng đo trực tiếp.');
+                    $this->buyStepDone(self::stepUrl($back, $intent['product_id'], 'so-do'));
+                }
+
+                /* ═════════════════════════════════════════════════════════
+                   HỒ SƠ NGUỒN CHỈ ĐƯỢC GIỮ KHI SỐ ĐO CÒN ĐÚNG LÀ CỦA NÓ.
+
+                   UC-03 bước 5 nói đơn hàng ghi lại "mã hồ sơ nguồn" — nguồn
+                   của thứ ĐÃ DÙNG. Khách chọn hồ sơ rồi sửa hai ô thì số trên
+                   đơn không còn là số của hồ sơ ấy, và giữ mã lại là dán một
+                   cái nhãn sai: sáu tháng sau ai đó tra ngược sẽ thấy hai bộ
+                   số khác nhau dưới cùng một mã và không biết tin bên nào.
+
+                   Luồng A1 cho phép sửa, và BR-GH-15.3 cấm sửa ngược lại hồ sơ
+                   gốc. Nên chỗ đúng để nói "khách đã sửa" là BỎ mã nguồn đi —
+                   dòng hàng vẫn mang đủ số đo trong cột `prescription`.
+
+                   ─────────────────────────────────────────────────────────
+                   SO BẰNG CHUỖI ĐÃ GÓI, KHÔNG SO TỪNG Ô THÔ.
+
+                   Bản đầu so sáu ô POST với sáu cột CSDL, và nó sai ở ba chỗ
+                   mà mỗi chỗ đều là ca THƯỜNG GẶP:
+
+                     · `od_cyl` NULL trong hồ sơ (khách không loạn — đa số) đổ
+                       ra ô rỗng, nhưng phép kiểm "phải điền đủ" bắt khách chọn
+                       "0.00 · Không loạn". So thô thì '' ≠ '0.00' → mã nguồn
+                       bị bỏ, dù khách KHÔNG SỬA GÌ. Tức là tính năng chính của
+                       UC-03 hỏng với chính nhóm khách đông nhất.
+                     · Hồ sơ có trục mà độ trụ bằng 0: ô trục bị khoá bằng
+                       `disabled`, mà ô disabled thì trình duyệt KHÔNG gửi lên.
+                       So thô lại thấy '' ≠ '90' → cũng bỏ mã nguồn oan.
+                     · Ngược lại, hai bộ số khác nhau nhưng cùng bị diopter()
+                       cắt về null sẽ so thô ra "khác" trong khi chuỗi đơn hàng
+                       lại giống hệt.
+
+                   formatRx() chuẩn hoá cả ba: NULL, 0.00 và "0.00 kèm trục"
+                   đều gói ra cùng một chuỗi, vì trục chỉ được in khi có độ
+                   trụ thật. Và đây đúng là chuỗi ghi vào `order_items`, nên
+                   so nó với chuỗi của hồ sơ là so ĐÚNG THỨ SẼ NẰM TRÊN ĐƠN —
+                   không còn khe nào giữa "cái đem đi so" và "cái đem đi ghi".
+                   ═════════════════════════════════════════════════════════ */
+                $khachId = AuthMiddleware::customerId();
+                $daSua   = true;
+
+                if (($intent['rx_ho_so'] ?? null) !== null && $khachId !== null) {
+                    $hsCu = PrescriptionRecordModel::findOwned(
+                        (string) $intent['rx_ho_so'],
+                        $khachId
+                    );
+
+                    if ($hsCu !== null) {
+                        $rxHoSo = LensModel::formatRx(
+                            ['sph' => $hsCu['od_sph'], 'cyl' => $hsCu['od_cyl'],
+                             'axis' => $hsCu['od_axis'], 'note' => null],
+                            ['sph' => $hsCu['os_sph'], 'cyl' => $hsCu['os_cyl'],
+                             'axis' => $hsCu['os_axis'], 'note' => null]
+                        );
+
+                        /* GHI CHÚ KHÔNG THAM GIA PHÉP SO. Hồ sơ không có ô ghi
+                           chú của khách (nhánh chọn hồ sơ cố ý không chép
+                           `note` sang — xem khối ở đó), nên gói lại kèm ghi
+                           chú là luôn ra "đã sửa". Ghi chú là lời nhắn cho
+                           người mài, không phải một con số đo. */
+                        $rxSoSanh = LensModel::formatRx(
+                            $od + ['note' => null],
+                            $os + ['note' => null]
+                        );
+
+                        $daSua = $rxHoSo === null || $rxHoSo !== $rxSoSanh;
+                    }
+
+                    if ($daSua) {
+                        $intent['rx_ho_so'] = null;
+                    }
+                } else {
+                    // Phiên mua hàng bắt đầu TRƯỚC khi đợt 7 lên sóng không có
+                    // khoá này. Khai ra để mọi nơi đọc phía sau không phải ??.
+                    $intent['rx_ho_so'] = $intent['rx_ho_so'] ?? null;
+                }
+
+                /* ─────────────────────────────────────────────────────────
+                   LƯU SỐ VỪA KHAI THÀNH MỘT BẢN GHI MỚI — UC-03 luồng A1.
+
+                   *"Nếu khách muốn lưu số MỚI thì hệ thống tạo một bản ghi mới
+                   trong sổ với nguồn 'khách tự khai'."*
+
+                   CHỮ "MỚI" LÀ MỘT ĐIỀU KIỆN, KHÔNG PHẢI MỘT TÍNH TỪ THỪA.
+                   Tick ô này sau khi chọn một hồ sơ mà KHÔNG sửa gì thì không
+                   có số mới nào để lưu, và lưu vẫn sẽ hỏng theo ba đường cùng
+                   lúc: sổ có thêm một bản trùng, bản ấy đề nguồn "khách tự
+                   khai" cho một lần đo do KỸ THUẬT VIÊN làm, và nó mất sạch
+                   những cột form này không hỏi (PD từng mắt, ADD, chiều cao
+                   quang tâm, thị lực) — rồi mã nguồn của đơn bị trỏ sang chính
+                   bản nghèo nàn ấy.
+
+                   Nên chỉ lưu khi $daSua. Số chưa sửa thì đã nằm trong sổ rồi.
+
+                   MẶC ĐỊNH KHÔNG TICK, và đó cũng là chủ ý: sổ đo mắt là
+                   chỉ-thêm (BR-GH-15.3), nên tự lưu mỗi lần mua sẽ biến nó
+                   thành nhật ký mua sắm.
+
+                   KHÁCH VÃNG LAI KHÔNG CÓ Ô NÀY — không có tài khoản thì không
+                   có sổ. Kiểm lại ở đây dù view đã ẩn: một ô tick ẩn vẫn gửi
+                   lên được bằng curl.
+
+                   NUỐT MỌI LỖI, cùng lý lẽ với seedPrescription() ngay dưới:
+                   việc chính của bước này là ghi số đo vào ý định mua hàng —
+                   xong ở trên rồi. Nhưng KHÔNG im lặng: ô tick đã bấm mà không
+                   có gì xảy ra là thứ khách không có cách nào phát hiện. */
+                if (($_POST['luu_ho_so'] ?? '') === '1' && $khachId !== null) {
+                    if (!$daSua && $intent['rx_ho_so'] !== null) {
+                        flash('cart_success',
+                            'Số đo này đã có sẵn trong sổ đo mắt của bạn, không cần lưu thêm.');
+                    } else {
+                        try {
+                            $kqLuu = PrescriptionRecordModel::save(null, $khachId, [
+                                'source'      => 'customer',
+                                'measured_at' => date('Y-m-d'),
+                                'od_sph'      => $intent['rx_raw']['od']['sph'],
+                                'od_cyl'      => $intent['rx_raw']['od']['cyl'],
+                                'od_axis'     => $intent['rx_raw']['od']['axis'],
+                                'os_sph'      => $intent['rx_raw']['os']['sph'],
+                                'os_cyl'      => $intent['rx_raw']['os']['cyl'],
+                                'os_axis'     => $intent['rx_raw']['os']['axis'],
+                            ], $khachId);
+
+                            if ($kqLuu['ok'] && isset($kqLuu['id'])) {
+                                /* Mã nguồn trỏ vào bản VỪA TẠO: số trên đơn
+                                   đúng là số của nó, nên nhãn không nói sai. */
+                                $intent['rx_ho_so'] = (string) $kqLuu['id'];
+
+                                flash('cart_success', 'Đã lưu số đo này vào sổ đo mắt của bạn.');
+                            } elseif (!$kqLuu['ok']) {
+                                flash('cart_error', 'Không lưu được vào sổ đo mắt: ' . $kqLuu['error']);
+                            }
+                        } catch (Throwable $e) {
+                            error_log('UC-03 luu ho so: ' . $e->getMessage());
+
+                            flash('cart_error', 'Không lưu được vào sổ đo mắt. Đơn hàng của bạn vẫn bình thường.');
+                        }
+                    }
+                }
 
                 /* LẦN NHẬP ĐẦU TIÊN thì dựng luôn hồ sơ khúc xạ cho khách đang
                    đăng nhập — cửa hàng có ngay bản ghi để tư vấn thay vì chờ
@@ -1183,6 +1513,7 @@ class CartController extends BaseController
                     'lens_id'    => $row['lens_id'] ?? null,
                     'lens_type'  => $row['lens_type'] ?? null,
                     'rx'         => $row['rx'] ?? null,
+                    'rx_ho_so'   => $row['rx_ho_so'] ?? null,
                     /* Giá lúc bỏ vào giỏ — Q14.2. Giỏ cũ (trước 08/09/2026)
                        không có khoá này -> null, và lines() hiểu null là
                        "không có mốc để so", tức không cảnh báo gì. Đúng: một
@@ -1438,6 +1769,7 @@ class CartController extends BaseController
                 'variant'   => $variant,
                 'lens'      => $lens,
                 'rx'        => $row['rx'] ?? null,
+                'rx_ho_so'  => $row['rx_ho_so'] ?? null,
                 'quantity'  => $lineQty,
                 'unitPrice' => $unit,
                 'lineTotal' => $unit * $lineQty,

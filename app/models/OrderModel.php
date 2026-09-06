@@ -328,6 +328,22 @@ class OrderModel extends BaseModel
                         'lens_price'    => $lensPrice,
                         // null = khách chưa biết độ, đo tại cửa hàng
                         'prescription'  => $row['rx'] ?? null,
+                        /* HỒ SƠ ĐO MẮT NGUỒN — UC-03 bước 5, thêm ở đợt 7.
+
+                           KHÁC HẲN cột `prescription` ngay trên, và hai cột
+                           lệch nhau là chuyện bình thường:
+
+                             prescription      SỐ ĐO đã chốt của dòng hàng này.
+                                               Bản chụp, đi xuống phiếu mài, đọc
+                                               được kể cả khi hồ sơ nguồn bị xoá.
+                             prescription_id   khách LẤY SỐ ẤY TỪ ĐÂU. NULL khi
+                                               họ gõ tay.
+
+                           Luồng A1 của UC-03 cho phép chọn hồ sơ rồi sửa vài ô,
+                           và CartController bỏ mã nguồn đi đúng lúc ấy — nên
+                           một dòng có mã nguồn thì số đo của nó ĐÚNG là số của
+                           hồ sơ ấy. Xem khối chú thích ở nhánh 'so-do'. */
+                        'prescription_id' => $row['rx_ho_so'] ?? null,
                         'product_name'  => $product['name'],
                         'unit_price'    => $unit,
                         'quantity'      => $quantity,
@@ -476,10 +492,15 @@ class OrderModel extends BaseModel
                    nhưng gọi nó cho từng dòng hàng vẫn là thói quen xấu. */
                 $coGiaVon   = self::coGiaVon();
                 $coKieuTrong = self::coKieuTrong();
+                $coHoSoNguon = self::coHoSoNguon();
 
                 foreach ($lines as $line) {
                     if (!$coGiaVon) {
                         unset($line['cost_price']);
+                    }
+
+                    if (!$coHoSoNguon) {
+                        unset($line['prescription_id']);
                     }
 
                     if (!$coKieuTrong) {
@@ -1159,6 +1180,12 @@ class OrderModel extends BaseModel
         return Database::columnExists('order_items', 'cost_price');
     }
 
+    /** CSDL đã có cột `order_items`.`prescription_id` chưa — migration đợt 7. */
+    public static function coHoSoNguon(): bool
+    {
+        return Database::columnExists('order_items', 'prescription_id');
+    }
+
     /** CSDL đã có cột `order_items`.`lens_type` chưa — migration đợt 5. */
     public static function coKieuTrong(): bool
     {
@@ -1175,10 +1202,31 @@ class OrderModel extends BaseModel
         // itemsForOrders() bên dưới — ảnh là dữ liệu trình bày, còn tên và giá
         // thì chép cứng vào order_items lúc đặt hàng. Sản phẩm bị gỡ thì
         // product_id thành NULL, dòng hàng mất ảnh nhưng hoá đơn vẫn nguyên.
+        /* HỒ SƠ ĐO MẮT NGUỒN — UC-03 bước 5: *"để sau này tra được đơn này
+           cắt theo hồ sơ nào."* Câu ấy chỉ thành sự thật khi có màn hình đọc
+           ra; cột không ai đọc thì chỉ là một cột.
+
+           JOIN CÓ ĐIỀU KIỆN vì cột `prescription_id` chỉ có sau migration đợt
+           7 — nhắc tới nó trên máy chưa nâng cấp là lỗi 1054 làm trắng cả màn
+           đơn hàng. Cùng lối phòng thủ với WaitlistModel::dangChoCho().
+
+           LẤY NGÀY ĐO VÀ NGUỒN, không lấy lại số đo: số đã nằm sẵn trong cột
+           `prescription` của chính dòng hàng, và đó mới là số đã dùng để mài.
+           Thứ hồ sơ nguồn trả lời thêm là "số ấy từ đâu ra" — do kỹ thuật viên
+           đo hôm nào, hay khách tự khai. */
+        $coHoSo = self::coHoSoNguon() && Database::tableExists('customer_prescriptions');
+
+        $cot  = $coHoSo
+            ? ', cp.measured_at AS hs_ngay, cp.source AS hs_nguon'
+            : ', NULL AS hs_ngay, NULL AS hs_nguon';
+        $join = $coHoSo
+            ? ' LEFT JOIN customer_prescriptions cp ON cp.id = oi.prescription_id'
+            : '';
+
         return Database::fetchAll(
-            'SELECT oi.*, p.brand, p.slug, p.images
+            'SELECT oi.*, p.brand, p.slug, p.images' . $cot . '
                FROM order_items oi
-               LEFT JOIN products p ON p.id = oi.product_id
+               LEFT JOIN products p ON p.id = oi.product_id' . $join . '
               WHERE oi.order_id = :id',
             ['id' => $orderId]
         );

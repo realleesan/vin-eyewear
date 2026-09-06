@@ -322,6 +322,24 @@ $canMark = !$paid
                         <?php elseif (!empty($item['lens_name'])): ?>
                             <p class="aoline__rx">Chưa có số đo — đo tại cửa hàng</p>
                         <?php endif; ?>
+
+                        <?php /* HỒ SƠ NGUỒN — UC-03 bước 5. Chỉ hiện khi đơn
+                                 thật sự cắt theo một hồ sơ đã lưu; khách gõ tay
+                                 thì cột này NULL và không có gì để nói.
+
+                                 Đứng dưới số đo chứ không thay nó: số ở trên là
+                                 thứ đã mài, dòng này chỉ nói nó từ đâu ra. Hồ sơ
+                                 bị khách xoá thì khoá ngoại ON DELETE SET NULL
+                                 nên dòng này lặng lẽ biến mất — số đo vẫn còn. */ ?>
+                        <?php if (!empty($item['hs_ngay'])): ?>
+                            <p class="aoline__rx">
+                                Cắt theo hồ sơ đo mắt ngày
+                                <?= e(formatDate((string) $item['hs_ngay'])) ?>
+                                <?php if (!empty($item['hs_nguon'])): ?>
+                                    · <?= e(PrescriptionRecordModel::SOURCES[$item['hs_nguon']] ?? $item['hs_nguon']) ?>
+                                <?php endif; ?>
+                            </p>
+                        <?php endif; ?>
                     </li>
                 <?php endforeach; ?>
             </ul>

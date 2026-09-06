@@ -1150,6 +1150,35 @@ a.alist__name:hover { color: var(--brand); }
     color: var(--on-ink);
 }
 
+/*
+ * VIÊN LỌC "HÀNG CHỜ" — in đậm hơn các viên khác. FR-SG-03 nói rõ hai viên
+ * "Thu một phần" và "Không tìm thấy đơn" phải in đậm.
+ *
+ * VÌ SAO CẦN: sổ giao dịch có sáu viên lọc, nhưng chỉ hai trong sáu là VIỆC
+ * PHẢI LÀM — mỗi dòng dưới chúng là một khoản tiền đã vào tài khoản cửa hàng
+ * mà đơn của khách vẫn hiện chưa thanh toán. Bốn viên còn lại chỉ để tra cứu.
+ * Một dải sáu viên bằng nhau bắt người trực quầy tự nhớ hai viên nào cần mở
+ * mỗi sáng, và họ sẽ quên.
+ *
+ * NHẤN BẰNG CHỮ ĐẬM VÀ VIỀN SẪM, KHÔNG BẰNG MÀU ĐỎ. Đỏ trong khu quản trị
+ * dành cho nút hành động và cho viên trạng thái "đã huỷ"; mượn nó ở đây là
+ * làm một dải BỘ LỌC trông như một dải cảnh báo, và cạnh tranh với chính mấy
+ * viên .badge--cancelled trong bảng ngay dưới.
+ *
+ * KHÔNG đụng tới .is-active: viên đang chọn vẫn nền sẫm chữ sáng như mọi viên
+ * khác, nên hai lớp chồng nhau không đánh nhau. Bộ chọn viết riêng cho ca ấy
+ * chỉ để giữ nét đậm.
+ */
+.atabs__item--cho {
+    border-color: #b9a68c;
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.atabs__item--cho .atabs__num { background: #e0d3bb; color: #5c4f42; }
+
+.atabs__item--cho.is-active .atabs__num { background: rgba(255, 255, 255, 0.18); color: var(--on-ink); }
+
 /* --- Bảng --------------------------------------------------- */
 
 /* Bảng dữ liệu rộng hơn màn hình thì CUỘN TRONG KHUNG, không đẩy cả trang

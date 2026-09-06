@@ -105,6 +105,27 @@ $lensType    = LensModel::findType($intent['lens_type']);
    nó hiện lại đúng như lúc rời đi, chứ không trắng trơn. Xem khối rx_raw trong
    CartController::buyStep(). */
 $rxRaw = is_array($intent['rx_raw'] ?? null) ? $intent['rx_raw'] : [];
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * HỒ SƠ ĐO MẮT ĐÃ LƯU CỦA KHÁCH — UC-03 · FR-GH-15.
+ *
+ * A2 nói rõ: *"Khách chưa có hồ sơ nào: bước này chỉ hiện lựa chọn nhập tay,
+ * không hiện danh sách rỗng."* Nên mảng rỗng là một trạng thái BÌNH THƯỜNG và
+ * view không vẽ gì cả — không có khối "bạn chưa có hồ sơ nào", vì câu ấy chỉ
+ * làm bước này dài thêm mà không cho khách lựa chọn nào mới.
+ *
+ * CHỈ ĐỌC KHI ĐANG Ở ĐÚNG BƯỚC ẤY. Hộp thoại này dựng lại ở mọi lượt tải trang
+ * có ?mua=, kể cả bước chọn gói tròng và bước xác nhận — hỏi CSDL ở cả bốn bước
+ * là ba lượt truy vấn không ai dùng tới.
+ *
+ * forUser() tự trả [] khi bảng chưa có (máy chưa chạy migration đợt 3) và khi
+ * khách chưa đăng nhập thì không có id để hỏi.
+ */
+$khachId = AuthMiddleware::customerId();
+$hoSo    = ($step === 'so-do' && $khachId !== null)
+    ? PrescriptionRecordModel::forUser($khachId)
+    : [];
 $typeTakesPkg = LensModel::typeTakesPackage($lensType);
 $lens        = LensModel::combo($intent['lens_id'], $intent['lens_type']);
 $lensPrice   = (int) ($lens['price'] ?? 0);
@@ -330,6 +351,68 @@ $stepForm = static function (string $buoc): void {
                 static fn (array $op): bool => $op['value'] !== '0'
             ));
             ?>
+            <?php
+            /* ═══════════════════════════════════════════════════════════════
+               DÙNG HỒ SƠ ĐÃ LƯU — UC-03 bước 1 và 2.
+
+               *"Hệ thống hiển thị bước Số đo với hai lựa chọn: Dùng hồ sơ đã
+               lưu và Nhập số đo mới."* Ở đây hai lựa chọn ấy không phải hai cái
+               tab: danh sách hồ sơ nằm TRÊN bảng nhập, và bấm một dòng là điền
+               sẵn bảng ấy. Bảng luôn hiện, nên "nhập số đo mới" không cần một
+               nút riêng — nó là thứ đang mở sẵn.
+
+               Làm hai tab thì khách chọn hồ sơ xong phải tự hiểu rằng mình vẫn
+               được sửa, mà bước 3 nói rõ *"vẫn cho phép sửa từng ô"*.
+
+               MỖI DÒNG LÀ MỘT FORM POST RIÊNG, không phải một nút JavaScript —
+               cả luồng mua hàng chạy được khi tắt JS. Nút <button> mang luôn
+               giá trị nên không cần thêm input ẩn nào.
+
+               BR-GH-15.1: *"Danh sách hồ sơ luôn hiển thị ngày đo để khách tự
+               đánh giá số đo còn phù hợp không."* Ngày đứng đầu dòng vì thế.
+               BR-GH-15.2 cấm chặn hoặc cảnh báo theo tuổi hồ sơ — không có dòng
+               "hồ sơ đã cũ" nào ở đây, kể cả với hồ sơ ba năm trước.
+               ═══════════════════════════════════════════════════════════════ */
+            ?>
+            <?php if ($hoSo !== []): ?>
+                <div class="bhoso">
+                    <p class="bhoso__cap">Dùng hồ sơ đo mắt đã lưu</p>
+
+                    <?php foreach ($hoSo as $hs): ?>
+                        <?php
+                        /* Tóm tắt số đo hai mắt — UC-03 bước 2 đòi đúng ba thứ
+                           trên mỗi dòng: ngày đo, nguồn dữ liệu, tóm tắt số đo.
+
+                           Dựng bằng LensModel::formatRx() để nó đọc GIỐNG HỆT
+                           chuỗi số đo ở các bước sau và trên đơn hàng. Hai cách
+                           viết cho cùng một bộ số là hai chỗ để khách phân vân
+                           mình có chọn đúng không. */
+                        $tomTat = LensModel::formatRx(
+                            ['sph' => $hs['od_sph'], 'cyl' => $hs['od_cyl'], 'axis' => $hs['od_axis'], 'note' => null],
+                            ['sph' => $hs['os_sph'], 'cyl' => $hs['os_cyl'], 'axis' => $hs['os_axis'], 'note' => null]
+                        );
+                        $dangChon = ($intent['rx_ho_so'] ?? null) === $hs['id'];
+                        ?>
+                        <form method="post" action="/gio-hang/chon" class="bhoso__form">
+                            <?php $stepForm('so-do'); ?>
+                            <button type="submit" name="chon_ho_so" value="<?= e($hs['id']) ?>"
+                                    class="bhoso__item<?= $dangChon ? ' is-on' : '' ?>">
+                                <span class="bhoso__ngay"><?= e(formatDate((string) $hs['measured_at'])) ?></span>
+                                <span class="bhoso__so"><?= e($tomTat !== null ? $tomTat : 'Chưa có số đo') ?></span>
+                                <span class="bhoso__nguon">
+                                    <?= e(PrescriptionRecordModel::SOURCES[$hs['source']] ?? $hs['source']) ?>
+                                </span>
+                            </button>
+                        </form>
+                    <?php endforeach; ?>
+
+                    <p class="bhoso__hint">
+                        Chọn một hồ sơ để điền sẵn bảng bên dưới. Bạn vẫn sửa được từng ô,
+                        và số đã sửa chỉ dùng cho đơn này — hồ sơ gốc giữ nguyên.
+                    </p>
+                </div>
+            <?php endif; ?>
+
             <form class="brx" method="post" action="/gio-hang/chon">
                 <?php $stepForm('so-do'); ?>
 
@@ -475,6 +558,29 @@ $stepForm = static function (string $buoc): void {
                          chốt, `required` ở đây chỉ để báo sớm.
 
                          Ai chưa biết độ của mình thì đi lối bên dưới. */ ?>
+                <?php
+                /* ─────────────────────────────────────────────────────────
+                   LƯU SỐ NÀY VÀO SỔ — UC-03 luồng A1.
+
+                   *"Nếu khách muốn lưu số mới thì hệ thống tạo một bản ghi mới
+                   trong sổ với nguồn 'khách tự khai'."*
+
+                   MẶC ĐỊNH KHÔNG TICK, và đó là chủ ý: sổ đo mắt là chỉ-thêm
+                   (BR-GH-15.3), nên tự lưu mỗi lần mua sẽ biến nó thành nhật ký
+                   mua sắm — mua ba lần trong tháng là ba dòng giống hệt nhau, và
+                   lần sau khách mở danh sách ra không biết chọn cái nào.
+
+                   CHỈ HIỆN VỚI KHÁCH ĐÃ ĐĂNG NHẬP: không có tài khoản thì không
+                   có sổ nào để lưu vào. Máy chủ kiểm lại lần nữa — một ô tick ẩn
+                   vẫn gửi lên được bằng curl. */
+                ?>
+                <?php if ($khachId !== null): ?>
+                    <label class="brxsave">
+                        <input type="checkbox" name="luu_ho_so" value="1">
+                        <span>Lưu số đo này vào sổ đo mắt của tôi</span>
+                    </label>
+                <?php endif; ?>
+
                 <button type="submit" class="bmodal__cta">Xác nhận độ kính</button>
             </form>
 

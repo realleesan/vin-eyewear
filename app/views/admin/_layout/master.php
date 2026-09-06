@@ -63,6 +63,17 @@ $navGroups = [
            thấy nó khi thật sự có người đang chờ tiền. */
         ['url' => '/quan-tri/hoan-tien', 'label' => 'Hoàn tiền cọc',
          'badge' => in_array('admin', $adminRoles, true) ? $pendingRefunds : 0],
+        /* SỔ GIAO DỊCH NGÂN HÀNG — ngay dưới Hoàn tiền cọc, vì hai màn nói
+           về cùng một dòng tiền đi hai chiều: một bên là tiền vào chưa khớp
+           được đơn, bên kia là tiền phải trả lại.
+
+           MỌI NHÂN VIÊN thấy, và huy hiệu cũng hiện với mọi nhân viên — khác
+           Hoàn tiền cọc ở ngay trên, nơi huy hiệu chỉ hiện với Quản trị viên
+           vì chỉ họ duyệt được. Ở đây thì chính nhân viên trực quầy là người
+           gắn giao dịch (SRS 5.2.2), nên con số này về 0 do việc HỌ làm — đúng
+           điều kiện để một mục được đeo số. */
+        ['url' => '/quan-tri/doi-soat', 'label' => 'Sổ giao dịch',
+         'badge' => $sepayChuaXuLy],
         ['url' => '/quan-tri/lich-hen', 'label' => 'Lịch hẹn',
          'badge' => $pendingAppointments],
         ['url' => '/quan-tri/lien-he',  'label' => 'Liên hệ', 'badge' => $pendingContacts],

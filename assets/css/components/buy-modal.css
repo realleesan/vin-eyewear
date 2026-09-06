@@ -931,3 +931,132 @@ body:has(.bmodal) { overflow: hidden; }
     color: var(--muted, #7a6d5f);
     text-align: center;
 }
+
+/* ===========================================================================
+   HỒ SƠ ĐO MẮT ĐÃ LƯU — UC-03 · FR-GH-15, đợt 7
+   =========================================================================== */
+
+/* Khối đứng TRÊN bảng nhập, không phải một tab cạnh nó.
+
+   UC-03 nói bước này có hai lựa chọn — "dùng hồ sơ đã lưu" và "nhập số đo mới"
+   — nhưng dựng chúng thành hai tab là sai với bước 3, nơi khách chọn hồ sơ rồi
+   VẪN sửa được từng ô. Hai tab thì thao tác ấy đọc như đang rời khỏi lựa chọn
+   vừa làm. Xếp chồng thì quan hệ thật hiện ra: danh sách này ĐIỀN VÀO bảng
+   dưới, và bảng dưới luôn là nơi chốt.
+
+   Đường kẻ đáy thay cho một cái khung: khối đã có ba lớp thẻ lồng nhau (hộp
+   thoại → thân → hàng), thêm một khung nữa là bốn. */
+.bhoso {
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line);
+}
+
+.bhoso__cap {
+    margin: 0 0 9px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--brand);
+}
+
+/* Mỗi dòng là một <form> riêng — không có JS thì đó là cách duy nhất để một
+   danh sách bấm được. Form mặc định là khối, nên phải gỡ khoảng cách mặc định
+   của nó đi, nếu không mỗi dòng cách nhau một quãng thừa. */
+.bhoso__form { margin: 0 0 8px; }
+.bhoso__form:last-of-type { margin-bottom: 0; }
+
+/* BA CỘT, và thứ tự cột là thứ tự đọc của UC-03 bước 2: ngày đo trước (BR-GH-
+   15.1 — khách tự đánh giá số đo còn hợp không), rồi tóm tắt số đo, rồi nguồn.
+
+   Mượn đúng dáng của .blens__item ở trên: hai danh sách nằm cách nhau một bước
+   trong cùng hộp thoại, khác dáng là bắt học lại một thao tác đã biết. */
+.bhoso__item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: baseline;
+    gap: 4px 14px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    font-family: var(--font-sans);
+    text-align: left;
+    cursor: pointer;
+}
+
+.bhoso__item:hover { border-color: var(--brand); }
+
+/* Hồ sơ đang dùng, khi khách bấm Lùi về bước này */
+.bhoso__item.is-on {
+    border-color: var(--brand);
+    background: #f7e8e2;
+}
+
+.bhoso__item:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.bhoso__ngay {
+    font-size: 13.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+}
+
+/* Số đo là thứ khách so sánh giữa các dòng, nên nó chiếm cột co giãn và dùng
+   chữ đều — hai chuỗi "−2.00 / −0.75 × 180°" xếp chồng chỉ so được khi các
+   chữ số thẳng cột. */
+.bhoso__so {
+    min-width: 0;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: #5c4f45;
+}
+
+.bhoso__nguon {
+    font-size: 11.5px;
+    color: var(--muted, #7a6d5f);
+    white-space: nowrap;
+}
+
+/* Ba cột không đủ chỗ trên điện thoại: ngày và nguồn về một hàng, số đo xuống
+   hàng dưới chiếm trọn chiều ngang. Số đo là thứ dài nhất nên nó được cả hàng. */
+@media (max-width: 480px) {
+    .bhoso__item { grid-template-columns: auto 1fr; }
+
+    /* Ngày ở cột 1, nguồn ở cột 2 — CẢ HAI trên hàng 1; số đo chiếm trọn
+       hàng 2. Phải chỉ đích danh hàng/cột: để tự xếp thì trình duyệt đặt số
+       đo vào ô trống ngay sau ngày, và nguồn bị đẩy xuống một hàng nữa. */
+    .bhoso__ngay  { grid-row: 1; grid-column: 1; }
+    .bhoso__nguon { grid-row: 1; grid-column: 2; justify-self: end; }
+    .bhoso__so    { grid-row: 2; grid-column: 1 / -1; }
+}
+
+.bhoso__hint {
+    margin: 10px 0 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--muted, #7a6d5f);
+}
+
+/* Ô tick "lưu số này vào sổ" — UC-03 luồng A1.
+
+   Đứng NGAY TRÊN nút xác nhận chứ không lẫn trong bảng: nó không phải một ô số
+   đo, nó là một quyết định về việc lưu trữ, và chỗ đọc nó là lúc khách sắp
+   bấm xong. */
+.brxsave {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 14px 0 10px;
+    font-size: 13.5px;
+    color: #5c4f45;
+    cursor: pointer;
+}
+
+.brxsave input { width: 16px; height: 16px; accent-color: var(--brand); }

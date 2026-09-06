@@ -1359,6 +1359,20 @@ CREATE TABLE `order_items` (
     `lens_name`     VARCHAR(160) NULL,
     `lens_price`    BIGINT       NOT NULL DEFAULT 0,
     `prescription`  VARCHAR(255) NULL,
+
+    /* HỒ SƠ ĐO MẮT NGUỒN — UC-03 bước 5, đợt 7.
+
+       KHÁC HẲN `prescription` ngay trên, và hai cột lệch nhau là bình thường:
+
+         prescription      SỐ ĐO đã chốt của dòng hàng này. Bản chụp, đi xuống
+                           phiếu mài, đọc được kể cả khi hồ sơ nguồn bị xoá.
+         prescription_id   khách LẤY SỐ ẤY TỪ ĐÂU. NULL khi họ gõ tay.
+
+       Luồng A1 của UC-03 cho khách chọn hồ sơ rồi sửa vài ô, và
+       CartController bỏ mã nguồn đi đúng lúc ấy (so bằng chuỗi đã gói, không
+       so từng ô thô) — nên một dòng CÓ mã nguồn thì số đo của nó đúng là số
+       của hồ sơ ấy. */
+    `prescription_id` CHAR(36)   NULL DEFAULT NULL,
     `product_name` VARCHAR(255) NOT NULL,
     `unit_price`   BIGINT       NOT NULL,
     /* GIÁ VỐN TẠI THỜI ĐIỂM BÁN — FR-DH-13.
@@ -1378,6 +1392,7 @@ CREATE TABLE `order_items` (
     KEY `idx_order_items_order` (`order_id`),
     KEY `idx_order_items_product` (`product_id`),
     KEY `idx_order_items_variant` (`variant_id`),
+    KEY `idx_order_items_prescription` (`prescription_id`),
     CONSTRAINT `fk_order_items_order` FOREIGN KEY (`order_id`)
         REFERENCES `orders` (`id`) ON DELETE CASCADE,
     CONSTRAINT `fk_order_items_product` FOREIGN KEY (`product_id`)
@@ -1569,13 +1584,40 @@ CREATE TABLE `sepay_transactions` (
     `reference_code`   VARCHAR(64)  NULL,
     `transaction_date` DATETIME     NULL,
     -- paid | deposit_paid | partial | no_order | ignored
+    --
+    -- NHÃN NÀY TRẢ LỜI "MỘT MÌNH KHOẢN NÀY ĐỦ TỚI ĐÂU", không trả lời "đơn
+    -- đang ở đâu" — chỗ trả lời câu sau là `orders`.`payment_status`. Hai cột
+    -- nói ngược nhau là chuyện BÌNH THƯỜNG: một khoản 'partial' cộng với khoản
+    -- trước có thể làm đơn thành 'paid'. Xem SepayModel::ganDon().
     `applied`          VARCHAR(32)  NOT NULL DEFAULT 'no_order',
+
+    /* AI GẮN TAY GIAO DỊCH NÀY, VÀ LÚC NÀO — đợt 7, FR-SG-05.
+
+       NULL nghĩa là "webhook tự khớp", không phải "chưa biết ai" — đó là
+       trạng thái của gần như mọi dòng. Khác NULL thì có một CON NGƯỜI đã
+       quyết định khoản tiền này thuộc về đơn kia, thường vì khách gõ sai nội
+       dung chuyển khoản, và quyết định ấy đổi trạng thái tiền của một đơn.
+
+       Vết đầy đủ vẫn ở `customer_audit_logs` (mã `sepay.link_order`); hai cột
+       này là bản sao tiện đọc ngay trên dòng sổ. */
+    `gan_boi`          CHAR(36)     NULL DEFAULT NULL,
+    `gan_luc`          DATETIME     NULL DEFAULT NULL,
+
     `created_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uq_sepay_txn` (`sepay_id`),
     KEY `idx_sepay_order` (`order_id`),
+    KEY `idx_sepay_gan_boi` (`gan_boi`),
+    /* Chỉ mục của MÀN SỔ: cột lọc đứng trước (năm viên lọc đều chạy
+       `WHERE applied = ?`). Nó KHÔNG giúp được câu sắp xếp — danhSach() sắp
+       theo COALESCE(transaction_date, created_at), một biểu thức — nhưng
+       filesort khi ấy chạy trên tập đã lọc thay vì cả bảng. Lý do đầy đủ ở
+       database/migrations/2026-09-06-dot-7-doi-soat.sql. */
+    KEY `idx_sepay_so` (`applied`, `transaction_date`),
     CONSTRAINT `fk_sepay_order` FOREIGN KEY (`order_id`)
-        REFERENCES `orders` (`id`) ON DELETE SET NULL
+        REFERENCES `orders` (`id`) ON DELETE SET NULL,
+    CONSTRAINT `fk_sepay_gan_boi` FOREIGN KEY (`gan_boi`)
+        REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -1981,6 +2023,22 @@ CREATE TABLE `customer_prescriptions` (
     CONSTRAINT `fk_cpres_author` FOREIGN KEY (`created_by`)
         REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+/*
+ * KHOÁ NGOẠI `order_items`.`prescription_id` → `customer_prescriptions` — UC-03.
+ *
+ * PHẢI KHAI RỜI Ở ĐÂY, không khai trong chính bảng `order_items`: bảng ấy dựng
+ * ở dòng ~1323, trước bảng này gần sáu trăm dòng, và InnoDB từ chối một khoá
+ * ngoại trỏ tới bảng chưa tồn tại. Cột và chỉ mục thì vẫn nằm cùng bảng của
+ * chúng — chỉ riêng ràng buộc phải đợi tới đây.
+ *
+ * ON DELETE SET NULL: khách xoá một hồ sơ trong sổ đo mắt thì đơn hàng cũ phải
+ * còn nguyên. Cột `prescription` giữ số thật nên không mất gì đáng kể — chỉ mất
+ * đường tra ngược, và đó đúng là thứ khách vừa yêu cầu xoá.
+ */
+ALTER TABLE `order_items`
+    ADD CONSTRAINT `fk_order_items_prescription` FOREIGN KEY (`prescription_id`)
+        REFERENCES `customer_prescriptions` (`id`) ON DELETE SET NULL;
 
 -- ----------------------------------------------------------------------------
 -- VẾT THAO TÁC TRÊN DỮ LIỆU KHÁCH

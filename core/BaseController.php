@@ -303,6 +303,10 @@ class BaseController
                 'rx_raw'     => is_array($intent['rx_raw'] ?? null)
                     ? $intent['rx_raw']
                     : null,
+                /* Hồ sơ đo mắt khách đã chọn ở bước Số đo — UC-03. View dùng
+                   nó để đánh dấu dòng đang chọn trong danh sách hồ sơ, nên
+                   bấm Lùi về bước ấy vẫn thấy mình đã chọn cái nào. */
+                'rx_ho_so'   => $intent['rx_ho_so'] ?? null,
                 'lens_id'    => $intent['lens_id'] ?? null,
                 'lens_type'  => $intent['lens_type'] ?? null,
                 'back'       => safeRedirectPath(
