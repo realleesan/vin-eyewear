@@ -256,11 +256,23 @@ class ProductAdminController extends AdminController
 
         $categoryId = (string) ($_POST['category_id'] ?? '');
 
-        /* Ba trạng thái xuất bản; giá trị lạ về 'visible'. `is_visible` suy ra
-           từ đây chứ không còn là một ô tick riêng — cả trang bán hàng lọc theo
-           cột đó, và để nó lệch với ô người dùng vừa chọn thì "đã ẩn" trong
-           admin vẫn bày ra ngoài. */
+        /* HAI trạng thái xuất bản. `is_visible` suy ra từ đây chứ không còn là
+           một ô tick riêng — cả trang bán hàng lọc theo cột đó, và để nó lệch
+           với ô người dùng vừa chọn thì "đã ẩn" trong admin vẫn bày ra ngoài. */
         $trangThai = (string) ($_POST['publish_status'] ?? 'visible');
+
+        /* 'draft' ĐỌC THÀNH 'hidden' — SRS v2.1.0, J02.
+
+           Trạng thái Nháp đã bỏ. Dòng mang 'draft' chỉ còn tồn tại trong khoảng
+           giữa lúc deploy mã và lúc chạy migration, nhưng đúng khoảng đó là lúc
+           nguy hiểm: không quy đổi ở đây thì 'draft' rơi vào nhánh "giá trị lạ"
+           bên dưới và thành 'visible' — tức một mặt hàng chưa nhập đủ thông tin
+           tự bày ra trang bán hàng chỉ vì ai đó mở form sửa giá rồi bấm Lưu.
+
+           Quy về 'hidden' là đúng nghĩa: cả hai vốn cùng cho is_visible = 0. */
+        if ($trangThai === 'draft') {
+            $trangThai = 'hidden';
+        }
 
         if (!isset(((array) config('eyewear.publish_statuses'))[$trangThai])) {
             $trangThai = 'visible';

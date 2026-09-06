@@ -207,7 +207,7 @@ class App
          *
          * Đây mới chỉ là tuổi thọ DỮ LIỆU phiên trên máy chủ. Vế "hết hạn do
          * không thao tác" — thứ người dùng thực sự cảm thấy — nằm ở
-         * AuthMiddleware::customerId(), cùng lối với phiên quản trị 30 phút.
+         * AuthMiddleware::customerId(), cùng lối với phiên quản trị.
          */
         $tuoiPhien = (int) config('app.session_lifetime', 86400);
         ini_set('session.gc_maxlifetime', (string) min($tuoiPhien, 86400));

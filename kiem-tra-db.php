@@ -196,8 +196,10 @@ if ($tables === []) {
 echo '   ✓ ', count($tables), " bảng: ", implode(', ', array_slice($tables, 0, 8)),
      count($tables) > 8 ? ', …' : '', "\n";
 
+// 'favorites' đã gỡ 2026-09-06 (SRS v2.1.0) — bảng chưa từng có màn hình nào
+// dùng, và schema.sql mới không tạo nó nữa.
 $need    = ['users', 'profiles', 'user_roles', 'prescriptions', 'categories',
-            'products', 'stores', 'favorites', 'appointments',
+            'products', 'stores', 'appointments',
             'orders', 'order_items', 'contact_requests', 'remember_tokens',
             'password_resets'];
 $missing = array_diff($need, $tables);

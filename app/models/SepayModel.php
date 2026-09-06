@@ -99,16 +99,32 @@ class SepayModel extends BaseModel
          *   ít hơn cả hai      -> 'partial'        KHÔNG đổi đơn
          *
          * ─────────────────────────────────────────────────────────────────
-         * XÉT TRÊN TỔNG SỐ TIỀN ĐÃ VỀ, KHÔNG PHẢI TRÊN RIÊNG LẦN CHUYỂN NÀY
+         * MỖI GIAO DỊCH XÉT ĐỘC LẬP — SRS v2.1.0, E08
          *
-         * Đơn đặt cọc gần như luôn được trả làm HAI lần: 30% lúc đặt, phần
-         * còn lại lúc nhận. Nếu chỉ so lần chuyển hiện tại với tổng đơn thì
-         * lần thứ hai (3.080.000 trên đơn 4.400.000) mãi mãi là 'partial' —
-         * khách đã trả đủ tiền mà đơn vẫn treo ở "đã đặt cọc", và phải có
-         * người vào bấm tay. Đúng cái việc mà SePay sinh ra để khỏi phải làm.
+         * Trước đây hệ thống CỘNG DỒN mọi khoản đã về cho đơn rồi mới so với
+         * tổng tiền, nên hai lần chuyển 30% + 70% tự động đưa đơn sang "đã
+         * thanh toán". Chủ đầu tư đã bỏ cách làm đó: một giao dịch chỉ được so
+         * với chính đơn ấy, không cộng với lần trước.
          *
-         * Cộng dồn cũng lo luôn ca khách chia nhỏ vì hạn mức chuyển khoản
-         * trong ngày.
+         * HỆ QUẢ PHẢI BIẾT: khách trả cọc rồi chuyển nốt phần còn lại thì lần
+         * chuyển thứ hai KHÔNG tự đẩy đơn sang "đã thanh toán".
+         *
+         * Nó rơi vào nhãn nào thì tuỳ số tiền của CHÍNH nó. Đơn 4.400.000đ cọc
+         * 1.320.000đ: lần chuyển 3.080.000đ nhỏ hơn tổng nhưng lớn hơn cọc, nên
+         * nhãn là 'deposit_paid' — và markDepositPaid() là một lệnh không làm
+         * gì (đơn đã ở 'deposit_paid' từ lần chuyển đầu). Lần chuyển nhỏ hơn cả
+         * cọc thì nhãn là 'partial'. Cả hai trường hợp đơn đều đứng yên và cần
+         * nhân viên đối chiếu rồi bấm tay ở màn đơn hàng.
+         *
+         * Vì thế MỘT ĐƠN CÓ THỂ CÓ HAI DÒNG CÙNG NHÃN 'deposit_paid' trong sổ.
+         * Nhãn ở đây trả lời "một mình khoản này đủ tới đâu", không trả lời
+         * "đơn đang ở đâu" — chỗ trả lời câu sau là `orders.payment_status`.
+         *
+         * Bù lại là màn hình SỔ GIAO DỊCH NGÂN HÀNG (FR-SG trong SRS), nơi
+         * nhân viên nhìn thấy mọi khoản đã về cho một đơn; trước đây bảng
+         * sepay_transactions ghi vào mà không màn hình nào đọc ra.
+         *
+         * Đừng dựng lại phép cộng dồn ở đây mà không sửa SRS trước.
          * ─────────────────────────────────────────────────────────────────
          *
          * "partial" cố tình không đổi gì: khách chuyển thiếu là chuyện phải có
@@ -128,9 +144,8 @@ class SepayModel extends BaseModel
         } elseif ($order !== null) {
             $total   = (int) $order['total'];
             $deposit = (int) ($order['deposit_amount'] ?? 0);
-            // Đã về trước đó + lần này. Lần này CHƯA nằm trong sổ (dòng sổ ghi
-            // ngay dưới), nên cộng tay vào đây.
-            $received = self::receivedFor((string) $order['id']) + $amount;
+            // CHỈ lần chuyển này — không cộng với các lần trước (E08).
+            $received = $amount;
 
             if ($received >= $total) {
                 $status = 'paid';
@@ -245,25 +260,17 @@ class SepayModel extends BaseModel
         }
     }
 
-    /**
-     * Tổng tiền ĐÃ VỀ cho một đơn, cộng từ sổ giao dịch.
+    /*
+     * receivedFor() ĐÃ GỠ — SRS v2.1.0, E08.
      *
-     * Chỉ đếm `transfer_type = 'in'`: tiền hoàn lại cho khách (hoặc phí trừ
-     * vào tài khoản) không phải là tiền khách trả cho đơn này.
+     * Hàm này cộng tổng tiền đã về cho một đơn từ sổ giao dịch, để handle() so
+     * tổng đó với tổng đơn. Cách làm cộng dồn đã bỏ; mỗi giao dịch nay xét
+     * độc lập, nên không còn ai gọi.
      *
-     * Đếm cả dòng 'partial': đó vẫn là tiền thật đã về, chỉ là một mình nó
-     * chưa đủ ngưỡng nào. Bỏ chúng ra thì hai lần chuyển thiếu cộng lại vẫn
-     * mãi không thành đủ.
+     * Màn hình sổ giao dịch ngân hàng (FR-SG) sẽ cần một phép cộng tương tự để
+     * HIỂN THỊ tổng đã về cho một đơn — nhưng đó là con số cho người đọc, không
+     * phải điều kiện để máy tự đổi trạng thái đơn. Hai việc khác nhau.
      */
-    private static function receivedFor(string $orderId): int
-    {
-        return (int) Database::fetchValue(
-            "SELECT COALESCE(SUM(amount), 0)
-               FROM sepay_transactions
-              WHERE order_id = :id AND transfer_type = 'in'",
-            ['id' => $orderId]
-        );
-    }
 
     /** Cắt về đúng độ dài cột, tránh một trường dài bất thường làm hỏng cả lệnh chèn. */
     private static function clip(mixed $value, int $len): ?string

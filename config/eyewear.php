@@ -185,15 +185,20 @@ return [
      * ─────────────────────────────────────────────────────────────────────────
      */
 
-    /* Ba trạng thái xuất bản — cột `products`.`publish_status`.
-       "Nháp" khác "Ẩn": ẩn là hàng làm xong nhưng chưa tới lượt bày, nháp là
-       hàng chưa nhập đủ thông tin. Cả hai đều không hiện ra trang bán hàng, nên
-       `is_visible` = 0 cho cả hai — nhưng người trong cửa hàng cần phân biệt
-       được để biết cái nào còn thiếu việc. */
+    /* HAI trạng thái xuất bản — cột `products`.`publish_status`.
+
+       Trước đây có ba, với "Nháp" nghĩa là hàng chưa nhập đủ thông tin, tách
+       khỏi "Ẩn" nghĩa là hàng làm xong nhưng chưa tới lượt bày. Chủ đầu tư đã
+       bỏ "Nháp" (SRS v2.1.0, J02): cả hai đều không hiện ra trang bán hàng, và
+       sự phân biệt ấy không đổi việc ai phải làm gì.
+
+       Dữ liệu đang ở 'draft' được migration đợt 1 chuyển thành 'hidden'.
+
+       `is_visible` vẫn đồng bộ theo cột này: visible → 1, hidden → 0. Trang bán
+       hàng lọc theo `is_visible` nên không phải biết cột này. */
     'publish_statuses' => [
         'visible' => 'Hiện',
         'hidden'  => 'Ẩn',
-        'draft'   => 'Nháp',
     ],
 
     /* Chất liệu gọng — khoá của ProductTaxonomy::MATERIALS.

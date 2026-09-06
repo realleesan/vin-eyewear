@@ -484,9 +484,9 @@ $stepForm = static function (string $buoc): void {
 
             <!-- ══════════ 3. CHỌN LOẠI TRÒNG KÍNH ══════════ -->
             <?php if ($intent['rx'] !== null): ?>
-                <?php /* Nhắc lại số đo vừa nhập ngay trên danh sách: "Mắt đặt"
-                         dành cho độ quá cao, nên hai thứ phải nhìn thấy cùng
-                         lúc mới quyết được. */ ?>
+                <?php /* Nhắc lại số đo vừa nhập ngay trên danh sách: kiểu tròng
+                         phù hợp phụ thuộc vào độ, nên hai thứ phải nhìn thấy
+                         cùng lúc mới quyết được. */ ?>
                 <p class="brxecho"><?= e($intent['rx']) ?></p>
             <?php endif; ?>
 
@@ -577,10 +577,12 @@ $stepForm = static function (string $buoc): void {
                     <div class="bsum__row">
                         <span>Tròng kính · <?= e($lens['name']) ?>:</span>
                         <?php if (!empty($lens['quoted'])): ?>
-                            <?php /* "Mắt đặt" — tròng đặt riêng theo đơn, chưa có
-                                     giá. Ghi "+0₫" ở đây thì khách đọc ra thành
-                                     "phần tròng miễn phí", và con số cuối cùng
-                                     cửa hàng báo sẽ thành một bất ngờ. */ ?>
+                            <?php /* Kiểu tròng KHÔNG CÓ BẢNG GIÁ. Từ SRS v2.1.0
+                                     (C08) không còn kiểu nào như vậy — kiểu duy
+                                     nhất từng rơi vào đây là "Mắt đặt", đã gỡ.
+                                     Giữ nhánh để dữ liệu cũ và kiểu thêm sau này
+                                     không in ra "+0₫", vì khách sẽ đọc thành
+                                     "phần tròng miễn phí". */ ?>
                             <span class="bsum__val bsum__val--soft">Báo giá sau khi tư vấn</span>
                         <?php else: ?>
                             <span class="bsum__val bsum__val--price">+<?= money($lensPrice) ?></span>

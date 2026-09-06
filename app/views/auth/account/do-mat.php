@@ -4,8 +4,11 @@
  * auth/account/do-mat.php — mục "Thông số đo mắt" (/tai-khoan?muc=do-mat).
  *
  * Bản thiết kế vẽ mục này ở dạng CHỈ ĐỌC: một thẻ gồm dòng "Đo ngày … · Cơ sở
- * …" kèm huy hiệu hiệu lực, bảng 5 cột hai mắt, hai thẻ tròn (PD, khuyến
- * nghị), và câu nhắc đo lại. Đó là trạng thái mặc định ở đây.
+ * …", bảng 5 cột hai mắt, và hai thẻ tròn (PD, khuyến nghị). Đó là trạng thái
+ * mặc định ở đây.
+ *
+ * Huy hiệu hiệu lực và câu nhắc đo lại đã gỡ theo SRS v2.1.0 (H09): hệ thống
+ * không kết luận một số đo còn dùng được hay không, ngày đo là đủ.
  *
  * Form tự nhập nằm ở trạng thái riêng (?sua=1). Nó có từ trước bản thiết kế
  * và là cách duy nhất để khách mang đơn thuốc đo ở nơi khác sang, nên không
@@ -13,24 +16,14 @@
  * controller mở thẳng form, khỏi bắt khách nhìn một thẻ rỗng rồi tự tìm nút.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * THẺ THỨ HAI: "KÍNH ĐANG ĐEO"
+ * MỤC "KÍNH ĐANG ĐEO" ĐÃ GỠ — SRS v2.1.0, A20
  *
- * Cửa hàng yêu cầu thêm phần này để có cơ sở tư vấn chính xác hơn — cùng một
- * đơn thuốc −3.00 nhưng người đang đeo đa tròng gọng khoan không viền và người
- * lần đầu cắt kính nhận hai lời khuyên khác hẳn nhau.
- *
- * Nó là một THẺ RIÊNG, không phải mấy dòng thêm vào bảng số đo, vì hai thứ trả
- * lời hai câu khác nhau và cập nhật theo hai nhịp khác nhau: số độ đo lại sau
- * 6–12 tháng, còn cặp kính đang đeo thì đổi khi khách đổi kính. Gộp một thẻ
- * thì sửa loại gọng cũng phải đi qua một form đầy số độ.
+ * Trang này từng có thẻ thứ hai cho khách tự khai cặp kính đang dùng. Chủ đầu
+ * tư đã bỏ: dữ liệu tự khai, không ai đối chiếu, và trên thực tế gần như không
+ * được điền.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-/* Đang đeo gì — dùng ở cả hai trạng thái, nên tính một lần ở đây.
-   $wearOn là các tính chất ĐÃ CHỌN; $wearFeatures (do controller đưa vào) là
-   cả danh sách để dựng ô tick. Hai thứ khác nhau nên tên phải khác nhau. */
-$wearType = $prescription['wear_lens_type'] ?? null;
-$wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? null);
 ?>
 
 <div class="acct-head acct-head--row">
@@ -264,138 +257,9 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
                    value="<?= e($prescription['recommendation'] ?? '') ?>">
         </label>
 
-        <?php
-        /*
-         * KÍNH ĐANG ĐEO — nằm TRONG cùng một <form> với số độ, dù ở màn chỉ đọc
-         * nó là thẻ riêng.
-         *
-         * Hai form riêng thì phải có hai nút "Lưu", và khách sửa cả hai phần
-         * rồi bấm một nút sẽ mất phần kia mà không có gì báo. Một form một nút
-         * là quy ước đang dùng ở mọi mục khác của trang tài khoản.
-         */
-        ?>
-        <hr class="acct-form__rule">
-
-        <h2 class="acct-form__title">Kính đang đeo</h2>
-        <p class="acct-form__note acct-form__note--lead">
-            Không bắt buộc. Những thông tin này giúp cửa hàng biết bạn đang quen với
-            loại kính nào để tư vấn cặp mới sát hơn.
-        </p>
-
-        <div class="acct-form__row">
-            <label class="acct-field">
-                <span class="acct-field__label">Loại tròng đang dùng</span>
-                <select class="acct-field__input" name="wear_lens_type">
-                    <option value="">— Chưa chọn —</option>
-                    <?php /* "Chưa đeo kính" là một câu trả lời THẬT, khác hẳn
-                             "chưa chọn": nó nói cho người tư vấn biết đây là
-                             lần đầu khách cắt kính. */ ?>
-                    <option value="<?= e(UserModel::WEAR_NONE) ?>"
-                            <?= $wearType === UserModel::WEAR_NONE ? 'selected' : '' ?>>
-                        Chưa đeo kính bao giờ
-                    </option>
-                    <?php foreach ($lensTypes as $ty): ?>
-                        <option value="<?= e($ty['id']) ?>"
-                                <?= $wearType === $ty['id'] ? 'selected' : '' ?>>
-                            <?= e($ty['name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </label>
-
-            <label class="acct-field">
-                <span class="acct-field__label">Loại gọng đang dùng</span>
-                <select class="acct-field__input" name="wear_frame_type">
-                    <option value="">— Chưa chọn —</option>
-                    <?php foreach ($wearFrames as $fr): ?>
-                        <option value="<?= e($fr) ?>"
-                                <?= ($prescription['wear_frame_type'] ?? '') === $fr ? 'selected' : '' ?>>
-                            <?= e($fr) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </label>
-        </div>
-
-        <div class="acct-field">
-            <span class="acct-field__label" id="nhan-tinh-chat">Tính chất tròng đang dùng</span>
-
-            <?php
-            /*
-             * ─────────────────────────────────────────────────────────────────
-             * BẢNG XỔ CHỌN NHIỀU — <details> BỌC CHÍNH CÁC Ô TICK
-             *
-             * Một cặp tròng thường có vài tính chất cùng lúc (siêu mỏng + chống
-             * ánh sáng xanh + chống trầy), nên đây bắt buộc là ô chọn nhiều.
-             *
-             * VÌ SAO KHÔNG PHẢI <select multiple>, dù cửa hàng nói "dropdown":
-             * trên điện thoại nó thu về một danh sách cuộn tí hon mà nhiều
-             * người không biết là bấm giữ được nhiều mục, và trên máy tính thì
-             * phải giữ Ctrl — một cử chỉ không ai đoán ra. Lý lẽ này có từ bản
-             * trước và vẫn đúng.
-             *
-             * <details> cho đúng thứ cửa hàng muốn — một ô đóng lại, bấm mới xổ
-             * — mà bên trong vẫn là ô tick thật: nhìn là biết chọn được nhiều,
-             * và KHÔNG CẦN một dòng JavaScript nào để mở/đóng. Cùng thẻ mà cột
-             * lọc trang sản phẩm và nhóm "Tài khoản của tôi" ở cột trái đang
-             * dùng.
-             *
-             * DÒNG TÓM TẮT do MÁY CHỦ in ra, đúng ở lúc tải trang. Tắt JS thì
-             * tick xong nó chưa đổi cho tới khi Lưu — chấp nhận được vì lúc ấy
-             * bảng đang mở và người dùng nhìn thẳng vào các ô tick. Có JS thì
-             * account.js cập nhật ngay; xem khối "BẢNG XỔ CHỌN NHIỀU" ở đó.
-             * ─────────────────────────────────────────────────────────────────
-             */
-            $tomTat = $wearOn === [] ? '— Chưa chọn —' : implode(' · ', $wearOn);
-            ?>
-            <details class="acct-multi" data-multi>
-                <summary class="acct-multi__btn">
-                    <span class="acct-multi__val" data-multi-val><?= e($tomTat) ?></span>
-                    <?php /* Chữ V vẽ tay, cùng hình với mũi tên của các ô chọn
-                             khác trên site — xem .catpick__caret. Ký tự ▼ thì
-                             mỗi hệ điều hành vẽ một kiểu và không chỉnh được
-                             độ dày nét. */ ?>
-                    <svg class="acct-multi__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
-                              stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </summary>
-
-                <div class="acct-multi__panel">
-                    <div class="acct-choice" role="group" aria-labelledby="nhan-tinh-chat">
-                        <?php foreach ($wearFeatures as $ft): ?>
-                            <label class="acct-choice__opt">
-                                <input type="checkbox" name="wear_lens_features[]" value="<?= e($ft) ?>"
-                                       <?= in_array($ft, $wearOn, true) ? 'checked' : '' ?>>
-                                <span><?= e($ft) ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </details>
-        </div>
-
-        <div class="acct-form__row">
-            <label class="acct-field">
-                <span class="acct-field__label">Đã dùng cặp kính hiện tại bao lâu</span>
-                <select class="acct-field__input" name="wear_since">
-                    <option value="">— Chưa chọn —</option>
-                    <?php foreach ($wearSince as $sn): ?>
-                        <option value="<?= e($sn) ?>"
-                                <?= ($prescription['wear_since'] ?? '') === $sn ? 'selected' : '' ?>>
-                            <?= e($sn) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </label>
-
-            <label class="acct-field">
-                <span class="acct-field__label">Ghi chú thêm</span>
-                <input class="acct-field__input" type="text" name="wear_note" maxlength="255"
-                       placeholder="VD: hay tuột gọng, đeo máy tính cả ngày"
-                       value="<?= e($prescription['wear_note'] ?? '') ?>">
-            </label>
-        </div>
+        <?php /* Mục "Kính đang đeo" đã gỡ — SRS v2.1.0, A20. Năm ô khách tự
+                 khai về cặp kính đang dùng (kiểu tròng, tính chất, loại gọng,
+                 dùng bao lâu, ghi chú) không còn. */ ?>
 
         <div class="acct-form__actions">
             <button type="submit" class="acct-btn acct-btn--primary">Lưu thông số</button>
@@ -424,9 +288,9 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
                 echo e(implode(' · ', $parts));
                 ?>
             </span>
-            <span class="acct-badge acct-badge--<?= $rxValid ? 'done' : 'wait' ?>">
-                <?= $rxValid ? 'Còn hiệu lực' : 'Nên đo lại' ?>
-            </span>
+            <?php /* Huy hiệu "Còn hiệu lực / Nên đo lại" đã gỡ — SRS v2.1.0, H09.
+                     Ngày đo vẫn hiện ngay bên trái, đó là dữ kiện để khách tự
+                     đánh giá; hệ thống không kết luận thay họ. */ ?>
         </div>
 
         <table class="acct-rx">
@@ -483,55 +347,8 @@ $wearOn   = UserModel::wearFeatureList($prescription['wear_lens_features'] ?? nu
             </div>
         <?php endif; ?>
 
-        <span class="acct-rxcard__note">Thông số nên được đo lại sau mỗi 6–12 tháng.</span>
-    </div>
-
-    <?php
-    /*
-     * THẺ "KÍNH ĐANG ĐEO" — chỉ hiện khi khách đã điền ít nhất một ô.
-     *
-     * Chưa điền gì thì hiện một lời mời thay vì một thẻ đầy dấu gạch ngang:
-     * bảng số độ ở trên phải in "—" cho ô trống vì trong đơn thuốc "không đo"
-     * khác "bằng không", còn ở đây không có gì để phân biệt — trống thì đúng
-     * là chưa có thông tin.
-     *
-     * (Chữ dùng trong mục này CỐ Ý tránh "khai". Đây là thứ khách tự nguyện
-     * cho biết để được tư vấn sát hơn, không phải một thủ tục phải làm.)
-     */
-    $wearRows = array_filter([
-        'Loại tròng' => UserModel::wearLensTypeName($wearType),
-        'Tính chất'  => $wearOn === [] ? null : implode(' · ', $wearOn),
-        'Loại gọng'  => $prescription['wear_frame_type'] ?? null,
-        'Đã dùng'    => $prescription['wear_since'] ?? null,
-        'Ghi chú'    => $prescription['wear_note'] ?? null,
-    ]);
-    ?>
-    <div class="acct-card acct-wear">
-        <div class="acct-rxcard__top">
-            <span class="acct-rxcard__when">Kính đang đeo</span>
-            <a class="acct-wear__edit" href="/tai-khoan?muc=do-mat&amp;sua=1">
-                <?php /* "Điền ngay", không phải "Khai ngay": đây là mục khách
-                         tự nguyện cho biết thói quen đeo kính để được tư vấn sát
-                         hơn — chữ "khai" đọc như một thủ tục bắt buộc. */ ?>
-                <?= $wearRows === [] ? 'Điền ngay' : 'Cập nhật' ?>
-            </a>
-        </div>
-
-        <?php if ($wearRows === []): ?>
-            <span class="acct-rxcard__note">
-                Bạn chưa cho biết cặp kính đang đeo. Cửa hàng dùng thông tin này để
-                tư vấn loại tròng và gọng sát với thói quen của bạn hơn.
-            </span>
-        <?php else: ?>
-            <dl class="acct-wear__list">
-                <?php foreach ($wearRows as $label => $value): ?>
-                    <div class="acct-wear__row">
-                        <dt><?= e($label) ?></dt>
-                        <dd><?= e($value) ?></dd>
-                    </div>
-                <?php endforeach; ?>
-            </dl>
-        <?php endif; ?>
+        <?php /* Không còn câu khuyến nghị đo lại theo mốc thời gian — SRS
+                 v2.1.0, H09. Ngày đo hiện ở đầu thẻ là đủ. */ ?>
     </div>
 
 <?php endif; ?>

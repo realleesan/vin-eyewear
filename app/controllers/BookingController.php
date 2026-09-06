@@ -251,21 +251,15 @@ class BookingController extends BaseController
         }
 
         /*
-         * ĐẨY SANG ZALO CỦA CỬA HÀNG — ngay khi lịch đã nằm trong CSDL.
+         * KHÔNG ĐẨY SANG ZALO — SRS v2.1.0, G12.
          *
-         * Cửa hàng đặt tính năng này để nhân viên không phải liên tục mở
-         * /quan-tri/lich-hen xem có lịch mới chưa. Đọc lại hàng vừa ghi thay vì
-         * gửi $data: tin báo cần TÊN cơ sở, mà $data chỉ có id.
+         * Ba sự kiện tạo / dời / huỷ lịch trước đây đều bắn một tin ZNS về Zalo
+         * của cửa hàng. Chủ đầu tư đã bỏ đường này: nhân viên theo dõi lịch mới
+         * bằng huy hiệu "Lịch hẹn" trên thanh bên khu quản trị, vốn đã đếm đúng
+         * số lịch đang chờ xác nhận.
          *
-         * Zalo::appointment() tự nuốt mọi lỗi và có hạn giờ ngắn — Zalo sập hay
-         * mạng ra ngoài bị chặn cũng không được phép biến thành trang lỗi cho
-         * người vừa đặt lịch xong. Xem khối chú thích đầu core/Zalo.php.
+         * Zalo vẫn dùng cho yêu cầu liên hệ (CSKH) — xem core/Zalo.php.
          */
-        $saved = BookingModel::findByCode($result['code']);
-
-        if ($saved !== null) {
-            Zalo::appointment($saved, 'created');
-        }
 
         /*
          * Đặt xong thì đi đâu?

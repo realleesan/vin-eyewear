@@ -54,13 +54,8 @@ class OrderAdminController extends AdminController
 
         $q      = trim((string) ($_GET['q'] ?? ''));
         $page   = max(1, (int) ($_GET['page'] ?? 1));
-        /* Phạm vi cơ sở đi vào TRUY VẤN, không đi vào view.
-
-           Lọc ở PHP sau khi đã lấy về là sai theo cả hai nghĩa: phân trang
-           đếm nhầm (trang 1 hiện 6 đơn vì 14 đơn bị loại sau khi đếm), và dữ
-           liệu của cơ sở khác vẫn rời khỏi cơ sở dữ liệu — chỉ là không in ra. */
         $result = OrderModel::paginateAdmin(
-            $status, $page, self::PER_PAGE, $q, $range, $this->phamViCoSo()
+            $status, $page, self::PER_PAGE, $q, $range
         );
 
         // Dòng hàng của các đơn đang hiện, gộp MỘT câu lệnh thay vì truy vấn
@@ -70,8 +65,6 @@ class OrderAdminController extends AdminController
         $this->renderAdmin('admin/orders/index', [
             'pageTitle' => 'Đơn hàng — Quản trị',
             'orders'    => $result['items'],
-            // View dùng cờ này để nói rõ vì sao danh sách ngắn hơn mong đợi.
-            'gioiHanCoSo' => $this->biGioiHanCoSo(),
             'items'     => $itemsByOrder,
             'total'     => $result['total'],
             'page'      => $result['page'],
@@ -81,10 +74,7 @@ class OrderAdminController extends AdminController
             // Nhãn trạng thái TIỀN. Truyền vào như 'statuses' thay vì để view gọi
             // thẳng hằng của model — cùng một lối cho cả hai trục trạng thái.
             'payStatuses' => OrderModel::PAYMENT_STATUSES,
-            /* Đếm TRONG PHẠM VI, cùng phạm vi với paginateAdmin() ở trên —
-               nếu không thì viên lọc hiện số của toàn hệ thống trong khi bấm
-               vào chỉ ra vài dòng. Xem OrderModel::statusCounts(). */
-            'counts'    => OrderModel::statusCounts($this->phamViCoSo()),
+            'counts'    => OrderModel::statusCounts(),
             'q'         => $q,
             'range'     => $range,
             'ranges'    => OrderModel::DATE_RANGES,
@@ -116,7 +106,7 @@ class OrderAdminController extends AdminController
             redirect($back);
         }
 
-        $this->chanNgoaiPhamVi($id, $back);
+        $this->chanDonKhongTonTai($id, $back);
 
         $order = OrderModel::find($id);
 
@@ -127,51 +117,32 @@ class OrderAdminController extends AdminController
 
         /*
          * ─────────────────────────────────────────────────────────────────────
-         * MỞ LẠI ĐƠN ĐÃ HUỶ — Q3.1, chốt 04/09/2026
+         * "ĐÃ HUỶ" LÀ TRẠNG THÁI KẾT THÚC — SRS v2.1.0, F10
          *
-         * Quyết định này SỬA yêu cầu ST-16 vốn đặt "Đã huỷ" là trạng thái kết
-         * thúc. Lý do BA đưa ra: nhân viên bấm nhầm nút Huỷ là chuyện xảy ra
-         * thật ở quầy, và bắt tạo đơn mới thì mất luôn số đo, mã giảm giá và
-         * mốc thời gian của đơn cũ.
+         * Trước đây Quản trị viên mở lại được đơn đã huỷ, kèm lý do bắt buộc.
+         * Chủ đầu tư đã bỏ hẳn đường này, và việc đó kéo theo hai thứ:
          *
-         * Nhưng "mở lại được" không có nghĩa là "mở lại như mọi thao tác
-         * khác". Huỷ đơn đã trả hàng về kho và đã cắt doanh thu; đi ngược lại
-         * là chạm vào cả hai con số đó. Nên Q3.1 kèm hai điều kiện, và cả hai
-         * đều kiểm ở đây:
+         *   · Hoàn kho trở thành MỘT CHIỀU. Huỷ đơn trả hàng về kho, và không
+         *     còn thao tác nào trừ lại — xem OrderModel::changeStatus().
+         *   · Người bấm nhầm nút Huỷ chỉ còn một đường lui: THANH HOÀN TÁC
+         *     hiện ngay sau thao tác, sống 5 phút. Hết cửa sổ đó thì phải tạo
+         *     đơn mới.
          *
-         *   ai      chỉ Quản trị viên. Đường của người vừa bấm nhầm là THANH
-         *           HOÀN TÁC ngay dưới (Q3.2) — nó không đòi lý do vì nó chỉ
-         *           sống vài phút và chỉ cho chính người ấy.
-         *   lý do   bắt buộc. Không phải để làm khó: một đơn có một lần huỷ
-         *           rồi mở lại mà không kèm chữ nào thì người đọc sổ sáu tháng
-         *           sau chỉ thấy hai dòng mâu thuẫn nhau.
+         * Chặn ở ĐÂY chứ không chỉ giấu nút trong view: ô chọn trạng thái là
+         * một form, và một cú POST dựng tay vẫn gửi được giá trị bất kỳ.
          * ─────────────────────────────────────────────────────────────────────
          */
-        $moLaiDon = (string) $order['status'] === 'cancelled' && $status !== 'cancelled';
-        $lyDo     = trim((string) ($_POST['ly_do'] ?? ''));
-
-        if ($moLaiDon) {
-            if (!UserModel::hasRole($this->userId, 'admin')) {
-                flash('admin_error',
-                    'Chỉ Quản trị viên mở lại được đơn đã huỷ. '
-                    . 'Nếu vừa bấm nhầm, dùng thanh Hoàn tác ngay sau thao tác.');
-                redirect($back);
-            }
-
-            if (utf8Length($lyDo) < OrderModel::LY_DO_TOI_THIEU) {
-                flash('admin_error',
-                    'Mở lại đơn đã huỷ thì phải ghi lý do, tối thiểu '
-                    . OrderModel::LY_DO_TOI_THIEU . ' ký tự.');
-                redirect($back);
-            }
+        if ((string) $order['status'] === 'cancelled' && $status !== 'cancelled') {
+            flash('admin_error',
+                'Đơn đã huỷ không mở lại được. Nếu vừa bấm nhầm, dùng thanh '
+                . 'Hoàn tác hiện ngay sau thao tác; quá cửa sổ đó thì tạo đơn mới.');
+            redirect($back);
         }
 
         // Mọi luật đi kèm việc đổi trạng thái nằm trong model: ghi lịch sử
         // (thanh tiến trình của khách đọc bảng đó), hoàn kho khi huỷ, và đánh
         // dấu đã thu tiền khi đơn COD hoàn tất. Xem OrderModel::changeStatus.
-        OrderModel::changeStatus(
-            $id, $status, AuthMiddleware::staffId(), $moLaiDon ? $lyDo : null
-        );
+        OrderModel::changeStatus($id, $status, AuthMiddleware::staffId());
 
         $this->ghiHoanTac([$id => (string) $order['status']], $status);
 
@@ -200,7 +171,7 @@ class OrderAdminController extends AdminController
         $id   = (string) ($_POST['id'] ?? '');
         $paid = ($_POST['paid'] ?? '') === '1';
 
-        $this->chanNgoaiPhamVi($id, $back);
+        $this->chanDonKhongTonTai($id, $back);
 
         $changed = $paid ? OrderModel::markPaid($id) : OrderModel::markUnpaid($id);
 
@@ -255,27 +226,9 @@ class OrderAdminController extends AdminController
 
         $ids = array_slice(array_unique($ids), 0, self::BULK_MAX);
 
-        /* PHẠM VI CƠ SỞ ÁP TRƯỚC KHI PHÂN VIỆC — SNFR-07b.
-
-           Lọc ở ĐÂY chứ không trong từng nhánh: hai nhánh tự lọc là hai chỗ có
-           thể quên, và nhánh quên thì thao tác hàng loạt trở thành đúng cái lỗ
-           mà thao tác đơn lẻ vừa bịt. Lọc chứ không từ chối cả lô — xem
-           OrderModel::locTheoPhamVi(). */
-        $truoc = count($ids);
-        $ids   = OrderModel::locTheoPhamVi($ids, $this->phamViCoSo());
-
-        if ($ids === []) {
-            flash('admin_error', 'Không có đơn nào trong phạm vi cơ sở của bạn.');
-            redirect($back);
-        }
-
-        if (count($ids) < $truoc) {
-            /* NÓI RA số đơn bị bỏ. Im lặng làm 6 trên 20 đơn rồi báo thành
-               công là để người dùng tin rằng cả 20 đã xong. */
-            flash('admin_error', sprintf(
-                'Bỏ qua %d đơn ngoài phạm vi cơ sở của bạn.', $truoc - count($ids)
-            ));
-        }
+        /* KHÔNG CÒN LỌC THEO PHẠM VI CƠ SỞ — SRS v2.1.0, K06. Mọi nhân viên
+           thao tác được trên mọi đơn, nên lô gửi lên đi thẳng vào phần phân
+           việc; phần cắt duy nhất còn lại là trần BULK_MAX ở trên. */
 
         match ((string) ($_POST['act'] ?? '')) {
             'trang-thai' => $this->bulkStatus($ids, (string) ($_POST['status'] ?? ''), $back),
@@ -304,25 +257,22 @@ class OrderAdminController extends AdminController
     {
         $this->requirePost('/quan-tri/don-hang');
 
-        $back  = $this->back();
-        $truoc = (array) ($_POST['truoc'] ?? []);
-        $soDon = 0;
+        $back     = $this->back();
+        $truoc    = (array) ($_POST['truoc'] ?? []);
+        $soDon    = 0;
+        $boQuaHuy = 0;
 
         /* CỬA SỔ ĐƯỢC KIỂM Ở MÁY CHỦ, KHÔNG CHỈ Ở CHỖ VẼ THANH — Q3.2.
 
-           Ẩn thanh đi là đủ cho người dùng thật, nhưng từ 07/09/2026 đường
-           này còn là một lối MỞ LẠI ĐƠN ĐÃ HUỶ mà không phải ghi lý do. Q3.1
-           chỉ cho Quản trị viên làm việc đó và bắt kèm lý do; nếu cửa sổ chỉ
-           tồn tại ở lớp giao diện thì một cú POST dựng tay đi vòng qua cả hai
-           điều kiện ấy. Trong cửa sổ thì miễn lý do là ĐÚNG Ý Q3.2 — nhưng
-           đúng ý ấy chỉ kéo dài vài phút. */
+           Ẩn thanh đi là đủ cho người dùng thật, nhưng một cú POST dựng tay thì
+           không đi qua lớp vẽ. */
         $luc = (int) ($_POST['luc'] ?? 0);
 
         if ($luc <= 0 || (time() - $luc) > OrderModel::RUT_LAI_GIAY) {
             flash('admin_error',
                 'Đã quá cửa sổ hoàn tác ' . (int) (OrderModel::RUT_LAI_GIAY / 60)
                 . ' phút. Đổi trạng thái bằng ô chọn trên bảng; '
-                . 'riêng đơn đã huỷ thì cần Quản trị viên mở lại kèm lý do.');
+                . 'riêng đơn đã huỷ thì không lùi được nữa — tạo đơn mới.');
             redirect($back);
         }
 
@@ -331,9 +281,36 @@ class OrderAdminController extends AdminController
                 continue;
             }
 
-            /* Phạm vi cơ sở — SNFR-07b. Hoàn tác cũng là một đường GHI, và
-               danh sách `truoc[]` đi trong chính form nên sửa được. */
-            if (!OrderModel::trongPhamVi($id, $this->phamViCoSo())) {
+            /* Hoàn tác cũng là một đường GHI, và danh sách `truoc[]` đi trong
+               chính form nên sửa được — vẫn phải kiểm đơn có thật. */
+            $don = OrderModel::find($id);
+
+            if ($don === null) {
+                continue;
+            }
+
+            /*
+             * ─────────────────────────────────────────────────────────────
+             * HOÀN TÁC KHÔNG ĐƯA ĐƠN RỜI KHỎI "ĐÃ HUỶ" — SRS v2.1.0, F10
+             *
+             * F10 gỡ tính năng mở lại đơn đã huỷ và chốt "đơn đã huỷ là chung
+             * cuộc" (GD-17). Kèm theo đó, hoàn kho thành MỘT CHIỀU: huỷ đơn
+             * trả hàng về kho, và không thao tác nào trừ lại
+             * (OrderModel::changeStatus).
+             *
+             * Nếu thanh Hoàn tác vẫn kéo được đơn từ 'cancelled' về trạng thái
+             * cũ thì nó trở thành đúng cái đường F10 vừa gỡ — và tệ hơn: kho
+             * đã +2 lúc huỷ mà không ai trừ lại, nên hai chiếc gọng ấy tồn tại
+             * hai lần trong hệ thống, một lần trên kệ và một lần trong đơn vừa
+             * được hồi sinh. Không có lỗi nào nổ ra và không dòng log nào.
+             *
+             * Nên chặn ở đây. Bấm nhầm nút Huỷ thì phải tạo đơn mới — cái giá
+             * của việc "đã huỷ là chung cuộc", và nó được nói ra ở câu báo
+             * dưới thay vì để người dùng tự đoán.
+             * ─────────────────────────────────────────────────────────────
+             */
+            if ((string) $don['status'] === 'cancelled' && $status !== 'cancelled') {
+                $boQuaHuy++;
                 continue;
             }
 
@@ -342,8 +319,20 @@ class OrderAdminController extends AdminController
         }
 
         if ($soDon === 0) {
-            flash('admin_error', 'Không còn gì để hoàn tác.');
+            flash('admin_error', $boQuaHuy > 0
+                ? 'Đơn đã huỷ không lùi lại được — huỷ đơn là chung cuộc. '
+                  . 'Nếu khách vẫn lấy hàng thì tạo đơn mới.'
+                : 'Không còn gì để hoàn tác.');
             redirect($back);
+        }
+
+        if ($boQuaHuy > 0) {
+            /* Nói ra NGAY CẢ KHI phần còn lại thành công: im lặng lùi 3 trên 4
+               đơn rồi báo thành công là để người dùng tin rằng cả 4 đã lùi. */
+            flash('admin_error', sprintf(
+                'Bỏ qua %d đơn ĐÃ HUỶ — huỷ đơn là chung cuộc, không lùi lại được.',
+                $boQuaHuy
+            ));
         }
 
         /* KHÔNG ghi hoàn tác cho chính cú hoàn tác. Một thanh "Hoàn tác" hiện
@@ -380,20 +369,13 @@ class OrderAdminController extends AdminController
              * ─────────────────────────────────────────────────────────────────
              * ĐƠN ĐÃ HUỶ KHÔNG MỞ LẠI ĐƯỢC BẰNG THAO TÁC HÀNG LOẠT — Q3.1
              *
-             * Bổ sung 09/09/2026. updateStatus() (đường đơn lẻ) kiểm rất kỹ:
-             * chỉ Quản trị viên, và bắt buộc lý do tối thiểu 10 ký tự. Đường
-             * hàng loạt này thì không kiểm gì — nên tick 20 đơn ở viên lọc "Đã
-             * huỷ" rồi chọn "Đang chuẩn bị" là mở lại cả 20 đơn, KHÔNG cần
-             * quyền quản trị và KHÔNG một dòng lý do nào.
-             *
-             * Hậu quả không chỉ là sổ sách: changeStatus() chạy nhánh mở-huỷ
-             * và TRỪ LẠI TỒN KHO cho từng đơn (xem khối chú thích ở đó), nên
-             * một cú bấm nhầm dời kho đi 20 lần.
+             * "Đã huỷ" là trạng thái KẾT THÚC — SRS v2.1.0, F10. Không còn
+             * đường nào rời khỏi nó, kể cả đường đơn lẻ, nên đường hàng loạt
+             * cũng phải chặn.
              *
              * BỎ QUA chứ không từ chối cả lô: người bấm gần như luôn đang định
              * xử lý những đơn CHƯA huỷ, và phạt cả 20 vì 2 đơn lẫn vào là bắt
-             * họ làm lại từ đầu. Đơn đã huỷ có đường riêng — mở từng đơn kèm
-             * lý do — và câu báo dưới đây chỉ thẳng tới đó.
+             * họ làm lại từ đầu.
              * ─────────────────────────────────────────────────────────────────
              */
             if ((string) $order['status'] === 'cancelled' && $status !== 'cancelled') {
@@ -410,8 +392,8 @@ class OrderAdminController extends AdminController
                20 đơn rồi báo thành công là để người dùng tin rằng cả 20 đã
                xong — và hai đơn kia nằm lại mà không ai biết. */
             flash('admin_error', sprintf(
-                'Bỏ qua %d đơn ĐÃ HUỶ. Mở lại đơn đã huỷ phải làm từng đơn, '
-                . 'do Quản trị viên và kèm lý do (Q3.1).',
+                'Bỏ qua %d đơn ĐÃ HUỶ. Đơn đã huỷ không mở lại được; '
+                . 'nếu cần xử lý tiếp thì tạo đơn mới.',
                 $boQua
             ));
         }
@@ -419,7 +401,7 @@ class OrderAdminController extends AdminController
         if ($truoc === []) {
             $this->bad(
                 $boQua > 0
-                    ? 'Tất cả đơn đã chọn đều ở trạng thái Đã huỷ — xem hướng dẫn ở trên.'
+                    ? 'Tất cả đơn đã chọn đều ở trạng thái Đã huỷ — không mở lại được.'
                     : 'Không tìm thấy đơn hàng.',
                 $back
             );
@@ -468,23 +450,21 @@ class OrderAdminController extends AdminController
      * @param array<string, string> $truoc [id đơn => trạng thái cũ]
      */
     /**
-     * Chặn thao tác ghi lên một đơn NGOÀI phạm vi cơ sở của người bấm.
+     * Chặn thao tác ghi lên một đơn KHÔNG TỒN TẠI.
      *
-     * Gộp cả phép kiểm tồn tại vào đây và ĐI THẲNG tới redirect: bốn action
-     * đơn lẻ đều cần đúng một câu hỏi, và bốn chỗ tự hỏi là bốn cơ hội quên —
-     * mà cái quên đó không gây lỗi, nó chỉ lặng lẽ cho người ta sửa đơn của
-     * cơ sở khác. Đây chính là chỗ đã bị bỏ sót suốt từ 05/09 tới 09/09.
+     * Gộp phép kiểm vào một chỗ và ĐI THẲNG tới redirect: bốn action đơn lẻ
+     * đều cần đúng một câu hỏi, và bốn chỗ tự hỏi là bốn cơ hội quên.
      *
-     * MỘT CÂU BÁO CHO CẢ HAI TRƯỜNG HỢP (không tồn tại · ngoài phạm vi): trả
-     * lời khác nhau là nói cho người dò biết id nào có thật.
+     * Trước đây hàm này còn kiểm phạm vi cơ sở; phạm vi đã gỡ theo SRS v2.1.0
+     * (K06) nên chỉ còn phép kiểm tồn tại.
      */
-    private function chanNgoaiPhamVi(string $id, string $back): void
+    private function chanDonKhongTonTai(string $id, string $back): void
     {
-        if (OrderModel::trongPhamVi($id, $this->phamViCoSo())) {
+        if ($id !== '' && OrderModel::exists(['id' => $id])) {
             return;
         }
 
-        flash('admin_error', 'Không tìm thấy đơn hàng trong phạm vi cơ sở của bạn.');
+        flash('admin_error', 'Không tìm thấy đơn hàng.');
         redirect($back);
     }
 
@@ -533,7 +513,7 @@ class OrderAdminController extends AdminController
         $id   = (string) ($_POST['id'] ?? '');
 
         $this->requireManager($back);
-        $this->chanNgoaiPhamVi($id, $back);
+        $this->chanDonKhongTonTai($id, $back);
 
         $ket = OrderModel::batDauMai($id, $this->userId);
 
@@ -566,7 +546,7 @@ class OrderAdminController extends AdminController
         $back = $this->back();
         $id   = (string) ($_POST['id'] ?? '');
 
-        $this->chanNgoaiPhamVi($id, $back);
+        $this->chanDonKhongTonTai($id, $back);
 
         $order = OrderModel::find($id);
 
@@ -665,8 +645,11 @@ class OrderAdminController extends AdminController
         $order['co_trong']    = OrderModel::coTrong($id);
         $order['da_mai']      = OrderModel::daBatDauMai($order);
         $order['rut_lai_duoc'] = OrderModel::trongCuaSoRutLai($order, $this->userId);
-        $order['la_admin']    = UserModel::hasRole($this->userId, 'admin');
-        $order['la_quan_ly']  = $order['la_admin'] || UserModel::hasRole($this->userId, 'manager');
+        /* Chỉ còn phục vụ nút đảo ngược mốc mài quá cửa sổ rút lại. Cờ
+           `la_admin` trước đây còn dùng để vẽ ô "mở lại đơn đã huỷ"; chức năng
+           đó đã gỡ (SRS v2.1.0, F10). */
+        $order['la_quan_ly']  = UserModel::hasRole($this->userId, 'admin')
+                             || UserModel::hasRole($this->userId, 'manager');
 
         /*
          * ─────────────────────────────────────────────────────────────────────

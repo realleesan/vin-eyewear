@@ -106,14 +106,14 @@ $navGroups = [
 /*
  * MỤC "TÀI KHOẢN NỘI BỘ" CHỈ HIỆN VỚI VAI TRÒ 'admin'.
  *
- * Nhân viên và quản lý vẫn MỞ ĐƯỢC trang đó bằng cách gõ địa chỉ — nó cố ý
- * cho xem danh sách, vì biết ai đang có quyền vào khu quản trị là việc chính
- * đáng. Chỉ cái nút đặt lại mật khẩu là bị chặn, và chặn ở controller chứ
- * không ở đây.
+ * Từ SRS v2.1.0 (K13), trang đó cũng CHẶN THẬT bằng 403 — trước đây nhân viên
+ * và quản lý gõ địa chỉ vẫn mở được và đọc được email, số điện thoại, vai trò
+ * và trạng thái khoá của cả đội ngũ.
  *
- * Giấu khỏi thanh bên là chuyện GỌN MẮT, không phải chuyện bảo mật: bày một
- * mục mà bấm vào chỉ để đọc dòng "bạn không có quyền" thì mỗi ngày mỗi nhân
- * viên đều thấy một cánh cửa khoá.
+ * Nên dòng ẩn ở đây và phép chặn ở StaffAdminController::index() nay nói cùng
+ * một điều. Giấu khỏi thanh bên vẫn chỉ là chuyện GỌN MẮT — bày một mục mà bấm
+ * vào chỉ để đọc "bạn không có quyền" thì mỗi ngày mỗi nhân viên đều thấy một
+ * cánh cửa khoá — nhưng nó không còn là hàng rào duy nhất.
  */
 if (in_array('admin', $adminRoles, true)) {
     // Chèn TRƯỚC "Quên mật khẩu" để hai mục về người dùng nằm cạnh nhau,
@@ -125,8 +125,8 @@ if (in_array('admin', $adminRoles, true)) {
     /*
      * "LỊCH SỬ THAO TÁC" — cũng chỉ vai trò 'admin', và đặt CUỐI nhóm Hệ thống.
      *
-     * Khác "Tài khoản nội bộ" ở một điểm: mục kia giấu đi cho gọn mắt còn
-     * trang thì vẫn mở được, mục này thì controller CHẶN THẬT bằng 403. Nhật
+     * Giống "Tài khoản nội bộ" ở chỗ cả hai đều chặn thật bằng 403 ở
+     * controller, không chỉ giấu khỏi thanh bên. Nhật
      * ký cho biết ai đã xem hồ sơ khúc xạ của khách nào — bày cho mọi nhân
      * viên là biến bảng vết thành một bảng theo dõi lẫn nhau.
      *

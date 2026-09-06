@@ -1174,16 +1174,8 @@ class AuthController extends BaseController
 
                 return [
                     'prescription' => $prescription,
-                    'rxValid'      => UserModel::prescriptionIsValid($prescription),
                     'editing'      => $editing,
                     'stores'       => $editing ? StoreModel::active() : [],
-                    /* Ba danh sách của mục "Kính đang đeo". Chỉ nạp khi đang mở
-                       form — màn chỉ đọc in ra chữ đã lưu, không cần danh sách
-                       nào để dựng ô chọn. */
-                    'lensTypes'    => $editing ? LensModel::types() : [],
-                    'wearFeatures' => $editing ? UserModel::wearLensFeatures() : [],
-                    'wearFrames'   => $editing ? UserModel::wearFrameTypes() : [],
-                    'wearSince'    => $editing ? UserModel::wearSinceOptions() : [],
                 ];
 
             case 'lich-hen':
@@ -1394,16 +1386,8 @@ class AuthController extends BaseController
         $code   = (string) ($_POST['code'] ?? '');
         $result = BookingModel::cancelOwned($code, $userId);
 
-        /* Báo sang Zalo cửa hàng. Một lịch đã huỷ mà không báo còn tệ hơn không
-           báo gì: nhân viên vẫn thấy tin cũ trong Zalo và vẫn gọi cho khách để
-           xác nhận một cái hẹn không còn nữa. Xem core/Zalo.php. */
-        if ($result['ok']) {
-            $saved = BookingModel::findByCode($code);
-
-            if ($saved !== null) {
-                Zalo::appointment($saved, 'cancelled');
-            }
-        }
+        /* KHÔNG ĐẨY ZALO nữa — SRS v2.1.0, G12. Cửa hàng theo dõi lịch hẹn
+           bằng huy hiệu trên thanh bên khu quản trị. */
 
         flash(
             $result['ok'] ? 'account_success' : 'account_error',
@@ -1428,13 +1412,7 @@ class AuthController extends BaseController
         );
 
         if ($result['ok']) {
-            // Cùng lý do với huỷ lịch: tin cũ trong Zalo nay đã sai ngày.
-            $saved = BookingModel::findByCode($code);
-
-            if ($saved !== null) {
-                Zalo::appointment($saved, 'rescheduled');
-            }
-
+            /* KHÔNG ĐẨY ZALO nữa — SRS v2.1.0, G12. */
             flash('account_success', 'Đã đổi ngày hẹn. Cửa hàng sẽ gọi xác nhận lại.');
             redirect('/tai-khoan?muc=lich-hen');
         }
@@ -1582,16 +1560,6 @@ class AuthController extends BaseController
             'measured_at'    => $_POST['measured_at'] ?? '',
             'store_id'       => $_POST['store_id'] ?? '',
             'recommendation' => $_POST['recommendation'] ?? '',
-
-            /* Kính đang đeo. `wear_lens_features` là ô nhiều lựa chọn nên đến
-               đây là một MẢNG — ép về mảng ngay chỗ này thay vì tin $_POST,
-               vì "wear_lens_features=x" gửi tay thì nó là chuỗi và model sẽ
-               foreach qua từng ký tự. Model lo phần kiểm từng giá trị. */
-            'wear_lens_type'     => $_POST['wear_lens_type'] ?? '',
-            'wear_lens_features' => (array) ($_POST['wear_lens_features'] ?? []),
-            'wear_frame_type'    => $_POST['wear_frame_type'] ?? '',
-            'wear_since'         => $_POST['wear_since'] ?? '',
-            'wear_note'          => $_POST['wear_note'] ?? '',
         ]);
 
         flash('account_success', 'Đã lưu thông số đo mắt.');

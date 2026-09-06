@@ -298,7 +298,6 @@ class CustomerAdminController extends AdminController
                 $lichSu = PrescriptionRecordModel::forUser($id);
 
                 $data['rxRecords']    = $lichSu;
-                $data['rxDeltas']     = PrescriptionRecordModel::chenhLech($lichSu);
                 $data['rxSources']    = PrescriptionRecordModel::SOURCES;
                 $data['stores']       = StoreModel::active();
                 $data['doneAppts']    = CustomerModel::doneAppointments($id);

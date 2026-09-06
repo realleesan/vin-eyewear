@@ -59,10 +59,7 @@ class AppointmentAdminController extends AdminController
          * số lệch nhau. Cùng cách làm với trang Tồn kho.
          * ─────────────────────────────────────────────────────────────────────
          */
-        /* Phạm vi cơ sở áp cho CẢ bộ đếm lẫn danh sách — xem
-           StaffStoreModel và BookingModel::locWithStore(). */
-        $phamVi = $this->phamViCoSo();
-        $counts = BookingModel::statusCounts($q, $coSo, $phamVi);
+        $counts = BookingModel::statusCounts($q, $coSo);
         $tong   = (int) ($counts[$status] ?? 0);
 
         $soTrang = max(1, (int) ceil($tong / self::PER_PAGE));
@@ -75,21 +72,15 @@ class AppointmentAdminController extends AdminController
 
         $this->renderAdmin('admin/appointments/index', [
             'pageTitle'    => 'Lịch hẹn — Quản trị',
-            'appointments' => BookingModel::withStore($status, self::PER_PAGE, $q, $coSo, $offset, $phamVi),
+            'appointments' => BookingModel::withStore($status, self::PER_PAGE, $q, $coSo, $offset),
             'total'        => $tong,
             'page'         => $trang,
             'totalPages'   => $soTrang,
             'status'       => $status,
             'q'            => $q,
             'coSo'         => $coSo,
-            /* Ô lọc CHỈ liệt kê cơ sở người này thuộc về. Liệt kê đủ hai cơ
-               sở rồi chặn ở truy vấn cũng an toàn, nhưng nó mời người ta chọn
-               một thứ luôn trả về rỗng — và họ sẽ báo đó là lỗi. */
-            'stores'       => $this->coSoChonDuoc(),
-            'gioiHanCoSo'  => $this->biGioiHanCoSo(),
-            // Ô chọn dịch vụ của hộp "Tạo lịch hẹn" — dùng chung danh sách với
-            // trang đặt lịch của khách, xem BookingModel::SERVICES.
-            'services'     => BookingModel::SERVICES,
+            /* Ô lọc liệt kê MỌI cơ sở — phạm vi cơ sở đã gỡ (SRS v2.1.0, K06). */
+            'stores'       => StoreModel::all('name ASC'),
             'statuses'     => BookingModel::STATUSES,
             /* Hai danh sách khác nhau, cố ý: `statuses` là NHÃN của cả bốn
                trạng thái (dải viên lọc và viên nhãn cần đủ bốn), còn
@@ -158,7 +149,7 @@ class AppointmentAdminController extends AdminController
             redirect($ve);
         }
 
-        if (!$this->trongPhamVi($id, $ve)) {
+        if (!$this->coLichHen($id, $ve)) {
             return;
         }
 
@@ -204,7 +195,7 @@ class AppointmentAdminController extends AdminController
 
         $id = (string) ($_POST['id'] ?? '');
 
-        if (!$this->trongPhamVi($id, $ve)) {
+        if (!$this->coLichHen($id, $ve)) {
             return;
         }
 
@@ -243,7 +234,7 @@ class AppointmentAdminController extends AdminController
 
         $id = (string) ($_POST['id'] ?? '');
 
-        if (!$this->trongPhamVi($id, $ve)) {
+        if (!$this->coLichHen($id, $ve)) {
             return;
         }
 
@@ -267,147 +258,45 @@ class AppointmentAdminController extends AdminController
             )
         );
 
-        /* BÁO CHO KHÁCH — cùng lý lẽ với đường khách tự đổi: tin Zalo cũ nay
-           ghi sai ngày, và một tin sai còn tệ hơn không có tin nào. Lịch tạo ở
-           quầy cho khách vãng lai vẫn có số điện thoại nên vẫn gửi được. */
-        if ($lich !== null) {
-            Zalo::appointment($lich, 'rescheduled');
-        }
+        /* KHÔNG ĐẨY ZALO nữa — SRS v2.1.0, G12. Cửa hàng theo dõi lịch hẹn
+           bằng huy hiệu trên thanh bên khu quản trị. */
 
         flash('admin_success', 'Đã dời lịch hẹn sang ngày mới.');
         redirect($ve);
     }
 
     /**
-     * Chặn thao tác ghi lên lịch hẹn NGOÀI phạm vi cơ sở của người bấm.
+     * Chặn thao tác ghi lên một lịch hẹn KHÔNG TỒN TẠI.
      *
-     * Gộp cả phép kiểm tồn tại vào đây và trả về false thay vì ném: ba action
-     * đều cần đúng một câu hỏi, và ba chỗ tự hỏi là ba cơ hội quên — mà cái
-     * quên đó không gây lỗi, nó chỉ lặng lẽ cho người ta sửa dữ liệu của cơ sở
-     * khác. Xem BookingModel::trongPhamVi().
+     * Gộp phép kiểm vào một chỗ: ba action ghi đều cần đúng một câu hỏi, và ba
+     * chỗ tự hỏi là ba cơ hội quên.
      *
-     * MỘT CÂU BÁO CHO CẢ HAI TRƯỜNG HỢP (không tồn tại · ngoài phạm vi): trả
-     * lời khác nhau là nói cho người dò biết id nào có thật.
+     * Trước đây hàm này còn kiểm phạm vi cơ sở; phạm vi đã gỡ theo SRS v2.1.0
+     * (K06) nên chỉ còn phép kiểm tồn tại.
      */
-    private function trongPhamVi(string $id, string $ve): bool
+    private function coLichHen(string $id, string $ve): bool
     {
-        if ($id !== '' && BookingModel::trongPhamVi($id, $this->phamViCoSo())) {
+        if ($id !== '' && BookingModel::exists(['id' => $id])) {
             return true;
         }
 
-        flash('admin_error', 'Không tìm thấy lịch hẹn trong phạm vi cơ sở của bạn.');
+        flash('admin_error', 'Không tìm thấy lịch hẹn.');
         redirect($ve);
     }
 
-    /**
-     * Tạo một lịch hẹn ngay trong khu quản trị (POST /quan-tri/lich-hen/tao).
-     *
+    /*
      * ─────────────────────────────────────────────────────────────────────────
-     * VÌ SAO KHU QUẢN TRỊ CẦN TẠO ĐƯỢC LỊCH
+     * KHÔNG CÒN TẠO LỊCH HẸN Ở KHU QUẢN TRỊ — SRS v2.1.0, G10
      *
-     * Phần lớn lịch tới từ trang đặt lịch của khách. Nhưng có hai đường vào
-     * khác, và cả hai đều có thật ở một cửa hàng kính: khách GỌI ĐIỆN đặt, và
-     * khách ĐANG ĐỨNG Ở QUẦY hẹn quay lại lấy kính hôm sau. Không tạo được ở
-     * đây thì nhân viên hoặc ghi ra giấy, hoặc tự vào trang khách đặt hộ bằng
-     * số điện thoại của chính mình — cách thứ hai làm hỏng cả cột `phone` lẫn
-     * mọi thống kê sau này.
+     * Trước đây lớp này có action store() cho nhân viên tạo lịch hộ khách gọi
+     * điện, kèm một hộp thoại "Tạo lịch hẹn" trong view và một hàm
+     * coSoChonDuoc() lọc ô chọn cơ sở theo phạm vi.
      *
-     * DÙNG LẠI BookingModel::create(), không viết INSERT riêng: hàm đó đã chặn
-     * ngày quá khứ và cơ sở không nhận khách, và nó sinh mã lịch theo đúng một
-     * cách. Một đường ghi thứ hai là một bộ luật thứ hai sẽ lệch dần.
+     * Chủ đầu tư đã bỏ đường vào này: khách gọi điện thì nhân viên hướng dẫn
+     * khách tự đặt trên web. Giữ đúng MỘT đường tạo lịch (BookingController)
+     * cũng có nghĩa là chỉ còn một bộ luật về ngày hợp lệ và một cách sinh mã.
      *
-     * `userId` để NULL: lịch này không thuộc tài khoản nào cả. Gắn bừa vào tài
-     * khoản nhân viên thì nó hiện trong trang "Lịch hẹn của tôi" của người đó.
+     * Đừng dựng lại action này mà không sửa SRS trước.
      * ─────────────────────────────────────────────────────────────────────────
      */
-    /**
-     * Danh sách cơ sở hiện trong ô lọc — đã cắt theo phạm vi của người xem.
-     */
-    private function coSoChonDuoc(): array
-    {
-        $tatCa  = StoreModel::all('name ASC');
-        $phamVi = $this->phamViCoSo();
-
-        if ($phamVi === null) {
-            return $tatCa;
-        }
-
-        return array_values(array_filter(
-            $tatCa,
-            static fn (array $s): bool => in_array($s['id'], $phamVi, true)
-        ));
-    }
-
-    public function store(): void
-    {
-        $this->requirePost('/quan-tri/lich-hen');
-
-        $ten   = trim((string) ($_POST['full_name'] ?? ''));
-        $sdt   = trim((string) ($_POST['phone'] ?? ''));
-        $ngay  = trim((string) ($_POST['appointment_date'] ?? ''));
-        $coSo  = (string) ($_POST['store_id'] ?? '');
-        $dv    = (string) ($_POST['service_type'] ?? '');
-        $ghi   = trim((string) ($_POST['note'] ?? ''));
-
-        /* Mở lại hộp thoại khi thiếu ô — nếu chỉ đá về danh sách thì người
-           dùng mất hết những gì vừa gõ và không biết ô nào sai. */
-        $quayLaiHop = '/quan-tri/lich-hen?them=1';
-
-        if ($ten === '' || $sdt === '' || $ngay === '') {
-            flash('admin_error', 'Vui lòng nhập tên khách, số điện thoại và ngày hẹn.');
-            redirect($quayLaiHop);
-        }
-
-        /* Kiểm dịch vụ có trong danh sách: ô chọn chỉ bày bốn giá trị, nhưng ai
-           gửi thẳng POST vẫn ghi được chuỗi bất kỳ vào `service_type` — mà cột
-           đó là thứ nhân viên đọc để chuẩn bị máy đo. */
-        if (!in_array($dv, BookingModel::SERVICES, true)) {
-            flash('admin_error', 'Dịch vụ không hợp lệ.');
-            redirect($quayLaiHop);
-        }
-
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * TẠO LỊCH CŨNG PHẢI TRONG PHẠM VI CƠ SỞ — bổ sung 09/09/2026
-         *
-         * Ba thao tác ghi kia (đổi trạng thái, huỷ, dời ngày) đã siết từ 09/09,
-         * nhưng TẠO thì không. Ô chọn cơ sở trong hộp thoại có lọc theo phạm vi
-         * (coSoChonDuoc), nhưng đó là HTML — một cú POST đặt store_id của cơ sở
-         * khác đi lọt thẳng.
-         *
-         * Lỗi này KHÔNG BAO GIỜ TỰ LỘ RA, và đó là chỗ nguy hiểm: tạo xong thì
-         * chính người tạo cũng không nhìn thấy lịch ấy nữa (danh sách có lọc
-         * phạm vi), nên quầy bên kia nhận một buổi hẹn không ai biết từ đâu tới
-         * và không ai nhận là mình đã tạo.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        $phamVi = $this->phamViCoSo();
-
-        if ($phamVi !== null && !in_array($coSo, $phamVi, true)) {
-            flash('admin_error', 'Bạn chỉ tạo được lịch hẹn cho cơ sở mình phụ trách.');
-            redirect($quayLaiHop);
-        }
-
-        $ket = BookingModel::create([
-            'userId'      => null,
-            'storeId'     => $coSo,
-            'date'        => $ngay,
-            'serviceType' => $dv,
-            'fullName'    => $ten,
-            'phone'       => $sdt,
-            'note'        => $ghi,
-        ]);
-
-        if (!$ket['ok']) {
-            flash('admin_error', $ket['error']);
-            redirect($quayLaiHop);
-        }
-
-        /* Lịch tạo ở quầy vẫn để 'pending' như lịch khách tự đặt — BookingModel
-           đặt mặc định đó. Nghe hơi thừa (nhân viên vừa nói chuyện với khách
-           xong), nhưng "đã xác nhận" ở đây nghĩa là ĐÃ GỌI LẠI CHỐT GIỜ, mà
-           việc ấy chưa xảy ra. Người tạo bấm thêm một cái nếu muốn. */
-        flash('admin_success', sprintf('Đã tạo lịch hẹn %s cho %s.', $ket['code'], $ten));
-        redirect('/quan-tri/lich-hen');
-    }
 }

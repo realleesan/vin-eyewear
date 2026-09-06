@@ -3,15 +3,17 @@
 /**
  * core/Zalo.php — đường ra Zalo của dự án.
  *
- * Bốn việc đi chung một đường vì cùng dùng ZNS, cùng một access_token và cùng
+ * Ba việc đi chung một đường vì cùng dùng ZNS, cùng một access_token và cùng
  * một chỗ gọi HTTP:
  *
- *   1. THÔNG BÁO LỊCH HẸN cho cửa hàng — appointment().
- *   2. THÔNG BÁO ĐƠN HÀNG MỚI cho cửa hàng — order().
- *   3. YÊU CẦU LIÊN HỆ cho CSKH — contact().
- *   4. MÃ OTP khi khách đăng ký / quên mật khẩu — sendOtp(), do core/Otp.php gọi.
+ *   1. THÔNG BÁO ĐƠN HÀNG MỚI cho cửa hàng — order().
+ *   2. YÊU CẦU LIÊN HỆ cho CSKH — contact().
+ *   3. MÃ OTP khi khách đăng ký / quên mật khẩu — sendOtp(), do core/Otp.php gọi.
  *
- * Việc thứ ba là việc DUY NHẤT không còn màn hình dự phòng nào phía sau: từ
+ * Thông báo LỊCH HẸN đã gỡ theo SRS v2.1.0 (G12) — cửa hàng theo dõi lịch mới
+ * bằng huy hiệu trên thanh bên khu quản trị.
+ *
+ * Việc thứ hai là việc DUY NHẤT không còn màn hình dự phòng nào phía sau: từ
  * 2026-08-26, trang /quan-tri/lien-he bỏ cột trạng thái và thành sổ lưu trữ
  * thuần, không ai ngồi canh. Vì thế contact() trả bool chứ không trả void, và
  * nơi gọi ghi lại kết quả vào `contact_requests`.`zalo_sent_at`.
@@ -38,13 +40,12 @@
  * phát triển (app.debug) mã hiện thẳng trên màn hình.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * GỬI THÔNG BÁO KHÔNG BAO GIỜ ĐƯỢC LÀM HỎNG VIỆC ĐẶT LỊCH HAY ĐẶT HÀNG
+ * GỬI THÔNG BÁO KHÔNG BAO GIỜ ĐƯỢC LÀM HỎNG VIỆC ĐẶT HÀNG
  *
- * Đây là việc phụ chạy kèm một việc chính đã xong: lịch (hoặc đơn) đã nằm
- * trong CSDL rồi. Zalo sập, token hết hạn, mạng ra ngoài bị chặn — không lý do
- * nào trong số đó được phép biến thành một trang lỗi cho người vừa bấm đặt.
- * Nên mọi lối ra của appointment() và order() đều bị bọc try/catch và mọi hỏng
- * hóc chỉ đi vào error log.
+ * Đây là việc phụ chạy kèm một việc chính đã xong: đơn đã nằm trong CSDL rồi.
+ * Zalo sập, token hết hạn, mạng ra ngoài bị chặn — không lý do nào trong số đó
+ * được phép biến thành một trang lỗi cho người vừa bấm đặt. Nên mọi lối ra của
+ * order() đều bị bọc try/catch và mọi hỏng hóc chỉ đi vào error log.
  *
  * Cũng vì thế mọi lượt gọi ra ngoài phải có HẠN GIỜ NGẮN. Không có hạn thì một
  * đầu bên kia treo sẽ giữ luôn request của khách, và họ ngồi nhìn trang trắng
@@ -82,48 +83,22 @@ class Zalo
     // ĐIỂM VÀO — LỊCH HẸN
     // ========================================================================
 
-    /**
-     * Đẩy một lịch hẹn vừa phát sinh sang Zalo.
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * KHÔNG CÒN ĐẨY LỊCH HẸN SANG ZALO — SRS v2.1.0, G12
      *
-     * $event là việc vừa xảy ra, dùng để đổi câu mở đầu:
-     *   'created'     khách vừa đặt
-     *   'rescheduled' khách vừa đổi ngày/giờ
-     *   'cancelled'   khách vừa huỷ
+     * Trước đây lớp này có appointment() bắn một tin ZNS về Zalo của cửa hàng
+     * (và tuỳ chọn cho khách) ở ba sự kiện: tạo, dời, huỷ. Chủ đầu tư đã bỏ cả
+     * ba: nhân viên theo dõi lịch mới bằng huy hiệu "Lịch hẹn" trên thanh bên
+     * khu quản trị.
      *
-     * ĐỔI VÀ HUỶ CŨNG BÁO, không chỉ lúc đặt. Cửa hàng yêu cầu tính năng này
-     * để "nhân viên không phải liên tục túc trực kiểm tra trên web" — mà nếu
-     * chỉ báo lúc đặt thì một lịch đã đổi ngày hoặc đã huỷ vẫn nằm im trong Zalo
-     * với thông tin cũ, và nhân viên tin vào nó. Báo thiếu còn tệ hơn không báo.
+     * Ba hàm phụ trợ compose(), notify() và appointmentParams() gỡ theo. Hai
+     * khoá cấu hình zalo.template_shop / zalo.template_customer cũng không còn
+     * nơi nào đọc.
      *
-     * @param array $appointment dòng `appointments` (kèm store_name nếu có)
+     * ZNS vẫn dùng cho ĐƠN HÀNG (order), LIÊN HỆ (contact) và MÃ OTP.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    public static function appointment(array $appointment, string $event = 'created'): void
-    {
-        try {
-            $message = self::compose($appointment, $event);
-
-            // 1. CỬA HÀNG — luôn gửi. Đây mới là mục đích chính của tính năng.
-            $shop = self::shopPhone();
-
-            if ($shop !== null) {
-                self::notify($shop, $appointment, $event, $message,
-                             (string) config('zalo.template_shop', ''), 'shop');
-            }
-
-            /* 2. KHÁCH — "nếu được", đúng chữ trong yêu cầu. Thực tế ZNS gửi
-                  cho khách tốn phí theo tin và cần mẫu riêng đã duyệt, nên nó
-                  là một công tắc bật/tắt được chứ không mặc định bật. */
-            $customer = self::normalize((string) ($appointment['phone'] ?? ''));
-
-            if ($customer !== null && config('zalo.notify_customer', false)) {
-                self::notify($customer, $appointment, $event, $message,
-                             (string) config('zalo.template_customer', ''), 'customer');
-            }
-        } catch (Throwable $e) {
-            // Nuốt MỌI thứ. Lịch đã nằm trong CSDL — xem khối chú thích đầu file.
-            error_log('[Zalo] Không đẩy được thông báo lịch hẹn: ' . $e->getMessage());
-        }
-    }
 
     // ========================================================================
     // ĐIỂM VÀO — ĐƠN HÀNG
@@ -193,11 +168,10 @@ class Zalo
      * Đẩy một yêu cầu liên hệ vừa gửi sang Zalo của CSKH.
      *
      * ─────────────────────────────────────────────────────────────────────
-     * KHÁC HAI ĐIỂM VÀO TRÊN Ở CHỖ NÓ TRẢ VỀ bool, VÀ ĐÓ LÀ CHỦ Ý
+     * KHÁC ĐIỂM VÀO TRÊN Ở CHỖ NÓ TRẢ VỀ bool, VÀ ĐÓ LÀ CHỦ Ý
      *
-     * appointment() và order() trả void: lịch hẹn và đơn hàng đều nằm sẵn
-     * trong khu quản trị với hàng chờ riêng, nên tin Zalo hỏng thì vẫn còn một
-     * màn hình có người mở ra xem.
+     * order() trả void: đơn hàng nằm sẵn trong khu quản trị với hàng chờ riêng,
+     * nên tin Zalo hỏng thì vẫn còn một màn hình có người mở ra xem.
      *
      * Yêu cầu liên hệ thì KHÔNG còn cái đó nữa. Từ 2026-08-26, cột `status`
      * bị bỏ và trang /quan-tri/lien-he thành sổ lưu trữ thuần — không ai ngồi
@@ -273,7 +247,7 @@ class Zalo
     /**
      * Các ô của mẫu tin liên hệ.
      *
-     * TÊN Ô PHẢI KHỚP MẪU ĐÃ DUYỆT — cùng ràng buộc như appointmentParams() và
+     * TÊN Ô PHẢI KHỚP MẪU ĐÃ DUYỆT — cùng ràng buộc như orderParams() và
      * orderParams(). Bốn ô: khach_hang · dien_thoai · email · noi_dung.
      *
      * `email` KHÔNG được để rỗng dù khách bỏ trống: ZNS từ chối cả tin nếu một
@@ -352,7 +326,7 @@ class Zalo
                 'otp'
             );
         } catch (Throwable $e) {
-            // Cùng lý do với appointment(): một thông báo hỏng không được phép
+            // Cùng lý do với order(): một thông báo hỏng không được phép
             // biến màn hình đăng ký thành trang lỗi.
             error_log('[Zalo] Không gửi được OTP: ' . $e->getMessage());
 
@@ -378,111 +352,6 @@ class Zalo
     // ========================================================================
     // NỘI DUNG LỊCH HẸN
     // ========================================================================
-
-    /**
-     * Soạn nội dung tin lịch hẹn dạng chữ.
-     *
-     * Vẫn giữ dù đã cắm ZNS: khi chưa khai mẫu tin lịch hẹn (mẫu này phải tự
-     * soạn và chờ Zalo duyệt, lâu hơn mẫu OTP dựng sẵn) thì đây là thứ ghi ra
-     * error log để nhân viên vẫn đọc được, và nó cũng là bản mô tả những ô mà
-     * mẫu cần có khi đi đăng ký.
-     */
-    private static function compose(array $appointment, string $event): string
-    {
-        $head = [
-            'created'     => 'LỊCH HẸN MỚI',
-            'rescheduled' => 'KHÁCH ĐỔI NGÀY HẸN',
-            'cancelled'   => 'KHÁCH HUỶ LỊCH',
-        ][$event] ?? 'LỊCH HẸN';
-
-        $date = (string) ($appointment['appointment_date'] ?? '');
-        $when = $date === '' ? '—' : formatDate($date);
-
-        $lines = [
-            $head . ' · ' . (string) ($appointment['code'] ?? ''),
-            'Khách:    ' . (string) ($appointment['full_name'] ?? ''),
-            'Điện thoại: ' . (string) ($appointment['phone'] ?? ''),
-            'Cơ sở:    ' . (string) ($appointment['store_name'] ?? '—'),
-            'Dịch vụ:  ' . (string) ($appointment['service_type'] ?? '—'),
-            /* CHỈ CÓ NGÀY. Lịch hẹn không lưu giờ — chính cuộc gọi mà tin
-               báo này thúc giục mới là lúc giờ được thống nhất. */
-            'Ngày hẹn:  ' . $when,
-        ];
-
-        $note = trim((string) ($appointment['note'] ?? ''));
-
-        if ($note !== '') {
-            $lines[] = 'Ghi chú:  ' . $note;
-        }
-
-        /* Câu cuối nhắc việc phải làm. Cửa hàng bỏ giới hạn khung giờ chính vì
-           họ sẽ gọi xác nhận và tự xếp người — nên tin báo phải nói ra việc đó,
-           không thì nó chỉ là một mẩu thông tin không ai biết để làm gì. */
-        if ($event !== 'cancelled') {
-            $lines[] = 'Vui lòng gọi khách để xác nhận lịch.';
-        }
-
-        return implode("\n", $lines);
-    }
-
-    /**
-     * Gửi một tin lịch hẹn, hoặc ghi ra log nếu chưa khai mẫu.
-     *
-     * Tách khỏi sendZns() vì tin lịch hẹn có đường lui mà OTP không có: nội
-     * dung dạng chữ vẫn hữu ích khi nằm trong log, còn một mã OTP nằm trong
-     * log thì chẳng tới tay ai.
-     */
-    private static function notify(
-        string $to,
-        array $appointment,
-        string $event,
-        string $message,
-        string $template,
-        string $who
-    ): bool {
-        if ($template === '' || !self::hasCredentials()) {
-            error_log(sprintf(
-                "[Zalo] Chưa khai mẫu tin lịch hẹn (%s) — tin chỉ nằm ở log:\n%s",
-                $who,
-                $message
-            ));
-
-            return false;
-        }
-
-        return self::sendZns($to, $template, self::appointmentParams($appointment, $event), $who);
-    }
-
-    /**
-     * Các ô của mẫu tin lịch hẹn.
-     *
-     * TÊN Ô PHẢI KHỚP MẪU ĐÃ DUYỆT. Mẫu lịch hẹn là mẫu tự soạn nên tên ô do
-     * chính người đi đăng ký đặt — đặt đúng bảy tên dưới đây khi soạn mẫu thì
-     * không phải sửa dòng nào ở đây. Đặt khác thì sửa ở đúng chỗ này.
-     *
-     * Giá trị đều là chuỗi: ZNS từ chối tin nếu một ô là số hay null.
-     */
-    private static function appointmentParams(array $appointment, string $event): array
-    {
-        $date = (string) ($appointment['appointment_date'] ?? '');
-
-        return [
-            'su_kien'    => [
-                'created'     => 'Lịch hẹn mới',
-                'rescheduled' => 'Khách đổi ngày hẹn',
-                'cancelled'   => 'Khách huỷ lịch',
-            ][$event] ?? 'Lịch hẹn',
-            'ma_lich'    => (string) ($appointment['code'] ?? '—'),
-            'khach_hang' => (string) ($appointment['full_name'] ?? '—'),
-            'dien_thoai' => (string) ($appointment['phone'] ?? '—'),
-            'co_so'      => (string) ($appointment['store_name'] ?? '—'),
-            'dich_vu'    => (string) ($appointment['service_type'] ?? '—'),
-            // Chỉ có ngày — xem composeAppointment(). Giữ tên khoá 'thoi_gian'
-            // vì đó là tên tham số đã khai trong mẫu tin ZNS trên zns.zalo.me;
-            // đổi ở đây mà không sửa mẫu bên đó là tin không gửi được.
-            'thoi_gian'  => $date === '' ? '—' : formatDate($date),
-        ];
-    }
 
     /**
      * Tin báo đơn hàng dạng CHỮ — dùng khi chưa khai mẫu ZNS, và là bản mẫu
@@ -524,7 +393,7 @@ class Zalo
     /**
      * Các ô của mẫu tin đơn hàng.
      *
-     * TÊN Ô PHẢI KHỚP MẪU ĐÃ DUYỆT — cùng ràng buộc như appointmentParams().
+     * TÊN Ô PHẢI KHỚP MẪU ĐÃ DUYỆT — cùng ràng buộc như contactParams().
      * Giá trị đều là chuỗi và đều CẮT NGẮN: ZNS giới hạn độ dài từng ô, và một
      * đơn năm món hay một địa chỉ dài sẽ vượt quá, khiến Zalo từ chối cả tin.
      * Thà mất mấy chữ cuối còn hơn mất cả tin báo.

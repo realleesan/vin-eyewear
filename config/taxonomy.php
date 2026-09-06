@@ -101,45 +101,12 @@ return [
      */
 
     /*
-     * LỊCH SỬ KÍNH ĐANG ĐEO — ba danh sách cho mục "Kính đang đeo" trong hồ sơ
-     * đo mắt của khách (/tai-khoan?muc=do-mat).
+     * BA DANH SÁCH "KÍNH ĐANG ĐEO" ĐÃ GỠ — SRS v2.1.0, A20.
      *
-     * Cửa hàng yêu cầu thêm phần này để có cơ sở tư vấn: cùng một đơn thuốc
-     * −3.00 nhưng người đang đeo đa tròng gọng khoan không viền và người lần
-     * đầu cắt kính nhận hai lời khuyên hoàn toàn khác nhau.
-     *
-     * LƯU NGUYÊN VĂN CHỨ KHÔNG LƯU MÃ. Đây là ghi chú tư vấn — thứ nhân viên
-     * ĐỌC chứ không phải thứ hệ thống lọc hay tính. Lưu mã thì mỗi lần đọc DB
-     * hay xuất báo cáo lại phải mang theo file config này để dịch ngược, đổi
-     * lại chẳng được gì. Cả ba danh sách vẫn được kiểm ở máy chủ (in_array)
-     * nên không có chuỗi lạ nào lọt vào — xem UserModel::savePrescription().
-     *
-     * Đọc qua UserModel::WEAR_* — đừng gọi thẳng config() ở view.
+     * 'wear_lens_features', 'wear_frame_types' và 'wear_since' phục vụ mục
+     * "Kính đang đeo" trong hồ sơ đo mắt của khách. Mục đó đã bỏ cùng năm cột
+     * `wear_*` trên bảng `prescriptions`.
      */
-    'wear_lens_features' => [
-        'Chống ánh sáng xanh',
-        'Đổi màu (photochromic)',
-        'Chống tia UV',
-        'Siêu mỏng (chiết suất cao)',
-        'Chống trầy · chống loá',
-        'Râm màu cố định',
-    ],
-
-    'wear_frame_types' => [
-        'Nhựa (acetate)',
-        'Kim loại',
-        'Titanium',
-        'Nửa viền',
-        'Không viền (khoan)',
-        'Gọng dẻo TR90',
-    ],
-
-    'wear_since' => [
-        'Dưới 6 tháng',
-        '6 – 12 tháng',
-        '1 – 2 năm',
-        'Trên 2 năm',
-    ],
 
     /*
      * KIỂU TRÒNG — TẦNG THỨ NHẤT CỦA BƯỚC "CHỌN LOẠI TRÒNG KÍNH"
@@ -153,9 +120,17 @@ return [
      * khi thực tế khách mua đa tròng chiết suất 1.61 là chuyện bình thường.
      *
      * `takes_package`
-     *     false với "Mắt đặt" — tròng đặt riêng theo đơn thì không có bảng giá
-     *     sẵn nào để chọn tiếp, cửa hàng báo giá sau khi xem thông số. Bước
-     *     chọn gói bị bỏ qua và phần tròng vào giỏ với giá 0đ.
+     *     MỌI kiểu tròng còn lại đều true — SRS v2.1.0, C08.
+     *
+     *     Trước đây có kiểu thứ tư "Mắt đặt" với takes_package = false: tròng
+     *     đặt riêng theo đơn, không có bảng giá sẵn, cửa hàng báo giá sau và
+     *     phần tròng vào giỏ với giá 0đ. Chủ đầu tư đã bỏ kiểu này — mọi kiểu
+     *     tròng bán trên web phải có giá xác định ngay lúc khách bấm đặt.
+     *
+     *     Cờ `takes_package` GIỮ LẠI dù hiện đều true: nó là chỗ để nói "kiểu
+     *     này có đi tiếp sang bảng giá không", và mọi nhánh xử lý phía sau đã
+     *     đọc nó. Gỡ cờ đi thì lần sau thêm một kiểu không có bảng giá phải
+     *     dựng lại toàn bộ những nhánh ấy.
      *
      * Đọc qua LensModel::types() / LensModel::findType().
      */
@@ -177,12 +152,6 @@ return [
             'name'          => 'Đa tròng',
             'desc'          => 'Độ chuyển dần từ xa sang gần, không có đường ranh trên mặt tròng',
             'takes_package' => true,
-        ],
-        [
-            'id'            => 'mat-dat',
-            'name'          => 'Mắt đặt',
-            'desc'          => 'Độ quá cao hoặc thông số đặc biệt, phải đặt riêng — cửa hàng báo giá sau',
-            'takes_package' => false,
         ],
     ],
 

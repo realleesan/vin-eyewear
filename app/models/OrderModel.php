@@ -920,7 +920,7 @@ class OrderModel extends BaseModel
 
             /*
              * ─────────────────────────────────────────────────────────────
-             * TỒN KHO ĐI THEO TRẠNG THÁI, HAI CHIỀU
+             * TỒN KHO ĐI THEO TRẠNG THÁI — MỘT CHIỀU
              *
              * Đặt hàng TRỪ kho ngay trong transaction tạo đơn (xem place()),
              * nhưng huỷ đơn thì trước nay không trả lại — kể cả nhân viên huỷ
@@ -931,21 +931,19 @@ class OrderModel extends BaseModel
              * `status` (xem khối chú thích ngay trên hàm này). Nhét vào
              * controller thì đường nào gọi thẳng model sẽ lặng lẽ bỏ qua.
              *
-             * PHẢI CÓ CẢ CHIỀU NGƯỢC LẠI. Nhân viên bấm nhầm 'Đã huỷ' rồi
-             * chuyển về 'Đang chuẩn bị' là chuyện có thật; chỉ cộng mà không
-             * trừ lại thì kho phình lên đúng bằng số lần bấm nhầm.
+             * HOÀN KHO NAY LÀ MỘT CHIỀU — SRS v2.1.0, F10.
              *
-             * Trừ lại dùng chính reserve(), nên nếu trong lúc đơn đang huỷ mà
-             * hàng đã bán hết cho người khác thì nó từ chối và tồn kho đứng
-             * yên ở 0 thay vì rơi xuống số âm. Ghi một dòng vào log để người
-             * trực còn biết mà đối chiếu — đây là ca hiếm nhưng im lặng bỏ qua
-             * thì không ai phát hiện.
+             * Trước đây có cả chiều ngược lại: nhân viên mở lại đơn đã huỷ thì
+             * hệ thống trừ kho lần nữa. Chức năng mở lại đơn đã gỡ, nên 'Đã
+             * huỷ' trở lại là trạng thái KẾT THÚC và không có đường nào rời
+             * khỏi nó — xem OrderAdminController::updateStatus().
+             *
+             * Giữ chỗ này chỉ còn nhánh cộng. Nếu sau này ai đó mở lại đường
+             * kia thì phải dựng lại cả nhánh trừ, nếu không kho sẽ phình lên
+             * đúng bằng số lần mở lại.
              * ─────────────────────────────────────────────────────────────
              */
-            $huyMoi   = $status === 'cancelled' && $truoc !== 'cancelled';
-            $moHuy    = $truoc === 'cancelled' && $status !== 'cancelled';
-
-            if ($huyMoi || $moHuy) {
+            if ($status === 'cancelled' && $truoc !== 'cancelled') {
                 foreach (self::items($id) as $dong) {
                     $sl  = (int) ($dong['quantity'] ?? 0);
                     $spId = (string) ($dong['product_id'] ?? '');
@@ -958,21 +956,7 @@ class OrderModel extends BaseModel
                         continue;
                     }
 
-                    if ($huyMoi) {
-                        VariantModel::release($dong['variant_id'] ?? null, $spId, $sl);
-                        continue;
-                    }
-
-                    $ok = VariantModel::reserve($dong['variant_id'] ?? null, $spId, $sl);
-
-                    if (!$ok) {
-                        error_log(sprintf(
-                            '[OrderModel] Mở lại đơn %s: không trừ được %d của sản phẩm %s — kho không đủ.',
-                            $id,
-                            $sl,
-                            $spId
-                        ));
-                    }
+                    VariantModel::release($dong['variant_id'] ?? null, $spId, $sl);
                 }
             }
 
@@ -1041,85 +1025,6 @@ class OrderModel extends BaseModel
 
     /** Lý do bắt buộc dài tối thiểu bao nhiêu ký tự. Cùng mức với hồ sơ khúc xạ. */
     public const LY_DO_TOI_THIEU = 10;
-
-    /**
-     * Đơn này có nằm trong PHẠM VI CƠ SỞ của người đang thao tác không.
-     *
-     * ─────────────────────────────────────────────────────────────────────────
-     * PHẠM VI PHẢI CHẶN CẢ ĐƯỜNG GHI, KHÔNG CHỈ ĐƯỜNG ĐỌC
-     *
-     * Đợt phân quyền 05/09 lọc DANH SÁCH đơn theo cơ sở, và 09/09 sửa nốt bộ
-     * ĐẾM trên các viên lọc. Nhưng sáu thao tác GHI — đổi trạng thái, ghi nhận
-     * thanh toán, hai thao tác hàng loạt, hoàn tác, và hai nút mốc mài — chỉ
-     * hỏi `exists(['id' => …])`. Một cú POST mang id đơn của cơ sở khác đi lọt
-     * qua tất cả.
-     *
-     * Không phải chuyện lý thuyết: id đơn hàng nằm ngay trong HTML của chính
-     * trang đó, và người từng được gán cơ sở khác rồi bị gỡ vẫn còn id trong
-     * tab đang mở. Lọc danh sách mà không chặn ghi là khoá cửa trước rồi để
-     * ngỏ cửa sau — và ở đây cửa sau dẫn thẳng vào việc đánh dấu một đơn của
-     * cơ sở khác là ĐÃ THU TIỀN.
-     *
-     * ĐƠN KHÔNG GẮN CƠ SỞ (giao tận nơi) VẪN TRONG PHẠM VI của mọi người đã
-     * được gán ít nhất một cơ sở — cùng luật với đường đọc, xem
-     * StaffStoreModel::menhDe(). Hai đường mà trả lời khác nhau thì nhân viên
-     * nhìn thấy một đơn nhưng bấm vào lại bị từ chối.
-     *
-     * @param string[]|null $phamVi kết quả StaffStoreModel::phamVi()
-     * ─────────────────────────────────────────────────────────────────────────
-     */
-    public static function trongPhamVi(string $id, ?array $phamVi): bool
-    {
-        if ($id === '' || !self::exists(['id' => $id])) {
-            return false;
-        }
-
-        // Không giới hạn (Quản trị viên) thì mọi đơn đều trong phạm vi.
-        if ($phamVi === null) {
-            return true;
-        }
-
-        // Chưa được gán cơ sở nào thì không thao tác được gì — Q12.3.
-        if ($phamVi === []) {
-            return false;
-        }
-
-        $coSo = Database::fetchValue(
-            'SELECT store_id FROM orders WHERE id = :id',
-            ['id' => $id]
-        );
-
-        // NULL = đơn giao tận nơi, không thuộc cơ sở nào. Xem chú thích trên.
-        if ($coSo === null || $coSo === false || $coSo === '') {
-            return true;
-        }
-
-        return in_array((string) $coSo, $phamVi, true);
-    }
-
-    /**
-     * Lọc một danh sách id, giữ lại những đơn TRONG phạm vi.
-     *
-     * Dùng cho hai thao tác hàng loạt. Lọc rồi làm tiếp, không phải từ chối cả
-     * lô: người tick 20 đơn trên một trang đã lọc thì mọi đơn đều trong phạm
-     * vi, nên lô bị lẫn id lạ gần như chắc chắn là một cú POST dựng tay — và
-     * lúc ấy việc đúng là bỏ qua phần lạ chứ không phạt phần hợp lệ.
-     *
-     * @param  string[]      $ids
-     * @param  string[]|null $phamVi
-     * @return string[]
-     */
-    public static function locTheoPhamVi(array $ids, ?array $phamVi): array
-    {
-        if ($phamVi === null) {
-            return $ids;
-        }
-
-        return array_values(array_filter(
-            $ids,
-            static fn (string $id): bool => self::trongPhamVi($id, $phamVi)
-        ));
-    }
 
     /**
      * Đơn này CÓ dịch vụ mài lắp tròng theo độ không.
@@ -1478,8 +1383,7 @@ class OrderModel extends BaseModel
         int $page = 1,
         int $perPage = 20,
         string $q = '',
-        string $range = '',
-        ?array $phamViCoSo = null
+        string $range = ''
     ): array {
         $page    = max(1, $page);
         $perPage = max(1, $perPage);
@@ -1487,24 +1391,8 @@ class OrderModel extends BaseModel
         $dieuKien = [];
         $params   = [];
 
-        /*
-         * PHẠM VI CƠ SỞ — SNFR-07b, ràng buộc quyền chứ không phải bộ lọc.
-         *
-         * Đặt Ở ĐẦU danh sách điều kiện, trước cả trạng thái và ô tìm: thứ tự
-         * không đổi kết quả SQL, nhưng người đọc hàm này thấy ngay rằng phạm
-         * vi được áp trước mọi thứ khác, và người thêm điều kiện thứ tư sẽ
-         * thêm vào sau nó thay vì chen lên trên.
-         *
-         * $phamViCoSo === null nghĩa là KHÔNG giới hạn (Quản trị viên), không
-         * phải "không có cơ sở nào". Phân biệt hai thứ đó nằm ở
-         * StaffStoreModel::menhDe().
-         */
-        [$loc, $locParams] = StaffStoreModel::menhDe($phamViCoSo, 'o.store_id', 'pv');
-
-        if ($loc !== null) {
-            $dieuKien[] = $loc;
-            $params    += $locParams;
-        }
+        /* Không còn mệnh đề phạm vi cơ sở ở đây — SRS v2.1.0, K06. Mọi nhân
+           viên thấy toàn bộ đơn hàng; xem khối chú thích ở core/AdminController. */
 
         if ($status !== '') {
             $dieuKien[]       = 'o.status = :status';
@@ -1622,26 +1510,11 @@ class OrderModel extends BaseModel
      *
      * @return array [khoá trạng thái => số đơn], khoá '' là tổng
      */
-    public static function statusCounts(?array $phamViCoSo = null): array
+    public static function statusCounts(): array
     {
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * ĐẾM CŨNG PHẢI THEO PHẠM VI CƠ SỞ — SNFR-07b
-         *
-         * Sót từ đợt phân quyền 05/09/2026: paginateAdmin() đã lọc theo cơ sở
-         * nhưng hàm đếm này thì không, nên nhân viên bị giới hạn ở một cơ sở
-         * vẫn thấy viên "Đang giao (47)" của TOÀN hệ thống rồi bấm vào chỉ ra
-         * 6 dòng.
-         *
-         * Hai cái sai trong một chỗ: người dùng không hiểu vì sao hai con số
-         * cãi nhau, và con số 47 kia chính là dữ liệu kinh doanh vừa rò ra
-         * ngoài phạm vi — thứ mà cả đợt phân quyền sinh ra để chặn. Một bộ lọc
-         * mà bộ đếm của nó không lọc thì phạm vi chỉ tồn tại một nửa.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        [$menhDe, $params] = StaffStoreModel::menhDe($phamViCoSo, 'store_id', 'sc');
-
-        $where = $menhDe !== null ? ' WHERE ' . $menhDe : '';
+        /* Đếm trên TOÀN bảng — không còn phạm vi cơ sở (SRS v2.1.0, K06). */
+        $where  = '';
+        $params = [];
 
         $counts = ['' => 0];
 

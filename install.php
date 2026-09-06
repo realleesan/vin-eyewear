@@ -91,7 +91,10 @@ if ($fatal === null) {
 $expectedTables = [
     'users', 'profiles', 'user_roles', 'prescriptions',
     'categories', 'products', 'stores',
-    'favorites', 'appointments', 'orders', 'order_items', 'contact_requests',
+    // 'favorites' đã gỡ 2026-09-06 (SRS v2.1.0) — bảng chưa từng có màn hình
+    // nào dùng. Để lại đây thì trang này báo đỏ vĩnh viễn và chặn cả bước tạo
+    // tài khoản quản trị, trong khi schema.sql mới cố ý không tạo nó nữa.
+    'appointments', 'orders', 'order_items', 'contact_requests',
     // Thêm ở bản 2026-08-14 (ghi nhớ đăng nhập / quên mật khẩu). Cơ sở dữ
     // liệu cũ thiếu hai bảng này -> chạy file trong database/migrations/.
     'remember_tokens', 'password_resets',

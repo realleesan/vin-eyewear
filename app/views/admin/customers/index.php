@@ -148,17 +148,12 @@
 
                             <?php /* NÚT KHOÁ / MỞ KHOÁ KHÔNG NẰM Ở ĐÂY, cố ý.
 
-                                     Khoá tài khoản BẮT BUỘC nhập lý do (xem
-                                     CustomerModel::lock), mà một dòng bảng
-                                     không có chỗ cho ô nhập đó. Nhét vào thì
-                                     hoặc phải bỏ ràng buộc lý do, hoặc phải
-                                     dựng thêm một hộp thoại — cả hai đều để
-                                     đổi lấy việc tiết kiệm đúng một cú bấm.
-
-                                     Cả hai nút nằm trong tab Hồ sơ của trang
-                                     chi tiết, nơi có sẵn ô lý do và nơi người
-                                     bấm đang nhìn đủ thông tin về người mình
-                                     sắp khoá. */ ?>
+                                     Khoá một tài khoản là thao tác cắt đường vào
+                                     của một con người. Nó thuộc về trang chi tiết,
+                                     nơi người bấm đang nhìn đủ thông tin về người
+                                     mình sắp khoá và có sẵn ô ghi lý do — chứ
+                                     không phải một nút lẫn giữa hai mươi dòng
+                                     bảng, cạnh nút "Xem chi tiết". */ ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>

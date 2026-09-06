@@ -293,48 +293,11 @@ $chuDauCua = static function (array $a): string {
                                        nút biến mất — đúng như nó nên thế: việc duy
                                        nhất nó làm là rút ngắn quãng chờ. */
                                     ?>
-                                    <?php
-                                    /* GÁN CƠ SỞ — Q12.1, Q12.2, Q12.3.
-
-                                       Ô tick chứ không phải ô chọn một: Q12.2
-                                       chốt một người gán được nhiều cơ sở.
-
-                                       Ô ẩn `co_so[]` rỗng đứng TRƯỚC các ô tick
-                                       là bắt buộc: trình duyệt không gửi trường
-                                       nào cả khi không ô nào được tick, và khi
-                                       đó máy chủ không phân biệt được "bỏ tick
-                                       hết" với "form gửi thiếu". Bỏ tick hết là
-                                       một ý muốn hợp lệ — nó nghĩa là người này
-                                       không thấy dữ liệu cơ sở nào. */
-                                    ?>
-                                    <?php if ($coBangCoSo && $stores !== []): ?>
-                                        <?php $daGan = $coSoTheoNguoi[$a['id']] ?? []; ?>
-                                        <form method="post" action="<?= e($base) ?>/co-so" class="astores">
-                                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                            <input type="hidden" name="id" value="<?= e($a['id']) ?>">
-                                            <input type="hidden" name="co_so[]" value="">
-
-                                            <span class="atable__sub">Cơ sở làm việc</span>
-                                            <?php foreach ($stores as $cs): ?>
-                                                <label class="astores__item">
-                                                    <input type="checkbox" name="co_so[]"
-                                                           value="<?= e($cs['id']) ?>"
-                                                           <?= in_array($cs['id'], $daGan, true) ? 'checked' : '' ?>>
-                                                    <?= e($cs['name']) ?>
-                                                </label>
-                                            <?php endforeach; ?>
-
-                                            <button type="submit" class="arow-btn">Lưu cơ sở</button>
-                                        </form>
-
-                                        <?php if ($daGan === [] && $vt !== 'admin'): ?>
-                                            <?php /* Nói thẳng hậu quả. Một ô tick trống không tự nó
-                                                     giải thích rằng người này đang không thấy gì. */ ?>
-                                            <span class="atable__sub" style="color:var(--danger,#9c2a1e)">
-                                                Chưa gán cơ sở — tài khoản này không thấy đơn hàng và lịch hẹn nào.
-                                            </span>
-                                        <?php endif; ?>
-                                    <?php endif; ?>
+                                    <?php /* KHÔNG CÒN GÁN CƠ SỞ — SRS v2.1.0, K06.
+                                             Trước đây mỗi dòng có một form tick
+                                             chọn cơ sở làm việc. Phân quyền theo
+                                             cơ sở đã bỏ hẳn: mọi nhân viên thấy
+                                             đơn hàng và lịch hẹn của cả hệ thống. */ ?>
 
                                     <?php if ($conKhoa > 0): ?>
                                         <?php $hoiMo = sprintf(

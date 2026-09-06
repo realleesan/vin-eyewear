@@ -86,23 +86,29 @@ class AuthMiddleware
     private const O_NOI_BO = 'admin_id';
 
     /**
-     * Phiên quản trị chết sau bao lâu KHÔNG THAO TÁC (giây) — 30 phút.
+     * Phiên quản trị chết sau bao lâu KHÔNG THAO TÁC (giây) — 24 giờ.
      *
-     * SNFR-10 (Quyết định C7) tách chính sách phiên theo nhóm người dùng, và
-     * đây là vế nghiêm hơn: khách ưu tiên trải nghiệm, nhân viên ưu tiên bảo
-     * mật vì thao tác của họ đụng tiền cọc và hồ sơ khúc xạ.
+     * ĐỔI TỪ 30 PHÚT LÊN 24 GIỜ — SRS v2.1.0, K12 và M10.
      *
-     * ĐO THEO LƯỢT THAO TÁC CUỐI, KHÔNG PHẢI LÚC ĐĂNG NHẬP. Đo từ lúc đăng
-     * nhập thì người đang xử lý đơn giữa chừng bị đá ra — 30 phút là quá ngắn
-     * cho một ca trực. Đo theo thao tác cuối thì chỉ máy bỏ quên mới hết hạn,
-     * đúng thứ điều khoản này muốn chặn: máy quầy dùng chung, nhân viên đứng
-     * dậy tiếp khách rồi quên khoá màn hình.
+     * Trước đây khu quản trị có chính sách phiên nghiêm hơn khu khách (30 phút
+     * so với 24 giờ), với lý do thao tác của nhân viên đụng tiền cọc và hồ sơ
+     * khúc xạ. Thực tế vận hành cho thấy con số đó quá ngắn cho một ca trực:
+     * nhân viên bị đá ra giữa chừng nhiều lần trong ngày, và cái giá phải trả
+     * là họ tìm cách ở lại đăng nhập thay vì khoá màn hình.
+     *
+     * Nay dùng CHUNG hạn 24 giờ với khu khách. Hằng số vẫn giữ riêng thay vì
+     * dùng thẳng KHACH_HET_HAN_SAU: hai khu là hai chính sách, chỉ đang tình cờ
+     * bằng nhau, và gộp chúng lại thì lần sau muốn tách ra phải đi tìm mọi nơi
+     * đọc hằng số đó.
+     *
+     * ĐO THEO LƯỢT THAO TÁC CUỐI, KHÔNG PHẢI LÚC ĐĂNG NHẬP — vẫn như cũ. Đo từ
+     * lúc đăng nhập thì người đang xử lý đơn giữa chừng bị đá ra.
      *
      * $_SESSION['logged_at'] ĐÃ TỒN TẠI TỪ TRƯỚC nhưng chưa từng có ai đọc —
      * nó ghi mốc đăng nhập, không phải mốc thao tác. Giữ nguyên nó (còn dùng
      * để hiển thị) và ghi mốc thao tác vào một ô riêng.
      */
-    private const NOI_BO_HET_HAN_SAU = 1800;
+    private const NOI_BO_HET_HAN_SAU = 86400;
 
     /** Ô ghi mốc thao tác cuối của phiên quản trị. */
     private const O_NOI_BO_THAO_TAC = 'admin_active_at';
@@ -408,7 +414,7 @@ class AuthMiddleware
             return null;
         }
 
-        /* HẾT HẠN DO KHÔNG THAO TÁC — SNFR-10, 30 phút.
+        /* HẾT HẠN DO KHÔNG THAO TÁC — 24 giờ, xem NOI_BO_HET_HAN_SAU.
 
            Kiểm ở ĐÂY chứ không ở requireStaff(): staffId() là cửa duy nhất mà
            mọi đường trong khu quản trị đi qua để biết "ai đang đăng nhập", kể
@@ -445,12 +451,12 @@ class AuthMiddleware
 
         // Chỉ chạm lại mốc khi đây là một lượt thao tác THẬT, không phải một
         // lời hỏi phụ từ AuditLogModel: nếu không thì mỗi dòng vết ghi ra lại
-        // gia hạn phiên thêm 30 phút, và cái timeout không bao giờ tới.
+        // gia hạn phiên, và cái timeout không bao giờ tới.
         if (!$huyNeuHetHan) {
             return $userId;
         }
 
-        // Chạm lại mốc mỗi lượt: đây là thứ biến 30 phút thành "không thao
+        // Chạm lại mốc mỗi lượt: đây là thứ biến 24 giờ thành "không thao
         // tác" chứ không phải "kể từ khi đăng nhập".
         $_SESSION[self::O_NOI_BO_THAO_TAC] = time();
 

@@ -40,24 +40,15 @@ class PrescriptionRecordModel extends BaseModel
         'external' => 'Toa từ nơi khác',
     ];
 
-    /**
-     * Đơn thuốc còn hiệu lực bao nhiêu tháng.
+    /*
+     * LY_DO_TOI_THIEU ĐÃ GỠ — SRS v2.1.0, H03.
      *
-     * TRỎ SANG HẰNG CỦA UserModel chứ không gõ lại số 12. Trang tài khoản của
-     * khách đọc mốc đó, màn hình này cũng đọc mốc đó — gõ hai lần thì có ngày
-     * một bên đổi thành 6 và khách sẽ thấy "Còn hiệu lực" trong khi nhân viên
-     * nhìn cùng một đơn thuốc và thấy "Cần đo lại".
-     */
-    public const HIEU_LUC_THANG = UserModel::PRESCRIPTION_VALID_MONTHS;
-
-    /**
-     * Lý do sửa phải dài tối thiểu bao nhiêu ký tự.
+     * Hằng số này đặt độ dài tối thiểu 10 ký tự cho ô "lý do sửa". Ràng buộc
+     * bắt buộc đã bỏ: ô vẫn còn và vẫn lưu khi có, nhưng không chặn thao tác.
      *
-     * 10 là con số BA chốt (X21). Nó vừa đủ để chặn "ok", "sua", "." — ba thứ
-     * người ta gõ khi bị bắt điền một ô mà không thấy nó để làm gì — và vẫn
-     * ngắn hơn một câu ngắn nhất còn có nghĩa: "Nhập nhầm trục".
+     * (OrderModel::LY_DO_TOI_THIEU là hằng số KHÁC và vẫn còn hiệu lực — nó áp
+     * cho việc đảo ngược mốc mài quá cửa sổ rút lại.)
      */
-    public const LY_DO_TOI_THIEU = 10;
 
     /**
      * MIỀN GIÁ TRỊ SỐ ĐO — Q63.1, Q63.3, Q63.4, Q63.7, chốt 04/09/2026.
@@ -209,37 +200,22 @@ class PrescriptionRecordModel extends BaseModel
         return Database::columnExists('customer_prescriptions', 'ban_goc_id');
     }
 
-    /**
-     * CSDL đã có cột `nguoi_duoc_do` chưa (X24).
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * TRƯỜNG "NGƯỜI ĐƯỢC ĐO" ĐÃ GỠ — SRS v2.1.0, H07
      *
-     * Cột này đến ở một file migration KHÁC với bộ cột phiên bản, nên nó cần
-     * phép hỏi riêng. Gộp vào coPhienBan() thì trên một máy đã chạy migration
-     * 04/09 mà chưa chạy 06/09, câu INSERT sẽ nhắc tới một cột chưa tồn tại và
-     * ném 1054 đúng lúc kỹ thuật viên bấm Lưu.
-     */
-    public static function coNguoiDuocDo(): bool
-    {
-        return Database::columnExists('customer_prescriptions', 'nguoi_duoc_do');
-    }
-
-    /**
-     * Tên hiển thị cho một bản ghi — X24.
+     * Trước đây một tài khoản chứa được số đo của nhiều người (mẹ và hai con),
+     * phân biệt bằng cột `nguoi_duoc_do`. Hai hàm coNguoiDuocDo() và
+     * tenNguoiDuocDo() phục vụ cột đó.
      *
-     * Cột trống nghĩa là CHÍNH CHỦ, nên nơi hiển thị lùi về tên tài khoản chứ
-     * không in dấu gạch. Gom vào đây thay vì để mỗi view tự lùi: mỗi chỗ tự lùi
-     * là mỗi chỗ có cơ hội quên, và cái quên đó biến "mẹ" thành "—" trên đúng
-     * cái bảng mà cột này sinh ra để làm rõ.
+     * Chủ đầu tư đã bỏ: MỘT TÀI KHOẢN ỨNG VỚI MỘT NGƯỜI. Người thân muốn lưu
+     * số đo thì lập tài khoản riêng.
+     *
+     * Việc này gỡ bỏ luôn một lớp phức tạp đáng kể — latest() không còn phải
+     * lọc theo người, chenhLech() không còn phải nhóm theo người, và không còn
+     * ca "số của con đi vào đơn kính của mẹ".
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    public static function tenNguoiDuocDo(array $ban, ?string $tenChu = null): string
-    {
-        $nguoi = trim((string) ($ban['nguoi_duoc_do'] ?? ''));
-
-        if ($nguoi !== '') {
-            return $nguoi;
-        }
-
-        return ($tenChu !== null && trim($tenChu) !== '') ? trim($tenChu) : 'Chính chủ';
-    }
 
     /** Một bản ghi, nhưng CHỈ khi nó thuộc về đúng khách đang mở. */
     public static function findOwned(string $id, string $userId): ?array
@@ -267,158 +243,35 @@ class PrescriptionRecordModel extends BaseModel
             return null;
         }
 
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * CHỈ LẤY BẢN CỦA CHÍNH CHỦ TÀI KHOẢN — sửa 09/09/2026
-         *
-         * Hàm này trả lời câu "độ hiện tại của người này", và kết quả của nó
-         * được mirrorLatest() chép sang bảng `prescriptions` — tức là con số
-         * hiện trên trang "Thông số đo mắt" của KHÁCH và con số điền sẵn khi
-         * họ mua kính.
-         *
-         * Từ 06/09 một tài khoản chứa được số đo của NHIỀU NGƯỜI (X24, cột
-         * `nguoi_duoc_do`). Câu lệnh cũ không lọc cột đó, nên bản đo mới nhất
-         * của BẤT KỲ AI cũng thành "độ hiện tại" của chủ tài khoản.
-         *
-         * Kịch bản đã dựng lại được: mẹ dẫn con đi đo, kỹ thuật viên nhập bản
-         * cho "Bé Na" OD -5.50 hôm nay. Mẹ mở trang tài khoản và thấy -5.50
-         * dưới dòng "Kết quả đo khúc xạ gần nhất tại Vin Eyewear". Nếu mẹ đặt
-         * kính, số của con đi thẳng vào đơn cắt tròng.
-         *
-         * chenhLech() đã lọc theo người từ 06/09; chỗ này bị bỏ sót. Cùng một
-         * cột, hai nơi đọc, chỉ một nơi được sửa — đó là lý do nó lọt.
-         *
-         * NULL VÀ CHUỖI RỖNG ĐỀU LÀ "CHÍNH CHỦ". Bản ghi tạo trước 06/09 mang
-         * NULL, bản mới nhập mà để trống ô cũng thành NULL — nhưng một form
-         * gửi chuỗi rỗng vẫn lọt qua validate() ở vài đường cũ. So bằng
-         * COALESCE để cả hai cùng rơi vào một nhóm.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        $loc = self::coNguoiDuocDo() ? " AND COALESCE(nguoi_duoc_do, '') = ''" : '';
-
+        /* Không còn lọc theo người được đo — SRS v2.1.0, H07: một tài khoản
+           ứng với một người, nên bản mới nhất của tài khoản CHÍNH LÀ độ hiện
+           tại của chủ tài khoản. */
         return Database::fetchOne(
             'SELECT * FROM customer_prescriptions
-              WHERE user_id = :uid' . $loc . '
+              WHERE user_id = :uid
               ORDER BY measured_at DESC, created_at DESC
               LIMIT 1',
             ['uid' => $userId]
         );
     }
 
-    /**
-     * Bản mới nhất của MỘT người được đo cụ thể — dùng khi cần đích danh.
+    /* conHieuLuc() ĐÃ GỠ cùng UserModel::prescriptionIsValid() — SRS v2.1.0,
+       H09. Hệ thống không kết luận một số đo còn dùng được hay không. */
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * CẢNH BÁO CHÊNH LỆCH ĐỘ ĐÃ GỠ — SRS v2.1.0, H08
      *
-     * Tách khỏi latest() thay vì thêm tham số: latest() được gọi ở nhiều nơi
-     * hỏi đúng một câu ("độ hiện tại của chủ tài khoản"), và thêm một tham số
-     * mặc định vào đó là mở đường cho nơi gọi mới vô tình truyền sai.
+     * Trước đây chenhLech() trừ cầu (SPH) của bản ghi này với bản liền trước
+     * của cùng người, kèm số tháng cách nhau, và bảng lịch sử tô đỏ ô nào tăng
+     * độ.
      *
-     * @param string $nguoi chuỗi rỗng = chính chủ
+     * Chủ đầu tư đã bỏ: một con số chênh lệch do máy tính ra, đứng cạnh dữ liệu
+     * y tế mà không có người diễn giải, dễ bị đọc thành một kết luận về sức
+     * khoẻ. Bảng lịch sử vẫn in đủ mọi lần đo theo thứ tự thời gian — người có
+     * chuyên môn tự so được.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    public static function latestCua(string $userId, string $nguoi): ?array
-    {
-        if (!self::available()) {
-            return null;
-        }
-
-        if (!self::coNguoiDuocDo()) {
-            return self::latest($userId);
-        }
-
-        return Database::fetchOne(
-            "SELECT * FROM customer_prescriptions
-              WHERE user_id = :uid AND COALESCE(nguoi_duoc_do, '') = :nguoi
-              ORDER BY measured_at DESC, created_at DESC
-              LIMIT 1",
-            ['uid' => $userId, 'nguoi' => trim($nguoi)]
-        );
-    }
-
-    /**
-     * Đơn đo trong vòng HIEU_LUC_THANG tháng thì còn dùng được.
-     *
-     * Gọi thẳng UserModel::prescriptionIsValid() — nó chỉ cần khoá
-     * 'measured_at', mà bản ghi ở bảng này có đúng khoá đó. Viết lại phép so
-     * ngày ở đây là tạo phiên bản thứ hai của cùng một luật.
-     */
-    public static function conHieuLuc(?array $ban): bool
-    {
-        return UserModel::prescriptionIsValid($ban);
-    }
-
-    /**
-     * Chênh lệch cầu (SPH) so với bản ghi liền trước, theo từng mắt.
-     *
-     * Đây là câu hỏi thật của người bán kính: "độ có tăng không, tăng bao
-     * nhiêu, trong bao lâu". Bảng số trần không trả lời được — mắt phải tự trừ
-     * hai dòng cách nhau vài centimet trên màn hình, và người ta trừ sai.
-     *
-     * @param array $lichSu Kết quả forUser(), tức đã sắp mới nhất trước
-     * @return array id bản ghi => ['od' => ?float, 'os' => ?float, 'thang' => ?int]
-     */
-    public static function chenhLech(array $lichSu): array
-    {
-        $ket = [];
-        $n   = count($lichSu);
-
-        /* CHỈ TRỪ TRONG CÙNG MỘT NGƯỜI — X24.
-
-           Trước 06/09/2026 dòng này là `$lichSu[$i + 1]`, tức bản kề dưới bất
-           kể của ai. Từ khi có cột `nguoi_duoc_do`, một tài khoản có thể chứa
-           số đo của mẹ và của hai đứa con, và bản kề dưới rất hay là của người
-           khác. Trừ hai người cho nhau ra một con số trông y hệt một con số
-           thật: "P -1.50 sau 0 tháng" đọc như mắt xấu đi trong một buổi chiều.
-
-           Khoá nhóm dùng đúng giá trị thô của cột (NULL = chính chủ, gộp về
-           chuỗi rỗng) chứ không dùng tenNguoiDuocDo(): hàm kia lùi về tên chủ
-           tài khoản để HIỂN THỊ, và nếu ai đó gõ đúng tên chủ vào ô người được
-           đo thì hai nhóm khác nhau sẽ bị gộp làm một. */
-        $ai = static function (array $ban): string {
-            return trim((string) ($ban['nguoi_duoc_do'] ?? ''));
-        };
-
-        for ($i = 0; $i < $n; $i++) {
-            $truoc = null;
-
-            for ($j = $i + 1; $j < $n; $j++) {
-                if ($ai($lichSu[$j]) === $ai($lichSu[$i])) {
-                    $truoc = $lichSu[$j];
-                    break;
-                }
-            }
-
-            // Không tìm được bản cũ hơn của CÙNG người — không có gì để so.
-            // Đó là dữ liệu thiếu chứ không phải chênh lệch bằng 0, và hai thứ
-            // đó phải hiện khác nhau.
-            if ($truoc === null) {
-                continue;
-            }
-
-            $nay = $lichSu[$i];
-
-            $hieu = static function (?string $a, ?string $b): ?float {
-                // 0.00 là một giá trị hợp lệ (mắt không cận), nên phải phân
-                // biệt nó với ô bỏ trống. So với null chứ đừng dùng empty().
-                return ($a === null || $b === null) ? null : round((float) $a - (float) $b, 2);
-            };
-
-            $thang = null;
-
-            if (!empty($nay['measured_at']) && !empty($truoc['measured_at'])) {
-                $t1 = new DateTime((string) $truoc['measured_at']);
-                $t2 = new DateTime((string) $nay['measured_at']);
-                $kc = $t1->diff($t2);
-                $thang = $kc->y * 12 + $kc->m;
-            }
-
-            $ket[$nay['id']] = [
-                'od'    => $hieu($nay['od_sph'] ?? null, $truoc['od_sph'] ?? null),
-                'os'    => $hieu($nay['os_sph'] ?? null, $truoc['os_sph'] ?? null),
-                'thang' => $thang,
-            ];
-        }
-
-        return $ket;
-    }
 
     // ========================================================================
     // GHI
@@ -460,10 +313,11 @@ class PrescriptionRecordModel extends BaseModel
          * Nay nó CHÈN một phiên bản mới trong cùng nhóm lần đo. Bản cũ nằm
          * nguyên chỗ cũ và vẫn đọc lại được qua phienBan().
          *
-         * LÝ DO SỬA LÀ BẮT BUỘC, tối thiểu 10 ký tự. Không phải để làm khó:
-         * một chuỗi phiên bản không kèm lý do thì sáu tháng sau chính người
-         * sửa cũng không nhớ vì sao có hai con số khác nhau cho cùng một ngày
-         * đo, và cả cơ chế phiên bản trở thành vô dụng.
+         * LÝ DO SỬA KHÔNG BẮT BUỘC — bỏ ràng buộc theo SRS v2.1.0, H03. Ô nhập
+         * vẫn còn và vẫn lưu khi có, và vẫn NÊN ghi: một chuỗi phiên bản không
+         * kèm lý do thì sáu tháng sau chính người sửa cũng không nhớ vì sao có
+         * hai con số khác nhau cho cùng một ngày đo. Vết trong
+         * customer_audit_logs vẫn ghi ai sửa và lúc nào.
          * ─────────────────────────────────────────────────────────────────────
          */
         if ($id !== null) {
@@ -485,13 +339,12 @@ class PrescriptionRecordModel extends BaseModel
                     . 'Chạy database/migrations/2026-09-04-ho-so-khuc-xa-chi-them.sql rồi thử lại.'];
             }
 
+            /* LÝ DO SỬA KHÔNG CÒN BẮT BUỘC — SRS v2.1.0, H03.
+               Ô nhập vẫn còn và vẫn lưu khi có: bản ghi cũ được giữ lại nên lý
+               do là thứ duy nhất giải thích vì sao có hai con số. Nhưng nó
+               không còn chặn thao tác — một ô bắt buộc mà người dùng buộc phải
+               gõ cho xong chỉ sinh ra những dòng "sửa" vô nghĩa. */
             $lyDo = trim((string) ($input['ly_do'] ?? ''));
-
-            if (utf8Length($lyDo) < self::LY_DO_TOI_THIEU) {
-                return ['ok' => false, 'error' =>
-                    'Phải ghi lý do sửa, tối thiểu ' . self::LY_DO_TOI_THIEU . ' ký tự. '
-                    . 'Bản ghi cũ được giữ lại nên lý do là thứ duy nhất giải thích vì sao có hai con số.'];
-            }
 
             /* Nhóm của bản đang sửa. Bản ghi cũ (tạo trước migration) đã được
                câu UPDATE trong file migration gán ban_goc_id = id, nên nhánh
@@ -507,7 +360,7 @@ class PrescriptionRecordModel extends BaseModel
             $moi = self::chen($userId, $actorId, $gia, [
                 'ban_goc_id' => $goc,
                 'phien_ban'  => $pbMax + 1,
-                'ly_do'      => utf8Substr($lyDo, 0, 255),
+                'ly_do'      => $lyDo === '' ? null : utf8Substr($lyDo, 0, 255),
             ]);
 
             self::mirrorLatest($userId);
@@ -661,14 +514,12 @@ class PrescriptionRecordModel extends BaseModel
     /**
      * Chép bản ghi MỚI NHẤT sang bảng `prescriptions` để phía khách đọc.
      *
-     * KHÔNG ĐỤNG NĂM CỘT wear_* — chúng mô tả cặp kính khách ĐANG ĐEO, do
-     * chính khách khai ở /tai-khoan/do-mat, và không phải kết quả của một lần
-     * đo nào. Câu ON DUPLICATE KEY UPDATE dưới đây chỉ liệt kê các cột số đo,
-     * nên phần khách tự khai sống sót qua mọi lần nhân viên nhập số mới.
+     * KHÔNG XOÁ dòng `prescriptions` khi lịch sử rỗng: bảng đó là thứ phía
+     * khách đọc, và xoá một dòng ở đó để rồi ghi lại là mở ra một khoảng thời
+     * gian ngắn mà khách nhìn thấy "chưa có số đo".
      *
-     * KHÔNG XOÁ dòng `prescriptions` khi lịch sử rỗng, cũng vì lẽ đó: xoá đi
-     * là mất luôn wear_* mà không lấy lại được, trong khi thứ vừa bị xoá chỉ
-     * là một bản ghi đo.
+     * (Trước đây khối chú thích này còn nói về năm cột wear_* phải giữ lại;
+     * mục "kính đang đeo" đã gỡ theo SRS v2.1.0, A20.)
      */
     private static function mirrorLatest(string $userId): void
     {
@@ -951,21 +802,8 @@ class PrescriptionRecordModel extends BaseModel
         $tech = trim((string) ($in['tech_note'] ?? ''));
         $gia['tech_note'] = $tech !== '' ? utf8Substr($tech, 0, 500) : null;
 
-        /* NGƯỜI ĐƯỢC ĐO — X24.
-
-           Để TRỐNG nghĩa là chính chủ tài khoản, và đó là mặc định đúng với
-           gần hết dữ liệu. Không tự điền tên chủ vào đây: một bản sao họ tên
-           nằm trong bảng y tế sẽ lệch ngay lần khách đổi tên đầu tiên, mà lúc
-           đó không ai phân được dòng nào là tên thật. Nơi hiển thị tự lùi về
-           tên chủ tài khoản khi cột trống — xem tenNguoiDuocDo(). */
-        $nguoi = trim((string) ($in['nguoi_duoc_do'] ?? ''));
-
-        if ($nguoi !== '' && utf8Length($nguoi) < 2) {
-            return ['ok' => false, 'error' =>
-                'Tên người được đo quá ngắn. Bỏ trống nếu là chính chủ tài khoản.'];
-        }
-
-        $gia['nguoi_duoc_do'] = $nguoi !== '' ? utf8Substr($nguoi, 0, 120) : null;
+        /* Trường "người được đo" đã gỡ — SRS v2.1.0, H07. Một tài khoản ứng
+           với một người; ô nhập, cột và mọi phép lọc theo nó đều không còn. */
 
         /* CỘT MỚI CHỈ GỬI KHI CSDL ĐÃ CÓ CHÚNG.
 
@@ -978,11 +816,6 @@ class PrescriptionRecordModel extends BaseModel
                       'os_seg_height', 'od_va_num', 'os_va_num', 'tech_note'] as $c) {
                 unset($gia[$c]);
             }
-        }
-
-        // Cùng lý lẽ, nhưng cột này đến ở migration 06/09 nên hỏi riêng.
-        if (!self::coNguoiDuocDo()) {
-            unset($gia['nguoi_duoc_do']);
         }
 
         return ['ok' => true, 'values' => $gia];

@@ -67,6 +67,18 @@ $canMark = !$paid
         </form>
 
         <div class="aodraw__acts">
+            <?php /* ĐƠN ĐÃ HUỶ KHÔNG ĐỔI TRẠNG THÁI ĐƯỢC NỮA — SRS v2.1.0, F10.
+
+                     "Đã huỷ" là trạng thái kết thúc: không còn đường nào rời
+                     khỏi nó. Bày ra một ô chọn rồi để máy chủ từ chối là mời
+                     người dùng làm một việc chắc chắn hỏng, nên ẩn hẳn ô và nói
+                     ra lý do. Máy chủ vẫn kiểm lại — ô này biến mất không có
+                     nghĩa là luật biến mất. */ ?>
+            <?php if ($order['status'] === 'cancelled'): ?>
+                <p class="aomolai__hint aomolai__hint--block">
+                    Đơn đã huỷ — không đổi trạng thái được nữa. Nếu cần xử lý tiếp thì tạo đơn mới.
+                </p>
+            <?php else: ?>
             <div class="astatus">
                 <label class="sr-only" for="aodraw-st">Trạng thái đơn <?= e($order['code']) ?></label>
                 <select class="astatus__pick astatus__pick--lg astatus__pick--<?= e($order['status']) ?>"
@@ -80,6 +92,7 @@ $canMark = !$paid
                 </select>
                 <button type="submit" form="aodrawst" class="aosave">Lưu</button>
             </div>
+            <?php endif; ?>
 
             <?php
             /* KHÁCH ĐANG ĐỌC CHỮ GÌ — B9.
@@ -100,34 +113,6 @@ $canMark = !$paid
                 <p class="aomolai__hint aomolai__hint--block">
                     Khách đang thấy trạng thái này là «<strong><?= e($nhanKhach) ?></strong>».
                 </p>
-            <?php endif; ?>
-
-            <?php /* Ô LÝ DO CHỈ HIỆN KHI ĐƠN ĐANG Ở "ĐÃ HUỶ" — Q3.1.
-
-                     Hiện thường trực thì nó là một ô trống bên cạnh mọi đơn,
-                     và một ô bắt buộc chỉ đôi khi bắt buộc là thứ người ta học
-                     cách bỏ qua. Máy chủ vẫn kiểm lại
-                     (OrderAdminController::updateStatus) — ô này biến mất
-                     không có nghĩa là luật biến mất. */ ?>
-            <?php if ($order['status'] === 'cancelled'): ?>
-                <?php if (!empty($order['la_admin'])): ?>
-                    <div class="aomolai">
-                        <label class="aomolai__lb" for="aodraw-lydo">
-                            Lý do mở lại đơn đã huỷ
-                        </label>
-                        <input class="aomolai__in" type="text" id="aodraw-lydo"
-                               name="ly_do" form="aodrawst" maxlength="255"
-                               placeholder="Ví dụ: nhân viên bấm nhầm, khách vẫn lấy hàng">
-                        <p class="aomolai__hint">
-                            Bắt buộc, tối thiểu <?= (int) OrderModel::LY_DO_TOI_THIEU ?> ký tự.
-                            Lý do lưu cùng mốc trạng thái và vào nhật ký thao tác.
-                        </p>
-                    </div>
-                <?php else: ?>
-                    <p class="aomolai__hint aomolai__hint--block">
-                        Đơn đã huỷ — chỉ Quản trị viên mở lại được, kèm lý do (Q3.1).
-                    </p>
-                <?php endif; ?>
             <?php endif; ?>
 
             <a class="aodraw__x" href="<?= e($dongUrl) ?>" data-modal-close aria-label="Đóng">&times;</a>

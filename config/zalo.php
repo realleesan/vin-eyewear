@@ -51,18 +51,6 @@ return [
     'shop_phone' => env('ZALO_SHOP_PHONE', '0366599711'),
 
     /*
-     * Có gửi cho CHÍNH KHÁCH nữa không?
-     *
-     * Yêu cầu của cửa hàng ghi "và gửi cả cho Zalo của khách hàng nếu được" —
-     * chữ "nếu được" là có lý do: ZNS gửi cho khách tính phí theo từng tin và
-     * cần một mẫu riêng đã duyệt, khác mẫu gửi nội bộ. Nên mặc định TẮT, bật
-     * khi đã đăng ký xong mẫu đó và chấp nhận chi phí.
-     *
-     * Bật khi chưa cắm nhà cung cấp cũng không hại gì: tin chỉ đi vào log.
-     */
-    'notify_customer' => (bool) env('ZALO_NOTIFY_CUSTOMER', false),
-
-    /*
      * ỨNG DỤNG trên developers.zalo.me — dùng để làm mới token.
      *
      * ⚠️ ĐỂ TRONG .env, KHÔNG BAO GIỜ COMMIT. Secret key cộng refresh_token là
@@ -100,16 +88,13 @@ return [
     'access_token' => env('ZALO_OA_ACCESS_TOKEN', ''),
 
     /*
-     * Mã mẫu tin ZNS đã được Zalo duyệt.
+     * HAI MẪU TIN LỊCH HẸN ĐÃ GỠ — SRS v2.1.0, G12.
      *
-     * Một mẫu cho tin báo nội bộ (gửi cửa hàng), một cho tin gửi khách nếu bật
-     * 'notify_customer'. Cả hai là mẫu TỰ SOẠN, nên tên các ô do chính người đi
-     * đăng ký đặt: đặt đúng bảy tên mà Zalo::appointmentParams() đang gửi
-     * (su_kien, ma_lich, khach_hang, dien_thoai, co_so, dich_vu, thoi_gian) thì
-     * không phải sửa mã; đặt khác thì sửa ở đúng hàm đó.
+     * 'template_shop' và 'template_customer' trước đây là mã mẫu ZNS cho thông
+     * báo lịch hẹn. Chức năng đó đã bỏ nên hai khoá này không còn nơi nào đọc;
+     * hai biến môi trường ZALO_ZNS_TEMPLATE_SHOP và ZALO_ZNS_TEMPLATE_CUSTOMER
+     * có thể xoá khỏi .env.
      */
-    'template_shop'     => env('ZALO_ZNS_TEMPLATE_SHOP', ''),
-    'template_customer' => env('ZALO_ZNS_TEMPLATE_CUSTOMER', ''),
 
     /*
      * Mẫu tin ĐƠN HÀNG MỚI — gửi cửa hàng, không gửi khách.

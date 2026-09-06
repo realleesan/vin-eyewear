@@ -3,7 +3,7 @@
 /**
  * _tab-don-thuoc.php — tab 3: lịch sử đơn thuốc kính.
  *
- * Biến: $khach, $rxRecords, $rxDeltas, $rxSources, $stores, $doneAppts,
+ * Biến: $khach, $rxRecords, $rxSources, $stores, $doneAppts,
  *       $rxEditing, $auditReady, $duongDan.
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -40,29 +40,9 @@ $so = static function (mixed $v): string {
     return ($f > 0 ? '+' : '') . number_format($f, 2, '.', '');
 };
 
-/* NGƯỜI ĐƯỢC ĐO — X24.
-
-   Cột "Người được đo" CHỈ HIỆN khi tài khoản này thật sự có nhiều hơn một
-   người. Với đại đa số tài khoản, ô đó luôn trống và cột chỉ lặp lại tên chủ
-   xuống mười dòng — một cột nhiễu trong cái bảng vốn đã mười hai cột, và nhiễu
-   thì làm người đọc lướt nhanh hơn chứ không kỹ hơn.
-
-   $daDo gom các tên ĐÃ TỪNG gõ để đổ vào <datalist> dưới form: gõ tay "Bé Na"
-   lần thứ hai mà lỡ thành "Bé na" là hai người khác nhau trong mắt phép trừ
-   chênh lệch (PrescriptionRecordModel::chenhLech so khớp chuỗi thô). */
-$daDo = [];
-
-foreach ($rxRecords as $rx) {
-    $ten = trim((string) ($rx['nguoi_duoc_do'] ?? ''));
-
-    if ($ten !== '') {
-        $daDo[$ten] = true;
-    }
-}
-
-$daDo    = array_keys($daDo);
-$coNhieu = $daDo !== [];
-$tenChu  = trim((string) ($khach['full_name'] ?? ''));
+/* Trường "người được đo" và cảnh báo chênh lệch độ đã gỡ — SRS v2.1.0,
+   H07 và H08. Một tài khoản ứng với một người, và hệ thống không tự trừ độ
+   giữa hai lần đo. */
 ?>
 
 <?php if (!$auditReady): ?>
@@ -104,9 +84,6 @@ $tenChu  = trim((string) ($khach['full_name'] ?? ''));
                 <thead>
                     <tr>
                         <th scope="col">Ngày đo</th>
-                        <?php if ($coNhieu): ?>
-                            <th scope="col">Người được đo</th>
-                        <?php endif; ?>
                         <th scope="col">Nguồn</th>
                         <?php /* Gộp tiêu đề "Mắt phải (OD)" cho ba cột con: ba
                                  nhãn SPH/CYL/AXIS lặp lại hai lần trong cùng
@@ -115,15 +92,11 @@ $tenChu  = trim((string) ($khach['full_name'] ?? ''));
                         <th scope="col" colspan="3" class="acus__rx-od">Mắt phải (OD)</th>
                         <th scope="col" colspan="3" class="acus__rx-os">Mắt trái (OS)</th>
                         <th scope="col">PD</th>
-                        <th scope="col">Thay đổi</th>
                         <th scope="col">Nơi đo</th>
                         <th scope="col"></th>
                     </tr>
                     <tr class="acus__rx-sub">
                         <th scope="col"></th>
-                        <?php if ($coNhieu): ?>
-                            <th scope="col"></th>
-                        <?php endif; ?>
                         <th scope="col"></th>
                         <th scope="col" class="acus__rx-od">SPH</th>
                         <th scope="col" class="acus__rx-od">CYL</th>
@@ -134,37 +107,23 @@ $tenChu  = trim((string) ($khach['full_name'] ?? ''));
                         <th scope="col"></th>
                         <th scope="col"></th>
                         <th scope="col"></th>
-                        <th scope="col"></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($rxRecords as $i => $rx): ?>
                         <?php
-                        $lech    = $rxDeltas[$rx['id']] ?? null;
                         $moiNhat = $i === 0;
                         ?>
                         <tr<?= $moiNhat ? ' class="is-latest"' : '' ?>>
                             <td>
                                 <?= e(formatDate($rx['measured_at'])) ?>
+                                <?php /* Không còn kết luận "còn hiệu lực / nên đo
+                                         lại" — SRS v2.1.0, H09. Ngày đo in ngay
+                                         trên là đủ để nhân viên tự đánh giá. */ ?>
                                 <?php if ($moiNhat): ?>
-                                    <span class="atable__sub">
-                                        <?= PrescriptionRecordModel::conHieuLuc($rx)
-                                            ? 'đang dùng · còn hiệu lực'
-                                            : 'đang dùng · nên đo lại' ?>
-                                    </span>
+                                    <span class="atable__sub">đang dùng</span>
                                 <?php endif; ?>
                             </td>
-
-                            <?php if ($coNhieu): ?>
-                                <td>
-                                    <?php /* Ô trống nghĩa là chính chủ, nên in
-                                             tên tài khoản chứ không in gạch —
-                                             một dấu "—" cạnh "Bé Na" đọc như
-                                             thiếu dữ liệu, trong khi nó là câu
-                                             trả lời đầy đủ. */ ?>
-                                    <?= e(PrescriptionRecordModel::tenNguoiDuocDo($rx, $tenChu)) ?>
-                                </td>
-                            <?php endif; ?>
 
                             <td>
                                 <?php /* Nguồn 'store' dùng viên nền xanh, hai
@@ -190,37 +149,6 @@ $tenChu  = trim((string) ($khach['full_name'] ?? ''));
                             </td>
 
                             <td class="num"><?= $rx['pd'] !== null ? e($rx['pd']) : '—' ?></td>
-
-                            <td>
-                                <?php if ($lech === null): ?>
-                                    <?php /* Bản ghi cũ nhất không có gì trước nó
-                                             để so. Đó là dữ liệu THIẾU, không
-                                             phải chênh lệch bằng 0 — hai thứ đó
-                                             phải trông khác nhau. */ ?>
-                                    <span class="atable__sub">lần đo đầu</span>
-                                <?php elseif ($lech['od'] === null && $lech['os'] === null): ?>
-                                    <span class="atable__sub">—</span>
-                                <?php else: ?>
-                                    <span class="acus__delta">
-                                        <?php foreach (['od' => 'P', 'os' => 'T'] as $mat => $nhan): ?>
-                                            <?php if ($lech[$mat] !== null): ?>
-                                                <?php /* Tăng độ (âm hơn) là tin
-                                                         xấu -> tô đỏ. Giữ nguyên
-                                                         hoặc giảm thì không tô. */ ?>
-                                                <span class="acus__delta-eye<?= $lech[$mat] < 0 ? ' is-worse' : '' ?>">
-                                                    <?= e($nhan) ?>
-                                                    <?= $lech[$mat] > 0 ? '+' : '' ?><?= e(number_format($lech[$mat], 2, '.', '')) ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    </span>
-                                    <?php if ($lech['thang'] !== null): ?>
-                                        <span class="atable__sub">
-                                            sau <?= (int) $lech['thang'] ?> tháng
-                                        </span>
-                                    <?php endif; ?>
-                                <?php endif; ?>
-                            </td>
 
                             <td>
                                 <?= $rx['store_name'] !== null
@@ -383,38 +311,6 @@ $tenChu  = trim((string) ($khach['full_name'] ?? ''));
                 <input type="date" id="ngay-do" name="measured_at" required
                        max="<?= e(date('Y-m-d')) ?>"
                        value="<?= e((string) ($form['measured_at'] ?? date('Y-m-d'))) ?>">
-            </div>
-
-            <?php /* NGƯỜI ĐƯỢC ĐO — X24, chốt 04/09/2026.
-
-                     Cả nhà dùng chung một số điện thoại là chuyện thường, và
-                     ba lần đo của ba người rơi vào cùng một tài khoản thì lịch
-                     sử trông như một người thoái hoá mắt trong ba ngày.
-
-                     Ô này KHÔNG bắt buộc: bỏ trống nghĩa là chính chủ, đúng với
-                     gần hết bản ghi. Bắt buộc nó là bắt kỹ thuật viên gõ lại
-                     tên khách vào mọi lần đo bình thường.
-
-                     <datalist> đổ các tên đã từng gõ cho tài khoản này: phép
-                     trừ chênh lệch so khớp CHUỖI THÔ, nên "Bé Na" và "Bé na" là
-                     hai người khác nhau và mỗi người sẽ mất đường so sánh. */ ?>
-            <div class="field">
-                <label for="nguoi-duoc-do">Người được đo</label>
-                <input type="text" id="nguoi-duoc-do" name="nguoi_duoc_do" maxlength="120"
-                       list="ds-nguoi-duoc-do"
-                       placeholder="<?= e($tenChu !== '' ? $tenChu : 'Chính chủ') ?>"
-                       value="<?= e((string) ($form['nguoi_duoc_do'] ?? '')) ?>">
-                <?php if ($daDo !== []): ?>
-                    <datalist id="ds-nguoi-duoc-do">
-                        <?php foreach ($daDo as $ten): ?>
-                            <option value="<?= e($ten) ?>"></option>
-                        <?php endforeach; ?>
-                    </datalist>
-                <?php endif; ?>
-                <p class="field__hint">
-                    Bỏ trống nếu đo cho chính chủ tài khoản. Chỉ điền khi đo hộ
-                    người thân dùng chung số điện thoại.
-                </p>
             </div>
 
             <div class="field">
@@ -590,23 +486,25 @@ $tenChu  = trim((string) ($khach['full_name'] ?? ''));
             </div>
 
             <?php
-            /* LÝ DO SỬA — chỉ hiện khi ĐANG SỬA, và khi đó là bắt buộc.
-            
+            /* LÝ DO SỬA — chỉ hiện khi ĐANG SỬA, và KHÔNG bắt buộc.
+
                Không hiện ở form thêm mới: bản ghi đầu tiên không sửa gì cả nên
-               không có lý do nào để ghi, và một ô bắt buộc vô nghĩa là thứ
-               người ta học cách gõ bừa cho qua. */
+               không có lý do nào để ghi.
+
+               Ràng buộc bắt buộc đã bỏ theo SRS v2.1.0 (H03): một ô bắt buộc mà
+               người dùng phải gõ cho xong chỉ sinh ra những dòng "sửa" vô nghĩa.
+               Ô vẫn ở đây và vẫn lưu khi có. */
             ?>
             <?php if ($sua !== null): ?>
                 <div class="field field--wide">
-                    <label for="ly-do-sua">Lý do sửa <span aria-hidden="true">*</span></label>
-                    <input type="text" id="ly-do-sua" name="ly_do" maxlength="255" required
-                           minlength="10"
+                    <label for="ly-do-sua">Lý do sửa <span class="field__opt">(không bắt buộc)</span></label>
+                    <input type="text" id="ly-do-sua" name="ly_do" maxlength="255"
                            placeholder="Ví dụ: nhập nhầm trục mắt phải, đối chiếu lại phiếu đo"
                            value="<?= e((string) ($form['ly_do'] ?? '')) ?>">
                     <p class="field__hint">
-                        Tối thiểu 10 ký tự. Bản ghi cũ được GIỮ NGUYÊN — lần lưu này
-                        tạo một phiên bản mới, và lý do là thứ duy nhất giải thích
-                        vì sao cùng một ngày đo lại có hai con số.
+                        Bản ghi cũ được GIỮ NGUYÊN — lần lưu này tạo một phiên bản
+                        mới, và lý do là thứ duy nhất giải thích vì sao cùng một
+                        ngày đo lại có hai con số. Nên ghi, dù không bắt buộc.
                     </p>
                 </div>
             <?php endif; ?>

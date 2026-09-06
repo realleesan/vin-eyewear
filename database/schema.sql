@@ -62,7 +62,6 @@ DROP TABLE IF EXISTS `order_status_history`;
 DROP TABLE IF EXISTS `order_items`;
 DROP TABLE IF EXISTS `orders`;
 DROP TABLE IF EXISTS `appointments`;
-DROP TABLE IF EXISTS `favorites`;
 DROP TABLE IF EXISTS `user_vouchers`;
 DROP TABLE IF EXISTS `vouchers`;
 DROP TABLE IF EXISTS `addresses`;
@@ -84,7 +83,12 @@ DROP TABLE IF EXISTS `collections`;
 DROP TABLE IF EXISTS `product_variants`;
 DROP TABLE IF EXISTS `products`;
 DROP TABLE IF EXISTS `categories`;
+-- Hai bảng dưới đây KHÔNG còn được tạo lại ở dưới (gỡ theo SRS v2.1.0: K06 và
+-- dọn mã chết), nhưng lệnh DROP thì phải GIỮ: chạy lại file này trên một cơ sở
+-- dữ liệu cũ mà bỏ hai dòng đó là để lại hai bảng mồ côi mang khoá ngoại trỏ
+-- vào `users`/`stores`/`products` vừa dựng lại.
 DROP TABLE IF EXISTS `staff_stores`;
+DROP TABLE IF EXISTS `favorites`;
 DROP TABLE IF EXISTS `user_roles`;
 DROP TABLE IF EXISTS `profiles`;
 DROP TABLE IF EXISTS `users`;
@@ -405,23 +409,10 @@ CREATE TABLE `prescriptions` (
     `store_id`       CHAR(36)      NULL,
     `recommendation` VARCHAR(255)  NULL,
 
-    -- Năm cột `wear_*` do migration 2026-08-21-kinh-dang-deo.sql thêm, đã gộp
-    -- thẳng vào đây. Chúng là mục "Kính đang đeo" trong hồ sơ đo mắt — cặp
-    -- kính khách ĐANG dùng, để cửa hàng có cơ sở tư vấn cặp mới.
-    --   wear_lens_type      cùng bộ mã với lens_types ở config/taxonomy.php
-    --                       ('don-trong'…'mat-dat'), cộng 'khong' = chưa đeo
-    --                       kính bao giờ. Không khoá ngoại: bên kia là mảng PHP.
-    --   wear_lens_features  nhiều tính chất, ngăn bằng '|' (nhãn có thể chứa
-    --                       dấu phẩy nên không dùng dấu phẩy làm dấu ngăn)
-    --   wear_frame_type     loại gọng, nguyên văn
-    --   wear_since          đã dùng cặp hiện tại bao lâu
-    --   wear_note           câu khách tự ghi
-    -- Cả năm NULL được: phần này không bắt buộc.
-    `wear_lens_type`     VARCHAR(32)  NULL,
-    `wear_lens_features` VARCHAR(255) NULL,
-    `wear_frame_type`    VARCHAR(64)  NULL,
-    `wear_since`         VARCHAR(32)  NULL,
-    `wear_note`          VARCHAR(255) NULL,
+    -- Năm cột `wear_*` (mục "Kính đang đeo") đã gỡ theo SRS v2.1.0, A20:
+    -- dữ liệu khách tự khai, không ai đối chiếu, gần như không được điền.
+    -- Cơ sở dữ liệu đang chạy gỡ chúng bằng
+    -- database/migrations/2026-09-06-dot-1-go-bo.sql
 
     `updated_at`     DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
                                    ON UPDATE CURRENT_TIMESTAMP,
@@ -437,13 +428,14 @@ CREATE TABLE `prescriptions` (
 -- ----------------------------------------------------------------------------
 -- BẢNG GIÁ TRÒNG — MỘT Ô CHO MỖI CẶP (KIỂU TRÒNG, GÓI CHIẾT SUẤT)
 --
--- Bước "chọn tròng" khi mua hàng hỏi hai tầng: KIỂU tròng (đơn · hai · đa ·
--- mắt đặt) rồi GÓI chiết suất. Giá nằm ở giao điểm chứ không ở riêng tầng
+-- Bước "chọn tròng" khi mua hàng hỏi hai tầng: KIỂU tròng (đơn · hai · đa)
+-- rồi GÓI chiết suất. Giá nằm ở giao điểm chứ không ở riêng tầng
 -- nào — mài đa tròng trên phôi 1.67 đắt hơn nhiều lần đơn tròng trên phôi
 -- 1.50, mà cũng đắt hơn đa tròng trên phôi 1.50.
 --
--- 3 kiểu có bảng giá × 5 gói = 15 ô. Kiểu "Mắt đặt" KHÔNG có dòng nào: tròng
--- đặt riêng theo đơn thì cửa hàng báo giá sau khi xem thông số.
+-- 3 kiểu × 5 gói = 15 ô, và MỌI kiểu tròng đều phải có đủ 5 ô. Kiểu thứ tư
+-- "Mắt đặt" — không bảng giá, cửa hàng báo giá sau — đã gỡ theo SRS v2.1.0
+-- (C08): thứ bán trên web phải có giá xác định ngay lúc khách bấm đặt.
 --
 -- DANH MỤC ở config, GIÁ ở đây. Mã, tên và mô tả của kiểu tròng lẫn gói chiết
 -- suất vẫn nằm trong config/taxonomy.php vì mã nguồn tham chiếu tới chúng
@@ -731,10 +723,12 @@ CREATE TABLE `products` (
     `status`           VARCHAR(32)  NOT NULL DEFAULT 'in_stock',
     `is_featured`      TINYINT(1)   NOT NULL DEFAULT 0,
     `is_visible`       TINYINT(1)   NOT NULL DEFAULT 1,
-    -- Hiện / Ẩn / Nháp — quyết định của người biên tập, KHÁC `status` ở trên
+    -- Hiện / Ẩn — quyết định của người biên tập, KHÁC `status` ở trên
     -- (in_stock/out_of_stock, suy ra từ tồn kho và không cho nhập tay).
-    -- `is_visible` được đồng bộ theo cột này: visible → 1, hidden và draft → 0.
+    -- `is_visible` được đồng bộ theo cột này: visible → 1, hidden → 0.
     -- Trang bán hàng vẫn lọc theo `is_visible` nên không phải biết cột này.
+    -- Trạng thái thứ ba 'draft' (Nháp) đã gỡ theo SRS v2.1.0, J02; dữ liệu cũ
+    -- được migration 2026-09-06-dot-1-go-bo.sql chuyển sang 'hidden'.
     `publish_status`   VARCHAR(16)  NOT NULL DEFAULT 'visible',
 
     -- ┌─ THÔNG SỐ KÍNH MẮT ─────────────────────────────────────────────────
@@ -1058,43 +1052,18 @@ CREATE TABLE `stores` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------------------------------------------------------
--- PHÂN CÔNG TÀI KHOẢN NỘI BỘ THEO CƠ SỞ
+-- BẢNG `staff_stores` ĐÃ GỠ — SRS v2.1.0, K06
 --
--- SNFR-07b (SRS v1.3.1): phạm vi cơ sở là RÀNG BUỘC QUYỀN, cưỡng chế ở máy chủ,
--- không phải một bộ lọc để người dùng tự chọn. `user_roles` nói một người LÀM
--- ĐƯỢC GÌ; bảng này nói họ làm được điều đó VỚI DỮ LIỆU CỦA AI.
+-- Trước đây bảng nối này gán cơ sở làm việc cho từng tài khoản nội bộ, và mọi
+-- màn quản trị lọc đơn hàng / lịch hẹn theo đó.
 --
--- BẢNG NỐI vì Q12.2 chốt một tài khoản gán được NHIỀU cơ sở. Nối tới `users`
--- chứ không tới `user_roles`: phạm vi là thuộc tính của con người, không phải
--- của từng vai trò họ giữ.
+-- Chủ đầu tư đã bỏ hẳn phân quyền theo cơ sở: mọi nhân viên xem và thao tác
+-- được trên dữ liệu của cả hệ thống. `stores` vẫn còn vì lịch hẹn cần biết
+-- khách đến cơ sở nào, nhưng cơ sở không còn là ràng buộc quyền.
 --
--- KHÔNG có dòng nào cho vai trò 'admin' — Quản trị viên thấy toàn hệ thống, và
--- điều đó do StaffStoreModel::KHONG_GIOI_HAN quyết định chứ không do dữ liệu.
---
--- Tài khoản nội bộ KHÔNG có dòng nào ở đây thì KHÔNG THẤY GÌ (Q12.3), không
--- phải thấy tất cả. Xem khối "BA TRẠNG THÁI" ở đầu app/models/StaffStoreModel.php.
+-- Cơ sở dữ liệu đang chạy gỡ bảng này bằng
+-- database/migrations/2026-09-06-dot-1-go-bo.sql
 -- ----------------------------------------------------------------------------
-CREATE TABLE `staff_stores` (
-    `id`         CHAR(36) NOT NULL DEFAULT (UUID()),
-    `user_id`    CHAR(36) NOT NULL,
-    `store_id`   CHAR(36) NOT NULL,
-    -- Ai gán, lúc nào. Thao tác phân quyền phải truy được người chịu trách
-    -- nhiệm; SET NULL để người nghỉ việc không kéo mất bản ghi phân công.
-    `granted_by` CHAR(36) NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uq_staff_store` (`user_id`, `store_id`),
-    KEY `idx_staff_stores_store` (`store_id`),
-    CONSTRAINT `fk_staff_stores_user` FOREIGN KEY (`user_id`)
-        REFERENCES `users` (`id`) ON DELETE CASCADE,
-    -- Đóng một cơ sở thì gỡ luôn phân công vào đó; không để phạm vi trỏ vào
-    -- chỗ không còn tồn tại.
-    CONSTRAINT `fk_staff_stores_store` FOREIGN KEY (`store_id`)
-        REFERENCES `stores` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_staff_stores_by` FOREIGN KEY (`granted_by`)
-        REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 
 -- Khoá ngoại của `prescriptions.store_id` — khai ở đây vì `stores` tới bây giờ
 -- mới tồn tại. SET NULL: cơ sở đóng cửa không làm kết quả đo mất giá trị.
@@ -1106,19 +1075,16 @@ ALTER TABLE `prescriptions`
 -- 4. TƯƠNG TÁC CỦA KHÁCH
 -- ============================================================================
 
-CREATE TABLE `favorites` (
-    `id`         CHAR(36) NOT NULL DEFAULT (UUID()),
-    `user_id`    CHAR(36) NOT NULL,
-    `product_id` CHAR(36) NOT NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uq_favorites` (`user_id`, `product_id`),
-    KEY `idx_favorites_product` (`product_id`),
-    CONSTRAINT `fk_favorites_user` FOREIGN KEY (`user_id`)
-        REFERENCES `users` (`id`) ON DELETE CASCADE,
-    CONSTRAINT `fk_favorites_product` FOREIGN KEY (`product_id`)
-        REFERENCES `products` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ----------------------------------------------------------------------------
+-- BẢNG `favorites` ĐÃ GỠ — dọn mã chết cùng đợt 1 (SRS v2.1.0)
+--
+-- Bảng này có từ bản dựng đầu tiên nhưng CHƯA BAO GIỜ có màn hình nào ghi hay
+-- đọc nó: không có nút "yêu thích" ở trang sản phẩm, không có mục nào ở trang
+-- tài khoản, không có model nào trỏ vào. Một bảng rỗng mang hai khoá ngoại thì
+-- không hại gì, nhưng nó khiến người đọc lược đồ tin rằng tính năng ấy có thật.
+--
+-- Muốn làm tính năng yêu thích thì dựng lại từ đầu cùng với màn hình của nó.
+-- ----------------------------------------------------------------------------
 
 -- Lịch hẹn khám mắt / tư vấn.
 --
@@ -1636,21 +1602,9 @@ CREATE TABLE `customer_prescriptions` (
      */
     `measured_at`    DATE          NOT NULL,
     `store_id`       CHAR(36)      NULL,
-    /*
-     * NGƯỜI ĐƯỢC ĐO — X24, chốt 04/09/2026.
-     *
-     * Cả nhà dùng chung một số điện thoại, mẹ dẫn hai con đi đo cùng buổi, và
-     * ba lần đo rơi vào cùng một tài khoản. Không có cột này thì lịch sử trông
-     * như một người thoái hoá mắt trong ba ngày.
-     *
-     * NULL nghĩa là CHÍNH CHỦ TÀI KHOẢN — nghĩa mặc định, không backfill tên
-     * chủ vào đây (bản sao họ tên trong bảng y tế sẽ lệch khi khách đổi tên).
-     *
-     * Đây là cột ĐỂ ĐỌC, không phải lớp dữ liệu: không sinh Customer_ID mới,
-     * không tách chuỗi lịch sử, không tách huy hiệu hiệu lực. Q67 (mỗi thành
-     * viên một hồ sơ riêng) nằm ở giai đoạn 2.
-     */
-    `nguoi_duoc_do`  VARCHAR(120)  NULL,
+    -- Cột `nguoi_duoc_do` đã gỡ theo SRS v2.1.0, H07: một tài khoản ứng với
+    -- một người, người thân muốn lưu số đo thì lập tài khoản riêng. Gỡ bằng
+    -- database/migrations/2026-09-06-dot-1-go-bo.sql
     -- Ghi chú KHÁCH ĐỌC ĐƯỢC. Q65.3 cho khách xem lịch sử đo của mình, nên cột
     -- này hiện ra ngoài — đừng viết nhận định chuyên môn hay ghi chú nội bộ vào
     -- đây, đã có `tech_note` cho việc đó.
@@ -1795,7 +1749,8 @@ INSERT INTO `lens_packages` (`id`, `name`, `description`, `sort_order`) VALUES
 -- config/eyewear.php và config/taxonomy.php vào CSDL để cửa hàng sửa được.
 -- Bảng rỗng thì bộ lọc trang tròng kính không có mục nào để chọn.
 --
--- LOẠI TRÒNG lấy bộ BỐN của config/taxonomy.php (Đơn · Hai · Đa · Mắt đặt),
+-- LOẠI TRÒNG lấy bộ BA của config/taxonomy.php (Đơn · Hai · Đa; "Mắt đặt" đã
+-- gỡ theo SRS v2.1.0, C08),
 -- không lấy bộ 'rx_lens_types' của config/eyewear.php (Đơn · Đa · Đổi màu ·
 -- Chống ánh sáng xanh). Hai bộ ấy khác nhau và đó là mâu thuẫn có sẵn: bộ sau
 -- trộn hai TÍNH NĂNG vào một nhóm nói về LOẠI, và thiếu "Hai tròng". Hai khoá
@@ -1809,7 +1764,8 @@ INSERT INTO `lens_options` (`group_key`, `option_key`, `label`, `note`, `sort_or
 ('loai-trong', 'don-trong', 'Đơn tròng', 'Một độ duy nhất trên cả mặt tròng — nhìn xa hoặc nhìn gần', 10),
 ('loai-trong', 'hai-trong', 'Hai tròng', 'Hai vùng nhìn tách nhau bằng một đường ranh: xa ở trên, gần ở dưới', 20),
 ('loai-trong', 'da-trong',  'Đa tròng',  'Độ chuyển dần từ xa sang gần, không có đường ranh trên mặt tròng', 30),
-('loai-trong', 'mat-dat',   'Mắt đặt',   'Độ quá cao hoặc thông số đặc biệt, phải đặt riêng — cửa hàng báo giá sau', 40),
+-- Kiểu 'mat-dat' (Mắt đặt) đã gỡ theo SRS v2.1.0, C08: mọi kiểu tròng bán trên
+-- web phải có giá xác định ngay lúc khách đặt, không còn kiểu "báo giá sau".
 
 ('chiet-suat', '1.50', '1.50', 'Tròng trắng cơ bản, độ nhẹ',            10),
 ('chiet-suat', '1.56', '1.56', 'Mỏng hơn 1.50, phù hợp cận trung bình', 20),
@@ -1891,7 +1847,6 @@ INSERT INTO `lens_options` (`group_key`, `option_key`, `label`, `note`, `sort_or
 --   vouchers         | public (is_active)      | chỉ đọc qua user_vouchers đã lọc
 --   order_status_history | theo đơn cha        | OrderModel::historyFor() sau khi
 --                    |                         | đơn đã qua forUser()/findByCode()
---   favorites        | own favorites           | WHERE user_id = session
 --   appointments     | own read / staff all    | BookingModel::forUser() vs ::all()
 --   orders           | own read / staff all    | OrderModel::forUser() vs ::all()
 --   order_items      | theo đơn cha / staff    | luôn join qua orders đã lọc quyền

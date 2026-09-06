@@ -93,10 +93,12 @@ class AuditLogModel extends BaseModel
            vết — không có thì một quản trị viên tự mở khoá cho mình rồi tiếp
            tục dò mật khẩu là chuyện không ai đọc lại được. */
         'staff.unlock_login' => 'Mở khoá đăng nhập nội bộ',
-        /* Gán cơ sở cho tài khoản nội bộ — Q12.1. Đây là thao tác PHÂN QUYỀN:
-           nó quyết định người đó nhìn thấy dữ liệu của cơ sở nào. Q80.1 xếp
-           thay đổi phân quyền vào nhóm bắt buộc ghi vết. */
-        'staff.set_stores'   => 'Gán cơ sở cho tài khoản nội bộ',
+        /* VẾT CŨ, KHÔNG CÒN AI GHI MỚI — cùng loại với nhóm profile / address
+           ở trên. Phân quyền theo cơ sở đã gỡ (SRS v2.1.0, K06), nhưng những
+           dòng đã ghi trước đó phải còn đọc được: chúng trả lời câu "ai đã đổi
+           phạm vi của ai, hồi nào" — đúng loại vết mà Q80.1 sinh ra để giữ.
+           Xoá khoá này đi thì các dòng ấy in ra mã thô. */
+        'staff.set_stores'   => 'Gán cơ sở cho tài khoản nội bộ (đã ngừng)',
 
         /* LỊCH HẸN — thêm 08/09/2026 cùng lúc mở đường cho nhân viên đổi ngày
            (X19). Trước đó ba thao tác trên lịch hẹn không để lại vết nào, kể

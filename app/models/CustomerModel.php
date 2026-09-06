@@ -382,11 +382,11 @@ class CustomerModel extends BaseModel
      */
     public static function lock(string $id, string $reason, string $actorId): array
     {
+        /* LÝ DO KHOÁ KHÔNG CÒN BẮT BUỘC — SRS v2.1.0, L07.
+           Ô nhập vẫn còn và vẫn lưu vào `locked_reason` khi có; để trống thì
+           cột nhận NULL chứ không nhận chuỗi rỗng, để câu hỏi "có ghi lý do
+           không" trả lời được bằng chính dữ liệu. */
         $reason = trim($reason);
-
-        if ($reason === '') {
-            return ['ok' => false, 'error' => 'Phải ghi lý do khoá tài khoản.'];
-        }
 
         $khach = self::detail($id);
 
@@ -399,7 +399,11 @@ class CustomerModel extends BaseModel
                 SET status = 'locked', locked_reason = :ly_do,
                     locked_at = NOW(), locked_by = :boi
               WHERE id = :id",
-            ['ly_do' => utf8Substr($reason, 0, 255), 'boi' => $actorId, 'id' => $id]
+            [
+                'ly_do' => $reason === '' ? null : utf8Substr($reason, 0, 255),
+                'boi'   => $actorId,
+                'id'    => $id,
+            ]
         );
 
         /* CẮT MỌI PHIÊN "GHI NHỚ ĐĂNG NHẬP" CỦA NGƯỜI NÀY.
@@ -408,7 +412,7 @@ class CustomerModel extends BaseModel
            vào như thế hàng tháng trời. Đúng cái mà nút khoá phải ngăn. */
         RememberModel::forgetAllFor($id);
 
-        AuditLogModel::write($id, 'lock', $reason);
+        AuditLogModel::write($id, 'lock', $reason === '' ? 'Khoá tài khoản (không ghi lý do)' : $reason);
 
         return ['ok' => true];
     }

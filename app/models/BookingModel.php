@@ -526,43 +526,6 @@ class BookingModel extends BaseModel
     // ========================================================================
 
     /**
-     * Lịch hẹn này có nằm trong PHẠM VI CƠ SỞ của người đang thao tác không.
-     *
-     * ─────────────────────────────────────────────────────────────────────────
-     * PHẠM VI PHẢI CHẶN CẢ ĐƯỜNG GHI, KHÔNG CHỈ ĐƯỜNG ĐỌC
-     *
-     * Đợt phân quyền 05/09 lọc DANH SÁCH theo cơ sở, nhưng ba thao tác ghi
-     * (đổi trạng thái, huỷ, và nay là đổi ngày) chỉ hỏi `exists(['id' => …])`
-     * — tức là một cú POST mang id của lịch bên cơ sở khác vẫn đi lọt.
-     *
-     * Không phải chuyện lý thuyết: id lịch hẹn hiện trong HTML của chính trang
-     * đó, và một người từng được gán cơ sở khác rồi bị gỡ vẫn còn id trong tab
-     * đang mở. Lọc danh sách mà không chặn ghi là khoá cửa trước rồi để ngỏ
-     * cửa sau.
-     *
-     * @param string[]|null $phamVi kết quả StaffStoreModel::phamVi()
-     * ─────────────────────────────────────────────────────────────────────────
-     */
-    public static function trongPhamVi(string $id, ?array $phamVi): bool
-    {
-        $coSo = Database::fetchValue(
-            'SELECT store_id FROM appointments WHERE id = :id',
-            ['id' => $id]
-        );
-
-        if ($coSo === null || $coSo === false) {
-            return false;   // không có lịch nào mang id đó
-        }
-
-        // Không giới hạn (Quản trị viên) thì mọi lịch đều trong phạm vi.
-        if ($phamVi === null) {
-            return true;
-        }
-
-        return in_array((string) $coSo, $phamVi, true);
-    }
-
-    /**
      * Id CHỦ TÀI KHOẢN của một lịch, hoặc null với khách vãng lai.
      *
      * Vết thao tác cần nó để dòng vết gắn được vào đúng khách. Khách vãng lai
@@ -675,8 +638,7 @@ class BookingModel extends BaseModel
         int $limit = 100,
         string $q = '',
         string $storeId = '',
-        int $offset = 0,
-        ?array $phamViCoSo = null
+        int $offset = 0
     ): array {
         /* Ba bộ lọc CỘNG ĐƯỢC với nhau, nên gom điều kiện vào mảng rồi mới
            ghép — thêm bộ lọc thứ tư sau này chỉ là đẩy thêm một phần tử.
@@ -693,7 +655,7 @@ class BookingModel extends BaseModel
            khi dùng prepared statement thật. An toàn vì cả hai đã qua max() và
            là số nguyên do controller tính ra — cùng cách làm với
            InventoryAdminController::index. */
-        [$where, $params] = self::locWithStore($status, $q, $storeId, $phamViCoSo);
+        [$where, $params] = self::locWithStore($status, $q, $storeId);
 
         return Database::fetchAll(
             "SELECT a.*, s.name AS store_name, s.code AS store_code
@@ -719,13 +681,11 @@ class BookingModel extends BaseModel
      */
     public static function statusCounts(
         string $q = '',
-        string $storeId = '',
-        ?array $phamViCoSo = null
+        string $storeId = ''
     ): array {
-        /* Đếm cũng phải theo phạm vi, không chỉ danh sách. Bỏ sót chỗ này thì
-           các tab trạng thái hiện "Chờ xác nhận (12)" trong khi bấm vào chỉ
-           thấy 4 — và con số 12 kia chính là thứ vừa rò rỉ ra ngoài. */
-        [$where, $params] = self::locWithStore('', $q, $storeId, $phamViCoSo);
+        /* Đếm cùng phạm vi với danh sách: bỏ sót chỗ này thì các tab trạng
+           thái hiện "Chờ xác nhận (12)" trong khi bấm vào chỉ thấy 4. */
+        [$where, $params] = self::locWithStore('', $q, $storeId);
 
         $rows   = Database::fetchAll(
             "SELECT a.status, COUNT(*) AS n
@@ -758,32 +718,17 @@ class BookingModel extends BaseModel
     private static function locWithStore(
         string $status,
         string $q,
-        string $storeId,
-        ?array $phamViCoSo = null
+        string $storeId
     ): array {
         $dieuKien = [];
         $params   = [];
 
         /*
-         * HAI THỨ CÙNG NÓI VỀ CƠ SỞ, ĐỪNG NHẦM CHÚNG VỚI NHAU.
-         *
-         *   $phamViCoSo   RÀNG BUỘC QUYỀN. Máy chủ áp, người dùng không gỡ
-         *                 được, đọc từ bảng phân công của chính họ (SNFR-07b).
-         *   $storeId      BỘ LỌC. Người dùng chọn trong ô "Cơ sở" trên màn
-         *                 hình, bỏ chọn là thôi lọc.
-         *
-         * Cả hai cùng áp: nhân viên chỉ thuộc Long Biên mà chọn lọc Tây Hồ thì
-         * ra danh sách rỗng, đúng như phải thế. Ô lọc KHÔNG nới được phạm vi.
-         *
-         * Trước lần sửa này chỉ có $storeId, và đó là toàn bộ lỗ hổng: một ô
-         * lọc bỏ trống nghĩa là thấy lịch hẹn của cả hai cơ sở.
+         * $storeId là BỘ LỌC do người dùng chọn trong ô "Cơ sở", không phải
+         * ràng buộc quyền. Cơ chế phạm vi cơ sở đã gỡ theo SRS v2.1.0 (K06):
+         * mọi nhân viên xem được lịch hẹn của mọi cơ sở, ô này chỉ để thu hẹp
+         * danh sách cho dễ nhìn và bỏ chọn là thôi lọc.
          */
-        [$loc, $locParams] = StaffStoreModel::menhDe($phamViCoSo, 'a.store_id', 'pv');
-
-        if ($loc !== null) {
-            $dieuKien[] = $loc;
-            $params    += $locParams;
-        }
 
         if ($status !== '') {
             $dieuKien[]       = 'a.status = :status';

@@ -77,6 +77,28 @@ class StaffAdminController extends AdminController
 
     public function index(): void
     {
+        /* CHỈ QUẢN TRỊ VIÊN — SRS v2.1.0, K13.
+
+           Trước đây mọi nhân viên mở được trang này và đọc được email, số điện
+           thoại, vai trò và trạng thái khoá của toàn bộ đội ngũ. Mọi action ghi
+           của lớp này vốn đã requireAdmin(), nên chỉ đường ĐỌC là hở.
+
+           Đặt ngay đầu index() chứ không ở constructor: constructor của lớp cha
+           chặn theo "là nhân viên", còn đây là luật riêng của màn hình này.
+
+           TRẢ 403, KHÔNG DÙNG requireAdmin(). Hàm đó chuyển hướng về self::BASE
+           — mà self::BASE CHÍNH LÀ trang này. Gọi nó ở đây là dựng một vòng lặp
+           chuyển hướng vô hạn: người không đủ quyền nhận ERR_TOO_MANY_REDIRECTS,
+           một trang trắng không nói gì cả. requireAdmin() vẫn đúng cho ba action
+           GHI vì chúng có một trang khác để quay về.
+
+           Cùng lối với AuditLogAdminController::chanNeuKhongPhaiAdmin(). */
+        if (!UserModel::hasRole($this->userId, 'admin')) {
+            http_response_code(403);
+            (new ErrorController())->forbidden();
+            exit;
+        }
+
         $accounts = UserModel::staffAccounts();
 
         /*
@@ -100,24 +122,10 @@ class StaffAdminController extends AdminController
             ]);
         }
 
-        /* PHÂN CÔNG CƠ SỞ — Q12.1, Q12.2, Q12.3.
-
-           Lấy một lượt cho cả bảng thay vì hỏi trong vòng lặp: mười tài khoản
-           là mười câu lệnh, và trang này vốn đã có một vòng lặp hỏi khoá đăng
-           nhập ở trên. */
-        $coSoTheoNguoi = [];
-
-        foreach ($accounts as $a) {
-            $coSoTheoNguoi[$a['id']] = StaffStoreModel::forUser($a['id']);
-        }
-
         $this->renderAdmin('admin/staff/index', [
             'pageTitle' => 'Tài khoản nội bộ — Quản trị',
             'accounts'  => $accounts,
             'khoaDangNhap' => $khoaDangNhap,
-            'stores'       => StoreModel::all('name ASC'),
-            'coSoTheoNguoi' => $coSoTheoNguoi,
-            'coBangCoSo'    => StaffStoreModel::available(),
             'me'        => $this->userId,
             'canReset'  => UserModel::hasRole($this->userId, 'admin'),
             /* Bản ghi đang sửa. Đọc qua staffAccounts() chứ không find() thẳng:
@@ -267,54 +275,18 @@ class StaffAdminController extends AdminController
         redirect(self::BASE);
     }
 
-    /**
-     * GÁN CƠ SỞ cho một tài khoản nội bộ — Q12.1, Q12.2, Q12.3.
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * KHÔNG CÒN GÁN CƠ SỞ CHO TÀI KHOẢN NỘI BỘ — SRS v2.1.0, K06
      *
-     * requireAdmin(): đây là thao tác PHÂN QUYỀN. Cho Quản lý cơ sở tự gán
-     * thêm cơ sở cho mình là bỏ luôn ý nghĩa của phạm vi — người bị giới hạn
-     * không được là người quyết định giới hạn của chính mình.
+     * Trước đây lớp này có action saveStores() ghi bảng phân công staff_stores,
+     * và trang này có một hộp thoại tick chọn cơ sở cho từng người.
      *
-     * BỎ TRỐNG HẾT LÀ HỢP LỆ, và nó có nghĩa "người này không thấy dữ liệu của
-     * cơ sở nào" theo đúng Q12.3 — không phải "thấy tất cả". Form vì thế luôn
-     * gửi kèm một ô ẩn rỗng, để trình duyệt không lược mất trường khi không ô
-     * nào được tick; thiếu nó thì $_POST['co_so'] vắng mặt và ta không phân
-     * biệt được "bỏ tick hết" với "form gửi thiếu".
+     * Chủ đầu tư đã bỏ hẳn phân quyền theo cơ sở: mọi nhân viên xem và thao tác
+     * được trên đơn hàng, lịch hẹn của cả hệ thống. Cơ sở vẫn còn là thuộc tính
+     * của lịch hẹn (khách chọn đến đâu) nhưng không còn là ràng buộc quyền.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    public function saveStores(): void
-    {
-        $this->requirePost(self::BASE);
-        $this->requireAdmin();
-
-        if (!StaffStoreModel::available()) {
-            flash('admin_error',
-                'Chưa nâng cấp cơ sở dữ liệu nên chưa gán cơ sở được. '
-                . 'Chạy database/migrations/2026-09-05-phan-quyen-theo-co-so.sql rồi thử lại.');
-            redirect(self::BASE);
-        }
-
-        $id = (string) ($_POST['id'] ?? '');
-        $ai = $this->timTaiKhoan($id);
-
-        if ($ai === null) {
-            flash('admin_error', 'Không tìm thấy tài khoản nội bộ này.');
-            redirect(self::BASE);
-        }
-
-        $chon = array_filter((array) ($_POST['co_so'] ?? []), static fn ($v): bool => trim((string) $v) !== '');
-
-        StaffStoreModel::setForUser($id, $chon, $this->userId);
-
-        $ten = (string) ($ai['full_name'] ?? $ai['email'] ?? 'tài khoản');
-
-        AuditLogModel::write($id, 'staff.set_stores',
-            'Gán ' . count($chon) . ' cơ sở cho ' . $ten);
-
-        flash('admin_success', $chon === []
-            ? 'Đã gỡ hết cơ sở của ' . $ten . '. Họ sẽ không thấy đơn hàng và lịch hẹn nào.'
-            : 'Đã gán ' . count($chon) . ' cơ sở cho ' . $ten . '.');
-
-        redirect(self::BASE);
-    }
 
     /**
      * MỞ KHOÁ ĐĂNG NHẬP sau 5 lần nhập sai — Quyết định Q13, 04/09/2026.

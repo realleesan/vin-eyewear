@@ -171,8 +171,10 @@
                         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                         <input type="hidden" name="id" value="<?= e($khach['id']) ?>">
 
-                        <label for="ly-do">Lý do khoá <span class="field__opt">(bắt buộc)</span></label>
-                        <input type="text" id="ly-do" name="ly_do" maxlength="255" required
+                        <?php /* KHÔNG CÒN BẮT BUỘC — SRS v2.1.0, L07. Ô vẫn ở đây
+                                 và vẫn lưu khi có, nhưng không chặn thao tác. */ ?>
+                        <label for="ly-do">Lý do khoá <span class="field__opt">(không bắt buộc)</span></label>
+                        <input type="text" id="ly-do" name="ly_do" maxlength="255"
                                placeholder="Ví dụ: đặt hàng ảo nhiều lần, không nhận máy">
                         <p class="field__hint">
                             Khách không đọc được lý do này. Người đọc nó là đồng nghiệp của bạn,

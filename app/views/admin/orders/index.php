@@ -334,6 +334,12 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
                             </td>
 
                             <td>
+                                <?php /* ĐƠN ĐÃ HUỶ KHÔNG ĐỔI TRẠNG THÁI ĐƯỢC — SRS v2.1.0, F10.
+                                         Bày ô chọn rồi để máy chủ từ chối là mời người dùng
+                                         làm một việc chắc chắn hỏng. Máy chủ vẫn kiểm lại. */ ?>
+                                <?php if ($o['status'] === 'cancelled'): ?>
+                                    <span class="atable__sub">Đã huỷ — kết thúc</span>
+                                <?php else: ?>
                                 <div class="astatus">
                                     <label class="sr-only" for="st-<?= e($o['id']) ?>">Trạng thái đơn <?= e($o['code']) ?></label>
                                     <?php /* data-cu / data-ma nuôi câu hỏi lại của
@@ -358,6 +364,7 @@ $duongDanTrang = static function (int $so) use ($locHienTai): string {
                                              tương ứng ở admin-orders.css. */ ?>
                                     <button type="submit" form="aost-<?= e($o['id']) ?>" class="aosave">Lưu</button>
                                 </div>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>

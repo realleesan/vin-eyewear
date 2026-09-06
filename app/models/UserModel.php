@@ -1083,105 +1083,40 @@ class UserModel extends BaseModel
         );
     }
 
-    /**
-     * Thông số đo mắt còn hiệu lực không?
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * HIỆU LỰC 12 THÁNG CỦA HỒ SƠ ĐO MẮT ĐÃ GỠ — SRS v2.1.0, H09
      *
-     * Khuyến cáo nhãn khoa là đo lại sau mỗi 6–12 tháng, nên mốc hết hiệu lực
-     * lấy 12 tháng kể từ NGÀY ĐO. Chưa ghi ngày đo thì coi như không kết luận
-     * được — trả false, giao diện sẽ hiện "Cần đo lại" thay vì "Còn hiệu lực".
+     * Trước đây có hằng số PRESCRIPTION_VALID_MONTHS = 12 và hàm
+     * prescriptionIsValid(), dùng để gắn nhãn "Còn hiệu lực" / "Nên đo lại"
+     * lên hồ sơ đo mắt mới nhất.
+     *
+     * Chủ đầu tư đã bỏ khái niệm này: hệ thống KHÔNG kết luận một số đo còn
+     * dùng được hay không. Việc đó thuộc về người đo, không thuộc về một phép
+     * trừ ngày.
+     *
+     * NGÀY ĐO VẪN PHẢI HIỆN Ở MỌI NƠI hiển thị hồ sơ — nó là dữ kiện để cả
+     * khách lẫn nhân viên tự đánh giá. Chỉ có LỜI KẾT LUẬN là bỏ.
+     *
+     * Đừng dựng lại một phép kiểm tương đương ở tầng view.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-    public const PRESCRIPTION_VALID_MONTHS = 12;
-
-    public static function prescriptionIsValid(?array $prescription): bool
-    {
-        $measured = $prescription['measured_at'] ?? null;
-
-        if ($measured === null || $measured === '') {
-            return false;
-        }
-
-        $date = date_create($measured);
-
-        if ($date === false) {
-            return false;
-        }
-
-        $date->modify('+' . self::PRESCRIPTION_VALID_MONTHS . ' months');
-
-        return $date >= new DateTimeImmutable('today');
-    }
-
-    // ------------------------------------------------------------------------
-    // KÍNH ĐANG ĐEO
-    // ------------------------------------------------------------------------
 
     /*
-     * "Lịch sử loại kính khách đang đeo" — năm cột `wear_*` trên chính bảng
-     * `prescriptions`.
+     * ─────────────────────────────────────────────────────────────────────────
+     * MỤC "KÍNH ĐANG ĐEO" ĐÃ GỠ — SRS v2.1.0, A20
      *
-     * VÌ SAO KHÔNG PHẢI MỘT BẢNG LỊCH SỬ RIÊNG. Thứ cửa hàng cần khi tư vấn là
-     * CẶP KÍNH KHÁCH ĐANG ĐEO, không phải chuỗi mọi cặp họ từng đeo — và cặp
-     * đang đeo thì mỗi khách có đúng một, y như hồ sơ khúc xạ. Đặt cạnh số độ
-     * trong cùng một bản ghi thì một truy vấn ra đủ thứ cần cho một buổi tư
-     * vấn; tách bảng thì phải JOIN và phải tự định nghĩa "bản ghi nào là bản
-     * đang đeo".
+     * Trước đây hồ sơ đo mắt có thêm năm trường khách tự khai về cặp kính họ
+     * ĐANG dùng: kiểu tròng, tính chất tròng, loại gọng, đã dùng bao lâu, và
+     * một câu ghi chú. Kèm theo là hằng WEAR_NONE và năm hàm wear*().
      *
-     * Cần lịch sử thật (đổi kính lần thứ mấy, mỗi lần đổi gì) thì đó là một
-     * tính năng khác và phải có bảng riêng có mốc thời gian — không phải thứ
-     * nhét thêm vào đây được.
+     * Chủ đầu tư đã bỏ toàn bộ: đây là dữ liệu khách tự khai, không ai đối
+     * chiếu, và trên thực tế gần như không được điền. Năm cột `wear_*` trên
+     * bảng `prescriptions` gỡ bằng migration đợt 1.
+     *
+     * Ba danh sách taxonomy.wear_* trong config/taxonomy.php cũng gỡ theo.
+     * ─────────────────────────────────────────────────────────────────────────
      */
-
-    /** Chưa đeo kính — giá trị riêng, không nằm trong bảng lens_types. */
-    public const WEAR_NONE = 'khong';
-
-    /** Tính chất tròng đang dùng, cho ô nhiều lựa chọn. */
-    public static function wearLensFeatures(): array
-    {
-        return config('taxonomy.wear_lens_features') ?? [];
-    }
-
-    /** Loại gọng đang dùng. */
-    public static function wearFrameTypes(): array
-    {
-        return config('taxonomy.wear_frame_types') ?? [];
-    }
-
-    /** Đã dùng cặp kính hiện tại bao lâu. */
-    public static function wearSinceOptions(): array
-    {
-        return config('taxonomy.wear_since') ?? [];
-    }
-
-    /**
-     * Tên kiểu tròng đang đeo để in ra ("Đa tròng", "Chưa đeo kính"), hoặc null.
-     *
-     * Dùng chung danh mục với bước mua hàng (LensModel::types) chứ không dựng
-     * một danh sách thứ hai: khách khai "đang đeo đa tròng" rồi vài phút sau
-     * chọn "Đa tròng" ở hộp thoại mua — hai chỗ mà gọi tên khác nhau thì không
-     * ai ghép được chúng lại.
-     */
-    public static function wearLensTypeName(?string $id): ?string
-    {
-        if ($id === null || $id === '') {
-            return null;
-        }
-
-        if ($id === self::WEAR_NONE) {
-            return 'Chưa đeo kính';
-        }
-
-        return LensModel::findType($id)['name'] ?? null;
-    }
-
-    /** Tính chất tròng đã lưu, tách ngược thành mảng để tick lại ô nào đã chọn. */
-    public static function wearFeatureList(?string $raw): array
-    {
-        if ($raw === null || trim($raw) === '') {
-            return [];
-        }
-
-        return array_values(array_filter(array_map('trim', explode('|', $raw))));
-    }
 
     /**
      * Lưu hồ sơ khúc xạ. Mỗi khách đúng một bản ghi nên dùng
@@ -1263,7 +1198,7 @@ class UserModel extends BaseModel
                 ? null : (int) $raw;
         }
 
-        foreach (['recommendation', 'measured_at', 'store_id', 'wear_note'] as $f) {
+        foreach (['recommendation', 'measured_at', 'store_id'] as $f) {
             $raw = trim((string) ($values[$f] ?? ''));
             $params[$f] = $raw === '' ? null : $raw;
         }
@@ -1282,67 +1217,24 @@ class UserModel extends BaseModel
             $params[$f] = ($raw === '' || !self::vaHopLe($raw)) ? null : $raw;
         }
 
-        /*
-         * KÍNH ĐANG ĐEO — ba ô có danh sách cố định, kiểm bằng chính danh sách.
-         *
-         * Không tin chuỗi gửi lên dù ô là <select> hay <input type=checkbox>:
-         * cả hai đều sửa tay được, và cột này là thứ nhân viên đọc để tư vấn.
-         * Giá trị lạ thì thành NULL — "khách chưa khai", đúng hơn là ghi vào
-         * hồ sơ một loại gọng không tồn tại.
-         */
-        $pick = static function (?string $raw, array $allowed): ?string {
-            $raw = trim((string) $raw);
-
-            return $raw !== '' && in_array($raw, $allowed, true) ? $raw : null;
-        };
-
-        $wearType = trim((string) ($values['wear_lens_type'] ?? ''));
-        $params['wear_lens_type'] = $wearType !== ''
-            && ($wearType === self::WEAR_NONE || LensModel::findType($wearType) !== null)
-                ? $wearType : null;
-
-        $params['wear_frame_type'] = $pick($values['wear_frame_type'] ?? null, self::wearFrameTypes());
-        $params['wear_since']      = $pick($values['wear_since'] ?? null, self::wearSinceOptions());
-
-        /* Tính chất tròng là ô NHIỀU lựa chọn -> một chuỗi ngăn bằng "|".
-           Dấu gạch đứng chứ không phải dấu phẩy: nhãn nào cũng có thể chứa
-           dấu phẩy ("Chống trầy, chống loá"), và khi đó tách ngược ra sai. */
-        $features = [];
-
-        foreach ((array) ($values['wear_lens_features'] ?? []) as $f) {
-            $ok = $pick(is_string($f) ? $f : null, self::wearLensFeatures());
-
-            if ($ok !== null && !in_array($ok, $features, true)) {
-                $features[] = $ok;
-            }
-        }
-
-        $params['wear_lens_features'] = $features === [] ? null : implode('|', $features);
+        /* Năm ô "kính đang đeo" đã gỡ — SRS v2.1.0, A20. */
 
         Database::execute(
             'INSERT INTO prescriptions
                 (user_id, od_sph, od_cyl, od_axis, od_va,
                          os_sph, os_cyl, os_axis, os_va,
-                         pd, measured_at, store_id, recommendation,
-                         wear_lens_type, wear_lens_features, wear_frame_type,
-                         wear_since, wear_note)
+                         pd, measured_at, store_id, recommendation)
              VALUES
                 (:user_id, :od_sph, :od_cyl, :od_axis, :od_va,
                            :os_sph, :os_cyl, :os_axis, :os_va,
-                           :pd, :measured_at, :store_id, :recommendation,
-                           :wear_lens_type, :wear_lens_features, :wear_frame_type,
-                           :wear_since, :wear_note)
+                           :pd, :measured_at, :store_id, :recommendation)
              ON DUPLICATE KEY UPDATE
                 od_sph = VALUES(od_sph), od_cyl = VALUES(od_cyl),
                 od_axis = VALUES(od_axis), od_va = VALUES(od_va),
                 os_sph = VALUES(os_sph), os_cyl = VALUES(os_cyl),
                 os_axis = VALUES(os_axis), os_va = VALUES(os_va),
                 pd = VALUES(pd), measured_at = VALUES(measured_at),
-                store_id = VALUES(store_id), recommendation = VALUES(recommendation),
-                wear_lens_type = VALUES(wear_lens_type),
-                wear_lens_features = VALUES(wear_lens_features),
-                wear_frame_type = VALUES(wear_frame_type),
-                wear_since = VALUES(wear_since), wear_note = VALUES(wear_note)',
+                store_id = VALUES(store_id), recommendation = VALUES(recommendation)',
             $params
         );
     }
@@ -1370,9 +1262,9 @@ class UserModel extends BaseModel
      * bản ghi không có, mà không hỏi ai.
      *
      * `measured_at` để NULL: đây là số khách chép từ đơn thuốc, không phải kết
-     * quả một buổi đo, nên không có ngày đo nào để ghi. Hệ quả có chủ đích là
-     * huy hiệu ở trang tài khoản hiện "Nên đo lại" — đúng, vì cửa hàng chưa
-     * từng đo cho người này.
+     * quả một buổi đo, nên không có ngày đo nào để ghi. Trang tài khoản in ra
+     * "Chưa ghi ngày đo" — đúng, vì cửa hàng chưa từng đo cho người này.
+     * (Huy hiệu "Còn hiệu lực / Nên đo lại" đã gỡ theo SRS v2.1.0, H09.)
      * ─────────────────────────────────────────────────────────────────────────
      *
      * Khách vãng lai ($userId null) và số đo rỗng đều là no-op.

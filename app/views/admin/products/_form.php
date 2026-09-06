@@ -135,6 +135,22 @@ $trangThai = $ky('publish_status') !== ''
     ? $ky('publish_status')
     : (($ed !== null && !$ed['is_visible']) ? 'hidden' : 'visible');
 
+/* 'draft' ĐỌC THÀNH 'hidden' — SRS v2.1.0, J02.
+
+   Trạng thái Nháp đã bỏ; migration đợt 1 đổi mọi dòng 'draft' thành 'hidden'.
+   Nhưng nếu mã nguồn được deploy TRƯỚC khi migration chạy thì vẫn còn dòng
+   mang 'draft' — và khi đó $doOption in thêm một mục "draft (giá trị cũ)",
+   người dùng bấm Lưu mà không đụng ô này, rồi controller thấy giá trị lạ và
+   rơi về 'visible'. Một mặt hàng chưa nhập đủ thông tin hiện thẳng ra trang
+   bán hàng, không ai bấm gì cả.
+
+   Quy về 'hidden' ngay ở đây thì thứ tự deploy thôi quan trọng: cả hai giá trị
+   vốn cùng cho is_visible = 0 nên không đổi thứ gì khách nhìn thấy.
+   ProductAdminController::normalize() làm cùng phép này ở phía nhận. */
+if ($trangThai === 'draft') {
+    $trangThai = 'hidden';
+}
+
 /* Ba dòng biến thể trống luôn có sẵn — thêm dòng là việc của JS, mà không có
    JS thì vẫn phải nhập được vài biến thể trong một lần lưu. Ba là con số vừa:
    đủ cho "đen / nâu / trong", không dài tới mức tấm nào cũng đầy ô rỗng. */
