@@ -230,6 +230,83 @@ MIGRATIONS=(
     # vì mỗi bước trong file đều hỏi information_schema trước: chạy lần hai chỉ
     # in ra "khong co, bo qua".
     "2026-09-10-go-doi-soat-hai-buoc.sql|data||"
+
+    # ── Đơn hàng: đối chiếu được tiền, theo dõi tới lúc khách nhận ──────────
+    #
+    # File này nằm trong thư mục từ 11/09 nhưng CHƯA TỪNG được khai ở đây, nên
+    # migrate.sh vẫn cảnh báo "bị bỏ qua" mỗi lượt chạy.
+    #
+    # Mốc là `orders.tax_amount` — cột đầu tiên nó thêm. Nếu ai đó đã áp file
+    # này bằng tay thì phép kiểm mốc chạy TRƯỚC bước áp, nên script chỉ ghi sổ
+    # chứ không chạy lại. Bản thân file cũng tự bọc mọi bước bằng
+    # PREPARE/EXECUTE hỏi information_schema, nên chạy lại vô hại.
+    "2026-09-11-don-hang-doi-soat-tien.sql|column|orders|tax_amount"
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # SRS v2.1.0 — hai đợt hiệu chỉnh theo bản đặc tả hệ thống đích
+    #
+    # ⚠ TÊN FILE GHI 06/09 NHƯNG HAI FILE NÀY CHẠY SAU CÙNG.
+    #
+    # Thứ tự thi hành là THỨ TỰ TRONG MẢNG NÀY, không phải thứ tự ngày trên
+    # tên file — vòng lặp áp file duyệt "${MIGRATIONS[@]}", còn phần glob thư
+    # mục ở cuối script chỉ dùng để cảnh báo file chưa khai. Hai file dưới đây
+    # là công việc mới nhất nên phải đứng cuối, dù ngày trên tên nhỏ hơn
+    # 2026-09-10 và 2026-09-11.
+    #
+    # KHÔNG khai hai file *-QUAY-LUI.sql đi kèm. Chúng là đường lùi, chạy bằng
+    # tay khi cần; khai vào đây thì script sẽ chạy chúng ngay sau file xuôi và
+    # dựng lại đúng thứ vừa gỡ. Vòng cảnh báo ở cuối script đã lọc chúng ra.
+    # ═══════════════════════════════════════════════════════════════════════
+
+    # ── Đợt 1 · gỡ 20 chức năng theo Phụ lục C ──────────────────────────────
+    #
+    # File CHỈ GỠ: bỏ hai bảng, sáu cột, một dòng danh mục, và gộp một giá trị
+    # trạng thái. Không tạo ra thứ gì để làm cột mốc, nên kiểu 'data' — sổ ghi
+    # là thứ duy nhất chặn chạy lại.
+    #
+    # Giao cho sổ ghi ở đây AN TOÀN vì bản thân file đã idempotent hoàn toàn:
+    # DROP TABLE IF EXISTS, DELETE, UPDATE vốn chạy lại được, còn sáu lệnh bỏ
+    # cột thì đi qua PREPARE/EXECUTE hỏi information_schema trước.
+    "2026-09-06-dot-1-go-bo.sql|data||"
+
+    # ── Đợt 2 · rút vai trò từ năm xuống ba ─────────────────────────────────
+    #
+    # Cũng kiểu 'data': file chuyển dữ liệu rồi THU ENUM. Không có bảng hay cột
+    # mới nào để làm mốc, và information_schema không cho hỏi "ENUM có chứa giá
+    # trị này không" bằng một câu đơn giản như hỏi bảng hay cột.
+    #
+    # Chạy lại vô hại: hai câu UPDATE lần hai khớp 0 dòng, và MODIFY COLUMN đặt
+    # lại đúng định nghĩa đã có.
+    "2026-09-06-dot-2-ba-vai-tro.sql|data||"
+
+    # ── Đợt 3 · hợp nhất hai nơi lưu số đo về một sổ chỉ-thêm ───────────────
+    #
+    # File này chỉ CHÈN — chép phần chỉ có ở bảng tóm tắt sang sổ. Không xoá,
+    # không sửa dòng cũ, và mệnh đề NOT EXISTS tự loại những khách đã chép ở
+    # lượt trước, nên chạy lại chèn 0 dòng.
+    #
+    # Kiểu 'data': không tạo ra bảng hay cột mới nào để làm mốc.
+    #
+    # CẶP ĐÔI CỦA NÓ — 2026-09-06-dot-3-go-bang-tom-tat.sql — CỐ Ý KHÔNG KHAI
+    # Ở ĐÂY. SRS mục 6.7.3 bước 6 buộc chờ hệ thống chạy ổn định một tuần rồi
+    # mới gỡ bảng, và chừng nào bảng còn thì đợt 3 còn đường lùi thật. Khai nó
+    # vào mảng này là chạy nó ngay hôm nay và đóng đường lùi đó lại.
+    "2026-09-06-dot-3-hop-nhat-so-do.sql|data||"
+
+    # ── Đợt 4 · khách chủ động: tự xoá tài khoản, tự huỷ đơn, hoàn tiền cọc ──
+    #
+    # Một file làm ba việc: tạo bảng `refund_requests`, thêm
+    # `users.deleted_source` và thêm `orders.cancelled_by`.
+    #
+    # Mốc là BẢNG chứ không phải cột, vì bảng là thứ nặng nhất trong ba và là
+    # thứ mã nguồn thật sự hỏi trước khi chạy (RefundRequestModel::available()).
+    # Hai cột kia đi qua PREPARE/EXECUTE có hỏi information_schema nên chạy lại
+    # cũng không sao.
+    #
+    # File *-QUAY-LUI.sql đi kèm CỐ Ý KHÔNG KHAI — nó DROP bảng, tức xoá mọi
+    # quyết định chi tiền đã duyệt. Đọc khối cảnh báo ở đầu file ấy trước khi
+    # nghĩ tới chuyện chạy nó.
+    "2026-09-06-dot-4-khach-chu-dong.sql|table|refund_requests|"
 )
 
 # ---------------------------------------------------------------------------
@@ -392,6 +469,23 @@ done
 for path in "${MIG_DIR}"/*.sql; do
     [[ -e "${path}" ]] || continue
     file="$(basename "${path}")"
+
+    # File *-QUAY-LUI.sql là ĐƯỜNG LÙI, cố ý không khai trong MIGRATIONS[].
+    #
+    # Khai vào đó thì script chạy chúng ngay sau file xuôi và dựng lại đúng thứ
+    # vừa gỡ — nên chúng phải nằm ngoài, và cũng phải nằm ngoài cảnh báo này:
+    # một dòng "chưa khai, bị bỏ qua" lặp mỗi lượt chạy sớm muộn sẽ khiến ai đó
+    # khai chúng vào cho hết cảnh báo.
+    if [[ "${file}" == *-QUAY-LUI.sql ]]; then
+        continue
+    fi
+
+    # Cùng lẽ đó với file gỡ bảng tóm tắt của đợt 3: nó phải chờ một tuần sau
+    # file hợp nhất (SRS mục 6.7.3 bước 6), nên chạy BẰNG TAY chứ không qua
+    # script. Lọc khỏi cảnh báo để không ai khai nó vào cho hết dòng nhắc.
+    if [[ "${file}" == "2026-09-06-dot-3-go-bang-tom-tat.sql" ]]; then
+        continue
+    fi
 
     if ! printf '%s\n' "${MIGRATIONS[@]}" | cut -d'|' -f1 | grep -qx "${file}"; then
         echo

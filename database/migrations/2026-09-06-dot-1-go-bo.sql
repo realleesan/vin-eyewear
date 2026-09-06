@@ -36,13 +36,17 @@
 -- giữa chừng thì phần đã chạy vẫn để lại một cơ sở dữ liệu hợp lệ.
 --
 -- ─────────────────────────────────────────────────────────────────────────────
--- CHẠY LẠI ĐƯỢC NHIỀU LẦN — nhưng KHÔNG hoàn toàn
+-- CHẠY LẠI ĐƯỢC NHIỀU LẦN — HOÀN TOÀN
 --
--- DROP TABLE IF EXISTS và DELETE là idempotent. ALTER TABLE ... DROP COLUMN
--- thì KHÔNG: lần chạy thứ hai báo lỗi 1091 "Can't DROP; check that column
--- exists". Đó là lỗi VÔ HẠI — nó nghĩa là cột đã đi rồi. MySQL không có
--- "DROP COLUMN IF EXISTS" ở mọi phiên bản nên không tránh được; cứ bỏ qua
--- thông báo đó và chạy tiếp câu sau.
+-- DROP TABLE IF EXISTS, DELETE và UPDATE ở đây vốn đã idempotent. Sáu lệnh bỏ
+-- cột thì đi qua một vòng PREPARE/EXECUTE hỏi information_schema trước, đúng
+-- khuôn mẫu của 2026-09-11-don-hang-doi-soat-tien.sql — MySQL 8 không có
+-- "DROP COLUMN IF EXISTS" nên đây là cách duy nhất.
+--
+-- VÌ SAO ĐÁNG LÀM: database/migrate.sh dừng cả lượt chạy khi một file trả về
+-- mã lỗi. Không có lớp bọc này thì lần chạy thứ hai ném 1091 "Can't DROP",
+-- script thoát, và file không được ghi sổ — kẹt ở đúng chỗ mà lẽ ra chỉ cần
+-- đi tiếp. Lần hai giờ in ra "da go, bo qua" và trả về thành công.
 --
 -- ─────────────────────────────────────────────────────────────────────────────
 -- MÃ NGUỒN PHẢI ĐI CÙNG
@@ -135,15 +139,48 @@ DROP TABLE IF EXISTS `favorites`;
 --       OR wear_since         IS NOT NULL
 --       OR wear_note          IS NOT NULL;
 --
--- Năm câu ALTER riêng chứ không gộp một câu năm mệnh đề: gộp thì lần chạy thứ
--- hai hỏng ở cột đầu và bốn cột sau không được thử, còn tách ra thì mỗi câu tự
--- báo riêng và ta biết chính xác cột nào đã đi, cột nào chưa.
+-- Năm khối riêng chứ không gộp một câu năm mệnh đề: tách ra thì mỗi cột tự báo
+-- riêng và ta biết chính xác cột nào đã đi, cột nào chưa.
 -- ----------------------------------------------------------------------------
-ALTER TABLE `prescriptions` DROP COLUMN `wear_lens_type`;
-ALTER TABLE `prescriptions` DROP COLUMN `wear_lens_features`;
-ALTER TABLE `prescriptions` DROP COLUMN `wear_frame_type`;
-ALTER TABLE `prescriptions` DROP COLUMN `wear_since`;
-ALTER TABLE `prescriptions` DROP COLUMN `wear_note`;
+SET @co := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prescriptions'
+               AND COLUMN_NAME = 'wear_lens_type');
+SET @sql := IF(@co = 1,
+    'ALTER TABLE `prescriptions` DROP COLUMN `wear_lens_type`',
+    'SELECT ''prescriptions.wear_lens_type da go, bo qua'' AS ghi_chu');
+PREPARE c FROM @sql; EXECUTE c; DEALLOCATE PREPARE c;
+
+SET @co := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prescriptions'
+               AND COLUMN_NAME = 'wear_lens_features');
+SET @sql := IF(@co = 1,
+    'ALTER TABLE `prescriptions` DROP COLUMN `wear_lens_features`',
+    'SELECT ''prescriptions.wear_lens_features da go, bo qua'' AS ghi_chu');
+PREPARE c FROM @sql; EXECUTE c; DEALLOCATE PREPARE c;
+
+SET @co := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prescriptions'
+               AND COLUMN_NAME = 'wear_frame_type');
+SET @sql := IF(@co = 1,
+    'ALTER TABLE `prescriptions` DROP COLUMN `wear_frame_type`',
+    'SELECT ''prescriptions.wear_frame_type da go, bo qua'' AS ghi_chu');
+PREPARE c FROM @sql; EXECUTE c; DEALLOCATE PREPARE c;
+
+SET @co := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prescriptions'
+               AND COLUMN_NAME = 'wear_since');
+SET @sql := IF(@co = 1,
+    'ALTER TABLE `prescriptions` DROP COLUMN `wear_since`',
+    'SELECT ''prescriptions.wear_since da go, bo qua'' AS ghi_chu');
+PREPARE c FROM @sql; EXECUTE c; DEALLOCATE PREPARE c;
+
+SET @co := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'prescriptions'
+               AND COLUMN_NAME = 'wear_note');
+SET @sql := IF(@co = 1,
+    'ALTER TABLE `prescriptions` DROP COLUMN `wear_note`',
+    'SELECT ''prescriptions.wear_note da go, bo qua'' AS ghi_chu');
+PREPARE c FROM @sql; EXECUTE c; DEALLOCATE PREPARE c;
 
 
 -- ----------------------------------------------------------------------------
@@ -181,7 +218,13 @@ ALTER TABLE `prescriptions` DROP COLUMN `wear_note`;
 --
 -- Đừng chọn cách thứ ba là cứ để nguyên rồi DROP.
 -- ----------------------------------------------------------------------------
-ALTER TABLE `customer_prescriptions` DROP COLUMN `nguoi_duoc_do`;
+SET @co := (SELECT COUNT(*) FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_prescriptions'
+               AND COLUMN_NAME = 'nguoi_duoc_do');
+SET @sql := IF(@co = 1,
+    'ALTER TABLE `customer_prescriptions` DROP COLUMN `nguoi_duoc_do`',
+    'SELECT ''customer_prescriptions.nguoi_duoc_do da go, bo qua'' AS ghi_chu');
+PREPARE c FROM @sql; EXECUTE c; DEALLOCATE PREPARE c;
 
 
 -- ----------------------------------------------------------------------------
