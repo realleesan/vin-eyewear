@@ -70,8 +70,12 @@ $count = count($lines);
     $canhBao = [];
 
     if (!empty($quaPhien)) {
-        $canhBao[] = 'Phiên đăng nhập đã hết hạn nên bạn cần đăng nhập lại, '
-                   . 'nhưng giỏ hàng vẫn được giữ nguyên.';
+        /* Câu này ĐÃ ĐỔI 07/09/2026. Trước đây nó hứa "giỏ hàng vẫn được giữ
+           nguyên" và trang bên dưới hiện đúng giỏ ấy. Nay giỏ được cất vào
+           ngăn của tài khoản (core/GioHangPhien.php) nên bên dưới là giỏ
+           trống — giữ nguyên câu cũ là nói sai ngay giữa màn hình. */
+        $canhBao[] = 'Phiên đăng nhập đã hết hạn. Giỏ hàng của bạn vẫn được giữ — '
+                   . 'đăng nhập lại để xem tiếp.';
     }
 
     if (!empty($soDoiGia)) {

@@ -168,6 +168,27 @@ class AuthMiddleware
      */
     public static function customerId(): ?string
     {
+        $userId = self::xacDinhKhach();
+
+        /* GIỎ HÀNG ĐI THEO NGƯỜI, KHÔNG THEO TRÌNH DUYỆT.
+
+           Đặt ở đây vì đây là chỗ DUY NHẤT biết danh tính vừa đổi, bất kể nó
+           đổi vì lý do gì: đăng nhập, đăng xuất, phiên 24 giờ hết hạn ngay ở
+           hàm trên, dựng lại phiên từ cookie ghi nhớ, hay tài khoản bị khoá
+           giữa chừng. Móc vào riêng login()/logout() thì ba đường sau lọt.
+
+           Không đụng header, không truy vấn, và không ghi gì khi chủ giỏ không
+           đổi — hàm này được gọi hàng chục lần trong một lượt dựng trang. */
+        GioHangPhien::theoChu($userId);
+
+        return $userId;
+    }
+
+    /**
+     * Phần việc thật của customerId(): danh tính, không đụng tới giỏ hàng.
+     */
+    private static function xacDinhKhach(): ?string
+    {
         $userId = $_SESSION[self::O_KHACH] ?? null;
 
         /*
@@ -194,14 +215,19 @@ class AuthMiddleware
 
                 /* GIỎ HÀNG SỐNG QUA PHIÊN — Q14.2, chốt 04/09/2026.
 
-                   Nó vốn đã sống: nhánh này chỉ dọn ba ô trên, không đụng tới
-                   $_SESSION['cart']. Nhưng Q14.2 đòi thêm vế thứ hai — CẢNH
-                   BÁO dòng nào vừa đổi giá hoặc hết hàng — và trang giỏ hàng
-                   không có cách nào tự biết phiên vừa hết hạn.
+                   Giỏ vẫn sống, nhưng từ 07/09/2026 nó sống TRONG NGĂN CỦA
+                   TÀI KHOẢN chứ không nằm lại trong phiên vừa mất chủ: ngay
+                   sau nhánh này, customerId() gọi GioHangPhien::theoChu(null)
+                   và cất nó đi. Người ngồi trước máy — có thể không còn là
+                   chủ giỏ — thấy giỏ vãng lai của chính họ; đăng nhập lại là
+                   giỏ cũ trở về nguyên vẹn.
 
-                   Cắm một lá cờ ở đây là chỗ DUY NHẤT biết điều đó. Cờ được
-                   trang giỏ hàng đọc rồi xoá ngay (dùng một lần), nên nó không
-                   nằm lại làm dải cảnh báo hiện mãi. */
+                   Cờ dưới đây là vế thứ hai của Q14.2: CẢNH BÁO. Trang giỏ
+                   hàng không có cách nào tự biết phiên vừa hết hạn, mà đây là
+                   chỗ DUY NHẤT biết. Đọc $_SESSION['cart'] lúc này vẫn còn
+                   thấy giỏ cũ, nên con số "có hàng hay không" là thật. Cờ
+                   được trang giỏ hàng đọc rồi xoá ngay (dùng một lần), nên nó
+                   không nằm lại làm dải cảnh báo hiện mãi. */
                 if (!empty($_SESSION['cart'])) {
                     $_SESSION['gio_qua_phien'] = true;
                 }
@@ -341,6 +367,12 @@ class AuthMiddleware
         $_SESSION[self::O_KHACH_THAO_TAC] = time();
         unset($_SESSION['via_cookie']);
 
+        /* Mở giỏ CỦA TÀI KHOẢN NÀY, và gộp vào đó những gì họ vừa chọn lúc
+           chưa đăng nhập. customerId() cũng làm đúng việc này ở lượt request
+           sau, nhưng gọi ngay tại đây thì trang đích ngay sau khi đăng nhập
+           (thường là /gio-hang hoặc /thanh-toan) đã thấy đúng giỏ. */
+        GioHangPhien::theoChu($userId);
+
         if ($remember) {
             RememberModel::issue($userId);
         }
@@ -361,41 +393,29 @@ class AuthMiddleware
         // vừa cố tránh, nhất là trên máy dùng chung.
         RememberModel::forget();
 
-        // Giữ lại giỏ hàng: khách đăng xuất trên máy chung vẫn nên mất phiên,
-        // nhưng giỏ đang chọn dở thì không có lý do gì phải xoá.
-        $cart = $_SESSION['cart'] ?? null;
-
         /* ─────────────────────────────────────────────────────────────────
-           NHƯNG BỎ MÃ HỒ SƠ ĐO MẮT KHỎI MỌI DÒNG — thêm 06/09/2026, đợt 7.
+           GIỎ HÀNG ĐI THEO TÀI KHOẢN VỪA ĐĂNG XUẤT — sửa 07/09/2026.
 
-           `rx_ho_so` (UC-03) trỏ vào một bản ghi Y TẾ thuộc về tài khoản vừa
-           đăng xuất. Giỏ thì ở lại, và câu chú thích ngay trên nói đúng ca
-           dùng nguy hiểm nhất: MÁY DÙNG CHUNG.
+           TRƯỚC ĐÂY chỗ này bê nguyên $_SESSION['cart'] qua lần huỷ phiên,
+           với lý do "khách đăng xuất trên máy chung vẫn nên mất phiên, nhưng
+           giỏ đang chọn dở thì không có lý do gì phải xoá". Vế sau đúng, vế
+           trước thì không: giỏ ở lại trong một phiên VÔ CHỦ, nên người đăng
+           nhập kế tiếp trên cùng trình duyệt nhận trọn giỏ của người trước.
 
-           Người A chọn hồ sơ của mình rồi thêm vào giỏ, đăng xuất; người B
-           đăng nhập trên cùng trình duyệt và thanh toán chính giỏ ấy.
-           OrderModel::place() ghi thẳng `prescription_id` xuống mà không hỏi
-           ai là chủ, và khoá ngoại chỉ trỏ tới bảng hồ sơ chứ không ràng buộc
-           theo người — nên đơn của B mang vĩnh viễn một liên kết tới hồ sơ
-           của A.
+           Đợt 7 đã bịt nhánh nguy hiểm nhất của chuyện đó (xoá `rx_ho_so` để
+           đơn của người sau không trỏ vào hồ sơ y tế của người trước). Nay
+           cắt ở gốc: giỏ được CẤT VÀO NGĂN CỦA CHÍNH TÀI KHOẢN ẤY, và chỉ mở
+           lại khi đúng tài khoản ấy đăng nhập lại. Ý định cũ vẫn được giữ
+           trọn — giỏ không bị xoá, A quay lại là còn nguyên — chỉ khác ở chỗ
+           nó không còn nằm chờ người lạ. Chi tiết ở core/GioHangPhien.php.
 
-           SỐ ĐO THÌ Ở LẠI, và đó là chủ ý: cột `rx` là thứ B nhìn thấy trong
-           giỏ và có thể sửa hoặc xoá dòng. Thứ phải cắt đứt là LIÊN KẾT tới
-           sổ y tế của người khác, không phải giỏ hàng.
+           Hai nửa vì huyPhien() xoá sạch $_SESSION: cất trước, dựng lại sau.
            ───────────────────────────────────────────────────────────────── */
-        if (is_array($cart)) {
-            foreach ($cart as $khoa => $dong) {
-                if (is_array($dong) && array_key_exists('rx_ho_so', $dong)) {
-                    $cart[$khoa]['rx_ho_so'] = null;
-                }
-            }
-        }
+        $gio = GioHangPhien::truocKhiHuyPhien();
 
         self::huyPhien();
 
-        if ($cart !== null) {
-            $_SESSION['cart'] = $cart;
-        }
+        GioHangPhien::sauKhiHuyPhien($gio);
     }
 
     // ========================================================================
