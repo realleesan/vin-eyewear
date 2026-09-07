@@ -130,10 +130,10 @@ $storeId  = $old['storeId'] ?? '';
         <?php /* Hai mắt xích, đúng bản thiết kế: giỏ hàng → thanh toán. Đây
                  vừa là đường lùi vừa là thước đo "còn mấy bước nữa" — khách
                  đang ở giữa một biểu mẫu dài thì cần cả hai. */ ?>
-        <nav class="cohead__crumbs" aria-label="Đường dẫn">
-            <a href="/gio-hang">Giỏ hàng</a>
+        <nav class="cohead__crumbs" aria-label="<?= e(t('co.crumbs')) ?>">
+            <a href="/gio-hang"><?= e(t('cart.title')) ?></a>
             <span class="cohead__sep" aria-hidden="true">/</span>
-            <span class="cohead__here" aria-current="page">Thanh toán</span>
+            <span class="cohead__here" aria-current="page"><?= e(t('co.checkout')) ?></span>
         </nav>
         <?php /* NÚT LÙI cạnh tiêu đề, cùng dáng với nút "‹" của hộp thoại mua
                  hàng. Dải mắt xích ngay trên cũng là một đường lùi, nhưng nó
@@ -142,13 +142,13 @@ $storeId  = $old['storeId'] ?? '';
                  Nút này chỉ về đúng chỗ vừa rời; xem $backUrl ở
                  OrderController::checkout(). */ ?>
         <div class="cohead__row">
-            <a class="cohead__back" href="<?= e($backUrl ?? '/gio-hang') ?>" aria-label="Quay lại">
+            <a class="cohead__back" href="<?= e($backUrl ?? '/gio-hang') ?>" aria-label="<?= e(t('co.back')) ?>">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M15 18l-6-6 6-6"></path>
                 </svg>
             </a>
-            <h1 class="cohead__title">Hoàn tất đơn hàng</h1>
+            <h1 class="cohead__title"><?= e(t('co.title')) ?></h1>
         </div>
     </div>
 
@@ -166,7 +166,7 @@ $storeId  = $old['storeId'] ?? '';
                  xong bấm Enter là… áp một mã giảm giá.
                  Không dùng `hidden` hay display:none: nút không được vẽ ra thì
                  trình duyệt bỏ qua nó khi tìm nút gửi mặc định. */ ?>
-        <button type="submit" class="cofallback" tabindex="-1" aria-hidden="true">Đặt hàng</button>
+        <button type="submit" class="cofallback" tabindex="-1" aria-hidden="true"><?= e(t('co.place')) ?></button>
 
         <!-- ══════════ CỘT TRÁI: BA BƯỚC ══════════ -->
         <div class="costeps">
@@ -175,22 +175,22 @@ $storeId  = $old['storeId'] ?? '';
             <section class="costep" aria-labelledby="co-b1">
                 <div class="costep__head">
                     <span class="costep__num" aria-hidden="true">1</span>
-                    <h2 class="costep__title" id="co-b1">Thông tin người nhận</h2>
+                    <h2 class="costep__title" id="co-b1"><?= e(t('co.step1')) ?></h2>
                 </div>
 
                 <div class="cofield__row">
                     <label class="cofield">
-                        <span class="cofield__label">Họ và tên *</span>
+                        <span class="cofield__label"><?= e(t('co.name')) ?> *</span>
                         <input class="cofield__input" type="text" name="customer_name" required
                                minlength="2" maxlength="120" autocomplete="name"
-                               placeholder="Nguyễn Văn A"
+                               placeholder="<?= e(t('co.name_ph')) ?>"
                                value="<?= e($fillCo('customerName', $address['recipient_name'] ?? null, $profile['full_name'] ?? null)) ?>">
                     </label>
 
                     <label class="cofield">
-                        <span class="cofield__label">Số điện thoại *</span>
+                        <span class="cofield__label"><?= e(t('co.phone')) ?> *</span>
                         <input class="cofield__input" type="tel" name="customer_phone" required
-                               autocomplete="tel" inputmode="tel" placeholder="09xx xxx xxx"
+                               autocomplete="tel" inputmode="tel" placeholder="<?= e(t('co.phone_ph')) ?>"
                                value="<?= e($fillCo('customerPhone', $address['phone'] ?? null, $profile['phone'] ?? null)) ?>">
                     </label>
                 </div>
@@ -200,7 +200,7 @@ $storeId  = $old['storeId'] ?? '';
                         Email <em>(để nhận xác nhận đơn)</em>
                     </span>
                     <input class="cofield__input" type="email" name="customer_email"
-                           autocomplete="email" placeholder="ban@email.com"
+                           autocomplete="email" placeholder="<?= e(t('co.email_ph')) ?>"
                            value="<?= e($fill('customerEmail', $profile['email'] ?? null)) ?>">
                 </label>
             </section>
@@ -209,7 +209,7 @@ $storeId  = $old['storeId'] ?? '';
             <section class="costep copick" aria-labelledby="co-b2">
                 <div class="costep__head">
                     <span class="costep__num" aria-hidden="true">2</span>
-                    <h2 class="costep__title" id="co-b2">Hình thức nhận hàng</h2>
+                    <h2 class="costep__title" id="co-b2"><?= e(t('co.step2')) ?></h2>
                 </div>
 
                 <div class="cocards cocards--2" role="radiogroup" aria-labelledby="co-b2">
@@ -250,17 +250,17 @@ $storeId  = $old['storeId'] ?? '';
                     ?>
                     <div class="cofield__row" data-vnaddr>
                         <label class="cofield">
-                            <span class="cofield__label">Tỉnh / Thành phố *</span>
+                            <span class="cofield__label"><?= e(t('co.province')) ?> *</span>
                             <input class="cofield__input" type="text" name="address_city"
-                                   maxlength="80" autocomplete="address-level1" placeholder="Hà Nội"
+                                   maxlength="80" autocomplete="address-level1" placeholder="<?= e(t('co.province_ph')) ?>"
                                    data-vnaddr-field="province"
                                    value="<?= e($cityShown) ?>">
                         </label>
 
                         <label class="cofield">
-                            <span class="cofield__label">Phường / Xã *</span>
+                            <span class="cofield__label"><?= e(t('co.ward')) ?> *</span>
                             <input class="cofield__input" type="text" name="address_ward"
-                                   maxlength="80" autocomplete="address-level2" placeholder="Phường Tây Hồ"
+                                   maxlength="80" autocomplete="address-level2" placeholder="<?= e(t('co.ward_ph')) ?>"
                                    data-vnaddr-field="ward"
                                    value="<?= e($wardShown) ?>">
                         </label>
@@ -270,23 +270,23 @@ $storeId  = $old['storeId'] ?? '';
                     </div>
 
                     <label class="cofield">
-                        <span class="cofield__label">Địa chỉ cụ thể *</span>
+                        <span class="cofield__label"><?= e(t('co.address')) ?> *</span>
                         <input class="cofield__input" type="text" name="address_line"
                                maxlength="160" autocomplete="address-line1"
-                               placeholder="Số nhà, tên đường…"
+                               placeholder="<?= e(t('co.address_ph')) ?>"
                                value="<?= e($fill('addressLine', $address['line1'] ?? null)) ?>">
                     </label>
                 </div>
 
                 <div class="copick__store">
-                    <span class="cofield__label">Chọn cơ sở</span>
+                    <span class="cofield__label"><?= e(t('co.store')) ?></span>
 
                     <?php if ($stores === []): ?>
                         <p class="copick__none">
                             Hiện chưa có cơ sở nào mở cửa. Vui lòng chọn "Giao tận nơi".
                         </p>
                     <?php else: ?>
-                        <div class="cocards" role="radiogroup" aria-label="Chọn cơ sở nhận hàng">
+                        <div class="cocards" role="radiogroup" aria-label="<?= e(t('co.store_aria')) ?>">
                             <?php foreach ($stores as $i => $st): ?>
                                 <label class="cocard">
                                     <!-- Cơ sở đầu tiên được chọn sẵn: bản thiết kế
@@ -310,7 +310,7 @@ $storeId  = $old['storeId'] ?? '';
             <section class="costep" aria-labelledby="co-b3">
                 <div class="costep__head">
                     <span class="costep__num" aria-hidden="true">3</span>
-                    <h2 class="costep__title" id="co-b3">Phương thức thanh toán</h2>
+                    <h2 class="costep__title" id="co-b3"><?= e(t('co.step3')) ?></h2>
                 </div>
 
                 <div class="cocards" role="radiogroup" aria-labelledby="co-b3">
@@ -359,7 +359,7 @@ $storeId  = $old['storeId'] ?? '';
                         Ghi chú <em>(không bắt buộc)</em>
                     </span>
                     <textarea class="cofield__input cofield__area" name="note" rows="3" maxlength="500"
-                              placeholder="Ví dụ: giao giờ hành chính, gọi trước khi giao…"><?= e($fill('note')) ?></textarea>
+                              placeholder="<?= e(t('co.note_ph')) ?>"><?= e($fill('note')) ?></textarea>
                 </label>
             </section>
         </div>
@@ -367,7 +367,7 @@ $storeId  = $old['storeId'] ?? '';
         <!-- ══════════ CỘT PHẢI: TÓM TẮT ══════════ -->
         <aside class="csum" aria-labelledby="co-sum">
             <div class="csum__card">
-                <h2 id="co-sum" class="csum__title">Đơn hàng của bạn</h2>
+                <h2 id="co-sum" class="csum__title"><?= e(t('co.your_order')) ?></h2>
 
                 <div class="coitems">
                     <?php foreach ($lines as $line): ?>
@@ -420,7 +420,7 @@ $storeId  = $old['storeId'] ?? '';
                          điền vào trường này", trong khi việc đang làm chẳng liên
                          quan gì tới ô đó. */ ?>
                 <div class="covou">
-                    <span class="cofield__label" id="co-vou">Mã giảm giá</span>
+                    <span class="cofield__label" id="co-vou"><?= e(t('cart.voucher')) ?></span>
 
                     <?php if ($voucher !== null): ?>
                         <div class="covou__on">
@@ -437,7 +437,7 @@ $storeId  = $old['storeId'] ?? '';
                             </span>
                             <button type="submit" class="covou__off" name="act" value="go"
                                     formaction="/thanh-toan/ma" formnovalidate
-                                    aria-label="Bỏ mã <?= e($voucher['code']) ?>">✕</button>
+                                    aria-label="<?= e(t('co.drop_code', [':code' => $voucher['code']])) ?>">✕</button>
                         </div>
                     <?php else: ?>
                         <?php
@@ -463,16 +463,16 @@ $storeId  = $old['storeId'] ?? '';
                            ───────────────────────────────────────────────── */
                         ?>
                         <div class="covou__type">
-                            <label class="sr-only" for="co-ma">Mã giảm giá</label>
+                            <label class="sr-only" for="co-ma"><?= e(t('cart.voucher')) ?></label>
                             <input class="covou__input" type="text" id="co-ma" name="code"
                                    maxlength="40" autocomplete="off" spellcheck="false"
-                                   placeholder="Nhập mã giảm giá">
+                                   placeholder="<?= e(t('cart.voucher_ph')) ?>">
                             <button type="submit" class="covou__apply"
-                                    formaction="/thanh-toan/ma" formnovalidate>Áp dụng</button>
+                                    formaction="/thanh-toan/ma" formnovalidate><?= e(t('filter.apply')) ?></button>
                         </div>
 
                         <?php if ($vouchers === []): ?>
-                            <p class="covou__none">Hiện chưa có mã nào đang chạy để chọn sẵn.</p>
+                            <p class="covou__none"><?= e(t('co.no_voucher')) ?></p>
                         <?php else: ?>
                         <details class="covou__pick">
                             <summary class="covou__toggle" aria-describedby="co-vou">
@@ -530,7 +530,7 @@ $storeId  = $old['storeId'] ?? '';
                 <div class="csum__rule"></div>
 
                 <div class="csum__row">
-                    <span>Tạm tính</span>
+                    <span><?= e(t('co.subtotal')) ?></span>
                     <span class="csum__val"><?= money($subtotal) ?></span>
                 </div>
 
@@ -538,13 +538,13 @@ $storeId  = $old['storeId'] ?? '';
                     <!-- Chỉ hiện khi có mã, nhưng BẮT BUỘC hiện khi có: thiếu
                          dòng này thì tạm tính + phí giao hàng không ra tổng cộng. -->
                     <div class="csum__row">
-                        <span>Giảm giá (<?= e($voucher['code']) ?>)</span>
+                        <span><?= e(t('co.discount')) ?> (<?= e($voucher['code']) ?>)</span>
                         <span class="csum__val csum__val--cut">−<?= money($discount) ?></span>
                     </div>
                 <?php endif; ?>
 
                 <div class="csum__row">
-                    <span>Phí giao hàng</span>
+                    <span><?= e(t('cart.shipping')) ?></span>
                     <span class="csum__val<?= $shippingFee === 0 ? ' csum__val--free' : '' ?>">
                         <?= $shippingFee > 0 ? money($shippingFee) : 'Miễn phí' ?>
                     </span>
@@ -553,7 +553,7 @@ $storeId  = $old['storeId'] ?? '';
                 <div class="csum__rule"></div>
 
                 <div class="csum__grand">
-                    <span>Tổng cộng</span>
+                    <span><?= e(t('cart.grand')) ?></span>
                     <span class="csum__grand-num"><?= money($total) ?></span>
                 </div>
 
@@ -588,12 +588,12 @@ $storeId  = $old['storeId'] ?? '';
                         </p>
 
                         <div class="csum__row csum__row--deposit">
-                            <span>Đặt cọc trước (<?= (int) $depositRate ?>%)</span>
+                            <span><?= e(t('co.deposit', [':p' => (string) (int) $depositRate])) ?></span>
                             <span class="csum__val csum__val--deposit"><?= money($deposit) ?></span>
                         </div>
 
                         <div class="csum__row">
-                            <span>Còn lại khi nhận hàng</span>
+                            <span><?= e(t('co.rest')) ?></span>
                             <span class="csum__val"><?= money($total - $deposit) ?></span>
                         </div>
                     </div>
@@ -625,13 +625,13 @@ $storeId  = $old['storeId'] ?? '';
                         </p>
 
                         <div class="csum__row csum__row--deposit">
-                            <span>Cần chuyển</span>
+                            <span><?= e(t('co.to_transfer')) ?></span>
                             <span class="csum__val csum__val--deposit"><?= money($total) ?></span>
                         </div>
                     <?php else: ?>
-                    <p class="csum__deposit-why">Chọn số tiền chuyển khoản lần này:</p>
+                    <p class="csum__deposit-why"><?= e(t('co.pick_amount')) ?></p>
 
-                    <div class="ckopt" role="radiogroup" aria-label="Số tiền chuyển khoản">
+                    <div class="ckopt" role="radiogroup" aria-label="<?= e(t('co.amount_aria')) ?>">
                         <label class="ckopt__item">
                             <input type="radio" name="bank_amount" value="full"
                                    <?= $bankAmount === 'full' ? 'checked' : '' ?>>
@@ -655,7 +655,7 @@ $storeId  = $old['storeId'] ?? '';
                             <span class="ckopt__dot" aria-hidden="true"></span>
                             <span class="ckopt__body">
                                 <span class="ckopt__top">
-                                    <span class="ckopt__name">Đặt cọc <?= (int) $depositRate ?>%</span>
+                                    <span class="ckopt__name"><?= e(t('co.deposit_only', [':p' => (string) (int) $depositRate])) ?></span>
                                     <span class="ckopt__num"><?= money($deposit) ?></span>
                                 </span>
                                 <span class="ckopt__note">
@@ -702,7 +702,7 @@ $storeId  = $old['storeId'] ?? '';
                          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                     </svg>
-                    <span>Bảo hành gọng 12 tháng, tròng 90 ngày</span>
+                    <span><?= e(t('co.trust1')) ?></span>
                 </li>
                 <li>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -710,14 +710,14 @@ $storeId  = $old['storeId'] ?? '';
                         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                         <path d="M3 3v5h5"></path>
                     </svg>
-                    <span>Đổi trả trong 7 ngày nếu lỗi nhà sản xuất</span>
+                    <span><?= e(t('co.trust2')) ?></span>
                 </li>
                 <li>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.13.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.27a2 2 0 0 1 2.1-.45c.9.34 1.84.57 2.8.7a2 2 0 0 1 1.7 2z"></path>
                     </svg>
-                    <span>Hỗ trợ <?= e(config('company.hotline')) ?> · 8:30 – 21:30 cả tuần</span>
+                    <span><?= e(t('co.trust3', [':phone' => (string) config('company.hotline')])) ?></span>
                 </li>
             </ul>
         </aside>

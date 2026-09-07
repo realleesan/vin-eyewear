@@ -16,7 +16,7 @@
 ?>
 
 <header class="barebar">
-    <a class="barebar__logo" href="/">Vin <em>Eyewear</em></a>
+    <a class="barebar__logo" href="/"><span class="header-logo__mark">Vin</span><span class="header-logo__sub">Eyewear</span></a>
 
     <span class="barebar__help">
         Bạn cần hỗ trợ?

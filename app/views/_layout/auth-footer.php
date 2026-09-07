@@ -27,9 +27,9 @@ $termsUrl = (string) config('auth.consent.terms_url', '');
         <span>© <?= date('Y') ?> Vin Eyewear · <?= e(config('company.name')) ?></span>
 
         <div class="barefoot__links">
-            <a href="<?= e((string) config('auth.consent.privacy_url', '/chinh-sach#bao-mat')) ?>">Chính sách bảo mật</a>
+            <a href="<?= e((string) config('auth.consent.privacy_url', '/chinh-sach#bao-mat')) ?>"><?= e(t('footer.privacy')) ?></a>
             <?php if ($termsUrl !== ''): ?>
-                <a href="<?= e($termsUrl) ?>">Điều khoản</a>
+                <a href="<?= e($termsUrl) ?>"><?= e(t('footer.terms')) ?></a>
             <?php endif; ?>
         </div>
     </div>

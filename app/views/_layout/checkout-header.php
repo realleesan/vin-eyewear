@@ -27,10 +27,10 @@
  */
 ?>
 
-<p class="barepromo">Miễn phí giao hàng toàn quốc cho đơn từ 1.000.000₫</p>
+<p class="barepromo"><?= e(t('announce.shipping')) ?></p>
 
 <header class="barebar">
-    <a class="barebar__logo" href="/">Vin <em>Eyewear</em></a>
+    <a class="barebar__logo" href="/"><span class="header-logo__mark">Vin</span><span class="header-logo__sub">Eyewear</span></a>
 
     <span class="barebar__help barebar__help--pay">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4d7a3f"
@@ -38,7 +38,7 @@
             <rect x="4" y="10" width="16" height="11" rx="2"></rect>
             <path d="M8 10V7a4 4 0 0 1 8 0v3"></path>
         </svg>
-        <span>Thanh toán an toàn</span>
+        <span><?= e(t('checkout.secure')) ?></span>
         <span class="barebar__dot" aria-hidden="true">·</span>
         <span>Hỗ trợ:
             <a href="<?= e(config('company.hotline_href')) ?>"><?= e(config('company.hotline')) ?></a>
