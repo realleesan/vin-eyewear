@@ -41,7 +41,9 @@ $initial = utf8Substr($name, 0, 1);
 
 /* Ba mục trong nhóm thu gọn được, và ba mục cấp một còn lại. Thứ tự lấy
    nguyên từ bản thiết kế. */
-$groupKeys = ['ho-so', 'dia-chi', 'mat-khau'];
+/* 'dia-chi' đã gộp vào 'ho-so' (sổ địa chỉ nằm ngay dưới form hồ sơ), nên
+   nhóm thu gọn chỉ còn hai mục — xem ghi chú ở AuthController::SECTIONS. */
+$groupKeys = ['ho-so', 'mat-khau'];
 /* 'do-mat' (Thông số đo mắt) đã gỡ khỏi trang tài khoản — xem ghi chú ở
    AuthController::SECTIONS. Số đo vẫn do kỹ thuật viên nhập bên quản trị. */
 $navKeys   = ['don-hang', 'lich-hen'];

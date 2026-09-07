@@ -158,11 +158,14 @@ return [
     // có JavaScript, và địa chỉ callback do Google gọi tới nên không thể là POST.
     'auth/google'          => 'AuthController@googleStart',
     'auth/google/callback' => 'AuthController@googleCallback',
-    // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": NĂM mục nằm
-    // trên CÙNG một đường dẫn, chọn bằng ?muc=... (ho-so · dia-chi · mat-khau
-    // · don-hang · lich-hen). Không tách thành năm route vì cột điều hướng bên
-    // trái phải hiện y hệt nhau ở cả năm — tách ra là năm action chỉ khác nhau
+    // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": BỐN mục nằm
+    // trên CÙNG một đường dẫn, chọn bằng ?muc=... (ho-so · mat-khau ·
+    // don-hang · lich-hen). Không tách thành bốn route vì cột điều hướng bên
+    // trái phải hiện y hệt nhau ở cả bốn — tách ra là bốn action chỉ khác nhau
     // đúng một biến.
+    //
+    // KHÔNG CÒN ?muc=dia-chi: sổ địa chỉ nay là một khối trong mục 'ho-so'.
+    // Ba đường POST của nó bên dưới vẫn giữ nguyên, chỉ quay về ?muc=ho-so.
     //
     // 'tai-khoan/khuc-xa' => updatePrescription() ĐÃ GỠ cùng mục "Thông số đo
     // mắt". Khách không còn tự xem/tự khai số đo; kỹ thuật viên vẫn nhập ở

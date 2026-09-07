@@ -1015,7 +1015,7 @@ class AuthController extends BaseController
     /**
      * Năm mục của trang tài khoản, khoá là giá trị ?muc=.
      *
-     * Ba mục đầu gộp trong nhóm "Tài khoản của tôi" ở cột trái (bản thiết kế
+     * Hai mục đầu gộp trong nhóm "Tài khoản của tôi" ở cột trái (bản thiết kế
      * vẽ chúng trong một menu thu gọn được); hai mục sau là mục cấp một.
      * 'lich-hen' thêm ngoài bản thiết kế — xem ghi chú đầu
      * app/views/auth/profile.php.
@@ -1023,10 +1023,16 @@ class AuthController extends BaseController
      * 'do-mat' (Thông số đo mắt) ĐÃ GỠ. Số đo vẫn nằm trong
      * customer_prescriptions và vẫn do kỹ thuật viên nhập ở
      * /quan-tri/khach-hang; chỉ mục tự xem/tự khai phía khách là bỏ.
+     *
+     * 'dia-chi' (Sổ địa chỉ) KHÔNG CÒN LÀ MỘT MỤC RIÊNG: nó nằm trong 'ho-so',
+     * ngay dưới form thông tin cá nhân. Cả hai đều là "thông tin của tôi", và
+     * tách đôi thì khách phải nhớ địa chỉ nhận hàng nằm ở mục thứ hai chứ
+     * không phải trong hồ sơ. Ba action địa chỉ vẫn giữ đường POST riêng —
+     * xem saveAddress/deleteAddress/setDefaultAddress bên dưới, tất cả nay
+     * quay về ?muc=ho-so.
      */
     private const SECTIONS = [
         'ho-so'    => 'Hồ sơ của tôi',
-        'dia-chi'  => 'Sổ địa chỉ',
         'mat-khau' => 'Đổi mật khẩu',
         'don-hang' => 'Đơn hàng của tôi',
         'lich-hen' => 'Lịch hẹn của tôi',
@@ -1155,7 +1161,10 @@ class AuthController extends BaseController
     private function sectionData(string $section, string $userId): array
     {
         switch ($section) {
-            case 'dia-chi':
+            /* Sổ địa chỉ nay là một khối BÊN TRONG mục Hồ sơ, nên dữ liệu
+               của nó đi cùng khoá 'ho-so'. Bốn biến dưới đây được
+               auth/account/ho-so.php chuyển tiếp sang khối địa chỉ. */
+            case 'ho-so':
                 return [
                     'addresses' => AddressModel::forUser($userId),
                     // ?sua=<id> mở form sửa ngay tại chỗ; id không thuộc về
@@ -1242,7 +1251,7 @@ class AuthController extends BaseController
                     'editing'         => $editing,
                 ];
 
-            default:   // ho-so, mat-khau — chỉ cần $profile, profile() đã nạp
+            default:   // mat-khau — chỉ cần $profile, profile() đã nạp
                 return [];
         }
     }
@@ -1332,7 +1341,7 @@ class AuthController extends BaseController
     public function saveAddress(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=dia-chi');
+        $this->requirePost('/tai-khoan?muc=ho-so');
 
         $id    = trim((string) ($_POST['id'] ?? ''));
         $input = [
@@ -1357,19 +1366,19 @@ class AuthController extends BaseController
             // và mở lại đúng form (thêm mới hay sửa) mà lỗi vừa xảy ra.
             $_SESSION['_old_address'] = $input;
             flash('account_error', $result['error']);
-            redirect('/tai-khoan?muc=dia-chi&' . ($id === '' ? 'them=1' : 'sua=' . rawurlencode($id)));
+            redirect('/tai-khoan?muc=ho-so&' . ($id === '' ? 'them=1' : 'sua=' . rawurlencode($id)));
         }
 
         unset($_SESSION['_old_address']);
 
         flash('account_success', $id === '' ? 'Đã thêm địa chỉ mới.' : 'Đã cập nhật địa chỉ.');
-        redirect('/tai-khoan?muc=dia-chi');
+        redirect('/tai-khoan?muc=ho-so');
     }
 
     public function deleteAddress(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=dia-chi');
+        $this->requirePost('/tai-khoan?muc=ho-so');
 
         $result = AddressModel::deleteOwned((string) ($_POST['id'] ?? ''), $userId);
 
@@ -1378,13 +1387,13 @@ class AuthController extends BaseController
             $result['ok'] ? 'Đã xoá địa chỉ.' : $result['error']
         );
 
-        redirect('/tai-khoan?muc=dia-chi');
+        redirect('/tai-khoan?muc=ho-so');
     }
 
     public function setDefaultAddress(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=dia-chi');
+        $this->requirePost('/tai-khoan?muc=ho-so');
 
         $result = AddressModel::setDefault((string) ($_POST['id'] ?? ''), $userId);
 
@@ -1393,7 +1402,7 @@ class AuthController extends BaseController
             $result['ok'] ? 'Đã đổi địa chỉ mặc định.' : $result['error']
         );
 
-        redirect('/tai-khoan?muc=dia-chi');
+        redirect('/tai-khoan?muc=ho-so');
     }
 
     // ========================================================================

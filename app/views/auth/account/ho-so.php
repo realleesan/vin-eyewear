@@ -8,6 +8,10 @@
  * (app/views/auth/profile.php) — ảnh nằm đúng chỗ nó hiện ra, và đổi được từ
  * bất kỳ mục nào chứ không phải quay về mục này trước. Nhờ vậy thẻ form ở đây
  * chiếm trọn bề ngang.
+ *
+ * Mục này nay có BA khối, theo thứ tự: form hồ sơ · sổ địa chỉ · xoá tài
+ * khoản. Sổ địa chỉ trước đây là mục riêng ?muc=dia-chi — xem ghi chú ở
+ * AuthController::SECTIONS.
  */
 
 $gender = $profile['gender'] ?? null;
@@ -85,6 +89,32 @@ $gender = $profile['gender'] ?? null;
 
     <button type="submit" class="acct-btn acct-btn--primary acct-btn--start">Lưu thay đổi</button>
 </form>
+
+<?php
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SỔ ĐỊA CHỈ — MỘT KHỐI CỦA MỤC NÀY, KHÔNG CÒN LÀ MỤC RIÊNG
+ *
+ * Địa chỉ nhận hàng cũng là "thông tin của tôi" y như họ tên và ngày sinh.
+ * Tách thành mục thứ hai thì khách phải nhớ nó nằm ngoài hồ sơ, và người vừa
+ * điền xong hồ sơ phải bấm thêm một lần nữa mới tới chỗ điền địa chỉ.
+ *
+ * ĐẶT GIỮA form hồ sơ và khối "Xoá tài khoản", không phải sau cùng: khối xoá
+ * phải là thứ cuối trang (xem lý do ngay dưới), nên mọi khối thêm vào sau này
+ * đều chèn vào đây.
+ *
+ * Truyền biến TƯỜNG MINH: partial() chạy trong phạm vi riêng nên nó không tự
+ * thấy $addresses/$editing/$adding/$old của file này. Bốn biến ấy do
+ * AuthController::sectionData() nhánh 'ho-so' dựng ra.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+partial('auth/account/dia-chi', [
+    'addresses' => $addresses,
+    'editing'   => $editing,
+    'adding'    => $adding,
+    'old'       => $old,
+]);
+?>
 
 <?php
 /*

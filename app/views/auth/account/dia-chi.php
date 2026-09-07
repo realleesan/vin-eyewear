@@ -1,12 +1,23 @@
 <?php
 
 /**
- * auth/account/dia-chi.php — mục "Sổ địa chỉ" (/tai-khoan?muc=dia-chi).
+ * auth/account/dia-chi.php — khối "Sổ địa chỉ", NẰM TRONG mục Hồ sơ.
+ *
+ * KHÔNG CÒN LÀ MỘT MỤC RIÊNG. Trước đây đây là view của ?muc=dia-chi; nay
+ * auth/account/ho-so.php gọi nó bằng partial() và dựng nó ngay dưới form
+ * thông tin cá nhân — lý do đầy đủ ở chỗ gọi. Vì thế tiêu đề ở đây là <h2>
+ * chứ không phải <h1>: trang đã có đúng một <h1> là "Hồ sơ của tôi".
+ *
+ * Mọi liên kết trong file trỏ về ?muc=ho-so, và ba trạng thái ?them=1 /
+ * ?sua=<id> / danh sách vẫn giữ nguyên cách làm cũ — chúng chỉ đổi mục đích
+ * đến, không đổi ngữ nghĩa.
  *
  * Bản thiết kế vẽ danh sách thẻ địa chỉ + nút "+ Thêm địa chỉ mới", nhưng
  * KHÔNG vẽ form thêm/sửa. Form dưới đây dựng bằng đúng những nguyên thể của
  * mục Hồ sơ (.acct-field / .acct-btn) nên nó nằm trong cùng một ngôn ngữ hình
  * ảnh, và hiện ngay trên danh sách khi ?them=1 hoặc ?sua=<id>.
+ *
+ * Nhận qua partial(): $addresses · $editing · $adding · $old
  */
 
 /* $editing là dòng địa chỉ đang sửa (đã kiểm chủ sở hữu ở controller),
@@ -15,13 +26,13 @@ $form = $old ?: ($editing ?? []);
 $open = $adding || $editing !== null;
 ?>
 
-<div class="acct-head acct-head--row">
+<div class="acct-head acct-head--row acct-head--sub">
     <div>
-        <h1 class="acct-head__title">Sổ địa chỉ</h1>
+        <h2 class="acct-head__title">Sổ địa chỉ</h2>
         <p class="acct-head__lead">Địa chỉ nhận hàng của bạn.</p>
     </div>
     <?php if (!$open): ?>
-        <a class="acct-btn acct-btn--primary" href="/tai-khoan?muc=dia-chi&amp;them=1">+ Thêm địa chỉ mới</a>
+        <a class="acct-btn acct-btn--primary" href="/tai-khoan?muc=ho-so&amp;them=1">+ Thêm địa chỉ mới</a>
     <?php endif; ?>
 </div>
 
@@ -162,7 +173,7 @@ $open = $adding || $editing !== null;
             <button type="submit" class="acct-btn acct-btn--primary">
                 <?= $editing !== null ? 'Lưu thay đổi' : 'Thêm địa chỉ' ?>
             </button>
-            <a class="acct-btn acct-btn--outline" href="/tai-khoan?muc=dia-chi">Huỷ</a>
+            <a class="acct-btn acct-btn--outline" href="/tai-khoan?muc=ho-so">Huỷ</a>
         </div>
     </form>
 <?php endif; ?>
@@ -178,7 +189,7 @@ $open = $adding || $editing !== null;
         </span>
         <span class="acct-empty__title">Chưa có địa chỉ nào</span>
         <span class="acct-empty__lead">Thêm địa chỉ để đặt hàng nhanh hơn ở lần sau.</span>
-        <a class="acct-empty__cta" href="/tai-khoan?muc=dia-chi&amp;them=1">Thêm địa chỉ mới</a>
+        <a class="acct-empty__cta" href="/tai-khoan?muc=ho-so&amp;them=1">Thêm địa chỉ mới</a>
     </div>
 <?php else: ?>
     <div class="acct-list">
@@ -217,7 +228,7 @@ $open = $adding || $editing !== null;
 
                 <div class="acct-addr__side">
                     <div class="acct-addr__links">
-                        <a href="/tai-khoan?muc=dia-chi&amp;sua=<?= e(rawurlencode($ad['id'])) ?>">Sửa</a>
+                        <a href="/tai-khoan?muc=ho-so&amp;sua=<?= e(rawurlencode($ad['id'])) ?>">Sửa</a>
 
                         <?php if (!$isDefault || count($addresses) === 1): ?>
                             <!-- Xoá là POST, không phải link: xem ghi chú ở

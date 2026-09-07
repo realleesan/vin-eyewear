@@ -448,6 +448,17 @@
     gap: 6px;
 }
 
+/* Tiêu đề của một khối NẰM TRONG một mục, không phải tiêu đề mở đầu trang:
+   sổ địa chỉ trong mục Hồ sơ. Vạch kẻ và khoảng thở phía trên để mắt đọc ra
+   đây là phần mới, chứ không phải phần đuôi của form ngay bên trên. Cỡ chữ
+   giữ nguyên .acct-head__title — nó là <h2> vì trang đã có một <h1>, nhưng
+   về mặt thị giác vẫn là một đầu mục ngang hàng. */
+.acct-head--sub {
+    margin-top: 12px;
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+}
+
 .acct-head__title {
     margin: 0;
     font-family: var(--font-serif);
