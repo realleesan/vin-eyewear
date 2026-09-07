@@ -1,880 +1,589 @@
-/* ============================================================
-   cart.css — giỏ hàng (/gio-hang)
+/* ============================================================================
+   cart.css — GIỎ HÀNG (và khối tóm tắt dùng chung với trang thanh toán)
 
-   Dựng theo "Vin Eyewear Cart.dc.html" (Claude Design):
+   Furnish KHÔNG có trang giỏ hàng, cũng không có một cái <table> nào trong cả
+   năm trang mẫu. Bố cục dưới đây suy ra từ ngôn ngữ của theme:
 
-     tiêu đề trần → hai cột: dòng hàng | tóm tắt 380px dính theo cuộn
-     thanh công cụ "Chọn tất cả" ở đầu cột trái
+     · mỗi dòng hàng là một HÀNG có đường kẻ dưới, không phải một thẻ nổi
+     · khối tóm tắt bên phải là một TẤM NỀN XÁM VIỀN MẢNH — đúng khuôn
+       `.bg-light.border.p-4` mà bản mẫu dùng cho các tấm lọc
+     · nút chữ IN HOA nhỏ, góc vuông, đệm dày
 
-   Markup: app/views/cart/index.php
+   ─────────────────────────────────────────────────────────────────────────────
+   ⚠ MỖI DÒNG HÀNG LÀ MỘT <form> RIÊNG — VÀ ĐÓ LÀ RÀNG BUỘC CỦA HTML
 
-   CỠ CHỮ ghi thẳng bằng px, không qua thang --fs-*, cùng lý do đã ghi ở đầu
-   category.css / account.css / auth.css: thang --fs-* là clamp() nên ở 1280px
-   nó lệch 1–5px so với từng con số của bản thiết kế, và bản thiết kế dùng
-   nhiều cỡ nửa pixel (11.5 · 12.5 · 13.5 · 14.5 · 16.5) mà thang không có.
+   HTML cấm lồng <form> trong <form>, nên bốn thao tác của một dòng (chọn ·
+   tăng · giảm · xoá) được phân biệt bằng nút submit nào được bấm:
 
-   MÀU gọi qua token (--brand, --ink, --surface…) vì các token đó đã mang đúng
-   giá trị của bản thiết kế — xem layout.css.
+       <button name="act" value="chon|tang|giam|xoa">
 
-   Bản thiết kế là khung cứng 1280px (`min-width:1280px`). Site này chạy từ
-   điện thoại lên, nên có thêm mốc gãy: 1100px khối tóm tắt xuống dưới danh
-   sách, 720px mỗi dòng hàng xếp lại thành lưới hai hàng.
+   CSS không được đụng vào cấu trúc đó. Cụ thể: KHÔNG đặt `display: contents`
+   lên <form> để "cho gọn lưới" — Safari từng bỏ vai trò của phần tử khi làm
+   thế, và một nút submit mất vai trò là một dòng hàng không xoá được.
 
-   KHỐI .csum* DÙNG CHUNG VỚI TRANG THANH TOÁN. order/checkout.php nạp file
-   này (xem $pageStyles trong master.php) và dựng khối "Đơn hàng của bạn" bằng
-   đúng các lớp ấy — hai trang đứng liền nhau trong luồng mua hàng nên chúng
-   phải nhìn như một. Sửa .csum* thì mở /thanh-toan xem lại luôn.
-   Khác biệt duy nhất: checkout thêm .csum--flat để bỏ dính-theo-cuộn.
-   ============================================================ */
+   `data-confirm` / `data-confirm-title` / `data-confirm-ok` do
+   assets/js/confirm-dialog.js đọc để thay confirm() mặc định. Giữ nguyên.
+   ============================================================================ */
 
 .cart {
-    /* Chữ phụ tông ấm — cùng bộ với category.css / account.css */
-    --k-note:   #9a877f;
-    --k-meta:   #b0a094;
-    --k-rule:   #f0e4d8;
-    --k-edge:   #d8c7ba;   /* viền ô tick chưa chọn */
-    --k-shell:  var(--surface-sunken);
-
-    --k-shadow-item: 0 2px 10px rgba(90, 40, 40, 0.05);
-    --k-shadow-sum:  0 2px 12px rgba(90, 40, 40, 0.06);
-
-    max-width: var(--container, 1600px);
-    margin: 0 auto;
-    padding: 24px var(--page-edge) 96px;
+    padding-block: var(--space-8) var(--section-pad);
 }
 
-/* Bản thiết kế bỏ hẳn gạch chân mặc định của trình duyệt trên toàn trang.
-   Ngoại lệ duy nhất là tên sản phẩm — link nằm giữa dòng chữ, xem .citem__name a. */
-.cart a { text-decoration: none; }
-
-/* --- Tiêu đề trang ---
-   Trần, không khối nền tối và không breadcrumb: bản thiết kế bỏ cả hai, giống
-   hệt cách các mục trong trang tài khoản mở đầu. */
-
+.cart__grid,
 .cart__head {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    /* Đệm ngang 0: tiêu đề trang phải thẳng hàng với wordmark trên header và
-       với tiêu đề của mọi trang khác. 6px cũ đẩy nó lệch đúng 6px. */
-    padding: 12px 0 24px;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--page-edge);
+}
+
+/* ── Đầu trang ───────────────────────────────────────────────────────────── */
+.cart__head {
+    margin-bottom: var(--block-gap);
 }
 
 .cart__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    /* 36px — cùng cỡ tiêu đề khối của trang chủ. Bản trước 30px, nên chuyển
-       từ trang chủ sang là chữ tụt hẳn một bậc mà không có lý do nào. */
-    font-size: 36px;
-    font-weight: 600;
-    color: var(--ink);
+    font-size: var(--fs-h2);
+    font-weight: 400;
+    letter-spacing: -0.02em;
 }
 
 .cart__lead {
-    margin: 0;
-    font-size: 14px;
-    color: var(--k-note);
+    margin-top: var(--space-3);
+    color: var(--muted);
+    font-size: var(--fs-body);
 }
 
-/* --- Thông báo sau thao tác ---
-   Không dùng .alert của ui.css: khối đó có viền vuông 4px của thiết kế cũ,
-   đặt cạnh các thẻ bo 20–28px ở đây thì lạc hẳn. */
-
+/* ── Dải báo ─────────────────────────────────────────────────────────────── */
 .cart__flash {
-    margin: 0 0 16px;
-    padding: 14px 22px;
-    border-radius: var(--radius);
-    font-size: 13.5px;
-    font-weight: 500;
+    margin-bottom: var(--space-6);
+    padding: var(--space-4) var(--space-5);
+    border-left: 3px solid var(--success);
+    background: var(--surface-sunken);
+    font-size: var(--fs-body-sm);
 }
 
-.cart__flash--ok  { background: #eef3e9; color: #3d6633; }
-.cart__flash--err { background: #f6e7e7; color: #8f3535; }
+.cart__flash--err {
+    border-left-color: var(--danger);
+    color: var(--danger);
+}
 
-/* ============================================================
-   KHUNG HAI CỘT
-   ============================================================ */
+.cart__notice {
+    margin-bottom: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
+    font-size: var(--fs-body-sm);
+}
 
+.cart__notice-line + .cart__notice-line {
+    margin-top: var(--space-2);
+}
+
+/* ── Bố cục hai cột ──────────────────────────────────────────────────────── */
 .cart__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 380px;
-    gap: 24px;
-    /* start chứ không stretch: khối tóm tắt phải cao đúng bằng nội dung của
-       nó thì position:sticky mới có chỗ mà trượt. */
+    gap: var(--block-gap);
     align-items: start;
 }
 
-.cart__lines {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    min-width: 0;
-}
-
-/* ============================================================
-   Ô TICK — dùng chung cho thanh công cụ và từng dòng
-   ============================================================ */
-
-/* KHÔNG phải <input type=checkbox>: trạng thái tick nằm trong session phía
-   server, mỗi lần bấm là một POST rồi vẽ lại. Checkbox thật sẽ có một khoảnh
-   khắc ô đã tick nhưng tổng tiền chưa đổi — xem ghi chú trong cart/index.php. */
-.cbox {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    width: 20px;
-    height: 20px;
-    border: 1.5px solid var(--k-edge);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    color: transparent;
-    flex-shrink: 0;
-}
-
-.cbox.is-on {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-/* ============================================================
-   THANH CÔNG CỤ
-   ============================================================ */
-
+/* ============================================================================
+   1. THANH THAO TÁC HÀNG LOẠT
+   ============================================================================ */
 .cbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    /* 20px chứ không 24px như thẻ dòng hàng — bản thiết kế bo nhẹ hơn một nấc
-       cho thanh mỏng này. */
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    padding: 16px 24px;
-    box-shadow: var(--k-shadow-item);
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--line);
 }
 
 .cbar__all {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 0;
-    border: none;
-    background: none;
-    font-family: var(--font-sans);
-    cursor: pointer;
+    gap: var(--space-3);
 }
 
 .cbar__label {
-    font-size: 14px;
-    color: var(--ink);
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    letter-spacing: .06em;
+    text-transform: uppercase;
 }
-
-.cbar__all:hover .cbar__label { color: var(--brand); }
 
 .cbar__wipe {
-    padding: 0;
-    border: none;
-    background: none;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--k-note);
+    border: 0;
+    background: transparent;
+    color: var(--accent);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
     cursor: pointer;
 }
 
-.cbar__wipe:hover { color: var(--brand); }
-
-/* ============================================================
-   DÒNG HÀNG
-   ============================================================ */
-
-.citem {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    padding: 22px 24px;
-    box-shadow: var(--k-shadow-item);
+.cbar__wipe:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
-/* Hết hàng thì mờ đi nhưng KHÔNG ẩn: khách cần thấy món đó còn trong giỏ để
-   tự bỏ ra, và cần đọc được dòng cảnh báo còn bao nhiêu cái. */
-.citem.is-out { opacity: 0.75; }
-
-.citem__pick {
-    padding: 0;
-    border: none;
-    background: none;
-    cursor: pointer;
-    flex-shrink: 0;
-}
-
-.citem__thumb {
-    display: grid;
-    place-items: center;
-    width: 96px;
-    height: 96px;
-    border-radius: var(--radius);
-    overflow: hidden;
-    background: var(--k-shell);
-    flex-shrink: 0;
-}
-
-/* contain chứ không cover: gọng kính chụp trên nền trắng, cắt mép là mất càng */
-.citem__thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+/* ============================================================================
+   2. DÒNG HÀNG
+   ============================================================================ */
+.cart__lines {
+    list-style: none;
 }
 
 .citem__body {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
+    display: grid;
+    grid-template-columns: auto 88px minmax(0, 1fr);
+    gap: var(--space-4);
+    align-items: start;
+    padding-block: var(--space-6);
+    border-bottom: 1px solid var(--line);
+}
+
+/* Ô tick chọn dòng — một nút submit thật (act=chon), không phải checkbox:
+   không có JS thì nó vẫn gửi form và đổi trạng thái ở máy chủ. */
+.citem__pick {
+    width: 20px;
+    height: 20px;
+    margin-top: var(--space-1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    color: transparent;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color .12s ease, border-color .12s ease;
+}
+
+.citem__pick[aria-pressed="true"],
+.citem__pick.is-on {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.citem__thumb {
+    width: 88px;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: var(--h-shell);
+    border: 1px solid var(--line);
+}
+
+.citem__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .citem__brand {
-    font-size: 11.5px;
-    letter-spacing: 0.12em;
+    color: var(--muted);
+    font-size: var(--fs-micro);
+    font-weight: 500;
+    letter-spacing: .14em;
     text-transform: uppercase;
-    color: var(--k-meta);
 }
 
 .citem__name {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--ink);
+    margin-top: var(--space-1);
+    font-size: var(--fs-body);
+    font-weight: 500;
 }
 
-.citem__name a { color: inherit; }
-.citem__name a:hover { color: var(--brand); }
+.citem__name a {
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.citem__name a:hover {
+    color: var(--accent);
+}
 
 .citem__variant {
-    font-size: 13px;
-    color: var(--k-note);
+    margin-top: var(--space-1);
+    color: var(--muted);
+    font-size: var(--fs-caption);
 }
 
 .citem__unit {
-    margin-top: 4px;
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--brand);
+    margin-top: var(--space-2);
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
 }
 
 .citem__warn {
-    margin-top: 4px;
-    font-size: 12.5px;
-    font-weight: 500;
+    margin-top: var(--space-2);
     color: var(--danger);
+    font-size: var(--fs-caption);
 }
 
-/* --- Bộ tăng giảm số lượng --- */
-
-.cstep {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    border: 1.5px solid var(--line);
-    border-radius: var(--radius-sm);
-    padding: 4px;
-    flex-shrink: 0;
-}
-
-.cstep__btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: none;
-    font-family: var(--font-sans);
-    font-size: 16px;
-    line-height: 1;
-    color: var(--brand);
-    cursor: pointer;
-}
-
-.cstep__btn:hover:not(:disabled) { background: #f1e7dd; }
-
-/* Chạm sàn 1 hoặc trần 20 thì nút mờ và không bấm được — bấm mà không xảy ra
-   gì thì người dùng tưởng trang hỏng. */
-.cstep__btn:disabled {
-    color: var(--k-meta);
-    cursor: not-allowed;
-}
-
-/* Bản thiết kế vẽ số lượng là chữ tĩnh. Ở đây là ô nhập thật (sửa thẳng bằng
-   bàn phím) nhưng gỡ hết hình dạng ô nhập đi, nên nhìn không khác gì. */
-.cstep__num {
-    width: 32px;
-    min-width: 28px;
-    padding: 0;
-    border: none;
-    background: none;
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 600;
-    text-align: center;
-    color: var(--ink);
-    /* Bỏ hai mũi tên lên xuống của trình duyệt — đã có nút − và + rồi */
-    appearance: textfield;
-}
-
-.cstep__num::-webkit-outer-spin-button,
-.cstep__num::-webkit-inner-spin-button { appearance: none; margin: 0; }
-
-.cstep__num:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
-}
-
-/* --- Thành tiền + nút xoá --- */
-
+/* Cụm cuối dòng: bộ đếm số lượng, thành tiền, nút xoá. */
 .citem__end {
+    grid-column: 1 / -1;
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-    min-width: 110px;
-    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
 }
 
 .citem__total {
-    font-size: 16.5px;
-    font-weight: 600;
-    color: var(--ink);
+    font-size: var(--fs-body-lg);
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .citem__del {
-    display: flex;
-    padding: 4px;
-    border: none;
-    background: none;
-    color: var(--k-meta);
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    letter-spacing: .06em;
+    text-transform: uppercase;
     cursor: pointer;
+    transition: color .15s ease;
 }
 
-.citem__del:hover { color: var(--brand); }
+.citem__del:hover {
+    color: var(--danger);
+}
 
-/* ============================================================
-   TRÒNG CẮT KÈM
+/* ── Bộ đếm số lượng ─────────────────────────────────────────────────────── */
+.cstep {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--line-strong);
+}
 
-   Một dòng hàng có thể mang theo gói tròng khách chọn ở hộp thoại "Chọn hình
-   thức mua" (xem _layout/buy-modal.php). Hiện thành khối riêng có nền chứ
-   không gộp vào dòng phiên bản: nó là phần lớn nhất của khoản chênh giá, và
-   số đo mắt là thứ khách phải soát lại được TRƯỚC khi đặt — sai một con số là
-   một cặp tròng mài hỏng.
-   ============================================================ */
+.cstep__btn {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--fs-body-lg);
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color .15s ease;
+}
 
+.cstep__btn:hover {
+    background: var(--surface-sunken);
+}
+
+.cstep__num {
+    width: 52px;
+    height: 40px;
+    border: 0;
+    border-inline: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 600;
+    text-align: center;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.cstep__num::-webkit-outer-spin-button,
+.cstep__num::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+}
+
+/* ── Tròng kính cắt kèm ──────────────────────────────────────────────────── */
 .clens {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    margin-top: 2px;
-    padding: 8px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--brand-subtle);
+    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-left: 2px solid var(--line-strong);
+    background: var(--surface-sunken);
+    font-size: var(--fs-caption);
 }
 
 .clens__name {
-    display: flex;
-    gap: 8px;
-    justify-content: space-between;
-    font-size: 12.5px;
     font-weight: 600;
-    color: #6e4a42;
 }
 
-.clens__price { white-space: nowrap; }
+.clens__price {
+    color: var(--muted);
+}
 
 .clens__rx {
-    font-size: 11.5px;
-    color: #8a6a60;
+    display: block;
+    margin-top: var(--space-1);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: var(--fs-micro);
 }
 
-/* ============================================================
-   KHỐI TÓM TẮT
-   ============================================================ */
-
-.csum {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    /* 88px = chiều cao header (76px) + 12px thở.
-       Bản thiết kế ghi top:24px vì header của nó KHÔNG dính theo cuộn. Header
-       của site này thì có, nên 24px sẽ đẩy khối này chui xuống dưới header. */
-    position: sticky;
-    top: 88px;
+/* ============================================================================
+   3. Ô MÃ GIẢM GIÁ
+   ============================================================================ */
+.cvou {
+    margin-top: var(--space-6);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
 }
 
-.csum__card {
+.cvou__title {
+    margin-bottom: var(--space-3);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.cvou__form {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
-    border-radius: var(--radius);
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.cvou__label {
+    flex: 1 1 180px;
+    min-width: 0;
+}
+
+.cvou__input {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line-strong);
     background: var(--surface-raised);
-    padding: 30px 30px 32px;
-    box-shadow: var(--k-shadow-sum);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-body-sm);
+    text-transform: uppercase;
+}
+
+.cvou__input:focus {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+}
+
+.cvou__apply {
+    padding: var(--space-3) var(--space-6);
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.cvou__apply:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.cvou__on {
+    margin-top: var(--space-3);
+    color: var(--success);
+    font-size: var(--fs-body-sm);
+}
+
+.cvou__off {
+    margin-top: var(--space-3);
+    color: var(--danger);
+    font-size: var(--fs-body-sm);
+}
+
+/* ============================================================================
+   4. KHỐI TÓM TẮT
+
+   Dùng chung với trang thanh toán (master.php nạp cart.css cho order/checkout),
+   nên đừng gắn thêm bất cứ thứ gì chỉ đúng ở một trong hai trang.
+   ============================================================================ */
+.csum__card {
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
 }
 
 .csum__title {
-    margin: 0 0 4px;
-    font-family: var(--font-serif);
-    font-size: 22px;
+    margin-bottom: var(--space-5);
+    font-size: var(--fs-label);
     font-weight: 600;
-    color: var(--ink);
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }
 
 .csum__row {
     display: flex;
+    align-items: baseline;
     justify-content: space-between;
-    gap: 12px;
-    font-size: 14px;
+    gap: var(--space-4);
+    padding-block: var(--space-2);
+    font-size: var(--fs-body-sm);
+}
+
+.csum__row > :first-child {
     color: var(--muted);
 }
 
 .csum__val {
     font-weight: 600;
-    color: var(--ink);
     white-space: nowrap;
 }
 
-/* Số tiền được giảm và chữ "Miễn phí" đều là tin VUI cho khách — bản thiết kế
-   cho chúng cùng một sắc xanh, khác hẳn màu chữ của các dòng còn lại. */
-.csum__val--cut,
-.csum__val--free { color: #4d7a3f; }
-
-.csum__nudge {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: var(--radius-sm);
-    background: #fdf3e3;
-    padding: 12px 16px;
-    font-size: 12.5px;
-    line-height: 1.5;
-    color: #a2701c;
+/* Dòng giảm giá — số âm, mang màu nhấn để nó tách khỏi các dòng cộng. */
+.csum__val--cut {
+    color: var(--accent);
 }
 
-.csum__nudge svg { flex-shrink: 0; }
-
 .csum__rule {
-    height: 1px;
-    background: var(--k-rule);
+    margin-block: var(--space-4);
+    border: 0;
+    border-top: 1px solid var(--line);
 }
 
 .csum__grand {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 12px;
-    font-size: 15px;
+    gap: var(--space-4);
+    font-size: var(--fs-body-lg);
     font-weight: 600;
-    color: var(--ink);
 }
 
 .csum__grand-num {
-    font-family: var(--font-serif);
-    font-size: 26px;
-    font-weight: 600;
-    color: var(--brand);
+    font-size: var(--fs-h4);
+    font-weight: 700;
     white-space: nowrap;
 }
 
-/* ============================================================
-   KHỐI ĐẶT CỌC — chỉ hiện ở đơn có cắt tròng theo độ
-   Markup: app/views/order/checkout.php
-
-   Tách hẳn khỏi cụm cộng tiền phía trên bằng nền và khung riêng, không phải
-   thêm hai dòng nữa vào cùng danh sách. Lý do: hai con số này KHÔNG cùng loại
-   với "tạm tính · giảm giá · phí ship" — ba dòng kia là các phần cấu thành
-   tổng, còn hai dòng này là CHIA tổng ra làm hai lần trả. Xếp chung một cột
-   thì mắt đọc thành năm dòng cộng dồn và con số cuối trông như cộng sai.
-   ============================================================ */
-
-/* [hidden] PHẢI ĐỨNG TRƯỚC, và phải là một luật riêng.
-
-   Trang thanh toán in ra HAI khối này — một cho COD, một cho chuyển khoản —
-   rồi giấu bớt một bằng thuộc tính `hidden` (xem checkout-deposit.js). Nhưng
-   `hidden` chỉ là `display: none` trong bộ mẫu mặc định của trình duyệt, nên
-   `display: flex` ngay bên dưới THẮNG nó và cả hai khối cùng hiện — đúng lỗi
-   đã thấy khi chụp ảnh đối chiếu.
-
-   Không dùng !important: chỉ cần một luật riêng cho [hidden] là đủ, vì nó
-   cùng độ ưu tiên nhưng cụ thể hơn (thêm một attribute selector). */
-.csum__deposit[hidden] { display: none; }
-
-.csum__deposit {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 16px 18px;
-    border: 1px solid var(--k-edge);
-    border-radius: var(--radius-sm);
-    /* Nền vàng nhạt ấm, cùng họ với nền pearl của site: đây là thông tin khách
-       PHẢI đọc trước khi bấm đặt, không phải một dòng tổng kết để liếc qua. */
-    background: #fdf6e8;
-}
-
-.csum__deposit-why {
-    margin: 0;
-    font-size: 12.5px;
+.csum__note,
+.csum__more,
+.csum__nudge {
+    margin-top: var(--space-3);
+    color: var(--muted);
+    font-size: var(--fs-caption);
     line-height: 1.6;
-    color: var(--k-note);
-}
-
-.csum__deposit-why strong { color: var(--brand); }
-
-/* Dòng tiền cọc — chữ đậm hơn dòng "còn lại" một nấc, vì đây mới là con số
-   khách phải chuyển ngay bây giờ. */
-.csum__row--deposit { color: var(--ink); }
-
-.csum__val--deposit {
-    font-size: 15px;
-    color: var(--brand);
 }
 
 .csum__cta {
-    display: block;
-    padding: 15px 0;
-    border-radius: var(--radius-sm);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: 15px;
-    font-weight: 600;
-    text-align: center;
-}
-
-.csum__cta:hover { background: var(--brand-strong); color: var(--on-brand); }
-
-/* Chưa tick dòng nào — nút vẫn ở đúng chỗ nhưng không đi đâu được */
-.csum__cta.is-off {
-    background: var(--surface-sunken);
-    color: var(--k-meta);
-    cursor: not-allowed;
-}
-
-.csum__note {
-    margin: -8px 0 0;
-    font-size: 12.5px;
-    text-align: center;
-    color: var(--k-meta);
-}
-
-/* Trang thanh toán dùng dòng này làm ghi chú giải thích chứ không phải lời
-   nhắc dưới nút, nên nó căn trái và không kéo lên sát nút. */
-.csum__note--left {
-    margin: 0;
-    text-align: left;
-    line-height: 1.6;
-}
-
-/* Khối tóm tắt của trang thanh toán KHÔNG dính theo cuộn: nó nằm cạnh một
-   form dài, dính lại thì nó trôi theo suốt lúc khách điền địa chỉ và che mất
-   phần dưới của form trên màn hình thấp. */
-.csum--flat { position: static; }
-
-/* Nút "Đặt hàng" là <button> (gửi form) chứ không phải <a> như bên giỏ hàng,
-   nên phải tự lấy lại những gì .csum__cta không có sẵn cho thẻ nút. */
-.csum__cta--btn {
-    width: 100%;
-    border: none;
-    font-family: var(--font-sans);
-    cursor: pointer;
-}
-
-.csum__more {
-    font-size: 13.5px;
-    font-weight: 500;
-    text-align: center;
-    color: var(--brand);
-}
-
-.csum__more:hover { color: var(--brand-strong); }
-
-/* ============================================================
-   Ô MÃ GIẢM GIÁ
-   ============================================================ */
-
-.cvou {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    /* 24px chứ không 28px — thẻ nhỏ hơn nên bản thiết kế bo nhẹ hơn một nấc */
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    padding: 22px 26px;
-    box-shadow: var(--k-shadow-item);
-}
-
-.cvou__label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.cvou__form {
-    display: flex;
-    gap: 8px;
-}
-
-.cvou__input {
-    box-sizing: border-box;
-    flex: 1;
-    min-width: 0;
-    padding: 12px 16px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--ink);
-    /* Mã giảm giá luôn viết hoa — khách gõ thường thì tự hiện hoa, khỏi băn
-       khoăn mình gõ đúng chưa. Server cũng strtoupper() nên hai bên khớp nhau. */
-    text-transform: uppercase;
-}
-
-.cvou__input:focus {
-    outline: none;
-    border-color: #c9a79b;
-    background: var(--surface-focus);
-}
-
-.cvou__input::placeholder { text-transform: none; color: var(--k-meta); }
-
-.cvou__apply {
-    padding: 0 22px;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-weight: 500;
-    white-space: nowrap;
-    cursor: pointer;
-}
-
-.cvou__apply:hover { background: var(--brand-strong); }
-
-/* --- Trạng thái đã áp mã --- */
-
-.cvou__on {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    border-radius: var(--radius-sm);
-    background: var(--brand-subtle);
-    padding: 14px 16px;
-}
-
-.cvou__code {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--brand);
-}
-
-.cvou__title {
-    font-size: 12.5px;
-    line-height: 1.5;
-    color: #6e4a42;
-}
-
-.cvou__off {
-    margin-top: 4px;
-    padding: 0;
-    border: none;
-    background: none;
-    font-family: var(--font-sans);
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--k-note);
-    cursor: pointer;
-}
-
-.cvou__off:hover { color: var(--brand); }
-
-.cvou__msg {
-    font-size: 12.5px;
-    line-height: 1.5;
-}
-
-.cvou__msg.is-ok  { color: #4d7a3f; }
-.cvou__msg.is-err { color: #a24040; }
-
-/* ============================================================
-   TRẠNG THÁI RỖNG
-   ============================================================ */
-
-.cart__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    padding: 80px 32px;
-    text-align: center;
-}
-
-.cart__empty-ring {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 72px;
-    height: 72px;
+    width: 100%;
+    margin-top: var(--space-5);
+    padding: var(--space-4) var(--space-6);
+    border: 1px solid var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+
+.csum__cta:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.csum__cta.is-off,
+.csum__cta:disabled {
+    background: var(--surface-sunken);
+    border-color: var(--line);
+    color: var(--muted);
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ============================================================================
+   5. GIỎ TRỐNG
+   ============================================================================ */
+.cart__empty {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: var(--space-20) var(--page-edge);
+    text-align: center;
+}
+
+/* Vòng tròn rỗng bao quanh icon — hình tròn THẬT, xem --radius-round. */
+.cart__empty-ring {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px;
+    height: 88px;
+    margin-bottom: var(--space-6);
+    border: 1px solid var(--line);
     border-radius: var(--radius-round);
-    background: var(--brand-subtle);
+    color: var(--muted);
 }
 
 .cart__empty-title {
-    font-family: var(--font-serif);
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--ink);
+    font-size: var(--fs-h4);
+    font-weight: 400;
+    margin-bottom: var(--space-3);
 }
 
 .cart__empty-cta {
-    margin-top: 8px;
-    padding: 12px 28px;
-    border-radius: var(--radius-sm);
+    display: inline-flex;
+    margin-top: var(--space-6);
+    padding: var(--space-4) var(--space-8);
     background: var(--brand);
     color: var(--on-brand);
-    font-size: 13.5px;
-    font-weight: 500;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-decoration: none;
 }
 
-.cart__empty-cta:hover { background: var(--brand-strong); color: var(--on-brand); }
-
-/* ============================================================
-   MỐC GÃY
-
-   Bản thiết kế là khung cứng 1280px. Ba mốc dưới đây là phần THÊM.
-   ============================================================ */
-
-@media (max-width: 1100px) {
-    .cart {
-        max-width: none;
-        padding: 24px 16px 64px;
-    }
-
-    /* minmax(0,1fr) chứ không 1fr: ô của lưới mặc định là min-width:auto, tức
-       KHÔNG co xuống dưới bề rộng nội dung nhỏ nhất — dòng hàng có ảnh 96px
-       cộng bộ tăng giảm nên bề rộng tối thiểu khá lớn, và cả trang sẽ cuộn ngang. */
-    .cart__grid {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 20px;
-    }
-
-    /* Bỏ dính theo cuộn: khối tóm tắt nay nằm DƯỚI danh sách, dính nó lại
-       nghĩa là nó bám đáy màn hình che mất dòng hàng cuối. */
-    .csum { position: static; }
+.cart__empty-cta:hover {
+    background: var(--accent);
 }
 
-@media (max-width: 720px) {
-    /* Mỗi dòng thành lưới 2 hàng: [tick · ảnh · mô tả] ở trên,
-       [bộ tăng giảm · thành tiền] ở dưới. Ép năm khối vào một hàng ngang ở
-       360px thì cái nào cũng bị bóp đến mức không đọc được. */
-    .citem {
-        display: grid;
-        grid-template-columns: auto 96px minmax(0, 1fr);
-        grid-template-areas:
-            "pick thumb body"
-            "step step  end";
-        gap: 14px 16px;
-        padding: 18px 16px;
-    }
+/* ============================================================================
+   6. MỐC BỀ NGANG
+   ============================================================================ */
+@media (min-width: 601px) {
 
-    .citem__pick  { grid-area: pick; align-self: start; margin-top: 4px; }
-    .citem__thumb { grid-area: thumb; }
-    .citem__body  { grid-area: body; }
-    .cstep        { grid-area: step; justify-self: start; }
-
-    .citem__end {
-        grid-area: end;
-        flex-direction: row;
+    .citem__body {
+        grid-template-columns: auto 104px minmax(0, 1fr) max-content;
         align-items: center;
-        justify-content: flex-end;
-        gap: 14px;
-        min-width: 0;
     }
 
-    .cbar { padding: 14px 18px; }
-    .cbar__label { font-size: 13.5px; }
+    .citem__thumb {
+        width: 104px;
+    }
 
-    .csum__card { padding: 24px 22px 26px; }
-    .cvou       { padding: 20px 22px; }
-
-    .cart__title { font-size: 26px; }
+    /* Từ đây cụm cuối về đúng cột của nó thay vì xuống hàng riêng. */
+    .citem__end {
+        grid-column: auto;
+        margin-top: 0;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: var(--space-3);
+    }
 }
 
-@media (max-width: 420px) {
-    /* Ảnh xuống 72px để dòng chữ còn chỗ thở */
-    .citem { grid-template-columns: auto 72px minmax(0, 1fr); }
-    .citem__thumb { width: 72px; height: 72px; }
+@media (min-width: 1101px) {
+
+    .cart__grid {
+        grid-template-columns: minmax(0, 1fr) 360px;
+    }
+
+    /* Khối tóm tắt đi theo khi cuộn qua một giỏ dài. */
+    .csum {
+        position: sticky;
+        top: calc(var(--header-h) + var(--space-6));
+    }
 }
-
-/* ============================================================
-   LỚP CŨ ĐÃ BỎ
-
-   .cart__inner · .cart__layout · .cline* · .cart__clear · .csum__list ·
-   .csum__hint · .csum__total — chúng dựng theo bản Lovable (thẻ viền vuông
-   1px trên nền pearl, một ô số lượng kèm nút "Cập nhật" riêng). Bản thiết kế
-   mới là thẻ bo 24px có đổ bóng và bộ tăng giảm hình viên thuốc, không tái
-   dùng được mẩu nào.
-
-   Trang thanh toán trước đây mượn .csum__list / .csum__hint / .csum__total ở
-   đây. Nó đã chuyển sang bộ .csum__row / .csum__rule / .csum__grand mới —
-   xem app/views/order/checkout.php. Ba lớp cũ vì thế không còn ai dùng.
-   ============================================================ */
-
-/* ============================================================
-   CẢNH BÁO SAU KHI PHIÊN HẾT HẠN — Q14.2 (08/09/2026)
-
-   Q14.2 giữ giỏ hàng qua phiên hết hạn, và bắt kèm cảnh báo dòng nào vừa đổi
-   giá hoặc hết hàng. Dải này là vế thứ hai ấy.
-
-   KHÔNG dùng .cart__flash--err: đây không phải một lỗi, không ai làm sai điều
-   gì. Tô đỏ một chuyện bình thường (giá thay đổi sau một đêm) là dạy khách
-   rằng màu đỏ trên trang này không có nghĩa gì.
-   ============================================================ */
-
-.cart__notice {
-    margin: 0 0 16px;
-    padding: 12px 22px;
-    border-left: 3px solid var(--brand);
-    border-radius: var(--radius);
-    background: #f6f2ec;
-}
-
-.cart__notice-line {
-    margin: 0;
-    font-size: 13.5px;
-    line-height: 1.6;
-    color: var(--ink);
-}
-
-.cart__notice-line + .cart__notice-line { margin-top: 6px; }
-
-/* Ghi chú đổi giá ở TỪNG dòng. Tăng thì cảnh báo, giảm thì không — giảm giá là
-   tin tốt, và tô đỏ nó là nói sai chuyện vừa xảy ra. */
-.citem__pricechg {
-    margin-top: 4px;
-    font-size: 12.5px;
-    font-weight: 500;
-}
-
-.citem__pricechg.is-up   { color: var(--danger); }
-.citem__pricechg.is-down { color: #3d6633; }

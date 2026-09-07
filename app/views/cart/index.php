@@ -35,7 +35,7 @@ $count = count($lines);
 <section class="cart">
 
     <div class="cart__head">
-        <h1 class="cart__title">Giỏ hàng</h1>
+        <h1 class="cart__title"><?= e(t('cart.title')) ?></h1>
         <p class="cart__lead">
             <?= $count > 0
                 ? $count . ' sản phẩm trong giỏ của bạn'
@@ -112,8 +112,8 @@ $count = count($lines);
                     <circle cx="16.5" cy="20" r="1.6"></circle>
                 </svg>
             </span>
-            <span class="cart__empty-title">Giỏ hàng của bạn đang trống</span>
-            <a class="cart__empty-cta" href="/san-pham">Tiếp tục mua sắm</a>
+            <span class="cart__empty-title"><?= e(t('cart.empty_title')) ?></span>
+            <a class="cart__empty-cta" href="/san-pham"><?= e(t('cart.keep_shopping')) ?></a>
         </div>
 
     <?php else: ?>
@@ -139,7 +139,7 @@ $count = count($lines);
                                     <path d="M4 12.5l5.5 5.5L20 7"></path>
                                 </svg>
                             </span>
-                            <span class="cbar__label">Chọn tất cả (<?= $count ?>)</span>
+                            <span class="cbar__label"><?= e(t('cart.select_all', [':n' => (string) $count])) ?></span>
                         </button>
                     </form>
 
@@ -148,7 +148,7 @@ $count = count($lines);
                        trên trang; onsubmit là lớp dự phòng khi không có JS —
                        confirm-dialog.js gỡ nó ra khi đã sẵn sàng thay thế.
                        Cùng một biến nên hai đường không thể lệch chữ. */
-                    $hoiXoaChon = 'Xoá các sản phẩm đã chọn khỏi giỏ hàng?';
+                    $hoiXoaChon = t('cart.confirm_selected');
                     ?>
                     <form method="post" action="/gio-hang/xoa-chon"
                           data-confirm="<?= e($hoiXoaChon) ?>"
@@ -156,7 +156,7 @@ $count = count($lines);
                           data-confirm-ok="Xoá"
                           onsubmit="return confirm('<?= e($hoiXoaChon) ?>')">
                         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                        <button type="submit" class="cbar__wipe">Xoá mục đã chọn</button>
+                        <button type="submit" class="cbar__wipe"><?= e(t('cart.remove_selected')) ?></button>
                     </form>
                 </div>
 
@@ -170,7 +170,7 @@ $count = count($lines);
                        trỏ nên "này" là rõ. Hộp thoại trên trang thì nằm giữa
                        màn hình, che mất chính cái dòng vừa bấm, và giỏ có năm
                        dòng thì "này" không còn chỉ vào đâu cả. */
-                    $hoiXoaMon = sprintf('Bỏ “%s” khỏi giỏ hàng?', $p['name']);
+                    $hoiXoaMon = t('cart.confirm_one', [':name' => $p['name']]);
                     /* Dòng mô tả phiên bản. Ưu tiên NHÃN BIẾN THỂ khách đã chọn
                        (vd "Chiết suất 1.61") — đó mới là thứ phân biệt hai dòng
                        cùng một mặt hàng trong giỏ. Không có biến thể thì ghép
@@ -194,7 +194,7 @@ $count = count($lines);
                                     <path d="M4 12.5l5.5 5.5L20 7"></path>
                                 </svg>
                             </span>
-                            <span class="sr-only">Chọn <?= e($p['name']) ?></span>
+                            <span class="sr-only"><?= e(t('cart.pick_sr', [':name' => $p['name']])) ?></span>
                         </button>
 
                         <a class="citem__thumb" href="<?= e($slug) ?>" tabindex="-1" aria-hidden="true">
@@ -284,10 +284,10 @@ $count = count($lines);
                                         data-confirm-title="Xoá sản phẩm?"
                                         data-confirm-ok="Xoá"
                                         onclick="return confirm('<?= e($hoiXoaMon) ?>')"
-                                        aria-label="Bỏ <?= e($p['name']) ?> khỏi giỏ hàng">−</button>
+                                        aria-label="<?= e(t('cart.remove_sr', [':name' => $p['name']])) ?>">−</button>
                             <?php else: ?>
                                 <button type="submit" name="act" value="giam" class="cstep__btn"
-                                        aria-label="Giảm số lượng <?= e($p['name']) ?>">−</button>
+                                        aria-label="<?= e(t('cart.dec_sr', [':name' => $p['name']])) ?>">−</button>
                             <?php endif; ?>
 
                             <!-- Ô số thật, không phải chữ: bàn phím và trình đọc
@@ -308,7 +308,7 @@ $count = count($lines);
                                      kiểm lại trong setQuantity(). */ ?>
                             <button type="submit" name="act" value="tang" class="cstep__btn"
                                     <?= $line['canAdd'] ? '' : 'disabled' ?>
-                                    aria-label="Tăng số lượng <?= e($p['name']) ?>">+</button>
+                                    aria-label="<?= e(t('cart.inc_sr', [':name' => $p['name']])) ?>">+</button>
                         </div>
 
                         <div class="citem__end">
@@ -322,7 +322,7 @@ $count = count($lines);
                                      stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
                                 </svg>
-                                <span class="sr-only">Xoá <?= e($p['name']) ?> khỏi giỏ hàng</span>
+                                <span class="sr-only"><?= e(t('cart.remove_sr', [':name' => $p['name']])) ?></span>
                             </button>
                         </div>
                     </form>
@@ -333,22 +333,22 @@ $count = count($lines);
             <aside class="csum" aria-labelledby="csum-title">
 
                 <div class="csum__card">
-                    <h2 id="csum-title" class="csum__title">Tóm tắt đơn hàng</h2>
+                    <h2 id="csum-title" class="csum__title"><?= e(t('cart.summary')) ?></h2>
 
                     <div class="csum__row">
-                        <span>Tạm tính (<?= (int) $picked ?> sản phẩm)</span>
+                        <span><?= e(t('cart.subtotal', [':n' => (string) (int) $picked])) ?></span>
                         <span class="csum__val"><?= money($subtotal) ?></span>
                     </div>
 
                     <div class="csum__row">
-                        <span>Giảm giá voucher</span>
+                        <span><?= e(t('cart.discount')) ?></span>
                         <span class="csum__val csum__val--cut">
                             <?= $discount > 0 ? '−' . money($discount) : money(0) ?>
                         </span>
                     </div>
 
                     <div class="csum__row">
-                        <span>Phí vận chuyển</span>
+                        <span><?= e(t('cart.shipping')) ?></span>
                         <span class="csum__val<?= $shippingFee === 0 ? ' csum__val--free' : '' ?>">
                             <?= $shippingFee === 0 ? 'Miễn phí' : money($shippingFee) ?>
                         </span>
@@ -369,25 +369,25 @@ $count = count($lines);
                     <div class="csum__rule"></div>
 
                     <div class="csum__grand">
-                        <span>Tổng cộng</span>
+                        <span><?= e(t('cart.grand')) ?></span>
                         <span class="csum__grand-num"><?= money($total) ?></span>
                     </div>
 
                     <?php if ($picked > 0): ?>
-                        <a class="csum__cta" href="/thanh-toan">Tiến hành thanh toán</a>
+                        <a class="csum__cta" href="/thanh-toan"><?= e(t('cart.checkout')) ?></a>
                     <?php else: ?>
                         <!-- Không có dòng nào được tick thì trang thanh toán sẽ
                              đá ngược về đây. Chặn ngay tại nút, kèm lý do, thay
                              vì để khách bấm rồi bị đẩy về chỗ cũ. -->
-                        <span class="csum__cta is-off" aria-disabled="true">Tiến hành thanh toán</span>
-                        <p class="csum__note">Hãy tick chọn ít nhất một sản phẩm.</p>
+                        <span class="csum__cta is-off" aria-disabled="true"><?= e(t('cart.checkout')) ?></span>
+                        <p class="csum__note"><?= e(t('cart.pick_one')) ?></p>
                     <?php endif; ?>
 
                     <a class="csum__more" href="/san-pham">← Tiếp tục mua sắm</a>
                 </div>
 
                 <div class="cvou">
-                    <span class="cvou__label">Mã giảm giá</span>
+                    <span class="cvou__label"><?= e(t('cart.voucher')) ?></span>
 
                     <?php if ($voucher !== null): ?>
                         <div class="cvou__on">
@@ -395,18 +395,18 @@ $count = count($lines);
                             <span class="cvou__title"><?= e($voucher['title']) ?></span>
                             <form method="post" action="/gio-hang/ma">
                                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                <button type="submit" name="act" value="go" class="cvou__off">Gỡ mã</button>
+                                <button type="submit" name="act" value="go" class="cvou__off"><?= e(t('cart.voucher_off')) ?></button>
                             </form>
                         </div>
                     <?php else: ?>
                         <form class="cvou__form" method="post" action="/gio-hang/ma">
                             <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                            <label class="sr-only" for="ma-giam-gia">Mã giảm giá</label>
+                            <label class="sr-only" for="ma-giam-gia"><?= e(t('cart.voucher')) ?></label>
                             <input class="cvou__input" type="text" id="ma-giam-gia" name="code"
                                    maxlength="40" autocomplete="off" spellcheck="false"
-                                   placeholder="Nhập mã giảm giá"
+                                   placeholder="<?= e(t('cart.voucher_ph')) ?>"
                                    value="<?= e($voucherCode) ?>">
-                            <button type="submit" class="cvou__apply">Áp dụng</button>
+                            <button type="submit" class="cvou__apply"><?= e(t('filter.apply')) ?></button>
                         </form>
                     <?php endif; ?>
 
