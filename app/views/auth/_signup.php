@@ -106,7 +106,12 @@ $backTo = static function (string $href): void { ?>
         <?php $backTo('/auth?tab=dang-ky'); ?>
         <p class="asay__title">Xác minh số điện thoại</p>
         <p class="asay__text">
-            Chúng tôi sẽ gửi mã xác minh qua Zalo đến <strong><?= e($phone) ?></strong>
+            <?php if (Otp::bypass()): ?>
+                Zalo OTP chưa được cắm, nên chưa có mã nào tới
+                <strong><?= e($phone) ?></strong>. Bấm tiếp để sang màn nhập mã.
+            <?php else: ?>
+                Chúng tôi sẽ gửi mã xác minh qua Zalo đến <strong><?= e($phone) ?></strong>
+            <?php endif; ?>
         </p>
     </div>
 
@@ -164,9 +169,29 @@ $backTo = static function (string $href): void { ?>
         <?php $backTo('/auth?tab=dang-ky'); ?>
         <p class="asay__title">Nhập mã xác minh</p>
         <p class="asay__text">
-            <?= e($signup['sentVia'] ?? '') ?> <strong><?= e($phone) ?></strong>
+            <?php /* Câu "Mã đã được gửi qua Zalo đến …" chỉ đúng khi mã thật sự
+                     đi được. Chưa cắm ZNS mà vẫn in câu ấy thì khách ngồi chờ
+                     một tin nhắn không tồn tại — xem Otp::bypass(). */ ?>
+            <?php if (Otp::bypass()): ?>
+                Xác minh số <strong><?= e($phone) ?></strong>
+            <?php else: ?>
+                <?= e($signup['sentVia'] ?? '') ?> <strong><?= e($phone) ?></strong>
+            <?php endif; ?>
         </p>
     </div>
+
+    <?php /* DẢI CẢNH BÁO CHẾ ĐỘ THỬ.
+             Không phải chỗ trang trí: nếu không nói ra, khách (và cả người đang
+             kiểm thử) đứng trước sáu ô trống mà không biết phải gõ gì, vì mã
+             thật đang nằm trong error log của máy chủ. Dải này biến mất ngay
+             khi khai đủ cấu hình Zalo — xem Otp::bypass(). */ ?>
+    <?php if (Otp::bypass()): ?>
+        <p class="adev">
+            <strong>Chế độ thử:</strong> Zalo OTP chưa được cắm nên chưa có mã nào
+            gửi đi. Gõ <strong>số bất kỳ</strong> vào các ô dưới đây để sang bước
+            tạo mật khẩu.
+        </p>
+    <?php endif; ?>
 
     <form class="authform" method="post" action="/auth/dang-ky/xac-minh">
         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
@@ -207,8 +232,14 @@ $backTo = static function (string $href): void { ?>
        Khoá ở đây CHỈ để đỡ bấm oan: chốt thật nằm ở máy chủ (xem
        AuthController::signupSend, `if (time() < resend)`), nên gỡ disabled
        bằng devtools cũng không gửi thêm được mã nào.
+
+       CẢ CỤM NÀY ẨN Ở CHẾ ĐỘ THỬ. "Gửi lại mã" khi chưa có kênh nào gửi được
+       thì chỉ sinh một mã mới cho error log rồi bắt khách chờ thêm 60 giây —
+       một cái nút hứa hẹn đúng thứ nó không làm được. Cắm xong Zalo là nó tự
+       hiện lại, xem Otp::bypass().
        ───────────────────────────────────────────────────────────────────── */
     ?>
+    <?php if (!Otp::bypass()): ?>
     <div class="aresend" data-wait="<?= (int) ($signup['wait'] ?? 0) ?>">
         <p class="aresend__ask">Bạn chưa nhận được mã?</p>
 
@@ -227,6 +258,7 @@ $backTo = static function (string $href): void { ?>
             <a class="aresend__link" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
         <?php endif; ?>
     </div>
+    <?php endif; ?>
 
 <?php elseif ($step === 'da-dang-ky'): ?>
 

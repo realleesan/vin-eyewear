@@ -664,12 +664,47 @@ class AuthController extends BaseController
         // có thì auth.js tự nhảy ô — hai đường về cùng một chỗ.
         $code = preg_replace('/\D+/', '', implode('', (array) ($_POST['ma'] ?? [])));
 
-        if (time() > (int) $signup['expires']) {
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * ZALO OA CHƯA CẮM: SỐ NÀO CŨNG QUA.
+         *
+         * Chưa khai đủ token và mã mẫu ZNS thì mã sinh ra chỉ nằm trong error
+         * log — khách không có đường nào biết nó, nên nếu vẫn so mã thì luồng
+         * đăng ký đứng hẳn tại đây và không ai thử được các bước sau. Trong
+         * quãng đó, màn này chỉ còn là một cái cửa hình thức: gõ số bất kỳ là
+         * đi tiếp.
+         *
+         * Hạn 120 giây cũng bỏ theo. Giữ lại thì khách vẫn kẹt, chỉ là kẹt vì
+         * một lý do khó hiểu hơn ("mã đã hết hạn" trong khi chưa từng có mã).
+         *
+         * BỎ QUA CHỨ KHÔNG BỎ HẲN MÀN NÀY: luồng vẫn đi đủ nhập số → gửi mã →
+         * nhập mã, nên ngày cắm xong ZNS thì bypass() trả false và mọi thứ ở
+         * đây chạy đúng như đã viết, không phải dựng lại màn nào.
+         *
+         * Ô rỗng vẫn bị chặn — nút "Tiếp theo" bấm nhầm thì không nên tính là
+         * đã xác minh, và dải cảnh báo trên màn hình đã nói rõ gõ gì cũng được.
+         *
+         * ⚠️ Đang mở thì bất kỳ ai cũng đăng ký được bằng số của người khác.
+         * Điều kiện mở nằm ở Otp::bypass() / config/auth.php.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        if (Otp::bypass()) {
+            if ($code === '') {
+                flash('auth_error', 'Vui lòng nhập mã xác minh.');
+                redirect('/auth?tab=dang-ky&buoc=ma');
+            }
+
+            error_log(sprintf(
+                '[Otp] BỎ QUA xác minh khi đăng ký cho %s — Zalo OTP chưa cắm '
+                . '(xem Otp::bypass()).',
+                $signup['phone']
+            ));
+        } elseif (time() > (int) $signup['expires']) {
             flash('auth_error', 'Mã đã hết hạn. Bấm "Gửi lại" để nhận mã mới.');
             redirect('/auth?tab=dang-ky&buoc=ma');
         }
 
-        if (!Otp::matches((string) $code, (string) $signup['hash'])) {
+        if (!Otp::bypass() && !Otp::matches((string) $code, (string) $signup['hash'])) {
             $signup['tries'] = (int) $signup['tries'] + 1;
 
             // Hết lượt thì huỷ mã luôn, không chỉ báo lỗi: còn mã là còn dò được.

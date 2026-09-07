@@ -44,6 +44,38 @@ return [
 
     /*
      * ─────────────────────────────────────────────────────────────────────────
+     * MÃ XÁC MINH (OTP) — CÔNG TẮC "CHƯA CẮM ZALO THÌ CHO QUA"
+     *
+     * Zalo OA (ZNS) chưa khai xong thì mã sinh ra không tới tay ai: send() chỉ
+     * ghi nó vào error log rồi trả false (xem core/Otp.php). Cả luồng đăng ký
+     * vì thế TẮC ở màn nhập mã — không ai qua được bước tạo mật khẩu.
+     *
+     * 'bypass' mở đúng một lối: ở màn nhập mã, gõ SỐ BẤT KỲ là đi tiếp. Mọi
+     * chặng khác giữ nguyên — vẫn phải nhập số điện thoại hợp lệ, vẫn phải bấm
+     * "Gửi qua Zalo", vẫn đi qua signupVerify(); chỉ phép so mã và hạn 120 giây
+     * là bỏ. Màn nhập mã tự hiện một dải cảnh báo khi công tắc này đang mở —
+     * xem auth/_signup.php.
+     *
+     * BA GIÁ TRỊ:
+     *   (không khai)  — TỰ ĐỘNG: mở khi Zalo chưa gửi được, tự đóng ngay khi
+     *                   khai đủ token + mã mẫu OTP. Đây là mặc định, và là lý
+     *                   do không phải nhớ tắt tay vào ngày cắm ZNS xong.
+     *   true          — ép mở, kể cả khi Zalo đã sẵn sàng (để thử luồng).
+     *   false         — ép đóng: thà tắc còn hơn mở cửa cho người lạ đăng ký
+     *                   bằng số của người khác.
+     *
+     * ⚠️ MỞ LÀ MẤT HẲN Ý NGHĨA CỦA KHÂU XÁC MINH: bất kỳ ai cũng mở được tài
+     * khoản bằng số điện thoại của bất kỳ ai. Chấp nhận được ở máy phát triển
+     * trong lúc chờ duyệt mẫu ZNS; ĐỪNG để nguyên như vậy khi mở cho khách thật
+     * — hoặc cắm xong Zalo, hoặc khai AUTH_OTP_BYPASS=false trong .env.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    'otp' => [
+        'bypass' => env('AUTH_OTP_BYPASS', null),
+    ],
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
      * ĐỒNG Ý ĐIỀU KHOẢN KHI ĐĂNG KÝ
      *
      * 'version' được ghi thẳng vào users.terms_version của từng tài khoản mới.

@@ -23,6 +23,10 @@
  * /quan-tri/quen-mat-khau đọc giá trị đó để biết yêu cầu bằng số điện thoại
  * đang tự chạy hay đang chờ nhân viên gọi điện.
  *
+ * TRONG LÚC CHƯA CẮM XONG, LUỒNG ĐĂNG KÝ VẪN ĐI ĐƯỢC: bypass() cho màn nhập mã
+ * nhận số bất kỳ, và tự đóng lại ngay khi ready() thành true. Xem bypass() bên
+ * dưới, và khối chú thích 'otp' trong config/auth.php.
+ *
  * HAI KÊNH CÒN LẠI CHƯA CÓ ĐƯỜNG RA. SMS cần một gateway (eSMS, SpeedSMS,
  * Twilio…), gọi thoại cần dịch vụ voice OTP — cả hai đều là hợp đồng riêng,
  * chưa ký thì send() ghi log rồi trả false. Cửa hàng chọn Zalo trước chính vì
@@ -141,6 +145,40 @@ class Otp
     public static function ready(string $method = 'zalo'): bool
     {
         return $method === 'zalo' && Zalo::otpReady();
+    }
+
+    /**
+     * CÓ ĐANG CHO QUA MÀN NHẬP MÃ KHÔNG? (chỉ luồng đăng ký)
+     *
+     * Bật thì signupVerify() nhận SỐ BẤT KỲ: không so mã, không tính hạn 120
+     * giây. Đây là tấm ván bắc tạm cho quãng Zalo OA chưa cắm — mã sinh ra vẫn
+     * nằm trong error log, nhưng khách không có cách nào biết nó, nên nếu không
+     * có lối này thì luồng đăng ký đứng hẳn ở màn nhập mã.
+     *
+     * MẶC ĐỊNH TỰ ĐỘNG THEO CẤU HÌNH ZALO, không phải một công tắc bật tay:
+     * chưa gửi được thì mở, khai đủ token và mã mẫu OTP là đóng lại ngay trong
+     * cùng lần sửa ấy. Công tắc bật tay thì sớm muộn cũng có người quên tắt, mà
+     * quên tắt ở đây nghĩa là khâu xác minh số điện thoại chỉ còn là hình thức.
+     * Muốn ép một chiều thì khai AUTH_OTP_BYPASS trong .env — xem config/auth.php.
+     *
+     * KHÔNG áp dụng cho luồng quên mật khẩu: ở đó mã sai chỉ làm khách không tự
+     * đặt lại được mật khẩu, còn yêu cầu vẫn rơi về hàng chờ để nhân viên gọi
+     * lại (xem PasswordResetModel). Đăng ký thì không có hàng chờ nào cả.
+     */
+    public static function bypass(): bool
+    {
+        $flag = config('auth.otp.bypass');
+
+        if (is_bool($flag)) {
+            return $flag;
+        }
+
+        // env() trả về chuỗi cho mọi giá trị không phải true/false/null.
+        if (is_string($flag) && trim($flag) !== '') {
+            return in_array(strtolower(trim($flag)), ['1', 'true', 'on', 'yes'], true);
+        }
+
+        return !self::ready();
     }
 
     public static function generate(): string
