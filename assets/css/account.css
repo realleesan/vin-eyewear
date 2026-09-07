@@ -411,10 +411,10 @@
     flex-direction: column;
     gap: 20px;
     /* BẮT BUỘC. Ô của lưới mặc định là `min-width:auto`, nghĩa là nó KHÔNG co
-       xuống dưới bề rộng nội dung nhỏ nhất của mình. Trong cột này có bảng
-       thông số và thanh tiến trình 5 bước — hai thứ có bề rộng tối thiểu khá
-       lớn — nên thiếu dòng này là cả cột phình to hơn màn hình và trang bị
-       cuộn ngang, kéo theo cả cột điều hướng lẫn chân trang.
+       xuống dưới bề rộng nội dung nhỏ nhất của mình. Trong cột này có thanh
+       tiến trình 5 bước của đơn hàng — thứ có bề rộng tối thiểu khá lớn —
+       nên thiếu dòng này là cả cột phình to hơn màn hình và trang bị cuộn
+       ngang, kéo theo cả cột điều hướng lẫn chân trang.
 
        Ở khổ rộng thì minmax(0,1fr) của .acct__grid đã lo; nhưng mốc gãy 1100px
        đổi sang một cột và rất dễ viết `1fr` cụt như vậy. Đặt luôn ở đây để lỗi
@@ -431,7 +431,7 @@
     padding: 12px 6px 0;
 }
 
-/* Biến thể có nút bên phải (sổ địa chỉ, đo mắt, lịch hẹn).
+/* Biến thể có nút bên phải (sổ địa chỉ, lịch hẹn).
    flex-end: nút căn theo ĐÁY của cụm tiêu đề, không phải giữa — đúng bản
    thiết kế, và cũng là chỗ mắt đang nhìn khi vừa đọc xong dòng mô tả. */
 .acct-head--row {
@@ -446,12 +446,6 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
-}
-
-.acct-head__actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
 }
 
 .acct-head__title {
@@ -565,7 +559,7 @@
 }
 
 /* ============================================================
-   FORM — dùng chung cho hồ sơ, địa chỉ, đổi mật khẩu, đo mắt
+   FORM — dùng chung cho hồ sơ, địa chỉ và đổi mật khẩu
    ============================================================ */
 
 .acct-form {
@@ -602,21 +596,6 @@
     margin: -6px 0 0;
     font-size: 12.5px;
     color: var(--a-meta);
-}
-
-/* Dòng dẫn ngay dưới một tiêu đề phụ trong form: kéo sát lên tiêu đề để hai
-   dòng đọc thành một khối, thay vì cách đều như hai trường riêng biệt. */
-.acct-form__note--lead { margin: -14px 0 2px; }
-
-/* Vạch ngăn hai phần của cùng một form (số độ | kính đang đeo). Chúng vẫn là
-   MỘT form một nút Lưu — xem ghi chú trong auth/account/do-mat.php — nên đây
-   là vạch phân đoạn, không phải ranh giới giữa hai form. */
-.acct-form__rule {
-    width: 100%;
-    height: 1px;
-    margin: 6px 0 0;
-    border: 0;
-    background: var(--a-rule);
 }
 
 .acct-field {
@@ -695,88 +674,6 @@ select.acct-field__input {
 /* --- Ba nút giới tính ---
    Ô radio thật nằm dưới, nhãn phủ lên trên: giữ được bàn phím và trình đọc
    màn hình mà vẫn ra đúng hình dạng viên thuốc của bản thiết kế. */
-
-/* --- BẢNG XỔ CHỌN NHIỀU (.acct-multi) ---
-   Markup: app/views/auth/account/do-mat.php
-
-   Một <details> trông như ô chọn, mà ruột là các ô tick thật. Mở/đóng do chính
-   thẻ <details> lo — không một dòng JavaScript nào, nên tắt JS vẫn xổ được.
-   account.js chỉ thêm hai thứ: cập nhật dòng tóm tắt ngay khi tick, và đóng
-   bảng khi bấm ra ngoài. */
-
-.acct-multi {
-    position: relative;
-}
-
-/* Đóng vai ô chọn: cùng viền, cùng nền, cùng cỡ chữ với .acct-field__input để
-   nó đứng chung hàng với "Loại tròng" và "Loại gọng" mà không lệch một pixel. */
-.acct-multi__btn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    box-sizing: border-box;
-    width: 100%;
-    padding: 11px 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-size: 13.5px;
-    color: var(--ink);
-    cursor: pointer;
-    /* Bỏ tam giác mặc định của <summary>: bản thiết kế dùng chữ V riêng, và
-       hai mũi tên cạnh nhau thì thành một ô chọn hỏng. */
-    list-style: none;
-}
-
-.acct-multi__btn::-webkit-details-marker { display: none; }
-
-.acct-multi__btn:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-}
-
-/* Danh sách đã chọn có thể dài hơn ô — cắt bằng ba chấm chứ không cho nó đẩy
-   mũi tên ra khỏi khung. Người cần đọc đủ thì mở bảng ra. */
-.acct-multi__val {
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.acct-multi__caret {
-    flex: none;
-    width: 12px;
-    height: 12px;
-    color: var(--muted);
-    transition: transform 0.2s ease;
-}
-
-.acct-multi[open] .acct-multi__caret { transform: rotate(180deg); }
-
-/* NỔI LÊN TRÊN, không đẩy form xuống. Đây là điểm khác giữa "bảng xổ" và "khối
-   thu gọn": mở ra mà cả form nhảy xuống 80px thì người dùng mất chỗ đang nhìn,
-   và nút Lưu ở cuối form cũng chạy đi. */
-.acct-multi__panel {
-    position: absolute;
-    z-index: 5;
-    top: calc(100% + 6px);
-    right: 0;
-    left: 0;
-    box-sizing: border-box;
-    /* Danh sách dài thì tự cuộn trong bảng, không kéo bảng dài quá màn hình.
-       overscroll-behavior chặn cú cuộn lan ra trang nền — cùng luật với hộp
-       mua hàng và bảng lọc trên điện thoại. */
-    max-height: 260px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding: 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    box-shadow: var(--elev-3);
-}
 
 .acct-choice {
     display: flex;
@@ -1749,302 +1646,6 @@ select.acct-field__input {
 }
 
 /* ============================================================
-   MỤC THÔNG SỐ ĐO MẮT
-   ============================================================ */
-
-.acct-rxcard {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    padding: 32px 36px;
-}
-
-.acct-rxcard__top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-.acct-rxcard__when {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.acct-rxcard__note {
-    font-size: 12.5px;
-    color: var(--a-meta);
-}
-
-/* --- Thẻ "Kính đang đeo" --- */
-
-.acct-wear {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-    padding: 28px 36px;
-}
-
-.acct-wear__edit {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--brand);
-    text-decoration: none;
-}
-
-.acct-wear__edit:hover { text-decoration: underline; }
-
-/* <dl> hai cột: nhãn trái cố định, giá trị phải giãn. Cột nhãn 132px vừa đủ
-   cho chuỗi dài nhất ("Loại tròng") ở cỡ chữ này mà không xuống dòng. */
-.acct-wear__list {
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.acct-wear__row {
-    display: grid;
-    grid-template-columns: 132px minmax(0, 1fr);
-    gap: 14px;
-    align-items: baseline;
-}
-
-.acct-wear__row dt {
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--eyebrow);
-}
-
-.acct-wear__row dd {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.55;
-    color: var(--ink);
-}
-
-/* Điện thoại: hai cột 132px + phần còn lại bóp giá trị xuống còn vài chữ một
-   dòng. Xếp dọc lại, nhãn thành dòng nhỏ phía trên. */
-@media (max-width: 560px) {
-    .acct-wear { padding: 24px 22px; }
-    .acct-wear__row { grid-template-columns: 1fr; gap: 3px; }
-}
-
-/* Bảng thông số. Bản thiết kế dựng bằng CSS grid 120px + 4 cột đều; ở đây là
-   <table> thật vì đó là dữ liệu bảng và trình đọc màn hình cần biết ô "-2.25"
-   thuộc hàng "Phải (OD)" cột "Cầu (SPH)". Kết quả nhìn giống hệt: cùng khung
-   bo 20px, cùng nền hàng tiêu đề, cùng đường kẻ ngang. */
-.acct-rx {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    border: 1px solid var(--a-rule);
-    border-radius: var(--radius);
-    overflow: hidden;
-    font-size: 14px;
-    text-align: center;
-}
-
-.acct-rx thead th {
-    padding: 14px;
-    background: var(--surface);
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--eyebrow);
-}
-
-.acct-rx thead th:first-child { text-align: left; width: 120px; }
-
-.acct-rx tbody th,
-.acct-rx tbody td {
-    padding: 16px 14px;
-    border-top: 1px solid var(--a-rule);
-    color: var(--a-item);
-}
-
-.acct-rx tbody th {
-    text-align: left;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-/* Bảng ở chế độ nhập — ô nhỏ hơn để nhường chỗ cho ô nhập */
-.acct-rx--edit tbody th,
-.acct-rx--edit tbody td { padding: 10px 12px; }
-
-/* Ô ĐỘ CẦU trong bảng thông số — dấu tách ra hai nút, độ lớn ở ô chọn bên
-   cạnh. Cùng dáng với hộp thoại mua hàng (.bsph/.bsign trong buy-modal.css);
-   lý do đầy đủ ghi trong app/views/auth/account/do-mat.php. */
-.acct-rx__sph {
-    display: flex;
-    align-items: stretch;
-    gap: 6px;
-}
-
-.acct-rxsign {
-    display: flex;
-    flex: none;
-    gap: 4px;
-}
-
-.acct-rxsign__opt {
-    position: relative;
-    display: block;
-}
-
-/* Ô radio thật nằm dưới, nhãn phủ lên — giữ được bàn phím và trình đọc màn
-   hình mà vẫn ra đúng hình dạng nút. Cùng cách với .acct-choice ở mục Hồ sơ. */
-.acct-rxsign__opt input {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    opacity: 0;
-    cursor: pointer;
-}
-
-.acct-rxsign__opt span {
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 100%;
-    min-height: 38px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 1;
-    color: var(--a-item);
-}
-
-.acct-rxsign__opt input:hover + span { border-color: var(--brand); }
-
-.acct-rxsign__opt input:checked + span {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-/* Vòng focus phải vẽ trên cái NHÌN THẤY, vì ô thật trong suốt */
-.acct-rxsign__opt input:focus-visible + span {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-}
-
-/* <select> trong ô độ cầu: bỏ mũi tên gốc cho khỏi chiếm chỗ trong một ô hẹp,
-   và cho nó co được để hai nút dấu luôn đủ chỗ. */
-.acct-rx__sph .acct-rx__input {
-    min-width: 0;
-    padding-inline: 8px;
-    appearance: none;
-    text-align: center;
-}
-
-.acct-rx__input {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-family: var(--font-sans);
-    font-size: 13.5px;
-    text-align: center;
-    color: var(--ink);
-}
-
-.acct-rx__input:focus {
-    outline: none;
-    border-color: #c9a79b;
-    background: var(--surface-focus);
-}
-
-/* --- Ô THỊ LỰC: hai ô số với dấu "/" cố định ở giữa ---
-   Markup: app/views/auth/account/do-mat.php
-
-   Dấu "/" là CHỮ TRONG MARKUP, không phải một ô nhập — nên không có cách nào
-   xoá nó, và đó chính là điều cửa hàng yêu cầu. Hai ô còn lại là
-   <input type="number" max="10">, tức mũi tên tăng giảm là của trình duyệt,
-   không phải thứ phải tự viết bằng JavaScript. */
-
-.acct-rxva {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-/* Hai ô chia đều phần còn lại sau dấu gạch. min-width:0 là bắt buộc: mục flex
-   mặc định không co xuống dưới bề rộng nội dung của nó, nên thiếu dòng này thì
-   cột "Thị lực" phình ra và đẩy cả bảng tràn ngang trên điện thoại. */
-.acct-rxva__num {
-    flex: 1 1 0;
-    min-width: 0;
-    padding-inline: 6px;
-}
-
-/* Mũi tên tăng giảm CỐ Ý ĐỂ HIỆN, khác các ô số khác của bảng này (chúng đặt
-   appearance:none). Cửa hàng yêu cầu bấm mũi tên đổi số được, mà ẩn đi thì chỉ
-   còn bàn phím ↑↓ — không ai đoán ra. Chrome/Safari chỉ hiện mũi tên khi ô
-   được trỏ tới hoặc có tiêu điểm, nên lúc bình thường bảng vẫn gọn. */
-.acct-rxva__num::-webkit-inner-spin-button,
-.acct-rxva__num::-webkit-outer-spin-button {
-    opacity: 1;
-}
-
-.acct-rxva__slash {
-    flex: none;
-    font-size: 14px;
-    color: var(--muted);
-    /* Không cho con trỏ chọn chữ: nó trông như một ký tự gõ được, mà bôi đen
-       rồi gõ đè lên thì không có gì xảy ra — một khoảnh khắc bối rối vô ích. */
-    user-select: none;
-}
-
-/* Câu nhắc giá trị cũ không đúng dạng. Chữ nhỏ và nằm dưới ô, không phải một
-   dải cảnh báo: đây là việc cần làm khi tiện tay, không phải sự cố. */
-.acct-rxva__cu {
-    margin: 6px 0 0;
-    font-size: 12px;
-    line-height: 1.45;
-    color: var(--muted);
-}
-
-/* --- Thẻ tròn thông tin thêm (PD, khuyến nghị, cách giao hàng…) --- */
-
-.acct-chips {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-.acct-chip {
-    padding: 9px 18px;
-    border-radius: var(--radius-sm);
-    background: var(--brand-subtle);
-    color: #6e4a42;
-    font-size: 13px;
-}
-
-/* ============================================================
-   MỤC ƯU ĐÃI
-   ============================================================ */
-
-
-
-
-
-
-
-
-/* ============================================================
    TRẠNG THÁI RỖNG — dùng chung cho mọi mục
    ============================================================ */
 
@@ -2124,7 +1725,6 @@ select.acct-field__input {
     .acct-form__row { grid-template-columns: 1fr; }
 
     .acct-order   { --o-pad: 20px; }
-    .acct-rxcard  { padding: 26px 22px; }
     .acct-addr    { padding: 22px 20px; gap: 20px; }
 
     .acct-head__title { font-size: 26px; }
@@ -2144,10 +1744,6 @@ select.acct-field__input {
         padding-left: 0;
         border-left: 0;
     }
-
-    /* Bảng thông số không co được nữa — cho cuộn ngang trong chính nó, không
-       để nó kéo cả trang rộng ra. */
-    .acct-rx { display: block; overflow-x: auto; white-space: nowrap; }
 }
 
 @media (max-width: 560px) {

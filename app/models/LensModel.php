@@ -1184,8 +1184,9 @@ class LensModel
      *
      * Bước đó đã bỏ (xem điểm 3 ở đầu _layout/buy-modal.php): số độ của lần đo
      * trước không còn được mang sang lượt mua mới, nên không còn nơi nào cần
-     * chuỗi ấy. Hồ sơ vẫn hiện đầy đủ ở /tai-khoan?muc=do-mat, nhưng trang đó
-     * dựng bảng năm cột từ chính các cột trong DB chứ không đọc chuỗi.
+     * chuỗi ấy. Từ 07/09/2026 thì càng không: mục "Thông số đo mắt" ở trang
+     * tài khoản cũng đã gỡ, hồ sơ nay chỉ xem được ở /quan-tri/khach-hang —
+     * mà trang đó dựng bảng từ chính các cột trong DB chứ không đọc chuỗi.
      */
 
     /**

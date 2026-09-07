@@ -28,8 +28,9 @@
  * 3. KHÔNG CÒN BƯỚC "DÙNG HỒ SƠ KHÚC XẠ ĐÃ LƯU".
  *    Trước đây khách có hồ sơ thì bấm một nút là xong. Cửa hàng yêu cầu bỏ:
  *    độ mắt thay đổi theo thời gian, nên số của lần đo trước KHÔNG được mặc
- *    định trở thành số của lần mua này. Hồ sơ vẫn còn nguyên trong trang tài
- *    khoản (/tai-khoan?muc=do-mat) để tra cứu; ở đây thì mọi lượt mua đều đi
+ *    định trở thành số của lần mua này. Hồ sơ vẫn còn nguyên trong
+ *    customer_prescriptions — từ 07/09/2026 thì tra ở /quan-tri/khach-hang,
+ *    vì mục "Thông số đo mắt" phía khách đã gỡ. Ở đây thì mọi lượt mua đều đi
  *    qua form nhập, và form ấy để trống. Thông tin hành chính (họ tên, số điện
  *    thoại, địa chỉ) thì ngược lại — vẫn tự điền đủ ở trang thanh toán.
  * ─────────────────────────────────────────────────────────────────────────────
