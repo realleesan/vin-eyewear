@@ -6,21 +6,21 @@
    hồng --brand-subtle.
 
    MÀU LẤY TỪ BẢNG MÀU CŨ CỦA SITE, không lấy mã màu trong bản thiết kế.
-   Bản thiết kế vẽ bằng một tông đỏ hơi khác (#7d2433 / #faf6f5 / #f3e6e3);
+   Bản thiết kế vẽ bằng một tông đỏ hơi khác (var(--accent-strong) / var(--surface-sunken) / var(--brand-subtle));
    chúng ánh xạ 1-1 sang token có sẵn nên chỉ cần đổi tên, không đổi bố cục:
 
-       #7d2433 → var(--brand)          #f3e6e3 / #f0dcdd → var(--brand-subtle)
-       #641c29 → var(--brand-strong)   #26262a           → var(--ink)
-       #faf6f5 → var(--surface)        #5a5a5e           → var(--muted)
-       #e9dcda → var(--line)           #9b8082           → var(--eyebrow)
-       #c4aeb0 → var(--h-meta)         #e2cfcd           → var(--h-blush-line)
+       var(--accent-strong) → var(--brand)          var(--brand-subtle) / var(--accent-subtle) → var(--brand-subtle)
+       var(--accent-strong) → var(--brand-strong)   var(--ink)           → var(--ink)
+       var(--surface-sunken) → var(--surface)        var(--muted)           → var(--muted)
+       var(--accent-subtle) → var(--line)           var(--h-meta)           → var(--eyebrow)
+       var(--h-line) → var(--h-meta)         var(--accent-subtle)           → var(--h-blush-line)
 
    RIÊNG lưới giá trị cốt lõi (khối 02) KHÔNG theo bản vẽ: bản vẽ tô các ô
-   bằng chính --brand, ở đây dùng --h-dark (#3b1219) — sắc đỏ đô đậm mà site
+   bằng chính --brand, ở đây dùng --h-dark (var(--h-dark)) — sắc đỏ đô đậm mà site
    dành cho MẢNG NỀN TỐI (ba dải tối trang chủ), còn
    --brand là màu của nút và chi tiết nhấn. Kéo theo cả bộ chữ trên nền tối
    đi cùng nó (--h-on-dark / --h-on-dark-muted / --h-on-dark-num), vì
-   --on-brand-* được chỉnh cho nền #8a2432 sáng hơn hẳn.
+   --on-brand-* được chỉnh cho nền var(--accent) sáng hơn hẳn.
 
    Chữ dùng --font-serif (Lora) chứ không phải Playfair Display của bản vẽ:
    toàn site đã nạp đúng một họ serif, thêm họ thứ hai chỉ cho một trang là
@@ -511,4 +511,30 @@
     }
 
     .about-start__actions > * { width: 100%; }
+}
+
+
+/* ============================================================================
+   NÉT CHỮ FURNISH — khối chốt cuối file
+
+   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
+   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
+   điểm khác rõ nhất giữa hai bản.
+
+   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
+   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
+   ============================================================================ */
+.about-h2, .about-start__h2, .about-exam__h2, .about-vlead__title {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.about-vcard__title, .about-exam__title {
+    font-weight: 400;
+}
+
+.about-eyebrow {
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }

@@ -1297,10 +1297,36 @@
 .cdet__face-foot {
     margin: 18px 0 0;
     padding-top: 14px;
-    border-top: 1px solid var(--line, #e7ddd2);
+    border-top: 1px solid var(--line, var(--line));
     font-size: 13.5px;
     line-height: 1.7;
-    color: var(--muted, #7a6d5f);
+    color: var(--muted, var(--muted));
 }
 
 .cdet__face-foot a { color: var(--brand); text-underline-offset: 3px; }
+
+
+/* ============================================================================
+   NÉT CHỮ FURNISH — khối chốt cuối file
+
+   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
+   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
+   điểm khác rõ nhất giữa hai bản.
+
+   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
+   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
+   ============================================================================ */
+.cdet__h2, .cdet__name, .cdet__end-title {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.cdet__h3, .cdet__cell-title {
+    font-weight: 400;
+}
+
+.cdet__eyebrow, .cdet__ways-label {
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}

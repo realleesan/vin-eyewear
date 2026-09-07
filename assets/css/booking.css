@@ -26,15 +26,15 @@
    ============================================================ */
 
 .bk {
-    --bk-line:  #e5d8cc;
-    --bk-soft:  #9a877f;
-    --bk-warm:  #6e4a42;
+    --bk-line:  var(--line);
+    --bk-soft:  var(--muted);
+    --bk-warm:  var(--ink);
     --bk-ok:    #4d7a3f;
     /* Ba sắc bản thiết kế dùng mà layout.css chưa có token: chữ trên viên
        chưa chọn, chữ mờ nhất, và nền nút chính khi rê chuột. */
-    --bk-ink2:  #4a3b38;
-    --bk-faint: #b0a094;
-    --bk-hi:    #6e1b28;
+    --bk-ink2:  var(--ink);
+    --bk-faint: var(--h-meta);
+    --bk-hi:    var(--accent-strong);
 
     max-width: var(--container, 1600px);
     margin: 0 auto;
@@ -144,7 +144,7 @@
 
 .bkstore:has(:checked) {
     border-color: var(--brand);
-    background: #faf3ee;
+    background: var(--surface-sunken);
 }
 
 .bkstore:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
@@ -157,7 +157,7 @@
     width: 18px;
     height: 18px;
     margin: 0;
-    border: 1.5px solid #d8c7ba;
+    border: 1.5px solid var(--line-strong);
     border-radius: var(--radius-round);
     background: var(--surface-raised);
     cursor: pointer;
@@ -241,7 +241,7 @@
 
 .bkday:has(:checked) {
     border-color: var(--brand);
-    background: #faf3ee;
+    background: var(--surface-sunken);
     color: var(--brand);
 }
 
@@ -321,7 +321,7 @@
 .bkfield__input:focus,
 .bkfield__area:focus {
     outline: none;
-    border-color: #c9a79b;
+    border-color: var(--h-line);
 }
 
 /* ============================================================
@@ -450,14 +450,14 @@
 
 .bkflow__rule {
     height: 1px;
-    background: #e3cfc4;
+    background: var(--line);
 }
 
 .bkflow__note {
     margin: 0;
     font-size: 12.5px;
     line-height: 1.6;
-    color: #8d7268;
+    color: var(--muted);
 }
 
 .bkflow__note strong { color: var(--bk-warm); }
@@ -481,8 +481,8 @@
     margin: 0;
     padding: 14px 20px;
     border-radius: var(--radius);
-    background: #fbeceb;
-    color: #9a3128;
+    background: var(--accent-subtle);
+    color: var(--danger);
     font-size: 13.5px;
 }
 
@@ -616,4 +616,30 @@
 
     .bkside__card,
     .bkflow { padding: 24px 20px; }
+}
+
+
+/* ============================================================================
+   NÉT CHỮ FURNISH — khối chốt cuối file
+
+   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
+   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
+   điểm khác rõ nhất giữa hai bản.
+
+   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
+   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
+   ============================================================================ */
+.bkcard__title, .bkside__title, .bkflow__title {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.bkempty__title {
+    font-weight: 400;
+}
+
+.bkfield__label {
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }

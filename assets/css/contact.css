@@ -22,21 +22,21 @@
 .cstores,
 .cbottom {
     /* Nền chờ phía sau bản đồ, thấy được lúc iframe chưa tải xong */
-    --k-shell:  #f5efe7;
+    --k-shell:  var(--surface-sunken);
 
     /* Chữ trên nền trắng của thẻ cơ sở — đậm hơn --muted một nấc */
-    --k-item:   #4a3b38;
+    --k-item:   var(--ink);
 
     /* Chữ phụ trên nền hồng của cột kênh liên hệ. Nhạt hơn --muted nhưng vẫn
-       đạt 4.6:1 trên #f2e4dc — chữ 13.5px thì phải đọc được. */
-    --k-onblush: #8d7268;
+       đạt 4.6:1 trên var(--brand-subtle) — chữ 13.5px thì phải đọc được. */
+    --k-onblush: var(--muted);
 
-    --k-note:   #9a877f;
-    --k-meta:   #b0a094;
+    --k-note:   var(--muted);
+    --k-meta:   var(--h-meta);
 
     /* Viền thẻ chưa chọn và chấm tròn rỗng */
-    --k-rule:   #eee0d4;
-    --k-box:    #d8c7ba;
+    --k-rule:   var(--h-card-line);
+    --k-box:    var(--line-strong);
 
     --k-shadow: 0 2px 12px rgba(90, 40, 40, 0.06);
 
@@ -197,7 +197,7 @@
 
 .cstore__go {
     padding: 6px 16px;
-    border: 1.5px solid #e0cfc2;
+    border: 1.5px solid var(--line);
     border-radius: var(--radius-sm);
     font-size: 12.5px;
     font-weight: 500;
@@ -429,12 +429,12 @@
 
 .cfield__input::placeholder { color: var(--k-meta); }
 
-/* Bản thiết kế đổi màu viền khi focus (`border-color:#c9a79b`). Giữ nguyên ý
+/* Bản thiết kế đổi màu viền khi focus (`border-color:var(--h-line)`). Giữ nguyên ý
    đó nhưng THÊM outline: viền hồng nhạt trên nền hồng nhạt chỉ đạt ~1.4:1,
    dưới xa ngưỡng 3:1 mà WCAG 2.4.11 đòi cho vòng focus — người dùng bàn phím
    sẽ không thấy mình đang ở ô nào. */
 .cfield__input:focus {
-    border-color: #c9a79b;
+    border-color: var(--h-line);
     outline: 2px solid var(--brand);
     outline-offset: 1px;
 }
@@ -589,4 +589,30 @@
     }
 
     .cquick { padding: 28px 22px; }
+}
+
+
+/* ============================================================================
+   NÉT CHỮ FURNISH — khối chốt cuối file
+
+   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
+   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
+   điểm khác rõ nhất giữa hai bản.
+
+   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
+   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
+   ============================================================================ */
+.cform__title, .cquick__title {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.cstore__name, .cmap__name {
+    font-weight: 400;
+}
+
+.cfield__label, .cchan__label {
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }

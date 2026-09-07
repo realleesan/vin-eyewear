@@ -156,3 +156,29 @@
     .coll__name    { font-size: 26px; }
     .coll__tagline { font-size: 15.5px; }
 }
+
+
+/* ============================================================================
+   NÉT CHỮ FURNISH — khối chốt cuối file
+
+   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
+   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
+   điểm khác rõ nhất giữa hai bản.
+
+   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
+   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
+   ============================================================================ */
+.coll__name {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.coll__tagline {
+    font-weight: 400;
+}
+
+.coll__when {
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}

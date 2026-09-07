@@ -13,19 +13,19 @@
    ─────────────────────────────────────────────────────────────────────────────
    MÀU VÀ ĐỘ BO LẤY CỦA TRANG CHỦ, KHÔNG LẤY CỦA BẢN THIẾT KẾ
 
-   Bản thiết kế đi kèm một bảng màu riêng (nền #FAF7F1, nâu đỏ #5E1F24, viền
-   #E7DFD3, chữ nhấn vàng #D9A05B, chữ serif Cormorant Garamond) và bo góc 0 —
+   Bản thiết kế đi kèm một bảng màu riêng (nền var(--surface-sunken), nâu đỏ var(--accent-strong), viền
+   var(--line), chữ nhấn vàng #D9A05B, chữ serif Cormorant Garamond) và bo góc 0 —
    mọi thẻ đều vuông cạnh. Site này đã có ngôn ngữ hình khối của riêng nó, dựng
    từ trang chủ, nên trang này lấy HÌNH DÁNG của bản thiết kế nhưng MÀU và ĐỘ BO
    của trang chủ:
 
-     nền           #FAF7F1  ->  var(--surface)
+     nền           var(--surface-sunken)  ->  var(--surface)
      thẻ           #fff     ->  var(--surface-raised)
-     viền thẻ      #E7DFD3  ->  var(--h-card-line)   1px, y như thẻ trang chủ
-     kẻ trong thẻ  #F1EAE0  ->  var(--h-rule)
-     nâu đỏ        #5E1F24  ->  var(--brand)
-     chữ thân bài  #5C544B  ->  var(--muted)
-     nhãn nhỏ      #8A8074  ->  var(--eyebrow)  (tông hồng ấm của .eyebrow)
+     viền thẻ      var(--line)  ->  var(--h-card-line)   1px, y như thẻ trang chủ
+     kẻ trong thẻ  var(--surface-sunken)  ->  var(--h-rule)
+     nâu đỏ        var(--accent-strong)  ->  var(--brand)
+     chữ thân bài  var(--muted)  ->  var(--muted)
+     nhãn nhỏ      var(--h-meta)  ->  var(--eyebrow)  (tông hồng ấm của .eyebrow)
      vàng          #D9A05B  ->  var(--eyebrow)  — site không có sắc vàng nào
      bo góc        0        ->  var(--h-radius) / var(--radius-sm)
 
@@ -513,7 +513,7 @@
 .ocomp__itemrx {
     margin: 1px 0 0;
     font-size: 12px;
-    color: #9a877f;
+    color: var(--muted);
 }
 
 /* ============================================================
@@ -1035,4 +1035,30 @@
 
     /* Thẻ biên nhận không được cắt làm đôi qua hai trang giấy. */
     .opaid__receipt { break-inside: avoid; }
+}
+
+
+/* ============================================================================
+   NÉT CHỮ FURNISH — khối chốt cuối file
+
+   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
+   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
+   điểm khác rõ nhất giữa hai bản.
+
+   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
+   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
+   ============================================================================ */
+.ocomp__title, .opaid__title {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.ocomp__ordertitle, .opaid__cardtitle {
+    font-weight: 400;
+}
+
+.ocomp__label, .ocomp__codelabel {
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }

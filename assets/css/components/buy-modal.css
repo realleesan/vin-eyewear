@@ -139,7 +139,7 @@ body:has(.bmodal) { overflow: hidden; }
     flex-shrink: 0;
 }
 
-.bmodal__back { color: #4a3b38; }
+.bmodal__back { color: var(--ink); }
 .bmodal__close { color: var(--h-note); }
 
 .bmodal__back:hover {
@@ -290,7 +290,7 @@ body:has(.bmodal) { overflow: hidden; }
    hỏi đã có câu trả lời", nên phải trông giống nhau. */
 .bopt.is-on {
     border-color: var(--brand);
-    background: #f7e8e2;
+    background: var(--brand-subtle);
 }
 
 .bopt:focus-visible {
@@ -308,7 +308,7 @@ body:has(.bmodal) { overflow: hidden; }
     height: 44px;
     border-radius: var(--radius-round);
     background: var(--h-shell);
-    color: #4a3b38;
+    color: var(--ink);
     flex-shrink: 0;
 }
 
@@ -316,7 +316,7 @@ body:has(.bmodal) { overflow: hidden; }
    thứ cửa hàng muốn khách chọn — nhưng chỉ nhấn bằng MÀU BIỂU TƯỢNG, không
    bằng viền đậm hay nền đặc. Lựa chọn kia phải vẫn dễ thấy như nhau. */
 .bopt__ico--brand {
-    background: #f7e8e2;
+    background: var(--brand-subtle);
     color: var(--brand);
 }
 
@@ -477,7 +477,7 @@ body:has(.bmodal) { overflow: hidden; }
 
 .brxtable__eyename {
     font-size: 12px;
-    color: #5c4f45;
+    color: var(--muted);
 }
 
 .brxtable__cell { min-width: 0; }
@@ -530,7 +530,7 @@ body:has(.bmodal) { overflow: hidden; }
     padding: 2px 0;
     font-size: 13px;
     font-weight: 600;
-    color: #5c4f45;
+    color: var(--muted);
     cursor: pointer;
     list-style: none;
 }
@@ -651,7 +651,7 @@ body:has(.bmodal) { overflow: hidden; }
     background: var(--h-shell);
     font-family: var(--font-mono, monospace);
     font-size: 12.5px;
-    color: #6f5f5a;
+    color: var(--muted);
 }
 
 .blens {
@@ -681,7 +681,7 @@ body:has(.bmodal) { overflow: hidden; }
 /* Gói đã chọn ở lần trước, khi khách lùi lại bước này để đổi ý */
 .blens__item.is-on {
     border-color: var(--brand);
-    background: #f7e8e2;
+    background: var(--brand-subtle);
 }
 
 .blens__item:focus-visible {
@@ -791,7 +791,7 @@ body:has(.bmodal) { overflow: hidden; }
     border-radius: var(--radius-round);
     background: var(--surface-raised);
     font-size: 16px;
-    color: #4a3b38;
+    color: var(--ink);
     cursor: pointer;
 }
 
@@ -924,11 +924,11 @@ body:has(.bmodal) { overflow: hidden; }
 .blens__empty {
     margin: 4px 0 0;
     padding: 14px 16px;
-    border: 1px dashed var(--line-strong, #d8cfc4);
+    border: 1px dashed var(--line-strong, var(--line-strong));
     border-radius: 10px;
     font-size: 13.5px;
     line-height: 1.65;
-    color: var(--muted, #7a6d5f);
+    color: var(--muted, var(--muted));
     text-align: center;
 }
 
@@ -993,7 +993,7 @@ body:has(.bmodal) { overflow: hidden; }
 /* Hồ sơ đang dùng, khi khách bấm Lùi về bước này */
 .bhoso__item.is-on {
     border-color: var(--brand);
-    background: #f7e8e2;
+    background: var(--brand-subtle);
 }
 
 .bhoso__item:focus-visible {
@@ -1015,12 +1015,12 @@ body:has(.bmodal) { overflow: hidden; }
     min-width: 0;
     font-size: 13px;
     font-variant-numeric: tabular-nums;
-    color: #5c4f45;
+    color: var(--muted);
 }
 
 .bhoso__nguon {
     font-size: 11.5px;
-    color: var(--muted, #7a6d5f);
+    color: var(--muted, var(--muted));
     white-space: nowrap;
 }
 
@@ -1041,7 +1041,7 @@ body:has(.bmodal) { overflow: hidden; }
     margin: 10px 0 0;
     font-size: 12.5px;
     line-height: 1.6;
-    color: var(--muted, #7a6d5f);
+    color: var(--muted, var(--muted));
 }
 
 /* Ô tick "lưu số này vào sổ" — UC-03 luồng A1.
@@ -1055,7 +1055,7 @@ body:has(.bmodal) { overflow: hidden; }
     gap: 9px;
     margin: 14px 0 10px;
     font-size: 13.5px;
-    color: #5c4f45;
+    color: var(--muted);
     cursor: pointer;
 }
 

@@ -47,8 +47,8 @@
 
 .authwrap {
     /* Chữ phụ tông ấm — cùng bộ với category.css và account.css */
-    --u-note: #9a877f;
-    --u-meta: #b0a094;
+    --u-note: var(--muted);
+    --u-meta: var(--h-meta);
 
     flex: 1;
     display: flex;
@@ -206,7 +206,7 @@
 
 .authfield__input:focus {
     outline: none;
-    border-color: #c9a79b;
+    border-color: var(--h-line);
     background: var(--surface-focus);
 }
 
@@ -298,7 +298,7 @@
     box-sizing: border-box;
     width: 20px;
     height: 20px;
-    border: 1.5px solid #d8c7ba;
+    border: 1.5px solid var(--line-strong);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
     color: transparent;
@@ -425,7 +425,7 @@
 .author__line {
     flex: 1;
     height: 1px;
-    background: #eee0d4;
+    background: var(--h-card-line);
 }
 
 .author__word {
@@ -470,7 +470,7 @@
 }
 
 .authflash--ok  { background: #eef3e9; color: #3d6633; }
-.authflash--err { background: #f6e7e7; color: #8f3535; }
+.authflash--err { background: var(--accent-subtle); color: var(--danger); }
 
 /* ============================================================
    KHỐI "ĐỨNG NHẦM CỔNG" — tài khoản nội bộ gõ vào form khách
@@ -483,7 +483,7 @@
    kiểm lại mật khẩu — việc duy nhất chắc chắn vô ích. Nên khối này lấy tông
    thương hiệu và có sức nặng của một chỉ dẫn, không phải một lời trách.
 
-   Màu lấy từ token của layout.css. Hai dòng #eef3e9/#f6e7e7 ngay trên là màu
+   Màu lấy từ token của layout.css. Hai dòng #eef3e9/var(--accent-subtle) ngay trên là màu
    gõ thẳng có từ trước; không nhân thêm nếp đó ra khối mới. */
 .authgate {
     display: flex;
@@ -879,7 +879,7 @@
    gợi ý — nó là một tình trạng tạm thời của hệ thống. Ba khối cùng chỗ đứng
    trên trang mà khác nghĩa thì phải khác màu, nếu không cả ba đọc như nhau.
 
-   Màu gõ thẳng, cùng nếp với #eef3e9/#f6e7e7 ở .authflash: bảng token của
+   Màu gõ thẳng, cùng nếp với #eef3e9/var(--accent-subtle) ở .authflash: bảng token của
    layout.css chưa có tông cảnh báo, mà thêm token cho một khối sẽ biến mất
    vào ngày cắm xong ZNS thì không đáng. */
 .adev {
@@ -1091,4 +1091,30 @@
     font-size: 14.5px;
     line-height: 1.7;
     color: var(--muted);
+}
+
+
+/* ============================================================================
+   NÉT CHỮ FURNISH — khối chốt cuối file
+
+   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
+   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
+   điểm khác rõ nhất giữa hai bản.
+
+   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
+   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
+   ============================================================================ */
+.authhead__title, .adone__title, .authgate__title, .asay__title {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.authcard__quote, .amethod__name {
+    font-weight: 400;
+}
+
+.astage__label {
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }

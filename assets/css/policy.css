@@ -28,20 +28,20 @@
     /* Nhãn chữ nhỏ IN HOA của bản thiết kế là XÁM ẤM, không phải --eyebrow
        hồng của trang chủ — ở đây chúng đứng cạnh chữ đỏ của mục lục đang
        chọn, để hồng nữa thì hai sắc đỏ đá nhau. 4.5:1 trên nền pearl. */
-    --p-label: #8a7e6e;
+    --p-label: var(--muted);
 
     /* Hai sắc chữ của cặp hỏi–đáp: câu hỏi đậm hơn thân bài một nấc, câu
        trả lời nhạt hơn --ink nhưng vẫn đậm hơn --muted (đây là chữ đọc dài,
        không phải chữ phụ). */
-    --p-q: #3a2c28;
-    --p-a: #55493f;
+    --p-q: var(--ink);
+    --p-a: var(--muted);
 
     /* Thanh dọc bên trái mục lục + đường kẻ trên đầu mỗi danh sách hỏi–đáp */
-    --p-rail: #e0d6c6;
+    --p-rail: var(--line);
 
     /* Nền mục lục đang chọn và nền khối "không tìm thấy" — sáng hơn
        --surface-sunken, chỉ đủ để tách khỏi nền trang */
-    --p-tint: #fbf7f1;
+    --p-tint: var(--surface-sunken);
 }
 
 .policy__inner {
@@ -271,7 +271,7 @@
     gap: 10px;
     padding: 0 16px;
     /* Viền ô nhập -> --line-strong (3.06:1), không dùng --line trang trí:
-       bản thiết kế để #dcd2c2 (1.9:1), dưới ngưỡng WCAG 1.4.11 cho thành
+       bản thiết kế để var(--line-strong) (1.9:1), dưới ngưỡng WCAG 1.4.11 cho thành
        phần giao diện thao tác được. */
     border: 1px solid var(--line-strong);
     border-radius: var(--radius-sm);
@@ -484,4 +484,30 @@
     .policy-group { padding-top: 28px; }
 
     .policy-empty { padding: 28px 20px; }
+}
+
+
+/* ============================================================================
+   NÉT CHỮ FURNISH — khối chốt cuối file
+
+   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
+   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
+   điểm khác rõ nhất giữa hai bản.
+
+   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
+   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
+   ============================================================================ */
+.policy-group__title, .policy-hot__title {
+    font-weight: 400;
+    letter-spacing: -0.02em;
+}
+
+.policy-card__title, .policy-qa__q {
+    font-weight: 400;
+}
+
+.policy-toc__label, .policy-ch__label {
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
 }
