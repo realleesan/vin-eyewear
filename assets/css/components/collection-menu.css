@@ -1,119 +1,61 @@
-/* ============================================================
-   collection-menu.css — phần RIÊNG của bảng xổ "Bộ sưu tập".
+/* ============================================================================
+   components/collection-menu.css — BẢNG XỔ "BỘ SƯU TẬP"
 
-   Đi kèm app/views/_layout/collection-menu.php.
+   PHẢI NẠP SAU components/mega-menu.css: bảng này dùng lại nguyên bộ lớp
+   .mega__* / .mega-feature của file đó và chỉ đè vài thuộc tính.
 
-   ─────────────────────────────────────────────────────────────
-   FILE NÀY NGẮN LÀ ĐÚNG, KHÔNG PHẢI LÀM DỞ
+   Khác bảng "Sản phẩm" ở đúng hai điểm:
+     · nó là một HÀNG THẺ ẢNH, không phải các cột chữ — mỗi bộ sưu tập một thẻ
+     · ô cuối là thẻ "Tất cả bộ sưu tập", cố ý KHÔNG có ảnh (xem chú thích
+       trong _layout/collection-menu.php)
+   ============================================================================ */
 
-   Bảng "Bộ sưu tập" phải giống y hệt bảng "Sản phẩm", nên nó DÙNG LẠI nguyên
-   bộ lớp .mega__* của components/mega-menu.css: viên thuốc, mũi nhọn hình
-   thoi, vùng bắt chuột phủ khoảng trống, bảng trải từ --page-edge bên này
-   sang --page-edge bên kia, lưới `repeat(--mega-cols, 1fr) 1.15fr`, và cả
-   .mega-feature cho từng thẻ. Chép các số đo ấy sang một bộ lớp thứ hai là
-   đặt hẹn giờ cho ngày ai đó chỉnh padding của một bên rồi hai bảng lệch nhau
-   mà không ai thấy.
-
-   Ở đây chỉ còn đúng thứ mega KHÔNG có: thẻ "Tất cả bộ sưu tập" ở ô cuối.
-
-   .mega--bst là móc để nhắm riêng bảng này. Nay có đúng một luật dùng tới nó:
-   bề rộng trần của bảng — xem mục ngay dưới đây.
-
-   master.php nạp file này ngay SAU mega-menu.css: .mega-feature--all chỉ đè
-   vài thuộc tính của .mega-feature, nên phải đến sau mới thắng.
-   ============================================================ */
-
-/* ============================================================
-   BẢNG RỘNG VỪA ĐỦ RUỘT, KHÔNG TRẢI HẾT BỀ NGANG TRANG
-
-   Mega "Sản phẩm" trải từ --page-edge bên này sang --page-edge bên kia vì nó
-   có ba cột chữ mười hai liên kết — đủ ruột để lấp chỗ ấy. Bảng này chỉ có
-   BỐN ô (ba bộ sưu tập cố định + thẻ "Tất cả", xem collection-menu.php), nên
-   cùng khung đó nghĩa là bốn thẻ bị kéo dãn: trên màn hình 1920px mỗi thẻ
-   phình tới ~355px, ảnh 140px nằm trên một khối rộng gần gấp ba chiều cao nó,
-   nhìn như bảng bị hỏng bố cục chứ không như một hàng thẻ.
-
-   Nên bảng này có TRẦN bề rộng, tính cho đúng bốn ô ở khổ thẻ mà bản thiết kế
-   nhắm tới (~220px — cùng con số mà collection-menu.php lấy để cắt câu giới
-   thiệu còn 30 ký tự):
-
-       3 thẻ x 1fr + thẻ "Tất cả" x 1.15fr  =  4.15 x 220px
-       + 3 khe 40px (gap của .mega__grid)
-       + 2 lần đệm ngang 44px của .mega__panel
-
-   left:auto để bảng neo theo mép PHẢI. Đặt cả left lẫn right rồi thêm
-   max-width là ràng buộc thừa: trình duyệt bỏ `right` và bảng dạt sang trái,
-   rời hẳn khỏi cái nút vừa mở nó. Neo phải giữ đúng nếp cũ — mép bảng thẳng
-   hàng với cụm icon bên phải header — và viên thuốc "Bộ sưu tập" (mục thứ năm
-   trong sáu) luôn nằm trong lòng bảng, nên mũi nhọn vẫn cắm đúng chỗ.
-
-   width PHẢI KHAI RÕ, đây là chỗ dễ hụt nhất. Bỏ left mà không khai width thì
-   bảng rơi vào lối "co theo ruột": bề rộng thành khoảng trống còn lại tính từ
-   mép phải, tức mép trái bảng chạy tuốt ra sát cạnh màn hình và mất luôn lề
-   --page-edge bên đó. Khai width bằng đúng công thức khung cũ (trọn bề ngang
-   trừ hai lề) thì trần bên dưới chỉ còn việc cắt bớt phần thừa.
-
-   Dưới ~1310px trần không còn tác dụng: khung trang đã hẹp hơn nó, nên bảng
-   chạy y như trước — cùng bề rộng, cùng hai lề, các cột 1fr tự co. Vì thế
-   @media (max-width:1279px) của mega-menu.css (đệm 28px, gap 26px) không cần
-   bản riêng ở đây: trần đâu có bám vào mấy số đó nữa.
-   ============================================================ */
-
+/* Bảng hẹp hơn bảng "Sản phẩm": nó chỉ có một hàng thẻ, kéo hết bề ngang cột
+   nội dung thì mỗi thẻ rộng ra vô lý và ảnh bị kéo giãn. */
 .mega--bst .mega__panel {
     left: auto;
     right: var(--page-edge);
-    /* 100% = bề ngang .site-header, tức bề ngang màn hình — chính là khung mà
-       cặp left/right của .mega__panel vẽ ra. Giữ nguyên nó làm mức trên. */
-    width: calc(100% - var(--page-edge) * 2);
-    max-width: calc(4.15 * 220px + 3 * 40px + 2 * 44px);   /* ~1121px */
+    width: min(880px, calc(100% - 2 * var(--page-edge)));
+    padding: var(--space-6);
 }
 
-/* ============================================================
-   THẺ "TẤT CẢ BỘ SƯU TẬP" — Ô CUỐI CỦA LƯỚI
+/* Các thẻ chia đều, thẻ "Tất cả" ở ô cuối cùng cũng rộng bằng chúng — khác
+   bảng "Sản phẩm", nơi cột cuối rộng hơn vì nó là thẻ ảnh đứng cạnh các cột
+   chữ hẹp. */
+.mega--bst .mega__grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-5);
+}
 
-   KHÔNG CÓ ẢNH, và đó là chủ ý: ảnh duy nhất có thể lấy cho nó là ảnh của một
-   trong mấy bộ đang đứng ngay cạnh, mà cùng một tấm hiện hai lần trên một
-   hàng thì trông như lỗi kết xuất. Lý do đầy đủ ghi ở collection-menu.php.
-
-   Nền brand đặc thay cho tấm ảnh: ô vẫn đủ nặng để không bị hẫng cạnh mấy thẻ
-   có ảnh, và nổi hẳn lên đúng như vai trò lối-ra-trang-đầy-đủ của nó.
-   ============================================================ */
-
+/* ── Thẻ "Tất cả bộ sưu tập" ─────────────────────────────────────────────── */
 .mega-feature--all {
-    /* Không có .mega-feature__media nên phần thân tự căn giữa chiều dọc, để
-       thẻ này cao bằng mấy thẻ kia mà chữ không dồn lên đỉnh. */
-    justify-content: center;
-    background: var(--brand);
+    display: flex;
+    align-items: flex-end;
+    min-height: 100%;
+    background: var(--ink);
+    color: var(--on-ink);
 }
 
-.mega-feature--all:hover,
-.mega-feature--all:focus-visible {
-    /* .mega-feature bình thường sáng lên khi rê chuột (#f2e4dc -> #eeddd2);
-       nền đặc thì phải TỐI đi mới thấy, nên dùng --brand-strong. */
+.mega-feature--all:hover {
     background: var(--brand-strong);
 }
 
-/* Hai dòng chữ đổi màu theo nền: --on-brand cho tên (thứ cần nổi),
-   --on-brand-soft cho dòng phụ. Cả hai đều là cặp đã đo tương phản với
-   --brand — xem layout.css, đừng thay bằng màu trắng pha trong suốt. */
-.mega-feature--all .mega-feature__name {
-    color: var(--on-brand);
-}
-
 .mega-feature--all .mega-feature__note {
-    color: var(--on-brand-soft);
+    color: var(--on-brand-muted);
 }
 
-/* Đệm rộng hơn thẻ thường một chút: thẻ kia có 140px ảnh đỡ phần trên, thẻ
-   này chỉ có chữ nên cần khoảng thở trên dưới mới ra dáng một ô ngang hàng. */
-.mega-feature--all .mega-feature__body {
-    padding: 22px 20px;
+.mega-feature--all .mega-feature__more {
+    color: var(--h-dark-eyebrow);
 }
 
+/* Dưới 1280px, mega-menu.css ẩn .mega-feature để nhường chỗ cho các cột chữ.
+   Ở bảng này thì THẺ CHÍNH LÀ NỘI DUNG — ẩn đi là bảng rỗng. */
 @media (max-width: 1279px) {
-    /* Bảng hẹp lại thì ảnh của mấy thẻ kia còn 110px (xem mega-menu.css),
-       nên ô này cũng phải thu theo, không thì nó cao hơn cả hàng. */
-    .mega-feature--all .mega-feature__body {
-        padding: 16px;
+    .mega--bst .mega-feature {
+        display: flex;
+    }
+
+    .mega--bst .mega__grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     }
 }

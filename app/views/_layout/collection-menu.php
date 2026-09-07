@@ -100,7 +100,7 @@ $bstDongPhu = static function (array $bst): string {
 <?php if ($bstDanhSach === []): ?>
     <li>
         <a href="/bo-suu-tap"
-           <?= $isCollectionActive ? 'class="is-active" aria-current="page"' : '' ?>>Bộ sưu tập</a>
+           <?= $isCollectionActive ? 'class="is-active" aria-current="page"' : '' ?>><?= e(t('nav.collections')) ?></a>
     </li>
 <?php else: ?>
 <li class="mega mega--bst">
@@ -108,7 +108,7 @@ $bstDongPhu = static function (array $bst): string {
     <a href="/bo-suu-tap"
        class="mega__trigger<?= $isCollectionActive ? ' is-active' : '' ?>"
        <?= $isCollectionActive ? 'aria-current="page"' : '' ?>>
-        Bộ sưu tập
+        <?= e(t('nav.collections')) ?>
         <svg class="mega__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round"/>
@@ -149,7 +149,7 @@ $bstDongPhu = static function (array $bst): string {
                                  nó khi câu giới thiệu dài. */ ?>
                         <span class="mega-feature__note">
                             <?= e($bstCau) ?>
-                            <span class="mega-feature__more">· Xem ngay &rarr;</span>
+                            <span class="mega-feature__more"><?= e(t('mega.view')) ?></span>
                         </span>
                     </span>
                 </a>
@@ -175,9 +175,9 @@ $bstDongPhu = static function (array $bst): string {
             ?>
             <a class="mega-feature mega-feature--all" href="/bo-suu-tap">
                 <span class="mega-feature__body">
-                    <span class="mega-feature__name">Tất cả bộ sưu tập</span>
+                    <span class="mega-feature__name"><?= e(t('mega.all_collections')) ?></span>
                     <span class="mega-feature__note">
-                        <?= (int) count($collectionsNav) ?> bộ đang trưng bày
+                        <?= e(t('mega.collections_count', [':n' => (string) count($collectionsNav)])) ?>
                         <span class="mega-feature__more">&rarr;</span>
                     </span>
                 </span>

@@ -1,708 +1,566 @@
+/* ============================================================================
+   components/header.css — DẢI TIỆN ÍCH · THANH ĐIỀU HƯỚNG · NGĂN KÉO
 
+   Dựng theo `.navbar-custom` của Furnish: nền trắng, chữ điều hướng IN HOA cỡ
+   .875rem weight 500 màu xám đậm, đổi sang đen khi rê chuột, đệm .75rem 1rem.
+   Không bo góc, không đổ bóng lúc nghỉ — phân cách với nội dung bằng đúng một
+   đường kẻ 1px.
 
-/* ============================================================
-   HEADER
-   ============================================================ */
+   ─────────────────────────────────────────────────────────────────────────────
+   MỌI TÊN LỚP Ở ĐÂY LÀ HỢP ĐỒNG VỚI JAVASCRIPT
 
-/* GÓC BO 4px, KHÔNG PHẢI VIÊN THUỐC. Bản thiết kế mới vẽ mọi nút và mục nav
-   bằng góc gần vuông; cụm 999px cũ đã đổi hết ở dưới. Chân trang và các khối
-   trang chủ đi theo cùng ngôn ngữ này.
+   assets/js/header.js bật/tắt đúng bốn lớp trạng thái, và CSS phải nhận cả bốn:
 
-   position:sticky là phần THÊM ngoài bản thiết kế — bản thiết kế là ảnh tĩnh
-   nên không nói gì về lúc cuộn. Ở trạng thái đầu trang, hai bản trông giống
-   hệt nhau.
+     #siteHeader.is-scrolled     đã cuộn khỏi đỉnh trang
+     [data-hpop].is-open         bảng xổ đang mở (bấm, dùng cho màn cảm ứng)
+     [data-hpop].is-closed       vừa bấm ra ngoài để đóng — CHẶN cả :hover,
+                                 nếu không chuột vẫn đang nằm trên nút thì
+                                 bảng bật lại ngay lập tức
+     #mobileNav.is-open          ngăn kéo đang mở (kèm thuộc tính hidden)
 
-   HÀNG NÀY CAO CỐ ĐỊNH, KHÔNG THU GỌN KHI CUỘN. Bản trước co dải thông báo
-   về 0 và hạ wordmark 24px -> 21px; header nằm trong luồng nên cả trang đổi
-   cao 40px mỗi lần lật, chữ to nhỏ và nội dung bên dưới trượt theo — người
-   dùng đọc ra là "nav bị zoom lên zoom xuống". Nay dải thông báo nằm NGOÀI
-   <header> (xem _layout/header.php) nên nó tự cuộn khuất đi, còn ở đây
-   không còn gì đổi kích thước. Cuộn chỉ thêm bóng đổ. */
-.site-header {
-    position: sticky;
+   assets/js/buy-flow.js còn chép RUỘT của .hpop__panel trong [data-cart] sang
+   trang đang mở — nên khối giỏ hàng phải giữ đúng cấu trúc lồng nhau.
+   ============================================================================ */
+
+/* ────────────────────────────────────────────────────────────────────────────
+   LỐI TẮT BÀN PHÍM
+   Ẩn khỏi mắt nhưng KHÔNG ẩn khỏi thứ tự tab: nhấn Tab lần đầu là nó hiện ra.
+   ──────────────────────────────────────────────────────────────────────────── */
+.skip-link {
+    position: absolute;
+    left: -9999px;
     top: 0;
-    z-index: 40;
-    /* Vạch ngăn với hero. Bản thiết kế TRƯỚC cho hero là khối bo góc nổi cách
-       header 8px nên một đường kẻ ở đây sẽ cắt ngang đúng chỗ đó; bản này cho
-       hero tràn cạnh và cùng màu pearl với header, nên không có vạch thì hai
-       vùng dính liền thành một mảng. */
-    border-bottom: 1px solid #eee0d4;
-    background: color-mix(in srgb, var(--surface) 92%, transparent);
-    color: var(--ink);
-    /* Đệm dọc của .header-main, khai thành token vì mega-menu.css PHẢI biết
-       đúng con số này. Viên thuốc "Sản phẩm" là phần tử cao nhất trong hàng
-       (41.8px, hơn cả nút tròn 40px) nên hàng cao đúng bằng nó, và khoảng
-       trống từ đáy viên thuốc xuống mép dưới header chính là đệm dưới này —
-       mũi nhọn cùng vùng bắt chuột của bảng xổ đều đo theo đó. */
-    --header-pad-y: 20px;
-    /* Nền mờ để nội dung cuộn phía dưới không đọc xuyên qua chữ header */
-    backdrop-filter: blur(12px);
-    transition: box-shadow 0.3s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+    z-index: 100;
+    padding: var(--space-3) var(--space-5);
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
 }
 
-.site-header.is-scrolled {
-    box-shadow: var(--elev-2);
+.skip-link:focus {
+    left: var(--space-4);
+    top: var(--space-4);
 }
 
-/* --- 1. Dải thông báo --------------------------------------- */
+/* ============================================================================
+   1. DẢI TIỆN ÍCH
 
-/* KHÔNG dính theo cuộn và KHÔNG co lại — nó là anh em của <header>, cuộn
-   xuống là khuất đi cùng nội dung. Đừng gắn lại max-height/opacity có hoạt
-   ảnh vào đây: dải nằm trên header trong luồng, đổi chiều cao của nó là đẩy
-   cả trang lên xuống. */
+   Furnish không có dải này. Nó dựng theo đúng ngôn ngữ của theme — nền tối
+   như chân trang, chữ IN HOA rất nhỏ — và mang bộ chuyển ngôn ngữ, thứ cần
+   một chỗ cố định mà không làm rối hàng nav chính.
+
+   KHÔNG dính theo cuộn: cuộn xuống là nó khuất đi, thanh nav ở lại với chiều
+   cao không đổi. Xem chú thích trong _layout/header.php.
+   ============================================================================ */
 .header-announce {
-    /* Thiết kế đặt dải này nền crimson, không phải nền mực như bản cũ */
-    background: var(--brand);
-    /* Hồng rất nhạt, không phải trắng pha trong suốt. Trên nền crimson nó cho
-       6.9:1, đủ cho chữ 12.5px. Chân trang dùng chung sắc này — xem
-       --on-brand-soft trong layout.css. */
-    color: var(--on-brand-soft);
-    padding-block: 10px;
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+.header-announce__inner {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: var(--space-2) var(--page-edge);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
 }
 
 .header-announce__text {
-    max-width: var(--container, 1280px);
-    margin-inline: auto;
-    padding-inline: var(--gutter);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: .1em;
+    text-transform: uppercase;
     text-align: center;
-    /* Chữ thường, không giãn ký tự — đúng dải thông báo của bản thiết kế.
-       Bản trước IN HOA + letter-spacing 0.18em, đọc nặng hơn hẳn và ở màn
-       hình hẹp thì câu duy nhất này phải xuống hai dòng. */
-    font-size: 12.5px;
-    font-weight: 400;
-    letter-spacing: 0.04em;
-    line-height: 1.6;
-}
-
-.header-announce__link {
-    color: inherit;
-    white-space: nowrap;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    text-decoration-color: color-mix(in srgb, var(--brand-light) 60%, transparent);
-    transition: color 0.2s;
-}
-
-.header-announce__link:hover,
-.header-announce__link:focus-visible {
-    color: var(--brand-light);
-}
-
-/* --- 2. Hàng chính ------------------------------------------ */
-
-/*
- * MỘT hàng: wordmark trái · điều hướng giữa · tác vụ phải.
- *
- * Bản trước dựng lưới 3 cột để ghim wordmark vào chính giữa, và đẩy điều
- * hướng xuống một thanh riêng bên dưới. Thiết kế mới gom hết vào một hàng
- * cao 76px nên lưới đó không còn việc gì để làm.
- */
-/* KHÔNG có max-width: bản thiết kế cho header chạy hết bề ngang trang, chỉ
-   chừa lề 56px hai bên — wordmark nằm sát mép trái chứ không thụt vào theo
-   cột nội dung 1280px như các section bên dưới. Đây là chỗ header cố tình
-   khác phần thân trang, không phải sơ suất. */
-.header-main {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    /* min-height chứ không phải height: khoá cứng thì màn hình hẹp bị bóp.
-       80px = 40px nút tròn + 20px đệm trên dưới, đúng bản thiết kế. */
-    min-height: 80px;
-    /* Cùng lề với các khối trang chủ và chân trang — xem --page-edge trong
-       layout.css. Bản thiết kế cho header chạy hết bề ngang trang, wordmark
-       nằm sát lề trái chứ không thụt theo cột nội dung. */
-    padding: var(--header-pad-y) var(--page-edge);
-}
-
-@media (max-width: 1100px) {
-    .site-header { --header-pad-y: 12px; }
-    .header-main { padding: var(--header-pad-y) var(--gutter); }
-}
-
-/* --- Ô TÌM KIẾM — nằm TRONG bảng xổ .hpop__panel ------------
-   Trước đây đây là một khay riêng bo 26px tự bung ra dưới nút kính lúp. Nay
-   nó dùng chung khuôn bảng xổ với ba nút còn lại, nên phần định vị/nền/bóng
-   đã do .hpop__panel lo; ở đây chỉ còn ruột của cái form. */
-
-.header-search__form {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Neo theo Ô NHẬP, không theo cả cái form: form mang thêm 12px đệm dưới nên
-   top:50% của nó rơi thấp hơn tâm ô nhập 6px. 22px = nửa chiều cao ô nhập,
-   và ô nhập bắt đầu ngay ở mép trên phần nội dung của form.
-   left 24px = 12px đệm form + 12px vào trong ô nhập. */
-.header-search__ico {
-    position: absolute;
-    left: 24px;
-    top: 22px;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
-    pointer-events: none;
-    color: var(--eyebrow);
-}
-
-.header-search__input {
+    /* Câu này dài; trên màn hẹp cho nó chiếm hết chỗ còn lại thay vì đẩy bộ
+       chuyển ngôn ngữ xuống dòng. */
     flex: 1 1 auto;
-    min-width: 0;
-    /* 44px theo vùng chạm tối thiểu WCAG 2.5.5, giống .tap-target */
-    height: 44px;
-    /* padding-left chừa chỗ cho kính lúp neo đè lên trên */
-    padding: 0 18px 0 38px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-family: var(--font-sans);
-    font-size: 13.5px;
+}
+
+/* ── Bộ chuyển ngôn ngữ ──────────────────────────────────────────────────── */
+.langsw {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex: 0 0 auto;
+}
+
+.langsw__item {
+    padding: 2px var(--space-2);
+    color: var(--on-brand-muted);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-decoration: none;
+    transition: color .15s ease;
+}
+
+.langsw__item:hover,
+.langsw__item:focus-visible {
+    color: var(--on-ink);
+}
+
+/* Ngôn ngữ đang dùng: sáng hẳn và có gạch dưới — chỉ đổi màu thì trên nền tối
+   hai mức xám rất khó phân biệt. */
+.langsw__item.is-active {
+    color: var(--on-ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ============================================================================
+   2. THANH ĐIỀU HƯỚNG
+   ============================================================================ */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--line);
+    /* Đổi bóng chứ không đổi CHIỀU CAO khi cuộn: mọi thứ làm đổi chiều cao
+       header đều đẩy nội dung bên dưới trượt lên xuống. */
+    transition: box-shadow .2s ease;
+}
+
+.site-header.is-scrolled {
+    box-shadow: var(--elev-1);
+}
+
+.header-main {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--page-edge);
+    min-height: var(--header-h);
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+}
+
+/* ── Wordmark hai dòng ───────────────────────────────────────────────────── */
+.header-logo {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    color: var(--ink);
+    text-decoration: none;
+    line-height: 1.05;
+    text-transform: uppercase;
+}
+
+.header-logo__mark {
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: .12em;
+}
+
+.header-logo__sub {
+    font-size: var(--fs-caption);
+    font-weight: 700;
+}
+
+/* ── Điều hướng ──────────────────────────────────────────────────────────── */
+.header-nav {
+    /* Đẩy nav ra GIỮA và cụm tác vụ sang phải — đúng bố cục của Furnish. */
+    margin-inline: auto;
+    display: none;
+}
+
+.header-nav__list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    list-style: none;
+}
+
+.header-nav__list > li > a,
+.header-nav__list > li > .mega__trigger,
+.header-nav__list > li > .cmenu__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color .15s ease;
+}
+
+.header-nav__list > li > a:hover,
+.header-nav__list > li > a:focus-visible {
     color: var(--ink);
 }
 
-.header-search__input::placeholder {
-    color: color-mix(in srgb, var(--muted) 70%, transparent);
-}
-
-/* MỘT vòng đỏ thôi, không phải hai.
-   Viền chỉ đậm lên một nấc sang hồng nhạt; vòng đỏ để cho outline đảm nhận.
-   Đổi cả viền sang đỏ thì hai vòng đỏ nằm cách nhau 1px, ô nhập trông như bị
-   viền kép. Cùng cặp giá trị với ô nhập ở form liên hệ (.cfield__input:focus).
-   offset dương chứ không âm — bảng xổ có đệm nên vòng ngoài không bị cắt. */
-.header-search__input:focus {
-    border-color: #c9a79b;
-    outline: 2px solid var(--brand);
-    outline-offset: 1px;
-}
-
-/* Nút đặc màu thương hiệu, cùng dáng với "Đặt lịch đo mắt" ở trang liên hệ và
-   "Xoá bộ lọc" ở trang danh mục. */
-.header-search__submit {
-    flex: none;
-    border: 0;
-    border-radius: var(--radius-sm);
-    /* Cùng ngưỡng chạm 44px với ô nhập — chữ "Tìm" ngắn nên phải ép chiều cao */
-    height: 44px;
-    padding: 0 22px;
-    background: var(--brand);
-    color: var(--on-brand);
-    font-family: var(--font-sans);
-    font-size: 13.5px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.header-search__submit:hover,
-.header-search__submit:focus-visible {
-    background: var(--brand-strong);
-}
-
-/* Wordmark */
-.header-logo {
-    min-width: 0;
-    text-decoration: none;
-    color: inherit;
-}
-
-.header-logo__text {
-    display: block;
-    font-family: var(--font-serif);
-    font-size: 24px;
+.header-nav__list > li > a.is-active {
+    color: var(--ink);
     font-weight: 600;
-    line-height: 1;
-    /* Cả cụm chữ ăn màu thương hiệu, không chỉ riêng "Eyewear" — bản thiết kế
-       đặt màu ở thẻ bọc ngoài. */
-    color: var(--brand);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* Nhẹ hơn nửa nấc, KHÔNG đổi màu — giống hệt wordmark ở chân trang */
-.header-logo__text em {
-    font-style: italic;
-    font-weight: 500;
-}
-
-/* Tác vụ bên phải */
+/* ── Cụm tác vụ bên phải ─────────────────────────────────────────────────── */
 .header-actions {
+    margin-left: auto;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
+    gap: var(--space-2);
+    flex: 0 0 auto;
 }
 
-/* ============================================================
-   BA NÚT TÁC VỤ — KHÔNG CÒN KHUNG BAO
+/* Số điện thoại — Furnish để nó in đậm ngay cạnh nút menu. */
+.header-phone {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
 
-   Bản trước vẽ ba nút tròn viền mảnh nền trắng, lấy theo
-   "Vin Eyewear Home.dc.html". Nay bỏ hẳn viền và nền: chúng nằm thẳng trên
-   nền của thanh điều hướng, đúng như các mục nav ngay bên trái — cụm tác vụ
-   không còn là mấy cái hộp trắng chen vào giữa dải pearl.
+.header-phone svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+}
 
-   RÊ CHUỘT CHỈ ĐỔI MÀU, KHÔNG ĐỔ NỀN — cùng quy ước với .header-nav__list > a
-   ở cuối file: nền be dành riêng cho trạng thái "đang mở".
+.header-phone:hover {
+    color: var(--accent);
+}
 
-   40px chứ không phải 44px của .tap-target: đây là số của bản thiết kế. 40px
-   vẫn qua WCAG 2.5.8 (mức AA, ngưỡng 24px), chỉ hụt so với 2.5.5 (mức AAA,
-   ngưỡng 44px). Cả bốn nút đều còn lối đi khác trên trang (ô tìm kiếm ở trang
-   sản phẩm, link tài khoản và giỏ hàng trong menu trượt) nên không có thao
-   tác nào chỉ bấm được qua đúng nút 40px này.
-   ============================================================ */
-
+/* Ba nút icon: không viền, không nền — chúng nằm thẳng trên nền trắng của
+   thanh nav và chỉ đổi màu khi rê chuột, đúng như các mục nav bên cạnh. */
 .header-action {
     position: relative;
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     border: 0;
-    border-radius: var(--radius-sm);
     background: transparent;
-    color: #4a3b38;
-    transition: color 0.2s;
-}
-
-.header-action svg {
-    width: 17px;
-    height: 17px;
+    color: var(--ink);
+    cursor: pointer;
+    text-decoration: none;
+    transition: color .15s ease;
 }
 
 .header-action:hover,
 .header-action:focus-visible {
-    color: var(--brand);
+    color: var(--accent);
 }
 
-/* Neo vào mép icon chứ không vào mép nút: nút 40px nay không còn viền, đặt
-   huy hiệu ở góc ô 40px thì nó trôi hẳn ra khỏi hình giỏ hàng. */
+.header-action svg {
+    width: 22px;
+    height: 22px;
+}
+
+/* Huy hiệu số trên giỏ hàng.
+
+   TRÒN chứ không vuông, và đó là ngoại lệ đã ghi trong bảng token: một chữ số
+   trong hình tròn đọc ra ngay là "đếm", còn một ô vuông nhỏ màu nhấn trông
+   như một chấm trạng thái. Xem khối --radius-round trong layout.css. */
 .header-action__badge {
     position: absolute;
     top: 4px;
-    right: 3px;
-    display: grid;
-    place-items: center;
-    /* 16px chứ không 20px như ba huy hiệu số còn lại: cái này nằm ĐÈ LÊN
-       icon giỏ hàng, to hơn là che mất chính cái icon nó đang chú thích.
-       Dáng thì vẫn một kiểu — xem khối "HUY HIỆU SỐ" trong account.css. */
-    min-width: 16px;
-    height: 16px;
-    padding-inline: 4px;
+    right: 2px;
+    min-width: 18px;
+    height: 18px;
+    padding-inline: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: var(--radius-round);
-    background: var(--brand);
-    color: var(--on-brand);
+    background: var(--accent);
+    color: #fff;
     font-size: var(--fs-micro);
     font-weight: 700;
     line-height: 1;
 }
 
-/* ============================================================
-   BẢNG XỔ DÙNG CHUNG (.hpop)
-   Markup: app/views/_layout/header.php
+/* ── Hamburger ───────────────────────────────────────────────────────────── */
+.header-burger {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
 
-   Một khuôn cho cả ba nút tác vụ: tìm kiếm · tài khoản · giỏ hàng. (Từng là
-   bốn — nút đầu là bảng đổi ngôn ngữ VI/EN, gỡ ngày 2026-08-30 cùng hệ dịch
-   viết tay. Site hiện chỉ có tiếng Việt; xem mục NGÔN NGỮ trong
-   core/helpers.php trước khi dựng lại bất cứ thứ gì ở đây.)
+.header-burger span {
+    width: 20px;
+    height: 1.5px;
+    background: var(--ink);
+}
 
-   MỞ BẰNG CSS, KHÔNG PHẢI JS: :hover cho chuột, :focus-within cho bàn phím —
-   Tab tới nút là bảng hiện ra, Tab hết mục cuối là bảng đóng, không cần một
-   dòng script nào. .is-open là phần JS thêm vào cho màn hình cảm ứng (chạm
-   kính lúp), xem assets/js/header.js.
+/* ============================================================================
+   3. BẢNG XỔ CỦA CỤM TÁC VỤ (.hpop)
 
-   ĐỘ BO GÓC lấy theo nút của trang chủ — var(--radius-sm), 4px. Xem khối
-   "ĐỘ BO GÓC" đầu assets/css/layout.css.
-   ============================================================ */
+   Một khuôn cho cả ba: tìm kiếm, tài khoản, giỏ hàng.
 
+   BA ĐƯỜNG MỞ, và cả ba đều cần:
+     :hover          chuột trên desktop
+     :focus-within   bàn phím — Tab vào cụm là bảng bung ra
+     .is-open        JS bật khi bấm, cho màn cảm ứng vốn không có hover
+
+   .is-closed CHẶN cả ba: vừa bấm ra ngoài để đóng mà chuột còn nằm trên nút
+   thì không có nó, bảng bật lại ngay.
+   ============================================================================ */
 .hpop {
     position: relative;
-    display: flex;
-    align-items: center;
 }
 
-/* Nút icon cũng sáng lên khi con trỏ ở bất kỳ đâu trong cụm — kể cả khi đã
-   trôi xuống bảng xổ. Thiếu dòng này thì lúc đang chọn trong bảng, cái nút
-   sinh ra nó lại tắt màu, trông như bảng không thuộc về nút nào. */
-.hpop:hover .header-action,
-.hpop:focus-within .header-action { color: var(--brand); }
-
-/*
- * Neo MÉP PHẢI: cụm tác vụ nằm sát cạnh phải màn hình, neo trái thì bảng rộng
- * 190px thò ra ngoài khung nhìn.
- *
- * top: 100% + padding-top CHỨ KHÔNG PHẢI top: calc(100% + 8px): khoảng hở
- * giữa nút và bảng phải nằm TRONG vùng chuột của bảng, nếu không con trỏ đi
- * từ nút xuống bảng sẽ băng qua 8px trống và bảng sập ngay giữa đường.
- */
 .hpop__panel {
     position: absolute;
+    top: calc(100% + 6px);
     right: 0;
-    top: 100%;
-    z-index: 60;
-    padding-top: 8px;
-    /* Ẩn bằng visibility chứ không display:none — cần giữ phần tử trong luồng
-       tiêu điểm để :focus-within có cái mà bắt, và để còn chuyển động mượt. */
-    visibility: hidden;
-    opacity: 0;
-    transform: translateY(-6px);
-    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
-    min-width: 190px;
-}
-
-.hpop:hover .hpop__panel,
-.hpop:focus-within .hpop__panel,
-.hpop.is-open .hpop__panel {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* ĐÓNG DÙ ĐANG :hover HAY :focus-within — lớp do assets/js/header.js gắn.
-
-   Ba dòng bên trên là ba điều kiện ĐỘC LẬP mở bảng, và trước đây JS không có
-   cách nào đè được hai cái đầu. Hậu quả đo được:
-
-     · bấm kính lúp lần hai để đóng -> con trỏ vẫn nằm trên nút nên :hover giữ
-       bảng lại; aria-expanded đã là "false" mà mắt vẫn thấy bảng mở;
-     · bấm Esc -> handler đóng rồi trả tiêu điểm về nút, mà nút nằm TRONG cụm
-       nên :focus-within mở lại ngay lập tức.
-
-   Lớp này là đường lui cho JS: "người dùng vừa chủ động đóng cụm này, đừng mở
-   lại cho tới khi họ rời ra rồi quay lại". JS gỡ nó khi con trỏ vào lại cụm
-   (mouseenter) hoặc khi tiêu điểm rời hẳn khỏi cụm (focusout) — xem closePop.
-
-   ĐẶT NGAY SAU KHỐI TRÊN LÀ BẮT BUỘC: `.hpop.is-closed .hpop__panel` và
-   `.hpop:hover .hpop__panel` có ĐỘ ĐẶC HIỆU BẰNG NHAU (đều 3 lớp — lớp giả
-   đếm như lớp). Bằng nhau thì luật đứng sau thắng. Chuyển khối này lên trên
-   là nó mất tác dụng, im lặng, không báo gì. */
-.hpop.is-closed .hpop__panel {
-    visibility: hidden;
-    opacity: 0;
-    transform: translateY(-6px);
-    pointer-events: none;
-}
-
-.hpop__panel--search {
-    /* Ô nhập + nút "Tìm" cần chỗ; 380px là bề ngang tối thiểu để câu gợi ý
-       "Tìm gọng, tròng kính..." không bị cắt. */
-    min-width: 380px;
-}
-
-/* Bảng xổ giỏ hàng: 340px là chỗ vừa đủ cho ảnh 40px + một dòng tên đọc được
-   + cột giá. Hẹp hơn thì tên bị cắt tới mức không nhận ra món nào. */
-.hpop__panel--cart { min-width: 340px; }
-
-@media (max-width: 560px) {
-    .hpop__panel--cart {
-        min-width: 0;
-        width: calc(100vw - 2 * var(--page-edge));
-    }
-}
-
-@media (max-width: 560px) {
-    .hpop__panel--search {
-        min-width: 0;
-        /* Trừ hai lề trang: bảng 380px ở màn 400px sẽ tràn ra ngoài */
-        width: calc(100vw - 2 * var(--page-edge));
-    }
-}
-
-/* Cái hộp thật: nền, viền, bóng. Gộp cả .hpop__head/.hpop__note/.hpop__list
-   vào một khung bo 4px. */
-.hpop__head,
-.hpop__note,
-.hpop__list,
-.hpop__panel--search .header-search__form {
+    z-index: 70;
+    min-width: 240px;
+    padding: var(--space-4);
     background: var(--surface-raised);
+    border: 1px solid var(--line);
+    box-shadow: var(--elev-3);
+    /* Ẩn bằng opacity + visibility chứ không display:none — display không
+       chuyển động được, và trình đọc màn hình cần visibility để bỏ qua. */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity .15s ease, transform .15s ease, visibility .15s;
+}
+
+.hpop:hover > .hpop__panel,
+.hpop:focus-within > .hpop__panel,
+.hpop.is-open > .hpop__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+}
+
+.hpop.is-closed > .hpop__panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
 }
 
 .hpop__head {
-    padding: 11px 16px 9px;
-    border: 1px solid var(--line);
-    border-bottom: 0;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    box-shadow: 0 -2px 10px rgba(90, 40, 40, 0.05);
-    font-size: 10.5px;
+    margin-bottom: var(--space-3);
+    font-size: var(--fs-label);
     font-weight: 600;
-    letter-spacing: 0.14em;
+    letter-spacing: .12em;
     text-transform: uppercase;
-    color: var(--h-note);
+    color: var(--eyebrow);
 }
 
 .hpop__note {
-    padding: 0 16px 10px;
-    border-inline: 1px solid var(--line);
-    font-size: 12.5px;
+    margin-bottom: var(--space-3);
     color: var(--muted);
+    font-size: var(--fs-body-sm);
 }
 
 .hpop__list {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
     list-style: none;
-    border: 1px solid var(--line);
-    border-top: 0;
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    box-shadow: 0 14px 34px rgba(90, 40, 40, 0.16);
-}
-
-.hpop__panel--search .header-search__form {
-    padding: 0 12px 12px;
-    border: 1px solid var(--line);
-    border-top: 0;
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    box-shadow: 0 14px 34px rgba(90, 40, 40, 0.16);
+    display: grid;
+    gap: 2px;
 }
 
 .hpop__item {
     display: block;
     width: 100%;
-    padding: 11px 16px;
-    border: 0;
-    background: transparent;
-    font-family: var(--font-sans);
-    font-size: 12.5px;
-    letter-spacing: 0.04em;
+    padding: var(--space-2) var(--space-3);
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
     text-align: left;
-    color: var(--h-note);
     text-decoration: none;
-    cursor: pointer;
-    transition: background-color 0.2s, color 0.2s;
+    transition: background-color .15s ease, color .15s ease;
 }
 
 .hpop__item:hover,
 .hpop__item:focus-visible {
-    background: #f1e7dd;
-    color: var(--brand);
+    background: var(--surface-sunken);
+    color: var(--accent);
 }
 
-/* ============================================================
-   BẢNG XỔ GIỎ HÀNG — năm món mới thêm
+/* Nút Đăng xuất nằm trong <form>, phải trông giống hệt các mục <a> quanh nó. */
+.hpop__item--btn {
+    border: 0;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
 
-   Markup: app/views/_layout/header-cart.php
+/* ── Bảng tìm kiếm ───────────────────────────────────────────────────────── */
+.hpop__panel--search {
+    width: min(360px, calc(100vw - 2 * var(--page-edge)));
+}
 
-   Dùng chung khung của .hpop (nền, viền, bóng, hoạt cảnh mở) nên ở đây chỉ
-   có phần ruột: hàng sản phẩm và chân bảng. Nhờ vậy bảng giỏ hàng và bảng
-   tài khoản mở ra giống hệt nhau, chỉ khác thứ nằm bên trong.
-   ============================================================ */
+.header-search__form {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.header-search__ico {
+    position: absolute;
+    left: var(--space-3);
+    width: 18px;
+    height: 18px;
+    color: var(--muted);
+    pointer-events: none;
+}
+
+.header-search__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 46px;
+    padding-left: calc(var(--space-3) + 18px + var(--space-2));
+    padding-right: var(--space-3);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-body-sm);
+}
+
+.header-search__input:focus {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+    border-color: var(--ink);
+}
+
+.header-search__submit {
+    height: 46px;
+    padding-inline: var(--space-4);
+    border: 0;
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color .15s ease;
+}
+
+.header-search__submit:hover {
+    background: var(--accent);
+}
+
+/* ── Bảng giỏ hàng ───────────────────────────────────────────────────────── */
+.hpop__panel--cart {
+    width: min(360px, calc(100vw - 2 * var(--page-edge)));
+}
 
 .cartpop {
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0;
     list-style: none;
-    background: var(--surface-raised);
-    border-inline: 1px solid var(--line);
+    display: grid;
+    gap: 2px;
 }
 
-/* Bốn cột: ảnh · tên (co giãn) · số lượng · giá.
-   1fr cho cột tên là chỗ toàn bộ phần co giãn dồn vào, để ba cột kia luôn
-   giữ nguyên bề rộng dù tên dài tới đâu. */
 .cartpop__row {
     display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) auto auto;
+    grid-template-columns: 40px 1fr auto;
     align-items: center;
-    gap: 10px;
-    padding: 9px 14px;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    color: var(--ink);
     text-decoration: none;
-    transition: background-color 0.2s;
+    transition: background-color .15s ease;
 }
 
-.cartpop__row:hover,
-.cartpop__row:focus-visible { background: #f7efe9; }
+.cartpop__row:hover {
+    background: var(--surface-sunken);
+}
 
 .cartpop__thumb {
-    display: grid;
-    place-items: center;
     width: 40px;
     height: 40px;
-    overflow: hidden;
-    border: 1px solid var(--h-card-line);
-    border-radius: var(--radius-sm);
-    /* Nền chờ cho món chưa có ảnh — ô trống vẫn giữ đúng khổ, hàng không xô
-       lệch. Xem ProductModel::hasImage() về việc không mượn ảnh món khác. */
     background: var(--h-shell);
+    overflow: hidden;
 }
 
 .cartpop__thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
-/* CẮT MỘT DÒNG. Ba dòng dưới đây phải đi cùng nhau: min-width:0 ở
-   grid-template mới cho phép ô co lại nhỏ hơn nội dung, không có nó thì
-   text-overflow không bao giờ có cơ hội chạy. */
+/* Cắt MỘT DÒNG bằng CSS chứ không cắt chuỗi trong PHP: máy chủ không biết
+   bảng rộng bao nhiêu pixel, mà cắt theo số ký tự thì tên ngắn cũng bị thêm
+   dấu ba chấm vô cớ. */
 .cartpop__name {
+    font-size: var(--fs-body-sm);
     overflow: hidden;
-    white-space: nowrap;
     text-overflow: ellipsis;
-    font-size: 13px;
-    line-height: 1.4;
-    color: var(--ink);
+    white-space: nowrap;
 }
 
 .cartpop__qty {
-    font-size: 12px;
-    color: var(--h-note);
-    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-size: var(--fs-caption);
 }
 
 .cartpop__price {
-    font-size: 13px;
     font-weight: 600;
-    color: var(--brand);
+    font-size: var(--fs-body-sm);
     white-space: nowrap;
 }
 
-/* Chân bảng — đóng nốt cái khung mà .hpop__head đã mở ở trên. */
 .cartpop__foot {
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 10px 14px;
-    border: 1px solid var(--line);
-    border-top: 1px solid var(--h-card-line);
-    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
-    background: var(--surface-raised);
-    box-shadow: 0 14px 34px rgba(90, 40, 40, 0.16);
+    gap: var(--space-3);
 }
 
 .cartpop__more {
-    font-size: 12px;
-    line-height: 1.4;
-    color: var(--h-note);
+    color: var(--muted);
+    font-size: var(--fs-caption);
 }
 
 .cartpop__cta {
-    flex: none;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-4);
     background: var(--brand);
     color: var(--on-brand);
-    font-size: 12px;
+    font-size: var(--fs-label);
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: .08em;
+    text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
-    transition: background-color 0.2s;
+    transition: background-color .15s ease;
 }
 
-.cartpop__cta:hover,
-.cartpop__cta:focus-visible { background: var(--brand-strong); color: var(--on-brand); }
-
-/* Nút "Đăng xuất" nằm trong <form> POST — <button> nên phải gỡ dáng mặc định
-   của trình duyệt để nó xếp hàng cùng ba liên kết bên trên. */
-.hpop__item--btn {
-    border-top: 1px solid var(--line);
-    color: var(--muted);
+.cartpop__cta:hover {
+    background: var(--accent);
 }
 
-/* Hamburger */
-.header-burger {
-    display: grid;
-    place-content: center;
-    gap: 5px;
-    border: 0;
-    background: transparent;
-    cursor: pointer;
-    color: var(--ink);
-}
+/* ============================================================================
+   4. NGĂN KÉO TRÊN MÀN HẸP
 
-@media (min-width: 1101px) {
-    .header-burger { display: none; }
-}
-
-.header-burger span {
-    display: block;
-    width: 22px;
-    height: 1.5px;
-    background: currentColor;
-    transition: transform 0.25s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)), opacity 0.2s;
-}
-
-/* --- 3. Điều hướng (trong hàng chính, từ 1101px) ------------- */
-
-.header-nav {
-    display: none;
-}
-
-@media (min-width: 1101px) {
-    .header-nav { display: block; }
-}
-
-.header-nav__list {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    list-style: none;
-}
-
-/* VIÊN THUỐC, KHÔNG PHẢI GẠCH CHÂN.
-   Bản trước là chữ trần cách nhau 32px, rê chuột thì một gạch 1px chạy ra từ
-   giữa. Bản thiết kế bỏ hẳn lối đó: mỗi mục là một viên thuốc bo tròn, rê
-   chuột thì cả viên đổ nền be #f1e7dd. Hai cách chiếm chỗ khác hẳn nhau —
-   viên thuốc tự mang đệm 9px/18px nên khoảng cách giữa các mục rút từ 32px
-   xuống 8px mà nhìn vẫn thoáng hơn. */
-.header-nav__list > li > a {
-    display: block;
-    padding: 9px 16px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    font-weight: 400;
-    color: var(--ink);
-    text-decoration: none;
-    white-space: nowrap;
-    transition: color 0.2s, background-color 0.2s;
-}
-
-/* RÊ CHUỘT CHỈ ĐỔI MÀU CHỮ, KHÔNG ĐỔ NỀN.
-   Viên thuốc nền be để dành riêng cho mục đang mở. Bản thiết kế cho cả hai
-   trạng thái cùng một nền #f1e7dd, nhưng khi chạy thật thì rê chuột qua thanh
-   nav là các viên thuốc sáng lên rồi tắt liên tục, trông y hệt trạng thái
-   "đang ở trang này" — người dùng mất luôn cái mốc để biết mình đang đứng
-   đâu. Nay hai trạng thái tách hẳn: rê chuột = đổi màu chữ, đang mở = viên
-   thuốc.
-
-   Không cần thay nền bằng gì khác cho bàn phím: :focus-visible dùng chung
-   trong layout.css đã vẽ sẵn vòng viền 2px quanh mục đang focus. */
-.header-nav__list > li > a:hover,
-.header-nav__list > li > a:focus-visible {
-    color: var(--brand);
-}
-
-/* Mục đang mở — trạng thái DUY NHẤT có nền.
-   Bản thiết kế không vẽ nó ở trang chủ (ảnh tĩnh, không mục nào đang mở),
-   nhưng bản Category và Contact thì có: mục tương ứng mang nền #f1e7dd, chữ
-   đỏ và in đậm. */
-.header-nav__list > li > a.is-active {
-    background: #f1e7dd;
-    color: var(--brand);
-    font-weight: 600;
-}
-
-/* Ở ĐÂY TRƯỚC CÓ .is-accent tô riêng mục "Khuyến mãi" đỏ + đậm sẵn — đã bỏ.
-   Nó lấy theo "Vin Eyewear Home.dc.html"; nhưng hai bản thiết kế làm sau
-   ("Vin Eyewear Category.dc.html" và "Vin Eyewear Contact.dc.html") đều vẽ
-   mục đó bằng chữ thường #33272a như năm mục còn lại. Nay cả sáu mục cùng
-   một dáng, chỉ đổi màu khi rê chuột, và MÀU ĐỎ trên thanh điều hướng chỉ
-   còn mang đúng một nghĩa: đây là trang bạn đang mở (.is-active). */
-
-/* ============================================================
-   MENU TRƯỢT (mobile)
-   ============================================================ */
-
+   header.js bỏ thuộc tính `hidden` TRƯỚC rồi mới thêm .is-open một khung hình
+   sau, và đợi 280ms mới gắn `hidden` lại lúc đóng — nên hiệu ứng trượt phải
+   nằm trong khoảng đó.
+   ============================================================================ */
 .mobile-nav {
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: 90;
 }
 
 .mobile-nav[hidden] {
@@ -712,9 +570,9 @@
 .mobile-nav__backdrop {
     position: absolute;
     inset: 0;
-    background: rgb(26 18 20 / 0.5);
+    background: rgba(33, 31, 28, .45);
     opacity: 0;
-    transition: opacity 0.25s ease-out;
+    transition: opacity .25s ease;
 }
 
 .mobile-nav.is-open .mobile-nav__backdrop {
@@ -726,43 +584,42 @@
     top: 0;
     right: 0;
     bottom: 0;
+    width: min(360px, 88vw);
     display: flex;
     flex-direction: column;
-    width: 88vw;
-    max-width: 384px;
-    padding: 16px var(--gutter-tight) 8px;
-    background: var(--surface);
-    overflow-y: auto;
+    background: var(--surface-raised);
+    border-left: 1px solid var(--line);
     transform: translateX(100%);
-    transition: transform 0.28s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+    transition: transform .25s ease;
 }
 
 .mobile-nav.is-open .mobile-nav__panel {
-    transform: translateX(0);
+    transform: none;
 }
 
 .mobile-nav__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--line);
 }
 
-/* Cùng cách tô màu với logo ở header chính, để hai chỗ không lệch nhau */
 .mobile-nav__logo {
-    font-family: var(--font-serif);
-    font-size: var(--fs-h5);
-    font-weight: 600;
-    color: var(--brand);
-}
-
-.mobile-nav__logo em {
-    font-style: italic;
-    color: var(--brand);
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: var(--ink);
 }
 
 .mobile-nav__close {
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
     border: 0;
     background: transparent;
     color: var(--ink);
@@ -774,183 +631,110 @@
     height: 22px;
 }
 
-/* --- Danh sách liên kết -------------------------------------
-
-   KHỐI NÀY TRƯỚC ĐÂY KHÔNG TỒN TẠI. Bản port thiết kế (ff0c201) dựng markup
-   .mobile-nav__links nhưng không kèm luật nào cho nó, nên suốt từ đó tới nay
-   menu trượt hiện link mặc định của trình duyệt: chữ xanh gạch chân, các mục
-   nằm tràn ngang một dòng vì <a> là inline. Không ai thấy vì nó chỉ lộ ra
-   dưới 1101px, mà bảng xổ desktop thì luôn được ngó tới trước.
-
-   Chú thích ở đầu khối "MENU TRƯỢT" trong components/mega-menu.css có câu
-   "dáng phải khớp các liên kết thẳng của .mobile-nav__links" — nay câu đó mới
-   có thứ để khớp vào.
-   ------------------------------------------------------------
-
-   MỘT LUẬT CHO CẢ <a> LẪN <summary>
-
-   Trong danh sách này có hai loại hàng: liên kết thẳng, và <summary> của hai
-   khối <details> ("Sản phẩm", "Bộ sưu tập"). Chúng phải trông y như nhau —
-   người dùng không cần biết cái nào bung ra được, chỉ cần thấy sáu mục cùng
-   cấp. Nên đệm, cỡ chữ và màu khai chung ở đây; mega-menu.css chỉ thêm phần
-   riêng của <summary> (bỏ tam giác mặc định, xếp chevron sang phải).
-
-   LUẬT DÙNG CHUNG KHÔNG ĐỤNG TỚI `display` — đã dính một lần rồi.
-
-   Bản đầu khai `display: block` ở luật chung cho gọn, nghĩ rằng mega-menu.css
-   nạp sau sẽ thắng. Sai: thứ tự nạp chỉ phân định khi độ đặc hiệu BẰNG nhau,
-   mà `.mobile-nav__links > details > summary` (1 lớp + 2 thẻ) đặc hiệu hơn
-   `.mobile-nav__group summary` (1 lớp + 1 thẻ). Kết quả là summary mất
-   display:flex, chevron thôi không bị đẩy ra mép phải mà dính ngay sau chữ.
-
-   Nên `display: block` nay khai riêng cho <a>, còn <summary> giữ nguyên flex
-   của mega-menu.css. */
-
 .mobile-nav__links {
-    display: flex;
-    flex-direction: column;
-    /* 2px chứ không 0: hai hàng liền nhau vẫn cần một vạch hở để nền lúc
-       :hover không dính thành một mảng. Khoảng cách thật giữa hai dòng chữ do
-       đệm 12px của hàng lo. */
-    gap: 2px;
-    margin-top: 12px;
-    padding-bottom: 16px;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: var(--space-3) 0;
 }
 
-/* Hàng cao 12 + 21 + 12 = 45px, qua ngưỡng chạm 44px của .tap-target mà không
-   phải khai min-height — ngón tay ở màn 320px to đúng bằng ở màn 430px.
-
-   Đệm ngang 8px là để nền lúc :hover và lúc .is-active không ôm sát chữ; nó
-   ăn vào đệm 20px của .mobile-nav__panel nên chữ vẫn thẳng hàng với wordmark
-   ở trên và cụm nút ở dưới. */
 .mobile-nav__links > a,
 .mobile-nav__links > details > summary {
-    padding: 12px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 15px;
-    line-height: 1.4;
-    color: var(--ink);
-    text-decoration: none;
-    transition: color 0.2s, background-color 0.2s;
-}
-
-.mobile-nav__links > a {
     display: block;
+    padding: var(--space-4) var(--space-5);
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
 }
 
-/* Rê chuột / tiêu điểm CHỈ đổi màu chữ, không đổ nền — cùng quy ước với
-   .header-nav__list > li > a ở trên: nền be dành riêng cho "đang ở trang này". */
-.mobile-nav__links > a:hover,
-.mobile-nav__links > a:focus-visible,
-.mobile-nav__links > details > summary:hover,
-.mobile-nav__links > details > summary:focus-visible {
-    color: var(--brand);
-}
-
-/* Trang đang mở — cùng bộ ba (nền be, chữ đỏ, in đậm) với mục .is-active của
-   thanh nav desktop, để hai khổ màn hình nói cùng một thứ tiếng.
-
-   ÁP CHO CẢ <summary>: đứng ở /san-pham hay /bo-suu-tap thì hàng tương ứng
-   cũng phải sáng lên. Không có nó thì đúng hai trang đó là hai trang duy nhất
-   mà menu trượt không cho biết mình đang ở đâu — mà chúng lại là hai mục có
-   nhiều trang con nhất, tức là nơi cần chỉ đường nhất.
-
-   Lớp .is-active của <summary> do hai partial mega-menu-mobile.php và
-   collection-menu-mobile.php gắn, đọc từ $isProductActive / $isCollectionActive
-   — cùng hai biến mà thanh nav desktop đang dùng. Không dùng [open] thay thế:
-   khối đang bung ra không có nghĩa là đang đứng ở trang đó. */
 .mobile-nav__links > a.is-active,
 .mobile-nav__links > details > summary.is-active {
-    background: #f1e7dd;
-    color: var(--brand);
+    color: var(--accent);
     font-weight: 600;
 }
 
-/* --- Mục con trong khối <details> ---------------------------
-   Khung của .mobile-nav__sub (thụt vào, vạch dọc bên trái) nằm ở
-   mega-menu.css — đó là chuyện của khối <details>. Ở đây chỉ là dáng chữ của
-   từng dòng, để nó không rơi lại về link mặc định như cả danh sách vừa rồi.
+/* ── Nhóm bung ra (<details>) ────────────────────────────────────────────────
+   "Sản phẩm" và "Bộ sưu tập" trong ngăn kéo là <details> chứ không phải một
+   bảng xổ do JS điều khiển: đóng/mở là hành vi sẵn có của trình duyệt, kèm
+   luôn phần trợ năng (nút biết trạng thái, trình đọc màn hình đọc được).
+   ──────────────────────────────────────────────────────────────────────────── */
+.mobile-nav__links > details > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    cursor: pointer;
+    list-style: none;
+}
 
-   Nhỏ hơn hàng cha một nấc (14px so với 15px) và dùng cùng màu chữ với
-   .mega__links a bên bảng xổ desktop: cùng là "lát cắt hẹp hơn của mục ngay
-   trên nó" thì phải cùng sắc.
+/* Bỏ tam giác mặc định của <summary> ở cả hai họ trình duyệt — đã có chevron
+   SVG riêng, để cả hai thì hàng có hai mũi tên. */
+.mobile-nav__links > details > summary::-webkit-details-marker {
+    display: none;
+}
 
-   40px chiều cao chứ không 45px như hàng cha: đây là mục con, và 40px vẫn qua
-   WCAG 2.5.8 — cùng con số đã dùng cho bốn nút .header-action. */
+.mobile-nav__links > details > summary svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    transition: transform .2s ease;
+}
+
+.mobile-nav__links > details[open] > summary svg {
+    transform: rotate(180deg);
+}
+
+.mobile-nav__sub {
+    display: grid;
+    background: var(--surface-sunken);
+    border-bottom: 1px solid var(--line);
+}
+
 .mobile-nav__sub a {
-    display: block;
-    padding: 10px 8px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
-    line-height: 1.4;
-    color: #4a3b38;
+    padding: var(--space-3) var(--space-5) var(--space-3) var(--space-8);
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
     text-decoration: none;
-    transition: color 0.2s;
 }
 
 .mobile-nav__sub a:hover,
 .mobile-nav__sub a:focus-visible {
-    color: var(--brand);
+    color: var(--ink);
 }
 
-/* Nút hành động dính đáy panel */
 .mobile-nav__foot {
-    position: sticky;
-    bottom: 0;
-    margin-top: auto;
-    padding: 16px 0 8px;
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-5);
     border-top: 1px solid var(--line);
-    background: var(--surface);
 }
 
-/* Người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành */
-@media (prefers-reduced-motion: reduce) {
-    .site-header *,
-    .mobile-nav * {
-        transition-duration: 0.01ms !important;
+/* ============================================================================
+   5. BA MỐC BỀ NGANG
+
+   Đúng bộ breakpoint của site — 601 / 901 / 1101 — không thêm mốc mới.
+   Xem khối đầu assets/css/layout.css.
+   ============================================================================ */
+
+/* Từ 901px: hiện số điện thoại. Nó là lối liên hệ được dùng nhiều nhất của
+   một cửa hàng kính, nên nó lên sớm hơn thanh nav đầy đủ. */
+@media (min-width: 901px) {
+    .header-phone {
+        display: inline-flex;
     }
 }
 
+/* Từ 1101px: thanh nav đầy đủ thay cho hamburger — đúng mốc mà bảng xổ mega
+   cần để có chỗ bung ra. */
+@media (min-width: 1101px) {
+    .header-nav {
+        display: block;
+    }
 
-/* ============================================================
-   MÀN HẸP — TRẢ CHỖ CHO WORDMARK
-
-   .header-actions KHÔNG co (mọi nút bên trong đều flex:none), nên wordmark chỉ
-   được phần bề ngang còn thừa. Hết chỗ thì text-overflow cắt dần thành
-   "Vin Eye…", "Vin E…", "V…".
-
-   CÁC CON SỐ ĐO ĐƯỢC BÊN DƯỚI ĐÃ CŨ — đọc trước khi tin. Chúng đo hồi cụm còn
-   NĂM thành viên (nút ngôn ngữ "VI ▾" · tìm kiếm · tài khoản · giỏ ·
-   hamburger), khi .header-actions rộng 247px và wordmark được `bề ngang màn
-   hình − 291px`. Nút ngôn ngữ gỡ ngày 2026-08-30, nên cụm nay hẹp hơn khoảng
-   53px và mọi ngưỡng dưới đây ĐỠ CĂNG hơn con số ghi ra, không căng hơn. Ai
-   đụng tới khối này thì đo lại bằng thước của trình duyệt, đừng cộng trừ từ
-   mấy số cũ.
-
-   HAI CÁCH LẤY LẠI CHỖ CÒN LẠI, theo thứ tự ít thiệt hại nhất:
-
-   1. Thu khe (−28px). Khe không phải ngưỡng chạm, thu được.
-   2. Hạ cỡ chữ wordmark. Để sau cùng, và chỉ ở màn hẹp nhất.
-
-   (Cách thứ nhất trước đây là "bỏ nút ngôn ngữ khỏi cụm ở màn hẹp, chuyển nó
-   vào menu trượt". Không còn nút nào để bỏ nữa. Ngày làm song ngữ thật, nếu
-   đặt lại một nút đổi ngôn ngữ vào đây thì phải dựng lại cả cách này.)
-
-   KHÔNG hạ 40px của nút icon: ngón tay ở màn 320px to đúng bằng ở màn 430px,
-   thu nút lại là thu ở chỗ không được phép thu.
-
-   ĐẶT CUỐI FILE là có chủ ý: @media không cộng độ đặc hiệu, mà luật
-   .header-actions (gap 10px) nằm phía trên. Chuyển khối này lên trên nó là mất
-   tác dụng — im lặng, không báo lỗi gì.
-   ============================================================ */
-
-@media (max-width: 700px) {
-    .header-main    { gap: 8px; }
-    .header-actions { gap: 2px; }
-}
-
-/* Màn hẹp nhất (320–346px) — chỗ còn lại tụt xuống dưới 137px.
-   19px cần 108px, vừa chỗ trống 110px của màn 320px. */
-@media (max-width: 346px) {
-    .header-logo__text { font-size: 19px; }
+    .header-burger {
+        display: none;
+    }
 }

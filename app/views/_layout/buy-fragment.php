@@ -22,6 +22,12 @@
  * đúng vài đường đi, rất khó lần.
  * ─────────────────────────────────────────────────────────────────────────────
  */
+
+/* Ba mảnh đều có chữ, mà đường thứ 2 ở trên (BaseController::buyFragment())
+   KHÔNG đi qua _layout/master.php — nơi lớp ngôn ngữ vẫn được nạp. Thiếu dòng
+   này thì mọi câu trong hộp thoại mua hàng đổ lỗi "gọi hàm t() chưa định
+   nghĩa", và nó chỉ đổ ở đúng nhánh POST. */
+require_once CORE_PATH . '/i18n.php';
 ?>
 <?php if (!empty($buyModal)): ?>
     <?php partial('_layout/buy-modal', ['buyModal' => $buyModal]); ?>

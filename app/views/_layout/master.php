@@ -1,5 +1,23 @@
 <?php
 /*
+ * LỚP NGÔN NGỮ — nạp TRƯỚC MỌI THỨ trong file này.
+ *
+ * Phải đứng trên cả hai nhánh "chế độ mảnh" bên dưới: mảnh cũng chứa chữ
+ * (hộp thoại mua hàng, dải báo, bảng xổ giỏ), nên t() phải có mặt trước khi
+ * bất kỳ nhánh nào in ra byte đầu tiên.
+ *
+ * require_once chứ không require: BaseController::buyFragment() nạp thẳng
+ * _layout/buy-fragment.php mà không đi qua file này, và file đó cũng tự nạp
+ * i18n của nó.
+ */
+require_once CORE_PATH . '/i18n.php';
+
+/* Cú bấm đổi ngôn ngữ: ghi cookie rồi quay lại chính trang này với URL sạch.
+   Gọi ở đây vì đây là chỗ CHƯA in ra gì — setcookie() và header() đều cần thế.
+   Không có ?lang= thì hàm trả về ngay, không tốn gì. */
+i18nXuLyChuyenNgonNgu();
+
+/*
  * ═══════════════════════════════════════════════════════════════════════════
  * CHẾ ĐỘ MẢNH — trả lời cú bấm "Mua ngay" / "Thêm vào giỏ"
  *
@@ -97,16 +115,19 @@ if ($manhCua !== null) {
 }
 ?>
 <!DOCTYPE html>
-<?php /* lang="vi" CỐ ĐỊNH vì site hiện chỉ có tiếng Việt. Thuộc tính này
-         khai ngôn ngữ của HTML MÁY CHỦ TRẢ VỀ, không phải ngôn ngữ khách muốn
-         đọc — trình đọc màn hình chọn giọng theo nó.
-         NGÀY LÀM SONG NGỮ THẬT thì đây là một trong những chỗ phải sửa, cùng
-         với thẻ <link rel="alternate" hreflang>: mỗi ngôn ngữ một URL riêng do
-         máy chủ dựng, và lang phải khớp thứ thật sự in ra trang đó. Đừng đoán
-         ngôn ngữ bằng cookie rồi khai "en" cho một trang chữ vẫn tiếng Việt —
-         trình đọc màn hình sẽ đọc tiếng Việt bằng giọng Anh, tệ hơn hẳn khai
-         sai một chiều. */ ?>
-<html lang="vi">
+<?php /* Thuộc tính này khai ngôn ngữ của HTML MÁY CHỦ VỪA DỰNG RA, không phải
+         ngôn ngữ khách mong muốn — trình đọc màn hình chọn giọng theo nó.
+
+         Nay nó đi theo currentLang() vì máy chủ THẬT SỰ dựng ra hai bản khác
+         nhau: chọn English là mọi nhãn giao diện in ra bằng tiếng Anh.
+
+         MỘT NỬA SỰ THẬT PHẢI BIẾT: tên sản phẩm, tên danh mục và nội dung
+         chính sách vẫn là tiếng Việt trong cả hai bản, vì CSDL chỉ có một
+         ngôn ngữ. Trang tiếng Anh vì thế có những đoạn tiếng Việt, và trình
+         đọc màn hình sẽ đọc chúng bằng giọng Anh. Cách chữa đúng là gắn
+         lang="vi" lên chính những khối đó — việc của lúc dữ liệu có hai
+         ngôn ngữ, không phải của lúc này. */ ?>
+<html lang="<?= e(currentLang()) ?>">
 
 <head>
     <meta charset="UTF-8">

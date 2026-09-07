@@ -57,7 +57,7 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
 <div class="hpop" data-hpop data-cart>
     <a href="/gio-hang" class="hpop__trigger header-action"
        data-hpop-trigger
-       aria-label="Giỏ hàng, <?= (int) $cartCount ?>">
+       aria-label="<?= e(t('cart.aria', [':n' => (string) (int) $cartCount])) ?>">
         <?php
         /* XE ĐẨY chứ không phải cái túi. Túi xách là biểu tượng của thời
            trang; xe đẩy là biểu tượng của "đang mua sắm", và đó mới là việc
@@ -79,13 +79,13 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
 
     <div class="hpop__panel hpop__panel--cart">
         <?php if ($recent['lines'] === []): ?>
-            <p class="hpop__head">Giỏ hàng</p>
-            <p class="hpop__note">Giỏ hàng đang trống</p>
+            <p class="hpop__head"><?= e(t('cart.title')) ?></p>
+            <p class="hpop__note"><?= e(t('cart.empty')) ?></p>
             <ul class="hpop__list" role="list">
-                <li><a class="hpop__item" href="/san-pham">Xem sản phẩm</a></li>
+                <li><a class="hpop__item" href="/san-pham"><?= e(t('cart.browse')) ?></a></li>
             </ul>
         <?php else: ?>
-            <p class="hpop__head">Sản phẩm mới thêm</p>
+            <p class="hpop__head"><?= e(t('cart.recent')) ?></p>
 
             <ul class="cartpop" role="list">
                 <?php foreach ($recent['lines'] as $line): ?>
@@ -127,10 +127,10 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
             <div class="cartpop__foot">
                 <span class="cartpop__more">
                     <?= $recent['more'] > 0
-                        ? e(sprintf('Còn %d sản phẩm nữa trong giỏ', $recent['more']))
+                        ? e(t('cart.more', [':n' => (string) (int) $recent['more']]))
                         : '' ?>
                 </span>
-                <a class="cartpop__cta" href="/gio-hang">Xem giỏ hàng</a>
+                <a class="cartpop__cta" href="/gio-hang"><?= e(t('cart.view')) ?></a>
             </div>
         <?php endif; ?>
     </div>

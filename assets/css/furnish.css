@@ -108,6 +108,25 @@
    dùng. Hai lớp dưới đây thay cho toàn bộ nhóm ấy, và co theo bề ngang màn
    hình thay vì nhảy bậc theo breakpoint.
    ──────────────────────────────────────────────────────────────────────────── */
+/* ┌─ CỘT NỘI DUNG ──────────────────────────────────────────────────────
+   │ MỘT lớp bọc duy nhất cho mọi khối của giao diện mới, thay cho việc mỗi
+   │ component tự khai max-width + padding như trước (26 chỗ chép lại cùng một
+   │ giá trị, sót một chỗ là hai khối cạnh nhau lệch mép).
+   │
+   │ KHÔNG dùng `.container` của Bootstrap: nó nhảy bậc theo breakpoint
+   │ (540/720/960/1140/1320px) và chốt ở 1320, hẹp hơn hẳn --container 1600px
+   │ mà cả site đang dùng. Trộn hai hệ là header rộng 1600 còn chân trang rộng
+   │ 1320, lệch nhau 280px ngay trên cùng một màn hình.
+   │
+   │ `.row` của Bootstrap vẫn dùng bình thường bên trong nó.
+   └──────────────────────────────────────────────────────────────────────── */
+.fx-shell {
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--page-edge);
+}
+
 .section {
     padding-block: clamp(48px, 7vw, 96px);
 }

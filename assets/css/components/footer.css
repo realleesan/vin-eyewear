@@ -1,286 +1,258 @@
-/* ============================================================
-   footer.css — Chân trang.
+/* ============================================================================
+   components/footer.css
 
-   NỀN CRIMSON, GIỐNG DẢI THÔNG BÁO TRÊN HEADER. Hai đầu trang và cuối
-   trang nay đóng khung nội dung bằng cùng một mảng màu: cùng nền
-   var(--brand), cùng sắc chữ var(--on-brand-soft).
+   Dựng theo `<footer class="bg-dark pt-8 footer">` của Furnish.
 
-   LỆCH BẢN THIẾT KẾ, CÓ CHỦ Ý. "Vin Eyewear Home.dc.html" vẽ chân trang
-   đứng trên nền pearl, tách khỏi nội dung bằng một đường kẻ 1px. Đây là
-   yêu cầu riêng, không phải port thiếu — ai so lại với file thiết kế sẽ
-   thấy khác và cần biết vì sao.
+   Điều làm nên chân trang của theme này không phải các cột liên kết — mà là
+   MỘT CÂU CỠ RẤT LỚN, nét mảnh, chiếm gần nửa chiều rộng, đặt giữa khối liên
+   kết và dải pháp lý. Nó biến chân trang từ một bảng tra cứu thành một phần
+   của thiết kế. Bỏ câu đó đi là mất phần Furnish nhất của cả trang.
 
-   BA MỨC CHỮ TRÊN NỀN ĐỎ, đo sẵn để lần sau đổi màu là biết mình phá gì:
+   Nền tối dùng --h-dark (cùng sắc với các dải tối khác của site), chữ ba mức:
+     --h-on-dark        tiêu đề, câu tuyên ngôn, email
+     --on-brand-soft    liên kết ở trạng thái nghỉ
+     --h-on-dark-muted  chữ phụ, dải pháp lý
 
-     --on-brand        #ffffff  8.96:1  thứ cần nổi — wordmark, liên kết
-     --on-brand-soft   #f6e3dd  6.90:1  thân bài — mức mặc định của cả khối
-     --on-brand-muted  #ecc9c0  5.34:1  hạng phụ — tiêu đề cột, dải bản quyền
+   Bố cục lưới do `.row`/`.col-*` của Bootstrap lo — đây là chỗ khung lưới ấy
+   thật sự có ích, không phải chỗ tự viết lại một hệ 12 cột nữa.
+   ============================================================================ */
 
-   Cả ba đều qua ngưỡng AA (4.5:1) cho chữ nhỏ; chân trang toàn chữ 12–13.5px
-   nên không được hạ thêm nấc nào nữa.
-
-   Đường kẻ dùng rgba trên nền đỏ chứ không phải màu đặc: một sắc pha sẵn sẽ
-   sai ngay khi --brand đổi tông.
-
-   Footer dùng chung cho MỌI trang, không riêng trang chủ. Khung rút gọn
-   (đăng nhập, thanh toán) dùng .barefoot riêng, không đụng tới file này.
-   ============================================================ */
-
-/* margin-top:88px là khoảng thở giữa khối cuối trang và chân trang, ghi
-   trong "Vin Eyewear Home.dc.html". Không đặt ở .main-content vì mỗi trang
-   kết thúc bằng một khối khác nhau — để ở đây thì trang nào cũng có đúng
-   một khoảng. */
 .site-footer {
-    margin-top: 88px;
-    /* Cùng lề với header và các khối trang chủ — xem --page-edge (layout.css) */
-    padding: 64px var(--page-edge) 12px;
-    /* KHÔNG còn border-top: chính mảng màu đã tách chân trang khỏi nội dung.
-       Giữ lại thì thành một sợi chỉ sáng vắt ngang mép trên khối đỏ. */
-    background: var(--brand);
-    color: var(--on-brand-soft);
+    margin-top: var(--section-pad);
+    padding-block: clamp(48px, 6vw, 88px) var(--space-6);
+    background: var(--h-dark);
+    color: var(--h-on-dark-muted);
 }
 
-/* TRỪ hai trang tự lo lấy khoảng đó.
-   "Vin Eyewear Category.dc.html" và "Vin Eyewear Contact.dc.html" không đặt
-   margin-top cho footer; thay vào đó khối cuối của chúng có sẵn 96px đệm
-   dưới. Cộng cả hai thành 184px trống trước chân trang — gấp đôi thiết kế. */
-/* TRANG CHỦ ĐÃ RỜI DANH SÁCH NÀY. Nó vào đây khi khối cuối của trang là
-   .hcta — một dải nâu sẫm tràn hai mép mà thiết kế cho chân trang bắt đầu
-   ngay dưới. Xoá khối đó (03/09/2026) thì trang kết thúc bằng khối đánh giá,
-   nền pearl như mọi trang thường, nên nó cần đúng 88px như mọi trang thường.
-   Đệm dưới của .hrev đã hạ về 0 để 88px này là khoảng DUY NHẤT — xem
-   components/home-sections.css. */
-/* Trang giới thiệu: khối cuối (.about-start) cũng là một dải nền tràn hai
-   mép, bản thiết kế cho chân trang bắt đầu ngay dưới nó. */
-.page-about-index .site-footer,
-.page-product-index .site-footer,
-.page-contact-index .site-footer,
-.page-product-detail .site-footer,
-.page-booking-index .site-footer {
-    margin-top: 0;
+/* ────────────────────────────────────────────────────────────────────────────
+   1. WORDMARK + CÁC CỘT LIÊN KẾT
+   ──────────────────────────────────────────────────────────────────────────── */
+.footer-top {
+    row-gap: var(--space-10);
 }
 
-/* --- 1. Lưới 4 cột ------------------------------------------ */
-
-.footer-grid {
-    display: grid;
-    gap: 48px;
-    max-width: var(--container, 1600px);
-    margin-inline: auto;
-}
-
-@media (min-width: 601px) {
-    .footer-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (min-width: 1101px) {
-
-    /* 1.4 / 1 / 1 / 1.2 — cột thương hiệu rộng nhất cho đoạn giới thiệu,
-       cột liên hệ rộng hơn hai cột liên kết vì chứa email và giờ mở cửa. */
-    .footer-grid {
-        grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
-        gap: 48px;
-    }
-}
-
-.footer-brand,
-.footer-col {
-    min-width: 0;
-}
-
-/* Wordmark 22px — nhỏ hơn wordmark trên header (24px) đúng một nấc */
 .footer-logo {
-    font-family: var(--font-serif);
-    font-size: 22px;
-    font-weight: 600;
-    line-height: 1.15;
-    color: var(--on-brand);
-}
-
-/* Nghiêng và nhẹ hơn nửa nấc, KHÔNG đổi màu: cả hai chữ cùng một sắc đỏ,
-   giống hệt wordmark trên header. */
-.footer-logo em {
-    font-style: italic;
-    font-weight: 500;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: var(--h-on-dark);
+    margin-bottom: var(--space-4);
 }
 
 .footer-blurb {
-    max-width: 280px;
-    margin-top: 16px;
-    font-size: 13.5px;
+    max-width: 34ch;
+    color: var(--h-on-dark-muted);
+    font-size: var(--fs-body-sm);
     line-height: 1.7;
-    color: var(--on-brand-muted);
 }
 
-/* Mạng xã hội */
-.footer-socials {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 22px;
-    list-style: none;
-}
-
-.footer-socials a {
-    display: grid;
-    place-items: center;
-    width: 36px;
-    height: 36px;
-    border: 1px solid rgba(246, 227, 221, 0.3);
-    border-radius: var(--radius-round);
-    color: var(--on-brand-soft);
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
-}
-
-/* ĐẢO MÀU khi rê chuột. Trên nền sáng, kiểu nút tròn của site là "đổ đầy màu
-   thương hiệu"; ở đây nền ĐÃ là màu thương hiệu nên đổ tiếp thì không thấy gì.
-   Đảo lại giữ đúng cái ý "rê chuột thì nút đặc lại". */
-.footer-socials a:hover,
-.footer-socials a:focus-visible {
-    background: var(--on-brand-soft);
-    border-color: var(--on-brand-soft);
-    color: var(--brand);
-}
-
-.footer-socials svg {
-    width: 15px;
-    height: 15px;
-    fill: currentColor;
-}
-
-/* Tiêu đề cột — cùng tông hồng ấm với .eyebrow của các khối trang chủ */
 .footer-heading {
-    font-family: var(--font-sans);
-    font-size: 12px;
+    margin-bottom: var(--space-4);
+    color: var(--h-on-dark);
+    font-size: var(--fs-label);
     font-weight: 600;
+    letter-spacing: .12em;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    /* KHÔNG dùng --eyebrow (#b0736a): sắc hồng ấm đó sinh ra cho nền pearl,
-       đặt lên crimson chỉ còn 1.6:1 — gần như biến mất. */
-    color: var(--on-brand-muted);
 }
 
-/* Cột "Liên hệ" — ba loại thông tin, không icon */
+.footer-links,
 .footer-contact {
-    margin-top: 12px;
     list-style: none;
     display: grid;
-    gap: 12px;
-    font-size: 13.5px;
-    line-height: 1.7;
-    color: var(--on-brand-soft);
+    gap: var(--space-3);
+    font-size: var(--fs-body-sm);
 }
 
+.footer-links a,
 .footer-contact a {
-    color: var(--on-brand);
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-/* Gạch chân khi rê chuột thay vì đổi màu: liên kết ở đây đã là màu sáng nhất
-   có trên nền đỏ, không còn nấc nào sáng hơn để nhảy lên. */
-.footer-contact a:hover,
-.footer-contact a:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-/* Hotline là thứ khách tìm nhanh nhất trong cột này -> đậm hơn hai dòng
-   ngay trên nó. Giữ màu chữ thường chứ không tô đỏ: bản thiết kế viết cả
-   dòng "Hotline: <số>" bằng một màu, chỉ email mới là liên kết. */
-.footer-phone {
-    font-weight: 600;
-    color: var(--on-brand);
-    letter-spacing: 0.02em;
-}
-
-.footer-phone:hover,
-.footer-phone:focus-visible {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-/* Email dài không được đẩy tràn cột trên màn hình hẹp */
-.footer-break {
-    word-break: break-all;
-}
-
-/* Cột liên kết */
-.footer-links {
-    margin-top: 12px;
-    list-style: none;
-    display: grid;
-    gap: 12px;
-    font-size: 13.5px;
-}
-
-.footer-links a {
-    display: inline-block;
     color: var(--on-brand-soft);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color .15s ease;
 }
 
 .footer-links a:hover,
-.footer-links a:focus-visible {
-    color: var(--on-brand);
+.footer-links a:focus-visible,
+.footer-contact a:hover,
+.footer-contact a:focus-visible {
+    /* Furnish: `.ft-links:hover { color: $white }` — sáng lên chứ không đổi
+       sắc. Trên nền tối, đổi sang màu nhấn thì crimson tối quá, chìm hẳn. */
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
-/* --- 2. Dải dưới cùng --------------------------------------- */
+.footer-phone {
+    font-weight: 600;
+}
 
-/* Đường kẻ và lề nằm trên __inner chứ không trên .footer-bottom: bản thiết
-   kế cho dải này rộng đúng bằng lưới 4 cột (1280px, căn giữa), nên đường kẻ
-   phải dừng lại ở mép lưới chứ không chạy hết bề ngang trang. */
-.footer-bottom__inner {
+/* Email dài hơn bề ngang cột trên màn hẹp — cho phép ngắt giữa chuỗi thay vì
+   đẩy cả cột rộng ra. */
+.footer-break {
+    overflow-wrap: anywhere;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   2. CÂU TUYÊN NGÔN + MẠNG XÃ HỘI
+   ──────────────────────────────────────────────────────────────────────────── */
+.footer-statement {
+    margin-top: clamp(40px, 5vw, 72px);
+    align-items: end;
+    row-gap: var(--space-8);
+}
+
+.footer-statement__text {
+    color: var(--h-on-dark);
+    /* Cỡ `display-3` của Furnish, chuyển sang clamp() để màn hẹp không vỡ. */
+    font-size: clamp(28px, 4.4vw, 56px);
+    font-weight: 400;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+}
+
+.footer-statement__side {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    max-width: var(--container, 1600px);
-    margin: 48px auto 0;
-    padding: 20px 0;
-    border-top: 1px solid rgba(246, 227, 221, 0.22);
-    font-size: 12px;
-    color: var(--on-brand-muted);
+    justify-content: flex-start;
 }
 
-@media (min-width: 601px) {
-    .footer-bottom__inner {
-        flex-direction: row;
+.footer-socials {
+    list-style: none;
+    display: flex;
+    gap: var(--space-3);
+}
+
+/* Nút vuông viền mảnh — `.btn-outline-light.btn-icon` của Furnish. Kích thước
+   3rem do lớp .btn-icon trong furnish.css lo. */
+.footer-socials .btn-icon {
+    border: 1px solid rgba(246, 245, 244, .28);
+    color: var(--h-on-dark);
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.footer-socials .btn-icon:hover,
+.footer-socials .btn-icon:focus-visible {
+    background: #fff;
+    border-color: #fff;
+    color: var(--h-dark);
+}
+
+.footer-socials svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   3. EMAIL CỠ LỚN + NÚT LIÊN HỆ
+   ──────────────────────────────────────────────────────────────────────────── */
+.footer-reach {
+    margin-top: clamp(40px, 5vw, 72px);
+    align-items: center;
+    row-gap: var(--space-6);
+}
+
+.footer-reach__label {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--h-dark-eyebrow);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.footer-reach__mail {
+    color: var(--h-on-dark);
+    font-size: clamp(20px, 2.4vw, 30px);
+    font-weight: 300;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.footer-reach__mail:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.footer-reach__side {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.footer-reach__cta {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-4) var(--space-8);
+    border: 1px solid rgba(246, 245, 244, .38);
+    color: var(--h-on-dark);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.footer-reach__cta:hover,
+.footer-reach__cta:focus-visible {
+    background: #fff;
+    border-color: #fff;
+    color: var(--h-dark);
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   4. ĐƯỜNG KẺ + DẢI PHÁP LÝ
+   ──────────────────────────────────────────────────────────────────────────── */
+.footer-rule {
+    margin-block: clamp(32px, 4vw, 56px) var(--space-6);
+    border: 0;
+    border-top: 1px solid rgba(246, 245, 244, .16);
+    opacity: 1;
+}
+
+.footer-legal {
+    align-items: center;
+    row-gap: var(--space-3);
+    font-size: var(--fs-caption);
+}
+
+.footer-legal__text {
+    color: var(--h-on-dark-muted);
+}
+
+.footer-legal__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+}
+
+.footer-legal__nav a {
+    color: var(--h-on-dark-muted);
+    text-decoration: none;
+    transition: color .15s ease;
+}
+
+.footer-legal__nav a:hover,
+.footer-legal__nav a:focus-visible {
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Từ 768px: hai khối bên phải căn phải, đúng bản mẫu (`justify-content-md-end`,
+   `text-md-end`). Dưới mốc đó chúng xếp dọc và căn trái — căn phải trên màn
+   hẹp làm dòng chữ trôi khỏi mép trái của mọi thứ còn lại. */
+@media (min-width: 768px) {
+    .footer-legal__nav {
+        justify-content: flex-end;
     }
 }
 
-.footer-bottom__nav {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
+@media (min-width: 992px) {
 
-.footer-bottom__nav a {
-    color: inherit;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.footer-bottom__nav a:hover,
-.footer-bottom__nav a:focus-visible {
-    color: var(--on-brand);
-}
-
-/* Dòng pháp nhân: gộp tên công ty + MST vào một dòng thay cho cả một tầng
-   riêng. Chữ nhỏ và mờ nhưng vẫn phải đọc được — đây là thông tin bắt buộc
-   theo quy định thương mại điện tử, không phải chú thích trang trí. */
-.footer-bottom__legal {
-    margin: 0;
-    color: var(--on-brand-muted);
-}
-
-@media (max-width: 720px) {
-    .site-footer {
-        margin-top: 56px;
-        padding: 48px var(--page-edge) 12px;
+    .footer-statement__side,
+    .footer-reach__side {
+        justify-content: flex-end;
     }
 }

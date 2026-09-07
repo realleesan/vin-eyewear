@@ -127,7 +127,7 @@ if ($feature !== null) {
     <a href="/san-pham"
        class="mega__trigger<?= $isProductActive ? ' is-active' : '' ?>"
        <?= $isProductActive ? 'aria-current="page"' : '' ?>>
-        Sản phẩm
+        <?= e(t('nav.products')) ?>
         <svg class="mega__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round"/>
@@ -183,7 +183,7 @@ if ($feature !== null) {
                                  hơn ô này (30 ký tự) vì thẻ chỉ rộng ~220px. */ ?>
                         <span class="mega-feature__note">
                             <?= e(excerpt($feature['tagline'] ?? '', 30)) ?>
-                            <span class="mega-feature__more">· Xem ngay →</span>
+                            <span class="mega-feature__more"><?= e(t('mega.view')) ?></span>
                         </span>
                     </span>
                 </a>
