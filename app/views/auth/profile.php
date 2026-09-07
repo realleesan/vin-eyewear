@@ -22,7 +22,7 @@
  *    tôi" đóng/mở bằng <details> — cũng là hành vi y hệt bản thiết kế nhưng
  *    của chính trình duyệt, không cần một dòng JS nào.
  *
- * 2. BẢY MỤC CHỨ KHÔNG SÁU — thêm "Lịch hẹn của tôi".
+ * 2. THÊM MỤC "Lịch hẹn của tôi", ngoài bản thiết kế.
  *    Trang tài khoản cũ đã có khối lịch hẹn đo mắt và nó đang chạy thật
  *    (BookingModel::forUser). Bản thiết kế không vẽ mục này, nhưng cột điều
  *    hướng của nó là một danh sách lặp (`sc-for navItems`) chứ không phải ba ô
@@ -42,7 +42,9 @@ $initial = utf8Substr($name, 0, 1);
 /* Ba mục trong nhóm thu gọn được, và ba mục cấp một còn lại. Thứ tự lấy
    nguyên từ bản thiết kế. */
 $groupKeys = ['ho-so', 'dia-chi', 'mat-khau'];
-$navKeys   = ['don-hang', 'do-mat', 'lich-hen'];
+/* 'do-mat' (Thông số đo mắt) đã gỡ khỏi trang tài khoản — xem ghi chú ở
+   AuthController::SECTIONS. Số đo vẫn do kỹ thuật viên nhập bên quản trị. */
+$navKeys   = ['don-hang', 'lich-hen'];
 
 $inGroup = in_array($section, $groupKeys, true);
 ?>

@@ -1013,19 +1013,22 @@ class AuthController extends BaseController
     // ========================================================================
 
     /**
-     * Sáu mục của trang tài khoản, khoá là giá trị ?muc=.
+     * Năm mục của trang tài khoản, khoá là giá trị ?muc=.
      *
      * Ba mục đầu gộp trong nhóm "Tài khoản của tôi" ở cột trái (bản thiết kế
-     * vẽ chúng trong một menu thu gọn được); ba mục sau là mục cấp một.
-     * 'lich-hen' là mục THỨ BẢY, thêm ngoài bản thiết kế — xem ghi chú đầu
+     * vẽ chúng trong một menu thu gọn được); hai mục sau là mục cấp một.
+     * 'lich-hen' thêm ngoài bản thiết kế — xem ghi chú đầu
      * app/views/auth/profile.php.
+     *
+     * 'do-mat' (Thông số đo mắt) ĐÃ GỠ. Số đo vẫn nằm trong
+     * customer_prescriptions và vẫn do kỹ thuật viên nhập ở
+     * /quan-tri/khach-hang; chỉ mục tự xem/tự khai phía khách là bỏ.
      */
     private const SECTIONS = [
         'ho-so'    => 'Hồ sơ của tôi',
         'dia-chi'  => 'Sổ địa chỉ',
         'mat-khau' => 'Đổi mật khẩu',
         'don-hang' => 'Đơn hàng của tôi',
-        'do-mat'   => 'Thông số đo mắt',
         'lich-hen' => 'Lịch hẹn của tôi',
     ];
 
@@ -1095,7 +1098,7 @@ class AuthController extends BaseController
         }
 
         /*
-         * Số hiện trên huy hiệu ở cột trái. Cột trái vẽ ở CẢ SÁU mục nên hai
+         * Số hiện trên huy hiệu ở cột trái. Cột trái vẽ ở CẢ NĂM mục nên hai
          * câu đếm này chạy mọi lần — nhưng chúng là COUNT(*) có chỉ mục, rẻ
          * hơn nhiều so với việc nạp cả danh sách chỉ để đếm.
          *
@@ -1112,8 +1115,8 @@ class AuthController extends BaseController
          * đã huỷ, hoặc quá ngày thì rơi khỏi countUpcoming(). Chi tiết từng
          * vế nằm ở chú thích của hai hàm đó.
          *
-         * Mục "Thông số đo mắt" không có huy hiệu: nó là một hồ sơ, không
-         * phải một hàng đợi — đếm "1" ở đó không nói thêm được gì.
+         * Ba mục còn lại không có huy hiệu: hồ sơ, sổ địa chỉ và đổi mật
+         * khẩu không phải hàng đợi, đếm ở đó không nói thêm được gì.
          * ─────────────────────────────────────────────────────────────────
          */
         $counts = [
@@ -1123,8 +1126,8 @@ class AuthController extends BaseController
 
         $this->renderView('auth/profile', [
             'pageTitle' => self::SECTIONS[$section] . ' — Vin Eyewear',
-            'metaDesc'  => 'Trang tài khoản Vin Eyewear: hồ sơ, sổ địa chỉ, đơn hàng, '
-                         . 'thông số đo mắt và ưu đãi của bạn.',
+            'metaDesc'  => 'Trang tài khoản Vin Eyewear: hồ sơ, sổ địa chỉ, đơn hàng '
+                         . 'và lịch hẹn của bạn.',
             'sections'  => self::SECTIONS,
             'section'   => $section,
             'counts'    => $counts,
@@ -1199,18 +1202,6 @@ class AuthController extends BaseController
                     // thanh toán in thẳng số tài khoản + mã đơn làm nội dung
                     // chuyển khoản. Xem config/company.php.
                     'bank'      => config('company.bank', []),
-                ];
-
-            case 'do-mat':
-                $prescription = UserModel::prescription($userId);
-                // Chưa có thông số nào thì mở thẳng form nhập: hiện một thẻ
-                // rỗng rồi bắt khách tự tìm ra nút sửa là thừa một bước.
-                $editing = isset($_GET['sua']) || $prescription === null;
-
-                return [
-                    'prescription' => $prescription,
-                    'editing'      => $editing,
-                    'stores'       => $editing ? StoreModel::active() : [],
                 ];
 
             case 'lich-hen':
@@ -1749,115 +1740,6 @@ class AuthController extends BaseController
         redirect('/gio-hang');
     }
 
-    /**
-     * Tự nhập thông số đo mắt.
-     *
-     * Bản thiết kế vẽ mục này ở dạng CHỈ ĐỌC — "kết quả đo khúc xạ gần nhất
-     * tại Vin Eyewear", tức dữ liệu do kỹ thuật viên nhập. Form tự nhập vẫn
-     * giữ (nó có từ trước và là cách duy nhất để khách mang đơn thuốc từ nơi
-     * khác sang), nhưng nằm ở một trạng thái riêng: /tai-khoan?muc=do-mat&sua=1.
-     */
-    public function updatePrescription(): void
-    {
-        $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=do-mat');
-
-        /*
-         * THỊ LỰC ĐẾN ĐÂY LÀ HAI Ô SỐ, ghép lại thành chuỗi "9/10".
-         *
-         * Form không còn ô chữ nào cho người dùng gõ cả phân số — dấu "/" là
-         * chữ trong markup, hai số là <input type="number" max="10">. Xem khối
-         * chú thích dài trong app/views/auth/account/do-mat.php.
-         *
-         * CỘT TRONG CSDL KHÔNG ĐỔI: vẫn là chuỗi "9/10". Ghép ở đây chứ không
-         * đổi lược đồ, vì bảng thông số, trang quản trị và bản in đều đang đọc
-         * một chuỗi — tách thành hai cột là sửa cả bốn chỗ để đổi lấy đúng một
-         * phép nối chuỗi.
-         *
-         * VẪN KIỂM LẠI bằng vaHopLe() sau khi ghép, và đó không phải phép thừa:
-         * thuộc tính min/max của ô số là hàng rào của TRÌNH DUYỆT, mà request
-         * gửi tay thì không đi qua trình duyệt nào cả. Đây là dữ liệu y tế.
-         *
-         * MỘT Ô TRỐNG MỘT Ô CÓ là gõ dở, không phải "chưa khai" — ghép ra "9/"
-         * hoặc "/10", và vaHopLe() chặn đúng nó rồi báo cho người dùng. Trống
-         * cả hai mới là chưa khai.
-         *
-         * Kiểm CẢ HAI MẮT và nêu đích danh mắt sai: người nhập gõ nhầm một bên
-         * thì phải biết bên nào, chứ không phải soi lại cả bảng.
-         */
-        $va = [];
-
-        foreach (['od' => 'mắt phải (OD)', 'os' => 'mắt trái (OS)'] as $mat => $ten) {
-            $so    = trim((string) ($_POST[$mat . '_va_so'] ?? ''));
-            $thang = trim((string) ($_POST[$mat . '_va_thang'] ?? ''));
-
-            $va[$mat] = ($so === '' && $thang === '') ? '' : $so . '/' . $thang;
-
-            if (!UserModel::vaHopLe($va[$mat])) {
-                flash('account_error', sprintf(
-                    'Thị lực %s phải là hai số từ 0 đến 10, điền đủ cả hai ô.',
-                    $ten
-                ));
-                redirect('/tai-khoan?muc=do-mat');
-            }
-        }
-
-        /* ĐỘ CẦU TỚI ĐÂY LÀ HAI Ô: dấu (`*_dau`) và độ lớn (`*_sph`).
-           Ghép bằng LensModel::joinSph() — đúng hàm mà luồng thêm tròng vào giỏ
-           đang dùng, nên một con số nhập ở hai nơi ra cùng một chuỗi trong CSDL.
-           Tự nối chuỗi ở đây là mở đường cho hai chỗ lệch nhau ở lần sửa sau. */
-        $ket = UserModel::savePrescription($userId, [
-            'od_sph'         => LensModel::joinSph($_POST['od_dau'] ?? null, $_POST['od_sph'] ?? null),
-            'od_cyl'         => $_POST['od_cyl'] ?? '',
-            'od_axis'        => $_POST['od_axis'] ?? '',
-            'od_va'          => $va['od'],
-            'os_sph'         => LensModel::joinSph($_POST['os_dau'] ?? null, $_POST['os_sph'] ?? null),
-            'os_cyl'         => $_POST['os_cyl'] ?? '',
-            'os_axis'        => $_POST['os_axis'] ?? '',
-            'os_va'          => $va['os'],
-            'pd'             => $_POST['pd'] ?? '',
-            'measured_at'    => $_POST['measured_at'] ?? '',
-            'store_id'       => $_POST['store_id'] ?? '',
-            'recommendation' => $_POST['recommendation'] ?? '',
-        ]);
-
-        /* ĐƯỜNG GHI MỚI TỪ CHỐI ĐƯỢC — SRS v2.1.0, FR-DM-01.
-
-           Từ khi số đo của khách đi chung một đường ghi với số đo của nhân
-           viên (PrescriptionRecordModel::save), nó chịu đủ bộ kiểm miền giá
-           trị: bước nhảy 0,25, quan hệ trụ/trục, ngày đo không ở tương lai.
-
-           Bản cũ trả void nên không có gì để kiểm. Bỏ qua kết quả ở đây là để
-           khách bấm Lưu, thấy trang tải lại y như thành công, và tin rằng số
-           đo đã vào hồ sơ — trong khi nó bị từ chối. */
-        if (!$ket['ok']) {
-            /* LỌC THÔNG BÁO: LỖI CỦA NGƯỜI NHẬP THÌ HIỆN, LỖI HẠ TẦNG THÌ KHÔNG.
- 
-               Đường ghi này dùng chung với khu quản trị, và vài câu lỗi của nó
-               viết cho nhân viên kỹ thuật — có cả tên file .sql và đường dẫn
-               thư mục nội bộ ("Chạy database/migrations/… rồi thử lại"). Đổ
-               nguyên văn ra trang tài khoản là vừa vô nghĩa với khách vừa phơi
-               cấu trúc dự án.
- 
-               Nhận ra lỗi hạ tầng bằng chính dấu hiệu ấy: câu nào nhắc tới
-               migration thì thay bằng một câu chung và ghi bản thật vào log.
-               Lỗi miền giá trị ("Độ trụ phải nằm trong khoảng…") thì hiện
-               nguyên văn — chúng viết cho người đang nhập, và đó là thứ duy
-               nhất nói cho khách biết phải sửa ô nào. */
-            $loi = (string) ($ket['error'] ?? '');
-
-            if ($loi === '' || str_contains($loi, 'migration')) {
-                error_log('updatePrescription: ' . ($loi !== '' ? $loi : 'không rõ lý do'));
-                $loi = 'Chưa lưu được thông số đo mắt. Vui lòng thử lại hoặc liên hệ cửa hàng.';
-            }
-
-            flash('account_error', $loi);
-            redirect('/tai-khoan?muc=do-mat&sua=1');
-        }
-
-        flash('account_success', 'Đã lưu thông số đo mắt.');
-        redirect('/tai-khoan?muc=do-mat');
-    }
 
     public function changePassword(): void
     {

@@ -158,14 +158,18 @@ return [
     // có JavaScript, và địa chỉ callback do Google gọi tới nên không thể là POST.
     'auth/google'          => 'AuthController@googleStart',
     'auth/google/callback' => 'AuthController@googleCallback',
-    // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": SÁU mục nằm
+    // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": NĂM mục nằm
     // trên CÙNG một đường dẫn, chọn bằng ?muc=... (ho-so · dia-chi · mat-khau
-    // · don-hang · do-mat · lich-hen). Không tách thành năm route vì
-    // cột điều hướng bên trái phải hiện y hệt nhau ở cả sáu — tách ra là sáu
-    // action chỉ khác nhau đúng một biến.
+    // · don-hang · lich-hen). Không tách thành năm route vì cột điều hướng bên
+    // trái phải hiện y hệt nhau ở cả năm — tách ra là năm action chỉ khác nhau
+    // đúng một biến.
+    //
+    // 'tai-khoan/khuc-xa' => updatePrescription() ĐÃ GỠ cùng mục "Thông số đo
+    // mắt". Khách không còn tự xem/tự khai số đo; kỹ thuật viên vẫn nhập ở
+    // /quan-tri/khach-hang, và luồng mua hàng vẫn tự ghi bản tự khai qua
+    // UserModel::seedPrescription().
     'tai-khoan'         => 'AuthController@profile',
     'tai-khoan/ho-so'   => 'AuthController@updateProfile',      // POST
-    'tai-khoan/khuc-xa' => 'AuthController@updatePrescription', // POST
     'tai-khoan/mat-khau'=> 'AuthController@changePassword',     // POST
     'tai-khoan/anh'     => 'AuthController@updateAvatar',       // POST (multipart)
     'tai-khoan/mua-lai' => 'AuthController@reorder',            // POST

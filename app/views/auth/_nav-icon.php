@@ -3,13 +3,15 @@
 /**
  * auth/_nav-icon.php — icon của một mục trong cột điều hướng tài khoản.
  *
- * KHÔNG dùng icon() của core/icons.php: bốn hình dưới đây vẽ riêng cho
+ * KHÔNG dùng icon() của core/icons.php: hai hình dưới đây vẽ riêng cho
  * "Vin Eyewear Account.dc.html" trên khung 16×16 nét 1.8, còn kho ICONS dùng
- * chung là khung 24×24 nét 1.5. Trộn hai bộ thì bốn mục cạnh nhau có bốn độ
- * dày nét khác nhau.
+ * chung là khung 24×24 nét 1.5. Trộn hai bộ thì các mục cạnh nhau có độ dày
+ * nét khác nhau.
+ *
+ * Hình 'do-mat' (cặp kính) đã gỡ cùng mục "Thông số đo mắt".
  *
  * Nhận qua partial():
- *   $key — khoá mục ('don-hang' | 'do-mat' | 'lich-hen')
+ *   $key — khoá mục ('don-hang' | 'lich-hen')
  */
 ?>
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -18,12 +20,6 @@
         case 'don-hang': ?>
             <path d="M16 3H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"></path>
             <path d="M9 7h6M9 11h6M9 15h4"></path>
-            <?php break;
-
-        case 'do-mat': ?>
-            <circle cx="6.5" cy="12" r="4"></circle>
-            <circle cx="17.5" cy="12" r="4"></circle>
-            <path d="M10.5 12h3M2.5 10.5L1 9M21.5 10.5L23 9"></path>
             <?php break;
 
         case 'lich-hen': ?>
