@@ -52,18 +52,72 @@
     var boxes = Array.prototype.slice.call(document.querySelectorAll('.aotp__box'));
 
     if (boxes.length) {
+        /* Nhảy sang ô sau rồi bôi đen nội dung sẵn có: gõ tiếp là ĐÈ LÊN chứ
+           không bị maxlength="1" nuốt mất phím. Đây là chỗ luồng cũ hỏng —
+           ô đích đã có số thì trình duyệt chặn ký tự mới, không sinh sự kiện
+           `input` nào, và người dùng thấy như ô nhập chết cứng. */
+        var toi = function (j) {
+            var next = boxes[j];
+            if (!next) return;
+
+            next.focus();
+            try { next.setSelectionRange(0, next.value.length); } catch (err) { /* ô số cũ */ }
+        };
+
         boxes.forEach(function (box, i) {
             box.addEventListener('input', function () {
                 // Chỉ giữ chữ số, và giữ ký tự VỪA gõ chứ không phải ký tự đầu:
                 // gõ đè lên một ô đã có số thì cái mới mới là cái người ta muốn.
-                box.value = box.value.replace(/\D/g, '').slice(-1);
+                var truoc = box.value;
+                box.value = truoc.replace(/\D/g, '').slice(-1);
 
-                if (box.value && boxes[i + 1]) boxes[i + 1].focus();
+                // Gõ chữ cái vào ô trống: xoá sạch rồi ĐỨNG YÊN, đừng nhảy ô.
+                if (box.value) toi(i + 1);
+            });
+
+            /* Bôi đen sẵn khi bấm/tab vào một ô đã có số — cùng lý do với
+               toi(): để phím tiếp theo ghi đè được. */
+            box.addEventListener('focus', function () {
+                try { box.setSelectionRange(0, box.value.length); } catch (err) { /* ô số cũ */ }
             });
 
             box.addEventListener('keydown', function (e) {
-                if (e.key === 'Backspace' && !box.value && boxes[i - 1]) {
-                    boxes[i - 1].focus();
+                /* CHẶN NƯỚC ĐÔI CỦA maxlength: ô đang đầy mà con trỏ không bôi
+                   đen gì thì trình duyệt lặng lẽ bỏ phím vừa gõ. Ở đây ta tự
+                   ghi đè rồi nhảy ô — không có đoạn này thì gõ lại một dãy mã
+                   thứ hai đè lên dãy cũ là bất động hoàn toàn. */
+                if (/^[0-9]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                    e.preventDefault();
+                    box.value = e.key;
+                    toi(i + 1);
+                    return;
+                }
+
+                if (e.key === 'Backspace') {
+                    /* Ô trống thì lùi ô VÀ xoá luôn số ở đó: một nhịp Backspace
+                       ăn một chữ số, đúng như người ta chờ đợi. */
+                    if (!box.value && boxes[i - 1]) {
+                        e.preventDefault();
+                        boxes[i - 1].value = '';
+                        toi(i - 1);
+                    }
+                    return;
+                }
+
+                if (e.key === 'Delete') {
+                    box.value = '';
+                    return;
+                }
+
+                if (e.key === 'ArrowLeft' && boxes[i - 1]) {
+                    e.preventDefault();
+                    toi(i - 1);
+                    return;
+                }
+
+                if (e.key === 'ArrowRight' && boxes[i + 1]) {
+                    e.preventDefault();
+                    toi(i + 1);
                 }
             });
 

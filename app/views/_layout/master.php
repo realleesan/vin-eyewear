@@ -434,6 +434,12 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         // ô mật khẩu vẫn dùng bình thường.
         'auth/index'    => 'auth.js',
         'auth/reset'    => 'auth.js',
+        // Màn quên mật khẩu dùng CHUNG cụm sáu ô mã (.aotp__box) và cụm đếm
+        // ngược gửi lại (.aresend) với luồng đăng ký — xem auth/forgot.php.
+        // Trang này bị bỏ sót khỏi bảng: sáu ô mã vẫn gõ được từng ô nhưng
+        // không tự nhảy ô, và nút "Gửi lại mã" nằm im ở trạng thái disabled
+        // cho tới khi tải lại trang.
+        'auth/forgot'   => 'auth.js',
         // Cùng nút hiện/ẩn mật khẩu ấy, dùng lại nguyên si — cổng quản trị
         // đặt đúng bộ lớp .authpw mà file này tìm. Thiếu nó thì nút tự ẩn và
         // ô mật khẩu vẫn gõ bình thường.
