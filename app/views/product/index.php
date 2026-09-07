@@ -217,7 +217,7 @@ $chip = static function (string $group, array $opt) use ($toggleUrl): void {
     ?>
     <?php if ($dead): ?>
         <span class="pchip is-off" aria-disabled="true"><?= e($opt['label']) ?><span
-            class="sr-only"> — không có sản phẩm nào</span></span>
+            class="sr-only"> — <?= e(t('filter.none_sr')) ?></span></span>
     <?php else: ?>
         <?php /* aria-current chứ không phải aria-pressed: aria-pressed chỉ hợp
                  lệ trên nút, còn đây là <a>. Kèm một câu chỉ trình đọc màn hình
@@ -228,7 +228,7 @@ $chip = static function (string $group, array $opt) use ($toggleUrl): void {
            href="<?= e($toggleUrl($group, $opt['key'])) ?>"
            <?= $opt['on'] ? 'aria-current="true"' : '' ?>
            rel="nofollow"><?= e($opt['label']) ?><?php
-            if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif;
+            if ($opt['on']): ?><span class="sr-only"> — <?= e(t('filter.on_sr')) ?></span><?php endif;
         ?></a>
     <?php endif; ?>
     <?php
@@ -361,7 +361,7 @@ $pick = static function (
         <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn là lọc luôn).
                  Không có JS thì đây là cách duy nhất để chốt lựa chọn, nên
                  không được bỏ. */ ?>
-        <button type="submit" class="catpick__go">Áp dụng</button>
+        <button type="submit" class="catpick__go"><?= e(t('filter.apply')) ?></button>
     </form>
     <?php
 };
@@ -410,11 +410,11 @@ $checkGroup = static function (string $key, string $legend, array $options, bool
         <?php if ($search): ?>
             <form class="pfacet__search" method="get" action="<?= e($catalogBase) ?>" data-brand-filter>
                 <?php $hiddenFilters(['bq', 'page']); ?>
-                <label class="sr-only" for="f-bq">Tìm trong danh sách thương hiệu</label>
+                <label class="sr-only" for="f-bq"><?= e(t('filter.brand_search')) ?></label>
                 <input class="pfacet__input" type="text" id="f-bq" name="bq"
                        value="<?= e($filters['bq']) ?>" placeholder="Tìm thương hiệu"
                        autocomplete="off">
-                <button type="submit" class="pfacet__go">Lọc</button>
+                <button type="submit" class="pfacet__go"><?= e(t('filter.filter')) ?></button>
             </form>
         <?php endif; ?>
 
@@ -427,7 +427,7 @@ $checkGroup = static function (string $key, string $legend, array $options, bool
                           data-brand-plain="<?= e(slugify($opt['label'])) ?>"<?php endif; ?>>
                         <span class="pcheck__box" aria-hidden="true"></span>
                         <span class="pcheck__label"><?= e($opt['label']) ?></span>
-                        <span class="sr-only"> — không có sản phẩm nào</span>
+                        <span class="sr-only"> — <?= e(t('filter.none_sr')) ?></span>
                     </span>
                 <?php else: ?>
                     <a class="pcheck<?= $opt['on'] ? ' is-on' : '' ?>"
@@ -442,13 +442,13 @@ $checkGroup = static function (string $key, string $legend, array $options, bool
                        data-brand-plain="<?= e(slugify($opt['label'])) ?>"<?php endif; ?>>
                         <span class="pcheck__box" aria-hidden="true"><?= $opt['on'] ? '✓' : '' ?></span>
                         <span class="pcheck__label"><?= e($opt['label']) ?></span>
-                        <?php if ($opt['on']): ?><span class="sr-only"> — đang lọc, bấm để bỏ</span><?php endif; ?>
+                        <?php if ($opt['on']): ?><span class="sr-only"> — <?= e(t('filter.on_sr')) ?></span><?php endif; ?>
                     </a>
                 <?php endif; ?>
             <?php endforeach; ?>
 
             <?php if ($options === []): ?>
-                <p class="pfacet__none">Không có thương hiệu nào khớp.</p>
+                <p class="pfacet__none"><?= e(t('filter.no_brand')) ?></p>
             <?php endif; ?>
         </div>
     </div>
@@ -522,9 +522,9 @@ partial('_layout/page-head', [
         <details class="cfilter" data-filter-sheet>
             <summary class="cfilter__toggle">
                 <?= icon('filter', '', 16) ?>
-                Bộ lọc
+                <?= e(t('filter.title')) ?>
                 <?php if ($activeCount > 0): ?>
-                    <span class="cfilter__count"><?= $activeCount ?><span class="sr-only"> tiêu chí đang bật</span></span>
+                    <span class="cfilter__count"><?= $activeCount ?><span class="sr-only"> <?= e(t('filter.count_sr')) ?></span></span>
                 <?php endif; ?>
             </summary>
 
@@ -543,9 +543,9 @@ partial('_layout/page-head', [
                              sẽ khiến hàng tiêu đề nhảy chiều cao mỗi lần bấm
                              tiêu chí lọc đầu tiên. */ ?>
                     <?php if ($hasFacetFilter): ?>
-                        <a class="cfilter__clear" rel="nofollow" href="<?= e($buildUrl($resetPatch)) ?>">Xoá tất cả</a>
+                        <a class="cfilter__clear" rel="nofollow" href="<?= e($buildUrl($resetPatch)) ?>"><?= e(t('filter.clear_all')) ?></a>
                     <?php else: ?>
-                        <span class="cfilter__clear is-off" aria-hidden="true">Xoá tất cả</span>
+                        <span class="cfilter__clear is-off" aria-hidden="true"><?= e(t('filter.clear_all')) ?></span>
                     <?php endif; ?>
                 </div>
 
@@ -704,7 +704,7 @@ partial('_layout/page-head', [
                          bắt người dùng cuộn ngược lên tìm lại chữ "Bộ lọc".
                          CSS giấu nút này từ 1101px trở lên. */ ?>
                 <button type="button" class="cfilter__done" data-sheet-close>
-                    Xem <?= (int) $total ?> sản phẩm
+                    <?= e(t('cat.show_n', [':n' => (string) (int) $total])) ?>
                 </button>
             </div>
         </details>
@@ -716,28 +716,31 @@ partial('_layout/page-head', [
 
             <div class="catbar">
                 <p class="catbar__count" aria-live="polite">
-                    Hiển thị <strong><?= (int) $total ?></strong> sản phẩm<?php
+                    <?= strtr(
+                        e(t('cat.showing', [':n' => '{{n}}'])),
+                        ['{{n}}' => '<strong>' . (int) $total . '</strong>']
+                    ) ?><?php
                     /* Mẩu dưới đây KHÔNG có trong bản thiết kế, và phải có: ô
                        tìm trên header đổ người dùng vào đúng trang này kèm
                        ?q=…, mà cột lọc bên trái không có ô tìm nào để soi lại
                        mình vừa gõ gì. Không in ra thì kết quả trông như bị lọc
                        ngẫu nhiên. */
                     ?><?php if ($filters['q'] !== ''): ?>
-                        cho “<strong><?= e($filters['q']) ?></strong>”
-                        <a class="catbar__drop" rel="nofollow" href="<?= e($buildUrl(['q' => null, 'page' => null])) ?>">bỏ từ khoá</a>
+                        <?= e(t('cat.for_query')) ?> “<strong><?= e($filters['q']) ?></strong>”
+                        <a class="catbar__drop" rel="nofollow" href="<?= e($buildUrl(['q' => null, 'page' => null])) ?>"><?= e(t('cat.drop_query')) ?></a>
                     <?php endif; ?>
                 </p>
 
                 <form class="catsort" method="get" action="<?= e($catalogBase) ?>">
                     <?php $hiddenFilters(['sort', 'page']); ?>
-                    <label class="catsort__label" for="f-sort">Sắp xếp theo</label>
+                    <label class="catsort__label" for="f-sort"><?= e(t('cat.sort_by')) ?></label>
                     <span class="catpick">
                         <select class="catpick__select" id="f-sort" name="sort" data-pick="sort">
                             <?php foreach ([
-                                'newest'     => 'Mới nhất',
-                                'popular'    => 'Bán chạy',
-                                'price-asc'  => 'Giá thấp → cao',
-                                'price-desc' => 'Giá cao → thấp',
+                                'newest'     => t('cat.sort_newest'),
+                                'popular'    => t('cat.sort_popular'),
+                                'price-asc'  => t('cat.sort_price_asc'),
+                                'price-desc' => t('cat.sort_price_desc'),
                             ] as $value => $text): ?>
                                 <option value="<?= e($value) ?>"<?= $filters['sort'] === $value ? ' selected' : '' ?>><?= e($text) ?></option>
                             <?php endforeach; ?>
@@ -756,15 +759,15 @@ partial('_layout/page-head', [
                     <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn là gửi
                              luôn). Không có JS thì đây là cách duy nhất để
                              chốt lựa chọn, nên không được bỏ. */ ?>
-                    <button type="submit" class="catpick__go">Áp dụng</button>
+                    <button type="submit" class="catpick__go"><?= e(t('filter.apply')) ?></button>
                 </form>
             </div>
 
             <?php if ($total === 0): ?>
                 <div class="catempty">
-                    <p class="catempty__title">Chưa có sản phẩm phù hợp</p>
-                    <p class="catempty__text">Thử bỏ bớt tiêu chí lọc hoặc xoá tất cả bộ lọc.</p>
-                    <a class="catempty__btn" href="<?= e($buildUrl($resetPatch)) ?>">Xoá bộ lọc</a>
+                    <p class="catempty__title"><?= e(t('cat.empty_title')) ?></p>
+                    <p class="catempty__text"><?= e(t('cat.empty_text')) ?></p>
+                    <a class="catempty__btn" href="<?= e($buildUrl($resetPatch)) ?>"><?= e(t('cat.empty_btn')) ?></a>
                 </div>
             <?php else: ?>
                 <?php /* THẺ DÙNG CHUNG VỚI TRANG CHỦ — _layout/product-card.php.
@@ -797,11 +800,11 @@ partial('_layout/page-head', [
                     $from = max(1, min($page - 2, $totalPages - 4));
                     $to   = min($totalPages, max($page + 2, 5));
                     ?>
-                    <nav class="catpager" aria-label="Phân trang">
+                    <nav class="catpager" aria-label="<?= e(t('cat.pager')) ?>">
                         <?php if ($page > 1): ?>
                             <a class="catpager__btn" rel="prev nofollow"
                                href="<?= e($buildUrl(['page' => $page - 1])) ?>"
-                               aria-label="Trang trước">←</a>
+                               aria-label="<?= e(t('cat.prev')) ?>">←</a>
                         <?php endif; ?>
 
                         <?php for ($i = $from; $i <= $to; $i++): ?>
@@ -810,14 +813,14 @@ partial('_layout/page-head', [
                             <?php else: ?>
                                 <a class="catpager__btn" rel="nofollow"
                                    href="<?= e($buildUrl(['page' => $i])) ?>"
-                                   aria-label="Trang <?= $i ?>"><?= $i ?></a>
+                                   aria-label="<?= e(t('cat.page_n', [':n' => (string) $i])) ?>"><?= $i ?></a>
                             <?php endif; ?>
                         <?php endfor; ?>
 
                         <?php if ($page < $totalPages): ?>
                             <a class="catpager__btn" rel="next nofollow"
                                href="<?= e($buildUrl(['page' => $page + 1])) ?>"
-                               aria-label="Trang sau">→</a>
+                               aria-label="<?= e(t('cat.next')) ?>">→</a>
                         <?php endif; ?>
                     </nav>
                 <?php endif; ?>

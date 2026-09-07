@@ -1,894 +1,564 @@
-/* ============================================================
-   category.css — trang danh sách sản phẩm (/san-pham)
+/* ============================================================================
+   category.css — TRANG DANH SÁCH SẢN PHẨM (/san-pham và hai trang con)
 
-   Dựng theo "Vin Eyewear Category.dc.html" (Claude Design):
+   Dựng theo `furnish-1.0.0/src/products.html`:
 
-     đầu trang nền hồng phấn (breadcrumb · tiêu đề · mô tả)
-     → hai cột: cột lọc 280px dính theo cuộn | lưới sản phẩm 3 cột
+     <aside class="col-lg-3">
+       <h3 class="fw-semibold h5">Filters</h3>
+       <div class="mb-4 bg-light border bg-opacity-50 p-4">
+         <h6 class="fw-semibold text-xs text-uppercase">Category</h6>
+         …
+     <select class="form-select">Sort by: Featured</select>
+     <div class="row">…thẻ sản phẩm…</div>
+     <nav><ul class="pagination justify-content-center">
 
-   Markup: app/views/product/index.php
+   Tức là: CỘT LỌC BÊN TRÁI gồm những TẤM NỀN XÁM NHẠT VIỀN MẢNH, mỗi tấm một
+   nhóm tiêu chí với tiêu đề IN HOA rất nhỏ; ô sắp xếp nằm một mình bên phải
+   phía trên lưới; phân trang căn giữa ở cuối.
 
-   THẺ SẢN PHẨM KHÔNG CÒN Ở FILE NÀY: lưới dùng .pcard chung với trang chủ
-   (components/product.css) thay cho .ptile dựng theo bản Category — xem chú
-   thích ở .catgrid bên dưới.
+   ─────────────────────────────────────────────────────────────────────────────
+   ⚠ VÙNG RỦI RO CAO NHẤT CỦA CẢ ĐỢT ĐỔI GIAO DIỆN
 
-   CỠ CHỮ ghi thẳng bằng px, không qua thang --fs-*, cùng lý do đã ghi ở đầu
-   cụm trang chủ trong components/home-sections.css: thang --fs-* là clamp()
-   nên ở 1280px nó lệch 1–5px so với từng con số của bản thiết kế, và bản
-   thiết kế dùng nhiều cỡ nửa pixel (11.5 · 12.5 · 13.5) mà thang không có.
+   assets/js/catalog.js nạp ngầm trang mới rồi thay RUỘT của đúng hai khối:
 
-   MÀU gọi qua token (--brand, --ink, --surface…) vì các token đó đã mang đúng
-   giá trị của bản thiết kế — xem layout.css.
+       .cfilter     cột lọc
+       .catmain     cột kết quả
 
-   Bản thiết kế là khung cứng 1280px (`min-width:1280px`). Site này chạy từ
-   điện thoại lên, nên có thêm mốc gãy: 1100px cột lọc thành khối gập được nằm
-   trên lưới, 900px lưới còn 2 cột, 560px còn 1 cột.
-   ============================================================ */
+   và giữ lại vị trí cuộn của `.cfilter__panel`. Nó chỉ chặn cú bấm nằm trong
+   `.cfilter`, `.catpager` hoặc `.catbar__drop`.
+
+   Đổi tên bất kỳ lớp nào trong số đó thì trang VẪN CHẠY ĐÚNG — chỉ là mỗi cú
+   bấm tiêu chí quay lại tải cả trang như thời chưa có JS. Không có lỗi nào
+   hiện ra; thứ mất đi là vị trí cuộn và cái bảng lọc trên điện thoại đóng sập
+   sau mỗi lần tick.
+
+   Bộ lọc cũng phải chạy KHI TẮT JAVASCRIPT: mọi tiêu chí là <a href> thật,
+   ô sắp xếp là <form method="get"> có nút "Áp dụng" thật.
+   ============================================================================ */
 
 .catbody {
-    /* Nền chờ phía sau ảnh sản phẩm, thấy được lúc ảnh chưa tải xong */
-    --c-shell:   #f5efe7;
-
-    /* Chữ phụ tông ấm — nhạt hơn --muted, đúng sắc của bản thiết kế */
-    --c-eyebrow: var(--eyebrow);
-    --c-note:    #9a877f;
-    --c-meta:    #b0a094;
-
-    /* Chữ trên nền trắng của cột lọc — đậm hơn --muted một nấc */
-    --c-item:    #4a3b38;
-
-    /* Đường kẻ trong cột lọc: nhạt hơn --line, chỉ để chia nhóm */
-    --c-rule:    #f0e4d8;
-
-    /* Viền ô chưa chọn (ô tick, nút tròn) — đậm hơn --line để nhìn ra ranh giới */
-    --c-box:     #d8c7ba;
-
-    --c-shadow:  0 2px 12px rgba(90, 40, 40, 0.06);
-
-    /* Bề ngang và lề của thân trang — 1392px chứ không phải 1280px như các
-       khối trang chủ: bản thiết kế nới riêng khối này ra vì nó phải chứa THÊM
-       cột lọc 280px bên trái. Trừ lề 56px hai bên và khoảng cách 32px giữa
-       hai cột thì lưới sản phẩm còn đúng 968px — vừa ba thẻ 309px. */
-    max-width: var(--container, 1600px);
-    margin: 0 auto;
-    padding: 40px var(--page-edge) 96px;
+    padding-block: var(--space-8) var(--section-pad);
 }
-
-/* ĐẦU TRANG (.cathead*) ĐÃ CHUYỂN ĐI — nay là component dùng chung
-   assets/css/components/page-head.css + app/views/_layout/page-head.php,
-   mang tên .pagehead*. Lý do: "Vin Eyewear Contact.dc.html" vẽ khối đầu
-   trang GIỐNG HỆT bản danh mục tới từng con số, mà category.css chỉ được
-   nạp cho trang /san-pham nên trang liên hệ không với tới được. */
-
-/* ============================================================
-   THÂN TRANG — khung hai cột
-   ============================================================ */
 
 .catbody__grid {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--page-edge);
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
-    gap: 32px;
-    /* start chứ không phải stretch: cột lọc phải cao đúng bằng nội dung của
-       nó thì position:sticky mới có chỗ mà trượt. Kéo cao bằng cột kết quả
-       là nó dính chặt tại chỗ. */
-    align-items: start;
+    gap: var(--space-10);
 }
 
-@media (max-width: 1100px) {
-    .catbody {
-        max-width: none;
-        padding: 24px 16px 64px;
-    }
+/* ============================================================================
+   1. CỘT LỌC
+   ============================================================================ */
 
-    .catbody__grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-}
-
-/* ============================================================
-   CỘT LỌC
-   ============================================================ */
-
+/* <details> đóng vai hai thứ: từ 1101px nó là cột lọc luôn mở, hẹp hơn thì
+   thành ngăn kéo trượt lên từ đáy màn hình. */
 .cfilter {
-    background: var(--surface-raised);
-    border-radius: var(--radius);
-    box-shadow: var(--c-shadow);
-    /* 88px = chiều cao header (76px) + 12px thở.
-       Bản thiết kế ghi top:24px vì header của nó KHÔNG dính theo cuộn. Header
-       của site này thì có, nên 24px sẽ đẩy cột lọc chui xuống dưới header. */
-    position: sticky;
-    top: 88px;
+    min-width: 0;
 }
 
-/* --- Nút thu gọn (chỉ dưới 1101px) --- */
-
+/* Nút mở bảng lọc — CHỈ có ở màn hẹp. */
 .cfilter__toggle {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 16px 20px;
-    font-size: 13.5px;
-    font-weight: 600;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--ink);
+    background: var(--surface-raised);
     color: var(--ink);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
     cursor: pointer;
     list-style: none;
 }
 
-.cfilter__toggle::-webkit-details-marker { display: none; }
+.cfilter__toggle::-webkit-details-marker {
+    display: none;
+}
 
+/* Huy hiệu đếm số tiêu chí đang bật — tròn, đúng ngoại lệ đã ghi trong bảng
+   token (xem khối --radius-round ở layout.css). */
 .cfilter__count {
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: 20px;
     height: 20px;
     padding-inline: 6px;
-    /* --radius-round: xem khối "HUY HIỆU SỐ" trong assets/css/account.css. */
     border-radius: var(--radius-round);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: 11px;
-    font-weight: 600;
+    background: var(--accent);
+    color: #fff;
+    font-size: var(--fs-micro);
+    font-weight: 700;
 }
 
-.cfilter__panel {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 28px 26px;
+.cfilter__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: rgba(33, 31, 28, .45);
 }
-
-@media (min-width: 1101px) {
-    .cfilter__toggle { display: none; }
-
-    /*
-     * Ẩn <summary> KHÔNG làm <details> mở ra: thiếu thuộc tính `open` thì
-     * trình duyệt vẫn giấu nội dung qua
-     * `::details-content { content-visibility: hidden }`. Không có hai dòng
-     * dưới, desktop mất sạch cột lọc mà cũng không còn nút nào để mở lại.
-     */
-    .cfilter::details-content { content-visibility: visible; }
-
-    /* Trình duyệt chưa hỗ trợ ::details-content — nội dung bị UA đặt display:none */
-    .cfilter:not([open]) > .cfilter__panel { display: flex; }
-}
-
-/*
- * ─────────────────────────────────────────────────────────────────────────
- * MÀN HÌNH HẸP: CỘT LỌC THÀNH BOTTOM-SHEET
- *
- * Dưới 1101px, <details> vẫn là <details> — không có JavaScript thì bấm
- * "Bộ lọc" vẫn mở được và mọi thứ bên trong vẫn lọc được. Chỉ có CÁCH VẼ
- * đổi: thay vì đẩy lưới sản phẩm xuống dưới một khối cao bằng cả màn hình,
- * panel trượt lên từ mép dưới và nằm đè lên trang.
- *
- * Vì sao không để nguyên khối xổ ra như trước: cột lọc nay có bảy nhóm chứ
- * không phải bốn. Xổ tại chỗ thì người dùng phải cuộn qua ba màn hình huy
- * hiệu mới nhìn lại được sản phẩm — mà lọc xong thì thứ họ muốn xem chính
- * là sản phẩm.
- * ───────────────────────────────────────────────────────────────────────── */
-@media (max-width: 1100px) {
-    .cfilter {
-        position: static;
-        border: 1px solid var(--line);
-    }
-
-    /*
-     * KHOÁ CUỘN TRANG NỀN KHI SHEET MỞ — bản CSS, SONG SONG với bản JS.
-     *
-     * assets/js/catalog.js đã làm đúng việc này từ trước bằng một listener
-     * 'toggle' đặt document.body.style.overflow. Dòng dưới đây KHÔNG thay thế
-     * nó và cũng không thừa: nó vá đúng khoảng mà bản JS không với tới —
-     * TẮT JAVASCRIPT.
-     *
-     * Tắt JS thì <details> vẫn mở được (đó là hành vi gốc của thẻ) và CSS vẫn
-     * vẽ sheet trượt lên, nhưng không có ai khoá trang nền: vuốt trên vùng nền
-     * mờ là lưới sản phẩm phía sau trôi đi, đóng sheet ra thì người dùng đứng
-     * ở một chỗ khác hẳn. Mọi luồng phải chạy được khi tắt JS (CLAUDE.md), và
-     * "chạy được" gồm cả chuyện này.
-     *
-     * Hai bản cùng bật thì cùng đặt overflow:hidden — không đá nhau.
-     *
-     * NẰM TRONG @media LÀ BẮT BUỘC. Từ 1101px trở lên, cột lọc không còn là
-     * sheet nữa nhưng thuộc tính `open` thì vẫn còn nguyên nếu người dùng đã
-     * mở nó lúc màn hình còn hẹp — để luật này ra ngoài @media là khoá chết
-     * cả trang ở desktop, không ai hiểu vì sao. (Bản JS chặn đúng ca ấy bằng
-     * một listener 'resize'; bản CSS chặn bằng chính cái @media này.)
-     */
-    body:has(.cfilter[open]) { overflow: hidden; }
-
-    .cfilter[open] > .cfilter__scrim {
-        position: fixed;
-        inset: 0;
-        z-index: 60;
-        background: rgb(0 0 0 / 0.42);
-    }
-
-    .cfilter[open] > .cfilter__panel {
-        position: fixed;
-        z-index: 61;
-        right: 0;
-        bottom: 0;
-        left: 0;
-
-        /* 82svh chứ không 82vh: trên trình duyệt di động, vh tính theo khung
-           nhìn KHI ĐÃ THU thanh địa chỉ, nên sheet cao hơn chỗ thật sự nhìn
-           thấy và nút "Xem N sản phẩm" ở đáy bị thanh địa chỉ che mất. */
-        max-height: 82svh;
-        overflow-y: auto;
-        overscroll-behavior: contain;
-
-        padding: 20px 20px 16px;
-        border-radius: 18px 18px 0 0;
-        background: var(--surface-raised);
-        box-shadow: 0 -12px 40px rgb(0 0 0 / 0.22);
-    }
-
-    .cfilter:not([open]) > .cfilter__panel { padding: 4px 20px 20px; }
-}
-
-/*
- * Nút chốt ở đáy bottom-sheet.
- *
- * Dính đáy panel (sticky) chứ không nằm cuối dòng chảy: sheet cuộn được, và
- * nút mà trôi lên trên thì lọc xong phải cuộn hết bảy nhóm mới đóng lại được.
- */
-.cfilter__done {
-    position: sticky;
-    bottom: 0;
-    margin-top: 8px;
-    padding: 13px 16px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: var(--brand);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--on-brand);
-    cursor: pointer;
-}
-
-.cfilter__done:hover,
-.cfilter__done:focus-visible { background: var(--brand-strong); }
-
-/* Không có JavaScript thì nút này không đóng được sheet (details.open là
-   thuộc tính DOM), nên chỉ hiện khi có JS — và chỉ ở bề rộng có sheet. */
-.cfilter__done { display: none; }
-
-@media (max-width: 1100px) {
-    .js .cfilter[open] > .cfilter__panel > .cfilter__done { display: block; }
-}
-
-/* --- Hàng đầu: "Bộ lọc" + "Xoá tất cả" --- */
 
 .cfilter__head {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
-    gap: 12px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid var(--c-rule);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
 }
 
 .cfilter__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: 19px;
-    font-weight: 600;
-    color: var(--ink);
+    font-size: var(--fs-subhead);
+    font-weight: 400;
 }
 
 .cfilter__clear {
-    padding: 4px 0;
-    font-size: 12.5px;
-    color: var(--c-eyebrow);
+    color: var(--accent);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
     text-decoration: none;
-    white-space: nowrap;
-    transition: color 0.2s;
 }
 
-.cfilter__clear:hover,
-.cfilter__clear:focus-visible { color: var(--brand); }
+.cfilter__clear:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
 
-/* Chưa lọc gì — vẫn chiếm chỗ để hàng tiêu đề không nhảy, nhưng mờ đi cho
-   thấy rõ là chưa có gì để xoá. */
+/* Không còn tiêu chí nào để xoá: vẫn giữ chỗ để hàng tiêu đề không nhảy. */
 .cfilter__clear.is-off {
-    opacity: 0.4;
-    cursor: default;
+    color: var(--h-meta);
+    pointer-events: none;
 }
 
-/* --- Một nhóm lọc --- */
-
+/* ── Một nhóm tiêu chí = một tấm nền xám viền mảnh ───────────────────────── */
 .pfacet {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 18px 0 20px;
-    border-bottom: 1px solid var(--c-rule);
-}
-
-/* Nhóm cuối không kẻ đáy: đường kẻ ở đó chỉ nằm lơ lửng trên khoảng trống
-   giữa nó và mép dưới của thẻ. */
-.pfacet:last-child {
-    padding-bottom: 6px;
-    border-bottom: 0;
+    margin-bottom: var(--space-5);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
 }
 
 .pfacet__legend {
-    margin: 0;
-    font-size: 12px;
+    display: block;
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-label);
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: .12em;
     text-transform: uppercase;
-    color: var(--c-eyebrow);
+    color: var(--ink);
 }
 
-.pfacet__chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-/* Hai nhóm dạng danh sách (thương hiệu, khoảng giá) xếp dòng sát nhau hơn
-   nhóm huy hiệu, nên tự khai gap riêng thay vì 12px của .pfacet. */
 .pfacet__list {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-}
-
-/* Danh sách thương hiệu có thể dài hơn cả cột lọc — cắt ở 186px (khoảng 6
-   dòng) rồi cho cuộn trong chính nó, đúng như bản thiết kế. */
-.pfacet:has(.pfacet__search) .pfacet__list {
-    max-height: 186px;
+    display: grid;
+    gap: var(--space-3);
+    list-style: none;
+    max-height: 260px;
     overflow-y: auto;
 }
 
 .pfacet__none {
-    margin: 6px 0 0;
-    font-size: 13px;
-    color: var(--c-note);
+    color: var(--muted);
+    font-size: var(--fs-caption);
 }
 
-/* --- Ô tìm thương hiệu --- */
-
-.pfacet__search {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 4px;
-}
-
-.pfacet__input {
-    width: 100%;
-    min-width: 0;
-    padding: 9px 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--ink);
-}
-
-.pfacet__input:focus {
-    outline: 2px solid var(--brand);
-    outline-offset: -2px;
-}
-
-/* Nút gửi của ô tìm thương hiệu. Có JavaScript thì catalog.js lọc ngay tại
-   chỗ và ẩn nút này đi; không có JS thì đây là cách duy nhất để lọc, nên
-   không được xoá khỏi markup. */
-.pfacet__go {
-    flex: none;
-    padding: 0 14px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: 12.5px;
-    color: var(--c-item);
-    cursor: pointer;
-}
-
-.js .pfacet__go { display: none; }
-
-/* --- Huy hiệu lọc --- */
-
-.pchip {
-    /* Giá trị lọc cũng do người nhập hàng gõ ("Nhựa acetate chống xước"),
-       nên huy hiệu phải biết tự bẻ dòng thay vì chọc ra khỏi cột lọc. */
-    max-width: 100%;
-    padding: 8px 16px;
-    border: 1.5px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    font-size: 13px;
-    color: var(--c-item);
-    text-decoration: none;
-    overflow-wrap: anywhere;
-    cursor: pointer;
-    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
-}
-
-.pchip:hover,
-.pchip:focus-visible {
-    border-color: var(--brand);
-    color: var(--c-item);
-}
-
-.pchip.is-on {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-.pchip.is-on:hover,
-.pchip.is-on:focus-visible {
-    background: var(--brand-strong);
-    border-color: var(--brand-strong);
-    color: var(--on-brand);
-}
-
-/* --- Dòng có ô tick (thương hiệu) --- */
-
+/* Ô lọc dạng tick — dựng bằng <a> chứ không phải <input type=checkbox>: mỗi
+   tiêu chí là một URL thật, nên nó chạy cả khi tắt JS và chia sẻ được. */
 .pcheck {
     display: flex;
-    align-items: center;
-    gap: 11px;
-    padding: 6px 0;
-    text-align: left;
+    align-items: flex-start;
+    gap: var(--space-3);
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
     text-decoration: none;
-    cursor: pointer;
+    line-height: 1.5;
 }
 
+/* Ô vuông nhỏ. Dấu tick là KÝ TỰ ✓ do PHP in ra khi tiêu chí đang bật (xem
+   .pcheck__box trong app/views/product/index.php) — không vẽ thêm bằng
+   ::after, nếu không sẽ có hai dấu tick chồng nhau. */
 .pcheck__box {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    border: 1.5px solid var(--c-box);
-    border-radius: var(--radius-sm);
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    border: 1px solid var(--line-strong);
     background: var(--surface-raised);
+    color: transparent;
     font-size: 11px;
     line-height: 1;
-    color: transparent;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: background-color .12s ease, border-color .12s ease;
+}
+
+.pcheck:hover .pcheck__box {
+    border-color: var(--ink);
 }
 
 .pcheck.is-on .pcheck__box {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
 }
 
-.pcheck:hover .pcheck__box,
-.pcheck:focus-visible .pcheck__box { border-color: var(--brand); }
+.pcheck.is-on .pcheck__label {
+    font-weight: 600;
+}
 
-/* Tên thương hiệu dài cắt bằng dấu ba chấm chứ không xuống dòng: cột lọc
-   chỉ rộng 280px, để nó xuống dòng thì ô tick và số lượng lệch nhau. */
 .pcheck__label {
-    flex: 1;
     min-width: 0;
-    font-size: 14px;
-    color: var(--c-item);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* Ở ĐÂY TỪNG CÓ .pradio* — dãy nút tròn của nhóm "Khoảng giá". Bỏ 2026-08-30
-   khi nhóm đó thành ô xổ xuống dùng chung .catpick với ba nhóm còn lại.
+/* Tiêu chí không còn kết quả nào: vẫn in ra (để khách thấy nó tồn tại) nhưng
+   câm và mờ — đúng cách <option disabled> của ô sắp xếp đang làm. */
+.pcheck.is-off,
+.pchip.is-off {
+    color: var(--h-meta);
+    pointer-events: none;
+}
 
-   Xoá luôn CSS chứ không để lại: markup đã không còn in bộ lớp này, giữ lại là
-   một khối kiểu không ai với tới, và người sửa sau sẽ tưởng nó đang được dùng
-   ở đâu đó. Cần lại thì lấy trong git.
-
-   Trang này KHÔNG còn nút tròn nào. Đừng dựng lại .pradio cho một nhóm mới mà
-   không đọc trước lý do bốn nhóm kia thành ô chọn — xem $pick trong
-   app/views/product/index.php. */
-
-/* --- Số đếm động --- */
-
-/* Ở ĐÂY TỪNG CÓ .pchip__n VÀ .pcheck__count — con số bên cạnh mỗi tiêu chí
-   lọc ("Acetate 2"). Bỏ 2026-08-29 theo yêu cầu của cửa hàng: nó không giúp
-   người ta chọn, mà mỗi cú bấm lại đổi một loạt số nhấp nháy trong cột lọc.
-
-   Xoá luôn CSS chứ không để lại: markup đã không còn in hai lớp này, giữ lại
-   là hai khối kiểu không ai với tới, và người sửa sau sẽ tưởng chúng đang
-   được dùng ở đâu đó.
-
-   Phép ĐẾM thì vẫn còn trong app/views/product/index.php — nó quyết định tiêu
-   chí nào bị làm mờ. Xem khối chú thích ở $dead trong file đó. */
-
-
-/* --- Lựa chọn không lọc ra sản phẩm nào --- */
-
-/*
- * Mục đếm ra 0 vẫn được in, nhưng KHÔNG phải là liên kết (view in ra <span>).
- * Làm mờ và đổi con trỏ để không ai mất một cú bấm mới biết.
- *
- * Vì sao không giấu hẳn: cột lọc sẽ co giãn sau mỗi thao tác, và mục vừa biến
- * mất chính là mục người dùng đang định bấm tiếp. Mờ tại chỗ nói được cả hai
- * điều — "có tiêu chí này" và "kết hợp với thứ bạn đang chọn thì không còn
- * hàng nào".
- */
-.pchip.is-off,
-.pcheck.is-off {
-    opacity: 0.38;
-    cursor: not-allowed;
+.pcheck.is-off .pcheck__box {
+    border-color: var(--line);
+    background: var(--surface-sunken);
 }
 
 .pchip.is-off {
-    /* .pchip là <a> nên nằm inline; bản is-off là <span>, cần khai lại phần
-       hộp để hai dạng cao bằng nhau trong cùng một hàng huy hiệu. */
-    display: inline-block;
+    border-color: var(--line);
+    background: var(--surface-sunken);
 }
 
-.pcheck.is-off {
+/* Chip của tiêu chí đang bật, hiện ở đầu cột lọc. */
+.pfacet__chips {
     display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
 }
 
-/* ============================================================
-   CỘT KẾT QUẢ
-   ============================================================ */
+.pchip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--ink);
+    background: var(--surface-raised);
+    color: var(--ink);
+    font-size: var(--fs-caption);
+    text-decoration: none;
+}
 
+.pchip:hover {
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+/* Ô nhập trong nhóm lọc (khoảng giá, tìm thương hiệu). */
+.pfacet__input,
+.pfacet__search input {
+    width: 100%;
+    padding: var(--space-3);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-body-sm);
+}
+
+.pfacet__input:focus,
+.pfacet__search input:focus {
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+}
+
+.pfacet__go {
+    margin-top: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border: 1px solid var(--ink);
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.pfacet__go:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.pfacet__pick {
+    display: grid;
+    gap: var(--space-3);
+}
+
+/* ============================================================================
+   2. CỘT KẾT QUẢ
+   ============================================================================ */
 .catmain {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
+    min-width: 0;
 }
-
-/* ĐANG NẠP KẾT QUẢ MỚI — assets/js/catalog.js đặt aria-busy trong lúc chờ.
-
-   Chỉ mờ đi, KHÔNG thay bằng khung xương hay vòng quay: kết quả cũ vẫn đúng
-   cho tới lúc kết quả mới về, và giữ nó trên màn hình thì lưới không sập
-   xuống rồi bung lên — mắt người dùng không mất chỗ đang nhìn.
-
-   Không chặn cú bấm trong lúc chờ (không pointer-events: none): bấm thêm một
-   tiêu chí nữa là chuyện bình thường, và JS đã lo phần lượt cũ về muộn bằng
-   số thứ tự lượt nạp.
-
-   Chọn aria-busy làm móc thay cho một lớp riêng vì nó vừa là thuộc tính trợ
-   năng thật (trình đọc màn hình biết vùng này đang thay đổi), vừa đủ để CSS
-   bắt — thêm một lớp nữa là hai nguồn sự thật cho cùng một trạng thái. */
-.catmain[aria-busy="true"] {
-    opacity: 0.55;
-    transition: opacity 0.12s linear;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .catmain[aria-busy="true"] { transition: none; }
-}
-
-/* --- Thanh trên: số kết quả + ô sắp xếp --- */
 
 .catbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 16px 24px;
+    gap: var(--space-4);
+    padding-bottom: var(--space-5);
+    margin-bottom: var(--space-8);
+    border-bottom: 1px solid var(--line);
 }
 
 .catbar__count {
-    margin: 0;
-    font-size: 14px;
     color: var(--muted);
+    font-size: var(--fs-body-sm);
 }
 
-.catbar__count strong { color: var(--ink); }
-
 .catbar__drop {
-    margin-left: 4px;
-    font-size: 13px;
-    color: var(--brand);
+    color: var(--accent);
     text-decoration: underline;
     text-underline-offset: 3px;
 }
 
+/* ── Ô sắp xếp ───────────────────────────────────────────────────────────── */
 .catsort {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .catsort__label {
-    font-size: 13px;
-    color: var(--c-note);
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    letter-spacing: .06em;
+    text-transform: uppercase;
     white-space: nowrap;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Ô CHỌN XỔ XUỐNG (.catpick) — DÙNG CHUNG CHO HAI CHỖ
+.catpick {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
 
-   HAI nơi trên trang này dùng chung một ô: "Sắp xếp theo" ở đầu cột kết quả,
-   và "Chất liệu" trong cột lọc. Hai chỗ đó PHẢI giống hệt nhau — người dùng
-   nhìn thấy chúng cùng lúc trên một màn hình, lệch 1px hay lệch một sắc là
-   thấy ngay.
-
-   VÌ SAO TÊN LÀ .catpick CHỨ KHÔNG PHẢI .catsort__*: bộ lớp này trước đây
-   thuộc riêng khối "sắp xếp theo" và mang tên .catsort__field / __select /
-   __caret / __go. Bộ lọc chất liệu nay mượn đúng bộ ấy, mà một ô LỌC mang tên
-   "sort" thì đọc mã sẽ hiểu sai chỗ nó thuộc về. Đổi tên chứ không nhân đôi
-   luật CSS: hai bản sao là hai chỗ phải nhớ sửa cùng lúc.
-
-   .catsort và .catsort__label thì GIỮ NGUYÊN tên — chúng là bố cục và nhãn
-   riêng của khối sắp xếp, không dùng lại ở đâu.
-   ───────────────────────────────────────────────────────────────────────── */
-
-.catpick { position: relative; }
-
-/* appearance:none để bỏ mũi tên mặc định của trình duyệt — bản thiết kế vẽ
-   mũi tên riêng — một SVG chữ V đặt đè lên bằng .catpick__caret. Cùng hình
-   và cùng màu với nút đổi ngôn ngữ trên thanh nav.
-
-   BO GÓC THEO THẺ SẢN PHẨM (--radius, 6px) chứ không phải --radius-sm (4px)
-   của nút: ô này là một KHỐI ngang hàng với lưới thẻ ngay dưới nó, không phải
-   một cái nút. Cả cụm "sắp xếp theo" — ô chọn và nút "Áp dụng" cạnh nó — dùng
-   cùng một độ bo, lệch nhau 2px trên hai ô sát nhau là thấy ngay.
-
-   Danh sách bung ra khi bấm thì KHÔNG bo được: nó do hệ điều hành vẽ, không
-   phải HTML trong trang, nên border-radius ở đây không với tới. */
 .catpick__select {
     appearance: none;
-    -webkit-appearance: none;
-    padding: 10px 40px 10px 20px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    padding: var(--space-3) calc(var(--space-8)) var(--space-3) var(--space-4);
+    border: 1px solid var(--line-strong);
     background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: 13.5px;
     color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-body-sm);
     cursor: pointer;
 }
 
-.catpick__select:focus-visible {
-    outline: 2px solid var(--brand);
+.catpick__select:focus {
+    outline: 2px solid var(--ink);
     outline-offset: -2px;
 }
 
-/* Chữ V dựng bằng SVG, cùng HÌNH và cùng MÀU với .hpop__chevron ở nút đổi
-   ngôn ngữ — 11px, nét 2.2, bo đầu tròn, màu #4a3b38.
-
-   #4a3b38 viết thẳng chứ không dùng token: đó chính là con số .hpop__trigger
-   --text đang dùng, và nó là một sắc nâu riêng của thanh nav, không trùng
-   token nào. Đổi màu nút ngôn ngữ thì phải sửa cả hai chỗ — ghi ra đây để lần
-   sau còn tìm thấy.
-
-   Đỏ thương hiệu để dành cho lúc RÊ VÀO, y như nút ngôn ngữ: mũi tên đứng yên
-   thì là một dấu hiệu tĩnh, đổi màu khi chuột tới mới là lời mời bấm. */
 .catpick__caret {
     position: absolute;
-    top: 50%;
-    right: 16px;
-    transform: translateY(-50%);
+    right: var(--space-3);
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.8;
     pointer-events: none;
-    width: 11px;
-    height: 11px;
-    color: #4a3b38;
-    transition: color 0.2s;
 }
 
-/* Bám theo cả ô, không riêng thẻ <select>: mũi tên có pointer-events:none nên
-   chính nó không bao giờ nhận :hover. :focus-within để bàn phím cũng thấy. */
-.catpick:hover .catpick__caret,
-.catpick:focus-within .catpick__caret { color: var(--brand); }
-
-/* ─────────────────────────────────────────────────────────────────────────
-   BO GÓC CẢ PHẦN XỔ XUỐNG.
-
-   Danh sách bung ra của một <select> gốc do TRÌNH DUYỆT vẽ chứ không phải HTML
-   trong trang, nên border-radius ở .catpick__select không với tới nó — góc
-   vuông là góc do hệ điều hành quyết định.
-
-   `appearance: base-select` mở cửa cho việc đó: nó bảo trình duyệt vẽ cả ô chọn
-   LẪN danh sách bằng chính cây HTML/CSS của trang. Lúc đó ::picker(select) là
-   hộp bung ra và các <option> là những dòng bên trong nó — bo góc, màu, đệm đều
-   nằm trong tầm CSS.
-
-   Bọc trong @supports vì Firefox và Safari chưa có thứ này: ở đó cả khối bị bỏ
-   qua, <select> vẫn là select gốc y như trước và không hỏng gì — chỉ là phần
-   bung ra vẫn góc vuông. Chrome/Edge (từ 135) thì thấy góc bo.
-   ───────────────────────────────────────────────────────────────────────── */
-@supports (appearance: base-select) {
-    .catpick__select { appearance: base-select; }
-
-    /* base-select tự vẽ thêm một mũi tên riêng, mà trang đã có ▼ của
-       .catpick__caret đè lên sẵn — để cả hai thì ô chọn có hai mũi tên. */
-    .catpick__select::picker-icon { display: none; }
-
-    .catpick__select::picker(select) {
-        appearance: base-select;
-        /* XỔ XUỐNG DƯỚI ô chọn.
-           Cần CẢ BA dòng, không phải chỉ position-area: mặc định trình duyệt đặt
-           position-try-order: most-block-size, tức "chọn phía nào rộng hơn". Ở
-           đây phía trên ô chọn rộng hơn phía dưới (439px so với 330px trên màn
-           1280×769), nên nó lật danh sách lên che mất dòng "Hiển thị N sản phẩm"
-           và cả phần đầu trang — không ai chờ một ô "sắp xếp theo" làm thế. Đo
-           được bằng getComputedStyle(el, '::picker(select)').positionTryOrder.
-           `normal` bảo nó cứ theo position-area, và chỉ lật khi dưới KHÔNG đủ
-           chỗ (ô nằm cuối màn hình) — đó là việc của flip-block. */
-        position-area: block-end span-inline-start;
-        position-try-order: normal;
-        position-try-fallbacks: flip-block;
-        margin-top: 6px;
-        padding: 6px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        background: var(--surface-raised);
-        box-shadow: var(--c-shadow);
-    }
-
-    .catpick__select option {
-        padding: 9px 14px;
-        /* Dòng bo nhỏ hơn hộp một nấc, đúng lối thẻ trong thẻ của cả site */
-        border-radius: var(--radius-sm);
-        font-size: 13.5px;
-        color: var(--ink);
-        cursor: pointer;
-    }
-
-    /* Dòng đang trỏ tới: nền thương hiệu thay cho nền xanh mặc định của hệ
-       điều hành.
-
-       :focus-VISIBLE chứ không :focus. Mở danh sách bằng chuột thì trình duyệt
-       đặt tiêu điểm lên dòng đang chọn, nên với :focus sẽ có HAI dòng cùng đỏ
-       lúc rê chuột sang dòng khác — đã đo được, không phải phỏng đoán. Dòng đang
-       chọn đã có dấu ✓ và chữ đậm để nhận ra, không cần nền. */
-    .catpick__select option:hover,
-    .catpick__select option:focus-visible {
-        background: var(--brand);
-        color: var(--on-brand);
-        outline: none;
-    }
-
-    .catpick__select option:checked { font-weight: 600; }
-}
-
-/* Cùng độ bo với ô chọn ngay bên trái — xem chú thích ở .catpick__select. */
+/* Nút "Áp dụng" chỉ dành cho trình duyệt KHÔNG chạy JS — catalog.js tự gửi
+   form khi đổi ô chọn rồi ẩn nút này đi. Giữ nguyên trong HTML: bỏ nó là bộ
+   lọc mất đường dùng khi tắt JS. */
 .catpick__go {
-    padding: 10px 18px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: 13px;
-    color: var(--c-item);
+    margin-left: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    text-transform: uppercase;
     cursor: pointer;
 }
 
-.js .catpick__go { display: none; }
-
-/* --- Ô chọn trong CỘT LỌC (chất liệu) ---
-   Khác khối "sắp xếp theo" ở đúng bề ngang: ở đó ô chọn nằm ngang hàng với
-   nhãn và nút nên rộng theo nội dung, còn ở đây cột lọc chỉ có ~228px lọt
-   lòng (280px trừ 26px đệm mỗi bên) — để ô co theo nội dung thì "Nylon &
-   Bio-nylon" tràn ra ngoài thẻ. */
-.pfacet__pick {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+.js .catpick__go {
+    display: none;
 }
 
-.pfacet__pick .catpick { flex: 1 1 100%; }
-
-.pfacet__pick .catpick__select {
-    width: 100%;
-    /* Đệm trái 14px thay cho 20px của ô sắp xếp: cột hẹp, 20px ăn mất gần
-       một phần mười bề ngang mà không đổi lấy gì. */
-    padding-inline: 14px 40px;
-}
-
-/* --- Lưới ---
-   THẺ SẢN PHẨM Ở ĐÂY LÀ .pcard, DÙNG CHUNG VỚI TRANG CHỦ.
-
-   Trước đây trang này có thẻ riêng (.ptile, dựng theo "Vin Eyewear
-   Category.dc.html": cả thẻ là một liên kết, ảnh cao 220px, không nút nào).
-   Nghĩa là cùng một sản phẩm hiện ra hai dáng khác nhau tuỳ khách đi vào từ
-   trang chủ hay từ danh mục — mà bốn chỗ còn lại (hai khối trang chủ, "sản
-   phẩm liên quan", trang tìm kiếm) đều đã dùng .pcard. Nay cả năm chỗ một thẻ:
-   xem components/product.css và _layout/product-card.php.
-
-   Vẫn giữ .catgrid riêng chứ không dùng .pcard__grid: cột nội dung ở đây bị bộ
-   lọc bên trái ăn mất một phần, ba cột cho ra thẻ rộng ~336px — xấp xỉ đúng bề
-   ngang thẻ ở trang chủ (~321px ở màn 1600). Nhồi bốn cột vào đây thì thẻ hẹp
-   hơn hẳn trang chủ, tức là KHÔNG còn giống nữa.
-
-   margin/padding/list-style: .catgrid nay là <ul> vì .pcard là <li>. */
-
+/* ── Lưới sản phẩm ───────────────────────────────────────────────────────── */
 .catgrid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 20px;
-    margin: 0;
-    padding: 0;
     list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--space-6);
 }
 
-@media (max-width: 900px) { .catgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 560px) { .catgrid { grid-template-columns: 1fr; } }
-
-/* --- Không có kết quả --- */
-
+/* ── Trống ───────────────────────────────────────────────────────────────── */
 .catempty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    padding: 72px 32px;
-    background: var(--surface-raised);
-    border-radius: var(--radius);
+    padding: var(--space-16) var(--space-6);
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
     text-align: center;
 }
 
 .catempty__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--ink);
+    font-size: var(--fs-h4);
+    font-weight: 400;
+    margin-bottom: var(--space-3);
 }
 
 .catempty__text {
-    margin: 0;
-    font-size: 14px;
-    color: var(--c-note);
+    max-width: 46ch;
+    margin-inline: auto;
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
 }
 
 .catempty__btn {
-    margin-top: 8px;
-    padding: 12px 28px;
-    border-radius: var(--radius-sm);
+    display: inline-flex;
+    margin-top: var(--space-6);
+    padding: var(--space-4) var(--space-8);
     background: var(--brand);
     color: var(--on-brand);
-    font-size: 13.5px;
-    font-weight: 500;
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
     text-decoration: none;
-    transition: background-color 0.2s;
 }
 
-.catempty__btn:hover,
-.catempty__btn:focus-visible {
-    background: var(--brand-strong);
-    color: var(--on-brand);
+.catempty__btn:hover {
+    background: var(--accent);
 }
 
-/* --- Phân trang --- */
-
+/* ── Phân trang — `.pagination justify-content-center` của bản mẫu ───────── */
 .catpager {
+    margin-top: var(--space-12);
     display: flex;
     justify-content: center;
+    gap: var(--space-2);
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
 }
 
 .catpager__btn {
-    display: grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    height: 44px;
+    padding-inline: var(--space-3);
     border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
     background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: 13.5px;
-    color: var(--c-item);
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
     text-decoration: none;
-    transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
 }
 
-.catpager__btn:hover,
-.catpager__btn:focus-visible {
-    border-color: var(--brand);
-    color: var(--brand);
+.catpager__btn:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-ink);
 }
 
 .catpager__btn.is-current {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-ink);
     font-weight: 600;
+}
+
+.catpager__btn.is-off {
+    color: var(--h-meta);
+    background: var(--surface-sunken);
+    pointer-events: none;
+}
+
+/* ============================================================================
+   3. HAI MỐC BỀ NGANG
+
+   Dưới 1101px: cột lọc thành NGĂN KÉO TRƯỢT LÊN TỪ ĐÁY.
+
+   Furnish để cột lọc xếp chồng lên trên lưới ở màn hẹp — nghĩa là khách phải
+   cuộn qua ba tấm lọc mới thấy sản phẩm đầu tiên. Ngăn kéo giữ được cả hai:
+   danh sách hàng nằm ngay đầu trang, bộ lọc cách đúng một cú chạm.
+   ============================================================================ */
+@media (max-width: 1100px) {
+
+    .cfilter__panel {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 85;
+        max-height: 82vh;
+        overflow-y: auto;
+        padding: var(--space-6);
+        background: var(--surface-raised);
+        border-top: 1px solid var(--line);
+        box-shadow: var(--elev-3);
+    }
+
+    /* <details> đóng thì cả tấm và lớp phủ biến mất — không cần một dòng JS
+       nào cho việc đóng/mở. */
+    .cfilter:not([open]) .cfilter__panel,
+    .cfilter:not([open]) .cfilter__scrim {
+        display: none;
+    }
+
+    .cfilter__done {
+        position: sticky;
+        bottom: 0;
+        width: 100%;
+        margin-top: var(--space-5);
+        padding: var(--space-4);
+        border: 0;
+        background: var(--brand);
+        color: var(--on-brand);
+        font-size: var(--fs-caption);
+        font-weight: 600;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+}
+
+@media (min-width: 1101px) {
+
+    .catbody__grid {
+        grid-template-columns: 280px minmax(0, 1fr);
+        align-items: start;
+    }
+
+    /* Cột lọc dính theo cuộn — danh sách tiêu chí đi cùng người đang lướt
+       trang kết quả dài. Neo dưới header, xem --header-h trong layout.css. */
+    .cfilter {
+        position: sticky;
+        top: calc(var(--header-h) + var(--space-5));
+    }
+
+    .cfilter__toggle,
+    .cfilter__scrim,
+    .cfilter__done {
+        display: none;
+    }
+
+    .cfilter__panel {
+        max-height: calc(100vh - var(--header-h) - var(--space-10));
+        overflow-y: auto;
+        /* Chừa chỗ cho thanh cuộn để chữ không dính sát mép. */
+        padding-right: var(--space-2);
+    }
 }
