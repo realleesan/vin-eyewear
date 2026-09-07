@@ -13,11 +13,11 @@
  */
 
 $steps = [
-    ['n' => '01', 'name' => 'Tiếp nhận',            'note' => '2 phút'],
-    ['n' => '02', 'name' => 'Đo khúc xạ tự động',   'note' => 'Thiết bị chuẩn phòng khám'],
-    ['n' => '03', 'name' => 'Thử tròng',            'note' => 'Điều chỉnh theo độ thực tế'],
-    ['n' => '04', 'name' => 'Tư vấn tròng kính',    'note' => 'Theo độ và nhu cầu'],
-    ['n' => '05', 'name' => 'Lắp ráp, chỉnh gọng',  'note' => '60–90 phút'],
+    ['n' => '01', 'name' => t('home.exam.s1'), 'note' => t('home.exam.s1n')],
+    ['n' => '02', 'name' => t('home.exam.s2'), 'note' => t('home.exam.s2n')],
+    ['n' => '03', 'name' => t('home.exam.s3'), 'note' => t('home.exam.s3n')],
+    ['n' => '04', 'name' => t('home.exam.s4'), 'note' => t('home.exam.s4n')],
+    ['n' => '05', 'name' => t('home.exam.s5'), 'note' => t('home.exam.s5n')],
 ];
 ?>
 
@@ -27,15 +27,13 @@ $steps = [
         <figure class="hexam__figure">
             <?php /* Ô "store-photo" của bản thiết kế — không gian cửa hàng */ ?>
             <img src="<?= designImage('store-photo', 'assets/images/showroom-frames.jpg') ?>"
-                 alt="Không gian cửa hàng Vin Eyewear"
+                 alt="<?= e(t('home.exam.alt')) ?>"
                  loading="lazy" decoding="async">
         </figure>
 
         <div class="hexam__text">
-            <p class="eyebrow hexam__eyebrow">Dịch vụ tại cửa hàng</p>
-            <h2 id="hexam-title" class="section-h2 section-h2--plain hexam__title">
-                Đo mắt chuẩn phòng khám, miễn phí
-            </h2>
+            <p class="eyebrow hexam__eyebrow"><?= e(t('home.exam.eyebrow')) ?></p>
+            <h2 id="hexam-title" class="section-h2 section-h2--plain hexam__title"><?= e(t('home.exam.title')) ?></h2>
 
             <ol class="hexam__steps">
                 <?php foreach ($steps as $step): ?>
@@ -47,7 +45,7 @@ $steps = [
                 <?php endforeach; ?>
             </ol>
 
-            <a class="hexam__cta" href="/dat-lich">Đặt lịch đo mắt</a>
+            <a class="hexam__cta" href="/dat-lich"><?= e(t('cta.book')) ?></a>
         </div>
     </div>
 </section>

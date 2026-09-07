@@ -39,10 +39,11 @@ $packages = LensModel::packages();
  * kết kinh doanh — sửa số ở đây thì phải khớp lại với trang chính sách.
  */
 $facts = [
-    'Đo mắt miễn phí',
-    'Nhận kính sau 60–90 phút',
+    t('home.lens.f1'),
+    t('home.lens.f2'),
+    // Tên hãng tròng — KHÔNG dịch, đây là tên riêng.
     'Essilor · Zeiss · Hoya · Chemi',
-    'Bảo hành 90 ngày',
+    t('home.lens.f4'),
 ];
 ?>
 
@@ -50,15 +51,13 @@ $facts = [
     <div class="hlens__inner">
 
         <div class="hlens__main">
-            <p class="eyebrow">Tròng kính chính hãng</p>
-            <h2 id="hlens-title" class="section-h2 section-h2--plain">
-                Cắt lắp trong ngày, tròng chính hãng
-            </h2>
+            <p class="eyebrow"><?= e(t('home.lens.eyebrow')) ?></p>
+            <h2 id="hlens-title" class="section-h2 section-h2--plain"><?= e(t('home.lens.title')) ?></h2>
 
             <figure class="hlens__figure">
                 <?php /* Ô "lab-photo" của bản thiết kế — máy đo mắt / bảng thị lực */ ?>
                 <img src="<?= designImage('lab-photo', 'assets/images/showroom-exam-room.jpg') ?>"
-                     alt="Quầy cắt kính tại Vin Eyewear"
+                     alt="<?= e(t('home.lens.alt')) ?>"
                      loading="lazy" decoding="async">
             </figure>
 
@@ -71,7 +70,7 @@ $facts = [
 
         <?php if ($packages !== []): ?>
             <div class="hlens__packages">
-                <h3 class="hlens__ptitle">Gói tròng phổ biến</h3>
+                <h3 class="hlens__ptitle"><?= e(t('home.lens.packages')) ?></h3>
 
                 <ul class="lpack" role="list">
                     <?php foreach ($packages as $p): ?>
@@ -83,16 +82,16 @@ $facts = [
                             <?php $from = LensModel::priceFrom($p['id']); ?>
                             <p class="lpack__price">
                                 <?php if ($from === null): ?>
-                                    <span class="lpack__ask">Liên hệ</span>
+                                    <span class="lpack__ask"><?= e(t('home.lens.ask')) ?></span>
                                 <?php else: ?>
-                                    <span class="lpack__from">Từ</span> <?= money($from) ?>
+                                    <span class="lpack__from"><?= e(t('home.lens.from')) ?></span> <?= money($from) ?>
                                 <?php endif; ?>
                             </p>
                         </li>
                     <?php endforeach; ?>
                 </ul>
 
-                <a class="hlens__cta" href="/dat-lich">Tư vấn chọn tròng</a>
+                <a class="hlens__cta" href="/dat-lich"><?= e(t('home.lens.cta')) ?></a>
             </div>
         <?php endif; ?>
     </div>

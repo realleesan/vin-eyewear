@@ -30,10 +30,8 @@ $reviews = config('taxonomy.google_reviews') ?? [];
     <div class="hrev__inner">
 
         <div class="hrev__head">
-            <p class="eyebrow">Đánh giá</p>
-            <h2 id="hrev-title" class="section-h2 section-h2--plain">
-                Khách hàng nói về Vin Eyewear
-            </h2>
+            <p class="eyebrow"><?= e(t('home.rev.eyebrow')) ?></p>
+            <h2 id="hrev-title" class="section-h2 section-h2--plain"><?= e(t('home.rev.title')) ?></h2>
         </div>
 
         <?php /* data-autoplay: số mili-giây giữa hai lần tự trượt. Có thuộc tính
@@ -52,13 +50,13 @@ $reviews = config('taxonomy.google_reviews') ?? [];
                      cũng quyết định băng có tự chạy hay không. */ ?>
             <?php if (count($reviews) > 5): ?>
                 <button type="button" class="hrev__arrow hrev__arrow--prev"
-                        data-review="prev" aria-label="Đánh giá trước" disabled>
+                        data-review="prev" aria-label="<?= e(t('home.rev.prev')) ?>" disabled>
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M15 18l-6-6 6-6"/>
                     </svg>
                 </button>
                 <button type="button" class="hrev__arrow hrev__arrow--next"
-                        data-review="next" aria-label="Đánh giá sau">
+                        data-review="next" aria-label="<?= e(t('home.rev.next')) ?>">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M9 6l6 6-6 6"/>
                     </svg>

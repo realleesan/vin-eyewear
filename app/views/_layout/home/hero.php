@@ -37,18 +37,18 @@
 $slides = [
     [
         'image'   => designImage('hero-photo', 'assets/images/hero-models.jpg'),
-        'alt'     => 'Khách hàng thử gọng kính tại Vin Eyewear',
-        'caption' => 'Đo khúc xạ chuẩn phòng khám · Hà Nội',
+        'alt'     => t('home.hero.alt1'),
+        'caption' => t('home.hero.cap1'),
     ],
     [
         'image'   => designImage('hero-slide-2', 'assets/images/showroom-frames.jpg'),
-        'alt'     => 'Kệ trưng bày kính mát tại cửa hàng',
-        'caption' => 'Bộ sưu tập kính mát 2026 · Polarized UV400',
+        'alt'     => t('home.hero.alt2'),
+        'caption' => t('home.hero.cap2'),
     ],
     [
         'image'   => designImage('hero-slide-3', 'assets/images/hero-eyewear.jpg'),
-        'alt'     => 'Gọng titan siêu nhẹ vừa lên kệ',
-        'caption' => 'Gọng titan siêu nhẹ 9 gram · Vừa lên kệ',
+        'alt'     => t('home.hero.alt3'),
+        'caption' => t('home.hero.cap3'),
     ],
 ];
 
@@ -58,11 +58,11 @@ $slides = [
  */
 $trust = [
     [
-        'label' => 'Đo khúc xạ miễn phí',
+        'label' => t('home.trust.exam'),
         'path'  => '<circle cx="6.5" cy="12" r="4"/><circle cx="17.5" cy="12" r="4"/><path d="M10.5 12h3"/>',
     ],
     [
-        'label' => 'Đổi trả trong 7 ngày',
+        'label' => t('home.trust.returns'),
         'path'  => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
     ],
     [
@@ -71,11 +71,11 @@ $trust = [
         // tháng cho lỗi nhà sản xuất — xem config/policy.php. Dải này lấy con số
         // của bản thiết kế; đổi sang "trọn đời" thì phải đổi cả bốn nhãn cho
         // cùng một giọng, không sửa lẻ một chỗ.
-        'label' => 'Bảo hành 24 tháng',
+        'label' => t('home.trust.warranty'),
         'path'  => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
     ],
     [
-        'label' => 'Giao nhanh toàn quốc',
+        'label' => t('home.trust.shipping'),
         'path'  => '<path d="M1 3h13v13H1zM14 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/>',
     ],
 ];
@@ -87,27 +87,29 @@ $trust = [
         <div class="hero__text">
             <p class="hero__eyebrow">
                 <span class="hero__eyebrow-rule" aria-hidden="true"></span>
-                Bộ sưu tập 2026
+                <?= e(t('home.hero.eyebrow')) ?>
             </p>
 
+            <?php /* Hai nửa tiêu đề là HAI KHOÁ RIÊNG, không phải một chuỗi có
+                     thẻ <br> bên trong: câu tiếng Anh và câu tiếng Việt ngắt
+                     dòng ở chỗ khác nhau, và một chuỗi mang sẵn HTML thì không
+                     escape được. Nửa sau in nghiêng màu nhấn — đúng cách Furnish
+                     dùng `fst-italic text-secondary` ở hero. */ ?>
             <h1 id="hero-title" class="hero__title">
-                Nhìn rõ hơn,<br><em>tự tin hơn.</em>
+                <?= e(t('home.hero.title_1')) ?><br><em><?= e(t('home.hero.title_2')) ?></em>
             </h1>
 
-            <p class="hero__lead">
-                Gọng titanium &amp; acetate chính hãng, đo khúc xạ miễn phí cùng
-                chuyên viên trước khi bạn chốt đơn.
-            </p>
+            <p class="hero__lead"><?= e(t('home.hero.lead')) ?></p>
 
             <div class="hero__actions">
-                <a class="hero__btn hero__btn--solid" href="/san-pham">Khám Phá Bộ Sưu Tập</a>
-                <a class="hero__btn hero__btn--ghost" href="/dat-lich">Đặt Lịch Đo Mắt Miễn Phí</a>
+                <a class="hero__btn hero__btn--solid" href="/san-pham"><?= e(t('home.hero.cta_shop')) ?></a>
+                <a class="hero__btn hero__btn--ghost" href="/dat-lich"><?= e(t('home.hero.cta_book')) ?></a>
             </div>
 
             <?php /* Cùng cờ với thanh điều hướng — xem ghi chú đầu config/ar.php.
                      Tính năng còn tắt thì không mời người ta bấm vào. */ ?>
             <?php if (config('ar.nav_enabled')): ?>
-                <a class="hero__ar" href="/thu-ar">Hoặc thử kính ảo bằng camera (AR) →</a>
+                <a class="hero__ar" href="/thu-ar"><?= e(t('home.hero.ar')) ?></a>
             <?php endif; ?>
 
             <?php /* Bộ điều khiển băng ảnh. Ẩn khi chỉ có một ảnh — hai mũi tên
@@ -119,12 +121,12 @@ $trust = [
                     </p>
 
                     <div class="hero__arrows">
-                        <button type="button" class="hero__arrow" data-hero="prev" aria-label="Ảnh trước">
+                        <button type="button" class="hero__arrow" data-hero="prev" aria-label="<?= e(t('home.hero.prev')) ?>">
                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path d="M19 12H5M11 6l-6 6 6 6"/>
                             </svg>
                         </button>
-                        <button type="button" class="hero__arrow" data-hero="next" aria-label="Ảnh sau">
+                        <button type="button" class="hero__arrow" data-hero="next" aria-label="<?= e(t('home.hero.next')) ?>">
                             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                                 <path d="M5 12h14M13 6l6 6-6 6"/>
                             </svg>

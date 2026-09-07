@@ -65,8 +65,8 @@ $truot = count($categories) > 3;
     <div class="hcat__inner">
 
         <div class="hsec-head">
-            <p class="eyebrow">Khám phá</p>
-            <h2 id="hcat-title" class="section-h2 section-h2--plain">Danh mục</h2>
+            <p class="eyebrow"><?= e(t('home.cat.eyebrow')) ?></p>
+            <h2 id="hcat-title" class="section-h2 section-h2--plain"><?= e(t('home.cat.title')) ?></h2>
         </div>
 
         <?php if ($truot): ?>
@@ -80,13 +80,13 @@ $truot = count($categories) > 3;
                      thể vượt số thẻ có thật, và lúc đó mờ đi là nói đúng sự
                      thật. */ ?>
             <button type="button" class="hcat__arrow hcat__arrow--prev"
-                    data-category="prev" aria-label="Danh mục trước">
+                    data-category="prev" aria-label="<?= e(t('home.cat.prev')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
             </button>
             <button type="button" class="hcat__arrow hcat__arrow--next"
-                    data-category="next" aria-label="Danh mục sau">
+                    data-category="next" aria-label="<?= e(t('home.cat.next')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M9 6l6 6-6 6"/>
                 </svg>
@@ -118,7 +118,9 @@ $truot = count($categories) > 3;
                                      bo theo ảnh vì khung media không cắt góc;
                                      pointer-events tắt để không chắn cú bấm. */ ?>
                             <span class="ccat__count">
-                                <?= $count > 0 ? $count . ' mẫu' : 'Sắp có hàng' ?>
+                                <?= $count > 0
+                                    ? e(t('home.cat.count', [':n' => (string) $count]))
+                                    : e(t('home.cat.soon')) ?>
                             </span>
                         </span>
 
@@ -130,7 +132,7 @@ $truot = count($categories) > 3;
                         </span>
 
                         <span class="ccat__foot">
-                            <span class="ccat__more">Xem danh mục</span>
+                            <span class="ccat__more"><?= e(t('home.cat.view')) ?></span>
                             <span class="ccat__arrow" aria-hidden="true">→</span>
                         </span>
                     </a>
@@ -144,7 +146,7 @@ $truot = count($categories) > 3;
         <?php endif; ?>
 
         <div class="hsec-all">
-            <a class="hsec-all__link" href="/san-pham">Tất cả sản phẩm →</a>
+            <a class="hsec-all__link" href="/san-pham"><?= e(t('home.cat.all')) ?></a>
         </div>
     </div>
 </section>

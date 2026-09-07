@@ -28,8 +28,8 @@ $collections = array_slice(CollectionModel::visible(), 0, 3);
     <div class="hcoll__inner">
 
         <div class="hsec-head">
-            <p class="eyebrow">Tuyển chọn theo chủ đề</p>
-            <h2 id="hcoll-title" class="section-h2 section-h2--plain">Bộ sưu tập mới</h2>
+            <p class="eyebrow"><?= e(t('home.coll.eyebrow')) ?></p>
+            <h2 id="hcoll-title" class="section-h2 section-h2--plain"><?= e(t('home.coll.title')) ?></h2>
         </div>
 
         <ul class="hcoll__grid" role="list">
@@ -54,7 +54,7 @@ $collections = array_slice(CollectionModel::visible(), 0, 3);
                                  không chắn cú bấm vào thẻ. */ ?>
                         <span class="ccard__plate">
                             <span class="ccard__name"><?= e($c['name']) ?></span>
-                            <span class="ccard__tagline"><?= e($c['tagline']) ?> · Khám phá →</span>
+                            <span class="ccard__tagline"><?= e($c['tagline']) ?> <?= e(t('home.coll.explore')) ?></span>
                         </span>
                     </a>
                 </li>
@@ -62,7 +62,7 @@ $collections = array_slice(CollectionModel::visible(), 0, 3);
         </ul>
 
         <div class="hsec-all">
-            <a class="hsec-all__link" href="/san-pham">Tất cả bộ sưu tập →</a>
+            <a class="hsec-all__link" href="/san-pham"><?= e(t('home.coll.all')) ?></a>
         </div>
     </div>
 </section>

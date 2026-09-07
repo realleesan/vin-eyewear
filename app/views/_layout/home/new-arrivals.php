@@ -38,8 +38,8 @@ $products = $products ?? [];
     <div class="hnew__inner">
 
         <div class="hsec-head">
-            <p class="eyebrow">Vừa lên kệ</p>
-            <h2 id="hnew-title" class="section-h2 section-h2--plain">Sản phẩm mới về</h2>
+            <p class="eyebrow"><?= e(t('home.new.eyebrow')) ?></p>
+            <h2 id="hnew-title" class="section-h2 section-h2--plain"><?= e(t('home.new.title')) ?></h2>
         </div>
 
         <div class="pstrip" data-product-strip>
@@ -50,13 +50,13 @@ $products = $products ?? [];
                      file nào. Xem .pstrip__arrow:disabled trong home-sections.css
                      để biết trạng thái mờ trông thế nào. */ ?>
             <button type="button" class="pstrip__arrow pstrip__arrow--prev"
-                    data-strip="prev" aria-label="Sản phẩm trước" disabled>
+                    data-strip="prev" aria-label="<?= e(t('home.strip.prev')) ?>" disabled>
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M15 18l-6-6 6-6"/>
                 </svg>
             </button>
             <button type="button" class="pstrip__arrow pstrip__arrow--next"
-                    data-strip="next" aria-label="Sản phẩm sau">
+                    data-strip="next" aria-label="<?= e(t('home.strip.next')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M9 6l6 6-6 6"/>
                 </svg>
@@ -80,7 +80,7 @@ $products = $products ?? [];
         </div>
 
         <div class="hsec-all">
-            <a class="hsec-all__link" href="/san-pham?sort=newest">Xem tất cả →</a>
+            <a class="hsec-all__link" href="/san-pham?sort=newest"><?= e(t('home.see_all')) ?></a>
         </div>
     </div>
 </section>

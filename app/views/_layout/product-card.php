@@ -79,15 +79,15 @@ $badge = null;
 $tone  = $badgeTone;
 
 if (!$inStock) {
-    $badge = 'Hết hàng';
+    $badge = t('product.out_of_stock');
     $tone  = 'out';
 } elseif ($percent !== null && $showCompare) {
     $badge = '-' . $percent . '%';
     $tone  = 'sale';
 } elseif ($badgeTone === 'new') {
-    $badge = 'Mới';
+    $badge = t('product.badge_new');
 } elseif (!empty($product['is_featured'])) {
-    $badge = 'Bán chạy';
+    $badge = t('product.badge_hot');
 }
 ?>
 
@@ -117,7 +117,7 @@ if (!$inStock) {
             <?php else: ?>
                 <?php /* Ô trống thật thà, không mượn ảnh của mặt hàng khác —
                          xem chú thích ở ProductModel::hasImage(). */ ?>
-                <span class="pcard__noimg">Chưa có ảnh</span>
+                <span class="pcard__noimg"><?= e(t('product.no_image')) ?></span>
             <?php endif; ?>
         </a>
 
@@ -163,12 +163,15 @@ if (!$inStock) {
         </h3>
 
         <p class="pcard__prices">
-            <span class="sr-only">Giá bán </span>
+            <span class="sr-only"><?= e(t('product.price_label')) ?> </span>
             <span class="pcard__price"><?= money($price) ?></span>
 
+            <?php /* Giá gốc đứng SAU trong DOM (trình đọc màn hình nghe giá thật
+                     trước) nhưng hiện ra TRƯỚC, đúng thứ tự của thẻ Furnish —
+                     xem `.pcard__was { order: -1 }` trong components/product.css. */ ?>
             <?php if ($showCompare && $compare !== null && $compare > $price): ?>
                 <span class="pcard__was">
-                    <span class="sr-only">Giá gốc </span><?= money($compare) ?>
+                    <span class="sr-only"><?= e(t('product.was_label')) ?> </span><?= money($compare) ?>
                 </span>
             <?php endif; ?>
         </p>
@@ -177,7 +180,7 @@ if (!$inStock) {
     <div class="pcard__actions">
         <?php if (!$inStock): ?>
             <span class="pcard__btn pcard__btn--solid is-off" aria-disabled="true">
-                Hết hàng<span class="sr-only"> — <?= e($product['name']) ?></span>
+                <?= e(t('product.out_of_stock')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
             </span>
 
         <?php elseif (!$canBuyNow): ?>
@@ -190,7 +193,7 @@ if (!$inStock) {
                      sang trang chi tiết kèm một dòng báo lỗi — trông y như
                      trang bị hỏng. Nhãn nay nói đúng việc sẽ xảy ra. */ ?>
             <a class="pcard__btn pcard__btn--solid" href="<?= e($url) ?>">
-                Chọn phương án<span class="sr-only"> — <?= e($product['name']) ?></span>
+                <?= e(t('product.choose_option')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
             </a>
 
         <?php else: ?>
@@ -215,11 +218,11 @@ if (!$inStock) {
                          product/detail.php) — hai chỗ cùng một quy ước thì đọc
                          add() một lần là hiểu cả hai. */ ?>
                 <button type="submit" name="action" value="buy" class="pcard__btn pcard__btn--solid">
-                    Mua ngay<span class="sr-only"> — <?= e($product['name']) ?></span>
+                    <?= e(t('product.buy_now')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
                 </button>
 
                 <button type="submit" class="pcard__btn pcard__btn--ghost">
-                    Thêm vào giỏ<span class="sr-only"> — <?= e($product['name']) ?></span>
+                    <?= e(t('product.add_to_cart')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
                 </button>
             </form>
         <?php endif; ?>
@@ -231,7 +234,7 @@ if (!$inStock) {
                  nằm ở tên sản phẩm cùng ô ảnh phía trên. */ ?>
         <?php if (!$canBuyNow): ?>
             <a class="pcard__btn pcard__btn--ghost" href="<?= e($url) ?>">
-                Chi tiết<span class="sr-only"> — <?= e($product['name']) ?></span>
+                <?= e(t('product.details')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
             </a>
         <?php endif; ?>
     </div>
