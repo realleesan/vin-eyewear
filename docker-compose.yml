@@ -1,0 +1,113 @@
+# =============================================================================
+# docker-compose.yml — môi trường phát triển Vin Eyewear cô lập trong Docker
+#
+# Ba dịch vụ:
+#   app         PHP 8.2 + Apache, mã nguồn bind-mount từ máy vào container
+#   db          MariaDB, tự nạp database/schema.sql khi volume còn trống
+#   phpmyadmin  Xem/sửa dữ liệu qua trình duyệt, không bắt buộc
+#
+# CHẠY LẦN ĐẦU:
+#     docker compose up -d --build
+#
+#   Rồi tạo tài khoản quản trị (script tương tác, không chạy tự động vì mật
+#   khẩu chỉ in ra đúng một lần — xem database/make-admin.php):
+#     docker compose exec app php database/make-admin.php admin@vineyewear.vn admin
+#
+# Trang web  : http://localhost:8080
+# phpMyAdmin : http://localhost:8081
+#
+# XOÁ SẠCH VÀ CÀI LẠI TỪ ĐẦU (mất toàn bộ dữ liệu database trong volume):
+#     docker compose down -v
+#
+# Thông tin đầy đủ, kể cả cách đổi cổng/mật khẩu: xem DOCKER.md ở gốc repo.
+# =============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      # Toàn bộ mã nguồn — sửa file .php trên máy thấy ngay, không cần rebuild.
+      - ./:/var/www/html
+      # storage/ và assets/uploads/ bị .gitignore bỏ qua nên không theo repo;
+      # tách volume riêng để dữ liệu (ảnh tải lên, hàng chờ email...) sống sót
+      # qua `docker compose down` (không kèm -v) dù không nằm trong git.
+      - app_storage:/var/www/html/storage
+      - app_uploads:/var/www/html/assets/uploads
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8080
+      APP_TIMEZONE: Asia/Ho_Chi_Minh
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: vin_eyewear
+      DB_USER: vin_eyewear
+      DB_PASS: vin_eyewear_pass
+      SESSION_LIFETIME: "1209600"
+      MAIL_DRIVER: log
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vin-eyewear
+
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: vin_eyewear
+      MYSQL_USER: vin_eyewear
+      MYSQL_PASSWORD: vin_eyewear_pass
+      MYSQL_ROOT_PASSWORD: root_pass_doi_di
+    volumes:
+      - db_data:/var/lib/mysql
+      # Image chính thức chỉ chạy các file trong đây MỘT LẦN, lúc volume rỗng
+      # (giống hệt install.php: "chưa có bảng nào -> cài mới"). schema.sql
+      # không có CREATE DATABASE/USE (cố ý — xem đầu file đó), nên phải nạp
+      # đúng vào database MYSQL_DATABASE ở trên; image tự làm việc đó cho ta.
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      # Dùng script healthcheck TÍCH HỢP SẴN trong image chính thức, thay vì
+      # tự gọi `mysqladmin`/`mariadb-admin`: tên binary đổi giữa các bản
+      # MariaDB (11.x đã bỏ `mysqladmin`), còn script này do chính image cung
+      # cấp nên luôn khớp với version bên trong nó — không phải đoán tên lệnh
+      # hay tự truyền mật khẩu qua tham số.
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    networks:
+      - vin-eyewear
+
+  phpmyadmin:
+    image: phpmyadmin:5
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root_pass_doi_di
+    ports:
+      - "8081:80"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - vin-eyewear
+
+volumes:
+  db_data:
+  app_storage:
+  app_uploads:
+
+networks:
+  vin-eyewear:

@@ -1,0 +1,12 @@
+# File/thư mục không cần gửi vào build context khi `docker compose build`.
+# Không ảnh hưởng bind-mount lúc chạy (docker-compose.yml mount ./ trực tiếp),
+# chỉ giúp build nhanh hơn và không rò rỉ bí mật vào layer image.
+
+.git
+.env
+.env.production
+storage/
+assets/uploads/
+relay/node_modules
+relay/data/
+*.log

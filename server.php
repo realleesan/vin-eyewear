@@ -26,12 +26,20 @@ $path = '/' . ltrim($path, '/');
 // ---------------------------------------------------------------------------
 
 /** Thư mục mã nguồn — không bao giờ phục vụ trực tiếp. */
-$blockedDirs = ['app', 'core', 'config', 'database', 'docs', 'scripts', 'errors',
-                 'storage', 'tools'];
+$blockedDirs = ['app', 'core', 'config', 'database', 'docker', 'docs', 'scripts',
+                 'errors', 'storage', 'tools'];
 
 /** Đuôi file không bao giờ phục vụ trực tiếp. */
 $blockedExts = ['php', 'sql', 'md', 'sh', 'log', 'lock', 'example', 'ini',
                 'yml', 'yaml', 'bak', 'old', 'orig', 'swp', 'dist'];
+
+/**
+ * Tên file trần (không đuôi) không bao giờ phục vụ trực tiếp.
+ *
+ * `Dockerfile` không có phần mở rộng nên $blockedExts phía trên không chặn
+ * được nó — xem khối tương ứng trong .htaccess.
+ */
+$blockedNames = ['Dockerfile'];
 
 $segments  = array_values(array_filter(explode('/', $path), 'strlen'));
 $firstSeg  = $segments[0] ?? '';
@@ -44,6 +52,8 @@ $blocked =
     || $firstSeg !== '' && str_starts_with($firstSeg, '.')
     // Thư mục mã nguồn
     || in_array($firstSeg, $blockedDirs, true)
+    // Tên file trần bị cấm
+    || in_array($basename, $blockedNames, true)
     // Đuôi file cấm — trừ index.php ở gốc, vốn là điểm vào hợp lệ
     // install.php là điểm vào hợp lệ thứ hai (cài đặt trên hosting không có
     // SSH). Nó tự bảo vệ bằng token + kiểm đã có admin chưa — xem đầu file đó.

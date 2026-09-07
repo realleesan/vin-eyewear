@@ -61,12 +61,32 @@
     </IfModule>
 </FilesMatch>
 
+# ----------------------------------------------------------------------------
+# TỆP DOCKER — không có đuôi để lọt qua bộ lọc đuôi file phía trên.
+#
+# `Dockerfile` không có phần mở rộng, nên khối "Đuôi file không bao giờ được
+# phục vụ trực tiếp" ở trên không chặn được nó. docker-compose.yml (.yml),
+# docker/entrypoint.sh (.sh) và docker/php.ini (.ini) đã nằm trong danh sách
+# đuôi bị chặn ở trên rồi — chỉ tên file trần này cần luật riêng.
+# ----------------------------------------------------------------------------
+<FilesMatch "^Dockerfile(\..*)?$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 # Thư mục mã nguồn — chỉ index.php ở gốc được chạy trực tiếp.
 # Chặn cả .php: file trong core/ và app/ được include từ index.php, gọi thẳng
 # qua URL chỉ gây lỗi (thiếu hằng ROOT_PATH) hoặc chạy code ngoài ngữ cảnh.
+# `docker` thêm vào danh sách vì docker/apache-vhost.conf dùng đuôi .conf,
+# đuôi này KHÔNG nằm trong danh sách bị chặn ở trên.
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(app|core|config|database|docs|scripts|storage|tools)/ - [F,L]
+    RewriteRule ^(app|core|config|database|docker|docs|scripts|storage|tools)/ - [F,L]
 </IfModule>
 
 # ----------------------------------------------------------------------------
