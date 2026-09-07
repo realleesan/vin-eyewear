@@ -139,19 +139,25 @@ if ($manhCua !== null) {
     }
     ?>
 
-    <!-- Google Fonts: Lora (tiêu đề) / Be Vietnam Pro (chữ chạy) / JetBrains Mono.
-         Trùng với --font-serif / --font-sans / --font-mono trong layout.css —
-         đổi ở đây thì phải đổi cả bên đó, và ngược lại.
-
-         LORA chứ không phải Playfair Display: "Vin Eyewear Home.dc.html" gọi
-         đúng dòng này (`family=Lora:ital,wght@0,400..700;1,400..600`). Hai font
-         không thay được cho nhau — Playfair có nét thanh/đậm chênh nhau rất
-         mạnh và chân chữ vuông, Lora mềm và đều nét hơn, nên cùng một cỡ chữ
-         mà nhìn nhẹ hơn hẳn. Giữ Playfair thì tiêu đề trang chủ không bao giờ
-         khớp bản thiết kế dù mọi con số px đều đúng. -->
+    <!-- ┌─ MỘT FAMILY DUY NHẤT: Be Vietnam Pro ────────────────────────────
+         │ Trùng với --font-sans / --font-serif / --font-mono trong layout.css —
+         │ đổi ở đây thì phải đổi cả bên đó, và ngược lại.
+         │
+         │ ĐÃ BỎ LORA. Furnish chạy trên đúng một family với tiêu đề nét mảnh;
+         │ giữ thêm một font serif cho tiêu đề là quay lại đúng lối mà theme cố
+         │ ý không đi. Bỏ nó cũng bớt được một request font và ~30KB.
+         │
+         │ KHÔNG dùng Poppins (font gốc của Furnish): nó không có subset
+         │ `vietnamese`, mọi chữ có dấu sẽ rơi sang font dự phòng giữa câu.
+         │ Lý do đầy đủ ghi ở khối FONT trong layout.css.
+         │
+         │ Bốn weight, không hơn: 400 thân bài và tiêu đề, 500 điều hướng,
+         │ 600 nhãn IN HOA, 700 giá tiền. 100/200/300/800/900 không chỗ nào
+         │ dùng nên không tải.
+         └──────────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..600&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
     <!-- ══════════════════════════════════════════════════════════════
          CSS DÙNG CHUNG — nạp cho MỌI trang.
@@ -166,7 +172,37 @@ if ($manhCua !== null) {
          Nay mọi mẩu dùng chung nằm trong ui.css, nên bảng bên dưới chỉ còn
          đúng CSS riêng của từng trang.
          ══════════════════════════════════════════════════════════════ -->
+    <?php
+    /*
+     * ┌─ NỀN BOOTSTRAP 5.3.8 ───────────────────────────────────────────────
+     * │ Tự lưu trong repo (assets/vendor/), KHÔNG lấy từ CDN: cả site đang tự
+     * │ phục vụ mọi asset, chỉ font chữ là ngoại lệ. Thêm một origin nữa vào
+     * │ đường vẽ trang là thêm một lượt DNS + TLS chặn render, đổi lấy đúng
+     * │ một file.
+     * │
+     * │ CHỈ CSS, KHÔNG BAO GIỜ JS. Site đã có sẵn ngăn kéo di động, popover và
+     * │ carousel viết tay trong assets/js/; nạp Bootstrap JS là có hai bộ mã
+     * │ làm cùng một việc, mà bộ thứ hai kéo theo cả Popper.
+     * │
+     * │ ĐỨNG TRƯỚC layout.css — thứ tự này là thứ giữ cho site không đổi hình
+     * │ dạng khi thêm khung: components/ui.css có sẵn .btn-primary, .btn-lg,
+     * │ .alert trùng tên với Bootstrap, nạp sau nên luôn thắng.
+     * │
+     * │ LOẠI TRỪ admin/login: màn ấy nằm trong khu quản trị (ngoài phạm vi đợt
+     * │ này) nhưng lại vẽ qua chính file master này, nên phải chặn tay.
+     * └──────────────────────────────────────────────────────────────────────
+     */
+    $khungFurnish = ($viewName ?? '') !== 'admin/login';
+    if ($khungFurnish):
+    ?>
+    <link rel="stylesheet" href="<?= asset('assets/vendor/bootstrap.min.css') ?>">
+    <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('assets/css/layout.css') ?>">
+    <?php /* Cầu nối token → biến --bs-*, và nhịp trang của Furnish. Phải đứng
+             SAU layout.css (đọc token của file đó) và TRƯỚC mọi component. */ ?>
+    <?php if ($khungFurnish): ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/furnish.css') ?>">
+    <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('assets/css/components/ui.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/header.css') ?>">
     <!-- Phải đứng SAU header.css: .mega__trigger chỉnh lại .header-nav__list > li > a -->

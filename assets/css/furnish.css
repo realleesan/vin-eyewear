@@ -1,0 +1,219 @@
+/* ============================================================================
+   furnish.css — LỚP NỀN của giao diện Furnish
+
+   Nạp ở GIỮA, và vị trí đó là bắt buộc:
+
+     1. assets/vendor/bootstrap.min.css   nền: grid, utility, form, pagination
+     2. assets/css/layout.css             reset + bảng token :root
+     3. assets/css/furnish.css            ← FILE NÀY: nối 1 với 2, dựng nhịp Furnish
+     4. assets/css/components/*.css       component của site
+     5. assets/css/<trang>.css            CSS riêng từng trang
+
+   VÌ SAO BOOTSTRAP ĐỨNG ĐẦU chứ không đứng cuối: `components/ui.css` đã có
+   `.btn-primary`, `.btn-secondary`, `.btn-lg`, `.alert` — trùng tên với
+   Bootstrap. Bootstrap nạp trước thì luật của site luôn thắng, nên nạp thêm
+   một khung CSS 232KB KHÔNG làm đổi hình dạng của bất kỳ trang nào đang có.
+   Đảo thứ tự là mọi nút trên site đổi kiểu cùng lúc.
+
+   VÌ SAO FILE NÀY KHÔNG CÓ MỘT DÒNG `!important` NÀO: nó chỉ khai biến và
+   khai lớp mới. Ghi đè component bằng !important là mở đầu cuộc chiến độ ưu
+   tiên mà lần sau không ai gỡ được — component nào cần đổi thì sửa thẳng file
+   của component đó.
+   ============================================================================ */
+
+/* ────────────────────────────────────────────────────────────────────────────
+   1. CẦU NỐI TOKEN → BIẾN BOOTSTRAP
+
+   Bootstrap 5.3 đọc phần lớn giá trị nền của nó qua custom property `--bs-*`.
+   Trỏ chúng về token của site là mọi primitive Bootstrap (grid, form,
+   pagination, table, card) tự mang màu và chữ của Vin Eyewear, KHÔNG phải
+   viết lại một dòng CSS component nào.
+
+   Đây cũng là chỗ DUY NHẤT hai hệ thống gặp nhau. Muốn đổi tông cả site thì
+   vẫn sửa ở `layout.css`, không sửa ở đây.
+   ──────────────────────────────────────────────────────────────────────────── */
+:root {
+    /* Chữ */
+    --bs-body-font-family: var(--font-sans);
+    --bs-body-font-size: var(--fs-body);
+    --bs-body-font-weight: 400;
+    --bs-body-line-height: 1.6;
+
+    /* Màu chữ và nền */
+    --bs-body-color: var(--ink);
+    --bs-body-bg: var(--surface);
+    --bs-emphasis-color: var(--ink);
+    --bs-secondary-color: var(--muted);
+    --bs-tertiary-color: var(--muted);
+    --bs-secondary-bg: var(--surface-sunken);
+    --bs-tertiary-bg: var(--surface-sunken);
+    --bs-heading-color: var(--ink);
+
+    /* Đường kẻ — hai mức của site, xem chú thích trong layout.css */
+    --bs-border-color: var(--line);
+    --bs-border-color-translucent: var(--line);
+
+    /* Màu vai trò. `--bs-primary` chỉ nuôi các utility `.text-primary`,
+       `.border-primary`…; nút bấm thì Bootstrap nhét hex thẳng vào
+       `--bs-btn-bg` lúc biên dịch nên KHÔNG ăn theo dòng này. Site không dùng
+       `.btn-primary` của Bootstrap (ui.css đã có lớp cùng tên và thắng), nên
+       đó là chuyện không cần giải quyết. */
+    --bs-primary: var(--brand);
+    --bs-primary-rgb: 0, 0, 0;
+    --bs-secondary: var(--muted);
+    --bs-danger: var(--danger);
+    --bs-success: var(--success);
+    --bs-light: var(--surface-sunken);
+    --bs-dark: var(--ink);
+
+    /* Liên kết — Furnish: chữ màu mực, hover sang màu nhấn, không gạch chân
+       cho tới khi hover. */
+    --bs-link-color: var(--ink);
+    --bs-link-color-rgb: 33, 31, 28;
+    --bs-link-hover-color: var(--accent);
+    --bs-link-decoration: none;
+    --bs-link-hover-decoration: underline;
+
+    /* ┌─ GÓC VUÔNG ────────────────────────────────────────────────────────
+       │ Đây là nét nhận dạng mạnh nhất của Furnish: `$enable-rounded: false`.
+       │ Bản dist của Bootstrap được biên dịch với bo góc BẬT, nên phải tắt
+       │ bằng biến. Sáu dòng chứ không một: `.rounded-pill` và `.rounded-circle`
+       │ đọc biến riêng, bỏ sót là còn sót vài nút hình viên thuốc.
+       └──────────────────────────────────────────────────────────────────── */
+    --bs-border-radius: 0;
+    --bs-border-radius-sm: 0;
+    --bs-border-radius-lg: 0;
+    --bs-border-radius-xl: 0;
+    --bs-border-radius-xxl: 0;
+    --bs-border-radius-2xl: 0;
+    --bs-border-radius-pill: 0;
+}
+
+/* Máng lưới rộng 2.5rem — `$grid-gutter-width` của Furnish, rộng hơn hẳn mặc
+   định 1.5rem của Bootstrap. Đây là một nửa lý do trang Furnish trông thoáng.
+   Khai trên `.row` chứ không trên `:root`: Bootstrap đặt `--bs-gutter-x` ngay
+   trên `.row`, đặt ở `:root` thì bị chính nó đè. */
+.row {
+    --bs-gutter-x: 2.5rem;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   2. NHỊP TRANG
+
+   Furnish dựng nhịp dọc bằng thang `$spacers` mở rộng tới 11 (8rem) — thứ chỉ
+   có khi biên dịch từ SCSS. Bản dist chỉ có 0–5 (tối đa 3rem), nên `pt-8`,
+   `py-lg-11`, `mt-lg-9` trong HTML của Furnish là những lớp KHÔNG TỒN TẠI.
+
+   Không dựng lại cả thang đó: ta tự viết markup nên chỉ cần đúng nhịp mình
+   dùng. Hai lớp dưới đây thay cho toàn bộ nhóm ấy, và co theo bề ngang màn
+   hình thay vì nhảy bậc theo breakpoint.
+   ──────────────────────────────────────────────────────────────────────────── */
+.section {
+    padding-block: clamp(48px, 7vw, 96px);
+}
+
+.section--tight {
+    padding-block: clamp(32px, 4.5vw, 64px);
+}
+
+.section--flush-top {
+    padding-block-start: 0;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   3. LỚP TIỆN ÍCH CỦA FURNISH
+
+   Chép từ `_custom.scss` của theme — bốn rule, đó là TOÀN BỘ phần CSS tự viết
+   của Furnish. Phần còn lại của giao diện theme là utility Bootstrap thuần.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Chữ rất nhỏ IN HOA — dòng thương hiệu trên thẻ sản phẩm, nhãn nhóm, nhãn ô
+   nhập. Furnish gọi là `.text-xs` ($font-xs: .75rem). */
+.text-xs {
+    font-size: var(--fs-caption);
+}
+
+/* Nhãn IN HOA nhỏ đứng trên tiêu đề khối. Furnish dùng
+   `text-uppercase text-xs fw-semibold` + màu phụ; gộp lại thành một lớp vì nó
+   lặp ở mọi khối, và vì màu của nó là token `--eyebrow` chứ không phải màu tuỳ ý. */
+.eyebrow {
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+/* Nút vuông chỉ chứa icon — mạng xã hội ở chân trang, nút điều hướng carousel. */
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    flex: 0 0 auto;
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   4. NHỮNG CHỖ BOOTSTRAP BIÊN DỊCH CỨNG, BIẾN KHÔNG VỚI TỚI
+
+   Bốn nhóm dưới đây là giá trị đã nằm trong file dist, đổi `--bs-*` không
+   chạm được. Số lượng ít nên khai lại bằng tay rẻ hơn hẳn việc dựng một
+   pipeline SCSS chỉ để build lại Bootstrap.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Tiêu đề NHẸ — `$headings-font-weight: 400` của Furnish. Bootstrap dist để
+   500, và chính nét chữ mảnh này làm trang Furnish trông "biên tập" chứ không
+   "quảng cáo". Chỉ áp cho tiêu đề nằm trong markup mới; component cũ khai
+   font-weight riêng nên không bị đụng. */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    font-weight: 400;
+}
+
+/* Ô nhập dày dặn — `$input-btn-padding-y: .85rem`, `-x: 1.5rem`. Bootstrap
+   dist để .375rem/.75rem, mảnh hơn hẳn. */
+.form-control,
+.form-select {
+    --bs-border-radius: 0;
+    padding: .85rem 1.5rem;
+    border-color: var(--line-strong);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--ink);
+    background-color: var(--surface-focus);
+    box-shadow: none;
+    /* Không dùng vòng sáng xanh mặc định của Bootstrap: nó là màu duy nhất
+       trên site không nằm trong bảng token, và nó bo tròn. */
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+}
+
+.form-control::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+
+/* Phân trang vuông, viền mảnh — dùng ở /san-pham. */
+.page-link {
+    --bs-pagination-border-radius: 0;
+    --bs-pagination-color: var(--ink);
+    --bs-pagination-bg: var(--surface-raised);
+    --bs-pagination-border-color: var(--line);
+    --bs-pagination-hover-color: var(--surface-raised);
+    --bs-pagination-hover-bg: var(--ink);
+    --bs-pagination-hover-border-color: var(--ink);
+    --bs-pagination-focus-color: var(--surface-raised);
+    --bs-pagination-focus-bg: var(--ink);
+    --bs-pagination-focus-box-shadow: none;
+    --bs-pagination-active-color: var(--surface-raised);
+    --bs-pagination-active-bg: var(--ink);
+    --bs-pagination-active-border-color: var(--ink);
+    --bs-pagination-disabled-color: var(--muted);
+    --bs-pagination-disabled-bg: var(--surface-sunken);
+    --bs-pagination-disabled-border-color: var(--line);
+}

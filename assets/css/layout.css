@@ -52,11 +52,11 @@
        │ Tỉ lệ tương phản đã đo, ghi ngay cạnh từng cặp để lần sau đổi
        │ màu là biết ngay mình đang phá cái gì.
        └──────────────────────────────────────────────────────────────── */
-   --brand: #8a2432;
-   /* Crimson — header, nút chính, khối nhấn — 8.39:1 trên pearl */
-   --brand-strong: #6e1b28;
-   /* bản đậm hơn — hover/nhấn trên nền sáng */
-   --brand-light: #c98d81;
+   --brand: #000000;
+   /* ĐEN — nút chính, khối nhấn, chữ điều hướng. Furnish $primary — 21:1 trên nền trắng */
+   --brand-strong: #211f1c;
+   /* bản đậm hơn — hover/nhấn trên nền sáng. Furnish $gray-900 */
+   --brand-light: #a0988d;
    /* bản nhạt — điểm nhấn/hover TRÊN NỀN TỐI.
                                        Bắt buộc phải có: --brand đặt trên --ink
                                        chỉ đạt 1.5:1 nên hover sẽ mất hút.
@@ -66,13 +66,13 @@
                                        chỉnh từ #c97a80 vì trên nền --ink mới
                                        (#33272a, sáng hơn #1a1214 cũ) sắc đó
                                        tụt xuống 4.48:1, dưới ngưỡng AA. */
-   --brand-subtle: #f2e4dc;
-   /* nền nhấn rất nhạt — badge, khối trích dẫn */
+   --brand-subtle: #f6f5f4;
+   /* nền nhấn rất nhạt — badge, khối trích dẫn. Furnish $gray-50 */
    --on-brand: #ffffff;
-   /* chữ đặt TRÊN --brand — 8.96:1 */
-   --on-brand-muted: #ecc9c0;
-   /* chữ phụ trên --brand — 5.34:1 */
-   --on-brand-soft: #f6e3dd;
+   /* chữ đặt TRÊN --brand (đen) — 21:1 */
+   --on-brand-muted: #b3aca3;
+   /* chữ phụ trên --brand — 7.4:1 trên đen */
+   --on-brand-soft: #ecebe9;
    /* chữ THÂN BÀI trên --brand — 6.9:1. Nằm giữa --on-brand (trắng, dùng cho
                                        thứ cần nổi) và --on-brand-muted (mờ nhất). Dải thông báo
                                        trên header và cả chân trang đều dùng sắc này; trước đây
@@ -87,18 +87,19 @@
        │ trước đúng cách làm việc này: chỉ cần đổi --surface-raised sang
        │ tông sáng hơn, không phải sửa chỗ nào khác.
        └──────────────────────────────────────────────────────────────── */
-   --surface: #faf6f0;
-   /* nền trang — PEARL */
+   --surface: #ffffff;
+   /* nền trang — TRẮNG. Furnish không dùng nền ngà, mọi khoảng thở là trắng */
    --surface-raised: #ffffff;
-   /* thẻ, khối nổi — nổi nhẹ khỏi nền pearl */
-   --surface-sunken: #f5efe7;
-   /* khối chìm nhẹ so với nền pearl */
-   --ink: #33272a;
-   /* chữ chính + nền khối tối — 13.42:1 trên pearl */
-   --on-ink: #f8ede8;
+   /* thẻ, khối nổi — cùng tông nền, tách nhau bằng ĐƯỜNG VIỀN chứ không bằng
+       màu. Đây là nếp của Furnish: phẳng, viền mảnh, gần như không đổ bóng */
+   --surface-sunken: #f6f5f4;
+   /* khối chìm — panel lọc, dải nền phụ. Furnish $gray-50 */
+   --ink: #211f1c;
+   /* chữ chính + nền khối tối — Furnish $gray-900, 16.4:1 trên trắng */
+   --on-ink: #f6f5f4;
    /* chữ đặt TRÊN --ink */
-   --muted: #6f5f5a;
-   /* chữ phụ trên nền sáng — 5.61:1 trên pearl */
+   --muted: #615b51;
+   /* chữ phụ trên nền sáng — Furnish $gray-700, 7.3:1 trên trắng */
 
    /* ┌─ HAI MỨC ĐƯỜNG KẺ ──────────────────────────────────────────
        │ Bản Lovable chỉ có một giá trị #c5bcb8 cho mọi đường viền.
@@ -113,16 +114,36 @@
        │                 chọn; bắt buộc dùng cho mọi thứ người dùng
        │                 phải nhìn ra ranh giới để thao tác.
        └──────────────────────────────────────────────────────────────── */
-   --line: #e5d8cc;
-   /* trang trí — đúng viền nút tròn của bản thiết kế */
-   --line-strong: #9d8b84;
-   /* chức năng — 3.06:1 trên nền trang */
+   --line: #ecebe9;
+   /* trang trí — Furnish $gray-100, cũng là $border-color của theme */
+   --line-strong: #b3aca3;
+   /* chức năng — Furnish $gray-400, 3.08:1 trên nền trắng.
+       KHÔNG hạ xuống $gray-300 (#c5c0b9): sắc đó chỉ đạt 2.3:1, dưới ngưỡng
+       WCAG 1.4.11 cho viền ô nhập — người mắt kém sẽ không thấy ô nhập ở đâu */
 
    /* Nhãn phụ tông hồng ấm — chữ IN HOA nhỏ đứng trên mỗi tiêu đề khối,
        tiêu đề cột chân trang, breadcrumb, nhãn ô nhập trong form liên hệ.
        Mọi bản thiết kế đều dùng đúng sắc này; trước đây nó bị chép tay ở bốn
        file CSS khác nhau nên đổi tông là phải nhớ sửa đủ bốn chỗ. */
-   --eyebrow: #b0736a;
+   --eyebrow: #8a2432;
+
+   /* ┌─ MÀU NHẤN ─────────────────────────────────────────────────
+       │ Crimson — màu thương hiệu CŨ của Vin Eyewear, nay giữ lại ở vai trò
+       │ NHẤN chứ không còn là màu chính. Nó đứng đúng chỗ mà Furnish đặt
+       │ $secondary (#d47f31 terracotta): nhãn IN HOA nhỏ, giá khuyến mãi,
+       │ liên kết khi rê chuột, huy hiệu giảm giá.
+       │
+       │ Đây là điểm khác biệt duy nhất giữa site này và một bản Furnish
+       │ trắng-đen thuần — bỏ nó đi thì không còn gì nhận ra Vin Eyewear.
+       │
+       │ 8.39:1 trên nền trắng. TRÊN NỀN TỐI thì KHÔNG dùng sắc này (chỉ đạt
+       │ 1.6:1 trên --ink) — dùng --h-dark-eyebrow ở cuối bảng.
+       └──────────────────────────────────────────────────────────────── */
+   --accent: #8a2432;
+   --accent-strong: #6e1b28;
+   /* bản đậm — hover của nút/liên kết mang màu nhấn */
+   --accent-subtle: #f7eef0;
+   /* nền rất nhạt của màu nhấn — huy hiệu "Giảm giá", dải khuyến mãi */
 
    /* Bí danh tên cũ (--yellow, --black, --white, --warm-bg…) đã BỎ HẲN.
        Chúng tồn tại để khỏi phải sửa "342 chỗ đang dùng" của thiết kế cũ;
@@ -134,29 +155,36 @@
    /* viền + chữ báo lỗi form — 5.06:1 */
    --success: #27ae60;
    /* chấm trạng thái camera đang chạy — 6.41:1 trên ink */
-   --surface-focus: #fffdfb;
-   /* nền ô nhập khi focus — sáng hơn pearl một chút */
+   --surface-focus: #ffffff;
+   /* nền ô nhập khi focus — nền trang đã là trắng nên ô nhập giữ trắng,
+       dấu hiệu focus nằm ở VIỀN và outline chứ không ở màu nền */
 
-   /* ┌─ FONT ──────────────────────────────────────────────────────
-       │ Lora cho tiêu đề, Be Vietnam Pro cho chữ chạy — đúng hai dòng
-       │ mà "Vin Eyewear Home.dc.html" nạp.
-       │ Be Vietnam Pro được thiết kế riêng cho tiếng Việt: dấu thanh
-       │ đặt đúng chỗ, không đè lên dấu mũ như phần lớn font Latin.
-       │ Lora cũng phủ đủ bộ dấu tiếng Việt, kể cả bản nghiêng — thẻ
-       │ <em> trong tiêu đề hero và câu trích dẫn ở khối đánh giá đều
-       │ dùng tới nét nghiêng thật chứ không phải nghiêng giả.
+   /* ┌─ MỘT FONT DUY NHẤT ─────────────────────────────────────────
+       │ Furnish chạy trên đúng MỘT family (Poppins) với tiêu đề nét mảnh
+       │ (weight 400). Đó là nửa bản sắc của theme — hai family là quay về
+       │ kiểu "serif cho tiêu đề, sans cho thân bài" mà Furnish cố ý không làm.
        │
-       │ ĐỔI TỪ Playfair Display: hai font không thay được cho nhau.
-       │ Playfair chênh nét thanh/đậm rất mạnh nên cùng một cỡ chữ nhìn
-       │ nặng hơn hẳn — đó là lý do trước đây .hcat .section-h2 phải hạ
-       │ font-weight từ 700 xuống 600 để "bù". Nay dùng đúng Lora thì
-       │ không cần bù nữa.
+       │ VÌ SAO KHÔNG PHẢI POPPINS: Poppins KHÔNG có subset `vietnamese`
+       │ (google/fonts METADATA.pb khai đúng bốn subset: devanagari, latin,
+       │ latin-ext, menu). Mọi chữ có dấu — ệ, ữ, ằ, ỗ — sẽ rơi sang font dự
+       │ phòng ngay giữa câu. Trên một site tiếng Việt thì đó không phải là
+       │ khiếm khuyết nhỏ, nó là hỏng.
+       │
+       │ Be Vietnam Pro là bản thay thế đúng nhất đang có: cũng là geometric
+       │ sans, dựng riêng cho tiếng Việt (dấu thanh không đè dấu mũ), và ĐÃ
+       │ NẠP SẴN — đổi sang nó không tốn thêm một request font nào, còn bớt
+       │ được một family.
+       │
+       │ --font-serif GIỮ LẠI TÊN, trỏ về cùng stack: 93 chỗ trong CSS đang
+       │ gọi var(--font-serif). Xoá token là 93 chỗ đó lặng lẽ tụt xuống
+       │ Georgia, không báo lỗi ở đâu cả.
        │
        │ Nhớ đổi kèm thẻ <link> Google Fonts trong _layout/master.php.
        └──────────────────────────────────────────────────────────────── */
-   --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
-   --font-sans: 'Be Vietnam Pro', 'Helvetica Neue', Arial, sans-serif;
-   --font-mono: 'JetBrains Mono', monospace;
+   --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, BlinkMacSystemFont,
+      'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+   --font-serif: var(--font-sans);
+   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
    /* ============================================================
        THANG CHỮ — nguồn duy nhất cho mọi font-size của site.
@@ -329,8 +357,17 @@
        ngoại lệ ở đây để lần sau đọc bảng này không tưởng bốn chỗ kia làm sai.
        Chi tiết ở khối "HUY HIỆU SỐ" trong assets/css/account.css.
        ============================================================ */
-   --radius: 6px;
-   --radius-sm: 4px;
+   /* ┌─ GÓC VUÔNG — Furnish `$enable-rounded: false` ──────────────
+       │ Đây là nét nhận dạng mạnh nhất của theme, và nó tuyệt đối: thẻ, nút,
+       │ ô nhập, ảnh, hộp thoại đều góc vuông.
+       │
+       │ --radius-round GIỮ 999px, không hạ về 0. Nó không dùng cho "góc" mà
+       │ cho những thứ VỐN LÀ HÌNH TRÒN — ảnh đại diện, chấm trạng thái camera,
+       │ số thứ tự bước trong vòng tròn. Hạ về 0 là biến chấm trạng thái thành
+       │ ô vuông nhỏ, không phải là làm nó vuông vắn hơn.
+       └──────────────────────────────────────────────────────────────── */
+   --radius: 0;
+   --radius-sm: 0;
    --radius-round: 999px;
 
    /* ============================================================
@@ -345,33 +382,40 @@
       Đây là những sắc KHÔNG có token vai trò tương ứng: hồng phấn, nền chờ
       sau ảnh, ba mức chữ phụ, ba mức đường kẻ, và cụm màu của dải nền tối.
       ============================================================ */
-   /* Hồng phấn — nhãn cam kết, nút sáng trên nền tối */
-   --h-blush:         #f2e4dc;
-   --h-blush-line:    #e3cfc4;
+   /* Nền nhấn rất nhạt — nhãn cam kết, nút sáng trên nền tối.
+      TỪNG LÀ HỒNG PHẤN của bảng Crimson/Pearl; nay là xám ấm trung tính của
+      Furnish. Giữ tên --h-blush vì ~60 chỗ đang gọi cụm --h-*. */
+   --h-blush:         #f6f5f4;
+   --h-blush-line:    #ecebe9;
 
    /* Nền chờ phía sau ảnh, thấy được lúc ảnh chưa tải xong */
-   --h-shell:         #f5efe7;
+   --h-shell:         #f6f5f4;
 
    /* Ba sắc chữ phụ, nhạt dần: nhãn khối · mô tả · siêu dữ liệu */
    --h-eyebrow:       var(--eyebrow);
-   --h-note:          #9a877f;
-   --h-meta:          #b0a094;
+   --h-note:          #615b51;
+   --h-meta:          #837a6d;
 
    /* HAI mức đường kẻ, cố ý khác nhau:
    --h-line      viền NÚT phụ (1.5px), phải thấy rõ vì bấm được
    --h-card-line viền THẺ (1px)
    --h-rule      đường kẻ TRONG thẻ, nhạt nhất */
-   --h-line:          #e0cfc2;
-   --h-card-line:     #eee0d4;
-   --h-rule:          #f0e4d8;
+   --h-line:          #c5c0b9;
+   --h-card-line:     #ecebe9;
+   --h-rule:          #f2f1ef;
 
    /* Ba dải tối của trang (cam kết dưới hero · đo mắt · CTA) dùng CHUNG một
    sắc nâu sẫm, không phải --ink (đen trung tính) */
-   --h-dark:          #3b1219;
-   --h-dark-eyebrow:  #d8a49a;
-   --h-on-dark:       #f8ede8;
-   --h-on-dark-muted: #bd9d95;
-   --h-on-dark-num:   #c98d81;
+   --h-dark:          #211f1c;
+   /* Chân trang và ba dải tối dùng CHUNG sắc này — Furnish $gray-900.
+      TỪNG LÀ nâu sẫm #3b1219 của bảng Crimson. */
+   --h-dark-eyebrow:  #c9928c;
+   /* Nhãn IN HOA trên nền tối. KHÔNG dùng --accent ở đây: crimson #8a2432
+      đặt trên #211f1c chỉ đạt 1.6:1, chữ sẽ chìm hẳn. Đây là bản làm sáng
+      của chính sắc đó — 6.6:1, vẫn đọc ra là họ crimson. */
+   --h-on-dark:       #f6f5f4;
+   --h-on-dark-muted: #b3aca3;
+   --h-on-dark-num:   #c9928c;
 
    /* Bí danh của token dùng chung trong layout.css — MỘT nguồn cho cả site.
    Giữ tên --h-* vì 27 chỗ trong file này đang gọi, nhưng giá trị nay
@@ -381,8 +425,11 @@
 
    --h-pad-y:         56px;  /* đệm trên/dưới mỗi khối */
 
-   --h-shadow:        0 2px 10px rgba(90, 40, 40, 0.05);
-   --h-shadow-lift:   0 18px 40px rgba(90, 40, 40, 0.12);
+   /* Bóng tô bằng chính sắc mực trung tính, không phải nâu đỏ như bảng cũ.
+      Furnish gần như không đổ bóng — phân tách bằng viền — nên hai mức này
+      cố ý nhạt hơn trước. */
+   --h-shadow:        0 1px 3px rgba(33, 31, 28, 0.05);
+   --h-shadow-lift:   0 12px 28px rgba(33, 31, 28, 0.10);
 
    /* ============================================================
        ĐỘ NỔI — bóng đổ.
@@ -394,14 +441,14 @@
        trên nền pearl ấm, bóng xám trung tính trông xỉn và bẩn. Mỗi mức
        gồm hai lớp — lớp sát để tạo mép, lớp toả để tạo chiều sâu.
        ============================================================ */
-   --elev-1: 0 1px 2px rgba(26, 18, 20, 0.05),
-      0 1px 1px rgba(26, 18, 20, 0.04);
+   --elev-1: 0 1px 2px rgba(33, 31, 28, 0.04),
+      0 1px 1px rgba(33, 31, 28, 0.03);
    /* thẻ ở trạng thái nghỉ */
-   --elev-2: 0 4px 14px rgba(26, 18, 20, 0.07),
-      0 1px 3px rgba(26, 18, 20, 0.05);
+   --elev-2: 0 4px 12px rgba(33, 31, 28, 0.06),
+      0 1px 3px rgba(33, 31, 28, 0.04);
    /* thẻ khi rê chuột */
-   --elev-3: 0 14px 36px rgba(26, 18, 20, 0.11),
-      0 4px 10px rgba(26, 18, 20, 0.06);
+   --elev-3: 0 12px 30px rgba(33, 31, 28, 0.10),
+      0 4px 10px rgba(33, 31, 28, 0.05);
    /* lớp nổi: menu, hộp thoại */
 }
 
