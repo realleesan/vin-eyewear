@@ -215,6 +215,26 @@ return [
     'cat.next'            => 'Trang sau',
     'cat.page_n'          => 'Trang :n',
 
+    // ── Trang chi tiết sản phẩm ──────────────────────────────────────────
+    'pd.options'      => 'Chiết suất — chọn theo độ cận',
+    'pd.qty'          => 'Số lượng',
+    'pd.qty_down'     => 'Giảm số lượng',
+    'pd.qty_up'       => 'Tăng số lượng',
+    'pd.wait_title'   => 'Thông báo khi có hàng',
+    'pd.wait_option'  => 'Phương án bạn đang chờ',
+    'pd.wait_go'      => 'Báo cho tôi khi có hàng',
+    'pd.specs'        => 'Thông số kỹ thuật',
+    'pd.specs_empty'  => 'Chưa cập nhật thông số cho sản phẩm này.',
+    'pd.reviews'      => 'Đánh giá',
+    'pd.reviews_empty' => 'Chưa có đánh giá nào. Hãy là người đầu tiên.',
+    'pd.write'        => 'Viết đánh giá của bạn',
+    'pd.rate'         => 'Chấm điểm',
+    'pd.comment'      => 'Nhận xét',
+    'pd.comment_ph'   => 'Kính dùng có vừa ý không? Cắt lắp mất bao lâu?',
+    'pd.send'         => 'Gửi đánh giá',
+    'pd.moderated'    => 'Đánh giá hiển thị sau khi được duyệt.',
+    'pd.related'      => 'Sản phẩm liên quan',
+
     // ── Thẻ sản phẩm (dùng ở 5 trang) ────────────────────────────────────
     'product.out_of_stock' => 'Hết hàng',
     'product.badge_new'    => 'Mới',

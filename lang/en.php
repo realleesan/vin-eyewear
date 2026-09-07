@@ -213,6 +213,26 @@ return [
     'cat.next'            => 'Next page',
     'cat.page_n'          => 'Page :n',
 
+    // ── Product detail ───────────────────────────────────────────────────
+    'pd.options'      => 'Lens index — pick by prescription',
+    'pd.qty'          => 'Quantity',
+    'pd.qty_down'     => 'Decrease quantity',
+    'pd.qty_up'       => 'Increase quantity',
+    'pd.wait_title'   => 'Notify me when back in stock',
+    'pd.wait_option'  => 'Which option are you waiting for',
+    'pd.wait_go'      => 'Notify me',
+    'pd.specs'        => 'Specifications',
+    'pd.specs_empty'  => 'No specifications recorded for this product yet.',
+    'pd.reviews'      => 'Reviews',
+    'pd.reviews_empty' => 'No reviews yet. Be the first.',
+    'pd.write'        => 'Write your review',
+    'pd.rate'         => 'Rating',
+    'pd.comment'      => 'Comment',
+    'pd.comment_ph'   => 'How do they fit? How long did glazing take?',
+    'pd.send'         => 'Submit review',
+    'pd.moderated'    => 'Reviews appear once approved.',
+    'pd.related'      => 'Related products',
+
     // ── Product card (used on 5 pages) ───────────────────────────────────
     'product.out_of_stock' => 'Out of stock',
     'product.badge_new'    => 'New',

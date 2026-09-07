@@ -291,7 +291,7 @@ $stars = static function (float $score): string {
 
                 <?php if ($variants !== []): ?>
                     <div class="pdopts">
-                        <span class="pdopts__label" id="nhan-pa">Chiết suất — chọn theo độ cận</span>
+                        <span class="pdopts__label" id="nhan-pa"><?= e(t('pd.options')) ?></span>
 
                         <div class="pdopts__row" role="radiogroup" aria-labelledby="nhan-pa">
                             <?php foreach ($variants as $v): ?>
@@ -365,16 +365,16 @@ $stars = static function (float $score): string {
                     ?>
                     <div class="pdqty">
                         <button type="button" class="pdqty__btn" data-qty-step="-1"
-                                aria-label="Giảm số lượng" aria-controls="so-luong"
+                                aria-label="<?= e(t('pd.qty_down')) ?>" aria-controls="so-luong"
                                 <?= $inStock ? '' : 'disabled' ?>><span aria-hidden="true">−</span></button>
 
-                        <label class="sr-only" for="so-luong">Số lượng</label>
+                        <label class="sr-only" for="so-luong"><?= e(t('pd.qty')) ?></label>
                         <input class="pdqty__num" type="number" id="so-luong" name="quantity"
                                value="1" min="1" max="<?= $maxMua ?>" step="1" inputmode="numeric"
                                <?= $inStock ? '' : 'disabled' ?>>
 
                         <button type="button" class="pdqty__btn" data-qty-step="1"
-                                aria-label="Tăng số lượng" aria-controls="so-luong"
+                                aria-label="<?= e(t('pd.qty_up')) ?>" aria-controls="so-luong"
                                 <?= $inStock ? '' : 'disabled' ?>><span aria-hidden="true">+</span></button>
                     </div>
 
@@ -478,7 +478,7 @@ $stars = static function (float $score): string {
 
             <?php if (!$inStock): ?>
                 <section class="pdwait" id="cho-hang" aria-labelledby="pdwait-title">
-                    <h2 class="pdwait__title" id="pdwait-title">Thông báo khi có hàng</h2>
+                    <h2 class="pdwait__title" id="pdwait-title"><?= e(t('pd.wait_title')) ?></h2>
 
                     <?php if ($waitMsg !== null): ?>
                         <p class="pdwait__msg" role="status"><?= e($waitMsg) ?></p>
@@ -513,7 +513,7 @@ $stars = static function (float $score): string {
                             <input type="hidden" name="slug" value="<?= e($product['slug']) ?>">
 
                             <?php if ($variants !== []): ?>
-                                <label class="pdwait__label" for="cho-pa">Phương án bạn đang chờ</label>
+                                <label class="pdwait__label" for="cho-pa"><?= e(t('pd.wait_option')) ?></label>
                                 <select class="pdwait__select" id="cho-pa" name="variant_id" required>
                                     <?php foreach ($variants as $v): ?>
                                         <option value="<?= e($v['id']) ?>"><?= e($v['label']) ?></option>
@@ -522,7 +522,7 @@ $stars = static function (float $score): string {
                             <?php endif; ?>
 
                             <div class="pdwait__row">
-                                <button type="submit" class="pdwait__go">Báo cho tôi khi có hàng</button>
+                                <button type="submit" class="pdwait__go"><?= e(t('pd.wait_go')) ?></button>
                             </div>
                         </form>
                     <?php else: ?>
@@ -563,7 +563,7 @@ $stars = static function (float $score): string {
     <div class="pdbottom">
 
         <div class="pdcard">
-            <h2 class="pdcard__title">Thông số kỹ thuật</h2>
+            <h2 class="pdcard__title"><?= e(t('pd.specs')) ?></h2>
 
             <?php
             /* Ghép vài cột có sẵn vào bảng thông số để nó không quá lèo tèo khi
@@ -589,7 +589,7 @@ $stars = static function (float $score): string {
             ?>
 
             <?php if ($rows === []): ?>
-                <p class="pdcard__empty">Chưa cập nhật thông số cho sản phẩm này.</p>
+                <p class="pdcard__empty"><?= e(t('pd.specs_empty')) ?></p>
             <?php else: ?>
                 <dl class="pdspecs">
                     <?php foreach ($rows as $k => $v): ?>
@@ -604,7 +604,7 @@ $stars = static function (float $score): string {
 
         <div class="pdcard" id="danh-gia">
             <div class="pdcard__head">
-                <h2 class="pdcard__title">Đánh giá (<?= $reviewN ?>)</h2>
+                <h2 class="pdcard__title"><?= e(t('pd.reviews')) ?> (<?= $reviewN ?>)</h2>
                 <div class="pdcard__score">
                     <span class="pdcard__num"><?= e(number_format($rating, 1)) ?></span>
                     <span class="pdstars pdstars--sm" aria-hidden="true"><?= $stars($rating) ?></span>
@@ -617,7 +617,7 @@ $stars = static function (float $score): string {
             <?php endif; ?>
 
             <?php if ($reviews === []): ?>
-                <p class="pdcard__empty">Chưa có đánh giá nào. Hãy là người đầu tiên.</p>
+                <p class="pdcard__empty"><?= e(t('pd.reviews_empty')) ?></p>
             <?php else: ?>
                 <?php foreach ($reviews as $rv): ?>
                     <article class="pdreview">
@@ -680,13 +680,13 @@ $stars = static function (float $score): string {
                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                     <input type="hidden" name="slug" value="<?= e($product['slug']) ?>">
 
-                    <span class="pdwrite__label">Viết đánh giá của bạn</span>
+                    <span class="pdwrite__label"><?= e(t('pd.write')) ?></span>
 
                     <!-- Năm ô radio xếp NGƯỢC trong HTML rồi lật lại bằng CSS
                          (flex-direction: row-reverse). Nhờ vậy "tô sáng mọi sao
                          bên trái sao đang chọn" làm được bằng bộ chọn ~ của CSS,
                          vốn chỉ nhìn được về phía SAU trong cây DOM. -->
-                    <div class="pdwrite__stars" role="radiogroup" aria-label="Chấm điểm">
+                    <div class="pdwrite__stars" role="radiogroup" aria-label="<?= e(t('pd.rate')) ?>">
                         <?php foreach ([5, 4, 3, 2, 1] as $n): ?>
                             <input type="radio" name="rating" id="sao-<?= $n ?>" value="<?= $n ?>"
                                    required <?= $n === 5 ? 'checked' : '' ?>>
@@ -697,13 +697,13 @@ $stars = static function (float $score): string {
                         <?php endforeach; ?>
                     </div>
 
-                    <label class="sr-only" for="noi-dung">Nhận xét</label>
+                    <label class="sr-only" for="noi-dung"><?= e(t('pd.comment')) ?></label>
                     <textarea class="pdwrite__area" id="noi-dung" name="body" rows="3"
                               required minlength="10" maxlength="2000"
-                              placeholder="Kính dùng có vừa ý không? Cắt lắp mất bao lâu?"></textarea>
+                              placeholder="<?= e(t('pd.comment_ph')) ?>"></textarea>
 
-                    <button type="submit" class="pdwrite__send">Gửi đánh giá</button>
-                    <span class="pdwrite__note">Đánh giá hiển thị sau khi được duyệt.</span>
+                    <button type="submit" class="pdwrite__send"><?= e(t('pd.send')) ?></button>
+                    <span class="pdwrite__note"><?= e(t('pd.moderated')) ?></span>
                 </form>
             <?php elseif (!empty($canReview['reason'])): ?>
                 <p class="pdcard__note"><?= e($canReview['reason']) ?></p>
@@ -713,7 +713,7 @@ $stars = static function (float $score): string {
 
     <?php if ($related !== []): ?>
         <section class="pdrelated" aria-labelledby="lien-quan">
-            <h2 class="pdcard__title" id="lien-quan">Sản phẩm liên quan</h2>
+            <h2 class="pdcard__title" id="lien-quan"><?= e(t('pd.related')) ?></h2>
             <ul class="pcard__grid" role="list">
                 <?php foreach ($related as $item): ?>
                     <?php partial('_layout/product-card', ['product' => $item]); ?>

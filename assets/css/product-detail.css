@@ -1,1164 +1,842 @@
-/* ============================================================
-   product-detail.css — chi tiết sản phẩm (/san-pham/{slug})
+/* ============================================================================
+   product-detail.css — TRANG CHI TIẾT SẢN PHẨM
 
-   Dựng theo "Vin Eyewear Product.dc.html" (Claude Design):
+   Furnish KHÔNG có trang này (bản mẫu chỉ có 5 trang: chủ, danh sách, giới
+   thiệu, cảm nhận, liên hệ). Toàn bộ bố cục dưới đây suy ra từ ngôn ngữ hình
+   khối của theme, giữ đúng bốn quy ước của nó:
 
-     breadcrumb → hai cột ĐỀU NHAU, gap 48:
-       trái  thư viện ảnh dính theo cuộn (khung 520px + hàng ảnh nhỏ 92px)
-       phải  thông tin, chọn phương án, mua hàng, 4 thẻ cam kết
-     → hai thẻ ngang nhau: Thông số kỹ thuật | Đánh giá
+     · góc vuông tuyệt đối, phân cách bằng đường kẻ 1px
+     · tiêu đề nét mảnh (400), nhãn nhóm IN HOA rất nhỏ giãn chữ rộng
+     · nút chữ IN HOA nhỏ, đệm dày (.85rem 1.5rem)
+     · nền phụ là xám ấm rất nhạt, không phải thẻ nổi có bóng
 
-   Markup: app/views/product/detail.php
+   ─────────────────────────────────────────────────────────────────────────────
+   BA FORM TRÊN TRANG NÀY LÀ NGHIỆP VỤ — CSS KHÔNG ĐƯỢC ĐỤNG VÀO CẤU TRÚC
 
-   Thẻ "sản phẩm liên quan" ở cuối trang dùng .pcard/.pcard__grid trong
-   components/product.css — nạp sẵn cho mọi trang, không khai lại ở đây.
+     .pdbuy        POST /gio-hang/them   _token · product_id · back ·
+                   variant_id (radio, data-stock) · quantity ·
+                   hai nút submit phân biệt bằng name="action" value="buy"
+     .pdwait__form POST /san-pham/cho-hang
+     .pdwrite      POST /san-pham/danh-gia
 
-   CỠ CHỮ ghi thẳng bằng px, cùng lý do đã ghi ở đầu category.css / account.css
-   / auth.css / cart.css / checkout.css.
-
-   Bản thiết kế là khung cứng 1280px. Mốc gãy thêm: 1000px về một cột (ảnh
-   trên, thông tin dưới, bỏ dính theo cuộn), 640px thu đệm và cỡ chữ.
-   ============================================================ */
+   assets/js/product-detail.js đọc [data-qty-step] và input[name=quantity] để
+   kẹp số lượng trong khoảng min/max. Đổi tên hai thứ đó là mất phép kẹp, và
+   khách gõ 999 sẽ chỉ biết mình sai sau khi bấm mua.
+   ============================================================================ */
 
 .pd {
-    --d-note:  #9a877f;
-    --d-meta:  #b0a094;
-    --d-rule:  #f0e4d8;
-    --d-star:  #c98d3a;
-    --d-ok:    #4d7a3f;
-
-    --d-shadow-card: 0 2px 10px rgba(90, 40, 40, 0.05);
-    --d-shadow-gal:  0 2px 12px rgba(90, 40, 40, 0.06);
-
-    max-width: var(--container, 1600px);
-    margin: 0 auto;
-    padding: 16px var(--page-edge) 0;
+    padding-block: var(--space-8) var(--section-pad);
 }
 
-.pd a { text-decoration: none; }
-
-/* --- Breadcrumb ---
-   Không còn bộ lớp riêng ở đây. Trang này gọi _layout/page-head.php và CHỈ
-   truyền breadcrumb, nên nó nhận `.pagehead--bare` trong components/page-head.css
-   — đúng hình cũ của .pd__crumbs, nhưng dùng chung một component với các
-   trang khác thay vì chép lại lần thứ hai. */
-
-/* --- Khung hai cột --- */
+.pd__grid,
+.pdbottom,
+.pdrelated {
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--page-edge);
+}
 
 .pd__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 48px;
+    gap: clamp(32px, 4vw, 64px);
     align-items: start;
 }
 
-/* ============================================================
-   THƯ VIỆN ẢNH
+/* ============================================================================
+   1. THƯ VIỆN ẢNH
 
-   Đổi ảnh bằng :target, không JavaScript. Mỗi ảnh lớn có một id, ảnh nhỏ là
-   <a href="#id">. Bấm ảnh nhỏ đổi ảnh lớn mà không tải lại trang, và địa chỉ
-   mang theo ảnh đang xem nên gửi link cho người khác vẫn mở đúng ảnh đó.
-   ============================================================ */
+   Ảnh đầu tiên là NỘI DUNG TỐI QUAN TRỌNG của trang: nó là thứ khách nhìn để
+   quyết định. Nên nó không lazy-load, và ô ảnh khai sẵn tỉ lệ để trang không
+   nhảy khi ảnh về.
 
+   KHÔNG dùng thư viện gallery: các ảnh phụ là một hàng cuộn ngang có
+   scroll-snap. Furnish dùng Swiper cho việc này (~150KB); ở đây là 6 dòng CSS.
+   ============================================================================ */
 .pdgal {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    /* 88px = chiều cao header (76px) + 12px thở. Bản thiết kế ghi top:24px vì
-       header của nó KHÔNG dính theo cuộn; header của site này thì có. */
-    position: sticky;
-    top: 88px;
+    position: relative;
+    min-width: 0;
 }
 
 .pdgal__stage {
     position: relative;
-    height: 520px;
-    border-radius: var(--radius);
+    aspect-ratio: 1 / 1;
     overflow: hidden;
-    background: var(--surface-raised);
-    box-shadow: var(--d-shadow-gal);
+    background: var(--h-shell);
+    border: 1px solid var(--line);
 }
 
-.pdgal__img {
-    position: absolute;
-    inset: 0;
+.pdgal__stage img {
     width: 100%;
     height: 100%;
-    /* contain: gọng kính chụp trên nền trắng, cắt mép là mất càng */
-    object-fit: contain;
-    padding: 32px;
-    box-sizing: border-box;
-    /* Mặc định ẩn; ảnh đầu và ảnh đang :target được bật lại bên dưới */
-    opacity: 0;
+    object-fit: cover;
+    display: block;
 }
-
-.pdgal__img.is-first { opacity: 1; }
-/* Khi có ảnh nào đang :target thì ảnh đầu nhường chỗ */
-.pdgal__stage:has(.pdgal__img:target) .pdgal__img.is-first { opacity: 0; }
-.pdgal__img:target { opacity: 1; }
 
 .pdgal__sale {
     position: absolute;
-    top: 20px;
-    left: 20px;
-    padding: 6px 16px;
-    border-radius: var(--radius-sm);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: 12px;
-    font-weight: 600;
-    /* Không nuốt cú bấm nào — dưới nó là ảnh, và ảnh không bấm được */
-    pointer-events: none;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    padding: var(--space-2) var(--space-4);
+    background: var(--accent);
+    color: #fff;
+    font-size: var(--fs-caption);
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
 }
 
 .pdgal__thumbs {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    list-style: none;
+}
+
+.pdgal__thumbs::-webkit-scrollbar {
+    display: none;
 }
 
 .pdgal__thumb {
-    display: block;
-    box-sizing: border-box;
-    width: 92px;
-    height: 92px;
-    padding: 3px;
-    border: 2px solid #eee0d4;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
+    flex: 0 0 auto;
+    width: 84px;
+    aspect-ratio: 1 / 1;
+    scroll-snap-align: start;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--h-shell);
+    cursor: pointer;
+    transition: border-color .15s ease;
 }
 
-.pdgal__thumb:hover { border-color: var(--brand); }
+.pdgal__thumb:hover,
+.pdgal__thumb.is-on {
+    border-color: var(--ink);
+}
 
 .pdgal__thumb img {
     width: 100%;
     height: 100%;
-    border-radius: var(--radius-sm);
-    object-fit: contain;
-    background: var(--surface-sunken);
+    object-fit: cover;
+    display: block;
 }
 
-/* ============================================================
-   THÔNG TIN
-   ============================================================ */
+.pdgal__video {
+    display: block;
+    width: 100%;
+    margin-top: var(--space-4);
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--line);
+}
 
+/* ============================================================================
+   2. CỘT THÔNG TIN
+   ============================================================================ */
 .pdinfo {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    padding-top: 8px;
     min-width: 0;
+}
+
+.pdinfo__eyebrow {
+    display: block;
+    margin-bottom: var(--space-3);
+    color: var(--eyebrow);
+    font-size: var(--fs-label);
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.pdinfo__title {
+    font-size: var(--fs-h2);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
 }
 
 .pdinfo__head {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.pdinfo__eyebrow {
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--d-meta);
-}
-
-.pdinfo__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: 36px;
-    font-weight: 600;
-    line-height: 1.2;
-    color: var(--ink);
-    text-wrap: pretty;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
 }
 
 .pdinfo__rate {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    font-size: 13.5px;
+    gap: var(--space-2);
 }
-
-.pdstars {
-    color: var(--d-star);
-    letter-spacing: 2px;
-}
-
-.pdstars--sm { font-size: 13px; }
 
 .pdinfo__score {
     font-weight: 600;
     color: var(--ink);
 }
 
-.pdinfo__dot { color: var(--d-meta); }
-
-.pdinfo__rate a { color: var(--d-note); }
-.pdinfo__rate a:hover { color: var(--brand); }
-
-.pdinfo__stock {
-    font-weight: 600;
-    color: var(--d-ok);
+.pdinfo__dot {
+    color: var(--line-strong);
 }
 
-.pdinfo__stock.is-out { color: var(--danger); }
-
-/* --- Giá --- */
-
+/* ── Giá ─────────────────────────────────────────────────────────────────── */
 .pdinfo__price {
     display: flex;
     align-items: baseline;
-    gap: 14px;
     flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+    padding-block: var(--space-5);
+    border-block: 1px solid var(--line);
 }
 
 .pdinfo__now {
-    font-family: var(--font-serif);
-    font-size: 38px;
-    font-weight: 600;
-    color: var(--brand);
+    font-size: var(--fs-h3);
+    font-weight: 700;
+    letter-spacing: -0.01em;
 }
 
 .pdinfo__old {
-    font-size: 17px;
-    color: var(--d-meta);
+    color: var(--muted);
+    font-size: var(--fs-body-lg);
     text-decoration: line-through;
 }
 
-/* Hạn khuyến mãi: một dòng nhỏ ngay dưới giá, không phải một cái nhãn nhấp
-   nháy. Nó là thông tin để quyết, không phải thứ phải giành sự chú ý với
-   chính con số giá ngay trên nó. */
 .pdinfo__sale-han {
-    margin: 6px 0 0;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--brand, #8f2b3c);
+    width: 100%;
+    color: var(--accent);
+    font-size: var(--fs-caption);
+    font-weight: 500;
 }
-
 
 .pdinfo__desc {
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.7;
+    margin-top: var(--space-5);
     color: var(--muted);
+    font-size: var(--fs-body);
+    line-height: 1.75;
 }
 
-/* ============================================================
-   CHỌN PHƯƠNG ÁN
-
-   Ô radio thật + :has(), đúng cách đã dùng ở trang thanh toán. Giá trị nằm
-   trong CHÍNH form mua hàng nên không có bước đồng bộ nào giữa hai nơi.
-   ============================================================ */
-
-.pdbuy {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-}
-
+/* ── Phương án (biến thể) ────────────────────────────────────────────────── */
 .pdopts {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    margin-top: var(--space-6);
 }
 
 .pdopts__label {
-    font-size: 12px;
+    display: block;
+    margin-bottom: var(--space-3);
+    font-size: var(--fs-label);
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: .12em;
     text-transform: uppercase;
-    color: var(--eyebrow);
 }
 
 .pdopts__row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    display: grid;
+    gap: var(--space-2);
 }
 
-.pdopt {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 11px 20px;
-    border: 1.5px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    color: #4a3b38;
-    cursor: pointer;
-}
-
-.pdopt:hover { border-color: var(--brand); }
-
-/* Ô thật ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc màn hình */
-.pdopt input {
+/* Mỗi phương án là một <label> bọc <input type=radio> — ô radio thật vẫn nằm
+   đó cho bàn phím và trình đọc màn hình, chỉ ẩn khỏi mắt. */
+.pdopts__row input[type="radio"] {
     position: absolute;
-    width: 1px;
-    height: 1px;
     opacity: 0;
     pointer-events: none;
 }
 
 .pdopt__body {
     display: flex;
-    flex-direction: column;
-    gap: 1px;
-    text-align: left;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    background: var(--surface-raised);
+    cursor: pointer;
+    transition: border-color .15s ease, background-color .15s ease;
+}
+
+.pdopts__row label:hover .pdopt__body {
+    border-color: var(--line-strong);
+}
+
+.pdopts__row input:checked + .pdopt__body,
+.pdopts__row input:checked ~ .pdopt__body {
+    border-color: var(--ink);
+    background: var(--surface-sunken);
+}
+
+.pdopts__row input:focus-visible + .pdopt__body {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
 }
 
 .pdopt__name {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-.pdopt__note {
-    font-size: 11.5px;
-    opacity: 0.75;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
 }
 
 .pdopt__delta {
-    font-size: 12px;
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     white-space: nowrap;
-    color: var(--brand);
 }
 
-.pdopt:has(input:checked) {
-    border-color: var(--brand);
-    background: #faf3ee;
-    color: var(--brand);
+.pdopt__note {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: var(--fs-caption);
 }
 
-.pdopt:has(input:focus-visible) {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-}
-
-/* Phương án hết hàng: mờ và không bấm được. Vẫn HIỆN chứ không ẩn — khách
-   cần biết cửa hàng có bán loại đó, chỉ là đang hết. */
-.pdopt.is-out {
-    opacity: 0.5;
+/* Phương án hết hàng: ô radio disabled, hàng mờ đi. */
+.pdopts__row input:disabled + .pdopt__body {
+    background: var(--surface-sunken);
+    border-color: var(--line);
+    color: var(--h-meta);
     cursor: not-allowed;
 }
 
-.pdopt.is-out:hover { border-color: var(--line); }
-
-/* ============================================================
-   MUA HÀNG
-   ============================================================ */
-
-.pdbuy__row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
+/* ── Số lượng ────────────────────────────────────────────────────────────── */
 .pdqty {
     display: flex;
     align-items: center;
-    border: 1.5px solid var(--line);
-    border-radius: var(--radius-sm);
-    padding: 4px;
-    background: var(--surface-raised);
-    flex-shrink: 0;
+    gap: 0;
+    margin-top: var(--space-6);
+    width: max-content;
+    border: 1px solid var(--line-strong);
 }
-
-/* ============================================================
-   HAI NÚT − / + — CHỈ TỒN TẠI KHI CÓ JAVASCRIPT
-
-   Bản thiết kế vẽ chúng ngay từ đầu. Trước đây chỗ này chỉ có mỗi ô số vì
-   trang chưa có JS, mà hai nút không JS thì phải gửi form — mỗi lần đổi số
-   lượng là một vòng tải lại trang. Nay trang có assets/js/product-detail.js.
-
-   ẨN MẶC ĐỊNH, HIỆN KHI <html> CÓ LỚP .js. Lớp đó do master.php gắn ngay đầu
-   <head>. Cùng cơ chế với nút "Áp dụng" của bộ lọc, chỉ ngược chiều: bên kia
-   ẩn đi KHI có JS, bên này hiện ra khi có JS.
-
-   Thiếu nhánh này thì người tắt JS thấy hai cái nút bấm không ra gì — tệ hơn
-   hẳn so với không có nút.
-   ============================================================ */
 
 .pdqty__btn {
-    display: none;
-}
-
-.js .pdqty__btn {
-    display: grid;
-    place-items: center;
-    width: 34px;
-    height: 34px;
-    flex: none;
+    width: 44px;
+    height: 44px;
     border: 0;
-    border-radius: var(--radius-sm);
-    background: none;
-    font-family: var(--font-sans);
-    /* 20px cho dấu − và + đứng một mình: nhỏ hơn thì hai ký hiệu này trông
-       như dấu câu lạc chỗ, chứ không ra nút bấm. */
-    font-size: 20px;
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--fs-body-lg);
     line-height: 1;
-    color: var(--ink);
     cursor: pointer;
-    transition: color 0.2s, background-color 0.2s;
+    transition: background-color .15s ease;
 }
 
-.js .pdqty__btn:hover,
-.js .pdqty__btn:focus-visible {
-    background: var(--brand-subtle, #f2e4dc);
-    color: var(--brand);
+.pdqty__btn:hover {
+    background: var(--surface-sunken);
 }
 
-/* CHẠM TRẦN TỒN KHO THÌ "+" MỜ HẲN — trạng thái này là thông tin, không phải
-   trang trí: nó nói "cửa hàng chỉ còn ngần này" mà không cần một dòng chữ.
-   Dùng thuộc tính disabled thật nên con trỏ, bàn phím và trình đọc màn hình
-   đều biết; CSS ở đây chỉ làm cho mắt thấy. */
-.js .pdqty__btn:disabled {
-    opacity: 0.32;
-    cursor: not-allowed;
-}
-
-.js .pdqty__btn:disabled:hover {
-    background: none;
+.pdqty__num {
+    width: 60px;
+    height: 44px;
+    border: 0;
+    border-inline: 1px solid var(--line-strong);
+    background: transparent;
     color: var(--ink);
-}
-
-/* MŨI TÊN MẶC ĐỊNH CỦA TRÌNH DUYỆT chỉ ẩn KHI ĐÃ CÓ hai nút thay thế. Ẩn vô
-   điều kiện là người tắt JS mất cả hai lối đổi số lượng, chỉ còn cách gõ tay.
-   Firefox cần -moz-appearance, WebKit cần hai lớp giả riêng. */
-.js .pdqty__num {
-    -moz-appearance: textfield;
+    font: inherit;
+    font-weight: 600;
+    text-align: center;
+    /* Bỏ hai mũi tên mặc định của input[type=number] — đã có hai nút thật. */
     appearance: textfield;
+    -moz-appearance: textfield;
 }
 
-.js .pdqty__num::-webkit-outer-spin-button,
-.js .pdqty__num::-webkit-inner-spin-button {
-    -webkit-appearance: none;
+.pdqty__num::-webkit-outer-spin-button,
+.pdqty__num::-webkit-inner-spin-button {
+    appearance: none;
     margin: 0;
 }
 
-/* Ô số giữ đúng chiều cao và hình viên thuốc của bản thiết kế. */
-.pdqty__num {
-    width: 84px;
-    height: 38px;
-    padding: 0 10px;
-    border: none;
-    background: none;
-    font-family: var(--font-sans);
-    font-size: 15px;
-    font-weight: 600;
-    text-align: center;
-    color: var(--ink);
-}
-
-/* Có hai nút kèm hai bên thì ô không cần rộng 84px nữa — cả cụm giữ nguyên bề
-   ngang cũ, chỉ chia lại chỗ. Không đổi .pdqty__num gốc vì bản không JS vẫn
-   cần đủ chỗ cho mũi tên của trình duyệt. */
-.js .pdqty__num {
-    width: 52px;
-}
-
-.pdqty__num:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
-    border-radius: var(--radius-sm);
-}
-
-/* ============================================================
-   LỜI NHẮC VỀ SỐ LƯỢNG — thay bong bóng mặc định của trình duyệt
-
-   Markup: app/views/product/detail.php · chữ do assets/js/product-detail.js
-   điền. Bong bóng kia là "Value must be less than or equal to 3." — tiếng Anh,
-   kiểu dáng của hệ điều hành, và CSS không với tới được.
-
-   NHẸ, KHÔNG PHẢI MỘT DẢI BÁO LỖI ĐỎ. Người dùng không làm gì sai: họ gõ một
-   con số, cửa hàng chỉ còn ít hơn thế, và số đã được sửa hộ ngay trước mắt.
-   Một khung đỏ có viền cho việc đó là phản ứng thái quá — nó nằm ngay trên nút
-   "Mua ngay", đủ sức làm người ta ngần ngừ không bấm nữa.
-
-   Nên: chữ nhỏ, màu nâu trầm của --muted, một dấu chấm tròn brand làm mốc mắt.
-   ============================================================ */
-
-/* PHẢI CÓ DÒNG NÀY, và nó phải đứng TRƯỚC .pdqty__note.
-
-   `hidden` chỉ là `display: none` trong bảng kiểu mặc định của trình duyệt,
-   nên BẤT KỲ khai báo `display` nào của mình cũng đè lên nó. Thiếu dòng này
-   thì lúc JS ẩn dòng nhắc đi, chữ biến mất nhưng CÁI CHẤM brand ở ::before
-   vẫn nằm lại giữa trang — một dấu tròn đỏ vô nghĩa treo dưới nút mua. Nhìn
-   thấy trên ảnh chụp trước khi vá. */
-.pdqty__note[hidden] {
-    display: none;
-}
-
 .pdqty__note {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 10px 0 0;
-    font-size: 13px;
-    line-height: 1.45;
+    margin-top: var(--space-2);
     color: var(--muted);
+    font-size: var(--fs-caption);
 }
 
-/* Dấu chấm dẫn: đủ để mắt biết đây là một lời nhắn mới xuất hiện chứ không
-   phải một dòng mô tả vẫn nằm sẵn ở đó. Dùng ::before nên trình đọc màn hình
-   không đọc phải một ký tự vô nghĩa. */
-.pdqty__note::before {
-    content: "";
-    flex-shrink: 0;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--brand);
+/* ── Nút mua ─────────────────────────────────────────────────────────────── */
+.pdbuy__row {
+    display: grid;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
 }
 
 .pdbtn {
-    flex: 1;
-    min-width: 150px;
-    padding: 16px 0;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-sans);
-    font-size: 15px;
-    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-8);
+    border: 1px solid var(--brand);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    text-decoration: none;
     cursor: pointer;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
 }
 
 .pdbtn--buy {
     background: var(--brand);
     color: var(--on-brand);
-    font-weight: 600;
 }
 
-.pdbtn--buy:hover:not(:disabled) { background: var(--brand-strong); }
+.pdbtn--buy:hover,
+.pdbtn--buy:focus-visible {
+    background: var(--accent);
+    border-color: var(--accent);
+}
 
 .pdbtn--add {
-    border: 1.5px solid #c9a79b;
-    background: none;
-    color: var(--brand);
-    font-weight: 500;
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line-strong);
 }
 
-.pdbtn--add:hover:not(:disabled) { background: var(--surface-raised); }
+.pdbtn--add:hover,
+.pdbtn--add:focus-visible {
+    border-color: var(--ink);
+    background: var(--surface-sunken);
+}
 
-.pdbtn:disabled {
-    opacity: 0.55;
+.pdbtn--ar {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.pdbtn--ar:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+.pdbtn:disabled,
+.pdbtn.is-off {
+    background: var(--surface-sunken);
+    border-color: var(--line);
+    color: var(--muted);
     cursor: not-allowed;
 }
 
-/* ============================================================
-   BỐN THẺ CAM KẾT
-   ============================================================ */
-
+/* ── Cam kết ─────────────────────────────────────────────────────────────── */
 .pdcommit {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin: 4px 0 0;
-    padding: 0;
+    gap: var(--space-4);
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--line);
     list-style: none;
 }
 
 .pdcommit__item {
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    padding: 16px 18px;
+    gap: var(--space-3);
 }
 
-.pdcommit__ico {
-    flex-shrink: 0;
-    margin-top: 2px;
-    color: var(--brand);
-}
-
-.pdcommit__text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+.pdcommit__item svg {
+    width: 20px;
+    height: 20px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
 }
 
 .pdcommit__title {
-    font-size: 13.5px;
+    display: block;
+    font-size: var(--fs-body-sm);
     font-weight: 600;
-    color: var(--ink);
 }
 
 .pdcommit__desc {
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--d-note);
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    line-height: 1.6;
 }
 
-/* ============================================================
-   THÔNG SỐ + ĐÁNH GIÁ
-   ============================================================ */
-
+/* ============================================================================
+   3. KHỐI DƯỚI — THÔNG SỐ · CHỜ HÀNG · ĐÁNH GIÁ
+   ============================================================================ */
 .pdbottom {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 24px;
-    padding: 64px 0 0;
-    align-items: start;
+    gap: var(--block-gap);
+    margin-top: var(--section-pad);
 }
 
-.pdcard {
-    display: flex;
-    flex-direction: column;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    padding: 34px 38px;
-    box-shadow: var(--d-shadow-card);
+/* ── Bảng thông số ───────────────────────────────────────────────────────── */
+.pdspecs {
+    border-top: 1px solid var(--line);
 }
 
-.pdcard__title {
-    margin: 0 0 14px;
-    font-family: var(--font-serif);
-    font-size: 24px;
+/* Hàng thông số: nhãn trái, giá trị phải, một đường kẻ dưới mỗi hàng — cách
+   bày danh sách của Furnish, không phải một cái bảng có nền sọc. */
+.pdspecs__row {
+    display: grid;
+    grid-template-columns: minmax(120px, 30%) minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-body-sm);
+}
+
+.pdspecs__row > :first-child {
+    color: var(--muted);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-size: var(--fs-caption);
+}
+
+/* ── Chờ hàng ────────────────────────────────────────────────────────────── */
+.pdwait {
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
+}
+
+.pdwait__title {
+    font-size: var(--fs-subhead);
+    font-weight: 400;
+    margin-bottom: var(--space-2);
+}
+
+.pdwait__lead {
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
+    line-height: 1.7;
+    margin-bottom: var(--space-5);
+}
+
+.pdwait__row {
+    display: grid;
+    gap: var(--space-3);
+}
+
+.pdwait__label {
+    font-size: var(--fs-caption);
     font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.pdwait__select {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
     color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-body-sm);
+}
+
+.pdwait__go {
+    padding: var(--space-4) var(--space-8);
+    border: 1px solid var(--brand);
+    background: var(--brand);
+    color: var(--on-brand);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.pdwait__go:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.pdwait__msg {
+    margin-top: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-left: 3px solid var(--success);
+    background: var(--surface-raised);
+    font-size: var(--fs-body-sm);
+}
+
+.pdwait__msg--loi {
+    border-left-color: var(--danger);
+    color: var(--danger);
+}
+
+/* ── Đánh giá ────────────────────────────────────────────────────────────── */
+.pdcard {
+    padding: var(--space-6);
+    border: 1px solid var(--line);
 }
 
 .pdcard__head {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
-    gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 4px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
 }
 
-.pdcard__head .pdcard__title { margin: 0; }
+.pdcard__title {
+    font-size: var(--fs-subhead);
+    font-weight: 400;
+}
 
 .pdcard__score {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .pdcard__num {
-    font-family: var(--font-serif);
-    font-size: 28px;
-    font-weight: 600;
-    color: var(--brand);
+    font-size: var(--fs-h4);
+    font-weight: 700;
 }
 
-.pdcard__empty,
-.pdcard__note {
-    margin: 8px 0 0;
-    font-size: 13.5px;
-    line-height: 1.6;
-    color: var(--d-note);
+.pdcard__note,
+.pdcard__empty {
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
 }
 
 .pdcard__more {
-    align-self: center;
-    margin-top: 18px;
-    padding: 11px 26px;
-    border: 1.5px solid #e0cfc2;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink);
-}
-
-.pdcard__more:hover {
-    border-color: var(--brand);
-    color: var(--brand);
-}
-
-/* --- Bảng thông số --- */
-
-.pdspecs { margin: 0; }
-
-.pdspecs__row {
-    display: flex;
-    justify-content: space-between;
-    gap: 24px;
-    padding: 13px 0;
-    border-bottom: 1px solid var(--d-rule);
-}
-
-.pdspecs__row dt {
-    font-size: 14px;
-    color: var(--d-note);
-}
-
-.pdspecs__row dd {
-    margin: 0;
-    font-size: 14px;
+    display: inline-block;
+    margin-top: var(--space-4);
+    color: var(--accent);
+    font-size: var(--fs-caption);
     font-weight: 600;
-    text-align: right;
-    color: var(--ink);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
 }
 
-/* --- Một đánh giá --- */
+.pdstars {
+    display: inline-flex;
+    gap: 2px;
+    color: var(--accent);
+}
+
+.pdstars svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.pdstars--sm svg {
+    width: 13px;
+    height: 13px;
+}
 
 .pdreview {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 16px 0;
-    border-top: 1px solid var(--d-rule);
+    padding-block: var(--space-5);
+    border-bottom: 1px solid var(--line);
 }
 
 .pdreview__head {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
 }
 
+/* Chữ cái đầu của tên người viết trong một ô tròn — đây là hình tròn thật,
+   không phải một góc bo (xem --radius-round trong layout.css). */
 .pdreview__face {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 36px;
     height: 36px;
+    flex: 0 0 auto;
     border-radius: var(--radius-round);
-    background: var(--brand-subtle);
-    color: var(--brand);
-    font-size: 14px;
+    background: var(--surface-sunken);
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
-    flex-shrink: 0;
+    text-transform: uppercase;
 }
 
 .pdreview__who {
-    display: flex;
-    flex-direction: column;
     min-width: 0;
 }
 
 .pdreview__name {
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     font-weight: 600;
-    color: var(--ink);
 }
 
 .pdreview__meta {
-    font-size: 11.5px;
-    color: var(--d-meta);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--muted);
+    font-size: var(--fs-caption);
 }
 
 .pdreview__stars {
     margin-left: auto;
-    font-size: 12px;
-    flex-shrink: 0;
 }
 
 .pdreview__body {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.65;
-    color: var(--muted);
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    line-height: 1.75;
 }
 
-/*
- * PHẢN HỒI CỦA CỬA HÀNG dưới một đánh giá.
- *
- * THỤT VÀO và có vạch màu bên trái, không phải một đoạn ngang hàng: nó là lời
- * của BÊN KIA trong cùng một cuộc trao đổi. Ngang hàng thì người đọc lướt qua
- * tưởng là đánh giá thứ hai của một khách khác — và một "đánh giá" ký tên cửa
- * hàng nằm lẫn giữa đánh giá của khách là thứ làm mất lòng tin nhanh nhất.
- */
+/* Phản hồi của cửa hàng — thụt vào, có vạch bên trái. */
 .pdreply {
-    margin-top: 12px;
-    padding: 12px 16px;
-    border-left: 3px solid var(--brand);
-    border-radius: 0 var(--radius) var(--radius) 0;
+    margin-top: var(--space-4);
+    margin-left: var(--space-10);
+    padding: var(--space-4);
+    border-left: 2px solid var(--line-strong);
     background: var(--surface-sunken);
 }
 
 .pdreply__from {
-    margin: 0;
     font-size: var(--fs-caption);
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--brand);
+    font-weight: 600;
 }
 
-/* Ngày trả lời — chữ thường, mờ, đứng sau tên cửa hàng. Trả lời sau ba ngày và
-   sau ba tháng là hai chuyện khác nhau, và khách đọc ra điều đó ngay. */
 .pdreply__when {
-    margin-left: 6px;
-    font-weight: 500;
-    letter-spacing: 0;
-    text-transform: none;
     color: var(--muted);
+    font-size: var(--fs-caption);
 }
 
 .pdreply__body {
-    margin: 6px 0 0;
+    margin-top: var(--space-2);
     font-size: var(--fs-body-sm);
-    line-height: 1.65;
-    color: var(--ink);
-    white-space: pre-wrap;
+    line-height: 1.7;
 }
 
-.pdreview__flash {
-    margin: 0 0 8px;
-    padding: 12px 16px;
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.pdreview__flash.is-ok  { background: #eef3e9; color: #3d6633; }
-.pdreview__flash.is-err { background: #f6e7e7; color: #8f3535; }
-
-/* ============================================================
-   FORM VIẾT ĐÁNH GIÁ
-
-   Không có trong bản thiết kế (nó chỉ vẽ phần đọc), nhưng đánh giá phải tới
-   từ đâu đó. Dựng bằng đúng nguyên thể của trang: ô nhập bo 16px nền pearl,
-   nút viên thuốc màu thương hiệu.
-   ============================================================ */
-
+/* ── Form viết đánh giá ──────────────────────────────────────────────────── */
 .pdwrite {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 18px;
-    padding-top: 18px;
-    border-top: 1px solid var(--d-rule);
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+    padding: var(--space-6);
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
 }
 
 .pdwrite__label {
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 600;
-    letter-spacing: 0.1em;
+    letter-spacing: .08em;
     text-transform: uppercase;
-    color: var(--eyebrow);
 }
 
-/* Năm ô radio xếp NGƯỢC trong HTML (5→1) rồi lật lại bằng row-reverse. Nhờ
-   vậy "tô sáng mọi sao bên trái sao đang chọn" làm được bằng bộ chọn ~, vốn
-   chỉ nhìn được về phía SAU trong cây DOM. */
+/* Chọn sao: năm <input type=radio> thật, ẩn khỏi mắt, nhãn là ngôi sao. */
 .pdwrite__stars {
-    display: flex;
+    display: inline-flex;
     flex-direction: row-reverse;
     justify-content: flex-end;
-    gap: 2px;
+    gap: var(--space-1);
 }
 
 .pdwrite__stars input {
     position: absolute;
-    width: 1px;
-    height: 1px;
     opacity: 0;
     pointer-events: none;
 }
 
 .pdwrite__stars label {
-    font-size: 22px;
-    line-height: 1;
-    color: var(--line);
+    color: var(--line-strong);
     cursor: pointer;
+    transition: color .12s ease;
 }
 
+.pdwrite__stars svg {
+    width: 22px;
+    height: 22px;
+    fill: currentColor;
+}
+
+/* row-reverse + dấu ~ cho phép tô sáng ngôi sao đang chọn VÀ mọi ngôi sao
+   bên trái nó, bằng CSS thuần — không cần một dòng JS nào. */
+.pdwrite__stars input:checked ~ label,
 .pdwrite__stars label:hover,
-.pdwrite__stars label:hover ~ label,
-.pdwrite__stars input:checked ~ label {
-    color: var(--d-star);
-}
-
-.pdwrite__stars input:focus-visible + label {
-    outline: 2px solid var(--brand);
-    outline-offset: 2px;
+.pdwrite__stars label:hover ~ label {
+    color: var(--accent);
 }
 
 .pdwrite__area {
-    box-sizing: border-box;
     width: 100%;
-    padding: 13px 16px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.6;
+    padding: var(--space-4);
+    border: 1px solid var(--line-strong);
+    background: var(--surface-raised);
     color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-body-sm);
     resize: vertical;
 }
 
 .pdwrite__area:focus {
-    outline: none;
-    border-color: #c9a79b;
-    background: var(--surface-focus);
+    outline: 2px solid var(--ink);
+    outline-offset: -2px;
+}
+
+.pdwrite__note {
+    color: var(--muted);
+    font-size: var(--fs-caption);
+    line-height: 1.6;
 }
 
 .pdwrite__send {
-    align-self: flex-start;
-    padding: 12px 28px;
-    border: none;
-    border-radius: var(--radius-sm);
+    justify-self: start;
+    padding: var(--space-4) var(--space-8);
+    border: 1px solid var(--brand);
     background: var(--brand);
     color: var(--on-brand);
-    font-family: var(--font-sans);
-    font-size: 13.5px;
+    font-size: var(--fs-caption);
     font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
     cursor: pointer;
 }
 
-.pdwrite__send:hover { background: var(--brand-strong); }
-
-.pdwrite__note {
-    font-size: 12px;
-    color: var(--d-meta);
+.pdwrite__send:hover {
+    background: var(--accent);
+    border-color: var(--accent);
 }
 
-/* ============================================================
-   SẢN PHẨM LIÊN QUAN
-   ============================================================ */
-
-.pdrelated { padding: 64px 0 96px; }
-
-.pdrelated .pdcard__title { margin-bottom: 24px; }
-
-/* Khoảng thở trước chân trang nằm ở đệm dưới của .pdrelated, mà khối đó chỉ
-   in ra khi sản phẩm CÓ hàng liên quan (xem cuối product/detail.php) — .pd
-   để đệm dưới bằng 0. Chân trang không chừa margin-top ở trang này
-   (components/footer.css), nên sản phẩm không có hàng liên quan sẽ có khối
-   đánh giá dính thẳng vào mảng đỏ. Nhận lấy đúng con số đó khi thiếu. */
-.pd:not(:has(.pdrelated)) { padding-bottom: 96px; }
-
-/* ============================================================
-   MỐC GÃY
-   ============================================================ */
-
-@media (max-width: 1000px) {
-    .pd {
-        max-width: none;
-        padding: 16px 16px 0;
-    }
-
-    /* minmax(0,1fr) chứ không 1fr — ô lưới mặc định là min-width:auto nên
-       không co xuống dưới bề rộng nội dung nhỏ nhất, và cả trang cuộn ngang. */
-    .pd__grid,
-    .pdbottom {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 28px;
-    }
-
-    /* Bỏ dính theo cuộn: ảnh nay nằm TRÊN phần thông tin, dính nó lại thì nó
-       che mất chính khối mua hàng bên dưới. */
-    .pdgal { position: static; }
-
-    .pdgal__stage { height: 420px; }
-
-    .pdbottom  { padding-top: 40px; }
-    .pdrelated { padding: 40px 0 64px; }
-    .pd:not(:has(.pdrelated)) { padding-bottom: 64px; }
+/* ── Sản phẩm liên quan ──────────────────────────────────────────────────── */
+.pdrelated {
+    margin-top: var(--section-pad);
 }
 
-@media (max-width: 640px) {
-    .pdinfo__title { font-size: 28px; }
-    .pdinfo__now   { font-size: 30px; }
-
-    .pdcard { padding: 26px 22px; }
-
-    .pdcommit { grid-template-columns: 1fr; }
-
-    .pdgal__stage { height: 320px; }
-    .pdgal__img   { padding: 20px; }
-
-    .pdgal__thumb { width: 72px; height: 72px; }
-
-    /* Hai nút mua chiếm trọn bề ngang, ô số lượng đứng riêng một hàng */
-    .pdqty { width: 100%; justify-content: center; }
-    .pdbtn { flex: 1 1 100%; }
+.pcard__grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--space-6);
+    margin-top: var(--block-gap);
 }
-
-/* Đường dẫn ảnh 360 / video, nằm dưới dãy thumbnail. Trông như một nút phụ
-   chứ không phải nút mua: nó dẫn ra khỏi trang, và thứ phải nổi nhất trong
-   cột này vẫn là nút thêm vào giỏ. */
-.pdgal__video {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 12px;
-    padding: 9px 16px;
-    border: 1px solid var(--d-line, #e2d9c8);
-    border-radius: 10px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--brand, #8f2b3c);
-    text-decoration: none;
-}
-
-.pdgal__video:hover { border-color: var(--brand, #8f2b3c); }
-
-.pdgal__video-ico { flex-shrink: 0; }
-
-
-/* ============================================================
-   CHỖ XIN BÁO KHI CÓ HÀNG — chỉ hiện khi mặt hàng đã hết
-
-   Markup: app/views/product/detail.php, ngay dưới hàng nút mua (lúc đó hai nút
-   ấy đang bị tắt). Đặt đúng chỗ mắt vừa nhìn tới rồi hụt: khách bấm không được
-   "Thêm vào giỏ" thì thứ tiếp theo họ thấy phải là lối đi khác, không phải một
-   khoảng trống rồi tới danh sách cam kết bảo hành.
-
-   Nền be nhạt --brand-subtle chứ không phải khung viền đỏ: đây là một lời mời,
-   không phải một cảnh báo. Hàng hết đã là tin xấu rồi, không cần tô thêm.
-   ============================================================ */
-
-.pdwait {
-    margin-top: 22px;
-    padding: 18px 20px 20px;
-    border-radius: var(--radius-sm);
-    background: var(--brand-subtle, #f2e4dc);
-}
-
-.pdwait__title {
-    margin: 0 0 4px;
-    font-family: var(--font-serif);
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.pdwait__lead {
-    margin: 0 0 14px;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--muted);
-}
-
-/* Câu trả lời sau khi gửi. Dùng chung một kiểu cho cả "đã ghi nhận" lẫn "email
-   không hợp lệ": phân biệt bằng chính câu chữ, không bằng màu — một dải đỏ cho
-   lỗi nhập liệu ở đây nặng nề hơn mức cần thiết. */
-.pdwait__msg {
-    margin: 0 0 12px;
-    padding: 9px 12px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    font-size: 13px;
-    line-height: 1.45;
-    color: var(--ink);
-}
-
-.pdwait__label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--ink);
-}
-
-.pdwait__select {
-    width: 100%;
-    height: 42px;
-    margin-bottom: 10px;
-    padding: 0 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    color: var(--ink);
-}
-
-/* Ba ô một hàng ở khổ rộng, xuống dòng khi hẹp — flex-wrap chứ không media
-   query: cụm này nằm trong cột phải của trang chi tiết, bề rộng của nó không
-   đi theo bề rộng màn hình một cách thẳng thớm. */
-.pdwait__row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-.pdwait__input {
-    flex: 1 1 160px;
-    height: 42px;
-    padding: 0 12px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    color: var(--ink);
-}
-
-.pdwait__input:focus-visible,
-.pdwait__select:focus-visible {
-    outline: 2px solid var(--brand);
-    outline-offset: -1px;
-}
-
-.pdwait__go {
-    flex: 0 0 auto;
-    height: 42px;
-    padding: 0 20px;
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: var(--brand);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--on-brand);
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.pdwait__go:hover,
-.pdwait__go:focus-visible {
-    background: var(--brand-strong);
-}
-
-/* Câu trả lời đứng MỘT MÌNH — khi hàng vừa về đúng lúc khách gửi form, khối
-   đăng ký đã biến mất nên câu này không còn nền be của .pdwait đỡ phía sau. */
-.pdwait__msg--loi {
-    margin-top: 16px;
-    border: 1px solid var(--line);
-}
-
 
 /* ============================================================================
-   THỬ ẢO — FR-SP-22
-
-   Nút thứ ba dưới "Mua ngay" và "Thêm vào giỏ", chỉ hiện với mẫu có trong
-   config('ar.frames').
+   4. MỐC BỀ NGANG
    ============================================================================ */
+@media (min-width: 901px) {
 
-/* HÀNG RIÊNG, không chen vào hàng hai nút mua.
+    .pdbuy__row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 
-   .pdbtn có flex:1 nên nhét nó vào cùng hàng là ép ba nút mỗi cái một phần ba
-   — "Mua ngay" mất chỗ đúng lúc nó cần nhất. Đây cũng là việc làm TRƯỚC khi
-   mua chứ không cạnh tranh với nút mua, nên nó đứng dưới và nhẹ hơn cả hai.
+    .pdcommit {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 
-   Là thẻ <a> nên phải tự khai display + căn giữa: .pdbtn viết cho <button>. */
-.pdbtn--ar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    margin-top: 10px;
-    padding: 13px 0;
-    border: 1px solid var(--line-strong, #d8cfc4);
-    background: none;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--ink);
-    text-decoration: none;
+    .pdwait__row {
+        grid-template-columns: minmax(0, 1fr) max-content;
+        align-items: end;
+    }
 }
 
-.pdbtn--ar:hover,
-.pdbtn--ar:focus-visible {
-    border-color: var(--brand);
-    color: var(--brand);
-}
+@media (min-width: 1101px) {
 
-/* Lời mời đăng nhập ở khối chờ hàng dùng lại .pdwait__go, mà lớp đó viết cho
-   <button> (height + padding, không có display). Thẻ <a> cần hai dòng này để
-   chữ không dính mép trên. */
-a.pdwait__go {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
+    .pd__grid {
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    }
+
+    /* Cột thông tin đi theo khi cuộn qua thư viện ảnh dài. */
+    .pdinfo {
+        position: sticky;
+        top: calc(var(--header-h) + var(--space-6));
+    }
 }
