@@ -46,7 +46,7 @@ return [
     // Đường /thu-ar VẪN vào thẳng được khi cờ tắt — để còn phát triển và xem
     // thử. Cờ chỉ quyết định có dẫn khách tới đó hay không.
     // ------------------------------------------------------------------
-    'nav_enabled' => true,
+    'nav_enabled' => false,
 
     // ------------------------------------------------------------------
     // GỌNG THỬ
