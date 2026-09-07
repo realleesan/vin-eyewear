@@ -3,7 +3,7 @@
  *
  * Dùng chung cho HAI form, vì cả hai ghi cùng một thứ và khách không nên phải
  * gõ theo hai kiểu khác nhau:
- *   · sổ địa chỉ    /tai-khoan?muc=dia-chi   (app/views/auth/account/dia-chi.php)
+ *   · sổ địa chỉ    /tai-khoan?muc=ho-so     (app/views/auth/account/dia-chi.php)
  *   · thanh toán    /thanh-toan              (app/views/order/checkout.php)
  *
  * ─────────────────────────────────────────────────────────────────────────────

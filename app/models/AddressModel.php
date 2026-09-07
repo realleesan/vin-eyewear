@@ -1,7 +1,7 @@
 <?php
 
 /**
- * AddressModel — sổ địa chỉ nhận hàng của khách (/tai-khoan?muc=dia-chi).
+ * AddressModel — sổ địa chỉ nhận hàng của khách (/tai-khoan?muc=ho-so).
  *
  * Dựng theo mục "Sổ địa chỉ" của "Vin Eyewear Account.dc.html".
  *

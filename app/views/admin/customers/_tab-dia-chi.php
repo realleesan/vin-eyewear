@@ -5,7 +5,7 @@
  *
  * Biến: $khach, $addresses (từ detail.php/controller).
  *
- * Sổ địa chỉ này là CHÍNH sổ khách thấy ở /tai-khoan?muc=dia-chi — cùng bảng,
+ * Sổ địa chỉ này là CHÍNH sổ khách thấy ở /tai-khoan?muc=ho-so — cùng bảng,
  * cùng AddressModel. Chính vì thế khu quản trị KHÔNG sửa: một cú gõ nhầm ở
  * đây là gói hàng tới đã đi sai nhà, mà người gõ thì không bao giờ thấy hậu
  * quả. Khách tự sửa sổ của mình; nhân viên đọc để đối chiếu khi khách gọi
@@ -72,6 +72,6 @@
 
 <p class="field__hint">
     Khu quản trị chỉ XEM sổ địa chỉ. Khách tự thêm, sửa, xoá và chọn địa chỉ
-    mặc định ở trang <a href="/tai-khoan?muc=dia-chi" target="_blank"
+    mặc định ở trang <a href="/tai-khoan?muc=ho-so" target="_blank"
     rel="noopener">tài khoản</a> của họ.
 </p>

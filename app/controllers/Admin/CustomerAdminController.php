@@ -32,7 +32,7 @@
  *                NHẬP. Gõ nhầm một chữ số là khách mất đường vào tài khoản
  *                của chính mình. Khách tự sửa ở /tai-khoan?muc=ho-so.
  *   · địa chỉ  — đây là CHÍNH sổ dùng để giao hàng. Gõ nhầm là gói hàng tới
- *                đi sai nhà. Khách tự sửa ở /tai-khoan?muc=dia-chi.
+ *                đi sai nhà. Khách tự sửa ở /tai-khoan?muc=ho-so.
  *
  * Điểm chung: người gõ nhầm không bao giờ thấy hậu quả, còn người chịu hậu quả
  * thì không biết vì sao. Nên module này KHÔNG có action ghi cho hai thứ đó, và
@@ -444,7 +444,7 @@ class CustomerAdminController extends AdminController
     // Cả hai là chỉ xem — đọc khối "DỮ LIỆU CỦA KHÁCH LÀ CHỈ XEM" ở đầu file
     // trước khi thêm lại. AddressModel vẫn có đủ create / updateOwned /
     // deleteOwned / setDefault và vẫn đang chạy cho đường của khách ở
-    // /tai-khoan?muc=dia-chi; mở lại cho nhân viên thì gọi đúng chúng, đừng
+    // /tai-khoan?muc=ho-so; mở lại cho nhân viên thì gọi đúng chúng, đừng
     // chép luật sang đây — và nhớ thêm cả route lẫn vết audit.
     // ========================================================================
 

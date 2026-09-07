@@ -44,7 +44,7 @@ $total = max(0, $subtotal - $discount) + $shippingFee;
  *
  *   1. $old       dữ liệu khách vừa gõ, khi form quay lại vì báo lỗi.
  *                 Luôn thắng: không ai muốn gõ lại thứ mình vừa gõ.
- *   2. $address   địa chỉ MẶC ĐỊNH trong sổ địa chỉ (/tai-khoan?muc=dia-chi).
+ *   2. $address   địa chỉ MẶC ĐỊNH trong sổ địa chỉ (/tai-khoan?muc=ho-so).
  *   3. $profile   hồ sơ tài khoản — họ tên, SỐ ĐIỆN THOẠI và email. Đây là
  *                 lưới đỡ cuối: sổ địa chỉ trống (khách chưa từng lưu địa chỉ
  *                 nào) thì hai ô tên và điện thoại vẫn phải có sẵn chữ, vì
