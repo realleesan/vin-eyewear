@@ -3,7 +3,7 @@
  *
  * Dùng chung cho HAI form, vì cả hai ghi cùng một thứ và khách không nên phải
  * gõ theo hai kiểu khác nhau:
- *   · sổ địa chỉ    /tai-khoan?muc=ho-so     (app/views/auth/account/dia-chi.php)
+ *   · hồ sơ         /tai-khoan?muc=ho-so     (app/views/auth/account/ho-so.php)
  *   · thanh toán    /thanh-toan              (app/views/order/checkout.php)
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -44,6 +44,10 @@
  * Nên thân hàm chạy lại được, và nghe sự kiện 'vin:acct-moi' account.js phát
  * ra sau mỗi lần thay. Trang /thanh-toan không phát sự kiện đó nên ở đấy hàm
  * chạy đúng một lần như trước — không đổi gì.
+ *
+ * Từ 2026-09-12 khối [data-vnaddr] của trang tài khoản nằm trong mục Hồ sơ
+ * chứ không phải mục Sổ địa chỉ (đã gỡ), nhưng nó vẫn ở trong .acct-main nên
+ * vẫn bị thay ruột y như trước — đoạn trên không đổi gì.
  *
  * CHỐT CHỐNG DỰNG HAI LẦN: thoát ngay nếu khối đã có <select>. Không có nó thì
  * một lần thay ruột mà .acct-main không đổi (bấm lại đúng mục đang xem) sẽ

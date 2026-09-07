@@ -272,7 +272,11 @@ class OrderController extends BaseController
              * khách đặt hàng gửi cho người khác, và cột recipient_name tồn tại
              * chính vì thế.
              */
-            'address'     => AddressModel::defaultFor($userId),
+            /* Địa chỉ nay nằm trong hồ sơ, không còn sổ nhiều địa chỉ nào.
+               UserModel::diaChi() trả về ĐÚNG bộ khoá mà AddressModel
+               ::defaultFor() từng trả, nên checkout.php không đổi gì — lý do
+               đầy đủ ở docblock của hàm đó. */
+            'address'     => UserModel::diaChi($userId),
         ]);
     }
 

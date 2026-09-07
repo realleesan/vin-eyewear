@@ -164,8 +164,8 @@ return [
     // trái phải hiện y hệt nhau ở cả bốn — tách ra là bốn action chỉ khác nhau
     // đúng một biến.
     //
-    // KHÔNG CÒN ?muc=dia-chi: sổ địa chỉ nay là một khối trong mục 'ho-so'.
-    // Ba đường POST của nó bên dưới vẫn giữ nguyên, chỉ quay về ?muc=ho-so.
+    // KHÔNG CÒN ?muc=dia-chi: địa chỉ nay là mấy ô trong chính form Hồ sơ,
+    // lưu cùng một lần bấm với họ tên. Xem AuthController::SECTIONS.
     //
     // 'tai-khoan/khuc-xa' => updatePrescription() ĐÃ GỠ cùng mục "Thông số đo
     // mắt". Khách không còn tự xem/tự khai số đo; kỹ thuật viên vẫn nhập ở
@@ -190,14 +190,11 @@ return [
        CustomerModel::khachTuXoa(). */
     'tai-khoan/xoa'     => 'AuthController@deleteAccount',      // POST
 
-    // Sổ địa chỉ. Cả ba đều POST: xoá và đổi mặc định qua GET nghĩa là một
-    // thẻ <img src="/tai-khoan/dia-chi/xoa?id=..."> trên trang khác cũng xoá
-    // được địa chỉ của khách đang đăng nhập.
-    'tai-khoan/dia-chi/luu'      => 'AuthController@saveAddress',       // POST
-    'tai-khoan/dia-chi/xoa'      => 'AuthController@deleteAddress',     // POST
-    'tai-khoan/dia-chi/mac-dinh' => 'AuthController@setDefaultAddress', // POST
+    // BA ĐƯỜNG 'tai-khoan/dia-chi/*' ĐÃ GỠ cùng sổ địa chỉ (2026-09-12). Mỗi
+    // khách nay có đúng một địa chỉ, nằm trong form Hồ sơ và lưu bằng chính
+    // 'tai-khoan/ho-so' ở trên — không còn gì để thêm, xoá hay đặt mặc định.
 
-    // Khách tự đổi / huỷ lịch hẹn. Cả hai POST, cùng lý do như sổ địa chỉ: huỷ
+    // Khách tự đổi / huỷ lịch hẹn. Cả hai POST: huỷ
     // lịch qua GET nghĩa là một thẻ <img src="/tai-khoan/lich-hen/huy?ma=...">
     // trên trang khác cũng huỷ được lịch của khách đang đăng nhập.
     // Form CHỌN giờ mới thì mở bằng ?doi=<mã> trên chính /tai-khoan — xem

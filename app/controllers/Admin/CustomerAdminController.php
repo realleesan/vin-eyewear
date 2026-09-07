@@ -294,10 +294,15 @@ class CustomerAdminController extends AdminController
          */
         switch ($tab) {
             case 'dia-chi':
-                // CHỈ danh sách, tab này không còn form nào. Cũng vì thế không
-                // nạp address-picker.js nữa: nó chỉ tồn tại để nâng hai ô gõ
-                // tay tỉnh/phường trong form thêm địa chỉ, mà form đó đã bỏ.
-                $data['addresses'] = AddressModel::forUser($id);
+                /* MỘT địa chỉ, không còn sổ. Từ 2026-09-12 mỗi khách có đúng
+                   một địa chỉ và nó là năm cột của `profiles`; bảng
+                   `addresses` cùng AddressModel đã gỡ — xem migration
+                   2026-09-12-dia-chi-vao-ho-so.sql.
+
+                   Tab này vẫn CHỈ XEM như trước, và cũng vì thế không nạp
+                   address-picker.js: nó chỉ tồn tại để nâng hai ô gõ tay
+                   tỉnh/phường trong một form nhập, mà ở đây không có form. */
+                $data['diaChi'] = UserModel::diaChi($id);
                 break;
 
             case 'don-thuoc':
@@ -439,13 +444,13 @@ class CustomerAdminController extends AdminController
     }
 
     // ========================================================================
-    // KHÔNG CÓ ACTION NÀO CHO HỒ SƠ VÀ SỔ ĐỊA CHỈ
+    // KHÔNG CÓ ACTION NÀO CHO HỒ SƠ VÀ ĐỊA CHỈ
     //
     // Cả hai là chỉ xem — đọc khối "DỮ LIỆU CỦA KHÁCH LÀ CHỈ XEM" ở đầu file
-    // trước khi thêm lại. AddressModel vẫn có đủ create / updateOwned /
-    // deleteOwned / setDefault và vẫn đang chạy cho đường của khách ở
-    // /tai-khoan?muc=ho-so; mở lại cho nhân viên thì gọi đúng chúng, đừng
-    // chép luật sang đây — và nhớ thêm cả route lẫn vết audit.
+    // trước khi thêm lại. Đường ghi của khách là UserModel::updateProfile(),
+    // và từ 2026-09-12 địa chỉ đi qua đúng hàm đó cùng họ tên (bảng
+    // `addresses` và AddressModel đã gỡ). Mở lại cho nhân viên thì gọi chính
+    // hàm ấy, đừng chép luật sang đây — và nhớ thêm cả route lẫn vết audit.
     // ========================================================================
 
     // ========================================================================

@@ -1024,12 +1024,10 @@ class AuthController extends BaseController
      * customer_prescriptions và vẫn do kỹ thuật viên nhập ở
      * /quan-tri/khach-hang; chỉ mục tự xem/tự khai phía khách là bỏ.
      *
-     * 'dia-chi' (Sổ địa chỉ) KHÔNG CÒN LÀ MỘT MỤC RIÊNG: nó nằm trong 'ho-so',
-     * ngay dưới form thông tin cá nhân. Cả hai đều là "thông tin của tôi", và
-     * tách đôi thì khách phải nhớ địa chỉ nhận hàng nằm ở mục thứ hai chứ
-     * không phải trong hồ sơ. Ba action địa chỉ vẫn giữ đường POST riêng —
-     * xem saveAddress/deleteAddress/setDefaultAddress bên dưới, tất cả nay
-     * quay về ?muc=ho-so.
+     * 'dia-chi' (Sổ địa chỉ) ĐÃ GỠ HẲN — không còn mục, không còn bảng, không
+     * còn action riêng. Mỗi khách nay có ĐÚNG MỘT địa chỉ và nó là bốn cột của
+     * `profiles`, sửa ngay trong form Hồ sơ cùng lần bấm Lưu với họ tên và
+     * ngày sinh. Xem migration 2026-09-12-dia-chi-vao-ho-so.sql.
      */
     private const SECTIONS = [
         'ho-so'    => 'Hồ sơ của tôi',
@@ -1144,9 +1142,11 @@ class AuthController extends BaseController
             'error'     => flash('account_error'),
         ] + $this->sectionData($section, $userId));
 
-        // Dữ liệu form địa chỉ nhập hỏng chỉ sống đúng một lần hiện trang, y
-        // như $_SESSION['_old_auth'] ở index(). Không xoá thì lần sau mở form
-        // "thêm địa chỉ mới" lại thấy nguyên những gì đã gõ hỏng tuần trước.
+        /* $_SESSION['_old_address'] không còn ai ghi vào: form địa chỉ riêng
+           đã gỡ cùng sổ địa chỉ. Vẫn dọn một lần ở đây để phiên của khách
+           đang mở dở lúc deploy không mang theo một khoá chết. Bỏ được dòng
+           này sau khi mọi phiên cũ đã hết hạn (tối đa 24 giờ — xem
+           App::startSession). */
         unset($_SESSION['_old_address']);
     }
 
@@ -1161,20 +1161,6 @@ class AuthController extends BaseController
     private function sectionData(string $section, string $userId): array
     {
         switch ($section) {
-            /* Sổ địa chỉ nay là một khối BÊN TRONG mục Hồ sơ, nên dữ liệu
-               của nó đi cùng khoá 'ho-so'. Bốn biến dưới đây được
-               auth/account/ho-so.php chuyển tiếp sang khối địa chỉ. */
-            case 'ho-so':
-                return [
-                    'addresses' => AddressModel::forUser($userId),
-                    // ?sua=<id> mở form sửa ngay tại chỗ; id không thuộc về
-                    // khách này thì findOwned trả null và form về chế độ thêm mới.
-                    'editing'   => isset($_GET['sua'])
-                        ? AddressModel::findOwned((string) $_GET['sua'], $userId) : null,
-                    'adding'    => isset($_GET['them']),
-                    'old'       => $_SESSION['_old_address'] ?? [],
-                ];
-
             case 'don-hang':
                 $orders = OrderModel::forUser($userId);
                 $tab    = (string) ($_GET['loc'] ?? '');
@@ -1261,10 +1247,12 @@ class AuthController extends BaseController
         $userId = AuthMiddleware::requireLogin();
         $this->requirePost('/tai-khoan?muc=ho-so');
 
-        // 'address' KHÔNG còn trong danh sách: ô "Địa chỉ giao hàng" cũ đã
-        // thành mục "Sổ địa chỉ" riêng, và profiles.address nay là bản sao do
-        // AddressModel giữ. Để form hồ sơ ghi thẳng vào đó nữa là hai nguồn
-        // cùng sửa một cột, cái sau đè cái trước.
+        /* ĐỊA CHỈ ĐI CÙNG CHUYẾN NÀY. Từ 2026-09-12 không còn bảng
+           `addresses` nào giữ bản gốc rồi đồng bộ ngược về profiles.address,
+           nên form hồ sơ ghi thẳng — bốn cột địa chỉ nằm trong cùng một câu
+           UPDATE với họ tên và ngày sinh, tức là lưu được hoặc hỏng cả cụm,
+           không có trạng thái nửa vời. Việc dọn chuỗi rỗng và mã lạc tên nằm
+           ở UserModel::updateProfile(). */
         /* EMAIL TRƯỚC, và dừng lại nếu nó hỏng.
            Nó nằm ở bảng `users` nên là một lệnh ghi riêng — xem
            UserModel::updateEmail(). Chạy trước vì đây là lỗi hay gặp nhất của
@@ -1281,6 +1269,11 @@ class AuthController extends BaseController
         $result = UserModel::updateProfile($userId, [
             'full_name'     => trim((string) ($_POST['full_name'] ?? '')),
             'phone'         => trim((string) ($_POST['phone'] ?? '')),
+            'address'       => trim((string) ($_POST['address'] ?? '')),
+            'province_name' => trim((string) ($_POST['province_name'] ?? '')),
+            'province_code' => trim((string) ($_POST['province_code'] ?? '')),
+            'ward_name'     => trim((string) ($_POST['ward_name'] ?? '')),
+            'ward_code'     => trim((string) ($_POST['ward_code'] ?? '')),
             'gender'        => (string) ($_POST['gender'] ?? ''),
             'date_of_birth' => ($_POST['date_of_birth'] ?? '') !== ''
                 ? (string) $_POST['date_of_birth'] : null,
@@ -1326,82 +1319,6 @@ class AuthController extends BaseController
         AvatarStorage::remove($old);
 
         flash('account_success', 'Đã cập nhật ảnh đại diện.');
-        redirect('/tai-khoan?muc=ho-so');
-    }
-
-    // ========================================================================
-    // SỔ ĐỊA CHỈ
-    // ========================================================================
-
-    /**
-     * Thêm mới hoặc sửa — một action cho cả hai, phân biệt bằng ô `id` ẩn.
-     * Hai form giống hệt nhau tới từng ô nhập; tách làm hai action nghĩa là
-     * hai bản sao của cùng một đoạn đọc $_POST.
-     */
-    public function saveAddress(): void
-    {
-        $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=ho-so');
-
-        $id    = trim((string) ($_POST['id'] ?? ''));
-        $input = [
-            'recipient_name' => $_POST['recipient_name'] ?? '',
-            'phone'          => $_POST['phone'] ?? '',
-            'line1'          => $_POST['line1'] ?? '',
-            // Bốn ô của cụm chọn tỉnh/phường. TÊN do khách chọn (hoặc gõ tay
-            // khi không có JavaScript), MÃ do JavaScript điền vào ô ẩn kèm theo.
-            'province_code'  => $_POST['province_code'] ?? '',
-            'province_name'  => $_POST['province_name'] ?? '',
-            'ward_code'      => $_POST['ward_code'] ?? '',
-            'ward_name'      => $_POST['ward_name'] ?? '',
-            'is_default'     => ($_POST['is_default'] ?? '') !== '',
-        ];
-
-        $result = $id === ''
-            ? AddressModel::create($userId, $input)
-            : AddressModel::updateOwned($id, $userId, $input);
-
-        if (!$result['ok']) {
-            // Nhớ những gì khách vừa gõ để họ không phải nhập lại từ đầu,
-            // và mở lại đúng form (thêm mới hay sửa) mà lỗi vừa xảy ra.
-            $_SESSION['_old_address'] = $input;
-            flash('account_error', $result['error']);
-            redirect('/tai-khoan?muc=ho-so&' . ($id === '' ? 'them=1' : 'sua=' . rawurlencode($id)));
-        }
-
-        unset($_SESSION['_old_address']);
-
-        flash('account_success', $id === '' ? 'Đã thêm địa chỉ mới.' : 'Đã cập nhật địa chỉ.');
-        redirect('/tai-khoan?muc=ho-so');
-    }
-
-    public function deleteAddress(): void
-    {
-        $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=ho-so');
-
-        $result = AddressModel::deleteOwned((string) ($_POST['id'] ?? ''), $userId);
-
-        flash(
-            $result['ok'] ? 'account_success' : 'account_error',
-            $result['ok'] ? 'Đã xoá địa chỉ.' : $result['error']
-        );
-
-        redirect('/tai-khoan?muc=ho-so');
-    }
-
-    public function setDefaultAddress(): void
-    {
-        $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=ho-so');
-
-        $result = AddressModel::setDefault((string) ($_POST['id'] ?? ''), $userId);
-
-        flash(
-            $result['ok'] ? 'account_success' : 'account_error',
-            $result['ok'] ? 'Đã đổi địa chỉ mặc định.' : $result['error']
-        );
-
         redirect('/tai-khoan?muc=ho-so');
     }
 

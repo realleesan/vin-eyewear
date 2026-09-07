@@ -784,6 +784,58 @@ class UserModel extends BaseModel
         );
     }
 
+    /**
+     * Địa chỉ giao hàng của khách, ĐÚNG HÌNH DẠNG mà trang thanh toán chờ.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO LÀ MỘT HÀM RIÊNG CHỨ KHÔNG ĐỌC THẲNG $profile
+     *
+     * Chỗ gọi là OrderController::checkout(), và trước 2026-09-12 nó nhận
+     * AddressModel::defaultFor() — một dòng của bảng `addresses` với các khoá
+     * recipient_name / phone / line1 / province_* / ward_*. Cả
+     * app/views/order/checkout.php đọc theo đúng bộ tên ấy, ở chừng chục chỗ.
+     *
+     * Hàm này dựng lại đúng bộ tên đó từ hồ sơ, nên bảng đi mà trang thanh
+     * toán không phải sửa một dòng nào. Đổi tên khoá ở đây là phải sửa cả
+     * checkout.php — đừng làm nếu không có lý do.
+     *
+     * recipient_name và phone lấy từ chính hồ sơ: địa chỉ nay thuộc về tài
+     * khoản, nên người nhận mặc nhiên là chủ tài khoản. Khách gửi cho người
+     * khác vẫn sửa được — ô "Người nhận" ở trang thanh toán còn nguyên, và
+     * $fillCo() ở đó ưu tiên thứ khách vừa gõ.
+     *
+     * TRẢ null KHI CHƯA CÓ ĐỊA CHỈ, không phải một mảng rỗng: checkout.php
+     * kiểm bằng `$address === null` để biết có gì điền sẵn hay không, và một
+     * mảng toàn chuỗi rỗng sẽ lọt qua phép kiểm ấy rồi xoá trắng các ô mà
+     * khách vừa gõ hỏng.
+     *
+     * "Có địa chỉ" đo bằng CHI TIẾT (`address`) chứ không bằng tỉnh/phường:
+     * chọn mỗi tỉnh rồi bỏ dở thì chưa giao được tới đâu cả.
+     * ─────────────────────────────────────────────────────────────────────────
+     *
+     * @return array{recipient_name:string, phone:string, line1:string,
+     *               province_code:?int, province_name:string,
+     *               ward_code:?int, ward_name:string}|null
+     */
+    public static function diaChi(string $userId): ?array
+    {
+        $p = self::profile($userId);
+
+        if ($p === null || trim((string) ($p['address'] ?? '')) === '') {
+            return null;
+        }
+
+        return [
+            'recipient_name' => (string) ($p['full_name'] ?? ''),
+            'phone'          => (string) ($p['phone'] ?? ''),
+            'line1'          => trim((string) $p['address']),
+            'province_code'  => $p['province_code'] !== null ? (int) $p['province_code'] : null,
+            'province_name'  => (string) ($p['province_name'] ?? ''),
+            'ward_code'      => $p['ward_code'] !== null ? (int) $p['ward_code'] : null,
+            'ward_name'      => (string) ($p['ward_name'] ?? ''),
+        ];
+    }
+
     // ========================================================================
     // "HỒ SƠ ĐÃ HOÀN THIỆN" — Q72, chốt 04/09/2026
     // ========================================================================
@@ -940,7 +992,11 @@ class UserModel extends BaseModel
      */
     public static function updateProfile(string $userId, array $data): array
     {
-        $allowed = ['full_name', 'phone', 'address', 'date_of_birth', 'gender', 'avatar_path'];
+        /* 'address' và bốn cột tỉnh/phường: từ 2026-09-12 địa chỉ nằm THẲNG
+           trong hồ sơ, không còn bảng `addresses` nào giữ bản gốc rồi đồng bộ
+           ngược về đây. Xem migration 2026-09-12-dia-chi-vao-ho-so.sql. */
+        $allowed = ['full_name', 'phone', 'address', 'province_code', 'province_name',
+                    'ward_code', 'ward_name', 'date_of_birth', 'gender', 'avatar_path'];
         $patch   = array_intersect_key($data, array_flip($allowed));
 
         if ($patch === []) {
@@ -984,6 +1040,38 @@ class UserModel extends BaseModel
 
                 $patch['phone'] = $phone;
             }
+        }
+
+        /* ─────────────────────────────────────────────────────────────────
+           BỐN CỘT ĐỊA CHỈ: RỖNG PHẢI THÀNH NULL, MÃ PHẢI LÀ SỐ
+
+           Ô trống gửi lên là chuỗi rỗng. Nhét '' vào province_code (SMALLINT)
+           thì MySQL ở chế độ STRICT từ chối cả câu UPDATE — tức khách bỏ trống
+           địa chỉ là không lưu nổi cả họ tên. Ở chế độ lỏng thì tệ hơn: nó
+           lặng lẽ thành 0, một mã tỉnh không tồn tại, và address-picker.js
+           mở form ra không chọn được mục nào.
+
+           Mã đi kèm TÊN: có mã mà không tên là thứ không hiển thị được (ứng
+           dụng luôn in theo tên), nên mất tên thì bỏ luôn mã. Chiều ngược lại
+           thì được — JavaScript tắt hoặc API chết thì khách gõ tay, có tên mà
+           không có mã, và đó là trạng thái hợp lệ.
+           ───────────────────────────────────────────────────────────────── */
+        foreach (['address', 'province_name', 'ward_name'] as $cot) {
+            if (array_key_exists($cot, $patch)) {
+                $patch[$cot] = trim((string) $patch[$cot]) !== ''
+                    ? trim((string) $patch[$cot]) : null;
+            }
+        }
+
+        foreach (['province' => 'province_code', 'ward' => 'ward_code'] as $vung => $cot) {
+            if (!array_key_exists($cot, $patch)) {
+                continue;
+            }
+
+            $ma = trim((string) $patch[$cot]);
+            $co = ($patch[$vung . '_name'] ?? null) !== null;
+
+            $patch[$cot] = ($ma !== '' && ctype_digit($ma) && $co) ? (int) $ma : null;
         }
 
         try {

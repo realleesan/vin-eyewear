@@ -9,9 +9,12 @@
  * bất kỳ mục nào chứ không phải quay về mục này trước. Nhờ vậy thẻ form ở đây
  * chiếm trọn bề ngang.
  *
- * Mục này nay có BA khối, theo thứ tự: form hồ sơ · sổ địa chỉ · xoá tài
- * khoản. Sổ địa chỉ trước đây là mục riêng ?muc=dia-chi — xem ghi chú ở
- * AuthController::SECTIONS.
+ * Mục này có HAI khối: form hồ sơ và khối "Xoá tài khoản".
+ *
+ * ĐỊA CHỈ NẰM TRONG CHÍNH FORM HỒ SƠ, ba ô ở cuối. Nó từng là một SỔ nhiều
+ * địa chỉ ở mục riêng ?muc=dia-chi (bảng `addresses`); từ 2026-09-12 mỗi khách
+ * có đúng một địa chỉ và nó là bốn cột của `profiles` — xem migration
+ * 2026-09-12-dia-chi-vao-ho-so.sql.
  */
 
 $gender = $profile['gender'] ?? null;
@@ -87,34 +90,74 @@ $gender = $profile['gender'] ?? null;
         </label>
     </div>
 
+    <?php
+    /* ─────────────────────────────────────────────────────────────────────────
+       ĐỊA CHỈ — MỘT ĐỊA CHỈ, NẰM TRONG CHÍNH FORM NÀY
+
+       Trước 2026-09-12 đây là một SỔ nhiều địa chỉ ở mục riêng ?muc=dia-chi,
+       lưu ở bảng `addresses`. Nay mỗi khách có đúng một địa chỉ và nó là bốn
+       cột của `profiles` — xem migration 2026-09-12-dia-chi-vao-ho-so.sql.
+
+       KHÔNG CÓ Ô QUẬN/HUYỆN. Từ 01/07/2025 Việt Nam bỏ cấp huyện, địa chỉ còn
+       hai cấp tỉnh/thành -> phường/xã, và provinces.open-api.vn v2 cũng chỉ
+       trả hai cấp. Thêm một ô "Quận/Huyện" ở đây thì không có nguồn nào đổ dữ
+       liệu vào nó.
+
+       HỢP ĐỒNG VỚI address-picker.js nằm ở các thuộc tính data-vnaddr* dưới
+       đây, không ở tên ô — đọc khối chú thích đầu assets/js/address-picker.js
+       trước khi đổi bất cứ thứ gì trong khối này. File ấy đã được nạp sẵn cho
+       trang tài khoản (xem $pageScripts trong _layout/master.php).
+
+       KHÔNG `required`: hồ sơ phải lưu được khi khách chưa muốn khai địa chỉ.
+       Trang thanh toán mới là nơi đòi đủ — ở đó không có địa chỉ thì không
+       giao hàng đi đâu được, và ô ở đó vẫn `required` như cũ.
+       ───────────────────────────────────────────────────────────────────────── */
+    ?>
+    <div class="acct-form__row" data-vnaddr>
+        <label class="acct-field">
+            <span class="acct-field__label">Tỉnh / Thành phố</span>
+            <input class="acct-field__input" type="text" name="province_name"
+                   maxlength="120" autocomplete="address-level1"
+                   placeholder="Thành phố Hà Nội"
+                   data-vnaddr-field="province"
+                   value="<?= e((string) ($profile['province_name'] ?? '')) ?>">
+        </label>
+
+        <label class="acct-field">
+            <span class="acct-field__label">Phường / Xã</span>
+            <input class="acct-field__input" type="text" name="ward_name"
+                   maxlength="120" autocomplete="address-level2"
+                   placeholder="Phường Tây Hồ"
+                   data-vnaddr-field="ward"
+                   value="<?= e((string) ($profile['ward_name'] ?? '')) ?>">
+        </label>
+
+        <?php /* Mã chỉ để address-picker.js chọn lại đúng mục khi mở form.
+                 Mang `name` nên chúng ĐƯỢC gửi lên và lưu — khác trang thanh
+                 toán, nơi đơn hàng chỉ lưu chữ nên hai ô mã ở đó không có
+                 `name`. UserModel::updateProfile() bỏ mã nào không đi kèm
+                 tên. */ ?>
+        <input type="hidden" name="province_code" data-vnaddr-code="province"
+               value="<?= e((string) ($profile['province_code'] ?? '')) ?>">
+        <input type="hidden" name="ward_code" data-vnaddr-code="ward"
+               value="<?= e((string) ($profile['ward_code'] ?? '')) ?>">
+    </div>
+
+    <label class="acct-field">
+        <span class="acct-field__label">Địa chỉ chi tiết</span>
+        <?php /* CHỈ số nhà và tên đường. Phường và tỉnh đã có hai ô trên —
+                 gõ lại vào đây thì phiếu gửi hàng in chúng hai lần. */ ?>
+        <input class="acct-field__input" type="text" name="address"
+               maxlength="255" autocomplete="address-line1"
+               placeholder="Số 12, ngõ 5 Đội Cấn"
+               value="<?= e((string) ($profile['address'] ?? '')) ?>">
+        <span class="acct-field__hint">
+            Số nhà và tên đường. Dùng để điền sẵn khi bạn đặt hàng.
+        </span>
+    </label>
+
     <button type="submit" class="acct-btn acct-btn--primary acct-btn--start">Lưu thay đổi</button>
 </form>
-
-<?php
-/*
- * ─────────────────────────────────────────────────────────────────────────────
- * SỔ ĐỊA CHỈ — MỘT KHỐI CỦA MỤC NÀY, KHÔNG CÒN LÀ MỤC RIÊNG
- *
- * Địa chỉ nhận hàng cũng là "thông tin của tôi" y như họ tên và ngày sinh.
- * Tách thành mục thứ hai thì khách phải nhớ nó nằm ngoài hồ sơ, và người vừa
- * điền xong hồ sơ phải bấm thêm một lần nữa mới tới chỗ điền địa chỉ.
- *
- * ĐẶT GIỮA form hồ sơ và khối "Xoá tài khoản", không phải sau cùng: khối xoá
- * phải là thứ cuối trang (xem lý do ngay dưới), nên mọi khối thêm vào sau này
- * đều chèn vào đây.
- *
- * Truyền biến TƯỜNG MINH: partial() chạy trong phạm vi riêng nên nó không tự
- * thấy $addresses/$editing/$adding/$old của file này. Bốn biến ấy do
- * AuthController::sectionData() nhánh 'ho-so' dựng ra.
- * ─────────────────────────────────────────────────────────────────────────────
- */
-partial('auth/account/dia-chi', [
-    'addresses' => $addresses,
-    'editing'   => $editing,
-    'adding'    => $adding,
-    'old'       => $old,
-]);
-?>
 
 <?php
 /*

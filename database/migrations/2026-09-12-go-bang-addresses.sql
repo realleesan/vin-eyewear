@@ -1,0 +1,75 @@
+-- ============================================================================
+-- 2026-09-12 — BƯỚC HAI: GỠ HẲN BẢNG `addresses`
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- ⚠ ĐỪNG CHẠY FILE NÀY CÙNG NGÀY VỚI 2026-09-12-dia-chi-vao-ho-so.sql
+--
+-- Cùng lý lẽ với 2026-09-06-dot-3-go-bang-tom-tat.sql: chừng nào `addresses`
+-- còn nguyên thì việc gộp địa chỉ vào hồ sơ có đường lùi THẬT — chạy file
+-- QUAY-LUI rồi deploy ngược mã nguồn là sổ địa chỉ sống lại y như cũ.
+--
+-- Chạy file này là ĐÓNG đường lùi đó. Sau đây, quay về mã cũ nghĩa là
+-- /tai-khoan?muc=dia-chi đổ lỗi 1146 "Table doesn't exist", và cách duy nhất
+-- còn lại là nạp bản sao lưu.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BA ĐIỀU KIỆN, ĐỦ CẢ BA MỚI CHẠY
+--
+--   1. Đã chạy 2026-09-12-dia-chi-vao-ho-so.sql và bốn câu hậu kiểm ở cuối
+--      file đó đều đúng.
+--
+--   2. Hệ thống chạy ít nhất MỘT TUẦN với mã mới, không có báo lỗi nào liên
+--      quan tới địa chỉ giao hàng — kể cả từ trang thanh toán.
+--
+--   3. Chạy lại câu này ngay trước khi gỡ, và nó phải ra 0:
+--
+--        SELECT COUNT(*) FROM addresses a
+--          JOIN profiles p ON p.id = a.user_id
+--         WHERE a.is_default = 1
+--           AND (p.address IS NULL OR TRIM(p.address) = '');
+--
+--      Khác 0 nghĩa là có khách còn địa chỉ mặc định trong sổ mà hồ sơ lại
+--      trống — DỪNG LẠI và chạy lại câu UPDATE ở file bước một.
+--
+--   4. Gỡ khối CREATE TABLE `addresses` và dòng DROP tương ứng ở đầu
+--      database/schema.sql, nếu chưa làm.
+--
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SAO LƯU TRƯỚC — NFR-R08
+--
+--   mysqldump -u <user> -p <ten_csdl> addresses > vin-eyewear-addresses.sql
+--
+-- Bảng này giữ những thứ hồ sơ KHÔNG chép sang: tên người nhận, số điện thoại
+-- giao hàng, ghi chú cho shipper, nhãn địa chỉ, và mọi địa chỉ phụ. Không có
+-- ngoại lệ.
+-- ============================================================================
+
+
+-- ----------------------------------------------------------------------------
+-- Gỡ bảng
+--
+-- Khoá ngoại trỏ sang `users` đi theo bảng, không cần DROP riêng. Không bảng
+-- nào trỏ VÀO `addresses` — đơn hàng chép địa chỉ thành CHỮ lúc đặt chứ không
+-- tham chiếu (cố ý: địa chỉ trên đơn đã giao không được đổi khi khách sửa sổ)
+-- — nên không có ràng buộc nào chặn lệnh dưới đây.
+-- ----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `addresses`;
+
+
+-- ----------------------------------------------------------------------------
+-- KIỂM TRA SAU KHI CHẠY
+--
+--   SHOW TABLES LIKE 'addresses';   -- không ra dòng nào
+--
+-- Rồi mở /tai-khoan?muc=ho-so và /thanh-toan bằng một tài khoản khách có địa
+-- chỉ: cả hai phải hiện đúng như trước khi chạy.
+--
+-- ----------------------------------------------------------------------------
+-- QUAY LUI
+--
+-- KHÔNG CÓ. Đó là toàn bộ lý do file này tách riêng và phải chờ một tuần.
+--
+-- Dựng lại bảng rỗng thì mã cũ chạy được nhưng MỌI khách đều "chưa có địa chỉ
+-- nào" — tệ hơn là để nguyên, vì nó trông như dữ liệu đã mất chứ không như
+-- một lỗi. Đường về duy nhất là nạp bản sao lưu tạo ở đầu file này.
+-- ----------------------------------------------------------------------------

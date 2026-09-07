@@ -244,9 +244,35 @@ CREATE TABLE `profiles` (
      * khi có tranh chấp đơn hàng, mà một cờ 0/1 thì không.
      */
     `phone_verified_at` DATETIME  NULL,
-    -- Bản sao của địa chỉ mặc định trong bảng `addresses`, giữ lại vì trang
-    -- thanh toán đang đọc cột này. AddressModel::syncProfileAddress() ghi đè.
+    /*
+     * ĐỊA CHỈ GIAO HÀNG — ĐÚNG MỘT CÁI, VÀ ĐÂY LÀ BẢN GỐC.
+     *
+     * Trước 2026-09-12 cột này chỉ là BẢN SAO của địa chỉ mặc định trong bảng
+     * `addresses` (một sổ nhiều địa chỉ), do AddressModel::syncProfileAddress()
+     * ghi đè. Sổ đã gỡ: mỗi khách có đúng một địa chỉ, sửa ngay trong form Hồ
+     * sơ. Xem migration 2026-09-12-dia-chi-vao-ho-so.sql.
+     *
+     * `address` giữ RIÊNG phần chi tiết — số nhà, tên đường. Phường/xã và
+     * tỉnh/thành nằm ở bốn cột ngay dưới. Ghép cả ba vào một chuỗi như bản cũ
+     * thì không lọc được theo tỉnh, và phiếu gửi hàng in lặp phần địa giới.
+     */
     `address`        TEXT         NULL,
+    /*
+     * HAI CẤP HÀNH CHÍNH, KHÔNG PHẢI BA — từ 01/07/2025 Việt Nam bỏ cấp huyện,
+     * còn tỉnh/thành phố -> phường/xã. Danh sách lấy từ provinces.open-api.vn
+     * (34 tỉnh thành; `?depth=2` cho phường/xã của một tỉnh).
+     *
+     * Lưu CẢ mã LẪN tên: mã để chọn lại đúng mục khi mở form sửa, tên để hiển
+     * thị và in lên đơn — tên phải nằm ngay đây chứ không tra lại theo mã, vì
+     * địa chỉ đã lưu không được đổi chữ khi danh mục hành chính sáp nhập.
+     *
+     * NULL được cả bốn: JavaScript tắt hoặc API chết thì form lùi về hai ô gõ
+     * tay, khi đó có tên mà không có mã. Ứng dụng luôn hiển thị theo TÊN.
+     */
+    `province_code`  SMALLINT UNSIGNED  NULL,
+    `province_name`  VARCHAR(120)       NULL,
+    `ward_code`      MEDIUMINT UNSIGNED NULL,
+    `ward_name`      VARCHAR(120)       NULL,
     `date_of_birth`  DATE         NULL,
     -- 'nu' | 'nam' | 'khac' — danh sách trong UserModel::GENDERS. Chuỗi chứ
     -- không ENUM: thêm lựa chọn vào ENUM cần ALTER TABLE khoá bảng, còn ở đây
@@ -576,6 +602,16 @@ CREATE TABLE `lens_prices` (
 -- KHÔNG đặt UNIQUE (user_id, is_default): MySQL sẽ hiểu thành "mỗi khách chỉ
 -- được có một địa chỉ KHÔNG mặc định". Luật "đúng một mặc định" do
 -- AddressModel::setDefault giữ, trong một transaction.
+--
+-- ⚠ BẢNG NÀY ĐANG CHỜ GỠ — 2026-09-12.
+--
+-- Mã nguồn KHÔNG còn đọc hay ghi nó: mỗi khách nay có đúng một địa chỉ, nằm ở
+-- năm cột của `profiles` (address · province_* · ward_*). Bảng còn đây chỉ để
+-- việc chuyển đổi có đường lùi — xem 2026-09-12-dia-chi-vao-ho-so.sql.
+--
+-- Xoá khối CREATE TABLE này (và dòng DROP tương ứng ở đầu file) cùng lúc chạy
+-- 2026-09-12-go-bang-addresses.sql, không sớm hơn: gỡ khỏi schema.sql trước
+-- thì bản cài mới không có bảng, mà file QUAY-LUI lại cần nó.
 -- ----------------------------------------------------------------------------
 CREATE TABLE `addresses` (
     `id`             CHAR(36)     NOT NULL DEFAULT (UUID()),

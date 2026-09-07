@@ -387,6 +387,29 @@ MIGRATIONS=(
     # 05/09 và 06/09 ở trên. Ghi lại để người đọc log không hoảng khi thấy một
     # migration đã "chết" vẫn chạy trên máy mới.
     "2026-09-06-dot-8-go-ma-qua-tang.sql|data||"
+
+    # ── Địa chỉ về thẳng hồ sơ, bỏ sổ nhiều địa chỉ ─────────────────────────
+    #
+    # Thêm bốn cột địa giới vào `profiles` rồi chép địa chỉ mặc định của từng
+    # khách sang. KHÔNG xoá gì — bảng `addresses` còn nguyên.
+    #
+    # Mốc là `province_code` chứ không phải `ward_code` hay `province_name`:
+    # bốn cột sinh ra trong CÙNG một câu ALTER nên hỏi cột nào cũng đúng, và
+    # đây là cột đầu tiên trong câu ấy — nghĩa là nếu ALTER đứt giữa chừng thì
+    # mốc này là thứ xuất hiện sớm nhất, và script sẽ coi file đã chạy. Câu
+    # ALTER của MySQL là một thao tác trọn gói nên cảnh đó không xảy ra; ghi
+    # lại để người sau không đổi mốc sang cột khác mà tưởng là tương đương.
+    #
+    # ⚠ TRÙNG TÊN CỘT VỚI MỘT DÒNG Ở TRÊN — dòng
+    # "2026-08-19-so-dia-chi-tach-phuong-tinh.sql|column|addresses|province_code".
+    # Hai mốc KHÁC BẢNG (`addresses` vs `profiles`) nên không đụng nhau, nhưng
+    # đọc lướt thì rất giống nhau. Đừng gộp.
+    #
+    # CẶP ĐÔI CỦA NÓ — 2026-09-12-go-bang-addresses.sql — CỐ Ý KHÔNG KHAI Ở
+    # ĐÂY, cùng lẽ với file gỡ bảng tóm tắt của đợt 3: nó DROP `addresses`, và
+    # chừng nào bảng còn thì việc chuyển đổi còn đường lùi thật. Khai nó vào
+    # mảng này là chạy nó ngay hôm nay và đóng đường lùi đó lại.
+    "2026-09-12-dia-chi-vao-ho-so.sql|column|profiles|province_code"
 )
 
 # ---------------------------------------------------------------------------
@@ -589,6 +612,12 @@ for path in "${MIG_DIR}"/*.sql; do
     # file hợp nhất (SRS mục 6.7.3 bước 6), nên chạy BẰNG TAY chứ không qua
     # script. Lọc khỏi cảnh báo để không ai khai nó vào cho hết dòng nhắc.
     if [[ "${file}" == "2026-09-06-dot-3-go-bang-tom-tat.sql" ]]; then
+        continue
+    fi
+
+    # Cùng lẽ đó với file gỡ bảng `addresses`: nó phải chờ một tuần sau file
+    # 2026-09-12-dia-chi-vao-ho-so.sql, nên chạy BẰNG TAY chứ không qua script.
+    if [[ "${file}" == "2026-09-12-go-bang-addresses.sql" ]]; then
         continue
     fi
 
