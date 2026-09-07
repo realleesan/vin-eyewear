@@ -102,9 +102,18 @@ $backTo = static function (string $href): void { ?>
                                placeholder="Số điện thoại / Email"
                                value="<?= e($old) ?>">
                         <?php /* Nói trước mã sẽ đi đường nào, để khách khỏi ngồi
-                                 chờ tin nhắn trong khi mã nằm trong hộp thư. */ ?>
+                                 chờ tin nhắn trong khi mã nằm trong hộp thư.
+
+                                 Câu này phải khớp PasswordResetModel::requestOtp():
+                                 kênh gửi bám theo thứ TÀI KHOẢN có, không phải thứ
+                                 khách gõ vào ô. Bản cũ hứa "gõ số thì mã gửi qua
+                                 Zalo" — sai kể từ khi email được ưu tiên, mà một
+                                 câu hứa sai ở đây thì khách ngồi chờ đúng cái kênh
+                                 không có mã. */ ?>
                         <span class="authfield__hint">
-                            Gõ email thì mã gửi qua email, gõ số điện thoại thì mã gửi qua Zalo.
+                            Gõ email hay số điện thoại đều được. Mã sẽ gửi về email
+                            đã đăng ký của tài khoản; tài khoản chưa có email thì mã
+                            đi qua Zalo.
                         </span>
                     </label>
 

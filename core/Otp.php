@@ -7,8 +7,10 @@
  *
  *   Đăng ký bằng số điện thoại  — dựng theo "Dang ky.dc.html" (Claude Design):
  *                                 nhập số → chọn kênh gửi → nhập mã → tạo mật khẩu.
- *   Quên mật khẩu               — PasswordResetModel::requestOtp(): gõ email thì
- *                                 mã đi qua Mailer, gõ số thì đi qua send() dưới đây.
+ *   Quên mật khẩu               — PasswordResetModel::requestOtp(): tài khoản có
+ *                                 email thì mã đi qua Mailer (kể cả khi khách gõ
+ *                                 số điện thoại), không có email mới đi qua
+ *                                 send() dưới đây.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * MÃ ĐI QUA ZALO — KIỂM TRA CẤU HÌNH TRƯỚC KHI ĐƯA LÊN PRODUCTION
@@ -251,6 +253,7 @@ class Otp
             'sms'   => 'SMS',
             'voice' => 'cuộc gọi',
             'email' => 'email',
+            'auto'  => 'email hoặc Zalo',
         ][$method] ?? 'Zalo';
     }
 
@@ -264,6 +267,15 @@ class Otp
             'sms'   => 'Mã xác minh đã được gửi qua SMS đến',
             'voice' => 'Mã xác minh đã được gửi qua cuộc gọi đến',
             'email' => 'Mã xác minh đã được gửi qua email đến',
+            /* 'auto' — ca KHÁCH GÕ SỐ ĐIỆN THOẠI ở luồng quên mật khẩu.
+
+               Ở đó mã đi qua email đã đăng ký nếu tài khoản có email, không
+               thì qua Zalo (xem PasswordResetModel::requestOtp). Câu này cố
+               tình KHÔNG nói ra ngả nào đã thắng, và KHÔNG in địa chỉ email:
+               in ra là nói cho người gõ biết số này có tài khoản và lộ một
+               phần hộp thư của chủ nó. Một câu duy nhất, đúng với cả ba ngả
+               — có email, chỉ có Zalo, và không khớp tài khoản nào. */
+            'auto'  => 'Mã xác minh đã được gửi tới email hoặc Zalo đã đăng ký của số',
         ][$method] ?? 'Mã xác minh đã được gửi qua Zalo đến';
     }
 

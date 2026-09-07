@@ -10,11 +10,13 @@
  * HAI ĐƯỜNG ĐẶT LẠI, MỘT BẢNG
  *
  *   Khách tự làm  -> mã OTP 6 số gửi thẳng cho khách, requestOtp() bên dưới.
- *                    Kênh chọn theo thứ khách gõ vào ô:
- *                        có '@'  -> email
- *                        là số   -> Zalo
- *                    Xác minh xong thì đặt mật khẩu ngay trong cùng phiên,
- *                    không sinh token nào cả.
+ *                    Ô nhập vẫn ăn cả email lẫn số điện thoại, nhưng KÊNH GỬI
+ *                    không bám theo thứ khách gõ — nó bám theo thứ TÀI KHOẢN
+ *                    ĐANG CÓ:
+ *                        tài khoản có email  -> email
+ *                        không có email      -> Zalo
+ *                    Lý do đầy đủ ở thân requestOtp(). Xác minh xong thì đặt
+ *                    mật khẩu ngay trong cùng phiên, không sinh token nào cả.
  *
  *   Nhân viên      -> issueByStaff() tạo LIÊN KẾT có token cho những ca khách
  *                    không nhận được mã (mất số, sai email, kênh gửi hỏng).
@@ -58,8 +60,9 @@ class PasswordResetModel extends BaseModel
     /**
      * Khách bấm "Gửi yêu cầu" ở /quen-mat-khau.
      *
-     * Sinh mã OTP, gửi qua kênh hợp với thứ khách vừa gõ, và trả về trạng thái
-     * để controller cất vào phiên. KHÔNG tự đụng $_SESSION: model chạy được cả
+     * Sinh mã OTP, gửi tới kênh mà tài khoản ĐANG CÓ (email trước, Zalo sau —
+     * xem khối chú thích ở thân hàm), và trả về trạng thái để controller cất
+     * vào phiên. KHÔNG tự đụng $_SESSION: model chạy được cả
      * trong script CLI, mà ở đó không có phiên nào.
      *
      * LUÔN TRẢ VỀ NHƯ NHAU DÙ TÀI KHOẢN CÓ TỒN TẠI HAY KHÔNG — kể cả khi không
@@ -149,11 +152,31 @@ class PasswordResetModel extends BaseModel
         $sent = false;
 
         if ($user !== null) {
-            $sent = $channel === 'email'
-                ? self::mailOtp((string) $user['email'], $code, (string) ($user['full_name'] ?? ''))
+            /*
+             * ─────────────────────────────────────────────────────────────
+             * EMAIL ĐI TRƯỚC, KỂ CẢ KHI KHÁCH GÕ SỐ ĐIỆN THOẠI
+             *
+             * Trước đây kênh gửi bám theo THỨ KHÁCH GÕ: gõ số thì mã đi
+             * Zalo. Mà Zalo ZNS chưa khai app_id/refresh_token/mã mẫu (xem
+             * config/zalo.php), nên Otp::send() chỉ ghi mã ra error log —
+             * khách gõ số điện thoại là ngồi chờ một tin nhắn không tồn tại
+             * và không tự đặt lại mật khẩu được.
+             *
+             * Nay: tài khoản có email thì mã LUÔN đi qua email, bất kể khách
+             * gõ gì. Chỉ tài khoản KHÔNG có email (ô email lúc đăng ký là
+             * tuỳ chọn — xem auth/_signup.php) mới rơi về Zalo, và khi ZNS
+             * cắm xong thì nhánh đó tự chạy thật, không phải sửa gì ở đây.
+             * ─────────────────────────────────────────────────────────────
+             */
+            $mail = trim((string) ($user['email'] ?? ''));
+
+            if ($mail !== '' && filter_var($mail, FILTER_VALIDATE_EMAIL) !== false) {
+                $sent = self::mailOtp($mail, $code, (string) ($user['full_name'] ?? ''));
+            } else {
                 // Zalo ZNS CHƯA CẮM: hàm này mới chỉ ghi mã ra error log.
                 // Chỗ cắm nhà cung cấp là Otp::send(), xem core/Otp.php.
-                : Otp::send((string) ($user['phone'] ?? $contact), $code, 'zalo');
+                $sent = Otp::send((string) ($user['phone'] ?? $contact), $code, 'zalo');
+            }
 
             if ($sent) {
                 Database::execute(
@@ -163,9 +186,24 @@ class PasswordResetModel extends BaseModel
             }
         }
 
+        /*
+         * KÊNH IN RA MÀN HÌNH ≠ KÊNH GỬI THẬT, và đó là cố ý.
+         *
+         * Gõ email thì nói thẳng "đã gửi qua email đến ng***an@gmail.com" —
+         * câu đó đúng và không hé lộ gì, vì địa chỉ ấy do chính khách vừa gõ.
+         *
+         * Gõ SỐ ĐIỆN THOẠI thì không: in ra "đã gửi qua email đến
+         * ng***an@gmail.com" là nói cho người gõ biết số này CÓ tài khoản và
+         * lộ luôn một phần địa chỉ của chủ nó — đúng thứ mà cả hàm này cố
+         * tránh (xem khối chú thích ở đầu). Nên ca đó dùng kênh 'auto': một
+         * câu duy nhất, đúng với mọi ngả (có email / chỉ có Zalo / không
+         * khớp tài khoản nào), và chỉ in lại chính con số khách vừa gõ.
+         */
+        $shown = $channel === 'email' ? 'email' : 'auto';
+
         return [
             'ok'      => true,
-            'channel' => $channel,
+            'channel' => $shown,
             'display' => self::maskContact($contact, $channel),
             'user_id' => $userId,
             'hash'    => Otp::hash($code),
