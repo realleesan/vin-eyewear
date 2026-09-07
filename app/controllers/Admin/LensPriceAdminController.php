@@ -44,10 +44,13 @@ class LensPriceAdminController extends AdminController
      */
     private function duLieuBangGia(): array
     {
-        /* Chỉ những kiểu CÓ bảng giá mới thành cột. "Mắt đặt" không có ô nào —
-           tròng đặt riêng theo đơn thì cửa hàng báo giá sau khi xem thông số,
-           nên vẽ cho nó một cột ô trống là mời người ta điền vào chỗ hệ thống
-           sẽ bỏ qua. View nói rõ điều đó bằng một dòng chú thích. */
+        /* Chỉ những kiểu CÓ bảng giá mới thành cột: vẽ cột ô trống cho một
+           kiểu hệ thống sẽ bỏ qua là mời người ta điền vào chỗ không lưu.
+
+           Hiện bộ lọc này KHÔNG loại kiểu nào — "Mắt đặt", kiểu duy nhất từng
+           bị loại, đã gỡ theo SRS DR-MD-07 và cả ba kiểu còn lại đều có bảng
+           giá. Giữ lại theo điểm mở rộng `takes_package` (config/taxonomy.php),
+           và để savePriceTable() với màn hình cùng nói một luật. */
         $types = array_values(array_filter(
             LensModel::types(),
             static fn (array $t): bool => LensModel::typeTakesPackage($t)

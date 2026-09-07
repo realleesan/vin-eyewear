@@ -249,15 +249,16 @@ class OrderModel extends BaseModel
                         throw new RuntimeException(sprintf('Sản phẩm "%s" không đủ tồn kho.', $product['name']));
                     }
 
-                    /* Tròng cắt kèm — KIỂU tròng (đơn/hai/đa/mắt đặt) gộp với
-                       GÓI chiết suất thành một mẩu tên + một con số tiền. Tra
-                       LẠI từ bảng giá ngay tại đây — giỏ hàng nằm trong session
-                       và chỉ nhớ hai id, đúng như nó chỉ nhớ id sản phẩm. Nhận
+                    /* Tròng cắt kèm — KIỂU tròng (đơn/hai/đa) gộp với GÓI
+                       chiết suất thành một mẩu tên + một con số tiền. Tra LẠI
+                       từ bảng giá ngay tại đây — giỏ hàng nằm trong session và
+                       chỉ nhớ hai id, đúng như nó chỉ nhớ id sản phẩm. Nhận
                        giá từ session nghĩa là cho khách tự đặt giá phần tròng.
 
-                       "Mắt đặt" trả về id = null và price = 0: hoá đơn ghi tên
-                       kiểu tròng, còn tiền tròng cửa hàng báo sau khi xem thông
-                       số — xem LensModel::combo(). */
+                       Đơn mới LUÔN có cả kiểu lẫn gói: từ SRS DR-MD-07 mọi kiểu
+                       tròng đang bán đều có bảng giá, nên không còn lối nào ghi
+                       một dòng tròng giá 0đ "báo giá sau" — xem
+                       LensModel::combo(). */
                     $lensType = LensModel::findType($row['lens_type'] ?? null);
                     $lens     = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
 
@@ -403,8 +404,7 @@ class OrderModel extends BaseModel
                 $laCod = ($data['paymentMethod'] ?? '') === 'cod';
 
                 /* CHUYỂN KHOẢN THÌ KHÁCH TỰ CHỌN. 'deposit' = chuyển 30% rồi
-                   trả nốt khi nhận; 'full' = chuyển đủ một lần và được tặng
-                   mã giảm giá cho lần sau (xem grantFullPaymentReward).
+                   trả nốt khi nhận; 'full' = chuyển đủ một lần.
 
                    Mặc định là 'full' khi giá trị gửi lên lạ: đó là vế cửa
                    hàng khuyến khích, và nó cũng là vế AN TOÀN — đoán nhầm
@@ -659,10 +659,12 @@ class OrderModel extends BaseModel
     /**
      * Một dòng giỏ có cắt tròng theo độ không.
      *
-     * Chốt ở `lens_type`, KHÔNG ở `lens_id`: "Mắt đặt" là một kiểu tròng hợp
-     * lệ nhưng chưa có gói chiết suất nào (cửa hàng báo giá sau khi xem thông
-     * số), nên lens_id của nó là null. Chốt nhầm ở lens_id thì đúng loại đơn
-     * khó làm nhất lại là loại duy nhất thoát khỏi việc đặt cọc.
+     * Chốt ở `lens_type`, KHÔNG ở `lens_id`. Hai id nay luôn đi cùng nhau
+     * (SRS DR-MD-07: mọi kiểu tròng đều có bảng giá), nên hai cách chốt cho
+     * cùng kết quả — nhưng `lens_type` mới là thứ NÓI RA rằng dòng này có mài
+     * tròng theo độ, còn `lens_id` chỉ là gói vật liệu. Giữ nguyên chỗ chốt
+     * này: thêm một kiểu tròng không có gói (như "Mắt đặt" đã gỡ) thì chốt ở
+     * lens_id sẽ để đúng loại đơn khó làm nhất thoát khỏi việc đặt cọc.
      *
      * CartController::add() chỉ điền hai khoá này khi khách đi qua nhánh
      * mode=trong; nhánh mode=gong để cả hai null.
@@ -1892,7 +1894,11 @@ class OrderModel extends BaseModel
         ) > 0;
 
         if ($doi) {
-            self::grantFullPaymentReward($id);
+            /* TỪNG GỌI grantFullPaymentReward($id) Ở ĐÂY — bỏ 2026-09-06.
+               Mã quà tặng tự động cho khách chuyển đủ 100% không có trong SRS:
+               mục 3.2.9.5 chỉ cho phép người tạo/sửa/phát mã, không có phần
+               thưởng tự gắn vào luồng thanh toán. Xem migration
+               2026-09-06-dot-8-go-ma-qua-tang.sql. */
             self::ghiVetTien($id, 'payment.paid', 'Đánh dấu đã thanh toán đủ');
 
             /* THƯ BÁO ĐÃ NHẬN ĐỦ TIỀN — FR-EM-02.
@@ -1912,9 +1918,9 @@ class OrderModel extends BaseModel
     /**
      * Ghi vết một thao tác tiền lên đơn — SNFR-11.
      *
-     * ĐẶT TRONG MODEL, KHÔNG Ở CONTROLLER — cùng lý lẽ đã ghi dài ở
-     * grantFullPaymentReward(): có ba đường đưa một đơn sang 'paid' (webhook
-     * SePay, nhân viên bấm ở /quan-tri/don-hang, đơn COD đánh dấu đã giao).
+     * ĐẶT TRONG MODEL, KHÔNG Ở CONTROLLER: có ba đường đưa một đơn sang
+     * 'paid' (webhook SePay, nhân viên bấm ở /quan-tri/don-hang, đơn COD đánh
+     * dấu đã giao).
      * Rải lời gọi ra ba chỗ thì đường thứ tư thêm sau này sẽ thiếu vết, và
      * không có lỗi nào nổ ra để ai biết.
      *
@@ -1948,60 +1954,22 @@ class OrderModel extends BaseModel
         );
     }
 
-    /**
-     * Tặng mã giảm giá cho khách đã CHUYỂN KHOẢN ĐỦ 100%.
+    /*
+     * ĐÃ BỎ: grantFullPaymentReward() — 2026-09-06, đợt 8.
      *
-     * ─────────────────────────────────────────────────────────────────────
-     * ĐẶT TRONG markPaid() CHỨ KHÔNG Ở TỪNG NƠI GỌI
+     * Hàm này tự phát một mã giảm giá cho khách chọn chuyển khoản đủ 100%,
+     * gọi từ markPaid(). SRS KHÔNG có một chữ nào về việc ấy: tìm "tặng",
+     * "thưởng", "quà" trong toàn bộ tài liệu ra 0 kết quả, và mục 3.2.9.5
+     * (Quản lý khuyến mãi) chỉ cho phép tạo/sửa/bật-tắt mã và phát mã theo
+     * quyết định của NGƯỜI, không phải phần thưởng tự gắn vào luồng tiền.
      *
-     * Ba đường đưa một đơn sang 'paid': webhook SePay khớp giao dịch, nhân
-     * viên đánh dấu ở /quan-tri/don-hang, và đơn COD được đánh dấu đã giao.
-     * Rải phép tặng quà ra ba chỗ thì thêm đường thứ tư sau này là quên một
-     * chỗ, và khách mất quà đã được hứa mà không ai biết — không có lỗi nào
-     * nổ ra cả.
+     * Nó cũng là một khoản chi ngoài sổ: giảm doanh thu các đơn sau mà không
+     * mục nào trong báo cáo giải thích được vì sao.
      *
-     * Chỉ chạy khi markPaid() THẬT SỰ đổi trạng thái, nên webhook SePay gửi
-     * lại cùng một giao dịch bảy lần cũng chỉ tặng một lần.
-     *
-     * BA ĐIỀU KIỆN, thiếu một là không tặng:
-     *   chuyển khoản    COD trả đủ khi nhận hàng không phải thứ đang khuyến
-     *                   khích; quà là để bù cho việc trả tiền TRƯỚC.
-     *   deposit = 0     tức khách chọn "chuyển đủ" ngay từ đầu. Đơn chọn cọc
-     *                   rồi trả nốt phần còn lại vẫn về 'paid', nhưng cửa
-     *                   hàng đã phải mài tròng trước khi có đủ tiền.
-     *   có tài khoản    mã riêng phát qua user_vouchers; khách vãng lai không
-     *                   có chỗ nào để nhận.
-     *
-     * NUỐT LỖI CÓ CHỦ Ý: quà là việc phụ, tiền đã về mới là việc chính. Bảng
-     * `vouchers` thiếu cột is_reward (chưa chạy migration) mà để ném ra ngoài
-     * thì webhook SePay nhận 500, SePay coi là thất bại và gửi lại — trong
-     * khi đơn ĐÃ được đánh dấu trả đủ ở câu trên. Ghi log để còn biết.
-     * ─────────────────────────────────────────────────────────────────────
+     * Gỡ cùng lượt: VoucherModel::reward() · clearRewardFlag() · grantTo() ·
+     * rewardHeldBy(), ô tick trong khu quản trị, hai màn hiển thị lời mời, và
+     * cột `vouchers.is_reward`. Xem migration 2026-09-06-dot-8-go-ma-qua-tang.sql.
      */
-    private static function grantFullPaymentReward(string $id): void
-    {
-        try {
-            $order = self::find($id);
-
-            if ($order === null
-                || $order['payment_method'] !== 'bank_transfer'
-                || (int) ($order['deposit_amount'] ?? 0) !== 0
-                || empty($order['user_id'])
-            ) {
-                return;
-            }
-
-            $reward = VoucherModel::reward();
-
-            if ($reward === null) {
-                return;   // cửa hàng chưa bật mã quà tặng nào
-            }
-
-            VoucherModel::grantTo((string) $order['user_id'], (string) $reward['id']);
-        } catch (Throwable $e) {
-            error_log('[reward] Không tặng được mã cho đơn ' . $id . ': ' . $e->getMessage());
-        }
-    }
 
     /**
      * Đánh dấu đơn đã nhận đủ TIỀN CỌC (chưa phải toàn bộ).

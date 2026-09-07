@@ -278,8 +278,8 @@ class CartController extends BaseController
                 'rx'         => null,   // chuỗi số đo đã gói (để hiển thị)
                 'rx_raw'     => null,   // đúng thứ khách đã chọn (để điền lại)
                 'rx_ho_so'   => null,   // hồ sơ đo mắt khách đã chọn (UC-03)
-                'lens_type'  => null,   // kiểu tròng: đơn/hai/đa tròng, mắt đặt
-                'lens_id'    => null,   // gói chiết suất (Mắt đặt thì null)
+                'lens_type'  => null,   // kiểu tròng: đơn / hai / đa tròng
+                'lens_id'    => null,   // gói chiết suất của kiểu đã chọn
             ];
 
             $this->buyStepDone(self::stepUrl($back, $product['id'], null));
@@ -310,9 +310,13 @@ class CartController extends BaseController
                         . 'mua=' . rawurlencode($product['id']) . '&buoc=kieu-trong');
                 }
 
-                /* "Mắt đặt" dừng ở đây: không có bảng giá sẵn nào để chọn tiếp,
-                   cửa hàng báo giá sau khi xem thông số. Đòi một gói chiết suất
-                   cho nó là đòi một thứ bước trước cố ý không hỏi. */
+                /* Kiểu tròng KHÔNG nhận gói thì dừng ở đây — đòi một gói chiết
+                   suất cho nó là đòi một thứ bước trước cố ý không hỏi.
+
+                   Hiện KHÔNG CÒN kiểu nào như vậy: "Mắt đặt" đã gỡ theo SRS
+                   DR-MD-07 và cả ba kiểu còn lại đều có bảng giá, nên nhánh này
+                   luôn đi vào. Giữ lại vì `takes_package` là điểm mở rộng có
+                   chủ ý — xem ghi chú ở config/taxonomy.php. */
                 if (LensModel::typeTakesPackage($lensType)) {
                     // Tra lại gói từ bảng giá, không tin tên và giá gửi lên. Đây là
                     // chỗ duy nhất quyết định phần tròng đáng bao nhiêu tiền.
@@ -662,7 +666,10 @@ class CartController extends BaseController
                  * Luồng đầy đủ của nhánh cắt tròng:
                  *
                  *     hình thức → số đo → kiểu tròng → gói chiết suất → xác nhận
-                 *                          └ "Mắt đặt" ─────────────────┘
+                 *
+                 * (Đường tắt bỏ qua bước "gói chiết suất" chỉ dành cho kiểu
+                 * tròng không có bảng giá. "Mắt đặt" là kiểu duy nhất từng đi
+                 * đường đó và đã gỡ — SRS DR-MD-07.)
                  *
                  * Mặt hàng KHÔNG có gói tròng (tròng rời) thì
                  * không có tròng nào để chọn — số đo xong là sang xác nhận.
@@ -1142,7 +1149,7 @@ class CartController extends BaseController
                 $next = LensModel::takesLensPackage($product) ? 'kieu-trong' : 'xac-nhan';
                 break;
 
-            // ── Bước 3: kiểu tròng (đơn · hai · đa · mắt đặt) ────────────
+            // ── Bước 3: kiểu tròng (đơn · hai · đa) ──────────────────────
             case 'kieu-trong':
                 $type = LensModel::findType(trim((string) ($_POST['kieu'] ?? '')));
 
@@ -1153,11 +1160,6 @@ class CartController extends BaseController
 
                 $intent['lens_type'] = $type['id'];
 
-                /* "Mắt đặt" không đi tiếp sang bảng giá: tròng đặt riêng theo
-                   đơn thì chưa có giá nào để chọn, cửa hàng báo sau khi xem
-                   thông số. Bỏ luôn gói của lần chọn trước, nếu khách vừa quay
-                   lui đổi từ "Đa tròng" sang "Mắt đặt" — để lại thì đơn mang
-                   theo một khoản tiền tròng của kiểu đã bị thay. */
                 /* ĐỔI KIỂU TRÒNG LÀ BỎ GÓI CŨ, KHÔNG ĐIỀU KIỆN — FR-GH-09.
 
                    Bản trước chỉ xoá `lens_id` khi kiểu mới không nhận gói. Đổi
@@ -1171,6 +1173,10 @@ class CartController extends BaseController
                    đúng, vì đó là một lựa chọn khác. */
                 $intent['lens_id'] = null;
 
+                /* Kiểu không có bảng giá thì nhảy thẳng sang xác nhận. Hiện
+                   không có kiểu nào như vậy ("Mắt đặt" đã gỡ — SRS DR-MD-07);
+                   nhánh giữ lại theo điểm mở rộng `takes_package`, xem
+                   config/taxonomy.php. */
                 if (!LensModel::typeTakesPackage($type)) {
                     $next = 'xac-nhan';
                     break;
@@ -1658,7 +1664,7 @@ class CartController extends BaseController
      * đã có `lens_id`, và hệ quả là mọi mặt hàng KHÔNG cắt gói tròng — kính áp
      * tròng, tròng rời — gộp mọi số đo về chung một dòng: mua một hộp cho mắt
      * phải −2.00 rồi một hộp cho mắt trái −3.25 thì giỏ hiện "×2" của một độ
-     * duy nhất. Kiểu "Mắt đặt" (không có gói chiết suất) cũng sẽ rơi đúng vào
+     * duy nhất. Một kiểu tròng không có gói chiết suất cũng sẽ rơi đúng vào
      * đó. Nay ba mảnh — kiểu tròng, gói, số đo — mỗi mảnh vào khoá một cách
      * độc lập.
      */

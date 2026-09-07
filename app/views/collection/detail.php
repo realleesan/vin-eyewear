@@ -176,10 +176,16 @@ if ($minPrice !== null) {
                         Xem <?= (int) $total ?> sản phẩm của bộ
                         <?= icon('arrow-right', 'cdet__cta-ico', 18) ?>
                     </a>
-                    <a class="cdet__cta cdet__cta--ghost" href="/thu-ar">
-                        <?= icon('scan-eye', 'cdet__cta-ico', 18) ?>
-                        Thử ảo trên khuôn mặt
-                    </a>
+                    <?php /* Theo cờ config('ar.nav_enabled') như năm chỗ còn
+                             lại — xem ghi chú đầu config/ar.php. Trước
+                             06/09/2026 nút này in ra vô điều kiện, nên tắt cờ
+                             vẫn còn đường dẫn khách sang trang ngoài phạm vi. */ ?>
+                    <?php if (config('ar.nav_enabled')): ?>
+                        <a class="cdet__cta cdet__cta--ghost" href="/thu-ar">
+                            <?= icon('scan-eye', 'cdet__cta-ico', 18) ?>
+                            Thử ảo trên khuôn mặt
+                        </a>
+                    <?php endif; ?>
                 </div>
             <?php else: ?>
                 <?php /* Bộ đang trưng bày mà chưa gắn hàng nào — xảy ra thật
@@ -484,11 +490,13 @@ if ($minPrice !== null) {
                      FR-SP-09. Nó hỏi về dáng mặt, nên nó thuộc về bảng dáng mặt;
                      và nằm trong cùng khối `if ($faceTable !== [])` nghĩa là nó
                      chỉ hiện khi thật sự CÓ một bảng dáng mặt để nói tới. */ ?>
-            <p class="cdet__face-foot">
-                Không chắc dáng mặt mình thuộc nhóm nào?
-                <a href="/thu-ar">Thử ảo trên khuôn mặt</a> đo giúp bạn ngay trên
-                trình duyệt, không cần cài gì.
-            </p>
+            <?php if (config('ar.nav_enabled')): ?>
+                <p class="cdet__face-foot">
+                    Không chắc dáng mặt mình thuộc nhóm nào?
+                    <a href="/thu-ar">Thử ảo trên khuôn mặt</a> đo giúp bạn ngay trên
+                    trình duyệt, không cần cài gì.
+                </p>
+            <?php endif; ?>
         </section>
     <?php endif; ?>
 
@@ -556,7 +564,9 @@ if ($minPrice !== null) {
             </div>
             <div class="cdet__end-btns">
                 <a class="cdet__end-btn cdet__end-btn--main" href="<?= e($catalogUrl) ?>">Xem <?= (int) $total ?> sản phẩm</a>
-                <a class="cdet__end-btn" href="/thu-ar">Thử ảo</a>
+                <?php if (config('ar.nav_enabled')): ?>
+                    <a class="cdet__end-btn" href="/thu-ar">Thử ảo</a>
+                <?php endif; ?>
                 <a class="cdet__end-btn" href="/gioi-thieu#co-so">Tìm cơ sở gần bạn</a>
             </div>
         </section>

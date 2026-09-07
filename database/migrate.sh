@@ -357,6 +357,36 @@ MIGRATIONS=(
     # phần sổ đối soát và phần UC-03 hỏng độc lập với nhau, nên lùi cái này
     # không được kéo theo cái kia. Đọc đầu mỗi file trước khi chạy.
     "2026-09-06-dot-7-doi-soat.sql|column|order_items|prescription_id"
+
+    # ── Đợt 8 · gỡ mã quà tặng tự động cho khách chuyển đủ 100% ─────────────
+    #
+    # File ĐI NGƯỢC: nó thu hồi các mã quà tặng chưa dùng, tắt chính mã ấy, rồi
+    # BỎ chỉ mục `idx_vouchers_reward` và cột `vouchers`.`is_reward`. Không tạo
+    # ra thứ gì để làm cột mốc — mốc kiểu `column` sẽ báo "chưa chạy" mãi mãi
+    # sau khi đã chạy xong, vì cột thì đã biến mất. Cùng ca với
+    # 2026-09-06-dot-1-go-bo.sql, nên cùng kiểu `data`.
+    #
+    # Giao cho sổ ghi ở đây AN TOÀN vì file idempotent hoàn toàn: DELETE và
+    # UPDATE vốn chạy lại được (lần hai khớp 0 dòng vì cột đã biến mất khiến
+    # chúng bị bọc trong PREPARE/EXECUTE có hỏi information_schema), còn hai
+    # lệnh bỏ chỉ mục/cột cũng đi qua đúng khuôn ấy.
+    #
+    # File *-QUAY-LUI.sql đi kèm CỐ Ý KHÔNG KHAI: nó dựng lại cột và chỉ mục
+    # nhưng KHÔNG dựng lại được các mã đã thu hồi — đọc đầu file ấy trước.
+    #
+    # ⚠ ĐỢT NÀY GỠ ĐÚNG CỘT MỐC CỦA MỘT DÒNG Ở TRÊN — dòng 111,
+    # "2026-08-22-ma-thuong-chuyen-du.sql|column|vouchers|is_reward". Sau khi
+    # đợt 8 chạy, cột mốc ấy không còn, nên trên một CSDL có sổ ghi thì không
+    # sao (in_ledger được hỏi TRƯỚC sentinel), nhưng trên một CSDL SẠCH — cài
+    # mới từ schema.sql, sổ ghi rỗng — file 22/08 sẽ được áp lại và thêm cột
+    # `is_reward` trở lại, rồi đợt 8 ở cuối mảng lại bỏ nó đi.
+    #
+    # KẾT QUẢ VẪN ĐÚNG vì thứ tự trong mảng này là thứ tự chạy, và đợt 8 đứng
+    # sau. Đây cũng không phải ca đầu tiên: đợt 1 gỡ `staff_stores` và
+    # `customer_prescriptions`.`nguoi_duoc_do`, tức cột mốc của hai dòng
+    # 05/09 và 06/09 ở trên. Ghi lại để người đọc log không hoảng khi thấy một
+    # migration đã "chết" vẫn chạy trên máy mới.
+    "2026-09-06-dot-8-go-ma-qua-tang.sql|data||"
 )
 
 # ---------------------------------------------------------------------------

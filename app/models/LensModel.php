@@ -8,7 +8,7 @@
  *
  * Tròng cắt kèm hỏi khách HAI TẦNG:
  *
- *   lens_types     kiểu tròng — Đơn tròng · Hai tròng · Đa tròng · Mắt đặt
+ *   lens_types     kiểu tròng — Đơn tròng · Hai tròng · Đa tròng
  *   lens_packages  gói vật liệu/chiết suất — 1.50, 1.56, chống sáng xanh…
  *
  * Mã, tên và mô tả của cả hai nằm trong config/taxonomy.php. Chúng là một BẢNG
@@ -204,11 +204,12 @@ class LensModel
     }
 
     // ========================================================================
-    // KIỂU TRÒNG — Đơn tròng · Hai tròng · Đa tròng · Mắt đặt
+    // KIỂU TRÒNG — Đơn tròng · Hai tròng · Đa tròng
     // ========================================================================
 
     /**
-     * Bốn kiểu tròng khách chọn ở bước cuối, theo đúng thứ tự trong config.
+     * Ba kiểu tròng khách chọn ở bước cuối, theo đúng thứ tự trong config.
+     * ("Mắt đặt" là kiểu thứ tư cũ, đã gỡ theo SRS DR-MD-07.)
      *
      * Đây là TẦNG THỨ NHẤT của việc chọn tròng: mắt nhìn qua mấy vùng. Tầng
      * thứ hai — dày mỏng và lớp phủ — là packages() ngay dưới. Lý do tách hai
@@ -258,16 +259,21 @@ class LensModel
      * hai thứ đó thì không chỗ nào phải sửa, và hoá đơn cũ vẫn đọc được
      * nguyên vẹn vì lens_name xưa nay đã là "tên chép lại lúc mua".
      *
-     * "Mắt đặt" không có gói nào để chọn: trả về id = null, price = 0 và tên
-     * đứng một mình. Bên gọi phân biệt được bằng chính `id === null`.
+     * CHỊU ĐƯỢC MỘT VẾ THIẾU, và đó KHÔNG phải một lối mua hiện hành.
+     *
+     * Từ SRS DR-MD-07 mọi kiểu tròng đang bán đều có bảng giá, nên đơn mới
+     * luôn mang đủ cả kiểu lẫn gói. Hàm vẫn nhận một vế null vì DỮ LIỆU CŨ:
+     * đơn đặt trước bản có tầng kiểu tròng chỉ có `lens_id`, và đơn đặt bằng
+     * kiểu "Mắt đặt" (đã gỡ) chỉ có `lens_type`. Cả hai phải còn ĐỌC được —
+     * hoá đơn cũ không được vỡ vì một kiểu tròng nay không còn trong config.
      */
     public static function combo(?string $lensId, ?string $typeId): ?array
     {
         $type = self::findType($typeId);
         $pkg  = self::find($lensId);
 
-        // Kiểu "Mắt đặt" đứng một mình là hợp lệ; một gói chiết suất đứng
-        // một mình cũng vậy — đơn cũ đặt trước bản có tầng kiểu tròng.
+        // Một vế đứng một mình vẫn dựng được tên — xem docblock: đó là dữ
+        // liệu cũ, không phải một lựa chọn khách còn đặt được hôm nay.
         if ($type === null && $pkg === null) {
             return null;
         }
@@ -423,8 +429,10 @@ class LensModel
         $clean = [];
 
         /* Chỉ nhận mã CÓ THẬT trong config, và chỉ kiểu nào thật sự có bảng
-           giá. Không kiểm thì một request gõ tay đặt được giá cho "Mắt đặt"
-           hoặc cho một gói không tồn tại, và bảng giá mọc ra những dòng không
+           giá. Hiện MỌI kiểu tròng đều có (SRS DR-MD-07), nên vòng lọc này
+           không loại gì — nó là chốt chặn cho hai ca khác: một request gõ tay
+           đặt giá cho một mã không tồn tại, hoặc cho một kiểu không nhận gói
+           nếu sau này lại có. Không kiểm thì bảng giá mọc ra những dòng không
            màn nào vẽ, không ai xoá được. */
         foreach (self::types() as $type) {
             if (!self::typeTakesPackage($type)) {

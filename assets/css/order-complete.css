@@ -560,13 +560,11 @@
 .opaid__hero,
 .opaid__receipt,
 .opaid__tools,
-.opaid__gift,
 .opaid__next,
 .opaid__acts { animation: opaid-rise 0.5s ease both; }
 
 .opaid__receipt { animation-delay: 0.15s; }
 .opaid__tools   { animation-delay: 0.2s; }
-.opaid__gift    { animation-delay: 0.25s; }
 .opaid__next    { animation-delay: 0.25s; }
 .opaid__acts    { animation-delay: 0.3s; }
 
@@ -623,7 +621,6 @@
     .opaid__hero,
     .opaid__receipt,
     .opaid__tools,
-    .opaid__gift,
     .opaid__next,
     .opaid__acts,
     .opaid__seal { animation: none; }
@@ -881,44 +878,8 @@
    mảng khác tông là cách rẻ nhất để mắt dừng lại đúng chỗ.
    ============================================================ */
 
-.opaid__gift {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    margin-top: 16px;
-    padding: 14px 16px;
-    border: 1px solid #cfe0c6;
-    border-radius: var(--radius-sm);
-    background: #f2f8ef;
-}
-
-.opaid__gifttag {
-    align-self: flex-start;
-    padding: 3px 9px;
-    border-radius: var(--radius-sm);
-    background: #4d7a3f;
-    color: #fff;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
-
-.opaid__giftbody {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.65;
-    color: var(--ink);
-}
-
-/* Mã in bằng chữ đều nét: khách sẽ đọc lại nó ở ô chọn mã lần sau, mà chữ
-   đều nét thì không nhầm 0 với O, 1 với l. */
-.opaid__giftcode {
-    font-family: var(--font-mono, ui-monospace, monospace);
-    font-size: 13.5px;
-    letter-spacing: 0.06em;
-    color: #3d6a30;
-}
+/* Bốn lớp .opaid__gift* ĐÃ BỎ 2026-09-06 cùng khối "Quà cảm ơn" — tính năng
+   mã quà tặng tự động không có trong SRS. Xem app/views/order/paid.php. */
 
 /* --- Khối "tiếp theo" --- */
 
@@ -1046,7 +1007,6 @@
        khung hình ở giữa chừng và in ra một trang mờ hoặc lệch. */
     .opaid__hero,
     .opaid__receipt,
-    .opaid__gift,
     .opaid__next,
     .opaid__seal,
     .opaid__sealtick { animation: none; }

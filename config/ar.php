@@ -17,11 +17,22 @@ return [
     // ------------------------------------------------------------------
     // HIỆN "THỬ KÍNH ẢO" TRÊN ĐIỀU HƯỚNG?
     //
-    // Tính năng còn đang làm dở, nên mục này TẠM ẨN. Cờ này chi phối CẢ BA
-    // chỗ có liên kết tới /thu-ar:
-    //   - thanh điều hướng desktop  (_layout/header.php)
-    //   - menu trượt mobile         (_layout/header.php)
-    //   - cột "Về Vin Eyewear"      (_layout/footer.php)
+    // SRS mục 1.2 xếp "Thử kính ảo" vào bảng NGOÀI PHẠM VI giai đoạn 1
+    // ("Giai đoạn sau") — không UC, không FR, không yêu cầu giao diện. Mã
+    // nguồn GIỮ NGUYÊN để triển khai ở giai đoạn 2; cờ này là thứ quyết định
+    // khách có nhìn thấy nó hay không, và phải TẮT trong suốt giai đoạn 1.
+    //
+    // Cờ chi phối CẢ SÁU chỗ có liên kết tới /thu-ar:
+    //   - thanh điều hướng desktop     (_layout/header.php)
+    //   - menu trượt mobile            (_layout/header.php)
+    //   - cột "Về Vin Eyewear"         (_layout/footer.php)
+    //   - dòng dưới hero trang chủ     (_layout/home/hero.php)
+    //   - nút ở trang chi tiết sản phẩm (product/detail.php)
+    //   - ba liên kết ở trang bộ sưu tập (collection/detail.php)
+    //
+    // Ba chỗ cuối trong danh sách trên TỪNG in ra vô điều kiện; gắn cờ cho
+    // chúng ngày 06/09/2026 để "tắt cờ" thật sự là tắt hết, không còn đường
+    // nào dẫn khách tới một tính năng ngoài phạm vi nghiệm thu.
     //
     // BẬT TỪ FR-SP-05... đúng hơn là FR-SP-22, ngày 06/09/2026. Trang thử AR
     // chạy được từ lâu nhưng không có đường nào dẫn tới — nó nằm đó cho riêng
@@ -35,7 +46,7 @@ return [
     // Đường /thu-ar VẪN vào thẳng được khi cờ tắt — để còn phát triển và xem
     // thử. Cờ chỉ quyết định có dẫn khách tới đó hay không.
     // ------------------------------------------------------------------
-    'nav_enabled' => true,
+    'nav_enabled' => false,
 
     // ------------------------------------------------------------------
     // GỌNG THỬ

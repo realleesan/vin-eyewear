@@ -838,7 +838,8 @@ class OrderController extends BaseController
                lần, và lần thứ hai thì mã đã phát từ trước. Hỏi cả với đơn đặt
                cọc — khách có thể đã nhận quà từ một đơn khác, và giấu đi thì
                họ không bao giờ biết mình đang cầm cái gì. */
-            'reward'     => VoucherModel::rewardHeldBy($userId),
+            /* 'reward' ĐÃ BỎ 2026-09-06: khối "Quà cảm ơn" trên trang biên
+               nhận đi cùng tính năng mã quà tặng tự động. */
             'isDeposit'  => $status === 'deposit_paid' && $deposit > 0,
             'paidAmount' => $status === 'deposit_paid' && $deposit > 0 ? $deposit : $total,
             'remaining'  => $status === 'deposit_paid' && $deposit > 0 ? $total - $deposit : 0,

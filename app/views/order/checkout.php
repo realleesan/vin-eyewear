@@ -118,15 +118,9 @@ $payment  = $old['paymentMethod'] ?? 'cod';
    khích và cũng là vế được tặng mã. Xem OrderModel::place(). */
 $bankAmount = ($old['bankAmount'] ?? 'full') === 'deposit' ? 'deposit' : 'full';
 
-/* Mã đang được tặng cho khách chuyển đủ 100%, hoặc null nếu cửa hàng chưa bật
-   mã nào. Tra MỘT LẦN ở đây vì trang này nhắc tới nó ở HAI chỗ cách nhau khá
-   xa: thẻ "Chuyển khoản ngân hàng" ở bước 3, và vế "Chuyển đủ 100%" trong
-   khối tóm tắt. Hai lần gọi là hai câu truy vấn cho cùng một câu trả lời.
-
-   KHÔNG phụ thuộc vào việc khách đã từng chuyển đủ hay chưa: đây là LỜI MỜI,
-   phải hiện với cả người mua lần đầu — họ mới là người cần biết nhất. Mã đã
-   nằm trong ví thì hiện ở chỗ khác (xem VoucherModel::rewardHeldBy). */
-$reward = VoucherModel::reward();
+/* $reward ĐÃ BỎ 2026-09-06 cùng tính năng mã quà tặng tự động. Trang này
+   từng nhắc tới nó ở hai chỗ — thẻ "Chuyển khoản ngân hàng" ở bước 3 và vế
+   "Chuyển đủ 100%" trong khối tóm tắt; cả hai nay chỉ còn câu nói về tiền. */
 $storeId  = $old['storeId'] ?? '';
 ?>
 
@@ -351,16 +345,9 @@ $storeId  = $old['storeId'] ?? '';
                                        đúng chỗ khách đang cân nhắc, và hiện với
                                        MỌI khách kể cả người chưa mua bao giờ. */
                                     ?>
-                                    <?php if ($value === 'bank_transfer' && $reward !== null): ?>
-                                        <span class="cocard__gift">+ Tặng mã giảm giá</span>
-                                    <?php endif; ?>
                                 </span>
                                 <span class="cocard__note">
                                     <?= e($pm['note']) ?>
-                                    <?php if ($value === 'bank_transfer' && $reward !== null): ?>
-                                        · chuyển đủ 100% được tặng mã
-                                        <strong><?= e($reward['code']) ?></strong>
-                                    <?php endif; ?>
                                 </span>
                             </span>
                         </label>
@@ -634,12 +621,7 @@ $storeId  = $old['storeId'] ?? '';
                         ?>
                         <p class="csum__deposit-why">
                             Chuyển khoản thì thanh toán <strong>đủ 100%</strong>.
-                            <?php if ($reward !== null): ?>
-                                Được tặng mã <strong><?= e($reward['code']) ?></strong>
-                                cho lần mua sau — <?= e($reward['condition_text'] ?: $reward['title']) ?>.
-                            <?php else: ?>
-                                Nhận hàng không phải trả thêm.
-                            <?php endif; ?>
+                            Nhận hàng không phải trả thêm.
                         </p>
 
                         <div class="csum__row csum__row--deposit">
@@ -658,31 +640,11 @@ $storeId  = $old['storeId'] ?? '';
                                 <span class="ckopt__top">
                                     <span class="ckopt__name">
                                         Chuyển đủ 100%
-                                        <?php if ($reward !== null): ?>
-                                            <?php /* NHÃN QUÀ nằm ngay cạnh tên lựa chọn, không
-                                                     chỉ trong dòng ghi chú. Ghi chú là chữ nhỏ
-                                                     màu nhạt — mắt lướt qua khi đang so hai con
-                                                     số. Đây là LÝ DO để chọn vế này, nên nó phải
-                                                     nằm ở tầng khách đọc trước. */ ?>
-                                            <span class="ckopt__gift">+ Tặng mã giảm giá</span>
-                                        <?php endif; ?>
                                     </span>
                                     <span class="ckopt__num"><?= money($total) ?></span>
                                 </span>
                                 <span class="ckopt__note">
-                                    <?php if ($reward !== null): ?>
-                                        <?php /* Nói RÕ mã gì và giảm bao nhiêu. "Tặng mã giảm
-                                                 giá" đứng một mình là một lời hứa mơ hồ, mà
-                                                 khách đang phải quyết định trả gấp ba lần số
-                                                 tiền của vế kia. */ ?>
-                                        Mã <strong><?= e($reward['code']) ?></strong> dùng cho lần
-                                        mua sau — <?= e($reward['condition_text'] ?: $reward['title']) ?>.
-                                    <?php else: ?>
-                                        <?php /* KHÔNG hứa quà khi cửa hàng chưa bật mã nào. Hứa
-                                                 rồi không có là mất lòng tin đắt hơn nhiều so
-                                                 với việc thiếu một dòng quảng cáo. */ ?>
-                                        Trả một lần, nhận hàng không phải trả thêm.
-                                    <?php endif; ?>
+                                    Trả một lần, nhận hàng không phải trả thêm.
                                 </span>
                             </span>
                         </label>

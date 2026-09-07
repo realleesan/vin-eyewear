@@ -397,20 +397,10 @@ $dongUrl = '/quan-tri/ma-giam-gia';
                 </p>
             </div>
 
-            <div class="field field--check">
-                <label>
-                    <input type="checkbox" name="is_reward"
-                           <?= ($ed !== null && !empty($ed['is_reward'])) ? 'checked' : '' ?>>
-                    Tặng cho khách chuyển khoản đủ 100%
-                </label>
-                <p class="field__hint">
-                    Đơn có cắt tròng được chọn chuyển 30% tiền cọc hoặc chuyển đủ.
-                    Chọn chuyển đủ thì khách được tặng mã này ngay khi tiền về —
-                    không cần phát tay. <strong>Chỉ một mã</strong> được bật:
-                    tick vào đây là mã đang bật trước đó tự tắt.
-                    Nên dùng với mã riêng (bỏ tick "công khai") để nó thật sự là quà.
-                </p>
-            </div>
+            <?php /* Ô TÍCH "Tặng cho khách chuyển khoản đủ 100%" ĐÃ BỎ
+                     2026-09-06. Phát mã là quyết định của người, không phải
+                     phần thưởng máy tự gắn vào luồng thanh toán — SRS 3.2.9.5.
+                     Phát tay vẫn còn: nút "Phát cho tất cả" ở bảng trên. */ ?>
 
             <button type="submit" class="astatus__save">
                 <?= $ed !== null ? 'Lưu thay đổi' : 'Tạo mã' ?>

@@ -132,7 +132,6 @@ class VoucherAdminController extends AdminController
             'expires_at'     => $expires ?: null,
             'is_active'      => isset($_POST['is_active']) ? 1 : 0,
             'is_public'      => isset($_POST['is_public']) ? 1 : 0,
-            'is_reward'      => isset($_POST['is_reward']) ? 1 : 0,
             'max_uses'       => $maxUsesVal,
         ];
 
@@ -146,17 +145,10 @@ class VoucherAdminController extends AdminController
             flash('admin_success', sprintf('Đã tạo mã %s.', $code));
         }
 
-        /* CHỈ MỘT MÃ LÀM QUÀ TẶNG. Tắt cờ ở mọi mã khác NGAY SAU khi lưu, chứ
-           không bắt nhân viên tự nhớ đi tắt mã cũ — quên một cái là hai mã
-           cùng bật, và lúc đó VoucherModel::reward() lấy đại một trong hai
-           theo thứ tự CSDL trả về. Không sai đến mức hỏng, nhưng cửa hàng sẽ
-           không hiểu vì sao khách nhận mã này chứ không phải mã kia.
-
-           Chạy cả khi vừa TẮT cờ: lúc đó $data['is_reward'] = 0 nên câu này
-           không tắt nhầm ai — điều kiện `id <> :id` chỉ chừa lại chính nó. */
-        if ((int) $data['is_reward'] === 1 && $id !== '') {
-            VoucherModel::clearRewardFlag((string) $id);
-        }
+        /* TỪNG CÓ Ở ĐÂY: khối bảo đảm "chỉ một mã làm quà tặng" — tắt cờ
+           is_reward ở mọi mã khác sau khi lưu. Bỏ 2026-09-06 cùng toàn bộ
+           tính năng mã quà tặng tự động (không có trong SRS; xem migration
+           2026-09-06-dot-8-go-ma-qua-tang.sql). */
 
         redirect(self::BASE);
     }
