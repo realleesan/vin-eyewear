@@ -36,30 +36,30 @@
 $cards = [
     [
         'panel' => 'lens',
-        'name'  => 'Chọn tròng',
-        'desc'  => 'Trả lời 1 câu hỏi để tìm loại tròng đúng nhu cầu của bạn.',
-        'cta'   => 'Chọn tròng kính →',
+        'name'  => t('home.qc.c1'),
+        'desc'  => t('home.qc.c1d'),
+        'cta'   => t('home.qc.c1c'),
         'url'   => danhMucUrl('trong-kinh'),
         'image' => designImage('check-1', 'assets/images/product-5.jpg'),
-        'alt'   => 'Tròng kính chụp cận cảnh',
+        'alt'   => t('home.qc.c1a'),
     ],
     [
         'panel' => 'frame',
-        'name'  => 'Chọn gọng',
-        'desc'  => 'Chọn dáng khuôn mặt giống bạn nhất để được gợi ý gọng.',
-        'cta'   => 'Chọn gọng kính →',
+        'name'  => t('home.qc.c2'),
+        'desc'  => t('home.qc.c2d'),
+        'cta'   => t('home.qc.c2c'),
         'url'   => danhMucUrl('gong-kinh'),
         'image' => designImage('check-2', 'assets/images/showroom-frames.jpg'),
-        'alt'   => 'Kệ trưng bày gọng kính tại cửa hàng',
+        'alt'   => t('home.qc.c2a'),
     ],
     [
         'panel' => null,
-        'name'  => 'Đặt lịch',
-        'desc'  => 'Đặt lịch đo mắt miễn phí tại cơ sở gần bạn.',
-        'cta'   => 'Đặt lịch ngay →',
+        'name'  => t('home.qc.c3'),
+        'desc'  => t('home.qc.c3d'),
+        'cta'   => t('home.qc.c3c'),
         'url'   => '/dat-lich',
         'image' => designImage('check-3', 'assets/images/showroom-exam-room.jpg'),
-        'alt'   => 'Kỹ thuật viên tư vấn cho khách tại cửa hàng',
+        'alt'   => t('home.qc.c3a'),
     ],
 ];
 
@@ -75,20 +75,18 @@ $cards = [
  */
 $lensOptions = [
     [
-        'label' => 'A. Bảo vệ mắt toàn diện khi sử dụng thiết bị điện tử',
-        'rec'   => 'Tròng chống ánh sáng xanh (Blue-cut) 1.56 – 1.61 — lọc ánh sáng '
-                 . 'màn hình, phù hợp làm việc máy tính nhiều giờ.',
+        'label' => t('home.qc.la'),
+        'rec'   => t('home.qc.lar'),
         'url'   => '/san-pham?lens%5B%5D=blue-light',
     ],
     [
-        'label' => 'B. Bảo vệ mắt khi trời nắng',
-        'rec'   => 'Tròng đổi màu Photochromic hoặc kính mát Polarized UV400 — tự tối '
-                 . 'màu khi ra nắng, chống chói.',
+        'label' => t('home.qc.lb'),
+        'rec'   => t('home.qc.lbr'),
         'url'   => '/san-pham?lens%5B%5D=photochromic',
     ],
     [
-        'label' => 'C. Mỏng nhẹ cho người cận thị độ cao',
-        'rec'   => 'Tròng chiết suất cao 1.67 – 1.74 — mỏng nhẹ cho độ cận từ 4.00 trở lên.',
+        'label' => t('home.qc.lc'),
+        'rec'   => t('home.qc.lcr'),
         'url'   => '/san-pham?lens%5B%5D=rx',
     ],
 ];
@@ -105,23 +103,23 @@ $lensOptions = [
  * đó một trường mà khối kia không bao giờ đọc.
  */
 $faces = [
-    ['num' => '01', 'name' => 'Mặt tròn',      'shape' => 'Square',
-     'desc' => 'Gọng vuông, browline — tạo đường nét góc cạnh, cân lại khuôn mặt',
+    ['num' => '01', 'name' => t('home.qc.f1'), 'shape' => 'Square',
+     'desc' => t('home.qc.f1d'),
      'path' => 'M100 32 C156 32 180 84 180 132 C180 188 148 234 100 234 C52 234 20 188 20 132 C20 84 44 32 100 32 Z'],
-    ['num' => '02', 'name' => 'Mặt vuông',     'shape' => 'Oval',
-     'desc' => 'Gọng oval, kim loại mảnh — làm mềm đường quai hàm',
+    ['num' => '02', 'name' => t('home.qc.f2'), 'shape' => 'Oval',
+     'desc' => t('home.qc.f2d'),
      'path' => 'M48 40 C70 26 130 26 152 40 C168 50 172 84 172 126 C172 172 166 202 146 220 C126 236 74 236 54 220 C34 202 28 172 28 126 C28 84 32 50 48 40 Z'],
-    ['num' => '03', 'name' => 'Mặt trái xoan', 'shape' => 'Round',
-     'desc' => 'Gọng tròn, acetate dày — khuôn mặt cân đối, hợp hầu hết kiểu gọng',
+    ['num' => '03', 'name' => t('home.qc.f3'), 'shape' => 'Round',
+     'desc' => t('home.qc.f3d'),
      'path' => 'M100 28 C148 28 170 74 170 118 C170 174 138 236 100 236 C62 236 30 174 30 118 C30 74 52 28 100 28 Z'],
-    ['num' => '04', 'name' => 'Mặt dài',       'shape' => 'Wayfarer',
-     'desc' => 'Gọng bản lớn, oversized — rút ngắn tỷ lệ, cân đối chiều dọc',
+    ['num' => '04', 'name' => t('home.qc.f4'), 'shape' => 'Wayfarer',
+     'desc' => t('home.qc.f4d'),
      'path' => 'M100 22 C140 22 156 66 156 124 C156 190 134 246 100 246 C66 246 44 190 44 124 C44 66 60 22 100 22 Z'],
-    ['num' => '05', 'name' => 'Mặt trái tim',  'shape' => 'Cat-eye',
-     'desc' => 'Gọng cat-eye nhẹ, không viền — cân lại phần cằm thon',
+    ['num' => '05', 'name' => t('home.qc.f5'), 'shape' => 'Cat-eye',
+     'desc' => t('home.qc.f5d'),
      'path' => 'M100 30 C146 30 172 58 172 98 C172 152 136 208 100 238 C64 208 28 152 28 98 C28 58 54 30 100 30 Z'],
-    ['num' => '06', 'name' => 'Mặt kim cương', 'shape' => 'Oval',
-     'desc' => 'Gọng browline mềm, oval — làm nổi gò má, dịu phần trán',
+    ['num' => '06', 'name' => t('home.qc.f6'), 'shape' => 'Oval',
+     'desc' => t('home.qc.f6d'),
      'path' => 'M100 28 C122 28 152 62 166 112 C172 136 148 192 100 240 C52 192 28 136 34 112 C48 62 78 28 100 28 Z'],
 ];
 ?>
@@ -130,8 +128,8 @@ $faces = [
     <div class="qcheck__inner">
 
         <div class="qcheck__head">
-            <p class="qcheck__kicker">Là một sản phẩm về sức khoẻ con người, hãy</p>
-            <h2 id="qcheck-title" class="section-h2 section-h2--plain">Bỏ ra 5 phút để kiểm tra</h2>
+            <p class="qcheck__kicker"><?= e(t('home.qc.kicker')) ?></p>
+            <h2 id="qcheck-title" class="section-h2 section-h2--plain"><?= e(t('home.qc.title')) ?></h2>
         </div>
 
         <ul class="qcheck__grid" role="list">
@@ -167,8 +165,8 @@ $faces = [
         <div class="qmodal__panel" role="dialog" aria-modal="true" aria-labelledby="qmodal-title">
 
             <div class="qmodal__head">
-                <h3 class="qmodal__title" id="qmodal-title" data-qcheck-title>Chọn tròng</h3>
-                <button type="button" class="qmodal__close" data-qcheck-close aria-label="Đóng">
+                <h3 class="qmodal__title" id="qmodal-title" data-qcheck-title><?= e(t('home.qc.c1')) ?></h3>
+                <button type="button" class="qmodal__close" data-qcheck-close aria-label="<?= e(t('ui.close')) ?>">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                     </svg>
@@ -178,7 +176,7 @@ $faces = [
             <!-- --- Bảng 1: chọn tròng ---------------------------- -->
             <div class="qmodal__panel-lens" data-qcheck-panel="lens">
                 <div class="qlens">
-                    <p class="qlens__question">Bạn quan trọng điều gì nhất khi đeo kính?</p>
+                    <p class="qlens__question"><?= e(t('home.qc.question')) ?></p>
 
                     <div class="qlens__options">
                         <?php foreach ($lensOptions as $i => $opt): ?>
@@ -194,8 +192,8 @@ $faces = [
                          không còn qua e() nữa. */ ?>
                 <?php foreach ($lensOptions as $i => $opt): ?>
                     <div class="qrec" data-qlens-rec="<?= $i ?>" hidden>
-                        <p class="qrec__text"><strong>Gợi ý cho bạn:</strong> <?= e($opt['rec']) ?></p>
-                        <a class="qrec__link" href="<?= e($opt['url']) ?>">Tư vấn chọn tròng →</a>
+                        <p class="qrec__text"><strong><?= e(t('home.qc.rec')) ?></strong> <?= e($opt['rec']) ?></p>
+                        <a class="qrec__link" href="<?= e($opt['url']) ?>"><?= e(t('home.qc.lens_cta')) ?></a>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -203,19 +201,19 @@ $faces = [
             <!-- --- Bảng 2: chọn gọng theo khuôn mặt -------------- -->
             <div class="qmodal__panel-frame" data-qcheck-panel="frame" hidden>
                 <div class="qface__head">
-                    <p class="qface__title">Hình dáng khuôn mặt</p>
-                    <p class="qface__sub">Dáng khuôn mặt nào sau đây trông giống bạn nhất?</p>
+                    <p class="qface__title"><?= e(t('home.qc.face_title')) ?></p>
+                    <p class="qface__sub"><?= e(t('home.qc.face_sub')) ?></p>
                 </div>
 
                 <div class="qface">
                     <button type="button" class="qface__arrow qface__arrow--prev"
-                            data-qface="prev" aria-label="Dáng mặt trước">
+                            data-qface="prev" aria-label="<?= e(t('home.qc.face_prev')) ?>">
                         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                             <path d="M15 18l-6-6 6-6"/>
                         </svg>
                     </button>
                     <button type="button" class="qface__arrow qface__arrow--next"
-                            data-qface="next" aria-label="Dáng mặt sau">
+                            data-qface="next" aria-label="<?= e(t('home.qc.face_next')) ?>">
                         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                             <path d="M9 6l6 6-6 6"/>
                         </svg>
@@ -246,7 +244,7 @@ $faces = [
                 <?php foreach ($faces as $i => $face): ?>
                     <div class="qrec" data-qface-rec="<?= $i ?>" hidden>
                         <p class="qrec__text"><strong><?= e($face['name']) ?>:</strong> <?= e($face['desc']) ?></p>
-                        <a class="qrec__link" href="/san-pham?shape=<?= e(rawurlencode($face['shape'])) ?>">Xem gọng phù hợp →</a>
+                        <a class="qrec__link" href="/san-pham?shape=<?= e(rawurlencode($face['shape'])) ?>"><?= e(t('home.qc.frame_cta')) ?></a>
                     </div>
                 <?php endforeach; ?>
             </div>
