@@ -177,6 +177,55 @@ if (in_array('admin', $adminRoles, true)) {
                                 'badge' => $emailHong];
     $navGroups[3]['items'][] = ['url' => '/quan-tri/mau-thu', 'label' => 'Mẫu thư'];
 }
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * TÍNH SẴN TRẠNG THÁI TỪNG NHÓM — trước vòng vẽ, không phải trong lúc vẽ.
+ *
+ * Thanh bên nay XỔ RA / THU VÀO theo nhóm, nên nhãn nhóm phải biết hai điều mà
+ * chỉ các mục con của nó mới trả lời được:
+ *
+ *   'active' — nhóm này có chứa trang đang mở không. Nhóm đó phải xổ sẵn từ
+ *              máy chủ; nếu không thì mở một màn quản trị lên là bốn nhóm đóng
+ *              kín và không thấy mình đang đứng ở đâu.
+ *   'badge'  — tổng huy hiệu của cả nhóm, để khi nhóm ĐANG THU vẫn đọc được
+ *              "bên trong có 5 việc đang chờ". Thiếu nó thì thu nhóm lại là
+ *              giấu luôn hàng chờ, và cái giá của việc gọn mắt hoá ra là bỏ
+ *              sót đơn — đúng thứ mà luật huy hiệu ở đầu file muốn tránh.
+ *
+ * Phải tính TRƯỚC vì <summary> đứng trên <ul>: lúc in nhãn nhóm thì vòng lặp
+ * chưa duyệt tới mục con nào cả.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+foreach ($navGroups as $gi => $group) {
+    $groupActive = false;
+    $groupBadge  = 0;
+
+    foreach ($group['items'] as $ii => $item) {
+        // Mục "Tổng quan" khớp chính xác, các mục khác khớp tiền tố để trang
+        // con (vd /quan-tri/san-pham/sua) vẫn sáng đúng mục cha.
+        $active = !empty($item['exact'])
+            ? $segment === $item['url']
+            : str_starts_with($segment, $item['url']);
+
+        $navGroups[$gi]['items'][$ii]['active'] = $active;
+
+        if ($active) {
+            $groupActive = true;
+        }
+
+        $groupBadge += (int) ($item['badge'] ?? 0);
+    }
+
+    $navGroups[$gi]['active'] = $groupActive;
+    $navGroups[$gi]['badge']  = $groupBadge;
+}
+
+/* Đường dẫn lạ (không mục nào khớp) thì xổ nhóm đầu. Một thanh bên đóng kín cả
+   bốn nhóm trông như hỏng, và người dùng phải bấm một cái chỉ để thấy menu. */
+if (!array_filter(array_column($navGroups, 'active'))) {
+    $navGroups[0]['active'] = true;
+}
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -270,33 +319,70 @@ if (in_array('admin', $adminRoles, true)) {
         </div>
 
         <nav class="asidebar__nav" aria-label="Điều hướng quản trị">
+            <?php
+            /*
+             * MỖI NHÓM LÀ MỘT <details>, KHÔNG PHẢI MỘT NHÃN CHẾT.
+             *
+             * Chia nhóm đã giúp mắt nhảy thẳng tới đúng bốn dòng cần đọc, nhưng
+             * mười sáu mục vẫn là mười sáu dòng: trên màn 768px thanh bên phải
+             * cuộn, và dưới 901px (nó xếp trên nội dung) thì phải lướt qua cả
+             * menu mới tới bảng dữ liệu. Thu nhóm lại thì thanh bên còn bốn
+             * dòng cộng với nhóm đang mở.
+             *
+             * DÙNG <details>/<summary> CHỨ KHÔNG PHẢI NÚT + JAVASCRIPT. Xổ ra /
+             * thu vào là hành vi có SẴN trong HTML, và nó mang theo bốn thứ mà
+             * bản tự dựng bằng JS gần như luôn chép thiếu: bàn phím (Enter,
+             * Space), vai trò + trạng thái đóng/mở cho trình đọc màn hình, tìm
+             * kiếm trong trang (Ctrl+F tự mở nhóm đang đóng để nhảy tới chữ bên
+             * trong), và quan trọng nhất — TẮT JAVASCRIPT VẪN BẤM ĐƯỢC. Đúng
+             * nếp cải tiến dần của cả dự án: không có JS thì mọi đường vẫn là
+             * link thật.
+             *
+             * name="asidebar-nav" là thuộc tính accordion của HTML: mở nhóm này
+             * thì nhóm kia tự đóng, không cần một dòng mã nào. Trình duyệt cũ
+             * chưa hiểu `name` sẽ cho mở nhiều nhóm cùng lúc — suy giảm êm, vẫn
+             * dùng được; admin.js có mấy dòng vá lại cho chúng.
+             *
+             * open đặt từ MÁY CHỦ theo nhóm chứa trang đang mở, không phải nhớ
+             * bằng localStorage. Nhóm cần mở suy ra được từ chính địa chỉ đang
+             * xem, nên không có gì phải cất giữ, không có gì lệch giữa hai tab,
+             * và khung hình đầu tiên đã đúng — không nhấp nháy chờ JS.
+             */
+            ?>
             <?php foreach ($navGroups as $group): ?>
-                <?php /* Nhãn nhóm là <p> chứ không phải <h2>: nó không mở ra một
-                         vùng nội dung mà chỉ gom mấy đường dẫn cho dễ nhìn, và
-                         một cấp tiêu đề giả làm rối cây tiêu đề của trang. Danh
-                         sách bên dưới mới là thứ trình đọc màn hình cần. */ ?>
-                <p class="asidebar__group"><?= e($group['label']) ?></p>
-                <ul role="list">
-                    <?php foreach ($group['items'] as $item): ?>
-                        <?php
-                        // Mục "Tổng quan" khớp chính xác, các mục khác khớp tiền tố
-                        // để trang con (vd /quan-tri/san-pham/sua) vẫn sáng đúng mục.
-                        $active = !empty($item['exact'])
-                            ? $segment === $item['url']
-                            : str_starts_with($segment, $item['url']);
-                        ?>
-                        <li>
-                            <a href="<?= e($item['url']) ?>"
-                               class="asidebar__link<?= $active ? ' is-active' : '' ?>"
-                               <?= $active ? 'aria-current="page"' : '' ?>>
-                                <span class="asidebar__label"><?= e($item['label']) ?></span>
-                                <?php if (!empty($item['badge'])): ?>
-                                    <span class="asidebar__badge"><?= (int) $item['badge'] ?></span>
-                                <?php endif; ?>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
+                <details class="asidebar__grp<?= $group['active'] ? ' is-here' : '' ?>"
+                         name="asidebar-nav"<?= $group['active'] ? ' open' : '' ?>>
+                    <?php /* <summary> thay cho <p> cũ, nhưng vẫn KHÔNG phải một
+                             cấp tiêu đề: nó là cái vách ngăn bấm được, không mở
+                             ra một vùng nội dung của trang. Danh sách bên dưới
+                             mới là thứ trình đọc màn hình cần. */ ?>
+                    <summary class="asidebar__group">
+                        <span class="asidebar__gname"><?= e($group['label']) ?></span>
+                        <?php /* TỔNG HUY HIỆU CỦA NHÓM — chỉ hiện khi nhóm đang
+                                 THU (luật ẩn nằm ở admin.css). Mở ra rồi thì đã
+                                 thấy từng con số ở từng mục, in thêm một tổng ở
+                                 nhãn nhóm là đếm hai lần. */ ?>
+                        <?php if (!empty($group['badge'])): ?>
+                            <span class="asidebar__gbadge"><?= (int) $group['badge'] ?><span class="sr-only"> việc đang chờ</span></span>
+                        <?php endif; ?>
+                        <?= icon('chevron-down', 'asidebar__caret', 14) ?>
+                    </summary>
+
+                    <ul role="list">
+                        <?php foreach ($group['items'] as $item): ?>
+                            <li>
+                                <a href="<?= e($item['url']) ?>"
+                                   class="asidebar__link<?= $item['active'] ? ' is-active' : '' ?>"
+                                   <?= $item['active'] ? 'aria-current="page"' : '' ?>>
+                                    <span class="asidebar__label"><?= e($item['label']) ?></span>
+                                    <?php if (!empty($item['badge'])): ?>
+                                        <span class="asidebar__badge"><?= (int) $item['badge'] ?></span>
+                                    <?php endif; ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </details>
             <?php endforeach; ?>
         </nav>
 

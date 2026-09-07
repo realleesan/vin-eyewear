@@ -253,21 +253,141 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 .asidebar__nav { flex: 1; overflow-y: auto; padding: 14px 12px 16px; }
 .asidebar__nav ul { list-style: none; margin: 0; padding: 0; }
 
-/* Nhãn nhóm ("VẬN HÀNH", "SẢN PHẨM"…). Cỡ 9.5px là cố ý nhỏ hơn mọi thứ
-   khác trong thanh bên: nó là vách ngăn, không phải một mục bấm được, nên
-   không được tranh chú ý với các đường dẫn ngay dưới nó. */
+/* ─────────────────────────────────────────────────────────────────
+   NHÓM XỔ RA / THU VÀO
+
+   Mỗi nhóm là một <details> (xem khối chú thích trong khung quản trị để
+   biết vì sao không phải nút + JavaScript). Ở đây chỉ lo phần nhìn.
+
+   Đường kẻ mảnh giữa các nhóm: khi cả bốn nhóm cùng THU, thanh bên chỉ còn
+   bốn dòng chữ hoa nhỏ xíu nằm rời rạc — không có gì cho biết chúng là bốn
+   ngăn của cùng một thứ. Một nét 5% trắng đủ để đọc ra thành danh sách mà
+   không thành cái bảng.
+   ───────────────────────────────────────────────────────────────── */
+.asidebar__grp { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+.asidebar__grp:last-child { border-bottom: 0; }
+
+/* Nhãn nhóm ("VẬN HÀNH", "SẢN PHẨM"…) — nay là <summary>, tức là BẤM ĐƯỢC.
+   Vẫn giữ cỡ 10px chữ hoa giãn cách của bản cũ: nó là vách ngăn, không được
+   tranh chú ý với các đường dẫn bên dưới. Cái đổi là nó có nền khi rê chuột
+   và một mũi nhọn ở mép phải — hai dấu hiệu tối thiểu để người dùng biết ở
+   đây bấm được, mà không phải to lên chút nào. */
 .asidebar__group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     margin: 0;
-    padding: 14px 10px 5px;
+    padding: 11px 10px;
+    border-radius: var(--radius-sm);
     font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.18em;
     color: var(--a-sidebar-dim);
+    cursor: pointer;
+    user-select: none;
+    /* Bỏ tam giác mặc định của <summary>: list-style cho Firefox/Chrome,
+       ::-webkit-details-marker cho Safari cũ. Phải có CẢ HAI — thiếu dòng
+       dưới thì Safari vẽ tam giác đen chồng lên chữ. */
+    list-style: none;
+    transition: background-color 0.15s, color 0.15s;
 }
 
-/* Nhóm đầu tiên sát ngay dưới logo thì không cần khoảng thở 14px */
-.asidebar__nav > .asidebar__group:first-child { padding-top: 8px; }
+.asidebar__group::-webkit-details-marker { display: none; }
+
+.asidebar__group:hover { background: rgba(255, 255, 255, 0.045); color: var(--a-sidebar-mute); }
+
+/* Viền bàn phím vẽ vào TRONG (outline-offset âm): thanh bên chỉ rộng 234px và
+   có overflow-y, một viền vẽ ra ngoài sẽ bị cắt mất ở mép trái. */
+.asidebar__group:focus-visible {
+    outline: 2px solid var(--brand-light);
+    outline-offset: -2px;
+}
+
+/* Chỉ tên nhóm được giãn — cùng lý do đã ghi ở .asidebar__label bên dưới:
+   gọi đúng tên lớp, đừng viết `.asidebar__group span`, nếu không huy hiệu
+   tổng và mũi nhọn cũng bị kéo dài ra. */
+.asidebar__gname { flex: 1; }
+
+/* Mũi nhọn quay 180° khi nhóm mở. Đây là thứ DUY NHẤT cho biết trạng thái
+   đóng/mở khi nhóm rỗng huy hiệu, nên nó không được mờ quá. */
+.asidebar__caret {
+    flex: 0 0 auto;
+    opacity: 0.65;
+    transition: transform 0.2s ease;
+}
+
+.asidebar__grp[open] > .asidebar__group .asidebar__caret { transform: rotate(180deg); }
+
+/* TỔNG HUY HIỆU CỦA NHÓM — chỉ tồn tại khi nhóm ĐANG THU.
+
+   Đây là điều kiện để việc thu nhóm không phải là một đánh đổi: thu lại thì
+   mất mười sáu dòng chữ, nhưng KHÔNG mất hàng chờ. Bốn con số vẫn nằm đúng
+   cột mép phải như khi mở, nên liếc một cái vẫn đếm được hôm nay có mấy việc
+   đang đợi người xử lý.
+
+   Mở ra rồi thì ẩn: lúc đó từng mục đã đeo số của nó, in thêm một tổng ở nhãn
+   nhóm là bắt mắt cộng trừ để hiểu hai con số đang nói cùng một chuyện. */
+.asidebar__gbadge {
+    flex: 0 0 auto;
+    min-width: 17px;
+    padding: 1px 6px;
+    /* --radius-round: xem khối "HUY HIỆU SỐ" trong assets/css/account.css. */
+    border-radius: var(--radius-round);
+    background: var(--a-badge);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    /* Trả lại giãn cách bình thường: 0.18em của nhãn nhóm là để đọc chữ hoa,
+       đeo lên một con số thì nó lệch hẳn sang trái trong viên thuốc. */
+    letter-spacing: 0;
+}
+
+.asidebar__grp[open] .asidebar__gbadge { display: none; }
+
+/* CHẤM "TRANG ĐANG MỞ NẰM TRONG NHÓM NÀY" — và chỉ vẽ khi nhóm ĐANG THU.
+
+   Nhóm chứa trang hiện tại luôn được máy chủ mở sẵn, nhưng người dùng có thể
+   mở một nhóm khác — mà đây là accordion nên nhóm đang đứng sẽ đóng lại. Lúc
+   ấy không còn gì cho biết mình đang ở đâu: mục sáng đỏ đã bị thu vào trong.
+   Một chấm 5px giữ lại đúng thông tin đó.
+
+   Nhóm đang mở thì không vẽ: mục đỏ bên dưới đã nói rồi, thêm chấm là hai dấu
+   hiệu cho một sự thật. */
+.asidebar__grp.is-here:not([open]) > .asidebar__group { color: var(--a-sidebar-mute); }
+
+.asidebar__grp.is-here:not([open]) > .asidebar__group .asidebar__gname::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-right: 7px;
+    vertical-align: 1px;
+    border-radius: 50%;
+    background: var(--brand-light);
+}
+
+/* Danh sách bên trong nhóm: chừa đáy 8px để mục cuối không dính vào đường kẻ
+   ngăn với nhóm kế tiếp. */
+.asidebar__grp > ul { padding: 0 0 8px; }
+
+/* Xổ ra có trượt nhẹ. <details> mở/đóng tức thì theo mặc định, và một danh
+   sách bảy dòng bật ra trong 0 giây thì mắt không kịp thấy nó đến từ đâu —
+   đọc như trang vừa nhảy. 0,18s là đủ để nối, chưa đủ để phải chờ.
+
+   Chỉ hoạt hình lúc MỞ. Lúc đóng thì nội dung bị gỡ khỏi cây ngay, không có
+   cách nào giữ lại để trượt ra mà không cần JavaScript — và một cú đóng gọn
+   thì cũng không ai thấy thiếu. */
+.asidebar__grp[open] > ul { animation: asidebar-xo 0.18s ease both; }
+
+@keyframes asidebar-xo {
+    from { opacity: 0; transform: translateY(-5px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .asidebar__grp[open] > ul { animation: none; }
+    .asidebar__caret { transition: none; }
+}
 
 /* space-between chứ không phải gap: nhãn ở mép trái, huy hiệu số ở mép PHẢI.
    Cả bốn huy hiệu xếp thẳng một cột dọc theo mép phải thanh bên, nên liếc

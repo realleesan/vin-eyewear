@@ -23,6 +23,48 @@
 
     /*
      * ────────────────────────────────────────────────────────────────────
+     * ACCORDION THANH BÊN — VÁ CHO TRÌNH DUYỆT CŨ, KHÔNG PHẢI DỰNG MỚI
+     *
+     * Các nhóm trong thanh bên là <details name="asidebar-nav">. Thuộc tính
+     * `name` là accordion CÓ SẴN của HTML: mở nhóm này thì trình duyệt tự đóng
+     * nhóm kia, không cần một dòng mã nào — và nó hoạt động cả khi tắt
+     * JavaScript, đúng nếp cải tiến dần của dự án.
+     *
+     * Trình duyệt chưa hiểu `name` (Chrome dưới 120, Safari dưới 17.2, Firefox
+     * dưới 130) thì mở được nhiều nhóm cùng lúc. Không hỏng gì cả — chỉ là
+     * thanh bên dài ra như bản trước. Mấy dòng dưới đây làm đúng phần trình
+     * duyệt ấy còn thiếu.
+     *
+     * Kiểm tra bằng 'name' in <details> chứ không dò tên/phiên bản trình
+     * duyệt: đây là câu hỏi "trình duyệt này có làm được việc đó không", và
+     * chuỗi User-Agent thì không trả lời được câu ấy một cách đáng tin.
+     *
+     * Thoát sớm khi trình duyệt đã hỗ trợ — chạy thêm cũng vô hại nhưng thành
+     * hai thứ cùng đóng một nhóm, và lần sau ai đọc sẽ không biết cái nào mới
+     * là thứ đang chạy thật.
+     * ────────────────────────────────────────────────────────────────────
+     */
+    (function () {
+        if ('name' in document.createElement('details')) return;
+
+        var groups = document.querySelectorAll('.asidebar__grp');
+
+        // Array.prototype.forEach.call chứ không groups.forEach: nhánh này chỉ
+        // chạy trên trình duyệt cũ, mà NodeList.forEach cũng là thứ chúng có
+        // thể thiếu.
+        Array.prototype.forEach.call(groups, function (group) {
+            group.addEventListener('toggle', function () {
+                if (!group.open) return;
+
+                Array.prototype.forEach.call(groups, function (other) {
+                    if (other !== group) other.open = false;
+                });
+            });
+        });
+    })();
+
+    /*
+     * ────────────────────────────────────────────────────────────────────
      * BỎ ẢNH VỪA CHỌN NHẦM, TRƯỚC KHI BẤM LƯU
      *
      * ĐÂY LÀ CHỖ DUY NHẤT TRONG KHU QUẢN TRỊ BẮT BUỘC PHẢI CÓ JAVASCRIPT.
