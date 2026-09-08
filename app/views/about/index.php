@@ -73,52 +73,45 @@ partial('_layout/page-head', [
     <section class="about-values" aria-labelledby="about-values-title">
         <div class="about-values__inner">
 
+            <?php
+            /* ─────────────────────────────────────────────────────────────
+               DỰNG THEO KHỐI "Our Core Values" CỦA about.html (Furnish):
+
+                   <section class="py-lg-9 py-5 bg-light">
+                     <div class="container text-center">
+                       <h2 class="mb-5">Our Core Values</h2>
+                       <div class="row g-4">
+                         <div class="col-md-4">
+                           <div class="card rounded-0 border-0 shadow-sm h-100 p-4">
+
+               ĐÃ BỎ LƯỚI SO LE CÓ HAI Ô ẢNH của bản cũ. Nó là bố cục kiểu
+               masonry — mỗi hàng một ô ảnh lệch nhau — và đó đúng là thứ làm
+               trang này không đọc ra là Furnish: bản mẫu xếp các giá trị
+               thành một hàng thẻ ĐỀU NHAU, căn giữa, trên một dải nền xám.
+
+               Hai tấm ảnh bỏ đi không mất chỗ nào khác: cả hai đã có mặt ở
+               khối 01 và khối 03 của chính trang này.
+               ───────────────────────────────────────────────────────────── */
+            ?>
             <div class="about-values__head">
-                <p class="about-eyebrow">02 — Giá trị cốt lõi</p>
-                <p class="about-values__note">Bốn điều định hình cách chúng tôi phục vụ mỗi ngày.</p>
+                <p class="about-eyebrow about-eyebrow--center">02 — Giá trị cốt lõi</p>
+
+                <h2 id="about-values-title" class="about-vlead__title">
+                    Giá trị cốt lõi<br><em>tạo nên một thương hiệu.</em>
+                </h2>
+
+                <p class="about-values__note">
+                    Không phải khẩu hiệu — đây là thước đo chúng tôi dùng cho từng lần tiếp
+                    khách, từng chiếc kính bàn giao.
+                </p>
             </div>
 
-            <?php /* Lưới 4 cột. Thứ tự ô đúng như bản vẽ: ô mở đầu chiếm hai cột,
-                     giá trị 01, rồi hai ô ảnh, rồi ba giá trị còn lại — nên hàng
-                     trên và hàng dưới mỗi hàng có đúng một ô ảnh, lệch nhau. */ ?>
             <ul class="about-values__grid" role="list">
-
-                <li class="about-vlead">
-                    <h2 id="about-values-title" class="about-vlead__title">
-                        Giá trị cốt lõi<br><em>tạo nên một thương hiệu.</em>
-                    </h2>
-                    <p class="about-vlead__desc">
-                        Không phải khẩu hiệu — đây là thước đo chúng tôi dùng cho từng lần tiếp
-                        khách, từng chiếc kính bàn giao.
-                    </p>
-                </li>
-
                 <?php foreach ($values as $i => $value): ?>
                     <li class="about-vcard">
                         <span class="about-vcard__num"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
                         <h3 class="about-vcard__title"><?= e($value) ?></h3>
                     </li>
-
-                    <?php /* Hai ô ảnh chèn ngay sau giá trị đầu tiên: ô ảnh thứ nhất
-                             khép hàng trên, ô thứ hai mở hàng dưới. */ ?>
-                    <?php if ($i === 0): ?>
-                        <li class="about-vfig">
-                            <img
-                                src="<?= asset('assets/images/showroom-frames.jpg') ?>"
-                                alt="Chi tiết gọng kính trưng bày tại showroom"
-                                width="1280" height="960"
-                                loading="lazy" decoding="async"
-                            >
-                        </li>
-                        <li class="about-vfig">
-                            <img
-                                src="<?= asset('assets/images/store-interior.jpg') ?>"
-                                alt="Không gian cửa hàng Vin Eyewear"
-                                width="1200" height="800"
-                                loading="lazy" decoding="async"
-                            >
-                        </li>
-                    <?php endif; ?>
                 <?php endforeach; ?>
             </ul>
         </div>

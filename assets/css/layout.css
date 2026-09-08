@@ -215,25 +215,40 @@
    --fs-body: 15px;
    --fs-body-lg: 16px;
 
-   /* Tầng tiêu đề — co giãn (giá trị ghi chú là cỡ ở 600px → 1440px) */
-   --fs-lead: clamp(15px, calc(14.6px + 0.24vw), 18px);
+   /* ┌─ TẦNG TIÊU ĐỀ — THANG CHỮ CỦA FURNISH ──────────────────────
+       │ Bản mẫu khai thang CỐ ĐỊNH trong _variables.scss:
+       │
+       │     h1 2.5rem (40)   h2 2rem (32)   h3 1.75rem (28)
+       │     h4 1.5rem (24)   h5 1.25rem (20)  h6 1rem (16)
+       │     display-5 3rem (48)   lead 1.25rem (20)
+       │
+       │ Ở đây giữ dạng clamp() nhưng ĐẶT ĐẦU TRÊN ĐÚNG BẰNG con số ấy: trên
+       │ laptop chữ khớp bản mẫu tới từng pixel, còn màn hẹp vẫn co lại được —
+       │ thứ Furnish không cần lo vì nó là trang tĩnh khung 1320px.
+       │
+       │ ĐÃ HẠ TỪ THANG CŨ (h1 tới 48, h2 tới 42, display tới 120). Thang cũ
+       │ to hơn hẳn và đó chính là lý do trang trông "quảng cáo" chứ không
+       │ "biên tập": Furnish lấy sức nặng từ KHOẢNG TRỐNG quanh chữ, không từ
+       │ cỡ chữ.
+       └──────────────────────────────────────────────────────────────── */
+   --fs-lead: clamp(16px, calc(15.1px + 0.24vw), 20px);
+   /* 16 → 20 */
+   --fs-subhead: clamp(16px, calc(15.1px + 0.24vw), 18px);
    /* 16 → 18 */
-   --fs-subhead: clamp(17px, calc(15.1px + 0.48vw), 22px);
-   /* 18 → 22 */
-   --fs-h6: clamp(19px, calc(16.4px + 0.60vw), 25px);
-   /* 20 → 25 */
-   --fs-h5: clamp(20px, calc(17.7px + 0.71vw), 28px);
+   --fs-h6: 16px;
+   /* cố định — Furnish h6 = 1rem */
+   --fs-h5: clamp(18px, calc(17.1px + 0.24vw), 20px);
+   /* 18 → 20 */
+   --fs-h4: clamp(20px, calc(18.1px + 0.48vw), 24px);
+   /* 20 → 24 */
+   --fs-h3: clamp(22px, calc(19.1px + 0.71vw), 28px);
    /* 22 → 28 */
-   --fs-h4: clamp(22px, calc(18.3px + 0.95vw), 32px);
+   --fs-h2: clamp(24px, calc(20.2px + 0.95vw), 32px);
    /* 24 → 32 */
-   --fs-h3: clamp(24px, calc(18.9px + 1.19vw), 36px);
-   /* 26 → 36 */
-   --fs-h2: clamp(26px, calc(18.0px + 1.67vw), 42px);
-   /* 28 → 42 */
-   --fs-h1: clamp(28px, calc(17.1px + 2.14vw), 48px);
-   /* 30 → 48 */
-   --fs-display: clamp(62px, calc(24.0px + 6.67vw), 120px);
-   /* 64 → 120 */
+   --fs-h1: clamp(28px, calc(22.3px + 1.43vw), 40px);
+   /* 28 → 40 */
+   --fs-display: clamp(32px, calc(24.4px + 1.90vw), 48px);
+   /* 32 → 48 — cỡ `display-5` mà mọi trang con của Furnish dùng cho <h1> */
 
    /* ============================================================
        THANG KHOẢNG CÁCH — lưới 4px, dùng cho padding/margin/gap.
@@ -304,11 +319,25 @@
        │ thu dần theo màn, nên điện thoại chỉ nhích thêm vài pixel so với trước
        │ (33px thay vì 29px ở màn 390) và thẻ sản phẩm không bị bóp.
        └──────────────────────────────────────────────────────────────── */
-   --page-edge: clamp(18px, 8.5vw, 128px);
-   --section-pad: clamp(56px, 8vw, 128px);
-   /* đệm TRÊN/DƯỚI mỗi section */
-   --block-gap: clamp(36px, 6vw, 76px);
-   /* giãn cách giữa các khối trong section */
+   /* ┌─ NHỊP DỌC CỦA FURNISH ──────────────────────────────────────
+       │ Bản mẫu dựng nhịp bằng đúng hai lớp trên MỌI section:
+       │
+       │     class="py-lg-8 py-5"    64px trên laptop · 32px trên điện thoại
+       │     class="py-lg-9 py-5"    80px cho dải nền xám nhấn
+       │
+       │ ($spacers của theme: 5 = 2rem, 8 = 4rem, 9 = 5rem, 11 = 8rem.)
+       │
+       │ ĐÃ HẠ TỪ 56–128px. Con số cũ thoáng hơn cả bản mẫu, nghe thì hay
+       │ nhưng nó phá đúng thứ đang cố giữ: nhịp của Furnish là ĐỀU, không
+       │ phải là rộng.
+       └──────────────────────────────────────────────────────────────── */
+   --page-edge: clamp(16px, 4vw, 40px);
+   --section-pad: clamp(32px, 4.4vw, 64px);
+   /* đệm TRÊN/DƯỚI mỗi section — py-5 → py-lg-8 */
+   --section-pad-lg: clamp(40px, 5.5vw, 80px);
+   /* dải nhấn nền xám — py-lg-9 */
+   --block-gap: clamp(32px, 3.5vw, 48px);
+   /* giãn cách giữa các khối trong section — g-5 / mb-5 của bản mẫu */
 
    /* Chiều cao dùng chung cho .site-header, chiều cao link nav và offset của
        .filter-sidebar (trước hardcode rời nhau, lệch nhau). Đổi ở đây là cả 3
@@ -325,7 +354,14 @@
        phải do --gutter mà do cột nội dung bị chặn ở 1280 rồi căn giữa — ở
        1920 riêng khoảng căn giữa đã là 313px mỗi bên, hạ gutter bao nhiêu
        cũng không đụng tới nó. */
-   --container: 1600px;
+   /* BỀ RỘNG CỘT NỘI DUNG — 1320px, đúng `.container` ở mốc xxl của Bootstrap
+       mà mọi trang Furnish dùng.
+
+       ĐÃ HẠ TỪ 1600px. Đây là một trong hai thứ làm site cũ "không ra
+       Furnish" dù màu và chữ đã đúng: cột nội dung rộng 1600 trên màn 1440
+       nghĩa là gần như không còn lề, mà lề rộng chính là chỗ bản mẫu đặt
+       phần lớn cảm giác thoáng của nó. */
+   --container: 1320px;
 
    /* ============================================================
        ĐỘ BO GÓC — ba giá trị cho cả site, không có giá trị thứ tư.

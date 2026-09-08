@@ -58,12 +58,39 @@ if (!$hasTitle && !$hasLead) {
 }
 ?>
 
+<?php
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * DỰNG THEO ĐẦU TRANG CON CỦA FURNISH
+ *
+ * `about.html` và `contact.html` mở đầu bằng ĐÚNG một khối, giống hệt nhau tới
+ * từng lớp:
+ *
+ *     <section class="py-lg-8 py-5 text-center">
+ *       <div class="container"><div class="row justify-content-center">
+ *         <div class="col-lg-6">
+ *           <h1 class="display-5 mb-3">…</h1>
+ *           <p class="text-muted lead">…</p>
+ *
+ * Ba đặc điểm, và cả ba đều là chủ ý:
+ *   · CĂN GIỮA — không phải căn trái như bản cũ
+ *   · CỘT HẸP (6/12) — câu dẫn xuống dòng sớm, tạo hình khối gọn ở giữa trang
+ *   · KHÔNG có nền màu, không viền, không thẻ — chỉ chữ trên nền trắng, tách
+ *     khỏi nội dung bên dưới bằng khoảng trống
+ *
+ * ĐƯỜNG DẪN (breadcrumb) thì Furnish KHÔNG có, vì nó chỉ có năm trang phẳng.
+ * Site này có /san-pham/{slug} và /bo-suu-tap/{slug} nằm sâu hai tầng, nên bỏ
+ * breadcrumb là bỏ một lối quay ra. Giữ lại, và dựng bằng chính ngôn ngữ của
+ * theme: chữ rất nhỏ, IN HOA, màu phụ, nằm CĂN GIỮA phía trên tiêu đề.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+?>
 <section class="<?= $classes ?>">
     <div class="pagehead__inner">
 
         <?php if ($head_crumbs !== []): ?>
-            <nav class="pagehead__crumbs" aria-label="Đường dẫn">
-                <a href="/">Trang chủ</a>
+            <nav class="pagehead__crumbs" aria-label="<?= e(t('co.crumbs')) ?>">
+                <a href="/"><?= e(t('nav.home')) ?></a>
                 <?php foreach ($head_crumbs as $crumb): ?>
                     <span class="pagehead__sep" aria-hidden="true">/</span>
                     <?php if (!empty($crumb['url'])): ?>
@@ -77,13 +104,12 @@ if (!$hasTitle && !$hasLead) {
 
         <?php if ($hasTitle || $hasLead): ?>
             <div class="pagehead__row">
+                <?php if ($hasBadge): ?>
+                    <span class="pagehead__badge"><?= e($head_badge) ?></span>
+                <?php endif; ?>
+
                 <?php if ($hasTitle): ?>
-                    <div class="pagehead__main">
-                        <?php if ($hasBadge): ?>
-                            <span class="pagehead__badge"><?= e($head_badge) ?></span>
-                        <?php endif; ?>
-                        <h1 class="pagehead__title"><?= e($head_title) ?></h1>
-                    </div>
+                    <h1 class="pagehead__title"><?= e($head_title) ?></h1>
                 <?php endif; ?>
 
                 <?php if ($hasLead): ?>

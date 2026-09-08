@@ -141,6 +141,85 @@ $channels = [
      một khung bản đồ rỗng kèm thẻ thông tin trống trông như trang hỏng, mà
      phần form bên dưới thì vẫn dùng được bình thường.
      ============================================================ -->
+<section class="cbottom" id="form">
+    <div class="cbottom__grid">
+
+        <div class="cform">
+            <div class="cform__head">
+                <h2 class="cform__title">Gửi câu hỏi cho chúng tôi</h2>
+                <p class="cform__lead">
+                    Điền thông tin bên dưới, đội ngũ tư vấn sẽ liên hệ lại trong ngày làm việc.
+                </p>
+            </div>
+
+            <?php if ($success !== null): ?>
+                <p class="alert alert--ok" role="status"><?= e($success) ?></p>
+            <?php endif; ?>
+            <?php if ($error !== null): ?>
+                <p class="alert alert--err" role="alert"><?= e($error) ?></p>
+            <?php endif; ?>
+
+            <form class="cform__body" method="post" action="/lien-he/gui">
+                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+
+                <div class="cform__pair">
+                    <label class="cfield">
+                        <span class="cfield__label">Họ và tên *</span>
+                        <input class="cfield__input" type="text" name="full_name" required
+                               minlength="2" maxlength="120" autocomplete="name"
+                               placeholder="Nguyễn Văn A"
+                               value="<?= e($old['fullName'] ?? '') ?>">
+                    </label>
+
+                    <label class="cfield">
+                        <span class="cfield__label">Số điện thoại *</span>
+                        <input class="cfield__input" type="tel" name="phone" required
+                               autocomplete="tel" inputmode="tel"
+                               placeholder="09xx xxx xxx"
+                               value="<?= e($old['phone'] ?? '') ?>">
+                    </label>
+                </div>
+
+                <label class="cfield">
+                    <span class="cfield__label">
+                        Email <em class="cfield__opt">(không bắt buộc)</em>
+                    </span>
+                    <input class="cfield__input" type="email" name="email" autocomplete="email"
+                           placeholder="ban@email.com"
+                           value="<?= e($old['email'] ?? '') ?>">
+                </label>
+
+                <label class="cfield">
+                    <span class="cfield__label">Nội dung *</span>
+                    <textarea class="cfield__input cfield__input--area" name="message" rows="5"
+                              required minlength="5" maxlength="1000"
+                              placeholder="Bạn cần tư vấn về gọng kính, tròng kính hay đặt lịch đo mắt?"><?= e($old['message'] ?? '') ?></textarea>
+                </label>
+
+                <button type="submit" class="cform__submit">Gửi câu hỏi</button>
+            </form>
+        </div>
+
+        <aside class="cquick">
+            <h2 class="cquick__title">Cần hỗ trợ ngay?</h2>
+            <p class="cquick__lead">Chọn kênh bạn thấy tiện nhất, 8:30 – 21:00 mỗi ngày.</p>
+
+            <?php foreach ($channels as $ch): ?>
+                <a class="cchan" href="<?= e($ch['href']) ?>"
+                   <?= $ch['blank'] ? 'target="_blank" rel="noreferrer noopener"' : '' ?>>
+                    <span class="cchan__mark cchan__mark--brand" aria-hidden="true">
+                        <?= brandIcon($ch['brand'], 'cchan__logo cchan__logo--' . $ch['brand'], 34) ?>
+                    </span>
+                    <span class="cchan__text">
+                        <span class="cchan__label"><?= e($ch['label']) ?></span>
+                        <span class="cchan__value"><?= e($ch['value']) ?></span>
+                    </span>
+                </a>
+            <?php endforeach; ?>
+        </aside>
+    </div>
+</section>
+
 <?php if ($selected !== null): ?>
 <section class="cstores">
     <div class="cstores__grid">
@@ -230,81 +309,4 @@ $channels = [
 <!-- ============================================================
      FORM + KÊNH LIÊN HỆ NHANH
      ============================================================ -->
-<section class="cbottom" id="form">
-    <div class="cbottom__grid">
 
-        <div class="cform">
-            <div class="cform__head">
-                <h2 class="cform__title">Gửi câu hỏi cho chúng tôi</h2>
-                <p class="cform__lead">
-                    Điền thông tin bên dưới, đội ngũ tư vấn sẽ liên hệ lại trong ngày làm việc.
-                </p>
-            </div>
-
-            <?php if ($success !== null): ?>
-                <p class="alert alert--ok" role="status"><?= e($success) ?></p>
-            <?php endif; ?>
-            <?php if ($error !== null): ?>
-                <p class="alert alert--err" role="alert"><?= e($error) ?></p>
-            <?php endif; ?>
-
-            <form class="cform__body" method="post" action="/lien-he/gui">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-
-                <div class="cform__pair">
-                    <label class="cfield">
-                        <span class="cfield__label">Họ và tên *</span>
-                        <input class="cfield__input" type="text" name="full_name" required
-                               minlength="2" maxlength="120" autocomplete="name"
-                               placeholder="Nguyễn Văn A"
-                               value="<?= e($old['fullName'] ?? '') ?>">
-                    </label>
-
-                    <label class="cfield">
-                        <span class="cfield__label">Số điện thoại *</span>
-                        <input class="cfield__input" type="tel" name="phone" required
-                               autocomplete="tel" inputmode="tel"
-                               placeholder="09xx xxx xxx"
-                               value="<?= e($old['phone'] ?? '') ?>">
-                    </label>
-                </div>
-
-                <label class="cfield">
-                    <span class="cfield__label">
-                        Email <em class="cfield__opt">(không bắt buộc)</em>
-                    </span>
-                    <input class="cfield__input" type="email" name="email" autocomplete="email"
-                           placeholder="ban@email.com"
-                           value="<?= e($old['email'] ?? '') ?>">
-                </label>
-
-                <label class="cfield">
-                    <span class="cfield__label">Nội dung *</span>
-                    <textarea class="cfield__input cfield__input--area" name="message" rows="5"
-                              required minlength="5" maxlength="1000"
-                              placeholder="Bạn cần tư vấn về gọng kính, tròng kính hay đặt lịch đo mắt?"><?= e($old['message'] ?? '') ?></textarea>
-                </label>
-
-                <button type="submit" class="cform__submit">Gửi câu hỏi</button>
-            </form>
-        </div>
-
-        <aside class="cquick">
-            <h2 class="cquick__title">Cần hỗ trợ ngay?</h2>
-            <p class="cquick__lead">Chọn kênh bạn thấy tiện nhất, 8:30 – 21:00 mỗi ngày.</p>
-
-            <?php foreach ($channels as $ch): ?>
-                <a class="cchan" href="<?= e($ch['href']) ?>"
-                   <?= $ch['blank'] ? 'target="_blank" rel="noreferrer noopener"' : '' ?>>
-                    <span class="cchan__mark cchan__mark--brand" aria-hidden="true">
-                        <?= brandIcon($ch['brand'], 'cchan__logo cchan__logo--' . $ch['brand'], 34) ?>
-                    </span>
-                    <span class="cchan__text">
-                        <span class="cchan__label"><?= e($ch['label']) ?></span>
-                        <span class="cchan__value"><?= e($ch['value']) ?></span>
-                    </span>
-                </a>
-            <?php endforeach; ?>
-        </aside>
-    </div>
-</section>
