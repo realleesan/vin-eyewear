@@ -142,6 +142,57 @@ function docThan(req) {
     });
 }
 
+/**
+ * Thứ vừa nhận về CÓ ĐÚNG LÀ CÂU TRẢ LỜI CỦA SepayController KHÔNG?
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * MÃ TRẠNG THÁI KHÔNG CHỨNG MINH ĐƯỢC GÌ CẢ, VÀ ĐÂY LÀ CHỖ ĐÃ MẤT TIỀN THẬT
+ *
+ * Lớp chống bot của InfinityFree trả HTTP 200 kèm HTML — chính điều đó là lý do
+ * cả thư mục relay/ này tồn tại (xem đầu file). laLoiDo() trong
+ * lib/infinityfree.js chỉ nhận ra được ĐÚNG MỘT kiểu lời đố: trang có cả
+ * `toNumbers(` lẫn `__test=`. Ngày InfinityFree đổi sang kiểu khác — hoặc trả
+ * trang tạm ngưng, trang quá tải, trang bảo trì, một lỗi PHP in ra HTML với mã
+ * 200 — thì:
+ *
+ *     lời đố không được nhận ra  ->  goi() trả về { ma: 200, than: '<html>…' }
+ *     dayVeSite() thấy 200       ->  "xong"
+ *     hangDoi.danhDauGiao()      ->  giao dịch RỜI KHỎI choXuLy() VĨNH VIỄN
+ *     /api/keo không trả nó nữa  ->  website không bao giờ ghi vào sổ
+ *
+ * Kết cục: tiền về tài khoản, nhật ký WebHooks bên SePay xanh, nhật ký Render
+ * xanh, và đơn nằm im ở 'unpaid' cho tới khi có người đọc sao kê. Không một
+ * dòng log nào nói có gì sai — đó là kiểu hỏng đắt nhất.
+ *
+ * Nên bằng chứng "website đã nhận" KHÔNG phải mã trạng thái, mà là việc thân
+ * phản hồi đúng là JSON do SepayController::reply() sinh ra: một object có khoá
+ * `success`. Lớp chống bot không bao giờ trả được thứ đó.
+ *
+ * Không nhận ra thì coi là HỎNG TẠM: giao dịch nằm lại hàng đợi và website tự
+ * KÉO về — đường kéo là chiều website gọi ra ngoài, không tường nào chắn. Thà
+ * đẩy lại một giao dịch đã ghi sổ (UNIQUE sepay_id chặn ở MySQL) còn hơn bỏ rơi
+ * một khoản tiền đã về.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * @return {boolean}
+ */
+function laTraLoiCuaSite(than) {
+    if (typeof than !== 'string' || than.trim() === '') return false;
+
+    let data;
+
+    try {
+        data = JSON.parse(than);
+    } catch (e) {
+        return false;
+    }
+
+    return data !== null
+        && typeof data === 'object'
+        && !Array.isArray(data)
+        && Object.prototype.hasOwnProperty.call(data, 'success');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // ĐẨY MỘT GIAO DỊCH SANG WEBSITE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,6 +208,11 @@ function docThan(req) {
  *   403  website chưa khai khoá                     — cũng là lỗi cấu hình
  *   503  website chưa chạy migration                — lỗi TẠM, giữ lại chờ
  *   5xx  website lỗi thật                           — lỗi TẠM, giữ lại chờ
+ *
+ * NHƯNG CHỈ ĐỌC MÃ ẤY KHI THÂN PHẢN HỒI ĐÚNG LÀ CỦA SepayController. Mã trạng
+ * thái một mình không phân biệt được website với lớp chống bot đứng trước nó —
+ * xem khối chú thích của laTraLoiCuaSite(). Thân không phải JSON thì bất kể mã
+ * là gì, đây KHÔNG phải câu trả lời của website: giữ lại, để đường kéo lo.
  *
  * Phân biệt "hỏng vĩnh viễn" với "hỏng tạm" là điểm mấu chốt: giữ lại một giao
  * dịch mà website sẽ không bao giờ nhận nổi thì hộp thư đầy dần bằng rác, và
@@ -181,6 +237,23 @@ async function dayVeSite(txn) {
 
     const tomTat = (kq.quaTuong ? 'qua lớp chống bot, ' : '')
                  + 'HTTP ' + kq.ma + ' — ' + kq.than.slice(0, 200).replace(/\s+/g, ' ');
+
+    /*
+     * CHƯA TỚI ĐƯỢC PHP THÌ KHÔNG CÓ MÃ NÀO ĐÁNG ĐỌC.
+     *
+     * Kêu to và giữ giao dịch lại. Đây là lối duy nhất trong cả hệ thống mà một
+     * giao dịch có thể biến mất không dấu vết, nên dòng log này in kèm 200 ký tự
+     * đầu của thứ nhận được — ngày lớp chống bot đổi kiểu, đó là manh mối để sửa
+     * laLoiDo()/docLoiDo() trong lib/infinityfree.js.
+     */
+    if (!laTraLoiCuaSite(kq.than)) {
+        nhatKy.loi('WEBSITE TRẢ HTTP ' + kq.ma + ' NHƯNG THÂN KHÔNG PHẢI JSON CỦA '
+            + 'SepayController — request chưa tới được PHP (nhiều khả năng lớp chống '
+            + 'bot của InfinityFree đã đổi kiểu; xem lib/infinityfree.js). Giao dịch '
+            + 'GIỮ LẠI hàng đợi cho website kéo về. Nhận được: ' + tomTat);
+
+        return { xong: false, tam: true, ma: kq.ma, ghiChu: 'không phải JSON của website: ' + tomTat };
+    }
 
     if (kq.ma === 200 || kq.ma === 201) {
         return { xong: true, tam: false, ma: kq.ma, ghiChu: tomTat };
@@ -407,17 +480,31 @@ async function chanDoan(req, res, url) {
             hanGio: cauHinh.hanGioSite,
         });
 
+        /* Cùng một phép thử với dayVeSite: mã trạng thái chỉ có nghĩa khi thân
+           phản hồi đúng là JSON của SepayController. Trước đây mục này đọc mã
+           trần, nên một trang HTML mã 200 của lớp chống bot hiện ra thành
+           "? Website trả HTTP 200" — đúng cái ca cần kêu to nhất lại là dòng mơ
+           hồ nhất. */
+        const tuSite = laTraLoiCuaSite(kq.than);
+
         bao.ban_thu = {
             ma: kq.ma,
             qua_lop_chong_bot: kq.quaTuong || (kq.ma > 0),
+            tra_loi_cua_website: tuSite,
             loi: kq.loi,
             than: kq.than.slice(0, 300),
-            ket_luan: kq.ma === 400
+            ket_luan: kq.ma === 0
+                ? '✗ Không qua được lớp chống bot. Đường đẩy hỏng — đường kéo vẫn chạy.'
+                : !tuSite
+                ? '✗ Nhận HTTP ' + kq.ma + ' nhưng thân KHÔNG phải JSON của SepayController — '
+                  + 'request chưa tới được PHP. Lớp chống bot của InfinityFree nhiều khả năng '
+                  + 'đã đổi kiểu: sửa laLoiDo()/docLoiDo() trong lib/infinityfree.js theo `than` '
+                  + 'ngay dưới. Đường kéo vẫn chạy nên KHÔNG mất giao dịch nào.'
+                : kq.ma === 400
                 ? '✓ Chặng đẩy THÔNG (400 = website nhận được, hiểu được, chỉ chê payload thử).'
                 : kq.ma === 401 ? '✗ Khoá lệch — so khoa_site ở trên với mục 2 của kiem-tra-sepay.php.'
                 : kq.ma === 403 ? '✗ Website chưa khai SEPAY_WEBHOOK_KEY trong .env trên hosting.'
                 : kq.ma === 503 ? '✗ Website chưa chạy migration 2026-08-22-sepay-doi-soat.sql.'
-                : kq.ma === 0   ? '✗ Không qua được lớp chống bot. Đường đẩy hỏng — đường kéo vẫn chạy.'
                 : '? Website trả HTTP ' + kq.ma + ', xem `than`.',
         };
     }
