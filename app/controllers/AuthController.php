@@ -42,33 +42,42 @@ class AuthController extends BaseController
 
     public function index(): void
     {
-        $step = self::signupStep();
+        /* Đã đăng nhập rồi thì không có lý do xem trang này nữa.
 
-        /*
-         * Đã đăng nhập rồi thì không có lý do xem trang này nữa — TRỪ màn
-         * "Đăng ký thành công": signupFinish() tạo tài khoản xong là đăng
-         * nhập luôn, nên nếu chặn ở đây thì màn cuối của luồng đăng ký không
-         * bao giờ hiện ra được, khách bị ném thẳng sang /tai-khoan.
-         */
-        if (AuthMiddleware::check() && $step !== 'xong') {
+           Không còn ngoại lệ nào: luồng đăng ký nay kết thúc bằng một cú
+           chuyển hướng theo BR-UC.USER.01-09 kèm dải toast "Đăng ký tài khoản
+           thành công!", chứ không phải một màn "xong" trên chính trang này. */
+        if (AuthMiddleware::check()) {
             redirect('/tai-khoan');
         }
 
+        $isRegister = ($_GET['tab'] ?? '') === 'dang-ky';
+
         $this->renderView('auth/index', [
-            // Bước đang mở trong luồng đăng ký nhiều chặng ('' = màn nhập số).
-            'step'      => $step,
             'signup'    => self::signupView(),
             // Khung rút gọn: không thanh điều hướng, không chân trang đầy đủ.
             // Xem ghi chú $bare trong app/views/_layout/master.php.
             'bareLayout' => true,
-            'pageTitle' => ($_GET['tab'] ?? '') === 'dang-ky'
+            'pageTitle' => $isRegister
                 ? 'Tạo tài khoản — Vin Eyewear' : 'Đăng nhập — Vin Eyewear',
             'metaDesc'  => 'Đăng nhập hoặc tạo tài khoản Vin Eyewear để theo dõi đơn hàng '
                          . 'và lịch hẹn của bạn.',
-            // Chỉ nhận đường dẫn nội bộ — xem ghi chú trong safeRedirectPath()
-            'redirect'  => $this->loginTarget($_GET['redirect'] ?? null),
-            'tab'       => ($_GET['tab'] ?? '') === 'dang-ky' ? 'dang-ky' : 'dang-nhap',
+            /* Chỉ nhận đường dẫn nội bộ — xem ghi chú trong safeRedirectPath().
+               HAI ĐÍCH MẶC ĐỊNH KHÁC NHAU, đúng BR-UC.USER.01-09: đăng nhập
+               xong về /tai-khoan, còn đăng ký xong về TRANG CHỦ. */
+            'redirect'  => $isRegister
+                ? $this->signupTarget($_GET['redirect'] ?? null)
+                : $this->loginTarget($_GET['redirect'] ?? null),
+            /* Đích ĐANG MANG THEO, chưa áp mặc định nào — chuỗi rỗng nghĩa là
+               khách tự vào đây chứ không bị nghiệp vụ nào đá về. Hai liên kết
+               "Đã có tài khoản? / Đăng ký" dùng nó để giữ đích qua lần đổi
+               tab; không có nó thì khách bị đá về /auth từ giỏ hàng, bấm sang
+               tab đăng ký, và đăng ký xong lạc mất chỗ đang dở. */
+            'redirectRaw' => safeRedirectPath($_GET['redirect'] ?? null, ''),
+            'tab'       => $isRegister ? 'dang-ky' : 'dang-nhap',
             'old'       => $_SESSION['_old_auth'] ?? [],
+            // Lỗi theo từng ô của màn đăng ký — xem signupErrors().
+            'errors'    => $_SESSION['_signup_errors'] ?? [],
             'error'     => flash('auth_error'),
             'success'   => flash('auth_success'),
 
@@ -80,7 +89,9 @@ class AuthController extends BaseController
             'staffGate' => flash('auth_staff_gate') !== null,
         ]);
 
-        unset($_SESSION['_old_auth']);
+        /* Xoá SAU khi vẽ xong, đúng nếp của flash(): hai ô này chỉ sống đúng
+           một lần hiện trang, tải lại là form sạch trở lại. */
+        unset($_SESSION['_old_auth'], $_SESSION['_signup_errors']);
     }
 
     public function login(): void
@@ -163,8 +174,11 @@ class AuthController extends BaseController
      * Luồng vẫn chạy đủ bốn chặng để khi cắm ZNS vào thì không phải sửa gì ở
      * đây; chỗ cắm là đúng một hàm Otp::send().
      *
-     * CÙNG MỘT KHUÔN VỚI LUỒNG ĐĂNG KÝ (xem khối chú thích ở signupPhone):
-     * bước đang mở nằm trên URL (?buoc=), dữ liệu dở dang nằm trong
+     * LUỒNG NÀY VẪN LÀ NHIỀU CHẶNG — và nay là luồng DUY NHẤT như vậy: đăng ký
+     * đã gộp về một màn theo UC-USER-01 (xem khối "ĐĂNG KÝ — MỘT MÀN" bên
+     * dưới). Ở đây thì giữ, vì hai chặng của nó phục vụ hai việc khác hẳn nhau
+     * — chứng minh quyền sở hữu, rồi mới đặt mật khẩu mới.
+     * Bước đang mở nằm trên URL (?buoc=), dữ liệu dở dang nằm trong
      * $_SESSION['_forgot'], mỗi chặng là một POST thật nên tắt JavaScript vẫn
      * chạy và nút Back lùi đúng một chặng. Email/số điện thoại KHÔNG nằm trên
      * URL: nó là dữ liệu cá nhân, mà URL thì đi vào lịch sử duyệt web, vào
@@ -472,150 +486,347 @@ class AuthController extends BaseController
 
     /*
      * ═════════════════════════════════════════════════════════════════════
-     * ĐĂNG KÝ — BỐN CHẶNG, DỰNG THEO "Dang ky.dc.html"
+     * ĐĂNG KÝ — MỘT MÀN, MỘT LƯỢT GỬI (UC-USER-01)
      *
-     *   (không có)   nhập số điện thoại            signupPhone()
-     *   xac-minh     "gửi mã qua Zalo?"            → signupSend()
-     *   phuong-thuc  chọn kênh gửi                 → signupSend()
-     *                (đang ẩn: chỉ còn Zalo — xem Otp::METHODS)
-     *   ma           nhập 6 số                     signupVerify()
-     *   da-dang-ky   số này đã có tài khoản        (ngõ cụt, có lối ra)
-     *   mat-khau     tạo mật khẩu                  signupFinish()
-     *   xong         đăng ký thành công
+     * Bản trước chia luồng thành sáu chặng nối nhau bằng ?buoc=: nhập số →
+     * hỏi kênh gửi → chọn kênh → nhập mã → tạo mật khẩu → xong. Đặc tả
+     * UC-USER-01 chốt lại một màn duy nhất hỏi đủ Họ tên, Số điện thoại,
+     * Email (không bắt buộc), Mật khẩu, Xác nhận mật khẩu và ô tick Điều
+     * khoản/Chính sách; bấm "Đăng ký" là kiểm hết một lượt rồi tạo tài khoản.
      *
-     * Bản trước là MỘT form: họ tên + số điện thoại + mật khẩu, gửi một phát.
-     * Nay số điện thoại phải xác minh trước khi tài khoản ra đời — và bản
-     * thiết kế bỏ hẳn ô họ tên, nên tài khoản mới không còn tên cho tới khi
-     * khách tự điền ở trang tài khoản.
+     *   POST /auth/dang-ky         signupSubmit()    tạo tài khoản
+     *   POST /auth/dang-ky/gui-ma  signupSendCode()  xin mã xác minh
      *
-     * MỖI CHẶNG LÀ MỘT POST THẬT, bước đang mở nằm trên URL (?buoc=), còn dữ
-     * liệu dở dang nằm trong $_SESSION['_signup'] — cùng lối với hộp thoại mua
-     * hàng (xem _layout/buy-modal.php). Nhờ vậy luồng chạy được khi tắt
-     * JavaScript, và nút Back của trình duyệt lùi đúng một chặng.
+     * ─────────────────────────────────────────────────────────────────────
+     * MÃ XÁC MINH Ở LẠI, NHƯNG KHÔNG CÒN LÀ MỘT CHẶNG
+     *
+     * BR-UC.USER.01-02 nói "Không yêu cầu OTP ở Phase 1". Gỡ hẳn khâu xác
+     * minh thì ngày cắm xong Zalo phải dựng lại từ đầu, nên nó ở lại dưới
+     * dạng MỘT HÀNG trong chính form đăng ký — và hàng ấy chỉ hiện khi mã
+     * thật sự gửi được (Otp::bypass() đóng). Chưa cắm Zalo thì form đúng
+     * nguyên văn đặc tả Phase 1: không ô mã, không bước xác minh.
      *
      * SỐ ĐIỆN THOẠI KHÔNG NẰM TRÊN URL: nó là dữ liệu cá nhân, mà URL thì đi
      * vào lịch sử duyệt web, vào Referer gửi sang bên thứ ba, và vào log của
-     * mọi proxy trên đường.
+     * mọi proxy trên đường. Trạng thái mã vì thế nằm trong
+     * $_SESSION['_signup_otp'], chữ đã gõ nằm trong $_SESSION['_old_auth'],
+     * và lỗi từng ô nằm trong $_SESSION['_signup_errors'].
      * ═════════════════════════════════════════════════════════════════════
      */
 
-    /** Trạng thái luồng đăng ký đang dở, hoặc null nếu chưa bắt đầu. */
-    private static function signup(): ?array
+    /**
+     * Đích đến sau khi ĐĂNG KÝ xong — BR-UC.USER.01-09.
+     *
+     * Khác loginTarget(): mặc định là TRANG CHỦ chứ không phải /tai-khoan.
+     * Đặc tả chốt hai ngả — vào đăng ký từ một nghiệp vụ đòi đăng nhập thì
+     * quay lại đúng nghiệp vụ đó (tham số `redirect` do
+     * AuthMiddleware::requireLogin() gắn vào), còn chủ động vào từ menu tài
+     * khoản thì về trang chủ.
+     */
+    private function signupTarget(?string $raw): string
     {
-        $s = $_SESSION['_signup'] ?? null;
+        return safeRedirectPath($raw, '/');
+    }
+
+    /** Yêu cầu này tới từ fetch của auth.js hay từ một cú submit thật? */
+    private static function laFetch(): bool
+    {
+        return ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'fetch';
+    }
+
+    /**
+     * Câu báo lỗi CÓ KÈM MỘT LIÊN KẾT.
+     *
+     * EF-10 đòi câu "Số điện thoại này đã được đăng ký. Vui lòng đăng nhập."
+     * phải đi kèm link Đăng nhập — mà một câu chữ thuần thì khách phải tự tìm
+     * đường về màn đăng nhập. Giá trị trong mảng $errors vì thế được phép là
+     * MỘT MẢNG thay vì một chuỗi; auth/_signup.php biết vẽ cả hai dạng.
+     */
+    private static function loiCoLink(string $message, string $href, string $label): array
+    {
+        return ['msg' => $message, 'href' => $href, 'text' => $label];
+    }
+
+    /** Trạng thái mã xác minh đang chờ, hoặc null nếu chưa xin lần nào. */
+    private static function signupOtp(): ?array
+    {
+        $s = $_SESSION['_signup_otp'] ?? null;
 
         return is_array($s) && ($s['phone'] ?? '') !== '' ? $s : null;
     }
 
-    /**
-     * Bước nào ĐƯỢC PHÉP mở lúc này.
-     *
-     * ?buoc= gõ tay được, nên mỗi bước phải tự chứng minh nó có cơ sở: chưa
-     * nhập số thì không có gì để xác minh, chưa xác minh xong thì không được
-     * nhảy tới màn tạo mật khẩu. Thiếu chốt này thì gõ tay một địa chỉ là bỏ
-     * qua được cả khâu xác minh — tức là đăng ký hộ số của người khác.
-     */
-    private static function signupStep(): string
-    {
-        $step   = (string) ($_GET['buoc'] ?? '');
-        $signup = self::signup();
-
-        if ($step === 'xong') {
-            return !empty($_SESSION['_signup_done']) ? 'xong' : '';
-        }
-
-        if ($signup === null) {
-            return '';
-        }
-
-        return match ($step) {
-            'xac-minh'                => $step,
-            /* Còn đúng một kênh gửi thì màn chọn phương thức không có gì để
-               chọn — đẩy về màn xác minh. Chốt ở đây chứ không chỉ ẩn nút:
-               ?buoc= gõ tay được, và một màn hình rỗng thì trông như hỏng. */
-            'phuong-thuc'             => Otp::hasChoice() ? $step : 'xac-minh',
-            'ma'                      => ($signup['hash'] ?? '') !== '' ? 'ma' : 'xac-minh',
-            'da-dang-ky', 'mat-khau'  => !empty($signup['verified']) ? $step : 'xac-minh',
-            default                   => '',
-        };
-    }
-
-    /** Dữ liệu các màn cần in ra. Không bao giờ trả về mã hay hash. */
+    /** Dữ liệu màn đăng ký cần in ra. Không bao giờ trả về mã hay hash. */
     private static function signupView(): array
     {
-        $signup = self::signup();
-
-        if ($signup === null) {
-            return [];
-        }
+        $otp = self::signupOtp();
 
         return [
-            'phone'   => $signup['phone'],
-            'display' => Otp::displayPhone($signup['phone']),
-            // Chữ khách vừa gõ ở ô họ tên và ô email, giữ lại khi màn tạo
-            // mật khẩu phải hiện lại vì lỗi. Nằm trong session chứ không phải
-            // trên URL — cùng lý do với số điện thoại, xem khối chú thích đầu
-            // mục này.
-            'name'    => $signup['name'] ?? '',
-            'email'   => $signup['email'] ?? '',
-            'method'  => $signup['method'] ?? 'zalo',
-            'sentVia' => Otp::sentVia($signup['method'] ?? 'zalo'),
-            // Còn mấy giây nữa mới được bấm "Gửi lại". 0 = bấm được ngay.
-            'wait'    => max(0, (int) (($signup['resend'] ?? 0) - time())),
-            'exists'  => $signup['exists'] ?? null,
+            // Còn mấy giây nữa mới được bấm "Gửi mã". 0 = bấm được ngay.
+            'wait' => $otp === null ? 0 : max(0, (int) ($otp['resend'] ?? 0) - time()),
+            // Đã xin mã lần nào chưa — quyết câu chữ dưới ô nhập mã.
+            'sent' => $otp !== null && ($otp['hash'] ?? '') !== '',
         ];
-    }
-
-    /** Bước 1: nhận số điện thoại. */
-    public function signupPhone(): void
-    {
-        $this->requirePost('/auth?tab=dang-ky');
-
-        $raw   = trim((string) ($_POST['phone'] ?? ''));
-        $phone = normalizePhone($raw);
-
-        if ($phone === null) {
-            $_SESSION['_old_auth'] = ['phone' => $raw];
-            flash('auth_error', 'Số điện thoại không hợp lệ. Ví dụ đúng: 0912345678.');
-            redirect('/auth?tab=dang-ky');
-        }
-
-        /* Bắt đầu lại từ đầu mỗi lần đổi số: giữ lại mã của số cũ thì khách
-           gõ số mới rồi dán mã cũ vào là xác minh được một số chưa hề nhận
-           tin nào. */
-        $_SESSION['_signup'] = [
-            'phone'    => $phone,
-            'remember' => ($_POST['remember'] ?? '') !== '',
-            'method'   => 'zalo',
-            'hash'     => '',
-            'expires'  => 0,
-            'resend'   => 0,
-            'tries'    => 0,
-            'verified' => false,
-        ];
-        unset($_SESSION['_signup_done']);
-
-        redirect('/auth?tab=dang-ky&buoc=xac-minh');
     }
 
     /**
-     * Sinh mã mới và "gửi" đi — dùng cho cả ba nút: "Gửi qua Zalo", chọn
-     * phương thức khác, và "Gửi lại".
+     * Toàn bộ phép kiểm của Main Flow bước 5 — EF-02 … EF-12.
+     *
+     * Trả về mảng KHOÁ THEO TÊN TRƯỜNG, rỗng nghĩa là hợp lệ. Kiểm HẾT một
+     * lượt chứ không dừng ở lỗi đầu tiên: sáu ô mà mỗi lần gửi chỉ chỉ ra
+     * được một chỗ sai thì khách phải gửi sáu lần mới biết hết.
+     *
+     * ⚠ Hàm này CÓ ghi vào phiên: signupCodeProblem() đếm số lần nhập sai mã.
+     * Đó là chủ ý — đếm ở đâu khác thì hai nơi phải cùng biết một phép kiểm.
      */
-    public function signupSend(): void
+    private static function signupErrors(array $in, string $password, string $confirm): array
     {
-        $this->requirePost('/auth?tab=dang-ky');
+        $loi = [];
 
-        $signup = self::signup();
+        /*
+         * ĐỒNG Ý ĐIỀU KHOẢN ĐỨNG ĐẦU — BR-UC.USER.01-05, EF-12.
+         *
+         * Kiểm ở MÁY CHỦ, không tin `required` của form: tắt JavaScript không
+         * ảnh hưởng gì tới thuộc tính ấy, nhưng gọi thẳng POST /auth/dang-ky
+         * thì bỏ qua được cả form. Mà đây đúng là loại ràng buộc không được
+         * phép chỉ sống ở trình duyệt — cả điểm của nó là ghi nhận một hành vi
+         * có thật của người dùng.
+         */
+        if (empty($in['dong_y'])) {
+            $loi['dong_y'] = 'Vui lòng đồng ý với Điều khoản và Chính sách để đăng ký.';
+        }
 
-        if ($signup === null) {
+        /* HỌ TÊN — BR-UC.USER.01-01, EF-02. Đã trim trước khi vào đây.
+
+           CHỈ KIỂM RỖNG, không đặt mốc độ dài tối thiểu: đặc tả nói đúng hai
+           việc là "bắt buộc" và "tự động trim". Form đặt lịch
+           (BookingController::store) đòi hai ký tự, nhưng luật ấy là của nó,
+           không phải của đây — chép sang là tự thêm một ràng buộc mà người
+           nghiệm thu không biết. Trần 120 bên dưới thì khác: nó khớp
+           maxlength="120" của ô, tức là một giới hạn của giao diện chứ không
+           phải một luật nghiệp vụ mới. */
+        if ($in['full_name'] === '') {
+            $loi['full_name'] = 'Vui lòng nhập họ tên.';
+        } elseif (utf8Length($in['full_name']) > 120) {
+            /* Chặn trên khớp maxlength="120" của ô. Cột profiles.full_name rộng
+               255 nên đây không phải để cứu câu INSERT, mà để một cái tên dài
+               bất thường bị chặn ngay chỗ nó được gõ ra. */
+            $loi['full_name'] = 'Họ tên quá dài (tối đa 120 ký tự).';
+        }
+
+        /* SỐ ĐIỆN THOẠI — BR-UC.USER.01-02 và BR-UC.USER.01-06; EF-03/04/10.
+           normalizePhone() là nơi giữ luật "10 số, đầu 03/05/07/08/09" và cũng
+           là hàm mà UserModel::register() dùng — một luật, một chỗ. */
+        $phone = normalizePhone($in['phone']);
+
+        if ($in['phone'] === '') {
+            $loi['phone'] = 'Vui lòng nhập số điện thoại.';
+        } elseif ($phone === null) {
+            $loi['phone'] = 'Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.';
+        } elseif ((int) Database::fetchValue(
+            'SELECT COUNT(*) FROM profiles WHERE phone = :p',
+            ['p' => $phone]
+        ) > 0) {
+            $loi['phone'] = self::loiCoLink(
+                'Số điện thoại này đã được đăng ký.',
+                '/auth',
+                'Vui lòng đăng nhập.'
+            );
+        }
+
+        /* EMAIL — BR-UC.USER.01-03, EF-05/EF-11. Không bắt buộc: bỏ trống thì
+           không kiểm gì cả. */
+        $email = strtolower($in['email']);
+
+        if ($email !== '') {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $loi['email'] = 'Email không hợp lệ. Vui lòng kiểm tra lại.';
+            } elseif ((int) Database::fetchValue(
+                'SELECT COUNT(*) FROM users WHERE email = :e',
+                ['e' => $email]
+            ) > 0) {
+                $loi['email'] = self::loiCoLink(
+                    'Email này đã được đăng ký. Vui lòng sử dụng Email khác hoặc',
+                    '/auth',
+                    'đăng nhập.'
+                );
+            }
+        }
+
+        /* MẬT KHẨU — BR-UC.USER.01-04, EF-06/EF-07.
+           Bộ quy tắc dùng chung cho mọi màn đặt mật khẩu, xem passwordProblem()
+           trong core/helpers.php. auth.js chấm xanh từng dòng ngay khi gõ,
+           nhưng đó chỉ là tăng cường: tắt JavaScript, hay gọi thẳng địa chỉ
+           này, thì hàm kia là thứ duy nhất còn đứng lại. */
+        if ($password === '') {
+            $loi['password'] = 'Vui lòng nhập mật khẩu.';
+        } elseif (($yeu = passwordProblem($password)) !== null) {
+            $loi['password'] = $yeu;
+        }
+
+        /* XÁC NHẬN MẬT KHẨU — EF-08/EF-09. Câu báo gắn vào ô XÁC NHẬN chứ
+           không phải ô mật khẩu: ô dưới mới là ô khách cần sửa. */
+        if ($confirm === '') {
+            $loi['password_confirm'] = 'Vui lòng xác nhận mật khẩu.';
+        } elseif ($password !== $confirm) {
+            $loi['password_confirm'] = 'Mật khẩu xác nhận không khớp.';
+        }
+
+        /* MÃ XÁC MINH — chỉ khi Zalo đã cắm, và chỉ khi số điện thoại đã qua
+           được các phép kiểm trên (chưa có số hợp lệ thì không có gì để so). */
+        if (!Otp::bypass() && !isset($loi['phone'])) {
+            $maLoi = self::signupCodeProblem((string) $phone, (string) $in['ma']);
+
+            if ($maLoi !== null) {
+                $loi['ma'] = $maLoi;
+            }
+        }
+
+        return $loi;
+    }
+
+    /**
+     * Mã xác minh có đúng không — null nghĩa là đúng.
+     *
+     * Tách riêng vì nó là phép kiểm DUY NHẤT trong nhóm có ghi ngược vào
+     * phiên: mỗi lần sai là một lượt bị trừ, và hết lượt thì huỷ mã luôn chứ
+     * không chỉ báo lỗi — còn mã là còn dò được.
+     */
+    private static function signupCodeProblem(string $phone, string $ma): ?string
+    {
+        $otp = self::signupOtp();
+
+        /* Chưa xin mã, hoặc đã xin cho một SỐ KHÁC. Vế thứ hai mới là vế quan
+           trọng: không có nó thì khách xin mã cho số của mình, đổi sang số
+           người khác rồi dán mã cũ vào là xác minh được một số chưa hề nhận
+           tin nào. */
+        if ($otp === null || ($otp['hash'] ?? '') === '' || $otp['phone'] !== $phone) {
+            return 'Vui lòng bấm "Gửi mã" để nhận mã xác minh cho số này.';
+        }
+
+        if ($ma === '') {
+            return 'Vui lòng nhập mã xác minh.';
+        }
+
+        if (time() > (int) $otp['expires']) {
+            return 'Mã đã hết hạn. Bấm "Gửi mã" để nhận mã mới.';
+        }
+
+        if (Otp::matches($ma, (string) $otp['hash'])) {
+            return null;
+        }
+
+        $otp['tries'] = (int) ($otp['tries'] ?? 0) + 1;
+
+        if ($otp['tries'] >= Otp::MAX_TRIES) {
+            $otp['hash']   = '';
+            $otp['resend'] = 0;
+            $_SESSION['_signup_otp'] = $otp;
+
+            return 'Nhập sai quá nhiều lần. Bấm "Gửi mã" để lấy mã mới.';
+        }
+
+        $_SESSION['_signup_otp'] = $otp;
+
+        return sprintf(
+            'Mã xác minh không đúng. Bạn còn %d lần thử.',
+            Otp::MAX_TRIES - $otp['tries']
+        );
+    }
+
+    /**
+     * Bấm "Gửi mã" bên cạnh ô số điện thoại.
+     *
+     * HAI ĐƯỜNG VỀ CÙNG MỘT CHỖ:
+     *   · có JavaScript — auth.js gọi ngầm và đọc JSON, khách không rời trang;
+     *   · không có     — nút submit thật, máy chủ cất chữ đã gõ vào phiên rồi
+     *                    trả khách về đúng form với dữ liệu còn nguyên.
+     *
+     * Nhận ra đường nào bằng header `X-Requested-With: fetch` — cùng quy ước
+     * với catalog.js/account.js, xem khối "Ba chế độ trả mảnh" trong CLAUDE.md.
+     */
+    public function signupSendCode(): void
+    {
+        /* KHÔNG dùng requirePost() ở đây: nó trả về một cú chuyển hướng HTML,
+           mà đường AJAX chỉ biết đọc JSON — khách sẽ thấy mãi câu "không gửi
+           được mã" thay vì "phiên đã hết hạn, tải lại trang". Hai phép kiểm
+           của nó vẫn nguyên, chỉ đổi cách trả lời. */
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
             redirect('/auth?tab=dang-ky');
         }
 
-        $method = (string) ($_POST['method'] ?? 'zalo');
+        $to  = $this->signupTarget($_POST['redirect'] ?? null);
+        $raw = trim((string) ($_POST['phone'] ?? ''));
 
-        if (!in_array($method, Otp::METHODS, true)) {
-            $method = 'zalo';
+        if (!csrfCheck($_POST['_token'] ?? null)) {
+            $this->signupCodeReply(
+                false,
+                'Phiên làm việc đã hết hạn. Vui lòng tải lại trang rồi thử lại.',
+                0,
+                $to
+            );
+        }
+
+        /* Đã đăng nhập thì không có việc gì ở luồng đăng ký. index() chặn
+           đường GET, nhưng POST thì đi thẳng vào đây. */
+        if (AuthMiddleware::check()) {
+            $this->signupCodeReply(false, 'Bạn đang đăng nhập rồi.', 0, $to);
+        }
+
+        /* KHÔNG XÁC MINH THÌ KHÔNG SINH MÃ.
+           Otp::bypass() đang mở nghĩa là hàng "Mã xác minh" không được vẽ ra,
+           nên địa chỉ này chỉ có thể tới từ một cú gọi thẳng. Sinh mã cho nó
+           là rải một chuỗi số vào error log mỗi lần có người gõ địa chỉ. */
+        if (Otp::bypass()) {
+            $this->signupCodeReply(
+                false,
+                'Bước xác minh số điện thoại hiện không áp dụng. Vui lòng điền form và bấm "Đăng ký".',
+                0,
+                $to
+            );
+        }
+
+        /* Đường KHÔNG JavaScript đi qua một cú tải lại trang, nên mọi chữ đã
+           gõ phải được cất lại — trừ hai ô mật khẩu, không bao giờ cất.
+
+           CHỈ Ở ĐƯỜNG ẤY. Đường AJAX không rời trang, chữ vẫn nằm nguyên
+           trong các ô; cất thêm một bản vào phiên thì bản ấy nằm lại đó và
+           lần sau mở màn ĐĂNG NHẬP là ô "Số điện thoại hoặc email" tự điền
+           sẵn thứ khách gõ ở màn đăng ký. */
+        if (!self::laFetch()) {
+            $_SESSION['_old_auth'] = [
+                'full_name' => trim((string) ($_POST['full_name'] ?? '')),
+                'phone'     => $raw,
+                'email'     => trim((string) ($_POST['email'] ?? '')),
+                'dong_y'    => !empty($_POST['dong_y']),
+            ];
+        }
+
+        $phone = normalizePhone($raw);
+
+        if ($raw === '') {
+            $this->signupCodeReply(false, 'Vui lòng nhập số điện thoại.', 0, $to);
+        }
+
+        if ($phone === null) {
+            $this->signupCodeReply(false, 'Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.', 0, $to);
+        }
+
+        /* Số đã có tài khoản thì dừng ngay tại đây, đừng gửi mã. Mã gửi tới
+           một số không thể đăng ký được là một tin nhắn mất tiền dẫn tới một
+           ngõ cụt — và EF-10 nói đúng câu cần nói. */
+        if ((int) Database::fetchValue(
+            'SELECT COUNT(*) FROM profiles WHERE phone = :p',
+            ['p' => $phone]
+        ) > 0) {
+            /* Câu này đi cả đường JSON (auth.js in ra dạng chữ thuần) nên
+               không kèm link được — ô số điện thoại sẽ tự có link ấy ngay khi
+               khách bấm "Đăng ký". */
+            $this->signupCodeReply(
+                false,
+                'Số điện thoại này đã được đăng ký. Vui lòng đăng nhập.',
+                0,
+                $to
+            );
         }
 
         /* CHƯA HẾT 60 GIÂY THÌ KHÔNG SINH MÃ MỚI.
@@ -623,267 +834,218 @@ class AuthController extends BaseController
            JavaScript, ai cũng gọi thẳng địa chỉ này được. Không có chốt thì
            một vòng lặp là bơm được vô số tin nhắn tới số của người khác — và
            khi đã cắm nhà cung cấp thật thì mỗi tin là tiền. */
-        if (time() < (int) ($signup['resend'] ?? 0)) {
-            redirect('/auth?tab=dang-ky&buoc=ma');
+        /* ⚠ CHỐT THEO PHIÊN, KHÔNG THEO SỐ. Bản đầu so thêm
+           `$otp['phone'] === $phone`, và đó là một cái lỗ: mỗi lần đổi số là
+           một mã mới được sinh ra ngay, nên một vòng lặp A, B, A, B… bơm được
+           vô số tin nhắn qua đúng một phiên — chính thứ mà khối chú thích trên
+           nói là phải chặn. Cái giá của việc bỏ vế ấy: khách gõ nhầm số rồi
+           sửa lại phải chờ hết 60 giây. Đó đúng là ý nghĩa của một chốt tần
+           suất, và câu báo dưới đây nói rõ còn bao lâu. */
+        $otp = self::signupOtp();
+
+        if ($otp !== null && time() < (int) ($otp['resend'] ?? 0)) {
+            $con = (int) ($otp['resend'] ?? 0) - time();
+
+            $this->signupCodeReply(
+                false,
+                sprintf('Vui lòng chờ %d giây rồi bấm "Gửi mã" lại.', $con),
+                $con,
+                $to
+            );
         }
 
         $code = Otp::generate();
 
-        $signup['method']  = $method;
-        $signup['hash']    = Otp::hash($code);
-        $signup['expires'] = time() + Otp::TTL;
-        $signup['resend']  = time() + Otp::RESEND_AFTER;
-        $signup['tries']   = 0;
+        $_SESSION['_signup_otp'] = [
+            'phone'   => $phone,
+            'hash'    => Otp::hash($code),
+            'expires' => time() + Otp::TTL,
+            'resend'  => time() + Otp::RESEND_AFTER,
+            'tries'   => 0,
+        ];
 
-        $_SESSION['_signup'] = $signup;
+        Otp::send($phone, $code, 'zalo');
 
-        Otp::send($signup['phone'], $code, $method);
+        $cau = 'Mã xác minh đã được gửi qua Zalo đến ' . Otp::displayPhone($phone) . '.';
 
-        /* Ở MÁY PHÁT TRIỂN thì hiện thẳng mã lên màn hình, vì chưa có nhà cung
-           cấp nào mang nó tới tay khách — xem khối chú thích đầu core/Otp.php.
-           Chốt theo app.debug: trên production nó chỉ nằm trong error log. */
+        /* Ở MÁY PHÁT TRIỂN thì hiện thẳng mã lên màn hình, vì chưa chắc có nhà
+           cung cấp nào mang nó tới tay khách — xem khối chú thích đầu
+           core/Otp.php. Chốt theo app.debug: trên production nó chỉ nằm trong
+           error log. */
         if (config('app.debug')) {
-            flash('auth_success', 'Mã xác minh (chỉ hiện ở chế độ phát triển): ' . $code);
+            $cau .= ' Mã (chỉ hiện ở chế độ phát triển): ' . $code;
         }
 
-        redirect('/auth?tab=dang-ky&buoc=ma');
+        $this->signupCodeReply(true, $cau, Otp::RESEND_AFTER, $to);
     }
 
-    /** Kiểm mã 6 số. */
-    public function signupVerify(): void
+    /**
+     * Trả lời cho signupSendCode() theo đúng đường mà khách đi tới.
+     *
+     * Không bao giờ trả về: cả hai nhánh đều kết thúc request.
+     */
+    private function signupCodeReply(bool $ok, string $message, int $wait, string $to): never
+    {
+        if (self::laFetch()) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(
+                ['ok' => $ok, 'message' => $message, 'wait' => $wait],
+                JSON_UNESCAPED_UNICODE
+            );
+            exit;
+        }
+
+        if ($ok) {
+            flash('auth_success', $message);
+        } else {
+            // Cùng ô, cùng câu chữ với đường JavaScript: lỗi của thao tác "xin
+            // mã" luôn hiện ngay dưới ô mã xác minh.
+            $_SESSION['_signup_errors'] = ['ma' => $message];
+        }
+
+        redirect($this->signupBack($to));
+    }
+
+    /** Địa chỉ màn đăng ký, giữ nguyên đích đến đang mang theo. */
+    private function signupBack(string $to): string
+    {
+        return '/auth?tab=dang-ky' . ($to !== '/' ? '&redirect=' . rawurlencode($to) : '');
+    }
+
+    /**
+     * Bấm "Đăng ký" — kiểm hết một lượt rồi tạo tài khoản.
+     *
+     * Main Flow bước 5 → 10 của UC-USER-01 nằm gọn trong hàm này.
+     */
+    public function signupSubmit(): void
     {
         $this->requirePost('/auth?tab=dang-ky');
 
-        $signup = self::signup();
-
-        if ($signup === null || ($signup['hash'] ?? '') === '') {
-            redirect('/auth?tab=dang-ky');
+        /* Đã đăng nhập thì không có việc gì ở đây. index() chặn đường GET,
+           nhưng POST thì đi thẳng vào đây — và không chặn thì một khách đang
+           đăng nhập tạo được tài khoản thứ hai rồi bị chuyển sang tài khoản
+           mới ấy ngay trong cùng một cú bấm. */
+        if (AuthMiddleware::check()) {
+            redirect('/tai-khoan');
         }
 
-        // Sáu ô rời thành một chuỗi. Không có JavaScript thì khách gõ từng ô,
-        // có thì auth.js tự nhảy ô — hai đường về cùng một chỗ.
-        $code = preg_replace('/\D+/', '', implode('', (array) ($_POST['ma'] ?? [])));
+        $in = [
+            'full_name' => trim((string) ($_POST['full_name'] ?? '')),
+            'phone'     => trim((string) ($_POST['phone'] ?? '')),
+            'email'     => trim((string) ($_POST['email'] ?? '')),
+            /* is_array(): form CŨ gửi mã bằng sáu ô tên `ma[]`. Một trang cũ
+               còn mở trong tab khác, hay một bookmark, vẫn POST đúng dạng ấy
+               — ép mảng sang chuỗi là một warning trên log production. */
+            'ma'        => preg_replace(
+                '/\D+/',
+                '',
+                is_array($_POST['ma'] ?? null) ? implode('', $_POST['ma']) : (string) ($_POST['ma'] ?? '')
+            ) ?? '',
+            'dong_y'    => !empty($_POST['dong_y']),
+        ];
 
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * ZALO OA CHƯA CẮM: SỐ NÀO CŨNG QUA.
-         *
-         * Chưa khai đủ token và mã mẫu ZNS thì mã sinh ra chỉ nằm trong error
-         * log — khách không có đường nào biết nó, nên nếu vẫn so mã thì luồng
-         * đăng ký đứng hẳn tại đây và không ai thử được các bước sau. Trong
-         * quãng đó, màn này chỉ còn là một cái cửa hình thức: gõ số bất kỳ là
-         * đi tiếp.
-         *
-         * Hạn 120 giây cũng bỏ theo. Giữ lại thì khách vẫn kẹt, chỉ là kẹt vì
-         * một lý do khó hiểu hơn ("mã đã hết hạn" trong khi chưa từng có mã).
-         *
-         * BỎ QUA CHỨ KHÔNG BỎ HẲN MÀN NÀY: luồng vẫn đi đủ nhập số → gửi mã →
-         * nhập mã, nên ngày cắm xong ZNS thì bypass() trả false và mọi thứ ở
-         * đây chạy đúng như đã viết, không phải dựng lại màn nào.
-         *
-         * Ô rỗng vẫn bị chặn — nút "Tiếp theo" bấm nhầm thì không nên tính là
-         * đã xác minh, và dải cảnh báo trên màn hình đã nói rõ gõ gì cũng được.
-         *
-         * ⚠️ Đang mở thì bất kỳ ai cũng đăng ký được bằng số của người khác.
-         * Điều kiện mở nằm ở Otp::bypass() / config/auth.php.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        if (Otp::bypass()) {
-            if ($code === '') {
-                flash('auth_error', 'Vui lòng nhập mã xác minh.');
-                redirect('/auth?tab=dang-ky&buoc=ma');
-            }
-
-            error_log(sprintf(
-                '[Otp] BỎ QUA xác minh khi đăng ký cho %s — Zalo OTP chưa cắm '
-                . '(xem Otp::bypass()).',
-                $signup['phone']
-            ));
-        } elseif (time() > (int) $signup['expires']) {
-            flash('auth_error', 'Mã đã hết hạn. Bấm "Gửi lại" để nhận mã mới.');
-            redirect('/auth?tab=dang-ky&buoc=ma');
-        }
-
-        if (!Otp::bypass() && !Otp::matches((string) $code, (string) $signup['hash'])) {
-            $signup['tries'] = (int) $signup['tries'] + 1;
-
-            // Hết lượt thì huỷ mã luôn, không chỉ báo lỗi: còn mã là còn dò được.
-            if ($signup['tries'] >= Otp::MAX_TRIES) {
-                $signup['hash']   = '';
-                $signup['resend'] = 0;
-                $_SESSION['_signup'] = $signup;
-
-                flash('auth_error', 'Nhập sai quá nhiều lần. Vui lòng lấy mã mới.');
-                redirect('/auth?tab=dang-ky&buoc=xac-minh');
-            }
-
-            $_SESSION['_signup'] = $signup;
-
-            flash('auth_error', sprintf(
-                'Mã không đúng. Bạn còn %d lần thử.',
-                Otp::MAX_TRIES - $signup['tries']
-            ));
-            redirect('/auth?tab=dang-ky&buoc=ma');
-        }
-
-        $signup['verified'] = true;
-        $signup['hash']     = '';
-
-        /*
-         * HỎI "SỐ NÀY CÓ TÀI KHOẢN CHƯA" SAU KHI XÁC MINH, KHÔNG PHẢI TRƯỚC.
-         *
-         * Đúng thứ tự của bản thiết kế, và đó là thứ tự an toàn: hỏi trước thì
-         * bất kỳ ai cũng gõ thử một dãy số để biết số đó có tài khoản ở đây
-         * không — một cách dò danh sách khách hàng mà không cần đăng nhập gì.
-         * Hỏi sau thì chỉ người chứng minh được mình đang giữ số mới biết.
-         */
-        $taken = Database::fetchValue(
-            'SELECT COUNT(*) FROM profiles WHERE phone = :p',
-            ['p' => $signup['phone']]
-        ) > 0;
-
-        $signup['exists'] = $taken;
-        $_SESSION['_signup'] = $signup;
-
-        redirect('/auth?tab=dang-ky&buoc=' . ($taken ? 'da-dang-ky' : 'mat-khau'));
-    }
-
-    /** Bước cuối: tạo mật khẩu, tạo tài khoản, đăng nhập luôn. */
-    public function signupFinish(): void
-    {
-        $this->requirePost('/auth?tab=dang-ky');
-
-        $signup = self::signup();
-
-        if ($signup === null || empty($signup['verified'])) {
-            redirect('/auth?tab=dang-ky');
-        }
-
-        $fullName = trim((string) ($_POST['full_name'] ?? ''));
         $password = (string) ($_POST['password'] ?? '');
         $confirm  = (string) ($_POST['password_confirm'] ?? '');
-        $email    = trim((string) ($_POST['email'] ?? ''));
-        $dongY    = !empty($_POST['dong_y']);
+        $to       = $this->signupTarget($_POST['redirect'] ?? null);
 
-        /* Ô email KHÔNG bắt buộc — xem auth/_signup.php. Giữ lại chữ vừa gõ
-           ngay từ đây, để mọi lối thoát lỗi bên dưới đều hiện lại nó thay vì
-           bắt khách gõ lại địa chỉ.
+        /* Giữ lại mọi chữ đã gõ, kể cả cú tick — quay về vì hai ô mật khẩu
+           lệch nhau mà mất luôn tên, số, email và cú tick là bắt làm lại bốn
+           việc đã làm đúng. HAI Ô MẬT KHẨU THÌ KHÔNG: không cất mật khẩu vào
+           phiên, và ô mật khẩu điền sẵn thì khách không biết mình đang gửi lại
+           chuỗi nào. */
+        $_SESSION['_old_auth'] = [
+            'full_name' => $in['full_name'],
+            'phone'     => $in['phone'],
+            'email'     => $in['email'],
+            'dong_y'    => $in['dong_y'],
+        ];
 
-           Họ tên đi cùng, cùng một lẽ: quay về vì hai ô mật khẩu lệch nhau mà
-           mất luôn cái tên vừa gõ là bắt làm lại một việc đã làm đúng. Hai ô
-           mật khẩu thì KHÔNG giữ lại — không cất mật khẩu vào phiên, và ô mật
-           khẩu điền sẵn thì khách không biết mình đang gửi lại chuỗi nào. */
-        $signup['name']      = $fullName;
-        $signup['email']     = $email;
-        $_SESSION['_signup'] = $signup;
+        $loi = self::signupErrors($in, $password, $confirm);
 
-        /* Ô tick cũng nhớ lại, cùng lẽ với email: quay về vì mật khẩu yếu mà
-           mất luôn cú tick là bắt làm lại một việc đã làm đúng. */
-        $_SESSION['_old_auth'] = ['dongY' => $dongY];
+        if ($loi !== []) {
+            $_SESSION['_signup_errors'] = $loi;
+            redirect($this->signupBack($to));
+        }
 
         /*
-         * ĐỒNG Ý ĐIỀU KHOẢN — kiểm ở MÁY CHỦ, không tin `required` của form.
+         * TỚI ĐÂY DỮ LIỆU ĐÃ HỢP LỆ — bước 6 đến 8 của Main Flow.
          *
-         * Thuộc tính `required` trên ô tick chỉ là lớp thứ nhất: tắt JavaScript
-         * không ảnh hưởng gì tới nó, nhưng gọi thẳng POST /auth/dang-ky/mat-khau
-         * thì bỏ qua được cả form. Mà đây đúng là loại ràng buộc không được
-         * phép chỉ sống ở trình duyệt — cả điểm của nó là ghi nhận một hành vi
-         * có thật của người dùng.
+         * register() tự kiểm lại số điện thoại, email và mật khẩu bằng ĐÚNG
+         * những hàm vừa dùng ở trên (normalizePhone, passwordProblem), rồi
+         * INSERT cả ba bảng trong MỘT giao dịch: hỏng ở đâu cũng không để lại
+         * tài khoản dở dang — đúng yêu cầu của EF-13.
          *
-         * Đứng TRƯỚC mọi phép kiểm khác vì nó rẻ nhất, và vì đây là cái cổng
-         * pháp lý: không có nó thì mọi thứ gõ vào bên trên đều không được phép
-         * đem đi làm gì. (Trên màn hình ô tick lại nằm cuối cùng — thứ tự kiểm
-         * ở đây cố tình không chạy theo thứ tự nhìn thấy.)
+         * Phiên bản văn bản Điều khoản đi cùng và được ghi TRONG CÙNG giao dịch
+         * ấy (BR-UC.USER.01-05): không có đường nào để một tài khoản ra đời mà
+         * thiếu vết đồng ý.
          */
-        if (!$dongY) {
-            flash('auth_error', 'Vui lòng đồng ý với Chính sách bảo mật để tiếp tục.');
-            redirect('/auth?tab=dang-ky&buoc=mat-khau');
-        }
-
-        /* HỌ TÊN BẮT BUỘC — `required` trên ô chỉ là lớp thứ nhất, gọi thẳng
-           POST /auth/dang-ky/mat-khau là bỏ qua được.
-
-           Mốc hai ký tự lấy đúng của form đặt lịch (BookingController::store):
-           tên người Việt ngắn nhất cũng hai chữ cái, còn một ký tự thì gần như
-           chắc chắn là gõ nhầm hoặc gõ cho xong. Đo bằng utf8Length() chứ không
-           strlen(): "Lê" là hai ký tự nhưng ba byte. */
-        if (utf8Length($fullName) < 2) {
-            flash('auth_error', 'Vui lòng nhập họ tên.');
-            redirect('/auth?tab=dang-ky&buoc=mat-khau');
-        }
-
-        /* Chặn trên khớp maxlength="120" của ô. Cột profiles.full_name rộng
-           255 nên đây không phải để cứu câu INSERT, mà để một cái tên dài bất
-           thường bị chặn ngay chỗ nó được gõ ra. */
-        if (utf8Length($fullName) > 120) {
-            flash('auth_error', 'Họ tên quá dài (tối đa 120 ký tự).');
-            redirect('/auth?tab=dang-ky&buoc=mat-khau');
-        }
-
-        /* HAI LẦN NHẬP PHẢI KHỚP — nguyên văn câu của hai màn đặt lại mật khẩu
-           (xem resetVerify/resetSave), vì cùng một tình huống thì không nên có
-           hai cách nói.
-
-           Kiểm TRƯỚC bộ quy tắc bên dưới: gõ lệch tay thì cả hai ô đều sai,
-           mà báo "thiếu chữ hoa" trong khi vấn đề thật là hai ô khác nhau thì
-           khách sửa nhầm chỗ. */
-        if ($password !== $confirm) {
-            flash('auth_error', 'Hai lần nhập mật khẩu không khớp.');
-            redirect('/auth?tab=dang-ky&buoc=mat-khau');
-        }
-
-        /* BỐN QUY TẮC của bản thiết kế, kiểm ở MÁY CHỦ.
-           auth.js chấm xanh từng dòng ngay khi gõ, nhưng đó chỉ là tăng cường:
-           tắt JavaScript, hay gọi thẳng địa chỉ này, thì bốn dòng dưới đây là
-           thứ duy nhất còn đứng lại. */
-        // Bộ quy tắc dùng chung cho mọi màn đặt mật khẩu — xem passwordProblem()
-        // trong core/helpers.php.
-        $failed = passwordProblem($password);
-
-        if ($failed !== null) {
-            flash('auth_error', $failed);
-            redirect('/auth?tab=dang-ky&buoc=mat-khau');
-        }
-
-        /* Email đi vào register() để nó tự kiểm định dạng và tính duy nhất —
-           cùng một bộ luật với luồng Google, không viết lại ở đây.
-
-           Phiên bản văn bản cũng đi cùng, và được ghi TRONG CÙNG giao dịch tạo
-           tài khoản: không có đường nào để một tài khoản ra đời mà thiếu vết
-           đồng ý. Ghi bằng một câu UPDATE riêng sau đó thì câu ấy hỏng là còn
-           lại đúng thứ không được phép tồn tại. */
-        $result = UserModel::register(
-            $signup['phone'],
+        $ket = UserModel::register(
+            (string) normalizePhone($in['phone']),
             $password,
-            $fullName,
-            $email,
+            $in['full_name'],
+            $in['email'],
             (string) config('auth.consent.version', '')
         );
 
-        if (!$result['ok']) {
-            flash('auth_error', $result['error']);
-            redirect('/auth?tab=dang-ky&buoc=mat-khau');
+        if (!$ket['ok']) {
+            /* Lọt tới đây nghĩa là có gì đó đổi GIỮA lúc kiểm và lúc ghi —
+               hai người cùng đăng ký một số trong cùng một giây, hoặc CSDL
+               trục trặc. Câu của register() vẫn là câu chính xác nhất mô tả
+               việc vừa hỏng, nên dùng lại nguyên văn; nó không thuộc ô nào cụ
+               thể nên đi vào dải báo chung, đúng chỗ EF-13 chỉ định. */
+            flash('auth_error', $ket['error']);
+            redirect($this->signupBack($to));
         }
 
-        $remember = !empty($signup['remember']);
+        unset(
+            $_SESSION['_old_auth'],
+            $_SESSION['_signup_errors'],
+            $_SESSION['_signup_otp']
+        );
 
-        unset($_SESSION['_signup'], $_SESSION['_old_auth']);
-        $_SESSION['_signup_done'] = true;
+        /* Bước 8 — BR-UC.USER.01-08: đăng ký xong đăng nhập luôn, bắt khách
+           nhập lại ngay thông tin vừa gõ là thêm một bước không cần thiết. */
+        AuthMiddleware::login($ket['id']);
 
-        // Đăng ký xong đăng nhập luôn — bắt khách nhập lại ngay thông tin
-        // vừa gõ là thêm một bước không cần thiết.
-        AuthMiddleware::login($result['id'], $remember);
+        /* Bước 9 và 10 — câu báo là một dải toast của khung trang khách nên nó
+           đi theo khách tới bất kỳ đích nào của BR-UC.USER.01-09. Khoá
+           'site_success' là khoá TRUNG TÍNH, đọc được ở mọi trang; khoá
+           'account_success' chỉ hiện trong khu /tai-khoan, mà đích mặc định
+           nay là trang chủ — xem BaseController::toastFromFlash(). */
+        flash('site_success', 'Đăng ký tài khoản thành công!');
 
-        redirect('/auth?tab=dang-ky&buoc=xong');
+        redirect($to);
     }
 
     /**
      * Bấm "Tiếp tục với Google" — đẩy khách sang Google.
      *
-     * GET chứ không phải POST, cùng lý do đã ghi ở LangController: đây là một
-     * thẻ <a> phải chạy được khi không có JavaScript, và bản thân nó chưa đổi
-     * gì cả. Thứ chống giả mạo ở luồng này là tham số `state` — chuỗi ngẫu
-     * nhiên lưu trong session và Google trả lại nguyên văn ở bước sau.
+     * ─────────────────────────────────────────────────────────────────────
+     * MỘT ĐỊA CHỈ, HAI PHƯƠNG THỨC — VÀ CHÚNG KHÁC NHAU Ở ĐÚNG MỘT THỨ
+     *
+     *   GET   từ màn ĐĂNG NHẬP. Một thẻ <a> phải chạy được khi không có
+     *         JavaScript, và bản thân bước này chưa đổi gì cả.
+     *
+     *   POST  từ màn ĐĂNG KÝ. Nút ở đó là nút submit của chính form đăng ký
+     *         (form="signupform"), nên cú bấm mang theo ô tick Điều khoản —
+     *         BR-UC.USER.01-05 bắt cả hai phương thức đăng ký đều phải tick.
+     *         Không tick thì dừng ngay tại đây, chưa đi Google lần nào.
+     *
+     * Cờ $_SESSION['_google_consent'] là thứ phân biệt hai đường ở bước sau:
+     * googleCallback() chỉ được phép TẠO tài khoản mới khi cờ này bật. Nhờ nó,
+     * người bấm Google ở màn đăng nhập vẫn đăng nhập được vào tài khoản có
+     * sẵn (AF-01) mà không mở được một lối tạo tài khoản không qua ô tick.
+     *
+     * CỜ ẤY GIỮ CHÍNH CHUỖI `state` CỦA LƯỢT NÀY, không phải một giá trị
+     * true/false. Mở hai tab — tab đăng ký tick rồi bấm, sau đó tab đăng nhập
+     * bấm — thì tab sau ghi đè `_google_state`, nên callback của tab sau hợp
+     * lệ; một cờ true/false sẽ theo nó vào và tạo tài khoản cho một lượt chưa
+     * hề đi qua ô tick nào. So `state` thì cú tick chỉ dùng được cho đúng lượt
+     * sinh ra nó.
+     *
+     * Thứ chống giả mạo của bản thân luồng OAuth là tham số `state` — chuỗi
+     * ngẫu nhiên lưu trong session và Google trả lại nguyên văn ở bước sau.
+     * ─────────────────────────────────────────────────────────────────────
      */
     public function googleStart(): void
     {
@@ -891,6 +1053,47 @@ class AuthController extends BaseController
             flash('auth_error', 'Đăng nhập bằng Google chưa được cấu hình.');
             redirect('/auth');
         }
+
+        $laDangKy = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
+
+        if ($laDangKy) {
+            $ve = $this->signupTarget($_POST['redirect'] ?? null);
+
+            if (!csrfCheck($_POST['_token'] ?? null)) {
+                flash('auth_error', 'Phiên làm việc đã hết hạn, vui lòng thử lại.');
+                redirect($this->signupBack($ve));
+            }
+
+            /* Nhớ lại chữ đã gõ: khách điền dở form rồi đổi ý bấm Google, bị
+               chặn vì chưa tick, thì quay về phải thấy nguyên những gì mình
+               vừa gõ. */
+            $_SESSION['_old_auth'] = [
+                'full_name' => trim((string) ($_POST['full_name'] ?? '')),
+                'phone'     => trim((string) ($_POST['phone'] ?? '')),
+                'email'     => trim((string) ($_POST['email'] ?? '')),
+                'dong_y'    => !empty($_POST['dong_y']),
+            ];
+
+            /* EF-12, và đây là lớp DUY NHẤT còn lại cho nút này: nút mang
+               formnovalidate (nó không cần họ tên hay mật khẩu), nên trình
+               duyệt không kiểm cả ô tick giùm nữa. */
+            if (empty($_POST['dong_y'])) {
+                $_SESSION['_signup_errors'] = [
+                    'dong_y' => 'Vui lòng đồng ý với Điều khoản và Chính sách để đăng ký.',
+                ];
+                redirect($this->signupBack($ve));
+            }
+        } else {
+            /* Vào bằng đường đăng nhập thì KHÔNG mang cờ đồng ý. Xoá hẳn chứ
+               không để nguyên: cờ sót lại từ một lượt bấm trước là một cú
+               tick đã dùng rồi được đem dùng lại cho một tài khoản khác. */
+            unset($_SESSION['_google_consent']);
+        }
+
+        /* Nhớ khách xuất phát từ tab nào, để mọi lối thoát lỗi ở bước sau trả
+           họ về đúng màn ấy — mục Giao diện của đặc tả nói lỗi Google phải
+           hiện "trên màn hình đăng ký". */
+        $_SESSION['_google_tab'] = $laDangKy ? 'dang-ky' : 'dang-nhap';
 
         /* Đã đăng nhập rồi thì không có việc gì ở đây.
            Chỉ hỏi customerId(): đây là luồng của khu khách, và phiên quản trị
@@ -902,10 +1105,22 @@ class AuthController extends BaseController
             redirect('/tai-khoan');
         }
 
-        $after = safeRedirectPath($_GET['redirect'] ?? null, '/tai-khoan');
+        /* Đích sau khi xong — BR-UC.USER.01-09. Vào từ màn đăng ký thì mặc
+           định là trang chủ, vào từ màn đăng nhập thì /tai-khoan; có tham số
+           `redirect` (do requireLogin() gắn) thì cả hai đều quay lại đúng
+           nghiệp vụ đang dở. */
+        $after = $laDangKy
+            ? $this->signupTarget($_POST['redirect'] ?? null)
+            : $this->loginTarget($_GET['redirect'] ?? null);
+
+        $state = bin2hex(random_bytes(16));
+
+        if ($laDangKy) {
+            $_SESSION['_google_consent'] = $state;
+        }
 
         // redirect() chỉ đặt header Location nên nhận cả địa chỉ tuyệt đối.
-        redirect(GoogleAuth::authUrl(bin2hex(random_bytes(16)), $after));
+        redirect(GoogleAuth::authUrl($state, $after));
     }
 
     /**
@@ -920,10 +1135,24 @@ class AuthController extends BaseController
         $after = safeRedirectPath($_SESSION['_google_after'] ?? null, '/tai-khoan');
         unset($_SESSION['_google_after']);
 
+        /* Cờ đồng ý CHỈ DÙNG ĐƯỢC MỘT LẦN, VÀ CHỈ CHO ĐÚNG LƯỢT SINH RA NÓ —
+           đọc ra rồi xoá ngay, trước cả những nhánh thoát bên dưới. Để nó sống
+           qua một lượt hỏng là cú tick của lượt này được đem dùng cho lượt
+           sau, có khi là một tài khoản Google khác. Xem googleStart(). */
+        $choPhep = (string) ($_SESSION['_google_consent'] ?? '');
+        $tuDangKy = ($_SESSION['_google_tab'] ?? '') === 'dang-ky';
+        unset($_SESSION['_google_consent'], $_SESSION['_google_tab']);
+
+        /* Màn để trả khách về khi có lỗi — mục Giao diện: lỗi Google hiện
+           trên chính màn khách vừa đứng. */
+        $veAuth = $tuDangKy ? '/auth?tab=dang-ky' : '/auth';
+
+        $daDongY = $choPhep !== '' && hash_equals($choPhep, (string) ($_GET['state'] ?? ''));
+
         /* Khách bấm "Huỷ" ở màn hình của Google. Không phải lỗi — im lặng đưa
            họ về trang đăng nhập, đừng doạ bằng một dòng đỏ. */
         if (isset($_GET['error'])) {
-            redirect('/auth');
+            redirect($veAuth);
         }
 
         $token = GoogleAuth::exchange(
@@ -931,9 +1160,12 @@ class AuthController extends BaseController
             (string) ($_GET['state'] ?? '')
         );
 
+        /* EF-01 — Google xác thực thất bại, hoặc kết quả trả về không hợp lệ.
+           Không tài khoản nào được tạo; khách thử lại hoặc đăng ký bằng SĐT. */
         if (!$token['ok']) {
-            flash('auth_error', $token['error']);
-            redirect('/auth');
+            flash('auth_error', 'Không thể xác thực tài khoản Google. Vui lòng thử lại.');
+            error_log('[Google] Xác thực thất bại: ' . $token['error']);
+            redirect($veAuth);
         }
 
         /*
@@ -943,15 +1175,12 @@ class AuthController extends BaseController
          * SRS mục 3.A đã chốt: "Đăng nhập bằng Google — Không áp dụng cho tài
          * khoản nội bộ ở Giai đoạn 1". Cổng /quan-tri/dang-nhap vì thế không
          * vẽ nút Google. Nhưng không có mấy dòng này thì cửa đó vẫn mở, chỉ là
-         * mở ở phía bên kia: nhánh 2 của findOrCreateGoogle() khớp người theo
-         * EMAIL ĐÃ XÁC MINH, nên một tài khoản Google mang địa chỉ
+         * mở ở phía bên kia: findOrCreateGoogle() từng khớp người theo EMAIL
+         * ĐÃ XÁC MINH, nên một tài khoản Google mang địa chỉ
          * admin@vineyewear.vn là nối thẳng vào tài khoản quản trị — không cần
-         * biết mật khẩu.
-         *
-         * CHẶN TRƯỚC KHI GỌI, không phải sau. findOrCreateGoogle() GHI: nó
-         * UPDATE google_id vào dòng users nó tìm được. Kiểm sau thì tài khoản
-         * nội bộ đã bị gắn vĩnh viễn với một tài khoản Google bên ngoài, dù
-         * lượt đăng nhập này vẫn bị từ chối.
+         * biết mật khẩu. Nhánh khớp theo email nay đã gỡ (AF-03), nhưng chốt
+         * này vẫn phải ở lại: nó chặn cả việc TẠO MỚI một tài khoản khách
+         * mang email nội bộ.
          * ─────────────────────────────────────────────────────────────────
          */
         if (UserModel::isStaffEmail($token['email'])) {
@@ -963,17 +1192,34 @@ class AuthController extends BaseController
             $token['sub'],
             $token['email'],
             $token['name'],
-            (bool) $token['verified']
+            (bool) $token['verified'],
+            // Chỉ được TẠO tài khoản mới khi lượt này đi qua ô tick đồng ý —
+            // BR-UC.USER.01-05. Xem googleStart().
+            $daDongY
         );
 
+        /*
+         * BA NGẢ HỎNG, BA CÁCH NÓI KHÁC NHAU.
+         *
+         *   email_taken   AF-03: email của Google đã thuộc một tài khoản khác.
+         *                 Không tạo mới, không tự liên kết — đưa khách về màn
+         *                 ĐĂNG NHẬP, vì đó mới là chỗ họ cần tới.
+         *   need_consent  Bấm Google từ màn đăng nhập nhưng chưa có tài khoản
+         *                 nào. Đẩy sang màn ĐĂNG KÝ để tick rồi bấm lại.
+         *   còn lại       Lỗi hệ thống — EF-13.
+         */
         if (!$result['ok']) {
             flash('auth_error', $result['error']);
-            redirect('/auth');
+
+            /* need_consent luôn về màn ĐĂNG KÝ (đó là nơi có ô tick), còn hai
+               ngả kia về đúng màn khách vừa đứng. */
+            redirect(($result['code'] ?? '') === 'need_consent' ? '/auth?tab=dang-ky' : $veAuth);
         }
 
-        /* Lưới thứ hai, cho nhánh 1 của findOrCreateGoogle(): một google_id
-           đã nối sẵn vào tài khoản nội bộ từ trước khi hai khu vực bị tách
-           thì lượt vào không đi qua email, nên chốt bên trên không thấy nó. */
+        /* Lưới thứ hai, cho nhánh "đã liên kết" của findOrCreateGoogle(): một
+           google_id đã nối sẵn vào tài khoản nội bộ từ trước khi hai khu vực
+           bị tách thì lượt vào không đi qua email, nên chốt bên trên không
+           thấy nó. */
         if (UserModel::isStaff($result['id'])) {
             flash('auth_staff_gate', '1');
             redirect('/auth');
@@ -981,9 +1227,12 @@ class AuthController extends BaseController
 
         AuthMiddleware::login($result['id']);
 
-        flash('account_success', $result['created']
-            ? 'Tạo tài khoản thành công. Chào mừng bạn đến với Vin Eyewear!'
-            : 'Đăng nhập thành công.');
+        /* Câu chữ đúng của AF-01 và AF-02, và khoá TRUNG TÍNH 'site_success'
+           để dải toast hiện được ở mọi đích của BR-UC.USER.01-09 — kể cả
+           trang chủ, nơi không có dải báo riêng của khu tài khoản. */
+        flash('site_success', $result['created']
+            ? 'Đăng ký tài khoản thành công!'
+            : 'Đăng nhập thành công!');
 
         redirect($after);
     }

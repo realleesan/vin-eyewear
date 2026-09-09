@@ -85,12 +85,12 @@ class UserModel extends BaseModel
         $email = strtolower(trim($email));
 
         if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return ['ok' => false, 'error' => 'Email không hợp lệ.'];
+            return ['ok' => false, 'error' => 'Email không hợp lệ. Vui lòng kiểm tra lại.'];
         }
 
         /* CHỐT TẦNG MODEL, dùng ĐÚNG hàm kiểm mà controller dùng.
 
-           AuthController::signupFinish() đã gọi passwordProblem() trước khi
+           AuthController::signupSubmit() đã gọi passwordProblem() trước khi
            tới đây, nên trước mắt không lộ ra gì. Nhưng đây là chốt SÂU NHẤT —
            chốt mà đường đặt mật khẩu thứ tư thêm sau này sẽ dựa vào — và để nó
            yếu hơn tầng trên thì hai tầng nói hai luật khác nhau: chỗ này nhận
@@ -103,7 +103,8 @@ class UserModel extends BaseModel
         }
 
         if ($email !== '' && static::exists(['email' => $email])) {
-            return ['ok' => false, 'error' => 'Email này đã được đăng ký.'];
+            return ['ok' => false, 'error' =>
+                'Email này đã được đăng ký. Vui lòng sử dụng Email khác hoặc đăng nhập.'];
         }
 
         if (trim($phone) === '') {
@@ -121,12 +122,13 @@ class UserModel extends BaseModel
 
             if ($normalized === null) {
                 return ['ok' => false, 'error' =>
-                    'Số điện thoại không hợp lệ. Ví dụ đúng: 0912345678 hoặc +84912345678.'];
+                    'Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.'];
             }
 
             if (Database::fetchValue('SELECT COUNT(*) FROM profiles WHERE phone = :p',
                                      ['p' => $normalized]) > 0) {
-                return ['ok' => false, 'error' => 'Số điện thoại này đã được đăng ký.'];
+                return ['ok' => false, 'error' =>
+                    'Số điện thoại này đã được đăng ký. Vui lòng đăng nhập.'];
             }
 
             $phone = $normalized;
@@ -167,7 +169,7 @@ class UserModel extends BaseModel
                     'INSERT INTO profiles (id, full_name, phone) VALUES (:id, :name, :phone)',
                     /* Tên rỗng thành NULL chứ không phải chuỗi rỗng: một ô
                        trống thì nên nói là "chưa có" thay vì "có, và nó rỗng".
-                       Form đăng ký nay BẮT BUỘC họ tên (xem signupFinish), nên
+                       Form đăng ký nay BẮT BUỘC họ tên (xem signupErrors), nên
                        nhánh rỗng chỉ còn dành cho những nơi gọi register()
                        không đi qua form — test, hoặc một luồng nội bộ. */
                     ['id' => $userId, 'name' => $fullName !== '' ? $fullName : null,
@@ -184,7 +186,10 @@ class UserModel extends BaseModel
         } catch (Throwable $e) {
             error_log('[UserModel] Không tạo được tài khoản: ' . $e->getMessage());
 
-            return ['ok' => false, 'error' => 'Không tạo được tài khoản, vui lòng thử lại.'];
+            /* EF-13 — giao dịch đã tự lùi lại, không còn dòng dở dang nào.
+               Câu chữ là nguyên văn đặc tả: khách không cần biết hỏng ở đâu,
+               chi tiết nằm trong error log cho người sửa. */
+            return ['ok' => false, 'error' => 'Có lỗi xảy ra. Vui lòng thử lại sau.'];
         }
 
         return ['ok' => true, 'id' => $userId];
@@ -194,28 +199,50 @@ class UserModel extends BaseModel
      * Tìm hoặc tạo tài khoản từ thông tin Google đã xác minh.
      *
      * ─────────────────────────────────────────────────────────────────────
-     * BA NHÁNH, THEO ĐÚNG THỨ TỰ NÀY
+     * BA NHÁNH — ĐÚNG AF-01, AF-02, AF-03 CỦA UC-USER-01
      *
-     *   1. Đã có `google_id` này  -> chính chủ, đăng nhập.
-     *   2. Chưa có, nhưng email TRÙNG một tài khoản mật khẩu sẵn có
-     *                             -> NỐI Google vào tài khoản đó.
-     *   3. Không khớp gì          -> tạo tài khoản mới.
+     *   1. Đã có `google_id` này        -> chính chủ, đăng nhập, KHÔNG tạo mới.
+     *   2. Chưa có + email chưa tồn tại -> tạo tài khoản mới và liên kết.
+     *   3. Chưa có + email ĐÃ tồn tại   -> DỪNG. Không tạo mới, không liên kết.
      *
-     * Nhánh 2 chỉ chạy khi Google báo email ĐÃ XÁC MINH. Tài khoản Google
-     * Workspace do doanh nghiệp tự quản có thể khai một email bất kỳ mà chưa
-     * chứng minh sở hữu; tin theo là ai đó tạo tài khoản Workspace mang email
-     * của khách rồi nối thẳng vào tài khoản người ta.
+     * ─────────────────────────────────────────────────────────────────────
+     * NHÁNH 3 TRƯỚC ĐÂY TỰ ĐỘNG NỐI GOOGLE VÀO TÀI KHOẢN TRÙNG EMAIL — ĐÃ GỠ
      *
-     * Tài khoản tạo ở nhánh 3 KHÔNG có số điện thoại và có mật khẩu ngẫu
+     * BR-UC.USER.01-07 chốt: "Google User ID là khoá xác định liên kết với Vin
+     * Eyewear (không dùng Email để xác định liên kết)", và AF-03 nói thẳng
+     * "KHÔNG tự động liên kết Google với tài khoản đã tồn tại".
+     *
+     * Lý do không chỉ là chữ nghĩa: nối tự động là MỞ THÊM MỘT CHÌA cho một
+     * cánh cửa đang khoá, dựa trên một lời khai của bên thứ ba. Google báo
+     * "email này đã xác minh" là đủ tin để tạo tài khoản MỚI mang email ấy,
+     * nhưng không đủ để trao quyền vào một tài khoản đã có sẵn đơn hàng, hồ sơ
+     * đo mắt và địa chỉ giao hàng của người khác.
+     *
+     * Đường liên kết đúng vì thế đi ngược lại: khách đăng nhập bằng SĐT/mật
+     * khẩu — tức là chứng minh mình là chủ tài khoản — rồi mới nối Google vào.
+     * ⚠ CHỖ NỐI ẤY CHƯA CÓ trong trang Hồ sơ; câu báo dưới đây hứa một việc mà
+     * hiện khách chưa tự làm được, và đó là việc còn thiếu của Phase 1.
+     *
+     * Tài khoản tạo ở nhánh 2 KHÔNG có số điện thoại và có mật khẩu ngẫu
      * nhiên không ai biết: khách đăng nhập bằng Google, không bằng mật khẩu.
      * Cột password_hash NOT NULL nên vẫn phải điền một giá trị — điền chuỗi
      * ngẫu nhiên 32 byte, chứ để rỗng thì một ngày nào đó có người so sánh
      * hash rỗng và mở cửa cho cả thiên hạ.
      *
-     * @return array{ok:bool, error?:string, id?:string, created?:bool}
+     * $allowCreate = false thì nhánh 2 KHÔNG chạy, chỉ báo về 'need_consent'.
+     * Đó là cách BR-UC.USER.01-05 được giữ: ô tick Điều khoản nằm ở màn đăng
+     * ký, nên một cú bấm Google không đi qua ô tick ấy chỉ được phép ĐĂNG NHẬP
+     * vào tài khoản có sẵn, không được phép tạo tài khoản mới.
+     *
+     * @return array{ok:bool, error?:string, code?:string, id?:string, created?:bool}
      */
-    public static function findOrCreateGoogle(string $sub, ?string $email, ?string $name, bool $emailVerified): array
-    {
+    public static function findOrCreateGoogle(
+        string $sub,
+        ?string $email,
+        ?string $name,
+        bool $emailVerified,
+        bool $allowCreate = true
+    ): array {
         $existing = Database::fetchOne('SELECT id FROM users WHERE google_id = :g', ['g' => $sub]);
 
         if ($existing !== null) {
@@ -236,58 +263,51 @@ class UserModel extends BaseModel
 
         $email = $email !== null ? strtolower(trim($email)) : null;
 
-        if ($email !== null && $email !== '' && $emailVerified) {
-            $byEmail = Database::fetchOne('SELECT id, google_id FROM users WHERE email = :e', ['e' => $email]);
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * AF-03 — EMAIL ĐÃ THUỘC MỘT TÀI KHOẢN KHÁC: DỪNG HẲN.
+         *
+         * Không phân biệt email đã xác minh hay chưa, vì kết luận giống nhau ở
+         * cả hai: tài khoản này không được tạo, và Google không được nối vào
+         * tài khoản kia. Bản trước chia hai ngả — xác minh thì nối tự động,
+         * chưa xác minh thì bỏ email đi rồi vẫn tạo tài khoản — và cả hai ngả
+         * đều lệch đặc tả.
+         *
+         * "Bỏ email đi rồi vẫn tạo" đặc biệt tệ: khách bấm Google, thấy đăng
+         * ký thành công, và có một tài khoản thứ hai không email, không số
+         * điện thoại, không dính gì tới tài khoản cũ của họ. Lần sau bấm
+         * Google lại vào đúng tài khoản rỗng ấy và không hiểu đơn hàng cũ đi
+         * đâu mất.
+         *
+         * Câu báo dưới đây là nguyên văn AF-03 bước 4.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if ($email !== null && $email !== '') {
+            $byEmail = Database::fetchOne(
+                'SELECT id, google_id FROM users WHERE email = :e',
+                ['e' => $email]
+            );
 
             if ($byEmail !== null) {
-                // Email này đã gắn với MỘT tài khoản Google KHÁC -> dừng.
-                // Trường hợp hiếm nhưng có thật khi doanh nghiệp đổi tên miền;
-                // ghi đè là đá tài khoản Google cũ ra khỏi chính tài khoản đó.
-                if (($byEmail['google_id'] ?? null) !== null) {
-                    return ['ok' => false, 'error' => 'Email này đã liên kết với một tài khoản Google khác.'];
-                }
-
-                // Cùng lý do với nhánh trên — và ở đây còn quan trọng hơn:
-                // nhánh này NỐI một tài khoản Google vào một tài khoản mật khẩu
-                // sẵn có, tức là mở thêm một chìa cho một cánh cửa đang khoá.
-                $chan = self::chanNeuKhongVaoDuoc($byEmail['id']);
-
-                if ($chan !== null) {
-                    return $chan;
-                }
-
-                Database::execute(
-                    'UPDATE users SET google_id = :g, email_verified = 1 WHERE id = :id',
-                    ['g' => $sub, 'id' => $byEmail['id']]
-                );
-
-                return ['ok' => true, 'id' => $byEmail['id'], 'created' => false];
+                return [
+                    'ok'    => false,
+                    'code'  => 'email_taken',
+                    'error' => 'Email này đã được đăng ký. Vui lòng đăng nhập bằng '
+                             . 'Số điện thoại/Mật khẩu để liên kết tài khoản Google.',
+                ];
             }
         }
 
-        /*
-         * TỚI ĐÂY MÀ EMAIL VẪN TRÙNG NGƯỜI KHÁC THÌ BỎ EMAIL ĐI, ĐỪNG NGÃ.
-         *
-         * Chỉ xảy ra khi Google KHÔNG xác nhận địa chỉ (nhánh 2 đã nuốt hết
-         * trường hợp xác nhận rồi): tài khoản Workspace tự khai một email đang
-         * thuộc về khách khác. Không được nối vào tài khoản kia — đó chính là
-         * điều nhánh 2 từ chối làm — nhưng cũng không được ném lỗi:
-         * `uq_users_email` sẽ chặn lệnh INSERT, và khách chỉ thấy câu "không
-         * tạo được tài khoản, vui lòng thử lại", thử lại bao nhiêu lần cũng
-         * hỏng y như vậy vì không có gì đổi giữa hai lần.
-         *
-         * Thứ định danh tài khoản này là `google_id`, không phải email. Bỏ
-         * email ra thì khách vẫn đăng nhập bằng Google bình thường, và tự điền
-         * một địa chỉ khác ở trang Hồ sơ nếu muốn (chỗ đó cũng kiểm trùng).
-         */
-        if ($email !== null && $email !== ''
-            && (int) Database::fetchValue('SELECT COUNT(*) FROM users WHERE email = :e',
-                                          ['e' => $email]) > 0) {
-            error_log('[UserModel] Google gửi email chưa xác minh đang thuộc tài khoản khác ('
-                      . $email . ') — tạo tài khoản không kèm email.');
-
-            $email         = null;
-            $emailVerified = false;
+        /* Chưa khớp gì cả -> AF-02, tạo mới. Nhưng chỉ khi lượt này có mang
+           theo cú tick Điều khoản — xem $allowCreate ở khối chú thích đầu hàm
+           và AuthController::googleStart(). */
+        if (!$allowCreate) {
+            return [
+                'ok'    => false,
+                'code'  => 'need_consent',
+                'error' => 'Số điện thoại hoặc Email này chưa có tài khoản. Vui lòng đồng ý '
+                         . 'với Điều khoản và Chính sách rồi bấm "Tiếp tục với Google" để đăng ký.',
+            ];
         }
 
         $userId = uuid();
@@ -297,20 +317,13 @@ class UserModel extends BaseModel
 
             Database::transaction(static function () use ($userId, $sub, $email, $name, $emailVerified, $termsVersion): void {
                 /*
-                 * TÀI KHOẢN TẠO QUA GOOGLE CŨNG GHI VẾT ĐỒNG Ý.
+                 * TÀI KHOẢN TẠO QUA GOOGLE CŨNG GHI VẾT ĐỒNG Ý — BR-UC.USER.01-05.
                  *
-                 * Ở đây KHÔNG có ô tick nào để kiểm — luồng Google không đi qua
-                 * form đăng ký. Cái đứng thay là dòng chữ ngay cạnh nút "Tiếp
-                 * tục với Google" trên /auth: "Bằng việc tạo tài khoản, bạn
-                 * đồng ý với…". Bấm nút đó là hành vi đồng ý, cùng chuẩn mà các
-                 * trang khác dùng cho nút đăng nhập mạng xã hội.
-                 *
-                 * Ghi lại chứ không bỏ trống, vì bỏ trống thì cột này nói sai:
-                 * NULL nghĩa là "tài khoản có trước khi có ô tick", mà tài khoản
-                 * Google tạo hôm nay thì không phải vậy.
-                 *
-                 * Nếu sau này cửa hàng muốn Google cũng phải tick tường minh
-                 * thì chỗ sửa là màn /auth, không phải chỗ này.
+                 * Và nay là một cú tick THẬT, không phải đồng ý ngầm: nút "Tiếp
+                 * tục với Google" ở màn đăng ký là nút submit của chính form
+                 * đăng ký, nên nó mang theo ô tick Điều khoản/Chính sách của
+                 * form ấy. Không tick thì $allowCreate về false và dòng này
+                 * không bao giờ chạy — xem AuthController::googleStart().
                  */
                 Database::execute(
                     'INSERT INTO users (id, email, google_id, password_hash, email_verified,
@@ -340,7 +353,7 @@ class UserModel extends BaseModel
         } catch (Throwable $e) {
             error_log('[UserModel] Không tạo được tài khoản Google: ' . $e->getMessage());
 
-            return ['ok' => false, 'error' => 'Không tạo được tài khoản, vui lòng thử lại.'];
+            return ['ok' => false, 'error' => 'Có lỗi xảy ra. Vui lòng thử lại sau.'];
         }
 
         return ['ok' => true, 'id' => $userId, 'created' => true];

@@ -145,17 +145,29 @@ return [
     'auth'              => 'AuthController@index',
     'auth/dang-nhap'    => 'AuthController@login',      // POST
     /*
-     * ĐĂNG KÝ LÀ BỐN CHẶNG, không còn một cú POST như trước — số điện thoại
-     * phải xác minh bằng mã trước khi tài khoản ra đời. Xem khối chú thích
-     * "ĐĂNG KÝ — BỐN CHẶNG" trong AuthController.
+     * ĐĂNG KÝ LÀ MỘT MÀN, MỘT CÚ POST — theo UC-USER-01.
+     *
+     * Bốn chặng cũ (nhận số → gửi mã → kiểm mã → tạo mật khẩu) đã gộp lại:
+     * 'auth/dang-ky' nay nhận CẢ form và tạo tài khoản luôn, còn
+     * 'auth/dang-ky/gui-ma' chỉ còn việc xin mã cho ô "Mã xác minh" nằm ngay
+     * trong form ấy. Hai địa chỉ 'auth/dang-ky/xac-minh' và
+     * 'auth/dang-ky/mat-khau' đã gỡ — chúng không còn hàm nào để trỏ tới.
+     *
+     * Xem khối chú thích "ĐĂNG KÝ — MỘT MÀN" trong AuthController.
      */
-    'auth/dang-ky'          => 'AuthController@signupPhone',   // POST — nhận số
-    'auth/dang-ky/gui-ma'   => 'AuthController@signupSend',    // POST — sinh & gửi mã
-    'auth/dang-ky/xac-minh' => 'AuthController@signupVerify',  // POST — kiểm mã
-    'auth/dang-ky/mat-khau' => 'AuthController@signupFinish',  // POST — tạo tài khoản
+    'auth/dang-ky'          => 'AuthController@signupSubmit',   // POST — tạo tài khoản
+    'auth/dang-ky/gui-ma'   => 'AuthController@signupSendCode', // POST — xin mã xác minh
     'auth/dang-xuat'    => 'AuthController@logout',     // POST
-    // Đăng nhập/đăng ký bằng Google. Cả hai là GET: chúng phải chạy khi không
-    // có JavaScript, và địa chỉ callback do Google gọi tới nên không thể là POST.
+    /*
+     * Đăng nhập/đăng ký bằng Google.
+     *
+     * 'auth/google' nhận CẢ GET LẪN POST — Router không lọc theo phương thức,
+     * và googleStart() cố ý dùng cả hai: GET là thẻ <a> ở màn đăng nhập (phải
+     * chạy khi không có JavaScript), POST là nút ở màn đăng ký, nơi cú bấm
+     * phải mang theo ô tick Điều khoản (BR-UC.USER.01-05).
+     *
+     * Địa chỉ callback thì luôn là GET — Google gọi tới nên ta không chọn được.
+     */
     'auth/google'          => 'AuthController@googleStart',
     'auth/google/callback' => 'AuthController@googleCallback',
     // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": BỐN mục nằm

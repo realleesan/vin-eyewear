@@ -224,5 +224,140 @@
                 });
             });
         }
+
+        /* NĂM DÒNG QUY TẮC CHỈ HIỆN KHI KHÁCH ĐỘNG TỚI Ô MẬT KHẨU.
+
+           Mục Giao diện của UC-USER-01: "hiển thị gợi ý yêu cầu mật khẩu khi
+           focus vào ô". Chỉ áp dụng cho form mang data-pw-focus (màn đăng ký);
+           hai màn đặt lại mật khẩu vẫn hiện thường trực, ở đó khách tới thẳng
+           để đặt mật khẩu nên quy tắc là thứ đầu tiên họ cần đọc.
+
+           GIẤU BẰNG JAVASCRIPT, không phải bằng CSS sẵn trong file: không có
+           JavaScript thì không có gì mở nó ra, và một bản yêu cầu mật khẩu
+           không bao giờ hiện thì tệ hơn một bản hiện suốt.
+
+           Hiện rồi thì Ở LẠI — nhấp nháy theo tiêu điểm khi khách chuyển qua
+           lại giữa hai ô mật khẩu là thứ khó chịu hơn cả việc nó hiện suốt. */
+        var bang = form.querySelector('.arule');
+
+        if (bang && form.hasAttribute('data-pw-focus')) {
+            bang.classList.add('is-quiet');
+
+            form.querySelectorAll('.authpw__input').forEach(function (o) {
+                o.addEventListener('focus', function () {
+                    bang.classList.remove('is-quiet');
+                });
+            });
+        }
     }
+}());
+
+/**
+ * ────────────────────────────────────────────────────────────────────────────
+ * NÚT "GỬI MÃ" CỦA MÀN ĐĂNG KÝ — gọi ngầm, không rời trang.
+ *
+ * CHỈ LÀ TĂNG CƯỜNG, đúng nếp của cả file này. Nút trong HTML là một nút
+ * submit thật mang formaction="/auth/dang-ky/gui-ma": không có JavaScript thì
+ * nó gửi form đi, máy chủ cất mọi chữ đã gõ vào phiên rồi trả khách về đúng
+ * form ấy với dữ liệu còn nguyên — chậm hơn một nhịp tải trang, nhưng không
+ * kẹt. Đoạn dưới đây chặn cú submit ấy lại và làm cùng việc bằng fetch.
+ *
+ * Đồng hồ đếm ngược ở đây CHỈ để đỡ bấm oan. Chốt thật nằm ở máy chủ —
+ * AuthController::signupSendCode(), `if (time() < resend)` — nên gỡ `disabled`
+ * bằng devtools cũng không xin thêm được mã nào.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+(function () {
+    'use strict';
+
+    var box = document.querySelector('[data-code]');
+    if (!box || !window.fetch) return;
+
+    var form  = box.closest('form');
+    var btn   = box.querySelector('[data-send-code]');
+    var nhan  = box.querySelector('[data-send-label]');
+    var so    = box.querySelector('.acode__num');
+    var ghi   = box.querySelector('[data-code-note]');
+
+    if (!form || !btn) return;
+
+    var con  = parseInt(box.getAttribute('data-wait'), 10) || 0;
+    var nhip = null;
+
+    /* Vẽ số giây còn lại ngay trong nhãn nút. Không kèm dấu cách ở đầu:
+       khoảng hở do `gap` của .acode__send lo, và hộp inline-flex cắt bỏ
+       khoảng trắng trong HTML nên dấu cách ở đây cũng vô nghĩa. */
+    var ve = function () {
+        if (!so) return;
+
+        so.hidden = con <= 0;
+        so.textContent = con > 0 ? '(' + con + 's)' : '';
+    };
+
+    var dem = function () {
+        window.clearInterval(nhip);
+        btn.disabled = con > 0;
+        ve();
+
+        if (con <= 0) return;
+
+        nhip = window.setInterval(function () {
+            con -= 1;
+            ve();
+
+            if (con > 0) return;
+
+            window.clearInterval(nhip);
+            btn.disabled = false;
+        }, 1000);
+    };
+
+    var noi = function (cau, hong) {
+        if (!ghi) return;
+
+        ghi.textContent = cau;
+        ghi.classList.toggle('is-err', !!hong);
+    };
+
+    dem();
+
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        if (btn.disabled) return;
+
+        btn.disabled = true;
+        if (nhan) nhan.textContent = 'Đang gửi…';
+
+        var goi = new FormData(form);
+
+        /* HAI Ô MẬT KHẨU KHÔNG ĐI CÙNG YÊU CẦU NÀY. Máy chủ không đọc tới
+           chúng, mà một mật khẩu gửi đi mỗi lần bấm "Gửi mã" là một chuỗi
+           nữa nằm trong log của mọi proxy trên đường — không cần thì đừng gửi. */
+        goi.delete('password');
+        goi.delete('password_confirm');
+
+        window.fetch(btn.getAttribute('formaction') || '/auth/dang-ky/gui-ma', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'fetch' },
+            body: goi,
+            credentials: 'same-origin'
+        }).then(function (r) {
+            return r.json();
+        }).then(function (d) {
+            if (nhan) nhan.textContent = d.ok ? 'Gửi lại mã' : 'Gửi mã';
+
+            noi(d.message || '', !d.ok);
+
+            con = parseInt(d.wait, 10) || 0;
+            dem();
+        }).catch(function () {
+            /* Mạng hỏng, hoặc máy chủ trả về thứ không phải JSON. Mở khoá nút
+               lại ngay: khách bấm lần nữa là đường duy nhất còn lại. */
+            if (nhan) nhan.textContent = 'Gửi mã';
+
+            noi('Không gửi được mã. Vui lòng thử lại.', true);
+            btn.disabled = false;
+        });
+    });
 }());

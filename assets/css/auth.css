@@ -322,7 +322,7 @@
     color: var(--muted);
 }
 
-/* --- Ô tick "Tôi đã đọc và đồng ý…" ở màn tạo mật khẩu ---
+/* --- Ô tick "Tôi đã đọc và đồng ý…" ở màn đăng ký ---
 
    Cùng nguyên thể với ô "Duy trì đăng nhập", khác đúng hai điểm:
 
@@ -330,7 +330,9 @@
      DƯỚI nút gửi trên màn đăng nhập, trong khi HTML giữ nó ở trên cho đúng
      thứ tự Tab. Ở đây không có nghịch lý đó: ô tick phải đứng ngay trước nút
      "Đăng ký" cả trên màn hình lẫn trong mã nguồn — người ta đồng ý rồi mới
-     bấm.
+     bấm. (Nay ô tick còn nằm trong .authagree nên `order` không còn tác dụng
+     gì ở đây; dòng dưới giữ lại để lớp này vẫn đúng nếu có ai dùng nó ngoài
+     khối ấy.)
    · canh theo mép TRÊN. Câu này dài hơn một dòng; align-items:center của
      .authcheck sẽ dìm hộp vuông xuống giữa khối chữ, trông như nó thuộc về
      dòng thứ hai. */
@@ -1091,4 +1093,117 @@
     font-size: 14.5px;
     line-height: 1.7;
     color: var(--muted);
+}
+
+/* ============================================================
+   MÀN ĐĂNG KÝ MỘT TRANG — lỗi từng ô + hàng "Mã xác minh"
+   ------------------------------------------------------------
+   UC-USER-01 chốt hai thứ mà bộ lớp cũ chưa có: mỗi ô hỏng thì
+   câu báo phải nằm NGAY DƯỚI ô ấy (EF-02…EF-12 đều chỉ đích danh
+   một trường), và ô "Mã xác minh" nằm cùng hàng với nút "Gửi mã"
+   thay vì là cả một màn riêng.
+   ============================================================ */
+
+/* --- Câu báo lỗi của một ô --- */
+
+/* Dùng chung màu chữ với .authflash--err nhưng KHÔNG có nền: đây là
+   một dòng nhỏ nép dưới ô nhập, không phải một dải báo của cả trang.
+   Sáu dải nền đỏ chồng lên nhau trong một form là một bức tường đỏ. */
+.authfield__err {
+    display: block;
+    margin-top: 2px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #8f3535;
+}
+
+/* Viền đỏ do MÁY CHỦ đặt, khác hẳn :user-invalid ở trên (do trình duyệt
+   đặt khi khách rời ô). Hai nguồn nhưng cùng một hình thức — người nhìn
+   không cần biết ai vừa từ chối cái gì. */
+.authfield__input.is-err,
+.authfield__input.is-err:focus { border-color: var(--danger); }
+
+/* Ghi chú dưới ô mã đổi sang tông lỗi khi lần xin mã vừa rồi hỏng. */
+.authfield__hint.is-err { color: #8f3535; }
+
+/* Ô tick Điều khoản + câu báo của nó: một khối, giãn 6px, để câu lỗi dính
+   vào đúng thứ nó nói tới thay vì trôi 22px xuống gần nút "Đăng ký". */
+.authagree {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* --- Hàng "Mã xác minh" + nút "Gửi mã" --- */
+
+/* .authfield lo phần khoảng cách dọc; ở đây chỉ dựng cái hàng ngang. */
+.acode__row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+}
+
+/* Ô nhập co lại được, nút thì không: nút phải giữ đủ chỗ cho nhãn dài
+   nhất của nó ("Gửi lại mã (60s)"). */
+.acode__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    letter-spacing: 0.28em;
+}
+
+.acode__send {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 16px;
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--brand);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s, color .18s, border-color .18s;
+}
+
+.acode__send:hover:not(:disabled),
+.acode__send:focus-visible:not(:disabled) {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* Khoá trong lúc đếm ngược. Chốt THẬT nằm ở máy chủ
+   (AuthController::signupSendCode, `if (time() < resend)`), nên gỡ
+   disabled bằng devtools cũng không xin thêm được mã nào. */
+.acode__send:disabled {
+    border-color: var(--line);
+    color: var(--u-meta);
+    cursor: not-allowed;
+}
+
+.acode__num[hidden] { display: none; }
+
+/* Màn hình hẹp: nút xuống hàng thay vì bóp ô nhập còn vài ký tự. */
+@media (max-width: 380px) {
+    .acode__row { flex-wrap: wrap; }
+    .acode__send { width: 100%; justify-content: center; padding: 10px 16px; }
+}
+
+/* Năm dòng quy tắc mật khẩu, ở màn đăng ký, nằm im cho tới khi khách chạm vào
+   ô mật khẩu — mục Giao diện của UC-USER-01. Lớp này do assets/js/auth.js đặt
+   vào, KHÔNG phải trạng thái mặc định của .arule: không có JavaScript thì
+   không có gì gỡ nó ra, và một bản yêu cầu mật khẩu không bao giờ hiện thì tệ
+   hơn một bản hiện suốt. */
+.arule.is-quiet { display: none; }
+
+/* Liên kết trong câu báo lỗi — EF-10 đòi câu "đã được đăng ký" phải kèm link
+   Đăng nhập. Giữ nguyên màu đỏ của câu, chỉ gạch chân và đậm lên: một liên
+   kết màu thương hiệu nằm giữa một câu đỏ trông như hai câu rời nhau. */
+.authfield__err a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
 }
