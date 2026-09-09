@@ -140,18 +140,50 @@ if ($feature !== null) {
         <span class="mega__caret" aria-hidden="true"></span>
     </a>
 
-    <?php /* --mega-cols: số cột CHỮ, chưa tính thẻ ảnh. Bản thiết kế vẽ 3;
-             CSDL hiện có 4 danh mục nên thực tế in ra 4. */ ?>
-    <div class="mega__panel">
+    <?php
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * BA CỘT CỐ ĐỊNH, XUỐNG HÀNG — KHÔNG PHẢI MỘT CỘT MỖI DANH MỤC
+     *
+     * Bản trước đặt `--mega-cols: count($categories)`, tức là số cột chạy theo
+     * số danh mục. Cửa hàng nay có CHÍN danh mục, nên bảng xổ in ra chín cột
+     * chữ nằm ngang cộng một thẻ ảnh — một bức tường phân loại.
+     *
+     * Hai hệ quả đo được trên bản live:
+     *   · mỗi cột chỉ còn ~130px, tiêu đề như "Kính đọc sách" phải xuống hai
+     *     dòng, nên dòng liên kết đầu tiên của các cột KHÔNG thẳng hàng nhau
+     *   · bảy trong chín cột mang y hệt một danh sách con (Oval · Vuông ·
+     *     Mắt mèo · Chữ nhật), nên mắt quét ngang chỉ thấy cùng bốn chữ lặp
+     *     lại bảy lần
+     *
+     * Nay khoá BA cột và để danh mục xuống hàng. Không bỏ một liên kết nào,
+     * không đổi một đích đến nào — chỉ đổi cách xếp: mỗi cột rộng gấp ba, tiêu
+     * đề nằm gọn một dòng, và ba danh mục có danh sách con thật sự khác nhau
+     * (gọng · kính mát · tròng) rơi đúng vào hàng đầu.
+     *
+     * --mega-rows để thẻ ảnh biết cần cao bao nhiêu hàng: nó chiếm trọn cột
+     * thứ tư từ hàng đầu tới hàng cuối, nên các cột chữ không tràn sang.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    $megaCols = 3;
+    $megaRows = (int) ceil(count($categories) / $megaCols);
+    ?>
+    <div class="mega__panel" id="megaPanelProducts">
         <div class="mega__grid<?= $feature === null ? ' mega__grid--no-feature' : '' ?>"
-             style="--mega-cols: <?= count($categories) ?>">
+             style="--mega-cols: <?= $megaCols ?>; --mega-rows: <?= max(1, $megaRows) ?>">
 
             <?php foreach ($categories as $cat): ?>
                 <?php $slice = $sliceBySlug[$cat['slug']] ?? $taxonomy['frame_styles']; ?>
                 <div class="mega__col">
                     <?php /* Tiêu đề cột bấm được: nó là lối vào cả danh mục, còn
                              bốn dòng dưới chỉ là lát cắt hẹp hơn của chính nó. */ ?>
-                    <a class="mega__label" href="<?= e(danhMucUrl($cat['slug'])) ?>">
+<?php /* lang="vi" — cùng quy ước đã ghi dài ở _layout/product-card.php.
+                             Tên danh mục ("Gọng kính", "Kính đổi màu") chỉ có một
+                             ngôn ngữ trong CSDL; khung trang in <html lang="en"> nên
+                             thiếu nhãn này là trình đọc màn hình phát âm chúng bằng
+                             bộ quy tắc tiếng Anh. Bảng xổ này in ra trên MỌI trang,
+                             nên đây là chỗ nhãn ấy đáng giá nhất. */ ?>
+                    <a class="mega__label" href="<?= e(danhMucUrl($cat['slug'])) ?>" lang="vi">
                         <?= e($cat['name']) ?>
                     </a>
 
@@ -175,7 +207,7 @@ if ($feature !== null) {
                     </span>
 
                     <span class="mega-feature__body">
-                        <span class="mega-feature__name"><?= e($feature['name']) ?></span>
+                        <span class="mega-feature__name" lang="vi"><?= e($feature['name']) ?></span>
                         <?php /* "· Xem ngay →" bọc riêng và cấm ngắt dòng: câu
                                  mô tả do người nhập nội dung viết, dài ngắn tuỳ
                                  ý, nên nếu để chảy tự do thì mũi tên hay rơi

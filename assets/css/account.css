@@ -85,7 +85,7 @@
     background: var(--surface-raised);
     border-radius: var(--radius);
     padding: 12px;
-    box-shadow: var(--a-shadow-nav);
+    box-shadow: none;
     /* 88px = chiều cao header (76px) + 12px thở.
        Bản thiết kế ghi top:24px vì header của nó KHÔNG dính theo cuộn.
        Header của site này thì có, nên 24px sẽ đẩy cột này chui xuống dưới. */
@@ -139,8 +139,8 @@
 
 .acct-nav__initial {
     font-family: var(--font-serif);
-    font-size: 20px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--brand);
 }
 
@@ -178,7 +178,7 @@
     border-radius: var(--radius-round);
     background: rgba(51, 39, 42, 0.35);
     opacity: 0;
-    transition: opacity 0.2s var(--ease-out-soft, ease);
+    transition: opacity var(--dur-fast) var(--ease-out-soft, ease);
 }
 
 .acct-nav__face:hover .acct-nav__facein::after { opacity: 1; }
@@ -205,7 +205,7 @@
     background: var(--brand);
     color: var(--on-brand);
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     font-weight: 500;
     cursor: pointer;
 }
@@ -220,8 +220,8 @@
 }
 
 .acct-nav__name {
-    font-size: 15.5px;
-    font-weight: 600;
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
     color: var(--ink);
     /* Tên dài không được đẩy vỡ cột 300px */
     overflow: hidden;
@@ -233,7 +233,7 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--eyebrow);
 }
 
@@ -251,7 +251,7 @@
     border-radius: var(--radius);
     background: none;
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body);
     color: var(--a-item);
     cursor: pointer;
 }
@@ -265,14 +265,14 @@
 .acct-nav__item.is-active {
     background: var(--brand-subtle);
     color: var(--brand);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Đầu nhóm khi mục đang mở nằm TRONG nhóm — chỉ đổi màu chữ, không đổi nền:
    nền đặc ở đây sẽ đá nhau với nền của mục con đang được chọn ngay bên dưới. */
 .acct-nav__item.is-current {
     color: var(--brand);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .acct-nav__icon {
@@ -322,8 +322,8 @@
     border-radius: var(--radius-round);
     background: var(--brand);
     color: var(--on-brand);
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
 }
 
 /* --- Nhóm thu gọn được --- */
@@ -341,7 +341,7 @@
 .acct-nav__chev {
     display: flex;
     color: var(--a-meta);
-    transition: transform 0.2s var(--ease-out-soft, ease);
+    transition: transform var(--dur-fast) var(--ease-out-soft, ease);
 }
 
 .acct-nav__group[open] .acct-nav__chev { transform: rotate(180deg); }
@@ -362,7 +362,7 @@
        hàng với chữ mục cha ở trên nó */
     padding: 9px 18px 9px 52px;
     border-radius: var(--radius-sm);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--muted);
 }
 
@@ -371,7 +371,7 @@
 .acct-nav__subitem.is-current {
     background: var(--a-pick);
     color: var(--brand);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* --- Chân cột --- */
@@ -392,7 +392,7 @@
     border-radius: var(--radius);
     background: none;
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body);
     color: var(--a-quiet);
     cursor: pointer;
 }
@@ -466,14 +466,14 @@
        Có một lúc chỗ này là 36px cho khớp cỡ tiêu đề khối của trang chủ; đã
        trả về 30px vì trang tài khoản là trang công cụ, tiêu đề của nó không
        phải tiêu đề chào hàng. */
-    font-size: 30px;
-    font-weight: 600;
+    font-size: var(--fs-h3);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .acct-head__lead {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
     color: var(--a-note);
 }
 
@@ -482,7 +482,7 @@
 .acct-card {
     background: var(--surface-raised);
     border-radius: var(--radius);
-    box-shadow: var(--a-shadow-card);
+    box-shadow: none;
 }
 
 .acct-list {
@@ -499,7 +499,7 @@
     margin: 12px 0 0;
     padding: 14px 22px;
     border-radius: var(--radius);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     font-weight: 500;
 }
 
@@ -519,7 +519,7 @@
     border: none;
     border-radius: var(--radius-sm);
     font-family: var(--font-sans);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     font-weight: 500;
     line-height: 1.2;
     white-space: nowrap;
@@ -544,7 +544,7 @@
 .acct-btn--outline:focus-visible { border-color: var(--brand); color: var(--brand); }
 
 /* Nút trong thẻ — nhỏ hơn nút ở đầu mục một nấc */
-.acct-btn--sm  { padding: 10px 22px; font-size: 13px; }
+.acct-btn--sm  { padding: 10px 22px; font-size: var(--fs-body-sm); }
 
 /* Nút LẶNG NHẤT — chỉ chữ, không viền. Dùng cho thao tác phá bỏ hoặc rút lui
    ("Huỷ lịch", "Để nguyên"): nó phải bấm được rõ ràng nhưng không được tranh
@@ -566,7 +566,7 @@
     align-self: flex-start;
     margin-top: 6px;
     padding: 13px 32px;
-    font-size: 14px;
+    font-size: var(--fs-body);
 }
 
 /* ============================================================
@@ -585,8 +585,8 @@
 .acct-form__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 20px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -605,7 +605,7 @@
 
 .acct-form__note {
     margin: -6px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--a-meta);
 }
 
@@ -617,8 +617,8 @@
 }
 
 .acct-field__label {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--eyebrow);
@@ -632,7 +632,7 @@
     border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: var(--font-sans);
-    font-size: 14px;
+    font-size: var(--fs-body);
     color: var(--ink);
 }
 
@@ -653,7 +653,7 @@
 
 /* Câu giải thích dưới ô. Dùng ở ô email trong mục Hồ sơ. */
 .acct-field__hint {
-    font-size: 12px;
+    font-size: var(--fs-caption);
     line-height: 1.5;
     color: var(--a-note);
 }
@@ -710,7 +710,7 @@ select.acct-field__input {
     border: 1.5px solid var(--line);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--a-item);
 }
 
@@ -720,7 +720,7 @@ select.acct-field__input {
     border-color: var(--brand);
     background: var(--brand);
     color: var(--on-brand);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Vòng focus phải vẽ trên cái NHÌN THẤY, vì ô thật trong suốt */
@@ -735,7 +735,7 @@ select.acct-field__input {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--a-item);
     cursor: pointer;
 }
@@ -785,8 +785,8 @@ select.acct-field__input {
 }
 
 .acct-addr__name {
-    font-size: 15.5px;
-    font-weight: 600;
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -797,12 +797,12 @@ select.acct-field__input {
 }
 
 .acct-addr__phone {
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--a-note);
 }
 
 .acct-addr__lines {
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.65;
     color: var(--muted);
 }
@@ -819,8 +819,8 @@ select.acct-field__input {
     display: flex;
     align-items: center;
     gap: 18px;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
 }
 
 /* layout.css đặt `a { color: inherit }`, mà thẻ địa chỉ có màu chữ nâu đậm —
@@ -835,8 +835,8 @@ select.acct-field__input {
     border: none;
     background: none;
     font-family: var(--font-sans);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
     color: var(--a-note);
     cursor: pointer;
 }
@@ -848,8 +848,8 @@ select.acct-field__input {
     border-radius: var(--radius-sm);
     background: var(--brand-subtle);
     color: var(--brand);
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
 }
 
 /* ============================================================
@@ -867,7 +867,7 @@ select.acct-field__input {
     border: 1.5px solid var(--line);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--a-item);
     white-space: nowrap;
 }
@@ -878,7 +878,7 @@ select.acct-field__input {
     border-color: var(--brand);
     background: var(--brand);
     color: var(--on-brand);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* Thẻ đơn hàng — KHÔNG cùng hình khối với các thẻ khác của trang tài khoản:
@@ -919,13 +919,13 @@ select.acct-field__input {
 }
 
 .acct-order__code {
-    font-size: 13.5px;
-    font-weight: 600;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .acct-order__when {
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--a-meta);
 }
 
@@ -935,8 +935,8 @@ select.acct-field__input {
 .acct-badge {
     padding: 6px 14px;
     border-radius: var(--radius-sm);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     white-space: nowrap;
 }
 
@@ -1017,21 +1017,21 @@ select.acct-field__input {
 }
 
 .acct-order__brand {
-    font-size: 11.5px;
-    letter-spacing: 0.12em;
+    font-size: var(--fs-caption);
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--a-meta);
 }
 
 .acct-order__name {
     font-family: var(--font-serif);
-    font-size: 17.5px;
-    font-weight: 600;
+    font-size: var(--fs-h5);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .acct-order__variant {
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     color: var(--a-note);
 }
 
@@ -1044,13 +1044,13 @@ select.acct-field__input {
 }
 
 .acct-order__qty {
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--a-meta);
 }
 
 .acct-order__total {
-    font-size: 16.5px;
-    font-weight: 600;
+    font-size: var(--fs-h6);
+    font-weight: 500;
     color: var(--brand);
 }
 
@@ -1119,7 +1119,7 @@ select.acct-field__input {
 }
 
 .acct-track__label {
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     text-align: center;
     color: var(--a-meta);
 }
@@ -1127,11 +1127,11 @@ select.acct-field__input {
 .acct-track__step--1 .acct-track__label,
 .acct-track__step--2 .acct-track__label {
     color: var(--ink);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .acct-track__time {
-    font-size: 11px;
+    font-size: var(--fs-label);
     text-align: center;
     color: var(--a-meta);
     /* Giữ chỗ cả khi chưa có mốc, để hàng chấm không so le */
@@ -1190,9 +1190,9 @@ select.acct-field__input {
 .acct-order__block:last-child { gap: 10px; }
 
 .acct-order__eyebrow {
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--eyebrow);
 }
@@ -1208,8 +1208,8 @@ select.acct-field__input {
 }
 
 .acct-order__to {
-    font-size: 14.5px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -1218,8 +1218,8 @@ select.acct-field__input {
    core/helpers.php, chỗ chèn dấu cách nhóm 4-3-3. */
 .acct-order__tel {
     margin-top: 2px;
-    font-size: 13px;
-    letter-spacing: 0.02em;
+    font-size: var(--fs-body-sm);
+    letter-spacing: var(--tracking-label);
     color: var(--a-note);
 }
 
@@ -1227,14 +1227,14 @@ select.acct-field__input {
     /* Tách hẳn khỏi cặp tên/số ở trên — đây là một ý khác, không phải dòng
        thứ ba của cùng một cụm. */
     margin-top: 10px;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.55;
     color: var(--muted);
 }
 
 .acct-order__memo {
     margin: 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.65;
     color: var(--muted);
 }
@@ -1252,8 +1252,8 @@ select.acct-field__input {
     border: 1px solid var(--line);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -1263,7 +1263,7 @@ select.acct-field__input {
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--muted);
 }
 
@@ -1283,12 +1283,12 @@ select.acct-field__input {
     align-items: flex-start;
     gap: 8px;
     margin: 10px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     line-height: 1.55;
     color: #3d6633;
 }
 
-.acct-order__got strong { font-weight: 600; }
+.acct-order__got strong { font-weight: 500; }
 
 .acct-order__gotmark {
     display: grid;
@@ -1302,7 +1302,7 @@ select.acct-field__input {
     margin-top: 1px;
     background: #3d7a4f;
     color: #fff;
-    font-size: 10px;
+    font-size: var(--fs-micro);
     line-height: 1;
 }
 
@@ -1314,7 +1314,7 @@ select.acct-field__input {
    margin-right:auto để cụm nút bên phải vẫn bị đẩy hết ra mép. */
 .acct-order__thanks {
     margin-right: auto;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     color: #3d6633;
 }
 
@@ -1333,13 +1333,13 @@ select.acct-field__input {
 .acct-order__sum--grand {
     padding-top: 10px;
     border-top: 1px solid var(--h-card-line);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .acct-order__num   { color: var(--ink); text-align: right; }
-.acct-order__free  { color: #4d7a3f; font-weight: 600; }
+.acct-order__free  { color: #4d7a3f; font-weight: 500; }
 
 /* --- Khối chuyển khoản (đơn chuyển khoản chưa nhận tiền) ---
    Nằm trong cột tóm tắt thanh toán, tách bằng một khung nhạt: đây là việc khách
@@ -1398,7 +1398,7 @@ select.acct-field__input {
 
 .acct-order__paysub {
     margin: 4px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     line-height: 1.5;
     color: var(--a-meta);
 }
@@ -1414,15 +1414,15 @@ select.acct-field__input {
 }
 
 .acct-order__paylabel {
-    font-size: 11.5px;
+    font-size: var(--fs-caption);
     color: var(--a-meta);
 }
 
 .acct-order__paynum {
     margin-top: 2px;
     font-family: var(--font-serif);
-    font-size: 21px;
-    font-weight: 700;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--brand);
     white-space: nowrap;
 }
@@ -1445,7 +1445,7 @@ select.acct-field__input {
 .acct-order__bankkey {
     display: block;
     margin-bottom: 3px;
-    font-size: 11.5px;
+    font-size: var(--fs-caption);
     color: var(--a-meta);
 }
 
@@ -1459,12 +1459,12 @@ select.acct-field__input {
 }
 
 .acct-order__bankval {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--ink);
     /* Số tài khoản 10–13 chữ số: giãn nhẹ cho dễ đọc lại từng số khi gõ tay.
        break-word để tên chủ tài khoản dài không đẩy ngang ô. */
-    letter-spacing: 0.02em;
+    letter-spacing: var(--tracking-label);
     word-break: break-word;
 }
 
@@ -1477,7 +1477,7 @@ select.acct-field__input {
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: 11.5px;
+    font-size: var(--fs-caption);
     font-weight: 500;
     color: var(--a-item);
     white-space: nowrap;
@@ -1512,7 +1512,7 @@ select.acct-field__input {
 .acct-order__payfoot .acct-order__memo {
     flex: 1;
     min-width: 220px;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     line-height: 1.5;
     color: #8a6a2e;
 }
@@ -1522,7 +1522,7 @@ select.acct-field__input {
 .acct-order__payfoot .acct-order__qr { flex: none; margin: 0; align-self: auto; }
 
 .acct-order__grand {
-    font-size: 16px;
+    font-size: var(--fs-h6);
     color: var(--brand);
 }
 
@@ -1546,7 +1546,7 @@ select.acct-field__input {
 }
 
 .acct-order__footnote {
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--a-meta);
 }
 
@@ -1560,7 +1560,7 @@ select.acct-field__input {
 }
 
 /* Nút trong dải chân đậm hơn nút ở đầu mục — bản thiết kế ghi 600 cho cả hai */
-.acct-order__foot .acct-btn { font-weight: 600; }
+.acct-order__foot .acct-btn { font-weight: 500; }
 .acct-order__foot .acct-btn--outline { padding: 10px 20px; }
 
 /* Ghi chú dưới dải hàng — dùng ở thẻ LỊCH HẸN, nơi không có dải chi tiết nào
@@ -1568,7 +1568,7 @@ select.acct-field__input {
 .acct-order__note {
     margin: 0;
     padding: 0 var(--o-pad) 20px;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     color: var(--a-note);
 }
 
@@ -1590,15 +1590,15 @@ select.acct-field__input {
 
 .acct-resched__now {
     margin: 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--muted);
 }
 
-.acct-resched__now strong { color: var(--ink); font-weight: 600; }
+.acct-resched__now strong { color: var(--ink); font-weight: 500; }
 
 .acct-resched__hint {
     margin: 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     line-height: 1.6;
     color: var(--a-meta);
 }
@@ -1612,9 +1612,9 @@ select.acct-field__input {
 .acct-resched__label {
     display: block;
     padding: 0;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--eyebrow);
 }
@@ -1639,7 +1639,7 @@ select.acct-field__input {
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--ink);
 }
 
@@ -1683,13 +1683,13 @@ select.acct-field__input {
 
 .acct-empty__title {
     font-family: var(--font-serif);
-    font-size: 20px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .acct-empty__lead {
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--a-note);
     max-width: 42ch;
 }
@@ -1700,7 +1700,7 @@ select.acct-field__input {
     border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     font-weight: 500;
 }
 
@@ -1738,7 +1738,7 @@ select.acct-field__input {
     .acct-order   { --o-pad: 20px; }
     .acct-addr    { padding: 22px 20px; gap: 20px; }
 
-    .acct-head__title { font-size: 26px; }
+    .acct-head__title { font-size: var(--fs-h3); }
 
     /* Hai cột chi tiết đơn về một cột. */
     .acct-order__detail {
@@ -1807,7 +1807,7 @@ select.acct-field__input {
 
     /* Chữ dưới chấm tiến trình không còn chỗ ở 5 bước — giữ chấm và vạch,
        bỏ nhãn, để thanh vẫn nói được "đơn đang ở bước thứ mấy trên mấy". */
-    .acct-track__label { font-size: 11px; }
+    .acct-track__label { font-size: var(--fs-label); }
     .acct-track__time  { display: none; }
 }
 
@@ -1816,7 +1816,7 @@ select.acct-field__input {
    app/views/auth/account/don-hang.php. */
 .acct-order__lens {
     display: block;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     color: var(--brand, var(--accent));
 }
 
@@ -1838,7 +1838,7 @@ select.acct-field__input {
    phiếu gửi hàng phải thấy ngay ranh giới, nên nó nghiêng và nhạt hơn. */
 .acct-addr__note {
     color: var(--a-note);
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     font-style: italic;
 }
 
@@ -1866,7 +1866,7 @@ select.acct-field__input {
 
 .acct-danger__lead {
     margin: 10px 0 18px;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.75;
     color: var(--a-note);
 }
@@ -1874,7 +1874,7 @@ select.acct-field__input {
 .acct-danger__list {
     margin: 0 0 20px;
     padding-left: 20px;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.9;
     color: var(--a-item);
 }
@@ -1906,7 +1906,7 @@ select.acct-field__input {
 
 .acct-cancel__lead {
     margin: 0;
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     color: var(--ink);
 }
 
@@ -1918,7 +1918,7 @@ select.acct-field__input {
     padding: 12px 14px;
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     line-height: 1.75;
     color: var(--a-note);
 }
@@ -1928,7 +1928,7 @@ select.acct-field__input {
 /* Nhãn phụ "(bắt buộc nếu chọn …)" — nhẹ hơn nhãn chính, cùng dòng với nó. */
 .field__opt {
     font-weight: 400;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     color: var(--a-note);
 }
 
@@ -1962,7 +1962,7 @@ select.acct-field__input {
     border-left: 3px solid var(--brand);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.7;
     color: var(--a-note);
 }
@@ -1982,7 +1982,7 @@ select.acct-field__input {
    ============================================================================ */
 .acct-head__title, .acct-form__title {
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .acct-order__code, .acct-empty__title {
@@ -1990,7 +1990,7 @@ select.acct-field__input {
 }
 
 .acct-order__eyebrow {
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }

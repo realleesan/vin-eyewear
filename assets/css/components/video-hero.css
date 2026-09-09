@@ -1,0 +1,315 @@
+/* ============================================================================
+   components/video-hero.css — HERO VIDEO TRÀN MÀN HÌNH (S01)
+
+   Markup: app/views/_layout/home/hero.php · Hành vi: assets/js/home.js
+   (khối videoHero, tìm [data-video-hero]).
+
+   Bộ lớp .vhero* là bộ MỚI, không dùng lại .hero* của băng ảnh cũ — hai thứ
+   khác nhau hoàn toàn về cấu trúc, và giữ tên cũ thì mọi luật cũ trong
+   components/home-sections.css sẽ dội vào đây theo những đường không ai lần ra.
+
+   Nạp CHỈ cho trang chủ, khai trong bảng $pageStyles của _layout/master.php.
+
+   MỌI CON SỐ ĐỌC TỪ TOKEN của gm.css (--dur*, --ease, --space*, --fs-*,
+   --tracking-*). Không gõ thẳng ms hay cubic-bezier ở file này — xem khối
+   "HỆ CHUYỂN ĐỘNG" trong assets/css/gm.css.
+   ============================================================================ */
+
+/* ┌─ CHIỀU CAO ─────────────────────────────────────────────────────────────
+   │ Trừ ĐỦ hai tầng đầu trang (dải tiện ích + hàng nav) để mép dưới video
+   │ dừng đúng đáy khung nhìn ở lần vẽ đầu — cùng phép tính mà .mega__panel
+   │ dùng, xem components/mega-menu.css.
+   │
+   │ dvh chứ không vh: trên điện thoại, vh tính theo khung nhìn LỚN NHẤT (lúc
+   │ thanh địa chỉ đã thu), nên với thanh địa chỉ còn hiện thì 100vh cao hơn
+   │ chỗ thật sự thấy được và mép dưới video bị đẩy khuất.
+   │
+   │ min-height: màn rất thấp (laptop 768px xoay ngang, hoặc cửa sổ bị kéo dẹt)
+   │ thì phép trừ ở trên còn lại quá ít — dưới 420px thì video mất hết bố cục.
+   └──────────────────────────────────────────────────────────────────────── */
+.vhero {
+    position: relative;
+    /* ┌─ TRÀN LÊN DƯỚI ĐẦU TRANG ───────────────────────────────────────────
+       │ Kéo ngược đúng chiều cao hai tầng đầu trang (dải tiện ích + hàng nav
+       │ + 1px đường kẻ) để video chạy TỪ MÉP TRÊN khung nhìn. Đầu trang vẫn
+       │ nằm trong luồng và vẫn `sticky`; nó chỉ thôi che chỗ, và vì z-index
+       │ 60 nên nó vẫn vẽ ĐÈ LÊN video — đúng thứ cần cho đầu trang trong
+       │ suốt (xem khối tương ứng trong components/header.css).
+       │
+       │ KHÔNG đụng một dòng nào của phần phát video: đây thuần tuý là hình
+       │ học. Muốn trả về như cũ thì xoá margin-top và đổi height về
+       │ `calc(100dvh - var(--header-h) - var(--announce-h))`.
+       │
+       │ Chiều cao nay là trọn 100dvh vì nó bắt đầu từ mép trên thật.
+       └──────────────────────────────────────────────────────────────────── */
+    margin-top: calc((var(--header-h) + var(--announce-h) + 1px) * -1);
+    height: 100dvh;
+    min-height: 420px;
+    /* Cuộn tới gần mép hero thì nó "ăn khớp" vào khung nhìn. `proximity`, KHÔNG
+       phải `mandatory`: mandatory chỉ đúng khi MỌI section đều cao 100dvh, mà
+       dưới hero là hai lưới sản phẩm cao gấp nhiều lần — ép snap ở đó là khoá
+       tay người đang cuộn đọc. Khai trên chính hero (xem cuối file). */
+    scroll-snap-align: start;
+    /* Video `object-fit: cover` luôn thừa ra ngoài một chiều — chiều nào tuỳ
+       tỉ lệ khung nhìn. Không cắt thì phần thừa đẩy trang rộng ra và sinh
+       thanh cuộn ngang. */
+    overflow: hidden;
+    background: var(--ink);
+    /* Chữ trắng nằm trên nền tối: dòng này cho gm.css biết để đảo màu vòng
+       tiêu điểm bàn phím sang trắng — xem PHẦN 17 của gm.css. */
+    color: var(--on-ink);
+    isolation: isolate;
+}
+
+.vhero__stage {
+    position: absolute;
+    inset: 0;
+}
+
+/* ┌─ BA CLIP CHỒNG KHÍT ────────────────────────────────────────────────────
+   │ Cả ba cùng inset:0. Clip đang chạy mang .is-on.
+   │
+   │ Chuyển bằng OPACITY, không bằng display/visibility: chỉ opacity mới mờ
+   │ chồng được, và nó chạy trên tầng ghép hình nên không tốn một lần tính bố
+   │ cục nào — quan trọng ở đây vì nền đang giải mã video 1920px cùng lúc.
+   │
+   │ --dur-slow (600ms) là quãng CHẬM NHẤT của hệ, và đây đúng là chỗ nó sinh
+   │ ra để dùng: hai cảnh phim tan vào nhau. Nhanh hơn thì thành cú cắt.
+   └──────────────────────────────────────────────────────────────────────── */
+.vhero__clip {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease);
+}
+
+.vhero__clip.is-on {
+    opacity: 1;
+}
+
+/* ┌─ LỚP PHỦ TƯƠNG PHẢN ────────────────────────────────────────────────────
+   │ Chỉ đậm ở NỬA DƯỚI, nơi có chữ. Phủ đều cả tấm thì video bị dìm xuống một
+   │ tông xám và mất đúng thứ nó được đặt ở đây để khoe.
+   │
+   │ Ba chặng chứ không hai: một dốc thẳng từ trong suốt xuống đen tạo một
+   │ đường viền thấy được ở khoảng giữa. Chặng 45% giữ phần trên sạch hẳn.
+   └──────────────────────────────────────────────────────────────────────── */
+.vhero__veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, .30) 0%,
+        rgba(0, 0, 0, 0)   45%,
+        rgba(0, 0, 0, .62) 100%
+    );
+}
+
+/* ── Cụm chữ: góc TRÁI DƯỚI ─────────────────────────────────────────────────
+   Không canh giữa. Canh giữa là ngôn ngữ của trang đích quảng cáo; nhà mốt
+   neo chữ vào một góc và để phần còn lại của khung cho hình. */
+.vhero__copy {
+    position: absolute;
+    left: var(--page-edge);
+    right: var(--page-edge);
+    bottom: var(--rhythm-sm);
+    z-index: 1;
+    max-width: min(46ch, 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+}
+
+.vhero__eyebrow {
+    margin: 0;
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    /* Không dùng --on-brand-muted: nền ở đây là VIDEO, không phải màu thương
+       hiệu. Trắng pha trong suốt tự hoà theo mọi khung hình phía sau. */
+    color: rgba(255, 255, 255, .78);
+}
+
+.vhero__title {
+    margin: 0;
+    font-size: var(--fs-h1);
+    font-weight: 400;
+    line-height: 1.04;
+    letter-spacing: var(--tracking-tight);
+    color: var(--on-ink);
+    /* text-wrap: balance của layout.css chia đều các dòng — ở đây KHÔNG muốn
+       thế: tiêu đề đã tự ngắt dòng bằng <br> theo đúng ý người viết. */
+    text-wrap: nowrap;
+}
+
+.vhero__title em {
+    font-style: italic;
+    font-weight: 400;
+}
+
+/* Liên kết gạch chân, KHÔNG phải nút đặc. Hai nút đặc cạnh nhau trên một hero
+   video đọc ra như một trang đích; một dòng chữ gạch chân là cách nhà mốt mời
+   đi tiếp. */
+.vhero__link {
+    display: inline-block;
+    padding-bottom: var(--space-1);
+    border-bottom: 1px solid currentColor;
+    color: var(--on-ink);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: opacity var(--dur) var(--ease);
+}
+
+.vhero__link:hover,
+.vhero__link:focus-visible {
+    /* Cùng cách báo hiệu với thanh nav trên nền sáng: MỜ ĐI, không đổi màu. */
+    opacity: .62;
+}
+
+/* Nhãn clip — góc PHẢI DƯỚI, đối diện cụm chữ. Nó là chú thích của hình, nên
+   đứng tách khỏi tiêu đề trang. */
+.vhero__label {
+    position: absolute;
+    /* ┌─ TRÁNH CỤM NÚT NỔI ─────────────────────────────────────────────────
+       │ .fab (components/floating.css) là position:fixed ở góc phải dưới, cao
+       │ 164px và rộng 48px. Hero chiếm trọn khung nhìn đầu tiên, nên nhãn ở
+       │ góc phải dưới của hero rơi ĐÚNG vào chỗ ba nút tròn ấy — đo được ở cả
+       │ 1440, 1920 và 900: label 1164–1416, fab 1368–1416, chồng nhau 48px.
+       │
+       │ Nhấc nhãn LÊN TRÊN cụm nút thay vì đẩy sang trái: đẩy ngang thì nhãn
+       │ rời khỏi mép phải và thôi thẳng cột với mọi thứ khác của trang, mà ở
+       │ màn hẹp vẫn còn đụng. Nâng lên thì nó vẫn neo đúng mép phải.
+       │
+       │ 48px là con số floating.css GÕ THẲNG (`width: 48px`), không phải một
+       │ token — nên nó đứng đây dưới dạng giá trị dự phòng của --fab-size.
+       │ Khai token ấy trong floating.css lúc nào thì chỗ này tự bám theo, mà
+       │ chưa khai thì vẫn ra đúng con số hiện hành.
+       └──────────────────────────────────────────────────────────────────── */
+    right: var(--page-edge);
+    bottom: calc(var(--rhythm-sm) + var(--fab-size, 48px) * 3 + var(--space-4));
+    z-index: 1;
+    margin: 0;
+    max-width: 32ch;
+    text-align: right;
+    font-size: var(--fs-caption);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .72);
+    transition: opacity var(--dur) var(--ease);
+}
+
+/* home.js hạ lớp này trong lúc đổi chữ, nên chữ cũ mờ đi rồi chữ mới mới hiện
+   — không có cú nhảy chữ giữa hai clip. */
+.vhero__label.is-fading {
+    opacity: 0;
+}
+
+/* ── Màn hẹp ────────────────────────────────────────────────────────────────
+   Nhãn clip bỏ hẳn: ở 390px nó nằm đè lên tiêu đề. Cụm chữ giữ nguyên vị trí
+   góc trái dưới, chỉ hạ nhịp lề. */
+@media (max-width: 780px) {
+    .vhero__label {
+        display: none;
+    }
+
+    .vhero__copy {
+        bottom: var(--rhythm-xs);
+        max-width: none;
+    }
+
+    .vhero__title {
+        /* Bỏ nowrap: ở bề ngang này câu ngắt dòng ở đâu cũng được, còn hơn
+           tràn ra ngoài mép. */
+        text-wrap: pretty;
+    }
+}
+
+/* ┌─ GIẢM CHUYỂN ĐỘNG ──────────────────────────────────────────────────────
+   │ Khối chung trong layout.css ép mọi transition/animation về 0.01ms, nhưng
+   │ nó KHÔNG chạm tới việc một thẻ <video> có phát hay không — đó là hành vi
+   │ của phần tử, không phải một hiệu ứng CSS.
+   │
+   │ Nên phần chặn phát nằm ở home.js (nó hỏi cùng câu hỏi này rồi mới gọi
+   │ play). Ở đây chỉ lo phần hình: hiện clip đầu ở khung hình poster và tắt
+   │ hẳn phần mờ chồng, để không còn gì nhấp nháy kể cả khi JS chưa chạy.
+   └──────────────────────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════════
+   CUỘN BẮT DÍNH TOÀN TRANG
+
+   ┌─ HAI LỖI ĐÃ SỬA Ở ĐÂY, GHI LẠI ĐỂ KHÔNG AI LẶP LẠI ─────────────────────
+   │
+   │ 1. ĐẶT SAI PHẦN TỬ. Bản trước khai `scroll-snap-type` trên
+   │    `.page-home-index` — tức là trên <body>. Nhưng khung cuộn của trang
+   │    này là KHUNG NHÌN, mà khung nhìn lấy thuộc tính cuộn từ <html>, KHÔNG
+   │    lấy từ <body> (chỉ `overflow` mới có luật propagate body → viewport,
+   │    scroll-snap-type thì không). Nên dòng ấy tính ra đúng giá trị trong
+   │    getComputedStyle mà chưa từng có tác dụng.
+   │
+   │    Đo trên trang thật trước khi sửa: dừng ở y=450 thì hero chiếm 50% màn
+   │    hình và khối "Hàng mới về" chiếm 50% — đúng cảnh "hai video cắt ngang"
+   │    mà người xem báo.
+   │
+   │    `html:has(body.page-home-index)` nhắm đúng <html> mà vẫn chỉ ở trang
+   │    chủ — không đụng trang nào khác.
+   │
+   │ 2. `mandatory` MỚI ĐÚNG Ở ĐÂY, và nó KHÔNG khoá tay người đọc lưới sản
+   │    phẩm — điều tôi lo trước đó là sai. Theo đặc tả: khi vùng snap CAO
+   │    HƠN khung nhìn thì vị trí cuộn được phép nghỉ ở BẤT KỲ đâu bên trong
+   │    nó. Hero cao đúng 100dvh nên nó khoá dứt khoát; hai lưới sản phẩm cao
+   │    gấp nhiều lần khung nhìn nên cuộn bên trong chúng vẫn tự do hoàn toàn.
+   │    Được cả hai, không phải đánh đổi.
+   │
+   │ KHÔNG dựng `.scroll-container` bọc <body> với `overflow-y: scroll`: thêm
+   │ một khung cuộn lồng là `position: sticky` của đầu trang neo vào khung
+   │ trong đó thay vì vào khung nhìn — đầu trang thôi dính, và cột thông tin
+   │ dính ở trang chi tiết sản phẩm cũng gãy theo.
+   └──────────────────────────────────────────────────────────────────────── */
+html:has(body.page-home-index) {
+    scroll-snap-type: y mandatory;
+
+    /* ┌─ PHẢI TRẢ scroll-padding-top VỀ 0, KHÔNG THÌ SNAP LỆCH ─────────────
+       │ gm.css khai `html { scroll-padding-top: calc(var(--header-h) +
+       │ var(--space-8)) }` ≈ 96px, để liên kết neo không bị thanh nav dính
+       │ che mất. Nhưng scroll-padding THU NHỎ CẢ VÙNG SNAP: mép đầu của
+       │ snapport tụt xuống 96px, nên `scroll-snap-align: start` của một khối
+       │ ở tài liệu y=900 lại nghỉ ở scrollY = 900 − 96 = 804.
+       │
+       │ Đo được đúng con số đó: nghỉ ở y=804, hero còn hở 11% ở mép trên —
+       │ vẫn là cảnh "hai khối cùng lúc" mà snap sinh ra để dẹp.
+       │
+       │ Trang chủ không có liên kết neo trong trang (ba khối đều là điểm đến
+       │ của chính cú cuộn), nên bỏ khoảng chừa ở đây không mất gì. Các trang
+       │ khác giữ nguyên 96px.
+       └──────────────────────────────────────────────────────────────────── */
+    scroll-padding-top: 0;
+}
+
+/* Mốc dính cho hai khối dưới hero. Cả hai đều cao hơn khung nhìn nên chúng chỉ
+   "bắt" ở MÉP ĐẦU — cuộn bên trong lưới không bị kéo. */
+.hnew,
+.hbest {
+    scroll-snap-align: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vhero__clip {
+        transition: none;
+    }
+
+    .vhero__label {
+        transition: none;
+    }
+
+    /* Người đã tắt chuyển động không muốn trang tự kéo dưới tay mình. */
+    html:has(body.page-home-index) {
+        scroll-snap-type: none;
+    }
+}

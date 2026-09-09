@@ -58,6 +58,7 @@ $facts = [
                 <?php /* Ô "lab-photo" của bản thiết kế — máy đo mắt / bảng thị lực */ ?>
                 <img src="<?= designImage('lab-photo', 'assets/images/showroom-exam-room.jpg') ?>"
                      alt="<?= e(t('home.lens.alt')) ?>"
+                     width="1600" height="900"
                      loading="lazy" decoding="async">
             </figure>
 

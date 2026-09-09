@@ -15,9 +15,16 @@ class HomeController extends BaseController
     public function index(): void
     {
         /*
-         * Bốn truy vấn cho mười khối của bản thiết kế. Bộ sưu tập, gói tròng,
-         * quy trình đo mắt và đánh giá đều đọc thẳng từ config nên không tốn
-         * thêm lần nào chạm DB.
+         * HAI truy vấn, không còn ba. Bộ sưu tập, gói tròng và quy trình đo mắt
+         * đều đọc thẳng từ config nên không tốn lần nào chạm DB.
+         *
+         * ĐÃ BỎ CategoryModel::withProductCounts(): khối "danh mục" không còn
+         * trên trang chủ (xem app/views/home/index.php). Đó là một câu có
+         * GROUP BY, chạy cho mỗi lượt xem trang chủ để dựng thứ không ai vẽ ra.
+         *
+         * Thanh nav VẪN có danh mục kèm số đếm — _layout/header.php tự gọi lại
+         * đúng hàm ấy cho bảng xổ của nó, độc lập với controller này. Nên bật
+         * lại khối danh mục ở trang chủ thì phải trả dòng 'categories' về đây.
          */
         $this->renderView('home/index', [
             'pageTitle'  => 'Vin Eyewear — Kính mắt chính hãng, đo khúc xạ miễn phí',
@@ -34,9 +41,6 @@ class HomeController extends BaseController
              * vẫn in ra nhưng nằm mờ, vì không còn gì để trượt.
              */
             'newArrivals' => ProductModel::newest(8),
-
-            // Danh mục kèm số sản phẩm, dùng cho lưới danh mục
-            'categories' => CategoryModel::withProductCounts(),
 
             // Bán chạy: ưu tiên hàng được đánh dấu nổi bật. 8 vì cùng lý do
             // với 'newArrivals' ở trên — khối này cũng là một băng trượt.

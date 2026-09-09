@@ -118,7 +118,19 @@ function ganChiTietDon() {
             var top  = card ? card.getBoundingClientRect().top : 0;
 
             if (card && top < 0) {
-                card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                /* 'smooth' chỉ khi người dùng KHÔNG tắt hiệu ứng chuyển động.
+                   Khối prefers-reduced-motion trong layout.css ép mọi transition
+                   và animation về 0.01ms, nhưng nó KHÔNG với tới đây: một
+                   behavior:'smooth' viết thẳng trong JS đè lên cả
+                   `scroll-behavior: auto` của CSS. Đây là chỗ duy nhất trên
+                   trang khách còn sót — floating.js (nút "lên đầu trang") đã
+                   hỏi đúng câu hỏi này trước khi cuộn. */
+                card.scrollIntoView({
+                    block: 'start',
+                    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+                        ? 'auto'
+                        : 'smooth'
+                });
             }
         }
     });

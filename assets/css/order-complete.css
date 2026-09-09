@@ -96,17 +96,17 @@
 }
 
 .ocomp__codelabel {
-    font-size: 12px;
-    letter-spacing: 0.14em;
+    font-size: var(--fs-caption);
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--eyebrow);
 }
 
 .ocomp__codeval {
     font-family: var(--font-mono);
-    font-size: 17px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
+    font-size: var(--fs-h5);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     color: var(--brand);
 }
 
@@ -127,7 +127,7 @@
 .ocomp__copy:focus-visible { color: var(--brand); }
 
 .ocomp__copied {
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 500;
     color: var(--brand);
 }
@@ -137,7 +137,7 @@
 .ocomp__lead {
     max-width: 440px;
     margin: 0 auto;
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     line-height: 1.7;
     color: var(--muted);
 }
@@ -148,7 +148,7 @@
 .ocomp__cancel {
     max-width: 480px;
     margin-top: 14px;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--h-note);
 }
 
@@ -178,9 +178,9 @@
 .ocomp__label {
     display: block;
     margin-bottom: 10px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--eyebrow);
 }
@@ -204,14 +204,14 @@
 .ocomp__fact + .ocomp__fact { border-left: 1px solid var(--h-card-line); }
 
 .ocomp__factval {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .ocomp__factsub {
     margin: 3px 0 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: var(--muted);
 }
@@ -220,17 +220,17 @@
    chữ chính: đây là thứ khách rà lại xem có đúng nhà mình không. */
 .ocomp__addr {
     margin: 6px 0 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.7;
     color: var(--ink);
 }
 
-.ocomp__addr strong { font-weight: 600; }
+.ocomp__addr strong { font-weight: 500; }
 
 /* Dòng "cách nhận · thời gian dự kiến" — lặng nhất trong ô */
 .ocomp__how {
     margin: 6px 0 0;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: var(--h-meta);
 }
@@ -243,7 +243,7 @@
     display: grid;
     gap: 6px;
     margin: 8px 0 10px;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
 }
 
 .ocomp__bank > div {
@@ -266,7 +266,7 @@
     word-break: break-word;
 }
 
-.ocomp__bank dd strong { font-weight: 600; }
+.ocomp__bank dd strong { font-weight: 500; }
 
 /* ============================================================
    THẺ ĐƠN HÀNG
@@ -287,13 +287,13 @@
 .ocomp__ordertitle {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 22px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .ocomp__ordercount {
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--h-meta);
 }
 
@@ -341,21 +341,21 @@
 }
 
 .ocomp__itemname {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
     line-height: 1.4;
     color: var(--ink);
 }
 
 .ocomp__itemqty {
     margin: 2px 0 0;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     color: var(--h-meta);
 }
 
 .ocomp__itemsum {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
     color: var(--ink);
     white-space: nowrap;
 }
@@ -372,7 +372,7 @@
     display: flex;
     justify-content: space-between;
     gap: 16px;
-    font-size: 14px;
+    font-size: var(--fs-body);
     color: var(--muted);
 }
 
@@ -397,27 +397,27 @@
 }
 
 .ocomp__deposit-num {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand);
 }
 
 .ocomp__deposit-why {
     margin: 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     line-height: 1.6;
     color: var(--h-note);
 }
 
 .ocomp__grandlabel {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .ocomp__grandval {
     font-family: var(--font-serif);
-    font-size: 28px;
-    font-weight: 600;
+    font-size: var(--fs-h3);
+    font-weight: 500;
     line-height: 1.1;
     color: var(--brand);
 }
@@ -505,14 +505,14 @@
 
 .ocomp__itemlens {
     margin: 2px 0 0;
-    font-size: 12.5px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     color: var(--brand);
 }
 
 .ocomp__itemrx {
     margin: 1px 0 0;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     color: var(--muted);
 }
 
@@ -561,7 +561,7 @@
 .opaid__receipt,
 .opaid__tools,
 .opaid__next,
-.opaid__acts { animation: opaid-rise 0.5s ease both; }
+.opaid__acts { animation: opaid-rise var(--dur-med) var(--ease) both; }
 
 .opaid__receipt { animation-delay: 0.15s; }
 .opaid__tools   { animation-delay: 0.2s; }
@@ -585,7 +585,7 @@
     border-radius: var(--radius-round);
     background: #3d7a4f;
     color: #fff;
-    box-shadow: 0 0 0 10px #e6f2ea, 0 10px 24px rgba(61, 122, 79, 0.22);
+    box-shadow: none;
     animation: opaid-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -596,15 +596,21 @@
 }
 
 /* Nét tick TỰ VẼ, không hiện sẵn. Vòng tròn nảy ra trước rồi nét chạy sau
-   (trễ 0.3s) — hai việc nối nhau đọc thành một câu "xong rồi", còn bật ra
-   cùng lúc thì chỉ là một hình tĩnh xuất hiện.
+   (trễ --dur = 220ms) — hai việc nối nhau đọc thành một câu "xong rồi", còn
+   bật ra cùng lúc thì chỉ là một hình tĩnh xuất hiện.
+
+   Chú thích cũ ghi "trễ 0.3s"; con số ấy đã thành var(--dur) ở đợt token hoá
+   mà dòng chữ thì chưa theo. Độ trễ tách riêng thành animation-delay chứ
+   không nằm trong shorthand: đọc `0.5s var(--dur) var(--ease)` rất dễ tưởng
+   var(--dur) là đường cong, mà nó là VỊ TRÍ THỜI GIAN THỨ HAI — tức độ trễ.
 
    24 là độ dài xấp xỉ của nét trong icon 'check' (M4.5 12.5l5 5 10-10 ≈ 21.2),
    làm tròn LÊN: thiếu một chút thì nét đứt đoạn ở cuối, thừa một chút thì
    không ai thấy. */
 .opaid__sealtick {
     stroke-dasharray: 24;
-    animation: opaid-tick 0.5s 0.3s ease both;
+    animation: opaid-tick 0.5s var(--ease) both;
+    animation-delay: var(--dur);
 }
 
 @keyframes opaid-tick {
@@ -632,14 +638,14 @@
     margin: 26px 0 8px;
     font-family: var(--font-serif);
     font-size: clamp(26px, 3.4vw, 32px);
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.25;
     color: var(--ink);
 }
 
 .opaid__lead {
     margin: 0;
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     line-height: 1.65;
     color: var(--h-note);
 }
@@ -675,8 +681,8 @@
 .opaid__cardtitle {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 16.5px;
-    font-weight: 600;
+    font-size: var(--fs-h6);
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -688,8 +694,8 @@
     border: 1px solid #bcd8c6;
     border-radius: var(--radius-sm);
     background: #eef7f0;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     white-space: nowrap;
     color: #3d6633;
 }
@@ -719,7 +725,7 @@
     column-gap: 16px;
     margin: 0;
     padding: 20px 24px;
-    font-size: 14px;
+    font-size: var(--fs-body);
 }
 
 .opaid__rows dt { color: var(--h-note); }
@@ -740,8 +746,8 @@
 }
 
 .opaid__code {
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     /* Chữ số đều bề ngang: mã đơn là thứ khách dò từng ký tự để đọc cho nhân
        viên qua điện thoại. */
     font-variant-numeric: tabular-nums;
@@ -757,8 +763,8 @@
     background: var(--surface-raised);
     color: var(--muted);
     font-family: inherit;
-    font-size: 11.5px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     line-height: 1.2;
     cursor: pointer;
 }
@@ -800,15 +806,15 @@
        với đường kẻ liền vốn chỉ ngăn hai khối ngang hàng nhau. */
     border-top: 1px dashed var(--h-line);
     background: var(--h-shell);
-    font-size: 14.5px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .opaid__totalnum {
     font-family: var(--font-serif);
-    font-size: 24px;
-    font-weight: 700;
+    font-size: var(--fs-h3);
+    font-weight: 500;
     color: var(--brand);
     white-space: nowrap;
 }
@@ -822,11 +828,11 @@
     gap: 16px;
     padding: 0 24px 16px;
     background: var(--h-shell);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--h-note);
 }
 
-.opaid__restnum { font-weight: 600; color: var(--ink); white-space: nowrap; }
+.opaid__restnum { font-weight: 500; color: var(--ink); white-space: nowrap; }
 
 /* --- Hai nút chữ: tải · chia sẻ --- */
 
@@ -855,8 +861,8 @@
     background: none;
     color: var(--muted);
     font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
     cursor: pointer;
 }
 
@@ -910,7 +916,7 @@
 
 .opaid__next p {
     margin: 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.65;
     color: var(--muted);
 }
@@ -936,8 +942,8 @@
     border-radius: var(--radius-sm);
     background: var(--brand);
     color: var(--on-brand);
-    font-size: 14.5px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     text-align: center;
 }
 
@@ -965,13 +971,13 @@
 
 .opaid__help {
     margin: 32px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     line-height: 1.7;
     text-align: center;
     color: var(--h-note);
 }
 
-.opaid__help a { color: var(--ink); font-weight: 600; }
+.opaid__help a { color: var(--ink); font-weight: 500; }
 
 @media (max-width: 560px) {
     .opaid { padding-top: 40px; }
@@ -979,7 +985,7 @@
     /* Nhãn lên dòng riêng: 108px nhãn + giá trị trên điện thoại thì dòng
        "Sản phẩm" vắt thành bốn dòng. */
     .opaid__rows { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
-    .opaid__rows dt { margin-top: 10px; font-size: 12.5px; }
+    .opaid__rows dt { margin-top: 10px; font-size: var(--fs-caption); }
     .opaid__rows dt:first-child { margin-top: 0; }
 
     .opaid__acts { grid-template-columns: minmax(0, 1fr); }
@@ -1050,7 +1056,7 @@
    ============================================================================ */
 .ocomp__title, .opaid__title {
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .ocomp__ordertitle, .opaid__cardtitle {
@@ -1058,7 +1064,7 @@
 }
 
 .ocomp__label, .ocomp__codelabel {
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }

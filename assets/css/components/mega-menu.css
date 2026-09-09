@@ -9,16 +9,38 @@
    `.header-nav__list > li > a` mà file kia vừa khai.
 
    ─────────────────────────────────────────────────────────────────────────────
+   DỰNG THEO BẢNG XỔ CỦA GENTLE MONSTER
+
+   Bảng xổ của họ TRÀN HẾT BỀ NGANG màn hình, dính sát đáy thanh nav, nền
+   trắng, không viền, không bóng, không mũi nhọn. Nó không đọc ra là "một cái
+   hộp bật lên" — nó đọc ra là thanh nav vừa CAO THÊM.
+
+   BẢN TRƯỚC LÀ NGƯỢC LẠI: một tấm thẻ có viền và bóng đổ, cách nút 10px, có
+   mũi nhọn hình thoi cắm vào mép trên. Ba chi tiết ấy đều là ngôn ngữ của
+   tooltip, không phải của mega menu thời trang.
+
+   BỎ HẲN BA THỨ:
+     · --mega-gap (khe 10px giữa nút và bảng)  → bảng dính sát, khe bằng 0
+     · .mega__caret (mũi nhọn hình thoi)       → ẩn
+     · .mega__chevron (mũi tên xuống ở nút)    → ẩn
+
+   Ba phần tử vẫn còn trong markup (_layout/mega-menu.php không đổi); chúng chỉ
+   thôi được vẽ ra. Bật lại là xoá vài dòng `display:none`.
+
+   ─────────────────────────────────────────────────────────────────────────────
    CÁCH NEO BẢNG — GIỮ NGUYÊN KỸ THUẬT CŨ, ĐỪNG ĐỔI
 
    `.mega` để `position: static`, nên `.mega__panel` (absolute) neo vào
    `.site-header` — thẻ tổ tiên gần nhất ĐÃ ĐƯỢC ĐỊNH VỊ, vì nó là sticky.
-   Nhờ vậy `top: 100%` nghĩa là "ngay dưới đáy header" và `left/right:
-   var(--page-edge)` cho bảng rộng đúng bằng cột nội dung của cả site.
+   Nhờ vậy `top: 100%` nghĩa là "ngay dưới đáy header".
 
    Đặt `position: relative` lên `.mega` là bảng thu lại còn đúng bề ngang của
    một mục nav — một lỗi trông như "mega menu bị vỡ" mà nguyên nhân nằm ở một
    dòng khác hẳn chỗ nhìn thấy.
+
+   ĐỔI SO VỚI BẢN TRƯỚC: `left/right` nay là 0 chứ không phải var(--page-edge),
+   nên bảng chạy hết bề ngang khung nhìn. Phần thụt lề chuyển vào `padding`
+   của chính bảng, để NỀN tràn mép còn NỘI DUNG vẫn thẳng cột với thanh nav.
 
    ─────────────────────────────────────────────────────────────────────────────
    MỞ BẰNG CSS, KHÔNG BẰNG JAVASCRIPT
@@ -34,123 +56,225 @@
 .mega {
     /* XEM KHỐI CHÚ THÍCH Ở ĐẦU FILE trước khi đổi dòng này. */
     position: static;
+
+    /* Bảng vẫn dính sát đáy thanh nav (nó neo `top: 100%` vào .site-header),
+       nhưng NÚT thì không cao bằng cả thanh nav — dưới chữ còn một dải đệm
+       thuộc về header chứ không thuộc về <li class="mega">.
+
+       Dải ấy là một KHE CHẾT: con trỏ đi thẳng từ chữ xuống bảng phải băng qua
+       nó, và trong lúc băng qua thì không còn hover trên .mega lẫn .mega__panel
+       — bảng đóng ngay trước khi chuột kịp tới nơi.
+
+       16px phủ dư dải đệm ấy ở mọi bề ngang. Vùng phủ do `.mega__trigger::after`
+       vẽ ra (xem bên dưới) và nó trong suốt, không có gì nhìn thấy được. */
+    --mega-gap: 16px;
 }
 
-/* ── Nút mở ──────────────────────────────────────────────────────────────── */
+/* ── Nút mở ──────────────────────────────────────────────────────────────────
+   Phải khớp TỪNG THUỘC TÍNH với `.header-nav__list > li > a` trong
+   components/header.css — hai thứ này đứng cạnh nhau trên cùng một hàng, lệch
+   một pixel là thấy ngay.
+   ──────────────────────────────────────────────────────────────────────────── */
 .mega__trigger {
     position: relative;
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    padding: var(--space-3) var(--space-4);
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
+    padding: var(--space-5) 0;
+    color: var(--ink);
+    font-size: var(--fs-label);
     font-weight: 500;
-    letter-spacing: .04em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
-    transition: color .15s ease;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    transition: opacity var(--dur) var(--ease);
 }
 
+/* ĐẢO CHIỀU (09/09/2026): mục đang rê/mở giữ opacity 1, CÁC MỤC BÊN CẠNH mờ đi.
+   Luật "sibling dimming" khai ở components/header.css trên .header-nav__list —
+   nó phủ cả liên kết thường lẫn .mega__trigger nên ở đây chỉ cần chốt lại là
+   mục đang mở không bao giờ mờ (luật này đứng sau, thắng luật mờ chung). */
 .mega:hover > .mega__trigger,
 .mega:focus-within > .mega__trigger,
 .mega__trigger:hover,
 .mega__trigger:focus-visible {
     color: var(--ink);
+    opacity: 1;
 }
 
+/* Mục đang mở: gạch chân, KHÔNG tăng weight — đổi weight làm cả hàng nav xê
+   dịch mỗi lần sang trang khác. */
 .mega__trigger.is-active {
     color: var(--ink);
-    font-weight: 600;
+    font-weight: 500;
+    text-decoration: underline;
+    text-underline-offset: 6px;
 }
 
-/* VÙNG BẮT CHUỘT phủ khoảng trống giữa nút và mép trên của bảng.
+/* VÙNG BẮT CHUỘT phủ khe chết giữa nút và mép trên của bảng — xem khối
+   --mega-gap ở trên.
 
-   Không có nó thì rê chuột từ nút xuống bảng sẽ đi ngang qua một dải trống,
-   :hover tắt, bảng đóng sập giữa chừng. Bản thiết kế gốc giải quyết bằng một
-   bộ hẹn giờ 180ms trong JavaScript; ở đây là một hình chữ nhật vô hình,
-   không tốn dòng JS nào. */
+   Nó là con của .mega__trigger nên vẫn nằm trong .mega: chuột đi qua đây thì
+   `.mega:hover` còn đúng và bảng ở lại. Trong suốt hoàn toàn.
+
+   z-index âm để nó không bao giờ nuốt cú bấm vào bảng: bảng có z-index 1, vùng
+   này lùi xuống dưới nền của bảng. */
 .mega__trigger::after {
     content: "";
     position: absolute;
     top: 100%;
     left: 0;
     right: 0;
+    z-index: -1;
     height: var(--mega-gap);
 }
 
+/* ẨN — xem khối chú thích đầu file. GM không đặt mũi tên cạnh mục nav. */
 .mega__chevron {
-    width: 12px;
-    height: 12px;
-    flex: 0 0 auto;
-    transition: transform .2s ease;
+    display: none;
 }
 
-.mega:hover .mega__chevron,
-.mega:focus-within .mega__chevron {
-    transform: rotate(180deg);
-}
-
-/* Mũi nhọn hình thoi cắm vào mép trên bảng — thứ trả lời câu "cái nút này mở
-   ra cái gì". Là <span> thật chứ không phải ::after vì trigger đã dùng ::after
-   cho vùng bắt chuột ở trên. */
+/* ẨN — mũi nhọn hình thoi cắm vào mép trên bảng. Bảng nay dính sát thanh nav
+   nên không còn gì để trỏ vào. */
 .mega__caret {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    z-index: 2;
-    width: 14px;
-    height: 14px;
-    margin-top: calc(var(--mega-gap) - 7px);
-    background: var(--surface-raised);
-    border-left: 1px solid var(--line);
-    border-top: 1px solid var(--line);
-    transform: translateX(-50%) rotate(45deg);
-    opacity: 0;
-    transition: opacity .15s ease;
+    display: none;
 }
 
-.mega:hover .mega__caret,
-.mega:focus-within .mega__caret {
-    opacity: 1;
-}
-
-/* ── Bảng ────────────────────────────────────────────────────────────────── */
-.mega {
-    --mega-gap: 10px;
-}
-
+/* ── Bảng ────────────────────────────────────────────────────────────────────
+   TRÀN HẾT BỀ NGANG, phẳng, không viền bốn cạnh.
+   ──────────────────────────────────────────────────────────────────────────── */
 .mega__panel {
     position: absolute;
     top: 100%;
-    left: var(--page-edge);
-    right: var(--page-edge);
+    /* 0 chứ không var(--page-edge): nền phải chạm hai mép màn hình. */
+    left: 0;
+    right: 0;
     z-index: 1;
-    margin-top: var(--mega-gap);
-    padding: var(--space-8);
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-    box-shadow: var(--elev-3);
+    margin-top: 0;
+    /* Thụt lề chuyển vào đây, nên NỀN tràn mép mà NỘI DUNG vẫn thẳng cột với
+       wordmark và các mục nav phía trên.
+
+       Đệm dọc đọc từ thang nhịp (PHẦN 3 của gm.css) — bảng xổ thở cùng nhịp
+       với các section của trang, không có nhịp riêng. */
+    padding: var(--rhythm-md) var(--page-edge) var(--rhythm-lg);
+    /* ┌─ GIỚI HẠN TRONG KHUNG NHÌN ─────────────────────────────────────────
+       │ Bảng này `position: absolute` bên trong `.site-header` — mà header
+       │ thì `position: sticky; top: 0`. Nghĩa là bảng DÍNH THEO khung nhìn:
+       │ phần thò xuống dưới đáy màn hình KHÔNG cuộn tới được, cuộn trang chỉ
+       │ kéo theo cả bảng đi cùng.
+       │
+       │ Đo bằng Playwright trước khi thêm hai dòng này:
+       │     1440×900   "Eyewear"      cao  894px  → thò 95px
+       │                "Collections"  cao 2080px  → thò 1280px
+       │     1366×768   "Collections"  cao 1976px  → thò 1308px
+       │     1920×1080  "Collections"  cao 2734px  → thò 1755px
+       │ max-height là `none` và overflow là `visible` ở mọi bề ngang, nên
+       │ mục cuối của bảng "Bộ sưu tập" chưa bao giờ với tới được.
+       │
+       │ NÓ CÒN LÀM BẢNG KHÔNG ĐÓNG ĐƯỢC. Bảng mở bằng `:hover` trên `.mega`,
+       │ và `.mega__panel` là con của `.mega` — phủ kín màn hình thì con trỏ
+       │ không còn chỗ nào để rời ra. Đo được: rê xuống (720, 890) rồi lấy
+       │ mẫu 700ms, opacity đứng nguyên ở 1.
+       │
+       │ Trừ đi ĐỦ CẢ HAI tầng đầu trang (dải tiện ích + hàng nav) chứ không
+       │ riêng --header-h: lúc chưa cuộn thì dải tiện ích còn nằm trên, mép
+       │ trên của bảng ở 101px chứ không phải 65px. Cuộn rồi thì bảng ngắn
+       │ hơn chỗ trống 36px — không ai thấy, mà không bao giờ thò ra.
+       │
+       │ overscroll-behavior: cuộn hết bảng thì DỪNG, không "lây" sang trang
+       │ phía sau — cùng lý do với ngăn kéo bộ lọc.
+       │
+       │ TRỪ THÊM MỘT BẬC NHỊP, và đó không phải để cho đẹp. Cắt vừa khít
+       │ khung nhìn thì bảng chiếm ĐÚNG 100% chỗ trống dưới thanh nav: đo
+       │ được y=100..900 trên màn 900 — không còn một pixel nào của trang.
+       │ Mà bảng mở bằng `:hover` trên `.mega`, nên con trỏ không còn lối
+       │ nào để rời ra theo hướng xuống; muốn đóng phải đi NGƯỢC lên thanh
+       │ nav. Chừa một dải trang thấy được vừa trả lại lối ra ấy, vừa giữ
+       │ bảng đọc thành "một lớp phủ lên trang" chứ không thành "một trang
+       │ khác" — đúng ngôn ngữ bảng xổ của bộ này.
+       │
+       │ Đã kiểm 5 lối đóng còn lại đều chạy: rê sang mục nav khác, rê lên
+       │ wordmark, rê sang icon giỏ hàng, bấm Esc, đưa trỏ ra ngoài cửa sổ.
+       └──────────────────────────────────────────────────────────────────── */
+    max-height: calc(100dvh - var(--header-h) - var(--announce-h) - var(--rhythm-sm));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: var(--surface);
+    /* CHỈ cạnh dưới. Cạnh trên đã là đường kẻ dưới của thanh nav; hai cạnh bên
+       không tồn tại vì bảng chạm mép màn hình. */
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    box-shadow: none;
     opacity: 0;
     visibility: hidden;
+    /* MỘT lần hiện có phối hợp: cả bảng mờ vào và nhích xuống 6px, không có
+       stagger cho từng cột. Bảng dính liền thanh nav nên quãng dịch phải rất
+       ngắn — 6px vừa đủ để mắt đọc ra là "vừa mở ra", không thành một cú
+       trượt.
+
+       ĐÓNG NHANH HƠN MỞ, và đó là lý do có hai khai báo transition.
+       Luật ở TRẠNG THÁI ĐÓNG (đây) chạy khi bảng ĐI VỀ đóng; luật ở trạng thái
+       mở (bên dưới) chạy khi bảng đi tới mở. Nên --dur-fast (180ms) ở đây là
+       thời gian đóng, --dur (220ms) bên dưới là thời gian mở.
+       Mở thong thả thì đọc ra là "mời vào"; đóng dứt khoát thì không níu chân
+       người vừa quyết định đi chỗ khác. */
     transform: translateY(-6px);
-    transition: opacity .18s ease, transform .18s ease, visibility .18s;
+    transition:
+        opacity var(--dur-fast) var(--ease),
+        transform var(--dur-fast) var(--ease),
+        visibility var(--dur-fast) var(--ease);
 }
 
 .mega:hover > .mega__panel,
 .mega:focus-within > .mega__panel {
     opacity: 1;
     visibility: visible;
-    transform: none;
+    transform: translateY(0);
+    transition:
+        opacity var(--dur) var(--ease),
+        transform var(--dur) var(--ease),
+        visibility var(--dur) var(--ease);
+}
+
+/* ĐÓNG CHỦ ĐỘNG — Esc hoặc bấm ra ngoài.
+
+   Cần một lớp riêng vì bảng này mở bằng :hover / :focus-within, mà không có
+   selector CSS nào huỷ được một trạng thái hover đang diễn ra. assets/js/header.js
+   gắn lớp này và gỡ ra khi con trỏ rời hẳn cụm — đúng cách mà .hpop.is-closed
+   đã làm cho bảng giỏ hàng và tài khoản.
+
+   Độ ưu tiên (0,3,1) thắng luật :hover (0,2,1) nên nó đè được cả khi con trỏ
+   vẫn đang nằm trên bảng. pointer-events:none để bảng vừa đóng không nuốt cú
+   bấm tiếp theo. */
+.mega.is-dismissed > .mega__panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    pointer-events: none;
 }
 
 /* --mega-cols do PHP đặt: số cột CHỮ, chưa tính thẻ ảnh. Cửa hàng thêm danh
    mục thứ tư là lưới tự nới, không bị rơi ra ngoài như khi khoá cứng ba cột. */
+/* --mega-cols nay CỐ ĐỊNH 3 (do PHP truyền), không còn chạy theo số danh mục —
+   xem khối chú thích trong _layout/mega-menu.php về lý do bỏ bức tường chín cột.
+
+   --mega-rows là số hàng mà chín danh mục cần khi xếp ba cột. Khai hàng TƯỜNG
+   MINH chứ không để lưới tự sinh: thẻ ảnh phải trải từ hàng đầu tới hàng cuối
+   của cột thứ tư, mà `grid-row: 1 / -1` chỉ hiểu đúng khi có hàng tường minh —
+   với hàng ngầm thì `-1` co về đúng hàng 1 và các cột chữ tràn sang cột ảnh. */
 .mega__grid {
     display: grid;
     grid-template-columns: repeat(var(--mega-cols, 3), minmax(0, 1fr)) minmax(0, 1.15fr);
-    gap: var(--space-10);
+    grid-template-rows: repeat(var(--mega-rows, 1), auto);
+    column-gap: var(--rhythm-sm);
+    /* Khe DỌC rộng hơn khe ngang: các cột đã tách nhau bằng chính khoảng trống
+       giữa hai danh sách, còn hai danh mục xếp chồng thì cần một quãng nghỉ rõ
+       ràng hơn để không đọc thành một danh sách dài liền mạch. */
+    row-gap: var(--rhythm-md);
     max-width: var(--container);
     margin-inline: auto;
 }
@@ -159,66 +283,87 @@
     grid-template-columns: repeat(var(--mega-cols, 3), minmax(0, 1fr));
 }
 
+/* Thẻ ảnh giữ trọn cột cuối, cao bằng cả bảng. Đặt tường minh để các cột chữ
+   auto-place bỏ qua cột ấy và chỉ chảy trong ba cột đầu. */
+.mega__grid .mega-feature {
+    grid-column: -2;
+    grid-row: 1 / -1;
+    align-self: start;
+}
+
 .mega__col {
     min-width: 0;
 }
 
 /* Tiêu đề cột bấm được: nó là lối vào cả danh mục, còn các dòng dưới chỉ là
-   lát cắt hẹp hơn của chính nó. */
+   lát cắt hẹp hơn của chính nó.
+
+   BỎ ĐƯỜNG KẺ DƯỚI. Bốn cái gạch chân song song ở đầu bốn cột là thứ chia
+   bảng thành bốn ô — đúng cái GM tránh. Khoảng trống làm việc đó tốt hơn. */
 .mega__label {
     display: block;
-    margin-bottom: var(--space-4);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line);
+    margin-bottom: var(--space-6);
+    padding-bottom: 0;
+    border-bottom: 0;
     color: var(--ink);
     font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
-    transition: color .15s ease;
+    transition: opacity var(--dur) var(--ease);
 }
 
+/* KHÔNG chuyển sang crimson — crimson nay chỉ còn dành cho giá khuyến mãi. */
 .mega__label:hover,
 .mega__label:focus-visible {
-    color: var(--accent);
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
 }
 
 .mega__links {
     list-style: none;
     display: grid;
-    gap: var(--space-3);
+    gap: var(--space-4);
 }
 
 .mega__links a {
     color: var(--muted);
     font-size: var(--fs-body-sm);
     text-decoration: none;
-    transition: color .15s ease;
+    transition: color var(--dur) var(--ease);
 }
 
 .mega__links a:hover,
 .mega__links a:focus-visible {
     color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
-/* ── Thẻ ảnh ở cột cuối ──────────────────────────────────────────────────── */
+/* ── Thẻ ảnh ở cột cuối ──────────────────────────────────────────────────────
+   Dựng lại theo đúng thẻ sản phẩm mới (.pcard): ảnh trên nền xám, chữ bên
+   dưới, KHÔNG có nền thẻ và KHÔNG có viền.
+   ──────────────────────────────────────────────────────────────────────────── */
 .mega-feature {
     display: flex;
     flex-direction: column;
-    background: var(--surface-sunken);
+    background: transparent;
     color: var(--ink);
     text-decoration: none;
-    transition: background-color .15s ease;
 }
 
 .mega-feature:hover {
-    background: var(--brand-subtle);
+    background: transparent;
 }
 
+/* Tỉ lệ BIÊN TẬP (4/3), cố ý KHÁC tỉ lệ sản phẩm (1/1) — đây là ảnh chủ đề
+   của một bộ sưu tập, không phải ảnh một chiếc kính. Hai vai trò, hai token,
+   và cả hai khai ở PHẦN 5 của gm.css chứ không gõ tay ở đây. */
 .mega-feature__media {
     display: block;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: var(--ratio-editorial);
     overflow: hidden;
     background: var(--h-shell);
 }
@@ -228,23 +373,40 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform .4s ease;
+    transition: transform var(--dur-slow) var(--ease);
 }
 
 .mega-feature:hover .mega-feature__media img {
-    transform: scale(1.04);
+    transform: scale(1.03);
 }
 
+@media (prefers-reduced-motion: reduce) {
+
+    .mega-feature__media img {
+        transition: none;
+    }
+
+    .mega-feature:hover .mega-feature__media img {
+        transform: none;
+    }
+}
+
+/* Không đệm ngang: chữ thẳng hàng với mép trái ô ảnh, đúng như ở .pcard__body. */
 .mega-feature__body {
     display: block;
-    padding: var(--space-4);
+    padding: var(--space-3) 0 0;
 }
 
 .mega-feature__name {
     display: block;
     margin-bottom: var(--space-1);
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 400;
+}
+
+.mega-feature:hover .mega-feature__name {
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
 .mega-feature__note {
@@ -254,11 +416,13 @@
 }
 
 /* "· Xem ngay →" cấm ngắt dòng: câu mô tả do người nhập nội dung viết, dài
-   ngắn tuỳ ý, nên để chảy tự do thì mũi tên hay rơi xuống một dòng riêng. */
+   ngắn tuỳ ý, nên để chảy tự do thì mũi tên hay rơi xuống một dòng riêng.
+
+   ĐEN, không còn crimson. */
 .mega-feature__more {
     white-space: nowrap;
-    color: var(--accent);
-    font-weight: 600;
+    color: var(--ink);
+    font-weight: 400;
 }
 
 /* Dưới 1280px bảng còn ít chỗ: bỏ thẻ ảnh, các cột chữ chia đều. */
@@ -269,6 +433,6 @@
 
     .mega__grid {
         grid-template-columns: repeat(var(--mega-cols, 3), minmax(0, 1fr));
-        gap: var(--space-6);
+        gap: var(--rhythm-xs);
     }
 }

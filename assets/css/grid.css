@@ -1,0 +1,164 @@
+/* ============================================================================
+   grid.css — LƯỚI VÀ TIỆN ÍCH, THAY CHO BOOTSTRAP
+
+   ─────────────────────────────────────────────────────────────────────────────
+   VÌ SAO FILE NÀY TỒN TẠI
+
+   Trang khách nạp `assets/vendor/bootstrap.min.css` — 232 KB, chiếm 46% toàn
+   bộ CSS của site. Đối chiếu MỌI class dùng trong app/views (trừ admin) với
+   những class chỉ Bootstrap định nghĩa, còn đúng 29 cái:
+
+     lưới       row · col-12 · col-6 · col-lg-2/3/4/5/6/7 · col-md-4/5/7 · g-4
+     tiện ích   d-flex · flex-column · justify-content-center · h-100 ·
+                text-center · text-uppercase · fw-bold · lh-sm · lead ·
+                display-5 · bg-dark · border-0 · rounded-0 · shadow-sm ·
+                mb-3 · mb-5 · py-5
+
+   29 class, 232 KB. File này dựng lại đúng 29 cái đó trong ~120 dòng.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   CHỈ DỰNG LẠI THỨ ĐANG DÙNG THẬT
+
+   Không chép cả hệ tiện ích của Bootstrap "cho chắc" — làm thế là quay lại
+   đúng chỗ vừa rời đi. Thêm một class mới vào view thì THÊM VÀO ĐÂY.
+
+   Cột khai đủ 1–12 cho ba mốc (mặc định · md · lg) chứ không chỉ những cột
+   đang dùng: một bộ đầy đủ là 36 dòng sinh ra máy móc, còn một bộ khuyết thì
+   lần sau ai đó dùng `col-lg-8` sẽ gặp lỗi im lặng.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   MỐC BREAKPOINT
+
+   Dùng ĐÚNG mốc của Bootstrap (md 768px · lg 992px), KHÔNG dùng bộ 601/901/
+   1101 của site: những class này nằm sẵn trong markup được viết theo Bootstrap
+   (chân trang, trang giới thiệu, chính sách), và đổi mốc là đổi chỗ xuống dòng
+   của chúng.
+   ============================================================================ */
+
+/* ── Container ───────────────────────────────────────────────────────────── */
+.container {
+    width: 100%;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding-inline: var(--page-edge);
+}
+
+/* ── Lưới 12 cột ─────────────────────────────────────────────────────────────
+   Bootstrap dựng lưới bằng flex-wrap + padding hai bên mỗi cột (máng chia đôi),
+   và margin âm trên .row để bù lại. Giữ nguyên cơ chế đó: markup hiện có đang
+   trông chờ đúng hành vi này.
+   ──────────────────────────────────────────────────────────────────────────── */
+.row {
+    --bs-gutter-x: var(--grid-gap);
+    --bs-gutter-y: 0;
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: calc(-1 * var(--bs-gutter-y));
+    margin-right: calc(-.5 * var(--bs-gutter-x));
+    margin-left: calc(-.5 * var(--bs-gutter-x));
+}
+
+.row > * {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+    padding-right: calc(var(--bs-gutter-x) * .5);
+    padding-left: calc(var(--bs-gutter-x) * .5);
+    margin-top: var(--bs-gutter-y);
+}
+
+/* Máng dọc — chỉ `g-4` đang dùng (1.5rem, đúng giá trị của Bootstrap). */
+.g-4 {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 1.5rem;
+}
+
+.col-1  { flex: 0 0 auto; width: 8.33333333%; }
+.col-2  { flex: 0 0 auto; width: 16.66666667%; }
+.col-3  { flex: 0 0 auto; width: 25%; }
+.col-4  { flex: 0 0 auto; width: 33.33333333%; }
+.col-5  { flex: 0 0 auto; width: 41.66666667%; }
+.col-6  { flex: 0 0 auto; width: 50%; }
+.col-7  { flex: 0 0 auto; width: 58.33333333%; }
+.col-8  { flex: 0 0 auto; width: 66.66666667%; }
+.col-9  { flex: 0 0 auto; width: 75%; }
+.col-10 { flex: 0 0 auto; width: 83.33333333%; }
+.col-11 { flex: 0 0 auto; width: 91.66666667%; }
+.col-12 { flex: 0 0 auto; width: 100%; }
+
+@media (min-width: 768px) {
+    .col-md-1  { flex: 0 0 auto; width: 8.33333333%; }
+    .col-md-2  { flex: 0 0 auto; width: 16.66666667%; }
+    .col-md-3  { flex: 0 0 auto; width: 25%; }
+    .col-md-4  { flex: 0 0 auto; width: 33.33333333%; }
+    .col-md-5  { flex: 0 0 auto; width: 41.66666667%; }
+    .col-md-6  { flex: 0 0 auto; width: 50%; }
+    .col-md-7  { flex: 0 0 auto; width: 58.33333333%; }
+    .col-md-8  { flex: 0 0 auto; width: 66.66666667%; }
+    .col-md-9  { flex: 0 0 auto; width: 75%; }
+    .col-md-10 { flex: 0 0 auto; width: 83.33333333%; }
+    .col-md-11 { flex: 0 0 auto; width: 91.66666667%; }
+    .col-md-12 { flex: 0 0 auto; width: 100%; }
+}
+
+@media (min-width: 992px) {
+    .col-lg-1  { flex: 0 0 auto; width: 8.33333333%; }
+    .col-lg-2  { flex: 0 0 auto; width: 16.66666667%; }
+    .col-lg-3  { flex: 0 0 auto; width: 25%; }
+    .col-lg-4  { flex: 0 0 auto; width: 33.33333333%; }
+    .col-lg-5  { flex: 0 0 auto; width: 41.66666667%; }
+    .col-lg-6  { flex: 0 0 auto; width: 50%; }
+    .col-lg-7  { flex: 0 0 auto; width: 58.33333333%; }
+    .col-lg-8  { flex: 0 0 auto; width: 66.66666667%; }
+    .col-lg-9  { flex: 0 0 auto; width: 75%; }
+    .col-lg-10 { flex: 0 0 auto; width: 83.33333333%; }
+    .col-lg-11 { flex: 0 0 auto; width: 91.66666667%; }
+    .col-lg-12 { flex: 0 0 auto; width: 100%; }
+}
+
+/* ── Tiện ích đang dùng ──────────────────────────────────────────────────────
+   Giá trị lấy ĐÚNG của Bootstrap 5.3 để markup cũ không xê dịch, trừ ba chỗ
+   ghi rõ bên dưới đã kéo về hệ thống của site.
+   ──────────────────────────────────────────────────────────────────────────── */
+.d-flex { display: flex !important; }
+.flex-column { flex-direction: column !important; }
+.justify-content-center { justify-content: center !important; }
+.h-100 { height: 100% !important; }
+.text-center { text-align: center !important; }
+.text-uppercase { text-transform: uppercase !important; }
+.fw-bold { font-weight: 500 !important; }   /* bộ này không dùng weight > 500 */
+.lh-sm { line-height: 1.25 !important; }
+.border-0 { border: 0 !important; }
+.rounded-0 { border-radius: 0 !important; }
+
+/* Nền tối + bóng: kéo về token của site, không dùng giá trị Bootstrap. */
+.bg-dark { background-color: var(--ink) !important; }
+.shadow-sm { box-shadow: var(--elev-1) !important; }
+
+.mb-3 { margin-bottom: var(--space-4) !important; }
+.mb-5 { margin-bottom: var(--space-12) !important; }
+.py-5 { padding-top: var(--space-12) !important; padding-bottom: var(--space-12) !important; }
+
+/* `lead` và `display-5` là kiểu CHỮ, nên đọc từ thang của site chứ không giữ
+   rem cứng của Bootstrap. */
+.lead {
+    font-size: var(--fs-lead);
+    font-weight: 400;
+}
+
+.display-5 {
+    font-size: var(--fs-h1);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
+}
+
+/* ── VÌ SAO CÓ !important Ở ĐÂY ──────────────────────────────────────────────
+   Đây là lớp TIỆN ÍCH, và Bootstrap cũng khai chúng với !important vì đúng một
+   lý do: một class tiện ích gắn thẳng vào markup phải thắng luật component,
+   nếu không nó vô dụng. Bỏ !important đi là `.text-center` trong chân trang
+   thua `.footer-legal__text` và không căn được gì.
+
+   Đây là ngoại lệ DUY NHẤT của luật "không !important" trong bộ này, và nó có
+   phạm vi đúng bằng 12 lớp tiện ích ở trên.
+   ──────────────────────────────────────────────────────────────────────────── */

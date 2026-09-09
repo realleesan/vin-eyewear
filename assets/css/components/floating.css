@@ -17,6 +17,61 @@
     gap: 10px;
 }
 
+/* ┌─ MENU DI ĐỘNG ĐANG MỞ → GIẤU HẲN CỤM NÚT ───────────────────────────────
+   │ .mobile-nav nay ở z-index 100 nên đã phủ lên cụm này rồi. Luật dưới đây
+   │ là lớp chặn thứ hai, và nó giải quyết thêm một việc mà z-index không làm
+   │ được: khi bảng điều hướng mở, ba nút vẫn nằm trong thứ tự Tab và trình
+   │ đọc màn hình vẫn đọc tới chúng dù người dùng đang ở trong một lớp phủ.
+   │ display:none cắt cả ba đường — mắt, ngón tay, trình đọc màn hình.
+   └──────────────────────────────────────────────────────────────────────── */
+body:has(#mobileNav.is-open) .fab {
+    display: none;
+}
+
+/* ┌─ HAI TRANG CÓ CỘT TÁC VỤ DÍNH BÊN PHẢI → CỤM NÚT SANG MÉP TRÁI ─────────
+   │ Quét bằng hit-test hình học ở MỌI vị trí cuộn (không chỉ màn hình đầu):
+   │ hai trang có một cột dính căn phải chứa nút hành động chính, và cả hai
+   │ đều bị cụm nút nổi đè lên đúng cái nút ấy:
+   │
+   │     /san-pham/{slug}   "Mua ngay"          (.pdbtn--buy)
+   │     /dat-lich          "Xác nhận đặt lịch" (nút gửi form đặt lịch)
+   │
+   │ Nguyên nhân là hình học, không phải z-index: cột ấy căn phải và nút chạy
+   │ hết bề ngang cột tới sát --page-edge, nên nó luôn đi qua làn ~56px mà cụm
+   │ nút chiếm ở góc phải dưới khung nhìn.
+   │
+   │ Chữa bằng CHỖ ĐỨNG của cụm nút, không bằng cách thu nút hành động lại:
+   │ trên một trang bán hàng và một trang đặt lịch, nút ấy là thứ cuối cùng
+   │ nên nhường chỗ.
+   │
+   │ MỘT ĐIỀU PHẢI NÓI THẲNG: một cụm nút `position: fixed` thì lúc cuộn bao
+   │ giờ cũng có lúc đi ngang qua một liên kết nào đó — điều đó không tránh
+   │ được và cũng không phải lỗi. Thứ luật này chữa là trường hợp nghiêm trọng:
+   │ nút hành động CHÍNH bị che ở đúng vị trí nghỉ mà khách dừng lại để bấm.
+   └──────────────────────────────────────────────────────────────────────── */
+/* CHỈ TỪ 900px TRỞ LÊN, và đây là chỗ dễ làm sai:
+
+   Dời sang trái ở MỌI bề ngang là một bước lùi. Dưới 900px trang xếp một cột,
+   cột tác vụ dính không còn, và gần như mọi thứ — nút mua, ô nhập form, nút
+   "Liên hệ" cùng liên kết pháp lý ở chân trang — đều căn TRÁI. Cụm nút đứng
+   bên trái lúc ấy đè lên đúng những thứ nó vừa tránh được ở bên phải.
+
+   Đo lại sau khi thử: ở 390px bản dời-trái che thêm .bkstore__dot,
+   .bkfield__input, .bkfield__area, "Get in touch" và "Privacy policy".
+
+   Ở màn hẹp cụm nút vốn đã thu về MỘT nút tròn ở góc phải dưới (xem khối
+   @media max-width:899px bên dưới) — đó là nếp quen thuộc và nó chiếm ít chỗ
+   hơn hẳn ba nút xếp dọc, nên để nguyên bên phải là đúng. */
+@media (min-width: 900px) {
+
+    .page-product-detail .fab,
+    .page-booking-index .fab {
+        right: auto;
+        left: clamp(12px, 3vw, 24px);
+        align-items: flex-start;
+    }
+}
+
 .fab__list {
     display: flex;
     flex-direction: column;
@@ -40,11 +95,11 @@
        nút hành động nổi. Cùng nhóm với icon mạng xã hội ở chân trang. */
     border-radius: var(--radius-round);
     color: var(--on-brand);
-    box-shadow: var(--elev-2);
+    box-shadow: none;
     cursor: pointer;
     transition:
-        transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-        box-shadow 0.2s;
+        transform var(--dur-fast) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
+        box-shadow var(--dur-fast) var(--ease);
 }
 
 /* Thuộc tính hidden phải thắng display:grid ở trên, nếu không nút "lên đầu
@@ -57,7 +112,7 @@
 .fab__btn:hover,
 .fab__toggle:hover {
     transform: translateY(-2px);
-    box-shadow: var(--elev-3);
+    box-shadow: none;
 }
 
 .fab__ico {
@@ -78,18 +133,36 @@
    --fab-blue dùng ở HAI nơi: nền nút, và chữ "Zalo" bên trong logo. Đổi biến
    này là cả hai đi theo; gõ cứng lại một trong hai chỗ thì chữ lệch tông nền.
    ============================================================ */
+/* ┌─ ĐÃ BỎ MÀU XANH (Phase 2) ──────────────────────────────────────────────
+   │ Ba nút này nổi trên MỌI trang khách, góc phải dưới, và chúng là ba đốm
+   │ #0068ff duy nhất trên một site đơn sắc. Trên trang thật chúng là thứ bão
+   │ hoà nhất trong khung nhìn — nổi hơn cả ảnh sản phẩm và cả nút "Mua ngay".
+   │
+   │ Nay cả ba là khối MỰC, hover sẫm thêm một nấc — cùng hệ với mọi nút đặc
+   │ khác của bộ (xem PHẦN 6 của gm.css).
+   │
+   │ --fab-blue GIỮ LẠI TÊN vì logo Zalo dùng nó cho chữ "Zalo" bên trong hình,
+   │ và chữ ấy phải tương phản với NỀN nút. Nền nay là mực, nên biến trỏ sang
+   │ màu chữ-trên-mực. Xoá biến là chữ "Zalo" mất màu và biến mất trong logo.
+   │
+   │ HỆ QUẢ ĐÃ BIẾT: màu không còn phân biệt ba nút — nhưng nó vốn đã không
+   │ phân biệt, cả ba từng dùng chung một màu xanh. ICON vẫn là thứ phân biệt
+   │ chúng, đúng như chú thích ở trên đã ghi. */
 :root {
-    --fab-blue:        #0068ff;   /* xanh thương hiệu Zalo */
-    --fab-blue-strong: #0052cc;   /* đậm hơn một nấc cho trạng thái rê chuột */
+    --fab-blue:        var(--on-ink);
+    --fab-blue-strong: var(--on-ink);
 }
 
 .fab__btn--call,
 .fab__btn--zalo,
-.fab__btn--messenger { background: var(--fab-blue); }
+.fab__btn--messenger {
+    background: var(--brand);
+    color: var(--on-brand);
+}
 
 .fab__btn--call:hover,
 .fab__btn--zalo:hover,
-.fab__btn--messenger:hover { background: var(--fab-blue-strong); }
+.fab__btn--messenger:hover { background: var(--brand-strong); }
 
 .fab__btn--top {
     background: var(--surface-raised);
@@ -108,14 +181,14 @@
     background: var(--ink);
     color: var(--on-ink);
     font-size: var(--fs-caption);
-    font-weight: 600;
+    font-weight: 500;
     white-space: nowrap;
     opacity: 0;
     transform: translateX(6px);
     pointer-events: none;
     transition:
-        opacity 0.2s,
-        transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+        opacity var(--dur-fast) var(--ease),
+        transform var(--dur-fast) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 .fab__btn:hover .fab__label,
@@ -140,7 +213,7 @@
     grid-area: 1 / 1;
     display: grid;
     place-items: center;
-    transition: opacity 0.2s, transform 0.2s;
+    transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
 .fab__toggle-ico--close { opacity: 0; transform: rotate(-45deg); }
@@ -165,9 +238,9 @@
         opacity: 0;
         transform: translateY(8px);
         transition:
-            opacity 0.2s,
-            transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-            visibility 0.2s;
+            opacity var(--dur-fast) var(--ease),
+            transform var(--dur-fast) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
+            visibility var(--dur-fast) var(--ease);
     }
 
     .js .fab.is-open .fab__list {
@@ -183,6 +256,11 @@
         opacity: 1;
         transform: none;
     }
+
+    /* KHÔNG có luật đảo mép trái ở đây, và đó là chủ ý.
+       Việc dời cụm nút sang trái chỉ áp dụng từ 900px trở lên (xem khối
+       @media min-width:900px bên trên). Trong khoảng bề ngang này cụm nút
+       luôn ở góc phải dưới, nên danh sách thu gọn giữ nguyên `right: 0`. */
 }
 
 /* Bản in không có gì để bấm */

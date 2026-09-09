@@ -8,36 +8,90 @@
      · nó là một HÀNG THẺ ẢNH, không phải các cột chữ — mỗi bộ sưu tập một thẻ
      · ô cuối là thẻ "Tất cả bộ sưu tập", cố ý KHÔNG có ảnh (xem chú thích
        trong _layout/collection-menu.php)
+
+   ─────────────────────────────────────────────────────────────────────────────
+   ĐỔI THEO ĐỢT GENTLE MONSTER
+
+   BẢN TRƯỚC GHIM BẢNG NÀY VỀ MÉP PHẢI, rộng tối đa 880px — tức là một tấm thẻ
+   nổi, trong khi bảng "Sản phẩm" ngay cạnh nó nay tràn hết bề ngang. Hai bảng
+   xổ của cùng một thanh nav mở ra hai hình dạng khác nhau là thứ đọc ra ngay
+   là chắp vá.
+
+   Nay nó thừa hưởng nguyên khuôn tràn mép của mega-menu.css; file này chỉ còn
+   lo phần THẬT SỰ riêng: hàng thẻ ảnh và ô "Tất cả bộ sưu tập".
    ============================================================================ */
 
-/* Bảng hẹp hơn bảng "Sản phẩm": nó chỉ có một hàng thẻ, kéo hết bề ngang cột
-   nội dung thì mỗi thẻ rộng ra vô lý và ảnh bị kéo giãn. */
-.mega--bst .mega__panel {
-    left: auto;
-    right: var(--page-edge);
-    width: min(880px, calc(100% - 2 * var(--page-edge)));
-    padding: var(--space-6);
-}
+/* Bảng thừa hưởng `left:0; right:0` của .mega__panel — không ghim mép phải
+   nữa. Chỉ giữ lại phần lưới bên trong cho đúng bề ngang cột nội dung, việc
+   đó .mega__grid đã lo bằng `max-width: var(--container)`. */
 
 /* Các thẻ chia đều, thẻ "Tất cả" ở ô cuối cùng cũng rộng bằng chúng — khác
    bảng "Sản phẩm", nơi cột cuối rộng hơn vì nó là thẻ ảnh đứng cạnh các cột
    chữ hẹp. */
-.mega--bst .mega__grid {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: var(--space-5);
+/* ┌─ GỠ CÁI GHIM Ô CỦA BẢNG "SẢN PHẨM" ─────────────────────────────────────
+   │ mega-menu.css khai `.mega__grid .mega-feature { grid-column: -2;
+   │ grid-row: 1 / -1 }` — đúng cho bảng "Sản phẩm", nơi CHỈ CÓ MỘT thẻ ảnh
+   │ và nó phải chiếm trọn cột cuối, cao bằng cả bảng.
+   │
+   │ Ở bảng này thì MỌI ô đều là .mega-feature, nên luật ấy ghim cả bốn thẻ
+   │ vào ĐÚNG MỘT ô — chúng chồng khít lên nhau và không ai thấy ba thẻ dưới.
+   │ Đo bằng Playwright ở 1440px trước khi thêm khối này:
+   │     grid-template-columns  0px 0px 0px 0px 0px 1391.06px
+   │     4 × .mega-feature      cùng 1391×1913, cùng grid-column -2
+   │ Một ảnh 800×800 bị kéo cao 1855px, và đó là lý do thật khiến bảng cao
+   │ 2080px — gấp hơn hai lần khung nhìn.
+   │
+   │ Đặt ở ĐÂY chứ không sửa mega-menu.css: file này vốn sinh ra để đè vài
+   │ thuộc tính của bảng kia (xem khối đầu file), và bảng "Sản phẩm" vẫn cần
+   │ nguyên luật gốc.
+   └──────────────────────────────────────────────────────────────────────── */
+.mega--bst .mega__grid .mega-feature {
+    grid-column: auto;
+    grid-row: auto;
+    align-self: stretch;
 }
 
-/* ── Thẻ "Tất cả bộ sưu tập" ─────────────────────────────────────────────── */
+.mega--bst .mega__grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    /* Máng hẹp hơn bảng "Sản phẩm": đây là một hàng thẻ ảnh liền mạch, không
+       phải bốn cột chữ cần tách bạch. Đọc ĐÚNG token mà .pgrid dùng, nên lưới
+       thẻ trong bảng xổ và lưới thẻ trên trang có cùng một nhịp. */
+    gap: var(--grid-gap);
+}
+
+/* ── Thẻ "Tất cả bộ sưu tập" ─────────────────────────────────────────────────
+   Ô đặc màu mực, không có ảnh. Đây là chỗ DUY NHẤT trong cả bảng có nền đặc,
+   và đó là chủ ý: nó không phải một bộ sưu tập, nó là lối đi tới tất cả.
+   ──────────────────────────────────────────────────────────────────────────── */
 .mega-feature--all {
     display: flex;
-    align-items: flex-end;
+    /* CHỮ NẰM ĐÁY, THẲNG MÉP TRÁI — cùng chỗ với tên của ba thẻ bên cạnh.
+       Trước là `align-items: flex-end` một mình, viết như thể hộp này xếp
+       NGANG. Nó thừa flex-direction: column của .mega-feature, nên trục chéo
+       là trục NGANG và flex-end đẩy chữ sang PHẢI, còn trục chính (dọc) vẫn
+       flex-start nên chữ dính đỉnh: nhãn "All collections" đứng góc trên bên
+       phải một ô đen cao 507px.
+       Lỗi này có sẵn nhưng không ai thấy, vì ô đen vốn bị ghim cao 1913px và
+       tràn khỏi màn hình — xem khối gỡ ghim ở trên. */
+    justify-content: flex-end;
+    align-items: stretch;
     min-height: 100%;
     background: var(--ink);
     color: var(--on-ink);
+    transition: opacity var(--dur) var(--ease);
 }
 
+/* --brand-strong nay BẰNG ĐÚNG --ink (cả hai là #000), nên hover theo bản cũ
+   sẽ không đổi gì cả. Mờ đi là cách báo hiệu dùng chung của cả thanh nav. */
 .mega-feature--all:hover {
-    background: var(--brand-strong);
+    background: var(--ink);
+    opacity: .8;
+}
+
+/* .mega-feature__body nay không còn đệm ngang (chữ thẳng hàng mép ảnh). Ô này
+   là một khối ĐẶC nên phải trả lại đệm, không thì chữ dính sát bốn cạnh. */
+.mega-feature--all .mega-feature__body {
+    padding: var(--space-5);
 }
 
 .mega-feature--all .mega-feature__note {
@@ -45,7 +99,13 @@
 }
 
 .mega-feature--all .mega-feature__more {
-    color: var(--h-dark-eyebrow);
+    color: var(--on-brand-soft);
+}
+
+/* Ô đặc không có ảnh để gạch chân theo — bỏ gạch chân mà .mega-feature:hover
+   của file kia gắn cho tên thẻ. */
+.mega-feature--all:hover .mega-feature__name {
+    text-decoration: none;
 }
 
 /* Dưới 1280px, mega-menu.css ẩn .mega-feature để nhường chỗ cho các cột chữ.
@@ -56,6 +116,6 @@
     }
 
     .mega--bst .mega__grid {
-        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     }
 }

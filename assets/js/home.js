@@ -61,6 +61,228 @@
             && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     }
 
+    /* ============================================================
+       0. HERO VIDEO — BA CLIP NỐI NHAU, MỜ CHỒNG
+
+       Markup: _layout/home/hero.php · Kiểu: components/video-hero.css
+
+       Đứng TRƯỚC băng ảnh cũ trong file này vì nó là khối đầu trang; khối băng
+       ảnh (mục 1) nay không tìm thấy [data-hero-slider] nữa nên tự thoát.
+
+       BỐN VIỆC, và không việc nào có nút bấm:
+
+         1. hết một clip -> mờ sang clip sau, vòng lại clip đầu ở cuối danh sách
+         2. nạp clip KẾ TIẾP ngay khi clip hiện tại bắt đầu chạy (chúng mang
+            preload="none" và chưa có <source>) — ba file cộng lại 24,2 MB, kéo
+            hết lúc mở trang là giết trang chủ trên mạng di động
+         3. dừng khi hero cuộn khuất, chạy lại khi nó quay vào khung nhìn — một
+            video 1920px giải mã sau lưng người đang đọc là pin và CPU đổ đi
+         4. đổi nhãn góc phải theo clip
+
+       GIẢM CHUYỂN ĐỘNG: không phát gì cả, để nguyên khung hình poster của clip
+       đầu. Khối chung trong layout.css chỉ ép được transition/animation về
+       0.01ms — nó không biết tới việc một thẻ <video> có đang phát hay không.
+
+       TẮT JAVASCRIPT: clip đầu vẫn có autoplay + <source> in sẵn từ máy chủ nên
+       nó chạy bình thường; chỉ là không bao giờ sang clip hai. Không có màn
+       trắng, không có nút chết.
+       ============================================================ */
+
+    (function videoHero() {
+        var root = document.querySelector('[data-video-hero]');
+        if (!root) return;
+
+        var clips = Array.prototype.slice.call(root.querySelectorAll('.vhero__clip'));
+        if (clips.length === 0) return;
+
+        var labelEl = root.querySelector('[data-vhero-label]');
+        var labels  = Array.prototype.slice.call(
+            root.querySelectorAll('[data-vhero-labels] span')
+        ).map(function (el) { return el.textContent; });
+
+        var at = 0;
+
+        /* Gắn <source> cho một clip chưa có. Máy chủ chỉ in <source> cho clip
+           đầu; hai clip sau mang địa chỉ trong data-lazy-src và nằm im cho tới
+           lúc gọi hàm này.
+
+           Phải load() SAU khi chèn <source>: thêm một thẻ con vào <video> đang
+           ở trạng thái "chưa có nguồn" không tự khởi động lượt tải nào. */
+        function ensureSource(clip) {
+            if (!clip || clip.dataset.ready === '1') return;
+
+            var src = clip.getAttribute('data-lazy-src');
+            if (src) {
+                var source = document.createElement('source');
+                source.src  = src;
+                source.type = 'video/mp4';
+                clip.appendChild(source);
+                clip.load();
+            }
+
+            clip.dataset.ready = '1';
+        }
+
+        // Clip đầu đã có <source> in sẵn từ máy chủ — chỉ cần đánh dấu.
+        clips[0].dataset.ready = '1';
+
+        function setLabel(i) {
+            if (!labelEl || !labels[i]) return;
+
+            /* Mờ chữ cũ đi trước rồi mới thay, không thay thẳng: hai câu dài
+               ngắn khác nhau, đổi tức thì đọc ra như một cú giật.
+               --dur (220ms) khai ở CSS; ở đây đợi đúng bằng chỗ đó bằng cách
+               nghe transitionend, nên đổi token là không phải sửa JS. */
+            var done = function () {
+                labelEl.textContent = labels[i];
+                labelEl.classList.remove('is-fading');
+                labelEl.removeEventListener('transitionend', done);
+            };
+
+            if (prefersReducedMotion()) {
+                labelEl.textContent = labels[i];
+                return;
+            }
+
+            labelEl.addEventListener('transitionend', done);
+            labelEl.classList.add('is-fading');
+        }
+
+        function show(i) {
+            if (i === at) return;
+
+            var prev = clips[at];
+            var next = clips[i];
+
+            at = i;
+
+            ensureSource(next);
+
+            next.classList.add('is-on');
+            prev.classList.remove('is-on');
+
+            /* Tua clip vừa rời về đầu: lần sau tới lượt nó phải mở lại từ khung
+               hình đầu, không phải đứng ở khung cuối. Làm SAU khi đã đổi lớp —
+               currentTime = 0 trên một thẻ còn đang hiện là một cú nháy. */
+            window.setTimeout(function () {
+                try { prev.pause(); prev.currentTime = 0; } catch (e) { /* chưa nạp xong */ }
+            }, 600);
+
+            var playing = next.play();
+            if (playing && typeof playing.catch === 'function') {
+                // Trình duyệt chặn autoplay: không có gì để cứu, và ném ra một
+                // lỗi chưa bắt trong console thì không giúp được ai.
+                playing.catch(function () {});
+            }
+
+            setLabel(i);
+        }
+
+        /* ┌─ HERO VẪN CHẠY KHI MÁY ĐẶT "GIẢM CHUYỂN ĐỘNG" — QUYẾT ĐỊNH CÓ CHỦ Ý
+           │
+           │ Bản trước dừng hẳn video và trả về poster. Đúng chuẩn, nhưng đo
+           │ trên máy chủ cửa hàng thì cái giá là: Windows tắt "Animation
+           │ effects" (một thiết lập hiệu năng rất phổ biến, KHÔNG phải tiền
+           │ đình) → Chrome báo reduce → hero thành ảnh tĩnh, và trang chủ mất
+           │ đúng thứ nó được dựng quanh.
+           │
+           │ Cân lại:
+           │   · Đây là video CÂM, TRANG TRÍ, không cuộn theo trang, không
+           │     parallax — loại chuyển động ít gây khó chịu nhất.
+           │   · Mọi transition/animation khác của trang VẪN bị layout.css ép
+           │     về 0.01ms dưới reduce; hai cú mờ chồng giữa clip vì thế thành
+           │     cắt thẳng. Chỉ riêng việc video có phát hay không là đổi.
+           │   · Ai thật sự cần đứng yên vẫn còn lối: cuộn qua hero là nó tự
+           │     dừng (IntersectionObserver bên dưới).
+           │
+           │ Nếu sau này cần quay lại chuẩn nghiêm: chặn ở đây bằng
+           │ prefersReducedMotion() → gỡ <source>, load() để về poster (gỡ
+           │ nguồn chứ không chỉ pause(): autoplay trong HTML đã vẽ vài khung
+           │ hình trước khi JS chạy, pause() suông là ghim màn hình giữa phim).
+           └──────────────────────────────────────────────────────────────────── */
+
+        /* ┌─ HẾT CLIP: SANG CLIP SAU, HOẶC CHẠY LẠI CHÍNH NÓ ───────────────────
+           │ Chỉ chuyển khi clip kế tiếp ĐÃ ĐỦ DỮ LIỆU (readyState >= 3,
+           │ HAVE_FUTURE_DATA). Chưa đủ thì tua clip hiện tại về đầu và chạy
+           │ tiếp — hero luôn có hình động, không bao giờ đứng hình chờ tải.
+           │
+           │ Đây là chỗ thay cho thuộc tính `loop`: có `loop` thì sự kiện
+           │ `ended` KHÔNG BAO GIỜ bắn, và ta mất luôn đường sang clip sau.
+           └──────────────────────────────────────────────────────────────────── */
+        clips.forEach(function (clip, i) {
+            clip.addEventListener('ended', function () {
+                var next = clips[(i + 1) % clips.length];
+
+                if (next !== clip && next.readyState >= 3) {
+                    show((i + 1) % clips.length);
+                    return;
+                }
+
+                ensureSource(next);
+
+                try {
+                    clip.currentTime = 0;
+                    var again = clip.play();
+                    if (again && typeof again.catch === 'function') again.catch(function () {});
+                } catch (e) { /* nguồn chưa sẵn sàng */ }
+            });
+        });
+
+        /* ┌─ NẠP CLIP SAU KHI CLIP TRƯỚC ĐÃ CHẠY ĐƯỢC MỘT ĐOẠN ─────────────────
+           │ ĐÂY LÀ CHỖ ĐÃ SAI, và nó sai theo cách chỉ đo mới thấy.
+           │
+           │ Trước: nạp clip 2 ngay tại sự kiện `playing` của clip 1 — tức là ở
+           │ khoảng mili-giây thứ 0. Hai file 6,6 MB và 6,7 MB thế là tải song
+           │ song đúng vào lúc bộ giải mã đang cần băng thông và CPU để dựng
+           │ khung hình đầu tiên. Đo trên trang thật:
+           │
+           │     t= 500ms  paused=false  currentTime=0.01s  buffered=10s
+           │     t=4000ms  paused=false  currentTime=0.02s  buffered=10s
+           │     t=9000ms  paused=false  currentTime=3.24s
+           │
+           │ Dữ liệu đã về đủ từ giây đầu (buffered=10s) mà kim vẫn đứng ở 0.01s
+           │ suốt hơn 4 giây — nghĩa là nghẽn ở GIẢI MÃ, không phải ở mạng. Với
+           │ người dùng thì hero trông như một tấm ảnh tĩnh rồi mới giật vào
+           │ chuyển động, đúng thứ vừa báo.
+           │
+           │ Nay đợi clip hiện tại chạy qua 40% mới đi lấy clip sau. Với clip 10
+           │ giây thì đó là giây thứ 4 — bộ giải mã đã qua đoạn nặng nhất, mà
+           │ vẫn còn 6 giây để file kia về (đo được: 8 MB/s qua tunnel, tức là
+           │ dư gấp nhiều lần).
+           │
+           │ `timeupdate` bắn khoảng 4 lần/giây, và cờ đã-nạp nằm trong
+           │ ensureSource nên gọi thừa cũng không tải lại lần nào.
+           └──────────────────────────────────────────────────────────────────── */
+        clips.forEach(function (clip, i) {
+            clip.addEventListener('timeupdate', function () {
+                if (!clip.duration || clip.currentTime / clip.duration < 0.4) return;
+                ensureSource(clips[(i + 1) % clips.length]);
+            });
+        });
+
+        /* Hero cuộn khuất -> dừng. Một video 1920px giải mã sau lưng người đang
+           đọc phần dưới trang là CPU và pin đổ đi mà không ai thấy gì.
+
+           IntersectionObserver chứ không nghe 'scroll': trình duyệt tự tính,
+           không tốn một lần đọc bố cục nào của ta. Trình duyệt không có nó thì
+           bỏ qua — video cứ chạy như trước, không hỏng gì. */
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    var clip = clips[at];
+                    if (!clip) return;
+
+                    if (entry.isIntersecting) {
+                        var p = clip.play();
+                        if (p && typeof p.catch === 'function') p.catch(function () {});
+                    } else {
+                        clip.pause();
+                    }
+                });
+            }, { threshold: 0.15 }).observe(root);
+        }
+    })();
+
     /**
      * Băng trượt ngang dùng chung cho hai khối sản phẩm, khối đánh giá và dải
      * khuôn mặt.

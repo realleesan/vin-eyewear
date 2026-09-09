@@ -99,6 +99,13 @@
 
             pop.classList.remove('is-open');
 
+            /* Lớp phủ tìm kiếm khoá cuộn nền và nâng đầu trang lên trên cụm nút
+               nổi bằng một lớp trên <body> — gỡ ở đây, đúng chỗ mọi lối đóng
+               (Esc · bấm ngoài · nút X · rê sang bảng khác) đều đi qua. */
+            if (pop.classList.contains('hpop--search')) {
+                document.body.classList.remove('is-search-open');
+            }
+
             /* GỠ LỚP THÔI LÀ CHƯA ĐÓNG ĐƯỢC.
 
                Bảng hiện ra bởi BA điều kiện trong CSS: :hover, :focus-within,
@@ -159,6 +166,10 @@
                        rồi rê vào mới mở lại được. */
                     pop.classList.remove('is-closed');
                     pop.classList.add('is-open');
+
+                    if (pop.classList.contains('hpop--search')) {
+                        document.body.classList.add('is-search-open');
+                    }
                 } else {
                     /* ĐÓNG PHẢI ĐI QUA closePop, không phải chỉ gỡ .is-open.
 
@@ -185,11 +196,31 @@
                 if (willOpen) {
                     var field = pop.querySelector('.header-search__input');
 
-                    /* Hoãn một khung hình: ngay trong handler này bảng vẫn còn
-                       visibility:hidden (kiểu chưa được tính lại), mà trình
-                       duyệt từ chối đặt tiêu điểm vào phần tử đang ẩn — gọi
-                       thẳng field.focus() ở đây là không có tác dụng gì. */
-                    if (field) window.requestAnimationFrame(function () { field.focus(); });
+                    /* HAI khung hình, không phải một — và đây là chỗ đã sai.
+
+                       Ngay trong handler này bảng vẫn còn visibility:hidden
+                       (kiểu chưa được tính lại), mà trình duyệt từ chối đặt
+                       tiêu điểm vào phần tử ẩn. Nên phải hoãn — đúng.
+
+                       Nhưng MỘT requestAnimationFrame là chưa đủ: theo thứ tự
+                       "cập nhật hiển thị" của trình duyệt, các callback rAF
+                       chạy TRƯỚC bước tính lại kiểu của khung hình đó. Tới lúc
+                       callback chạy, .is-open đã gắn nhưng kiểu vẫn là kiểu cũ
+                       — ô nhập vẫn đang visibility:hidden và focus() rơi vào
+                       khoảng không.
+
+                       Đo bằng Playwright: bấm kính lúp rồi đợi 500ms, tiêu điểm
+                       vẫn nằm trên chính cái nút vừa bấm, không phải ô nhập.
+                       Lồng thêm một khung hình nữa thì tiêu điểm vào đúng
+                       .header-search__input.
+
+                       Nghĩa là cả tính năng "bấm kính lúp là gõ được luôn" —
+                       thứ mà khối chú thích ngay trên mô tả — chưa từng chạy. */
+                    if (field) {
+                        window.requestAnimationFrame(function () {
+                            window.requestAnimationFrame(function () { field.focus(); });
+                        });
+                    }
                 }
             });
         });
@@ -276,6 +307,23 @@
             closeAllPops(inside);
         });
 
+        /* NÚT X VÀ NỀN MỜ — [data-hpop-close] bên trong một cụm. Uỷ quyền từ
+           document chứ không gắn thẳng: phần tử này nằm trong bảng, mà bảng thì
+           có thể bị thay ruột (giỏ hàng qua buy-flow.js). Đóng xong trả tiêu
+           điểm về nút mở, cùng lý do với Esc bên dưới. */
+        document.addEventListener('click', function (e) {
+            var nut = e.target instanceof Element ? e.target.closest('[data-hpop-close]') : null;
+            if (!nut) return;
+
+            var pop = nut.closest('[data-hpop]');
+            if (!pop) return;
+
+            closePop(pop);
+
+            var trigger = pop.querySelector('[data-hpop-trigger]');
+            if (trigger) trigger.focus();
+        });
+
         /* Esc đóng và trả tiêu điểm về nút — người dùng bàn phím cần đường lui,
            nếu không họ mắc kẹt phải Tab hết các mục trong bảng mới ra được. */
         document.addEventListener('keydown', function (e) {
@@ -290,6 +338,292 @@
             });
         });
     }
+
+    /* ====================================================================
+       2a. GIỎ HÀNG LÀ NGĂN KÉO BÊN PHẢI — CHẠY BẰNG BOOTSTRAP OFFCANVAS
+
+       ĐỢT 09/09/2026: khối này TRƯỚC ĐÂY tự viết ~120 dòng (mở/đóng, nền mờ,
+       khoá cuộn, bẫy tiêu điểm, Esc, trả tiêu điểm). Nay Bootstrap lo toàn bộ
+       phần HÀNH VI đó; Vin giữ nguyên phần HÌNH ẢNH và CHUYỂN ĐỘNG trong
+       components/header.css.
+
+       VÌ SAO ĐỔI — ba thứ bản tự viết làm sai hoặc không làm:
+         · KHOÁ CUỘN KHÔNG BÙ THANH CUỘN. `overflow:hidden` trên <body> làm
+           thanh cuộn Windows (~15px) biến mất, và cả trang GIẬT SANG PHẢI đúng
+           lúc ngăn kéo trượt vào. Bootstrap đo bề rộng thanh cuộn rồi bù bằng
+           padding-right — hết giật.
+         · BẪY TIÊU ĐIỂM tự viết chỉ bắt phím Tab. Bootstrap còn chặn cả
+           `focusin` từ ngoài (kéo thả, trình đọc màn hình nhảy vùng).
+         · aria-modal / inert / trả tiêu điểm về đúng phần tử mở — Bootstrap
+           làm sẵn và đã qua kiểm chứng rộng hơn bất cứ thứ gì viết ở đây.
+
+       KHÔNG NẠP BOOTSTRAP CSS. Chỉ nạp `bootstrap.bundle.min.js` (79 KB, tự
+       host trong assets/vendor). Bộ 227 KB CSS kia sẽ đè lên gm.css và phá cả
+       hệ token — xem chú thích ở _layout/master.php.
+
+       HỢP ĐỒNG GIỮ NGUYÊN TUYỆT ĐỐI: [data-cart], [data-hpop-trigger] và
+       .hpop__panel vẫn đúng tên, đúng cách lồng, đúng phần tử — buy-flow.js
+       thay ruột hai thứ sau mỗi lần thêm hàng và không biết gì về đợt này.
+
+       TẮT JAVASCRIPT: thẻ mở vẫn là <a href="/gio-hang"> thật; không có
+       Bootstrap thì bấm vào là sang thẳng trang giỏ hàng.
+
+       CÒN LẠI Ở ĐÂY đúng hai việc mà Bootstrap không lo:
+         1. đồng bộ aria-expanded trên thẻ mở (Offcanvas không đụng tới nó);
+         2. giữ nút X hoạt động sau khi buy-flow.js thay ruột bảng — nút mới
+            không có instance nào gắn vào, nên uỷ quyền từ [data-cart].
+       ==================================================================== */
+
+    var cart = document.querySelector('[data-hpop][data-cart]');
+
+    if (cart && window.bootstrap && window.bootstrap.Offcanvas) {
+        var cartTrigger = cart.querySelector('[data-hpop-trigger]');
+        var cartPanel   = cart.querySelector('.hpop__panel');
+
+        if (cartPanel) {
+            /* `backdrop: true` -> Bootstrap tự dựng .offcanvas-backdrop và gắn
+               vào <body>; `scroll: false` -> khoá cuộn nền CÓ BÙ thanh cuộn. */
+            var cartOc = window.bootstrap.Offcanvas.getOrCreateInstance(cartPanel, {
+                backdrop: true,
+                scroll: false,
+                keyboard: true
+            });
+
+            if (cartTrigger) {
+                cartTrigger.setAttribute('aria-haspopup', 'dialog');
+                cartTrigger.setAttribute('aria-expanded', 'false');
+
+                cartTrigger.addEventListener('click', function (e) {
+                    /* Ctrl/Cmd/giữa chuột = ý muốn MỞ TAB MỚI tới /gio-hang —
+                       để trình duyệt làm việc của nó. */
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+
+                    e.preventDefault();
+                    cartOc.toggle();
+                });
+            }
+
+            /* Nút X nằm TRONG .hpop__panel, mà buy-flow.js thay ruột bảng ấy
+               sau mỗi lần thêm hàng — nút gắn sự kiện trực tiếp sẽ chết ngay
+               sau đó. Uỷ quyền từ thẻ bọc [data-cart] thì nút mới nào cũng
+               chạy. (Không dùng data-bs-dismiss vì lý do y hệt: Bootstrap đọc
+               thuộc tính ấy qua data-API ở document nên vẫn sống — nhưng gọi
+               thẳng instance thì không phụ thuộc vào việc nút có nằm trong
+               .offcanvas hay không.) */
+            cart.addEventListener('click', function (e) {
+                if (e.target instanceof Element && e.target.closest('[data-cart-close]')) {
+                    e.preventDefault();
+                    cartOc.hide();
+                }
+            });
+
+            /* ┌─ BA THỨ OFFCANVAS KHÔNG LO, PHẢI TỰ NỐI ────────────────────────
+               │
+               │ 1. LỚP TRÊN <body>. Offcanvas KHÔNG gắn `modal-open` — lớp đó
+               │    là của Modal. Không có lớp nào thì luật nâng z-index của đầu
+               │    trang không bao giờ chạy, và hậu quả đo được rất cụ thể: tấm
+               │    giỏ nằm trong .site-header (z 60) nên NỀN MỜ (z 105) phủ ĐÈ
+               │    LÊN CHÍNH NÓ và nuốt cú bấm nút X. Gắn lớp riêng của Vin.
+               │
+               │ 2. aria-expanded của thẻ mở — Offcanvas không đụng tới.
+               │
+               │ 3. TRẢ TIÊU ĐIỂM. Bootstrap chỉ tự trả về thẻ mở khi ngăn kéo
+               │    được mở QUA data-API (data-bs-toggle). Ở đây ta gọi thẳng
+               │    instance (để còn chặn Ctrl/Cmd+bấm cho lối mở tab mới), nên
+               │    Bootstrap không có tham chiếu nào để trả về — tiêu điểm rơi
+               │    ra <body> và người dùng bàn phím phải Tab lại từ đầu trang.
+               └──────────────────────────────────────────────────────────────── */
+            cartPanel.addEventListener('shown.bs.offcanvas', function () {
+                document.body.classList.add('is-cart-open');
+                if (cartTrigger) cartTrigger.setAttribute('aria-expanded', 'true');
+
+                /* ĐƯA TIÊU ĐIỂM VÀO NÚT ĐÓNG — và đây không phải chuyện trợ
+                   năng suông, nó là thứ làm phím Esc chạy được.
+
+                   Đo được: sau khi mở, document.activeElement vẫn là chính thẻ
+                   <a> mở ngăn kéo. Mà Bootstrap nghe phím Esc TRÊN CHÍNH PHẦN
+                   TỬ offcanvas — tiêu điểm còn ở ngoài thì sự kiện keydown
+                   không bao giờ nổi bọt tới đó, và Esc không đóng được gì.
+
+                   Nhắm `button[data-cart-close]` chứ không `[data-cart-close]`
+                   trần: cùng cái bẫy đã gặp ở bản tự viết — nền mờ (nay do
+                   Bootstrap dựng) không còn mang thuộc tính ấy, nhưng giữ tên
+                   chọn chặt vẫn đúng hơn. Nút đóng cũng là thứ người dùng bàn
+                   phím cần chạm tới đầu tiên. */
+                var close = cartPanel.querySelector('button[data-cart-close]');
+
+                if (close) {
+                    /* HOÃN HAI KHUNG HÌNH. Bootstrap gắn lớp `.show` rồi bắn
+                       `shown` NGAY trong cùng một khối đồng bộ — kiểu chưa được
+                       tính lại, nên tấm vẫn đang là `visibility: hidden` theo
+                       luật trạng thái đóng, và trình duyệt TỪ CHỐI đặt tiêu
+                       điểm vào phần tử ẩn.
+
+                       Đo được: không có lấy một sự kiện `focusin` nào sau khi
+                       gọi close.focus() — nó rơi vào khoảng không, và Esc vì
+                       thế cũng chết theo (xem khối trên).
+
+                       Một rAF là chưa đủ: callback rAF chạy TRƯỚC bước tính lại
+                       kiểu của khung hình đó. Đây đúng là cái bẫy đã làm ô tìm
+                       kiếm không nhận tiêu điểm — xem khối 2. */
+                    window.requestAnimationFrame(function () {
+                        window.requestAnimationFrame(function () { close.focus(); });
+                    });
+                }
+            });
+
+            /* ESC BẮT Ở CẤP DOCUMENT, KHÔNG CHỈ DỰA VÀO BOOTSTRAP.
+
+               Bootstrap nghe Esc trên chính phần tử offcanvas, nên nó chỉ chạy
+               khi tiêu điểm đã nằm trong tấm. Mà tiêu điểm chỉ vào tấm SAU khi
+               nó trượt xong (xem khối `shown` bên dưới) — đo được: bấm Esc ở
+               mili-giây thứ 120, trong lúc tấm đang trượt vào, thì không đóng
+               được gì.
+
+               Một khe 360ms nghe thì nhỏ, nhưng "bấm nhầm rồi Esc ngay" đúng là
+               lúc người ta bấm Esc nhanh nhất. Bắt ở document thì phím ăn ngay
+               từ khung hình đầu tiên. */
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'Escape') return;
+                if (!cartPanel.classList.contains('show') &&
+                    !cartPanel.classList.contains('showing')) return;
+
+                cartOc.hide();
+            });
+
+            cartPanel.addEventListener('hidden.bs.offcanvas', function () {
+                document.body.classList.remove('is-cart-open');
+                if (cartTrigger) {
+                    cartTrigger.setAttribute('aria-expanded', 'false');
+                    cartTrigger.focus();
+                }
+            });
+        }
+    }
+
+    /* ====================================================================
+       2b. BẢNG XỔ ĐIỀU HƯỚNG (.mega) — ESC · BẤM RA NGOÀI · ARIA
+
+       BẢNG NÀY MỞ BẰNG CSS, KHÔNG BẰNG JS. `:hover` và `:focus-within` trong
+       components/mega-menu.css làm toàn bộ việc mở/đóng và cả chuyển động —
+       khối này KHÔNG đụng vào đó.
+
+       Nó chỉ thêm ba thứ mà CSS thuần không làm được:
+
+         1. Esc đóng bảng. Không có selector nào huỷ được một trạng thái hover
+            đang diễn ra, nên phải có một lớp đè: .is-dismissed.
+         2. Bấm ra ngoài đóng bảng đang mở bằng tiêu điểm bàn phím.
+         3. aria-expanded phản ánh đúng trạng thái, cho trình đọc màn hình.
+
+       .is-dismissed được GỠ khi con trỏ rời hẳn cụm hoặc khi tiêu điểm quay
+       lại — nếu không, một lần Esc sẽ khoá bảng vĩnh viễn cho tới khi tải lại
+       trang. Đây đúng là nếp mà .hpop.is-closed ở khối trên đang dùng.
+
+       Không có .mega nào (khung rút gọn của trang thanh toán / đăng nhập) thì
+       vòng lặp chạy 0 lần và khối này im lặng.
+       ==================================================================== */
+
+    var megas = Array.prototype.slice.call(document.querySelectorAll('.mega'));
+
+    if (megas.length) {
+        megas.forEach(function (mega, i) {
+            var trigger = mega.querySelector('.mega__trigger');
+            var panel = mega.querySelector('.mega__panel');
+
+            if (!trigger || !panel) return;
+
+            /* aria-controls cần một id. Bảng "Sản phẩm" đã có sẵn trong markup;
+               những bảng khác (Bộ sưu tập) thì đặt ở đây để không phải sửa view
+               chỉ vì một thuộc tính kỹ thuật. */
+            if (!panel.id) {
+                panel.id = 'megaPanel' + i;
+            }
+
+            trigger.setAttribute('aria-haspopup', 'true');
+            trigger.setAttribute('aria-controls', panel.id);
+            trigger.setAttribute('aria-expanded', 'false');
+
+            var danhDau = function (mo) {
+                trigger.setAttribute('aria-expanded', mo ? 'true' : 'false');
+            };
+
+            /* Con trỏ vào: bỏ dấu "vừa đóng" — cú rê chuột mới là ý muốn mới,
+               nó phải thắng lần Esc trước đó. */
+            mega.addEventListener('mouseenter', function () {
+                mega.classList.remove('is-dismissed');
+                danhDau(true);
+            });
+
+            mega.addEventListener('mouseleave', function () {
+                mega.classList.remove('is-dismissed');
+                danhDau(false);
+            });
+
+            mega.addEventListener('focusin', function () {
+                mega.classList.remove('is-dismissed');
+                danhDau(true);
+            });
+
+            /* relatedTarget là phần tử SẮP nhận tiêu điểm. Còn nằm trong cụm
+               thì người dùng chỉ đang Tab giữa các liên kết của chính bảng —
+               chưa đóng. */
+            mega.addEventListener('focusout', function (e) {
+                if (!mega.contains(e.relatedTarget)) {
+                    danhDau(false);
+                }
+            });
+        });
+
+        var dongMega = function (mega) {
+            if (mega.contains(document.activeElement)) {
+                document.activeElement.blur();
+            }
+
+            mega.classList.add('is-dismissed');
+
+            var trigger = mega.querySelector('.mega__trigger');
+            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+
+            return trigger;
+        };
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+
+            megas.forEach(function (mega) {
+                /* Chỉ đóng cụm ĐANG mở. `:hover` hỏi được bằng matches(); tiêu
+                   điểm thì hỏi bằng contains() — hai đường mở, hai cách kiểm. */
+                var dangMo = mega.matches(':hover') || mega.contains(document.activeElement);
+                if (!dangMo) return;
+
+                var trigger = dongMega(mega);
+
+                /* Trả tiêu điểm về nút: người dùng bàn phím vừa ở trong bảng,
+                   không trả thì tiêu điểm rơi về <body> và họ phải Tab lại từ
+                   đầu trang. Chỉ trả khi họ THẬT SỰ đang dùng bàn phím — đóng
+                   bằng Esc lúc đang rê chuột thì không cướp tiêu điểm. */
+                if (trigger && mega.matches(':focus-within')) {
+                    trigger.focus();
+                }
+            });
+        });
+
+        document.addEventListener('click', function (e) {
+            var trong = e.target instanceof Element ? e.target.closest('.mega') : null;
+
+            megas.forEach(function (mega) {
+                if (mega === trong) return;
+                if (!mega.contains(document.activeElement)) return;
+
+                /* Chỉ đóng cụm đang giữ tiêu điểm. Cụm chỉ đang mở vì con trỏ
+                   nằm trên nó thì không cần đụng tới: rời chuột là nó tự đóng,
+                   mà gắn .is-dismissed lúc này lại làm bảng biến mất ngay dưới
+                   con trỏ đang đọc dở. */
+                dongMega(mega);
+            });
+        });
+    }
+
     /* ====================================================================
        3. MENU TRƯỢT MOBILE
        ==================================================================== */
@@ -323,10 +657,31 @@
         toggle.setAttribute('aria-expanded', 'false');
         document.body.style.overflow = '';
 
-        // Đợi hiệu ứng trượt xong mới ẩn hẳn, nếu không panel biến mất đột ngột
+        /* Đợi hiệu ứng trượt xong mới ẩn hẳn, nếu không panel biến mất đột ngột.
+           ĐỌC THỜI LƯỢNG TỪ CHÍNH CSS, không gõ lại một con số ở đây.
+
+           Trước: gõ cứng 280ms, trong khi .mobile-nav__panel chuyển bằng
+           var(--dur-med) = 360ms. Đo bằng Playwright ở 390×844: `hidden` được
+           gắn ở t=287ms trong lúc tấm mới trượt tới -827px trên quãng -844px —
+           tức là bị cắt ở 98%, còn lại một cú giật 17px. Chú thích trong
+           components/header.css thì vẫn ghi "GIỮ NGUYÊN 250ms", một con số
+           không còn ở đâu trong file cả.
+
+           Hỏi getComputedStyle thì đổi token là chỗ này tự theo, và
+           prefers-reduced-motion (transition-duration bị ép về 0.01ms) cũng
+           tự đúng — không phải chờ 280ms với một hiệu ứng không hề chạy. */
+        var doi = 0;
+
+        if (panel) {
+            var cs = window.getComputedStyle(panel);
+            (cs.transitionDuration || '').split(',').forEach(function (v) {
+                doi = Math.max(doi, (parseFloat(v) || 0) * 1000);
+            });
+        }
+
         window.setTimeout(function () {
             if (!nav.classList.contains('is-open')) nav.hidden = true;
-        }, 280);
+        }, doi + 20);
 
         // Trả tiêu điểm về nút vừa mở menu — người dùng bàn phím không bị
         // văng lên đầu trang.

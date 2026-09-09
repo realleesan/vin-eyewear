@@ -34,7 +34,9 @@
     <div class="mobile-nav__sub">
         <a href="/san-pham"><?= e(t('mega.all_products')) ?></a>
         <?php foreach ($categories as $cat): ?>
-            <a href="<?= e(danhMucUrl($cat['slug'])) ?>"><?= e($cat['name']) ?></a>
+<?php /* lang="vi" — cùng lý do và cùng quy ước với bản desktop
+                     trong _layout/mega-menu.php. */ ?>
+            <a href="<?= e(danhMucUrl($cat['slug'])) ?>" lang="vi"><?= e($cat['name']) ?></a>
         <?php endforeach; ?>
     </div>
 </details>

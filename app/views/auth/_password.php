@@ -16,14 +16,32 @@
  *   $pw_holder   chữ mờ trong ô
  *   $pw_min      độ dài tối thiểu (bỏ trống = không đặt)
  *   $pw_required bắt buộc nhập hay không
+ *   $pw_id       id của ô — CHỈ cần khi nhãn KHÔNG bọc quanh ô
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * VÌ SAO CÓ $pw_id
+ *
+ * Sáu trong bảy chỗ gọi file này đều bọc nó trong <label class="authfield">,
+ * nên ô nhận tên từ nhãn bọc ngoài và không cần id.
+ *
+ * Chỗ thứ bảy — ô mật khẩu ở màn đăng nhập — thì không bọc được: hàng nhãn của
+ * nó còn có liên kết "Quên mật khẩu?" đứng cạnh, mà <a> lồng trong <label> là
+ * HTML sai (bấm vào liên kết sẽ hoá thành bấm vào ô nhập). Chỗ đó dùng <div>,
+ * và hệ quả là ô mật khẩu KHÔNG có tên cho trình đọc màn hình — placeholder
+ * chỉ toàn dấu chấm nên không đọc ra được gì.
+ *
+ * Truyền $pw_id là ô có id, rồi bên gọi dùng <label for="..."> đứng riêng.
+ * Không truyền thì không in id — sáu chỗ kia không đổi một byte nào.
  */
 
 $pw_min      = $pw_min      ?? null;
 $pw_required = $pw_required ?? false;
+$pw_id       = $pw_id       ?? null;
 ?>
 
 <span class="authpw">
     <input class="authfield__input authpw__input" type="password"
+           <?= $pw_id !== null ? 'id="' . e($pw_id) . '"' : '' ?>
            name="<?= e($pw_name) ?>"
            autocomplete="<?= e($pw_auto) ?>"
            placeholder="<?= e($pw_holder) ?>"

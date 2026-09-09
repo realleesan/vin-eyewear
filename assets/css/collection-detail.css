@@ -28,8 +28,8 @@
 .cdet__eyebrow {
     margin: 0 0 12px;
     font-size: var(--fs-label, 11px);
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--eyebrow);
 }
@@ -37,8 +37,8 @@
 .cdet__h2 {
     margin: 0 0 18px;
     font-family: var(--font-serif);
-    font-size: 30px;
-    font-weight: 600;
+    font-size: var(--fs-h3);
+    font-weight: 500;
     line-height: 1.2;
     color: var(--ink);
 }
@@ -46,7 +46,7 @@
 .cdet__h3 {
     margin: 0 0 16px;
     font-size: var(--fs-subhead);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -60,8 +60,8 @@
     padding: 2px 8px;
     border-radius: var(--radius-sm);
     background: var(--brand-subtle);
-    font-size: 10.5px;
-    font-weight: 600;
+    font-size: var(--fs-label);
+    font-weight: 500;
     text-align: center;
     color: var(--brand);
 }
@@ -70,7 +70,7 @@
    khi mắt lướt dọc bảng, mà font chữ thường thì chữ số rộng hẹp khác nhau. */
 .cdet__size {
     font-family: var(--font-mono);
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--ink);
 }
 
@@ -119,8 +119,8 @@
     gap: 10px;
     margin: 0;
     font-size: var(--fs-label, 11px);
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--eyebrow);
 }
@@ -137,7 +137,7 @@
     margin: 0;
     font-family: var(--font-serif);
     font-size: clamp(28px, calc(13.2px + 2.56vw), 46px);
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.1;
     letter-spacing: normal;
     color: var(--ink);
@@ -174,7 +174,7 @@
 }
 
 .cdet__meta-row { display: flex; gap: 7px; }
-.cdet__meta-row dt { font-weight: 600; color: var(--ink); }
+.cdet__meta-row dt { font-weight: 500; color: var(--ink); }
 .cdet__meta-row dd { margin: 0; }
 
 .cdet__stats {
@@ -184,8 +184,8 @@
     gap: 10px;
     margin: 8px 0 0;
     font-size: var(--fs-note, 13px);
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     color: var(--ink);
 }
 
@@ -198,7 +198,7 @@
     border-radius: var(--radius-sm);
     background: var(--brand-subtle);
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand-strong);
 }
 
@@ -218,11 +218,11 @@
     padding: 13px 26px;
     border-radius: var(--radius-sm);
     background: var(--brand);
-    font-size: 14.5px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--on-brand);
     text-decoration: none;
-    transition: background-color 0.2s, transform 0.2s;
+    transition: background-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
 .cdet__cta:hover {
@@ -255,7 +255,7 @@
     color: var(--muted);
 }
 
-.cdet__soon a { font-weight: 600; color: var(--brand); }
+.cdet__soon a { font-weight: 500; color: var(--brand); }
 
 /* ============================================================
    LỚP 1 — DẢI LOOKBOOK
@@ -344,7 +344,7 @@
 }
 
 .cdet__swatch-name {
-    font-size: 11.5px;
+    font-size: var(--fs-caption);
     line-height: 1.35;
     color: var(--muted);
 }
@@ -362,7 +362,7 @@
     display: flex;
     gap: 11px;
     align-items: flex-start;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: var(--muted);
 }
@@ -392,7 +392,7 @@
 .cdet__aud-label {
     margin: 0 0 8px;
     font-size: var(--fs-label, 11px);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--h-meta);
@@ -401,19 +401,19 @@
 .cdet__aud-value {
     margin: 0 0 6px;
     font-family: var(--font-serif);
-    font-size: 19px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .cdet__aud-note {
     margin: 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: var(--muted);
 }
 
-.cdet__aud-note a { font-weight: 600; }
+.cdet__aud-note a { font-weight: 500; }
 
 /* ============================================================
    LỚP 2 — BẢNG SO SÁNH
@@ -448,8 +448,8 @@
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    font-size: 13.5px;
-    font-weight: 600;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
     color: var(--brand);
     text-decoration: none;
     white-space: nowrap;
@@ -491,7 +491,7 @@
     background: var(--surface-sunken);
     border-bottom: 1px solid var(--line);
     font-size: var(--fs-label, 11px);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     text-align: left;
@@ -516,7 +516,7 @@
 .cdet__table tbody tr:last-child td,
 .cdet__table tbody tr:last-child th { border-bottom: 0; }
 
-.cdet__row { transition: background-color 0.15s; }
+.cdet__row { transition: background-color var(--dur-fast) var(--ease); }
 
 /* focus-within chứ không chỉ hover: dòng sáng lên khi người dùng bàn phím
    Tab vào một trong hai liên kết của nó. */
@@ -559,11 +559,11 @@
 
 .cdet__cell-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 
-.cdet__cell-title { font-weight: 600; color: var(--ink); }
+.cdet__cell-title { font-weight: 500; color: var(--ink); }
 
 .cdet__cell-sku {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     color: var(--h-meta);
 }
 
@@ -574,7 +574,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
     text-decoration: none;
     white-space: nowrap;
@@ -585,7 +585,7 @@
 .cdet__price-ico {
     transform: rotate(-90deg);
     color: var(--h-meta);
-    transition: transform 0.2s;
+    transition: transform var(--dur-fast) var(--ease);
 }
 
 .cdet__row:hover .cdet__price-ico { transform: rotate(-90deg) translateY(3px); }
@@ -606,7 +606,7 @@
 
 .cdet__ways-label {
     font-size: var(--fs-label, 11px);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--h-meta);
@@ -633,7 +633,10 @@
     font-weight: 500;
     color: var(--ink);
     text-decoration: none;
-    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+    transition:
+        border-color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease),
+        color var(--dur-fast) var(--ease);
 }
 
 .cdet__chip:hover {
@@ -657,7 +660,7 @@
 
 .cdet__guide-lead {
     margin: 0 0 22px;
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     line-height: 1.75;
     color: var(--muted);
 }
@@ -681,16 +684,16 @@
     flex-shrink: 0;
     border-radius: var(--radius-round);
     background: var(--brand);
-    font-size: 12.5px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     color: var(--on-brand);
 }
 
 .cdet__step-body { display: flex; flex-direction: column; gap: 3px; }
 
-.cdet__step-title { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.cdet__step-title { font-size: var(--fs-body); font-weight: 500; color: var(--ink); }
 
-.cdet__step-text { font-size: 13.5px; line-height: 1.65; color: var(--muted); }
+.cdet__step-text { font-size: var(--fs-body-sm); line-height: 1.65; color: var(--muted); }
 
 .cdet__panel {
     background: var(--surface-raised);
@@ -705,7 +708,7 @@
     background: var(--surface-sunken);
     border-bottom: 1px solid var(--line);
     font-size: var(--fs-label, 11px);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
@@ -713,13 +716,13 @@
 
 /* Bảng nhỏ nằm trong panel: bỏ nền tiêu đề (panel đã có dải riêng) và thu
    đệm lại một bậc. */
-.cdet__table--sm { font-size: 13.5px; }
+.cdet__table--sm { font-size: var(--fs-body-sm); }
 
 .cdet__table--sm thead th {
     padding: 11px 14px;
     background: transparent;
     border-bottom: 1px solid var(--h-rule);
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-label);
     color: var(--h-meta);
 }
 
@@ -738,7 +741,7 @@
     color: var(--h-note);
 }
 
-.cdet__panel-foot a { font-weight: 600; }
+.cdet__panel-foot a { font-weight: 500; }
 
 /* ============================================================
    LỚP 3 — GỌNG THEO DÁNG MẶT
@@ -762,7 +765,7 @@
     font-size: var(--fs-body-sm);
 }
 
-.cdet__face-name { font-weight: 600; color: var(--ink); }
+.cdet__face-name { font-weight: 500; color: var(--ink); }
 .cdet__face-models { text-align: right; color: var(--muted); }
 
 /* ============================================================
@@ -789,7 +792,7 @@
     display: flex;
     gap: 12px;
     align-items: flex-start;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.65;
     color: var(--muted);
 }
@@ -812,8 +815,8 @@
     justify-content: space-between;
     gap: 20px;
     padding: 16px 22px;
-    font-size: 14.5px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--ink);
     cursor: pointer;
     list-style: none;
@@ -829,7 +832,7 @@
 .cdet__q-ico {
     flex-shrink: 0;
     color: var(--brand);
-    transition: transform 0.2s;
+    transition: transform var(--dur-fast) var(--ease);
 }
 
 .cdet__q[open] .cdet__q-ico { transform: rotate(180deg); }
@@ -841,7 +844,7 @@
 .cdet__q-body {
     margin: 0;
     padding: 0 22px 18px;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.75;
     color: var(--muted);
 }
@@ -866,15 +869,15 @@
 .cdet__end-title {
     margin: 0 0 8px;
     font-family: var(--font-serif);
-    font-size: 28px;
-    font-weight: 600;
+    font-size: var(--fs-h3);
+    font-weight: 500;
     line-height: 1.2;
     color: var(--h-on-dark);
 }
 
 .cdet__end-lead {
     margin: 0;
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     line-height: 1.7;
     color: var(--h-on-dark-muted);
 }
@@ -888,11 +891,11 @@
     padding: 13px 24px;
     border: 1px solid var(--h-on-dark-muted);
     border-radius: var(--radius-sm);
-    font-size: 14.5px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--h-on-dark);
     text-decoration: none;
-    transition: background-color 0.2s, color 0.2s;
+    transition: background-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .cdet__end-btn:hover {
@@ -952,8 +955,8 @@
 
 .cdet__oname {
     font-family: var(--font-serif);
-    font-size: 19px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -994,7 +997,7 @@
     max-width: 100vw;
     height: 100vh;
     background: var(--surface-raised);
-    box-shadow: -18px 0 44px rgba(90, 40, 40, 0.22);
+    box-shadow: none;
 }
 
 .cdraw__head {
@@ -1013,15 +1016,15 @@
 .cdraw__sku {
     margin: 0;
     font-family: var(--font-mono);
-    font-size: 11.5px;
+    font-size: var(--fs-caption);
     color: var(--h-meta);
 }
 
 .cdraw__name {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 23px;
-    font-weight: 600;
+    font-size: var(--fs-h3);
+    font-weight: 500;
     line-height: 1.2;
     color: var(--ink);
 }
@@ -1037,7 +1040,7 @@
     border: 1px solid var(--line);
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
-    font-size: 19px;
+    font-size: var(--fs-h4);
     line-height: 1;
     color: var(--muted);
     text-decoration: none;
@@ -1076,7 +1079,7 @@
 .cdraw__group {
     margin: 0 0 10px;
     font-size: var(--fs-label, 11px);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--eyebrow);
@@ -1090,7 +1093,7 @@
     gap: 20px;
     padding: 8px 0;
     border-bottom: 1px solid var(--h-rule);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
 }
 
 .cdraw__row dt { color: var(--h-note); flex-shrink: 0; }
@@ -1109,7 +1112,7 @@
 
 .cdraw__size-num {
     font-family: var(--font-mono);
-    font-size: 17px;
+    font-size: var(--fs-h5);
     font-weight: 500;
     color: var(--ink);
 }
@@ -1118,8 +1121,8 @@
     padding: 3px 10px;
     border-radius: var(--radius-sm);
     background: var(--brand);
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--fs-label);
+    font-weight: 500;
     color: var(--on-brand);
 }
 
@@ -1183,7 +1186,7 @@
     padding: 12px 18px;
     border-radius: var(--radius-sm);
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
 }
 
@@ -1259,7 +1262,7 @@
     /* Một cột: hai ô 150px cạnh nhau thì không còn nhìn ra cái gì trong ảnh. */
     .cdet__look-grid { grid-template-columns: 1fr; }
 
-    .cdet__h2 { font-size: 23px; }
+    .cdet__h2 { font-size: var(--fs-h3); }
 
     .cdet__aud,
     .cdet__face-list,
@@ -1298,7 +1301,7 @@
     margin: 18px 0 0;
     padding-top: 14px;
     border-top: 1px solid var(--line, var(--line));
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.7;
     color: var(--muted, var(--muted));
 }
@@ -1318,7 +1321,7 @@
    ============================================================================ */
 .cdet__h2, .cdet__name, .cdet__end-title {
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .cdet__h3, .cdet__cell-title {
@@ -1326,7 +1329,46 @@
 }
 
 .cdet__eyebrow, .cdet__ways-label {
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
+}
+/* ============================================================================
+   PHASE 2 — HẠ CẤP KHỐI "THÔNG SỐ SO SÁNH" (.cdet__cmp)
+
+   Khối này là một bảng dữ liệu tám cột (Mẫu · Phân loại · Kích thước · Dáng ·
+   Chất liệu · Nặng · Tròng · Giá). Nó HỮU ÍCH và không bị bỏ đi — nhưng ở
+   trạng thái cũ nó hô to ngang các khối kể chuyện quanh nó, và một bảng dữ
+   liệu dày đặt giữa một trang bộ sưu tập là thứ kéo cả trang từ "editorial"
+   về "trang thông số".
+
+   Nay nó vẫn ở nguyên vị trí trong DOM — KHÔNG dùng `order` của flex để đẩy
+   xuống, vì cái đó tách thứ tự nhìn khỏi thứ tự đọc/Tab và phá WCAG 1.3.2 —
+   chỉ hạ TRỌNG LƯỢNG THỊ GIÁC:
+
+     · tiêu đề khối xuống tầng 2 (--fs-h3), như các khối dịch vụ ở trang chủ
+     · chữ trong bảng nhỏ hơn một nấc và chuyển sang màu phụ
+     · bảng cuộn ngang trong khung riêng, không nong trang ra
+   ============================================================================ */
+
+.cdet__cmp .section-h2,
+.cdet__cmp .cdet__title {
+    font-size: var(--fs-h3);
+}
+
+.cdet__table-wrap {
+    /* Bảng rộng thì CUỘN TRONG KHUNG CỦA NÓ, không đẩy cả trang trượt ngang. */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cdet__table {
+    font-size: var(--fs-body-sm);
+    color: var(--muted);
+}
+
+/* Cột tên mẫu vẫn là mực — nó là thứ duy nhất trong bảng người ta thật sự
+   quét mắt tìm. */
+.cdet__table .cdet__cell-name {
+    color: var(--ink);
 }

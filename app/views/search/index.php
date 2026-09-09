@@ -74,7 +74,20 @@
                     </a>
                 </div>
 
-                <ul class="pcard__grid" role="list">
+                <?php /* `.pgrid` — MỘT lưới sản phẩm cho cả site (Phase 2).
+
+                         Lớp cũ ở đây là `.pcard__grid`, tên thứ BA cho cùng một
+                         thứ: trang chủ dùng `.pgrid`, trang danh mục dùng
+                         `.catgrid`, trang này dùng `.pcard__grid`.
+
+                         Và trên ĐÚNG TRANG NÀY nó không có kiểu nào cả. Lớp ấy
+                         được khai ở assets/css/product-detail.css (dải "sản phẩm
+                         liên quan"), mà bảng $pageStyles trong _layout/master.php
+                         chỉ nạp search.css cho 'search/index' — nên lưới rơi về
+                         `display: block` và các thẻ xếp chồng thành một cột.
+
+                         Xem components/product.css. */ ?>
+                <ul class="pgrid" role="list">
                     <?php foreach ($products as $p): ?>
                         <?php partial('_layout/product-card', ['product' => $p]); ?>
                     <?php endforeach; ?>

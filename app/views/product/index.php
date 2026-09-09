@@ -308,61 +308,83 @@ $pick = static function (
     array $options,
     string $tatCa,
     bool $mang = true
-) use ($hiddenFilters, $catalogBase): void {
-    $id  = 'f-' . $key;
-    $ten = $key . ($mang ? '[]' : '');
+) use ($buildUrl): void {
+    $id = 'f-' . $key;
 
     if ($options === []) {
         /* Không còn tiêu chí nào để chọn (kho hết sạch nhóm này) thì chỉ in
-           tiêu đề. <p> chứ không <label>: một <label for> nhắm vào id không tồn
-           tại là thứ trình đọc màn hình đọc ra rồi bỏ lửng. */
+           tiêu đề. */
         printf('<p class="pfacet__legend">%s</p>', e($legend));
 
         return;
     }
 
-    $daChon = false;
+    /*
+     * ═════════════════════════════════════════════════════════════════════════
+     * <details> + DANH SÁCH LIÊN KẾT, KHÔNG CÒN <select> (09/09/2026)
+     *
+     * <select> vẽ bằng giao diện của HỆ ĐIỀU HÀNH: hộp thả xanh Windows, chữ
+     * Segoe, viền xám — thứ duy nhất trên cả trang không do ta vẽ, và nó nằm
+     * ngay giữa cột lọc. Không CSS nào chạm vào được bên trong nó.
+     *
+     * Nay mỗi nhóm là một <details> mở gập TẠI CHỖ (không thả nổi, không cần
+     * z-index hay bắt cú bấm ra ngoài), bên trong là các <a href> THẬT — mỗi
+     * mục là đúng URL mà ô chọn cũ sẽ tạo ra, do $buildUrl dựng ở máy chủ.
+     *
+     * KHÔNG CẦN SỬA catalog.js: laDuongLoc() đã chặn mọi <a> cùng đường dẫn
+     * trong cột lọc và nạp ngầm hai mảnh — nên bấm một mục là lưới đổi mà trang
+     * không tải lại, y như lúc đổi <select>. Vòng lặp [data-pick] của nó nay
+     * không tìm thấy gì và tự thoát. Tắt JavaScript thì liên kết vẫn là liên
+     * kết: bấm là điều hướng, bộ lọc vẫn chạy — không còn cần nút "Áp dụng".
+     *
+     * Mỗi cú lọc thay cả cột .cfilter bằng bản máy chủ vẽ lại, nên <details>
+     * tự về trạng thái gập — đúng thứ người ta mong sau khi chọn xong.
+     * ═════════════════════════════════════════════════════════════════════════
+     */
+    $dangOn = null;
+    foreach ($options as $opt) {
+        if ($opt['on']) {
+            $dangOn = $opt;
+            break;
+        }
+    }
     ?>
-    <?php /* <label> chứ không <p> như nhóm huy hiệu: ở đây tiêu đề nhóm CHÍNH
-             LÀ nhãn của ô chọn, nên bấm vào chữ tiêu đề là mở được danh sách. */ ?>
-    <label class="pfacet__legend" for="<?= e($id) ?>"><?= e($legend) ?></label>
+    <p class="pfacet__legend" id="<?= e($id) ?>-legend"><?= e($legend) ?></p>
 
-    <form class="pfacet__pick" method="get" action="<?= e($catalogBase) ?>">
-        <?php $hiddenFilters([$key, 'page']); ?>
-        <span class="catpick">
-            <select class="catpick__select" id="<?= e($id) ?>"
-                    name="<?= e($ten) ?>" data-pick="<?= e($ten) ?>">
-                <?php /* value rỗng = bỏ lọc. multi() ở controller slugify rồi
-                         loại chuỗi rỗng, nên không cần nhánh riêng. */ ?>
-                <option value=""><?= e($tatCa) ?></option>
-                <?php foreach ($options as $opt): ?>
-                    <?php
-                    /* disabled thay cho lớp .is-off của huy hiệu: <option> vô
-                       hiệu hoá được thật, và trình đọc màn hình tự nói ra —
-                       không phải chêm câu sr-only như bên kia. Mục ĐANG BẬT
-                       không bao giờ bị tắt, cùng luật với huy hiệu. */
-                    $tat  = $opt['count'] === 0 && !$opt['on'];
-                    $chon = $opt['on'] && !$daChon;
-
-                    if ($chon) {
-                        $daChon = true;
-                    }
-                    ?>
-                    <option value="<?= e($opt['key']) ?>"
-                        <?= $chon ? ' selected' : '' ?><?= $tat ? ' disabled' : '' ?>><?= e($opt['label']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <?php /* Cùng chữ V với ô "Sắp xếp theo" — xem chú thích ở khối đó. */ ?>
+    <details class="catpick" data-catpick>
+        <summary class="catpick__sum" aria-labelledby="<?= e($id) ?>-legend">
+            <span class="catpick__cur"><?= e($dangOn !== null ? $dangOn['label'] : $tatCa) ?></span>
             <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
+                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6"
                       stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-        </span>
-        <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn là lọc luôn).
-                 Không có JS thì đây là cách duy nhất để chốt lựa chọn, nên
-                 không được bỏ. */ ?>
-        <button type="submit" class="catpick__go"><?= e(t('filter.apply')) ?></button>
-    </form>
+        </summary>
+
+        <ul class="catpick__menu" role="list">
+            <li>
+                <a class="catpick__opt<?= $dangOn === null ? ' is-on' : '' ?>"
+                   href="<?= e($buildUrl([$key => null, 'page' => null])) ?>"
+                   <?= $dangOn === null ? 'aria-current="true"' : '' ?>>
+                    <span><?= e($tatCa) ?></span>
+                </a>
+            </li>
+            <?php foreach ($options as $opt): ?>
+                <?php
+                /* Mục hết hàng (count 0) đứng mờ và KHÔNG bấm được — cùng luật
+                   với huy hiệu .is-off. Mục ĐANG BẬT không bao giờ bị tắt. */
+                $tat = $opt['count'] === 0 && !$opt['on'];
+                ?>
+                <li>
+                    <a class="catpick__opt<?= $opt['on'] ? ' is-on' : '' ?><?= $tat ? ' is-off' : '' ?>"
+                       href="<?= e($buildUrl([$key => ($mang ? [$opt['key']] : $opt['key']), 'page' => null])) ?>"
+                       <?= $opt['on'] ? 'aria-current="true"' : '' ?><?= $tat ? ' aria-disabled="true" tabindex="-1"' : '' ?>>
+                        <span><?= e($opt['label']) ?></span>
+                        <span class="catpick__n"><?= (int) $opt['count'] ?></span>
+                    </a>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+    </details>
     <?php
 };
 
@@ -734,7 +756,10 @@ partial('_layout/page-head', [
                 <form class="catsort" method="get" action="<?= e($catalogBase) ?>">
                     <?php $hiddenFilters(['sort', 'page']); ?>
                     <label class="catsort__label" for="f-sort"><?= e(t('cat.sort_by')) ?></label>
-                    <span class="catpick">
+                    <?php /* .catpick--select: ô này VẪN là <select> (thanh sắp xếp
+                             không đi cùng đợt đổi cột lọc sang <details>) nên
+                             cần biến thể giữ lại dáng cũ — xem category.css. */ ?>
+                    <span class="catpick catpick--select">
                         <select class="catpick__select" id="f-sort" name="sort" data-pick="sort">
                             <?php foreach ([
                                 'newest'     => t('cat.sort_newest'),
@@ -773,18 +798,29 @@ partial('_layout/page-head', [
                 <?php /* THẺ DÙNG CHUNG VỚI TRANG CHỦ — _layout/product-card.php.
                          Trước đây trang này có thẻ riêng (_layout/product-tile.php,
                          cả thẻ là một liên kết, ảnh 220px, không nút nào), nên cùng
-                         một sản phẩm hiện ra hai dáng tuỳ khách đi vào từ đâu. File
-                         đó đã bỏ; xem chú thích ở .catgrid trong assets/css/category.css.
+                         một sản phẩm hiện ra hai dáng tuỳ khách đi vào từ đâu.
+
+                         LƯỚI CŨNG DÙNG CHUNG NỐT — `.pgrid` thay cho `.catgrid`
+                         (Phase 2). `.catgrid` là một lưới thứ hai làm đúng việc của
+                         `.pgrid` nhưng khai số cột và máng khác, nên cùng một thẻ
+                         hiện ra hai cỡ tuỳ khách vào từ trang chủ hay từ danh mục —
+                         đúng thứ mà việc gộp thẻ ở trên vừa dẹp xong. Lớp đó đã bỏ
+                         khỏi assets/css/category.css.
+
+                         KHÔNG phải hợp đồng với JavaScript: catalog.js thay ruột của
+                         `.catmain` (khối bọc ngoài) chứ không tìm tên lưới này.
 
                          <ul> chứ không <div>: product-card.php in ra <li>. */ ?>
-                <ul class="catgrid" role="list">
+                <ul class="pgrid" role="list">
                     <?php foreach ($products as $i => $p): ?>
                         <?php partial('_layout/product-card', [
                             'product'     => $p,
                             'showCompare' => true,
-                            // Hàng thẻ ĐẦU TIÊN (ba cột) nằm trong khung nhìn ngay
-                            // khi trang mở, lazy-load chúng chỉ làm ảnh tới chậm hơn.
-                            'eager'       => $i < 3,
+                            // Hàng thẻ ĐẦU TIÊN nằm trong khung nhìn ngay khi trang
+                            // mở, lazy-load chúng chỉ làm ảnh tới chậm hơn. BỐN chứ
+                            // không ba: .pgrid xếp 4 cột từ 1101px (xem
+                            // components/product.css), trước đây .catgrid xếp 3.
+                            'eager'       => $i < 4,
                         ]); ?>
                     <?php endforeach; ?>
                 </ul>

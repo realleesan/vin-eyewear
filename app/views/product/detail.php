@@ -33,7 +33,51 @@ $percent  = discount($price, $compare);
 $hanKM    = ProductPricing::hanKhuyenMai($product);
 $rating   = (float) ($product['rating'] ?? 5);
 $reviewN  = (int) ($product['review_count'] ?? 0);
-$images   = $product['images'] ?: [ProductModel::image($product)];
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * LỌC ẢNH KHÔNG PHẢI ẢNH SẢN PHẨM RA KHỎI THƯ VIỆN
+ *
+ * Cột `images` cho phép dán đường dẫn bất kỳ, và trên dữ liệu đang chạy có hai
+ * mặt hàng bị gán nhầm ảnh KHÔNG PHẢI chụp sản phẩm:
+ *
+ *     Aurora Titan Vuông        -> /assets/images/showroom-frames.jpg
+ *     Solis Phi Công Phân Cực   -> /assets/images/hero-eyewear.jpg
+ *
+ * Tấm thứ nhất là ảnh NỘI THẤT MỘT CỬA HÀNG KHÁC — trong ảnh còn đọc được biển
+ * hiệu của thương hiệu đó. Đặt nó làm ảnh thứ hai trong thư viện của một chiếc
+ * gọng titan là thứ khách nhìn thấy ngay khi bấm sang ảnh kế tiếp.
+ *
+ * Tấm thứ hai là ảnh bìa chiến dịch, không phải ảnh chụp chiếc kính đang bán.
+ *
+ * Ở đây KHÔNG đoán "ảnh này có đúng mặt hàng không" — việc đó cần mắt người.
+ * Chỉ loại những tấm mà bản thân VAI TRÒ của chúng đã sai: ảnh cửa hàng, ảnh
+ * nội thất, ảnh bìa chiến dịch không bao giờ là ảnh sản phẩm, dù gắn cho mặt
+ * hàng nào.
+ *
+ * Lọc ở TẦNG VIEW, không sửa CSDL và không đụng ProductModel: đây là quyết
+ * định trình bày ("đừng vẽ tấm này ra"), và nó tự biến mất khi dữ liệu ảnh
+ * được dọn. Gỡ luật này chỉ là xoá một mảng.
+ *
+ * Nếu lọc xong không còn tấm nào thì rơi về ô trống thật thà `.pdgal--empty`
+ * chứ KHÔNG mượn ảnh của mặt hàng khác — cùng nguyên tắc với `.pcard__noimg`.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+$anhKhongPhaiSanPham = ['showroom-', 'store-interior', 'hero-'];
+
+$images = array_values(array_filter(
+    $product['images'] ?: [ProductModel::image($product)],
+    static function ($duongDan) use ($anhKhongPhaiSanPham): bool {
+        $ten = basename(parse_url((string) $duongDan, PHP_URL_PATH) ?? '');
+
+        foreach ($anhKhongPhaiSanPham as $dauHieu) {
+            if (str_starts_with($ten, $dauHieu)) {
+                return false;
+            }
+        }
+
+        return $ten !== '';
+    }
+));
 $specs    = is_array($product['specs']) ? $product['specs'] : [];
 $slug     = rawurlencode($product['slug']);
 
@@ -153,33 +197,58 @@ $stars = static function (float $score): string {
     <div class="pd__grid">
 
         <!-- ══════════ THƯ VIỆN ẢNH ══════════ -->
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * XẾP DỌC, KHÔNG CÒN "MỘT Ô LỚN + HÀNG ẢNH NHỎ"
+         *
+         * Mọi ảnh của mẫu hàng in ra thành một CỘT ẢNH LỚN cuộn tự nhiên, mỗi
+         * tấm chiếm trọn bề ngang cột. Đây là cách trang sản phẩm của các nhà
+         * thời trang trình bày: người xem cuộn qua từng tấm thay vì bấm vào ảnh
+         * nhỏ để đổi ảnh lớn.
+         *
+         * VÀ NÓ SỬA MỘT LỖI CÓ THẬT. Bản trước xếp mọi ảnh chồng lên nhau trong
+         * một ô `.pdgal__stage` cao 1:1 rồi dựa vào CSS `:target` để chọn ảnh
+         * nào hiện — nhưng KHÔNG CÓ luật `:target` nào trong assets/css:
+         * grep `.pdgal__img` và `:target` cả thư mục ra 0 kết quả. Nghĩa là mọi
+         * ảnh phụ vẫn nằm trong luồng, bị `overflow:hidden` của ô cắt đi, và
+         * hàng ảnh nhỏ bấm vào không đổi được gì. Trang chỉ có MỘT ảnh dùng
+         * được, đúng như khi soi trang thật.
+         *
+         * Cột dọc không cần `:target`, không cần ảnh nhỏ, không cần một dòng JS.
+         *
+         * TẤM ĐẦU `fetchpriority="high"` và KHÔNG lazy — nó là thứ khách nhìn
+         * để quyết định. Các tấm sau lazy như thường.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        ?>
         <div class="pdgal">
-            <div class="pdgal__stage">
-                <?php foreach ($images as $i => $img): ?>
-                    <!-- id là đích của ảnh nhỏ bên dưới; CSS :target chọn ảnh
-                         nào hiện. Ảnh đầu hiện mặc định khi chưa có :target. -->
-                    <img class="pdgal__img<?= $i === 0 ? ' is-first' : '' ?>"
-                         id="anh-<?= $i ?>" src="<?= e($img) ?>"
-                         alt="<?= e($product['name']) ?><?= $i > 0 ? ' — ảnh ' . ($i + 1) : '' ?>"
-                         width="520" height="520"
-                         <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
-                <?php endforeach; ?>
-
-                <?php if ($percent !== null): ?>
-                    <span class="pdgal__sale">-<?= (int) $percent ?>%</span>
-                <?php endif; ?>
-            </div>
-
-            <?php if (count($images) > 1): ?>
-                <div class="pdgal__thumbs">
-                    <?php foreach ($images as $i => $img): ?>
-                        <a class="pdgal__thumb" href="#anh-<?= $i ?>">
-                            <img src="<?= e($img) ?>" alt="Xem ảnh <?= $i + 1 ?>"
-                                 width="92" height="92" loading="lazy" decoding="async">
-                        </a>
-                    <?php endforeach; ?>
-                </div>
+            <?php /* Ô TRỐNG THẬT THÀ khi mặt hàng không còn tấm ảnh hợp lệ nào —
+                     cùng nguyên tắc với `.pcard__noimg` ở thẻ sản phẩm: thà để
+                     trống còn hơn mượn ảnh của mặt hàng khác. Dùng lại đúng bộ
+                     lớp đó nên không phát sinh kiểu dáng mới. */ ?>
+            <?php if ($images === []): ?>
+                <figure class="pdgal__frame">
+                    <span class="pcard__noimg"><?= e(t('product.no_image')) ?></span>
+                </figure>
             <?php endif; ?>
+
+            <?php foreach ($images as $i => $img): ?>
+                <figure class="pdgal__frame">
+                    <?php /* asset() bọc ngoài để một tấm ảnh chỉ có một địa chỉ —
+                             lý do đầy đủ ở _layout/product-card.php. */ ?>
+                    <img class="pdgal__img" src="<?= e(asset($img)) ?>"
+                         alt="<?= e($product['name']) ?><?= $i > 0 ? ' — ảnh ' . ($i + 1) : '' ?>"
+                         width="1000" height="1000"
+                         <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
+
+                    <?php /* Huy hiệu giảm giá chỉ trên TẤM ĐẦU — lặp lại ở mọi
+                             tấm là biến một thông tin thành một hoa văn. */ ?>
+                    <?php if ($i === 0 && $percent !== null): ?>
+                        <span class="pdgal__sale">-<?= (int) $percent ?>%</span>
+                    <?php endif; ?>
+                </figure>
+            <?php endforeach; ?>
 
             <?php
             /*
@@ -211,13 +280,62 @@ $stars = static function (float $score): string {
         </div>
 
         <!-- ══════════ THÔNG TIN ══════════ -->
-        <div class="pdinfo">
+        <?php
+        /* [data-recent] — "đã xem gần đây" của lớp phủ tìm kiếm. search-suggest.js
+           đọc JSON này ở mọi trang có nó và đẩy vào localStorage; máy chủ không
+           lưu gì. Giá là CHUỖI ĐÃ ĐỊNH DẠNG ($price là giá hiệu lực, có khuyến
+           mãi thì đã trừ) để bên JS không phải biết luật giá. */
+        $recentJson = json_encode([
+            'slug'  => (string) $product['slug'],
+            'name'  => (string) $product['name'],
+            'image' => $images !== [] ? asset($images[0]) : '',
+            'price' => money($price),
+        ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        ?>
+        <div class="pdinfo" data-recent="<?= e($recentJson) ?>">
 
+<?php
+            /*
+             * ═════════════════════════════════════════════════════════════════
+             * CỘT THÔNG TIN XẾP LẠI THEO NHÀ MỐT (09/09/2026)
+             *
+             * Trước: SKU → tên (48px) → sao · số đánh giá · tồn kho → giá → hạn
+             * khuyến mãi → mô tả → phương án → số lượng + hai nút. Mười thứ xếp
+             * dọc, và tám trong số đó là "chrome thương mại" đứng TRƯỚC nút mua.
+             * Đối chiếu với trang sản phẩm của một nhà mốt: tên (nhỏ) → giá →
+             * phương án → MỘT nút → rồi mới tới các mục gập.
+             *
+             * KHÔNG XOÁ DỮ LIỆU NÀO. SKU, sao, số đánh giá, tồn kho, hạn khuyến
+             * mãi, mô tả: tất cả DỜI XUỐNG mục gập "Chi tiết" phía dưới nút mua
+             * (mở sẵn). Ai cần vẫn thấy, nhưng thứ đầu tiên chạm mắt là ẢNH và
+             * TÊN, không phải một bảng thông số.
+             *
+             * Thứ tự mới:
+             *   tên → giá → phương án → số lượng + nút → [Chi tiết] → [Giao hàng]
+             * ═════════════════════════════════════════════════════════════════
+             */
+            ?>
             <div class="pdinfo__head">
+                <h1 class="pdinfo__title notranslate" translate="no" lang="vi"><?= e($product['name']) ?></h1>
+            </div>
+
+            <div class="pdinfo__price">
+                <span class="pdinfo__now"><?= money($price) ?></span>
+                <?php if ($compare !== null && $compare > $price): ?>
+                    <span class="pdinfo__old"><?= money($compare) ?></span>
+                <?php endif; ?>
+            </div>
+
+            <?php
+            /* Khối "meta" — SKU · sao · đánh giá · tồn kho · hạn KM · mô tả —
+               nay dựng ở ĐÂY vào một biến rồi in ra BÊN TRONG mục gập "Chi tiết"
+               sau form mua. Gom thành một chuỗi để markup của mục gập đọc gọn,
+               và để mọi lớp .pdinfo__* cũ giữ nguyên tên (CSS không đổi). */
+            ob_start();
+            ?>
                 <span class="pdinfo__eyebrow">
                     <?= e($product['brand'] ?? 'Vin Eyewear') ?> · SKU <?= e($product['sku']) ?>
                 </span>
-                <h1 class="pdinfo__title notranslate" translate="no"><?= e($product['name']) ?></h1>
 
                 <div class="pdinfo__rate">
                     <span class="pdstars" aria-hidden="true"><?= $stars($rating) ?></span>
@@ -255,14 +373,6 @@ $stars = static function (float $score): string {
                         ?>
                     </span>
                 </div>
-            </div>
-
-            <div class="pdinfo__price">
-                <span class="pdinfo__now"><?= money($price) ?></span>
-                <?php if ($compare !== null && $compare > $price): ?>
-                    <span class="pdinfo__old"><?= money($compare) ?></span>
-                <?php endif; ?>
-            </div>
 
             <?php /* HẠN KHUYẾN MÃI NÓI RA, không để khách tự đoán.
 
@@ -280,6 +390,7 @@ $stars = static function (float $score): string {
             <?php if (!empty($product['description'])): ?>
                 <p class="pdinfo__desc"><?= e($product['description']) ?></p>
             <?php endif; ?>
+            <?php $pdMeta = ob_get_clean(); ?>
 
             <form class="pdbuy" method="post" action="/gio-hang/them">
                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
@@ -440,6 +551,44 @@ $stars = static function (float $score): string {
             </form>
 
             <?php
+            /* ─────────────────────────────────────────────────────────────────
+               HAI MỤC GẬP DƯỚI NÚT MUA — <details> thật, không JS.
+
+               "Chi tiết" MỞ SẴN: nó chứa mô tả và mọi thứ vừa dời từ đầu cột
+               xuống (SKU · sao · tồn kho · hạn KM). Gập kín thì khách phải bấm
+               mới thấy mô tả — một bước thừa cho thứ ai cũng đọc.
+
+               "Giao hàng & đổi trả" GẬP: ai cần mới mở, và nó dẫn sang trang
+               chính sách đầy đủ chứ không chép cả trang đó vào đây.
+
+               Mục "Thông số kỹ thuật" và "Đánh giá" VẪN ở khối .pdbottom phía
+               dưới, không đụng — chúng dài, không hợp nằm trong một cột hẹp.
+               ───────────────────────────────────────────────────────────────── */
+            ?>
+            <div class="pdacc">
+                <details class="pdacc__item" open>
+                    <summary class="pdacc__sum">
+                        <span><?= e(t('pd.acc_details')) ?></span>
+                        <span class="pdacc__ico" aria-hidden="true"></span>
+                    </summary>
+                    <div class="pdacc__body">
+                        <?= $pdMeta ?>
+                    </div>
+                </details>
+
+                <details class="pdacc__item">
+                    <summary class="pdacc__sum">
+                        <span><?= e(t('pd.acc_shipping')) ?></span>
+                        <span class="pdacc__ico" aria-hidden="true"></span>
+                    </summary>
+                    <div class="pdacc__body">
+                        <p class="pdacc__text"><?= e(t('pd.acc_shipping_text')) ?></p>
+                        <a class="pdacc__link" href="/chinh-sach"><?= e(t('pd.acc_shipping_link')) ?></a>
+                    </div>
+                </details>
+            </div>
+
+            <?php
             /*
              * ══════════════════════════════════════════════════════════════
              * HẾT HÀNG -> CHỖ ĐỂ KHÁCH XIN ĐƯỢC BÁO KHI HÀNG VỀ
@@ -588,19 +737,81 @@ $stars = static function (float $score): string {
             }
             ?>
 
-            <?php if ($rows === []): ?>
+            <?php
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * SỐ ĐO TÁCH RA KHỎI BẢNG THÔNG SỐ
+             *
+             * Cột `specs` của cửa hàng ghi kích thước theo quy ước quốc tế của
+             * ngành kính: "53-18-145" = rộng tròng · cầu kính · càng kính (mm).
+             *
+             * In nguyên chuỗi đó vào một dòng bảng thì nó là một mã số không ai
+             * đọc được. Tách thành ba số đo CÓ NHÃN là thứ khách thật sự cần để
+             * biết gọng có vừa mặt mình không — và đó cũng là cách các nhà kính
+             * lớn trình bày phần "size & fit".
+             *
+             * KHÔNG ĐỘNG TỚI DỮ LIỆU: chỉ đọc lại chuỗi đã có. Mẫu nào ghi
+             * kiểu khác (hoặc để trống) thì $sizeParts rỗng và dòng đó ở lại
+             * trong bảng thông số như cũ — không mất gì.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            $sizeParts = [];
+
+            foreach (['Kích thước', 'Kich thuoc', 'Size'] as $khoa) {
+                if (!isset($rows[$khoa])) {
+                    continue;
+                }
+
+                if (preg_match('/^\s*(\d{2,3})\s*[-–—]\s*(\d{1,2})\s*[-–—]\s*(\d{2,3})\s*$/u', (string) $rows[$khoa], $so)) {
+                    $sizeParts = [
+                        ['Rộng tròng', $so[1]],
+                        ['Cầu kính',   $so[2]],
+                        ['Càng kính',  $so[3]],
+                    ];
+                    unset($rows[$khoa]);
+                }
+
+                break;
+            }
+            ?>
+
+            <?php if ($rows === [] && $sizeParts === []): ?>
                 <p class="pdcard__empty"><?= e(t('pd.specs_empty')) ?></p>
             <?php else: ?>
-                <dl class="pdspecs">
-                    <?php foreach ($rows as $k => $v): ?>
-                        <div class="pdspecs__row">
-                            <dt><?= e((string) $k) ?></dt>
-                            <dd><?= e((string) $v) ?></dd>
-                        </div>
-                    <?php endforeach; ?>
-                </dl>
+                <?php if ($rows !== []): ?>
+                    <dl class="pdspecs">
+                        <?php foreach ($rows as $k => $v): ?>
+                            <div class="pdspecs__row">
+                                <dt><?= e((string) $k) ?></dt>
+                                <dd><?= e((string) $v) ?></dd>
+                            </div>
+                        <?php endforeach; ?>
+                    </dl>
+                <?php endif; ?>
             <?php endif; ?>
         </div>
+
+        <?php if ($sizeParts !== []): ?>
+            <?php /* KHỐI SỐ ĐO — nét mảnh, đơn sắc, không đồ hoạ màu. Ba con số
+                     đứng thành hàng với nhãn nhỏ IN HOA bên dưới, đúng ngôn ngữ
+                     kỹ thuật tối giản của phần còn lại. */ ?>
+            <div class="pdcard">
+                <h2 class="pdcard__title">Kích thước &amp; vừa vặn</h2>
+
+                <ul class="pdsize" role="list">
+                    <?php foreach ($sizeParts as [$nhan, $mm]): ?>
+                        <li class="pdsize__item">
+                            <span class="pdsize__num"><?= e($mm) ?><span class="pdsize__unit">mm</span></span>
+                            <span class="pdsize__label"><?= e($nhan) ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+
+                <p class="pdcard__note">
+                    Số đo theo quy ước quốc tế: rộng tròng · cầu kính · càng kính.
+                </p>
+            </div>
+        <?php endif; ?>
 
         <div class="pdcard" id="danh-gia">
             <div class="pdcard__head">
@@ -714,7 +925,8 @@ $stars = static function (float $score): string {
     <?php if ($related !== []): ?>
         <section class="pdrelated" aria-labelledby="lien-quan">
             <h2 class="pdcard__title" id="lien-quan"><?= e(t('pd.related')) ?></h2>
-            <ul class="pcard__grid" role="list">
+            <?php /* `.pgrid` — MỘT lưới thẻ cho cả site (Phase 2). */ ?>
+<ul class="pgrid" role="list">
                 <?php foreach ($related as $item): ?>
                     <?php partial('_layout/product-card', ['product' => $item]); ?>
                 <?php endforeach; ?>

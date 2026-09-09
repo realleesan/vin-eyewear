@@ -1,189 +1,141 @@
 <?php
 
 /**
- * _layout/home/hero.php — hero trang chủ (S01).
+ * _layout/home/hero.php — hero trang chủ (S01): BĂNG VIDEO TRÀN MÀN HÌNH.
  *
- * Dựng theo "Vin Eyewear Home.dc.html": hai cột TRÀN CẠNH, không còn khối bo
- * góc nổi trên nền như bản trước.
+ * ĐÃ THAY HẲN BĂNG ẢNH CŨ (09/09/2026).
  *
- *   trái  nhãn "Bộ sưu tập 2026" · tiêu đề serif hai màu · mô tả · hai nút
- *         · liên kết AR · dải ưu đãi kèm ĐỒNG HỒ ĐẾM NGƯỢC · bộ điều khiển
- *         băng ảnh (số thứ tự, hai mũi tên, ba vạch tiến độ)
- *   phải  băng ba ảnh trượt ngang, kèm thẻ chú thích nền sẫm ở mép trái dưới
- *   dưới  dải cam kết nền nâu sẫm chạy hết bề ngang
+ * Bản trước là bố cục hai cột: nửa trái chữ + hai nút + bộ điều khiển (số thứ
+ * tự, hai mũi tên, ba vạch tiến độ), nửa phải băng ba ẢNH trượt ngang, dưới
+ * cùng là dải bốn cam kết. Nay hero là MỘT khối video tràn cạnh, không một nút
+ * điều khiển nào — đúng lối của trang nhà mốt: thứ đầu tiên chạm vào mắt là
+ * HÌNH ẢNH ĐỘNG, không phải một bảng điều khiển.
  *
- * BĂNG ẢNH TRỞ LẠI. Bản thiết kế trước là khối tĩnh nên phần JS trượt ảnh đã
- * bỏ; bản này có ba ảnh trượt ngang nên nó quay lại — nằm trong
- * assets/js/home.js, một file cho cả trang chủ.
+ * ĐÃ BỎ khỏi khối này: hai mũi tên, ba vạch tiến độ, ô đếm "01 / 03", thẻ chú
+ * thích, hai nút CTA cạnh nhau, và dải bốn cam kết. Bộ lớp .hero__* cũ vẫn còn
+ * nguyên trong components/home-sections.css — không xoá ở đợt này để còn đối
+ * chiếu; nó chỉ thôi được dùng.
  *
- * BĂNG TỰ CHẠY, và chạy nhanh (theo yêu cầu) — khác bản thiết kế, vốn đứng yên
- * chờ bấm mũi tên. Nhịp khai bằng data-autoplay ngay trên .hero__media bên
- * dưới. Băng dừng lại khi con trỏ hoặc tiêu điểm bàn phím ở trong hero: ảnh tự
- * trôi đi giữa lúc người ta đang nhìn là một cách gây bực.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BA VIDEO NỐI NHAU, CHUYỂN BẰNG MỜ CHỒNG
  *
- * KHÔNG CÓ JS THÌ VẪN ĐỌC ĐƯỢC: ảnh đầu tiên hiện sẵn, hai mũi tên và ba vạch
- * chỉ là điều khiển phụ.
+ * Không phải "trượt": ba thẻ <video> chồng khít lên nhau, thẻ đang chạy để
+ * opacity 1, hai thẻ kia 0. Hết một clip thì clip sau mờ lên đè lên clip
+ * trước. Trượt ngang cần một băng dài gấp ba bề ngang và làm trình duyệt phải
+ * giữ ba khung hình video sống cùng lúc; mờ chồng chỉ đổi một con số.
  *
- * DẢI ƯU ĐÃI CÓ ĐỒNG HỒ ĐẾM NGƯỢC ĐÃ BỎ (2026-08-26) cùng với cả tính năng
- * sự kiện: nó lấy bài ưu đãi đang chạy từ EventModel::currentPromo() rồi trỏ
- * sang /su-kien/{slug}, mà cả hai thứ đó không còn. Muốn dựng lại một dải đếm
- * ngược cho khuyến mãi thì phải có nguồn dữ liệu riêng, không phải bảng bài viết.
+ * KHÔNG `loop` trên từng thẻ: vòng lặp nằm ở cấp danh sách (clip cuối quay về
+ * clip đầu), và JS biết được điều đó nhờ sự kiện `ended` — thứ mà thẻ có
+ * `loop` không bao giờ bắn ra.
+ *
+ * TẢI: chỉ clip ĐẦU mang preload="auto"; hai clip sau là preload="none" cho
+ * tới khi tới lượt. Ba file cộng lại 24,2 MB — kéo hết ngay khi mở trang là
+ * giết trang chủ trên 4G. assets/js/home.js gọi load() cho clip kế tiếp NGAY
+ * KHI clip hiện tại bắt đầu chạy, nên nó có trọn thời lượng của clip trước để
+ * về kịp.
+ *
+ * poster: khung hình đầu để lấp chỗ trong lúc video còn đang giải mã, và là
+ * thứ DUY NHẤT hiện ra khi máy đặt "giảm chuyển động" — xem khối reduced
+ * motion trong components/video-hero.css và nhánh tương ứng trong home.js.
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 /*
- * Ba ảnh của băng. Ô "hero-photo · hero-slide-2 · hero-slide-3" trong bản
- * thiết kế; chưa tải ảnh thiết kế về thì dùng ảnh có sẵn trong repo.
+ * Ba clip theo thứ tự chạy. 'poster' dùng ảnh có sẵn trong repo: video chưa có
+ * ảnh khung hình đầu riêng, mà một thẻ <video> chưa giải mã xong thì vẽ ra một
+ * ô ĐEN — chính là cú nháy đen mà poster sinh ra để chặn.
+ *
+ * 'label' là chữ hiện ở góc dưới, đổi theo clip. Dùng lại đúng ba khoá caption
+ * của băng ảnh cũ nên không phải thêm chuỗi dịch mới.
  */
-$slides = [
+$clips = [
     [
-        'image'   => designImage('hero-photo', 'assets/images/hero-models.jpg'),
-        'alt'     => t('home.hero.alt1'),
-        'caption' => t('home.hero.cap1'),
+        'src'    => 'assets/video/main_pc_1920_990.mp4',
+        'poster' => 'assets/images/hero-models.jpg',
+        'label'  => t('home.hero.cap1'),
     ],
     [
-        'image'   => designImage('hero-slide-2', 'assets/images/showroom-frames.jpg'),
-        'alt'     => t('home.hero.alt2'),
-        'caption' => t('home.hero.cap2'),
+        'src'    => 'assets/video/main_global_pc_1920_990.mp4',
+        'poster' => 'assets/images/showroom-frames.jpg',
+        'label'  => t('home.hero.cap2'),
     ],
     [
-        'image'   => designImage('hero-slide-3', 'assets/images/hero-eyewear.jpg'),
-        'alt'     => t('home.hero.alt3'),
-        'caption' => t('home.hero.cap3'),
-    ],
-];
-
-/*
- * Dải cam kết dưới hero. Bốn mục, icon vẽ thẳng ở đây chứ không qua core/icons.php:
- * ba trong bốn hình (gọng kính, khiên, xe tải) không có trong bộ icon chung.
- */
-$trust = [
-    [
-        'label' => t('home.trust.exam'),
-        'path'  => '<circle cx="6.5" cy="12" r="4"/><circle cx="17.5" cy="12" r="4"/><path d="M10.5 12h3"/>',
-    ],
-    [
-        'label' => t('home.trust.returns'),
-        'path'  => '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
-    ],
-    [
-        // Bản thiết kế ghi "Bảo hành 24 tháng". Trang chính sách thì nêu CẢ HAI
-        // mốc: trọn đời cho dịch vụ chăm sóc (nắn gọng, thay ốc, vệ sinh) và 24
-        // tháng cho lỗi nhà sản xuất — xem config/policy.php. Dải này lấy con số
-        // của bản thiết kế; đổi sang "trọn đời" thì phải đổi cả bốn nhãn cho
-        // cùng một giọng, không sửa lẻ một chỗ.
-        'label' => t('home.trust.warranty'),
-        'path'  => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
-    ],
-    [
-        'label' => t('home.trust.shipping'),
-        'path'  => '<path d="M1 3h13v13H1zM14 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/>',
+        'src'    => 'assets/video/main_0_pc_1920_990.mp4',
+        'poster' => 'assets/images/hero-eyewear.jpg',
+        'label'  => t('home.hero.cap3'),
     ],
 ];
 ?>
 
-<section class="hero" data-section="s01" aria-labelledby="hero-title">
-    <div class="hero__inner">
+<section class="vhero" data-section="s01" data-video-hero aria-labelledby="hero-title">
 
-        <div class="hero__text">
-            <p class="hero__eyebrow">
-                <span class="hero__eyebrow-rule" aria-hidden="true"></span>
-                <?= e(t('home.hero.eyebrow')) ?>
-            </p>
-
-            <?php /* Hai nửa tiêu đề là HAI KHOÁ RIÊNG, không phải một chuỗi có
-                     thẻ <br> bên trong: câu tiếng Anh và câu tiếng Việt ngắt
-                     dòng ở chỗ khác nhau, và một chuỗi mang sẵn HTML thì không
-                     escape được. Nửa sau in nghiêng màu nhấn — đúng cách Furnish
-                     dùng `fst-italic text-secondary` ở hero. */ ?>
-            <h1 id="hero-title" class="hero__title">
-                <?= e(t('home.hero.title_1')) ?><br><em><?= e(t('home.hero.title_2')) ?></em>
-            </h1>
-
-            <p class="hero__lead"><?= e(t('home.hero.lead')) ?></p>
-
-            <div class="hero__actions">
-                <a class="hero__btn hero__btn--solid" href="/san-pham"><?= e(t('home.hero.cta_shop')) ?></a>
-                <a class="hero__btn hero__btn--ghost" href="/dat-lich"><?= e(t('home.hero.cta_book')) ?></a>
-            </div>
-
-            <?php /* Cùng cờ với thanh điều hướng — xem ghi chú đầu config/ar.php.
-                     Tính năng còn tắt thì không mời người ta bấm vào. */ ?>
-            <?php if (config('ar.nav_enabled')): ?>
-                <a class="hero__ar" href="/thu-ar"><?= e(t('home.hero.ar')) ?></a>
-            <?php endif; ?>
-
-            <?php /* Bộ điều khiển băng ảnh. Ẩn khi chỉ có một ảnh — hai mũi tên
-                     không làm gì là một lời hứa suông. */ ?>
-            <?php if (count($slides) > 1): ?>
-                <div class="hero__nav">
-                    <p class="hero__counter">
-                        <span data-hero-index>01</span> / <?= str_pad((string) count($slides), 2, '0', STR_PAD_LEFT) ?>
-                    </p>
-
-                    <div class="hero__arrows">
-                        <button type="button" class="hero__arrow" data-hero="prev" aria-label="<?= e(t('home.hero.prev')) ?>">
-                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                <path d="M19 12H5M11 6l-6 6 6 6"/>
-                            </svg>
-                        </button>
-                        <button type="button" class="hero__arrow" data-hero="next" aria-label="<?= e(t('home.hero.next')) ?>">
-                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                <path d="M5 12h14M13 6l6 6-6 6"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div class="hero__bars" aria-hidden="true">
-                        <?php foreach ($slides as $i => $slide): ?>
-                            <span class="hero__bar<?= $i === 0 ? ' is-on' : '' ?>"></span>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            <?php endif; ?>
-        </div>
-
-        <?php /* data-autoplay: số mili-giây giữa hai lần tự đổi ảnh. Có thuộc
-                 tính này thì assets/js/home.js bật chế độ tự chạy; bỏ đi là băng
-                 chỉ đổi khi bấm mũi tên (đúng bản thiết kế — nó KHÔNG tự chạy).
-                 Cùng quy ước với data-autoplay của khối đánh giá.
-
-                 2000ms là CỐ Ý NHANH theo yêu cầu. Trừ 0.55s chuyển động ở
-                 .hero__track thì mỗi ảnh đứng yên khoảng 1.45 giây. Muốn chậm
-                 lại thì tăng đúng con số này, không cần sửa JavaScript.
-
-                 Máy đặt "giảm chuyển động" (prefers-reduced-motion) thì home.js
-                 KHÔNG bật tự chạy, dù có thuộc tính này.
-
-                 BẤM VÀO ẢNH LÀ SANG ẢNH SAU: home.js gắn thẳng vào thẻ này, ở
-                 đây không cần thuộc tính nào. Nó cũng tự gắn lớp .is-clickable
-                 để đổi con trỏ, nên đừng in sẵn lớp đó trong view. */ ?>
-        <?php /* aria-live=off: chú thích đổi theo ảnh, đọc lại mỗi lần đổi chỉ
-                 làm phiền — nhất là khi băng tự chạy. */ ?>
-        <div class="hero__media" data-hero-slider data-autoplay="2000">
-            <div class="hero__track">
-                <?php foreach ($slides as $i => $slide): ?>
-                    <figure class="hero__slide" data-caption="<?= e($slide['caption']) ?>">
-                        <?php /* fetchpriority=high cho tấm đầu: đây là Largest
-                                 Contentful Paint của trang chủ. */ ?>
-                        <img src="<?= e($slide['image']) ?>" alt="<?= e($slide['alt']) ?>"
-                             <?= $i === 0 ? 'fetchpriority="high"' : 'loading="lazy"' ?> decoding="async">
-                    </figure>
-                <?php endforeach; ?>
-            </div>
-
-            <p class="hero__caption" data-hero-caption><?= e($slides[0]['caption']) ?></p>
-        </div>
+    <?php /* aria-hidden trên cả sân khấu: ba video là NỀN TRANG TRÍ, không mang
+             thông tin nào mà chữ bên dưới chưa nói. Không có nó thì trình đọc
+             màn hình phải lội qua ba điều khiển media vô danh trước khi tới
+             tiêu đề trang. Cũng vì thế chúng không có <track> phụ đề: không có
+             tiếng, không có lời nào để chép lại. */ ?>
+    <div class="vhero__stage" aria-hidden="true">
+        <?php foreach ($clips as $i => $clip): ?>
+            <?php
+            /* muted + playsinline là ĐIỀU KIỆN BẮT BUỘC để autoplay chạy trên
+               iOS và trên Chrome — thiếu một trong hai là trình duyệt chặn, và
+               chặn im lặng. disablepictureinpicture + controlslist chặn nốt
+               những lối mà trình duyệt tự mọc ra một nút điều khiển. */
+            ?>
+            <video
+                class="vhero__clip<?= $i === 0 ? ' is-on' : '' ?>"
+                <?= $i === 0 ? 'autoplay preload="auto"' : 'preload="none"' ?>
+                muted
+                playsinline
+                disablepictureinpicture
+                controlslist="nodownload noplaybackrate noremoteplayback"
+                poster="<?= e(asset($clip['poster'])) ?>"
+                width="1920" height="990"
+                <?= $i === 0 ? '' : 'data-lazy-src="' . e(asset($clip['src'])) . '"' ?>
+            ><?php if ($i === 0): ?><source src="<?= e(asset($clip['src'])) ?>" type="video/mp4"><?php endif; ?></video>
+        <?php endforeach; ?>
     </div>
 
-    <ul class="hero__trust" role="list">
-        <?php foreach ($trust as $i => $item): ?>
-            <?php if ($i > 0): ?>
-                <li class="hero__trust-sep" aria-hidden="true"></li>
-            <?php endif; ?>
-            <li class="hero__trust-item">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><?= $item['path'] ?></svg>
-                <?= e($item['label']) ?>
-            </li>
+    <?php /* Lớp phủ tối chuyển dần từ dưới lên. Chữ trắng đặt thẳng lên video
+             thì độ tương phản đổi theo từng khung hình — có khung đọc được, có
+             khung không. Lớp này khoá sàn tương phản lại ở vùng có chữ mà không
+             làm tối cả tấm hình. */ ?>
+    <div class="vhero__veil" aria-hidden="true"></div>
+
+    <?php /* .reveal — cụm chữ mờ lên SAU khi hero đã vào khung nhìn, không hiện
+             sẵn từ khung hình đầu. Cặp .reveal/.visible do đoạn IntersectionObserver
+             dùng chung ở cuối _layout/master.php lo; nó cũng tự bỏ qua khi máy đặt
+             giảm chuyển động, và chỉ ẩn khi <html> có lớp .js nên tắt JavaScript
+             thì chữ vẫn hiện. */ ?>
+    <div class="vhero__copy reveal">
+        <p class="vhero__eyebrow"><?= e(t('home.hero.eyebrow')) ?></p>
+
+        <?php /* <h1> Ở LẠI, dù bản GM gần như không có chữ trên hero. Mỗi trang
+                 phải có đúng một h1: đó là thứ trình đọc màn hình và máy tìm
+                 kiếm dùng để biết trang này nói về cái gì. Bỏ nó đi thì trang
+                 chủ mất tiêu đề — cái giá không đáng cho một khoảng trống. */ ?>
+        <h1 id="hero-title" class="vhero__title">
+            <?= e(t('home.hero.title_1')) ?><br><em><?= e(t('home.hero.title_2')) ?></em>
+        </h1>
+
+        <a class="vhero__link" href="/san-pham"><?= e(t('home.hero.cta_shop')) ?></a>
+    </div>
+
+    <?php /* Nhãn của clip đang chạy. aria-hidden vì nó đổi theo video nền —
+             đọc lại mỗi 10 giây là quấy rối, và nó không nói gì thêm ngoài thứ
+             đang thấy trên hình.
+
+             ANH EM VỚI .vhero__copy, KHÔNG NẰM TRONG NÓ. Nó neo `right` vào
+             mép phải của HERO; đặt lồng bên trong thì mốc neo thành cái hộp
+             chữ ở góc trái, và nhãn rơi đè lên chính tiêu đề. */ ?>
+    <p class="vhero__label" data-vhero-label aria-hidden="true"><?= e($clips[0]['label']) ?></p>
+
+    <?php /* Nhãn của từng clip, đọc bởi home.js. Để trong DOM chứ không nhúng
+             vào JSON trong thẻ <script>: máy chủ đã dịch sẵn chuỗi rồi, và một
+             danh sách ẩn thì không cần cú phân tích nào. */ ?>
+    <div hidden data-vhero-labels>
+        <?php foreach ($clips as $clip): ?>
+            <span><?= e($clip['label']) ?></span>
         <?php endforeach; ?>
-    </ul>
+    </div>
 </section>

@@ -77,9 +77,52 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
         <?php endif; ?>
     </a>
 
-    <div class="hpop__panel hpop__panel--cart">
+    <?php
+    /* NỀN MỜ ĐÃ BỎ khỏi markup: Bootstrap Offcanvas tự dựng .offcanvas-backdrop
+       và gắn vào <body> khi mở, xoá khi đóng — xem khối 2a trong header.js.
+       Kiểu dáng của nó khai trong components/header.css.
+
+       ─────────────────────────────────────────────────────────────────────────
+       BA LỚP BOOTSTRAP TRÊN ĐÚNG THẺ CŨ, KHÔNG THÊM THẺ NÀO
+
+       `offcanvas offcanvas-end` là hợp đồng lớp mà Bootstrap JS đọc; `.hpop__panel
+       .hpop__panel--cart` là hợp đồng mà buy-flow.js và CSS của Vin đọc. Cả bốn
+       nằm trên CÙNG MỘT phần tử nên không bên nào phải đổi.
+
+       tabindex="-1": Offcanvas đặt tiêu điểm vào chính tấm khi mở.
+       aria-modal / role=dialog do Bootstrap tự gắn — không khai tay nữa, khai
+       đè lên thứ nó quản lý là cách sinh ra hai nguồn sự thật. */
+    ?>
+    <div class="hpop__panel hpop__panel--cart offcanvas offcanvas-end" tabindex="-1"
+         id="cartDrawer" aria-label="<?= e(t('cart.title')) ?>">
+
+        <?php
+        /* Đầu ngăn kéo. NẰM TRONG .hpop__panel, và đó là chủ ý: buy-flow.js
+           thay ruột bảng này bằng ruột do MÁY CHỦ dựng, mà máy chủ luôn chạy
+           đúng file này — nên nút đóng quay lại nguyên vẹn sau mỗi lần thêm
+           hàng. Đặt ngoài bảng thì nó sống sót, nhưng tiêu đề và nút đóng lại
+           không đổi theo trạng thái giỏ được nữa.
+
+           Dùng lại khoá 'menu.close' của ngăn kéo điều hướng: cùng một việc,
+           cùng một câu, không thêm chuỗi dịch mới. */
+        ?>
+        <div class="cartdrawer__head">
+            <p class="cartdrawer__title"><?= e(t('cart.title')) ?></p>
+            <button type="button" class="cartdrawer__close tap-target" data-cart-close
+                    aria-label="<?= e(t('menu.close')) ?>">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+            </button>
+        </div>
+
         <?php if ($recent['lines'] === []): ?>
-            <p class="hpop__head"><?= e(t('cart.title')) ?></p>
+            <?php /* KHÔNG in .hpop__head ở nhánh này nữa: nó đọc đúng chuỗi
+                     'cart.title' mà .cartdrawer__title phía trên vừa in ra, nên
+                     ngăn kéo rỗng hiện chữ "Giỏ hàng" HAI LẦN chồng nhau.
+
+                     Nhánh có hàng thì giữ nguyên: ở đó .hpop__head là "Sản phẩm
+                     mới thêm" — một câu khác, nói một việc khác. */ ?>
             <p class="hpop__note"><?= e(t('cart.empty')) ?></p>
             <ul class="hpop__list" role="list">
                 <li><a class="hpop__item" href="/san-pham"><?= e(t('cart.browse')) ?></a></li>
@@ -112,7 +155,10 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
                                      trong PHP: máy chủ không biết bảng rộng bao
                                      nhiêu pixel, mà cắt theo số ký tự thì tên
                                      ngắn cũng bị thêm dấu ba chấm vô cớ. */ ?>
-                            <span class="cartpop__name"><?= e($line['name']) ?></span>
+<?php /* lang="vi" — tên sản phẩm, cùng quy ước đã ghi dài ở
+                                     _layout/product-card.php. Bảng xổ giỏ hàng có mặt
+                                     trên mọi trang khung đầy đủ. */ ?>
+                            <span class="cartpop__name" lang="vi"><?= e($line['name']) ?></span>
 
                             <?php if ($line['quantity'] > 1): ?>
                                 <span class="cartpop__qty">×<?= (int) $line['quantity'] ?></span>

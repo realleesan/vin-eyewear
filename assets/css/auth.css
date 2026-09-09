@@ -67,7 +67,7 @@
     background: var(--surface-raised);
     border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: 0 8px 40px rgba(90, 40, 40, 0.08);
+    box-shadow: none;
 }
 
 /* --- Cột ảnh thương hiệu --- */
@@ -97,7 +97,24 @@
     /* Nền chuyển dần lên trên, để chữ trắng đọc được trên bất kỳ tấm ảnh nào
        — kể cả ảnh sáng. Không có nó thì chữ phụ thuộc hoàn toàn vào tấm ảnh
        mà cửa hàng thả vào. */
-    background: linear-gradient(to top, rgba(59, 18, 25, 0.72), rgba(59, 18, 25, 0));
+    /* ┌─ GIỮ VÙNG TỐI LÊN CAO HƠN. ĐO BẰNG PIXEL ──────────────────────────
+       │ Bản trước là một dải hai điểm dừng: đặc 0.72 ở chân rồi tắt thẳng về
+       │ 0. Câu trích dẫn cỡ 32px đứng ở khoảng 70% chiều cao lớp phủ, tức là
+       │ chỗ dải đã nhạt gần hết.
+       │
+       │ Đo trên ảnh thật (chụp đúng vùng chữ rồi đọc pixel, vì gradient không
+       │ tính được bằng công thức tương phản thường):
+       │     .authcard__quote  2.68:1  ← trượt, chữ lớn cần 3.0
+       │     .authcard__sub    4.61:1  ← đạt, vì nó nằm thấp hơn
+       │
+       │ Bốn điểm dừng giữ alpha ~0.56 tới tận mốc 75%, và tông nền sẫm thêm
+       │ một bậc để có dư địa. Vẫn giữ sắc ấm của bản cũ chứ không đổi sang đen
+       │ trung tính — nó ăn với tông ảnh người mẫu. */
+    background: linear-gradient(to top,
+        rgba(30, 12, 16, .90) 0%,
+        rgba(30, 12, 16, .78) 45%,
+        rgba(30, 12, 16, .56) 75%,
+        rgba(30, 12, 16, 0) 100%);
     /* Lớp phủ này không nuốt cú bấm nào — dưới nó không có gì bấm được, còn
        chuột vẫn chọn được chữ. */
     pointer-events: none;
@@ -106,8 +123,8 @@
 .authcard__quote {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 26px;
-    font-weight: 600;
+    font-size: var(--fs-h3);
+    font-weight: 500;
     line-height: 1.4;
     color: #fff;
     text-wrap: pretty;
@@ -115,7 +132,7 @@
 
 .authcard__sub {
     margin: 8px 0 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: rgba(255, 255, 255, 0.85);
 }
 
@@ -139,14 +156,14 @@
 .authhead__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 32px;
-    font-weight: 600;
+    font-size: var(--fs-h2);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .authhead__lead {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
     color: var(--u-note);
 }
 
@@ -168,8 +185,8 @@
 }
 
 .authfield__label {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--eyebrow);
@@ -184,8 +201,8 @@
 }
 
 .authfield__aside {
-    font-size: 12.5px;
-    font-weight: 600;
+    font-size: var(--fs-caption);
+    font-weight: 500;
     color: var(--brand);
     text-decoration: none;
 }
@@ -200,7 +217,7 @@
     border-radius: var(--radius-sm);
     background: var(--surface);
     font-family: var(--font-sans);
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     color: var(--ink);
 }
 
@@ -217,7 +234,7 @@
 .authfield__input:user-invalid { border-color: var(--danger); }
 
 .authfield__hint {
-    font-size: 12px;
+    font-size: var(--fs-caption);
     color: var(--u-meta);
 }
 
@@ -318,7 +335,7 @@
 }
 
 .authcheck__text {
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--muted);
 }
 
@@ -346,7 +363,7 @@
 .authcheck--agree .authcheck__text { line-height: 1.55; }
 
 .authcheck--agree a {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand);
     text-decoration: none;
 }
@@ -367,8 +384,8 @@
     border: none;
     border-radius: var(--radius-sm);
     font-family: var(--font-sans);
-    font-size: 15px;
-    font-weight: 600;
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
     line-height: 1.2;
     cursor: pointer;
 }
@@ -385,7 +402,7 @@
     padding: 14px 0;
     border: 1.5px solid var(--line);
     background: var(--surface-raised);
-    font-size: 14px;
+    font-size: var(--fs-body);
     font-weight: 500;
     color: var(--ink);
 }
@@ -406,9 +423,9 @@
     padding: 3px 10px;
     border-radius: var(--radius-sm);
     background: var(--surface-sunken);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     color: var(--u-meta);
 }
 
@@ -429,14 +446,14 @@
 }
 
 .author__word {
-    font-size: 12px;
+    font-size: var(--fs-caption);
     letter-spacing: 0.1em;
     color: var(--u-meta);
 }
 
 .authnote {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     line-height: 1.6;
     text-align: center;
     color: var(--u-meta);
@@ -444,7 +461,7 @@
 
 .authnote a,
 .authalt a {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand);
     text-decoration: none;
 }
@@ -454,7 +471,7 @@
 
 .authalt {
     margin: 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     text-align: center;
     color: var(--u-note);
 }
@@ -465,7 +482,7 @@
     margin: 0;
     padding: 13px 18px;
     border-radius: var(--radius-sm);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     font-weight: 500;
 }
 
@@ -508,7 +525,7 @@
 .authgate__title {
     margin: 0;
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -525,7 +542,7 @@
     gap: 5px;
     margin-top: 10px;
     font-size: var(--fs-note);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand);
     text-decoration: none;
     /* Gạch chân dựng bằng border trong suốt rồi mới hiện lúc hover: dùng
@@ -543,7 +560,7 @@
    thêm" ở trang chủ, để nó đọc ra là một lối đi chứ không phải chữ trang trí. */
 .authgate__arrow {
     flex: none;
-    transition: transform .18s ease;
+    transition: transform var(--dur) var(--ease);
 }
 
 .authgate__link:hover .authgate__arrow {
@@ -567,22 +584,25 @@
 .authdone__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 20px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .authdone p {
     margin: 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.7;
     color: var(--muted);
 }
 
-.authdone__note { color: var(--u-note) !important; }
+/* `--u-note` KHÔNG TỒN TẠI trong bảng token (grep cả assets/css ra 0 khai
+   báo), nên dòng cũ là giá trị không hợp lệ và bị bỏ qua — cái !important
+   ở đó không bao giờ có tác dụng. Khai đúng token vai trò và bỏ !important. */
+.authdone__note { color: var(--muted); }
 
 .authdone a {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand);
     text-decoration: none;
 }
@@ -619,7 +639,7 @@
 @media (max-width: 560px) {
     .authcard__panel { padding: 32px 22px; gap: 18px; }
     .authform        { gap: 18px; }
-    .authhead__title { font-size: 26px; }
+    .authhead__title { font-size: var(--fs-h3); }
 
     .authfoot__inner {
         flex-direction: column;
@@ -646,7 +666,7 @@
 .errpage__code {
     font-family: var(--font-serif);
     font-size: clamp(64px, 14vw, 120px);
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1;
     color: var(--brand);
 }
@@ -655,7 +675,7 @@
     margin-top: 8px;
     font-family: var(--font-serif);
     font-size: var(--fs-h3);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -731,12 +751,12 @@
     border: 1px solid var(--line);
     border-radius: var(--radius-round);
     background: var(--surface-raised);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
     color: var(--muted);
 }
 
-.astage__label { font-size: 12px; color: var(--muted); }
+.astage__label { font-size: var(--fs-caption); color: var(--muted); }
 
 .astage__item.is-now .astage__dot,
 .astage__item.is-done .astage__dot {
@@ -755,24 +775,24 @@
 .asay__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 22px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .asay__text {
     margin: 10px 0 0;
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     line-height: 1.65;
     color: var(--muted);
 }
 
-.asay__text strong { color: var(--ink); font-weight: 600; }
+.asay__text strong { color: var(--ink); font-weight: 500; }
 
 .asay__phone {
     margin: 10px 0 0;
-    font-size: 17px;
-    font-weight: 600;
+    font-size: var(--fs-h5);
+    font-weight: 500;
     color: var(--brand);
 }
 
@@ -824,7 +844,7 @@
 .aalt .authbtn { margin: 0; }
 
 .aalt__quiet {
-    font-size: 14px;
+    font-size: var(--fs-body);
     color: var(--muted);
     text-decoration: none;
 }
@@ -864,8 +884,8 @@
 }
 
 .amethod__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.amethod__name { font-size: 15px; font-weight: 600; color: var(--ink); }
-.amethod__note { font-size: 13px; color: var(--muted); }
+.amethod__name { font-size: var(--fs-body-lg); font-weight: 500; color: var(--ink); }
+.amethod__note { font-size: var(--fs-body-sm); color: var(--muted); }
 
 /* ============================================================
    DẢI "CHẾ ĐỘ THỬ" — Zalo OTP chưa cắm
@@ -894,7 +914,7 @@
     text-align: left;
 }
 
-.adev strong { font-weight: 600; color: #533a0f; }
+.adev strong { font-weight: 500; color: #533a0f; }
 
 /* --- Sáu ô nhập mã --- */
 
@@ -924,8 +944,8 @@
     border-radius: 0;
     background: transparent;
     font-family: var(--font-sans);
-    font-size: 22px;
-    font-weight: 600;
+    font-size: var(--fs-h4);
+    font-weight: 500;
     text-align: center;
     color: var(--ink);
 }
@@ -950,7 +970,7 @@
 .aresend__ask {
     margin: 0;
     flex-basis: 100%;
-    font-size: 14px;
+    font-size: var(--fs-body);
     color: var(--muted);
 }
 
@@ -976,11 +996,15 @@
     border-radius: var(--radius-sm);
     background: none;
     font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--brand);
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s, opacity 0.2s;
+    transition:
+        background-color var(--dur-fast) var(--ease),
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease),
+        opacity var(--dur-fast) var(--ease);
 }
 
 .aresend__btn:hover:not(:disabled),
@@ -1010,8 +1034,8 @@
     border: 0;
     background: none;
     font-family: var(--font-sans);
-    font-size: 14px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--brand);
     text-decoration: none;
     cursor: pointer;
@@ -1020,7 +1044,7 @@
 .aresend__link:hover,
 .aresend__link:focus-visible { text-decoration: underline; }
 
-.aresend__or { font-size: 14px; color: var(--muted); }
+.aresend__or { font-size: var(--fs-body); color: var(--muted); }
 
 /* --- Bốn quy tắc mật khẩu --- */
 
@@ -1037,7 +1061,7 @@
     display: flex;
     align-items: center;
     gap: 9px;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     color: var(--muted);
 }
 
@@ -1050,7 +1074,7 @@
     height: 16px;
     border: 1.5px solid var(--line-strong);
     border-radius: var(--radius-round);
-    font-size: 9px;
+    font-size: var(--fs-micro);
     color: transparent;
 }
 
@@ -1081,14 +1105,14 @@
 .adone__title {
     margin: 20px 0 0;
     font-family: var(--font-serif);
-    font-size: 24px;
-    font-weight: 600;
+    font-size: var(--fs-h3);
+    font-weight: 500;
     color: var(--ink);
 }
 
 .adone__text {
     margin: 12px 0 0;
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     line-height: 1.7;
     color: var(--muted);
 }
@@ -1106,7 +1130,7 @@
    ============================================================================ */
 .authhead__title, .adone__title, .authgate__title, .asay__title {
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .authcard__quote, .amethod__name {
@@ -1114,7 +1138,7 @@
 }
 
 .astage__label {
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }

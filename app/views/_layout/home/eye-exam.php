@@ -28,6 +28,7 @@ $steps = [
             <?php /* Ô "store-photo" của bản thiết kế — không gian cửa hàng */ ?>
             <img src="<?= designImage('store-photo', 'assets/images/showroom-frames.jpg') ?>"
                  alt="<?= e(t('home.exam.alt')) ?>"
+                 width="1600" height="900"
                  loading="lazy" decoding="async">
         </figure>
 

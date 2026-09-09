@@ -85,24 +85,47 @@ $isCollectionActive = $segment === 'bo-suu-tap';
  * <li> lẫn liên kết của mình. Để hai cái mốc đó NẰM TRONG danh sách (thay vì
  * in riêng trước/sau vòng lặp) nên đọc file là thấy ngay thứ tự thật.
  */
+/* ┌─ BA MỤC, KHÔNG PHẢI NĂM ─────────────────────────────────────────────────
+   │ Trước: Trang chủ · Sản phẩm · Giới thiệu · Bộ sưu tập · Liên hệ.
+   │
+   │ Năm mục làm hàng nav đọc thành một MỤC LỤC. Nhà mốt thì ngược lại: hàng
+   │ nav chỉ giữ những lối dẫn tới HÀNG, còn lại đẩy xuống chân trang. Ở đây
+   │ hai mục bị bỏ đều đã có lối vào khác, không mất đường nào:
+   │
+   │   "Trang chủ"  → chính wordmark bên trái đã là <a href="/">. Giữ thêm
+   │                  một chữ "Home" cạnh nó là nói hai lần cùng một việc.
+   │   "Liên hệ"    → chân trang có BA lối (cột Liên hệ, liên kết "cửa hàng",
+   │                  nút CTA cuối trang) cộng số hotline nằm sẵn trên dải
+   │                  tiện ích ngay phía trên hàng nav này.
+   │
+   │ Thứ tự mới đặt HAI BẢNG XỔ cạnh nhau rồi mới tới trang tĩnh: mắt đi từ
+   │ "xem hàng" sang "đọc về hãng", không phải xen kẽ.
+   │
+   │ ROUTE KHÔNG ĐỔI. /lien-he và / vẫn sống; đây chỉ là bớt lối vào trùng
+   │ trên một hàng ngang, không phải gỡ trang.
+   └──────────────────────────────────────────────────────────────────────── */
 $navItems = [
-    ['label' => t('nav.home'),   'url' => '/',           'match' => ['', 'home']],
     ['mega'  => true],
     // Ngay sau "Sản phẩm": thử kính là một cách xem hàng, không phải một trang
-    // giới thiệu. Đứng cạnh thứ nó phục vụ.
+    // giới thiệu. Đứng cạnh thứ nó phục vụ. (Đang tắt qua config('ar.nav_enabled').)
     ['label' => t('nav.ar'),      'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
-    ['label' => t('nav.about'),   'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
     ['bst'   => true],
-    ['label' => t('nav.contact'), 'url' => '/lien-he',    'match' => ['lien-he']],
+    ['label' => t('nav.about'),   'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
 ];
 
 /*
  * Trang không có chỗ trên thanh nav. Chúng vẫn có lối vào ở chân trang; ở đây
  * là lối vào cho màn hẹp, nơi chân trang nằm sau một quãng cuộn rất dài.
+ *
+ * "Liên hệ" xuống đây cùng lý do: trên desktop nó đã có ba lối ở chân trang,
+ * nhưng trên điện thoại chân trang nằm sau cả một trang cuộn — ngăn kéo phải
+ * giữ lối đó lại. Còn "Trang chủ" thì KHÔNG cần: wordmark trên đầu ngăn kéo
+ * nay cũng là <a href="/">, đúng như wordmark của thanh nav desktop.
  */
 $mobileExtra = [
     ['label' => t('nav.booking'), 'url' => '/dat-lich',   'match' => ['dat-lich']],
     ['label' => t('nav.policy'),  'url' => '/chinh-sach', 'match' => ['chinh-sach']],
+    ['label' => t('nav.contact'), 'url' => '/lien-he',    'match' => ['lien-he']],
 ];
 
 /**
@@ -148,6 +171,30 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
     <div class="header-announce__inner">
         <p class="header-announce__text"><?= e(t('announce.shipping')) ?></p>
 
+        <div class="header-announce__side">
+
+        <?php
+        /* SỐ ĐIỆN THOẠI — ĐÃ CHUYỂN XUỐNG ĐÂY TỪ HÀNG NAV.
+
+           Furnish đặt nó cạnh nút menu và in đậm; Gentle Monster giữ hàng nav
+           chỉ có wordmark · liên kết · icon, không có mẩu chữ nào khác. Dải
+           tiện ích là chỗ quy ước của một liên kết utility như thế này.
+
+           KHÔNG BỎ ĐI: với một cửa hàng kính thì gọi điện (đặt lịch đo mắt,
+           hỏi còn hàng) là lối liên hệ được dùng nhiều nhất. Nó đổi chỗ và đổi
+           dáng chữ, không đổi vai trò.
+
+           Ẩn dưới 601px — xem @media cuối components/header.css. */
+        ?>
+        <a class="header-phone" href="<?= e($company['hotline_href']) ?>">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M6.6 3.5h3l1.5 3.7-2 1.4a11 11 0 005.3 5.3l1.4-2 3.7 1.5v3a1.6 1.6 0 01-1.7 1.6A14.4 14.4 0 015 5.2 1.6 1.6 0 016.6 3.5z"
+                      fill="none" stroke="currentColor" stroke-width="1.6"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span><?= e($company['hotline']) ?></span>
+        </a>
+
         <?php
         /* BỘ CHUYỂN NGÔN NGỮ — hai liên kết thật, không phải <select> + JS.
 
@@ -168,6 +215,8 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                    <?= $dang ? 'aria-current="true"' : '' ?>><?= e(strtoupper($ma)) ?><span class="sr-only"> — <?= e($ten) ?></span></a>
             <?php endforeach; ?>
         </nav>
+
+        </div>
     </div>
 </div>
 
@@ -207,19 +256,12 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
         <div class="header-actions">
 
             <?php
-            /* SỐ ĐIỆN THOẠI — Furnish đặt nó ngay cạnh nút menu và in đậm.
-               Với một cửa hàng kính thì đó là lối liên hệ được dùng nhiều nhất
-               (đặt lịch đo mắt, hỏi còn hàng), nên nó xứng đáng chỗ ấy.
-               Ẩn dưới 1101px: ở đó chỗ dành cho ba nút tác vụ và hamburger. */
+            /* SỐ ĐIỆN THOẠI ĐÃ RỜI KHỎI ĐÂY — nay nằm trên dải tiện ích phía
+               trên, xem khối .header-announce__side đầu file này.
+
+               Hàng nav giờ đúng khuôn Gentle Monster: wordmark · liên kết ·
+               ba icon, không có mẩu chữ thứ tư nào chen vào. */
             ?>
-            <a class="header-phone" href="<?= e($company['hotline_href']) ?>">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M6.6 3.5h3l1.5 3.7-2 1.4a11 11 0 005.3 5.3l1.4-2 3.7 1.5v3a1.6 1.6 0 01-1.7 1.6A14.4 14.4 0 015 5.2 1.6 1.6 0 016.6 3.5z"
-                          fill="none" stroke="currentColor" stroke-width="1.6"
-                          stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <span><?= e($company['hotline']) ?></span>
-            </a>
 
             <?php
             /* TÌM KIẾM — bảng xổ chứa nguyên ô nhập.
@@ -227,6 +269,35 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                Là <button> chứ không <a>: màn cảm ứng không có "rê chuột", nên
                header.js bắt cú bấm và bật lớp .is-open. Không có JS thì trang
                danh sách sản phẩm vẫn còn ô tìm kiếm riêng. */
+            ?>
+            <?php
+            /* ═══════════════════════════════════════════════════════════════
+               TÌM KIẾM LÀ LỚP PHỦ TRÀN BỀ NGANG, KẾT QUẢ HIỆN TẠI CHỖ (09/09/2026)
+
+               Trước: một bảng xổ 420px treo dưới kính lúp, gõ xong bấm Tìm là
+               CHUYỂN SANG /tim-kiem. Nay: bảng chạy hết bề ngang dưới thanh nav
+               (cùng cách neo với mega menu), ô nhập lớn ở giữa, bên dưới là
+               "xu hướng" (5 mẫu nổi bật) và "đã xem gần đây" (localStorage);
+               gõ là kết quả nạp ngầm từ /tim-kiem rồi hiện ngay trong lớp phủ —
+               không rời trang. search-suggest.js lo toàn bộ phần động.
+
+               MỌI MÓC GIỮ NGUYÊN: #headerSearchToggle, [data-hpop],
+               [data-hpop-trigger], .hpop__panel--search, #headerSearch,
+               #headerSearchSuggest, data-suggest, .header-search__form —
+               header.js và search-suggest.js đều bám vào đúng những tên này.
+
+               MỞ BẰNG CÚ BẤM, KHÔNG BẰNG RÊ CHUỘT — cùng lý do với ngăn kéo giỏ:
+               một lớp phủ cả bề ngang mà bay ra vì con trỏ lướt qua icon là hành
+               vi không ai muốn. Luật ở components/header.css.
+
+               Tắt JavaScript: lớp phủ không mở được; trang /tim-kiem vẫn có ô
+               tìm riêng — đã là nếp từ trước, xem chú thích cũ bên trên.
+
+               ProductModel::featured(5) thêm MỘT truy vấn cho mỗi lượt xem trang
+               (header đã có hai: danh mục và bộ sưu tập). Chấp nhận: đó là cái
+               giá cho việc lớp phủ có sẵn thứ để xem trước khi khách gõ chữ nào.
+               ═══════════════════════════════════════════════════════════════ */
+            $searchTrends = ProductModel::featured(5);
             ?>
             <div class="hpop hpop--search" data-hpop>
                 <button
@@ -245,33 +316,82 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                     </svg>
                 </button>
 
-                <div class="hpop__panel hpop__panel--search" id="headerSearchPanel">
-                    <p class="hpop__head"><?= e(t('search.title')) ?></p>
-                    <form class="header-search__form" role="search" action="/tim-kiem" method="get">
-                        <label class="sr-only" for="headerSearch"><?= e(t('search.title')) ?></label>
-                        <svg class="header-search__ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
-                            <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                        </svg>
-                        <?php /* GỢI Ý TỪ KHOÁ — <datalist> chứ không phải hộp thả
-                                 tự vẽ: trình duyệt lo phần khó (bàn phím lên/xuống,
-                                 trình đọc màn hình, chạm ra ngoài để đóng, vị trí
-                                 hộp khi ô sát mép màn). Danh sách RỖNG lúc máy chủ
-                                 vẽ trang; search-suggest.js đổ vào sau mỗi lần gõ. */ ?>
-                        <input
-                            type="search"
-                            id="headerSearch"
-                            name="q"
-                            class="header-search__input"
-                            placeholder="<?= e(t('search.placeholder')) ?>"
-                            list="headerSearchSuggest"
-                            autocomplete="off"
-                            data-suggest="/tim-kiem/goi-y"
-                            value="<?= e($keyword) ?>"
-                        >
-                        <datalist id="headerSearchSuggest"></datalist>
-                        <button type="submit" class="header-search__submit"><?= e(t('search.submit')) ?></button>
-                    </form>
+                <?php /* Nền mờ phủ trang phía sau — bấm vào là đóng. Anh em với
+                         bảng, không nằm trong nó. */ ?>
+                <div class="hpop__scrim" data-hpop-close aria-hidden="true"></div>
+
+                <div class="hpop__panel hpop__panel--search" id="headerSearchPanel" role="dialog" aria-label="<?= e(t('search.title')) ?>">
+                    <div class="srchov">
+                        <button type="button" class="srchov__close tap-target" data-hpop-close aria-label="<?= e(t('search.close')) ?>">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                            </svg>
+                        </button>
+
+                        <form class="header-search__form" role="search" action="/tim-kiem" method="get" data-search-form>
+                            <label class="sr-only" for="headerSearch"><?= e(t('search.title')) ?></label>
+                            <svg class="header-search__ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/>
+                                <path d="M16.5 16.5L21 21" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                            </svg>
+                            <?php /* GỢI Ý TỪ KHOÁ — <datalist> chứ không phải hộp thả
+                                     tự vẽ: trình duyệt lo phần khó (bàn phím lên/xuống,
+                                     trình đọc màn hình, chạm ra ngoài để đóng, vị trí
+                                     hộp khi ô sát mép màn). Danh sách RỖNG lúc máy chủ
+                                     vẽ trang; search-suggest.js đổ vào sau mỗi lần gõ. */ ?>
+                            <input
+                                type="search"
+                                id="headerSearch"
+                                name="q"
+                                class="header-search__input"
+                                placeholder="<?= e(t('search.placeholder')) ?>"
+                                list="headerSearchSuggest"
+                                autocomplete="off"
+                                data-suggest="/tim-kiem/goi-y"
+                                data-search-url="/tim-kiem"
+                                value="<?= e($keyword) ?>"
+                            >
+                            <datalist id="headerSearchSuggest"></datalist>
+                            <button type="submit" class="header-search__submit"><?= e(t('search.submit')) ?></button>
+                        </form>
+
+                        <?php /* Kết quả nạp ngầm đổ vào đây; ẩn cho tới khi có gì. */ ?>
+                        <div class="srchov__results" data-search-results hidden
+                             data-all-label="<?= e(t('search.all_results')) ?>"
+                             data-busy-label="<?= e(t('search.searching')) ?>"></div>
+
+                        <div class="srchov__default" data-search-default>
+                            <?php if ($searchTrends !== []): ?>
+                                <section class="srchov__group">
+                                    <p class="srchov__head"><?= e(t('search.trends')) ?></p>
+                                    <ul class="srchmini" role="list">
+                                        <?php foreach ($searchTrends as $p): ?>
+                                            <li class="srchmini__item">
+                                                <a class="srchmini__link" href="/san-pham/<?= e(rawurlencode((string) $p['slug'])) ?>">
+                                                    <span class="srchmini__thumb">
+                                                        <img src="<?= e(asset(ProductModel::image($p))) ?>" alt=""
+                                                             width="200" height="200" loading="lazy" decoding="async">
+                                                    </span>
+                                                    <span class="srchmini__name" lang="vi"><?= e($p['name']) ?></span>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </section>
+                            <?php endif; ?>
+
+                            <?php /* Dựng hoàn toàn ở trình duyệt từ localStorage — máy
+                                     chủ không biết khách đã xem gì. Ẩn cho tới khi có
+                                     ít nhất một mẫu. */ ?>
+                            <section class="srchov__group" data-recent-viewed hidden>
+                                <div class="srchov__headrow">
+                                    <p class="srchov__head"><?= e(t('search.recent')) ?></p>
+                                    <button type="button" class="srchov__clear" data-recent-clear><?= e(t('search.clear_recent')) ?></button>
+                                </div>
+                                <ul class="srchmini" role="list" data-recent-list></ul>
+                            </section>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -365,10 +485,16 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
     <div class="mobile-nav__panel" role="dialog" aria-modal="true" aria-label="<?= e(t('menu.aria')) ?>">
 
         <div class="mobile-nav__head">
-            <span class="mobile-nav__logo">
+            <?php /* LÀ LIÊN KẾT, không còn là <span> câm. Thanh nav desktop đã bỏ
+                     mục "Trang chủ" vì wordmark của nó vốn là <a href="/">; ngăn
+                     kéo này thừa hưởng cùng danh sách $navItems nên cũng mất mục
+                     ấy — mà wordmark ở đây lại không bấm được. Cho nó cùng vai
+                     trò với wordmark desktop là lối về trang chủ liền lại, đúng
+                     ở chỗ mắt đã quen tìm. */ ?>
+            <a href="/" class="mobile-nav__logo" aria-label="Vin Eyewear">
                 <span class="header-logo__mark">Vin</span>
                 <span class="header-logo__sub">Eyewear</span>
-            </span>
+            </a>
             <button type="button" class="mobile-nav__close tap-target" data-close-nav aria-label="<?= e(t('menu.close')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>

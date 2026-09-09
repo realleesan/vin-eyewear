@@ -51,13 +51,10 @@ $covers = [
 ];
 
 /*
- * Ba thẻ vừa khít một khung nhìn. Thừa ra thì mới cần mũi tên — xem khối chú
- * thích trên. Con số 3 này đi cặp với .hcat__track > * trong
- * assets/css/components/home-sections.css: đổi một chỗ mà quên chỗ kia thì
- * mũi tên hiện ra trong khi mọi thẻ đã nằm sẵn trong khung, bấm không thấy gì
- * đổi.
+ * $truot ĐÃ BỎ (Phase 2). Nó quyết định khối này vẽ ra băng trượt hay lưới —
+ * mà nay luôn là lưới `.pgrid`, nên không còn hai nhánh để chọn. Xem khối chú
+ * thích ở chỗ <ul> bên dưới.
  */
-$truot = count($categories) > 3;
 ?>
 
 <?php if ($categories !== []): ?>
@@ -69,33 +66,38 @@ $truot = count($categories) > 3;
             <h2 id="hcat-title" class="section-h2 section-h2--plain"><?= e(t('home.cat.title')) ?></h2>
         </div>
 
-        <?php if ($truot): ?>
-        <div class="hcat__strip" data-category-strip>
-            <?php /* Hai mũi tên CHỈ in ra khi thật sự có thứ để trượt, nên
-                     không cần trạng thái mờ ban đầu như .pstrip — ở đây
-                     makeStrip() luôn tìm thấy đủ thẻ để bật chúng lên.
-
-                     Vẫn để makeStrip() tự đặt `disabled`: trên màn rất rộng
-                     hay khi người dùng phóng to chữ, số thẻ lọt trong khung có
-                     thể vượt số thẻ có thật, và lúc đó mờ đi là nói đúng sự
-                     thật. */ ?>
-            <button type="button" class="hcat__arrow hcat__arrow--prev"
-                    data-category="prev" aria-label="<?= e(t('home.cat.prev')) ?>">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M15 18l-6-6 6-6"/>
-                </svg>
-            </button>
-            <button type="button" class="hcat__arrow hcat__arrow--next"
-                    data-category="next" aria-label="<?= e(t('home.cat.next')) ?>">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M9 6l6 6-6 6"/>
-                </svg>
-            </button>
-
-            <div class="hcat__window">
-        <?php endif; ?>
-
-        <ul class="<?= $truot ? 'hcat__track' : 'hcat__grid' ?>" role="list">
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * BĂNG TRƯỢT NGANG → LƯỚI (Phase 2) — VÀ ĐÂY LÀ CHỖ SỬA MỘT LỖI THẬT
+         *
+         * Khối này TRƯỚC ĐÂY VỠ HẲN trên desktop, và vỡ ở cả hai nhánh:
+         *
+         *   Luật dùng chung của băng trượt trong home-sections.css liệt kê
+         *   `.pstrip__track, .hcat__strip, .hrev__track, .qface__track` —
+         *   nhưng `.hcat__strip` là cái <div> BỌC NGOÀI (chứa hai mũi tên và
+         *   .hcat__window), còn đường ray thật là <ul class="hcat__track">.
+         *   Nên `display:flex` rơi vào nhầm phần tử: <ul> giữ nguyên
+         *   `display:block`, và mỗi <li class="ccat"> rộng `min(320px, 72vw)`
+         *   xếp CHỒNG thành MỘT CỘT 320px giữa một khung 1920px.
+         *
+         *   Nhánh còn lại (≤3 danh mục) dùng `.hcat__grid` — một lớp KHÔNG
+         *   được khai ở đâu trong toàn bộ assets/css. Cùng kết quả.
+         *
+         * Đó là khối "một cột mỏng sát lề trái, bỏ trống 70% bên phải" ngay
+         * dưới hero. Lỗi có từ trước đợt Gentle Monster, không phải do nó.
+         *
+         * Nay khối dùng `.pgrid` — cùng lớp lưới với mọi lưới thẻ khác của
+         * site, nên không còn tên lớp nào chỉ tồn tại ở đúng một chỗ để lệch
+         * đi mà không ai thấy.
+         *
+         * $truot, hai mũi tên và `data-category-strip` bỏ theo. home.js dò
+         * băng này bằng `document.querySelector('[data-category-strip]')` rồi
+         * thoát ngay nếu không thấy — không có lỗi nào phát sinh.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        ?>
+        <ul class="pgrid" role="list">
             <?php foreach ($categories as $i => $c): ?>
                 <?php
                 [$slot, $fallback] = $covers[$c['slug']] ?? ['', 'assets/images/product-1.jpg'];
@@ -107,12 +109,15 @@ $truot = count($categories) > 3;
                         <span class="ccat__media">
                             <img src="<?= e($cover) ?>" alt=""
                                  width="600" height="600"
-                                 <?php /* Ba thẻ đầu nằm trong khung nhìn ngay khi
-                                          trang mở ra; các thẻ sau phải bấm mũi
-                                          tên mới thấy nên để lazy. makeStrip()
-                                          tự gỡ lazy ở cú trượt đầu tiên — xem
-                                          wakeLazyImages() trong home.js. */ ?>
-                                 <?= $i < 3 ? '' : 'loading="lazy"' ?> decoding="async">
+                                 <?php /* Hàng ĐẦU của lưới (4 ô ở desktop) nằm
+                                          trong khung nhìn ngay khi trang mở ra;
+                                          phần còn lại để lazy.
+
+                                          BỐN chứ không ba: con số cũ đi cặp với
+                                          băng trượt 3 thẻ đã bỏ, nay nó đi cặp
+                                          với số cột của .pgrid từ 1101px — xem
+                                          components/product.css. */ ?>
+                                 <?= $i < 4 ? '' : 'loading="lazy"' ?> decoding="async">
 
                             <?php /* Huy hiệu nằm trong .ccat__media nhưng KHÔNG bị
                                      bo theo ảnh vì khung media không cắt góc;
@@ -139,11 +144,6 @@ $truot = count($categories) > 3;
                 </li>
             <?php endforeach; ?>
         </ul>
-
-        <?php if ($truot): ?>
-            </div>
-        </div>
-        <?php endif; ?>
 
         <div class="hsec-all">
             <a class="hsec-all__link" href="/san-pham"><?= e(t('home.cat.all')) ?></a>

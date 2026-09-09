@@ -214,7 +214,9 @@ $stepForm = static function (string $buoc): void {
         <div class="bmodal__item">
             <span class="bmodal__thumb">
                 <?php if (ProductModel::hasImage($product)): ?>
-                    <img src="<?= e(ProductModel::image($product)) ?>" alt=""
+                    <?php /* asset() bọc ngoài để một tấm ảnh chỉ có một địa chỉ —
+                             lý do đầy đủ ở _layout/product-card.php. */ ?>
+                    <img src="<?= e(asset(ProductModel::image($product))) ?>" alt=""
                          width="64" height="64" loading="lazy" decoding="async">
                 <?php else: ?>
                     <?= icon('glasses', '', 26) ?>
@@ -222,7 +224,7 @@ $stepForm = static function (string $buoc): void {
             </span>
 
             <div class="bmodal__itembody">
-                <span class="bmodal__name notranslate" translate="no"><?= e($product['name']) ?></span>
+                <span class="bmodal__name notranslate" translate="no" lang="vi"><?= e($product['name']) ?></span>
                 <span class="bmodal__meta">
                     <?= e($product['brand'] ?? 'Vin Eyewear') ?>
                     <?php if (!empty($product['sku'])): ?>

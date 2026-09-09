@@ -110,10 +110,93 @@ if (!$inStock) {
                  Bàn phím và trình đọc màn hình không mất gì: tên sản phẩm và nút
                  "Chi tiết" vẫn là hai đường tới đúng trang này. */ ?>
         <a class="pcard__shot" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
+            <?php
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * asset() BỌC NGOÀI — ĐỂ MỘT TẤM ẢNH CHỈ CÓ MỘT ĐỊA CHỈ
+             *
+             * asset() gắn `?v=filemtime` để phá cache. Các partial của trang chủ
+             * (hero, danh mục, khối dịch vụ) vốn đã đi qua nó, còn đường dẫn lấy
+             * từ CSDL thì trước đây in thẳng.
+             *
+             * Hệ quả đo được trên bản live: cùng một file có mặt trên trang dưới
+             * HAI địa chỉ —
+             *     /assets/images/product-1.jpg
+             *     /assets/images/product-1.jpg?v=1787493435
+             * — và trình duyệt coi đó là hai tài nguyên khác nhau nên tải cả hai.
+             * Riêng trang chủ, 40 thẻ <img> phân giải thành 17 URL, trong đó 6
+             * cặp là cùng một file: khoảng 460KB tải thừa mỗi lượt vào trang.
+             *
+             * Bọc ở TẦNG VIEW chứ không sửa ProductModel::image(): model trả về
+             * dữ liệu, việc gắn chuỗi phá cache là chuyện của lúc in ra HTML.
+             *
+             * An toàn với ảnh ngoài miền: asset() kiểm is_file() trước, không
+             * thấy file thì trả nguyên đường dẫn, không gắn gì.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            ?>
             <?php if (ProductModel::hasImage($product)): ?>
-                <img src="<?= e(ProductModel::image($product)) ?>" alt=""
+                <img src="<?= e(asset(ProductModel::image($product))) ?>" alt=""
                      width="600" height="600"
                      <?= $eager ? '' : 'loading="lazy"' ?> decoding="async">
+
+                <?php
+                /*
+                 * ─────────────────────────────────────────────────────────────
+                 * ẢNH THỨ HAI — HIỆN KHI RÊ CHUỘT
+                 *
+                 * Nếp chuẩn của mọi trang bán kính và bán thời trang: ảnh nghỉ
+                 * là chiếc kính chụp trên nền sạch, rê chuột vào thì đổi sang
+                 * ảnh người đeo. Khách hình dung ngay dáng và cỡ kính lên mặt —
+                 * thứ mà một tấm ảnh gọng nằm không bao giờ nói được, và là rào
+                 * cản lớn nhất của việc mua kính trực tuyến.
+                 *
+                 * DÙNG DỮ LIỆU ĐÃ CÓ, KHÔNG THÊM CỘT NÀO: `images` vốn là mảng
+                 * nhiều ảnh (trang chi tiết đã dựng cả thư viện từ nó). Ở đây
+                 * chỉ lấy thêm phần tử [1]. Mặt hàng chỉ có một ảnh thì không in
+                 * gì cả và thẻ giữ nguyên hành vi cũ.
+                 *
+                 * KHÔNG MỘT DÒNG JAVASCRIPT: hai ảnh chồng lên nhau, CSS đổi
+                 * opacity khi :hover / :focus-within — xem .pcard__alt trong
+                 * components/product.css. Trên thiết bị chạm nó không bao giờ
+                 * hiện, nên cũng không tốn gì.
+                 *
+                 * LUÔN `loading="lazy"`, kể cả khi $eager: ảnh này không bao giờ
+                 * nằm trong màn hình đầu tiên ở trạng thái nghỉ, nên tải sớm nó
+                 * là lấy băng thông của đúng tấm ảnh khách đang chờ.
+                 * ─────────────────────────────────────────────────────────────
+                 */
+                $anhPhu = $product['images'][1] ?? '';
+
+                /*
+                 * LỌC ẢNH KHÔNG PHẢI ẢNH SẢN PHẨM — cùng luật với thư viện ở
+                 * product/detail.php.
+                 *
+                 * Trên dữ liệu đang chạy, ảnh thứ hai của hai mặt hàng là ảnh
+                 * nội thất cửa hàng (kèm biển hiệu một thương hiệu khác) và
+                 * ảnh bìa chiến dịch. Ở thư viện thì khách phải bấm mới thấy;
+                 * ở ĐÂY nó bung ra chỉ vì con trỏ đi ngang qua thẻ — tức là
+                 * còn dễ gặp hơn.
+                 *
+                 * Ảnh cửa hàng, ảnh nội thất và ảnh bìa không bao giờ là ảnh
+                 * sản phẩm, dù gắn cho mặt hàng nào. Loại theo VAI TRÒ, không
+                 * đoán "có đúng mặt hàng không".
+                 *
+                 * Không còn ảnh thứ hai hợp lệ thì thẻ đơn giản không có hiệu
+                 * ứng đổi ảnh — đúng hành vi của mặt hàng chỉ có một ảnh.
+                 */
+                foreach (['showroom-', 'store-interior', 'hero-'] as $dauHieu) {
+                    if (str_starts_with(basename((string) $anhPhu), $dauHieu)) {
+                        $anhPhu = '';
+                        break;
+                    }
+                }
+                ?>
+                <?php if ($anhPhu !== ''): ?>
+                    <img class="pcard__alt" src="<?= e(asset($anhPhu)) ?>" alt=""
+                         width="600" height="600"
+                         loading="lazy" decoding="async">
+                <?php endif; ?>
             <?php else: ?>
                 <?php /* Ô trống thật thà, không mượn ảnh của mặt hàng khác —
                          xem chú thích ở ProductModel::hasImage(). */ ?>
@@ -158,7 +241,29 @@ if (!$inStock) {
          * ─────────────────────────────────────────────────────────────────────
          */
         ?>
-        <h3 class="pcard__name notranslate" translate="no">
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * lang="vi" — BA THUỘC TÍNH, BA NGƯỜI ĐỌC KHÁC NHAU
+         *
+         *   translate="no"       trình dịch cài sẵn của trình duyệt
+         *   class="notranslate"  công cụ dịch bên ngoài
+         *   lang="vi"            TRÌNH ĐỌC MÀN HÌNH  ← thêm ở đợt này
+         *
+         * Khung trang in ra `<html lang="en">` (mặc định English-first), nhưng
+         * tên sản phẩm trong CSDL chỉ có một ngôn ngữ là tiếng Việt. Thiếu dòng
+         * này thì trình đọc màn hình phát âm "Gọng titan siêu nhẹ" bằng bộ quy
+         * tắc tiếng Anh — ra một chuỗi âm không ai hiểu.
+         *
+         * Khai VÔ ĐIỀU KIỆN chứ không kèm `if (currentLang() !== 'vi')`: nội
+         * dung này là tiếng Việt ở CẢ HAI bản, nên nhãn ngôn ngữ đúng ở cả hai.
+         * Khi trang đang là lang="vi" thì dòng này chỉ thừa, không sai.
+         *
+         * Đây chính là khoản nợ mà khối chú thích ở _layout/master.php đã ghi.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        ?>
+        <h3 class="pcard__name notranslate" translate="no" lang="vi">
             <a href="<?= e($url) ?>"><?= e($product['name']) ?></a>
         </h3>
 

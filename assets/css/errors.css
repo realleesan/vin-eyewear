@@ -22,7 +22,7 @@
     display: block;
     font-family: var(--font-sans);
     font-size: var(--fs-display);
-    font-weight: 800;
+    font-weight: 500;
     color: var(--brand);
     line-height: 1;
     margin-bottom: var(--space-4);
@@ -31,7 +31,7 @@
 .error-page__title {
     font-family: var(--font-sans);
     font-size: var(--fs-h5);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--ink);
     margin-bottom: var(--space-4);
 }
@@ -51,11 +51,11 @@
     color: var(--surface-raised);
     font-family: var(--font-sans);
     font-size: var(--fs-note);
-    font-weight: 700;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: var(--tracking-label);
     border-radius: 0;
-    transition: background 0.2s ease, color 0.2s ease;
+    transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .error-page__btn:hover {
@@ -100,15 +100,32 @@
    ============================================================================ */
 .error-page__title {
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .error-page__code {
     font-weight: 400;
 }
 
+/* ┌─ ĐÃ BỎ text-transform: uppercase KHỎI DÒNG MÔ TẢ ───────────────────────
+   │ Nhãn IN HOA giãn chữ là đúng cho NHÃN — vài từ, đọc bằng cách nhận dạng
+   │ hình khối. Dòng này thì không phải nhãn, nó là một CÂU:
+   │     "Xin lỗi, trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển."
+   │
+   │ Viết hoa cả câu bỏ mất đường viền trên–dưới của chữ thường, thứ mà mắt
+   │ dùng để đọc lướt. Với tiếng Việt còn tệ hơn một bậc: dấu thanh và dấu mũ
+   │ nằm ĐÈ lên chữ hoa (LỖI, HOẶC, CHUYỂN) nên dòng chữ rậm hẳn lên.
+   │
+   │ Bỏ luôn weight 500 và tracking đi kèm — cả hai chỉ có mặt để đỡ cho chữ
+   │ hoa; giữ lại trên chữ thường thì thành một dòng đậm và rời rạc không lý do.
+   └──────────────────────────────────────────────────────────────────────── */
 .error-page__desc {
-    font-weight: 600;
-    letter-spacing: .12em;
-    text-transform: uppercase;
+    font-weight: 400;
+    text-wrap: pretty;
+}
+
+/* Nút đặc thì KHÔNG gạch chân. Không có dòng này, chữ trong nút thừa hưởng
+   gạch chân của thẻ <a> và trông như một liên kết lồng trong một cái nút. */
+.error-page__btn {
+    text-decoration: none;
 }

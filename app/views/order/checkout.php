@@ -377,11 +377,12 @@ $storeId  = $old['storeId'] ?? '';
                         ?>
                         <div class="coitem">
                             <span class="coitem__thumb">
-                                <img src="<?= e(ProductModel::image($p)) ?>" alt=""
+                                <?php /* asset() bọc ngoài — xem _layout/product-card.php. */ ?>
+                                <img src="<?= e(asset(ProductModel::image($p))) ?>" alt=""
                                      width="60" height="60" loading="lazy" decoding="async">
                             </span>
                             <span class="coitem__body">
-                                <span class="coitem__name notranslate" translate="no"><?= e($p['name']) ?></span>
+                                <span class="coitem__name notranslate" translate="no" lang="vi"><?= e($p['name']) ?></span>
                                 <span class="coitem__meta">
                                     <?= $variant !== '' ? e($variant) . ' · ' : '' ?>x<?= (int) $line['quantity'] ?>
                                 </span>

@@ -50,10 +50,11 @@
     background: var(--ink);
     color: var(--on-ink);
     font-size: var(--fs-note);
-    font-weight: 600;
-    letter-spacing: 0.04em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
     transform: translateY(-200%);
-    transition: transform 0.2s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+    transition: transform var(--dur-fast) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
 .skip-link:focus-visible { transform: translateY(0); }
@@ -70,12 +71,19 @@
    do <head> của master.php gắn, chạy trước khi trang vẽ.
    ============================================================ */
 
+/* HIỆN DẦN KHỐI BIÊN TẬP — quãng chậm nhất của hệ, và là chỗ DUY NHẤT được
+   phép chậm. 600ms (--dur-slow) nằm giữa khoảng 500–700ms.
+
+   Nhích 16px chứ không 20px: quãng ngắn hơn thì khối "đã ở đó rồi" chứ không
+   "vừa bay vào". Cả KHỐI đi một lần — không stagger từng đoạn văn, từng icon.
+
+   `--d` là độ trễ riêng của từng phần tử, view đặt inline. */
 .js .reveal {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
     transition:
-        opacity   0.7s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)) var(--d, 0ms),
-        transform 0.7s var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)) var(--d, 0ms);
+        opacity var(--dur-slow) var(--ease) var(--d, 0ms),
+        transform var(--dur-slow) var(--ease) var(--d, 0ms);
 }
 
 .js .reveal.visible { opacity: 1; transform: none; }
@@ -89,36 +97,43 @@
    TIÊU ĐỀ SECTION
    ============================================================ */
 
+/* ĐÃ HẠ VỀ 11px/500/0.12em — khớp với `.eyebrow` trong gm.css và với mọi nhãn
+   IN HOA khác của bộ mới (nhãn cột chân trang, nhãn bảng xổ, nhãn ô nhập).
+
+   Bản trước là 12.5px/600 tông hồng ấm: to hơn và đậm hơn mọi nhãn khác trên
+   cùng một trang, nên nó đọc ra như một tiêu đề phụ chứ không như một nhãn. */
 .eyebrow {
-    /* Giá trị của bản thiết kế mới: 12.5px/600/0.14em, tông hồng ấm. Trước đây
-       là 11px/500/0.12em màu xám, và trang chủ phải viết đè cả bốn ở 6 selector. */
-    font-size: 12.5px;
-    font-weight: 600;
+    font-size: var(--fs-label);
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: var(--tracking-label);
     color: var(--eyebrow);
 }
 
 .micro-label {
     font-size: var(--fs-label);
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--brand);
+    letter-spacing: var(--tracking-label);
+    color: var(--ink);
 }
 
+/* TIÊU ĐỀ KHỐI — nét mảnh, cỡ lớn, siết chữ âm.
+
+   ĐỔI BA THỨ so với bản trước, và cả ba đi cùng nhau:
+     font-size   --fs-h3 → --fs-h2   (thang mới: 26 → 48px thay vì 20 → 30)
+     font-weight 600     → 400       (Gentle Monster không dùng tiêu đề đậm)
+     tracking    normal  → -0.02em   (bắt buộc khi đã lên cỡ này)
+
+   Weight 400 ở cỡ lớn là toàn bộ dáng chữ của GM. Ở 600 thì cùng một câu đọc
+   ra là một tiêu đề quảng cáo; ở 400 nó đọc ra là một dòng biên tập. */
 .section-h2 {
     margin-top: 16px;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h3);
-    /* 600 + KHÔNG siết chữ — đúng giá trị trang chủ dùng cho mọi tiêu đề khối.
-       Bản trước là 700/-0.012em; Lora ở 700 nhìn nặng hơn hẳn 600, và siết chữ
-       làm tiêu đề tiếng Việt có dấu bị chật. Trang chủ đã phải viết đè hai
-       thuộc tính này ở 8 selector — nay đưa thẳng vào mặc định thì mọi trang
-       cùng một dáng chữ và cụm viết đè kia bỏ được. */
-    font-weight: 600;
-    line-height: 1.16;
-    letter-spacing: normal;
+    font-family: var(--font-sans);
+    font-size: var(--fs-h2);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: var(--tracking-tight);
     color: var(--ink);
     /* `pretty` chỉ lo dòng cuối, `balance` chia đều mọi dòng — hai cách cho ra
        hai hình khối chữ khác nhau ở tiêu đề dài. Trang chủ dùng `pretty`. */
@@ -136,32 +151,55 @@
     gap: 16px;
 }
 
-/* Liên kết "Tất cả sản phẩm →" ở góc phải mỗi tiêu đề. GÓC GẦN VUÔNG, không
-   còn viên thuốc như bản trước — xem ghi chú "ngôn ngữ hình khối" ở trên. */
+/* Liên kết "Tất cả sản phẩm →" ở góc phải mỗi tiêu đề khối.
+
+   KHÔNG CÒN LÀ MỘT CÁI NÚT. Gentle Monster dùng đúng một chữ "MORE" gạch chân
+   ở cuối mỗi dải sản phẩm — không viền, không nền, không đổ màu khi rê chuột.
+
+   Một cái nút viền ở cạnh mỗi tiêu đề khối là thứ chia trang thành nhiều ô;
+   một chữ gạch chân thì không. Tên lớp giữ nguyên (.pill-link) vì nhiều trang
+   đang gọi — chỉ có hình dạng đổi. */
 .pill-link {
     align-self: flex-end;
-    padding: 11px 24px;
-    border: 1.5px solid var(--h-line);
-    border-radius: var(--h-radius-sm);
-    font-size: 13.5px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: var(--fs-label);
     font-weight: 500;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
     color: var(--ink);
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 4px;
     white-space: nowrap;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    transition: opacity var(--dur-fast) var(--ease);
 }
 
 .pill-link:hover,
 .pill-link:focus-visible {
-    background: var(--brand);
-    border-color: var(--brand);
-    color: var(--on-brand);
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink);
+    opacity: 0.55;
 }
 
 /* ============================================================
    NÚT
    ============================================================ */
 
+/* ┌─ NÚT KIỂU GENTLE MONSTER ───────────────────────────────────────────────
+   │ Chữ nhật đặc hoặc viền mảnh, IN HOA 11px, giãn chữ .12em, weight 500.
+   │
+   │ ĐỔI HAI GIÁ TRỊ so với bản trước:
+   │   font-weight  600  → 500     (600 ở 11px trông nặng và bè ra)
+   │   tracking     .18em → .12em  (.18em ở cỡ này làm chữ rời thành từng
+   │                                chữ cái, nhãn tiếng Việt có dấu càng rõ)
+   │
+   │ HOVER LÀ ĐẢO MÀU, không phải đổi sang một sắc thứ ba. Bảng màu nay chỉ có
+   │ đen và trắng, nên đảo hai thứ đó cho nhau là cách duy nhất còn lại — và
+   │ đó cũng đúng là cách GM làm.
+   └──────────────────────────────────────────────────────────────────────── */
 .btn-primary,
 .btn-outline,
 .btn-secondary,
@@ -170,16 +208,19 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 48px;
+    height: var(--btn-h);
     border: 1px solid transparent;
     font-family: var(--font-sans);
-    font-size: var(--fs-label);
-    font-weight: 600;
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
     text-transform: uppercase;
-    letter-spacing: 0.18em;
+    letter-spacing: var(--btn-ls);
     text-decoration: none;
     cursor: pointer;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+    transition:
+        background-color var(--dur-fast) var(--ease),
+        color var(--dur-fast) var(--ease),
+        border-color var(--dur-fast) var(--ease);
 }
 
 /* Biến thể nằm trong dòng — bốn nút trên mặc định chiếm hết chiều ngang
@@ -196,30 +237,42 @@
 
 .btn-primary {
     background: var(--brand);
+    border-color: var(--brand);
     color: var(--on-brand);
 }
 
+/* ĐẢO MÀU. Bản trước đổi nền sang --brand-strong, mà --brand-strong nay BẰNG
+   ĐÚNG --brand (cả hai là #000) — hover sẽ không đổi gì cả. */
 .btn-primary:hover:not(:disabled),
-.btn-primary:focus-visible { background: var(--brand-strong); }
+.btn-primary:focus-visible {
+    background: var(--brand-strong);
+}
 
 .btn-primary:disabled {
     background: var(--surface-sunken);
+    border-color: var(--surface-sunken);
     color: var(--muted);
     cursor: not-allowed;
 }
 
 .btn-outline {
-    height: 44px;
-    border-color: var(--line-strong);
-    color: color-mix(in srgb, var(--ink) 75%, transparent);
+    height: var(--btn-h);
+    /* Viền ĐEN, chữ ĐEN. Bản trước dùng --line-strong (xám) và chữ mờ 75% —
+       một cái nút trông như đang bị vô hiệu hoá. */
+    border-color: var(--ink);
+    color: var(--ink);
 }
 
 .btn-outline:hover,
-.btn-outline:focus-visible { border-color: var(--brand); color: var(--brand); }
+.btn-outline:focus-visible {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-ink);
+}
 
 .btn-secondary {
-    height: 44px;
-    padding-inline: 20px;
+    height: var(--btn-h);
+    padding-inline: var(--btn-pad-x);
     width: auto;
     display: inline-flex;
     border-color: var(--line-strong);
@@ -290,9 +343,9 @@
     display: block;
     margin-bottom: 6px;
     font-size: var(--fs-label);
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: var(--tracking-label);
     color: var(--muted);
 }
 
@@ -310,15 +363,25 @@
     color: var(--muted);
 }
 
+/* ┌─ Ô NHẬP: GẠCH CHÂN, KHÔNG PHẢI KHUNG ───────────────────────────────────
+   │ Gentle Monster không vẽ khung bốn cạnh quanh ô nhập — chỉ một đường kẻ
+   │ dưới. Cùng dáng với `.form-control` trong gm.css, và cùng lý do: một lưới
+   │ form với 8 cái khung xám là 8 hình chữ nhật tranh chỗ với nội dung.
+   │
+   │ VẪN GIỮ --line-strong (3.06:1) cho đường kẻ, KHÔNG hạ xuống --line.
+   │ WCAG 1.4.11 đòi 3:1 cho ranh giới thành phần giao diện, và một ô nhập chỉ
+   │ còn MỘT đường để nhìn thấy thì đường đó càng phải đủ đậm.
+   │
+   │ Đệm ngang về 0: nhãn ô và chữ trong ô thẳng cùng một cột.
+   └──────────────────────────────────────────────────────────────────────── */
 .field input,
 .field select,
 .field textarea {
     width: 100%;
-    padding: 12px;
-    /* Viền ô nhập -> --line-strong (3.11:1) theo WCAG 1.4.11.
-       KHÔNG dùng --line: nó chỉ 1.73:1, người mắt kém không thấy ô ở đâu. */
-    border: 1px solid var(--line-strong);
-    background: var(--surface);
+    padding: 12px 0;
+    border: 1px solid transparent;
+    border-bottom-color: var(--line-strong);
+    background: transparent;
     font-family: var(--font-sans);
     font-size: var(--fs-body);
     color: var(--ink);
@@ -333,12 +396,21 @@
     line-height: 1.7;
 }
 
+/* Đường kẻ đậm lên = "ô đang hoạt động". Bù 1px vào padding để chữ không
+   nhích lên khi đường kẻ dày thêm.
+
+   KHÔNG khai `outline: none` ở đây. Bản trước có, và đó là một lỗi trợ năng
+   thật: người dùng bàn phím mất hoàn toàn dấu hiệu mình đang ở ô nào, vì một
+   đường kẻ dày thêm 1px không phải là dấu hiệu tiêu điểm. Vòng tiêu điểm nay
+   do luật :focus-visible dùng chung ở PHẦN 17 của gm.css vẽ, và luật này
+   không được chặn nó. */
 .field input:focus,
 .field select:focus,
 .field textarea:focus {
-    outline: 2px solid var(--brand);
-    outline-offset: -2px;
-    background: var(--surface-focus);
+    border-bottom-color: var(--ink);
+    border-bottom-width: 2px;
+    padding-bottom: 11px;
+    background: transparent;
 }
 
 /* Ô bị vô hiệu hoá — nền xám nói rõ "không sửa được ở đây" */
@@ -364,7 +436,7 @@
     background: var(--surface);
     font-family: var(--font-sans);
     font-size: var(--fs-body);
-    font-weight: 600;
+    font-weight: 500;
     text-align: center;
     color: var(--ink);
 }
@@ -398,45 +470,58 @@
     margin-top: 40px;
 }
 
+/* Số trần, không ô viền — cùng cách với `.page-link` của Bootstrap trong
+   gm.css. Trang đang mở gạch chân thay vì tô nền đen. */
 .pager__link {
     display: grid;
     place-items: center;
     min-width: 44px;
     height: 44px;
     padding-inline: 12px;
-    border: 1px solid var(--line);
+    border: 0;
     font-size: var(--fs-body-sm);
     text-decoration: none;
-    color: var(--ink);
-    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+    color: var(--muted);
+    transition: color var(--dur-fast) var(--ease);
 }
 
 .pager__link:hover,
-.pager__link:focus-visible { border-color: var(--brand); color: var(--brand); }
+.pager__link:focus-visible {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
 
 .pager__link.is-current {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
+    background: transparent;
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 4px;
 }
 
 /* ============================================================
    TRẠNG THÁI RỖNG
    ============================================================ */
 
+/* KHÔNG VIỀN ĐỨT NÉT. Viền đứt là ngôn ngữ của một ô kéo-thả hoặc một chỗ
+   chờ nội dung; ở đây nó chỉ vẽ một hình chữ nhật quanh một câu thông báo.
+   GM để trạng thái rỗng là chữ đặt giữa một khoảng trống rộng. */
 .plist__empty {
     display: grid;
     justify-items: center;
-    gap: 8px;
+    gap: 12px;
     margin-top: 24px;
-    padding: 56px 24px;
-    border: 1px dashed var(--line-strong);
+    padding: var(--rhythm-lg) var(--space-6);
+    border: 0;
     text-align: center;
     color: var(--muted);
+    font-size: var(--fs-body-sm);
 }
 
 .plist__empty strong {
-    font-size: var(--fs-body-lg);
+    font-size: var(--fs-h4);
+    font-weight: 400;
+    letter-spacing: var(--tracking-snug);
     color: var(--ink);
 }
 
@@ -484,12 +569,12 @@
     border-radius: var(--radius);
     background: var(--ink);
     color: var(--on-ink);
-    font-size: 14.5px;
+    font-size: var(--fs-body);
     line-height: 1.5;
     text-align: center;
     box-shadow: var(--elev-3);
     transform: translateX(-50%);
-    animation: toast-in-out 5s ease forwards;
+    animation: toast-in-out var(--dur-slow) var(--ease) forwards;
 }
 
 @keyframes toast-in-out {
@@ -510,7 +595,7 @@
 /* Người dùng đã tắt hiệu ứng chuyển động: bỏ phần trượt, nhưng VẪN cho nó tự
    mờ đi — tự biến mất là hành vi của thành phần, không phải hiệu ứng trang trí. */
 @media (prefers-reduced-motion: reduce) {
-    .toast { animation: toast-fade 5s ease forwards; }
+    .toast { animation: toast-fade var(--dur-slow) var(--ease) forwards; }
 
     @keyframes toast-fade {
         0%, 88% { opacity: 1; }

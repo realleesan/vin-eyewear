@@ -24,12 +24,12 @@
     margin: 0;
     padding: 48px 0;
     text-align: center;
-    font-size: 15px;
+    font-size: var(--fs-body-lg);
     color: var(--muted);
 }
 
 .colls__empty a {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand);
 }
 
@@ -73,9 +73,9 @@
 
 .coll__when {
     margin: 0;
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--eyebrow);
 }
@@ -83,8 +83,8 @@
 .coll__name {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 38px;
-    font-weight: 600;
+    font-size: var(--fs-h2);
+    font-weight: 500;
     line-height: 1.12;
     letter-spacing: normal;
     color: var(--ink);
@@ -92,14 +92,14 @@
 
 .coll__tagline {
     margin: 0;
-    font-size: 17px;
+    font-size: var(--fs-h5);
     line-height: 1.5;
     color: var(--ink);
 }
 
 .coll__intro {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-body-lg);
     line-height: 1.75;
     color: var(--muted);
 }
@@ -112,11 +112,11 @@
     padding: 13px 26px;
     border-radius: var(--radius-sm);
     background: var(--brand);
-    font-size: 14.5px;
-    font-weight: 600;
+    font-size: var(--fs-body);
+    font-weight: 500;
     color: var(--on-brand);
     text-decoration: none;
-    transition: background-color 0.2s, transform 0.2s;
+    transition: background-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
 .coll__cta:hover {
@@ -147,14 +147,14 @@
 
     .coll--flip .coll__media { order: 0; }
 
-    .coll__name { font-size: 30px; }
+    .coll__name { font-size: var(--fs-h3); }
 }
 
 @media (max-width: 560px) {
     .colls { padding-inline: 16px; }
 
-    .coll__name    { font-size: 26px; }
-    .coll__tagline { font-size: 15.5px; }
+    .coll__name    { font-size: var(--fs-h3); }
+    .coll__tagline { font-size: var(--fs-body-lg); }
 }
 
 
@@ -170,7 +170,7 @@
    ============================================================================ */
 .coll__name {
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .coll__tagline {
@@ -178,7 +178,7 @@
 }
 
 .coll__when {
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }

@@ -1,73 +1,156 @@
 /* ============================================================================
    components/product.css — THẺ SẢN PHẨM DÙNG CHUNG (.pcard)
 
-   Dựng theo `.card.product-card` của Furnish (`src/products.html`):
+   DỰNG THEO THẺ SẢN PHẨM CỦA GENTLE MONSTER
+   (`/int/en/category/sunglasses/view-all`, `/int/en/category/glasses/view-all`).
 
-       <div class="card product-card">
-         <a><img class="card-img-top"></a>
-         <div class="card-body">
-           <p class="text-muted text-uppercase text-xs">Brand</p>
-           <h3 class="h5"><a>Modern Sofa</a></h3>
-           <span class="text-decoration-line-through">$59.00</span> <span>$29.00</span>
-           <a class="btn btn-primary btn-sm">Add to Cart</a>
+   Thẻ của họ có ĐÚNG BA THỨ và không có gì khác:
 
-   Tức là: ảnh tràn mép trên · dòng thương hiệu IN HOA rất nhỏ · tên cỡ h5 ·
-   giá gốc gạch ngang đứng TRƯỚC giá bán · một nút đặc nhỏ. Thẻ vuông góc,
-   viền 1px, không đổ bóng lúc nghỉ.
+       ô ảnh vuông trên nền xám #f2f2f2   ← chiếm gần hết chiều cao thẻ
+       tên mẫu, 13px, weight thường
+       giá, 13px, weight thường
+
+   Không viền. Không nền thẻ. Không bóng. Không dòng thương hiệu. Không nút.
+   Khoảng cách giữa các thẻ hẹp, và chính vì thế mà LƯỚI ảnh đọc ra thành một
+   dải liền mạch chứ không thành 24 cái hộp.
 
    ─────────────────────────────────────────────────────────────────────────────
-   BA CHỖ KHÁC BẢN MẪU, ĐỀU DO NGHIỆP VỤ CHỨ KHÔNG DO THẨM MỸ
+   BỐN CHỖ KHÁC BẢN THAM CHIẾU, ĐỀU DO NGHIỆP VỤ CHỨ KHÔNG DO THẨM MỸ
 
-   1. HAI NÚT chứ không một. "Mua ngay" (đi tiếp tới thanh toán) và "Thêm vào
-      giỏ" (dừng ở giỏ) là hai luồng khác nhau của CartController::add(), phân
-      biệt bằng `name="action" value="buy"`. Gộp thành một nút là bỏ mất một
-      luồng mua hàng.
-   2. HUY HIỆU góc trái trên — hết hàng / -N% / Mới / Bán chạy. Furnish không
-      có, nhưng một cửa hàng có khuyến mãi và có hàng hết thì phải nói ra trên
-      chính cái thẻ, không để khách bấm vào mới biết.
-   3. Ô ẢNH giữ tỉ lệ VUÔNG. Ảnh sản phẩm trong CSDL là 600×600; ép sang khổ
-      ngang của bản mẫu là cắt mất càng kính ở hai bên.
+   1. HAI NÚT MUA. GM không bán từ lưới — bấm thẻ là sang trang chi tiết. Site
+      này có "Mua ngay" và "Thêm vào giỏ" ngay trên thẻ, là hai luồng khác nhau
+      của CartController::add() phân biệt bằng `name="action" value="buy"`. Bỏ
+      chúng là bỏ mất một luồng mua hàng có thật.
+
+      GIẢI PHÁP: ẨN LÚC NGHỈ — HIỆN THEO NGỮ CẢNH. Xem khối 4 bên dưới.
+
+   2. HUY HIỆU góc trái trên — hết hàng / -N% / Mới. GM chỉ có chữ "Sold out"
+      đặt dưới giá; ở đây có khuyến mãi theo phần trăm nên huy hiệu phải nằm
+      trên ảnh để quét mắt thấy được. Nhưng nó là CHỮ TRẦN, không phải viên
+      màu — xem khối 2.
+
+   3. DÒNG THƯƠNG HIỆU BỊ ẨN. `.pcard__brand` in ra "Vin Eyewear" trên mọi thẻ,
+      tức là cùng một chuỗi lặp lại 24 lần trong một lưới. Đó đúng là thứ nhiễu
+      thị giác mà GM loại bỏ. Ẩn bằng CSS chứ không xoá markup: dữ liệu vẫn ở
+      đó (`$product['brand']`), bật lại là một dòng, và view không phải sửa.
+
+   4. GIÁ KHUYẾN MÃI TÔ CRIMSON. Đây là ngoại lệ màu duy nhất đã chốt cho cả
+      site — xem khối token đầu assets/css/gm.css.
 
    Năm nơi gọi tới thẻ này: trang chủ (mới về · bán chạy), /san-pham,
    /tim-kiem, và dải "sản phẩm liên quan" ở trang chi tiết.
    ============================================================================ */
 
+/* ┌─ LƯỚI MỘT CỘT, HAI HÀNG — VÀ ĐÓ LÀ CHỦ Ý ──────────────────────────────
+   │ `grid` chứ không `flex`, để CỤM NÚT PHỦ LÊN Ô ẢNH MÀ KHÔNG PHẢI SỬA MARKUP.
+   │
+   │ DOM của _layout/product-card.php là ba khối anh em ngang hàng:
+   │
+   │     .pcard__media  →  .pcard__body  →  .pcard__actions
+   │
+   │ Muốn cụm nút nằm đè lên đáy ô ảnh thì cách thường làm là chuyển nó vào
+   │ TRONG .pcard__media rồi position:absolute. Ở đây KHÔNG làm thế: khối đó
+   │ chứa <form> mua hàng, và mọi thao tác cắt-dán trên nó là một cơ hội làm
+   │ hỏng hợp đồng với CartController::add() và buy-flow.js mà không đổi lấy
+   │ được gì về hình ảnh.
+   │
+   │ Lưới giải quyết trọn vẹn: xếp .pcard__media và .pcard__actions vào CÙNG
+   │ MỘT Ô (hàng 1, cột 1) là chúng chồng lên nhau. Markup không đổi một byte.
+   └──────────────────────────────────────────────────────────────────────── */
 .pcard {
-    display: flex;
-    flex-direction: column;
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-    /* Chuyển màu viền chứ không nhấc thẻ lên: Furnish phẳng, và một cái bóng
-       đổ ở đây sẽ là thứ duy nhất trên trang có bóng. */
-    transition: border-color .18s ease;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    /* KHÔNG viền, KHÔNG nền, KHÔNG bóng. Bản trước có cả ba, và ba thứ đó
+       chính là cái làm lưới cũ đọc ra thành "một bảng các hộp". */
+    background: transparent;
+    border: 0;
 }
 
-.pcard:hover {
-    border-color: var(--line-strong);
-}
-
-/* ── Ô ảnh ───────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   1. Ô ẢNH
+   ──────────────────────────────────────────────────────────────────────────── */
 .pcard__media {
+    /* Hàng 1 — dùng chung ô với .pcard__actions, xem khối chú thích trên. */
+    grid-row: 1;
+    grid-column: 1;
     position: relative;
+    /* Nền xám đứng SAU ảnh. Ảnh sản phẩm của cửa hàng phần lớn là nền trắng,
+       nên ô xám này là thứ vẽ ra ranh giới của thẻ — thay cho đường viền vừa
+       bỏ đi. Đây đúng là cách GM tách các ô trong lưới. */
+    background: var(--h-shell);
+    /* Cắt phần ảnh phóng ra ngoài mép ô khi rê chuột. */
+    overflow: hidden;
 }
 
+/* Tỉ lệ đọc từ token — MỌI ảnh sản phẩm trên site dùng chung một khung, nên
+   không thẻ nào có ô ảnh cao thấp khác thẻ bên cạnh. Xem PHẦN 5 của gm.css. */
 .pcard__shot {
     display: block;
-    aspect-ratio: 1 / 1;
+    position: relative;
+    aspect-ratio: var(--ratio-product);
     overflow: hidden;
-    background: var(--h-shell);
+}
+
+/* ┌─ ẢNH THỨ HAI — ĐỔI KHI RÊ CHUỘT ────────────────────────────────────────
+   │ Chồng khít lên ảnh chính. Chỉ in ra khi mặt hàng có từ hai ảnh trở lên —
+   │ xem khối chú thích trong _layout/product-card.php.
+   │
+   │ `inset: 0` chứ không `width/height: 100%`: ảnh chính là phần tử trong
+   │ luồng và nó quyết định chiều cao ô; ảnh này bám theo đúng cái ô đó, nên
+   │ hai tấm không bao giờ lệch nhau một pixel dù tỉ lệ ảnh gốc có khác.
+   └──────────────────────────────────────────────────────────────────────── */
+.pcard__alt {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity var(--dur-med) var(--ease);
 }
 
 .pcard__shot img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    /* `contain` chứ không `cover`: ảnh trong CSDL là 600×600 đã canh sẵn, mà
+       `cover` sẽ cắt càng kính ở hai bên khi ô thẻ không vuông tuyệt đối. Nền
+       xám của .pcard__media lấp phần dôi ra, nên không có mép trắng. */
+    object-fit: contain;
     display: block;
-    transition: transform .45s ease;
+    transition: transform var(--dur-med) var(--ease);
 }
 
-.pcard:hover .pcard__shot img {
-    transform: scale(1.04);
+/* Phóng RẤT NHẸ. Bản trước là 1.04 — đủ để thấy ảnh "nhảy". GM gần như không
+   phóng, họ đổi sang ảnh người mẫu; ta chỉ có một ảnh nên giữ một chuyển động
+   vừa đủ để thẻ trả lời con trỏ. */
+@media (hover: hover) and (pointer: fine) {
+    .pcard:hover .pcard__shot img {
+        transform: scale(1.03);
+    }
+
+    /* Đổi sang ảnh người đeo. `:focus-within` đi kèm để người dùng bàn phím
+       Tab tới thẻ cũng thấy — cùng luật với cụm nút ở khối 4. */
+    .pcard:hover .pcard__alt,
+    .pcard:focus-within .pcard__alt {
+        opacity: 1;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pcard__shot img {
+        transition: none;
+    }
+
+    .pcard:hover .pcard__shot img {
+        transform: none;
+    }
+
+    /* Ảnh thứ hai VẪN đổi — đó là thông tin (dáng kính lên mặt), không phải
+       trang trí. Chỉ bỏ phần chuyển mượt. */
+    .pcard__alt {
+        transition: none;
+    }
 }
 
 /* Ô trống thật thà, không mượn ảnh của mặt hàng khác. */
@@ -77,60 +160,74 @@
     justify-content: center;
     height: 100%;
     color: var(--h-meta);
-    font-size: var(--fs-caption);
+    font-size: var(--fs-label);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
 }
 
-/* ── Huy hiệu ────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   2. HUY HIỆU — CHỮ TRẦN, KHÔNG PHẢI VIÊN MÀU
+
+   Bản trước tô nền đặc (crimson / đen / xám) và chữ trắng. Một viên màu đặc ở
+   góc mỗi ô là thứ nặng nhất trên cả lưới — nó thắng cả ảnh sản phẩm.
+
+   Nay là chữ IN HOA rất nhỏ đặt thẳng lên nền xám của ô ảnh.
+   ──────────────────────────────────────────────────────────────────────────── */
 .pcard__badge {
     position: absolute;
-    top: 0;
-    left: 0;
-    padding: var(--space-1) var(--space-3);
-    font-size: var(--fs-micro);
-    font-weight: 700;
-    letter-spacing: .1em;
+    top: var(--space-3);
+    left: var(--space-3);
+    z-index: 2;
+    padding: 0;
+    background: transparent;
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
-    line-height: 1.6;
+    line-height: 1.4;
 }
 
-/* Giảm giá dùng MÀU NHẤN — đây là chỗ duy nhất trên thẻ có màu, nên nó tự
-   thành thứ mắt nhìn thấy trước. */
+/* NGOẠI LỆ MÀU DUY NHẤT TRÊN THẺ — xem khối token đầu gm.css. */
 .pcard__badge--sale {
-    background: var(--accent);
-    color: #fff;
+    color: var(--accent);
 }
 
 .pcard__badge--new {
-    background: var(--ink);
-    color: var(--on-ink);
+    color: var(--ink);
 }
 
 .pcard__badge--out {
-    background: var(--surface-sunken);
     color: var(--muted);
 }
 
-/* ── Thân thẻ ────────────────────────────────────────────────────────────── */
+/* ────────────────────────────────────────────────────────────────────────────
+   3. THÂN THẺ
+
+   KHÔNG có padding ngang: chữ phải thẳng hàng với mép trái ô ảnh. Bản trước
+   thụt vào 20px, nên tên sản phẩm không thẳng cột với bất kỳ thứ gì.
+   ──────────────────────────────────────────────────────────────────────────── */
 .pcard__body {
-    flex: 1 1 auto;
-    padding: var(--space-5);
+    grid-row: 2;
+    grid-column: 1;
+    padding: var(--space-3) 0 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-1);
 }
 
+/* ẨN — xem điểm 4 ở khối chú thích đầu file. Bật lại chỉ cần xoá luật này. */
 .pcard__brand {
-    color: var(--muted);
-    font-size: var(--fs-micro);
-    font-weight: 500;
-    letter-spacing: .14em;
-    text-transform: uppercase;
+    display: none;
 }
 
 .pcard__name {
-    font-size: var(--fs-body-lg);
-    font-weight: 500;
-    line-height: 1.35;
+    /* Cỡ và weight BẰNG ĐÚNG dòng giá ngay dưới. Đây là chi tiết dễ bỏ qua
+       nhất mà lại quyết định nhiều nhất: ở GM, tên và giá là một cặp ngang
+       hàng, không phải một tiêu đề và một chú thích. */
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: normal;
 }
 
 .pcard__name a {
@@ -138,14 +235,17 @@
     text-decoration: none;
 }
 
+/* KHÔNG đổi màu khi rê chuột — chỉ gạch chân. Nếp chung của cả site, xem
+   khối 7 trong gm.css. */
 .pcard__name a:hover,
 .pcard__name a:focus-visible {
-    color: var(--accent);
+    color: var(--ink);
+    text-decoration: underline;
 }
 
 .pcard__prices {
-    margin-top: auto;
-    padding-top: var(--space-2);
+    margin-top: 0;
+    padding-top: 0;
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
@@ -153,110 +253,309 @@
 }
 
 .pcard__price {
-    font-size: var(--fs-body-lg);
-    font-weight: 700;
+    font-size: var(--fs-body-sm);
+    /* weight THƯỜNG, không phải 700. Giá in đậm là nếp của trang thương mại
+       điện tử phổ thông; ở GM giá là một dòng thông tin như mọi dòng khác. */
+    font-weight: 400;
+    color: var(--ink);
 }
 
-/* order:-1 đưa giá gốc RA TRƯỚC khi hiển thị, đúng thứ tự của thẻ Furnish,
-   trong khi DOM vẫn để giá thật đứng trước — trình đọc màn hình đọc giá phải
-   trả trước, mắt nhìn thấy mức giảm trước. Xem chú thích trong
-   _layout/product-card.php. */
+/* ┌─ GIÁ ĐANG GIẢM THÌ TÔ CRIMSON ──────────────────────────────────────────
+   │ `:has()` thay cho một lớp do PHP thêm vào: chỉ khi trong cùng dòng giá có
+   │ mặt giá gốc bị gạch (`.pcard__was`) thì giá bán mới là giá khuyến mãi.
+   │
+   │ Làm ở CSS chứ không ở view vì đây thuần tuý là chuyện hiển thị —
+   │ _layout/product-card.php không phải biết gì về màu. */
+.pcard__prices:has(.pcard__was) .pcard__price {
+    color: var(--accent);
+}
+
+/* order:-1 đưa giá gốc RA TRƯỚC khi hiển thị, trong khi DOM vẫn để giá thật
+   đứng trước — trình đọc màn hình đọc giá phải trả trước, mắt nhìn thấy mức
+   giảm trước. Xem chú thích trong _layout/product-card.php. */
 .pcard__was {
     order: -1;
     color: var(--muted);
     font-size: var(--fs-body-sm);
+    font-weight: 400;
     text-decoration: line-through;
 }
 
-/* ── Chân thẻ ────────────────────────────────────────────────────────────── */
+/* ============================================================================
+   4. CỤM NÚT — ẨN LÚC NGHỈ, HIỆN THEO NGỮ CẢNH
+
+   ĐÂY LÀ CHỖ QUAN TRỌNG NHẤT CỦA FILE NÀY. Đọc hết khối này trước khi sửa.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   HỢP ĐỒNG KHÔNG ĐƯỢC ĐỘNG TỚI
+
+   Cụm nút này là hai <button submit> trong MỘT <form method="post"
+   action="/gio-hang/them">. CSS ở đây chỉ đổi CHỖ ĐỨNG và LÚC HIỆN của chúng.
+
+   _layout/product-card.php KHÔNG ĐỔI MỘT BYTE NÀO trong đợt này. Toàn bộ việc
+   đưa cụm nút lên đè ô ảnh làm bằng lưới CSS — xem khối chú thích ở `.pcard`.
+
+   KHÔNG có gì trong file này — và không được có gì — chạm tới:
+     · form action / method
+     · tên và giá trị của input: _token · product_id · back · action
+     · quy ước "hai nút một form" (nút `action=buy` đi tiếp tới thanh toán,
+       nút trần dừng ở giỏ)
+     · assets/js/buy-flow.js và các mảnh nó đọc
+
+   Đổi `.pcard__actions` từ khối trong luồng thành khối phủ lên ảnh là thay
+   TRÌNH BÀY. Cả hai nút vẫn là submit của đúng form ấy, vẫn gửi đúng ngần ấy
+   trường, và buy-flow.js vẫn bắt được như cũ.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   BA THIẾT BỊ, BA CÁCH — VÀ KHÔNG MỘT DÒNG JAVASCRIPT NÀO
+
+   CHUỘT (hover: hover)      nghỉ: không thấy nút, thẻ sạch đúng kiểu GM
+                             rê vào: dải nút trượt lên từ đáy ô ảnh
+
+   BÀN PHÍM (mọi thiết bị)   Tab tới nút là :focus-within bật — dải nút hiện
+                             ra y như khi rê chuột. Đây là lý do luật hover
+                             LUÔN đi kèm luật focus-within; thiếu vế sau thì
+                             người dùng bàn phím tab vào một cái nút vô hình.
+
+   CHẠM (hover: none)        KHÔNG hiện nút, và cũng không có "tap để hiện".
+                             Chạm vào thẻ là sang thẳng trang chi tiết, nơi
+                             đã có sẵn đầy đủ giao diện mua kèm chọn phương án.
+
+   VÌ SAO CHẠM LẠI LÀ `display:none` CHỨ KHÔNG PHẢI ẨN MỜ:
+
+     Ẩn bằng opacity mà vẫn để trong luồng thì nút VẪN BẤM ĐƯỢC dù không nhìn
+     thấy — chạm nhầm vào giữa ô ảnh là hàng vào giỏ mà không ai hiểu vì sao.
+     Thêm `pointer-events:none` thì chặn được ngón tay nhưng KHÔNG chặn được
+     cú chạm tổng hợp của trình đọc màn hình, nên người dùng VoiceOver lại
+     kích hoạt được đúng cái nút mà họ không được nghe mô tả.
+
+     `display:none` cắt sạch cả ba đường — mắt, ngón tay, trình đọc màn hình —
+     nên trên thiết bị chạm MỌI NGƯỜI đi cùng một lối: qua trang chi tiết.
+     Ngang bằng nhau, và không có bẫy nào.
+
+     Đó cũng là hành vi của chính GM trên điện thoại.
+   ============================================================================ */
+
+/* Vị trí NỀN: chung ô lưới với .pcard__media, dồn xuống đáy ô đó.
+
+   KHÔNG position:absolute — `align-self: end` trong ô lưới cho ra đúng kết quả
+   ấy mà không cần một containing block, nên .pcard__media giữ được
+   `overflow:hidden` cho cú phóng ảnh mà không cắt mất cụm nút.
+
+   Luật này đúng cho mọi thiết bị; hai khối @media bên dưới chỉ quyết định nó
+   có HIỆN hay không. */
 .pcard__actions {
-    padding: 0 var(--space-5) var(--space-5);
+    grid-row: 1;
+    grid-column: 1;
+    align-self: end;
+    z-index: 3;
+    padding: var(--space-2);
     display: grid;
-    gap: var(--space-2);
+    gap: var(--space-1);
 }
 
 /* form bọc hai nút phải trong suốt với lưới trên — nếu không hai nút bị nhốt
    trong một ô và mất khoảng cách với nút "Chi tiết" bên ngoài. */
 .pcard__actions form {
     display: grid;
-    gap: var(--space-2);
+    gap: var(--space-1);
 }
 
+/* Đọc HỆ NÚT chung (PHẦN 6 của gm.css). Bản trước tự khai .1em trong khi
+   .btn-primary dùng .18em và .cartpop__cta dùng .12em — ba cái nút cùng một
+   site với ba khoảng giãn chữ khác nhau. Nay cả ba đọc --btn-ls.
+
+   --btn-h-sm chứ không --btn-h: đây là biến thể NHỎ, dùng khi nút nằm trong
+   thẻ. Vùng chạm 44px của WCAG 2.5.5 không áp ở đây — trên thiết bị chạm cụm
+   này không tồn tại (xem khối 4). */
 .pcard__btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: var(--space-3) var(--space-4);
+    min-height: var(--btn-h-sm);
+    padding: var(--space-2) var(--space-3);
     border: 1px solid transparent;
-    font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .08em;
+    font-size: var(--btn-fs);
+    font-weight: var(--btn-fw);
+    letter-spacing: var(--btn-ls);
     text-transform: uppercase;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
 .pcard__btn--solid {
-    background: var(--brand);
-    border-color: var(--brand);
-    color: var(--on-brand);
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--on-ink);
 }
 
 .pcard__btn--solid:hover,
 .pcard__btn--solid:focus-visible {
-    background: var(--accent);
-    border-color: var(--accent);
+    /* Đảo màu, KHÔNG chuyển sang crimson. Bản trước chuyển sang crimson —
+       crimson nay chỉ còn dành cho giá khuyến mãi. */
+    background: var(--brand-strong);
 }
 
 .pcard__btn--ghost {
-    background: transparent;
-    border-color: var(--line-strong);
+    background: var(--surface);
+    border-color: var(--surface);
     color: var(--ink);
 }
 
 .pcard__btn--ghost:hover,
 .pcard__btn--ghost:focus-visible {
+    background: var(--ink);
     border-color: var(--ink);
-    background: var(--surface-sunken);
+    color: var(--on-ink);
 }
 
-/* Hết hàng: vẫn là một ô đặc để hàng thẻ không xô lệch, nhưng câm và xám. */
+/* Hết hàng: ô câm, không bấm được. */
 .pcard__btn.is-off {
-    background: var(--surface-sunken);
-    border-color: var(--line);
+    background: var(--surface);
+    border-color: var(--surface);
     color: var(--muted);
     cursor: default;
     pointer-events: none;
 }
 
-/* ============================================================================
-   LƯỚI THẺ
+/* ── CHUỘT: ẩn lúc nghỉ, trượt lên khi rê vào hoặc khi Tab tới ───────────── */
+@media (hover: hover) and (pointer: fine) {
+    .pcard__actions {
+        opacity: 0;
+        /* Nhích 8px chứ không trượt hẳn 100%: cụm nút dùng chung ô lưới với ô
+           ảnh chứ không nằm TRONG nó, nên một cú trượt cả chiều cao sẽ thò
+           xuống đè lên tên sản phẩm thay vì bị mép ảnh cắt đi. 8px đủ để mắt
+           đọc ra là "vừa hiện lên", và không tràn khỏi ô. */
+        transform: translateY(8px);
+        /* Chặn con trỏ lúc đang ẩn: không có dòng này thì nửa dưới ô ảnh
+           "nuốt" cú bấm lẽ ra phải sang trang chi tiết. */
+        pointer-events: none;
+        transition:
+            opacity var(--dur) var(--ease),
+            transform var(--dur) var(--ease);
+    }
 
-   Một lớp dùng chung cho mọi trang có lưới sản phẩm, thay cho bốn lưới gần
-   giống nhau ở bốn file CSS. `auto-fill` chứ không `auto-fit`: với 1–2 sản
-   phẩm thì auto-fit kéo thẻ giãn hết bề ngang màn hình, nhìn như lỗi.
+    /* HAI vế, và vế thứ hai không phải là thứ thêm cho đủ: :focus-within là
+       toàn bộ đường vào của người dùng bàn phím. */
+    .pcard:hover .pcard__actions,
+    .pcard:focus-within .pcard__actions {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+    }
+}
+
+/* Đã tắt hiệu ứng chuyển động: bỏ phần trượt, giữ phần hiện/ẩn. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+    .pcard__actions {
+        transform: none;
+        transition: opacity var(--dur-med) var(--ease);
+    }
+}
+
+/* ── CHẠM: cụm nút không tồn tại. Lối mua đi qua trang chi tiết ──────────── */
+@media (hover: none) {
+    .pcard__actions {
+        display: none;
+    }
+}
+
+/* ============================================================================
+   5. LƯỚI THẺ
+
+   BỐN CỘT trên desktop, đúng lưới view-all của GM — không phải `auto-fill`.
+
+   VÌ SAO BỎ auto-fill: với --container nay là 1920px (xem gm.css), một lưới
+   `minmax(240px, 1fr)` sẽ tự chia thành BẢY cột trên màn 1920 và thẻ tụt
+   xuống cỡ tem. Số cột là một lựa chọn thiết kế, không phải thứ để mặc cho
+   bề ngang màn hình quyết định.
+
+   Ba mốc chuẩn của dự án — 601 / 901 / 1101 — không thêm mốc mới.
+   Xem khối đầu assets/css/layout.css.
    ============================================================================ */
+/* Máng lưới đọc token chung (--grid-gap / --grid-gap-row) — cùng giá trị với
+   lưới bộ sưu tập và lưới thẻ trong bảng xổ, nên ba lưới trên ba trang khác
+   nhau có cùng một nhịp. Số CỘT thì đổi theo bề ngang; máng thì không. */
+/* ════════════════════════════════════════════════════════════════════════════
+   THẺ SẢN PHẨM HIỆN DẦN KHI CUỘN TỚI — SCROLL-DRIVEN ANIMATION THUẦN CSS
+
+   Không một dòng JavaScript. `animation-timeline: view()` cho mỗi thẻ một
+   "đồng hồ" riêng chạy theo vị trí của CHÍNH NÓ trong khung nhìn; `animation-
+   range: entry 0% entry 45%` nghĩa là hiệu ứng chạy từ lúc mép trên thẻ vừa
+   chạm đáy khung nhìn tới khi nó vào được 45% quãng đường — xong trước khi
+   thẻ tới giữa màn hình, nên mắt không kịp thấy nó "đang chạy".
+
+   ┌─ VÌ SAO KHÔNG DÙNG .reveal NHƯ HAI ĐẦU SECTION ─────────────────────────
+   │ .reveal ẩn phần tử bằng `opacity: 0` rồi chờ IntersectionObserver trong
+   │ master.php gắn .visible. Observer ấy chạy MỘT LẦN lúc tải trang.
+   │
+   │ Mà lưới sản phẩm bị THAY MỚI sau mỗi cú lọc: catalog.js nạp ngầm rồi
+   │ thay cả khối .catmain. Thẻ mới chưa từng được observer nhìn thấy → đứng
+   │ mãi ở opacity 0 → LƯỚI SẢN PHẨM TRỐNG TRƠN sau lần lọc đầu tiên. Cùng
+   │ cái bẫy ấy với trang tìm kiếm (kết quả nạp ngầm vào lớp phủ).
+   │
+   │ CSS thuần không có bẫy đó: luật tự áp cho mọi phần tử khớp selector, kể
+   │ cả phần tử vừa được chèn vào DOM một giây trước.
+   └──────────────────────────────────────────────────────────────────────────
+
+   HAI LỚP BẢO VỆ, và cả hai đều cần:
+     @supports  — trình duyệt chưa hỗ trợ thì KHÔNG có luật nào áp, thẻ hiện
+                  bình thường. Không bao giờ có trạng thái "ẩn mà không ai
+                  hiện lại" như cách làm bằng JS.
+     @media     — người tắt chuyển động thì thẻ hiện thẳng. Khối chung trong
+                  layout.css ép animation về 0.01ms, nhưng ở đây ta chặn hẳn
+                  từ đầu cho sạch.
+
+   KHÔNG stagger theo nth-child: lưới là `auto-fill`/`repeat()` nên số cột đổi
+   theo bề ngang (2 · 3 · 4). Một công thức nth-child chỉ đúng ở đúng một mốc,
+   sai ở mọi mốc còn lại. Mỗi thẻ tự chạy theo vị trí thật của nó, nên nhịp
+   theo TỪNG HÀNG là tự nhiên ở mọi bề ngang mà không phải khai gì thêm.
+   ════════════════════════════════════════════════════════════════════════════ */
+@supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+        .pgrid > li {
+            animation: pcard-rise linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 45%;
+        }
+    }
+}
+
+/* Nhích 20px, không hơn. Cùng ngôn ngữ với .reveal (16px) và bảng xổ (6px):
+   quãng ngắn thì khối đọc ra là "đã ở đó rồi", quãng dài thành "vừa bay vào". */
+@keyframes pcard-rise {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
 .pgrid {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: var(--space-6);
+    /* HAI cột ngay từ màn hẹp nhất. GM không bao giờ xuống một cột: hai ô ảnh
+       cạnh nhau vẫn đọc ra là một lưới, một ô thì thành một dải thẻ rời rạc. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--grid-gap);
+    row-gap: var(--grid-gap-row);
 }
 
-@media (max-width: 600px) {
+@media (min-width: 901px) {
     .pgrid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: var(--space-4);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+}
 
-    .pcard__body {
-        padding: var(--space-4);
-    }
-
-    .pcard__actions {
-        padding: 0 var(--space-4) var(--space-4);
+@media (min-width: 1101px) {
+    .pgrid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 }

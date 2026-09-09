@@ -29,43 +29,28 @@ $products = $products ?? [];
 <section class="hbest" data-section="s08" aria-labelledby="hbest-title">
     <div class="hbest__inner">
 
-        <div class="hsec-head">
+        <div class="hsec-head reveal">
             <p class="eyebrow"><?= e(t('home.best.eyebrow')) ?></p>
             <h2 id="hbest-title" class="section-h2 section-h2--plain"><?= e(t('home.best.title')) ?></h2>
         </div>
 
-        <div class="pstrip" data-product-strip>
-            <?php /* Hai mũi tên LUÔN in ra, kể cả khi chưa đủ hàng để trượt.
-                     Lúc đó makeStrip() (assets/js/home.js) tự đặt `disabled` cho
-                     cả hai — chúng mờ đi nhưng vẫn giữ chỗ, nên thêm sản phẩm
-                     trong trang quản trị là băng chạy được ngay, không phải sửa
-                     file nào. Xem .pstrip__arrow:disabled trong home-sections.css
-                     để biết trạng thái mờ trông thế nào. */ ?>
-            <button type="button" class="pstrip__arrow pstrip__arrow--prev"
-                    data-strip="prev" aria-label="<?= e(t('home.strip.prev')) ?>" disabled>
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M15 18l-6-6 6-6"/>
-                </svg>
-            </button>
-            <button type="button" class="pstrip__arrow pstrip__arrow--next"
-                    data-strip="next" aria-label="<?= e(t('home.strip.next')) ?>">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M9 6l6 6-6 6"/>
-                </svg>
-            </button>
-
-            <div class="pstrip__window">
-                <ul class="pstrip__track" role="list">
-                    <?php foreach ($products as $p): ?>
-                        <?php partial('_layout/product-card', [
-                            'product'     => $p,
-                            'badgeTone'   => 'sale',
-                            'showCompare' => true,
-                        ]); ?>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        </div>
+        <?php /* BĂNG TRƯỢT NGANG → LƯỚI (Phase 2). Lý do đầy đủ ở khối chú
+                 thích cùng chỗ trong _layout/home/new-arrivals.php: cả site nay
+                 dùng đúng một lớp lưới `.pgrid`, và hai mũi tên bỏ đi không làm
+                 home.js hỏng vì nó lặp qua `[data-product-strip]` chứ không giả
+                 định có phần tử nào. */ ?>
+        <ul class="pgrid" role="list">
+            <?php foreach ($products as $i => $p): ?>
+                <?php partial('_layout/product-card', [
+                    'product'     => $p,
+                    'badgeTone'   => 'sale',
+                    'showCompare' => true,
+                    // Hàng đầu của lưới (4 thẻ ở desktop) nằm trong khung nhìn
+                    // nếu khách cuộn tới đây; giữ lazy cho phần còn lại.
+                    'eager'       => false,
+                ]); ?>
+            <?php endforeach; ?>
+        </ul>
 
         <div class="hsec-all">
             <a class="hsec-all__link" href="/san-pham"><?= e(t('home.see_all')) ?></a>

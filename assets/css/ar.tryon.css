@@ -59,7 +59,10 @@
     opacity: 0;
     /* Chuyển động rất ngắn: đủ mượt giữa hai khung nhận diện, chưa đủ để
        thấy gọng "trôi" chậm sau khuôn mặt. */
-    transition: opacity 0.2s ease-out;
+    /* `var(--ease)-out` là cú thay chuỗi hụt của đợt token hoá: nó KHÔNG phải
+       một timing-function hợp lệ, nên cả dòng transition bị trình duyệt vứt
+       và gọng kính nhấp nháy tắt/bật giữa hai khung nhận diện thay vì mờ. */
+    transition: opacity var(--dur-fast) var(--ease);
     will-change: transform;
     z-index: 2;
 }
@@ -87,7 +90,7 @@
 .arstage__title {
     font-family: var(--font-serif);
     font-size: var(--fs-h6);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .arstage__note {
@@ -163,12 +166,12 @@
     background: color-mix(in srgb, var(--ink) 82%, transparent);
     font-family: var(--font-sans);
     font-size: var(--fs-label);
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: var(--tracking-label);
     color: var(--on-ink);
     cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
+    transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .arbtn:hover { border-color: var(--brand-light); color: var(--brand-light); }
@@ -192,9 +195,9 @@
 .arblock__title {
     font-family: var(--font-sans);
     font-size: var(--fs-label);
-    font-weight: 700;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 0.16em;
+    letter-spacing: var(--tracking-label);
     color: var(--muted);
 }
 
@@ -225,7 +228,9 @@
     border: 1px solid var(--line);
     background: var(--surface);
     cursor: pointer;
-    transition: border-color 0.2s, background-color 0.2s;
+    transition:
+        border-color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
 }
 
 .arframe img {
@@ -238,7 +243,7 @@
 .arframe__name {
     margin-top: 6px;
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -246,7 +251,7 @@
 
 .arframe__price {
     font-size: var(--fs-body-sm);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--brand);
 }
 
@@ -281,7 +286,7 @@
     font-size: var(--fs-label);
     color: var(--muted);
     cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
+    transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .arswatch__dot {
@@ -296,7 +301,7 @@
 .arswatch__radio:checked + .arswatch {
     border-color: var(--brand);
     color: var(--brand);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .arswatch__radio:focus-visible + .arswatch {
@@ -319,10 +324,12 @@
     border: 1px solid var(--line);
     background: var(--surface);
     cursor: pointer;
-    transition: border-color 0.2s, background-color 0.2s;
+    transition:
+        border-color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease);
 }
 
-.arlens__item strong { font-size: var(--fs-body-sm); font-weight: 600; color: var(--ink); }
+.arlens__item strong { font-size: var(--fs-body-sm); font-weight: 500; color: var(--ink); }
 .arlens__item span   { font-size: var(--fs-label); color: var(--muted); }
 
 .arlens__radio:checked + .arlens__item {
@@ -384,10 +391,13 @@
     border: 1px solid var(--line-strong);
     background: var(--surface);
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
     cursor: pointer;
-    transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+    transition:
+        border-color var(--dur-fast) var(--ease),
+        background-color var(--dur-fast) var(--ease),
+        color var(--dur-fast) var(--ease);
 }
 
 .arsize__radio:checked + .arsize__item {
@@ -424,7 +434,7 @@
     margin-top: 8px;
     font-family: var(--font-serif);
     font-size: var(--fs-h6);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--brand);
 }
 
@@ -442,7 +452,7 @@
 .arbuy__name {
     font-family: var(--font-serif);
     font-size: var(--fs-h6);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ink);
 }
 
@@ -451,7 +461,7 @@
     align-items: baseline;
     gap: 10px;
     font-size: var(--fs-h6);
-    font-weight: 700;
+    font-weight: 500;
     color: var(--brand);
 }
 

@@ -102,8 +102,13 @@ $termsUrl = (string) config('auth.consent.terms_url', '');
             <div class="col-6 col-lg-2 footer-col">
                 <h2 class="footer-heading"><?= e(t('footer.products')) ?></h2>
                 <ul class="footer-links" role="list">
+                    <?php /* lang="vi": tên danh mục đọc thẳng từ CSDL và chỉ có
+                             tiếng Việt, trong khi khung trang mặc định là
+                             lang="en". Không đánh dấu thì trình đọc màn hình
+                             phát âm "Gọng kính" theo quy tắc tiếng Anh. Cùng
+                             lý do với tên sản phẩm — xem _layout/product-card.php. */ ?>
                     <?php foreach ($products as $item): ?>
-                        <li><a href="<?= e($item['url']) ?>"><?= e($item['label']) ?></a></li>
+                        <li><a href="<?= e($item['url']) ?>" lang="vi"><?= e($item['label']) ?></a></li>
                     <?php endforeach; ?>
                 </ul>
             </div>
@@ -141,7 +146,36 @@ $termsUrl = (string) config('auth.consent.terms_url', '');
             <div class="col-12 col-lg-7">
                 <p class="footer-statement__text"><?= e(t('footer.statement')) ?></p>
             </div>
+
+            <?php
+            /*
+             * ─────────────────────────────────────────────────────────────────
+             * CỤM "LIÊN HỆ" — GỘP TỪ HAI HÀNG CŨ THÀNH MỘT
+             *
+             * Trước đợt này chân trang có BỐN hàng, và hai trong số đó gần như
+             * rỗng nửa bên phải:
+             *
+             *   hàng 2   tuyên ngôn (7 cột) | icon mạng xã hội trôi một mình
+             *   hàng 3   nhãn EMAIL + email cỡ lớn | nút "Liên hệ" ở tít mép phải
+             *
+             * Ba thứ đó — email, nút liên hệ, mạng xã hội — đều trả lời đúng
+             * MỘT câu hỏi: "làm sao gọi được cho các anh?". Tách chúng ra ba
+             * góc màn hình biến một ý thành ba mảnh rời, và để lại hai dải
+             * trống lớn mà mắt đọc ra là chân trang bị bỏ dở chứ không phải
+             * khoảng thở có chủ ý.
+             *
+             * Nay chúng đứng cùng nhau ở cột phải của chính hàng tuyên ngôn.
+             *
+             * ĐÃ BỎ KHỐI EMAIL CỠ LỚN. Địa chỉ ấy đã có mặt ở cột "Liên hệ"
+             * ngay phía trên, nên nó là bản sao thứ hai của cùng một chuỗi
+             * trên cùng một màn hình — xoá nó cắt được trọn một hàng trống mà
+             * không mất một thông tin nào.
+             * ─────────────────────────────────────────────────────────────────
+             */
+            ?>
             <div class="col-12 col-lg-5 footer-statement__side">
+                <a class="footer-reach__cta" href="/lien-he"><?= e(t('footer.cta')) ?></a>
+
                 <ul class="footer-socials" role="list">
                     <?php foreach ($company['socials'] as $social): ?>
                         <?php $path = $socialPaths[$social['icon']] ?? null; ?>
@@ -157,17 +191,6 @@ $termsUrl = (string) config('auth.consent.terms_url', '');
                         </li>
                     <?php endforeach; ?>
                 </ul>
-            </div>
-        </div>
-
-        <?php /* ── 3. Email cỡ lớn + nút liên hệ ───────────────────────── */ ?>
-        <div class="row footer-reach">
-            <div class="col-12 col-lg-7">
-                <span class="footer-reach__label"><?= e(t('footer.email')) ?></span>
-                <a class="footer-reach__mail" href="mailto:<?= e($company['email']) ?>"><?= e($company['email']) ?></a>
-            </div>
-            <div class="col-12 col-lg-5 footer-reach__side">
-                <a class="footer-reach__cta" href="/lien-he"><?= e(t('footer.cta')) ?></a>
             </div>
         </div>
 

@@ -15,8 +15,11 @@
      4. KHOẢNG THỞ RỘNG — `$spacers` của theme kéo tới 8rem, `$grid-gutter`
         2.5rem. Ở đây là --section-pad và --block-gap.
 
-   Điểm nhấn màu là --accent (crimson của Vin Eyewear) đứng đúng chỗ mà
-   Furnish đặt $secondary: nhãn nhỏ, chữ nghiêng trong tiêu đề, giá khuyến mãi.
+   PHASE 2: KHÔNG CÒN MỘT VET CRIMSON TRANG TRÍ NÀO trong file này. Crimson
+   (--accent) nay chỉ dành cho TRẠNG THÁI THƯƠNG MẠI — giá đang giảm và nhãn
+   hết hàng — và cả hai thứ đó nằm trong components/product.css, không nằm ở
+   đây. Mọi chỗ trước đây tô crimson (chữ nghiêng tiêu đề, liên kết thử ảo,
+   icon cam kết, sao đánh giá, hover của ba nút CTA) nay là mực hoặc đảo màu.
 
    ⚠ MỌI data-* VÀ LỚP TRẠNG THÁI DƯỚI ĐÂY LÀ HỢP ĐỒNG VỚI assets/js/home.js:
      [data-hero-slider] .hero__track .hero__slide [data-hero-caption]
@@ -31,14 +34,57 @@
    0. DÙNG CHUNG CHO MỌI KHỐI
    ──────────────────────────────────────────────────────────────────────────── */
 
-/* Đầu khối: nhãn nhỏ + tiêu đề bên trái, liên kết "xem tất cả" bên phải. */
+/* ┌─ ĐẦU KHỐI: NHÃN TRÊN TIÊU ĐỀ, CẢ HAI DỒN TRÁI ──────────────────────────
+   │ SỬA MỘT LỖI BỐ CỤC THẤY RÕ TRÊN TRANG THẬT.
+   │
+   │ Bản trước là `display:flex; justify-content:space-between`. Nhưng trong
+   │ markup, `.eyebrow` và `.section-h2` là HAI CON TRỰC TIẾP của khối này
+   │ (xem _layout/home/*.php) — nên space-between đẩy chúng về HAI ĐẦU đối
+   │ diện: nhãn dính mép trái, tiêu đề trôi sang tận mép phải, ở giữa là một
+   │ khoảng trống 700px. Mọi khối của trang chủ đều bị, và nó là thứ làm trang
+   │ đọc ra như bị vỡ chứ không như được xếp.
+   │
+   │ Lưới hai cột chữa gọn mà KHÔNG phải sửa một file view nào: cột 1 xếp
+   │ chồng nhãn rồi tiêu đề, cột 2 giữ liên kết "xem tất cả" ở mép phải.
+   └──────────────────────────────────────────────────────────────────────── */
 .hsec-head {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-4);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0 var(--space-4);
     margin-bottom: var(--block-gap);
+}
+
+.hsec-head > .eyebrow {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.hsec-head > .section-h2 {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+/* Liên kết "xem tất cả" chiếm cả hai hàng ở cột phải, căn đáy cho thẳng chân
+   chữ với tiêu đề. */
+.hsec-head > .hsec-all {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    align-self: end;
+}
+
+/* Dưới 601px: liên kết xuống dòng riêng, không ép tiêu đề co lại. */
+@media (max-width: 600px) {
+    .hsec-head {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .hsec-head > .hsec-all {
+        grid-column: 1;
+        grid-row: 3;
+        justify-self: start;
+        margin-top: var(--space-4);
+    }
 }
 
 .eyebrow {
@@ -46,8 +92,8 @@
     margin-bottom: var(--space-3);
     color: var(--eyebrow);
     font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: .14em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -55,7 +101,7 @@
     font-size: var(--fs-h2);
     font-weight: 400;
     line-height: 1.15;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
     max-width: 20ch;
 }
 
@@ -63,12 +109,36 @@
     max-width: none;
 }
 
-/* Chữ nghiêng trong tiêu đề mang màu nhấn — đúng cách Furnish dùng
-   `fst-italic text-secondary` ở hero. */
+/* ┌─ HAI TẦNG TIÊU ĐỀ KHỐI ─────────────────────────────────────────────────
+   │ Trang chủ có hai LOẠI khối, và trước đợt này cả hai dùng chung một cỡ
+   │ tiêu đề — nên khối "Kiểm tra 5 phút" hô to ngang khối "Hàng mới về", và
+   │ trang đọc ra như một bảng liệt kê tính năng.
+   │
+   │   TẦNG 1 (--fs-h2)  hàng hoá và chiến dịch: hero · bộ sưu tập · mới về ·
+   │                     bán chạy · danh mục · đánh giá
+   │   TẦNG 2 (--fs-h3)  DỊCH VỤ: tròng kính · đo mắt · kiểm tra nhanh
+   │
+   │ Ba khối dịch vụ vẫn giữ nguyên nội dung và vị trí trong chương của chúng
+   │ (xem thứ tự gọi trong app/views/home/index.php) — chúng chỉ thôi tranh
+   │ tiếng nói với hàng hoá.
+   │
+   │ KHÔNG tạo lớp mới: nhắm qua khối cha, nên view không phải sửa gì. */
+.hlens .section-h2,
+.hexam .section-h2,
+.qcheck .section-h2 {
+    font-size: var(--fs-h3);
+}
+
+/* Chữ nghiêng trong tiêu đề GIỮ NÉT NGHIÊNG, BỎ MÀU.
+
+   Bản trước tô crimson theo lối `fst-italic text-secondary` của Furnish. Nhưng
+   crimson nay chỉ dành cho trạng thái thương mại (giá giảm, hết hàng); một
+   cụm chữ đỏ giữa tiêu đề khối là màu trang trí, đúng thứ bộ này loại bỏ.
+   Nét nghiêng một mình đã đủ để nhấn. */
 .section-h2 em,
 .hero__title em {
     font-style: italic;
-    color: var(--accent);
+    color: inherit;
 }
 
 .hsec-all {
@@ -83,24 +153,25 @@
     border-bottom: 1px solid var(--ink);
     color: var(--ink);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .1em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
-    transition: color .15s ease, border-color .15s ease;
+    transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
 .hsec-all__link:hover,
 .hsec-all__link:focus-visible {
-    color: var(--accent);
-    border-color: var(--accent);
+    color: var(--ink);
+    border-color: var(--ink);
+    opacity: .55;
 }
 
-/* Nút mũi tên của mọi băng trượt (sản phẩm, danh mục, đánh giá, dáng mặt).
-   Vuông, viền mảnh, đảo màu khi rê chuột — `.btn-outline-*` của Furnish. */
-.pstrip__arrow,
-.hcat__arrow,
+/* Nút mũi tên của các băng trượt CÒN LẠI: đánh giá, dáng mặt, hero.
+
+   ĐÃ GỠ .pstrip__arrow VÀ .hcat__arrow (Phase 2) — hai khối sản phẩm và khối
+   danh mục nay là lưới `.pgrid`, không còn mũi tên nào để tô kiểu. */
 .hrev__arrow,
 .qface__arrow,
 .hero__arrow {
@@ -114,11 +185,9 @@
     background: transparent;
     color: var(--ink);
     cursor: pointer;
-    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
-.pstrip__arrow:hover,
-.hcat__arrow:hover,
 .hrev__arrow:hover,
 .qface__arrow:hover,
 .hero__arrow:hover {
@@ -127,8 +196,6 @@
     color: var(--on-ink);
 }
 
-.pstrip__arrow svg,
-.hcat__arrow svg,
 .hrev__arrow svg,
 .qface__arrow svg,
 .hero__arrow svg {
@@ -141,8 +208,6 @@
     stroke-linejoin: round;
 }
 
-.pstrip__arrow[disabled],
-.hcat__arrow[disabled],
 .hrev__arrow[disabled],
 .qface__arrow[disabled] {
     opacity: .35;
@@ -152,15 +217,28 @@
 /* Băng trượt dùng chung: cửa sổ cắt + đường ray cuộn ngang.
    CUỘN BẰNG CSS scroll-snap, không bằng thư viện: home.js chỉ đẩy scrollLeft.
    Đây là chỗ Furnish dùng Swiper (~150KB) cho đúng việc này. */
-.pstrip__window,
-.hcat__window,
+/* ┌─ ĐÃ GỠ .hcat__* KHỎI CẢ BA NHÓM DƯỚI ĐÂY (Phase 2) ─────────────────────
+   │ Khối "Danh mục" trên trang chủ không còn là băng trượt — nó là lưới
+   │ `.pgrid` như mọi lưới thẻ khác. Xem khối chú thích trong
+   │ _layout/home/categories.php.
+   │
+   │ VÀ NHÓM NÀY TỪNG CHỨA MỘT LỖI THẬT: nó liệt kê `.hcat__strip`, nhưng
+   │ `.hcat__strip` là cái <div> BỌC NGOÀI (chứa hai mũi tên + .hcat__window),
+   │ còn đường ray thật là `<ul class="hcat__track">`. Nên `display:flex` rơi
+   │ vào nhầm phần tử và <ul> giữ nguyên `display:block` — sáu thẻ danh mục xếp
+   │ chồng thành MỘT CỘT 320px giữa khung 1920px, bỏ trống 70% bề ngang ngay
+   │ dưới hero.
+   │
+   │ HAI băng trượt còn lại trên trang chủ — .hrev (đánh giá) và .qface (dáng
+   │ mặt) — khai ĐÚNG tên đường ray của mình nên không dính lỗi này. Chúng ở
+   │ lại vì băng trượt là hình dạng ĐÚNG cho chúng: một dải lời chứng và một
+   │ dải hình vẽ dáng mặt không phải là lưới hàng hoá.
+   └──────────────────────────────────────────────────────────────────────── */
 .hrev__window,
 .qface__window {
     overflow: hidden;
 }
 
-.pstrip__track,
-.hcat__strip,
 .hrev__track,
 .qface__track {
     display: flex;
@@ -172,15 +250,11 @@
     list-style: none;
 }
 
-.pstrip__track::-webkit-scrollbar,
-.hcat__strip::-webkit-scrollbar,
 .hrev__track::-webkit-scrollbar,
 .qface__track::-webkit-scrollbar {
     display: none;
 }
 
-.pstrip__track > *,
-.hcat__strip > *,
 .hrev__track > *,
 .qface__track > * {
     scroll-snap-align: start;
@@ -202,9 +276,9 @@
 .hero__inner {
     max-width: var(--container);
     margin-inline: auto;
-    padding: clamp(40px, 6vw, 88px) var(--page-edge);
+    padding: var(--rhythm-md) var(--page-edge);
     display: grid;
-    gap: clamp(32px, 5vw, 72px);
+    gap: var(--rhythm-sm);
     align-items: center;
 }
 
@@ -215,8 +289,8 @@
     margin-bottom: var(--space-5);
     color: var(--eyebrow);
     font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: .14em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -230,7 +304,7 @@
     font-size: var(--fs-h1);
     font-weight: 400;
     line-height: 1.08;
-    letter-spacing: -0.03em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .hero__lead {
@@ -256,11 +330,11 @@
     padding: var(--space-4) var(--space-8);
     border: 1px solid var(--brand);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .1em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
-    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
 .hero__btn--solid {
@@ -270,8 +344,9 @@
 
 .hero__btn--solid:hover,
 .hero__btn--solid:focus-visible {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+    color: var(--on-brand);
 }
 
 .hero__btn--ghost {
@@ -289,7 +364,9 @@
 .hero__ar {
     display: inline-block;
     margin-top: var(--space-5);
-    color: var(--accent);
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
     font-size: var(--fs-body-sm);
     font-weight: 500;
     text-decoration: none;
@@ -314,7 +391,7 @@
     font-family: var(--font-mono);
     font-size: var(--fs-caption);
     color: var(--muted);
-    letter-spacing: .1em;
+    letter-spacing: var(--tracking-label);
 }
 
 .hero__arrows {
@@ -332,7 +409,7 @@
     width: 28px;
     height: 2px;
     background: var(--line);
-    transition: background-color .25s ease;
+    transition: background-color var(--dur) var(--ease);
 }
 
 .hero__bar.is-on {
@@ -352,8 +429,10 @@
 
 .hero__track {
     display: flex;
-    /* home.js đẩy translateX; 0.55s là nhịp đã ghi trong view. */
-    transition: transform .55s cubic-bezier(.22, .61, .36, 1);
+    /* home.js đẩy translateX. Đường cong đọc từ token — bezier gõ tay ở đây
+       (.22, .61, .36, 1) là một đường cong thứ tư trên cùng một trang, đúng
+       thứ khối HỆ CHUYỂN ĐỘNG của gm.css cấm. */
+    transition: transform var(--dur-slow) var(--ease);
 }
 
 .hero__slide {
@@ -363,7 +442,19 @@
 
 .hero__slide img {
     width: 100%;
-    aspect-ratio: 4 / 3;
+    /* BẮT BUỘC khi thẻ <img> có thuộc tính width/height.
+
+       Thuộc tính height="900" trong markup ánh xạ thành một "presentation
+       hint" tương đương `height: 900px`. Luật này khai `width: 100%` nhưng
+       KHÔNG khai height, nên cái hint kia sống sót và ĐÈ `aspect-ratio` —
+       ảnh hero vẽ ra cao 900px, thành khung dọc thay vì 16:9.
+
+       `height: auto` trả quyền quyết định lại cho aspect-ratio, mà vẫn giữ
+       được tỉ lệ nội tại do hai thuộc tính kia khai (thứ chống layout shift).
+
+       Ba ảnh figure còn lại không dính vì chúng đã khai `height: 100%`. */
+    height: auto;
+    aspect-ratio: var(--ratio-campaign);
     object-fit: cover;
     display: block;
 }
@@ -378,7 +469,7 @@
     background: var(--ink);
     color: var(--on-ink);
     font-size: var(--fs-caption);
-    letter-spacing: .02em;
+    letter-spacing: var(--tracking-label);
 }
 
 /* ── Dải cam kết ─────────────────────────────────────────────────────────── */
@@ -401,7 +492,7 @@
     color: var(--muted);
     font-size: var(--fs-caption);
     font-weight: 500;
-    letter-spacing: .04em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -410,8 +501,8 @@
     height: 20px;
     flex: 0 0 auto;
     fill: none;
-    stroke: var(--accent);
-    stroke-width: 1.5;
+    stroke: var(--ink);
+    stroke-width: var(--icon-stroke);
     stroke-linecap: round;
     stroke-linejoin: round;
 }
@@ -448,16 +539,52 @@
     padding-inline: var(--page-edge);
 }
 
-.hcat__window {
-    margin-inline: calc(-1 * var(--space-1));
-}
+/* .hcat__window / .hcat__strip ĐÃ BỎ — khối danh mục không còn băng trượt.
 
-.hcat__strip {
-    padding-inline: var(--space-1);
-}
-
+   .ccat KHÔNG CÒN KHAI width. Nó từng là `min(320px, 72vw)` vì nó là một ô
+   trong đường ray flex; trong một ô lưới thì một bề ngang cố định là đúng thứ
+   phá lưới — ô co theo cột, thẻ phải lấp đầy ô. */
 .ccat {
-    width: min(320px, 72vw);
+    min-width: 0;
+}
+
+/* ┌─ LƯỚI DANH MỤC: BA CỘT, KHÔNG PHẢI BỐN ─────────────────────────────────
+   │ Khối này mượn `.pgrid` — lưới thẻ dùng chung — mà `.pgrid` lên BỐN cột từ
+   │ 1101px. Với 9 danh mục, bốn cột cho ra 4 + 4 + 1: hàng cuối còn đúng một
+   │ thẻ và bỏ trống 75% bề ngang.
+   │
+   │ Đó là khoảng trống do THIẾU nội dung, không phải khoảng trống có chủ ý —
+   │ hai thứ trông giống nhau nhưng đọc ra khác hẳn.
+   │
+   │ Ba cột cũng chính là con số mà khối chú thích đầu
+   │ _layout/home/categories.php đã chốt ("khoá cứng 3 cột như bản thiết kế").
+   │ Ở đây chỉ là làm cho CSS khớp lại với đặc tả của chính nó, và 9 chia hết
+   │ cho 3 nên lưới đầy đúng ba hàng.
+   │
+   │ Chỉ đè đúng khối này. Lưới sản phẩm ở /san-pham, trang chủ và tìm kiếm
+   │ vẫn bốn cột như cũ.
+   └──────────────────────────────────────────────────────────────────────── */
+@media (min-width: 901px) {
+    .hcat .pgrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* ┌─ MÀN HẸP: THẺ LẺ CUỐI CÙNG CHIẾM TRỌN HÀNG ─────────────────────────────
+   │ Dưới 901px lưới còn HAI cột, mà 9 danh mục là số lẻ — nên vẫn dôi ra một
+   │ thẻ đứng một mình cạnh một nửa hàng trống.
+   │
+   │ Ở hai cột thì khoảng trống ấy chỉ bằng 50% bề ngang (so với 75% của bốn
+   │ cột), nhưng vẫn đọc ra là thiếu. Cho thẻ lẻ trải hết hàng thì hàng đầy,
+   │ và một thẻ rộng gấp đôi ở cuối danh sách đọc ra như một mục được nhấn —
+   │ có chủ ý, không phải bỏ dở.
+   │
+   │ `:last-child:nth-child(odd)` chỉ khớp khi TỔNG SỐ thẻ là lẻ, nên thêm hay
+   │ bớt một danh mục là luật này tự bật/tắt, không phải sửa tay. */
+@media (max-width: 900px) {
+    .hcat .pgrid > .ccat:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
 }
 
 .ccat__link {
@@ -468,15 +595,17 @@
     background: var(--surface-raised);
     color: var(--ink);
     text-decoration: none;
-    transition: border-color .18s ease;
+    transition: border-color var(--dur) var(--ease);
 }
 
 .ccat__link:hover {
     border-color: var(--line-strong);
 }
 
+/* Ô DỌC như thẻ bộ sưu tập — hai lưới này đứng ngay cạnh nhau trên trang chủ
+   và cùng nằm trong `.pgrid`, nên khung ảnh của chúng phải cùng chiều. */
 .ccat__media {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: var(--ratio-editorial);
     overflow: hidden;
     background: var(--h-shell);
 }
@@ -486,7 +615,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform .45s ease;
+    transition: transform var(--dur) var(--ease);
 }
 
 .ccat__link:hover .ccat__media img {
@@ -509,7 +638,7 @@
 .ccat__count {
     color: var(--muted);
     font-size: var(--fs-caption);
-    letter-spacing: .04em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -529,8 +658,8 @@
 
 .ccat__more {
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .1em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -540,7 +669,7 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 1.8;
-    transition: transform .2s ease;
+    transition: transform var(--dur) var(--ease);
 }
 
 .ccat__link:hover .ccat__arrow {
@@ -550,17 +679,32 @@
 /* ────────────────────────────────────────────────────────────────────────────
    3. BỘ SƯU TẬP
    ──────────────────────────────────────────────────────────────────────────── */
-.hcoll__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--space-6);
-    list-style: none;
+/* .hcoll__grid ĐÃ BỎ — khối bộ sưu tập dùng `.pgrid` như mọi lưới thẻ khác.
+   Lớp cũ khai `auto-fit, minmax(260px, 1fr)`: trên màn 1920 nó tự chia thành
+   SÁU cột trong khi lưới sản phẩm ngay dưới chỉ có bốn.
+
+   ┌─ NHƯNG SỐ BỘ SƯU TẬP LÀ SỐ THAY ĐỔI ────────────────────────────────────
+   │ `.pgrid` khoá 4 cột từ 1101px. Cửa hàng đang trưng BA bộ sưu tập, nên ô
+   │ thứ tư bỏ trống — một khoảng chết rộng gần 1/4 bề ngang ngay cạnh khối
+   │ ảnh lớn nhất trang. Thấy rõ trên trang thật.
+   │
+   │ Lưới hàng hoá thì khoá cột là đúng (số sản phẩm luôn nhiều hơn số cột).
+   │ Lưới BIÊN TẬP thì không: số bộ sưu tập do cửa hàng quyết, hôm nay ba,
+   │ tháng sau năm. `auto-fit` cho các ô GIÃN RA lấp hết bề ngang dù có bao
+   │ nhiêu, nên không bao giờ còn ô trống.
+   │
+   │ Chỉ áp trong khối bộ sưu tập — `.pgrid` ở mọi nơi khác giữ nguyên 4 cột. */
+.hcoll .pgrid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .ccard__link {
     position: relative;
     display: block;
-    aspect-ratio: 3 / 4;
+    /* Khung ảnh biên tập dùng chung — xem PHẦN 5 của gm.css. Trước đây con số
+       3/4 gõ thẳng ở đây, còn thẻ ảnh trong bảng xổ mega gõ 4/3: hai khung ảnh
+       cùng vai trò nằm ngược chiều nhau. */
+    aspect-ratio: var(--ratio-editorial);
     overflow: hidden;
     background: var(--h-shell);
     color: var(--on-ink);
@@ -572,7 +716,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform .5s ease;
+    transition: transform var(--dur) var(--ease);
 }
 
 .ccard__link:hover .ccard__img {
@@ -581,13 +725,46 @@
 
 /* Tấm chữ đặc ở đáy ảnh — không phải lớp phủ mờ dần: nền đặc thì chữ đọc
    được trên MỌI tấm ảnh, kể cả ảnh sáng. */
+/* ┌─ LỚP PHỦ SÂU HƠN, VÀ ĐEN THẬT ──────────────────────────────────────────
+   │ Bản trước phủ từ rgba(33,31,28,.92) — sắc NÂU SẪM của bảng màu cũ — và
+   │ tắt dần quá nhanh. Trên trang thật, thẻ nào có dòng mô tả xuống HAI DÒNG
+   │ thì dòng trên trồi ra khỏi vùng tối và chữ trắng nằm trên ảnh sáng: gần
+   │ như không đọc được. Thấy rõ ở hai thẻ giữa của khối bộ sưu tập.
+   │
+   │ Nay: đen thật, đậm hơn ở chân, và tắt dần chậm hơn (qua mốc 55%), cộng
+   │ một khoảng đệm trên rộng để dù mô tả dài tới hai dòng vẫn nằm trong vùng
+   │ tối. Không dùng nền đặc — nền đặc cắt ngang tấm ảnh thành một cái nhãn. */
 .ccard__plate {
     position: absolute;
     left: 0;
     right: 0;
     bottom: 0;
-    padding: var(--space-5);
-    background: linear-gradient(to top, rgba(33, 31, 28, .92), rgba(33, 31, 28, 0));
+    padding: var(--rhythm-xs) var(--space-5) var(--space-5);
+    /* ┌─ ĐÃ KÉO DÀI VÙNG TỐI LÊN TRÊN. ĐO BẰNG PIXEL, KHÔNG BẰNG CSS ───────
+       │ Bản trước tắt dần quá sớm: ở mốc 75% lớp phủ chỉ còn alpha .28, mà
+       │ ĐÓ CHÍNH LÀ CHỖ dòng tên bộ sưu tập đứng.
+       │
+       │ Không đo được bằng công thức tương phản thường: lớp phủ là gradient,
+       │ nên getComputedStyle().backgroundColor không thấy nó và mọi phép tính
+       │ từ CSS đều cho số vô nghĩa. Phải chụp đúng vùng chữ rồi đọc pixel.
+       │
+       │ Kết quả đo trên ảnh thật của cửa hàng (ảnh sản phẩm nền trắng, tức là
+       │ trường hợp xấu nhất cho chữ trắng):
+       │     .ccard__name     2.26:1 @1440 · 2.51:1 @390   ← TRƯỢT (cần 4.5)
+       │     .ccard__tagline  8.39:1 @1440 · 8.08:1 @390   ← đạt
+       │ Dòng mô tả nằm thấp hơn nên nó vẫn nằm trong vùng đặc; chỉ dòng tên
+       │ trồi lên khỏi vùng ấy — đúng cái lỗi mà khối chú thích trên đã sửa một
+       │ lần cho trường hợp mô tả xuống hai dòng, nhưng dòng tên thì chưa.
+       │
+       │ Thang mới giữ alpha ~.72 tới tận mốc 70%, nên dòng tên nằm trên nền
+       │ tối thật ở mọi tấm ảnh.
+       └──────────────────────────────────────────────────────────────────── */
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, .94) 0%,
+        rgba(0, 0, 0, .86) 40%,
+        rgba(0, 0, 0, .72) 70%,
+        rgba(0, 0, 0, .42) 88%,
+        rgba(0, 0, 0, 0) 100%);
 }
 
 .ccard__name {
@@ -596,32 +773,35 @@
     font-weight: 400;
 }
 
+/* --on-brand-soft (#dadada) chứ không --on-brand-muted (#a8a8a8): dòng này
+   nằm trên ẢNH có lớp phủ, không phải trên một nền đen đặc, nên nó cần sáng
+   hơn một nấc so với chữ phụ trên nền tối thường. */
 .ccard__tagline {
     display: block;
     margin-top: var(--space-1);
-    color: var(--on-brand-muted);
+    color: var(--on-brand-soft);
     font-size: var(--fs-caption);
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
    4. HÀNG MỚI VỀ · BÁN CHẠY
    ──────────────────────────────────────────────────────────────────────────── */
-.hbest {
-    background: var(--surface-sunken);
-}
+/* KHÔNG dải nền xám. Bản trước tô .hbest xám để 'tách khối', nhưng nó nằm
+   giữa hai lưới hàng hoá và cắt mạch xem hàng làm đôi. Khoảng trống theo
+   thang nhịp đã tách đủ. */
 
-.pstrip {
-    position: relative;
-}
+/* ┌─ TOÀN BỘ .pstrip* ĐÃ BỎ (Phase 2) ──────────────────────────────────────
+   │ Hai khối "Hàng mới về" và "Bán chạy" là nơi DUY NHẤT dùng băng trượt sản
+   │ phẩm, và cả hai nay là lưới `.pgrid`. Giữ lại bộ lớp này là giữ một hệ
+   │ lưới thứ hai cho đúng cái thẻ mà `.pgrid` đã lo.
+   │
+   │ `.pstrip__track > .pcard { width: min(280px, 72vw) }` là dòng đáng chú ý
+   │ nhất trong số đã bỏ: nó ép bề ngang CỐ ĐỊNH lên thẻ sản phẩm. Trong một ô
+   │ lưới thì đó đúng là thứ làm thẻ không lấp đầy cột.
+   │
+   │ home.js KHÔNG hỏng: nó lặp qua `[data-product-strip]`, nay ra 0 phần tử.
+   └──────────────────────────────────────────────────────────────────────── */
 
-.pstrip__track > .pcard {
-    width: min(280px, 72vw);
-}
-
-.pstrip__arrow--prev,
-.pstrip__arrow--next,
-.hcat__arrow--prev,
-.hcat__arrow--next,
 .hrev__arrow--prev,
 .hrev__arrow--next,
 .qface__arrow--prev,
@@ -629,21 +809,54 @@
     position: absolute;
     top: 38%;
     z-index: 2;
-    background: var(--surface-raised);
+    background: var(--surface);
 }
 
-.pstrip__arrow--prev,
-.hcat__arrow--prev,
+/* ┌─ MŨI TÊN THÒ RA NGOÀI, NHƯNG KHÔNG QUÁ LỀ TRANG ────────────────────────
+   │ Hai nút này cố ý nhô ra khỏi đường ray để không đè lên thẻ. Nhưng phần
+   │ nhô ra phải NHỎ HƠN HOẶC BẰNG lề ngang của trang — nếu không, ở màn hẹp
+   │ chúng vượt qua mép khung nhìn và cả trang cuộn ngang được.
+   │
+   │ Đo trước khi sửa: --space-5 là 20px cố định, còn --page-edge chỉ 16px ở
+   │ 390px. Chênh 4px ấy chính là 394>390, 772>768 và 1027>1024 — cùng một
+   │ nguyên nhân ở cả ba khung nhìn.
+   │
+   │ min() giữ nguyên dáng trên desktop (--page-edge tới 32px nên 20px thắng)
+   │ và tự thu lại đúng bằng lề ở màn hẹp.
+   └──────────────────────────────────────────────────────────────────────── */
 .hrev__arrow--prev,
 .qface__arrow--prev {
-    left: calc(-1 * var(--space-5));
+    /* Kéo ra ngoài NHIỀU NHẤT CÓ THỂ mà vẫn không vượt lề trang. Nút rộng
+       44px; kéo được bao nhiêu thì phần còn lại đè lên thẻ bấy nhiêu, mà thẻ
+       chỉ có 24px đệm để chịu. Ở 1440 lề là ~24px nên nút chỉ còn thò vào
+       20px — nằm gọn trong đệm, không chạm chữ. */
+    left: calc(-1 * min(44px, var(--page-edge)));
 }
 
-.pstrip__arrow--next,
-.hcat__arrow--next,
 .hrev__arrow--next,
 .qface__arrow--next {
-    right: calc(-1 * var(--space-5));
+    right: calc(-1 * min(44px, var(--page-edge)));
+}
+
+/* ┌─ MÀN HẸP: BỎ HẲN HAI MŨI TÊN ───────────────────────────────────────────
+   │ Dưới 1101px lề trang tụt xuống 16–18px, trong khi nút rộng 44px — nghĩa
+   │ là nút buộc phải thò vào 26–28px, vượt quá 24px đệm của thẻ và đè lên
+   │ chính câu trích dẫn. Đo được ở 1440 trước đợt sửa: mũi tên trái phủ lên
+   │ dấu mở ngoặc kép của thẻ thứ nhất, mũi tên phải cắt ngang chữ thẻ thứ hai.
+   │
+   │ Không mất chức năng nào: `.hrev__track` vốn là `overflow-x: auto` kèm
+   │ `scroll-snap`, nên vuốt ngang, lăn chuột ngang và phím mũi tên đều đã
+   │ cuộn được sẵn. Bỏ hai cái nút chỉ là bỏ một lớp điều khiển thừa ở đúng
+   │ bề ngang mà nó không có chỗ đứng.
+   └──────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+
+    .hrev__arrow--prev,
+    .hrev__arrow--next,
+    .qface__arrow--prev,
+    .qface__arrow--next {
+        display: none;
+    }
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -651,7 +864,7 @@
    ──────────────────────────────────────────────────────────────────────────── */
 .qcheck {
     padding-block: var(--section-pad);
-    background: var(--surface-sunken);
+    background: var(--surface-alt);
 }
 
 .qcheck__head {
@@ -680,7 +893,7 @@
 }
 
 .qcard__media {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: var(--ratio-campaign);
     overflow: hidden;
     background: var(--h-shell);
 }
@@ -723,11 +936,11 @@
     background: transparent;
     color: var(--ink);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .1em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     cursor: pointer;
-    transition: background-color .15s ease, color .15s ease;
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
 .qcard__btn:hover,
@@ -842,7 +1055,7 @@ body.is-modal-open {
     color: var(--ink);
     text-align: center;
     cursor: pointer;
-    transition: border-color .15s ease, background-color .15s ease;
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
 }
 
 .qface__card:hover {
@@ -866,8 +1079,8 @@ body.is-modal-open {
 .qface__name {
     margin-top: var(--space-2);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .06em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -894,7 +1107,7 @@ body.is-modal-open {
     font-size: var(--fs-body-sm);
     text-align: left;
     cursor: pointer;
-    transition: border-color .15s ease, background-color .15s ease;
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
 }
 
 .qlens__option:hover,
@@ -920,10 +1133,12 @@ body.is-modal-open {
 .qrec__link {
     display: inline-block;
     margin-top: var(--space-3);
-    color: var(--accent);
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .08em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
     border-bottom: 1px solid currentColor;
@@ -939,7 +1154,7 @@ body.is-modal-open {
 }
 
 .hlens__figure {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: var(--ratio-campaign);
     overflow: hidden;
     background: var(--h-shell);
 }
@@ -966,17 +1181,38 @@ body.is-modal-open {
     line-height: 1.65;
 }
 
+/* Khối bảng giá là ANH EM của .hlens__main, không nằm trong lưới hai cột của
+   nó, nên nó không nhận `gap` — trước đợt này nhãn "GÓI TRÒNG PHỔ BIẾN" chạm
+   gần sát mép dưới tấm ảnh chiến dịch (đo được ~8px). Một nhãn dính vào đáy
+   ảnh đọc ra là chú thích của tấm ảnh, chứ không phải tiêu đề của bảng bên
+   dưới. Đọc đúng bậc nhịp dùng chung thay vì một số gõ tay. */
+.hlens__packages {
+    margin-top: var(--block-gap);
+}
+
 .hlens__ptitle {
     margin-bottom: var(--space-4);
     font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--eyebrow);
 }
 
+/* ┌─ CHẶN BỀ NGANG: TÊN GÓI VÀ GIÁ PHẢI CÒN NHÌN THẤY NHAU ─────────────────
+   │ `justify-content: space-between` đẩy giá về mép phải của container, mà
+   │ container ở đây là cả cột nội dung. Đo được: hàng rộng 1 391px ở 1440 và
+   │ 1 856px ở 1920 — tức là giá cách tên gói gần 1,3m thị giác, và mắt phải
+   │ men theo một khoảng trống dài để ghép hai thứ thuộc về nhau.
+   │
+   │ Cùng phép đo cho ra 185 ký tự/dòng ở 1440 và 238 ở 1920, gấp ba lần
+   │ khoảng dễ đọc.
+   │
+   │ Một trần bề ngang chữa cả hai: dòng ngắn lại, và giá quay về cạnh tên.
+   └──────────────────────────────────────────────────────────────────────── */
 .lpack {
     list-style: none;
+    max-width: 56rem;
     border-top: 1px solid var(--line);
 }
 
@@ -1011,7 +1247,7 @@ body.is-modal-open {
 
 .lpack__price {
     font-size: var(--fs-body);
-    font-weight: 700;
+    font-weight: 500;
     white-space: nowrap;
 }
 
@@ -1036,15 +1272,15 @@ body.is-modal-open {
     background: var(--brand);
     color: var(--on-brand);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .1em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
-    transition: background-color .15s ease;
+    transition: background-color var(--dur) var(--ease);
 }
 
 .hlens__cta:hover {
-    background: var(--accent);
+    background: var(--brand-strong);
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -1061,16 +1297,24 @@ body.is-modal-open {
     margin-bottom: var(--space-3);
     color: var(--h-dark-eyebrow);
     font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: .14em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
 .hexam__title {
+    /* MÀU PHẢI KHAI Ở ĐÂY, KHÔNG ĐƯỢC KẾ THỪA.
+       `.hexam` đặt `color: var(--h-on-dark)` cho cả khối, nhưng phần tử này
+       cũng mang lớp `.section-h2`, mà `.section-h2` khai `color` TƯỜNG MINH —
+       nên giá trị kế thừa thua và tiêu đề thành #111 trên nền #111, tức là
+       tương phản 1.00:1 và không nhìn thấy gì.
+       Ba phần tử anh em (__eyebrow, __text, __note) không dính vì mỗi cái đều
+       tự khai màu sáng của mình. */
+    color: var(--h-on-dark);
     font-size: var(--fs-h2);
     font-weight: 400;
     line-height: 1.15;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
     max-width: 18ch;
 }
 
@@ -1095,7 +1339,7 @@ body.is-modal-open {
     color: var(--h-on-dark-num);
     font-family: var(--font-mono);
     font-size: var(--fs-caption);
-    letter-spacing: .1em;
+    letter-spacing: var(--tracking-label);
 }
 
 .hexam__name {
@@ -1113,7 +1357,7 @@ body.is-modal-open {
 }
 
 .hexam__figure {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: var(--ratio-campaign);
     overflow: hidden;
     background: rgba(246, 245, 244, .08);
 }
@@ -1134,16 +1378,15 @@ body.is-modal-open {
     background: var(--h-on-dark);
     color: var(--h-dark);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .1em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
-    transition: background-color .15s ease, color .15s ease;
+    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
 .hexam__cta:hover {
-    background: var(--accent);
-    color: #fff;
+    background: var(--brand-strong);
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -1189,13 +1432,13 @@ body.is-modal-open {
 
 .rcard__name {
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .rating-stars {
     display: inline-flex;
     gap: 2px;
-    color: var(--accent);
+    color: var(--ink);
 }
 
 .rating-stars svg {
@@ -1223,4 +1466,28 @@ body.is-modal-open {
     .hlens__main {
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     }
+}
+
+/* ============================================================================
+   HÌNH VẼ DÁNG MẶT (.qface__draw) — MÀU TỪ TOKEN
+
+   Bốn nét trong mỗi hình từng gõ cứng #33272a và #8a2432 ngay trong markup
+   (_layout/home/quick-check.php). Nay chúng dùng `currentColor`, nên màu do
+   đúng hai luật dưới đây quyết định.
+
+   Đường kẻ đo (.qface__rule) nhạt hơn nét viền mặt: nó là ghi chú kỹ thuật,
+   không phải hình chính.
+   ============================================================================ */
+.qface__draw {
+    color: var(--ink);
+}
+
+.qface__draw .qface__rule {
+    color: var(--muted-soft);
+}
+
+/* Thẻ đang chọn: nét đậm lên bằng màu, không bằng độ dày — đổi stroke-width
+   làm hình nhảy kích thước. */
+.qface__card[aria-pressed="true"] .qface__draw {
+    color: var(--ink);
 }

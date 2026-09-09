@@ -587,6 +587,28 @@ a {
    color: inherit;
 }
 
+/* ┌─ NHẤN MẠNH LÀ 500, KHÔNG PHẢI 700 ──────────────────────────────────────
+   │ Mặc định của trình duyệt cho <strong>/<b> là `bolder`, ra 700. Nhưng cả
+   │ trang khách KHÔNG có một khai báo font-weight: 700 nào (đo: 305 lần 500,
+   │ 91 lần 400, 0 lần 700), và bộ chữ nạp về cũng chỉ có 400 với 500 — xem
+   │ khối FONT trong _layout/master.php.
+   │
+   │ Nên 38 chỗ <strong> trong view đang đòi một mặt chữ không tồn tại, và
+   │ trình duyệt TỰ BÓP ĐẬM mặt 500 để thế chỗ. Đậm giả làm nét chữ dày lệch
+   │ và bệt ở chân — thấy rõ nhất trong đoạn văn dài của trang chính sách.
+   │
+   │ 500 cũng là đúng nấc mà bộ này dùng để nhấn ở mọi chỗ khác (nhãn IN HOA,
+   │ mục nav đang mở, tên cửa hàng đang chọn), nên <strong> nay nói cùng một
+   │ giọng với chúng thay vì hét to hơn cả tiêu đề.
+   │
+   │ Component nào cần khác thì cứ đè — nhiều file đã tự khai 500 ở đây rồi,
+   │ và từ nay chúng chỉ là thừa chứ không sai.
+   └──────────────────────────────────────────────────────────────────────── */
+strong,
+b {
+   font-weight: 500;
+}
+
 .main-content {
    display: block;
 }

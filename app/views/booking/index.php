@@ -292,3 +292,34 @@ $steps = [
 
     <?php endif; ?>
 </section>
+
+<?php
+/*
+ * ═════════════════════════════════════════════════════════════════════════════
+ * "KIỂM TRA 5 PHÚT" — CHUYỂN VỀ ĐÂY TỪ TRANG CHỦ (09/09/2026)
+ *
+ * Khối này (tư vấn dáng mặt + bộ chọn tròng) trước nằm giữa trang chủ. Ở đó nó
+ * chặn đường tới hàng và làm trang chủ đọc ra như một cổng dịch vụ. Ở đây thì
+ * đúng người đúng lúc: ai đã cuộn hết một trang đặt lịch đo khúc xạ chính là
+ * người đang cần tư vấn chọn dáng và chọn tròng.
+ *
+ * ĐẶT SAU </section> của form, không lồng vào trong: nó là một chương riêng
+ * của trang, và <section class="qcheck"> tự mang khung + nhịp của mình.
+ *
+ * BA THỨ PHẢI ĐI CÙNG NÓ, khai trong hai bảng của _layout/master.php:
+ *   components/home-sections.css   bộ lớp .qcheck/.qcard/.qface/.qlens/.qmodal
+ *   home.js                        IIFE quickCheck() mở hộp thoại và lo hai
+ *                                  bộ chọn; nó tìm #quickCheck bằng
+ *                                  getElementById nên chạy ở bất kỳ trang nào
+ *   (không thứ ba nào nữa — partial tự dựng lấy dữ liệu từ config/lang)
+ *
+ * ĐÃ ĐỐI CHIẾU VA CHẠM LỚP trước khi nạp home-sections.css vào trang này:
+ * file đó khai 155 tên lớp, view này dùng 52, GIAO NHAU BẰNG 0. Bộ lớp .bk*
+ * của trang đặt lịch và bộ lớp của trang chủ không đụng nhau chỗ nào.
+ *
+ * KHÔNG ĐƯỢC BẬT ĐỒNG THỜI Ở TRANG CHỦ: home.js tìm #quickCheck bằng
+ * getElementById, mà id thì phải là duy nhất trên một trang.
+ * ═════════════════════════════════════════════════════════════════════════════
+ */
+partial('_layout/home/quick-check');
+?>

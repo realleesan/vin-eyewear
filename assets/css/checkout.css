@@ -56,7 +56,7 @@
     gap: var(--space-2);
     color: var(--muted);
     font-size: var(--fs-caption);
-    letter-spacing: .06em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     text-decoration: none;
 }
@@ -79,13 +79,13 @@
 
 .cohead__here {
     color: var(--ink);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .cohead__title {
     font-size: var(--fs-h2);
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 /* ── Bố cục hai cột ──────────────────────────────────────────────────────── */
@@ -123,7 +123,7 @@
     background: var(--ink);
     color: var(--on-ink);
     font-size: var(--fs-caption);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .costep__title {
@@ -145,8 +145,8 @@
 
 .cofield__label {
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .08em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -208,7 +208,7 @@
     border: 1px solid var(--line);
     background: var(--surface-raised);
     cursor: pointer;
-    transition: border-color .15s ease, background-color .15s ease;
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
 }
 
 .cocards label:hover .cocard__body {
@@ -253,7 +253,7 @@
 .cocard__name {
     display: block;
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .cocard__note {
@@ -296,7 +296,7 @@
 
 .ckopt__name {
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .ckopt__note {
@@ -361,7 +361,7 @@
 }
 
 .coitem__price {
-    font-weight: 600;
+    font-weight: 500;
     font-size: var(--fs-body-sm);
     white-space: nowrap;
 }
@@ -384,7 +384,7 @@
     background: var(--surface-sunken);
     color: var(--ink);
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
 }
 
@@ -394,7 +394,7 @@
     fill: none;
     stroke: currentColor;
     stroke-width: 1.8;
-    transition: transform .2s ease;
+    transition: transform var(--dur) var(--ease);
 }
 
 .covou[open] .covou__chev,
@@ -432,15 +432,16 @@
     background: var(--ink);
     color: var(--on-ink);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .08em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     cursor: pointer;
 }
 
 .covou__apply:hover {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+    color: var(--on-brand);
 }
 
 .covou__pick {
@@ -467,10 +468,10 @@
 
 .covou__type {
     font-size: var(--fs-caption);
-    font-weight: 700;
-    letter-spacing: .06em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--ink);
 }
 
 .covou__desc {
@@ -484,7 +485,7 @@
 }
 
 .covou__cut {
-    font-weight: 700;
+    font-weight: 500;
     white-space: nowrap;
 }
 
@@ -505,7 +506,7 @@
 
 .covou__oncode {
     font-family: var(--font-mono);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .covou__onnote {
@@ -523,7 +524,7 @@
     background: transparent;
     color: var(--danger);
     font-size: var(--fs-caption);
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
     cursor: pointer;
 }
@@ -540,9 +541,11 @@
     border-top: 1px dashed var(--line-strong);
 }
 
+/* SỐ TIỀN ĐẶT CỌC — trạng thái thương mại, giữ crimson (xem PHẦN 1 gm.css).
+   font-weight về 500: bộ này không dùng 700 ở đâu cả. */
 .csum__val--deposit {
     color: var(--accent);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .csum__deposit {
@@ -589,7 +592,7 @@
 .coqr__title {
     font-size: var(--fs-h2);
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .coqr__titles {
@@ -641,7 +644,7 @@
     display: block;
     color: var(--muted);
     font-size: var(--fs-caption);
-    letter-spacing: .08em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -650,7 +653,7 @@
     display: block;
     margin-top: var(--space-1);
     font-size: var(--fs-h3);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .coqr__amountrest {
@@ -680,20 +683,20 @@
 .coqr__bankkey {
     color: var(--muted);
     font-size: var(--fs-caption);
-    letter-spacing: .04em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
 .coqr__bankval {
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
     overflow-wrap: anywhere;
 }
 
 /* Nội dung chuyển khoản: chữ đơn cách để khách đối chiếu từng ký tự. */
 .coqr__bankval--wide {
     font-family: var(--font-mono);
-    letter-spacing: .04em;
+    letter-spacing: var(--tracking-label);
 }
 
 .coqr__copy {
@@ -702,8 +705,8 @@
     background: transparent;
     color: var(--ink);
     font-size: var(--fs-micro);
-    font-weight: 600;
-    letter-spacing: .06em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     cursor: pointer;
     white-space: nowrap;
@@ -732,7 +735,7 @@
     background: var(--ink);
     color: var(--on-ink);
     font-size: var(--fs-micro);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .coqr__steplabel {
@@ -757,15 +760,15 @@
 
 .coqr__ordertitle {
     font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
 .coqr__code {
     font-family: var(--font-mono);
     font-size: var(--fs-body-sm);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .coqr__nocode {
@@ -792,7 +795,7 @@
 .coqr__linesum--due {
     padding-top: var(--space-3);
     border-top: 1px solid var(--line);
-    font-weight: 700;
+    font-weight: 500;
 }
 
 .coqr__total {
@@ -822,7 +825,16 @@
     flex: 0 0 auto;
     border-radius: var(--radius-round);
     background: var(--success);
-    animation: coqr-pulse 1.6s ease-in-out infinite;
+    /* `var(--ease)-in-out` là cú thay chuỗi hụt của đợt token hoá — KHÔNG phải
+       một timing-function hợp lệ, nên cả dòng animation bị trình duyệt vứt và
+       chấm đứng im, đúng lúc người dùng cần thấy trang vẫn đang theo dõi.
+
+       NGOẠI LỆ DUY NHẤT KHÔNG DÙNG --ease, và có lý do: --ease là đường cong
+       MỘT CHIỀU (ra nhanh, vào chậm) cho một lần đổi trạng thái. Nhịp này lặp
+       vô hạn và đối xứng (1 → .25 → 1); lắp một đường cong một chiều vào thì
+       vận tốc gãy ở chỗ nối vòng và mắt đọc ra thành "nháy" chứ không phải
+       "thở". Đây là chấm chờ duy nhất của trang khách. */
+    animation: coqr-pulse var(--dur-slow) ease-in-out infinite;
 }
 
 @keyframes coqr-pulse {
@@ -871,7 +883,7 @@
     background: var(--brand);
     color: var(--on-brand);
     font-size: var(--fs-caption);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: .1em;
     text-transform: uppercase;
     text-decoration: none;
@@ -880,8 +892,9 @@
 
 .coqr__manual:hover,
 .coqr__confirm:hover {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+    color: var(--on-brand);
 }
 
 .coqr__back {

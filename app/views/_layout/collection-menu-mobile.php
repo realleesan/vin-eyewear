@@ -37,7 +37,9 @@ $collectionsNav = $collectionsNav ?? CollectionModel::visible();
     <div class="mobile-nav__sub">
         <a href="/bo-suu-tap"><?= e(t('mega.all_collections')) ?></a>
         <?php foreach ($collectionsNav as $bst): ?>
-            <a href="/bo-suu-tap/<?= e(rawurlencode($bst['slug'])) ?>"><?= e($bst['name']) ?></a>
+<?php /* lang="vi" — cùng quy ước với bản desktop trong
+                     _layout/collection-menu.php. */ ?>
+            <a href="/bo-suu-tap/<?= e(rawurlencode($bst['slug'])) ?>" lang="vi"><?= e($bst['name']) ?></a>
         <?php endforeach; ?>
     </div>
 </details>

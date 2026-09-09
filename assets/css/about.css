@@ -85,7 +85,7 @@
     margin-bottom: var(--space-3);
     color: var(--eyebrow);
     font-size: var(--fs-label);
-    letter-spacing: .14em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -102,7 +102,7 @@
 
 .about-h2 em {
     font-style: italic;
-    color: var(--accent);
+    color: var(--ink);
 }
 
 /* `p.text-muted` — hai đoạn liền nhau, không có gạch đầu dòng, không thụt lề. */
@@ -199,7 +199,7 @@
 
 .about-vlead__title em {
     font-style: italic;
-    color: var(--accent);
+    color: var(--ink);
 }
 
 .about-values__note {
@@ -226,7 +226,7 @@
     gap: var(--space-4);
     padding: var(--space-8) var(--space-5);
     background: var(--surface-raised);
-    box-shadow: var(--elev-1);
+    box-shadow: none;
 }
 
 /* Bản mẫu đặt một icon 42px ở đây với `mb-5`. Site không có bộ icon cho bốn
@@ -235,7 +235,7 @@
 .about-vcard__num {
     font-family: var(--font-mono);
     font-size: var(--fs-h4);
-    color: var(--accent);
+    color: var(--ink);
     line-height: 1;
 }
 
@@ -302,7 +302,7 @@
 .js .about .reveal {
     opacity: 0;
     transform: translateY(12px);
-    transition: opacity .5s ease, transform .5s ease;
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
 
 .js .about .reveal.visible {

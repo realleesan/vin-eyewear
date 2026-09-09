@@ -69,6 +69,11 @@ return [
     'cart.more'   => ':n more in your cart',
     'cart.view'   => 'View cart',
 
+    /* Dòng dẫn dưới tiêu đề trang giỏ. Cố ý NGẮN và KHÁC cart.empty_title —
+       hai chuỗi đứng trên cùng một màn hình. */
+    'cart.lead_count'       => ':n items in your bag',
+    'cart.lead_empty'       => 'Nothing here yet',
+
     'cart.empty_title'      => 'Your cart is empty',
     'cart.keep_shopping'    => 'Keep shopping',
     'cart.select_all'       => 'Select all (:n)',
@@ -242,6 +247,19 @@ return [
     'pd.wait_title'   => 'Notify me when back in stock',
     'pd.wait_option'  => 'Which option are you waiting for',
     'pd.wait_go'      => 'Notify me',
+    // Two collapsible groups under the buy buttons on the product page — see
+    // the .pdacc block in product/detail.php. "Details" open, shipping closed.
+    // Header search overlay — _layout/header.php + search-suggest.js.
+    'search.trends'       => 'Search trends',
+    'search.recent'       => 'Recently viewed',
+    'search.clear_recent' => 'Remove',
+    'search.all_results'  => 'View all results',
+    'search.close'        => 'Close search',
+    'search.searching'    => 'Searching…',
+    'pd.acc_details'  => 'Details',
+    'pd.acc_shipping' => 'Shipping & returns',
+    'pd.acc_shipping_text' => 'Free nationwide delivery on orders over 1,000,000₫. 7-day returns, 24-month warranty.',
+    'pd.acc_shipping_link' => 'Read the full policy',
     'pd.specs'        => 'Specifications',
     'pd.specs_empty'  => 'No specifications recorded for this product yet.',
     'pd.reviews'      => 'Reviews',

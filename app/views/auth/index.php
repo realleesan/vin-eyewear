@@ -158,12 +158,21 @@ $showOr = $step === '';
 
                     <div class="authfield">
                         <div class="authfield__row">
-                            <span class="authfield__label">Mật khẩu</span>
+                            <?php /* <label for> chứ không <span>: ô mật khẩu ở màn này KHÔNG
+                                     nằm trong một <label> bọc ngoài như mọi ô khác của luồng
+                                     tài khoản, vì hàng nhãn còn có liên kết "Quên mật khẩu?"
+                                     và <a> lồng trong <label> là HTML sai.
+
+                                     Trước khi có dòng này, ô mật khẩu là trường DUY NHẤT trên
+                                     toàn site không có tên cho trình đọc màn hình — placeholder
+                                     của nó là tám dấu chấm nên không đọc ra được gì. */ ?>
+                            <label class="authfield__label" for="loginPassword">Mật khẩu</label>
                             <a class="authfield__aside" href="/quen-mat-khau">Quên mật khẩu?</a>
                         </div>
 
                         <?php partial('auth/_password', [
                             'pw_name'     => 'password',
+                            'pw_id'       => 'loginPassword',
                             'pw_auto'     => 'current-password',
                             'pw_holder'   => '••••••••',
                             'pw_required' => true,

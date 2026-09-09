@@ -150,6 +150,28 @@
 </IfModule>
 
 # ----------------------------------------------------------------------------
+# 3b. BỘ NHỚ ĐỆM CHO TÀI NGUYÊN TĨNH
+#
+# TRƯỚC ĐỢT NÀY KHÔNG CÓ HEADER NÀO CẢ. Không có Cache-Control thì trình duyệt
+# TỰ ĐOÁN thời hạn (heuristic: khoảng 10% tuổi của Last-Modified), và đó là chỗ
+# sinh ra cảnh "đã sửa CSS rồi mà máy vẫn hiện bản cũ" — người sửa nhìn thấy
+# bản mới, người xem thì không, và không ai biết mình đang xem bản nào.
+#
+# AN TOÀN VÌ MỌI ĐƯỜNG DẪN ĐỀU CÓ DẤU VÂN TAY: helper asset() trong core gắn
+# `?v=filemtime(...)` vào từng file. Sửa file là mtime đổi là URL đổi là trình
+# duyệt bắt buộc tải lại — nên đệm một năm không có rủi ro phục vụ bản cũ.
+# `immutable` nói thêm với trình duyệt: đừng cả hỏi lại khi người dùng bấm F5.
+#
+# KHÔNG áp cho .php và .html: chúng do PHP tự đặt header (no-store) vì nội dung
+# đổi theo phiên đăng nhập và theo giỏ hàng.
+# ----------------------------------------------------------------------------
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2?|ttf|otf|eot|jpe?g|png|gif|webp|avif|svg|ico|mp4|webm)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# ----------------------------------------------------------------------------
 # 4. KHÁC
 # ----------------------------------------------------------------------------
 

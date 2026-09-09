@@ -137,6 +137,7 @@ $faces = [
                 <li class="qcard">
                     <div class="qcard__media">
                         <img src="<?= e($card['image']) ?>" alt="<?= e($card['alt']) ?>"
+                             width="1600" height="900"
                              loading="lazy" decoding="async">
                     </div>
 
@@ -225,13 +226,23 @@ $faces = [
                                 <li class="qface__item">
                                     <button type="button" class="qface__card"
                                             data-qface-pick="<?= $i ?>" aria-pressed="false">
+                                        <?php
+                                        /* MÀU LẤY TỪ CSS, KHÔNG GÕ HEX VÀO MARKUP.
+                                           Bốn nét dưới đây từng gõ cứng #33272a (nâu đen của bảng
+                                           màu CŨ) và #8a2432 (crimson) — nhân với sáu dáng mặt là
+                                           18 nét crimson + 6 nét nâu phục vụ ra HTML trên trang chủ.
+                                           Đó là màu trang trí, đúng thứ bộ đơn sắc loại bỏ, và nó
+                                           vô hình với mọi phép rà soát CSS vì nó nằm trong markup.
+                                           `currentColor` để .qface__draw trong home-sections.css
+                                           quyết định — xem khối màu ở đó. */
+                                        ?>
                                         <svg class="qface__draw" viewBox="0 0 200 270"
                                              aria-hidden="true" focusable="false">
-                                            <path d="<?= e($face['path']) ?>" stroke="#33272a" stroke-width="2" fill="#fff"/>
-                                            <path d="M52 254 H148" stroke="#8a2432" stroke-width="1.5"
+                                            <path d="<?= e($face['path']) ?>" stroke="currentColor" stroke-width="2" fill="none"/>
+                                            <path class="qface__rule" d="M52 254 H148" stroke="currentColor" stroke-width="1.5"
                                                   stroke-dasharray="2 6" stroke-linecap="round"/>
-                                            <circle cx="52" cy="254" r="3.5" stroke="#8a2432" stroke-width="1.5" fill="none"/>
-                                            <circle cx="148" cy="254" r="3.5" stroke="#8a2432" stroke-width="1.5" fill="none"/>
+                                            <circle class="qface__rule" cx="52" cy="254" r="3.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                                            <circle class="qface__rule" cx="148" cy="254" r="3.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
                                         </svg>
                                         <span class="qface__name"><?= e($face['name']) ?></span>
                                     </button>

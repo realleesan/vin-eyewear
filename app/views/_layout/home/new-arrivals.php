@@ -37,47 +37,51 @@ $products = $products ?? [];
 <section class="hnew" data-section="s07" aria-labelledby="hnew-title">
     <div class="hnew__inner">
 
-        <div class="hsec-head">
+        <div class="hsec-head reveal">
             <p class="eyebrow"><?= e(t('home.new.eyebrow')) ?></p>
             <h2 id="hnew-title" class="section-h2 section-h2--plain"><?= e(t('home.new.title')) ?></h2>
         </div>
 
-        <div class="pstrip" data-product-strip>
-            <?php /* Hai mũi tên LUÔN in ra, kể cả khi chưa đủ hàng để trượt.
-                     Lúc đó makeStrip() (assets/js/home.js) tự đặt `disabled` cho
-                     cả hai — chúng mờ đi nhưng vẫn giữ chỗ, nên thêm sản phẩm
-                     trong trang quản trị là băng chạy được ngay, không phải sửa
-                     file nào. Xem .pstrip__arrow:disabled trong home-sections.css
-                     để biết trạng thái mờ trông thế nào. */ ?>
-            <button type="button" class="pstrip__arrow pstrip__arrow--prev"
-                    data-strip="prev" aria-label="<?= e(t('home.strip.prev')) ?>" disabled>
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M15 18l-6-6 6-6"/>
-                </svg>
-            </button>
-            <button type="button" class="pstrip__arrow pstrip__arrow--next"
-                    data-strip="next" aria-label="<?= e(t('home.strip.next')) ?>">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M9 6l6 6-6 6"/>
-                </svg>
-            </button>
-
-            <div class="pstrip__window">
-                <ul class="pstrip__track" role="list">
-                    <?php foreach ($products as $i => $p): ?>
-                        <?php partial('_layout/product-card', [
-                            'product'     => $p,
-                            'badgeTone'   => 'new',
-                            'showCompare' => false,
-                            // CHỈ bốn thẻ đầu: chúng nằm trong khung nhìn ngay
-                            // khi trang mở ra. Bốn thẻ sau nằm ngoài vùng cắt,
-                            // phải bấm mũi tên mới thấy -> để lazy như thường.
-                            'eager'       => $i < 4,
-                        ]); ?>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        </div>
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * BĂNG TRƯỢT NGANG → LƯỚI (Phase 2)
+         *
+         * Khối này từng là `.pstrip`: một băng cuộn ngang có hai mũi tên, do
+         * makeStrip() trong assets/js/home.js điều khiển.
+         *
+         * VÌ SAO ĐỔI: trang chủ có BỐN khối cùng bày sản phẩm/danh mục, và mỗi
+         * khối lại là một hình dạng khác nhau — một khối lưới, một khối băng
+         * trượt 4 thẻ, một khối băng trượt thẻ nhỏ, một khối vỡ hẳn thành một
+         * cột. Cùng một thẻ sản phẩm hiện ra bốn cỡ khác nhau trong một lần
+         * cuộn trang. Đó là thứ đọc ra ngay là "ghép từ nhiều nguồn".
+         *
+         * Nay mọi lưới thẻ của site — trang chủ, /san-pham, /tim-kiem — dùng
+         * ĐÚNG một lớp `.pgrid`: 2 cột trên điện thoại, 3 từ 901px, 4 từ
+         * 1101px. Xem components/product.css.
+         *
+         * HAI MŨI TÊN BỎ THEO, và JS KHÔNG HỎNG: home.js tìm băng trượt bằng
+         * `document.querySelectorAll('[data-product-strip]')` rồi lặp qua kết
+         * quả — không còn phần tử nào thì vòng lặp chạy 0 lần. Không có lỗi,
+         * không có mã chết nào phải gỡ ở đây (makeStrip vẫn phục vụ băng đánh
+         * giá và băng dáng mặt).
+         *
+         * LAZY-LOAD ĐỔI THEO: trước đây chỉ 4 thẻ đầu `eager` vì 4 thẻ sau nằm
+         * ngoài vùng cắt. Lưới thì mọi thẻ đều hiện, nhưng chỉ HÀNG ĐẦU (4 thẻ
+         * ở desktop) nằm trong khung nhìn — nên con số 4 vẫn đúng, chỉ đổi lý do.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        ?>
+        <ul class="pgrid" role="list">
+            <?php foreach ($products as $i => $p): ?>
+                <?php partial('_layout/product-card', [
+                    'product'     => $p,
+                    'badgeTone'   => 'new',
+                    'showCompare' => false,
+                    'eager'       => $i < 4,
+                ]); ?>
+            <?php endforeach; ?>
+        </ul>
 
         <div class="hsec-all">
             <a class="hsec-all__link" href="/san-pham?sort=newest"><?= e(t('home.see_all')) ?></a>

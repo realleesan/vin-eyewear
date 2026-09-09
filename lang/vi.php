@@ -71,6 +71,11 @@ return [
     'cart.more'   => 'Còn :n sản phẩm nữa trong giỏ',
     'cart.view'   => 'Xem giỏ hàng',
 
+    /* Dòng dẫn dưới tiêu đề trang giỏ. Cố ý NGẮN và KHÁC cart.empty_title —
+       hai chuỗi đứng trên cùng một màn hình. */
+    'cart.lead_count'       => ':n sản phẩm trong giỏ của bạn',
+    'cart.lead_empty'       => 'Chưa có sản phẩm nào',
+
     'cart.empty_title'      => 'Giỏ hàng của bạn đang trống',
     'cart.keep_shopping'    => 'Tiếp tục mua sắm',
     'cart.select_all'       => 'Chọn tất cả (:n)',
@@ -244,6 +249,19 @@ return [
     'pd.wait_title'   => 'Thông báo khi có hàng',
     'pd.wait_option'  => 'Phương án bạn đang chờ',
     'pd.wait_go'      => 'Báo cho tôi khi có hàng',
+    // Hai mục xếp gọn dưới nút mua trên trang chi tiết — xem khối .pdacc trong
+    // product/detail.php. Mở sẵn "Chi tiết", gập "Giao hàng & đổi trả".
+    // Lớp phủ tìm kiếm ở đầu trang — _layout/header.php + search-suggest.js.
+    'search.trends'       => 'Xu hướng tìm kiếm',
+    'search.recent'       => 'Đã xem gần đây',
+    'search.clear_recent' => 'Xoá',
+    'search.all_results'  => 'Xem tất cả kết quả',
+    'search.close'        => 'Đóng tìm kiếm',
+    'search.searching'    => 'Đang tìm…',
+    'pd.acc_details'  => 'Chi tiết',
+    'pd.acc_shipping' => 'Giao hàng & đổi trả',
+    'pd.acc_shipping_text' => 'Miễn phí giao hàng toàn quốc cho đơn từ 1.000.000₫. Đổi trả trong 7 ngày, bảo hành 24 tháng.',
+    'pd.acc_shipping_link' => 'Xem chính sách đầy đủ',
     'pd.specs'        => 'Thông số kỹ thuật',
     'pd.specs_empty'  => 'Chưa cập nhật thông số cho sản phẩm này.',
     'pd.reviews'      => 'Đánh giá',

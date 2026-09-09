@@ -1,14 +1,6 @@
 /* ============================================================================
    components/page-head.css — ĐẦU TRANG CON
 
-   Dựng theo khối mở đầu của `about.html` / `contact.html` (Furnish):
-
-       <section class="py-lg-8 py-5 text-center">
-         <div class="container"><div class="row justify-content-center">
-           <div class="col-lg-6">
-             <h1 class="display-5 mb-3">…</h1>
-             <p class="text-muted lead">…</p>
-
    MƯỜI TRANG dùng chung component này — /gioi-thieu · /lien-he · /chinh-sach ·
    /dat-lich · /san-pham · /san-pham/{slug} · /bo-suu-tap · /bo-suu-tap/{slug} ·
    /tim-kiem · /thu-ar. Đây là chỗ một thay đổi về bố cục lan xa nhất, nên nó
@@ -16,42 +8,48 @@
    vào đây, trang nào cần khác thì đè trong CSS của chính nó.
 
    ─────────────────────────────────────────────────────────────────────────────
-   BA THỨ CỦA BẢN CŨ ĐÃ BỎ, VÀ VÌ SAO
+   ĐỔI LỚN CỦA PHASE 2: CĂN GIỮA → CĂN TRÁI THEO CỘT NỘI DUNG
 
-   1. NỀN HỒNG PHẤN sau cả khối. Trang con của Furnish mở đầu bằng chữ trên nền
-      TRẮNG; một dải màu ở đây là thứ đầu tiên phá cảm giác "biên tập".
-   2. BỐ CỤC HAI CỘT (tiêu đề trái · câu dẫn phải). Bản mẫu xếp dọc và căn
-      giữa trong một cột hẹp.
-   3. TIÊU ĐỀ NẶNG. Nay là cỡ `display-5` với nét 400.
+   Bản Phase 1 giữ nguyên khuôn Furnish: một cột hẹp 660px căn giữa trang.
+
+   Đặt khối đó lên trên một lưới sản phẩm chạy gần TRÀN MÀN HÌNH thì tiêu đề
+   trôi lơ lửng giữa trang trong khi lưới bắt đầu từ mép — hai thứ nằm trên hai
+   hệ toạ độ khác nhau. Đó chính là kiểu lệch mà mắt đọc ra ngay là "hai khối
+   này không thuộc về nhau", dù không ai chỉ được ra vì sao.
+
+   Nay khối đầu trang dùng ĐÚNG cột và ĐÚNG lề của nội dung bên dưới
+   (var(--container) + var(--page-edge)), nên mép trái của tiêu đề thẳng hàng
+   với mép trái của thẻ sản phẩm đầu tiên. Đây cũng là cách Gentle Monster xếp
+   đầu trang danh mục.
+
+   CÂU DẪN vẫn bị chặn bề rộng — nhưng bằng `max-width` theo số ký tự đọc được,
+   không phải bằng cách bóp cả khối.
    ============================================================================ */
 
 .pagehead {
-    padding-block: var(--section-pad);
-    text-align: center;
+    padding-block: var(--section-pad) var(--rhythm-sm);
+    text-align: left;
 }
 
 .pagehead__inner {
-    /* Cột 6/12 của bản mẫu, quy ra bề rộng đọc được: một câu dẫn xuống dòng
-       sau khoảng 60 ký tự — đúng chỗ mắt người đọc muốn nghỉ. */
-    max-width: 660px;
+    /* CÙNG cột với nội dung trang — xem khối chú thích trên. */
+    width: 100%;
+    max-width: var(--container);
     margin-inline: auto;
     padding-inline: var(--page-edge);
 }
 
-/* ── Đường dẫn ───────────────────────────────────────────────────────────────
-   Furnish không có breadcrumb. Dựng theo ngôn ngữ của nó: chữ rất nhỏ, IN HOA,
-   giãn rộng, màu phụ — cùng khuôn với nhãn nhóm ở mọi khối khác.
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ── Đường dẫn ───────────────────────────────────────────────────────────── */
 .pagehead__crumbs {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--rhythm-xs);
     font-size: var(--fs-label);
     font-weight: 500;
-    letter-spacing: .12em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--muted);
 }
@@ -59,70 +57,78 @@
 .pagehead__crumbs a {
     color: var(--muted);
     text-decoration: none;
-    transition: color .15s ease;
+    transition: color var(--dur) var(--ease);
 }
 
 .pagehead__crumbs a:hover,
 .pagehead__crumbs a:focus-visible {
     color: var(--ink);
+    text-decoration: underline;
 }
 
 .pagehead__sep {
     color: var(--line-strong);
 }
 
+/* 500, không 600: cả hàng breadcrumb là một nhãn: đổi weight giữa chừng làm
+   bậc cuối trông như một nhãn khác loại. Nó đã khác màu (đen) là đủ. */
 .pagehead__here {
     color: var(--ink);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 /* ── Tiêu đề và câu dẫn ──────────────────────────────────────────────────── */
+
+/* KHÔNG CÒN CRIMSON, KHÔNG CÒN NỀN.
+
+   Bản trước là một viên nền --brand-subtle với chữ --accent (crimson) — mà
+   crimson nay chỉ dành cho giá khuyến mãi, và một viên nền ở đây là đúng thứ
+   "badge thừa" mà bộ này loại bỏ. Nay nó là nhãn eyebrow như mọi nhãn khác. */
 .pagehead__badge {
-    display: inline-block;
+    display: block;
     margin-bottom: var(--space-3);
-    padding: var(--space-1) var(--space-3);
-    background: var(--brand-subtle);
-    color: var(--accent);
-    font-size: var(--fs-micro);
-    font-weight: 700;
-    letter-spacing: .12em;
+    padding: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: var(--fs-label);
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
-/* `display-5` + `mb-3` của bản mẫu. */
 .pagehead__title {
     margin-bottom: var(--space-4);
-    font-size: var(--fs-display);
+    /* Bậc riêng của tiêu đề trang — xem khối --fs-pagehead trong gm.css về lý
+       do không dùng --fs-display ở đây nữa. */
+    font-size: var(--fs-pagehead);
     font-weight: 400;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
+    /* 1.12 chứ không 1.05: tiếng Việt có dấu CHỒNG TẦNG — "Sản phẩm kính mắt"
+       mang cả dấu hỏi trên ả lẫn dấu mũ+hỏi trên ẩ, và ở cỡ lớn với 1.05 phần
+       dấu vươn lên khỏi hộp dòng, chạm vào breadcrumb ngay trên. Đây là khoảng
+       thở mà chữ Latin không dấu không cần tới nhưng chữ Việt thì có. */
+    line-height: 1.12;
+    letter-spacing: var(--tracking-tight);
+    text-wrap: pretty;
 }
 
-/* `text-muted lead` — 1.25rem, màu phụ, không giới hạn thêm bề ngang vì cột
-   bọc ngoài đã hẹp sẵn. */
 .pagehead__lead {
+    /* Chặn theo SỐ KÝ TỰ đọc được, không bóp cả khối — xem khối chú thích đầu
+       file. ~70 ký tự là chỗ mắt người đọc muốn xuống dòng. */
+    max-width: 70ch;
     color: var(--muted);
     font-size: var(--fs-lead);
     line-height: 1.7;
 }
 
 /* ── Hai biến thể ────────────────────────────────────────────────────────────
-   --bare     chỉ có breadcrumb (trang chi tiết sản phẩm): thu đệm dưới lại,
-              nội dung thật bắt đầu ngay sau đó
-   --article  có huy hiệu phía trên tiêu đề
+   --bare     chỉ có breadcrumb (trang chi tiết sản phẩm): thu đệm lại, nội
+              dung thật bắt đầu ngay sau đó
+   --article  có nhãn phía trên tiêu đề
    ──────────────────────────────────────────────────────────────────────────── */
 .pagehead--bare {
-    padding-block: var(--space-5) 0;
-}
-
-.pagehead--bare .pagehead__inner {
-    /* Breadcrumb đứng một mình thì căn TRÁI theo mép cột nội dung, không căn
-       giữa: nó là thanh điều hướng, không phải một khối tiêu đề. */
-    max-width: var(--container);
-    text-align: left;
+    padding-block: var(--rhythm-xs) 0;
 }
 
 .pagehead--bare .pagehead__crumbs {
-    justify-content: flex-start;
     margin-bottom: 0;
 }

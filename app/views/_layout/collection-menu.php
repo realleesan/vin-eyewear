@@ -143,7 +143,9 @@ $bstDongPhu = static function (array $bst): string {
                     </span>
 
                     <span class="mega-feature__body">
-                        <span class="mega-feature__name"><?= e($bst['name']) ?></span>
+<?php /* lang="vi" — tên bộ sưu tập trong CSDL chỉ có tiếng Việt.
+                                 Cùng quy ước đã ghi ở _layout/product-card.php. */ ?>
+                        <span class="mega-feature__name" lang="vi"><?= e($bst['name']) ?></span>
                         <?php /* "· Xem ngay →" bọc riêng và cấm ngắt dòng, nếu
                                  không mũi tên hay rơi xuống một dòng của riêng
                                  nó khi câu giới thiệu dài. */ ?>

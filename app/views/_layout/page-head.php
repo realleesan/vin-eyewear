@@ -43,9 +43,20 @@ $hasTitle = $head_title !== null && $head_title !== '';
 $hasLead  = $head_lead  !== null && $head_lead  !== '';
 $hasBadge = $head_badge !== null && $head_badge !== '';
 
-/* Gọi mà không truyền gì cả gần như luôn là nhầm — im lặng in ra một khối
-   rỗng thì rất khó lần ra, nên thoát hẳn. */
-if ($head_crumbs === [] && !$hasTitle && !$hasLead) {
+/* ┌─ ĐÃ BỎ BREADCRUMB TOÀN SITE (09/09/2026) ───────────────────────────────
+   │ Khối chú thích dài bên dưới lập luận vì sao nên GIỮ nó; lập luận ấy đúng
+   │ cho một site tiện ích, và đã thua khi site đi theo ngôn ngữ nhà mốt:
+   │ "Home / Kính đổi màu / Chroma Đổi Màu Đa Dụng" là dòng đầu tiên mắt chạm
+   │ trên trang sản phẩm, và nó đọc ra là sơ đồ thư mục, không phải trang
+   │ trưng bày. Lối quay ra vẫn còn: wordmark, bảng xổ "Eyewear" có mặt ở mọi
+   │ trang, và nút Lùi.
+   │
+   │ Tham số $head_crumbs VẪN NHẬN để không caller nào gãy — nó chỉ không
+   │ còn được in ra. Trang chỉ truyền crumbs (trang sản phẩm, `--bare`) vì
+   │ thế không còn gì để vẽ → thoát hẳn, không in ra một <section> rỗng có
+   │ đệm.
+   └──────────────────────────────────────────────────────────────────────── */
+if (!$hasTitle && !$hasLead) {
     return;
 }
 
@@ -88,19 +99,7 @@ if (!$hasTitle && !$hasLead) {
 <section class="<?= $classes ?>">
     <div class="pagehead__inner">
 
-        <?php if ($head_crumbs !== []): ?>
-            <nav class="pagehead__crumbs" aria-label="<?= e(t('co.crumbs')) ?>">
-                <a href="/"><?= e(t('nav.home')) ?></a>
-                <?php foreach ($head_crumbs as $crumb): ?>
-                    <span class="pagehead__sep" aria-hidden="true">/</span>
-                    <?php if (!empty($crumb['url'])): ?>
-                        <a href="<?= e($crumb['url']) ?>"><?= e($crumb['label']) ?></a>
-                    <?php else: ?>
-                        <span class="pagehead__here" aria-current="page"><?= e($crumb['label']) ?></span>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </nav>
-        <?php endif; ?>
+        <?php /* Hàng breadcrumb từng in ở đây — xem khối chú thích đầu file. */ ?>
 
         <?php if ($hasTitle || $hasLead): ?>
             <div class="pagehead__row">

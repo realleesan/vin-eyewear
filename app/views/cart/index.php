@@ -36,10 +36,18 @@ $count = count($lines);
 
     <div class="cart__head">
         <h1 class="cart__title"><?= e(t('cart.title')) ?></h1>
+        <?php /* HAI CHUỖI NÀY TỪNG BỊ GÕ CỨNG BẰNG TIẾNG VIỆT, không đi qua t().
+                 Hệ quả: chọn English thì màn giỏ rỗng đọc ra "Cart" → "Chưa có
+                 sản phẩm nào" → "Your cart is empty" → "KEEP SHOPPING", tức là
+                 đổi ngôn ngữ hai lần trong bốn dòng.
+
+                 Khoá riêng cho dòng dẫn chứ không dùng lại cart.empty_title:
+                 dòng dẫn và tiêu đề trạng thái rỗng đứng cách nhau vài trăm
+                 pixel trên cùng một màn, nói y hệt nhau là thừa. */ ?>
         <p class="cart__lead">
-            <?= $count > 0
-                ? $count . ' sản phẩm trong giỏ của bạn'
-                : 'Chưa có sản phẩm nào' ?>
+            <?= e($count > 0
+                ? t('cart.lead_count', [':n' => $count])
+                : t('cart.lead_empty')) ?>
         </p>
     </div>
 
@@ -105,7 +113,12 @@ $count = count($lines);
 
         <div class="cart__empty">
             <span class="cart__empty-ring" aria-hidden="true">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b0736a"
+                <?php /* currentColor, KHÔNG phải #b0736a. Mã màu cũ là một sắc hồng
+                         đất gõ cứng — nó không nằm trong bảng token nào, và bảng
+                         màu trang khách chỉ có đen, xám và ĐÚNG MỘT sắc crimson
+                         dành riêng cho giá khuyến mãi. Một icon giỏ hàng màu hồng
+                         đất là chỗ duy nhất trên site phá quy tắc đó. */ ?>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                      stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M2.5 4h2l2.2 11h11.1l2.2-8H6"></path>
                     <circle cx="8.5" cy="20" r="1.6"></circle>
@@ -198,13 +211,14 @@ $count = count($lines);
                         </button>
 
                         <a class="citem__thumb" href="<?= e($slug) ?>" tabindex="-1" aria-hidden="true">
-                            <img src="<?= e(ProductModel::image($p)) ?>" alt=""
+                            <?php /* asset() bọc ngoài — xem _layout/product-card.php. */ ?>
+                            <img src="<?= e(asset(ProductModel::image($p))) ?>" alt=""
                                  width="96" height="96" loading="lazy" decoding="async">
                         </a>
 
                         <div class="citem__body">
                             <span class="citem__brand"><?= e($p['brand'] ?? 'Vin Eyewear') ?></span>
-                            <h2 class="citem__name notranslate" translate="no"><a href="<?= e($slug) ?>"><?= e($p['name']) ?></a></h2>
+                            <h2 class="citem__name notranslate" translate="no" lang="vi"><a href="<?= e($slug) ?>"><?= e($p['name']) ?></a></h2>
                             <?php if ($variant !== ''): ?>
                                 <span class="citem__variant"><?= e($variant) ?></span>
                             <?php endif; ?>

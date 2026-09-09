@@ -44,7 +44,7 @@
 .cart__title {
     font-size: var(--fs-h2);
     font-weight: 400;
-    letter-spacing: -0.02em;
+    letter-spacing: var(--tracking-tight);
 }
 
 .cart__lead {
@@ -108,17 +108,17 @@
 .cbar__label {
     color: var(--muted);
     font-size: var(--fs-caption);
-    letter-spacing: .06em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
 .cbar__wipe {
     border: 0;
     background: transparent;
-    color: var(--accent);
+    color: var(--ink);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .06em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     cursor: pointer;
 }
@@ -156,10 +156,10 @@
     border: 1px solid var(--line-strong);
     background: var(--surface-raised);
     color: transparent;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     line-height: 1;
     cursor: pointer;
-    transition: background-color .12s ease, border-color .12s ease;
+    transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
 .citem__pick[aria-pressed="true"],
@@ -188,7 +188,7 @@
     color: var(--muted);
     font-size: var(--fs-micro);
     font-weight: 500;
-    letter-spacing: .14em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -204,7 +204,7 @@
 }
 
 .citem__name a:hover {
-    color: var(--accent);
+    color: var(--ink);
 }
 
 .citem__variant {
@@ -238,7 +238,7 @@
 
 .citem__total {
     font-size: var(--fs-body-lg);
-    font-weight: 700;
+    font-weight: 500;
     white-space: nowrap;
 }
 
@@ -247,10 +247,10 @@
     background: transparent;
     color: var(--muted);
     font-size: var(--fs-caption);
-    letter-spacing: .06em;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     cursor: pointer;
-    transition: color .15s ease;
+    transition: color var(--dur) var(--ease);
 }
 
 .citem__del:hover {
@@ -273,7 +273,7 @@
     font-size: var(--fs-body-lg);
     line-height: 1;
     cursor: pointer;
-    transition: background-color .15s ease;
+    transition: background-color var(--dur) var(--ease);
 }
 
 .cstep__btn:hover {
@@ -288,7 +288,7 @@
     background: transparent;
     color: var(--ink);
     font: inherit;
-    font-weight: 600;
+    font-weight: 500;
     text-align: center;
     appearance: textfield;
     -moz-appearance: textfield;
@@ -310,7 +310,7 @@
 }
 
 .clens__name {
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .clens__price {
@@ -338,8 +338,8 @@
 .cvou__title {
     margin-bottom: var(--space-3);
     font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -376,15 +376,16 @@
     background: var(--ink);
     color: var(--on-ink);
     font-size: var(--fs-caption);
-    font-weight: 600;
-    letter-spacing: .08em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     cursor: pointer;
 }
 
 .cvou__apply:hover {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+    color: var(--on-brand);
 }
 
 .cvou__on {
@@ -414,8 +415,8 @@
 .csum__title {
     margin-bottom: var(--space-5);
     font-size: var(--fs-label);
-    font-weight: 600;
-    letter-spacing: .12em;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
@@ -433,11 +434,14 @@
 }
 
 .csum__val {
-    font-weight: 600;
+    font-weight: 500;
     white-space: nowrap;
 }
 
 /* Dòng giảm giá — số âm, mang màu nhấn để nó tách khỏi các dòng cộng. */
+/* SỐ TIỀN ĐƯỢC GIẢM — một trong hai chỗ duy nhất của giỏ hàng còn dùng
+   crimson. Đây là TRẠNG THÁI THƯƠNG MẠI (tiền bớt đi), không phải trang trí,
+   nên nó nằm đúng ngoại lệ đã chốt ở bảng màu — xem PHẦN 1 của gm.css. */
 .csum__val--cut {
     color: var(--accent);
 }
@@ -454,12 +458,12 @@
     justify-content: space-between;
     gap: var(--space-4);
     font-size: var(--fs-body-lg);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .csum__grand-num {
     font-size: var(--fs-h4);
-    font-weight: 700;
+    font-weight: 500;
     white-space: nowrap;
 }
 
@@ -483,17 +487,18 @@
     background: var(--brand);
     color: var(--on-brand);
     font-size: var(--fs-caption);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: .1em;
     text-transform: uppercase;
     text-decoration: none;
     cursor: pointer;
-    transition: background-color .15s ease, border-color .15s ease;
+    transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
 .csum__cta:hover {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: var(--brand-strong);
+    border-color: var(--brand-strong);
+    color: var(--on-brand);
 }
 
 .csum__cta.is-off,
@@ -508,10 +513,24 @@
 /* ============================================================================
    5. GIỎ TRỐNG
    ============================================================================ */
+/* ┌─ XẾP DỌC, CĂN GIỮA ─────────────────────────────────────────────────────
+   │ SỬA MỘT LỖI THẤY RÕ TRÊN TRANG THẬT: vòng tròn icon, dòng "Giỏ hàng đang
+   │ trống" và nút "Tiếp tục mua sắm" nằm ĐÈ LÊN NHAU trên một hàng ngang —
+   │ chữ chạy thẳng vào nền đen của nút.
+   │
+   │ Nguyên nhân: khối chỉ có `text-align: center`, mà ba con của nó đều là
+   │ phần tử inline/inline-flex nên chúng chảy thành MỘT DÒNG rồi tràn lên
+   │ nhau. `text-align` căn giữa được dòng chữ, nhưng không xếp được ba khối.
+   │
+   │ Lưới một cột với `justify-items: center` xếp đúng thứ tự dọc và căn giữa
+   │ cả ba, không phụ thuộc phần tử con là inline hay block. */
 .cart__empty {
     max-width: var(--container);
     margin-inline: auto;
-    padding: var(--space-20) var(--page-edge);
+    padding: var(--rhythm-lg) var(--page-edge);
+    display: grid;
+    justify-items: center;
+    gap: 0;
     text-align: center;
 }
 
@@ -541,14 +560,17 @@
     background: var(--brand);
     color: var(--on-brand);
     font-size: var(--fs-caption);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: .1em;
     text-transform: uppercase;
     text-decoration: none;
 }
 
+/* SẪM ĐI, không đảo sang trắng: nút này không có viền, đảo màu là nó biến
+   mất khỏi nền trắng. Cùng luật với mọi nút đặc khác — xem PHẦN 6 gm.css. */
 .cart__empty-cta:hover {
-    background: var(--accent);
+    background: var(--brand-strong);
+    color: var(--on-brand);
 }
 
 /* ============================================================================

@@ -96,7 +96,10 @@ if (($_SERVER['HTTP_X_BUY_FLOW'] ?? '') === '1') {
  */
 $manhCua = null;
 
-foreach (['X-Catalog' => 'HTTP_X_CATALOG', 'X-Account' => 'HTTP_X_ACCOUNT'] as $ten => $bien) {
+/* X-Search (09/09/2026): lớp phủ tìm kiếm ở đầu trang nạp ngầm /tim-kiem?q=
+   rồi lấy khối .srch ra hiện TẠI CHỖ — assets/js/search-suggest.js. Cùng nhánh,
+   cùng hợp đồng với hai mảnh kia: in nguyên view, không in khung. */
+foreach (['X-Catalog' => 'HTTP_X_CATALOG', 'X-Account' => 'HTTP_X_ACCOUNT', 'X-Search' => 'HTTP_X_SEARCH'] as $ten => $bien) {
     if (($_SERVER[$bien] ?? '') === '1') {
         $manhCua = $ten;
         break;
@@ -172,13 +175,40 @@ if ($manhCua !== null) {
          │ `vietnamese`, mọi chữ có dấu sẽ rơi sang font dự phòng giữa câu.
          │ Lý do đầy đủ ghi ở khối FONT trong layout.css.
          │
-         │ Bốn weight, không hơn: 400 thân bài và tiêu đề, 500 điều hướng,
-         │ 600 nhãn IN HOA, 700 giá tiền. 100/200/300/800/900 không chỗ nào
-         │ dùng nên không tải.
+         │ ┌─ HAI WEIGHT + MỘT KIỂU NGHIÊNG (09/09/2026) ───────────────────
+         │ │ Trước: `wght@400;500;600;700` và KHÔNG có trục nghiêng. Đo bằng
+         │ │ document.fonts trên trang chủ thật:
+         │ │
+         │ │   Be Vietnam Pro normal 400   loaded
+         │ │   Be Vietnam Pro normal 500   loaded
+         │ │   Be Vietnam Pro normal 600   unloaded   ← không chỗ nào dùng
+         │ │   Be Vietnam Pro normal 700   unloaded   ← không chỗ nào dùng
+         │ │
+         │ │ Đối chiếu lại toàn bộ CSS trang khách: 305 lần font-weight 500,
+         │ │ 91 lần 400, đúng MỘT lần 600 — và nó nằm trong furnish.css, file
+         │ │ mà chính khối chú thích bên dưới ghi là không còn nơi nào nạp.
+         │ │ 700 thì không có lần nào. Chú thích cũ ("600 nhãn IN HOA, 700 giá
+         │ │ tiền") mô tả một bản thiết kế đã bị thay.
+         │ │
+         │ │ THÊM TRỤC NGHIÊNG `1,400`, và đây mới là chỗ thấy được bằng mắt:
+         │ │ nửa sau tiêu đề hero in nghiêng ở 72px, cùng 8 chỗ font-style:
+         │ │ italic khác trong CSS. Không tải mặt nghiêng thật thì trình duyệt
+         │ │ TỰ BÓP NGHIÊNG mặt đứng — ở cỡ chữ nhỏ không ai nhận ra, nhưng ở
+         │ │ một tiêu đề 72px thì nét chữ méo và đó đúng là thứ làm chữ trông
+         │ │ rẻ tiền.
+         │ │
+         │ │ CHỈ nghiêng ở weight 400: mọi chỗ dùng italic đều là chữ thường
+         │ │ hoặc tiêu đề nét mảnh, không chỗ nào nghiêng-đậm.
+         │ │
+         │ │ NHẤN MẠNH = 500, KHÔNG PHẢI 700. <strong> và <b> theo mặc định
+         │ │ của trình duyệt là 700; layout.css kéo chúng về 500 để khớp thang
+         │ │ này — xem khối `strong, b` trong đó. Thiếu nó thì 38 chỗ <strong>
+         │ │ trong view lại đòi một mặt 700 không tồn tại và bị bóp đậm giả.
+         │ └────────────────────────────────────────────────────────────────
          └──────────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
     <!-- ══════════════════════════════════════════════════════════════
          CSS DÙNG CHUNG — nạp cho MỌI trang.
@@ -213,16 +243,48 @@ if ($manhCua !== null) {
      * │ này) nhưng lại vẽ qua chính file master này, nên phải chặn tay.
      * └──────────────────────────────────────────────────────────────────────
      */
-    $khungFurnish = ($viewName ?? '') !== 'admin/login';
-    if ($khungFurnish):
+    /*
+     * ĐÃ ĐỔI TÊN $khungFurnish -> $khungGM. Cùng một cái cờ, cùng một điều
+     * kiện; đổi tên vì thứ nó bật/tắt nay là lớp nền Gentle Monster, không
+     * còn là lớp nền Furnish.
+     *
+     * CỜ NÀY LÀ RANH GIỚI CÁCH LY KHU QUẢN TRỊ. gm.css khai lại `:root` để đổi
+     * tông cả cửa hàng; khung quản trị (app/views/admin/_layout/master.php)
+     * nạp layout.css nhưng KHÔNG đi qua file này, nên nó không bao giờ thấy
+     * gm.css. Màn admin/login thì có đi qua đây — và bị cờ này chặn.
+     */
+    $khungGM = ($viewName ?? '') !== 'admin/login';
+    if ($khungGM):
     ?>
-    <link rel="stylesheet" href="<?= asset('assets/vendor/bootstrap.min.css') ?>">
+    <?php
+    /*
+     * ĐÃ THAY BOOTSTRAP BẰNG assets/css/grid.css.
+     *
+     * bootstrap.min.css nặng 232 KB — 46% toàn bộ CSS của trang khách. Đối
+     * chiếu mọi class trong app/views (trừ admin) với những class CHỈ Bootstrap
+     * định nghĩa thì còn đúng 29 cái: lưới 12 cột, `g-4`, và 17 lớp tiện ích.
+     *
+     * grid.css dựng lại đúng 29 cái đó trong ~120 dòng. Không phải "subset
+     * Bootstrap" — là viết lại phần đang dùng, nên nó không lớn dần trở lại.
+     *
+     * File vendor VẪN CÒN trong repo, không xoá: khu quản trị không nạp nó,
+     * nhưng giữ lại thì lùi một bước chỉ là đổi một dòng ở đây.
+     */
+    ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/grid.css') ?>">
     <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('assets/css/layout.css') ?>">
-    <?php /* Cầu nối token → biến --bs-*, và nhịp trang của Furnish. Phải đứng
-             SAU layout.css (đọc token của file đó) và TRƯỚC mọi component. */ ?>
-    <?php if ($khungFurnish): ?>
-    <link rel="stylesheet" href="<?= asset('assets/css/furnish.css') ?>">
+    <?php
+    /* Cầu nối token → biến --bs-*, bảng token tông Gentle Monster, và nhịp
+       trang. Phải đứng SAU layout.css (ghi đè token của file đó) và TRƯỚC mọi
+       component.
+
+       THAY CHỖ CỦA furnish.css. File cũ còn nằm trong repo nhưng KHÔNG còn nơi
+       nào nạp — xoá ở đợt dọn asset (Phase 3), không xoá lúc này để còn đối
+       chiếu nếu một trang chưa dựng lại bị vỡ. */
+    ?>
+    <?php if ($khungGM): ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/gm.css') ?>">
     <?php endif; ?>
     <link rel="stylesheet" href="<?= asset('assets/css/components/ui.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/header.css') ?>">
@@ -241,6 +303,11 @@ if ($manhCua !== null) {
              thoại vẽ ra không có kiểu thì che mất cả trang. */ ?>
     <link rel="stylesheet" href="<?= asset('assets/css/components/buy-modal.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/floating.css') ?>">
+    <?php /* search.css nay nạp cho MỌI trang, không còn riêng 'search/index': lớp
+             phủ tìm kiếm ở đầu trang chèn khối .srch của trang /tim-kiem vào bất
+             kỳ trang nào — thiếu file này thì nhóm cửa hàng/chính sách trong kết
+             quả hiện ra không có kiểu. 9,8 KB, và nó đã có cache từ lần đầu. */ ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/search.css') ?>">
 
     <?php
     /*
@@ -250,7 +317,11 @@ if ($manhCua !== null) {
      * và không thể quên đóng thẻ điều kiện.
      */
     $pageStyles = [
-        'home/index'     => ['components/home-sections.css'],
+        // video-hero.css TRƯỚC home-sections.css: hero nay là khối video tràn
+        // màn hình với bộ lớp .vhero* riêng (xem components/video-hero.css).
+        // home-sections.css vẫn cần cho hai băng sản phẩm còn lại; bộ lớp
+        // .hero* cũ trong đó không còn view nào gọi tới.
+        'home/index'     => ['components/video-hero.css', 'components/home-sections.css'],
         // Trang danh sách nay dựng theo "Vin Eyewear Category.dc.html" và có
         // bộ lớp riêng; nó không còn mượn .section-head/.eyebrow của trang chủ
         // nên cũng không nạp home-sections.css nữa.
@@ -294,7 +365,13 @@ if ($manhCua !== null) {
         'order/paid'     => ['components/bare-shell.css', 'order-complete.css'],
         // Trang đặt lịch nay dựng theo "Vin Eyewear Booking.dc.html" và có bộ
         // lớp riêng (.bk*).
-        'booking/index'  => ['booking.css'],
+        //
+        // home-sections.css đi kèm vì khối "Kiểm tra 5 phút" (.qcheck/.qcard/
+        // .qface/.qlens/.qmodal) đã chuyển từ trang chủ về cuối trang này —
+        // xem khối chú thích cuối app/views/booking/index.php. Hai bộ lớp
+        // KHÔNG đụng nhau: đã đối chiếu 155 tên lớp của file đó với 52 tên lớp
+        // view này dùng, giao nhau bằng 0.
+        'booking/index'  => ['booking.css', 'components/home-sections.css'],
         // Ba trang tài khoản-chưa-đăng-nhập dựng theo "Vin Eyewear Login.dc.html".
         // bare-shell.css phải đứng TRƯỚC auth.css: nó giữ khung rút gọn dùng
         // chung với trang thanh toán, auth.css giữ phần riêng (.authcard/.authform*).
@@ -436,6 +513,34 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
              phải nội dung chính. -->
         <?php partial('_layout/floating-actions'); ?>
 
+        <?php
+        /* ┌─ BOOTSTRAP: CHỈ JAVASCRIPT, KHÔNG BAO GIỜ CSS (09/09/2026) ─────────
+           │ bootstrap.bundle.min.js — 79 KB, tự host trong assets/vendor (cả
+           │ site tự phục vụ asset, chỉ font là ngoại lệ; thêm một origin vào
+           │ đường vẽ trang là thêm một lượt DNS + TLS chặn render).
+           │
+           │ KHÔNG NẠP bootstrap.min.css. File 227 KB ấy vẫn nằm trong repo
+           │ nhưng không nơi nào gọi: nó khai lại `:root`, reset, và mọi lớp
+           │ .btn/.alert/.form-control trùng tên với gm.css — nạp vào là cả hệ
+           │ token đổ. Khối chú thích ở đầu <head> ghi rõ lý do đã thay nó bằng
+           │ assets/css/grid.css 120 dòng.
+           │
+           │ DÙNG ĐÚNG MỘT THỨ: Offcanvas cho ngăn kéo giỏ hàng — xem khối 2a
+           │ trong assets/js/header.js về ba lỗi mà bản tự viết mắc phải (khoá
+           │ cuộn không bù thanh cuộn, bẫy tiêu điểm chỉ bắt Tab, thiếu
+           │ aria-modal). Những thứ còn lại (mega menu, lớp phủ tìm kiếm, hộp
+           │ mua, ngăn kéo bộ lọc, mục gập) VẪN chạy bằng CSS/`<details>` thuần
+           │ và KHÔNG được chuyển sang Bootstrap: chúng đã đúng, mà đổi là sinh
+           │ ra hai hệ chuyển động cạnh tranh trong cùng một đầu trang.
+           │
+           │ ĐỨNG TRƯỚC header.js: file kia đọc window.bootstrap.Offcanvas ngay
+           │ lúc chạy. Cả hai đều `defer` nên giữ đúng thứ tự viết ở đây.
+           │
+           │ Không có file này (mạng hỏng, chặn script) thì thẻ mở giỏ vẫn là
+           │ <a href="/gio-hang"> thật — bấm là sang trang giỏ, không gãy gì.
+           └──────────────────────────────────────────────────────────────────── */
+        ?>
+        <script src="<?= asset('assets/vendor/bootstrap.bundle.min.js') ?>" defer></script>
         <script src="<?= asset('assets/js/header.js') ?>" defer></script>
         <?php /* Gợi ý từ khoá cho ô tìm kiếm ở đầu trang — X29.
 
@@ -471,6 +576,12 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
      */
     $pageScripts = [
         'home/index'    => 'home.js',
+        /* Trang đặt lịch dùng home.js CHỈ vì khối "Kiểm tra 5 phút" chuyển về
+           đây (xem cuối app/views/booking/index.php). Bốn khối còn lại của file
+           ấy — băng hero, hai băng sản phẩm, băng đánh giá — đều vào bằng một
+           câu document.querySelector và thoát ngay khi không thấy phần tử, nên
+           chúng im lặng ở trang này. */
+        'booking/index' => 'home.js',
         'policy/index'  => 'policy.js',
         'ar/tryon'      => 'ar-tryon.js',
         // Chỉ là tăng cường: đổi ô sắp xếp là gửi form luôn, và lọc danh sách
