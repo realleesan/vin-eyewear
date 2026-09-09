@@ -23,11 +23,10 @@
  * đứng: một hàng "Mã xác minh" ngay dưới ô số điện thoại, kèm nút "Gửi mã" gọi
  * ngầm (assets/js/auth.js) để khách không rời trang và không mất chữ đã gõ.
  *
- * HÀNG ẤY LUÔN HIỆN, kể cả khi Zalo OA chưa khai xong. Lúc đó nó đi kèm một
- * dải cảnh báo nói thẳng là chưa có tin nhắn nào gửi đi được, và máy chủ nhận
- * số bất kỳ (xem Otp::bypass() và AuthController::signupCodeProblem). Ẩn hẳn
- * hàng này khi chưa cắm Zalo thì màn đăng ký ở máy phát triển khác hẳn màn ở
- * máy thật — một khác biệt chỉ vỡ ra đúng vào ngày cắm xong.
+ * HÀNG ẤY LUÔN HIỆN, kể cả khi Zalo OA chưa khai xong — lúc đó máy chủ nhận
+ * mọi dãy SÁU CHỮ SỐ (xem Otp::bypass() và AuthController::signupCodeProblem).
+ * Ẩn hẳn hàng này khi chưa cắm Zalo thì màn đăng ký ở máy phát triển khác hẳn
+ * màn ở máy thật — một khác biệt chỉ vỡ ra đúng vào ngày cắm xong.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * LỖI HIỆN DƯỚI TỪNG Ô, KHÔNG GOM VÀO MỘT DẢI ĐỎ
@@ -44,19 +43,6 @@
 $signup = $signup ?? [];
 $old    = $old    ?? [];
 $errors = $errors ?? [];
-
-/**
- * Mã có GỬI ĐI ĐƯỢC thật không.
- *
- * false nghĩa là Zalo OA chưa khai xong: mã vẫn sinh ra nhưng chỉ nằm trong
- * error log, nên màn hình phải nói thẳng điều đó (dải .adev bên dưới) và máy
- * chủ nhận số bất kỳ — xem Otp::bypass() và AuthController::signupCodeProblem().
- *
- * Hàng "Mã xác minh" thì LUÔN HIỆN, cờ này chỉ đổi câu chữ quanh nó. Ẩn hẳn
- * hàng ấy khi chưa cắm Zalo là để lộ ra một màn đăng ký khác hẳn giữa máy phát
- * triển và máy thật — thứ chỉ vỡ ra đúng vào ngày cắm xong.
- */
-$otpGuiDuoc = !Otp::bypass();
 
 /** Ô này có lỗi không. */
 $hong = static fn (string $field): bool =>
@@ -175,28 +161,31 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
      * trống là chuyện bình thường ở thời điểm xin mã.
      */
     ?>
-    <?php if (!$otpGuiDuoc): ?>
-        <?php /* DẢI CẢNH BÁO CHẾ ĐỘ THỬ.
-
-                 Không phải chỗ trang trí: không nói ra thì khách (và cả người
-                 đang kiểm thử) đứng trước một ô trống mà không biết gõ gì, vì
-                 mã thật đang nằm trong error log của máy chủ. Dải này biến mất
-                 ngay khi khai đủ cấu hình Zalo — xem Otp::bypass().
-
-                 ⚠ Đang mở thì bất kỳ ai cũng đăng ký được bằng số của người
-                 khác. Điều kiện mở nằm ở config/auth.php. */ ?>
-        <p class="adev">
-            <strong>Chế độ thử:</strong> Zalo OTP chưa được cắm nên chưa có mã nào
-            gửi tới điện thoại. Bấm <strong>Gửi mã</strong> rồi gõ
-            <strong>số bất kỳ</strong> vào ô dưới đây để đăng ký.
-        </p>
-    <?php endif; ?>
     <div class="authfield acode" data-code data-wait="<?= (int) ($signup['wait'] ?? 0) ?>">
         <label class="authfield__label" for="signup-ma">Mã xác minh</label>
 
         <div class="acode__row">
+            <?php
+            /* CHỈ CHỮ SỐ, VÀ ĐÚNG Otp::LENGTH CHỮ SỐ — ba lớp, không lớp nào thừa.
+ 
+                 inputmode  bàn phím điện thoại mở thẳng bàn số. Chỉ là gợi ý:
+                            bàn phím máy tính vẫn gõ được chữ.
+                 pattern    trình duyệt chặn ngay lúc bấm "Đăng ký", nên khách
+                            biết mình gõ sai TRƯỚC khi mất một vòng tải trang.
+                            `[0-9]*` cũ nhận cả dãy 1–5 số, nên một mã gõ thiếu
+                            vẫn lọt xuống máy chủ và ăn một lượt thử.
+                 title      trình duyệt đọc thuộc tính này làm câu giải thích
+                            trong bong bóng lỗi; không có nó thì bong bóng chỉ
+                            nói chung chung "vui lòng khớp định dạng yêu cầu".
+ 
+               Cả ba đều là của trình duyệt, tức là tắt JavaScript vẫn chạy
+               nhưng gọi thẳng POST thì bỏ qua được — chốt thật nằm ở
+               AuthController::signupCodeProblem(). */
+            ?>
             <input class="authfield__input acode__input<?= $xau('ma') ?>" id="signup-ma"
-                   type="text" name="ma" inputmode="numeric" pattern="[0-9]*"
+                   type="text" name="ma" inputmode="numeric"
+                   pattern="[0-9]{<?= Otp::LENGTH ?>}"
+                   title="Mã xác minh gồm <?= Otp::LENGTH ?> chữ số."
                    maxlength="<?= Otp::LENGTH ?>" autocomplete="one-time-code"
                    placeholder="<?= str_repeat('•', Otp::LENGTH) ?>">
 

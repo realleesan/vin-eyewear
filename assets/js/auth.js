@@ -250,7 +250,42 @@
     'use strict';
 
     var box = document.querySelector('[data-code]');
-    if (!box || !window.fetch) return;
+    if (!box) return;
+
+    /* ── Ô MÃ CHỈ NHẬN CHỮ SỐ ────────────────────────────────────────────
+ 
+       ĐỨNG TRƯỚC CHỐT `window.fetch` bên dưới, và đó là chủ ý: việc lọc này
+       không dính gì tới cú gọi ngầm, nên một trình duyệt cũ không có fetch
+       vẫn phải được lọc. Gộp vào khối dưới là để nó biến mất đúng ở nơi khó
+       kiểm thử nhất.
+ 
+       Lọc chứ không CHẶN phím (keydown): chặn phím thì hỏng cả dán chuột,
+       dán bằng bàn phím, gõ tiếng Việt qua bộ gõ, và tự điền mã OTP của điện
+       thoại. Nghe `input` thì mọi đường nhập liệu đều đi qua đây.
+ 
+       Con trỏ phải dời theo số ký tự VỪA BỊ BỎ Ở PHÍA TRƯỚC nó, nếu không
+       gõ chèn một chữ cái vào giữa dãy sẽ ném con trỏ về cuối ô.
+ 
+       Đây chỉ là lớp tiện tay. Hai chốt thật là `pattern` của ô (trình duyệt)
+       và AuthController::signupCodeProblem() (máy chủ). */
+    var oMa = box.querySelector('.acode__input');
+
+    if (oMa) {
+        oMa.addEventListener('input', function () {
+            var sach = oMa.value.replace(/\D/g, '');
+
+            if (sach === oMa.value) return;
+
+            var viTri = oMa.selectionStart;
+            var bo    = (oMa.value.slice(0, viTri).match(/\D/g) || []).length;
+
+            oMa.value = sach;
+
+            try { oMa.setSelectionRange(viTri - bo, viTri - bo); } catch (err) { /* ô số cũ */ }
+        });
+    }
+
+    if (!window.fetch) return;
 
     var form  = box.closest('form');
     var btn   = box.querySelector('[data-send-code]');

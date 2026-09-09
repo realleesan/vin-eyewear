@@ -365,6 +365,22 @@ class AuthController extends BaseController
         }
 
         /*
+         * CHƯA ĐỦ SÁU CHỮ SỐ THÌ KHÔNG PHẢI MỘT LẦN DÒ MÃ — ĐỪNG TRỪ LƯỢT.
+         *
+         * Không có chốt này thì bấm "Xác minh" với sáu ô còn trống cũng ăn một
+         * lượt: $code là chuỗi rỗng, và password_verify('', $hash) trượt như
+         * mọi mã sai khác. Năm lần bấm nhầm là mất mã, phải xin lại từ đầu —
+         * mà khách chưa gõ chữ số nào.
+         *
+         * Cùng luật, cùng câu chữ với signupCodeProblem() ở luồng đăng ký: một
+         * mã OTP là đúng Otp::LENGTH chữ số ở cả hai màn.
+         */
+        if (preg_match('/^[0-9]{' . Otp::LENGTH . '}$/', (string) $code) !== 1) {
+            flash('auth_error', sprintf('Mã xác minh gồm %d chữ số.', Otp::LENGTH));
+            redirect('/quen-mat-khau?buoc=ma');
+        }
+
+        /*
          * user_id rỗng nghĩa là chuỗi khách gõ KHÔNG khớp tài khoản nào.
          *
          * Mã của yêu cầu đó chưa từng được gửi đi đâu (xem
@@ -698,12 +714,39 @@ class AuthController extends BaseController
 
         /*
          * ─────────────────────────────────────────────────────────────────
-         * ZALO OA CHƯA CẮM: SỐ NÀO CŨNG QUA.
+         * HÌNH DẠNG TRƯỚC, NỘI DUNG SAU — VÀ ĐỨNG TRÊN MỌI NHÁNH BÊN DƯỚI
+         *
+         * Mã OTP là ĐÚNG Otp::LENGTH chữ số, không hơn không kém, không chữ
+         * cái. Chốt ở đây chứ không phó mặc cho phép so hash bên dưới, vì hai
+         * lý do:
+         *
+         *   · "abc" hay "123" mà rơi xuống Otp::matches() thì trượt, và cú
+         *     trượt ấy ĂN MỘT LƯỢT trong năm lượt của MAX_TRIES. Gõ hụt một
+         *     chữ số không phải một lần dò mã — trừ lượt vì nó là phạt nhầm
+         *     người, và năm lần gõ hụt là mất mã, phải xin lại từ đầu.
+         *   · Câu báo nói đúng việc phải sửa. "Mã xác minh không đúng. Bạn còn
+         *     4 lần thử" cho một ô gõ thiếu số là câu chữ đánh lạc hướng.
+         *
+         * Ô RỖNG THÌ KHÔNG XÉT Ở ĐÂY: nó có câu riêng bên dưới, và ở nhánh
+         * "chưa xin mã" thì câu đúng lại là 'bấm "Gửi mã"' chứ không phải
+         * 'nhập mã' — thứ tự ấy phải giữ nguyên.
+         *
+         * TRƯỚC BYPASS, KHÔNG PHẢI SAU. Zalo chưa cắm là nới lỏng việc mã có
+         * KHỚP hay không, không phải nới lỏng việc nó có phải một mã hay
+         * không — bỏ chốt này vào trong bypass thì ô mã nhận cả "abc".
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if ($ma !== '' && preg_match('/^[0-9]{' . Otp::LENGTH . '}$/', $ma) !== 1) {
+            return sprintf('Mã xác minh gồm %d chữ số.', Otp::LENGTH);
+        }
+
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * ZALO OA CHƯA CẮM: DÃY SÁU SỐ NÀO CŨNG QUA.
          *
          * Chưa khai đủ token và mã mẫu ZNS thì mã sinh ra chỉ nằm trong error
          * log — khách không có đường nào biết nó, nên nếu vẫn so mã thì luồng
-         * đăng ký đứng hẳn tại đây. Trong quãng đó, ô mã chỉ còn là một cái
-         * cửa hình thức, và màn hình đã nói thẳng điều ấy bằng dải .adev.
+         * đăng ký đứng hẳn tại đây.
          *
          * Ô RỖNG VẪN BỊ CHẶN: bấm nhầm nút "Đăng ký" thì không nên tính là đã
          * xác minh. Hạn 120 giây và số lần thử thì bỏ theo — giữ lại chỉ làm
@@ -963,11 +1006,23 @@ class AuthController extends BaseController
             'full_name' => trim((string) ($_POST['full_name'] ?? '')),
             'phone'     => trim((string) ($_POST['phone'] ?? '')),
             'email'     => trim((string) ($_POST['email'] ?? '')),
-            /* is_array(): form CŨ gửi mã bằng sáu ô tên `ma[]`. Một trang cũ
-               còn mở trong tab khác, hay một bookmark, vẫn POST đúng dạng ấy
-               — ép mảng sang chuỗi là một warning trên log production. */
+            /*
+             * is_array(): form CŨ gửi mã bằng sáu ô tên `ma[]`. Một trang cũ
+             * còn mở trong tab khác, hay một bookmark, vẫn POST đúng dạng ấy
+             * — ép mảng sang chuỗi là một warning trên log production.
+             *
+             * CHỈ BÓC KHOẢNG TRẮNG, KHÔNG BÓC CHỮ CÁI. Bản trước dùng `/\D+/`,
+             * tức nuốt lặng mọi thứ không phải chữ số: "12ab34" thành "1234",
+             * rồi "1234" trượt phép so hash và ĂN MỘT LƯỢT thử — khách thấy
+             * "Mã xác minh không đúng, còn 4 lần" cho một ô họ gõ đủ sáu ký
+             * tự. Giữ nguyên thứ khách gõ thì signupCodeProblem() nói đúng
+             * bệnh: "Mã xác minh gồm 6 chữ số."
+             *
+             * Khoảng trắng thì vẫn bóc: dán "123 456" từ tin nhắn là chuyện
+             * thường, và đó không phải một lỗi đáng bắt khách sửa tay.
+             */
             'ma'        => preg_replace(
-                '/\D+/',
+                '/\s+/u',
                 '',
                 is_array($_POST['ma'] ?? null) ? implode('', $_POST['ma']) : (string) ($_POST['ma'] ?? '')
             ) ?? '',
