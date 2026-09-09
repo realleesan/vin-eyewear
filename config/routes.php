@@ -157,16 +157,29 @@ return [
      */
     'auth/dang-ky'          => 'AuthController@signupSubmit',   // POST — tạo tài khoản
     'auth/dang-ky/gui-ma'   => 'AuthController@signupSendCode', // POST — xin mã xác minh
+    /*
+     * ĐĂNG KÝ BẰNG GOOGLE LÀ MỘT CÁCH RIÊNG, KHÔNG PHẢI MỘT NÚT CỦA FORM TRÊN.
+     *
+     * Chọn xong tài khoản ở Google thì khách rơi vào màn "Hoàn tất tạo tài
+     * khoản" này: email điền sẵn và khoá, còn họ tên, số điện thoại (không
+     * bắt buộc) và ô tick Điều khoản thì khai tại đây. Tài khoản ra đời ở cú
+     * POST bên dưới, KHÔNG phải ở 'auth/google/callback'.
+     *
+     * Hai địa chỉ chứ không phải một, cùng nếp với 'auth/dang-ky' ở trên:
+     * Router không lọc theo phương thức, nên gộp làm một là mỗi action phải
+     * tự đoán mình đang được gọi kiểu gì.
+     */
+    'auth/dang-ky/google'     => 'AuthController@googleSignup',       // GET  — màn hoàn tất
+    'auth/dang-ky/google/tao' => 'AuthController@googleSignupSubmit', // POST — tạo tài khoản
     'auth/dang-xuat'    => 'AuthController@logout',     // POST
     /*
-     * Đăng nhập/đăng ký bằng Google.
+     * Đăng nhập/đăng ký bằng Google — hai chặng đầu.
      *
-     * 'auth/google' nhận CẢ GET LẪN POST — Router không lọc theo phương thức,
-     * và googleStart() cố ý dùng cả hai: GET là thẻ <a> ở màn đăng nhập (phải
-     * chạy khi không có JavaScript), POST là nút ở màn đăng ký, nơi cú bấm
-     * phải mang theo ô tick Điều khoản (BR-UC.USER.01-05).
-     *
-     * Địa chỉ callback thì luôn là GET — Google gọi tới nên ta không chọn được.
+     * Cả hai là GET. 'auth/google' chỉ sinh một chuỗi `state` rồi chuyển
+     * hướng, không đổi gì cả; ô tick Điều khoản nay nằm ở màn hoàn tất
+     * ('auth/dang-ky/google' bên trên) chứ không đi kèm cú bấm này nữa, nên
+     * nút ở màn đăng ký cũng trở lại là một thẻ <a> thường. Địa chỉ callback
+     * thì luôn là GET — Google gọi tới nên ta không chọn được.
      */
     'auth/google'          => 'AuthController@googleStart',
     'auth/google/callback' => 'AuthController@googleCallback',

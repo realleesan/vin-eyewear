@@ -273,9 +273,10 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
      * signupSubmit() kiểm lại trước khi gọi register(), vì tắt JavaScript hay
      * gọi thẳng POST /auth/dang-ky đều bỏ qua được thuộc tính này.
      *
-     * Ô này CŨNG là ô đồng ý của nút "Tiếp tục với Google" — nút đó gửi đi
-     * cùng form này qua thuộc tính form="signupform". Vì thế không có ô tick
-     * thứ hai ở dưới, và câu chữ nói về "tạo tài khoản" nói chung.
+     * Ô này CHỈ thuộc về form này. Nút "Tiếp tục với Google" bên dưới từng gửi
+     * đi cùng form này (form="signupform") để mượn ô tick ấy — nay không còn:
+     * đăng ký bằng Google có màn "Hoàn tất tạo tài khoản" riêng với ô tick của
+     * chính nó (auth/google-signup.php). Hai cách, hai ô tick.
      */
     ?>
     <?php /* Ô tick và câu báo của nó nằm trong MỘT khối riêng: .authform giãn

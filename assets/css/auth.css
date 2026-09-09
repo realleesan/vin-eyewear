@@ -130,6 +130,30 @@
     min-width: 0;
 }
 
+/* ── Khung MỘT CỘT: màn "Hoàn tất tạo tài khoản" bằng Google ───────────────
+
+   Cùng cái thẻ, bỏ cột ảnh. Khách đang ở GIỮA một luồng — đi tiếp hoặc bỏ dở
+   — chứ không đứng trước một ngã ba để chọn cách đăng ký, nên ảnh thương hiệu
+   và hai liên kết đổi tab đều không có việc gì ở đây.
+
+   560px chứ không 460px như cột form của thẻ hai cột: đứng một mình thì bề
+   ngang ấy trông như một cột bị hụt mất nửa kia. */
+.authcard--solo {
+    display: block;
+    width: 560px;
+}
+
+/* Thẻ một cột thì không có gì để canh giữa theo chiều dọc, và `center` sẽ
+   khoá chiều cao lại khi form dài ra vì mấy câu báo lỗi. */
+.authcard--solo .authcard__panel {
+    justify-content: flex-start;
+    padding: 48px 44px;
+}
+
+@media (max-width: 600px) {
+    .authcard--solo .authcard__panel { padding: 36px 24px; }
+}
+
 .authhead {
     display: flex;
     flex-direction: column;
@@ -215,6 +239,23 @@
 /* Chỉ tô đỏ SAU khi người dùng đã rời ô và gõ sai — :user-invalid, không phải
    :invalid. :invalid tô đỏ mọi ô bắt buộc ngay khi trang vừa mở. */
 .authfield__input:user-invalid { border-color: var(--danger); }
+
+/* Ô Email ở màn "Hoàn tất tạo tài khoản" bằng Google: điền sẵn và khoá.
+
+   Nền chìm + chữ nhạt một nấc để đọc ra ngay là "thông tin cho biết", không
+   phải "ô chờ bạn gõ" — nhưng KHÔNG mờ tới mức khó đọc: đây đúng là địa chỉ
+   khách cần soi lại xem mình có chọn nhầm tài khoản Google hay không.
+
+   opacity của <input disabled> do trình duyệt đặt (Safari nặng tay nhất), nên
+   phải ghi đè, nếu không hai trình duyệt hiện hai độ mờ khác nhau. */
+.authfield__input--locked:disabled {
+    opacity: 1;
+    background: var(--surface-sunken);
+    border-color: var(--line);
+    color: var(--u-note);
+    cursor: default;
+    -webkit-text-fill-color: var(--u-note);   /* Safari bỏ qua `color` trên ô khoá */
+}
 
 .authfield__hint {
     font-size: 12px;

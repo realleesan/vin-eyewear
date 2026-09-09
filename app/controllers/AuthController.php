@@ -1102,34 +1102,67 @@ class AuthController extends BaseController
         redirect($to);
     }
 
+    /*
+     * ═════════════════════════════════════════════════════════════════════
+     * ĐĂNG KÝ BẰNG GOOGLE — MỘT CÁCH RIÊNG, BA CHẶNG
+     *
+     *   1. googleStart()         bấm "Tiếp tục với Google" -> sang Google.
+     *   2. googleCallback()      Google trả về. TRA, KHÔNG TẠO. Chưa có tài
+     *                            khoản thì cất thông tin đã xác thực vào
+     *                            phiên rồi đẩy sang chặng 3.
+     *   3. googleSignup()        màn "Hoàn tất tạo tài khoản": email điền sẵn
+     *      googleSignupSubmit()  và khoá, khách khai họ tên + số điện thoại
+     *                            (không bắt buộc) + tick Điều khoản. Tài khoản
+     *                            ra đời ở ĐÂY, không sớm hơn.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO CÓ CHẶNG 3 — TRƯỚC ĐÂY KHÔNG CÓ
+     *
+     * Bản cũ tạo tài khoản ngay trong callback. Nghĩa là mọi thứ tài khoản
+     * mới cần phải được thu thập TRƯỚC khi đi Google, mà chỗ duy nhất làm
+     * được việc đó là form đăng ký bằng số điện thoại — nên nút "Tiếp tục với
+     * Google" phải là nút submit của form ấy, để mượn ô tick Điều khoản của
+     * nó. Hai cách đăng ký dính vào nhau ở đúng chỗ khó thấy nhất: bỏ ô tick
+     * khỏi form kia là lặng lẽ mở một lối tạo tài khoản không có đồng ý.
+     *
+     * Nay mỗi cách có form riêng, ô tick riêng, phép kiểm riêng. Cờ
+     * `_google_consent` và tham số $allowCreate đi theo bản cũ: chúng sinh ra
+     * chỉ để bù cho việc callback được phép tạo tài khoản, mà nay nó không
+     * được phép nữa.
+     * ═════════════════════════════════════════════════════════════════════
+     */
+
+    /**
+     * Thông tin Google đã xác thực, đang chờ khách hoàn tất hồ sơ.
+     *
+     * Nằm trong PHIÊN chứ không phải trên địa chỉ: `sub` là định danh vĩnh
+     * viễn của một con người ở phía Google, và một chuỗi như thế đi qua thanh
+     * địa chỉ là đi vào lịch sử duyệt web, vào Referer gửi sang bên thứ ba,
+     * và vào log của mọi proxy trên đường — cùng lý do đã ghi ở khối
+     * "ĐĂNG KÝ — MỘT MÀN" phía trên.
+     */
+    private static function googlePending(): ?array
+    {
+        $p = $_SESSION['_google_pending'] ?? null;
+
+        return is_array($p) && ($p['sub'] ?? '') !== '' ? $p : null;
+    }
+
     /**
      * Bấm "Tiếp tục với Google" — đẩy khách sang Google.
      *
      * ─────────────────────────────────────────────────────────────────────
-     * MỘT ĐỊA CHỈ, HAI PHƯƠNG THỨC — VÀ CHÚNG KHÁC NHAU Ở ĐÚNG MỘT THỨ
+     * GET, VÀ CHỈ GET — Ở CẢ HAI MÀN
      *
-     *   GET   từ màn ĐĂNG NHẬP. Một thẻ <a> phải chạy được khi không có
-     *         JavaScript, và bản thân bước này chưa đổi gì cả.
+     * Nút này ở màn đăng ký từng là nút submit của chính form đăng ký (POST),
+     * để cú bấm mang theo ô tick Điều khoản của form ấy. Nay cú tick nằm ở
+     * màn "Hoàn tất tạo tài khoản" — đúng chỗ tài khoản thật sự ra đời — nên
+     * nút trở lại là một thẻ <a> thường ở cả hai màn.
      *
-     *   POST  từ màn ĐĂNG KÝ. Nút ở đó là nút submit của chính form đăng ký
-     *         (form="signupform"), nên cú bấm mang theo ô tick Điều khoản —
-     *         BR-UC.USER.01-05 bắt cả hai phương thức đăng ký đều phải tick.
-     *         Không tick thì dừng ngay tại đây, chưa đi Google lần nào.
-     *
-     * Cờ $_SESSION['_google_consent'] là thứ phân biệt hai đường ở bước sau:
-     * googleCallback() chỉ được phép TẠO tài khoản mới khi cờ này bật. Nhờ nó,
-     * người bấm Google ở màn đăng nhập vẫn đăng nhập được vào tài khoản có
-     * sẵn (AF-01) mà không mở được một lối tạo tài khoản không qua ô tick.
-     *
-     * CỜ ẤY GIỮ CHÍNH CHUỖI `state` CỦA LƯỢT NÀY, không phải một giá trị
-     * true/false. Mở hai tab — tab đăng ký tick rồi bấm, sau đó tab đăng nhập
-     * bấm — thì tab sau ghi đè `_google_state`, nên callback của tab sau hợp
-     * lệ; một cờ true/false sẽ theo nó vào và tạo tài khoản cho một lượt chưa
-     * hề đi qua ô tick nào. So `state` thì cú tick chỉ dùng được cho đúng lượt
-     * sinh ra nó.
-     *
-     * Thứ chống giả mạo của bản thân luồng OAuth là tham số `state` — chuỗi
-     * ngẫu nhiên lưu trong session và Google trả lại nguyên văn ở bước sau.
+     * Được phép là GET vì bước này KHÔNG ĐỔI GÌ CẢ: nó chỉ sinh một chuỗi
+     * `state` rồi chuyển hướng. Thứ chống giả mạo của luồng OAuth là chính
+     * `state` ấy — lưu trong phiên, Google trả lại nguyên văn ở bước sau, và
+     * GoogleAuth::exchange() so bằng hash_equals.
      * ─────────────────────────────────────────────────────────────────────
      */
     public function googleStart(): void
@@ -1139,45 +1172,10 @@ class AuthController extends BaseController
             redirect('/auth');
         }
 
-        $laDangKy = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
-
-        if ($laDangKy) {
-            $ve = $this->signupTarget($_POST['redirect'] ?? null);
-
-            if (!csrfCheck($_POST['_token'] ?? null)) {
-                flash('auth_error', 'Phiên làm việc đã hết hạn, vui lòng thử lại.');
-                redirect($this->signupBack($ve));
-            }
-
-            /* Nhớ lại chữ đã gõ: khách điền dở form rồi đổi ý bấm Google, bị
-               chặn vì chưa tick, thì quay về phải thấy nguyên những gì mình
-               vừa gõ. */
-            $_SESSION['_old_auth'] = [
-                'full_name' => trim((string) ($_POST['full_name'] ?? '')),
-                'phone'     => trim((string) ($_POST['phone'] ?? '')),
-                'email'     => trim((string) ($_POST['email'] ?? '')),
-                'dong_y'    => !empty($_POST['dong_y']),
-            ];
-
-            /* EF-12, và đây là lớp DUY NHẤT còn lại cho nút này: nút mang
-               formnovalidate (nó không cần họ tên hay mật khẩu), nên trình
-               duyệt không kiểm cả ô tick giùm nữa. */
-            if (empty($_POST['dong_y'])) {
-                $_SESSION['_signup_errors'] = [
-                    'dong_y' => 'Vui lòng đồng ý với Điều khoản và Chính sách để đăng ký.',
-                ];
-                redirect($this->signupBack($ve));
-            }
-        } else {
-            /* Vào bằng đường đăng nhập thì KHÔNG mang cờ đồng ý. Xoá hẳn chứ
-               không để nguyên: cờ sót lại từ một lượt bấm trước là một cú
-               tick đã dùng rồi được đem dùng lại cho một tài khoản khác. */
-            unset($_SESSION['_google_consent']);
-        }
-
         /* Nhớ khách xuất phát từ tab nào, để mọi lối thoát lỗi ở bước sau trả
            họ về đúng màn ấy — mục Giao diện của đặc tả nói lỗi Google phải
            hiện "trên màn hình đăng ký". */
+        $laDangKy = ($_GET['tab'] ?? '') === 'dang-ky';
         $_SESSION['_google_tab'] = $laDangKy ? 'dang-ky' : 'dang-nhap';
 
         /* Đã đăng nhập rồi thì không có việc gì ở đây.
@@ -1190,26 +1188,30 @@ class AuthController extends BaseController
             redirect('/tai-khoan');
         }
 
+        /* Một lượt mới thì bỏ hẳn lượt dở trước đó: khách bấm Google, bỏ giữa
+           chừng ở màn hoàn tất, rồi quay lại bấm bằng một tài khoản Google
+           khác — không dọn thì thông tin của tài khoản cũ còn nằm đó. */
+        unset($_SESSION['_google_pending']);
+
         /* Đích sau khi xong — BR-UC.USER.01-09. Vào từ màn đăng ký thì mặc
            định là trang chủ, vào từ màn đăng nhập thì /tai-khoan; có tham số
            `redirect` (do requireLogin() gắn) thì cả hai đều quay lại đúng
            nghiệp vụ đang dở. */
         $after = $laDangKy
-            ? $this->signupTarget($_POST['redirect'] ?? null)
+            ? $this->signupTarget($_GET['redirect'] ?? null)
             : $this->loginTarget($_GET['redirect'] ?? null);
 
-        $state = bin2hex(random_bytes(16));
-
-        if ($laDangKy) {
-            $_SESSION['_google_consent'] = $state;
-        }
-
         // redirect() chỉ đặt header Location nên nhận cả địa chỉ tuyệt đối.
-        redirect(GoogleAuth::authUrl($state, $after));
+        redirect(GoogleAuth::authUrl(bin2hex(random_bytes(16)), $after));
     }
 
     /**
      * Google gọi ngược về đây kèm `code` và `state`.
+     *
+     * HAI NGẢ, và không ngả nào tạo tài khoản:
+     *   · nối chìa   — khách đang đăng nhập, bấm "Liên kết" ở trang Hồ sơ.
+     *   · mở cửa     — đăng nhập nếu `google_id` đã thuộc về ai, còn chưa thì
+     *                  chuyển sang màn hoàn tất.
      */
     public function googleCallback(): void
     {
@@ -1220,19 +1222,14 @@ class AuthController extends BaseController
         $after = safeRedirectPath($_SESSION['_google_after'] ?? null, '/tai-khoan');
         unset($_SESSION['_google_after']);
 
-        /* Cờ đồng ý CHỈ DÙNG ĐƯỢC MỘT LẦN, VÀ CHỈ CHO ĐÚNG LƯỢT SINH RA NÓ —
-           đọc ra rồi xoá ngay, trước cả những nhánh thoát bên dưới. Để nó sống
-           qua một lượt hỏng là cú tick của lượt này được đem dùng cho lượt
-           sau, có khi là một tài khoản Google khác. Xem googleStart(). */
-        $choPhep = (string) ($_SESSION['_google_consent'] ?? '');
         $tuDangKy = ($_SESSION['_google_tab'] ?? '') === 'dang-ky';
 
-        /* Cờ LIÊN KẾT đọc và xoá ở đúng chỗ này, cùng lý do và cùng cách với
-           cờ đồng ý: nó cũng giữ chính chuỗi `state` của lượt sinh ra nó, nên
-           một lượt bấm "Liên kết" bỏ dở không để lại quyền nối cho lượt bấm
-           "Đăng nhập bằng Google" sau đó. Xem linkGoogle(). */
+        /* Cờ LIÊN KẾT chỉ dùng được MỘT LẦN, và chỉ cho đúng lượt sinh ra nó —
+           đọc ra rồi xoá ngay, trước cả những nhánh thoát bên dưới. Để nó sống
+           qua một lượt hỏng là quyền nối của lượt này được đem dùng cho lượt
+           sau, có khi là một tài khoản Google khác. Xem linkGoogle(). */
         $xinNoi = (string) ($_SESSION['_google_link'] ?? '');
-        unset($_SESSION['_google_consent'], $_SESSION['_google_tab'], $_SESSION['_google_link']);
+        unset($_SESSION['_google_tab'], $_SESSION['_google_link']);
 
         /* Màn để trả khách về khi có lỗi — mục Giao diện: lỗi Google hiện
            trên chính màn khách vừa đứng.
@@ -1246,8 +1243,6 @@ class AuthController extends BaseController
         $veAuth = $xinNoi !== ''
             ? '/tai-khoan?muc=ho-so'
             : ($tuDangKy ? '/auth?tab=dang-ky' : '/auth');
-
-        $daDongY = $choPhep !== '' && hash_equals($choPhep, (string) ($_GET['state'] ?? ''));
 
         /* Khách bấm "Huỷ" ở màn hình của Google. Không phải lỗi — im lặng đưa
            họ về chỗ vừa đứng ($veAuth: màn đăng nhập, màn đăng ký, hay trang
@@ -1277,18 +1272,18 @@ class AuthController extends BaseController
 
         /*
          * ─────────────────────────────────────────────────────────────────
-         * NGẢ THỨ HAI CỦA CALLBACK: NỐI CHÌA, KHÔNG PHẢI MỞ CỬA.
+         * NGẢ THỨ NHẤT: NỐI CHÌA, KHÔNG PHẢI MỞ CỬA.
          *
          * Lượt này xuất phát từ nút "Liên kết" ở trang Hồ sơ, nên khách ĐÃ
          * đăng nhập rồi — không có ai để đăng nhập nữa, và tuyệt đối không
-         * được rơi xuống findOrCreateGoogle() bên dưới: hàm ấy tra theo
-         * `google_id`, nên một tài khoản Google đang thuộc về NGƯỜI KHÁC sẽ
-         * thành một cú đổi phiên im lặng — khách bấm "Liên kết" trong trang
-         * hồ sơ của mình và đứng dậy với tư cách người lạ.
+         * được rơi xuống nhánh mở cửa bên dưới: nhánh ấy tra theo `google_id`,
+         * nên một tài khoản Google đang thuộc về NGƯỜI KHÁC sẽ thành một cú
+         * đổi phiên im lặng — khách bấm "Liên kết" trong trang hồ sơ của mình
+         * và đứng dậy với tư cách người lạ.
          *
          * Nhánh này vì thế thoát hẳn, không dùng chung một dòng nào với ngả
-         * đăng nhập, kể cả hai chốt nội bộ — chúng phải nói bằng câu chữ và
-         * đích đến của trang Hồ sơ, không phải của màn đăng nhập.
+         * kia, kể cả hai chốt nội bộ — chúng phải nói bằng câu chữ và đích
+         * đến của trang Hồ sơ, không phải của màn đăng nhập.
          * ─────────────────────────────────────────────────────────────────
          */
         if ($xinNoi !== '' && hash_equals($xinNoi, (string) ($_GET['state'] ?? ''))) {
@@ -1337,12 +1332,9 @@ class AuthController extends BaseController
          * SRS mục 3.A đã chốt: "Đăng nhập bằng Google — Không áp dụng cho tài
          * khoản nội bộ ở Giai đoạn 1". Cổng /quan-tri/dang-nhap vì thế không
          * vẽ nút Google. Nhưng không có mấy dòng này thì cửa đó vẫn mở, chỉ là
-         * mở ở phía bên kia: findOrCreateGoogle() từng khớp người theo EMAIL
-         * ĐÃ XÁC MINH, nên một tài khoản Google mang địa chỉ
-         * admin@vineyewear.vn là nối thẳng vào tài khoản quản trị — không cần
-         * biết mật khẩu. Nhánh khớp theo email nay đã gỡ (AF-03), nhưng chốt
-         * này vẫn phải ở lại: nó chặn cả việc TẠO MỚI một tài khoản khách
-         * mang email nội bộ.
+         * mở ở phía bên kia: một tài khoản Google mang địa chỉ
+         * admin@vineyewear.vn đăng ký ở đây là có một tài khoản khách mang
+         * email nội bộ, và từ đó là một đường liên hệ giả danh cửa hàng.
          * ─────────────────────────────────────────────────────────────────
          */
         if (UserModel::isStaffEmail($token['email'])) {
@@ -1350,53 +1342,192 @@ class AuthController extends BaseController
             redirect('/auth');
         }
 
-        $result = UserModel::findOrCreateGoogle(
-            $token['sub'],
-            $token['email'],
-            $token['name'],
-            (bool) $token['verified'],
-            // Chỉ được TẠO tài khoản mới khi lượt này đi qua ô tick đồng ý —
-            // BR-UC.USER.01-05. Xem googleStart().
-            $daDongY
-        );
+        $tra = UserModel::googleLookup($token['sub'], $token['email']);
+
+        /* AF-01 — đã liên kết từ trước: đăng nhập, không hỏi gì thêm. */
+        if ($tra['code'] === 'login') {
+            /* Lưới thứ hai: một google_id đã nối sẵn vào tài khoản nội bộ từ
+               trước khi hai khu vực bị tách thì lượt vào không đi qua email,
+               nên chốt bên trên không thấy nó. */
+            if (UserModel::isStaff($tra['id'])) {
+                flash('auth_staff_gate', '1');
+                redirect('/auth');
+            }
+
+            AuthMiddleware::login($tra['id']);
+
+            // Khoá TRUNG TÍNH 'site_success' để dải toast hiện được ở mọi đích
+            // của BR-UC.USER.01-09 — kể cả trang chủ, nơi không có dải báo
+            // riêng của khu tài khoản.
+            flash('site_success', 'Đăng nhập thành công!');
+            redirect($after);
+        }
+
+        /* AF-03 và ca tài khoản bị khoá. Cả hai đưa khách về màn ĐĂNG NHẬP:
+           đó mới là chỗ họ cần tới, chứ không phải màn đăng ký. */
+        if ($tra['code'] !== 'signup') {
+            flash('auth_error', $tra['error']);
+            redirect($tra['code'] === 'email_taken' ? '/auth' : $veAuth);
+        }
 
         /*
-         * BA NGẢ HỎNG, BA CÁCH NÓI KHÁC NHAU.
+         * AF-02 — chưa khớp gì cả. KHÔNG TẠO TÀI KHOẢN Ở ĐÂY.
          *
-         *   email_taken   AF-03: email của Google đã thuộc một tài khoản khác.
-         *                 Không tạo mới, không tự liên kết — đưa khách về màn
-         *                 ĐĂNG NHẬP, vì đó mới là chỗ họ cần tới.
-         *   need_consent  Bấm Google từ màn đăng nhập nhưng chưa có tài khoản
-         *                 nào. Đẩy sang màn ĐĂNG KÝ để tick rồi bấm lại.
-         *   còn lại       Lỗi hệ thống — EF-13.
+         * Cất thông tin Google vừa xác thực vào phiên rồi đưa khách sang màn
+         * hoàn tất. `verified` đi theo để createFromGoogle() ghi đúng
+         * `email_verified`; `name` chỉ để điền sẵn ô họ tên, khách sửa được.
          */
-        if (!$result['ok']) {
-            flash('auth_error', $result['error']);
+        $_SESSION['_google_pending'] = [
+            'sub'      => (string) $token['sub'],
+            'email'    => $token['email'] !== null ? strtolower(trim((string) $token['email'])) : null,
+            'name'     => $token['name'] !== null ? trim((string) $token['name']) : null,
+            'verified' => (bool) $token['verified'],
+            'after'    => $after,
+        ];
 
-            /* need_consent luôn về màn ĐĂNG KÝ (đó là nơi có ô tick), còn hai
-               ngả kia về đúng màn khách vừa đứng. */
-            redirect(($result['code'] ?? '') === 'need_consent' ? '/auth?tab=dang-ky' : $veAuth);
+        redirect('/auth/dang-ky/google');
+    }
+
+    /**
+     * Màn "Hoàn tất tạo tài khoản" sau khi chọn xong tài khoản Google.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * BỐN Ô, VÀ CHỈ HAI Ô LÀ BẮT BUỘC
+     *
+     *   Email             điền sẵn từ Google, KHOÁ. Nó là thứ nối tài khoản
+     *                     này với Google; cho sửa thì khách gõ một địa chỉ
+     *                     chưa ai xác minh vào cột `email_verified = 1`.
+     *   Họ và tên         bắt buộc. Điền sẵn tên Google trả về, sửa được.
+     *   Số điện thoại     KHÔNG bắt buộc — Google đã bảo chứng danh tính, bắt
+     *                     thêm một khâu xác minh nữa là dựng lại đúng cái rào
+     *                     mà cách đăng ký này sinh ra để tránh.
+     *   Đồng ý Điều khoản bắt buộc — BR-UC.USER.01-05. Đây là ô tick THẬT của
+     *                     cách đăng ký này, không còn mượn của form kia.
+     *
+     * KHÔNG CÓ Ô MẬT KHẨU: khách đăng nhập bằng Google. Muốn có mật khẩu thì
+     * đi đường "Quên mật khẩu" như mọi khách khác — xem createFromGoogle().
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    public function googleSignup(): void
+    {
+        /* Đã đăng nhập thì màn này vô nghĩa — và nếu vừa đăng ký xong ở tab
+           khác thì nó còn nguy hiểm: gửi form sẽ đòi tạo tài khoản thứ hai
+           bằng đúng tài khoản Google ấy. */
+        if (AuthMiddleware::customerId() !== null) {
+            redirect('/tai-khoan');
         }
 
-        /* Lưới thứ hai, cho nhánh "đã liên kết" của findOrCreateGoogle(): một
-           google_id đã nối sẵn vào tài khoản nội bộ từ trước khi hai khu vực
-           bị tách thì lượt vào không đi qua email, nên chốt bên trên không
-           thấy nó. */
-        if (UserModel::isStaff($result['id'])) {
-            flash('auth_staff_gate', '1');
-            redirect('/auth');
+        $cho = self::googlePending();
+
+        /* Vào thẳng địa chỉ này mà chưa đi qua Google. Không có gì để hoàn
+           tất — trả về màn đăng ký, nơi có nút bắt đầu lại. */
+        if ($cho === null) {
+            redirect('/auth?tab=dang-ky');
         }
 
-        AuthMiddleware::login($result['id']);
+        $old    = $_SESSION['_google_old'] ?? [];
+        $errors = $_SESSION['_google_errors'] ?? [];
+        unset($_SESSION['_google_old'], $_SESSION['_google_errors']);
 
-        /* Câu chữ đúng của AF-01 và AF-02, và khoá TRUNG TÍNH 'site_success'
-           để dải toast hiện được ở mọi đích của BR-UC.USER.01-09 — kể cả
-           trang chủ, nơi không có dải báo riêng của khu tài khoản. */
-        flash('site_success', $result['created']
-            ? 'Đăng ký tài khoản thành công!'
-            : 'Đăng nhập thành công!');
+        $this->renderView('auth/google-signup', [
+            'bareLayout' => true,
+            'pageTitle'  => 'Hoàn tất tạo tài khoản — Vin Eyewear',
+            'metaDesc'   => 'Hoàn tất tạo tài khoản Vin Eyewear bằng Google.',
+            'pending'    => $cho,
+            'old'        => is_array($old) ? $old : [],
+            'errors'     => is_array($errors) ? $errors : [],
+            'error'      => flash('auth_error'),
+        ]);
+    }
 
-        redirect($after);
+    /** Bấm "Đăng ký" ở màn hoàn tất — tài khoản ra đời tại đây. */
+    public function googleSignupSubmit(): void
+    {
+        $this->requirePost('/auth/dang-ky/google');
+
+        if (AuthMiddleware::customerId() !== null) {
+            redirect('/tai-khoan');
+        }
+
+        $cho = self::googlePending();
+
+        if ($cho === null) {
+            flash('auth_error', 'Phiên đăng ký đã hết hạn. Vui lòng bấm "Tiếp tục với Google" lại.');
+            redirect('/auth?tab=dang-ky');
+        }
+
+        $in = [
+            'full_name' => trim((string) ($_POST['full_name'] ?? '')),
+            'phone'     => trim((string) ($_POST['phone'] ?? '')),
+            'dong_y'    => !empty($_POST['dong_y']),
+        ];
+
+        $loi = [];
+
+        // BR-UC.USER.01-05, EF-12 — kiểm ở máy chủ, không tin `required`.
+        if (!$in['dong_y']) {
+            $loi['dong_y'] = 'Vui lòng đồng ý với Điều khoản và Chính sách để đăng ký.';
+        }
+
+        if ($in['full_name'] === '') {
+            $loi['full_name'] = 'Vui lòng nhập họ tên.';
+        } elseif (utf8Length($in['full_name']) > 120) {
+            $loi['full_name'] = 'Họ tên quá dài (tối đa 120 ký tự).';
+        }
+
+        /* Ô SỐ ĐIỆN THOẠI ĐỂ TRỐNG LÀ HỢP LỆ, gõ sai thì không.
+           "Không bắt buộc" nói về việc CÓ ĐIỀN HAY KHÔNG, không phải lời hứa
+           rằng thứ điền vào sẽ được nhận bừa: một số sai lọt vào hồ sơ là
+           cửa hàng gọi giao hàng vào số của người khác. */
+        if ($in['phone'] !== '') {
+            $phone = normalizePhone($in['phone']);
+
+            if ($phone === null) {
+                $loi['phone'] = 'Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.';
+            } elseif ((int) Database::fetchValue(
+                'SELECT COUNT(*) FROM profiles WHERE phone = :p', ['p' => $phone]
+            ) > 0) {
+                $loi['phone'] = self::loiCoLink(
+                    'Số điện thoại này đã được đăng ký.', '/auth', 'Đăng nhập'
+                );
+            }
+        }
+
+        if ($loi !== []) {
+            /* Giữ lại chữ đã gõ và cú tick — quay về vì một ô sai mà mất cả
+               ba là bắt làm lại những việc đã làm đúng. */
+            $_SESSION['_google_old']    = $in;
+            $_SESSION['_google_errors'] = $loi;
+            redirect('/auth/dang-ky/google');
+        }
+
+        $ket = UserModel::createFromGoogle(
+            (string) $cho['sub'],
+            $cho['email'] ?? null,
+            $in['full_name'],
+            $in['phone'] !== '' ? $in['phone'] : null,
+            !empty($cho['verified'])
+        );
+
+        if (!$ket['ok']) {
+            /* Ba ca hỏng đều là ca "có người khác vừa chiếm mất" hoặc lỗi hệ
+               thống — không phải thứ khách sửa được bằng cách gõ lại, nên bỏ
+               phiên chờ và đưa họ về màn đăng ký với câu báo. */
+            unset($_SESSION['_google_pending'], $_SESSION['_google_old'], $_SESSION['_google_errors']);
+
+            flash('auth_error', $ket['error']);
+            redirect(($ket['code'] ?? '') === 'email_taken' ? '/auth' : '/auth?tab=dang-ky');
+        }
+
+        $to = $this->signupTarget($cho['after'] ?? null);
+
+        unset($_SESSION['_google_pending'], $_SESSION['_google_old'], $_SESSION['_google_errors']);
+
+        // Bước 8 — BR-UC.USER.01-08: đăng ký xong đăng nhập luôn.
+        AuthMiddleware::login($ket['id']);
+
+        flash('site_success', 'Đăng ký tài khoản thành công!');
+        redirect($to);
     }
 
     /*
@@ -1417,11 +1548,13 @@ class AuthController extends BaseController
     /**
      * Bấm "Liên kết tài khoản Google" ở trang Hồ sơ — đẩy khách sang Google.
      *
-     * Cùng khuôn với googleStart() nhưng cờ để lại là `_google_link` chứ
-     * không phải `_google_consent`, và nó cũng giữ chính chuỗi `state` của
-     * lượt này. Hai cờ tách hẳn nhau vì chúng cho phép hai việc khác nhau —
-     * gộp làm một là để một cú bấm ở trang Hồ sơ mở luôn quyền TẠO tài khoản
-     * mới (BR-UC.USER.01-05), và ngược lại.
+     * Cùng khuôn với googleStart() nhưng để lại cờ `_google_link`, giữ chính
+     * chuỗi `state` của lượt này. Cờ ấy là thứ DUY NHẤT phân biệt hai ngả ở
+     * callback, và nó phải giữ `state` chứ không phải true/false: mở hai tab —
+     * tab hồ sơ bấm "Liên kết", sau đó tab kia bấm "Tiếp tục với Google" —
+     * thì tab sau ghi đè `_google_state`, nên callback của tab sau hợp lệ; một
+     * cờ true/false sẽ theo nó vào và nối Google trong một lượt chưa hề đi qua
+     * nút "Liên kết" nào.
      */
     public function linkGoogle(): void
     {

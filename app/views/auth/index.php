@@ -22,11 +22,12 @@
  *    trang cùng ngôn ngữ. Giữ nguyên URL cũ nên mọi liên kết và mọi lệnh
  *    redirect đang có vẫn trỏ đúng chỗ.
  *
- * 2. NÚT GOOGLE CHỈ SỐNG KHI ĐÃ CẤU HÌNH, VÀ ĐỔI HÌNH DẠNG THEO TAB.
+ * 2. NÚT GOOGLE CHỈ SỐNG KHI ĐÃ CẤU HÌNH.
  *    Chưa điền GOOGLE_CLIENT_ID/SECRET thì nó là nút xám "Sắp có" —
- *    GoogleAuth::isConfigured() quyết. Đã cấu hình thì ở tab đăng nhập nó là
- *    thẻ <a> (GET), còn ở tab đăng ký nó là nút submit của chính form đăng ký
- *    để mang theo ô tick Điều khoản (BR-UC.USER.01-05). Xem chú thích tại chỗ.
+ *    GoogleAuth::isConfigured() quyết. Đã cấu hình thì nó là thẻ <a> (GET) ở
+ *    cả hai tab, chỉ khác tham số mang theo. Ở tab đăng ký nó KHÔNG tạo tài
+ *    khoản mà dẫn sang màn "Hoàn tất tạo tài khoản"
+ *    (auth/google-signup.php) — hai cách đăng ký, hai form, hai ô tick.
  *
  * 3. Ô "DUY TRÌ ĐĂNG NHẬP" ĐỨNG TRƯỚC NÚT TRONG MÃ NGUỒN.
  *    Bản thiết kế xếp nó SAU nút "Đăng nhập" trên màn hình. Giữ đúng thứ tự
@@ -215,40 +216,37 @@ $urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
              * phía họ hay phía site.
              *
              * ─────────────────────────────────────────────────────────────
-             * HAI HÌNH DẠNG, TUỲ ĐANG ĐỨNG Ở TAB NÀO
+             * MỘT HÌNH DẠNG CHO CẢ HAI TAB: THẺ <a>, GET.
              *
-             *   ĐĂNG NHẬP  thẻ <a> (GET). Người đã có tài khoản thì không có
-             *              gì để đồng ý lại; và bước này chưa đổi gì cả nên
-             *              GET là đúng. Thứ chống giả mạo là tham số `state`
-             *              mà GoogleAuth sinh ra và cất trong session.
+             * Ở tab đăng ký, nút này từng là nút submit của CHÍNH form đăng ký
+             * (form="signupform", POST) — cách duy nhất để cú bấm mang theo ô
+             * tick Điều khoản của form ấy, vì hồi đó callback của Google tạo
+             * tài khoản ngay khi quay về.
              *
-             *   ĐĂNG KÝ    nút submit của CHÍNH form đăng ký (form="signupform"),
-             *              POST. BR-UC.USER.01-05 bắt cả hai phương thức đăng
-             *              ký đều phải tick Điều khoản/Chính sách, mà ô tick
-             *              duy nhất nằm trong form ấy — nối nút vào form là
-             *              cách để cú bấm này mang theo ô tick đó, và để trình
-             *              duyệt tự chặn khi chưa tick.
-             *
-             *              formnovalidate: cú bấm này KHÔNG cần họ tên hay mật
-             *              khẩu (Google cung cấp danh tính), nên không được để
-             *              trình duyệt đòi những ô ấy. Hệ quả là ô tick cũng
-             *              thoát khỏi phép kiểm của trình duyệt — chốt thật vì
-             *              thế nằm ở máy chủ: AuthController::googleStart()
-             *              từ chối cú POST không mang `dong_y`.
+             * Nay không còn: đăng ký bằng Google có màn "Hoàn tất tạo tài
+             * khoản" riêng (/auth/dang-ky/google), và ô tick BR-UC.USER.01-05
+             * nằm ở đó — đúng chỗ tài khoản thật sự ra đời. Nút này lại chỉ là
+             * một cú chuyển hướng sang Google, không đổi gì cả, nên GET là
+             * đúng. Thứ chống giả mạo của luồng OAuth là tham số `state` mà
+             * GoogleAuth sinh ra và cất trong session.
              * ─────────────────────────────────────────────────────────────
              */
             $googleOn = GoogleAuth::isConfigured();
             ?>
-            <?php if ($googleOn && $isRegister): ?>
-            <button type="submit" class="authbtn authbtn--google"
-                    form="signupform" formaction="/auth/google" formmethod="post" formnovalidate>
-                <?php partial('auth/_google-icon'); ?>
-                Tiếp tục với Google
-            </button>
-            <?php elseif ($googleOn): ?>
-            <a class="authbtn authbtn--google"
-               href="/auth/google<?= $redirect !== '' ? '?redirect=' . e(rawurlencode($redirect)) : '' ?>"
-               rel="nofollow">
+            <?php
+            /* Địa chỉ mang theo HAI thứ: `tab` để googleStart() biết trả khách
+               về màn nào khi có lỗi và chọn đúng đích mặc định của
+               BR-UC.USER.01-09 (đăng ký xong về trang chủ, đăng nhập xong về
+               /tai-khoan), và `redirect` để cả hai quay lại được nghiệp vụ
+               đang dở. */
+            $urlGoogle = '/auth/google'
+                . ($isRegister ? '?tab=dang-ky' : '')
+                . ($redirect !== ''
+                    ? ($isRegister ? '&' : '?') . 'redirect=' . rawurlencode($redirect)
+                    : '');
+            ?>
+            <?php if ($googleOn): ?>
+            <a class="authbtn authbtn--google" href="<?= e($urlGoogle) ?>" rel="nofollow">
                 <?php partial('auth/_google-icon'); ?>
                 Tiếp tục với Google
             </a>

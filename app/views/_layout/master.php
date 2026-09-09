@@ -242,6 +242,9 @@ if ($manhCua !== null) {
         // bare-shell.css phải đứng TRƯỚC auth.css: nó giữ khung rút gọn dùng
         // chung với trang thanh toán, auth.css giữ phần riêng (.authcard/.authform*).
         'auth/index'     => ['components/bare-shell.css', 'auth.css'],
+        // Màn "Hoàn tất tạo tài khoản" bằng Google — một cột, cùng bộ lớp
+        // .authfield/.authbtn của màn kia nên dùng chung đúng hai file này.
+        'auth/google-signup' => ['components/bare-shell.css', 'auth.css'],
         // Cổng quản trị dựng theo "Admin Login.dc.html" — nền TỐI, bộ lớp
         // riêng (.alog*). KHÔNG nạp bare-shell.css: khung rút gọn bên đó vẽ
         // đầu và chân trang màu be của luồng khách, mà trang này thay cả hai
