@@ -29,10 +29,10 @@
  *    khoản mà dẫn sang màn "Hoàn tất tạo tài khoản"
  *    (auth/google-signup.php) — hai cách đăng ký, hai form, hai ô tick.
  *
- * 3. Ô "DUY TRÌ ĐĂNG NHẬP" ĐỨNG TRƯỚC NÚT TRONG MÃ NGUỒN.
+ * 3. Ô "GHI NHỚ ĐĂNG NHẬP" ĐỨNG TRƯỚC NÚT TRONG MÃ NGUỒN.
  *    Bản thiết kế xếp nó SAU nút "Đăng nhập" trên màn hình. Giữ đúng thứ tự
  *    ấy trong HTML thì người dùng bàn phím phải Tab QUA nút gửi mới tới được ô
- *    tick — tức là gặp nút gửi trước khi kịp chọn có duy trì đăng nhập hay
+ *    tick — tức là gặp nút gửi trước khi kịp chọn có ghi nhớ đăng nhập hay
  *    không. Nên HTML để ô tick trước, còn CSS (`order`) đẩy nó xuống dưới nút.
  *    Nhìn giống hệt bản thiết kế, thứ tự Tab thì đúng.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -50,6 +50,52 @@ $signup     = $signup ?? [];
 $giuDich  = ($redirectRaw ?? '') !== '' ? 'redirect=' . rawurlencode($redirectRaw) : '';
 $urlLogin = '/auth' . ($giuDich !== '' ? '?' . $giuDich : '');
 $urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * LỖI THEO TỪNG Ô — DỰNG Ở ĐÂY, DÙNG CHO CẢ HAI TAB
+ *
+ * Hai màn không bao giờ hiện cùng lúc nên chúng chia nhau một mảng $errors và
+ * một khoá phiên ('_auth_errors'). Ba cái đóng gói dưới đây đi kèm nhau và
+ * được truyền sang auth/_signup.php qua partial(), để hai màn không trôi thành
+ * hai cách vẽ lỗi khác nhau.
+ *
+ * Màn ĐĂNG NHẬP chỉ dùng chúng cho EF-01…EF-04 (những lỗi nhìn chuỗi đã gõ là
+ * biết). EF-05…EF-07 cố tình KHÔNG gắn vào ô nào — xem BR-UC.USER.02-03 và
+ * khối chú thích trong AuthController::login().
+ */
+
+/** Ô này có lỗi không. */
+$hong = static fn (string $field): bool =>
+    isset($errors[$field]) && $errors[$field] !== '' && $errors[$field] !== [];
+
+/**
+ * In dòng lỗi của một trường, hoặc không in gì.
+ *
+ * Giá trị trong $errors thường là một chuỗi, nhưng CÓ THỂ là mảng
+ * ['msg', 'href', 'text'] khi câu báo phải kèm một liên kết — EF-10 của màn
+ * đăng ký đòi câu "Số điện thoại này đã được đăng ký" đi cùng link Đăng nhập.
+ * Xem AuthController::loiCoLink().
+ */
+$loi = static function (string $field) use ($errors, $hong): void {
+    if (!$hong($field)) {
+        return;
+    }
+
+    $v = $errors[$field];
+    ?>
+    <span class="authfield__err" role="alert">
+        <?php if (is_array($v)): ?>
+            <?= e((string) ($v['msg'] ?? '')) ?>
+            <a href="<?= e((string) ($v['href'] ?? '/auth')) ?>"><?= e((string) ($v['text'] ?? '')) ?></a>
+        <?php else: ?>
+            <?= e((string) $v) ?>
+        <?php endif; ?>
+    </span>
+<?php };
+
+/** Lớp tô viền đỏ cho ô đang có lỗi. */
+$xau = static fn (string $field): string => $hong($field) ? ' is-err' : '';
 ?>
 
 <section class="authwrap">
@@ -148,10 +194,12 @@ $urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
                             nhiều dạng định danh; để "email" thì trình quản lý mật
                             khẩu sẽ không gợi ý mục đã lưu bằng số điện thoại.
                         -->
-                        <input class="authfield__input" type="text" name="email" required
-                               autocomplete="username" inputmode="email" autofocus
+                        <input class="authfield__input<?= $xau('email') ?>" type="text" name="email"
+                               required autocomplete="username" inputmode="email" autofocus
                                placeholder="Số điện thoại / Email"
                                value="<?= e($old['email'] ?? '') ?>">
+                        <?php /* EF-01, EF-03, EF-04 — cả ba đều nói về ô này. */ ?>
+                        <?php $loi('email'); ?>
                     </label>
 
                     <div class="authfield">
@@ -165,7 +213,13 @@ $urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
                             'pw_auto'     => 'current-password',
                             'pw_holder'   => '••••••••',
                             'pw_required' => true,
+                            'pw_err'      => $hong('password'),
                         ]); ?>
+                        <?php /* EF-02, và CHỈ EF-02: "sai mật khẩu" (EF-07)
+                                 không được gắn vào đây — gắn vào là đã nói ô
+                                 trên đúng, tức là địa chỉ ấy có tài khoản.
+                                 Xem BR-UC.USER.02-03. */ ?>
+                        <?php $loi('password'); ?>
                     </div>
 
                     <!-- Ô tick đứng TRƯỚC nút trong HTML, CSS đẩy nó xuống dưới —
@@ -179,7 +233,7 @@ $urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
                                 <path d="M4 12.5l5.5 5.5L20 7"></path>
                             </svg>
                         </span>
-                        <span class="authcheck__text">Duy trì đăng nhập</span>
+                        <span class="authcheck__text">Ghi nhớ đăng nhập</span>
                     </label>
 
                     <button type="submit" class="authbtn authbtn--primary">Đăng nhập</button>
@@ -196,6 +250,10 @@ $urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
                     'old'      => $old,
                     'errors'   => $errors,
                     'redirect' => $redirect,
+                    // Ba cái đóng gói dựng ở đầu file này — xem khối chú thích ở đó.
+                    'hong'     => $hong,
+                    'loi'      => $loi,
+                    'xau'      => $xau,
                 ]); ?>
 
             <?php endif; ?>
@@ -295,7 +353,7 @@ $urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
                 <?php if ($isRegister): ?>
                     Đã có tài khoản? <a href="<?= e($urlLogin) ?>">Đăng nhập</a>
                 <?php else: ?>
-                    Bạn mới biết đến Vin Eyewear? <a href="<?= e($urlSignup) ?>">Đăng ký</a>
+                    Chưa có tài khoản? <a href="<?= e($urlSignup) ?>">Đăng ký</a>
                 <?php endif; ?>
             </p>
         </div>

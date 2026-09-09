@@ -37,45 +37,28 @@
  * AuthController::signupSubmit() dựng; dải đỏ ở trên chỉ còn dành cho lỗi
  * KHÔNG thuộc ô nào: EF-01 (Google) và EF-13 (lỗi hệ thống).
  *
- * Nhận qua partial(): $signup (mảng của signupView()), $old, $errors.
+ * Nhận qua partial(): $signup (mảng của signupView()), $old, $errors, $redirect,
+ * và ba cái đóng gói vẽ lỗi $hong/$loi/$xau — xem ngay dưới.
  */
 
 $signup = $signup ?? [];
 $old    = $old    ?? [];
 $errors = $errors ?? [];
 
-/** Ô này có lỗi không. */
-$hong = static fn (string $field): bool =>
-    isset($errors[$field]) && $errors[$field] !== '' && $errors[$field] !== [];
-
-/**
- * In dòng lỗi của một trường, hoặc không in gì.
+/*
+ * BA CÁI ĐÓNG GÓI VẼ LỖI ĐẾN TỪ auth/index.php, không dựng lại ở đây.
  *
- * Giá trị trong $errors thường là một chuỗi, nhưng CÓ THỂ là mảng
- * ['msg', 'href', 'text'] khi câu báo phải kèm một liên kết — EF-10 đòi câu
- * "Số điện thoại này đã được đăng ký" đi cùng link Đăng nhập, và một địa chỉ
- * nằm giữa câu chữ thuần thì khách phải tự đi tìm. Xem
- * AuthController::loiCoLink().
+ *   $hong('ten_o')  ô này có lỗi không
+ *   $loi('ten_o')   in dòng lỗi dưới ô, hoặc không in gì
+ *   $xau('ten_o')   lớp tô viền đỏ cho ô
+ *
+ * Chép một bản thứ hai vào đây thì sớm muộn hai màn cũng vẽ lỗi hai kiểu —
+ * xem khối chú thích tại chỗ dựng chúng. Vế `?? fn` chỉ là lưới đỡ cho ngày
+ * có ai đó nhúng file này từ một chỗ khác mà quên truyền.
  */
-$loi = static function (string $field) use ($errors, $hong): void {
-    if (!$hong($field)) {
-        return;
-    }
-
-    $v = $errors[$field];
-    ?>
-    <span class="authfield__err" role="alert">
-        <?php if (is_array($v)): ?>
-            <?= e((string) ($v['msg'] ?? '')) ?>
-            <a href="<?= e((string) ($v['href'] ?? '/auth')) ?>"><?= e((string) ($v['text'] ?? '')) ?></a>
-        <?php else: ?>
-            <?= e((string) $v) ?>
-        <?php endif; ?>
-    </span>
-<?php };
-
-/** Lớp tô viền đỏ cho ô đang có lỗi. */
-$xau = static fn (string $field): string => $hong($field) ? ' is-err' : '';
+$hong = $hong ?? static fn (string $f): bool => false;
+$loi  = $loi  ?? static function (string $f): void {};
+$xau  = $xau  ?? static fn (string $f): string => '';
 
 /*
  * VĂN BẢN ĐỒNG Ý — chỉ nói về thứ CÓ THẬT.

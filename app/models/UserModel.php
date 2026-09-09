@@ -772,7 +772,13 @@ class UserModel extends BaseModel
                 LoginAttemptModel::donCu();
             }
 
-            return ['ok' => false, 'error' => 'Thông tin đăng nhập không đúng.'];
+            /* MỘT CÂU CHUNG cho cả hai ca — EF-05 và EF-07 của UC-USER-02,
+               và BR-UC.USER.02-03 nói rõ vì sao: tách ra thành "không tìm
+               thấy tài khoản" và "sai mật khẩu" là biến ô đăng nhập thành máy
+               tra cứu xem một số điện thoại hay email có tài khoản ở đây
+               không. */
+            return ['ok' => false, 'error' =>
+                'Số điện thoại/Email hoặc mật khẩu không chính xác.'];
         }
 
         /* TÀI KHOẢN BỊ KHOÁ — KIỂM SAU password_verify, KHÔNG PHẢI TRƯỚC.
@@ -786,7 +792,12 @@ class UserModel extends BaseModel
            người quyết định nên nói gì với khách là người nhấc điện thoại chứ
            không phải màn hình đăng nhập. */
         if (($user['status'] ?? 'active') === 'locked') {
-            return ['ok' => false, 'error' => 'Tài khoản đã bị khoá. Vui lòng liên hệ cửa hàng.'];
+            /* EF-06. Câu chữ lấy theo mục Giao diện của UC-USER-02 —
+               phần bảng Luồng rẽ nhánh viết "Tài khoản của bạn hiện lỗi",
+               nhưng đó là một câu không hoàn chỉnh và không nói cho khách
+               biết phải làm gì. */
+            return ['ok' => false, 'error' =>
+                'Tài khoản của bạn hiện không thể đăng nhập. Vui lòng liên hệ hỗ trợ.'];
         }
 
         // Nâng cấp hash khi PHP đổi thuật toán mặc định hoặc đổi độ khó.

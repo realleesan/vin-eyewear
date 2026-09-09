@@ -32,13 +32,24 @@ class AuthController extends BaseController
      */
     private function loginTarget(?string $raw): string
     {
-        $to = safeRedirectPath($raw, self::HOME_AFTER_LOGIN);
-
-        return $to === '/' ? self::HOME_AFTER_LOGIN : $to;
+        return safeRedirectPath($raw, self::HOME_AFTER_LOGIN);
     }
 
-    /** Đích mặc định sau khi đăng nhập / đăng ký. */
-    private const HOME_AFTER_LOGIN = '/tai-khoan';
+    /**
+     * Đích mặc định sau khi đăng nhập — BR-UC.USER.02-06.
+     *
+     * TRANG CHỦ, không phải /tai-khoan. Đặc tả chốt hai ngả và cả hai đều nằm
+     * ở đây: vào màn đăng nhập từ một nghiệp vụ đòi đăng nhập thì quay lại
+     * đúng nghiệp vụ đó (`redirect` do AuthMiddleware::requireLogin() gắn),
+     * còn chủ động vào từ menu tài khoản thì về trang chủ.
+     *
+     * Bản trước mặc định /tai-khoan, và vì thế phải có thêm một nhánh riêng
+     * đổi `redirect=/` thành /tai-khoan: trang chủ công khai nên không ai bị
+     * chặn ở đó, một liên kết dựng sai trỏ về '/' là đưa khách đi một vòng
+     * rồi về chỗ cũ. Nay '/' CHÍNH LÀ đích mặc định nên nhánh ấy không còn
+     * việc gì để làm.
+     */
+    private const HOME_AFTER_LOGIN = '/';
 
     public function index(): void
     {
@@ -77,7 +88,7 @@ class AuthController extends BaseController
             'tab'       => $isRegister ? 'dang-ky' : 'dang-nhap',
             'old'       => $_SESSION['_old_auth'] ?? [],
             // Lỗi theo từng ô của màn đăng ký — xem signupErrors().
-            'errors'    => $_SESSION['_signup_errors'] ?? [],
+            'errors'    => $_SESSION['_auth_errors'] ?? [],
             'error'     => flash('auth_error'),
             'success'   => flash('auth_success'),
 
@@ -91,7 +102,7 @@ class AuthController extends BaseController
 
         /* Xoá SAU khi vẽ xong, đúng nếp của flash(): hai ô này chỉ sống đúng
            một lần hiện trang, tải lại là form sạch trở lại. */
-        unset($_SESSION['_old_auth'], $_SESSION['_signup_errors']);
+        unset($_SESSION['_old_auth'], $_SESSION['_auth_errors']);
     }
 
     public function login(): void
@@ -106,14 +117,61 @@ class AuthController extends BaseController
         $remember = ($_POST['remember'] ?? '') !== '';
         $to       = $this->loginTarget($_POST['redirect'] ?? null);
 
+        /* Nhớ chuỗi đã gõ để khách không phải gõ lại — nhưng KHÔNG nhớ mật
+           khẩu (BR-UC.USER.02-02: không lưu mật khẩu thô ở bất kỳ bước nào),
+           và nhớ luôn trạng thái ô "Ghi nhớ đăng nhập". */
+        $_SESSION['_old_auth'] = ['email' => $login, 'remember' => $remember];
+
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * HAI TẦNG BÁO LỖI, VÀ RANH GIỚI GIỮA CHÚNG LÀ RANH GIỚI BẢO MẬT
+         *
+         *   THEO TỪNG Ô (EF-01…EF-04) — những thứ nhìn vào chuỗi đã gõ là
+         *   biết, không cần chạm tới CSDL: bỏ trống, số điện thoại sai định
+         *   dạng, email sai định dạng. Nói thẳng và chỉ đúng ô cần sửa thì
+         *   không rò rỉ gì cả, vì câu trả lời không phụ thuộc vào việc tài
+         *   khoản có tồn tại hay không.
+         *
+         *   DẢI BANNER (EF-05…EF-07) — những thứ chỉ CSDL mới trả lời được.
+         *   Ở đó BR-UC.USER.02-03 bắt phải dùng MỘT câu chung cho cả "không
+         *   tìm thấy tài khoản" lẫn "sai mật khẩu", và không gắn vào ô nào:
+         *   gắn câu "sai mật khẩu" vào riêng ô mật khẩu là đã nói rằng ô trên
+         *   đúng, tức là địa chỉ đó CÓ tài khoản ở đây.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        $loi = [];
+
+        if ($login === '') {
+            $loi['email'] = 'Vui lòng nhập số điện thoại hoặc email.';
+        } elseif (looksLikePhone($login)) {
+            /* looksLikePhone() phân loại theo HÌNH DẠNG chuỗi (có '@' hay
+               không), đúng cách findByLogin() chọn nhánh tra cứu — nhờ vậy
+               câu báo ở đây luôn nói về cùng thứ mà máy chủ sắp đi tìm. */
+            if (normalizePhone($login) === null) {
+                $loi['email'] = 'Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.';
+            }
+        } elseif (!filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $loi['email'] = 'Email không hợp lệ. Vui lòng kiểm tra lại.';
+        }
+
+        if ($password === '') {
+            $loi['password'] = 'Vui lòng nhập mật khẩu.';
+        }
+
+        if ($loi !== []) {
+            /* KHÔNG gọi attempt() khi đã biết chuỗi không thể khớp ai: mỗi
+               lượt gọi là một lần băm mật khẩu và một vạch trong bộ đếm khoá
+               tạm của LoginAttemptModel. Gõ thiếu một ô năm lần thì không nên
+               bị khoá 15 phút. */
+            $_SESSION['_auth_errors'] = $loi;
+            redirect($this->loginBack($to));
+        }
+
         $result = UserModel::attempt($login, $password);
 
         if (!$result['ok']) {
-            // Nhớ chuỗi đã gõ để khách không phải gõ lại — nhưng KHÔNG nhớ
-            // mật khẩu, và cũng nhớ luôn trạng thái ô ghi nhớ
-            $_SESSION['_old_auth'] = ['email' => $login, 'remember' => $remember];
             flash('auth_error', $result['error']);
-            redirect('/auth?redirect=' . rawurlencode($to));
+            redirect($this->loginBack($to));
         }
 
         /*
@@ -141,14 +199,29 @@ class AuthController extends BaseController
          * ─────────────────────────────────────────────────────────────────
          */
         if (UserModel::isStaff($result['id'])) {
-            $_SESSION['_old_auth'] = ['email' => $login, 'remember' => $remember];
             flash('auth_staff_gate', '1');
-            redirect('/auth?redirect=' . rawurlencode($to));
+            redirect($this->loginBack($to));
         }
 
+        unset($_SESSION['_old_auth'], $_SESSION['_auth_errors']);
+
+        /* Bước 7 — phiên đăng nhập. $remember là ô "Ghi nhớ đăng nhập"
+           (BR-UC.USER.02-05); AuthMiddleware::login() lo phần cookie dài hạn
+           qua RememberModel. */
         AuthMiddleware::login($result['id'], $remember);
 
+        /* Bước 8 và 9. Khoá TRUNG TÍNH 'site_success' để dải toast hiện được
+           ở mọi đích của BR-UC.USER.02-06 — kể cả trang chủ, nơi không có dải
+           báo riêng của khu tài khoản. Xem BaseController::toastFromFlash(). */
+        flash('site_success', 'Đăng nhập thành công!');
+
         redirect($to);
+    }
+
+    /** Màn đăng nhập, giữ nguyên đích đến đang mang theo. */
+    private function loginBack(string $to): string
+    {
+        return '/auth' . ($to !== '/' ? '?redirect=' . rawurlencode($to) : '');
     }
 
     /*
@@ -526,7 +599,8 @@ class AuthController extends BaseController
      * vào lịch sử duyệt web, vào Referer gửi sang bên thứ ba, và vào log của
      * mọi proxy trên đường. Trạng thái mã vì thế nằm trong
      * $_SESSION['_signup_otp'], chữ đã gõ nằm trong $_SESSION['_old_auth'],
-     * và lỗi từng ô nằm trong $_SESSION['_signup_errors'].
+     * và lỗi từng ô nằm trong $_SESSION['_auth_errors'] — khoá dùng chung
+     * với màn đăng nhập, vì hai màn không bao giờ hiện cùng lúc.
      * ═════════════════════════════════════════════════════════════════════
      */
 
@@ -973,7 +1047,7 @@ class AuthController extends BaseController
         } else {
             // Cùng ô, cùng câu chữ với đường JavaScript: lỗi của thao tác "xin
             // mã" luôn hiện ngay dưới ô mã xác minh.
-            $_SESSION['_signup_errors'] = ['ma' => $message];
+            $_SESSION['_auth_errors'] = ['ma' => $message];
         }
 
         redirect($this->signupBack($to));
@@ -1048,7 +1122,7 @@ class AuthController extends BaseController
         $loi = self::signupErrors($in, $password, $confirm);
 
         if ($loi !== []) {
-            $_SESSION['_signup_errors'] = $loi;
+            $_SESSION['_auth_errors'] = $loi;
             redirect($this->signupBack($to));
         }
 
@@ -1084,7 +1158,7 @@ class AuthController extends BaseController
 
         unset(
             $_SESSION['_old_auth'],
-            $_SESSION['_signup_errors'],
+            $_SESSION['_auth_errors'],
             $_SESSION['_signup_otp']
         );
 
@@ -1673,7 +1747,9 @@ class AuthController extends BaseController
      *
      *     menu người dùng -> "Thông tin tài khoản"
      *     trang 403       -> "Tài khoản của tôi"
-     *     sau khi đăng nhập (HOME_AFTER_LOGIN)
+     *
+     * (Đăng nhập xong KHÔNG còn rơi vào đây: BR-UC.USER.02-06 đưa khách về
+     * trang chủ hoặc trang họ đang dở — xem HOME_AFTER_LOGIN.)
      *
      * Để mặc định ở 'don-hang' thì mục đầu menu hứa "Thông tin tài khoản" mà
      * mở ra danh sách đơn — và nó rơi đúng vào chỗ mục NGAY DƯỚI nó đã dẫn
