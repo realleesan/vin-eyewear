@@ -1853,6 +1853,81 @@ select.acct-field__input {
    thêm một nút đỏ để doạ.
    ============================================================================ */
 
+/* ── Liên kết tài khoản Google, cuối trang Hồ sơ ───────────────────────────── */
+
+/* Thẻ TRUNG TÍNH, không viền màu. Nó nằm ngay trên vùng nguy hiểm, và hai
+   khối cùng đeo viền màu cạnh nhau thì cái viền đỏ mất hết sức nặng — mà đó
+   mới là cái phải làm người ta chậm lại. */
+.acct-link {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 28px 40px 32px;
+    margin-bottom: 24px;
+}
+
+.acct-link__lead,
+.acct-link__state {
+    margin: 10px 0 18px;
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: var(--a-note);
+}
+
+.acct-link__state strong,
+.acct-link__lead strong { font-weight: 600; color: var(--ink); }
+
+/* Chấm xanh trước dòng "Đã liên kết" — cùng vai trò với một huy hiệu trạng
+   thái, nhưng không phải một cái nhãn: câu chữ ngay sau nó đã nói đủ, chấm
+   chỉ để mắt nhận ra trạng thái trước khi đọc. aria-hidden ở view lo phần
+   trình đọc màn hình. */
+.acct-link__dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: #5c8a4a;
+    vertical-align: baseline;
+}
+
+/* Logo Google giữ nguyên bốn màu của nó, nên nút phải là nút VIỀN — đặt bốn
+   màu ấy lên nền nâu thương hiệu thì cả hai cùng xấu đi. */
+.acct-btn--google svg { flex: none; }
+
+.acct-btn--google:disabled {
+    color: var(--a-meta);
+    border-color: var(--a-edge);
+    cursor: not-allowed;
+}
+
+/* Xám hoá logo theo nút: một logo bốn màu rực rỡ trên một cái nút mờ đi trông
+   như nút hỏng chứ không như nút chưa mở. */
+.acct-btn--google:disabled svg { filter: grayscale(1); opacity: .6; }
+
+.acct-link__soon {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--a-pick);
+    font-size: 11px;
+    color: var(--a-meta);
+}
+
+/* Form gỡ nằm TRONG thẻ đã có padding — cùng lý do với .acct-danger .acct-form. */
+.acct-link__form {
+    align-self: stretch;
+    max-width: 420px;
+    padding: 0;
+    gap: 16px;
+}
+
+.acct-link__acts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
 /* ── Vùng nguy hiểm ở cuối trang Hồ sơ ─────────────────────────────────────── */
 
 /* Đường viền đỏ nhạt bên trái, KHÔNG phải cả thẻ đỏ: thẻ đỏ kéo mắt về nó ngay

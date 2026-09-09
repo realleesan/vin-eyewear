@@ -189,6 +189,16 @@ return [
     'tai-khoan/anh'     => 'AuthController@updateAvatar',       // POST (multipart)
     'tai-khoan/mua-lai' => 'AuthController@reorder',            // POST
 
+    /* LIÊN KẾT GOOGLE — chỗ nối mà AF-03 hứa hẹn.
+       UserModel::findOrCreateGoogle() không tự nối Google vào tài khoản trùng
+       email nữa, và câu báo của nó bảo khách "đăng nhập bằng Số điện thoại/Mật
+       khẩu để liên kết" — hai đường này là chỗ ấy, nằm trong mục Hồ sơ.
+       Cả hai POST: một thẻ <a> tới đường nối nghĩa là một trang khác gắn
+       <img src="/tai-khoan/google"> cũng đẩy được khách đi Google, còn đường
+       gỡ thì tự nó đã là một thao tác phá bỏ. */
+    'tai-khoan/google'     => 'AuthController@linkGoogle',      // POST
+    'tai-khoan/google/go'  => 'AuthController@unlinkGoogle',    // POST
+
     /* KHÁCH TỰ HUỶ ĐƠN — SRS v2.1.0, UC-02.
        Đường RIÊNG, không gộp vào một action "đổi trạng thái" chung: khách chỉ
        có đúng một thao tác trạng thái là huỷ, và một action chung nghĩa là

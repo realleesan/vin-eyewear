@@ -220,8 +220,8 @@ class UserModel extends BaseModel
      *
      * Đường liên kết đúng vì thế đi ngược lại: khách đăng nhập bằng SĐT/mật
      * khẩu — tức là chứng minh mình là chủ tài khoản — rồi mới nối Google vào.
-     * ⚠ CHỖ NỐI ẤY CHƯA CÓ trong trang Hồ sơ; câu báo dưới đây hứa một việc mà
-     * hiện khách chưa tự làm được, và đó là việc còn thiếu của Phase 1.
+     * Chỗ nối ấy là khối "Tài khoản Google" ở mục Hồ sơ, chạy qua linkGoogle()
+     * bên dưới; câu báo của nhánh này trỏ thẳng tới đó.
      *
      * Tài khoản tạo ở nhánh 2 KHÔNG có số điện thoại và có mật khẩu ngẫu
      * nhiên không ai biết: khách đăng nhập bằng Google, không bằng mật khẩu.
@@ -357,6 +357,192 @@ class UserModel extends BaseModel
         }
 
         return ['ok' => true, 'id' => $userId, 'created' => true];
+    }
+
+    /* ========================================================================
+       LIÊN KẾT GOOGLE — CHỖ NỐI Ở TRANG HỒ SƠ
+
+       findOrCreateGoogle() ở trên cố tình KHÔNG tự nối Google vào một tài
+       khoản trùng email (AF-03, BR-UC.USER.01-07). Câu báo của nhánh ấy hứa
+       một đường đi: "Vui lòng đăng nhập bằng Số điện thoại/Mật khẩu để liên
+       kết tài khoản Google." Ba hàm dưới đây là đường ấy.
+
+       Thứ tự bị đảo lại so với luồng đăng ký, và đó chính là điểm mấu chốt:
+       khách CHỨNG MINH mình là chủ tài khoản trước (đăng nhập bằng mật khẩu),
+       rồi mới nối Google vào. Google không còn là lời khai quyết định ai là
+       chủ — nó chỉ là chiếc chìa thứ hai mà chủ nhà tự tay cắt thêm.
+       ======================================================================== */
+
+    /**
+     * Tài khoản này đang nối với Google chưa, và gỡ ra có mắc kẹt không?
+     *
+     * Trang Hồ sơ cần cả hai vế trong một lần hỏi, nên trả về một mảng chứ
+     * không phải bool.
+     *
+     * `co_dinh_danh` là vế thứ hai: đăng nhập bằng mật khẩu cần MỘT CHUỖI ĐỂ
+     * GÕ VÀO Ô "Số điện thoại hoặc Email" — xem findByLogin(). Tài khoản tạo
+     * qua Google ra đời không có cả hai, nên với họ "gỡ liên kết" là tự khoá
+     * mình ra ngoài dù có biết mật khẩu đi nữa.
+     *
+     * KHÔNG CÓ VẾ "ĐANG NỐI VỚI TÀI KHOẢN GOOGLE NÀO". Bảng `users` chỉ giữ
+     * `google_id` — chuỗi `sub` của Google, một dãy số vô nghĩa với người đọc.
+     * Hiện tên tài khoản Google lên màn hình thì phải thêm một cột nữa (và một
+     * migration), mà email của Google chưa chắc trùng email tài khoản nên
+     * KHÔNG mượn tạm `users.email` để hiện thay được.
+     *
+     * @return array{linked:bool, co_dinh_danh:bool}
+     */
+    public static function googleLink(string $userId): array
+    {
+        $row = Database::fetchOne(
+            'SELECT u.google_id, u.email, p.phone
+               FROM users u
+          LEFT JOIN profiles p ON p.id = u.id
+              WHERE u.id = :id',
+            ['id' => $userId]
+        );
+
+        if ($row === null) {
+            return ['linked' => false, 'co_dinh_danh' => false];
+        }
+
+        return [
+            'linked' => ($row['google_id'] ?? null) !== null,
+            'co_dinh_danh' => trim((string) ($row['email'] ?? '')) !== ''
+                           || trim((string) ($row['phone'] ?? '')) !== '',
+        ];
+    }
+
+    /**
+     * Nối một tài khoản Google đã xác thực vào tài khoản đang đăng nhập.
+     *
+     * Nơi gọi (AuthController::googleCallback) đã có `sub` trong tay từ
+     * GoogleAuth::exchange(), tức Google đã ký xác nhận; việc còn lại ở đây
+     * chỉ là hai phép kiểm về sở hữu.
+     *
+     * KHÔNG ĐỤNG TỚI `users.email`. Google trả về một email, và nó rất hay
+     * khác email khách đã khai — ghi đè vào là đổi luôn thứ khách dùng để
+     * đăng nhập và để nhận liên kết đặt lại mật khẩu, chỉ vì họ vừa bấm một
+     * nút mang tên "liên kết". Cũng không đặt `email_verified`: khoá xác định
+     * liên kết là `google_id`, không phải email (BR-UC.USER.01-07).
+     *
+     * @return array{ok:bool, error?:string, code?:string}
+     */
+    public static function linkGoogle(string $userId, string $sub): array
+    {
+        $chu = Database::fetchValue(
+            'SELECT id FROM users WHERE google_id = :g',
+            ['g' => $sub]
+        );
+
+        /* Đã nối sẵn vào CHÍNH tài khoản này thì không có gì để làm, và cũng
+           không có gì để phàn nàn — khách bấm hai lần, hoặc bấm nút cũ trên
+           một tab mở từ trước. Nói "xong rồi" đúng hơn là báo lỗi. */
+        if ($chu !== null && $chu !== false && (string) $chu === $userId) {
+            return ['ok' => true, 'code' => 'da_noi_san'];
+        }
+
+        /* Tài khoản Google này đang là chìa của NGƯỜI KHÁC.
+
+           Không im lặng cướp lấy: cột `google_id` có UNIQUE nên câu UPDATE
+           dưới kia sẽ ném lỗi 1062 — nhưng bắt ở đây thì khách nhận được một
+           câu người đọc hiểu được, và quan trọng hơn là không có đường nào để
+           một cú bấm cắt mất lối vào Google của người kia. */
+        if ($chu !== null && $chu !== false) {
+            return [
+                'ok'    => false,
+                'code'  => 'google_taken',
+                'error' => 'Tài khoản Google này đã liên kết với một tài khoản Vin Eyewear '
+                         . 'khác. Vui lòng chọn tài khoản Google khác.',
+            ];
+        }
+
+        /* MỆNH ĐỀ `google_id IS NULL` LÀ MỘT PHÉP KIỂM, KHÔNG PHẢI THỪA.
+
+           Giữa lúc đọc ở trên và ghi ở đây, chính khách này có thể đã nối một
+           tài khoản Google khác ở một tab thứ hai. Không có mệnh đề ấy thì cú
+           ghi sau lặng lẽ đè lên cú trước, và chiếc chìa vừa cắt xong đã hỏng
+           mà không ai được báo. */
+        $doi = Database::execute(
+            'UPDATE users SET google_id = :g WHERE id = :id AND google_id IS NULL',
+            ['g' => $sub, 'id' => $userId]
+        );
+
+        if ($doi === 0) {
+            return [
+                'ok'    => false,
+                'code'  => 'da_co_google',
+                'error' => 'Tài khoản của bạn đang liên kết với một tài khoản Google khác. '
+                         . 'Vui lòng gỡ liên kết hiện tại trước.',
+            ];
+        }
+
+        return ['ok' => true];
+    }
+
+    /**
+     * Gỡ liên kết Google khỏi tài khoản đang đăng nhập.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * HỎI MẬT KHẨU, VÀ KHÔNG PHẢI ĐỂ XÁC MINH DANH TÍNH
+     *
+     * Hay nói đúng hơn: không CHỈ để xác minh danh tính. Gỡ liên kết là tháo
+     * một lối vào, nên câu hỏi thật sự là "gỡ xong thì còn lối nào không" —
+     * và mật khẩu là thứ duy nhất trả lời được câu ấy.
+     *
+     * Tài khoản tạo qua Google có `password_hash` là một chuỗi bcrypt THẬT,
+     * băm từ 32 byte ngẫu nhiên không ai biết (xem findOrCreateGoogle). Cột
+     * ấy không rỗng, nên không có phép kiểm nào trên chính nó phân biệt được
+     * "mật khẩu khách tự đặt" với "mật khẩu không ai biết" — CustomerModel
+     * đã vấp đúng chỗ này một lần, xem khối chú thích trong khachTuXoa().
+     *
+     * Bắt gõ đúng mật khẩu thì câu trả lời tự hiện ra: gõ được nghĩa là mật
+     * khẩu có thật và khách biết nó, tức sau khi gỡ vẫn vào được. Gõ không
+     * được thì họ chưa từng đặt mật khẩu, và câu báo chỉ đường sang "Quên mật
+     * khẩu" thay vì bảo họ gõ lại một thứ chưa hề tồn tại.
+     *
+     * Vế còn lại là ĐỊNH DANH: mật khẩu không đủ, còn phải có số điện thoại
+     * hoặc email để gõ vào ô đầu của màn đăng nhập. Xem googleLink().
+     * ─────────────────────────────────────────────────────────────────────
+     *
+     * @return array{ok:bool, error?:string}
+     */
+    public static function unlinkGoogle(string $userId, string $matKhau): array
+    {
+        $trangThai = self::googleLink($userId);
+
+        if (!$trangThai['linked']) {
+            return ['ok' => false, 'error' => 'Tài khoản của bạn chưa liên kết với Google.'];
+        }
+
+        if (!$trangThai['co_dinh_danh']) {
+            return ['ok' => false, 'error' =>
+                'Tài khoản của bạn chưa có số điện thoại hoặc email nào để đăng nhập, '
+                . 'nên gỡ liên kết Google sẽ khiến bạn không vào lại được. Vui lòng bổ '
+                . 'sung số điện thoại ở form phía trên trước.'];
+        }
+
+        $user = static::find($userId);
+
+        if ($user === null) {
+            return ['ok' => false, 'error' => 'Không tìm thấy tài khoản.'];
+        }
+
+        if (!password_verify($matKhau, (string) ($user['password_hash'] ?? ''))) {
+            /* Chưa từng đặt mật khẩu — xem khối chú thích trên. Chỉ đường
+               sang "Quên mật khẩu" chứ không nói "sai mật khẩu": họ không gõ
+               sai, họ không có gì để gõ. */
+            return ['ok' => false, 'error' =>
+                'Mật khẩu không đúng. Nếu bạn đăng ký bằng Google và chưa từng đặt mật '
+                . 'khẩu, hãy dùng "Quên mật khẩu" để đặt một mật khẩu trước khi gỡ liên kết.'];
+        }
+
+        Database::execute(
+            'UPDATE users SET google_id = NULL WHERE id = :id',
+            ['id' => $userId]
+        );
+
+        return ['ok' => true];
     }
 
     /**

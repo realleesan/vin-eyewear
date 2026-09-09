@@ -1171,16 +1171,32 @@ class AuthController extends BaseController
            sau, có khi là một tài khoản Google khác. Xem googleStart(). */
         $choPhep = (string) ($_SESSION['_google_consent'] ?? '');
         $tuDangKy = ($_SESSION['_google_tab'] ?? '') === 'dang-ky';
-        unset($_SESSION['_google_consent'], $_SESSION['_google_tab']);
+
+        /* Cờ LIÊN KẾT đọc và xoá ở đúng chỗ này, cùng lý do và cùng cách với
+           cờ đồng ý: nó cũng giữ chính chuỗi `state` của lượt sinh ra nó, nên
+           một lượt bấm "Liên kết" bỏ dở không để lại quyền nối cho lượt bấm
+           "Đăng nhập bằng Google" sau đó. Xem linkGoogle(). */
+        $xinNoi = (string) ($_SESSION['_google_link'] ?? '');
+        unset($_SESSION['_google_consent'], $_SESSION['_google_tab'], $_SESSION['_google_link']);
 
         /* Màn để trả khách về khi có lỗi — mục Giao diện: lỗi Google hiện
-           trên chính màn khách vừa đứng. */
-        $veAuth = $tuDangKy ? '/auth?tab=dang-ky' : '/auth';
+           trên chính màn khách vừa đứng.
+
+           Lượt LIÊN KẾT thì màn ấy là trang Hồ sơ, không phải màn đăng nhập:
+           khách đang đăng nhập sẵn, nên /auth chỉ đá họ sang /tai-khoan (xem
+           index()) và câu báo lỗi rơi vào một trang khác hẳn chỗ họ vừa bấm.
+           Đọc $xinNoi trần ở đây là ĐỦ AN TOÀN: nó chỉ chọn đường về, không
+           cho phép điều gì — chỗ cho phép nối là phép so hash_equals bên
+           dưới. */
+        $veAuth = $xinNoi !== ''
+            ? '/tai-khoan?muc=ho-so'
+            : ($tuDangKy ? '/auth?tab=dang-ky' : '/auth');
 
         $daDongY = $choPhep !== '' && hash_equals($choPhep, (string) ($_GET['state'] ?? ''));
 
         /* Khách bấm "Huỷ" ở màn hình của Google. Không phải lỗi — im lặng đưa
-           họ về trang đăng nhập, đừng doạ bằng một dòng đỏ. */
+           họ về chỗ vừa đứng ($veAuth: màn đăng nhập, màn đăng ký, hay trang
+           Hồ sơ), đừng doạ bằng một dòng đỏ. */
         if (isset($_GET['error'])) {
             redirect($veAuth);
         }
@@ -1193,9 +1209,70 @@ class AuthController extends BaseController
         /* EF-01 — Google xác thực thất bại, hoặc kết quả trả về không hợp lệ.
            Không tài khoản nào được tạo; khách thử lại hoặc đăng ký bằng SĐT. */
         if (!$token['ok']) {
-            flash('auth_error', 'Không thể xác thực tài khoản Google. Vui lòng thử lại.');
+            /* ĐẶT ĐÚNG MỘT KHOÁ, THEO ĐÍCH SẮP TỚI. Màn đăng nhập đọc
+               'auth_error', trang Hồ sơ đọc 'account_error' — đặt cả hai cho
+               chắc thì cái không được đọc nằm lại trong phiên và bật ra ở lần
+               mở trang kia, có khi vài ngày sau, không dính gì tới việc khách
+               đang làm lúc đó. */
+            flash($xinNoi !== '' ? 'account_error' : 'auth_error',
+                  'Không thể xác thực tài khoản Google. Vui lòng thử lại.');
             error_log('[Google] Xác thực thất bại: ' . $token['error']);
             redirect($veAuth);
+        }
+
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * NGẢ THỨ HAI CỦA CALLBACK: NỐI CHÌA, KHÔNG PHẢI MỞ CỬA.
+         *
+         * Lượt này xuất phát từ nút "Liên kết" ở trang Hồ sơ, nên khách ĐÃ
+         * đăng nhập rồi — không có ai để đăng nhập nữa, và tuyệt đối không
+         * được rơi xuống findOrCreateGoogle() bên dưới: hàm ấy tra theo
+         * `google_id`, nên một tài khoản Google đang thuộc về NGƯỜI KHÁC sẽ
+         * thành một cú đổi phiên im lặng — khách bấm "Liên kết" trong trang
+         * hồ sơ của mình và đứng dậy với tư cách người lạ.
+         *
+         * Nhánh này vì thế thoát hẳn, không dùng chung một dòng nào với ngả
+         * đăng nhập, kể cả hai chốt nội bộ — chúng phải nói bằng câu chữ và
+         * đích đến của trang Hồ sơ, không phải của màn đăng nhập.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if ($xinNoi !== '' && hash_equals($xinNoi, (string) ($_GET['state'] ?? ''))) {
+            $veHoSo = '/tai-khoan?muc=ho-so';
+            $userId = AuthMiddleware::customerId();
+
+            /* Phiên đã tắt giữa chừng — khách đi Google lâu quá, hoặc đăng
+               xuất ở một tab khác. Không đoán xem họ là ai: đưa về màn đăng
+               nhập, vào lại rồi bấm "Liên kết" một lần nữa. */
+            if ($userId === null) {
+                flash('auth_error', 'Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại '
+                                  . 'rồi liên kết tài khoản Google.');
+                redirect('/auth');
+            }
+
+            /* SRS mục 3.A — Google không áp dụng cho tài khoản nội bộ ở Giai
+               đoạn 1. Hai vế, hai lỗ khác nhau: người đang đăng nhập là nhân
+               viên (nối vào chính tài khoản nội bộ của họ), và tài khoản
+               Google vừa xác thực mang email nội bộ (đem danh tính của một
+               nhân viên gắn vào một tài khoản khách). Chặn cả hai. */
+            if (UserModel::isStaff($userId) || UserModel::isStaffEmail($token['email'])) {
+                flash('account_error', 'Tài khoản nội bộ chưa dùng liên kết Google ở giai '
+                                     . 'đoạn này. Vui lòng liên hệ quản trị viên.');
+                redirect($veHoSo);
+            }
+
+            $noi = UserModel::linkGoogle($userId, $token['sub']);
+
+            if (!$noi['ok']) {
+                flash('account_error', $noi['error']);
+                redirect($veHoSo);
+            }
+
+            flash('account_success', ($noi['code'] ?? '') === 'da_noi_san'
+                ? 'Tài khoản Google này đã được liên kết từ trước.'
+                : 'Đã liên kết tài khoản Google. Từ nay bạn đăng nhập bằng '
+                  . '"Tiếp tục với Google" cũng vào đúng tài khoản này.');
+
+            redirect($veHoSo);
         }
 
         /*
@@ -1265,6 +1342,83 @@ class AuthController extends BaseController
             : 'Đăng nhập thành công!');
 
         redirect($after);
+    }
+
+    /*
+     * ========================================================================
+     * LIÊN KẾT GOOGLE TỪ TRANG HỒ SƠ
+     *
+     * findOrCreateGoogle() cố tình KHÔNG tự nối Google vào tài khoản trùng
+     * email (AF-03), và câu báo của nhánh ấy chỉ khách sang đây: đăng nhập
+     * bằng số điện thoại/mật khẩu trước, rồi tự tay nối Google vào.
+     *
+     * Chiều nối đảo ngược so với luồng đăng ký, và đó là toàn bộ lý do nó an
+     * toàn: quyền vào tài khoản đã được chứng minh bằng mật khẩu TRƯỚC khi
+     * Google được hỏi tới. Google ở đây không trả lời câu "ai là chủ", nó chỉ
+     * cung cấp một `sub` để cất làm chìa thứ hai.
+     * ========================================================================
+     */
+
+    /**
+     * Bấm "Liên kết tài khoản Google" ở trang Hồ sơ — đẩy khách sang Google.
+     *
+     * Cùng khuôn với googleStart() nhưng cờ để lại là `_google_link` chứ
+     * không phải `_google_consent`, và nó cũng giữ chính chuỗi `state` của
+     * lượt này. Hai cờ tách hẳn nhau vì chúng cho phép hai việc khác nhau —
+     * gộp làm một là để một cú bấm ở trang Hồ sơ mở luôn quyền TẠO tài khoản
+     * mới (BR-UC.USER.01-05), và ngược lại.
+     */
+    public function linkGoogle(): void
+    {
+        $userId = AuthMiddleware::requireLogin('/tai-khoan?muc=ho-so');
+        $this->requirePost('/tai-khoan?muc=ho-so');
+
+        if (!GoogleAuth::isConfigured()) {
+            flash('account_error', 'Đăng nhập bằng Google chưa được cấu hình.');
+            redirect('/tai-khoan?muc=ho-so');
+        }
+
+        /* Hỏi lại trạng thái ngay trước khi đi, không tin cái nút vừa được
+           bấm: trang có thể đã mở từ lâu, hoặc khách vừa nối xong ở tab khác.
+           Đi một vòng sang Google rồi mới báo "đã liên kết rồi" là bắt người
+           ta trả giá cho một câu trả lời đã có sẵn ở đây. */
+        if (UserModel::googleLink($userId)['linked']) {
+            flash('account_error', 'Tài khoản của bạn đã liên kết với Google rồi.');
+            redirect('/tai-khoan?muc=ho-so');
+        }
+
+        $state = bin2hex(random_bytes(16));
+        $_SESSION['_google_link'] = $state;
+
+        redirect(GoogleAuth::authUrl($state, '/tai-khoan?muc=ho-so'));
+    }
+
+    /**
+     * Gỡ liên kết Google — POST kèm mật khẩu hiện tại.
+     *
+     * Vì sao phải hỏi mật khẩu cho một thao tác mà người đang đăng nhập lẽ ra
+     * đủ quyền làm: xem khối chú thích của UserModel::unlinkGoogle(). Tóm
+     * tắt — mật khẩu ở đây không chỉ để nhận mặt khách, nó là phép thử DUY
+     * NHẤT trả lời được câu "gỡ xong còn lối nào vào không".
+     */
+    public function unlinkGoogle(): void
+    {
+        $userId = AuthMiddleware::requireLogin('/tai-khoan?muc=ho-so');
+        $this->requirePost('/tai-khoan?muc=ho-so');
+
+        $ket = UserModel::unlinkGoogle($userId, (string) ($_POST['mat_khau'] ?? ''));
+
+        if (!$ket['ok']) {
+            flash('account_error', $ket['error']);
+            /* Trả về với form gỡ ĐANG MỞ: đóng nó lại thì câu báo lỗi đứng
+               một mình ở đầu trang, cạnh một cái nút phải bấm lại mới thấy ô
+               mật khẩu. Cùng lối với ?xoa=1 của khối Xoá tài khoản. */
+            redirect('/tai-khoan?muc=ho-so&go-google=1');
+        }
+
+        flash('account_success', 'Đã gỡ liên kết tài khoản Google. Từ nay bạn đăng nhập '
+                               . 'bằng số điện thoại hoặc email và mật khẩu.');
+        redirect('/tai-khoan?muc=ho-so');
     }
 
     public function logout(): void
@@ -1440,6 +1594,12 @@ class AuthController extends BaseController
     private function sectionData(string $section, string $userId): array
     {
         switch ($section) {
+            case 'ho-so':
+                /* Trạng thái liên kết Google — khối cuối mục Hồ sơ. Hỏi ở đây
+                   chứ không để view gọi model: mục này là mục duy nhất vẽ khối
+                   ấy, nên câu hỏi không nên chạy ở bốn mục còn lại. */
+                return ['google' => UserModel::googleLink($userId)];
+
             case 'don-hang':
                 $orders = OrderModel::forUser($userId);
                 $tab    = (string) ($_GET['loc'] ?? '');
