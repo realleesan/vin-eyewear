@@ -22,34 +22,80 @@
  *    trang cùng ngôn ngữ. Giữ nguyên URL cũ nên mọi liên kết và mọi lệnh
  *    redirect đang có vẫn trỏ đúng chỗ.
  *
- * 2. NÚT GOOGLE VẼ ĐÚNG NHƯNG KHOÁ LẠI.
- *    Dự án chưa có hạ tầng OAuth nào — không client ID, không route callback,
- *    bảng users không có cột nối tài khoản Google. Nút vẫn ở đúng chỗ và đúng
- *    hình dạng bản thiết kế, nhưng `disabled` kèm chữ "Sắp có", thay vì bấm
- *    vào rồi không có gì xảy ra.
+ * 2. NÚT GOOGLE CHỈ SỐNG KHI ĐÃ CẤU HÌNH.
+ *    Chưa điền GOOGLE_CLIENT_ID/SECRET thì nó là nút xám "Sắp có" —
+ *    GoogleAuth::isConfigured() quyết. Đã cấu hình thì nó là thẻ <a> (GET) ở
+ *    cả hai tab, chỉ khác tham số mang theo. Ở tab đăng ký nó KHÔNG tạo tài
+ *    khoản mà dẫn sang màn "Hoàn tất tạo tài khoản"
+ *    (auth/google-signup.php) — hai cách đăng ký, hai form, hai ô tick.
  *
- * 3. Ô "DUY TRÌ ĐĂNG NHẬP" ĐỨNG TRƯỚC NÚT TRONG MÃ NGUỒN.
+ * 3. Ô "GHI NHỚ ĐĂNG NHẬP" ĐỨNG TRƯỚC NÚT TRONG MÃ NGUỒN.
  *    Bản thiết kế xếp nó SAU nút "Đăng nhập" trên màn hình. Giữ đúng thứ tự
  *    ấy trong HTML thì người dùng bàn phím phải Tab QUA nút gửi mới tới được ô
- *    tick — tức là gặp nút gửi trước khi kịp chọn có duy trì đăng nhập hay
+ *    tick — tức là gặp nút gửi trước khi kịp chọn có ghi nhớ đăng nhập hay
  *    không. Nên HTML để ô tick trước, còn CSS (`order`) đẩy nó xuống dưới nút.
  *    Nhìn giống hệt bản thiết kế, thứ tự Tab thì đúng.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 $old        = $old ?? [];
+$errors     = $errors ?? [];
 $isRegister = $tab === 'dang-ky';
+$signup     = $signup ?? [];
 
-/* Bước của luồng đăng ký nhiều chặng — '' là màn nhập số điện thoại.
-   AuthController::signupStep() đã lọc, ở đây chỉ việc dùng. */
-$step   = $isRegister ? ($step ?? '') : '';
-$signup = $signup ?? [];
+/* Hai liên kết đổi tab phải MANG THEO đích đang dở. Khách bị giỏ hàng đá về
+   /auth?redirect=/thanh-toan rồi bấm "Đăng ký" mà mất tham số ấy thì đăng ký
+   xong bị thả về trang chủ, không quay lại được việc đang làm —
+   BR-UC.USER.01-09 nói rõ phải quay lại. */
+$giuDich  = ($redirectRaw ?? '') !== '' ? 'redirect=' . rawurlencode($redirectRaw) : '';
+$urlLogin = '/auth' . ($giuDich !== '' ? '?' . $giuDich : '');
+$urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
 
-/* Khối "HOẶC · Google · điều khoản · đã có tài khoản" chỉ hợp lý ở màn ĐẦU:
-   giữa chừng luồng xác minh, một nút "Tiếp tục với Google" là lời mời bỏ dở
-   việc đang làm, còn dòng "Đã có tài khoản?" thì đã có lối ra riêng ở từng
-   màn rồi. */
-$showOr = $step === '';
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * LỖI THEO TỪNG Ô — DỰNG Ở ĐÂY, DÙNG CHO CẢ HAI TAB
+ *
+ * Hai màn không bao giờ hiện cùng lúc nên chúng chia nhau một mảng $errors và
+ * một khoá phiên ('_auth_errors'). Ba cái đóng gói dưới đây đi kèm nhau và
+ * được truyền sang auth/_signup.php qua partial(), để hai màn không trôi thành
+ * hai cách vẽ lỗi khác nhau.
+ *
+ * Màn ĐĂNG NHẬP chỉ dùng chúng cho EF-01…EF-04 (những lỗi nhìn chuỗi đã gõ là
+ * biết). EF-05…EF-07 cố tình KHÔNG gắn vào ô nào — xem BR-UC.USER.02-03 và
+ * khối chú thích trong AuthController::login().
+ */
+
+/** Ô này có lỗi không. */
+$hong = static fn (string $field): bool =>
+    isset($errors[$field]) && $errors[$field] !== '' && $errors[$field] !== [];
+
+/**
+ * In dòng lỗi của một trường, hoặc không in gì.
+ *
+ * Giá trị trong $errors thường là một chuỗi, nhưng CÓ THỂ là mảng
+ * ['msg', 'href', 'text'] khi câu báo phải kèm một liên kết — EF-10 của màn
+ * đăng ký đòi câu "Số điện thoại này đã được đăng ký" đi cùng link Đăng nhập.
+ * Xem AuthController::loiCoLink().
+ */
+$loi = static function (string $field) use ($errors, $hong): void {
+    if (!$hong($field)) {
+        return;
+    }
+
+    $v = $errors[$field];
+    ?>
+    <span class="authfield__err" role="alert">
+        <?php if (is_array($v)): ?>
+            <?= e((string) ($v['msg'] ?? '')) ?>
+            <a href="<?= e((string) ($v['href'] ?? '/auth')) ?>"><?= e((string) ($v['text'] ?? '')) ?></a>
+        <?php else: ?>
+            <?= e((string) $v) ?>
+        <?php endif; ?>
+    </span>
+<?php };
+
+/** Lớp tô viền đỏ cho ô đang có lỗi. */
+$xau = static fn (string $field): string => $hong($field) ? ' is-err' : '';
 ?>
 
 <section class="authwrap">
@@ -81,16 +127,14 @@ $showOr = $step === '';
         <!-- ══════════ CỘT FORM ══════════ -->
         <div class="authcard__panel">
 
-            <?php if ($step === ''): ?>
-                <div class="authhead">
-                    <h1 class="authhead__title"><?= $isRegister ? 'Tạo tài khoản' : 'Đăng nhập' ?></h1>
-                    <p class="authhead__lead">
-                        <?= $isRegister
-                            ? 'Mở tài khoản để theo dõi đơn hàng và lịch hẹn.'
-                            : 'Chào mừng bạn quay lại Vin Eyewear.' ?>
-                    </p>
-                </div>
-            <?php endif; ?>
+            <div class="authhead">
+                <h1 class="authhead__title"><?= $isRegister ? 'Tạo tài khoản' : 'Đăng nhập' ?></h1>
+                <p class="authhead__lead">
+                    <?= $isRegister
+                        ? 'Mở tài khoản để theo dõi đơn hàng và lịch hẹn.'
+                        : 'Chào mừng bạn quay lại Vin Eyewear.' ?>
+                </p>
+            </div>
 
             <?php if ($success !== null): ?>
                 <p class="authflash authflash--ok" role="status"><?= e($success) ?></p>
@@ -150,10 +194,12 @@ $showOr = $step === '';
                             nhiều dạng định danh; để "email" thì trình quản lý mật
                             khẩu sẽ không gợi ý mục đã lưu bằng số điện thoại.
                         -->
-                        <input class="authfield__input" type="text" name="email" required
-                               autocomplete="username" inputmode="email" autofocus
+                        <input class="authfield__input<?= $xau('email') ?>" type="text" name="email"
+                               required autocomplete="username" inputmode="email" autofocus
                                placeholder="Số điện thoại / Email"
                                value="<?= e($old['email'] ?? '') ?>">
+                        <?php /* EF-01, EF-03, EF-04 — cả ba đều nói về ô này. */ ?>
+                        <?php $loi('email'); ?>
                     </label>
 
                     <div class="authfield">
@@ -176,7 +222,13 @@ $showOr = $step === '';
                             'pw_auto'     => 'current-password',
                             'pw_holder'   => '••••••••',
                             'pw_required' => true,
+                            'pw_err'      => $hong('password'),
                         ]); ?>
+                        <?php /* EF-02, và CHỈ EF-02: "sai mật khẩu" (EF-07)
+                                 không được gắn vào đây — gắn vào là đã nói ô
+                                 trên đúng, tức là địa chỉ ấy có tài khoản.
+                                 Xem BR-UC.USER.02-03. */ ?>
+                        <?php $loi('password'); ?>
                     </div>
 
                     <!-- Ô tick đứng TRƯỚC nút trong HTML, CSS đẩy nó xuống dưới —
@@ -190,7 +242,7 @@ $showOr = $step === '';
                                 <path d="M4 12.5l5.5 5.5L20 7"></path>
                             </svg>
                         </span>
-                        <span class="authcheck__text">Duy trì đăng nhập</span>
+                        <span class="authcheck__text">Ghi nhớ đăng nhập</span>
                     </label>
 
                     <button type="submit" class="authbtn authbtn--primary">Đăng nhập</button>
@@ -198,20 +250,22 @@ $showOr = $step === '';
 
             <?php else: ?>
 
-                <?php /* ĐĂNG KÝ NAY LÀ MỘT LUỒNG NHIỀU CHẶNG, không còn một
-                         form gửi một phát: số điện thoại phải xác minh bằng mã
-                         trước khi tài khoản ra đời, và ô họ tên đã bỏ hẳn.
-                         Dựng theo "Dang ky.dc.html" — xem auth/_signup.php và
-                         khối "ĐĂNG KÝ — BỐN CHẶNG" trong AuthController. */ ?>
+                <?php /* ĐĂNG KÝ LÀ MỘT FORM, MỘT LƯỢT GỬI — theo UC-USER-01.
+                         Luồng sáu chặng nối bằng ?buoc= đã gỡ; khâu xác minh
+                         bằng mã nay là một hàng trong chính form ấy. Xem khối
+                         chú thích đầu auth/_signup.php. */ ?>
                 <?php partial('auth/_signup', [
-                    'step'   => $step,
-                    'signup' => $signup,
-                    'old'    => $old,
+                    'signup'   => $signup,
+                    'old'      => $old,
+                    'errors'   => $errors,
+                    'redirect' => $redirect,
+                    // Ba cái đóng gói dựng ở đầu file này — xem khối chú thích ở đó.
+                    'hong'     => $hong,
+                    'loi'      => $loi,
+                    'xau'      => $xau,
                 ]); ?>
 
             <?php endif; ?>
-
-            <?php if ($showOr): ?>
 
             <div class="author" aria-hidden="true">
                 <span class="author__line"></span>
@@ -228,32 +282,44 @@ $showOr = $step === '';
              * Google còn tệ hơn nút không bấm được, vì khách không biết lỗi ở
              * phía họ hay phía site.
              *
-             * Là thẻ <a> chứ không phải form: bước này chưa đổi gì cả, và nó
-             * phải chạy khi không có JavaScript. Thứ chống giả mạo nằm ở tham
-             * số `state` mà GoogleAuth sinh ra và cất trong session.
+             * ─────────────────────────────────────────────────────────────
+             * MỘT HÌNH DẠNG CHO CẢ HAI TAB: THẺ <a>, GET.
+             *
+             * Ở tab đăng ký, nút này từng là nút submit của CHÍNH form đăng ký
+             * (form="signupform", POST) — cách duy nhất để cú bấm mang theo ô
+             * tick Điều khoản của form ấy, vì hồi đó callback của Google tạo
+             * tài khoản ngay khi quay về.
+             *
+             * Nay không còn: đăng ký bằng Google có màn "Hoàn tất tạo tài
+             * khoản" riêng (/auth/dang-ky/google), và ô tick BR-UC.USER.01-05
+             * nằm ở đó — đúng chỗ tài khoản thật sự ra đời. Nút này lại chỉ là
+             * một cú chuyển hướng sang Google, không đổi gì cả, nên GET là
+             * đúng. Thứ chống giả mạo của luồng OAuth là tham số `state` mà
+             * GoogleAuth sinh ra và cất trong session.
+             * ─────────────────────────────────────────────────────────────
              */
             $googleOn = GoogleAuth::isConfigured();
             ?>
+            <?php
+            /* Địa chỉ mang theo HAI thứ: `tab` để googleStart() biết trả khách
+               về màn nào khi có lỗi và chọn đúng đích mặc định của
+               BR-UC.USER.01-09 (đăng ký xong về trang chủ, đăng nhập xong về
+               /tai-khoan), và `redirect` để cả hai quay lại được nghiệp vụ
+               đang dở. */
+            $urlGoogle = '/auth/google'
+                . ($isRegister ? '?tab=dang-ky' : '')
+                . ($redirect !== ''
+                    ? ($isRegister ? '&' : '?') . 'redirect=' . rawurlencode($redirect)
+                    : '');
+            ?>
             <?php if ($googleOn): ?>
-            <a class="authbtn authbtn--google"
-               href="/auth/google<?= $redirect !== '' ? '?redirect=' . e(rawurlencode($redirect)) : '' ?>"
-               rel="nofollow">
-                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-                    <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"></path>
-                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"></path>
-                    <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"></path>
-                    <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"></path>
-                </svg>
+            <a class="authbtn authbtn--google" href="<?= e($urlGoogle) ?>" rel="nofollow">
+                <?php partial('auth/_google-icon'); ?>
                 Tiếp tục với Google
             </a>
             <?php else: ?>
             <button type="button" class="authbtn authbtn--google" disabled>
-                <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-                    <path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"></path>
-                    <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"></path>
-                    <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"></path>
-                    <path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C36.9 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.9z"></path>
-                </svg>
+                <?php partial('auth/_google-icon'); ?>
                 Tiếp tục với Google
                 <span class="authbtn__soon">Sắp có</span>
             </button>
@@ -261,18 +327,17 @@ $showOr = $step === '';
 
             <?php
             /*
-             * ĐỒNG Ý NGẦM — chỉ còn đúng nghĩa ở HAI chỗ, và câu chữ phải nói
-             * đúng chỗ nào:
+             * ĐỒNG Ý NGẦM — CHỈ CÒN Ở MÀN ĐĂNG NHẬP.
              *
-             *   · màn ĐĂNG NHẬP — người đã có tài khoản thì đã tick lúc đăng ký;
-             *     bắt tick lại mỗi lần vào là thêm ma sát mà không thêm giá trị
-             *     pháp lý nào.
-             *   · nút "Tiếp tục với Google" — luồng đó không đi qua form đăng ký
-             *     nên không có ô tick nào; chính cú bấm là hành vi đồng ý.
-             *     UserModel::findOrCreateGoogle() ghi vết dựa trên câu này.
+             * Người đã có tài khoản thì đã tick lúc đăng ký; bắt tick lại mỗi
+             * lần vào là thêm ma sát mà không thêm giá trị pháp lý nào.
              *
-             * Màn ĐĂNG KÝ bằng số điện thoại thì không: ở đó có ô tick thật ở
-             * chặng cuối (auth/_signup.php).
+             * Màn ĐĂNG KÝ thì KHÔNG dùng câu này nữa — kể cả cho nút Google.
+             * BR-UC.USER.01-05 đòi một hành vi đồng ý TƯỜNG MINH cho cả hai
+             * phương thức, nên ở đó có đúng một ô tick thật (auth/_signup.php)
+             * và nút Google gửi đi cùng ô tick ấy. Một dòng chữ "bằng việc tạo
+             * tài khoản, bạn đồng ý…" đứng cạnh một ô tick nói cùng chuyện chỉ
+             * làm người đọc hoang mang xem cái nào mới tính.
              *
              * Vế "Điều khoản dịch vụ" chỉ hiện khi văn bản đã tồn tại. Trước đây
              * nó trỏ cứng tới /chinh-sach#dieu-khoan — một neo KHÔNG có trong
@@ -282,24 +347,24 @@ $showOr = $step === '';
             $consent  = (array) config('auth.consent', []);
             $termsUrl = (string) ($consent['terms_url'] ?? '');
             ?>
+            <?php if (!$isRegister): ?>
             <p class="authnote">
-                Bằng việc <?= $isRegister ? 'tạo tài khoản' : 'đăng nhập' ?>, bạn đồng ý với
+                Bằng việc đăng nhập, bạn đồng ý với
                 <?php if ($termsUrl !== ''): ?>
                     <a href="<?= e($termsUrl) ?>">Điều khoản dịch vụ</a> và
                 <?php endif; ?>
                 <a href="<?= e((string) ($consent['privacy_url'] ?? '/chinh-sach#bao-mat')) ?>">Chính sách bảo mật</a>
                 của Vin Eyewear.
             </p>
+            <?php endif; ?>
 
             <p class="authalt">
                 <?php if ($isRegister): ?>
-                    Đã có tài khoản? <a href="/auth">Đăng nhập</a>
+                    Đã có tài khoản? <a href="<?= e($urlLogin) ?>">Đăng nhập</a>
                 <?php else: ?>
-                    Bạn mới biết đến Vin Eyewear? <a href="/auth?tab=dang-ky">Đăng ký</a>
+                    Chưa có tài khoản? <a href="<?= e($urlSignup) ?>">Đăng ký</a>
                 <?php endif; ?>
             </p>
-
-            <?php endif; /* $showOr */ ?>
         </div>
     </div>
 </section>

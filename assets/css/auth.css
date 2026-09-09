@@ -147,6 +147,30 @@
     min-width: 0;
 }
 
+/* ── Khung MỘT CỘT: màn "Hoàn tất tạo tài khoản" bằng Google ───────────────
+
+   Cùng cái thẻ, bỏ cột ảnh. Khách đang ở GIỮA một luồng — đi tiếp hoặc bỏ dở
+   — chứ không đứng trước một ngã ba để chọn cách đăng ký, nên ảnh thương hiệu
+   và hai liên kết đổi tab đều không có việc gì ở đây.
+
+   560px chứ không 460px như cột form của thẻ hai cột: đứng một mình thì bề
+   ngang ấy trông như một cột bị hụt mất nửa kia. */
+.authcard--solo {
+    display: block;
+    width: 560px;
+}
+
+/* Thẻ một cột thì không có gì để canh giữa theo chiều dọc, và `center` sẽ
+   khoá chiều cao lại khi form dài ra vì mấy câu báo lỗi. */
+.authcard--solo .authcard__panel {
+    justify-content: flex-start;
+    padding: 48px 44px;
+}
+
+@media (max-width: 600px) {
+    .authcard--solo .authcard__panel { padding: 36px 24px; }
+}
+
 .authhead {
     display: flex;
     flex-direction: column;
@@ -232,6 +256,23 @@
 /* Chỉ tô đỏ SAU khi người dùng đã rời ô và gõ sai — :user-invalid, không phải
    :invalid. :invalid tô đỏ mọi ô bắt buộc ngay khi trang vừa mở. */
 .authfield__input:user-invalid { border-color: var(--danger); }
+
+/* Ô Email ở màn "Hoàn tất tạo tài khoản" bằng Google: điền sẵn và khoá.
+
+   Nền chìm + chữ nhạt một nấc để đọc ra ngay là "thông tin cho biết", không
+   phải "ô chờ bạn gõ" — nhưng KHÔNG mờ tới mức khó đọc: đây đúng là địa chỉ
+   khách cần soi lại xem mình có chọn nhầm tài khoản Google hay không.
+
+   opacity của <input disabled> do trình duyệt đặt (Safari nặng tay nhất), nên
+   phải ghi đè, nếu không hai trình duyệt hiện hai độ mờ khác nhau. */
+.authfield__input--locked:disabled {
+    opacity: 1;
+    background: var(--surface-sunken);
+    border-color: var(--line);
+    color: var(--u-note);
+    cursor: default;
+    -webkit-text-fill-color: var(--u-note);   /* Safari bỏ qua `color` trên ô khoá */
+}
 
 .authfield__hint {
     font-size: var(--fs-caption);
@@ -339,7 +380,7 @@
     color: var(--muted);
 }
 
-/* --- Ô tick "Tôi đã đọc và đồng ý…" ở màn tạo mật khẩu ---
+/* --- Ô tick "Tôi đã đọc và đồng ý…" ở màn đăng ký ---
 
    Cùng nguyên thể với ô "Duy trì đăng nhập", khác đúng hai điểm:
 
@@ -347,7 +388,9 @@
      DƯỚI nút gửi trên màn đăng nhập, trong khi HTML giữ nó ở trên cho đúng
      thứ tự Tab. Ở đây không có nghịch lý đó: ô tick phải đứng ngay trước nút
      "Đăng ký" cả trên màn hình lẫn trong mã nguồn — người ta đồng ý rồi mới
-     bấm.
+     bấm. (Nay ô tick còn nằm trong .authagree nên `order` không còn tác dụng
+     gì ở đây; dòng dưới giữ lại để lớp này vẫn đúng nếu có ai dùng nó ngoài
+     khối ấy.)
    · canh theo mép TRÊN. Câu này dài hơn một dòng; align-items:center của
      .authcheck sẽ dìm hộp vuông xuống giữa khối chữ, trông như nó thuộc về
      dòng thứ hai. */
@@ -887,35 +930,6 @@
 .amethod__name { font-size: var(--fs-body-lg); font-weight: 500; color: var(--ink); }
 .amethod__note { font-size: var(--fs-body-sm); color: var(--muted); }
 
-/* ============================================================
-   DẢI "CHẾ ĐỘ THỬ" — Zalo OTP chưa cắm
-   ============================================================
-
-   Hiện ở màn nhập mã khi Otp::bypass() bật, để nói ra một sự thật mà màn hình
-   không tự lộ: sáu ô kia đang nhận bất cứ con số nào.
-
-   Tông hổ phách chứ không phải đỏ của .authflash--err hay tông thương hiệu của
-   .authgate: khách không làm sai gì, và đây cũng không phải một lối đi được
-   gợi ý — nó là một tình trạng tạm thời của hệ thống. Ba khối cùng chỗ đứng
-   trên trang mà khác nghĩa thì phải khác màu, nếu không cả ba đọc như nhau.
-
-   Màu gõ thẳng, cùng nếp với #eef3e9/var(--accent-subtle) ở .authflash: bảng token của
-   layout.css chưa có tông cảnh báo, mà thêm token cho một khối sẽ biến mất
-   vào ngày cắm xong ZNS thì không đáng. */
-.adev {
-    margin: 0 0 18px;
-    padding: 12px 14px;
-    border-left: 3px solid #c98a2e;
-    border-radius: var(--radius-sm);
-    background: #fdf4e3;
-    font-size: var(--fs-note);
-    line-height: 1.6;
-    color: #6d4d16;
-    text-align: left;
-}
-
-.adev strong { font-weight: 500; color: #533a0f; }
-
 /* --- Sáu ô nhập mã --- */
 
 /* min-width: 0 KHÔNG PHẢI THỪA.
@@ -1117,6 +1131,111 @@
     color: var(--muted);
 }
 
+/* ============================================================
+   MÀN ĐĂNG KÝ MỘT TRANG — lỗi từng ô + hàng "Mã xác minh"
+   ------------------------------------------------------------
+   UC-USER-01 chốt hai thứ mà bộ lớp cũ chưa có: mỗi ô hỏng thì
+   câu báo phải nằm NGAY DƯỚI ô ấy (EF-02…EF-12 đều chỉ đích danh
+   một trường), và ô "Mã xác minh" nằm cùng hàng với nút "Gửi mã"
+   thay vì là cả một màn riêng.
+   ============================================================ */
+
+/* --- Câu báo lỗi của một ô --- */
+
+/* Dùng chung màu chữ với .authflash--err nhưng KHÔNG có nền: đây là
+   một dòng nhỏ nép dưới ô nhập, không phải một dải báo của cả trang.
+   Sáu dải nền đỏ chồng lên nhau trong một form là một bức tường đỏ. */
+.authfield__err {
+    display: block;
+    margin-top: 2px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #8f3535;
+}
+
+/* Viền đỏ do MÁY CHỦ đặt, khác hẳn :user-invalid ở trên (do trình duyệt
+   đặt khi khách rời ô). Hai nguồn nhưng cùng một hình thức — người nhìn
+   không cần biết ai vừa từ chối cái gì. */
+.authfield__input.is-err,
+.authfield__input.is-err:focus { border-color: var(--danger); }
+
+/* Ghi chú dưới ô mã đổi sang tông lỗi khi lần xin mã vừa rồi hỏng. */
+.authfield__hint.is-err { color: #8f3535; }
+
+/* Ô tick Điều khoản + câu báo của nó: một khối, giãn 6px, để câu lỗi dính
+   vào đúng thứ nó nói tới thay vì trôi 22px xuống gần nút "Đăng ký". */
+.authagree {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* --- Hàng "Mã xác minh" + nút "Gửi mã" --- */
+
+/* .authfield lo phần khoảng cách dọc; ở đây chỉ dựng cái hàng ngang. */
+.acode__row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+}
+
+/* Ô nhập co lại được, nút thì không: nút phải giữ đủ chỗ cho nhãn dài
+   nhất của nó ("Gửi lại mã (60s)"). */
+.acode__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    letter-spacing: 0.28em;
+}
+
+.acode__send {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 16px;
+    border: 1px solid var(--brand);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--brand);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s, color .18s, border-color .18s;
+}
+
+.acode__send:hover:not(:disabled),
+.acode__send:focus-visible:not(:disabled) {
+    background: var(--brand);
+    color: var(--on-brand);
+}
+
+/* Khoá trong lúc đếm ngược. Chốt THẬT nằm ở máy chủ
+   (AuthController::signupSendCode, `if (time() < resend)`), nên gỡ
+   disabled bằng devtools cũng không xin thêm được mã nào. */
+.acode__send:disabled {
+    border-color: var(--line);
+    color: var(--u-meta);
+    cursor: not-allowed;
+}
+
+.acode__num[hidden] { display: none; }
+
+/* Màn hình hẹp: nút xuống hàng thay vì bóp ô nhập còn vài ký tự. */
+@media (max-width: 380px) {
+    .acode__row { flex-wrap: wrap; }
+    .acode__send { width: 100%; justify-content: center; padding: 10px 16px; }
+}
+
+/* Liên kết trong câu báo lỗi — EF-10 đòi câu "đã được đăng ký" phải kèm link
+   Đăng nhập. Giữ nguyên màu đỏ của câu, chỉ gạch chân và đậm lên: một liên
+   kết màu thương hiệu nằm giữa một câu đỏ trông như hai câu rời nhau. */
+.authfield__err a {
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+}
 
 /* ============================================================================
    NÉT CHỮ FURNISH — khối chốt cuối file

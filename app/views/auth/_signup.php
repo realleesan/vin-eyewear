@@ -1,446 +1,293 @@
 <?php
 
 /**
- * auth/_signup.php — luồng đăng ký nhiều chặng (/auth?tab=dang-ky[&buoc=…]).
- *
- * Dựng theo "Dang ky.dc.html" (Claude Design). Bản thiết kế vẽ SÁU màn; ở đây
- * cả sáu nằm trong đúng cái thẻ hai cột của trang đăng nhập, vì yêu cầu là
- * "giao diện lấy cái cũ, luồng nút bấm lấy theo design".
- *
- *   ''            Nhập số điện thoại      → POST /auth/dang-ky
- *   xac-minh      "Gửi mã qua Zalo?"      → POST /auth/dang-ky/gui-ma
- *   phuong-thuc   Chọn kênh gửi           → POST /auth/dang-ky/gui-ma
- *                 (ĐANG ẨN: chỉ còn Zalo, xem Otp::METHODS)
- *   ma            Nhập 6 số               → POST /auth/dang-ky/xac-minh
- *   da-dang-ky    Số đã có tài khoản      → lối ra: đăng nhập, hoặc đổi số
- *   mat-khau      Tạo mật khẩu            → POST /auth/dang-ky/mat-khau
- *   xong          Đăng ký thành công
- *
- * Bước nào được phép mở là do AuthController::signupStep() quyết, không phải
- * ?buoc= trên URL — xem chú thích ở đó.
- *
- * Nhận qua partial(): $step, $signup (mảng của signupView(), rỗng khi chưa
- * bắt đầu), $old.
+ * auth/_signup.php — màn "Tạo tài khoản" (/auth?tab=dang-ky).
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * MÃ XÁC MINH CHƯA GỬI ĐI ĐÂU ĐƯỢC — xem khối chú thích đầu core/Otp.php.
- * Ở chế độ phát triển, mã hiện lên chính dải .authflash phía trên.
+ * MỘT MÀN, MỘT LƯỢT GỬI — theo UC-USER-01 (mục Giao diện và Luồng sự kiện
+ * chính). Bản trước chia luồng thành sáu chặng nối nhau bằng ?buoc= (nhập số →
+ * hỏi kênh gửi → chọn kênh → nhập mã → tạo mật khẩu → xong); đặc tả chốt lại
+ * chỉ còn MỘT màn hỏi đủ:
+ *
+ *     Họ tên * · Số điện thoại * · Email (không bắt buộc)
+ *     Mật khẩu * · Xác nhận mật khẩu * · ô tick Điều khoản/Chính sách
+ *     nút "Đăng ký" · vạch "HOẶC" · "Tiếp tục với Google" · "Đã có tài khoản?"
+ *
+ * Ba mục cuối nằm ở auth/index.php vì màn đăng nhập dùng chung.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * MÃ XÁC MINH KHÔNG CÒN LÀ MỘT CHẶNG RIÊNG — NÓ LÀ MỘT HÀNG TRONG FORM NÀY
+ *
+ * BR-UC.USER.01-02 nói "Không yêu cầu OTP ở Phase 1". Nhưng gỡ hẳn khâu xác
+ * minh thì ngày cắm xong Zalo phải dựng lại từ đầu, nên nó ở lại — chỉ đổi chỗ
+ * đứng: một hàng "Mã xác minh" ngay dưới ô số điện thoại, kèm nút "Gửi mã" gọi
+ * ngầm (assets/js/auth.js) để khách không rời trang và không mất chữ đã gõ.
+ *
+ * HÀNG ẤY LUÔN HIỆN, kể cả khi Zalo OA chưa khai xong — lúc đó máy chủ nhận
+ * mọi dãy SÁU CHỮ SỐ (xem Otp::bypass() và AuthController::signupCodeProblem).
+ * Ẩn hẳn hàng này khi chưa cắm Zalo thì màn đăng ký ở máy phát triển khác hẳn
+ * màn ở máy thật — một khác biệt chỉ vỡ ra đúng vào ngày cắm xong.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * LỖI HIỆN DƯỚI TỪNG Ô, KHÔNG GOM VÀO MỘT DẢI ĐỎ
+ *
+ * EF-02…EF-12 đều chỉ đích danh một trường và một câu. Gom cả vào dải
+ * .authflash ở đầu thẻ thì khách phải tự dò xem câu ấy nói về ô nào — mà form
+ * này có sáu ô. $errors là mảng khoá-theo-tên-trường do
+ * AuthController::signupSubmit() dựng; dải đỏ ở trên chỉ còn dành cho lỗi
+ * KHÔNG thuộc ô nào: EF-01 (Google) và EF-13 (lỗi hệ thống).
+ *
+ * Nhận qua partial(): $signup (mảng của signupView()), $old, $errors, $redirect,
+ * và ba cái đóng gói vẽ lỗi $hong/$loi/$xau — xem ngay dưới.
  */
 
 $signup = $signup ?? [];
-$phone  = $signup['display'] ?? '';
+$old    = $old    ?? [];
+$errors = $errors ?? [];
 
-/** Dải ba bước ở đầu bản thiết kế. Bước hiện tại quyết ba cái chấm sáng tới đâu. */
-$stage = match ($step) {
-    'mat-khau'   => 2,
-    'xong'       => 3,
-    default      => 1,
-};
+/*
+ * BA CÁI ĐÓNG GÓI VẼ LỖI ĐẾN TỪ auth/index.php, không dựng lại ở đây.
+ *
+ *   $hong('ten_o')  ô này có lỗi không
+ *   $loi('ten_o')   in dòng lỗi dưới ô, hoặc không in gì
+ *   $xau('ten_o')   lớp tô viền đỏ cho ô
+ *
+ * Chép một bản thứ hai vào đây thì sớm muộn hai màn cũng vẽ lỗi hai kiểu —
+ * xem khối chú thích tại chỗ dựng chúng. Vế `?? fn` chỉ là lưới đỡ cho ngày
+ * có ai đó nhúng file này từ một chỗ khác mà quên truyền.
+ */
+$hong = $hong ?? static fn (string $f): bool => false;
+$loi  = $loi  ?? static function (string $f): void {};
+$xau  = $xau  ?? static fn (string $f): string => '';
 
-/** Nút lùi của các màn giữa — cùng dáng với nút "‹" của hộp thoại mua hàng. */
-$backTo = static function (string $href): void { ?>
-    <a class="aback" href="<?= e($href) ?>" aria-label="Quay lại">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6"></path>
-        </svg>
-    </a>
-<?php };
+/*
+ * VĂN BẢN ĐỒNG Ý — chỉ nói về thứ CÓ THẬT.
+ *
+ * Trang Điều khoản dịch vụ chưa tồn tại (xem config/auth.php), nên vế đó chỉ
+ * hiện khi 'terms_url' đã được điền. Xin đồng ý cho một văn bản không ở đâu cả
+ * thì tệ hơn là không xin.
+ */
+$consent  = (array) config('auth.consent', []);
+$termsUrl = (string) ($consent['terms_url'] ?? '');
 ?>
 
-<?php if ($step !== ''): ?>
-    <?php /* Ba chặng: Xác minh SĐT → Tạo mật khẩu → Hoàn tất. Màn nhập số
-             chưa vào chặng nào nên không vẽ dải này. */ ?>
-    <ol class="astage" role="list">
-        <?php foreach (['Xác minh SĐT', 'Tạo mật khẩu', 'Hoàn tất'] as $i => $label): ?>
-            <?php $n = $i + 1; ?>
-            <li class="astage__item<?= $n < $stage ? ' is-done' : ($n === $stage ? ' is-now' : '') ?>">
-                <span class="astage__dot" aria-hidden="true"><?= $n < $stage ? '✓' : $n ?></span>
-                <span class="astage__label"><?= e($label) ?></span>
-            </li>
-        <?php endforeach; ?>
-    </ol>
-<?php endif; ?>
-
-<?php if ($step === ''): ?>
-
-    <!-- ══════════ 1. NHẬP SỐ ĐIỆN THOẠI ══════════ -->
-    <?php /* Chỉ MỘT ô. Bản thiết kế bỏ cả họ tên lẫn mật khẩu khỏi màn này:
-             cả hai hỏi ở chặng cuối, sau khi số điện thoại đã xác minh xong —
-             gõ tên với mật khẩu trước rồi kẹt ở màn nhập mã là mất công vô ích. */ ?>
-    <form class="authform" method="post" action="/auth/dang-ky">
-        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-
-        <label class="authfield">
-            <span class="authfield__label">Số điện thoại</span>
-            <input class="authfield__input" type="tel" name="phone" required
-                   autocomplete="tel" autofocus placeholder="0912345678"
-                   value="<?= e($old['phone'] ?? '') ?>">
-            <span class="authfield__hint">Dùng số này để đăng nhập.</span>
-        </label>
-
-        <!-- Ô tick đứng TRƯỚC nút trong HTML, CSS đẩy nó xuống dưới —
-             xem ghi chú số 3 ở đầu auth/index.php. -->
-        <label class="authcheck">
-            <input type="checkbox" name="remember" value="1" checked>
-            <span class="authcheck__box" aria-hidden="true">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 12.5l5.5 5.5L20 7"></path>
-                </svg>
-            </span>
-            <span class="authcheck__text">Duy trì đăng nhập</span>
-        </label>
-
-        <button type="submit" class="authbtn authbtn--primary">Tiếp theo</button>
-    </form>
-
-<?php elseif ($step === 'xac-minh'): ?>
-
-    <!-- ══════════ 2. XÁC NHẬN KÊNH GỬI ══════════ -->
-    <?php /* Bản thiết kế vẽ màn này thành hộp thoại nổi đè lên form. Ở đây nó
-             là một màn thật trong luồng: hộp thoại nổi cần JavaScript để mở,
-             mà cả trang đăng ký phải chạy được khi tắt JavaScript. Ba nút vẫn
-             y nguyên — Hủy · Phương thức khác · Gửi qua Zalo. */ ?>
-    <div class="asay">
-        <?php $backTo('/auth?tab=dang-ky'); ?>
-        <p class="asay__title">Xác minh số điện thoại</p>
-        <p class="asay__text">
-            <?php if (Otp::bypass()): ?>
-                Zalo OTP chưa được cắm, nên chưa có mã nào tới
-                <strong><?= e($phone) ?></strong>. Bấm tiếp để sang màn nhập mã.
-            <?php else: ?>
-                Chúng tôi sẽ gửi mã xác minh qua Zalo đến <strong><?= e($phone) ?></strong>
-            <?php endif; ?>
-        </p>
-    </div>
-
-    <form class="authform" method="post" action="/auth/dang-ky/gui-ma">
-        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-        <input type="hidden" name="method" value="zalo">
-        <button type="submit" class="authbtn authbtn--primary">Gửi qua Zalo</button>
-    </form>
-
-    <div class="aalt">
-        <?php /* "Phương thức khác" chỉ hiện khi THẬT SỰ còn phương thức khác —
-                 xem Otp::hasChoice(). Bản thiết kế vẽ ba nút ở màn này, nhưng
-                 nút thứ ba dẫn tới một danh sách một dòng thì chỉ tổ hứa hẹn
-                 một lối đi không tồn tại. */ ?>
-        <?php if (Otp::hasChoice()): ?>
-            <a class="authbtn authbtn--ghost" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
-        <?php endif; ?>
-        <a class="aalt__quiet" href="/auth?tab=dang-ky">Hủy</a>
-    </div>
-
-<?php elseif ($step === 'phuong-thuc'): ?>
-
-    <!-- ══════════ 3. CHỌN PHƯƠNG THỨC ══════════ -->
-    <div class="asay">
-        <?php $backTo('/auth?tab=dang-ky&buoc=' . (($signup['wait'] ?? 0) > 0 ? 'ma' : 'xac-minh')); ?>
-        <p class="asay__title">Chọn phương thức xác minh</p>
-        <p class="asay__text">
-            Chọn một trong các phương thức bên dưới để gửi mã xác minh đến
-            <strong><?= e($phone) ?></strong>
-        </p>
-    </div>
-
-    <?php /* Mỗi lựa chọn là một FORM riêng: chúng gửi cùng một địa chỉ, khác
-             nhau đúng ở `method`, và HTML không cho lồng form vào nhau. */ ?>
-    <div class="amethod">
-        <?php foreach (Otp::choices() as $key => [$label, $note]): ?>
-            <form method="post" action="/auth/dang-ky/gui-ma">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                <input type="hidden" name="method" value="<?= e($key) ?>">
-                <button type="submit" class="amethod__item">
-                    <span class="amethod__ico amethod__ico--<?= e($key) ?>" aria-hidden="true"></span>
-                    <span class="amethod__body">
-                        <span class="amethod__name"><?= e($label) ?></span>
-                        <span class="amethod__note"><?= e($note) ?></span>
-                    </span>
-                </button>
-            </form>
-        <?php endforeach; ?>
-    </div>
-
-<?php elseif ($step === 'ma'): ?>
-
-    <!-- ══════════ 4. NHẬP MÃ ══════════ -->
-    <div class="asay">
-        <?php $backTo('/auth?tab=dang-ky'); ?>
-        <p class="asay__title">Nhập mã xác minh</p>
-        <p class="asay__text">
-            <?php /* Câu "Mã đã được gửi qua Zalo đến …" chỉ đúng khi mã thật sự
-                     đi được. Chưa cắm ZNS mà vẫn in câu ấy thì khách ngồi chờ
-                     một tin nhắn không tồn tại — xem Otp::bypass(). */ ?>
-            <?php if (Otp::bypass()): ?>
-                Xác minh số <strong><?= e($phone) ?></strong>
-            <?php else: ?>
-                <?= e($signup['sentVia'] ?? '') ?> <strong><?= e($phone) ?></strong>
-            <?php endif; ?>
-        </p>
-    </div>
-
-    <?php /* DẢI CẢNH BÁO CHẾ ĐỘ THỬ.
-             Không phải chỗ trang trí: nếu không nói ra, khách (và cả người đang
-             kiểm thử) đứng trước sáu ô trống mà không biết phải gõ gì, vì mã
-             thật đang nằm trong error log của máy chủ. Dải này biến mất ngay
-             khi khai đủ cấu hình Zalo — xem Otp::bypass(). */ ?>
-    <?php if (Otp::bypass()): ?>
-        <p class="adev">
-            <strong>Chế độ thử:</strong> Zalo OTP chưa được cắm nên chưa có mã nào
-            gửi đi. Gõ <strong>số bất kỳ</strong> vào các ô dưới đây để sang bước
-            tạo mật khẩu.
-        </p>
-    <?php endif; ?>
-
-    <form class="authform" method="post" action="/auth/dang-ky/xac-minh">
-        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-
-        <?php /* SÁU Ô RỜI, không phải một ô sáu ký tự — đúng bản thiết kế.
-                 Mỗi ô là một <input> thật nên tắt JavaScript vẫn gõ được đủ
-                 sáu số rồi bấm Tiếp theo; auth.js chỉ thêm việc tự nhảy ô. */ ?>
-        <fieldset class="aotp">
-            <legend class="sr-only">Mã xác minh gồm <?= Otp::LENGTH ?> chữ số</legend>
-            <?php for ($i = 0; $i < Otp::LENGTH; $i++): ?>
-                <input class="aotp__box" type="text" name="ma[]" inputmode="numeric"
-                       pattern="[0-9]*" maxlength="1" autocomplete="one-time-code"
-                       aria-label="Chữ số thứ <?= $i + 1 ?>"
-                       <?= $i === 0 ? 'autofocus' : '' ?>>
-            <?php endfor; ?>
-        </fieldset>
-
-        <button type="submit" class="authbtn authbtn--primary">Tiếp theo</button>
-    </form>
+<?php
+/*
+ * id="signupform" KHÔNG PHẢI ĐỂ TRANG TRÍ.
+ *
+ * Nút "Tiếp tục với Google" nằm ngoài form này (nó ở auth/index.php, dùng chung
+ * với màn đăng nhập) nhưng phải GỬI ĐI cùng ô tick đồng ý của form này —
+ * BR-UC.USER.01-05 bắt cả hai phương thức đăng ký đều phải tick. Thuộc tính
+ * form="signupform" trên nút đó nối nó vào đây; xem chú thích tại chỗ.
+ */
+?>
+<form class="authform" id="signupform" method="post" action="/auth/dang-ky">
+    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+    <input type="hidden" name="redirect" value="<?= e($redirect ?? '') ?>">
 
     <?php
-    /* ─────────────────────────────────────────────────────────────────────
-       NÚT GỬI LẠI LUÔN HIỆN, CHỈ KHOÁ LẠI TRONG LÚC CHỜ.
-
-       Bản trước giấu hẳn cả cụm này trong 60 giây đầu và chỉ để lại một câu
-       "Vui lòng chờ N giây". Hai vấn đề:
-
-         · Khách không biết là CÓ nút gửi lại. Người không nhận được mã sẽ
-           ngồi nhìn một câu đếm ngược mà không biết chờ xong thì được gì.
-         · Không có JavaScript thì nút KHÔNG BAO GIỜ hiện ra — chính auth.js
-           là thứ duy nhất gỡ thuộc tính hidden. Tắt JS, hoặc file chưa tải
-           xong, là mất hẳn đường gửi lại mã.
-
-       Nay nút nằm đó ngay từ đầu, mang `disabled` kèm số giây đếm ngược ngay
-       trong nhãn. Hết giờ, auth.js mở khoá. Không có JS thì tải lại trang là
-       máy chủ tự tính lại số giây còn — chậm hơn nhưng không kẹt.
-
-       Khoá ở đây CHỈ để đỡ bấm oan: chốt thật nằm ở máy chủ (xem
-       AuthController::signupSend, `if (time() < resend)`), nên gỡ disabled
-       bằng devtools cũng không gửi thêm được mã nào.
-
-       CẢ CỤM NÀY ẨN Ở CHẾ ĐỘ THỬ. "Gửi lại mã" khi chưa có kênh nào gửi được
-       thì chỉ sinh một mã mới cho error log rồi bắt khách chờ thêm 60 giây —
-       một cái nút hứa hẹn đúng thứ nó không làm được. Cắm xong Zalo là nó tự
-       hiện lại, xem Otp::bypass().
-       ───────────────────────────────────────────────────────────────────── */
+    /*
+     * NÚT MẶC ĐỊNH CỦA FORM — vô hình, và bắt buộc phải có.
+     *
+     * Bấm Enter trong một ô nhập là kích hoạt nút submit ĐẦU TIÊN theo thứ tự
+     * tài liệu. Form này có ba nút submit, và hai trong số đó không phải là
+     * "Đăng ký": nút "Gửi mã" (đứng ngay dưới ô số điện thoại) và nút "Tiếp
+     * tục với Google" (nối vào form qua form="signupform"). Không có nút này
+     * thì khách gõ xong bấm Enter là đi xin mã xác minh, hoặc bị đẩy sang
+     * Google — mãi không đăng ký được.
+     *
+     * tabindex="-1" và aria-hidden để nó không xuất hiện với bàn phím lẫn
+     * trình đọc màn hình: nút "Đăng ký" thật ở cuối form mới là nút họ cần
+     * gặp. Ẩn bằng .sr-only chứ không phải hidden/display:none — nút bị ẩn
+     * hẳn thì trình duyệt không coi nó là nút mặc định nữa.
+     */
     ?>
-    <?php if (!Otp::bypass()): ?>
-    <div class="aresend" data-wait="<?= (int) ($signup['wait'] ?? 0) ?>">
-        <p class="aresend__ask">Bạn chưa nhận được mã?</p>
+    <button type="submit" class="sr-only" tabindex="-1" aria-hidden="true">Đăng ký</button>
 
-        <form method="post" action="/auth/dang-ky/gui-ma">
-            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-            <input type="hidden" name="method" value="<?= e($signup['method'] ?? 'zalo') ?>">
-            <button type="submit" class="aresend__btn" data-resend
+    <!-- ══════════ HỌ TÊN ══════════ -->
+    <label class="authfield">
+        <span class="authfield__label">Họ và tên</span>
+        <input class="authfield__input<?= $xau('full_name') ?>" type="text" name="full_name"
+               required maxlength="120" autocomplete="name" autofocus
+               placeholder="Nguyễn Văn A"
+               value="<?= e($old['full_name'] ?? '') ?>">
+        <?php $loi('full_name'); ?>
+    </label>
+
+    <!-- ══════════ SỐ ĐIỆN THOẠI ══════════ -->
+    <?php /* type="tel" chứ không phải type="number": ô số nuốt mất số 0 dẫn
+             đầu ở vài trình duyệt, mà "0912345678" thì số 0 ấy là một phần
+             của số. */ ?>
+    <label class="authfield">
+        <span class="authfield__label">Số điện thoại</span>
+        <input class="authfield__input<?= $xau('phone') ?>" type="tel" name="phone" required
+               autocomplete="tel" inputmode="tel" maxlength="15"
+               placeholder="0912345678"
+               value="<?= e($old['phone'] ?? '') ?>">
+        <span class="authfield__hint">Dùng số này để đăng nhập.</span>
+        <?php $loi('phone'); ?>
+    </label>
+
+    <!-- ══════════ MÃ XÁC MINH ══════════ -->
+    <?php
+    /*
+     * NÚT "GỬI MÃ" LÀ MỘT NÚT SUBMIT THẬT, không phải <button type="button">.
+     *
+     * Có JavaScript: auth.js chặn cú submit lại, gọi ngầm /auth/dang-ky/gui-ma
+     * rồi đếm ngược ngay trên nhãn nút — khách không rời trang.
+     *
+     * Không có JavaScript: nó submit thật sang chính địa chỉ ấy (formaction),
+     * máy chủ gửi mã, cất mọi chữ đã gõ vào phiên rồi trả khách về đúng form
+     * này với dữ liệu còn nguyên. Chậm hơn một nhịp tải trang, nhưng không kẹt.
+     *
+     * formnovalidate: cú bấm này chưa phải lúc kiểm cả form — mật khẩu còn
+     * trống là chuyện bình thường ở thời điểm xin mã.
+     */
+    ?>
+    <div class="authfield acode" data-code data-wait="<?= (int) ($signup['wait'] ?? 0) ?>">
+        <label class="authfield__label" for="signup-ma">Mã xác minh</label>
+
+        <div class="acode__row">
+            <?php
+            /* CHỈ CHỮ SỐ, VÀ ĐÚNG Otp::LENGTH CHỮ SỐ — ba lớp, không lớp nào thừa.
+ 
+                 inputmode  bàn phím điện thoại mở thẳng bàn số. Chỉ là gợi ý:
+                            bàn phím máy tính vẫn gõ được chữ.
+                 pattern    trình duyệt chặn ngay lúc bấm "Đăng ký", nên khách
+                            biết mình gõ sai TRƯỚC khi mất một vòng tải trang.
+                            `[0-9]*` cũ nhận cả dãy 1–5 số, nên một mã gõ thiếu
+                            vẫn lọt xuống máy chủ và ăn một lượt thử.
+                 title      trình duyệt đọc thuộc tính này làm câu giải thích
+                            trong bong bóng lỗi; không có nó thì bong bóng chỉ
+                            nói chung chung "vui lòng khớp định dạng yêu cầu".
+ 
+               Cả ba đều là của trình duyệt, tức là tắt JavaScript vẫn chạy
+               nhưng gọi thẳng POST thì bỏ qua được — chốt thật nằm ở
+               AuthController::signupCodeProblem(). */
+            ?>
+            <input class="authfield__input acode__input<?= $xau('ma') ?>" id="signup-ma"
+                   type="text" name="ma" inputmode="numeric"
+                   pattern="[0-9]{<?= Otp::LENGTH ?>}"
+                   title="Mã xác minh gồm <?= Otp::LENGTH ?> chữ số."
+                   maxlength="<?= Otp::LENGTH ?>" autocomplete="one-time-code"
+                   placeholder="<?= str_repeat('•', Otp::LENGTH) ?>">
+
+            <button type="submit" class="acode__send" data-send-code
+                    formaction="/auth/dang-ky/gui-ma" formmethod="post" formnovalidate
                     <?= ($signup['wait'] ?? 0) > 0 ? 'disabled' : '' ?>>
-                Gửi lại mã<span class="aresend__num"<?= ($signup['wait'] ?? 0) > 0 ? '' : ' hidden' ?>>
+                <span data-send-label>Gửi mã</span><span class="acode__num"<?= ($signup['wait'] ?? 0) > 0 ? '' : ' hidden' ?>>
                     (<?= (int) ($signup['wait'] ?? 0) ?>s)</span>
             </button>
-        </form>
+        </div>
 
-        <?php if (Otp::hasChoice()): ?>
-            <span class="aresend__or">hoặc thử</span>
-            <a class="aresend__link" href="/auth?tab=dang-ky&amp;buoc=phuong-thuc">Phương thức khác</a>
-        <?php endif; ?>
-    </div>
-    <?php endif; ?>
-
-<?php elseif ($step === 'da-dang-ky'): ?>
-
-    <!-- ══════════ 5. SỐ NÀY ĐÃ CÓ TÀI KHOẢN ══════════ -->
-    <?php /* Ngõ cụt CÓ LỐI RA, đúng bản thiết kế: đăng nhập bằng số này, hoặc
-             quay lại nhập số khác. Màn này chỉ hiện SAU khi mã đã đúng — xem
-             chú thích trong signupVerify() về việc vì sao không hỏi sớm hơn. */ ?>
-    <div class="asay">
-        <p class="asay__title">Số điện thoại đã được đăng ký</p>
-        <p class="asay__phone"><?= e($phone) ?></p>
-        <p class="asay__text">
-            Vui lòng đăng nhập nếu đây là tài khoản của bạn. Hoặc quay lại và
-            dùng một số điện thoại khác để mở tài khoản mới.
-        </p>
+        <span class="authfield__hint" data-code-note>
+            <?= !empty($signup['sent'])
+                ? 'Mã đã gửi. Mã có hiệu lực ' . Otp::TTL . ' giây.'
+                : 'Bấm "Gửi mã" để nhận mã xác minh qua Zalo.' ?>
+        </span>
+        <?php $loi('ma'); ?>
     </div>
 
-    <a class="authbtn authbtn--primary" href="/auth">Đăng nhập</a>
+    <!-- ══════════ EMAIL (KHÔNG BẮT BUỘC) ══════════ -->
+    <?php /* type="email" ở đây thì hợp lệ: ô này chỉ nhận email, khác ô đăng
+             nhập vốn nhận cả số điện thoại. */ ?>
+    <label class="authfield">
+        <span class="authfield__label">Email <em class="authfield__opt">(không bắt buộc)</em></span>
+        <input class="authfield__input<?= $xau('email') ?>" type="email" name="email"
+               autocomplete="email" maxlength="255"
+               placeholder="ban@vidu.com"
+               value="<?= e($old['email'] ?? '') ?>">
+        <span class="authfield__hint">
+            Dùng để đăng nhập và lấy lại mật khẩu khi bạn đổi số điện thoại.
+        </span>
+        <?php $loi('email'); ?>
+    </label>
 
-    <div class="aalt">
-        <a class="aalt__quiet" href="/auth?tab=dang-ky">Dùng số điện thoại khác</a>
-    </div>
+    <!-- ══════════ MẬT KHẨU ══════════ -->
+    <label class="authfield">
+        <span class="authfield__label">Mật khẩu</span>
+        <?php partial('auth/_password', [
+            'pw_name'     => 'password',
+            'pw_auto'     => 'new-password',
+            'pw_holder'   => 'Mật khẩu',
+            'pw_min'      => 8,
+            'pw_required' => true,
+            'pw_err'      => ($errors['password'] ?? '') !== '',
+        ]); ?>
+        <?php /* MỘT DÒNG THAY CHO DANH SÁCH NĂM DÒNG.
 
-<?php elseif ($step === 'mat-khau'): ?>
+                 auth/_password-rules.php (bản chấm xanh từng dòng khi gõ) đã gỡ
+                 khỏi màn này cho gọn — nó vẫn nguyên vẹn và vẫn dùng ở hai màn
+                 đặt lại mật khẩu, nơi khách tới thẳng để đặt mật khẩu nên bản
+                 chi tiết là thứ đầu tiên họ cần đọc.
 
-    <!-- ══════════ 6. TẠO MẬT KHẨU ══════════ -->
-    <div class="asay">
-        <?php $backTo('/auth?tab=dang-ky'); ?>
-        <p class="asay__title">Tạo mật khẩu</p>
-        <p class="asay__text">
-            Bước cuối cùng! Tạo mật khẩu cho tài khoản <strong><?= e($phone) ?></strong>
-        </p>
-    </div>
+                 Nhưng KHÔNG BỎ TRẮNG: passwordProblem() trong core/helpers.php
+                 vẫn từ chối đúng năm điều kiện ấy, nên không nói gì thì khách
+                 chỉ biết luật sau khi đã bị từ chối một lần. Câu này phải KHỚP
+                 hàm đó — sửa hàm thì sửa cả đây. */ ?>
+        <span class="authfield__hint">
+            8–32 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
+        </span>
+        <?php $loi('password'); ?>
+    </label>
 
-    <form class="authform" method="post" action="/auth/dang-ky/mat-khau" data-pw-rules>
-        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+    <!-- ══════════ XÁC NHẬN MẬT KHẨU ══════════ -->
+    <?php /* Nhãn hiện rõ ở CẢ HAI ô: một mình ô mật khẩu thì chữ mờ trong ô là
+             đủ, nhưng hai ô giống hệt nhau nằm sát nhau mà chữ mờ lại biến mất
+             ngay khi gõ ký tự đầu thì không còn gì phân biệt ô trên với ô dưới. */ ?>
+    <label class="authfield">
+        <span class="authfield__label">Xác nhận mật khẩu</span>
+        <?php partial('auth/_password', [
+            'pw_name'     => 'password_confirm',
+            'pw_auto'     => 'new-password',
+            'pw_holder'   => '••••••••',
+            'pw_min'      => 8,
+            'pw_required' => true,
+            'pw_err'      => ($errors['password_confirm'] ?? '') !== '',
+        ]); ?>
+        <?php $loi('password_confirm'); ?>
+    </label>
 
-        <?php /* HỌ TÊN ĐỨNG ĐẦU, và bắt buộc.
-
-                 Bản thiết kế không có ô này. Thêm vào vì tài khoản không tên
-                 thì mọi chỗ xưng hô với khách — lời chào ở trang tài khoản,
-                 tên người nhận điền sẵn khi đặt hàng, danh sách khách bên
-                 quản trị — đều chỉ còn một dãy số điện thoại.
-
-                 Bắt buộc chứ không tuỳ chọn như ô email bên dưới: email còn
-                 có đường lấy lại (khách tự điền sau ở trang Hồ sơ khi cần
-                 dùng tới), còn tên thì không ai đi điền vì chẳng thiếu gì
-                 ngay lúc ấy — nên hỏi một lần ở đây là rẻ nhất. */ ?>
-        <label class="authfield">
-            <span class="authfield__label">Họ và tên</span>
-            <input class="authfield__input" type="text" name="full_name" required
-                   maxlength="120" autocomplete="name" autofocus
-                   placeholder="Nguyễn Văn A"
-                   value="<?= e($signup['name'] ?? '') ?>">
-        </label>
-
-        <label class="authfield">
-            <span class="authfield__label">Mật khẩu</span>
-            <?php partial('auth/_password', [
-                'pw_name'     => 'password',
-                'pw_auto'     => 'new-password',
-                'pw_holder'   => 'Mật khẩu',
-                'pw_min'      => 8,
-                'pw_required' => true,
-            ]); ?>
-        </label>
-
-        <?php /* Ô NHẬP LẠI — cùng khuôn với màn đặt lại mật khẩu (auth/reset.php).
-
-                 Nhãn chuyển từ sr-only sang hiện rõ ở CẢ HAI ô: một mình ô mật
-                 khẩu thì chữ mờ trong ô là đủ, nhưng hai ô giống hệt nhau nằm
-                 sát nhau mà chữ mờ lại biến mất ngay khi gõ ký tự đầu thì
-                 không còn gì phân biệt ô trên với ô dưới.
-
-                 Chốt thật nằm ở signupFinish() — trình duyệt không có cách nào
-                 tự so hai ô này, và gọi thẳng POST thì bỏ qua được cả form. */ ?>
-        <label class="authfield">
-            <span class="authfield__label">Nhập lại mật khẩu</span>
-            <?php partial('auth/_password', [
-                'pw_name'     => 'password_confirm',
-                'pw_auto'     => 'new-password',
-                'pw_holder'   => '••••••••',
-                'pw_min'      => 8,
-                'pw_required' => true,
-            ]); ?>
-        </label>
-
-        <?php /* Bốn dòng quy tắc đứng SAU cả hai ô, đúng lối của auth/reset.php:
-                 chúng nói về mật khẩu nói chung chứ không riêng ô nào, mà kẹp
-                 vào giữa thì trông như chỉ ràng buộc ô phía trên.
-                 auth.js chấm xanh theo ô ĐẦU TIÊN — xem chú thích ở đó. */ ?>
-        <?php partial('auth/_password-rules'); ?>
-
-        <!-- EMAIL LÀ TUỲ CHỌN, VÀ ĐỨNG SAU MẬT KHẨU.
-             Bản thiết kế không có ô này; thêm vào vì tài khoản chỉ có số điện
-             thoại thì mất hai lối: đăng nhập bằng email, và nhận liên kết đặt
-             lại mật khẩu qua email khi không còn giữ số cũ.
-
-             Không bắt buộc và đứng sau, để không cản người chỉ muốn xong nhanh
-             — khách bỏ trống thì điền sau ở trang Hồ sơ cũng được.
-
-             type="email" ở đây thì hợp lệ: ô này chỉ nhận email, khác ô đăng
-             nhập vốn nhận cả số điện thoại. -->
-        <label class="authfield">
-            <span class="authfield__label">Email <em class="authfield__opt">(tuỳ chọn)</em></span>
-            <input class="authfield__input" type="email" name="email"
-                   autocomplete="email" maxlength="255"
-                   placeholder="ban@vidu.com"
-                   value="<?= e($signup['email'] ?? '') ?>">
-            <span class="authfield__hint">
-                Dùng để đăng nhập và lấy lại mật khẩu khi bạn đổi số điện thoại.
-            </span>
-        </label>
-
-        <?php
-        /*
-         * Ô ĐỒNG Ý — đặt ở ĐÂY chứ không ở màn nhập số điện thoại.
-         *
-         * Đây là chặng cuối, cũng là chỗ tài khoản thật sự ra đời
-         * (AuthController::signupFinish -> UserModel::register). Tick ở chặng
-         * đầu rồi bỏ dở giữa chừng thì cú tick ấy chẳng gắn với tài khoản nào;
-         * tick ngay cạnh nút tạo tài khoản mới đúng là đồng ý cho việc sắp làm.
-         *
-         * `required` là lớp thứ nhất, trình duyệt tự chặn. Lớp thật nằm ở máy
-         * chủ: signupFinish() kiểm lại trước khi gọi register(), vì tắt
-         * JavaScript hay gọi thẳng /auth/dang-ky/mat-khau đều bỏ qua được
-         * thuộc tính này.
-         *
-         * CÂU CHỮ CHỈ NÓI VỀ THỨ CÓ THẬT. Trang Điều khoản dịch vụ chưa tồn
-         * tại (xem config/auth.php), nên vế đó chỉ hiện khi 'terms_url' đã
-         * được điền. Tick "tôi đồng ý với Điều khoản" trong khi Điều khoản
-         * không ở đâu cả thì tệ hơn là không hỏi.
-         */
-        $consent  = (array) config('auth.consent', []);
-        $termsUrl = (string) ($consent['terms_url'] ?? '');
-        ?>
-        <?php /* Dùng lại đúng nguyên thể .authcheck của ô "Duy trì đăng nhập":
-                 ô thật ẩn khỏi mắt nhưng còn nguyên với bàn phím và trình đọc
-                 màn hình, hộp vuông vẽ bằng CSS, dấu tick là SVG.
-                 --agree chỉ chỉnh hai thứ: bỏ `order: 2` (thứ đó dành riêng cho
-                 bố cục màn đăng nhập) và canh chữ theo mép trên vì câu này dài
-                 hơn một dòng. */ ?>
-        <label class="authcheck authcheck--agree">
-            <input type="checkbox" name="dong_y" value="1" required
-                   <?= !empty($old['dongY']) ? 'checked' : '' ?>>
-            <span class="authcheck__box" aria-hidden="true">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 12.5l5.5 5.5L20 7"></path>
-                </svg>
-            </span>
-            <span class="authcheck__text">
-                Tôi đã đọc và đồng ý với
-                <?php if ($termsUrl !== ''): ?>
-                    <a href="<?= e($termsUrl) ?>" target="_blank" rel="noopener">Điều khoản dịch vụ</a> và
-                <?php endif; ?>
-                <a href="<?= e((string) ($consent['privacy_url'] ?? '/chinh-sach#bao-mat')) ?>"
-                   target="_blank" rel="noopener">Chính sách bảo mật</a>
-                của Vin Eyewear.
-            </span>
-        </label>
-
-        <button type="submit" class="authbtn authbtn--primary">Đăng ký</button>
-    </form>
-
-<?php elseif ($step === 'xong'): ?>
-
-    <!-- ══════════ 7. XONG ══════════ -->
-    <div class="adone">
-        <span class="adone__mark" aria-hidden="true">
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <?php
+    /*
+     * Ô ĐỒNG Ý — BR-UC.USER.01-05.
+     *
+     * `required` là lớp thứ nhất, trình duyệt tự chặn. Lớp thật nằm ở máy chủ:
+     * signupSubmit() kiểm lại trước khi gọi register(), vì tắt JavaScript hay
+     * gọi thẳng POST /auth/dang-ky đều bỏ qua được thuộc tính này.
+     *
+     * Ô này CHỈ thuộc về form này. Nút "Tiếp tục với Google" bên dưới từng gửi
+     * đi cùng form này (form="signupform") để mượn ô tick ấy — nay không còn:
+     * đăng ký bằng Google có màn "Hoàn tất tạo tài khoản" riêng với ô tick của
+     * chính nó (auth/google-signup.php). Hai cách, hai ô tick.
+     */
+    ?>
+    <?php /* Ô tick và câu báo của nó nằm trong MỘT khối riêng: .authform giãn
+             các phần tử con 22px, mà một câu lỗi cách ô nó nói tới 22px thì
+             đọc như đang nói về nút "Đăng ký" ở dưới. */ ?>
+    <div class="authagree">
+    <label class="authcheck authcheck--agree">
+        <input type="checkbox" name="dong_y" value="1" required
+               <?= !empty($old['dong_y']) ? 'checked' : '' ?>>
+        <span class="authcheck__box" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 12.5l5.5 5.5L20 7"></path>
             </svg>
         </span>
-        <p class="adone__title">Đăng ký thành công!</p>
-        <p class="adone__text">Tài khoản của bạn đã sẵn sàng. Chào mừng bạn đến với Vin Eyewear.</p>
+        <span class="authcheck__text">
+            Tôi đã đọc và đồng ý với
+            <?php if ($termsUrl !== ''): ?>
+                <a href="<?= e($termsUrl) ?>" target="_blank" rel="noopener">Điều khoản dịch vụ</a> và
+            <?php endif; ?>
+            <a href="<?= e((string) ($consent['privacy_url'] ?? '/chinh-sach#bao-mat')) ?>"
+               target="_blank" rel="noopener">Chính sách bảo mật</a>
+            của Vin Eyewear.
+        </span>
+    </label>
+        <?php /* Lỗi của ô tick đứng NGAY CẠNH ô tick — EF-12 nói rõ vị trí. */ ?>
+        <?php $loi('dong_y'); ?>
     </div>
 
-    <a class="authbtn authbtn--primary" href="/san-pham">Bắt đầu mua sắm</a>
-
-    <div class="aalt">
-        <a class="aalt__quiet" href="/">Về trang chủ</a>
-    </div>
-
-<?php endif; ?>
+    <button type="submit" class="authbtn authbtn--primary">Đăng ký</button>
+</form>

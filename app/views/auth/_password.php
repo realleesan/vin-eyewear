@@ -16,6 +16,7 @@
  *   $pw_holder   chữ mờ trong ô
  *   $pw_min      độ dài tối thiểu (bỏ trống = không đặt)
  *   $pw_required bắt buộc nhập hay không
+ *   $pw_err      ô này đang có lỗi -> tô viền đỏ (mặc định false)
  *   $pw_id       id của ô — CHỈ cần khi nhãn KHÔNG bọc quanh ô
  *
  * ─────────────────────────────────────────────────────────────────────────────
@@ -37,10 +38,11 @@
 $pw_min      = $pw_min      ?? null;
 $pw_required = $pw_required ?? false;
 $pw_id       = $pw_id       ?? null;
+$pw_err      = $pw_err      ?? false;
 ?>
 
 <span class="authpw">
-    <input class="authfield__input authpw__input" type="password"
+    <input class="authfield__input authpw__input<?= $pw_err ? ' is-err' : '' ?>" type="password"
            <?= $pw_id !== null ? 'id="' . e($pw_id) . '"' : '' ?>
            name="<?= e($pw_name) ?>"
            autocomplete="<?= e($pw_auto) ?>"

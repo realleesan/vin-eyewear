@@ -145,17 +145,42 @@ return [
     'auth'              => 'AuthController@index',
     'auth/dang-nhap'    => 'AuthController@login',      // POST
     /*
-     * ĐĂNG KÝ LÀ BỐN CHẶNG, không còn một cú POST như trước — số điện thoại
-     * phải xác minh bằng mã trước khi tài khoản ra đời. Xem khối chú thích
-     * "ĐĂNG KÝ — BỐN CHẶNG" trong AuthController.
+     * ĐĂNG KÝ LÀ MỘT MÀN, MỘT CÚ POST — theo UC-USER-01.
+     *
+     * Bốn chặng cũ (nhận số → gửi mã → kiểm mã → tạo mật khẩu) đã gộp lại:
+     * 'auth/dang-ky' nay nhận CẢ form và tạo tài khoản luôn, còn
+     * 'auth/dang-ky/gui-ma' chỉ còn việc xin mã cho ô "Mã xác minh" nằm ngay
+     * trong form ấy. Hai địa chỉ 'auth/dang-ky/xac-minh' và
+     * 'auth/dang-ky/mat-khau' đã gỡ — chúng không còn hàm nào để trỏ tới.
+     *
+     * Xem khối chú thích "ĐĂNG KÝ — MỘT MÀN" trong AuthController.
      */
-    'auth/dang-ky'          => 'AuthController@signupPhone',   // POST — nhận số
-    'auth/dang-ky/gui-ma'   => 'AuthController@signupSend',    // POST — sinh & gửi mã
-    'auth/dang-ky/xac-minh' => 'AuthController@signupVerify',  // POST — kiểm mã
-    'auth/dang-ky/mat-khau' => 'AuthController@signupFinish',  // POST — tạo tài khoản
+    'auth/dang-ky'          => 'AuthController@signupSubmit',   // POST — tạo tài khoản
+    'auth/dang-ky/gui-ma'   => 'AuthController@signupSendCode', // POST — xin mã xác minh
+    /*
+     * ĐĂNG KÝ BẰNG GOOGLE LÀ MỘT CÁCH RIÊNG, KHÔNG PHẢI MỘT NÚT CỦA FORM TRÊN.
+     *
+     * Chọn xong tài khoản ở Google thì khách rơi vào màn "Hoàn tất tạo tài
+     * khoản" này: email điền sẵn và khoá, còn họ tên, số điện thoại (không
+     * bắt buộc) và ô tick Điều khoản thì khai tại đây. Tài khoản ra đời ở cú
+     * POST bên dưới, KHÔNG phải ở 'auth/google/callback'.
+     *
+     * Hai địa chỉ chứ không phải một, cùng nếp với 'auth/dang-ky' ở trên:
+     * Router không lọc theo phương thức, nên gộp làm một là mỗi action phải
+     * tự đoán mình đang được gọi kiểu gì.
+     */
+    'auth/dang-ky/google'     => 'AuthController@googleSignup',       // GET  — màn hoàn tất
+    'auth/dang-ky/google/tao' => 'AuthController@googleSignupSubmit', // POST — tạo tài khoản
     'auth/dang-xuat'    => 'AuthController@logout',     // POST
-    // Đăng nhập/đăng ký bằng Google. Cả hai là GET: chúng phải chạy khi không
-    // có JavaScript, và địa chỉ callback do Google gọi tới nên không thể là POST.
+    /*
+     * Đăng nhập/đăng ký bằng Google — hai chặng đầu.
+     *
+     * Cả hai là GET. 'auth/google' chỉ sinh một chuỗi `state` rồi chuyển
+     * hướng, không đổi gì cả; ô tick Điều khoản nay nằm ở màn hoàn tất
+     * ('auth/dang-ky/google' bên trên) chứ không đi kèm cú bấm này nữa, nên
+     * nút ở màn đăng ký cũng trở lại là một thẻ <a> thường. Địa chỉ callback
+     * thì luôn là GET — Google gọi tới nên ta không chọn được.
+     */
     'auth/google'          => 'AuthController@googleStart',
     'auth/google/callback' => 'AuthController@googleCallback',
     // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": BỐN mục nằm
@@ -176,6 +201,16 @@ return [
     'tai-khoan/mat-khau'=> 'AuthController@changePassword',     // POST
     'tai-khoan/anh'     => 'AuthController@updateAvatar',       // POST (multipart)
     'tai-khoan/mua-lai' => 'AuthController@reorder',            // POST
+
+    /* LIÊN KẾT GOOGLE — chỗ nối mà AF-03 hứa hẹn.
+       UserModel::findOrCreateGoogle() không tự nối Google vào tài khoản trùng
+       email nữa, và câu báo của nó bảo khách "đăng nhập bằng Số điện thoại/Mật
+       khẩu để liên kết" — hai đường này là chỗ ấy, nằm trong mục Hồ sơ.
+       Cả hai POST: một thẻ <a> tới đường nối nghĩa là một trang khác gắn
+       <img src="/tai-khoan/google"> cũng đẩy được khách đi Google, còn đường
+       gỡ thì tự nó đã là một thao tác phá bỏ. */
+    'tai-khoan/google'     => 'AuthController@linkGoogle',      // POST
+    'tai-khoan/google/go'  => 'AuthController@unlinkGoogle',    // POST
 
     /* KHÁCH TỰ HUỶ ĐƠN — SRS v2.1.0, UC-02.
        Đường RIÊNG, không gộp vào một action "đổi trạng thái" chung: khách chỉ

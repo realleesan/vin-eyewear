@@ -192,7 +192,10 @@
 
     if (form) {
         /* Ô mật khẩu mang tên khác nhau tuỳ màn: 'password' khi đăng ký,
-           'new_password' ở hai màn đặt lại mật khẩu. querySelector trả về ô
+           'new_password' ở hai màn đặt lại mật khẩu. Màn ĐĂNG KÝ nay không
+           còn danh sách quy tắc (chỉ một dòng gợi ý tĩnh dưới ô), nên khối này
+           thực tế chỉ còn chạy ở hai màn đặt lại mật khẩu — vẫn giữ nguyên,
+           vì nó dò theo `data-pw-rules` chứ không theo tên màn. querySelector trả về ô
            ĐẦU TIÊN theo thứ tự tài liệu, nên ở màn có thêm ô "nhập lại" thì
            vẫn đúng ô trên. */
         var input = form.querySelector('input[name="password"], input[name="new_password"]');
@@ -224,5 +227,151 @@
                 });
             });
         }
+
     }
+}());
+
+/**
+ * ────────────────────────────────────────────────────────────────────────────
+ * NÚT "GỬI MÃ" CỦA MÀN ĐĂNG KÝ — gọi ngầm, không rời trang.
+ *
+ * CHỈ LÀ TĂNG CƯỜNG, đúng nếp của cả file này. Nút trong HTML là một nút
+ * submit thật mang formaction="/auth/dang-ky/gui-ma": không có JavaScript thì
+ * nó gửi form đi, máy chủ cất mọi chữ đã gõ vào phiên rồi trả khách về đúng
+ * form ấy với dữ liệu còn nguyên — chậm hơn một nhịp tải trang, nhưng không
+ * kẹt. Đoạn dưới đây chặn cú submit ấy lại và làm cùng việc bằng fetch.
+ *
+ * Đồng hồ đếm ngược ở đây CHỈ để đỡ bấm oan. Chốt thật nằm ở máy chủ —
+ * AuthController::signupSendCode(), `if (time() < resend)` — nên gỡ `disabled`
+ * bằng devtools cũng không xin thêm được mã nào.
+ * ────────────────────────────────────────────────────────────────────────────
+ */
+(function () {
+    'use strict';
+
+    var box = document.querySelector('[data-code]');
+    if (!box) return;
+
+    /* ── Ô MÃ CHỈ NHẬN CHỮ SỐ ────────────────────────────────────────────
+ 
+       ĐỨNG TRƯỚC CHỐT `window.fetch` bên dưới, và đó là chủ ý: việc lọc này
+       không dính gì tới cú gọi ngầm, nên một trình duyệt cũ không có fetch
+       vẫn phải được lọc. Gộp vào khối dưới là để nó biến mất đúng ở nơi khó
+       kiểm thử nhất.
+ 
+       Lọc chứ không CHẶN phím (keydown): chặn phím thì hỏng cả dán chuột,
+       dán bằng bàn phím, gõ tiếng Việt qua bộ gõ, và tự điền mã OTP của điện
+       thoại. Nghe `input` thì mọi đường nhập liệu đều đi qua đây.
+ 
+       Con trỏ phải dời theo số ký tự VỪA BỊ BỎ Ở PHÍA TRƯỚC nó, nếu không
+       gõ chèn một chữ cái vào giữa dãy sẽ ném con trỏ về cuối ô.
+ 
+       Đây chỉ là lớp tiện tay. Hai chốt thật là `pattern` của ô (trình duyệt)
+       và AuthController::signupCodeProblem() (máy chủ). */
+    var oMa = box.querySelector('.acode__input');
+
+    if (oMa) {
+        oMa.addEventListener('input', function () {
+            var sach = oMa.value.replace(/\D/g, '');
+
+            if (sach === oMa.value) return;
+
+            var viTri = oMa.selectionStart;
+            var bo    = (oMa.value.slice(0, viTri).match(/\D/g) || []).length;
+
+            oMa.value = sach;
+
+            try { oMa.setSelectionRange(viTri - bo, viTri - bo); } catch (err) { /* ô số cũ */ }
+        });
+    }
+
+    if (!window.fetch) return;
+
+    var form  = box.closest('form');
+    var btn   = box.querySelector('[data-send-code]');
+    var nhan  = box.querySelector('[data-send-label]');
+    var so    = box.querySelector('.acode__num');
+    var ghi   = box.querySelector('[data-code-note]');
+
+    if (!form || !btn) return;
+
+    var con  = parseInt(box.getAttribute('data-wait'), 10) || 0;
+    var nhip = null;
+
+    /* Vẽ số giây còn lại ngay trong nhãn nút. Không kèm dấu cách ở đầu:
+       khoảng hở do `gap` của .acode__send lo, và hộp inline-flex cắt bỏ
+       khoảng trắng trong HTML nên dấu cách ở đây cũng vô nghĩa. */
+    var ve = function () {
+        if (!so) return;
+
+        so.hidden = con <= 0;
+        so.textContent = con > 0 ? '(' + con + 's)' : '';
+    };
+
+    var dem = function () {
+        window.clearInterval(nhip);
+        btn.disabled = con > 0;
+        ve();
+
+        if (con <= 0) return;
+
+        nhip = window.setInterval(function () {
+            con -= 1;
+            ve();
+
+            if (con > 0) return;
+
+            window.clearInterval(nhip);
+            btn.disabled = false;
+        }, 1000);
+    };
+
+    var noi = function (cau, hong) {
+        if (!ghi) return;
+
+        ghi.textContent = cau;
+        ghi.classList.toggle('is-err', !!hong);
+    };
+
+    dem();
+
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        if (btn.disabled) return;
+
+        btn.disabled = true;
+        if (nhan) nhan.textContent = 'Đang gửi…';
+
+        var goi = new FormData(form);
+
+        /* HAI Ô MẬT KHẨU KHÔNG ĐI CÙNG YÊU CẦU NÀY. Máy chủ không đọc tới
+           chúng, mà một mật khẩu gửi đi mỗi lần bấm "Gửi mã" là một chuỗi
+           nữa nằm trong log của mọi proxy trên đường — không cần thì đừng gửi. */
+        goi.delete('password');
+        goi.delete('password_confirm');
+
+        window.fetch(btn.getAttribute('formaction') || '/auth/dang-ky/gui-ma', {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'fetch' },
+            body: goi,
+            credentials: 'same-origin'
+        }).then(function (r) {
+            return r.json();
+        }).then(function (d) {
+            if (nhan) nhan.textContent = d.ok ? 'Gửi lại mã' : 'Gửi mã';
+
+            noi(d.message || '', !d.ok);
+
+            con = parseInt(d.wait, 10) || 0;
+            dem();
+        }).catch(function () {
+            /* Mạng hỏng, hoặc máy chủ trả về thứ không phải JSON. Mở khoá nút
+               lại ngay: khách bấm lần nữa là đường duy nhất còn lại. */
+            if (nhan) nhan.textContent = 'Gửi mã';
+
+            noi('Không gửi được mã. Vui lòng thử lại.', true);
+            btn.disabled = false;
+        });
+    });
 }());
