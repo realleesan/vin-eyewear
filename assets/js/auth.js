@@ -192,7 +192,10 @@
 
     if (form) {
         /* Ô mật khẩu mang tên khác nhau tuỳ màn: 'password' khi đăng ký,
-           'new_password' ở hai màn đặt lại mật khẩu. querySelector trả về ô
+           'new_password' ở hai màn đặt lại mật khẩu. Màn ĐĂNG KÝ nay không
+           còn danh sách quy tắc (chỉ một dòng gợi ý tĩnh dưới ô), nên khối này
+           thực tế chỉ còn chạy ở hai màn đặt lại mật khẩu — vẫn giữ nguyên,
+           vì nó dò theo `data-pw-rules` chứ không theo tên màn. querySelector trả về ô
            ĐẦU TIÊN theo thứ tự tài liệu, nên ở màn có thêm ô "nhập lại" thì
            vẫn đúng ô trên. */
         var input = form.querySelector('input[name="password"], input[name="new_password"]');
@@ -225,30 +228,6 @@
             });
         }
 
-        /* NĂM DÒNG QUY TẮC CHỈ HIỆN KHI KHÁCH ĐỘNG TỚI Ô MẬT KHẨU.
-
-           Mục Giao diện của UC-USER-01: "hiển thị gợi ý yêu cầu mật khẩu khi
-           focus vào ô". Chỉ áp dụng cho form mang data-pw-focus (màn đăng ký);
-           hai màn đặt lại mật khẩu vẫn hiện thường trực, ở đó khách tới thẳng
-           để đặt mật khẩu nên quy tắc là thứ đầu tiên họ cần đọc.
-
-           GIẤU BẰNG JAVASCRIPT, không phải bằng CSS sẵn trong file: không có
-           JavaScript thì không có gì mở nó ra, và một bản yêu cầu mật khẩu
-           không bao giờ hiện thì tệ hơn một bản hiện suốt.
-
-           Hiện rồi thì Ở LẠI — nhấp nháy theo tiêu điểm khi khách chuyển qua
-           lại giữa hai ô mật khẩu là thứ khó chịu hơn cả việc nó hiện suốt. */
-        var bang = form.querySelector('.arule');
-
-        if (bang && form.hasAttribute('data-pw-focus')) {
-            bang.classList.add('is-quiet');
-
-            form.querySelectorAll('.authpw__input').forEach(function (o) {
-                o.addEventListener('focus', function () {
-                    bang.classList.remove('is-quiet');
-                });
-            });
-        }
     }
 }());
 

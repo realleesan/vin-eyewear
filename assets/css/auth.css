@@ -1192,13 +1192,6 @@
     .acode__send { width: 100%; justify-content: center; padding: 10px 16px; }
 }
 
-/* Năm dòng quy tắc mật khẩu, ở màn đăng ký, nằm im cho tới khi khách chạm vào
-   ô mật khẩu — mục Giao diện của UC-USER-01. Lớp này do assets/js/auth.js đặt
-   vào, KHÔNG phải trạng thái mặc định của .arule: không có JavaScript thì
-   không có gì gỡ nó ra, và một bản yêu cầu mật khẩu không bao giờ hiện thì tệ
-   hơn một bản hiện suốt. */
-.arule.is-quiet { display: none; }
-
 /* Liên kết trong câu báo lỗi — EF-10 đòi câu "đã được đăng ký" phải kèm link
    Đăng nhập. Giữ nguyên màu đỏ của câu, chỉ gạch chân và đậm lên: một liên
    kết màu thương hiệu nằm giữa một câu đỏ trông như hai câu rời nhau. */

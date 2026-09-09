@@ -671,9 +671,10 @@ class AuthController extends BaseController
             $loi['password_confirm'] = 'Mật khẩu xác nhận không khớp.';
         }
 
-        /* MÃ XÁC MINH — chỉ khi Zalo đã cắm, và chỉ khi số điện thoại đã qua
-           được các phép kiểm trên (chưa có số hợp lệ thì không có gì để so). */
-        if (!Otp::bypass() && !isset($loi['phone'])) {
+        /* MÃ XÁC MINH — chỉ bỏ qua khi số điện thoại chưa hợp lệ, vì lúc ấy
+           không có gì để so mã với. Chế độ thử (Otp::bypass) KHÔNG bỏ qua phép
+           kiểm này, nó chỉ nới lỏng bên trong signupCodeProblem(). */
+        if (!isset($loi['phone'])) {
             $maLoi = self::signupCodeProblem((string) $phone, (string) $in['ma']);
 
             if ($maLoi !== null) {
@@ -694,6 +695,42 @@ class AuthController extends BaseController
     private static function signupCodeProblem(string $phone, string $ma): ?string
     {
         $otp = self::signupOtp();
+
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * ZALO OA CHƯA CẮM: SỐ NÀO CŨNG QUA.
+         *
+         * Chưa khai đủ token và mã mẫu ZNS thì mã sinh ra chỉ nằm trong error
+         * log — khách không có đường nào biết nó, nên nếu vẫn so mã thì luồng
+         * đăng ký đứng hẳn tại đây. Trong quãng đó, ô mã chỉ còn là một cái
+         * cửa hình thức, và màn hình đã nói thẳng điều ấy bằng dải .adev.
+         *
+         * Ô RỖNG VẪN BỊ CHẶN: bấm nhầm nút "Đăng ký" thì không nên tính là đã
+         * xác minh. Hạn 120 giây và số lần thử thì bỏ theo — giữ lại chỉ làm
+         * khách kẹt vì một lý do khó hiểu hơn ("mã đã hết hạn" trong khi chưa
+         * từng có mã nào).
+         *
+         * BỎ QUA CHỨ KHÔNG BỎ HẲN: ô mã vẫn ở đúng chỗ, nút "Gửi mã" vẫn sinh
+         * mã thật, nên ngày cắm xong ZNS thì bypass() trả false và mọi dòng
+         * bên dưới chạy đúng như đã viết — không phải dựng lại gì.
+         *
+         * ⚠ ĐANG MỞ THÌ BẤT KỲ AI CŨNG ĐĂNG KÝ ĐƯỢC BẰNG SỐ CỦA NGƯỜI KHÁC.
+         * Điều kiện mở nằm ở Otp::bypass() / config/auth.php.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if (Otp::bypass()) {
+            if ($ma === '') {
+                return 'Vui lòng nhập mã xác minh.';
+            }
+
+            error_log(sprintf(
+                '[Otp] BỎ QUA xác minh khi đăng ký cho %s — Zalo OTP chưa cắm '
+                . '(xem Otp::bypass()).',
+                $phone
+            ));
+
+            return null;
+        }
 
         /* Chưa xin mã, hoặc đã xin cho một SỐ KHÁC. Vế thứ hai mới là vế quan
            trọng: không có nó thì khách xin mã cho số của mình, đổi sang số
@@ -770,19 +807,6 @@ class AuthController extends BaseController
            đường GET, nhưng POST thì đi thẳng vào đây. */
         if (AuthMiddleware::check()) {
             $this->signupCodeReply(false, 'Bạn đang đăng nhập rồi.', 0, $to);
-        }
-
-        /* KHÔNG XÁC MINH THÌ KHÔNG SINH MÃ.
-           Otp::bypass() đang mở nghĩa là hàng "Mã xác minh" không được vẽ ra,
-           nên địa chỉ này chỉ có thể tới từ một cú gọi thẳng. Sinh mã cho nó
-           là rải một chuỗi số vào error log mỗi lần có người gõ địa chỉ. */
-        if (Otp::bypass()) {
-            $this->signupCodeReply(
-                false,
-                'Bước xác minh số điện thoại hiện không áp dụng. Vui lòng điền form và bấm "Đăng ký".',
-                0,
-                $to
-            );
         }
 
         /* Đường KHÔNG JavaScript đi qua một cú tải lại trang, nên mọi chữ đã
@@ -864,9 +888,15 @@ class AuthController extends BaseController
             'tries'   => 0,
         ];
 
-        Otp::send($phone, $code, 'zalo');
+        $daGui = Otp::send($phone, $code, 'zalo');
 
-        $cau = 'Mã xác minh đã được gửi qua Zalo đến ' . Otp::displayPhone($phone) . '.';
+        /* CÂU BÁO PHẢI NÓI ĐÚNG THỨ VỪA XẢY RA.
+           "Mã đã được gửi qua Zalo đến 09xx" trong khi ZNS chưa cắm là bắt
+           khách ngồi chờ một tin nhắn không tồn tại — xem Otp::bypass(). */
+        $cau = $daGui
+            ? 'Mã xác minh đã được gửi qua Zalo đến ' . Otp::displayPhone($phone) . '.'
+            : 'Zalo OTP chưa được cắm nên chưa có tin nhắn nào gửi đi. '
+              . 'Gõ số bất kỳ vào ô mã để tiếp tục.';
 
         /* Ở MÁY PHÁT TRIỂN thì hiện thẳng mã lên màn hình, vì chưa chắc có nhà
            cung cấp nào mang nó tới tay khách — xem khối chú thích đầu

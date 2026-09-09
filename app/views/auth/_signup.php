@@ -23,9 +23,11 @@
  * đứng: một hàng "Mã xác minh" ngay dưới ô số điện thoại, kèm nút "Gửi mã" gọi
  * ngầm (assets/js/auth.js) để khách không rời trang và không mất chữ đã gõ.
  *
- * VÀ HÀNG ẤY CHỈ HIỆN KHI MÃ THẬT SỰ GỬI ĐƯỢC. Otp::bypass() đang mở (Zalo OA
- * chưa khai xong) thì cả hàng biến mất và form đúng nguyên văn đặc tả Phase 1.
- * Cắm xong Zalo là nó tự hiện lại, không phải sửa gì ở đây.
+ * HÀNG ẤY LUÔN HIỆN, kể cả khi Zalo OA chưa khai xong. Lúc đó nó đi kèm một
+ * dải cảnh báo nói thẳng là chưa có tin nhắn nào gửi đi được, và máy chủ nhận
+ * số bất kỳ (xem Otp::bypass() và AuthController::signupCodeProblem). Ẩn hẳn
+ * hàng này khi chưa cắm Zalo thì màn đăng ký ở máy phát triển khác hẳn màn ở
+ * máy thật — một khác biệt chỉ vỡ ra đúng vào ngày cắm xong.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * LỖI HIỆN DƯỚI TỪNG Ô, KHÔNG GOM VÀO MỘT DẢI ĐỎ
@@ -43,8 +45,18 @@ $signup = $signup ?? [];
 $old    = $old    ?? [];
 $errors = $errors ?? [];
 
-/** Có bắt xác minh bằng mã không — xem khối chú thích trên. */
-$otpOn = !Otp::bypass();
+/**
+ * Mã có GỬI ĐI ĐƯỢC thật không.
+ *
+ * false nghĩa là Zalo OA chưa khai xong: mã vẫn sinh ra nhưng chỉ nằm trong
+ * error log, nên màn hình phải nói thẳng điều đó (dải .adev bên dưới) và máy
+ * chủ nhận số bất kỳ — xem Otp::bypass() và AuthController::signupCodeProblem().
+ *
+ * Hàng "Mã xác minh" thì LUÔN HIỆN, cờ này chỉ đổi câu chữ quanh nó. Ẩn hẳn
+ * hàng ấy khi chưa cắm Zalo là để lộ ra một màn đăng ký khác hẳn giữa máy phát
+ * triển và máy thật — thứ chỉ vỡ ra đúng vào ngày cắm xong.
+ */
+$otpGuiDuoc = !Otp::bypass();
 
 /** Ô này có lỗi không. */
 $hong = static fn (string $field): bool =>
@@ -100,8 +112,7 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
  * form="signupform" trên nút đó nối nó vào đây; xem chú thích tại chỗ.
  */
 ?>
-<form class="authform" id="signupform" method="post" action="/auth/dang-ky"
-      data-pw-rules data-pw-focus>
+<form class="authform" id="signupform" method="post" action="/auth/dang-ky">
     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
     <input type="hidden" name="redirect" value="<?= e($redirect ?? '') ?>">
 
@@ -148,8 +159,7 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
         <?php $loi('phone'); ?>
     </label>
 
-    <?php if ($otpOn): ?>
-    <!-- ══════════ MÃ XÁC MINH (chỉ khi Zalo đã cắm) ══════════ -->
+    <!-- ══════════ MÃ XÁC MINH ══════════ -->
     <?php
     /*
      * NÚT "GỬI MÃ" LÀ MỘT NÚT SUBMIT THẬT, không phải <button type="button">.
@@ -165,6 +175,22 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
      * trống là chuyện bình thường ở thời điểm xin mã.
      */
     ?>
+    <?php if (!$otpGuiDuoc): ?>
+        <?php /* DẢI CẢNH BÁO CHẾ ĐỘ THỬ.
+
+                 Không phải chỗ trang trí: không nói ra thì khách (và cả người
+                 đang kiểm thử) đứng trước một ô trống mà không biết gõ gì, vì
+                 mã thật đang nằm trong error log của máy chủ. Dải này biến mất
+                 ngay khi khai đủ cấu hình Zalo — xem Otp::bypass().
+
+                 ⚠ Đang mở thì bất kỳ ai cũng đăng ký được bằng số của người
+                 khác. Điều kiện mở nằm ở config/auth.php. */ ?>
+        <p class="adev">
+            <strong>Chế độ thử:</strong> Zalo OTP chưa được cắm nên chưa có mã nào
+            gửi tới điện thoại. Bấm <strong>Gửi mã</strong> rồi gõ
+            <strong>số bất kỳ</strong> vào ô dưới đây để đăng ký.
+        </p>
+    <?php endif; ?>
     <div class="authfield acode" data-code data-wait="<?= (int) ($signup['wait'] ?? 0) ?>">
         <label class="authfield__label" for="signup-ma">Mã xác minh</label>
 
@@ -184,12 +210,11 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
 
         <span class="authfield__hint" data-code-note>
             <?= !empty($signup['sent'])
-                ? 'Mã đã gửi qua Zalo. Mã có hiệu lực ' . Otp::TTL . ' giây.'
+                ? 'Mã đã gửi. Mã có hiệu lực ' . Otp::TTL . ' giây.'
                 : 'Bấm "Gửi mã" để nhận mã xác minh qua Zalo.' ?>
         </span>
         <?php $loi('ma'); ?>
     </div>
-    <?php endif; ?>
 
     <!-- ══════════ EMAIL (KHÔNG BẮT BUỘC) ══════════ -->
     <?php /* type="email" ở đây thì hợp lệ: ô này chỉ nhận email, khác ô đăng
@@ -217,6 +242,20 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
             'pw_required' => true,
             'pw_err'      => ($errors['password'] ?? '') !== '',
         ]); ?>
+        <?php /* MỘT DÒNG THAY CHO DANH SÁCH NĂM DÒNG.
+
+                 auth/_password-rules.php (bản chấm xanh từng dòng khi gõ) đã gỡ
+                 khỏi màn này cho gọn — nó vẫn nguyên vẹn và vẫn dùng ở hai màn
+                 đặt lại mật khẩu, nơi khách tới thẳng để đặt mật khẩu nên bản
+                 chi tiết là thứ đầu tiên họ cần đọc.
+
+                 Nhưng KHÔNG BỎ TRẮNG: passwordProblem() trong core/helpers.php
+                 vẫn từ chối đúng năm điều kiện ấy, nên không nói gì thì khách
+                 chỉ biết luật sau khi đã bị từ chối một lần. Câu này phải KHỚP
+                 hàm đó — sửa hàm thì sửa cả đây. */ ?>
+        <span class="authfield__hint">
+            8–32 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
+        </span>
         <?php $loi('password'); ?>
     </label>
 
@@ -236,11 +275,6 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
         ]); ?>
         <?php $loi('password_confirm'); ?>
     </label>
-
-    <?php /* Năm dòng quy tắc đứng SAU cả hai ô: chúng nói về mật khẩu nói
-             chung chứ không riêng ô nào, mà kẹp vào giữa thì trông như chỉ
-             ràng buộc ô phía trên. auth.js chấm xanh theo ô ĐẦU TIÊN. */ ?>
-    <?php partial('auth/_password-rules'); ?>
 
     <?php
     /*
