@@ -114,7 +114,20 @@ $filterUrl = static function (string $slug, array $search): string {
    được nếu thiếu, giống $categories ngay trên. */
 $collectionsNav = $collectionsNav ?? CollectionModel::visible();
 
-$feature = $collectionsNav[0] ?? null;
+/* ĐÃ TẮT THẺ ẢNH NỔI BẬT (10/09/2026).
+ *
+ * Bảng xổ nay trong suốt, nằm thẳng trên video hero (xem khối cuối
+ * components/mega-menu.css). Một thẻ ảnh 400×280 đặt lên đó là một mảng đục
+ * che mất đúng thứ hero được dựng ra để khoe — cùng lý do đã bỏ nền trắng.
+ *
+ * Bảng cũng phải GỌN lại: mega giờ chỉ là ba cột chữ, cao vừa đủ nội dung,
+ * không còn là một tấm chiếm nửa khung nhìn.
+ *
+ * Đặt null ở đây chứ không xoá khối markup bên dưới: markup đã có sẵn nhánh
+ * `$feature === null` (nó thêm lớp .mega__grid--no-feature để lưới bỏ cột
+ * cuối). Bật lại chỉ là trả dòng này về `$collectionsNav[0] ?? null`.
+ */
+$feature = null;
 
 if ($feature !== null) {
     $featureImage = CollectionModel::cover($feature);
@@ -187,13 +200,24 @@ if ($feature !== null) {
                         <?= e($cat['name']) ?>
                     </a>
 
-                    <ul class="mega__links" role="list">
-                        <?php foreach (array_slice($slice, 0, $maxLinks) as $link): ?>
-                            <li>
-                                <a href="<?= e($filterUrl($cat['slug'], $link['search'])) ?>"><?= e($link['label']) ?></a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
+                    <?php
+                    /* ĐÃ BỎ BỐN LIÊN KẾT LỌC DƯỚI MỖI DANH MỤC (10/09/2026).
+                     *
+                     * Cửa hàng có CHÍN danh mục. Bốn liên kết mỗi cái là 36 dòng,
+                     * và lưới ba cột phải xuống ba hàng — bảng xổ cao tràn khỏi
+                     * khung nhìn, đè lên cả cụm chữ của hero. Đo trên trang thật:
+                     * hàng cuối ("Kính thể thao / Kính đọc sách / Phụ kiện") nằm
+                     * dưới đáy màn, không cuộn tới được vì bảng dính theo header.
+                     *
+                     * Bảng xổ là chỗ ĐI TIẾP, không phải chỗ lọc. Lọc theo dáng
+                     * đã có đủ trên chính trang danh mục, nơi còn thấy được số
+                     * mặt hàng của từng lựa chọn — thứ bảng xổ không bao giờ có.
+                     *
+                     * $slice / $maxLinks / $filterUrl vẫn còn ở đầu file: ngăn
+                     * kéo mobile (_layout/mega-menu-mobile.php) dùng chúng, ở đó
+                     * bảng cuộn được nên 36 dòng không phải vấn đề.
+                     */
+                    ?>
                 </div>
             <?php endforeach; ?>
 

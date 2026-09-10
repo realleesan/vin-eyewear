@@ -205,6 +205,90 @@
        └──────────────────────────────────────────────────────────────────── */
     --ease-out-soft: var(--ease);
 
+    /* ┌─ TOKEN VŨ ĐẠO LỚP PHỦ (motion-choreo.css) ─────────────────────────
+       │ Đo từ tham chiếu (gentlemonster.com, 10/09/2026): bề mặt lớp phủ mờ
+       │ vào 420ms ease-in-out, đóng 240ms; ruột "bubble" 24px. --ease vẫn là
+       │ đường cong của mọi tương tác vi mô; --ease-io CHỈ dành cho vũ đạo mở/
+       │ đóng lớp phủ — chuyển động của một bề mặt cần vào mềm lẫn ra mềm, còn
+       │ đường ra-nhanh-vào-chậm của --ease đọc thành "bật lên" ở cỡ này.
+       └──────────────────────────────────────────────────────────────────── */
+    --ease-io: cubic-bezier(.42, 0, .58, 1);
+    --mo-surface: 420ms;      /* bề mặt lớp phủ vào (tìm kiếm, mega) */
+    --mo-surface-out: 240ms;  /* bề mặt ra */
+    --mo-child: 240ms;        /* một lớp con vào */
+    --mo-child-out: 160ms;    /* một lớp con ra */
+    --mo-drawer: 480ms;       /* ngăn kéo trượt vào (giỏ, điều hướng, bộ lọc) */
+    --mo-drawer-out: 320ms;   /* ngăn kéo trượt ra */
+
+    /* ┌─ BỐN QUÃNG BỔ SUNG ────────────────────────────────────────────────
+       │ Bộ trên chỉ mô tả LỚP PHỦ. Bốn token này lấp ba khoảng trống mà
+       │ phần còn lại của site cần: phản hồi tức thì, nở tại chỗ, và nhịp
+       │ giữa các lớp con.
+       │
+       │ Đối chiếu với thang của IBM Carbon (@carbon/motion) — không phải để
+       │ bắt chước, mà để biết bộ đo từ tham chiếu có rơi vào chỗ hợp lý
+       │ không: --mo-child 240ms TRÙNG KHỚP moderate-02 (240ms), --mo-surface
+       │ 420ms sát slow-01 (400ms). Hai mốc quan trọng nhất trùng thang của
+       │ một hệ thiết kế dựng độc lập → bộ token này không phải phỏng đoán.
+       └──────────────────────────────────────────────────────────────────── */
+    --mo-micro: 120ms;        /* chip, ô tick, sao, nút nhấn — Carbon fast-02 110ms */
+    --mo-expand: 320ms;       /* accordion nở */
+    --mo-expand-out: 240ms;   /* accordion co */
+    --mo-step: 45ms;          /* nhịp giữa hai lớp con liền nhau */
+
+    /* ┌─ Ý ĐỊNH RÊ CHUỘT ──────────────────────────────────────────────────
+       │ Hai token này KHÔNG đo chuyển động — chúng đo Ý ĐỊNH, tức khoảng
+       │ chờ trước khi giao diện tin rằng con trỏ dừng lại chứ không đi ngang
+       │ qua. Đứng ở đây chứ không nằm trong mega-menu.css vì mọi bảng mở
+       │ bằng hover đều phải dùng chung một ngưỡng: hai ngưỡng khác nhau trên
+       │ cùng một thanh nav thì người dùng đọc ra là "cái này lag".
+       │
+       │ 140ms: dưới mức ấy gần như chắc chắn là đi ngang; trên mức ấy là
+       │ dừng lại. Đủ ngắn để không ai gọi là chậm.
+       │
+       │ 260ms ân hạn: sau khi rời hẳn, menu còn "sống" thêm ngần ấy để con
+       │ trỏ băng qua khe giữa hai mục mà không phải chờ ý định lại từ đầu.
+       │ assets/js/header.js ĐỌC token này bằng getComputedStyle chứ không
+       │ chép lại con số — một nguồn sự thật, sửa một chỗ.
+       └──────────────────────────────────────────────────────────────────── */
+    --mo-intent: 140ms;
+    --mo-intent-grace: 260ms;
+
+    /* ┌─ SÁU ĐƯỜNG CONG CỦA IBM CARBON ────────────────────────────────────
+       │ Lấy nguyên văn từ source đã publish của @carbon/motion.
+       │
+       │ VÌ SAO THÊM MÀ KHÔNG THAY --ease-io: --ease-io đúng bằng `ease-in-out`
+       │ của CSS, tức đúng thứ tham chiếu dùng, và bảy lớp phủ trong
+       │ motion-choreo.css đã được đo rồi chỉnh theo nó. Thay đường cong ở đó
+       │ là vứt bỏ công đo. Sáu đường dưới đây dành cho PHẦN VIỆC MỚI.
+       │
+       │ Luật phân đôi của Carbon — thứ giá trị hơn cả con số:
+       │   productive  việc, thao tác nhỏ, lặp nhiều lần trong một phiên
+       │               → nhanh, kín đáo, không đòi chú ý
+       │   expressive  khoảnh khắc lớn, hiếm, có cảm xúc
+       │               → chậm hơn, có sức nặng
+       │ Một tốc độ cho cả site là thứ làm giao diện đọc ra "template".
+       └──────────────────────────────────────────────────────────────────── */
+    --ease-p-std: cubic-bezier(.2, 0, .38, .9);    /* productive standard */
+    --ease-p-in: cubic-bezier(0, 0, .38, .9);      /* productive entrance */
+    --ease-p-out: cubic-bezier(.2, 0, 1, .9);      /* productive exit */
+    --ease-e-std: cubic-bezier(.4, .14, .3, 1);    /* expressive standard */
+    --ease-e-in: cubic-bezier(0, 0, .3, 1);        /* expressive entrance */
+    --ease-e-out: cubic-bezier(.4, .14, 1, 1);     /* expressive exit */
+
+    /* ┌─ VÒNG ĐỜI, KHÔNG PHẢI THỜI LƯỢNG ──────────────────────────────────
+       │ Hai token này đo BAO LÂU MỘT LỜI BÁO Ở LẠI, không phải bao lâu nó
+       │ chuyển động. Tách riêng vì đã có một lỗi đúng từ chỗ lẫn hai khái
+       │ niệm: .toast từng chạy `animation: toast-in-out var(--dur-slow)`, mà
+       │ --dur-slow là 600ms — nên cả vòng đời của lời báo "Đã thêm vào giỏ
+       │ hàng" là 0,6 giây. Không ai đọc kịp.
+       │
+       │ 4s cho lời xác nhận là mức thường thấy và đủ để đọc một dòng; lời
+       │ báo LỖI ở lại 8s vì khách còn phải hiểu để biết làm gì tiếp.
+       └──────────────────────────────────────────────────────────────────── */
+    --toast-life: 4s;
+    --toast-life-err: 8s;
+
     /* Chiều cao dải tiện ích (--space-2 trên + dưới, cộng một dòng chữ
        --fs-label). Bảng xổ mega đọc nó để tự giới hạn trong khung nhìn —
        xem .mega__panel trong components/mega-menu.css. */
@@ -316,7 +400,31 @@
        không phải của một cửa hàng image-first.
        ============================================================ */
     /* Lề ngang: 16 điện thoại · 24 desktop · 32 màn rất rộng — đúng bản đặc tả. */
-    --container: 1920px;
+    /* ┌─ BỀ NGANG NỘI DUNG — ĐÃ HẠ 1920 → 1440 ───────────────────────────
+       │ Lưới của site là hệ PHẦN TRĂM (grid.css: .col-lg-3 = 25%), nên mọi
+       │ thứ nở theo con số này. Ở 1920px, một thẻ col-lg-3 rộng 480px, mà
+       │ --ratio-editorial là 3/4 → thẻ CAO 640px. Ba thẻ bộ sưu tập chiếm
+       │ trọn một khung nhìn, và đó là thứ đọc ra thành "ảnh quá to".
+       │
+       │ 1440px là bề ngang thường thấy của các trang thời trang; cùng thẻ ấy
+       │ còn 360×480px. Không đổi một dòng markup nào, không đụng số cột.
+       │
+       │ DẤU VẾT CHO THẤY 1920 LÀ CON SỐ ĐI LẠC: 25 chỗ trong assets/css vẫn
+       │ ghi dự phòng `var(--container, 1600px)` hoặc `1280px`, và chú thích ở
+       │ layout.css:348 nói lần sửa gần nhất là "1200 → 1280". Không chỗ nào
+       │ được cập nhật theo 1920 — nó được nâng lên rời rạc chứ không phải một
+       │ quyết định của cả hệ.
+       │
+       │ MUỐN CHỈNH: đây là NÚM DUY NHẤT. To lên/nhỏ đi thì toàn site đi theo,
+       │ không phải sửa từng trang.
+       └──────────────────────────────────────────────────────────────────── */
+    --container: 1440px;
+
+    /* Thanh nav và dải tiện ích KHÔNG đi theo --container: nhà mốt để hai dải
+       này chạm gần mép màn (xem ảnh tham chiếu Gentle Monster — wordmark ở
+       giữa, mục nav sát mép trái, icon sát mép phải). Thu chúng vào 1440 thì
+       thanh nav trông như một hộp trôi giữa màn. */
+    --container-bleed: 1920px;
     --page-edge: clamp(16px, 1.7vw, 32px);
     --gutter: var(--page-edge);
     --gutter-tight: clamp(16px, 3vw, 20px);

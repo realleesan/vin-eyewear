@@ -111,6 +111,13 @@ $navItems = [
     ['label' => t('nav.ar'),      'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
     ['bst'   => true],
     ['label' => t('nav.about'),   'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
+    /* Liên hệ LÊN THANH NAV. Trước nó chỉ nằm trong $mobileExtra, tức khách
+       desktop phải cuộn xuống chân trang mới thấy. Với một cửa hàng có mặt
+       bằng thật thì "làm sao gặp được người bán" là một trong vài câu hỏi
+       hay gặp nhất, không phải một mục phụ.
+       ĐÃ GỠ khỏi $mobileExtra bên dưới: ngăn kéo mobile ghép cả hai danh
+       sách bằng array_merge, để cả hai chỗ là mục hiện hai lần. */
+    ['label' => t('nav.contact'), 'url' => '/lien-he',    'match' => ['lien-he']],
 ];
 
 /*
@@ -125,7 +132,6 @@ $navItems = [
 $mobileExtra = [
     ['label' => t('nav.booking'), 'url' => '/dat-lich',   'match' => ['dat-lich']],
     ['label' => t('nav.policy'),  'url' => '/chinh-sach', 'match' => ['chinh-sach']],
-    ['label' => t('nav.contact'), 'url' => '/lien-he',    'match' => ['lien-he']],
 ];
 
 /**

@@ -512,15 +512,58 @@
 
     if (!sheet) return;
 
+    /*
+     * ĐÓNG CÓ VŨ ĐẠO. <details> đóng là display:none tức thì — tấm biến mất
+     * giữa khung hình. motion-choreo.css khai đường ra cho .cfilter.is-closing
+     * (ruột mờ đi, tấm trượt ra, nền mờ khép), nên ở đây gắn lớp đó, đợi
+     * animation của tấm kết thúc rồi mới đặt open=false. Có mốc dự phòng bằng
+     * setTimeout: prefers-reduced-motion ép animation về 0.01ms và có trình
+     * duyệt không bắn animationend cho một hiệu ứng ngắn tới thế.
+     */
+    var dangDong = false;
+
+    function dongSheet() {
+        if (!sheet.open || dangDong) return;
+
+        var panel = sheet.querySelector('.cfilter__panel');
+
+        if (!panel || !isSheetMode()) {
+            sheet.open = false;
+            return;
+        }
+
+        dangDong = true;
+        sheet.classList.add('is-closing');
+
+        var xong = function () {
+            if (!dangDong) return;
+            dangDong = false;
+            panel.removeEventListener('animationend', khiXong);
+            sheet.classList.remove('is-closing');
+            sheet.open = false;
+        };
+
+        var khiXong = function (e) {
+            if (e.target === panel) xong();
+        };
+
+        panel.addEventListener('animationend', khiXong);
+
+        var cs = window.getComputedStyle(panel);
+        var doi = ((parseFloat(cs.animationDuration) || 0) + (parseFloat(cs.animationDelay) || 0)) * 1000;
+
+        window.setTimeout(xong, doi + 60);
+    }
+
     sheet.addEventListener('click', function (event) {
         if (event.target.closest('[data-sheet-close]')) {
-            sheet.open = false;
+            dongSheet();
         }
     });
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape' && sheet.open && isSheetMode()) {
-            sheet.open = false;
+            dongSheet();
         }
     });
 

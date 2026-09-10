@@ -1491,3 +1491,57 @@ body.is-modal-open {
 .qface__card[aria-pressed="true"] .qface__draw {
     color: var(--ink);
 }
+
+/* ============================================================================
+   BỎ QUA PHẦN CHƯA NHÌN THẤY — content-visibility
+
+   Trang chủ có CHÍN section, phần lớn là lưới ảnh: hero, hàng mới, bán chạy,
+   bộ sưu tập, danh mục, tròng kính, đo mắt, tự kiểm, đánh giá. Mặc định trình
+   duyệt phải bố cục và vẽ CẢ CHÍN ở mọi khung hình có gì đó đổi — kể cả tám
+   cái đang nằm ngoài khung nhìn. Đó là nguyên nhân điển hình của cuộn khựng
+   trên một trang dài nhiều ảnh, và nó không sửa được bằng cách tối ưu JS:
+   ba trình nghe cuộn của site đã throttle bằng requestAnimationFrame và đều
+   passive, ảnh đã có width/height + loading=lazy + decoding=async.
+
+   `content-visibility: auto` cho trình duyệt quyền BỎ QUA hẳn phần việc ấy
+   với section chưa tới gần khung nhìn. Khi cuộn tới, nó dựng lại — đúng thứ
+   ta muốn: trả tiền cho cái đang xem, không trả cho cái chưa xem.
+
+   `contain-intrinsic-size: auto 900px` là chiều cao TẠM cho section đang bị
+   bỏ qua, để thanh cuộn không nhảy. Từ khoá `auto` ở đầu quan trọng: sau lần
+   dựng đầu tiên trình duyệt NHỚ chiều cao thật và dùng lại con số ấy, nên
+   900px chỉ ảnh hưởng lượt cuộn đầu.
+
+   VHERO CỐ Ý KHÔNG NẰM TRONG DANH SÁCH: nó ở ngay đầu trang, luôn được dựng,
+   thêm containment vào chỉ tốn thêm việc mà không bỏ qua được gì. Nó cũng
+   chứa video nền — không đụng vào là an toàn nhất.
+
+   ĐIỀU PHẢI KIỂM BẰNG MẮT: `content-visibility` kéo theo `contain: layout`,
+   nghĩa là section trở thành khối chứa cho mọi con position:absolute/fixed
+   bên trong. Section nào có lớp phủ tràn mép neo ra ngoài chính nó sẽ bị kéo
+   về trong. Bốn section lưới thuần (hnew, hbest, hcoll, hcat) gần như chắc
+   chắn không sao; ba cái còn lại phải nhìn qua một lượt.
+
+   ─────────────────────────────────────────────────────────────────────────
+   TẠM GỠ (10/09/2026) — ĐỂ ĐO MỘT BIẾN MỘT LÚC.
+
+   Thủ phạm thật của "cuộn giật khựng" hoá ra là `scroll-snap-type: y mandatory`
+   trong components/video-hero.css: nó buộc khung nhìn luôn phải nghỉ ở một
+   điểm neo, nên mỗi nấc lăn chuột trình duyệt lại kéo trang về điểm gần nhất.
+   Khối ấy đã gỡ.
+
+   `content-visibility` là một cải thiện THẬT về chi phí vẽ, nhưng nó có một
+   kiểu hỏng riêng cho ra đúng triệu chứng đang đi tìm: ở lượt cuộn ĐẦU TIÊN,
+   mỗi section dựng lại và đổi chiều cao từ 900px ước lượng sang chiều cao
+   thật, làm thanh cuộn nhảy. Ship cả hai cùng lúc thì nếu vẫn giật, không
+   biết tại cái nào.
+
+   Nên: gỡ ra, để chủ dự án xác nhận việc gỡ scroll-snap đã đủ chưa. Đủ rồi
+   thì thêm lại khối dưới đây, lần này với contain-intrinsic-size ĐO TỪ TRANG
+   THẬT cho từng section thay vì một con số 900px dùng chung:
+
+     .hnew, .hbest, .hcoll, .hcat, .hlens, .hexam, .qcheck, .hrev {
+         content-visibility: auto;
+         contain-intrinsic-size: auto 900px;
+     }
+   ============================================================================ */

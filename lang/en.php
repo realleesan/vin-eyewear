@@ -105,6 +105,8 @@ return [
     'home.hero.title_2'   => 'wear it daily.',
     'home.hero.lead'      => 'Authentic titanium and acetate frames, with a free eye test by a qualified optician before you decide.',
     'home.hero.cta_shop'  => 'Explore the collection',
+    'home.hero.cta_buy'   => 'Shop now',
+    'home.hero.slide_of'  => 'Slide :n of :tong',
     'home.hero.cta_book'  => 'Book a free eye test',
     'home.hero.ar'        => 'Or try frames on with your camera (AR) →',
     'home.hero.prev'      => 'Previous image',

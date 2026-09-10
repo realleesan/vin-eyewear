@@ -107,6 +107,11 @@ return [
     'home.hero.title_2'   => 'tự tin hơn.',
     'home.hero.lead'      => 'Gọng titanium và acetate chính hãng, đo khúc xạ miễn phí cùng chuyên viên trước khi bạn chốt đơn.',
     'home.hero.cta_shop'  => 'Khám phá bộ sưu tập',
+    /* Nút THỨ NHẤT của mỗi tấm hero. 'cta_shop' ngay trên là nút THỨ HAI — nó
+       dẫn sang trang giới thiệu bộ sưu tập, còn nút này dẫn thẳng vào danh
+       sách hàng của chính bộ ấy. */
+    'home.hero.cta_buy'   => 'Mua ngay',
+    'home.hero.slide_of'  => 'Tấm :n trên :tong',
     'home.hero.cta_book'  => 'Đặt lịch đo mắt miễn phí',
     'home.hero.ar'        => 'Hoặc thử kính ảo bằng camera (AR) →',
     'home.hero.prev'      => 'Ảnh trước',

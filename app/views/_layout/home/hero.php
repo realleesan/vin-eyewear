@@ -1,141 +1,181 @@
 <?php
 
 /**
- * _layout/home/hero.php — hero trang chủ (S01): BĂNG VIDEO TRÀN MÀN HÌNH.
- *
- * ĐÃ THAY HẲN BĂNG ẢNH CŨ (09/09/2026).
- *
- * Bản trước là bố cục hai cột: nửa trái chữ + hai nút + bộ điều khiển (số thứ
- * tự, hai mũi tên, ba vạch tiến độ), nửa phải băng ba ẢNH trượt ngang, dưới
- * cùng là dải bốn cam kết. Nay hero là MỘT khối video tràn cạnh, không một nút
- * điều khiển nào — đúng lối của trang nhà mốt: thứ đầu tiên chạm vào mắt là
- * HÌNH ẢNH ĐỘNG, không phải một bảng điều khiển.
- *
- * ĐÃ BỎ khỏi khối này: hai mũi tên, ba vạch tiến độ, ô đếm "01 / 03", thẻ chú
- * thích, hai nút CTA cạnh nhau, và dải bốn cam kết. Bộ lớp .hero__* cũ vẫn còn
- * nguyên trong components/home-sections.css — không xoá ở đợt này để còn đối
- * chiếu; nó chỉ thôi được dùng.
+ * _layout/home/hero.php — hero trang chủ (S01): BĂNG VIDEO KÉO ĐƯỢC BẰNG CHUỘT.
  *
  * ═══════════════════════════════════════════════════════════════════════════
- * BA VIDEO NỐI NHAU, CHUYỂN BẰNG MỜ CHỒNG
+ * ĐÃ ĐỔI TỪ "MỜ CHỒNG" SANG "BĂNG TRƯỢT" (10/09/2026)
  *
- * Không phải "trượt": ba thẻ <video> chồng khít lên nhau, thẻ đang chạy để
- * opacity 1, hai thẻ kia 0. Hết một clip thì clip sau mờ lên đè lên clip
- * trước. Trượt ngang cần một băng dài gấp ba bề ngang và làm trình duyệt phải
- * giữ ba khung hình video sống cùng lúc; mờ chồng chỉ đổi một con số.
+ * Bản trước: ba thẻ <video> chồng khít lên nhau, clip đang chạy để opacity 1,
+ * hai clip kia 0; hết một clip thì clip sau mờ lên. Không kéo được, không có
+ * nút, mỗi lúc chỉ MỘT clip được nạp và giải mã.
  *
- * KHÔNG `loop` trên từng thẻ: vòng lặp nằm ở cấp danh sách (clip cuối quay về
- * clip đầu), và JS biết được điều đó nhờ sự kiện `ended` — thứ mà thẻ có
- * `loop` không bao giờ bắn ra.
+ * Nay: ba clip nằm CẠNH NHAU trên một băng dài gấp ba bề ngang, kéo bằng
+ * chuột / vuốt bằng ngón tay để sang tấm khác, mỗi tấm mang tên bộ sưu tập
+ * và HAI nút — "Mua ngay" vào thẳng danh sách hàng của bộ ấy, "Khám phá bộ
+ * sưu tập" sang trang giới thiệu của chính bộ ấy.
  *
- * TẢI: chỉ clip ĐẦU mang preload="auto"; hai clip sau là preload="none" cho
- * tới khi tới lượt. Ba file cộng lại 24,2 MB — kéo hết ngay khi mở trang là
- * giết trang chủ trên 4G. assets/js/home.js gọi load() cho clip kế tiếp NGAY
- * KHI clip hiện tại bắt đầu chạy, nên nó có trọn thời lượng của clip trước để
- * về kịp.
+ * ┌─ CÁI GIÁ CỦA BĂNG TRƯỢT, GHI LẠI ĐỂ NGƯỜI SAU KHÔNG PHẢI ĐO LẠI ─────────
+ * │ Chú thích của bản trước đã nêu đúng: băng trượt bắt trình duyệt giữ BA
+ * │ khung hình video sống cùng lúc, còn mờ chồng thì "chỉ đổi một con số".
+ * │ Ba file cộng lại 24,2 MB và cả ba nay đều preload="auto".
+ * │
+ * │ Đây là lựa chọn CÓ CÂN NHẮC, không phải sơ suất: chủ dự án đã được báo
+ * │ về chi phí này và chọn phương án "cả ba cùng phát" để giống đúng tham
+ * │ chiếu. Phương án còn lại — chỉ tấm đang xem mới phát, hai tấm bên cạnh
+ * │ đứng ở poster — vẫn kéo được y hệt mà giữ nguyên chi phí giải mã của bản
+ * │ cũ. Muốn quay về nó thì sửa đúng ba chỗ: bỏ `autoplay` ở hai clip sau,
+ * │ trả chúng về preload="none" + data-lazy-src, và trong home.js chỉ gọi
+ * │ play() cho clip tại chỉ số đang hiện.
+ * │
+ * │ Trên máy yếu hoặc mạng chậm, triệu chứng sẽ là: hero đứng hình vài giây
+ * │ rồi mới vào chuyển động, và cuộn trang khựng trong lúc ba luồng còn đang
+ * │ giải mã. Nếu thấy đúng vậy thì đó là chỗ này, không phải content-visibility
+ * │ ở components/home-sections.css.
+ * └──────────────────────────────────────────────────────────────────────────
  *
- * poster: khung hình đầu để lấp chỗ trong lúc video còn đang giải mã, và là
- * thứ DUY NHẤT hiện ra khi máy đặt "giảm chuyển động" — xem khối reduced
- * motion trong components/video-hero.css và nhánh tương ứng trong home.js.
+ * KHÔNG JAVASCRIPT VẪN DÙNG ĐƯỢC. Băng không có transform nào từ máy chủ, mà
+ * .vhero__viewport thì overflow:hidden — nên tấm đầu chiếm trọn khung và hai
+ * tấm sau nằm ngoài mép, đúng như một hero tĩnh. Hai nút của tấm đầu là thẻ
+ * <a> thật, bấm được. Chỉ là không sang được tấm hai.
+ *
+ * poster: khung hình đầu để lấp chỗ trong lúc video còn đang giải mã. Một thẻ
+ * <video> chưa giải mã xong thì vẽ ra một ô ĐEN — chính là cú nháy đen mà
+ * poster sinh ra để chặn.
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
 /*
- * Ba clip theo thứ tự chạy. 'poster' dùng ảnh có sẵn trong repo: video chưa có
- * ảnh khung hình đầu riêng, mà một thẻ <video> chưa giải mã xong thì vẽ ra một
- * ô ĐEN — chính là cú nháy đen mà poster sinh ra để chặn.
+ * Ba clip theo thứ tự trượt.
  *
- * 'label' là chữ hiện ở góc dưới, đổi theo clip. Dùng lại đúng ba khoá caption
- * của băng ảnh cũ nên không phải thêm chuỗi dịch mới.
+ * 'bst' là SLUG bộ sưu tập, và nó là thứ nối tấm hero với hai nút: nút thứ
+ * nhất đi /san-pham?collection=<slug>, nút thứ hai đi /bo-suu-tap/<slug>.
+ * Đổi thứ tự clip thì hai nút đi theo, không phải sửa chỗ nào khác.
+ *
+ * 'ten' viết thẳng ở đây chứ không truy vấn `collections`: hero là khối biên
+ * tập, ba clip này được quay riêng cho ba bộ ấy nên cặp video–tên là cố định.
+ * Nối vào CSDL thì đổi tên bộ trong trang quản trị sẽ làm lệch chữ khỏi hình.
+ * Có lang="vi" vì đây là tên riêng tiếng Việt, không dịch — cùng quy ước với
+ * tên sản phẩm ở _layout/product-card.php.
  */
 $clips = [
     [
         'src'    => 'assets/video/main_pc_1920_990.mp4',
         'poster' => 'assets/images/hero-models.jpg',
-        'label'  => t('home.hero.cap1'),
+        'bst'    => 'titan-sieu-nhe',
+        'ten'    => 'Titan Siêu Nhẹ',
+        'label'  => t('home.hero.cap3'),
     ],
     [
         'src'    => 'assets/video/main_global_pc_1920_990.mp4',
         'poster' => 'assets/images/showroom-frames.jpg',
-        'label'  => t('home.hero.cap2'),
+        'bst'    => 'acetate-thu-cong',
+        'ten'    => 'Acetate Thủ Công',
+        'label'  => t('home.hero.cap1'),
     ],
     [
         'src'    => 'assets/video/main_0_pc_1920_990.mp4',
         'poster' => 'assets/images/hero-eyewear.jpg',
-        'label'  => t('home.hero.cap3'),
+        'bst'    => 'phi-cong-co-dien',
+        'ten'    => 'Phi Công Cổ Điển',
+        'label'  => t('home.hero.cap2'),
     ],
 ];
+
+$tong = count($clips);
 ?>
 
-<section class="vhero" data-section="s01" data-video-hero aria-labelledby="hero-title">
+<section class="vhero" data-section="s01" data-video-hero
+         aria-roledescription="carousel" aria-labelledby="hero-title">
 
-    <?php /* aria-hidden trên cả sân khấu: ba video là NỀN TRANG TRÍ, không mang
-             thông tin nào mà chữ bên dưới chưa nói. Không có nó thì trình đọc
-             màn hình phải lội qua ba điều khiển media vô danh trước khi tới
-             tiêu đề trang. Cũng vì thế chúng không có <track> phụ đề: không có
-             tiếng, không có lời nào để chép lại. */ ?>
-    <div class="vhero__stage" aria-hidden="true">
+    <?php
+    /* <h1> ẨN BẰNG .sr-only, KHÔNG BỎ ĐI.
+       Mỗi trang cần đúng một <h1>, và trang chủ thì <h1> ấy phải nói website
+       này là gì — không phải tên bộ sưu tập đang tình cờ trượt tới. Bản trước
+       in nó ra to giữa hero; nay hero theo lối tham chiếu (chỉ tên bộ + hai
+       nút) nên câu ấy chuyển thành chữ dành cho trình đọc màn hình và cho
+       công cụ tìm kiếm. aria-labelledby ở trên trỏ vào đây. */
+    ?>
+    <h1 id="hero-title" class="sr-only">
+        <?= e(t('home.hero.title_1')) ?> <?= e(t('home.hero.title_2')) ?>
+    </h1>
+
+    <?php
+    /* Khung cắt. overflow:hidden ở đây là thứ giữ hai tấm sau nằm ngoài mép —
+       và cũng là thứ làm hero vẫn đúng khi tắt JavaScript. */
+    ?>
+    <div class="vhero__viewport">
+        <div class="vhero__track" data-vhero-track>
+            <?php foreach ($clips as $i => $clip): ?>
+                <article class="vhero__slide<?= $i === 0 ? ' is-on' : '' ?>"
+                         role="group" aria-roledescription="slide"
+                         aria-label="<?= e(t('home.hero.slide_of', [
+                             ':n'    => (string) ($i + 1),
+                             ':tong' => (string) $tong,
+                         ])) ?>"
+                         <?= $i === 0 ? '' : 'inert' ?>>
+
+                    <?php
+                    /* aria-hidden: video là NỀN TRANG TRÍ, nghĩa của tấm nằm ở
+                       chữ bên dưới. Cũng vì thế không có <track> phụ đề —
+                       không có lời nào để chép ra.
+
+                       CẢ BA đều autoplay + preload="auto": đây là phương án
+                       "cả ba cùng phát" — xem khối chú thích đầu file. */
+                    ?>
+                    <video class="vhero__clip"
+                           autoplay muted loop playsinline preload="auto"
+                           poster="<?= e(asset($clip['poster'])) ?>"
+                           aria-hidden="true" tabindex="-1"><source
+                            src="<?= e(asset($clip['src'])) ?>" type="video/mp4"></video>
+
+                    <?php /* Lớp phủ tối chuyển dần từ dưới lên: chữ trắng đặt
+                             thẳng lên video thì độ đọc được đổi theo từng khung
+                             hình. Dải này khoá sàn tương phản ở đúng vùng có chữ. */ ?>
+                    <div class="vhero__veil" aria-hidden="true"></div>
+
+                    <div class="vhero__copy">
+                        <p class="vhero__eyebrow"><?= e($clip['label']) ?></p>
+                        <p class="vhero__name" lang="vi"><?= e($clip['ten']) ?></p>
+
+                        <div class="vhero__cta">
+                            <?php
+                            /* HAI ĐÍCH KHÁC NHAU, và đó là chủ ý:
+                                 Mua ngay   → danh sách hàng ĐÃ LỌC theo bộ này
+                                 Khám phá   → trang kể chuyện của chính bộ ấy
+                               Cùng một bộ sưu tập, hai ý định mua khác nhau. */
+                            ?>
+                            <a class="vhero__btn vhero__btn--solid"
+                               href="/san-pham?<?= e(http_build_query(['collection' => $clip['bst']])) ?>">
+                                <?= e(t('home.hero.cta_buy')) ?>
+                            </a>
+                            <a class="vhero__btn"
+                               href="/bo-suu-tap/<?= e(rawurlencode($clip['bst'])) ?>">
+                                <?= e(t('home.hero.cta_shop')) ?>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    </div>
+
+    <?php
+    /* Vạch tiến độ — <button> thật, không phải <span>: chúng bấm được và Tab
+       tới được, nên người không dùng chuột vẫn sang tấm khác được mà không
+       cần kéo. home.js gắn hành vi; tắt JavaScript thì chúng bị ẩn hẳn bằng
+       CSS (html:not(.js)) chứ không nằm đó làm nút chết. */
+    ?>
+    <div class="vhero__bars" data-vhero-bars role="tablist"
+         aria-label="<?= e(t('home.hero.eyebrow')) ?>">
         <?php foreach ($clips as $i => $clip): ?>
-            <?php
-            /* muted + playsinline là ĐIỀU KIỆN BẮT BUỘC để autoplay chạy trên
-               iOS và trên Chrome — thiếu một trong hai là trình duyệt chặn, và
-               chặn im lặng. disablepictureinpicture + controlslist chặn nốt
-               những lối mà trình duyệt tự mọc ra một nút điều khiển. */
-            ?>
-            <video
-                class="vhero__clip<?= $i === 0 ? ' is-on' : '' ?>"
-                <?= $i === 0 ? 'autoplay preload="auto"' : 'preload="none"' ?>
-                muted
-                playsinline
-                disablepictureinpicture
-                controlslist="nodownload noplaybackrate noremoteplayback"
-                poster="<?= e(asset($clip['poster'])) ?>"
-                width="1920" height="990"
-                <?= $i === 0 ? '' : 'data-lazy-src="' . e(asset($clip['src'])) . '"' ?>
-            ><?php if ($i === 0): ?><source src="<?= e(asset($clip['src'])) ?>" type="video/mp4"><?php endif; ?></video>
-        <?php endforeach; ?>
-    </div>
-
-    <?php /* Lớp phủ tối chuyển dần từ dưới lên. Chữ trắng đặt thẳng lên video
-             thì độ tương phản đổi theo từng khung hình — có khung đọc được, có
-             khung không. Lớp này khoá sàn tương phản lại ở vùng có chữ mà không
-             làm tối cả tấm hình. */ ?>
-    <div class="vhero__veil" aria-hidden="true"></div>
-
-    <?php /* .reveal — cụm chữ mờ lên SAU khi hero đã vào khung nhìn, không hiện
-             sẵn từ khung hình đầu. Cặp .reveal/.visible do đoạn IntersectionObserver
-             dùng chung ở cuối _layout/master.php lo; nó cũng tự bỏ qua khi máy đặt
-             giảm chuyển động, và chỉ ẩn khi <html> có lớp .js nên tắt JavaScript
-             thì chữ vẫn hiện. */ ?>
-    <div class="vhero__copy reveal">
-        <p class="vhero__eyebrow"><?= e(t('home.hero.eyebrow')) ?></p>
-
-        <?php /* <h1> Ở LẠI, dù bản GM gần như không có chữ trên hero. Mỗi trang
-                 phải có đúng một h1: đó là thứ trình đọc màn hình và máy tìm
-                 kiếm dùng để biết trang này nói về cái gì. Bỏ nó đi thì trang
-                 chủ mất tiêu đề — cái giá không đáng cho một khoảng trống. */ ?>
-        <h1 id="hero-title" class="vhero__title">
-            <?= e(t('home.hero.title_1')) ?><br><em><?= e(t('home.hero.title_2')) ?></em>
-        </h1>
-
-        <a class="vhero__link" href="/san-pham"><?= e(t('home.hero.cta_shop')) ?></a>
-    </div>
-
-    <?php /* Nhãn của clip đang chạy. aria-hidden vì nó đổi theo video nền —
-             đọc lại mỗi 10 giây là quấy rối, và nó không nói gì thêm ngoài thứ
-             đang thấy trên hình.
-
-             ANH EM VỚI .vhero__copy, KHÔNG NẰM TRONG NÓ. Nó neo `right` vào
-             mép phải của HERO; đặt lồng bên trong thì mốc neo thành cái hộp
-             chữ ở góc trái, và nhãn rơi đè lên chính tiêu đề. */ ?>
-    <p class="vhero__label" data-vhero-label aria-hidden="true"><?= e($clips[0]['label']) ?></p>
-
-    <?php /* Nhãn của từng clip, đọc bởi home.js. Để trong DOM chứ không nhúng
-             vào JSON trong thẻ <script>: máy chủ đã dịch sẵn chuỗi rồi, và một
-             danh sách ẩn thì không cần cú phân tích nào. */ ?>
-    <div hidden data-vhero-labels>
-        <?php foreach ($clips as $clip): ?>
-            <span><?= e($clip['label']) ?></span>
+            <button type="button" class="vhero__bar<?= $i === 0 ? ' is-on' : '' ?>"
+                    role="tab" aria-selected="<?= $i === 0 ? 'true' : 'false' ?>"
+                    data-vhero-go="<?= $i ?>"
+                    aria-label="<?= e(t('home.hero.slide_of', [
+                        ':n'    => (string) ($i + 1),
+                        ':tong' => (string) $tong,
+                    ])) ?>"><span class="vhero__bar-fill"></span></button>
         <?php endforeach; ?>
     </div>
 </section>

@@ -62,258 +62,225 @@
     }
 
     /* ============================================================
-       0. HERO — BĂNG VIDEO KÉO ĐƯỢC BẰNG CHUỘT
+       0. HERO VIDEO — BA CLIP NỐI NHAU, MỜ CHỒNG
 
-       Markup: _layout/home/hero.php · Hình: components/video-hero.css
+       Markup: _layout/home/hero.php · Kiểu: components/video-hero.css
 
-       ĐÃ THAY HẲN KHỐI "BA CLIP MỜ CHỒNG" (10/09/2026). Bản trước xếp ba thẻ
-       <video> chồng khít và đổi opacity; nay ba tấm nằm cạnh nhau trên một
-       băng và ta dời băng bằng translate3d.
+       Đứng TRƯỚC băng ảnh cũ trong file này vì nó là khối đầu trang; khối băng
+       ảnh (mục 1) nay không tìm thấy [data-hero-slider] nữa nên tự thoát.
 
-       Khối này lo bốn việc, không hơn:
-         1. kéo/vuốt để sang tấm khác, có kháng lực ở hai đầu băng
-         2. ba vạch tiến độ bấm được, và phím mũi tên
-         3. tự sang tấm sau sau AUTO_MS, dừng khi người dùng đang kéo
-         4. dừng toàn bộ video khi hero cuộn khuất
+       BỐN VIỆC, và không việc nào có nút bấm:
 
-       CẢ BA CLIP CÙNG PHÁT — quyết định có cân nhắc của chủ dự án, xem khối
-       chú thích đầu _layout/home/hero.php để biết cái giá và cách quay về
-       phương án một-clip nếu cần.
+         1. hết một clip -> mờ sang clip sau, vòng lại clip đầu ở cuối danh sách
+         2. nạp clip KẾ TIẾP ngay khi clip hiện tại bắt đầu chạy (chúng mang
+            preload="none" và chưa có <source>) — ba file cộng lại 24,2 MB, kéo
+            hết lúc mở trang là giết trang chủ trên mạng di động
+         3. dừng khi hero cuộn khuất, chạy lại khi nó quay vào khung nhìn — một
+            video 1920px giải mã sau lưng người đang đọc là pin và CPU đổ đi
+         4. đổi nhãn góc phải theo clip
 
-       TẮT JAVASCRIPT: băng không có transform nào từ máy chủ và .vhero__viewport
-       thì overflow:hidden, nên tấm đầu chiếm trọn khung như một hero tĩnh; hai
-       nút của nó là thẻ <a> thật. Ba vạch tiến độ bị CSS ẩn đi (html:not(.js))
-       nên không có nút chết nào.
+       GIẢM CHUYỂN ĐỘNG: không phát gì cả, để nguyên khung hình poster của clip
+       đầu. Khối chung trong layout.css chỉ ép được transition/animation về
+       0.01ms — nó không biết tới việc một thẻ <video> có đang phát hay không.
+
+       TẮT JAVASCRIPT: clip đầu vẫn có autoplay + <source> in sẵn từ máy chủ nên
+       nó chạy bình thường; chỉ là không bao giờ sang clip hai. Không có màn
+       trắng, không có nút chết.
        ============================================================ */
 
     (function videoHero() {
         var root = document.querySelector('[data-video-hero]');
         if (!root) return;
 
-        var track  = root.querySelector('[data-vhero-track]');
-        var slides = Array.prototype.slice.call(root.querySelectorAll('.vhero__slide'));
-        var clips  = Array.prototype.slice.call(root.querySelectorAll('.vhero__clip'));
-        var bars   = Array.prototype.slice.call(root.querySelectorAll('[data-vhero-go]'));
+        var clips = Array.prototype.slice.call(root.querySelectorAll('.vhero__clip'));
+        if (clips.length === 0) return;
 
-        /* Dưới hai tấm thì không có gì để trượt — để nguyên hero tĩnh, và
-           không gắn một trình nghe nào. */
-        if (!track || slides.length < 2) return;
+        var labelEl = root.querySelector('[data-vhero-label]');
+        var labels  = Array.prototype.slice.call(
+            root.querySelectorAll('[data-vhero-labels] span')
+        ).map(function (el) { return el.textContent; });
 
-        var tong = slides.length;
-        var at   = 0;
+        var at = 0;
 
-        var AUTO_MS   = 7000;
-        var autoTimer = null;
-        var nhinThay  = true;
+        /* Gắn <source> cho một clip chưa có. Máy chủ chỉ in <source> cho clip
+           đầu; hai clip sau mang địa chỉ trong data-lazy-src và nằm im cho tới
+           lúc gọi hàm này.
 
-        /* Đo bề ngang từ DOM chứ không từ window.innerWidth: hero có thể không
-           chiếm trọn bề ngang cửa sổ (thanh cuộn, hoặc một khung bọc sau này),
-           và lệch vài pixel là băng dừng không khớp mép. */
-        function beNgang() {
-            return root.clientWidth || 1;
+           Phải load() SAU khi chèn <source>: thêm một thẻ con vào <video> đang
+           ở trạng thái "chưa có nguồn" không tự khởi động lượt tải nào. */
+        function ensureSource(clip) {
+            if (!clip || clip.dataset.ready === '1') return;
+
+            var src = clip.getAttribute('data-lazy-src');
+            if (src) {
+                var source = document.createElement('source');
+                source.src  = src;
+                source.type = 'video/mp4';
+                clip.appendChild(source);
+                clip.load();
+            }
+
+            clip.dataset.ready = '1';
         }
 
-        function render(px) {
-            track.style.transform =
-                'translate3d(' + (-at * beNgang() + (px || 0)) + 'px, 0, 0)';
+        // Clip đầu đã có <source> in sẵn từ máy chủ — chỉ cần đánh dấu.
+        clips[0].dataset.ready = '1';
+
+        function setLabel(i) {
+            if (!labelEl || !labels[i]) return;
+
+            /* Mờ chữ cũ đi trước rồi mới thay, không thay thẳng: hai câu dài
+               ngắn khác nhau, đổi tức thì đọc ra như một cú giật.
+               --dur (220ms) khai ở CSS; ở đây đợi đúng bằng chỗ đó bằng cách
+               nghe transitionend, nên đổi token là không phải sửa JS. */
+            var done = function () {
+                labelEl.textContent = labels[i];
+                labelEl.classList.remove('is-fading');
+                labelEl.removeEventListener('transitionend', done);
+            };
+
+            if (prefersReducedMotion()) {
+                labelEl.textContent = labels[i];
+                return;
+            }
+
+            labelEl.addEventListener('transitionend', done);
+            labelEl.classList.add('is-fading');
         }
 
-        /* inert trên tấm không hiện: nếu không, Tab sẽ chui vào hai nút của tấm
-           đang nằm NGOÀI MÉP MÀN HÌNH — tiêu điểm biến mất và trình duyệt cuộn
-           ngang theo nó. Đây là lỗi tiếp cận kinh điển của mọi băng trượt. */
-        function danhDau() {
-            slides.forEach(function (s, i) {
-                s.classList.toggle('is-on', i === at);
-                if (i === at) {
-                    s.removeAttribute('inert');
-                } else {
-                    s.setAttribute('inert', '');
+        function show(i) {
+            if (i === at) return;
+
+            var prev = clips[at];
+            var next = clips[i];
+
+            at = i;
+
+            ensureSource(next);
+
+            next.classList.add('is-on');
+            prev.classList.remove('is-on');
+
+            /* Tua clip vừa rời về đầu: lần sau tới lượt nó phải mở lại từ khung
+               hình đầu, không phải đứng ở khung cuối. Làm SAU khi đã đổi lớp —
+               currentTime = 0 trên một thẻ còn đang hiện là một cú nháy. */
+            window.setTimeout(function () {
+                try { prev.pause(); prev.currentTime = 0; } catch (e) { /* chưa nạp xong */ }
+            }, 600);
+
+            var playing = next.play();
+            if (playing && typeof playing.catch === 'function') {
+                // Trình duyệt chặn autoplay: không có gì để cứu, và ném ra một
+                // lỗi chưa bắt trong console thì không giúp được ai.
+                playing.catch(function () {});
+            }
+
+            setLabel(i);
+        }
+
+        /* ┌─ HERO VẪN CHẠY KHI MÁY ĐẶT "GIẢM CHUYỂN ĐỘNG" — QUYẾT ĐỊNH CÓ CHỦ Ý
+           │
+           │ Bản trước dừng hẳn video và trả về poster. Đúng chuẩn, nhưng đo
+           │ trên máy chủ cửa hàng thì cái giá là: Windows tắt "Animation
+           │ effects" (một thiết lập hiệu năng rất phổ biến, KHÔNG phải tiền
+           │ đình) → Chrome báo reduce → hero thành ảnh tĩnh, và trang chủ mất
+           │ đúng thứ nó được dựng quanh.
+           │
+           │ Cân lại:
+           │   · Đây là video CÂM, TRANG TRÍ, không cuộn theo trang, không
+           │     parallax — loại chuyển động ít gây khó chịu nhất.
+           │   · Mọi transition/animation khác của trang VẪN bị layout.css ép
+           │     về 0.01ms dưới reduce; hai cú mờ chồng giữa clip vì thế thành
+           │     cắt thẳng. Chỉ riêng việc video có phát hay không là đổi.
+           │   · Ai thật sự cần đứng yên vẫn còn lối: cuộn qua hero là nó tự
+           │     dừng (IntersectionObserver bên dưới).
+           │
+           │ Nếu sau này cần quay lại chuẩn nghiêm: chặn ở đây bằng
+           │ prefersReducedMotion() → gỡ <source>, load() để về poster (gỡ
+           │ nguồn chứ không chỉ pause(): autoplay trong HTML đã vẽ vài khung
+           │ hình trước khi JS chạy, pause() suông là ghim màn hình giữa phim).
+           └──────────────────────────────────────────────────────────────────── */
+
+        /* ┌─ HẾT CLIP: SANG CLIP SAU, HOẶC CHẠY LẠI CHÍNH NÓ ───────────────────
+           │ Chỉ chuyển khi clip kế tiếp ĐÃ ĐỦ DỮ LIỆU (readyState >= 3,
+           │ HAVE_FUTURE_DATA). Chưa đủ thì tua clip hiện tại về đầu và chạy
+           │ tiếp — hero luôn có hình động, không bao giờ đứng hình chờ tải.
+           │
+           │ Đây là chỗ thay cho thuộc tính `loop`: có `loop` thì sự kiện
+           │ `ended` KHÔNG BAO GIỜ bắn, và ta mất luôn đường sang clip sau.
+           └──────────────────────────────────────────────────────────────────── */
+        clips.forEach(function (clip, i) {
+            clip.addEventListener('ended', function () {
+                var next = clips[(i + 1) % clips.length];
+
+                if (next !== clip && next.readyState >= 3) {
+                    show((i + 1) % clips.length);
+                    return;
                 }
-            });
 
-            bars.forEach(function (b, i) {
-                b.classList.toggle('is-on', i === at);
-                b.setAttribute('aria-selected', i === at ? 'true' : 'false');
-            });
-        }
+                ensureSource(next);
 
-        function dungAuto() {
-            window.clearTimeout(autoTimer);
-            autoTimer = null;
-        }
-
-        function henAuto() {
-            dungAuto();
-
-            /* Không tự chạy khi hero đang khuất (không ai thấy) hoặc khi máy
-               đặt giảm chuyển động — một tấm tràn bề ngang tự trượt là đúng
-               loại chuyển động lớn mà thiết lập ấy muốn tránh. Video vẫn phát;
-               chỉ việc TỰ SANG TẤM là dừng. */
-            if (!nhinThay || prefersReducedMotion()) return;
-
-            autoTimer = window.setTimeout(function () { di(at + 1); }, AUTO_MS);
-        }
-
-        function di(i) {
-            at = ((i % tong) + tong) % tong;
-            track.classList.add('is-gliding');
-            render(0);
-            danhDau();
-            henAuto();
-        }
-
-        /* ── KÉO ─────────────────────────────────────────────────────────────
-           Pointer Events lo cả chuột, cảm ứng và bút bằng MỘT đường mã.
-           setPointerCapture để cú kéo không đứt khi con trỏ ra khỏi băng —
-           không có nó thì kéo nhanh ra ngoài mép là băng kẹt giữa chừng. */
-        var batDau = 0;
-        var dx     = 0;
-        var dangKeo = false;
-        var daDi    = false;
-        var pid     = null;
-
-        track.addEventListener('pointerdown', function (e) {
-            if (e.button !== undefined && e.button !== 0) return;
-
-            dangKeo = true;
-            daDi    = false;
-            batDau  = e.clientX;
-            dx      = 0;
-            pid     = e.pointerId;
-
-            /* ┌─ KHÔNG BẮT CON TRỎ Ở ĐÂY — ĐÂY LÀ LỖI ĐÃ LÀM HAI NÚT CHẾT ──
-               │ Bản trước gọi setPointerCapture ngay tại pointerdown. Hệ quả:
-               │ MỌI sự kiện con trỏ sau đó đổi đích về .vhero__track, kể cả
-               │ pointerup. Mà trình duyệt bắn `click` vào TỔ TIÊN CHUNG của
-               │ đích pointerdown và đích pointerup — capture làm hai đích ấy
-               │ đều thành track, nên click rơi vào track chứ không vào thẻ <a>
-               │ đang nằm dưới ngón tay. Hai nút "Mua ngay" và "Khám phá bộ sưu
-               │ tập" bấm không ăn, mà console không báo gì cả.
-               │
-               │ Nay chỉ bắt con trỏ KHI ĐÃ THẬT SỰ KÉO (xem pointermove). Cú
-               │ bấm đứng yên không bao giờ đi qua capture, nên click về đúng
-               │ thẻ <a> của nó.
-               └──────────────────────────────────────────────────────────── */
-
-            /* Gỡ .is-gliding: đang kéo thì băng phải bám tay TỪNG KHUNG HÌNH,
-               còn transition thì làm nó chạy sau tay một nhịp. */
-            track.classList.remove('is-gliding');
-            dungAuto();
-        });
-
-        track.addEventListener('pointermove', function (e) {
-            if (!dangKeo) return;
-
-            dx = e.clientX - batDau;
-
-            /* Vượt 4px mới tính là KÉO. Đúng lúc ấy mới bắt con trỏ (để cú kéo
-               không đứt khi tay ra khỏi băng) và mới đổi con trỏ sang "đang
-               nắm". Dưới ngưỡng này thì mọi thứ vẫn là một cú bấm bình thường. */
-            if (!daDi && Math.abs(dx) > 4) {
-                daDi = true;
-                track.classList.add('is-dragging');
-                try { track.setPointerCapture(pid); } catch (err) { /* trình duyệt cũ */ }
-            }
-
-            if (!daDi) return;
-
-            /* KHÁNG LỰC Ở HAI ĐẦU: kéo quá tấm đầu hoặc tấm cuối thì băng chỉ
-               nhúc nhích 35% quãng tay. Băng cứng ngắc đọc ra như hỏng; băng đi
-               hết cỡ rồi bật lại thì người dùng tưởng còn tấm nữa. */
-            if ((at === 0 && dx > 0) || (at === tong - 1 && dx < 0)) dx *= 0.35;
-
-            render(dx);
-        });
-
-        function ketThucKeo() {
-            if (!dangKeo) return;
-            dangKeo = false;
-
-            track.classList.remove('is-dragging');
-            track.classList.add('is-gliding');
-
-            if (pid !== null) {
-                try { track.releasePointerCapture(pid); } catch (err) { /* đã nhả */ }
-                pid = null;
-            }
-
-            /* 12% bề ngang: đủ xa để không nhầm với một cú bấm hụt, đủ gần để
-               không phải kéo hết màn hình. */
-            var nguong = beNgang() * 0.12;
-
-            if (dx <= -nguong)      di(at + 1);
-            else if (dx >= nguong)  di(at - 1);
-            else { render(0); henAuto(); }
-
-            dx = 0;
-        }
-
-        track.addEventListener('pointerup', ketThucKeo);
-        track.addEventListener('pointercancel', ketThucKeo);
-
-        /* Kéo XONG thì cú click cuối cùng vẫn bắn ra, và nó rơi trúng thẻ <a>
-           nằm dưới tay — người vừa trượt băng lại bị chuyển sang trang khác.
-           Chặn ở pha CAPTURE để tới trước mọi trình nghe của chính thẻ <a>. */
-        track.addEventListener('click', function (e) {
-            if (!daDi) return;
-            e.preventDefault();
-            e.stopPropagation();
-            daDi = false;
-        }, true);
-
-        bars.forEach(function (b) {
-            b.addEventListener('click', function () {
-                di(parseInt(b.getAttribute('data-vhero-go'), 10) || 0);
+                try {
+                    clip.currentTime = 0;
+                    var again = clip.play();
+                    if (again && typeof again.catch === 'function') again.catch(function () {});
+                } catch (e) { /* nguồn chưa sẵn sàng */ }
             });
         });
 
-        /* Phím mũi tên khi tiêu điểm đang ở trong hero. Không bắt ở document:
-           mũi tên trái/phải là phím cuộn ngang của cả trang, cướp nó ở mọi nơi
-           là chặn một đường đi lại hợp lệ. */
-        root.addEventListener('keydown', function (e) {
-            if (e.key === 'ArrowRight') { e.preventDefault(); di(at + 1); }
-            else if (e.key === 'ArrowLeft') { e.preventDefault(); di(at - 1); }
+        /* ┌─ NẠP CLIP SAU KHI CLIP TRƯỚC ĐÃ CHẠY ĐƯỢC MỘT ĐOẠN ─────────────────
+           │ ĐÂY LÀ CHỖ ĐÃ SAI, và nó sai theo cách chỉ đo mới thấy.
+           │
+           │ Trước: nạp clip 2 ngay tại sự kiện `playing` của clip 1 — tức là ở
+           │ khoảng mili-giây thứ 0. Hai file 6,6 MB và 6,7 MB thế là tải song
+           │ song đúng vào lúc bộ giải mã đang cần băng thông và CPU để dựng
+           │ khung hình đầu tiên. Đo trên trang thật:
+           │
+           │     t= 500ms  paused=false  currentTime=0.01s  buffered=10s
+           │     t=4000ms  paused=false  currentTime=0.02s  buffered=10s
+           │     t=9000ms  paused=false  currentTime=3.24s
+           │
+           │ Dữ liệu đã về đủ từ giây đầu (buffered=10s) mà kim vẫn đứng ở 0.01s
+           │ suốt hơn 4 giây — nghĩa là nghẽn ở GIẢI MÃ, không phải ở mạng. Với
+           │ người dùng thì hero trông như một tấm ảnh tĩnh rồi mới giật vào
+           │ chuyển động, đúng thứ vừa báo.
+           │
+           │ Nay đợi clip hiện tại chạy qua 40% mới đi lấy clip sau. Với clip 10
+           │ giây thì đó là giây thứ 4 — bộ giải mã đã qua đoạn nặng nhất, mà
+           │ vẫn còn 6 giây để file kia về (đo được: 8 MB/s qua tunnel, tức là
+           │ dư gấp nhiều lần).
+           │
+           │ `timeupdate` bắn khoảng 4 lần/giây, và cờ đã-nạp nằm trong
+           │ ensureSource nên gọi thừa cũng không tải lại lần nào.
+           └──────────────────────────────────────────────────────────────────── */
+        clips.forEach(function (clip, i) {
+            clip.addEventListener('timeupdate', function () {
+                if (!clip.duration || clip.currentTime / clip.duration < 0.4) return;
+                ensureSource(clips[(i + 1) % clips.length]);
+            });
         });
 
-        /* Đổi bề ngang cửa sổ thì quãng dời tính theo bề ngang cũ sai hết. Vẽ
-           lại KHÔNG có .is-gliding — đây là chỉnh lại vị trí, không phải một
-           cú trượt, cho nó chạy animation là băng trôi vô cớ khi xoay máy. */
-        window.addEventListener('resize', function () {
-            track.classList.remove('is-gliding');
-            render(0);
-        }, { passive: true });
-
-        /* Hero cuộn khuất -> dừng CẢ BA video. Ba luồng 1920px giải mã sau lưng
-           người đang đọc phần dưới trang là CPU và pin đổ đi mà không ai thấy.
-           Với phương án "cả ba cùng phát" thì đây là chỗ tiết kiệm duy nhất, nên
-           nó càng đáng giữ.
+        /* Hero cuộn khuất -> dừng. Một video 1920px giải mã sau lưng người đang
+           đọc phần dưới trang là CPU và pin đổ đi mà không ai thấy gì.
 
            IntersectionObserver chứ không nghe 'scroll': trình duyệt tự tính,
-           không tốn một lần đọc bố cục nào của ta. */
+           không tốn một lần đọc bố cục nào của ta. Trình duyệt không có nó thì
+           bỏ qua — video cứ chạy như trước, không hỏng gì. */
         if ('IntersectionObserver' in window) {
             new IntersectionObserver(function (entries) {
-                entries.forEach(function (en) {
-                    nhinThay = en.isIntersecting;
+                entries.forEach(function (entry) {
+                    var clip = clips[at];
+                    if (!clip) return;
 
-                    clips.forEach(function (c) {
-                        if (en.isIntersecting) {
-                            var p = c.play();
-                            // Trình duyệt chặn autoplay: không có gì để cứu, và
-                            // ném một lỗi chưa bắt ra console không giúp được ai.
-                            if (p && typeof p.catch === 'function') p.catch(function () {});
-                        } else {
-                            c.pause();
-                        }
-                    });
-
-                    if (en.isIntersecting) henAuto(); else dungAuto();
+                    if (entry.isIntersecting) {
+                        var p = clip.play();
+                        if (p && typeof p.catch === 'function') p.catch(function () {});
+                    } else {
+                        clip.pause();
+                    }
                 });
             }, { threshold: 0.15 }).observe(root);
         }
-
-        danhDau();
-        render(0);
-        henAuto();
     })();
 
     /**

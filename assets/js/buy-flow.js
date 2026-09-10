@@ -54,7 +54,39 @@
     /** Đã có lần nào chính file này đẩy lịch sử chưa — xem khối popstate. */
     var pushed = false;
 
-    function modal()  { return document.querySelector('.bmodal'); }
+    /* Bỏ qua hộp ĐANG ĐÓNG: nó còn nằm trong DOM thêm ~300ms để chạy đường ra
+       (xem dongHop bên dưới), nhưng với mọi logic ở đây thì nó đã không còn. */
+    function modal()  { return document.querySelector('.bmodal:not(.is-closing)'); }
+
+    /*
+     * GỠ HỘP CÓ VŨ ĐẠO. Gỡ thẳng khỏi DOM là hộp biến mất giữa khung hình;
+     * motion-choreo.css khai đường ra cho .bmodal.is-closing (ruột mờ đi, hộp
+     * lún xuống, nền mờ khép sau cùng). Gắn lớp, đợi animation của chính lớp
+     * phủ (thứ kết thúc muộn nhất) rồi mới gỡ. Mốc dự phòng bằng setTimeout
+     * cho prefers-reduced-motion (animation 0.01ms, có thể không bắn
+     * animationend).
+     */
+    function dongHop(m) {
+        if (!m || m.classList.contains('is-closing')) return;
+
+        m.classList.add('is-closing');
+
+        var daGo = false;
+        var go = function () {
+            if (daGo) return;
+            daGo = true;
+            m.remove();
+        };
+
+        m.addEventListener('animationend', function (e) {
+            if (e.target === m) go();
+        });
+
+        var cs = window.getComputedStyle(m);
+        var doi = ((parseFloat(cs.animationDuration) || 0) + (parseFloat(cs.animationDelay) || 0)) * 1000;
+
+        window.setTimeout(go, doi + 60);
+    }
 
     /* ── Thay ba mảnh đã đổi ────────────────────────────────────────────── */
     function apply(html, url, push) {
@@ -68,7 +100,7 @@
             var adopted = document.importNode(newModal, true);
             if (oldModal) { oldModal.replaceWith(adopted); } else { document.body.appendChild(adopted); }
         } else if (oldModal) {
-            oldModal.remove();
+            dongHop(oldModal);
         }
 
         // 2. DẢI BÁO. Xoá cái cũ trước rồi mới thêm cái mới: cùng một phần tử
@@ -91,6 +123,34 @@
             if (oldTrigger && newTrigger) {
                 oldTrigger.innerHTML = newTrigger.innerHTML;
                 oldTrigger.setAttribute('aria-label', newTrigger.getAttribute('aria-label') || '');
+
+                /* NHỊP ĐẬP CỦA HUY HIỆU — nối cú bấm với cái giỏ.
+                   Khách bấm ở giữa trang, dải báo hiện ở đáy màn, còn thứ
+                   thật sự đổi thì ở góc trên phải. Không có nhịp này thì ba
+                   chỗ ấy không chỗ nào nối với chỗ nào. Luật animation nằm ở
+                   .header-action.is-bumped trong components/header.css.
+
+                   Chỉ đập khi THẬT SỰ có huy hiệu: thêm hàng lúc giỏ đang
+                   rỗng-và-vẫn-rỗng (không xảy ra ở luồng thường, nhưng máy
+                   chủ có thể trả về như vậy khi hết hàng) thì không có gì để
+                   đập, mà lớp .is-bumped sẽ nằm lại vì animationend không bao
+                   giờ bắn. */
+                var badge = oldTrigger.querySelector('.header-action__badge');
+
+                if (badge) {
+                    /* Gỡ → ép trình duyệt tính lại → gắn lại. Thiếu bước
+                       giữa thì bấm thêm lần hai trong lúc animation còn chạy
+                       sẽ không khởi động lại: với trình duyệt, lớp chưa từng
+                       rời khỏi phần tử. Đây đúng cái bẫy mà khối "DẢI BÁO" ở
+                       trên né bằng cách xoá hẳn phần tử cũ. */
+                    oldTrigger.classList.remove('is-bumped');
+                    void oldTrigger.offsetWidth;
+                    oldTrigger.classList.add('is-bumped');
+
+                    oldTrigger.addEventListener('animationend', function () {
+                        oldTrigger.classList.remove('is-bumped');
+                    }, { once: true });
+                }
             }
 
             /* Thay CẢ bảng xổ chứ không riêng dòng đếm: danh sách liên kết
@@ -101,7 +161,51 @@
                header.js chỉ nhớ [data-hpop] và thẻ mở, không nhớ bảng xổ. */
             var oldPanel = oldCart.querySelector('.hpop__panel');
             var newPanel = newCart.querySelector('.hpop__panel');
-            if (oldPanel && newPanel) oldPanel.innerHTML = newPanel.innerHTML;
+
+            if (oldPanel && newPanel) {
+                /* Ngăn kéo CÓ ĐANG MỞ KHÔNG — hỏi TRƯỚC khi thay ruột. Sau khi
+                   thay thì vẫn hỏi được (lớp nằm trên chính .hpop__panel, không
+                   phải trên ruột), nhưng đọc ở đây thì thứ tự đọc-rồi-ghi rõ
+                   ràng hơn cho người sửa sau. */
+                var dangMo = oldPanel.classList.contains('show')
+                    && !oldPanel.classList.contains('hiding');
+
+                oldPanel.innerHTML = newPanel.innerHTML;
+
+                /* ĐÓNG thì không cần gì: lần mở sau, vũ đạo bằng transition
+                   trong motion-choreo.css §3 chạy đầy đủ như thường.
+
+                   ĐANG MỞ thì phải có lớp này. Nút vừa sinh ra được vẽ ngay ở
+                   trạng thái cuối nên transition không có gì để chạy — dòng
+                   hàng mới hiện bụp giữa danh sách. .is-refreshed bật một vũ
+                   đạo ngắn bằng `animation`, thứ duy nhất chạy được cho phần
+                   tử không có quá khứ. */
+                if (dangMo) {
+                    oldPanel.classList.add('is-refreshed');
+
+                    /* Gỡ lớp khi MỌI animation con đã xong — không hẹn giờ bằng
+                       một con số chép tay, vì con số ấy sẽ lệch ngay lần đầu ai
+                       đó chỉnh nhịp trong CSS. getAnimations() hỏi thẳng trình
+                       duyệt xem còn gì đang chạy.
+
+                       Đợi một khung hình rồi mới hỏi: lúc vừa gắn lớp, danh
+                       sách animation chưa được dựng xong. */
+                    window.requestAnimationFrame(function () {
+                        var dsAnim = typeof oldPanel.getAnimations === 'function'
+                            ? oldPanel.getAnimations({ subtree: true })
+                            : [];
+
+                        if (!dsAnim.length) {
+                            oldPanel.classList.remove('is-refreshed');
+                            return;
+                        }
+
+                        Promise.all(dsAnim.map(function (a) { return a.finished; }))
+                            .then(function () { oldPanel.classList.remove('is-refreshed'); })
+                            .catch(function () { oldPanel.classList.remove('is-refreshed'); });
+                    });
+                }
+            }
         }
 
         // 4. ĐỊA CHỈ TRÊN THANH URL. Phải đổi theo: ?mua= và ?buoc= là thứ

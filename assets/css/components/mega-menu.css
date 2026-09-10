@@ -200,8 +200,25 @@
        │ Đã kiểm 5 lối đóng còn lại đều chạy: rê sang mục nav khác, rê lên
        │ wordmark, rê sang icon giỏ hàng, bấm Esc, đưa trỏ ra ngoài cửa sổ.
        └──────────────────────────────────────────────────────────────────── */
-    max-height: calc(100dvh - var(--header-h) - var(--announce-h) - var(--rhythm-sm));
-    overflow-y: auto;
+    /* ┌─ ĐÃ GỠ max-height + overflow-y (10/09/2026) ────────────────────────
+       │ Hai dòng này sinh ra một THANH CUỘN NGANG ở đáy bảng — thấy rõ trong
+       │ ảnh chụp. Không phải lỗi vặt mà là một luật của CSS ít người biết:
+       │ đặt `overflow-y` khác `visible` thì `overflow-x: visible` KHÔNG còn
+       │ hợp lệ và trình duyệt tự tính nó thành `auto`. Bảng có
+       │ `width: max-content` cộng đệm phải, nên `auto` ấy tìm ra chỗ dôi và
+       │ vẽ thanh cuộn.
+       │
+       │ Gỡ được vì lý do sinh ra chúng đã hết. Khối chú thích ngay trên đo
+       │ được bảng "Bộ sưu tập" cao tới 2734px và thò 1755px khỏi màn — đó là
+       │ hồi ruột bảng còn là lưới thẻ ảnh. Nay ruột là chín dòng chữ, cao
+       │ chưa tới 400px, không có gì để cắt.
+       │
+       │ NẾU SAU NÀY BẢNG LẠI DÀI RA: đừng trả hai dòng này về nguyên trạng.
+       │ Khai kèm `overflow-x: clip` (hoặc `hidden`) để chặn đúng cái thanh
+       │ cuộn ngang mà `auto` sinh ra.
+       └──────────────────────────────────────────────────────────────────── */
+    max-height: none;
+    overflow: visible;
     overscroll-behavior: contain;
     background: var(--surface);
     /* CHỈ cạnh dưới. Cạnh trên đã là đường kẻ dưới của thanh nav; hai cạnh bên
@@ -435,4 +452,285 @@
         grid-template-columns: repeat(var(--mega-cols, 3), minmax(0, 1fr));
         gap: var(--rhythm-xs);
     }
+}
+
+/* ============================================================================
+   BẢNG XỔ TRONG SUỐT — CHỈ TRANG CHỦ (10/09/2026)
+
+   Trang chủ có video tràn màn ngay dưới thanh nav. Bảng xổ nền trắng đặt lên
+   đó là một tấm đục che mất đúng thứ hero được dựng ra để khoe — và càng sai
+   về sau, khi mega menu có video riêng bên trong.
+
+   Nay bảng trong suốt: mục menu nằm THẲNG trên video, cùng một tông với chữ
+   của thanh nav phía trên. Hai thứ đọc như MỘT lớp thay vì hai mảng dán cạnh
+   nhau. Đây cũng là lý do khối điều kiện `:has(.mega:hover)` trong
+   components/header.css đã gỡ: không còn tấm trắng nào để thanh nav phải khớp
+   màu với.
+
+   CHỈ .page-home-index. Trang khác mở đầu bằng chữ đen trên nền trắng — bảng
+   trong suốt ở đó là chữ trắng trên nền trắng, mất hẳn nội dung.
+
+   ─────────────────────────────────────────────────────────────────────────
+   VẪN CÓ MỘT LỚP PHỦ TỐI, VÀ NÓ KHÔNG MÂU THUẪN VỚI "TRONG SUỐT".
+
+   Video của Vin không phải lúc nào cũng tối: khung cà chua đỏ tươi làm chữ
+   trắng biến mất hoàn toàn. Tham chiếu không gặp chuyện này vì cảnh của họ
+   tối đều.
+
+   Lớp phủ ở đây là dải chuyển sắc rất nhạt (.42 → .12), đủ khoá sàn tương
+   phản cho chữ mà vẫn nhìn xuyên thấy video — khác hẳn một tấm nền đục. Muốn
+   bỏ hẳn thì xoá đúng khối .mega__panel::before bên dưới; chữ sẽ đọc được hay
+   không tuỳ từng khung hình video.
+   ============================================================================ */
+.page-home-index .mega__panel {
+    background: transparent;
+    border-bottom-color: transparent;
+}
+
+/* KHÔNG có lớp phủ nào. Bản trước thêm một dải chuyển sắc tối rất nhạt để khoá
+   sàn tương phản cho chữ, vì video của Vin có khung sáng (cảnh cà chua đỏ).
+   Chủ dự án yêu cầu TRONG SUỐT HẲN — chữ đè thẳng lên hero, không có gì chen
+   giữa. Đổi lại: trên khung video sáng, chữ menu sẽ khó đọc; cách chữa đúng
+   lúc đó là chỉnh VIDEO (hạ sáng khung nền) chứ không phải thêm tấm phủ. */
+
+/* Chữ đảo sang tông sáng. Nhắm từng lớp một chứ không đặt `color: inherit` ở
+   thẻ cha: phần lớn chúng khai `color: var(--ink)` tường minh (xem L308–424),
+   mà khai tường minh thì không thừa hưởng gì cả. */
+.page-home-index .mega__panel :is(.mega__label, .mega-feature__name, .mega-feature__more) {
+    color: var(--on-ink);
+}
+
+.page-home-index .mega__panel :is(.mega__links a, .mega-feature__note) {
+    color: rgba(255, 255, 255, .74);
+}
+
+.page-home-index .mega__panel :is(.mega__links a:hover, .mega__links a:focus-visible) {
+    color: var(--on-ink);
+}
+
+/* Ô ảnh của thẻ nổi bật: --h-shell là xám rất nhạt, trên nền video nó thành
+   một mảng đục. Hạ xuống một lớp trắng mờ để ảnh vẫn có khung mà video vẫn
+   thấy được quanh nó. */
+.page-home-index .mega-feature__media {
+    background: rgba(255, 255, 255, .10);
+}
+
+/* Vòng tiêu điểm bàn phím phải là vòng TRẮNG — vòng đen của PHẦN 17 gm.css
+   biến mất hoàn toàn trên cảnh tối. */
+.page-home-index .mega__panel :focus-visible {
+    outline-color: var(--on-ink);
+}
+
+/* ============================================================================
+   BẢNG XỔ GỌN (10/09/2026)
+
+   Sau khi bỏ bốn liên kết lọc dưới mỗi danh mục (xem _layout/mega-menu.php) và
+   bỏ thẻ ảnh nổi bật, ruột bảng chỉ còn CHÍN cái tên. Nhưng các con số đệm và
+   máng vẫn là của bản cũ — thang --rhythm-* sinh ra cho SECTION của trang, tức
+   48–120px. Chín dòng chữ ngồi trong ngần ấy khoảng trắng thì bảng vẫn cao
+   gần nửa khung nhìn dù chẳng còn gì trong đó.
+
+   Nay đọc thang --space-* (thang thành phần) thay cho --rhythm-* (thang trang):
+   bảng cao vừa đúng nội dung, mép dưới dừng ngay sau dòng cuối.
+
+   --mega-cols do PHP truyền vẫn là 3, nên chín tên xếp 3 cột × 3 hàng — gọn,
+   và mắt vẫn quét được cả bảng trong một lượt mà không phải cuộn.
+   ============================================================================ */
+/* ┌─ THẲNG CỘT VỚI THANH NAV ───────────────────────────────────────────────
+   │ Bảng lệch vì nó và thanh nav đo từ hai gốc khác nhau:
+   │     .header-main   max-width 1920 → căn giữa → RỒI mới đệm --page-edge
+   │     .mega__panel   đệm --page-edge trước → rồi mới căn giữa phần còn lại
+   │ Hai phép tính ấy chỉ trùng nhau khi cửa sổ rộng đúng 1920px; rộng hơn là
+   │ mép trái của bảng tụt vào trong so với chữ EYEWEAR phía trên.
+   │
+   │ Sửa bằng cách cho ruột bảng ĐÚNG CÁI HỘP của .header-main: bỏ đệm ngang
+   │ khỏi tấm (nền vẫn tràn mép vì left/right vẫn là 0), chuyển cả max-width
+   │ lẫn đệm xuống .mega__grid. Nay hai thứ dùng chung một công thức nên không
+   │ có bề ngang nào làm chúng lệch được.
+   └──────────────────────────────────────────────────────────────────────── */
+.mega__panel {
+    padding-block: var(--space-5) var(--space-10);
+    padding-inline: 0;
+}
+
+/* ┌─ MỘT CỘT DỒN TRÁI, KHÔNG PHẢI BA CỘT TRẢI NGANG ────────────────────────
+   │ Lưới cũ là `repeat(--mega-cols, 1fr)` — ba cột chia đều BỀ NGANG MÀN HÌNH.
+   │ Với chín cái tên ngắn thì nó thành ba cột thưa cách nhau 400px, xuống ba
+   │ hàng, và mắt phải quét ngang rồi mới xuống — đúng cái "lệch block" nhìn
+   │ thấy trên trang.
+   │
+   │ Tham chiếu xếp MỘT cột dồn sát mép trái, ngay dưới mục nav vừa rê vào,
+   │ dòng nọ cách dòng kia rất khít. Đọc từ trên xuống, một mạch, không phải
+   │ tìm.
+   │
+   │ `auto` chứ không `1fr`: 1fr là "chia hết chỗ thừa", nên một cột 1fr sẽ
+   │ rộng bằng cả màn và mỗi mục thành một dải bấm được dài 1900px. `auto` cho
+   │ cột co đúng bằng cái tên dài nhất.
+   │
+   │ justify-content: start ghim cột vào mép trái của .mega__panel — mà padding
+   │ ngang của bảng đã là --page-edge, nên nó thẳng cột với wordmark và các mục
+   │ nav phía trên.
+   └──────────────────────────────────────────────────────────────────────── */
+.mega__grid,
+.mega__grid--no-feature {
+    grid-template-columns: auto;
+    grid-template-rows: none;
+    justify-content: start;
+    column-gap: 0;
+    row-gap: 0;
+    /* Đúng cái hộp của .header-main — xem khối chú thích ở .mega__panel trên. */
+    max-width: var(--container-bleed);
+    margin-inline: auto;
+    padding-inline: var(--page-edge);
+}
+
+/* ┌─ MỤC MENU: CHỮ THƯỜNG, KHÍT NHAU ───────────────────────────────────────
+   │ --fs-label (12px IN HOA, giãn ký tự) là kiểu của NHÃN — thứ đứng đầu một
+   │ nhóm để gọi tên nhóm ấy. Ở đây chúng không còn là nhãn của gì cả: bốn liên
+   │ kết dưới mỗi cái đã bỏ, nên mỗi dòng nay là MỘT ĐÍCH ĐẾN.
+   │
+   │ Đích đến thì đọc như câu chữ thường, không như tiêu đề. Chữ hoa giãn ký
+   │ tự xếp chín dòng liền nhau đọc rất mệt, và tham chiếu cũng dùng chữ
+   │ thường ở đúng chỗ này.
+   └──────────────────────────────────────────────────────────────────────── */
+.mega__label {
+    margin-bottom: 0;
+    padding-block: var(--space-2);
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+}
+
+/* ┌─ DANH SÁCH BỘ SƯU TẬP — CÙNG NHỊP VỚI CỘT DANH MỤC ─────────────────────
+   │ Bảng "Bộ sưu tập" nay cũng là một cột chữ (xem _layout/collection-menu.php),
+   │ nên nó phải đọc y hệt bảng "Sản phẩm": cùng cỡ chữ, cùng khoảng dòng, cùng
+   │ mép trái. Hai bảng xổ cạnh nhau trên một thanh nav mà nhịp khác nhau thì
+   │ đọc ra như hai website.
+   │
+   │ Đệm dọc đặt trên chính thẻ <a> chứ không trên <li>: vùng bấm phải là cả
+   │ dòng, không chỉ mấy chữ. Ở khoảng dòng khít này, chênh lệch ấy là khác biệt
+   │ giữa "bấm được" và "phải nhắm".
+   └──────────────────────────────────────────────────────────────────────── */
+.mega__links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.mega__links a {
+    display: block;
+    padding-block: var(--space-2);
+    font-size: var(--fs-body-sm);
+    font-weight: 400;
+    letter-spacing: normal;
+    text-transform: none;
+    text-decoration: none;
+}
+
+/* ============================================================================
+   BẢNG XỔ NEO DƯỚI ĐÚNG MỤC ĐÃ RÊ VÀO (10/09/2026)
+
+   ĐÂY LÀ CHỖ ĐẢO LẠI MỘT QUYẾT ĐỊNH CŨ, VÀ LÝ DO ĐÃ ĐỔI.
+
+   Khối chú thích đầu file dặn giữ `.mega { position: static }` để bảng neo vào
+   .site-header và tràn hết bề ngang — kèm cảnh báo rằng đặt `position: relative`
+   sẽ làm "bảng thu lại còn đúng bề ngang một mục nav".
+
+   Cảnh báo ấy đúng khi ruột bảng là BA CỘT chữ cộng một thẻ ảnh: thu lại là vỡ.
+   Nay ruột chỉ còn MỘT CỘT tên ngắn, nên "thu lại bằng bề ngang một mục nav"
+   không còn là hỏng — nó chính là hình dáng mong muốn.
+
+   Và nó sửa đúng lỗi đang thấy: bảng neo vào header thì mọi mục nav đều xổ ra
+   ở MÉP TRÁI MÀN HÌNH. Rê vào COLLECTIONS mà danh sách hiện dưới EYEWEAR thì
+   người dùng đọc ra là lệch — vì nó lệch thật, so với thứ họ vừa trỏ vào.
+
+   `top: calc(100% + var(--mega-gap))`: 100% nay là đáy của <li class="mega">
+   (tức đáy chữ), không còn là đáy header. --mega-gap là đúng chiều cao vùng
+   bắt chuột vô hình mà .mega__trigger::after vẽ ra ngay dưới chữ, nên bảng
+   dính khít vào mép dưới vùng ấy — con trỏ đi từ chữ xuống bảng không băng
+   qua khoảng chết nào.
+
+   BỎ KHUNG: không viền, không bóng. Trang chủ thì nền trong suốt (video xuyên
+   qua); trang khác giữ nền --surface để chữ đọc được khi bảng đè lên nội dung,
+   nhưng KHÔNG có đường kẻ nào — nên nó đọc ra là chữ xổ xuống, không phải một
+   cái hộp bật ra.
+   ============================================================================ */
+/* ┌─ TẤM TRÀN BỀ NGANG, CHỮ DỜI THEO MỤC NAV ──────────────────────────────
+   │ Lần trước tôi neo cả TẤM vào <li class="mega"> rồi vẽ nền bằng một
+   │ ::after phá khung `left: calc(50% - 50vw); width: 100vw`. Sai, và sai theo
+   │ cách chỉ lộ ra ở mục nav nằm lệch trái: `50%` trong `left` của một phần tử
+   │ absolute tính theo KHỐI CHỨA — tức bề ngang của chính tấm, không phải của
+   │ khung nhìn. Nên dải 100vw ấy bị căn giữa quanh tấm; tấm ở x≈130 thì dải
+   │ phủ từ −720 tới 1180 và HỤT MẤT phần bên phải màn hình. Đó đúng là vệt
+   │ trắng lộ nội dung trang ở ảnh chụp.
+   │
+   │ Cách đúng đảo lại vai trò: TẤM tràn bề ngang như cũ (nền tự phủ kín, không
+   │ cần thủ thuật nào), còn CHỮ thì dời sang phải đúng bằng khoảng cách từ
+   │ mép trái màn tới mục nav. Khoảng ấy CSS không tự biết được — assets/js/
+   │ header.js đo bằng getBoundingClientRect và ghi vào --mega-x.
+   │
+   │ Dự phòng 0px: chưa có JS thì chữ nằm sát mép trái. Vẫn đọc được, vẫn bấm
+   │ được — chỉ là không thẳng cột với mục nav.
+   └──────────────────────────────────────────────────────────────────────── */
+.mega {
+    position: static;
+}
+
+.mega__panel {
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: auto;
+    /* KHÔNG đệm ngang ở đây: --mega-x đo TỪ MÉP TRÁI MÀN HÌNH, nên nếu tấm
+       còn đệm --page-edge nữa thì chữ bị đẩy thừa đúng ngần ấy. Toàn bộ phần
+       dời ngang giao cho .mega__grid bên dưới, một chỗ duy nhất. */
+    padding: var(--space-5) 0 var(--space-10);
+    border: 0;
+    box-shadow: none;
+}
+
+/* padding-left của ruột khai ở KHỐI CUỐI FILE, không phải ở đây — xem chú
+   thích tại đó để biết vì sao thứ tự quan trọng. */
+
+/* ┌─ DẢI NỀN TRÀN BỀ NGANG, TÁCH KHỎI VỊ TRÍ CỦA CHỮ ──────────────────────
+   │ Hai yêu cầu tưởng như chỏi nhau:
+   │   · CHỮ phải nằm đúng dưới mục vừa rê vào (nếu không thì lệch)
+   │   · NỀN phải chạy hết bề ngang màn (nếu không thì chữ chồng lên nội dung
+   │     trang — đúng cảnh "ng kính" xuyên qua danh sách ở ảnh vừa gửi)
+   │
+   │ Một phần tử không làm được cả hai: nó chỉ có một cái hộp. Nên tách ra —
+   │ .mega__panel giữ CHỮ và neo vào mục nav, còn ::after vẽ NỀN và tự phá
+   │ khung để trải hết khung nhìn.
+   │
+   │ `left: calc(50% - 50vw); width: 100vw` là cách phá khung tiêu chuẩn: lấy
+   │ tâm của chính phần tử rồi lùi lại nửa khung nhìn, nên dải luôn phủ đúng
+   │ từ mép trái tới mép phải màn hình bất kể phần tử cha rộng bao nhiêu hay
+   │ nằm ở đâu.
+   │
+   │ `top: calc(var(--mega-gap) * -1)`: bảng bắt đầu ở dưới chữ 16px, mà mép
+   │ dưới thanh nav thì cao hơn thế. Không kéo dải lên bù đúng 16px ấy thì
+   │ giữa thanh nav và dải hở một khe thấy được nội dung trang chạy qua.
+   │
+   │ z-index -1 giữ dải nằm sau chữ của chính bảng nhưng vẫn trên nội dung
+   │ trang: .mega__panel có z-index 1 nên nó tạo tầng xếp riêng, và -1 chỉ lùi
+   │ trong tầng ấy — cùng thủ pháp với .header-announce::after.
+   └──────────────────────────────────────────────────────────────────────── */
+/* ::after ĐÃ BỎ — nó là cái dải phá khung hụt mép phải nói ở khối trên. Tấm
+   nay lại tràn bề ngang nên NỀN CỦA CHÍNH NÓ đã phủ kín, không cần lớp phụ
+   nào. Trang chủ vẫn trong suốt nhờ luật .page-home-index .mega__panel. */
+
+/* Ruột thôi phải khớp hộp của .header-main: bảng nay đã nằm đúng dưới mục nav
+   rồi, nên mọi phép căn giữa/đệm ngang ở đây chỉ đẩy nó lệch đi. */
+/* KHỐI CUỐI CÙNG quyết định lề của ruột bảng — phải đứng sau mọi khai báo
+   .mega__grid khác trong file, vì chúng cùng độ đặc hiệu và luật sau thắng.
+   Gộp cả bốn thuộc tính vào đây thay vì rải ra: trước đó `padding-inline: 0`
+   nằm ở khối này còn `padding-left: var(--mega-x)` ở khối trên, nên cái sau
+   xoá cái trước và bảng lại dồn về mép trái. */
+.mega__grid,
+.mega__grid--no-feature {
+    max-width: none;
+    margin-inline: 0;
+    padding-right: 0;
+    padding-left: var(--mega-x, 0px);
 }

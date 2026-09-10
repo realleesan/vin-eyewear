@@ -78,7 +78,11 @@
 }
 
 .header-announce__inner {
-    max-width: var(--container);
+    /* --container-bleed, KHÔNG phải --container: --container đã hạ xuống 1440px
+       cho phần nội dung (xem PHẦN 2 của gm.css), nhưng dải tiện ích và thanh
+       nav phải chạm gần mép màn như khuôn nhà mốt. Thu chúng vào 1440 thì hai
+       dải này trông như một cái hộp trôi giữa màn hình. */
+    max-width: var(--container-bleed);
     margin-inline: auto;
     padding: var(--space-2) var(--page-edge);
     display: flex;
@@ -143,10 +147,16 @@
     display: none;
 }
 
+/* KHÔNG gạch chân khi rê chuột. Dải tiện ích là chỗ CHỮ NHỎ VIẾT HOA giãn
+   ký tự; một đường gạch chân ở cỡ ấy cắt ngang chân chữ hoa và làm cả dải
+   trông rẻ tiền. Đổi màu là đủ để nói "bấm được" — cùng cách mà .langsw__item
+   ngay bên cạnh đang dùng, nên hai thứ trên cùng một dải cư xử giống nhau.
+
+   Vẫn có transition màu để cú đổi không giật (xem .header-phone ở trên). */
 .header-phone:hover,
 .header-phone:focus-visible {
     color: var(--ink);
-    text-decoration: underline;
+    text-decoration: none;
 }
 
 /* ── Bộ chuyển ngôn ngữ ──────────────────────────────────────────────────── */
@@ -261,9 +271,15 @@ body.page-home-index {
 }
 
 /* Trạng thái ĐẶC — ĐÂY LÀ NƠI DUY NHẤT KHAI ĐIỀU KIỆN. */
+/* ĐÃ GỠ hai điều kiện `:has(.mega:hover)` / `:has(.mega:focus-within)`.
+   Mega menu nay TRONG SUỐT trên trang chủ (xem components/mega-menu.css), nên
+   không còn tấm trắng nào mở ra dưới thanh nav để phải khớp màu với. Thanh nav
+   giữ nguyên trong suốt suốt lúc bảng xổ mở — chữ menu và chữ nav cùng nằm
+   trên video, cùng một tông, đọc như MỘT lớp thay vì hai mảng dán cạnh nhau.
+
+   Bỏ chúng cũng dẹp luôn hai lỗi vừa báo: thanh loé trắng khi chỉ lướt chuột
+   qua, và cửa sổ chữ-xám-trên-nền-xám ở giữa cú chuyển màu. */
 body.page-home-index:has(.site-header.is-scrolled),
-body.page-home-index:has(.mega:hover),
-body.page-home-index:has(.mega:focus-within),
 body.page-home-index:has(.hpop--search.is-open) {
     --hdr-bg: var(--surface);
     --hdr-line: var(--line);
@@ -272,14 +288,114 @@ body.page-home-index:has(.hpop--search.is-open) {
     --hdr-veil: 0;
 }
 
-.page-home-index .header-announce,
+/* ┌─ DẢI TIỆN ÍCH CÓ BỘ BIẾN RIÊNG ─────────────────────────────────────────
+   │ Trước: dải đọc chung --hdr-* với thanh nav, nên MỌI thứ lật thanh nav
+   │ sang trắng cũng lật cả dải. Cộng thêm luật ở cuối khối này —
+   │ `:has(.site-header:hover)` — thì rê chuột vào bất kỳ đâu trong thanh nav,
+   │ kể cả một mục không có bảng xổ, là dải sáng trắng lên theo. Đó chính là
+   │ cái `:hover` quá rộng mà khối chú thích ở trên nói đã sửa cho .site-header
+   │ nhưng bỏ sót ở đây.
+   │
+   │ VÌ SAO DẢI KHÔNG ĐI THEO: nó nằm TRÊN thanh nav, không phải trên tấm mega.
+   │ Tấm trắng mở ra bên dưới thanh nav thì mép cần xử lý là mép GIỮA thanh nav
+   │ và tấm — dải tiện ích cách đó cả một hàng, nó vẫn đang nằm trên video và
+   │ không liên quan.
+   │
+   │ Ba biến chứ không một, vì bỏ nền trắng đi thì hai thứ kia phải ở lại:
+   │ chữ vẫn phải là trắng-mờ (không phải xám), và dải chuyển sắc phía sau vẫn
+   │ phải bật. Thiếu một trong hai là chữ xám trên video — không đọc nổi.
+   │
+   │ Điều kiện duy nhất: .is-scrolled. Không có :hover, không có :has() nào.
+   └──────────────────────────────────────────────────────────────────────── */
+body.page-home-index {
+    --ann-bg: transparent;
+    --ann-fg: rgba(255, 255, 255, .78);
+    --ann-veil: 1;
+}
+
+body.page-home-index:has(.site-header.is-scrolled) {
+    --ann-bg: var(--surface);
+    --ann-fg: var(--muted);
+    --ann-veil: 0;
+}
+
+/* ┌─ ĐÃ SỬA: THANH LOÉ TRẮNG KHI CHỈ LƯỚT CHUỘT QUA ────────────────────────
+   │ Hai lỗi cùng lúc, và chúng cộng vào nhau.
+   │
+   │ 1. KHÔNG CÙNG NHỊP VỚI BẢNG XỔ. Bảng mega nay chờ --mo-intent (140ms) mới
+   │    mở, để con trỏ đi ngang qua không kích hoạt nhầm (xem motion-choreo.css
+   │    §4). Nhưng nền thanh nav thì lật NGAY — nên lướt chuột qua hàng nav là
+   │    cả thanh loé trắng rồi tắt, mà không bảng nào hiện ra. Nền phải chờ
+   │    đúng ngần ấy: cùng một nguyên nhân thì phải cùng một nhịp.
+   │
+   │ 2. CỬA SỔ KHÔNG ĐỌC ĐƯỢC Ở GIỮA CÚ CHUYỂN. Nền đi từ trong suốt sang
+   │    trắng và chữ đi từ trắng sang mực TRONG CÙNG 360ms. Ở khoảng giữa, nền
+   │    mới trắng một nửa còn chữ đã xám — chữ xám trên nền xám, không đọc nổi.
+   │    360ms là quãng dài, nên cửa sổ mù ấy kéo tới hơn một phần năm giây.
+   │
+   │    Chữ đổi NHANH HƠN nền và bắt đầu MUỘN HƠN: nền chạy trọn 240ms, chữ
+   │    chỉ 120ms và đợi tới mốc 120ms mới khởi động — lúc nền đã đục quá nửa.
+   │    Nhờ thế chữ luôn nằm trên một nền đã đủ tương phản, ở cả hai chiều.
+   │
+   │ --mo-intent áp cho CẢ HAI chiều, và điều đó là mong muốn: rời chuột khỏi
+   │ mục này để sang mục bên cạnh thì nền không kịp nhấp nháy về trong suốt
+   │ rồi lại đục — nó đứng yên trong suốt quãng chuyển.
+   └──────────────────────────────────────────────────────────────────────── */
 .page-home-index .site-header {
     background-color: var(--hdr-bg);
     border-bottom-color: var(--hdr-line);
     transition:
-        background-color var(--dur-med) var(--ease),
-        border-color var(--dur-med) var(--ease),
-        color var(--dur-med) var(--ease);
+        background-color var(--hdr-switch) var(--ease),
+        border-color var(--hdr-switch) var(--ease),
+        /* Chữ đổi ở NỬA SAU của cú chuyển nền: lúc nền đã đục quá nửa, nên
+           chữ không bao giờ rơi vào cảnh xám-trên-xám. */
+        color 90ms var(--ease) 90ms;
+}
+
+/* Chữ và icon nằm trong thanh đi theo đúng nhịp của thanh — khai lại ở đây vì
+   chúng là phần tử KHÁC, transition của cha không chảy xuống con.
+
+   KHÔNG còn --mo-intent: hai nguyên nhân duy nhất còn lại (cuộn qua mốc 4px,
+   và mở lớp phủ tìm kiếm bằng cú BẤM) đều là ý định đã rõ ràng — bắt chúng
+   chờ thêm 140ms chỉ làm thanh nav phản hồi chậm. Độ trễ ấy sinh ra cho
+   `:hover` của mega, mà mega nay không còn lật màu thanh nữa. */
+.page-home-index :is(
+    .header-logo,
+    .header-nav__list > li > a,
+    .header-nav__list > li > .mega__trigger,
+    .header-nav__list > li > .cmenu__trigger,
+    .header-action
+) {
+    transition: color 90ms var(--ease) 90ms;
+}
+
+/* ┌─ MỘT NHỊP CHUNG CHO CẢ CÚ ĐỔI BỐI CẢNH ────────────────────────────────
+   │ Cuộn từ dưới lên đỉnh sinh ra một dải xám nhoè kéo dài, vì BA LỚP ĐỐI
+   │ NGHỊCH NHAU chạy ở ba tốc độ khác nhau:
+   │     nền dải tiện ích   trắng → trong suốt    360ms
+   │     nền thanh nav      trắng → trong suốt    240ms
+   │     dải chuyển sắc TỐI  0 → 1                360ms
+   │     chữ                mực → trắng          120ms, trễ 120ms
+   │
+   │ Nền trắng đang mờ đi CHỒNG LÊN dải tối đang hiện ra: cộng lại ra xám đục,
+   │ và vì bốn con số không khớp nhau nên vệt xám ấy kéo suốt hơn một phần ba
+   │ giây — đúng cảnh trong ảnh.
+   │
+   │ Sửa bằng cách KHÔNG CHO HAI LỚP CHỒNG NHAU, thay vì cố khớp chúng:
+   │     0–180ms    nền trắng tan đi   (dải tối vẫn đang ở 0)
+   │     180–300ms  dải tối hiện lên   (nền đã trong suốt hẳn)
+   │ Chiều ngược lại tự đúng: cuộn xuống thì nền trắng đục lại trong 180ms
+   │ đầu, và dải tối chỉ tắt SAU đó — lúc nó đã nằm khuất sau nền trắng.
+   │
+   │ --hdr-switch giữ bốn con số ấy ở MỘT chỗ. Sửa nhịp là sửa một dòng.
+   └──────────────────────────────────────────────────────────────────────── */
+body.page-home-index {
+    --hdr-switch: 180ms;
+}
+
+.page-home-index .header-announce {
+    background-color: var(--ann-bg);
+    transition: background-color var(--hdr-switch) var(--ease);
 }
 
 /* ┌─ PHẢI CÓ z-index, KHÔNG CHỈ position ───────────────────────────────────
@@ -321,9 +437,15 @@ body.page-home-index:has(.hpop--search.is-open) {
     z-index: -1;
     pointer-events: none;
     background: linear-gradient(to bottom, rgba(0, 0, 0, .55), rgba(0, 0, 0, 0));
-    /* Tắt cùng lúc với lúc thanh có nền trắng thật — lúc đó dải này thừa. */
-    opacity: var(--hdr-veil);
-    transition: opacity var(--dur-med) var(--ease);
+    /* --ann-veil chứ không --hdr-veil: dải chuyển sắc này phục vụ CHỮ CỦA DẢI
+       TIỆN ÍCH, nên nó phải tắt/bật theo dải, không theo thanh nav. Dùng chung
+       --hdr-veil thì mở một tấm mega là dải chuyển sắc tắt trong khi dải tiện
+       ích vẫn đang trong suốt nằm trên video — chữ mất nền, không đọc được. */
+    opacity: var(--ann-veil);
+    /* TRỄ đúng bằng --hdr-switch, để dải tối này KHÔNG BAO GIỜ chồng lên nền
+       trắng đang mờ đi — xem khối "MỘT NHỊP CHUNG CHO CẢ CÚ ĐỔI BỐI CẢNH" ở
+       trên. Nền tan hết trước, rồi dải mới hiện. */
+    transition: opacity 120ms var(--ease) var(--hdr-switch);
 }
 
 /* Chữ và icon đảo màu. Nhắm cả bộ con vì phần lớn chúng khai
@@ -341,7 +463,7 @@ body.page-home-index:has(.hpop--search.is-open) {
 
 /* Chữ phụ của dải tiện ích: xám khi nền trắng, trắng-mờ khi nằm trên video. */
 .page-home-index :is(.header-announce__text, .header-phone, .langsw__item) {
-    color: var(--hdr-fg-quiet);
+    color: var(--ann-fg);
 }
 
 /* Vòng tiêu điểm bàn phím trên nền video phải là vòng TRẮNG — vòng đen của
@@ -350,23 +472,17 @@ body.page-home-index:has(.hpop--search.is-open) {
 .page-home-index .site-header :focus-visible {
     outline-color: var(--hdr-fg);
 }
-/* Dải tiện ích cuộn khỏi màn hình (nó KHÔNG dính — xem khối 1), nên nó không
-   cần trạng thái "đã cuộn". Nhưng lúc bảng xổ mở ra khi trang còn ở đỉnh thì
-   nó vẫn đang nằm trên video: trả nền trắng cho nó cùng lúc với thanh nav. */
-.page-home-index:has(.site-header:hover) .header-announce,
-.page-home-index:has(.site-header:focus-within) .header-announce,
-.page-home-index:has(.site-header.is-scrolled) .header-announce {
-    background-color: var(--surface);
-}
+/* ĐÃ BỎ ở đây: hai khối `:has(.site-header:hover)` / `:focus-within` từng lật
+   dải tiện ích sang trắng. Chúng là nguyên nhân của lỗi "rê chuột vào thanh
+   nav thì dải thông báo sáng lên" — `:hover` trên cả .site-header bắt luôn
+   wordmark, ba icon bên phải và mọi mục nav không có bảng xổ.
 
-.page-home-index:has(.site-header:hover) :is(.header-announce__text, .header-phone, .langsw__item),
-.page-home-index:has(.site-header:focus-within) :is(.header-announce__text, .header-phone, .langsw__item),
-.page-home-index:has(.site-header.is-scrolled) :is(.header-announce__text, .header-phone, .langsw__item) {
-    color: var(--muted);
-}
+   Việc chúng làm nay do --ann-bg / --ann-fg / --ann-veil lo, và chỉ .is-scrolled
+   mới lật được — xem khối "DẢI TIỆN ÍCH CÓ BỘ BIẾN RIÊNG" ở trên. */
 
 .header-main {
-    max-width: var(--container);
+    /* Xem chú thích ở .header-announce__inner — thanh nav giữ bề ngang cũ. */
+    max-width: var(--container-bleed);
     margin-inline: auto;
     padding-inline: var(--page-edge);
     min-height: var(--header-h);
@@ -577,6 +693,34 @@ body.page-home-index:has(.hpop--search.is-open) {
     font-size: var(--fs-micro);
     font-weight: 500;
     line-height: 1;
+}
+
+/* ┌─ NHỊP ĐẬP KHI SỐ TRONG GIỎ ĐỔI ────────────────────────────────────────
+   │ Thêm hàng từ thẻ sản phẩm hoặc hộp thoại mua thì buy-flow.js thay ruột
+   │ nút giỏ, huy hiệu đổi số — nhưng ĐỔI TRONG IM LẶNG. Khách vừa bấm ở
+   │ giữa trang, lời báo hiện ở ĐÁY màn, còn thứ thật sự thay đổi thì nằm ở
+   │ GÓC TRÊN PHẢI và không nhúc nhích. Ba chỗ, không chỗ nào nối với chỗ nào.
+   │
+   │ Một nhịp đập 240ms nối cú bấm với cái giỏ: mắt bắt được chuyển động ở
+   │ góc phải và tự hiểu "món vừa thêm đã nằm ở đó". Đây là liên tục không
+   │ gian (nguyên tắc 2 của docs/motion-system.md), không phải trang trí.
+   │
+   │ 1.28 chứ không 1.5: huy hiệu chỉ 16px, phóng mạnh ở cỡ này đọc ra thành
+   │ "nảy" và kéo chú ý khỏi việc khách đang làm. Đường cong expressive
+   │ standard của Carbon lên nhanh, lắng mềm — một nhịp, không phải cú giật.
+   │
+   │ Tắt chuyển động: guard toàn cục ép về 0,01ms nên không có nhịp nào.
+   │ ĐÚNG — nghĩa đã nằm ở con số mới trên huy hiệu và ở dải báo; nhịp đập
+   │ chỉ là thứ dẫn mắt tới đó. Không cần miễn trừ như .toast.
+   └──────────────────────────────────────────────────────────────────────── */
+@keyframes cart-bump {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.28); }
+    100% { transform: scale(1); }
+}
+
+.header-action.is-bumped .header-action__badge {
+    animation: cart-bump var(--mo-child) var(--ease-e-std) both;
 }
 
 /* ── Hamburger ───────────────────────────────────────────────────────────── */
@@ -1043,6 +1187,24 @@ body.is-search-open .site-header {
 .header-search__input:focus {
     border-bottom-color: var(--ink);
     border-bottom-width: 2px;
+}
+
+/* ┌─ TẮT VÒNG TIÊU ĐIỂM Ở RIÊNG Ô NÀY ─────────────────────────────────────
+   │ Khối chú thích ngay trên cố ý KHÔNG tắt outline, để vòng tiêu điểm chung
+   │ của PHẦN 17 gm.css được vẽ đè. Đúng nguyên tắc, sai chỗ: ô nhập chạy hết
+   │ bề ngang lớp phủ, nên cái vòng ấy thành một KHUNG CHỮ NHẬT to bao quanh
+   │ cả dòng — đúng thứ vừa báo là "bấm vào ô nhập bị khung viền bo quanh".
+   │
+   │ Tắt được vì ô này ĐÃ CÓ chỉ báo tiêu điểm riêng và rõ hơn: gạch chân đổi
+   │ từ 1px --line-strong sang 2px --ink (luật ngay trên). Vừa đổi độ dày vừa
+   │ đổi màu, nhìn thấy ở mọi nền — nên bỏ vòng ngoài không làm mất đường lui
+   │ của người dùng bàn phím, chỉ bỏ một khung thừa vẽ chồng lên nó.
+   │
+   │ CHỈ ô này. Mọi thứ khác trong lớp phủ (nút X, gợi ý, thẻ đã xem) vẫn giữ
+   │ vòng tiêu điểm chung.
+   └──────────────────────────────────────────────────────────────────────── */
+.header-search__input:focus-visible {
+    outline: none;
 }
 
 .header-search__submit {
@@ -1647,5 +1809,54 @@ body.is-search-open .site-header {
 
     .header-burger {
         display: none;
+    }
+
+    /* ┌─ WORDMARK VÀO GIỮA — BA CỘT, KHÔNG PHẢI FLEX ──────────────────────
+       │ Khuôn Gentle Monster: mục nav dồn TRÁI, wordmark ĐÚNG GIỮA thanh, ba
+       │ icon dồn PHẢI.
+       │
+       │ VÌ SAO GRID CHỨ KHÔNG FLEX: với flex, wordmark chỉ nằm giữa khi hai
+       │ bên tình cờ rộng bằng nhau — mà chúng không bao giờ bằng nhau (bên
+       │ trái là 4–6 mục chữ, bên phải là 3 icon). Kết quả là logo lệch, và
+       │ lệch thêm mỗi lần thêm một mục nav. `minmax(0, 1fr) auto minmax(0, 1fr)`
+       │ ép hai cột biên RỘNG BẰNG NHAU theo đúng định nghĩa của `fr`, nên cột
+       │ giữa nằm chính giữa thanh bất kể hai bên chứa gì.
+       │
+       │ minmax(0, 1fr) chứ không 1fr trơn: mặc định `min-width` của một ô lưới
+       │ là `auto`, nên một hàng nav dài sẽ nong cột ra thay vì cho phép thu —
+       │ đúng cái bẫy đã ghi ở khối "KHỐI BỌC TRONG LƯỚI" của components/ui.css.
+       │
+       │ MARKUP KHÔNG ĐỔI MỘT BYTE. Thứ tự trong DOM vẫn là logo → nav →
+       │ actions, đúng thứ tự đọc của trình đọc màn hình và của Tab (wordmark
+       │ là lối về trang chủ, nó nên đến trước). `order` chỉ đổi chỗ VẼ RA.
+       │
+       │ Chỉ từ 1101px. Dưới mốc đó hàng nav không tồn tại (hamburger thay
+       │ chỗ), lưới ba cột sẽ để lại một cột trống bên trái và đẩy wordmark
+       │ lệch — nên bề ngang hẹp giữ nguyên flex đã chỉnh cho 390px.
+       └──────────────────────────────────────────────────────────────────── */
+    .header-main {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: center;
+        gap: var(--space-6);
+    }
+
+    .header-nav {
+        order: 1;
+        justify-self: start;
+        /* margin-right:auto là công cụ của flex; trong lưới nó vô nghĩa và chỉ
+           gây nhiễu khi ai đó đọc lại. */
+        margin-right: 0;
+    }
+
+    .header-logo {
+        order: 2;
+        justify-self: center;
+    }
+
+    .header-actions {
+        order: 3;
+        justify-self: end;
+        margin-left: 0;
     }
 }

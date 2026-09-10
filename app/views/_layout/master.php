@@ -403,6 +403,11 @@ if ($manhCua !== null) {
         printf('    <link rel="stylesheet" href="%s">' . "\n", e(asset('assets/css/' . $css)));
     }
     ?>
+    <?php /* Vũ đạo mở/đóng của mọi lớp phủ. Nạp SAU CÙNG, sau cả CSS riêng
+             của trang: nó đè lại transition/animation của header.css,
+             mega-menu.css, category.css và buy-modal.css bằng cùng độ ưu
+             tiên, nên thứ tự nạp là thứ quyết định. */ ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/motion-choreo.css') ?>">
 </head>
 
 <?php

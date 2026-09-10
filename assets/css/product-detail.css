@@ -1254,6 +1254,40 @@
         align-items: start;
     }
 
+    /* ┌─ ẢNH KHÔNG ĐƯỢC CAO HƠN MỘT MÀN HÌNH ──────────────────────────────
+       │ --container là 1920px, nên trên màn 1920 cột ảnh rộng ~1400px. Tỉ lệ
+       │ --ratio-product là 1/1, vậy tấm ảnh đầu tiên CAO 1400px — gấp rưỡi
+       │ chiều cao khung nhìn. Khách mở trang ra chỉ thấy một mảng ảnh, phải
+       │ cuộn mới biết mình đang xem cái gì.
+       │
+       │ Luật cũ ("màn càng rộng thì ảnh càng to") đúng với một trang biên tập,
+       │ nhưng trang này là trang QUYẾT ĐỊNH MUA: tên, giá và nút phải cùng
+       │ nằm trong màn đầu tiên với ảnh.
+       │
+       │ min() ba vế, mỗi vế chặn một kiểu màn:
+       │   100%      màn hẹp — không bao giờ tràn cột
+       │   720px     màn rất rộng — ảnh có trần, không phình theo bề ngang
+       │   100dvh…   màn thấp (laptop 13") — trần theo CHIỀU CAO thật
+       │ Vì tỉ lệ là 1/1 nên chặn bề ngang CHÍNH LÀ chặn chiều cao; đổi
+       │ --ratio-product sang khác vuông thì phải tính lại vế thứ ba.
+       │
+       │ 88px là chỗ thở dưới ảnh để mắt thấy còn nội dung bên dưới — không có
+       │ nó thì ảnh chạm đúng mép màn và trang trông như hết bài.
+       └──────────────────────────────────────────────────────────────────── */
+    .pdgal {
+        max-width: min(100%, 720px, calc(100dvh - var(--header-h) - 88px));
+        margin-inline: auto;
+    }
+
+    /* Khoá bề ngang bài đọc. --container 1920px là con số cho dải ảnh tràn
+       màn của trang chủ; ở đây nó chỉ kéo giãn khoảng trống giữa ảnh và cột
+       chữ, làm hai thứ cần đọc cùng nhau lại nằm xa nhau. */
+    .pd__grid,
+    .pdbottom,
+    .pdrelated {
+        max-width: 1400px;
+    }
+
     /* Cột thông tin đi theo khi cuộn qua CỘT ẢNH DỌC. Neo THẤP hơn trước
        (--rhythm-lg thay vì --space-6): cụm tên–giá–nút rơi xuống khoảng giữa
        khung nhìn, ngang tầm với thân kính trong ảnh, thay vì dính sát thanh

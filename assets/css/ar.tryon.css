@@ -125,8 +125,24 @@
 
 @keyframes arspin { to { transform: rotate(360deg); } }
 
+/* BỎ HẲN VÒNG XOAY, KHÔNG PHẢI LÀM NÓ CHẬM LẠI.
+
+   Bản trước ghi `animation-duration: 2s` với ý giữ vòng xoay sống nhưng dịu
+   hơn. Ý đúng, nhưng không chạy được: guard toàn cục trong layout.css có
+   `animation-iteration-count: 1 !important`, mà !important thắng luật thường
+   bất kể thứ tự — nên vòng xoay quay ĐÚNG MỘT VÒNG rồi đứng im ở
+   rotate(360deg), tức trông y hệt lúc chưa chạy. Một vòng xoay đứng im ngay
+   chỗ hệ thống đang chờ quyền camera thì đọc ra thành "hỏng", tệ hơn là
+   không có gì.
+
+   Nghĩa của trạng thái này đã nằm ở dòng chữ bên cạnh (#arLoadingText —
+   "Đang bật camera…"), và chữ thì đọc được ở mọi cấu hình. Vòng xoay chỉ là
+   phần trang trí chồng lên nghĩa ấy, nên bỏ đi là đúng.
+
+   Cùng cách xử lý với .is-buy-busy::after trong components/buy-modal.css —
+   một luật cho cả hai chỉ báo bận của site. */
 @media (prefers-reduced-motion: reduce) {
-    .arspin { animation-duration: 2s; }
+    .arspin { display: none; }
 }
 
 /* Dải trạng thái nhận diện */

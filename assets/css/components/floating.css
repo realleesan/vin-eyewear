@@ -148,9 +148,29 @@ body:has(#mobileNav.is-open) .fab {
    │ HỆ QUẢ ĐÃ BIẾT: màu không còn phân biệt ba nút — nhưng nó vốn đã không
    │ phân biệt, cả ba từng dùng chung một màu xanh. ICON vẫn là thứ phân biệt
    │ chúng, đúng như chú thích ở trên đã ghi. */
+/* ┌─ ĐÃ SỬA: CHỮ "ZALO" TRẮNG TRÊN BONG BÓNG TRẮNG ────────────────────────
+   │ Bản trước: --fab-blue: var(--on-ink).
+   │
+   │ Ba màu trong logo Zalo, đọc từ _layout/floating-actions.php:
+   │     bong bóng   fill="currentColor"     → var(--on-brand)  (sáng)
+   │     chữ "Zalo"  fill="var(--fab-blue)"  → var(--on-ink)    (CŨNG sáng)
+   │
+   │ Chữ sáng nằm trên bong bóng sáng thì biến mất, và cái còn lại đúng là
+   │ MỘT BONG BÓNG TRƠN — không phân biệt được với nút Messenger ngay dưới.
+   │ Đó chính là thứ chú thích ở trên nói đã sửa xong ("đã đổi từ bong bóng
+   │ chat trơn sang logo Zalo thật"), nhưng biến màu làm nó quay lại y như cũ.
+   │
+   │ Chú thích ở khối trên đã nói đúng luật — chữ "phải tương phản với NỀN
+   │ nút" — chỉ là biến trỏ nhầm màu. Nền nút là var(--brand), nên chữ phải
+   │ là var(--brand): nó đọc thành chữ KHOÉT RỖNG trên bong bóng sáng, đúng
+   │ cách logo Zalo thật hoạt động (chỉ đảo tông cho hợp bộ đơn sắc).
+   │
+   │ Rê chuột nền sẫm thêm một nấc, nên chữ đi theo — nếu không, chữ giữ tông
+   │ nền cũ và lộ ra như một vệt lệch màu giữa logo.
+   └──────────────────────────────────────────────────────────────────────── */
 :root {
-    --fab-blue:        var(--on-ink);
-    --fab-blue-strong: var(--on-ink);
+    --fab-blue:        var(--brand);
+    --fab-blue-strong: var(--brand-strong);
 }
 
 .fab__btn--call,
@@ -163,6 +183,14 @@ body:has(#mobileNav.is-open) .fab {
 .fab__btn--call:hover,
 .fab__btn--zalo:hover,
 .fab__btn--messenger:hover { background: var(--brand-strong); }
+
+/* Khai lại biến TRÊN CHÍNH NÚT: SVG nội tuyến đọc var(--fab-blue) lúc nó được
+   tính giá trị, nên đổi biến ở đây là chữ trong logo đi theo mà không phải
+   đụng vào markup. */
+.fab__btn--zalo:hover,
+.fab__btn--zalo:focus-visible {
+    --fab-blue: var(--fab-blue-strong);
+}
 
 .fab__btn--top {
     background: var(--surface-raised);

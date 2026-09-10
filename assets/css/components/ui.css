@@ -555,6 +555,33 @@
 
    `forwards` giữ nguyên khung hình cuối (đã trong suốt + visibility:hidden),
    nên nó không còn che thứ gì bên dưới sau khi mờ hết.
+
+   ─────────────────────────────────────────────────────────────────────────
+   HAI ANIMATION, KHÔNG PHẢI MỘT — và đây là chỗ sửa một lỗi thật.
+
+   Bản trước chạy MỘT keyframes `toast-in-out` trải trên `var(--dur-slow)`,
+   với các mốc 0% / 6% / 88% / 100%. Nhưng --dur-slow là 600ms, và ở đây nó
+   là TOÀN BỘ VÒNG ĐỜI chứ không phải thời lượng chuyển động: lời báo "Đã
+   thêm … vào giỏ hàng" vào ở 36ms, giữ tới 528ms, biến mất ở 600ms. Không
+   ai đọc kịp một dòng chữ trong nửa giây. (Dấu vết của lỗi: bản lỗi phải
+   ghi đè `animation-duration: 8s` — nếu 600ms là đúng ý thì đã không cần.)
+
+   Gốc của lỗi là lẫn hai khái niệm khác nhau vào một con số: THỜI LƯỢNG
+   CHUYỂN ĐỘNG (bao lâu để mờ vào) và VÒNG ĐỜI (bao lâu ở lại). Tách ra làm
+   hai animation thì mỗi cái đo đúng thứ của nó, và đổi vòng đời không còn
+   kéo theo đổi tốc độ mờ:
+
+     toast-in    320ms  --ease-e-in    vào ngay
+     toast-out   240ms  --ease-p-out   trễ --toast-life (4s), 8s nếu là lỗi
+
+   Đường vào dùng đường cong EXPRESSIVE ENTRANCE của Carbon
+   (cubic-bezier(0,0,.3,1)) — vọt lên rồi hãm gấp. Đây là tin mới, nó phải
+   ập tới. Đường ra dùng PRODUCTIVE EXIT, kín đáo: nó chỉ đang dọn dẹp.
+
+   RÊ CHUỘT THÌ DỪNG ĐẾM. `animation-play-state: paused` treo cả hai
+   animation, mà lúc rê thì cái vào đã xong nên chỉ có cái ra bị treo. Đây
+   cũng là đường dừng theo WCAG 2.2.2 cho một nội dung tự biến mất — và nó
+   tốn đúng một dòng.
    ============================================================ */
 
 .toast {
@@ -574,32 +601,70 @@
     text-align: center;
     box-shadow: var(--elev-3);
     transform: translateX(-50%);
-    animation: toast-in-out var(--dur-slow) var(--ease) forwards;
+    animation:
+        toast-in 320ms var(--ease-e-in) both,
+        toast-out var(--mo-surface-out) var(--ease-p-out) var(--toast-life) forwards;
 }
 
-@keyframes toast-in-out {
-    0%   { opacity: 0; transform: translate(-50%, 12px); }
-    6%   { opacity: 1; transform: translate(-50%, 0); }
-    88%  { opacity: 1; transform: translate(-50%, 0); }
-    100% { opacity: 0; visibility: hidden; transform: translate(-50%, 8px); }
+@keyframes toast-in {
+    from { opacity: 0; transform: translate(-50%, 16px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes toast-out {
+    from { opacity: 1; transform: translate(-50%, 0); }
+    to   { opacity: 0; visibility: hidden; transform: translate(-50%, -6px); }
+}
+
+/* Bản không dịch chuyển, dùng cho reduced-motion: KHÔNG đụng tới transform,
+   nên phần tử giữ nguyên `translateX(-50%)` của luật gốc và không nhích một
+   pixel nào. Chỉ mờ đi. */
+@keyframes toast-out-flat {
+    from { opacity: 1; }
+    to   { opacity: 0; visibility: hidden; }
+}
+
+/* Rê chuột hoặc tab tới thì dừng đếm giờ — người đọc chậm không bị cướp mất
+   lời báo giữa chừng. Rời chuột ra là đếm tiếp từ chỗ đang dừng, không phải
+   đếm lại từ đầu: đó là hành vi của `paused`, và nó đúng hơn một setTimeout
+   chạy lại. */
+.toast:hover,
+.toast:focus-visible {
+    animation-play-state: paused;
 }
 
 /* Lời BÁO LỖI thì đỏ, và ở lại lâu hơn: một lời xác nhận đọc lướt là đủ, còn
-   một lời báo lỗi thì khách phải kịp đọc hết rồi mới biết làm gì tiếp. */
+   một lời báo lỗi thì khách phải kịp đọc hết rồi mới biết làm gì tiếp.
+   Chỉ dời ĐỘ TRỄ của animation thứ hai — tốc độ mờ vào/ra giữ nguyên. */
 .toast--err {
     background: var(--danger);
     color: #fff;
-    animation-duration: 8s;
+    animation-delay: 0s, var(--toast-life-err);
 }
 
-/* Người dùng đã tắt hiệu ứng chuyển động: bỏ phần trượt, nhưng VẪN cho nó tự
-   mờ đi — tự biến mất là hành vi của thành phần, không phải hiệu ứng trang trí. */
-@media (prefers-reduced-motion: reduce) {
-    .toast { animation: toast-fade var(--dur-slow) var(--ease) forwards; }
+/* ── TẮT CHUYỂN ĐỘNG ──────────────────────────────────────────────────────
+   Bản trước khai `animation: toast-fade var(--dur-slow) …` với ý giữ lại
+   phần tự mờ đi. Ý đúng, nhưng KHÔNG CHẠY: guard toàn cục trong layout.css
+   có `animation-duration: .01ms !important` + `animation-delay: 0s
+   !important`, nên toast mờ hết trong 0,01 giây — người tắt chuyển động
+   KHÔNG BAO GIỜ THẤY một lời báo nào. Với luồng mua hàng thì đó là mất hẳn
+   lời xác nhận "đã thêm vào giỏ", không phải mất một hiệu ứng.
 
-    @keyframes toast-fade {
-        0%, 88% { opacity: 1; }
-        100%    { opacity: 0; visibility: hidden; }
+   Sửa bằng độ ưu tiên chứ không phải bằng cách nới guard: `.toast` là (0,1,0)
+   còn `*` là (0,0,0), hai bên cùng !important thì bên đặc hiệu hơn thắng.
+   Guard toàn cục giữ nguyên cho mọi thứ khác.
+
+   Một animation duy nhất, không dịch chuyển: phần tử đứng sẵn ở trạng thái
+   hiện (không có đường vào), ở lại đủ --toast-life, rồi mờ đi. Tự biến mất
+   là HÀNH VI của thành phần, không phải hiệu ứng trang trí — nên nó phải
+   sống sót qua reduced-motion. */
+@media (prefers-reduced-motion: reduce) {
+    .toast {
+        animation: toast-out-flat var(--mo-surface-out) linear var(--toast-life) forwards !important;
+    }
+
+    .toast--err {
+        animation-delay: var(--toast-life-err) !important;
     }
 }
 

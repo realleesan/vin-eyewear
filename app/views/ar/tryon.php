@@ -83,7 +83,12 @@ partial('_layout/page-head', [
                 </div>
 
                 <!-- Đang tải -->
-                <div class="arstage__loading" id="arLoading" hidden>
+                <!-- role="status" (aria-live polite): ar-tryon.js đổi chữ trong
+                     #arLoadingText qua nhiều bước — bật camera, tải bộ nhận diện
+                     ~4MB. Không có nó thì người dùng trình đọc màn hình chỉ nghe
+                     một lần rồi im lặng suốt quãng chờ dài nhất của site.
+                     aria-busy nói rõ khối này đang trong lúc cập nhật. -->
+                <div class="arstage__loading" id="arLoading" role="status" aria-busy="true" hidden>
                     <span class="arspin" aria-hidden="true"></span>
                     <p id="arLoadingText">Đang bật camera…</p>
                 </div>

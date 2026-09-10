@@ -624,6 +624,11 @@ b {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+      /* CẢ ĐỘ TRỄ, không chỉ thời lượng: vũ đạo lớp phủ (motion-choreo.css)
+         cho từng lớp con vào trễ tới ~800ms. Chỉ ép thời lượng về 0 thì người
+         tắt chuyển động vẫn phải nhìn một tấm trống 800ms rồi ruột mới hiện. */
+      animation-delay: 0s !important;
+      transition-delay: 0s !important;
    }
 }
 

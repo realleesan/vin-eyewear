@@ -526,6 +526,57 @@
     var megas = Array.prototype.slice.call(document.querySelectorAll('.mega'));
 
     if (megas.length) {
+        /* ────────────────────────────────────────────────────────────────
+           .is-mega-live — "hàng nav đang có một bảng mở"
+
+           CSS thuần không trả lời được câu hỏi "vừa nãy có bảng nào mở
+           không", mà đó đúng là thứ quyết định cú mở tiếp theo nên chờ ý
+           định hay không:
+
+             chưa có bảng nào mở  → chờ 140ms (--mega-intent), tránh mở nhầm
+                                    khi con trỏ chỉ đi ngang qua
+             đã có bảng đang mở   → đổi sang bảng bên cạnh TỨC THÌ, và chạy
+                                    vũ đạo rút gọn (xem motion-choreo.css §4)
+
+           260ms ân hạn sau khi rời hẳn: đủ để con trỏ băng qua khe giữa hai
+           mục mà menu không "chết" giữa chừng, và đủ ngắn để quay lại sau
+           một quãng nghỉ thật thì lại phải có ý định.
+
+           Không đụng vào việc MỞ/ĐÓNG — chỗ đó vẫn là :hover/:focus-within
+           của CSS, đúng như khối chú thích ở trên đã cam kết. Lớp này chỉ
+           nói cho CSS biết BỐI CẢNH.
+           ──────────────────────────────────────────────────────────────── */
+        var navList = megas[0].closest('.header-nav__list');
+        var liveTimer = null;
+
+        /* Ân hạn ĐỌC TỪ TOKEN, không chép lại. --mo-intent-grace khai bằng ms
+           trong gm.css nên parseFloat ra đúng con số; dự phòng 260 chỉ dùng khi
+           token biến mất (bảng token chưa nạp, hoặc ai đó xoá nhầm). */
+        var graceMs = parseFloat(
+            window.getComputedStyle(document.documentElement)
+                .getPropertyValue('--mo-intent-grace')
+        ) || 260;
+
+        var moLive = function () {
+            if (!navList) return;
+            window.clearTimeout(liveTimer);
+            navList.classList.add('is-mega-live');
+        };
+
+        var hetLive = function (ngay) {
+            if (!navList) return;
+            window.clearTimeout(liveTimer);
+
+            if (ngay) {
+                navList.classList.remove('is-mega-live');
+                return;
+            }
+
+            liveTimer = window.setTimeout(function () {
+                navList.classList.remove('is-mega-live');
+            }, graceMs);
+        };
+
         megas.forEach(function (mega, i) {
             var trigger = mega.querySelector('.mega__trigger');
             var panel = mega.querySelector('.mega__panel');
@@ -547,21 +598,58 @@
                 trigger.setAttribute('aria-expanded', mo ? 'true' : 'false');
             };
 
+            /* ────────────────────────────────────────────────────────────────
+               --mega-x : KHOẢNG CÁCH TỪ MÉP TRÁI MÀN HÌNH TỚI MỤC NAV NÀY
+
+               Bảng xổ tràn hết bề ngang (nền phải phủ kín, nếu không nội dung
+               trang lộ ra sau chữ). Nhưng CHỮ thì phải nằm thẳng cột với đúng
+               mục vừa rê vào — nếu không, rê COLLECTIONS mà danh sách hiện
+               dưới EYEWEAR.
+
+               CSS thuần không trả lời được "mục này cách mép trái bao nhiêu":
+               con số ấy đổi theo bề ngang cửa sổ, theo độ dài nhãn của các mục
+               đứng trước, và theo cả ngôn ngữ đang chọn. getBoundingClientRect
+               là cách duy nhất biết chính xác.
+
+               Đo LÚC SẮP MỞ chứ không đo sẵn một lần: hàng nav dùng lưới ba
+               cột căn giữa wordmark, nên vị trí mọi mục dịch mỗi khi cửa sổ
+               đổi bề ngang. Đo tại chỗ thì không cần nghe sự kiện resize và
+               không bao giờ lệch.
+
+               Ghi lên chính .mega (không phải lên panel): --mega-x thừa kế
+               xuống, mà panel thì có thể bị buy-flow.js thay ruột.
+               ──────────────────────────────────────────────────────────────── */
+            var doViTri = function () {
+                mega.style.setProperty(
+                    '--mega-x',
+                    Math.round(trigger.getBoundingClientRect().left) + 'px'
+                );
+            };
+
             /* Con trỏ vào: bỏ dấu "vừa đóng" — cú rê chuột mới là ý muốn mới,
                nó phải thắng lần Esc trước đó. */
             mega.addEventListener('mouseenter', function () {
                 mega.classList.remove('is-dismissed');
+                doViTri();
                 danhDau(true);
+                moLive();
             });
 
+            /* hetLive() KHÔNG gỡ lớp ngay mà hẹn sau graceMs. Nhờ vậy khi con
+               trỏ đi từ mục này sang mục kế bên, thứ tự sự kiện là
+               mouseleave(A) → mouseenter(B), và cú enter của B huỷ hẹn giờ
+               trước khi nó kịp chạy — menu không chết ở khe giữa hai mục. */
             mega.addEventListener('mouseleave', function () {
                 mega.classList.remove('is-dismissed');
                 danhDau(false);
+                hetLive();
             });
 
             mega.addEventListener('focusin', function () {
                 mega.classList.remove('is-dismissed');
+                doViTri();
                 danhDau(true);
+                moLive();
             });
 
             /* relatedTarget là phần tử SẮP nhận tiêu điểm. Còn nằm trong cụm
@@ -570,6 +658,7 @@
             mega.addEventListener('focusout', function (e) {
                 if (!mega.contains(e.relatedTarget)) {
                     danhDau(false);
+                    hetLive();
                 }
             });
         });
@@ -580,6 +669,12 @@
             }
 
             mega.classList.add('is-dismissed');
+
+            /* Đóng CHỦ ĐỘNG (Esc, bấm ra ngoài) thì cắt "đang sống" NGAY, không
+               chờ hết ân hạn: người vừa nói rõ là họ xong với menu. Để lớp còn
+               nằm đó thì cú rê chuột kế tiếp mở tức thì — đúng thứ họ vừa bảo
+               đừng làm. */
+            hetLive(true);
 
             var trigger = mega.querySelector('.mega__trigger');
             if (trigger) trigger.setAttribute('aria-expanded', 'false');
@@ -673,9 +768,15 @@
         var doi = 0;
 
         if (panel) {
+            /* THỜI LƯỢNG + ĐỘ TRỄ, không riêng thời lượng. Vũ đạo đóng
+               (motion-choreo.css) cho ruột đi trước rồi tấm mới trượt, tức là
+               tấm có transition-delay 60ms; chỉ đọc duration thì `hidden`
+               được gắn sớm 60ms và tấm bị cắt ở ~85% quãng. */
             var cs = window.getComputedStyle(panel);
-            (cs.transitionDuration || '').split(',').forEach(function (v) {
-                doi = Math.max(doi, (parseFloat(v) || 0) * 1000);
+            var tre = (cs.transitionDelay || '').split(',');
+            (cs.transitionDuration || '').split(',').forEach(function (v, i) {
+                var d = (parseFloat(v) || 0) * 1000 + (parseFloat(tre[i] || tre[0]) || 0) * 1000;
+                doi = Math.max(doi, d);
             });
         }
 

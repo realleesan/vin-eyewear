@@ -126,64 +126,57 @@ $bstDongPhu = static function (array $bst): string {
     <div class="mega__panel">
         <div class="mega__grid" style="--mega-cols: <?= count($bstDanhSach) ?>">
 
-            <?php foreach ($bstDanhSach as $bst): ?>
-                <?php
-                /* cover() đã tự kiểm file có thật hay không và trả '' khi không
-                   có ảnh dùng được, nên ở đây chỉ cần hỏi chuỗi rỗng. Ô ảnh vẫn
-                   giữ đúng khổ khi trống, để hàng thẻ không xô lệch. */
-                $bstAnh = CollectionModel::cover($bst);
-                $bstCau = $bstDongPhu($bst);
-                ?>
-                <a class="mega-feature" href="/bo-suu-tap/<?= e(rawurlencode($bst['slug'])) ?>">
-                    <span class="mega-feature__media">
-                        <?php if ($bstAnh !== ''): ?>
-                            <img src="<?= e(asset($bstAnh)) ?>" alt=""
-                                 width="400" height="280" loading="lazy" decoding="async">
-                        <?php endif; ?>
-                    </span>
-
-                    <span class="mega-feature__body">
-<?php /* lang="vi" — tên bộ sưu tập trong CSDL chỉ có tiếng Việt.
-                                 Cùng quy ước đã ghi ở _layout/product-card.php. */ ?>
-                        <span class="mega-feature__name" lang="vi"><?= e($bst['name']) ?></span>
-                        <?php /* "· Xem ngay →" bọc riêng và cấm ngắt dòng, nếu
-                                 không mũi tên hay rơi xuống một dòng của riêng
-                                 nó khi câu giới thiệu dài. */ ?>
-                        <span class="mega-feature__note">
-                            <?= e($bstCau) ?>
-                            <span class="mega-feature__more"><?= e(t('mega.view')) ?></span>
-                        </span>
-                    </span>
-                </a>
-            <?php endforeach; ?>
-
             <?php
-            /*
-             * Ô CUỐI: THẺ "TẤT CẢ BỘ SƯU TẬP" — CỐ Ý KHÔNG CÓ ẢNH.
+            /* ĐÃ ĐỔI TỪ THẺ ẢNH SANG DANH SÁCH CHỮ (10/09/2026).
              *
-             * Đã thử cho nó một tấm ảnh cho giống ba thẻ bên cạnh. Không có tấm
-             * nào dùng được mà trung thực: ảnh duy nhất có thể lấy là ảnh của
-             * một trong ba bộ đang đứng ngay cạnh, và cùng một tấm hiện hai lần
-             * trên một hàng thì trông như lỗi kết xuất chứ không như chủ ý.
+             * Khối chú thích đầu file lập luận rằng ruột bảng này phải là thẻ
+             * ảnh, vì một bộ sưu tập không có sẵn "bốn lát cắt hẹp hơn" như một
+             * danh mục, và bịa ra bốn dòng cho đủ chỗ là dựng bốn ngõ cụt. Lập
+             * luận ấy vẫn đúng — nhưng nó chọn sai đường ra.
              *
-             * Nên nó là một tấm nền brand đặc — vẫn đúng khổ ô, vẫn là một thẻ
-             * bấm được, và nổi hẳn lên đúng như vai trò của nó: lối ra trang đầy
-             * đủ, nơi có ảnh lớn, ngày ra mắt và phần FAQ mà bảng xổ không chứa
-             * nổi.
+             * Đường ra đúng là MỘT CỘT CHỮ, mỗi bộ một dòng: không ngõ cụt nào
+             * bị bịa ra, và cũng không có ảnh nào che mất video hero phía sau
+             * (bảng nay trong suốt — xem cuối components/mega-menu.css).
              *
-             * Số bộ ĐẾM CẢ phần đã bị cắt khỏi bảng, vì đó chính là thứ nó hứa:
-             * bấm vào là thấy đủ.
+             * cover() và $bstDongPhu() thôi được gọi ở đây. Cả hai vẫn còn dùng
+             * ở trang /bo-suu-tap, nên không xoá gì ngoài chỗ này.
              */
             ?>
-            <a class="mega-feature mega-feature--all" href="/bo-suu-tap">
-                <span class="mega-feature__body">
-                    <span class="mega-feature__name"><?= e(t('mega.all_collections')) ?></span>
-                    <span class="mega-feature__note">
-                        <?= e(t('mega.collections_count', [':n' => (string) count($collectionsNav)])) ?>
-                        <span class="mega-feature__more">&rarr;</span>
-                    </span>
-                </span>
-            </a>
+            <div class="mega__col">
+                <ul class="mega__links" role="list">
+                    <?php
+                    /* "Tất cả bộ sưu tập" ĐỨNG ĐẦU, không đứng cuối.
+                       Bản trước nó là một thẻ nền brand ở ô cuối lưới. Trong một
+                       danh sách chữ thì chỗ ấy sai: mắt đọc từ trên xuống và
+                       dừng lại ngay khi thấy tên bộ mình cần, nên lối ra "xem
+                       tất cả" nằm dưới đáy gần như không ai gặp. Tham chiếu đặt
+                       "View all" ở dòng đầu, và đó là lý do.
+
+                       Số bộ đếm CẢ phần đã bị cắt khỏi bảng — đó chính là thứ
+                       nó hứa: bấm vào là thấy đủ. */
+                    ?>
+                    <li>
+                        <?php /* CHỈ MỘT DÒNG CHỮ, không kèm số đếm.
+                                 Bản trước in thêm "9 bộ sưu tập đang bày" ngay
+                                 sau nhãn; trong một danh sách chữ khít nhau thì
+                                 hai mẩu chữ ấy dính liền thành một câu đọc
+                                 không ra ("Tất cả bộ sưu tập 9 bộ sưu tập đang
+                                 bày"). Số đếm là thông tin của TRANG đích, để
+                                 nó nói ở đó. */ ?>
+                        <a href="/bo-suu-tap"><?= e(t('mega.all_collections')) ?></a>
+                    </li>
+
+                    <?php foreach ($bstDanhSach as $bst): ?>
+                        <li>
+                            <?php /* lang="vi" — tên bộ sưu tập trong CSDL chỉ có
+                                     tiếng Việt. Cùng quy ước đã ghi ở
+                                     _layout/product-card.php. */ ?>
+                            <a href="/bo-suu-tap/<?= e(rawurlencode($bst['slug'])) ?>"
+                               lang="vi"><?= e($bst['name']) ?></a>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
 
         </div>
     </div>
