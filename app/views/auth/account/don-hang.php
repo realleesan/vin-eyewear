@@ -177,7 +177,7 @@ $paymentShort  = [
         </span>
         <span class="acct-empty__title">Chưa có đơn hàng nào</span>
         <span class="acct-empty__lead">Các đơn ở trạng thái này sẽ hiển thị tại đây.</span>
-        <a class="acct-empty__cta" href="/san-pham">Khám phá sản phẩm</a>
+        <a class="acct-empty__cta" href="/san-pham/gong-kinh">Khám phá gọng kính</a>
     </div>
 <?php else: ?>
     <div class="acct-list">

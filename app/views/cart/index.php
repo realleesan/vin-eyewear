@@ -126,7 +126,7 @@ $count = count($lines);
                 </svg>
             </span>
             <span class="cart__empty-title"><?= e(t('cart.empty_title')) ?></span>
-            <a class="cart__empty-cta" href="/san-pham"><?= e(t('cart.keep_shopping')) ?></a>
+            <a class="cart__empty-cta" href="/san-pham/gong-kinh"><?= e(t('cart.keep_shopping')) ?></a>
         </div>
 
     <?php else: ?>
@@ -397,7 +397,7 @@ $count = count($lines);
                         <p class="csum__note"><?= e(t('cart.pick_one')) ?></p>
                     <?php endif; ?>
 
-                    <a class="csum__more" href="/san-pham">← Tiếp tục mua sắm</a>
+                    <a class="csum__more" href="/san-pham/gong-kinh">← Tiếp tục mua sắm</a>
                 </div>
 
                 <div class="cvou">

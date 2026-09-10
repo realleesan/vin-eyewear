@@ -45,6 +45,9 @@ return [
        những thứ vốn đã công khai (sản phẩm đang hiện, cơ sở, chính sách). */
     'tim-kiem/goi-y'   => 'SearchController@suggest',
 
+    /* /san-pham TRƠN không còn là trang gom cả kho (10/09/2026): nó chuyển về
+       /san-pham/gong-kinh. Route vẫn giữ vì ?collection= / ?q= / ?category=
+       của danh mục chưa có trang con còn dùng — xem ProductController::index. */
     'san-pham'         => 'ProductController@index',
     // Đặt TRƯỚC 'san-pham/{slug}': router khớp theo thứ tự khai, để sau thì
     // 'danh-gia' bị hiểu thành slug của một sản phẩm.

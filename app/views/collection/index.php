@@ -61,7 +61,7 @@ $ngayRaMat = static function (?string $date): string {
                  ra thật khi cửa hàng ẩn hết để chuẩn bị mùa mới. */ ?>
         <p class="colls__empty">
             Chưa có bộ sưu tập nào đang trưng bày. Mời bạn xem
-            <a href="/san-pham">toàn bộ sản phẩm</a>.
+            <a href="/san-pham/gong-kinh">gọng kính</a> hoặc <a href="/san-pham/trong-kinh">tròng kính</a>.
         </p>
     <?php else: ?>
         <div class="colls__list">

@@ -860,7 +860,7 @@ class OrderController extends BaseController
 
         // Vào thẳng địa chỉ này mà không vừa đặt hàng -> không có gì để khoe
         if ($code === null) {
-            redirect('/san-pham');
+            redirect('/san-pham/gong-kinh');
         }
 
         // Truyền $userId: mã đơn đến từ flash của chính phiên này nên không thể

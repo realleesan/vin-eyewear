@@ -326,7 +326,7 @@ $mineHref = $order !== null
             <a href="<?= e($mineHref) ?>" class="btn-primary btn-inline btn-lg">
                 Xem đơn hàng của tôi
             </a>
-            <a href="/san-pham" class="btn-outline btn-inline btn-lg">Tiếp tục mua sắm</a>
+            <a href="/san-pham/gong-kinh" class="btn-outline btn-inline btn-lg">Tiếp tục mua sắm</a>
         </div>
     <?php endif; ?>
 </section>

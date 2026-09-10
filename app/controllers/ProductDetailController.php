@@ -65,7 +65,7 @@ class ProductDetailController extends BaseController
     public function review(): void
     {
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-            redirect('/san-pham');
+            redirect('/san-pham/gong-kinh');
         }
 
         $slug = (string) ($_POST['slug'] ?? '');
@@ -79,7 +79,7 @@ class ProductDetailController extends BaseController
         $product = $slug === '' ? null : ProductModel::findVisibleBySlug($slug);
 
         if ($product === null) {
-            redirect('/san-pham');
+            redirect('/san-pham/gong-kinh');
         }
 
         $userId = AuthMiddleware::customerId();
@@ -123,7 +123,7 @@ class ProductDetailController extends BaseController
     public function waitlist(): void
     {
         if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-            redirect('/san-pham');
+            redirect('/san-pham/gong-kinh');
         }
 
         $slug = (string) ($_POST['slug'] ?? '');
@@ -147,7 +147,7 @@ class ProductDetailController extends BaseController
         $product = $slug === '' ? null : ProductModel::findVisibleBySlug($slug);
 
         if ($product === null) {
-            redirect('/san-pham');
+            redirect('/san-pham/gong-kinh');
         }
 
         /* Biến thể: chỉ nhận id THUỘC đúng mặt hàng này. Không kiểm thì gửi id

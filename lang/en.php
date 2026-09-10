@@ -27,7 +27,9 @@ return [
     // ── Navigation ───────────────────────────────────────────────────────
     'nav.aria.main'    => 'Main navigation',
     'nav.home'         => 'Home',
-    'nav.products'     => 'Eyewear',
+    /* 'nav.products' removed (2026-09-10) — split into the two items below. */
+    'nav.frames'       => 'Frames',
+    'nav.lenses'       => 'Lenses',
     'nav.ar'           => 'Virtual try-on',
     'nav.about'        => 'About us',
     'nav.collections'  => 'Collections',
@@ -38,7 +40,13 @@ return [
     'mega.view'        => '· View now →',
     'mega.all_collections' => 'All collections',
     'mega.collections_count' => ':n collections on show',
-    'mega.all_products' => 'All eyewear',
+    'mega.all_frames'  => 'View all frames',
+    'mega.all_lenses'  => 'View all lenses',
+    'mega.shape'       => 'Shape',
+    'mega.material'    => 'Material',
+    'mega.lens_type'   => 'Lens type',
+    'mega.lens_index'  => 'Index',
+    'mega.lens_coat'   => 'Features',
 
     'menu.open'        => 'Open navigation menu',
     'menu.close'       => 'Close menu',
@@ -64,7 +72,7 @@ return [
     'cart.title'  => 'Cart',
     'cart.aria'   => 'Cart, :n',
     'cart.empty'  => 'Your cart is empty',
-    'cart.browse' => 'Browse eyewear',
+    'cart.browse' => 'Browse frames',
     'cart.recent' => 'Just added',
     'cart.more'   => ':n more in your cart',
     'cart.view'   => 'View cart',
@@ -140,7 +148,7 @@ return [
     'home.cat.count'      => ':n styles',
     'home.cat.soon'       => 'Coming soon',
     'home.cat.view'       => 'View category',
-    'home.cat.all'        => 'All eyewear →',
+    'home.cat.all'        => 'Browse frames →',
 
     'home.lens.eyebrow'   => 'Genuine lenses',
     'home.lens.title'     => 'Glazed the same day, genuine lenses',

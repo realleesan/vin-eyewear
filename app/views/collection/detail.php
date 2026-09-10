@@ -194,7 +194,7 @@ if ($minPrice !== null) {
                          lưới trắng, còn tệ hơn là không có nút. */ ?>
                 <p class="cdet__soon">
                     Bộ này chưa có sản phẩm nào đang bán. Mời bạn xem
-                    <a href="/san-pham">toàn bộ sản phẩm</a>.
+                    <a href="/san-pham/gong-kinh">gọng kính</a> hoặc <a href="/san-pham/trong-kinh">tròng kính</a>.
                 </p>
             <?php endif; ?>
         </div>

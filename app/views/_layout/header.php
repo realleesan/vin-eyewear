@@ -40,13 +40,13 @@
  * đó từ trước, và nạp Bootstrap JS chỉ để lặp lại nó sẽ kéo theo cả Popper.
  * ─────────────────────────────────────────────────────────────────────────────
  *
- * NĂM MỤC, HAI TRONG SỐ ĐÓ LÀ BẢNG XỔ
+ * CÁC MỤC, BA TRONG SỐ ĐÓ LÀ BẢNG XỔ
  *
- *     Trang chủ · Sản phẩm ▾ · [Thử kính ảo] · Giới thiệu · Bộ sưu tập ▾ · Liên hệ
+ *     Gọng kính ▾ · Tròng kính ▾ · [Thử kính ảo] · Bộ sưu tập ▾ · Giới thiệu · Liên hệ
  *
- * Hai mục bảng xổ tự dựng <li> của mình (mega-menu.php, collection-menu.php)
- * và đọc danh mục / bộ sưu tập thẳng từ CSDL, nên admin thêm một danh mục là
- * nó có mặt ngay, không phải sửa file này.
+ * Mục bảng xổ tự dựng <li> của mình (mega-menu.php, collection-menu.php).
+ * "Gọng kính" và "Tròng kính" dùng CHUNG một partial, mỗi lần require đặt sẵn
+ * $megaSlug khác nhau — xem _layout/mega-data.php.
  *
  * "Thử kính ảo" chỉ hiện khi config('ar.nav_enabled') bật — ẩn bằng cách KHÔNG
  * in ra HTML chứ không phải display:none. Xem đầu config/ar.php.
@@ -56,13 +56,14 @@ $company = config('company');
 $segment = currentSegment();
 
 /*
- * Dùng ở CẢ HAI chỗ: bảng xổ desktop và khối <details> của ngăn kéo.
+ * Slug các danh mục đang hiện — chỉ để biết mục "Gọng kính" / "Tròng kính" có
+ * được in ra không. Danh mục bị ẩn ở khu quản trị thì trang con của nó 404
+ * (ProductController::category), nên mục nav trỏ vào đó cũng phải biến mất.
  *
- * withProductCounts() chứ không phải visible(): bảng xổ hiện số mặt hàng bên
- * cạnh mỗi danh mục — thông tin khách cần TRƯỚC khi bấm. Một câu truy vấn có
- * GROUP BY, chạy một lần cho cả header.
+ * visible() thay cho withProductCounts() của bản trước: bảng xổ nay không
+ * còn liệt kê danh mục kèm số đếm, nên câu GROUP BY ấy thành thừa.
  */
-$categories = CategoryModel::withProductCounts();
+$visibleCategorySlugs = array_column(CategoryModel::visible(), 'slug');
 
 /*
  * Bộ sưu tập đang trưng bày — ĐỌC MỘT LẦN, dùng ở BA chỗ: bảng xổ "Bộ sưu
@@ -70,13 +71,17 @@ $categories = CategoryModel::withProductCounts();
  */
 $collectionsNav = CollectionModel::visible();
 
-/* "Sản phẩm" đang mở khi đứng ở trang danh sách HOẶC trang chi tiết — cả hai
-   nằm dưới /san-pham nên so đoạn đầu là đủ. mega-menu.php đọc biến này. */
-$isProductActive = $segment === 'san-pham';
+/* Đoạn thứ hai của URL khi đang ở /san-pham/… — 'gong-kinh' hay 'trong-kinh'
+   thì mục nav tương ứng sáng lên (mega-data.php so với $megaSlug). Trang chi
+   tiết /san-pham/{slug} cho ra slug sản phẩm, không khớp mục nào — đúng ý:
+   header không biết sản phẩm đó thuộc gọng hay tròng. */
+$productSub = $segment === 'san-pham'
+    ? (string) (explode('/', trim(currentPath(), '/'))[1] ?? '')
+    : '';
 
 /* "Bộ sưu tập" sáng ở cả /bo-suu-tap lẫn /bo-suu-tap/{slug}.
    KHÔNG tính /san-pham?collection=<slug>: đó là trang danh sách đã lọc sẵn,
-   mục đang mở ở đấy phải là "Sản phẩm". */
+   không phải trang bộ sưu tập. */
 $isCollectionActive = $segment === 'bo-suu-tap';
 
 /*
@@ -104,9 +109,15 @@ $isCollectionActive = $segment === 'bo-suu-tap';
    │ ROUTE KHÔNG ĐỔI. /lien-he và / vẫn sống; đây chỉ là bớt lối vào trùng
    │ trên một hàng ngang, không phải gỡ trang.
    └──────────────────────────────────────────────────────────────────────── */
+/* ┌─ "SẢN PHẨM" TÁCH THÀNH "GỌNG KÍNH" + "TRÒNG KÍNH" (10/09/2026) ──────────
+   │ Theo yêu cầu chủ dự án: không còn một mục gom cả kho. Hai mục ngang hàng,
+   │ mỗi mục một bảng xổ và dẫn thẳng tới trang con của mình. Giá trị của
+   │ 'mega' là slug danh mục — header require cùng một partial hai lần.
+   └──────────────────────────────────────────────────────────────────────── */
 $navItems = [
-    ['mega'  => true],
-    // Ngay sau "Sản phẩm": thử kính là một cách xem hàng, không phải một trang
+    ['mega'  => 'gong-kinh'],
+    ['mega'  => 'trong-kinh'],
+    // Ngay sau hai mục hàng: thử kính là một cách xem hàng, không phải một trang
     // giới thiệu. Đứng cạnh thứ nó phục vụ. (Đang tắt qua config('ar.nav_enabled').)
     ['label' => t('nav.ar'),      'url' => '/thu-ar',     'match' => ['thu-ar'], 'feature' => 'ar'],
     ['bst'   => true],
@@ -144,6 +155,13 @@ $featureOn = static fn (array $item): bool =>
     !isset($item['feature']) || (bool) config($item['feature'] . '.nav_enabled');
 
 $navItems    = array_values(array_filter($navItems, $featureOn));
+
+/* Mục sản phẩm chỉ in khi danh mục của nó đang hiện — xem $visibleCategorySlugs. */
+$navItems = array_values(array_filter(
+    $navItems,
+    static fn (array $item): bool => !isset($item['mega'])
+        || in_array($item['mega'], $visibleCategorySlugs, true)
+));
 $mobileExtra = array_values(array_filter($mobileExtra, $featureOn));
 
 // Giữ lại từ khoá đang tìm để ô tìm kiếm không bị xoá trắng sau khi submit
@@ -151,8 +169,9 @@ $keyword = $_GET['q'] ?? '';
 
 /**
  * Mục đang mở? So theo đoạn đầu URL để route con vẫn sáng đúng mục cha —
- * /san-pham/{slug} vẫn làm sáng "Sản phẩm". "Trang chủ" khớp chuỗi rỗng vì
- * currentSegment() trả '' cho đường dẫn '/'.
+ * /bo-suu-tap/{slug} vẫn làm sáng "Bộ sưu tập". "Trang chủ" khớp chuỗi rỗng vì
+ * currentSegment() trả '' cho đường dẫn '/'. (Hai mục sản phẩm so riêng theo
+ * $productSub, xem mega-data.php.)
  */
 $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?? [], true);
 ?>
@@ -245,7 +264,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             <ul class="header-nav__list" role="list">
                 <?php foreach ($navItems as $item): ?>
                     <?php if (!empty($item['mega'])): ?>
-                        <?php require VIEWS_PATH . '/_layout/mega-menu.php'; ?>
+                        <?php $megaSlug = $item['mega']; require VIEWS_PATH . '/_layout/mega-menu.php'; ?>
                     <?php elseif (!empty($item['bst'])): ?>
                         <?php require VIEWS_PATH . '/_layout/collection-menu.php'; ?>
                     <?php else: ?>
@@ -517,7 +536,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
         <nav class="mobile-nav__links" aria-label="<?= e(t('nav.aria.main')) ?>">
             <?php foreach (array_merge($navItems, $mobileExtra) as $item): ?>
                 <?php if (!empty($item['mega'])): ?>
-                    <?php require VIEWS_PATH . '/_layout/mega-menu-mobile.php'; ?>
+                    <?php $megaSlug = $item['mega']; require VIEWS_PATH . '/_layout/mega-menu-mobile.php'; ?>
                 <?php elseif (!empty($item['bst'])): ?>
                     <?php require VIEWS_PATH . '/_layout/collection-menu-mobile.php'; ?>
                 <?php else: ?>

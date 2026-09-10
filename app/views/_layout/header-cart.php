@@ -125,7 +125,7 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
                      mới thêm" — một câu khác, nói một việc khác. */ ?>
             <p class="hpop__note"><?= e(t('cart.empty')) ?></p>
             <ul class="hpop__list" role="list">
-                <li><a class="hpop__item" href="/san-pham"><?= e(t('cart.browse')) ?></a></li>
+                <li><a class="hpop__item" href="/san-pham/gong-kinh"><?= e(t('cart.browse')) ?></a></li>
             </ul>
         <?php else: ?>
             <p class="hpop__head"><?= e(t('cart.recent')) ?></p>

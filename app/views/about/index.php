@@ -176,7 +176,7 @@ partial('_layout/page-head', [
         <p class="about-start__quote">“Your journey to clearer vision starts with the right choice.”</p>
 
         <div class="about-start__actions">
-            <a href="/san-pham" class="btn-primary btn-inline">Khám phá sản phẩm</a>
+            <a href="/san-pham/gong-kinh" class="btn-primary btn-inline">Khám phá gọng kính</a>
             <a href="/dat-lich" class="btn-outline btn-inline btn-lg about-start__alt">Đặt lịch tư vấn</a>
         </div>
     </section>

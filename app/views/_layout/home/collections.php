@@ -66,7 +66,8 @@ $collections = array_slice(CollectionModel::visible(), 0, 3);
         </ul>
 
         <div class="hsec-all">
-            <a class="hsec-all__link" href="/san-pham"><?= e(t('home.coll.all')) ?></a>
+            <?php /* "Tất cả bộ sưu tập" trỏ /bo-suu-tap — trước đây trỏ nhầm /san-pham. */ ?>
+            <a class="hsec-all__link" href="/bo-suu-tap"><?= e(t('home.coll.all')) ?></a>
         </div>
     </div>
 </section>

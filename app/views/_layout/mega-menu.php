@@ -1,249 +1,72 @@
 <?php
 
 /**
- * _layout/mega-menu.php — bảng xổ của mục "Sản phẩm" trên thanh điều hướng.
- *
- * Dựng theo "Vin Eyewear Home.dc.html". Bảng có mặt trên MỌI trang vì header
- * dùng chung — trang /san-pham cũng vậy, không phải dựng riêng.
+ * _layout/mega-menu.php — bảng xổ của MỘT mục sản phẩm trên thanh nav:
+ * "Gọng kính" hoặc "Tròng kính".
  *
  * File này được require BÊN TRONG <ul class="header-nav__list"> nên phần tử
- * gốc phải là <li>. Biến $isProductActive do header.php đặt sẵn.
+ * gốc phải là <li>. header.php require nó HAI LẦN, mỗi lần đặt sẵn:
+ *   $megaSlug   'gong-kinh' | 'trong-kinh' — trang con mà mục này dẫn tới
+ *   $productSub đoạn thứ hai của URL khi đang đứng dưới /san-pham/…
+ *
+ * Vì bị require hai lần trong cùng một phạm vi, file này KHÔNG được khai
+ * function/class nào — khai lần hai là lỗi fatal. Chỉ dùng closure gán biến.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * ĐÃ RÚT GỌN MẠNH so với bản trước — đây là thay đổi lớn nhất của lần dựng này
+ * VÌ SAO KHÔNG CÒN MỤC "SẢN PHẨM" (10/09/2026, theo yêu cầu chủ dự án)
  *
- * Bản trước có 5 vùng: danh mục kèm số đếm · dáng gọng + đối tượng · chất liệu
- * + tính năng tròng · thương hiệu · dải 3 thẻ sản phẩm nổi bật; kèm sợi chỉ
- * crimson nối viên thuốc xuống bảng và hiệu ứng "vào nét" ba tầng.
+ * Trước: một mục "Sản phẩm" trỏ về /san-pham — trang gom cả kho — kèm bảng xổ
+ * liệt kê chín danh mục. Cửa hàng bán hai thứ khác hẳn nhau về cách chọn
+ * (gọng chọn theo dáng/chất liệu, tròng chọn theo loại/chiết suất/lớp phủ),
+ * nên nay thanh nav có HAI mục ngang hàng, mỗi mục dẫn thẳng tới trang con của
+ * mình: /san-pham/gong-kinh · /san-pham/trong-kinh. Trang gom /san-pham trần
+ * thì chuyển 301 về Gọng kính — xem ProductController::index().
  *
- * Bản thiết kế mới chỉ có BỐN cột: ba cột liên kết và một thẻ ảnh bộ sưu tập.
- * Không thương hiệu, không thẻ sản phẩm, không "Tất cả sản phẩm" (chính viên
- * thuốc "Sản phẩm" đã trỏ tới /san-pham). Mọi thứ bỏ đi đều còn đường khác:
- * lọc thương hiệu và lọc sâu nằm ở cột lọc trang /san-pham, rộng rãi hơn nhiều.
- * ─────────────────────────────────────────────────────────────────────────────
- * MỞ BẰNG CSS, KHÔNG BẰNG JAVASCRIPT
+ * Dữ liệu (nhãn, liên kết từng cột) dựng ở _layout/mega-data.php — dùng chung
+ * với ngăn kéo mobile. File này chỉ VẼ.
  *
- * :hover mở panel, :focus-within giữ nó mở khi người dùng Tab vào bên trong.
- * Thiếu :focus-within thì bảng này chỉ tồn tại với người dùng chuột — bấm Tab
- * là focus nhảy vào các liên kết đang bị ẩn, không ai thấy mình đang ở đâu.
- *
- * Bản thiết kế dùng state + hẹn giờ đóng 180ms; ở đây là CSS thuần nên vai trò
- * đó do một vùng bắt chuột vô hình đảm nhiệm (.mega__trigger::after).
- *
- * Mega chỉ chạy từ 1101px. Hẹp hơn thì cả .header-nav ẩn đi và menu trượt
- * (_layout/mega-menu-mobile.php) lo phần điều hướng.
- * ─────────────────────────────────────────────────────────────────────────────
- * BA CỘT CỦA BẢN THIẾT KẾ LÀ BA DANH MỤC — ĐỌC TỪ CSDL
- *
- * Bản thiết kế gõ cứng ba tiêu đề "Gọng kính · Kính mát · Tròng kính" và bốn
- * liên kết dưới mỗi cái. Ở đây tiêu đề lấy từ bảng `categories`, còn bốn liên
- * kết lấy từ config/taxonomy.php và ĐƯỢC RÀNG THEO danh mục của cột — bấm
- * "Titanium" dưới cột "Gọng kính" ra gọng titan, không ra cả kho.
- *
- * Vì sao không gõ cứng theo thiết kế: bốn nhãn của bản thiết kế ("Gọng không
- * viền", "Kính thể thao"…) không có giá trị tương ứng nào trong CSDL, bấm vào
- * là ra trang rỗng. Một liên kết dẫn tới chỗ trống tệ hơn là không có nó.
- *
- * Số cột chạy theo số danh mục CÓ THẬT trong bảng `categories` (xem
- * --mega-cols), nên cửa hàng thêm danh mục thứ tư là nó tự có chỗ, không bị
- * rơi ra ngoài như khi khoá cứng ba cột.
+ * Mở/đóng vẫn bằng CSS (:hover / :focus-within) + assets/js/header.js như cũ;
+ * header.js vốn đã duyệt MỌI .mega trên trang nên không phải sửa gì bên đó.
  */
 
-$taxonomy = config('taxonomy');
-
-/* header.php đã đọc danh mục để dùng chung với menu trượt và truyền xuống đây
-   qua phạm vi của `require`. Vẫn tự đọc được nếu thiếu, để file này không phụ
-   thuộc ngầm vào đúng một nơi gọi. */
-$categories = $categories ?? CategoryModel::visible();
-
-/** Số liên kết tối đa mỗi cột — bản thiết kế vẽ đúng 4. */
-$maxLinks = 4;
-
-/*
- * Lát cắt lọc hợp nghĩa cho từng danh mục.
- *
- * Ghép theo NGHĨA, không phải ghép cho đủ chỗ: người tìm gọng nghĩ theo chất
- * liệu (titan hay acetate), người tìm kính mát nghĩ theo dáng (phi công hay
- * mắt mèo), người tìm tròng nghĩ theo tính năng (chống ánh sáng xanh hay đổi
- * màu). Danh mục lạ chưa có trong bảng thì rơi về dáng gọng — lát cắt dùng
- * được cho mọi thứ đeo lên mặt.
- */
-$sliceBySlug = [
-    'gong-kinh'  => $taxonomy['materials'],
-    'kinh-mat'   => $taxonomy['frame_styles'],
-    'trong-kinh' => $taxonomy['lens_functions'],
-];
-
-/**
- * Dựng URL lọc, LUÔN kèm danh mục của cột:
- *   ['q' => 'titanium'] trong cột "Gọng kính" -> /san-pham/gong-kinh?q=titanium
- *
- * Danh mục CÓ TRANG CON thì nằm ở đường dẫn, không ở query — danhMucUrl() lo
- * việc đó. Danh mục chưa có trang con thì rơi về ?category=<slug>, và lúc ấy
- * tham số lọc phải nối bằng '&' chứ không phải '?'.
- *
- * Không ghép tay '/san-pham?category=…' như trước: làm thế thì mỗi cú bấm
- * trong mega menu ăn một chuyển hướng 301 sang trang con — chạy đúng nên
- * không ai phát hiện ra, chỉ chậm thêm một vòng mạng.
- */
-$filterUrl = static function (string $slug, array $search): string {
-    $base = danhMucUrl($slug);
-    $noi  = str_contains($base, '?') ? '&' : '?';
-
-    return $search === [] ? $base : $base . $noi . http_build_query($search);
-};
-
-/*
- * Thẻ ảnh ở cột cuối — ô "mega-featured" của bản thiết kế.
- *
- * Bản thiết kế ghi cứng "Bộ sưu tập 2026 / 10+ mẫu mới vừa về". Ở đây lấy bộ
- * sưu tập ĐẦU TIÊN theo thứ tự trưng bày: cùng bố cục, nhưng tên và câu
- * mô tả là thật, và liên kết ra đúng bộ lọc của nó. Treo "10+ mẫu" lên một cửa
- * hàng đang có 6 mặt hàng là nói sai ngay trên trang.
- *
- * Không có bộ sưu tập nào thì cả thẻ biến mất và lưới còn lại các cột chữ —
- * một khung ảnh trống trông như trang hỏng.
- */
-/* Bộ đầu tiên theo thứ tự trưng bày của cửa hàng (sort_order), lấy từ CSDL
-   thay cho config/collections.php. CollectionModel::cover() đã tự kiểm file có
-   thật hay không, nên ở đây không cần is_file() nữa.
-
-   DANH SÁCH DO header.php ĐỌC rồi truyền xuống — cùng danh sách mà bảng xổ
-   "Bộ sưu tập" đang dùng, nên thẻ ảnh ở đây luôn là bộ đứng đầu bảng xổ đó,
-   không phải hai lần truy vấn cho hai kết quả có thể lệch nhau. Vẫn tự đọc
-   được nếu thiếu, giống $categories ngay trên. */
-$collectionsNav = $collectionsNav ?? CollectionModel::visible();
-
-/* ĐÃ TẮT THẺ ẢNH NỔI BẬT (10/09/2026).
- *
- * Bảng xổ nay trong suốt, nằm thẳng trên video hero (xem khối cuối
- * components/mega-menu.css). Một thẻ ảnh 400×280 đặt lên đó là một mảng đục
- * che mất đúng thứ hero được dựng ra để khoe — cùng lý do đã bỏ nền trắng.
- *
- * Bảng cũng phải GỌN lại: mega giờ chỉ là ba cột chữ, cao vừa đủ nội dung,
- * không còn là một tấm chiếm nửa khung nhìn.
- *
- * Đặt null ở đây chứ không xoá khối markup bên dưới: markup đã có sẵn nhánh
- * `$feature === null` (nó thêm lớp .mega__grid--no-feature để lưới bỏ cột
- * cuối). Bật lại chỉ là trả dòng này về `$collectionsNav[0] ?? null`.
- */
-$feature = null;
-
-if ($feature !== null) {
-    $featureImage = CollectionModel::cover($feature);
-
-    $featureImage = designImage('mega-featured', $featureImage);
-}
+$mega = require VIEWS_PATH . '/_layout/mega-data.php';
 ?>
-<li class="mega">
+<li class="mega mega--<?= e($mega['slug']) ?>">
 
-    <a href="/san-pham"
-       class="mega__trigger<?= $isProductActive ? ' is-active' : '' ?>"
-       <?= $isProductActive ? 'aria-current="page"' : '' ?>>
-        <?= e(t('nav.products')) ?>
+    <a href="<?= e($mega['base']) ?>"
+       class="mega__trigger<?= $mega['on'] ? ' is-active' : '' ?>"
+       <?= $mega['on'] ? 'aria-current="page"' : '' ?>>
+        <?= e($mega['label']) ?>
         <svg class="mega__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-
-        <?php /* Mũi nhọn hình thoi cắm vào mép trên bảng — thứ trả lời câu
-                 "cái nút này mở ra cái gì". Thay cho SỢI CHỈ crimson của bản
-                 trước. Là <span> thật chứ không phải ::after vì trigger đã
-                 dùng ::after cho vùng bắt chuột phủ khoảng trống. */ ?>
         <span class="mega__caret" aria-hidden="true"></span>
     </a>
 
-    <?php
-    /*
-     * ─────────────────────────────────────────────────────────────────────────
-     * BA CỘT CỐ ĐỊNH, XUỐNG HÀNG — KHÔNG PHẢI MỘT CỘT MỖI DANH MỤC
-     *
-     * Bản trước đặt `--mega-cols: count($categories)`, tức là số cột chạy theo
-     * số danh mục. Cửa hàng nay có CHÍN danh mục, nên bảng xổ in ra chín cột
-     * chữ nằm ngang cộng một thẻ ảnh — một bức tường phân loại.
-     *
-     * Hai hệ quả đo được trên bản live:
-     *   · mỗi cột chỉ còn ~130px, tiêu đề như "Kính đọc sách" phải xuống hai
-     *     dòng, nên dòng liên kết đầu tiên của các cột KHÔNG thẳng hàng nhau
-     *   · bảy trong chín cột mang y hệt một danh sách con (Oval · Vuông ·
-     *     Mắt mèo · Chữ nhật), nên mắt quét ngang chỉ thấy cùng bốn chữ lặp
-     *     lại bảy lần
-     *
-     * Nay khoá BA cột và để danh mục xuống hàng. Không bỏ một liên kết nào,
-     * không đổi một đích đến nào — chỉ đổi cách xếp: mỗi cột rộng gấp ba, tiêu
-     * đề nằm gọn một dòng, và ba danh mục có danh sách con thật sự khác nhau
-     * (gọng · kính mát · tròng) rơi đúng vào hàng đầu.
-     *
-     * --mega-rows để thẻ ảnh biết cần cao bao nhiêu hàng: nó chiếm trọn cột
-     * thứ tư từ hàng đầu tới hàng cuối, nên các cột chữ không tràn sang.
-     * ─────────────────────────────────────────────────────────────────────────
-     */
-    $megaCols = 3;
-    $megaRows = (int) ceil(count($categories) / $megaCols);
-    ?>
-    <div class="mega__panel" id="megaPanelProducts">
-        <div class="mega__grid<?= $feature === null ? ' mega__grid--no-feature' : '' ?>"
-             style="--mega-cols: <?= $megaCols ?>; --mega-rows: <?= max(1, $megaRows) ?>">
+    <div class="mega__panel" id="megaPanel-<?= e($mega['slug']) ?>">
+        <?php /* .mega__grid--groups: nhiều cột chữ đặt cạnh nhau, mỗi cột một
+                 tiêu đề nhóm. Luật ở cuối components/mega-menu.css — lưới mặc
+                 định của file đó là MỘT cột (dành cho bảng Bộ sưu tập). */ ?>
+        <div class="mega__grid mega__grid--no-feature mega__grid--groups"
+             style="--mega-cols: <?= max(1, count($mega['cols'])) ?>">
 
-            <?php foreach ($categories as $cat): ?>
-                <?php $slice = $sliceBySlug[$cat['slug']] ?? $taxonomy['frame_styles']; ?>
+            <?php /* "Tất cả …" đứng ĐẦU, trải hết các cột — cùng lý do bảng Bộ
+                     sưu tập đặt "Tất cả bộ sưu tập" ở dòng đầu. */ ?>
+            <a class="mega__all" href="<?= e($mega['base']) ?>"><?= e($mega['all']) ?></a>
+
+            <?php foreach ($mega['cols'] as [$head, $links]): ?>
                 <div class="mega__col">
-                    <?php /* Tiêu đề cột bấm được: nó là lối vào cả danh mục, còn
-                             bốn dòng dưới chỉ là lát cắt hẹp hơn của chính nó. */ ?>
-<?php /* lang="vi" — cùng quy ước đã ghi dài ở _layout/product-card.php.
-                             Tên danh mục ("Gọng kính", "Kính đổi màu") chỉ có một
-                             ngôn ngữ trong CSDL; khung trang in <html lang="en"> nên
-                             thiếu nhãn này là trình đọc màn hình phát âm chúng bằng
-                             bộ quy tắc tiếng Anh. Bảng xổ này in ra trên MỌI trang,
-                             nên đây là chỗ nhãn ấy đáng giá nhất. */ ?>
-                    <a class="mega__label" href="<?= e(danhMucUrl($cat['slug'])) ?>" lang="vi">
-                        <?= e($cat['name']) ?>
-                    </a>
-
-                    <?php
-                    /* ĐÃ BỎ BỐN LIÊN KẾT LỌC DƯỚI MỖI DANH MỤC (10/09/2026).
-                     *
-                     * Cửa hàng có CHÍN danh mục. Bốn liên kết mỗi cái là 36 dòng,
-                     * và lưới ba cột phải xuống ba hàng — bảng xổ cao tràn khỏi
-                     * khung nhìn, đè lên cả cụm chữ của hero. Đo trên trang thật:
-                     * hàng cuối ("Kính thể thao / Kính đọc sách / Phụ kiện") nằm
-                     * dưới đáy màn, không cuộn tới được vì bảng dính theo header.
-                     *
-                     * Bảng xổ là chỗ ĐI TIẾP, không phải chỗ lọc. Lọc theo dáng
-                     * đã có đủ trên chính trang danh mục, nơi còn thấy được số
-                     * mặt hàng của từng lựa chọn — thứ bảng xổ không bao giờ có.
-                     *
-                     * $slice / $maxLinks / $filterUrl vẫn còn ở đầu file: ngăn
-                     * kéo mobile (_layout/mega-menu-mobile.php) dùng chúng, ở đó
-                     * bảng cuộn được nên 36 dòng không phải vấn đề.
-                     */
-                    ?>
+                    <p class="mega__head"><?= e($head) ?></p>
+                    <ul class="mega__links" role="list">
+                        <?php foreach ($links as [$nhan, $url]): ?>
+                            <?php /* lang="vi" — nhãn lấy từ config/CSDL chỉ có
+                                     tiếng Việt; xem quy ước ở _layout/product-card.php. */ ?>
+                            <li><a href="<?= e($url) ?>" lang="vi"><?= e($nhan) ?></a></li>
+                        <?php endforeach; ?>
+                    </ul>
                 </div>
             <?php endforeach; ?>
-
-            <?php if ($feature !== null): ?>
-                <a class="mega-feature" href="/san-pham?<?= e(http_build_query(['collection' => $feature['slug']])) ?>">
-                    <span class="mega-feature__media">
-                        <?php if ($featureImage !== ''): ?>
-                            <img src="<?= e($featureImage) ?>" alt=""
-                                 width="400" height="280" loading="lazy" decoding="async">
-                        <?php endif; ?>
-                    </span>
-
-                    <span class="mega-feature__body">
-                        <span class="mega-feature__name" lang="vi"><?= e($feature['name']) ?></span>
-                        <?php /* "· Xem ngay →" bọc riêng và cấm ngắt dòng: câu
-                                 mô tả do người nhập nội dung viết, dài ngắn tuỳ
-                                 ý, nên nếu để chảy tự do thì mũi tên hay rơi
-                                 xuống một dòng của riêng nó. Cắt tagline ngắn
-                                 hơn ô này (30 ký tự) vì thẻ chỉ rộng ~220px. */ ?>
-                        <span class="mega-feature__note">
-                            <?= e(excerpt($feature['tagline'] ?? '', 30)) ?>
-                            <span class="mega-feature__more"><?= e(t('mega.view')) ?></span>
-                        </span>
-                    </span>
-                </a>
-            <?php endif; ?>
 
         </div>
     </div>

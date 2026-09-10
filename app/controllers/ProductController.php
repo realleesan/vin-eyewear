@@ -1,7 +1,8 @@
 <?php
 
 /**
- * ProductController — danh sách sản phẩm (/san-pham).
+ * ProductController — danh sách sản phẩm: /san-pham/gong-kinh · /san-pham/trong-kinh
+ * (và /san-pham?collection=… / ?q= / ?category=… — xem index()).
  *
  * Dựng theo "Vin Eyewear Category.dc.html" (Claude Design): đầu trang nền hồng
  * phấn, bộ lọc thành CỘT BÊN TRÁI dính theo cuộn, kết quả bên phải.
@@ -162,11 +163,65 @@ class ProductController extends BaseController
     private const KHOA_NGUYEN_VAN = ['lens_type', 'lens_index', 'lens_coat', 'lens_color'];
 
     /**
-     * /san-pham — cả kho, hoặc lọc theo ?category= với danh mục chưa có trang con.
+     * Trang con mà /san-pham TRẦN chuyển về — xem khối đầu index().
+     */
+    private const TRANG_MAC_DINH = 'gong-kinh';
+
+    /**
+     * /san-pham — KHÔNG CÒN là trang gom cả kho.
+     *
+     * Chỉ còn phục vụ những địa chỉ CÓ BỐI CẢNH riêng: ?collection=<slug>
+     * (lối "xem hàng của bộ sưu tập"), ?q= (lối "xem tất cả" từ trang tìm
+     * kiếm), ?category=<slug> của danh mục chưa có trang con.
      */
     public function index(): void
     {
         $category = (string) ($_GET['category'] ?? '');
+
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * BỎ TRANG GOM "SẢN PHẨM" (10/09/2026, theo yêu cầu chủ dự án)
+         *
+         * Thanh nav nay có hai mục "Gọng kính" · "Tròng kính" thay cho một mục
+         * "Sản phẩm". /san-pham trơn — hoặc chỉ mang tham số lọc/sắp xếp mà
+         * không nói "xem trong phạm vi nào" — chuyển về trang Gọng kính,
+         * GIỮ NGUYÊN các tham số còn lại (?shape=round vẫn tới đúng gọng tròn).
+         *
+         * Vì sao là Gọng kính: đó là mặt hàng chính và là thứ khách hình dung
+         * khi bấm "Tiếp tục mua sắm". Mọi nút như thế trong site cũng đã trỏ
+         * thẳng tới /san-pham/gong-kinh; dòng này chỉ đỡ cho bookmark cũ, liên
+         * kết ngoài và máy tìm kiếm.
+         *
+         * KHÔNG chuyển khi có collection / q / category: ba tham số ấy chính
+         * là "phạm vi" của trang, bỏ chúng đi là đổi nội dung khách đã chọn.
+         *
+         * 302 CHỨ KHÔNG 301 — khác hẳn nhánh ?category= ngay dưới. Đích ở đây
+         * TUỲ DỮ LIỆU (danh mục nào đang hiện), mà trình duyệt cache 301 gần
+         * như vĩnh viễn (xem redirect() trong core/helpers.php): ẩn Gọng kính
+         * rồi mà khách cũ vẫn bị đẩy vào một trang 404. Cũng để ngày cửa hàng
+         * đổi ý dựng lại trang gom thì không ai bị khoá ở địa chỉ cũ.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $coPhamVi = $category !== ''
+            || trim((string) (is_scalar($_GET['q'] ?? null) ? $_GET['q'] : '')) !== ''
+            || !empty($_GET['collection']);
+
+        if (!$coPhamVi) {
+            /* Gọng kính bị ẩn ở khu quản trị thì trang con của nó 404 — lúc đó
+               lùi sang trang con kế tiếp còn hiện, thay vì chuyển khách tới một
+               trang lỗi. Không trang con nào hiện thì vẽ catalog như cũ. */
+            foreach (array_unique(array_merge([self::TRANG_MAC_DINH], self::SUB_PAGES)) as $slug) {
+                if (CategoryModel::findVisibleBySlug($slug) === null) {
+                    continue;
+                }
+
+                $rest = $_GET;
+                unset($rest['category'], $rest['q'], $rest['collection']);
+
+                redirect('/san-pham/' . rawurlencode($slug)
+                    . ($rest === [] ? '' : '?' . http_build_query($rest)), 302);
+            }
+        }
 
         /*
          * ?category=<slug> CỦA DANH MỤC CÓ TRANG CON -> chuyển hướng về trang
@@ -374,11 +429,10 @@ class ProductController extends BaseController
                   . 'thương hiệu, dáng gọng, chất liệu và tính năng tròng phù hợp với bạn.';
         }
 
-        /* Lọc theo danh mục thì breadcrumb có bậc "Sản phẩm" leo ngược về danh
-           sách đầy đủ — cùng đường mà trang chi tiết sản phẩm trỏ tới. */
-        $crumbs = $current === null
-            ? [['label' => 'Sản phẩm']]
-            : [['label' => 'Sản phẩm', 'url' => '/san-pham'], ['label' => $current['name']]];
+        /* Không còn bậc "Sản phẩm" trỏ về /san-pham: trang gom đã bỏ (xem
+           index()), bậc ấy nay chỉ dẫn vòng sang Gọng kính. Danh mục là bậc
+           duy nhất sau "Trang chủ". */
+        $crumbs = [['label' => $current['name'] ?? 'Sản phẩm']];
 
         $this->renderView('product/index', [
             'pageTitle'   => $heading . ' — Vin Eyewear',

@@ -52,7 +52,7 @@
             <p class="srch__empty-title">Không tìm thấy gì cho “<?= e($q) ?>”.</p>
             <p class="srch__empty-note">
                 Thử từ khoá ngắn hơn, hoặc xem
-                <a href="/san-pham">toàn bộ sản phẩm</a> và
+                <a href="/san-pham/gong-kinh">gọng kính</a>, <a href="/san-pham/trong-kinh">tròng kính</a> và
                 <a href="/bo-suu-tap">các bộ sưu tập</a>.
             </p>
         </div>

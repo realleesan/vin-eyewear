@@ -734,3 +734,73 @@
     padding-right: 0;
     padding-left: var(--mega-x, 0px);
 }
+
+/* ============================================================================
+   BẢNG XỔ "GỌNG KÍNH" / "TRÒNG KÍNH" — NHIỀU CỘT CÓ TIÊU ĐỀ NHÓM (10/09/2026)
+
+   Mục "Sản phẩm" đã tách thành hai mục (xem _layout/mega-data.php). Ruột mỗi
+   bảng không còn là một cột tên danh mục mà là 2–3 NHÓM LỌC đặt cạnh nhau:
+   Kiểu dáng · Chất liệu, hoặc Loại tròng · Chiết suất · Tính năng.
+
+   Lưới mặc định phía trên đã bị ép về MỘT cột `auto` (cho bảng Bộ sưu tập),
+   nên ở đây mở lại thành --mega-cols cột, vẫn `auto` để mỗi cột co đúng bằng
+   nhãn dài nhất và cả cụm dồn sát dưới mục nav vừa rê vào (--mega-x).
+
+   PHẢI ĐỨNG CUỐI FILE: cùng độ đặc hiệu với khối .mega__grid ngay trên, luật
+   sau thắng. padding-left: var(--mega-x) của khối trên vẫn giữ nguyên.
+   ============================================================================ */
+.mega__grid--groups {
+    grid-template-columns: repeat(var(--mega-cols, 2), auto);
+    column-gap: var(--space-12, 48px);
+    row-gap: var(--space-3, 12px);
+    align-items: start;
+}
+
+/* KHOẢNG DÒNG KHÍT — áp cho MỌI bảng xổ, cả "Bộ sưu tập".
+   Khối .mega__links đầu file còn để `gap: var(--space-4)`; cộng với đệm dọc
+   --space-2 đặt trên từng <a> ở khối "DANH SÁCH BỘ SƯU TẬP" thì mỗi dòng cách
+   nhau ~54px — ngược với ý "dòng nọ cách dòng kia rất khít" ghi ở chính khối
+   đó. Đệm trên <a> đã đủ tách dòng (và giữ vùng bấm trọn dòng), nên bỏ gap. */
+.mega__links {
+    gap: 0;
+}
+
+/* "Tất cả gọng kính" — trải hết các cột, đứng trên cùng. Chữ đậm hơn một nấc
+   so với liên kết lọc: nó là lối vào cả trang, không phải một lát cắt. */
+.mega__all {
+    grid-column: 1 / -1;
+    justify-self: start;
+    padding-block: var(--space-2);
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.mega__all:hover,
+.mega__all:focus-visible {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Tiêu đề nhóm — NHÃN thật sự (gọi tên nhóm, không bấm được), nên dùng kiểu
+   nhãn IN HOA nhỏ của hệ thống, khác hẳn các liên kết chữ thường bên dưới. */
+.mega__head {
+    margin: 0 0 var(--space-2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+}
+
+/* Trang chủ: bảng trong suốt đè lên video — đảo chữ sang tông sáng, cùng cách
+   khối .page-home-index phía trên xử lý .mega__label / .mega__links. */
+.page-home-index .mega__panel .mega__all {
+    color: var(--on-ink);
+}
+
+.page-home-index .mega__panel .mega__head {
+    color: rgba(255, 255, 255, .6);
+}

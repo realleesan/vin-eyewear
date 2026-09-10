@@ -84,7 +84,7 @@ $products = $products ?? [];
         </ul>
 
         <div class="hsec-all">
-            <a class="hsec-all__link" href="/san-pham?sort=newest"><?= e(t('home.see_all')) ?></a>
+            <a class="hsec-all__link" href="/san-pham/gong-kinh?sort=newest"><?= e(t('home.see_all')) ?></a>
         </div>
     </div>
 </section>

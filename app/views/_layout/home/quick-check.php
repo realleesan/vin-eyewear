@@ -77,17 +77,17 @@ $lensOptions = [
     [
         'label' => t('home.qc.la'),
         'rec'   => t('home.qc.lar'),
-        'url'   => '/san-pham?lens%5B%5D=blue-light',
+        'url'   => '/san-pham/trong-kinh?lens%5B%5D=blue-light',
     ],
     [
         'label' => t('home.qc.lb'),
         'rec'   => t('home.qc.lbr'),
-        'url'   => '/san-pham?lens%5B%5D=photochromic',
+        'url'   => '/san-pham/trong-kinh?lens%5B%5D=photochromic',
     ],
     [
         'label' => t('home.qc.lc'),
         'rec'   => t('home.qc.lcr'),
-        'url'   => '/san-pham?lens%5B%5D=rx',
+        'url'   => '/san-pham/trong-kinh?lens%5B%5D=rx',
     ],
 ];
 
@@ -255,7 +255,7 @@ $faces = [
                 <?php foreach ($faces as $i => $face): ?>
                     <div class="qrec" data-qface-rec="<?= $i ?>" hidden>
                         <p class="qrec__text"><strong><?= e($face['name']) ?>:</strong> <?= e($face['desc']) ?></p>
-                        <a class="qrec__link" href="/san-pham?shape=<?= e(rawurlencode($face['shape'])) ?>"><?= e(t('home.qc.frame_cta')) ?></a>
+                        <a class="qrec__link" href="/san-pham/gong-kinh?shape=<?= e(rawurlencode($face['shape'])) ?>"><?= e(t('home.qc.frame_cta')) ?></a>
                     </div>
                 <?php endforeach; ?>
             </div>

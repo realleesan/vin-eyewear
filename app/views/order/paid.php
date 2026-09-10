@@ -214,7 +214,7 @@ $paidAt = $order['paid_at'] ?: ($order['updated_at'] ?? null);
            href="/tai-khoan?muc=don-hang&amp;don=<?= e(rawurlencode($order['code'])) ?>#<?= e($order['code']) ?>">
             Xem đơn hàng
         </a>
-        <a class="opaid__btn opaid__btn--ghost" href="/san-pham">Tiếp tục mua sắm</a>
+        <a class="opaid__btn opaid__btn--ghost" href="/san-pham/gong-kinh">Tiếp tục mua sắm</a>
     </div>
 
     <p class="opaid__help">

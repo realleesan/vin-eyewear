@@ -1744,6 +1744,20 @@ body.is-search-open .site-header {
     color: var(--ink);
 }
 
+/* Tiêu đề nhóm trong khối "Gọng kính" / "Tròng kính" (Kiểu dáng, Chất liệu…).
+   Không bấm được; nhỏ và nhạt hơn liên kết, có khoảng hở phía trên để các
+   nhóm tách nhau mà không cần đường kẻ. Xem _layout/mega-menu-mobile.php. */
+.mobile-nav__subhead {
+    margin: var(--space-3) 0 0;
+    padding: var(--space-2) var(--page-edge) var(--space-1);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    opacity: .75;
+}
+
 .mobile-nav__foot {
     display: grid;
     gap: var(--space-3);

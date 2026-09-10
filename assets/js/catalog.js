@@ -381,9 +381,22 @@
             .then(function (res) {
                 if (!res.ok) throw new Error('HTTP ' + res.status);
 
+                /* MÁY CHỦ CHUYỂN SANG MỘT CATALOG KHÁC — đi đường thật.
+                   Từ 10/09/2026 /san-pham trơn chuyển về /san-pham/gong-kinh
+                   (xem ProductController::index). Đứng ở /san-pham?collection=x
+                   bấm "Xoá tất cả" là rơi đúng vào đó: fetch tự theo chuyển
+                   hướng, và nếu cứ thay mảnh thì thanh địa chỉ ghi /san-pham
+                   trong khi nội dung là trang Gọng kính với bộ lọc khác hẳn. */
+                if (res.redirected && res.url &&
+                    new URL(res.url).pathname !== duongCatalog) {
+                    window.location.href = res.url;
+                    return null;
+                }
+
                 return res.text();
             })
             .then(function (html) {
+                if (html === null) return;  // đã chuyển trang thật ở trên
                 if (stt !== luot) return;   // lượt cũ về muộn, vứt
 
                 if (!thayMang(html)) {

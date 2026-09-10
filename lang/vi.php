@@ -29,7 +29,9 @@ return [
     // ── Điều hướng ───────────────────────────────────────────────────────
     'nav.aria.main'    => 'Điều hướng chính',
     'nav.home'         => 'Trang chủ',
-    'nav.products'     => 'Sản phẩm',
+    /* 'nav.products' ĐÃ BỎ (10/09/2026) — mục "Sản phẩm" tách thành hai mục dưới. */
+    'nav.frames'       => 'Gọng kính',
+    'nav.lenses'       => 'Tròng kính',
     'nav.ar'           => 'Thử kính ảo',
     'nav.about'        => 'Giới thiệu',
     'nav.collections'  => 'Bộ sưu tập',
@@ -40,7 +42,13 @@ return [
     'mega.view'        => '· Xem ngay →',
     'mega.all_collections' => 'Tất cả bộ sưu tập',
     'mega.collections_count' => ':n bộ đang trưng bày',
-    'mega.all_products' => 'Tất cả sản phẩm',
+    'mega.all_frames'  => 'Xem tất cả gọng kính',
+    'mega.all_lenses'  => 'Xem tất cả tròng kính',
+    'mega.shape'       => 'Kiểu dáng',
+    'mega.material'    => 'Chất liệu',
+    'mega.lens_type'   => 'Loại tròng',
+    'mega.lens_index'  => 'Chiết suất',
+    'mega.lens_coat'   => 'Tính năng',
 
     'menu.open'        => 'Mở menu điều hướng',
     'menu.close'       => 'Đóng menu',
@@ -66,7 +74,7 @@ return [
     'cart.title'  => 'Giỏ hàng',
     'cart.aria'   => 'Giỏ hàng, :n',
     'cart.empty'  => 'Giỏ hàng đang trống',
-    'cart.browse' => 'Xem sản phẩm',
+    'cart.browse' => 'Xem gọng kính',
     'cart.recent' => 'Sản phẩm mới thêm',
     'cart.more'   => 'Còn :n sản phẩm nữa trong giỏ',
     'cart.view'   => 'Xem giỏ hàng',
@@ -145,7 +153,7 @@ return [
     'home.cat.count'      => ':n mẫu',
     'home.cat.soon'       => 'Sắp có hàng',
     'home.cat.view'       => 'Xem danh mục',
-    'home.cat.all'        => 'Tất cả sản phẩm →',
+    'home.cat.all'        => 'Xem gọng kính →',
 
     'home.lens.eyebrow'   => 'Tròng kính chính hãng',
     'home.lens.title'     => 'Cắt lắp trong ngày, tròng chính hãng',
