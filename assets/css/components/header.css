@@ -286,11 +286,13 @@ body.page-home-index {
        3px mờ, lệch 1px: đủ tách nét khỏi nền, chưa tới mức nhìn ra là bóng. */
     --hdr-shadow: 0 1px 3px rgba(0, 0, 0, .5);
     --hdr-drop: drop-shadow(0 1px 2px rgba(0, 0, 0, .45));
-    /* KHÔNG lọc gì khi đang nằm trên video. `none` chứ không `blur(0)`:
-       backdrop-filter dù bằng 0 vẫn buộc trình duyệt chụp lại nền sau lưng ở
-       MỖI khung hình — trên một hero đang phát video thì đó là cái giá vô ích
-       suốt cả quãng cuộn đầu tiên. */
-    --hdr-blur: none;
+    /* ┌─ `blur(0px)` CHỨ KHÔNG CÒN `none` ──────────────────────────────────
+       │ Bản trước dùng `none` để khỏi phải chụp lại nền sau lưng ở mỗi khung
+       │ hình. Cái giá của nó lộ ra khi ĐO cú cuộn ngược lên đỉnh: `none` và
+       │ `blur(20px)` không nội suy được với nhau, nên kính mờ TẮT PHỰT ngay
+       │ đầu cú chuyển, lúc nền vẫn còn trắng 32% — thấy rõ một cú giật.
+       │ `blur(0px)` nội suy trơn, và đó là thứ quyết định ở đây. */
+    --hdr-blur: saturate(100%) blur(0px);
 }
 
 /* Trạng thái ĐẶC — ĐÂY LÀ NƠI DUY NHẤT KHAI ĐIỀU KIỆN. */
@@ -402,10 +404,8 @@ body.page-home-index:has(.site-header.is-past-hero) {
        Khai transparent tường minh để đè `background: var(--surface)` của
        .site-header gốc. */
     background-color: transparent;
-    transition:
-        /* Chữ đổi ở NỬA SAU của cú chuyển nền: lúc nền đã đục quá nửa, nên
-           chữ không bao giờ rơi vào cảnh xám-trên-xám. */
-        color 90ms var(--ease) 90ms;
+    /* Cùng nhịp, không độ trễ — xem khối --hdr-switch. */
+    transition: color var(--hdr-switch) var(--ease);
 }
 
 /* ┌─ KÍNH MỜ NẰM Ở ::before, KHÔNG NẰM Ở CHÍNH .site-header ────────────────
@@ -442,10 +442,11 @@ body.page-home-index:has(.site-header.is-past-hero) {
     background-color: var(--hdr-bg);
     -webkit-backdrop-filter: var(--hdr-blur);
     backdrop-filter: var(--hdr-blur);
-    /* Chỉ nền chuyển mượt. --hdr-blur nhảy thẳng từ `none` sang `blur(20px)`
-       — hai giá trị đó không nội suy được, mà cũng không cần: nó nhảy đúng
-       vào lúc nền trắng bắt đầu hiện ra, nên mắt đọc cả hai là MỘT cú đổi. */
-    transition: background-color var(--hdr-switch) var(--ease);
+    /* Kính mờ đi CÙNG nền, không nhảy nữa — xem khối --hdr-blur ở trên. */
+    transition:
+        background-color var(--hdr-switch) var(--ease),
+        -webkit-backdrop-filter var(--hdr-switch) var(--ease),
+        backdrop-filter var(--hdr-switch) var(--ease);
 }
 
 /* Chữ và icon nằm trong thanh đi theo đúng nhịp của thanh — khai lại ở đây vì
@@ -463,8 +464,8 @@ body.page-home-index:has(.site-header.is-past-hero) {
     .header-action
 ) {
     transition:
-        color 90ms var(--ease) 90ms,
-        text-shadow 90ms var(--ease) 90ms;
+        color var(--hdr-switch) var(--ease),
+        text-shadow var(--hdr-switch) var(--ease);
 }
 
 /* Nét SVG của ba icon bên phải không nhận text-shadow — chúng là hình vẽ, không
@@ -476,7 +477,7 @@ body.page-home-index:has(.site-header.is-past-hero) {
    thì có thể có. */
 .page-home-index .header-action svg {
     filter: var(--hdr-drop);
-    transition: filter 90ms var(--ease) 90ms;
+    transition: filter var(--hdr-switch) var(--ease);
 }
 
 /* ┌─ MỘT NHỊP CHUNG CHO CẢ CÚ ĐỔI BỐI CẢNH ────────────────────────────────
@@ -500,7 +501,32 @@ body.page-home-index:has(.site-header.is-past-hero) {
    │ --hdr-switch giữ bốn con số ấy ở MỘT chỗ. Sửa nhịp là sửa một dòng.
    └──────────────────────────────────────────────────────────────────────── */
 body.page-home-index {
-    --hdr-switch: 180ms;
+    /* ┌─ MỘT NHỊP CHO TẤT CẢ, KHÔNG CÒN CHUỖI SO LE (10/09/2026) ───────────
+       │ Khối chú thích ngay trên mô tả cách chữa cũ: xếp bốn lớp so le nhau
+       │ để chúng không chồng lên nhau. Đo lại cú cuộn ngược lên đỉnh, lấy mẫu
+       │ mỗi 60ms, thì cách ấy sinh ra đúng cái nó định tránh:
+       │
+       │   t=265  nền 33%   · kính mờ ĐÃ TẮT HẲN · chữ vẫn ĐEN
+       │   t=326  nền 8%    · chữ mới chuyển, đang là xám #484848
+       │   t=391  nền 0%    · chữ đã gần TRẮNG · dải tối vẫn ở 0   ← mù
+       │   t=452  dải tối mới lên 0.80
+       │
+       │ Mốc t=391 là chữ trắng nằm trần trên video, không nền không dải —
+       │ hụt hẳn một nhịp. Và cả chuỗi kéo hơn 450ms, đủ dài để mắt đọc ra
+       │ TỪNG GIAI ĐOẠN thay vì một cú lật.
+       │
+       │ Cách chữa không phải xếp lại thứ tự cho khéo hơn, mà là BỎ HẲN việc
+       │ xếp: bốn lớp chạy cùng lúc, cùng 160ms, không lớp nào có độ trễ. Khi
+       │ mọi thứ đổi trong một nhịp ngắn thì không còn "giữa chừng" nào đủ dài
+       │ để lộ ra, và chữ luôn có ít nhất một trong hai lớp đỡ phía sau.
+       │
+       │ 160ms chứ không 180: nhanh hơn một nhịp vì nay không còn xếp hàng
+       │ chờ nhau, tổng thời gian cú chuyển từ 450ms xuống còn 160ms.
+       │
+       │ Chữ vẫn an toàn ở khoảng giữa nhờ bóng chữ (--hdr-shadow) — bóng đi
+       │ theo từng nét nên nó không phụ thuộc vào nền đang ở đâu trong cú
+       │ chuyển. Đó là thứ cho phép bỏ chuỗi so le mà không mất độ đọc. */
+    --hdr-switch: 160ms;
 }
 
 .page-home-index .header-announce {
@@ -581,10 +607,10 @@ body.page-home-index {
        dùng --ann-veil vẫn đúng, còn dùng --hdr-veil là chữ dải tiện ích mất
        nền giữa lúc vẫn đang nằm trên video. */
     opacity: var(--ann-veil);
-    /* TRỄ đúng bằng --hdr-switch, để dải tối này KHÔNG BAO GIỜ chồng lên nền
-       trắng đang mờ đi — xem khối "MỘT NHỊP CHUNG CHO CẢ CÚ ĐỔI BỐI CẢNH" ở
-       trên. Nền tan hết trước, rồi dải mới hiện. */
-    transition: opacity 120ms var(--ease) var(--hdr-switch);
+    /* Độ trễ ĐÃ BỎ. Chính nó tạo ra mốc t=391 trong phép đo ghi ở khối
+       --hdr-switch: nền trắng đã tan hết mà dải tối còn chưa bắt đầu, nên chữ
+       trắng nằm trần trên video. Nay dải hiện cùng lúc nền tan. */
+    transition: opacity var(--hdr-switch) var(--ease);
 }
 
 /* Chữ và icon đảo màu. Nhắm cả bộ con vì phần lớn chúng khai
