@@ -1847,6 +1847,42 @@ body.is-cart-open .header-announce {
     display: none;
 }
 
+/* ┌─ "XEM GIỎ HÀNG" DÙNG CHUNG KHUÔN NÚT VỚI NHÁNH GIỎ RỖNG ────────────────
+   │ .cartpop__cta là nút ĐẶC: nền --ink, chữ trắng, vuông góc. Đó là dáng
+   │ của một nút chính trong một ngăn kéo hẹp — ở đó nó là thứ duy nhất cần
+   │ nhìn thấy. Trong lớp phủ tràn màn thì một khối đen 720px nằm giữa một
+   │ mặt phẳng #f3f4f6 là mảng nặng nhất trên màn hình, và nó chỏi với chính
+   │ cái nút mà nhánh giỏ RỖNG đang dùng cách đó vài dòng.
+   │
+   │ Tham chiếu chỉ có MỘT khuôn nút cho cả lớp phủ: nền bằng nền, viền mảnh
+   │ xám, bo 8px, chữ đen — đo được 327×47, viền rgb(171,171,171).
+   │
+   │ Bề ngang chốt 327px như nút kia thay vì kéo hết 720px của cột: hai nhánh
+   │ của cùng một tấm thì nút phải cùng cỡ, nếu không mở giỏ lúc rỗng và lúc
+   │ có hàng ra hai bố cục khác nhau. */
+.hpop__panel--cart .cartpop__cta {
+    width: min(327px, 100%);
+    min-height: 47px;
+    margin-inline: auto;
+    padding: var(--space-2) var(--space-4);
+    background: transparent;
+    border: 1px solid #ababab;
+    border-radius: 8px;
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    letter-spacing: normal;
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+
+.hpop__panel--cart .cartpop__cta:hover,
+.hpop__panel--cart .cartpop__cta:focus-visible {
+    /* Không đảo sang nền đậm — cùng phản hồi với nút của nhánh rỗng: viền
+       đậm lên, nền sáng lên một chút. */
+    background: rgba(255, 255, 255, .6);
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
 .hpop__panel--cart .cartdrawer__head {
     /* Nút X ra sát mép phải MÀN HÌNH chứ không sát mép cột 720px. */
     width: 100%;
