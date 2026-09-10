@@ -103,7 +103,11 @@ if ($minPrice !== null) {
     ?>
     <?php if (count($dsBst) > 1): ?>
         <nav class="cdet__chips" aria-label="Bộ sưu tập khác">
-            <a class="cdet__chip" href="/bo-suu-tap">Tất cả</a>
+            <?php /* KHÔNG còn chip "Tất cả" dẫn về /bo-suu-tap: đường ấy nay tự
+                     chuyển hướng sang bộ đầu tiên (xem CollectionController::index),
+                     nên một chip như thế chỉ đưa người ta quay lại đúng chỗ vừa
+                     đứng — hoặc tệ hơn, đọc ra như một mục thứ tư rồi nhảy sang
+                     mục thứ nhất. */ ?>
             <?php foreach ($dsBst as $bo): ?>
                 <?php $dangXem = $bo['slug'] === $collection['slug']; ?>
                 <a class="cdet__chip<?= $dangXem ? ' is-on' : '' ?>"

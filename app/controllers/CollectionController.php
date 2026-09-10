@@ -74,6 +74,28 @@ class CollectionController extends BaseController
     {
         $collections = CollectionModel::visible();
 
+        /* ┌─ VÀO THẲNG BỘ MỚI NHẤT, KHÔNG DỪNG Ở TRANG DANH SÁCH ───────────────
+           │ Theo yêu cầu chủ dự án, dựng đúng cách nhà mốt tham chiếu làm: họ
+           │ không có trang "danh sách các bộ" nào cả — bấm Collections là vào
+           │ thẳng một bộ, và hàng chip trên đầu lo việc chuyển qua lại
+           │ (/category/collections tự chuyển sang /collections/veggie-collection).
+           │
+           │ 302 chứ không 301: thứ tự bộ đổi mỗi lần cửa hàng thêm bộ mới, nên
+           │ đích của đường này KHÔNG cố định. 301 là bảo trình duyệt và máy tìm
+           │ kiếm nhớ vĩnh viễn một đích sẽ hết đúng ngay đợt ra mắt sau.
+           │
+           │ Bộ ĐẦU trong CollectionModel::visible() — thứ tự đã là
+           │ `sort_order ASC, launched_at DESC, name ASC`, tức cửa hàng tự xếp
+           │ được bộ nào đứng trước bằng ô sắp xếp trong trang quản trị.
+           │
+           │ KHÔNG bỏ hẳn view collection/index: nó vẫn là trang chạy khi CSDL
+           │ chưa có bộ nào (khỏi chuyển hướng vào hư không), và file vẫn nằm
+           │ nguyên trên đĩa nếu sau này muốn bật lại đường vào.
+           └──────────────────────────────────────────────────────────────────── */
+        if ($collections !== []) {
+            redirect('/bo-suu-tap/' . rawurlencode($collections[0]['slug']));
+        }
+
         $tieuDe  = SiteTextModel::get(SiteTextModel::BST_TIEU_DE, self::DAU_TRANG['tieu_de']);
         $doanDan = SiteTextModel::get(SiteTextModel::BST_DOAN_DAN, self::DAU_TRANG['doan_dan']);
 
