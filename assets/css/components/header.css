@@ -1745,6 +1745,64 @@ body.is-cart-open .site-header {
     text-align: center;
 }
 
+/* ┌─ MÀU CHỮ TRONG LỚP PHỦ — ĐO TRÊN THAM CHIẾU ───────────────────────────
+   │ Số đo lớp phủ giỏ hàng của gentlemonster.com:
+   │     nền                    rgb(243,244,246)
+   │     dòng "…nothing…"       rgb(17,17,17)  13px/350   ← ĐEN
+   │     nút CONTINUE SHOPPING  rgb(17,17,17)  13px/400
+   │                            viền 1px solid rgb(171,171,171), bo 8px, 327×47
+   │
+   │ Ở đây dòng trống đang đọc --muted (#6b6b6b). Trên nền trắng nó cho 5.3:1
+   │ và vẫn ổn; nhưng lớp phủ này KHÔNG phải nền trắng — nó là #f3f4f6, và
+   │ trên đó cùng màu ấy chỉ còn ~4.7:1. Cộng với việc dòng ấy nằm một mình
+   │ giữa một khoảng trống rất lớn, không có gì quanh để mắt lấy làm mốc, thì
+   │ nó đọc ra là mờ. Tham chiếu để nó ĐEN ĐẶC, không xám.
+   │
+   │ Chỉ đổi TRONG lớp phủ: .hpop__note còn được bảng tài khoản dùng, mà ở đó
+   │ nó là chú thích phụ bên cạnh các mục chính — xám là đúng vai.
+   └──────────────────────────────────────────────────────────────────────── */
+.hpop__panel--cart :is(.hpop__note, .hpop__head, .cartpop__qty, .cartpop__more) {
+    color: var(--ink);
+}
+
+.hpop__panel--cart .hpop__note {
+    font-size: var(--fs-body-sm);
+    margin-bottom: var(--rhythm-xs);
+}
+
+/* Lối đi duy nhất của một giỏ rỗng thành NÚT VIỀN, không còn là một dòng chữ
+   trôi. Đúng khuôn "CONTINUE SHOPPING" của tham chiếu, kể cả bo 8px — bộ này
+   vốn không bo góc chỗ nào, nhưng đây là chi tiết chủ dự án chỉ đích danh. */
+.hpop__panel--cart .hpop__list > li > .hpop__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: min(327px, 100%);
+    min-height: 47px;
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid #ababab;
+    border-radius: 8px;
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    letter-spacing: normal;
+    text-transform: uppercase;
+    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+}
+
+.hpop__panel--cart .hpop__list > li > .hpop__item:hover,
+.hpop__panel--cart .hpop__list > li > .hpop__item:focus-visible {
+    border-color: var(--ink);
+    background: rgba(255, 255, 255, .6);
+}
+
+/* Tiêu đề tấm: 18px như hai tab BAG/WISHLIST của tham chiếu, không phải nhãn
+   12px giãn chữ như hồi nó còn là đầu một ngăn kéo hẹp. */
+.hpop__panel--cart .cartdrawer__title {
+    font-size: var(--fs-h4);
+    font-weight: 400;
+    letter-spacing: normal;
+}
+
 .cartpop {
     list-style: none;
     display: grid;
