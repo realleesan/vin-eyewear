@@ -100,27 +100,44 @@
  *
  * NHỊP CÒN LẠI, sáu chương, hai chương một vai trò:
  *
+ * NHỊP ĐANG CHẠY, ba chương:
+ *
  *   1. HERO          hình ảnh dẫn dắt
  *   2. BỘ SƯU TẬP    khối ảnh chiến dịch
- *   3. MỚI VỀ        ─┐ HÀNG HOÁ
- *   4. TRÒNG KÍNH     ├─ chương biên tập/dịch vụ chen giữa hai băng hàng,
- *   5. BÁN CHẠY      ─┘  nên trang không thành hai lưới thẻ dính nhau
- *   6. ĐO MẮT        lối vào dịch vụ, đóng trang
+ *   3. MỚI VỀ        ─┐ HÀNG HOÁ, hai băng trượt liền nhau
+ *   4. BÁN CHẠY      ─┘
+ *
+ * (Ba chương "TRÒNG KÍNH · ĐO MẮT · ĐÁNH GIÁ" của bản thiết kế cũ vẫn còn file
+ *  trên đĩa, xem khối chú thích ở cuối trang này.)
  * ═════════════════════════════════════════════════════════════════════════════
  */
 ?>
 
 <?php partial('_layout/home/hero'); ?>
 
+<?php
+/* BỘ SƯU TẬP ĐÃ TRỞ LẠI, VÀ ĐỨNG NGAY SAU HERO (10/09/2026).
+
+   Thứ tự ba chương chính nay là: Bộ sưu tập → Mới về → Bán chạy.
+
+   Khối này tự gọi CollectionModel::visible() bên trong nên không cần thêm gì
+   vào HomeController::index() — khác với 'categories' ngay dưới, khối đó phải
+   được truyền dữ liệu vào.
+
+   Đặt trước hai băng hàng hoá là có lý do hình ảnh: hero vừa hết là ba tấm
+   ảnh chiến dịch lớn, rồi mới tới lưới thẻ. Để hai băng thẻ dính ngay sau
+   hero thì trang mở ra là một bảng hàng, không phải một cửa hàng. */
+partial('_layout/home/collections');
+?>
+
 <?php partial('_layout/home/new-arrivals', ['products' => $newArrivals]); ?>
 
 <?php partial('_layout/home/best-sellers', ['products' => $bestSellers]); ?>
 
-<?php /* ── SÁU KHỐI ĐÃ RÚT KHỎI TRANG CHỦ ──────────────────────────────────
-         Sáu file partial VẪN NẰM NGUYÊN trên đĩa. Bỏ dấu chú thích một dòng là
+<?php /* ── NĂM KHỐI CÒN LẠI ĐANG RÚT KHỎI TRANG CHỦ ────────────────────────
+         Năm file partial VẪN NẰM NGUYÊN trên đĩa. Bỏ dấu chú thích một dòng là
          khối ấy trở lại đúng chỗ cũ; không có gì bị xoá.
 
-         partial('_layout/home/collections');
          partial('_layout/home/categories', ['categories' => $categories]);
              → cũng phải trả 'categories' vào HomeController::index().
          partial('_layout/home/lenses');

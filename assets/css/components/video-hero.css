@@ -322,9 +322,17 @@ html:not(.js) .vhero__bars {
 }
 
 .vhero__bar {
-    /* Vùng bấm 44px cao nhưng vạch chỉ 2px: đệm trong suốt gánh phần còn lại,
-       nên ngón tay có đủ chỗ mà mắt chỉ thấy một nét mảnh. */
-    width: 44px;
+    /* Vùng bấm 44px CAO nhưng vạch chỉ 1px: đệm trong suốt gánh phần còn lại,
+       nên ngón tay có đủ chỗ mà mắt chỉ thấy một nét mảnh.
+
+       Bề ngang theo số đo trên gentlemonster.com: vạch của họ rộng 102px, cao
+       1px, bo tròn hết cỡ. 44px của bản trước là con số của VÙNG BẤM bị đem
+       dùng luôn cho bề ngang — vạch ngắn và dày thì đọc ra là "nút", còn một
+       nét dài mảnh mới đọc ra là "tiến độ".
+
+       clamp chứ không 102px cứng: bốn vạch 102px cộng khe là 440px, vừa trên
+       laptop nhưng chiếm gần trọn bề ngang một máy 390px. */
+    width: clamp(48px, 7vw, 102px);
     height: 44px;
     padding: 0;
     display: flex;
@@ -337,7 +345,11 @@ html:not(.js) .vhero__bars {
 .vhero__bar-fill {
     display: block;
     width: 100%;
-    height: 2px;
+    /* 1px, theo đúng số đo tham chiếu. Ở màn DPR 2 nó vẫn vẽ ra được nửa
+       pixel vật lý; ở DPR 1 trình duyệt làm mờ nhẹ, và đó lại đúng dáng nét
+       tóc mà bộ này cần. */
+    height: 1px;
+    border-radius: 999px;
     background: rgba(255, 255, 255, .38);
     transition: background-color var(--dur) var(--ease);
 }

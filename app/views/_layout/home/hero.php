@@ -62,25 +62,69 @@ $clips = [
     [
         'src'    => 'assets/video/main_pc_1920_990.mp4',
         'poster' => 'assets/images/hero-models.jpg',
-        'bst'    => 'titan-sieu-nhe',
-        'ten'    => 'Titan Siêu Nhẹ',
         'label'  => t('home.hero.cap3'),
     ],
     [
         'src'    => 'assets/video/main_global_pc_1920_990.mp4',
         'poster' => 'assets/images/showroom-frames.jpg',
-        'bst'    => 'acetate-thu-cong',
-        'ten'    => 'Acetate Thủ Công',
         'label'  => t('home.hero.cap1'),
     ],
     [
         'src'    => 'assets/video/main_0_pc_1920_990.mp4',
         'poster' => 'assets/images/hero-eyewear.jpg',
-        'bst'    => 'phi-cong-co-dien',
-        'ten'    => 'Phi Công Cổ Điển',
         'label'  => t('home.hero.cap2'),
     ],
+    /* ┌─ CHỖ CHO TẤM THỨ TƯ ────────────────────────────────────────────────
+       │ File chưa có trên máy này, và khối lọc ngay dưới sẽ bỏ qua nó cho tới
+       │ khi ai đó chép video vào đúng đường dẫn này. Thả file vào là hero
+       │ thành bốn tấm, không phải sửa một dòng nào ở đây, ở home.js hay ở
+       │ vạch tiến độ — cả ba đều đếm theo $clips.
+       │
+       │ Poster dùng lại ảnh hero có sẵn; đổi thành ảnh riêng của clip mới thì
+       │ tốt hơn, nhưng thiếu nó cũng không sao — poster chỉ lấp chỗ trong lúc
+       │ video giải mã. */
+    [
+        'src'    => 'assets/video/main_4_pc_1920_990.mp4',
+        'poster' => 'assets/images/hero-eyewear.jpg',
+        'label'  => t('home.hero.cap1'),
+    ],
 ];
+
+/* ┌─ BỎ QUA CLIP THIẾU FILE ────────────────────────────────────────────────
+   │ Một <video> trỏ vào đường dẫn 404 không báo lỗi gì cả: nó dựng ra một ô
+   │ đen câm nằm giữa băng trượt, và vạch tiến độ vẫn đếm nó như một tấm thật.
+   │ Lọc ở đây thì danh sách bên dưới, home.js và vạch tiến độ tự khớp nhau.
+   └──────────────────────────────────────────────────────────────────────── */
+$clips = array_values(array_filter(
+    $clips,
+    static fn (array $c): bool => is_file(ROOT_PATH . '/' . $c['src'])
+));
+
+/* ┌─ SLUG BỘ SƯU TẬP LẤY TỪ CSDL, KHÔNG VIẾT CỨNG NỮA (10/09/2026) ─────────
+   │ Bản trước viết cứng 'titan-sieu-nhe' / 'acetate-thu-cong' /
+   │ 'phi-cong-co-dien' ngay trong mảng trên. Không bộ nào trong ba cái đó tồn
+   │ tại: bảng `collections` đang có 'nang-he', 'co-dien-tro-lai',
+   │ 'nhe-ca-ngay'. Hậu quả đo được trên trang thật:
+   │     "Khám phá bộ sưu tập" → /bo-suu-tap/titan-sieu-nhe   → 404
+   │     "Mua ngay"            → /san-pham?collection=…       → lọc rỗng
+   │ Cả hai nút của cả ba tấm đều hỏng, và hỏng im lặng.
+   │
+   │ Nay ghép lần lượt clip thứ i với bộ đang hiển thị thứ i. Chú thích cũ lo
+   │ rằng nối vào CSDL thì "đổi tên bộ trong quản trị sẽ làm lệch chữ khỏi
+   │ hình" — đúng, nhưng một cái tên lệch vẫn hơn một cái nút 404, và tên nay
+   │ cũng lấy từ CSDL nên nó luôn nói đúng bộ mà nút sẽ dẫn tới.
+   │
+   │ Clip nào không còn bộ để ghép (nhiều clip hơn bộ) thì hai nút lùi về
+   │ trang tổng /bo-suu-tap — vẫn là một đích có thật.
+   └──────────────────────────────────────────────────────────────────────── */
+$bsts = CollectionModel::visible();
+
+foreach ($clips as $i => &$clip) {
+    $bo = $bsts[$i] ?? null;
+    $clip['bst'] = $bo['slug'] ?? null;
+    $clip['ten'] = $bo['name'] ?? '';
+}
+unset($clip);
 
 $tong = count($clips);
 ?>
@@ -136,7 +180,12 @@ $tong = count($clips);
 
                     <div class="vhero__copy">
                         <p class="vhero__eyebrow"><?= e($clip['label']) ?></p>
-                        <p class="vhero__name" lang="vi"><?= e($clip['ten']) ?></p>
+                        <?php /* Tên lấy từ CSDL nên có thể rỗng khi clip không ghép được
+                                 với bộ nào — bỏ hẳn thẻ thay vì in một dòng trống đẩy
+                                 hai nút tụt xuống. */ ?>
+                        <?php if ($clip['ten'] !== ''): ?>
+                            <p class="vhero__name" lang="vi"><?= e($clip['ten']) ?></p>
+                        <?php endif; ?>
 
                         <div class="vhero__cta">
                             <?php
@@ -146,11 +195,15 @@ $tong = count($clips);
                                Cùng một bộ sưu tập, hai ý định mua khác nhau. */
                             ?>
                             <a class="vhero__btn vhero__btn--solid"
-                               href="/san-pham?<?= e(http_build_query(['collection' => $clip['bst']])) ?>">
+                               href="<?= e($clip['bst']
+                                   ? '/san-pham?' . http_build_query(['collection' => $clip['bst']])
+                                   : '/san-pham') ?>">
                                 <?= e(t('home.hero.cta_buy')) ?>
                             </a>
                             <a class="vhero__btn"
-                               href="/bo-suu-tap/<?= e(rawurlencode($clip['bst'])) ?>">
+                               href="<?= e($clip['bst']
+                                   ? '/bo-suu-tap/' . rawurlencode($clip['bst'])
+                                   : '/bo-suu-tap') ?>">
                                 <?= e(t('home.hero.cta_shop')) ?>
                             </a>
                         </div>

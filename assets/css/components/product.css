@@ -88,7 +88,7 @@
 .pcard__shot {
     display: block;
     position: relative;
-    aspect-ratio: var(--ratio-product);
+    aspect-ratio: var(--ratio-pcard);
     overflow: hidden;
 }
 
@@ -355,9 +355,18 @@
 }
 
 /* form bọc hai nút phải trong suốt với lưới trên — nếu không hai nút bị nhốt
-   trong một ô và mất khoảng cách với nút "Chi tiết" bên ngoài. */
+   trong một ô và mất khoảng cách với nút "Chi tiết" bên ngoài.
+
+   HAI CỘT BẰNG NHAU, không phải hai hàng chồng lên nhau (10/09/2026). Xếp dọc
+   thì cụm nút cao gấp đôi và ăn mất một phần ba ô ảnh khi hiện ra; nằm ngang
+   thì nó là một dải mỏng dưới đáy ảnh, đúng thứ cần cho một lớp phủ.
+
+   `minmax(0, 1fr)` chứ không `1fr`: nhãn "Thêm vào giỏ" dài hơn ô, mà `1fr`
+   có sàn là `auto` — nó sẽ để cột phải nở rộng hơn cột trái đúng bằng phần
+   chữ thừa, và hai nút thôi bằng nhau. minmax(0,…) bỏ cái sàn ấy đi. */
 .pcard__actions form {
     display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--space-1);
 }
 
@@ -374,7 +383,13 @@
     justify-content: center;
     width: 100%;
     min-height: var(--btn-h-sm);
-    padding: var(--space-2) var(--space-3);
+    /* Đệm ngang hẹp hơn (--space-2 thay vì --space-3): mỗi nút nay chỉ còn
+       một nửa bề ngang thẻ, mà "Thêm vào giỏ" là nhãn dài. */
+    padding: var(--space-2) var(--space-2);
+    /* Không cho nhãn dài bẻ đôi xuống hai dòng làm hai nút lệch chiều cao. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     border: 1px solid transparent;
     font-size: var(--btn-fs);
     font-weight: var(--btn-fw);

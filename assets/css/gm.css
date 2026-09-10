@@ -461,6 +461,22 @@
        ============================================================ */
     /* VUÔNG — mọi ảnh SẢN PHẨM. Ảnh trong CSDL là 600×600. */
     --ratio-product: 1 / 1;
+    /* ┌─ THẺ SẢN PHẨM CÓ TỈ LỆ RIÊNG, KHÔNG DÙNG CHUNG --ratio-product ─────
+       │ Đo trên gentlemonster.com ở 1440px: thẻ 387×635, phần chữ dưới ảnh
+       │ chỉ ~40px, nên ô ảnh là 387×595 — tỉ lệ 0.65, tức CAO hơn rộng gấp
+       │ rưỡi. Thẻ của bộ này đang để ảnh vuông: 332×332 ảnh + 56px chữ = 388,
+       │ ra một thẻ bè ngang trong khi kính thì nằm lọt thỏm giữa ô.
+       │
+       │ 3/4 chứ không 0.65 của tham chiếu: họ xếp 3 cột (thẻ rộng 387), bộ
+       │ này xếp 4 cột (thẻ rộng 332). Cùng tỉ lệ 0.65 thì thẻ cao 510 + chữ,
+       │ và bốn cột như thế làm trang dài gấp rưỡi. 3/4 giữ đúng hướng —
+       │ ảnh dọc, sản phẩm to hơn trong khung — mà không đẩy trang đi quá xa.
+       │
+       │ TOKEN RIÊNG chứ không sửa --ratio-product: token kia còn được
+       │ product-detail.css dùng, và ở đó có một phép tính chiều cao ĐÃ GHI RÕ
+       │ là phụ thuộc vào việc nó bằng 1/1 (xem chú thích quanh dòng 1259 của
+       │ file ấy). Đổi chung là hỏng trang chi tiết mà không báo gì. */
+    --ratio-pcard: 3 / 4;
 
     /* DỌC 3:4 — mọi ảnh BIÊN TẬP: thẻ bộ sưu tập, thẻ danh mục, thẻ ảnh trong
        bảng xổ mega.
