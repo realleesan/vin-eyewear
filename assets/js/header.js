@@ -31,8 +31,34 @@
        sát đỉnh, bóng nhấp nháy theo thì khó chịu.
        ==================================================================== */
 
+    /* ────────────────────────────────────────────────────────────────────
+       1b. ĐÃ ĐI QUA HERO CHƯA — lớp .is-past-hero
+
+       .is-scrolled ở trên trả lời "đã rời đỉnh trang chưa", và nó vẫn giữ
+       nguyên nghĩa đó. Nhưng trang chủ cần một câu hỏi KHÁC: "thanh nav còn
+       nằm trên video hay đã sang nội dung trắng?".
+
+       Hai câu hỏi lệch nhau đúng một chiều cao hero (82dvh). Trước đây đầu
+       trang lật sang trắng ngay ở 4px — nghĩa là mới nhích chuột một cái là
+       chữ đen đã nằm trên video, còn 80% quãng cuộn hero thì đầu trang là
+       một dải trắng đè lên ảnh chiến dịch. Nay chữ trắng ở lại đúng chừng nào
+       còn video sau lưng, và chỉ đổi đen + kính mờ khi mép dưới hero đã trượt
+       qua mép dưới thanh nav — đúng cách gentlemonster.com làm.
+
+       Đo bằng getBoundingClientRect() mỗi khung hình chứ không cộng dồn một
+       con số đo sẵn: hero cao theo dvh, và trên di động thanh địa chỉ thu vào
+       bung ra là con số đó đổi. Đo lại thì không bao giờ lệch.
+
+       8px trễ một chiều (bật ở đúng mép, tắt khi đã lùi quá 8px) để cú cuộn
+       dừng đúng ngay mốc không làm lớp lật qua lật lại. Lật lớp KHÔNG đụng
+       chiều cao trang nên không có vòng lặp neo-cuộn như ghi chú ở trên.
+       ──────────────────────────────────────────────────────────────────── */
+
+    var hero = document.querySelector('[data-video-hero]');
+
     if (header) {
         var scrolled = false;
+        var quaHero = false;
 
         function onScroll() {
             var next = window.scrollY > 4;
@@ -40,6 +66,19 @@
             if (next !== scrolled) {
                 scrolled = next;
                 header.classList.toggle('is-scrolled', scrolled);
+            }
+
+            if (hero) {
+                var mepDuoiThanh = header.offsetHeight;
+                var mepDuoiHero = hero.getBoundingClientRect().bottom;
+                var nextHero = quaHero
+                    ? mepDuoiHero <= mepDuoiThanh + 8
+                    : mepDuoiHero <= mepDuoiThanh;
+
+                if (nextHero !== quaHero) {
+                    quaHero = nextHero;
+                    header.classList.toggle('is-past-hero', quaHero);
+                }
             }
         }
 
@@ -50,6 +89,17 @@
          */
         var ticking = false;
         window.addEventListener('scroll', function () {
+            if (ticking) return;
+            ticking = true;
+            window.requestAnimationFrame(function () {
+                onScroll();
+                ticking = false;
+            });
+        }, { passive: true });
+
+        /* Đổi bề ngang là hero đổi chiều cao (82dvh), nên mốc lật cũng đổi —
+           mà không có sự kiện scroll nào bắn ra để tính lại. */
+        window.addEventListener('resize', function () {
             if (ticking) return;
             ticking = true;
             window.requestAnimationFrame(function () {

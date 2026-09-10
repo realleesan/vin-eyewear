@@ -21,7 +21,9 @@
 
    assets/js/header.js bật/tắt đúng bốn lớp trạng thái, và CSS phải nhận cả bốn:
 
-     #siteHeader.is-scrolled     đã cuộn khỏi đỉnh trang
+     #siteHeader.is-scrolled     đã cuộn khỏi đỉnh trang (4px)
+     #siteHeader.is-past-hero    mép dưới hero đã trượt qua mép dưới thanh nav
+                                 — CHỈ trang chủ, vì chỉ ở đó mới có hero
      [data-hpop].is-open         bảng xổ đang mở (bấm, dùng cho màn cảm ứng)
      [data-hpop].is-closed       vừa bấm ra ngoài để đóng — CHẶN cả :hover,
                                  nếu không chuột vẫn đang nằm trên nút thì
@@ -268,6 +270,11 @@ body.page-home-index {
     --hdr-fg: var(--on-ink);
     --hdr-fg-quiet: rgba(255, 255, 255, .78);
     --hdr-veil: 1;
+    /* KHÔNG lọc gì khi đang nằm trên video. `none` chứ không `blur(0)`:
+       backdrop-filter dù bằng 0 vẫn buộc trình duyệt chụp lại nền sau lưng ở
+       MỖI khung hình — trên một hero đang phát video thì đó là cái giá vô ích
+       suốt cả quãng cuộn đầu tiên. */
+    --hdr-blur: none;
 }
 
 /* Trạng thái ĐẶC — ĐÂY LÀ NƠI DUY NHẤT KHAI ĐIỀU KIỆN. */
@@ -279,13 +286,35 @@ body.page-home-index {
 
    Bỏ chúng cũng dẹp luôn hai lỗi vừa báo: thanh loé trắng khi chỉ lướt chuột
    qua, và cửa sổ chữ-xám-trên-nền-xám ở giữa cú chuyển màu. */
-body.page-home-index:has(.site-header.is-scrolled),
+/* ĐÃ ĐỔI ĐIỀU KIỆN: `.is-past-hero` chứ không còn `.is-scrolled`.
+
+   `.is-scrolled` bật ở 4px — nghĩa là nhích chuột một cái là thanh nav đã
+   trắng đục và chữ đã đen, trong khi 80% quãng cuộn hero vẫn còn video chạy
+   sau lưng. Đúng thứ cần là ngược lại: chữ TRẮNG ở lại chừng nào còn video,
+   và chỉ đổi khi mép dưới hero trượt qua mép dưới thanh nav. header.js đo
+   mốc đó và bật `.is-past-hero` — xem khối 1b ở đầu file ấy.
+
+   `.hpop--search.is-open` giữ nguyên: lớp phủ tìm kiếm là một tấm trắng tràn
+   bề ngang mở ra ngay dưới thanh nav, thanh phải khớp màu với nó dù đang
+   đứng ở đâu. */
+body.page-home-index:has(.site-header.is-past-hero),
 body.page-home-index:has(.hpop--search.is-open) {
-    --hdr-bg: var(--surface);
+    /* KHÔNG phải var(--surface) đặc nữa. Đây là kính mờ kiểu Gentle Monster:
+       nền trắng 82% + làm mờ thứ chạy phía sau, nên nội dung vẫn "chảy" dưới
+       thanh nav thay vì biến mất sau một dải trắng kín.
+
+       82% chứ không 60-70%: chữ ở đây là --ink trên nền có thể là bất cứ tấm
+       ảnh sản phẩm nào trôi qua. 82% khoá sàn tương phản lại mà mắt vẫn đọc
+       ra là kính mờ. */
+    --hdr-bg: rgba(255, 255, 255, .82);
     --hdr-line: var(--line);
     --hdr-fg: var(--ink);
     --hdr-fg-quiet: var(--muted);
     --hdr-veil: 0;
+    /* saturate đi kèm blur: làm mờ đơn thuần kéo màu phía sau nhợt đi, bù lại
+       độ bão hoà thì mảng mờ trông vẫn là "cùng một bức ảnh", không phải một
+       lớp sương xám. */
+    --hdr-blur: saturate(180%) blur(20px);
 }
 
 /* ┌─ DẢI TIỆN ÍCH CÓ BỘ BIẾN RIÊNG ─────────────────────────────────────────
@@ -305,7 +334,7 @@ body.page-home-index:has(.hpop--search.is-open) {
    │ chữ vẫn phải là trắng-mờ (không phải xám), và dải chuyển sắc phía sau vẫn
    │ phải bật. Thiếu một trong hai là chữ xám trên video — không đọc nổi.
    │
-   │ Điều kiện duy nhất: .is-scrolled. Không có :hover, không có :has() nào.
+   │ Điều kiện duy nhất: .is-past-hero. Không có :hover, không có :has() nào.
    └──────────────────────────────────────────────────────────────────────── */
 body.page-home-index {
     --ann-bg: transparent;
@@ -313,7 +342,11 @@ body.page-home-index {
     --ann-veil: 1;
 }
 
-body.page-home-index:has(.site-header.is-scrolled) {
+/* Cũng đổi sang `.is-past-hero` cùng lý do với thanh nav ở trên: dải này cao
+   ~36px, cuộn 4px thì nó vẫn còn hơn 30px nằm trên video. Lật sang trắng ngay
+   lúc ấy là một vệt trắng loé lên rồi trượt đi mất — thấy rõ ở mỗi cú cuộn đầu
+   tiên. Nay nó trượt khuất trong đúng bộ áo mà nó xuất hiện. */
+body.page-home-index:has(.site-header.is-past-hero) {
     --ann-bg: var(--surface);
     --ann-fg: var(--muted);
     --ann-veil: 0;
@@ -342,14 +375,56 @@ body.page-home-index:has(.site-header.is-scrolled) {
    │ rồi lại đục — nó đứng yên trong suốt quãng chuyển.
    └──────────────────────────────────────────────────────────────────────── */
 .page-home-index .site-header {
-    background-color: var(--hdr-bg);
+    /* NỀN ĐÃ RỜI KHỎI ĐÂY, XUỐNG ::before NGAY DƯỚI — xem lý do ở đó.
+       Khai transparent tường minh để đè `background: var(--surface)` của
+       .site-header gốc. */
+    background-color: transparent;
     border-bottom-color: var(--hdr-line);
     transition:
-        background-color var(--hdr-switch) var(--ease),
         border-color var(--hdr-switch) var(--ease),
         /* Chữ đổi ở NỬA SAU của cú chuyển nền: lúc nền đã đục quá nửa, nên
            chữ không bao giờ rơi vào cảnh xám-trên-xám. */
         color 90ms var(--ease) 90ms;
+}
+
+/* ┌─ KÍNH MỜ NẰM Ở ::before, KHÔNG NẰM Ở CHÍNH .site-header ────────────────
+   │ Đây KHÔNG phải chuyện thẩm mỹ, mà là một cái bẫy của quy chuẩn:
+   │
+   │   một phần tử có `backdrop-filter` khác `none` trở thành KHỐI ĐỊNH VỊ
+   │   cho mọi con cháu `position: fixed` của nó.
+   │
+   │ Trong .site-header có đúng hai thứ như thế, và cả hai đều phải phủ trọn
+   │ khung nhìn mới làm được việc: `.hpop__scrim` (nền mờ sau lớp phủ tìm
+   │ kiếm, `position: fixed; inset: 0`) và tấm ngăn kéo giỏ hàng. Đặt
+   │ backdrop-filter thẳng lên .site-header thì `inset: 0` của chúng thôi neo
+   │ vào khung nhìn và co lại đúng bằng dải nav cao 64px — nền mờ chỉ tối một
+   │ vệt ngang trên đỉnh, phần còn lại của trang vẫn bấm xuyên qua được.
+   │
+   │ ::before không có con cháu nào nên nó gánh bộ lọc mà không gây ra cái đó.
+   │
+   │ z-index: -1 để nó nằm DƯỚI .header-main (z 2) và .hpop__scrim (z 1) mà
+   │ vẫn ở trong tầng xếp của .site-header (sticky + z-index 60) — tức là vẫn
+   │ vẽ đè lên video hero, đúng chỗ của một cái nền.
+   │
+   │ NỀN MÀU CŨNG PHẢI Ở ĐÂY, không thể để lại trên .site-header: thứ tự vẽ
+   │ trong một tầng xếp là "nền của chính phần tử" TRƯỚC, "con z-index âm"
+   │ SAU. Để nền trắng ở trên thì nó lọt vào phần hậu cảnh mà ::before đem đi
+   │ làm mờ — hoá ra làm mờ chính tấm trắng của mình, và mọi thứ sau lưng thì
+   │ vẫn nét.
+   └──────────────────────────────────────────────────────────────────────── */
+.page-home-index .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-color: var(--hdr-bg);
+    -webkit-backdrop-filter: var(--hdr-blur);
+    backdrop-filter: var(--hdr-blur);
+    /* Chỉ nền chuyển mượt. --hdr-blur nhảy thẳng từ `none` sang `blur(20px)`
+       — hai giá trị đó không nội suy được, mà cũng không cần: nó nhảy đúng
+       vào lúc nền trắng bắt đầu hiện ra, nên mắt đọc cả hai là MỘT cú đổi. */
+    transition: background-color var(--hdr-switch) var(--ease);
 }
 
 /* Chữ và icon nằm trong thanh đi theo đúng nhịp của thanh — khai lại ở đây vì
@@ -477,7 +552,7 @@ body.page-home-index {
    nav thì dải thông báo sáng lên" — `:hover` trên cả .site-header bắt luôn
    wordmark, ba icon bên phải và mọi mục nav không có bảng xổ.
 
-   Việc chúng làm nay do --ann-bg / --ann-fg / --ann-veil lo, và chỉ .is-scrolled
+   Việc chúng làm nay do --ann-bg / --ann-fg / --ann-veil lo, và chỉ .is-past-hero
    mới lật được — xem khối "DẢI TIỆN ÍCH CÓ BỘ BIẾN RIÊNG" ở trên. */
 
 .header-main {
