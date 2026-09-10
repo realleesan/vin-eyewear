@@ -280,6 +280,57 @@ if (!$inStock) {
                 </span>
             <?php endif; ?>
         </p>
+
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * Ô MÀU — hàng chấm màu dưới giá, đúng lối thẻ sản phẩm của Gentle
+         * Monster.
+         *
+         * NÓ TRẢ LỜI MỘT CÂU HỎI THẬT: cùng một dáng gọng thường có ba, bốn
+         * phối màu, và màu là thứ quyết định mua hay không nhiều hơn cả dáng.
+         * Không có hàng này thì khách phải mở từng mẫu ra mới biết mẫu nào có
+         * màu mình muốn — tức là phải đoán.
+         *
+         * MỖI Ô LÀ MỘT <a> THẬT trỏ sang trang chi tiết, không phải một <span>
+         * trang trí và cũng không phải một nút JavaScript:
+         *   · chỗ CHỌN màu thật sự là trang chi tiết (ở đó có ô chọn phương án,
+         *     giá theo phương án và nút mua) — thẻ này không có chỗ cho ngần ấy
+         *   · tắt JavaScript vẫn đi được, mở tab mới được, máy tìm kiếm đi theo
+         *     được
+         *
+         * PHẦN "XEM TRƯỚC" nằm ở assets/js/pcard-swatch.js: rê chuột (hoặc Tab)
+         * vào một ô có ảnh riêng thì ảnh của thẻ đổi sang đúng phối màu ấy. Đó
+         * là TĂNG CƯỜNG — không có JS thì ô vẫn là một liên kết đúng.
+         *
+         * data-swatch-img có thể RỖNG: cửa hàng mới gắn ảnh cho một phần biến
+         * thể. Ô không có ảnh thì không đổi gì, và đó là hành vi đúng — thà
+         * không xem trước còn hơn xem trước sai màu.
+         *
+         * KHÔNG THÊM MỘT TRUY VẤN NÀO CHO MỖI THẺ: VariantModel::swatchMap()
+         * hỏi cả bảng đúng một lần rồi nhớ suốt request, cùng lối với
+         * productIdsWithVariants() mà $canBuyNow phía trên đang dùng.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        $swatches = VariantModel::swatches((string) $product['id']);
+        ?>
+        <?php if ($swatches !== []): ?>
+            <ul class="pcard__sw" role="list">
+                <?php foreach ($swatches as $sw): ?>
+                    <li>
+                        <?php /* aria-label mang CẢ tên màu lẫn tên mẫu: người
+                                 dùng trình đọc màn hình nghe danh sách liên kết
+                                 sẽ chỉ nghe được nhãn, mà "Bạc mờ" một mình
+                                 không nói được nó thuộc chiếc kính nào. */ ?>
+                        <a class="pcard__swatch"
+                           href="<?= e($url) ?>"
+                           style="--sw: <?= e($sw['hex']) ?>"
+                           data-swatch-img="<?= $sw['anh'] === '' ? '' : e(asset($sw['anh'])) ?>"
+                           aria-label="<?= e($sw['ten']) ?> — <?= e($product['name']) ?>"></a>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
     </div>
 
     <div class="pcard__actions">

@@ -78,47 +78,50 @@ $openStatus = static function (?string $hours): array {
 /*
  * Bốn kênh liên hệ nhanh.
  *
- * KHÁC BẢN THIẾT KẾ: dùng LOGO GỐC của từng ứng dụng (brandIcon), không phải
- * vòng tròn hồng chứa một ký tự.
+ * ─────────────────────────────────────────────────────────────────────────────
+ * ĐÃ BỎ LOGO GỐC NHIỀU MÀU, QUAY VỀ ICON NÉT CỦA SITE (theo yêu cầu)
  *
- * Bản thiết kế đặt chữ "Z" và "M" trong vòng tròn đơn sắc vì nếu vẽ cả hai
- * bằng icon bong bóng chat của site thì không phân biệt được kênh nào. Logo
- * gốc giải quyết đúng vấn đề đó mà còn tốt hơn: khách nhận ra Zalo, Messenger
- * hay Gmail bằng màu và hình quen thuộc, không phải đọc nhãn. Đây là bốn nút
- * dẫn khách RA NGOÀI site — dấu hiệu của nơi sắp đến quan trọng hơn việc giữ
- * cho hàng icon đồng bộ với phần còn lại của trang.
+ * Bản trước dùng brandIcon(): nút nhấc máy XANH LÁ, ô vuông Zalo XANH DƯƠNG,
+ * bong bóng Messenger GRADIENT tím-hồng, phong bì Gmail BỐN MÀU. Lý lẽ hồi đó
+ * — "khách nhận ra kênh bằng màu quen thuộc" — không sai, nhưng nó đánh đổi
+ * một thứ đắt hơn: bốn logo ấy là bốn mảng màu rực nằm giữa một trang đơn sắc,
+ * và chúng là thứ nặng nhất trên cả trang Liên hệ. Đọc ra là bốn cái nhãn dán
+ * của người khác dán lên site này.
  *
- * Đổi lại, các mark này không còn ăn theo màu chữ nữa: màu là một phần nhận
- * dạng thương hiệu, không được đổi. Nên .cchan__mark--brand bỏ hẳn nền hồng
- * và màu chữ — xem contact.css.
+ * Nay bốn icon cùng một nét, cùng một màu mực — đúng hệ icon mà mọi trang khác
+ * đang dùng (xem PHẦN 7 của gm.css).
  *
- * Hotline không phải ứng dụng nên không có logo gốc; brandIcon('hotline') vẽ
- * nút nhấc máy xanh lá quen mắt của iOS/Android.
+ * CÒN PHÂN BIỆT ĐƯỢC KÊNH NÀO KHÔNG? Có, và không phải nhờ icon:
+ *   · mỗi dòng đã có NHÃN viết rõ ("ZALO", "MESSENGER") ngay cạnh icon
+ *   · bốn glyph vẫn khác nhau: ống nghe · bong bóng · bong bóng có đuôi · phong bì
+ * Icon ở đây làm việc phân LOẠI (gọi / nhắn / gửi thư), còn việc định danh kênh
+ * là của cái nhãn — đúng thứ tự đọc mà một danh sách có nhãn nên có.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 $channels = [
     [
-        'brand' => 'hotline',
+        'icon'  => 'phone',
         'label' => 'Hotline',
         'value' => $company['hotline'],
         'href'  => $company['hotline_href'],
         'blank' => false,
     ],
     [
-        'brand' => 'zalo',
+        'icon'  => 'message',
         'label' => 'Zalo',
         'value' => 'Nhắn tin tư vấn',
         'href'  => $company['channels']['zalo'],
         'blank' => true,
     ],
     [
-        'brand' => 'messenger',
+        'icon'  => 'chat',
         'label' => 'Messenger',
         'value' => 'Chat trực tiếp',
         'href'  => $company['channels']['messenger'],
         'blank' => true,
     ],
     [
-        'brand' => 'gmail',
+        'icon'  => 'mail',
         'label' => 'Email',
         'value' => $company['email'],
         'href'  => 'mailto:' . $company['email'],
@@ -134,91 +137,65 @@ $channels = [
                    . 'khi bạn chưa mua kính.',
 ]); ?>
 
+<?php
+/*
+ * ═════════════════════════════════════════════════════════════════════════════
+ * THỨ TỰ MỚI CỦA TRANG: KÊNH NHANH → CƠ SỞ + BẢN ĐỒ → FORM
+ *
+ * Bản trước xếp FORM lên trước, với lý lẽ ghi ở đầu contact.css: "người mở
+ * trang Liên hệ là để LIÊN HỆ, không phải để đọc danh sách địa chỉ".
+ *
+ * Vế đầu đúng, vế sau kéo sai kết luận. Người muốn liên hệ NGAY thì gọi điện
+ * hoặc nhắn Zalo — không ai điền một form bốn ô rồi ngồi đợi "trong ngày làm
+ * việc" khi có sẵn số hotline. Form là kênh CHẬM NHẤT trong bốn kênh có trên
+ * trang này, nên đặt nó lên đầu là đặt lựa chọn tệ nhất vào chỗ tốt nhất.
+ *
+ * Thứ tự mới xếp theo TỐC ĐỘ TRẢ LỜI, nhanh trước:
+ *   1. bốn kênh nhắn/gọi — trả lời trong vài phút
+ *   2. cơ sở + bản đồ    — đến tận nơi, cũng là thứ trang này có mà trang khác
+ *                          không có
+ *   3. form              — trả lời trong ngày
+ *
+ * Đổi thứ tự trong DOM chứ không bằng CSS `order`, đúng như bản trước đã dặn:
+ * thứ tự DOM cũng là thứ tự bàn phím và trình đọc màn hình đi qua.
+ * ═════════════════════════════════════════════════════════════════════════════
+ */
+?>
 <!-- ============================================================
-     CƠ SỞ + BẢN ĐỒ
-
-     Bỏ hẳn khối này khi bảng `stores` chưa có cơ sở nào đang hoạt động:
-     một khung bản đồ rỗng kèm thẻ thông tin trống trông như trang hỏng, mà
-     phần form bên dưới thì vẫn dùng được bình thường.
+     1. BỐN KÊNH LIÊN HỆ NHANH — hàng ngang, không còn là cột bên
      ============================================================ -->
-<section class="cbottom" id="form">
-    <div class="cbottom__grid">
-
-        <div class="cform">
-            <div class="cform__head">
-                <h2 class="cform__title">Gửi câu hỏi cho chúng tôi</h2>
-                <p class="cform__lead">
-                    Điền thông tin bên dưới, đội ngũ tư vấn sẽ liên hệ lại trong ngày làm việc.
-                </p>
-            </div>
-
-            <?php if ($success !== null): ?>
-                <p class="alert alert--ok" role="status"><?= e($success) ?></p>
-            <?php endif; ?>
-            <?php if ($error !== null): ?>
-                <p class="alert alert--err" role="alert"><?= e($error) ?></p>
-            <?php endif; ?>
-
-            <form class="cform__body" method="post" action="/lien-he/gui">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-
-                <div class="cform__pair">
-                    <label class="cfield">
-                        <span class="cfield__label">Họ và tên *</span>
-                        <input class="cfield__input" type="text" name="full_name" required
-                               minlength="2" maxlength="120" autocomplete="name"
-                               placeholder="Nguyễn Văn A"
-                               value="<?= e($old['fullName'] ?? '') ?>">
-                    </label>
-
-                    <label class="cfield">
-                        <span class="cfield__label">Số điện thoại *</span>
-                        <input class="cfield__input" type="tel" name="phone" required
-                               autocomplete="tel" inputmode="tel"
-                               placeholder="09xx xxx xxx"
-                               value="<?= e($old['phone'] ?? '') ?>">
-                    </label>
-                </div>
-
-                <label class="cfield">
-                    <span class="cfield__label">
-                        Email <em class="cfield__opt">(không bắt buộc)</em>
-                    </span>
-                    <input class="cfield__input" type="email" name="email" autocomplete="email"
-                           placeholder="ban@email.com"
-                           value="<?= e($old['email'] ?? '') ?>">
-                </label>
-
-                <label class="cfield">
-                    <span class="cfield__label">Nội dung *</span>
-                    <textarea class="cfield__input cfield__input--area" name="message" rows="5"
-                              required minlength="5" maxlength="1000"
-                              placeholder="Bạn cần tư vấn về gọng kính, tròng kính hay đặt lịch đo mắt?"><?= e($old['message'] ?? '') ?></textarea>
-                </label>
-
-                <button type="submit" class="cform__submit">Gửi câu hỏi</button>
-            </form>
+<section class="cchans" aria-labelledby="cchans-title">
+    <div class="cchans__inner">
+        <div class="cchans__head">
+            <p class="eyebrow">Hỗ trợ</p>
+            <h2 id="cchans-title" class="cchans__title">Cần hỗ trợ ngay?</h2>
+            <p class="cchans__lead">Chọn kênh bạn thấy tiện nhất, 8:30 – 21:00 mỗi ngày.</p>
         </div>
 
-        <aside class="cquick">
-            <h2 class="cquick__title">Cần hỗ trợ ngay?</h2>
-            <p class="cquick__lead">Chọn kênh bạn thấy tiện nhất, 8:30 – 21:00 mỗi ngày.</p>
-
+        <ul class="cchans__list" role="list">
             <?php foreach ($channels as $ch): ?>
-                <a class="cchan" href="<?= e($ch['href']) ?>"
-                   <?= $ch['blank'] ? 'target="_blank" rel="noreferrer noopener"' : '' ?>>
-                    <span class="cchan__mark cchan__mark--brand" aria-hidden="true">
-                        <?= brandIcon($ch['brand'], 'cchan__logo cchan__logo--' . $ch['brand'], 34) ?>
-                    </span>
-                    <span class="cchan__text">
-                        <span class="cchan__label"><?= e($ch['label']) ?></span>
-                        <span class="cchan__value"><?= e($ch['value']) ?></span>
-                    </span>
-                </a>
+                <li>
+                    <a class="cchan" href="<?= e($ch['href']) ?>"
+                       <?= $ch['blank'] ? 'target="_blank" rel="noreferrer noopener"' : '' ?>>
+                        <span class="cchan__mark" aria-hidden="true">
+                            <?= icon($ch['icon'], '', 22) ?>
+                        </span>
+                        <span class="cchan__text">
+                            <span class="cchan__label"><?= e($ch['label']) ?></span>
+                            <span class="cchan__value"><?= e($ch['value']) ?></span>
+                        </span>
+                    </a>
+                </li>
             <?php endforeach; ?>
-        </aside>
+        </ul>
     </div>
 </section>
+
+<?php
+/* ĐÃ GỠ <aside class="cquick">. Bốn kênh nhanh nay là khối .cchans ở ĐẦU trang
+   — xem khối chú thích "THỨ TỰ MỚI CỦA TRANG" phía trên. Giữ chúng ở cả hai chỗ
+   là in cùng bốn liên kết hai lần trên một trang. */
+?>
 
 <?php if ($selected !== null): ?>
 <section class="cstores">
@@ -307,6 +284,65 @@ $channels = [
 <?php endif; ?>
 
 <!-- ============================================================
-     FORM + KÊNH LIÊN HỆ NHANH
+     3. FORM GỬI CÂU HỎI — kênh chậm nhất, nên đứng cuối
      ============================================================ -->
+<section class="cbottom" id="form">
+    <div class="cbottom__grid">
 
+        <div class="cform">
+            <div class="cform__head">
+                <h2 class="cform__title">Gửi câu hỏi cho chúng tôi</h2>
+                <p class="cform__lead">
+                    Điền thông tin bên dưới, đội ngũ tư vấn sẽ liên hệ lại trong ngày làm việc.
+                </p>
+            </div>
+
+            <?php if ($success !== null): ?>
+                <p class="alert alert--ok" role="status"><?= e($success) ?></p>
+            <?php endif; ?>
+            <?php if ($error !== null): ?>
+                <p class="alert alert--err" role="alert"><?= e($error) ?></p>
+            <?php endif; ?>
+
+            <form class="cform__body" method="post" action="/lien-he/gui">
+                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+
+                <div class="cform__pair">
+                    <label class="cfield">
+                        <span class="cfield__label">Họ và tên *</span>
+                        <input class="cfield__input" type="text" name="full_name" required
+                               minlength="2" maxlength="120" autocomplete="name"
+                               placeholder="Nguyễn Văn A"
+                               value="<?= e($old['fullName'] ?? '') ?>">
+                    </label>
+
+                    <label class="cfield">
+                        <span class="cfield__label">Số điện thoại *</span>
+                        <input class="cfield__input" type="tel" name="phone" required
+                               autocomplete="tel" inputmode="tel"
+                               placeholder="09xx xxx xxx"
+                               value="<?= e($old['phone'] ?? '') ?>">
+                    </label>
+                </div>
+
+                <label class="cfield">
+                    <span class="cfield__label">
+                        Email <em class="cfield__opt">(không bắt buộc)</em>
+                    </span>
+                    <input class="cfield__input" type="email" name="email" autocomplete="email"
+                           placeholder="ban@email.com"
+                           value="<?= e($old['email'] ?? '') ?>">
+                </label>
+
+                <label class="cfield">
+                    <span class="cfield__label">Nội dung *</span>
+                    <textarea class="cfield__input cfield__input--area" name="message" rows="5"
+                              required minlength="5" maxlength="1000"
+                              placeholder="Bạn cần tư vấn về gọng kính, tròng kính hay đặt lịch đo mắt?"><?= e($old['message'] ?? '') ?></textarea>
+                </label>
+
+                <button type="submit" class="cform__submit">Gửi câu hỏi</button>
+            </form>
+        </div>
+    </div>
+</section>

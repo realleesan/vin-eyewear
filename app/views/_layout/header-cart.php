@@ -106,8 +106,36 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
            Dùng lại khoá 'menu.close' của ngăn kéo điều hướng: cùng một việc,
            cùng một câu, không thêm chuỗi dịch mới. */
         ?>
+        <?php
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * DỰNG LẠI RUỘT NGĂN KÉO (đợt này)
+         *
+         * Bản trước, khi giỏ trống, in ra đúng ba dòng chữ dồn về góc trên trái:
+         * "GIỎ HÀNG" · "Giỏ hàng đang trống" · "Xem sản phẩm" — cái thứ ba là
+         * một <a> trong .hpop__list, tức là một MỤC MENU chứ không phải một lối
+         * đi tiếp. Bên dưới là 700px trắng trơn. Ngăn kéo rộng 420px mà nội dung
+         * chiếm 100px ở góc thì đọc ra là chưa dựng xong.
+         *
+         * Nay:
+         *   · đầu ngăn kéo có SỐ MÓN cạnh tiêu đề và một đường kẻ chân
+         *   · giỏ trống thì cụm chữ + nút CĂN GIỮA theo chiều dọc, nút là nút
+         *     thật (khối đen), không phải một dòng liên kết
+         *   · giỏ có hàng thì mỗi dòng có ảnh 64px (trước là 40px), tên, số
+         *     lượng, giá — và chân ngăn kéo có TẠM TÍNH cùng hai lối đi tiếp
+         *
+         * TẠM TÍNH LÀ THỨ THIẾU LỚN NHẤT CỦA BẢN TRƯỚC. Một ngăn kéo giỏ hàng
+         * không nói tổng tiền thì khách phải mở hẳn trang giỏ chỉ để biết mình
+         * đang tiêu bao nhiêu — mà đó đúng là câu hỏi khiến người ta bấm vào
+         * cái giỏ. CartController::recent() nay trả về 'subtotal' cộng trên CẢ
+         * giỏ (không chỉ năm dòng vẽ ra) — xem chú thích tại đó.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        ?>
         <div class="cartdrawer__head">
-            <p class="cartdrawer__title"><?= e(t('cart.title')) ?></p>
+            <p class="cartdrawer__title">
+                <?= e(t('cart.title')) ?><?php if ($cartCount > 0): ?><span class="cartdrawer__n"><?= (int) $cartCount ?></span><?php endif; ?>
+            </p>
             <button type="button" class="cartdrawer__close tap-target" data-cart-close
                     aria-label="<?= e(t('menu.close')) ?>">
                 <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -146,7 +174,7 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
                                 ?>
                                 <?php if ($line['image'] !== ''): ?>
                                     <img src="<?= e($line['image']) ?>" alt="" loading="lazy"
-                                         width="40" height="40"
+                                         width="64" height="64"
                                          onerror="this.style.display='none'">
                                 <?php endif; ?>
                             </span>
@@ -155,14 +183,13 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
                                      trong PHP: máy chủ không biết bảng rộng bao
                                      nhiêu pixel, mà cắt theo số ký tự thì tên
                                      ngắn cũng bị thêm dấu ba chấm vô cớ. */ ?>
-<?php /* lang="vi" — tên sản phẩm, cùng quy ước đã ghi dài ở
+                            <?php /* lang="vi" — tên sản phẩm, cùng quy ước đã ghi dài ở
                                      _layout/product-card.php. Bảng xổ giỏ hàng có mặt
                                      trên mọi trang khung đầy đủ. */ ?>
-                            <span class="cartpop__name" lang="vi"><?= e($line['name']) ?></span>
-
-                            <?php if ($line['quantity'] > 1): ?>
+                            <span class="cartpop__body">
+                                <span class="cartpop__name" lang="vi"><?= e($line['name']) ?></span>
                                 <span class="cartpop__qty">×<?= (int) $line['quantity'] ?></span>
-                            <?php endif; ?>
+                            </span>
 
                             <span class="cartpop__price"><?= money($line['price']) ?></span>
                         </a>
@@ -170,13 +197,26 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
                 <?php endforeach; ?>
             </ul>
 
+            <?php if ($recent['more'] > 0): ?>
+                <p class="cartpop__more"><?= e(t('cart.more', [':n' => (string) (int) $recent['more']])) ?></p>
+            <?php endif; ?>
+
             <div class="cartpop__foot">
-                <span class="cartpop__more">
-                    <?= $recent['more'] > 0
-                        ? e(t('cart.more', [':n' => (string) (int) $recent['more']]))
-                        : '' ?>
-                </span>
+                <?php /* TẠM TÍNH, không phải "Tổng cộng": phí giao hàng và mã
+                         giảm giá chỉ chốt được ở trang thanh toán, và gọi con số
+                         này là tổng cộng thì nó sai ngay ở bước sau. */ ?>
+                <p class="cartpop__sum">
+                    <?php /* Chuỗi 'cart.subtotal' mang tham số :n — cùng khoá mà
+                             trang /gio-hang đang dùng, nên hai chỗ nói giống hệt
+                             nhau. Đếm bằng SỐ MÓN (cộng số lượng), không bằng số
+                             dòng: "Tạm tính (2 sản phẩm)" phải đúng khi khách mua
+                             hai chiếc cùng một gọng. */ ?>
+                    <span class="cartpop__sum-label"><?= e(t('cart.subtotal', [':n' => (string) CartController::count()])) ?></span>
+                    <span class="cartpop__sum-value"><?= money((int) ($recent['subtotal'] ?? 0)) ?></span>
+                </p>
+
                 <a class="cartpop__cta" href="/gio-hang"><?= e(t('cart.view')) ?></a>
+                <a class="cartpop__cta cartpop__cta--ghost" href="/thanh-toan"><?= e(t('cart.checkout')) ?></a>
             </div>
         <?php endif; ?>
     </div>

@@ -568,6 +568,12 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         ?>
         <script src="<?= asset('assets/vendor/bootstrap.bundle.min.js') ?>" defer></script>
         <script src="<?= asset('assets/js/header.js') ?>" defer></script>
+        <?php /* Đăng nhập ngay trong ngăn kéo tài khoản. Nạp cạnh header.js vì
+                 ngăn kéo ấy là một phần của chính đầu trang, tức là có mặt ở
+                 MỌI trang khung đầy đủ — không xếp vào $pageScripts. File tự
+                 thoát khi không tìm thấy form (khách đã đăng nhập, hoặc khung
+                 rút gọn của trang thanh toán). */ ?>
+        <script src="<?= asset('assets/js/account-drawer.js') ?>" defer></script>
         <?php /* Gợi ý từ khoá cho ô tìm kiếm ở đầu trang — X29.
 
                  Nạp cạnh header.js vì ô tìm kiếm nằm trong chính đầu trang
@@ -583,6 +589,12 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
                  chủ, danh mục, tìm kiếm và chi tiết sản phẩm — cùng chỗ mà
                  buy-modal.css đã được nạp sẵn ở đầu trang. */ ?>
         <script src="<?= asset('assets/js/buy-flow.js') ?>" defer></script>
+        <?php /* Xem trước phối màu trên thẻ sản phẩm. Nạp cạnh buy-flow.js vì
+                 cùng một lý do: thẻ .pcard có mặt ở trang chủ, danh mục, tìm
+                 kiếm, bộ sưu tập và dải "sản phẩm liên quan" — tức là ở đúng
+                 những trang dùng khung đầy đủ. File uỷ quyền từ document nên
+                 trang không có thẻ nào thì nó chỉ nằm im. */ ?>
+        <script src="<?= asset('assets/js/pcard-swatch.js') ?>" defer></script>
         <?php /* Bảng số đo khúc xạ trong hộp thoại: khoá ô trục khi chưa có độ
                  trụ, và ô tóm tắt đọc số ra thành chữ. Nạp cùng chỗ với
                  buy-flow.js vì hộp thoại xuất hiện ở đúng những trang đó. */ ?>

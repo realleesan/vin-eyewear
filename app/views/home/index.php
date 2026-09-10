@@ -113,6 +113,27 @@
  */
 ?>
 
+<?php
+/*
+ * ═════════════════════════════════════════════════════════════════════════════
+ * THỨ TỰ CHỐT (theo yêu cầu chủ dự án): BỘ SƯU TẬP → MỚI VỀ → BÁN CHẠY
+ *
+ * Đọc hai khối chú thích dài phía trên như LỊCH SỬ, không như luật đang hiệu
+ * lực — chúng ghi lại hai lần xếp trước và cả hai đều đã bị thay.
+ *
+ * Vì sao thứ tự này đứng vững chứ không chỉ là một yêu cầu tuỳ hứng: khách vào
+ * trang chủ một nhà kính chưa biết mình muốn gì. Bộ sưu tập trả lời câu hỏi
+ * RỘNG nhất ("phong cách nào") bằng ẢNH, tức là bằng thứ mắt đọc nhanh nhất;
+ * rồi mới tới hai băng hàng hoá, hẹp dần: hàng mới nhất, rồi hàng người khác
+ * đang mua. Rộng → hẹp, hình → hàng.
+ *
+ * Khối "Bộ sưu tập" TỰ ĐỌC CSDL (CollectionModel::visible(), cắt ở ba bộ đầu
+ * theo thứ tự trưng bày) nên bật lại nó KHÔNG cần thêm dữ liệu nào vào
+ * HomeController.
+ * ═════════════════════════════════════════════════════════════════════════════
+ */
+?>
+
 <?php partial('_layout/home/hero'); ?>
 
 <?php

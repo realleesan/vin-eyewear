@@ -86,6 +86,27 @@ if ($minPrice !== null) {
 
 <article class="cdet">
 
+    <?php
+    /*
+     * ═════════════════════════════════════════════════════════════════════════
+     * HERO TRÀN MÀN, CHỮ ĐẶT TRÊN ẢNH (dựng theo trang collection của Gentle
+     * Monster) — thay cho bố cục "ảnh một bên, thẻ chữ một bên".
+     *
+     * Bản trước xếp ảnh 880×600 bên trái và một cột chữ bên phải chứa: mùa,
+     * tên, tagline, intro, một bảng <dl> thông số, một dòng thống kê, một dòng
+     * khuyến mãi và hai nút. Mười thứ trong một cột, và tấm ảnh — thứ DUY NHẤT
+     * nói được bộ này trông thế nào — chỉ chiếm nửa bề ngang.
+     *
+     * Nhà mốt mở đầu trang bộ sưu tập bằng ĐÚNG MỘT thứ: hình. Tên bộ đặt lên
+     * trên hình, và không có gì khác trong màn đầu tiên.
+     *
+     * KHÔNG BỎ MỘT DỮ LIỆU NÀO. Bảng thông số, dòng thống kê và dòng khuyến mãi
+     * chuyển xuống ngay dưới hero thành một dải meta nằm ngang (.cdet__bar) —
+     * chỗ đúng của chúng, vì chúng là chú giải cho tấm ảnh chứ không phải phần
+     * của nó.
+     * ═════════════════════════════════════════════════════════════════════════
+     */
+    ?>
     <!-- ══════════ LỚP 1 · GIỚI THIỆU BỘ ══════════ -->
     <section class="cdet__hero">
         <div class="cdet__media">
@@ -101,6 +122,12 @@ if ($minPrice !== null) {
                 </div>
             <?php endif; ?>
         </div>
+
+        <?php /* Lớp phủ tối chuyển dần từ dưới lên — cùng thủ pháp với hero
+                 trang chủ (.vhero__veil): chữ trắng đặt thẳng lên một tấm ảnh
+                 do cửa hàng tự tải lên thì độ đọc được đổi theo từng tấm. Dải
+                 này khoá sàn tương phản ở đúng vùng có chữ. */ ?>
+        <div class="cdet__veil" aria-hidden="true"></div>
 
         <div class="cdet__body">
             <?php if (!empty($collection['season_code']) || $when !== '' || !empty($collection['season_label'])): ?>
@@ -125,32 +152,45 @@ if ($minPrice !== null) {
             <?php if (!empty($collection['tagline'])): ?>
                 <p class="cdet__tagline"><?= e($collection['tagline']) ?></p>
             <?php endif; ?>
+        </div>
+    </section>
 
-            <?php if (!empty($collection['intro'])): ?>
-                <p class="cdet__intro"><?= e($collection['intro']) ?></p>
-            <?php endif; ?>
+    <?php
+    /*
+     * DẢI META — chú giải của tấm ảnh trên, không phải một phần của nó.
+     *
+     * Gom ba thứ từng chen trong cột chữ của hero cũ: đoạn dẫn, bảng thông số
+     * và dòng thống kê/khuyến mãi/nút. Nằm ngang thành ba cột nên chúng đọc ra
+     * là một dải dữ kiện, không phải một danh sách dài.
+     */
+    ?>
+    <section class="cdet__bar">
+        <?php if (!empty($collection['intro'])): ?>
+            <p class="cdet__intro"><?= e($collection['intro']) ?></p>
+        <?php endif; ?>
 
-            <?php if ($meta !== []): ?>
-                <dl class="cdet__meta">
-                    <?php foreach ($meta as $nhan => $giaTri): ?>
-                        <div class="cdet__meta-row">
-                            <dt><?= e($nhan) ?></dt>
-                            <dd><?= e((string) $giaTri) ?></dd>
-                        </div>
-                    <?php endforeach; ?>
-                </dl>
-            <?php endif; ?>
+        <?php if ($meta !== []): ?>
+            <dl class="cdet__meta">
+                <?php foreach ($meta as $nhan => $giaTri): ?>
+                    <div class="cdet__meta-row">
+                        <dt><?= e($nhan) ?></dt>
+                        <dd><?= e((string) $giaTri) ?></dd>
+                    </div>
+                <?php endforeach; ?>
+            </dl>
+        <?php endif; ?>
 
-            <?php
-            /*
-             * Quy mô và khoảng giá — thứ trang danh mục chỉ trả lời được SAU
-             * khi người dùng đã bấm vào. Nó đứng ngay cạnh nút để người ta
-             * biết mình sắp bấm vào cái gì.
-             *
-             * Bộ chưa có hàng thì cả khối biến mất chứ không in "0 sản phẩm":
-             * câu đó không mời ai bấm tiếp.
-             */
-            ?>
+        <?php
+        /*
+         * Quy mô và khoảng giá — thứ trang danh mục chỉ trả lời được SAU
+         * khi người dùng đã bấm vào. Nó đứng ngay cạnh nút để người ta
+         * biết mình sắp bấm vào cái gì.
+         *
+         * Bộ chưa có hàng thì cả khối biến mất chứ không in "0 sản phẩm":
+         * câu đó không mời ai bấm tiếp.
+         */
+        ?>
+        <div class="cdet__barcta">
             <?php if ($total > 0): ?>
                 <p class="cdet__stats">
                     <span class="cdet__stat"><?= (int) $total ?> mẫu</span>
@@ -199,6 +239,67 @@ if ($minPrice !== null) {
             <?php endif; ?>
         </div>
     </section>
+
+    <?php
+    /*
+     * ═════════════════════════════════════════════════════════════════════════
+     * LƯỚI SẢN PHẨM CỦA BỘ — KHỐI MỚI, VÀ NÓ ĐẢO MỘT QUYẾT ĐỊNH CŨ
+     *
+     * Đầu app/controllers/CollectionController.php có một câu dặn thẳng: trang
+     * này "KHÔNG được có nút thêm-vào-giỏ, không chọn phương án, không phân
+     * trang, không ô sắp xếp", vì một trang liệt kê lại hàng mà thiếu bộ lọc
+     * của trang danh mục thì chỉ là "một bản sao nghèo hơn".
+     *
+     * ĐỌC CÂU ẤY NHƯ LỊCH SỬ. Chủ dự án yêu cầu dựng trang này theo trang
+     * collection của Gentle Monster, mà ở đó lưới hàng CHÍNH LÀ ruột của trang:
+     * xem ảnh chiến dịch xong thì thấy ngay những chiếc kính trong đó, không
+     * phải bấm sang một địa chỉ khác.
+     *
+     * Lo ngại cũ vẫn được tôn trọng ở chỗ quan trọng nhất: đây là lưới ĐỌC, hết
+     * bộ trong một trang, KHÔNG phân trang và KHÔNG có ô sắp xếp hay cột lọc —
+     * ai cần lọc thì nút "Xem N sản phẩm của bộ" ngay trên dẫn sang trang danh
+     * mục đã bật sẵn tiêu chí. Hai trang nay bổ sung nhau thay vì một trang đẩy
+     * người xem sang trang kia.
+     *
+     * Dùng CHUNG _layout/product-card.php với mọi lưới khác của site — nên thẻ
+     * ở đây giống hệt thẻ ở trang chủ và trang danh mục, kể cả hai nút mua hiện
+     * ra khi rê chuột. Đó là điều khoản duy nhất của quyết định cũ bị bỏ, và bỏ
+     * có chủ ý: dựng một dáng thẻ thứ hai chỉ để tránh hai cái nút là quay lại
+     * đúng cái bẫy "mỗi trang một dáng thẻ" mà cả dự án vừa dọn xong.
+     * ═════════════════════════════════════════════════════════════════════════
+     */
+    ?>
+    <?php if ($products !== []): ?>
+        <section class="cdet__shop" aria-labelledby="cdet-shop-title">
+            <?php /* Dùng bộ lớp .cdet__* của chính trang này, KHÔNG mượn
+                     .hsec-head/.hsec-all của trang chủ: components/home-sections.css
+                     chỉ được nạp cho 'home/index' (xem bảng $pageStyles trong
+                     _layout/master.php), nên hai lớp ấy ở đây là hai cái tên
+                     không có luật nào — liên kết rơi xuống dưới tiêu đề thay vì
+                     đứng ở mép phải. */ ?>
+            <div class="cdet__shop-head">
+                <div>
+                    <p class="cdet__eyebrow">Trong bộ này</p>
+                    <h2 id="cdet-shop-title" class="cdet__h2">
+                        <?= (int) $total ?> mẫu của <?= e($collection['name']) ?>
+                    </h2>
+                </div>
+
+                <a class="cdet__shop-all" href="<?= e($catalogUrl) ?>">Lọc &amp; sắp xếp →</a>
+            </div>
+
+            <ul class="pgrid" role="list">
+                <?php foreach ($products as $i => $p): ?>
+                    <?php partial('_layout/product-card', [
+                        'product'     => $p,
+                        'showCompare' => true,
+                        // Hàng thẻ đầu (4 ô ở desktop) nằm ngay dưới hero.
+                        'eager'       => $i < 4,
+                    ]); ?>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+    <?php endif; ?>
 
     <!-- ══════════ LỚP 1 · DẢI LOOKBOOK ══════════ -->
     <?php if ($gallery !== []): ?>

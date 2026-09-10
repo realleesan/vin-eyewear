@@ -69,6 +69,23 @@ return [
     'account.orders'       => 'Đơn hàng của tôi',
     'account.appointments' => 'Lịch hẹn đo mắt',
     'account.logout'       => 'Đăng xuất',
+    /* Ba chuỗi của NGĂN KÉO tài khoản (icon người trên thanh nav) — xem khối
+       [data-account] trong _layout/header.php. Chỉ dùng ở đó. */
+    'account.drawer_lead'  => 'Đăng nhập để theo dõi đơn hàng, lịch hẹn đo mắt '
+                            . 'và hồ sơ khúc xạ của bạn.',
+    'account.or'           => 'Hoặc',
+    'account.google'       => 'Tiếp tục với Google',
+    /* Form đăng nhập TRONG ngăn kéo. Chữ giữ giống hệt màn /auth — hai chỗ
+       cùng một việc mà gọi tên khác nhau thì khách tưởng là hai luồng. */
+    'account.id_label'     => 'Số điện thoại hoặc email',
+    'account.id_holder'    => 'Số điện thoại / Email',
+    'account.password'     => 'Mật khẩu',
+    'account.forgot'       => 'Quên mật khẩu?',
+    'account.remember'     => 'Ghi nhớ đăng nhập',
+    'account.no_account'   => 'Chưa có tài khoản?',
+    /* Câu dự phòng khi nạp ngầm hỏng (mất mạng, máy chủ 500). Không nuốt lỗi:
+       khách bấm mà không có gì xảy ra là thứ tệ nhất. */
+    'account.net_error'    => 'Không gửi được. Kiểm tra kết nối rồi thử lại.',
 
     // ── Giỏ hàng ─────────────────────────────────────────────────────────
     'cart.title'  => 'Giỏ hàng',

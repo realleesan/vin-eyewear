@@ -1,92 +1,96 @@
-/* ============================================================
-   TRANG BỘ SƯU TẬP (/bo-suu-tap)
+/* ============================================================================
+   TRANG BỘ SƯU TẬP (/bo-suu-tap) — LƯỚI ẢNH
 
-   Ba–năm thẻ lớn xếp dọc, ảnh và chữ so le trái/phải. Không dùng lưới thẻ
-   nhỏ như trang danh mục: ở đây mỗi bộ cần đủ chỗ cho một đoạn giới thiệu
-   thật, mà thẻ lưới thì chỉ chứa nổi một dòng.
+   DỰNG LẠI HOÀN TOÀN. Bản trước là bố cục "so le": mỗi bộ một hàng hai cột,
+   ảnh 3:2 một bên và một khối chữ bốn dòng bên kia, các hàng đổi bên qua lại.
+   Lý do bỏ ghi đầy đủ trong app/views/collection/index.php — tóm tắt: đó là
+   nhịp của một trang GIỚI THIỆU, không phải của một trang TRƯNG BÀY, và nó
+   không bao giờ cho hai tấm ảnh đứng cạnh nhau để so sánh.
 
-   Màu và cỡ chữ lấy từ token trong layout.css — xem quy ước ở CLAUDE.md.
-   ============================================================ */
+   Nay: lưới ảnh cỡ lớn, tên nằm dưới ảnh bằng chữ nhỏ, không nút, cả ô là một
+   liên kết — đúng cách nhà mốt bày bộ sưu tập.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   MỌI GIÁ TRỊ ĐỌC TỪ TOKEN. Bản cũ gõ tay 56px/32px/96px/72px/48px/14px/13px
+   26px — tám con số không nằm trong thang nào, nên trang này thở theo một nhịp
+   riêng không giống trang nào khác của site. Đó chính là thứ khiến "khoảng cách
+   giữa các khối" đọc ra là lệch. Xem PHẦN 3 và PHẦN 4 của gm.css.
+   ============================================================================ */
 
 .colls {
-    max-width: var(--container, 1600px);
-    margin: 0 auto;
-    padding: 56px 32px 96px;
-}
-
-.colls__list {
-    display: flex;
-    flex-direction: column;
-    gap: 72px;
+    max-width: var(--container);
+    margin-inline: auto;
+    padding: var(--rhythm-md) var(--page-edge) var(--rhythm-lg);
 }
 
 .colls__empty {
     margin: 0;
-    padding: 48px 0;
+    padding-block: var(--rhythm-md);
     text-align: center;
     font-size: var(--fs-body-lg);
     color: var(--muted);
 }
 
 .colls__empty a {
-    font-weight: 500;
-    color: var(--brand);
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
-/* --- Một bộ sưu tập --- */
+/* ────────────────────────────────────────────────────────────────────────────
+   LƯỚI
 
-.coll {
+   HAI CỘT, không phải ba hay bốn. Ảnh chiến dịch phải đủ lớn để đọc được cảnh
+   trong đó; ở ba cột trên màn 1440 mỗi ô chỉ còn ~460px và một tấm lookbook ở
+   cỡ ấy đọc ra như ảnh thumbnail.
+
+   Máng đọc token chung với mọi lưới khác của site (--grid-gap / --grid-gap-row),
+   nên trang này có cùng một nhịp với lưới sản phẩm và lưới bộ sưu tập ngoài
+   trang chủ.
+   ──────────────────────────────────────────────────────────────────────────── */
+.collgrid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    align-items: center;
-    gap: 48px;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: var(--grid-gap);
+    row-gap: var(--rhythm-sm);
 }
 
-/* So le: đảo THỨ TỰ CỘT bằng CSS, không đảo trong HTML — thứ tự đọc của trình
-   đọc màn hình phải giữ nguyên ảnh-rồi-chữ ở mọi thẻ. */
-.coll--flip .coll__media { order: 2; }
+@media (min-width: 601px) {
+    .collgrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 
-.coll__img {
+    /* Ô ĐẦU ĂN CẢ HÀNG. Đây là bộ đứng đầu thứ tự trưng bày (sort_order), tức
+       là bộ cửa hàng muốn đẩy. Một khung rộng gấp đôi là cách một trang biên
+       tập nói "bắt đầu từ đây" mà không cần dán chữ "nổi bật" lên. */
+    .collcard--lead {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ┌─ BA CỘT TỪ 1101px, VÀ ĐÂY LÀ CHUYỆN CHIỀU CAO CHỨ KHÔNG PHẢI MẬT ĐỘ ────
+   │ Khung ảnh biên tập là 3:4 (DỌC). Ở hai cột trên màn 1440, mỗi ô rộng
+   │ ~708px — nghĩa là CAO 944px, cao hơn cả khung nhìn. Xem hai bộ là cuộn
+   │ hai màn, và không bao giờ có ba tấm ảnh cùng lúc trước mắt để so sánh:
+   │ đúng cái tật của bố cục so le mà bản này sinh ra để chữa.
+   │
+   │ Ba cột kéo ô về ~460px → cao ~613px, vừa một khung nhìn cho cả một hàng.
+   │ Chín bộ nay xếp thành một dải đọc được, không phải một cột dài chín màn.
+   └──────────────────────────────────────────────────────────────────────── */
+@media (min-width: 1101px) {
+    .collgrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+   MỘT Ô
+   ──────────────────────────────────────────────────────────────────────────── */
+.collcard__link {
     display: block;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 3 / 2;
-    object-fit: cover;
-    border-radius: var(--radius);
-}
-
-/* Ô giữ chỗ khi bộ chưa có ảnh bìa. Giữ đúng aspect-ratio của ảnh thật để
-   bố cục không nhảy khi ảnh được thêm vào sau. */
-.coll__img--empty {
-    display: grid;
-    place-items: center;
-    background: var(--brand-subtle);
-    color: var(--brand);
-}
-
-.coll__body {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-}
-
-.coll__when {
-    margin: 0;
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--eyebrow);
-}
-
-.coll__name {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h2);
-    font-weight: 500;
-    line-height: 1.12;
-    letter-spacing: normal;
     color: var(--ink);
 }
 
@@ -119,69 +123,109 @@
     font-weight: 500;
     color: var(--on-brand);
     text-decoration: none;
-    transition: background-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
 }
 
-.coll__cta:hover {
-    background: var(--brand-strong);
-    transform: translateX(3px);
+.collcard__media {
+    display: block;
+    /* Khung ảnh BIÊN TẬP dùng chung — xem PHẦN 5 của gm.css. Không gõ tay
+       3/2 như bản cũ: đó là tỉ lệ thứ tư trên site, và nó làm ảnh bộ sưu tập ở
+       đây khác khung với chính ảnh bộ sưu tập ngoài trang chủ. */
+    aspect-ratio: var(--ratio-editorial);
+    overflow: hidden;
+    background: var(--h-shell);
+}
+
+/* Ô đầu rộng gấp đôi thì tỉ lệ DỌC 3:4 sẽ cho ra một tấm cao gần 1900px. Khung
+   ngang là đúng cho một dải tràn hàng — cùng tỉ lệ với dải chiến dịch của bộ. */
+@media (min-width: 601px) {
+    .collcard--lead .collcard__media {
+        aspect-ratio: var(--ratio-campaign);
+    }
+}
+
+.collcard__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--dur-slow) var(--ease);
+}
+
+/* Phóng RẤT NHẸ, đúng nhịp của thẻ sản phẩm (.pcard) — hai lưới ảnh trên cùng
+   một site phải trả lời con trỏ giống nhau. */
+@media (hover: hover) and (pointer: fine) {
+    .collcard__link:hover .collcard__img {
+        transform: scale(1.03);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .coll__cta:hover { transform: none; }
-}
-
-/* ============================================================
-   MÀN HÌNH HẸP — xếp dọc, bỏ so le
-
-   Dưới 900px hai cột thành một, nên .coll--flip không còn nghĩa: đảo `order`
-   lúc này chỉ đẩy ảnh xuống DƯỚI chữ ở các thẻ chẵn, làm nhịp đọc gãy.
-   ============================================================ */
-
-@media (max-width: 900px) {
-    .colls { padding: 40px 20px 72px; }
-
-    .colls__list { gap: 56px; }
-
-    .coll {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 24px;
+    .collcard__img {
+        transition: none;
     }
 
-    .coll--flip .coll__media { order: 0; }
-
-    .coll__name { font-size: var(--fs-h3); }
+    .collcard__link:hover .collcard__img {
+        transform: none;
+    }
 }
 
-@media (max-width: 560px) {
-    .colls { padding-inline: 16px; }
-
-    .coll__name    { font-size: var(--fs-h3); }
-    .coll__tagline { font-size: var(--fs-body-lg); }
+/* Ô giữ chỗ khi bộ chưa có ảnh bìa — giữ đúng khung để lưới không nhảy khi ảnh
+   được thêm vào sau. */
+.collcard__ph {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: var(--muted-soft);
 }
 
-
-/* ============================================================================
-   NÉT CHỮ FURNISH — khối chốt cuối file
-
-   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
-   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
-   điểm khác rõ nhất giữa hai bản.
-
-   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
-   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
-   ============================================================================ */
-.coll__name {
-    font-weight: 400;
-    letter-spacing: var(--tracking-tight);
+/* ── Chữ dưới ảnh ───────────────────────────────────────────────────────────
+   KHÔNG đệm ngang: chữ thẳng cột với mép trái ô ảnh — cùng luật với .pcard__body
+   trong components/product.css, nên hai lưới đọc như một hệ.
+   ──────────────────────────────────────────────────────────────────────────── */
+.collcard__body {
+    display: block;
+    padding-top: var(--space-4);
 }
 
-.coll__tagline {
-    font-weight: 400;
-}
-
-.coll__when {
+.collcard__when {
+    display: block;
+    margin-bottom: var(--space-2);
+    color: var(--eyebrow);
+    font-size: var(--fs-label);
     font-weight: 500;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
+}
+
+.collcard__name {
+    display: block;
+    font-size: var(--fs-h5);
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: var(--tracking-snug);
+}
+
+/* Ô đầu mang chữ lớn hơn một bậc, khớp với khung ảnh rộng gấp đôi của nó. */
+@media (min-width: 601px) {
+    .collcard--lead .collcard__name {
+        font-size: var(--fs-section);
+        letter-spacing: var(--tracking-tight);
+    }
+}
+
+/* Gạch chân khi rê chuột, KHÔNG đổi màu — nếp chung của cả site (PHẦN 16 gm.css). */
+.collcard__link:hover .collcard__name,
+.collcard__link:focus-visible .collcard__name {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+.collcard__tagline {
+    display: block;
+    margin-top: var(--space-1);
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
+    line-height: 1.5;
 }

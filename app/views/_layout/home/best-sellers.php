@@ -29,9 +29,15 @@ $products = $products ?? [];
 <section class="hbest" data-section="s08" aria-labelledby="hbest-title">
     <div class="hbest__inner">
 
+        <?php /* "Xem tất cả" trong đầu khối — cùng lý do đã ghi ở
+                 _layout/home/new-arrivals.php. */ ?>
         <div class="hsec-head reveal">
             <p class="eyebrow"><?= e(t('home.best.eyebrow')) ?></p>
             <h2 id="hbest-title" class="section-h2 section-h2--plain"><?= e(t('home.best.title')) ?></h2>
+
+            <div class="hsec-all">
+                <a class="hsec-all__link" href="/san-pham"><?= e(t('home.see_all')) ?></a>
+            </div>
         </div>
 
         <?php /* BĂNG TRƯỢT NGANG → LƯỚI (Phase 2). Lý do đầy đủ ở khối chú

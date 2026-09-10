@@ -1268,8 +1268,15 @@
        │   100%      màn hẹp — không bao giờ tràn cột
        │   720px     màn rất rộng — ảnh có trần, không phình theo bề ngang
        │   100dvh…   màn thấp (laptop 13") — trần theo CHIỀU CAO thật
+       │
        │ Vì tỉ lệ là 1/1 nên chặn bề ngang CHÍNH LÀ chặn chiều cao; đổi
-       │ --ratio-product sang khác vuông thì phải tính lại vế thứ ba.
+       │ --ratio-product sang khác vuông thì phải nhân lại vế thứ ba.
+       │
+       │ (Đã có một lượt đổi token này sang 4/3 và vế ba được nhân lên tương
+       │ ứng; lượt ấy bị bỏ khi gộp nhánh — thẻ sản phẩm nay có token riêng
+       │ --ratio-pcard, còn --ratio-product ở lại 1/1. Nên công thức quay về
+       │ bản không nhân. Giữ đoạn này để lần sau ai đổi token thì biết đây là
+       │ chỗ phải tính lại.)
        │
        │ 88px là chỗ thở dưới ảnh để mắt thấy còn nội dung bên dưới — không có
        │ nó thì ảnh chạm đúng mép màn và trang trông như hết bài.
