@@ -389,6 +389,22 @@
     --fs-h1: clamp(22px, calc(14.9px + 1.19vw), 32px);
     --fs-display: clamp(26px, calc(16px + 1.67vw), 40px);
 
+    /* ┌─ TIÊU ĐỀ KHỐI — BÍ DANH CỦA --fs-h2, KHÔNG PHẢI BẬC THỨ MƯỜI MỘT ───
+       │ Token này ra đời hồi thang chữ còn cao (h2 chạm 48px, tiêu đề trang
+       │ 64px): lúc ấy tiêu đề khối cần một bậc RIÊNG nằm giữa h3 và h2, và nó
+       │ được neo 24→36px.
+       │
+       │ Thang chữ nay đã hạ một bậc trên toàn site (xem các dòng ngay trên:
+       │ h2 còn 18→24, tiêu đề trang 20→28). Giữ nguyên 24→36 thì tiêu đề khối
+       │ TO HƠN CẢ tiêu đề trang và hơn cả --fs-h1 — đúng thứ bậc ngược mà nó
+       │ sinh ra để sửa.
+       │
+       │ Nên nó thôi là một bậc riêng và trỏ thẳng về --fs-h2 — vốn CHÍNH LÀ ô
+       │ "tiêu đề khối" trong thang mới. Giữ lại cái TÊN vì bốn file đang gọi
+       │ (home-sections · collection · collection-detail · contact) và vì tên
+       │ ấy đọc ra vai trò, không đọc ra cỡ. */
+    --fs-section: var(--fs-h2);
+
     /* ┌─ TIÊU ĐỀ TRANG — BẬC RIÊNG, KHÔNG DÙNG --fs-display ────────────────
        │ --fs-display chạm 96px và nó tồn tại cho hero cùng dải chiến dịch.
        │ Trước đợt này .pagehead__title cũng đọc nó, nên "Giới thiệu",

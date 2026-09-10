@@ -1117,6 +1117,49 @@ body.page-home-index {
     z-index: 2;
 }
 
+/* ┌─ ĐÃ SỬA: MỞ Ô TÌM KIẾM THÌ CẢ THANH NAV BỊ NỀN MỜ PHỦ LÊN ──────────────
+   │ Triệu chứng: bấm kính lúp, lớp phủ tìm kiếm mở ra đúng — nhưng wordmark
+   │ VIN EYEWEAR và cả hàng mục nav bên trái xám xịt đi như bị tắt, đúng cảnh
+   │ trong ảnh báo lỗi.
+   │
+   │ NGUYÊN NHÂN LÀ THỨ TỰ VẼ, KHÔNG PHẢI MÀU. Nền mờ từng nằm BÊN TRONG
+   │ `.hpop--search`, tức là bên trong `.header-actions`, tức là bên trong
+   │ `.header-main`. Mà `.header-main` có `position: relative` + `z-index: 2`
+   │ nên nó TỰ TẠO MỘT TẦNG XẾP: mọi con của nó xếp với nhau, không xếp với
+   │ phần còn lại của trang.
+   │
+   │ Trong tầng ấy, nền mờ mang z-index 1 — còn wordmark, hàng nav và cụm icon
+   │ đều là phần tử KHÔNG ĐỊNH VỊ, tức là nằm ở lớp dưới cùng theo thứ tự vẽ
+   │ của CSS. Nên nền mờ `position: fixed; inset: 0` phủ kín khung nhìn ĐÈ LÊN
+   │ CHÍNH BA thứ đó, chỉ chừa ra tấm tìm kiếm (z 70).
+   │
+   │ ĐÃ THỬ VÀ ĐÃ BỎ cách chữa "cho ba khối kia z-index dương". Nó chạy, nhưng
+   │ `position: relative` trên `.header-actions` biến chính nó thành khối định
+   │ vị gần nhất — mà tấm tìm kiếm (`absolute; left:0; right:0`) đang cố ý neo
+   │ vào `.site-header` để chạy hết bề ngang. Đo được: tấm co lại thành một cột
+   │ hẹp ~160px nằm sát mép phải. Cùng cái bẫy ấy chờ sẵn ở `.header-nav` với
+   │ hai tấm mega.
+   │
+   │ CÁCH CHỮA ĐANG DÙNG: nền mờ RA KHỎI cụm icon, thành con trực tiếp của
+   │ `<header class="site-header">` (xem _layout/header.php). Ở đó nó xếp cùng
+   │ tầng với `.header-main` (z 2) nên z-index 1 đặt nó xuống DƯỚI toàn bộ nội
+   │ dung thanh nav, mà vẫn phủ kín phần trang bên dưới. Không khối nào của
+   │ thanh nav phải đổi `position`, nên hai mỏ neo tràn-bề-ngang còn nguyên.
+   └──────────────────────────────────────────────────────────────────────── */
+
+/* ┌─ NỀN MỜ — Ở TẦNG GỐC, KHÔNG NẰM TRONG THANH NAV ────────────────────────
+   │ Lý do phải ra khỏi cụm icon ghi ở khối "ĐÃ SỬA: MỞ Ô TÌM KIẾM…" phía trên.
+   │ Còn vì sao ra tận TẦNG GỐC chứ không chỉ ra khỏi .header-main: dải tiện
+   │ ích (.header-announce) là một <div> NGOÀI <header>, nên một tấm phủ đặt
+   │ trong <header> vẫn trùm lên nó.
+   │
+   │ 95 đọc theo thang z-index của site:
+   │     cụm nút nổi        90   ← nền mờ phải phủ LÊN, chúng không phải lối
+   │                              đi tiếp trong lúc đang tìm kiếm
+   │     nền mờ này         95
+   │     ngăn kéo nav      100   (không bao giờ mở cùng lúc)
+   │     thanh nav + dải   110   ← hai luật ngay dưới nâng chúng lên
+   └──────────────────────────────────────────────────────────────────────── */
 .hpop__scrim {
     position: fixed;
     inset: 0;
@@ -1130,12 +1173,29 @@ body.page-home-index {
     background: rgba(0, 0, 0, .38);
     opacity: 0;
     visibility: hidden;
+    /* Không nuốt cú bấm khi đang ẩn — nó phủ kín khung nhìn suốt thời gian đó. */
+    pointer-events: none;
     transition: opacity var(--dur-fast) var(--ease), visibility var(--dur-fast) var(--ease);
 }
 
-.hpop--search.is-open .hpop__scrim {
+/* Điều kiện mở đọc từ <body>, không từ .hpop--search: nền mờ không còn là hậu
+   duệ của cụm ấy nên `.hpop--search.is-open .hpop__scrim` không khớp gì cả.
+   header.js gắn/gỡ .is-search-open ở đúng mọi lối đóng (Esc · bấm ngoài · nút
+   X · rê sang bảng khác), nên đây là móc chính xác hơn chứ không phải xấp xỉ. */
+body.is-search-open .hpop__scrim {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
+}
+
+/* Dải tiện ích lên cùng thang với thanh nav trong lúc lớp phủ mở. Không có
+   dòng này thì nền mờ (95) trùm lên nó và dòng "MIỄN PHÍ GIAO HÀNG…" xám xịt
+   đi trong khi thanh nav ngay dưới vẫn sáng — hai dải dính nhau, hai độ sáng.
+   Luật `.page-home-index .header-announce { z-index: 61 }` ở trên chỉ lo việc
+   khác (chui lên trên hero) và con số của nó không đủ ở đây. */
+body.is-search-open .header-announce {
+    position: relative;
+    z-index: 110;
 }
 
 .hpop--search > .hpop__panel--search {
@@ -1663,16 +1723,79 @@ body.is-cart-open .site-header {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    margin-bottom: var(--space-6);
+    /* Đường kẻ chân thay cho một khoảng trống 24px: tấm này cao suốt màn hình,
+       nên đầu tấm cần một ranh giới thấy được, không chỉ một quãng thở. */
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--line);
 }
 
 .cartdrawer__title {
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     font-size: var(--fs-label);
     font-weight: 500;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--ink);
+}
+
+/* Số món cạnh tiêu đề. Chữ phụ chứ không phải huy hiệu tròn: huy hiệu là để
+   BÁO khi mắt không nhìn vào đó (icon giỏ trên thanh nav), còn ở đây khách đã
+   mở ngăn kéo ra rồi — con số chỉ cần đọc được. */
+.cartdrawer__n {
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: normal;
+}
+
+/* ┌─ GIỎ TRỐNG: CĂN GIỮA, VÀ CÓ MỘT NÚT THẬT ───────────────────────────────
+   │ Bản trước để ba dòng chữ dồn góc trên trái rồi bỏ trống 700px bên dưới,
+   │ và lối đi tiếp là một <a> trong .hpop__list — tức là dáng một MỤC MENU.
+   │ Trạng thái rỗng là chỗ duy nhất trong ngăn kéo có đúng MỘT việc để làm,
+   │ nên việc ấy phải là một cái nút và phải nằm giữa tầm mắt.
+   │
+   │ flex:1 để khối chiếm hết chiều cao còn lại của tấm — .hpop__panel--cart
+   │ vốn đã là một cột flex. */
+.cartdrawer__empty {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-5);
+    padding-bottom: var(--rhythm-lg);
+    text-align: center;
+}
+
+.cartdrawer__empty-ico {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border: 1px solid var(--line);
+    color: var(--muted-soft);
+}
+
+.cartdrawer__empty-ico svg {
+    width: 28px;
+    height: 28px;
+}
+
+.cartdrawer__empty-text {
+    margin: 0;
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
+}
+
+/* Nút trong trạng thái rỗng không kéo hết bề ngang tấm — một khối đen 372px
+   giữa một vùng trống là quá nặng cho một lời mời "xem thử hàng đi". */
+.cartdrawer__empty .cartpop__cta {
+    align-self: center;
+    padding-inline: var(--space-10);
 }
 
 .cartdrawer__close {
@@ -2120,15 +2243,25 @@ body.is-cart-open .site-header {
 .cartpop {
     list-style: none;
     display: grid;
-    gap: var(--space-4);
+    gap: 0;
+    margin: 0;
+    padding: 0;
+}
+
+/* Mỗi dòng tách nhau bằng một đường kẻ, đúng ngôn ngữ của cả bộ. Bản trước chỉ
+   cách nhau 16px trống, nên ba món đọc ra là một khối chữ liền. */
+.cartpop > li + li {
+    border-top: 1px solid var(--line);
 }
 
 .cartpop__row {
     display: grid;
-    grid-template-columns: 48px 1fr auto;
+    /* 64px chứ không 48px: ô ảnh là thứ duy nhất trong dòng cho biết khách vừa
+       bỏ vào cái gì, mà ở 48px một chiếc kính chỉ còn là một vệt. */
+    grid-template-columns: 64px minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--space-4);
-    padding: 0;
+    padding-block: var(--space-4);
     color: var(--ink);
     text-decoration: none;
     transition: opacity var(--dur) var(--ease);
@@ -2140,8 +2273,8 @@ body.is-cart-open .site-header {
 }
 
 .cartpop__thumb {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
     background: var(--h-shell);
     overflow: hidden;
 }
@@ -2151,6 +2284,15 @@ body.is-cart-open .site-header {
     height: 100%;
     object-fit: contain;
     display: block;
+}
+
+/* Tên và số lượng xếp CHỒNG trong một cột, không nằm ngang: ở bề ngang 420px
+   trừ ảnh và giá, cột giữa chỉ còn ~200px — nhét thêm "×2" vào cùng dòng là
+   tên sản phẩm bị cắt sớm hơn một chữ. */
+.cartpop__body {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
 }
 
 /* Cắt MỘT DÒNG bằng CSS chứ không cắt chuỗi trong PHP: máy chủ không biết
@@ -2212,6 +2354,51 @@ body.is-cart-open .site-header {
 .cartpop__cta:hover,
 .cartpop__cta:focus-visible {
     background: var(--brand-strong);
+}
+
+/* ┌─ NÚT PHỤ CỦA CHÂN NGĂN KÉO ─────────────────────────────────────────────
+   │ Chân ngăn kéo có hai lối đi tiếp: "Xem giỏ hàng" (đặc) và "Tiến hành
+   │ thanh toán". Hai khối đen cạnh nhau thì không khối nào là lối chính nữa,
+   │ nên lối thứ hai để viền.
+   └──────────────────────────────────────────────────────────────────────── */
+.cartpop__cta--ghost {
+    background: transparent;
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+.cartpop__cta--ghost:hover,
+.cartpop__cta--ghost:focus-visible {
+    background: var(--ink);
+    color: var(--on-ink);
+}
+
+/* ┌─ TẠM TÍNH ──────────────────────────────────────────────────────────────
+   │ Dòng tiền ở chân ngăn kéo — nhãn bên trái, số bên phải, kẹp trên một
+   │ đường kẻ. Đây là thứ khách bấm vào cái giỏ để biết, nên số phải là thứ
+   │ đậm nhất trong cả tấm sau tên hàng.
+   │
+   │ _layout/header-cart.php in ra ba lớp này; CartController::recent() trả
+   │ 'subtotal' cộng trên CẢ giỏ (không chỉ năm dòng vẽ ra) — xem chú thích
+   │ tại đó về việc vì sao phải tra cả giỏ.
+   └──────────────────────────────────────────────────────────────────────── */
+.cartpop__sum {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
+}
+
+.cartpop__sum-label {
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
+}
+
+.cartpop__sum-value {
+    font-size: var(--fs-body-lg);
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 /* ============================================================================

@@ -60,8 +60,53 @@
         var scrolled = false;
         var quaHero = false;
 
+        /* ────────────────────────────────────────────────────────────────
+           NGƯỠNG LẬT: ĐÁY HERO, KHÔNG PHẢI 4px
+
+           Trang chủ mở đầu bằng một băng video tràn màn, và .is-scrolled là
+           thứ lật CẢ ĐẦU TRANG từ "trong suốt trên video" sang "trắng đục"
+           (xem components/header.css). Với ngưỡng 4px thì chỉ cần lăn chuột
+           một nấc — chưa tới 1% chiều cao hero — là cả dải thông báo lẫn
+           thanh nav đổi màu, rồi cuộn ngược lên là đổi lại. Bốn lớp chuyển
+           màu chạy cùng lúc trên một quãng cuộn cực ngắn: đó đúng là chỗ
+           "cuộn từ dưới lên đầu trang thấy chưa mượt".
+
+           Ngưỡng đúng là chỗ VIDEO THẬT SỰ RỜI KHỎI SAU THANH NAV. Trên
+           quãng ấy đầu trang trong suốt là đúng (nó nằm trên hình); qua khỏi
+           nó thì phía sau là nền trắng và chữ trắng phải đổi sang mực, không
+           thì mất hẳn. Lật ở đúng ranh giới ấy khiến cú đổi màu đọc ra là
+           HỆ QUẢ của việc hình đã đi qua, không phải một cú giật ngẫu nhiên.
+
+           ĐO LÚC CẦN, KHÔNG NHỚ SẴN: chiều cao hero đổi theo bề ngang cửa sổ
+           (nó là 100dvh trừ đầu trang), nên một con số ghi lúc tải trang sẽ
+           sai ngay khi ai đó kéo cửa sổ. getBoundingClientRect + scrollY cho
+           ra vị trí đáy hero so với ĐỈNH TÀI LIỆU, đúng ở mọi lúc.
+
+           TRANG KHÁC KHÔNG CÓ HERO thì rơi về 4px như cũ — ở đó .is-scrolled
+           chỉ tắt bóng đổ (mà bóng đã là `none`), nên ngưỡng nào cũng vậy.
+           ──────────────────────────────────────────────────────────────── */
+        var hero = document.querySelector('[data-video-hero]');
+
+        function nguong() {
+            if (!hero) return 4;
+
+            var o = hero.getBoundingClientRect();
+
+            /* Trừ chiều cao thanh nav: thanh dính ở top 0, nên "video rời khỏi
+               sau thanh nav" xảy ra khi đáy hero chạm ĐÁY thanh, không phải khi
+               nó chạm đỉnh khung nhìn. */
+            return Math.max(4, o.bottom + window.scrollY - header.offsetHeight);
+        }
+
         function onScroll() {
-            var next = window.scrollY > 4;
+            var moc = nguong();
+
+            /* ĐỘ TRỄ HAI CHIỀU (hysteresis) 24px. Không có nó, dừng chuột đúng
+               tại ngưỡng là mỗi rung động 1px của trackpad lại lật cả đầu trang
+               một lần — và mỗi lần lật kéo theo bốn lớp chuyển màu 180ms. */
+            var next = scrolled
+                ? window.scrollY > moc - 24
+                : window.scrollY > moc;
 
             if (next !== scrolled) {
                 scrolled = next;
@@ -111,6 +156,13 @@
         // Chạy một lần lúc tải: người dùng có thể mở trang ở giữa chừng
         // (tải lại trang đã cuộn, hoặc mở link có #anchor).
         onScroll();
+
+        /* Đổi bề ngang cửa sổ là hero đổi chiều cao (nó cao theo 100dvh), tức
+           là ngưỡng lật dời đi. Không chạy lại thì đầu trang mắc kẹt ở trạng
+           thái của bề ngang cũ cho tới lần cuộn kế tiếp. */
+        if (hero) {
+            window.addEventListener('resize', onScroll, { passive: true });
+        }
     }
 
     /* ====================================================================
@@ -365,7 +417,16 @@
             var nut = e.target instanceof Element ? e.target.closest('[data-hpop-close]') : null;
             if (!nut) return;
 
+            /* Nút đóng NẰM NGOÀI cụm nó phục vụ thì tự khai đích bằng
+               data-hpop-target. Đúng một chỗ dùng tới: nền mờ của lớp phủ tìm
+               kiếm, đã chuyển ra ngoài .header-main để thôi vẽ đè lên thanh
+               nav — xem chú thích ở _layout/header.php. */
             var pop = nut.closest('[data-hpop]');
+
+            if (!pop && nut.dataset.hpopTarget) {
+                pop = document.querySelector(nut.dataset.hpopTarget);
+            }
+
             if (!pop) return;
 
             closePop(pop);

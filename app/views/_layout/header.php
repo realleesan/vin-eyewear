@@ -192,6 +192,39 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
    chỗ quy ước của một thanh tiện ích, và là chỗ giữ cho hàng nav chính sạch.
    ============================================================ */
 ?>
+<?php
+/* NỀN MỜ CỦA LỚP PHỦ TÌM KIẾM — bấm vào là đóng.
+   ĐỨNG Ở CẤP CAO NHẤT, trước cả dải tiện ích, chứ không nằm trong
+   .hpop--search như trước.
+
+   Vì sao phải ra tận đây: .header-main là một tầng xếp riêng (position:relative
+   + z-index:2), nên một tấm phủ nằm bên trong nó vẽ ĐÈ LÊN wordmark và hàng
+   nav — đúng lỗi "bấm kính lúp thì cả thanh nav xám xịt". Mà đưa nó vào trong
+   <header> cũng chưa đủ: dải tiện ích là một <div> NGOÀI <header>, nên nó vẫn
+   bị phủ. Ở cấp này thì cả hai dải đều nằm trên nền mờ được — luật z-index ở
+   components/header.css lo phần còn lại.
+
+   data-hpop-target: nút đóng bình thường tìm cụm của mình bằng
+   closest('[data-hpop]'), mà tấm này không còn nằm trong cụm nào. Thuộc tính
+   này nói thẳng cho header.js biết nó đóng cụm nào — xem handler
+   [data-hpop-close] ở khối 2 của assets/js/header.js. */
+?>
+<div class="hpop__scrim" data-hpop-close data-hpop-target=".hpop--search"
+     aria-hidden="true"></div>
+
+<?php
+/* LỚP LÀM MỜ TRANG KHI BẢNG XỔ ĐIỀU HƯỚNG MỞ.
+
+   Thuần trang trí, không bấm được, không có nội dung — nên aria-hidden và
+   pointer-events:none. Bật/tắt HOÀN TOÀN bằng CSS (`body:has(.mega:hover)`),
+   không một dòng JavaScript: bảng xổ vốn đã mở bằng :hover/:focus-within, và
+   thêm một cơ chế thứ hai cho cùng một trạng thái là chỗ để hai bên lệch nhau.
+
+   Đứng cạnh nền mờ của ô tìm kiếm vì cùng một lý do thứ tự vẽ — xem khối chú
+   thích ngay trên. Luật đầy đủ ở cuối components/mega-menu.css. */
+?>
+<div class="mega-veil" aria-hidden="true"></div>
+
 <div class="header-announce">
     <div class="header-announce__inner">
         <p class="header-announce__text"><?= e(t('announce.shipping')) ?></p>
@@ -341,9 +374,11 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                     </svg>
                 </button>
 
-                <?php /* Nền mờ phủ trang phía sau — bấm vào là đóng. Anh em với
-                         bảng, không nằm trong nó. */ ?>
-                <div class="hpop__scrim" data-hpop-close aria-hidden="true"></div>
+                <?php /* NỀN MỜ ĐÃ RỜI KHỎI ĐÂY — nay là con trực tiếp của
+                         <header>, ngay dưới .header-main. Lý do đầy đủ (thứ tự
+                         vẽ trong tầng xếp của .header-main) ghi ở khối "ĐÃ SỬA:
+                         MỞ Ô TÌM KIẾM THÌ CẢ THANH NAV BỊ NỀN MỜ PHỦ LÊN" trong
+                         components/header.css. */ ?>
 
                 <div class="hpop__panel hpop__panel--search" id="headerSearchPanel" role="dialog" aria-label="<?= e(t('search.title')) ?>">
                     <div class="srchov">
@@ -663,6 +698,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             </button>
         </div>
     </div>
+
 </header>
 
 <?php

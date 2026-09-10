@@ -84,6 +84,88 @@
         if (scrim) {
             scrim.hidden = false;
         }
+
+        ganNhomLoc();
+    }
+
+    /* ------------------------------------------------------------------
+       MỞ MỘT NHÓM LỌC THÌ NHÓM ĐANG MỞ ĐÓNG LẠI, VÀ NHÓM VỪA MỞ PHẢI THẤY
+       ĐƯỢC CẢ DANH SÁCH
+
+       Hai lỗi cùng một chỗ, đều do ngăn kéo là một cột cuộn có nút "Xem N sản
+       phẩm" DÍNH Ở ĐÁY:
+
+         1. Bấm một nhóm nằm gần cuối cột (Khoảng giá, Giới tính) thì danh sách
+            bung ra BÊN DƯỚI nút dính ấy — người dùng thấy đúng một, hai dòng
+            đầu rồi tới cái nút đen. Nút không có lỗi: nó `position: sticky` nên
+            nội dung phải cuộn qua dưới nó, mà chẳng ai biết là cần cuộn.
+         2. Mở lần lượt bốn, năm nhóm thì cột dài ra mãi và mọi nhóm mở cùng
+            lúc — cột lọc thành một danh sách phẳng dài gấp ba màn hình.
+
+       Chữa cả hai bằng một hành vi: MỞ CÁI NÀY THÌ ĐÓNG CÁI KIA (đúng nếp
+       accordion mà mọi cột lọc thời trang đang dùng), rồi cuộn sao cho cả nhóm
+       vừa mở nằm trọn TRÊN nút dính.
+
+       ĐÂY LÀ TĂNG CƯỜNG, KHÔNG PHẢI ĐIỀU KIỆN. Tắt JavaScript thì <details>
+       vẫn mở/đóng bằng chính trình duyệt, chỉ là mở được nhiều cái cùng lúc và
+       phải tự cuộn — đúng hành vi mặc định, không hỏng gì.
+
+       Gắn TRỰC TIẾP lên từng <details> chứ không uỷ quyền: sự kiện `toggle`
+       KHÔNG nổi bọt, nên một listener ở thẻ cha sẽ không bao giờ chạy. Phần tử
+       bị thay mới sau mỗi cú lọc, mà hàm này được ganTienIch() gọi lại ngay
+       sau đó, nên không có listener nào mồ côi.
+       ------------------------------------------------------------------ */
+    function ganNhomLoc() {
+        var panel = document.querySelector('.cfilter__panel');
+
+        if (!panel) return;
+
+        var nhoms = Array.prototype.slice.call(panel.querySelectorAll('[data-catpick]'));
+
+        nhoms.forEach(function (d) {
+            d.addEventListener('toggle', function () {
+                if (!d.open) return;
+
+                nhoms.forEach(function (khac) {
+                    if (khac !== d) khac.open = false;
+                });
+
+                hienTronNhom(panel, d);
+            });
+        });
+    }
+
+    /**
+     * Cuộn trong ngăn kéo sao cho cả nhóm vừa mở nằm trên nút dính ở đáy.
+     *
+     * Đo bằng getBoundingClientRect chứ không cộng offsetTop: cột lọc có nhiều
+     * tầng lồng nhau và một cái nút `sticky` ở giữa, nên phép cộng thủ công
+     * lệch ngay khi ai đó thêm một lớp bọc. Toạ độ khung nhìn thì luôn đúng.
+     *
+     * Chỉ cuộn KHI CẦN, và chỉ cuộn XUỐNG: nhóm đã nằm gọn trong tầm mắt thì
+     * giật màn hình một cái là làm phiền chứ không giúp gì.
+     */
+    function hienTronNhom(panel, nhom) {
+        var nut = panel.querySelector('.cfilter__done');
+
+        /* rAF: <details> vừa mở thì danh sách chưa được bố trí lại, đo lúc này
+           ra chiều cao của trạng thái đóng. */
+        window.requestAnimationFrame(function () {
+            var oNhom  = nhom.getBoundingClientRect();
+            var oPanel = panel.getBoundingClientRect();
+
+            /* Sàn dưới = mép trên của nút dính nếu có nút, không thì đáy tấm. */
+            var san = nut ? nut.getBoundingClientRect().top : oPanel.bottom;
+            var du  = oNhom.bottom - san;
+
+            if (du <= 0) return;
+
+            /* Không cuộn quá mép trên: kéo nhóm lên khỏi tầm mắt để lộ cái đuôi
+               của nó thì đổi một lỗi lấy một lỗi khác. */
+            var toiDa = oNhom.top - oPanel.top - 8;
+
+            panel.scrollTop += Math.min(du + 8, Math.max(0, toiDa));
+        });
     }
 
     /** URL cho một lựa chọn của ô [data-pick], hoặc null nếu thiếu URL API. */
@@ -345,7 +427,12 @@
          */
         if (a.pathname !== duongCatalog) return false;
 
+        /* `.catsort` thêm vào đợt này: ô "Sắp xếp theo" đã bỏ <select> và nay
+           là một danh sách <a> đúng như cột lọc (xem app/views/product/index.php).
+           Thiếu vế này thì đổi cách sắp xếp lại tải cả trang — hỏng im lặng,
+           đúng kiểu lỗi mà khối chú thích dài bên dưới đang cảnh báo. */
         return !!(a.closest('.cfilter') ||
+                  a.closest('.catsort') ||
                   a.closest('.catpager') ||
                   a.classList.contains('catbar__drop'));
     }
@@ -438,18 +525,53 @@
            thoại. Thay cả phần tử là mất cả hai: listener đi theo phần tử cũ,
            còn HTML mới từ máy chủ thì không mang `open` — đúng cái lỗi đóng
            sập mà mục này sinh ra để sửa. */
-        var panel = locCu.querySelector('.cfilter__panel');
-        var cuon  = panel ? panel.scrollTop : 0;
 
-        locCu.innerHTML  = locMoi.innerHTML;
+        /* ┌─ ĐÃ SỬA: MỖI CÚ TICK TIÊU CHÍ, NGĂN KÉO TRƯỢT VÀO LẠI TỪ ĐẦU ─────
+           │ Người dùng báo "bấm option là bị reload lại". Trang KHÔNG tải lại
+           │ — đo bằng một biến cắm trên window, nó sống sót qua mọi cú lọc.
+           │ Thứ họ nhìn thấy là NGĂN KÉO CHẠY LẠI HIỆU ỨNG MỞ.
+           │
+           │ Nguyên nhân: bản trước ghi `locCu.innerHTML = locMoi.innerHTML`,
+           │ tức là .cfilter__panel bị thay bằng một phần tử HOÀN TOÀN MỚI. Mà
+           │ gm.css khai `.cfilter[open] .cfilter__panel { animation:
+           │ gm-drawer-in … }` — animation gắn với PHẦN TỬ, nên phần tử mới
+           │ sinh ra là nó chạy lại từ đầu: tấm trượt từ mép phải vào, nền mờ
+           │ nhấp nháy. Đúng cảm giác "trang vừa nạp lại".
+           │
+           │ Nay chỉ thay ruột của CHÍNH tấm ấy. .cfilter__panel và
+           │ .cfilter__scrim giữ nguyên phần tử → không animation nào chạy lại,
+           │ và cái scrim cũng không quay về trạng thái `hidden` của HTML máy
+           │ chủ (thứ ganTienIch() phải gỡ lại sau mỗi lần).
+           │
+           │ <summary> thay riêng: huy hiệu đếm số tiêu chí đang bật nằm trong
+           │ đó và nó ĐỔI sau mỗi cú lọc. Nó không mang animation nào nên thay
+           │ cả ruột vô hại.
+           │
+           │ Vẫn còn đường lui: thiếu tấm hoặc thiếu summary thì rơi về cách cũ
+           │ (thay cả ruột .cfilter) — thà chạy lại hiệu ứng còn hơn không cập
+           │ nhật được bộ lọc. */
+        var panelMoi = locMoi.querySelector('.cfilter__panel');
+        var panelCu  = locCu.querySelector('.cfilter__panel');
+        var cuon     = panelCu ? panelCu.scrollTop : 0;
+
+        if (panelMoi && panelCu) {
+            panelCu.innerHTML = panelMoi.innerHTML;
+
+            var sumMoi = locMoi.querySelector('.cfilter__toggle');
+            var sumCu  = locCu.querySelector('.cfilter__toggle');
+
+            if (sumMoi && sumCu) sumCu.innerHTML = sumMoi.innerHTML;
+        } else {
+            locCu.innerHTML = locMoi.innerHTML;
+            panelCu = locCu.querySelector('.cfilter__panel');
+        }
+
         mainCu.innerHTML = mainMoi.innerHTML;
 
         /* Trả lại chỗ cuộn TRONG bảng lọc: người dùng tick một tiêu chí ở gần
            cuối danh sách thì phải thấy nó vẫn ở trước mắt, không bị hất về
            đầu bảng. */
-        panel = locCu.querySelector('.cfilter__panel');
-
-        if (panel) panel.scrollTop = cuon;
+        if (panelCu) panelCu.scrollTop = cuon;
 
         mainCu.removeAttribute('aria-busy');
 

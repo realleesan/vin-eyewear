@@ -55,6 +55,37 @@ $ngayRaMat = static function (?string $date): string {
     'head_lead'   => $headLead,
 ]); ?>
 
+<?php
+/*
+ * ═════════════════════════════════════════════════════════════════════════════
+ * DỰNG LẠI THEO TRANG COLLECTION CỦA GENTLE MONSTER (bỏ bố cục so le cũ)
+ *
+ * BẢN CŨ: mỗi bộ là một hàng hai cột — ảnh 3:2 một bên, một khối chữ bốn dòng
+ * bên kia, và các hàng ĐỔI BÊN so le nhau. Bố cục ấy thuộc về một trang giới
+ * thiệu ("về chúng tôi", "quy trình"), không thuộc về một trang TRƯNG BÀY:
+ *
+ *   · mỗi bộ chiếm trọn một màn hình, nên xem hết chín bộ là cuộn chín màn và
+ *     không lúc nào so sánh được hai bộ với nhau
+ *   · so le trái/phải bắt mắt zigzag, mà thứ cần so sánh lại là các TẤM ẢNH —
+ *     chúng không bao giờ nằm cạnh nhau
+ *   · nút "Xem chi tiết" nền đen bo góc: dáng nút của một trang quản trị, và
+ *     nó là thứ nặng nhất trong mỗi hàng, hơn cả ảnh
+ *
+ * BẢN MỚI là một LƯỚI ẢNH. Nhà mốt bày bộ sưu tập đúng như thế: ảnh chiến dịch
+ * cỡ lớn xếp cạnh nhau, tên nằm dưới ảnh bằng chữ nhỏ, không nút, cả ô là một
+ * liên kết. Mắt quét được nhiều bộ trong một lượt và so sánh bằng HÌNH — thứ
+ * duy nhất phân biệt được các bộ với nhau.
+ *
+ * BỘ ĐẦU ĂN CẢ HÀNG (.collcard--lead). Đây là bộ đứng đầu thứ tự trưng bày, tức
+ * là bộ cửa hàng muốn đẩy; cho nó một khung rộng gấp đôi là cách một trang biên
+ * tập nói "bắt đầu từ đây" mà không cần chữ "nổi bật".
+ *
+ * KHÔNG MẤT MỘT THÔNG TIN NÀO so với bản cũ: ngày ra mắt, tên, tagline đều còn.
+ * Riêng `intro` (đoạn dài) bỏ khỏi trang danh sách — nó là phần MỞ ĐẦU của
+ * trang chi tiết, và in cả ở đây thì khách đọc xong không còn lý do bấm vào.
+ * ═════════════════════════════════════════════════════════════════════════════
+ */
+?>
 <section class="colls">
     <?php if ($collections === []): ?>
         <?php /* Chưa có bộ nào đang hiện: nói ra thay vì để trang trắng. Xảy
@@ -64,65 +95,53 @@ $ngayRaMat = static function (?string $date): string {
             <a href="/san-pham/gong-kinh">gọng kính</a> hoặc <a href="/san-pham/trong-kinh">tròng kính</a>.
         </p>
     <?php else: ?>
-        <div class="colls__list">
+        <ul class="collgrid" role="list">
             <?php foreach ($collections as $i => $c): ?>
                 <?php
                 $cover = CollectionModel::cover($c);
                 $when  = $ngayRaMat($c['launched_at'] ?? null);
                 ?>
-                <article class="coll<?= $i % 2 ? ' coll--flip' : '' ?>">
+                <li class="collcard<?= $i === 0 ? ' collcard--lead' : '' ?>">
                     <?php
-                    /*
-                     * Ảnh và chữ ĐỔI BÊN so le nhau (.coll--flip đảo thứ tự
-                     * trong CSS, không đảo thứ tự trong HTML — thứ tự đọc phải
-                     * giữ nguyên ảnh-rồi-chữ cho trình đọc màn hình).
-                     *
-                     * Ba thẻ cùng một bố cục thì mắt trượt thẳng xuống và các
-                     * bộ trông như một danh sách. So le buộc mắt dừng lại ở đầu
-                     * mỗi thẻ — đây là trang trưng bày, không phải bảng dữ liệu.
-                     */
+                    /* CẢ Ô LÀ MỘT LIÊN KẾT, không phải "ảnh bấm được + nút bấm
+                       được" như bản cũ. Bên trong không có nút nào nên không
+                       phạm luật cấm lồng thẻ tương tác, và đích chạm rộng bằng
+                       cả tấm ảnh — đúng thứ ngón tay cần trên điện thoại. */
                     ?>
-                    <div class="coll__media">
-                        <?php if ($cover !== ''): ?>
-                            <?php /* loading="lazy" từ thẻ THỨ HAI trở đi: thẻ đầu
-                                     nằm ngay trong màn hình đầu, hoãn tải nó chỉ
-                                     làm trang trông chậm hơn. */ ?>
-                            <img class="coll__img" src="<?= e(asset($cover)) ?>"
-                                 alt="<?= e($c['name']) ?>"
-                                 width="720" height="480"
-                                 <?= $i === 0 ? '' : 'loading="lazy"' ?>>
-                        <?php else: ?>
-                            <?php /* Bộ vừa tạo chưa kịp có ảnh. Vẽ ô giữ chỗ đúng
-                                     tỷ lệ để bố cục không sập, thay vì để một
-                                     khoảng trắng cao 0px. */ ?>
-                            <div class="coll__img coll__img--empty" aria-hidden="true">
-                                <?= icon('glasses', 'coll__ph', 48) ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
+                    <a class="collcard__link" href="/bo-suu-tap/<?= e(rawurlencode($c['slug'])) ?>">
+                        <span class="collcard__media">
+                            <?php if ($cover !== ''): ?>
+                                <?php /* loading="lazy" từ ô THỨ HAI trở đi: ô đầu
+                                         nằm ngay trong màn hình đầu, hoãn tải nó
+                                         chỉ làm trang trông chậm hơn. */ ?>
+                                <img class="collcard__img" src="<?= e(asset($cover)) ?>"
+                                     alt=""
+                                     width="1200" height="900"
+                                     <?= $i === 0 ? '' : 'loading="lazy"' ?> decoding="async">
+                            <?php else: ?>
+                                <?php /* Bộ vừa tạo chưa kịp có ảnh. Ô giữ chỗ đúng
+                                         tỷ lệ để lưới không sập, thay vì một khoảng
+                                         trắng cao 0px. */ ?>
+                                <span class="collcard__ph" aria-hidden="true">
+                                    <?= icon('glasses', '', 40) ?>
+                                </span>
+                            <?php endif; ?>
+                        </span>
 
-                    <div class="coll__body">
-                        <?php if ($when !== ''): ?>
-                            <p class="coll__when"><?= e($when) ?></p>
-                        <?php endif; ?>
+                        <span class="collcard__body">
+                            <?php if ($when !== ''): ?>
+                                <span class="collcard__when"><?= e($when) ?></span>
+                            <?php endif; ?>
 
-                        <h2 class="coll__name"><?= e($c['name']) ?></h2>
+                            <span class="collcard__name" lang="vi"><?= e($c['name']) ?></span>
 
-                        <?php if (!empty($c['tagline'])): ?>
-                            <p class="coll__tagline"><?= e($c['tagline']) ?></p>
-                        <?php endif; ?>
-
-                        <?php if (!empty($c['intro'])): ?>
-                            <p class="coll__intro"><?= e($c['intro']) ?></p>
-                        <?php endif; ?>
-
-                        <a class="coll__cta" href="/bo-suu-tap/<?= e(rawurlencode($c['slug'])) ?>">
-                            Xem chi tiết
-                            <?= icon('arrow-right', 'coll__cta-ico', 18) ?>
-                        </a>
-                    </div>
-                </article>
+                            <?php if (!empty($c['tagline'])): ?>
+                                <span class="collcard__tagline"><?= e($c['tagline']) ?></span>
+                            <?php endif; ?>
+                        </span>
+                    </a>
+                </li>
             <?php endforeach; ?>
-        </div>
+        </ul>
     <?php endif; ?>
 </section>

@@ -94,6 +94,29 @@ $clips = [
         'poster' => null,
         'label'  => t('home.hero.cap2'),
     ],
+
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * TẤM THỨ TƯ — CHỖ CẮM CHO CLIP DEMO
+     *
+     * 'src' trỏ tới một file CHƯA CÓ TRÊN ĐĨA. Đó là chủ ý, không phải sót:
+     * đây là chỗ để thả clip demo vào, và cho tới lúc có clip thật thì
+     * $clipSrc() ngay dưới tự mượn tấm đầu để hero không thủng một ô đen.
+     *
+     * ĐỂ CẮM CLIP THẬT: chép file vào đúng đường dẫn dưới đây, không phải sửa
+     * một dòng mã nào. Quy cách để khớp ba clip đang có: MP4 (H.264 + AAC),
+     * 1920×990, không tiếng (hero luôn `muted`), dưới ~9 MB.
+     *
+     * 'poster' thì đã có ảnh thật, nên khung hình chờ vẫn đúng ngay từ bây giờ.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    [
+        'src'    => 'assets/video/main_demo_pc_1920_990.mp4',
+        'poster' => 'assets/images/showroom-storefront.jpg',
+        'bst'    => 'van-phong-anh-sang-xanh',
+        'ten'    => 'Văn Phòng Ánh Sáng Xanh',
+        'label'  => t('home.hero.cap1'),
+    ],
 ];
 
 /* ┌─ BỎ QUA CLIP THIẾU FILE ────────────────────────────────────────────────
@@ -181,7 +204,7 @@ $tong = count($clips);
                            autoplay muted loop playsinline preload="auto"
                            <?= $clip['poster'] ? 'poster="' . e(asset($clip['poster'])) . '"' : '' ?>
                            aria-hidden="true" tabindex="-1"><source
-                            src="<?= e(asset($clip['src'])) ?>" type="video/mp4"></video>
+                            src="<?= e(asset($clipSrc($clip))) ?>" type="video/mp4"></video>
 
                     <?php /* Lớp phủ tối chuyển dần từ dưới lên: chữ trắng đặt
                              thẳng lên video thì độ đọc được đổi theo từng khung

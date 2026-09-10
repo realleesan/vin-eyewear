@@ -83,6 +83,89 @@ class VariantModel extends BaseModel
     }
 
     /**
+     * Ô MÀU của MỌI mặt hàng — một câu truy vấn cho cả trang, nhớ suốt request.
+     *
+     * Cùng lối với productIdsWithVariants() ngay trên, và cùng lý do: thẻ sản
+     * phẩm (_layout/product-card.php) cần biết mặt hàng có những màu nào, mà
+     * một lưới có tới 12 thẻ và partial thì được gọi từng cái một. Hỏi một lần
+     * cho cả bảng rẻ hơn hẳn 12 lần hỏi từng mặt hàng, và bảng này vốn nhỏ —
+     * xem chú thích ở hàm kia.
+     *
+     * CHỈ LẤY BIẾN THỂ CÓ MÃ MÀU. Biến thể phân biệt nhau bằng chiết suất tròng
+     * hay bằng cỡ thì không có màu để vẽ, và một ô xám mặc định đặt cạnh tên
+     * "1.61" là nói sai.
+     *
+     * LỌC TRÙNG THEO MÃ MÀU: một mặt hàng có "Đen bóng · S" và "Đen bóng · M"
+     * là hai biến thể nhưng MỘT màu. In hai ô đen giống hệt nhau cạnh nhau đọc
+     * ra là dữ liệu lỗi.
+     *
+     * MÃ MÀU ĐƯỢC SIẾT NGAY TẠI ĐÂY, không phải ở view. Giá trị này đi thẳng
+     * vào thuộc tính `style` của thẻ, mà cột do form quản trị ghi — một chuỗi
+     * như "red; background-image:url(…)" lọt vào đó là một lối chèn CSS. Chỉ
+     * nhận đúng dạng #rgb hoặc #rrggbb. (Cùng phép kiểm mà
+     * app/views/collection/detail.php dùng cho bảng màu của bộ sưu tập.)
+     *
+     * @return array<string, array<int, array{hex: string, ten: string, anh: string}>>
+     */
+    public static function swatchMap(): array
+    {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        $cache = [];
+
+        $rows = Database::fetchAll(
+            "SELECT product_id, label, color, swatch_hex, image
+               FROM product_variants
+              WHERE is_active = 1
+                AND swatch_hex IS NOT NULL
+                AND swatch_hex <> ''
+              ORDER BY position ASC, label ASC"
+        );
+
+        foreach ($rows as $row) {
+            $hex = trim((string) $row['swatch_hex']);
+
+            if (!preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/', $hex)) {
+                continue;
+            }
+
+            $pid  = (string) $row['product_id'];
+            $daCo = array_column($cache[$pid] ?? [], 'hex');
+
+            if (in_array(strtolower($hex), array_map('strtolower', $daCo), true)) {
+                continue;
+            }
+
+            /* Tên hiển thị: cột `color` là tên MÀU thuần ("Xám khói"), còn
+               `label` là nhãn đầy đủ của biến thể ("Xám khói · M"). Ưu tiên cột
+               màu — ô này nói về màu, không nói về cỡ. */
+            $ten = trim((string) ($row['color'] ?? ''));
+
+            if ($ten === '') {
+                $ten = trim((string) $row['label']);
+            }
+
+            $cache[$pid][] = [
+                'hex' => $hex,
+                'ten' => $ten,
+                'anh' => trim((string) ($row['image'] ?? '')),
+            ];
+        }
+
+        return $cache;
+    }
+
+    /** Ô màu của MỘT mặt hàng. Rỗng nếu nó không có biến thể mang mã màu. */
+    public static function swatches(string $productId): array
+    {
+        return self::swatchMap()[$productId] ?? [];
+    }
+
+    /**
      * Một biến thể, CHỈ khi nó thuộc đúng mặt hàng đang xét.
      *
      * Nhận cả hai tham số chứ không chỉ id: id đến từ form nên sửa được, và
