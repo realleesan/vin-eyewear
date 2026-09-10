@@ -1796,8 +1796,23 @@ body.is-cart-open .header-announce {
     text-align: center;
 }
 
-.hpop__panel--cart > :not(.cartdrawer__head) {
-    margin-block: auto;
+/* ┌─ CĂN GIỮA CẢ CỤM, KHÔNG PHẢI TỪNG PHẦN TỬ MỘT ──────────────────────────
+   │ `margin-block: auto` áp cho MỌI con là chỗ sinh ra khoảng trắng lớn giữa
+   │ dòng "Giỏ hàng đang trống" và nút: trong một flex column, mỗi con nhận
+   │ auto ở cả trên lẫn dưới thì chỗ trống còn lại bị CHIA ĐỀU cho từng cặp
+   │ mép — đo được 247px nằm giữa hai thứ lẽ ra phải đi liền nhau.
+   │
+   │ Đúng cách là chỉ đặt auto ở HAI ĐẦU của cụm: phần tử ngay sau hàng tiêu
+   │ đề lấy margin-top:auto, phần tử cuối lấy margin-bottom:auto. Chỗ trống
+   │ dồn hết ra ngoài hai đầu, còn bên trong cụm thì các phần tử giữ đúng
+   │ khoảng cách do chính chúng khai.
+   └──────────────────────────────────────────────────────────────────────── */
+.hpop__panel--cart > .cartdrawer__head + * {
+    margin-top: auto;
+}
+
+.hpop__panel--cart > :last-child {
+    margin-bottom: auto;
 }
 
 .hpop__panel--cart .cartdrawer__head {
@@ -1834,7 +1849,9 @@ body.is-cart-open .header-announce {
 
 .hpop__panel--cart .hpop__note {
     font-size: var(--fs-body-sm);
-    margin-bottom: var(--rhythm-xs);
+    /* Khoảng cách chữ → nút, đo trên tham chiếu: dòng "There's nothing…" ở
+       y=461, đỉnh nút ở y=518 — chừng 40px. */
+    margin-bottom: var(--rhythm-sm);
 }
 
 /* Lối đi duy nhất của một giỏ rỗng thành NÚT VIỀN, không còn là một dòng chữ
