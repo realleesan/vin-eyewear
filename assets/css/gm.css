@@ -525,6 +525,13 @@
        Không thêm tỉ lệ thứ tư mà không sửa khối chú thích này.
        ============================================================ */
     /* VUÔNG — mọi ảnh SẢN PHẨM. Ảnh trong CSDL là 600×600. */
+    /* ┌─ NỀN CỦA LỚP PHỦ TOÀN MÀN (tìm kiếm · giỏ hàng) ────────────────────
+       │ #f3f4f6, đo trực tiếp trên gentlemonster.com: cả lớp phủ tìm kiếm lẫn
+       │ lớp phủ giỏ hàng của họ đều dùng đúng màu này, đặc, không trong suốt.
+       │ Xám rất nhạt chứ không trắng — nó tách khỏi trang bên dưới mà không
+       │ thành một mảng chói. */
+    --overlay-bg: #f3f4f6;
+
     --ratio-product: 1 / 1;
     /* ┌─ THẺ SẢN PHẨM CÓ TỈ LỆ RIÊNG, KHÔNG DÙNG CHUNG --ratio-product ─────
        │ Đo trên gentlemonster.com ở 1440px: thẻ 387×635, phần chữ dưới ảnh
