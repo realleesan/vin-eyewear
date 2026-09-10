@@ -102,6 +102,7 @@ if ($minPrice !== null) {
     $dsBst = CollectionModel::visible();
     ?>
     <?php if (count($dsBst) > 1): ?>
+        <div class="cdet__bar">
         <nav class="cdet__chips" aria-label="Bộ sưu tập khác">
             <?php /* KHÔNG còn chip "Tất cả" dẫn về /bo-suu-tap: đường ấy nay tự
                      chuyển hướng sang bộ đầu tiên (xem CollectionController::index),
@@ -115,74 +116,6 @@ if ($minPrice !== null) {
                    <?= $dangXem ? 'aria-current="page"' : '' ?>><?= e($bo['name']) ?></a>
             <?php endforeach; ?>
         </nav>
-    <?php endif; ?>
-
-    <!-- ══════════ LỚP 1 · BANNER TRÀN BỀ NGANG ══════════ -->
-    <?php
-    /* Trước đợt này khối mở đầu là lưới HAI CỘT: ảnh bên trái, chữ bên phải.
-       Tham chiếu dựng nó thành một tấm ảnh tràn bề ngang cao 675px với chữ
-       TRẮNG chồng lên góc dưới trái — tên bộ 24px, mô tả 13px rộng ~515px,
-       một liên kết "xem câu chuyện".
-
-       Chữ chồng lên ảnh nên phải có dải chuyển sắc tối phía sau, cùng lý lẽ
-       với dải của đầu trang trên hero video: ảnh bộ sưu tập do cửa hàng tải
-       lên, sáng tối không đoán trước được. */
-    ?>
-    <section class="cdet__hero">
-        <div class="cdet__media">
-            <?php if ($cover !== ''): ?>
-                <?php /* KHÔNG loading="lazy": ảnh nằm ngay trong màn hình đầu,
-                         hoãn tải nó chỉ làm trang trông chậm hơn. */ ?>
-                <img class="cdet__img" src="<?= e(asset($cover)) ?>"
-                     alt="<?= e($collection['name']) ?>"
-                     width="1440" height="675" decoding="async">
-            <?php else: ?>
-                <div class="cdet__img cdet__img--empty" aria-hidden="true">
-                    <?= icon('glasses', 'cdet__ph', 56) ?>
-                </div>
-            <?php endif; ?>
-            <div class="cdet__veil" aria-hidden="true"></div>
-        </div>
-
-        <div class="cdet__cap">
-            <?php if (!empty($collection['season_code']) || $when !== '' || !empty($collection['season_label'])): ?>
-                <p class="cdet__season">
-                    <?php if (!empty($collection['season_code'])): ?>
-                        <span class="cdet__season-tag"><?= e($collection['season_code']) ?></span>
-                    <?php endif; ?>
-                    <?php if (!empty($collection['season_label'])): ?>
-                        <span><?= e($collection['season_label']) ?></span>
-                    <?php endif; ?>
-                    <?php if ($when !== ''): ?>
-                        <?php if (!empty($collection['season_label'])): ?>
-                            <span class="cdet__dot" aria-hidden="true">·</span>
-                        <?php endif; ?>
-                        <span><?= e($when) ?></span>
-                    <?php endif; ?>
-                </p>
-            <?php endif; ?>
-
-            <h1 class="cdet__name"><?= e($collection['name']) ?></h1>
-
-            <?php if (!empty($collection['tagline'])): ?>
-                <p class="cdet__tagline"><?= e($collection['tagline']) ?></p>
-            <?php endif; ?>
-
-            <?php if (!empty($collection['intro'])): ?>
-                <p class="cdet__intro"><?= e($collection['intro']) ?></p>
-            <?php endif; ?>
-
-            <?php /* "Xem câu chuyện" chỉ in ra khi thật sự có chuyện để xem —
-                     khối .cdet__story bên dưới dựng từ $paras. */ ?>
-            <?php if (!empty($paras)): ?>
-                <a class="cdet__story-link" href="#cdet-story-title">
-                    Xem câu chuyện
-                    <span class="cdet__story-arrow" aria-hidden="true">↗</span>
-                </a>
-            <?php endif; ?>
-        </div>
-    </section>
-
     <!-- ══════════ BỘ LỌC ══════════ -->
     <?php
     /* ┌─ <details> CHỨ KHÔNG PHẢI JAVASCRIPT ───────────────────────────────
@@ -276,6 +209,74 @@ if ($minPrice !== null) {
             </form>
         </details>
     <?php endif; ?>
+        </div><!-- /.cdet__bar -->
+    <?php endif; ?>
+
+    <!-- ══════════ LỚP 1 · BANNER TRÀN BỀ NGANG ══════════ -->
+    <?php
+    /* Trước đợt này khối mở đầu là lưới HAI CỘT: ảnh bên trái, chữ bên phải.
+       Tham chiếu dựng nó thành một tấm ảnh tràn bề ngang cao 675px với chữ
+       TRẮNG chồng lên góc dưới trái — tên bộ 24px, mô tả 13px rộng ~515px,
+       một liên kết "xem câu chuyện".
+
+       Chữ chồng lên ảnh nên phải có dải chuyển sắc tối phía sau, cùng lý lẽ
+       với dải của đầu trang trên hero video: ảnh bộ sưu tập do cửa hàng tải
+       lên, sáng tối không đoán trước được. */
+    ?>
+    <section class="cdet__hero">
+        <div class="cdet__media">
+            <?php if ($cover !== ''): ?>
+                <?php /* KHÔNG loading="lazy": ảnh nằm ngay trong màn hình đầu,
+                         hoãn tải nó chỉ làm trang trông chậm hơn. */ ?>
+                <img class="cdet__img" src="<?= e(asset($cover)) ?>"
+                     alt="<?= e($collection['name']) ?>"
+                     width="1440" height="675" decoding="async">
+            <?php else: ?>
+                <div class="cdet__img cdet__img--empty" aria-hidden="true">
+                    <?= icon('glasses', 'cdet__ph', 56) ?>
+                </div>
+            <?php endif; ?>
+            <div class="cdet__veil" aria-hidden="true"></div>
+        </div>
+
+        <div class="cdet__cap">
+            <?php if (!empty($collection['season_code']) || $when !== '' || !empty($collection['season_label'])): ?>
+                <p class="cdet__season">
+                    <?php if (!empty($collection['season_code'])): ?>
+                        <span class="cdet__season-tag"><?= e($collection['season_code']) ?></span>
+                    <?php endif; ?>
+                    <?php if (!empty($collection['season_label'])): ?>
+                        <span><?= e($collection['season_label']) ?></span>
+                    <?php endif; ?>
+                    <?php if ($when !== ''): ?>
+                        <?php if (!empty($collection['season_label'])): ?>
+                            <span class="cdet__dot" aria-hidden="true">·</span>
+                        <?php endif; ?>
+                        <span><?= e($when) ?></span>
+                    <?php endif; ?>
+                </p>
+            <?php endif; ?>
+
+            <h1 class="cdet__name"><?= e($collection['name']) ?></h1>
+
+            <?php if (!empty($collection['tagline'])): ?>
+                <p class="cdet__tagline"><?= e($collection['tagline']) ?></p>
+            <?php endif; ?>
+
+            <?php if (!empty($collection['intro'])): ?>
+                <p class="cdet__intro"><?= e($collection['intro']) ?></p>
+            <?php endif; ?>
+
+            <?php /* "Xem câu chuyện" chỉ in ra khi thật sự có chuyện để xem —
+                     khối .cdet__story bên dưới dựng từ $paras. */ ?>
+            <?php if (!empty($paras)): ?>
+                <a class="cdet__story-link" href="#cdet-story-title">
+                    Xem câu chuyện
+                    <span class="cdet__story-arrow" aria-hidden="true">↗</span>
+                </a>
+            <?php endif; ?>
+        </div>
+    </section>
 
     <!-- ══════════ LƯỚI SẢN PHẨM CỦA BỘ ══════════ -->
     <?php
@@ -310,7 +311,7 @@ if ($minPrice !== null) {
                      đầy đủ thông số, bộ lọc và sắp xếp. */ ?>
             <div class="cdet__shop-more">
                     <a class="cdet__more-btn" href="<?= e($catalogUrl) ?>">
-                        Xem chi tiết sản phẩm bộ sưu tập
+                        Xem chi tiết danh sách sản phẩm
                     </a>
             </div>
         </section>

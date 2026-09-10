@@ -38,6 +38,14 @@
     gap: var(--rhythm-md);
 }
 
+/* Dải điều khiển và tấm bìa là một cặp, không phải hai chương: khe giữa chúng
+   do chính .cdet__hero đặt (44px), nên triệt khe chung của .cdet ở đúng cặp
+   này. `gap` không nhắm được từng cặp, nên bù bằng margin âm trên dải — dải
+   không có nền nên nó không đè lên gì. */
+.cdet__bar {
+    margin-bottom: calc(var(--rhythm-md) * -1);
+}
+
 /* --- Mẩu dùng lại trong nhiều khối --- */
 
 .cdet__eyebrow {
@@ -116,10 +124,37 @@
    Cuộn ngang khi tràn chứ không xuống hàng: số bộ tăng theo thời gian, mà
    hai hàng chip thì nó thành một khối menu chứ không còn là dải điều hướng.
    Thanh cuộn ẩn đi — dải này ngắn, kéo bằng chuột/vuốt là đủ. */
+/* Dải điều khiển: chip chạy từ trái, nút lọc dồn sát mép phải — xem chú thích
+   ở .cdet__bar trong collection/detail.php. */
+.cdet__bar {
+    /* position + z-index: banner ngay dưới mang `margin-top` ÂM để bám sát dải
+       này (xem .cdet__hero), nên nếu dải không nổi lên thì tấm ảnh leo đè lên
+       nút lọc và nuốt luôn cú bấm — Playwright báo đúng chỗ: ".cdet__img
+       intercepts pointer events". */
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding-block: var(--space-2);
+}
+
+/* Khối <details> của bộ lọc là con của dải, nên nó không được co lại và cũng
+   không được ăn chỗ của hàng chip. Tấm panel bên trong nó thì `position:
+   absolute` để bung ra khỏi dải (xem .cfil__panel). */
+.cdet__bar > .cfil {
+    flex: 0 0 auto;
+    margin-top: 0;
+    margin-left: auto;
+    position: static;
+}
+
 .cdet__chips {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    min-width: 0;
+    flex: 1 1 auto;
     margin-bottom: 0;
     padding-block: var(--space-2);
     overflow-x: auto;
@@ -175,15 +210,17 @@
        │ giết luôn `position: sticky` của đầu trang. */
     margin-inline: calc(50% - 50vw);
     width: 100vw;
-    /* Kéo ngược bớt khe của .cdet. Hàng chip là điều hướng của CHÍNH banner
-       ngay dưới nó, hai thứ phải đi liền chứ không cách nhau một nhịp section
-       — tham chiếu để chúng cách nhau 44px (chip ở y=110, banner ở y=154).
-       Đặt margin âm trên BANNER chứ không trên hàng chip: chip là phần tử đầu
-       của trang, margin âm ở đó còn kéo cả nó lên đè vào đầu trang.
+    /* Khe với dải điều khiển ngay trên: 44px, đúng số đo tham chiếu (chip ở
+       y=110, banner ở y=154).
 
-       Tính theo CHÍNH biến khe thay vì một số cứng, để đổi --rhythm-md là
-       khoảng cách này đi theo: khe trừ đi 44px. */
-    margin-top: calc(44px - var(--rhythm-md));
+       ĐẶT DƯƠNG, KHÔNG KÉO ÂM. Bản trước bù bằng `margin-top` âm để triệt khe
+       của .cdet, và tấm ảnh leo lên đè vào dải: nó tràn 100vw nên phần chồng
+       phủ trọn bề ngang, nuốt luôn cú bấm vào nút lọc — Playwright báo đúng
+       chỗ ".cdet__img intercepts pointer events". Một tấm ảnh nằm đè lên bộ
+       điều khiển của chính nó thì không z-index nào chữa cho sạch được; bỏ
+       khe của .cdet đi rồi đặt lại bằng margin dương thì không có gì chồng
+       lên gì. */
+    margin-top: 44px;
     /* 675/1440 = 0.469 — đúng tỉ lệ tấm của tham chiếu, nên banner cao theo
        bề ngang thay vì cố định px và bẹt đi ở màn hẹp. min-height giữ cho
        điện thoại vẫn còn chỗ cho bốn dòng chữ. */
@@ -1619,17 +1656,18 @@
     margin-top: var(--rhythm-sm);
 }
 
+/* Nút mở KHÔNG còn viền: tham chiếu để nó là chữ "Filter" trần cạnh một biểu
+   tượng, ngang hàng với các chip chứ không phải một nút thứ hai cạnh chúng —
+   một viên viền nữa ở đầu dải thì mắt đọc ra là chip thứ n+1. */
 .cfil__toggle {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    min-height: 40px;
-    padding: 0 var(--space-5);
-    border: 1px solid #ababab;
-    border-radius: 8px;
+    min-height: 32px;
+    padding: 0;
     color: var(--ink);
     font-size: var(--fs-body-sm);
-    text-transform: uppercase;
+    white-space: nowrap;
     cursor: pointer;
     list-style: none;
 }
@@ -1652,12 +1690,35 @@
 }
 
 /* Tấm lọc: tràn bề ngang như banner, cùng cách phá khung — xem .cdet__hero. */
+/* Tấm lọc bung ra khỏi dải điều khiển và tràn hết bề ngang khung nhìn, đúng
+   như tham chiếu: nó không phải một hộp treo dưới nút mà là một tầng riêng
+   chạy ngang cả trang.
+
+   `position: absolute` neo vào .cdet (phần tử positioned gần nhất — xem luật
+   .cdet ngay dưới): đứng ngoài luồng thì nó không đẩy banner xuống mỗi lần
+   mở, mà banner cũng không phải nhường chỗ sẵn cho nó. */
 .cfil__panel {
-    margin-inline: calc(50% - 50vw);
-    width: 100vw;
-    margin-top: var(--rhythm-xs);
-    padding: var(--rhythm-sm) max(var(--page-edge), calc(50vw - var(--container) / 2 + var(--page-edge)));
+    position: absolute;
+    left: calc(var(--page-edge) * -1);
+    right: calc(var(--page-edge) * -1);
+    z-index: 30;
+    margin-top: var(--space-3);
+    padding: var(--rhythm-sm) var(--page-edge);
     background: var(--overlay-bg);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, .06);
+}
+
+/* ĐÓNG THÌ PHẢI BIẾN MẤT HẲN. <details> ẩn phần ruột bằng cơ chế ngầm của
+   trình duyệt, nhưng cơ chế ấy KHÔNG với tới một phần tử đã `position:
+   absolute` — tấm lọc vẫn vẽ ra và nằm chắn ngay trước cái nút mở nó
+   (Playwright báo đúng: ".cfil__panel intercepts pointer events"). */
+.cfil:not([open]) .cfil__panel {
+    display: none;
+}
+
+/* Mốc neo cho tấm lọc ở trên. */
+.cdet {
+    position: relative;
 }
 
 .cfil__head {

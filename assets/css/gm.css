@@ -326,8 +326,15 @@
     --fs-caption: 12px;    /* chú thích, meta */
     --fs-note: 12px;
     --fs-body-sm: 13px;    /* meta, liên kết chân trang */
-    --fs-body: clamp(14px, calc(13.3px + 0.12vw), 16px);   /* thân bài 14→16 */
-    --fs-body-lg: 16px;
+    /* ┌─ THÂN BÀI 13→14, KHÔNG CÒN 14→16 ───────────────────────────────────
+       │ Đếm cỡ chữ thực trên gentlemonster.com: 13px×135 và 12px×112 chiếm
+       │ gần hết mặt chữ của họ, 14px chỉ dùng cho hàng nav. Ở đây --fs-body
+       │ chạm 16px, tức mọi đoạn văn to hơn chữ thân của tham chiếu 3px —
+       │ nhân lên cả trang thì đó là chỗ chủ dự án thấy "hơi to".
+       │
+       │ 13→14 giữ đúng bậc ấy mà vẫn co được một nhịp cho màn rộng. */
+    --fs-body: clamp(13px, calc(12.6px + 0.1vw), 14px);
+    --fs-body-lg: 15px;
 
     /* Tầng tiêu đề — clamp() neo qua 2 mốc (600px điện thoại, 1440px laptop),
        nên tiêu đề tự vừa ở MỌI bề ngang và không cần khai lại trong @media.
@@ -491,14 +498,31 @@
        │ MUỐN CHỈNH: đây là NÚM DUY NHẤT. To lên/nhỏ đi thì toàn site đi theo,
        │ không phải sửa từng trang.
        └──────────────────────────────────────────────────────────────────── */
-    --container: 1440px;
+    /* ┌─ KHÔNG CÒN KHOÁ 1440px (11/09/2026) ────────────────────────────────
+       │ Đo trên gentlemonster.com ở HAI bề ngang:
+       │     1440px   lưới sản phẩm x=60, rộng 1321, cách mép phải 60 — 3 cột
+       │     1920px   lưới sản phẩm x=60, rộng 1800, cách mép phải 60 — 4 cột
+       │ Tức họ KHÔNG có max-width nào cả: nội dung luôn cách mép đúng 60px và
+       │ dàn hết bề ngang, số cột tự tăng khi màn rộng ra.
+       │
+       │ Khoá 1440 ở đây làm màn 1920 hở 240px trắng MỖI BÊN — đúng thứ chủ dự
+       │ án gọi là "hai bên ăn nhiều khoảng trống quá". Nay để 100%: lề do
+       │ --page-edge lo, một nguồn duy nhất.
+       │
+       │ --container-bleed giữ nguyên vai trò cũ (thanh nav và dải tiện ích
+       │ chạm gần mép hơn phần nội dung) nhưng nay hai bên bằng nhau, nên nó
+       │ chỉ còn là trần an toàn cho màn siêu rộng. */
+    --container: 100%;
 
     /* Thanh nav và dải tiện ích KHÔNG đi theo --container: nhà mốt để hai dải
        này chạm gần mép màn (xem ảnh tham chiếu Gentle Monster — wordmark ở
        giữa, mục nav sát mép trái, icon sát mép phải). Thu chúng vào 1440 thì
        thanh nav trông như một hộp trôi giữa màn. */
     --container-bleed: 1920px;
-    --page-edge: clamp(16px, 1.7vw, 32px);
+    /* 60px ở desktop — số đo của tham chiếu, đo được y hệt ở cả 1440 lẫn
+       1920. clamp để màn hẹp không mất chỗ: 4.2vw chạm 60 ngay từ 1430px, còn
+       ở 390px cho ra 16px như cũ. */
+    --page-edge: clamp(16px, 4.2vw, 60px);
     --gutter: var(--page-edge);
     --gutter-tight: clamp(16px, 3vw, 20px);
 
