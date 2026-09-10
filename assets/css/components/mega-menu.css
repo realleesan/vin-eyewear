@@ -482,43 +482,134 @@
    bỏ hẳn thì xoá đúng khối .mega__panel::before bên dưới; chữ sẽ đọc được hay
    không tuỳ từng khung hình video.
    ============================================================================ */
-.page-home-index .mega__panel {
-    background: transparent;
-    border-bottom-color: transparent;
+/* ════════════════════════════════════════════════════════════════════════════
+   ĐÃ BỎ "TRONG SUỐT HẲN" — BẢNG XỔ NAY CÓ HAI BỘ MẶT (10/09/2026)
+
+   Bản trước để `background: transparent` KHÔNG kèm điều kiện nào, cộng với chữ
+   khai cứng màu trắng. Nó chỉ đúng ở đúng MỘT hoàn cảnh: đứng ở đỉnh trang,
+   nơi bảng (cao ~400px) nằm trọn trong hero (cao 738px). Ra khỏi hoàn cảnh ấy
+   là hỏng, và hỏng theo hai kiểu:
+
+     1. CHỮ TRẮNG TRÊN NỀN TRẮNG. Chỉ cần cuộn ~270px là mép dưới bảng đã trượt
+        ra khỏi hero. Từ đó trở xuống bảng nằm trên nội dung trang — nền trắng
+        — mà chữ vẫn trắng. Chụp lại được: "KIỂU DÁNG", "CHẤT LIỆU", "Oval",
+        "Acetate" mất gần hết, chỉ còn thấy mờ mờ. Cuộn hẳn qua hero thì mất
+        sạch.
+     2. CHÌM TRÊN KHUNG VIDEO SÁNG. Đúng thứ khối chú thích cũ đã lường trước
+        và chấp nhận đánh đổi ("cách chữa đúng là chỉnh VIDEO").
+
+   Chủ dự án yêu cầu sửa cả hai. Nên bảng nay đi theo ĐÚNG bộ mặt của thanh nav
+   phía trên nó — hai thứ dính liền nhau thì không được là hai bối cảnh ngược
+   nhau:
+
+     trên video (chưa qua hero)  kính mờ TỐI  + chữ trắng + bóng chữ
+     đã qua hero                 kính mờ TRẮNG + chữ mực, y như thanh nav
+
+   "Kính mờ tối" KHÔNG phải là quay lại tấm nền đục mà chủ dự án đã bỏ: nền chỉ
+   40% đen, và `backdrop-filter` làm mờ chứ không che — video vẫn chuyển động
+   nhìn thấy được sau chữ, chỉ là mất chi tiết đủ để chữ không phải cạnh tranh
+   với nó. Khác hẳn một tấm --surface đục kín.
+
+   Nó cũng cứu luôn ca số 1: nửa dưới của bảng thò ra khỏi hero vẫn có nền tối
+   riêng, nên chữ trắng ở đó đọc được y như nửa trên.
+
+   Mốc lật là `.is-past-hero` — CÙNG một lớp mà thanh nav dùng (header.js bật,
+   xem components/header.css). Không có mốc riêng nào cho bảng xổ: dùng chung
+   thì hai thứ không bao giờ lệch pha nhau được.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Trạng thái GỐC: bảng đang nằm trên video. */
+body.page-home-index {
+    /* .48 chứ không .40, và con số này do CA XẤU NHẤT quyết định — không phải
+       ca thường. Ca thường là bảng nằm trọn trên video (thường tối, .40 đã dư).
+       Ca xấu nhất là bảng thò một nửa xuống dưới đáy hero, nửa ấy nằm trên nền
+       TRẮNG của trang: nền trắng phủ đen .40 ra 153, chữ trắng trên đó chỉ
+       được ~2.5:1. .48 kéo nền xuống 133 và tương phản lên ~3.1:1.
+       Đo trên khung video sáng nhất: .48 vẫn thấy rõ hình chuyển động sau chữ,
+       chưa thành tấm đục. */
+    --mega-bg: rgba(0, 0, 0, .48);
+    --mega-blur: saturate(140%) blur(18px);
+    --mega-line: transparent;
+    --mega-fg: var(--on-ink);
+    /* .92 chứ không .74 như bản trước: chữ mờ ba phần tư trên một khung video
+       sáng là gần như không còn gì. Vẫn đủ nhạt hơn --mega-fg để giữ phân cấp
+       giữa nhãn nhóm và mục con. */
+    --mega-fg-quiet: rgba(255, 255, 255, .92);
+    --mega-fg-faint: rgba(255, 255, 255, .78);
+    --mega-media-bg: rgba(255, 255, 255, .10);
+    /* Bảo hiểm thứ hai, cùng lý lẽ với --hdr-shadow của thanh nav: nền khoá
+       được sàn tương phản của cả mảng, bóng thì đi theo từng nét chữ nên nó
+       đủ ở cả khung hình có mảng loá đúng sau chữ. */
+    --mega-shadow: 0 1px 3px rgba(0, 0, 0, .5);
 }
 
-/* KHÔNG có lớp phủ nào. Bản trước thêm một dải chuyển sắc tối rất nhạt để khoá
-   sàn tương phản cho chữ, vì video của Vin có khung sáng (cảnh cà chua đỏ).
-   Chủ dự án yêu cầu TRONG SUỐT HẲN — chữ đè thẳng lên hero, không có gì chen
-   giữa. Đổi lại: trên khung video sáng, chữ menu sẽ khó đọc; cách chữa đúng
-   lúc đó là chỉnh VIDEO (hạ sáng khung nền) chứ không phải thêm tấm phủ. */
+/* Trạng thái ĐÃ QUA HERO: bảng nằm trên nội dung trang, mặc đúng bộ áo của
+   thanh nav lúc này (xem --hdr-bg trong components/header.css). */
+body.page-home-index:has(.site-header.is-past-hero) {
+    --mega-bg: rgba(255, 255, 255, .86);
+    --mega-blur: saturate(180%) blur(20px);
+    --mega-line: var(--line);
+    --mega-fg: var(--ink);
+    --mega-fg-quiet: var(--muted);
+    --mega-fg-faint: var(--muted);
+    --mega-media-bg: rgba(0, 0, 0, .05);
+    /* rgba(...,0) chứ không `none`: nội suy được nên bóng TAN cùng nhịp với
+       màu chữ, không biến mất giật một cái. */
+    --mega-shadow: 0 1px 3px rgba(0, 0, 0, 0);
+}
+
+.page-home-index .mega__panel {
+    background: var(--mega-bg);
+    -webkit-backdrop-filter: var(--mega-blur);
+    backdrop-filter: var(--mega-blur);
+    border-bottom-color: var(--mega-line);
+    /* Cùng nhịp --hdr-switch với thanh nav: hai mảng dính nhau phải đổi bối
+       cảnh như MỘT, lệch nhịp là thấy ngay ở đường tiếp giáp. */
+    transition:
+        background-color var(--hdr-switch, 180ms) var(--ease),
+        border-color var(--hdr-switch, 180ms) var(--ease);
+}
 
 /* Chữ đảo sang tông sáng. Nhắm từng lớp một chứ không đặt `color: inherit` ở
    thẻ cha: phần lớn chúng khai `color: var(--ink)` tường minh (xem L308–424),
    mà khai tường minh thì không thừa hưởng gì cả. */
 .page-home-index .mega__panel :is(.mega__label, .mega-feature__name, .mega-feature__more) {
-    color: var(--on-ink);
+    color: var(--mega-fg);
+    text-shadow: var(--mega-shadow);
 }
 
 .page-home-index .mega__panel :is(.mega__links a, .mega-feature__note) {
-    color: rgba(255, 255, 255, .74);
+    color: var(--mega-fg-quiet);
+    text-shadow: var(--mega-shadow);
 }
 
 .page-home-index .mega__panel :is(.mega__links a:hover, .mega__links a:focus-visible) {
-    color: var(--on-ink);
+    color: var(--mega-fg);
+}
+
+/* Cả bộ chữ đổi màu và tan bóng cùng một nhịp với nền — khai riêng vì
+   transition của thẻ cha không chảy xuống con. */
+.page-home-index .mega__panel :is(
+    .mega__label, .mega-feature__name, .mega-feature__more,
+    .mega__links a, .mega-feature__note, .mega__all, .mega__head
+) {
+    transition:
+        color 90ms var(--ease) 90ms,
+        text-shadow 90ms var(--ease) 90ms;
 }
 
 /* Ô ảnh của thẻ nổi bật: --h-shell là xám rất nhạt, trên nền video nó thành
-   một mảng đục. Hạ xuống một lớp trắng mờ để ảnh vẫn có khung mà video vẫn
-   thấy được quanh nó. */
+   một mảng đục. Trên video hạ xuống một lớp trắng mờ để ảnh vẫn có khung mà
+   video vẫn thấy được quanh nó; qua hero thì đảo lại thành xám nhạt, vì trắng
+   10% trên một tấm trắng là không còn khung nào cả. */
 .page-home-index .mega-feature__media {
-    background: rgba(255, 255, 255, .10);
+    background: var(--mega-media-bg);
 }
 
-/* Vòng tiêu điểm bàn phím phải là vòng TRẮNG — vòng đen của PHẦN 17 gm.css
-   biến mất hoàn toàn trên cảnh tối. */
+/* Vòng tiêu điểm bàn phím đi theo màu chữ: vòng đen của PHẦN 17 gm.css biến
+   mất trên cảnh tối, mà vòng trắng thì biến mất trên tấm kính mờ trắng. */
 .page-home-index .mega__panel :focus-visible {
-    outline-color: var(--on-ink);
+    outline-color: var(--mega-fg);
 }
 
 /* ============================================================================
@@ -718,7 +809,8 @@
    └──────────────────────────────────────────────────────────────────────── */
 /* ::after ĐÃ BỎ — nó là cái dải phá khung hụt mép phải nói ở khối trên. Tấm
    nay lại tràn bề ngang nên NỀN CỦA CHÍNH NÓ đã phủ kín, không cần lớp phụ
-   nào. Trang chủ vẫn trong suốt nhờ luật .page-home-index .mega__panel. */
+   nào. Trên trang chủ nền ấy là kính mờ, tối hay trắng tuỳ đã qua hero chưa —
+   xem khối "BẢNG XỔ NAY CÓ HAI BỘ MẶT" ở giữa file. */
 
 /* Ruột thôi phải khớp hộp của .header-main: bảng nay đã nằm đúng dưới mục nav
    rồi, nên mọi phép căn giữa/đệm ngang ở đây chỉ đẩy nó lệch đi. */
@@ -798,11 +890,13 @@
 /* Trang chủ: bảng trong suốt đè lên video — đảo chữ sang tông sáng, cùng cách
    khối .page-home-index phía trên xử lý .mega__label / .mega__links. */
 .page-home-index .mega__panel .mega__all {
-    color: var(--on-ink);
+    color: var(--mega-fg);
+    text-shadow: var(--mega-shadow);
 }
 
 .page-home-index .mega__panel .mega__head {
-    color: rgba(255, 255, 255, .6);
+    color: var(--mega-fg-faint);
+    text-shadow: var(--mega-shadow);
 }
 
 /* ============================================================================
