@@ -1947,11 +1947,26 @@ body.is-search-open .site-header {
    .header-logo__mark / __sub) — hai wordmark phải chồng khít lên nhau lúc
    ngăn kéo mở, xem chú thích ở .mobile-nav__head.
 
-   Chiều cao thanh nav KHÔNG ĐỔI (--header-h 64px): 44px chữ, line-height 1,
-   vẫn còn 10px thở mỗi bên.
+   Chiều cao thanh nav KHÔNG ĐỔI (--header-h 64px).
+
+   ─────────────────────────────────────────────────────────────────────────
+   NHỎ LẠI VÀ MẢNH LẠI (10/09/2026, theo phản hồi "to quá, nhìn thô")
+
+   Chốt trên 44px thì ở màn 1920px wordmark nặng như một tiêu đề trang, không
+   còn là logo. Hạ cả thang xuống ~¾:
+       clamp(22px, 2.4vw, 44px)  →  clamp(20px, 1.8vw, 34px)
+       1920px: 44 → 34px   ·   1440px: 35 → 26px   ·   1280px: 31 → 23px
+   Dưới 601px: 17 → 16px.
+
+   Cỡ nhỏ lại thì mọi phép đo "có đè lên hàng nav không" ở khối trên chỉ càng
+   dư chỗ, không phải đo lại.
+
+   Nét chữ hạ 500 → 400. Phần "thô" không chỉ đến từ cỡ: Be Vietnam Pro 500
+   phóng lên hơn 30px là nét dày rõ, trong khi wordmark tham chiếu đọc ra nhẹ.
+   Muốn đậm lại thì xoá dòng font-weight ở .header-logo__mark bên dưới.
    ============================================================================ */
 :root {
-    --logo-fs: clamp(22px, 2.4vw, 44px);
+    --logo-fs: clamp(20px, 1.8vw, 34px);
     --logo-tracking: .12em;
 }
 
@@ -1963,7 +1978,7 @@ body.is-search-open .site-header {
 
 @media (max-width: 600px) {
     :root {
-        --logo-fs: 17px;
+        --logo-fs: 16px;
     }
 }
 
@@ -1971,6 +1986,8 @@ body.is-search-open .site-header {
 .header-logo__sub {
     font-size: var(--logo-fs);
     letter-spacing: var(--logo-tracking);
+    /* 400 chứ không 500 gốc — xem khối "NHỎ LẠI VÀ MẢNH LẠI" ở trên. */
+    font-weight: 400;
 }
 
 /* Giãn chữ cộng thêm một khoảng thừa SAU ký tự cuối — với .12em ở 36px là
