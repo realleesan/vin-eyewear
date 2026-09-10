@@ -1756,14 +1756,31 @@ body.is-cart-open .header-announce {
     height: var(--icon);
 }
 
-/* Nút "Xem giỏ hàng" dính đáy tấm: danh sách dài bao nhiêu thì lối đi tiếp vẫn
-   ở trong tầm mắt, không phải cuộn xuống mới thấy. */
+/* ┌─ "DÍNH ĐÁY TẤM" ĐÃ BỎ (10/09/2026) ─────────────────────────────────────
+   │ Khối này dựng cho thời tấm giỏ còn là NGĂN KÉO hẹp 420px cao trọn màn:
+   │ ở đó `margin-top: auto` + `position: sticky; bottom: 0` giữ nút "Xem giỏ
+   │ hàng" luôn trong tầm mắt dù danh sách dài bao nhiêu, và `background:
+   │ var(--surface)` là tấm nền để danh sách trượt lên phía sau nó.
+   │
+   │ Tấm nay là LỚP PHỦ TRÀN MÀN, và cả ba thứ ấy quay ra gây hại. Đo trên
+   │ trang thật sau khi bỏ một món vào giỏ:
+   │     margin-top      489px  ← nút bị đẩy xuống tận đáy khung nhìn, hở một
+   │                              khoảng trống 518px dưới dòng sản phẩm
+   │     padding-top     16px   ┐ cộng với nền TRẮNG thành một dải trắng nằm
+   │     background      #fff   ┘ ngay trên đầu nút, trên nền #f3f4f6
+   │
+   │ Đúng thứ chủ dự án chỉ ra. Nút nay đi liền sau danh sách, cách một nhịp
+   │ --rhythm-xs, không nền riêng, không đường kẻ.
+   │
+   │ Vẫn giữ specificity (0,3,0) của selector cũ chứ không viết luật chồng ở
+   │ nơi khác: luật này là nơi duy nhất nói về chân bảng giỏ, sửa tại chỗ thì
+   │ không ai phải lần theo hai chỗ. */
 .hpop[data-cart] .cartpop__foot {
-    position: sticky;
-    bottom: 0;
-    margin-top: auto;
-    padding-top: var(--space-4);
-    background: var(--surface);
+    position: static;
+    margin-top: var(--rhythm-xs);
+    padding-top: 0;
+    border-top: 0;
+    background: transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1807,12 +1824,27 @@ body.is-cart-open .header-announce {
    │ dồn hết ra ngoài hai đầu, còn bên trong cụm thì các phần tử giữ đúng
    │ khoảng cách do chính chúng khai.
    └──────────────────────────────────────────────────────────────────────── */
-.hpop__panel--cart > .cartdrawer__head + * {
+/* CHỈ khi giỏ TRỐNG. Giỏ trống có đúng hai thứ (một dòng chữ và một nút) nên
+   dồn chúng vào giữa khung nhìn là đúng — đó là cách tham chiếu xếp. Giỏ CÓ
+   HÀNG thì không: nó là một danh sách, mà danh sách phải bắt đầu từ trên
+   xuống. Để luật này áp chung thì cụm bị đẩy xuống giữa và hở một khoảng
+   192px giữa dòng sản phẩm cuối và nút "Xem giỏ hàng" — đo được trên trang
+   thật sau khi bỏ một món vào giỏ.
+
+   `:has(.hpop__note)` là dấu nhận biết nhánh trống: .hpop__note chỉ in ra ở
+   nhánh ấy (xem _layout/header-cart.php). */
+.hpop__panel--cart:has(.hpop__note) > .cartdrawer__head + * {
     margin-top: auto;
 }
 
-.hpop__panel--cart > :last-child {
+.hpop__panel--cart:has(.hpop__note) > :last-child {
     margin-bottom: auto;
+}
+
+/* Ô "còn N sản phẩm nữa" in ra rỗng khi giỏ chỉ có mấy món — mà .cartpop__foot
+   là grid nên một span rỗng vẫn chiếm trọn một hàng cộng một khe gap. */
+.hpop__panel--cart .cartpop__more:empty {
+    display: none;
 }
 
 .hpop__panel--cart .cartdrawer__head {
