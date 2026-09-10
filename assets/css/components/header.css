@@ -2114,7 +2114,21 @@ body.is-search-open .site-header {
    Muốn đậm lại thì xoá dòng font-weight ở .header-logo__mark bên dưới.
    ============================================================================ */
 :root {
-    --logo-fs: clamp(20px, 1.8vw, 34px);
+    /* ┌─ CỘNG BÙ 11% KHI ĐỔI SANG SERIF ────────────────────────────────────
+       │ Thang cũ clamp(20px, 1.8vw, 34px) đo cho Be Vietnam Pro. Đổi font mà
+       │ giữ nguyên con số là wordmark TỰ NHỎ ĐI, dù font-size không đổi: cỡ
+       │ chữ tính theo em, còn mắt đọc theo CHIỀU CAO CHỮ HOA, mà hai font
+       │ không có cùng tỉ lệ ấy. Đo bằng canvas actualBoundingBoxAscent ở
+       │ 100px:
+       │     EB Garamond 600    cap 66px
+       │     Be Vietnam Pro 400 cap 74px   → serif thấp hơn 11%
+       │ Nhân cả ba mốc lên 74/66 để wordmark giữ ĐÚNG kích thước thị giác nó
+       │ đang có: 20→22, 1.8→2.0vw, 34→38.
+       │
+       │ Bề ngang thì gần như không đổi (685.5 so với 686 ở 100px), nên phần
+       │ rộng thêm chỉ đến từ 11% cỡ chữ — đã đo lại khoảng hở với hàng nav,
+       │ xem chú thích ở khối trên. */
+    --logo-fs: clamp(22px, 2vw, 38px);
     --logo-tracking: .12em;
 }
 
@@ -2126,16 +2140,31 @@ body.is-search-open .site-header {
 
 @media (max-width: 600px) {
     :root {
-        --logo-fs: 16px;
+        /* 18px, cũng là 16 nhân bù 11% — cùng lý do ở khối :root trên. */
+        --logo-fs: 18px;
     }
 }
 
 .header-logo__mark,
 .header-logo__sub {
+    /* ┌─ DÁNG CHỮ SERIF, KHÔNG PHẢI SANS CỦA SITE ──────────────────────────
+       │ Đây là chỗ DUY NHẤT trên site gọi --font-wordmark (khai trong
+       │ layout.css, nạp trong _layout/master.php). Wordmark là hình chứ không
+       │ phải chữ chạy: nó được đọc như một cái logo, nên nó có quyền mang dáng
+       │ riêng — và đó đúng là cách nhà mốt tham chiếu làm.
+       │
+       │ Luật này phủ cả 5 chỗ in wordmark, vì cả 5 đều dùng đúng hai lớp
+       │ __mark/__sub: đầu trang · chân trang · ngăn kéo mobile · thanh rút gọn
+       │ của trang đăng nhập và trang thanh toán. Không chỗ nào bị bỏ sót.
+       └──────────────────────────────────────────────────────────────────── */
+    font-family: var(--font-wordmark);
     font-size: var(--logo-fs);
     letter-spacing: var(--logo-tracking);
-    /* 400 chứ không 500 gốc — xem khối "NHỎ LẠI VÀ MẢNH LẠI" ở trên. */
-    font-weight: 400;
+    /* 600, KHÔNG phải 400 như hồi còn chạy Be Vietnam Pro. Hai thang nét không
+       so sánh trực tiếp được: một serif old-style ở 400 cho ra nét mảnh hơn
+       hẳn một geometric sans cùng số, và wordmark tham chiếu đọc ra là nét
+       CHẮC — nét dọc dày, nét ngang mảnh. 600 là mặt duy nhất được nạp. */
+    font-weight: 600;
 }
 
 /* Giãn chữ cộng thêm một khoảng thừa SAU ký tự cuối — với .12em ở 36px là

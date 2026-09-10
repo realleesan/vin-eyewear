@@ -186,6 +186,24 @@
    --font-serif: var(--font-sans);
    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
+   /* ┌─ CHỮ CỦA RIÊNG WORDMARK ────────────────────────────────────────
+      │ NGOẠI LỆ DUY NHẤT với luật "một family" ở khối trên, và nó chỉ
+      │ chạm tới 14 ký tự: "VIN EYEWEAR" ở .header-logo__mark /
+      │ .header-logo__sub (đầu trang · chân trang · ngăn kéo mobile · hai
+      │ thanh rút gọn). ĐỪNG gọi token này ở bất kỳ chỗ nào khác — nạp
+      │ thêm một family cho một dòng chữ thì đáng, cho một đoạn văn thì
+      │ không.
+      │
+      │ Be Vietnam Pro không có mặt serif, nên dáng chữ nhà mốt mà chủ dự
+      │ án yêu cầu không thể ép ra bằng weight hay letter-spacing.
+      │
+      │ Dự phòng là các serif có sẵn trên máy, xếp theo mức gần EB
+      │ Garamond nhất: cùng là serif old-style, trục nghiêng, chân nhọn.
+      │ Nhớ đổi kèm thẻ <link> Google Fonts trong _layout/master.php.
+      └────────────────────────────────────────────────────────────────── */
+   --font-wordmark: 'EB Garamond', 'Garamond', 'Palatino Linotype', Palatino,
+      'Times New Roman', Times, serif;
+
    /* ============================================================
        THANG CHỮ — nguồn duy nhất cho mọi font-size của site.
        Đổi ở đây là mọi trang đổi theo; ĐỪNG viết font-size bằng px

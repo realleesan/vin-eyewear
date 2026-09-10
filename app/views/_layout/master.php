@@ -208,7 +208,25 @@ if ($manhCua !== null) {
          └──────────────────────────────────────────────────────────────── -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <!-- ┌─ EB GARAMOND: DÙNG ĐÚNG MỘT CHỖ, LÀ WORDMARK ────────────────────
+         │ Đây là ngoại lệ có chủ đích với luật "một family duy nhất" ở khối
+         │ trên, và nó chỉ gánh 14 ký tự: "VIN EYEWEAR" (hoa) ở đầu trang, chân
+         │ trang, ngăn kéo mobile và hai thanh rút gọn. Không một dòng chữ nào
+         │ khác trên site chạm tới nó — xem --font-wordmark trong layout.css.
+         │
+         │ VÌ SAO PHẢI LÀ MỘT FONT KHÁC: chủ dự án yêu cầu wordmark mang đúng
+         │ dáng chữ serif của nhà mốt tham chiếu. Be Vietnam Pro là geometric
+         │ sans, không có mặt serif nào — không có cách nào ép ra dáng ấy bằng
+         │ font-weight hay letter-spacing.
+         │
+         │ CHỈ WEIGHT 600, chỉ mặt đứng: wordmark không bao giờ in nghiêng và
+         │ không bao giờ đổi nét. Một mặt chữ ~25KB.
+         │
+         │ KHÔNG cần subset vietnamese ở đây dù EB Garamond có: wordmark là
+         │ "VIN EYEWEAR", không dấu. Phần còn lại của site vẫn là Be Vietnam
+         │ Pro, nên chữ tiếng Việt không đi qua font này bao giờ.
+         └────────────────────────────────────────────────────────────────── -->
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;1,400&family=EB+Garamond:wght@600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 
     <!-- ══════════════════════════════════════════════════════════════
          CSS DÙNG CHUNG — nạp cho MỌI trang.
