@@ -14,13 +14,28 @@
    Màu và cỡ chữ lấy từ token trong layout.css — xem quy ước ở CLAUDE.md.
    ============================================================ */
 
+/* ┌─ NHỊP ĐỌC TỪ THANG CHUNG, KHÔNG GÕ TAY (11/09/2026) ────────────────────
+   │ Ba con số cũ — 48px trên, 96px dưới, gap 76px — không thuộc thang nào
+   │ của bộ, nên trang này thở khác mọi trang khác: đổi --rhythm-* trong
+   │ gm.css thì cả site theo, riêng đây đứng yên.
+   │
+   │ Nay: đệm dưới lấy --section-pad (đúng bậc mà mọi section của trang chủ
+   │ dùng), khe giữa các khối lấy --rhythm-md, còn đệm TRÊN thì --rhythm-xs
+   │ thôi. Đệm trên phải nhỏ vì thứ đứng đầu trang này là hàng chip rồi tới
+   │ ngay tấm bìa — tham chiếu để chip cách thanh nav đúng 20px, không phải
+   │ 48. Một tấm bìa bị đẩy xuống nửa nhịp thì nó thôi là bìa.
+   │
+   │ `var(--container)` bỏ giá trị dự phòng 1600px: token ấy luôn có mặt
+   │ (khai ở :root trong gm.css), và con số dự phòng 1600 khác hẳn 1440 thật
+   │ nên nếu nó có ngày được dùng thì trang này lệch lề với mọi trang khác mà
+   │ không ai biết vì sao. */
 .cdet {
-    max-width: var(--container, 1600px);
+    max-width: var(--container);
     margin: 0 auto;
-    padding: 48px var(--page-edge) 96px;
+    padding: var(--rhythm-xs) var(--page-edge) var(--section-pad);
     display: flex;
     flex-direction: column;
-    gap: 76px;
+    gap: var(--rhythm-md);
 }
 
 /* --- Mẩu dùng lại trong nhiều khối --- */
@@ -146,23 +161,29 @@
    chuẩn, cùng cách .mega__panel từng dùng. */
 .cdet__hero {
     position: relative;
-    /* ┌─ PHÁ KHUNG BẰNG CÁCH BÙ ĐÚNG ĐỆM CỦA .cdet, KHÔNG DÙNG 100vw ────────
-       │ `width: 100vw; margin-inline: calc(50% - 50vw)` là thủ pháp phá khung
-       │ quen thuộc, nhưng 100vw ĐO CẢ THANH CUỘN: đo được scrollWidth 1433 so
-       │ với clientWidth 1425, tức banner thò ra 8px và cả trang sinh thanh
-       │ cuộn ngang.
+    /* ┌─ TRÀN HẾT KHUNG NHÌN, KHÔNG DỪNG Ở MÉP CONTAINER ───────────────────
+       │ Bù `padding-inline` của .cdet là đủ cho màn ≤1440, nhưng .cdet có
+       │ `max-width: var(--container)` = 1440px — nên trên màn rộng hơn thế
+       │ banner dừng lại ở 1440 và hai bên hở ra hai dải trắng. Tham chiếu để
+       │ ảnh chiến dịch chạm hai mép màn ở MỌI bề ngang.
        │
-       │ Bù đệm thì không bao giờ lệch: .cdet có `padding-inline:
-       │ var(--page-edge)`, kéo ngược đúng ngần ấy là banner chạm hai mép của
-       │ .cdet — mà .cdet rộng bằng khung nhìn ở mọi màn tới 1600px. */
-    margin-inline: calc(var(--page-edge) * -1);
-    /* Kéo ngược bớt `gap: 76px` của .cdet. Hàng chip là điều hướng của CHÍNH
-       banner ngay dưới nó, hai thứ phải đi liền chứ không cách nhau một nhịp
-       section — tham chiếu để chúng cách nhau 44px (chip ở y=110, banner ở
-       y=154). Đặt margin âm trên BANNER chứ không trên hàng chip: chip là
-       phần tử đầu của trang, margin âm ở đó còn kéo cả nó lên đè vào đầu
-       trang. */
-    margin-top: -32px;
+       │ `100vw` là cách duy nhất chạm mép thật, và nó có đúng một tác dụng
+       │ phụ: 100vw ĐO CẢ THANH CUỘN, nên banner thò ra ~8px và sinh thanh
+       │ cuộn ngang (đo được scrollWidth 1433 so với clientWidth 1425).
+       │ `overflow-x: clip` trên thân trang cắt đúng phần thò ấy —
+       │ `clip` chứ KHÔNG `hidden`: hidden biến phần tử thành khung cuộn và
+       │ giết luôn `position: sticky` của đầu trang. */
+    margin-inline: calc(50% - 50vw);
+    width: 100vw;
+    /* Kéo ngược bớt khe của .cdet. Hàng chip là điều hướng của CHÍNH banner
+       ngay dưới nó, hai thứ phải đi liền chứ không cách nhau một nhịp section
+       — tham chiếu để chúng cách nhau 44px (chip ở y=110, banner ở y=154).
+       Đặt margin âm trên BANNER chứ không trên hàng chip: chip là phần tử đầu
+       của trang, margin âm ở đó còn kéo cả nó lên đè vào đầu trang.
+
+       Tính theo CHÍNH biến khe thay vì một số cứng, để đổi --rhythm-md là
+       khoảng cách này đi theo: khe trừ đi 44px. */
+    margin-top: calc(44px - var(--rhythm-md));
     /* 675/1440 = 0.469 — đúng tỉ lệ tấm của tham chiếu, nên banner cao theo
        bề ngang thay vì cố định px và bẹt đi ở màn hẹp. min-height giữ cho
        điện thoại vẫn còn chỗ cho bốn dòng chữ. */
@@ -1570,4 +1591,173 @@
    quét mắt tìm. */
 .cdet__table .cdet__cell-name {
     color: var(--ink);
+}
+
+
+/* Cắt phần 100vw thò ra vì thanh cuộn — xem khối .cdet__hero ở trên. Nhắm lớp
+   trên <body> chứ không nhắm chính <body>: `overflow` trên body có thể lan lên
+   phần tử gốc và đổi hành vi cuộn của cả tài liệu. */
+.page-collection-detail .main-content {
+    overflow-x: clip;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BỘ LỌC CỦA TRANG BỘ SƯU TẬP
+
+   Số đo lấy trên tấm lọc của nhà mốt tham chiếu ở 1440px:
+       tấm       tràn bề ngang, nền rgb(243,244,246) — cùng --overlay-bg với
+                 lớp phủ tìm kiếm và giỏ hàng
+       tiêu đề   "FILTER" 18px ở góc trái, nút X góc phải
+       cột       NĂM cột đều nhau, mốc x = 60 · 343 · 626 · 910 · 1193
+                 (cách nhau 283px)
+       nhãn nhóm 13px, màu #111
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Nút mở. Cùng khuôn nút viền với mọi nút khác của bộ (bo 8px, viền #ababab)
+   — xem .cdet__more-btn ngay trên và nút của lớp phủ giỏ hàng. */
+.cfil {
+    margin-top: var(--rhythm-sm);
+}
+
+.cfil__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 40px;
+    padding: 0 var(--space-5);
+    border: 1px solid #ababab;
+    border-radius: 8px;
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    text-transform: uppercase;
+    cursor: pointer;
+    list-style: none;
+}
+
+/* Bỏ tam giác mặc định của <summary> — mỗi trình duyệt vẽ một kiểu. */
+.cfil__toggle::-webkit-details-marker { display: none; }
+.cfil__toggle::marker { content: ''; }
+
+.cfil__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: var(--fs-micro);
+}
+
+/* Tấm lọc: tràn bề ngang như banner, cùng cách phá khung — xem .cdet__hero. */
+.cfil__panel {
+    margin-inline: calc(50% - 50vw);
+    width: 100vw;
+    margin-top: var(--rhythm-xs);
+    padding: var(--rhythm-sm) max(var(--page-edge), calc(50vw - var(--container) / 2 + var(--page-edge)));
+    background: var(--overlay-bg);
+}
+
+.cfil__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--rhythm-xs);
+}
+
+.cfil__title {
+    margin: 0;
+    font-size: var(--fs-h4);
+    text-transform: uppercase;
+}
+
+/* Số đứng trên vai chữ, đúng như "FILTER³⁴" của tham chiếu. */
+.cfil__count {
+    font-size: var(--fs-micro);
+    vertical-align: super;
+    margin-left: 2px;
+}
+
+.cfil__close {
+    display: inline-flex;
+    width: var(--icon-hit, 44px);
+    height: var(--icon-hit, 44px);
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+}
+
+.cfil__close svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+}
+
+/* NĂM CỘT ĐỀU. auto-fit chứ không `repeat(5, 1fr)` cứng: nhóm nào cả bộ không
+   có giá trị nào thì view bỏ hẳn cột đó, và năm cột cứng sẽ để lại một ô trống
+   giữa bảng. */
+.cfil__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--rhythm-xs) var(--space-6);
+}
+
+.cfil__col {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.cfil__legend {
+    padding: 0;
+    margin-bottom: var(--space-4);
+    font-size: var(--fs-body-sm);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--ink);
+}
+
+.cfil__opt {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    font-size: var(--fs-body-sm);
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.cfil__opt input {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--ink);
+    flex: 0 0 auto;
+}
+
+.cfil__foot {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-top: var(--rhythm-xs);
+}
+
+.cfil__apply {
+    min-height: 44px;
+    padding: 0 var(--space-8);
+    border: 1px solid var(--ink);
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: var(--fs-body-sm);
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.cfil__clear {
+    color: var(--muted);
+    font-size: var(--fs-body-sm);
 }

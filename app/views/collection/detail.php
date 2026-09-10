@@ -183,6 +183,100 @@ if ($minPrice !== null) {
         </div>
     </section>
 
+    <!-- ══════════ BỘ LỌC ══════════ -->
+    <?php
+    /* ┌─ <details> CHỨ KHÔNG PHẢI JAVASCRIPT ───────────────────────────────
+       │ Tấm lọc mở/đóng bằng chính <details> của trình duyệt, cùng lối mà ô
+       │ chọn của trang danh mục đang dùng. Tắt JavaScript thì nó vẫn mở được
+       │ và form vẫn gửi được — đây là một form GET thật, không phải một lớp
+       │ phủ do script dựng.
+       │
+       │ Dựng theo tấm lọc của nhà mốt tham chiếu: một lớp tràn bề ngang nền
+       │ #f3f4f6, tiêu đề "FILTER" kèm số ở góc trái, nút đóng ở góc phải, và
+       │ NĂM CỘT ĐỀU nhau bên dưới (đo được: 5 cột cách nhau 283px ở 1440).
+       │ Ở đây bốn cột đầu là bốn nhóm lọc, cột thứ năm là sắp xếp.
+       └──────────────────────────────────────────────────────────────────── */
+    $nhanNhom = [
+        'shape'      => 'Dáng gọng',
+        'material'   => 'Chất liệu',
+        'lens_color' => 'Màu tròng',
+        'gender'     => 'Giới tính',
+    ];
+
+    $coLuaChon = false;
+
+    foreach ($luaChon as $ds) {
+        if ($ds !== []) { $coLuaChon = true; break; }
+    }
+    ?>
+    <?php if ($coLuaChon): ?>
+        <details class="cfil"<?= $soLocDangBat > 0 ? ' open' : '' ?>>
+            <summary class="cfil__toggle">
+                Bộ lọc
+                <?php if ($soLocDangBat > 0): ?>
+                    <span class="cfil__badge"><?= (int) $soLocDangBat ?></span>
+                <?php endif; ?>
+            </summary>
+
+            <form class="cfil__panel" method="get" action="">
+                <div class="cfil__head">
+                    <p class="cfil__title">
+                        Bộ lọc<span class="cfil__count"><?= (int) $tongCaBo ?></span>
+                    </p>
+                    <?php /* Đóng tấm = một liên kết về chính trang này KHÔNG mang
+                             tham số nào: nó vừa đóng vừa xoá sạch bộ lọc, và chạy
+                             cả khi tắt JavaScript. */ ?>
+                    <a class="cfil__close" href="/bo-suu-tap/<?= e(rawurlencode($collection['slug'])) ?>"
+                       aria-label="Đóng bộ lọc">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="cfil__cols">
+                    <?php foreach ($nhanNhom as $khoa => $nhan): ?>
+                        <?php if ($luaChon[$khoa] === []) { continue; } ?>
+                        <fieldset class="cfil__col">
+                            <legend class="cfil__legend"><?= e($nhan) ?></legend>
+                            <?php foreach ($luaChon[$khoa] as $muc): ?>
+                                <label class="cfil__opt">
+                                    <input type="checkbox" name="<?= e($khoa) ?>[]"
+                                           value="<?= e($muc['key']) ?>"
+                                           <?= !empty($muc['on']) ? 'checked' : '' ?>>
+                                    <span><?= e($muc['label']) ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </fieldset>
+                    <?php endforeach; ?>
+
+                    <fieldset class="cfil__col">
+                        <legend class="cfil__legend">Sắp xếp</legend>
+                        <?php foreach ([
+                            ''           => 'Mặc định',
+                            'newest'     => 'Mới nhất',
+                            'price-asc'  => 'Giá thấp trước',
+                            'price-desc' => 'Giá cao trước',
+                        ] as $gt => $nhan): ?>
+                            <label class="cfil__opt">
+                                <input type="radio" name="sort" value="<?= e($gt) ?>"
+                                       <?= $sapXep === $gt ? 'checked' : '' ?>>
+                                <span><?= e($nhan) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </fieldset>
+                </div>
+
+                <div class="cfil__foot">
+                    <button type="submit" class="cfil__apply">Áp dụng</button>
+                    <?php if ($soLocDangBat > 0): ?>
+                        <a class="cfil__clear" href="/bo-suu-tap/<?= e(rawurlencode($collection['slug'])) ?>">Xoá lọc</a>
+                    <?php endif; ?>
+                </div>
+            </form>
+        </details>
+    <?php endif; ?>
+
     <!-- ══════════ LƯỚI SẢN PHẨM CỦA BỘ ══════════ -->
     <?php
     /* ĐẶT NGAY DƯỚI BANNER, và đó là điểm khác lớn nhất so với bản trước.
@@ -196,11 +290,12 @@ if ($minPrice !== null) {
        Dùng .pgrid và _layout/product-card như trang danh mục và trang tìm
        kiếm — cùng một thẻ, cùng một lưới, không dựng thêm biến thể nào.
 
-       CẮT 12 MẪU. Cả bộ có thể vài chục mẫu, mà đây không phải trang danh
-       mục: nó là trang giới thiệu có kèm hàng. Hết 12 thì một nút dẫn sang
-       danh mục đã lọc — nơi có bộ lọc, sắp xếp và phân trang thật. Tham chiếu
-       cũng cắt và để nút "More 32 / 34" ở cuối lưới. */
-    $luoi = array_slice($products, 0, 12);
+       CẮT 8 MẪU — ĐÚNG HAI HÀNG BỐN CỘT. Con số này không phải làm tròn cho
+       đẹp: lưới .pgrid ra 4 cột ở màn rộng, nên 8 là hai hàng đầy, không có
+       hàng cụt. 12 của bản trước ra ba hàng và đẩy phần còn lại của trang
+       xuống quá sâu. Hết 8 thì một nút dẫn sang danh mục đã lọc — nơi có bộ
+       lọc, sắp xếp và phân trang thật. */
+    $luoi = array_slice($products, 0, 8);
     ?>
     <?php if ($luoi !== []): ?>
         <section class="cdet__shop" aria-label="Sản phẩm thuộc <?= e($collection['name']) ?>">
@@ -210,13 +305,14 @@ if ($minPrice !== null) {
                 <?php endforeach; ?>
             </ul>
 
-            <?php if ($total > count($luoi)): ?>
-                <div class="cdet__shop-more">
+            <?php /* In ra kể cả khi bộ chỉ có đúng 8 mẫu: nút này không nói "còn
+                     nữa" mà là LỐI SANG trang danh mục đã lọc — nơi xem được
+                     đầy đủ thông số, bộ lọc và sắp xếp. */ ?>
+            <div class="cdet__shop-more">
                     <a class="cdet__more-btn" href="<?= e($catalogUrl) ?>">
-                        Xem tiếp <?= (int) count($luoi) ?> / <?= (int) $total ?>
+                        Xem chi tiết sản phẩm bộ sưu tập
                     </a>
-                </div>
-            <?php endif; ?>
+            </div>
         </section>
     <?php endif; ?>
 

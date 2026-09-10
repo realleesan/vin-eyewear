@@ -137,6 +137,67 @@ class CollectionController extends BaseController
         // Cả bộ, không phân trang — xem ProductModel::inCollection.
         $products = ProductModel::inCollection($slug);
 
+        /* ┌─ BỘ LỌC CỦA TRANG BỘ SƯU TẬP ───────────────────────────────────────
+           │ Dùng lại ProductFacets — CÙNG bộ máy với trang /san-pham, không
+           │ viết phép lọc thứ hai. Nếu ở đây tự so sánh cột thì hai trang sẽ
+           │ trả kết quả khác nhau cho cùng một lựa chọn ngay lần đầu ai đó đổi
+           │ luật gộp (VÀ/HOẶC) ở một bên.
+           │
+           │ BỐN NHÓM, không phải cả GROUPS: bộ sưu tập vốn đã là MỘT bộ nên
+           │ nhóm 'collection' vô nghĩa ở đây, còn 'brand'/'collab' thì cả bộ
+           │ thường chung một hãng. Bốn nhóm còn lại là thứ thật sự khác nhau
+           │ giữa các mẫu trong cùng một bộ.
+           │
+           │ attach() TRƯỚC apply(): apply đọc khoá '_facets' do attach gắn vào
+           │ từng sản phẩm, gọi ngược thứ tự là lọc trên một mảng chưa có khoá
+           │ nào và trả về rỗng — im lặng, không báo lỗi.
+           └──────────────────────────────────────────────────────────────────── */
+        $nhomLoc = ['shape', 'material', 'lens_color', 'gender'];
+        $chon    = [];
+
+        foreach ($nhomLoc as $g) {
+            $raw     = $_GET[$g] ?? [];
+            $chon[$g] = array_values(array_filter(array_map(
+                static fn ($v) => is_scalar($v) ? trim((string) $v) : '',
+                is_array($raw) ? $raw : [$raw]
+            )));
+        }
+
+        $products = ProductFacets::attach($products);
+        $tatCa    = $products;                       // giữ bản đầy đủ để ĐẾM
+        $products = ProductFacets::apply($products, $chon);
+
+        /* Sắp xếp — ba mốc như tham chiếu (Newest · Lowest Price · Highest
+           Price). Mặc định là thứ tự model trả về, tức thứ tự cửa hàng xếp. */
+        $sapXep = (string) ($_GET['sort'] ?? '');
+
+        if ($sapXep === 'price-asc' || $sapXep === 'price-desc') {
+            usort($products, static function (array $a, array $b) use ($sapXep): int {
+                $x = (int) ($a['sale_price'] ?: $a['price']);
+                $y = (int) ($b['sale_price'] ?: $b['price']);
+                return $sapXep === 'price-asc' ? $x <=> $y : $y <=> $x;
+            });
+        } elseif ($sapXep === 'newest') {
+            usort($products, static fn (array $a, array $b): int
+                => strcmp((string) $b['created_at'], (string) $a['created_at']));
+        }
+
+        /* Danh sách lựa chọn của từng nhóm, kèm số đếm. Dựng từ $tatCa (cả bộ)
+           chứ không từ $products (đã lọc): đếm trên bản đã lọc thì chọn một
+           dáng xong là mọi dáng khác biến mất khỏi bảng, và không còn đường
+           đổi ý ngoài việc xoá hết bộ lọc. */
+        $luaChon = [];
+
+        foreach ($nhomLoc as $g) {
+            $luaChon[$g] = ProductFacets::group($tatCa, $chon, $g);
+        }
+
+        $soLocDangBat = 0;
+
+        foreach ($chon as $ds) {
+            $soLocDangBat += count($ds);
+        }
+
         /*
          * Mẫu đang mở trong ngăn kéo. Slug lạ thì coi như KHÔNG mở ngăn kéo
          * nào, chứ không 404: cả trang vẫn đúng và vẫn đọc được, chỉ thiếu một
@@ -168,6 +229,12 @@ class CollectionController extends BaseController
             // và view bỏ hẳn khối đó chứ không vẽ dải trống.
             'gallery'    => CollectionModel::gallery($collection),
             'products'   => $products,
+            // Bộ lọc — xem khối chú thích ở trên.
+            'luaChon'      => $luaChon,
+            'chon'         => $chon,
+            'sapXep'       => $sapXep,
+            'soLocDangBat' => $soLocDangBat,
+            'tongCaBo'     => count($tatCa),
             'total'      => $stats['count'],
             'minPrice'   => $stats['minPrice'],
             'maxPrice'   => $this->maxPrice($products),
