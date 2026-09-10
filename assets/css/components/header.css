@@ -1847,41 +1847,6 @@ body.is-cart-open .header-announce {
     display: none;
 }
 
-/* ┌─ "XEM GIỎ HÀNG" DÙNG CHUNG KHUÔN NÚT VỚI NHÁNH GIỎ RỖNG ────────────────
-   │ .cartpop__cta là nút ĐẶC: nền --ink, chữ trắng, vuông góc. Đó là dáng
-   │ của một nút chính trong một ngăn kéo hẹp — ở đó nó là thứ duy nhất cần
-   │ nhìn thấy. Trong lớp phủ tràn màn thì một khối đen 720px nằm giữa một
-   │ mặt phẳng #f3f4f6 là mảng nặng nhất trên màn hình, và nó chỏi với chính
-   │ cái nút mà nhánh giỏ RỖNG đang dùng cách đó vài dòng.
-   │
-   │ Tham chiếu chỉ có MỘT khuôn nút cho cả lớp phủ: nền bằng nền, viền mảnh
-   │ xám, bo 8px, chữ đen — đo được 327×47, viền rgb(171,171,171).
-   │
-   │ Bề ngang chốt 327px như nút kia thay vì kéo hết 720px của cột: hai nhánh
-   │ của cùng một tấm thì nút phải cùng cỡ, nếu không mở giỏ lúc rỗng và lúc
-   │ có hàng ra hai bố cục khác nhau. */
-.hpop__panel--cart .cartpop__cta {
-    width: min(327px, 100%);
-    min-height: 47px;
-    margin-inline: auto;
-    padding: var(--space-2) var(--space-4);
-    background: transparent;
-    border: 1px solid #ababab;
-    border-radius: 8px;
-    color: var(--ink);
-    font-size: var(--fs-body-sm);
-    letter-spacing: normal;
-    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
-}
-
-.hpop__panel--cart .cartpop__cta:hover,
-.hpop__panel--cart .cartpop__cta:focus-visible {
-    /* Không đảo sang nền đậm — cùng phản hồi với nút của nhánh rỗng: viền
-       đậm lên, nền sáng lên một chút. */
-    background: rgba(255, 255, 255, .6);
-    border-color: var(--ink);
-    color: var(--ink);
-}
 
 .hpop__panel--cart .cartdrawer__head {
     /* Nút X ra sát mép phải MÀN HÌNH chứ không sát mép cột 720px. */
@@ -2029,27 +1994,47 @@ body.is-cart-open .header-announce {
    "ADD TO BAG" của GM. Bản trước là một nút nhỏ nằm cạnh dòng chữ. */
 /* Đọc HỆ NÚT chung (PHẦN 6 của gm.css) chứ không tự khai chiều cao và dáng
    chữ — nó là cùng một cái nút với .btn-primary, chỉ khác chỗ đứng. */
+/* ┌─ NÚT VIỀN, KHÔNG CÒN NÚT ĐẶC (10/09/2026) ──────────────────────────────
+   │ Trước: nền --ink, chữ trắng, vuông góc — dáng của một nút chính trong
+   │ ngăn kéo hẹp, nơi nó là thứ duy nhất cần nhìn thấy. Tấm giỏ nay là lớp
+   │ phủ tràn màn, và một khối đen nằm giữa mặt phẳng #f3f4f6 là mảng nặng
+   │ nhất trên màn hình; nó cũng chỏi với nút của nhánh giỏ RỖNG ngay bên
+   │ cạnh, vốn đã là nút viền.
+   │
+   │ Số đo lấy từ tham chiếu: 327×47, viền 1px rgb(171,171,171), bo 8px, chữ
+   │ rgb(17,17,17) 13px, nền bằng nền.
+   │
+   │ SỬA TẠI ĐÂY chứ không viết luật chồng ở khối lớp phủ. .cartpop__cta chỉ
+   │ được in ra đúng MỘT chỗ (_layout/header-cart.php) và chỗ ấy luôn nằm
+   │ trong lớp phủ, nên một luật chồng chỉ thêm một thứ để người sau phải lần
+   │ theo — và thêm một cửa để hai bên lệch nhau. */
 .cartpop__cta {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: var(--btn-h);
-    padding: var(--space-3) var(--btn-pad-x);
-    background: var(--ink);
-    border: 1px solid var(--ink);
-    color: var(--on-ink);
-    font-size: var(--btn-fs);
+    width: min(327px, 100%);
+    min-height: 47px;
+    margin-inline: auto;
+    padding: var(--space-2) var(--space-4);
+    background: transparent;
+    border: 1px solid #ababab;
+    border-radius: 8px;
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
     font-weight: var(--btn-fw);
-    letter-spacing: var(--tracking-label);
+    letter-spacing: normal;
     text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
-    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+    transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 
+/* Không đảo sang nền đậm — cùng phản hồi với nút của nhánh rỗng. */
 .cartpop__cta:hover,
 .cartpop__cta:focus-visible {
-    background: var(--brand-strong);
+    background: rgba(255, 255, 255, .6);
+    border-color: var(--ink);
+    color: var(--ink);
 }
 
 /* ============================================================================
