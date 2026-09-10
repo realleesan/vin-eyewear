@@ -213,7 +213,16 @@
     top: 0;
     z-index: 60;
     background: var(--surface);
-    border-bottom: 1px solid var(--line);
+    /* KHÔNG có đường kẻ dưới, và cũng không có bóng đổ (xem .is-scrolled ngay
+       dưới). Thanh nav thôi tự vạch ranh giới với nội dung: chủ dự án yêu cầu
+       bỏ vạch ấy đi.
+
+       Hệ quả phải nhớ khi sửa về sau: mọi tấm xổ ra ngay dưới thanh nav —
+       .hpop__panel, .hpop__panel--search, .mega__panel — trước đây mượn đúng
+       đường kẻ này làm CẠNH TRÊN của chúng, nên chúng đều khai `border-top: 0`.
+       Tấm nào tràn bề ngang (tìm kiếm, mega) thì không sao: nó dính liền thanh
+       nav thành một khối trắng, đúng ngôn ngữ của bộ này. Tấm HẸP thả lơ lửng
+       dưới icon thì cần cạnh trên của riêng nó — xem .hpop__panel. */
 }
 
 /* GM PHẲNG TUYỆT ĐỐI — cuộn xuống KHÔNG sinh ra bóng đổ. */
@@ -266,7 +275,7 @@
 /* Trạng thái GỐC của trang chủ: nằm trên video. */
 body.page-home-index {
     --hdr-bg: transparent;
-    --hdr-line: transparent;
+    /* --hdr-line ĐÃ GỠ cùng với đường kẻ dưới thanh nav. */
     --hdr-fg: var(--on-ink);
     --hdr-fg-quiet: rgba(255, 255, 255, .78);
     --hdr-veil: 1;
@@ -314,7 +323,6 @@ body.page-home-index:has(.hpop--search.is-open) {
        ảnh sản phẩm nào trôi qua. 82% khoá sàn tương phản lại mà mắt vẫn đọc
        ra là kính mờ. */
     --hdr-bg: rgba(255, 255, 255, .82);
-    --hdr-line: var(--line);
     --hdr-fg: var(--ink);
     --hdr-fg-quiet: var(--muted);
     --hdr-veil: 0;
@@ -394,9 +402,7 @@ body.page-home-index:has(.site-header.is-past-hero) {
        Khai transparent tường minh để đè `background: var(--surface)` của
        .site-header gốc. */
     background-color: transparent;
-    border-bottom-color: var(--hdr-line);
     transition:
-        border-color var(--hdr-switch) var(--ease),
         /* Chữ đổi ở NỬA SAU của cú chuyển nền: lúc nền đã đục quá nửa, nên
            chữ không bao giờ rơi vào cảnh xám-trên-xám. */
         color 90ms var(--ease) 90ms;
@@ -944,9 +950,11 @@ body.page-home-index {
     min-width: 260px;
     padding: var(--space-6);
     background: var(--surface);
-    /* Chỉ ba cạnh: cạnh trên đã là đường kẻ dưới của thanh nav. */
+    /* ĐỦ BỐN CẠNH. Trước đây bỏ cạnh trên vì "cạnh trên đã là đường kẻ dưới của
+       thanh nav" — mà đường kẻ ấy nay đã bỏ (xem .site-header), nên không bỏ
+       theo thì tấm này hở một cạnh: nó thả lơ lửng dưới icon, hẹp 260px, chứ
+       không dính vào mép nào để mượn nét. */
     border: 1px solid var(--line);
-    border-top: 0;
     box-shadow: var(--elev-3);
     /* Ẩn bằng opacity + visibility chứ không display:none — display không
        chuyển động được, và trình đọc màn hình cần visibility để bỏ qua. */
