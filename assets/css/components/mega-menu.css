@@ -804,3 +804,27 @@
 .page-home-index .mega__panel .mega__head {
     color: rgba(255, 255, 255, .6);
 }
+
+/* ============================================================================
+   RÊ VÀO MỤC CON: KHÔNG GẠCH CHÂN (10/09/2026, theo yêu cầu)
+
+   Tham chiếu (Gentle Monster) không gạch chân mục con trong bảng xổ — rê vào
+   chỉ làm chữ sáng/đậm màu lên. Các khối phía trên còn khai `underline` cho
+   .mega__label, .mega__links a, .mega__all và tên thẻ nổi bật; khối này gỡ
+   tất cả, GIỮ LẠI phần đổi màu làm phản hồi.
+
+   Chỉ nhắm mục BÊN TRONG .mega__panel. Gạch chân của .mega__trigger.is-active
+   (mục nav của trang đang đứng) không đụng tới — nó báo "bạn đang ở đây", không
+   phải hiệu ứng rê chuột.
+
+   Bàn phím vẫn thấy đang đứng ở đâu: vòng tiêu điểm của PHẦN 17 gm.css không
+   phụ thuộc gạch chân.
+
+   Đứng CUỐI FILE và thêm .mega__panel vào bộ chọn để chắc chắn thắng mọi khai
+   báo hover cũ, kể cả bản trang chủ (.page-home-index .mega__panel …).
+   ============================================================================ */
+.mega__panel a:hover,
+.mega__panel a:focus-visible,
+.mega__panel .mega-feature:hover .mega-feature__name {
+    text-decoration: none;
+}
