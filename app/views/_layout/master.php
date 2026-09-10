@@ -568,6 +568,12 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         ?>
         <script src="<?= asset('assets/vendor/bootstrap.bundle.min.js') ?>" defer></script>
         <script src="<?= asset('assets/js/header.js') ?>" defer></script>
+        <?php /* Đăng nhập ngay trong ngăn kéo tài khoản. Nạp cạnh header.js vì
+                 ngăn kéo ấy là một phần của chính đầu trang, tức là có mặt ở
+                 MỌI trang khung đầy đủ — không xếp vào $pageScripts. File tự
+                 thoát khi không tìm thấy form (khách đã đăng nhập, hoặc khung
+                 rút gọn của trang thanh toán). */ ?>
+        <script src="<?= asset('assets/js/account-drawer.js') ?>" defer></script>
         <?php /* Gợi ý từ khoá cho ô tìm kiếm ở đầu trang — X29.
 
                  Nạp cạnh header.js vì ô tìm kiếm nằm trong chính đầu trang

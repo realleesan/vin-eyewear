@@ -396,6 +396,19 @@
     --tracking-tight: -0.02em;   /* tiêu đề từ --fs-h3 trở lên */
     --tracking-snug: -0.01em;    /* tiêu đề nhỏ, h4–h6 */
     --tracking-label: 0.08em;    /* MỌI nhãn IN HOA: nav, nút, eyebrow */
+    /* ┌─ NHÃN IN HOA "TRẦM" ────────────────────────────────────────────────
+       │ .08em là khoảng giãn của một nhãn ĐỨNG MỘT MÌNH — mục nav, eyebrow
+       │ trên đầu khối, chữ trên nút. Ở đó nó đúng: giãn rộng làm mẩu chữ nhỏ
+       │ đọc ra là một nhãn chứ không phải một từ bị bỏ quên.
+       │
+       │ Trong một CỘT DỌC nhiều nhãn xếp liền nhau — form đăng nhập, bảng
+       │ thông số — thì nó thành ra ồn: mắt đọc từng CHỮ CÁI thay vì đọc từng
+       │ từ, và cả cột trông như bị kéo giãn. Tham chiếu (gentlemonster.com)
+       │ dùng khoảng giãn nhẹ hơn hẳn ở đúng những chỗ ấy.
+       │
+       │ .04em vẫn đủ để chữ hoa không dính vào nhau ở cỡ 12px, mà thôi hô to.
+       └──────────────────────────────────────────────────────────────────── */
+    --tracking-label-soft: 0.04em;
     --tracking-wordmark: 0.22em; /* riêng wordmark Vin Eyewear */
 
     /* ============================================================

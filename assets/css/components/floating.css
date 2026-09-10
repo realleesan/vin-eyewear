@@ -28,6 +28,19 @@ body:has(#mobileNav.is-open) .fab {
     display: none;
 }
 
+/* ┌─ NGĂN KÉO TÀI KHOẢN ĐANG MỞ → CŨNG GIẤU CỤM NÚT ────────────────────────
+   │ Cùng lý lẽ với ngăn kéo điều hướng ngay trên, nhưng ở đây z-index KHÔNG
+   │ cứu được: nền mờ của Bootstrap ở 105 phủ được ba nút (90) về mặt hình
+   │ ảnh, nhưng chúng vẫn nằm trong thứ tự Tab và trình đọc màn hình vẫn đi
+   │ tới — tức là phía sau một hộp thoại đang mở vẫn còn ba đích bấm được.
+   │
+   │ `.is-acct-open` do assets/js/header.js gắn lên <body> qua sự kiện
+   │ shown/hidden.bs.offcanvas — xem ganNganKeo().
+   └──────────────────────────────────────────────────────────────────────── */
+body.is-acct-open .fab {
+    display: none;
+}
+
 /* ┌─ HAI TRANG CÓ CỘT TÁC VỤ DÍNH BÊN PHẢI → CỤM NÚT SANG MÉP TRÁI ─────────
    │ Quét bằng hit-test hình học ở MỌI vị trí cuộn (không chỉ màn hình đầu):
    │ hai trang có một cột dính căn phải chứa nút hành động chính, và cả hai

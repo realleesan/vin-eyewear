@@ -424,48 +424,64 @@
             không có instance nào gắn vào, nên uỷ quyền từ [data-cart].
        ==================================================================== */
 
-    var cart = document.querySelector('[data-hpop][data-cart]');
+    /* ┌─ MỘT HÀM CHO HAI NGĂN KÉO ──────────────────────────────────────────
+       │ Giỏ hàng và TÀI KHOẢN là cùng một thứ: một tấm trượt từ mép phải, mở
+       │ bằng cú bấm vào một icon trên thanh nav, đóng bằng nút X · nền mờ ·
+       │ Esc. Trước đợt này chỉ giỏ hàng có, và toàn bộ phần nối nằm thẳng
+       │ trong khối 2a.
+       │
+       │ Tách thành hàm thay vì chép khối ấy lần thứ hai: hai bản sao của cùng
+       │ một đoạn nối Bootstrap là hai chỗ phải nhớ sửa cùng lúc, và bốn cái
+       │ bẫy đã ghi chú dài bên dưới (lớp trên <body>, aria-expanded, trả tiêu
+       │ điểm, hoãn hai khung hình) sẽ chỉ được vá ở một bản.
+       │
+       │ Ba tham số là ba thứ KHÁC nhau giữa hai ngăn kéo, không hơn:
+       │   goc       thẻ bọc [data-hpop] — cũng là chỗ uỷ quyền cú bấm nút X
+       │   dongAttr  thuộc tính của nút đóng ('data-cart-close' | 'data-acct-close')
+       │   lopBody   lớp gắn lên <body> lúc mở, cho CSS bám vào
+       └──────────────────────────────────────────────────────────────────── */
+    function ganNganKeo(goc, dongAttr, lopBody) {
+        if (!goc || !window.bootstrap || !window.bootstrap.Offcanvas) return;
 
-    if (cart && window.bootstrap && window.bootstrap.Offcanvas) {
-        var cartTrigger = cart.querySelector('[data-hpop-trigger]');
-        var cartPanel   = cart.querySelector('.hpop__panel');
+        var trigger = goc.querySelector('[data-hpop-trigger]');
+        var panel   = goc.querySelector('.hpop__panel');
 
-        if (cartPanel) {
-            /* `backdrop: true` -> Bootstrap tự dựng .offcanvas-backdrop và gắn
-               vào <body>; `scroll: false` -> khoá cuộn nền CÓ BÙ thanh cuộn. */
-            var cartOc = window.bootstrap.Offcanvas.getOrCreateInstance(cartPanel, {
-                backdrop: true,
-                scroll: false,
-                keyboard: true
+        if (!panel) return;
+
+        /* `backdrop: true` -> Bootstrap tự dựng .offcanvas-backdrop và gắn
+           vào <body>; `scroll: false` -> khoá cuộn nền CÓ BÙ thanh cuộn. */
+        var oc = window.bootstrap.Offcanvas.getOrCreateInstance(panel, {
+            backdrop: true,
+            scroll: false,
+            keyboard: true
+        });
+
+        if (trigger) {
+            trigger.setAttribute('aria-haspopup', 'dialog');
+            trigger.setAttribute('aria-expanded', 'false');
+
+            trigger.addEventListener('click', function (e) {
+                /* Ctrl/Cmd/giữa chuột = ý muốn MỞ TAB MỚI tới địa chỉ thật của
+                   thẻ (/gio-hang, /tai-khoan) — để trình duyệt làm việc của nó. */
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+
+                e.preventDefault();
+                oc.toggle();
             });
+        }
 
-            if (cartTrigger) {
-                cartTrigger.setAttribute('aria-haspopup', 'dialog');
-                cartTrigger.setAttribute('aria-expanded', 'false');
-
-                cartTrigger.addEventListener('click', function (e) {
-                    /* Ctrl/Cmd/giữa chuột = ý muốn MỞ TAB MỚI tới /gio-hang —
-                       để trình duyệt làm việc của nó. */
-                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-
-                    e.preventDefault();
-                    cartOc.toggle();
-                });
+        /* Nút X nằm TRONG .hpop__panel, mà buy-flow.js thay ruột bảng giỏ sau
+           mỗi lần thêm hàng — nút gắn sự kiện trực tiếp sẽ chết ngay sau đó.
+           Uỷ quyền từ thẻ bọc thì nút mới nào cũng chạy. (Không dùng
+           data-bs-dismiss vì lý do y hệt: Bootstrap đọc thuộc tính ấy qua
+           data-API ở document nên vẫn sống — nhưng gọi thẳng instance thì
+           không phụ thuộc vào việc nút có nằm trong .offcanvas hay không.) */
+        goc.addEventListener('click', function (e) {
+            if (e.target instanceof Element && e.target.closest('[' + dongAttr + ']')) {
+                e.preventDefault();
+                oc.hide();
             }
-
-            /* Nút X nằm TRONG .hpop__panel, mà buy-flow.js thay ruột bảng ấy
-               sau mỗi lần thêm hàng — nút gắn sự kiện trực tiếp sẽ chết ngay
-               sau đó. Uỷ quyền từ thẻ bọc [data-cart] thì nút mới nào cũng
-               chạy. (Không dùng data-bs-dismiss vì lý do y hệt: Bootstrap đọc
-               thuộc tính ấy qua data-API ở document nên vẫn sống — nhưng gọi
-               thẳng instance thì không phụ thuộc vào việc nút có nằm trong
-               .offcanvas hay không.) */
-            cart.addEventListener('click', function (e) {
-                if (e.target instanceof Element && e.target.closest('[data-cart-close]')) {
-                    e.preventDefault();
-                    cartOc.hide();
-                }
-            });
+        });
 
             /* ┌─ BA THỨ OFFCANVAS KHÔNG LO, PHẢI TỰ NỐI ────────────────────────
                │
@@ -483,24 +499,30 @@
                │    Bootstrap không có tham chiếu nào để trả về — tiêu điểm rơi
                │    ra <body> và người dùng bàn phím phải Tab lại từ đầu trang.
                └──────────────────────────────────────────────────────────────── */
-            cartPanel.addEventListener('shown.bs.offcanvas', function () {
-                document.body.classList.add('is-cart-open');
-                if (cartTrigger) cartTrigger.setAttribute('aria-expanded', 'true');
+        panel.addEventListener('shown.bs.offcanvas', function () {
+                document.body.classList.add(lopBody);
+                if (trigger) trigger.setAttribute('aria-expanded', 'true');
 
-                /* ĐƯA TIÊU ĐIỂM VÀO NÚT ĐÓNG — và đây không phải chuyện trợ
-                   năng suông, nó là thứ làm phím Esc chạy được.
+                /* ĐƯA TIÊU ĐIỂM VÀO CHÍNH TẤM, KHÔNG VÀO NÚT X.
+                   ─────────────────────────────────────────────────────────────
+                   Tiêu điểm PHẢI đi vào tấm — đó là thứ làm phím Esc của
+                   Bootstrap chạy được (nó nghe keydown trên chính phần tử
+                   offcanvas, nên tiêu điểm còn ở ngoài thì sự kiện không bao
+                   giờ nổi bọt tới đó), và cũng là luật của một hộp thoại: mở ra
+                   thì con trỏ bàn phím phải nằm trong nó.
 
-                   Đo được: sau khi mở, document.activeElement vẫn là chính thẻ
-                   <a> mở ngăn kéo. Mà Bootstrap nghe phím Esc TRÊN CHÍNH PHẦN
-                   TỬ offcanvas — tiêu điểm còn ở ngoài thì sự kiện keydown
-                   không bao giờ nổi bọt tới đó, và Esc không đóng được gì.
+                   ĐÃ ĐỔI TỪ NÚT X SANG TẤM. Đặt tiêu điểm vào một <button> thì
+                   Chrome vẽ vòng :focus-visible quanh nó — nên mở ngăn kéo bằng
+                   CHUỘT cũng thấy một khung chữ nhật quanh dấu X, đúng thứ vừa
+                   bị báo là lỗi. Tấm mang `tabindex="-1"`: nhận được tiêu điểm
+                   theo lệnh nhưng không nằm trong thứ tự Tab và không vẽ vòng
+                   nào. Người dùng bàn phím không mất gì — cú Tab đầu tiên vẫn
+                   rơi vào nút X, phần tử bấm được đầu tiên trong tấm.
 
-                   Nhắm `button[data-cart-close]` chứ không `[data-cart-close]`
-                   trần: cùng cái bẫy đã gặp ở bản tự viết — nền mờ (nay do
-                   Bootstrap dựng) không còn mang thuộc tính ấy, nhưng giữ tên
-                   chọn chặt vẫn đúng hơn. Nút đóng cũng là thứ người dùng bàn
-                   phím cần chạm tới đầu tiên. */
-                var close = cartPanel.querySelector('button[data-cart-close]');
+                   Esc thì có HAI lớp: bắt ở cấp document (khối ngay dưới) chạy
+                   ngay từ khung hình đầu, còn đường của Bootstrap là lớp dự
+                   phòng. */
+                var close = panel;
 
                 if (close) {
                     /* HOÃN HAI KHUNG HÌNH. Bootstrap gắn lớp `.show` rồi bắn
@@ -533,23 +555,27 @@
                Một khe 360ms nghe thì nhỏ, nhưng "bấm nhầm rồi Esc ngay" đúng là
                lúc người ta bấm Esc nhanh nhất. Bắt ở document thì phím ăn ngay
                từ khung hình đầu tiên. */
-            document.addEventListener('keydown', function (e) {
-                if (e.key !== 'Escape') return;
-                if (!cartPanel.classList.contains('show') &&
-                    !cartPanel.classList.contains('showing')) return;
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape') return;
+            if (!panel.classList.contains('show') &&
+                !panel.classList.contains('showing')) return;
 
-                cartOc.hide();
-            });
+            oc.hide();
+        });
 
-            cartPanel.addEventListener('hidden.bs.offcanvas', function () {
-                document.body.classList.remove('is-cart-open');
-                if (cartTrigger) {
-                    cartTrigger.setAttribute('aria-expanded', 'false');
-                    cartTrigger.focus();
-                }
-            });
-        }
+        panel.addEventListener('hidden.bs.offcanvas', function () {
+            document.body.classList.remove(lopBody);
+            if (trigger) {
+                trigger.setAttribute('aria-expanded', 'false');
+                trigger.focus();
+            }
+        });
     }
+
+    /* Hai ngăn kéo, một hàm. Thứ tự gọi không quan trọng — chúng độc lập, và
+       Bootstrap không cho hai offcanvas cùng mở (mở cái sau đóng cái trước). */
+    ganNganKeo(document.querySelector('[data-hpop][data-cart]'), 'data-cart-close', 'is-cart-open');
+    ganNganKeo(document.querySelector('[data-hpop][data-account]'), 'data-acct-close', 'is-acct-open');
 
     /* ====================================================================
        2b. BẢNG XỔ ĐIỀU HƯỚNG (.mega) — ESC · BẤM RA NGOÀI · ARIA
