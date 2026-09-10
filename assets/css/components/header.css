@@ -324,7 +324,11 @@ body.page-home-index:has(.hpop--search.is-open) {
        82% chứ không 60-70%: chữ ở đây là --ink trên nền có thể là bất cứ tấm
        ảnh sản phẩm nào trôi qua. 82% khoá sàn tương phản lại mà mắt vẫn đọc
        ra là kính mờ. */
-    --hdr-bg: rgba(255, 255, 255, .82);
+    /* Đo trên gentlemonster.com: tấm kính mờ của đầu trang họ là
+       rgba(243,244,246,.6) + blur(15px), không phải trắng .82 + blur(20).
+       Dùng đúng bộ ấy, và bảng xổ mega dùng lại y hệt (xem --mega-bg trong
+       components/mega-menu.css) nên hai khối dính nhau đọc ra là MỘT tấm. */
+    --hdr-bg: rgba(243, 244, 246, .6);
     --hdr-fg: var(--ink);
     --hdr-fg-quiet: var(--muted);
     --hdr-veil: 0;
@@ -339,7 +343,7 @@ body.page-home-index:has(.hpop--search.is-open) {
     /* saturate đi kèm blur: làm mờ đơn thuần kéo màu phía sau nhợt đi, bù lại
        độ bão hoà thì mảng mờ trông vẫn là "cùng một bức ảnh", không phải một
        lớp sương xám. */
-    --hdr-blur: saturate(180%) blur(20px);
+    --hdr-blur: blur(15px);
 }
 
 /* ┌─ DẢI TIỆN ÍCH CÓ BỘ BIẾN RIÊNG ─────────────────────────────────────────
@@ -763,23 +767,17 @@ body.page-home-index {
    │ Hai vế: :hover cho chuột, :focus-within cho bàn phím — Tab qua từng mục
    │ cũng thấy đúng cảnh ấy.
    └──────────────────────────────────────────────────────────────────────── */
-.header-nav__list:hover > li > a,
-.header-nav__list:hover > li > .mega__trigger,
-.header-nav__list:hover > li > .cmenu__trigger,
-.header-nav__list:focus-within > li > a,
-.header-nav__list:focus-within > li > .mega__trigger,
-.header-nav__list:focus-within > li > .cmenu__trigger {
-    opacity: .55;
-}
+/* ĐÃ BỎ HẲN "LÀM MỜ CÁC MỤC BÊN CẠNH" (10/09/2026, theo yêu cầu chủ dự án).
 
-.header-nav__list > li:hover > a,
-.header-nav__list > li:hover > .mega__trigger,
-.header-nav__list > li:hover > .cmenu__trigger,
-.header-nav__list > li:focus-within > a,
-.header-nav__list > li:focus-within > .mega__trigger,
-.header-nav__list > li:focus-within > .cmenu__trigger {
-    opacity: 1;
-}
+   Khối chú thích ngay trên mô tả nó như thủ pháp của trang biên tập, và về
+   nguyên tắc thì đúng — nhưng đo trên gentlemonster.com thì hàng nav của họ
+   KHÔNG có hiệu ứng nào khi rê chuột: mọi mục giữ nguyên độ đậm, không mờ,
+   không đổi màu, không gạch chân. Một hàng nav năm mục mà cả hàng nhạt đi mỗi
+   lần con trỏ đi ngang qua là chuyển động không phục vụ việc gì.
+
+   Cả hai luật cùng đi: luật mờ và luật gỡ-mờ chỉ có nghĩa khi có nhau.
+   Riêng gạch chân của mục ĐANG Ở (.is-active) thì giữ — đó là trạng thái, không
+   phải hiệu ứng rê chuột. */
 
 /* Mục đang mở: gạch chân mảnh sát chữ. KHÔNG tăng font-weight — đổi weight
    làm cả hàng nav xê dịch mỗi lần sang trang khác. */
