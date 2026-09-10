@@ -315,7 +315,22 @@ body.page-home-index {
    `.hpop--search.is-open` giữ nguyên: lớp phủ tìm kiếm là một tấm trắng tràn
    bề ngang mở ra ngay dưới thanh nav, thanh phải khớp màu với nó dù đang
    đứng ở đâu. */
+/* ┌─ LỚP PHỦ MỞ = ĐẦU TRANG PHẢI SANG TRẠNG THÁI ĐẶC (10/09/2026) ──────────
+   │ `.is-cart-open` thêm vào đây, và nó là một lỗi ĐỌC ĐƯỢC NGAY chứ không
+   │ phải chuyện tinh chỉnh: trên trang chủ, đầu trang là chữ TRẮNG trên video.
+   │ Bấm giỏ hàng thì một tấm #f3f4f6 mở ra ngay dưới hàng nav — mà hàng nav
+   │ vẫn trắng, nên "Gọng kính · Tròng kính · Bộ sưu tập" và cả wordmark biến
+   │ mất trên nền sáng. Chụp lại được: chữ trắng gần như vô hình.
+   │
+   │ Đợt trước sót vì chỉ thử trên /lien-he, nơi hàng nav vốn đã đen — ở đó
+   │ không có gì để lộ ra.
+   │
+   │ `.is-cart-open` là lớp trên <body> do header.js gắn (sự kiện
+   │ shown/hidden.bs.offcanvas), nên đây là một selector thường, không cần
+   │ :has(). Lớp phủ tìm kiếm đã có sẵn ở dòng dưới từ trước.
+   └──────────────────────────────────────────────────────────────────────── */
 body.page-home-index:has(.site-header.is-past-hero),
+body.page-home-index.is-cart-open,
 body.page-home-index:has(.hpop--search.is-open) {
     /* KHÔNG phải var(--surface) đặc nữa. Đây là kính mờ kiểu Gentle Monster:
        nền trắng 82% + làm mờ thứ chạy phía sau, nên nội dung vẫn "chảy" dưới
@@ -375,7 +390,9 @@ body.page-home-index {
    ~36px, cuộn 4px thì nó vẫn còn hơn 30px nằm trên video. Lật sang trắng ngay
    lúc ấy là một vệt trắng loé lên rồi trượt đi mất — thấy rõ ở mỗi cú cuộn đầu
    tiên. Nay nó trượt khuất trong đúng bộ áo mà nó xuất hiện. */
-body.page-home-index:has(.site-header.is-past-hero) {
+body.page-home-index:has(.site-header.is-past-hero),
+body.page-home-index.is-cart-open,
+body.page-home-index:has(.hpop--search.is-open) {
     --ann-bg: var(--surface);
     --ann-fg: var(--muted);
     --ann-veil: 0;
@@ -1118,8 +1135,27 @@ body.page-home-index {
 }
 
 .hpop__scrim {
-    position: fixed;
-    inset: 0;
+    /* ┌─ BẮT ĐẦU TỪ DƯỚI THANH NAV, KHÔNG PHỦ CẢ ĐẦU TRANG ─────────────────
+       │ `position: fixed; inset: 0` phủ trọn khung nhìn, kể cả dải tiện ích
+       │ và hàng nav — nên khi mở tìm kiếm thì cả đầu trang bị nhuộm xám. Tham
+       │ chiếu làm tối phần TRANG bên dưới lớp phủ và giữ đầu trang sáng
+       │ nguyên.
+       │
+       │ Không sửa được bằng z-index: nền mờ này là con của .header-main
+       │ (z-index 2 → tầng riêng), còn nền của thanh nav nằm ở .site-header
+       │ ::before trong tầng .site-header — tầng .header-main luôn vẽ sau, nên
+       │ số nào cũng không đưa nền nav lên trên được. Phải sửa HÌNH HỌC.
+       │
+       │ `absolute; top: 100%` neo vào .site-header, đúng mốc mà
+       │ .hpop__panel--search đang dùng — nền mờ bắt đầu ngay dưới thanh nav.
+       │ 200vh chứ không 100: header là sticky, cuộn xuống thì mốc 100% đi
+       │ theo, nhưng lúc trang chưa cuộn thì phần dưới vẫn phải đủ dài.
+       └──────────────────────────────────────────────────────────────────── */
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 200vh;
     /* -1 chứ không 1, cùng lý do với .hpop__panel--cart: cả hai là con của
        .header-main (z-index 2 → tầng xếp riêng), và trong tầng ấy wordmark cùng
        các mục nav là nội dung thường không mang z-index. Số dương đưa nền mờ
@@ -1178,6 +1214,37 @@ body.is-search-open {
 body.is-search-open .site-header,
 body.is-cart-open .site-header {
     z-index: 110;
+}
+
+/* ┌─ THANH NAV ĐẶC BẰNG ĐÚNG MÀU LỚP PHỦ ──────────────────────────────────
+   │ Kính mờ 60% là đúng khi phía sau là NỘI DUNG TRANG — nó cho thấy trang
+   │ vẫn chạy dưới thanh nav. Nhưng khi lớp phủ mở thì phía sau thanh nav lại
+   │ là video hero (lớp phủ bắt đầu từ DƯỚI thanh nav), nên 60% để lọt màu
+   │ video lên và vùng nav thành một dải loang lổ cạnh một tấm phẳng #f3f4f6.
+   │
+   │ Đặc, và đúng --overlay-bg: thanh nav với lớp phủ đọc ra là MỘT mặt phẳng
+   │ liền, đúng như tham chiếu.
+   │
+   │ Áp cho mọi trang chứ không riêng trang chủ: trang thường có nền
+   │ --surface (#fff trắng) trong khi lớp phủ là #f3f4f6, chênh nhau đủ để
+   │ thấy một đường ranh ngang ngay dưới hàng nav.
+   └──────────────────────────────────────────────────────────────────────── */
+body.is-search-open .site-header,
+body.is-cart-open .site-header {
+    background-color: var(--overlay-bg);
+}
+
+body.is-search-open .site-header::before,
+body.is-cart-open .site-header::before {
+    background-color: var(--overlay-bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+/* Dải tiện ích đi theo — nó nằm ngay trên thanh nav và cùng nhìn ra nền ấy. */
+body.is-search-open .header-announce,
+body.is-cart-open .header-announce {
+    background-color: var(--overlay-bg);
 }
 
 /* Cột nội dung của lớp phủ: hẹp và căn giữa, để một lớp phủ tràn bề ngang
