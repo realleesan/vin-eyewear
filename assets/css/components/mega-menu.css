@@ -521,17 +521,32 @@
    thì hai thứ không bao giờ lệch pha nhau được.
    ════════════════════════════════════════════════════════════════════════════ */
 
-/* Trạng thái GỐC: bảng đang nằm trên video. */
+/* ┌─ NỀN ĐO TRỰC TIẾP TRÊN GENTLEMONSTER.COM (10/09/2026) ──────────────────
+   │ Chủ dự án yêu cầu nền bảng xổ "y hệt" tham chiếu. Đo bằng cách hover mục
+   │ "Sunglasses" rồi đọc getComputedStyle của tấm và của mọi tổ tiên nó:
+   │
+   │   ĐANG Ở ĐỈNH (bảng nằm trên hero)
+   │     tấm mega     background rgba(0,0,0,0) · backdrop-filter none
+   │     → KHÔNG CÓ NỀN GÌ CẢ. Chữ trắng đè thẳng lên video.
+   │
+   │   ĐÃ CUỘN QUA HERO
+   │     chữ mega     rgb(0,0,0)  ← đen, không còn trắng
+   │     header-bg-blur  rgba(243,244,246,.6) · blur(15px), và nó GIÃN CAO
+   │                     ra ôm trọn cả bảng xổ
+   │
+   │ Tức tham chiếu không cho bảng xổ một cái nền riêng bao giờ: hoặc không có
+   │ gì, hoặc nó nằm chung dưới tấm kính mờ của đầu trang.
+   │
+   │ ĐÂY LÀ ĐẢO LẠI đợt trước, và cái giá phải nói rõ: bỏ nền tối đi thì trên
+   │ khung video sáng chữ menu sẽ chìm — đúng thứ đã sửa cách đây ít lâu. Thứ
+   │ giữ lại được độ đọc là --mega-shadow (bóng theo từng nét chữ, tham chiếu
+   │ không có): nó vô hình trên nền tối và cứu chữ trên nền sáng.
+   └──────────────────────────────────────────────────────────────────────── */
+
+/* Trạng thái GỐC: bảng đang nằm trên video — không nền, đúng như tham chiếu. */
 body.page-home-index {
-    /* .48 chứ không .40, và con số này do CA XẤU NHẤT quyết định — không phải
-       ca thường. Ca thường là bảng nằm trọn trên video (thường tối, .40 đã dư).
-       Ca xấu nhất là bảng thò một nửa xuống dưới đáy hero, nửa ấy nằm trên nền
-       TRẮNG của trang: nền trắng phủ đen .40 ra 153, chữ trắng trên đó chỉ
-       được ~2.5:1. .48 kéo nền xuống 133 và tương phản lên ~3.1:1.
-       Đo trên khung video sáng nhất: .48 vẫn thấy rõ hình chuyển động sau chữ,
-       chưa thành tấm đục. */
-    --mega-bg: rgba(0, 0, 0, .48);
-    --mega-blur: saturate(140%) blur(18px);
+    --mega-bg: transparent;
+    --mega-blur: none;
     --mega-line: transparent;
     --mega-fg: var(--on-ink);
     /* .92 chứ không .74 như bản trước: chữ mờ ba phần tư trên một khung video
@@ -543,14 +558,19 @@ body.page-home-index {
     /* Bảo hiểm thứ hai, cùng lý lẽ với --hdr-shadow của thanh nav: nền khoá
        được sàn tương phản của cả mảng, bóng thì đi theo từng nét chữ nên nó
        đủ ở cả khung hình có mảng loá đúng sau chữ. */
-    --mega-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+    /* Đậm hơn .5 của bản trước: khi còn nền tối .48 thì bóng chỉ là lớp thứ
+       hai, nay nền đã bỏ nên nó là lớp DUY NHẤT đỡ chữ trên video. */
+    --mega-shadow: 0 1px 4px rgba(0, 0, 0, .75);
 }
 
 /* Trạng thái ĐÃ QUA HERO: bảng nằm trên nội dung trang, mặc đúng bộ áo của
    thanh nav lúc này (xem --hdr-bg trong components/header.css). */
+/* Đã qua hero: đúng bộ số của tham chiếu — rgba(243,244,246,.6) + blur(15px).
+   Cùng giá trị với --hdr-bg của thanh nav lúc này, nên hai khối dính liền
+   nhau đọc ra là MỘT tấm kính mờ kéo dài, y như cách họ giãn header-bg-blur. */
 body.page-home-index:has(.site-header.is-past-hero) {
-    --mega-bg: rgba(255, 255, 255, .86);
-    --mega-blur: saturate(180%) blur(20px);
+    --mega-bg: rgba(243, 244, 246, .6);
+    --mega-blur: blur(15px);
     --mega-line: var(--line);
     --mega-fg: var(--ink);
     --mega-fg-quiet: var(--muted);

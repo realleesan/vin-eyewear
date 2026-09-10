@@ -362,15 +362,32 @@
        │
        │ Công thức clamp giữ nguyên cách tính: b = (max−min)/8.4 vw, và
        │ a = min − b×6, để tại 600px ra đúng min, tại 1440px ra đúng max. */
+    /* ┌─ HẠ BẬC THỨ HAI (10/09/2026) ───────────────────────────────────────
+       │ Đợt trước hạ một phần ba và tưởng đã đủ. Đo lại bằng cách ĐẾM cỡ chữ
+       │ thực trên trang — mỗi phần tử lá, gom theo font-size:
+       │
+       │   gentlemonster.com   13px×135 · 12px×112 · 14px×5 · 16px×4 · 24px×4
+       │   trang chủ           13px×50  · 12px×34  · 15px×4 · 29px×4 · 32px×2
+       │
+       │ Chữ THÂN đã khớp: 13 và 12 chiếm gần hết ở cả hai bên. Chỗ còn lệch
+       │ là TRẦN của thang — tham chiếu không có gì trên 24px (con 29px của ta
+       │ là wordmark, chuyện khác), còn ở đây vẫn còn 32 và 30.
+       │
+       │ Nên đợt này chỉ kéo TRẦN xuống, không đụng sàn: h2 32→24 (đúng bậc
+       │ tiêu đề section của tham chiếu), h1 48→32, display 64→40, tiêu đề
+       │ trang 40→28, h3 24→20, h4 20→17.
+       │
+       │ Sàn (giá trị ở 600px) cũng kéo theo cho thang khỏi bẹt: một thang mà
+       │ min và max sát nhau thì clamp() thành vô nghĩa. */
     --fs-lead: clamp(15px, calc(14.3px + 0.12vw), 16px);
     --fs-subhead: clamp(14px, calc(13.5px + 0.12vw), 16px);
-    --fs-h6: 15px;
-    --fs-h5: clamp(15px, calc(13.6px + 0.24vw), 17px);
-    --fs-h4: clamp(16px, calc(13.1px + 0.48vw), 20px);
-    --fs-h3: clamp(18px, calc(13.7px + 0.71vw), 24px);
-    --fs-h2: clamp(22px, calc(14.9px + 1.19vw), 32px);
-    --fs-h1: clamp(30px, calc(17.1px + 2.14vw), 48px);
-    --fs-display: clamp(36px, calc(16px + 3.33vw), 64px);
+    --fs-h6: 14px;
+    --fs-h5: clamp(14px, calc(13.3px + 0.12vw), 15px);
+    --fs-h4: clamp(15px, calc(13.6px + 0.24vw), 17px);
+    --fs-h3: clamp(16px, calc(13.1px + 0.48vw), 20px);
+    --fs-h2: clamp(18px, calc(13.7px + 0.71vw), 24px);
+    --fs-h1: clamp(22px, calc(14.9px + 1.19vw), 32px);
+    --fs-display: clamp(26px, calc(16px + 1.67vw), 40px);
 
     /* ┌─ TIÊU ĐỀ TRANG — BẬC RIÊNG, KHÔNG DÙNG --fs-display ────────────────
        │ --fs-display chạm 96px và nó tồn tại cho hero cùng dải chiến dịch.
@@ -379,18 +396,20 @@
        │ hơn tiêu đề hero (72px) và gấp đôi tên sản phẩm thật trên trang chi
        │ tiết (48px). Thang chữ đúng, nhưng phân bổ thì ngược.
        │
-       │ Trật tự đọc ra, sau đợt hạ thang 10/09/2026:
-       │     hero / chiến dịch   36–64px
-       │     h1                  30–48px
-       │     tiêu đề trang       26–40px   ← bậc này
-       │     tiêu đề section     22–32px
+       │ Trật tự đọc ra, sau đợt hạ bậc thứ hai 10/09/2026:
+       │     hero / chiến dịch   26–40px
+       │     h1                  22–32px
+       │     tiêu đề trang       20–28px   ← bậc này
+       │     tiêu đề section     18–24px
        │
        │ Con số đổi, vai trò không: bậc này vẫn nằm giữa hero và tiêu đề
        │ section, vẫn thôi tranh chỗ với hero.
        └──────────────────────────────────────────────────────────────────── */
-    /* 40px thay cho 64 — cùng đợt hạ thang ở khối trên. Vẫn giữ đúng vai
-       trò cũ: lớn hơn tiêu đề section (32) và nhỏ hơn hero (48–64). */
-    --fs-pagehead: clamp(26px, calc(16px + 1.67vw), 40px);
+    /* 28px. Vẫn giữ đúng vai trò cũ: lớn hơn tiêu đề section (24) và nhỏ hơn
+       hero (32–40). Tham chiếu thì trang danh mục của họ KHÔNG có tiêu đề lớn
+       nào cả — chỉ một dòng "View all Products" 12–13px — nên 28px ở đây đã là
+       rộng tay hơn họ, và đó là chủ ý: trang này cần một cái tên. */
+    --fs-pagehead: clamp(20px, calc(14.3px + 0.95vw), 28px);
 
     /* Siết chữ đi kèm cỡ — ba giá trị, không phải mỗi chỗ một số. */
     --tracking-tight: -0.02em;   /* tiêu đề từ --fs-h3 trở lên */
@@ -519,6 +538,13 @@
        Không thêm tỉ lệ thứ tư mà không sửa khối chú thích này.
        ============================================================ */
     /* VUÔNG — mọi ảnh SẢN PHẨM. Ảnh trong CSDL là 600×600. */
+    /* ┌─ NỀN CỦA LỚP PHỦ TOÀN MÀN (tìm kiếm · giỏ hàng) ────────────────────
+       │ #f3f4f6, đo trực tiếp trên gentlemonster.com: cả lớp phủ tìm kiếm lẫn
+       │ lớp phủ giỏ hàng của họ đều dùng đúng màu này, đặc, không trong suốt.
+       │ Xám rất nhạt chứ không trắng — nó tách khỏi trang bên dưới mà không
+       │ thành một mảng chói. */
+    --overlay-bg: #f3f4f6;
+
     --ratio-product: 1 / 1;
     /* ┌─ THẺ SẢN PHẨM CÓ TỈ LỆ RIÊNG, KHÔNG DÙNG CHUNG --ratio-product ─────
        │ Đo trên gentlemonster.com ở 1440px: thẻ 387×635, phần chữ dưới ảnh

@@ -324,7 +324,11 @@ body.page-home-index:has(.hpop--search.is-open) {
        82% chứ không 60-70%: chữ ở đây là --ink trên nền có thể là bất cứ tấm
        ảnh sản phẩm nào trôi qua. 82% khoá sàn tương phản lại mà mắt vẫn đọc
        ra là kính mờ. */
-    --hdr-bg: rgba(255, 255, 255, .82);
+    /* Đo trên gentlemonster.com: tấm kính mờ của đầu trang họ là
+       rgba(243,244,246,.6) + blur(15px), không phải trắng .82 + blur(20).
+       Dùng đúng bộ ấy, và bảng xổ mega dùng lại y hệt (xem --mega-bg trong
+       components/mega-menu.css) nên hai khối dính nhau đọc ra là MỘT tấm. */
+    --hdr-bg: rgba(243, 244, 246, .6);
     --hdr-fg: var(--ink);
     --hdr-fg-quiet: var(--muted);
     --hdr-veil: 0;
@@ -339,7 +343,7 @@ body.page-home-index:has(.hpop--search.is-open) {
     /* saturate đi kèm blur: làm mờ đơn thuần kéo màu phía sau nhợt đi, bù lại
        độ bão hoà thì mảng mờ trông vẫn là "cùng một bức ảnh", không phải một
        lớp sương xám. */
-    --hdr-blur: saturate(180%) blur(20px);
+    --hdr-blur: blur(15px);
 }
 
 /* ┌─ DẢI TIỆN ÍCH CÓ BỘ BIẾN RIÊNG ─────────────────────────────────────────
@@ -763,23 +767,17 @@ body.page-home-index {
    │ Hai vế: :hover cho chuột, :focus-within cho bàn phím — Tab qua từng mục
    │ cũng thấy đúng cảnh ấy.
    └──────────────────────────────────────────────────────────────────────── */
-.header-nav__list:hover > li > a,
-.header-nav__list:hover > li > .mega__trigger,
-.header-nav__list:hover > li > .cmenu__trigger,
-.header-nav__list:focus-within > li > a,
-.header-nav__list:focus-within > li > .mega__trigger,
-.header-nav__list:focus-within > li > .cmenu__trigger {
-    opacity: .55;
-}
+/* ĐÃ BỎ HẲN "LÀM MỜ CÁC MỤC BÊN CẠNH" (10/09/2026, theo yêu cầu chủ dự án).
 
-.header-nav__list > li:hover > a,
-.header-nav__list > li:hover > .mega__trigger,
-.header-nav__list > li:hover > .cmenu__trigger,
-.header-nav__list > li:focus-within > a,
-.header-nav__list > li:focus-within > .mega__trigger,
-.header-nav__list > li:focus-within > .cmenu__trigger {
-    opacity: 1;
-}
+   Khối chú thích ngay trên mô tả nó như thủ pháp của trang biên tập, và về
+   nguyên tắc thì đúng — nhưng đo trên gentlemonster.com thì hàng nav của họ
+   KHÔNG có hiệu ứng nào khi rê chuột: mọi mục giữ nguyên độ đậm, không mờ,
+   không đổi màu, không gạch chân. Một hàng nav năm mục mà cả hàng nhạt đi mỗi
+   lần con trỏ đi ngang qua là chuyển động không phục vụ việc gì.
+
+   Cả hai luật cùng đi: luật mờ và luật gỡ-mờ chỉ có nghĩa khi có nhau.
+   Riêng gạch chân của mục ĐANG Ở (.is-active) thì giữ — đó là trạng thái, không
+   phải hiệu ứng rê chuột. */
 
 /* Mục đang mở: gạch chân mảnh sát chữ. KHÔNG tăng font-weight — đổi weight
    làm cả hàng nav xê dịch mỗi lần sang trang khác. */
@@ -1122,7 +1120,13 @@ body.page-home-index {
 .hpop__scrim {
     position: fixed;
     inset: 0;
-    z-index: 1;
+    /* -1 chứ không 1, cùng lý do với .hpop__panel--cart: cả hai là con của
+       .header-main (z-index 2 → tầng xếp riêng), và trong tầng ấy wordmark cùng
+       các mục nav là nội dung thường không mang z-index. Số dương đưa nền mờ
+       lên trên chúng và cả đầu trang bị nhuộm xám; tham chiếu giữ đầu trang
+       hiện rõ trên lớp phủ. Số âm vẫn phủ kín trang vì cả tầng .header-main
+       nằm trong .site-header (z-index 110 khi lớp phủ mở). */
+    z-index: -1;
     background: rgba(0, 0, 0, .38);
     opacity: 0;
     visibility: hidden;
@@ -1146,6 +1150,10 @@ body.page-home-index {
     padding: var(--rhythm-md) var(--page-edge) var(--rhythm-lg);
     border: 0;
     border-bottom: 1px solid var(--line);
+    /* Cùng nền với lớp phủ giỏ hàng — hai cái phải đọc ra là một họ, đúng như
+       tham chiếu (cả hai đều #f3f4f6 đặc). Trước đây tấm này thừa hưởng
+       `background: var(--surface)` của .hpop__panel, tức trắng. */
+    background: var(--overlay-bg);
 }
 
 .hpop--search:hover > .hpop__panel--search,
@@ -1167,7 +1175,8 @@ body.is-search-open {
     overflow: hidden;
 }
 
-body.is-search-open .site-header {
+body.is-search-open .site-header,
+body.is-cart-open .site-header {
     z-index: 110;
 }
 
@@ -1487,11 +1496,31 @@ body.is-search-open .site-header {
    │ z-index 105: trên cụm nút nổi (90) và ngăn kéo điều hướng (100), DƯỚI
    │ chính tấm giỏ — tấm nằm trong .site-header, mà header lên 110 khi mở.
    └──────────────────────────────────────────────────────────────────────── */
+/* ┌─ NỀN MỜ ĐÃ TẮT (10/09/2026) ────────────────────────────────────────────
+   │ Bootstrap vẫn dựng .offcanvas-backdrop và gắn vào <body> khi mở — không
+   │ chặn được từ phía CSS, và cũng không nên chặn: nó là thứ khoá cuộn nền và
+   │ bắt cú bấm ra ngoài để đóng.
+   │
+   │ Nhưng từ khi tấm giỏ thành LỚP PHỦ TRÀN MÀN thì phần nhìn thấy của nó là
+   │ thừa: nó nằm ở z-index 105, tức TRÊN cả thanh nav, nên cả đầu trang bị
+   │ nhuộm xám trong khi tham chiếu giữ đầu trang hiện nguyên. Và phía sau nó
+   │ đã có một tấm đặc #f3f4f6 che kín rồi — không còn gì để làm mờ.
+   │
+   │ Nên giữ phần tử (cho Bootstrap làm việc của nó) và bỏ phần MÀU: nền trong
+   │ suốt, và hạ xuống dưới thanh nav.
+   └──────────────────────────────────────────────────────────────────────── */
 .offcanvas-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 105;
-    background: #000;
+    z-index: 50;
+    background: transparent;
+    /* Và KHÔNG bắt cú bấm nữa. Bootstrap dùng tấm này để đóng khi bấm ra
+       ngoài ngăn kéo — nhưng lớp phủ nay che kín khung nhìn, nên "ngoài" không
+       còn tồn tại: mọi cú bấm đều rơi vào chính lớp phủ. Để nguyên thì nó nằm
+       chắn trước nút X và nút ấy thôi bấm được (Playwright báo đúng chỗ:
+       "offcanvas-backdrop intercepts pointer events").
+       Đóng bằng nút X hoặc phím Esc — cùng hai lối của tham chiếu. */
+    pointer-events: none;
     opacity: 0;
     transition: opacity var(--dur-fast) var(--ease);
 }
@@ -1529,8 +1558,38 @@ body.is-search-open .site-header {
        │     → tấm giỏ         110
        │     hộp thoại mua 200 · dải báo 300  (vẫn đè lên giỏ, đúng ý)
        └──────────────────────────────────────────────────────────────────── */
-    z-index: 110;
-    width: min(420px, 100vw);
+    /* ┌─ 1, KHÔNG PHẢI 110 ────────────────────────────────────────────────
+       │ Khối chú thích cũ (nay đã gỡ) đo rằng tấm này rơi ra tầng xếp gốc nên
+       │ phải mang số lớn để vượt nền mờ. Điều đó đúng với một NGĂN KÉO nằm
+       │ cạnh nền mờ; với một lớp phủ tràn màn thì nó lại sinh ra lỗi mới: tấm
+       │ leo lên trên cả thanh nav và nuốt mất đầu trang, trong khi tham chiếu
+       │ giữ đầu trang hiện nguyên trên lớp phủ.
+       │
+       │ Tầng xếp mà số này so vào KHÔNG phải của .site-header: tấm là con của
+       │ .hpop → .header-actions → .header-main, mà .header-main có
+       │ `position: relative; z-index: 2` nên CHÍNH NÓ tạo tầng. Đo được bằng
+       │ elementFromPoint ngay giữa wordmark: trả về .hpop__panel--cart.
+       │
+       │ Trong tầng ấy, wordmark và các mục nav là nội dung thường, không mang
+       │ z-index — nên bất kỳ số DƯƠNG nào ở đây cũng đưa tấm lên trên chúng.
+       │ Phải là số ÂM: tấm lùi xuống dưới nội dung của .header-main mà vẫn ở
+       │ trên toàn bộ trang, vì cả tầng .header-main đã nằm trong .site-header
+       │ (z-index 110 khi lớp phủ mở).
+       └──────────────────────────────────────────────────────────────────── */
+    z-index: -1;
+    /* ┌─ LỚP PHỦ TRÀN MÀN, KHÔNG CÒN NGĂN KÉO 420px BÊN PHẢI (10/09/2026) ──
+       │ Đo trên gentlemonster.com: bấm biểu tượng túi ra một tấm 1440×900
+       │ (trọn khung nhìn), nền đặc rgb(243,244,246), hai tab BAG / WISHLIST
+       │ ở giữa mép trên, nút X góc phải, nội dung căn giữa cả hai chiều.
+       │ KHÔNG phải ngăn kéo trượt từ mép phải.
+       │
+       │ Cùng đúng một khuôn với lớp phủ tìm kiếm của họ (cũng 1440 ngang,
+       │ cũng #f3f4f6, cũng nút X góc phải) — hai cái đọc ra là một họ.
+       │
+       │ `left: 0` đè `left: auto` ở khối trên, `width: 100%` đè min(420px).
+       └──────────────────────────────────────────────────────────────────── */
+    left: 0;
+    width: 100%;
     max-height: none;
     display: flex;
     flex-direction: column;
@@ -1538,19 +1597,19 @@ body.is-search-open .site-header {
        "lây" xuống trang phía sau. */
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: var(--space-6) var(--space-6) var(--space-8);
+    /* Đệm trên chừa chỗ cho thanh nav: tấm phủ từ y=0 nhưng đầu trang vẫn phải
+       đọc được đè lên nó, đúng như tham chiếu. */
+    padding: calc(var(--header-h) + var(--rhythm-sm)) var(--page-edge) var(--rhythm-lg);
     border: 0;
-    background: var(--surface);
-    /* Đóng: dịch hẳn ra ngoài mép phải. Giữ visibility để trình đọc màn hình
-       bỏ qua tấm đang đóng — dịch ra ngoài khung nhìn thôi thì nó vẫn đọc. */
-    opacity: 1;
+    background: var(--overlay-bg);
+    /* Đóng: mờ đi tại chỗ. KHÔNG còn translateX — một tấm tràn màn trượt
+       ngang thì cả trang trông như bị đẩy sang bên. Giữ visibility để trình
+       đọc màn hình bỏ qua tấm đang đóng. */
+    opacity: 0;
     visibility: hidden;
-    transform: translateX(100%);
-    /* RA NHANH HƠN VÀO, đúng nếp của cả bộ: --dur (220ms) ở trạng thái đóng là
-       thời gian ĐI VỀ đóng; --dur-med (360ms) ở luật mở bên dưới là thời gian
-       đi tới mở. */
+    transform: none;
     transition:
-        transform var(--dur) var(--ease),
+        opacity var(--dur) var(--ease),
         visibility var(--dur) var(--ease);
 }
 
@@ -1560,9 +1619,10 @@ body.is-search-open .site-header {
 .hpop[data-cart] > .hpop__panel--cart.show,
 .hpop[data-account] > .hpop__panel--acct.show {
     visibility: visible;
-    transform: translateX(0);
+    opacity: 1;
+    transform: none;
     transition:
-        transform var(--dur-med) var(--ease),
+        opacity var(--dur-med) var(--ease),
         visibility var(--dur-med) var(--ease);
 }
 
@@ -2021,8 +2081,40 @@ body.is-search-open .site-header {
 }
 
 /* ── Bảng giỏ hàng ───────────────────────────────────────────────────────── */
+/* `width: min(400px, …)` ĐÃ BỎ. Luật này đứng SAU khối hình học ở trên nên nó
+   thắng, và nó kéo tấm về lại 400px — tức là ép ngăn kéo cũ quay lại đúng lúc
+   khối trên vừa đổi tấm sang lớp phủ tràn màn. Ruột tấm thì giới hạn bề ngang
+   bằng .cartpop bên dưới, không phải bằng bề ngang của cả tấm. */
+
+/* Ruột lớp phủ: cột hẹp căn giữa, không dàn hết 1440px — cùng cách tham chiếu
+   xếp nội dung giỏ hàng và tìm kiếm. */
+.hpop__panel--cart > * {
+    width: min(720px, 100%);
+    margin-inline: auto;
+}
+
+/* Hàng tiêu đề + nút X bám mép TRÊN, phần còn lại dồn vào giữa màn theo chiều
+   dọc — đúng cách tham chiếu xếp một giỏ rỗng ("There's nothing in your
+   Shopping Bag, yet." nằm giữa khung nhìn, không dính mép trên). */
 .hpop__panel--cart {
-    width: min(400px, calc(100vw - 2 * var(--page-edge)));
+    justify-content: flex-start;
+    text-align: center;
+}
+
+.hpop__panel--cart > :not(.cartdrawer__head) {
+    margin-block: auto;
+}
+
+.hpop__panel--cart .cartdrawer__head {
+    /* Nút X ra sát mép phải MÀN HÌNH chứ không sát mép cột 720px. */
+    width: 100%;
+    max-width: none;
+}
+
+/* Mục trong lớp phủ căn giữa theo cột, không bám mép trái như hồi còn là ngăn
+   kéo hẹp. .hpop__item khai `text-align: left` tường minh nên phải gỡ ở đây. */
+.hpop__panel--cart :is(.hpop__note, .hpop__item, .hpop__list) {
+    text-align: center;
 }
 
 .cartpop {
