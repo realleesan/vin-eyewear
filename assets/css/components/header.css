@@ -1180,6 +1180,16 @@ body.page-home-index {
     width: auto;
     min-width: 0;
     z-index: 70;
+    /* ┌─ CAO HẲN LÊN, KHÔNG CO THEO NỘI DUNG ───────────────────────────────
+       │ Tấm này vốn chỉ cao bằng thứ nằm trong nó — đo được 486px ở màn 900,
+       │ tức chưa tới 55% khung nhìn, nên nó đọc ra là một bảng xổ to chứ
+       │ không phải một lớp phủ. Tham chiếu để tấm cao 777px trên khung 900
+       │ (86%), và giữ nguyên chiều cao ấy dù có gõ chữ hay chưa.
+       │
+       │ min-height tính từ mép dưới đầu trang: 100dvh trừ hai tầng đầu trang
+       │ rồi trừ thêm một nhịp để còn thấy ló ra một dải trang phía dưới —
+       │ đúng như tham chiếu, tấm của họ cũng không chạm đáy màn. */
+    min-height: calc(100dvh - var(--header-h) - var(--announce-h) - var(--rhythm-md));
     max-height: calc(100dvh - var(--header-h) - var(--announce-h));
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -1255,10 +1265,21 @@ body.is-cart-open .header-announce {
     margin-inline: auto;
 }
 
+/* ┌─ NÚT X SÁT MÉP PHẢI MÀN HÌNH, KHÔNG BÁM CỘT NỘI DUNG ───────────────────
+   │ `right: calc(var(--page-edge) * -1)` neo nút vào mép phải của .srchov —
+   │ cột nội dung rộng 880px căn giữa — nên ở màn 1440 nó dừng lại cách mép
+   │ màn hình gần 250px, nằm lửng ngay trên ô tìm kiếm.
+   │
+   │ Tham chiếu đặt nút ở góc phải TRÊN của cả lớp phủ, cách mép màn chừng
+   │ 4%: đo trên ảnh của họ, nút ở x≈1846 trên khung 1919.
+   │
+   │ `position: fixed` chứ không absolute: .srchov nằm trong một tấm cuộn
+   │ được (.hpop__panel--search có overflow-y:auto), nên absolute sẽ trôi
+   │ theo nội dung khi danh sách dài. Nút đóng phải đứng yên. */
 .srchov__close {
-    position: absolute;
-    top: calc(var(--rhythm-md) * -1 + var(--space-4));
-    right: calc(var(--page-edge) * -1);
+    position: fixed;
+    top: calc(var(--header-h) + var(--announce-h) + var(--space-6));
+    right: var(--page-edge);
     display: inline-flex;
     align-items: center;
     justify-content: center;
