@@ -80,11 +80,179 @@
    LỚP 1 — KHỐI GIỚI THIỆU
    ============================================================ */
 
-.cdet__hero {
-    display: grid;
-    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+/* ════════════════════════════════════════════════════════════════════════════
+   HÀNG CHIP CHUYỂN BỘ + BANNER TRÀN BỀ NGANG (10/09/2026)
+
+   Dựng theo trang collections của nhà mốt tham chiếu. Số đo lấy trực tiếp trên
+   trang họ ở 1440px:
+       banner        1425 × 675
+       tên bộ        24px, weight 400, TRẮNG, mặt serif, đặt ở x = --page-edge
+                     và sát đáy banner
+       mô tả         13px trắng, cột rộng ~515px
+       "VIEW STORY"  13px trắng
+       hàng chip     ngay dưới thanh nav, chip bo tròn hết cỡ, 13px
+
+   Trước đợt này khối mở đầu là lưới HAI CỘT — ảnh trái, chữ phải, cả hai trên
+   nền trắng. Đó là bố cục của một trang giới thiệu; tham chiếu dựng nó thành
+   một tấm ảnh chiến dịch có chữ đè lên, tức là một trang BÌA.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Hàng chip ─────────────────────────────────────────────────────────────
+   Cuộn ngang khi tràn chứ không xuống hàng: số bộ tăng theo thời gian, mà
+   hai hàng chip thì nó thành một khối menu chứ không còn là dải điều hướng.
+   Thanh cuộn ẩn đi — dải này ngắn, kéo bằng chuột/vuốt là đủ. */
+.cdet__chips {
+    display: flex;
     align-items: center;
-    gap: 56px;
+    gap: var(--space-2);
+    margin-bottom: 0;
+    padding-block: var(--space-2);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+}
+
+.cdet__chips::-webkit-scrollbar {
+    display: none;
+}
+
+.cdet__chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+/* Bộ đang xem: tô đặc, không viền — cùng cách tham chiếu đánh dấu chip hiện
+   hành. KHÔNG dùng --ink đen đặc: dải chip nằm ngay dưới hàng nav, một viên
+   đen ở đó nặng hơn cả wordmark. */
+.cdet__chip.is-on {
+    background: var(--h-shell, #e9e9e9);
+    border-color: transparent;
+}
+
+/* ── Banner ────────────────────────────────────────────────────────────────
+   Tràn hết bề ngang khung nhìn, kể cả khi trang đang nằm trong một khung có
+   đệm hai bên: `margin-inline` âm nửa khung nhìn là thủ pháp phá khung tiêu
+   chuẩn, cùng cách .mega__panel từng dùng. */
+.cdet__hero {
+    position: relative;
+    /* ┌─ PHÁ KHUNG BẰNG CÁCH BÙ ĐÚNG ĐỆM CỦA .cdet, KHÔNG DÙNG 100vw ────────
+       │ `width: 100vw; margin-inline: calc(50% - 50vw)` là thủ pháp phá khung
+       │ quen thuộc, nhưng 100vw ĐO CẢ THANH CUỘN: đo được scrollWidth 1433 so
+       │ với clientWidth 1425, tức banner thò ra 8px và cả trang sinh thanh
+       │ cuộn ngang.
+       │
+       │ Bù đệm thì không bao giờ lệch: .cdet có `padding-inline:
+       │ var(--page-edge)`, kéo ngược đúng ngần ấy là banner chạm hai mép của
+       │ .cdet — mà .cdet rộng bằng khung nhìn ở mọi màn tới 1600px. */
+    margin-inline: calc(var(--page-edge) * -1);
+    /* Kéo ngược bớt `gap: 76px` của .cdet. Hàng chip là điều hướng của CHÍNH
+       banner ngay dưới nó, hai thứ phải đi liền chứ không cách nhau một nhịp
+       section — tham chiếu để chúng cách nhau 44px (chip ở y=110, banner ở
+       y=154). Đặt margin âm trên BANNER chứ không trên hàng chip: chip là
+       phần tử đầu của trang, margin âm ở đó còn kéo cả nó lên đè vào đầu
+       trang. */
+    margin-top: -32px;
+    /* 675/1440 = 0.469 — đúng tỉ lệ tấm của tham chiếu, nên banner cao theo
+       bề ngang thay vì cố định px và bẹt đi ở màn hẹp. min-height giữ cho
+       điện thoại vẫn còn chỗ cho bốn dòng chữ. */
+    aspect-ratio: 1440 / 675;
+    min-height: 420px;
+    overflow: hidden;
+    isolation: isolate;
+    background: var(--ink);
+}
+
+.cdet__media,
+.cdet__img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.cdet__img {
+    object-fit: cover;
+}
+
+.cdet__img--empty {
+    display: grid;
+    place-items: center;
+    background: var(--h-shell, #ededed);
+}
+
+/* Dải chuyển sắc tối đỡ chữ. Ảnh bộ sưu tập do cửa hàng tự tải lên nên sáng
+   tối không đoán trước được — cùng lý lẽ với dải của đầu trang trên hero
+   video. Chỉ tối ở NỬA DƯỚI, nơi có chữ; nửa trên để ảnh nguyên. */
+.cdet__veil {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 40%,
+        rgba(0, 0, 0, .55) 100%);
+}
+
+/* Chữ chồng lên ảnh, dồn xuống đáy trái. */
+.cdet__cap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    padding: var(--rhythm-sm) var(--page-edge);
+    color: var(--on-ink);
+}
+
+/* Chữ trong tấm bìa đảo sang trắng. Nhắm từng lớp một chứ không đặt
+   `color: inherit` ở .cdet__cap: mấy lớp này khai --ink / --muted tường minh
+   (chúng vốn dựng cho nền trắng), mà khai tường minh thì không thừa hưởng gì. */
+.cdet__cap :is(.cdet__name, .cdet__tagline, .cdet__intro, .cdet__season) {
+    color: var(--on-ink);
+}
+
+.cdet__cap .cdet__season-tag {
+    border-color: rgba(255, 255, 255, .55);
+    color: var(--on-ink);
+}
+
+/* Mô tả rộng ~515px như tham chiếu, không kéo hết bề ngang màn. */
+.cdet__cap :is(.cdet__tagline, .cdet__intro) {
+    max-width: 56ch;
+}
+
+.cdet__story-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--on-ink);
+    font-size: var(--fs-body-sm);
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 2px;
+}
+
+/* ── Phần thông số, nay nằm DƯỚI banner ────────────────────────────────── */
+.cdet__info {
+    margin-top: var(--rhythm-sm);
+}
+
+.cdet__info .cdet__body {
+    max-width: 720px;
 }
 
 .cdet__img {
@@ -136,8 +304,11 @@
 .cdet__name {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: clamp(28px, calc(13.2px + 2.56vw), 46px);
-    font-weight: 500;
+    /* Trần 32px thay cho 46: tham chiếu để tên bộ ở 24px, và cả thang chữ của
+       site vừa hạ trần về 24–32 (xem PHẦN 2 gm.css). Một cái tên 46px trên
+       ảnh thì nó không còn là nhãn của tấm bìa nữa mà thành tiêu đề trang. */
+    font-size: clamp(22px, calc(14.9px + 1.19vw), 32px);
+    font-weight: 400;
     line-height: 1.1;
     letter-spacing: normal;
     color: var(--ink);

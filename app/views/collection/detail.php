@@ -86,7 +86,44 @@ if ($minPrice !== null) {
 
 <article class="cdet">
 
-    <!-- ══════════ LỚP 1 · GIỚI THIỆU BỘ ══════════ -->
+    <?php
+    /* ══════════ HÀNG CHIP CHUYỂN BỘ ══════════
+       Dựng theo trang collections của nhà mốt tham chiếu: ngay dưới thanh nav
+       là một hàng chip bo tròn liệt kê MỌI bộ sưu tập, bộ đang xem tô đặc.
+       Nó biến trang chi tiết thành một trang duyệt — sang bộ khác không phải
+       quay về trang danh sách.
+
+       Cuộn ngang khi tràn (xem .cdet__chips trong collection-detail.css): số
+       bộ tăng theo thời gian, mà xuống hai hàng thì nó thành một khối menu
+       chứ không còn là một dải điều hướng.
+
+       CollectionModel::visible() gọi thêm một truy vấn cho trang này. Chấp
+       nhận: đây là điều hướng chính của cả khu bộ sưu tập. */
+    $dsBst = CollectionModel::visible();
+    ?>
+    <?php if (count($dsBst) > 1): ?>
+        <nav class="cdet__chips" aria-label="Bộ sưu tập khác">
+            <a class="cdet__chip" href="/bo-suu-tap">Tất cả</a>
+            <?php foreach ($dsBst as $bo): ?>
+                <?php $dangXem = $bo['slug'] === $collection['slug']; ?>
+                <a class="cdet__chip<?= $dangXem ? ' is-on' : '' ?>"
+                   href="/bo-suu-tap/<?= e(rawurlencode($bo['slug'])) ?>"
+                   <?= $dangXem ? 'aria-current="page"' : '' ?>><?= e($bo['name']) ?></a>
+            <?php endforeach; ?>
+        </nav>
+    <?php endif; ?>
+
+    <!-- ══════════ LỚP 1 · BANNER TRÀN BỀ NGANG ══════════ -->
+    <?php
+    /* Trước đợt này khối mở đầu là lưới HAI CỘT: ảnh bên trái, chữ bên phải.
+       Tham chiếu dựng nó thành một tấm ảnh tràn bề ngang cao 675px với chữ
+       TRẮNG chồng lên góc dưới trái — tên bộ 24px, mô tả 13px rộng ~515px,
+       một liên kết "xem câu chuyện".
+
+       Chữ chồng lên ảnh nên phải có dải chuyển sắc tối phía sau, cùng lý lẽ
+       với dải của đầu trang trên hero video: ảnh bộ sưu tập do cửa hàng tải
+       lên, sáng tối không đoán trước được. */
+    ?>
     <section class="cdet__hero">
         <div class="cdet__media">
             <?php if ($cover !== ''): ?>
@@ -94,15 +131,16 @@ if ($minPrice !== null) {
                          hoãn tải nó chỉ làm trang trông chậm hơn. */ ?>
                 <img class="cdet__img" src="<?= e(asset($cover)) ?>"
                      alt="<?= e($collection['name']) ?>"
-                     width="880" height="600" decoding="async">
+                     width="1440" height="675" decoding="async">
             <?php else: ?>
                 <div class="cdet__img cdet__img--empty" aria-hidden="true">
                     <?= icon('glasses', 'cdet__ph', 56) ?>
                 </div>
             <?php endif; ?>
+            <div class="cdet__veil" aria-hidden="true"></div>
         </div>
 
-        <div class="cdet__body">
+        <div class="cdet__cap">
             <?php if (!empty($collection['season_code']) || $when !== '' || !empty($collection['season_label'])): ?>
                 <p class="cdet__season">
                     <?php if (!empty($collection['season_code'])): ?>
@@ -129,6 +167,24 @@ if ($minPrice !== null) {
             <?php if (!empty($collection['intro'])): ?>
                 <p class="cdet__intro"><?= e($collection['intro']) ?></p>
             <?php endif; ?>
+
+            <?php /* "Xem câu chuyện" chỉ in ra khi thật sự có chuyện để xem —
+                     khối .cdet__story bên dưới dựng từ $paras. */ ?>
+            <?php if (!empty($paras)): ?>
+                <a class="cdet__story-link" href="#cdet-story-title">
+                    Xem câu chuyện
+                    <span class="cdet__story-arrow" aria-hidden="true">↗</span>
+                </a>
+            <?php endif; ?>
+        </div>
+    </section>
+
+    <!-- ══════════ LỚP 1b · THÔNG SỐ VÀ LỐI MUA ══════════ -->
+    <?php /* Đã TÁCH khỏi banner: trên ảnh chỉ giữ tên bộ, một câu và một liên
+             kết — đúng như tham chiếu. Bảng thông số, con số quy mô và hai nút
+             mua đứng dưới ảnh, trên nền trắng, nơi chúng đọc được. */ ?>
+    <section class="cdet__info">
+        <div class="cdet__body">
 
             <?php if ($meta !== []): ?>
                 <dl class="cdet__meta">
