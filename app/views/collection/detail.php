@@ -179,6 +179,43 @@ if ($minPrice !== null) {
         </div>
     </section>
 
+    <!-- ══════════ LƯỚI SẢN PHẨM CỦA BỘ ══════════ -->
+    <?php
+    /* ĐẶT NGAY DƯỚI BANNER, và đó là điểm khác lớn nhất so với bản trước.
+
+       Trang này vốn có $products từ controller nhưng chỉ dùng nó cho BẢNG SO
+       SÁNH và cho ngăn kéo — tức là xem một bộ sưu tập xong vẫn không thấy
+       mặt hàng nào, phải bấm thêm một nút nữa sang trang danh mục đã lọc.
+       Tham chiếu đi thẳng từ tấm bìa xuống lưới hàng: bìa nói bộ này là gì,
+       lưới nói bộ này có gì.
+
+       Dùng .pgrid và _layout/product-card như trang danh mục và trang tìm
+       kiếm — cùng một thẻ, cùng một lưới, không dựng thêm biến thể nào.
+
+       CẮT 12 MẪU. Cả bộ có thể vài chục mẫu, mà đây không phải trang danh
+       mục: nó là trang giới thiệu có kèm hàng. Hết 12 thì một nút dẫn sang
+       danh mục đã lọc — nơi có bộ lọc, sắp xếp và phân trang thật. Tham chiếu
+       cũng cắt và để nút "More 32 / 34" ở cuối lưới. */
+    $luoi = array_slice($products, 0, 12);
+    ?>
+    <?php if ($luoi !== []): ?>
+        <section class="cdet__shop" aria-label="Sản phẩm thuộc <?= e($collection['name']) ?>">
+            <ul class="pgrid" role="list">
+                <?php foreach ($luoi as $item): ?>
+                    <?php partial('_layout/product-card', ['product' => $item]); ?>
+                <?php endforeach; ?>
+            </ul>
+
+            <?php if ($total > count($luoi)): ?>
+                <div class="cdet__shop-more">
+                    <a class="cdet__more-btn" href="<?= e($catalogUrl) ?>">
+                        Xem tiếp <?= (int) count($luoi) ?> / <?= (int) $total ?>
+                    </a>
+                </div>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
+
     <!-- ══════════ LỚP 1b · THÔNG SỐ VÀ LỐI MUA ══════════ -->
     <?php /* Đã TÁCH khỏi banner: trên ảnh chỉ giữ tên bộ, một câu và một liên
              kết — đúng như tham chiếu. Bảng thông số, con số quy mô và hai nút
@@ -228,10 +265,17 @@ if ($minPrice !== null) {
                 <?php endif; ?>
 
                 <div class="cdet__cta-row">
-                    <a class="cdet__cta" href="<?= e($catalogUrl) ?>">
-                        Xem <?= (int) $total ?> sản phẩm của bộ
-                        <?= icon('arrow-right', 'cdet__cta-ico', 18) ?>
-                    </a>
+                    <?php /* Nút "Xem N sản phẩm của bộ" CHỈ in khi lưới phía trên
+                             không có gì. Có lưới rồi thì nó đã kèm sẵn nút "Xem
+                             tiếp 12 / N" dẫn đúng cùng một chỗ — hai nút cùng
+                             đích cách nhau một màn hình là thừa, và cái thứ hai
+                             lại là nút ĐEN nên nó còn nặng hơn cái thật. */ ?>
+                    <?php if ($luoi === []): ?>
+                        <a class="cdet__cta" href="<?= e($catalogUrl) ?>">
+                            Xem <?= (int) $total ?> sản phẩm của bộ
+                            <?= icon('arrow-right', 'cdet__cta-ico', 18) ?>
+                        </a>
+                    <?php endif; ?>
                     <?php /* Theo cờ config('ar.nav_enabled') như năm chỗ còn
                              lại — xem ghi chú đầu config/ar.php. Trước
                              06/09/2026 nút này in ra vô điều kiện, nên tắt cờ

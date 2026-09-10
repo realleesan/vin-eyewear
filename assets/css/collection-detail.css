@@ -246,6 +246,34 @@
     padding-bottom: 2px;
 }
 
+/* ── Lưới sản phẩm của bộ ──────────────────────────────────────────────────
+   .pgrid tự lo số cột (4 ở màn rộng) — đây chỉ khai khoảng cách với banner và
+   khuôn cái nút cuối lưới. */
+.cdet__shop-more {
+    margin-top: var(--rhythm-sm);
+    display: flex;
+    justify-content: center;
+}
+
+/* Cùng khuôn nút viền với lớp phủ giỏ hàng: nền bằng nền, viền mảnh xám, bo
+   8px — tham chiếu để nút "More 32 / 34" ở cuối lưới đúng dáng ấy. */
+.cdet__more-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 240px;
+    min-height: 47px;
+    padding: var(--space-2) var(--space-6);
+    border: 1px solid #ababab;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink);
+    font-size: var(--fs-body-sm);
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
 /* ── Phần thông số, nay nằm DƯỚI banner ────────────────────────────────── */
 .cdet__info {
     margin-top: var(--rhythm-sm);
