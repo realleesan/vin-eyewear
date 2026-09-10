@@ -522,42 +522,30 @@
     }
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
-   Ô "SẮP XẾP THEO" — CÙNG MỘT <details> VỚI CỘT LỌC
-
-   ĐÃ GỠ HẲN ba luật cũ của biến thể <select>: `.catpick--select`,
-   `.catpick__select` và một khai báo `.catpick__caret` thứ hai.
-
-   Khai báo caret thứ hai ấy là một BẪY ĐÃ SỐNG ÂM THẦM, ghi lại để không ai
-   dựng lại nó: nó `position: absolute; right: 0` và đứng SAU luật caret của
-   `.catpick` thường (cùng độ đặc hiệu (0,1,0)), nên nó thắng và áp cho MỌI
-   chữ V trên trang — kể cả chín cái trong cột lọc, vốn được thiết kế để nằm
-   trong một hàng flex `space-between`. Chúng bị bốc ra khỏi luồng và neo vào
-   khối định vị gần nhất, tình cờ là `.cfilter__panel` (position: fixed). Nhìn
-   thì đúng chỗ, nhưng đó là trùng hợp, không phải bố cục.
-
-   Nay ô sắp xếp dùng thẳng bộ .catpick chung, chỉ đè đúng những gì khác:
-   nó đứng trên một HÀNG NGANG cạnh nhãn "Sắp xếp theo", không đứng trong một
-   cột dọc — nên nó không chiếm hết bề ngang và không cần đường kẻ dưới.
-   ════════════════════════════════════════════════════════════════════════════ */
-.catpick--sort {
-    /* Cột lọc cho mỗi nhóm một gạch chân để tách nhóm; ở đây chỉ có MỘT ô nằm
-       cạnh nhãn của nó, nên gạch chân biến thành một nét lạc giữa thanh. */
+/* ── Ô "Sắp xếp" ở thanh trên — vẫn là <select>, giữ nguyên luật cũ ─────── */
+.catpick--select {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
     border-bottom: 0;
-    /* Khoá bề ngang để dòng chữ hiện tại đổi dài ngắn ("Mới nhất" →
-       "Giá cao → thấp") mà thanh trên không co giật theo. Đủ chứa nhãn dài
-       nhất cộng chữ V. */
-    min-width: 168px;
 }
 
-.catpick--sort .catpick__sum {
-    /* Cùng dáng "gạch chân, không khung" với mọi ô nhập khác của bộ — thứ mà
-       biến thể <select> cũ đang mang, và là thứ duy nhất đáng giữ lại từ nó. */
-    border-bottom: 1px solid var(--line-strong);
+/* Gạch chân, không khung — cùng dáng với mọi ô nhập khác của bộ. */
+.catpick__select {
+    appearance: none;
+    padding: var(--space-2) var(--space-8) var(--space-2) 0;
+    border: 1px solid transparent;
+    border-bottom-color: var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--fs-body-sm);
+    cursor: pointer;
 }
 
-.catpick--sort[open] .catpick__sum {
+.catpick__select:focus {
     border-bottom-color: var(--ink);
+    border-bottom-width: 2px;
 }
 
 /* ┌─ BỎ KHUNG CHỮ NHẬT KHI BẤM VÀO Ô SẮP XẾP ───────────────────────────────
@@ -572,48 +560,20 @@
    │ chỉ chồng thêm một hình chữ nhật quanh cái đã rõ.
    │
    │ Người dùng bàn phím không mất gì: Tab tới ô này vẫn thấy gạch chân dày
-   │ lên gấp đôi và đổi sang đen đặc.
-   │
-   │ GIỮ LUẬT NÀY DÙ <select> ĐÃ ĐI. Ô sắp xếp nay là <details> (xem
-   │ app/views/product/index.php), nên `.catpick__select` không còn phần tử
-   │ nào để khớp. Không xoá: bảng lọc của trang chi tiết bộ sưu tập và vài màn
-   │ quản trị vẫn còn <select> mang lớp này, và luật thì vô hại khi không khớp
-   │ ai. Xoá nó thì lần sau ai đó dựng lại một ô chọn ở đây sẽ gặp lại đúng cái
-   │ khung chữ nhật đã tốn công đo mới tìm ra. */
+   │ lên gấp đôi và đổi sang đen đặc. */
 .catpick__select:focus-visible {
     outline: none;
 }
 
-/* ┌─ DANH SÁCH THẢ NỔI CỦA Ô SẮP XẾP ───────────────────────────────────────
-   │ SỬA MỘT LỖI GHÉP NHÁNH. Khối này từng mang selector `.catpick__caret` —
-   │ tức là toàn bộ phần thân của một danh sách thả nổi (position:absolute,
-   │ nền trắng, viền, bóng, z-index 20) bị dán nhầm lên CHỮ V.
-   │
-   │ Hậu quả nhìn thấy trên trang: một ô trắng có viền 34×18px lơ lửng ở góc
-   │ trái, ngay cả khi cột lọc đang đóng — chính là mấy cái chevron của chín
-   │ nhóm lọc bị bốc ra khỏi luồng và neo vào mép trang.
-   │
-   │ Selector đúng là danh sách trong ô SẮP XẾP. Trong cột lọc, danh sách mở
-   │ ra TRONG LUỒNG là đúng (cột ấy cuộn riêng); ở thanh trên thì không — ngay
-   │ dưới nó là lưới sản phẩm, mở trong luồng là cả lưới bị đẩy xuống 150px
-   │ rồi bật lại khi gập.
-   └──────────────────────────────────────────────────────────────────────── */
-.catpick--sort {
-    /* Mốc neo cho danh sách thả nổi ngay dưới. Thiếu dòng này thì nó neo vào
-       khối định vị gần nhất ở tận đâu đó phía trên. */
-    position: relative;
-}
-
-.catpick--sort .catpick__menu {
+.catpick__caret {
     position: absolute;
-    top: calc(100% + var(--space-2));
     right: 0;
-    left: 0;
-    z-index: 20;
-    padding: var(--space-2) var(--space-4);
-    background: var(--surface);
-    border: 1px solid var(--line);
-    box-shadow: var(--elev-3);
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.6;
+    pointer-events: none;
 }
 
 /* ── Trống ───────────────────────────────────────────────────────────────────

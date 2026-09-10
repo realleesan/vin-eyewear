@@ -37,18 +37,9 @@ $products = $products ?? [];
 <section class="hnew" data-section="s07" aria-labelledby="hnew-title">
     <div class="hnew__inner">
 
-        <?php /* "Xem tất cả" NẰM TRONG ĐẦU KHỐI, không còn treo dưới lưới.
-                 Lý do đầy đủ ở khối "ĐẦU KHỐI" trong components/home-sections.css:
-                 dưới lưới nó rơi vào ngay sát chân thẻ cuối và đọc ra như một
-                 dòng chú thích của đúng cái thẻ ấy. .hsec-head vốn đã có sẵn ô
-                 lưới chờ nó ở cột phải. */ ?>
         <div class="hsec-head reveal">
             <p class="eyebrow"><?= e(t('home.new.eyebrow')) ?></p>
             <h2 id="hnew-title" class="section-h2 section-h2--plain"><?= e(t('home.new.title')) ?></h2>
-
-            <div class="hsec-all">
-                <a class="hsec-all__link" href="/san-pham?sort=newest"><?= e(t('home.see_all')) ?></a>
-            </div>
         </div>
 
         <?php

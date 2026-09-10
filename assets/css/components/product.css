@@ -61,22 +61,6 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto;
-    /* ┌─ KHÔNG CHO HAI HÀNG GIÃN RA LẤP CHỖ THỪA ──────────────────────────
-       │ `.pgrid` kéo mọi thẻ trong một hàng cao BẰNG NHAU (mặc định của lưới
-       │ là stretch). Thẻ nào ít nội dung hơn thì dôi ra một khoảng — và với
-       │ `align-content` mặc định, khoảng dôi ấy được CHIA cho hai hàng `auto`,
-       │ nên chính Ô ẢNH cao lên.
-       │
-       │ Đo được sau khi thêm hàng ô màu: thẻ CÓ ô màu và thẻ KHÔNG có nằm cạnh
-       │ nhau trên một hàng, ô ảnh lệch nhau 14px và tên sản phẩm không thẳng
-       │ hàng. Ảnh không có aspect-ratio nào nữa để bảo vệ nó — .pcard__media
-       │ giãn theo hàng, .pcard__shot bên trong thì giữ tỉ lệ, kết quả là một
-       │ dải xám thừa dưới chân ảnh.
-       │
-       │ `start` ghim cả hai hàng lên đầu: ô ảnh luôn đúng tỉ lệ, chữ luôn bắt
-       │ đầu ở cùng một cao độ, còn khoảng dôi rơi xuống ĐÁY thẻ — nơi không ai
-       │ nhìn thấy nó. */
-    align-content: start;
     /* KHÔNG viền, KHÔNG nền, KHÔNG bóng. Bản trước có cả ba, và ba thứ đó
        chính là cái làm lưới cũ đọc ra thành "một bảng các hộp". */
     background: transparent;
@@ -121,8 +105,6 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    /* Cùng chế độ với ảnh chính — xem khối chú thích ở .pcard__shot img. Hai
-       tấm chồng khít mà cắt khác nhau thì cú đổi ảnh đọc ra như một cú nhảy. */
     object-fit: contain;
     opacity: 0;
     transition: opacity var(--dur-med) var(--ease);
@@ -131,21 +113,9 @@
 .pcard__shot img {
     width: 100%;
     height: 100%;
-    /* ┌─ `contain`, VÀ Ở KHUNG NÀY THÌ BẮT BUỘC ────────────────────────────
-       │ Ô thẻ là khung DỌC 3/4 (--ratio-pcard), còn ảnh trong CSDL là vuông
-       │ 600×600. Hai chế độ vì thế cắt theo hai chiều khác hẳn nhau:
-       │     contain  ảnh vừa theo BỀ NGANG → chừa dải xám trên và dưới. Chiếc
-       │              kính còn nguyên.
-       │     cover    ảnh vừa theo CHIỀU CAO → cắt 12,5% MỖI BÊN, mà đúng hai
-       │              bên là chỗ CÀNG KÍNH nằm. Gọng bị xén mất hai đầu.
-       │
-       │ (Đã có một lượt đổi sang `cover`. Lượt ấy đi kèm một khung NGANG 4:3,
-       │ nơi cover cắt phần trên–dưới trống. Khung ngang đó bị bỏ khi gộp
-       │ nhánh — thẻ nay dùng khung dọc — nên `cover` mất hết lý do và chỉ còn
-       │ lại phần tác hại.)
-       │
-       │ Nền xám của .pcard__media lấp phần dôi ra, nên không có mép trắng.
-       └──────────────────────────────────────────────────────────────────── */
+    /* `contain` chứ không `cover`: ảnh trong CSDL là 600×600 đã canh sẵn, mà
+       `cover` sẽ cắt càng kính ở hai bên khi ô thẻ không vuông tuyệt đối. Nền
+       xám của .pcard__media lấp phần dôi ra, nên không có mép trắng. */
     object-fit: contain;
     display: block;
     transition: transform var(--dur-med) var(--ease);
@@ -311,85 +281,6 @@
     text-decoration: line-through;
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   3b. Ô MÀU
-
-   Hàng chấm màu dưới giá — xem chú thích dài ở _layout/product-card.php về vì
-   sao mỗi ô là một <a> thật chứ không phải một nút JavaScript.
-
-   VUÔNG, KHÔNG TRÒN. Cả bộ này góc vuông tuyệt đối (--radius: 0), và ngoại lệ
-   duy nhất đã ghi trong bảng token là huy hiệu SỐ trên giỏ hàng — một chữ số
-   trong hình tròn đọc ra ngay là "đếm". Ô màu không thuộc ngoại lệ ấy; tham
-   chiếu cũng vẽ chúng vuông.
-
-   16px: đủ để phân biệt hai sắc gần nhau (bạc mờ và ghi khói lệch nhau không
-   nhiều) mà vẫn là một chi tiết phụ dưới dòng giá, không phải một hàng nút.
-   ──────────────────────────────────────────────────────────────────────────── */
-.pcard__sw {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: var(--space-2) 0 0;
-    padding: 0;
-}
-
-.pcard__swatch {
-    display: block;
-    width: 16px;
-    height: 16px;
-    background: var(--sw, var(--surface-sunken));
-    /* Viền mảnh cùng màu đường kẻ: nếu không thì ô màu TRẮNG (bạc, kem, trong
-       suốt) biến mất hoàn toàn trên nền trắng của thẻ. */
-    border: 1px solid var(--line-quiet);
-    /* Vùng chạm nới ra bằng đệm trong suốt chứ không bằng cách phóng to ô: hình
-       nhìn thấy giữ nguyên 16px, mà ngón tay có 24px. Chưa đạt 44px của WCAG
-       2.5.5 — chấp nhận được vì đây KHÔNG phải đường đi duy nhất tới trang chi
-       tiết: ảnh và tên sản phẩm ngay trên đều dẫn tới đúng chỗ ấy, và cả hai
-       đều là đích chạm rất lớn. */
-    background-clip: padding-box;
-    outline-offset: 3px;
-    transition: box-shadow var(--dur) var(--ease);
-}
-
-/* Đang rê/đang giữ tiêu điểm: một vòng mực cách ô 2px. Không phóng to ô — hàng
-   ô sẽ xê dịch và ô bên cạnh nhảy chỗ ngay lúc con trỏ đang nhắm vào. */
-.pcard__swatch:hover,
-.pcard__swatch:focus-visible {
-    box-shadow: 0 0 0 1px var(--surface), 0 0 0 2px var(--ink);
-}
-
-/* ┌─ ẢNH XEM TRƯỚC CỦA MỘT PHỐI MÀU ────────────────────────────────────────
-   │ assets/js/pcard-swatch.js chèn đúng MỘT thẻ <img> này vào ô ảnh khi cần
-   │ và đổi `src` theo ô màu đang rê. Chồng khít lên ảnh chính, cùng chế độ
-   │ cắt với nó (xem .pcard__shot img) để cú đổi không thành một cú nhảy.
-   │
-   │ z-index 1: TRÊN cả ảnh chính lẫn .pcard__alt (ảnh người đeo, hiện khi rê
-   │ vào thẻ). Rê vào một ô màu là một ý định HẸP hơn rê vào thẻ, nên nó phải
-   │ thắng.
-   └──────────────────────────────────────────────────────────────────────── */
-.pcard__swap {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--dur) var(--ease);
-}
-
-.pcard__swap.is-on {
-    opacity: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .pcard__swap {
-        transition: none;
-    }
-}
-
 /* ============================================================================
    4. CỤM NÚT — ẨN LÚC NGHỈ, HIỆN THEO NGỮ CẢNH
 
@@ -453,27 +344,6 @@
 
    Luật này đúng cho mọi thiết bị; hai khối @media bên dưới chỉ quyết định nó
    có HIỆN hay không. */
-/* ┌─ HAI NÚT NẰM CẠNH NHAU, MỖI NÚT NỬA THẺ — KHÔNG XẾP CHỒNG ──────────────
-   │ Bản trước là lưới MỘT cột: "Mua ngay" nằm trên, "Thêm vào giỏ" nằm dưới.
-   │ Hai khối chữ hoa cao 40px xếp chồng ăn hết 84px đáy ô ảnh — che gần một
-   │ phần ba chiếc kính đúng lúc khách đang rê chuột vào để nhìn nó.
-   │
-   │ Nay hai cột đều nhau: cụm nút chỉ còn cao một nút, và hai lựa chọn đứng
-   │ ngang hàng nên đọc ra là hai lối đi song song ("mua luôn" hay "để dành"),
-   │ không phải một cái chính và một cái phụ.
-   │
-   │ CẢ HAI VÀNH NGOÀI CÙNG PHẢI CHIA ĐÔI, và đó là lý do luật này khai ở hai
-   │ chỗ. Chân thẻ có hai hình dạng khác nhau tuỳ mặt hàng:
-   │     mua thẳng được  → một <form> chứa hai <button>
-   │     không mua thẳng → một <a>/<span> trạng thái + một <a> "Chi tiết",
-   │                       hai anh em NGANG HÀNG trong .pcard__actions
-   │ Nên .pcard__actions chia đôi cho ca thứ hai, còn <form> chia đôi cho ca
-   │ thứ nhất và tự trải hết hai cột của cha (`grid-column: 1 / -1`) để nó
-   │ không bị nhốt vào nửa trái.
-   │
-   │ HỢP ĐỒNG VỚI CartController::add() KHÔNG ĐỔI: vẫn đúng một <form>, đúng
-   │ hai <button submit>, đúng bộ input ẩn. Đây thuần tuý là chỗ đứng.
-   └──────────────────────────────────────────────────────────────────────── */
 .pcard__actions {
     grid-row: 1;
     grid-column: 1;
@@ -481,7 +351,6 @@
     z-index: 3;
     padding: var(--space-2);
     display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: var(--space-1);
 }
 
@@ -496,7 +365,6 @@
    có sàn là `auto` — nó sẽ để cột phải nở rộng hơn cột trái đúng bằng phần
    chữ thừa, và hai nút thôi bằng nhau. minmax(0,…) bỏ cái sàn ấy đi. */
 .pcard__actions form {
-    grid-column: 1 / -1;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--space-1);

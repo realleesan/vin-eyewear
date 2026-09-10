@@ -28,33 +28,6 @@ body:has(#mobileNav.is-open) .fab {
     display: none;
 }
 
-/* ┌─ MỌI LỚP PHỦ TOÀN MÀN KHÁC CŨNG PHẢI GIẤU CỤM NÚT ──────────────────────
-   │ Cùng lý lẽ với ngăn kéo điều hướng ngay trên, nhưng BỐN lớp phủ này thì
-   │ z-index KHÔNG cứu được:
-   │
-   │     .cfilter[open]      ngăn kéo bộ lọc của trang danh sách (tấm z 85,
-   │                         nền mờ z 80) — ba nút tròn nổi lù lù giữa danh
-   │                         sách tiêu chí
-   │     .is-search-open     lớp phủ tìm kiếm (nền mờ z 95 phủ được, nhưng ba
-   │                         nút vẫn nằm trong thứ tự Tab phía sau nó)
-   │     .is-cart-open       ngăn kéo giỏ hàng
-   │     .is-acct-open       ngăn kéo tài khoản — nền mờ Bootstrap ở 105 phủ
-   │                         được ba nút về mặt hình ảnh, nhưng cũng chỉ thế
-   │
-   │ Nâng z-index của nền mờ lên cho đủ cao là cách chữa sai: nó chỉ giấu cụm
-   │ nút khỏi MẮT, còn phím Tab và trình đọc màn hình vẫn đi vào ba nút nằm
-   │ sau một lớp phủ đang mở. display:none cắt cả ba đường cùng lúc.
-   │
-   │ Ba lớp trên <body> đều do assets/js/header.js gắn qua sự kiện
-   │ shown/hidden.bs.offcanvas — xem ganNganKeo().
-   └──────────────────────────────────────────────────────────────────────── */
-body:has(.cfilter[open]) .fab,
-body.is-search-open .fab,
-body.is-cart-open .fab,
-body.is-acct-open .fab {
-    display: none;
-}
-
 /* ┌─ HAI TRANG CÓ CỘT TÁC VỤ DÍNH BÊN PHẢI → CỤM NÚT SANG MÉP TRÁI ─────────
    │ Quét bằng hit-test hình học ở MỌI vị trí cuộn (không chỉ màn hình đầu):
    │ hai trang có một cột dính căn phải chứa nút hành động chính, và cả hai

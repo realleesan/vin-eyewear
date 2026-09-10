@@ -198,100 +198,80 @@
 }
 
 /* ============================================================================
-   2. TÀI KHOẢN — NAY LÀ NGĂN KÉO, KHÔNG CÒN LÀ BẢNG XỔ
+   2. TÀI KHOẢN — bảng xổ neo dưới icon, nhỏ, nhịp ruột ngắn
 
-   ĐÃ THAY TOÀN BỘ KHỐI NÀY. Bản trước tả một bảng xổ nhỏ neo dưới icon: mờ vào
-   + nhích 6px xuống, ruột lên từng dòng cách nhau 50ms. Tấm ấy không còn tồn
-   tại — bấm icon người nay mở một NGĂN KÉO trượt từ mép phải, đúng như giỏ
-   hàng (yêu cầu chủ dự án, tham chiếu gentlemonster.com). Xem khối
-   [data-account] trong app/views/_layout/header.php.
+   t=0    tấm: mờ vào + nhích 6px xuống (300ms)
+   t=120  nhãn đầu bảng (220ms, 10px)
+   t=170+ các mục, cách 50ms (220ms, 12px)
+   Đóng: ruột 140ms, tấm 220ms trễ 40ms → lắng ở 260ms.
 
-   ┌─ VÌ SAO PHẢI SỬA Ở ĐÂY, KHÔNG CHỈ Ở components/header.css ───────────────
-   │ Selector cũ là `.hpop:not(.hpop--search):not([data-cart]) > .hpop__panel`
-   │ — nó loại trừ ô tìm kiếm và giỏ hàng, nên nó khớp ĐÚNG cụm tài khoản. Độ
-   │ ưu tiên (0,4,0), và file này nạp SAU header.css.
-   │
-   │ Hệ quả đo được khi mới dựng ngăn kéo: header.css đặt
-   │ `transform: translateX(100%)` để tấm nằm ngoài mép phải lúc đóng, nhưng
-   │ luật trên đè lại thành `translateY(-6px)` — tấm đứng NGAY TRONG khung
-   │ nhìn, phủ 420px bên phải mọi trang. Nó `visibility: hidden` nên không ai
-   │ nhìn thấy, nhưng nó NUỐT MỌI CÚ BẤM ở dải đó: bấm chính cái icon tài
-   │ khoản cũng không tới nơi.
-   │
-   │ Đây là kiểu lỗi chỉ lộ ra khi thử bằng chuột thật — nhìn ảnh chụp thì
-   │ trang hoàn toàn bình thường.
-   └──────────────────────────────────────────────────────────────────────────
+   Tham chiếu không có bảng nào tương đương (tài khoản của họ là tấm 50% màn
+   trượt 1000ms); giữ ngôn ngữ ease-in-out + bubble, thu quãng và thời lượng
+   theo cỡ bảng.
 
-   NHỊP: dùng lại NGUYÊN nhịp của ngăn kéo giỏ (PHẦN 3 ngay dưới) — cùng một
-   vật thì phải trượt cùng một tốc độ. Hai ngăn kéo trên cùng một thanh nav mà
-   một cái 480ms một cái 300ms thì đọc ra là hai website.
+   Trạng thái mở khai ĐỦ opacity/visibility/transform chứ không chỉ transition:
+   luật đóng ở đây có độ ưu tiên (0,4,0), cao hơn luật :hover của header.css
+   (0,3,0) — thiếu ba dòng ấy là bảng không bao giờ hết lệch 6px.
    ============================================================================ */
-.hpop[data-account] > .hpop__panel--acct {
+.hpop:not(.hpop--search):not([data-cart]) > .hpop__panel {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
     transition:
-        transform var(--mo-drawer-out) var(--ease-io) 60ms,
-        visibility 0s linear 380ms;
+        opacity 220ms var(--ease-io) 40ms,
+        transform 220ms var(--ease-io) 40ms,
+        visibility 0s linear 260ms;
 }
 
-.hpop[data-account] > .hpop__panel--acct.showing,
-.hpop[data-account] > .hpop__panel--acct.show:not(.hiding) {
+.hpop:not(.hpop--search):not([data-cart]):hover > .hpop__panel,
+.hpop:not(.hpop--search):not([data-cart]):focus-within > .hpop__panel,
+.hpop:not(.hpop--search):not([data-cart]).is-open > .hpop__panel {
+    opacity: 1;
     visibility: visible;
     transform: none;
     transition:
-        transform var(--mo-drawer) var(--ease-io),
+        opacity 300ms var(--ease-io),
+        transform 300ms var(--ease-io),
         visibility 0s linear;
 }
 
-.hpop[data-account] > .hpop__panel--acct.hiding {
+.hpop:not(.hpop--search):not([data-cart]).is-closed > .hpop__panel {
+    opacity: 0;
     visibility: hidden;
-    transform: translateX(100%);
+    transform: translateY(-6px);
     transition:
-        transform var(--mo-drawer-out) var(--ease-io) 60ms,
-        visibility 0s linear 380ms;
+        opacity 220ms var(--ease-io) 40ms,
+        transform 220ms var(--ease-io) 40ms,
+        visibility 0s linear 260ms;
 }
 
-/* Ruột lên sau tấm, cùng cách với ngăn kéo giỏ: đầu tấm trước, rồi đoạn dẫn,
-   rồi cụm nút, rồi danh sách lối đi. Quãng ngắn hơn giỏ một nấc (12px thay vì
-   20px) vì đây là chữ và nút, không phải hàng ảnh. */
-.hpop[data-account] .cartdrawer__head,
-.hpop[data-account] .acctdr__lead,
-.hpop[data-account] .acctdr__cta,
-.hpop[data-account] .acctdr__or,
-.hpop[data-account] .acctdr__btn--google,
-.hpop[data-account] .acctdr__nav > li,
-.hpop[data-account] .acctdr__foot {
+.hpop:not(.hpop--search):not([data-cart]) .hpop__head,
+.hpop:not(.hpop--search):not([data-cart]) .hpop__list > li {
     opacity: 0;
     transform: translateY(var(--mo-rise, 12px));
     transition:
-        opacity var(--mo-child-out) var(--ease-io),
-        transform 0s linear var(--mo-child-out);
+        opacity 140ms var(--ease-io),
+        transform 0s linear 140ms;
 }
 
-.hpop[data-account] > :is(.showing, .show:not(.hiding)) .cartdrawer__head,
-.hpop[data-account] > :is(.showing, .show:not(.hiding)) .acctdr__lead,
-.hpop[data-account] > :is(.showing, .show:not(.hiding)) .acctdr__cta,
-.hpop[data-account] > :is(.showing, .show:not(.hiding)) .acctdr__or,
-.hpop[data-account] > :is(.showing, .show:not(.hiding)) .acctdr__btn--google,
-.hpop[data-account] > :is(.showing, .show:not(.hiding)) .acctdr__nav > li,
-.hpop[data-account] > :is(.showing, .show:not(.hiding)) .acctdr__foot {
+.hpop:not(.hpop--search):not([data-cart]):not(.is-closed):hover .hpop__head,
+.hpop:not(.hpop--search):not([data-cart]):not(.is-closed):hover .hpop__list > li,
+.hpop:not(.hpop--search):not([data-cart]):not(.is-closed):focus-within .hpop__head,
+.hpop:not(.hpop--search):not([data-cart]):not(.is-closed):focus-within .hpop__list > li,
+.hpop:not(.hpop--search):not([data-cart]).is-open .hpop__head,
+.hpop:not(.hpop--search):not([data-cart]).is-open .hpop__list > li {
     opacity: 1;
     transform: none;
     transition:
-        opacity var(--mo-d, 260ms) var(--ease-io) var(--mo-delay, 0ms),
-        transform var(--mo-d, 260ms) var(--ease-io) var(--mo-delay, 0ms);
+        opacity var(--mo-d, 220ms) var(--ease-io) var(--mo-delay, 0ms),
+        transform var(--mo-d, 220ms) var(--ease-io) var(--mo-delay, 0ms);
 }
 
-.hpop[data-account] .cartdrawer__head          { --mo-rise: 16px; --mo-delay: 220ms; }
-.hpop[data-account] .acctdr__lead              { --mo-delay: 290ms; }
-.hpop[data-account] .acctdr__cta               { --mo-delay: 350ms; }
-.hpop[data-account] .acctdr__or                { --mo-delay: 410ms; }
-.hpop[data-account] .acctdr__btn--google       { --mo-delay: 450ms; }
-/* Danh sách lối đi: mỗi dòng cách 45ms, đúng nhịp mà dòng hàng trong giỏ dùng.
-   Dòng thứ năm trở đi dùng chung mốc cuối — bảng này không bao giờ dài hơn. */
-.hpop[data-account] .acctdr__nav > li              { --mo-delay: 560ms; }
-.hpop[data-account] .acctdr__nav > li:nth-child(1) { --mo-delay: 425ms; }
-.hpop[data-account] .acctdr__nav > li:nth-child(2) { --mo-delay: 470ms; }
-.hpop[data-account] .acctdr__nav > li:nth-child(3) { --mo-delay: 515ms; }
-.hpop[data-account] .acctdr__foot              { --mo-rise: 16px; --mo-delay: 600ms; }
+.hpop:not(.hpop--search):not([data-cart]) .hpop__head                   { --mo-rise: 10px; --mo-delay: 120ms; }
+.hpop:not(.hpop--search):not([data-cart]) .hpop__list > li              { --mo-rise: 12px; --mo-delay: 320ms; }
+.hpop:not(.hpop--search):not([data-cart]) .hpop__list > li:nth-child(1) { --mo-delay: 170ms; }
+.hpop:not(.hpop--search):not([data-cart]) .hpop__list > li:nth-child(2) { --mo-delay: 220ms; }
+.hpop:not(.hpop--search):not([data-cart]) .hpop__list > li:nth-child(3) { --mo-delay: 270ms; }
 
 /* ============================================================================
    3. GIỎ HÀNG — ngăn kéo + nền mờ + ruột là MỘT sự kiện không gian

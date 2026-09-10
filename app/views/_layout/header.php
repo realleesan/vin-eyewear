@@ -192,39 +192,6 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
    chỗ quy ước của một thanh tiện ích, và là chỗ giữ cho hàng nav chính sạch.
    ============================================================ */
 ?>
-<?php
-/* NỀN MỜ CỦA LỚP PHỦ TÌM KIẾM — bấm vào là đóng.
-   ĐỨNG Ở CẤP CAO NHẤT, trước cả dải tiện ích, chứ không nằm trong
-   .hpop--search như trước.
-
-   Vì sao phải ra tận đây: .header-main là một tầng xếp riêng (position:relative
-   + z-index:2), nên một tấm phủ nằm bên trong nó vẽ ĐÈ LÊN wordmark và hàng
-   nav — đúng lỗi "bấm kính lúp thì cả thanh nav xám xịt". Mà đưa nó vào trong
-   <header> cũng chưa đủ: dải tiện ích là một <div> NGOÀI <header>, nên nó vẫn
-   bị phủ. Ở cấp này thì cả hai dải đều nằm trên nền mờ được — luật z-index ở
-   components/header.css lo phần còn lại.
-
-   data-hpop-target: nút đóng bình thường tìm cụm của mình bằng
-   closest('[data-hpop]'), mà tấm này không còn nằm trong cụm nào. Thuộc tính
-   này nói thẳng cho header.js biết nó đóng cụm nào — xem handler
-   [data-hpop-close] ở khối 2 của assets/js/header.js. */
-?>
-<div class="hpop__scrim" data-hpop-close data-hpop-target=".hpop--search"
-     aria-hidden="true"></div>
-
-<?php
-/* LỚP LÀM MỜ TRANG KHI BẢNG XỔ ĐIỀU HƯỚNG MỞ.
-
-   Thuần trang trí, không bấm được, không có nội dung — nên aria-hidden và
-   pointer-events:none. Bật/tắt HOÀN TOÀN bằng CSS (`body:has(.mega:hover)`),
-   không một dòng JavaScript: bảng xổ vốn đã mở bằng :hover/:focus-within, và
-   thêm một cơ chế thứ hai cho cùng một trạng thái là chỗ để hai bên lệch nhau.
-
-   Đứng cạnh nền mờ của ô tìm kiếm vì cùng một lý do thứ tự vẽ — xem khối chú
-   thích ngay trên. Luật đầy đủ ở cuối components/mega-menu.css. */
-?>
-<div class="mega-veil" aria-hidden="true"></div>
-
 <div class="header-announce">
     <div class="header-announce__inner">
         <p class="header-announce__text"><?= e(t('announce.shipping')) ?></p>
@@ -374,11 +341,9 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                     </svg>
                 </button>
 
-                <?php /* NỀN MỜ ĐÃ RỜI KHỎI ĐÂY — nay là con trực tiếp của
-                         <header>, ngay dưới .header-main. Lý do đầy đủ (thứ tự
-                         vẽ trong tầng xếp của .header-main) ghi ở khối "ĐÃ SỬA:
-                         MỞ Ô TÌM KIẾM THÌ CẢ THANH NAV BỊ NỀN MỜ PHỦ LÊN" trong
-                         components/header.css. */ ?>
+                <?php /* Nền mờ phủ trang phía sau — bấm vào là đóng. Anh em với
+                         bảng, không nằm trong nó. */ ?>
+                <div class="hpop__scrim" data-hpop-close aria-hidden="true"></div>
 
                 <div class="hpop__panel hpop__panel--search" id="headerSearchPanel" role="dialog" aria-label="<?= e(t('search.title')) ?>">
                     <div class="srchov">
@@ -474,40 +439,7 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             $isLoggedIn = AuthMiddleware::check();
             $accountUrl = $isLoggedIn ? '/tai-khoan' : '/auth';
             ?>
-            <?php
-            /*
-             * ═══════════════════════════════════════════════════════════════════
-             * TÀI KHOẢN LÀ NGĂN KÉO BÊN PHẢI, KHÔNG PHẢI BẢNG XỔ 260px
-             *
-             * Theo yêu cầu chủ dự án và theo tham chiếu (gentlemonster.com): bấm
-             * icon người là một tấm TRƯỢT VÀO TỪ MÉP PHẢI, y hệt giỏ hàng — không
-             * rời khỏi trang đang xem.
-             *
-             * Bản trước là một bảng xổ nhỏ treo dưới icon, mở bằng RÊ CHUỘT, chứa
-             * bốn dòng liên kết. Hai chỗ sai với thứ khách chờ đợi:
-             *   · rê chuột lướt qua icon là bảng bay ra — cùng lỗi mà ô tìm kiếm
-             *     và giỏ hàng đã bỏ từ lâu (xem khối .hpop trong header.css)
-             *   · muốn đăng nhập thì phải RỜI TRANG sang /auth, mất cả chỗ đang
-             *     đứng lẫn thứ đang xem dở
-             *
-             * DÙNG LẠI ĐÚNG CƠ CHẾ CỦA GIỎ HÀNG, không dựng cơ chế thứ hai:
-             * Bootstrap Offcanvas lo mở/đóng, nền mờ, khoá cuộn có bù thanh cuộn,
-             * bẫy tiêu điểm và Esc. assets/js/header.js nối cả hai bằng CÙNG một
-             * hàm — xem khối 2a ở đó.
-             *
-             * TẮT JAVASCRIPT VẪN ĐI ĐƯỢC: thẻ mở vẫn là <a href> thật trỏ tới
-             * /tai-khoan (đã đăng nhập) hoặc /auth (chưa) — bấm vào là sang trang
-             * ấy như trước, không mất lối nào.
-             *
-             * VÌ SAO KHÔNG NHÉT HẲN FORM ĐĂNG NHẬP VÀO ĐÂY: gõ sai mật khẩu thì
-             * AuthController đá về /auth kèm lỗi theo từng ô (UC-USER-02), tức là
-             * ngăn kéo biến mất và khách vẫn rời trang — chỉ khác là sau khi đã gõ
-             * xong. Hai nút dẫn thẳng tới màn đăng nhập thật thì trung thực hơn:
-             * nó không hứa một thứ mà luồng phía sau chưa làm được.
-             * ═══════════════════════════════════════════════════════════════════
-             */
-            ?>
-            <div class="hpop" data-hpop data-account>
+            <div class="hpop" data-hpop>
                 <a href="<?= e($accountUrl) ?>" class="hpop__trigger header-action"
                    data-hpop-trigger
                    aria-label="<?= e($isLoggedIn ? t('account.mine') : t('account.login')) ?>">
@@ -517,164 +449,29 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
                     </svg>
                 </a>
 
-                <?php /* Ba lớp Bootstrap (`offcanvas offcanvas-end`) và hai lớp
-                         của Vin (`hpop__panel hpop__panel--acct`) nằm trên CÙNG
-                         một phần tử — đúng cách ngăn kéo giỏ đang làm, nên không
-                         bên nào phải đổi tên.
-
-                         tabindex="-1": Offcanvas đặt tiêu điểm vào chính tấm khi
-                         mở. role/aria-modal do Bootstrap tự gắn, không khai tay. */ ?>
-                <div class="hpop__panel hpop__panel--acct offcanvas offcanvas-end" tabindex="-1"
-                     id="acctDrawer" aria-label="<?= e(t('account.title')) ?>">
-
-                    <div class="cartdrawer__head">
-                        <p class="cartdrawer__title"><?= e(t('account.title')) ?></p>
-                        <button type="button" class="cartdrawer__close tap-target" data-acct-close
-                                aria-label="<?= e(t('menu.close')) ?>">
-                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <?php if ($isLoggedIn): ?>
-                        <ul class="acctdr__nav" role="list">
-                            <li><a class="acctdr__link" href="/tai-khoan"><?= e(t('account.info')) ?></a></li>
-                            <li><a class="acctdr__link" href="/tai-khoan?muc=don-hang"><?= e(t('account.orders')) ?></a></li>
-                            <li><a class="acctdr__link" href="/tai-khoan?muc=lich-hen"><?= e(t('account.appointments')) ?></a></li>
-                            <li><a class="acctdr__link" href="/dat-lich"><?= e(t('nav.booking')) ?></a></li>
-                        </ul>
-
-                        <div class="acctdr__foot">
-                            <?php /* Đăng xuất qua POST: một thẻ <img src="/auth/dang-xuat">
-                                     trên trang khác cũng đủ để đá khách ra nếu dùng GET. */ ?>
-                            <form method="post" action="/auth/dang-xuat">
-                                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                <button type="submit" class="acctdr__btn acctdr__btn--ghost"><?= e(t('account.logout')) ?></button>
-                            </form>
-                        </div>
-                    <?php else: ?>
-                        <p class="acctdr__lead"><?= e(t('account.drawer_lead')) ?></p>
-
-                        <?php
-                        /*
-                         * ─────────────────────────────────────────────────────
-                         * FORM ĐĂNG NHẬP NẰM NGAY TRONG NGĂN KÉO
-                         *
-                         * Bản trước chỉ có hai nút dẫn sang /auth. Chủ dự án yêu
-                         * cầu đăng nhập được TẠI CHỖ — và đúng: bắt khách rời
-                         * trang họ đang xem chỉ để gõ hai ô là mất cả chỗ đang
-                         * đứng lẫn thứ đang xem dở.
-                         *
-                         * FORM POST THẬT, KHÔNG PHẢI FORM GIẢ. Cùng địa chỉ, cùng
-                         * tên trường với màn /auth (`email` · `password` ·
-                         * `remember` · `redirect` · `_token`), nên AuthController
-                         * ::login() KHÔNG phải biết gì về ngăn kéo này. Tắt
-                         * JavaScript thì nó gửi như một form thường: đúng luồng
-                         * cũ, chỉ khác chỗ xuất phát.
-                         *
-                         * CÓ JAVASCRIPT thì assets/js/account-drawer.js chặn cú
-                         * gửi, nạp ngầm, và vẽ lỗi ngay trong tấm — khách không
-                         * rời trang dù gõ sai. Xem chú thích tại đó.
-                         *
-                         * `redirect` là ĐỊA CHỈ ĐANG ĐỨNG: đăng nhập xong quay
-                         * lại đúng trang này. Khác hẳn thẻ <a> mở ngăn kéo (cố ý
-                         * không mang redirect — xem khối chú thích ở trên): ở đó
-                         * khách CHƯA làm gì, còn ở đây họ đang đọc dở một trang.
-                         * safeRedirectPath() bên controller chặn mọi địa chỉ
-                         * ngoài site, nên giá trị này không mở được lối chuyển
-                         * hướng nào ra ngoài.
-                         * ─────────────────────────────────────────────────────
-                         */
-                        ?>
-                        <?php /* data-net-error: câu dự phòng khi cú nạp ngầm hỏng
-                                 hẳn (mất mạng). Đặt trên thẻ chứ không gõ trong
-                                 JS — chuỗi hiển thị phải đi qua bảng dịch. */ ?>
-                        <form class="acctdr__form" method="post" action="/auth/dang-nhap"
-                              data-acct-login
-                              data-net-error="<?= e(t('account.net_error')) ?>">
-                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                            <input type="hidden" name="redirect" value="<?= e(currentUrlWithout()) ?>">
-
-                            <?php /* Dải báo lỗi chung (sai tài khoản/mật khẩu, tài
-                                     khoản nội bộ). RỖNG lúc máy chủ vẽ; JS đổ chữ
-                                     vào rồi bỏ [hidden]. role="alert" đặt sẵn từ
-                                     đầu chứ không gắn lúc điền: một vùng alert vừa
-                                     mới sinh ra thì trình đọc màn hình không đọc
-                                     nội dung của chính nó. */ ?>
-                            <p class="acctdr__alert" data-acct-alert role="alert" hidden></p>
-
-                            <div class="acctdr__field">
-                                <label class="acctdr__label" for="acctLogin"><?= e(t('account.id_label')) ?></label>
-                                <?php /* type="text" chứ KHÔNG phải type="email": ô này
-                                         nhận cả số điện thoại, mà trình duyệt sẽ chặn
-                                         "0912345678" ngay tại chỗ nếu để type="email".
-                                         autocomplete="username" là giá trị đúng cho một
-                                         ô nhận nhiều dạng định danh. Cùng lý lẽ đã ghi
-                                         dài ở app/views/auth/index.php. */ ?>
-                                <input class="acctdr__input" type="text" id="acctLogin" name="email"
-                                       required autocomplete="username" inputmode="email"
-                                       placeholder="<?= e(t('account.id_holder')) ?>">
-                                <span class="acctdr__err" data-acct-err="email" hidden></span>
-                            </div>
-
-                            <div class="acctdr__field">
-                                <div class="acctdr__labelrow">
-                                    <label class="acctdr__label" for="acctPassword"><?= e(t('account.password')) ?></label>
-                                    <?php /* <a> KHÔNG lồng trong <label> — HTML sai. Đây
-                                             là lý do hàng nhãn của ô này là một <div>
-                                             riêng chứ không phải một <label> bọc ngoài
-                                             như ô trên. */ ?>
-                                    <a class="acctdr__aside" href="/quen-mat-khau"><?= e(t('account.forgot')) ?></a>
-                                </div>
-                                <input class="acctdr__input" type="password" id="acctPassword" name="password"
-                                       required autocomplete="current-password"
-                                       placeholder="••••••••">
-                                <span class="acctdr__err" data-acct-err="password" hidden></span>
-                            </div>
-
-                            <label class="acctdr__check">
-                                <input type="checkbox" name="remember" value="1">
-                                <span><?= e(t('account.remember')) ?></span>
-                            </label>
-
-                            <button type="submit" class="acctdr__btn" data-acct-submit>
-                                <?= e(t('account.login')) ?>
-                            </button>
-                        </form>
-
-                        <?php
-                        /* Nút Google chỉ in ra khi ĐÃ CẤU HÌNH. Chưa điền
-                           GOOGLE_CLIENT_ID/SECRET thì trang /auth vẽ một nút xám
-                           "Sắp có" — hợp lý ở đó, vì đó là màn đăng nhập và khách
-                           cần biết vì sao thiếu lối này. Trong ngăn kéo thì không:
-                           đây là một tấm gọn gồm toàn lối đi dùng được, thêm một
-                           nút chết vào là thêm nhiễu. */
-                        ?>
-                        <?php if (GoogleAuth::isConfigured()): ?>
-                            <p class="acctdr__or"><?= e(t('account.or')) ?></p>
-
-                            <a class="acctdr__btn acctdr__btn--google" href="/auth/google">
-                                <?php partial('auth/_google-icon'); ?>
-                                <?= e(t('account.google')) ?>
-                            </a>
+                <div class="hpop__panel">
+                    <?php /* Luôn là "Tài khoản", kể cả khi chưa đăng nhập: lấy
+                             "Đăng nhập" làm nhãn đầu bảng thì nó lặp lại đúng
+                             chữ của mục ngay bên dưới. */ ?>
+                    <p class="hpop__head"><?= e(t('account.title')) ?></p>
+                    <ul class="hpop__list" role="list">
+                        <?php if ($isLoggedIn): ?>
+                            <li><a class="hpop__item" href="/tai-khoan"><?= e(t('account.info')) ?></a></li>
+                            <li><a class="hpop__item" href="/tai-khoan?muc=don-hang"><?= e(t('account.orders')) ?></a></li>
+                            <li><a class="hpop__item" href="/tai-khoan?muc=lich-hen"><?= e(t('account.appointments')) ?></a></li>
+                            <li>
+                                <?php /* Đăng xuất qua POST: một thẻ <img src="/auth/dang-xuat">
+                                         trên trang khác cũng đủ để đá khách ra nếu dùng GET. */ ?>
+                                <form method="post" action="/auth/dang-xuat">
+                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                                    <button type="submit" class="hpop__item hpop__item--btn"><?= e(t('account.logout')) ?></button>
+                                </form>
+                            </li>
+                        <?php else: ?>
+                            <li><a class="hpop__item" href="/auth"><?= e(t('account.login')) ?></a></li>
+                            <li><a class="hpop__item" href="/auth?tab=dang-ky"><?= e(t('account.register')) ?></a></li>
                         <?php endif; ?>
-
-                        <p class="acctdr__signup">
-                            <?= e(t('account.no_account')) ?>
-                            <a href="/auth?tab=dang-ky"><?= e(t('account.register')) ?></a>
-                        </p>
-
-                        <?php /* Ba lối đi KHÔNG cần đăng nhập, đặt dưới một đường
-                                 kẻ: khách mở tấm này ra không phải lúc nào cũng
-                                 để đăng nhập — phần lớn là để hỏi "đơn của tôi
-                                 đến đâu rồi". */ ?>
-                        <ul class="acctdr__nav acctdr__nav--quiet" role="list">
-                            <li><a class="acctdr__link" href="/dat-lich"><?= e(t('nav.booking')) ?></a></li>
-                            <li><a class="acctdr__link" href="/chinh-sach"><?= e(t('nav.policy')) ?></a></li>
-                            <li><a class="acctdr__link" href="/lien-he"><?= e(t('nav.contact')) ?></a></li>
-                        </ul>
-                    <?php endif; ?>
+                    </ul>
                 </div>
             </div>
 
@@ -698,7 +495,6 @@ $isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?
             </button>
         </div>
     </div>
-
 </header>
 
 <?php

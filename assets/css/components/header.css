@@ -1134,49 +1134,6 @@ body.page-home-index {
     z-index: 2;
 }
 
-/* ┌─ ĐÃ SỬA: MỞ Ô TÌM KIẾM THÌ CẢ THANH NAV BỊ NỀN MỜ PHỦ LÊN ──────────────
-   │ Triệu chứng: bấm kính lúp, lớp phủ tìm kiếm mở ra đúng — nhưng wordmark
-   │ VIN EYEWEAR và cả hàng mục nav bên trái xám xịt đi như bị tắt, đúng cảnh
-   │ trong ảnh báo lỗi.
-   │
-   │ NGUYÊN NHÂN LÀ THỨ TỰ VẼ, KHÔNG PHẢI MÀU. Nền mờ từng nằm BÊN TRONG
-   │ `.hpop--search`, tức là bên trong `.header-actions`, tức là bên trong
-   │ `.header-main`. Mà `.header-main` có `position: relative` + `z-index: 2`
-   │ nên nó TỰ TẠO MỘT TẦNG XẾP: mọi con của nó xếp với nhau, không xếp với
-   │ phần còn lại của trang.
-   │
-   │ Trong tầng ấy, nền mờ mang z-index 1 — còn wordmark, hàng nav và cụm icon
-   │ đều là phần tử KHÔNG ĐỊNH VỊ, tức là nằm ở lớp dưới cùng theo thứ tự vẽ
-   │ của CSS. Nên nền mờ `position: fixed; inset: 0` phủ kín khung nhìn ĐÈ LÊN
-   │ CHÍNH BA thứ đó, chỉ chừa ra tấm tìm kiếm (z 70).
-   │
-   │ ĐÃ THỬ VÀ ĐÃ BỎ cách chữa "cho ba khối kia z-index dương". Nó chạy, nhưng
-   │ `position: relative` trên `.header-actions` biến chính nó thành khối định
-   │ vị gần nhất — mà tấm tìm kiếm (`absolute; left:0; right:0`) đang cố ý neo
-   │ vào `.site-header` để chạy hết bề ngang. Đo được: tấm co lại thành một cột
-   │ hẹp ~160px nằm sát mép phải. Cùng cái bẫy ấy chờ sẵn ở `.header-nav` với
-   │ hai tấm mega.
-   │
-   │ CÁCH CHỮA ĐANG DÙNG: nền mờ RA KHỎI cụm icon, thành con trực tiếp của
-   │ `<header class="site-header">` (xem _layout/header.php). Ở đó nó xếp cùng
-   │ tầng với `.header-main` (z 2) nên z-index 1 đặt nó xuống DƯỚI toàn bộ nội
-   │ dung thanh nav, mà vẫn phủ kín phần trang bên dưới. Không khối nào của
-   │ thanh nav phải đổi `position`, nên hai mỏ neo tràn-bề-ngang còn nguyên.
-   └──────────────────────────────────────────────────────────────────────── */
-
-/* ┌─ NỀN MỜ — Ở TẦNG GỐC, KHÔNG NẰM TRONG THANH NAV ────────────────────────
-   │ Lý do phải ra khỏi cụm icon ghi ở khối "ĐÃ SỬA: MỞ Ô TÌM KIẾM…" phía trên.
-   │ Còn vì sao ra tận TẦNG GỐC chứ không chỉ ra khỏi .header-main: dải tiện
-   │ ích (.header-announce) là một <div> NGOÀI <header>, nên một tấm phủ đặt
-   │ trong <header> vẫn trùm lên nó.
-   │
-   │ 95 đọc theo thang z-index của site:
-   │     cụm nút nổi        90   ← nền mờ phải phủ LÊN, chúng không phải lối
-   │                              đi tiếp trong lúc đang tìm kiếm
-   │     nền mờ này         95
-   │     ngăn kéo nav      100   (không bao giờ mở cùng lúc)
-   │     thanh nav + dải   110   ← hai luật ngay dưới nâng chúng lên
-   └──────────────────────────────────────────────────────────────────────── */
 .hpop__scrim {
     /* ┌─ BẮT ĐẦU TỪ DƯỚI THANH NAV, KHÔNG PHỦ CẢ ĐẦU TRANG ─────────────────
        │ `position: fixed; inset: 0` phủ trọn khung nhìn, kể cả dải tiện ích
@@ -1209,29 +1166,12 @@ body.page-home-index {
     background: rgba(0, 0, 0, .38);
     opacity: 0;
     visibility: hidden;
-    /* Không nuốt cú bấm khi đang ẩn — nó phủ kín khung nhìn suốt thời gian đó. */
-    pointer-events: none;
     transition: opacity var(--dur-fast) var(--ease), visibility var(--dur-fast) var(--ease);
 }
 
-/* Điều kiện mở đọc từ <body>, không từ .hpop--search: nền mờ không còn là hậu
-   duệ của cụm ấy nên `.hpop--search.is-open .hpop__scrim` không khớp gì cả.
-   header.js gắn/gỡ .is-search-open ở đúng mọi lối đóng (Esc · bấm ngoài · nút
-   X · rê sang bảng khác), nên đây là móc chính xác hơn chứ không phải xấp xỉ. */
-body.is-search-open .hpop__scrim {
+.hpop--search.is-open .hpop__scrim {
     opacity: 1;
     visibility: visible;
-    pointer-events: auto;
-}
-
-/* Dải tiện ích lên cùng thang với thanh nav trong lúc lớp phủ mở. Không có
-   dòng này thì nền mờ (95) trùm lên nó và dòng "MIỄN PHÍ GIAO HÀNG…" xám xịt
-   đi trong khi thanh nav ngay dưới vẫn sáng — hai dải dính nhau, hai độ sáng.
-   Luật `.page-home-index .header-announce { z-index: 61 }` ở trên chỉ lo việc
-   khác (chui lên trên hero) và con số của nó không đủ ở đây. */
-body.is-search-open .header-announce {
-    position: relative;
-    z-index: 110;
 }
 
 .hpop--search > .hpop__panel--search {
@@ -1656,17 +1596,7 @@ body.is-cart-open .header-announce {
     opacity: .38;
 }
 
-/* ┌─ HAI NGĂN KÉO DÙNG CHUNG MỘT DÁNG ──────────────────────────────────────
-   │ .hpop__panel--acct (tài khoản) thêm vào danh sách chọn thay vì có bộ luật
-   │ riêng: nó là ĐÚNG cùng một vật — tấm trượt từ mép phải, rộng bằng nhau,
-   │ mở/đóng cùng nhịp, cùng z-index. Hai bộ luật song song là hai chỗ sẽ lệch
-   │ nhau ở lần chỉnh sau, và người dùng sẽ thấy hai cái ngăn kéo trên cùng
-   │ một thanh nav trượt vào với hai tốc độ khác nhau.
-   │
-   │ assets/js/header.js cũng nối cả hai bằng một hàm chung — xem ganNganKeo().
-   └──────────────────────────────────────────────────────────────────────── */
-.hpop[data-cart] > .hpop__panel--cart,
-.hpop[data-account] > .hpop__panel--acct {
+.hpop[data-cart] > .hpop__panel--cart {
     position: fixed;
     top: 0;
     right: 0;
@@ -1743,8 +1673,7 @@ body.is-cart-open .header-announce {
 /* .show là lớp Bootstrap bật/tắt (thay cho .is-drawer-open tự viết trước đây).
    Nó cũng bật .showing/.hiding trong lúc chuyển — ta không cần tới vì transition
    ở trên đã lo, nhưng KHÔNG được để chúng đè: chỉ nhắm đúng .show. */
-.hpop[data-cart] > .hpop__panel--cart.show,
-.hpop[data-account] > .hpop__panel--acct.show {
+.hpop[data-cart] > .hpop__panel--cart.show {
     visibility: visible;
     opacity: 1;
     transform: none;
@@ -1790,79 +1719,16 @@ body.is-cart-open .header-announce {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-4);
-    /* Đường kẻ chân thay cho một khoảng trống 24px: tấm này cao suốt màn hình,
-       nên đầu tấm cần một ranh giới thấy được, không chỉ một quãng thở. */
-    margin-bottom: var(--space-5);
-    padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--line);
+    margin-bottom: var(--space-6);
 }
 
 .cartdrawer__title {
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
     font-size: var(--fs-label);
     font-weight: 500;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--ink);
-}
-
-/* Số món cạnh tiêu đề. Chữ phụ chứ không phải huy hiệu tròn: huy hiệu là để
-   BÁO khi mắt không nhìn vào đó (icon giỏ trên thanh nav), còn ở đây khách đã
-   mở ngăn kéo ra rồi — con số chỉ cần đọc được. */
-.cartdrawer__n {
-    color: var(--muted);
-    font-weight: 400;
-    letter-spacing: normal;
-}
-
-/* ┌─ GIỎ TRỐNG: CĂN GIỮA, VÀ CÓ MỘT NÚT THẬT ───────────────────────────────
-   │ Bản trước để ba dòng chữ dồn góc trên trái rồi bỏ trống 700px bên dưới,
-   │ và lối đi tiếp là một <a> trong .hpop__list — tức là dáng một MỤC MENU.
-   │ Trạng thái rỗng là chỗ duy nhất trong ngăn kéo có đúng MỘT việc để làm,
-   │ nên việc ấy phải là một cái nút và phải nằm giữa tầm mắt.
-   │
-   │ flex:1 để khối chiếm hết chiều cao còn lại của tấm — .hpop__panel--cart
-   │ vốn đã là một cột flex. */
-.cartdrawer__empty {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-5);
-    padding-bottom: var(--rhythm-lg);
-    text-align: center;
-}
-
-.cartdrawer__empty-ico {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 64px;
-    height: 64px;
-    border: 1px solid var(--line);
-    color: var(--muted-soft);
-}
-
-.cartdrawer__empty-ico svg {
-    width: 28px;
-    height: 28px;
-}
-
-.cartdrawer__empty-text {
-    margin: 0;
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-}
-
-/* Nút trong trạng thái rỗng không kéo hết bề ngang tấm — một khối đen 372px
-   giữa một vùng trống là quá nặng cho một lời mời "xem thử hàng đi". */
-.cartdrawer__empty .cartpop__cta {
-    align-self: center;
-    padding-inline: var(--space-10);
 }
 
 .cartdrawer__close {
@@ -1888,367 +1754,6 @@ body.is-cart-open .header-announce {
 .cartdrawer__close svg {
     width: var(--icon);
     height: var(--icon);
-}
-
-/* ============================================================================
-   NGĂN KÉO TÀI KHOẢN (.hpop__panel--acct)
-
-   Khung ngoài — vị trí, bề ngang, nhịp trượt, z-index — DÙNG CHUNG với ngăn
-   kéo giỏ ở khối trên; đầu tấm cũng dùng lại `.cartdrawer__head/__title/__close`
-   nguyên vẹn. Ở đây chỉ còn RUỘT: một đoạn dẫn, hai nút, và danh sách lối đi.
-
-   Vì sao dùng lại lớp `.cartdrawer__*` thay vì đặt tên `.acctdrawer__*`: đó là
-   ĐÚNG cùng một hàng tiêu đề + nút X, và một bộ lớp thứ hai chỉ để đổi tiền tố
-   là hai chỗ phải sửa mỗi lần chỉnh chiều cao hay khoảng đệm của nó. Cái tên
-   `cartdrawer` nay đọc là "đầu ngăn kéo" chứ không còn là "đầu ngăn kéo GIỎ" —
-   ghi lại ở đây để người sau không đi đổi tên vì tưởng là nhầm.
-   ============================================================================ */
-
-/* ┌─ THANG CHỮ CỦA NGĂN KÉO — CHỈNH THEO THAM CHIẾU ────────────────────────
-   │ Tấm này là một CỘT DỌC toàn chữ nhỏ: tiêu đề, đoạn dẫn, hai nhãn ô nhập,
-   │ nút, vạch "hoặc", một dòng mời đăng ký, rồi ba lối đi. Chín mẩu chữ nối
-   │ đuôi nhau trong 420px.
-   │
-   │ Bản trước cho gần như tất cả cùng một dáng: 12px IN HOA giãn .08em, weight
-   │ 500. Ở một chỗ đứng lẻ (mục nav, eyebrow) dáng ấy đúng; xếp chín cái liền
-   │ nhau thì cả cột hô đều một giọng và không có thứ bậc nào — đó là thứ làm
-   │ nó đọc ra "web thường" chứ không "sang".
-   │
-   │ BA VIỆC, không phải đổi font:
-   │   1. GIÃN KHOẢNG. Nhịp giữa các khối nới rộng — khoảng trống là thứ làm
-   │      một tấm đọc ra là đắt, không phải cỡ chữ.
-   │   2. HẠ GIỌNG NHÃN. Nhãn ô nhập chuyển sang --tracking-label-soft và màu
-   │      phụ, nhường độ đậm cho CHÍNH THỨ KHÁCH GÕ VÀO.
-   │   3. MỘT BẬC CHỮ RÕ RÀNG. Tiêu đề tấm và chữ trên nút lên --fs-body-sm
-   │      (13px), nhãn ở --fs-label (12px), chú thích ở --fs-caption. Ba bậc
-   │      thay vì một.
-   │
-   │ KHÔNG đổi font family: cả site chạy một family (Be Vietnam Pro, xem khối
-   │ --font-sans trong layout.css), và thêm một family cho riêng một tấm là
-   │ quay lại đúng cái lối mà hệ thống cố ý không đi.
-   └──────────────────────────────────────────────────────────────────────── */
-
-/* Tấm thở rộng hơn: đệm ngang bằng đệm dọc, và đáy chừa chỗ cho ngón tay. */
-.hpop[data-account] > .hpop__panel--acct {
-    padding: var(--space-6) var(--space-8) var(--space-10);
-}
-
-/* Tiêu đề tấm: lên một bậc và giãn chữ nhẹ đi. Ở 12px/.08em nó đọc ngang hàng
-   với nhãn ô nhập bên dưới — mà nó là tiêu đề của cả tấm. */
-.hpop[data-account] .cartdrawer__title {
-    font-size: var(--fs-body-sm);
-    letter-spacing: var(--tracking-label-soft);
-}
-
-.hpop[data-account] .cartdrawer__head {
-    margin-bottom: var(--rhythm-xs);
-}
-
-.acctdr__lead {
-    /* Quãng nghỉ rộng trước form: đây là ranh giới giữa "đọc" và "làm". */
-    margin: 0 0 var(--rhythm-sm);
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-    /* 1.6 chứ không 1.7: hai dòng chữ trong một cột 340px ở 1.7 tách nhau tới
-       mức đọc thành hai câu rời. */
-    line-height: 1.6;
-}
-
-/* Hai nút xếp CHỒNG, mỗi nút hết bề ngang tấm. Tấm chỉ rộng 420px trừ đệm, mà
-   "Đăng nhập" và "Đăng ký" là hai lối đi ngang hàng nhau — chia đôi thì mỗi ô
-   còn ~170px và cả hai đều thành nút hẹp, trong khi chiều cao thì thừa. */
-.acctdr__cta {
-    display: grid;
-    gap: var(--space-3);
-}
-
-/* Đọc HỆ NÚT chung (PHẦN 6 của gm.css) — cùng chiều cao, cùng dáng chữ với
-   .btn-primary và .cartpop__cta, chỉ khác chỗ đứng. */
-.acctdr__btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-3);
-    width: 100%;
-    /* 52px, cao hơn --btn-h (48) một nấc. Nút ở đây chạy hết bề ngang tấm —
-       một khối rộng 340px mà chỉ cao 48px đọc ra hơi dẹt; tham chiếu dùng
-       khoảng 52. Không sửa --btn-h: đó là chiều cao của MỌI nút trên site và
-       phần lớn chúng không chạy hết bề ngang. */
-    min-height: 52px;
-    padding: var(--space-4) var(--btn-pad-x);
-    background: var(--brand);
-    border: 1px solid var(--brand);
-    color: var(--on-brand);
-    /* Lên một bậc (13px) và giãn chữ nhẹ đi: chữ trên một nút rộng cần đủ
-       thân để không trôi giữa khối đen, mà .08em ở đó thì rời rạc. */
-    font-size: var(--fs-body-sm);
-    font-weight: var(--btn-fw);
-    letter-spacing: var(--tracking-label-soft);
-    text-transform: uppercase;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
-}
-
-.acctdr__btn:hover,
-.acctdr__btn:focus-visible {
-    background: var(--brand-strong);
-    color: var(--on-brand);
-}
-
-.acctdr__btn--ghost {
-    background: transparent;
-    border-color: var(--ink);
-    color: var(--ink);
-}
-
-.acctdr__btn--ghost:hover,
-.acctdr__btn--ghost:focus-visible {
-    background: var(--ink);
-    color: var(--on-ink);
-}
-
-/* Nút Google giữ NỀN TRẮNG VÀ LOGO BỐN MÀU, và đó là ngoại lệ có chủ ý — cùng
-   ngoại lệ mà trang /auth đang dùng. Hướng dẫn nhận diện của Google không cho
-   đổi màu logo, và một nút đăng nhập bên thứ ba thì dấu hiệu "đây là Google"
-   quan trọng hơn việc đồng bộ với bảng màu đơn sắc của site. */
-.acctdr__btn--google {
-    background: var(--surface);
-    border-color: var(--line-strong);
-    color: var(--ink);
-}
-
-.acctdr__btn--google:hover,
-.acctdr__btn--google:focus-visible {
-    background: var(--surface);
-    border-color: var(--ink);
-    color: var(--ink);
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
-   FORM ĐĂNG NHẬP TRONG NGĂN KÉO
-
-   Ô nhập GẠCH CHÂN, không khung bốn cạnh — cùng ngôn ngữ với mọi ô nhập khác
-   của bộ (xem PHẦN 15 của gm.css) và với ô tìm kiếm ở lớp phủ đầu trang. Màn
-   /auth có bộ lớp .authfield riêng của nó với khung bốn cạnh; KHÔNG mượn bộ ấy
-   sang đây vì auth.css chỉ được nạp cho đúng trang đó (xem bảng $pageStyles
-   trong _layout/master.php) — mượn tên lớp mà không có file thì ô nhập ra
-   trần trụi theo mặc định của trình duyệt.
-   ──────────────────────────────────────────────────────────────────────────── */
-.acctdr__form {
-    display: grid;
-    /* 24px giữa các ô, không 20px. Ở 20px nhãn của ô dưới đứng gần đáy ô trên
-       gần bằng khoảng cách của chính nó tới ô nó gán vào — mắt phải đoán nhãn
-       thuộc về ô nào. */
-    gap: var(--space-6);
-}
-
-/* Dải báo lỗi chung. Không nền đỏ đặc: cả bộ chỉ dùng đỏ cho GIÁ khuyến mãi và
-   cho chữ lỗi, không cho mảng nền. Một nét dọc bên trái đủ để tách nó khỏi
-   dòng chữ thường mà không thành một cái hộp cảnh báo. */
-.acctdr__alert {
-    margin: 0;
-    padding: var(--space-3) 0 var(--space-3) var(--space-4);
-    border-left: 2px solid var(--danger);
-    color: var(--danger);
-    font-size: var(--fs-body-sm);
-    line-height: 1.6;
-}
-
-.acctdr__field {
-    display: grid;
-    gap: var(--space-2);
-}
-
-/* Nhãn HẠ GIỌNG: màu phụ, giãn chữ nhẹ. Thứ đáng đậm trong một ô nhập là CHUỖI
-   KHÁCH GÕ VÀO, không phải cái tên của ô — tham chiếu còn bỏ hẳn nhãn và chỉ để
-   placeholder. Ở đây giữ nhãn vì trình đọc màn hình cần nó và vì placeholder
-   biến mất ngay khi bắt đầu gõ; chỉ hạ trọng lượng thị giác của nó xuống. */
-.acctdr__label {
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label-soft);
-    text-transform: uppercase;
-    color: var(--muted);
-}
-
-/* Hàng nhãn của ô mật khẩu: nhãn bên trái, "Quên mật khẩu?" bên phải. Là <div>
-   chứ không <label> vì bên trong có thẻ <a>, mà <a> lồng trong <label> là HTML
-   sai — cùng lý do đã ghi ở app/views/auth/index.php. */
-.acctdr__labelrow {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3);
-}
-
-.acctdr__aside {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    white-space: nowrap;
-    transition: color var(--dur) var(--ease);
-}
-
-.acctdr__aside:hover,
-.acctdr__aside:focus-visible {
-    color: var(--ink);
-}
-
-.acctdr__input {
-    width: 100%;
-    /* Ô CAO HƠN. 12px đệm dọc cho ra ô ~44px; 16px cho ra ~52px — đúng khoảng
-       mà tham chiếu dùng. Ô nhập cao là chi tiết rẻ nhất và thấy rõ nhất của
-       một form đọc ra "đắt": nó cho chuỗi khách gõ một khoảng thở riêng thay
-       vì kẹp sát giữa nhãn và đường kẻ. */
-    padding: var(--space-4) 0;
-    /* Giữ viền bốn cạnh TRONG SUỐT thay vì bỏ hẳn: bỏ border là chiều cao ô đổi
-       2px và hàng nhãn phía trên xê dịch theo. Cùng thủ pháp với .form-control. */
-    border: 1px solid transparent;
-    border-bottom-color: var(--line-strong);
-    background: transparent;
-    color: var(--ink);
-    font: inherit;
-    font-size: var(--fs-body);
-}
-
-.acctdr__input::placeholder {
-    color: var(--muted);
-}
-
-/* Đường kẻ đậm lên khi ĐANG GÕ — dấu hiệu "ô đang hoạt động", KHÁC với vòng
-   tiêu điểm bàn phím (luật :focus-visible chung ở PHẦN 17 gm.css). Không khai
-   `outline: none` ở đây: hai thứ cố ý chồng lên nhau. */
-.acctdr__input:focus {
-    border-bottom-color: var(--ink);
-    border-bottom-width: 2px;
-    /* Bù đúng 1px vừa dày thêm, để ô không cao lên lúc đang gõ. */
-    padding-bottom: calc(var(--space-4) - 1px);
-    outline-offset: 4px;
-}
-
-/* Ô có lỗi: gạch chân đỏ. Màu KHÔNG phải dấu hiệu duy nhất — câu lỗi in ngay
-   dưới ô, nên người không phân biệt được màu vẫn biết ô nào sai. */
-.acctdr__input.is-err {
-    border-bottom-color: var(--danger);
-}
-
-.acctdr__err {
-    color: var(--danger);
-    font-size: var(--fs-caption);
-    line-height: 1.5;
-}
-
-.acctdr__check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    color: var(--ink);
-    font-size: var(--fs-body-sm);
-    cursor: pointer;
-}
-
-/* Ô tick vẽ bằng chính accent-color của trình duyệt thay vì dựng lại bằng
-   <span> + SVG: một ô tick tự vẽ phải tự lo cả trạng thái tiêu điểm, trạng
-   thái nửa-chọn và chế độ tương phản cao của hệ điều hành. accent-color đổi
-   đúng một thứ cần đổi — màu — và giữ nguyên phần còn lại. */
-.acctdr__check input {
-    width: 16px;
-    height: 16px;
-    accent-color: var(--ink);
-    cursor: pointer;
-}
-
-/* Dòng "Chưa có tài khoản? Đăng ký" — chữ phụ, căn giữa dưới cụm nút. */
-.acctdr__signup {
-    margin: var(--rhythm-xs) 0 0;
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-    text-align: center;
-}
-
-.acctdr__signup a {
-    color: var(--ink);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-/* Nút đang gửi: mờ đi và không bấm được nữa. Chỉ đổi độ mờ, KHÔNG đổi nhãn —
-   đổi chữ trên nút đang bấm làm trình đọc màn hình đọc lại cả cái nút. */
-.acctdr__btn[disabled] {
-    opacity: .55;
-    cursor: default;
-}
-
-/* ┌─ "HOẶC" — CHỮ KHÔNG, KHÔNG CÓ HAI ĐOẠN KẺ ──────────────────────────────
-   │ Bản trước kẹp chữ giữa hai đoạn kẻ chạy ngang. Tấm này ĐÃ có ba đường kẻ
-   │ khác (chân đầu tấm, hai gạch chân ô nhập, đường trên danh sách lối đi);
-   │ thêm hai đoạn nữa là cả cột thành một cái thang.
-   │
-   │ Tham chiếu chỉ để đúng một chữ "OR" xám nhỏ căn giữa. Khoảng trống hai
-   │ bên đã nói đủ rằng đây là ranh giới — không cần vẽ nó ra.
-   └──────────────────────────────────────────────────────────────────────── */
-.acctdr__or {
-    margin: var(--rhythm-xs) 0;
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    font-weight: 400;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    text-align: center;
-}
-
-/* ── Danh sách lối đi ──────────────────────────────────────────────────────── */
-.acctdr__nav {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 0;
-}
-
-/* Bản "trầm": ba lối KHÔNG cần đăng nhập, đứng dưới cùng và tách khỏi cụm nút
-   bằng một đường kẻ + một quãng nghỉ. Chúng là lối phụ, không phải việc chính
-   của tấm này. */
-.acctdr__nav--quiet {
-    margin-top: var(--rhythm-md);
-    padding-top: var(--space-2);
-    border-top: 1px solid var(--line);
-}
-
-.acctdr__link {
-    display: block;
-    /* 16px đệm dọc cho ra hàng ~46px — vừa qua ngưỡng chạm 44px của WCAG
-       2.5.5, và cũng là quãng làm danh sách đọc ra thong thả thay vì dồn. */
-    padding-block: var(--space-4);
-    border-bottom: 1px solid var(--line);
-    color: var(--ink);
-    font-size: var(--fs-body-sm);
-    text-decoration: none;
-    transition: opacity var(--dur) var(--ease);
-}
-
-/* Mục cuối bỏ kẻ: một đường kẻ chạy dưới dòng cuối cùng của một danh sách
-   không ngăn cách gì cả, nó chỉ đóng khung. */
-.acctdr__nav > li:last-child .acctdr__link {
-    border-bottom: 0;
-}
-
-/* Mờ đi khi rê chuột, KHÔNG gạch chân — cùng cách báo hiệu mà thanh nav ngay
-   trên đang dùng (.header-action, .header-nav__list). */
-.acctdr__link:hover,
-.acctdr__link:focus-visible {
-    opacity: .55;
-    text-decoration: none;
-}
-
-/* Nút Đăng xuất dính đáy tấm: danh sách trên có dài tới đâu thì lối ra vẫn
-   trong tầm mắt — cùng thủ pháp với nút "Xem giỏ hàng" của ngăn kéo giỏ. */
-.acctdr__foot {
-    margin-top: auto;
-    padding-top: var(--rhythm-xs);
-    background: var(--surface);
 }
 
 /* Nút "Xem giỏ hàng" dính đáy tấm: danh sách dài bao nhiêu thì lối đi tiếp vẫn
@@ -2368,25 +1873,15 @@ body.is-cart-open .header-announce {
 .cartpop {
     list-style: none;
     display: grid;
-    gap: 0;
-    margin: 0;
-    padding: 0;
-}
-
-/* Mỗi dòng tách nhau bằng một đường kẻ, đúng ngôn ngữ của cả bộ. Bản trước chỉ
-   cách nhau 16px trống, nên ba món đọc ra là một khối chữ liền. */
-.cartpop > li + li {
-    border-top: 1px solid var(--line);
+    gap: var(--space-4);
 }
 
 .cartpop__row {
     display: grid;
-    /* 64px chứ không 48px: ô ảnh là thứ duy nhất trong dòng cho biết khách vừa
-       bỏ vào cái gì, mà ở 48px một chiếc kính chỉ còn là một vệt. */
-    grid-template-columns: 64px minmax(0, 1fr) auto;
+    grid-template-columns: 48px 1fr auto;
     align-items: center;
     gap: var(--space-4);
-    padding-block: var(--space-4);
+    padding: 0;
     color: var(--ink);
     text-decoration: none;
     transition: opacity var(--dur) var(--ease);
@@ -2398,8 +1893,8 @@ body.is-cart-open .header-announce {
 }
 
 .cartpop__thumb {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     background: var(--h-shell);
     overflow: hidden;
 }
@@ -2409,15 +1904,6 @@ body.is-cart-open .header-announce {
     height: 100%;
     object-fit: contain;
     display: block;
-}
-
-/* Tên và số lượng xếp CHỒNG trong một cột, không nằm ngang: ở bề ngang 420px
-   trừ ảnh và giá, cột giữa chỉ còn ~200px — nhét thêm "×2" vào cùng dòng là
-   tên sản phẩm bị cắt sớm hơn một chữ. */
-.cartpop__body {
-    min-width: 0;
-    display: grid;
-    gap: 2px;
 }
 
 /* Cắt MỘT DÒNG bằng CSS chứ không cắt chuỗi trong PHP: máy chủ không biết
@@ -2479,51 +1965,6 @@ body.is-cart-open .header-announce {
 .cartpop__cta:hover,
 .cartpop__cta:focus-visible {
     background: var(--brand-strong);
-}
-
-/* ┌─ NÚT PHỤ CỦA CHÂN NGĂN KÉO ─────────────────────────────────────────────
-   │ Chân ngăn kéo có hai lối đi tiếp: "Xem giỏ hàng" (đặc) và "Tiến hành
-   │ thanh toán". Hai khối đen cạnh nhau thì không khối nào là lối chính nữa,
-   │ nên lối thứ hai để viền.
-   └──────────────────────────────────────────────────────────────────────── */
-.cartpop__cta--ghost {
-    background: transparent;
-    border-color: var(--ink);
-    color: var(--ink);
-}
-
-.cartpop__cta--ghost:hover,
-.cartpop__cta--ghost:focus-visible {
-    background: var(--ink);
-    color: var(--on-ink);
-}
-
-/* ┌─ TẠM TÍNH ──────────────────────────────────────────────────────────────
-   │ Dòng tiền ở chân ngăn kéo — nhãn bên trái, số bên phải, kẹp trên một
-   │ đường kẻ. Đây là thứ khách bấm vào cái giỏ để biết, nên số phải là thứ
-   │ đậm nhất trong cả tấm sau tên hàng.
-   │
-   │ _layout/header-cart.php in ra ba lớp này; CartController::recent() trả
-   │ 'subtotal' cộng trên CẢ giỏ (không chỉ năm dòng vẽ ra) — xem chú thích
-   │ tại đó về việc vì sao phải tra cả giỏ.
-   └──────────────────────────────────────────────────────────────────────── */
-.cartpop__sum {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-4);
-    margin: 0 0 var(--space-4);
-}
-
-.cartpop__sum-label {
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-}
-
-.cartpop__sum-value {
-    font-size: var(--fs-body-lg);
-    font-weight: 500;
-    white-space: nowrap;
 }
 
 /* ============================================================================

@@ -1570,7 +1570,7 @@ class CartController extends BaseController
         $cart = self::items();
 
         if ($cart === []) {
-            return ['lines' => [], 'shown' => 0, 'more' => 0, 'subtotal' => 0];
+            return ['lines' => [], 'shown' => 0, 'more' => 0];
         }
 
         /* Mới nhất lên đầu. Dòng của giỏ cũ (thêm trước khi có added_seq) coi
@@ -1582,23 +1582,8 @@ class CartController extends BaseController
         $tong  = count($cart);
         $dau   = array_slice($cart, 0, max(1, $limit), true);
 
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * TRA CẢ GIỎ, NHƯNG CHỈ VẼ NĂM DÒNG ĐẦU — ĐỔI TỪ "CẮT TRƯỚC, TRA SAU"
-         *
-         * Bản trước chỉ tra đúng năm dòng sắp vẽ, và chú thích ở đầu hàm gọi đó
-         * là "cắt trước, tra sau". Đổi lại vì ngăn kéo nay hiện TẠM TÍNH của cả
-         * giỏ, mà một con số cộng từ năm dòng rồi gắn nhãn "tạm tính" là nói
-         * sai — khách có bảy món sẽ thấy một tổng thiếu hai món.
-         *
-         * KHÔNG TỐN THÊM TRUY VẤN NÀO. Cả hai hàm dưới nhận MỘT MẢNG id và bắn
-         * đúng một câu `IN (...)`, nên tra năm id hay hai mươi id vẫn là một
-         * lượt chạm CSDL. Thứ đổi là số DÒNG trả về, mà giỏ hàng thì hiếm khi
-         * quá vài chục dòng — đây không phải chỗ để tiết kiệm.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        $products = ProductModel::findManyById(array_column($cart, 'product_id'));
-        $variants = VariantModel::forProducts(array_column($cart, 'product_id'));
+        $products = ProductModel::findManyById(array_column($dau, 'product_id'));
+        $variants = VariantModel::forProducts(array_column($dau, 'product_id'));
         $lines    = [];
 
         foreach ($dau as $key => $row) {
@@ -1638,44 +1623,6 @@ class CartController extends BaseController
             ];
         }
 
-        /*
-         * TẠM TÍNH CỦA CẢ GIỎ — cộng trên MỌI dòng, không chỉ năm dòng vẽ ra.
-         *
-         * Dùng đúng công thức của từng dòng ở vòng lặp trên (giá biến thể +
-         * giá tròng, nhân số lượng), nên con số này khớp với cột "Tạm tính" ở
-         * trang /gio-hang. Hai chỗ tính hai kiểu là hai con số sẽ lệch nhau vào
-         * đúng lúc khách so sánh chúng.
-         *
-         * Món đã bị gỡ khỏi catalog nhưng còn nằm trong giỏ thì KHÔNG cộng —
-         * nó cũng không bán được nữa, và trang giỏ hàng cũng bỏ nó ra.
-         */
-        $tamTinh = 0;
-
-        foreach ($cart as $row) {
-            $pid = $row['product_id'];
-
-            if (!isset($products[$pid])) {
-                continue;
-            }
-
-            $product = $products[$pid];
-            $variant = null;
-
-            if (($row['variant_id'] ?? null) !== null) {
-                foreach ($variants[$pid] ?? [] as $v) {
-                    if ($v['id'] === $row['variant_id']) {
-                        $variant = $v;
-                        break;
-                    }
-                }
-            }
-
-            $lens = LensModel::combo($row['lens_id'] ?? null, $row['lens_type'] ?? null);
-
-            $tamTinh += (VariantModel::priceOf($product, $variant) + (int) ($lens['price'] ?? 0))
-                      * (int) $row['quantity'];
-        }
-
         return [
             'lines' => $lines,
             'shown' => count($lines),
@@ -1683,7 +1630,6 @@ class CartController extends BaseController
                gỡ khỏi catalog vẫn đang nằm trong giỏ khách, và nói "còn 2 món
                nữa" rồi mở giỏ ra thấy 3 thì thà đừng nói. */
             'more'  => max(0, $tong - count($lines)),
-            'subtotal' => $tamTinh,
         ];
     }
 

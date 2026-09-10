@@ -67,23 +67,6 @@ return [
     'account.orders'       => 'My orders',
     'account.appointments' => 'Eye test appointments',
     'account.logout'       => 'Sign out',
-    /* Three strings for the account DRAWER (person icon in the nav bar) — see
-       the [data-account] block in _layout/header.php. Used nowhere else. */
-    'account.drawer_lead'  => 'Sign in to follow your orders, eye-test bookings '
-                            . 'and prescription records.',
-    'account.or'           => 'Or',
-    'account.google'       => 'Continue with Google',
-    /* Sign-in form INSIDE the drawer. Wording matches the /auth screen — the
-       same job named two ways reads as two different flows. */
-    'account.id_label'     => 'Phone number or email',
-    'account.id_holder'    => 'Phone / Email',
-    'account.password'     => 'Password',
-    'account.forgot'       => 'Forgot password?',
-    'account.remember'     => 'Keep me signed in',
-    'account.no_account'   => 'No account yet?',
-    /* Fallback when the background request fails (offline, server 500). Never
-       swallow it: a button that does nothing is the worst outcome. */
-    'account.net_error'    => 'Could not send. Check your connection and try again.',
 
     // ── Cart ─────────────────────────────────────────────────────────────
     'cart.title'  => 'Cart',

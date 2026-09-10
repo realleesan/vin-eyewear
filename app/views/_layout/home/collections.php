@@ -27,17 +27,9 @@ $collections = array_slice(CollectionModel::visible(), 0, 3);
 <section class="hcoll" data-section="s09" aria-labelledby="hcoll-title">
     <div class="hcoll__inner">
 
-        <?php /* "Xem tất cả" trong đầu khối — cùng lý do đã ghi ở
-                 _layout/home/new-arrivals.php. Đích là /bo-suu-tap (trang danh
-                 sách đầy đủ) chứ không phải /san-pham: khối này bày BỘ, nên
-                 "xem tất cả" phải ra tất cả các bộ, không ra cả kho hàng. */ ?>
-        <div class="hsec-head reveal">
+        <div class="hsec-head">
             <p class="eyebrow"><?= e(t('home.coll.eyebrow')) ?></p>
             <h2 id="hcoll-title" class="section-h2 section-h2--plain"><?= e(t('home.coll.title')) ?></h2>
-
-            <div class="hsec-all">
-                <a class="hsec-all__link" href="/bo-suu-tap"><?= e(t('home.coll.all')) ?></a>
-            </div>
         </div>
 
         <?php /* `.pgrid` — MỘT lưới thẻ cho cả site (Phase 2). `.hcoll__grid` là lưới
@@ -51,15 +43,7 @@ $collections = array_slice(CollectionModel::visible(), 0, 3);
                    nên thẻ tự bỏ ảnh thay vì vẽ icon ảnh vỡ. */
                 $img = CollectionModel::cover($c);
 
-                /* SANG TRANG CỦA CHÍNH BỘ ẤY, không sang lưới hàng đã lọc.
-                   Khối này bày BỘ SƯU TẬP, và cái khách bấm vào là một tấm ảnh
-                   chiến dịch kèm một câu mô tả — thứ nó hứa là "kể cho tôi
-                   nghe về bộ này", không phải "đổ hàng ra cho tôi xem". Trang
-                   chi tiết mở đầu bằng đúng tấm ảnh ấy rồi mới dẫn sang
-                   /san-pham?collection=<slug>, nên lối cũ không mất, chỉ lùi
-                   lại một bước và có thêm phần kể chuyện. Cùng cặp đích với
-                   hai nút trên hero — xem _layout/home/hero.php. */
-                $url = '/bo-suu-tap/' . rawurlencode((string) $c['slug']);
+                $url = '/san-pham?' . http_build_query(['collection' => $c['slug']]);
                 ?>
                 <li class="ccard<?= $i === 0 ? ' ccard--lead' : '' ?>">
                     <a class="ccard__link" href="<?= e($url) ?>">

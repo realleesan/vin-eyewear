@@ -1,54 +1,53 @@
 /* ============================================================================
    contact.css — TRANG LIÊN HỆ
 
-   DỰNG LẠI. Bản trước bám theo `contact.html` của theme Furnish: form nằm
-   trong một thẻ có viền, danh sách cơ sở là một lưới thẻ viền, bản đồ là một
-   dải 350px chạy dưới cùng.
+   Trang thứ hai của site có BẢN MẪU TRỰC TIẾP trong Furnish (`contact.html`).
+   Bám theo từng khối:
+
+     1. Hero      py-lg-8 py-5 · text-center · col-lg-6   → _layout/page-head.php
+     2. Thân      py-5 · row g-5 align-items-start
+                    col-md-4  "Get in Touch" — h4 + đoạn dẫn + ba dòng
+                              icon · nhãn IN HOA rất nhỏ · giá trị
+                    col-md-8  <div class="card"><div class="card-body p-lg-5">
+                              form row g-3, nút "Send Message" CĂN PHẢI
+     3. Bản đồ    row mt-5 · col-12 · iframe cao 350px, shadow-sm
+
+   Site này có thêm DANH SÁCH CƠ SỞ (bản mẫu chỉ có một địa chỉ), nên nó nằm
+   giữa form và bản đồ — cùng ngôn ngữ: hàng thẻ đều nhau, viền mảnh.
 
    ─────────────────────────────────────────────────────────────────────────────
-   MỘT LỖI THẬT ĐÃ SỐNG TRONG FILE NÀY — GHI LẠI ĐỂ KHÔNG AI DỰNG LẠI
+   ĐÃ ĐỔI THỨ TỰ HAI KHỐI TRONG VIEW
 
-   Bản trước tô kiểu THẺ CƠ SỞ lên selector `.cstore__row`. Nhưng trong
-   app/views/contact/index.php, `.cstore__row` KHÔNG phải cái thẻ — nó là một
-   DÒNG THÔNG TIN bên trong thẻ (dòng địa chỉ, dòng điện thoại), và cái thẻ thì
-   mang lớp `.cstore`.
-
-   Hệ quả nhìn thấy trên trang thật: mỗi dòng địa chỉ và mỗi dòng số điện thoại
-   được vẽ thành một ô riêng có viền và nền trắng, xếp chồng nhau — chín cơ sở
-   ra mười tám cái hộp con. Còn `.cstore` thì không có luật nào, nên thẻ không
-   có ranh giới, không có khoảng đệm, và trạng thái "đang xem" (.is-on) không
-   hiện ra ở đâu cả.
-
-   Đây là kiểu lỗi CSS không bao giờ báo: cả hai selector đều hợp lệ, chỉ là
-   một cái không trỏ vào thứ người viết tưởng.
-
-   ─────────────────────────────────────────────────────────────────────────────
-   THỨ TỰ KHỐI ĐÃ ĐỔI: KÊNH NHANH → CƠ SỞ + BẢN ĐỒ → FORM
-   Lý do đầy đủ ghi trong app/views/contact/index.php (khối "THỨ TỰ MỚI").
-
-   ICON KÊNH LIÊN HỆ ĐÃ BỎ MÀU GỐC. Bốn logo nhiều màu (nút gọi xanh lá, ô Zalo
-   xanh dương, bong bóng Messenger gradient, phong bì Gmail bốn màu) là bốn mảng
-   màu rực duy nhất trên một trang đơn sắc. Nay là icon nét của site — xem chú
-   thích ở $channels trong view.
+   Bản cũ xếp cơ sở + bản đồ TRƯỚC, form ở cuối trang. Bản mẫu làm ngược lại,
+   và nó đúng: người mở trang Liên hệ là để LIÊN HỆ, không phải để đọc danh
+   sách địa chỉ. Đổi thứ tự trong DOM chứ không bằng CSS `order` — thứ tự DOM
+   cũng là thứ tự bàn phím và trình đọc màn hình đi qua.
    ============================================================================ */
 
 /* ────────────────────────────────────────────────────────────────────────────
-   1. BỐN KÊNH NHANH — hàng ngang, ngay dưới đầu trang
+   1. KHỐI THÂN — thông tin | form
    ──────────────────────────────────────────────────────────────────────────── */
-.cchans {
-    padding-block: var(--rhythm-sm) var(--rhythm-md);
+.cbottom {
+    padding-block: var(--section-pad);
 }
 
-.cchans__inner {
+.cbottom__grid {
     max-width: var(--container);
     margin-inline: auto;
     padding-inline: var(--page-edge);
+    display: grid;
+    gap: var(--block-gap);
+    align-items: start;
 }
 
-.cchans__head {
-    margin-bottom: var(--rhythm-xs);
-    padding-bottom: var(--space-5);
-    border-bottom: 1px solid var(--line);
+/* ── Thẻ form ────────────────────────────────────────────────────────────────
+   `.card` + `.card-body p-lg-5`: nền trắng, viền mảnh, góc vuông, đệm 40px.
+   ──────────────────────────────────────────────────────────────────────────── */
+.cform {
+    min-width: 0;
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    padding: clamp(24px, 3vw, 40px);
 }
 
 .cform__head {
@@ -130,8 +129,8 @@
 .cfield__opt {
     color: var(--h-meta);
     font-weight: 400;
-    line-height: 1.15;
-    letter-spacing: var(--tracking-tight);
+    text-transform: none;
+    letter-spacing: 0;
 }
 
 /* `btn btn-dark px-4` căn PHẢI (`col-12 text-end`). */
@@ -177,78 +176,43 @@
     line-height: 1.7;
 }
 
-/* Bốn ô đều nhau. `auto-fit` chứ không `repeat(4, …)`: cửa hàng có thể bỏ bớt
-   một kênh (ví dụ chưa mở Messenger) và hàng vẫn chia đều, không để lại ô hổng. */
-.cchans__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0;
-}
-
-/* ┌─ MỘT KÊNH ──────────────────────────────────────────────────────────────
-   │ Tách nhau bằng ĐƯỜNG KẺ chứ không bằng viền hộp: bốn cái hộp cạnh nhau
-   │ đọc ra là bốn cái nút, mà đây là một DANH SÁCH lối liên hệ.
-   │
-   │ Đường kẻ đặt ở mép TRÁI của từng ô rồi bỏ ở ô đầu mỗi hàng — cách này tự
-   │ đúng ở mọi số cột mà lưới auto-fit sinh ra, không phải đếm tay.
-   └──────────────────────────────────────────────────────────────────────── */
 .cchan {
     display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    height: 100%;
-    padding: var(--space-5) var(--space-5) var(--space-5) 0;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--line);
     color: var(--ink);
     text-decoration: none;
-    transition: opacity var(--dur) var(--ease);
 }
 
-.cchan:hover,
-.cchan:focus-visible {
-    opacity: .55;
+.cchan:hover .cchan__value {
+    color: var(--ink);
 }
 
-@media (min-width: 601px) {
-    .cchans__list > li + li .cchan {
-        padding-left: var(--space-5);
-        border-left: 1px solid var(--line);
-    }
-}
-
-/* Dưới 601px lưới về một cột, nên đường kẻ phải chuyển từ cạnh TRÁI sang cạnh
-   TRÊN — một nét dọc giữa hai hàng chồng nhau là vô nghĩa. */
-@media (max-width: 600px) {
-    .cchans__list > li + li .cchan {
-        border-top: 1px solid var(--line);
-    }
-}
-
+/* Icon mang màu nhấn — `text-secondary` của bản mẫu. */
 .cchan__mark {
     flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: 1px solid var(--line);
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
     color: var(--ink);
 }
 
-/* Nét icon đọc token chung. PHẢI nhắm vào CON của <svg>, không vào <svg>: các
-   icon mang sẵn stroke-width trên chính thẻ <path>, và presentation attribute
-   thắng giá trị kế thừa từ cha — cùng cái bẫy đã ghi ở components/header.css. */
 .cchan__mark svg {
-    width: 22px;
-    height: 22px;
+    width: 100%;
+    height: 100%;
     fill: none;
     stroke: currentColor;
+    stroke-width: 1.6;
 }
 
-.cchan__mark svg :is(path, circle, line, rect, polyline) {
-    stroke-width: var(--icon-stroke);
+.cchan__mark--brand svg {
+    fill: currentColor;
+    stroke: none;
 }
 
 .cchan__text {
@@ -258,7 +222,7 @@
 .cchan__label {
     display: block;
     margin-bottom: 2px;
-    font-size: var(--fs-label);
+    font-size: var(--fs-micro);
     font-weight: 500;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
@@ -269,182 +233,112 @@
     color: var(--muted);
     font-size: var(--fs-body-sm);
     overflow-wrap: anywhere;
+    transition: color var(--dur) var(--ease);
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-   2. CƠ SỞ + BẢN ĐỒ
+   2. DANH SÁCH CƠ SỞ
 
-   HAI CỘT: danh sách cuộn bên trái, bản đồ lớn bên phải. Bản trước là một lưới
-   thẻ chạy hết bề ngang rồi bản đồ nằm dưới — nên lúc bấm một cơ sở, tấm bản đồ
-   đổi theo lại nằm ngoài tầm mắt.
+   Bản mẫu chỉ có MỘT địa chỉ nên không có khối này. Dựng bằng ngôn ngữ của
+   nó: hàng thẻ đều nhau, nền trắng, viền mảnh, tiêu đề nét 400.
    ──────────────────────────────────────────────────────────────────────────── */
 .cstores {
-    padding-block: var(--rhythm-md);
-    /* Bỏ nền xám của bản trước: nó cắt trang làm ba dải màu, mà cả site chỉ
-       dùng nền xám cho Ô ẢNH sản phẩm. */
-    background: var(--surface);
-    border-top: 1px solid var(--line);
+    padding-block: var(--section-pad);
+    background: var(--surface-sunken);
 }
 
 .cstores__grid {
     max-width: var(--container);
     margin-inline: auto;
     padding-inline: var(--page-edge);
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--rhythm-sm);
-    align-items: start;
-}
-
-@media (min-width: 901px) {
-    .cstores__grid {
-        grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
-        gap: var(--rhythm-sm);
-    }
 }
 
 .cstores__count {
-    margin: 0 0 var(--space-4);
+    margin-bottom: var(--space-5);
     color: var(--muted);
-    font-size: var(--fs-label);
-    font-weight: 500;
+    font-size: var(--fs-caption);
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
 }
 
 .cstores__list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-5);
+    list-style: none;
 }
 
-/* ┌─ MỘT THẺ CƠ SỞ — `.cstore`, KHÔNG PHẢI `.cstore__row` ──────────────────
-   │ Xem khối "MỘT LỖI THẬT" ở đầu file. Đây là selector đúng: nó khớp thẻ <a>
-   │ bọc cả cơ sở trong app/views/contact/index.php.
-   │
-   │ Không viền hộp — tách nhau bằng một đường kẻ ngang, đúng ngôn ngữ của cả
-   │ bộ. Trạng thái "đang xem trên bản đồ" thì đổi NỀN chứ không đổi viền:
-   │ danh sách chín cơ sở mà mỗi cái một khung viền là chín cái hộp.
-   └──────────────────────────────────────────────────────────────────────── */
-.cstore {
+.cstore__row {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-4) var(--space-4) var(--space-4) var(--space-4);
-    border-bottom: 1px solid var(--line);
+    gap: var(--space-3);
+    padding: var(--space-5);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
     color: var(--ink);
     text-decoration: none;
-    transition: background-color var(--dur) var(--ease);
+    transition: border-color var(--dur) var(--ease);
 }
 
-.cstore:first-of-type {
-    border-top: 1px solid var(--line);
-}
-
-.cstore:hover {
-    background: var(--surface-alt);
-}
-
-.cstore.is-on {
-    background: var(--surface-sunken);
+.cstore__row:hover {
+    border-color: var(--ink);
 }
 
 .cstore__head {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     gap: var(--space-2);
 }
 
 .cstore__name {
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
+    font-size: var(--fs-subhead);
+    font-weight: 400;
 }
 
-/* Chấm tròn = cơ sở đang xem trên bản đồ. Ngoại lệ hình tròn có lý do: một
-   chấm chỉ báo trạng thái mà vuông thì đọc ra là một ô vuông trang trí. */
 .cstore__dot {
-    width: 6px;
-    height: 6px;
-    border-radius: var(--radius-round);
-    background: transparent;
+    color: var(--line-strong);
 }
 
-.cstore.is-on .cstore__dot {
-    background: var(--ink);
-}
-
-.cstore__row {
-    /* CHỈ là một dòng icon + chữ. Mọi thuộc tính "thẻ" (viền, nền, đệm lớn) đã
-       chuyển sang .cstore — xem khối "MỘT LỖI THẬT" ở đầu file. */
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-2);
-    padding: 0;
-    border: 0;
-    background: transparent;
-}
-
-.cstore__ico {
-    flex: 0 0 auto;
-    margin-top: 3px;
+.cstore__address {
     color: var(--muted);
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-}
-
-.cstore__address,
-.cstore__phone {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    line-height: 1.5;
+    font-size: var(--fs-body-sm);
+    line-height: 1.65;
 }
 
 .cstore__foot {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    margin-top: var(--space-1);
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line);
 }
 
-.cstore__hours {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
-
-/* Ngoài giờ mở cửa: chỉ nhạt đi, KHÔNG tô đỏ. Đỏ ở bộ này chỉ dành cho giá
-   khuyến mãi (xem khối token đầu gm.css), và "đã đóng cửa" không phải lỗi. */
-.cstore__hours.is-closed {
-    color: var(--muted-soft);
+.cstore__phone {
+    font-size: var(--fs-body-sm);
+    font-weight: 500;
 }
 
 .cstore__go {
-    flex: 0 0 auto;
-    color: var(--ink);
-    font-size: var(--fs-label);
+    font-size: var(--fs-caption);
     font-weight: 500;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    color: var(--ink);
 }
 
 .cstores__cta {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    align-self: flex-start;
-    min-height: var(--btn-h);
     margin-top: var(--space-6);
-    padding: var(--space-3) var(--btn-pad-x);
+    padding: var(--space-4) var(--space-8);
     border: 1px solid var(--ink);
     color: var(--ink);
-    font-size: var(--btn-fs);
-    font-weight: var(--btn-fw);
-    letter-spacing: var(--btn-ls);
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    letter-spacing: .1em;
     text-transform: uppercase;
     text-decoration: none;
-    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
 .cstores__cta:hover {
@@ -452,32 +346,19 @@
     color: var(--on-ink);
 }
 
-/* ── Bản đồ ─────────────────────────────────────────────────────────────────
-   DÍNH THEO CUỘN từ 901px: danh sách chín cơ sở dài hơn khung nhìn, và bấm một
-   cơ sở ở cuối danh sách mà tấm bản đồ đã trôi khỏi màn thì không ai thấy nó
-   vừa đổi.
+/* ────────────────────────────────────────────────────────────────────────────
+   3. BẢN ĐỒ — `row mt-5` chạy hết bề ngang, cao 350px, shadow-sm
    ──────────────────────────────────────────────────────────────────────────── */
 .cmap {
-    margin-top: 0;
-    min-width: 0;
-}
-
-@media (min-width: 901px) {
-    .cmap {
-        position: sticky;
-        top: calc(var(--header-h) + var(--space-6));
-    }
+    margin-top: var(--block-gap);
 }
 
 .cmap__frame {
     display: block;
     width: 100%;
-    /* Cao theo khung nhìn, có trần và sàn: một tấm bản đồ 350px cố định trên
-       màn 1440 trông như một dải băng, còn trên laptop 13" thì 700px lại đẩy
-       thẻ thông tin xuống dưới nếp gấp. */
-    height: clamp(320px, calc(100dvh - var(--header-h) - 180px), 620px);
+    height: 350px;
     border: 0;
-    background: var(--h-shell);
+    box-shadow: none;
 }
 
 .cmap__card {
@@ -486,163 +367,30 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin-top: 0;
-    padding: var(--space-4) 0;
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid var(--line);
+    margin-top: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
 }
 
 .cmap__name {
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
+    font-size: var(--fs-subhead);
+    font-weight: 400;
 }
 
 .cmap__address {
     color: var(--muted);
-    font-size: var(--fs-caption);
+    font-size: var(--fs-body-sm);
 }
 
 .cmap__link {
-    font-size: var(--fs-label);
+    font-size: var(--fs-caption);
     font-weight: 500;
     letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--ink);
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    text-decoration: none;
     white-space: nowrap;
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
-   3. FORM
-
-   KHÔNG CÒN THẺ CÓ VIỀN. Ô nhập chuyển sang GẠCH CHÂN, đúng ngôn ngữ ô nhập
-   của cả bộ (xem PHẦN 15 của gm.css) — bản trước là khung bốn cạnh, tức là
-   trang Liên hệ có một kiểu ô nhập riêng không giống trang nào khác.
-   ──────────────────────────────────────────────────────────────────────────── */
-.cbottom {
-    padding-block: var(--rhythm-md);
-    border-top: 1px solid var(--line);
-}
-
-.cbottom__grid {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding-inline: var(--page-edge);
-}
-
-.cform {
-    min-width: 0;
-    /* Cột chữ hẹp: một form bốn ô kéo hết 1440px thì ô "Nội dung" thành một
-       dải dài 1400px và mắt lạc hàng khi gõ. */
-    max-width: 760px;
-    padding: 0;
-    background: transparent;
-    border: 0;
-}
-
-.cform__head {
-    margin-bottom: var(--rhythm-xs);
-    padding-bottom: var(--space-5);
-    border-bottom: 1px solid var(--line);
-}
-
-.cform__title {
-    margin-bottom: var(--space-2);
-    font-size: var(--fs-section);
-    font-weight: 400;
-    line-height: 1.15;
-    letter-spacing: var(--tracking-tight);
-}
-
-.cform__lead {
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-}
-
-.cform__body {
-    display: grid;
-    gap: var(--rhythm-xs);
-}
-
-.cform__pair {
-    display: grid;
-    gap: var(--rhythm-xs);
-}
-
-.cfield {
-    display: grid;
-    gap: var(--space-2);
-    min-width: 0;
-}
-
-.cfield__label {
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-}
-
-.cfield__input {
-    width: 100%;
-    padding: var(--space-3) 0;
-    /* Giữ viền bốn cạnh TRONG SUỐT thay vì bỏ hẳn: bỏ border là chiều cao ô đổi
-       2px và hai ô cùng hàng lệch nhau. Cùng thủ pháp với .form-control. */
-    border: 1px solid transparent;
-    border-bottom-color: var(--line-strong);
-    background: transparent;
-    color: var(--ink);
-    font: inherit;
-    font-size: var(--fs-body);
-}
-
-.cfield__input--area {
-    resize: vertical;
-    min-height: 120px;
-}
-
-/* Đường kẻ đậm lên khi ĐANG GÕ — dấu hiệu "ô đang hoạt động". Vòng tiêu điểm
-   bàn phím là chuyện khác và do luật :focus-visible chung ở PHẦN 17 gm.css lo;
-   KHÔNG khai `outline: none` ở đây. */
-.cfield__input:focus {
-    border-bottom-color: var(--ink);
-    border-bottom-width: 2px;
-    padding-bottom: calc(var(--space-3) - 1px);
-    outline-offset: 4px;
-}
-
-.cfield__input::placeholder {
-    color: var(--muted);
-}
-
-.cfield__opt {
-    color: var(--muted);
-    font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
-}
-
-/* Nút gửi: đọc hệ nút chung, và căn TRÁI chứ không căn phải — nó thẳng cột với
-   mọi nhãn ô nhập phía trên, nên mắt đi xuống một đường thẳng. */
-.cform__submit {
-    justify-self: start;
-    min-height: var(--btn-h);
-    padding: var(--space-3) var(--btn-pad-x);
-    border: 1px solid var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: var(--btn-fs);
-    font-weight: var(--btn-fw);
-    letter-spacing: var(--btn-ls);
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background-color var(--dur) var(--ease);
-}
-
-.cform__submit:hover {
-    background: var(--brand-strong);
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -652,7 +400,7 @@
     margin-bottom: var(--space-5);
     padding: var(--space-4) var(--space-5);
     border-left: 3px solid var(--line-strong);
-    background: var(--surface-alt);
+    background: var(--surface-sunken);
     font-size: var(--fs-body-sm);
 }
 
@@ -666,10 +414,30 @@
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
-   5. MỐC BỀ NGANG
+   5. MỐC BỀ NGANG — bản mẫu chia 4/8 từ `md` (768px)
    ──────────────────────────────────────────────────────────────────────────── */
 @media (min-width: 601px) {
     .cform__pair {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 768px) {
+
+    .cbottom__grid {
+        /* 4 | 8 của bản mẫu. Cột thông tin đứng TRƯỚC về mặt thị giác, còn
+           trong DOM form vẫn đứng trước — người dùng bàn phím gặp việc chính
+           trước, mắt vẫn thấy đúng bố cục bản mẫu. */
+        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
+
+    .cform {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .cquick {
+        grid-column: 1;
+        grid-row: 1;
     }
 }

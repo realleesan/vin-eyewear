@@ -753,86 +753,39 @@ partial('_layout/page-head', [
                     <?php endif; ?>
                 </p>
 
-                <?php
-                /*
-                 * ═════════════════════════════════════════════════════════════
-                 * "SẮP XẾP THEO" ĐÃ BỎ <select>, DÙNG CHUNG <details> VỚI CỘT LỌC
-                 *
-                 * Ô này là thứ CUỐI CÙNG trên trang khách còn là <select> thật,
-                 * và nó mang đúng hai tật mà cột lọc đã bỏ được từ 09/09/2026:
-                 *
-                 *   1. DANH SÁCH DO HỆ ĐIỀU HÀNH VẼ. Bấm vào là bung ra hộp thả
-                 *      xanh của Windows, phông Segoe, viền xám — thứ duy nhất
-                 *      trên cả trang không do ta vẽ. Không CSS nào với tới được
-                 *      bên trong nó.
-                 *   2. KHUNG CHỮ NHẬT KHI BẤM. Chrome coi <select> là phần tử
-                 *      bàn phím nên nó khớp :focus-visible NGAY CẢ khi mở bằng
-                 *      chuột, và luật tiêu điểm dùng chung ở PHẦN 17 gm.css vẽ
-                 *      một vòng 2px quanh cả ô. Đó đúng là "ô chữ nhật bên
-                 *      ngoài" trong ảnh báo lỗi — không phải viền của ô, mà là
-                 *      vòng tiêu điểm.
-                 *
-                 * Nay là đúng bộ .catpick của cột lọc: mỗi lựa chọn là một <a>
-                 * href THẬT do $buildUrl dựng ở máy chủ, gập/mở tại chỗ.
-                 *
-                 * KHÔNG CÒN <form>, VÀ CŨNG KHÔNG CẦN. Form GET tồn tại để mang
-                 * bộ lọc hiện tại theo qua các input ẩn; $buildUrl đã nhét sẵn
-                 * cả bộ ấy vào từng href. Nút "Áp dụng" theo đó cũng biến mất —
-                 * tắt JavaScript thì bấm một dòng là điều hướng thật, đúng như
-                 * mọi tiêu chí trong cột lọc.
-                 *
-                 * catalog.js: laDuongLoc() đã được nới để nhận cả `.catsort`,
-                 * nên bấm một dòng ở đây vẫn nạp ngầm hai mảnh chứ không tải lại
-                 * trang. Vòng lặp [data-pick] của nó nay không còn phần tử nào
-                 * để bắt và tự thoát.
-                 * ═════════════════════════════════════════════════════════════
-                 */
-                $sortOptions = [
-                    'newest'     => t('cat.sort_newest'),
-                    'popular'    => t('cat.sort_popular'),
-                    'price-asc'  => t('cat.sort_price_asc'),
-                    'price-desc' => t('cat.sort_price_desc'),
-                ];
-
-                /* Giá trị lạ trên URL đã bị controller nắn về 'newest' trước khi
-                   tới đây, nên ?? chỉ là lưới an toàn cho lần ai đó thêm một
-                   kiểu sắp xếp ở controller mà quên thêm nhãn ở đây. */
-                $sortNhan = $sortOptions[$filters['sort']] ?? reset($sortOptions);
-                ?>
-                <div class="catsort">
-                    <span class="catsort__label" id="f-sort-legend"><?= e(t('cat.sort_by')) ?></span>
-
-                    <details class="catpick catpick--sort" data-catpick>
-                        <summary class="catpick__sum" aria-labelledby="f-sort-legend">
-                            <span class="catpick__cur"><?= e($sortNhan) ?></span>
-                            <?php
-                            /* SVG chữ V vẽ tay. Trước đây là ký tự ▼ — mà ký tự
-                               thì mỗi hệ điều hành vẽ một kiểu: Windows ra tam
-                               giác đặc nhỏ xíu, Android ra một hình khác hẳn, và
-                               không chỉnh được độ dày nét cho khớp phần còn lại
-                               của site. */
-                            ?>
-                            <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6"
-                                      stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </summary>
-
-                        <ul class="catpick__menu" role="list">
-                            <?php foreach ($sortOptions as $value => $text): ?>
-                                <?php $dangChon = $filters['sort'] === $value; ?>
-                                <li>
-                                    <a class="catpick__opt<?= $dangChon ? ' is-on' : '' ?>"
-                                       rel="nofollow"
-                                       href="<?= e($buildUrl(['sort' => $value, 'page' => null])) ?>"
-                                       <?= $dangChon ? 'aria-current="true"' : '' ?>>
-                                        <span><?= e($text) ?></span>
-                                    </a>
-                                </li>
+                <form class="catsort" method="get" action="<?= e($catalogBase) ?>">
+                    <?php $hiddenFilters(['sort', 'page']); ?>
+                    <label class="catsort__label" for="f-sort"><?= e(t('cat.sort_by')) ?></label>
+                    <?php /* .catpick--select: ô này VẪN là <select> (thanh sắp xếp
+                             không đi cùng đợt đổi cột lọc sang <details>) nên
+                             cần biến thể giữ lại dáng cũ — xem category.css. */ ?>
+                    <span class="catpick catpick--select">
+                        <select class="catpick__select" id="f-sort" name="sort" data-pick="sort">
+                            <?php foreach ([
+                                'newest'     => t('cat.sort_newest'),
+                                'popular'    => t('cat.sort_popular'),
+                                'price-asc'  => t('cat.sort_price_asc'),
+                                'price-desc' => t('cat.sort_price_desc'),
+                            ] as $value => $text): ?>
+                                <option value="<?= e($value) ?>"<?= $filters['sort'] === $value ? ' selected' : '' ?>><?= e($text) ?></option>
                             <?php endforeach; ?>
-                        </ul>
-                    </details>
-                </div>
+                        </select>
+                        <?php
+                        /* SVG chữ V vẽ tay. Trước đây là ký tự ▼ — mà ký tự thì
+                           mỗi hệ điều hành vẽ một kiểu: Windows ra tam giác đặc
+                           nhỏ xíu, Android ra một hình khác hẳn, và không chỉnh
+                           được độ dày nét cho khớp phần còn lại của site. */
+                        ?>
+                        <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
+                                  stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn là gửi
+                             luôn). Không có JS thì đây là cách duy nhất để
+                             chốt lựa chọn, nên không được bỏ. */ ?>
+                    <button type="submit" class="catpick__go"><?= e(t('filter.apply')) ?></button>
+                </form>
             </div>
 
             <?php if ($total === 0): ?>

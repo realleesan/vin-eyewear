@@ -47,37 +47,12 @@
    │ Lưới hai cột chữa gọn mà KHÔNG phải sửa một file view nào: cột 1 xếp
    │ chồng nhãn rồi tiêu đề, cột 2 giữ liên kết "xem tất cả" ở mép phải.
    └──────────────────────────────────────────────────────────────────────── */
-/* ┌─ ĐẦU KHỐI DỰNG LẠI (đợt này) ───────────────────────────────────────────
-   │ Bản trước: nhãn nhỏ, rồi một dòng tiêu đề 48px, rồi thẳng xuống lưới thẻ.
-   │ Không có gì đóng khung cái đầu khối lại, nên nó không đọc ra là "đầu một
-   │ chương" — nó đọc ra là một dòng chữ to đứng lạc giữa khoảng trắng, và
-   │ liên kết "xem tất cả" thì bị đẩy xuống tận dưới lưới, sát chân thẻ cuối,
-   │ nơi nó trông như chú thích của đúng cái thẻ ấy.
-   │
-   │ BA THAY ĐỔI, mỗi cái chữa một việc:
-   │
-   │   1. MỘT ĐƯỜNG KẺ MẢNH DƯỚI CẢ ĐẦU KHỐI. Đây là thứ biến ba dòng rời rạc
-   │      thành một khối có ranh giới, và là cách nhà mốt mở đầu một chương —
-   │      không phải bằng nền màu hay bằng chữ to hơn.
-   │   2. TIÊU ĐỀ HẠ MỘT BẬC (--fs-section, xem PHẦN 2 của gm.css). Sức nặng
-   │      chuyển từ CỠ CHỮ sang KHOẢNG TRỐNG và đường kẻ.
-   │   3. "XEM TẤT CẢ" VỀ ĐÚNG Ô CỦA NÓ ở cột phải, thẳng chân chữ với tiêu
-   │      đề. Ô lưới ấy vốn đã có sẵn trong luật cũ nhưng không view nào đặt
-   │      liên kết vào; nay ba view đều đặt (xem _layout/home/*.php).
-   │
-   │ align-items: baseline chứ không `end`: hai cột có chiều cao khác hẳn nhau
-   │ (một bên hai dòng, một bên một dòng), nên căn theo HỘP sẽ cho ra hai chân
-   │ chữ lệch nhau vài pixel — đủ để mắt thấy là "không thẳng".
-   └──────────────────────────────────────────────────────────────────────── */
 .hsec-head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    align-items: baseline;
-    column-gap: var(--space-6);
-    row-gap: 0;
-    margin-bottom: var(--rhythm-xs);
-    padding-bottom: var(--space-5);
-    border-bottom: 1px solid var(--line);
+    align-items: end;
+    gap: 0 var(--space-4);
+    margin-bottom: var(--block-gap);
 }
 
 .hsec-head > .eyebrow {
@@ -90,12 +65,12 @@
     grid-row: 2;
 }
 
-/* Liên kết "xem tất cả" nằm ở HÀNG CỦA TIÊU ĐỀ (không trải cả hai hàng nữa):
-   chỉ khi ở chung một hàng thì `align-items: baseline` mới có hai đường chân
-   chữ để căn với nhau. */
+/* Liên kết "xem tất cả" chiếm cả hai hàng ở cột phải, căn đáy cho thẳng chân
+   chữ với tiêu đề. */
 .hsec-head > .hsec-all {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 1 / 3;
+    align-self: end;
 }
 
 /* Dưới 601px: liên kết xuống dòng riêng, không ép tiêu đề co lại. */
@@ -114,7 +89,7 @@
 
 .eyebrow {
     display: block;
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-3);
     color: var(--eyebrow);
     font-size: var(--fs-label);
     font-weight: 500;
@@ -123,7 +98,7 @@
 }
 
 .section-h2 {
-    font-size: var(--fs-section);
+    font-size: var(--fs-h2);
     font-weight: 400;
     line-height: 1.15;
     letter-spacing: var(--tracking-tight);
@@ -543,35 +518,12 @@
    2. DANH MỤC
    ──────────────────────────────────────────────────────────────────────────── */
 .hcat,
-/* ┌─ NHỊP GIỮA CÁC KHỐI — ĐÃ THU LẠI ───────────────────────────────────────
-   │ --section-pad là --rhythm-lg, tức 48→120px. Mỗi khối lấy ngần ấy Ở CẢ HAI
-   │ ĐẦU, nên khoảng giữa hai khối là GẤP ĐÔI: đo trên laptop 1440 ra ~187px
-   │ trống giữa lưới "mới về" và tiêu đề "bán chạy" — gần một phần tư khung
-   │ nhìn không có gì. Trang đọc ra là rời rạc, không phải thoáng.
-   │
-   │ --rhythm-sm (32→48) cho ra 64→96px giữa hai khối. Đó là quãng mà mắt vẫn
-   │ đọc thành "sang chương khác" nhưng không mất dấu mạch trang.
-   │
-   │ VÌ SAO KHÔNG SỬA THẲNG --section-pad: token đó là nhịp của MỌI section
-   │ trên site (trang giới thiệu, chính sách, đặt lịch đều đọc nó qua lớp
-   │ `.section`). Trang chủ là trang DUY NHẤT xếp nhiều khối liền nhau nên chỉ
-   │ nó gặp cảnh cộng dồn hai đầu; các trang kia có một, hai section và cần
-   │ đúng quãng thở rộng ấy.
-   └──────────────────────────────────────────────────────────────────────── */
 .hcoll,
 .hnew,
 .hbest,
 .hlens,
 .hrev {
-    padding-block: var(--rhythm-sm);
-}
-
-/* Khối ĐẦU TIÊN sau hero thở rộng hơn một bậc: nó phải tách khỏi một băng
-   video tràn màn, không phải khỏi một lưới thẻ. */
-.vhero + .hcoll,
-.vhero + .hnew,
-.vhero + .hbest {
-    padding-block-start: var(--rhythm-md);
+    padding-block: var(--section-pad);
 }
 
 .hcat__inner,

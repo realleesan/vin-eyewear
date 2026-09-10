@@ -307,19 +307,6 @@
    │ html:not(.js): không có JavaScript thì chúng không làm được gì, và một nút
    │ bấm vào không phản ứng còn tệ hơn không có nút.
    └──────────────────────────────────────────────────────────────────────── */
-/* ┌─ MẢNH HƠN, DÀI HƠN, KHÍT HƠN ───────────────────────────────────────────
-   │ Bản trước: ba đoạn 44×2px cách nhau 8px — đọc ra là ba cái GẠCH NGANG, gần
-   │ với dấu nối hơn là với một thước đo tiến độ, và ở 2px chúng còn nặng hơn
-   │ mọi đường kẻ khác trên site (--line vẽ ở 1px).
-   │
-   │ Tham chiếu dùng những nét DÀI và MẢNH TỚI MỨC gần như chỉ còn là một vệt
-   │ sáng: chúng nói "đang ở tấm thứ mấy" mà không tranh chỗ với hình.
-   │ 64×1px, khe 12px — dài gấp rưỡi, mỏng đi một nửa.
-   │
-   │ VÙNG BẤM KHÔNG NHỎ ĐI MỘT PIXEL NÀO: chiều cao 44px của .vhero__bar là
-   │ đệm trong suốt và nó giữ nguyên (WCAG 2.5.5). Chỉ cái nét NHÌN THẤY mỏng
-   │ đi — xem .vhero__bar-fill.
-   └──────────────────────────────────────────────────────────────────────── */
 .vhero__bars {
     position: absolute;
     left: 50%;
@@ -327,7 +314,7 @@
     z-index: 2;
     transform: translateX(-50%);
     display: flex;
-    gap: var(--space-3);
+    gap: var(--space-2);
 }
 
 html:not(.js) .vhero__bars {
