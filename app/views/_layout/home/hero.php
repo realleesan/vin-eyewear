@@ -58,35 +58,41 @@
  * Có lang="vi" vì đây là tên riêng tiếng Việt, không dịch — cùng quy ước với
  * tên sản phẩm ở _layout/product-card.php.
  */
+/* ┌─ BA TẤM, CẢ BA LÀ VIDEO — KHÔNG CÒN ẢNH TĨNH NÀO (10/09/2026) ──────────
+   │ Trước đợt này mỗi tấm mang một `poster` là ảnh chụp của Vin
+   │ (hero-models · showroom-frames · hero-eyewear). Poster sinh ra để lấp chỗ
+   │ trong lúc video giải mã, nhưng ba ảnh ấy KHÔNG PHẢI khung hình của video
+   │ nào cả — nên mỗi lần băng trượt sang tấm mới, mắt bắt được một tấm ảnh
+   │ lạ nháy lên rồi biến mất. Đó là "cái ảnh tĩnh" cần bỏ.
+   │
+   │ Nay chỉ TẤM ĐẦU còn poster, và nó là đúng khung hình đầu của chính video
+   │ tấm ấy, nên không ai nhận ra đó là một tấm ảnh. Hai tấm sau bỏ hẳn
+   │ poster: chúng nằm ngoài mép màn hình, tới lúc trượt tới thì video đã tải
+   │ xong từ lâu (cả ba đều preload="auto"), không có chỗ nào để lấp.
+   │
+   │ Bỏ poster cho tấm đầu luôn thì được cái sạch nhưng mất cái quan trọng
+   │ hơn: đó là hình đầu tiên người xem thấy khi vào trang, và trong quãng
+   │ video chưa giải mã thì chỗ ấy là một ô đen.
+   │
+   │ Ô THỨ TƯ ĐÃ BỎ. Nó là chỗ giữ sẵn cho một video chưa có file; nay chốt
+   │ đúng ba tấm nên không cần nữa. Khối lọc "bỏ qua clip thiếu file" bên dưới
+   │ thì GIỮ — nó vẫn là thứ chặn một <video> trỏ vào 404 dựng ra ô đen câm.
+   └──────────────────────────────────────────────────────────────────────── */
 $clips = [
     [
         'src'    => 'assets/video/main_pc_1920_990.mp4',
-        'poster' => 'assets/images/hero-models.jpg',
+        'poster' => 'assets/images/hero-poster.jpg',
         'label'  => t('home.hero.cap3'),
     ],
     [
         'src'    => 'assets/video/main_global_pc_1920_990.mp4',
-        'poster' => 'assets/images/showroom-frames.jpg',
+        'poster' => null,
         'label'  => t('home.hero.cap1'),
     ],
     [
         'src'    => 'assets/video/main_0_pc_1920_990.mp4',
-        'poster' => 'assets/images/hero-eyewear.jpg',
+        'poster' => null,
         'label'  => t('home.hero.cap2'),
-    ],
-    /* ┌─ CHỖ CHO TẤM THỨ TƯ ────────────────────────────────────────────────
-       │ File chưa có trên máy này, và khối lọc ngay dưới sẽ bỏ qua nó cho tới
-       │ khi ai đó chép video vào đúng đường dẫn này. Thả file vào là hero
-       │ thành bốn tấm, không phải sửa một dòng nào ở đây, ở home.js hay ở
-       │ vạch tiến độ — cả ba đều đếm theo $clips.
-       │
-       │ Poster dùng lại ảnh hero có sẵn; đổi thành ảnh riêng của clip mới thì
-       │ tốt hơn, nhưng thiếu nó cũng không sao — poster chỉ lấp chỗ trong lúc
-       │ video giải mã. */
-    [
-        'src'    => 'assets/video/main_4_pc_1920_990.mp4',
-        'poster' => 'assets/images/hero-eyewear.jpg',
-        'label'  => t('home.hero.cap1'),
     ],
 ];
 
@@ -167,9 +173,13 @@ $tong = count($clips);
                        CẢ BA đều autoplay + preload="auto": đây là phương án
                        "cả ba cùng phát" — xem khối chú thích đầu file. */
                     ?>
+                    <?php /* poster CHỈ in ra khi tấm ấy có — xem khối $clips ở đầu
+                             file. `poster=""` rỗng không phải là "không có
+                             poster": trình duyệt coi chuỗi rỗng là một URL, đi
+                             tải chính trang hiện tại rồi bỏ vì không phải ảnh. */ ?>
                     <video class="vhero__clip"
                            autoplay muted loop playsinline preload="auto"
-                           poster="<?= e(asset($clip['poster'])) ?>"
+                           <?= $clip['poster'] ? 'poster="' . e(asset($clip['poster'])) . '"' : '' ?>
                            aria-hidden="true" tabindex="-1"><source
                             src="<?= e(asset($clip['src'])) ?>" type="video/mp4"></video>
 
