@@ -548,6 +548,23 @@
     border-bottom-width: 2px;
 }
 
+/* ┌─ BỎ KHUNG CHỮ NHẬT KHI BẤM VÀO Ô SẮP XẾP ───────────────────────────────
+   │ Đo bằng getComputedStyle ngay sau cú bấm: `outline: rgb(17,17,17) solid
+   │ 2px`. Nó đến từ luật :focus-visible chung ở PHẦN 17 gm.css, và nó bật
+   │ với CHUỘT chứ không riêng bàn phím — <select> là widget nhận phím, nên
+   │ trình duyệt coi mọi cú focus vào nó là "cần thấy vòng tiêu điểm".
+   │
+   │ KHÔNG phải bỏ dấu hiệu tiêu điểm, mà là thôi vẽ nó HAI LẦN: luật :focus
+   │ ngay trên đã kéo gạch chân xuống đen 2px, đó vốn là cách bộ này báo một
+   │ ô đang được chọn (mọi ô nhập đều gạch chân, không khung). Vòng outline
+   │ chỉ chồng thêm một hình chữ nhật quanh cái đã rõ.
+   │
+   │ Người dùng bàn phím không mất gì: Tab tới ô này vẫn thấy gạch chân dày
+   │ lên gấp đôi và đổi sang đen đặc. */
+.catpick__select:focus-visible {
+    outline: none;
+}
+
 .catpick__caret {
     position: absolute;
     right: 0;

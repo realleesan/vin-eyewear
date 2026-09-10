@@ -315,6 +315,14 @@
        9–10px trên máy hẹp; giữ nguyên là đúng, không phải thiếu responsive. */
     --fs-micro: 10px;      /* huy hiệu số trên giỏ hàng */
     --fs-label: 12px;      /* NHÃN IN HOA + chữ trên nút — cỡ dùng nhiều nhất */
+    /* ┌─ HÀNG NAV CÓ CỠ RIÊNG ──────────────────────────────────────
+       │ 14px, và nó KHÔNG dùng chung --fs-label được: nhãn IN HOA ở
+       │ 12px + giãn .08em là một dáng chữ, còn mục nav viết hoa chữ
+       │ đầu không giãn là một dáng khác — cùng con số thì mục nav đọc
+       │ ra bé hơn hẳn, vì chữ thường thấp hơn chữ hoa.
+       │ 14px là số đo trên gentlemonster.com (nav 14px/350, chữ thân
+       │ 13px, tên+giá sản phẩm 12px). */
+    --fs-nav: 14px;
     --fs-caption: 12px;    /* chú thích, meta */
     --fs-note: 12px;
     --fs-body-sm: 13px;    /* meta, liên kết chân trang */

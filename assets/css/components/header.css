@@ -697,10 +697,22 @@ body.page-home-index {
     padding: var(--space-5) 0;
     /* ĐEN, không phải xám. Xem điểm 3 ở khối chú thích đầu file. */
     color: var(--ink);
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+    /* ┌─ VIẾT HOA CHỮ ĐẦU, KHÔNG IN HOA HẾT (10/09/2026) ───────────────────
+       │ Đo trên gentlemonster.com: nav là 14px, weight 350, `text-transform:
+       │ none`, `letter-spacing: normal`. Không mục nav nào in hoa hết.
+       │
+       │ Nhãn trong lang/vi.php vốn đã viết đúng kiểu câu ("Gọng kính", "Bộ
+       │ sưu tập") — chính CSS ở đây mới bẻ chúng thành GỌNG KÍNH. Nên bỏ hai
+       │ dòng là ra đúng thứ cần, không phải sửa chữ nào trong lang.
+       │
+       │ Cỡ phải TĂNG khi bỏ in hoa chứ không giữ nguyên: chữ thường thấp hơn
+       │ chữ hoa nên cùng 12px sẽ đọc ra bé hơn hẳn. 12 → 14 (--fs-nav).
+       │ Giãn chữ về normal: .08em sinh ra cho nhãn IN HOA, giữ nó trên chữ
+       │ thường là các từ rời rạc ra.
+       │ Nét 500 → 400 cùng lý do, và theo đúng 350 của tham chiếu. */
+    font-size: var(--fs-nav);
+    font-weight: 400;
+    letter-spacing: normal;
     text-decoration: none;
     white-space: nowrap;
     background: none;
@@ -747,7 +759,9 @@ body.page-home-index {
    làm cả hàng nav xê dịch mỗi lần sang trang khác. */
 .header-nav__list > li > a.is-active {
     color: var(--ink);
-    font-weight: 500;
+    /* font-weight 500 ĐÃ BỎ: chính chú thích ngay trên ghi lý do "đổi weight
+       làm cả hàng nav xê dịch" mà vẫn khai nó. Nay hàng nav chạy 400 nên dòng
+       ấy đúng là cái xê dịch nó nói tới. */
     text-decoration: underline;
     text-underline-offset: 6px;
 }
@@ -1012,18 +1026,46 @@ body.page-home-index {
     transition: opacity var(--dur) var(--ease);
 }
 
+/* GẠCH CHÂN ĐÃ BỎ. Chú thích ở .hpop__item ghi "GM không tô nền mục menu, họ
+   gạch chân" — nhưng gạch chân nhảy ra khi rê chuột làm cả cụm mục nhấp nháy
+   theo con trỏ, và nó chỏi với hàng nav ngay trên (hàng ấy báo hiệu bằng
+   TRỌNG LƯỢNG: các mục bên cạnh mờ đi, xem khối "LÀM MỜ CÁC MỤC BÊN CẠNH").
+   Bảng này nay dùng đúng ngôn ngữ ấy: mục đang rê giữ nguyên, không có nét
+   nào mọc thêm. */
 .hpop__item:hover,
 .hpop__item:focus-visible {
     background: transparent;
     color: var(--ink);
-    text-decoration: underline;
+    text-decoration: none;
 }
 
-/* Nút Đăng xuất nằm trong <form>, phải trông giống hệt các mục <a> quanh nó. */
+/* Mục bên cạnh mờ đi — cùng thủ pháp với hàng nav, xem khối "LÀM MỜ CÁC MỤC
+   BÊN CẠNH". Nhắm <li> vì nút Đăng xuất nằm trong <form>, không phải con trực
+   tiếp của .hpop__list. */
+.hpop__list:hover > li,
+.hpop__list:focus-within > li {
+    opacity: .55;
+    transition: opacity var(--dur-fast) var(--ease);
+}
+
+.hpop__list > li:hover,
+.hpop__list > li:focus-within {
+    opacity: 1;
+}
+
+/* Nút Đăng xuất nằm trong <form>, phải trông giống hệt các mục <a> quanh nó.
+
+   `font: inherit` ĐÃ BỎ, và đó chính là chỗ làm chữ "Đăng xuất" khác cỡ với
+   ba mục trên nó: shorthand `font` reset CẢ font-size, nên nó xoá luôn
+   `font-size: var(--fs-body-sm)` mà .hpop__item vừa đặt và kéo nút về cỡ chữ
+   kế thừa từ <form> (tức cỡ body, 14–16px). Nay chỉ nhận đúng thứ cần lấy từ
+   thẻ cha là mặt chữ — cỡ để .hpop__item lo, một nguồn duy nhất. */
 .hpop__item--btn {
     border: 0;
     background: transparent;
-    font: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    line-height: inherit;
     cursor: pointer;
 }
 
@@ -1825,7 +1867,9 @@ body.is-search-open .site-header {
     font-size: var(--fs-h4);
     font-weight: 400;
     letter-spacing: var(--tracking-snug);
-    text-transform: uppercase;
+    /* KHÔNG in hoa — đi theo hàng nav desktop, xem khối chú thích ở
+       .header-nav__list > li > a. Ngăn kéo này LÀ hàng nav ở màn hẹp; để nó
+       in hoa còn hàng kia không là cùng một menu mang hai giọng. */
     text-decoration: none;
     border-bottom: 0;
 }
