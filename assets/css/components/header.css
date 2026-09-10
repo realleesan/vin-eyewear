@@ -1874,3 +1874,72 @@ body.is-search-open .site-header {
         margin-left: 0;
     }
 }
+
+/* ============================================================================
+   WORDMARK TO HƠN — TỈ LỆ VỚI CHỮ NAV THEO GENTLE MONSTER (10/09/2026)
+
+   Trước: wordmark cỡ --fs-body (14–16px), chỉ nhỉnh hơn chữ nav 12px một chút,
+   nên giữa thanh nó đọc như thêm một mục nav chứ không phải LOGO. Tham chiếu
+   (ảnh chụp đầu trang gentlemonster.com) để chữ in hoa của wordmark cao gấp
+   khoảng 2,5 lần chữ nav.
+
+   Nay chữ nav 12px (cao hoa ~8,5px) → wordmark 30px (cao hoa ~21px).
+
+   GIÃN CHỮ HẠ TỪ .22em XUỐNG .12em. Token --tracking-wordmark tính theo em,
+   nên phóng cỡ chữ gấp đôi là khoảng hở giữa các chữ cũng gấp đôi — ở 30px,
+   .22em là gần 7px mỗi ký tự, wordmark rời ra thành từng chữ và dài gần
+   400px. Tham chiếu gần như không giãn; .12em giữ lại chút dáng "nhà mốt"
+   của bản cũ mà chữ vẫn liền thành một khối.
+
+   THEO BA MỐC BỀ NGANG (601 / 1101), vì dưới 1101px wordmark nằm CHUNG MỘT
+   HÀNG với bốn nút 44px (tìm · tài khoản · giỏ · hamburger): cỡ 30px ở 390px
+   đẩy tràn ngang. Cỡ nhỏ hơn ở màn hẹp là đo cho vừa, không phải ý đồ dáng.
+
+   Áp cho cả wordmark trong ngăn kéo (.mobile-nav__logo dùng chung hai lớp
+   .header-logo__mark / __sub) — hai wordmark phải chồng khít lên nhau lúc
+   ngăn kéo mở, xem chú thích ở .mobile-nav__head.
+
+   Chiều cao thanh nav KHÔNG ĐỔI (--header-h 64px): 30px chữ vẫn thừa chỗ.
+   ============================================================================ */
+:root {
+    --logo-fs: 30px;
+    --logo-tracking: .12em;
+}
+
+@media (max-width: 1100px) {
+    :root {
+        --logo-fs: 22px;
+        --logo-tracking: .1em;
+    }
+}
+
+/* 17px chứ không 18px: đo ở 360px (máy Android nhỏ phổ biến) với đủ bốn nút,
+   18px làm trang tràn ngang đúng 1px. */
+@media (max-width: 600px) {
+    :root {
+        --logo-fs: 17px;
+    }
+}
+
+.header-logo__mark,
+.header-logo__sub {
+    font-size: var(--logo-fs);
+    letter-spacing: var(--logo-tracking);
+}
+
+/* Giãn chữ cộng thêm một khoảng thừa SAU ký tự cuối — với .12em ở 30px là
+   ~4px, đủ để wordmark trông lệch trái so với tâm thanh. Kéo lại đúng bằng
+   chừng ấy để chữ nằm giữa thật.
+   Đặt trên __sub (chữ cuối) chứ không trên .header-logo: `em` ở đây phải tính
+   theo cỡ 30px của chính span, không theo cỡ chữ của thẻ cha. */
+.header-logo__sub {
+    margin-right: calc(var(--logo-tracking) * -1);
+}
+
+/* Khe giữa "VIN" và "EYEWEAR" phải lớn theo cỡ chữ. `gap: .4em` gốc tính theo
+   cỡ chữ của THẺ CHA (~15px), nên phóng wordmark lên 30px mà khe vẫn 6px — hai
+   chữ dính vào nhau thành "VINEYEWEAR". */
+.header-logo,
+.mobile-nav__logo {
+    gap: calc(var(--logo-fs) * .32);
+}
