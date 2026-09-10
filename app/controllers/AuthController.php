@@ -1708,26 +1708,39 @@ class AuthController extends BaseController
     // ========================================================================
 
     /**
-     * Năm mục của trang tài khoản, khoá là giá trị ?muc=.
+     * Các mục của trang tài khoản, khoá là giá trị ?muc=.
      *
-     * Hai mục đầu gộp trong nhóm "Tài khoản của tôi" ở cột trái (bản thiết kế
-     * vẽ chúng trong một menu thu gọn được); hai mục sau là mục cấp một.
-     * 'lich-hen' thêm ngoài bản thiết kế — xem ghi chú đầu
-     * app/views/auth/profile.php.
+     * THỨ TỰ Ở ĐÂY LÀ THỨ TỰ HIỆN RA. app/views/auth/profile.php duyệt thẳng
+     * mảng này chứ không vẽ tay từng mục, nên đổi thứ tự ở đây là đổi cột điều
+     * hướng — không có chỗ thứ hai phải sửa theo.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * 'mat-khau' ĐÃ RỜI KHỎI ĐÂY — 2026-09-10, theo BR-UC.USER.05-02/03
+     *
+     * Đổi mật khẩu không còn là một MỤC (một URL, một lần tải trang) mà là
+     * KHU VỰC THỨ BA ngay trong trang Hồ sơ, cùng trang với Thông tin cá nhân
+     * và Sổ địa chỉ. Đặc tả cấm dùng tab hoặc chuyển trang giữa ba khu vực.
+     *
+     * File app/views/auth/account/mat-khau.php vẫn còn, nay được ho-so.php gọi
+     * bằng partial(). Liên kết cũ ?muc=mat-khau KHÔNG vỡ: nó thành một giá trị
+     * lạ, và profile() đưa mọi giá trị lạ về mục mặc định — chính là 'ho-so'.
      *
      * 'do-mat' (Thông số đo mắt) ĐÃ GỠ. Số đo vẫn nằm trong
      * customer_prescriptions và vẫn do kỹ thuật viên nhập ở
      * /quan-tri/khach-hang; chỉ mục tự xem/tự khai phía khách là bỏ.
      *
-     * 'dia-chi' (Sổ địa chỉ) ĐÃ GỠ HẲN — không còn mục, không còn bảng, không
-     * còn action riêng. Mỗi khách nay có ĐÚNG MỘT địa chỉ và nó là bốn cột của
-     * `profiles`, sửa ngay trong form Hồ sơ cùng lần bấm Lưu với họ tên và
-     * ngày sinh. Xem migration 2026-09-12-dia-chi-vao-ho-so.sql.
+     * 'dia-chi' (Sổ địa chỉ) cũng không có mục riêng, nhưng vì lý do NGƯỢC
+     * LẠI: sổ đã quay lại (UC-USER-05, Khu vực 2) và nằm ngay trong trang Hồ
+     * sơ. Bốn tuyến `tai-khoan/dia-chi/*` ở config/routes.php phục vụ nó —
+     * xem AddressModel.
+     *
+     * NHÃN LẤY THEO ĐÚNG CHỮ TRONG ĐẶC TẢ ("Hồ sơ cá nhân", "Đơn hàng"), vì
+     * chúng vừa là nhãn trên cột điều hướng vừa là tiêu đề thẻ trình duyệt.
+     * 'lich-hen' không có trong đặc tả nên giữ nguyên chữ cũ.
      */
     private const SECTIONS = [
-        'ho-so'    => 'Hồ sơ của tôi',
-        'mat-khau' => 'Đổi mật khẩu',
-        'don-hang' => 'Đơn hàng của tôi',
+        'ho-so'    => 'Hồ sơ cá nhân',
+        'don-hang' => 'Đơn hàng',
         'lich-hen' => 'Lịch hẹn của tôi',
     ];
 
@@ -1774,28 +1787,35 @@ class AuthController extends BaseController
         if (!$known) {
             /*
              * ─────────────────────────────────────────────────────────────────
-             * MỤC MỞ SẴN PHỤ THUỘC HỒ SƠ ĐÃ HOÀN THIỆN CHƯA — Q72, 04/09/2026
+             * LUÔN LÀ 'ho-so' — UC-USER-05, Main Flow bước 1 & 5
              *
-             * Trước đây mọi người vào /tai-khoan trần đều rơi vào 'ho-so', kể
-             * cả khách đã điền xong từ lâu — họ phải bấm thêm một lần nữa để
-             * tới thứ mình định xem.
+             * Đặc tả nói thẳng: khách chọn biểu tượng cá nhân hoặc menu "Tài
+             * khoản" -> hệ thống hiển thị trang "Hồ sơ cá nhân", và mục đó trên
+             * cột điều hướng được highlight. Cả hai lối vào ("Thông tin tài
+             * khoản" ở menu người dùng, "Tài khoản của tôi" ở trang 403) đều
+             * trỏ tới /tai-khoan trần, tức đúng nhánh này.
              *
-             * Q72 chốt: điều kiện để KHÔNG bị điều hướng về trang Hồ sơ là họ
-             * tên + số điện thoại đã xác thực. Luật ấy nằm gọn ở
-             * UserModel::hoSoDayDu() — đừng viết lại điều kiện ở đây, vì khi
-             * Zalo OTP lên thì chỉ một chỗ được đổi.
+             * ⚠ CHỖ NÀY ĐÃ ĐÈ LÊN Q72 (04/09/2026) — nếu BA muốn giữ Q72 thì
+             * đây là dòng phải sửa, và đặc tả UC-USER-05 phải ghi nhận nó.
              *
-             * Chưa đủ -> 'ho-so' như cũ, và đó chính là điều hướng mà Q72 nói
-             * tới. Đủ rồi -> 'don-hang', thứ khách hay tới xem nhất.
+             * Q72 chốt: khách đã có đủ họ tên + số điện thoại xác thực
+             * (UserModel::hoSoDayDu()) thì vào /tai-khoan trần sẽ rơi thẳng
+             * vào 'don-hang', đỡ một cú bấm. Luật ấy mâu thuẫn trực tiếp với
+             * Main Flow ở trên, nên nó tạm nghỉ:
+             *
+             *     $section = UserModel::hoSoDayDu($userId) ? 'don-hang' : 'ho-so';
+             *
+             * UserModel::hoSoDayDu() GIỮ NGUYÊN dù đây là chỗ gọi cuối cùng
+             * của nó. Nó là một luật nghiệp vụ viết đúng một lần (và sẽ đổi khi
+             * Zalo OTP lên), không phải mã chết theo nghĩa thường — gỡ đi rồi
+             * bật lại Q72 là phải viết lại điều kiện từ đầu, ở một chỗ nào đó
+             * không phải UserModel.
              *
              * ?muc= có thật thì KHÔNG đụng tới: người bấm thẳng vào một mục là
-             * người đã biết mình muốn gì, và đá họ về Hồ sơ vì hồ sơ thiếu một
-             * dòng là phạt họ giữa chừng một việc khác.
+             * người đã biết mình muốn gì.
              * ─────────────────────────────────────────────────────────────────
              */
-            $section = UserModel::hoSoDayDu($userId)
-                ? 'don-hang'
-                : self::DEFAULT_SECTION;
+            $section = self::DEFAULT_SECTION;
         }
 
         /*
@@ -1825,6 +1845,41 @@ class AuthController extends BaseController
             'lich-hen' => BookingModel::countUpcoming($userId),
         ];
 
+        /*
+         * ─────────────────────────────────────────────────────────────────────
+         * EF-01 — KHÔNG TRUY XUẤT ĐƯỢC HỒ SƠ
+         *
+         * Hai đường dẫn tới đây: câu truy vấn ném (mất kết nối, bảng hỏng), và
+         * câu truy vấn chạy được nhưng không có dòng nào — `profiles` thiếu
+         * dòng của tài khoản này. Cả hai đều là "không đọc được hồ sơ" dưới mắt
+         * khách, nên cả hai ra cùng một trang.
+         *
+         * KHÔNG chuyển hướng đi đâu cả. Đặc tả cho phép đưa khách về Đăng nhập
+         * hoặc Trang chủ ở trường hợp thất bại, nhưng hai chỗ ấy dành cho phiên
+         * hết hạn (BR-05, đã do AuthMiddleware::requireLogin lo ở trên). Ở đây
+         * phiên vẫn tốt — đá một khách đang đăng nhập về trang chủ thì họ chỉ
+         * bấm lại vào đúng chỗ vừa văng ra, và không ai đọc được câu báo lỗi.
+         *
+         * $profile = null đi tiếp vào view: app/views/auth/profile.php vẫn dựng
+         * cột điều hướng như thường rồi in câu báo ở vùng nội dung, nên Đơn
+         * hàng và Lịch hẹn vẫn vào được.
+         *
+         * CHI TIẾT KỸ THUẬT VÀO error_log, KHÔNG RA MÀN HÌNH — BR-UC.USER.05-05.
+         * ─────────────────────────────────────────────────────────────────────
+         */
+        try {
+            $profile = UserModel::profile($userId);
+        } catch (Throwable $e) {
+            error_log('[AuthController::profile] không đọc được hồ sơ ' . $userId
+                . ': ' . $e->getMessage());
+
+            $profile = null;
+        }
+
+        if ($profile === null) {
+            error_log('[AuthController::profile] không có dòng profiles cho ' . $userId);
+        }
+
         $this->renderView('auth/profile', [
             'pageTitle' => self::SECTIONS[$section] . ' — Vin Eyewear',
             'metaDesc'  => 'Trang tài khoản Vin Eyewear: hồ sơ, sổ địa chỉ, đơn hàng '
@@ -1832,12 +1887,15 @@ class AuthController extends BaseController
             'sections'  => self::SECTIONS,
             'section'   => $section,
             'counts'    => $counts,
-            'profile'   => UserModel::profile($userId),
+            'profile'   => $profile,
             'roles'     => UserModel::roles($userId),
             'genders'   => UserModel::GENDERS,
             'success'   => flash('account_success'),
             'error'     => flash('account_error'),
-        ] + $this->sectionData($section, $userId));
+            /* Hồ sơ hỏng thì KHÔNG chạy sectionData(): view không require mục
+               nào cả, nên mọi câu truy vấn nó gọi đều là công cốc — và một
+               trong số chúng nhiều khả năng hỏng vì cùng lý do. */
+        ] + ($profile !== null ? $this->sectionData($section, $userId) : []));
 
         /* $_SESSION['_old_address'] không còn ai ghi vào: form địa chỉ riêng
            đã gỡ cùng sổ địa chỉ. Vẫn dọn một lần ở đây để phiên của khách
@@ -1859,10 +1917,39 @@ class AuthController extends BaseController
     {
         switch ($section) {
             case 'ho-so':
-                /* Trạng thái liên kết Google — khối cuối mục Hồ sơ. Hỏi ở đây
-                   chứ không để view gọi model: mục này là mục duy nhất vẽ khối
-                   ấy, nên câu hỏi không nên chạy ở bốn mục còn lại. */
-                return ['google' => UserModel::googleLink($userId)];
+                /*
+                 * ─────────────────────────────────────────────────────────────
+                 * BA KHU VỰC CỦA TRANG HỒ SƠ CẦN GÌ
+                 *
+                 * Hỏi ở đây chứ không để view gọi model: mục này là mục duy
+                 * nhất vẽ chúng, nên các câu hỏi không nên chạy ở hai mục còn
+                 * lại.
+                 *
+                 * ?sua= THẮNG ?them= — và đây không phải chuyện ưu tiên tuỳ ý.
+                 * Cả hai form địa chỉ đều mang khối [data-vnaddr], mà
+                 * address-picker.js tìm nó bằng querySelector: MỘT khối cho cả
+                 * trang. Hai form cùng mở thì cái thứ hai còn trơ hai ô gõ tay,
+                 * không có lỗi nào để thấy. Xem khối đầu file JS ấy.
+                 *
+                 * findOwned() trả null khi mã lạ hoặc địa chỉ của người khác,
+                 * và khi đó view chỉ đơn giản không mở form nào — không cần một
+                 * câu báo riêng, vì đường duy nhất tới một mã lạ là gõ tay.
+                 * ─────────────────────────────────────────────────────────────
+                 */
+                $suaDiaChi = isset($_GET['sua'])
+                    ? AddressModel::findOwned((string) $_GET['sua'], $userId) : null;
+
+                return [
+                    'google'       => UserModel::googleLink($userId),
+                    'addresses'    => AddressModel::forUser($userId),
+                    'editing'      => $suaDiaChi,
+                    'themDiaChi'   => isset($_GET['them']),
+                    'nhanDiaChi'   => AddressModel::NHAN,
+                    'toiDaDiaChi'  => AddressModel::TOI_DA,
+                    /* Chế độ của Khu vực 1: xem (mặc định) hay sửa. Xem khối
+                       "XEM TRƯỚC, BẤM MỚI SỬA" ở đầu account/ho-so.php. */
+                    'suaHoSo'      => isset($_GET['sua-ho-so']),
+                ];
 
             case 'don-hang':
                 $orders = OrderModel::forUser($userId);
@@ -1940,43 +2027,52 @@ class AuthController extends BaseController
                     'editing'         => $editing,
                 ];
 
-            default:   // mat-khau — chỉ cần $profile, profile() đã nạp
+            default:
+                /* Không còn mục nào rơi vào đây từ khi 'mat-khau' rời SECTIONS,
+                   nhưng nhánh này phải ở lại: switch không có default thì thêm
+                   một mục mới mà quên viết case là một cảnh báo "undefined
+                   variable" trong view, không phải một lỗi đọc ra được. */
                 return [];
         }
     }
 
+    /**
+     * Lưu Khu vực 1 — Thông tin cá nhân.
+     *
+     * KHÔNG CÒN NHẬN Ô ĐỊA CHỈ NÀO. Tới 2026-09-10 form này ôm cả năm cột địa
+     * chỉ; nay địa chỉ là một SỔ riêng ngay dưới (UC-USER-05, Khu vực 2) với
+     * bốn tuyến của riêng nó. UserModel::updateProfile() vẫn nhận năm cột ấy,
+     * nhưng người gọi duy nhất còn lại là AddressModel::dongBoHoSo().
+     *
+     * Thêm một ô địa chỉ trở lại đây là dựng hai nguồn sự thật cho cùng một dữ
+     * liệu: cái lưu sau ghi đè cái lưu trước, âm thầm, và khách không có cách
+     * nào biết nơi nhận hàng của mình vừa đổi.
+     */
     public function updateProfile(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=ho-so');
+        $this->requirePost(self::VE_HO_SO . '#thong-tin');
 
-        /* ĐỊA CHỈ ĐI CÙNG CHUYẾN NÀY. Từ 2026-09-12 không còn bảng
-           `addresses` nào giữ bản gốc rồi đồng bộ ngược về profiles.address,
-           nên form hồ sơ ghi thẳng — bốn cột địa chỉ nằm trong cùng một câu
-           UPDATE với họ tên và ngày sinh, tức là lưu được hoặc hỏng cả cụm,
-           không có trạng thái nửa vời. Việc dọn chuỗi rỗng và mã lạc tên nằm
-           ở UserModel::updateProfile(). */
         /* EMAIL TRƯỚC, và dừng lại nếu nó hỏng.
            Nó nằm ở bảng `users` nên là một lệnh ghi riêng — xem
            UserModel::updateEmail(). Chạy trước vì đây là lỗi hay gặp nhất của
            form này (địa chỉ đã thuộc về tài khoản khác), và ghi hồ sơ xong rồi
            mới báo lỗi email thì màn hình nói "không lưu được" trong khi bốn ô
-           kia đã lưu rồi. */
+           kia đã lưu rồi.
+
+           Lỗi thì quay lại với ?sua-ho-so=1: form phải còn MỞ để khách sửa
+           đúng cái ô vừa bị chê. Về chế độ xem là bắt họ bấm "Chỉnh sửa" lần
+           nữa rồi gõ lại từ đầu. */
         $email = UserModel::updateEmail($userId, (string) ($_POST['email'] ?? ''));
 
         if (!$email['ok']) {
             flash('account_error', $email['error']);
-            redirect('/tai-khoan?muc=ho-so');
+            redirect(self::VE_HO_SO . '&sua-ho-so=1#thong-tin');
         }
 
         $result = UserModel::updateProfile($userId, [
             'full_name'     => trim((string) ($_POST['full_name'] ?? '')),
             'phone'         => trim((string) ($_POST['phone'] ?? '')),
-            'address'       => trim((string) ($_POST['address'] ?? '')),
-            'province_name' => trim((string) ($_POST['province_name'] ?? '')),
-            'province_code' => trim((string) ($_POST['province_code'] ?? '')),
-            'ward_name'     => trim((string) ($_POST['ward_name'] ?? '')),
-            'ward_code'     => trim((string) ($_POST['ward_code'] ?? '')),
             'gender'        => (string) ($_POST['gender'] ?? ''),
             'date_of_birth' => ($_POST['date_of_birth'] ?? '') !== ''
                 ? (string) $_POST['date_of_birth'] : null,
@@ -1984,11 +2080,98 @@ class AuthController extends BaseController
 
         if (!$result['ok']) {
             flash('account_error', $result['error']);
-            redirect('/tai-khoan?muc=ho-so');
+            redirect(self::VE_HO_SO . '&sua-ho-so=1#thong-tin');
         }
 
+        /* Lưu xong về CHẾ ĐỘ XEM (không kèm ?sua-ho-so): khách vừa xong việc,
+           và thứ họ muốn thấy tiếp theo là thông tin mới đã vào đúng chỗ. */
         flash('account_success', 'Đã cập nhật hồ sơ.');
-        redirect('/tai-khoan?muc=ho-so');
+        redirect(self::VE_HO_SO . '#thong-tin');
+    }
+
+    // ========================================================================
+    // SỔ ĐỊA CHỈ — UC-USER-05, Khu vực 2
+    //
+    // Bốn hàm, một hình dạng: lấy tham số -> gọi AddressModel -> flash kết quả
+    // -> quay về #so-dia-chi. Mọi luật (đúng chủ, đủ trường, ai thay chân địa
+    // chỉ mặc định vừa xoá, đồng bộ sang `profiles`) nằm trong model, không có
+    // vế nào ở đây — xem app/models/AddressModel.php.
+    //
+    // CẢ BỐN ĐỀU LÀ POST. GET thì một thẻ <img src="/tai-khoan/dia-chi/xoa?id=…">
+    // trên trang bất kỳ cũng xoá được địa chỉ của khách đang đăng nhập; ô
+    // _token chặn nốt đường POST giả. Xem requirePost().
+    // ========================================================================
+
+    /** Đường quay về trang Hồ sơ. Một hằng vì mười mấy chỗ dưới đây dùng nó. */
+    private const VE_HO_SO = '/tai-khoan?muc=ho-so';
+
+    public function addAddress(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost(self::VE_HO_SO . '#so-dia-chi');
+
+        $result = AddressModel::them($userId, $_POST);
+
+        if (!$result['ok']) {
+            flash('account_error', $result['error']);
+            /* Mở lại form THÊM, không về danh sách: dữ liệu khách vừa gõ mất
+               rồi (form này không giữ giá trị cũ), nhưng ít nhất họ không phải
+               tìm lại nút "Thêm địa chỉ mới" trước khi gõ lại. */
+            redirect(self::VE_HO_SO . '&them=1#them-dia-chi');
+        }
+
+        flash('account_success', 'Đã thêm địa chỉ vào sổ.');
+        redirect(self::VE_HO_SO . '#so-dia-chi');
+    }
+
+    public function updateAddress(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost(self::VE_HO_SO . '#so-dia-chi');
+
+        $id     = (string) ($_POST['id'] ?? '');
+        $result = AddressModel::sua($id, $userId, $_POST);
+
+        if (!$result['ok']) {
+            flash('account_error', $result['error']);
+            redirect(self::VE_HO_SO . '&sua=' . rawurlencode($id) . '#sua-dia-chi');
+        }
+
+        flash('account_success', 'Đã cập nhật địa chỉ.');
+        redirect(self::VE_HO_SO . '#so-dia-chi');
+    }
+
+    public function deleteAddress(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost(self::VE_HO_SO . '#so-dia-chi');
+
+        $result = AddressModel::xoa((string) ($_POST['id'] ?? ''), $userId);
+
+        if (!$result['ok']) {
+            flash('account_error', $result['error']);
+        } else {
+            flash('account_success', 'Đã xoá địa chỉ khỏi sổ.');
+        }
+
+        redirect(self::VE_HO_SO . '#so-dia-chi');
+    }
+
+    public function setDefaultAddress(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost(self::VE_HO_SO . '#so-dia-chi');
+
+        $result = AddressModel::datMacDinh((string) ($_POST['id'] ?? ''), $userId);
+
+        if (!$result['ok']) {
+            flash('account_error', $result['error']);
+        } else {
+            flash('account_success',
+                'Đã đặt địa chỉ mặc định. Địa chỉ này sẽ được điền sẵn khi bạn đặt hàng.');
+        }
+
+        redirect(self::VE_HO_SO . '#so-dia-chi');
     }
 
     /**
@@ -2370,10 +2553,17 @@ class AuthController extends BaseController
     }
 
 
+    /**
+     * Đổi mật khẩu — Khu vực 3 của trang Hồ sơ.
+     *
+     * Mọi đường quay về nay là '?muc=ho-so#doi-mat-khau', không còn
+     * '?muc=mat-khau': khu vực này nằm trong trang Hồ sơ (BR-UC.USER.05-03),
+     * và cái neo là thứ đưa khách trở lại đúng chỗ trên một trang dài.
+     */
     public function changePassword(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost('/tai-khoan?muc=mat-khau');
+        $this->requirePost(self::VE_HO_SO . '#doi-mat-khau');
 
         $new     = (string) ($_POST['new_password'] ?? '');
         $confirm = (string) ($_POST['new_password_confirm'] ?? '');
@@ -2382,7 +2572,7 @@ class AuthController extends BaseController
         // gợi ý của trình duyệt — request gửi tay thì không đi qua nó.
         if ($new !== $confirm) {
             flash('account_error', 'Hai lần nhập mật khẩu mới không khớp.');
-            redirect('/tai-khoan?muc=mat-khau');
+            redirect(self::VE_HO_SO . '#doi-mat-khau');
         }
 
         $result = UserModel::changePassword(
@@ -2393,7 +2583,7 @@ class AuthController extends BaseController
 
         if (!$result['ok']) {
             flash('account_error', $result['error']);
-            redirect('/tai-khoan?muc=mat-khau');
+            redirect(self::VE_HO_SO . '#doi-mat-khau');
         }
 
         // Đổi mật khẩu là đá mọi thiết bị đang "ghi nhớ đăng nhập" ra ngoài.
@@ -2403,7 +2593,7 @@ class AuthController extends BaseController
         RememberModel::forgetAllFor($userId);
 
         flash('account_success', 'Đã đổi mật khẩu. Các thiết bị khác đã được đăng xuất.');
-        redirect('/tai-khoan?muc=mat-khau');
+        redirect(self::VE_HO_SO . '#doi-mat-khau');
     }
 
     // ========================================================================

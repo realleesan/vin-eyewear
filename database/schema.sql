@@ -245,12 +245,29 @@ CREATE TABLE `profiles` (
      */
     `phone_verified_at` DATETIME  NULL,
     /*
-     * ĐỊA CHỈ GIAO HÀNG — ĐÚNG MỘT CÁI, VÀ ĐÂY LÀ BẢN GỐC.
+     * ĐỊA CHỈ GIAO HÀNG — BẢN SAO CỦA ĐỊA CHỈ MẶC ĐỊNH, KHÔNG PHẢI BẢN GỐC.
      *
-     * Trước 2026-09-12 cột này chỉ là BẢN SAO của địa chỉ mặc định trong bảng
-     * `addresses` (một sổ nhiều địa chỉ), do AddressModel::syncProfileAddress()
-     * ghi đè. Sổ đã gỡ: mỗi khách có đúng một địa chỉ, sửa ngay trong form Hồ
-     * sơ. Xem migration 2026-09-12-dia-chi-vao-ho-so.sql.
+     * ⚠ Ý NGHĨA CỘT NÀY ĐÃ ĐỔI HAI LẦN. Đọc kỹ trước khi ghi vào nó:
+     *
+     *   tới 12/09/2026   bản sao của địa chỉ mặc định trong `addresses`, ở dạng
+     *                    CHUỖI GHÉP ("Số 12 ngõ 5 Đội Cấn, Phường Ba Đình,
+     *                    Thành phố Hà Nội").
+     *   12/09 → 10/09    BẢN GỐC. Sổ địa chỉ gỡ khỏi giao diện, mỗi khách đúng
+     *                    một địa chỉ và form Hồ sơ ghi thẳng vào đây.
+     *   từ 10/09/2026    bản sao trở lại — nhưng ở dạng CHI TIẾT, không ghép
+     *                    chuỗi. Sổ địa chỉ quay lại theo UC-USER-05, và
+     *                    AddressModel::dongBoHoSo() ghi đè năm cột này sau mỗi
+     *                    lần sổ đổi.
+     *
+     * NGUỒN THẬT NAY LÀ BẢNG `addresses`. Ghi thẳng vào đây từ một chỗ khác là
+     * dựng hai nguồn sự thật cho cùng một dữ liệu: lần đồng bộ kế tiếp ghi đè
+     * lại, âm thầm, và khách không có cách nào biết nơi nhận hàng của mình vừa
+     * quay về giá trị cũ. Chiều đồng bộ chỉ có một: addresses -> profiles.
+     *
+     * VÌ SAO KHÔNG BỎ BẢN SAO ĐI: OrderController::checkout() và
+     * app/views/order/checkout.php đọc UserModel::diaChi(), hàm ấy dựng dữ liệu
+     * từ năm cột này, và chừng chục chỗ trong checkout.php gọi tên khoá theo
+     * đúng hình dạng đó. Giữ bản sao thì luồng thanh toán không phải sửa gì.
      *
      * `address` giữ RIÊNG phần chi tiết — số nhà, tên đường. Phường/xã và
      * tỉnh/thành nằm ở bốn cột ngay dưới. Ghép cả ba vào một chuỗi như bản cũ
@@ -603,15 +620,25 @@ CREATE TABLE `lens_prices` (
 -- được có một địa chỉ KHÔNG mặc định". Luật "đúng một mặc định" do
 -- AddressModel::setDefault giữ, trong một transaction.
 --
--- ⚠ BẢNG NÀY ĐANG CHỜ GỠ — 2026-09-12.
+-- ⚠ BẢNG NÀY TỪNG CHỜ GỠ (12/09/2026) — NAY KHÔNG GỠ NỮA.
 --
--- Mã nguồn KHÔNG còn đọc hay ghi nó: mỗi khách nay có đúng một địa chỉ, nằm ở
--- năm cột của `profiles` (address · province_* · ward_*). Bảng còn đây chỉ để
--- việc chuyển đổi có đường lùi — xem 2026-09-12-dia-chi-vao-ho-so.sql.
+-- Trong bảy ngày ở giữa, mã nguồn không đọc cũng không ghi nó: mỗi khách chỉ
+-- có đúng một địa chỉ, nằm ở năm cột của `profiles`. UC-USER-05 (Khu vực 2)
+-- đòi lại một SỔ nhiều địa chỉ — người nhận và số điện thoại riêng cho từng
+-- nơi, kèm Thêm · Sửa · Xoá · Đặt làm mặc định — nên từ 10/09/2026
+-- app/models/AddressModel.php đọc/ghi bảng này trở lại.
 --
--- Xoá khối CREATE TABLE này (và dòng DROP tương ứng ở đầu file) cùng lúc chạy
--- 2026-09-12-go-bang-addresses.sql, không sớm hơn: gỡ khỏi schema.sql trước
--- thì bản cài mới không có bảng, mà file QUAY-LUI lại cần nó.
+-- Dựng lại được mà không mất một dòng nào vì lệnh DROP nằm ở file riêng và
+-- file ấy CHƯA từng chạy. Xem 2026-09-13-so-dia-chi-tro-lai.sql.
+--
+-- ⛔ ĐỪNG CHẠY 2026-09-12-go-bang-addresses.sql, và đừng xoá khối CREATE TABLE
+-- này. Cả hai nay là thao tác xoá sổ địa chỉ của mọi khách.
+--
+-- NĂM CỘT `profiles.address / province_* / ward_*` VẪN CÒN, và vẫn giữ bản sao
+-- của địa chỉ ĐANG ĐẶT MẶC ĐỊNH — AddressModel::dongBoHoSo() ghi đè chúng sau
+-- mỗi lần sổ đổi. Trang thanh toán đọc bản sao ấy qua UserModel::diaChi(), nên
+-- nó không phải sửa một dòng nào khi sổ quay lại. Chiều đồng bộ chỉ có một:
+-- addresses -> profiles.
 -- ----------------------------------------------------------------------------
 CREATE TABLE `addresses` (
     `id`             CHAR(36)     NOT NULL DEFAULT (UUID()),

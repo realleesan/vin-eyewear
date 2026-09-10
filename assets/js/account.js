@@ -194,13 +194,67 @@ function ganBangXo() {
     });
 }
 
+/* ── NÚT CON MẮT HIỆN/ẨN MẬT KHẨU — khu vực 3 của trang Hồ sơ ────────────────
+ *
+ * CHỈ LÀ TĂNG CƯỜNG. Nút mang `hidden` ngay trong HTML
+ * (app/views/auth/account/mat-khau.php); hàm này gỡ thuộc tính đó ra. Không có
+ * JavaScript thì nút không bao giờ hiện — một cái nút bấm mà không xảy ra gì
+ * còn khó hiểu hơn là không có nút, và ô mật khẩu vẫn dùng bình thường.
+ *
+ * VÌ SAO KHÔNG DÙNG assets/js/auth.js — nó đã có đúng khối này.
+ * Hai lý do, mỗi lý do đủ một mình:
+ *   · auth.js tìm .authpw__eye, bộ lớp của auth.css, mà trang tài khoản KHÔNG
+ *     nạp file CSS đó (xem $pageStyles trong _layout/master.php).
+ *   · auth.js gắn sự kiện THẲNG vào từng nút, đúng một lần lúc trang tải. Vùng
+ *     nội dung ở đây bị thay ruột sau mỗi lần đổi mục, nên từ cú đổi mục đầu
+ *     tiên trở đi mọi nút là phần tử KHÁC và không còn nghe gì nữa.
+ *
+ * Nên phần BẤM uỷ quyền trên document (không có gì để gắn lại), còn phần GỠ
+ * `hidden` thì phải chạy lại sau mỗi lần thay ruột — nó đụng vào chính các nút
+ * vừa được dựng mới. Vì thế hai việc nằm ở hai hàm khác nhau.
+ */
+function ganHienMatKhau() {
+    document.addEventListener('click', function (ev) {
+        var btn = ev.target && ev.target.closest ? ev.target.closest('.acct-pw__eye') : null;
+        if (!btn) return;
+
+        var input = btn.parentNode.querySelector('input');
+        if (!input) return;
+
+        var hien = input.type === 'password';
+
+        input.type = hien ? 'text' : 'password';
+        btn.setAttribute('aria-pressed', hien ? 'true' : 'false');
+        btn.setAttribute('aria-label', hien ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+
+        /* Trả con trỏ về ô nhập, đúng chỗ nó đang đứng: đổi thuộc tính `type`
+           khiến trình duyệt bỏ tiêu điểm và đẩy con trỏ về cuối, nên phải đặt
+           lại tay. Đây cũng là thứ giữ cho khối gợi ý mật khẩu (:focus-within)
+           không đóng sập lại ngay khi bấm nút. */
+        var at = input.value.length;
+
+        input.focus();
+        input.setSelectionRange(at, at);
+    });
+}
+
+/** Gỡ `hidden` khỏi mọi nút con mắt đang có trên trang. Gọi lại được. */
+function hienNutMatKhau() {
+    Array.prototype.forEach.call(document.querySelectorAll('.acct-pw__eye'), function (btn) {
+        btn.hidden = false;
+    });
+}
+
 /* Chạy lần đầu cho HTML máy chủ vừa in ra.
 
-   ganBangXo() KHÔNG nằm trong gan() ở cuối file: nó uỷ quyền trên document nên
-   gọi lại là gắn chồng listener, mỗi lần đổi mục thêm một bộ. */
+   ganBangXo() và ganHienMatKhau() KHÔNG nằm trong gan() ở cuối file: cả hai uỷ
+   quyền trên document nên gọi lại là gắn chồng listener, mỗi lần đổi mục thêm
+   một bộ. hienNutMatKhau() thì ngược lại — nó phải chạy lại, xem gan(). */
 ganBangXo();
+ganHienMatKhau();
 ganDoiAnh();
 ganChiTietDon();
+hienNutMatKhau();
 
 /* ── ĐỔI MỤC KHÔNG TẢI LẠI TRANG ──────────────────────────────────────────────
  *
@@ -365,6 +419,7 @@ ganChiTietDon();
     function gan() {
         ganDoiAnh();
         ganChiTietDon();
+        hienNutMatKhau();
 
         document.dispatchEvent(new Event('vin:acct-moi'));
     }

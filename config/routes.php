@@ -183,14 +183,16 @@ return [
      */
     'auth/google'          => 'AuthController@googleStart',
     'auth/google/callback' => 'AuthController@googleCallback',
-    // Trang tài khoản dựng theo "Vin Eyewear Account.dc.html": BỐN mục nằm
-    // trên CÙNG một đường dẫn, chọn bằng ?muc=... (ho-so · mat-khau ·
-    // don-hang · lich-hen). Không tách thành bốn route vì cột điều hướng bên
-    // trái phải hiện y hệt nhau ở cả bốn — tách ra là bốn action chỉ khác nhau
-    // đúng một biến.
+    // Trang tài khoản: BA mục nằm trên CÙNG một đường dẫn, chọn bằng ?muc=...
+    // (ho-so · don-hang · lich-hen). Không tách thành ba route vì cột điều
+    // hướng bên trái phải hiện y hệt nhau ở cả ba — tách ra là ba action chỉ
+    // khác nhau đúng một biến.
     //
-    // KHÔNG CÒN ?muc=dia-chi: địa chỉ nay là mấy ô trong chính form Hồ sơ,
-    // lưu cùng một lần bấm với họ tên. Xem AuthController::SECTIONS.
+    // KHÔNG CÒN ?muc=mat-khau, và cũng không có ?muc=dia-chi: từ 2026-09-10 cả
+    // "Đổi mật khẩu" lẫn "Sổ địa chỉ" là KHU VỰC trong chính trang Hồ sơ, cuộn
+    // xuống là tới (BR-UC.USER.05-03 cấm dùng tab hoặc chuyển trang giữa ba khu
+    // vực). Liên kết cũ ?muc=mat-khau vẫn tới đúng trang — profile() đưa mọi
+    // giá trị ?muc= lạ về mục mặc định. Xem AuthController::SECTIONS.
     //
     // 'tai-khoan/khuc-xa' => updatePrescription() ĐÃ GỠ cùng mục "Thông số đo
     // mắt". Khách không còn tự xem/tự khai số đo; kỹ thuật viên vẫn nhập ở
@@ -225,9 +227,21 @@ return [
        CustomerModel::khachTuXoa(). */
     'tai-khoan/xoa'     => 'AuthController@deleteAccount',      // POST
 
-    // BA ĐƯỜNG 'tai-khoan/dia-chi/*' ĐÃ GỠ cùng sổ địa chỉ (2026-09-12). Mỗi
-    // khách nay có đúng một địa chỉ, nằm trong form Hồ sơ và lưu bằng chính
-    // 'tai-khoan/ho-so' ở trên — không còn gì để thêm, xoá hay đặt mặc định.
+    /* SỔ ĐỊA CHỈ — UC-USER-05, Khu vực 2. Dựng lại 2026-09-10; bốn đường này
+       từng bị gỡ hồi 12/09 khi địa chỉ thu về một ô trong form Hồ sơ.
+
+       KHÔNG có đường 'tai-khoan/dia-chi' trần để XEM: sổ không phải một mục
+       riêng nữa, nó là khu vực thứ hai của chính trang Hồ sơ. Bốn đường dưới
+       đây chỉ để GHI, và cả bốn đều POST — 'xoa' hay 'mac-dinh' mở với GET
+       nghĩa là một thẻ <img src="/tai-khoan/dia-chi/xoa?id=…"> trên trang bất
+       kỳ cũng đổi được sổ của khách đang đăng nhập.
+
+       Form thêm/sửa mở bằng ?them=1 / ?sua=<mã> trên chính /tai-khoan — cùng
+       lối với ?don= của đơn hàng và ?doi= của lịch hẹn. */
+    'tai-khoan/dia-chi/them'      => 'AuthController@addAddress',        // POST
+    'tai-khoan/dia-chi/sua'       => 'AuthController@updateAddress',     // POST
+    'tai-khoan/dia-chi/xoa'       => 'AuthController@deleteAddress',     // POST
+    'tai-khoan/dia-chi/mac-dinh'  => 'AuthController@setDefaultAddress', // POST
 
     // Khách tự đổi / huỷ lịch hẹn. Cả hai POST: huỷ
     // lịch qua GET nghĩa là một thẻ <img src="/tai-khoan/lich-hen/huy?ma=...">

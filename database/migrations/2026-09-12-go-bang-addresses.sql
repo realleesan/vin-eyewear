@@ -1,3 +1,20 @@
+-- ############################################################################
+-- ⛔ FILE CHẾT — ĐỪNG CHẠY. Cập nhật 10/09/2026.
+--
+-- Sổ địa chỉ ĐÃ QUAY LẠI theo UC-USER-05 (Khu vực 2): app/models/AddressModel.php
+-- đọc và ghi bảng `addresses` trở lại, và trang Hồ sơ hiện danh sách địa chỉ
+-- lấy thẳng từ đó. Chạy file này bây giờ là XOÁ SỔ ĐỊA CHỈ CỦA MỌI KHÁCH — kể
+-- cả người nhận, số điện thoại giao hàng, ghi chú cho shipper và mọi địa chỉ
+-- phụ, những thứ không có bản sao ở đâu khác.
+--
+-- Không xoá file: nó là lịch sử đọc được của một quyết định đã bị đảo. migrate.sh
+-- lọc nó khỏi cả mảng MIGRATIONS lẫn vòng cảnh báo "chưa khai", nên không có
+-- đường nào script tự chạy nó.
+--
+-- Toàn bộ phần bên dưới là văn bản GỐC của ngày 12/09, giữ nguyên để đọc lại
+-- lý lẽ khi ấy. Ba điều kiện nó liệt kê nay không còn nghĩa gì.
+-- ############################################################################
+
 -- ============================================================================
 -- 2026-09-12 — BƯỚC HAI: GỠ HẲN BẢNG `addresses`
 --
@@ -53,7 +70,12 @@
 -- tham chiếu (cố ý: địa chỉ trên đơn đã giao không được đổi khi khách sửa sổ)
 -- — nên không có ràng buộc nào chặn lệnh dưới đây.
 -- ----------------------------------------------------------------------------
-DROP TABLE IF EXISTS `addresses`;
+-- ⛔ LỆNH ĐÃ VÔ HIỆU HOÁ 10/09/2026 — xem khối cảnh báo ở đầu file.
+--    Để nguyên dạng chú thích chứ không xoá dòng: người đọc sau này cần thấy
+--    file này ĐỊNH làm gì. Ai thật sự muốn gỡ bảng thì bỏ hai dấu gạch, và khi
+--    đó phải gỡ luôn AddressModel cùng khu vực "Sổ địa chỉ" của trang Hồ sơ —
+--    tức là làm ngược lại UC-USER-05.
+-- DROP TABLE IF EXISTS `addresses`;
 
 
 -- ----------------------------------------------------------------------------

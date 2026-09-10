@@ -3,52 +3,45 @@
 /**
  * auth/profile.php — trang tài khoản (/tai-khoan)
  *
- * Dựng theo "Vin Eyewear Account.dc.html" (Claude Design):
- *
- *   hai cột — cột điều hướng 300px dính theo cuộn | vùng nội dung
- *   cột trái: thẻ khách + nhóm "Tài khoản của tôi" thu gọn được + ba mục
- *             cấp một + đăng xuất
- *   vùng phải: đúng MỘT mục hiện tại, chọn bằng ?muc=
+ * Hai cột: cột điều hướng 300px dính theo cuộn | vùng nội dung.
+ * Cột trái: thẻ khách (avatar + họ tên) rồi các mục; vùng phải: đúng MỘT mục,
+ * chọn bằng ?muc=.
  *
  * CSS: assets/css/account.css
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * BA CHỖ CỐ Ý KHÁC BẢN THIẾT KẾ — VÀ VÌ SAO
+ * CỘT ĐIỀU HƯỚNG — BR-UC.USER.05-02
  *
- * 1. ĐỔI MỤC BẰNG URL, KHÔNG BẰNG JAVASCRIPT.
- *    Bản thiết kế giữ mục đang xem trong state của trình duyệt. Ở đây mỗi mục
- *    là một URL riêng (?muc=don-hang…), nên F5 không mất chỗ, gửi link cho
- *    nhân viên hỗ trợ được, và trang chạy cả khi tắt JS. Nhóm "Tài khoản của
- *    tôi" đóng/mở bằng <details> — cũng là hành vi y hệt bản thiết kế nhưng
- *    của chính trình duyệt, không cần một dòng JS nào.
+ * Đặc tả chốt danh sách phẳng, không cấp lồng:
  *
- * 2. THÊM MỤC "Lịch hẹn của tôi", ngoài bản thiết kế.
- *    Trang tài khoản cũ đã có khối lịch hẹn đo mắt và nó đang chạy thật
- *    (BookingModel::forUser). Bản thiết kế không vẽ mục này, nhưng cột điều
- *    hướng của nó là một danh sách lặp (`sc-for navItems`) chứ không phải ba ô
- *    vẽ cứng, nên thêm một mục KHÔNG phá bố cục. Bỏ nó đi thì khách không còn
- *    chỗ nào xem lịch hẹn của mình.
+ *     Hồ sơ cá nhân    (icon user)          — highlight khi đang ở trang này
+ *     Đơn hàng         (icon shopping-bag)
+ *     Lịch hẹn của tôi (icon calendar)      — NGOÀI đặc tả, xem bên dưới
+ *     Đăng xuất        (icon sign-out)      — hỏi lại trước khi thoát
  *
- * 3. SÁU THẺ LỌC ĐƠN HÀNG THÀNH BẢY.
- *    Bản thiết kế liệt kê 5 trạng thái đơn; OrderModel::STATUSES có 6. Dải thẻ
- *    lọc cũng là danh sách lặp, nên nó dựng thẳng từ hằng đó — trạng thái là
- *    của hệ thống, danh sách trong file thiết kế chỉ là dữ liệu mẫu.
+ * NHÓM THU GỌN "TÀI KHOẢN CỦA TÔI" ĐÃ GỠ (2026-09-10). Nó bọc hai mục "Hồ sơ"
+ * và "Đổi mật khẩu" trong một <details>. Cả hai lý do tồn tại của nó đều mất:
+ * đặc tả đòi một danh sách phẳng, và "Đổi mật khẩu" không còn là một mục nữa —
+ * nó là khu vực thứ ba NGAY TRONG trang Hồ sơ (BR-UC.USER.05-03).
+ *
+ * "LỊCH HẸN CỦA TÔI" GIỮ LẠI dù đặc tả không vẽ. Khối lịch hẹn đo mắt đang
+ * chạy thật (BookingModel::forUser) và đây là chỗ DUY NHẤT khách xem được lịch
+ * của mình; gỡ khỏi cột này là gỡ luôn chức năng. Danh sách mục vốn là một vòng
+ * lặp chứ không phải ba ô vẽ cứng, nên thêm một mục không phá bố cục.
+ *
  * ─────────────────────────────────────────────────────────────────────────────
+ * ĐỔI MỤC BẰNG URL, KHÔNG BẰNG JAVASCRIPT
+ *
+ * Mỗi mục là một URL riêng (?muc=don-hang…), nên F5 không mất chỗ, gửi link cho
+ * nhân viên hỗ trợ được, và trang chạy cả khi tắt JS. assets/js/account.js chỉ
+ * chặn cú bấm để nạp ngầm — nó là tăng cường, không phải cơ chế.
  */
 
-$name    = $profile['full_name'] ?: 'Khách hàng';
+/* `?? ''` chứ không `?:` trần: $profile là NULL khi không đọc được hồ sơ (EF-01,
+   xử lý ở vùng nội dung bên dưới), và thẻ khách ở cột trái vẫn phải vẽ ra được
+   — cột điều hướng không được biến mất chỉ vì một câu truy vấn hỏng. */
+$name    = ($profile['full_name'] ?? '') ?: 'Khách hàng';
 $initial = utf8Substr($name, 0, 1);
-
-/* Ba mục trong nhóm thu gọn được, và ba mục cấp một còn lại. Thứ tự lấy
-   nguyên từ bản thiết kế. */
-/* 'dia-chi' đã gộp vào 'ho-so' (sổ địa chỉ nằm ngay dưới form hồ sơ), nên
-   nhóm thu gọn chỉ còn hai mục — xem ghi chú ở AuthController::SECTIONS. */
-$groupKeys = ['ho-so', 'mat-khau'];
-/* 'do-mat' (Thông số đo mắt) đã gỡ khỏi trang tài khoản — xem ghi chú ở
-   AuthController::SECTIONS. Số đo vẫn do kỹ thuật viên nhập bên quản trị. */
-$navKeys   = ['don-hang', 'lich-hen'];
-
-$inGroup = in_array($section, $groupKeys, true);
 ?>
 
 <section class="acct">
@@ -59,8 +52,7 @@ $inGroup = in_array($section, $groupKeys, true);
 
             <!--
                 Thẻ khách kiêm luôn chỗ đổi ảnh đại diện: bấm thẳng vào hình
-                tròn là mở hộp chọn file. Bản thiết kế đặt việc này ở một thẻ
-                riêng bên phải mục Hồ sơ; gộp vào đây thì ảnh nằm đúng chỗ nó
+                tròn là mở hộp chọn file. Gộp vào đây thì ảnh nằm đúng chỗ nó
                 hiện ra, và đổi được từ BẤT KỲ mục nào chứ không phải quay về
                 mục Hồ sơ trước.
 
@@ -103,7 +95,7 @@ $inGroup = in_array($section, $groupKeys, true);
 
                 <span class="acct-nav__who">
                     <span class="acct-nav__name"><?= e($name) ?></span>
-                    <a class="acct-nav__edit" href="/tai-khoan?muc=ho-so">
+                    <a class="acct-nav__edit" href="/tai-khoan?muc=ho-so&amp;sua-ho-so=1#thong-tin">
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
@@ -117,45 +109,18 @@ $inGroup = in_array($section, $groupKeys, true);
                 <button type="submit" class="acct-nav__send">Tải ảnh lên</button>
             </form>
 
-            <!-- Nhóm thu gọn được. <details open> khi mục đang xem nằm trong
-                 nhóm — mở trang ra là thấy ngay mình đang ở đâu. -->
-            <details class="acct-nav__group"<?= $inGroup ? ' open' : '' ?>>
-                <summary class="acct-nav__item<?= $inGroup ? ' is-current' : '' ?>">
-                    <span class="acct-nav__icon" aria-hidden="true">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="1.8" stroke-linecap="round">
-                            <circle cx="12" cy="8" r="4"></circle>
-                            <path d="M4 21c1.5-3.5 4.5-5 8-5s6.5 1.5 8 5"></path>
-                        </svg>
-                    </span>
-                    <span class="acct-nav__label">Tài khoản của tôi</span>
-                    <span class="acct-nav__chev" aria-hidden="true">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M6 9l6 6 6-6"></path>
-                        </svg>
-                    </span>
-                </summary>
-
-                <div class="acct-nav__sub">
-                    <?php foreach ($groupKeys as $key): ?>
-                        <a class="acct-nav__subitem<?= $section === $key ? ' is-current' : '' ?>"
-                           href="/tai-khoan?muc=<?= e($key) ?>"
-                           <?= $section === $key ? 'aria-current="page"' : '' ?>>
-                            <?= e($key === 'ho-so' ? 'Hồ sơ' : $sections[$key]) ?>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            </details>
-
-            <?php foreach ($navKeys as $key): ?>
+            <?php
+            /* Ba mục, dựng từ chính bảng SECTIONS của controller. Vòng lặp chứ
+               không ba khối vẽ tay: thêm/bớt một mục thì chỉ có một chỗ để sửa,
+               và thứ tự hiện ra luôn là thứ tự khai trong SECTIONS. */
+            foreach ($sections as $key => $label): ?>
                 <a class="acct-nav__item<?= $section === $key ? ' is-active' : '' ?>"
                    href="/tai-khoan?muc=<?= e($key) ?>"
                    <?= $section === $key ? 'aria-current="page"' : '' ?>>
                     <span class="acct-nav__icon" aria-hidden="true">
                         <?php partial('auth/_nav-icon', ['key' => $key]); ?>
                     </span>
-                    <span class="acct-nav__label"><?= e($sections[$key]) ?></span>
+                    <span class="acct-nav__label"><?= e($label) ?></span>
                     <?php if (!empty($counts[$key])): ?>
                         <span class="acct-nav__count"><?= (int) $counts[$key] ?></span>
                     <?php endif; ?>
@@ -175,18 +140,28 @@ $inGroup = in_array($section, $groupKeys, true);
                  * có cách nào biết người đang xem cũng đang mở khu quản trị —
                  * nhánh ấy vĩnh viễn không chạy.
                  *
-                 * Giữ lại thì tệ hơn là chỉ thừa: nó là một liên kết từ khu
-                 * KHÁCH trỏ vào khu QUẢN TRỊ, đúng thứ mà việc tách hai khu
-                 * vực đang dọn đi. Người đọc mã sau này thấy nó sẽ tưởng hai
-                 * bên vẫn đi lại được với nhau.
-                 *
                  * Nhân viên muốn vào khu quản trị thì đi cửa của họ:
                  * /quan-tri/dang-nhap.
                  */
+
+                /* HỎI LẠI TRƯỚC KHI ĐĂNG XUẤT — BR-UC.USER.05-02 và mục Giao
+                   diện đều nói "Click vào Đăng xuất: hiển thị hộp thoại xác
+                   nhận". Hộp thoại thật do confirm-dialog.js mở, đọc chữ từ ba
+                   thuộc tính data-confirm* dưới đây; onsubmit là lớp dự phòng
+                   khi chưa có JS, và chính file JS đó gỡ nó ra khi đã sẵn sàng.
+
+                   Đăng xuất vẫn qua POST: một thẻ <img src="/auth/dang-xuat">
+                   trên trang khác cũng đủ để đá khách ra nếu dùng GET. Hộp thoại
+                   không thay thế được điều đó — nó hỏi người thật, còn CSRF
+                   token chặn request giả. */
+                $hoiThoat = 'Đăng xuất khỏi tài khoản Vin Eyewear?';
                 ?>
-                <!-- Đăng xuất qua POST: một thẻ <img src="/auth/dang-xuat"> trên
-                     trang khác cũng đủ để đá khách ra nếu dùng GET. -->
-                <form method="post" action="/auth/dang-xuat">
+                <form method="post" action="/auth/dang-xuat"
+                      data-confirm="<?= e($hoiThoat) ?>"
+                      data-confirm-title="Đăng xuất?"
+                      data-confirm-ok="Đăng xuất"
+                      data-confirm-cancel="Ở lại"
+                      onsubmit="return confirm('<?= e($hoiThoat) ?>')">
                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                     <button type="submit" class="acct-nav__quiet">
                         <span class="acct-nav__icon" aria-hidden="true">
@@ -213,16 +188,38 @@ $inGroup = in_array($section, $groupKeys, true);
                 <p class="acct-flash acct-flash--err" role="alert"><?= e($error) ?></p>
             <?php endif; ?>
 
-            <?php require VIEWS_PATH . '/auth/account/' . $section . '.php'; ?>
+            <?php
+            /*
+             * EF-01 — KHÔNG TRUY XUẤT ĐƯỢC HỒ SƠ.
+             *
+             * $profile là null khi UserModel::profile() không trả về dòng nào:
+             * bảng `profiles` thiếu dòng của tài khoản này (dữ liệu lệch), hoặc
+             * câu truy vấn hỏng. Trước 2026-09-10 nhánh này không tồn tại và
+             * view đọc thẳng $profile['full_name'] — khách nhận nguyên một trang
+             * 500 thay vì câu báo mà đặc tả viết sẵn.
+             *
+             * Dựng cột điều hướng NHƯ THƯỜNG rồi mới báo lỗi ở vùng nội dung:
+             * "không đọc được hồ sơ" không có nghĩa là đơn hàng và lịch hẹn cũng
+             * hỏng, nên đừng khoá luôn hai lối đó. Câu báo KHÔNG kèm chi tiết kỹ
+             * thuật — BR-UC.USER.05-05 cấm in stack trace hay lỗi SQL ra giao
+             * diện; chi tiết đã nằm trong error_log của AuthController::profile().
+             */
+            if ($profile === null) {
+                echo '<p class="acct-flash acct-flash--err" role="alert">'
+                   . 'Không thể tải thông tin hồ sơ. Vui lòng thử lại sau.</p>';
+            } else {
+                require VIEWS_PATH . '/auth/account/' . $section . '.php';
+            }
+            ?>
 
         </div>
     </div>
 </section>
 
 <?php
-/* Hộp thoại hỏi lại trước khi huỷ lịch hẹn / xoá địa chỉ. In MỘT LẦN ở khung
-   ngoài chứ không trong từng mục: trang tài khoản chỉ dựng một mục mỗi lượt,
-   nhưng để ở đây thì mục thứ ba cần hỏi lại sau này không phải nhớ thêm dòng
+/* Hộp thoại hỏi lại trước khi đăng xuất / huỷ lịch hẹn / xoá địa chỉ. In MỘT
+   LẦN ở khung ngoài chứ không trong từng mục: nhờ vậy thao tác cần hỏi lại
+   tiếp theo chỉ phải thêm thuộc tính data-confirm, không phải nhớ thêm dòng
    require, và không bao giờ có hai hộp cùng id trên một trang. */
 partial('_layout/confirm-dialog');
 ?>

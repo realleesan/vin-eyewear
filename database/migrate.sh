@@ -409,7 +409,28 @@ MIGRATIONS=(
     # ĐÂY, cùng lẽ với file gỡ bảng tóm tắt của đợt 3: nó DROP `addresses`, và
     # chừng nào bảng còn thì việc chuyển đổi còn đường lùi thật. Khai nó vào
     # mảng này là chạy nó ngay hôm nay và đóng đường lùi đó lại.
+    #
+    # ⚠ VÀ TỪ 10/09/2026 THÌ ĐỪNG CHẠY NÓ NỮA, KỂ CẢ BẰNG TAY: sổ địa chỉ đã
+    # quay lại (UC-USER-05) và mã nguồn đọc/ghi `addresses` trở lại. Xem khối
+    # cảnh báo ở đầu chính file ấy.
     "2026-09-12-dia-chi-vao-ho-so.sql|column|profiles|province_code"
+
+    # ── Sổ địa chỉ trở lại — UC-USER-05, Khu vực 2 ──────────────────────────
+    #
+    # File CHỈ CHUYỂN DỮ LIỆU: đồng bộ ngược `profiles` -> `addresses` cho quãng
+    # 12/09 tới nay, khi form Hồ sơ ghi thẳng vào `profiles` mà không đụng tới
+    # sổ. Không tạo bảng, không tạo cột, nên kiểu 'data' — sổ ghi
+    # schema_migrations là thứ duy nhất chặn chạy lại.
+    #
+    # Giao cho sổ ghi ở đây AN TOÀN vì file tự idempotent hoàn toàn: câu UPDATE
+    # chỉ khớp dòng đang LỆCH (lần hai khớp 0 dòng), câu INSERT đi qua một bảng
+    # tạm chỉ chứa khách CHƯA có dòng nào trong sổ, và bước đặt lại mặc định chỉ
+    # nhắm khách đang không có địa chỉ mặc định nào.
+    #
+    # PHẢI ĐỨNG SAU 2026-09-12-dia-chi-vao-ho-so.sql — nó đọc bốn cột mà file ấy
+    # tạo ra. Thứ tự trong mảng này lo phần đó; tên file mang ngày 13/09 để
+    # người đọc thấy ngay thứ tự ấy, dù ngày trên tên không phải thứ quyết định.
+    "2026-09-13-so-dia-chi-tro-lai.sql|data||"
 )
 
 # ---------------------------------------------------------------------------
@@ -615,8 +636,11 @@ for path in "${MIG_DIR}"/*.sql; do
         continue
     fi
 
-    # Cùng lẽ đó với file gỡ bảng `addresses`: nó phải chờ một tuần sau file
-    # 2026-09-12-dia-chi-vao-ho-so.sql, nên chạy BẰNG TAY chứ không qua script.
+    # File gỡ bảng `addresses`: TỪ 10/09/2026 NÓ LÀ MỘT FILE CHẾT, không phải
+    # một file đang chờ tới lượt. Sổ địa chỉ đã quay lại (UC-USER-05) và mã
+    # nguồn đọc/ghi bảng ấy trở lại, nên chạy nó là mất sổ của mọi khách. Giữ
+    # trong thư mục để lịch sử đọc được; lọc khỏi vòng cảnh báo để không ai khai
+    # nó vào mảng cho hết dòng nhắc.
     if [[ "${file}" == "2026-09-12-go-bang-addresses.sql" ]]; then
         continue
     fi

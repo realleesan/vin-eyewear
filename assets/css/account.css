@@ -326,7 +326,17 @@
     font-weight: 500;
 }
 
-/* --- Nhóm thu gọn được --- */
+/* --- Nhóm thu gọn được ---
+
+   ⚠ KHÔNG CÒN AI DÙNG BỐN LỚP DƯỚI ĐÂY — 2026-09-10.
+
+   Nhóm <details> "Tài khoản của tôi" đã gỡ khỏi cột điều hướng: BR-UC.USER.05-02
+   đòi một danh sách phẳng, và mục "Đổi mật khẩu" mà nó bọc nay là khu vực thứ ba
+   ngay trong trang Hồ sơ. Xem app/views/auth/profile.php.
+
+   Giữ lại chứ không xoá: quyết định "phẳng hay lồng" là thứ đặc tả có thể đảo
+   lại lần nữa, và dựng lại bốn lớp này từ đầu tốn hơn nhiều so với chỗ chúng
+   chiếm. Nếu sáu tháng nữa vẫn không ai dùng thì hãy xoá. */
 
 .acct-nav__group > summary {
     /* Bỏ tam giác mặc định của trình duyệt — bản thiết kế dùng mũi tên riêng
@@ -2044,6 +2054,228 @@ select.acct-field__input {
 
 .acct-notice strong { color: var(--ink); }
 
+
+
+/* ============================================================================
+   TRANG HỒ SƠ CÁ NHÂN — BA KHU VỰC TRÊN MỘT TRANG
+   Thêm 2026-09-10 theo UC-USER-05.
+
+   Tới trước ngày này mỗi khu vực là một mục riêng (?muc=), nên vùng nội dung
+   chỉ có đúng một tiêu đề và không bao giờ phải cuộn tới đâu cả.
+   BR-UC.USER.05-03 gộp cả ba vào một trang, và cái gì cũng theo sau:
+   neo cuộn, khối chữ chế độ xem, thẻ form địa chỉ, và ô mật khẩu có nút con mắt.
+   ============================================================================ */
+
+/*
+ * NEO CUỘN — vì sao 100px chứ không phải 0.
+ *
+ * Trang này có đầu trang DÍNH (xem .acct-nav { top: 88px } bên trên — con số ấy
+ * chính là chiều cao đầu trang). Nhảy tới #doi-mat-khau mà không chừa gì thì
+ * tiêu đề khu vực nằm khuất SAU đầu trang, và khách thấy mình rơi vào giữa một
+ * form không có tên.
+ *
+ * Liệt kê từng id chứ không dùng `.acct-main [id]`: vùng nội dung còn hàng
+ * chục id khác (thẻ đơn hàng, khối chi tiết) mà không id nào trong số đó là
+ * đích của một cú nhảy neo.
+ */
+#thong-tin,
+#tai-khoan-google,
+#xoa-tai-khoan,
+#so-dia-chi,
+#them-dia-chi,
+#sua-dia-chi,
+#doi-mat-khau {
+    scroll-margin-top: 100px;
+}
+
+/* ============================================================
+   KHU VỰC 1 — CHẾ ĐỘ XEM
+
+   <dl> chứ không phải một loạt <input disabled>: một ô nhập xám vẫn là một ô
+   nhập, người ta bấm vào rồi ngồi đợi con trỏ. Ở chế độ xem thì đây là CHỮ.
+   ============================================================ */
+
+.acct-info {
+    margin: 0;
+    padding: 30px 40px;
+}
+
+.acct-info__row {
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 20px;
+    align-items: baseline;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.acct-info__row:last-child { border-bottom: 0; }
+
+/* Cùng bộ chữ với .acct-field__label để hai chế độ xem/sửa đọc như một trang,
+   không phải hai màn hình khác nhau tình cờ ở cùng chỗ. */
+.acct-info__label {
+    margin: 0;
+    font-size: var(--fs-caption);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--eyebrow);
+}
+
+.acct-info__value {
+    margin: 0;
+    font-size: var(--fs-body);
+    line-height: 1.6;
+    color: var(--ink);
+    overflow-wrap: anywhere;   /* email dài không đẩy giãn cả thẻ */
+}
+
+/* "Chưa cập nhật" — nhạt và nghiêng, để mắt lướt qua nhận ra ngay đây là chỗ
+   TRỐNG chứ không phải một giá trị có thật ai đó đã nhập. */
+.acct-info__value--empty {
+    color: var(--a-note);
+    font-style: italic;
+}
+
+/* ============================================================
+   KHU VỰC 2 — FORM THÊM/SỬA ĐỊA CHỈ
+
+   Nằm CHEN vào giữa danh sách thẻ địa chỉ (form sửa thay chỗ đúng thẻ đang
+   sửa), nên nó phải khác thẻ thường ngay từ cái liếc đầu tiên — nếu không thì
+   khách không biết mình đang xem hay đang sửa.
+   ============================================================ */
+
+.acct-addr-form {
+    border: 1px solid var(--brand);
+}
+
+.acct-addr-form .acct-form__title { margin-bottom: 4px; }
+
+/* Ghi chú giao hàng trên thẻ địa chỉ — nhỏ hơn dòng địa chỉ, vì nó là lời dặn
+   thêm chứ không phải một phần của nơi nhận. */
+.acct-addr__note {
+    margin: 0;
+    font-size: var(--fs-body-sm);
+    font-style: italic;
+    color: var(--a-note);
+}
+
+/* Nhãn "Nhà riêng"/"Công ty" đứng cạnh nhãn "Mặc định". Hai cái phải KHÁC nhau:
+   "Mặc định" nói một trạng thái hệ thống đang dùng, còn loại địa chỉ chỉ là
+   ghi chú của khách — cùng màu thương hiệu thì cái thứ hai trông cũng quan
+   trọng như cái thứ nhất. */
+.acct-tag--quiet {
+    background: var(--surface-sunken);
+    color: var(--a-note);
+}
+
+/* ============================================================
+   KHU VỰC 3 — Ô MẬT KHẨU CÓ NÚT CON MẮT
+
+   KHÔNG mượn .authpw của auth.css: trang tài khoản không nạp file đó (xem bảng
+   $pageStyles trong _layout/master.php). Hình dạng thì chép theo, để hai nơi
+   nhìn như một sản phẩm.
+   ============================================================ */
+
+.acct-pw {
+    position: relative;
+    display: block;
+}
+
+/* Chừa chỗ cho nút 36×36 nằm đè bên phải. */
+.acct-pw__input { padding-right: 52px; }
+
+.acct-pw__eye {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    transform: translateY(-50%);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--a-note);
+    cursor: pointer;
+}
+
+/* ⚠ PHẢI CÓ DÒNG NÀY. Nút mang thuộc tính `hidden` cho tới khi account.js gỡ
+   ra, mà `display: flex` ở trên ĐÈ LÊN `[hidden] { display: none }` của trình
+   duyệt — thiếu dòng này thì nút hiện ra ngay cả khi JavaScript tắt, và bấm
+   vào không xảy ra gì. Đúng cái bẫy mà auth.css tránh được nhờ .authpw__eye
+   dùng display mặc định. */
+.acct-pw__eye[hidden] { display: none; }
+
+.acct-pw__eye:hover { color: var(--brand); }
+
+.acct-pw__eye:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 1px;
+}
+
+/* Hai hình chồng nhau, đổi bằng CSS theo aria-pressed — JS chỉ phải đảo đúng
+   một thuộc tính, không phải vẽ lại SVG. */
+.acct-pw__off { display: none; }
+.acct-pw__eye[aria-pressed="true"] .acct-pw__on  { display: none; }
+.acct-pw__eye[aria-pressed="true"] .acct-pw__off { display: block; }
+
+/* --- Gợi ý yêu cầu mật khẩu ---
+
+   HIỆN KHI CON TRỎ VÀO Ô, đúng chữ trong mục Giao diện ("hiển thị gợi ý yêu
+   cầu mật khẩu khi focus vào ô"). Làm bằng :focus-within của .acct-field, nên
+   KHÔNG cần một dòng JavaScript nào — và cũng không có kịch bản nào mà JS hỏng
+   làm khách không đọc được yêu cầu.
+
+   KHÔNG dùng `display: none` HAY `visibility: hidden`, và đây là chỗ dễ sai
+   nhất của khối này: cả hai đều GỠ phần tử khỏi cây trợ năng, mà ô mật khẩu
+   lại trỏ tới nó bằng aria-describedby — người dùng trình đọc màn hình sẽ
+   không bao giờ nghe được năm dòng yêu cầu. `height: 0` + `overflow: hidden`
+   thì phần tử vẫn nằm trong cây ấy, chỉ không chiếm chỗ trên màn hình.
+
+   Chỉ chuyển động phần opacity: `height: auto` không nội suy được, và một khối
+   nhảy bật ra ở đây còn đỡ khó chịu hơn một khối trượt sai nhịp. */
+.acct-rules {
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    list-style: none;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+.acct-field:focus-within .acct-rules {
+    height: auto;
+    margin-top: 2px;
+    opacity: 1;
+}
+
+.acct-rules__item {
+    font-size: var(--fs-caption);
+    line-height: 1.9;
+    color: var(--a-note);
+}
+
+.acct-rules__item::before {
+    content: '·';
+    margin-right: 8px;
+    color: var(--brand);
+}
+
+@media (max-width: 900px) {
+    .acct-info { padding: 22px 24px; }
+
+    /* Nhãn và giá trị xếp dọc: 200px cho nhãn là gần nửa bề ngang màn hình
+       điện thoại, và giá trị bị ép thành hai ba dòng. */
+    .acct-info__row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 6px;
+    }
+}
 
 /* ============================================================================
    NÉT CHỮ FURNISH — khối chốt cuối file
