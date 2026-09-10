@@ -270,6 +270,13 @@ body.page-home-index {
     --hdr-fg: var(--on-ink);
     --hdr-fg-quiet: rgba(255, 255, 255, .78);
     --hdr-veil: 1;
+    /* Bóng đổ dưới chữ — lớp bảo hiểm thứ hai cho độ đọc, bên cạnh dải chuyển
+       sắc. Dải khoá được SÀN tương phản của cả vùng, nhưng một khung hình có
+       mảng trắng loá đúng sau chữ (áo trắng, trời, tường kính) thì sàn ấy vẫn
+       chưa đủ; bóng đi theo TỪNG NÉT CHỮ nên nó đủ ở mọi khung hình.
+       3px mờ, lệch 1px: đủ tách nét khỏi nền, chưa tới mức nhìn ra là bóng. */
+    --hdr-shadow: 0 1px 3px rgba(0, 0, 0, .5);
+    --hdr-drop: drop-shadow(0 1px 2px rgba(0, 0, 0, .45));
     /* KHÔNG lọc gì khi đang nằm trên video. `none` chứ không `blur(0)`:
        backdrop-filter dù bằng 0 vẫn buộc trình duyệt chụp lại nền sau lưng ở
        MỖI khung hình — trên một hero đang phát video thì đó là cái giá vô ích
@@ -311,6 +318,14 @@ body.page-home-index:has(.hpop--search.is-open) {
     --hdr-fg: var(--ink);
     --hdr-fg-quiet: var(--muted);
     --hdr-veil: 0;
+    /* TẮT BÓNG khi nền đã trắng: chữ --ink trên nền trắng mà còn bóng đen là
+       bẩn, đọc ra ngay.
+
+       `rgba(0,0,0,0)` chứ không `none`: hai giá trị này nội suy được với nhau
+       nên bóng TAN DẦN cùng nhịp với màu chữ. `none` thì nó biến mất tức thì,
+       lệch pha với cú đổi màu 90ms bên dưới. */
+    --hdr-shadow: 0 1px 3px rgba(0, 0, 0, 0);
+    --hdr-drop: drop-shadow(0 1px 2px rgba(0, 0, 0, 0));
     /* saturate đi kèm blur: làm mờ đơn thuần kéo màu phía sau nhợt đi, bù lại
        độ bão hoà thì mảng mờ trông vẫn là "cùng một bức ảnh", không phải một
        lớp sương xám. */
@@ -441,7 +456,21 @@ body.page-home-index:has(.site-header.is-past-hero) {
     .header-nav__list > li > .cmenu__trigger,
     .header-action
 ) {
-    transition: color 90ms var(--ease) 90ms;
+    transition:
+        color 90ms var(--ease) 90ms,
+        text-shadow 90ms var(--ease) 90ms;
+}
+
+/* Nét SVG của ba icon bên phải không nhận text-shadow — chúng là hình vẽ, không
+   phải chữ. drop-shadow() làm đúng việc ấy cho nét.
+
+   Đặt filter lên CHÍNH <svg> chứ không lên .header-action: `filter` khác `none`
+   cũng biến phần tử thành khối định vị cho con cháu absolute/fixed, đúng cái bẫy
+   đã tránh ở ::before phía trên. <svg> không có con nào như thế, .header-action
+   thì có thể có. */
+.page-home-index .header-action svg {
+    filter: var(--hdr-drop);
+    transition: filter 90ms var(--ease) 90ms;
 }
 
 /* ┌─ MỘT NHỊP CHUNG CHO CẢ CÚ ĐỔI BỐI CẢNH ────────────────────────────────
@@ -496,26 +525,55 @@ body.page-home-index {
    │ mất. Một tấm phủ đều sẽ dìm cả video xuống một tông xám; dải chuyển sắc
    │ chỉ khoá sàn tương phản ở ĐÚNG vùng có chữ rồi tan hết.
    │
-   │ 160px phủ trọn dải tiện ích (36) + hàng nav (65) và còn ~60px để tan —
-   │ không có mép cứng nào nhìn thấy được.
+   │ ═══ ĐÃ CHUYỂN TỪ .header-announce::after SANG .site-header::after ═══
    │
-   │ Gắn lên ::after của dải tiện ích chứ không đụng .vhero__veil của hero:
-   │ đây là nhu cầu của ĐẦU TRANG (do nó vừa trong suốt), không phải của hero.
+   │ Đây là lỗi "chữ nav trông xám chứ không trắng ở đỉnh trang", và nó là một
+   │ lỗi THỨ TỰ VẼ, không phải lỗi màu:
+   │
+   │   .header-announce mang `z-index: 61` (nó phải vượt hero, xem khối ngay
+   │   trên) — nên nó tạo một TẦNG XẾP RIÊNG ở mức 61. Mọi thứ bên trong tầng
+   │   ấy, kể cả một ::after mang `z-index: -1`, đều được vẽ ở mức 61 khi so
+   │   với bên ngoài. Mà `.site-header` chỉ ở mức 60.
+   │
+   │   Hệ quả: dải tối cao 160px — dư sức trùm hết dải tiện ích (36) LẪN hàng
+   │   nav (65) — nằm ĐÈ LÊN chữ nav thay vì lót dưới nó. Chữ vẫn là #fff, chỉ
+   │   là bị một lớp đen 20-33% phủ lên trên, ra xám.
+   │
+   │   Đây cũng là lý do soi bằng getComputedStyle mãi không thấy gì sai: màu
+   │   tính ra vẫn đúng `rgb(255,255,255)`, cái sai nằm ở lớp phủ bên trên.
+   │
+   │ Gắn vào .site-header (mức 60) thì dải nằm DƯỚI cả hàng nav lẫn cụm dải
+   │ tiện ích (61) — đúng vai một cái nền. `top` âm để nó trườn ngược lên phủ
+   │ trọn dải tiện ích, vì .site-header bắt đầu từ dưới dải ấy.
+   │
+   │ 240px thay cho 160: mốc 42% rơi đúng đáy hàng nav (36 + 65 = 101px), nên
+   │ toàn bộ vùng có chữ nằm trong đoạn ĐẬM, và còn gần 140px để tan hết —
+   │ không có mép cứng nào nhìn thấy được. Bản cũ chỉ còn 60px để tan nên đã
+   │ phải nhạt đi ngay giữa hàng nav.
+   │
    │ pointer-events:none để nó không nuốt cú bấm vào wordmark hay mục nav. */
-.page-home-index .header-announce::after {
+.page-home-index .site-header::after {
     content: '';
     position: absolute;
-    top: 0;
+    /* Trườn ngược lên trùm dải tiện ích. */
+    top: calc(var(--announce-h) * -1);
     left: 0;
     right: 0;
-    height: 160px;
+    height: 240px;
     z-index: -1;
     pointer-events: none;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, .55), rgba(0, 0, 0, 0));
-    /* --ann-veil chứ không --hdr-veil: dải chuyển sắc này phục vụ CHỮ CỦA DẢI
-       TIỆN ÍCH, nên nó phải tắt/bật theo dải, không theo thanh nav. Dùng chung
-       --hdr-veil thì mở một tấm mega là dải chuyển sắc tắt trong khi dải tiện
-       ích vẫn đang trong suốt nằm trên video — chữ mất nền, không đọc được. */
+    background: linear-gradient(to bottom,
+        rgba(0, 0, 0, .66) 0,
+        /* 42% ≈ 101px = đáy hàng nav: giữ nguyên độ đậm suốt vùng có chữ. */
+        rgba(0, 0, 0, .54) 42%,
+        rgba(0, 0, 0, .22) 68%,
+        rgba(0, 0, 0, 0) 100%);
+    /* --ann-veil chứ không --hdr-veil, DÙ dải nay gắn trên thanh nav: nó vẫn
+       đang phục vụ chữ của dải tiện ích nữa, và dải tiện ích là thứ ở lại
+       trong suốt lâu nhất. Hai biến hiện lật cùng một điều kiện, nhưng nếu
+       sau này có gì lật riêng --hdr-veil (một tấm mega trắng chẳng hạn) thì
+       dùng --ann-veil vẫn đúng, còn dùng --hdr-veil là chữ dải tiện ích mất
+       nền giữa lúc vẫn đang nằm trên video. */
     opacity: var(--ann-veil);
     /* TRỄ đúng bằng --hdr-switch, để dải tối này KHÔNG BAO GIỜ chồng lên nền
        trắng đang mờ đi — xem khối "MỘT NHỊP CHUNG CHO CẢ CÚ ĐỔI BỐI CẢNH" ở
@@ -534,11 +592,18 @@ body.page-home-index {
     .header-action
 ) {
     color: var(--hdr-fg);
+    text-shadow: var(--hdr-shadow);
 }
 
-/* Chữ phụ của dải tiện ích: xám khi nền trắng, trắng-mờ khi nằm trên video. */
+/* Chữ phụ của dải tiện ích: xám khi nền trắng, trắng-mờ khi nằm trên video.
+
+   Dùng chung --hdr-shadow với hàng nav: hai cụm nay lật cùng một điều kiện, và
+   một con số cho cả đầu trang thì cú đổi đọc ra là MỘT, không phải hai lớp
+   nhấp nháy lệch nhau. */
 .page-home-index :is(.header-announce__text, .header-phone, .langsw__item) {
     color: var(--ann-fg);
+    text-shadow: var(--hdr-shadow);
+    transition: text-shadow 90ms var(--ease) 90ms;
 }
 
 /* Vòng tiêu điểm bàn phím trên nền video phải là vòng TRẮNG — vòng đen của
