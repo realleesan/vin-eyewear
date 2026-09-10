@@ -334,15 +334,43 @@
 
        Thang khớp bản đặc tả: H1 56–72 desktop / 36–48 mobile · H2 36–48 ·
        H3 24–32 · tên sản phẩm 18–24 (h4) · giá 14–16 (body). */
-    --fs-lead: clamp(15px, calc(14.1px + 0.24vw), 18px);
+    /* ┌─ THANG TIÊU ĐỀ ĐÃ HẠ MỘT BẬC (10/09/2026) ──────────────────────────
+       │ Đo trên gentlemonster.com ở 1440px: MỌI tiêu đề section của họ đều
+       │ 24px / line-height 28px, không trừ cái nào; chữ thân 13px; nav 14px;
+       │ tên và giá sản phẩm 12px. Cả trang chạy trong một quãng 12–24px.
+       │
+       │ Thang cũ ở đây chạm 96px (display), 72 (h1), 64 (tiêu đề trang), 48
+       │ (h2) — gấp đôi tới gấp bốn. Cộng thêm việc mỗi trang chọn một bậc
+       │ khác nhau cho cùng một vai trò, ra đúng cái chủ dự án gọi là "font
+       │ size chưa đồng nhất giữa các trang": đo được h2 là 48px ở trang chủ,
+       │ /bo-suu-tap và /gioi-thieu nhưng 24px ở /lien-he.
+       │
+       │ Hạ khoảng một phần ba, GIỮ NGUYÊN cấu trúc thang (vẫn 9 bậc, vẫn
+       │ clamp neo qua hai mốc 600px và 1440px), nên không file nào phải sửa —
+       │ mọi thứ đọc token. Trật tự đọc mới ở 1440px:
+       │     display (hero/chiến dịch)  64px
+       │     h1                         48px
+       │     tiêu đề trang              40px
+       │     h2 (tiêu đề section)       32px
+       │     h3                         24px   ← đúng bậc của tham chiếu
+       │     h4 (tên sản phẩm)          20px
+       │
+       │ KHÔNG hạ thẳng về 24px như tham chiếu: chữ Việt có dấu, và ở 24px thì
+       │ "Bộ sưu tập" cùng "Sản phẩm bán chạy" thôi làm được việc phân chương
+       │ trên một trang dài — họ không cần thế vì mỗi chương của họ là một tấm
+       │ ảnh tràn màn.
+       │
+       │ Công thức clamp giữ nguyên cách tính: b = (max−min)/8.4 vw, và
+       │ a = min − b×6, để tại 600px ra đúng min, tại 1440px ra đúng max. */
+    --fs-lead: clamp(15px, calc(14.3px + 0.12vw), 16px);
     --fs-subhead: clamp(14px, calc(13.5px + 0.12vw), 16px);
-    --fs-h6: 16px;
-    --fs-h5: clamp(16px, calc(13.1px + 0.48vw), 20px);
-    --fs-h4: clamp(18px, calc(13.7px + 0.71vw), 24px);
-    --fs-h3: clamp(20px, calc(11.4px + 1.43vw), 32px);
-    --fs-h2: clamp(28px, calc(13.7px + 2.38vw), 48px);
-    --fs-h1: clamp(36px, calc(10.3px + 4.29vw), 72px);
-    --fs-display: clamp(44px, calc(6.9px + 6.19vw), 96px);
+    --fs-h6: 15px;
+    --fs-h5: clamp(15px, calc(13.6px + 0.24vw), 17px);
+    --fs-h4: clamp(16px, calc(13.1px + 0.48vw), 20px);
+    --fs-h3: clamp(18px, calc(13.7px + 0.71vw), 24px);
+    --fs-h2: clamp(22px, calc(14.9px + 1.19vw), 32px);
+    --fs-h1: clamp(30px, calc(17.1px + 2.14vw), 48px);
+    --fs-display: clamp(36px, calc(16px + 3.33vw), 64px);
 
     /* ┌─ TIÊU ĐỀ TRANG — BẬC RIÊNG, KHÔNG DÙNG --fs-display ────────────────
        │ --fs-display chạm 96px và nó tồn tại cho hero cùng dải chiến dịch.
@@ -351,14 +379,18 @@
        │ hơn tiêu đề hero (72px) và gấp đôi tên sản phẩm thật trên trang chi
        │ tiết (48px). Thang chữ đúng, nhưng phân bổ thì ngược.
        │
-       │ Bậc mới neo 34px (390) → 64px (1440+), nên trật tự đọc ra là:
-       │     hero / chiến dịch   72–96px
-       │     tiêu đề trang       34–64px   ← bậc này
-       │     tên sản phẩm (PDP)  48px
+       │ Trật tự đọc ra, sau đợt hạ thang 10/09/2026:
+       │     hero / chiến dịch   36–64px
+       │     h1                  30–48px
+       │     tiêu đề trang       26–40px   ← bậc này
+       │     tiêu đề section     22–32px
        │
-       │ 64px vẫn là chữ lớn; nó chỉ thôi tranh chỗ với hero.
+       │ Con số đổi, vai trò không: bậc này vẫn nằm giữa hero và tiêu đề
+       │ section, vẫn thôi tranh chỗ với hero.
        └──────────────────────────────────────────────────────────────────── */
-    --fs-pagehead: clamp(34px, calc(22.9px + 2.86vw), 64px);
+    /* 40px thay cho 64 — cùng đợt hạ thang ở khối trên. Vẫn giữ đúng vai
+       trò cũ: lớn hơn tiêu đề section (32) và nhỏ hơn hero (48–64). */
+    --fs-pagehead: clamp(26px, calc(16px + 1.67vw), 40px);
 
     /* Siết chữ đi kèm cỡ — ba giá trị, không phải mỗi chỗ một số. */
     --tracking-tight: -0.02em;   /* tiêu đề từ --fs-h3 trở lên */
@@ -384,11 +416,25 @@
     /* Nhịp SECTION theo bản đặc tả: desktop 80–120 · tablet 64–96 · mobile
        48–72. --rhythm-lg là bậc mặc định của một section và chạm đúng ba
        khoảng đó ở ba bề ngang. */
-    --rhythm-xs: clamp(20px, 2.2vw, 32px);
-    --rhythm-sm: clamp(32px, 3.4vw, 48px);
-    --rhythm-md: clamp(48px, 5vw, 80px);
-    --rhythm-lg: clamp(48px, 6.5vw, 120px);
-    --rhythm-xl: clamp(72px, 9vw, 160px);
+    /* ┌─ HẠ THEO THANG CHỮ (10/09/2026) ────────────────────────────────────
+       │ Thang chữ vừa hạ khoảng một phần ba (xem PHẦN 2). Khoảng trắng KHÔNG
+       │ phải một đại lượng độc lập — nó chỉ có nghĩa khi so với cỡ chữ nằm
+       │ trong nó. Giữ nguyên nhịp cũ sau khi chữ nhỏ đi thì mỗi section thành
+       │ một dòng chữ nhỏ trôi giữa hai khoảng trống lớn, và trang đọc ra là
+       │ rời rạc chứ không phải thoáng.
+       │
+       │ Hạ khoảng một phần năm, ít hơn mức hạ của chữ: khoảng trắng chịu
+       │ được sai số lớn hơn cỡ chữ, và cắt sâu bằng chữ thì các chương lại
+       │ dính vào nhau. Ở 1440px: section 120 → 96, dải nhấn 160 → 128, khe
+       │ giữa các khối 48 → 40.
+       │
+       │ Ba mốc đầu (xs/sm) đụng tới khe giữa các khối NHỎ, nên hạ nhẹ hơn
+       │ nữa — chúng đã sát ngưỡng dính. */
+    --rhythm-xs: clamp(18px, 2vw, 28px);
+    --rhythm-sm: clamp(28px, 2.9vw, 40px);
+    --rhythm-md: clamp(40px, 4.2vw, 64px);
+    --rhythm-lg: clamp(40px, 5.4vw, 96px);
+    --rhythm-xl: clamp(56px, 7.2vw, 128px);
 
     /* Bí danh theo VAI TRÒ — component nên gọi tên vai trò, không gọi bậc,
        để đổi nhịp cả site chỉ sửa ba dòng này. */

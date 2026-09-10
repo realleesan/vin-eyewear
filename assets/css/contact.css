@@ -54,10 +54,17 @@
     margin-bottom: var(--space-6);
 }
 
-/* `h4` của bản mẫu — 1.5rem, nét 400. */
+/* ĐÃ NÂNG --fs-h4 → --fs-h3. Hai tiêu đề này là <h2> trong markup nhưng
+   mang cỡ của h4, nên đo ra 20px trong khi <h2> ở /bo-suu-tap và /gioi-thieu
+   là 32px — cùng một cấp thẻ, hai cỡ chữ khác nhau tuỳ trang.
+
+   --fs-h3 (24px) chứ không --fs-h2 (32px): đây là tiêu đề của một CỘT trong
+   section chứ không phải tiêu đề section, và ở 32px nó phá bố cục hai cột.
+   Chênh 32 ↔ 24 giữa hai vai trò ấy là có chủ ý; chênh 32 ↔ 20 giữa hai
+   trang thì không. */
 .cform__title {
     margin-bottom: var(--space-2);
-    font-size: var(--fs-h4);
+    font-size: var(--fs-h3);
     line-height: 1.25;
 }
 
@@ -155,9 +162,10 @@
     min-width: 0;
 }
 
+/* Cùng cặp với .cform__title ở trên — xem chú thích tại đó. */
 .cquick__title {
     margin-bottom: var(--space-3);
-    font-size: var(--fs-h4);
+    font-size: var(--fs-h3);
     line-height: 1.25;
 }
 

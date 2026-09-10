@@ -90,9 +90,12 @@
     color: var(--ink);
 }
 
+/* --fs-lead chứ không --fs-h5: đây là CÂU DẪN, cùng vai trò với câu dưới
+   tiêu đề ở mọi trang khác, mà những chỗ đó đều đọc --fs-lead. Dùng một bậc
+   tiêu đề cho một đoạn văn là chỗ làm cỡ chữ lệch giữa các trang. */
 .coll__tagline {
     margin: 0;
-    font-size: var(--fs-h5);
+    font-size: var(--fs-lead);
     line-height: 1.5;
     color: var(--ink);
 }
