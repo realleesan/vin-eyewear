@@ -155,9 +155,15 @@
     /* ┌─ CHIỀU CAO THANH ĐẦU TRANG ──────────────────────────────────────
        │ Mẫu vẽ 52px với wordmark 18px — tỉ lệ 2,89 lần cỡ chữ. Phóng thang
        │ chữ lên 1.4 mà giữ khung 52px thì wordmark (nay 25,2px, hộp chữ cao
-       │ 37,8px) chỉ còn 7,1px thở mỗi bên và tỉ lệ tụt xuống 2,06 — thanh
-       │ trông bị nhồi. Nên nó co giãn cùng thang: 52 × 1.4 = 72,8px, trả lại
-       │ đúng tỉ lệ 2,89 của mẫu.
+       │ 37,8px) chỉ còn 7,1px thở mỗi bên — thanh bị nhồi. Nên nó co giãn
+       │ cùng thang.
+       │
+       │ SỐ NỀN LÀ 64, KHÔNG PHẢI 52 CỦA MẪU. Chủ dự án muốn thanh thoáng hơn
+       │ mẫu; 64 × 1.4 = 89,6px cho 25,9px thở mỗi bên (tỉ lệ 3,56 lần cỡ
+       │ wordmark, mẫu là 2,89).
+       │
+       │ ĐỔI CHIỀU CAO = ĐỔI ĐÚNG SỐ 64 Ở DÒNG DƯỚI. Mọi thứ phụ thuộc nó đều
+       │ tính qua var(--hdr-h) nên tự đi theo — xem danh sách bên dưới.
        │
        │ ĐÂY LÀ NGOẠI LỆ với luật "không phóng số bố cục" ở khối --oa-scale.
        │ Chiều cao thanh nav bị nội dung bên trong quyết định, khác lề ngang
@@ -171,7 +177,7 @@
        │ tức là biến mất. Luôn dùng var(--hdr-h).
        │
        │ assets/js/header.js đo bằng header.offsetHeight nên nó tự đúng. */
-    --hdr-h: calc(52px * var(--oa-scale));
+    --hdr-h: calc(64px * var(--oa-scale));
     --edge: 64px;           /* lề ngang của khối CHỮ */
     --edge-grid: 60px;      /* lề ngang của LƯỚI thẻ (thẻ có padding 14px) */
 
