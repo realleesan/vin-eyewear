@@ -66,32 +66,32 @@
 
     if (!top) return;
 
-    // Ngưỡng hiện nút: một màn hình rưỡi. Tính theo chiều cao khung nhìn chứ
-    // không phải con số cứng — trên màn dài, 600px vẫn chưa đáng gọi là "xa".
-    var THRESHOLD = function () { return window.innerHeight * 1.5; };
+    /* --------------------------------------------------------------------
+       NÚT LUÔN HIỆN — ĐÃ BỎ NGƯỠNG THEO VỊ TRÍ CUỘN
 
-    var shown  = false;
-    var ticking = false;
+       Bản trước chỉ hiện nút khi đã cuộn quá MỘT MÀN HÌNH RƯỠI
+       (`window.innerHeight * 1.5`). Hai vấn đề với con số đó:
 
-    function sync() {
-        var next = window.scrollY > THRESHOLD();
-        if (next === shown) return;
-        shown = next;
-        top.hidden = !next;
-    }
+       1. Nó cao hơn cả chiều cuộn của nhiều trang. Đo trên trang chủ ở khung
+          nhìn 900px: trang cao 1827px nên cuộn hết cỡ cũng chỉ tới scrollY
+          927 — trong khi ngưỡng là 1350. Nút KHÔNG BAO GIỜ hiện ra. Nó cũng
+          không báo lỗi gì; chỉ là một nút không ai từng thấy.
 
-    window.addEventListener('scroll', function () {
-        if (ticking) return;
-        ticking = true;
-        window.requestAnimationFrame(function () {
-            sync();
-            ticking = false;
-        });
-    }, { passive: true });
+       2. Nút hiện rồi biến mất theo vị trí cuộn làm cụm bốn nút góc phải lúc
+          có lúc không — thứ mà người dùng để ý ra ngay.
 
-    // Mở trang ở giữa chừng (tải lại trang đã cuộn, link có #anchor) vẫn phải
-    // thấy nút ngay, không đợi tới lần cuộn đầu tiên.
-    sync();
+       Nên nay hiện thẳng, không điều kiện. Cái giá: ở đúng đỉnh trang, bấm
+       vào nút không đưa đi đâu cả (đã ở đỉnh rồi). Chấp nhận được — nó là
+       một nút không gây hại, còn một nút không bao giờ xuất hiện thì vô dụng
+       hoàn toàn.
+
+       VẪN GỠ `hidden` BẰNG JAVASCRIPT chứ không bỏ thuộc tính đó khỏi HTML:
+       không có JavaScript thì nút này không làm được gì (cả hành vi cuộn nằm
+       ở handler bên dưới), và một nút chết nằm sẵn ở góc màn hình chỉ tổ gây
+       bấm hụt. Xem chú thích cạnh #fabTop trong _layout/floating-actions.php.
+       -------------------------------------------------------------------- */
+
+    top.hidden = false;
 
     top.addEventListener('click', function () {
         /*

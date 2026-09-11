@@ -116,9 +116,14 @@ $actions = [
 <div class="fab" id="fabRoot" data-section="s22">
 
     <!--
-      Lên đầu trang — JS bỏ thuộc tính hidden khi đã cuộn đủ xa.
-      Để sẵn `hidden` trong HTML chứ không ẩn bằng CSS: tắt JavaScript thì nút
-      này vô dụng (không có gì gắn vào nó), hiện ra chỉ gây bấm hụt.
+      Lên đầu trang — floating.js gỡ `hidden` ngay khi chạy, rồi nút ở lại
+      suốt. KHÔNG còn ẩn/hiện theo vị trí cuộn: ngưỡng cũ (1,5 màn hình) cao
+      hơn cả chiều cuộn của nhiều trang nên nút chưa từng xuất hiện — xem khối
+      chú thích mục 2 trong assets/js/floating.js.
+
+      Vẫn để sẵn `hidden` trong HTML chứ không ẩn bằng CSS: tắt JavaScript thì
+      nút này vô dụng (toàn bộ hành vi cuộn nằm trong JS), hiện ra chỉ gây bấm
+      hụt.
     -->
     <button type="button" class="fab__btn fab__btn--top tap-target" id="fabTop"
             title="Lên đầu trang" hidden>
