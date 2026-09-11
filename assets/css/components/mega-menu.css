@@ -90,7 +90,8 @@
     white-space: nowrap;
 }
 
-.mega__trigger:hover,
+/* Không có luật `:hover` ở đây — hàng nav đứng yên dưới con trỏ, xem khối
+   chú thích tại .oa-header__nav trong oa.css. Chỉ còn dấu trang đang đứng. */
 .mega__trigger.is-active {
     opacity: .65;
     color: inherit;

@@ -1499,7 +1499,19 @@ textarea.oa-field {
     color: inherit;
 }
 
-.oa-header__nav a:hover,
+/* ┌─ KHÔNG CÓ HIỆU ỨNG HOVER TRÊN HÀNG NAV — CỐ Ý ────────────────────────
+   │ Bản trước làm mờ mục nav xuống `opacity: .65` khi rê chuột. Đã bỏ theo
+   │ yêu cầu: hàng nav đứng yên, chữ không đổi gì dưới con trỏ.
+   │
+   │ `.is-active` GIỮ LẠI và vẫn mờ — nó không phải hiệu ứng rê chuột mà là
+   │ dấu "đang đứng ở nhánh này", thứ duy nhất phân biệt mục hiện hành. Đừng
+   │ gộp nó vào đây rồi xoá luôn.
+   │
+   │ Mục có bảng xổ cũng theo luật này — xem .mega__trigger ở
+   │ components/mega-menu.css, nơi luật `:hover` song song đã gỡ cùng lượt.
+   │ Dấu hiệu "rê vào có gì đó" nay là chính cái bảng bật ra, không cần chữ
+   │ nhạt đi báo trước.
+   └──────────────────────────────────────────────────────────────────────── */
 .oa-header__nav a.is-active {
     opacity: .65;
 }
