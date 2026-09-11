@@ -1461,10 +1461,24 @@ textarea.oa-field {
     white-space: nowrap;
     font-size: var(--fs-ui);
     letter-spacing: .01em;
-    /* Mép phải nhoè dần thay vì cắt phựt — dấu hiệu "còn nữa" của mẫu */
-    mask-image: linear-gradient(90deg, #000 85%, transparent);
-    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
 }
+
+/* ┌─ ĐÃ GỠ `mask-image` — ĐỪNG THÊM LẠI ──────────────────────────────────
+   │ Mẫu cho mép phải hàng nav nhoè dần bằng
+   │     mask-image: linear-gradient(90deg, #000 85%, transparent)
+   │ như dấu hiệu "còn nữa". Nó KHÔNG dùng được ở đây nữa.
+   │
+   │ `mask-image` áp lên TOÀN BỘ CÂY CON của phần tử, kể cả con
+   │ position:absolute neo vào một tổ tiên khác. Ba bảng mega nằm trong
+   │ <li> của hàng nav nhưng neo vào <header>; hộp hàng nav chỉ 520×23px,
+   │ nên mask xoá sạch phần bảng nằm ngoài hộp đó. Triệu chứng rất khó
+   │ đoán: bảng có đủ kích thước, `visibility: visible`, `opacity: 1`,
+   │ nằm đúng toạ độ — mà màn hình không thấy gì.
+   │
+   │ `overflow: hidden` bên trên thì GIỮ ĐƯỢC: theo chuẩn, nó chỉ cắt
+   │ những con có containing block là chính nó hoặc nằm trong nó. Bảng
+   │ mega neo vào <header> (tổ tiên) nên không bị cắt.
+   └──────────────────────────────────────────────────────────────────────── */
 
 .oa-header__nav a {
     color: inherit;

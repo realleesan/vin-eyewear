@@ -205,8 +205,11 @@ if ($manhCua !== null) {
        │   search     lớp phủ tìm kiếm ở đầu trang chèn khối .srch của trang
        │              /tim-kiem vào bất kỳ trang nào; thiếu file này thì kết
        │              quả hiện ra không có kiểu.
+       │   mega-menu  ba bảng xổ trên thanh nav (Gọng kính · Tròng kính · Bộ
+       │              sưu tập). Thanh nav có ở mọi trang khung đầy đủ.
        └────────────────────────────────────────────────────────────────────*/
     ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/components/mega-menu.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/buy-modal.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/confirm.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/floating.css') ?>">

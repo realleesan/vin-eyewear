@@ -16,20 +16,30 @@
  *      chuyển ngôn ngữ dời xuống hàng cuối chân trang, cạnh dòng bản quyền —
  *      đúng chỗ mẫu đặt "Country : Vietnam".
  *
- *   2. HAI BẢNG MEGA (Gọng kính / Tròng kính) và bảng xổ Bộ sưu tập. Mẫu chỉ
- *      có năm liên kết phẳng, không bảng nào. Ba partial ấy còn trong repo
- *      (_layout/mega-menu.php, collection-menu.php, mega-data.php cùng hai bản
- *      mobile) nhưng KHÔNG còn nơi nào nạp. Khối mega trong assets/js/header.js
- *      tự thoát khi không thấy phần tử `.mega` nào — đã đối chiếu, nó bọc
- *      trong `if (megas.length)`.
- *
- *   3. WORDMARK HAI DÒNG ("Vin" trên "Eyewear"). Mẫu dùng một dòng, IN HOA,
+ *   2. WORDMARK HAI DÒNG ("Vin" trên "Eyewear"). Mẫu dùng một dòng, IN HOA,
  *      weight 700, giãn .12em. Hai dòng là dáng của thiết kế cũ.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ * BA BẢNG XỔ — KHÁC MẪU, CÓ CHỦ Ý
+ *
+ * Mẫu chỉ có năm liên kết phẳng. Ở đây ba mục đầu (Gọng kính · Tròng kính ·
+ * Bộ sưu tập) mở bảng xổ tràn bề ngang, vì cửa hàng này có hàng trăm mặt hàng
+ * chia theo chất liệu, dáng, chiết suất — năm liên kết phẳng thì khách phải
+ * vào trang danh mục rồi mới thấy có những nhánh nào.
+ *
+ * Bảng dựng theo ĐÚNG ngôn ngữ của mẫu (nền trắng, nhãn 9px IN HOA, kẻ mảnh);
+ * kiểu dáng ở assets/css/components/mega-menu.css.
+ *
+ * PHẢI LÀ <ul class="header-nav__list"> VỚI <li>: cả ba partial đều emit <li>
+ * làm phần tử gốc, và assets/js/header.js gọi
+ * `megas[0].closest('.header-nav__list')` để gắn lớp .is-mega-live. Đổi sang
+ * <a> phẳng là gãy cả ba chỗ cùng lúc, im lặng.
  *
  * ───────────────────────────────────────────────────────────────────────────
  * MÓC JAVASCRIPT — GIỮ NGUYÊN TÊN, đổi tên là gãy im lặng:
  *
  *   #siteHeader · #navToggle · #mobileNav · .mobile-nav__panel   header.js
+ *   .header-nav__list · .mega · .mega__trigger · .mega__panel    header.js
  *   [data-hpop] · [data-hpop-trigger] · [data-hpop-close]        header.js
  *   .hpop__panel · [data-cart] · [data-cart-close]               header.js
  *   #headerSearch · #headerSearchSuggest · .header-search__form  search-suggest.js
@@ -59,18 +69,32 @@ $segment = currentSegment();
    └──────────────────────────────────────────────────────────────────────── */
 $visibleCategorySlugs = array_column(CategoryModel::visible(), 'slug');
 
+/* Bảng xổ "Bộ sưu tập" đọc hai biến này — xem _layout/collection-menu.php.
+   KHÔNG tính /san-pham?collection=<slug> là đang ở bộ sưu tập: đó là trang
+   danh sách đã lọc sẵn, không phải trang bộ sưu tập. */
+$collectionsNav      = CollectionModel::visible();
+$isCollectionActive  = $segment === 'bo-suu-tap';
+
+/* ┌─ BA MỤC ĐẦU LÀ BẢNG XỔ, HAI MỤC CUỐI LÀ LIÊN KẾT PHẲNG ───────────────
+   │ 'mega' => slug danh mục  → require _layout/mega-menu.php (dùng hai lần,
+   │                            mỗi lần một slug qua biến $megaSlug)
+   │ 'bst'  => true           → require _layout/collection-menu.php
+   │ còn lại                  → một <a> thường
+   └──────────────────────────────────────────────────────────────────────── */
 $navItems = [
-    ['label' => t('nav.frames'),     'url' => '/san-pham/gong-kinh',  'match' => ['san-pham'], 'cat' => 'gong-kinh'],
-    ['label' => t('nav.lenses'),     'url' => '/san-pham/trong-kinh', 'match' => ['san-pham'], 'cat' => 'trong-kinh'],
-    ['label' => t('nav.collections'), 'url' => '/bo-suu-tap',          'match' => ['bo-suu-tap']],
-    ['label' => t('nav.about'),      'url' => '/gioi-thieu',          'match' => ['gioi-thieu']],
-    ['label' => t('nav.contact'),    'url' => '/lien-he',             'match' => ['lien-he']],
+    ['mega'  => 'gong-kinh'],
+    ['mega'  => 'trong-kinh'],
+    ['bst'   => true],
+    ['label' => t('nav.about'),   'url' => '/gioi-thieu', 'match' => ['gioi-thieu']],
+    ['label' => t('nav.contact'), 'url' => '/lien-he',    'match' => ['lien-he']],
 ];
 
+/* Quản trị ẩn một danh mục thì mục nav của nó biến mất, không dẫn tới trang
+   rỗng. Lọc TRƯỚC khi in để bảng xổ cũng không dựng cho danh mục đã ẩn. */
 $navItems = array_values(array_filter(
     $navItems,
-    static fn (array $item): bool => !isset($item['cat'])
-        || in_array($item['cat'], $visibleCategorySlugs, true)
+    static fn (array $item): bool => !isset($item['mega'])
+        || in_array($item['mega'], $visibleCategorySlugs, true)
 ));
 
 /* Ngăn kéo mobile ghép thêm những lối vào mà hàng nav desktop không còn chỗ.
@@ -91,13 +115,7 @@ $productSub = $segment === 'san-pham'
     ? (string) (explode('/', trim(currentPath(), '/'))[1] ?? '')
     : '';
 
-$isActive = static function (array $item) use ($segment, $productSub): bool {
-    if (!in_array($segment, $item['match'] ?? [], true)) {
-        return false;
-    }
-
-    return !isset($item['cat']) || $item['cat'] === $productSub;
-};
+$isActive = static fn (array $item): bool => in_array($segment, $item['match'] ?? [], true);
 
 $isLoggedIn = AuthMiddleware::check();
 
@@ -127,11 +145,21 @@ $headerOver = ($viewName ?? '') === 'home/index';
 <header class="oa-header<?= $headerOver ? ' oa-header--over' : '' ?>" id="siteHeader">
 
     <nav class="oa-header__nav" aria-label="<?= e(t('nav.aria.main')) ?>">
-        <?php foreach ($navItems as $item): ?>
-            <?php $on = $isActive($item); ?>
-            <a href="<?= e($item['url']) ?>"
-               <?= $on ? 'class="is-active" aria-current="page"' : '' ?>><?= e($item['label']) ?></a>
-        <?php endforeach; ?>
+        <ul class="header-nav__list" role="list">
+            <?php foreach ($navItems as $item): ?>
+                <?php if (!empty($item['mega'])): ?>
+                    <?php $megaSlug = $item['mega']; require VIEWS_PATH . '/_layout/mega-menu.php'; ?>
+                <?php elseif (!empty($item['bst'])): ?>
+                    <?php require VIEWS_PATH . '/_layout/collection-menu.php'; ?>
+                <?php else: ?>
+                    <?php $on = $isActive($item); ?>
+                    <li>
+                        <a href="<?= e($item['url']) ?>"
+                           <?= $on ? 'class="is-active" aria-current="page"' : '' ?>><?= e($item['label']) ?></a>
+                    </li>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </ul>
     </nav>
 
     <?php /* Nút hamburger thế chỗ hàng nav dưới 760px — xem @media cuối
@@ -321,7 +349,13 @@ $headerOver = ($viewName ?? '') === 'home/index';
 
         <nav class="mobile-nav__links" aria-label="<?= e(t('nav.aria.main')) ?>">
             <?php foreach (array_merge($navItems, $mobileExtra) as $item): ?>
-                <a href="<?= e($item['url']) ?>"<?= $isActive($item) ? ' class="is-active" aria-current="page"' : '' ?>><?= e($item['label']) ?></a>
+                <?php if (!empty($item['mega'])): ?>
+                    <?php $megaSlug = $item['mega']; require VIEWS_PATH . '/_layout/mega-menu-mobile.php'; ?>
+                <?php elseif (!empty($item['bst'])): ?>
+                    <?php require VIEWS_PATH . '/_layout/collection-menu-mobile.php'; ?>
+                <?php else: ?>
+                    <a href="<?= e($item['url']) ?>"<?= $isActive($item) ? ' class="is-active" aria-current="page"' : '' ?>><?= e($item['label']) ?></a>
+                <?php endif; ?>
             <?php endforeach; ?>
         </nav>
 

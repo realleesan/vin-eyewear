@@ -1,0 +1,330 @@
+/* ============================================================================
+   mega-menu.css — BA BẢNG XỔ TRÊN THANH NAV
+                   (Gọng kính · Tròng kính · Bộ sưu tập)
+
+   Dùng chung cho cả ba: _layout/mega-menu.php in ra hai bảng đầu,
+   _layout/collection-menu.php in ra bảng thứ ba — và bảng thứ ba CỐ Ý mang
+   đúng bộ lớp .mega__* của hai bảng kia, không có lớp riêng nào.
+
+   ═════════════════════════════════════════════════════════════════════════
+   MẪU "EYEWEAR COLLECTION" KHÔNG CÓ BẢNG XỔ NÀO — nó chỉ có năm liên kết
+   phẳng. Đây là phần THÊM, và nó phải trông như thể mẫu đã vẽ ra nó:
+
+     · nền TRẮNG đặc, không đổ bóng, không bo góc — bảng là một mảng giấy
+       trải hết bề ngang, không phải một thẻ nổi
+     · một đường kẻ 1px dưới đáy, đúng sắc --line
+     · tiêu đề cột 9px IN HOA giãn .06em (.oa-eyebrow của mẫu)
+     · liên kết 10px thường, rê chuột thì nhạt đi chứ không gạch chân
+
+   ═════════════════════════════════════════════════════════════════════════
+   BA MÓC BẮT BUỘC, ĐỌC TRƯỚC KHI SỬA
+
+   1. MỞ/ĐÓNG LÀ VIỆC CỦA CSS, KHÔNG PHẢI CỦA JAVASCRIPT.
+      `.mega:hover` và `.mega:focus-within` là thứ duy nhất mở bảng.
+      assets/js/header.js KHÔNG mở/đóng gì — nó chỉ gắn thêm bối cảnh
+      (.is-mega-live, .is-dismissed) và đặt aria-expanded. Nghĩa là bảng
+      vẫn chạy khi JavaScript bị chặn.
+
+   2. --mega-x LÀ SỐ DO JAVASCRIPT ĐO.
+      Bảng trải hết bề ngang màn hình (nền phải phủ kín, nếu không nội dung
+      trang lộ ra sau chữ), NHƯNG cột chữ phải thẳng hàng với đúng mục vừa
+      rê vào — rê "Bộ sưu tập" mà danh sách hiện dưới "Gọng kính" là sai.
+      CSS thuần không trả lời được "mục này cách mép trái bao nhiêu", nên
+      header.js đo rồi ghi --mega-x lên chính .mega. Thiếu JS thì biến này
+      không có và `var(--mega-x, 0px)` lùi về 0 — bảng vẫn dùng được, chỉ
+      là chữ nằm sát mép trái.
+
+   3. .is-dismissed LÀ CÚ ESC.
+      Bấm Esc thì header.js gắn lớp này để ĐÈ LÊN :hover — con trỏ lúc ấy
+      vẫn đang nằm trên mục, nên nếu không có nó thì bảng mở lại ngay.
+   ========================================================================= */
+
+/* ══════════════════════════════════════════════════════════════════════
+   HÀNG NAV
+   ══════════════════════════════════════════════════════════════════════ */
+
+.header-nav__list {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    list-style: none;
+    min-width: 0;
+}
+
+.header-nav__list > li {
+    display: flex;
+    align-items: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MỤC CÓ BẢNG XỔ
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* `position: static` CHỨ KHÔNG relative: bảng con dùng `position: absolute`
+   để trải từ mép trái tới mép phải MÀN HÌNH. Cho .mega một containing block
+   riêng là bảng co lại vừa bề ngang một mục nav. Thanh đầu trang mới là chỗ
+   neo — xem .mega__panel bên dưới. */
+.mega {
+    position: static;
+}
+
+.mega__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    color: inherit;
+    white-space: nowrap;
+}
+
+.mega__trigger:hover,
+.mega__trigger.is-active {
+    opacity: .65;
+    color: inherit;
+}
+
+/* Mũi tên xuống — cỡ lấy từ chữ nav như mọi icon khác trên thanh này (xem
+   khối .oa-header__btn > svg trong oa.css). Xoay 180° khi bảng đang mở. */
+.mega__chevron {
+    width: .8em;
+    height: .8em;
+    flex: none;
+    transition: transform .2s ease;
+}
+
+.mega:hover .mega__chevron,
+.mega:focus-within .mega__chevron {
+    transform: rotate(180deg);
+}
+
+.mega.is-dismissed .mega__chevron {
+    transform: none;
+}
+
+/* ┌─ MŨI NHỌN HÌNH THOI — ẨN HẲN ─────────────────────────────────────────
+   │ Thiết kế cũ có một hình thoi nhỏ nối mục nav với bảng. Ở đây nó không
+   │ còn việc gì để làm: bảng dán SÁT mép dưới thanh đầu trang, không có khe
+   │ nào để bắc cầu, và cả hai đều nền trắng — mũi nhọn thành một vết gạch lẻ
+   │ nổi lên giữa mảng trắng.
+   │
+   │ Việc "bảng này thuộc mục nào" đã do --mega-x lo: cột chữ thụt vào thẳng
+   │ hàng với đúng mục vừa rê. Đó là dấu hiệu mạnh hơn một hình thoi 10px.
+   │
+   │ Giữ <span class="mega__caret"> trong markup: nó có ở cả ba partial và
+   │ gỡ đi thì phải sửa ba file cho một thứ vô hình.
+   └──────────────────────────────────────────────────────────────────────── */
+.mega__caret {
+    display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BẢNG
+
+   Neo vào chính <header> (thanh đầu trang là phần tử position:sticky gần
+   nhất), trải từ mép trái sang mép phải màn hình.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.mega__panel {
+    position: absolute;
+    top: var(--hdr-h);
+    left: 0;
+    right: 0;
+    z-index: 1;
+
+    padding: 28px var(--edge) 32px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--line);
+
+    /* Ẩn bằng visibility chứ không display:none — bảng cần được tính bố cục
+       để chuyển động mờ dần chạy được, và để header.js đo được vị trí. */
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
+}
+
+.mega:hover .mega__panel,
+.mega:focus-within .mega__panel {
+    visibility: visible;
+    opacity: 1;
+    transform: none;
+    transition: opacity .2s ease, transform .2s ease;
+}
+
+/* Esc — đè lên :hover, xem móc 3 ở khối chú thích đầu file */
+.mega.is-dismissed .mega__panel {
+    visibility: hidden;
+    opacity: 0;
+}
+
+/* ┌─ ĐỔI BẢNG THÌ KHÔNG MỜ LẠI TỪ ĐẦU ────────────────────────────────────
+   │ header.js gắn .is-mega-live lên hàng nav khi ĐÃ có một bảng đang mở.
+   │ Lúc ấy rê sang mục bên cạnh là đổi TỨC THÌ — mờ vào rồi mờ ra giữa hai
+   │ mục cạnh nhau đọc ra như một cú nháy, không phải một cú chuyển.
+   └──────────────────────────────────────────────────────────────────────── */
+.header-nav__list.is-mega-live .mega__panel {
+    transition: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   RUỘT BẢNG
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ┌─ CHỮ THẲNG CỘT VỚI MỤC NAV ───────────────────────────────────────────
+   │ Nền trải hết bề ngang, nhưng chữ thụt vào đúng bằng --mega-x (khoảng
+   │ cách từ mép trái màn hình tới mục nav). Trừ đi --edge vì thẻ cha đã có
+   │ sẵn chừng ấy đệm; `max(0px, …)` chặn số âm khi mục nav nằm sát mép.
+   └──────────────────────────────────────────────────────────────────────── */
+.mega__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--mega-cols, 1), minmax(0, 1fr));
+    gap: 24px 32px;
+    max-width: 900px;
+    margin-left: max(0px, calc(var(--mega-x, 0px) - var(--edge)));
+}
+
+/* Bảng Bộ sưu tập không khai --mega-cols nên nó rơi về 1 cột — đúng ý: nó
+   là một danh sách bộ, không phải nhiều nhóm song song. */
+.mega__grid--groups {
+    align-items: start;
+}
+
+/* "Tất cả gọng kính" / "Tất cả bộ sưu tập" — trải hết các cột, đứng đầu.
+   Một đường kẻ dưới tách nó khỏi các nhóm bên dưới. */
+.mega__all {
+    grid-column: 1 / -1;
+    padding-bottom: 14px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink);
+}
+
+.mega__all:hover {
+    color: var(--ink-3);
+}
+
+.mega__col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.mega__head {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.mega__links {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    list-style: none;
+}
+
+.mega__links a {
+    font-size: var(--fs-body);
+    color: var(--ink);
+}
+
+.mega__links a:hover {
+    color: var(--ink-3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+
+   Dưới 760px hàng nav biến thành ngăn kéo (xem .oa-header__nav trong
+   oa.css), nên ba bảng này không có mặt. Ngăn kéo dùng hai partial riêng:
+   mega-menu-mobile.php và collection-menu-mobile.php — chúng là <details>
+   gập xuống, kiểu dáng ở cuối oa.css cùng .mobile-nav.
+
+   Giữ luật này dù hàng nav đã `display:none`: một bảng position:absolute
+   bên trong phần tử ẩn vẫn có thể bị tính bố cục ở vài trình duyệt cũ, và
+   nó neo vào <header> chứ không vào hàng nav.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 760px) {
+    .mega__panel {
+        display: none;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BẢN NGĂN KÉO  (_layout/mega-menu-mobile.php · collection-menu-mobile.php)
+
+   Cùng ba nhóm ấy, nhưng là <details> gập xuống tại chỗ thay vì bảng xổ.
+   Bản mobile KHÔNG dùng lớp .mega__* nào — nó có bộ lớp riêng, nên khối
+   này không đụng gì tới phần trên.
+
+   Ba nhóm nằm lẫn với các liên kết phẳng trong .mobile-nav__links, nên
+   <summary> phải trông GIỐNG HỆT một liên kết phẳng ở đó: cùng đệm dọc
+   14px, cùng đường kẻ dưới, cùng cỡ chữ. Khác đúng một mũi tên bên phải.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.mobile-nav__group > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line-input);
+    font-size: var(--fs-ui);
+    letter-spacing: var(--ls-tight);
+    cursor: pointer;
+    list-style: none;
+}
+
+.mobile-nav__group > summary::-webkit-details-marker {
+    display: none;
+}
+
+.mobile-nav__group > summary.is-active {
+    color: var(--ink-3);
+}
+
+.mobile-nav__group > summary svg {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    transition: transform .2s ease;
+}
+
+.mobile-nav__group[open] > summary svg {
+    transform: rotate(180deg);
+}
+
+/* Ruột nhóm — thụt vào 12px và có một đường kẻ trái, để nó đọc ra là
+   "thuộc về mục vừa bấm" chứ không phải một danh sách thứ hai ngang hàng. */
+.mobile-nav__sub {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 0 14px 12px;
+    margin-bottom: 2px;
+    border-left: 1px solid var(--line-input);
+    border-bottom: 1px solid var(--line-input);
+}
+
+.mobile-nav__sub a {
+    font-size: var(--fs-body);
+    color: var(--ink);
+}
+
+.mobile-nav__subhead {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-top: 6px;
+}
+
+/* Tiêu đề nhóm đầu tiên không cần đẩy xuống — ngay trên nó là liên kết
+   "Tất cả …", đã có khe 10px của flex rồi. */
+.mobile-nav__sub .mobile-nav__subhead:first-of-type {
+    margin-top: 0;
+}
