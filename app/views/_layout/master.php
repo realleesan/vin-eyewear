@@ -320,7 +320,20 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
 ?>
 <body class="<?= e($bodyClass) ?><?= $bare ? ' is-bare' : '' ?>">
 
-    <?php partial($bare ? $bareHead : '_layout/header'); ?>
+    <?php
+    /* ┌─ 'viewName' PHẢI TRUYỀN VÀO, KHÔNG TỰ RÒ SANG ────────────────────
+       │ partial() chạy trong phạm vi hàm riêng của nó (xem core/helpers.php):
+       │ nó `extract($data)` rồi `require`, nên biến của file NÀY không nhìn
+       │ thấy được từ bên trong file con.
+       │
+       │ _layout/header.php cần biết đang ở trang nào để quyết định có bật
+       │ .oa-header--over hay không (thanh trong suốt đè lên hero trang chủ).
+       │ Thiếu dòng này thì $viewName trong đó là null, cờ luôn false, và
+       │ thanh nav ra kính mờ ngay cả khi đang nằm trên video — hỏng im lặng,
+       │ vì trang vẫn chạy bình thường.
+       └──────────────────────────────────────────────────────────────────── */
+    ?>
+    <?php partial($bare ? $bareHead : '_layout/header', ['viewName' => $viewName ?? '']); ?>
 
     <!-- id là đích của .skip-link trong header.php — đổi tên là link đó gãy -->
     <main class="main-content" id="noi-dung-chinh" tabindex="-1">

@@ -14,7 +14,7 @@
    BĂNG TRƯỢT HERO
 
    .vhero__* là HỢP ĐỒNG với assets/js/home.js — đổi tên là gãy im lặng.
-   Khung ngoài (chiều cao 100vh, margin-top âm 52px, nền) do .oa-hero--full
+   Khung ngoài (chiều cao 85dvh, margin-top âm 52px, nền) do .oa-hero--full
    trong oa.css lo; ở đây chỉ có cơ chế trượt.
    ══════════════════════════════════════════════════════════════════════ */
 
@@ -24,42 +24,58 @@
     overflow: hidden;
 }
 
-/* ┌─ BA TẤM CHỒNG KHÍT, MỜ CHỒNG — KHÔNG TRƯỢT NGANG ─────────────────────
-   │ Cả ba <video> nằm đè lên nhau ở cùng một chỗ; đổi tấm là đổi opacity.
+/* ┌─ BĂNG TRƯỢT NGANG THẬT — KHÔNG PHẢI MỜ CHỒNG ─────────────────────────
    │
-   │ VÌ SAO KHÔNG DÙNG transform:translateX như một băng trượt thường: ba
-   │ video cùng phát, và trình duyệt phải giữ ba luồng giải mã sống cùng
-   │ lúc. Trượt ngang buộc cả ba khung hình phải được vẽ ra ở ba vị trí
-   │ khác nhau trong MỖI khung hình của hoạt ảnh; mờ chồng thì chúng đứng
-   │ yên, chỉ một con số đổi. Trên máy yếu đó là khác biệt giữa 60fps và
-   │ một cú giật thấy rõ mỗi lần sang tấm.
+   │ ĐỌC TRƯỚC KHI SỬA. Ba tấm nằm CẠNH NHAU thành một dải rộng 300%, và
+   │ assets/js/home.js kéo cả dải bằng
    │
-   │ home.js vẫn gắn .is-gliding/.is-dragging lên .vhero__track cho cú vuốt
-   │ trên màn cảm ứng — giữ nguyên tên lớp kể cả khi luật ở đây không đọc
-   │ tới chúng, vì gỡ đi là lần sau ai thêm hiệu ứng vuốt lại vỡ đúng chỗ cũ.
+   │     track.style.transform = 'translate3d(' + (-at * beNgang()) + 'px,0,0)'
+   │
+   │ Nghĩa là bố cục ở đây là HỢP ĐỒNG với dòng JavaScript đó, không phải
+   │ một lựa chọn thẩm mỹ tự do:
+   │
+   │   .vhero__track   flex row, KHÔNG position:absolute
+   │   .vhero__slide   flex: 0 0 100%, KHÔNG position:absolute
+   │
+   │ Dựng kiểu mờ chồng (cả ba tấm `position:absolute; inset:0` rồi đổi
+   │ opacity) thì ba tấm chồng khít lên nhau — và cú translate của home.js
+   │ đẩy CẢ BA ra ngoài mép màn hình ngay khi sang tấm thứ hai. Hero còn
+   │ trơ lại đúng màu nền #b9b3a6 của .oa-hero--full, không chữ không nút.
+   │ Đây là lỗi đã xảy ra thật; nó không lộ ra ở tấm đầu (translate = 0)
+   │ nên rất dễ tưởng là xong.
+   │
+   │ Muốn đổi sang mờ chồng thì phải sửa home.js trước.
    └──────────────────────────────────────────────────────────────────────── */
 .vhero__track {
-    position: absolute;
-    inset: 0;
+    display: flex;
+    height: 100%;
+    /* Báo trước cho trình duyệt biết thuộc tính nào sẽ đổi, để nó tách lớp
+       hợp thành riêng thay vì vẽ lại ba khung video mỗi khung hình. */
+    will-change: transform;
 }
 
 .vhero__slide {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    /* visibility đi kèm opacity: tấm trong suốt vẫn bắt được cú bấm, nên
-       thiếu dòng này thì hai nút của tấm đang ẨN nằm đè lên hai nút của tấm
-       đang hiện. transition trên visibility hoãn 0.7s để nó chỉ biến mất
-       SAU khi mờ hẳn. */
-    visibility: hidden;
-    transition: opacity .7s ease, visibility 0s linear .7s;
+    position: relative;
+    flex: 0 0 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
-.vhero__slide.is-on {
-    opacity: 1;
-    visibility: visible;
-    transition: opacity .7s ease;
+/* home.js gắn .is-gliding khi trượt có hoạt ảnh, .is-dragging trong lúc
+   ngón tay còn đặt trên màn hình. Kéo tay phải bám ngón TỨC THÌ — có
+   transition ở trạng thái ấy là dải chạy trễ sau ngón, cảm giác như dính. */
+.vhero__track.is-gliding {
+    transition: transform .6s cubic-bezier(.4, 0, .2, 1);
 }
+
+.vhero__track.is-dragging {
+    transition: none;
+}
+
+/* Tấm không phải tấm đang xem nằm ngoài mép màn hình. home.js đã gắn `inert`
+   cho chúng (bàn phím không Tab tới được), nhưng `inert` không giấu chúng
+   khỏi mắt — mà chúng vốn đã ở ngoài khung nhìn nhờ overflow:hidden của
+   .vhero__viewport, nên không cần luật ẩn nào ở đây. */
 
 .vhero__clip {
     position: absolute;
@@ -69,23 +85,35 @@
     object-fit: cover;
 }
 
-/* ┌─ LỚP PHỦ TỐI ─────────────────────────────────────────────────────────
-   │ Mẫu không có lớp này vì ảnh mẫu là ảnh tĩnh đã tối sẵn ở vùng có chữ.
-   │ Video thì đổi theo từng khung hình, nên chữ trắng đặt thẳng lên nó có
-   │ lúc đọc được có lúc không.
+/* ┌─ LỚP PHỦ TỐI — HAI DẢI, HAI VIỆC KHÁC NHAU ───────────────────────────
+   │ Mẫu không có lớp này vì ảnh mẫu là ảnh tĩnh đã tối sẵn đúng chỗ cần.
+   │ Video thì đổi theo từng khung hình — và ba clip này do người khác quay,
+   │ không ai biết trước khung nào sáng khung nào tối.
    │
-   │ Dải chuyển dần từ đáy lên, đặc nhất đúng ở dải 88px dưới cùng — chỗ
-   │ .oa-hero__center đặt chữ và hai nút. Phần trên ảnh gần như không bị
-   │ đụng tới, nên hình vẫn là hình.
+   │ DẢI DƯỚI (đậm) giữ cho tiêu đề và hai nút đọc được. Đặc nhất ở 88px
+   │ dưới cùng, đúng chỗ .oa-hero__center đặt chữ.
+   │
+   │ DẢI TRÊN (rất nhạt) giữ cho HÀNG NAV đọc được. Thanh đầu trang ở trạng
+   │ thái trong suốt có chữ TRẮNG; gặp một khung hình sáng — tóc vàng, nền
+   │ trời, tường trắng — là năm mục nav mất hút. Chỉ cần .28 ở mép trên tan
+   │ hết trong 120px: đủ để chữ trắng luôn có nền tựa, mà không ai nhận ra
+   │ ảnh bị phủ.
+   │
+   │ 120px chứ không phải 52px (chiều cao thanh nav): tan đúng tại mép thanh
+   │ thì thấy được đường cắt ngang ảnh.
    └──────────────────────────────────────────────────────────────────────── */
 .vhero__veil {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top,
-        rgba(0, 0, 0, .55) 0%,
-        rgba(0, 0, 0, .35) 22%,
-        rgba(0, 0, 0, .08) 45%,
-        rgba(0, 0, 0, 0) 65%);
+    background:
+        linear-gradient(to top,
+            rgba(0, 0, 0, .55) 0%,
+            rgba(0, 0, 0, .35) 22%,
+            rgba(0, 0, 0, .08) 45%,
+            rgba(0, 0, 0, 0) 65%),
+        linear-gradient(to bottom,
+            rgba(0, 0, 0, .28) 0,
+            rgba(0, 0, 0, 0) 120px);
 }
 
 /* Khối chữ nằm TRÊN lớp phủ, không chìm dưới nó */
@@ -115,12 +143,16 @@ html:not(.js) .vhero__bars {
    ══════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 760px) {
-    /* Hero vẫn tràn màn hình trên điện thoại — .oa-hero--full giữ 100vh và
-       KHÔNG bị @media của oa.css kéo về 4:5 (luật đó nhắm .oa-hero trần,
-       dùng cho hero bộ sưu tập và hero giới thiệu). Nhắc lại ở đây để lần
-       sau ai sửa mốc ấy biết là có hai hero khác nhau. */
+    /* Hero vẫn chiếm gần trọn màn hình trên điện thoại — .oa-hero--full giữ
+       85dvh và KHÔNG bị @media của oa.css kéo về 4:5 (luật đó nhắm
+       .oa-hero trần, dùng cho hero bộ sưu tập và hero giới thiệu). Nhắc lại
+       ở đây để lần sau ai sửa mốc ấy biết là có hai hero khác nhau.
+
+       Sàn hạ xuống 420: màn 390×844 trừ thanh địa chỉ còn ~700px, 85dvh của
+       nó là ~595 — sàn 480 không chạm tới, nhưng máy nhỏ hơn (iPhone SE,
+       568px) thì 85dvh chỉ còn ~440 và sàn 480 sẽ ép hero cao hơn màn hình. */
     .oa-hero--full {
-        min-height: 480px;
+        min-height: 420px;
     }
 
     /* Ba vạch 90px cộng khe là 282px — vừa khít màn 320px, nhưng sát mép quá.

@@ -1324,13 +1324,28 @@ textarea.oa-field {
 }
 
 /* ┌─ ĐẦU TRANG TRONG SUỐT TRÊN TRANG CHỦ ─────────────────────────────────
-   │ Trang chủ có ảnh hero cao 100vh chạy LÊN DƯỚI thanh đầu trang (hero
-   │ kéo margin-top âm đúng 52px). Khi chưa cuộn, thanh trong suốt và chữ
-   │ trắng; cuộn qua hero thì .is-scrolled bật lại nền mờ + chữ đen.
+   │ Trang chủ có ảnh hero chạy LÊN DƯỚI thanh đầu trang (hero kéo
+   │ margin-top âm đúng 52px). Chừng nào còn video sau lưng thì thanh trong
+   │ suốt và chữ trắng; hero trượt hết mới lật sang nền mờ + chữ đen.
    │
-   │ Lớp .is-scrolled do assets/js/header.js gắn. Không có JS thì thanh
-   │ ở nguyên trạng thái trong suốt — nên .oa-header--over CHỈ được đặt
-   │ trên trang thật sự có hero tối tràn lên đầu trang.
+   │ ═══ .is-past-hero, KHÔNG PHẢI .is-scrolled ═══
+   │
+   │ header.js gắn HAI lớp, và chúng trả lời hai câu hỏi khác nhau:
+   │
+   │   .is-scrolled    "đã rời đỉnh trang chưa"  → bật ở scrollY > 4px
+   │   .is-past-hero   "hero còn sau lưng không" → bật khi mép dưới hero
+   │                   trượt qua mép dưới thanh nav
+   │
+   │ Ở đây phải là .is-past-hero. Dùng .is-scrolled thì mới nhích chuột một
+   │ cái là thanh đã lật sang trắng, và suốt 80% quãng cuộn hero người dùng
+   │ nhìn thấy một dải kính mờ trắng đè lên ảnh chiến dịch — đúng thứ vừa
+   │ phải sửa. header.js đo mép hero bằng getBoundingClientRect() mỗi khung
+   │ hình (không cộng dồn một con số đo sẵn) nên nó đúng cả khi thanh địa
+   │ chỉ trên di động thu vào bung ra.
+   │
+   │ Không có JavaScript thì KHÔNG lớp nào được gắn và thanh ở nguyên trạng
+   │ thái trong suốt — nên .oa-header--over CHỈ được đặt trên trang thật sự
+   │ có hero tối tràn lên đầu trang.
    └──────────────────────────────────────────────────────────────────────*/
 .oa-header--over {
     background: transparent;
@@ -1339,7 +1354,7 @@ textarea.oa-field {
     color: #fff;
 }
 
-.oa-header--over.is-scrolled {
+.oa-header--over.is-past-hero {
     background: rgba(255, 255, 255, .55);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -1432,7 +1447,7 @@ textarea.oa-field {
     text-align: center;
 }
 
-.oa-header--over:not(.is-scrolled):not(.is-overlay) .oa-header__count {
+.oa-header--over:not(.is-past-hero):not(.is-overlay) .oa-header__count {
     background: #fff;
     color: var(--ink);
 }
@@ -1655,11 +1670,29 @@ textarea.oa-field {
     background: #cfd3d6;
 }
 
-/* Hero trang chủ — cao trọn màn hình và chạy LÊN DƯỚI thanh đầu trang */
+/* ┌─ HERO TRANG CHỦ ──────────────────────────────────────────────────────
+   │ Chạy LÊN DƯỚI thanh đầu trang bằng margin-top âm đúng --hdr-h, nên
+   │ thanh nav nổi trên ảnh chứ không đẩy ảnh xuống.
+   │
+   │ 85dvh CHỨ KHÔNG 100vh, và hai chi tiết ở đây đều có lý do:
+   │
+   │   85 — mẫu vẽ hero trọn màn hình, nhưng trọn màn hình thì không có
+   │        mẩu nội dung nào ló ra dưới đáy, và trang chủ mở ra trông như
+   │        một trang đích chứ không phải một cửa hàng. Chừa 15% là đủ để
+   │        thấy mép băng "Sản phẩm mới về" — dấu hiệu duy nhất nói cho
+   │        người dùng biết bên dưới còn gì.
+   │
+   │   dvh — `vh` trên di động tính theo khung nhìn LỚN NHẤT (lúc thanh
+   │        địa chỉ đã thu vào), nên ở trạng thái vừa mở trang hero luôn
+   │        cao hơn màn hình thật và đáy bị cắt. `dvh` đo khung nhìn ĐANG
+   │        có. Dòng `vh` đứng trước làm bản dự phòng cho trình duyệt cũ —
+   │        thứ tự này bắt buộc, đảo lại là `dvh` bị `vh` đè.
+   └──────────────────────────────────────────────────────────────────────*/
 .oa-hero--full {
     aspect-ratio: auto;
-    height: 100vh;
-    min-height: 520px;
+    height: 85vh;
+    height: 85dvh;
+    min-height: 480px;
     margin-top: calc(var(--hdr-h) * -1);
     background: #b9b3a6;
 }
@@ -2234,8 +2267,8 @@ summary:focus-visible,
     border-radius: 2px;
 }
 
-.oa-header--over:not(.is-scrolled) a:focus-visible,
-.oa-header--over:not(.is-scrolled) button:focus-visible,
+.oa-header--over:not(.is-past-hero) a:focus-visible,
+.oa-header--over:not(.is-past-hero) button:focus-visible,
 .oa-hero a:focus-visible,
 .oa-hero button:focus-visible {
     outline-color: #fff;
