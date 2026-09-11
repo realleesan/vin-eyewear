@@ -397,7 +397,9 @@
 
 .bkside {
     position: sticky;
-    top: 72px;
+    /* 20px thở dưới thanh nav — neo theo var(--hdr-h), không gõ cứng 72
+       (= 52 + 20 của thang cũ). Xem chú thích --hdr-h trong oa.css. */
+    top: calc(var(--hdr-h) + 20px);
     display: flex;
     flex-direction: column;
     gap: 16px;

@@ -152,9 +152,26 @@
 
     /* ══ BỐ CỤC ═══════════════════════════════════════════════════════ */
 
-    --hdr-h: 52px;          /* chiều cao thanh đầu trang — nhiều chỗ trừ đi
-                               con số này (sticky top, min-height), nên nó
-                               phải là token chứ không gõ tay */
+    /* ┌─ CHIỀU CAO THANH ĐẦU TRANG ──────────────────────────────────────
+       │ Mẫu vẽ 52px với wordmark 18px — tỉ lệ 2,89 lần cỡ chữ. Phóng thang
+       │ chữ lên 1.4 mà giữ khung 52px thì wordmark (nay 25,2px, hộp chữ cao
+       │ 37,8px) chỉ còn 7,1px thở mỗi bên và tỉ lệ tụt xuống 2,06 — thanh
+       │ trông bị nhồi. Nên nó co giãn cùng thang: 52 × 1.4 = 72,8px, trả lại
+       │ đúng tỉ lệ 2,89 của mẫu.
+       │
+       │ ĐÂY LÀ NGOẠI LỆ với luật "không phóng số bố cục" ở khối --oa-scale.
+       │ Chiều cao thanh nav bị nội dung bên trong quyết định, khác lề ngang
+       │ và khe lưới — hai thứ đó do bề ngang màn hình quyết định.
+       │
+       │ RẤT NHIỀU CHỖ TRỪ ĐI CON SỐ NÀY: hero trang chủ kéo margin-top âm
+       │ bằng nó, bảng tìm kiếm và ngăn giỏ neo `top` vào nó, ba khối dính
+       │ (.pdinfo · .csum__card · .bkside) cộng thêm một khoảng thở rồi mới
+       │ neo. Gõ tay một con số 52 ở bất kỳ đâu là chỗ đó lệch ngay khi đổi
+       │ --oa-scale — và lệch theo kiểu khối dính chui xuống DƯỚI thanh nav,
+       │ tức là biến mất. Luôn dùng var(--hdr-h).
+       │
+       │ assets/js/header.js đo bằng header.offsetHeight nên nó tự đúng. */
+    --hdr-h: calc(52px * var(--oa-scale));
     --edge: 64px;           /* lề ngang của khối CHỮ */
     --edge-grid: 60px;      /* lề ngang của LƯỚI thẻ (thẻ có padding 14px) */
 

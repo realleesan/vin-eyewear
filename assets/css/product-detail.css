@@ -114,7 +114,10 @@
 
 .pdinfo {
     position: sticky;
-    top: 64px;
+    /* 12px thở dưới thanh nav. Neo theo var(--hdr-h) chứ KHÔNG gõ 64:
+       64 là 52 + 12 của lúc thang chữ còn ở 1. Đổi --oa-scale là thanh cao
+       lên, mà cột dính vẫn neo ở 64 thì nó chui xuống dưới thanh và mất hút. */
+    top: calc(var(--hdr-h) + 12px);
     align-self: start;
     display: flex;
     flex-direction: column;
