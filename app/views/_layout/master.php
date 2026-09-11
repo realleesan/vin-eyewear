@@ -163,269 +163,101 @@ if ($manhCua !== null) {
     }
     ?>
 
-    <!-- ┌─ MỘT FAMILY DUY NHẤT: Be Vietnam Pro ────────────────────────────
-         │ Trùng với --font-sans / --font-serif / --font-mono trong layout.css —
-         │ đổi ở đây thì phải đổi cả bên đó, và ngược lại.
+    <!-- ┌─ KHÔNG TẢI FONT NGOÀI ────────────────────────────────────────────
+         │ Thiết kế mới (mẫu "Eyewear Collection") chạy trên stack font hệ
+         │ thống: "Helvetica Neue", Helvetica, Arial. Xem --font trong
+         │ assets/css/oa.css — đổi ở đó, không đổi ở đây.
          │
-         │ ĐÃ BỎ LORA. Furnish chạy trên đúng một family với tiêu đề nét mảnh;
-         │ giữ thêm một font serif cho tiêu đề là quay lại đúng lối mà theme cố
-         │ ý không đi. Bỏ nó cũng bớt được một request font và ~30KB.
+         │ ĐÃ GỠ ba family cũ cùng hai thẻ <link> Google Fonts: Be Vietnam Pro
+         │ (thân bài), EB Garamond (wordmark), JetBrains Mono (mã đơn hàng).
+         │ Không còn nơi nào gọi chúng — giao diện cũ đi cùng chúng.
          │
-         │ KHÔNG dùng Poppins (font gốc của Furnish): nó không có subset
-         │ `vietnamese`, mọi chữ có dấu sẽ rơi sang font dự phòng giữa câu.
-         │ Lý do đầy đủ ghi ở khối FONT trong layout.css.
-         │
-         │ ┌─ HAI WEIGHT + MỘT KIỂU NGHIÊNG (09/09/2026) ───────────────────
-         │ │ Trước: `wght@400;500;600;700` và KHÔNG có trục nghiêng. Đo bằng
-         │ │ document.fonts trên trang chủ thật:
-         │ │
-         │ │   Be Vietnam Pro normal 400   loaded
-         │ │   Be Vietnam Pro normal 500   loaded
-         │ │   Be Vietnam Pro normal 600   unloaded   ← không chỗ nào dùng
-         │ │   Be Vietnam Pro normal 700   unloaded   ← không chỗ nào dùng
-         │ │
-         │ │ Đối chiếu lại toàn bộ CSS trang khách: 305 lần font-weight 500,
-         │ │ 91 lần 400, đúng MỘT lần 600 — và nó nằm trong furnish.css, file
-         │ │ mà chính khối chú thích bên dưới ghi là không còn nơi nào nạp.
-         │ │ 700 thì không có lần nào. Chú thích cũ ("600 nhãn IN HOA, 700 giá
-         │ │ tiền") mô tả một bản thiết kế đã bị thay.
-         │ │
-         │ │ THÊM TRỤC NGHIÊNG `1,400`, và đây mới là chỗ thấy được bằng mắt:
-         │ │ nửa sau tiêu đề hero in nghiêng ở 72px, cùng 8 chỗ font-style:
-         │ │ italic khác trong CSS. Không tải mặt nghiêng thật thì trình duyệt
-         │ │ TỰ BÓP NGHIÊNG mặt đứng — ở cỡ chữ nhỏ không ai nhận ra, nhưng ở
-         │ │ một tiêu đề 72px thì nét chữ méo và đó đúng là thứ làm chữ trông
-         │ │ rẻ tiền.
-         │ │
-         │ │ CHỈ nghiêng ở weight 400: mọi chỗ dùng italic đều là chữ thường
-         │ │ hoặc tiêu đề nét mảnh, không chỗ nào nghiêng-đậm.
-         │ │
-         │ │ NHẤN MẠNH = 500, KHÔNG PHẢI 700. <strong> và <b> theo mặc định
-         │ │ của trình duyệt là 700; layout.css kéo chúng về 500 để khớp thang
-         │ │ này — xem khối `strong, b` trong đó. Thiếu nó thì 38 chỗ <strong>
-         │ │ trong view lại đòi một mặt 700 không tồn tại và bị bóp đậm giả.
-         │ └────────────────────────────────────────────────────────────────
-         └──────────────────────────────────────────────────────────────── -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- ┌─ EB GARAMOND: DÙNG ĐÚNG MỘT CHỖ, LÀ WORDMARK ────────────────────
-         │ Đây là ngoại lệ có chủ đích với luật "một family duy nhất" ở khối
-         │ trên, và nó chỉ gánh 14 ký tự: "VIN EYEWEAR" (hoa) ở đầu trang, chân
-         │ trang, ngăn kéo mobile và hai thanh rút gọn. Không một dòng chữ nào
-         │ khác trên site chạm tới nó — xem --font-wordmark trong layout.css.
-         │
-         │ VÌ SAO PHẢI LÀ MỘT FONT KHÁC: chủ dự án yêu cầu wordmark mang đúng
-         │ dáng chữ serif của nhà mốt tham chiếu. Be Vietnam Pro là geometric
-         │ sans, không có mặt serif nào — không có cách nào ép ra dáng ấy bằng
-         │ font-weight hay letter-spacing.
-         │
-         │ CHỈ WEIGHT 600, chỉ mặt đứng: wordmark không bao giờ in nghiêng và
-         │ không bao giờ đổi nét. Một mặt chữ ~25KB.
-         │
-         │ KHÔNG cần subset vietnamese ở đây dù EB Garamond có: wordmark là
-         │ "VIN EYEWEAR", không dấu. Phần còn lại của site vẫn là Be Vietnam
-         │ Pro, nên chữ tiếng Việt không đi qua font này bao giờ.
-         └────────────────────────────────────────────────────────────────── -->
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;1,400&family=EB+Garamond:wght@600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+         │ Bỏ luôn hai thẻ <link rel="preconnect">: không còn origin nào ngoài
+         │ site để mở sẵn kết nối, và đó là hai lượt DNS + TLS đứng chặn đường
+         │ vẽ trang mỗi lượt truy cập.
+         └──────────────────────────────────────────────────────────────────── -->
 
     <!-- ══════════════════════════════════════════════════════════════
-         CSS DÙNG CHUNG — nạp cho MỌI trang.
+         CSS — nạp cho MỌI trang.
 
-         THỨ TỰ QUAN TRỌNG:
-           1. layout.css  khai :root chứa toàn bộ token
-           2. ui.css      nguyên thể dùng chung (nút, ô nhập, thông báo…)
-           3. còn lại     component, chỉ tiêu thụ hai file trên
+         MỘT FILE NỀN DUY NHẤT: oa.css. Nó chứa token, reset, thang chữ và
+         toàn bộ nguyên thể dùng chung (nút, ô nhập, chip, thẻ sản phẩm,
+         đầu trang, chân trang, lớp phủ) — tức là phần việc mà trước đây
+         chia cho layout.css + gm.css + ui.css + grid.css + năm file
+         components/. Năm file ấy KHÔNG còn được nạp ở đâu.
 
-         Trước đây các file trang phải nạp chéo nhau — trang thanh toán nạp
-         contact.css chỉ để mượn .field, nạp cart.css chỉ để mượn .alert.
-         Nay mọi mẩu dùng chung nằm trong ui.css, nên bảng bên dưới chỉ còn
-         đúng CSS riêng của từng trang.
+         Bảng $pageStyles bên dưới vì thế chỉ còn CSS thật sự riêng của
+         từng trang, và phần lớn trang không cần dòng nào.
          ══════════════════════════════════════════════════════════════ -->
-    <?php
-    /*
-     * ┌─ NỀN BOOTSTRAP 5.3.8 ───────────────────────────────────────────────
-     * │ Tự lưu trong repo (assets/vendor/), KHÔNG lấy từ CDN: cả site đang tự
-     * │ phục vụ mọi asset, chỉ font chữ là ngoại lệ. Thêm một origin nữa vào
-     * │ đường vẽ trang là thêm một lượt DNS + TLS chặn render, đổi lấy đúng
-     * │ một file.
-     * │
-     * │ CHỈ CSS, KHÔNG BAO GIỜ JS. Site đã có sẵn ngăn kéo di động, popover và
-     * │ carousel viết tay trong assets/js/; nạp Bootstrap JS là có hai bộ mã
-     * │ làm cùng một việc, mà bộ thứ hai kéo theo cả Popper.
-     * │
-     * │ ĐỨNG TRƯỚC layout.css — thứ tự này là thứ giữ cho site không đổi hình
-     * │ dạng khi thêm khung: components/ui.css có sẵn .btn-primary, .btn-lg,
-     * │ .alert trùng tên với Bootstrap, nạp sau nên luôn thắng.
-     * │
-     * │ LOẠI TRỪ admin/login: màn ấy nằm trong khu quản trị (ngoài phạm vi đợt
-     * │ này) nhưng lại vẽ qua chính file master này, nên phải chặn tay.
-     * └──────────────────────────────────────────────────────────────────────
-     */
-    /*
-     * ĐÃ ĐỔI TÊN $khungFurnish -> $khungGM. Cùng một cái cờ, cùng một điều
-     * kiện; đổi tên vì thứ nó bật/tắt nay là lớp nền Gentle Monster, không
-     * còn là lớp nền Furnish.
-     *
-     * CỜ NÀY LÀ RANH GIỚI CÁCH LY KHU QUẢN TRỊ. gm.css khai lại `:root` để đổi
-     * tông cả cửa hàng; khung quản trị (app/views/admin/_layout/master.php)
-     * nạp layout.css nhưng KHÔNG đi qua file này, nên nó không bao giờ thấy
-     * gm.css. Màn admin/login thì có đi qua đây — và bị cờ này chặn.
-     */
-    $khungGM = ($viewName ?? '') !== 'admin/login';
-    if ($khungGM):
-    ?>
-    <?php
-    /*
-     * ĐÃ THAY BOOTSTRAP BẰNG assets/css/grid.css.
-     *
-     * bootstrap.min.css nặng 232 KB — 46% toàn bộ CSS của trang khách. Đối
-     * chiếu mọi class trong app/views (trừ admin) với những class CHỈ Bootstrap
-     * định nghĩa thì còn đúng 29 cái: lưới 12 cột, `g-4`, và 17 lớp tiện ích.
-     *
-     * grid.css dựng lại đúng 29 cái đó trong ~120 dòng. Không phải "subset
-     * Bootstrap" — là viết lại phần đang dùng, nên nó không lớn dần trở lại.
-     *
-     * File vendor VẪN CÒN trong repo, không xoá: khu quản trị không nạp nó,
-     * nhưng giữ lại thì lùi một bước chỉ là đổi một dòng ở đây.
-     */
-    ?>
-    <link rel="stylesheet" href="<?= asset('assets/css/grid.css') ?>">
-    <?php endif; ?>
-    <link rel="stylesheet" href="<?= asset('assets/css/layout.css') ?>">
-    <?php
-    /* Cầu nối token → biến --bs-*, bảng token tông Gentle Monster, và nhịp
-       trang. Phải đứng SAU layout.css (ghi đè token của file đó) và TRƯỚC mọi
-       component.
+    <link rel="stylesheet" href="<?= asset('assets/css/oa.css') ?>">
 
-       THAY CHỖ CỦA furnish.css. File cũ còn nằm trong repo nhưng KHÔNG còn nơi
-       nào nạp — xoá ở đợt dọn asset (Phase 3), không xoá lúc này để còn đối
-       chiếu nếu một trang chưa dựng lại bị vỡ. */
+    <?php
+    /* ┌─ BỐN COMPONENT NẠP CHO MỌI TRANG, KHÔNG THEO BẢNG $pageStyles ─────
+       │ Cả bốn đều là thứ có thể bật ra TRÊN BẤT KỲ TRANG NÀO, nên xếp
+       │ chúng vào bảng theo tên view là sai ngay từ tiền đề:
+       │
+       │   buy-modal  hộp "Chọn hình thức mua" — bật từ mọi nút thêm giỏ,
+       │              tức là trang chủ, danh mục, tìm kiếm, bộ sưu tập, chi
+       │              tiết. Một hộp thoại vẽ ra không có kiểu thì che cả trang.
+       │   confirm    hộp xác nhận "Bỏ khỏi giỏ?" và anh em của nó.
+       │   floating   cụm nút liên hệ nổi góc màn hình — có ở mọi trang
+       │              khung đầy đủ.
+       │   search     lớp phủ tìm kiếm ở đầu trang chèn khối .srch của trang
+       │              /tim-kiem vào bất kỳ trang nào; thiếu file này thì kết
+       │              quả hiện ra không có kiểu.
+       └────────────────────────────────────────────────────────────────────*/
     ?>
-    <?php if ($khungGM): ?>
-    <link rel="stylesheet" href="<?= asset('assets/css/gm.css') ?>">
-    <?php endif; ?>
-    <link rel="stylesheet" href="<?= asset('assets/css/components/ui.css') ?>">
-    <link rel="stylesheet" href="<?= asset('assets/css/components/header.css') ?>">
-    <!-- Phải đứng SAU header.css: .mega__trigger chỉnh lại .header-nav__list > li > a -->
-    <link rel="stylesheet" href="<?= asset('assets/css/components/mega-menu.css') ?>">
-    <!-- Bảng xổ "Bộ sưu tập". Phải đứng SAU mega-menu.css: nó dùng lại nguyên
-         bộ lớp .mega__* / .mega-feature của file đó và chỉ đè vài thuộc tính
-         cho thẻ "Tất cả bộ sưu tập" ở ô cuối. -->
-    <link rel="stylesheet" href="<?= asset('assets/css/components/collection-menu.css') ?>">
-    <link rel="stylesheet" href="<?= asset('assets/css/components/footer.css') ?>">
-    <link rel="stylesheet" href="<?= asset('assets/css/components/page-head.css') ?>">
-    <link rel="stylesheet" href="<?= asset('assets/css/components/product.css') ?>">
-    <?php /* Hộp thoại "Chọn hình thức mua". Nạp cho MỌI trang chứ không theo
-             bảng $pageStyles bên dưới: nó hiện đè lên bất kỳ trang nào có nút
-             thêm giỏ — trang chủ, danh mục, tìm kiếm, chi tiết — và một hộp
-             thoại vẽ ra không có kiểu thì che mất cả trang. */ ?>
     <link rel="stylesheet" href="<?= asset('assets/css/components/buy-modal.css') ?>">
+    <link rel="stylesheet" href="<?= asset('assets/css/components/confirm.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/floating.css') ?>">
-    <?php /* search.css nay nạp cho MỌI trang, không còn riêng 'search/index': lớp
-             phủ tìm kiếm ở đầu trang chèn khối .srch của trang /tim-kiem vào bất
-             kỳ trang nào — thiếu file này thì nhóm cửa hàng/chính sách trong kết
-             quả hiện ra không có kiểu. 9,8 KB, và nó đã có cache từ lần đầu. */ ?>
     <link rel="stylesheet" href="<?= asset('assets/css/search.css') ?>">
 
     <?php
-    /*
-     * CSS riêng của từng trang.
-     *
-     * Dùng bảng thay cho một chuỗi if: thêm trang mới chỉ cần thêm một dòng,
-     * và không thể quên đóng thẻ điều kiện.
-     */
+    /* ┌─ CSS RIÊNG CỦA TỪNG TRANG ────────────────────────────────────────
+       │ KHOÁ = ĐÚNG TÊN VIEW. Thêm file CSS mà quên dòng ở đây thì trang ra
+       │ không có kiểu nào và không có gì báo lỗi — đây là chỗ dễ quên nhất
+       │ trong cả khung.
+       │
+       │ Trang nào KHÔNG có dòng ở đây là trang dựng hoàn toàn bằng nguyên
+       │ thể của oa.css. Đó là trạng thái mong muốn, không phải thiếu sót.
+       └──────────────────────────────────────────────────────────────────*/
     $pageStyles = [
-        // video-hero.css TRƯỚC home-sections.css: hero nay là khối video tràn
-        // màn hình với bộ lớp .vhero* riêng (xem components/video-hero.css).
-        // home-sections.css vẫn cần cho hai băng sản phẩm còn lại; bộ lớp
-        // .hero* cũ trong đó không còn view nào gọi tới.
-        'home/index'     => ['components/video-hero.css', 'components/home-sections.css'],
-        // Trang danh sách nay dựng theo "Vin Eyewear Category.dc.html" và có
-        // bộ lớp riêng; nó không còn mượn .section-head/.eyebrow của trang chủ
-        // nên cũng không nạp home-sections.css nữa.
-        'search/index'   => ['search.css'],
-        'product/index'  => ['category.css'],
-        // Trang chi tiết nay dựng theo "Vin Eyewear Product.dc.html" và có bộ
-        // lớp riêng (.pd*); nó không còn mượn .section-h2 của trang chủ nữa.
-        // Thẻ "sản phẩm liên quan" dùng .pcard trong components/product.css
-        // vốn đã nạp cho mọi trang.
-        'product/detail' => ['product-detail.css'],
-        // Trang danh sách nay dựng theo "Vin Eyewear News.dc.html" và có bộ lớp
-        // riêng (.nw*); nó không còn mượn .section-h2/.eyebrow của trang chủ.
-        // Trang CHI TIẾT thì vẫn theo bản Lovable nên giữ nguyên.
-        // Trang bộ sưu tập có bộ lớp riêng (.coll*), không mượn của trang chủ.
-        // Trang CHI TIẾT của một bộ là file CSS RIÊNG với tiền tố riêng (.cdet*)
-        // chứ không dùng chung collection.css: hai trang chỉ giống nhau ở khối
-        // đầu, phần còn lại khác hẳn — xem đầu assets/css/collection-detail.css.
-        'collection/index'  => ['collection.css'],
-        'collection/detail' => ['collection-detail.css'],
-        'about/index'    => ['about.css'],
-        // Trang liên hệ nay dựng theo "Vin Eyewear Contact.dc.html" và có bộ
-        // lớp riêng; nó không còn mượn .section-h2/.eyebrow của trang chủ.
-        'contact/index'  => ['contact.css'],
-        'policy/index'   => ['policy.css'],
-        'cart/index'     => ['cart.css', 'components/confirm.css'],
-        // Trang thanh toán dựng theo "Vin Eyewear Checkout.dc.html": khung rút
-        // gọn (bare-shell) + khối tóm tắt dùng chung với giỏ hàng (cart.css)
-        // + bộ lớp riêng của nó (checkout.css).
-        'order/checkout' => ['components/bare-shell.css', 'cart.css', 'checkout.css'],
-        // Màn "Thanh toán QR" — màn thứ hai của cùng bản thiết kế, nên dùng
-        // chung checkout.css (bộ lớp .coqr*). Không cần cart.css: màn này
-        // không có khối tóm tắt .csum*.
-        'order/transfer' => ['components/bare-shell.css', 'checkout.css'],
-        // Trang xác nhận đơn nay dựng theo "Vin Eyewear Order Complete.dc.html"
-        // và có bộ lớp riêng (.ocomp*); nó không còn mượn .section-h2 của trang
-        // chủ. order.css đã bỏ — trang đặt
-        // lịch (bộ lớp .b* trong file đó) từ lâu đã có booking.css riêng.
-        'order/success'  => ['order-complete.css'],
-        // Biên nhận thanh toán — ở chung file CSS với trang xác nhận đơn, hai
-        // trang là anh em (cùng điểm cuối một luồng, cùng khung rút gọn).
-        'order/paid'     => ['components/bare-shell.css', 'order-complete.css'],
-        // Trang đặt lịch nay dựng theo "Vin Eyewear Booking.dc.html" và có bộ
-        // lớp riêng (.bk*).
-        //
-        // home-sections.css đi kèm vì khối "Kiểm tra 5 phút" (.qcheck/.qcard/
-        // .qface/.qlens/.qmodal) đã chuyển từ trang chủ về cuối trang này —
-        // xem khối chú thích cuối app/views/booking/index.php. Hai bộ lớp
-        // KHÔNG đụng nhau: đã đối chiếu 155 tên lớp của file đó với 52 tên lớp
-        // view này dùng, giao nhau bằng 0.
-        'booking/index'  => ['booking.css', 'components/home-sections.css'],
-        // Ba trang tài khoản-chưa-đăng-nhập dựng theo "Vin Eyewear Login.dc.html".
-        // bare-shell.css phải đứng TRƯỚC auth.css: nó giữ khung rút gọn dùng
-        // chung với trang thanh toán, auth.css giữ phần riêng (.authcard/.authform*).
-        'auth/index'     => ['components/bare-shell.css', 'auth.css'],
-        // Màn "Hoàn tất tạo tài khoản" bằng Google — một cột, cùng bộ lớp
-        // .authfield/.authbtn của màn kia nên dùng chung đúng hai file này.
-        'auth/google-signup' => ['components/bare-shell.css', 'auth.css'],
-        // Cổng quản trị dựng theo "Admin Login.dc.html" — nền TỐI, bộ lớp
-        // riêng (.alog*). KHÔNG nạp bare-shell.css: khung rút gọn bên đó vẽ
-        // đầu và chân trang màu be của luồng khách, mà trang này thay cả hai
-        // bằng bản của riêng nó.
-        'admin/login'    => ['admin-login.css'],
-        'auth/forgot'    => ['components/bare-shell.css', 'auth.css'],
-        'auth/reset'     => ['components/bare-shell.css', 'auth.css'],
-        // Trang tài khoản nay dựng theo "Vin Eyewear Account.dc.html" và có bộ
-        // lớp riêng (.acct*); nó không còn mượn .acard/.otable của auth.css.
-        'auth/profile'   => ['account.css', 'components/confirm.css'],
-        'ar/tryon'       => ['ar.tryon.css'],
-        // errors.css giữ .error-page* mà 404 và 500 dùng; auth.css giữ .errpage*
-        // mà 403 dùng. Ba trang lỗi hiện dựng theo HAI bộ lớp khác nhau —
-        // gộp về một bộ là việc riêng, chưa làm ở đây. Trước đó bảng này chỉ
-        // trỏ auth.css nên 404 và 500 ra trang KHÔNG có kiểu nào cả.
-        'errors/403'     => ['auth.css'],
-        'errors/404'     => ['errors.css'],
-        'errors/500'     => ['errors.css'],
+        'home/index'         => ['home.css'],
+
+        'product/index'      => ['catalog.css'],
+        'product/detail'     => ['product-detail.css'],
+        'search/index'       => ['catalog.css'],
+
+        'collection/index'   => ['collection.css'],
+        'collection/detail'  => ['catalog.css', 'collection.css'],
+
+        'cart/index'         => ['cart.css'],
+        'order/checkout'     => ['cart.css', 'checkout.css'],
+        'order/transfer'     => ['checkout.css'],
+        'order/success'      => ['checkout.css'],
+        'order/paid'         => ['checkout.css'],
+
+        'auth/index'         => ['auth.css'],
+        'auth/forgot'        => ['auth.css'],
+        'auth/reset'         => ['auth.css'],
+        'auth/google-signup' => ['auth.css'],
+        'auth/profile'       => ['account.css'],
+
+        'about/index'        => ['about.css'],
+        'contact/index'      => ['contact.css'],
+        'policy/index'       => ['policy.css'],
+        'booking/index'      => ['booking.css'],
+        'ar/tryon'           => ['ar.tryon.css'],
+
+        /* Khu quản trị giữ nguyên bộ CSS riêng của nó — thiết kế mới chỉ
+           phủ khu bán hàng. Xem khối chú thích đầu admin/_layout/master.php. */
+        'admin/login'        => ['admin-login.css'],
     ];
 
     foreach ($pageStyles[$viewName ?? ''] ?? [] as $css) {
         printf('    <link rel="stylesheet" href="%s">' . "\n", e(asset('assets/css/' . $css)));
     }
     ?>
-    <?php /* Vũ đạo mở/đóng của mọi lớp phủ. Nạp SAU CÙNG, sau cả CSS riêng
-             của trang: nó đè lại transition/animation của header.css,
-             mega-menu.css, category.css và buy-modal.css bằng cùng độ ưu
-             tiên, nên thứ tự nạp là thứ quyết định. */ ?>
-    <link rel="stylesheet" href="<?= asset('assets/css/motion-choreo.css') ?>">
 </head>
 
 <?php

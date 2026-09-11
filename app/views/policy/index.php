@@ -137,10 +137,21 @@ $policyChannels = [
 
                         <div class="policy-qa">
                             <?php foreach ($group['items'] as $item): ?>
-                                <div class="policy-qa__item" data-policy-item>
-                                    <p class="policy-qa__q"><?= e($item['q']) ?></p>
+                                <?php
+                                /* <details>/<summary> CHỨ KHÔNG PHẢI hai thẻ <p>.
+                                   Mẫu vẽ mỗi câu hỏi thành một mục gập: bấm vào là
+                                   câu trả lời bung ra, và câu hỏi đang mở to lên
+                                   13px (xem .policy-qa__item[open] trong policy.css).
+
+                                   assets/js/policy.js không phải sửa gì: nó chỉ đọc
+                                   item.textContent để lọc và bật/tắt item.hidden —
+                                   cả hai vẫn đúng trên một <details>. Móc
+                                   [data-policy-item] ở nguyên chỗ cũ. */
+                                ?>
+                                <details class="policy-qa__item" data-policy-item>
+                                    <summary class="policy-qa__q"><?= e($item['q']) ?></summary>
                                     <p class="policy-qa__a"><?= e($item['a']) ?></p>
-                                </div>
+                                </details>
                             <?php endforeach; ?>
                         </div>
                     </section>

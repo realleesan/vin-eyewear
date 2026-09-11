@@ -60,61 +60,30 @@ if (!$hasTitle && !$hasLead) {
     return;
 }
 
-$classes = 'pagehead';
-if ($hasBadge) {
-    $classes .= ' pagehead--article';
-}
-if (!$hasTitle && !$hasLead) {
-    $classes .= ' pagehead--bare';
-}
+/* ┌─ MỘT DÁNG DUY NHẤT, CĂN GIỮA ─────────────────────────────────────────
+   │ Mẫu vẽ đầu trang y hệt nhau ở /san-pham, /lien-he, /gioi-thieu và
+   │ /tai-khoan: tiêu đề 13px IN HOA giãn .06em, dưới nó một câu 10px màu
+   │ #333, cả khối căn giữa với đệm 64px trên / 24px dưới.
+   │
+   │ Nên bỏ hẳn ba biến thể cũ (--article, --bare và huy hiệu chuyên mục):
+   │ chúng là ba dáng khác nhau cho cùng một vai trò, tức là ba chỗ để lệch
+   │ dần. $head_badge VẪN NHẬN để không caller nào gãy, nhưng nó in ra thành
+   │ dòng nhãn nhỏ TRÊN tiêu đề — đúng chỗ mẫu đặt "01 — VỀ CHÚNG TÔI".
+   │
+   │ Kiểu dáng nằm trong .oa-pagehead của oa.css. Không còn
+   │ components/page-head.css — file ấy không còn nơi nào nạp.
+   └──────────────────────────────────────────────────────────────────────── */
 ?>
+<section class="oa-pagehead">
+    <?php if ($hasBadge): ?>
+        <span class="oa-eyebrow"><?= e($head_badge) ?></span>
+    <?php endif; ?>
 
-<?php
-/*
- * ─────────────────────────────────────────────────────────────────────────────
- * DỰNG THEO ĐẦU TRANG CON CỦA FURNISH
- *
- * `about.html` và `contact.html` mở đầu bằng ĐÚNG một khối, giống hệt nhau tới
- * từng lớp:
- *
- *     <section class="py-lg-8 py-5 text-center">
- *       <div class="container"><div class="row justify-content-center">
- *         <div class="col-lg-6">
- *           <h1 class="display-5 mb-3">…</h1>
- *           <p class="text-muted lead">…</p>
- *
- * Ba đặc điểm, và cả ba đều là chủ ý:
- *   · CĂN GIỮA — không phải căn trái như bản cũ
- *   · CỘT HẸP (6/12) — câu dẫn xuống dòng sớm, tạo hình khối gọn ở giữa trang
- *   · KHÔNG có nền màu, không viền, không thẻ — chỉ chữ trên nền trắng, tách
- *     khỏi nội dung bên dưới bằng khoảng trống
- *
- * ĐƯỜNG DẪN (breadcrumb) thì Furnish KHÔNG có, vì nó chỉ có năm trang phẳng.
- * Site này có /san-pham/{slug} và /bo-suu-tap/{slug} nằm sâu hai tầng, nên bỏ
- * breadcrumb là bỏ một lối quay ra. Giữ lại, và dựng bằng chính ngôn ngữ của
- * theme: chữ rất nhỏ, IN HOA, màu phụ, nằm CĂN GIỮA phía trên tiêu đề.
- * ─────────────────────────────────────────────────────────────────────────────
- */
-?>
-<section class="<?= $classes ?>">
-    <div class="pagehead__inner">
+    <?php if ($hasTitle): ?>
+        <h1 class="oa-title"><?= e($head_title) ?></h1>
+    <?php endif; ?>
 
-        <?php /* Hàng breadcrumb từng in ở đây — xem khối chú thích đầu file. */ ?>
-
-        <?php if ($hasTitle || $hasLead): ?>
-            <div class="pagehead__row">
-                <?php if ($hasBadge): ?>
-                    <span class="pagehead__badge"><?= e($head_badge) ?></span>
-                <?php endif; ?>
-
-                <?php if ($hasTitle): ?>
-                    <h1 class="pagehead__title"><?= e($head_title) ?></h1>
-                <?php endif; ?>
-
-                <?php if ($hasLead): ?>
-                    <p class="pagehead__lead"><?= e($head_lead) ?></p>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-    </div>
+    <?php if ($hasLead): ?>
+        <p><?= e($head_lead) ?></p>
+    <?php endif; ?>
 </section>

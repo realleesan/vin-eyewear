@@ -1,308 +1,224 @@
 <?php
-
-/**
- * _layout/product-card.php — thẻ sản phẩm DỌC, dùng chung cho cả site.
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THẺ SẢN PHẨM — dựng 1:1 từ mẫu "Eyewear Collection"
  *
- * Dựng theo "Vin Eyewear Home.dc.html". Bản thiết kế vẽ ĐÚNG MỘT dáng thẻ và
- * dùng lại ở mọi lưới sản phẩm. NĂM nơi gọi tới nó:
+ * Dùng chung cho MỌI lưới hàng: trang chủ, /san-pham, /bo-suu-tap/{slug},
+ * /tim-kiem, khối "sản phẩm tương tự" ở trang chi tiết. Một thẻ, một chỗ sửa.
  *
- *   _layout/home/new-arrivals.php   "Sản phẩm mới về"   (huy hiệu xanh, không giá gốc)
- *   _layout/home/best-sellers.php   "Sản phẩm bán chạy" (huy hiệu đỏ, có giá gốc)
- *   product/index.php               lưới danh mục /san-pham
- *   product/detail.php              "Sản phẩm liên quan"
- *   search/index.php                kết quả tìm kiếm
+ * ───────────────────────────────────────────────────────────────────────────
+ * HÌNH CỦA MẪU, từ trên xuống:
  *
- *   ảnh cao 300px (bấm vào ảnh sang trang chi tiết) + huy hiệu góc trái trên
- *   thương hiệu · tên · giá
- *   chân thẻ có đường kẻ: "Mua ngay" (đặc) + "Thêm vào giỏ" (viền)
+ *   ┌─────────────────────────┐
+ *   │ [MỚI] [-30%]            │  huy hiệu góc trên trái, nằm NGOÀI liên kết
+ *   │                         │
+ *   │      ảnh 4:5 contain    │  nền thẻ là một trong bốn tông xám luân phiên
+ *   │                         │
+ *   ├─────────────────────────┤
+ *   │ —                    ⚑  │  dòng nhãn hiệu (mờ) · dấu trang góc phải
+ *   │ Tên sản phẩm            │
+ *   │ 8.446.300₫              │  hoặc  8̶.̶9̶0̶0̶.̶0̶0̶0̶  6.230.000₫  (đỏ)
+ *   │ ● ● ●   Đen             │  ô màu + tên màu đang chọn
+ *   ├─────────────────────────┤
+ *   │ [ Mua ngay ][Thêm vào..]│  hai nút viên chia đôi, chữ 9px
+ *   └─────────────────────────┘
  *
- * FILE NÀY TỪNG LÀ MỘT THỨ KHÁC HẲN. Bản cũ là thẻ Lovable (ảnh đổi khi rê
- * chuột, nút "Thử AR", bo góc lớn) và chỉ còn dùng ở dải "liên quan" — nên
- * cuộn xuống cuối trang chi tiết là gặp một dáng thẻ không giống trang nào
- * khác. Nay mọi lưới sản phẩm chung một file.
+ * ẢNH `contain` CHỨ KHÔNG `cover`, và đó là điểm mẫu phân biệt rất rõ: ảnh
+ * SẢN PHẨM phải thấy trọn cái gọng, ảnh CHIẾN DỊCH mới cắt tràn khung.
  *
- * ĐÃ GỘP _layout/product-tile.php VÀO ĐÂY. File đó là thẻ riêng của lưới danh
- * mục, dựng theo "Category.dc.html": cả thẻ là một liên kết, ảnh cao 220px,
- * không có nút nào. Hệ quả là cùng một sản phẩm hiện ra hai dáng khác nhau tuỳ
- * khách đi vào từ trang chủ hay từ danh mục — trong khi bốn chỗ còn lại đều đã
- * dùng thẻ này. Nay chỉ còn một dáng thẻ cho cả site.
+ * ───────────────────────────────────────────────────────────────────────────
+ * THAM SỐ
  *
- * Nhận qua partial():
- *   $product      dòng sản phẩm ĐÃ qua ProductModel
- *   $badgeTone    'new' (xanh) hoặc 'sale' (đỏ) — quyết định màu huy hiệu
- *   $showCompare  true thì in thêm giá gốc gạch ngang bên cạnh giá bán
- *   $eager        true thì KHÔNG lazy-load ảnh (dành cho hàng thẻ đầu tiên)
- *
- * HAI NÚT Ở CHÂN THẺ ĐỀU LÀ FORM POST, không có nút nào là liên kết trá hình:
- * "Mua ngay" đi tiếp tới thanh toán, "Thêm vào giỏ" dừng ở giỏ — nhãn nút hứa
- * gì thì làm đúng thế.
- *
- * (Trước đây ô bên phải là liên kết "Chi tiết". Đã đổi theo yêu cầu. Đường sang
- * trang sản phẩm KHÔNG mất: tên sản phẩm và ô ảnh đều dẫn tới đó, và với mặt
- * hàng không mua thẳng được thì nút "Chi tiết" vẫn hiện ra — xem chân file.)
+ *   $product      bắt buộc — một dòng từ ProductModel
+ *   $i            chỉ số trong lưới, quyết định tông nền (mặc định 0)
+ *   $variants     mảng biến thể của MẶT HÀNG NÀY, để vẽ ô màu. Không truyền
+ *                 thì hàng ô màu không hiện — thẻ vẫn đúng, chỉ thiếu một
+ *                 dòng. Xem khối "Ô MÀU" bên dưới về cách lấy rẻ.
+ *   $badgeTone    'sale' (mặc định) | 'new' — quyết định huy hiệu nào hiện
+ *                 khi mặt hàng KHÔNG giảm giá
+ *   $showCompare  false để giấu giá gạch (dùng ở khối gợi ý)
+ *   $eager        true cho thẻ nằm trong màn hình đầu — bỏ loading="lazy"
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 $badgeTone   = $badgeTone   ?? 'sale';
 $showCompare = $showCompare ?? true;
 $eager       = $eager       ?? false;
+$i           = $i           ?? 0;
+$variants    = $variants    ?? [];
 
-$url     = '/san-pham/' . rawurlencode($product['slug']);
-/* Giá qua ProductPricing: đang khuyến mãi có hạn thì $price là giá khuyến mãi
-   và $compare là giá thường bị gạch. Không đọc thẳng hai cột nữa — xem khối
-   "MỘT NƠI QUYẾT ĐỊNH GIÁ" ở app/services/ProductPricing.php. */
+$url = '/san-pham/' . rawurlencode($product['slug']);
+
+/* MỘT NƠI QUYẾT ĐỊNH GIÁ — không đọc thẳng hai cột `price`/`compare_price`.
+   Mặt hàng đang khuyến mãi có hạn thì giá bán là giá khuyến mãi, và cả giỏ
+   hàng lẫn lúc tạo đơn đều đi qua đúng hai hàm này. Xem
+   app/services/ProductPricing.php. */
 $price   = ProductPricing::giaBan($product);
 $compare = ProductPricing::giaGach($product);
 $percent = discount($price, $compare);
-$inStock = ProductModel::inStock($product);
 
-/*
- * Mua thẳng từ thẻ được không?
- *
- * Không, nếu hết hàng, hoặc nếu mặt hàng có phương án (chiết suất tròng, màu
- * gọng…): thẻ không có chỗ nào để chọn phương án, mà CartController::add() từ
- * chối một mặt hàng có phương án mà không kèm phương án nào.
- *
- * Tính MỘT lần ở đây vì chân thẻ hỏi tới hai lần: một lần để chọn dáng ô bên
- * trái, một lần để quyết định có in nút "Chi tiết" hay không.
- */
-$canBuyNow = $inStock && !VariantModel::hasVariants($product['id']);
+$inStock   = ProductModel::inStock($product);
+$hasOption = VariantModel::hasVariants($product['id']);
+$canBuyNow = $inStock && !$hasOption;
 
-/*
- * Huy hiệu. Một thứ tự ưu tiên cho cả năm chỗ gọi, để một sản phẩm không mang
- * hai nhãn khác nhau ở hai trang:
- * hết hàng > giảm giá > nhãn riêng của khối.
- *
- * Khối "mới về" truyền $badgeTone = 'new' và không có giá gốc, nên rơi xuống
- * nhánh cuối và nhận chữ "Mới".
- */
-$badge = null;
-$tone  = $badgeTone;
+/* ┌─ TÔNG NỀN LUÂN PHIÊN ─────────────────────────────────────────────────
+   │ Mẫu đổi tông theo chỉ số thẻ để lưới không thành một mảng xám phẳng.
+   │ Công thức của mẫu: `(i + floor(i/4)) % 4` — nó dịch pha mỗi khi xuống
+   │ một hàng, nên hai thẻ nằm ngay trên/dưới nhau không bao giờ cùng tông.
+   │ Chép nguyên, đừng rút gọn thành `i % 4`: rút gọn là mất đúng hiệu ứng đó.
+   └──────────────────────────────────────────────────────────────────────── */
+$tone = (((int) $i + intdiv((int) $i, 4)) % 4) + 1;
 
-if (!$inStock) {
-    $badge = t('product.out_of_stock');
-    $tone  = 'out';
-} elseif ($percent !== null && $showCompare) {
-    $badge = '-' . $percent . '%';
-    $tone  = 'sale';
-} elseif ($badgeTone === 'new') {
-    $badge = t('product.badge_new');
-} elseif (!empty($product['is_featured'])) {
-    $badge = t('product.badge_hot');
+/* ┌─ Ô MÀU ───────────────────────────────────────────────────────────────
+   │ Chỉ vẽ từ biến thể CÓ mã màu thật (`swatch_hex`). Phương án chiết suất
+   │ tròng hay cỡ gọng để cột ấy NULL, và một ô màu trống thì vô nghĩa.
+   │
+   │ Ô ĐẦU TIÊN LÀ Ô ĐANG CHỌN. Ở lưới thì ô màu chỉ là xem trước, không đổi
+   │ được gì — nên chúng là <a> dẫn sang trang chi tiết kèm ?bien-the=, chứ
+   │ không phải <button> giả vờ bấm được rồi không xảy ra gì.
+   └──────────────────────────────────────────────────────────────────────── */
+$swatches = [];
+
+foreach ($variants as $v) {
+    if (!empty($v['swatch_hex'])) {
+        $swatches[] = $v;
+    }
 }
 ?>
+<li class="oa-card oa-card--t<?= $tone ?>">
 
-<li class="pcard">
-    <div class="pcard__media">
-        <?php /* Ô ẢNH CŨNG LÀ ĐƯỜNG SANG TRANG CHI TIẾT: khách bấm vào ảnh theo
-                 phản xạ chứ không đi tìm nút "Chi tiết" ở chân thẻ.
+    <div class="oa-card__media">
+        <?php
+        /* Ô ẢNH CŨNG LÀ ĐƯỜNG SANG TRANG CHI TIẾT — khách bấm vào ảnh theo phản
+           xạ chứ không đi tìm nút.
 
-                 Liên kết chỉ phủ ô ảnh, KHÔNG phủ cả thẻ: chân thẻ có form
-                 "Mua ngay", mà lồng <button> vào trong <a> là HTML sai và bấm
-                 nút sẽ hoá thành đi theo liên kết.
+           Liên kết chỉ phủ ô ảnh, KHÔNG phủ cả thẻ: chân thẻ có form "Mua
+           ngay", mà lồng <button> vào trong <a> là HTML sai và bấm nút sẽ hoá
+           thành đi theo liên kết.
 
-                 aria-hidden + tabindex="-1" vì đây là liên kết TRÙNG đích với
-                 tên sản phẩm ngay bên dưới. Ảnh mang alt="" (tên đã có ở tiêu
-                 đề, đọc lại là đọc hai lần) nên nếu để trình đọc màn hình thấy,
-                 nó chỉ đọc được một "liên kết" trơ trọi không tên; còn để nhận
-                 tiêu điểm thì người dùng bàn phím phải Tab qua bốn liên kết một
-                 thẻ thay vì ba. Huy hiệu nằm NGOÀI liên kết nên vẫn đọc được.
-
-                 Bàn phím và trình đọc màn hình không mất gì: tên sản phẩm và nút
-                 "Chi tiết" vẫn là hai đường tới đúng trang này. */ ?>
-        <a class="pcard__shot" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
-            <?php
-            /*
-             * ─────────────────────────────────────────────────────────────────
-             * asset() BỌC NGOÀI — ĐỂ MỘT TẤM ẢNH CHỈ CÓ MỘT ĐỊA CHỈ
-             *
-             * asset() gắn `?v=filemtime` để phá cache. Các partial của trang chủ
-             * (hero, danh mục, khối dịch vụ) vốn đã đi qua nó, còn đường dẫn lấy
-             * từ CSDL thì trước đây in thẳng.
-             *
-             * Hệ quả đo được trên bản live: cùng một file có mặt trên trang dưới
-             * HAI địa chỉ —
-             *     /assets/images/product-1.jpg
-             *     /assets/images/product-1.jpg?v=1787493435
-             * — và trình duyệt coi đó là hai tài nguyên khác nhau nên tải cả hai.
-             * Riêng trang chủ, 40 thẻ <img> phân giải thành 17 URL, trong đó 6
-             * cặp là cùng một file: khoảng 460KB tải thừa mỗi lượt vào trang.
-             *
-             * Bọc ở TẦNG VIEW chứ không sửa ProductModel::image(): model trả về
-             * dữ liệu, việc gắn chuỗi phá cache là chuyện của lúc in ra HTML.
-             *
-             * An toàn với ảnh ngoài miền: asset() kiểm is_file() trước, không
-             * thấy file thì trả nguyên đường dẫn, không gắn gì.
-             * ─────────────────────────────────────────────────────────────────
-             */
-            ?>
+           aria-hidden + tabindex="-1" vì đây là liên kết TRÙNG ĐÍCH với tên
+           sản phẩm ngay bên dưới. Ảnh mang alt="" (tên đã có ở tiêu đề, đọc
+           lại là đọc hai lần) nên nếu để trình đọc màn hình thấy, nó chỉ đọc
+           được một "liên kết" trơ trọi không tên; còn để nhận tiêu điểm thì
+           người dùng bàn phím phải Tab qua bốn liên kết một thẻ thay vì ba.
+           Huy hiệu nằm NGOÀI liên kết nên vẫn đọc được. */
+        ?>
+        <a class="oa-slot oa-slot--contain" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1"
+           style="position:absolute;inset:0">
             <?php if (ProductModel::hasImage($product)): ?>
                 <img src="<?= e(asset(ProductModel::image($product))) ?>" alt=""
-                     width="600" height="600"
+                     width="600" height="750"
                      <?= $eager ? '' : 'loading="lazy"' ?> decoding="async">
-
-                <?php
-                /*
-                 * ─────────────────────────────────────────────────────────────
-                 * ẢNH THỨ HAI — HIỆN KHI RÊ CHUỘT
-                 *
-                 * Nếp chuẩn của mọi trang bán kính và bán thời trang: ảnh nghỉ
-                 * là chiếc kính chụp trên nền sạch, rê chuột vào thì đổi sang
-                 * ảnh người đeo. Khách hình dung ngay dáng và cỡ kính lên mặt —
-                 * thứ mà một tấm ảnh gọng nằm không bao giờ nói được, và là rào
-                 * cản lớn nhất của việc mua kính trực tuyến.
-                 *
-                 * DÙNG DỮ LIỆU ĐÃ CÓ, KHÔNG THÊM CỘT NÀO: `images` vốn là mảng
-                 * nhiều ảnh (trang chi tiết đã dựng cả thư viện từ nó). Ở đây
-                 * chỉ lấy thêm phần tử [1]. Mặt hàng chỉ có một ảnh thì không in
-                 * gì cả và thẻ giữ nguyên hành vi cũ.
-                 *
-                 * KHÔNG MỘT DÒNG JAVASCRIPT: hai ảnh chồng lên nhau, CSS đổi
-                 * opacity khi :hover / :focus-within — xem .pcard__alt trong
-                 * components/product.css. Trên thiết bị chạm nó không bao giờ
-                 * hiện, nên cũng không tốn gì.
-                 *
-                 * LUÔN `loading="lazy"`, kể cả khi $eager: ảnh này không bao giờ
-                 * nằm trong màn hình đầu tiên ở trạng thái nghỉ, nên tải sớm nó
-                 * là lấy băng thông của đúng tấm ảnh khách đang chờ.
-                 * ─────────────────────────────────────────────────────────────
-                 */
-                $anhPhu = $product['images'][1] ?? '';
-
-                /*
-                 * LỌC ẢNH KHÔNG PHẢI ẢNH SẢN PHẨM — cùng luật với thư viện ở
-                 * product/detail.php.
-                 *
-                 * Trên dữ liệu đang chạy, ảnh thứ hai của hai mặt hàng là ảnh
-                 * nội thất cửa hàng (kèm biển hiệu một thương hiệu khác) và
-                 * ảnh bìa chiến dịch. Ở thư viện thì khách phải bấm mới thấy;
-                 * ở ĐÂY nó bung ra chỉ vì con trỏ đi ngang qua thẻ — tức là
-                 * còn dễ gặp hơn.
-                 *
-                 * Ảnh cửa hàng, ảnh nội thất và ảnh bìa không bao giờ là ảnh
-                 * sản phẩm, dù gắn cho mặt hàng nào. Loại theo VAI TRÒ, không
-                 * đoán "có đúng mặt hàng không".
-                 *
-                 * Không còn ảnh thứ hai hợp lệ thì thẻ đơn giản không có hiệu
-                 * ứng đổi ảnh — đúng hành vi của mặt hàng chỉ có một ảnh.
-                 */
-                foreach (['showroom-', 'store-interior', 'hero-'] as $dauHieu) {
-                    if (str_starts_with(basename((string) $anhPhu), $dauHieu)) {
-                        $anhPhu = '';
-                        break;
-                    }
-                }
-                ?>
-                <?php if ($anhPhu !== ''): ?>
-                    <img class="pcard__alt" src="<?= e(asset($anhPhu)) ?>" alt=""
-                         width="600" height="600"
-                         loading="lazy" decoding="async">
-                <?php endif; ?>
             <?php else: ?>
                 <?php /* Ô trống thật thà, không mượn ảnh của mặt hàng khác —
                          xem chú thích ở ProductModel::hasImage(). */ ?>
-                <span class="pcard__noimg"><?= e(t('product.no_image')) ?></span>
+                <span class="oa-slot__ph"><?= e(t('product.no_image')) ?></span>
             <?php endif; ?>
         </a>
 
-        <?php if ($badge !== null): ?>
-            <span class="pcard__badge pcard__badge--<?= e($tone) ?>"><?= e($badge) ?></span>
-        <?php endif; ?>
+        <?php
+        /* ┌─ HUY HIỆU ────────────────────────────────────────────────────
+           │ Mẫu cho phép tối đa hai huy hiệu cạnh nhau: đen "MỚI" rồi đỏ
+           │ "-30%". Hết hàng thì nuốt cả hai — lúc đó điều duy nhất đáng
+           │ nói về mặt hàng này là nó không mua được.
+           └──────────────────────────────────────────────────────────────── */
+        ?>
+        <div class="oa-badges">
+            <?php if (!$inStock): ?>
+                <span class="oa-badge"><?= e(t('product.out_of_stock')) ?></span>
+            <?php else: ?>
+                <?php if ($badgeTone === 'new' || !empty($product['is_featured'])): ?>
+                    <span class="oa-badge"><?= e($badgeTone === 'new' ? t('product.badge_new') : t('product.badge_hot')) ?></span>
+                <?php endif; ?>
+                <?php if ($percent !== null && $showCompare): ?>
+                    <span class="oa-badge oa-badge--sale">-<?= (int) $percent ?>%</span>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
-    <div class="pcard__body">
-        <p class="pcard__brand"><?= e($product['brand'] ?? 'Vin Eyewear') ?></p>
+    <div class="oa-card__body">
+        <div class="oa-card__info">
 
-        <?php
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * TÊN SẢN PHẨM KHÔNG ĐƯỢC DỊCH — quy ước của cả site, ghi ở đây vì đây
-         * là chỗ in tên sản phẩm được dùng lại nhiều nhất (trang chủ, danh mục,
-         * tìm kiếm, bộ sưu tập đều nạp file này).
-         *
-         * Grep 'notranslate' trong app/views/ ra đủ 14 chỗ. Thêm một view in
-         * tên sản phẩm mới thì thêm cả hai thuộc tính dưới đây vào.
-         *
-         * VÌ SAO: "Vin T01 Titan" dịch sang tiếng Anh không ra thứ gì tốt hơn,
-         * mà lại ra thứ khách đọc xong không tìm thấy trên hoá đơn, trong tin
-         * nhắn của cửa hàng, hay khi gọi điện hỏi. Tên riêng để nguyên là đúng
-         * ở mọi ngôn ngữ.
-         *
-         * HAI CÁCH ĐÁNH DẤU VÌ HAI BÊN ĐỌC KHÁC NHAU, không phải viết thừa:
-         *   translate="no"        thuộc tính chuẩn HTML — trình dịch cài sẵn
-         *                         trong Chrome/Safari đọc cái này, và đó là
-         *                         thứ ĐANG có tác dụng thật ngay lúc này
-         *   class="notranslate"   quy ước của các công cụ dịch bên ngoài. Chưa
-         *                         ai dùng tới, giữ vì nó là tên lớp mà mọi thứ
-         *                         từ Google Translate trở đi đều hiểu.
-         *
-         * TÊN TRÒNG KÍNH THÌ NGƯỢC LẠI — CỐ Ý ĐỂ DỊCH. "Tròng trắng 1.50",
-         * "Chống sáng xanh 1.61" là câu mô tả chứ không phải tên riêng; người
-         * đọc bằng ngôn ngữ khác cần hiểu mới chọn đúng được.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        ?>
-        <?php
-        /*
-         * ─────────────────────────────────────────────────────────────────────
-         * lang="vi" — BA THUỘC TÍNH, BA NGƯỜI ĐỌC KHÁC NHAU
-         *
-         *   translate="no"       trình dịch cài sẵn của trình duyệt
-         *   class="notranslate"  công cụ dịch bên ngoài
-         *   lang="vi"            TRÌNH ĐỌC MÀN HÌNH  ← thêm ở đợt này
-         *
-         * Khung trang in ra `<html lang="en">` (mặc định English-first), nhưng
-         * tên sản phẩm trong CSDL chỉ có một ngôn ngữ là tiếng Việt. Thiếu dòng
-         * này thì trình đọc màn hình phát âm "Gọng titan siêu nhẹ" bằng bộ quy
-         * tắc tiếng Anh — ra một chuỗi âm không ai hiểu.
-         *
-         * Khai VÔ ĐIỀU KIỆN chứ không kèm `if (currentLang() !== 'vi')`: nội
-         * dung này là tiếng Việt ở CẢ HAI bản, nên nhãn ngôn ngữ đúng ở cả hai.
-         * Khi trang đang là lang="vi" thì dòng này chỉ thừa, không sai.
-         *
-         * Đây chính là khoản nợ mà khối chú thích ở _layout/master.php đã ghi.
-         * ─────────────────────────────────────────────────────────────────────
-         */
-        ?>
-        <h3 class="pcard__name notranslate" translate="no" lang="vi">
-            <a href="<?= e($url) ?>"><?= e($product['name']) ?></a>
-        </h3>
+            <span class="oa-card__kicker"><?= e($product['brand'] ?? 'Vin Eyewear') ?></span>
 
-        <p class="pcard__prices">
-            <span class="sr-only"><?= e(t('product.price_label')) ?> </span>
-            <span class="pcard__price"><?= money($price) ?></span>
+            <?php
+            /* notranslate / translate="no" / lang="vi" — tên sản phẩm là danh
+               từ riêng và phải giữ nguyên trên cả bản tiếng Anh của giao diện.
+               CSDL chỉ có một ngôn ngữ; xem khối chú thích ở đầu master.php. */
+            ?>
+            <a class="oa-card__name notranslate" translate="no" lang="vi" href="<?= e($url) ?>"><?= e($product['name']) ?></a>
 
-            <?php /* Giá gốc đứng SAU trong DOM (trình đọc màn hình nghe giá thật
-                     trước) nhưng hiện ra TRƯỚC, đúng thứ tự của thẻ Furnish —
-                     xem `.pcard__was { order: -1 }` trong components/product.css. */ ?>
             <?php if ($showCompare && $compare !== null && $compare > $price): ?>
-                <span class="pcard__was">
-                    <span class="sr-only"><?= e(t('product.was_label')) ?> </span><?= money($compare) ?>
+                <span class="oa-card__pricesale">
+                    <span class="sr-only"><?= e(t('product.was_label')) ?> </span>
+                    <s><?= money($compare) ?></s>
+                    <span class="sr-only"><?= e(t('product.price_label')) ?> </span>
+                    <b><?= money($price) ?></b>
+                </span>
+            <?php else: ?>
+                <span class="oa-card__price">
+                    <span class="sr-only"><?= e(t('product.price_label')) ?> </span><?= money($price) ?>
                 </span>
             <?php endif; ?>
-        </p>
+
+            <?php if (!$inStock): ?>
+                <span class="oa-card__status"><?= e(t('product.out_of_stock')) ?></span>
+            <?php endif; ?>
+
+            <?php if ($swatches !== []): ?>
+                <div class="oa-swatches">
+                    <?php foreach (array_slice($swatches, 0, 5) as $k => $v): ?>
+                        <a class="oa-swatch<?= $k === 0 ? ' is-active' : '' ?>"
+                           href="<?= e($url) ?>?bien-the=<?= e(rawurlencode((string) $v['id'])) ?>"
+                           title="<?= e($v['color'] ?? $v['label']) ?>"
+                           style="background:<?= e($v['swatch_hex']) ?>">
+                            <span class="sr-only"><?= e($v['color'] ?? $v['label']) ?></span>
+                        </a>
+                    <?php endforeach; ?>
+                    <span class="oa-swatch__label"><?= e($swatches[0]['color'] ?? $swatches[0]['label']) ?></span>
+                </div>
+            <?php endif; ?>
+
+        </div>
+
+        <?php /* Dấu trang — trang trí thuần, chưa có chức năng yêu thích. Mang
+                 aria-hidden vì nó không phải nút: vẽ một icon mà trình đọc màn
+                 hình gọi là "hình ảnh" rồi không làm gì thì thà đừng đọc. */ ?>
+        <svg class="oa-card__flag" width="12" height="14" viewBox="0 0 12 14" fill="none"
+             stroke="currentColor" stroke-width="1.2" aria-hidden="true" focusable="false">
+            <path d="M1 1h10v12L6 9.5 1 13V1z"/>
+        </svg>
     </div>
 
-    <div class="pcard__actions">
+    <div class="oa-card__actions">
         <?php if (!$inStock): ?>
-            <span class="pcard__btn pcard__btn--solid is-off" aria-disabled="true">
+
+            <span class="oa-btn oa-btn--card oa-btn--solid" aria-disabled="true">
                 <?= e(t('product.out_of_stock')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
             </span>
 
         <?php elseif (!$canBuyNow): ?>
-            <?php /* MẶT HÀNG CÓ PHƯƠNG ÁN (chiết suất tròng, màu gọng…) thì
-                     KHÔNG mua được từ thẻ này: thẻ không có chỗ nào để chọn,
-                     và CartController::add() từ chối một mặt hàng có phương án
-                     mà không kèm phương án nào.
 
-                     Trước đây chỗ này vẫn vẽ nút "Mua ngay". Bấm vào là bị đá
-                     sang trang chi tiết kèm một dòng báo lỗi — trông y như
-                     trang bị hỏng. Nhãn nay nói đúng việc sẽ xảy ra. */ ?>
-            <a class="pcard__btn pcard__btn--solid" href="<?= e($url) ?>">
+            <?php
+            /* MẶT HÀNG CÓ PHƯƠNG ÁN (chiết suất tròng, màu gọng…) KHÔNG mua được
+               từ thẻ này: thẻ không có chỗ nào để chọn, và CartController::add()
+               từ chối một mặt hàng có phương án mà không kèm phương án nào.
+
+               Trước đây chỗ này vẫn vẽ nút "Mua ngay". Bấm vào là bị đá sang
+               trang chi tiết kèm một dòng báo lỗi — trông y như trang bị hỏng.
+               Nhãn nay nói đúng việc sẽ xảy ra. */
+            ?>
+            <a class="oa-btn oa-btn--card oa-btn--solid" href="<?= e($url) ?>">
                 <?= e(t('product.choose_option')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
+            </a>
+            <a class="oa-btn oa-btn--card" href="<?= e($url) ?>">
+                <?= e(t('product.details')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
             </a>
 
         <?php else: ?>
-            <form action="/gio-hang/them" method="post">
+
+            <form action="/gio-hang/them" method="post" style="display:contents">
                 <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                 <input type="hidden" name="product_id" value="<?= e($product['id']) ?>">
                 <?php /* Nơi quay về sau khi chọn hình thức mua. Gọng và kính mát
@@ -310,37 +226,23 @@ if (!$inStock) {
                          mua" ngay trên trang này, và hộp thoại cần biết "trang
                          này" là trang nào. Xem CartController::add(). */ ?>
                 <input type="hidden" name="back" value="<?= e(currentUrlWithout(['mua', 'buoc'])) ?>">
+
                 <?php /* HAI NÚT, MỘT FORM. Trình duyệt chỉ gửi name/value của
                          ĐÚNG nút được bấm, nên không cần hai form:
-
-                           "Mua ngay"     -> action=buy  -> CartController::add()
-                                             đưa khách tiếp tới /thanh-toan
-                           "Thêm vào giỏ" -> không gửi `action` nào -> add() hiểu
-                                             là 'add' và dừng ở giỏ hàng
-
-                         Nút thứ hai cố ý KHÔNG mang name/value, đúng cách trang
-                         chi tiết đang làm (.pdbtn--buy / .pdbtn--add trong
-                         product/detail.php) — hai chỗ cùng một quy ước thì đọc
-                         add() một lần là hiểu cả hai. */ ?>
-                <button type="submit" name="action" value="buy" class="pcard__btn pcard__btn--solid">
+                           "Mua ngay"     -> action=buy -> add() đưa tiếp tới
+                                             /thanh-toan
+                           "Thêm vào giỏ" -> không gửi `action` -> add() hiểu là
+                                             'add' và dừng ở giỏ hàng
+                         Nút thứ hai cố ý KHÔNG mang name/value, đúng quy ước mà
+                         trang chi tiết cũng dùng. */ ?>
+                <button type="submit" name="action" value="buy" class="oa-btn oa-btn--card oa-btn--solid">
                     <?= e(t('product.buy_now')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
                 </button>
-
-                <button type="submit" class="pcard__btn pcard__btn--ghost">
+                <button type="submit" class="oa-btn oa-btn--card">
                     <?= e(t('product.add_to_cart')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
                 </button>
             </form>
-        <?php endif; ?>
 
-        <?php /* "Chi tiết" CHỈ còn cho mặt hàng không mua thẳng được từ thẻ (hết
-                 hàng, hoặc phải chọn phương án): ô bên trái của chúng không phải
-                 nút mua, nên chân thẻ cần một đường đi thật. Mặt hàng mua thẳng
-                 được thì hai ô đã là hai nút mua, và đường sang trang chi tiết
-                 nằm ở tên sản phẩm cùng ô ảnh phía trên. */ ?>
-        <?php if (!$canBuyNow): ?>
-            <a class="pcard__btn pcard__btn--ghost" href="<?= e($url) ?>">
-                <?= e(t('product.details')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
-            </a>
         <?php endif; ?>
     </div>
 </li>

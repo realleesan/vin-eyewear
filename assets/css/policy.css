@@ -1,524 +1,415 @@
-/* ============================================================
-   policy.css — Trang Chính sách & Hỗ trợ (/chinh-sach)
+/* ============================================================================
+   policy.css — CHÍNH SÁCH & CÂU HỎI THƯỜNG GẶP (/chinh-sach)
 
-   Dựng theo "Chinh Sach & Ho Tro v2.dc.html" (Claude Design):
+   ═════════════════════════════════════════════════════════════════════════
+   MẪU VẼ TRANG NÀY dưới tên "Customer Service", và nó là artboard chi tiết
+   thứ hai sau trang danh mục:
 
-     đầu trang nền hồng phấn (components/page-head.css, dùng chung)
-     → lưới 4 thẻ cam kết
-     → mục lục dính theo cuộn 256px | cột nội dung
-     → khối "Liên hệ hỗ trợ" khép lại cuối cột nội dung
+     ┌──────────────────────────────────────┬──────────────────┐
+     │ CÂU HỎI THƯỜNG GẶP                   │ Cần hỗ trợ?      │
+     │  ┌────────────────────────────────┐  │ một đoạn ngắn    │
+     │  │ TÀI KHOẢN                   ›  │  │ [Chọn chủ đề ⌵]  │
+     │  └────────────────────────────────┘  │                  │
+     │  ┌────────────────────────────────┐  │                  │
+     │  │ SẢN PHẨM                    ›  │  │                  │
+     │  └────────────────────────────────┘  │                  │
+     │  …                                   │                  │
+     │ flex 1 1 480, tối đa 650px            │ flex 0 1 330px   │
+     └──────────────────────────────────────┴──────────────────┘
+                       nền cả trang #f3f3f5
 
-   Markup: app/views/policy/index.php · Hành vi: assets/js/policy.js
+   BA ĐIỂM LÀM NÊN HÌNH NÀY:
 
-   CỠ CHỮ ghi thẳng bằng px như category.css và contact.css: thang --fs-* là
-   clamp() nên lệch 1–5px so với từng con số của bản thiết kế, và bản này
-   dùng nhiều cỡ nửa pixel (13.5 · 14.5 · 15.5).
+     1. HAI TẦNG GẬP. Tầng ngoài là NHÓM (nền trắng bo 6, chữ 9px IN HOA,
+        mũi tên › xoay). Tầng trong là từng CÂU HỎI (không nền, kẻ ngang
+        mảnh #f0f0f0, dấu + / −).
 
-   ĐỘ BO GÓC thì KHÔNG lấy theo bản thiết kế. Bản thiết kế vẽ mọi khối góc
-   vuông tuyệt đối; trang này đi sau trang chủ nên phải cùng dáng với nó —
-   --radius (6px) cho thẻ/panel, --radius-sm (4px) cho ô nhập và mục lục.
-   Xem khối "ĐỘ BO GÓC" đầu assets/css/layout.css.
+     2. CÂU HỎI ĐANG MỞ TO LÊN 13px. Không chỉ xoay mũi tên — cả cỡ chữ
+        lẫn đệm dọc đều đổi. Đó là thứ làm mục đang mở nổi hẳn khỏi danh
+        sách, và nó đã nằm sẵn trong .oa-qa[open] của oa.css.
 
-   Bản thiết kế là khung cứng 1160px. Site này chạy từ điện thoại lên nên có
-   thêm hai mốc gãy: 1100px hai cột thành một (mục lục nằm ngang, cuộn
-   ngang), 720px thu lề lại.
-   ============================================================ */
+     3. KHOẢNG THỞ 120px giữa các chương lớn. Trang này dài và toàn chữ;
+        khe nhỏ hơn là nó đọc ra như một bảng điều khoản.
+   ═════════════════════════════════════════════════════════════════════════ */
 
 .policy {
-    /* Nhãn chữ nhỏ IN HOA của bản thiết kế là XÁM ẤM, không phải --eyebrow
-       hồng của trang chủ — ở đây chúng đứng cạnh chữ đỏ của mục lục đang
-       chọn, để hồng nữa thì hai sắc đỏ đá nhau. 4.5:1 trên nền pearl. */
-    --p-label: var(--muted);
-
-    /* Hai sắc chữ của cặp hỏi–đáp: câu hỏi đậm hơn thân bài một nấc, câu
-       trả lời nhạt hơn --ink nhưng vẫn đậm hơn --muted (đây là chữ đọc dài,
-       không phải chữ phụ). */
-    --p-q: var(--ink);
-    --p-a: var(--muted);
-
-    /* Thanh dọc bên trái mục lục + đường kẻ trên đầu mỗi danh sách hỏi–đáp */
-    --p-rail: var(--line);
-
-    /* Nền mục lục đang chọn và nền khối "không tìm thấy" — sáng hơn
-       --surface-sunken, chỉ đủ để tách khỏi nền trang */
-    --p-tint: var(--surface-sunken);
+    background: var(--bg-panel);
+    padding: 48px var(--edge) 96px;
 }
 
+/* ┌─ BA TẦNG LỒNG NHAU — ĐỌC KỸ, ĐÂY LÀ CHỖ DỄ DỰNG SAI NHẤT ─────────────
+   │
+   │   .policy__inner            cột dọc: thẻ nổi bật, rồi thân trang
+   │     ul.policy-highlights      lưới thẻ, TRÀN HẾT BỀ NGANG
+   │     .policy-body              HAI CỘT — đây mới là thẻ chia cột
+   │       aside.policy-side         đứng TRƯỚC trong DOM
+   │       .policy-content           đứng SAU trong DOM
+   │
+   │ Hai bẫy ở đây:
+   │
+   │   1. .policy-body KHÔNG phải một cột — nó là THẺ BỌC của hai cột. Cho
+   │      nó `flex: 1 1 480px` là biến cả thân trang thành một cột hẹp nằm
+   │      cạnh lưới thẻ nổi bật.
+   │
+   │   2. DOM để cột phụ TRƯỚC cột chính, nhưng mẫu vẽ ngược lại: câu hỏi
+   │      thường gặp bên trái, liên hệ bên phải. Đảo bằng `order`, KHÔNG
+   │      đảo trong markup — thứ tự DOM hiện tại là thứ tự đọc ĐÚNG cho
+   │      trình đọc màn hình: mục lục trước, rồi mới tới nội dung dài.
+   └──────────────────────────────────────────────────────────────────────── */
 .policy__inner {
-    max-width: var(--container, 1600px);
-    margin-inline: auto;
-    padding: var(--section-pad) var(--page-edge);
-}
-
-/* ============================================================
-   4 CAM KẾT NỔI BẬT
-   ============================================================ */
-
-.policy-highlights {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
-    list-style: none;
-}
-
-.policy-card {
-    padding: 22px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    box-shadow: none;
-    transition:
-        box-shadow var(--dur) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-        border-color var(--dur) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-        transform var(--dur) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
-}
-
-.policy-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--brand);
-    box-shadow: none;
-}
-
-.policy-card__ico {
-    display: grid;
-    place-items: center;
-    width: 38px;
-    height: 38px;
-    border-radius: var(--radius-sm);
-    background: var(--h-blush);
-    color: var(--brand);
-    transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
-}
-
-.policy-card:hover .policy-card__ico {
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-.policy-card__title {
-    margin-top: 14px;
-    font-family: var(--font-sans);
-    font-size: var(--fs-body-lg);
-    font-weight: 500;
-    line-height: 1.4;
-    color: var(--ink);
-}
-
-.policy-card__desc {
-    margin-top: 7px;
-    font-size: var(--fs-body-sm);
-    line-height: 1.6;
-    color: var(--muted);
-}
-
-/* ============================================================
-   BỐ CỤC HAI CỘT
-   ============================================================ */
-
-.policy-body {
-    display: grid;
-    gap: 32px;
-    margin-top: 44px;
-}
-
-@media (min-width: 1101px) {
-    .policy-body {
-        grid-template-columns: 256px minmax(0, 1fr);
-        gap: 48px;
-        align-items: start;
-    }
-}
-
-/* --- Cột trái ------------------------------------------------ */
-
-.policy-side {
     display: flex;
     flex-direction: column;
-    gap: 22px;
-    min-width: 0;
+    gap: 64px;
 }
 
-@media (min-width: 1101px) {
-    .policy-side {
-        position: sticky;
-        /* Chừa chỗ cho header dính trên cùng, nếu không mục đầu bị che.
-           Cùng con số với scroll-padding-top của html trong layout.css. */
-        top: 160px;
-    }
-}
-
-.policy-toc__label {
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--p-label);
-}
-
-.policy-toc__list {
+.policy-body {
     display: flex;
-    gap: 6px;
-    margin-top: 11px;
-    /* Dưới 1101px: cuộn ngang thay vì xếp dọc thành một khối cao chắn hết
-       màn hình trước khi tới nội dung. */
-    overflow-x: auto;
-    padding-bottom: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 48px 64px;
+    align-items: flex-start;
 }
 
-@media (min-width: 1101px) {
-    .policy-toc__list {
-        flex-direction: column;
-        overflow: visible;
-        padding-bottom: 0;
-    }
+.policy-content {
+    order: 1;
+    flex: 1 1 480px;
+    max-width: 650px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    /* Khe NHỎ ở đây, rồi nới riêng giữa các chương bằng margin bên dưới.
+       Khe 120px đặt thẳng lên `gap` thì ô tìm ở đầu cột cũng cách chương
+       đầu tiên 120px, và trang mở ra là một mảng trống. */
+    gap: 24px;
 }
 
-/*
- * Mục lục: thanh nhấn 2px bên trái, KHÔNG viền quanh — đây là mục lục chứ
- * không phải hàng nút bấm, viền tứ phía sẽ đọc thành 6 cái nút.
- * Bo góc chỉ ở ba cạnh phải để thanh nhấn vẫn là một vạch thẳng đứng.
- */
-.policy-toc__item {
-    flex-shrink: 0;
-    padding: 10px 14px;
-    border: none;
-    border-left: 2px solid var(--p-rail);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background: transparent;
-    font-size: var(--fs-body);
-    font-weight: 400;
-    text-align: left;
-    text-decoration: none;
-    white-space: nowrap;
-    color: var(--p-a);
-    /* ĐÍCH DANH BA THUỘC TÍNH, KHÔNG PHẢI `all`.
-       `.is-active` đổi cả font-weight 400 → 500, và policy.js lật lớp ấy theo
-       từng cú cuộn (scroll spy). Dưới `all`, mỗi lần lật là 220ms trình duyệt
-       tính lại bố cục liên tục cho một cột dính — mà chữ thì không nội suy
-       được: Be Vietnam Pro nạp weight rời (400/500/600/700), không phải font
-       biến, nên nét vẫn nhảy một phát ở giữa quãng. Trả tiền bố cục để mua
-       một thứ không nhìn thấy.
-       Ba dòng dưới đều chạy trên tầng vẽ, không đụng bố cục. */
-    transition:
-        background-color var(--dur) var(--ease-out-soft),
-        color var(--dur) var(--ease-out-soft),
-        border-left-color var(--dur) var(--ease-out-soft);
+/* 120px giữa hai CHƯƠNG — khoảng thở của mẫu cho một trang dài toàn chữ.
+   Dùng `+` nên chương đầu tiên không bị đẩy xuống. */
+.policy-group + .policy-group {
+    margin-top: 96px;
 }
 
-@media (min-width: 1101px) {
-    .policy-toc__item {
-        flex-shrink: 1;
-        white-space: normal;
-    }
+.policy-side {
+    order: 2;
+    flex: 0 1 330px;
+    min-width: 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
 }
 
-.policy-toc__item:hover,
-.policy-toc__item:focus-visible {
-    background: var(--p-tint);
-    color: var(--brand);
-}
+/* ══════════════════════════════════════════════════════════════════════
+   Ô TÌM TRONG TRANG
+   ══════════════════════════════════════════════════════════════════════ */
 
-.policy-toc__item.is-active {
-    border-left-color: var(--brand);
-    background: var(--p-tint);
-    font-weight: 500;
-    color: var(--brand);
-}
-
-/* --- Khối hotline nền đỏ ------------------------------------- */
-
-.policy-hot {
-    padding: 22px;
-    border-radius: var(--radius);
-    background: var(--brand);
-}
-
-.policy-hot__title {
-    font-family: var(--font-serif);
-    font-size: var(--fs-h5);
-    font-weight: 500;
-    line-height: 1.3;
-    color: var(--on-brand);
-}
-
-.policy-hot__desc {
-    margin-top: 7px;
-    font-size: var(--fs-body-sm);
-    line-height: 1.6;
-    color: var(--on-brand-muted);
-}
-
-.policy-hot__phone {
-    display: block;
-    margin-top: 14px;
-    font-size: var(--fs-body-lg);
-    font-weight: 500;
-    text-decoration: none;
-    color: var(--on-brand);
-}
-
-.policy-hot__phone:hover,
-.policy-hot__phone:focus-visible { text-decoration: underline; }
-
-.policy-hot__mail {
-    margin-top: 4px;
-    font-size: var(--fs-body-sm);
-    color: var(--on-brand-muted);
-}
-
-/* ============================================================
-   CỘT NỘI DUNG
-   ============================================================ */
-
-.policy-content { min-width: 0; }
-
-/* --- Ô tìm nhanh --------------------------------------------
-   Icon nằm TRONG luồng flex chứ không phải position:absolute như bản trước:
-   bản thiết kế vẽ viền bọc cả icon lẫn ô nhập thành một hàng, nên khung viền
-   thuộc về .policy-search còn <input> bên trong không có viền riêng. */
+/* Ô tìm đứng ĐẦU cột nội dung, chiếm trọn bề ngang cột. */
 .policy-search {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 0 16px;
-    /* Viền ô nhập -> --line-strong (3.06:1), không dùng --line trang trí:
-       bản thiết kế để var(--line-strong) (1.9:1), dưới ngưỡng WCAG 1.4.11 cho thành
-       phần giao diện thao tác được. */
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-}
-
-.policy-search:focus-within {
-    border-color: var(--brand);
-    box-shadow: none;
-}
-
-.policy-search[hidden] { display: none; }
-
-.policy-search__ico {
-    flex-shrink: 0;
-    color: var(--p-label);
+    gap: 8px;
 }
 
 .policy-search__input {
     flex: 1;
     min-width: 0;
-    padding: 13px 0;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-family: var(--font-sans);
-    font-size: var(--fs-body);
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--r-field);
+    background: var(--bg);
     color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    outline: none;
 }
 
-.policy-search__input::placeholder { color: var(--p-label); }
-
-/* Chrome vẽ thêm nút "x" của input[type=search] — bỏ đi, Esc đã làm việc đó */
-.policy-search__input::-webkit-search-cancel-button { display: none; }
-
-.policy-result {
-    padding: 6px 2px 0;
-    font-size: var(--fs-body-sm);
-    color: var(--muted);
+.policy-search__input:focus {
+    box-shadow: inset 0 0 0 1px var(--ink);
 }
 
-.policy-result[hidden] { display: none; }
+.policy-result,
+.policy-empty {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
 
-/* --- Một nhóm chính sách ------------------------------------- */
+/* ══════════════════════════════════════════════════════════════════════
+   MỤC LỤC
+
+   Danh sách chữ trần, không phải một hàng chip: nó nằm dưới ô tìm và trên
+   một trang đã có rất nhiều hộp bo 6.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.policy-toc {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.policy-toc__label {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.policy-toc__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    list-style: none;
+}
+
+.policy-toc__item {
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+}
+
+.policy-toc__item:hover,
+.policy-toc__item.is-on {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MỘT CHƯƠNG
+   ══════════════════════════════════════════════════════════════════════ */
 
 .policy-group {
-    padding-top: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scroll-margin-top: calc(var(--hdr-h) + 16px);
 }
 
-.policy-group[hidden] { display: none; }
-
+/* h2 của chương — 12px weight 400, KHÔNG in hoa. Đây là ngoại lệ có chủ
+   đích của mẫu: trang này có rất nhiều chữ IN HOA rồi (mỗi nhóm gập là
+   một dòng IN HOA), thêm bốn tiêu đề IN HOA nữa là không còn tầng bậc. */
 .policy-group__title {
-    font-family: var(--font-serif);
-    font-size: var(--fs-h3);
-    font-weight: 500;
-    line-height: 1.2;
-    color: var(--ink);
+    font-size: var(--fs-sub);
+    font-weight: 400;
 }
 
 .policy-group__intro {
-    margin-top: 8px;
-    max-width: 640px;
-    font-size: var(--fs-body);
-    line-height: 1.6;
-    color: var(--muted);
-}
-
-/* Danh sách hỏi–đáp: không gấp lại, không viền quanh — chỉ là những dòng kẻ
-   ngang chia đôi từng cặp câu hỏi/câu trả lời. */
-.policy-qa {
-    margin-top: 14px;
-    border-top: 1px solid var(--p-rail);
-}
-
-.policy-qa__item {
-    padding: 18px 2px;
-    border-bottom: 1px solid var(--line);
-}
-
-.policy-qa__item[hidden] { display: none; }
-
-.policy-qa__q {
-    font-size: var(--fs-body-lg);
-    font-weight: 500;
-    line-height: 1.5;
-    color: var(--p-q);
-}
-
-.policy-qa__a {
-    margin-top: 7px;
-    max-width: 640px;
-    font-size: var(--fs-body);
-    line-height: 1.7;
-    color: var(--p-a);
+    color: var(--ink-2);
     text-wrap: pretty;
 }
 
-/* --- Không tìm thấy kết quả ---------------------------------- */
-
-.policy-empty {
-    display: grid;
-    gap: 6px;
-    margin-top: 32px;
-    padding: 36px;
-    border: 1px dashed var(--line-strong);
-    border-radius: var(--radius);
-    background: var(--p-tint);
-    text-align: center;
+/* ┌─ TẦNG NGOÀI: NHÓM GẬP ────────────────────────────────────────────── */
+.policy-qa {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
 }
 
-.policy-empty[hidden] { display: none; }
+.policy-qa__item {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--r-field);
+    background: var(--bg);
+}
 
-.policy-empty strong {
-    font-family: var(--font-serif);
-    font-size: var(--fs-h5);
-    font-weight: 500;
+.policy-qa__q {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: var(--lh-tight);
+    cursor: pointer;
+    list-style: none;
+}
+
+.policy-qa__q::-webkit-details-marker {
+    display: none;
+}
+
+.policy-qa__q:hover {
+    background: #fafafa;
     color: var(--ink);
 }
 
-.policy-empty span {
-    font-size: var(--fs-body);
-    color: var(--muted);
+/* Dấu + / − tự sinh — markup không cần in ra ký tự nào */
+.policy-qa__q::after {
+    content: "+";
+    flex: none;
+    font-size: 14px;
+    line-height: 1;
 }
 
-/* ============================================================
-   LIÊN HỆ HỖ TRỢ — mục cuối cột nội dung
-   ============================================================ */
+.policy-qa__item[open] > .policy-qa__q::after {
+    content: "−";
+}
 
-.policy-contact { padding-top: 44px; }
+/* CÂU HỎI ĐANG MỞ TO LÊN — xem điểm 2 ở khối chú thích đầu file */
+.policy-qa__item[open] > .policy-qa__q {
+    font-size: var(--fs-h);
+    letter-spacing: var(--ls-tight);
+    text-transform: none;
+    padding: 14px 14px 12px;
+}
+
+.policy-qa__a {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 14px 20px;
+    color: var(--ink-2);
+}
+
+.policy-qa__a p {
+    white-space: pre-line;
+    text-wrap: pretty;
+}
+
+.policy-qa__a a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.policy-qa__a ul,
+.policy-qa__a ol {
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THẺ NỔI BẬT  (bảo hành · đổi trả · giao hàng)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.policy-highlights {
+    display: grid;
+    /* Bốn thẻ trên một hàng ở màn rộng — cùng nhịp với lưới sản phẩm. */
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--gap-tight);
+    list-style: none;
+}
+
+.policy-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+}
+
+/* Icon bỏ hẳn: mẫu không có icon nào trong trang CSKH, và ba icon nhỏ trên
+   ba thẻ chữ là ba vết bẩn chứ không phải thông tin. */
+.policy-card__ico {
+    display: none;
+}
+
+.policy-card__title {
+    font-size: var(--fs-micro);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.policy-card__desc {
+    color: var(--ink-3);
+    line-height: var(--lh);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CỘT PHẢI — LIÊN HỆ
+   ══════════════════════════════════════════════════════════════════════ */
+
+.policy-contact,
+.policy-hot {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.policy-hot__title {
+    font-size: var(--fs-sub);
+    font-weight: 400;
+}
+
+.policy-hot__desc {
+    color: var(--ink-2);
+    text-wrap: pretty;
+}
+
+.policy-hot__phone,
+.policy-hot__mail {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
 
 .policy-channels {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 14px;
-    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    margin-top: 24px;
     list-style: none;
 }
 
 .policy-ch {
-    display: block;
-    height: 100%;
-    padding: 20px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    text-decoration: none;
-    transition:
-        border-color var(--dur) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-        box-shadow var(--dur) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line-input);
 }
 
-.policy-ch:hover,
-.policy-ch:focus-visible {
-    border-color: var(--brand);
-    box-shadow: none;
+.policy-ch:last-child {
+    border-bottom: 1px solid var(--line-input);
 }
 
 .policy-ch__label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: 0.1em;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    color: var(--p-label);
+    white-space: nowrap;
 }
 
 .policy-ch__value {
-    display: block;
-    font-size: var(--fs-h6);
-    font-weight: 500;
-    line-height: 1.4;
-    /* Địa chỉ Zalo/Messenger dài hơn bề ngang thẻ ở màn hẹp */
-    overflow-wrap: anywhere;
-    color: var(--brand);
+    text-align: right;
 }
 
 .policy-stores {
-    margin-top: 20px;
-    font-size: var(--fs-body);
-    line-height: 1.8;
-    list-style: none;
-    color: var(--p-a);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+    color: var(--ink-2);
+    font-size: var(--fs-micro);
+    line-height: var(--lh);
 }
 
-/* ============================================================
+/* ══════════════════════════════════════════════════════════════════════
    MÀN HẸP
-   ============================================================ */
+   ══════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 1100px) {
-    /* Mục lục nằm ngang: thanh nhấn chuyển xuống CẠNH DƯỚI, vì một vạch dọc
-       bên trái của hàng chip nằm ngang thì không còn đọc ra là "đang chọn". */
-    .policy-toc__item {
-        border-left: none;
-        border-bottom: 2px solid var(--p-rail);
-        border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+@media (max-width: 900px) {
+    /* Cột phải xuống dưới và chiếm trọn bề ngang. Nó KHÔNG lên trên: câu
+       hỏi thường gặp là thứ khách tới trang này để tìm, còn "liên hệ" là
+       lối thoát khi không tìm thấy. */
+    .policy-side {
+        flex-basis: 100%;
+        max-width: 650px;
     }
 
-    .policy-toc__item.is-active {
-        border-left-color: transparent;
-        border-bottom-color: var(--brand);
+    .policy-content,
+    .policy-body {
+        gap: 64px;
     }
-
-    .policy-group__title { font-size: var(--fs-h3); }
 }
 
-@media (max-width: 720px) {
-    .policy-card { padding: 18px; }
-
-    .policy-group { padding-top: 28px; }
-
-    .policy-empty { padding: 28px 20px; }
-}
-
-
-/* ============================================================================
-   NÉT CHỮ FURNISH — khối chốt cuối file
-
-   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
-   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
-   điểm khác rõ nhất giữa hai bản.
-
-   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
-   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
-   ============================================================================ */
-.policy-group__title, .policy-hot__title {
-    font-weight: 400;
-    letter-spacing: var(--tracking-tight);
-}
-
-.policy-card__title, .policy-qa__q {
-    font-weight: 400;
-}
-
-.policy-toc__label, .policy-ch__label {
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+@media (max-width: 560px) {
+    .policy {
+        padding: 28px var(--edge) 64px;
+    }
 }

@@ -30,7 +30,7 @@
 <p class="barepromo"><?= e(t('announce.shipping')) ?></p>
 
 <header class="barebar">
-    <a class="barebar__logo" href="/"><span class="header-logo__mark">Vin</span><span class="header-logo__sub">Eyewear</span></a>
+    <a class="barebar__logo oa-header__mark" href="/">Vin Eyewear</a>
 
     <span class="barebar__help barebar__help--pay">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4d7a3f"

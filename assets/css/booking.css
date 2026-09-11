@@ -1,559 +1,501 @@
-/* ============================================================
-   booking.css — Đặt lịch đo mắt (/dat-lich)
+/* ============================================================================
+   booking.css — ĐẶT LỊCH ĐO MẮT (/dat-lich)
 
-   Dựng theo "Vin Eyewear Booking.dc.html" (Claude Design). Đi kèm
-   app/views/booking/index.php, đăng ký trong bảng $pageStyles của
-   app/views/_layout/master.php.
+   Bốn bước trong một form: chọn cơ sở → chọn dịch vụ → chọn ngày & giờ →
+   điền thông tin. Bên phải là thẻ tóm tắt dính, giống trang thanh toán.
 
-   Quy ước chung của các trang dựng theo Claude Design (xem thêm đầu
-   category.css / account.css): cỡ chữ ghi thẳng bằng px vì thang
-   --fs-* là clamp nên lệch so với thiết kế; màu gọi qua token trong
-   layout.css; bản thiết kế cố định 1280px nên mọi @media ở cuối file là phần
-   THÊM, không phải phần bản thiết kế vẽ.
+   ═════════════════════════════════════════════════════════════════════════
+   MẪU KHÔNG VẼ TRANG NÀY. Nhưng nó đã vẽ một trang RẤT GẦN — trang thanh
+   toán không có trong mẫu thì cũng thế, và hai trang này là cùng một bài
+   toán: một form nhiều bước với tóm tắt dính bên cạnh.
 
-   ────────────────────────────────────────────────────────────
-   PHẦN "CHỌN LỰA BẰNG CSS" Ở CUỐI FILE
+   Nên booking.css mượn thẳng ngôn ngữ đã dựng ở checkout.css:
 
-   Trang này không có JavaScript. Cột tóm tắt đổi theo lựa chọn, và lưới giờ
-   đổi theo cơ sở/ngày, đều nhờ :has() cộng với các nút radio thật. Cách làm
-   và lý do ghi ở đầu app/views/booking/index.php — đọc chỗ đó trước khi sửa
-   khối luật ở cuối file này.
+     bkcard    = costep      khối một bước, số trong vòng tròn viền mảnh
+     bkstore   = cocard      ô chọn, ĐANG CHỌN thì viền đen không đổi nền
+     bkfield   = cofield     ô nhập cao 44 bo 6
+     bksum     = csum        thẻ tóm tắt nền #f3f3f5, dính top 72px
 
-   Các luật đó viết theo CHỈ SỐ (0, 1, 2…) chứ không theo giá trị, nên không
-   phụ thuộc vào danh sách khung giờ trong config hay ngày hôm nay. Đổi lại,
-   số luật là hữu hạn: 8 cơ sở · 8 dịch vụ · 7 ngày. Vượt quá thì thêm dòng,
-   KHÔNG có cách nào để CSS tự sinh thêm.
-   ============================================================ */
+   Hai thứ riêng của trang này, không có ở đâu khác:
+
+     .bkdays   dải NGÀY cuộn ngang — mỗi ngày một ô vuông, thứ ở trên, số
+               ở dưới. Đây là chỗ duy nhất trên site có một dải ô vuông
+               chọn được.
+     .bkpills  hàng GIỜ — chip cao 26 bo 13, đúng .oa-chip của mẫu.
+   ═════════════════════════════════════════════════════════════════════════ */
 
 .bk {
-    --bk-line:  var(--line);
-    --bk-soft:  var(--muted);
-    --bk-warm:  var(--ink);
-    --bk-ok:    #4d7a3f;
-    /* Ba sắc bản thiết kế dùng mà layout.css chưa có token: chữ trên viên
-       chưa chọn, chữ mờ nhất, và nền nút chính khi rê chuột. */
-    --bk-ink2:  var(--ink);
-    --bk-faint: var(--h-meta);
-    --bk-hi:    var(--accent-strong);
-
-    max-width: var(--container, 1600px);
-    margin: 0 auto;
-    padding: 48px var(--page-edge) 96px;
+    padding: 0 var(--edge) 96px;
 }
 
 .bk__grid {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 380px;
-    gap: 24px;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 48px;
     align-items: start;
+    padding-top: 8px;
 }
 
 .bk__steps {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 32px;
     min-width: 0;
 }
 
-/* Nút radio thật, ẩn khỏi mắt nhưng KHÔNG ẩn khỏi bàn phím.
-   display:none hay visibility:hidden sẽ loại nó khỏi thứ tự Tab và trình đọc
-   màn hình — mất luôn ngữ nghĩa "chọn một trong nhiều" mà cả trang dựa vào. */
-.bk__radio {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
+.bkalert {
+    padding: 12px 14px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+    border-left: 2px solid var(--sale);
+    line-height: var(--lh);
 }
 
-/* ============================================================
-   THẺ MỘT BƯỚC
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   MỘT BƯỚC
+   ══════════════════════════════════════════════════════════════════════ */
 
 .bkcard {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 32px 36px;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    box-shadow: none;
+    gap: 14px;
 }
 
 .bkcard__head {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-input);
 }
 
 .bkcard__num {
-    display: flex;
-    flex-shrink: 0;
+    flex: none;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-round);
-    background: var(--brand-subtle);
-    color: var(--brand);
-    font-family: var(--font-serif);
-    font-size: var(--fs-body-lg);
-    font-weight: 500;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    font-size: var(--fs-micro);
+    font-variant-numeric: tabular-nums;
 }
 
 .bkcard__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h4);
-    font-weight: 500;
-    color: var(--ink);
+    font-size: var(--fs-ui);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
-/* Câu giải thích dưới tiêu đề một thẻ. Kéo sát lên đầu thẻ (gap của .bkcard là
-   20px, quá thưa cho một dòng thuộc về tiêu đề ngay trên nó). */
 .bkcard__note {
-    margin: -12px 0 0;
-    /* Trần bề ngang: không có nó, dòng ghi chú kéo hết bề ngang cột — đo được
-       145 ký tự/dòng ở 1024 và 212 ở 1920, trong khi khoảng dễ đọc là 45–75.
-       Chữ càng nhỏ thì dòng dài càng khó bắt lại đầu dòng sau. */
-    max-width: 68ch;
-    font-size: var(--fs-body-sm);
-    line-height: 1.65;
-    color: var(--muted);
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
 }
 
-/* ============================================================
-   1 · CƠ SỞ
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   BƯỚC 1 — CƠ SỞ
+   ══════════════════════════════════════════════════════════════════════ */
 
 .bkstores {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
 }
 
 .bkstore {
     display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 18px 20px;
-    border: 1.5px solid var(--bk-line);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
     cursor: pointer;
-    transition: border-color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+    transition: border-color .18s ease;
 }
 
-.bkstore:hover { border-color: var(--brand); }
-
-.bkstore:has(:checked) {
-    border-color: var(--brand);
-    background: var(--surface-sunken);
+.bkstore:hover {
+    border-color: var(--ink-6);
 }
 
-.bkstore:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
-
-/* Ô tròn của bản thiết kế CHÍNH LÀ nút radio, chỉ bỏ hình mặc định đi rồi vẽ
-   lại — nhẹ hơn là ẩn radio rồi thêm một <span> giả làm chấm tròn. */
-.bkstore__dot {
+/* ┌─ RADIO THẬT, ĐƯỢC TẠO DÁNG — không ẩn đi rồi vẽ ô giả ────────────────
+   │ `.bkstore__dot` nằm THẲNG trên chính <input type=radio>: markup không
+   │ có thẻ span nào để vẽ ô tròn giả. `appearance:none` tắt hình mặc định
+   │ của trình duyệt, còn lại vẫn là một radio thật — bàn phím, trình đọc
+   │ màn hình và form đều không biết có gì đổi.
+   │
+   │ Khác cách làm ở checkout.css (ẩn input, vẽ span). Hai cách đều đúng;
+   │ cách nào dùng được là do markup có sẵn thẻ để vẽ hay không.
+   └──────────────────────────────────────────────────────────────────────── */
+.bkstore__dot,
+.bk__radio {
     appearance: none;
-    flex-shrink: 0;
-    width: 18px;
-    height: 18px;
-    margin: 0;
-    border: 1.5px solid var(--line-strong);
-    border-radius: var(--radius-round);
-    background: var(--surface-raised);
+    -webkit-appearance: none;
+    flex: none;
+    width: 12px;
+    height: 12px;
+    margin: 2px 0 0;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    background: var(--bg);
     cursor: pointer;
-    /* ┌─ VÀNH DÀY VẼ BẰNG box-shadow, KHÔNG BẰNG border-width ──────────────
-       │ Trước: `border` 1.5px → 5.5px, và `transition: border` kéo theo cả
-       │ border-width — thuộc tính BỐ CỤC. Mỗi lần chọn cơ sở là trình duyệt
-       │ tính lại bố cục suốt 180ms cho một chấm 18px.
-       │
-       │ Hình ra y hệt: hộp vẫn 18×18 (border-box), vành 1.5px viền cộng 4px
-       │ bóng trong = đúng 5.5px đặc màu --brand, chừa lõi 7px nền. Khác ở
-       │ chỗ border-color và box-shadow đều chỉ chạm tầng VẼ.
-       └──────────────────────────────────────────────────────────────────── */
-    box-shadow: inset 0 0 0 0 var(--brand);
-    transition:
-        border-color var(--dur-fast) var(--ease),
-        box-shadow var(--dur-fast) var(--ease);
+    position: relative;
 }
 
-.bkstore__dot:checked {
-    border-color: var(--brand);
-    box-shadow: inset 0 0 0 4px var(--brand);
+.bkstore__dot:checked::after,
+.bk__radio:checked::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    background: var(--ink);
+}
+
+.bkstore__dot:focus-visible,
+.bk__radio:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+
+.bkstore:has(.bkstore__dot:checked) {
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
 }
 
 .bkstore__text {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     min-width: 0;
 }
 
 .bkstore__name {
-    font-size: var(--fs-body);
-    font-weight: 500;
-    color: var(--ink);
+    font-size: var(--fs-ui);
 }
 
 .bkstore__addr {
-    font-size: var(--fs-caption);
-    color: var(--bk-soft);
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
 }
 
-/* ============================================================
-   VIÊN CHỌN (dịch vụ)
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   BƯỚC 2 & 3 — DỊCH VỤ, GIỜ
+
+   Chip cao 26 bo 13 — đúng .oa-chip của mẫu. Radio bên trong ẩn hẳn: ở
+   đây cái nhìn thấy được LÀ chính cái nhãn, không có ô tròn nào.
+   ══════════════════════════════════════════════════════════════════════ */
 
 .bkpills {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
 }
 
 .bkpill {
-    padding: 11px 22px;
-    border: 1.5px solid var(--bk-line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    color: var(--bk-ink2);
-    font-size: var(--fs-body-sm);
-    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-chip);
+    padding: 0 12px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--fs-ui);
     white-space: nowrap;
-    transition:
-        border-color var(--dur-fast) var(--ease),
-        background var(--dur-fast) var(--ease),
-        color var(--dur-fast) var(--ease);
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease;
 }
 
-.bkpill:hover { border-color: var(--brand); }
-
-.bkpill:has(:checked) {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-weight: 500;
+.bkpill:hover {
+    border-color: var(--ink-6);
 }
 
-.bkpill:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+.bkpill .bk__radio {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    border: 0;
+}
 
-/* ============================================================
-   3 · NGÀY
-   ============================================================ */
+.bkpill:has(.bk__radio:checked) {
+    background: var(--bg-chip-flat);
+    border-color: var(--bg-chip-flat);
+}
 
+.bkpill:has(.bk__radio:focus-visible) {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+
+/* Giờ đã kín chỗ — xám và không bấm được. Vẫn HIỆN chứ không giấu: giấu đi
+   thì hàng giờ nhảy chỗ mỗi lần đổi ngày, và khách không biết khung giờ ấy
+   có tồn tại hay không. */
+.bkpill:has(.bk__radio:disabled) {
+    color: var(--ink-6);
+    border-color: var(--line);
+    background: var(--bg-soft);
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+/* ┌─ DẢI NGÀY ────────────────────────────────────────────────────────── */
 .bkdays {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+}
+
+.bkdays::-webkit-scrollbar {
+    display: none;
 }
 
 .bkday {
-    padding: 10px 18px;
-    border: 1.5px solid var(--bk-line);
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    color: var(--bk-ink2);
+    flex: none;
     cursor: pointer;
-    transition:
-        border-color var(--dur-fast) var(--ease),
-        background var(--dur-fast) var(--ease),
-        color var(--dur-fast) var(--ease);
 }
 
-.bkday:hover { border-color: var(--brand); }
-
-.bkday:has(:checked) {
-    border-color: var(--brand);
-    background: var(--surface-sunken);
-    color: var(--brand);
+.bkday .bk__radio {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    border: 0;
 }
-
-.bkday:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
 
 .bkday__box {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 2px;
+    width: 52px;
+    height: 56px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.bkday:hover .bkday__box {
+    border-color: var(--ink-6);
+}
+
+/* Ngày ĐANG CHỌN đảo thành nền đen chữ trắng. Đây là ngoại lệ với luật
+   "đánh dấu lựa chọn bằng viền": một dải mười bốn ô vuông giống hệt nhau
+   thì một đường viền đen không đủ để mắt bắt được ô nào đang chọn. */
+.bkday:has(.bk__radio:checked) .bkday__box {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.bkday:has(.bk__radio:focus-visible) .bkday__box {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+
+.bkday:has(.bk__radio:disabled) .bkday__box {
+    background: var(--bg-soft);
+    border-color: var(--line);
+    color: var(--ink-6);
+    cursor: not-allowed;
 }
 
 .bkday__wd {
-    font-size: var(--fs-caption);
-    opacity: 0.75;
+    font-size: 8px;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
 .bkday__dm {
-    font-size: var(--fs-body-lg);
-    font-weight: 500;
+    font-size: var(--fs-ui);
+    font-variant-numeric: tabular-nums;
 }
 
-/* ============================================================
-   4 · THÔNG TIN
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   BƯỚC 4 — THÔNG TIN
+   ══════════════════════════════════════════════════════════════════════ */
 
 .bkfields {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px 16px;
 }
 
 .bkfield {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
     min-width: 0;
 }
 
+.bkfield--wide {
+    grid-column: 1 / -1;
+}
+
 .bkfield__label {
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: 0.1em;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    color: var(--eyebrow);
 }
 
 .bkfield__opt {
-    font-style: normal;
-    font-weight: 400;
-    letter-spacing: 0;
     text-transform: none;
-    color: var(--bk-faint);
+    letter-spacing: 0;
+    color: var(--ink-5);
 }
 
 .bkfield__input,
 .bkfield__area {
-    box-sizing: border-box;
     width: 100%;
-    padding: 13px 18px;
-    border: 1px solid var(--bk-line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    color: var(--ink);
     font-family: inherit;
     font-size: var(--fs-body);
-    color: var(--ink);
+    outline: none;
+    transition: border-color .18s ease;
 }
 
 .bkfield__area {
-    padding: 14px 18px;
+    height: auto;
+    min-height: 84px;
+    padding: 12px;
     resize: vertical;
+    line-height: var(--lh);
 }
-
-.bkfield__input::placeholder,
-.bkfield__area::placeholder { color: var(--bk-faint); }
 
 .bkfield__input:focus,
 .bkfield__area:focus {
-    outline: none;
-    border-color: var(--h-line);
+    border-color: var(--ink);
 }
 
-/* ============================================================
-   CỘT PHẢI
-   ============================================================ */
+.bkfield__input[aria-invalid="true"],
+.bkfield__area[aria-invalid="true"] {
+    border-color: var(--sale);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THẺ TÓM TẮT
+   ══════════════════════════════════════════════════════════════════════ */
 
 .bkside {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
     position: sticky;
-    top: 24px;
-}
-
-.bkside__card {
+    top: 72px;
     display: flex;
     flex-direction: column;
     gap: 16px;
-    padding: 30px;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    box-shadow: none;
 }
 
-.bkside__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h4);
-    font-weight: 500;
-    color: var(--ink);
-}
-
+.bkside__card,
 .bksum {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    padding: 20px;
+    border-radius: var(--r-field);
+    background: var(--bg-panel);
+}
+
+.bkside__title {
+    font-size: var(--fs-micro);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    margin-bottom: 4px;
 }
 
 .bksum__row {
     display: flex;
     justify-content: space-between;
-    gap: 16px;
-    font-size: var(--fs-body-sm);
-}
-
-.bksum__k { color: var(--bk-soft); }
-
-.bksum__v {
-    font-weight: 500;
-    color: var(--ink);
-    text-align: right;
-}
-
-.bksum__free {
-    font-weight: 500;
-    color: var(--bk-ok);
-}
-
-.bkside__cta {
-    padding: 14px 0;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-family: inherit;
-    font-size: var(--fs-body);
-    font-weight: 500;
-    cursor: pointer;
-    transition: background var(--dur-fast) var(--ease);
-}
-
-.bkside__cta:hover { background: var(--bk-hi); }
-
-.bkok {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    border-radius: var(--radius-sm);
-    background: #eef3e9;
-    color: var(--bk-ok);
-    font-size: var(--fs-caption);
-    line-height: 1.5;
-}
-
-.bkok svg { flex-shrink: 0; }
-
-/* --- Quy trình đo mắt --- */
-
-.bkflow {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 28px 30px;
-    border-radius: var(--radius);
-    background: var(--brand-subtle);
-}
-
-.bkflow__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h4);
-    font-weight: 500;
-    color: var(--ink);
-}
-
-.bkflow__step {
-    display: flex;
     align-items: baseline;
     gap: 12px;
 }
 
-.bkflow__n {
-    min-width: 20px;
-    font-family: var(--font-serif);
-    font-size: var(--fs-body);
-    font-weight: 500;
-    color: var(--brand);
+.bksum__k {
+    color: var(--ink-3);
+    white-space: nowrap;
 }
 
-.bkflow__text {
-    font-size: var(--fs-body-sm);
-    line-height: 1.55;
-    color: var(--bk-warm);
+.bksum__v {
+    text-align: right;
 }
 
-.bkflow__rule {
-    height: 1px;
-    background: var(--line);
+/* Ô chưa chọn — chữ xám nhạt. bk.js (trong home.js) điền dần các ô này
+   khi khách đi qua bốn bước, nên trạng thái "chưa có" phải nhìn ra được. */
+.bksum__v--soft {
+    color: var(--ink-5);
 }
 
-.bkflow__note {
-    margin: 0;
-    /* Xem .bkcard__note về lý do có trần bề ngang. */
-    max-width: 68ch;
-    font-size: var(--fs-caption);
-    line-height: 1.6;
-    color: var(--muted);
-}
-
-.bkflow__note strong { color: var(--bk-warm); }
-
-.bkflow__note a {
-    font-weight: 500;
-    color: var(--brand);
-    text-decoration: none;
-}
-
-.bkflow__note a:hover { text-decoration: underline; }
-
-/* ============================================================
-   BÁO LỖI · CHƯA MỞ LỊCH
-   ============================================================ */
-
-.bkalert {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0;
-    padding: 14px 20px;
-    border-radius: var(--radius);
-    background: var(--accent-subtle);
-    color: var(--danger);
-    font-size: var(--fs-body-sm);
-}
-
-.bkalert svg { flex-shrink: 0; }
-
-/* .bknotice — dòng "đang đặt lịch tham dự …" — đã bỏ 2026-08-26 cùng tính
-   năng sự kiện. Nó là khối duy nhất dùng lớp này. */
-
-.bkempty {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 56px 40px;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    text-align: center;
-}
-
-.bkempty__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h4);
-    font-weight: 500;
+.bksum__free {
     color: var(--ink);
 }
 
-.bkempty__lead {
-    margin: 0;
-    font-size: var(--fs-body);
-    color: var(--muted);
+.bkside__cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--h-field);
+    border: 0;
+    border-radius: var(--r-field);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .18s ease;
 }
 
-/* ============================================================
-   CHỌN LỰA BẰNG CSS
+.bkside__cta:hover {
+    background: #333;
+    color: #fff;
+}
 
-   Đọc ghi chú ở đầu file và ở đầu app/views/booking/index.php trước khi sửa.
+.bkside__cta:disabled {
+    background: var(--ink-5);
+    cursor: not-allowed;
+}
 
-   Ba nhóm luật, cùng một khuôn: thứ cần giấu để display:none, rồi cho hiện
-   lại đúng cái tương ứng với nút radio đang được chọn.
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   CỘT TÓM TẮT TỰ CẬP NHẬT — KHÔNG CÓ MỘT DÒNG JAVASCRIPT NÀO
 
-/* --- 2. Cột tóm tắt: tên cơ sở và dịch vụ ---------------------- */
+   ĐỌC KHỐI NÀY TRƯỚC KHI SỬA CỘT TÓM TẮT. Nó là chỗ dễ "sửa cho gọn" nhất
+   trong cả trang, và sửa gọn là hỏng.
 
-.bksum__v > span { display: none; }
+   Markup in ra TẤT CẢ các lựa chọn cùng lúc — mọi tên cơ sở, mọi dịch vụ,
+   mọi ngày — rồi giấu hết bằng `display:none`. Mỗi cú tick radio, `:has()`
+   cho hiện lại đúng một cái.
+
+   Vì sao làm thế thay vì để JavaScript viết chữ vào: cột tóm tắt lúc đó
+   đúng ngay ở khung hình ĐẦU TIÊN, kể cả khi script chưa tải xong hoặc bị
+   chặn. Với một form bốn bước thì "tôi vừa chọn gì" là câu phải trả lời
+   tức thì.
+
+   Cái giá: danh sách id phải dài hơn số lựa chọn có thể có. 8 cơ sở, 8 dịch
+   vụ, 7 ngày — vượt quá thì lựa chọn thứ 9 tick vào mà tóm tắt không đổi,
+   và KHÔNG CÓ GÌ BÁO LỖI. Thêm cơ sở thứ 9 thì phải thêm dòng ở đây.
+
+   Thiếu cả khối này thì cột tóm tắt hiện MỌI lựa chọn dính liền nhau
+   ("Vin Eyewear Long BiênVin Eyewear Tây Hồ") — triệu chứng nhận ra ngay.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.bksum__v > span {
+    display: none;
+}
 
 .bk__grid:has(#bk-st-0:checked) .bksum-st-0,
 .bk__grid:has(#bk-st-1:checked) .bksum-st-1,
@@ -571,19 +513,7 @@
 .bk__grid:has(#bk-sv-4:checked) .bksum-sv-4,
 .bk__grid:has(#bk-sv-5:checked) .bksum-sv-5,
 .bk__grid:has(#bk-sv-6:checked) .bksum-sv-6,
-.bk__grid:has(#bk-sv-7:checked) .bksum-sv-7 { display: inline; }
-
-/* --- 3. Cột tóm tắt: ngày hẹn ---------------------------------
-
-   Trước đây khối này đọc ô giờ, vì giá trị của ô ấy là "chỉ số ngày|chỉ số
-   khung" và mang cả hai chiều: một luật khớp phần đuôi ra GIỜ, một luật khớp
-   phần đầu ra NGÀY, dấu "|" giữ cho hai phép khớp không nhầm ("|1" không phải
-   đuôi của "3|11"). Form không còn ô giờ, nên tất cả rút về đúng một chiều:
-   đọc thẳng nhóm radio ngày.
-
-   Cũng không còn `.bksum__none` / `.bksum__sep`. Cả hai tồn tại cho trạng thái
-   "chưa chọn giờ"; dải ngày thì luôn có sẵn một ngày được tick, nên trạng thái
-   rỗng ấy không xảy ra được nữa. */
+.bk__grid:has(#bk-sv-7:checked) .bksum-sv-7,
 
 .bk__grid:has(#bk-d-0:checked) .bksum-d-0,
 .bk__grid:has(#bk-d-1:checked) .bksum-d-1,
@@ -591,82 +521,110 @@
 .bk__grid:has(#bk-d-3:checked) .bksum-d-3,
 .bk__grid:has(#bk-d-4:checked) .bksum-d-4,
 .bk__grid:has(#bk-d-5:checked) .bksum-d-5,
-.bk__grid:has(#bk-d-6:checked) .bksum-d-6 { display: inline; }
-
-/* "Cửa hàng gọi xác nhận" — một câu chú thích, không phải giá trị khách chọn.
-   Nhạt hơn và không in đậm để nó không tranh chấp với dòng ngày ngay trên. */
-.bksum__v--soft {
-    font-weight: 500;
-    color: var(--muted);
+.bk__grid:has(#bk-d-6:checked) .bksum-d-6 {
+    display: inline;
 }
 
-/* ============================================================
-   MÀN HÌNH HẸP — phần THÊM, bản thiết kế chỉ vẽ ở 1280px
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   HAI MÀN KHÁC
+   ══════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 1100px) {
-    .bk {
-        max-width: none;
-        padding: 32px 16px 64px;
-    }
-
-    /* minmax(0,1fr) chứ không 1fr — ô lưới mặc định là min-width:auto nên
-       không co xuống dưới bề rộng nội dung nhỏ nhất. */
-    .bk__grid {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 20px;
-    }
-
-    /* Bỏ dính theo cuộn: cột tóm tắt nay nằm DƯỚI form, dính lại thì nó bám
-       đáy màn hình che mất phần cuối form. */
-    .bkside { position: static; }
-
-    .bkcard { padding: 26px 24px; }
-}
-
-@media (max-width: 700px) {
-    .bkcard {
-        gap: 16px;
-        padding: 22px 18px;
-        border-radius: var(--radius);
-    }
-
-    .bkcard__title { font-size: var(--fs-h4); }
-
-    /* Một cột: hai thẻ cơ sở cạnh nhau ở 360px thì địa chỉ vỡ thành bốn dòng. */
-    .bkstores,
-    .bkfields { grid-template-columns: minmax(0, 1fr); }
-
-    .bkpill { padding: 10px 16px; }
-
-    .bkday { padding: 9px 13px; }
-
-    .bkside__card,
-    .bkflow { padding: 24px 20px; }
-}
-
-
-/* ============================================================================
-   NÉT CHỮ FURNISH — khối chốt cuối file
-
-   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
-   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
-   điểm khác rõ nhất giữa hai bản.
-
-   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
-   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
-   ============================================================================ */
-.bkcard__title, .bkside__title, .bkflow__title {
-    font-weight: 400;
-    letter-spacing: var(--tracking-tight);
+/* Chưa có cơ sở nào mở nhận lịch */
+.bkempty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 96px var(--edge) 120px;
+    text-align: center;
 }
 
 .bkempty__title {
-    font-weight: 400;
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
-.bkfield__label {
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+.bkempty__lead {
+    color: var(--ink-3);
+    max-width: 420px;
+    text-wrap: pretty;
+}
+
+/* Đặt xong */
+.bkok {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 64px 0;
+    text-align: center;
+}
+
+/* ┌─ BỐN BƯỚC Ở CHÂN TRANG  (.bkflow) ────────────────────────────────────
+   │ "Đặt lịch → Nhận xác nhận → Tới cửa hàng → Đo mắt". Hàng ngang có
+   │ đường nối, cùng hình với .acct-track của khu tài khoản.
+   └──────────────────────────────────────────────────────────────────────── */
+.bkflow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 80px 0 0;
+}
+
+.bkflow__step {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+
+.bkflow__n {
+    font-size: var(--fs-micro);
+    color: var(--ink-5);
+    font-variant-numeric: tabular-nums;
+}
+
+.bkflow__title {
+    font-size: var(--fs-body);
+}
+
+.bkflow__text,
+.bkflow__note {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
+}
+
+.bkflow__rule {
+    display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+    .bk__grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
+    }
+
+    /* Tóm tắt xuống DƯỚI form và thôi dính. Nút "Đặt lịch" nằm trong nó,
+       nên đưa nó lên trên là bắt khách cuộn ngược để bấm. */
+    .bkside {
+        position: static;
+    }
+}
+
+@media (max-width: 560px) {
+    .bk {
+        padding-bottom: 64px;
+    }
+
+    .bkflow {
+        padding-top: 48px;
+    }
 }

@@ -3,48 +3,70 @@
 /**
  * HomeController — trang chủ (/).
  *
- * Port từ src/routes/index.tsx.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BỐN BĂNG HÀNG, MỖI BĂNG ĐÚNG MỘT HÀNG BỐN THẺ
  *
- * Bản cũ của controller này gõ cứng gần 240 dòng nội dung (tiêu đề section,
- * ảnh CDN của Moscot, danh sách id sản phẩm…). Nay mọi thứ đọc từ DB hoặc
- * từ config, controller chỉ còn việc lấy dữ liệu.
+ * Mẫu "Eyewear Collection" xếp trang chủ thành: hero tràn màn hình, rồi bốn
+ * băng nền xám — Sản phẩm mới về · Sản phẩm bán chạy · Gọng kính · Tròng kính
+ * — mỗi băng một lưới 4 cột, rồi khối "Ghé thăm cửa hàng".
+ *
+ * LẤY ĐÚNG 4, KHÔNG PHẢI 8. Bản cũ lấy 8 vì hai khối ấy là BĂNG TRƯỢT có mũi
+ * tên tới/lui, mà một băng chỉ đủ lấp một khung nhìn thì hai mũi tên chẳng đưa
+ * đi đâu. Mẫu bỏ hẳn băng trượt: lưới tĩnh 4 thẻ, muốn xem tiếp thì bấm "More"
+ * bên dưới tiêu đề băng. Nên 4 thẻ là vừa đủ, và 4 thẻ thừa mỗi lượt xem trang
+ * chủ là 4 lần decode() ảnh + thông số cho thứ không ai vẽ ra.
+ *
+ * ───────────────────────────────────────────────────────────────────────────
+ * NĂM TRUY VẤN, VÀ VÌ SAO KHÔNG ÍT HƠN ĐƯỢC
+ *
+ *   newest(4)                       hàng mới về
+ *   featured(4)                     hàng bán chạy
+ *   filter(category: gong-kinh, 4)  băng gọng kính
+ *   filter(category: trong-kinh, 4) băng tròng kính
+ *   VariantModel::forProducts(...)  ô màu cho CẢ BỐN băng, gom làm MỘT câu
+ *
+ * Câu thứ năm là chỗ dễ làm sai nhất: thẻ sản phẩm của mẫu có hàng ô màu, và
+ * hỏi biến thể ngay trong vòng lặp thẻ là 16 câu truy vấn cho một trang chủ.
+ * forProducts() nhận cả mảng id và trả về mảng gom theo product_id — gọi MỘT
+ * lần ở đây, view chỉ việc tra. Mọi trang có lưới hàng đều phải theo nếp này.
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
 class HomeController extends BaseController
 {
+    /** Số thẻ trên mỗi băng — mẫu xếp đúng một hàng bốn cột. */
+    private const PER_BAND = 4;
+
     public function index(): void
     {
-        /*
-         * HAI truy vấn, không còn ba. Bộ sưu tập, gói tròng và quy trình đo mắt
-         * đều đọc thẳng từ config nên không tốn lần nào chạm DB.
-         *
-         * ĐÃ BỎ CategoryModel::withProductCounts(): khối "danh mục" không còn
-         * trên trang chủ (xem app/views/home/index.php). Đó là một câu có
-         * GROUP BY, chạy cho mỗi lượt xem trang chủ để dựng thứ không ai vẽ ra.
-         *
-         * Thanh nav VẪN có danh mục kèm số đếm — _layout/header.php tự gọi lại
-         * đúng hàm ấy cho bảng xổ của nó, độc lập với controller này. Nên bật
-         * lại khối danh mục ở trang chủ thì phải trả dòng 'categories' về đây.
-         */
+        $newArrivals = ProductModel::newest(self::PER_BAND);
+        $bestSellers = ProductModel::featured(self::PER_BAND);
+
+        $frames = ProductModel::filter(['category' => 'gong-kinh'], 1, self::PER_BAND)['items'];
+        $lenses = ProductModel::filter(['category' => 'trong-kinh'], 1, self::PER_BAND)['items'];
+
+        /* Gom id của cả bốn băng rồi hỏi biến thể MỘT lần. array_unique vì một
+           mặt hàng rất dễ có mặt ở hai băng cùng lúc (vừa mới về vừa bán chạy),
+           và hỏi trùng id chỉ làm câu IN(...) dài ra. */
+        $ids = [];
+
+        foreach ([$newArrivals, $bestSellers, $frames, $lenses] as $band) {
+            foreach ($band as $p) {
+                $ids[] = $p['id'];
+            }
+        }
+
         $this->renderView('home/index', [
-            'pageTitle'  => 'Vin Eyewear — Kính mắt chính hãng, đo khúc xạ miễn phí',
-            'metaDesc'   => 'Gọng kính, kính mát và tròng kính chính hãng tại Hà Nội. '
-                          . 'Đo khúc xạ miễn phí, thử kính AR trực tuyến, bảo hành trọn đời.',
+            'pageTitle' => 'Vin Eyewear — Kính mắt chính hãng, đo khúc xạ miễn phí',
+            'metaDesc'  => 'Gọng kính, kính mát và tròng kính chính hãng tại Hà Nội. '
+                         . 'Đo khúc xạ miễn phí, thử kính AR trực tuyến, bảo hành trọn đời.',
 
-            /*
-             * Hàng vừa lên kệ. 8 chứ không phải 4 (bản thiết kế xếp đúng một
-             * hàng 4 thẻ): hai lưới sản phẩm của trang chủ nay là BĂNG TRƯỢT
-             * có mũi tên tới/lui, mà một băng chỉ đủ lấp đúng một khung nhìn
-             * thì hai mũi tên chẳng đưa đi đâu được.
-             *
-             * 8 = hai khung nhìn ở màn rộng. Hạ xuống dưới 5 thì hai mũi tên
-             * vẫn in ra nhưng nằm mờ, vì không còn gì để trượt.
-             */
-            'newArrivals' => ProductModel::newest(8),
+            'newArrivals' => $newArrivals,
+            'bestSellers' => $bestSellers,
+            'frames'      => $frames,
+            'lenses'      => $lenses,
 
-            // Bán chạy: ưu tiên hàng được đánh dấu nổi bật. 8 vì cùng lý do
-            // với 'newArrivals' ở trên — khối này cũng là một băng trượt.
-            'bestSellers' => ProductModel::featured(8),
+            'variants' => VariantModel::forProducts(array_values(array_unique($ids))),
         ]);
     }
 }

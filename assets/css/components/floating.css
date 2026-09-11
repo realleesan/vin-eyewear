@@ -1,312 +1,158 @@
-/* ============================================================
-   S22 — CỤM NÚT NỔI HỖ TRỢ
-   Markup: app/views/_layout/floating-actions.php
-   Hành vi: assets/js/floating.js
-   ============================================================ */
+/* ============================================================================
+   floating.css — CỤM NÚT HỖ TRỢ NỔI (S22)
 
+   Mẫu "Eyewear Collection" KHÔNG có cụm này. Nó là chức năng sẵn có của site
+   (gọi · Zalo · Messenger · lên đầu trang), nên phần việc ở đây là dựng nó
+   theo ĐÚNG NGÔN NGỮ của mẫu chứ không phải bê nguyên dáng cũ sang.
+
+   Ba luật của mẫu áp vào đây thành:
+
+     1. KHÔNG MÀU. Nút nền #111 chữ trắng, hết. Bản cũ tô mỗi kênh một màu
+        thương hiệu (Zalo xanh, Messenger tím) — đó là ba màu mới trên một
+        site chỉ có hai. Sắc thương hiệu nay chỉ còn sống bên trong hình vẽ
+        icon Zalo, ở kích thước 24×18px, và đó là chỗ duy nhất nó được phép
+        xuất hiện.
+
+     2. VIÊN, CAO 32, CHỮ 9px IN HOA GIÃN .06em — cùng thang với .oa-btn--card
+        của thẻ sản phẩm, vì hai thứ này có cùng "trọng lượng" trên trang.
+
+     3. NẰM DƯỚI MỌI LỚP PHỦ. z-index 3, tức là dưới --z-scrim (4). Một nút
+        nổi lơ lửng trên nền mờ của ngăn giỏ là thứ phá vỡ ảo giác lớp.
+   ========================================================================= */
+
+/* --fab-blue: icon Zalo tự vẽ chữ bằng biến này (xem _layout/floating-actions.php,
+   các path fill="var(--fab-blue)"). Bong bóng ăn currentColor (trắng), chữ ăn
+   biến này — nên hai phần của icon không bao giờ lệch tông. */
 .fab {
+    --fab-blue: #0068ff;
+
     position: fixed;
-    right: clamp(12px, 3vw, 24px);
-    bottom: clamp(12px, 3vw, 24px);
-    /* Dưới .mobile-nav (z-index 100) để menu trượt luôn phủ lên cụm này,
-       trên header (40) và mọi nội dung trang. */
-    z-index: 90;
+    right: 20px;
+    bottom: 20px;
+    z-index: 3;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 10px;
-}
-
-/* ┌─ MENU DI ĐỘNG ĐANG MỞ → GIẤU HẲN CỤM NÚT ───────────────────────────────
-   │ .mobile-nav nay ở z-index 100 nên đã phủ lên cụm này rồi. Luật dưới đây
-   │ là lớp chặn thứ hai, và nó giải quyết thêm một việc mà z-index không làm
-   │ được: khi bảng điều hướng mở, ba nút vẫn nằm trong thứ tự Tab và trình
-   │ đọc màn hình vẫn đọc tới chúng dù người dùng đang ở trong một lớp phủ.
-   │ display:none cắt cả ba đường — mắt, ngón tay, trình đọc màn hình.
-   └──────────────────────────────────────────────────────────────────────── */
-body:has(#mobileNav.is-open) .fab {
-    display: none;
-}
-
-/* ┌─ HAI TRANG CÓ CỘT TÁC VỤ DÍNH BÊN PHẢI → CỤM NÚT SANG MÉP TRÁI ─────────
-   │ Quét bằng hit-test hình học ở MỌI vị trí cuộn (không chỉ màn hình đầu):
-   │ hai trang có một cột dính căn phải chứa nút hành động chính, và cả hai
-   │ đều bị cụm nút nổi đè lên đúng cái nút ấy:
-   │
-   │     /san-pham/{slug}   "Mua ngay"          (.pdbtn--buy)
-   │     /dat-lich          "Xác nhận đặt lịch" (nút gửi form đặt lịch)
-   │
-   │ Nguyên nhân là hình học, không phải z-index: cột ấy căn phải và nút chạy
-   │ hết bề ngang cột tới sát --page-edge, nên nó luôn đi qua làn ~56px mà cụm
-   │ nút chiếm ở góc phải dưới khung nhìn.
-   │
-   │ Chữa bằng CHỖ ĐỨNG của cụm nút, không bằng cách thu nút hành động lại:
-   │ trên một trang bán hàng và một trang đặt lịch, nút ấy là thứ cuối cùng
-   │ nên nhường chỗ.
-   │
-   │ MỘT ĐIỀU PHẢI NÓI THẲNG: một cụm nút `position: fixed` thì lúc cuộn bao
-   │ giờ cũng có lúc đi ngang qua một liên kết nào đó — điều đó không tránh
-   │ được và cũng không phải lỗi. Thứ luật này chữa là trường hợp nghiêm trọng:
-   │ nút hành động CHÍNH bị che ở đúng vị trí nghỉ mà khách dừng lại để bấm.
-   └──────────────────────────────────────────────────────────────────────── */
-/* CHỈ TỪ 900px TRỞ LÊN, và đây là chỗ dễ làm sai:
-
-   Dời sang trái ở MỌI bề ngang là một bước lùi. Dưới 900px trang xếp một cột,
-   cột tác vụ dính không còn, và gần như mọi thứ — nút mua, ô nhập form, nút
-   "Liên hệ" cùng liên kết pháp lý ở chân trang — đều căn TRÁI. Cụm nút đứng
-   bên trái lúc ấy đè lên đúng những thứ nó vừa tránh được ở bên phải.
-
-   Đo lại sau khi thử: ở 390px bản dời-trái che thêm .bkstore__dot,
-   .bkfield__input, .bkfield__area, "Get in touch" và "Privacy policy".
-
-   Ở màn hẹp cụm nút vốn đã thu về MỘT nút tròn ở góc phải dưới (xem khối
-   @media max-width:899px bên dưới) — đó là nếp quen thuộc và nó chiếm ít chỗ
-   hơn hẳn ba nút xếp dọc, nên để nguyên bên phải là đúng. */
-@media (min-width: 900px) {
-
-    .page-product-detail .fab,
-    .page-booking-index .fab {
-        right: auto;
-        left: clamp(12px, 3vw, 24px);
-        align-items: flex-start;
-    }
+    gap: 8px;
 }
 
 .fab__list {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 10px;
+    gap: 8px;
     list-style: none;
 }
 
-/* --- Nút tròn dùng chung --- */
-
-.fab__btn,
-.fab__toggle {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 48px;
-    height: 48px;
+.fab__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 14px 0 10px;
     border: 0;
-    /* TRÒN, không phải 4px như các nút khác: cụm nút này nổi đè lên nội dung
-       chứ không nằm trong một thẻ nào, và hình tròn là quy ước quen thuộc cho
-       nút hành động nổi. Cùng nhóm với icon mạng xã hội ở chân trang. */
-    border-radius: var(--radius-round);
-    color: var(--on-brand);
-    box-shadow: none;
+    border-radius: 16px;
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    white-space: nowrap;
     cursor: pointer;
-    transition:
-        transform var(--dur-fast) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-        box-shadow var(--dur-fast) var(--ease);
+    transition: background .18s ease;
 }
 
-/* Thuộc tính hidden phải thắng display:grid ở trên, nếu không nút "lên đầu
-   trang" và nút mở/đóng vẫn hiện dù JS chưa gỡ hidden. */
-.fab__btn[hidden],
-.fab__toggle[hidden] {
-    display: none;
-}
-
-.fab__btn:hover,
-.fab__toggle:hover {
-    transform: translateY(-2px);
-    box-shadow: none;
+.fab__btn:hover {
+    background: #333;
+    color: #fff;
 }
 
 .fab__ico {
-    /* Nét vẽ không được co lại khi nhãn bên cạnh dài */
     flex: none;
+    display: block;
 }
 
-/* ============================================================
-   MÀU CỤM NÚT — CẢ BA CÙNG MỘT SẮC XANH ZALO
-
-   Bản trước mỗi kênh một màu: gọi crimson, Zalo #0068ff, Messenger #0084ff.
-   Nay cả ba dùng chung #0068ff.
-
-   HỆ QUẢ PHẢI BIẾT: màu không còn phân biệt được ba nút, nên ICON là thứ duy
-   nhất làm việc đó. Vì thế nút Zalo đã đổi từ bong bóng chat trơn (giống hệt
-   Messenger) sang logo Zalo thật — xem _layout/floating-actions.php.
-
-   --fab-blue dùng ở HAI nơi: nền nút, và chữ "Zalo" bên trong logo. Đổi biến
-   này là cả hai đi theo; gõ cứng lại một trong hai chỗ thì chữ lệch tông nền.
-   ============================================================ */
-/* ┌─ ĐÃ BỎ MÀU XANH (Phase 2) ──────────────────────────────────────────────
-   │ Ba nút này nổi trên MỌI trang khách, góc phải dưới, và chúng là ba đốm
-   │ #0068ff duy nhất trên một site đơn sắc. Trên trang thật chúng là thứ bão
-   │ hoà nhất trong khung nhìn — nổi hơn cả ảnh sản phẩm và cả nút "Mua ngay".
-   │
-   │ Nay cả ba là khối MỰC, hover sẫm thêm một nấc — cùng hệ với mọi nút đặc
-   │ khác của bộ (xem PHẦN 6 của gm.css).
-   │
-   │ --fab-blue GIỮ LẠI TÊN vì logo Zalo dùng nó cho chữ "Zalo" bên trong hình,
-   │ và chữ ấy phải tương phản với NỀN nút. Nền nay là mực, nên biến trỏ sang
-   │ màu chữ-trên-mực. Xoá biến là chữ "Zalo" mất màu và biến mất trong logo.
-   │
-   │ HỆ QUẢ ĐÃ BIẾT: màu không còn phân biệt ba nút — nhưng nó vốn đã không
-   │ phân biệt, cả ba từng dùng chung một màu xanh. ICON vẫn là thứ phân biệt
-   │ chúng, đúng như chú thích ở trên đã ghi. */
-/* ┌─ ĐÃ SỬA: CHỮ "ZALO" TRẮNG TRÊN BONG BÓNG TRẮNG ────────────────────────
-   │ Bản trước: --fab-blue: var(--on-ink).
-   │
-   │ Ba màu trong logo Zalo, đọc từ _layout/floating-actions.php:
-   │     bong bóng   fill="currentColor"     → var(--on-brand)  (sáng)
-   │     chữ "Zalo"  fill="var(--fab-blue)"  → var(--on-ink)    (CŨNG sáng)
-   │
-   │ Chữ sáng nằm trên bong bóng sáng thì biến mất, và cái còn lại đúng là
-   │ MỘT BONG BÓNG TRƠN — không phân biệt được với nút Messenger ngay dưới.
-   │ Đó chính là thứ chú thích ở trên nói đã sửa xong ("đã đổi từ bong bóng
-   │ chat trơn sang logo Zalo thật"), nhưng biến màu làm nó quay lại y như cũ.
-   │
-   │ Chú thích ở khối trên đã nói đúng luật — chữ "phải tương phản với NỀN
-   │ nút" — chỉ là biến trỏ nhầm màu. Nền nút là var(--brand), nên chữ phải
-   │ là var(--brand): nó đọc thành chữ KHOÉT RỖNG trên bong bóng sáng, đúng
-   │ cách logo Zalo thật hoạt động (chỉ đảo tông cho hợp bộ đơn sắc).
-   │
-   │ Rê chuột nền sẫm thêm một nấc, nên chữ đi theo — nếu không, chữ giữ tông
-   │ nền cũ và lộ ra như một vệt lệch màu giữa logo.
-   └──────────────────────────────────────────────────────────────────────── */
-:root {
-    --fab-blue:        var(--brand);
-    --fab-blue-strong: var(--brand-strong);
-}
-
-.fab__btn--call,
-.fab__btn--zalo,
-.fab__btn--messenger {
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-.fab__btn--call:hover,
-.fab__btn--zalo:hover,
-.fab__btn--messenger:hover { background: var(--brand-strong); }
-
-/* Khai lại biến TRÊN CHÍNH NÚT: SVG nội tuyến đọc var(--fab-blue) lúc nó được
-   tính giá trị, nên đổi biến ở đây là chữ trong logo đi theo mà không phải
-   đụng vào markup. */
-.fab__btn--zalo:hover,
-.fab__btn--zalo:focus-visible {
-    --fab-blue: var(--fab-blue-strong);
-}
-
+/* Nút "lên đầu trang" chỉ có icon — bỏ nhãn, thu về hình tròn 32px. Nó xuất
+   hiện/biến mất theo vị trí cuộn nên một cái nhãn chữ nhảy ra nhảy vào ở góc
+   màn hình là thứ bắt mắt sai chỗ. */
 .fab__btn--top {
-    background: var(--surface-raised);
+    padding: 0;
+    width: 32px;
+    justify-content: center;
+    background: var(--bg);
+    border: 1px solid var(--line-btn);
     color: var(--ink);
-    border: 1px solid var(--line);
 }
 
-/* --- Nhãn chữ nổi bên trái nút --- */
-
-.fab__label {
-    position: absolute;
-    /* Neo mép phải vào cạnh trái của nút: nhãn dài ngắn khác nhau vẫn không
-       đẩy nút lệch khỏi cột. */
-    right: calc(100% + 10px);
-    padding: 6px 10px;
+.fab__btn--top:hover {
     background: var(--ink);
-    color: var(--on-ink);
-    font-size: var(--fs-caption);
-    font-weight: 500;
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.fab__btn--top .fab__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
     white-space: nowrap;
-    opacity: 0;
-    transform: translateX(6px);
-    pointer-events: none;
-    transition:
-        opacity var(--dur-fast) var(--ease),
-        transform var(--dur-fast) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1));
 }
 
-.fab__btn:hover .fab__label,
-.fab__btn:focus-visible .fab__label {
-    opacity: 1;
-    transform: none;
-}
-
-/* --- Nút mở/đóng (chỉ dưới 900px) --- */
-
-/* Từ 900px trở lên ba kênh đã xếp dọc và luôn thấy, nút mở/đóng thành thừa.
-   Đặt SAU khối .fab__btn, .fab__toggle ở trên để ghi đè display: grid. */
+/* ┌─ NÚT MỞ/ĐÓNG — CHỈ DƯỚI 900px ───────────────────────────────────────
+   │ Màn rộng thì ba kênh hiện thẳng, không cần gom. Màn hẹp thì ba viên
+   │ chữ chiếm gần nửa chiều cao màn hình, nên chúng thu vào sau một nút
+   │ tròn.
+   │
+   │ Nút có `hidden` sẵn trong HTML và floating.js gỡ ra: không có
+   │ JavaScript thì bấm vào không mở được gì, trong khi danh sách kênh lúc
+   │ ấy vẫn hiện thường (xem luật .fab__list cuối file).
+   └──────────────────────────────────────────────────────────────────────── */
 .fab__toggle {
     display: none;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
     background: var(--ink);
-    color: var(--on-ink);
+    color: #fff;
+    cursor: pointer;
 }
 
-/* Hai icon chồng lên nhau trong cùng một ô lưới, đổi bên nào hiện theo
-   trạng thái — làm vậy thì nút không đổi kích thước lúc mở/đóng. */
 .fab__toggle-ico {
-    grid-area: 1 / 1;
-    display: grid;
-    place-items: center;
-    transition: opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+    display: flex;
 }
 
-.fab__toggle-ico--close { opacity: 0; transform: rotate(-45deg); }
-.fab.is-open .fab__toggle-ico--open  { opacity: 0; transform: rotate(45deg); }
-.fab.is-open .fab__toggle-ico--close { opacity: 1; transform: none; }
-
-/* ============================================================
-   BỀ NGANG HẸP — gộp ba kênh vào sau nút mở/đóng
-   ============================================================ */
-
-@media (max-width: 899px) {
-
-    .fab__toggle:not([hidden]) { display: grid; }
-
-    /* Chỉ thu gọn khi có JavaScript: không có JS thì nút mở/đóng vẫn mang
-       thuộc tính hidden, thu gọn danh sách lúc đó là giấu luôn cả ba kênh. */
-    .js .fab__list {
-        position: absolute;
-        right: 0;
-        bottom: calc(100% + 10px);
-        visibility: hidden;
-        opacity: 0;
-        transform: translateY(8px);
-        transition:
-            opacity var(--dur-fast) var(--ease),
-            transform var(--dur-fast) var(--ease-out-soft, cubic-bezier(0.23, 1, 0.32, 1)),
-            visibility var(--dur-fast) var(--ease);
-    }
-
-    .js .fab.is-open .fab__list {
-        visibility: visible;
-        opacity: 1;
-        transform: none;
-    }
-
-    /* Màn cảm ứng không có hover -> mở ra là hiện luôn nhãn.
-       Càng cần thiết từ khi cả ba nút chung một màu: không còn sắc nào để
-       phân biệt, chỉ còn icon, mà icon 24px thì đọc lướt rất dễ nhầm. */
-    .js .fab.is-open .fab__label {
-        opacity: 1;
-        transform: none;
-    }
-
-    /* KHÔNG có luật đảo mép trái ở đây, và đó là chủ ý.
-       Việc dời cụm nút sang trái chỉ áp dụng từ 900px trở lên (xem khối
-       @media min-width:900px bên trên). Trong khoảng bề ngang này cụm nút
-       luôn ở góc phải dưới, nên danh sách thu gọn giữ nguyên `right: 0`. */
+.fab__toggle-ico--close,
+.fab.is-open .fab__toggle-ico--open {
+    display: none;
 }
 
-/* Bản in không có gì để bấm */
-@media print {
-    .fab { display: none; }
+.fab.is-open .fab__toggle-ico--close {
+    display: flex;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .fab__btn,
-    .fab__toggle,
-    .fab__label,
-    .fab__toggle-ico,
-    .js .fab__list {
-        transition: none;
+@media (max-width: 900px) {
+    .fab {
+        right: 14px;
+        bottom: 14px;
     }
 
-    .fab__btn:hover,
-    .fab__toggle:hover {
-        transform: none;
+    .fab__toggle:not([hidden]) {
+        display: flex;
+    }
+
+    /* Ẩn danh sách CHỈ KHI JavaScript có mặt — html.js do thẻ <script> ở đầu
+       <head> gắn. Thiếu chốt này thì trên máy tắt JS, ba kênh biến mất và nút
+       mở lại không bấm được: không còn lối liên hệ nào. */
+    html.js .fab__list {
+        display: none;
+    }
+
+    html.js .fab.is-open .fab__list {
+        display: flex;
     }
 }

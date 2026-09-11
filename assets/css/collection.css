@@ -1,187 +1,1140 @@
-/* ============================================================
-   TRANG BỘ SƯU TẬP (/bo-suu-tap)
+/* ============================================================================
+   collection.css — DANH SÁCH BỘ SƯU TẬP (/bo-suu-tap)
+                    và TRANG MỘT BỘ      (/bo-suu-tap/{slug})
 
-   Ba–năm thẻ lớn xếp dọc, ảnh và chữ so le trái/phải. Không dùng lưới thẻ
-   nhỏ như trang danh mục: ở đây mỗi bộ cần đủ chỗ cho một đoạn giới thiệu
-   thật, mà thẻ lưới thì chỉ chứa nổi một dòng.
+   ═════════════════════════════════════════════════════════════════════════
+   MẪU VẼ TRANG NÀY — nó chính là artboard mang tên "Eyewear Collection":
 
-   Màu và cỡ chữ lấy từ token trong layout.css — xem quy ước ở CLAUDE.md.
-   ============================================================ */
+     ┌──────────────────────────────────────────────────────────┐
+     │ (Veggie)(Circuit)(2026)(Pocket)…              Bộ lọc ☰   │ ← hàng chip
+     ├──────────────────────────────────────────────────────────┤
+     │                                                          │
+     │        ẢNH HERO TRÀN HẾT MÉP, tỉ lệ 16:8.4               │
+     │                                                          │
+     │  BỘ SƯU TẬP VEGGIE 2026                                  │ ← chữ trắng,
+     │  Một đoạn giới thiệu ba dòng…                            │   góc dưới trái
+     │  XEM CÂU CHUYỆN ↗                                        │
+     ├──────────────────────────────────────────────────────────┤
+     │  [thẻ] [thẻ] [thẻ] [thẻ]                                 │ ← lưới 4 cột
+     │  [thẻ] [thẻ] [thẻ] [thẻ]                                 │
+     │              ( Xem chi tiết sản phẩm BST )               │
+     └──────────────────────────────────────────────────────────┘
+
+   BA ĐIỂM CHỐT:
+
+     1. HERO TRÀN HẾT MÉP MÀN HÌNH — không lề, không bo góc, không khung.
+        Nó là thứ đầu tiên dưới hàng chip và nó phải chạm cả hai mép.
+
+     2. HÀNG CHIP ĐỨNG TRÊN HERO, không phải dưới. Khách đổi bộ ngay mà
+        không phải cuộn qua một tấm ảnh cao 700px.
+
+     3. Mọi khối nội dung DƯỚI lưới (câu chuyện, bảng so sánh, dáng mặt,
+        hỏi đáp) đều dựng bằng nguyên thể sẵn có — .oa-split, .oa-steps,
+        .oa-rows, .oa-acc, .oa-grid--tight — chứ không sinh dáng mới.
+        Trang này dài; mỗi dáng mới là một nhịp đọc lạ.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════════════════════════
+   /bo-suu-tap — DANH SÁCH BỘ
+   ══════════════════════════════════════════════════════════════════════ */
 
 .colls {
-    max-width: var(--container, 1600px);
-    margin: 0 auto;
-    padding: 56px 32px 96px;
+    padding: 0 var(--edge-grid) 120px;
 }
 
 .colls__list {
-    display: flex;
-    flex-direction: column;
-    gap: 72px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--gap-row) var(--gap-col);
+    list-style: none;
 }
 
 .colls__empty {
-    margin: 0;
-    padding: 48px 0;
+    padding: 96px var(--edge) 120px;
     text-align: center;
-    font-size: var(--fs-body-lg);
-    color: var(--muted);
+    color: var(--ink-3);
 }
-
-.colls__empty a {
-    font-weight: 500;
-    color: var(--brand);
-}
-
-/* --- Một bộ sưu tập --- */
 
 .coll {
-    display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    align-items: center;
-    gap: 48px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-soft);
 }
 
-/* So le: đảo THỨ TỰ CỘT bằng CSS, không đảo trong HTML — thứ tự đọc của trình
-   đọc màn hình phải giữ nguyên ảnh-rồi-chữ ở mọi thẻ. */
-.coll--flip .coll__media { order: 2; }
+.coll:nth-child(even) {
+    background: #f2f2f2;
+}
+
+/* Ảnh bộ sưu tập là ảnh CHIẾN DỊCH, không phải ảnh sản phẩm — cắt tràn
+   khung (`cover`), không `contain`. */
+.coll__media {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: var(--bg-slot);
+}
 
 .coll__img {
-    display: block;
     width: 100%;
-    height: auto;
-    aspect-ratio: 3 / 2;
+    height: 100%;
     object-fit: cover;
-    border-radius: var(--radius);
+    display: block;
 }
 
-/* Ô giữ chỗ khi bộ chưa có ảnh bìa. Giữ đúng aspect-ratio của ảnh thật để
-   bố cục không nhảy khi ảnh được thêm vào sau. */
 .coll__img--empty {
-    display: grid;
-    place-items: center;
-    background: var(--brand-subtle);
-    color: var(--brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
 }
 
 .coll__body {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
+    gap: 8px;
+    padding: 14px 14px 18px;
 }
 
 .coll__when {
-    margin: 0;
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-wide);
     text-transform: uppercase;
-    color: var(--eyebrow);
+    color: var(--ink-5);
 }
 
 .coll__name {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h2);
-    font-weight: 500;
-    line-height: 1.12;
-    letter-spacing: normal;
-    color: var(--ink);
+    font-size: var(--fs-ui);
+    font-weight: 400;
 }
 
-/* --fs-lead chứ không --fs-h5: đây là CÂU DẪN, cùng vai trò với câu dưới
-   tiêu đề ở mọi trang khác, mà những chỗ đó đều đọc --fs-lead. Dùng một bậc
-   tiêu đề cho một đoạn văn là chỗ làm cỡ chữ lệch giữa các trang. */
-.coll__tagline {
-    margin: 0;
-    font-size: var(--fs-lead);
-    line-height: 1.5;
-    color: var(--ink);
-}
-
+.coll__tagline,
 .coll__intro {
-    margin: 0;
-    font-size: var(--fs-body-lg);
-    line-height: 1.75;
-    color: var(--muted);
+    color: var(--ink-3);
+    text-wrap: pretty;
 }
 
 .coll__cta {
+    align-self: flex-start;
+    margin-top: 4px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   /bo-suu-tap/{slug} — MỘT BỘ
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cdet {
+    background: var(--bg);
+}
+
+/* ┌─ HÀNG CHIP ĐỔI BỘ ────────────────────────────────────────────────── */
+.cdet__bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px var(--edge);
+    overflow: hidden;
+}
+
+.cdet__chips {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.cdet__chips::-webkit-scrollbar {
+    display: none;
+}
+
+.cdet__chip {
+    flex: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    margin-top: 6px;
-    padding: 13px 26px;
-    border-radius: var(--radius-sm);
-    background: var(--brand);
-    font-size: var(--fs-body);
+    height: var(--h-chip);
+    padding: 0 12px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+    transition: background .18s ease, border-color .18s ease;
+}
+
+.cdet__chip:hover {
+    border-color: var(--ink-6);
+    color: var(--ink);
+}
+
+.cdet__chip.is-on,
+.cdet__chip[aria-current="page"] {
+    background: var(--bg-chip-flat);
+    border-color: var(--bg-chip-flat);
+}
+
+/* Chấm màu của bộ trước tên chip — mẫu không có. Ẩn: mỗi bộ một sắc là
+   một bảng màu thứ hai chạy song song với bảng phi sắc của cả site. */
+.cdet__chip-color,
+.cdet__dot {
+    display: none;
+}
+
+/* ┌─ HERO TRÀN MÉP ───────────────────────────────────────────────────── */
+.cdet__hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 8.4;
+    overflow: hidden;
+    background: #cfd3d6;
+}
+
+.cdet__media,
+.cdet__media img,
+.cdet__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.cdet__img--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-slot);
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
+}
+
+/* Lớp phủ tối từ đáy lên — ảnh do nhân viên tải lên, không ai biết trước
+   nó sáng hay tối. Cùng lý do với .vhero__veil và .about-story::after. */
+.cdet__veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, .55) 0%,
+        rgba(0, 0, 0, .3) 30%,
+        rgba(0, 0, 0, 0) 60%);
+    pointer-events: none;
+}
+
+.cdet__cap {
+    position: absolute;
+    left: var(--edge);
+    bottom: 56px;
+    max-width: 320px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: #fff;
+}
+
+.cdet__season,
+.cdet__season-tag,
+.cdet__eyebrow {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+}
+
+.cdet__name {
+    font-size: var(--fs-hero);
     font-weight: 500;
-    color: var(--on-brand);
-    text-decoration: none;
-    transition: background-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+    letter-spacing: var(--ls-tight);
+    text-transform: uppercase;
+    line-height: 1.3;
 }
 
-.coll__cta:hover {
-    background: var(--brand-strong);
-    transform: translateX(3px);
+.cdet__tagline,
+.cdet__caption,
+.cdet__intro {
+    line-height: var(--lh);
+    text-wrap: pretty;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .coll__cta:hover { transform: none; }
+/* "Xem câu chuyện ↗" — mũi tên là một phần của mẫu, giữ nguyên */
+.cdet__story-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-tight);
+    text-transform: uppercase;
+    color: inherit;
 }
 
-/* ============================================================
-   MÀN HÌNH HẸP — xếp dọc, bỏ so le
+.cdet__story-arrow {
+    font-size: var(--fs-body);
+}
 
-   Dưới 900px hai cột thành một, nên .coll--flip không còn nghĩa: đảo `order`
-   lúc này chỉ đẩy ảnh xuống DƯỚI chữ ở các thẻ chẵn, làm nhịp đọc gãy.
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   KHỐI CHUNG CỦA PHẦN NỘI DUNG DƯỚI LƯỚI
+   ══════════════════════════════════════════════════════════════════════ */
 
-@media (max-width: 900px) {
-    .colls { padding: 40px 20px 72px; }
+.cdet__shop,
+.cdet__info,
+.cdet__look,
+.cdet__story-wrap,
+.cdet__aud-wrap,
+.cdet__cmp,
+.cdet__size-wrap,
+.cdet__face,
+.cdet__help,
+.cdet__others {
+    padding: 0 var(--edge-grid);
+}
 
-    .colls__list { gap: 56px; }
+.cdet__shop {
+    padding-bottom: 0;
+}
 
-    .coll {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 24px;
+.cdet__info,
+.cdet__look,
+.cdet__story-wrap,
+.cdet__aud-wrap,
+.cdet__cmp,
+.cdet__size-wrap,
+.cdet__face,
+.cdet__help {
+    padding-top: 96px;
+}
+
+.cdet__h2 {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.cdet__h3 {
+    font-size: var(--fs-ui);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.cdet__para,
+.cdet__body,
+.cdet__guide-lead,
+.cdet__aside-lead,
+.cdet__cmp-note,
+.cdet__meta {
+    color: var(--ink-2);
+    line-height: var(--lh);
+    text-wrap: pretty;
+}
+
+.cdet__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-width: 650px;
+}
+
+.cdet__meta-row,
+.cdet__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    align-items: baseline;
+}
+
+.cdet__more-btn,
+.cdet__shop-more,
+.cdet__cmp-all,
+.cdet__olink {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ┌─ LƯỚI ẢNH CHIẾN DỊCH ─────────────────────────────────────────────── */
+.cdet__look-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap-tight);
+    margin-top: 20px;
+    list-style: none;
+}
+
+.cdet__look-item {
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+    background: var(--bg-slot);
+}
+
+.cdet__look-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* ┌─ HÀNG SỐ LIỆU ────────────────────────────────────────────────────── */
+.cdet__stats,
+.cdet__aud {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--gap-tight);
+    margin-top: 20px;
+    list-style: none;
+}
+
+.cdet__stat,
+.cdet__aud-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 16px;
+    background: var(--bg-soft);
+}
+
+.cdet__aud-label {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.cdet__aud-value {
+    font-size: var(--fs-ui);
+}
+
+.cdet__aud-note {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
+}
+
+/* ┌─ BẢNG SO SÁNH ────────────────────────────────────────────────────── */
+.cdet__table-wrap {
+    /* Bảng là thứ DUY NHẤT trên site được phép cuộn ngang — xem luật
+       "không cuộn ngang" ở oa.css. Một bảng bốn cột số đo trên màn 360px
+       thì hoặc cuộn, hoặc chữ nhỏ tới mức không đọc được. */
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+.cdet__table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: var(--fs-body);
+}
+
+.cdet__cell-title,
+.cdet__table th {
+    padding: 10px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--line-input);
+    font-size: var(--fs-micro);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    white-space: nowrap;
+}
+
+.cdet__table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--line-2);
+    vertical-align: top;
+}
+
+.cdet__cell-name {
+    color: var(--ink);
+}
+
+.cdet__cell-sku,
+.cdet__cell-lens,
+.cdet__cell-text {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+.cdet__cell-sku {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .04em;
+}
+
+.cdet__cell-link {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.cdet__cmp-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* ┌─ BẢNG MÀU & Ô MÀU ────────────────────────────────────────────────── */
+.cdet__palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+    list-style: none;
+}
+
+.cdet__swatch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-micro);
+}
+
+.cdet__swatch::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
+    /* --sw do view đặt inline: style="--sw:#6b3e1e" */
+    background: var(--sw, var(--bg-slot));
+}
+
+.cdet__swatch-name {
+    color: var(--ink-2);
+}
+
+/* ┌─ SỐ ĐO GỌNG ──────────────────────────────────────────────────────── */
+.cdet__size {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 16px;
+    list-style: none;
+}
+
+.cdet__size .num {
+    font-size: var(--fs-ui);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ┌─ DÁNG MẶT ────────────────────────────────────────────────────────── */
+.cdet__face-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--gap-tight);
+    margin-top: 20px;
+    list-style: none;
+}
+
+.cdet__face-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    background: var(--bg-soft);
+}
+
+.cdet__face-name {
+    font-size: var(--fs-ui);
+}
+
+.cdet__face-models,
+.cdet__face-foot {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
+}
+
+/* ┌─ CÁCH BẢO QUẢN ───────────────────────────────────────────────────── */
+.cdet__care,
+.cdet__ways,
+.cdet__steps {
+    display: flex;
+    flex-direction: column;
+    margin-top: 16px;
+    list-style: none;
+}
+
+.cdet__care-list {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+}
+
+.cdet__care-item,
+.cdet__sign-item {
+    padding: 10px 0;
+    border-top: 1px solid var(--line);
+    color: var(--ink-2);
+}
+
+.cdet__step {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 8px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+}
+
+.cdet__step-n {
+    font-size: var(--fs-micro);
+    color: var(--ink-5);
+    font-variant-numeric: tabular-nums;
+}
+
+.cdet__step-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.cdet__step-title {
+    color: var(--ink);
+}
+
+.cdet__step-text {
+    color: var(--ink-3);
+}
+
+.cdet__ways-label {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+/* ┌─ HỎI ĐÁP ─────────────────────────────────────────────────────────── */
+.cdet__faq-wrap,
+.cdet__faq {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+    max-width: 650px;
+}
+
+.cdet__q {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--r-field);
+    background: var(--bg-soft);
+}
+
+.cdet__q-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    cursor: pointer;
+    list-style: none;
+}
+
+.cdet__q-head::-webkit-details-marker {
+    display: none;
+}
+
+.cdet__q-head::after {
+    content: "+";
+    flex: none;
+    font-size: 14px;
+    line-height: 1;
+}
+
+.cdet__q[open] > .cdet__q-head::after {
+    content: "−";
+}
+
+.cdet__q-body {
+    padding: 0 14px 16px;
+    color: var(--ink-2);
+    line-height: var(--lh);
+}
+
+/* ┌─ KHỐI KẾT ────────────────────────────────────────────────────────── */
+.cdet__end {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 120px var(--edge) 84px;
+    text-align: center;
+}
+
+.cdet__end-title {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    max-width: 420px;
+    text-wrap: pretty;
+}
+
+.cdet__end-lead,
+.cdet__end-text {
+    color: var(--ink-3);
+    max-width: 460px;
+    text-wrap: pretty;
+}
+
+.cdet__end-btns,
+.cdet__cta-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.cdet__cta,
+.cdet__end-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--line-btn);
+    border-radius: var(--r-pill);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.cdet__cta:hover,
+.cdet__end-btn:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.cdet__end-btn--main {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.cdet__end-btn--main:hover {
+    background: var(--bg);
+    color: var(--ink);
+}
+
+.cdet__cta--ghost {
+    border-color: var(--line-btn);
+}
+
+/* ┌─ BỘ KHÁC ─────────────────────────────────────────────────────────── */
+.cdet__others {
+    padding-bottom: 96px;
+}
+
+.cdet__olist {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--gap-tight);
+    margin-top: 20px;
+    list-style: none;
+}
+
+.cdet__ocard {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-soft);
+}
+
+.cdet__oimg {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.cdet__oimg--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-slot);
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
+}
+
+.cdet__oname {
+    padding: 12px 14px 4px;
+    font-size: var(--fs-ui);
+}
+
+.cdet__otag {
+    padding: 0 14px 14px;
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+/* Bộ chưa mở bán */
+.cdet__soon {
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   NGĂN KÉO THÔNG SỐ  (.cdraw)
+
+   Bấm một mẫu trong bảng so sánh là ngăn này trượt ra từ phải. Cùng dáng
+   .oa-drawer của mẫu — nền #f3f3f5, không bo góc ở mép dính màn hình.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cdraw {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-drawer);
+    width: min(560px, 40vw);
+    min-width: 320px;
+    background: var(--bg-panel);
+    padding: 20px 40px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    font-size: var(--fs-body);
+}
+
+.cdraw[hidden] {
+    display: none;
+}
+
+.cdraw__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.cdraw__head-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.cdraw__name {
+    font-size: var(--fs-ui);
+}
+
+.cdraw__type,
+.cdraw__sku,
+.cdraw__size-hint,
+.cdraw__alt {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+.cdraw__sku {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .04em;
+}
+
+.cdraw__x {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.cdraw__shots {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+}
+
+.cdraw__shot {
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+    background: var(--bg);
+    width: 100%;
+    display: block;
+}
+
+.cdraw__body,
+.cdraw__group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.cdraw__rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.cdraw__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid var(--line-input);
+}
+
+.cdraw__dim,
+.cdraw__size-num {
+    font-variant-numeric: tabular-nums;
+}
+
+.cdraw__colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cdraw__color {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-micro);
+}
+
+.cdraw__dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
+    background: var(--sw, var(--bg-slot));
+}
+
+.cdraw__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.cdraw__chip {
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-chip);
+    padding: 0 12px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    font-size: var(--fs-ui);
+}
+
+.cdraw__foot {
+    margin-top: auto;
+    padding-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cdraw__go {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--h-field);
+    border: 0;
+    border-radius: var(--r-field);
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.cdraw__go:hover {
+    background: #333;
+    color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BỘ LỌC RIÊNG CỦA TRANG BỘ  (.cfil)
+
+   Cùng hình với .cfilter của catalog.css — bảng tràn ngang bung ra từ một
+   hàng, không phải cột bên trái. Hai bộ lớp khác nhau vì hai trang dựng ở
+   hai đợt; luật thì giống nhau.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cfil {
+    border-bottom: 1px solid var(--line);
+}
+
+.cfil__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 16px var(--edge);
+    font-size: var(--fs-ui);
+    cursor: pointer;
+    list-style: none;
+}
+
+.cfil__toggle::-webkit-details-marker {
+    display: none;
+}
+
+.cfil__badge,
+.cfil__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 8px;
+}
+
+.cfil__panel {
+    padding: 0 var(--edge) 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.cfil__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.cfil__title {
+    font-size: var(--fs-h);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.cfil__close,
+.cfil__clear {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--ink-3);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.cfil__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px 32px;
+}
+
+.cfil__col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.cfil__legend {
+    font-size: var(--fs-body);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.cfil__opt {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: var(--fs-body);
+    cursor: pointer;
+}
+
+.cfil__foot {
+    display: flex;
+    gap: 8px;
+}
+
+.cfil__apply {
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1000px) {
+    .cdet__look-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .cdet__hero {
+        aspect-ratio: 4 / 5;
     }
 
-    .coll--flip .coll__media { order: 0; }
+    .cdet__cap {
+        left: var(--edge);
+        right: var(--edge);
+        bottom: 32px;
+        max-width: none;
+    }
 
-    .coll__name { font-size: var(--fs-h3); }
-}
+    /* Dải phủ đậm hơn ở 4:5 — khối chữ lúc này chiếm gần nửa chiều cao ảnh.
+       Xem chú thích cùng nội dung ở about.css. */
+    .cdet__veil {
+        background: linear-gradient(to top,
+            rgba(0, 0, 0, .68) 0%,
+            rgba(0, 0, 0, .5) 42%,
+            rgba(0, 0, 0, .12) 72%,
+            rgba(0, 0, 0, 0) 92%);
+    }
 
-@media (max-width: 560px) {
-    .colls { padding-inline: 16px; }
+    .cdet__info,
+    .cdet__look,
+    .cdet__story-wrap,
+    .cdet__aud-wrap,
+    .cdet__cmp,
+    .cdet__size-wrap,
+    .cdet__face,
+    .cdet__help {
+        padding-top: 56px;
+    }
 
-    .coll__name    { font-size: var(--fs-h3); }
-    .coll__tagline { font-size: var(--fs-body-lg); }
-}
+    .cdet__end {
+        padding: 64px var(--edge) 56px;
+    }
 
+    .cdraw {
+        width: 100%;
+        min-width: 0;
+        padding: 20px 24px 32px;
+    }
 
-/* ============================================================================
-   NÉT CHỮ FURNISH — khối chốt cuối file
-
-   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
-   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
-   điểm khác rõ nhất giữa hai bản.
-
-   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
-   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
-   ============================================================================ */
-.coll__name {
-    font-weight: 400;
-    letter-spacing: var(--tracking-tight);
-}
-
-.coll__tagline {
-    font-weight: 400;
-}
-
-.coll__when {
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+    .colls {
+        padding-bottom: 64px;
+    }
 }

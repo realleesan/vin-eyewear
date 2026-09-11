@@ -1,954 +1,1487 @@
 /* ============================================================================
-   checkout.css — THANH TOÁN (order/checkout) và QUÉT MÃ CHUYỂN KHOẢN (order/transfer)
+   checkout.css — BỐN TRANG CỦA ĐƯỜNG TIỀN
 
-   Hai màn của cùng một luồng nên chung một file. Cả hai chạy trên KHUNG RÚT
-   GỌN (components/bare-shell.css) — không nav, không giỏ, không cụm nút nổi.
+     /thanh-toan            đặt hàng          .co* · .ck* · .csum*
+     /thanh-toan/chuyen-khoan  màn QR SePay   .coqr__*
+     /dat-hang/thanh-cong   xác nhận đơn      .ocomp__*
+     /dat-hang/da-thanh-toan biên nhận        .opaid__*
 
-   Furnish không có trang thanh toán. Bố cục suy ra từ ngôn ngữ của theme, và
-   giữ đúng ba nguyên tắc UX của một trang trả tiền:
+   Bốn trang gộp một file vì chúng là MỘT luồng liên tục và dùng chung phần
+   lớn nguyên thể. Tách ra thì bốn file cùng khai lại .cofield, .cocard và
+   khối tóm tắt tiền — đúng kiểu lệch dần đã xảy ra ở bản trước.
 
-     · MỘT CỘT NHẬP LIỆU, một cột tóm tắt. Không chia ba.
-     · Mỗi bước có SỐ THỨ TỰ. Người đang trả tiền cần biết còn mấy bước nữa.
-     · Không có gì nhấp nháy, không có gì tự đổi chỗ.
+   ═════════════════════════════════════════════════════════════════════════
+   MẪU KHÔNG VẼ TRANG NÀO TRONG BỐN TRANG NÀY. Bốn quy tắc dịch, áp cả file:
 
-   ─────────────────────────────────────────────────────────────────────────────
-   ⚠ ĐÂY LÀ LUỒNG TIỀN — CSS KHÔNG ĐƯỢC ĐỤNG VÀO CẤU TRÚC
+     ô nhập      → .oa-input: cao 44, bo 6, viền #ddd, nền trắng
+     ô chọn      → viền 1px #ddd; ĐANG CHỌN thì viền đen (box-shadow inset),
+                   KHÔNG đổi nền. Đây là luật của mẫu ở mọi chỗ có lựa chọn.
+     nút chính   → .oa-btn--block: cao 44, bo 6, chữ 9px IN HOA
+     mã đơn / số → `tabular-nums`, giãn .06em. Không tải font mono nào —
+                   bộ số đều bề ngang đã có sẵn trong font hệ thống.
 
-     [data-deposit-block]  assets/js/checkout-deposit.js hiện/ẩn khối cọc theo
-                           hình thức thanh toán đang chọn
-     [data-vnaddr*]        assets/js/address-picker.js nâng hai ô tỉnh/phường
-                           thành ô chọn, đọc từ provinces.open-api.vn
-     [data-pay-watch] +    assets/js/pay-watch.js hỏi trạng thái thanh toán
-     data-watch-url        theo nhịp giãn dần, dừng khi tab bị ẩn
-     .js-copy[data-copy]   assets/js/copy-btn.js chép số tài khoản / nội dung CK
-
-   Khối tóm tắt (.csum*) dùng CHUNG với giỏ hàng — nằm ở cart.css, master.php
-   nạp cả hai file cho trang này. Đừng khai lại .csum* ở đây.
-   ============================================================================ */
+   VÀ MỘT LUẬT RIÊNG CHO ĐƯỜNG TIỀN: không dùng sắc --sale cho tổng tiền
+   hay cho nút. Đỏ ở đây chỉ có nghĩa "số bị trừ đi" (giảm giá) hoặc "việc
+   vừa rồi hỏng". Tô đỏ nút "Đặt hàng" là nói sai một câu quan trọng.
+   ═════════════════════════════════════════════════════════════════════════ */
 
 .checkout {
-    padding-block: var(--space-8) var(--section-pad);
+    padding: 0 var(--edge) 96px;
 }
 
-.cohead,
-.cogrid {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding-inline: var(--page-edge);
-}
+/* ══════════════════════════════════════════════════════════════════════
+   ĐẦU TRANG
+   ══════════════════════════════════════════════════════════════════════ */
 
-/* ── Đầu trang + đường dẫn ───────────────────────────────────────────────── */
 .cohead {
-    margin-bottom: var(--block-gap);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 32px 0 28px;
+}
+
+.cohead__crumbs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.cohead__sep {
+    color: var(--line-btn);
+}
+
+.cohead__here {
+    color: var(--ink);
 }
 
 .cohead__row {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
+    gap: 14px;
 }
 
 .cohead__back {
     display: inline-flex;
     align-items: center;
-    gap: var(--space-2);
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    letter-spacing: var(--tracking-label);
+    gap: 4px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    text-decoration: none;
+    color: var(--ink-3);
 }
 
 .cohead__back:hover {
     color: var(--ink);
 }
 
-.cohead__crumbs {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
-
-.cohead__sep {
-    color: var(--line-strong);
-}
-
-.cohead__here {
-    color: var(--ink);
-    font-weight: 500;
-}
-
 .cohead__title {
-    font-size: var(--fs-h2);
-    font-weight: 400;
-    letter-spacing: var(--tracking-tight);
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
-/* ── Bố cục hai cột ──────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   BỐ CỤC: các bước bên trái, tóm tắt dính bên phải
+   ══════════════════════════════════════════════════════════════════════ */
+
 .cogrid {
     display: grid;
-    gap: var(--block-gap);
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 48px;
     align-items: start;
 }
 
-/* ============================================================================
-   1. CÁC BƯỚC
-   ============================================================================ */
 .costeps {
-    display: grid;
-    gap: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    min-width: 0;
+}
+
+.costep {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .costep__head {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    margin-bottom: var(--space-5);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line);
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-input);
 }
 
-/* Số thứ tự bước — ô VUÔNG đặc, không phải vòng tròn: cả trang đang vuông. */
+/* Số bước — vòng tròn viền mảnh, KHÔNG tô đặc. Tô đặc thì ba con số đen
+   thành ba điểm nặng nhất trang, mà thứ nặng nhất phải là nút đặt hàng. */
 .costep__num {
+    flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
-    flex: 0 0 auto;
-    background: var(--ink);
-    color: var(--on-ink);
-    font-size: var(--fs-caption);
-    font-weight: 500;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    font-size: var(--fs-micro);
+    font-variant-numeric: tabular-nums;
 }
 
 .costep__title {
-    font-size: var(--fs-subhead);
+    font-size: var(--fs-ui);
     font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
-/* ── Ô nhập ──────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   Ô NHẬP
+   ══════════════════════════════════════════════════════════════════════ */
+
 .cofield__row {
     display: grid;
-    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px 16px;
 }
 
 .cofield {
-    display: grid;
-    gap: var(--space-2);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
     min-width: 0;
 }
 
+/* Ô chiếm trọn hàng — địa chỉ, ghi chú */
+.cofield--wide {
+    grid-column: 1 / -1;
+}
+
 .cofield__label {
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .cofield__input,
 .cofield__area {
     width: 100%;
-    padding: var(--space-4);
-    border: 1px solid var(--line-strong);
-    background: var(--surface-raised);
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
     color: var(--ink);
-    font: inherit;
-    font-size: var(--fs-body-sm);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    outline: none;
+    transition: border-color .18s ease;
+}
+
+select.cofield__input {
+    appearance: none;
+    -webkit-appearance: none;
+    /* Mũi tên tự vẽ bằng gradient thay vì SVG nền: một <select> trong lưới
+       này không có chỗ treo thẻ SVG anh em như .catpick--select có. */
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+        linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+    background-position: calc(100% - 15px) 19px, calc(100% - 10px) 19px;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 30px;
 }
 
 .cofield__area {
+    height: auto;
+    min-height: 84px;
+    padding: 12px;
     resize: vertical;
+    line-height: var(--lh);
+}
+
+.cofield__input::placeholder,
+.cofield__area::placeholder {
+    color: var(--ink-5);
 }
 
 .cofield__input:focus,
 .cofield__area:focus {
-    outline: 2px solid var(--ink);
-    outline-offset: -2px;
     border-color: var(--ink);
 }
 
-.cofield__input:invalid:not(:placeholder-shown) {
-    border-color: var(--danger);
+/* Ô sai — viền đỏ mảnh. KHÔNG tô nền hồng: nền màu trên một form trắng là
+   thứ duy nhất có màu trên cả trang, và nó kéo mắt mạnh hơn mức cần. */
+.cofield__input[aria-invalid="true"],
+.cofield__area[aria-invalid="true"] {
+    border-color: var(--sale);
 }
 
-/* Khi JS tắt hoặc API địa giới chết, address-picker.js để nguyên hai ô gõ tay
-   và khối này là lời giải thích. */
-.cofallback {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
+/* ══════════════════════════════════════════════════════════════════════
+   Ô CHỌN (giao hàng / nhận tại cửa hàng, hình thức trả tiền)
+   ══════════════════════════════════════════════════════════════════════ */
 
-/* ============================================================================
-   2. HAI NHÓM Ô CHỌN — hình thức nhận hàng và hình thức thanh toán
-
-   Mỗi lựa chọn là một <label> bọc <input type=radio>. Ô radio thật vẫn nằm đó
-   cho bàn phím và trình đọc màn hình, chỉ ẩn khỏi mắt.
-   ============================================================================ */
 .cocards {
     display: grid;
-    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 8px;
 }
 
-.cocards input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
+.cocards--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.cocard__body {
+.cocard,
+.ckopt__item {
     display: flex;
     align-items: flex-start;
-    gap: var(--space-3);
-    padding: var(--space-5);
-    border: 1px solid var(--line);
-    background: var(--surface-raised);
+    gap: 10px;
+    padding: 14px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
     cursor: pointer;
-    transition: border-color var(--dur) var(--ease), background-color var(--dur) var(--ease);
+    transition: border-color .18s ease;
 }
 
-.cocards label:hover .cocard__body {
-    border-color: var(--line-strong);
+.cocard:hover,
+.ckopt__item:hover {
+    border-color: var(--ink-6);
 }
 
-.cocards input:checked + .cocard__body,
-.cocards input:checked ~ .cocard__body {
+/* Radio thật bị ẩn, không bị bỏ: bàn phím vẫn đi qua nó, trình đọc màn hình
+   vẫn đọc đúng "nút chọn", và form vẫn gửi đúng giá trị. Ô tròn nhìn thấy
+   là .cocard__dot ngay dưới. */
+.cocard input,
+.ckopt__item input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.cocard__dot,
+.ckopt__dot {
+    flex: none;
+    width: 12px;
+    height: 12px;
+    margin-top: 2px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    background: var(--bg);
+    position: relative;
+}
+
+.cocard input:checked ~ .cocard__dot::after,
+.ckopt__item input:checked ~ .ckopt__dot::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    background: var(--ink);
+}
+
+/* ĐANG CHỌN = VIỀN ĐEN. :has() cho phép ô cha đổi dáng theo radio bên trong
+   mà không cần JavaScript gắn lớp. Trình duyệt không hỗ trợ :has() thì chấm
+   tròn bên trong vẫn đầy lên — lựa chọn vẫn nhìn ra được, chỉ kém nổi hơn. */
+.cocard:has(input:checked),
+.ckopt__item:has(input:checked) {
     border-color: var(--ink);
-    background: var(--surface-sunken);
+    box-shadow: inset 0 0 0 1px var(--ink);
 }
 
-.cocards input:focus-visible + .cocard__body {
+.cocard:has(input:focus-visible),
+.ckopt__item:has(input:focus-visible) {
     outline: 2px solid var(--ink);
     outline-offset: 2px;
 }
 
-/* Chấm tròn giả lập ô radio — đây là hình TRÒN thật, đúng vai trò của nó. */
-.cocard__dot {
-    position: relative;
-    width: 16px;
-    height: 16px;
-    flex: 0 0 auto;
-    margin-top: 3px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-round);
-    background: var(--surface-raised);
-}
-
-.cocards input:checked + .cocard__body .cocard__dot {
-    border-color: var(--ink);
-}
-
-.cocards input:checked + .cocard__body .cocard__dot::after {
-    content: "";
-    position: absolute;
-    inset: 3px;
-    border-radius: var(--radius-round);
-    background: var(--ink);
-}
-
-.cocard__name {
-    display: block;
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
-}
-
-.cocard__note {
-    display: block;
-    margin-top: 2px;
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    line-height: 1.6;
-}
-
-/* ── Chọn cơ sở nhận hàng ────────────────────────────────────────────────── */
-.copick {
-    margin-top: var(--space-4);
-}
-
-.copick__store,
-.copick__ship {
-    display: grid;
-    gap: var(--space-3);
-}
-
-.copick__none {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
-
-/* ── Khối tuỳ chọn có đánh số (ví dụ hình thức trả tiền) ─────────────────── */
-.ckopt__item {
+.cocard__body,
+.ckopt__body {
     display: flex;
-    gap: var(--space-4);
-    padding-block: var(--space-4);
-    border-bottom: 1px solid var(--line);
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.cocard__name,
+.ckopt__name {
+    font-size: var(--fs-ui);
+}
+
+.cocard__note,
+.ckopt__note,
+.copick__none,
+.cotrust,
+.cofallback {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
 }
 
 .ckopt__num {
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: var(--fs-caption);
+    font-variant-numeric: tabular-nums;
 }
 
-.ckopt__name {
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
+.ckopt__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
 }
 
-.ckopt__note {
-    margin-top: 2px;
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    line-height: 1.6;
+.copick__ship,
+.copick__store {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.ckopt__dot {
-    color: var(--line-strong);
+/* Nút gửi dự phòng cho trình duyệt không chạy JavaScript — nằm ngoài luồng
+   nhìn nhưng vẫn bấm được bằng bàn phím. */
+html.js .cofallback {
+    display: none;
 }
 
-/* ============================================================================
-   3. DANH SÁCH HÀNG TRONG ĐƠN
-   ============================================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   DANH SÁCH HÀNG TRONG TÓM TẮT
+   ══════════════════════════════════════════════════════════════════════ */
+
 .coitems {
-    list-style: none;
+    display: flex;
+    flex-direction: column;
 }
 
-.coitem__body {
+.coitem {
     display: grid;
-    grid-template-columns: 64px minmax(0, 1fr) max-content;
-    gap: var(--space-4);
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 10px;
     align-items: start;
-    padding-block: var(--space-4);
-    border-bottom: 1px solid var(--line);
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line-input);
 }
 
 .coitem__thumb {
-    width: 64px;
-    aspect-ratio: 1 / 1;
+    width: 48px;
+    aspect-ratio: 4 / 5;
     overflow: hidden;
-    background: var(--h-shell);
-    border: 1px solid var(--line);
+    background: var(--bg);
 }
 
 .coitem__thumb img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    display: block;
+    object-fit: contain;
+}
+
+.coitem__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 .coitem__name {
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
+    font-size: var(--fs-body);
 }
 
 .coitem__meta,
 .coitem__lens {
-    margin-top: 2px;
-    color: var(--muted);
-    font-size: var(--fs-caption);
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
 }
 
 .coitem__rx {
-    margin-top: 2px;
-    color: var(--muted);
-    font-family: var(--font-mono);
-    font-size: var(--fs-micro);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
 }
 
 .coitem__price {
-    font-weight: 500;
-    font-size: var(--fs-body-sm);
     white-space: nowrap;
 }
 
-/* ============================================================================
-   4. Ô MÃ GIẢM GIÁ CỦA TRANG THANH TOÁN
-   ============================================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   VOUCHER TRONG TRANG THANH TOÁN
+
+   Khác ô voucher ở trang giỏ: ở đây có cả một BẢNG XỔ danh sách mã khách
+   đang có, nên nó là <details> chứ không chỉ một ô nhập.
+   ══════════════════════════════════════════════════════════════════════ */
+
 .covou {
-    margin-top: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
 }
 
 .covou__toggle {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: var(--space-3);
-    width: 100%;
-    padding: var(--space-4);
-    border: 1px solid var(--line);
-    background: var(--surface-sunken);
-    color: var(--ink);
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 12px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    font-size: var(--fs-body);
     cursor: pointer;
+    list-style: none;
+}
+
+.covou__toggle::-webkit-details-marker {
+    display: none;
 }
 
 .covou__chev {
-    width: 16px;
-    height: 16px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    transition: transform var(--dur) var(--ease);
+    flex: none;
+    transition: transform .2s ease;
 }
 
-.covou[open] .covou__chev,
-.covou__toggle[aria-expanded="true"] .covou__chev {
+.covou[open] .covou__chev {
     transform: rotate(180deg);
 }
 
 .covou__menu {
-    padding: var(--space-4);
-    border: 1px solid var(--line);
-    border-top: 0;
-}
-
-.covou__code {
     display: flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
+    flex-direction: column;
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
 }
 
-.covou__input {
-    flex: 1 1 180px;
-    min-width: 0;
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--line-strong);
-    background: var(--surface-raised);
-    color: var(--ink);
-    font: inherit;
-    font-size: var(--fs-body-sm);
-    text-transform: uppercase;
-}
-
-.covou__apply {
-    padding: var(--space-3) var(--space-6);
-    border: 1px solid var(--ink);
-    background: var(--ink);
-    color: var(--on-ink);
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+.covou__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    border: 0;
+    background: none;
+    text-align: left;
+    font-family: inherit;
+    font-size: var(--fs-body);
     cursor: pointer;
 }
 
-.covou__apply:hover {
-    background: var(--brand-strong);
-    border-color: var(--brand-strong);
-    color: var(--on-brand);
+.covou__item + .covou__item {
+    border-top: 1px solid var(--line-2);
 }
 
-.covou__pick {
-    display: grid;
-    gap: var(--space-2);
-    margin-top: var(--space-4);
-    list-style: none;
+.covou__item:hover {
+    background: var(--bg-soft);
 }
 
 .covou__itembody {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    border: 1px solid var(--line);
-    background: var(--surface-raised);
-    cursor: pointer;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
-.covou__itembody:hover {
+.covou__code,
+.covou__oncode {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.covou__desc,
+.covou__min,
+.covou__onnote,
+.covou__none {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
+}
+
+/* Loại voucher — huy hiệu chữ nhỏ IN HOA, cùng dáng với .oa-badge nhưng
+   rỗng ruột: nó phân loại, không thông báo. */
+.covou__type {
+    flex: none;
+    height: 16px;
+    padding: 0 6px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--line-input);
+    font-size: 8px;
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.covou__pick {
+    display: flex;
+    gap: 6px;
+}
+
+.covou__input {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    outline: none;
+}
+
+.covou__input:focus {
     border-color: var(--ink);
 }
 
-.covou__type {
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
+.covou__apply {
+    flex: none;
+    height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-field);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    color: var(--ink);
+    cursor: pointer;
 }
 
-.covou__desc {
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
-}
-
-.covou__min {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
-
-.covou__cut {
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.covou__none {
-    color: var(--muted);
-    font-size: var(--fs-caption);
+.covou__on {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+    padding: 12px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-field);
+    background: var(--bg);
 }
 
 .covou__onbody {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding: var(--space-4);
-    border: 1px solid var(--success);
-    background: var(--surface-raised);
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
-.covou__oncode {
-    font-family: var(--font-mono);
-    font-weight: 500;
-}
-
-.covou__onnote {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
-
-.covou__on {
-    color: var(--success);
-    font-size: var(--fs-body-sm);
+.covou__cut {
+    color: var(--sale);
+    white-space: nowrap;
 }
 
 .covou__off {
+    margin-left: auto;
     border: 0;
-    background: transparent;
-    color: var(--danger);
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    text-transform: uppercase;
+    background: none;
+    padding: 0;
+    color: var(--ink-3);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    text-decoration: underline;
+    text-underline-offset: 2px;
     cursor: pointer;
 }
 
-/* ============================================================================
-   5. KHỐI TÓM TẮT — phần RIÊNG của trang thanh toán
-
-   Phần dùng chung (.csum__card, .csum__row, .csum__grand…) nằm ở cart.css.
-   Ở đây chỉ có những dòng chỉ trang này mới có: tiền cọc.
-   ============================================================================ */
-.csum__row--deposit {
-    padding-top: var(--space-3);
-    margin-top: var(--space-2);
-    border-top: 1px dashed var(--line-strong);
+.covou__off:hover {
+    color: var(--sale);
 }
 
-/* SỐ TIỀN ĐẶT CỌC — trạng thái thương mại, giữ crimson (xem PHẦN 1 gm.css).
-   font-weight về 500: bộ này không dùng 700 ở đâu cả. */
+.covou__msg {
+    font-size: var(--fs-micro);
+    color: var(--sale);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   ĐẶT CỌC
+
+   Hai dòng đặc biệt trong khối tóm tắt khi đơn chỉ trả trước một phần.
+   Chúng phải TÁCH KHỎI các dòng thường, không thì khách đọc lướt sẽ tưởng
+   số cuối cùng là số phải trả đủ.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.csum__row--deposit {
+    padding-top: 8px;
+    border-top: 1px dashed var(--line-input);
+}
+
 .csum__val--deposit {
-    color: var(--accent);
-    font-weight: 500;
+    color: var(--ink);
 }
 
 .csum__deposit {
-    margin-top: var(--space-4);
-    padding: var(--space-4);
-    border: 1px solid var(--line);
-    background: var(--surface-raised);
-    font-size: var(--fs-caption);
-    line-height: 1.65;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--r-field);
+    background: var(--bg);
 }
 
 .csum__deposit-why {
-    display: block;
-    margin-top: var(--space-2);
-    color: var(--muted);
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
 }
 
 .csum__cta--btn {
-    border: 1px solid var(--brand);
+    border: 0;
+    width: 100%;
 }
 
-.cotrust {
-    display: grid;
-    gap: var(--space-2);
-    margin-top: var(--space-5);
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    list-style: none;
-}
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN QR CHUYỂN KHOẢN  (/thanh-toan/chuyen-khoan)
+   ══════════════════════════════════════════════════════════════════════ */
 
-/* ============================================================================
-   6. MÀN QUÉT MÃ CHUYỂN KHOẢN (order/transfer)
-   ============================================================================ */
 .coqr {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: var(--space-8) var(--page-edge) var(--section-pad);
-}
-
-.coqr__head {
-    margin-bottom: var(--block-gap);
-}
-
-.coqr__title {
-    font-size: var(--fs-h2);
-    font-weight: 400;
-    letter-spacing: var(--tracking-tight);
+    padding: 40px var(--edge) 96px;
 }
 
 .coqr__titles {
-    margin-top: var(--space-2);
-    color: var(--muted);
-    font-size: var(--fs-body);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    margin-bottom: 36px;
+}
+
+.coqr__title,
+.coqr__paytitle,
+.coqr__ordertitle {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.coqr__paysub,
+.coqr__note,
+.coqr__paynote,
+.coqr__nocode,
+.coqr__slow {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh);
 }
 
 .coqr__split {
     display: grid;
-    gap: var(--block-gap);
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 40px;
     align-items: start;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 .coqr__card,
 .coqr__side {
-    padding: var(--space-6);
-    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px;
+    border-radius: var(--r-field);
+    background: var(--bg-panel);
 }
 
-.coqr__side {
-    background: var(--surface-sunken);
+.coqr__pay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
 }
 
-/* Khung ảnh QR — nền trắng đặc và viền dày hơn bình thường: mã phải tách hẳn
-   khỏi nền để camera điện thoại bắt được. */
+/* Khung ảnh QR — nền TRẮNG bắt buộc, và đệm 12px quanh mã. Máy quét cần
+   vùng lặng quanh mã; đặt QR lên nền xám là cách làm nó khó quét trên máy
+   cũ mà không ai thử ra được. */
 .coqr__frame {
-    display: block;
     width: min(260px, 100%);
-    margin-inline: auto;
-    padding: var(--space-4);
+    aspect-ratio: 1 / 1;
+    padding: 12px;
     background: #fff;
-    border: 1px solid var(--line-strong);
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
 }
 
 .coqr__frame img {
     width: 100%;
-    height: auto;
-    display: block;
+    height: 100%;
+    object-fit: contain;
 }
 
-.coqr__amount {
-    margin-top: var(--space-5);
-    text-align: center;
-}
-
-.coqr__amountlabel,
-.coqr__totallabel {
-    display: block;
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-}
-
-.coqr__amountval,
-.coqr__totalval {
-    display: block;
-    margin-top: var(--space-1);
-    font-size: var(--fs-h3);
-    font-weight: 500;
-}
-
-.coqr__amountrest {
-    display: block;
-    margin-top: var(--space-1);
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
-
-/* ── Bảng thông tin ngân hàng ────────────────────────────────────────────── */
 .coqr__bank {
-    display: grid;
-    gap: 0;
-    margin-top: var(--space-5);
-    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
 
 .coqr__line {
-    display: grid;
-    grid-template-columns: minmax(96px, 34%) minmax(0, 1fr) auto;
-    gap: var(--space-3);
-    align-items: center;
-    padding-block: var(--space-3);
-    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--line-input);
 }
 
 .coqr__bankkey {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-}
-
-.coqr__bankval {
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
-    overflow-wrap: anywhere;
-}
-
-/* Nội dung chuyển khoản: chữ đơn cách để khách đối chiếu từng ký tự. */
-.coqr__bankval--wide {
-    font-family: var(--font-mono);
-    letter-spacing: var(--tracking-label);
-}
-
-.coqr__copy {
-    padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--line-strong);
-    background: transparent;
-    color: var(--ink);
+    color: var(--ink-3);
     font-size: var(--fs-micro);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    cursor: pointer;
     white-space: nowrap;
 }
 
-.coqr__copy:hover {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: var(--on-ink);
+.coqr__bankval {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .04em;
+    word-break: break-word;
 }
 
-/* ── Các bước làm ────────────────────────────────────────────────────────── */
+.coqr__bankval--wide {
+    letter-spacing: .08em;
+}
+
+/* Nút chép — chữ nhỏ IN HOA gạch chân, không phải một nút đặc. Nó đứng
+   cạnh con số mà nó chép, nên nó không được nặng hơn con số ấy. */
+.coqr__copy {
+    border: 0;
+    background: none;
+    padding: 0;
+    margin-left: 8px;
+    color: var(--ink-3);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.coqr__copy:hover {
+    color: var(--ink);
+}
+
+/* copy-btn.js đổi chữ thành "Đã chép" và gắn lớp này trong 2 giây */
+.coqr__copy.is-copied {
+    color: var(--success);
+    text-decoration: none;
+}
+
+.coqr__amount {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 16px;
+    width: 100%;
+    border-radius: var(--r-field);
+    background: var(--bg);
+    text-align: center;
+}
+
+.coqr__amountlabel {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.coqr__amountval {
+    font-size: var(--fs-h);
+    font-variant-numeric: tabular-nums;
+}
+
+.coqr__amountrest {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+/* Nội dung chuyển khoản — đây là chuỗi khách phải chép ĐÚNG TỪNG KÝ TỰ,
+   nên nó là thứ đặc nhất trên trang: nền trắng, viền đen, chữ giãn rộng. */
+.coqr__code {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    word-break: break-all;
+}
+
 .coqr__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.coqr__step {
     display: grid;
-    gap: var(--space-4);
-    list-style: none;
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
 }
 
 .coqr__stepnum {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
-    flex: 0 0 auto;
-    background: var(--ink);
-    color: var(--on-ink);
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
     font-size: var(--fs-micro);
-    font-weight: 500;
+    font-variant-numeric: tabular-nums;
 }
 
 .coqr__steplabel {
-    font-size: var(--fs-body-sm);
-    line-height: 1.6;
+    line-height: var(--lh);
 }
 
 .coqr__steprule {
-    margin-block: var(--space-4);
-    border: 0;
-    border-top: 1px solid var(--line);
+    height: 1px;
+    background: var(--line-input);
 }
 
-/* ── Tóm tắt đơn trong cột phải ──────────────────────────────────────────── */
-.coqr__orderhead {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
-}
-
-.coqr__ordertitle {
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-}
-
-.coqr__code {
-    font-family: var(--font-mono);
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
-}
-
-.coqr__nocode {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
-
-.coqr__lens,
-.coqr__note {
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    line-height: 1.6;
-}
-
-.coqr__linesum {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--space-3);
-    padding-block: var(--space-2);
-    font-size: var(--fs-body-sm);
-}
-
-.coqr__linesum--due {
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--line);
-    font-weight: 500;
-}
-
-.coqr__total {
-    margin-top: var(--space-4);
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--line);
-}
-
-/* ── Trạng thái chờ tiền về ──────────────────────────────────────────────── */
-.coqr__wait,
+/* ┌─ ĐANG CHỜ BÁO CÓ ─────────────────────────────────────────────────────
+   │ pay-watch.js hỏi máy chủ vài giây một lần xem tiền về chưa. Chấm nhấp
+   │ nháy là dấu hiệu DUY NHẤT cho biết trang còn sống — bỏ nó đi thì một
+   │ màn chờ im lìm trông y hệt một trang treo.
+   └──────────────────────────────────────────────────────────────────────── */
 .coqr__watch {
     display: flex;
     align-items: center;
-    gap: var(--space-3);
-    margin-top: var(--space-5);
-    padding: var(--space-4);
-    border: 1px solid var(--line);
-    background: var(--surface-raised);
-    font-size: var(--fs-body-sm);
+    gap: 8px;
+    padding: 12px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+    font-size: var(--fs-micro);
 }
 
-/* Chấm nhấp nháy — hình TRÒN thật. Nó là dấu hiệu duy nhất cho biết trang
-   đang thật sự hỏi máy chủ chứ không đứng im. */
 .coqr__watchdot {
-    width: 10px;
-    height: 10px;
-    flex: 0 0 auto;
-    border-radius: var(--radius-round);
-    background: var(--success);
-    /* `var(--ease)-in-out` là cú thay chuỗi hụt của đợt token hoá — KHÔNG phải
-       một timing-function hợp lệ, nên cả dòng animation bị trình duyệt vứt và
-       chấm đứng im, đúng lúc người dùng cần thấy trang vẫn đang theo dõi.
-
-       NGOẠI LỆ DUY NHẤT KHÔNG DÙNG --ease, và có lý do: --ease là đường cong
-       MỘT CHIỀU (ra nhanh, vào chậm) cho một lần đổi trạng thái. Nhịp này lặp
-       vô hạn và đối xứng (1 → .25 → 1); lắp một đường cong một chiều vào thì
-       vận tốc gãy ở chỗ nối vòng và mắt đọc ra thành "nháy" chứ không phải
-       "thở". Đây là chấm chờ duy nhất của trang khách. */
-    animation: coqr-pulse var(--dur-slow) ease-in-out infinite;
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ink);
+    animation: coqr-pulse 1.4s ease-in-out infinite;
 }
 
 @keyframes coqr-pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: .25;
-    }
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .25; }
 }
 
-/* Máy đặt "giảm chuyển động" thì chấm đứng yên — nó vẫn nói đủ ý bằng màu. */
-@media (prefers-reduced-motion: reduce) {
-    .coqr__watchdot {
-        animation: none;
-    }
-}
-
-.coqr__watchtext {
-    color: var(--muted);
-}
-
-.coqr__slow {
-    margin-top: var(--space-3);
-    color: var(--muted);
-    font-size: var(--fs-caption);
-}
-
-.coqr__checked {
-    color: var(--muted);
-    font-size: var(--fs-caption);
+/* Tiền đã về — chấm đứng yên và đổi sang xanh. Đây là một trong hai chỗ
+   duy nhất trên site dùng --success. */
+.coqr__checked .coqr__watchdot {
+    background: var(--success);
+    animation: none;
 }
 
 .coqr__manual,
 .coqr__confirm {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    margin-top: var(--space-4);
-    padding: var(--space-4) var(--space-6);
-    border: 1px solid var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: .1em;
+    height: var(--h-field);
+    border: 1px solid var(--line-btn-2);
+    border-radius: var(--r-field);
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    text-decoration: none;
     cursor: pointer;
 }
 
-.coqr__manual:hover,
+.coqr__confirm {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: #fff;
+}
+
 .coqr__confirm:hover {
-    background: var(--brand-strong);
-    border-color: var(--brand-strong);
-    color: var(--on-brand);
+    background: #333;
+    color: #fff;
 }
 
 .coqr__back {
-    display: inline-block;
-    margin-top: var(--space-4);
-    color: var(--muted);
-    font-size: var(--fs-caption);
+    align-self: center;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-underline-offset: 2px;
 }
 
-.coqr__pay {
-    margin-top: var(--space-5);
+.coqr__orderhead {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-input);
 }
 
-.coqr__paytitle {
-    font-size: var(--fs-subhead);
-    font-weight: 400;
+.coqr__linesum,
+.coqr__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
 }
 
-.coqr__paysub,
-.coqr__paynote {
-    margin-top: var(--space-2);
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    line-height: 1.6;
+.coqr__total {
+    padding-top: 10px;
+    border-top: 1px solid var(--line-input);
 }
 
-/* ============================================================================
-   7. MỐC BỀ NGANG
-   ============================================================================ */
-@media (min-width: 601px) {
-
-    .cofield__row {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .cocards--2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+.coqr__totallabel {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
-@media (min-width: 1101px) {
+.coqr__totalval {
+    font-size: var(--fs-h);
+    font-variant-numeric: tabular-nums;
+}
 
-    .cogrid {
-        grid-template-columns: minmax(0, 1fr) 380px;
-    }
+.coqr__linesum--due {
+    color: var(--sale);
+}
 
+.coqr__lens {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+/* pay-watch.js hiện câu này sau vài phút chưa thấy tiền về */
+.coqr__slow[hidden] {
+    display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   XÁC NHẬN ĐƠN  (/dat-hang/thanh-cong)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.ocomp {
+    padding: 0 var(--edge) 96px;
+}
+
+.ocomp__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 64px 0 40px;
+    text-align: center;
+}
+
+/* Dấu tích trong vòng tròn viền mảnh — KHÔNG tô xanh lá đặc. Mẫu không có
+   màu nào ngoài đen; niềm vui "đặt hàng xong" nói bằng khoảng trắng và một
+   dòng chữ, không bằng một mảng màu. */
+.ocomp__seal,
+.opaid__seal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--ink);
+    border-radius: 50%;
+    color: var(--ink);
+}
+
+.ocomp__title,
+.opaid__title {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.ocomp__lead,
+.opaid__lead {
+    color: var(--ink-3);
+    max-width: 460px;
+    text-wrap: pretty;
+}
+
+/* Mã đơn — thứ khách sẽ đọc qua điện thoại, nên nó đặc và giãn rộng */
+.ocomp__codelabel,
+.opaid__code {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.ocomp__code,
+.opaid__codewrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-field);
+    background: var(--bg);
+}
+
+.ocomp__codeval {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.ocomp__copy,
+.opaid__copy {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--ink-3);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.ocomp__copy:hover,
+.opaid__copy:hover {
+    color: var(--ink);
+}
+
+.ocomp__copied {
+    color: var(--success);
+}
+
+.ocomp__card,
+.opaid__card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px;
+    border-radius: var(--r-field);
+    background: var(--bg-panel);
+    max-width: 640px;
+    margin: 0 auto 16px;
+}
+
+.ocomp__orderhead,
+.opaid__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-input);
+}
+
+.ocomp__ordertitle,
+.opaid__cardtitle {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.ocomp__ordercount {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+/* Bảng thông tin giao hàng — nhãn trái, giá trị phải */
+.ocomp__facts {
+    display: flex;
+    flex-direction: column;
+}
+
+.ocomp__fact {
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid var(--line-2);
+}
+
+.ocomp__label {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.ocomp__factval {
+    word-break: break-word;
+}
+
+.ocomp__factsub,
+.ocomp__addr {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
+}
+
+.ocomp__items,
+.opaid__rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.ocomp__item,
+.opaid__item {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    gap: 10px;
+    align-items: start;
+    padding: 12px 0;
+    border-top: 1px solid var(--line-2);
+}
+
+.ocomp__thumb {
+    width: 48px;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: var(--bg);
+}
+
+.ocomp__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.ocomp__itemmain {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.ocomp__itemname {
+    font-size: var(--fs-body);
+}
+
+.ocomp__itemqty,
+.ocomp__itemlens,
+.opaid__lens {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
+}
+
+.ocomp__itemrx {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .02em;
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+.ocomp__itemsum {
+    white-space: nowrap;
+}
+
+.ocomp__sums,
+.opaid__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ocomp__sum {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    color: var(--ink-3);
+}
+
+.ocomp__sum--grand {
+    padding-top: 10px;
+    border-top: 1px solid var(--line-input);
+    color: var(--ink);
+}
+
+.ocomp__grandlabel {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.ocomp__grandval,
+.opaid__totalnum,
+.opaid__restnum {
+    font-size: var(--fs-h);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.ocomp__deposit,
+.opaid__rest {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+}
+
+.ocomp__deposit-num {
+    font-variant-numeric: tabular-nums;
+}
+
+.ocomp__deposit-why,
+.opaid__help,
+.opaid__next {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh);
+}
+
+.ocomp__bank,
+.ocomp__how {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+    font-size: var(--fs-micro);
+    line-height: var(--lh);
+}
+
+.ocomp__acts,
+.opaid__acts,
+.opaid__tools {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 640px;
+    margin: 24px auto 0;
+}
+
+.ocomp__cancel {
+    display: block;
+    margin: 16px auto 0;
+    text-align: center;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.ocomp__cancel:hover {
+    color: var(--sale);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BIÊN NHẬN ĐÃ THANH TOÁN  (/dat-hang/da-thanh-toan)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.opaid {
+    padding: 0 var(--edge) 96px;
+}
+
+.opaid__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 64px 0 40px;
+    text-align: center;
+}
+
+/* Huy hiệu "ĐÃ THANH TOÁN" — đặc, đen, chữ 8px. Cùng dáng .oa-badge của
+   thẻ sản phẩm: một khẳng định ngắn đè lên nội dung. */
+.opaid__badge {
+    height: 18px;
+    padding: 0 8px;
+    display: inline-flex;
+    align-items: center;
+    background: var(--ink);
+    color: #fff;
+    font-size: 8px;
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+}
+
+/* ┌─ MÉP RĂNG CƯA CỦA BIÊN NHẬN ──────────────────────────────────────────
+   │ Một hình vui duy nhất trên cả đường tiền, và nó không tốn một byte
+   │ ảnh nào: hai gradient hình nón lặp lại tạo răng cưa.
+   │
+   │ Đây là ngoại lệ có chủ đích với sự tiết chế của mẫu. Nó nằm ở đúng
+   │ một chỗ — mép dưới tấm biên nhận — và nó nói một điều thật: tờ giấy
+   │ này đã xé ra khỏi cuống.
+   └──────────────────────────────────────────────────────────────────────── */
+.opaid__tear {
+    height: 8px;
+    max-width: 640px;
+    margin: -1px auto 0;
+    background:
+        radial-gradient(circle at 6px 0, transparent 6px, var(--bg-panel) 6px);
+    background-size: 12px 8px;
+    background-repeat: repeat-x;
+    /* Lật ngược để răng cưa cắn LÊN tấm thẻ phía trên */
+    transform: scaleY(-1);
+}
+
+.opaid__receipt {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.opaid__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-input);
+}
+
+.opaid__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease;
+}
+
+.opaid__btn:hover {
+    background: var(--bg);
+    color: var(--ink);
+}
+
+.opaid__btn--ghost {
+    background: var(--bg);
+    border-color: var(--line-btn);
+    color: var(--ink);
+}
+
+.opaid__btn--ghost:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.opaid__nextico {
+    flex: none;
+    color: var(--ink-5);
+}
+
+.opaid__tool {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--ink-3);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.opaid__tool:hover {
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+    .cogrid,
     .coqr__split {
-        grid-template-columns: minmax(0, 1fr) 360px;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 32px;
     }
 
-    .csum {
-        position: sticky;
-        top: var(--space-6);
+    /* Tóm tắt THÔI DÍNH khi thành một cột — dính ở cột đầy màn hình thì nó
+       che chính các bước nhập bên dưới. */
+    .csum__card {
+        position: static;
+    }
+}
+
+@media (max-width: 560px) {
+    .cocards--2 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ocomp__fact {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+    }
+
+    .checkout,
+    .coqr,
+    .ocomp,
+    .opaid {
+        padding-bottom: 64px;
+    }
+
+    .ocomp__hero,
+    .opaid__hero {
+        padding-top: 40px;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   IN RA GIẤY
+
+   Chỉ trang biên nhận. Khách in nó ra để kẹp vào sổ hoặc gửi kế toán, nên
+   bỏ mọi thứ không thuộc về tờ giấy: nút bấm, cụm liên hệ nổi, khung rút
+   gọn. Chưa có ai yêu cầu, nhưng một trang có chữ "biên nhận" mà in ra
+   kèm ba cái nút thì là thiếu sót thấy ngay.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media print {
+    .opaid__acts,
+    .opaid__tools,
+    .barebar,
+    .barepromo,
+    .barefoot,
+    .fab {
+        display: none !important;
+    }
+
+    .opaid__card {
+        background: #fff;
+        border: 1px solid #ddd;
+    }
+
+    .opaid {
+        padding: 0;
     }
 }

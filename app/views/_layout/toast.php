@@ -14,10 +14,10 @@
  * role="alert" vì nó nói rằng việc khách vừa làm đã không xảy ra.
  *
  * Tự mờ đi sau vài giây bằng CSS animation, không phải setTimeout — xem
- * .toast trong components/ui.css.
+ * .oa-toast trong assets/css/oa.css.
  */
 
 $tone = $toastTone ?? 'ok';
 ?>
-<p class="toast toast--<?= e($tone) ?>"
+<p class="toast oa-toast toast--<?= e($tone) ?>"
    role="<?= $tone === 'err' ? 'alert' : 'status' ?>"><?= e($toast) ?></p>

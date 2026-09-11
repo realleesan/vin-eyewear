@@ -1,0 +1,2999 @@
+/* ============================================================================
+   oa.css — DESIGN SYSTEM, dựng 1:1 từ mẫu "Eyewear Collection.dc.html"
+   (claude.ai/design/p/fe6c21a1-361c-4ca4-af1e-503ea7d969da)
+
+   File này THAY CHỖ của layout.css + gm.css + components/ui.css + grid.css.
+   Nó là tầng duy nhất khai token; mọi file CSS trang chỉ được tiêu thụ token
+   ở đây, không tự gõ mã màu.
+
+   ĐỌC TRƯỚC KHI SỬA — ba luật của mẫu, phá luật nào là lệch mẫu chỗ đó:
+
+   1. MỘT BẢNG MÀU PHI SẮC. Đen #111, bốn mức xám chữ, bốn mức xám nền, sáu
+      mức xám viền. Đúng HAI màu có sắc trên cả site: đỏ giảm giá #e53935 và
+      xanh Zalo #0068ff. Không thêm màu thứ ba — bản sắc của mẫu nằm ở chỗ
+      nó không có màu.
+
+   2. CHỮ NHỎ, GIÃN RỘNG, IN HOA. Thân bài 10px, nhãn 9px IN HOA giãn .06em,
+      tiêu đề trang 13px IN HOA. Đây là cỡ THẬT của mẫu, không phải mẫu bị
+      thu nhỏ — xem khối THANG CHỮ bên dưới. Muốn phóng to cả site thì đổi
+      đúng một số: --oa-scale.
+
+   3. LỀ 64px CHO KHỐI CHỮ, 60px CHO LƯỚI. Hai con số khác nhau là cố ý:
+      thẻ sản phẩm có padding trong 14px, nên lưới lùi ra 4px để mép chữ của
+      thẻ thẳng hàng với mép chữ của khối bên trên.
+   ========================================================================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    /* ┌─ THANG PHÓNG ────────────────────────────────────────────────────
+       │ Mẫu vẽ ở 1:1 với cỡ chữ nhỏ theo lối nhà mốt (thân bài 10px). Toàn
+       │ bộ thang chữ bên dưới nhân với số này, nên muốn cả site to lên đều
+       │ thì đổi 1 thành 1.2 và KHÔNG sửa gì khác.
+       │
+       │ Để nguyên 1 = giống mẫu 100%.
+       │
+       │ Chỉ THANG CHỮ ăn theo, không phải lề và chiều cao: phóng luôn cả
+       │ bố cục thì lưới 4 cột vỡ sang cuộn ngang trên laptop 1366px.
+       └────────────────────────────────────────────────────────────────── */
+    --oa-scale: 1;
+
+    /* ══ MÀU ══════════════════════════════════════════════════════════ */
+
+    /* Chữ — bốn mức, từ đậm tới mờ nhất */
+    --ink: #111;            /* chữ chính, nút đặc, viền nhấn              */
+    --ink-2: #333;          /* giá tiền, đoạn văn phụ dưới tiêu đề        */
+    --ink-3: #555;          /* chú thích, liên kết đã nhạt, chữ trên nền  */
+    --ink-4: #666;          /* nhãn màu bên cạnh ô swatch                 */
+    --ink-5: #888;          /* placeholder, số thứ tự, chữ mờ nhất còn đọc*/
+    --ink-6: #999;          /* tab chưa chọn, giá gạch ngang              */
+
+    /* Nền — trắng là mặc định, bốn tông xám rất nhạt để tách khối */
+    --bg: #fff;
+    --bg-soft: #f4f4f4;     /* chân trang, băng khối trang chủ, nền thẻ   */
+    --bg-panel: #f3f3f5;    /* lớp phủ: tìm kiếm, giỏ, ngăn tài khoản     */
+    --bg-page: #f7f7f8;     /* nền trang chi tiết sản phẩm                */
+    --bg-slot: #e9e9eb;     /* ô ảnh khi chưa có ảnh                      */
+    --bg-chip: #e4e4e6;     /* chip/tab ĐANG CHỌN trong lớp phủ           */
+    --bg-chip-flat: #eaeaea;/* chip ĐANG CHỌN trên hàng lọc nền trắng     */
+
+    /* Viền — sáu mức. --line trang trí, --line-input chức năng.          */
+    --line: #e6e6e6;        /* kẻ ngang phân cách trong khối              */
+    --line-2: #f0f0f0;      /* kẻ mảnh nhất, giữa các mục FAQ             */
+    --line-input: #ddd;     /* viền ô nhập, viền hộp                      */
+    --line-chip: #dcdcdc;   /* viền chip chưa chọn                        */
+    --line-btn: #ccc;       /* viền nút phụ                               */
+    --line-btn-2: #bbb;     /* viền nút phụ trên nền xám                  */
+    --line-strong: #999;    /* viền nút phụ đậm nhất, gạch chân ô tìm     */
+
+    /* Hai màu có sắc duy nhất trên site */
+    --sale: #e53935;        /* huy hiệu giảm giá + giá sau giảm           */
+    --zalo: #0068ff;        /* chỉ dùng cho ô vuông chữ "Zalo" trong nút  */
+
+    /* Giữ lại cho thông báo lỗi/thành công của form — mẫu không vẽ, suy ra
+       theo đúng lối: đỏ dùng chung với --sale, xanh là sắc tối nhất có thể
+       để không phá luật "site không có màu". */
+    --danger: #e53935;
+    --success: #1f7a44;
+
+    /* ══ CHỮ ══════════════════════════════════════════════════════════ */
+
+    /* ┌─ FONT: HỆ THỐNG, KHÔNG TẢI GÌ ───────────────────────────────────
+       │ Mẫu khai đúng stack này. Đã BỎ Be Vietnam Pro / EB Garamond /
+       │ JetBrains Mono cùng thẻ <link> Google Fonts trong master.php: mẫu
+       │ chạy trên font hệ thống, và bỏ đi là bớt một origin chặn vẽ trang.
+       │
+       │ THÊM "Liberation Sans" + system-ui vào cuối stack của mẫu:
+       │ Helvetica Neue/Helvetica không có trên Linux và Windows, thiếu hai
+       │ tên này thì chữ rơi xuống font mặc định của trình duyệt — thường là
+       │ một serif. Arial và Liberation Sans đều phủ đủ dấu tiếng Việt.
+       └────────────────────────────────────────────────────────────────── */
+    --font: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", system-ui, sans-serif;
+
+    /* Serif DÙNG ĐÚNG MỘT CHỖ: tiêu đề hero trang chủ. Mẫu khai Georgia ở
+       đó và không ở đâu khác — đừng gọi token này chỗ thứ hai. */
+    --font-hero: Georgia, "Times New Roman", serif;
+
+    /* ┌─ THANG CHỮ ──────────────────────────────────────────────────────
+       │ Bảy cỡ, hết. Mỗi cỡ có đúng một vai trò; không chèn cỡ thứ tám.
+       │
+       │   --fs-micro  9px   nhãn IN HOA, chú thích nhỏ nhất, huy hiệu
+       │   --fs-body  10px   THÂN BÀI mặc định của cả site
+       │   --fs-ui    11px   nav, chip, nút, tên sản phẩm trong cột phải
+       │   --fs-sub   12px   tiêu đề mục trong trang CSKH, câu trích footer
+       │   --fs-h     13px   TIÊU ĐỀ TRANG (h1) và tiêu đề băng (h2)
+       │   --fs-hero  15px   tiêu đề đè trên ảnh hero bộ sưu tập/giới thiệu
+       │   --fs-mark  18px   wordmark trên thanh đầu trang
+       │   --fs-home  22px   tiêu đề hero trang chủ (font serif)
+       └────────────────────────────────────────────────────────────────── */
+    --fs-micro: calc(9px * var(--oa-scale));
+    --fs-body: calc(10px * var(--oa-scale));
+    --fs-ui: calc(11px * var(--oa-scale));
+    --fs-sub: calc(12px * var(--oa-scale));
+    --fs-h: calc(13px * var(--oa-scale));
+    --fs-hero: calc(15px * var(--oa-scale));
+    --fs-mark: calc(16px * var(--oa-scale));
+    --fs-mark-lg: calc(18px * var(--oa-scale));
+    --fs-home: calc(22px * var(--oa-scale));
+
+    /* Giãn chữ — ba mức, đi kèm IN HOA. .12em chỉ dành cho wordmark. */
+    --ls-tight: .04em;
+    --ls: .06em;
+    --ls-wide: .08em;
+    --ls-mark: .12em;
+
+    --lh: 1.5;              /* thân bài */
+    --lh-tight: 1.4;        /* chữ trong thẻ, dòng ngắn */
+
+    /* ══ BỐ CỤC ═══════════════════════════════════════════════════════ */
+
+    --hdr-h: 52px;          /* chiều cao thanh đầu trang — nhiều chỗ trừ đi
+                               con số này (sticky top, min-height), nên nó
+                               phải là token chứ không gõ tay */
+    --edge: 64px;           /* lề ngang của khối CHỮ */
+    --edge-grid: 60px;      /* lề ngang của LƯỚI thẻ (thẻ có padding 14px) */
+
+    --gap-col: 20px;        /* khe dọc giữa cột trong lưới sản phẩm */
+    --gap-row: 48px;        /* khe ngang giữa hàng trong lưới sản phẩm */
+    --gap-tight: 12px;      /* lưới ảnh chiến dịch, lưới cửa hàng */
+
+    --r-pill: 18px;         /* nút cao 36 */
+    --r-pill-sm: 16px;      /* nút cao 32 */
+    --r-chip: 13px;         /* chip cao 26 */
+    --r-tab: 14px;          /* tab cao 28 */
+    --r-field: 6px;         /* ô nhập, nút khối cao 44 */
+
+    --h-btn: 36px;
+    --h-btn-sm: 32px;
+    --h-chip: 26px;
+    --h-tab: 28px;
+    --h-field: 44px;
+
+    /* ┌─ Z-INDEX ────────────────────────────────────────────────────────
+       │ Mẫu dùng đúng năm mức. Ghi ra thành token vì thứ tự giữa chúng là
+       │ thứ quyết định lớp phủ nào đè lớp nào, và nó dễ vỡ nhất khi có
+       │ người thêm một lớp phủ mới mà gõ đại một số.
+       │
+       │   4  nền mờ của tìm kiếm/giỏ   (DƯỚI thanh đầu trang)
+       │   5  thanh đầu trang
+       │   6  bảng tìm kiếm / bảng giỏ  (TRÊN thanh đầu trang)
+       │   7  nền mờ của ngăn tài khoản (TRÊN cả thanh đầu trang)
+       │   8  ngăn tài khoản
+       └────────────────────────────────────────────────────────────────── */
+    --z-scrim: 4;
+    --z-header: 5;
+    --z-panel: 6;
+    --z-scrim-top: 7;
+    --z-drawer: 8;
+
+    /* ══ BÍ DANH TƯƠNG THÍCH ══════════════════════════════════════════
+       Những tên này là của hệ token CŨ. Các file CSS trang chưa dựng lại
+       vẫn gọi chúng; trỏ chúng về bảng màu mới để trang đó ra ĐÚNG TÔNG
+       của mẫu thay vì vỡ hẳn, trong lúc chờ được viết lại.
+
+       ĐỪNG DÙNG TÊN NÀO TRONG KHỐI NÀY CHO CODE MỚI. Khối này teo dần
+       theo từng file CSS được dựng lại, và sẽ xoá hẳn khi file cuối cùng
+       không còn gọi tên nào. */
+    --brand: var(--ink);
+    --brand-strong: #000;
+    --brand-light: var(--ink-5);
+    --brand-subtle: var(--bg-soft);
+    --on-brand: #fff;
+    --on-brand-muted: var(--ink-6);
+    --on-brand-soft: var(--bg-soft);
+    --surface: var(--bg);
+    --surface-raised: var(--bg);
+    --surface-sunken: var(--bg-soft);
+    --surface-focus: var(--bg);
+    --on-surface: var(--ink);
+    --ink-dark: var(--ink);
+    --on-ink: #fff;
+    --muted: var(--ink-3);
+    --accent: var(--ink);
+    --accent-strong: #000;
+    --accent-subtle: var(--bg-soft);
+    --eyebrow: var(--ink-3);
+    --line-strong-legacy: var(--line-strong);
+    --font-sans: var(--font);
+    --font-serif: var(--font);
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+    --font-wordmark: var(--font);
+    --header-h: var(--hdr-h);
+    --container: none;
+    --page-edge: var(--edge);
+    --gutter: var(--gap-col);
+    --gutter-tight: var(--gap-tight);
+    --radius: var(--r-field);
+    --radius-sm: 3px;
+    --radius-round: 999px;
+    --section-pad: 80px;
+    --section-pad-lg: 96px;
+    --block-gap: 48px;
+    --elev-1: none;
+    --elev-2: none;
+    --elev-3: none;
+    --fs-micro-legacy: var(--fs-micro);
+    --fs-caption: var(--fs-micro);
+    --fs-label: var(--fs-micro);
+    --fs-note: var(--fs-micro);
+    --fs-body-sm: var(--fs-micro);
+    --fs-body-lg: var(--fs-ui);
+    --fs-lead: var(--fs-ui);
+    --fs-subhead: var(--fs-sub);
+    --fs-h6: var(--fs-micro);
+    --fs-h5: var(--fs-body);
+    --fs-h4: var(--fs-ui);
+    --fs-h3: var(--fs-sub);
+    --fs-h2: var(--fs-h);
+    --fs-h1: var(--fs-h);
+    --fs-display: var(--fs-home);
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-14: 56px;
+    --space-16: 64px;
+    --space-20: 80px;
+    --space-24: 96px;
+    --space-30: 120px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   NỀN
+   ══════════════════════════════════════════════════════════════════════ */
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font);
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Mẫu dựng trang thành một cột dọc chiếm trọn màn hình rồi đẩy chân
+       trang xuống đáy — trang ngắn (404, giỏ rỗng) không được để hở nền. */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1 0 auto;
+}
+
+/* ┌─ LIÊN KẾT ────────────────────────────────────────────────────────────
+   │ Mẫu: `a{color:#111;text-decoration:none} a:hover{color:#555}`. Không
+   │ gạch chân mặc định — chỗ nào cần gạch chân thì view tự khai .oa-u.
+   │
+   │ Bỏ gạch chân toàn site là một đánh đổi có thật về khả năng tiếp cận:
+   │ người mù màu mất dấu hiệu thứ hai để nhận ra đâu là liên kết. Bù lại
+   │ bằng :focus-visible rõ ở khối cuối file, và bằng việc mọi liên kết
+   │ trong ĐOẠN VĂN đều mang .oa-u (xem .oa-prose a bên dưới).
+   └──────────────────────────────────────────────────────────────────────*/
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: color .18s ease;
+}
+
+a:hover {
+    color: var(--ink-3);
+}
+
+.oa-u,
+.oa-prose a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+img,
+svg,
+video {
+    max-width: 100%;
+}
+
+img {
+    display: block;
+    height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+ul[role="list"],
+ol[role="list"],
+.oa-plain {
+    list-style: none;
+}
+
+/* Chỉ dành cho trình đọc màn hình */
+.sr-only,
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Nhảy thẳng tới nội dung — hiện ra khi được focus bằng bàn phím */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 8px;
+    z-index: 999;
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 16px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    border-radius: var(--r-field);
+}
+
+.skip-link:focus {
+    top: 8px;
+    color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THANG CHỮ — dùng lớp, không gõ font-size trong file trang
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Nhãn IN HOA nhỏ: "01 — VỀ CHÚNG TÔI", "CAMPAIGN", tiêu đề cột chân trang */
+.oa-eyebrow {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.oa-eyebrow--ink {
+    color: var(--ink);
+}
+
+/* Nhãn IN HOA trong thẻ/ngăn — giãn hẹp hơn eyebrow một mức */
+.oa-label {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+/* TIÊU ĐỀ TRANG. Mẫu dùng đúng một dáng cho h1 và h2 băng: 13px, weight
+   500, IN HOA, giãn .06em. Khác nhau chỉ ở chỗ đặt, không ở dáng chữ. */
+.oa-title {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+/* Tiêu đề băng trang chủ — weight 400, giãn hẹp hơn: nó là nhãn của một
+   dải hàng, không phải tiêu đề của trang. */
+.oa-band-title {
+    font-size: var(--fs-h);
+    font-weight: 400;
+    letter-spacing: var(--ls-tight);
+    text-transform: uppercase;
+}
+
+/* Tiêu đề đè trên ảnh hero (bộ sưu tập, giới thiệu) */
+.oa-hero-title {
+    font-size: var(--fs-hero);
+    font-weight: 500;
+    letter-spacing: var(--ls-tight);
+    text-transform: uppercase;
+    line-height: 1.3;
+}
+
+.oa-lead {
+    font-size: var(--fs-body);
+    color: var(--ink-2);
+}
+
+.oa-muted {
+    color: var(--ink-3);
+}
+
+.oa-prose {
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+    text-wrap: pretty;
+}
+
+.oa-prose > * + * {
+    margin-top: 10px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   KHUNG & KHOẢNG CÁCH
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Khối chữ — lề 64px */
+.oa-sec {
+    padding-left: var(--edge);
+    padding-right: var(--edge);
+}
+
+/* Lưới thẻ — lề 60px, lùi 4px để mép chữ trong thẻ thẳng hàng với khối chữ */
+.oa-sec--grid {
+    padding-left: var(--edge-grid);
+    padding-right: var(--edge-grid);
+}
+
+/* Đầu trang căn giữa: tiêu đề + một câu mô tả. Dùng ở /san-pham,
+   /lien-he, /gioi-thieu, /tai-khoan — mẫu vẽ đúng một kiểu cho tất cả. */
+.oa-pagehead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 64px var(--edge) 24px;
+    text-align: center;
+}
+
+.oa-pagehead--roomy {
+    padding-top: 56px;
+    padding-bottom: 56px;
+}
+
+.oa-pagehead p {
+    font-size: var(--fs-body);
+    color: var(--ink-2);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   NÚT
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ┌─ BA DÁNG NÚT, KHÔNG PHẢI MỘT ─────────────────────────────────────────
+   │ Mẫu dùng ba hình dáng khác hẳn nhau, mỗi hình một chỗ. Chọn nhầm dáng
+   │ là chỗ dễ lệch mẫu nhất, nên ghi rõ:
+   │
+   │   .oa-btn      VIÊN, cao 36, chữ 11px thường  → nút trong nội dung
+   │                trang (CTA cuối trang, "Xem thêm", "Gửi câu hỏi")
+   │   .oa-btn--sm  VIÊN, cao 32, chữ 11px         → nút trên ảnh hero,
+   │                nút trong thẻ cửa hàng
+   │   .oa-btn--card VIÊN, cao 32, chữ 9px         → hai nút trong thẻ SP
+   │   .oa-btn--block VUÔNG r6, cao 44, chữ 9px IN HOA → form và ngăn kéo
+   │
+   │ Luật ngầm: nút VIÊN nằm trên nền trang, nút VUÔNG nằm trong form.
+   │ Mẫu không có ngoại lệ nào.
+   └──────────────────────────────────────────────────────────────────────*/
+.oa-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--line-btn);
+    border-radius: var(--r-pill);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.oa-btn:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+/* Nút chính — đặc sẵn, rê chuột thì ĐẢO NGƯỢC thành rỗng. Đây là cú lật
+   của mẫu, không phải "đậm hơn một chút" như lối thường gặp. */
+.oa-btn--solid {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.oa-btn--solid:hover {
+    background: var(--bg);
+    color: var(--ink);
+    border-color: var(--ink);
+}
+
+/* Trên nền ảnh tối: viền trắng */
+.oa-btn--onimage {
+    border-color: #fff;
+    background: rgba(0, 0, 0, .25);
+    color: #fff;
+}
+
+.oa-btn--onimage:hover {
+    background: #fff;
+    color: var(--ink);
+    border-color: #fff;
+}
+
+.oa-btn--onimage-solid {
+    border-color: #fff;
+    background: #fff;
+    color: var(--ink);
+}
+
+.oa-btn--onimage-solid:hover {
+    background: transparent;
+    color: #fff;
+}
+
+.oa-btn--sm {
+    height: var(--h-btn-sm);
+    padding: 0 22px;
+    border-radius: var(--r-pill-sm);
+}
+
+/* Hai nút trong thẻ sản phẩm — chia đôi bề ngang, chữ 9px */
+.oa-btn--card {
+    height: var(--h-btn-sm);
+    flex: 1;
+    padding: 0 10px;
+    border-radius: var(--r-pill-sm);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-tight);
+}
+
+.oa-btn--card.oa-btn--solid:hover {
+    background: #333;
+    border-color: #333;
+    color: #fff;
+}
+
+.oa-btn--card:not(.oa-btn--solid):hover {
+    background: transparent;
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+/* Nút khối trong form / ngăn kéo — VUÔNG bo 6, cao 44, chữ 9px IN HOA.
+
+   TỰ ĐỦ, không cần đi kèm .oa-btn: align-items/justify-content khai lại ở
+   đây vì nửa số chỗ dùng nó là <button class="oa-btn--block"> trần. Thiếu
+   hai dòng ấy thì chữ dạt sang trái — và đó là lỗi chỉ lộ ra ở đúng những
+   chỗ quên ghép lớp, tức là lộ ra muộn. */
+.oa-btn--block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--r-field);
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.oa-btn--block:hover {
+    background: #333;
+    border-color: #333;
+    color: #fff;
+}
+
+/* Nút khối phụ — rỗng, viền xám */
+.oa-btn--block-ghost {
+    background: transparent;
+    border: 1px solid var(--line-btn-2);
+    color: var(--ink);
+}
+
+.oa-btn--block-ghost:hover {
+    background: transparent;
+    border-color: var(--ink);
+    color: var(--ink);
+}
+
+/* Nút khối chờ dữ liệu hợp lệ — xám, không phải mờ đi */
+.oa-btn--block-wait {
+    background: var(--ink-5);
+}
+
+.oa-btn--block-wait:hover {
+    background: var(--ink);
+}
+
+.oa-btn:disabled,
+.oa-btn[aria-disabled="true"] {
+    cursor: not-allowed;
+    background: var(--ink-5);
+    border-color: var(--ink-5);
+    color: #fff;
+}
+
+.oa-btn:disabled:hover,
+.oa-btn[aria-disabled="true"]:hover {
+    background: var(--ink-5);
+    border-color: var(--ink-5);
+    color: #fff;
+}
+
+/* Nút trần — chỉ có chữ, dùng cho "Filter", "✕", "More" */
+.oa-btn-bare {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    cursor: pointer;
+}
+
+.oa-close {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.oa-close--lg {
+    font-size: 18px;
+}
+
+/* Ô vuông xanh chữ "Zalo" nhét vào đầu nút — dáng riêng của mẫu */
+.oa-zalo-mark {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    border-radius: 3px;
+    background: var(--zalo);
+    color: #fff;
+    font-size: 6px;
+    font-weight: 700;
+    letter-spacing: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Nhãn giữa nút có icon bên trái — đẩy chữ ra chính giữa nút, không phải
+   cạnh icon. Mẫu làm thế ở cả nút Zalo lẫn nút Google. */
+.oa-btn__center {
+    flex: 1;
+    text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CHIP & TAB
+   ══════════════════════════════════════════════════════════════════════ */
+
+.oa-chip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-chip);
+    padding: 0 12px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease;
+}
+
+.oa-chip:hover {
+    border-color: var(--ink-6);
+    color: var(--ink);
+}
+
+.oa-chip.is-active,
+.oa-chip[aria-current="true"],
+.oa-chip[aria-pressed="true"] {
+    background: var(--bg-chip-flat);
+    border-color: var(--bg-chip-flat);
+}
+
+/* Hàng chip cuộn ngang + nút Filter ở cuối hàng */
+.oa-chiprow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px var(--edge);
+    overflow: hidden;
+}
+
+.oa-chiprow__scroll {
+    display: flex;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.oa-chiprow__scroll::-webkit-scrollbar {
+    display: none;
+}
+
+/* Tab trong lớp phủ / trang tài khoản — cao 28, bo 14, nền xám khi chọn */
+.oa-tab {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-tab);
+    padding: 0 13px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-tab);
+    background: transparent;
+    color: var(--ink-5);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.oa-tab.is-active,
+.oa-tab[aria-current="page"],
+.oa-tab[aria-selected="true"] {
+    background: var(--bg-chip);
+    border-color: var(--bg-chip);
+    color: var(--ink);
+}
+
+/* Biến thể IN HOA đậm — tab Bag/Wishlist, tab Đăng nhập/Đăng ký */
+.oa-tab--caps {
+    padding: 0 14px;
+    border: 0;
+    font-size: var(--fs-body);
+    font-weight: 700;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-6);
+}
+
+.oa-tab--caps.is-active {
+    border: 0;
+}
+
+/* Số nhỏ treo sau nhãn tab: Bag⁰, Recently Viewed³ */
+.oa-sup {
+    font-size: 7px;
+    margin-left: 1px;
+    vertical-align: super;
+}
+
+.oa-sup--lg {
+    font-size: 8px;
+    margin-left: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Ô NHẬP
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ┌─ HAI DÁNG Ô NHẬP ────────────────────────────────────────────────────
+   │ .oa-input  HỘP cao 44, bo 6, viền #ddd, nền trắng → form trong ngăn
+   │            kéo, trang đăng nhập, trang CSKH
+   │ .oa-field  GẠCH CHÂN, cao 34, không nền          → form liên hệ
+   │
+   │ Trong trang CSKH mẫu bỏ hẳn viền (`border:0`) vì nền trang đã là xám
+   │ — dùng .oa-input--flat cho chỗ đó.
+   └──────────────────────────────────────────────────────────────────────*/
+.oa-input {
+    display: block;
+    width: 100%;
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    outline: none;
+    transition: border-color .18s ease;
+}
+
+textarea.oa-input {
+    height: auto;
+    min-height: 90px;
+    padding: 12px;
+    resize: vertical;
+    line-height: var(--lh);
+}
+
+.oa-input::placeholder {
+    color: var(--ink-5);
+}
+
+.oa-input:focus {
+    border-color: var(--ink);
+}
+
+.oa-input--flat {
+    border: 0;
+}
+
+.oa-input--flat:focus {
+    box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+/* Ô mã OTP — chữ giãn rộng, căn giữa */
+.oa-input--otp {
+    letter-spacing: .3em;
+    text-align: center;
+}
+
+.oa-field {
+    display: block;
+    width: 100%;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--line-btn);
+    background: none;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    outline: none;
+    transition: border-color .18s ease;
+}
+
+textarea.oa-field {
+    height: auto;
+    min-height: 90px;
+    padding: 10px 0;
+    resize: vertical;
+    line-height: var(--lh);
+}
+
+.oa-field::placeholder {
+    color: var(--ink-5);
+}
+
+.oa-field:focus {
+    border-bottom-color: var(--ink);
+}
+
+/* Nhãn trên ô nhập */
+.oa-formrow {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.oa-formrow > span,
+.oa-formrow > label {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+/* "*Bắt buộc" nép phải trên đầu nhóm ô nhập */
+.oa-req {
+    align-self: flex-end;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+}
+
+/* Ô chọn (checkbox/radio giả) — mẫu vẽ ô vuông 11px cho checkbox và tròn
+   cho nhóm "Sort By"; ô 14px cho checkbox trong form đăng ký. */
+.oa-check {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: var(--fs-body);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.oa-check input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.oa-check__box {
+    width: 11px;
+    height: 11px;
+    flex: none;
+    border: 1px solid var(--ink);
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 8px;
+    line-height: 1;
+}
+
+.oa-check--round .oa-check__box {
+    border-radius: 50%;
+}
+
+.oa-check input:checked + .oa-check__box {
+    background: var(--ink);
+}
+
+.oa-check input:checked + .oa-check__box::after {
+    content: "✓";
+}
+
+.oa-check--round input:checked + .oa-check__box::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+.oa-check input:focus-visible + .oa-check__box {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+
+/* Checkbox to hơn cho dòng "Tôi đồng ý…" — mẫu dùng 14px bo 3 ở đó */
+.oa-check--lg {
+    align-items: flex-start;
+    white-space: normal;
+    gap: 8px;
+}
+
+.oa-check--lg .oa-check__box {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    font-size: 9px;
+    margin-top: 1px;
+}
+
+/* Công tắc bật/tắt — tuỳ chọn nhận tin trong trang hồ sơ */
+.oa-switch {
+    width: 32px;
+    height: 18px;
+    flex: none;
+    border: 0;
+    border-radius: 9px;
+    background: var(--line-btn);
+    position: relative;
+    cursor: pointer;
+    transition: background .2s ease;
+}
+
+.oa-switch::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    transition: left .2s ease;
+}
+
+.oa-switch[aria-checked="true"] {
+    background: var(--ink);
+}
+
+.oa-switch[aria-checked="true"]::after {
+    left: 16px;
+}
+
+/* Ô chọn giả dạng nút xổ — "Select a topic*" */
+.oa-select {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    white-space: nowrap;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+}
+
+.oa-select:focus {
+    border-color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Ô ẢNH
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ┌─ image-slot của mẫu → .oa-slot ───────────────────────────────────────
+   │ Mẫu dùng thẻ <image-slot> (một web component của Claude Design chỉ
+   │ sống trong canvas). Ở đây nó thành một khối có tỉ lệ cố định + nền
+   │ xám nhạt, ảnh thật nằm bên trong.
+   │
+   │ HAI KIỂU LẤP ĐẦY, và mẫu phân biệt rất rõ:
+   │   fit="contain"  ẢNH SẢN PHẨM — gọng kính phải thấy trọn, không cắt
+   │   (mặc định)     ẢNH CHIẾN DỊCH/HERO — cắt tràn khung
+   └──────────────────────────────────────────────────────────────────────*/
+.oa-slot {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: var(--bg-slot);
+    font-size: 0;
+}
+
+.oa-slot > img,
+.oa-slot > picture > img,
+.oa-slot > video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.oa-slot--contain {
+    background: transparent;
+}
+
+.oa-slot--contain > img,
+.oa-slot--contain > picture > img {
+    object-fit: contain;
+}
+
+.oa-slot--4x5 { aspect-ratio: 4 / 5; }
+.oa-slot--4x3 { aspect-ratio: 4 / 3; }
+.oa-slot--3x4 { aspect-ratio: 3 / 4; }
+.oa-slot--1x1 { aspect-ratio: 1 / 1; }
+.oa-slot--16x9 { aspect-ratio: 16 / 9; }
+.oa-slot--hero { aspect-ratio: 16 / 8.4; }
+.oa-slot--map { aspect-ratio: 16 / 6; }
+
+/* Chữ giữ chỗ khi chưa có ảnh */
+.oa-slot__ph {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
+    color: var(--ink-5);
+    text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THẺ SẢN PHẨM
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Lưới 4 cột — dáng chuẩn của mọi trang có hàng: danh mục, bộ sưu tập,
+   băng trang chủ, kết quả tìm kiếm. */
+.oa-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap-row) var(--gap-col);
+    padding: 40px var(--edge-grid) 0;
+    background: var(--bg);
+}
+
+/* Lưới khít — ảnh chiến dịch, thẻ cửa hàng, ô giá trị cốt lõi */
+.oa-grid--tight {
+    gap: var(--gap-tight);
+}
+
+.oa-grid--auto {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.oa-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-soft);
+    padding: 0 0 14px;
+}
+
+/* Bốn tông nền luân phiên giữa các thẻ. Mẫu đổi tông theo chỉ số thẻ để
+   lưới không thành một mảng xám phẳng — view gắn .oa-card--t1…t4. */
+.oa-card--t1 { background: #f4f4f4; }
+.oa-card--t2 { background: #f7f7f7; }
+.oa-card--t3 { background: #f2f2f2; }
+.oa-card--t4 { background: #f5f5f5; }
+
+.oa-card__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    cursor: pointer;
+    display: block;
+}
+
+.oa-card__media .oa-slot {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+}
+
+/* Huy hiệu góc trên trái: "MỚI", "-30%" */
+.oa-badges {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    gap: 4px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.oa-badge {
+    height: 18px;
+    padding: 0 7px;
+    display: flex;
+    align-items: center;
+    background: var(--ink);
+    color: #fff;
+    font-size: 8px;
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.oa-badge--sale {
+    background: var(--sale);
+}
+
+/* Mũi tên trái/phải khi thẻ có nhiều ảnh */
+.oa-card__nav {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    pointer-events: none;
+    font-size: 14px;
+    color: var(--ink);
+}
+
+.oa-card__body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 14px 14px 4px;
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+}
+
+.oa-card__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+/* Dòng gạch nối phía trên tên — chỗ giữ cho tên danh mục/bộ sưu tập */
+.oa-card__kicker {
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
+}
+
+.oa-card__name {
+    cursor: pointer;
+    color: var(--ink);
+}
+
+.oa-card__price {
+    color: var(--ink-2);
+}
+
+.oa-card__pricesale {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.oa-card__pricesale s {
+    color: var(--ink-6);
+}
+
+.oa-card__pricesale b {
+    color: var(--sale);
+    font-weight: 700;
+}
+
+.oa-card__status {
+    color: var(--ink-2);
+}
+
+/* Dấu trang góc phải — icon cờ 12×14 */
+.oa-card__flag {
+    flex: none;
+    color: var(--ink);
+}
+
+.oa-card__actions {
+    display: flex;
+    gap: 6px;
+    padding: 12px 14px 0;
+}
+
+/* Hàng ô màu dưới giá */
+.oa-swatches {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.oa-swatch {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    border: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
+    padding: 0;
+    cursor: pointer;
+}
+
+.oa-swatch.is-active,
+.oa-swatch[aria-pressed="true"] {
+    box-shadow: 0 0 0 1px #fff, 0 0 0 2px var(--ink);
+}
+
+.oa-swatch__label {
+    font-size: var(--fs-micro);
+    color: var(--ink-4);
+    margin-left: 4px;
+}
+
+/* Nút "Xem thêm" cuối lưới — mẫu cho nó rất nhiều khoảng thở */
+.oa-more {
+    display: flex;
+    justify-content: center;
+    padding: 96px 0 120px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THANH ĐẦU TRANG
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ┌─ BA CỘT, WORDMARK Ở GIỮA ─────────────────────────────────────────────
+   │ `minmax(0,1fr) auto minmax(0,1fr)` — hai cột bên co được về 0, cột
+   │ giữa lấy đúng bề rộng của wordmark. Đó là thứ giữ wordmark ở CHÍNH
+   │ GIỮA màn hình bất kể hàng nav dài bao nhiêu.
+   │
+   │ Hàng nav bên trái bị cắt bằng mask thay vì xuống dòng: thanh cao đúng
+   │ 52px và không được phép cao hơn.
+   └──────────────────────────────────────────────────────────────────────*/
+.oa-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-header);
+    height: var(--hdr-h);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    padding: 0 var(--edge);
+    border-bottom: 1px solid transparent;
+    color: var(--ink);
+    background: rgba(255, 255, 255, .55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    transition: background .25s ease, color .25s ease;
+}
+
+/* ┌─ ĐẦU TRANG TRONG SUỐT TRÊN TRANG CHỦ ─────────────────────────────────
+   │ Trang chủ có ảnh hero cao 100vh chạy LÊN DƯỚI thanh đầu trang (hero
+   │ kéo margin-top âm đúng 52px). Khi chưa cuộn, thanh trong suốt và chữ
+   │ trắng; cuộn qua hero thì .is-scrolled bật lại nền mờ + chữ đen.
+   │
+   │ Lớp .is-scrolled do assets/js/header.js gắn. Không có JS thì thanh
+   │ ở nguyên trạng thái trong suốt — nên .oa-header--over CHỈ được đặt
+   │ trên trang thật sự có hero tối tràn lên đầu trang.
+   └──────────────────────────────────────────────────────────────────────*/
+.oa-header--over {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    color: #fff;
+}
+
+.oa-header--over.is-scrolled {
+    background: rgba(255, 255, 255, .55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: var(--ink);
+}
+
+/* Khi một lớp phủ đang mở, thanh đầu trang lấy đúng nền của lớp phủ để
+   hai khối liền thành một mảng — mẫu bỏ hẳn blur ở trạng thái này. */
+.oa-header.is-overlay {
+    background: var(--bg-panel);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    color: var(--ink);
+}
+
+.oa-header__nav {
+    display: flex;
+    gap: 14px;
+    min-width: 0;
+    margin-right: 24px;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: var(--fs-ui);
+    letter-spacing: .01em;
+    /* Mép phải nhoè dần thay vì cắt phựt — dấu hiệu "còn nữa" của mẫu */
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+}
+
+.oa-header__nav a {
+    color: inherit;
+}
+
+.oa-header__nav a:hover,
+.oa-header__nav a.is-active {
+    opacity: .65;
+}
+
+.oa-header__mark {
+    font-size: var(--fs-mark-lg);
+    font-weight: 700;
+    letter-spacing: var(--ls-mark);
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: inherit;
+}
+
+.oa-header__mark:hover {
+    color: inherit;
+    opacity: .75;
+}
+
+.oa-header__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    font-size: var(--fs-ui);
+}
+
+.oa-header__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: none;
+    padding: 0;
+    color: inherit;
+    cursor: pointer;
+    position: relative;
+}
+
+.oa-header__btn svg {
+    display: block;
+}
+
+/* Số món trong giỏ — chấm nhỏ góc trên phải icon túi */
+.oa-header__count {
+    position: absolute;
+    top: -4px;
+    right: -6px;
+    min-width: 13px;
+    height: 13px;
+    padding: 0 3px;
+    border-radius: 7px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 8px;
+    line-height: 13px;
+    text-align: center;
+}
+
+.oa-header--over:not(.is-scrolled):not(.is-overlay) .oa-header__count {
+    background: #fff;
+    color: var(--ink);
+}
+
+/* Nút mở ngăn kéo trên mobile — ẩn ở desktop, xem @media cuối file */
+.oa-header__burger {
+    display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LỚP PHỦ
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Nền mờ. Hai độ đậm, và mẫu dùng chúng rất có chủ ý:
+   .18 cho lớp phủ nằm DƯỚI (tìm kiếm, giỏ) — trang sau vẫn đọc được
+   .35 cho ngăn kéo tài khoản — nó đòi toàn bộ sự chú ý */
+.oa-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-scrim);
+    background: rgba(0, 0, 0, .18);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
+.oa-scrim--deep {
+    z-index: var(--z-scrim-top);
+    background: rgba(0, 0, 0, .35);
+}
+
+/* Bảng tìm kiếm — tràn bề ngang, neo ngay dưới thanh đầu trang */
+.oa-panel {
+    position: fixed;
+    top: var(--hdr-h);
+    left: 0;
+    right: 0;
+    z-index: var(--z-panel);
+    background: var(--bg-panel);
+    padding: 28px var(--edge) 72px;
+    min-height: min(540px, calc(100vh - var(--hdr-h)));
+    max-height: calc(100vh - var(--hdr-h));
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Bảng giỏ — cùng lối, nhưng phủ trọn phần còn lại của màn hình */
+.oa-panel--full {
+    bottom: 0;
+    padding-bottom: 56px;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    align-items: stretch;
+    max-height: none;
+}
+
+.oa-panel__inner {
+    width: min(600px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+    margin-top: 28px;
+}
+
+/* Ô tìm kiếm lớn — gạch chân, có kính lúp bên trái */
+.oa-searchbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--line-strong);
+    padding-bottom: 8px;
+}
+
+.oa-searchbar input {
+    flex: 1;
+    border: 0;
+    background: none;
+    outline: none;
+    font-family: inherit;
+    font-size: var(--fs-body);
+    color: var(--ink);
+}
+
+/* Dải thẻ nhỏ cuộn ngang — "Search Trends", "Recently Viewed" */
+.oa-strip {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.oa-strip::-webkit-scrollbar {
+    display: none;
+}
+
+.oa-strip__item {
+    flex: none;
+    width: 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: var(--fs-micro);
+    line-height: 1.45;
+}
+
+.oa-strip__item .oa-slot {
+    width: 80px;
+    height: 44px;
+    aspect-ratio: auto;
+}
+
+/* Ngăn kéo phải — tài khoản/đăng nhập */
+.oa-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-drawer);
+    width: min(760px, 40vw);
+    min-width: 320px;
+    background: var(--bg-panel);
+    padding: 20px 60px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+    color: var(--ink);
+    overflow-y: auto;
+}
+
+.oa-drawer > * {
+    flex: none;
+}
+
+.oa-drawer__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.oa-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.oa-stack--lg {
+    gap: 12px;
+}
+
+/* "hoặc" căn giữa giữa hai nhóm nút */
+.oa-or {
+    text-align: center;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+}
+
+/* Bảng bộ lọc — đẩy hàng chip xuống, không phải đè lên */
+.oa-filter {
+    padding: 40px var(--edge) 36px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+}
+
+.oa-filter__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 26px;
+}
+
+.oa-filter__groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px 32px;
+}
+
+.oa-filter__group {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.oa-filter__opts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    gap: 14px 8px;
+}
+
+/* Khối rỗng căn giữa — giỏ rỗng, chưa có đơn, chưa có yêu thích */
+.oa-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 40px 0;
+    text-align: center;
+}
+
+.oa-empty--tall {
+    flex: 1;
+    gap: 40px;
+    padding: 140px var(--edge) 160px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HERO
+   ══════════════════════════════════════════════════════════════════════ */
+
+.oa-hero {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 8.4;
+    overflow: hidden;
+    background: #cfd3d6;
+}
+
+/* Hero trang chủ — cao trọn màn hình và chạy LÊN DƯỚI thanh đầu trang */
+.oa-hero--full {
+    aspect-ratio: auto;
+    height: 100vh;
+    min-height: 520px;
+    margin-top: calc(var(--hdr-h) * -1);
+    background: #b9b3a6;
+}
+
+.oa-hero > .oa-slot {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    background: transparent;
+}
+
+.oa-hero__copy {
+    position: absolute;
+    left: var(--edge);
+    bottom: 56px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: #fff;
+    /* Chữ không bắt chuột; chỉ liên kết bên trong mới bắt — nếu không thì
+       khối chữ nuốt mất cú bấm vào ảnh hero. */
+    pointer-events: none;
+}
+
+.oa-hero__copy a,
+.oa-hero__copy button {
+    pointer-events: auto;
+}
+
+.oa-hero__copy p {
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+    text-wrap: pretty;
+}
+
+/* Khối chữ hero trang chủ — căn giữa, nằm dưới đáy */
+.oa-hero__center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 88px;
+    gap: 22px;
+    color: #fff;
+    pointer-events: none;
+    text-align: center;
+}
+
+.oa-hero__center > * {
+    pointer-events: auto;
+}
+
+.oa-hero__title {
+    font-family: var(--font-hero);
+    font-size: var(--fs-home);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.oa-hero__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Vạch chỉ slide dưới đáy hero */
+.oa-hero__dots {
+    position: absolute;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+}
+
+.oa-hero__dot {
+    width: 90px;
+    height: 1px;
+    border: 0;
+    padding: 0;
+    background: rgba(255, 255, 255, .4);
+    cursor: pointer;
+}
+
+.oa-hero__dot.is-active {
+    background: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BĂNG TRANG CHỦ
+   ══════════════════════════════════════════════════════════════════════ */
+
+.oa-band {
+    background: var(--bg-soft);
+    padding: 80px 0 96px;
+}
+
+.oa-band__head {
+    padding: 0 var(--edge);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.oa-band__more {
+    font-size: var(--fs-body);
+    letter-spacing: var(--ls-tight);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Lưới trong băng có thêm khoảng thở phía trên so với lưới trần */
+.oa-band .oa-grid {
+    padding-top: 64px;
+    background: transparent;
+}
+
+/* Khối hai cột chữ + ảnh — dùng ở "Ghé thăm cửa hàng", "Dịch vụ đo mắt" */
+.oa-split {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--gap-col);
+    align-items: center;
+    padding: 96px var(--edge-grid) 120px;
+    background: var(--bg);
+}
+
+.oa-split__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 420px;
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+}
+
+/* Danh sách bước đánh số — "01 Thiết bị đo khúc xạ" */
+.oa-steps {
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+}
+
+.oa-steps__item {
+    display: grid;
+    grid-template-columns: 24px 1fr;
+    gap: 8px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+}
+
+.oa-steps__n {
+    font-size: var(--fs-micro);
+    color: var(--ink-5);
+}
+
+/* Hàng nhãn ↔ giá trị, kẻ ngang phía trên — kênh liên hệ, thông số */
+.oa-rows {
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+}
+
+.oa-rows__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+}
+
+.oa-rows__item:last-child {
+    border-bottom: 1px solid var(--line);
+}
+
+.oa-rows__k {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.oa-rows__v {
+    text-align: right;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MỤC GẬP (FAQ, chính sách)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.oa-acc {
+    border-radius: var(--r-field);
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+}
+
+.oa-acc__head {
+    height: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 0 14px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+}
+
+.oa-acc__head::-webkit-details-marker {
+    display: none;
+}
+
+.oa-acc__head:hover {
+    background: #fafafa;
+    color: var(--ink);
+}
+
+.oa-acc__chev {
+    font-size: 12px;
+    display: inline-block;
+    transform: rotate(90deg);
+    transition: transform .2s ease;
+}
+
+.oa-acc[open] > .oa-acc__head .oa-acc__chev {
+    transform: rotate(-90deg);
+}
+
+.oa-acc__body {
+    display: flex;
+    flex-direction: column;
+    padding: 0 12px 10px;
+}
+
+.oa-qa {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--line-2);
+}
+
+.oa-qa__q {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    font-size: var(--fs-body);
+    line-height: var(--lh-tight);
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+    transition: font-size .15s ease, padding .15s ease;
+}
+
+.oa-qa__q::-webkit-details-marker {
+    display: none;
+}
+
+/* Câu hỏi ĐANG MỞ to lên 13px — mẫu đổi cả cỡ chữ lẫn padding, không chỉ
+   xoay mũi tên. Đó là thứ làm mục đang mở nổi hẳn khỏi danh sách. */
+.oa-qa[open] > .oa-qa__q {
+    font-size: var(--fs-h);
+    padding: 14px 0 12px;
+}
+
+.oa-qa__sign {
+    font-size: 14px;
+    flex: none;
+}
+
+.oa-qa__sign::after {
+    content: "+";
+}
+
+.oa-qa[open] .oa-qa__sign::after {
+    content: "−";
+}
+
+.oa-qa__a {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 0 24px;
+}
+
+.oa-qa__a p {
+    white-space: pre-line;
+    text-wrap: pretty;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CHÂN TRANG
+   ══════════════════════════════════════════════════════════════════════ */
+
+.oa-footer {
+    flex: none;
+    background: var(--bg-soft);
+    padding: 72px var(--edge) 32px;
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    gap: 48px;
+}
+
+.oa-footer__top {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px 0;
+    align-items: stretch;
+}
+
+/* Cột 1: wordmark + câu trích. Có ĐƯỜNG KẺ BÊN PHẢI. */
+.oa-footer__brand {
+    flex: 1 1 220px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+    padding: 0 32px 0 0;
+    border-right: 1px solid var(--line-input);
+}
+
+.oa-footer__mark {
+    font-size: var(--fs-mark);
+    font-weight: 700;
+    letter-spacing: var(--ls-mark);
+    text-transform: uppercase;
+}
+
+.oa-footer__quote {
+    font-size: var(--fs-sub);
+    letter-spacing: .02em;
+    text-wrap: pretty;
+}
+
+/* Cột 2: ba nhóm liên kết */
+.oa-footer__links {
+    flex: 2 1 380px;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 32px 20px;
+    padding: 0 32px;
+}
+
+.oa-footer__col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.oa-footer__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Cột 3: kênh hỗ trợ. Có ĐƯỜNG KẺ BÊN TRÁI. */
+.oa-footer__help {
+    flex: 1 1 240px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    text-align: center;
+    padding: 0 0 0 32px;
+    border-left: 1px solid var(--line-input);
+}
+
+.oa-footer__channels {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.oa-footer__channel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-micro);
+}
+
+.oa-footer__channel span {
+    white-space: nowrap;
+}
+
+/* Hàng icon mạng xã hội, có hai đường kẻ chạy ra hai mép */
+.oa-footer__social {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 32px;
+}
+
+.oa-footer__rule {
+    height: 1px;
+    background: var(--line-input);
+}
+
+.oa-footer__icons {
+    display: flex;
+    gap: 28px;
+    align-items: center;
+}
+
+.oa-footer__legal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MẨU DÙNG CHUNG
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Thông báo — mẫu không vẽ, suy ra theo đúng lối: hộp vuông bo 6, viền
+   mảnh, không nền màu. Sắc chỉ nằm ở một đường kẻ trái 2px. */
+.oa-note {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    border: 1px solid var(--line-input);
+    border-left: 2px solid var(--ink);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+}
+
+.oa-note--danger {
+    border-left-color: var(--danger);
+}
+
+.oa-note--success {
+    border-left-color: var(--success);
+}
+
+.oa-note--plain {
+    border-left-width: 1px;
+    border-left-color: var(--line-input);
+    color: var(--ink-2);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
+    max-width: 220px;
+}
+
+/* Dải báo nổi sau khi thêm vào giỏ */
+.oa-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: min(520px, calc(100vw - 32px));
+    padding: 12px 16px;
+    border-radius: var(--r-field);
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+}
+
+.oa-toast--danger,
+.toast--err {
+    background: var(--sale);
+}
+
+/* ┌─ TỰ MỜ ĐI ────────────────────────────────────────────────────────────
+   │ Dải báo sống 4 giây rồi tan, và nó làm việc đó bằng CSS animation chứ
+   │ không bằng setTimeout: không có JavaScript nào phải chạy, và dải vẫn
+   │ biến mất đúng hạn kể cả khi script bị chặn.
+   │
+   │ `forwards` để nó ở lại trạng thái cuối (trong suốt) thay vì nhảy về
+   │ hiện lại; `pointer-events:none` ở cuối để nó thôi che nội dung bên
+   │ dưới sau khi đã tan.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-toast {
+    animation: oa-toast-life 4s ease-in-out forwards;
+}
+
+@keyframes oa-toast-life {
+    0%        { opacity: 0; transform: translate(-50%, 8px); }
+    6%, 85%   { opacity: 1; transform: translate(-50%, 0); }
+    100%      { opacity: 0; transform: translate(-50%, 8px); pointer-events: none; }
+}
+
+/* Vạch phân cách ngang */
+.oa-hr {
+    height: 1px;
+    background: var(--line);
+    border: 0;
+}
+
+/* Khối chữ hẹp căn giữa — trang tài khoản, trang CSKH */
+.oa-narrow {
+    width: min(650px, 100%);
+    margin: 0 auto;
+    padding: 80px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+}
+
+/* Bảng số liệu đơn giản */
+.oa-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--fs-body);
+}
+
+.oa-table th,
+.oa-table td {
+    padding: 12px 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+}
+
+.oa-table th {
+    font-size: var(--fs-micro);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TIÊU ĐIỂM BÀN PHÍM
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ┌─ BÙ LẠI CHO VIỆC BỎ GẠCH CHÂN ───────────────────────────────────────
+   │ Mẫu bỏ gạch chân liên kết, nên dấu hiệu tiêu điểm phải rõ hơn mức
+   │ thường. Viền 2px màu --ink cách 2px, trên MỌI thứ bấm được — không
+   │ dùng `outline:none` ở bất kỳ đâu trong file này.
+   └──────────────────────────────────────────────────────────────────────*/
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.oa-header--over:not(.is-scrolled) a:focus-visible,
+.oa-header--over:not(.is-scrolled) button:focus-visible,
+.oa-hero a:focus-visible,
+.oa-hero button:focus-visible {
+    outline-color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CƠ CHẾ ĐÓNG/MỞ CỦA LỚP PHỦ ĐẦU TRANG
+
+   .hpop / .hpop__panel / .is-open là HỢP ĐỒNG với assets/js/header.js.
+   Kiểu dáng của bảng nằm ở .oa-panel phía trên; khối này chỉ lo việc ẩn
+   hiện, và nó có đúng một ràng buộc không được phá:
+
+     ẨN BẰNG visibility:hidden, KHÔNG BẰNG display:none.
+
+   header.js đặt tiêu điểm vào ô tìm ngay sau khi mở (xem khối rAF kép ở
+   đó). display:none làm phần tử biến mất khỏi cây bố cục và focus() rơi
+   vào khoảng không; visibility:hidden thì chỉ cần một lần tính lại kiểu.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.hpop {
+    display: flex;
+    align-items: center;
+}
+
+.hpop__scrim,
+.hpop__panel--search {
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity .2s ease, visibility 0s linear .2s;
+}
+
+.hpop.is-open .hpop__scrim,
+.hpop.is-open .hpop__panel--search {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity .2s ease;
+}
+
+/* .is-closed do header.js gắn khi bấm lần thứ hai — nó tồn tại để đè lên
+   :hover/:focus-within. Giữ luật này kể cả khi không còn luật hover nào:
+   gỡ đi thì lần sau ai thêm hover vào lại vỡ đúng chỗ cũ. */
+.hpop.is-closed .hpop__scrim,
+.hpop.is-closed .hpop__panel--search {
+    visibility: hidden;
+    opacity: 0;
+}
+
+/* Khoá cuộn nền khi lớp phủ tìm kiếm mở — header.js gắn lớp này lên <body> */
+body.is-search-open {
+    overflow: hidden;
+}
+
+/* ┌─ NGĂN GIỎ — Bootstrap Offcanvas trượt từ TRÊN xuống ──────────────────
+   │ Bootstrap cho .offcanvas-top chiều cao 30vh và neo top:0. Mẫu muốn nó
+   │ bắt đầu ngay dưới thanh đầu trang và phủ hết phần còn lại, nên phải đè
+   │ cả hai — .oa-panel--full đã lo dáng, khối này chỉ chỉnh chỗ neo.
+   │
+   │ ═══ ĐỌC KỸ: CSS ẨN/HIỆN Ở ĐÂY LÀ BẮT BUỘC, KHÔNG PHẢI TRANG TRÍ ═══
+   │
+   │ Dự án nạp bootstrap.bundle.min.JS nhưng CỐ Ý KHÔNG nạp bootstrap.min.CSS
+   │ (227KB ấy khai lại :root và mọi lớp .btn/.form-control, trùng tên với hệ
+   │ token ở đầu file này — nạp vào là cả bảng màu đổ). Xem khối chú thích ở
+   │ cuối _layout/master.php.
+   │
+   │ Hệ quả: bốn lớp trạng thái mà Offcanvas JS bật/tắt — .showing · .show ·
+   │ .hiding và .offcanvas-backdrop — KHÔNG CÓ KIỂU DÁNG NÀO nếu ta không tự
+   │ khai. Thiếu khối này thì tấm giỏ hiện thường trực đè lên mọi trang, và
+   │ đó đúng là thứ đã xảy ra khi components/header.css bị gỡ.
+   │
+   │ Bốn luật dưới đây là bản rút gọn của _offcanvas.scss, giữ nguyên tên lớp
+   │ và nguyên thứ tự — đừng đổi, chúng là hợp đồng với thư viện.
+   └──────────────────────────────────────────────────────────────────────*/
+.offcanvas.hpop__panel--cart {
+    top: var(--hdr-h);
+    height: calc(100vh - var(--hdr-h));
+    max-height: none;
+    border: 0;
+
+    /* Trạng thái nghỉ: ẩn hẳn và nằm sẵn phía trên mép màn hình */
+    visibility: hidden;
+    transform: translateY(-100%);
+    transition: transform .3s ease-in-out, visibility 0s linear .3s;
+}
+
+/* .showing bật ngay lúc bắt đầu mở; .hiding còn giữ trong lúc trượt ra.
+   Cả ba đều phải NHÌN THẤY được, nếu không thì không có hoạt ảnh nào. */
+.offcanvas.hpop__panel--cart.showing,
+.offcanvas.hpop__panel--cart.hiding,
+.offcanvas.hpop__panel--cart.show {
+    visibility: visible;
+    transition: transform .3s ease-in-out;
+}
+
+/* Về đúng chỗ khi đang mở. `:not(.hiding)` là chốt của Bootstrap: lúc đóng,
+   .show vẫn còn trên phần tử một nhịp nữa cùng với .hiding — thiếu nó thì
+   tấm nhảy biến mất thay vì trượt lên. */
+.offcanvas.hpop__panel--cart.showing,
+.offcanvas.hpop__panel--cart.show:not(.hiding) {
+    transform: none;
+}
+
+/* Nền mờ do Offcanvas tự dựng và gắn vào <body>. Độ đậm .18 lấy theo mẫu —
+   cùng con số với .oa-scrim, vì đây là lớp phủ "nằm dưới" y như bảng tìm
+   kiếm: trang phía sau vẫn phải đọc được. */
+.offcanvas-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-scrim);
+    background: #000;
+    opacity: 0;
+    transition: opacity .3s ease;
+}
+
+.offcanvas-backdrop.show {
+    opacity: .18;
+}
+
+.offcanvas-backdrop.fade:not(.show) {
+    opacity: 0;
+}
+
+.cartdrawer__body {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: min(600px, 100%);
+    margin: 0 auto;
+    padding: 40px 0;
+    align-self: start;
+}
+
+.cartdrawer__list {
+    display: flex;
+    flex-direction: column;
+}
+
+.cartdrawer__row {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line-input);
+    font-size: var(--fs-body);
+}
+
+.cartdrawer__list li:last-child .cartdrawer__row {
+    border-bottom: 1px solid var(--line-input);
+}
+
+.cartdrawer__thumb {
+    width: 56px;
+    height: 56px;
+    aspect-ratio: auto;
+    flex: none;
+}
+
+.cartdrawer__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Tên cắt MỘT DÒNG bằng CSS chứ không cắt chuỗi trong PHP: máy chủ không
+   biết bảng rộng bao nhiêu pixel, mà cắt theo số ký tự thì tên ngắn cũng bị
+   thêm dấu ba chấm vô cớ. */
+.cartdrawer__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cartdrawer__qty {
+    color: var(--ink-3);
+}
+
+.cartdrawer__price {
+    white-space: nowrap;
+}
+
+.cartdrawer__foot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Nút "Tiếp tục mua sắm" / "Xem giỏ hàng" — VUÔNG cao 40, viền #bbb. Mẫu
+   dùng đúng dáng này trong bảng giỏ và không dùng ở đâu khác, nên nó ở đây
+   chứ không thành một biến thể của .oa-btn. */
+.cartdrawer__cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    width: min(276px, 100%);
+    border: 1px solid var(--line-btn-2);
+    background: none;
+    color: var(--ink);
+    font-size: var(--fs-body);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.cartdrawer__cta:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   NGĂN KÉO ĐIỀU HƯỚNG (màn hẹp)
+
+   Mẫu không vẽ bản mobile, nên đây là phần suy ra. Nguyên tắc: mượn đúng
+   dáng ngăn kéo tài khoản của mẫu (.oa-drawer) — nền #f3f3f5, trượt từ
+   phải, nền mờ .35 — chứ không dựng một ngôn ngữ thứ hai cho mobile.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.mobile-nav {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-drawer);
+}
+
+.mobile-nav[hidden] {
+    display: none;
+}
+
+.mobile-nav__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, .35);
+}
+
+.mobile-nav__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(360px, 86vw);
+    background: var(--bg-panel);
+    padding: 20px 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform .28s ease;
+}
+
+.mobile-nav.is-open .mobile-nav__panel {
+    transform: translateX(0);
+}
+
+.mobile-nav__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.mobile-nav__links {
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-nav__links > a {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--line-input);
+    font-size: var(--fs-ui);
+    letter-spacing: var(--ls-tight);
+}
+
+.mobile-nav__links > a.is-active {
+    color: var(--ink-3);
+}
+
+.mobile-nav__foot {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.mobile-nav__foot .oa-btn {
+    width: 100%;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HAI MẨU CÒN LẠI CỦA CHÂN TRANG
+   ══════════════════════════════════════════════════════════════════════ */
+
+.oa-footer__helptitle {
+    font-size: var(--fs-ui);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.oa-footer__lang {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.oa-footer__lang .is-active {
+    color: var(--ink);
+    font-weight: 700;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BA TÊN NÚT CỦA THIẾT KẾ CŨ
+
+   .btn-primary · .btn-outline · .btn-inline (+ cỡ .btn-lg) còn nằm trong
+   sáu view: gioi-thieu, dat-hang/thanh-cong, errors/403, ngăn kéo mobile,
+   và hai chỗ trong khu tài khoản.
+
+   TRỎ CHÚNG VỀ ĐÚNG HAI DÁNG NÚT CỦA MẪU thay vì đi sửa sáu view: mỗi lần
+   sửa một view là một cơ hội gõ nhầm tên lớp, mà ba tên này thì không mơ
+   hồ — primary là nút đặc, outline là nút rỗng, inline là một liên kết.
+
+   Khối này sẽ teo dần khi các view ấy được dựng lại, và xoá hẳn khi view
+   cuối cùng không còn gọi tên nào.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.btn-primary,
+.btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--line-btn);
+    border-radius: var(--r-pill);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.btn-primary {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+/* Nút đặc rê chuột thì ĐẢO NGƯỢC thành rỗng — cú lật của mẫu, xem .oa-btn */
+.btn-primary:hover {
+    background: var(--bg);
+    color: var(--ink);
+    border-color: var(--ink);
+}
+
+.btn-outline:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+/* .btn-lg KHÔNG làm nút to hơn. Thang của mẫu chỉ có hai chiều cao nút —
+   36 và 32 — và "lớn" không phải một trong hai. Giữ tên để view khỏi gãy,
+   nhưng nó chỉ nới đệm ngang. */
+.btn-lg {
+    padding-left: 36px;
+    padding-right: 36px;
+}
+
+.btn-inline {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   KHUNG RÚT GỌN — thanh toán, đăng nhập, đăng ký
+
+   Bốn trang (/thanh-toan, /auth, /auth/quen-mat-khau, /auth/dat-lai) chạy
+   khung `$bareLayout`: KHÔNG hàng nav, KHÔNG giỏ, KHÔNG chân trang đầy đủ.
+   Chỉ wordmark và một dòng hỗ trợ.
+
+   Mẫu không vẽ khung này, nhưng nó đã nói đủ: giữ nguyên wordmark 18px/700/
+   .12em và chiều cao 52px của .oa-header, bỏ mọi thứ còn lại. Nghĩa là
+   khung rút gọn trông đúng như thanh đầu trang thật vừa bị gỡ hết nội dung
+   hai bên — không phải một thanh khác.
+
+   CỐ Ý BỎ LỐI ĐI: đây là lúc khách đang nhập thông tin. Mỗi liên kết thêm
+   trên màn hình này là một lối rời khỏi giao dịch đang dở.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Dải khuyến mãi mỏng trên cùng trang thanh toán */
+.barepromo {
+    padding: 8px var(--edge);
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.barebar {
+    height: var(--hdr-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 var(--edge);
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+}
+
+.barebar__help {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+    text-align: right;
+}
+
+.barebar__help a {
+    color: var(--ink);
+}
+
+.barebar__help svg {
+    flex: none;
+}
+
+/* Ổ khoá "thanh toán an toàn" — SVG trong checkout-header.php gõ cứng
+   stroke="#4d7a3f". Đó là màu thứ ba trên một site chỉ có hai, nên đè về
+   currentColor ở đây thay vì sửa 1 thuộc tính trong view: view ấy còn in
+   ra ở hai nhánh khác. */
+.barebar__help--pay svg {
+    stroke: currentColor;
+}
+
+.barebar__dot {
+    color: var(--line-btn);
+}
+
+.barefoot {
+    flex: none;
+    padding: 24px var(--edge);
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+}
+
+.barefoot__inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.barefoot__links {
+    display: flex;
+    gap: 16px;
+}
+
+.barefoot__links a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TRANG LỖI  (403 · 404 · 500)
+
+   Ba trang này dùng HAI bộ lớp khác nhau — .errpage cho 403, .error-page
+   cho 404/500 — vì chúng được dựng ở hai đợt khác nhau và chưa gộp. Gộp
+   lại ở đây bằng cách cho cả hai bộ cùng một luật, thay vì sửa markup ba
+   view: chúng là ba trang không ai nhìn thấy trong lúc mọi thứ chạy đúng,
+   nên chúng phải là ba trang KHÔNG BAO GIỜ phải sửa lại.
+
+   Hình lấy từ .oa-empty--tall của mẫu: mã lỗi làm nhãn nhỏ, tiêu đề 13px
+   IN HOA, một câu giải thích, rồi nút.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.error-page,
+.errpage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 140px var(--edge) 160px;
+}
+
+.error-page__container,
+.errpage__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-width: 460px;
+    text-align: center;
+}
+
+/* Mã lỗi là NHÃN, không phải tiêu đề. Bản cũ in "404" ở cỡ rất lớn — đó là
+   một cỡ chữ không có trong thang của mẫu, và nó làm con số to hơn câu nói
+   cho khách biết phải làm gì. */
+.error-page__code,
+.errpage__code {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.error-page__title,
+.errpage__title {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.error-page__desc,
+.errpage__lead {
+    color: var(--ink-3);
+    text-wrap: pretty;
+}
+
+.errpage__actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 12px;
+}
+
+/* .btn-primary / .btn-outline / .btn-inline là ba tên của thiết kế cũ, còn
+   sót ở errors/403.php và ngăn kéo mobile. Trỏ chúng về đúng hai dáng nút
+   của mẫu thay vì đi sửa từng view — chúng chỉ còn ở vài chỗ, và mỗi chỗ
+   sửa là một cơ hội gõ nhầm tên. */
+.error-page__btn,
+.errpage__actions .btn-primary,
+.errpage__actions .btn-outline,
+.mobile-nav__foot .btn-primary,
+.mobile-nav__foot .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--line-btn);
+    border-radius: var(--r-pill);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+}
+
+.error-page__btn,
+.errpage__actions .btn-primary,
+.mobile-nav__foot .btn-primary {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.error-page__btn:hover,
+.errpage__actions .btn-primary:hover,
+.mobile-nav__foot .btn-primary:hover {
+    background: var(--bg);
+    color: var(--ink);
+    border-color: var(--ink);
+}
+
+.errpage__actions .btn-outline:hover,
+.mobile-nav__foot .btn-outline:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.btn-inline {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+    .error-page,
+    .errpage {
+        padding: 80px var(--edge) 96px;
+    }
+
+    .barepromo,
+    .barebar {
+        padding-left: var(--edge);
+        padding-right: var(--edge);
+    }
+
+    .barebar__help {
+        font-size: 8px;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+
+   Mẫu chỉ vẽ bản desktop. Bốn mốc dưới đây là phần SUY RA, và nguyên tắc
+   là: giữ nguyên dáng, chỉ rút lề và bớt cột. Không đổi cỡ chữ, không đổi
+   bán kính bo, không đổi cách xếp — làm thế là ra một thiết kế thứ hai.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1200px) {
+    :root {
+        --edge: 40px;
+        --edge-grid: 36px;
+        --gap-row: 40px;
+    }
+
+    .oa-drawer {
+        width: min(560px, 60vw);
+        padding: 20px 40px 40px;
+    }
+}
+
+@media (max-width: 1000px) {
+    .oa-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .oa-footer__brand,
+    .oa-footer__help {
+        flex-basis: 100%;
+        border: 0;
+        padding: 0;
+    }
+
+    .oa-footer__links {
+        flex-basis: 100%;
+        padding: 0;
+    }
+}
+
+@media (max-width: 760px) {
+    :root {
+        --edge: 20px;
+        --edge-grid: 16px;
+        --gap-row: 32px;
+        --gap-col: 12px;
+    }
+
+    /* ┌─ HÀNG NAV BIẾN THÀNH NGĂN KÉO ────────────────────────────────────
+       │ Thanh vẫn ba cột, nhưng cột trái đổi từ hàng liên kết sang một nút
+       │ hamburger. Wordmark ở nguyên giữa — đó là thứ duy nhất của thanh
+       │ đầu trang không được phép xê dịch ở bất kỳ bề ngang nào.
+       └──────────────────────────────────────────────────────────────────*/
+    .oa-header__nav {
+        display: none;
+    }
+
+    .oa-header__burger {
+        display: flex;
+        align-items: center;
+        border: 0;
+        background: none;
+        padding: 0;
+        color: inherit;
+        cursor: pointer;
+    }
+
+    .oa-header__mark {
+        font-size: var(--fs-mark);
+    }
+
+    .oa-header__actions {
+        gap: 12px;
+    }
+
+    .oa-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .oa-drawer {
+        width: 100%;
+        min-width: 0;
+        padding: 20px 24px 40px;
+    }
+
+    .oa-panel {
+        padding: 24px var(--edge) 48px;
+    }
+
+    .oa-hero__copy {
+        left: var(--edge);
+        right: var(--edge);
+        bottom: 32px;
+        max-width: none;
+    }
+
+    .oa-hero {
+        aspect-ratio: 4 / 5;
+    }
+
+    .oa-split,
+    .oa-more {
+        padding-top: 56px;
+        padding-bottom: 64px;
+    }
+
+    .oa-band {
+        padding: 56px 0 64px;
+    }
+
+    .oa-band .oa-grid {
+        padding-top: 40px;
+    }
+
+    .oa-narrow {
+        padding: 48px 0 64px;
+        gap: 48px;
+    }
+
+    .oa-footer {
+        padding: 48px var(--edge) 24px;
+        gap: 32px;
+    }
+
+    .oa-footer__social {
+        gap: 16px;
+    }
+
+    .oa-empty--tall {
+        padding: 80px var(--edge) 96px;
+    }
+}
+
+@media (max-width: 420px) {
+    .oa-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .oa-card__actions {
+        flex-direction: column;
+    }
+}
+
+/* Người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

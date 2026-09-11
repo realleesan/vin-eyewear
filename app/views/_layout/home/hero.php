@@ -133,27 +133,31 @@ foreach ($clips as $i => &$clip) {
 unset($clip);
 
 $tong = count($clips);
+/* ┌─ TIÊU ĐỀ HERO ────────────────────────────────────────────────────────
+   │ Mẫu in đúng một dòng chữ giữa đáy ảnh — "2026 Collection", font Georgia
+   │ serif, 22px, IN HOA, giãn .06em. Đây là NGOẠI LỆ DUY NHẤT với luật "cả
+   │ site một family sans" của oa.css; xem --font-hero ở đó.
+   │
+   │ Lấy tên bộ sưu tập của tấm đang hiện, không viết cứng: tấm nào thì tên
+   │ ấy, và nút bên dưới dẫn đúng tới bộ đó. Bộ chưa ghép được thì lùi về
+   │ nhãn chung, không in một dòng trống đẩy hai nút tụt xuống.
+   └──────────────────────────────────────────────────────────────────────── */
 ?>
 
-<section class="vhero" data-section="s01" data-video-hero
+<section class="oa-hero oa-hero--full vhero" data-section="s01" data-video-hero
          aria-roledescription="carousel" aria-labelledby="hero-title">
 
     <?php
-    /* <h1> ẨN BẰNG .sr-only, KHÔNG BỎ ĐI.
-       Mỗi trang cần đúng một <h1>, và trang chủ thì <h1> ấy phải nói website
-       này là gì — không phải tên bộ sưu tập đang tình cờ trượt tới. Bản trước
-       in nó ra to giữa hero; nay hero theo lối tham chiếu (chỉ tên bộ + hai
-       nút) nên câu ấy chuyển thành chữ dành cho trình đọc màn hình và cho
-       công cụ tìm kiếm. aria-labelledby ở trên trỏ vào đây. */
+    /* Mỗi trang cần đúng một <h1>, và <h1> của trang chủ phải nói website này
+       là gì — không phải tên bộ sưu tập đang tình cờ trượt tới. Mẫu vẽ chữ to
+       giữa hero là TÊN BỘ, nên câu định danh chuyển thành chữ chỉ dành cho
+       trình đọc màn hình và cho máy tìm kiếm. aria-labelledby ở trên trỏ vào
+       đây. */
     ?>
     <h1 id="hero-title" class="sr-only">
         <?= e(t('home.hero.title_1')) ?> <?= e(t('home.hero.title_2')) ?>
     </h1>
 
-    <?php
-    /* Khung cắt. overflow:hidden ở đây là thứ giữ hai tấm sau nằm ngoài mép —
-       và cũng là thứ làm hero vẫn đúng khi tắt JavaScript. */
-    ?>
     <div class="vhero__viewport">
         <div class="vhero__track" data-vhero-track>
             <?php foreach ($clips as $i => $clip): ?>
@@ -166,51 +170,44 @@ $tong = count($clips);
                          <?= $i === 0 ? '' : 'inert' ?>>
 
                     <?php
-                    /* aria-hidden: video là NỀN TRANG TRÍ, nghĩa của tấm nằm ở
-                       chữ bên dưới. Cũng vì thế không có <track> phụ đề —
-                       không có lời nào để chép ra.
+                    /* Video là NỀN TRANG TRÍ — nghĩa của tấm nằm ở chữ bên dưới,
+                       nên aria-hidden và không có <track> phụ đề: không có lời
+                       nào để chép ra.
 
-                       CẢ BA đều autoplay + preload="auto": đây là phương án
-                       "cả ba cùng phát" — xem khối chú thích đầu file. */
+                       poster CHỈ in khi tấm ấy có. `poster=""` rỗng không phải
+                       là "không có poster": trình duyệt coi chuỗi rỗng là một
+                       URL, đi tải chính trang hiện tại rồi bỏ vì không phải ảnh. */
                     ?>
-                    <?php /* poster CHỈ in ra khi tấm ấy có — xem khối $clips ở đầu
-                             file. `poster=""` rỗng không phải là "không có
-                             poster": trình duyệt coi chuỗi rỗng là một URL, đi
-                             tải chính trang hiện tại rồi bỏ vì không phải ảnh. */ ?>
                     <video class="vhero__clip"
                            autoplay muted loop playsinline preload="auto"
                            <?= $clip['poster'] ? 'poster="' . e(asset($clip['poster'])) . '"' : '' ?>
                            aria-hidden="true" tabindex="-1"><source
                             src="<?= e(asset($clip['src'])) ?>" type="video/mp4"></video>
 
-                    <?php /* Lớp phủ tối chuyển dần từ dưới lên: chữ trắng đặt
+                    <?php /* Lớp phủ tối chuyển dần từ dưới lên. Chữ trắng đặt
                              thẳng lên video thì độ đọc được đổi theo từng khung
-                             hình. Dải này khoá sàn tương phản ở đúng vùng có chữ. */ ?>
+                             hình; dải này khoá sàn tương phản ở đúng vùng có chữ.
+                             Mẫu không vẽ nó vì ảnh mẫu là ảnh tĩnh đã tối sẵn. */ ?>
                     <div class="vhero__veil" aria-hidden="true"></div>
 
-                    <div class="vhero__copy">
-                        <p class="vhero__eyebrow"><?= e($clip['label']) ?></p>
-                        <?php /* Tên lấy từ CSDL nên có thể rỗng khi clip không ghép được
-                                 với bộ nào — bỏ hẳn thẻ thay vì in một dòng trống đẩy
-                                 hai nút tụt xuống. */ ?>
-                        <?php if ($clip['ten'] !== ''): ?>
-                            <p class="vhero__name" lang="vi"><?= e($clip['ten']) ?></p>
-                        <?php endif; ?>
+                    <div class="oa-hero__center vhero__copy">
+                        <p class="oa-hero__title" lang="vi">
+                            <?= e($clip['ten'] !== '' ? $clip['ten'] : t('home.hero.eyebrow')) ?>
+                        </p>
 
-                        <div class="vhero__cta">
+                        <div class="oa-hero__actions">
                             <?php
-                            /* HAI ĐÍCH KHÁC NHAU, và đó là chủ ý:
-                                 Mua ngay   → danh sách hàng ĐÃ LỌC theo bộ này
-                                 Khám phá   → trang kể chuyện của chính bộ ấy
-                               Cùng một bộ sưu tập, hai ý định mua khác nhau. */
+                            /* Hai đích KHÁC NHAU cho cùng một bộ sưu tập:
+                                 Mua ngay  → danh sách hàng ĐÃ LỌC theo bộ này
+                                 Chi tiết  → trang kể chuyện của chính bộ ấy */
                             ?>
-                            <a class="vhero__btn vhero__btn--solid"
+                            <a class="oa-btn oa-btn--sm oa-btn--onimage-solid"
                                href="<?= e($clip['bst']
                                    ? '/san-pham?' . http_build_query(['collection' => $clip['bst']])
                                    : '/san-pham') ?>">
                                 <?= e(t('home.hero.cta_buy')) ?>
                             </a>
-                            <a class="vhero__btn"
+                            <a class="oa-btn oa-btn--sm oa-btn--onimage"
                                href="<?= e($clip['bst']
                                    ? '/bo-suu-tap/' . rawurlencode($clip['bst'])
                                    : '/bo-suu-tap') ?>">
@@ -224,21 +221,24 @@ $tong = count($clips);
     </div>
 
     <?php
-    /* Vạch tiến độ — <button> thật, không phải <span>: chúng bấm được và Tab
-       tới được, nên người không dùng chuột vẫn sang tấm khác được mà không
-       cần kéo. home.js gắn hành vi; tắt JavaScript thì chúng bị ẩn hẳn bằng
-       CSS (html:not(.js)) chứ không nằm đó làm nút chết. */
+    /* VẠCH CHỈ TẤM — mẫu vẽ năm vạch 90×1px dưới đáy, vạch đang chạy màu
+       trắng đặc, còn lại trắng 40%. Ở đây số vạch bằng số clip THẬT có file,
+       nên nó luôn khớp với băng trượt.
+
+       Là <button> thật để bàn phím tới được. home.js gắn hành vi; tắt
+       JavaScript thì CSS ẩn hẳn chúng (html:not(.js)) chứ không để lại một
+       hàng nút chết. */
     ?>
-    <div class="vhero__bars" data-vhero-bars role="tablist"
+    <div class="oa-hero__dots vhero__bars" data-vhero-bars role="tablist"
          aria-label="<?= e(t('home.hero.eyebrow')) ?>">
         <?php foreach ($clips as $i => $clip): ?>
-            <button type="button" class="vhero__bar<?= $i === 0 ? ' is-on' : '' ?>"
+            <button type="button" class="oa-hero__dot vhero__bar<?= $i === 0 ? ' is-active is-on' : '' ?>"
                     role="tab" aria-selected="<?= $i === 0 ? 'true' : 'false' ?>"
                     data-vhero-go="<?= $i ?>"
                     aria-label="<?= e(t('home.hero.slide_of', [
                         ':n'    => (string) ($i + 1),
                         ':tong' => (string) $tong,
-                    ])) ?>"><span class="vhero__bar-fill"></span></button>
+                    ])) ?>"></button>
         <?php endforeach; ?>
     </div>
 </section>

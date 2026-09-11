@@ -1,0 +1,664 @@
+/* ============================================================================
+   catalog.css — TRANG DANH MỤC · TRANG BỘ SƯU TẬP · TRANG TÌM KIẾM
+
+   Ba trang này dùng chung một hình: đầu trang căn giữa → hàng lọc → lưới 4 cột
+   → nút "Xem thêm". Đó đúng là artboard trung tâm của mẫu.
+
+   ═════════════════════════════════════════════════════════════════════════
+   THAY ĐỔI LỚN NHẤT: BỎ CỘT LỌC BÊN TRÁI
+
+   Bản cũ là bố cục hai cột — cột lọc 260px dính bên trái, lưới 3 cột bên
+   phải. Mẫu không có cột nào: bộ lọc là một BẢNG TRÀN BỀ NGANG bung ra từ
+   một hàng ngang, đẩy lưới xuống, rồi cụp lại.
+
+   VÀ KHÔNG PHẢI SỬA MỘT DÒNG MARKUP NÀO để làm việc đó. Cột lọc vốn đã là
+   `<details class="cfilter">` + `<summary class="cfilter__toggle">` —
+   đúng cơ chế đóng/mở mà mẫu cần, đúng cách chạy được khi tắt JavaScript.
+   Việc ở đây chỉ là cho hai phần tử ấy dáng mới:
+
+     .cfilter          từ "cột dính bên trái" → khối tràn ngang, đứng trên lưới
+     .cfilter__toggle  từ "nút thu gọn ở mobile" → HÀNG LỌC của mẫu, hiện ở
+                       mọi bề ngang: chip bên trái, chữ "Bộ lọc" + icon bên phải
+     .cfilter__panel   từ "danh sách dọc" → lưới nhóm auto-fit 200px của mẫu
+
+   Hệ quả cần biết: mọi @media trong file này chỉ còn lo BỀ NGANG, không còn
+   lo "đổi hẳn kiểu bộ lọc ở 1101px" như bản cũ. Một hình cho mọi màn hình.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.catbody {
+    background: var(--bg);
+}
+
+/* Một cột. Bản cũ là `grid-template-columns: 260px minmax(0,1fr)`. */
+.catbody__grid {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HÀNG LỌC  (= .oa-chiprow của mẫu)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cfilter {
+    display: block;
+    border-bottom: 1px solid var(--line);
+}
+
+/* <summary> mặc định có tam giác riêng của trình duyệt, và nó không chỉnh
+   được nét cho khớp phần còn lại — bỏ ở cả hai cú pháp. */
+.cfilter__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    padding: 20px var(--edge);
+    font-size: var(--fs-ui);
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+}
+
+.cfilter__toggle::-webkit-details-marker {
+    display: none;
+}
+
+.cfilter__toggle svg {
+    flex: none;
+}
+
+/* Số tiêu chí đang bật — chấm tròn đen cạnh chữ "Bộ lọc" */
+.cfilter__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 8px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BẢNG LỌC BUNG RA
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cfilter__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.cfilter__title {
+    font-size: var(--fs-h);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.cfilter__clear {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Chưa lọc gì thì LÀM MỜ, không giấu đi: giấu rồi hiện lại khiến hàng tiêu
+   đề nhảy chiều cao mỗi lần bấm tiêu chí đầu tiên. */
+.cfilter__clear.is-off {
+    color: var(--line-btn);
+    text-decoration: none;
+    pointer-events: none;
+}
+
+/* ┌─ NHÓM TIÊU CHÍ — lưới auto-fit 200px, đúng của mẫu ───────────────────
+   │ Các .pfacet là con TRỰC TIẾP của .cfilter__panel, nên lưới khai ở đây
+   │ chứ không ở một thẻ bọc (không có thẻ bọc nào trong markup).
+   │
+   │ .cfilter__head và .cfilter__done cũng là con trực tiếp — cả hai phải
+   │ chiếm trọn hàng, xem luật ngay dưới.
+   └──────────────────────────────────────────────────────────────────────── */
+.cfilter__panel {
+    padding: 0 var(--edge) 36px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px 32px;
+    align-items: start;
+}
+
+.cfilter__head,
+.cfilter__done,
+.cfilter__scrim {
+    grid-column: 1 / -1;
+}
+
+/* Nền mờ của bottom-sheet cũ — không còn bottom-sheet nào, ẩn hẳn. Giữ luật
+   thay vì xoá thẻ khỏi view: thẻ ấy mang [data-sheet-close] mà catalog.js
+   còn đọc tới. */
+.cfilter__scrim {
+    display: none;
+}
+
+.pfacet {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.pfacet__legend {
+    font-size: var(--fs-body);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+/* Danh sách tiêu chí — lưới auto-fill 78px của mẫu, nên "Đen", "Bạc", "Nâu"
+   xếp thành nhiều cột thay vì một cột dọc dài. */
+.pfacet__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+    gap: 14px 8px;
+}
+
+.pfacet__none {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+.pfacet__search {
+    display: flex;
+    gap: 6px;
+}
+
+.pfacet__input {
+    flex: 1;
+    min-width: 0;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    outline: none;
+}
+
+.pfacet__input:focus {
+    border-color: var(--ink);
+}
+
+.pfacet__go {
+    flex: none;
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-field);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+/* ┌─ Ô TÍCH ──────────────────────────────────────────────────────────────
+   │ Mẫu vẽ ô vuông 11px viền 1px đen, KHÔNG tô nền khi chưa chọn. Đây là
+   │ <a> chứ không phải <input type=checkbox> — mỗi tiêu chí là một URL
+   │ thật, nên bộ lọc chạy khi tắt JavaScript và chia sẻ link được.
+   └──────────────────────────────────────────────────────────────────────── */
+.pcheck {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: var(--fs-body);
+    color: var(--ink);
+    cursor: pointer;
+    min-width: 0;
+}
+
+.pcheck__box {
+    flex: none;
+    width: 11px;
+    height: 11px;
+    border: 1px solid var(--ink);
+    background: var(--bg);
+    position: relative;
+}
+
+.pcheck.is-on .pcheck__box {
+    background: var(--ink);
+}
+
+.pcheck.is-on .pcheck__box::after {
+    content: "✓";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 8px;
+    line-height: 1;
+}
+
+.pcheck__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Tiêu chí không còn mặt hàng nào: vẫn HIỆN nhưng tắt. Giấu đi thì danh sách
+   nhảy chỗ sau mỗi cú bấm, và khách không hiểu vì sao "Nâu" vừa còn đó. */
+.pcheck.is-off {
+    color: var(--ink-6);
+    cursor: not-allowed;
+}
+
+.pcheck.is-off .pcheck__box {
+    border-color: var(--line-btn);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CHIP
+   ══════════════════════════════════════════════════════════════════════ */
+
+.pfacet__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pchip {
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-chip);
+    padding: 0 12px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+}
+
+.pchip:hover {
+    border-color: var(--ink-6);
+    color: var(--ink);
+}
+
+.pchip.is-on {
+    background: var(--bg-chip-flat);
+    border-color: var(--bg-chip-flat);
+}
+
+.pchip.is-off {
+    color: var(--ink-6);
+    border-color: var(--line);
+    cursor: not-allowed;
+}
+
+/* Nút "Xem N sản phẩm" đóng bảng lọc — chỉ có nghĩa khi bảng đang mở */
+.cfilter__done {
+    justify-self: start;
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    cursor: pointer;
+}
+
+.cfilter__done:hover {
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   THANH KẾT QUẢ & SẮP XẾP
+   ══════════════════════════════════════════════════════════════════════ */
+
+.catbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 20px var(--edge) 0;
+}
+
+.catbar__count {
+    font-size: var(--fs-body);
+    color: var(--ink-3);
+}
+
+.catbar__count strong {
+    color: var(--ink);
+    font-weight: 400;
+}
+
+.catbar__drop {
+    margin-left: 6px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.catsort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.catsort__label {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+/* ┌─ Ô SẮP XẾP ───────────────────────────────────────────────────────────
+   │ VẪN là <select> thật (thanh sắp xếp không đi cùng đợt đổi cột lọc sang
+   │ <details>), nên đây là dáng của một <select> chứ không phải của
+   │ .catpick dạng <details> bên dưới.
+   │
+   │ appearance:none rồi tự vẽ mũi tên bằng SVG: mũi tên mặc định mỗi hệ
+   │ điều hành một kiểu — Windows ra tam giác đặc nhỏ xíu, Android ra hình
+   │ khác hẳn — và không chỉnh được độ dày nét cho khớp phần còn lại.
+   └──────────────────────────────────────────────────────────────────────── */
+.catpick--select {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.catpick__select {
+    height: var(--h-chip);
+    padding: 0 28px 0 12px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.catpick__select:focus {
+    border-color: var(--ink);
+}
+
+.catpick--select .catpick__caret {
+    position: absolute;
+    right: 10px;
+    width: 12px;
+    height: 12px;
+    pointer-events: none;
+    color: var(--ink);
+}
+
+/* Ẩn khi có JavaScript — catalog.js gửi form ngay khi đổi ô chọn. Không có
+   JS thì đây là cách DUY NHẤT chốt lựa chọn, nên không được bỏ hẳn. */
+html.js .catpick__go {
+    display: none;
+}
+
+.catpick__go {
+    height: var(--h-chip);
+    padding: 0 12px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-chip);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+/* ┌─ Ô CHỌN DẠNG <details> (nhóm "chiết suất", "giá") ────────────────────
+   │ Khác .catpick--select ở trên: cái này là <details>/<summary> tự vẽ, vì
+   │ mỗi mục cần kèm SỐ ĐẾM mà <option> không chứa được gì ngoài chữ.
+   └──────────────────────────────────────────────────────────────────────── */
+.catpick {
+    position: relative;
+}
+
+.catpick__sum {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    font-size: var(--fs-body);
+    cursor: pointer;
+    list-style: none;
+}
+
+.catpick__sum::-webkit-details-marker {
+    display: none;
+}
+
+.catpick__caret {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    transition: transform .2s ease;
+}
+
+.catpick[open] > .catpick__sum .catpick__caret {
+    transform: rotate(180deg);
+}
+
+.catpick__menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 2;
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    list-style: none;
+}
+
+.catpick__opt {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    font-size: var(--fs-body);
+}
+
+.catpick__opt:hover {
+    background: var(--bg-soft);
+    color: var(--ink);
+}
+
+.catpick__opt.is-on {
+    background: var(--bg-chip);
+}
+
+.catpick__opt.is-off {
+    color: var(--ink-6);
+    pointer-events: none;
+}
+
+.catpick__n {
+    flex: none;
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LƯỚI KẾT QUẢ
+
+   .pgrid là lưới của ba trang này. Cùng đúng một luật với .oa-grid trong
+   oa.css — khai lại ở đây thay vì thêm lớp .oa-grid vào bốn view, vì tên
+   .pgrid còn nằm trong cả catalog.js (mảnh nạp ngầm) lẫn bốn file view.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.pgrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap-row) var(--gap-col);
+    padding: 40px var(--edge-grid) 0;
+    list-style: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   KHÔNG CÓ KẾT QUẢ
+   ══════════════════════════════════════════════════════════════════════ */
+
+.catempty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 120px var(--edge) 140px;
+    text-align: center;
+}
+
+.catempty__title {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.catempty__text {
+    color: var(--ink-3);
+    max-width: 420px;
+    text-wrap: pretty;
+}
+
+.catempty__btn {
+    height: var(--h-btn);
+    padding: 0 28px;
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--fs-ui);
+    margin-top: 8px;
+}
+
+.catempty__btn:hover {
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   PHÂN TRANG
+
+   Mẫu chỉ vẽ một nút "More 32 / 77" căn giữa với rất nhiều khoảng thở
+   (96px trên, 120px dưới). Ở đây vẫn là phân trang thật — nhiều nút số —
+   vì nó chạy khi tắt JavaScript và máy tìm kiếm đi theo được, còn "tải
+   thêm" thì không. Giữ nguyên khoảng thở và dáng viên của mẫu.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.catpager {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 96px var(--edge) 120px;
+}
+
+.catpager__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--h-btn);
+    height: var(--h-btn);
+    padding: 0 16px;
+    border: 1px solid var(--line-btn);
+    border-radius: var(--r-pill);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--fs-ui);
+}
+
+.catpager__btn:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+.catpager__btn.is-current {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+    cursor: default;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1000px) {
+    .pgrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 760px) {
+    .pgrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .catbar {
+        padding-top: 16px;
+    }
+
+    .catpager {
+        padding: 56px var(--edge) 72px;
+    }
+
+    .catempty {
+        padding: 72px var(--edge) 88px;
+    }
+}
+
+@media (max-width: 420px) {
+    .pgrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .catsort {
+        width: 100%;
+    }
+
+    .catpick--select {
+        flex: 1;
+    }
+
+    .catpick__select {
+        width: 100%;
+    }
+}

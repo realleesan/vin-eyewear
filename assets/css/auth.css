@@ -1,1263 +1,711 @@
-/* ============================================================
-   auth.css — luồng tài khoản khi CHƯA đăng nhập, và trang lỗi
+/* ============================================================================
+   auth.css — ĐĂNG NHẬP · ĐĂNG KÝ · QUÊN MẬT KHẨU · ĐẶT LẠI · GOOGLE
 
-   Dựng theo "Vin Eyewear Login.dc.html" (Claude Design):
+   ═════════════════════════════════════════════════════════════════════════
+   MẪU VẼ ĐÚNG LUỒNG NÀY, và vẽ rất kỹ — nó là NGĂN KÉO BÊN PHẢI trong mẫu:
 
-     khung rút gọn — logo + hotline | thẻ giữa màn | chân trang pháp lý
-     thẻ 1060px bo 36px, chia hai: ảnh thương hiệu (co giãn) | form 460px
+     ┌──────────────────────────────────┐
+     │ (Đăng nhập)(Đăng ký)          ✕  │  hai nút viên, nút đang chọn nền #e4e4e6
+     │                                  │
+     │ ĐĂNG NHẬP                        │  10px IN HOA giãn .06em, weight 400
+     │ Đăng nhập bằng số điện thoại …   │  10px thường
+     │                                  │
+     │                      *Bắt buộc   │  9px #555, NÉP PHẢI
+     │ ┌──────────────────────────────┐ │
+     │ │ Số điện thoại*               │ │  cao 44, bo 6, viền #ddd, nền trắng
+     │ └──────────────────────────────┘ │
+     │ ┌──────────────────────────────┐ │
+     │ │ Mật khẩu*                    │ │
+     │ └──────────────────────────────┘ │
+     │               Quên mật khẩu?     │  9px gạch chân, NÉP PHẢI
+     │ ┌──────────────────────────────┐ │
+     │ │        ĐĂNG NHẬP             │ │  cao 44, bo 6, nền #111, chữ 9px
+     │ └──────────────────────────────┘ │
+     │              hoặc                │  9px #555, căn giữa
+     │ ┌──────────────────────────────┐ │
+     │ │ G     ĐĂNG NHẬP VỚI GOOGLE   │ │  nền TRẮNG, hover: viền trong 1px
+     │ └──────────────────────────────┘ │
+     │ Chưa có tài khoản? Đăng ký       │
+     │ ┌──────────────────────────────┐ │
+     │ │      THEO DÕI ĐƠN HÀNG       │ │  rỗng, viền #999
+     │ └──────────────────────────────┘ │
+     │ Chăm sóc khách hàng              │  ở đáy, đẩy xuống bằng margin-top:auto
+     └──────────────────────────────────┘
 
-   Markup: app/views/_layout/auth-header.php · auth-footer.php
-           app/views/auth/index.php · _password.php · forgot.php · reset.php
-   JS:     assets/js/auth.js  (chỉ là nút hiện/ẩn mật khẩu)
-
-   Khung rút gọn bật bằng cờ $bareLayout trong _layout/master.php — controller
-   truyền 'bareLayout' => true.
-
-   CỠ CHỮ ghi thẳng bằng px, không qua thang --fs-*, cùng lý do đã ghi ở đầu
-   category.css và account.css: thang --fs-* là clamp() nên ở 1280px nó lệch
-   1–5px so với từng con số của bản thiết kế, và bản thiết kế dùng nhiều cỡ
-   nửa pixel (12.5 · 13.5 · 14.5) mà thang không có.
-
-   MÀU gọi qua token (--brand, --ink, --surface…) vì các token đó đã mang đúng
-   giá trị của bản thiết kế — xem layout.css.
-
-   Bản thiết kế là khung cứng 1280px (`min-width:1280px`). Site này chạy từ
-   điện thoại lên, nên có thêm mốc gãy: 980px thẻ bỏ cột ảnh, còn một cột form;
-   560px thu đệm và cỡ tiêu đề.
-
-   LỚP CŨ ĐÃ BỎ: .auth__inner, .authtabs*, .checkline, .authform__row/forgot/
-   hint/alt. Chúng dựng theo bản Lovable — dải tab vuông trên nền pearl — mà
-   bản thiết kế mới bỏ hẳn dải tab, nên không tái dùng được mẩu nào.
-   ============================================================ */
-
-/* ============================================================
-   KHUNG RÚT GỌN — ĐÃ CHUYỂN ĐI
-
-   Đầu/chân trang tối giản nay là component dùng chung:
-   assets/css/components/bare-shell.css, bộ lớp .barebar* / .barefoot* /
-   body.is-bare. Trang thanh toán cũng dùng nó, mà nạp "auth.css" cho trang
-   thanh toán thì tên file nói sai việc.
-
-   Bảng $pageStyles trong master.php phải nạp bare-shell.css TRƯỚC auth.css.
-   ============================================================ */
-
-/* ============================================================
-   THẺ HAI CỘT
-   ============================================================ */
+   Ở ĐÂY NÓ LÀ TRANG THẬT, KHÔNG PHẢI NGĂN KÉO — xem khối chú thích "TÀI
+   KHOẢN" trong _layout/header.php về lý do. Nên: cùng bộ nguyên thể, cùng
+   nền #f3f3f5, nhưng gói trong một cột 480px căn giữa thay vì dán mép phải.
+   ═════════════════════════════════════════════════════════════════════════ */
 
 .authwrap {
-    /* Chữ phụ tông ấm — cùng bộ với category.css và account.css */
-    --u-note: var(--muted);
-    --u-meta: var(--h-meta);
-
     flex: 1;
     display: flex;
-    align-items: center;
     justify-content: center;
-    padding: 24px 32px 64px;
+    padding: 48px var(--edge) 96px;
+    background: var(--bg-panel);
 }
 
+/* ┌─ MỘT CỘT, KHÔNG PHẢI HAI ─────────────────────────────────────────────
+   │ Bản cũ là thẻ hai cột: ảnh chiến dịch bên trái, form bên phải. Mẫu
+   │ không có ảnh nào trong luồng đăng nhập — nó cho form toàn bộ sự chú ý.
+   │
+   │ .authcard__photo bị ẩn chứ không gỡ khỏi view: nó là ảnh TRANG TRÍ
+   │ thuần (mọi chữ trên nó — .authcard__brand, __quote, __caption — cũng
+   │ chỉ là nhãn thương hiệu, không có thông tin nào khách cần để đăng
+   │ nhập). Muốn thử lại bố cục hai cột thì bỏ luật này là xong.
+   └──────────────────────────────────────────────────────────────────────── */
 .authcard {
-    display: grid;
-    /* minmax(0,1fr) chứ không 1fr: cột ảnh phải chịu co lại khi màn hình hẹp
-       hơn 1060px, không thì thẻ đẩy cả trang cuộn ngang. */
-    grid-template-columns: minmax(0, 1fr) 460px;
-    width: 1060px;
-    max-width: 100%;
-    background: var(--surface-raised);
-    border-radius: var(--radius);
-    overflow: hidden;
-    box-shadow: none;
-}
-
-/* --- Cột ảnh thương hiệu --- */
-
-.authcard__brand {
-    position: relative;
+    width: min(480px, 100%);
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
-    min-height: 620px;
-    /* Nền chờ phía sau ảnh, thấy được lúc ảnh chưa tải xong */
-    background: var(--brand-subtle);
+    gap: 28px;
 }
 
 .authcard__photo {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    /* cover: ảnh người phải lấp kín cột, cắt bớt còn hơn để lộ nền */
-    object-fit: cover;
+    display: none;
 }
-
-.authcard__caption {
-    position: relative;
-    padding: 40px 44px;
-    /* Nền chuyển dần lên trên, để chữ trắng đọc được trên bất kỳ tấm ảnh nào
-       — kể cả ảnh sáng. Không có nó thì chữ phụ thuộc hoàn toàn vào tấm ảnh
-       mà cửa hàng thả vào. */
-    /* ┌─ GIỮ VÙNG TỐI LÊN CAO HƠN. ĐO BẰNG PIXEL ──────────────────────────
-       │ Bản trước là một dải hai điểm dừng: đặc 0.72 ở chân rồi tắt thẳng về
-       │ 0. Câu trích dẫn cỡ 32px đứng ở khoảng 70% chiều cao lớp phủ, tức là
-       │ chỗ dải đã nhạt gần hết.
-       │
-       │ Đo trên ảnh thật (chụp đúng vùng chữ rồi đọc pixel, vì gradient không
-       │ tính được bằng công thức tương phản thường):
-       │     .authcard__quote  2.68:1  ← trượt, chữ lớn cần 3.0
-       │     .authcard__sub    4.61:1  ← đạt, vì nó nằm thấp hơn
-       │
-       │ Bốn điểm dừng giữ alpha ~0.56 tới tận mốc 75%, và tông nền sẫm thêm
-       │ một bậc để có dư địa. Vẫn giữ sắc ấm của bản cũ chứ không đổi sang đen
-       │ trung tính — nó ăn với tông ảnh người mẫu. */
-    background: linear-gradient(to top,
-        rgba(30, 12, 16, .90) 0%,
-        rgba(30, 12, 16, .78) 45%,
-        rgba(30, 12, 16, .56) 75%,
-        rgba(30, 12, 16, 0) 100%);
-    /* Lớp phủ này không nuốt cú bấm nào — dưới nó không có gì bấm được, còn
-       chuột vẫn chọn được chữ. */
-    pointer-events: none;
-}
-
-.authcard__quote {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h3);
-    font-weight: 500;
-    line-height: 1.4;
-    color: #fff;
-    text-wrap: pretty;
-}
-
-.authcard__sub {
-    margin: 8px 0 0;
-    font-size: var(--fs-body-sm);
-    color: rgba(255, 255, 255, 0.85);
-}
-
-/* --- Cột form --- */
 
 .authcard__panel {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 22px;
-    padding: 56px 52px;
-    min-width: 0;
+    gap: 28px;
 }
 
-/* ── Khung MỘT CỘT: màn "Hoàn tất tạo tài khoản" bằng Google ───────────────
-
-   Cùng cái thẻ, bỏ cột ảnh. Khách đang ở GIỮA một luồng — đi tiếp hoặc bỏ dở
-   — chứ không đứng trước một ngã ba để chọn cách đăng ký, nên ảnh thương hiệu
-   và hai liên kết đổi tab đều không có việc gì ở đây.
-
-   560px chứ không 460px như cột form của thẻ hai cột: đứng một mình thì bề
-   ngang ấy trông như một cột bị hụt mất nửa kia. */
-.authcard--solo {
-    display: block;
-    width: 560px;
-}
-
-/* Thẻ một cột thì không có gì để canh giữa theo chiều dọc, và `center` sẽ
-   khoá chiều cao lại khi form dài ra vì mấy câu báo lỗi. */
-.authcard--solo .authcard__panel {
-    justify-content: flex-start;
-    padding: 48px 44px;
-}
-
-@media (max-width: 600px) {
-    .authcard--solo .authcard__panel { padding: 36px 24px; }
-}
+/* ══════════════════════════════════════════════════════════════════════
+   TIÊU ĐỀ
+   ══════════════════════════════════════════════════════════════════════ */
 
 .authhead {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 
 .authhead__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h2);
-    font-weight: 500;
-    color: var(--ink);
+    font-size: var(--fs-body);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
 .authhead__lead {
-    margin: 0;
-    font-size: var(--fs-body);
-    color: var(--u-note);
+    text-wrap: pretty;
 }
 
-/* ============================================================
-   FORM
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════════════
+   BÁO TRẠNG THÁI
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authflash,
+.authnote {
+    padding: 12px 14px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+    border-left: 2px solid var(--ink);
+    line-height: var(--lh);
+}
+
+.authflash--err {
+    border-left-color: var(--sale);
+}
+
+.authflash--ok {
+    border-left-color: var(--success);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Ô NHẬP
+   ══════════════════════════════════════════════════════════════════════ */
 
 .authform {
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 10px;
 }
 
 .authfield {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    min-width: 0;
+    gap: 4px;
+}
+
+.authfield__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
 }
 
 .authfield__label {
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: 0.1em;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    color: var(--eyebrow);
 }
 
-/* Hàng "MẬT KHẨU ......... Quên mật khẩu?" */
-.authfield__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.authfield__aside {
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    color: var(--brand);
-    text-decoration: none;
-}
-
-.authfield__aside:hover { color: var(--brand-strong); }
-
-.authfield__input {
-    box-sizing: border-box;
+.authfield__input,
+.authpw__input,
+.acode__input {
     width: 100%;
-    padding: 14px 18px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-family: var(--font-sans);
-    font-size: var(--fs-body);
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
     color: var(--ink);
-}
-
-.authfield__input:focus {
+    font-family: inherit;
+    font-size: var(--fs-body);
     outline: none;
-    border-color: var(--h-line);
-    background: var(--surface-focus);
+    transition: border-color .18s ease;
 }
 
-.authfield__input::placeholder { color: var(--u-meta); }
+.authfield__input::placeholder,
+.authpw__input::placeholder {
+    color: var(--ink-5);
+}
 
-/* Chỉ tô đỏ SAU khi người dùng đã rời ô và gõ sai — :user-invalid, không phải
-   :invalid. :invalid tô đỏ mọi ô bắt buộc ngay khi trang vừa mở. */
-.authfield__input:user-invalid { border-color: var(--danger); }
+.authfield__input:focus,
+.authpw__input:focus,
+.acode__input:focus {
+    border-color: var(--ink);
+}
 
-/* Ô Email ở màn "Hoàn tất tạo tài khoản" bằng Google: điền sẵn và khoá.
+/* Ô đã xác thực, không sửa được (số điện thoại sau bước OTP) */
+.authfield__input--locked {
+    background: var(--bg-soft);
+    color: var(--ink-3);
+    cursor: not-allowed;
+}
 
-   Nền chìm + chữ nhạt một nấc để đọc ra ngay là "thông tin cho biết", không
-   phải "ô chờ bạn gõ" — nhưng KHÔNG mờ tới mức khó đọc: đây đúng là địa chỉ
-   khách cần soi lại xem mình có chọn nhầm tài khoản Google hay không.
+.authfield__input[aria-invalid="true"] {
+    border-color: var(--sale);
+}
 
-   opacity của <input disabled> do trình duyệt đặt (Safari nặng tay nhất), nên
-   phải ghi đè, nếu không hai trình duyệt hiện hai độ mờ khác nhau. */
-.authfield__input--locked:disabled {
-    opacity: 1;
-    background: var(--surface-sunken);
-    border-color: var(--line);
-    color: var(--u-note);
-    cursor: default;
-    -webkit-text-fill-color: var(--u-note);   /* Safari bỏ qua `color` trên ô khoá */
+.authfield__err {
+    color: var(--sale);
+    font-size: var(--fs-micro);
 }
 
 .authfield__hint {
-    font-size: var(--fs-caption);
-    color: var(--u-meta);
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    line-height: var(--lh-tight);
 }
 
-/* "(tuỳ chọn)" nằm TRONG nhãn, nên phải tự gỡ chữ hoa và giãn cách mà
-   .authfield__label áp lên — không thì nó đọc như một phần của tên trường. */
-.authfield__opt {
-    font-style: normal;
-    font-weight: 500;
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--u-meta);
+/* "*Bắt buộc" và "Quên mật khẩu?" — cả hai NÉP PHẢI, 9px */
+.authfield__aside,
+.authfield__opt,
+.field__opt {
+    align-self: flex-end;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
 }
 
-/* --- Ô mật khẩu + nút con mắt --- */
+.authfield__opt,
+.field__opt {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    color: var(--ink);
+}
 
+/* ┌─ Ô MẬT KHẨU CÓ NÚT CON MẮT ───────────────────────────────────────── */
 .authpw {
     position: relative;
-    display: block;
 }
 
-/* 52px bên phải để chữ không chui xuống dưới nút */
-.authpw__input { padding-right: 52px; }
+.authpw__input {
+    padding-right: 40px;
+}
 
 .authpw__eye {
     position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: var(--h-field);
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    border: none;
-    border-radius: var(--radius-sm);
+    border: 0;
     background: none;
-    color: var(--u-meta);
+    color: var(--ink-5);
     cursor: pointer;
 }
 
-.authpw__eye:hover { color: var(--brand); }
+.authpw__eye:hover {
+    color: var(--ink);
+}
 
-/* Đổi hình theo aria-pressed — thuộc tính DUY NHẤT mà auth.js phải đảo, và
-   cũng chính là thứ trình đọc màn hình dùng để thông báo trạng thái. */
-.authpw__eye .authpw__on  { display: none; }
-.authpw__eye .authpw__off { display: block; }
-.authpw__eye[aria-pressed="true"] .authpw__on  { display: block; }
-.authpw__eye[aria-pressed="true"] .authpw__off { display: none; }
+/* ┌─ HAI ICON CHỒNG NHAU, ĐỔI BẰNG aria-pressed ──────────────────────────
+   │ Markup đặt CẢ HAI <svg> trong nút và để CSS ẩn một cái — xem chú thích
+   │ trong auth/_password.php. auth.js chỉ đảo đúng một thuộc tính.
+   │
+   │ Nên điều kiện phải đọc aria-pressed, KHÔNG phải [hidden]: không thẻ nào
+   │ trong hai thẻ ấy mang [hidden], và luật đọc nhầm thuộc tính thì cả hai
+   │ icon cùng hiện chồng lên nhau — đúng thứ đã xảy ra.
+   │
+   │ Nút mang `hidden` sẵn trong HTML và auth.js gỡ ra: không có JavaScript
+   │ thì con mắt không bấm được, nên nó không được phép hiện. */
+.authpw__eye[aria-pressed="false"] .authpw__off,
+.authpw__eye[aria-pressed="true"] .authpw__on {
+    display: none;
+}
 
-/* --- Ô tick "Duy trì đăng nhập" --- */
+/* ══════════════════════════════════════════════════════════════════════
+   Ô TÍCH
+   ══════════════════════════════════════════════════════════════════════ */
 
 .authcheck {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 8px;
     cursor: pointer;
-    /* Bản thiết kế xếp ô tick SAU nút gửi trên màn hình, nhưng trong HTML nó
-       đứng TRƯỚC để thứ tự Tab đúng — xem ghi chú số 3 ở đầu
-       app/views/auth/index.php. `order` lo phần hình ảnh.
-       2 vì .authform là flex column và nút gửi mang order mặc định 0. */
-    order: 2;
+    margin-top: 4px;
 }
 
-/* Ô tick thật: ẩn khỏi mắt nhưng KHÔNG khỏi bàn phím và trình đọc màn hình.
-   display:none hay visibility:hidden sẽ gỡ nó khỏi cả hai. */
 .authcheck input {
     position: absolute;
-    width: 1px;
-    height: 1px;
     opacity: 0;
-    pointer-events: none;
+    width: 0;
+    height: 0;
 }
 
 .authcheck__box {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    background: var(--bg);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
-    width: 20px;
-    height: 20px;
-    border: 1.5px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    color: transparent;
-    flex-shrink: 0;
+    color: #fff;
+    font-size: 9px;
+    line-height: 1;
 }
 
-.authcheck input:checked + .authcheck__box {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
+.authcheck input:checked + .authcheck__box::after {
+    content: "✓";
 }
 
-/* Vòng focus vẽ trên cái NHÌN THẤY, vì ô thật đã ẩn đi */
 .authcheck input:focus-visible + .authcheck__box {
-    outline: 2px solid var(--brand);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
 }
 
 .authcheck__text {
-    font-size: var(--fs-body-sm);
-    color: var(--muted);
+    text-wrap: pretty;
 }
 
-/* --- Ô tick "Tôi đã đọc và đồng ý…" ở màn đăng ký ---
-
-   Cùng nguyên thể với ô "Duy trì đăng nhập", khác đúng hai điểm:
-
-   · order về mặc định. `order: 2` của .authcheck tồn tại để đẩy ô tick xuống
-     DƯỚI nút gửi trên màn đăng nhập, trong khi HTML giữ nó ở trên cho đúng
-     thứ tự Tab. Ở đây không có nghịch lý đó: ô tick phải đứng ngay trước nút
-     "Đăng ký" cả trên màn hình lẫn trong mã nguồn — người ta đồng ý rồi mới
-     bấm. (Nay ô tick còn nằm trong .authagree nên `order` không còn tác dụng
-     gì ở đây; dòng dưới giữ lại để lớp này vẫn đúng nếu có ai dùng nó ngoài
-     khối ấy.)
-   · canh theo mép TRÊN. Câu này dài hơn một dòng; align-items:center của
-     .authcheck sẽ dìm hộp vuông xuống giữa khối chữ, trông như nó thuộc về
-     dòng thứ hai. */
-.authcheck--agree {
-    order: 0;
-    align-items: flex-start;
+.authcheck__text a,
+.authagree a {
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
 
-/* 2px đẩy hộp vuông xuống cho khớp đường chân chữ của dòng đầu — hộp cao 20px
-   còn dòng chữ 13.5px/1.55 nên hai tâm không tự trùng nhau. */
-.authcheck--agree .authcheck__box { margin-top: 2px; }
-
-.authcheck--agree .authcheck__text { line-height: 1.55; }
-
-.authcheck--agree a {
-    font-weight: 500;
-    color: var(--brand);
-    text-decoration: none;
-}
-
-.authcheck--agree a:hover { color: var(--brand-strong); }
-
-/* ============================================================
+/* ══════════════════════════════════════════════════════════════════════
    NÚT
-   ============================================================ */
+   ══════════════════════════════════════════════════════════════════════ */
 
 .authbtn {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
     width: 100%;
-    padding: 15px 0;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-sans);
-    font-size: var(--fs-body-lg);
-    font-weight: 500;
-    line-height: 1.2;
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-field);
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
     cursor: pointer;
+    transition: background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
-.authbtn--primary {
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-.authbtn--primary:hover,
-.authbtn--primary:focus-visible { background: var(--brand-strong); }
-
-.authbtn--google {
-    padding: 14px 0;
-    border: 1.5px solid var(--line);
-    background: var(--surface-raised);
-    font-size: var(--fs-body);
-    font-weight: 500;
+.authbtn:hover {
+    border-color: var(--ink);
     color: var(--ink);
 }
 
-.authbtn--google:hover:not(:disabled) { border-color: var(--brand); }
+.authbtn--primary {
+    border: 0;
+    background: var(--ink);
+    color: #fff;
+}
 
-/* Đăng nhập bằng Google chưa nối được — dự án chưa có hạ tầng OAuth. Nút giữ
-   đúng hình dạng bản thiết kế nhưng mờ đi và không bấm được, kèm nhãn "Sắp
-   có": một cái nút bấm được mà không xảy ra gì thì người dùng tưởng trang hỏng. */
-.authbtn--google:disabled {
-    opacity: 0.55;
+.authbtn--primary:hover {
+    background: #333;
+    color: #fff;
+}
+
+/* Chưa đủ điều kiện gửi (chưa tick đồng ý) — XÁM, không mờ đi. Mẫu dùng
+   #888 cho đúng trạng thái này; một nút mờ 40% trông như lỗi vẽ. */
+.authbtn--primary:disabled,
+.authbtn--primary[aria-disabled="true"] {
+    background: var(--ink-5);
+    color: #fff;
     cursor: not-allowed;
 }
 
-.authbtn--google:disabled svg { filter: grayscale(1); }
-
-.authbtn__soon {
-    padding: 3px 10px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-sunken);
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    color: var(--u-meta);
+/* ┌─ NÚT GOOGLE ──────────────────────────────────────────────────────────
+   │ Nền TRẮNG, không viền lúc nghỉ; rê chuột thì hiện một đường viền
+   │ TRONG 1px bằng box-shadow. Dùng box-shadow chứ không border: border
+   │ mọc thêm 1px vào bố cục và nút nhích lên 1px mỗi lần rê qua.
+   │
+   │ Icon Google giữ NGUYÊN BỐN MÀU gốc. Đây là ngoại lệ duy nhất với luật
+   │ "site không có màu" ngoài đỏ giảm giá và xanh Zalo — logo của bên thứ
+   │ ba tô một màu là dùng sai thương hiệu của họ.
+   └──────────────────────────────────────────────────────────────────────── */
+.authbtn--google {
+    border: 0;
+    background: var(--bg);
+    color: var(--ink);
+    justify-content: flex-start;
 }
 
-/* ============================================================
-   VẠCH NGĂN · CHÚ THÍCH · THÔNG BÁO
-   ============================================================ */
+.authbtn--google:hover {
+    box-shadow: inset 0 0 0 1px var(--ink);
+    background: var(--bg);
+}
 
+.authbtn--google > span:last-child {
+    flex: 1;
+    text-align: center;
+}
+
+.authbtn__soon {
+    color: var(--ink-5);
+}
+
+/* ┌─ .authalt LÀ MỘT <p>, KHÔNG PHẢI MỘT KHỐI ────────────────────────────
+   │ "Chưa có tài khoản? Đăng ký" — một câu với một liên kết trong nó. Cho
+   │ nó display:flex là tách câu thành hai dòng rời, và liên kết rơi xuống
+   │ dưới như thể nó là một nút thứ hai.
+   │
+   │ Bẫy này đáng ghi lại vì tên lớp gợi ý sai: "alt" nghe như "nhóm lựa
+   │ chọn thay thế". Nó không phải.
+   └──────────────────────────────────────────────────────────────────────── */
+.authalt {
+    color: var(--ink-3);
+}
+
+.authalt a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* "hoặc" căn giữa giữa hai nhóm nút */
+.aresend__or {
+    text-align: center;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+}
+
+.aback {
+    align-self: center;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+}
+
+.aback:hover {
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÃ OTP
+
+   Ô nhập chữ giãn .3em căn giữa — mẫu dùng đúng dáng này cho ô "Mã OTP
+   (6 số)". Sáu ô riêng lẻ trông "công nghệ" hơn nhưng dán mã từ tin nhắn
+   vào thì hỏng, mà dán là cách khách nhập OTP nhiều nhất.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.aotp,
+.acode {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.acode__row {
+    display: flex;
+    gap: 8px;
+}
+
+.acode__input,
+.acode__num {
+    flex: 1;
+    letter-spacing: .3em;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.acode__send {
+    flex: none;
+    height: var(--h-field);
+    padding: 0 14px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-field);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.aotp__box {
+    padding: 12px 14px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+    line-height: var(--lh);
+}
+
+.aresend {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: var(--fs-micro);
+}
+
+.aresend__btn,
+.aresend__link {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
+
+.aresend__ask,
+.aresend__num {
+    color: var(--ink-3);
+}
+
+.aresend__num {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LUẬT MẬT KHẨU
+
+   Mỗi luật một dòng, chấm tròn nhỏ bên trái. Chấm ĐẦY khi luật đã đạt —
+   không đổi sang xanh, không thêm dấu tích: đây là danh sách sẽ chuyển
+   trạng thái theo từng ký tự gõ vào, mà một hàng dấu tích xanh nhảy ra
+   nhảy vào cạnh ô đang gõ là thứ kéo mắt sai chỗ.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.arule,
+.acct-rules {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    list-style: none;
+}
+
+.arule__item,
+.acct-rules__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--fs-micro);
+    color: var(--ink-3);
+}
+
+.arule__dot {
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border: 1px solid var(--ink-5);
+    border-radius: 50%;
+}
+
+.arule__item.is-ok {
+    color: var(--ink);
+}
+
+.arule__item.is-ok .arule__dot {
+    background: var(--ink);
+    border-color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CÁC BƯỚC  (nhập số → nhận OTP → đặt mật khẩu)
+
+   Hàng chấm ngang có nhãn. Bước đang đứng: chấm đen đặc. Bước đã qua:
+   chấm đen rỗng. Bước chưa tới: chấm xám rỗng.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.astage {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    list-style: none;
+}
+
+.astage__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    text-align: center;
+}
+
+.astage__dot {
+    width: 8px;
+    height: 8px;
+    border: 1px solid var(--line-btn);
+    border-radius: 50%;
+    background: var(--bg);
+}
+
+.astage__label {
+    font-size: var(--fs-micro);
+    color: var(--ink-5);
+    line-height: var(--lh-tight);
+}
+
+.astage__item.is-done .astage__dot {
+    border-color: var(--ink);
+}
+
+.astage__item.is-on .astage__dot {
+    border-color: var(--ink);
+    background: var(--ink);
+}
+
+.astage__item.is-on .astage__label,
+.astage__item.is-done .astage__label {
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HAI KHỐI CÒN LẠI
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Câu trích thương hiệu dưới form */
+.asay {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line-input);
+}
+
+.asay__title {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.asay__text {
+    color: var(--ink-3);
+    text-wrap: pretty;
+}
+
+/* Màn "xong rồi" sau khi đặt lại mật khẩu */
+.authdone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 0;
+    text-align: center;
+}
+
+/* ┌─ CHẶN VÀO TRANG ──────────────────────────────────────────────────────
+   │ Hiện ở /auth khi khách đã đăng nhập rồi, và ở errors/403. Cùng hình
+   │ với .oa-empty của mẫu: icon trong vòng tròn viền mảnh, tiêu đề 13px
+   │ IN HOA, một câu, rồi lối đi.
+   └──────────────────────────────────────────────────────────────────────── */
+.authgate {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 64px 0;
+    text-align: center;
+}
+
+.authgate__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border: 1px solid var(--line-input);
+    border-radius: 50%;
+    color: var(--ink-5);
+}
+
+.authgate__title {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.authgate__text {
+    color: var(--ink-3);
+    max-width: 400px;
+    text-wrap: pretty;
+}
+
+.authgate__link {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Chữ "hoặc" ngăn giữa hai nhóm — biến thể chỉ có ở trang đăng ký Google */
 .author {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
 }
 
 .author__line {
     flex: 1;
     height: 1px;
-    background: var(--h-card-line);
+    background: var(--line-input);
 }
 
 .author__word {
-    font-size: var(--fs-caption);
-    letter-spacing: 0.1em;
-    color: var(--u-meta);
-}
-
-.authnote {
-    margin: 0;
-    font-size: var(--fs-caption);
-    line-height: 1.6;
-    text-align: center;
-    color: var(--u-meta);
-}
-
-.authnote a,
-.authalt a {
-    font-weight: 500;
-    color: var(--brand);
-    text-decoration: none;
-}
-
-.authnote a:hover,
-.authalt a:hover { color: var(--brand-strong); }
-
-.authalt {
-    margin: 0;
-    font-size: var(--fs-body-sm);
-    text-align: center;
-    color: var(--u-note);
-}
-
-/* Không dùng .alert của ui.css: khối đó có viền vuông 4px của thiết kế cũ,
-   đặt trong một thẻ bo 36px thì lạc hẳn. */
-.authflash {
-    margin: 0;
-    padding: 13px 18px;
-    border-radius: var(--radius-sm);
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
-}
-
-.authflash--ok  { background: #eef3e9; color: #3d6633; }
-.authflash--err { background: var(--accent-subtle); color: var(--danger); }
-
-/* ============================================================
-   KHỐI "ĐỨNG NHẦM CỔNG" — tài khoản nội bộ gõ vào form khách
-   ============================================================
-
-   KHÔNG dùng .authflash--err, dù chỗ đứng trên trang là một.
-
-   Dải đỏ ở trên nói "bạn làm sai gì đó". Ở đây thì không: mật khẩu gõ đúng,
-   tài khoản có thật, chỉ là nó thuộc khu quản trị. Tô đỏ là đẩy người đọc đi
-   kiểm lại mật khẩu — việc duy nhất chắc chắn vô ích. Nên khối này lấy tông
-   thương hiệu và có sức nặng của một chỉ dẫn, không phải một lời trách.
-
-   Màu lấy từ token của layout.css. Hai dòng #eef3e9/var(--accent-subtle) ngay trên là màu
-   gõ thẳng có từ trước; không nhân thêm nếp đó ra khối mới. */
-.authgate {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding: 14px 16px;
-    border-radius: var(--radius-sm);
-    /* Viền trái thay cho viền bốn cạnh: đủ để tách khối khỏi form mà không
-       dựng thêm một cái hộp nữa cạnh mấy ô nhập vốn đã có viền. */
-    border-left: 3px solid var(--brand);
-    background: var(--surface-sunken);
-    text-align: left;
-}
-
-.authgate__icon {
     flex: none;
-    display: block;
-    margin-top: 1px;
-    color: var(--brand);
 }
 
-.authgate__title {
-    margin: 0;
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
-    color: var(--ink);
-}
-
-.authgate__text {
-    margin: 3px 0 0;
-    font-size: var(--fs-note);
-    line-height: 1.55;
-    color: var(--muted);
-}
-
-.authgate__link {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 10px;
-    font-size: var(--fs-note);
-    font-weight: 500;
-    color: var(--brand);
-    text-decoration: none;
-    /* Gạch chân dựng bằng border trong suốt rồi mới hiện lúc hover: dùng
-       text-decoration thì nét gạch dính sát chữ và chạy cả dưới mũi tên. */
-    border-bottom: 1px solid transparent;
-}
-
-.authgate__link:hover,
-.authgate__link:focus-visible {
-    color: var(--brand-strong);
-    border-bottom-color: currentColor;
-}
-
-/* Mũi tên nhích sang phải khi rê chuột — cùng cử chỉ với các liên kết "xem
-   thêm" ở trang chủ, để nó đọc ra là một lối đi chứ không phải chữ trang trí. */
-.authgate__arrow {
-    flex: none;
-    transition: transform var(--dur) var(--ease);
-}
-
-.authgate__link:hover .authgate__arrow {
-    transform: translateX(2px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .authgate__arrow { transition: none; }
-}
-
-/* ============================================================
-   KHỐI "ĐÃ XONG" — quên mật khẩu / liên kết hỏng
-   ============================================================ */
-
-.authdone {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.authdone__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h4);
-    font-weight: 500;
-    color: var(--ink);
-}
-
-.authdone p {
-    margin: 0;
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-    color: var(--muted);
-}
-
-/* `--u-note` KHÔNG TỒN TẠI trong bảng token (grep cả assets/css ra 0 khai
-   báo), nên dòng cũ là giá trị không hợp lệ và bị bỏ qua — cái !important
-   ở đó không bao giờ có tác dụng. Khai đúng token vai trò và bỏ !important. */
-.authdone__note { color: var(--muted); }
-
-.authdone a {
-    font-weight: 500;
-    color: var(--brand);
-    text-decoration: none;
-}
-
-.authdone a:hover { color: var(--brand-strong); }
-
-/* ============================================================
-   MỐC GÃY
-
-   Bản thiết kế là khung cứng 1280px. Hai mốc dưới đây là phần THÊM.
-   ============================================================ */
-
-@media (max-width: 980px) {
-    .authbar  { padding: 16px var(--gutter, 20px); }
-    .authfoot { padding: 0 var(--gutter, 20px); }
-
-    .authwrap { padding: 16px var(--gutter, 20px) 40px; }
-
-    /* Bỏ cột ảnh: ép nó xuống dưới form thì nó thành 620px ảnh nằm dưới một
-       form đã cuộn hết màn hình — không ai cuộn tới. Ảnh là trang trí, form
-       là việc cần làm. */
-    .authcard {
-        grid-template-columns: minmax(0, 1fr);
-        width: 100%;
-        max-width: 460px;
-        border-radius: var(--radius);
-    }
-
-    .authcard__brand { display: none; }
-
-    .authcard__panel { padding: 40px 32px; }
-}
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 560px) {
-    .authcard__panel { padding: 32px 22px; gap: 18px; }
-    .authform        { gap: 18px; }
-    .authhead__title { font-size: var(--fs-h3); }
-
-    .authfoot__inner {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
+    .authwrap {
+        padding: 28px var(--edge) 64px;
     }
-}
 
-/* ============================================================
-   TRANG LỖI (403 · 404 · 500)
-
-   KHÔNG dùng khung rút gọn — trang lỗi vẫn nằm trong khung đầy đủ, vì người
-   gặp lỗi cần đúng cái thanh điều hướng để đi tiếp. Chúng chỉ nạp chung file
-   CSS này vì bảng $pageStyles trong master.php đã trỏ như vậy từ trước.
-   ============================================================ */
-
-.errpage__inner {
-    max-width: 640px;
-    margin-inline: auto;
-    padding: var(--section-pad) var(--gutter-tight);
-    text-align: center;
-}
-
-.errpage__code {
-    font-family: var(--font-serif);
-    font-size: clamp(64px, 14vw, 120px);
-    font-weight: 500;
-    line-height: 1;
-    color: var(--brand);
-}
-
-.errpage__title {
-    margin-top: 8px;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h3);
-    font-weight: 500;
-    color: var(--ink);
-}
-
-.errpage__lead {
-    margin-top: 12px;
-    font-size: var(--fs-body);
-    line-height: 1.75;
-    color: var(--muted);
-}
-
-.errpage__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 32px;
-}
-
-/* ============================================================
-   LUỒNG ĐĂNG KÝ NHIỀU CHẶNG
-
-   Dựng theo "Dang ky.dc.html". Bản thiết kế vẽ sáu màn rời, mỗi màn một thẻ
-   520px đứng giữa trang; ở đây cả sáu nằm trong ĐÚNG cột form của thẻ đăng
-   nhập sẵn có — yêu cầu là giữ giao diện cũ, chỉ lấy luồng nút bấm.
-
-   Mọi màu và bo góc lấy từ token của site (--brand, --line, --radius-sm),
-   không gõ lại mã màu của bản thiết kế: hai bảng màu lệch nhau vài nấc và
-   trang này đứng cạnh trang đăng nhập.
-   ============================================================ */
-
-/* --- Dải ba chặng: Xác minh SĐT → Tạo mật khẩu → Hoàn tất --- */
-
-.astage {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    margin: 0 0 28px;
-    padding: 0;
-    list-style: none;
-}
-
-.astage__item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 7px;
-    text-align: center;
-}
-
-/* Vạch nối giữa các chấm. Vẽ bằng ::after của chính mục đứng trước nên số
-   vạch luôn ít hơn số chặng đúng một — không phải thêm phần tử rỗng nào. */
-.astage__item:not(:last-child) { position: relative; }
-
-.astage__item:not(:last-child)::after {
-    content: "";
-    position: absolute;
-    top: 13px;
-    left: calc(50% + 20px);
-    right: calc(-50% + 20px);
-    height: 1px;
-    background: var(--line);
-}
-
-.astage__item.is-done::after { background: var(--brand); }
-
-.astage__dot {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 27px;
-    height: 27px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-round);
-    background: var(--surface-raised);
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
-    color: var(--muted);
-}
-
-.astage__label { font-size: var(--fs-caption); color: var(--muted); }
-
-.astage__item.is-now .astage__dot,
-.astage__item.is-done .astage__dot {
-    border-color: var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-.astage__item.is-now .astage__label,
-.astage__item.is-done .astage__label { color: var(--brand); }
-
-/* --- Tiêu đề và lời dẫn của từng màn --- */
-
-.asay { position: relative; margin-bottom: 22px; }
-
-.asay__title {
-    margin: 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h4);
-    font-weight: 500;
-    color: var(--ink);
-}
-
-.asay__text {
-    margin: 10px 0 0;
-    font-size: var(--fs-body);
-    line-height: 1.65;
-    color: var(--muted);
-}
-
-.asay__text strong { color: var(--ink); font-weight: 500; }
-
-.asay__phone {
-    margin: 10px 0 0;
-    font-size: var(--fs-h5);
-    font-weight: 500;
-    color: var(--brand);
-}
-
-/* Nút lùi neo ngoài lề trái của cột form, không chen vào hàng tiêu đề: chen
-   vào thì tiêu đề của sáu màn thụt vào một quãng khác nhau tuỳ màn có nút
-   hay không. */
-.aback {
-    position: absolute;
-    top: 2px;
-    left: -38px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    border-radius: var(--radius-sm);
-    color: var(--ink);
-    text-decoration: none;
-}
-
-.aback:hover,
-.aback:focus-visible { background: var(--surface-sunken); color: var(--brand); }
-
-@media (max-width: 1100px) {
-    /* Hết chỗ ngoài lề thì đưa nút về trên tiêu đề */
-    .aback { position: static; margin-bottom: 6px; }
-}
-
-/* --- Nút phụ và lối ra --- */
-
-.authbtn--ghost {
-    border: 1.5px solid var(--line);
-    background: var(--surface-raised);
-    color: var(--ink);
-    text-decoration: none;
-}
-
-.authbtn--ghost:hover,
-.authbtn--ghost:focus-visible { border-color: var(--brand); color: var(--brand); }
-
-.aalt {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    margin-top: 14px;
-}
-
-.aalt .authbtn { margin: 0; }
-
-.aalt__quiet {
-    font-size: var(--fs-body);
-    color: var(--muted);
-    text-decoration: none;
-}
-
-.aalt__quiet:hover,
-.aalt__quiet:focus-visible { color: var(--brand); text-decoration: underline; }
-
-/* --- Ba phương thức gửi mã --- */
-
-.amethod { display: flex; flex-direction: column; gap: 12px; }
-
-.amethod__item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    width: 100%;
-    padding: 14px 16px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--surface-raised);
-    font-family: var(--font-sans);
-    text-align: left;
-    cursor: pointer;
-}
-
-.amethod__item:hover,
-.amethod__item:focus-visible { border-color: var(--brand); }
-
-/* Ba chấm tròn màu kênh liên lạc, cùng sắc xanh với cụm nút nổi ở góc phải
-   dưới (xem components/floating.css) — cùng một thứ thì cùng một màu. */
-.amethod__ico {
-    flex-shrink: 0;
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-round);
-    background: #2f6fe4;
-}
-
-.amethod__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.amethod__name { font-size: var(--fs-body-lg); font-weight: 500; color: var(--ink); }
-.amethod__note { font-size: var(--fs-body-sm); color: var(--muted); }
-
-/* --- Sáu ô nhập mã --- */
-
-/* min-width: 0 KHÔNG PHẢI THỪA.
-   <fieldset> mang sẵn `min-inline-size: min-content` trong bộ style mặc định
-   của trình duyệt, nên nó KHÔNG co theo cột form: sáu ô nhập giãn tới bề rộng
-   tự nhiên của <input> và cả hàng phình ra 1742px, tràn khỏi thẻ (đo được).
-   Dòng này ghi đè đúng thuộc tính đó. */
-.aotp {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    width: 100%;
-    min-width: 0;
-    margin: 0 0 4px;
-    padding: 0;
-    border: 0;
-    box-sizing: border-box;
-}
-
-.aotp__box {
-    flex: 1;
-    min-width: 0;
-    padding: 10px 0;
-    border: none;
-    border-bottom: 1.5px solid var(--line);
-    border-radius: 0;
-    background: transparent;
-    font-family: var(--font-sans);
-    font-size: var(--fs-h4);
-    font-weight: 500;
-    text-align: center;
-    color: var(--ink);
-}
-
-.aotp__box:focus {
-    outline: none;
-    border-bottom-color: var(--brand);
-}
-
-/* --- Đếm ngược và gửi lại --- */
-
-.aresend {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 18px;
-    text-align: center;
-}
-
-.aresend__ask {
-    margin: 0;
-    flex-basis: 100%;
-    font-size: var(--fs-body);
-    color: var(--muted);
-}
-
-.aresend form { display: contents; }
-
-/* NÚT THẬT, có viền — không phải một liên kết chữ như trước.
-
-   Cửa hàng yêu cầu "nút gửi lại", và đúng là nó nên trông như nút: đây là
-   thao tác ĐỔI trạng thái máy chủ (gửi thêm một tin nhắn), khác hẳn
-   "Phương thức khác" bên cạnh vốn chỉ là đi tới một màn khác.
-
-   Nút LUÔN nằm trong trang, khoá lại trong lúc chờ — xem chú thích ở
-   app/views/auth/_signup.php về việc vì sao không giấu nó đi nữa. */
-.aresend__btn {
-    display: inline-flex;
-    align-items: center;
-    /* gap chứ không trông vào dấu cách trong HTML: hộp inline-flex CẮT BỎ
-       khoảng trắng giữa các phần tử con, nên "Gửi lại mã" và "(44s)" dính liền
-       nhau — đúng lỗi đã thấy khi chụp ảnh đối chiếu. */
-    gap: 4px;
-    padding: 9px 18px;
-    border: 1px solid var(--brand);
-    border-radius: var(--radius-sm);
-    background: none;
-    font-family: var(--font-sans);
-    font-size: var(--fs-body);
-    font-weight: 500;
-    color: var(--brand);
-    cursor: pointer;
-    transition:
-        background-color var(--dur-fast) var(--ease),
-        color var(--dur-fast) var(--ease),
-        border-color var(--dur-fast) var(--ease),
-        opacity var(--dur-fast) var(--ease);
-}
-
-.aresend__btn:hover:not(:disabled),
-.aresend__btn:focus-visible:not(:disabled) {
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-/* Đang trong 60 giây chờ. Vẫn ĐỌC ĐƯỢC — mờ hẳn thì khách không thấy con số
-   đếm ngược nằm ngay trong nhãn, mà đó chính là thứ đang trả lời "bao giờ
-   thì bấm được". */
-.aresend__btn:disabled {
-    border-color: var(--line-strong);
-    color: var(--muted);
-    cursor: not-allowed;
-}
-
-/* Số giây trong nhãn nút. `hidden` của HTML chỉ là display:none mặc định nên
-   bất kỳ dòng display nào cũng đè được — khai lại cho chắc. */
-.aresend__num[hidden] { display: none; }
-
-/* Nút "Gửi lại" là <button> trong form (nó ĐỔI trạng thái máy chủ nên không
-   được là liên kết), còn "Phương thức khác" là <a>. Cho hai thứ trông giống
-   nhau vì với người dùng chúng là hai lựa chọn ngang hàng. */
-.aresend__link {
-    padding: 0;
-    border: 0;
-    background: none;
-    font-family: var(--font-sans);
-    font-size: var(--fs-body);
-    font-weight: 500;
-    color: var(--brand);
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.aresend__link:hover,
-.aresend__link:focus-visible { text-decoration: underline; }
-
-.aresend__or { font-size: var(--fs-body); color: var(--muted); }
-
-/* --- Bốn quy tắc mật khẩu --- */
-
-.arule {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin: 14px 0 0;
-    padding: 0;
-    list-style: none;
-}
-
-.arule__item {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    font-size: var(--fs-body-sm);
-    color: var(--muted);
-}
-
-.arule__dot {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    width: 16px;
-    height: 16px;
-    border: 1.5px solid var(--line-strong);
-    border-radius: var(--radius-round);
-    font-size: var(--fs-micro);
-    color: transparent;
-}
-
-/* Đạt rồi thì cả dòng xanh và dấu tick hiện ra. Màu lấy từ .pcard__badge--new
-   của thẻ sản phẩm, sắc xanh duy nhất đang dùng trong site. */
-.arule__item.is-ok { color: #4d7a3f; }
-
-.arule__item.is-ok .arule__dot {
-    border-color: #4d7a3f;
-    color: #4d7a3f;
-}
-
-/* --- Màn hoàn tất --- */
-
-.adone { text-align: center; margin-bottom: 24px; }
-
-.adone__mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 68px;
-    height: 68px;
-    border-radius: var(--radius-round);
-    background: #eaf3e6;
-    color: #4d7a3f;
-}
-
-.adone__title {
-    margin: 20px 0 0;
-    font-family: var(--font-serif);
-    font-size: var(--fs-h3);
-    font-weight: 500;
-    color: var(--ink);
-}
-
-.adone__text {
-    margin: 12px 0 0;
-    font-size: var(--fs-body);
-    line-height: 1.7;
-    color: var(--muted);
-}
-
-/* ============================================================
-   MÀN ĐĂNG KÝ MỘT TRANG — lỗi từng ô + hàng "Mã xác minh"
-   ------------------------------------------------------------
-   UC-USER-01 chốt hai thứ mà bộ lớp cũ chưa có: mỗi ô hỏng thì
-   câu báo phải nằm NGAY DƯỚI ô ấy (EF-02…EF-12 đều chỉ đích danh
-   một trường), và ô "Mã xác minh" nằm cùng hàng với nút "Gửi mã"
-   thay vì là cả một màn riêng.
-   ============================================================ */
-
-/* --- Câu báo lỗi của một ô --- */
-
-/* Dùng chung màu chữ với .authflash--err nhưng KHÔNG có nền: đây là
-   một dòng nhỏ nép dưới ô nhập, không phải một dải báo của cả trang.
-   Sáu dải nền đỏ chồng lên nhau trong một form là một bức tường đỏ. */
-.authfield__err {
-    display: block;
-    margin-top: 2px;
-    font-size: 12.5px;
-    line-height: 1.5;
-    color: #8f3535;
-}
-
-/* Viền đỏ do MÁY CHỦ đặt, khác hẳn :user-invalid ở trên (do trình duyệt
-   đặt khi khách rời ô). Hai nguồn nhưng cùng một hình thức — người nhìn
-   không cần biết ai vừa từ chối cái gì. */
-.authfield__input.is-err,
-.authfield__input.is-err:focus { border-color: var(--danger); }
-
-/* Ghi chú dưới ô mã đổi sang tông lỗi khi lần xin mã vừa rồi hỏng. */
-.authfield__hint.is-err { color: #8f3535; }
-
-/* Ô tick Điều khoản + câu báo của nó: một khối, giãn 6px, để câu lỗi dính
-   vào đúng thứ nó nói tới thay vì trôi 22px xuống gần nút "Đăng ký". */
-.authagree {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-/* --- Hàng "Mã xác minh" + nút "Gửi mã" --- */
-
-/* .authfield lo phần khoảng cách dọc; ở đây chỉ dựng cái hàng ngang. */
-.acode__row {
-    display: flex;
-    align-items: stretch;
-    gap: 10px;
-}
-
-/* Ô nhập co lại được, nút thì không: nút phải giữ đủ chỗ cho nhãn dài
-   nhất của nó ("Gửi lại mã (60s)"). */
-.acode__input {
-    flex: 1 1 auto;
-    min-width: 0;
-    letter-spacing: 0.28em;
-}
-
-.acode__send {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 0 16px;
-    border: 1px solid var(--brand);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--brand);
-    font: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background .18s, color .18s, border-color .18s;
-}
-
-.acode__send:hover:not(:disabled),
-.acode__send:focus-visible:not(:disabled) {
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-/* Khoá trong lúc đếm ngược. Chốt THẬT nằm ở máy chủ
-   (AuthController::signupSendCode, `if (time() < resend)`), nên gỡ
-   disabled bằng devtools cũng không xin thêm được mã nào. */
-.acode__send:disabled {
-    border-color: var(--line);
-    color: var(--u-meta);
-    cursor: not-allowed;
-}
-
-.acode__num[hidden] { display: none; }
-
-/* Màn hình hẹp: nút xuống hàng thay vì bóp ô nhập còn vài ký tự. */
-@media (max-width: 380px) {
-    .acode__row { flex-wrap: wrap; }
-    .acode__send { width: 100%; justify-content: center; padding: 10px 16px; }
-}
-
-/* Liên kết trong câu báo lỗi — EF-10 đòi câu "đã được đăng ký" phải kèm link
-   Đăng nhập. Giữ nguyên màu đỏ của câu, chỉ gạch chân và đậm lên: một liên
-   kết màu thương hiệu nằm giữa một câu đỏ trông như hai câu rời nhau. */
-.authfield__err a {
-    color: inherit;
-    font-weight: 600;
-    text-decoration: underline;
-}
-
-/* ============================================================================
-   NÉT CHỮ FURNISH — khối chốt cuối file
-
-   `$headings-font-weight: 400` của theme: tiêu đề lấy sức nặng từ CỠ CHỮ, không
-   từ nét đậm. Bộ chữ trước đó dùng 600/700 cho cùng những chỗ này, nên đây là
-   điểm khác rõ nhất giữa hai bản.
-
-   Nhãn nhóm thì ngược lại — nhỏ, IN HOA, giãn chữ rộng, mang màu nhấn. Hai
-   thái cực đó cạnh nhau chính là nhịp chữ của Furnish.
-   ============================================================================ */
-.authhead__title, .adone__title, .authgate__title, .asay__title {
-    font-weight: 400;
-    letter-spacing: var(--tracking-tight);
-}
-
-.authcard__quote, .amethod__name {
-    font-weight: 400;
-}
-
-.astage__label {
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
+    .authcard,
+    .authcard__panel {
+        gap: 20px;
+    }
+
+    /* Ba nhãn bước cạnh nhau trên màn 360px là ba cột ~100px — đủ, nhưng
+       chỉ khi khe rút lại. */
+    .astage {
+        gap: 8px;
+    }
 }

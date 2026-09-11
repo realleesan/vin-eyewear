@@ -1,138 +1,144 @@
-/* ============================================================
-   components/confirm.css — hộp thoại "bạn có chắc không"
+/* ============================================================================
+   confirm.css — HỘP XÁC NHẬN ("Bỏ sản phẩm khỏi giỏ hàng?")
 
-   Markup: app/views/_layout/confirm-dialog.php
-   Hành vi: assets/js/confirm-dialog.js
+   Mẫu không vẽ hộp xác nhận nào, nên hình ở đây suy ra từ chính ngôn ngữ của
+   nó — và mẫu đã nói đủ rõ để không phải đoán:
 
-   Cùng ngôn ngữ hình với hộp thoại mua hàng (components/buy-modal.css): nền
-   nổi, bo theo --radius, đổ bóng --elev-3. Hai hộp thoại của cùng một site
-   xuất hiện trong cùng một lượt mua thì phải trông như anh em.
+     · nền lớp phủ  rgba(0,0,0,.35)   (cùng .oa-scrim--deep, vì hộp này cũng
+       đòi toàn bộ sự chú ý)
+     · tấm hộp      nền #f3f3f5, bo 6, cùng nền với ngăn kéo tài khoản
+     · hai nút      cao 44, bo 6, chữ 9px IN HOA — đúng .oa-btn--block
 
-   KHÔNG một con số bo góc viết thẳng — chỉ token. Xem khối "ĐỘ BO GÓC" trong
-   assets/css/layout.css.
-   ============================================================ */
+   Tức là hộp xác nhận trông như một ngăn kéo thu nhỏ, không phải một hộp
+   thoại theo lối khác. Đó là điều duy nhất mẫu cho phép suy ra.
 
-/* <dialog> mặc định có border, padding và margin auto của trình duyệt. Xoá
-   sạch rồi tự dựng: giữ lại thì hộp lệch tâm và có một khung 1px màu hệ thống
-   không thuộc bảng màu nào của site. */
+   Markup ở app/views/_layout/confirm-dialog.php, hành vi ở
+   assets/js/confirm-dialog.js — cả hai giữ nguyên, đây chỉ là tầng kiểu dáng.
+   ========================================================================= */
+
+/* ┌─ ĐÂY LÀ <dialog> THẬT, VÀ ĐÓ LÀ CÁI BẪY CỦA FILE NÀY ──────────────────
+   │ Trình duyệt ẩn <dialog> chưa mở bằng `display:none` trong bộ kiểu mặc
+   │ định của nó. Khai `.cfm { display:flex }` trần là ĐÈ MẤT luật ấy, và
+   │ hộp xác nhận nằm chình ình góc trên trái của MỌI trang có nó.
+   │
+   │ Nên `display` chỉ được đặt bên trong `[open]`. Khối ngoài lo mọi thứ
+   │ khác — vị trí, nền, z-index — nhưng không đụng tới display.
+   │
+   │ ::backdrop là nền mờ RIÊNG của <dialog>, do showModal() dựng ra ở lớp
+   │ trên cùng của trình duyệt. Tô nó thay vì tự thêm một thẻ nền: thẻ tự
+   │ thêm sẽ nằm DƯỚI hộp trong cùng ngăn xếp và không phủ được top layer.
+   └──────────────────────────────────────────────────────────────────────── */
 .cfm {
-    /* TỰ CĂN GIỮA MÀN HÌNH.
-
-       Trình duyệt vốn căn <dialog> bằng `margin: auto` trong bộ mẫu mặc định
-       của nó. Nhưng bộ reset ở đầu layout.css đặt `margin: 0` cho mọi thẻ, và
-       nó THẮNG — nên nếu không khai lại ở đây thì hộp thoại dính vào góc trên
-       bên trái, đúng lỗi đã thấy khi chụp lần đầu.
-
-       inset: 0 + margin: auto là cặp căn giữa cả hai chiều; height phải là
-       fit-content, không thì hộp bị kéo cao bằng cả màn hình. */
     position: fixed;
     inset: 0;
-    margin: auto;
-    width: 400px;
-    max-width: calc(100vw - 32px);
-    height: fit-content;
-    max-height: calc(100vh - 32px);
-    padding: 0;
+    z-index: 30;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
     border: 0;
-    border-radius: var(--radius);
-    background: var(--surface-raised);
-    box-shadow: none;
-    color: var(--ink);
+    background: transparent;
+    overflow: hidden;
 }
 
-/* Nền mờ phía sau. Cùng sắc với nền của .bmodal để hai hộp thoại không tối
-   khác nhau khi hiện trên cùng một trang. */
-.cfm::backdrop {
-    background: rgba(28, 16, 18, 0.55);
+.cfm[open] {
+    display: flex;
 }
+
+.cfm::backdrop {
+    background: rgba(0, 0, 0, .35);
+}
+
+/* confirm-dialog.js tự thoát khi trình duyệt không có showModal() — lúc đó
+   thẻ không bao giờ mang [open] và người dùng được hỏi bằng confirm() của
+   trình duyệt. Không cần luật dự phòng nào ở đây. */
 
 .cfm__panel {
+    width: min(420px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 28px 28px 24px;
+    border: 0;
+    border-radius: var(--r-field);
+    background: var(--bg-panel);
+    color: var(--ink);
+    font-size: var(--fs-body);
+    line-height: var(--lh);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 22px 24px 20px;
+    gap: 12px;
 }
 
 .cfm__title {
-    margin: 0;
-    /* --font-display KHÔNG TỒN TẠI trong bảng token (grep cả assets/css ra 0
-       khai báo), nên dòng cũ là một giá trị không hợp lệ và bị trình duyệt
-       bỏ qua — tiêu đề hộp thoại vẫn đang thừa kế font của trang. Khai đúng
-       thứ nó vốn đang hiển thị. */
-    font-family: var(--font-sans);
-    font-size: var(--fs-h4);
+    font-size: var(--fs-ui);
     font-weight: 500;
-    line-height: 1.3;
-    color: var(--h-dark);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
 .cfm__body {
-    margin: 0;
-    font-size: var(--fs-body);
-    line-height: 1.6;
-    color: var(--h-note);
+    color: var(--ink-3);
+    text-wrap: pretty;
 }
 
-/* Hai nút nằm phải, "Giữ lại" trước "Xoá" — thao tác an toàn nằm trên đường
-   tay với trước.
-
-   Màn hẹp xếp dọc bằng column-reverse, tức "Xoá" lên trên và "Giữ lại" xuống
-   dưới. Nghe ngược nhưng đúng: trên điện thoại, nút THẤP NHẤT là nút ngón cái
-   với tới dễ nhất, nên chỗ đó phải dành cho lựa chọn không mất gì. */
+/* ┌─ THỨ TỰ HAI NÚT ──────────────────────────────────────────────────────
+   │ HUỶ ĐỨNG TRƯỚC, ĐỒNG Ý ĐỨNG SAU — cả trong DOM lẫn trên màn hình.
+   │
+   │ Hộp này luôn hỏi về một việc KHÔNG LÙI ĐƯỢC (bỏ hàng khỏi giỏ, huỷ đơn).
+   │ Nút an toàn đứng ở chỗ ngón tay chạm tới trước, và người dùng bàn phím
+   │ Tab tới nó trước — nên một cú Enter theo phản xạ là huỷ, không phải xoá.
+   └──────────────────────────────────────────────────────────────────────── */
 .cfm__acts {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    gap: 8px;
     margin-top: 8px;
 }
 
-/* Kiểu đầy đủ, không mượn của components/ui.css — xem chú thích trong
-   _layout/confirm-dialog.php. Chữ hoa giãn nét lấy đúng cách .btn-primary của
-   cửa hàng đang làm, để hộp thoại không đọc như của site khác dán vào. */
 .cfm__act {
-    flex: none;
-    min-width: 104px;
-    height: 42px;
-    display: inline-flex;
+    flex: 1;
+    display: flex;
     align-items: center;
     justify-content: center;
-    padding-inline: 20px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-sans);
-    font-size: var(--fs-label);
-    font-weight: 500;
+    height: var(--h-field);
+    padding: 0 12px;
+    border: 0;
+    border-radius: var(--r-field);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    letter-spacing: var(--tracking-label);
     cursor: pointer;
-    transition:
-        background-color var(--dur-fast) var(--ease),
-        color var(--dur-fast) var(--ease),
-        border-color var(--dur-fast) var(--ease);
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
-
-.cfm__act--ok {
-    background: var(--brand);
-    color: var(--on-brand);
-}
-
-.cfm__act--ok:hover,
-.cfm__act--ok:focus-visible { background: var(--brand-strong); }
 
 .cfm__act--huy {
-    border-color: var(--line-strong);
-    background: var(--surface-sunken);
+    background: transparent;
+    border: 1px solid var(--line-btn-2);
     color: var(--ink);
 }
 
-.cfm__act--huy:hover,
-.cfm__act--huy:focus-visible { border-color: var(--brand); color: var(--brand); }
-
-@media (max-width: 420px) {
-    .cfm__acts {
-        flex-direction: column-reverse;
-        gap: 8px;
-    }
-
-    .cfm__act { width: 100%; }
+.cfm__act--huy:hover {
+    border-color: var(--ink);
+    color: var(--ink);
 }
+
+/* ĐỎ, không phải đen: đây là một trong hai chỗ duy nhất trên site được dùng
+   sắc --sale ngoài giá khuyến mãi. Việc sắp xảy ra là xoá thật. */
+.cfm__act--ok {
+    background: var(--sale);
+    color: #fff;
+}
+
+.cfm__act--ok:hover {
+    background: #c62828;
+    color: #fff;
+}
+
+/* CỐ Ý KHÔNG XẾP CHỒNG Ở MÀN HẸP. Hai nút cao 44 nằm ngang vẫn vừa màn
+   320px, và xếp chồng thì một trong hai phải xuống dưới — chỗ ngón cái với
+   tới dễ nhất. Với một hộp hỏi về việc không lùi được, đưa nút XOÁ xuống
+   đúng chỗ ấy là mời gọi bấm nhầm; mà đưa nút HUỶ xuống thì lại phá thứ tự
+   an toàn mà khối bên trên vừa dựng. Để nguyên hàng ngang là không phải
+   chọn giữa hai cái sai. */

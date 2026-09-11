@@ -1,320 +1,380 @@
 /* ============================================================================
-   about.css — TRANG GIỚI THIỆU
+   about.css — TRANG GIỚI THIỆU (/gioi-thieu)
 
-   Đây là một trong hai trang của site có BẢN MẪU TRỰC TIẾP trong Furnish
-   (`about.html`), nên nó bám theo từng khối chứ không suy diễn.
+   ═════════════════════════════════════════════════════════════════════════
+   MẪU VẼ TRANG NÀY, và vẽ đúng bốn chương mà view đang có:
 
-   Bốn khối của bản mẫu, theo đúng thứ tự:
+     01 — VỀ CHÚNG TÔI     hero 16:8.4, chữ trắng đè góc dưới trái
+     02 — GIÁ TRỊ CỐT LÕI  tiêu đề căn giữa + bốn ô 4:5 nền xám
+     03 — DỊCH VỤ ĐO MẮT   hai cột: chữ + ba bước bên trái, ảnh 4:5 bên phải
+     04 — BẮT ĐẦU          khối kết căn giữa, một câu trích nghiêng, hai nút
 
-     1. Hero      py-lg-8 py-5 · text-center · container > row > col-lg-6
-                  → dùng chung _layout/page-head.php
-     2. Mission   py-lg-8 py-5 · row align-items-center g-5 · ảnh | chữ
-     3. Values    py-lg-9 py-5 · bg-light · text-center · row g-4 của
-                  card rounded-0 border-0 shadow-sm h-100 p-4
-     4. Team      py-lg-8 py-5 · text-center · row g-4 của col-md-3
+   Bốn nhãn "01 —", "02 —" … là xương sống của trang: chúng cho một trang
+   dài toàn chữ một nhịp đọc. Mẫu in chúng ở 9px IN HOA giãn .08em màu #555,
+   và đó là .oa-eyebrow trong oa.css.
 
-   Site này có bốn khối tương ứng: 01 Về chúng tôi (=Mission) · 02 Giá trị cốt
-   lõi (=Values) · 03 Dịch vụ đo mắt (=Mission lật ngược) · 04 Bắt đầu (khối CTA
-   cuối, bản mẫu không có — dựng bằng chính ngôn ngữ của nó: chữ căn giữa trên
-   nền trắng, hai nút cạnh nhau).
-
-   ─────────────────────────────────────────────────────────────────────────────
-   MỘT ĐIỀU HỌC ĐƯỢC TỪ BẢN MẪU MÀ TRƯỚC ĐÓ TÔI HIỂU SAI
-
-   Thẻ giá trị của Furnish là `border-0 shadow-sm` — KHÔNG viền, CÓ bóng nhẹ.
-   Nghĩa là "Furnish không dùng bóng đổ" là một khái quát sai: nó dùng bóng cho
-   THẺ NỔI TRÊN NỀN XÁM, và dùng viền mảnh cho thẻ trên nền trắng. Hai ngữ cảnh
-   khác nhau, hai cách tách khối khác nhau.
-   ============================================================================ */
+   MỘT ĐIỀU DỄ LÀM SAI: khối 02 dùng LƯỚI 4 CỘT GIỐNG HỆT lưới sản phẩm —
+   cùng `repeat(4, minmax(0,1fr))`, cùng khe 48px/20px, cùng lề 60px, và
+   bốn ô cũng tỉ lệ 4:5 nền xám luân phiên như thẻ hàng. Đó không phải
+   trùng hợp: mẫu cố ý cho "giá trị cốt lõi" đọc ra như một dãy sản phẩm.
+   ═════════════════════════════════════════════════════════════════════════ */
 
 .about {
-    /* Khoảng cách giữa các khối lấy đúng py-lg-8/py-5 của bản mẫu. */
-    --about-pad: var(--section-pad);
-    --about-gap: var(--block-gap);
+    background: var(--bg);
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   1. KHỐI CHIA ĐÔI — dùng cho cả 01 (ảnh trái) và 03 (ảnh phải)
-
-   `row align-items-center g-5` của bản mẫu: hai cột bằng nhau, căn GIỮA theo
-   trục dọc, khe 32px. Ảnh vuông góc, `img-fluid`, không khung, không bóng.
-   ──────────────────────────────────────────────────────────────────────────── */
-.about-story,
-.about-exam {
-    padding-block: var(--about-pad);
-}
-
-.about-story__grid,
-.about-exam__grid {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding-inline: var(--page-edge);
-    display: grid;
-    gap: var(--about-gap);
-    align-items: center;
-}
-
-/* Khung ảnh — bỏ hẳn phần lệch/chồng của bản cũ. Bản mẫu để ảnh phẳng, đúng
-   khổ cột, không bo góc và không đổ bóng. */
-.about-frame {
-    margin: 0;
-    min-width: 0;
-}
-
-.about-frame__media {
-    overflow: hidden;
-    background: var(--h-shell);
-}
-
-.about-frame__media img {
-    width: 100%;
-    height: auto;
-    display: block;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-}
-
-.about-story__text,
-.about-exam__text {
-    min-width: 0;
-}
-
-/* Nhãn IN HOA nhỏ trên mỗi khối — `text-uppercase text-xs` của theme. */
+/* Nhãn chương — .oa-eyebrow đã lo dáng, ở đây chỉ thêm biến thể căn giữa */
 .about-eyebrow {
-    display: block;
-    margin-bottom: var(--space-3);
-    color: var(--eyebrow);
-    font-size: var(--fs-label);
-    letter-spacing: var(--tracking-label);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-wide);
     text-transform: uppercase;
+    color: var(--ink-3);
 }
 
 .about-eyebrow--center {
     text-align: center;
 }
 
-/* `h2` của bản mẫu: cỡ 2rem, nét 400, không giãn chữ âm quá tay. */
-.about-h2 {
-    margin-bottom: var(--space-4);
-    font-size: var(--fs-h2);
-    line-height: 1.2;
+.about-h2,
+.about-exam__h2,
+.about-start__h2,
+.about-vlead__title {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    line-height: 1.3;
 }
 
-.about-h2 em {
-    font-style: italic;
-    color: var(--ink);
+.about-prose {
+    color: var(--ink-2);
+    text-wrap: pretty;
 }
 
-/* `p.text-muted` — hai đoạn liền nhau, không có gạch đầu dòng, không thụt lề. */
-.about-prose p,
-.about-exam__lead {
-    color: var(--muted);
-    font-size: var(--fs-body);
-    line-height: 1.8;
+/* ══════════════════════════════════════════════════════════════════════
+   01 — HERO
+   ══════════════════════════════════════════════════════════════════════ */
+
+.about-story {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 8.4;
+    overflow: hidden;
+    background: #d8d3cc;
 }
 
-.about-prose p + p {
-    margin-top: var(--space-4);
+.about-frame,
+.about-story__grid > .about-frame {
+    position: absolute;
+    inset: 0;
+}
+
+.about-frame__media,
+.about-frame__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Khối chữ đè góc dưới trái. Mẫu đặt nó cách mép 64px, cách đáy 56px, rộng
+   tối đa 320px — hẹp là cố ý: nó phải để lộ phần lớn bức ảnh. */
+.about-story__text {
+    position: absolute;
+    left: var(--edge);
+    bottom: 56px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: #fff;
+    z-index: 1;
+}
+
+/* Trên ảnh thì mọi sắc chữ đều là trắng — #555 của .about-eyebrow và #333
+   của .about-prose đều chìm mất trên nền tối. */
+.about-story__text .about-eyebrow,
+.about-story__text .about-prose,
+.about-story__text .about-sign {
+    color: inherit;
+}
+
+/* Lớp phủ tối từ đáy lên. Ảnh do nhân viên tải lên qua trang quản trị nên
+   không ai biết trước nó sáng hay tối — dải này khoá sàn tương phản ở đúng
+   vùng có chữ. Cùng lý do với .vhero__veil ở trang chủ. */
+.about-story::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, .55) 0%,
+        rgba(0, 0, 0, .3) 30%,
+        rgba(0, 0, 0, 0) 60%);
+    pointer-events: none;
+}
+
+.about-story__text {
+    z-index: 2;
 }
 
 .about-sign {
-    margin-top: var(--space-5);
-    color: var(--h-meta);
-    font-size: var(--fs-caption);
-    letter-spacing: .1em;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-wide);
     text-transform: uppercase;
 }
 
-/* ── Danh sách các bước đo mắt (khối 03) ─────────────────────────────────────
-   Bản mẫu không có danh sách đánh số. Dựng bằng ngôn ngữ của nó: số thứ tự là
-   chữ đơn cách màu phụ, mỗi mục cách nhau bằng một đường kẻ mảnh — cùng khuôn
-   với bảng thông số ở trang chi tiết sản phẩm.
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   02 — GIÁ TRỊ CỐT LÕI
+   ══════════════════════════════════════════════════════════════════════ */
+
+.about-values {
+    padding: 0 var(--edge-grid);
+    background: var(--bg);
+}
+
+/* ┌─ HAI THẺ LỒNG NHAU, HAI VAI KHÁC HẲN ─────────────────────────────────
+   │ __inner là THẺ BỌC của cả chương (đầu đề + lưới), __head là riêng
+   │ khối chữ đầu đề. Cho cả hai cùng `align-items:center` là sai: lưới
+   │ bên trong __inner co lại vừa nội dung và bốn ô dồn vào giữa, chừa hai
+   │ mảng trắng hai bên — đúng thứ đã xảy ra.
+   │
+   │ Nên: __inner chỉ xếp dọc và KHÔNG căn giữa con của nó; __head tự căn
+   │ giữa chữ của riêng nó.
+   └──────────────────────────────────────────────────────────────────────── */
+.about-values__inner {
+    display: flex;
+    flex-direction: column;
+}
+
+.about-values__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px 0 48px;
+    text-align: center;
+}
+
+.about-values__note {
+    color: var(--ink-2);
+    max-width: 420px;
+    text-wrap: pretty;
+}
+
+/* Lưới giống hệt lưới sản phẩm — xem khối chú thích đầu file */
+.about-values__grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--gap-row) var(--gap-col);
+    list-style: none;
+}
+
+.about-vcard {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    aspect-ratio: 4 / 5;
+    padding: 16px 14px;
+    background: var(--bg-soft);
+}
+
+/* Bốn tông xám luân phiên — cùng bảng với .oa-card--t1…t4 */
+.about-vcard:nth-child(1) { background: #f4f4f4; }
+.about-vcard:nth-child(2) { background: #f7f7f7; }
+.about-vcard:nth-child(3) { background: #f2f2f2; }
+.about-vcard:nth-child(4) { background: #f5f5f5; }
+
+.about-vcard__num {
+    font-size: var(--fs-micro);
+    color: var(--ink-5);
+    font-variant-numeric: tabular-nums;
+}
+
+.about-vcard__title {
+    font-size: var(--fs-ui);
+    font-weight: 400;
+    line-height: var(--lh-tight);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   03 — DỊCH VỤ ĐO MẮT
+   ══════════════════════════════════════════════════════════════════════ */
+
+.about-exam {
+    padding: 96px var(--edge-grid) 0;
+}
+
+.about-exam__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--gap-tight);
+    align-items: center;
+}
+
+.about-exam__text {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 4px 0 12px;
+}
+
+.about-exam__lead {
+    color: var(--ink-2);
+    text-wrap: pretty;
+}
+
+/* Ba bước đánh số — kẻ ngang phía trên mỗi bước, số ở cột 24px bên trái.
+   Cùng hình với .oa-steps trong oa.css. */
 .about-exam__list {
-    margin-top: var(--space-6);
-    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
     list-style: none;
 }
 
 .about-exam__item {
-    display: flex;
-    gap: var(--space-4);
-    padding-block: var(--space-4);
-    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    gap: 8px;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
 }
 
 .about-exam__num {
-    flex: 0 0 auto;
-    color: var(--h-meta);
-    font-family: var(--font-mono);
-    font-size: var(--fs-caption);
-    letter-spacing: .1em;
+    font-size: var(--fs-micro);
+    color: var(--ink-5);
+    font-variant-numeric: tabular-nums;
 }
 
 .about-exam__title {
-    margin-bottom: 2px;
     font-size: var(--fs-body);
-    font-weight: 500;
+    font-weight: 400;
 }
 
 .about-exam__desc {
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-    line-height: 1.65;
+    color: var(--ink-3);
 }
 
 .about-exam__cta {
-    margin-top: var(--space-6);
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
-   2. GIÁ TRỊ CỐT LÕI — `py-lg-9 py-5 bg-light text-center`
-
-   Dải nền xám, tiêu đề căn giữa, rồi một hàng thẻ ĐỀU NHAU. Đây là khối bám
-   bản mẫu sát nhất trên cả trang.
-   ──────────────────────────────────────────────────────────────────────────── */
-.about-values {
-    padding-block: var(--section-pad-lg);
-    background: var(--surface-sunken);
-}
-
-.about-values__inner {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding-inline: var(--page-edge);
-    text-align: center;
-}
-
-.about-values__head {
-    max-width: 660px;
-    margin-inline: auto;
-    margin-bottom: var(--block-gap);
-}
-
-.about-vlead__title {
-    margin-bottom: var(--space-4);
-    font-size: var(--fs-h2);
-    line-height: 1.2;
-}
-
-.about-vlead__title em {
-    font-style: italic;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--line-btn);
+    border-radius: var(--r-pill);
+    background: var(--bg);
     color: var(--ink);
+    font-size: var(--fs-ui);
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
 
-.about-values__note {
-    color: var(--muted);
-    font-size: var(--fs-lead);
-    line-height: 1.7;
+.about-exam__cta:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
 }
 
-/* `row g-4` của bản mẫu: các thẻ chia đều, khe 24px, cao bằng nhau (`h-100`). */
-.about-values__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: var(--space-6);
-    list-style: none;
+/* Ảnh phòng đo — 4:5, cắt tràn khung. Đây là ảnh KHÔNG GIAN, không phải
+   ảnh sản phẩm, nên `cover` chứ không `contain`. */
+.about-exam__grid > .about-frame,
+.about-exam__grid > .about-frame__media {
+    position: static;
+    aspect-ratio: 4 / 5;
+    background: var(--bg-soft);
+    overflow: hidden;
 }
 
-/* `card rounded-0 border-0 shadow-sm h-100 p-4` — KHÔNG viền, CÓ bóng nhẹ.
-   Xem khối chú thích ở đầu file về lý do đây không mâu thuẫn với phần còn lại
-   của site (thẻ trên nền TRẮNG thì dùng viền, thẻ trên nền XÁM thì dùng bóng). */
-.about-vcard {
+/* ══════════════════════════════════════════════════════════════════════
+   04 — BẮT ĐẦU
+   ══════════════════════════════════════════════════════════════════════ */
+
+.about-start {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-8) var(--space-5);
-    background: var(--surface-raised);
-    box-shadow: none;
-}
-
-/* Bản mẫu đặt một icon 42px ở đây với `mb-5`. Site không có bộ icon cho bốn
-   giá trị này, nên chỗ đó là SỐ THỨ TỰ — vẫn là một mỏ neo thị giác cùng cỡ,
-   cùng khoảng cách, và trung thực hơn một icon chọn đại. */
-.about-vcard__num {
-    font-family: var(--font-mono);
-    font-size: var(--fs-h4);
-    color: var(--ink);
-    line-height: 1;
-}
-
-.about-vcard__title {
-    font-size: var(--fs-h5);
-    font-weight: 400;
-    line-height: 1.35;
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
-   3. KHỐI CUỐI — CTA
-
-   Bản mẫu không có. Dựng bằng ngôn ngữ của nó: chữ căn giữa trong cột hẹp,
-   nền trắng, hai nút cạnh nhau (một đặc, một viền).
-   ──────────────────────────────────────────────────────────────────────────── */
-.about-start {
-    max-width: 720px;
-    margin-inline: auto;
-    padding: var(--section-pad-lg) var(--page-edge);
+    gap: 12px;
+    padding: 120px var(--edge) 84px;
     text-align: center;
 }
 
 .about-start__h2 {
-    margin-bottom: var(--space-4);
+    max-width: 420px;
+    text-wrap: pretty;
 }
 
+/* Câu trích tiếng Anh in nghiêng — chỗ duy nhất trên site dùng font-style
+   italic, và mẫu dùng nó đúng một lần, ở đúng đây. */
 .about-start__quote {
-    margin-bottom: var(--space-8);
-    color: var(--muted);
-    font-size: var(--fs-lead);
+    color: var(--ink-3);
     font-style: italic;
-    line-height: 1.7;
 }
 
 .about-start__actions {
     display: flex;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
-    gap: var(--space-3);
+    margin-top: 20px;
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   4. MỐC BỀ NGANG — bản mẫu chia đôi từ `md` (768px)
-   ──────────────────────────────────────────────────────────────────────────── */
-@media (min-width: 768px) {
+.about-start__alt {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
 
-    .about-story__grid,
-    .about-exam__grid {
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1000px) {
+    .about-values__grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+}
 
-    /* Khối 03 lật ngược: chữ trái, ảnh phải. Đổi thứ tự bằng `order` chứ không
-       bằng cách viết lại HTML — thứ tự trong DOM là thứ tự người dùng bàn phím
-       và trình đọc màn hình đi qua, và ở đó chữ nên đến trước ảnh. */
-    .about-exam .about-frame--left {
-        order: 2;
+@media (max-width: 760px) {
+    /* Hero 16:8.4 trên điện thoại là một dải cao 180px — không đủ chỗ cho
+       khối chữ năm dòng đè lên. Đổi sang 4:5 và cho chữ tràn hết bề ngang. */
+    .about-story {
+        aspect-ratio: 4 / 5;
+    }
+
+    .about-story__text {
+        left: var(--edge);
+        right: var(--edge);
+        bottom: 32px;
+        max-width: none;
+    }
+
+    /* Khối chữ ở 4:5 dài gần nửa chiều cao ảnh, nên dải phủ phải với lên cao
+       hơn và đặc hơn. Ở 16:8.4 chữ chỉ chiếm dải đáy nên dải nhạt là đủ —
+       giữ hai giá trị khác nhau thay vì lấy giá trị đậm cho cả hai, vì ở
+       màn rộng dải đậm ăn mất nửa bức ảnh. */
+    .about-story::after {
+        background: linear-gradient(to top,
+            rgba(0, 0, 0, .68) 0%,
+            rgba(0, 0, 0, .5) 42%,
+            rgba(0, 0, 0, .12) 72%,
+            rgba(0, 0, 0, 0) 92%);
+    }
+
+    .about-exam {
+        padding-top: 56px;
+    }
+
+    .about-exam__text {
+        padding: 0;
+    }
+
+    .about-start {
+        padding: 64px var(--edge) 56px;
     }
 }
 
-/* ── Hiệu ứng hiện dần khi cuộn tới ──────────────────────────────────────────
-   Chỉ chạy khi có JavaScript (master.php gắn lớp .js lên <html>) — không có JS
-   thì nội dung hiện sẵn, không ẩn mất. Máy đặt "giảm chuyển động" cũng vậy.
-   ──────────────────────────────────────────────────────────────────────────── */
-.js .about .reveal {
-    opacity: 0;
-    transform: translateY(12px);
-    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
-}
-
-.js .about .reveal.visible {
-    opacity: 1;
-    transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-
-    .js .about .reveal {
-        opacity: 1;
-        transform: none;
-        transition: none;
+@media (max-width: 420px) {
+    .about-values__grid {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

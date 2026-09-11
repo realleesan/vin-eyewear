@@ -1,407 +1,233 @@
 /* ============================================================================
-   contact.css — TRANG LIÊN HỆ
+   contact.css — TRANG LIÊN HỆ (/lien-he)
 
-   Trang thứ hai của site có BẢN MẪU TRỰC TIẾP trong Furnish (`contact.html`).
-   Bám theo từng khối:
+   ═════════════════════════════════════════════════════════════════════════
+   MẪU VẼ TRANG NÀY GẦN NHƯ NGUYÊN VẸN — bốn khối, đúng thứ tự của view:
 
-     1. Hero      py-lg-8 py-5 · text-center · col-lg-6   → _layout/page-head.php
-     2. Thân      py-5 · row g-5 align-items-start
-                    col-md-4  "Get in Touch" — h4 + đoạn dẫn + ba dòng
-                              icon · nhãn IN HOA rất nhỏ · giá trị
-                    col-md-8  <div class="card"><div class="card-body p-lg-5">
-                              form row g-3, nút "Send Message" CĂN PHẢI
-     3. Bản đồ    row mt-5 · col-12 · iframe cao 350px, shadow-sm
+     1. đầu trang căn giữa
+     2. hai cột: "Cần hỗ trợ ngay?" (hàng nhãn↔giá trị) | form nền #f4f4f4
+     3. lưới cửa hàng + một ô ĐEN "Đặt lịch đo mắt"
+     4. ảnh bản đồ 16:6 có dải chữ nền trắng mờ chạy dọc đáy
 
-   Site này có thêm DANH SÁCH CƠ SỞ (bản mẫu chỉ có một địa chỉ), nên nó nằm
-   giữa form và bản đồ — cùng ngôn ngữ: hàng thẻ đều nhau, viền mảnh.
+   HAI CHI TIẾT CỦA MẪU RẤT DỄ BỎ SÓT, và cả hai đều đáng giữ:
 
-   ─────────────────────────────────────────────────────────────────────────────
-   ĐÃ ĐỔI THỨ TỰ HAI KHỐI TRONG VIEW
+     · Ô ĐEN trong lưới cửa hàng. Nó là thẻ thứ ba trong một hàng hai thẻ
+       cửa hàng, nền #111 chữ trắng. Đó là điểm tối DUY NHẤT của cả trang,
+       và nó đứng đúng chỗ mắt dừng sau khi đọc xong hai địa chỉ.
 
-   Bản cũ xếp cơ sở + bản đồ TRƯỚC, form ở cuối trang. Bản mẫu làm ngược lại,
-   và nó đúng: người mở trang Liên hệ là để LIÊN HỆ, không phải để đọc danh
-   sách địa chỉ. Đổi thứ tự trong DOM chứ không bằng CSS `order` — thứ tự DOM
-   cũng là thứ tự bàn phím và trình đọc màn hình đi qua.
-   ============================================================================ */
+     · Ô NHẬP GẠCH CHÂN trong form, không phải ô có viền. Form nằm trên nền
+       #f4f4f4 nên một hộp viền nữa là hai đường bao lồng nhau. Đây là chỗ
+       duy nhất trên site dùng .oa-field thay cho .oa-input.
+   ═════════════════════════════════════════════════════════════════════════ */
 
-/* ────────────────────────────────────────────────────────────────────────────
-   1. KHỐI THÂN — thông tin | form
-   ──────────────────────────────────────────────────────────────────────────── */
-.cbottom {
-    padding-block: var(--section-pad);
+/* ══════════════════════════════════════════════════════════════════════
+   HAI CỘT: KÊNH HỖ TRỢ | FORM
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cbottom,
+.cquick {
+    padding: 0 var(--edge-grid);
 }
 
+/* Mẫu đặt cột kênh hỗ trợ BÊN TRÁI, form BÊN PHẢI. Markup để form trước —
+   đảo bằng `order`, không đảo markup: form là nội dung chính của trang này
+   và nó nên đứng trước trong thứ tự đọc. */
 .cbottom__grid {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding-inline: var(--page-edge);
     display: grid;
-    gap: var(--block-gap);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--gap-tight);
     align-items: start;
 }
 
-/* ── Thẻ form ────────────────────────────────────────────────────────────────
-   `.card` + `.card-body p-lg-5`: nền trắng, viền mảnh, góc vuông, đệm 40px.
-   ──────────────────────────────────────────────────────────────────────────── */
-.cform {
-    min-width: 0;
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-    padding: clamp(24px, 3vw, 40px);
+.cbottom__grid > .cquick {
+    order: -1;
 }
 
-.cform__head {
-    margin-bottom: var(--space-6);
-}
-
-/* ĐÃ NÂNG --fs-h4 → --fs-h3. Hai tiêu đề này là <h2> trong markup nhưng
-   mang cỡ của h4, nên đo ra 20px trong khi <h2> ở /bo-suu-tap và /gioi-thieu
-   là 32px — cùng một cấp thẻ, hai cỡ chữ khác nhau tuỳ trang.
-
-   --fs-h3 (24px) chứ không --fs-h2 (32px): đây là tiêu đề của một CỘT trong
-   section chứ không phải tiêu đề section, và ở 32px nó phá bố cục hai cột.
-   Chênh 32 ↔ 24 giữa hai vai trò ấy là có chủ ý; chênh 32 ↔ 20 giữa hai
-   trang thì không. */
-.cform__title {
-    margin-bottom: var(--space-2);
-    font-size: var(--fs-h3);
-    line-height: 1.25;
-}
-
-.cform__lead {
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-}
-
-.cform__body {
-    display: grid;
-    gap: var(--space-4);
-}
-
-/* `row g-3` với hai `col-md-6` — họ tên và số điện thoại nằm cùng hàng. */
-.cform__pair {
-    display: grid;
-    gap: var(--space-4);
-}
-
-.cfield {
-    display: grid;
-    gap: var(--space-2);
-    min-width: 0;
-}
-
-/* `form-label` của bản mẫu là chữ thường; ở đây dùng nhãn IN HOA rất nhỏ —
-   cùng khuôn với `text-uppercase text-xs` mà chính contact.html dùng cho ba
-   dòng thông tin bên trái, nên hai cột đọc ra là cùng một hệ. */
-.cfield__label {
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-}
-
-.cfield__input {
-    width: 100%;
-    padding: var(--space-4);
-    border: 1px solid var(--line-strong);
-    background: var(--surface-raised);
-    color: var(--ink);
-    font: inherit;
-    font-size: var(--fs-body-sm);
-}
-
-.cfield__input--area {
-    resize: vertical;
-    min-height: 140px;
-}
-
-.cfield__input:focus {
-    outline: 2px solid var(--ink);
-    outline-offset: -2px;
-    border-color: var(--ink);
-}
-
-.cfield__input::placeholder {
-    color: var(--h-meta);
-}
-
-.cfield__opt {
-    color: var(--h-meta);
-    font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
-}
-
-/* `btn btn-dark px-4` căn PHẢI (`col-12 text-end`). */
-.cform__submit {
-    justify-self: end;
-    padding: var(--space-4) var(--space-8);
-    border: 1px solid var(--brand);
-    background: var(--brand);
-    color: var(--on-brand);
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease);
-}
-
-.cform__submit:hover {
-    background: var(--brand-strong);
-    border-color: var(--brand-strong);
-    color: var(--on-brand);
-}
-
-/* ── Cột kênh liên hệ ────────────────────────────────────────────────────────
-   Ba dòng `d-flex align-items-start` của bản mẫu: icon · nhãn IN HOA rất nhỏ ·
-   giá trị màu phụ. Không viền, không nền — chỉ chữ.
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ┌─ CỘT TRÁI — BỐN KÊNH ─────────────────────────────────────────────── */
 .cquick {
-    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 12px;
 }
 
-/* Cùng cặp với .cform__title ở trên — xem chú thích tại đó. */
 .cquick__title {
-    margin-bottom: var(--space-3);
-    font-size: var(--fs-h3);
-    line-height: 1.25;
+    font-size: var(--fs-ui);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
 .cquick__lead {
-    margin-bottom: var(--space-6);
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
+    color: var(--ink-3);
 }
 
 .cchan {
     display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    padding-block: var(--space-4);
-    border-bottom: 1px solid var(--line);
-    color: var(--ink);
-    text-decoration: none;
-}
-
-.cchan:hover .cchan__value {
-    color: var(--ink);
-}
-
-/* Icon mang màu nhấn — `text-secondary` của bản mẫu. */
-.cchan__mark {
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    margin-top: 2px;
-    color: var(--ink);
-}
-
-.cchan__mark svg {
-    width: 100%;
-    height: 100%;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-}
-
-.cchan__mark--brand svg {
-    fill: currentColor;
-    stroke: none;
-}
-
-.cchan__text {
-    min-width: 0;
-}
-
-.cchan__label {
-    display: block;
-    margin-bottom: 2px;
-    font-size: var(--fs-micro);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-}
-
-.cchan__value {
-    display: block;
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-    overflow-wrap: anywhere;
-    transition: color var(--dur) var(--ease);
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
-   2. DANH SÁCH CƠ SỞ
-
-   Bản mẫu chỉ có MỘT địa chỉ nên không có khối này. Dựng bằng ngôn ngữ của
-   nó: hàng thẻ đều nhau, nền trắng, viền mảnh, tiêu đề nét 400.
-   ──────────────────────────────────────────────────────────────────────────── */
-.cstores {
-    padding-block: var(--section-pad);
-    background: var(--surface-sunken);
-}
-
-.cstores__grid {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding-inline: var(--page-edge);
-}
-
-.cstores__count {
-    margin-bottom: var(--space-5);
-    color: var(--muted);
-    font-size: var(--fs-caption);
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-}
-
-.cstores__list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--space-5);
-    list-style: none;
-}
-
-.cstore__row {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    padding: var(--space-5);
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-    color: var(--ink);
-    text-decoration: none;
-    transition: border-color var(--dur) var(--ease);
-}
-
-.cstore__row:hover {
-    border-color: var(--ink);
-}
-
-.cstore__head {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-}
-
-.cstore__name {
-    font-size: var(--fs-subhead);
-    font-weight: 400;
-}
-
-.cstore__dot {
-    color: var(--line-strong);
-}
-
-.cstore__address {
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-    line-height: 1.65;
-}
-
-.cstore__foot {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: var(--space-3);
-    margin-top: auto;
-    padding-top: var(--space-3);
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 0;
     border-top: 1px solid var(--line);
 }
 
-.cstore__phone {
-    font-size: var(--fs-body-sm);
-    font-weight: 500;
+/* Kênh cuối cùng cũng cần một đường kẻ dưới — không thì danh sách trông
+   như bị cắt cụt giữa chừng. */
+.cchan:last-of-type {
+    border-bottom: 1px solid var(--line);
 }
 
-.cstore__go {
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
+.cchan__label {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    color: var(--ink);
-}
-
-.cstores__cta {
-    display: inline-flex;
-    margin-top: var(--space-6);
-    padding: var(--space-4) var(--space-8);
-    border: 1px solid var(--ink);
-    color: var(--ink);
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    text-decoration: none;
-}
-
-.cstores__cta:hover {
-    background: var(--ink);
-    color: var(--on-ink);
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
-   3. BẢN ĐỒ — `row mt-5` chạy hết bề ngang, cao 350px, shadow-sm
-   ──────────────────────────────────────────────────────────────────────────── */
-.cmap {
-    margin-top: var(--block-gap);
-}
-
-.cmap__frame {
-    display: block;
-    width: 100%;
-    height: 350px;
-    border: 0;
-    box-shadow: none;
-}
-
-.cmap__card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-4);
-    padding: var(--space-4) var(--space-5);
-    background: var(--surface-raised);
-    border: 1px solid var(--line);
-}
-
-.cmap__name {
-    font-size: var(--fs-subhead);
-    font-weight: 400;
-}
-
-.cmap__address {
-    color: var(--muted);
-    font-size: var(--fs-body-sm);
-}
-
-.cmap__link {
-    font-size: var(--fs-caption);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--ink);
-    text-decoration: none;
     white-space: nowrap;
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   4. DẢI BÁO
-   ──────────────────────────────────────────────────────────────────────────── */
+.cchan__value,
+.cchan__text {
+    text-align: right;
+}
+
+/* Chấm màu thương hiệu cạnh tên kênh (Zalo, Messenger). Mẫu không có nó;
+   ẩn hẳn thay vì đưa thêm hai màu vào một trang chỉ có đen trắng. */
+.cchan__mark,
+.cchan__mark--brand {
+    display: none;
+}
+
+/* ┌─ CỘT PHẢI — FORM ─────────────────────────────────────────────────── */
+.cform {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 40px var(--edge) 24px;
+    background: var(--bg-soft);
+}
+
+.cform__head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cform__title {
+    font-size: var(--fs-ui);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.cform__lead {
+    color: var(--ink-3);
+}
+
+.cform__body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px 20px;
+}
+
+/* Ô chiếm trọn hàng — email và nội dung */
+.cform__pair,
+.cfield--wide {
+    grid-column: 1 / -1;
+}
+
+.cfield {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.cfield__label {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.cfield__opt {
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink-5);
+}
+
+/* Ô GẠCH CHÂN, không viền — xem khối chú thích đầu file */
+.cfield__input {
+    width: 100%;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--line-btn);
+    background: none;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    outline: none;
+    transition: border-color .18s ease;
+}
+
+.cfield__input--area {
+    height: auto;
+    min-height: 90px;
+    padding: 10px 0;
+    resize: vertical;
+    line-height: var(--lh);
+}
+
+.cfield__input::placeholder {
+    color: var(--ink-5);
+}
+
+.cfield__input:focus {
+    border-bottom-color: var(--ink);
+}
+
+.cfield__input[aria-invalid="true"] {
+    border-bottom-color: var(--sale);
+}
+
+/* ┌─ NÚT GỬI NÉP PHẢI ────────────────────────────────────────────────────
+   │ Nút nằm TRONG `.cform__body`, mà thẻ đó là một LƯỚI. Trong lưới,
+   │ `align-self` căn theo trục DỌC — nó không đẩy nút sang phải được.
+   │ Cặp đúng là `grid-column: 1/-1` (chiếm trọn hàng) + `justify-self: end`.
+   │
+   │ Bẫy này đáng ghi: `align-self:flex-end` là câu đúng khi thẻ cha là
+   │ flex, và nó im lặng không làm gì khi thẻ cha là grid.
+   └──────────────────────────────────────────────────────────────────────── */
+.cform__submit {
+    grid-column: 1 / -1;
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-btn);
+    padding: 0 28px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-ui);
+    cursor: pointer;
+    transition: background .18s ease, color .18s ease;
+}
+
+.cform__submit:hover {
+    background: var(--bg);
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BÁO TRẠNG THÁI
+   ══════════════════════════════════════════════════════════════════════ */
+
 .alert {
-    margin-bottom: var(--space-5);
-    padding: var(--space-4) var(--space-5);
-    border-left: 3px solid var(--line-strong);
-    background: var(--surface-sunken);
-    font-size: var(--fs-body-sm);
+    padding: 12px 14px;
+    border-radius: var(--r-field);
+    background: var(--bg);
+    border-left: 2px solid var(--ink);
+    line-height: var(--lh);
 }
 
 .alert--ok {
@@ -409,35 +235,268 @@
 }
 
 .alert--err {
-    border-left-color: var(--danger);
-    color: var(--danger);
+    border-left-color: var(--sale);
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   5. MỐC BỀ NGANG — bản mẫu chia 4/8 từ `md` (768px)
-   ──────────────────────────────────────────────────────────────────────────── */
-@media (min-width: 601px) {
-    .cform__pair {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+/* ══════════════════════════════════════════════════════════════════════
+   HAI CƠ SỞ + BẢN ĐỒ
+
+   ┌──────────────────┬──────────────────────────────────┐
+   │ 2 CƠ SỞ TẠI HN   │                                  │
+   │ ┌──────────────┐ │        <iframe> bản đồ           │
+   │ │ Long Biên  ● │ │                                  │
+   │ │ 261 Ngọc Lâm │ │  ┌────────────────────────────┐  │
+   │ │ 0901 234 568 │ │  │ Long Biên · 261 Ngọc Lâm   │  │
+   │ │ Mở · Chỉ đg  │ │  └────────────────────────────┘  │
+   │ └──────────────┘ │                                  │
+   │ [Đặt lịch đo mắt]│                                  │
+   └──────────────────┴──────────────────────────────────┘
+
+   THẺ CƠ SỞ KHÔNG CÓ ẢNH, và đó là điều quan trọng nhất ở khối này: mẫu vẽ
+   thẻ cửa hàng có ảnh mặt tiền, nhưng markup ở đây không mang ảnh nào —
+   `.cstore__head` là HÀNG TÊN, không phải khung ảnh.
+
+   Nên thẻ dựng bằng HÀNG KẺ NGANG thay vì bằng ảnh: cùng ngôn ngữ với
+   .oa-rows của mẫu, và nó nói đúng thứ đang có. Cho .cstore__head một
+   `aspect-ratio` là ra một ô xám trống ôm lấy dòng chữ tên — đúng thứ đã
+   xảy ra.
+
+   CẢ THẺ LÀ MỘT <a>. Vì vậy "Chỉ đường" bên trong là <span> chứ không phải
+   <a> (HTML cấm <a> lồng <a>) — contact.js bắt cú bấm ở đó. Đừng dựng lại
+   nó thành liên kết.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cstores {
+    padding: 96px var(--edge-grid) 0;
 }
 
-@media (min-width: 768px) {
+.cstores__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+}
 
-    .cbottom__grid {
-        /* 4 | 8 của bản mẫu. Cột thông tin đứng TRƯỚC về mặt thị giác, còn
-           trong DOM form vẫn đứng trước — người dùng bàn phím gặp việc chính
-           trước, mắt vẫn thấy đúng bố cục bản mẫu. */
-        grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+.cstores__list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+.cstores__count {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 4px;
+}
+
+.cstore {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px;
+    border: 1px solid var(--line-input);
+    border-radius: var(--r-field);
+    background: var(--bg);
+    color: var(--ink);
+    transition: border-color .18s ease;
+}
+
+.cstore:hover {
+    border-color: var(--ink-6);
+    color: var(--ink);
+}
+
+/* Cơ sở ĐANG XEM trên bản đồ — viền đen, đúng luật "đánh dấu lựa chọn bằng
+   đường bao" của mẫu. */
+.cstore.is-on {
+    border-color: var(--ink);
+    box-shadow: inset 0 0 0 1px var(--ink);
+}
+
+.cstore__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.cstore__name {
+    font-size: var(--fs-ui);
+}
+
+/* Chấm tròn chỉ cơ sở đang xem. Rỗng khi không chọn, đặc khi đang chọn —
+   trạng thái này chỉ nằm ở hình dạng chấm nên markup có kèm một câu cho
+   trình đọc màn hình; đừng bỏ câu ấy đi. */
+.cstore__dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border: 1px solid var(--line-btn);
+    border-radius: 50%;
+}
+
+.cstore.is-on .cstore__dot {
+    background: var(--ink);
+    border-color: var(--ink);
+}
+
+.cstore__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: var(--ink-2);
+}
+
+.cstore__row svg {
+    flex: none;
+    margin-top: 2px;
+    color: var(--ink-5);
+}
+
+.cstore__address,
+.cstore__phone {
+    min-width: 0;
+}
+
+.cstore__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    padding-top: 8px;
+    margin-top: 2px;
+    border-top: 1px solid var(--line);
+}
+
+.cstore__hours {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+.cstore__go {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+}
+
+/* ĐIỂM TỐI DUY NHẤT CỦA TRANG — mẫu đặt một ô đen "Đặt lịch đo mắt" ở cuối
+   dãy cửa hàng, và nó là thứ mắt dừng lại sau khi đọc xong hai địa chỉ. */
+.cstores__cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--h-field);
+    margin-top: 6px;
+    border-radius: var(--r-field);
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    transition: background .18s ease;
+}
+
+.cstores__cta:hover {
+    background: #333;
+    color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BẢN ĐỒ
+
+   Dải chữ nền trắng .92 chạy dọc đáy. `pointer-events:none` cho cả dải rồi
+   bật lại cho riêng liên kết "Chỉ đường": dải phủ hết bề ngang, để nó bắt
+   chuột là khách không kéo được bản đồ nữa.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cmap {
+    position: relative;
+    min-width: 0;
+    aspect-ratio: 16 / 9;
+    min-height: 360px;
+    overflow: hidden;
+    background: var(--bg-slot);
+}
+
+/* `position:absolute; inset:0` CHỨ KHÔNG `height:100%`.
+   <iframe> mang chiều cao mặc định 150px của riêng nó, và `height:100%`
+   trên một thẻ cha lấy chiều cao từ `aspect-ratio` thì trình duyệt không
+   phải lúc nào cũng giải được — kết quả là bản đồ nhỏ xíu nằm trong một ô
+   xám lớn. Trải tuyệt đối thì không còn phụ thuộc vào việc ấy. */
+.cmap__frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+}
+
+.cmap__card {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, .92);
+    pointer-events: none;
+}
+
+.cmap__name {
+    font-size: var(--fs-body);
+}
+
+.cmap__address {
+    color: var(--ink-3);
+}
+
+.cmap__link {
+    pointer-events: auto;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 760px) {
+    .cquick {
+        padding: 0;
     }
 
     .cform {
-        grid-column: 2;
-        grid-row: 1;
+        padding: 24px var(--edge);
     }
 
-    .cquick {
-        grid-column: 1;
-        grid-row: 1;
+    .cstores {
+        padding-top: 56px;
+    }
+
+    .cstores__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cstores__count {
+        padding: 0;
+    }
+
+    /* Bản đồ thấp lại khi nó không còn phải cao bằng cột cửa hàng bên cạnh */
+    .cmap {
+        min-height: 300px;
+        aspect-ratio: 1 / 1;
     }
 }

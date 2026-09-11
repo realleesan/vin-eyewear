@@ -1,0 +1,131 @@
+/* ============================================================================
+   home.css — CSS RIÊNG CỦA TRANG CHỦ
+
+   Trang chủ dựng gần như trọn bằng nguyên thể của oa.css (.oa-band, .oa-grid,
+   .oa-card, .oa-split). File này chỉ còn ĐÚNG MỘT việc: băng trượt hero.
+
+   Hero là chỗ duy nhất trang chủ cần CSS riêng vì mẫu vẽ nó thành một ảnh
+   tĩnh, còn ở đây nó là BA CLIP VIDEO trượt ngang. Năm vạch chỉ tấm trong mẫu
+   đã nói rằng khối ấy vốn là băng trượt — nên giữ băng trượt, và cho nó đúng
+   dáng của mẫu: chữ căn giữa đáy, tiêu đề serif, hai nút viền trắng.
+   ========================================================================= */
+
+/* ══════════════════════════════════════════════════════════════════════
+   BĂNG TRƯỢT HERO
+
+   .vhero__* là HỢP ĐỒNG với assets/js/home.js — đổi tên là gãy im lặng.
+   Khung ngoài (chiều cao 100vh, margin-top âm 52px, nền) do .oa-hero--full
+   trong oa.css lo; ở đây chỉ có cơ chế trượt.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.vhero__viewport {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+/* ┌─ BA TẤM CHỒNG KHÍT, MỜ CHỒNG — KHÔNG TRƯỢT NGANG ─────────────────────
+   │ Cả ba <video> nằm đè lên nhau ở cùng một chỗ; đổi tấm là đổi opacity.
+   │
+   │ VÌ SAO KHÔNG DÙNG transform:translateX như một băng trượt thường: ba
+   │ video cùng phát, và trình duyệt phải giữ ba luồng giải mã sống cùng
+   │ lúc. Trượt ngang buộc cả ba khung hình phải được vẽ ra ở ba vị trí
+   │ khác nhau trong MỖI khung hình của hoạt ảnh; mờ chồng thì chúng đứng
+   │ yên, chỉ một con số đổi. Trên máy yếu đó là khác biệt giữa 60fps và
+   │ một cú giật thấy rõ mỗi lần sang tấm.
+   │
+   │ home.js vẫn gắn .is-gliding/.is-dragging lên .vhero__track cho cú vuốt
+   │ trên màn cảm ứng — giữ nguyên tên lớp kể cả khi luật ở đây không đọc
+   │ tới chúng, vì gỡ đi là lần sau ai thêm hiệu ứng vuốt lại vỡ đúng chỗ cũ.
+   └──────────────────────────────────────────────────────────────────────── */
+.vhero__track {
+    position: absolute;
+    inset: 0;
+}
+
+.vhero__slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    /* visibility đi kèm opacity: tấm trong suốt vẫn bắt được cú bấm, nên
+       thiếu dòng này thì hai nút của tấm đang ẨN nằm đè lên hai nút của tấm
+       đang hiện. transition trên visibility hoãn 0.7s để nó chỉ biến mất
+       SAU khi mờ hẳn. */
+    visibility: hidden;
+    transition: opacity .7s ease, visibility 0s linear .7s;
+}
+
+.vhero__slide.is-on {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .7s ease;
+}
+
+.vhero__clip {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ┌─ LỚP PHỦ TỐI ─────────────────────────────────────────────────────────
+   │ Mẫu không có lớp này vì ảnh mẫu là ảnh tĩnh đã tối sẵn ở vùng có chữ.
+   │ Video thì đổi theo từng khung hình, nên chữ trắng đặt thẳng lên nó có
+   │ lúc đọc được có lúc không.
+   │
+   │ Dải chuyển dần từ đáy lên, đặc nhất đúng ở dải 88px dưới cùng — chỗ
+   │ .oa-hero__center đặt chữ và hai nút. Phần trên ảnh gần như không bị
+   │ đụng tới, nên hình vẫn là hình.
+   └──────────────────────────────────────────────────────────────────────── */
+.vhero__veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top,
+        rgba(0, 0, 0, .55) 0%,
+        rgba(0, 0, 0, .35) 22%,
+        rgba(0, 0, 0, .08) 45%,
+        rgba(0, 0, 0, 0) 65%);
+}
+
+/* Khối chữ nằm TRÊN lớp phủ, không chìm dưới nó */
+.vhero__copy {
+    z-index: 1;
+}
+
+/* ┌─ VẠCH CHỈ TẤM ────────────────────────────────────────────────────────
+   │ home.js gắn `.is-on`, oa.css đọc `.is-active` — nối hai tên ở đây thay
+   │ vì sửa một trong hai bên: .is-active là tên của hệ thiết kế (dùng chung
+   │ với chip, tab, ô màu), .is-on là tên JavaScript đã dùng từ trước và còn
+   │ ở sáu chỗ khác trong home.js.
+   └──────────────────────────────────────────────────────────────────────── */
+.vhero__bar.is-on {
+    background: #fff;
+}
+
+/* Tắt JavaScript thì hàng vạch biến mất hẳn: chúng không bấm được, mà một
+   hàng nút chết dưới đáy hero trông như trang bị hỏng. Tấm đầu vẫn hiện và
+   vẫn phát — hero không mất gì ngoài khả năng sang tấm khác. */
+html:not(.js) .vhero__bars {
+    display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 760px) {
+    /* Hero vẫn tràn màn hình trên điện thoại — .oa-hero--full giữ 100vh và
+       KHÔNG bị @media của oa.css kéo về 4:5 (luật đó nhắm .oa-hero trần,
+       dùng cho hero bộ sưu tập và hero giới thiệu). Nhắc lại ở đây để lần
+       sau ai sửa mốc ấy biết là có hai hero khác nhau. */
+    .oa-hero--full {
+        min-height: 480px;
+    }
+
+    /* Ba vạch 90px cộng khe là 282px — vừa khít màn 320px, nhưng sát mép quá.
+       Rút còn 48px để chúng nằm gọn giữa đáy. */
+    .oa-hero__dot {
+        width: 48px;
+    }
+}

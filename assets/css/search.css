@@ -1,289 +1,323 @@
 /* ============================================================================
-   search.css — TRANG KẾT QUẢ TÌM KIẾM (/tim-kiem)
-   Markup: app/views/search/index.php
+   search.css — KẾT QUẢ TÌM KIẾM
 
-   PHASE 2 — dựng lại theo hệ thống Gentle Monster (assets/css/gm.css).
+   NẠP CHO MỌI TRANG, không theo bảng $pageStyles — và đó là điều quan trọng
+   nhất cần biết về file này.
 
-   ─────────────────────────────────────────────────────────────────────────────
-   ĐỔI GÌ SO VỚI BẢN CŨ
+   Lý do: lớp phủ tìm kiếm ở đầu trang nạp ngầm /tim-kiem?q=… rồi chèn khối
+   `.srch` của trang ấy vào BẤT KỲ trang nào (xem assets/js/search-suggest.js
+   và khối "TÌM KIẾM" trong _layout/header.php). Xếp file này theo tên view
+   thì gõ tìm kiếm trên trang chủ sẽ ra một danh sách không có kiểu nào.
 
-   Bản trước là bản Lovable còn sót lại và nó vi phạm gần hết mọi luật của hệ
-   thống mới cùng lúc:
+   ─────────────────────────────────────────────────────────────────────────
+   MẪU VẼ PHẦN LỚP PHỦ (ô tìm gạch chân, dải "Xu hướng", dải "Đã xem gần
+   đây") và những thứ ấy nằm trong oa.css: .oa-searchbar, .oa-strip.
 
-     · MƯỜI MỘT cỡ chữ gõ thẳng bằng px — 12 · 13 · 13.5 · 14 · 14.5 · 15 ·
-       17 · 18 · 19 · 22, không cỡ nào nằm trong thang
-     · thẻ có nền + viền + BO GÓC (--radius) + đổ bóng
-     · hover NHẤC THẺ LÊN (translateY(-3px) + box-shadow)
-     · `var(--container, 1600px)` — giá trị dự phòng của một bản khác hẳn
-     · một khối "NÉT CHỮ FURNISH" ở cuối file ghi đè lại chính những dòng
-       font-weight khai ở trên nó, tức là hai hệ chữ chồng lên nhau trong
-       cùng một file
-
-   Nay: không thẻ, không viền bao, không bóng, không nhấc. Ba nhóm kết quả tách
-   nhau bằng KHOẢNG TRỐNG theo thang nhịp; từng mục trong nhóm tách nhau bằng
-   một đường kẻ 1px. Mọi cỡ chữ đọc từ thang.
-
-   LƯỚI SẢN PHẨM dùng `.pgrid` — cùng lớp với trang chủ và trang danh mục.
-   View trước đây gọi `.pcard__grid`, một tên thứ BA cho cùng một lưới.
-   ============================================================================ */
+   File này lo phần CÒN LẠI mà mẫu không vẽ: danh sách kết quả. Ba nhóm —
+   sản phẩm (lưới thẻ .pgrid), câu hỏi thường gặp, và cửa hàng.
+   ========================================================================= */
 
 .srch {
-    max-width: var(--container);
-    margin-inline: auto;
-    padding: 0 var(--page-edge) var(--section-pad);
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   1. Ô TÌM LẠI
-
-   Cùng dáng với ô tìm trên đầu trang (components/header.css): gạch chân, không
-   khung, nút submit là chữ trần. Hai ô tìm của cùng một site thì phải là cùng
-   một component.
-   ──────────────────────────────────────────────────────────────────────────── */
+/* ┌─ Ô TÌM CỦA CHÍNH TRANG /tim-kiem ─────────────────────────────────────
+   │ Khác ô trong lớp phủ: trang này phải chạy được khi tắt JavaScript,
+   │ nên nó là <form> thật với một nút gửi. Dáng vẫn là ô gạch chân của
+   │ mẫu, chỉ thêm nút.
+   └──────────────────────────────────────────────────────────────────────── */
 .srch__form {
-    position: relative;
     display: flex;
     align-items: center;
-    gap: var(--space-4);
-    max-width: 620px;
-    margin-bottom: var(--rhythm-md);
+    gap: 8px;
+    width: min(600px, 100%);
+    margin: 0 auto;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line-strong);
 }
 
-/* Icon kính lúp bỏ đi — cùng lý do với ô tìm trên header: một cái icon lơ
-   lửng bên trái một gạch chân thì không neo vào đâu cả. */
 .srch__ico {
-    display: none;
+    flex: none;
+    color: var(--ink);
 }
 
 .srch__input {
-    flex: 1 1 auto;
+    flex: 1;
     min-width: 0;
-    height: var(--btn-h);
-    padding: 0;
     border: 0;
-    border-bottom: 1px solid var(--line-strong);
-    background: transparent;
-    font-family: var(--font-sans);
+    background: none;
+    outline: none;
+    font-family: inherit;
     font-size: var(--fs-body);
     color: var(--ink);
 }
 
-.srch__input:focus {
-    border-bottom-color: var(--ink);
-    border-bottom-width: 2px;
+.srch__input::placeholder {
+    color: var(--ink-5);
 }
 
 .srch__go {
     flex: none;
-    height: var(--btn-h);
-    /* Cao 48px nhưng padding 0 nên bề ngang co đúng bằng chữ "Tìm" — đo được
-       25×48, tức là hụt chiều ngang so với ngưỡng 44px của WCAG 2.5.5. Đây là
-       nút gửi của ô tìm kiếm, thứ ngón tay bấm nhiều nhất trên trang này. */
-    min-width: 44px;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--ink);
-    font-family: var(--font-sans);
-    font-size: var(--btn-fs);
-    font-weight: var(--btn-fw);
-    letter-spacing: var(--btn-ls);
+    height: var(--h-chip);
+    padding: 0 14px;
+    border: 1px solid var(--ink);
+    border-radius: var(--r-chip);
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
-    transition: opacity var(--dur) var(--ease);
-}
-
-.srch__go:hover,
-.srch__go:focus-visible {
-    opacity: .55;
-    text-decoration: underline;
 }
 
 .srch__hint {
-    font-size: var(--fs-body-sm);
-    color: var(--muted);
+    text-align: center;
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   2. NHÓM KẾT QUẢ
+/* ══════════════════════════════════════════════════════════════════════
+   MỘT NHÓM KẾT QUẢ
+   ══════════════════════════════════════════════════════════════════════ */
 
-   Khoảng cách giữa các nhóm do đây sinh ra, không phải margin của từng khối
-   bên trong: nhóm rỗng không được in ra, nên margin của nó cũng phải biến mất
-   theo — xem ghi chú đầu file view.
-   ──────────────────────────────────────────────────────────────────────────── */
-.srch__group + .srch__group {
-    margin-top: var(--rhythm-lg);
-}
-
-.srch__group .section-head {
-    margin-bottom: var(--rhythm-xs);
-}
-
-.srch__group .section-head > div {
+.srch__group {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: 20px;
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   3. HỎI ĐÁP — danh sách hàng, tách bằng đường kẻ
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 0 var(--edge);
+}
 
-   Bản trước là thẻ có nền + viền + bo góc + bóng, và hover nhấc lên 3px. Một
-   danh sách câu hỏi không phải là một dãy thẻ sản phẩm; nó là văn bản, và GM
-   trình bày văn bản bằng đường kẻ mảnh chứ không bằng hộp.
-   ──────────────────────────────────────────────────────────────────────────── */
+.section-h2,
+.section-h2--plain {
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.eyebrow {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.pill-link {
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-chip);
+    padding: 0 12px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.pill-link:hover {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   KẾT QUẢ DẠNG CHỮ  (câu hỏi thường gặp, mục chính sách)
+
+   Danh sách kẻ ngang, không phải thẻ có hộp: chúng nằm ngay dưới một lưới
+   thẻ sản phẩm, và hai khối cùng dạng hộp cạnh nhau thì mất tầng bậc.
+   ══════════════════════════════════════════════════════════════════════ */
+
 .srch__list {
-    display: grid;
-    gap: 0;
-    margin: 0;
-    padding: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 var(--edge);
     list-style: none;
+}
+
+.srchitem {
     border-top: 1px solid var(--line);
 }
 
-.srchitem__link {
-    display: block;
-    padding: var(--rhythm-xs) 0;
+.srchitem:last-child {
     border-bottom: 1px solid var(--line);
-    background: transparent;
-    text-decoration: none;
-    transition: opacity var(--dur) var(--ease);
 }
 
-.srchitem__link:hover,
-.srchitem__link:focus-visible {
-    opacity: .6;
+.srchitem__link {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 0;
+}
+
+.srchitem__link:hover .srchitem__title {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.srchitem__meta {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    color: var(--ink-5);
+}
+
+.srchitem__title {
+    font-size: var(--fs-ui);
+    color: var(--ink);
+}
+
+.srchitem__excerpt {
+    color: var(--ink-3);
+    /* Cắt đúng hai dòng: đoạn trích lấy từ nội dung chính sách có thể rất
+       dài, mà một danh sách mười kết quả với mười đoạn văn thì không còn
+       là danh sách. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .srchitem__body {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: 3px;
     min-width: 0;
 }
 
-.srchitem__meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--muted);
-}
+/* ══════════════════════════════════════════════════════════════════════
+   KẾT QUẢ CỬA HÀNG
+   ══════════════════════════════════════════════════════════════════════ */
 
-.srchitem__title {
-    font-size: var(--fs-h4);
-    font-weight: 400;
-    line-height: 1.3;
-    letter-spacing: var(--tracking-snug);
-    color: var(--ink);
-}
-
-.srchitem__excerpt {
-    max-width: 80ch;
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-    color: var(--muted);
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
-   4. CƠ SỞ — cùng ngôn ngữ với danh sách hỏi đáp, xếp thành lưới
-   ──────────────────────────────────────────────────────────────────────────── */
 .srch__stores {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--grid-gap) var(--rhythm-sm);
-    margin: 0;
-    padding: 0;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--gap-tight);
+    padding: 0 var(--edge);
     list-style: none;
 }
 
 .srchstore {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--rhythm-xs) 0;
-    background: transparent;
-    border: 0;
-    border-top: 1px solid var(--line);
+    gap: 4px;
+    padding: 16px;
+    border-radius: var(--r-field);
+    background: var(--bg-soft);
 }
 
 .srchstore__name {
-    margin: 0;
-    font-size: var(--fs-h5);
-    font-weight: 400;
-    letter-spacing: var(--tracking-snug);
-    color: var(--ink);
+    font-size: var(--fs-ui);
 }
 
 .srchstore__addr,
 .srchstore__phone {
-    margin: 0;
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-    color: var(--muted);
-}
-
-.srchstore__phone {
-    font-weight: 400;
-    color: var(--ink);
+    color: var(--ink-3);
 }
 
 .srchstore__go {
-    margin-top: var(--space-2);
-    font-size: var(--fs-label);
-    font-weight: 500;
-    letter-spacing: var(--tracking-label);
+    margin-top: 6px;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
     text-transform: uppercase;
-    color: var(--ink);
     text-decoration: underline;
-    text-underline-offset: 3px;
+    text-underline-offset: 2px;
 }
 
-.srchstore__go:hover {
-    opacity: .55;
-}
+/* ══════════════════════════════════════════════════════════════════════
+   KHÔNG TÌM THẤY GÌ
+   ══════════════════════════════════════════════════════════════════════ */
 
-/* ────────────────────────────────────────────────────────────────────────────
-   5. KHÔNG CÓ KẾT QUẢ
-
-   Cùng dáng với `.plist__empty` (components/ui.css) và `.catempty`
-   (category.css): chữ đặt giữa một khoảng trống rộng, không nền, không viền.
-   Ba trạng thái rỗng của site nay là một.
-   ──────────────────────────────────────────────────────────────────────────── */
 .srch__empty {
-    padding: var(--rhythm-lg) var(--space-6);
-    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 96px var(--edge) 120px;
     text-align: center;
 }
 
 .srch__empty-title {
-    margin: 0 0 var(--space-3);
-    font-size: var(--fs-h4);
-    font-weight: 400;
-    letter-spacing: var(--tracking-snug);
-    color: var(--ink);
+    font-size: var(--fs-h);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
 .srch__empty-note {
-    margin: 0;
-    font-size: var(--fs-body-sm);
-    line-height: 1.7;
-    color: var(--muted);
+    color: var(--ink-3);
+    max-width: 420px;
+    text-wrap: pretty;
 }
 
-.srch__empty-note a {
-    color: var(--ink);
+/* ══════════════════════════════════════════════════════════════════════
+   TRONG LỚP PHỦ ĐẦU TRANG
+
+   Cùng khối .srch, nhưng nó đang nằm trong một bảng rộng 600px chứ không
+   phải trên một trang rộng 1440px. Bỏ hết lề ngang và rút khe lại —
+   .oa-panel__inner bên ngoài đã lo phần lề.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.hpop__panel .srch,
+[data-search-results] .srch {
+    gap: 28px;
+}
+
+.hpop__panel .section-head,
+.hpop__panel .srch__list,
+.hpop__panel .srch__stores,
+[data-search-results] .section-head,
+[data-search-results] .srch__list,
+[data-search-results] .srch__stores {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Ô tìm của trang bị ẩn trong lớp phủ: bảng đã có ô tìm riêng ở trên, và
+   hai ô tìm chồng nhau là hai chỗ gõ cho cùng một việc. */
+.hpop__panel .srch__form,
+[data-search-results] .srch__form {
+    display: none;
+}
+
+.hpop__panel .section-h2,
+[data-search-results] .section-h2 {
+    font-size: var(--fs-body);
     font-weight: 400;
-    text-decoration: underline;
-    text-underline-offset: 3px;
 }
 
-@media (max-width: 600px) {
-    .srch__form {
-        flex-wrap: wrap;
+/* Lưới thẻ trong lớp phủ chỉ còn hai cột — 600px chia bốn là mỗi thẻ 135px,
+   không đủ cho tên sản phẩm và hai nút. */
+.hpop__panel .pgrid,
+[data-search-results] .pgrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0;
+    gap: 24px 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 560px) {
+    .srch__empty {
+        padding: 64px var(--edge) 80px;
+    }
+
+    .hpop__panel .pgrid,
+    [data-search-results] .pgrid {
+        grid-template-columns: minmax(0, 1fr);
     }
 }

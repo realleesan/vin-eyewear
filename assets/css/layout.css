@@ -152,6 +152,42 @@
 
    /* Màu trạng thái — lấy theo bản Lovable, đo tương phản trên nền pearl */
    --danger: #c0392b;
+
+   /* ┌─ TÊN TOKEN CỦA HỆ MỚI — CHỈ ĐỂ KHU QUẢN TRỊ DÙNG CHUNG confirm.css ──
+      │
+      │ Khu bán hàng đã chuyển sang assets/css/oa.css và KHÔNG nạp file này
+      │ nữa. Khu quản trị vẫn nạp nó, và hai khu dùng chung đúng một file
+      │ component: assets/css/components/confirm.css (hộp "bạn có chắc
+      │ không"), vì hộp ấy có mặt ở cả hai bên.
+      │
+      │ File đó viết bằng tên token của hệ MỚI. Không có khối này thì mọi
+      │ var() trong nó trả về rỗng, cả luật bị bỏ, và hộp xác nhận ở khu
+      │ quản trị mất sạch kiểu dáng — hỏng im lặng, chỉ lộ ra khi ai đó
+      │ bấm nút Xoá.
+      │
+      │ Giá trị trỏ về đúng bảng màu CỦA KHU QUẢN TRỊ, không chép từ oa.css:
+      │ mục đích là để một file dùng chung chạy được ở hai nơi, không phải
+      │ để kéo thiết kế mới sang khu quản trị.
+      │
+      │ Thêm một component dùng chung nữa thì bổ sung token của nó vào đây.
+      └───────────────────────────────────────────────────────────────────── */
+   --bg: var(--surface-raised);
+   --bg-panel: var(--surface-sunken);
+   --bg-soft: var(--surface-sunken);
+   --ink-2: var(--muted);
+   --ink-3: var(--muted);
+   --ink-5: var(--brand-light);
+   --ink-6: var(--brand-light);
+   --line-input: var(--line-strong);
+   --line-btn: var(--line-strong);
+   --line-btn-2: var(--line-strong);
+   --sale: var(--danger);
+   --r-field: var(--radius);
+   --h-field: 44px;
+   --fs-ui: var(--fs-body);
+   --lh: 1.5;
+   --ls: .06em;
+
    /* viền + chữ báo lỗi form — 5.06:1 */
    --success: #27ae60;
    /* chấm trạng thái camera đang chạy — 6.41:1 trên ink */
