@@ -14,7 +14,7 @@
    BĂNG TRƯỢT HERO
 
    .vhero__* là HỢP ĐỒNG với assets/js/home.js — đổi tên là gãy im lặng.
-   Khung ngoài (chiều cao 85dvh, margin-top âm 52px, nền) do .oa-hero--full
+   Khung ngoài (chiều cao 78dvh, margin-top âm --hdr-h, nền) do .oa-hero--full
    trong oa.css lo; ở đây chỉ có cơ chế trượt.
    ══════════════════════════════════════════════════════════════════════ */
 
@@ -143,16 +143,15 @@ html:not(.js) .vhero__bars {
    ══════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 760px) {
-    /* Hero vẫn chiếm gần trọn màn hình trên điện thoại — .oa-hero--full giữ
-       85dvh và KHÔNG bị @media của oa.css kéo về 4:5 (luật đó nhắm
+    /* Hero vẫn chiếm phần lớn màn hình trên điện thoại — .oa-hero--full giữ
+       78dvh và KHÔNG bị @media của oa.css kéo về 4:5 (luật đó nhắm
        .oa-hero trần, dùng cho hero bộ sưu tập và hero giới thiệu). Nhắc lại
        ở đây để lần sau ai sửa mốc ấy biết là có hai hero khác nhau.
 
-       Sàn hạ xuống 420: màn 390×844 trừ thanh địa chỉ còn ~700px, 85dvh của
-       nó là ~595 — sàn 480 không chạm tới, nhưng máy nhỏ hơn (iPhone SE,
-       568px) thì 85dvh chỉ còn ~440 và sàn 480 sẽ ép hero cao hơn màn hình. */
+       Sàn 390: iPhone SE cao 568px, 78dvh của nó là ~443 — sàn phải thấp hơn
+       con số đó, nếu không nó đè lên tỉ lệ và hero lại cao gần trọn màn. */
     .oa-hero--full {
-        min-height: 420px;
+        min-height: 390px;
     }
 
     /* Ba vạch 90px cộng khe là 282px — vừa khít màn 320px, nhưng sát mép quá.
