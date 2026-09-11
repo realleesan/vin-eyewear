@@ -1448,6 +1448,41 @@ textarea.oa-field {
     font-size: var(--fs-ui);
 }
 
+/* ┌─ CỠ ICON LẤY TỪ CỠ CHỮ NAV, KHÔNG GÕ CỨNG ───────────────────────────
+   │ Ba icon (kính lúp · tài khoản · túi) và nút hamburger mang width/height
+   │ GÕ CỨNG trong thuộc tính HTML. Thuộc tính HTML thì --oa-scale không với
+   │ tới — nên khi phóng thang chữ lên 1.4, chữ nav đi từ 11 lên 15,4px còn
+   │ icon đứng im ở 14–15px. Tỉ lệ icon/chữ tụt từ 1,3 xuống 0,94 và icon
+   │ trông bé hẳn so với hàng chữ bên cạnh.
+   │
+   │ Khai bằng `em` ở đây thì chúng bám vĩnh viễn vào cỡ chữ của thanh nav,
+   │ kể cả khi đổi --oa-scale về sau. CSS width/height đè lên thuộc tính HTML
+   │ nên không phải sửa một dòng markup nào.
+   │
+   │ HỆ SỐ 1.3 là tỉ lệ của chính mẫu (11px chữ ↔ 14–15px icon). Icon nét
+   │ mảnh đọc nhẹ hơn chữ cùng cỡ, nên để đúng 1em là nhìn ra vẫn bé.
+   │
+   │ Cả ba VỀ CÙNG MỘT CỠ. Mẫu vẽ kính lúp 14 còn hai cái kia 15 — lệch 1px
+   │ ở cỡ đó không ai thấy, nhưng phóng lên là thành lệch 1,4px giữa ba icon
+   │ xếp cạnh nhau.
+   │
+   │ Chọn con `> svg` chứ không `.oa-header__actions svg`: bảng tìm kiếm và
+   │ ngăn giỏ nằm BÊN TRONG cụm này và có icon riêng của chúng (kính lúp
+   │ trong ô tìm, logo Google…). Luật lỏng tay sẽ phóng luôn cả những cái đó.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-header__btn > svg,
+.oa-header__burger > svg {
+    width: 1.3em;
+    height: 1.3em;
+
+    /* `flex: none` BẮT BUỘC. Ba nút là flex item của .oa-header__actions, và
+       svg bên trong chúng cũng là flex item. Ở màn hẹp, wordmark giữa đẩy cột
+       phải co lại và flex bóp luôn icon — đo trên màn 390px: 20px tụt còn
+       16,8px, trong khi hamburger bên trái (cột rộng rãi) vẫn đủ 20. Ba icon
+       lệch nhau giữa hai bề ngang màn hình mà không rõ vì sao. */
+    flex: none;
+}
+
 .oa-header__btn {
     display: flex;
     align-items: center;
@@ -1486,8 +1521,12 @@ textarea.oa-field {
 }
 
 /* Nút mở ngăn kéo trên mobile — ẩn ở desktop, xem @media cuối file */
+/* font-size ở đây KHÔNG phải để in chữ (nút chỉ có icon) — nó là GỐC cho
+   đơn vị `em` của icon bên trong. Nút hamburger nằm ngoài .oa-header__actions
+   nên không thừa hưởng --fs-ui từ đó. */
 .oa-header__burger {
     display: none;
+    font-size: var(--fs-ui);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2951,8 +2990,21 @@ body.is-search-open {
         cursor: pointer;
     }
 
+    /* ┌─ WORDMARK PHẢI NHỎ LẠI Ở MÀN HẸP ────────────────────────────────
+       │ Thanh nav là lưới `minmax(0,1fr) auto minmax(0,1fr)`: cột GIỮA lấy
+       │ đúng bề ngang wordmark và bóp hai cột bên. Wordmark quá rộng thì nó
+       │ không xuống dòng mà ĐÈ LÊN ba icon bên phải.
+       │
+       │ Sau khi phóng thang chữ lên 1.4, "VIN EYEWEAR" ở 22,4px kèm giãn
+       │ .12em rộng ~215px — cộng nút hamburger, ba icon, khe và lề thì vượt
+       │ 390px. Nên ở đây thu cả hai: cỡ chữ VÀ độ giãn.
+       │
+       │ 13 × scale = 18,2px, giãn .08em → wordmark ~160px, còn dư chỗ ở cả
+       │ màn 360px. Vẫn là wordmark IN HOA giãn rộng, chỉ bớt phô trương.
+       └──────────────────────────────────────────────────────────────────── */
     .oa-header__mark {
-        font-size: var(--fs-mark);
+        font-size: calc(13px * var(--oa-scale));
+        letter-spacing: .08em;
     }
 
     .oa-header__actions {
