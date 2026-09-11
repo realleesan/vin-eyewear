@@ -67,31 +67,75 @@
     if (!top) return;
 
     /* --------------------------------------------------------------------
-       NÚT LUÔN HIỆN — ĐÃ BỎ NGƯỠNG THEO VỊ TRÍ CUỘN
+       NGƯỠNG HIỆN NÚT — ĐO THEO QUÃNG CUỘN CỦA CHÍNH TRANG
 
-       Bản trước chỉ hiện nút khi đã cuộn quá MỘT MÀN HÌNH RƯỠI
-       (`window.innerHeight * 1.5`). Hai vấn đề với con số đó:
+       Yêu cầu: ở đỉnh trang thì ẩn, cuộn xuống thì hiện.
 
-       1. Nó cao hơn cả chiều cuộn của nhiều trang. Đo trên trang chủ ở khung
-          nhìn 900px: trang cao 1827px nên cuộn hết cỡ cũng chỉ tới scrollY
-          927 — trong khi ngưỡng là 1350. Nút KHÔNG BAO GIỜ hiện ra. Nó cũng
-          không báo lỗi gì; chỉ là một nút không ai từng thấy.
+       ═══ ĐỪNG QUAY LẠI MỘT CON SỐ CỨNG ═══
 
-       2. Nút hiện rồi biến mất theo vị trí cuộn làm cụm bốn nút góc phải lúc
-          có lúc không — thứ mà người dùng để ý ra ngay.
+       Bản đầu dùng `window.innerHeight * 1.5`. Nó hỏng im lặng trên mọi trang
+       ngắn, vì ngưỡng có thể CAO HƠN CẢ QUÃNG CUỘN CÓ THẬT. Đo trên trang chủ
+       ở khung nhìn 900px: trang cao 1827 nên cuộn hết cỡ cũng chỉ tới 927,
+       trong khi ngưỡng là 1350 — nút không bao giờ hiện, và không có gì báo.
 
-       Nên nay hiện thẳng, không điều kiện. Cái giá: ở đúng đỉnh trang, bấm
-       vào nút không đưa đi đâu cả (đã ở đỉnh rồi). Chấp nhận được — nó là
-       một nút không gây hại, còn một nút không bao giờ xuất hiện thì vô dụng
-       hoàn toàn.
+       Cùng cái bẫy ấy với '300px', '400px' hay 'một màn hình': trang nào ngắn
+       hơn ngưỡng là nút chết.
 
-       VẪN GỠ `hidden` BẰNG JAVASCRIPT chứ không bỏ thuộc tính đó khỏi HTML:
-       không có JavaScript thì nút này không làm được gì (cả hành vi cuộn nằm
-       ở handler bên dưới), và một nút chết nằm sẵn ở góc màn hình chỉ tổ gây
-       bấm hụt. Xem chú thích cạnh #fabTop trong _layout/floating-actions.php.
+       Nên ngưỡng lấy theo CHÍNH QUÃNG CUỘN của trang: một phần tư quãng ấy,
+       chặn trên ở 600px cho trang rất dài.
+
+         trang dài   (quãng 5000) -> 600   nút hiện sau khi cuộn một đoạn thật
+         trang chủ   (quãng  927) -> 232   hiện sớm hơn, vì trang vốn ngắn
+         trang ngắn  (quãng  100) ->  25   vẫn hiện được
+         không cuộn được (quãng 0) ->  0   scrollY luôn 0 nên vẫn ẩn, đúng ý
+
+       KHÔNG đặt sàn tối thiểu (kiểu `Math.max(120, ...)`): sàn chính là thứ
+       dựng lại cái bẫy — trang có quãng cuộn 100px mà sàn 120 thì lại tắc.
+
+       Đọc scrollHeight mỗi lần cuộn chứ không đo sẵn một lần: ảnh tải xong,
+       mục gập bung ra, băng sản phẩm dựng thêm — chiều cao trang đổi suốt.
        -------------------------------------------------------------------- */
 
-    top.hidden = false;
+    function nguong() {
+        var quangCuon = Math.max(
+            0,
+            document.documentElement.scrollHeight - window.innerHeight
+        );
+
+        return Math.min(quangCuon * 0.25, 600);
+    }
+
+    var shown   = false;
+    var ticking = false;
+
+    function sync() {
+        var next = window.scrollY > nguong();
+        if (next === shown) return;
+        shown = next;
+        top.hidden = !next;
+    }
+
+    window.addEventListener('scroll', function () {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(function () {
+            sync();
+            ticking = false;
+        });
+    }, { passive: true });
+
+    /* Chiều cao trang còn đổi SAU khi tải xong — ảnh lazy vào chỗ, font thay
+       thế đổi số dòng. Ngưỡng tính theo chiều cao nên phải đo lại, nếu không
+       một trang vừa dài ra vẫn giữ ngưỡng cũ tính trên chiều cao lúc trống. */
+    window.addEventListener('resize', sync, { passive: true });
+
+    if (window.ResizeObserver) {
+        new ResizeObserver(sync).observe(document.documentElement);
+    }
+
+    /* Mở trang ở giữa chừng (tải lại trang đã cuộn, link có #anchor) vẫn phải
+       thấy nút ngay, không đợi tới lần cuộn đầu tiên. */
+    sync();
 
     top.addEventListener('click', function () {
         /*
