@@ -32,17 +32,29 @@
 }
 
 :root {
-    /* ┌─ THANG PHÓNG ────────────────────────────────────────────────────
-       │ Mẫu vẽ ở 1:1 với cỡ chữ nhỏ theo lối nhà mốt (thân bài 10px). Toàn
-       │ bộ thang chữ bên dưới nhân với số này, nên muốn cả site to lên đều
-       │ thì đổi 1 thành 1.2 và KHÔNG sửa gì khác.
+    /* ┌─ THANG PHÓNG — MỘT SỐ, CẢ SITE ĐI THEO ──────────────────────────
+       │ Mẫu vẽ ở 1:1 với cỡ chữ rất nhỏ theo lối nhà mốt: thân bài 10px,
+       │ nhãn 9px. Đo trên trang thật thì phần lớn chữ rơi vào 9–10px — dưới
+       │ ngưỡng đọc thoải mái, và tiếng Việt còn thiệt hơn nữa vì dấu thanh
+       │ chồng lên dấu mũ cần chiều cao mới tách ra được.
        │
-       │ Để nguyên 1 = giống mẫu 100%.
+       │ 1.4 đưa thân bài về 14px. Con số ấy không lấy từ trên trời: chính
+       │ repo này từng chốt "chữ thân về 13–14px" ở commit 224fe78, trước khi
+       │ dựng lại theo mẫu.
        │
-       │ Chỉ THANG CHỮ ăn theo, không phải lề và chiều cao: phóng luôn cả
-       │ bố cục thì lưới 4 cột vỡ sang cuộn ngang trên laptop 1366px.
+       │       --oa-scale   thân bài   nhãn    tiêu đề trang
+       │            1         10px     9px        13px      (đúng mẫu)
+       │          1.4         14px    12.6px      18.2px    (đang dùng)
+       │
+       │ ĐỔI ĐÚNG MỘT SỐ NÀY, không sửa gì khác. Cả thang chữ lẫn chiều cao
+       │ ô điều khiển (chip, tab, nút, ô nhập) đều nhân với nó — xem khối
+       │ CHIỀU CAO Ô ĐIỀU KHIỂN bên dưới.
+       │
+       │ KHÔNG ăn theo: lề ngang, khe lưới, chiều cao thanh đầu trang, bề
+       │ ngang ngăn kéo. Phóng cả những số đó thì lưới 4 cột vỡ sang cuộn
+       │ ngang trên laptop 1366px.
        └────────────────────────────────────────────────────────────────── */
-    --oa-scale: 1;
+    --oa-scale: 1.4;
 
     /* ══ MÀU ══════════════════════════════════════════════════════════ */
 
@@ -112,6 +124,13 @@
        │   --fs-mark  18px   wordmark trên thanh đầu trang
        │   --fs-home  22px   tiêu đề hero trang chủ (font serif)
        └────────────────────────────────────────────────────────────────── */
+    /* Hai cỡ DƯỚI --fs-micro. Chúng chỉ dùng cho huy hiệu, số đếm treo và
+       nhãn nhỏ nhất — nhưng phải nằm trong thang, không được gõ cứng: gõ
+       cứng thì phóng --oa-scale lên, cả site to ra mà riêng chúng đứng im và
+       teo lại thành vết bẩn. */
+    --fs-nano: calc(8px * var(--oa-scale));
+    --fs-pico: calc(7px * var(--oa-scale));
+
     --fs-micro: calc(9px * var(--oa-scale));
     --fs-body: calc(10px * var(--oa-scale));
     --fs-ui: calc(11px * var(--oa-scale));
@@ -143,17 +162,31 @@
     --gap-row: 48px;        /* khe ngang giữa hàng trong lưới sản phẩm */
     --gap-tight: 12px;      /* lưới ảnh chiến dịch, lưới cửa hàng */
 
-    --r-pill: 18px;         /* nút cao 36 */
-    --r-pill-sm: 16px;      /* nút cao 32 */
-    --r-chip: 13px;         /* chip cao 26 */
-    --r-tab: 14px;          /* tab cao 28 */
-    --r-field: 6px;         /* ô nhập, nút khối cao 44 */
+    /* ┌─ CHIỀU CAO Ô ĐIỀU KHIỂN — CO GIÃN CÙNG CHỮ ──────────────────────
+       │ Đây là nhóm số DUY NHẤT ngoài thang chữ được nhân với --oa-scale,
+       │ và nó bắt buộc phải thế: một cái chip cao 26px không chứa nổi dòng
+       │ chữ 15px. Chiều cao của chip/tab/nút/ô nhập là số ĐI THEO CHỮ, không
+       │ phải số của bố cục.
+       │
+       │ Bán kính đi kèm chiều cao: nút viên cần bán kính bằng ĐÚNG một nửa
+       │ chiều cao. Phóng chiều cao mà quên bán kính là nút viên hoá hình chữ
+       │ nhật bo góc.
+       │
+       │ KHÔNG phóng: lề ngang (--edge), khe lưới (--gap-*), chiều cao thanh
+       │ đầu trang (--hdr-h), bề ngang ngăn kéo. Đó mới là số của bố cục —
+       │ phóng chúng thì lưới 4 cột vỡ sang cuộn ngang trên laptop 1366px.
+       └──────────────────────────────────────────────────────────────────── */
+    --r-pill: calc(18px * var(--oa-scale));      /* = ½ --h-btn    */
+    --r-pill-sm: calc(16px * var(--oa-scale));   /* = ½ --h-btn-sm */
+    --r-chip: calc(13px * var(--oa-scale));      /* = ½ --h-chip   */
+    --r-tab: calc(14px * var(--oa-scale));       /* = ½ --h-tab    */
+    --r-field: calc(6px * var(--oa-scale));      /* góc bo, không phải viên */
 
-    --h-btn: 36px;
-    --h-btn-sm: 32px;
-    --h-chip: 26px;
-    --h-tab: 28px;
-    --h-field: 44px;
+    --h-btn: calc(36px * var(--oa-scale));
+    --h-btn-sm: calc(32px * var(--oa-scale));
+    --h-chip: calc(26px * var(--oa-scale));
+    --h-tab: calc(28px * var(--oa-scale));
+    --h-field: calc(44px * var(--oa-scale));
 
     /* ┌─ Z-INDEX ────────────────────────────────────────────────────────
        │ Mẫu dùng đúng năm mức. Ghi ra thành token vì thứ tự giữa chúng là
@@ -676,7 +709,7 @@ ol[role="list"],
     border-radius: 3px;
     background: var(--zalo);
     color: #fff;
-    font-size: 6px;
+    font-size: calc(6px * var(--oa-scale));
     font-weight: 700;
     letter-spacing: 0;
     display: flex;
@@ -789,13 +822,13 @@ ol[role="list"],
 
 /* Số nhỏ treo sau nhãn tab: Bag⁰, Recently Viewed³ */
 .oa-sup {
-    font-size: 7px;
+    font-size: var(--fs-pico);
     margin-left: 1px;
     vertical-align: super;
 }
 
 .oa-sup--lg {
-    font-size: 8px;
+    font-size: var(--fs-nano);
     margin-left: 2px;
 }
 
@@ -936,7 +969,7 @@ textarea.oa-field {
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: 8px;
+    font-size: var(--fs-nano);
     line-height: 1;
 }
 
@@ -976,7 +1009,7 @@ textarea.oa-field {
     width: 14px;
     height: 14px;
     border-radius: 3px;
-    font-size: 9px;
+    font-size: var(--fs-micro);
     margin-top: 1px;
 }
 
@@ -1167,7 +1200,7 @@ textarea.oa-field {
     align-items: center;
     background: var(--ink);
     color: #fff;
-    font-size: 8px;
+    font-size: var(--fs-nano);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     white-space: nowrap;
@@ -1442,7 +1475,7 @@ textarea.oa-field {
     border-radius: 7px;
     background: var(--ink);
     color: #fff;
-    font-size: 8px;
+    font-size: var(--fs-nano);
     line-height: 13px;
     text-align: center;
 }
@@ -2873,7 +2906,7 @@ body.is-search-open {
     }
 
     .barebar__help {
-        font-size: 8px;
+        font-size: var(--fs-nano);
     }
 }
 

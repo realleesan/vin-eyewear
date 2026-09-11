@@ -510,7 +510,7 @@ html.js .cofallback {
     display: inline-flex;
     align-items: center;
     border: 1px solid var(--line-input);
-    font-size: 8px;
+    font-size: var(--fs-nano);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--ink-3);
@@ -1320,7 +1320,7 @@ html.js .cofallback {
     align-items: center;
     background: var(--ink);
     color: #fff;
-    font-size: 8px;
+    font-size: var(--fs-nano);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
 }

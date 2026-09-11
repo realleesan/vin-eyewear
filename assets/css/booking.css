@@ -277,8 +277,12 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
-    width: 52px;
-    height: 56px;
+    /* Co giãn cùng --oa-scale: đây là Ô CHỨA CHỮ, không phải số của bố cục.
+       Để cứng 52×56 thì ở thang 1.4 nhãn "HÔM NAY" (11,2px) phải xuống hai
+       dòng và ô trông bị bó. Bảy ô cộng khe vượt bề ngang màn hình cũng không
+       sao — .bkdays vốn cuộn ngang. */
+    width: calc(52px * var(--oa-scale));
+    height: calc(56px * var(--oa-scale));
     border: 1px solid var(--line-input);
     border-radius: var(--r-field);
     background: var(--bg);
@@ -311,7 +315,7 @@
 }
 
 .bkday__wd {
-    font-size: 8px;
+    font-size: var(--fs-nano);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }

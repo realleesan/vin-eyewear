@@ -214,7 +214,7 @@
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: 8px;
+    font-size: var(--fs-nano);
     line-height: 1;
 }
 

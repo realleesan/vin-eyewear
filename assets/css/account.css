@@ -99,7 +99,7 @@
 
 /* Số đơn / số lịch hẹn treo sau nhãn — cùng dáng .oa-sup của mẫu */
 .acct-nav__count {
-    font-size: 7px;
+    font-size: var(--fs-pico);
     vertical-align: super;
     margin-left: 1px;
 }
@@ -524,7 +524,7 @@ select.acct-field__input {
     height: 18px;
     padding: 0 7px;
     border: 1px solid var(--ink);
-    font-size: 8px;
+    font-size: var(--fs-nano);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     white-space: nowrap;
@@ -819,7 +819,7 @@ select.acct-field__input {
     height: 18px;
     border: 1px solid var(--ink);
     border-radius: 50%;
-    font-size: 9px;
+    font-size: var(--fs-micro);
 }
 
 .acct-order__thanks {
@@ -918,7 +918,7 @@ select.acct-field__input {
 }
 
 .acct-track__time {
-    font-size: 8px;
+    font-size: var(--fs-nano);
     color: var(--ink-5);
     font-variant-numeric: tabular-nums;
 }

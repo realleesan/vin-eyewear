@@ -77,7 +77,7 @@
     align-items: center;
     background: var(--sale);
     color: #fff;
-    font-size: 8px;
+    font-size: var(--fs-nano);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
 }
@@ -561,7 +561,7 @@
 }
 
 .pdsize__label {
-    font-size: 8px;
+    font-size: var(--fs-nano);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     color: var(--ink-5);
