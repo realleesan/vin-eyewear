@@ -382,6 +382,32 @@ ol[role="list"],
     list-style: none;
 }
 
+/* ┌─ [hidden] PHẢI ĐƯỢC KHAI LẠI Ở ĐÂY — ĐỪNG XOÁ ────────────────────────
+   │
+   │ Trình duyệt có sẵn `[hidden] { display: none }`, NHƯNG luật ấy nằm trong
+   │ bộ kiểu MẶC ĐỊNH của trình duyệt — và bất kỳ khai báo `display` nào của
+   │ tác giả cũng thắng nó, bất kể độ ưu tiên chọn tử. Nghĩa là mọi phần tử
+   │ nào được một lớp đặt `display` thì `el.hidden = true` KHÔNG giấu nó đi.
+   │
+   │ File này đặt `display` cho hàng trăm lớp, nên cái bẫy ấy phủ gần như cả
+   │ site. Hai chỗ đã đo được là nó hỏng thật:
+   │
+   │   · #fabTop (.fab__btn, display:inline-flex) — nút "lên đầu trang" đứng
+   │     lì ở đỉnh trang dù floating.js đã đặt hidden.
+   │   · Bộ lọc /chinh-sach — gõ một từ khoá không khớp gì, policy.js đặt
+   │     hidden lên 6 nhóm và 36 mục, và cả 42 vẫn hiện nguyên.
+   │
+   │ `!important` ở đây là ĐÚNG CHỖ, không phải cách chữa cháy: [hidden] là
+   │ lời khẳng định "phần tử này không có mặt", nó phải thắng mọi luật trình
+   │ bày. Đây cũng chính là luật mà normalize.css có sẵn vì cùng lý do.
+   │
+   │ Hệ quả kèm theo: từ nay không cần viết `.abc[hidden] { display: none }`
+   │ cho từng chỗ nữa. Vài luật kiểu đó còn trong file là dư, không sai.
+   └──────────────────────────────────────────────────────────────────────── */
+[hidden] {
+    display: none !important;
+}
+
 /* Chỉ dành cho trình đọc màn hình */
 .sr-only,
 .visually-hidden {
