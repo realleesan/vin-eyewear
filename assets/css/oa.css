@@ -2034,7 +2034,10 @@ textarea.oa-field {
 .oa-footer {
     flex: none;
     background: var(--bg-soft);
-    padding: 72px var(--edge) 32px;
+    /* Đệm dưới 64 chứ không 32. 32px là con số của lúc còn HÀNG BẢN QUYỀN nằm
+       dưới cùng — nó tự mang theo khoảng thở của riêng nó. Bỏ hàng ấy mà giữ
+       32 thì bốn cột kết thúc sát mép dưới, chân trang trông như bị cắt cụt. */
+    padding: 72px var(--edge) 64px;
     font-size: var(--fs-body);
     line-height: var(--lh);
     color: var(--ink);
@@ -2129,35 +2132,6 @@ textarea.oa-field {
 
 .oa-footer__channel span {
     white-space: nowrap;
-}
-
-/* Hàng icon mạng xã hội, có hai đường kẻ chạy ra hai mép */
-.oa-footer__social {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 32px;
-}
-
-.oa-footer__rule {
-    height: 1px;
-    background: var(--line-input);
-}
-
-.oa-footer__icons {
-    display: flex;
-    gap: 28px;
-    align-items: center;
-}
-
-.oa-footer__legal {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    font-size: var(--fs-micro);
-    color: var(--ink-3);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2594,7 +2568,7 @@ body.is-search-open {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   HAI MẨU CÒN LẠI CỦA CHÂN TRANG
+   MẨU CÒN LẠI CỦA CHÂN TRANG
    ══════════════════════════════════════════════════════════════════════ */
 
 .oa-footer__helptitle {
@@ -2602,17 +2576,6 @@ body.is-search-open {
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
-}
-
-.oa-footer__lang {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.oa-footer__lang .is-active {
-    color: var(--ink);
-    font-weight: 700;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2677,10 +2640,22 @@ body.is-search-open {
     padding-right: 36px;
 }
 
+/* ┌─ .btn-inline LÀ BỔ NGỮ BỐ CỤC, KHÔNG PHẢI KIỂU CHỮ ───────────────────
+   │ Đã đối chiếu cả 12 chỗ dùng (ar/tryon, order/success, about, errors/403):
+   │ KHÔNG chỗ nào nó đứng một mình — luôn ghép với .btn-primary hoặc
+   │ .btn-outline. Trong thiết kế cũ nó chỉ có nghĩa "nút nằm inline, không
+   │ chiếm trọn hàng".
+   │
+   │ Bản trước ở đây dịch nó thành liên kết chữ gạch chân màu --ink. Vì nó
+   │ đứng SAU .btn-primary trong file, `color: var(--ink)` đè lên `color:#fff`
+   │ của nút đặc — và ra một viên đen KHÔNG CÓ CHỮ. Chữ vẫn ở đó, chỉ là đen
+   │ trên đen.
+   │
+   │ Muốn một liên kết chữ gạch chân thì dùng .oa-u.
+   └──────────────────────────────────────────────────────────────────────── */
 .btn-inline {
-    color: var(--ink);
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    display: inline-flex;
+    width: auto;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2888,10 +2863,10 @@ body.is-search-open {
     color: #fff;
 }
 
-.btn-inline {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
+/* .btn-inline KHÔNG khai ở đây nữa — nó đã có luật riêng ở khối "BA TÊN NÚT
+   CỦA THIẾT KẾ CŨ" bên trên, và nó là bổ ngữ BỐ CỤC chứ không phải kiểu chữ.
+   Hai luật cùng tên ở hai chỗ trong một file là cách chắc chắn để sửa một
+   chỗ rồi tưởng đã xong — đúng thứ vừa xảy ra. */
 
 @media (max-width: 760px) {
     .error-page,
@@ -3029,12 +3004,8 @@ body.is-search-open {
     }
 
     .oa-footer {
-        padding: 48px var(--edge) 24px;
+        padding: 48px var(--edge) 40px;
         gap: 32px;
-    }
-
-    .oa-footer__social {
-        gap: 16px;
     }
 
     .oa-empty--tall {

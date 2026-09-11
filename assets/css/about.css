@@ -319,9 +319,13 @@
     margin-top: 20px;
 }
 
+/* .about-start__alt nằm TRÊN một nút (.btn-outline), không phải trên một
+   dòng chữ phụ — xem about/index.php dòng 180. Cho nó `color`/`font-size`
+   riêng là đè lên kiểu chữ của nút: chữ tụt xuống 12,6px và hoá xám nhạt
+   giữa một cặp nút cân nhau. Giữ tên lớp để markup khỏi gãy, nhưng nó chỉ
+   còn là móc treo, không mang kiểu dáng nào. */
 .about-start__alt {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
+    /* cố ý để trống */
 }
 
 /* ══════════════════════════════════════════════════════════════════════
