@@ -67,49 +67,42 @@
     if (!top) return;
 
     /* --------------------------------------------------------------------
-       NGƯỠNG HIỆN NÚT — ĐO THEO QUÃNG CUỘN CỦA CHÍNH TRANG
+       LUẬT: ẨN KHI Ở ĐỈNH TRANG, HIỆN NGAY KHI ĐÃ CUỘN
 
-       Yêu cầu: ở đỉnh trang thì ẩn, cuộn xuống thì hiện.
+       Đúng một câu, không có vùng xám: còn ở đỉnh (không cuộn lên được nữa)
+       thì ẩn; rời khỏi đỉnh là hiện.
 
-       ═══ ĐỪNG QUAY LẠI MỘT CON SỐ CỨNG ═══
+       ═══ HAI BẢN TRƯỚC ĐỀU SAI, GHI LẠI ĐỂ KHỎI QUAY VÒNG ═══
 
-       Bản đầu dùng `window.innerHeight * 1.5`. Nó hỏng im lặng trên mọi trang
-       ngắn, vì ngưỡng có thể CAO HƠN CẢ QUÃNG CUỘN CÓ THẬT. Đo trên trang chủ
-       ở khung nhìn 900px: trang cao 1827 nên cuộn hết cỡ cũng chỉ tới 927,
-       trong khi ngưỡng là 1350 — nút không bao giờ hiện, và không có gì báo.
+       Bản 1 — ngưỡng CỨNG `window.innerHeight * 1.5`. Nó cao hơn cả quãng
+       cuộn của nhiều trang: trang chủ cuộn hết cỡ mới tới 927px trong khi
+       ngưỡng là 1350. Nút không bao giờ hiện, và không báo lỗi gì.
 
-       Cùng cái bẫy ấy với '300px', '400px' hay 'một màn hình': trang nào ngắn
-       hơn ngưỡng là nút chết.
+       Bản 2 — ngưỡng THEO TỈ LỆ, 25% quãng cuộn (trần 600px). Chữa được lỗi
+       "không bao giờ hiện", nhưng đẻ ra một vùng xám: trên trang dài, suốt
+       600px đầu nút vẫn vắng mặt dù người dùng đã cuộn. Nhìn ra thì giống
+       như nút không chịu hiện.
 
-       Nên ngưỡng lấy theo CHÍNH QUÃNG CUỘN của trang: một phần tư quãng ấy,
-       chặn trên ở 600px cho trang rất dài.
+       Bản này bỏ hẳn khái niệm ngưỡng. Chỉ còn một câu hỏi: đang ở đỉnh hay
+       không.
 
-         trang dài   (quãng 5000) -> 600   nút hiện sau khi cuộn một đoạn thật
-         trang chủ   (quãng  927) -> 232   hiện sớm hơn, vì trang vốn ngắn
-         trang ngắn  (quãng  100) ->  25   vẫn hiện được
-         không cuộn được (quãng 0) ->  0   scrollY luôn 0 nên vẫn ẩn, đúng ý
+       VÌ SAO 4px CHỨ KHÔNG PHẢI 0: chuột và trackpad hay để lại scrollY lẻ
+       1–2px ở sát đỉnh, và trình duyệt khôi phục vị trí cuộn khi bấm Lùi
+       cũng thường lệch vài pixel. So với 0 thì nút nhấp nháy ở đúng chỗ nó
+       phải đứng yên. Cùng con số với lớp .is-scrolled trong header.js.
 
-       KHÔNG đặt sàn tối thiểu (kiểu `Math.max(120, ...)`): sàn chính là thứ
-       dựng lại cái bẫy — trang có quãng cuộn 100px mà sàn 120 thì lại tắc.
-
-       Đọc scrollHeight mỗi lần cuộn chứ không đo sẵn một lần: ảnh tải xong,
-       mục gập bung ra, băng sản phẩm dựng thêm — chiều cao trang đổi suốt.
+       Trang KHÔNG CUỘN ĐƯỢC (nội dung ngắn hơn khung nhìn) thì scrollY luôn
+       bằng 0 nên nút ẩn suốt — đúng ý, không cần luật riêng.
        -------------------------------------------------------------------- */
 
-    function nguong() {
-        var quangCuon = Math.max(
-            0,
-            document.documentElement.scrollHeight - window.innerHeight
-        );
-
-        return Math.min(quangCuon * 0.25, 600);
-    }
+    /* Vùng chết ở sát đỉnh — xem lý do ngay trên. */
+    var DEADZONE = 4;
 
     var shown   = false;
     var ticking = false;
 
     function sync() {
-        var next = window.scrollY > nguong();
+        var next = window.scrollY > DEADZONE;
         if (next === shown) return;
         shown = next;
         top.hidden = !next;
@@ -124,14 +117,11 @@
         });
     }, { passive: true });
 
-    /* Chiều cao trang còn đổi SAU khi tải xong — ảnh lazy vào chỗ, font thay
-       thế đổi số dòng. Ngưỡng tính theo chiều cao nên phải đo lại, nếu không
-       một trang vừa dài ra vẫn giữ ngưỡng cũ tính trên chiều cao lúc trống. */
-    window.addEventListener('resize', sync, { passive: true });
-
-    if (window.ResizeObserver) {
-        new ResizeObserver(sync).observe(document.documentElement);
-    }
+    /* ĐÃ GỠ hai trình nghe `resize` và ResizeObserver. Chúng có mặt vì bản
+       trước tính ngưỡng theo CHIỀU CAO TRANG, nên trang dài ra là phải đo
+       lại. Luật mới chỉ đọc scrollY — chiều cao trang đổi bao nhiêu cũng
+       không ảnh hưởng, và một ResizeObserver gắn lên <html> chạy suốt đời
+       trang là cái giá không còn lý do để trả. */
 
     /* Mở trang ở giữa chừng (tải lại trang đã cuộn, link có #anchor) vẫn phải
        thấy nút ngay, không đợi tới lần cuộn đầu tiên. */

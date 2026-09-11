@@ -116,12 +116,11 @@ $actions = [
 <div class="fab" id="fabRoot" data-section="s22">
 
     <!--
-      Lên đầu trang — ẩn ở đỉnh trang, hiện khi đã cuộn xuống.
+      Lên đầu trang — ẩn khi đang Ở ĐỈNH, hiện ngay khi đã cuộn.
 
-      Ngưỡng KHÔNG phải một con số cứng mà là một phần tư quãng cuộn của chính
-      trang (chặn trên 600px). Con số cứng — dù là '1,5 màn hình', '400px' hay
-      bất cứ gì — sẽ cao hơn quãng cuộn của những trang ngắn và nút chết im
-      lặng ở đó. Xem khối chú thích mục 2 trong assets/js/floating.js.
+      Không còn ngưỡng nào cả. Hai bản trước dùng ngưỡng (1,5 màn hình, rồi
+      25% quãng cuộn) và cả hai đều đẻ ra một vùng người dùng đã cuộn mà nút
+      vẫn vắng mặt — xem khối chú thích mục 2 trong assets/js/floating.js.
 
       Vẫn để sẵn `hidden` trong HTML chứ không ẩn bằng CSS: tắt JavaScript thì
       nút này vô dụng (toàn bộ hành vi cuộn nằm trong JS), hiện ra chỉ gây bấm
