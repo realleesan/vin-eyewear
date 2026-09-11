@@ -1461,6 +1461,21 @@ textarea.oa-field {
     white-space: nowrap;
     font-size: var(--fs-ui);
     letter-spacing: .01em;
+
+    /* ┌─ CAO TRỌN THANH — ĐỪNG ĐỔI VỀ `center` ────────────────────────────
+       │ Thanh nav là lưới với `align-items: center`, nên mặc định hàng nav
+       │ chỉ cao bằng dòng chữ (23px) và nằm lửng giữa khung 90px.
+       │
+       │ Lúc ấy giữa mép dưới mục nav và mép trên bảng xổ có một KHE CHẾT
+       │ 34px — con trỏ đi xuống để bấm vào bảng sẽ rơi khỏi .mega:hover ở
+       │ giữa đường, bảng đóng trước khi tay tới nơi. Đo được, và đó đúng là
+       │ lỗi "chưa kịp bấm nó đã mất".
+       │
+       │ `stretch` kéo hàng nav cao trọn 90px; mép dưới của nó chạm đúng mép
+       │ trên bảng nên đường đi của con trỏ liền một mạch. Chữ vẫn nằm giữa —
+       │ .header-nav__list căn lại ở mega-menu.css.
+       └──────────────────────────────────────────────────────────────────── */
+    align-self: stretch;
 }
 
 /* ┌─ ĐÃ GỠ `mask-image` — ĐỪNG THÊM LẠI ──────────────────────────────────

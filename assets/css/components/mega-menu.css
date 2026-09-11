@@ -47,9 +47,19 @@
    HÀNG NAV
    ══════════════════════════════════════════════════════════════════════ */
 
+/* ┌─ HÀNG NAV CAO TRỌN THANH ─────────────────────────────────────────────
+   │ `align-items: stretch` (mặc định của flex, ghi ra cho rõ ý) kéo mỗi <li>
+   │ cao bằng cả thanh nav. Đó là thứ xoá KHE CHẾT giữa mục nav và bảng xổ —
+   │ xem khối chú thích ở .oa-header__nav trong oa.css.
+   │
+   │ Chữ vẫn nằm giữa nhờ `align-items: center` trên chính <li>: ô thì cao
+   │ trọn, nội dung thì căn giữa ô. Đổi `stretch` ở đây về `center` là khe
+   │ chết quay lại và bảng không bấm được nữa.
+   └──────────────────────────────────────────────────────────────────────── */
 .header-nav__list {
     display: flex;
-    align-items: center;
+    align-items: stretch;
+    height: 100%;
     gap: 14px;
     list-style: none;
     min-width: 0;
