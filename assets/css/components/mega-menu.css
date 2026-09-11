@@ -10,9 +10,13 @@
    MẪU "EYEWEAR COLLECTION" KHÔNG CÓ BẢNG XỔ NÀO — nó chỉ có năm liên kết
    phẳng. Đây là phần THÊM, và nó phải trông như thể mẫu đã vẽ ra nó:
 
-     · nền TRẮNG đặc, không đổ bóng, không bo góc — bảng là một mảng giấy
-       trải hết bề ngang, không phải một thẻ nổi
-     · một đường kẻ 1px dưới đáy, đúng sắc --line
+     · KHÔNG VIỀN, KHÔNG BO GÓC, KHÔNG ĐỔ BÓNG
+     · nền TRONG SUỐT ở trang chủ khi hero còn sau lưng (đúng lối tham chiếu
+       chủ dự án đưa), TRẮNG ĐỤC ở mọi lúc khác — xem khối chú thích trong
+       .mega__panel về lý do không chép nguyên "không nền" cho cả site
+     · KHÔNG MŨI TÊN trên mục nav — ba mục có bảng trông y hệt hai mục không
+     · màu chữ THỪA KẾ từ thanh nav, nên nó tự đúng trên cả ảnh hero tối lẫn
+       nền trang sáng
      · tiêu đề cột 9px IN HOA giãn .06em (.oa-eyebrow của mẫu)
      · liên kết 10px thường, rê chuột thì nhạt đi chứ không gạch chân
 
@@ -82,22 +86,20 @@
     color: inherit;
 }
 
-/* Mũi tên xuống — cỡ lấy từ chữ nav như mọi icon khác trên thanh này (xem
-   khối .oa-header__btn > svg trong oa.css). Xoay 180° khi bảng đang mở. */
+/* ┌─ MŨI TÊN XUỐNG — ẨN HẲN ──────────────────────────────────────────────
+   │ Theo tham chiếu: hàng nav chỉ có chữ, không mục nào đeo mũi tên. Ba mục
+   │ có bảng xổ trông y hệt hai mục không có.
+   │
+   │ Đánh đổi có thật, ghi ra để biết mình đang chọn gì: mất dấu hiệu nhìn
+   │ thấy được cho "mục này còn nữa". Bù lại bằng aria-haspopup / aria-expanded
+   │ mà header.js đặt sẵn trên .mega__trigger — trình đọc màn hình vẫn biết,
+   │ chỉ mắt thường là không.
+   │
+   │ Giữ <svg class="mega__chevron"> trong markup: nó có ở cả ba partial và
+   │ gỡ đi thì phải sửa ba file cho một thứ vô hình.
+   └──────────────────────────────────────────────────────────────────────── */
 .mega__chevron {
-    width: .8em;
-    height: .8em;
-    flex: none;
-    transition: transform .2s ease;
-}
-
-.mega:hover .mega__chevron,
-.mega:focus-within .mega__chevron {
-    transform: rotate(180deg);
-}
-
-.mega.is-dismissed .mega__chevron {
-    transform: none;
+    display: none;
 }
 
 /* ┌─ MŨI NHỌN HÌNH THOI — ẨN HẲN ─────────────────────────────────────────
@@ -130,9 +132,35 @@
     right: 0;
     z-index: 1;
 
-    padding: 28px var(--edge) 32px;
+    padding: 28px var(--edge) 40px;
+
+    /* ┌─ BẢNG MƯỢN ĐÚNG NỀN CỦA THANH NAV ──────────────────────────────────
+       │ Tham chiếu (gentlemonster.com) cho bảng KHÔNG nền — chữ nổi thẳng
+       │ trên ảnh. Chép nguyên như vậy thì trang chủ đẹp đúng ý, nhưng TRANG
+       │ TRONG vỡ hẳn: thử trên /gioi-thieu, tiêu đề "GIỚI THIỆU" đan vào cột
+       │ MATERIAL và ba mục "Kim loại / Titanium / Nylon" rơi xuống ảnh hero
+       │ rồi mất hút.
+       │
+       │ Tham chiếu sống được vì dưới thanh nav của họ LUÔN là ảnh tràn mép.
+       │ Trang trong của site này bắt đầu bằng khối chữ căn giữa trên nền
+       │ trắng — điều kiện khác hẳn.
+       │
+       │ Nên chia hai trạng thái:
+       │
+       │   trang chủ, chưa qua hero → TRONG SUỐT, đúng y tham chiếu
+       │   mọi lúc khác             → TRẮNG ĐỤC
+       │
+       │ Đã thử một bản ở giữa — kính mờ rgba(255,255,255,.55) như chính
+       │ thanh nav — và nó KHÔNG đủ: chữ đọc được, nhưng tiêu đề "GIỚI THIỆU"
+       │ vẫn hằn qua lớp mờ và đan vào cột MATERIAL. Nền sau bảng là chữ tiêu
+       │ đề tĩnh, khác hẳn nền sau thanh nav (nội dung đang trôi qua, hằn lên
+       │ một chút là đúng cái hiệu ứng ta muốn).
+       │
+       │ Chỗ giáp giữa thanh nav (.55 kính mờ) và bảng (trắng đục) gần như
+       │ không thấy: sát đỉnh trang trong, thứ nằm sau thanh nav cũng là nền
+       │ trắng, nên .55 trắng chồng lên trắng ra gần đúng trắng.
+       └──────────────────────────────────────────────────────────────────── */
     background: var(--bg);
-    border-bottom: 1px solid var(--line);
 
     /* Ẩn bằng visibility chứ không display:none — bảng cần được tính bố cục
        để chuyển động mờ dần chạy được, và để header.js đo được vị trí. */
@@ -140,6 +168,14 @@
     opacity: 0;
     transform: translateY(-4px);
     transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s;
+}
+
+/* Trang chủ khi hero còn sau lưng: thanh nav trong suốt, bảng cũng vậy —
+   đây là trạng thái khớp đúng tham chiếu. `:not(.is-past-hero)` là cùng
+   điều kiện mà .oa-header--over dùng để lật giữa trong suốt và kính mờ;
+   xem khối chú thích ở oa.css. */
+.oa-header--over:not(.is-past-hero):not(.is-overlay) .mega__panel {
+    background: transparent;
 }
 
 .mega:hover .mega__panel,
@@ -190,19 +226,36 @@
 
 /* "Tất cả gọng kính" / "Tất cả bộ sưu tập" — trải hết các cột, đứng đầu.
    Một đường kẻ dưới tách nó khỏi các nhóm bên dưới. */
+/* ┌─ MÀU CHỮ THỪA KẾ TỪ THANH NAV, KHÔNG GÕ CỨNG ─────────────────────────
+   │ Bảng không còn nền riêng nên nó nằm trên hai loại nền khác hẳn nhau:
+   │   trang chủ ở đỉnh → ảnh hero tối, thanh nav chữ TRẮNG
+   │   mọi trang khác   → nền trang sáng, thanh nav chữ ĐEN
+   │ Gõ cứng `color: var(--ink)` là chữ đen trên ảnh tối ở trang chủ.
+   │ `inherit` đi theo .oa-header, nên nó tự đúng ở cả hai.
+   │
+   │ Cùng lý do cho đường kẻ và chữ mờ: dùng currentColor với độ mờ, không
+   │ dùng --line / --ink-3 (hai token ấy chỉ đúng trên nền sáng).
+   └──────────────────────────────────────────────────────────────────────── */
 .mega__all {
     grid-column: 1 / -1;
     padding-bottom: 14px;
     margin-bottom: 4px;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid currentColor;
     font-size: var(--fs-micro);
     letter-spacing: var(--ls);
     text-transform: uppercase;
-    color: var(--ink);
+    color: inherit;
+}
+
+/* Đường kẻ mảnh hơn nhiều so với chữ — currentColor ở độ đậm đầy đủ là một
+   gạch đen/trắng đặc cắt ngang bảng. */
+.mega__all {
+    border-bottom-color: color-mix(in srgb, currentColor 22%, transparent);
 }
 
 .mega__all:hover {
-    color: var(--ink-3);
+    color: inherit;
+    opacity: .65;
 }
 
 .mega__col {
@@ -216,7 +269,8 @@
     font-size: var(--fs-micro);
     letter-spacing: var(--ls);
     text-transform: uppercase;
-    color: var(--ink-3);
+    color: inherit;
+    opacity: .55;
 }
 
 .mega__links {
@@ -228,11 +282,12 @@
 
 .mega__links a {
     font-size: var(--fs-body);
-    color: var(--ink);
+    color: inherit;
 }
 
 .mega__links a:hover {
-    color: var(--ink-3);
+    color: inherit;
+    opacity: .65;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
