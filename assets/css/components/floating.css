@@ -7,24 +7,33 @@
 
    Ba luật của mẫu áp vào đây thành:
 
-     1. KHÔNG MÀU. Nút nền #111 chữ trắng, hết. Bản cũ tô mỗi kênh một màu
-        thương hiệu (Zalo xanh, Messenger tím) — đó là ba màu mới trên một
-        site chỉ có hai. Sắc thương hiệu nay chỉ còn sống bên trong hình vẽ
-        icon Zalo, ở kích thước 24×18px, và đó là chỗ duy nhất nó được phép
-        xuất hiện.
+     1. KHÔNG MÀU. Nền #111, icon trắng, hết. Bản cũ tô mỗi kênh một màu
+        thương hiệu (Zalo xanh, Messenger tím) — ba màu mới trên một site chỉ
+        có hai. Nay kể cả chữ "Zalo" bên trong logo cũng không còn xanh: nó
+        khoét rỗng theo màu nền nút.
 
-     2. VIÊN, CAO 32, CHỮ 9px IN HOA GIÃN .06em — cùng thang với .oa-btn--card
-        của thẻ sản phẩm, vì hai thứ này có cùng "trọng lượng" trên trang.
+     2. CHỈ CÓ ICON, KHÔNG CÓ CHỮ. Bốn vòng tròn 40px. Bản trước là bốn viên
+        có nhãn chữ — một cụm chữ nổi thường trực ở góc phải cạnh tranh sự
+        chú ý với chính nội dung trang.
 
      3. NẰM DƯỚI MỌI LỚP PHỦ. z-index 3, tức là dưới --z-scrim (4). Một nút
         nổi lơ lửng trên nền mờ của ngăn giỏ là thứ phá vỡ ảo giác lớp.
+
+     4. BA ICON CÂN NHAU VỀ MẮT, không bằng nhau về số đo. Hình nét (điện
+        thoại) vẽ ở 20px; hình tô đặc (Zalo, Messenger) vẽ ở 18-20px bề ngang
+        — hình đặc nặng hơn hình nét cùng cỡ, để bằng số là nhìn ra lệch.
    ========================================================================= */
 
-/* --fab-blue: icon Zalo tự vẽ chữ bằng biến này (xem _layout/floating-actions.php,
-   các path fill="var(--fab-blue)"). Bong bóng ăn currentColor (trắng), chữ ăn
-   biến này — nên hai phần của icon không bao giờ lệch tông. */
+/* ┌─ HAI BIẾN, CẢ HAI ĐỀU BẮT BUỘC ───────────────────────────────────────
+   │ --fab-knock  màu chữ "Zalo" khoét trong bong bóng. Phải BẰNG ĐÚNG nền
+   │              nút thì chữ mới trông như bị khoét thủng thay vì tô đè.
+   │              Rê chuột đổi nền thì luật :hover bên dưới đổi biến theo —
+   │              xem khối chú thích logo Zalo trong floating-actions.php.
+   │ --fab-size   đường kính nút. Một chỗ đổi cho cả bốn nút.
+   └──────────────────────────────────────────────────────────────────────── */
 .fab {
-    --fab-blue: #0068ff;
+    --fab-knock: var(--ink);
+    --fab-size: 40px;
 
     position: fixed;
     right: 20px;
@@ -44,21 +53,25 @@
     list-style: none;
 }
 
+/* ┌─ VÒNG TRÒN ĐEN, ICON TRẮNG, KHÔNG CHỮ ────────────────────────────────
+   │ Nhãn vẫn nằm trong DOM dưới .sr-only (xem floating-actions.php) — nó là
+   │ TÊN của liên kết cho trình đọc màn hình, không phải chữ trang trí.
+   │
+   │ 40px là sàn vùng chạm dùng được trên di động. Đừng hạ xuống 32 cho
+   │ "gọn": ba đích 32px xếp cách nhau 8px là ba ô rất dễ bấm nhầm sang ô
+   │ bên cạnh.
+   └──────────────────────────────────────────────────────────────────────── */
 .fab__btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    height: 32px;
-    padding: 0 14px 0 10px;
+    justify-content: center;
+    width: var(--fab-size);
+    height: var(--fab-size);
+    padding: 0;
     border: 0;
-    border-radius: 16px;
+    border-radius: 50%;
     background: var(--ink);
     color: #fff;
-    font-family: inherit;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    white-space: nowrap;
     cursor: pointer;
     transition: background .18s ease;
 }
@@ -66,6 +79,8 @@
 .fab__btn:hover {
     background: #333;
     color: #fff;
+    /* Chữ khoét đi theo nền, nếu không nó thành một vệt đen lạc trên xám */
+    --fab-knock: #333;
 }
 
 .fab__ico {
@@ -73,13 +88,13 @@
     display: block;
 }
 
-/* Nút "lên đầu trang" chỉ có icon — bỏ nhãn, thu về hình tròn 32px. Nó xuất
-   hiện/biến mất theo vị trí cuộn nên một cái nhãn chữ nhảy ra nhảy vào ở góc
-   màn hình là thứ bắt mắt sai chỗ. */
+/* ┌─ NÚT LÊN ĐẦU TRANG — CỐ Ý KHÁC BA NÚT KIA ────────────────────────────
+   │ Rỗng, viền mảnh. Nó không phải một kênh liên hệ mà là một tiện ích điều
+   │ hướng, và nó hiện/ẩn theo vị trí cuộn — để nó cùng dáng đặc với ba nút
+   │ kia thì cụm bốn vòng tròn đen giống hệt nhau, mà cái thứ tư lại nhấp
+   │ nháy theo cuộn.
+   └──────────────────────────────────────────────────────────────────────── */
 .fab__btn--top {
-    padding: 0;
-    width: 32px;
-    justify-content: center;
     background: var(--bg);
     border: 1px solid var(--line-btn);
     color: var(--ink);
@@ -91,68 +106,31 @@
     color: #fff;
 }
 
-.fab__btn--top .fab__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-}
+/* ══════════════════════════════════════════════════════════════════════
+   NÚT MỞ/ĐÓNG — ĐÃ TẮT HẲN
 
-/* ┌─ NÚT MỞ/ĐÓNG — CHỈ DƯỚI 900px ───────────────────────────────────────
-   │ Màn rộng thì ba kênh hiện thẳng, không cần gom. Màn hẹp thì ba viên
-   │ chữ chiếm gần nửa chiều cao màn hình, nên chúng thu vào sau một nút
-   │ tròn.
-   │
-   │ Nút có `hidden` sẵn trong HTML và floating.js gỡ ra: không có
-   │ JavaScript thì bấm vào không mở được gì, trong khi danh sách kênh lúc
-   │ ấy vẫn hiện thường (xem luật .fab__list cuối file).
-   └──────────────────────────────────────────────────────────────────────── */
+   Nó tồn tại cho bản cũ: ba nút VIÊN CÓ NHÃN CHỮ xếp dọc chiếm gần nửa
+   chiều cao màn điện thoại, nên phải gom lại sau một nút tròn.
+
+   Ba vòng tròn 40px cộng khe là 136px — vừa gọn ở mọi màn hình, nên bước
+   bấm để mở ra chỉ còn là một bước thừa giữa khách và cái nút gọi điện.
+
+   GIỮ `display:none` KHÔNG ĐIỀU KIỆN, đừng đổi sang [hidden]: floating.js
+   GỠ thuộc tính hidden ra ngay khi chạy (floating.js dòng 29). Chỉ
+   display:none mới vừa giấu được nó vừa lấy nó ra khỏi thứ tự Tab — một
+   nút vô hình mà bàn phím vẫn dừng vào là lỗi tiếp cận.
+
+   Markup và JavaScript giữ nguyên: muốn bật lại thì bỏ luật này và trả lại
+   khối @media ẩn .fab__list dưới 900px. Xem lịch sử git của file này.
+   ══════════════════════════════════════════════════════════════════════ */
+
 .fab__toggle {
     display: none;
-    width: 44px;
-    height: 44px;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    border-radius: 50%;
-    background: var(--ink);
-    color: #fff;
-    cursor: pointer;
-}
-
-.fab__toggle-ico {
-    display: flex;
-}
-
-.fab__toggle-ico--close,
-.fab.is-open .fab__toggle-ico--open {
-    display: none;
-}
-
-.fab.is-open .fab__toggle-ico--close {
-    display: flex;
 }
 
 @media (max-width: 900px) {
     .fab {
         right: 14px;
         bottom: 14px;
-    }
-
-    .fab__toggle:not([hidden]) {
-        display: flex;
-    }
-
-    /* Ẩn danh sách CHỈ KHI JavaScript có mặt — html.js do thẻ <script> ở đầu
-       <head> gắn. Thiếu chốt này thì trên máy tắt JS, ba kênh biến mất và nút
-       mở lại không bấm được: không còn lối liên hệ nào. */
-    html.js .fab__list {
-        display: none;
-    }
-
-    html.js .fab.is-open .fab__list {
-        display: flex;
     }
 }
