@@ -55,47 +55,41 @@ $megaUrl = static function (array $search) use ($megaBase): string {
  * Các cột của bảng: [tiêu đề, [[nhãn, url], …]]. Cột rỗng bị bỏ ngay ở đây để
  * phần vẽ bên dưới không phải hỏi lại.
  */
-$megaCols = [];
+/* ┌─ MỘT DANH SÁCH PHẲNG, MỘT TRỤC — KHÔNG CÒN NHÓM ──────────────────────
+   │ Theo tham chiếu chủ dự án đưa: bảng xổ là một cột chữ, "Xem tất cả"
+   │ đứng đầu, rồi tới danh sách. Không tiêu đề nhóm, không cột thứ hai.
+   │
+   │ Nên mỗi bảng giữ ĐÚNG MỘT TRỤC phân loại:
+   │   Gọng kính  → các DÁNG kính  (oval, vuông, mắt mèo…)
+   │   Tròng kính → các LOẠI tròng (đơn tròng, đa tròng…)
+   │
+   │ VÌ SAO KHÔNG GỘP HẾT VÀO MỘT CỘT: bỏ tiêu đề nhóm rồi mà vẫn đổ cả
+   │ chất liệu vào sau dáng thì ra "Oval · Vuông · … · Acetate · Kim loại" —
+   │ hai trục khác nhau nằm liền một mạch, không có gì báo cho người đọc biết
+   │ chỗ nào là chỗ chuyển. Một trục thì tự nó rõ.
+   │
+   │ BA TRỤC BỊ GỠ KHỎI BẢNG XỔ VẪN LỌC ĐƯỢC ở trang danh mục — chất liệu
+   │ gọng, chiết suất và lớp phủ tròng đều có mặt trong bảng bộ lọc của
+   │ /san-pham (xem $megaNhom cũ trong lịch sử git nếu cần dựng lại).
+   └──────────────────────────────────────────────────────────────────────── */
+$megaLinks = [];
 
 if ($megaSlug === 'trong-kinh') {
     $megaLabel = t('nav.lenses');
     $megaAll   = t('mega.all_lenses');
 
-    /* Nhóm quản trị => tên tham số trên URL của trang tròng kính. Cùng bảng
-       nối với $nhomTrong trong ProductModel::catalog(). Màu tròng cố ý không
-       đưa lên đây: bảng xổ giữ ba cột cho gọn, màu vẫn lọc được ở trang đích. */
-    $megaNhom = [
-        'loai-trong' => ['head' => t('mega.lens_type'),  'param' => 'lens_type'],
-        'chiet-suat' => ['head' => t('mega.lens_index'), 'param' => 'lens_index'],
-        'lop-phu'    => ['head' => t('mega.lens_coat'),  'param' => 'lens_coat'],
-    ];
-
-    foreach ($megaNhom as $nhom => $cot) {
-        $links = [];
-
-        foreach (LensOptionModel::visible($nhom) as $o) {
-            $links[] = [(string) $o['label'], $megaUrl([$cot['param'] => (string) $o['option_key']])];
-        }
-
-        $megaCols[] = [$cot['head'], $links];
+    foreach (LensOptionModel::visible('loai-trong') as $o) {
+        $megaLinks[] = [(string) $o['label'], $megaUrl(['lens_type' => (string) $o['option_key']])];
     }
 } else {
     $megaLabel = t('nav.frames');
     $megaAll   = t('mega.all_frames');
 
-    foreach ([
-        [t('mega.shape'),    $taxonomy['frame_styles'] ?? []],
-        [t('mega.material'), $taxonomy['materials'] ?? []],
-    ] as [$head, $slice]) {
-        $links = [];
-
-        /* $lat chứ không phải $item: header.php đang ở giữa vòng
-           `foreach ($navItems as $item)` khi require file này. */
-        foreach ($slice as $lat) {
-            $links[] = [(string) $lat['label'], $megaUrl($lat['search'])];
-        }
-
-        $megaCols[] = [$head, $links];
+    /* `$lat` chứ không `$item`: file này được require BÊN TRONG
+       `foreach ($navItems as $item)` của header.php — trùng tên là ghi đè
+       biến vòng lặp bên ngoài và hàng nav mất mục. */
+    foreach ($taxonomy['frame_styles'] ?? [] as $lat) {
+        $megaLinks[] = [(string) $lat['label'], $megaUrl($lat['search'])];
     }
 }
 
@@ -104,6 +98,6 @@ return [
     'base'  => $megaBase,
     'label' => $megaLabel,
     'all'   => $megaAll,
-    'cols'  => array_values(array_filter($megaCols, static fn (array $c): bool => $c[1] !== [])),
+    'links' => $megaLinks,
     'on'    => $productSub === $megaSlug,
 ];

@@ -33,14 +33,12 @@ $mega = require VIEWS_PATH . '/_layout/mega-data.php';
     </summary>
 
     <div class="mobile-nav__sub">
+        <?php /* Cùng một danh sách phẳng với bản desktop — "Xem tất cả" đứng
+                 đầu, không tiêu đề nhóm. Xem _layout/mega-data.php. */ ?>
         <a href="<?= e($mega['base']) ?>"><?= e($mega['all']) ?></a>
-        <?php foreach ($mega['cols'] as [$head, $links]): ?>
-            <?php /* Tiêu đề nhóm là <p>, không bấm được — nó chỉ gọi tên nhóm.
-                     Kiểu ở .mobile-nav__subhead trong components/header.css. */ ?>
-            <p class="mobile-nav__subhead"><?= e($head) ?></p>
-            <?php foreach ($links as [$nhan, $url]): ?>
-                <a href="<?= e($url) ?>" lang="vi"><?= e($nhan) ?></a>
-            <?php endforeach; ?>
+
+        <?php foreach ($mega['links'] as [$nhan, $url]): ?>
+            <a href="<?= e($url) ?>" lang="vi"><?= e($nhan) ?></a>
         <?php endforeach; ?>
     </div>
 </details>

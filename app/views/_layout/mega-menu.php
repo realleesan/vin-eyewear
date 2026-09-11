@@ -45,29 +45,20 @@ $mega = require VIEWS_PATH . '/_layout/mega-data.php';
     </a>
 
     <div class="mega__panel" id="megaPanel-<?= e($mega['slug']) ?>">
-        <?php /* .mega__grid--groups: nhiều cột chữ đặt cạnh nhau, mỗi cột một
-                 tiêu đề nhóm. Luật ở cuối components/mega-menu.css — lưới mặc
-                 định của file đó là MỘT cột (dành cho bảng Bộ sưu tập). */ ?>
-        <div class="mega__grid mega__grid--no-feature mega__grid--groups"
-             style="--mega-cols: <?= max(1, count($mega['cols'])) ?>">
+        <?php
+        /* MỘT CỘT PHẲNG. "Xem tất cả" là <li> ĐẦU TIÊN của chính danh sách,
+           không phải một khối riêng bên trên — theo tham chiếu, nó trông y hệt
+           các mục còn lại, chỉ khác chỗ đứng. Xem khối chú thích trong
+           _layout/mega-data.php về lý do mỗi bảng chỉ giữ một trục phân loại. */
+        ?>
+        <ul class="mega__links" role="list">
+            <li><a href="<?= e($mega['base']) ?>"><?= e($mega['all']) ?></a></li>
 
-            <?php /* "Tất cả …" đứng ĐẦU, trải hết các cột — cùng lý do bảng Bộ
-                     sưu tập đặt "Tất cả bộ sưu tập" ở dòng đầu. */ ?>
-            <a class="mega__all" href="<?= e($mega['base']) ?>"><?= e($mega['all']) ?></a>
-
-            <?php foreach ($mega['cols'] as [$head, $links]): ?>
-                <div class="mega__col">
-                    <p class="mega__head"><?= e($head) ?></p>
-                    <ul class="mega__links" role="list">
-                        <?php foreach ($links as [$nhan, $url]): ?>
-                            <?php /* lang="vi" — nhãn lấy từ config/CSDL chỉ có
-                                     tiếng Việt; xem quy ước ở _layout/product-card.php. */ ?>
-                            <li><a href="<?= e($url) ?>" lang="vi"><?= e($nhan) ?></a></li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
+            <?php foreach ($mega['links'] as [$nhan, $url]): ?>
+                <?php /* lang="vi" — nhãn lấy từ config/CSDL chỉ có tiếng Việt;
+                         xem quy ước ở _layout/product-card.php. */ ?>
+                <li><a href="<?= e($url) ?>" lang="vi"><?= e($nhan) ?></a></li>
             <?php endforeach; ?>
-
-        </div>
+        </ul>
     </div>
 </li>

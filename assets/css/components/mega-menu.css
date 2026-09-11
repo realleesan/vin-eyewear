@@ -211,72 +211,25 @@
    │ sẵn chừng ấy đệm; `max(0px, …)` chặn số âm khi mục nav nằm sát mép.
    └──────────────────────────────────────────────────────────────────────── */
 .mega__grid {
-    display: grid;
-    grid-template-columns: repeat(var(--mega-cols, 1), minmax(0, 1fr));
-    gap: 24px 32px;
-    max-width: 900px;
     margin-left: max(0px, calc(var(--mega-x, 0px) - var(--edge)));
 }
 
-/* Bảng Bộ sưu tập không khai --mega-cols nên nó rơi về 1 cột — đúng ý: nó
-   là một danh sách bộ, không phải nhiều nhóm song song. */
-.mega__grid--groups {
-    align-items: start;
-}
-
-/* "Tất cả gọng kính" / "Tất cả bộ sưu tập" — trải hết các cột, đứng đầu.
-   Một đường kẻ dưới tách nó khỏi các nhóm bên dưới. */
-/* ┌─ MÀU CHỮ THỪA KẾ TỪ THANH NAV, KHÔNG GÕ CỨNG ─────────────────────────
-   │ Bảng không còn nền riêng nên nó nằm trên hai loại nền khác hẳn nhau:
-   │   trang chủ ở đỉnh → ảnh hero tối, thanh nav chữ TRẮNG
-   │   mọi trang khác   → nền trang sáng, thanh nav chữ ĐEN
-   │ Gõ cứng `color: var(--ink)` là chữ đen trên ảnh tối ở trang chủ.
-   │ `inherit` đi theo .oa-header, nên nó tự đúng ở cả hai.
+/* ┌─ MỘT CỘT PHẲNG ───────────────────────────────────────────────────────
+   │ Theo tham chiếu: một dãy chữ dọc, mục đầu là "Xem tất cả", không tiêu
+   │ đề nhóm, không đường kẻ, không cột thứ hai.
    │
-   │ Cùng lý do cho đường kẻ và chữ mờ: dùng currentColor với độ mờ, không
-   │ dùng --line / --ink-3 (hai token ấy chỉ đúng trên nền sáng).
+   │ ĐÃ GỠ .mega__col / .mega__head / .mega__all và biến --mega-cols. Ba thứ
+   │ ấy phục vụ bản nhiều nhóm; nay _layout/mega-data.php chỉ trả về một danh
+   │ sách phẳng nên markup không còn sinh ra chúng. Bảng Bộ sưu tập
+   │ (collection-menu.php) vốn đã một cột nên không đổi gì.
+   │
+   │ Khe 12px giữa các dòng: đủ để mắt đi dọc mà không thành một khối chữ
+   │ dính. Tham chiếu để khoảng này rộng hơn cỡ chữ chừng gấp đôi.
    └──────────────────────────────────────────────────────────────────────── */
-.mega__all {
-    grid-column: 1 / -1;
-    padding-bottom: 14px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid currentColor;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    color: inherit;
-}
-
-/* Đường kẻ mảnh hơn nhiều so với chữ — currentColor ở độ đậm đầy đủ là một
-   gạch đen/trắng đặc cắt ngang bảng. */
-.mega__all {
-    border-bottom-color: color-mix(in srgb, currentColor 22%, transparent);
-}
-
-.mega__all:hover {
-    color: inherit;
-    opacity: .65;
-}
-
-.mega__col {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    min-width: 0;
-}
-
-.mega__head {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    color: inherit;
-    opacity: .55;
-}
-
 .mega__links {
     display: flex;
     flex-direction: column;
-    gap: 9px;
+    gap: 12px;
     list-style: none;
 }
 
@@ -288,6 +241,14 @@
 .mega__links a:hover {
     color: inherit;
     opacity: .65;
+}
+
+/* .mega__col còn trong markup của collection-menu.php — giữ nó thành một
+   khối dọc thường, không cho nó dáng riêng nào. */
+.mega__col {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
