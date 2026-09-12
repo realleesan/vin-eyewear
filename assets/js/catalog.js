@@ -455,6 +455,23 @@
         if (locCu && locMoi) locCu.innerHTML = locMoi.innerHTML;
         mainCu.innerHTML = mainMoi.innerHTML;
 
+        /* CON SỐ TRÊN NÚT "BỘ LỌC" nằm NGOÀI .fbar, nên vòng thay ruột ở trên
+           không chạm tới nó — phải chép riêng.
+
+           Nó ở ngoài là CỐ Ý: nút mở là <summary> của <details> bọc cả tấm, và
+           thay cả khối ấy sẽ dựng lại <details>, tức là tấm tự đóng sập sau mỗi
+           cú bấm tiêu chí. Cái giá phải trả là đúng bốn dòng này.
+
+           Thẻ số LUÔN có mặt trong HTML, chỉ đổi thuộc tính `hidden` — nên
+           không cần xử lý trường hợp "vừa mất thẻ" hay "vừa mọc thẻ". */
+        var demMoi = doc.querySelector('.fbarwrap__num');
+        var demCu  = document.querySelector('.fbarwrap__num');
+
+        if (demMoi && demCu) {
+            demCu.innerHTML = demMoi.innerHTML;
+            demCu.hidden    = demMoi.hidden;
+        }
+
         if (locCu) {
             Array.prototype.forEach.call(locCu.querySelectorAll('.fbar__list'),
                 function (el, i) { if (cuonCu[i] !== undefined) el.scrollTop = cuonCu[i]; });

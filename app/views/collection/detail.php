@@ -256,9 +256,13 @@ if ($minPrice !== null) {
         /* Số mũ cạnh chữ "Bộ lọc" là số món ĐANG KHỚP, không phải cả bộ —
            cùng nghĩa với trang danh mục, nơi nó đọc $total sau lọc. */
         'fbTotal' => count($products),
-        /* ✕ và "Xoá tất cả" cùng trỏ về bộ này không mang tiêu chí nào. */
-        'fbClose' => $cfBase,
+        /* "Xoá tất cả" trỏ về bộ này không mang tiêu chí nào. */
         'fbClear' => $soLocDangBat > 0 ? $cfBase : '',
+        /* Số tiêu chí đang bật — in lên nút mở, và quyết định tấm có bung sẵn
+           hay không. Ô sắp xếp KHÔNG tính: nó không thu hẹp kết quả, nên đếm
+           nó vào thì chọn "Giá thấp trước" xong tấm bung ra như thể đang lọc
+           một thứ gì đó. */
+        'fbCount' => (int) $soLocDangBat,
     ]);
     ?>
 

@@ -30,16 +30,39 @@
  *                    ]
  *                    'off' = không còn hàng nào -> làm mờ, bỏ liên kết.
  *   $fbTotal  int    tổng số món đang khớp (số mũ cạnh chữ "Bộ lọc")
- *   $fbClose  string địa chỉ nút ✕ (thường là chính trang này, không tham số)
  *   $fbClear  string địa chỉ "Xoá tất cả"; chuỗi rỗng = không có gì để xoá
  *   $fbTitle  string nhan đề tấm, mặc định "Bộ lọc"
+ *   $fbCount  int    số tiêu chí ĐANG BẬT — in lên nút mở, và quyết định tấm
+ *                    có bung sẵn hay không
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * TẤM ĐÓNG SẴN, MỞ RA BẰNG NÚT "BỘ LỌC"
+ *
+ * Mặc định chỉ hiện một nút nhỏ ở mép phải; bấm vào mới bung cả tấm. Đây là
+ * yêu cầu của chủ dự án (12/09/2026) và cũng là dáng của bản thiết kế: bảy
+ * cột tiêu chí chiếm gần nửa màn hình đầu, mà phần lớn khách vào để NHÌN
+ * HÀNG chứ không để lọc.
+ *
+ * <details> CHỨ KHÔNG PHẢI JAVASCRIPT — cùng lối mà tấm lọc cũ của trang bộ
+ * sưu tập đã dùng. Tắt JS thì nút vẫn mở/đóng được.
+ *
+ * ⚠ KHÔNG có nút ✕ trong tấm nữa. Trước đây nó là một liên kết về trang trần,
+ * tức là vừa đóng vừa XOÁ SẠCH bộ lọc — hai việc khác nhau đeo chung một dấu
+ * ✕. Nay đóng là bấm lại đúng cái nút vừa mở, còn xoá là "Xoá tất cả bộ lọc"
+ * ở chân tấm. Đừng thêm lại ✕: hai lối đóng cạnh nhau là chỗ người dùng đoán
+ * sai rồi mất cả bộ lọc đang gõ dở.
+ *
+ * ⚠ NÚT MỞ NẰM NGOÀI .fbar, còn assets/js/catalog.js thì thay ruột .fbar sau
+ * mỗi cú bấm tiêu chí. Cố ý: nhờ vậy trạng thái mở/đóng và cả vị trí cuộn
+ * không bị dựng lại. Đổi lại, con số trên nút phải để catalog.js chép sang —
+ * xem .fbarwrap__num ở đó.
  */
 
 $fbCols  = $fbCols  ?? [];
 $fbTotal = (int) ($fbTotal ?? 0);
-$fbClose = (string) ($fbClose ?? '');
 $fbClear = (string) ($fbClear ?? '');
 $fbTitle = (string) ($fbTitle ?? 'Bộ lọc');
+$fbCount = (int) ($fbCount ?? 0);
 
 /* Không còn cột nào có lựa chọn thì không vẽ tấm rỗng. Một tấm lọc trống làm
    người ta tưởng trang hỏng, trong khi sự thật chỉ là kho chưa đủ hàng để có
@@ -58,24 +81,28 @@ if (!$fbCoGi) {
 }
 ?>
 
+<details class="fbarwrap"<?= $fbCount > 0 ? ' open' : '' ?>>
+    <?php /* <summary> mang sẵn tam giác riêng của trình duyệt và nó không
+             chỉnh được nét cho khớp phần còn lại — tắt ở cả hai cú pháp trong
+             filter-bar.css (list-style + ::-webkit-details-marker). */ ?>
+    <summary class="fbarwrap__btn">
+        <span><?= e($fbTitle) ?></span>
+        <?= icon('sliders', 'fbarwrap__ico', 16) ?>
+
+        <?php /* Ô SỐ LUÔN CÓ MẶT, chỉ `hidden` khi bằng 0 — không phải khi
+                 rỗng thì bỏ hẳn thẻ. catalog.js chép con số này sang sau mỗi
+                 cú lọc, mà chép vào một thẻ không tồn tại thì con số đứng im
+                 ở giá trị lúc nạp trang. */ ?>
+        <span class="fbarwrap__num"<?= $fbCount > 0 ? '' : ' hidden' ?>><?= $fbCount ?><span
+            class="sr-only"> tiêu chí đang bật</span></span>
+    </summary>
+
 <div class="fbar">
     <div class="fbar__head">
         <p class="fbar__title">
             <?= e($fbTitle) ?><span class="fbar__count"><?= $fbTotal ?><span
                 class="sr-only"> sản phẩm đang khớp</span></span>
         </p>
-
-        <?php /* ✕ là một LIÊN KẾT về chính trang này không mang tham số nào —
-                 nó vừa đóng tấm vừa xoá sạch bộ lọc, và chạy cả khi tắt
-                 JavaScript. Cùng lối với nút ✕ của trang bộ sưu tập. */ ?>
-        <?php if ($fbClose !== ''): ?>
-            <a class="fbar__close" href="<?= e($fbClose) ?>" rel="nofollow" aria-label="Đóng bộ lọc">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                    <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor"
-                          stroke-width="1.6" stroke-linecap="round"/>
-                </svg>
-            </a>
-        <?php endif; ?>
     </div>
 
     <div class="fbar__cols">
@@ -139,3 +166,4 @@ if (!$fbCoGi) {
         </div>
     <?php endif; ?>
 </div>
+</details>

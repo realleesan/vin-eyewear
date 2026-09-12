@@ -70,6 +70,12 @@ const ICONS = [
     'layers'      => '<path d="M12 3.5l8 4-8 4-8-4z"/><path d="M4 12l8 4 8-4"/><path d="M4 16.5l8 4 8-4"/>',
     'ruler'       => '<path d="M4 14.5L14.5 4l5.5 5.5L9.5 20z"/><path d="M8 10.5l1.8 1.8M11 7.5l1.8 1.8M13.8 13.3l1.8 1.8"/>',
     'filter'      => '<path d="M3.5 5.5h17l-6.5 7.5V19l-4 2v-8z"/>',
+    /* 'sliders' KHÁC 'filter' và cả hai đều đang dùng: 'filter' (cái phễu) cho
+       những chỗ nói về VIỆC lọc, còn 'sliders' — hai thanh trượt có núm — là
+       icon trên nút mở tấm lọc của ba trang có lưới sản phẩm, lấy theo bản
+       thiết kế chủ dự án đưa. Đừng gộp hai cái làm một. */
+    'sliders'     => '<path d="M3 8h9M16.5 8H21M3 16h4.5M12 16h9"/>'
+                   . '<circle cx="14.25" cy="8" r="2.25"/><circle cx="9.75" cy="16" r="2.25"/>',
     // ── Thanh bên khu quản trị ──────────────────────────────────────────
     // Lấy nguyên đường dẫn từ bản thiết kế "Vin Eyewear Admin.dc.html": mỗi
     // mục điều hướng một hình riêng. Trước đây thanh bên dùng lại icon của

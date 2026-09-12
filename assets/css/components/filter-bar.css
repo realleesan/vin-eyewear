@@ -41,13 +41,88 @@
    câu chỉ trình đọc màn hình nghe được — xem app/views/_layout/filter-bar.php.
    ═════════════════════════════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════════════════════════
+   NÚT MỞ — "Bộ lọc" + hai thanh trượt, dồn sát mép PHẢI
+
+   Tấm đóng sẵn; chỉ cái nút này hiện ra cho tới khi có người bấm. Xem khối
+   chú thích đầu app/views/_layout/filter-bar.php.
+
+   VIỀN VUÔNG, không bo góc — luật chung của cả site từ đợt dựng lại màn
+   đăng nhập. Đừng thêm border-radius ở đây cho "mềm mắt": nó sẽ là chỗ duy
+   nhất trong trang có góc tròn.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.fbarwrap {
+    display: block;
+    border-bottom: 1px solid var(--line);
+}
+
+/* Tấm đang mở thì chính .fbar đã có viền trên/dưới — hai đường liền nhau ở
+   cùng một chỗ dày gấp đôi. */
+.fbarwrap[open] {
+    border-bottom: 0;
+}
+
+.fbarwrap__btn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px var(--edge);
+    font-size: var(--fs-text, 13px);
+    color: var(--ink);
+    list-style: none;
+    cursor: pointer;
+}
+
+/* Tam giác mặc định của <summary> — tắt ở cả hai cú pháp. Firefox đọc
+   `list-style`, WebKit đọc thẻ giả riêng của nó. */
+.fbarwrap__btn::-webkit-details-marker {
+    display: none;
+}
+
+.fbarwrap__ico {
+    flex: none;
+}
+
+/* Số tiêu chí đang bật — viên đen nhỏ, chỉ hiện khi > 0. `hidden` do PHP
+   đặt, nhưng display:inline-flex ngay dưới sẽ thắng nó nếu không chốt lại
+   ở khối [hidden] bên dưới. */
+.fbarwrap__num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--fs-micro, 10px);
+    line-height: 1;
+}
+
+.fbarwrap__num[hidden] {
+    display: none;
+}
+
+.fbarwrap__btn:hover {
+    opacity: .65;
+}
+
+/* Bàn phím: <summary> nhận tiêu điểm như một nút, và nó phải THẤY được —
+   đây là lối duy nhất vào bộ lọc khi không dùng chuột. */
+.fbarwrap__btn:focus-visible {
+    outline: 1px solid var(--ink);
+    outline-offset: -1px;
+}
+
 .fbar {
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     background: var(--bg-off);
 }
 
-/* ┌─ HÀNG ĐẦU: tên tấm + tổng số hàng + nút đóng ─────────────────────────── */
+/* ┌─ HÀNG ĐẦU: tên tấm + tổng số hàng (nút ✕ đã gỡ — xem filter-bar.php) ── */
 .fbar__head {
     display: flex;
     align-items: baseline;
@@ -74,24 +149,6 @@
     color: var(--ink-3);
 }
 
-.fbar__close {
-    flex: none;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ink);
-}
-
-.fbar__close svg {
-    width: 16px;
-    height: 16px;
-}
-
-.fbar__close:hover {
-    opacity: .6;
-}
 
 /* ┌─ CÁC CỘT ─────────────────────────────────────────────────────────────
    │ auto-fit + minmax: số cột tự co theo bề ngang màn hình, không phải một

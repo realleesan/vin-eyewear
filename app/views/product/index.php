@@ -334,11 +334,15 @@ $fbCols[] = [
     partial('_layout/filter-bar', [
         'fbCols'  => $fbCols,
         'fbTotal' => (int) $total,
-        /* ✕ và "Xoá tất cả" cùng trỏ về trang này KHÔNG mang tiêu chí nào. Giữ
-           nguyên ?q= nếu khách tới từ ô tìm kiếm: xoá bộ lọc khác với xoá từ
-           khoá đang tìm. */
-        'fbClose' => $buildUrl($resetPatch),
+        /* "Xoá tất cả" trỏ về trang này KHÔNG mang tiêu chí nào. Giữ nguyên
+           ?q= nếu khách tới từ ô tìm kiếm: xoá bộ lọc khác với xoá từ khoá
+           đang tìm. */
         'fbClear' => $hasFacetFilter ? $buildUrl($resetPatch) : '',
+        /* Số tiêu chí đang bật — in lên nút mở, và là thứ quyết định tấm có
+           bung sẵn hay không. Trừ 'category' ra: danh mục là CHÍNH trang này
+           chứ không phải một tiêu chí khách vừa bấm, nên đếm nó vào là tấm
+           luôn bung sẵn ở mọi trang con. Cùng phép với $hasFacetFilter. */
+        'fbCount' => max(0, $activeCount - ($filters['category'] !== '' ? 1 : 0)),
     ]);
     ?>
 
