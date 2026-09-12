@@ -1,0 +1,271 @@
+/* ============================================================================
+   filter-bar.css — TẤM LỌC NGANG, dùng chung cho mọi trang có lưới sản phẩm
+
+   ═════════════════════════════════════════════════════════════════════════
+       ┌──────────────────────────────────────────────────────────── ✕ ─┐
+       │ BỘ LỌC¹³⁹                                                       │
+       │                                                                 │
+       │ KIỂU DÁNG        CHẤT LIỆU       THƯƠNG HIỆU      SẮP XẾP       │
+       │ ☐ Vuông          ☐ Acetate       ☐ Gucci          ◯ Mới nhất    │
+       │ ☐ Tròn           ☐ Kim loại      ☐ Dior           ◯ Giá thấp    │
+       │ ☐ Mắt mèo        ☐ Nhựa dẻo      ☐ Ray-Ban        ◯ Giá cao     │
+       └─────────────────────────────────────────────────────────────────┘
+
+   ─────────────────────────────────────────────────────────────────────────
+   VÌ SAO TẤM NGANG THAY CHO CỘT TRÁI 280px
+
+   Cột trái hẹp là thứ đã ép trang danh mục phải gói bốn nhóm lọc vào bốn Ô
+   CHỌN XỔ XUỐNG — chú thích cũ trong product/index.php nói thẳng lý do: "một
+   nhóm ăn ba, bốn dòng của một cột chỉ rộng 280px, đẩy Thương hiệu và Khoảng
+   giá xuống dưới nếp gấp".
+
+   Tấm ngang gỡ đúng cái ép ấy: bề ngang cả trang đủ cho năm, sáu cột đứng
+   cạnh nhau, nên mỗi nhóm lại bày ra được hết lựa chọn của nó. Người mua nhìn
+   một lượt là thấy toàn bộ tiêu chí, thay vì phải mở từng ô mới biết trong đó
+   có gì.
+
+   ─────────────────────────────────────────────────────────────────────────
+   Ô TICK Ở ĐÂY LÀ <a href>, KHÔNG PHẢI <input type=checkbox>
+
+   Nhìn thì giống ô tick, nhưng mỗi mục là một LIÊN KẾT THẬT tới đúng địa chỉ
+   đã lọc, do máy chủ dựng sẵn. Ba thứ được nhờ đó:
+
+     · Bấm là lọc NGAY, không cần nút "Áp dụng" — một lượt bấm ít hơn.
+     · Tắt JavaScript vẫn chạy nguyên: liên kết vẫn là liên kết.
+     · Mở trong tab mới, chép địa chỉ, đánh dấu trang — đều được, vì trạng
+       thái bộ lọc nằm trên URL chứ không nằm trong DOM.
+
+   ⚠ ĐỪNG đổi chúng thành <input type="checkbox"> cho "đúng ngữ nghĩa". Làm
+   thế là phải thêm nút "Áp dụng" (một cú bấm nữa), thêm JS để gom trạng thái,
+   và mất cả ba thứ trên. Trạng thái đang-bật do `aria-current` mang, kèm một
+   câu chỉ trình đọc màn hình nghe được — xem app/views/_layout/filter-bar.php.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+.fbar {
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-off);
+}
+
+/* ┌─ HÀNG ĐẦU: tên tấm + tổng số hàng + nút đóng ─────────────────────────── */
+.fbar__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px var(--edge) 0;
+}
+
+.fbar__title {
+    font-size: var(--fs-subtitle);
+    font-weight: 600;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+/* Số tổng nằm CAO như số mũ, đúng bản vẽ. Nó là "có bao nhiêu món đang khớp",
+   không phải "bao nhiêu tiêu chí đang bật" — hai con số khác nhau, và huy hiệu
+   trên nút mở tấm mới là con số thứ hai. */
+.fbar__count {
+    margin-left: 2px;
+    font-size: var(--fs-micro);
+    font-weight: 400;
+    vertical-align: super;
+    color: var(--ink-3);
+}
+
+.fbar__close {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+}
+
+.fbar__close svg {
+    width: 16px;
+    height: 16px;
+}
+
+.fbar__close:hover {
+    opacity: .6;
+}
+
+/* ┌─ CÁC CỘT ─────────────────────────────────────────────────────────────
+   │ auto-fit + minmax: số cột tự co theo bề ngang màn hình, không phải một
+   │ con số gõ cứng. Thêm một nhóm lọc mới là nó tự tìm chỗ.
+   │
+   │ 170px là bề ngang đủ cho nhãn dài nhất đang có ("Bộ sưu tập hợp tác")
+   │ mà không ngắt dòng giữa chừng. */
+.fbar__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 28px 24px;
+    padding: 18px var(--edge) 32px;
+}
+
+.fbar__col {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.fbar__legend {
+    margin-bottom: 14px;
+    padding: 0;
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+/* ┌─ CỘT DÀI THÌ TỰ CUỘN, VÀ CẮT ĐÚNG GIỮA HAI DÒNG ──────────────────────
+   │ Nhóm Thương hiệu có mấy chục hãng; để nguyên thì một cột kéo cả tấm dài
+   │ gấp ba những cột khác.
+   │
+   │ Chiều cao là BỘI SỐ của nhịp dòng, không phải một con số tròn gõ đại:
+   │ mỗi mục cao 22px, cách nhau 10px, nên 8 dòng = 8*22 + 7*10 = 246px. Cắt ở
+   │ một con số tuỳ ý thì dòng cuối bị xén làm đôi — trông như lỗi dựng trang
+   │ chứ không như một cột cuộn được.
+   │
+   │ min-height trên .fbar__opt là thứ giữ cho phép tính ấy đúng; nhãn dài
+   │ tràn hai dòng vẫn đẩy lệch, nhưng đó là ngoại lệ hiếm và nó chỉ làm dòng
+   │ cuối hụt chứ không vỡ bố cục. */
+.fbar__list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 246px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+/* ┌─ MỘT MỤC = một liên kết trông như ô tick ──────────────────────────────── */
+.fbar__opt {
+    min-height: 22px;
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    color: var(--ink);
+    font-size: var(--fs-text);
+    line-height: var(--lh-tight);
+}
+
+.fbar__box {
+    flex: none;
+    width: 13px;
+    height: 13px;
+    margin-top: 1px;
+    border: 1px solid var(--line-strong);
+    /* Góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: background-color .12s ease, border-color .12s ease;
+}
+
+.fbar__box svg {
+    display: block;
+    width: 9px;
+    height: 9px;
+    visibility: hidden;
+}
+
+/* Nhóm SẮP XẾP chọn-một nên ô của nó TRÒN, đúng quy ước ô chọn tròn — và
+   đúng bản vẽ. Hình dạng ô là thứ nói cho người dùng biết "chọn được nhiều"
+   hay "chỉ một"; dùng chung một hình cho cả hai là bỏ mất lời nhắc ấy. */
+.fbar__opt--one .fbar__box {
+    border-radius: 50%;
+}
+
+.fbar__opt--one .fbar__box::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #fff;
+    visibility: hidden;
+}
+
+/* ĐANG BẬT: ô tô đen đặc. Khác biệt là NỀN chứ không phải sắc độ chữ, nên nó
+   đọc được cả khi người dùng không phân biệt được màu — cùng thủ pháp đã dùng
+   cho .authcheck và .authtab. */
+.fbar__opt.is-on .fbar__box {
+    border-color: var(--ink);
+    background: var(--ink);
+}
+
+.fbar__opt.is-on .fbar__box svg,
+.fbar__opt--one.is-on .fbar__box::after {
+    visibility: visible;
+}
+
+/* Ô TRÒN KHÔNG DÙNG DẤU TICK. Hình tick nằm sẵn trong markup của mọi mục (một
+   partial, một khuôn), nên ở nhóm chọn-một phải giấu nó đi — không giấu thì ô
+   tròn hiện một dấu tick, tức là nó nói "chọn được nhiều" đúng lúc nó chỉ cho
+   chọn một. Chấm tròn ::after ở trên mới là dấu của nhóm này. */
+.fbar__opt--one .fbar__box svg {
+    display: none;
+}
+
+.fbar__opt:hover .fbar__box {
+    border-color: var(--ink);
+}
+
+/* ┌─ MỤC KHÔNG CÒN HÀNG ───────────────────────────────────────────────────
+   │ Làm mờ và bỏ liên kết, KHÔNG giấu đi: giấu thì tấm co giãn sau mỗi cú
+   │ bấm và người dùng mất dấu tiêu chí vừa nhìn thấy. Mục ĐANG BẬT không bao
+   │ giờ bị tắt — tắt nó là không còn cách nào bỏ lọc. */
+.fbar__opt.is-off {
+    color: var(--ink-5);
+    pointer-events: none;
+}
+
+.fbar__opt.is-off .fbar__box {
+    border-color: var(--line-input);
+    background: var(--bg-off);
+}
+
+/* ┌─ CHÂN TẤM ─────────────────────────────────────────────────────────────── */
+.fbar__foot {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 var(--edge) 24px;
+}
+
+.fbar__clear {
+    color: var(--ink-2);
+    font-size: var(--fs-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.fbar__clear:hover {
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP — cột thu còn hai, rồi một
+
+   Không đổi sang tấm trượt từ đáy: tấm này nằm TRONG luồng trang (nó là một
+   <details> mở gập tại chỗ), nên ở màn hẹp nó chỉ cần xếp lại cột. Một tấm
+   trượt sẽ cần thêm khoá cuộn, bẫy tiêu điểm và một máy trạng thái — cả một
+   bộ máy cho thứ mà việc xếp lại cột đã giải quyết xong.
+   ══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+    .fbar__cols {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 22px 16px;
+    }
+
+    /* 5 dòng ở màn hẹp — vẫn là bội số của nhịp 22+10. */
+    .fbar__list {
+        max-height: 150px;
+    }
+}
