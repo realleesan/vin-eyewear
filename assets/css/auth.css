@@ -230,31 +230,20 @@
     line-height: var(--lh-tight);
 }
 
-/* ┌─ "*Bắt buộc" và "Quên mật khẩu?" — cả hai NÉP PHẢI, 9px ──────────────
-   │ ĐÃ GỠ BỘ CHỌN `.field__opt` TRẦN khỏi hai luật này (12/09/2026).
+/* ┌─ Dòng phụ NÉP PHẢI trong một ô nhập ──────────────────────────────────
+   │ ĐÃ GỠ `.authfield__opt` (12/09/2026) — lớp ấy chuyên để vẽ đuôi nhãn
+   │ "(không bắt buộc)", mà luật mới của site không còn ghi câu đó nữa: ô bắt
+   │ buộc có dấu *, ô không bắt buộc thì để trống nhãn. Xem khối "DẤU * TRÊN
+   │ NHÃN Ô BẮT BUỘC" ở assets/css/oa.css.
    │
-   │ Nó là mã chết ở đây: auth/index.php, auth/_signup.php và
-   │ auth/google-signup.php đều dùng .authfield__opt. Nơi duy nhất còn dùng
-   │ lớp trần là auth/account/don-hang.php — trang tài khoản, nạp account.css
-   │ chứ không nạp file này.
+   │ Bộ chọn `.field__opt` TRẦN cũng đã gỡ khỏi đây trước đó: auth.css nay nạp
+   │ cho MỌI trang khung đầy đủ (ngăn kéo đăng nhập bật ra được ở bất kỳ đâu),
+   │ nên để nguyên thì dòng "(bắt buộc nếu chọn Lý do khác)" trong form huỷ
+   │ đơn bỗng bị luật này với tay tới.
    │
-   │ Gỡ vì auth.css nay nạp cho MỌI trang khung đầy đủ (ngăn kéo đăng nhập
-   │ bật ra được ở bất kỳ đâu — xem _layout/master.php). Để nguyên thì dòng
-   │ gợi ý "(bắt buộc nếu chọn Lý do khác)" trong form huỷ đơn bỗng bị gạch
-   │ chân và đẩy sang phải, vì luật này với tay tới nó.
-   └──────────────────────────────────────────────────────────────────────── */
-.authfield__aside,
-.authfield__opt {
-    align-self: flex-end;
-    font-size: var(--fs-micro);
-    color: var(--ink-3);
-}
-
-.authfield__opt {
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    color: var(--ink);
-}
+   │ `.authfield__aside` gỡ cùng lượt: quét cả app/ lẫn assets/js/ không còn
+   │ chỗ nào in ra lớp ấy. Nó là bạn đồng hành của .authfield__opt, và chết
+   │ theo. */
 
 /* ┌─ Ô MẬT KHẨU CÓ NÚT CON MẮT ───────────────────────────────────────── */
 .authpw {

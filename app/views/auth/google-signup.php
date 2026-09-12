@@ -137,7 +137,7 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
 
                 <label class="authfield">
                     <span class="authfield__label">
-                        Số điện thoại <em class="authfield__opt">(không bắt buộc)</em>
+                        Số điện thoại
                     </span>
                     <?php /* type="tel" + inputmode: bàn phím điện thoại mở thẳng
                              bàn số. maxlength 15 để lọt cả dạng +84… —

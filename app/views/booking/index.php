@@ -182,7 +182,7 @@ $steps = [
 
                     <div class="bkfields">
                         <label class="bkfield">
-                            <span class="bkfield__label">Họ và tên *</span>
+                            <span class="bkfield__label">Họ và tên</span>
                             <input class="bkfield__input" type="text" name="full_name" required
                                    minlength="2" maxlength="120" autocomplete="name"
                                    placeholder="Nguyễn Văn A"
@@ -190,7 +190,7 @@ $steps = [
                         </label>
 
                         <label class="bkfield">
-                            <span class="bkfield__label">Số điện thoại *</span>
+                            <span class="bkfield__label">Số điện thoại</span>
                             <input class="bkfield__input" type="tel" name="phone" required
                                    autocomplete="tel" inputmode="tel"
                                    placeholder="09xx xxx xxx"
@@ -200,7 +200,7 @@ $steps = [
 
                     <label class="bkfield">
                         <span class="bkfield__label">
-                            Ghi chú <em class="bkfield__opt">(không bắt buộc)</em>
+                            Ghi chú
                         </span>
                         <textarea class="bkfield__area" name="note" rows="3" maxlength="500"
                                   placeholder="Ví dụ: đang đeo kính cận 2 độ, muốn tư vấn tròng chống ánh sáng xanh…"><?= e($old['note'] ?? '') ?></textarea>

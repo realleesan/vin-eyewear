@@ -910,7 +910,7 @@ $paymentShort  = [
                             <?php endif; ?>
 
                             <label class="acct-field">
-                                <span class="acct-field__label">Vì sao bạn huỷ đơn? <span aria-hidden="true">*</span></span>
+                                <span class="acct-field__label">Vì sao bạn huỷ đơn?</span>
                                 <select class="acct-field__input" name="ly_do" required
                                         data-cancel-reason>
                                     <option value="">— Chọn lý do —</option>

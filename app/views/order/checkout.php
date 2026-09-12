@@ -180,7 +180,7 @@ $storeId  = $old['storeId'] ?? '';
 
                 <div class="cofield__row">
                     <label class="cofield">
-                        <span class="cofield__label"><?= e(t('co.name')) ?> *</span>
+                        <span class="cofield__label"><?= e(t('co.name')) ?></span>
                         <input class="cofield__input" type="text" name="customer_name" required
                                minlength="2" maxlength="120" autocomplete="name"
                                placeholder="<?= e(t('co.name_ph')) ?>"
@@ -188,7 +188,7 @@ $storeId  = $old['storeId'] ?? '';
                     </label>
 
                     <label class="cofield">
-                        <span class="cofield__label"><?= e(t('co.phone')) ?> *</span>
+                        <span class="cofield__label"><?= e(t('co.phone')) ?></span>
                         <input class="cofield__input" type="tel" name="customer_phone" required
                                autocomplete="tel" inputmode="tel" placeholder="<?= e(t('co.phone_ph')) ?>"
                                value="<?= e($fillCo('customerPhone', $address['phone'] ?? null, $profile['phone'] ?? null)) ?>">
@@ -250,7 +250,7 @@ $storeId  = $old['storeId'] ?? '';
                     ?>
                     <div class="cofield__row" data-vnaddr>
                         <label class="cofield">
-                            <span class="cofield__label"><?= e(t('co.province')) ?> *</span>
+                            <span class="cofield__label"><?= e(t('co.province')) ?></span>
                             <input class="cofield__input" type="text" name="address_city"
                                    maxlength="80" autocomplete="address-level1" placeholder="<?= e(t('co.province_ph')) ?>"
                                    data-vnaddr-field="province"
@@ -258,7 +258,7 @@ $storeId  = $old['storeId'] ?? '';
                         </label>
 
                         <label class="cofield">
-                            <span class="cofield__label"><?= e(t('co.ward')) ?> *</span>
+                            <span class="cofield__label"><?= e(t('co.ward')) ?></span>
                             <input class="cofield__input" type="text" name="address_ward"
                                    maxlength="80" autocomplete="address-level2" placeholder="<?= e(t('co.ward_ph')) ?>"
                                    data-vnaddr-field="ward"
@@ -270,7 +270,7 @@ $storeId  = $old['storeId'] ?? '';
                     </div>
 
                     <label class="cofield">
-                        <span class="cofield__label"><?= e(t('co.address')) ?> *</span>
+                        <span class="cofield__label"><?= e(t('co.address')) ?></span>
                         <input class="cofield__input" type="text" name="address_line"
                                maxlength="160" autocomplete="address-line1"
                                placeholder="<?= e(t('co.address_ph')) ?>"
@@ -356,7 +356,7 @@ $storeId  = $old['storeId'] ?? '';
 
                 <label class="cofield">
                     <span class="cofield__label">
-                        Ghi chú <em>(không bắt buộc)</em>
+                        Ghi chú
                     </span>
                     <textarea class="cofield__input cofield__area" name="note" rows="3" maxlength="500"
                               placeholder="<?= e(t('co.note_ph')) ?>"><?= e($fill('note')) ?></textarea>

@@ -164,7 +164,7 @@ $channels = [
 
                 <div class="cform__pair">
                     <label class="cfield">
-                        <span class="cfield__label">Họ và tên *</span>
+                        <span class="cfield__label">Họ và tên</span>
                         <input class="cfield__input" type="text" name="full_name" required
                                minlength="2" maxlength="120" autocomplete="name"
                                placeholder="Nguyễn Văn A"
@@ -172,7 +172,7 @@ $channels = [
                     </label>
 
                     <label class="cfield">
-                        <span class="cfield__label">Số điện thoại *</span>
+                        <span class="cfield__label">Số điện thoại</span>
                         <input class="cfield__input" type="tel" name="phone" required
                                autocomplete="tel" inputmode="tel"
                                placeholder="09xx xxx xxx"
@@ -182,7 +182,7 @@ $channels = [
 
                 <label class="cfield">
                     <span class="cfield__label">
-                        Email <em class="cfield__opt">(không bắt buộc)</em>
+                        Email
                     </span>
                     <input class="cfield__input" type="email" name="email" autocomplete="email"
                            placeholder="ban@email.com"
@@ -190,7 +190,7 @@ $channels = [
                 </label>
 
                 <label class="cfield">
-                    <span class="cfield__label">Nội dung *</span>
+                    <span class="cfield__label">Nội dung</span>
                     <textarea class="cfield__input cfield__input--area" name="message" rows="5"
                               required minlength="5" maxlength="1000"
                               placeholder="Bạn cần tư vấn về gọng kính, tròng kính hay đặt lịch đo mắt?"><?= e($old['message'] ?? '') ?></textarea>

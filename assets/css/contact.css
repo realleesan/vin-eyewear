@@ -155,12 +155,6 @@
     text-transform: uppercase;
 }
 
-.cfield__opt {
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--ink-5);
-}
-
 /* Ô GẠCH CHÂN, không viền — xem khối chú thích đầu file */
 .cfield__input {
     width: 100%;

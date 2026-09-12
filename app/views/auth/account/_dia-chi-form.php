@@ -54,7 +54,7 @@ $neo   = $laSua ? 'sua-dia-chi' : 'them-dia-chi';
 
         <div class="acct-form__row">
             <label class="acct-field">
-                <span class="acct-field__label">Người nhận <span aria-hidden="true">*</span></span>
+                <span class="acct-field__label">Người nhận</span>
                 <?php /* KHÔNG điền sẵn họ tên chủ tài khoản khi thêm mới: phần
                          lớn địa chỉ thứ hai trở đi là gửi cho người khác (nhà bố
                          mẹ, cơ quan), và một ô đã có sẵn tên đúng của mình là ô
@@ -65,7 +65,7 @@ $neo   = $laSua ? 'sua-dia-chi' : 'them-dia-chi';
             </label>
 
             <label class="acct-field">
-                <span class="acct-field__label">Số điện thoại <span aria-hidden="true">*</span></span>
+                <span class="acct-field__label">Số điện thoại</span>
                 <input class="acct-field__input" type="tel" name="phone" required
                        autocomplete="tel"
                        value="<?= e((string) ($dc['phone'] ?? '')) ?>">
@@ -75,7 +75,7 @@ $neo   = $laSua ? 'sua-dia-chi' : 'them-dia-chi';
 
         <div class="acct-form__row" data-vnaddr>
             <label class="acct-field">
-                <span class="acct-field__label">Tỉnh / Thành phố <span aria-hidden="true">*</span></span>
+                <span class="acct-field__label">Tỉnh / Thành phố</span>
                 <input class="acct-field__input" type="text" name="province_name" required
                        maxlength="120" autocomplete="address-level1"
                        placeholder="Thành phố Hà Nội"
@@ -84,7 +84,7 @@ $neo   = $laSua ? 'sua-dia-chi' : 'them-dia-chi';
             </label>
 
             <label class="acct-field">
-                <span class="acct-field__label">Phường / Xã <span aria-hidden="true">*</span></span>
+                <span class="acct-field__label">Phường / Xã</span>
                 <input class="acct-field__input" type="text" name="ward_name" required
                        maxlength="120" autocomplete="address-level2"
                        placeholder="Phường Tây Hồ"
@@ -103,7 +103,7 @@ $neo   = $laSua ? 'sua-dia-chi' : 'them-dia-chi';
         </div>
 
         <label class="acct-field">
-            <span class="acct-field__label">Địa chỉ chi tiết <span aria-hidden="true">*</span></span>
+            <span class="acct-field__label">Địa chỉ chi tiết</span>
             <?php /* CHỈ số nhà và tên đường. Phường và tỉnh đã có hai ô trên —
                      gõ lại vào đây thì phiếu gửi hàng in chúng hai lần. */ ?>
             <input class="acct-field__input" type="text" name="line1" required

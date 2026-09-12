@@ -520,7 +520,7 @@ $stepForm = static function (string $buoc): void {
                          || trim((string) ($rxRaw['os']['note'] ?? '')) !== '';
                 ?>
                 <details class="brxnote"<?= $coGhiChu ? ' open' : '' ?>>
-                    <summary class="brxnote__toggle">Thêm ghi chú (không bắt buộc)</summary>
+                    <summary class="brxnote__toggle">Thêm ghi chú</summary>
 
                     <div class="brxnote__grid">
                         <?php foreach ($eyes as $side => [$code, $label]): ?>

@@ -137,6 +137,7 @@ $backTo = static function (string $href): void { ?>
                         <legend class="sr-only">Mã xác minh gồm <?= Otp::LENGTH ?> chữ số</legend>
                         <?php for ($i = 0; $i < Otp::LENGTH; $i++): ?>
                             <input class="aotp__box" type="text" name="ma[]" inputmode="numeric"
+                                   required
                                    pattern="[0-9]*" maxlength="1" autocomplete="one-time-code"
                                    aria-label="Chữ số thứ <?= $i + 1 ?>"
                                    <?= $i === 0 ? 'autofocus' : '' ?>>

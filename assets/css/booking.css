@@ -352,12 +352,6 @@
     text-transform: uppercase;
 }
 
-.bkfield__opt {
-    text-transform: none;
-    letter-spacing: 0;
-    color: var(--ink-5);
-}
-
 .bkfield__input,
 .bkfield__area {
     width: 100%;

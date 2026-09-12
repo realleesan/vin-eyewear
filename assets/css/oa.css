@@ -3150,6 +3150,57 @@ textarea.oa-field {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   DẤU * TRÊN NHÃN Ô BẮT BUỘC
+   (12/09/2026, theo yêu cầu chủ dự án)
+
+   Luật của site: ô nào BẮT BUỘC thì nhãn có dấu *, ô nào không thì KHÔNG ghi
+   gì cả — không còn "(không bắt buộc)" đuôi nhãn nữa. Vắng dấu * đã là câu
+   trả lời.
+
+   ─────────────────────────────────────────────────────────────────────────
+   DẤU * DO CSS SINH RA TỪ CHÍNH THUỘC TÍNH `required`, KHÔNG GÕ TAY
+
+   Đây là chỗ quan trọng nhất của khối này. Gõ tay một dấu * vào từng nhãn thì
+   dấu ấy và thuộc tính `required` là HAI nguồn sự thật: ngày ai đó gỡ
+   `required` khỏi một ô, cái dấu * vẫn nằm lại và nói dối khách. `:has()` đọc
+   thẳng thuộc tính thật, nên dấu * không thể lệch với hành vi của form.
+
+   ⚠ Muốn một ô có dấu * thì thêm `required` cho ô ấy — đừng gõ dấu * vào nhãn.
+   Và nhớ: `required` chỉ là lớp chặn của TRÌNH DUYỆT; máy chủ vẫn phải kiểm
+   lại (gọi thẳng POST là bỏ qua được nó).
+
+   ─────────────────────────────────────────────────────────────────────────
+   HAI DÒNG `content` LÀ CỐ Ý, KHÔNG PHẢI CHÉP THỪA
+
+   Dòng sau dùng cú pháp `content: "…" / ""` — phần sau dấu gạch là CHỮ THAY
+   THẾ cho trình đọc màn hình, ở đây để RỖNG. Ô nhập đã mang `required` nên
+   trình đọc màn hình tự đọc "bắt buộc"; đọc thêm một tiếng "sao" nữa là đọc
+   thừa.
+
+   Trình duyệt chưa hiểu cú pháp ấy sẽ bỏ qua CẢ dòng — nên dòng trên phải
+   đứng đó làm nền, không thì ở những trình duyệt đó dấu * biến mất hẳn.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ┌─ KHU KHÁCH HÀNG, KHÔNG PHẢI KHU QUẢN TRỊ ─────────────────────────────
+   │ Năm họ ô nhập dưới đây là toàn bộ form mà KHÁCH nhìn thấy. Khu quản trị
+   │ (`.field > label`, 35 nhãn) cố ý đứng ngoài: ở đó dấu * đang GÕ TAY
+   │ trong từng nhãn, và trộn hai cách lại là mỗi nhãn hiện HAI dấu.
+   │
+   │ ⚠ Muốn đưa khu quản trị vào đây thì phải gỡ 35 dấu * gõ tay ấy TRƯỚC —
+   │ và nhớ rằng 5 trong số đó đang nói dối: nhãn có *, ô nhập KHÔNG có
+   │ `required` (lens-prices/_goi-form.php:50, products/_form.php:235 và 261,
+   │ staff/index.php:388 và 412). Chuyển sang luật này là chúng lặng lẽ mất
+   │ dấu *, nên phải quyết từng ô một: thêm `required`, hay bỏ dấu. */
+.authfield:has(:is(input, select, textarea)[required]) > .authfield__label::after,
+.acct-field:has(:is(input, select, textarea)[required]) > .acct-field__label::after,
+.cofield:has(:is(input, select, textarea)[required]) > .cofield__label::after,
+.cfield:has(:is(input, select, textarea)[required]) > .cfield__label::after,
+.bkfield:has(:is(input, select, textarea)[required]) > .bkfield__label::after {
+    content: " *";
+    content: " *" / "";
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    TIÊU ĐIỂM BÀN PHÍM
    ══════════════════════════════════════════════════════════════════════ */
 

@@ -262,7 +262,7 @@ $moGoGoogle = isset($_GET['go-google']);
                 </p>
 
                 <label class="acct-field">
-                    <span class="acct-field__label">Mật khẩu hiện tại <span aria-hidden="true">*</span></span>
+                    <span class="acct-field__label">Mật khẩu hiện tại</span>
                     <input class="acct-field__input" type="password" name="mat_khau"
                            required autocomplete="current-password">
                 </label>
@@ -375,7 +375,7 @@ $canhBao = isset($_GET['canh-bao']);
             <?php endif; ?>
 
             <label class="acct-field">
-                <span class="acct-field__label">Mật khẩu hiện tại <span aria-hidden="true">*</span></span>
+                <span class="acct-field__label">Mật khẩu hiện tại</span>
                 <input class="acct-field__input" type="password" name="mat_khau"
                        required autocomplete="current-password">
             </label>

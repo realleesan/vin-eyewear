@@ -146,15 +146,112 @@
             return;
         }
 
-        /*
-         * Không cần chốt lại đúng 0 nữa.
-         *
-         * Bản trước phải làm: header bung dải thông báo trở lại khi tới gần
-         * đỉnh, trang cao thêm vài chục pixel, cơ chế neo cuộn bù lại và hoạt
-         * ảnh dừng ở scrollY = 17 chứ không phải 0. Dải thông báo nay nằm
-         * ngoài header và header cao cố định (xem components/header.css), nên
-         * không còn cú đổi chiều cao nào để phải bù.
-         */
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        leoLenDinh();
     });
+
+    /* ====================================================================
+       3. HOẠT ẢNH CUỘN TỰ VẼ  (12/09/2026, theo yêu cầu chủ dự án)
+
+       VÌ SAO KHÔNG DÙNG `behavior: 'smooth'` CỦA TRÌNH DUYỆT NỮA
+
+       Nó chạy được, nhưng đường cong và thời lượng do trình duyệt định, không
+       chỉnh được, và mỗi hãng một kiểu. Từ cuối một trang dài, Chrome lao rất
+       nhanh rồi dừng khựng ở đỉnh — đúng cảm giác "giật một phát" mà chủ dự
+       án muốn bỏ.
+
+       Bản này quyết ba thứ mà bản kia không cho quyết:
+
+         · THỜI LƯỢNG THEO QUÃNG ĐƯỜNG. Cuộn 400px và cuộn 6000px mà cùng một
+           thời lượng thì một cái lết, một cái phi. Ở đây tỉ lệ thuận với
+           quãng, chặn hai đầu 320–900ms.
+         · ĐƯỜNG CONG easeOutCubic: đi nhanh ngay từ khung hình đầu (bấm là
+           thấy phản hồi tức thì) rồi hãm dần, đáp xuống đỉnh chứ không đập
+           vào đỉnh.
+         · DỪNG KHI NGƯỜI DÙNG ĐỘNG VÀO. Lăn chuột, chạm màn hay bấm phím
+           cuộn giữa chừng là huỷ ngay. Hoạt ảnh cãi nhau với ngón tay người
+           dùng là lỗi khó chịu hơn hẳn việc không có hoạt ảnh.
+
+       `behavior: 'instant'` ở mỗi khung hình, KHÔNG phải 'auto': nếu ngày nào
+       có ai đặt `scroll-behavior: smooth` lên <html>, thì 'auto' sẽ nghe theo
+       luật CSS ấy và trình duyệt lại chồng một hoạt ảnh mượt nữa lên trên
+       hoạt ảnh này — hai cái kéo nhau, kết quả là bò chậm rồi không bao giờ
+       tới nơi. 'instant' cắt đường đó.
+       ==================================================================== */
+
+    /* Lượt cuộn đang chạy — bấm nút lần nữa giữa chừng thì huỷ lượt cũ trước
+       khi mở lượt mới. Thiếu cờ này thì hai vòng requestAnimationFrame cùng
+       gán scrollY mỗi khung hình, mỗi vòng một mốc thời gian khác nhau, và
+       trang giật qua lại giữa hai vị trí. */
+    var dangLeo = null;
+
+    function leoLenDinh() {
+        var batDau = window.scrollY;
+
+        if (batDau <= 0) return;
+
+        if (dangLeo) dangLeo();
+
+        /* 0,6ms cho mỗi pixel, chặn 320–900ms. Con số 0,6 chọn để một trang
+           chủ (~900px quãng cuộn) rơi vào khoảng 540ms — đủ để mắt theo kịp
+           mà không phải ngồi đợi. */
+        var thoiLuong = Math.max(320, Math.min(900, batDau * 0.6));
+        var moc       = null;
+        var huy       = false;
+
+        /* Người dùng động vào là dừng. `passive: true` vì ta chỉ ĐỌC sự kiện,
+           không bao giờ gọi preventDefault — nói trước cho trình duyệt biết để
+           nó không phải chờ mã này chạy xong mới cuộn. */
+        var PHIM_CUON = [
+            'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'
+        ];
+
+        function dungLai(e) {
+            if (e.type === 'keydown' && PHIM_CUON.indexOf(e.key) === -1) return;
+            huy = true;
+        }
+
+        window.addEventListener('wheel', dungLai, { passive: true });
+        window.addEventListener('touchstart', dungLai, { passive: true });
+        window.addEventListener('keydown', dungLai);
+
+        function donDep() {
+            window.removeEventListener('wheel', dungLai);
+            window.removeEventListener('touchstart', dungLai);
+            window.removeEventListener('keydown', dungLai);
+            if (dangLeo === huyLuotNay) dangLeo = null;
+        }
+
+        /* Cách lượt SAU huỷ lượt này: bật cờ rồi dọn trình nghe ngay, không
+           đợi khung hình kế — lượt mới gắn trình nghe của riêng nó. */
+        function huyLuotNay() {
+            huy = true;
+            donDep();
+        }
+
+        dangLeo = huyLuotNay;
+
+        function buoc(nay) {
+            if (moc === null) moc = nay;
+
+            if (huy) { donDep(); return; }
+
+            var xong = Math.min(1, (nay - moc) / thoiLuong);
+
+            /* easeOutCubic: 1 - (1-t)³ */
+            var t = 1 - Math.pow(1 - xong, 3);
+
+            window.scrollTo({ top: Math.round(batDau * (1 - t)), behavior: 'instant' });
+
+            if (xong < 1) {
+                window.requestAnimationFrame(buoc);
+                return;
+            }
+
+            /* Chốt đúng 0: phép làm tròn từng khung hình có thể để lại 1px. */
+            window.scrollTo({ top: 0, behavior: 'instant' });
+            donDep();
+        }
+
+        window.requestAnimationFrame(buoc);
+    }
 })();
