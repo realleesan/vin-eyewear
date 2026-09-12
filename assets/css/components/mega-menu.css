@@ -139,40 +139,68 @@
 .mega__panel {
     position: absolute;
 
-    /* ┌─ ĐỈNH BẢNG = ĐÁY CHỮ MỤC NAV, KHÔNG PHẢI ĐÁY THANH ───────────────
-       │ (12/09/2026, theo yêu cầu chủ dự án: "giữ nguyên mọi thứ của nav,
-       │ kéo khối dropdown lùi lên sát vào nav".)
+    /* ┌─ ĐỈNH BẢNG = ĐÁY THANH. ĐỪNG KÉO LÊN CAO HƠN ─────────────────────
+       │ ĐÃ THỬ VÀ ĐÃ HOÀN LẠI (12/09/2026) — ghi ở đây để không ai thử lần
+       │ nữa.
        │
-       │ Trước đây là `top: var(--hdr-h)` — bảng dán vào ĐÁY THANH. Bảng và
-       │ thanh khi ấy đã sát nhau đúng 0px rồi; thứ trông như một khoảng hở
-       │ là NỬA DƯỚI CỦA CHÍNH THANH: chữ nav căn giữa một thanh cao 89,6px
-       │ nên dưới chân chữ còn 33,8px trống trước khi tới đỉnh bảng. Ở trang
-       │ chưa cuộn, sau thanh không có gì nên dải ấy trắng trơn, còn bảng thì
-       │ bắt đầu làm mờ — mắt đọc ra đúng chỗ bảng "bắt đầu".
+       │ Yêu cầu ban đầu: "bảng xổ dính sát vào mục nav, đang cách nhau một
+       │ khoảng nhỏ". Bản thử kéo đỉnh bảng lên `calc(50% + --fs-ui * .75)`,
+       │ tức đúng đáy chữ mục nav (đo được 56,3px). Kết quả: bảng ĐÈ LÊN nửa
+       │ dưới của thanh, và chủ dự án nhìn ra ngay — "sao cắt đi phần dưới
+       │ của nav menu?".
        │
-       │ CÔNG THỨC, KHÔNG PHẢI SỐ GÕ CỨNG. Chữ nav căn giữa thanh, nên đáy
-       │ chữ = nửa thanh + nửa chiều cao dòng chữ:
+       │ Hình học của nó không tránh được: chữ nav căn GIỮA thanh cao 89,6px
+       │ nên dưới chân chữ còn 33,8px thuộc về THANH. Muốn bảng chạm đáy chữ
+       │ thì bảng phải chiếm 33,8px ấy — tức thanh mất nửa dưới. Hai yêu cầu
+       │ "bảng chạm chữ nav" và "thanh giữ nguyên kích thước" loại trừ nhau
+       │ chừng nào chữ nav còn căn giữa.
        │
-       │     50%                 = 44,8px  (nửa thanh 89,6)
-       │     --fs-ui × 1,5 ÷ 2   = 11,6px  (dòng chữ nav: cỡ --fs-ui,
-       │                                    line-height 1.5 → cao 23,1px)
-       │     ────────────────────────────
-       │     top                 = 56,4px  ≈ đáy chữ nav (đo được 55,8)
-       │
-       │ Gõ cứng 56px thì hỏng ngay lần ai đó đổi --oa-scale hoặc --fs-ui:
-       │ cả thang chữ to ra mà riêng con số này đứng im, bảng sẽ cắt ngang
-       │ chữ nav. Viết theo token thì nó tự bám.
-       │
-       │ ĐI KÈM MỘT LUẬT NỮA, ĐỪNG TÁCH RỜI: .oa-header:has(...)::before ở
-       │ oa.css thu lớp kính của thanh lại đúng mốc này khi bảng mở. Thiếu
-       │ nó thì đoạn 56→89,6 có HAI lớp kính chồng nhau (tint .55 trên .55
-       │ ≈ .80, blur hai lần) và hiện ra một dải trắng đục đậm hơn hẳn chạy
-       │ ngang màn hình.
+       │ Nên NỘI DUNG bảng ở lại dưới đáy thanh. Khe giữa bảng và thanh vốn
+       │ đã là 0px — thứ trông như khoảng hở là nửa dưới của thanh, không
+       │ phải một khe. Cần thu khoảng nhìn thấy thì chỉnh `padding-top` ngay
+       │ dưới đây, đó là chỗ duy nhất không đụng tới thanh.
        └──────────────────────────────────────────────────────────────────── */
-    top: calc(50% + var(--fs-ui) * .75);
+
+    /* ┌─ HỘP BẢNG PHỦ CẢ THANH NAV — ĐỂ CHỈ CÓ MỘT TẤM KÍNH ──────────────
+       │ (12/09/2026) `top: 0` chứ không `var(--hdr-h)`, và ĐỪNG đổi lại.
+       │ Đây KHÔNG phải chuyện bố cục — nội dung bảng vẫn nằm dưới đáy thanh
+       │ y như cũ, nhờ `padding-top` bù đúng --hdr-h ở khối dưới. Đây là
+       │ chuyện LỚP MỜ.
+       │
+       │ ═══ VÌ SAO HAI TẤM KÍNH CẠNH NHAU LUÔN CÓ VẾT GỢN ═══
+       │
+       │ `backdrop-filter` chỉ làm mờ phần nền nằm trong ĐÚNG hình chữ nhật
+       │ của phần tử. Nội dung KHÔNG loang qua mép chung. Đo được trên Chrome:
+       │ đặt nền xám tuyệt đối đều và một vạch đen 4px ở y=96, tức chỉ 6px
+       │ dưới mốc giáp 89,6 —
+       │
+       │     dưới mốc  vệt đen loang mềm, đúng như blur 14px phải làm
+       │     trên mốc  PHẲNG LÌ, không một dấu vết nào của vạch đen
+       │
+       │ Ranh giới ấy là một bậc sắc, và không con số nào chữa được: hai
+       │ hình chữ nhật thì luôn là hai phép mờ riêng. Muốn thông suốt thì
+       │ phải còn ĐÚNG MỘT hình chữ nhật.
+       │
+       │ Nên bảng nhận luôn việc làm kính cho cả thanh: hộp nó trải từ đỉnh
+       │ thanh xuống hết bảng, một phép mờ liên tục. Đổi lại, lớp kính riêng
+       │ của thanh phải TẮT khi bảng mở — xem .oa-header:has(...)::before
+       │ trong oa.css. HAI LUẬT ẤY LÀ MỘT CẶP, sửa một cái mà quên cái kia
+       │ thì hoặc thừa hai lớp kính chồng nhau, hoặc thanh mất kính.
+       │
+       │ ═══ z-index: -1, KHÔNG PHẢI 1 ═══
+       │
+       │ Hộp bảng nay trùm lên chữ nav, nên nếu để z-index dương thì nó vẽ
+       │ ĐÈ LÊN chữ ấy. Số âm đẩy nó xuống dưới lớp nội dung không định vị
+       │ (chữ nav, wordmark, nút bên phải) mà vẫn nằm TRÊN ::before của
+       │ thanh — hai thứ cùng -1 thì cái sau trong DOM thắng.
+       │
+       │ Vẫn nằm trong bối cảnh xếp lớp của <header> (z-index 5) nên toàn bộ
+       │ bảng vẫn ở trên nội dung trang như thường.
+       └──────────────────────────────────────────────────────────────────── */
+    top: 0;
     left: 0;
     right: 0;
-    z-index: 1;
+    z-index: -1;
 
     /* ┌─ ĐỆM TRÊN 16px — ĐÃ TỪ 28px XUỐNG (theo yêu cầu chủ dự án) ─────────
        │ Khoảng cách MẮT THẤY từ chữ mục nav xuống dòng đầu bảng KHÔNG phải
@@ -190,7 +218,11 @@
        │ có đường kẻ nào giữa hai khối, nên dòng đầu bảng sẽ đọc ra như một
        │ mục nav rơi xuống hàng hai.
        └──────────────────────────────────────────────────────────────────── */
-    padding: 16px var(--edge) 40px;
+    /* --hdr-h BÙ LẠI CHO `top: 0` Ở TRÊN. Hộp bảng bắt đầu từ đỉnh thanh
+       nav (để chỉ có một tấm kính), nên phải đẩy NỘI DUNG xuống đúng một
+       chiều cao thanh — có thế dòng chữ đầu mới nằm đúng chỗ cũ, cách đáy
+       thanh 16px. Hai số này đi liền nhau: đổi `top` thì đổi cả đây. */
+    padding: calc(var(--hdr-h) + 16px) var(--edge) 40px;
 
     /* ┌─ BẢNG MƯỢN ĐÚNG NỀN CỦA THANH NAV ──────────────────────────────────
        │ Tham chiếu (gentlemonster.com) cho bảng KHÔNG nền — chữ nổi thẳng

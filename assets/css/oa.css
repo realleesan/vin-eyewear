@@ -1821,45 +1821,34 @@ textarea.oa-field {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    transition: background .25s ease;
+    transition: background .25s ease, opacity .2s ease;
 }
 
-/* ┌─ BẢNG XỔ ĐANG MỞ: LỚP KÍNH CỦA THANH THU LÊN, NHƯỜNG CHỖ CHO BẢNG ────
-   │ (12/09/2026) LUẬT NÀY ĐI LIỀN VỚI `top` CỦA .mega__panel — sửa một cái
-   │ mà quên cái kia là hỏng ngay, cả hai cùng một mốc.
+/* ┌─ BẢNG XỔ MỞ: THANH NHƯỜNG HẲN VIỆC LÀM KÍNH CHO BẢNG ─────────────────
+   │ (12/09/2026) CẶP ĐÔI với `top: 0` của .mega__panel trong
+   │ components/mega-menu.css. Sửa một cái mà quên cái kia là hỏng ngay:
+   │ thiếu luật này thì hai lớp kính chồng nhau (tint .55 trên .55 ≈ .80),
+   │ thiếu `top: 0` bên kia thì thanh mất kính trắng trơn.
    │
-   │ Từ 12/09/2026 bảng xổ không còn dán ở đáy thanh mà kéo lên sát đáy chữ
-   │ mục nav (yêu cầu chủ dự án). Nó vì thế ĐÈ LÊN nửa dưới của thanh — mà
-   │ cả hai đều là kính mờ, nên đoạn chồng nhau có HAI lớp kính:
+   │ VÌ SAO PHẢI NHƯỜNG HẲN, KHÔNG PHẢI CHIA ĐÔI: `backdrop-filter` chỉ làm
+   │ mờ phần nền trong đúng hình chữ nhật của phần tử, nội dung không loang
+   │ qua mép chung. Hai tấm kính cạnh nhau — dù cùng công thức, cùng token —
+   │ vẫn cho hai kết quả khác nhau ở sát đường giáp, và mắt đọc ra một vết
+   │ gợn sắc. Đo trên Chrome: nền xám đều, vạch đen 4px cách mốc giáp 6px về
+   │ phía bảng → phía bảng vệt đen loang mềm, phía thanh phẳng lì không một
+   │ dấu vết. Chỉ còn MỘT hình chữ nhật thì mới hết bậc.
    │
-   │     tint  .55 chồng .55  ≈ .80   → trắng đục hơn hẳn
-   │     blur  14px hai lần          → nhoè gấp đôi
-   │
-   │ ra một dải đậm rộng 33,8px chạy ngang màn hình, ngay dưới chữ nav.
-   │
-   │ Chữa bằng cách cho lớp kính của thanh DỪNG ở đúng mốc bảng bắt đầu,
-   │ nên hai tấm kính TIẾP NỐI nhau thay vì chồng lên nhau. Cùng công thức,
-   │ cùng lấy mẫu từ trang, nên mắt thấy MỘT mặt kính liền từ đỉnh thanh
-   │ xuống hết bảng — đúng nghĩa "dropdown dính vào nav".
-   │
-   │ `bottom` là phần bù của `top` bên .mega__panel, cùng hai số hạng:
-   │     top    = calc(50% + --fs-ui × .75)   tính từ ĐỈNH
-   │     bottom = calc(50% - --fs-ui × .75)   tính từ ĐÁY
-   │
-   │ CHỈ KHI BẢNG MỞ. Bảng đóng thì lớp kính phải phủ trọn thanh như thường,
-   │ không thì nửa dưới thanh mất kính mờ ở mọi trang.
-   │
-   │ :has() — trình duyệt nào cũng có từ 2023, và site này đã dùng sẵn
-   │ (.bkpill:has(.bk__radio:disabled) trong booking.css). Máy quá cũ không
-   │ hiểu :has() thì bỏ qua cả luật: về đúng hành vi cũ, dải đậm hiện lại —
-   │ xấu chứ không vỡ.
+   │ `opacity` chứ không `background: transparent`: bảng hiện ra bằng
+   │ opacity .2s, nên lớp kính của thanh cũng mờ đi đúng .2s ấy — hai lớp
+   │ chuyển chéo cho nhau. Tắt phựt thì trong 200ms bảng còn đang mờ dần mà
+   │ thanh đã trắng trơn, thành một cú nháy.
    │
    │ Hai điều kiện khớp đúng cặp đang bật bảng ở mega-menu.css
    │ (.mega:hover · .mega:focus-within). Thêm trạng thái mở thứ ba thì phải
    │ thêm cả ở đây. */
 .oa-header:has(.mega:hover)::before,
 .oa-header:has(.mega:focus-within)::before {
-    bottom: calc(50% - var(--fs-ui) * .75);
+    opacity: 0;
 }
 
 /* ┌─ ĐẦU TRANG TRONG SUỐT TRÊN TRANG CHỦ ─────────────────────────────────
