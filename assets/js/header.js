@@ -236,9 +236,33 @@
 
         pops.forEach(function (pop) {
             var trigger = pop.querySelector('[data-hpop-trigger]');
-            if (!trigger || trigger.tagName !== 'BUTTON') return;
+            if (!trigger) return;
 
-            trigger.addEventListener('click', function () {
+            /* ┌─ AI ĐƯỢC VÒNG LẶP NÀY NHẬN ────────────────────────────────────
+               │ <button>               ô tìm kiếm — không đi đâu, bấm là mở
+               │ <a> + [data-hpop-link] ngăn kéo đăng nhập — là liên kết THẬT
+               │                        tới /auth, JS chặn lại để mở tấm
+               │
+               │ Giỏ hàng cũng là <a> nhưng KHÔNG mang [data-hpop-link] nên rơi
+               │ khỏi đây — đúng ý: nó do khối Bootstrap Offcanvas ở mục 2c lo,
+               │ và nhận ở cả hai nơi là hai handler cùng bật/tắt một tấm.
+               │
+               │ Thuộc tính CHỌN-VÀO chứ không loại-trừ-ra: thêm một tấm mới thì
+               │ tác giả của nó phải nói rõ mình muốn gì, không ai vô tình bị
+               │ cuốn vào. */
+            var laLienKet = trigger.tagName !== 'BUTTON';
+
+            if (laLienKet && !trigger.hasAttribute('data-hpop-link')) return;
+
+            trigger.addEventListener('click', function (e) {
+                /* Ctrl/Cmd/Shift/chuột giữa trên một <a> = ý muốn MỞ TAB MỚI.
+                   Để trình duyệt làm việc của nó — cùng lối đã dùng cho thẻ mở
+                   giỏ hàng ở mục 2c. */
+                if (laLienKet) {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                    e.preventDefault();
+                }
+
                 var willOpen = !pop.classList.contains('is-open');
 
                 // Mở cái này thì đóng ba cái kia — hai bảng chồng nhau thì

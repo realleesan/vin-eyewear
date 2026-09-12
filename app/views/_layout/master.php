@@ -99,7 +99,19 @@ $manhCua = null;
 /* X-Search (09/09/2026): lớp phủ tìm kiếm ở đầu trang nạp ngầm /tim-kiem?q=
    rồi lấy khối .srch ra hiện TẠI CHỖ — assets/js/search-suggest.js. Cùng nhánh,
    cùng hợp đồng với hai mảnh kia: in nguyên view, không in khung. */
-foreach (['X-Catalog' => 'HTTP_X_CATALOG', 'X-Account' => 'HTTP_X_ACCOUNT', 'X-Search' => 'HTTP_X_SEARCH'] as $ten => $bien) {
+/* X-Auth (12/09/2026): ngăn kéo đăng nhập ở thanh đầu trang nạp ngầm /auth
+   rồi hiện TẠI CHỖ — assets/js/auth-drawer.js. Cùng nhánh, cùng hợp đồng.
+
+   ĐÂY LÀ THỨ GIỮ CHO LUỒNG ĐĂNG NHẬP CHỈ CÓ MỘT BẢN. Khối chú thích ở
+   _layout/header.php từ chối dựng ngăn kéo vì sợ chép luồng /auth ra lần thứ
+   hai; nạp ngầm chính /auth thì không chép gì — cùng view, cùng controller,
+   cùng CSRF, cùng các bước OTP. Ngăn kéo chỉ là một cái khung khác để đặt nó
+   vào. Đừng bao giờ thay nó bằng một form gõ tay trong header.
+
+   NHÁNH NÀY IN CẢ VIEW `bareLayout` NHƯ THƯỜNG: /auth vốn chạy khung rút gọn,
+   nhưng đoạn dưới đây `return` trước khi tới chỗ chọn khung, nên cả khung rút
+   gọn lẫn khung đầy đủ đều không được in — đúng thứ cần. */
+foreach (['X-Catalog' => 'HTTP_X_CATALOG', 'X-Account' => 'HTTP_X_ACCOUNT', 'X-Search' => 'HTTP_X_SEARCH', 'X-Auth' => 'HTTP_X_AUTH'] as $ten => $bien) {
     if (($_SERVER[$bien] ?? '') === '1') {
         $manhCua = $ten;
         break;
@@ -207,6 +219,18 @@ if ($manhCua !== null) {
        │              quả hiện ra không có kiểu.
        │   mega-menu  ba bảng xổ trên thanh nav (Gọng kính · Tròng kính · Bộ
        │              sưu tập). Thanh nav có ở mọi trang khung đầy đủ.
+       │   auth       ngăn kéo đăng nhập bên phải nạp ngầm chính trang /auth
+       │              vào bất kỳ trang nào (assets/js/auth-drawer.js), y hệt
+       │              cách `search` phục vụ lớp phủ tìm kiếm. Thiếu file này
+       │              thì ngăn kéo hiện ra một mớ chữ trần không kiểu.
+       │
+       │              ĐÃ QUÉT VA CHẠM TRƯỚC KHI ĐƯA LÊN ĐÂY: 69 lớp gốc của
+       │              auth.css đối chiếu với 51 view khu bán hàng — không lớp
+       │              nào trùng. Hai lớp .acct-rules* thì trùng CÓ LỢI: trang
+       │              /tai-khoan?muc=mat-khau vốn dùng chúng mà chưa bao giờ
+       │              nạp được luật (chúng chỉ khai trong auth.css), nên nay
+       │              nó mới đúng dáng. Riêng `.field__opt` trần đã phải gỡ
+       │              khỏi auth.css — xem chú thích tại chỗ đó.
        └────────────────────────────────────────────────────────────────────*/
     ?>
     <link rel="stylesheet" href="<?= asset('assets/css/components/mega-menu.css') ?>">
@@ -214,6 +238,7 @@ if ($manhCua !== null) {
     <link rel="stylesheet" href="<?= asset('assets/css/components/confirm.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/floating.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/search.css') ?>">
+    <link rel="stylesheet" href="<?= asset('assets/css/auth.css') ?>">
 
     <?php
     /* ┌─ CSS RIÊNG CỦA TỪNG TRANG ────────────────────────────────────────
@@ -240,10 +265,14 @@ if ($manhCua !== null) {
         'order/success'      => ['checkout.css'],
         'order/paid'         => ['checkout.css'],
 
-        'auth/index'         => ['auth.css'],
-        'auth/forgot'        => ['auth.css'],
-        'auth/reset'         => ['auth.css'],
-        'auth/google-signup' => ['auth.css'],
+        /* BỐN TRANG auth/* KHÔNG CÓ DÒNG Ở ĐÂY, và không phải vì quên:
+           auth.css nay nạp cho mọi trang trong khối CSS toàn cục bên trên
+           (ngăn kéo đăng nhập bật ra được ở bất kỳ đâu). Khai lại ở đây là
+           hai thẻ <link> cùng một file.
+
+           Nếu ngày nào đó gỡ auth.css khỏi khối toàn cục thì PHẢI trả bốn
+           dòng này về: auth/index · auth/forgot · auth/reset ·
+           auth/google-signup. */
         'auth/profile'       => ['account.css'],
 
         'about/index'        => ['about.css'],
@@ -425,6 +454,14 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
                  File tự thoát khi không tìm thấy ô hoặc <datalist>, nên trang
                  khung rút gọn (checkout) không cần loại trừ gì. */ ?>
         <script src="<?= asset('assets/js/search-suggest.js') ?>" defer></script>
+        <?php /* Ngăn kéo đăng nhập — nạp ngầm /auth vào tấm bên phải thanh
+                 đầu trang. Cạnh header.js vì cùng lý do: icon tài khoản có
+                 mặt ở MỌI trang khung đầy đủ, không thuộc trang nào cả.
+
+                 File tự thoát khi không thấy [data-auth-drawer], nên với
+                 khách ĐÃ đăng nhập (lúc ấy icon là <a> trơn, không có ngăn
+                 kéo) nó không làm gì. */ ?>
+        <script src="<?= asset('assets/js/auth-drawer.js') ?>" defer></script>
         <script src="<?= asset('assets/js/floating.js') ?>" defer></script>
         <?php /* Mua hàng không tải lại trang. Nạp cho MỌI trang khung đầy đủ
                  chứ không theo $pageScripts: nút "Thêm vào giỏ" có mặt ở trang

@@ -296,9 +296,14 @@ $headerOver = ($viewName ?? '') === 'home/index';
            │ lần thứ hai trong thanh đầu trang là hai bản sao của cùng một
            │ luồng đăng nhập, và bản trong header sẽ lệch dần.
            │
-           │ Nên: icon dẫn thẳng tới /auth, còn TRANG /auth mang đúng dáng
-           │ của ngăn kéo trong mẫu — cùng hai tab, cùng ô nhập cao 44 bo
-           │ 6, cùng nút Zalo OTP, cùng nút Google. Xem app/views/auth/.
+           │ NAY ĐÃ CÓ NGĂN KÉO (12/09/2026), và lý do trên KHÔNG bị lật:
+           │ ngăn kéo không chứa form nào của riêng nó — nó nạp ngầm CHÍNH
+           │ /auth qua header `X-Auth: 1` rồi đổ vào. Cùng view, cùng
+           │ controller, cùng token, cùng mọi bước OTP; không có bản thứ hai
+           │ nào để lệch. Markup ở _layout/header-auth.php, phần nạp ở
+           │ assets/js/auth-drawer.js, nhánh trả mảnh ở _layout/master.php.
+           │
+           │ Đã đăng nhập thì KHÔNG có ngăn kéo: icon dẫn thẳng /tai-khoan.
            │
            │ KHÔNG kèm ?redirect=: tham số đó dành cho khách BỊ CHẶN giữa
            │ chừng (AuthMiddleware::requireLogin đá về đây rồi trả lại đúng
@@ -310,13 +315,7 @@ $headerOver = ($viewName ?? '') === 'home/index';
            │ khu quản trị hay không.
            └──────────────────────────────────────────────────────────────── */
         ?>
-        <a href="<?= $isLoggedIn ? '/tai-khoan' : '/auth' ?>" class="oa-header__btn"
-           aria-label="<?= e($isLoggedIn ? t('account.mine') : t('account.login')) ?>">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/>
-            </svg>
-        </a>
+        <?php partial('_layout/header-auth', ['isLoggedIn' => $isLoggedIn]); ?>
 
         <?php /* GIỎ HÀNG — icon, số món và ngăn kéo, ở _layout/header-cart.php.
                  Nằm riêng một file vì master.php cũng in đúng cụm đó khi trả

@@ -190,17 +190,27 @@
     line-height: var(--lh-tight);
 }
 
-/* "*Bắt buộc" và "Quên mật khẩu?" — cả hai NÉP PHẢI, 9px */
+/* ┌─ "*Bắt buộc" và "Quên mật khẩu?" — cả hai NÉP PHẢI, 9px ──────────────
+   │ ĐÃ GỠ BỘ CHỌN `.field__opt` TRẦN khỏi hai luật này (12/09/2026).
+   │
+   │ Nó là mã chết ở đây: auth/index.php, auth/_signup.php và
+   │ auth/google-signup.php đều dùng .authfield__opt. Nơi duy nhất còn dùng
+   │ lớp trần là auth/account/don-hang.php — trang tài khoản, nạp account.css
+   │ chứ không nạp file này.
+   │
+   │ Gỡ vì auth.css nay nạp cho MỌI trang khung đầy đủ (ngăn kéo đăng nhập
+   │ bật ra được ở bất kỳ đâu — xem _layout/master.php). Để nguyên thì dòng
+   │ gợi ý "(bắt buộc nếu chọn Lý do khác)" trong form huỷ đơn bỗng bị gạch
+   │ chân và đẩy sang phải, vì luật này với tay tới nó.
+   └──────────────────────────────────────────────────────────────────────── */
 .authfield__aside,
-.authfield__opt,
-.field__opt {
+.authfield__opt {
     align-self: flex-end;
     font-size: var(--fs-micro);
     color: var(--ink-3);
 }
 
-.authfield__opt,
-.field__opt {
+.authfield__opt {
     text-decoration: underline;
     text-underline-offset: 2px;
     color: var(--ink);

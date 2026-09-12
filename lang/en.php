@@ -23,6 +23,7 @@ return [
     'announce.shipping' => 'Free nationwide delivery on orders over 1,000,000₫',
     'lang.label'        => 'Language',
     'ui.close'          => 'Close',
+    'ui.loading'        => 'Loading…',
 
     // ── Navigation ───────────────────────────────────────────────────────
     'nav.aria.main'    => 'Main navigation',

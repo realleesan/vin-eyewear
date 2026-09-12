@@ -25,6 +25,7 @@ return [
     'announce.shipping' => 'Miễn phí giao hàng toàn quốc cho đơn từ 1.000.000₫',
     'lang.label'       => 'Ngôn ngữ',
     'ui.close'         => 'Đóng',
+    'ui.loading'       => 'Đang tải…',
 
     // ── Điều hướng ───────────────────────────────────────────────────────
     'nav.aria.main'    => 'Điều hướng chính',
