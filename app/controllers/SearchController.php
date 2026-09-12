@@ -82,6 +82,11 @@ class SearchController extends BaseController
 
             'q'         => $q,
             'products'  => $products['items'],
+            /* Một câu cho cả trang kết quả — xem chú thích cùng ý ở
+               ProductController::index(). */
+            'variants'  => VariantModel::forProducts(
+                array_column($products['items'], 'id')
+            ),
             'productTotal' => $products['total'],
             'stores'    => $stores,
             'policies'  => $policies,

@@ -229,6 +229,9 @@ class CollectionController extends BaseController
             // và view bỏ hẳn khối đó chứ không vẽ dải trống.
             'gallery'    => CollectionModel::gallery($collection),
             'products'   => $products,
+            /* Biến thể màu cho hàng chấm dưới giá, gom MỘT câu cho cả lưới —
+               xem chú thích cùng ý ở ProductController::index(). */
+            'variants'   => VariantModel::forProducts(array_column($products, 'id')),
             // Bộ lọc — xem khối chú thích ở trên.
             'luaChon'      => $luaChon,
             'chon'         => $chon,

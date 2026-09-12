@@ -1419,26 +1419,59 @@ textarea.oa-field {
     color: var(--ink);
 }
 
+/* ┌─ CHÂN THẺ CĂN GIỮA (12/09/2026, theo yêu cầu chủ dự án) ──────────────
+   │ Trước: chữ căn trái, và .oa-card__body là một hàng ngang "thông tin
+   │ bên trái · icon dấu trang bên phải" (space-between). Icon ấy đã gỡ, nên
+   │ hàng ngang không còn gì để dàn ra hai đầu — nay body chỉ còn một khối
+   │ duy nhất và mọi dòng trong nó căn giữa theo trục của tấm ảnh.
+   │
+   │ align-items: center trên .oa-card__info là thứ căn HÀNG Ô MÀU: nó là
+   │ một flex row, mà text-align không với tới con của flex. Thiếu dòng ấy
+   │ thì tên và giá nằm giữa còn chấm màu dạt về trái — lỗi chỉ lộ ra ở
+   │ đúng những mặt hàng CÓ biến thể màu.
+   └──────────────────────────────────────────────────────────────────────── */
 .oa-card__body {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 8px;
     padding: 14px 14px 4px;
     font-size: var(--fs-body);
     line-height: var(--lh);
+    text-align: center;
 }
 
 .oa-card__info {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 2px;
     min-width: 0;
 }
 
+/* ┌─ TÊN HÀNG: IN HOA, IN ĐẬM ────────────────────────────────────────────
+   │ Giãn chữ .04em đi kèm chứ không phải trang trí: chữ in hoa đặt sát nhau
+   │ ở cỡ 13px đọc chậm hơn hẳn chữ thường, và khoảng giãn ấy trả lại phần
+   │ dễ đọc đã mất. Cùng trị số --ls-tight mà mọi nhãn in hoa khác của site
+   │ đang dùng (huy hiệu, nút, tiêu đề băng).
+   │
+   │ text-wrap: balance để tên hai dòng chia đều hai bên trục giữa — tên
+   │ căn giữa mà dòng đầu dài dòng sau một chữ là hình dễ thấy nhất của một
+   │ lưới làm vội.
+   └──────────────────────────────────────────────────────────────────────── */
 .oa-card__name {
     cursor: pointer;
     color: var(--ink);
+
+    /* TO HƠN GIÁ MỘT BẬC RƯỠI (12/09/2026, theo yêu cầu chủ dự án): tên ở
+       --fs-sub (12px), giá giữ --fs-body (10px) thừa hưởng từ .oa-card__body.
+       Lấy trong THANG CHỮ có sẵn chứ không gõ cứng 12px — xem khối "THANG
+       CHỮ" đầu file: gõ cứng thì phóng --oa-scale lên, cả site to ra mà
+       riêng tên hàng đứng im.
+
+       Bậc kế bên là --fs-ui (11px); ở cỡ ấy tên chỉ nhỉnh hơn giá đúng một
+       pixel, và phần lớn sự khác biệt là do in đậm chứ không phải cỡ chữ. */
+    font-size: var(--fs-sub);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-tight);
+    text-wrap: balance;
 }
 
 .oa-card__price {
@@ -1450,6 +1483,7 @@ textarea.oa-field {
     gap: 6px;
     align-items: baseline;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .oa-card__pricesale s {
@@ -1560,10 +1594,11 @@ textarea.oa-field {
     border-color: var(--ink);
 }
 
-/* Hàng ô màu dưới giá */
+/* Hàng ô màu NGAY DƯỚI GIÁ — căn giữa cùng trục với tên và giá. */
 .oa-swatches {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     margin-top: 8px;
     flex-wrap: wrap;

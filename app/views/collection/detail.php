@@ -302,7 +302,12 @@ if ($minPrice !== null) {
         <section class="cdet__shop" aria-label="Sản phẩm thuộc <?= e($collection['name']) ?>">
             <ul class="pgrid" role="list">
                 <?php foreach ($luoi as $item): ?>
-                    <?php partial('_layout/product-card', ['product' => $item]); ?>
+                    <?php partial('_layout/product-card', [
+                        'product'  => $item,
+                        /* Biến thể màu gom sẵn ở CollectionController — tra mảng,
+                           không hỏi CSDL trong vòng lặp. */
+                        'variants' => $variants[$item['id']] ?? [],
+                    ]); ?>
                 <?php endforeach; ?>
             </ul>
 

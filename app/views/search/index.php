@@ -89,7 +89,12 @@
                          Xem components/product.css. */ ?>
                 <ul class="pgrid" role="list">
                     <?php foreach ($products as $p): ?>
-                        <?php partial('_layout/product-card', ['product' => $p]); ?>
+                        <?php partial('_layout/product-card', [
+                            'product'  => $p,
+                            /* Biến thể màu gom sẵn ở SearchController — tra mảng,
+                               không hỏi CSDL trong vòng lặp. */
+                            'variants' => $variants[$p['id']] ?? [],
+                        ]); ?>
                     <?php endforeach; ?>
                 </ul>
             </div>

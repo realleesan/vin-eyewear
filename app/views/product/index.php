@@ -816,6 +816,10 @@ partial('_layout/page-head', [
                         <?php partial('_layout/product-card', [
                             'product'     => $p,
                             'showCompare' => true,
+                            /* Hàng chấm màu dưới giá. Controller gom SẴN biến thể
+                               của cả trang trong một câu — tra mảng ở đây, không
+                               hỏi CSDL trong vòng lặp. */
+                            'variants'    => $variants[$p['id']] ?? [],
                             // Hàng thẻ ĐẦU TIÊN nằm trong khung nhìn ngay khi trang
                             // mở, lazy-load chúng chỉ làm ảnh tới chậm hơn. BỐN chứ
                             // không ba: .pgrid xếp 4 cột ở khổ máy tính

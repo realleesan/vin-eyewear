@@ -438,6 +438,13 @@ class ProductController extends BaseController
             'pageTitle'   => $heading . ' — Vin Eyewear',
             'metaDesc'    => $lead,
             'products'    => $result['items'],
+            /* Biến thể màu của CẢ TRANG gom trong MỘT câu, không hỏi trong
+               vòng lặp thẻ: một trang là 9 mặt hàng, tức 9 lượt hỏi CSDL cho
+               một hàng chấm màu. Cùng cách HomeController làm cho bốn băng
+               trang chủ — xem VariantModel::forProducts(). */
+            'variants'    => VariantModel::forProducts(
+                array_column($result['items'], 'id')
+            ),
             'total'       => $result['total'],
             'page'        => $result['page'],
             'totalPages'  => $result['totalPages'],

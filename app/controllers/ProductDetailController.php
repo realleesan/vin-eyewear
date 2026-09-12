@@ -32,7 +32,8 @@ class ProductDetailController extends BaseController
             ? CategoryModel::find($product['category_id'])
             : null;
 
-        $userId = AuthMiddleware::customerId();
+        $userId  = AuthMiddleware::customerId();
+        $related = ProductModel::related($product['category_id'], $product['id'], 4);
 
         $this->renderView('product/detail', [
             'pageTitle' => $product['name'] . ' — Vin Eyewear',
@@ -42,7 +43,12 @@ class ProductDetailController extends BaseController
             'variants'  => VariantModel::forProduct($product['id']),
             // Biến thể khách vừa chọn hỏng (thiếu, sai) — nhớ lại để chọn sẵn
             'pickedVariant' => (string) ($_GET['pa'] ?? ''),
-            'related'   => ProductModel::related($product['category_id'], $product['id'], 4),
+            'related'   => $related,
+            /* Biến thể màu của bốn thẻ "sản phẩm tương tự". KHÁC 'variants' ở
+               trên: đó là biến thể của CHÍNH mặt hàng đang mở (cột chọn phương
+               án), còn đây là của bốn mặt hàng khác. Hai thứ khác nhau nên hai
+               tên khác nhau — gộp lại là chỗ sẽ có người đọc nhầm. */
+            'relatedVariants' => VariantModel::forProducts(array_column($related, 'id')),
             // Chỉ lấy vài đánh giá đầu; "Xem tất cả" mở trang riêng.
             'reviews'   => ReviewModel::published($product['id'], $showAll ? null : ReviewModel::PREVIEW),
             'showAll'   => $showAll,

@@ -988,7 +988,13 @@ $stars = static function (float $score): string {
             <?php /* `.pgrid` — MỘT lưới thẻ cho cả site (Phase 2). */ ?>
 <ul class="pgrid" role="list">
                 <?php foreach ($related as $item): ?>
-                    <?php partial('_layout/product-card', ['product' => $item]); ?>
+                    <?php partial('_layout/product-card', [
+                        'product'  => $item,
+                        /* $relatedVariants, KHÔNG PHẢI $variants: biến thể của
+                           bốn mặt hàng gợi ý, còn $variants là của chính mặt
+                           hàng đang mở (cột chọn phương án ở trên). */
+                        'variants' => $relatedVariants[$item['id']] ?? [],
+                    ]); ?>
                 <?php endforeach; ?>
             </ul>
         </section>
