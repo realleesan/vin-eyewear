@@ -515,10 +515,23 @@ ol[role="list"],
     text-transform: uppercase;
 }
 
-/* Tiêu đề băng trang chủ — weight 400, giãn hẹp hơn: nó là nhãn của một
-   dải hàng, không phải tiêu đề của trang. */
+/* ┌─ TIÊU ĐỀ BĂNG TRANG CHỦ ──────────────────────────────────────────────
+   │ 18px (12/09/2026, theo yêu cầu chủ dự án), lên từ 13px của --fs-h.
+   │
+   │ LẤY TRONG THANG CHỮ, KHÔNG GÕ CỨNG: --fs-mark-lg là cỡ 18px có sẵn (nó
+   │ mang tên ấy vì wordmark ở thanh đầu trang dùng trước). Gõ cứng 18px thì
+   │ lúc phóng --oa-scale, cả site to ra mà riêng bốn tiêu đề này đứng im.
+   │
+   │ VÌ SAO KHÔNG LẤY 22px: --fs-home là cỡ của tiêu đề hero trên video đầu
+   │ trang. Cho tiêu đề băng bằng đúng cỡ ấy là xoá mất bậc giữa "cửa vào
+   │ trang" và "một mục hàng trong trang" — cuộn xuống thì mọi dòng chữ to
+   │ ngang nhau và không còn thứ tự nào để mắt bám.
+   │
+   │ --fs-h VẪN LÀ CỠ TIÊU ĐỀ TRANG (h1) ở các trang khác; luật này chỉ nhắm
+   │ .oa-band-title, tức bốn băng hàng của trang chủ.
+   └──────────────────────────────────────────────────────────────────────── */
 .oa-band-title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-mark-lg);
     font-weight: 600;
     letter-spacing: var(--ls-tight);
     text-transform: uppercase;
