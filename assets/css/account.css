@@ -35,6 +35,32 @@
     padding-bottom: 96px;
 }
 
+/* ┌─ THANH ĐẦU TRANG LẤY ĐÚNG NỀN CỦA TRANG ──────────────────────────────
+   │ .acct ở trên là --bg-panel (#f3f3f5), còn thanh đầu trang mặc định là
+   │ `rgba(255,255,255,.55)` + `blur(14px)`. Kính mờ trắng chồng lên #f3f3f5
+   │ ra một dải sáng hơn hẳn phần dưới — một đường giáp thấy rõ ngay dưới
+   │ thanh, suốt cả trang tài khoản.
+   │
+   │ Trang này không có gì trôi qua sau lưng thanh (nội dung là khối chữ trên
+   │ nền phẳng), nên lớp kính mờ không còn việc gì để làm ngoài việc phá màu.
+   │ Bỏ blur và lấy thẳng token của nền.
+   │
+   │ ĐỂ LUẬT NÀY Ở ĐÂY, CẠNH .acct, chứ không mang sang oa.css: hai giá trị
+   │ phải BẰNG NHAU, và cách chắc nhất để chúng không lệch là đứng liền nhau.
+   │ account.css cũng chỉ nạp cho đúng view auth/profile ($pageStyles trong
+   │ _layout/master.php) nên luật không rò sang trang nào khác.
+   │
+   │ Không đụng `color`: thanh vẫn --ink như mọi trang trong. Và không xung
+   │ đột với `.oa-header.is-overlay` (bật khi mở ô tìm / ngăn giỏ) — hai luật
+   │ cùng độ ưu tiên (0,2,0) nhưng đặt CÙNG một nền, nên thắng thua thế nào
+   │ cũng ra một kết quả.
+   └──────────────────────────────────────────────────────────────────────── */
+.page-auth-profile .oa-header {
+    background: var(--bg-panel);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
 .acct__grid {
     display: flex;
     flex-direction: column;
