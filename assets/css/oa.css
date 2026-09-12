@@ -1668,6 +1668,29 @@ textarea.oa-field {
     right: 0;
     z-index: var(--z-panel);
     background: var(--bg-panel);
+
+    /* ┌─ `color` PHẢI ĐI KÈM `background` Ở ĐÂY ──────────────────────────
+       │ Hai bảng này (tìm kiếm · giỏ) nằm BÊN TRONG <header> trong DOM, nên
+       │ chúng thừa kế màu chữ của thanh. Trên trang chủ thanh mang
+       │ .oa-header--over { color: #fff } để đọc được trên ảnh hero — và màu
+       │ trắng ấy chảy thẳng vào bảng, nơi nền là --bg-panel (#f3f3f5).
+       │ Kết quả: "Xu hướng", tên sản phẩm, "Giỏ hàng trống" trắng trên nền
+       │ xám nhạt, gần như không đọc được.
+       │
+       │ Chỉ vài chỗ thoát nạn vì có màu khai riêng (ô nhập, nút ✕), nên lỗi
+       │ trông như "mất chữ lỗ chỗ" chứ không như một bảng hỏng — dễ bỏ qua.
+       │
+       │ Ghim ở CHÍNH .oa-panel chứ không ở từng con: hễ nền là --bg-panel
+       │ thì chữ là --ink, hai dòng đứng cạnh nhau. Bảng nào thêm sau này
+       │ mượn lớp này là tự đúng.
+       │
+       │ Ghi chú: oa.css có sẵn `.oa-header.is-overlay { color: var(--ink) }`
+       │ đúng cho tình huống này, nhưng KHÔNG mã nào gắn .is-overlay — grep
+       │ cả assets/js/ không ra một chỗ nào. Luật ấy (và hai vế
+       │ `:not(.is-overlay)` ở .oa-header__count với .mega__panel) hiện là mã
+       │ chết; đừng trông vào nó.
+       └──────────────────────────────────────────────────────────────────── */
+    color: var(--ink);
     padding: 28px var(--edge) 72px;
     min-height: min(540px, calc(100vh - var(--hdr-h)));
     max-height: calc(100vh - var(--hdr-h));
