@@ -15,9 +15,14 @@
        cửa hàng, nền #111 chữ trắng. Đó là điểm tối DUY NHẤT của cả trang,
        và nó đứng đúng chỗ mắt dừng sau khi đọc xong hai địa chỉ.
 
-     · Ô NHẬP GẠCH CHÂN trong form, không phải ô có viền. Form nằm trên nền
-       #f4f4f4 nên một hộp viền nữa là hai đường bao lồng nhau. Đây là chỗ
-       duy nhất trên site dùng .oa-field thay cho .oa-input.
+     · Ô NHẬP GẠCH CHÂN trong form, không phải ô có viền. Đây là chỗ duy
+       nhất trên site dùng .oa-field thay cho .oa-input.
+
+       Lý do CŨ là "form nằm trên nền #f4f4f4, thêm hộp viền nữa thành hai
+       đường bao lồng nhau". Từ 12/09/2026 nền ấy đã trắng và chính .cform
+       mang viền (xem khối "NỀN TRẮNG TOÀN SITE" ở assets/css/oa.css), nên
+       lý do còn đúng NGUYÊN VẸN — chỉ là đường bao ngoài nay là nét viền
+       chứ không phải mảng xám. ĐỪNG đổi sang .oa-input.
    ═════════════════════════════════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -103,6 +108,9 @@
     gap: 22px;
     padding: 40px var(--edge) 24px;
     background: var(--bg-soft);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .cform__head {

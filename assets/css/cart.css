@@ -243,7 +243,7 @@
     width: 88px;
     aspect-ratio: 4 / 5;
     overflow: hidden;
-    background: var(--bg-soft);
+    background: var(--bg-media);
 }
 
 .citem__thumb img {
@@ -343,7 +343,7 @@
 }
 
 .cstep__btn:hover {
-    background: var(--bg-soft);
+    background: var(--bg-hover);
 }
 
 .cstep__btn:disabled {
@@ -416,6 +416,9 @@
     padding: 20px;
     border-radius: var(--r-field);
     background: var(--bg-panel);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .csum__title {
@@ -532,6 +535,9 @@
     padding: 20px;
     border-radius: var(--r-field);
     background: var(--bg-panel);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .cvou__label,

@@ -216,6 +216,9 @@
     padding: 16px;
     border-radius: var(--r-field);
     background: var(--bg-soft);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .srchstore__name {

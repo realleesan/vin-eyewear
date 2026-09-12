@@ -170,7 +170,7 @@
 
 /* Ô đã xác thực, không sửa được (số điện thoại sau bước OTP) */
 .authfield__input--locked {
-    background: var(--bg-soft);
+    background: var(--bg-off);
     color: var(--ink-3);
     cursor: not-allowed;
 }

@@ -26,8 +26,18 @@
         nút mua, thông số — gói trong 220px ở cỡ chữ 10px. Cột hẹp là thứ
         làm ảnh chiếm phần còn lại của màn hình.
 
-     3. NỀN #f7f7f8, KHÔNG PHẢI TRẮNG. Đây là trang DUY NHẤT của mẫu có nền
-        xám nhạt; ảnh sản phẩm nền trắng nổi lên khỏi nó.
+     3. NỀN TRẮNG — ĐIỂM DUY NHẤT TRANG NÀY RỜI KHỎI MẪU (12/09/2026, theo
+        yêu cầu chủ dự án: cả site về #FFFFFF).
+
+        Mẫu cho trang này nền #f7f7f8, và đây là trang DUY NHẤT của mẫu có
+        nền xám nhạt — cốt để ảnh sản phẩm nền trắng nổi lên khỏi nó. Nay
+        ảnh trắng nằm trên trang trắng, tức mép ảnh do CHÍNH tấm ảnh vẽ ra
+        chứ không còn nền đỡ.
+
+        Ảnh gọng kính chụp trên nền trắng nên việc này không mất mát gì:
+        cái gọng vẫn là thứ duy nhất có màu trong khung. Ngày nào kho đổi
+        sang ảnh nền trắng CÓ VIỀN hoặc ảnh cắt nền, thì tính lại — xem
+        khối "NỀN TRẮNG TOÀN SITE" trong assets/css/oa.css.
    ═════════════════════════════════════════════════════════════════════════ */
 
 .pd {
@@ -361,7 +371,7 @@
 }
 
 .pdqty__btn:hover {
-    background: var(--bg-soft);
+    background: var(--bg-hover);
 }
 
 .pdqty__btn:disabled {

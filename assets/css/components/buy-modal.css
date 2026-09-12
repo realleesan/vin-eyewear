@@ -204,7 +204,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: var(--bg-soft);
+    background: var(--bg-media);
     color: var(--ink);
 }
 
@@ -445,7 +445,7 @@
 /* buy-rx.js khoá ô TRỤC khi chưa chọn độ CẦU — ô khoá phải NHÌN RA ĐƯỢC là
    khoá, không chỉ là bấm không ăn. */
 .brxsel:disabled {
-    background: var(--bg-soft);
+    background: var(--bg-off);
     color: var(--ink-5);
     cursor: not-allowed;
 }
@@ -574,7 +574,7 @@
 }
 
 .bqty__btn:hover {
-    background: var(--bg-soft);
+    background: var(--bg-hover);
 }
 
 .bqty__btn:disabled {

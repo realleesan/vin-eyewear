@@ -61,8 +61,21 @@
     background: var(--bg-soft);
 }
 
-.coll:nth-child(even) {
-    background: #f2f2f2;
+/* ┌─ HAI HÀNG LIỀN NHAU TÁCH BẰNG VIỀN, KHÔNG BẰNG TÔNG XÁM NỮA ──────────
+   │ (12/09/2026, nền trắng toàn site — xem khối "NỀN TRẮNG TOÀN SITE"
+   │ trong assets/css/oa.css.)
+   │
+   │ Ở đây từng có `.coll:nth-child(even) { background: #f2f2f2 }`: hàng lẻ
+   │ #f4f4f4, hàng chẵn #f2f2f2. Hai mã cách nhau 2 đơn vị — không ai nhìn
+   │ ra "hai màu", việc thật của nó là cho hai hàng dính nhau một đường
+   │ giáp. Mà mã ấy GÁN CỨNG nên không đi theo --bg-soft: giữ lại thì hàng
+   │ lẻ trắng, hàng chẵn xám, tương phản còn MẠNH HƠN trước khi đổi.
+   │
+   │ Viền làm đúng việc cũ trên nền trắng. `+` chứ không `border-top` trơn:
+   │ hàng ĐẦU không cần kẻ, nó đã giáp với phần trên của trang.
+   └──────────────────────────────────────────────────────────────────────── */
+.coll + .coll {
+    border-top: 1px solid var(--line);
 }
 
 /* Ảnh bộ sưu tập là ảnh CHIẾN DỊCH, không phải ảnh sản phẩm — cắt tràn
@@ -397,6 +410,9 @@
     gap: 4px;
     padding: 16px;
     background: var(--bg-soft);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .cdet__aud-label {
@@ -539,6 +555,9 @@
     gap: 6px;
     padding: 16px;
     background: var(--bg-soft);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .cdet__face-name {
@@ -624,6 +643,9 @@
     flex-direction: column;
     border-radius: var(--r-field);
     background: var(--bg-soft);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .cdet__q-head {
@@ -751,6 +773,9 @@
     display: flex;
     flex-direction: column;
     background: var(--bg-soft);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .cdet__oimg {

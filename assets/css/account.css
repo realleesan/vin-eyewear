@@ -680,7 +680,7 @@ select.acct-field__input {
     width: 48px;
     aspect-ratio: 4 / 5;
     overflow: hidden;
-    background: var(--bg-soft);
+    background: var(--bg-media);
 }
 
 .acct-order__thumb img {

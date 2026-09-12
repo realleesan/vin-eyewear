@@ -66,14 +66,58 @@
     --ink-5: #888;          /* placeholder, số thứ tự, chữ mờ nhất còn đọc*/
     --ink-6: #999;          /* tab chưa chọn, giá gạch ngang              */
 
-    /* Nền — trắng là mặc định, bốn tông xám rất nhạt để tách khối */
+    /* ┌─ NỀN TRẮNG TOÀN SITE (12/09/2026, theo yêu cầu chủ dự án) ───────
+       │ Ba token nền MẶT PHẲNG nay đều là #fff. Trước đó mỗi cái một tông
+       │ xám rất nhạt, và chính chênh lệch tông ấy là thứ tách khối:
+       │
+       │   --bg-soft   #f4f4f4  chân trang, băng trang chủ, hộp trong trang
+       │   --bg-panel  #f3f3f5  lớp phủ: tìm kiếm, giỏ, ngăn tài khoản
+       │   --bg-page   #f7f7f8  nền trang chi tiết sản phẩm
+       │
+       │ GIỮ CẢ BA TÊN thay vì gộp về --bg: chúng nằm ở 54 luật trong 20
+       │ file, và mỗi cái vẫn mang một Ý NGHĨA khác nhau (mặt phẳng trang ·
+       │ lớp nổi lên trên · nền một trang riêng). Ngày nào muốn xám trở lại
+       │ — dù chỉ một tầng — thì sửa đúng một dòng ở đây.
+       │
+       │ ═══ MẤT MÀU THÌ PHẢI BÙ BẰNG VIỀN ═══
+       │
+       │ Hộp đặt TRONG một trang (thẻ tài khoản, ô tổng tiền giỏ hàng, hộp
+       │ câu hỏi…) trước đây nổi lên nhờ xám-trên-trắng. Nay cùng màu với
+       │ trang nên chúng được thêm `border: 1px solid var(--line-input)`
+       │ ngay tại chỗ. Chân trang và băng trang chủ nhận `border-top`.
+       │
+       │ LỚP PHỦ THÌ KHÔNG CẦN GÌ: ngăn kéo và hộp thoại đều có màn mờ phía
+       │ sau (.oa-scrim, .mobile-nav__backdrop, .bmodal__scrim,
+       │ .offcanvas-backdrop của Bootstrap), nên trang phía sau đã tối đi —
+       │ tấm trắng vẫn tách bạch mà không cần viền hay đổ bóng. Site này
+       │ vốn PHẲNG, không có đổ bóng ở đâu cả; đừng thêm.
+       └────────────────────────────────────────────────────────────────── */
     --bg: #fff;
-    --bg-soft: #f4f4f4;     /* chân trang, băng khối trang chủ, nền thẻ   */
-    --bg-panel: #f3f3f5;    /* lớp phủ: tìm kiếm, giỏ, ngăn tài khoản     */
-    --bg-page: #f7f7f8;     /* nền trang chi tiết sản phẩm                */
+    --bg-soft: #fff;        /* trước: #f4f4f4 */
+    --bg-panel: #fff;       /* trước: #f3f3f5 */
+    --bg-page: #fff;        /* trước: #f7f7f8 */
+
+    /* Ba tông dưới KHÔNG đổi: xám ở đây không phải mặt phẳng nền mà là ô
+       giữ chỗ ảnh và trạng thái "đang chọn" của chip. */
     --bg-slot: #e9e9eb;     /* ô ảnh khi chưa có ảnh                      */
     --bg-chip: #e4e4e6;     /* chip/tab ĐANG CHỌN trong lớp phủ           */
     --bg-chip-flat: #eaeaea;/* chip ĐANG CHỌN trên hàng lọc nền trắng     */
+
+    /* ┌─ XÁM MANG NGHĨA — BA TOKEN TÁCH RA KHI NỀN THÀNH TRẮNG ──────────
+       │ Ba chỗ dưới đây từng dùng chung --bg-soft, nhưng ở chúng màu xám
+       │ KHÔNG phải là nền: nó là câu trả lời cho người dùng. Cho chúng đi
+       │ theo --bg-soft về trắng là xoá mất câu trả lời ấy —
+       │
+       │   rê chuột  -> nút không phản hồi gì, tưởng trang đơ
+       │   khoá ô    -> ô bị khoá trông y hệt ô gõ được
+       │   nền ảnh   -> ảnh sản phẩm nền trắng tan vào thẻ, mất mép
+       │
+       │ nên chúng tách thành token riêng, GIỮ ĐÚNG #f4f4f4 cũ. Tách ba tên
+       │ chứ không một: ba việc khác nhau thì lần sau chỉnh được riêng.
+       └────────────────────────────────────────────────────────────────── */
+    --bg-hover: #f4f4f4;    /* phản hồi khi rê chuột lên nút/dòng chọn    */
+    --bg-off: #f4f4f4;      /* ô nhập bị khoá, lựa chọn hết chỗ           */
+    --bg-media: #f4f4f4;    /* nền sau ảnh nhỏ: ảnh giỏ hàng, ảnh đơn     */
 
     /* Viền — sáu mức. --line trang trí, --line-input chức năng.          */
     --line: #e6e6e6;        /* kẻ ngang phân cách trong khối              */
@@ -2586,6 +2630,20 @@ textarea.oa-field {
 .oa-footer {
     flex: none;
     background: var(--bg-soft);
+
+    /* ┌─ VIỀN TRÊN — THAY CHO NỀN XÁM CŨ ────────────────────────────────
+       │ Chân trang từng là #f4f4f4 trên trang trắng, nên mép của nó là chỗ
+       │ màu đổi. Nay cả hai cùng trắng, không kẻ dòng này thì bốn cột chân
+       │ trang trôi lập lờ dưới đáy nội dung, không ra một khối riêng.
+       │
+       │ BĂNG TRANG CHỦ (.oa-band) CỐ Ý KHÔNG CÓ dòng tương tự, dù nó cũng
+       │ vừa mất nền xám: bốn băng nằm liền nhau và trước đây CÙNG một tông
+       │ xám, tức giữa chúng chưa bao giờ có ranh giới nhìn thấy được — thứ
+       │ tách chúng là 176px khoảng trắng, và khoảng ấy còn nguyên. Thêm
+       │ viền vào đó là vẽ ra bốn đường kẻ chưa từng tồn tại.
+       └────────────────────────────────────────────────────────────────── */
+    border-top: 1px solid var(--line);
+
     /* Đệm dưới 64 chứ không 32. 32px là con số của lúc còn HÀNG BẢN QUYỀN nằm
        dưới cùng — nó tự mang theo khoảng thở của riêng nó. Bỏ hàng ấy mà giữ
        32 thì bốn cột kết thúc sát mép dưới, chân trang trông như bị cắt cụt. */

@@ -239,7 +239,7 @@
 .bkpill:has(.bk__radio:disabled) {
     color: var(--ink-6);
     border-color: var(--line);
-    background: var(--bg-soft);
+    background: var(--bg-off);
     cursor: not-allowed;
     text-decoration: line-through;
 }
@@ -308,7 +308,7 @@
 }
 
 .bkday:has(.bk__radio:disabled) .bkday__box {
-    background: var(--bg-soft);
+    background: var(--bg-off);
     border-color: var(--line);
     color: var(--ink-6);
     cursor: not-allowed;
@@ -413,6 +413,9 @@
     padding: 20px;
     border-radius: var(--r-field);
     background: var(--bg-panel);
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .bkside__title {
