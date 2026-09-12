@@ -24,7 +24,7 @@ $ed = $editing;
             <tr>
                 <th scope="col">Thứ tự</th>
                 <th scope="col">Tên</th>
-                <th scope="col">Slug</th>
+                <th scope="col">Đường dẫn</th>
                 <th scope="col">Mô tả</th>
                 <th scope="col">Sản phẩm</th>
                 <th scope="col">Hiển thị</th>

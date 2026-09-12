@@ -127,12 +127,15 @@ $company = config('company');
        │ Đây là chỗ DUY NHẤT trên cả site có bộ chuyển ấy (nó vốn ở dải tiện
        │ ích đầu trang, dời xuống đây khi dựng lại theo mẫu, nay bỏ hẳn).
        │
-       │ Bản tiếng Anh VẪN SỐNG và vẫn dựng được từ máy chủ: mở bất kỳ trang
-       │ nào kèm ?lang=en là core/i18n.php ghi cookie rồi chuyển hướng về URL
-       │ sạch. Chỉ là không còn nút nào bấm tới. Toàn bộ lang/en.php,
-       │ langUrl() và i18nXuLyChuyenNgonNgu() giữ nguyên, không gỡ gì —
-       │ muốn có lại nút thì chỉ cần in ra một chỗ nào đó, không phải dựng
-       │ lại tầng dịch.
+       │ TỪ 12/09/2026 SITE CHỈ CÒN TIẾNG VIỆT, nên đoạn này KHÔNG còn là
+       │ "có bản tiếng Anh nhưng thiếu nút bấm" nữa: 'en' đã ra khỏi
+       │ I18N_NGON_NGU, tức ?lang=en không khớp gì cả và trang ra tiếng
+       │ Việt. Cookie vin_lang=en còn sót từ trước cũng vậy.
+       │
+       │ Toàn bộ lang/en.php, langUrl() và i18nXuLyChuyenNgonNgu() vẫn giữ
+       │ nguyên, không gỡ gì. Muốn mở lại tiếng Anh thì thêm dòng 'en' vào
+       │ I18N_NGON_NGU (xem khối chú thích ở core/i18n.php) RỒI in một bộ
+       │ chuyển ra đây — thiếu một trong hai thì chưa đủ.
        └──────────────────────────────────────────────────────────────────── */
     ?>
 

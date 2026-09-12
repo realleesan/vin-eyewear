@@ -290,7 +290,7 @@ $soDongTrong = 3;
                 </div>
 
                 <div class="field">
-                    <label for="tags">Tags</label>
+                    <label for="tags">Thẻ phân loại</label>
                     <input type="text" id="tags" name="tags" maxlength="255"
                            placeholder="bestseller, mùa hè, quà tặng"
                            value="<?= e($ky('tags')) ?>">
@@ -616,7 +616,7 @@ $soDongTrong = 3;
                 <div class="apf__vgrid" data-variant-grid>
                     <div class="apf__vhead">
                         <span>Màu</span>
-                        <span>Size</span>
+                        <span>Cỡ</span>
                         <span>SKU riêng</span>
                         <span>Giá riêng (₫)</span>
                         <span>Tồn</span>

@@ -17,9 +17,9 @@
  *   · nội dung thư, nội dung Zalo
  *   · khu quản trị          giữ nguyên tiếng Việt hoàn toàn
  *
- * Hệ quả phải biết trước: chọn English thì khung trang là tiếng Anh còn tên
- * hàng vẫn tiếng Việt. Đó là trạng thái ĐÚNG với dữ liệu đang có, không phải
- * lỗi dịch sót.
+ * TỪ 12/09/2026 SITE CHỈ CÒN MỘT NGÔN NGỮ: tiếng Việt. Xem khối chú thích ở
+ * I18N_NGON_NGU bên dưới — tầng dịch và bảng lang/en.php vẫn nguyên vẹn, chỉ
+ * là 'en' không còn nằm trong danh sách ngôn ngữ site nhận.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * VÌ SAO KHÔNG DÙNG THƯ VIỆN I18N
@@ -43,12 +43,36 @@
  * sẽ ra thứ mình đọc được, còn thấy "Tiếng Việt" thì chắc.
  */
 const I18N_NGON_NGU = [
-    'en' => 'English',
     'vi' => 'Tiếng Việt',
 ];
 
+/*
+ * ┌─ SITE CHỈ CÒN TIẾNG VIỆT (12/09/2026, theo yêu cầu chủ dự án) ────────────
+ * │
+ * │ HAI DÒNG TRÊN LÀ CHỐT, KHÔNG PHẢI THIẾU SÓT. 'en' đã ra khỏi danh sách
+ * │ ngôn ngữ site nhận, nên:
+ * │
+ * │   · mở ?lang=en  -> không khớp, bị bỏ qua, trang ra tiếng Việt
+ * │   · cookie vin_lang=en còn sót từ trước -> cũng không khớp, cùng kết quả
+ * │
+ * │ VÌ SAO PHẢI GỠ KHỎI DANH SÁCH chứ không chỉ đổi mặc định thành 'vi':
+ * │ trước đây mặc định là 'en' và site đã chạy một thời gian như thế, nên
+ * │ trình duyệt của khách cũ có thể đang giữ cookie 'en'. Đổi mỗi mặc định
+ * │ thì đúng những người đã ghé trước vẫn thấy tiếng Anh — và không còn nút
+ * │ nào để họ chuyển về (bộ chuyển ngôn ngữ đã bỏ cùng hàng bản quyền ở chân
+ * │ trang; xem chú thích trong _layout/footer.php).
+ * │
+ * │ KHÔNG XOÁ GÌ CỦA TẦNG DỊCH: lang/en.php, langUrl() và
+ * │ i18nXuLyChuyenNgonNgu() giữ nguyên. Muốn mở lại tiếng Anh thì thêm đúng
+ * │ dòng 'en' => 'English' vào mảng trên, rồi in một bộ chuyển ở đâu đó.
+ * │
+ * │ t() vẫn lùi về bảng tiếng Việt khi thiếu khoá — nay nó là cả hai vai:
+ * │ ngôn ngữ đang dùng VÀ lưới an toàn.
+ * └──────────────────────────────────────────────────────────────────────────
+ */
+
 /** Ngôn ngữ mặc định khi khách chưa chọn gì. */
-const I18N_MAC_DINH = 'en';
+const I18N_MAC_DINH = 'vi';
 
 /** Tên cookie ghi nhớ lựa chọn. Sống một năm. */
 const I18N_COOKIE = 'vin_lang';
@@ -63,12 +87,15 @@ const I18N_COOKIE_PARAM = 'lang';
  *
  *   1. ?lang=  trên URL   — cú bấm vừa xảy ra, phải thắng mọi thứ
  *   2. cookie vin_lang    — lựa chọn của những lần trước
- *   3. I18N_MAC_DINH      — English
+ *   3. I18N_MAC_DINH      — tiếng Việt
  *
- * KHÔNG đoán theo Accept-Language của trình duyệt. Đoán sai thì khách Việt mở
- * trang ra thấy tiếng Anh (hoặc ngược lại) mà không hiểu vì sao, và cái nút
- * chuyển ngôn ngữ lại nằm ở góc trên bên phải — nơi người ta chỉ tìm tới sau
- * khi đã bực. Một mặc định cố định thì đoán được, và một cú bấm là xong.
+ * Nay mảng I18N_NGON_NGU chỉ còn 'vi', nên hai mức đầu chỉ khớp được đúng
+ * 'vi'; mọi giá trị khác rơi thẳng xuống mức 3. Ba mức vẫn giữ nguyên để ngày
+ * nào mở lại ngôn ngữ thứ hai thì không phải viết lại hàm này.
+ *
+ * KHÔNG đoán theo Accept-Language của trình duyệt: một mặc định cố định thì
+ * đoán được. (Lý do này càng đúng từ khi site chỉ còn một ngôn ngữ — đoán để
+ * rồi ra cùng một kết quả là công đi vô ích.)
  *
  * KHÔNG lưu vào $_SESSION: phiên là thứ của tầng nghiệp vụ (giỏ hàng, đăng
  * nhập, token CSRF) và đợt này không được đụng tới. Cookie riêng cũng sống lâu
