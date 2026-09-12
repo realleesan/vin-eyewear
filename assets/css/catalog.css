@@ -399,7 +399,27 @@
     -webkit-appearance: none;
 }
 
-.catpick__select:focus {
+/* ┌─ VIỀN ĐEN CHỈ HIỆN VỚI BÀN PHÍM, KHÔNG HIỆN KHI BẤM CHUỘT ────────────
+   │ (12/09/2026, theo yêu cầu chủ dự án: "bấm vào ô sắp xếp thì có viền chữ
+   │ nhật đen bo quanh, bỏ đi".)
+   │
+   │ Thủ phạm là luật này lúc còn là `:focus` trơn: viền 1px đổi sang --ink
+   │ (#111). Nó vốn kín đáo vì ô này từng bo tròn --r-chip; từ lúc cả site về
+   │ góc vuông (--r-chip: 0, xem khối "KHÔNG BO TRÒN" ở oa.css) thì cùng một
+   │ luật ấy vẽ ra đúng một hình chữ nhật đen sắc cạnh.
+   │
+   │ ĐỔI SANG :focus-visible CHỨ KHÔNG XOÁ HẲN, và đây là chỗ quan trọng:
+   │ .catpick__select có `outline: none` ngay trên kia. Xoá nốt luật này là ô
+   │ sắp xếp KHÔNG CÒN DẤU HIỆU TIÊU ĐIỂM NÀO — người dùng bàn phím Tab tới
+   │ đây rồi không biết mình đang đứng ở đâu, mà đây lại là ô đổi cả thứ tự
+   │ danh sách.
+   │
+   │ :focus-visible chia đúng hai đường: bấm chuột thì trình duyệt không coi
+   │ là "cần hiện tiêu điểm" nên viền im — đúng thứ chủ dự án muốn; Tab tới
+   │ thì viền hiện như cũ. Lối này site đã dùng sẵn ở chín chỗ (booking.css,
+   │ checkout.css, product-detail.css…).
+   └──────────────────────────────────────────────────────────────────────── */
+.catpick__select:focus-visible {
     border-color: var(--ink);
 }
 

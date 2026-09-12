@@ -391,7 +391,15 @@
    │ nav màu trắng, mà --ink-3 là xám đậm.
    └──────────────────────────────────────────────────────────────────────── */
 .mega__links a {
-    font-size: var(--fs-body);
+    /* CHỮ TRONG BẢNG XỔ = CHỮ TRÊN HÀNG NAV (12/09/2026, theo yêu cầu chủ dự
+       án). Trước đây bảng dùng --fs-body (10px) còn hàng nav --fs-ui (11px):
+       rê chuột vào một mục nav thì chữ bên dưới nhỏ hơn chính mục vừa rê một
+       nấc, mà cả hai đều là LỐI ĐI — cùng một vai trò thì cùng một cỡ.
+
+       --fs-ui là cỡ của MỌI thứ điều hướng và điều khiển: hàng nav, mục trong
+       bảng xổ, mục trong ngăn kéo di động, chip, nút. Xem khối "BA VAI TRÒ
+       CHỮ" trong oa.css để biết nó đứng ở đâu trong hệ. */
+    font-size: var(--fs-ui);
     color: inherit;
 }
 
@@ -490,7 +498,9 @@
 }
 
 .mobile-nav__sub a {
-    font-size: var(--fs-body);
+    /* Cùng cỡ với mục cha (.mobile-nav__group > summary) và với hàng nav ở
+       khổ máy tính — xem chú thích ở .mega__links a. */
+    font-size: var(--fs-ui);
     color: var(--ink);
 }
 

@@ -2116,8 +2116,11 @@ textarea.oa-field {
    │ kể cả khi đổi --oa-scale về sau. CSS width/height đè lên thuộc tính HTML
    │ nên không phải sửa một dòng markup nào.
    │
-   │ HỆ SỐ 1.3 là tỉ lệ của chính mẫu (11px chữ ↔ 14–15px icon). Icon nét
-   │ mảnh đọc nhẹ hơn chữ cùng cỡ, nên để đúng 1em là nhìn ra vẫn bé.
+   │ HỆ SỐ NAY LÀ 1, TRƯỚC LÀ 1.3 (12/09/2026, theo yêu cầu chủ dự án:
+   │ "icon phải tương đương kích thước nav items"). Chú thích cũ ở đây từng
+   │ lập luận ngược lại — "icon nét mảnh đọc nhẹ hơn chữ cùng cỡ, để đúng
+   │ 1em là nhìn ra vẫn bé" — và lập luận ấy không sai, nó chỉ thua một yêu
+   │ cầu rõ ràng hơn: icon phải ĐO BẰNG chữ nav, không to hơn.
    │
    │ Cả ba VỀ CÙNG MỘT CỠ. Mẫu vẽ kính lúp 14 còn hai cái kia 15 — lệch 1px
    │ ở cỡ đó không ai thấy, nhưng phóng lên là thành lệch 1,4px giữa ba icon
@@ -2129,8 +2132,8 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────── */
 .oa-header__btn > svg,
 .oa-header__burger > svg {
-    width: 1.3em;
-    height: 1.3em;
+    width: 1em;
+    height: 1em;
 
     /* `flex: none` BẮT BUỘC. Ba nút là flex item của .oa-header__actions, và
        svg bên trong chúng cũng là flex item. Ở màn hẹp, wordmark giữa đẩy cột
@@ -2152,8 +2155,29 @@ textarea.oa-field {
     position: relative;
 }
 
-.oa-header__btn svg {
+/* CỠ ICON KHÔNG KHAI Ở ĐÂY — nó nằm ở luật `> svg` phía trên cùng với
+   `flex: none`. Một cỡ, một chỗ; đừng thêm luật thứ hai cho cùng phần tử,
+   vì hai luật cùng độ ưu tiên thì cái sau thắng âm thầm và người đọc luật
+   trước tưởng mình đang đọc giá trị thật. */
+.oa-header__btn > svg,
+.oa-header__burger > svg {
     display: block;
+}
+
+/* ┌─ KÍNH LÚP TRONG Ô TÌM KIẾM — CỠ LẤY THẲNG TỪ TOKEN, KHÔNG DÙNG 1em ────
+   │ Ở ba icon trên kia, `1em` đúng vì chúng nằm TRONG nút, mà nút mang
+   │ --fs-ui. Ở đây thì KHÔNG: <svg> này là ANH EM của <input> trong
+   │ .oa-searchbar (một flex row), nên `1em` của nó tính theo cỡ chữ của
+   │ .oa-searchbar — mà thẻ ấy không khai cỡ nào, nó thừa hưởng từ tổ tiên.
+   │ Tức `1em` ở đây ra một con số không ai chủ động chọn.
+   │
+   │ Ghi thẳng token cho hết đoán: cùng --fs-text mà .oa-searchbar input
+   │ đang dùng, nên kính lúp luôn bằng đúng cỡ chữ khách đang gõ.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-searchbar > svg {
+    flex: none;
+    width: var(--fs-text);
+    height: var(--fs-text);
 }
 
 /* Số món trong giỏ — chấm nhỏ góc trên phải icon túi */
