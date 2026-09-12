@@ -143,7 +143,23 @@
     right: 0;
     z-index: 1;
 
-    padding: 28px var(--edge) 40px;
+    /* ┌─ ĐỆM TRÊN 16px — ĐÃ TỪ 28px XUỐNG (theo yêu cầu chủ dự án) ─────────
+       │ Khoảng cách MẮT THẤY từ chữ mục nav xuống dòng đầu bảng KHÔNG phải
+       │ số này. Nó là tổng của ba đoạn:
+       │
+       │   ~34px  mép dưới chữ nav → mép dưới thanh (thanh cao --hdr-h và
+       │          căn giữa theo chiều dọc, nên nửa dưới luôn trống chừng ấy)
+       │    16px  đệm trên của bảng  ← chỉ đoạn NÀY chỉnh được ở đây
+       │     ~4px nửa khoảng dòng của chính dòng chữ đầu
+       │
+       │ Nên 28 → 16 rút tổng từ 62px còn 50px. Muốn gọn hơn nữa thì phải
+       │ đụng chiều cao thanh, mà đó là số của mẫu — đừng.
+       │
+       │ ĐỪNG HẠ VỀ 0: bảng và thanh nav cùng nền trắng ở trang trong, không
+       │ có đường kẻ nào giữa hai khối, nên dòng đầu bảng sẽ đọc ra như một
+       │ mục nav rơi xuống hàng hai.
+       └──────────────────────────────────────────────────────────────────── */
+    padding: 16px var(--edge) 40px;
 
     /* ┌─ BẢNG MƯỢN ĐÚNG NỀN CỦA THANH NAV ──────────────────────────────────
        │ Tham chiếu (gentlemonster.com) cho bảng KHÔNG nền — chữ nổi thẳng
