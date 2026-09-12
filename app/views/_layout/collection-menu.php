@@ -143,29 +143,30 @@ $bstDongPhu = static function (array $bst): string {
              */
             ?>
             <div class="mega__col">
+                <?php
+                /* ĐÃ BỎ DÒNG "Tất cả bộ sưu tập" (theo yêu cầu chủ dự án).
+                 *
+                 * Bản trước để nó làm <li> đầu tiên, lập luận rằng một danh
+                 * sách chữ cần lối ra "xem tất cả" ở trên đầu vì mắt đọc từ
+                 * trên xuống rồi dừng lại khi thấy tên bộ mình cần.
+                 *
+                 * Lối ra ấy KHÔNG MẤT: chính mục nav "Bộ sưu tập" phía trên là
+                 * một <a href="/bo-suu-tap"> thật — bấm vào nhãn mở bảng là đi
+                 * thẳng tới trang gom. Dòng đầu bảng vì thế lặp đúng cái liên
+                 * kết mà con trỏ đang đứng trên, tức hai lối vào cùng một chỗ
+                 * cách nhau chưa tới 30px.
+                 *
+                 * Khác hai bảng Gọng kính · Tròng kính: ở đó "Xem tất cả" vẫn
+                 * đứng đầu vì danh sách bên dưới là các LÁT CẮT đã lọc
+                 * (?material=…), không có dòng nào dẫn về trang chưa lọc.
+                 *
+                 * Khoá 'mega.all_collections' GIỮ LẠI trong lang/: ngăn kéo
+                 * mobile (collection-menu-mobile.php) vẫn in nó, và ở đó nhãn
+                 * <summary> chỉ gập/mở chứ không phải liên kết, nên dòng ấy là
+                 * lối vào /bo-suu-tap duy nhất.
+                 */
+                ?>
                 <ul class="mega__links" role="list">
-                    <?php
-                    /* "Tất cả bộ sưu tập" ĐỨNG ĐẦU, không đứng cuối.
-                       Bản trước nó là một thẻ nền brand ở ô cuối lưới. Trong một
-                       danh sách chữ thì chỗ ấy sai: mắt đọc từ trên xuống và
-                       dừng lại ngay khi thấy tên bộ mình cần, nên lối ra "xem
-                       tất cả" nằm dưới đáy gần như không ai gặp. Tham chiếu đặt
-                       "View all" ở dòng đầu, và đó là lý do.
-
-                       Số bộ đếm CẢ phần đã bị cắt khỏi bảng — đó chính là thứ
-                       nó hứa: bấm vào là thấy đủ. */
-                    ?>
-                    <li>
-                        <?php /* CHỈ MỘT DÒNG CHỮ, không kèm số đếm.
-                                 Bản trước in thêm "9 bộ sưu tập đang bày" ngay
-                                 sau nhãn; trong một danh sách chữ khít nhau thì
-                                 hai mẩu chữ ấy dính liền thành một câu đọc
-                                 không ra ("Tất cả bộ sưu tập 9 bộ sưu tập đang
-                                 bày"). Số đếm là thông tin của TRANG đích, để
-                                 nó nói ở đó. */ ?>
-                        <a href="/bo-suu-tap"><?= e(t('mega.all_collections')) ?></a>
-                    </li>
-
                     <?php foreach ($bstDanhSach as $bst): ?>
                         <li>
                             <?php /* lang="vi" — tên bộ sưu tập trong CSDL chỉ có
