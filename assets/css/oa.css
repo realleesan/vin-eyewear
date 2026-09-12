@@ -1763,10 +1763,50 @@ textarea.oa-field {
     padding: 0 var(--edge);
     border-bottom: 1px solid transparent;
     color: var(--ink);
+
+    /* KHÔNG có background/backdrop-filter ở đây — xem khối ngay dưới. */
+    background: transparent;
+    transition: color .25s ease;
+}
+
+/* ┌─ KÍNH MỜ NẰM TRÊN ::before, KHÔNG NẰM TRÊN CHÍNH THANH ───────────────
+   │ (12/09/2026) ĐỌC HẾT KHỐI NÀY TRƯỚC KHI GỘP HAI LUẬT LẠI.
+   │
+   │ Bảng xổ của mega menu là CON CHÁU của thanh này trong DOM:
+   │
+   │     header.oa-header > nav > ul.header-nav__list > li.mega
+   │                             > div.mega__panel
+   │
+   │ Mà một phần tử mang `backdrop-filter` thì trở thành BACKDROP ROOT:
+   │ con cháu bên trong nó chỉ lấy mẫu được những gì vẽ BÊN TRONG nó, không
+   │ nhìn xuyên qua được ra trang phía sau. Bảng xổ lại nằm DƯỚI hộp của
+   │ thanh, chỗ ấy trong root không có gì vẽ cả — nên lớp mờ của bảng không
+   │ có gì để làm mờ, và nó ra một tấm trắng .55 phẳng lì với chữ của trang
+   │ hiện SẮC NÉT xuyên qua. Đó chính là chỗ "lệch nhau" giữa thanh nav và
+   │ bảng xổ, và nó KHÔNG sửa được bằng cách chỉnh hai con số: hai bên đã
+   │ dùng chung --glass-bg/--glass-blur từ trước rồi.
+   │
+   │ Chuyển lớp kính xuống ::before thì thanh thôi làm backdrop root (một
+   │ bối cảnh xếp lớp do z-index KHÔNG tạo ra backdrop root), nên cả hai
+   │ cùng lấy mẫu thẳng từ trang. Cùng công thức, cùng nền → giống hệt.
+   │
+   │ z-index: -1 cho lớp kính nằm sau chữ của thanh nhưng VẪN trong bối
+   │ cảnh xếp lớp của thanh, nên nó không rơi xuống dưới trang.
+   │
+   │ MỌI TRẠNG THÁI ĐỔI NỀN CỦA THANH PHẢI NHẮM VÀO ::before, không nhắm
+   │ vào .oa-header nữa: .oa-header--over · .is-past-hero · .is-overlay và
+   │ .page-auth-profile trong account.css. Đặt `background` lên chính thanh
+   │ thì nó phủ LÊN TRÊN lớp kính và ăn mất hiệu ứng.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    transition: background .25s ease, color .25s ease;
+    transition: background .25s ease;
 }
 
 /* ┌─ ĐẦU TRANG TRONG SUỐT TRÊN TRANG CHỦ ─────────────────────────────────
@@ -1793,27 +1833,38 @@ textarea.oa-field {
    │ thái trong suốt — nên .oa-header--over CHỈ được đặt trên trang thật sự
    │ có hero tối tràn lên đầu trang.
    └──────────────────────────────────────────────────────────────────────*/
+/* Ba trạng thái dưới đây nhắm vào ::before — lớp kính — chứ không vào chính
+   thanh. Lý do đầy đủ ở khối .oa-header::before phía trên. */
 .oa-header--over {
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
     color: #fff;
 }
 
+.oa-header--over::before {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
 .oa-header--over.is-past-hero {
+    color: var(--ink);
+}
+
+.oa-header--over.is-past-hero::before {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    color: var(--ink);
 }
 
 /* Khi một lớp phủ đang mở, thanh đầu trang lấy đúng nền của lớp phủ để
    hai khối liền thành một mảng — mẫu bỏ hẳn blur ở trạng thái này. */
 .oa-header.is-overlay {
+    color: var(--ink);
+}
+
+.oa-header.is-overlay::before {
     background: var(--bg-panel);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
-    color: var(--ink);
 }
 
 .oa-header__nav {

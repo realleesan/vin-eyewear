@@ -55,7 +55,11 @@
    │ cùng độ ưu tiên (0,2,0) nhưng đặt CÙNG một nền, nên thắng thua thế nào
    │ cũng ra một kết quả.
    └──────────────────────────────────────────────────────────────────────── */
-.page-auth-profile .oa-header {
+/* NHẮM VÀO ::before, không vào chính thanh: từ 12/09/2026 lớp kính của
+   .oa-header nằm trên ::before (để bảng xổ mega menu blur được — xem khối
+   .oa-header::before trong oa.css). Đặt `background` lên .oa-header thì nó
+   phủ LÊN TRÊN lớp kính, không thay được lớp ấy. */
+.page-auth-profile .oa-header::before {
     background: var(--bg-panel);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
