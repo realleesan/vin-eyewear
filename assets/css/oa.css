@@ -623,35 +623,50 @@ ol[role="list"],
     text-transform: uppercase;
 }
 
-/* TIÊU ĐỀ TRANG. Mẫu dùng đúng một dáng cho h1 và h2 băng: 13px, weight
-   500, IN HOA, giãn .06em. Khác nhau chỉ ở chỗ đặt, không ở dáng chữ. */
-.oa-title {
+/* ┌─ TIÊU ĐỀ TRANG VÀ TIÊU ĐỀ BĂNG — MỘT DÁNG DUY NHẤT ───────────────────
+   │ 13px, weight 500, IN HOA, giãn .06em. Mẫu dùng đúng một dáng cho h1 và
+   │ cho h2 của các băng; khác nhau chỉ ở chỗ đặt, không ở dáng chữ.
+   │
+   │ .oa-band-title GỘP VÀO ĐÂY (12/09/2026, theo yêu cầu chủ dự án: "font
+   │ size của title các section lấy giống khối Gặp chúng tôi tại cửa hàng").
+   │ Khối ấy dùng .oa-title, nên cách chắc chắn nhất để hai bên không bao giờ
+   │ lệch nữa là cho chúng dùng CHUNG MỘT LUẬT thay vì chép ba dòng khai báo
+   │ sang chỗ thứ hai.
+   │
+   │ ĐÃ GỠ bản riêng của .oa-band-title: 18px (--fs-mark-lg), weight 600,
+   │ giãn --ls-tight. Nó sống đúng một quãng ngắn trong ngày 12/09 giữa hai
+   │ yêu cầu ngược nhau của chủ dự án — "to hơn nữa" rồi "lấy giống khối cửa
+   │ hàng". Ghi lại ở đây để lần sau ai thấy tiêu đề băng nhỏ thì biết đó là
+   │ lựa chọn, không phải sót.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-title,
+.oa-band-title {
     font-size: var(--fs-h);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
-/* ┌─ TIÊU ĐỀ BĂNG TRANG CHỦ ──────────────────────────────────────────────
-   │ 18px (12/09/2026, theo yêu cầu chủ dự án), lên từ 13px của --fs-h.
+/* ┌─ DÒNG DẪN DƯỚI TIÊU ĐỀ BĂNG   (12/09/2026, theo yêu cầu chủ dự án) ────
+   │ CÙNG CỠ CHỮ, CÙNG MÀU với dòng dẫn của khối "Gặp chúng tôi tại cửa
+   │ hàng": ở đó là .oa-muted (màu --ink-3) nằm trong .oa-split__copy (cỡ
+   │ --fs-body, dòng --lh). Ba trị số ấy khai lại ở đây vì .oa-band-lead
+   │ không nằm trong khối cha đó — KHÔNG phải một dáng chữ khác.
    │
-   │ LẤY TRONG THANG CHỮ, KHÔNG GÕ CỨNG: --fs-mark-lg là cỡ 18px có sẵn (nó
-   │ mang tên ấy vì wordmark ở thanh đầu trang dùng trước). Gõ cứng 18px thì
-   │ lúc phóng --oa-scale, cả site to ra mà riêng bốn tiêu đề này đứng im.
+   │ 560px là bề ngang ĐỌC ĐƯỢC, không phải con số tròn cho đẹp: ở cỡ chữ
+   │ 10px, 560px cho ra khoảng 85 ký tự một dòng — đã ở mép trên của ngưỡng
+   │ dễ đọc. Bỏ khoá này ra thì câu dẫn chạy hết 1248px vùng nội dung, mắt
+   │ phải quét cả bề ngang màn cho một dòng chữ.
    │
-   │ VÌ SAO KHÔNG LẤY 22px: --fs-home là cỡ của tiêu đề hero trên video đầu
-   │ trang. Cho tiêu đề băng bằng đúng cỡ ấy là xoá mất bậc giữa "cửa vào
-   │ trang" và "một mục hàng trong trang" — cuộn xuống thì mọi dòng chữ to
-   │ ngang nhau và không còn thứ tự nào để mắt bám.
-   │
-   │ --fs-h VẪN LÀ CỠ TIÊU ĐỀ TRANG (h1) ở các trang khác; luật này chỉ nhắm
-   │ .oa-band-title, tức bốn băng hàng của trang chủ.
+   │ text-wrap: balance vì khối căn giữa: câu hai dòng mà dòng sau chỉ có
+   │ một từ là hình dễ thấy nhất của một trang làm vội.
    └──────────────────────────────────────────────────────────────────────── */
-.oa-band-title {
-    font-size: var(--fs-mark-lg);
-    font-weight: 600;
-    letter-spacing: var(--ls-tight);
-    text-transform: uppercase;
+.oa-band-lead {
+    max-width: 560px;
+    color: var(--ink-3);
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+    text-wrap: balance;
 }
 
 /* Tiêu đề đè trên ảnh hero (bộ sưu tập, giới thiệu) */

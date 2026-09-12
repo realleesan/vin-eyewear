@@ -136,6 +136,16 @@ return [
     'home.band.new'       => 'Sản phẩm mới về',
     'home.band.best'      => 'Sản phẩm bán chạy',
     'home.band.all'       => 'Xem tất cả',
+    /* Dòng dẫn dưới tiêu đề mỗi khối trang chủ — cùng vai với
+       'home.store.lead'. Đây là CHỮ MARKETING, chủ cửa hàng sửa thoải mái ở
+       đây mà không phải đụng vào view nào. Giữ mỗi câu trong khoảng một dòng
+       rưỡi: khối .oa-band-lead khoá bề ngang 560px và căn giữa, câu dài hơn
+       hai dòng là mất cân với tiêu đề ngay trên nó. */
+    'home.band.new_lead'  => 'Những mẫu vừa lên kệ, cập nhật theo từng đợt hàng về.',
+    'home.band.best_lead' => 'Các mẫu bán chạy do cửa hàng chọn giới thiệu.',
+    'home.band.frames_lead' => 'Gọng titan, acetate và kim loại — đủ dáng, lắp được mọi loại tròng.',
+    'home.band.lenses_lead' => 'Tròng chính hãng chống tia UV; đo khúc xạ và tư vấn chiết suất miễn phí.',
+    'home.rev.lead'       => 'Đánh giá của khách đã mua, hiển thị sau khi cửa hàng duyệt.',
     'home.store.eyebrow'  => 'Ghé thăm cửa hàng',
     'home.store.title'    => 'Gặp chúng tôi tại cửa hàng',
     'home.store.lead'     => 'Hai cơ sở tại Hà Nội, mở cửa cả tuần. Đo khúc xạ miễn phí và thử kính trực tiếp, kể cả khi bạn chưa mua.',

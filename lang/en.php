@@ -129,8 +129,13 @@ return [
 
     // ── Home: four product bands + store block ──────────────────────────
     'home.band.new'       => 'New arrivals',
-    'home.band.best'      => 'Bestsellers',
+    'home.band.best'      => 'Best sellers',
     'home.band.all'       => 'View all',
+    'home.band.new_lead'  => 'Fresh on the shelves, updated with every delivery.',
+    'home.band.best_lead' => 'Best sellers picked by the shop.',
+    'home.band.frames_lead' => 'Titanium, acetate and metal frames — every shape, ready for any lens.',
+    'home.band.lenses_lead' => 'Genuine UV-blocking lenses; free eye test and index advice.',
+    'home.rev.lead'       => 'Reviews from customers who bought, shown after the shop approves them.',
     'home.store.eyebrow'  => 'Visit a store',
     'home.store.title'    => 'Meet us in store',
     'home.store.lead'     => 'Two stores in Hanoi, open all week. Free eye tests and in-person fittings, even if you are not buying yet.',

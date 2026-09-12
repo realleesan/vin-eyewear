@@ -36,11 +36,14 @@
 <?php
 /* Khoá 'items' rỗng thì băng đó không in ra dòng nào — cửa hàng chưa nhập
    tròng kính không phải nhìn một tiêu đề treo trên khoảng trống. */
+/* 'lead' — một dòng ngắn dưới tiêu đề, cùng vai với dòng dẫn của khối "Gặp
+   chúng tôi tại cửa hàng" (theo yêu cầu chủ dự án 12/09/2026). Chữ nằm trong
+   lang/vi.php để sửa được mà không đụng view; khối này chỉ chọn khoá. */
 $bands = [
-    ['title' => t('home.band.new'),    'more' => '/san-pham?sap-xep=moi-nhat',  'items' => $newArrivals, 'tone' => 'new'],
-    ['title' => t('home.band.best'),   'more' => '/san-pham?sap-xep=ban-chay',  'items' => $bestSellers, 'tone' => 'sale'],
-    ['title' => t('nav.frames'),       'more' => '/san-pham/gong-kinh',         'items' => $frames,      'tone' => 'sale'],
-    ['title' => t('nav.lenses'),       'more' => '/san-pham/trong-kinh',        'items' => $lenses,      'tone' => 'sale'],
+    ['title' => t('home.band.new'),    'lead' => t('home.band.new_lead'),    'more' => '/san-pham?sap-xep=moi-nhat',  'items' => $newArrivals, 'tone' => 'new'],
+    ['title' => t('home.band.best'),   'lead' => t('home.band.best_lead'),   'more' => '/san-pham?sap-xep=ban-chay',  'items' => $bestSellers, 'tone' => 'sale'],
+    ['title' => t('nav.frames'),       'lead' => t('home.band.frames_lead'), 'more' => '/san-pham/gong-kinh',         'items' => $frames,      'tone' => 'sale'],
+    ['title' => t('nav.lenses'),       'lead' => t('home.band.lenses_lead'), 'more' => '/san-pham/trong-kinh',        'items' => $lenses,      'tone' => 'sale'],
 ];
 ?>
 
@@ -52,6 +55,11 @@ $bands = [
                  dời xuống chân băng — xem khối .oa-band__foot ngay dưới lưới. */ ?>
         <div class="oa-band__head">
             <h2 class="oa-band-title"><?= e($band['title']) ?></h2>
+            <?php /* Bỏ trống 'lead' trong mảng $bands ở trên thì dòng này
+                     không in ra — khối vẫn đúng, chỉ gọn hơn. */ ?>
+            <?php if (!empty($band['lead'])): ?>
+                <p class="oa-band-lead"><?= e($band['lead']) ?></p>
+            <?php endif; ?>
         </div>
 
         <?php /* <ul role="list"> chứ không <div>: đây là một DANH SÁCH hàng hoá,

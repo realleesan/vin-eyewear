@@ -83,6 +83,7 @@ $hrevTrong = max(0, $reviewSlots - count($reviews));
 
     <div class="oa-band__head">
         <h2 class="oa-band-title" id="hrev-title"><?= e(t('home.rev.title')) ?></h2>
+        <p class="oa-band-lead"><?= e(t('home.rev.lead')) ?></p>
     </div>
 
     <div class="hrev__wrap">
