@@ -154,6 +154,13 @@
                (Esc · bấm ngoài · nút X · rê sang bảng khác) đều đi qua. */
             if (pop.classList.contains('hpop--search')) {
                 document.body.classList.remove('is-search-open');
+
+                /* Gỡ cùng chỗ, cùng điều kiện với is-search-open — khối chú
+                   thích ngay trên đã nói vì sao đây là chỗ đúng: mọi lối đóng
+                   đều đi qua closePop. Gắn ở nhánh mở nhưng gỡ ở một chỗ khác
+                   là kiểu sai để lại thanh đầu trang kẹt màu nền sau khi bảng
+                   đã biến mất. */
+                if (header) header.classList.remove('is-overlay');
             }
 
             /* GỠ LỚP THÔI LÀ CHƯA ĐÓNG ĐƯỢC.
@@ -219,6 +226,30 @@
 
                     if (pop.classList.contains('hpop--search')) {
                         document.body.classList.add('is-search-open');
+
+                        /* THANH ĐẦU TRANG LIỀN MỘT MẢNG VỚI BẢNG.
+
+                           oa.css có sẵn `.oa-header.is-overlay` — nền
+                           --bg-panel, bỏ blur, chữ --ink — đúng cho lúc này,
+                           nhưng cho tới nay KHÔNG mã nào gắn lớp ấy, nên luật
+                           đó nằm chết trong file. Đây là chỗ gắn nó.
+
+                           Thấy rõ nhất ở trang chủ: thanh đang trong suốt đè
+                           lên ảnh hero, mở ô tìm ra thì phía dưới là một mảng
+                           --bg-panel còn thanh vẫn là ảnh — hai khối rời nhau
+                           ngay chỗ giáp. Gắn lớp này là chúng thành một.
+
+                           Trang trong cũng có tác dụng, chỉ là nhẹ: nền đổi từ
+                           --bg sang --bg-panel, mất đường ranh mờ giữa hai
+                           khối.
+
+                           `header &&`: khung rút gọn của trang thanh toán /
+                           đăng nhập không có #siteHeader. Hôm nay ô tìm nằm
+                           BÊN TRONG thanh nên không có thanh là cũng không có
+                           ô tìm, tức nhánh này không với tới được — nhưng đó
+                           là một bất biến của markup, không phải của file này.
+                           Xem `if (header)` ở khối cuộn đầu file, cùng lối. */
+                        if (header) header.classList.add('is-overlay');
                     }
                 } else {
                     /* ĐÓNG PHẢI ĐI QUA closePop, không phải chỉ gỡ .is-open.

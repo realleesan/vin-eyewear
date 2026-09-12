@@ -1660,6 +1660,31 @@ textarea.oa-field {
     background: rgba(0, 0, 0, .35);
 }
 
+/* ┌─ NỀN MỜ CỦA Ô TÌM BẮT ĐẦU NGAY DƯỚI THANH ĐẦU TRANG ──────────────────
+   │ `inset: 0` ở trên cho nền mờ phủ cả thanh — và nó ĐÈ LÊN thanh thật,
+   │ dù --z-scrim (4) nhỏ hơn --z-header (5). z-index chỉ so bên trong cùng
+   │ một ngữ cảnh xếp chồng, mà nút nền mờ này nằm BÊN TRONG <header>
+   │ (.hpop__scrim là con của .hpop, .hpop nằm trong .oa-header__actions).
+   │ Thanh có position + z-index nên nó tự mở một ngữ cảnh mới, và con thì
+   │ luôn vẽ đè lên nền của cha bất kể z-index nhỏ tới đâu.
+   │
+   │ Trước đây không ai thấy: thanh trong suốt trên hero, 18% đen ấy đọc ra
+   │ như đang làm tối ảnh. Từ khi thanh nhận .is-overlay và có nền đục thì
+   │ nó hiện nguyên hình — thanh ra #c8c8c9 còn bảng ngay dưới ra #f3f3f5,
+   │ đúng hai mảng xám khác nhau ở chỗ đáng lẽ phải liền một khối.
+   │
+   │ Cắt nền mờ xuống dưới thanh là xong, và cũng đúng nghĩa: phần cần làm
+   │ mờ là TRANG phía sau, không phải thanh — thanh giờ thuộc về lớp phủ.
+   │ Mốc cắt trùng đúng `top` của .oa-panel nên hai mép khít nhau.
+   │
+   │ Chỉ ô tìm mới có .hpop__scrim (xem _layout/header.php); ngăn giỏ dùng
+   │ .offcanvas-backdrop của Bootstrap, gắn thẳng vào <body> nên không dính
+   │ chuyện này.
+   └──────────────────────────────────────────────────────────────────────── */
+.hpop--search .hpop__scrim {
+    top: var(--hdr-h);
+}
+
 /* Bảng tìm kiếm — tràn bề ngang, neo ngay dưới thanh đầu trang */
 .oa-panel {
     position: fixed;
