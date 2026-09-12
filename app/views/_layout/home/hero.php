@@ -201,13 +201,13 @@ $tong = count($clips);
                                  Mua ngay  → danh sách hàng ĐÃ LỌC theo bộ này
                                  Chi tiết  → trang kể chuyện của chính bộ ấy */
                             ?>
-                            <a class="oa-btn oa-btn--sm oa-btn--onimage-solid"
+                            <a class="oa-btn oa-btn--sm oa-btn--strong oa-btn--onimage-solid"
                                href="<?= e($clip['bst']
                                    ? '/san-pham?' . http_build_query(['collection' => $clip['bst']])
                                    : '/san-pham') ?>">
                                 <?= e(t('home.hero.cta_buy')) ?>
                             </a>
-                            <a class="oa-btn oa-btn--sm oa-btn--onimage"
+                            <a class="oa-btn oa-btn--sm oa-btn--strong oa-btn--onimage"
                                href="<?= e($clip['bst']
                                    ? '/bo-suu-tap/' . rawurlencode($clip['bst'])
                                    : '/bo-suu-tap') ?>">

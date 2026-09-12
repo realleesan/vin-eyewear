@@ -112,10 +112,16 @@ $bands = [
         <h2 class="oa-title"><?= e(t('home.store.title')) ?></h2>
         <p class="oa-muted"><?= e(t('home.store.lead')) ?></p>
 
-        <?php /* .oa-btn--strong: chữ in hoa, in đậm — cùng dáng với nút "Xem tất
-                 cả" ở chân bốn băng phía trên, xem khối chú thích của lớp ấy
-                 trong assets/css/oa.css. */ ?>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <?php
+        /* .oa-btn--strong: chữ in hoa, in đậm — cùng dáng với nút "Xem tất cả"
+           ở chân bốn băng phía trên, xem khối chú thích của lớp ấy trong
+           assets/css/oa.css.
+
+           .hstore__cta thay cho style="" gõ thẳng: hai nút phải nằm CÙNG MỘT
+           HÀNG (yêu cầu chủ dự án), mà luật giữ chúng ở đó cần nhiều hơn một
+           dòng — xem khối .hstore__cta trong assets/css/home.css. */
+        ?>
+        <div class="hstore__cta">
             <a class="oa-btn oa-btn--strong oa-btn--solid" href="/dat-lich"><?= e(t('cta.book')) ?></a>
             <a class="oa-btn oa-btn--strong" href="/lien-he"><?= e(t('home.store.branches')) ?></a>
         </div>

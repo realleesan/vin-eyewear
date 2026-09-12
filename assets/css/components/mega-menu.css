@@ -187,7 +187,25 @@
        │ không thấy: sát đỉnh trang trong, thứ nằm sau thanh nav cũng là nền
        │ trắng, nên .55 trắng chồng lên trắng ra gần đúng trắng.
        └──────────────────────────────────────────────────────────────────── */
-    background: var(--bg);
+    /* ┌─ KÍNH MỜ (12/09/2026, theo yêu cầu chủ dự án) ─────────────────────
+       │ Bảng nay là KÍNH MỜ THẬT: nền trắng .78 + backdrop-filter blur(22px),
+       │ cùng ngôn ngữ với thanh nav ngay trên nó (rgba .55 + blur 14px, xem
+       │ oa.css) nhưng đục hơn và mờ mạnh hơn — vì sau bảng là NỘI DUNG TĨNH
+       │ của trang, còn sau thanh nav là nội dung đang trôi qua.
+       │
+       │ ĐỌC KHỐI CHÚ THÍCH NGAY TRÊN TRƯỚC KHI HẠ HAI SỐ NÀY. Ở đó ghi rằng
+       │ một bản trắng .55 KHÔNG kèm blur đã bị bỏ vì tiêu đề trang hằn qua
+       │ và đan vào chữ trong bảng. Lần này khác đúng ở chỗ blur: .55 trần
+       │ chỉ làm chữ phía sau NHẠT đi (vẫn đọc ra được nét chữ), còn blur
+       │ 22px biến nó thành một vệt màu không còn hình thù. Hạ blur về 0 là
+       │ quay lại đúng lỗi đã bỏ.
+       │
+       │ MÁY KHÔNG CÓ backdrop-filter thì @supports bên dưới trả nền về đục
+       │ hẳn — thà mất hiệu ứng còn hơn để chữ chồng lên chữ.
+       └──────────────────────────────────────────────────────────────────── */
+    background: rgba(255, 255, 255, .78);
+    backdrop-filter: blur(22px) saturate(120%);
+    -webkit-backdrop-filter: blur(22px) saturate(120%);
 
     /* Ẩn bằng visibility chứ không display:none — bảng cần được tính bố cục
        để chuyển động mờ dần chạy được, và để header.js đo được vị trí. */
@@ -200,9 +218,23 @@
 /* Trang chủ khi hero còn sau lưng: thanh nav trong suốt, bảng cũng vậy —
    đây là trạng thái khớp đúng tham chiếu. `:not(.is-past-hero)` là cùng
    điều kiện mà .oa-header--over dùng để lật giữa trong suốt và kính mờ;
-   xem khối chú thích ở oa.css. */
+   xem khối chú thích ở oa.css.
+
+   CHỈ ĐỔI `background`, KHÔNG đụng backdrop-filter: lớp mờ vẫn chạy, nên ở
+   đây bảng là kính TRONG (không tráng trắng) đặt trên video đang phát —
+   video sau lưng nhoè đi, chữ trắng của bảng nổi lên. Thêm một dòng
+   `backdrop-filter: none` vào đây là mất đúng hiệu ứng vừa dựng. */
 .oa-header--over:not(.is-past-hero):not(.is-overlay) .mega__panel {
     background: transparent;
+}
+
+/* Trình duyệt không có backdrop-filter (Firefox cũ, một số webview): nền
+   đục hẳn. Mất kính mờ, nhưng không bao giờ có cảnh chữ trang chồng lên chữ
+   trong bảng. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .mega__panel {
+        background: var(--bg);
+    }
 }
 
 .mega:hover .mega__panel,

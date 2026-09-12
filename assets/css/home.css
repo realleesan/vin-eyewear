@@ -160,3 +160,72 @@ html:not(.js) .vhero__bars {
         width: 48px;
     }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   KHỐI "GHÉ THĂM CỬA HÀNG" — HAI NÚT NẰM CÙNG MỘT HÀNG   (12/09/2026)
+
+   Hai nút "Đặt lịch đo mắt" và "Chi nhánh cửa hàng" đo ra 204px và 244px,
+   cộng khe 10px là 458px — trong khi .oa-split__copy của oa.css khoá
+   max-width 420px. Thiếu 38px, và `flex-wrap: wrap` của hàng nút làm đúng
+   việc nó được giao: đẩy nút thứ hai xuống dòng dưới.
+
+   KHÔNG chữa bằng cách thu đệm ngang của nút: 458 về vừa 420 thì đệm phải
+   xuống ~18px, tức chỉ còn 3px dư — và cả thang chữ site này nhân với
+   --oa-scale, nên chỉ cần chủ trang phóng cỡ chữ lên một nấc là nó vỡ lại.
+   Chữa ở chỗ THẬT SỰ chật: cột chữ.
+
+   ĐỘ DÀI DÒNG CHỮ GIỮ NGUYÊN. Cột nay rộng hết nửa khối (auto-fit 1fr,
+   ~600px ở màn 1440) nhưng ba khối chữ vẫn bị khoá ở 420px — bỏ khoá ấy đi
+   là đoạn dẫn dài gần 600px, tức ~110 ký tự một dòng, quá ngưỡng dễ đọc.
+   Chỉ HÀNG NÚT được dùng hết chỗ vừa mở ra.
+
+   CHỈ TRANG CHỦ: file này chỉ nạp cho 'home/index', nên khối "Dịch vụ đo
+   mắt" ở trang giới thiệu (cũng dùng .oa-split) không đổi.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.oa-split__copy {
+    max-width: none;
+}
+
+.oa-split__copy > .oa-eyebrow,
+.oa-split__copy > .oa-title,
+.oa-split__copy > .oa-muted {
+    max-width: 420px;
+}
+
+.hstore__cta {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+
+    /* ┌─ WRAP LÀ MẶC ĐỊNH, NOWRAP CHỈ Ở CHỖ ĐỦ RỘNG ──────────────────────
+       │ ĐỌC BẢNG NÀY TRƯỚC KHI ĐỔI `flex-wrap` THÀNH `nowrap` TRẦN.
+       │
+       │ Hàng nút cần 458px (204 + 244 + khe 10). Bề ngang CỘT chứa nó, sau
+       │ khi .oa-split__copy bỏ khoá 420px ở trên:
+       │
+       │     màn  360   1 cột   328px   TRÀN
+       │     màn  414   1 cột   382px   TRÀN
+       │     màn  560   1 cột   528px   đủ
+       │     màn  640   1 cột   608px   đủ
+       │     màn  768   2 cột   305px   TRÀN
+       │     màn  900   2 cột   367px   TRÀN
+       │     màn 1024   2 cột   425px   TRÀN
+       │     màn 1280   2 cột   545px   đủ
+       │
+       │ .oa-split là `auto-fit minmax(300px, 1fr)`, nên từ ~644px trở lên
+       │ nó tách làm HAI cột và mỗi cột hẹp lại — đó là lý do khoảng 700 tới
+       │ 1100px tràn nặng hơn cả màn điện thoại. `nowrap` trần ở đây là cuộn
+       │ ngang trên mọi máy tính bảng và laptop 1024, không riêng điện thoại.
+       │
+       │ Nên: `wrap` ở mọi nơi, và chỉ khoá một hàng từ 1200px — chỗ cột đo
+       │ được 508px, dư 50px cho cả trường hợp chủ trang phóng --oa-scale.
+       └────────────────────────────────────────────────────────────────── */
+    flex-wrap: wrap;
+}
+
+@media (min-width: 1200px) {
+    .hstore__cta {
+        flex-wrap: nowrap;
+    }
+}
