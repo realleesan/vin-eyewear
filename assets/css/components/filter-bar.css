@@ -60,14 +60,11 @@
     align-items: center;
     gap: 12px;
     padding: 0 var(--edge);
-    border-bottom: 1px solid var(--line);
 }
 
-/* Tấm đang mở thì chính .fbar đã có viền trên — hai đường liền nhau ở cùng
-   một chỗ dày gấp đôi. */
-.fbarbar:has(.fbarwrap[open]) {
-    border-bottom: 0;
-}
+/* ⚠ KHÔNG có border-bottom ở đây, và đó là chủ ý (12/09/2026, yêu cầu chủ
+   dự án): một đường kẻ ngay trên tiêu đề "Gọng kính" cắt trang làm hai mảnh
+   rời, trong khi hàng chip và cái tiêu đề ấy nói về cùng một thứ. */
 
 /* Hàng chip CUỘN NGANG khi tràn, không xuống hai hàng: số bộ sưu tập tăng
    theo thời gian, mà xuống hàng thì nó thành một khối menu chứ không còn là
@@ -189,12 +186,18 @@
  *
  * ⚠ .fbar phải là EM LIỀN KỀ của .fbarbar. Chèn bất cứ thẻ nào vào giữa hai
  * khối là tấm không bao giờ mở ra nữa, và không có lỗi nào để thấy.
+ *
+ * NỀN TRẮNG NHƯ PHẦN CÒN LẠI CỦA TRANG (12/09/2026, yêu cầu chủ dự án).
+ * Trước đây là --bg-off, tức một mảng xám nhạt bung ra giữa trang mỗi lần mở
+ * bộ lọc. Nay chỉ còn một nét viền trên làm mép của tấm — đủ để biết nó vừa
+ * xổ ra, mà không cắt trang thành hai mảng màu.
+ *
+ * Cũng KHÔNG còn border-bottom: xem lý do ở .fbarbar bên trên.
  */
 .fbar {
     display: none;
     border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    background: var(--bg-off);
+    background: var(--bg);
 }
 
 .fbarbar:has(.fbarwrap[open]) + .fbar {
