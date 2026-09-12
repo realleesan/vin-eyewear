@@ -530,21 +530,36 @@
                 }
             });
 
-            /* ┌─ BA THỨ OFFCANVAS KHÔNG LO, PHẢI TỰ NỐI ────────────────────────
+            /* ┌─ HAI THỨ OFFCANVAS KHÔNG LO, PHẢI TỰ NỐI ───────────────────────
                │
-               │ 1. LỚP TRÊN <body>. Offcanvas KHÔNG gắn `modal-open` — lớp đó
-               │    là của Modal. Không có lớp nào thì luật nâng z-index của đầu
-               │    trang không bao giờ chạy, và hậu quả đo được rất cụ thể: tấm
-               │    giỏ nằm trong .site-header (z 60) nên NỀN MỜ (z 105) phủ ĐÈ
-               │    LÊN CHÍNH NÓ và nuốt cú bấm nút X. Gắn lớp riêng của Vin.
+               │ 1. aria-expanded của thẻ mở — Offcanvas không đụng tới.
                │
-               │ 2. aria-expanded của thẻ mở — Offcanvas không đụng tới.
-               │
-               │ 3. TRẢ TIÊU ĐIỂM. Bootstrap chỉ tự trả về thẻ mở khi ngăn kéo
+               │ 2. TRẢ TIÊU ĐIỂM. Bootstrap chỉ tự trả về thẻ mở khi ngăn kéo
                │    được mở QUA data-API (data-bs-toggle). Ở đây ta gọi thẳng
                │    instance (để còn chặn Ctrl/Cmd+bấm cho lối mở tab mới), nên
                │    Bootstrap không có tham chiếu nào để trả về — tiêu điểm rơi
                │    ra <body> và người dùng bàn phím phải Tab lại từ đầu trang.
+               │
+               │ ───────────────────────────────────────────────────────────────
+               │ TỪNG CÓ THỨ BA: `document.body.classList.add('is-cart-open')`.
+               │ Đã gỡ 12/09/2026, và gỡ được vì VẤN ĐỀ NÓ SINH RA ĐỂ CHỮA nay
+               │ không còn — không phải vì nó thừa ngay từ đầu.
+               │
+               │ Nó tồn tại để bật một luật nâng z-index đầu trang, chữa cảnh
+               │ nền mờ của Offcanvas phủ đè lên chính tấm giỏ và nuốt cú bấm
+               │ nút X. Luật ấy nằm trong components/header.css; file đó đã gỡ
+               │ khỏi khu bán hàng, nên từ lúc ấy lớp này chỉ còn được GẮN chứ
+               │ không ai ĐỌC — grep cả assets/css/ không ra một dòng nào.
+               │
+               │ Cùng cái lỗi nền-mờ-đè-lên-thanh ấy nay đã chữa bằng đường
+               │ khác và đứng độc lập với mọi lớp trên <body>: cắt nền mờ xuống
+               │ dưới thanh bằng `inset: var(--hdr-h) 0 0` — xem khối
+               │ .offcanvas-backdrop trong oa.css.
+               │
+               │ Khoá cuộn nền thì `scroll: false` ở config Offcanvas lo, không
+               │ cần lớp nào. Nên đừng gắn lại lớp này "cho chắc": muốn CSS biết
+               │ ngăn giỏ đang mở thì đã có sẵn `.offcanvas.show` trên chính
+               │ tấm, không cần một cờ thứ hai để lệch.
                └──────────────────────────────────────────────────────────────── */
             /* ┌─ THANH ĐẦU TRANG LIỀN MỘT MẢNG VỚI TẤM GIỎ ────────────────────
                │ Cùng thứ ô tìm kiếm làm ở khối 2 — `.oa-header.is-overlay` trong
@@ -566,7 +581,6 @@
             });
 
             cartPanel.addEventListener('shown.bs.offcanvas', function () {
-                document.body.classList.add('is-cart-open');
                 if (cartTrigger) cartTrigger.setAttribute('aria-expanded', 'true');
 
                 /* ĐƯA TIÊU ĐIỂM VÀO NÚT ĐÓNG — và đây không phải chuyện trợ
@@ -624,8 +638,6 @@
             });
 
             cartPanel.addEventListener('hidden.bs.offcanvas', function () {
-                document.body.classList.remove('is-cart-open');
-
                 /* `hidden` CHỨ KHÔNG `hide` — ngược với chiều mở, và cũng vì
                    cùng một lý do. `hide` bắn lúc BẮT ĐẦU trượt ra: thanh sẽ trả
                    về trong suốt trong khi tấm còn đang trôi lên, tức là ba tấc
