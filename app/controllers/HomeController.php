@@ -37,6 +37,15 @@ class HomeController extends BaseController
     /** Số thẻ trên mỗi băng — mẫu xếp đúng một hàng bốn cột. */
     private const PER_BAND = 4;
 
+    /**
+     * Số thẻ của băng đánh giá — 5, theo yêu cầu chủ dự án.
+     *
+     * Đây là số THẺ, không phải số đánh giá lấy được: chưa đủ 5 đánh giá đã
+     * duyệt thì view in tiếp thẻ trống cho đủ năm (xem _layout/home/reviews.php).
+     * Nên con số này quyết định cả hình của khối lẫn câu truy vấn.
+     */
+    private const PER_REVIEWS = 5;
+
     public function index(): void
     {
         $newArrivals = ProductModel::newest(self::PER_BAND);
@@ -67,6 +76,12 @@ class HomeController extends BaseController
             'lenses'      => $lenses,
 
             'variants' => VariantModel::forProducts(array_values(array_unique($ids))),
+
+            /* Băng đánh giá. MỘT câu cho cả khối, và nó rỗng là chuyện BÌNH
+               THƯỜNG chứ không phải lỗi: cửa hàng mới mở, hoặc đánh giá đang
+               chờ duyệt trong khu quản trị. View lo phần "chưa có gì". */
+            'reviews'  => ReviewModel::latestPublished(self::PER_REVIEWS),
+            'reviewSlots' => self::PER_REVIEWS,
         ]);
     }
 }

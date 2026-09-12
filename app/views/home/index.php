@@ -100,6 +100,21 @@ $bands = [
 <?php endforeach; ?>
 
 <?php
+/* ┌─ BĂNG ĐÁNH GIÁ KHÁCH HÀNG ────────────────────────────────────────────
+   │ Đặt NGAY TRÊN khối "Ghé thăm cửa hàng" (yêu cầu chủ dự án). Khối này
+   │ LUÔN in ra, kể cả khi chưa có đánh giá nào được duyệt — lúc ấy nó là
+   │ năm thẻ trống. Lý do đầy đủ ở đầu _layout/home/reviews.php.
+   │
+   │ File partial ấy từng nằm trong nhóm "năm khối của bản cũ đã ra khỏi
+   │ trang chủ" ghi ở đầu file này; nay nó trở lại, viết lại từ đầu bằng
+   │ ngôn ngữ của oa.css và đọc đánh giá thật trong CSDL. */
+?>
+<?php partial('_layout/home/reviews', [
+    'reviews'     => $reviews,
+    'reviewSlots' => $reviewSlots,
+]); ?>
+
+<?php
 /* ┌─ GHÉ THĂM CỬA HÀNG ───────────────────────────────────────────────────
    │ Hai cột co giãn: chữ bên trái tối đa 420px, ảnh 4:3 bên phải. Dưới
    │ 600px hai cột tự xếp chồng — `repeat(auto-fit, minmax(300px,1fr))` lo

@@ -229,6 +229,8 @@ return [
 
     'home.rev.eyebrow'    => 'Reviews',
     'home.rev.title'      => 'What our customers say',
+    'home.rev.empty'      => 'No reviews yet',
+    'home.rev.empty_lead' => 'Customer reviews appear here once the shop approves them.',
     'home.rev.prev'       => 'Previous reviews',
     'home.rev.next'       => 'Next reviews',
 
@@ -291,6 +293,7 @@ return [
     'pd.write'        => 'Write your review',
     'pd.rate'         => 'Rating',
     'pd.comment'      => 'Comment',
+    'pd.comment_max'  => 'Up to :n characters.',
     'pd.comment_ph'   => 'How do they fit? How long did glazing take?',
     'pd.send'         => 'Submit review',
     'pd.moderated'    => 'Reviews appear once approved.',

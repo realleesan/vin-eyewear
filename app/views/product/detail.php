@@ -969,9 +969,18 @@ $stars = static function (float $score): string {
                     </div>
 
                     <label class="sr-only" for="noi-dung"><?= e(t('pd.comment')) ?></label>
+                    <?php
+                    /* maxlength ĐỌC TỪ HẰNG, không gõ số: trần thật nằm ở
+                       ReviewModel::BODY_MAX và máy chủ mới là chốt cuối (thuộc
+                       tính này sửa được bằng công cụ nhà phát triển). Gõ hai
+                       con số ở hai nơi thì ngày chúng lệch nhau, khách gõ vừa
+                       đủ theo ô nhập rồi bị máy chủ từ chối. */
+                    ?>
                     <textarea class="pdwrite__area" id="noi-dung" name="body" rows="3"
-                              required minlength="10" maxlength="2000"
+                              required minlength="10" maxlength="<?= ReviewModel::BODY_MAX ?>"
                               placeholder="<?= e(t('pd.comment_ph')) ?>"></textarea>
+
+                    <span class="pdwrite__hint"><?= e(t('pd.comment_max', [':n' => ReviewModel::BODY_MAX])) ?></span>
 
                     <button type="submit" class="pdwrite__send"><?= e(t('pd.send')) ?></button>
                     <span class="pdwrite__note"><?= e(t('pd.moderated')) ?></span>

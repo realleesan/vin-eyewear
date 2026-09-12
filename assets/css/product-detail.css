@@ -963,6 +963,14 @@
     font-size: var(--fs-micro);
 }
 
+/* Dòng nhắc trần ký tự, ngay dưới ô nhập — cùng dáng với .pdwrite__note
+   nhưng nhạt hơn: nó là ghi chú kỹ thuật, không phải lời cửa hàng nói. */
+.pdwrite__hint {
+    margin-top: -4px;
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
+}
+
 .pdwrite__send {
     align-self: flex-start;
     height: var(--h-btn);

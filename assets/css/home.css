@@ -229,3 +229,202 @@ html:not(.js) .vhero__bars {
         flex-wrap: nowrap;
     }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   BĂNG ĐÁNH GIÁ KHÁCH HÀNG   (12/09/2026)
+
+   Một VÙNG CUỘN NGANG THẬT có scroll-snap, không phải băng transform như
+   makeStrip() của home.js. Lý do đầy đủ ở đầu _layout/home/reviews.php;
+   tóm tắt: vuốt trên điện thoại và trackpad phải chạy y như mọi vùng cuộn
+   khác của hệ điều hành, và tắt JavaScript vẫn phải lướt được.
+
+   THẺ CÓ BỀ NGANG CỐ ĐỊNH (320px), KHÔNG PHẢI 1fr: một dải cuộn mà thẻ co
+   theo khung thì chẳng bao giờ có gì thò ra ngoài mép — tức không còn dấu
+   hiệu nào cho biết bên phải còn nữa, và cũng không còn gì để cuộn.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.hrev__wrap {
+    position: relative;
+}
+
+.hrev__strip {
+    display: flex;
+    gap: 16px;
+    padding: 40px var(--edge-grid) 4px;
+    list-style: none;
+
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--edge-grid);
+    scroll-behavior: smooth;
+    overscroll-behavior-x: contain;
+
+    /* Thanh cuộn ẩn đi: dải này có hai mũi tên và vuốt được, còn một thanh
+       cuộn ngang chạy dưới bốn tấm thẻ là thứ mẫu không có ở đâu cả. Vẫn
+       cuộn được bằng mọi cách — ẩn thanh KHÔNG phải tắt cuộn. */
+    scrollbar-width: none;
+}
+
+.hrev__strip::-webkit-scrollbar {
+    display: none;
+}
+
+/* Viền tiêu điểm cho người dùng bàn phím: dải mang tabindex="0" nên nó
+   nhận được tiêu điểm, và một vùng cuộn nhận tiêu điểm mà không hiện gì là
+   một cái bẫy. */
+.hrev__strip:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+}
+
+.hrev__card {
+    flex: 0 0 320px;
+    max-width: 320px;
+    scroll-snap-align: start;
+
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    border: 1px solid var(--line-input);
+    background: var(--bg);
+    font-size: var(--fs-body);
+    line-height: var(--lh);
+}
+
+.hrev__stars {
+    color: var(--ink);
+    font-size: var(--fs-ui);
+    letter-spacing: .12em;
+}
+
+.hrev__stars--off {
+    color: var(--ink-5);
+}
+
+/* ┌─ CẮT Ở 6 DÒNG — LỚP THỨ HAI, KHÔNG PHẢI LỚP DUY NHẤT ─────────────────
+   │ Trần thật là ReviewModel::BODY_MAX (400 ký tự), chặn ngay lúc khách
+   │ gửi. Luật này lo phần còn lại: đánh giá CŨ trong CSDL viết từ trước khi
+   │ có trần ấy (giới hạn cũ là 2000 ký tự) vẫn đang nằm đó, và chúng không
+   │ được phép kéo một thẻ cao gấp ba thẻ bên cạnh.
+   │
+   │ min-height giữ cho thẻ ngắn và thẻ dài cao bằng nhau: cả năm thẻ đứng
+   │ cùng một hàng, lệch chiều cao là thấy ngay.
+   └──────────────────────────────────────────────────────────────────────── */
+.hrev__body {
+    flex: 1;
+    min-height: 6em;
+    color: var(--ink-2);
+    text-wrap: pretty;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 6;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.hrev__body--empty {
+    color: var(--ink-5);
+}
+
+.hrev__foot {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line-input);
+}
+
+.hrev__who {
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls-tight);
+    text-transform: uppercase;
+}
+
+.hrev__buy {
+    color: var(--ink-4);
+}
+
+.hrev__what {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+.hrev__what:hover {
+    color: var(--ink);
+}
+
+/* ┌─ HAI MŨI TÊN ─────────────────────────────────────────────────────────
+   │ Nổi ở hai mép dải, căn giữa theo chiều dọc. CHỈ HIỆN TRÊN MÁY CÓ CHUỘT:
+   │ màn cảm ứng thì vuốt là xong, hai nút nổi đè lên thẻ chỉ che mất chữ.
+   │
+   │ Chúng in ra kèm `hidden` và home.js gỡ ra — không có JavaScript thì
+   │ không có nút, vì lúc ấy bấm vào chẳng đi đâu cả.
+   └──────────────────────────────────────────────────────────────────────── */
+.hrev__arrow {
+    display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .hrev__arrow:not([hidden]) {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 1px solid var(--line-btn);
+        background: var(--bg);
+        color: var(--ink);
+        cursor: pointer;
+        transition: background .18s ease, color .18s ease, opacity .18s ease;
+    }
+
+    .hrev__arrow svg {
+        width: 16px;
+        height: 16px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.4;
+    }
+
+    .hrev__arrow:hover {
+        background: var(--ink);
+        color: #fff;
+    }
+
+    /* Hết đường thì MỜ ĐI chứ không biến mất: một nút biến mất làm cả dải
+       nhảy chỗ, và người dùng mất mốc. home.js gắn/gỡ lớp này theo vị trí
+       cuộn. */
+    .hrev__arrow.is-off {
+        opacity: .3;
+        cursor: default;
+    }
+
+    .hrev__arrow--prev {
+        left: calc(var(--edge-grid) - 18px);
+    }
+
+    .hrev__arrow--next {
+        right: calc(var(--edge-grid) - 18px);
+    }
+}
+
+@media (max-width: 760px) {
+    .hrev__strip {
+        padding-top: 28px;
+        gap: 12px;
+    }
+
+    /* Thẻ hẹp hơn bề ngang màn để lòi ra một mẩu thẻ sau — đó là thứ duy
+       nhất nói cho người dùng biết dải này cuộn được. */
+    .hrev__card {
+        flex-basis: min(320px, 78vw);
+        max-width: min(320px, 78vw);
+    }
+}

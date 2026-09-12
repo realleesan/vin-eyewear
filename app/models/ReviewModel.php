@@ -33,6 +33,30 @@ class ReviewModel extends BaseModel
     /** Số đánh giá hiện sẵn trên trang sản phẩm trước khi phải bấm "xem tất cả". */
     public const PREVIEW = 3;
 
+    /**
+     * TRẦN KÝ TỰ CỦA MỘT NHẬN XÉT — 400.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * CON SỐ NÀY ĐO TỪ CÁI THẺ, KHÔNG PHẢI CHỌN BỪA
+     *
+     * Thẻ trong băng đánh giá ở trang chủ rộng 320px, chữ 10px, mỗi dòng vừa
+     * khoảng 52 ký tự, và thẻ chừa chỗ cho 6 dòng — tức ~310 ký tự hiện trọn.
+     * 400 là mức cho phép dôi thêm một chút (CSS cắt phần thừa bằng
+     * -webkit-line-clamp, xem .hrev__body trong home.css) mà vẫn không có
+     * chuyện một nhận xét dài đẩy vỡ cả băng.
+     *
+     * TRƯỚC ĐÂY LÀ 2000 VÀ CẮT ÂM THẦM: submit() gọi utf8Substr($body, 0, 2000)
+     * rồi lưu. Khách gõ 2100 ký tự thì 100 ký tự cuối biến mất, không một lời
+     * nào — và họ chỉ phát hiện khi đọc lại đánh giá của chính mình. Nay quá
+     * trần là BÁO LỖI và giữ nguyên thứ họ gõ để sửa.
+     *
+     * ĐỔI SỐ NÀY THÌ NHỚ ba chỗ đi cùng: maxlength của <textarea> và dòng nhắc
+     * dưới ô nhập (app/views/product/detail.php), và số dòng cắt của
+     * .hrev__body. Trần ở máy chủ là chốt cuối; hai chỗ kia chỉ để khách biết
+     * trước.
+     */
+    public const BODY_MAX = 400;
+
     // ========================================================================
     // ĐỌC
     // ========================================================================
@@ -55,6 +79,42 @@ class ReviewModel extends BaseModel
         }
 
         return Database::fetchAll($sql, ['pid' => $productId]);
+    }
+
+    /**
+     * Đánh giá ĐÃ DUYỆT mới nhất của CẢ SITE — băng đánh giá ở trang chủ.
+     *
+     * Khác published() ở chỗ không hỏi theo một mặt hàng: trang chủ cần
+     * "khách nói gì về cửa hàng", không phải về một cái gọng.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * JOIN CHỨ KHÔNG PHẢI HAI CÂU
+     *
+     * Thẻ đánh giá in kèm tên mặt hàng và dẫn sang trang của nó, nên tên và
+     * slug phải đi cùng dòng đánh giá. Ở đây JOIN được (khác
+     * FavoriteModel::danhSach, nơi phải đi hai câu để mượn decode() của
+     * ProductModel): thẻ này chỉ cần `name` và `slug`, không đụng tới cột JSON
+     * nào của sản phẩm.
+     *
+     * `p.is_visible = 1` là phép lọc THẬT, không phải cho đẹp: đánh giá của một
+     * mặt hàng cửa hàng vừa ẩn mà vẫn nằm trên trang chủ thì cú bấm vào tên
+     * hàng ra trang 404.
+     *
+     * BẢNG CÓ THỂ CHƯA CÓ CỘT `reply` trên máy chưa chạy migration — nên câu
+     * này KHÔNG đọc nó. Băng trên trang chủ chỉ in lời khách.
+     */
+    public static function latestPublished(int $limit = 5): array
+    {
+        return Database::fetchAll(
+            'SELECT r.id, r.rating, r.body, r.author_name, r.order_id,
+                    r.variant_label, r.created_at,
+                    p.name AS product_name, p.slug AS product_slug
+               FROM reviews r
+               JOIN products p ON p.id = r.product_id
+              WHERE r.status = \'published\' AND p.is_visible = 1
+              ORDER BY r.created_at DESC
+              LIMIT ' . max(1, $limit)
+        );
     }
 
     /** Danh sách cho khu quản trị, lọc theo trạng thái, kèm tên sản phẩm. */
@@ -170,6 +230,20 @@ class ReviewModel extends BaseModel
             return ['ok' => false, 'error' => 'Nhận xét cần ít nhất 10 ký tự.'];
         }
 
+        /* Quá dài thì TỪ CHỐI, không cắt bớt rồi lưu — xem khối chú thích của
+           hằng BODY_MAX. Câu báo nói cả trần lẫn số khách đang có, vì "quá
+           dài" mà không biết dài bao nhiêu thì phải xoá mò. */
+        if (utf8Length($body) > self::BODY_MAX) {
+            return [
+                'ok'    => false,
+                'error' => sprintf(
+                    'Nhận xét tối đa %d ký tự (bạn đang viết %d). Vui lòng rút gọn.',
+                    self::BODY_MAX,
+                    utf8Length($body)
+                ),
+            ];
+        }
+
         $profile = UserModel::profile($userId);
 
         static::insert([
@@ -179,7 +253,10 @@ class ReviewModel extends BaseModel
             // Chép lại tên lúc viết — xem ghi chú trong schema.sql
             'author_name'   => $profile['full_name'] ?: 'Khách hàng',
             'rating'        => $rating,
-            'body'          => utf8Substr($body, 0, 2000),
+            /* utf8Substr là lưới an toàn cuối, KHÔNG phải phép cắt: phép kiểm
+               ngay trên đã chặn mọi chuỗi dài hơn BODY_MAX, nên dòng này chỉ
+               chạy nếu ai đó sửa phép kiểm mà quên chỗ này. */
+            'body'          => utf8Substr($body, 0, self::BODY_MAX),
             'variant_label' => $allowed['variant'],
             'status'        => 'pending',
         ]);

@@ -234,6 +234,8 @@ return [
 
     'home.rev.eyebrow'    => 'Đánh giá',
     'home.rev.title'      => 'Khách hàng nói về Vin Eyewear',
+    'home.rev.empty'      => 'Chưa có đánh giá',
+    'home.rev.empty_lead' => 'Đánh giá của khách sẽ hiện ở đây sau khi cửa hàng duyệt.',
     'home.rev.prev'       => 'Đánh giá trước',
     'home.rev.next'       => 'Đánh giá sau',
 
@@ -296,6 +298,7 @@ return [
     'pd.write'        => 'Viết đánh giá của bạn',
     'pd.rate'         => 'Chấm điểm',
     'pd.comment'      => 'Nhận xét',
+    'pd.comment_max'  => 'Tối đa :n ký tự.',
     'pd.comment_ph'   => 'Kính dùng có vừa ý không? Cắt lắp mất bao lâu?',
     'pd.send'         => 'Gửi đánh giá',
     'pd.moderated'    => 'Đánh giá hiển thị sau khi được duyệt.',

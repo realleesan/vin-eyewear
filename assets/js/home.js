@@ -9,6 +9,9 @@
  *   4. hai băng trượt sản phẩm ("mới về" và "bán chạy") — chỉ đổi khi bấm
  *   5. băng trượt khối danh mục — chỉ đổi khi bấm, và CHỈ TỒN TẠI khi có quá
  *      ba danh mục (dưới mức đó view in ra lưới tĩnh, không có gì để nối vào)
+ *   6. băng đánh giá khách hàng — KHÁC BỐN CÁI TRÊN: nó là vùng cuộn ngang
+ *      thật của trình duyệt, việc của JS chỉ là gắn hai mũi tên cho người
+ *      dùng chuột (xem khối 6 ở cuối file)
  *
  * ĐỒNG HỒ ĐẾM NGƯỢC của dải ưu đãi từng là việc số 2, bỏ cùng tính năng sự
  * kiện (2026-08-26) — nó đếm tới ends_at của một bài trong bảng `events`.
@@ -1007,5 +1010,74 @@
             prev:   '[data-category="prev"]',
             next:   '[data-category="next"]'
         });
+    })();
+
+    /* ============================================================
+       6. BĂNG ĐÁNH GIÁ — HAI MŨI TÊN CHO MỘT VÙNG CUỘN THẬT
+
+       KHÔNG dùng makeStrip: khối này không phải băng transform mà là một
+       vùng overflow-x: auto có scroll-snap (xem _layout/home/reviews.php).
+       Vuốt, trackpad, phím mũi tên và thanh cuộn đều đã chạy sẵn nhờ trình
+       duyệt — phần duy nhất còn thiếu là hai cái nút cho người dùng chuột.
+
+       ĐÂY LÀ TĂNG CƯỜNG THUẦN TUÝ, và hai dòng dưới đây là chỗ thể hiện
+       điều đó: view in hai nút kèm thuộc tính `hidden`, JS gỡ ra. Tắt
+       JavaScript thì không có nút nào — thay vì có nút mà bấm không đi đâu.
+
+       CUỘN THEO BỀ NGANG MỘT THẺ, không theo một số gõ cứng: đọc trực tiếp
+       thẻ đầu rồi cộng khe. Đổi bề ngang thẻ trong CSS thì bước cuộn tự
+       đúng theo, không phải nhớ sửa ở đây.
+       ============================================================ */
+
+    (function reviewStrip() {
+        var strip = document.querySelector('[data-rev-strip]');
+
+        if (!strip) return;
+
+        var wrap = strip.parentNode;
+        var prev = wrap.querySelector('[data-rev="prev"]');
+        var next = wrap.querySelector('[data-rev="next"]');
+
+        if (!prev || !next) return;
+
+        prev.hidden = false;
+        next.hidden = false;
+
+        /** Bề ngang một bước cuộn = thẻ + khe. */
+        function buoc() {
+            var card = strip.querySelector('.hrev__card');
+
+            if (!card) return strip.clientWidth;
+
+            var khe = parseFloat(window.getComputedStyle(strip).columnGap) || 0;
+
+            return card.getBoundingClientRect().width + khe;
+        }
+
+        /* Hết đường thì làm mờ nút, không giấu đi: nút biến mất làm cả dải
+           nhảy chỗ. 2px dung sai vì scrollWidth/clientWidth trả số lẻ khi
+           trình duyệt phóng to. */
+        function veLaiNut() {
+            var het = strip.scrollWidth - strip.clientWidth;
+
+            prev.classList.toggle('is-off', strip.scrollLeft <= 2);
+            next.classList.toggle('is-off', strip.scrollLeft >= het - 2);
+        }
+
+        prev.addEventListener('click', function () {
+            strip.scrollBy({ left: -buoc(), behavior: 'smooth' });
+        });
+
+        next.addEventListener('click', function () {
+            strip.scrollBy({ left: buoc(), behavior: 'smooth' });
+        });
+
+        /* passive: true — listener này chỉ ĐỌC vị trí cuộn, không bao giờ
+           gọi preventDefault. Nói trước cho trình duyệt biết để nó không
+           phải chờ mã này chạy xong mới vẽ khung hình cuộn tiếp theo. */
+        strip.addEventListener('scroll', veLaiNut, { passive: true });
+        window.addEventListener('resize', veLaiNut);
+
+        veLaiNut();
     })();
 })();
