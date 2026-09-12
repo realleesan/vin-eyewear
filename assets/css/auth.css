@@ -318,24 +318,56 @@
     height: 0;
 }
 
+/* ┌─ Ô TICK — SỬA LỖI 12/09/2026: BẤM MÀ KHÔNG THẤY GÌ ĐỔI ───────────────
+   │ Ô nhập thật bị giấu (`opacity: 0` ngay trên), nên toàn bộ phần khách
+   │ NHÌN THẤY là cái hộp này. Mà bản cũ vẽ hộp y hệt nhau ở cả hai trạng
+   │ thái: nền `var(--bg)` = #fff, và dấu tick `color: #fff` — trắng trên
+   │ trắng. Cả hình SVG bên trong cũng `stroke="currentColor"`, tức cũng
+   │ trắng. Bấm vào thì `input.checked` đổi thật, nhưng trên màn hình không
+   │ một điểm ảnh nào khác đi, nên nó đọc đúng như "ô tick không hoạt động".
+   │
+   │ Nay trạng thái ĐÃ TICK đổi bằng NỀN (đen đặc) chứ không chỉ bằng dấu
+   │ tick: khác biệt nền đọc được cả khi người dùng không phân biệt được màu,
+   │ và nó vẫn thấy rõ ở màn hình chói hay độ tương phản thấp — cùng lý lẽ đã
+   │ ghi ở .authtab.is-on.
+   │
+   │ ⚠ `color: #fff` PHẢI ở lại: hình tick dùng currentColor, và trên nền đen
+   │ thì trắng mới là màu đúng. Đừng đổi nó thành var(--ink) cho "nhất quán"
+   │ — làm thế là quay lại đúng lỗi vừa sửa, chỉ là đen trên đen. */
 .authcheck__box {
     flex: none;
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     margin-top: 1px;
     border: 1px solid var(--ink);
-    border-radius: 3px;
-    background: var(--bg);
+    /* Góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
+    background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: var(--fs-micro);
     line-height: 1;
+    transition: background-color .12s ease;
 }
 
-.authcheck input:checked + .authcheck__box::after {
-    content: "✓";
+/* Cỡ hình tick do CSS quyết, không do thuộc tính width/height trên thẻ <svg>:
+   ba chỗ dùng ô tick khai 12px trong một hộp 16px có viền — vừa khít tới mức
+   nét vẽ chạm viền. 10px chừa lại một vành thở. */
+.authcheck__box svg {
+    display: block;
+    width: 10px;
+    height: 10px;
+}
+
+/* CHƯA tick: giấu hẳn hình tick. Không dựa vào chuyện nó trùng màu nền —
+   đó chính là thứ vừa làm hỏng cả ô tick này. */
+.authcheck input:not(:checked) + .authcheck__box svg {
+    visibility: hidden;
+}
+
+.authcheck input:checked + .authcheck__box {
+    background: var(--ink);
 }
 
 .authcheck input:focus-visible + .authcheck__box {
