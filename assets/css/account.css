@@ -210,6 +210,23 @@
     text-wrap: pretty;
 }
 
+/* ┌─ TRANG PHẲNG MỘT MÀU — THẺ KHÔNG CÒN LÀ MỘT MẶT PHẲNG RIÊNG ──────────
+   │ Trước: trang --bg-panel, thẻ --bg (#fff). Nay tất cả về --bg-panel, nên
+   │ .acct-card thôi làm "tấm trắng nổi trên nền xám" và chỉ còn là một khối
+   │ đệm 20px gom nhóm.
+   │
+   │ HỆ QUẢ PHẢI BIẾT: thẻ này KHÔNG có viền, không đổ bóng — trắng-trên-xám
+   │ chính là toàn bộ thứ vẽ ra ranh giới của nó. Từ nay ranh giới ấy biến
+   │ mất; cái phân nhóm còn lại là khoảng trắng giữa các thẻ và nhãn mục.
+   │ Muốn thấy lại đường bao thì thêm `border: 1px solid var(--line-input)`,
+   │ đừng trả nền trắng về — trả nền là hỏng đúng thứ vừa làm.
+   │
+   │ BỐN BIẾN THỂ CỦA THẺ CŨNG PHẢI ĐỔI THEO, nếu không trang ra chỗ xám chỗ
+   │ trắng: .acct-order · .acct-addr · .acct-cancel/.acct-danger · .acct-link.
+   │ Cả bốn khai `background` của riêng chúng, đứng SAU luật này và cùng độ
+   │ ưu tiên nên chúng thắng. Ba cái sau có viền sẵn nên vẫn còn hình; riêng
+   │ .acct-order thì giống .acct-card, mất hẳn đường bao.
+   └──────────────────────────────────────────────────────────────────────── */
 .acct-card,
 .acct-notice {
     display: flex;
@@ -217,7 +234,7 @@
     gap: 12px;
     padding: 20px;
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: var(--bg-panel);
 }
 
 .acct-flash {
@@ -295,6 +312,19 @@
     text-transform: uppercase;
 }
 
+/* ┌─ Ô NHẬP LẤY NỀN CỦA TRANG, KHÔNG PHẢI TRẮNG ──────────────────────────
+   │ Ba mặt phẳng của trang này trước đây là: trang --bg-panel (#f3f3f5),
+   │ thẻ --bg (#fff), ô nhập --bg (#fff). Ô nhập vì thế TRÙNG với thẻ chứa
+   │ nó và chỉ còn đường viền 1px phân biệt.
+   │
+   │ Nay ô nhập lấy --bg-panel, bằng đúng nền trang. Viền `--line-input`
+   │ GIỮ NGUYÊN và nay là thứ duy nhất vẽ ra hình ô — đừng gỡ nó đi, không
+   │ thì không còn gì cho biết chỗ nào gõ được.
+   │
+   │ `select.acct-field__input` bên dưới chỉ khai `background-image` (hai
+   │ vệt chéo làm mũi tên) và nó đứng SAU luật này, nên thuộc tính rút gọn
+   │ ở đây không xoá mất mũi tên. Đảo thứ tự hai khối là mất.
+   └──────────────────────────────────────────────────────────────────────── */
 .acct-field__input,
 .acct-pw__input {
     width: 100%;
@@ -302,7 +332,7 @@
     padding: 0 12px;
     border: 1px solid var(--line-input);
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: var(--bg-panel);
     color: var(--ink);
     font-family: inherit;
     font-size: var(--fs-body);
@@ -387,6 +417,9 @@ select.acct-field__input {
     gap: 8px;
 }
 
+/* Cùng nền với ô nhập — khối này (chọn giới tính ở ho-so.php, loại địa chỉ
+   ở _dia-chi-form.php) mang đúng viền và bo góc của một ô nhập, nên để nó
+   trắng trong khi mọi ô cạnh nó đã xám thì đọc ra như một chỗ bị sót. */
 .acct-choice__opt {
     display: flex;
     align-items: flex-start;
@@ -394,7 +427,7 @@ select.acct-field__input {
     padding: 12px;
     border: 1px solid var(--line-input);
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: var(--bg-panel);
     cursor: pointer;
 }
 
@@ -580,13 +613,16 @@ select.acct-field__input {
    MỘT ĐƠN HÀNG
    ══════════════════════════════════════════════════════════════════════ */
 
+/* Cùng nền với .acct-card — xem khối chú thích ở đó. Thẻ đơn hàng cũng
+   không có viền, nên danh sách đơn nay phân nhau bằng khoảng trống chứ
+   không bằng mép thẻ. */
 .acct-order {
     display: flex;
     flex-direction: column;
     gap: 14px;
     padding: 20px;
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: var(--bg-panel);
 }
 
 .acct-order__top {
@@ -960,7 +996,7 @@ select.acct-field__input {
     padding: 16px;
     border: 1px solid var(--line-input);
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: var(--bg-panel);
 }
 
 /* Địa chỉ mặc định — viền đen thay vì một huy hiệu màu */
@@ -1087,7 +1123,7 @@ select.acct-field__input {
     padding: 20px;
     border: 1px solid var(--sale);
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: var(--bg-panel);
 }
 
 .acct-cancel__lead,
@@ -1130,7 +1166,7 @@ select.acct-field__input {
     padding: 12px 16px;
     border: 1px solid var(--line-input);
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: var(--bg-panel);
 }
 
 .acct-link__state {
