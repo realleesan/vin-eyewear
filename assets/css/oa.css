@@ -97,6 +97,28 @@
     --bg-panel: #fff;       /* trước: #f3f3f5 */
     --bg-page: #fff;        /* trước: #f7f7f8 */
 
+    /* ┌─ KÍNH MỜ — MỘT CÔNG THỨC, DÙNG CHO CẢ THANH NAV LẪN BẢNG XỔ ──────
+       │ (12/09/2026, theo yêu cầu chủ dự án: "dropdown phải blur GIỐNG nav")
+       │
+       │ Hai thứ này DÍNH LIỀN NHAU trên màn hình — bảng xổ mọc thẳng từ mép
+       │ dưới thanh nav, không có đường kẻ nào ngăn. Nên chỉ cần lệch một
+       │ chút là thấy ngay một bậc màu chạy ngang ở chỗ giáp: trước đó bảng
+       │ để .78 + blur 22px còn thanh nav .55 + blur 14px, và cái bậc ấy là
+       │ thứ chủ dự án nhìn ra.
+       │
+       │ GÕ SỐ Ở HAI CHỖ LÀ CÁCH CHẮC CHẮN CHÚNG SẼ LỆCH LẦN NỮA: người sau
+       │ chỉnh độ mờ của thanh nav rồi quên mất là còn một bảng xổ ở file
+       │ CSS khác (components/mega-menu.css). Hai token này là chốt cho việc
+       │ đó — đổi một lần, hai chỗ đi theo.
+       │
+       │ ĐỔI SỐ THÌ NHỚ: nền càng trong (alpha thấp) thì blur phải càng mạnh,
+       │ vì thứ nằm sau bảng xổ là CHỮ TĨNH của trang. Blur yếu + nền trong
+       │ là chữ trang hằn qua và đan vào chữ trong bảng — lỗi đã từng phải
+       │ sửa một lần, xem chú thích ở .mega__panel.
+       └────────────────────────────────────────────────────────────────── */
+    --glass-bg: rgba(255, 255, 255, .55);
+    --glass-blur: blur(14px);
+
     /* Ba tông dưới KHÔNG đổi: xám ở đây không phải mặt phẳng nền mà là ô
        giữ chỗ ảnh và trạng thái "đang chọn" của chip. */
     --bg-slot: #e9e9eb;     /* ô ảnh khi chưa có ảnh                      */
@@ -1741,9 +1763,9 @@ textarea.oa-field {
     padding: 0 var(--edge);
     border-bottom: 1px solid transparent;
     color: var(--ink);
-    background: rgba(255, 255, 255, .55);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     transition: background .25s ease, color .25s ease;
 }
 
@@ -1779,9 +1801,9 @@ textarea.oa-field {
 }
 
 .oa-header--over.is-past-hero {
-    background: rgba(255, 255, 255, .55);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     color: var(--ink);
 }
 

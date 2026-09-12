@@ -187,25 +187,31 @@
        │ không thấy: sát đỉnh trang trong, thứ nằm sau thanh nav cũng là nền
        │ trắng, nên .55 trắng chồng lên trắng ra gần đúng trắng.
        └──────────────────────────────────────────────────────────────────── */
-    /* ┌─ KÍNH MỜ (12/09/2026, theo yêu cầu chủ dự án) ─────────────────────
-       │ Bảng nay là KÍNH MỜ THẬT: nền trắng .78 + backdrop-filter blur(22px),
-       │ cùng ngôn ngữ với thanh nav ngay trên nó (rgba .55 + blur 14px, xem
-       │ oa.css) nhưng đục hơn và mờ mạnh hơn — vì sau bảng là NỘI DUNG TĨNH
-       │ của trang, còn sau thanh nav là nội dung đang trôi qua.
+    /* ┌─ KÍNH MỜ — ĐÚNG CÔNG THỨC CỦA THANH NAV ───────────────────────────
+       │ (12/09/2026, theo yêu cầu chủ dự án: bảng xổ phải mờ GIỐNG HỆT
+       │ thanh nav, không phải "cũng mờ".)
        │
-       │ ĐỌC KHỐI CHÚ THÍCH NGAY TRÊN TRƯỚC KHI HẠ HAI SỐ NÀY. Ở đó ghi rằng
-       │ một bản trắng .55 KHÔNG kèm blur đã bị bỏ vì tiêu đề trang hằn qua
-       │ và đan vào chữ trong bảng. Lần này khác đúng ở chỗ blur: .55 trần
-       │ chỉ làm chữ phía sau NHẠT đi (vẫn đọc ra được nét chữ), còn blur
-       │ 22px biến nó thành một vệt màu không còn hình thù. Hạ blur về 0 là
-       │ quay lại đúng lỗi đã bỏ.
+       │ Hai token --glass-bg và --glass-blur khai MỘT LẦN ở oa.css và dùng
+       │ cho cả .oa-header lẫn bảng này. Bản trước đó bảng để .78 + blur 22px
+       │ còn thanh nav .55 + blur 14px: hai khối dính liền nhau mà khác độ
+       │ mờ thì chỗ giáp hiện ra một bậc màu chạy ngang màn hình.
+       │
+       │ ĐỪNG GÕ SỐ THẲNG VÀO ĐÂY nữa, kể cả khi chỉ muốn "đục thêm một
+       │ chút": số gõ thẳng là cách chắc chắn hai chỗ sẽ lệch lần nữa. Sửa ở
+       │ token, cả hai đi theo.
+       │
+       │ Khối chú thích ngay trên ghi rằng một bản trắng .55 từng bị bỏ vì
+       │ tiêu đề trang hằn qua bảng. Bản ấy KHÔNG có blur: .55 trần chỉ làm
+       │ chữ phía sau nhạt đi, vẫn đọc ra nét chữ. Nay .55 đi cùng blur 14px
+       │ — chữ phía sau thành vệt không còn hình thù. Bỏ blur là quay lại
+       │ đúng lỗi đã sửa.
        │
        │ MÁY KHÔNG CÓ backdrop-filter thì @supports bên dưới trả nền về đục
        │ hẳn — thà mất hiệu ứng còn hơn để chữ chồng lên chữ.
        └──────────────────────────────────────────────────────────────────── */
-    background: rgba(255, 255, 255, .78);
-    backdrop-filter: blur(22px) saturate(120%);
-    -webkit-backdrop-filter: blur(22px) saturate(120%);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
 
     /* Ẩn bằng visibility chứ không display:none — bảng cần được tính bố cục
        để chuyển động mờ dần chạy được, và để header.js đo được vị trí. */
@@ -220,12 +226,15 @@
    điều kiện mà .oa-header--over dùng để lật giữa trong suốt và kính mờ;
    xem khối chú thích ở oa.css.
 
-   CHỈ ĐỔI `background`, KHÔNG đụng backdrop-filter: lớp mờ vẫn chạy, nên ở
-   đây bảng là kính TRONG (không tráng trắng) đặt trên video đang phát —
-   video sau lưng nhoè đi, chữ trắng của bảng nổi lên. Thêm một dòng
-   `backdrop-filter: none` vào đây là mất đúng hiệu ứng vừa dựng. */
+   BỎ LUÔN CẢ LỚP MỜ Ở TRẠNG THÁI NÀY, và đó là cùng một yêu cầu "bảng phải
+   giống thanh nav": ở đây .oa-header--over khai `backdrop-filter: none` (xem
+   oa.css) — thanh nav trong veo trên video. Để bảng còn blur thì ngay dưới
+   một thanh nav không mờ lại là một mảng kính mờ, tức đúng cái bậc vừa phải
+   gỡ, chỉ đổi chỗ. */
 .oa-header--over:not(.is-past-hero):not(.is-overlay) .mega__panel {
     background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
 }
 
 /* Trình duyệt không có backdrop-filter (Firefox cũ, một số webview): nền
