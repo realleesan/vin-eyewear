@@ -150,6 +150,11 @@ return [
     'thanh-toan/thanh-cong' => 'OrderController@paid',
     // Đăng nhập / đăng ký / tài khoản
     'auth'              => 'AuthController@index',
+
+    /* Bước một của màn đăng nhập — bản thiết kế 12/09/2026 chia đôi nó:
+       nhập định danh ở đây, mật khẩu ở màn sau. Hàm identify() KHÔNG hỏi
+       CSDL câu nào; xem khối "NĂM MÀN, MỘT ĐỊA CHỈ" trong AuthController. */
+    'auth/tiep-tuc'     => 'AuthController@identify',   // POST
     'auth/dang-nhap'    => 'AuthController@login',      // POST
     /*
      * ĐĂNG KÝ LÀ MỘT MÀN, MỘT CÚ POST — theo UC-USER-01.
@@ -162,8 +167,9 @@ return [
      *
      * Xem khối chú thích "ĐĂNG KÝ — MỘT MÀN" trong AuthController.
      */
-    'auth/dang-ky'          => 'AuthController@signupSubmit',   // POST — tạo tài khoản
-    'auth/dang-ky/gui-ma'   => 'AuthController@signupSendCode', // POST — xin mã xác minh
+    'auth/dang-ky'          => 'AuthController@signupSubmit',   // POST — kiểm form, gửi mã
+    'auth/dang-ky/xac-minh' => 'AuthController@signupVerify',   // POST — nhập mã, tạo tài khoản
+    'auth/dang-ky/gui-ma'   => 'AuthController@signupSendCode', // POST — gửi lại mã
     /*
      * ĐĂNG KÝ BẰNG GOOGLE LÀ MỘT CÁCH RIÊNG, KHÔNG PHẢI MỘT NÚT CỦA FORM TRÊN.
      *

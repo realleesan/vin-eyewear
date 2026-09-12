@@ -481,6 +481,21 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
 
                  File tự thoát khi không thấy khuôn (khách ĐÃ đăng nhập thì
                  master.php không in nó ra), nên nó không làm gì ở đó. */ ?>
+        <?php /* auth.js ĐI CÙNG, và phải đứng TRƯỚC.
+
+                 Nó vốn chỉ nạp cho vài view trong $pageScripts bên dưới, vì
+                 hồi ấy phần tăng cường của nó (nút con mắt, sáu ô mã tự nhảy,
+                 đồng hồ gửi lại mã) chỉ có việc ở đúng những trang đó.
+
+                 Ngăn kéo đổi điều đó: nó nạp view /auth vào GIỮA bất kỳ trang
+                 nào, nên những phần tử ấy có thể xuất hiện ở khắp nơi.
+                 auth-drawer.js gọi window.AuthUI.gan() sau mỗi lượt nạp mảnh —
+                 không có file này thì lời gọi đó lặng lẽ không làm gì, và
+                 trong tấm nút con mắt mang `hidden` mãi mãi.
+
+                 Cả hai đều `defer` nên thứ tự thẻ là thứ tự chạy: auth.js
+                 phải dựng xong window.AuthUI trước khi auth-drawer.js gọi. */ ?>
+        <script src="<?= asset('assets/js/auth.js') ?>" defer></script>
         <script src="<?= asset('assets/js/auth-drawer.js') ?>" defer></script>
         <script src="<?= asset('assets/js/floating.js') ?>" defer></script>
         <?php /* Mua hàng không tải lại trang. Nạp cho MỌI trang khung đầy đủ

@@ -1,68 +1,80 @@
 <?php
 
 /**
- * auth/index.php — đăng nhập & đăng ký (/auth và /auth?tab=dang-ky)
+ * auth/index.php — bốn màn của /auth.
  *
- * Dựng theo "Vin Eyewear Login.dc.html" (Claude Design):
+ * Dựng theo "Đăng ký Đăng nhập.dc.html" (Claude Design, 12/09/2026):
  *
- *   khung rút gọn (logo + hotline | thẻ | chân trang pháp lý)
- *   → thẻ 1060px bo 36px, chia hai: ảnh thương hiệu | form 460px
+ *   dinh-danh    Đăng nhập hoặc tạo tài khoản   một ô, nút "Tiếp tục"
+ *   mat-khau     Nhập mật khẩu                  "Đăng nhập với … · Đổi"
+ *   dang-ky      Tạo tài khoản                  auth/_signup.php
+ *   dang-ky-ma   Xác minh mã OTP                auth/_signup-otp.php
+ *
+ * Màn thứ năm của bản vẽ — "Quên mật khẩu" — có địa chỉ riêng từ trước:
+ * /quen-mat-khau, xem auth/forgot.php.
  *
  * CSS: assets/css/auth.css · JS: assets/js/auth.js
+ * Trong ngăn kéo: assets/css/components/auth-drawer.css · assets/js/auth-drawer.js
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * VÌ SAO CHIA ĐÔI MÀN ĐĂNG NHẬP — VÀ CÁI GIÁ PHẢI TRẢ ĐỂ ĐƯỢC PHÉP CHIA
+ *
+ * Hỏi định danh trước rồi mới hỏi mật khẩu là lối dễ rò rỉ nhất trong cả luồng:
+ * chỉ cần bước một trả lời khác nhau cho một địa chỉ CÓ và một địa chỉ KHÔNG có
+ * tài khoản, thì bất kỳ ai cũng dò được danh sách khách hàng bằng một vòng lặp.
+ *
+ * Nên AuthController::identify() kiểm ĐÚNG HÌNH DẠNG chuỗi rồi đi tiếp, không
+ * tra bảng nào cả. Mọi chuỗi hợp lệ đều sang màn mật khẩu, và câu "Thông tin
+ * đăng nhập không đúng" vẫn nằm nguyên ở màn ấy — BR-UC.USER.02-03 giữ nguyên.
+ *
+ * ⚠ ĐỪNG thêm một phép tra ở màn một để hiện câu "Số này chưa có tài khoản, tạo
+ * mới nhé?". Nó đúng là thân thiện hơn, và nó đúng là thứ luật trên cấm.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * BA CHỖ CỐ Ý KHÁC BẢN THIẾT KẾ — VÀ VÌ SAO
  *
- * 1. HAI TAB THÀNH HAI TRẠNG THÁI CỦA CÙNG MỘT THẺ.
- *    Bản cũ có dải tab "Đăng nhập | Tạo tài khoản" ở đầu trang. Bản thiết kế
- *    bỏ hẳn dải đó: trang chỉ có việc đăng nhập, còn đăng ký là một liên kết
- *    nhỏ ở cuối form. Nên /auth?tab=dang-ky nay là form đăng ký dựng trong
- *    ĐÚNG cái thẻ hai cột ấy — bản thiết kế không vẽ trang đăng ký, nhưng nó
- *    định nghĩa đủ nguyên thể (nhãn, ô nhập, nút, vạch ngăn) để dựng ra một
- *    trang cùng ngôn ngữ. Giữ nguyên URL cũ nên mọi liên kết và mọi lệnh
- *    redirect đang có vẫn trỏ đúng chỗ.
+ * 1. KHÔNG CÓ DẢI TAB "ĐĂNG NHẬP | ĐĂNG KÝ" ở đầu tấm. Dải viên thuốc trong
+ *    file thiết kế là bộ CHUYỂN MÀN của khung vẽ (nhãn "Bước" đứng trước nó),
+ *    không phải một thành phần giao diện. Lối sang màn đăng ký là dòng "Chưa có
+ *    tài khoản? Đăng ký" ở cuối màn một, đúng như bản vẽ.
  *
- * 2. NÚT GOOGLE CHỈ SỐNG KHI ĐÃ CẤU HÌNH.
- *    Chưa điền GOOGLE_CLIENT_ID/SECRET thì nó là nút xám "Sắp có" —
- *    GoogleAuth::isConfigured() quyết. Đã cấu hình thì nó là thẻ <a> (GET) ở
- *    cả hai tab, chỉ khác tham số mang theo. Ở tab đăng ký nó KHÔNG tạo tài
- *    khoản mà dẫn sang màn "Hoàn tất tạo tài khoản"
- *    (auth/google-signup.php) — hai cách đăng ký, hai form, hai ô tick.
+ * 2. NÚT GOOGLE CHỈ SỐNG KHI ĐÃ CẤU HÌNH. Chưa điền GOOGLE_CLIENT_ID/SECRET thì
+ *    nó là nút xám "Sắp có" — GoogleAuth::isConfigured() quyết. Một nút bấm được
+ *    mà ra trang lỗi của Google còn tệ hơn nút không bấm được, vì khách không
+ *    biết lỗi ở phía họ hay phía site.
  *
- * 3. Ô "GHI NHỚ ĐĂNG NHẬP" ĐỨNG TRƯỚC NÚT TRONG MÃ NGUỒN.
- *    Bản thiết kế xếp nó SAU nút "Đăng nhập" trên màn hình. Giữ đúng thứ tự
- *    ấy trong HTML thì người dùng bàn phím phải Tab QUA nút gửi mới tới được ô
- *    tick — tức là gặp nút gửi trước khi kịp chọn có ghi nhớ đăng nhập hay
- *    không. Nên HTML để ô tick trước, còn CSS (`order`) đẩy nó xuống dưới nút.
- *    Nhìn giống hệt bản thiết kế, thứ tự Tab thì đúng.
- * ─────────────────────────────────────────────────────────────────────────────
+ * 3. Ô "GHI NHỚ ĐĂNG NHẬP" ĐỨNG TRƯỚC NÚT TRONG MÃ NGUỒN. Trên màn hình nó nằm
+ *    dưới nút (CSS `order`). Giữ đúng thứ tự ấy trong HTML thì người dùng bàn
+ *    phím phải Tab QUA nút gửi mới tới được ô tick — tức là gặp nút gửi trước
+ *    khi kịp chọn có ghi nhớ đăng nhập hay không.
  */
 
 $old        = $old ?? [];
 $errors     = $errors ?? [];
-$isRegister = $tab === 'dang-ky';
 $signup     = $signup ?? [];
+$buoc       = (string) ($buoc ?? 'dinh-danh');
+$dinhDanh   = trim((string) ($dinhDanh ?? ''));
 
-/* Hai liên kết đổi tab phải MANG THEO đích đang dở. Khách bị giỏ hàng đá về
+/* Hai liên kết đổi màn phải MANG THEO đích đang dở. Khách bị giỏ hàng đá về
    /auth?redirect=/thanh-toan rồi bấm "Đăng ký" mà mất tham số ấy thì đăng ký
    xong bị thả về trang chủ, không quay lại được việc đang làm —
    BR-UC.USER.01-09 nói rõ phải quay lại. */
-$giuDich  = ($redirectRaw ?? '') !== '' ? 'redirect=' . rawurlencode($redirectRaw) : '';
-$urlLogin = '/auth' . ($giuDich !== '' ? '?' . $giuDich : '');
+$giuDich   = ($redirectRaw ?? '') !== '' ? 'redirect=' . rawurlencode($redirectRaw) : '';
+$urlLogin  = '/auth' . ($giuDich !== '' ? '?' . $giuDich : '');
 $urlSignup = '/auth?tab=dang-ky' . ($giuDich !== '' ? '&' . $giuDich : '');
 
 /*
  * ─────────────────────────────────────────────────────────────────────────────
- * LỖI THEO TỪNG Ô — DỰNG Ở ĐÂY, DÙNG CHO CẢ HAI TAB
+ * LỖI THEO TỪNG Ô — DỰNG Ở ĐÂY, DÙNG CHO CẢ BỐN MÀN
  *
- * Hai màn không bao giờ hiện cùng lúc nên chúng chia nhau một mảng $errors và
- * một khoá phiên ('_auth_errors'). Ba cái đóng gói dưới đây đi kèm nhau và
- * được truyền sang auth/_signup.php qua partial(), để hai màn không trôi thành
- * hai cách vẽ lỗi khác nhau.
+ * Bốn màn không bao giờ hiện cùng lúc nên chúng chia nhau một mảng $errors và
+ * một khoá phiên ('_auth_errors'). Ba cái đóng gói dưới đây đi kèm nhau và được
+ * truyền sang auth/_signup.php qua partial(), để các màn không trôi thành mấy
+ * cách vẽ lỗi khác nhau.
  *
  * Màn ĐĂNG NHẬP chỉ dùng chúng cho EF-01…EF-04 (những lỗi nhìn chuỗi đã gõ là
- * biết). EF-05…EF-07 cố tình KHÔNG gắn vào ô nào — xem BR-UC.USER.02-03 và
- * khối chú thích trong AuthController::login().
+ * biết). EF-05…EF-07 cố tình KHÔNG gắn vào ô nào — xem BR-UC.USER.02-03 và khối
+ * chú thích trong AuthController::login().
  */
 
 /** Ô này có lỗi không. */
@@ -97,79 +109,71 @@ $loi = static function (string $field) use ($errors, $hong): void {
 /** Lớp tô viền đỏ cho ô đang có lỗi. */
 $xau = static fn (string $field): string => $hong($field) ? ' is-err' : '';
 
+/* Tiêu đề và dòng dẫn của từng màn — gom một chỗ để bốn nhánh bên dưới chỉ còn
+   phần KHÁC nhau thật sự là form. */
+/* Cột thứ ba là TÊN RÚT GỌN cho thanh đầu ngăn kéo. Thanh ấy rộng chưa tới
+   nửa tấm, mà tiêu đề đầy đủ của màn một dài 28 ký tự — in nguyên vào đó là
+   tràn hoặc cắt cụt. Trang /auth mở bằng đường dẫn thường không có thanh nào
+   nên thuộc tính này vô hại ở đó; xem datTenMan() trong assets/js/auth-drawer.js. */
+[$tuaDe, $dongDan, $tuaNgan] = match ($buoc) {
+    'mat-khau'   => ['Nhập mật khẩu', '', 'Đăng nhập'],
+    'dang-ky'    => ['Tạo tài khoản', 'Hoàn tất thông tin để theo dõi đơn hàng và lịch hẹn của bạn.', 'Đăng ký'],
+    'dang-ky-ma' => ['Xác minh mã OTP', '', 'Xác minh'],
+    default      => ['Đăng nhập hoặc tạo tài khoản', 'Nhập email hoặc số điện thoại để tiếp tục.', 'Đăng nhập'],
+};
+
 /* Chuỗi khách gõ lần trước (controller cất trong $_SESSION['_old_auth']) —
-   điền lại để họ không phải gõ hai lần sau một lượt sai mật khẩu. */
-$dinhDanh = (string) ($old['email'] ?? '');
+   điền lại để họ không phải gõ hai lần sau một lượt sai. */
+$dinhDanhCu = (string) ($old['email'] ?? $dinhDanh);
 ?>
 
 <section class="authwrap">
     <div class="authcard">
 
-        <!-- ══════════ CỘT ẢNH THƯƠNG HIỆU ══════════ -->
-        <div class="authcard__brand">
-            <?php
-            /*
-             * Ô ảnh `login-photo` của bản thiết kế. designImage() dùng ảnh
-             * thiết kế nếu đã tải về assets/images/home/login-photo.(webp|jpg|png),
-             * chưa có thì lấy tạm ảnh người mẫu của trang chủ — xem
-             * assets/images/home/README.md.
-             */
-            ?>
-            <img class="authcard__photo"
-                 src="<?= designImage('login-photo', 'assets/images/hero-models.jpg') ?>"
-                 alt="" width="600" height="620">
-
-            <!-- pointer-events:none trong CSS: lớp chữ phủ lên ảnh nhưng không
-                 được nuốt cú bấm nào — dưới nó không có gì bấm được, và chuột
-                 vẫn phải chọn được chữ. -->
-            <div class="authcard__caption">
-                <p class="authcard__quote">Kính đẹp là kính hợp với chính bạn.</p>
-                <p class="authcard__sub">Hơn 50 thương hiệu quốc tế · Đo mắt chuẩn phòng khám</p>
-            </div>
-        </div>
+        <?php
+        /*
+         * CỘT ẢNH THƯƠNG HIỆU ĐÃ GỠ (12/09/2026).
+         *
+         * Thẻ này từng chia hai: ảnh chiến dịch bên trái, form bên phải. Bản
+         * thiết kế "Đăng ký Đăng nhập.dc.html" vẽ MỘT CỘT ở cả khổ máy tính
+         * lẫn điện thoại, nên cột ảnh không còn chỗ đứng.
+         *
+         * ⚠ Nó không chỉ "bị ẩn": auth.css vốn đã có `.authcard__photo {
+         * display: none }` từ đợt trước, nhưng luật ấy chỉ giấu TẤM ẢNH — hai
+         * dòng chữ phủ lên nó (.authcard__quote, .authcard__sub) vẫn hiện, và
+         * chúng nổi lên đầu trang /auth như một câu quảng cáo lạc chỗ. Gỡ hẳn
+         * khối markup là cách duy nhất hết chuyện đó.
+         */
+        ?>
 
         <!-- ══════════ CỘT FORM ══════════ -->
         <div class="authcard__panel">
 
-            <?php
-            /* ┌─ HAI TAB — bản thiết kế 12/09/2026 ────────────────────────
-               │ Hai viên thuốc ở đầu tấm, viên đang đứng tô nền xám. Chúng
-               │ là LIÊN KẾT THẬT tới /auth và /auth?tab=dang-ky: trong ngăn
-               │ kéo thì auth-drawer.js chặn cú bấm và nạp mảnh vào chỗ cũ,
-               │ còn trên trang /auth thật thì đi như liên kết thường. Một
-               │ markup, đúng hành vi ở cả hai nơi — cùng lối với "Tiếp tục
-               │ không đăng nhập".
-               │
-               │ role="tablist" cố ý KHÔNG dùng: vai trò ấy đi kèm hợp đồng
-               │ bàn phím của ARIA (mũi tên trái/phải chuyển tab, tab panel
-               │ cùng cây DOM). Ở đây mỗi tab là một lượt nạp trang/mảnh, nên
-               │ hai liên kết thường mô tả đúng thứ đang xảy ra hơn. */
-            $urlDangKy = '/auth?tab=dang-ky'
-                . ($redirectRaw !== '' ? '&redirect=' . rawurlencode($redirectRaw) : '');
-            $urlDangNhap = '/auth'
-                . ($redirectRaw !== '' ? '?redirect=' . rawurlencode($redirectRaw) : '');
-            ?>
-            <div class="authtabs">
-                <a class="authtab<?= $isRegister ? '' : ' is-on' ?>" href="<?= e($urlDangNhap) ?>"
-                   <?= $isRegister ? '' : 'aria-current="page"' ?>>Đăng nhập</a>
-                <a class="authtab<?= $isRegister ? ' is-on' : '' ?>" href="<?= e($urlDangKy) ?>"
-                   <?= $isRegister ? 'aria-current="page"' : '' ?>>Đăng ký</a>
-            </div>
-
             <div class="authhead">
                 <?php /* id="authovTitle" — ngăn kéo trỏ aria-labelledby vào
                          đây. Trên trang /auth thường thì id ấy vô hại. */ ?>
-                <h1 class="authhead__title" id="authovTitle"><?= $isRegister ? 'Đăng ký' : 'Đăng nhập' ?></h1>
-                <p class="authhead__lead">
-                    <?= $isRegister
-                        ? 'Mở tài khoản để theo dõi đơn hàng và lịch hẹn, hoặc tiếp tục với Google.'
-                        : 'Đăng nhập bằng số điện thoại hoặc email và mật khẩu, hoặc tiếp tục với Google.' ?>
-                </p>
+                <h1 class="authhead__title" id="authovTitle"
+                    data-short="<?= e($tuaNgan) ?>"><?= e($tuaDe) ?></h1>
 
-                <?php /* Dòng "*Bắt buộc" của bản thiết kế: nói MỘT LẦN cho cả
-                         form thay vì lặp chú thích ở từng ô. Dấu * trên nhãn
-                         mỗi ô là thứ trỏ về đây. */ ?>
-                <p class="authreq">*Bắt buộc</p>
+                <?php if ($buoc === 'mat-khau'): ?>
+                    <?php
+                    /* "Đăng nhập với <định danh> · Đổi" — bản thiết kế đặt lối
+                       quay lại ngay trong dòng dẫn, không phải một mũi tên ở
+                       góc. Liên kết trỏ về /auth (màn một) và mang theo đích
+                       đang dở như mọi liên kết khác trong tấm này. */
+                    ?>
+                    <p class="authhead__lead">
+                        Đăng nhập với <span class="authwho"><?= e($dinhDanhCu) ?></span>
+                        · <a href="<?= e($urlLogin) ?>">Đổi</a>
+                    </p>
+                <?php elseif ($buoc === 'dang-ky-ma'): ?>
+                    <p class="authhead__lead">
+                        Mã gồm <?= Otp::LENGTH ?> số đã được gửi đến
+                        <span class="authwho"><?= e((string) ($signup['where'] ?? '')) ?></span>.
+                    </p>
+                <?php elseif ($dongDan !== ''): ?>
+                    <p class="authhead__lead"><?= e($dongDan) ?></p>
+                <?php endif; ?>
             </div>
 
             <?php if ($success !== null): ?>
@@ -212,71 +216,72 @@ $dinhDanh = (string) ($old['email'] ?? '');
                 </div>
             <?php endif; ?>
 
-            <?php if (!$isRegister): ?>
+            <?php if ($buoc === 'dinh-danh'): ?>
 
+                <!-- ══════════ 1. NHẬP ĐỊNH DANH ══════════ -->
+                <?php
+                /*
+                 * type="text" chứ KHÔNG phải type="email": ô này nhận cả số
+                 * điện thoại, mà trình duyệt sẽ chặn "0912345678" ngay tại chỗ
+                 * nếu để type="email", kèm thông báo khó hiểu. Việc kiểm định
+                 * dạng do máy chủ làm — xem AuthController::loiDinhDanh().
+                 *
+                 * autocomplete="username" là giá trị đúng cho một ô nhận nhiều
+                 * dạng định danh; để "email" thì trình quản lý mật khẩu không
+                 * gợi ý mục đã lưu bằng số điện thoại.
+                 */
+                ?>
+                <form class="authform" method="post" action="/auth/tiep-tuc">
+                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                    <input type="hidden" name="redirect" value="<?= e($redirect) ?>">
+
+                    <label class="authfield">
+                        <span class="authfield__label">Số điện thoại hoặc email</span>
+                        <input class="authfield__input<?= $xau('email') ?>" type="text"
+                               name="email" required autocomplete="username"
+                               inputmode="email" autofocus
+                               placeholder="Số điện thoại / Email"
+                               value="<?= e($dinhDanhCu) ?>">
+                        <?php /* EF-01, EF-03, EF-04 — cả ba đều nói về ô này. */ ?>
+                        <?php $loi('email'); ?>
+                    </label>
+
+                    <button type="submit" class="authbtn authbtn--primary">Tiếp tục</button>
+                </form>
+
+            <?php elseif ($buoc === 'mat-khau'): ?>
+
+                <!-- ══════════ 2. NHẬP MẬT KHẨU ══════════ -->
                 <form class="authform" method="post" action="/auth/dang-nhap">
                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                     <input type="hidden" name="redirect" value="<?= e($redirect) ?>">
 
                     <?php
-                    /* ┌─ NHÃN NẰM TRONG Ô — bản thiết kế 12/09/2026 ────────
-                       │ Bản thiết kế vẽ ô nhập cao, nền trắng, chữ nhãn nằm
-                       │ luôn bên trong thay vì một dòng nhãn riêng phía trên.
-                       │
-                       │ Nhưng placeholder KHÔNG PHẢI nhãn: nó biến mất ngay
-                       │ khi khách gõ chữ đầu tiên, và trình đọc màn hình ở
-                       │ vài trình duyệt không đọc nó. Nên mỗi ô vẫn có <label>
-                       │ thật, chỉ bị .sr-only giấu khỏi mắt — hình thì đúng
-                       │ bản thiết kế, còn máy đọc vẫn nghe đủ tên ô.
-                       │
-                       │ type="text" chứ KHÔNG phải type="email": ô này nhận
-                       │ cả số điện thoại, mà trình duyệt sẽ chặn
-                       │ "0912345678" ngay tại chỗ nếu để type="email", kèm
-                       │ thông báo khó hiểu. Việc kiểm định dạng do máy chủ
-                       │ làm — xem AuthController::login().
-                       │
-                       │ autocomplete="username" là giá trị đúng cho một ô
-                       │ nhận nhiều dạng định danh; để "email" thì trình quản
-                       │ lý mật khẩu không gợi ý mục đã lưu bằng số điện
-                       │ thoại. */
+                    /* Ô ẨN mang định danh sang cùng cú gửi.
+                       login() vẫn đọc $_POST['email'] y như khi màn này còn là
+                       một form hai ô — không có đường nào cho một cú POST
+                       thiếu định danh lọt vào, dù phiên có hết hạn giữa chừng.
+                       Sửa được ô ẩn cũng không tới đâu: nó chỉ là chuỗi đăng
+                       nhập, và mật khẩu vẫn phải khớp. */
                     ?>
-                    <div class="authfield">
-                        <label class="sr-only" for="loginId">Số điện thoại hoặc email</label>
-                        <input class="authfield__input<?= $xau('email') ?>" type="text"
-                               id="loginId" name="email"
-                               required autocomplete="username" inputmode="email" autofocus
-                               placeholder="Số điện thoại hoặc email*"
-                               value="<?= e($dinhDanh) ?>">
-                        <?php /* EF-01, EF-03, EF-04 — cả ba đều nói về ô này. */ ?>
-                        <?php $loi('email'); ?>
-                    </div>
+                    <input type="hidden" name="email" value="<?= e($dinhDanhCu) ?>">
 
-                    <div class="authfield">
-                        <?php /* Nhãn .sr-only như ô trên: bản thiết kế không vẽ
-                                 dòng nhãn nào, nhưng một ô nhập không tên là ô
-                                 mà trình đọc màn hình gọi là "chỉnh sửa văn
-                                 bản" — placeholder ở đây lại là tám dấu chấm,
-                                 không đọc ra được gì. */ ?>
-                        <label class="sr-only" for="loginPassword">Mật khẩu</label>
-
+                    <label class="authfield">
+                        <span class="authfield__label">Mật khẩu</span>
                         <?php partial('auth/_password', [
-                            'pw_name'     => 'password',
-                            'pw_id'       => 'loginPassword',
-                            'pw_auto'     => 'current-password',
-                            'pw_holder'   => 'Mật khẩu*',
-                            'pw_required' => true,
-                            'pw_err'      => $hong('password'),
+                            'pw_name'      => 'password',
+                            'pw_auto'      => 'current-password',
+                            'pw_holder'    => 'Nhập mật khẩu',
+                            'pw_required'  => true,
+                            'pw_autofocus' => true,
+                            'pw_err'       => $hong('password'),
                         ]); ?>
                         <?php /* EF-02, và CHỈ EF-02: "sai mật khẩu" (EF-07)
                                  không được gắn vào đây — gắn vào là đã nói ô
-                                 trên đúng, tức là địa chỉ ấy có tài khoản.
+                                 định danh đúng, tức là địa chỉ ấy có tài khoản.
                                  Xem BR-UC.USER.02-03. */ ?>
                         <?php $loi('password'); ?>
-                    </div>
-
-                    <?php /* "Quên mật khẩu?" — bản thiết kế đặt nó CĂN PHẢI
-                             ngay dưới ô mật khẩu, không phải cạnh nhãn. */ ?>
-                    <a class="authforgot" href="/quen-mat-khau">Quên mật khẩu?</a>
+                    </label>
 
                     <!-- Ô tick đứng TRƯỚC nút trong HTML, CSS đẩy nó xuống dưới —
                          xem ghi chú số 3 ở đầu file. -->
@@ -295,17 +300,28 @@ $dinhDanh = (string) ($old['email'] ?? '');
                     <button type="submit" class="authbtn authbtn--primary">Đăng nhập</button>
                 </form>
 
+                <?php /* "Quên mật khẩu?" — bản thiết kế đặt nó CĂN GIỮA ngay
+                         dưới nút, không phải cạnh nhãn ô. */ ?>
+                <a class="authforgot" href="/quen-mat-khau">Quên mật khẩu?</a>
+
+            <?php elseif ($buoc === 'dang-ky-ma'): ?>
+
+                <!-- ══════════ 4. XÁC MINH MÃ ══════════ -->
+                <?php partial('auth/_signup-otp', [
+                    'signup'   => $signup,
+                    'errors'   => $errors,
+                    'redirect' => $redirect,
+                    'loi'      => $loi,
+                ]); ?>
+
             <?php else: ?>
 
-                <?php /* ĐĂNG KÝ LÀ MỘT FORM, MỘT LƯỢT GỬI — theo UC-USER-01.
-                         Luồng sáu chặng nối bằng ?buoc= đã gỡ; khâu xác minh
-                         bằng mã nay là một hàng trong chính form ấy. Xem khối
-                         chú thích đầu auth/_signup.php. */ ?>
+                <!-- ══════════ 3. TẠO TÀI KHOẢN ══════════ -->
                 <?php partial('auth/_signup', [
-                    'signup'   => $signup,
                     'old'      => $old,
                     'errors'   => $errors,
                     'redirect' => $redirect,
+                    'dinhDanh' => $dinhDanh,
                     // Ba cái đóng gói dựng ở đầu file này — xem khối chú thích ở đó.
                     'hong'     => $hong,
                     'loi'      => $loi,
@@ -314,77 +330,70 @@ $dinhDanh = (string) ($old['email'] ?? '');
 
             <?php endif; ?>
 
-            <div class="author" aria-hidden="true">
-                <span class="author__line"></span>
-                <span class="author__word">HOẶC</span>
-                <span class="author__line"></span>
-            </div>
-
             <?php
             /*
-             * NÚT GOOGLE CHỈ SỐNG KHI ĐÃ CẤU HÌNH.
+             * VẠCH "HOẶC" VÀ NÚT GOOGLE — CHỈ Ở MÀN MỘT.
              *
-             * Chưa điền GOOGLE_CLIENT_ID/SECRET trong .env thì nó vẫn là cái
-             * nút xám "Sắp có" như trước — nút bấm được mà ra trang lỗi của
-             * Google còn tệ hơn nút không bấm được, vì khách không biết lỗi ở
-             * phía họ hay phía site.
-             *
-             * ─────────────────────────────────────────────────────────────
-             * MỘT HÌNH DẠNG CHO CẢ HAI TAB: THẺ <a>, GET.
-             *
-             * Ở tab đăng ký, nút này từng là nút submit của CHÍNH form đăng ký
-             * (form="signupform", POST) — cách duy nhất để cú bấm mang theo ô
-             * tick Điều khoản của form ấy, vì hồi đó callback của Google tạo
-             * tài khoản ngay khi quay về.
-             *
-             * Nay không còn: đăng ký bằng Google có màn "Hoàn tất tạo tài
-             * khoản" riêng (/auth/dang-ky/google), và ô tick BR-UC.USER.01-05
-             * nằm ở đó — đúng chỗ tài khoản thật sự ra đời. Nút này lại chỉ là
-             * một cú chuyển hướng sang Google, không đổi gì cả, nên GET là
-             * đúng. Thứ chống giả mạo của luồng OAuth là tham số `state` mà
-             * GoogleAuth sinh ra và cất trong session.
-             * ─────────────────────────────────────────────────────────────
+             * Bản thiết kế vẽ chúng đúng một lần, ở màn nhập định danh, và đó
+             * là chỗ duy nhất chúng có nghĩa: màn mật khẩu là của một người đã
+             * chọn xong cách đăng nhập, còn hai màn đăng ký thì đã đi được nửa
+             * đường bằng số điện thoại — mời họ rẽ sang Google ở đó là bỏ dở
+             * mọi thứ vừa gõ.
              */
-            $googleOn = GoogleAuth::isConfigured();
             ?>
-            <?php
-            /* Địa chỉ mang theo HAI thứ: `tab` để googleStart() biết trả khách
-               về màn nào khi có lỗi và chọn đúng đích mặc định của
-               BR-UC.USER.01-09 (đăng ký xong về trang chủ, đăng nhập xong về
-               /tai-khoan), và `redirect` để cả hai quay lại được nghiệp vụ
-               đang dở. */
-            $urlGoogle = '/auth/google'
-                . ($isRegister ? '?tab=dang-ky' : '')
-                . ($redirect !== ''
-                    ? ($isRegister ? '&' : '?') . 'redirect=' . rawurlencode($redirect)
-                    : '');
-            ?>
-            <?php if ($googleOn): ?>
-            <a class="authbtn authbtn--google" href="<?= e($urlGoogle) ?>" rel="nofollow">
-                <?php partial('auth/_google-icon'); ?>
-                Tiếp tục với Google
-            </a>
-            <?php else: ?>
-            <button type="button" class="authbtn authbtn--google" disabled>
-                <?php partial('auth/_google-icon'); ?>
-                Tiếp tục với Google
-                <span class="authbtn__soon">Sắp có</span>
-            </button>
+            <?php if ($buoc === 'dinh-danh'): ?>
+
+                <div class="author" aria-hidden="true">
+                    <span class="author__line"></span>
+                    <span class="author__word">Hoặc</span>
+                    <span class="author__line"></span>
+                </div>
+
+                <?php
+                /*
+                 * NÚT GOOGLE CHỈ SỐNG KHI ĐÃ CẤU HÌNH — xem ghi chú 2 đầu file.
+                 *
+                 * Là thẻ <a> (GET) vì bước này KHÔNG ĐỔI GÌ CẢ: nó chỉ sinh một
+                 * chuỗi `state` rồi chuyển hướng. Thứ chống giả mạo của luồng
+                 * OAuth là chính `state` ấy — lưu trong phiên, Google trả lại
+                 * nguyên văn ở bước sau, và GoogleAuth::exchange() so bằng
+                 * hash_equals.
+                 *
+                 * Đăng ký bằng Google KHÔNG tạo tài khoản ngay khi quay về: nó
+                 * dẫn sang màn "Hoàn tất tạo tài khoản" (auth/google-signup.php),
+                 * nơi có ô tick Điều khoản của chính nó — BR-UC.USER.01-05.
+                 */
+                $googleOn = GoogleAuth::isConfigured();
+                $urlGoogle = '/auth/google'
+                    . ($redirect !== '' ? '?redirect=' . rawurlencode($redirect) : '');
+                ?>
+                <?php if ($googleOn): ?>
+                <a class="authbtn authbtn--google" href="<?= e($urlGoogle) ?>" rel="nofollow">
+                    <?php partial('auth/_google-icon'); ?>
+                    Tiếp tục với Google
+                </a>
+                <?php else: ?>
+                <button type="button" class="authbtn authbtn--google" disabled>
+                    <?php partial('auth/_google-icon'); ?>
+                    Tiếp tục với Google
+                    <span class="authbtn__soon">Sắp có</span>
+                </button>
+                <?php endif; ?>
+
             <?php endif; ?>
 
             <?php
             /*
-             * ĐỒNG Ý NGẦM — CHỈ CÒN Ở MÀN ĐĂNG NHẬP.
+             * ĐỒNG Ý NGẦM — CHỈ Ở MÀN MỘT.
              *
              * Người đã có tài khoản thì đã tick lúc đăng ký; bắt tick lại mỗi
              * lần vào là thêm ma sát mà không thêm giá trị pháp lý nào.
              *
-             * Màn ĐĂNG KÝ thì KHÔNG dùng câu này nữa — kể cả cho nút Google.
-             * BR-UC.USER.01-05 đòi một hành vi đồng ý TƯỜNG MINH cho cả hai
-             * phương thức, nên ở đó có đúng một ô tick thật (auth/_signup.php)
-             * và nút Google gửi đi cùng ô tick ấy. Một dòng chữ "bằng việc tạo
-             * tài khoản, bạn đồng ý…" đứng cạnh một ô tick nói cùng chuyện chỉ
-             * làm người đọc hoang mang xem cái nào mới tính.
+             * Hai màn ĐĂNG KÝ thì KHÔNG dùng câu này: BR-UC.USER.01-05 đòi một
+             * hành vi đồng ý TƯỜNG MINH, nên ở đó có đúng một ô tick thật
+             * (auth/_signup.php). Một dòng chữ "bằng việc tạo tài khoản, bạn
+             * đồng ý…" đứng cạnh một ô tick nói cùng chuyện chỉ làm người đọc
+             * hoang mang xem cái nào mới tính.
              *
              * Vế "Điều khoản dịch vụ" chỉ hiện khi văn bản đã tồn tại. Trước đây
              * nó trỏ cứng tới /chinh-sach#dieu-khoan — một neo KHÔNG có trong
@@ -394,7 +403,7 @@ $dinhDanh = (string) ($old['email'] ?? '');
             $consent  = (array) config('auth.consent', []);
             $termsUrl = (string) ($consent['terms_url'] ?? '');
             ?>
-            <?php if (!$isRegister): ?>
+            <?php if ($buoc === 'dinh-danh'): ?>
             <p class="authnote">
                 Bằng việc đăng nhập, bạn đồng ý với
                 <?php if ($termsUrl !== ''): ?>
@@ -405,31 +414,15 @@ $dinhDanh = (string) ($old['email'] ?? '');
             </p>
             <?php endif; ?>
 
-            <p class="authalt">
-                <?php if ($isRegister): ?>
-                    Đã có tài khoản? <a href="<?= e($urlLogin) ?>">Đăng nhập</a>
-                <?php else: ?>
-                    Chưa có tài khoản? <a href="<?= e($urlSignup) ?>">Đăng ký</a>
-                <?php endif; ?>
-            </p>
+            <?php /* Lối sang màn kia. Màn nhập mã có đường lùi riêng ("Sửa lại
+                     thông tin") nên không in thêm ở đây — hai lối quay lại cạnh
+                     nhau thì khách phải đoán cái nào giữ được thứ đã gõ. */ ?>
+            <?php if ($buoc === 'dinh-danh'): ?>
+                <p class="authalt">Chưa có tài khoản? <a href="<?= e($urlSignup) ?>">Đăng ký</a></p>
+            <?php elseif ($buoc === 'dang-ky'): ?>
+                <p class="authalt">Đã có tài khoản? <a href="<?= e($urlLogin) ?>">Đăng nhập</a></p>
+            <?php endif; ?>
 
-            <?php
-            /* ┌─ THEO DÕI ĐƠN HÀNG — nút viền, cuối tấm ───────────────────
-               │ Bản thiết kế gọi nó "TRACK MY ORDER". Ở đây nó trỏ thẳng tới
-               │ mục Đơn hàng của trang tài khoản, và đó là một đường ĐI ĐƯỢC
-               │ chứ không phải nút trang trí: chưa đăng nhập thì
-               │ AuthMiddleware::requireLogin() đưa về đúng màn này kèm đường
-               │ quay lại, đăng nhập xong khách rơi thẳng vào danh sách đơn.
-               │
-               │ KHÔNG dựng một trang "tra cứu đơn bằng mã" cho khách vãng
-               │ lai: site chưa có luồng ấy, và một nút hứa điều chưa có thì
-               │ thà đừng vẽ. */
-            ?>
-            <a class="authbtn authbtn--ghost" href="/tai-khoan?muc=don-hang">Theo dõi đơn hàng</a>
-
-            <?php /* Chân tấm — lối sang chăm sóc khách hàng, đúng chỗ bản
-                     thiết kế đặt "Customer Service". */ ?>
-            <p class="authfoot"><a href="/lien-he">Chăm sóc khách hàng</a></p>
         </div>
     </div>
 </section>

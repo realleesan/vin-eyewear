@@ -2,42 +2,65 @@
    auth.css — ĐĂNG NHẬP · ĐĂNG KÝ · QUÊN MẬT KHẨU · ĐẶT LẠI · GOOGLE
 
    ═════════════════════════════════════════════════════════════════════════
-   MẪU VẼ ĐÚNG LUỒNG NÀY, và vẽ rất kỹ — nó là NGĂN KÉO BÊN PHẢI trong mẫu:
+   BẢN THIẾT KẾ ĐANG DỰNG: "Đăng ký Đăng nhập.dc.html" (Claude Design,
+   12/09/2026) — năm màn, một cột 440px:
 
-     ┌──────────────────────────────────┐
-     │ (Đăng nhập)(Đăng ký)          ✕  │  hai nút viên, nút đang chọn nền #e4e4e6
-     │                                  │
-     │ ĐĂNG NHẬP                        │  10px IN HOA giãn .06em, weight 400
-     │ Đăng nhập bằng số điện thoại …   │  10px thường
-     │                                  │
-     │                      *Bắt buộc   │  9px #555, NÉP PHẢI
-     │ ┌──────────────────────────────┐ │
-     │ │ Số điện thoại*               │ │  cao 44, bo 6, viền #ddd, nền trắng
-     │ └──────────────────────────────┘ │
-     │ ┌──────────────────────────────┐ │
-     │ │ Mật khẩu*                    │ │
-     │ └──────────────────────────────┘ │
-     │               Quên mật khẩu?     │  9px gạch chân, NÉP PHẢI
-     │ ┌──────────────────────────────┐ │
-     │ │        ĐĂNG NHẬP             │ │  cao 44, bo 6, nền #111, chữ 9px
-     │ └──────────────────────────────┘ │
-     │              hoặc                │  9px #555, căn giữa
-     │ ┌──────────────────────────────┐ │
-     │ │ G     ĐĂNG NHẬP VỚI GOOGLE   │ │  nền TRẮNG, hover: viền trong 1px
-     │ └──────────────────────────────┘ │
-     │ Chưa có tài khoản? Đăng ký       │
-     │ ┌──────────────────────────────┐ │
-     │ │      THEO DÕI ĐƠN HÀNG       │ │  rỗng, viền #999
-     │ └──────────────────────────────┘ │
-     │ Chăm sóc khách hàng              │  ở đáy, đẩy xuống bằng margin-top:auto
-     └──────────────────────────────────┘
+     ĐĂNG NHẬP HOẶC TẠO TÀI KHOẢN        tiêu đề IN HOA, giãn chữ
+     Nhập email hoặc số điện thoại…      dòng dẫn, chữ nhạt
+     SỐ ĐIỆN THOẠI HOẶC EMAIL            nhãn nhỏ IN HOA, đứng TRÊN ô
+     ┌──────────────────────────────┐
+     │ Số điện thoại / Email        │    ô cao, viền mảnh, nền trắng
+     └──────────────────────────────┘
+     ┌──────────────────────────────┐
+     │           TIẾP TỤC           │    nút ĐEN tràn ngang
+     └──────────────────────────────┘
+     ───────────── Hoặc ─────────────    chữ giữa hai vạch kẻ
+     ┌──────────────────────────────┐
+     │  G   TIẾP TỤC VỚI GOOGLE     │    nút TRẮNG, viền mảnh
+     └──────────────────────────────┘
+     Bằng việc đăng nhập, bạn đồng ý…    chữ nhỏ, KHÔNG khung
+     Chưa có tài khoản? Đăng ký
 
-   Ở ĐÂY NÓ LÀ TRANG THẬT, KHÔNG PHẢI NGĂN KÉO — xem khối chú thích "TÀI
-   KHOẢN" trong _layout/header.php về lý do. Nên: cùng bộ nguyên thể, cùng
-   nền #f3f3f5, nhưng gói trong một cột 480px căn giữa thay vì dán mép phải.
+   ─────────────────────────────────────────────────────────────────────────
+   HAI CHỖ CỐ Ý KHÔNG THEO BẢN VẼ — theo yêu cầu chủ dự án 12/09/2026
+
+   1. CỠ CHỮ LẤY TỪ BỘ TOKEN CỦA SITE, không lấy con số trong bản vẽ.
+      Bản vẽ ghi 22px / 15px / 13px / 12px. Site này có đúng ba vai cỡ chữ
+      dùng chung mọi trang (--fs-title, --fs-subtitle, --fs-text, xem
+      assets/css/oa.css), và chủ dự án đã chốt mọi nơi phải theo ba vai ấy.
+      Nên ở đây chép TỈ LỆ và THỨ BẬC của bản vẽ, không chép con số.
+
+      ⚠ Đừng "sửa cho đúng bản vẽ" bằng cách gõ px cứng vào đây. Làm thế là
+      khu đăng nhập to hơn hẳn phần còn lại của site — đúng thứ bộ ba vai
+      sinh ra để dẹp.
+
+   2. GÓC VUÔNG HẾT. Bản vẽ bo 4px cho ô nhập và nút Google; luật của site là
+      không bo tròn gì cả (xem khối "KHÔNG BO TRÒN" trong oa.css).
+
+   ─────────────────────────────────────────────────────────────────────────
+   MỘT BỘ LUẬT CHO CẢ HAI NƠI
+
+   File này dựng trang /auth mở bằng đường dẫn thường. NGĂN KÉO (bật ra từ
+   icon tài khoản) nạp ĐÚNG view ấy vào một tấm trượt và nạp thêm
+   components/auth-drawer.css — file kia nay chỉ còn lo BỐ CỤC TẤM (kích
+   thước, lớp phủ, hoạt cảnh trượt), mọi thứ về hình dáng form đều ở đây.
+
+   ⚠ Trước 12/09/2026 auth-drawer.css có một bản sao của bộ dáng này, tiền tố
+   `.authov__body`. Đã gỡ: hai bản sao của cùng một thiết kế là hai chỗ phải
+   sửa, và chỗ thứ hai luôn là chỗ bị quên.
    ═════════════════════════════════════════════════════════════════════════ */
 
 .authwrap {
+    /* ┌─ BA TOKEN CỤC BỘ — nguồn duy nhất cho dáng ô nhập và nút ────────
+       │ Khai ở đây chứ không sửa token toàn cục: ô nhập của bản thiết kế
+       │ này cao hơn và viền nhạt hơn ô nhập dùng chung của site, mà luật ấy
+       │ chỉ đúng trong khu đăng nhập. Đổi một dòng ở đây là đổi cả bốn màn;
+       │ mọi luật bên dưới đều đọc qua chúng, đừng gõ lại con số. */
+    --h-field: 52px;
+    --line-input: #d6d6d6;
+    /* Vuông hết — xem ghi chú 2 ở đầu file. */
+    --r-field: 0;
+
     flex: 1;
     display: flex;
     justify-content: center;
@@ -49,21 +72,23 @@
    │ Bản cũ là thẻ hai cột: ảnh chiến dịch bên trái, form bên phải. Mẫu
    │ không có ảnh nào trong luồng đăng nhập — nó cho form toàn bộ sự chú ý.
    │
-   │ .authcard__photo bị ẩn chứ không gỡ khỏi view: nó là ảnh TRANG TRÍ
-   │ thuần (mọi chữ trên nó — .authcard__brand, __quote, __caption — cũng
-   │ chỉ là nhãn thương hiệu, không có thông tin nào khách cần để đăng
-   │ nhập). Muốn thử lại bố cục hai cột thì bỏ luật này là xong.
+   │ Cả cột ảnh đã GỠ KHỎI VIEW ngày 12/09/2026, không còn chỉ bị ẩn: bản
+   │ thiết kế "Đăng ký Đăng nhập.dc.html" vẽ một cột ở mọi khổ màn hình.
+   │ Ẩn nửa vời là thứ vừa gây lỗi — luật `.authcard__photo { display:none }`
+   │ giấu tấm ảnh nhưng hai dòng chữ phủ lên nó thì vẫn hiện, và chúng nổi
+   │ lên đầu trang /auth như một câu quảng cáo lạc chỗ.
    └──────────────────────────────────────────────────────────────────────── */
 .authcard {
-    width: min(480px, 100%);
+    width: min(440px, 100%);
     display: flex;
     flex-direction: column;
     gap: 28px;
 }
 
-.authcard__photo {
-    display: none;
-}
+/* .authcard__photo / __brand / __caption đã gỡ khỏi view 12/09/2026 — bản
+   thiết kế một cột không có cột ảnh. Luật ẩn cũ nằm ở đây không còn gì để ẩn,
+   và nó từng che đúng một nửa vấn đề: tấm ảnh biến mất nhưng hai dòng chữ phủ
+   lên nó thì không. */
 
 .authcard__panel {
     display: flex;
@@ -96,12 +121,22 @@
    BÁO TRẠNG THÁI
    ══════════════════════════════════════════════════════════════════════ */
 
-.authflash,
-.authnote {
+.authflash {
     padding: 12px 14px;
     border-radius: var(--r-field);
     background: var(--bg);
     border-left: 2px solid var(--ink);
+    line-height: var(--lh);
+}
+
+/* ┌─ DÒNG PHÁP LÝ KHÔNG PHẢI MỘT THÔNG BÁO ───────────────────────────────
+   │ "Bằng việc đăng nhập, bạn đồng ý…" từng dùng chung khung với dải báo
+   │ .authflash: cùng nền, cùng vạch kẻ trái. Nhưng vạch ấy nói sai — nó
+   │ khiến một câu pháp lý TĨNH, luôn có mặt, trông như một thông báo VỪA
+   │ xảy ra. Bản thiết kế vẽ nó là chữ nhỏ nhạt, không khung; đúng hơn. */
+.authnote {
+    color: var(--ink-3);
+    font-size: var(--fs-text);
     line-height: var(--lh);
 }
 
@@ -117,16 +152,19 @@
    Ô NHẬP
    ══════════════════════════════════════════════════════════════════════ */
 
+/* 18px giữa các ô, 8px giữa nhãn và ô của CÙNG một ô — đúng tỉ lệ bản vẽ.
+   Hai con số phải cách nhau đủ xa: gần nhau quá thì một nhãn trông như đang
+   thuộc về ô phía trên nó. */
 .authform {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 18px;
 }
 
 .authfield {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
 }
 
 .authfield__row {
@@ -135,24 +173,27 @@
     gap: 10px;
 }
 
+/* Nhãn ô là một TIÊU ĐỀ NHỎ, nên nó lấy vai --fs-subtitle chứ không phải
+   --fs-micro. Bản vẽ để nhãn nhỏ hơn dòng dẫn (12 so với 15); bộ ba vai của
+   site xếp ngược lại (tiêu đề nhỏ > chữ thường), và giữ đúng BA VAI là thứ
+   chủ dự án đã chốt — xem ghi chú 1 ở đầu file. */
 .authfield__label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-subtitle);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .authfield__input,
-.authpw__input,
-.acode__input {
+.authpw__input {
     width: 100%;
     height: var(--h-field);
-    padding: 0 12px;
+    padding: 0 16px;
     border: 1px solid var(--line-input);
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: #fff;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-text);
     outline: none;
     transition: border-color .18s ease;
 }
@@ -163,8 +204,7 @@
 }
 
 .authfield__input:focus,
-.authpw__input:focus,
-.acode__input:focus {
+.authpw__input:focus {
     border-color: var(--ink);
 }
 
@@ -181,12 +221,12 @@
 
 .authfield__err {
     color: var(--sale);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-text);
 }
 
 .authfield__hint {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-text);
     line-height: var(--lh-tight);
 }
 
@@ -331,7 +371,8 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-text);
+    font-weight: 600;
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
@@ -372,21 +413,19 @@
    │ "site không có màu" ngoài đỏ giảm giá và xanh Zalo — logo của bên thứ
    │ ba tô một màu là dùng sai thương hiệu của họ.
    └──────────────────────────────────────────────────────────────────────── */
+/* Căn GIỮA cả cụm logo + chữ, đúng bản vẽ. Bản trước đẩy cụm về mép trái và
+   cho ô chữ cuối `flex: 1` để nó tự căn giữa phần còn lại — hai luật cùng lo
+   một việc, và chúng chỉ khớp nhau khi nút có đúng hai phần tử con. Nút "Sắp
+   có" có ba. */
 .authbtn--google {
-    border: 0;
-    background: var(--bg);
+    border: 1px solid var(--line-input);
+    background: #fff;
     color: var(--ink);
-    justify-content: flex-start;
 }
 
 .authbtn--google:hover {
-    box-shadow: inset 0 0 0 1px var(--ink);
-    background: var(--bg);
-}
-
-.authbtn--google > span:last-child {
-    flex: 1;
-    text-align: center;
+    border-color: var(--ink);
+    background: #fff;
 }
 
 .authbtn__soon {
@@ -429,55 +468,59 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   MÃ OTP
+   MÃ OTP — SÁU Ô RỜI
 
-   Ô nhập chữ giãn .3em căn giữa — mẫu dùng đúng dáng này cho ô "Mã OTP
-   (6 số)". Sáu ô riêng lẻ trông "công nghệ" hơn nhưng dán mã từ tin nhắn
-   vào thì hỏng, mà dán là cách khách nhập OTP nhiều nhất.
+   Bản thiết kế 12/09/2026 vẽ sáu ô, và dự án đã dựng sẵn chúng ở màn quên
+   mật khẩu từ trước.
+
+   Lo cũ "sáu ô thì dán mã từ tin nhắn vào là hỏng" đã được xử: assets/js/auth.js
+   bắt sự kiện `paste` ở bất kỳ ô nào, tách chữ số rồi rải đủ sáu ô. Dán vẫn
+   là cách khách nhập OTP nhiều nhất, và nó chạy.
    ══════════════════════════════════════════════════════════════════════ */
 
-.aotp,
-.acode {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
 
-.acode__row {
-    display: flex;
+/* ┌─ SÁU Ô NẰM NGANG ─────────────────────────────────────────────────────
+   │ ⚠ SỬA LỖI 12/09/2026. .aotp trước đây dùng chung luật với .acode (hàng
+   │ "Mã xác minh + nút Gửi mã" của form đăng ký cũ, nay đã gỡ) —
+   │ `flex-direction: column` — nên sáu ô mã XẾP DỌC thành một cột sáu dòng,
+   │ mỗi ô rộng hết bề ngang. Không ai nhận ra vì màn nhập mã của luồng quên
+   │ mật khẩu ít khi mở tới.
+   │
+   │ grid với sáu cột bằng nhau: gõ xong ô nào cũng thấy ngay mình đang ở
+   │ chữ số thứ mấy, và cả dãy vẫn co lại vừa màn hẹp mà không tràn. */
+.aotp {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
 }
 
-.acode__input,
-.acode__num {
-    flex: 1;
-    letter-spacing: .3em;
-    text-align: center;
-    font-variant-numeric: tabular-nums;
-}
 
-.acode__send {
-    flex: none;
-    height: var(--h-field);
-    padding: 0 14px;
-    border: 1px solid var(--ink);
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
-    background: var(--ink);
-    color: #fff;
-    font-family: inherit;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    white-space: nowrap;
-    cursor: pointer;
-}
+
 
 .aotp__box {
-    padding: 12px 14px;
+    width: 100%;
+    height: 56px;
+    padding: 0;
+    border: 1px solid var(--line-input);
     border-radius: var(--r-field);
-    background: var(--bg);
-    line-height: var(--lh);
+    background: #fff;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-title);
+    text-align: center;
+    outline: none;
+    transition: border-color .18s ease;
+}
+
+.aotp__box:focus {
+    border-color: var(--ink);
+}
+
+.aotp__box.is-err {
+    border-color: var(--sale);
 }
 
 .aresend {
@@ -735,5 +778,36 @@
 }
 
 .authskip:hover {
+    color: var(--ink);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   HAI NGUYÊN THỂ MỚI CỦA BẢN THIẾT KẾ 12/09/2026
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ┌─ "Quên mật khẩu?" — CĂN GIỮA, DƯỚI NÚT ───────────────────────────────
+   │ Bản trước nép nó sang phải, ngay dưới ô mật khẩu. Bản thiết kế đặt nó
+   │ giữa và dưới nút "Đăng nhập" — đúng thứ tự đọc: thử đăng nhập trước, đi
+   │ đường vòng sau. Nép phải dưới ô nhập thì mắt gặp nó TRƯỚC cả nút gửi. */
+.authforgot {
+    align-self: center;
+    margin-top: -6px;
+    color: var(--ink-2);
+    font-size: var(--fs-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.authforgot:hover {
+    color: var(--ink);
+}
+
+/* ┌─ Chuỗi định danh in đậm hơn trong dòng dẫn ───────────────────────────
+   │ "Đăng nhập với 0912 345 678 · Đổi" và "Mã gồm 6 số đã được gửi đến
+   │ 0912***678": trong cả hai câu, thứ khách cần soi là CHUỖI SỐ, không
+   │ phải câu chữ quanh nó. Nên dòng dẫn giữ màu nhạt và riêng chuỗi ấy đậm
+   │ lên — chứ không phải ngược lại, tô đậm cả câu. */
+.authwho {
     color: var(--ink);
 }

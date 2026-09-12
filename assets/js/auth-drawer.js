@@ -165,6 +165,32 @@
        ────────────────────────────────────────────────────────────────── */
     var DUONG_TRONG_TAM = ['/auth', '/quen-mat-khau'];
 
+    /* ──────────────────────────────────────────────────────────────────
+       TÊN MÀN TRÊN THANH ĐẦU TẤM
+
+       Tấm sống qua bốn màn (định danh · mật khẩu · đăng ký · nhập mã) nhưng
+       khuôn chỉ được nhân bản MỘT lần, nên cái tên phải đi theo mảnh vừa nạp
+       chứ không nằm cứng trong khuôn.
+
+       Nguồn là data-short của <h1 id="authovTitle"> — bản RÚT GỌN mà
+       app/views/auth/index.php in ra riêng cho chỗ này. Không lấy luôn chữ
+       của h1: nó là câu đầy đủ ("Đăng nhập hoặc tạo tài khoản"), dài gấp ba
+       chỗ trống trên thanh. Thiếu data-short thì lùi về chữ của h1 — xấu còn
+       hơn để trống.
+       ────────────────────────────────────────────────────────────────── */
+    var datTenMan = function () {
+        if (!lop || !than) return;
+
+        var o   = lop.querySelector('[data-authov-title]');
+        var h1  = than.querySelector('#authovTitle');
+
+        if (!o) return;
+
+        o.textContent = h1
+            ? (h1.getAttribute('data-short') || h1.textContent || '').trim()
+            : '';
+    };
+
     var nap = function (url, tuyChon) {
         if (dangNap || !than) return;
 
@@ -202,6 +228,15 @@
 
                 than.innerHTML = html;
                 daNap = true;
+
+                datTenMan();
+
+                /* Gắn lại phần tăng cường của auth.js cho mảnh vừa về: nút con
+                   mắt, sáu ô mã tự nhảy, đồng hồ "Gửi lại mã". Không gọi thì
+                   trong tấm nút con mắt mang `hidden` mãi mãi và sáu ô mã phải
+                   bấm Tab từng ô — xem khối "BA KHỐI DƯỚI ĐÂY NHẬN MỘT GỐC"
+                   trong assets/js/auth.js. */
+                if (window.AuthUI && window.AuthUI.gan) window.AuthUI.gan(than);
 
                 /* Con trỏ vào ô đầu tiên — người mở ngăn kéo là để gõ. */
                 var o = than.querySelector('input:not([type=hidden]):not([readonly])');

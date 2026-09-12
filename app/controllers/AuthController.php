@@ -62,12 +62,51 @@ class AuthController extends BaseController
             redirect('/tai-khoan');
         }
 
-        /* HAI TAB, MỘT MÀN MỖI TAB — theo bản thiết kế chủ dự án gửi
-           12/09/2026. Ở đây từng có luồng "hỏi định danh trước" (bước email
-           riêng rồi mới tới mật khẩu); nó đã gỡ cùng ngày theo chính yêu cầu
-           ấy. Gỡ nó cũng trả lại luật BR-UC.USER.02-03: không còn màn nào
-           cho biết một địa chỉ đã có tài khoản hay chưa. */
+        /*
+         * ═════════════════════════════════════════════════════════════════
+         * NĂM MÀN, MỘT ĐỊA CHỈ — theo "Đăng ký Đăng nhập.dc.html"
+         * (Claude Design, 12/09/2026)
+         *
+         *   dinh-danh    nhập số điện thoại hoặc email  -> identify()
+         *   mat-khau     nhập mật khẩu                  -> login()
+         *   dang-ky      họ tên · số · mật khẩu         -> signupSubmit()
+         *   dang-ky-ma   nhập 6 số vừa nhận             -> signupVerify()
+         *
+         * (Màn thứ năm của bản vẽ — "Quên mật khẩu" — đã có địa chỉ riêng
+         * /quen-mat-khau từ trước, xem forgot().)
+         *
+         * ─────────────────────────────────────────────────────────────────
+         * MÀN "NHẬP ĐỊNH DANH" KHÔNG ĐƯỢC HỎI CSDL — BR-UC.USER.02-03
+         *
+         * Chia đôi màn đăng nhập là lối dễ rò rỉ nhất trong cả luồng: chỉ cần
+         * bước một trả lời khác nhau cho một địa chỉ CÓ và một địa chỉ KHÔNG
+         * có tài khoản, thì bất kỳ ai cũng dò được danh sách khách hàng bằng
+         * một vòng lặp.
+         *
+         * Nên identify() kiểm ĐÚNG HÌNH DẠNG chuỗi rồi đi tiếp, không tra
+         * bảng nào cả: mọi chuỗi hợp lệ đều sang màn mật khẩu, và câu "Thông
+         * tin đăng nhập không đúng" vẫn nằm nguyên ở màn ấy như trước.
+         *
+         * ⚠ ĐỪNG "tiện tay" thêm một phép tra ở bước một để hiện câu "Số này
+         * chưa có tài khoản, tạo mới nhé?". Nó đúng là thân thiện hơn, và nó
+         * đúng là thứ luật trên cấm.
+         * ═════════════════════════════════════════════════════════════════
+         */
         $isRegister = ($_GET['tab'] ?? '') === 'dang-ky';
+        $buocXin    = (string) ($_GET['buoc'] ?? '');
+
+        if ($isRegister) {
+            /* Màn nhập mã chỉ tồn tại khi CÓ hồ sơ đang chờ. Gõ thẳng địa chỉ
+               ?buoc=xac-minh mà chưa gửi form thì rơi về form — một màn hỏi
+               mã cho một hồ sơ không tồn tại chẳng xác minh được gì. */
+            $buoc = ($buocXin === 'xac-minh' && self::signupPending() !== null)
+                ? 'dang-ky-ma' : 'dang-ky';
+        } else {
+            /* Cũng vậy: không có định danh trong phiên thì không có gì để
+               hỏi mật khẩu cho. */
+            $buoc = ($buocXin === 'mat-khau' && self::dinhDanhCho() !== '')
+                ? 'mat-khau' : 'dinh-danh';
+        }
 
         $this->renderView('auth/index', [
             'signup'    => self::signupView(),
@@ -91,6 +130,11 @@ class AuthController extends BaseController
                tab đăng ký, và đăng ký xong lạc mất chỗ đang dở. */
             'redirectRaw' => safeRedirectPath($_GET['redirect'] ?? null, ''),
             'tab'       => $isRegister ? 'dang-ky' : 'dang-nhap',
+            // Màn nào đang hiện — xem khối "NĂM MÀN, MỘT ĐỊA CHỈ" ở trên.
+            'buoc'      => $buoc,
+            /* Chuỗi khách gõ ở màn một, để màn mật khẩu in ra được
+               "Đăng nhập với 0912 345 678 · Đổi" và gửi kèm khi submit. */
+            'dinhDanh'  => self::dinhDanhCho(),
             'old'       => $_SESSION['_old_auth'] ?? [],
             // Lỗi theo từng ô của màn đăng ký — xem signupErrors().
             'errors'    => $_SESSION['_auth_errors'] ?? [],
@@ -108,6 +152,93 @@ class AuthController extends BaseController
         /* Xoá SAU khi vẽ xong, đúng nếp của flash(): hai ô này chỉ sống đúng
            một lần hiện trang, tải lại là form sạch trở lại. */
         unset($_SESSION['_old_auth'], $_SESSION['_auth_errors']);
+    }
+
+    /**
+     * Định danh khách đang chờ ở màn mật khẩu — chuỗi rỗng nghĩa là chưa có.
+     *
+     * Cất trong PHIÊN chứ không phải trên địa chỉ: số điện thoại và email là
+     * dữ liệu cá nhân, mà một chuỗi đi qua thanh địa chỉ là đi vào lịch sử
+     * duyệt web, vào Referer gửi sang bên thứ ba và vào log của mọi proxy
+     * trên đường — cùng lý lẽ đã ghi ở googlePending().
+     */
+    private static function dinhDanhCho(): string
+    {
+        return trim((string) ($_SESSION['_auth_ident'] ?? ''));
+    }
+
+    /**
+     * Bấm "Tiếp tục" ở màn một — chỉ kiểm HÌNH DẠNG rồi sang màn mật khẩu.
+     *
+     * ⚠ KHÔNG CÓ CÂU TRUY VẤN NÀO TRONG HÀM NÀY, và đó là chủ ý. Xem khối
+     * "MÀN NHẬP ĐỊNH DANH KHÔNG ĐƯỢC HỎI CSDL" ở index(): mọi chuỗi đúng
+     * dạng đều đi tiếp, nên hàm này không phân biệt được — và không cho ai
+     * phân biệt được — địa chỉ nào đã có tài khoản.
+     *
+     * Ba phép kiểm dưới đây là BẢN SAO CHÍNH XÁC của ba phép đầu trong
+     * login(): cùng thứ tự, cùng câu chữ. Lệch một câu là khách gõ sai định
+     * dạng bị báo một kiểu ở màn một và một kiểu khác ở màn hai.
+     */
+    public function identify(): void
+    {
+        $this->requirePost('/auth');
+
+        $login = trim((string) ($_POST['email'] ?? ''));
+        $to    = $this->loginTarget($_POST['redirect'] ?? null);
+
+        $_SESSION['_old_auth'] = ['email' => $login];
+
+        $loi = self::loiDinhDanh($login);
+
+        if ($loi !== null) {
+            $_SESSION['_auth_errors'] = ['email' => $loi];
+            unset($_SESSION['_auth_ident']);
+            redirect($this->authBack($to, ''));
+        }
+
+        $_SESSION['_auth_ident'] = $login;
+        unset($_SESSION['_auth_errors']);
+
+        redirect($this->authBack($to, 'mat-khau'));
+    }
+
+    /**
+     * Chuỗi định danh sai ở đâu — null nghĩa là đúng dạng.
+     *
+     * Dùng chung cho identify() và login(): EF-01, EF-03, EF-04 phải nói cùng
+     * một câu ở cả hai màn.
+     */
+    private static function loiDinhDanh(string $login): ?string
+    {
+        if ($login === '') {
+            return 'Vui lòng nhập số điện thoại hoặc email.';
+        }
+
+        /* looksLikePhone() phân loại theo HÌNH DẠNG chuỗi (có '@' hay không),
+           đúng cách findByLogin() chọn nhánh tra cứu. */
+        if (looksLikePhone($login)) {
+            return normalizePhone($login) === null
+                ? 'Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.' : null;
+        }
+
+        return filter_var($login, FILTER_VALIDATE_EMAIL)
+            ? null : 'Email không hợp lệ. Vui lòng kiểm tra lại.';
+    }
+
+    /** Địa chỉ một màn của /auth, giữ nguyên đích đến đang mang theo. */
+    private function authBack(string $to, string $buoc): string
+    {
+        $q = [];
+
+        if ($buoc !== '') {
+            $q[] = 'buoc=' . $buoc;
+        }
+
+        if ($to !== '/') {
+            $q[] = 'redirect=' . rawurlencode($to);
+        }
+
+        return '/auth' . ($q === [] ? '' : '?' . implode('&', $q));
     }
 
     public function login(): void
@@ -146,17 +277,11 @@ class AuthController extends BaseController
          */
         $loi = [];
 
-        if ($login === '') {
-            $loi['email'] = 'Vui lòng nhập số điện thoại hoặc email.';
-        } elseif (looksLikePhone($login)) {
-            /* looksLikePhone() phân loại theo HÌNH DẠNG chuỗi (có '@' hay
-               không), đúng cách findByLogin() chọn nhánh tra cứu — nhờ vậy
-               câu báo ở đây luôn nói về cùng thứ mà máy chủ sắp đi tìm. */
-            if (normalizePhone($login) === null) {
-                $loi['email'] = 'Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.';
-            }
-        } elseif (!filter_var($login, FILTER_VALIDATE_EMAIL)) {
-            $loi['email'] = 'Email không hợp lệ. Vui lòng kiểm tra lại.';
+        /* Ba phép kiểm hình dạng nay nằm trong loiDinhDanh() — màn một
+           (identify) gọi đúng hàm ấy, nên hai màn không thể trôi thành hai
+           luật khác nhau. */
+        if (($loiId = self::loiDinhDanh($login)) !== null) {
+            $loi['email'] = $loiId;
         }
 
         if ($password === '') {
@@ -208,7 +333,7 @@ class AuthController extends BaseController
             redirect($this->loginBack($to));
         }
 
-        unset($_SESSION['_old_auth'], $_SESSION['_auth_errors']);
+        unset($_SESSION['_old_auth'], $_SESSION['_auth_errors'], $_SESSION['_auth_ident']);
 
         /* Bước 7 — phiên đăng nhập. $remember là ô "Ghi nhớ đăng nhập"
            (BR-UC.USER.02-05); AuthMiddleware::login() lo phần cookie dài hạn
@@ -223,10 +348,17 @@ class AuthController extends BaseController
         redirect($to);
     }
 
-    /** Màn đăng nhập, giữ nguyên đích đến đang mang theo. */
+    /**
+     * Màn đăng nhập, giữ nguyên đích đến đang mang theo.
+     *
+     * Còn định danh trong phiên thì về ĐÚNG màn mật khẩu. Rơi về màn một sau
+     * một lượt gõ sai mật khẩu là bắt khách gõ lại số điện thoại — và tệ hơn:
+     * dải báo "Thông tin đăng nhập không đúng" hiện trên một màn chưa hỏi mật
+     * khẩu lần nào, đọc như thể chính SỐ ĐIỆN THOẠI mới là thứ sai.
+     */
     private function loginBack(string $to): string
     {
-        return '/auth' . ($to !== '/' ? '?redirect=' . rawurlencode($to) : '');
+        return $this->authBack($to, self::dinhDanhCho() !== '' ? 'mat-khau' : '');
     }
 
     /*
@@ -580,25 +712,35 @@ class AuthController extends BaseController
 
     /*
      * ═════════════════════════════════════════════════════════════════════
-     * ĐĂNG KÝ — MỘT MÀN, MỘT LƯỢT GỬI (UC-USER-01)
+     * ĐĂNG KÝ — HAI MÀN (UC-USER-01)
      *
-     * Bản trước chia luồng thành sáu chặng nối nhau bằng ?buoc=: nhập số →
-     * hỏi kênh gửi → chọn kênh → nhập mã → tạo mật khẩu → xong. Đặc tả
-     * UC-USER-01 chốt lại một màn duy nhất hỏi đủ Họ tên, Số điện thoại,
-     * Email (không bắt buộc), Mật khẩu, Xác nhận mật khẩu và ô tick Điều
-     * khoản/Chính sách; bấm "Đăng ký" là kiểm hết một lượt rồi tạo tài khoản.
-     *
-     *   POST /auth/dang-ky         signupSubmit()    tạo tài khoản
-     *   POST /auth/dang-ky/gui-ma  signupSendCode()  xin mã xác minh
+     *   POST /auth/dang-ky          signupSubmit()    kiểm form, GỬI MÃ
+     *   POST /auth/dang-ky/xac-minh signupVerify()    nhập mã, TẠO TÀI KHOẢN
+     *   POST /auth/dang-ky/gui-ma   signupSendCode()  gửi lại mã
      *
      * ─────────────────────────────────────────────────────────────────────
-     * MÃ XÁC MINH Ở LẠI, NHƯNG KHÔNG CÒN LÀ MỘT CHẶNG
+     * BA LẦN ĐỔI HÌNH, VÀ VÌ SAO BẢN NÀY KHÔNG PHẢI BẢN ĐẦU QUAY LẠI
      *
-     * BR-UC.USER.01-02 nói "Không yêu cầu OTP ở Phase 1". Gỡ hẳn khâu xác
-     * minh thì ngày cắm xong Zalo phải dựng lại từ đầu, nên nó ở lại dưới
-     * dạng MỘT HÀNG trong chính form đăng ký — và hàng ấy chỉ hiện khi mã
-     * thật sự gửi được (Otp::bypass() đóng). Chưa cắm Zalo thì form đúng
-     * nguyên văn đặc tả Phase 1: không ô mã, không bước xác minh.
+     * Bản đầu chia luồng thành SÁU chặng nối nhau bằng ?buoc= (nhập số → hỏi
+     * kênh gửi → chọn kênh → nhập mã → tạo mật khẩu → xong). Đặc tả
+     * UC-USER-01 gộp lại thành MỘT màn hỏi đủ mọi thứ, ô mã nằm luôn trong
+     * form. Bản thiết kế 12/09/2026 chốt ở giữa: HAI màn.
+     *
+     * Hai màn khác sáu chặng ở chỗ khách chỉ khai MỘT LẦN rồi xác nhận; và
+     * khác một màn ở thứ tự chi tiêu: ở bản một-màn, khách phải xin mã TRƯỚC
+     * khi biết mình có gõ hỏng ô nào khác không, nên mỗi lượt gõ sai mật khẩu
+     * là một tin nhắn mất tiền đã bay đi vô ích. Nay kiểm hết rồi mới gửi.
+     *
+     * ⚠ Đừng gộp ngược về một màn để "đỡ một lượt tải". Gộp là mang lại đúng
+     * cái thứ tự chi tiêu ấy.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * MÃ XÁC MINH — BR-UC.USER.01-02 nói "Không yêu cầu OTP ở Phase 1"
+     *
+     * Gỡ hẳn khâu xác minh thì ngày cắm xong Zalo phải dựng lại từ đầu, nên
+     * nó ở lại nguyên hình. Chưa cắm Zalo thì Otp::bypass() mở và màn nhập mã
+     * nhận mọi chuỗi 6 số — đúng tinh thần Phase 1, mà không phải xoá đi một
+     * màn rồi dựng lại.
      *
      * SỐ ĐIỆN THOẠI KHÔNG NẰM TRÊN URL: nó là dữ liệu cá nhân, mà URL thì đi
      * vào lịch sử duyệt web, vào Referer gửi sang bên thứ ba, và vào log của
@@ -654,12 +796,19 @@ class AuthController extends BaseController
     private static function signupView(): array
     {
         $otp = self::signupOtp();
+        $cho = self::signupPending();
 
         return [
-            // Còn mấy giây nữa mới được bấm "Gửi mã". 0 = bấm được ngay.
+            // Còn mấy giây nữa mới được bấm "Gửi lại mã". 0 = bấm được ngay.
             'wait' => $otp === null ? 0 : max(0, (int) ($otp['resend'] ?? 0) - time()),
             // Đã xin mã lần nào chưa — quyết câu chữ dưới ô nhập mã.
             'sent' => $otp !== null && ($otp['hash'] ?? '') !== '',
+            /* Số đã gửi mã tới, ĐÃ CHE BỚT (Otp::displayPhone). Màn nhập mã
+               phải nói rõ mã đi đâu — "đã gửi đến số của bạn" thì khách không
+               biết mình gõ nhầm số hay mạng chậm — nhưng in đủ mười chữ số
+               trên một màn đang mở sẵn thì lại là in số điện thoại của khách
+               ra cho mọi người đứng sau lưng cùng đọc. */
+            'where' => $cho === null ? '' : Otp::displayPhone((string) $cho['phone']),
         ];
     }
 
@@ -673,7 +822,7 @@ class AuthController extends BaseController
      * ⚠ Hàm này CÓ ghi vào phiên: signupCodeProblem() đếm số lần nhập sai mã.
      * Đó là chủ ý — đếm ở đâu khác thì hai nơi phải cùng biết một phép kiểm.
      */
-    private static function signupErrors(array $in, string $password, string $confirm): array
+    private static function signupErrors(array $in, string $password): array
     {
         $loi = [];
 
@@ -758,24 +907,23 @@ class AuthController extends BaseController
             $loi['password'] = $yeu;
         }
 
-        /* XÁC NHẬN MẬT KHẨU — EF-08/EF-09. Câu báo gắn vào ô XÁC NHẬN chứ
-           không phải ô mật khẩu: ô dưới mới là ô khách cần sửa. */
-        if ($confirm === '') {
-            $loi['password_confirm'] = 'Vui lòng xác nhận mật khẩu.';
-        } elseif ($password !== $confirm) {
-            $loi['password_confirm'] = 'Mật khẩu xác nhận không khớp.';
-        }
-
-        /* MÃ XÁC MINH — chỉ bỏ qua khi số điện thoại chưa hợp lệ, vì lúc ấy
-           không có gì để so mã với. Chế độ thử (Otp::bypass) KHÔNG bỏ qua phép
-           kiểm này, nó chỉ nới lỏng bên trong signupCodeProblem(). */
-        if (!isset($loi['phone'])) {
-            $maLoi = self::signupCodeProblem((string) $phone, (string) $in['ma']);
-
-            if ($maLoi !== null) {
-                $loi['ma'] = $maLoi;
-            }
-        }
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * HAI PHÉP KIỂM ĐÃ RỜI KHỎI ĐÂY — VÀ CHÚNG KHÔNG "BIẾN MẤT"
+         *
+         * XÁC NHẬN MẬT KHẨU (EF-08/EF-09) gỡ hẳn cùng ô nhập của nó: bản
+         * thiết kế 12/09/2026 vẽ màn đăng ký đúng ba ô, không có ô gõ lại.
+         * Thứ thay chỗ nó là nút "Hiện" ngay trong ô mật khẩu — khách ĐỌC
+         * được chuỗi mình vừa gõ, thay vì gõ mù hai lần rồi so.
+         *
+         * MÃ XÁC MINH chuyển sang signupVerify(): nó nay là MỘT MÀN RIÊNG,
+         * hiện ra sau khi form này đã hợp lệ và mã đã thật sự gửi đi. Kiểm mã
+         * ở đây thì màn ấy không còn gì để làm.
+         *
+         * ⚠ Cả hai vẫn chạy ở máy chủ, chỉ đổi chỗ. Đừng đọc khối này thành
+         * "đăng ký nay không cần mã nữa".
+         * ─────────────────────────────────────────────────────────────────
+         */
 
         return $loi;
     }
@@ -913,8 +1061,7 @@ class AuthController extends BaseController
             redirect('/auth?tab=dang-ky');
         }
 
-        $to  = $this->signupTarget($_POST['redirect'] ?? null);
-        $raw = trim((string) ($_POST['phone'] ?? ''));
+        $to = $this->signupTarget($_POST['redirect'] ?? null);
 
         if (!csrfCheck($_POST['_token'] ?? null)) {
             $this->signupCodeReply(
@@ -931,50 +1078,44 @@ class AuthController extends BaseController
             $this->signupCodeReply(false, 'Bạn đang đăng nhập rồi.', 0, $to);
         }
 
-        /* Đường KHÔNG JavaScript đi qua một cú tải lại trang, nên mọi chữ đã
-           gõ phải được cất lại — trừ hai ô mật khẩu, không bao giờ cất.
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * SỐ LẤY TỪ HỒ SƠ ĐANG CHỜ, KHÔNG LẤY TỪ FORM
+         *
+         * Bản trước đọc $_POST['phone']: hồi ấy nút "Gửi mã" nằm ngay cạnh ô
+         * số trong form đăng ký, nên số phải đi cùng cú bấm. Nay nút này chỉ
+         * còn ở MÀN NHẬP MÃ, nơi không có ô số nào — và cũng không nên có:
+         * nhận số từ form ở màn ấy là mở đúng cái lỗ mà chốt 60 giây bên dưới
+         * sinh ra để bịt, vì đổi số là qua được chốt theo phiên.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        $cho = self::signupPending();
 
-           CHỈ Ở ĐƯỜNG ẤY. Đường AJAX không rời trang, chữ vẫn nằm nguyên
-           trong các ô; cất thêm một bản vào phiên thì bản ấy nằm lại đó và
-           lần sau mở màn ĐĂNG NHẬP là ô "Số điện thoại hoặc email" tự điền
-           sẵn thứ khách gõ ở màn đăng ký. */
-        if (!self::laFetch()) {
-            $_SESSION['_old_auth'] = [
-                'full_name' => trim((string) ($_POST['full_name'] ?? '')),
-                'phone'     => $raw,
-                'email'     => trim((string) ($_POST['email'] ?? '')),
-                'dong_y'    => !empty($_POST['dong_y']),
-            ];
-        }
-
-        $phone = normalizePhone($raw);
-
-        if ($raw === '') {
-            $this->signupCodeReply(false, 'Vui lòng nhập số điện thoại.', 0, $to);
-        }
-
-        if ($phone === null) {
-            $this->signupCodeReply(false, 'Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.', 0, $to);
-        }
-
-        /* Số đã có tài khoản thì dừng ngay tại đây, đừng gửi mã. Mã gửi tới
-           một số không thể đăng ký được là một tin nhắn mất tiền dẫn tới một
-           ngõ cụt — và EF-10 nói đúng câu cần nói. */
-        if ((int) Database::fetchValue(
-            'SELECT COUNT(*) FROM profiles WHERE phone = :p',
-            ['p' => $phone]
-        ) > 0) {
-            /* Câu này đi cả đường JSON (auth.js in ra dạng chữ thuần) nên
-               không kèm link được — ô số điện thoại sẽ tự có link ấy ngay khi
-               khách bấm "Đăng ký". */
+        if ($cho === null) {
             $this->signupCodeReply(
                 false,
-                'Số điện thoại này đã được đăng ký. Vui lòng đăng nhập.',
+                'Phiên đăng ký đã hết hạn. Vui lòng điền lại thông tin.',
                 0,
                 $to
             );
         }
 
+        $ket = self::signupIssueCode((string) $cho['phone']);
+
+        $this->signupCodeReply($ket['ok'], $ket['message'], $ket['wait'], $to);
+    }
+
+    /**
+     * Sinh và gửi một mã xác minh cho số này.
+     *
+     * Tách khỏi signupSendCode() vì nay CÓ HAI nơi cần nó: cú bấm "Tạo tài
+     * khoản" (gửi mã lần đầu) và nút "Gửi lại mã" ở màn nhập mã. Để hai bản
+     * sao của chốt 60 giây là sớm muộn cũng có một bản quên mất.
+     *
+     * @return array{ok: bool, message: string, wait: int}
+     */
+    private static function signupIssueCode(string $phone): array
+    {
         /* CHƯA HẾT 60 GIÂY THÌ KHÔNG SINH MÃ MỚI.
            Chốt ở máy chủ chứ không chỉ ở nút bấm: đồng hồ đếm ngược nằm trong
            JavaScript, ai cũng gọi thẳng địa chỉ này được. Không có chốt thì
@@ -983,21 +1124,17 @@ class AuthController extends BaseController
         /* ⚠ CHỐT THEO PHIÊN, KHÔNG THEO SỐ. Bản đầu so thêm
            `$otp['phone'] === $phone`, và đó là một cái lỗ: mỗi lần đổi số là
            một mã mới được sinh ra ngay, nên một vòng lặp A, B, A, B… bơm được
-           vô số tin nhắn qua đúng một phiên — chính thứ mà khối chú thích trên
-           nói là phải chặn. Cái giá của việc bỏ vế ấy: khách gõ nhầm số rồi
-           sửa lại phải chờ hết 60 giây. Đó đúng là ý nghĩa của một chốt tần
-           suất, và câu báo dưới đây nói rõ còn bao lâu. */
+           vô số tin nhắn qua đúng một phiên. */
         $otp = self::signupOtp();
 
         if ($otp !== null && time() < (int) ($otp['resend'] ?? 0)) {
             $con = (int) ($otp['resend'] ?? 0) - time();
 
-            $this->signupCodeReply(
-                false,
-                sprintf('Vui lòng chờ %d giây rồi bấm "Gửi mã" lại.', $con),
-                $con,
-                $to
-            );
+            return [
+                'ok'      => false,
+                'message' => sprintf('Vui lòng chờ %d giây rồi bấm "Gửi lại mã".', $con),
+                'wait'    => $con,
+            ];
         }
 
         $code = Otp::generate();
@@ -1028,7 +1165,7 @@ class AuthController extends BaseController
             $cau .= ' Mã (chỉ hiện ở chế độ phát triển): ' . $code;
         }
 
-        $this->signupCodeReply(true, $cau, Otp::RESEND_AFTER, $to);
+        return ['ok' => true, 'message' => $cau, 'wait' => Otp::RESEND_AFTER];
     }
 
     /**
@@ -1058,16 +1195,52 @@ class AuthController extends BaseController
         redirect($this->signupBack($to));
     }
 
-    /** Địa chỉ màn đăng ký, giữ nguyên đích đến đang mang theo. */
-    private function signupBack(string $to): string
+    /** Địa chỉ một màn của luồng đăng ký, giữ nguyên đích đến đang mang theo. */
+    private function signupBack(string $to, string $buoc = ''): string
     {
-        return '/auth?tab=dang-ky' . ($to !== '/' ? '&redirect=' . rawurlencode($to) : '');
+        return '/auth?tab=dang-ky'
+            . ($buoc !== '' ? '&buoc=' . $buoc : '')
+            . ($to !== '/' ? '&redirect=' . rawurlencode($to) : '');
     }
 
     /**
-     * Bấm "Đăng ký" — kiểm hết một lượt rồi tạo tài khoản.
+     * Hồ sơ đăng ký đang chờ mã xác minh — null nghĩa là chưa có.
      *
-     * Main Flow bước 5 → 10 của UC-USER-01 nằm gọn trong hàm này.
+     * ─────────────────────────────────────────────────────────────────────
+     * TRONG NÀY CHỈ CÓ CHUỖI BĂM, KHÔNG BAO GIỜ CÓ MẬT KHẨU THÔ
+     *
+     * Màn đăng ký nay chia đôi (form → màn nhập mã), nên có một quãng mà hồ
+     * sơ phải nằm đâu đó giữa hai lượt gửi. BR-UC.USER.02-02 cấm cất mật khẩu
+     * thô ở bất kỳ bước nào, nên signupSubmit() băm ngay lúc nhận và chỉ cất
+     * chuỗi băm — đúng thứ sẽ vào cột `users.password_hash`, không hơn.
+     *
+     * ⚠ ĐỪNG thêm khoá 'password' vào mảng này để "tiện kiểm lại". Phép kiểm
+     * ấy đã chạy xong trên chuỗi thô trước khi băm; thêm chuỗi thô vào phiên
+     * là phá đúng luật mà cả khối này sinh ra để giữ.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    private static function signupPending(): ?array
+    {
+        $c = $_SESSION['_signup_pending'] ?? null;
+
+        return is_array($c) && ($c['phone'] ?? '') !== '' && ($c['hash'] ?? '') !== ''
+            ? $c : null;
+    }
+
+    /**
+     * Bấm "Tạo tài khoản" — kiểm hết một lượt rồi XIN MÃ, chưa tạo gì cả.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO TÀI KHOẢN KHÔNG RA ĐỜI Ở ĐÂY NỮA
+     *
+     * Bản thiết kế 12/09/2026 tách màn nhập mã thành một màn riêng, sau form.
+     * Đó không chỉ là chuyện hình thức: ở bản cũ, ô mã nằm ngay trong form
+     * nên khách phải xin mã TRƯỚC khi biết mình có gõ sai ô nào khác không —
+     * gõ hỏng mật khẩu là một tin nhắn mất tiền đã bay đi vô ích.
+     *
+     * Nay thứ tự đúng chiều: kiểm hết -> mới gửi mã -> mới hỏi mã. Main Flow
+     * bước 5..7 của UC-USER-01 nằm ở hàm này, bước 8..10 ở signupVerify().
+     * ─────────────────────────────────────────────────────────────────────
      */
     public function signupSubmit(): void
     {
@@ -1084,87 +1257,155 @@ class AuthController extends BaseController
         $in = [
             'full_name' => trim((string) ($_POST['full_name'] ?? '')),
             'phone'     => trim((string) ($_POST['phone'] ?? '')),
+            /* Ô email không còn trên màn đăng ký — bản thiết kế vẽ đúng ba ô.
+               Chuỗi này là thứ khách đã gõ ở MÀN MỘT khi họ gõ một địa chỉ
+               email: mang theo thì không ai phải gõ hai lần, và nó vẫn đi qua
+               đủ phép kiểm EF-05/EF-11 trong signupErrors() như khi nó còn là
+               một ô thật. */
             'email'     => trim((string) ($_POST['email'] ?? '')),
-            /*
-             * is_array(): form CŨ gửi mã bằng sáu ô tên `ma[]`. Một trang cũ
-             * còn mở trong tab khác, hay một bookmark, vẫn POST đúng dạng ấy
-             * — ép mảng sang chuỗi là một warning trên log production.
-             *
-             * CHỈ BÓC KHOẢNG TRẮNG, KHÔNG BÓC CHỮ CÁI. Bản trước dùng `/\D+/`,
-             * tức nuốt lặng mọi thứ không phải chữ số: "12ab34" thành "1234",
-             * rồi "1234" trượt phép so hash và ĂN MỘT LƯỢT thử — khách thấy
-             * "Mã xác minh không đúng, còn 4 lần" cho một ô họ gõ đủ sáu ký
-             * tự. Giữ nguyên thứ khách gõ thì signupCodeProblem() nói đúng
-             * bệnh: "Mã xác minh gồm 6 chữ số."
-             *
-             * Khoảng trắng thì vẫn bóc: dán "123 456" từ tin nhắn là chuyện
-             * thường, và đó không phải một lỗi đáng bắt khách sửa tay.
-             */
-            'ma'        => preg_replace(
-                '/\s+/u',
-                '',
-                is_array($_POST['ma'] ?? null) ? implode('', $_POST['ma']) : (string) ($_POST['ma'] ?? '')
-            ) ?? '',
             'dong_y'    => !empty($_POST['dong_y']),
+            'tin_tuc'   => !empty($_POST['tin_tuc']),
         ];
 
         $password = (string) ($_POST['password'] ?? '');
-        $confirm  = (string) ($_POST['password_confirm'] ?? '');
         $to       = $this->signupTarget($_POST['redirect'] ?? null);
 
-        /* Giữ lại mọi chữ đã gõ, kể cả cú tick — quay về vì hai ô mật khẩu
-           lệch nhau mà mất luôn tên, số, email và cú tick là bắt làm lại bốn
-           việc đã làm đúng. HAI Ô MẬT KHẨU THÌ KHÔNG: không cất mật khẩu vào
-           phiên, và ô mật khẩu điền sẵn thì khách không biết mình đang gửi lại
-           chuỗi nào. */
+        /* Giữ lại mọi chữ đã gõ, kể cả hai cú tick — quay về vì một ô sai mà
+           mất luôn tên, số và cú tick là bắt làm lại những việc đã làm đúng.
+           Ô MẬT KHẨU THÌ KHÔNG: không cất mật khẩu vào phiên, và một ô mật
+           khẩu điền sẵn thì khách không biết mình đang gửi lại chuỗi nào. */
         $_SESSION['_old_auth'] = [
             'full_name' => $in['full_name'],
             'phone'     => $in['phone'],
             'email'     => $in['email'],
             'dong_y'    => $in['dong_y'],
+            'tin_tuc'   => $in['tin_tuc'],
         ];
 
-        $loi = self::signupErrors($in, $password, $confirm);
+        $loi = self::signupErrors($in, $password);
 
         if ($loi !== []) {
             $_SESSION['_auth_errors'] = $loi;
             redirect($this->signupBack($to));
         }
 
+        $phone = (string) normalizePhone($in['phone']);
+        $ket   = self::signupIssueCode($phone);
+
+        if (!$ket['ok']) {
+            /* Chỉ còn một lý do trượt ở đây: chốt 60 giây. Câu báo nói rõ còn
+               bao lâu, và nó thuộc về thao tác "xin mã" nên đi vào dải chung
+               chứ không gắn vào ô nào của form. */
+            flash('auth_error', $ket['message']);
+            redirect($this->signupBack($to));
+        }
+
+        /* Hồ sơ chờ — xem khối chú thích ở signupPending() về chuỗi băm. */
+        $_SESSION['_signup_pending'] = [
+            'full_name' => $in['full_name'],
+            'phone'     => $phone,
+            'email'     => strtolower($in['email']),
+            'tin_tuc'   => $in['tin_tuc'],
+            'hash'      => password_hash($password, PASSWORD_DEFAULT),
+        ];
+
+        unset($_SESSION['_old_auth'], $_SESSION['_auth_errors']);
+
+        flash('auth_success', $ket['message']);
+
+        redirect($this->signupBack($to, 'xac-minh'));
+    }
+
+    /**
+     * Bấm "Xác nhận" ở màn nhập mã — bước 8 đến 10 của Main Flow.
+     */
+    public function signupVerify(): void
+    {
+        $this->requirePost('/auth?tab=dang-ky');
+
+        if (AuthMiddleware::check()) {
+            redirect('/tai-khoan');
+        }
+
+        $to  = $this->signupTarget($_POST['redirect'] ?? null);
+        $cho = self::signupPending();
+
+        if ($cho === null) {
+            /* Phiên hết hạn giữa hai màn. Về form chứ không đứng lại màn mã:
+               không còn hồ sơ nào thì một ô mã cũng không xác minh được gì. */
+            flash('auth_error', 'Phiên đăng ký đã hết hạn. Vui lòng điền lại thông tin.');
+            redirect($this->signupBack($to));
+        }
+
         /*
-         * TỚI ĐÂY DỮ LIỆU ĐÃ HỢP LỆ — bước 6 đến 8 của Main Flow.
+         * is_array(): màn này gửi mã bằng SÁU ô tên `ma[]`, nhưng một trang cũ
+         * còn mở trong tab khác vẫn POST đúng một ô `ma` — nhận cả hai dạng.
          *
-         * register() tự kiểm lại số điện thoại, email và mật khẩu bằng ĐÚNG
-         * những hàm vừa dùng ở trên (normalizePhone, passwordProblem), rồi
-         * INSERT cả ba bảng trong MỘT giao dịch: hỏng ở đâu cũng không để lại
-         * tài khoản dở dang — đúng yêu cầu của EF-13.
+         * CHỈ BÓC KHOẢNG TRẮNG, KHÔNG BÓC CHỮ CÁI. Bản trước dùng `/\D+/`,
+         * tức nuốt lặng mọi thứ không phải chữ số: "12ab34" thành "1234", rồi
+         * trượt phép so hash và ĂN MỘT LƯỢT thử. Giữ nguyên thứ khách gõ thì
+         * signupCodeProblem() nói đúng bệnh: "Mã xác minh gồm 6 chữ số."
+         */
+        $ma = preg_replace(
+            '/\s+/u',
+            '',
+            is_array($_POST['ma'] ?? null) ? implode('', $_POST['ma']) : (string) ($_POST['ma'] ?? '')
+        ) ?? '';
+
+        $maLoi = self::signupCodeProblem((string) $cho['phone'], $ma);
+
+        if ($maLoi !== null) {
+            $_SESSION['_auth_errors'] = ['ma' => $maLoi];
+            redirect($this->signupBack($to, 'xac-minh'));
+        }
+
+        /*
+         * TỚI ĐÂY MỌI THỨ ĐÃ HỢP LỆ — bước 8.
          *
-         * Phiên bản văn bản Điều khoản đi cùng và được ghi TRONG CÙNG giao dịch
-         * ấy (BR-UC.USER.01-05): không có đường nào để một tài khoản ra đời mà
-         * thiếu vết đồng ý.
+         * register() tự kiểm lại số điện thoại và email bằng ĐÚNG những hàm
+         * đã dùng ở signupSubmit(), rồi INSERT cả ba bảng trong MỘT giao dịch:
+         * hỏng ở đâu cũng không để lại tài khoản dở dang — đúng yêu cầu EF-13.
+         *
+         * Tham số cuối là chuỗi băm đã sinh ở màn trước; tham số $password để
+         * rỗng vì không còn chuỗi thô nào tồn tại ở bước này — xem khối
+         * $passwordHash trong UserModel::register().
          */
         $ket = UserModel::register(
-            (string) normalizePhone($in['phone']),
-            $password,
-            $in['full_name'],
-            $in['email'],
-            (string) config('auth.consent.version', '')
+            (string) $cho['phone'],
+            '',
+            (string) $cho['full_name'],
+            (string) $cho['email'],
+            (string) config('auth.consent.version', ''),
+            (string) $cho['hash']
         );
 
         if (!$ket['ok']) {
             /* Lọt tới đây nghĩa là có gì đó đổi GIỮA lúc kiểm và lúc ghi —
                hai người cùng đăng ký một số trong cùng một giây, hoặc CSDL
-               trục trặc. Câu của register() vẫn là câu chính xác nhất mô tả
-               việc vừa hỏng, nên dùng lại nguyên văn; nó không thuộc ô nào cụ
-               thể nên đi vào dải báo chung, đúng chỗ EF-13 chỉ định. */
+               trục trặc. Về FORM chứ không về màn mã: thứ phải sửa nằm ở
+               form, và hồ sơ chờ đã hỏng thì giữ lại chỉ để hỏng tiếp. */
+            unset($_SESSION['_signup_pending'], $_SESSION['_signup_otp']);
             flash('auth_error', $ket['error']);
             redirect($this->signupBack($to));
+        }
+
+        /* Ô "Nhận thông tin ưu đãi" — chỉ có thật khi có địa chỉ email để
+           ghi vào, vì bảng newsletter_subscribers khoá theo email. Màn đăng ký
+           không hỏi email (bản thiết kế ba ô), nên ô tick ấy chỉ hiện ra khi
+           khách đã gõ một email ở màn một; xem auth/_signup.php.
+
+           Hỏng thì KHÔNG chặn đường: tài khoản đã tạo xong rồi, và một lỗi
+           ghi bản tin không phải lý do để nuốt mất cả lượt đăng ký. */
+        if (!empty($cho['tin_tuc']) && ($cho['email'] ?? '') !== '') {
+            NewsletterModel::subscribe((string) $cho['email'], 'dang-ky');
         }
 
         unset(
             $_SESSION['_old_auth'],
             $_SESSION['_auth_errors'],
-            $_SESSION['_signup_otp']
+            $_SESSION['_signup_otp'],
+            $_SESSION['_signup_pending'],
+            $_SESSION['_auth_ident']
         );
 
         /* Bước 8 — BR-UC.USER.01-08: đăng ký xong đăng nhập luôn, bắt khách

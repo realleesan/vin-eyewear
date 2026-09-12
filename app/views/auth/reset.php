@@ -14,15 +14,11 @@
 <section class="authwrap">
     <div class="authcard">
 
-        <div class="authcard__brand">
-            <img class="authcard__photo"
-                 src="<?= designImage('login-photo', 'assets/images/hero-models.jpg') ?>"
-                 alt="" width="600" height="620">
-            <div class="authcard__caption">
-                <p class="authcard__quote">Kính đẹp là kính hợp với chính bạn.</p>
-                <p class="authcard__sub">Hơn 50 thương hiệu quốc tế · Đo mắt chuẩn phòng khám</p>
-            </div>
-        </div>
+        <?php
+        /* CỘT ẢNH THƯƠNG HIỆU ĐÃ GỠ (12/09/2026) — bản thiết kế
+           "Đăng ký Đăng nhập.dc.html" vẽ một cột. Xem khối chú thích cùng tên
+           trong auth/index.php về lý do phải gỡ HẲN markup chứ không chỉ ẩn. */
+        ?>
 
         <div class="authcard__panel">
 

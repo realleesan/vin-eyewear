@@ -65,22 +65,32 @@
              aria-labelledby="authovTitle" tabindex="-1" data-authov-panel>
 
             <?php
-            /* CHỈ CÒN NÚT ✕ Ở ĐÂY. Tiêu đề của tấm nằm trong chính mảnh /auth
-               (hai viên thuốc ĐĂNG NHẬP/ĐĂNG KÝ rồi tới tiêu đề) — bản thiết
-               kế vẽ như thế, và để nó ở đó thì nhãn tự đổi theo tab đang mở
-               mà không cần JS nói cho khung biết.
-
-               aria-labelledby của hộp thoại vì vậy trỏ vào một phần tử của
-               MẢNH, không phải của khung: h1 trong /auth mang id="authovTitle"
-               ngay khi mảnh được đổ vào. Quãng ngắn trước đó tấm chỉ có chữ
-               "Đang tải…" nên chưa có gì để đọc tên — chấp nhận được, và
-               aria-busy đã nói đúng trạng thái ấy. */
+            /* ┌─ THANH ĐẦU TẤM ──────────────────────────────────────────────
+               │ Tên màn bên trái, ✕ bên phải — bản thiết kế 12/09/2026.
+               │
+               │ Ô chữ để TRỐNG trong khuôn: tấm này sống qua bốn màn (định
+               │ danh · mật khẩu · đăng ký · nhập mã), mỗi màn một tên, mà
+               │ khuôn thì được nhân bản MỘT lần rồi dùng lại. auth-drawer.js
+               │ điền nó sau mỗi lượt nạp mảnh, lấy từ data-short của
+               │ <h1 id="authovTitle"> — xem datTenMan() bên đó.
+               │
+               │ aria-hidden: tên màn này là bản RÚT GỌN của chính cái h1 nằm
+               │ ngay dưới, mà hộp thoại đã lấy h1 ấy làm nhãn (aria-labelledby
+               │ bên trên). Không giấu thì trình đọc màn hình đọc "Đăng nhập,
+               │ Đăng nhập hoặc tạo tài khoản" — một cái tên nói hai lần.
+               │
+               │ Quãng ngắn trước khi mảnh về, ô chữ rỗng và tấm chỉ có dòng
+               │ "Đang tải…"; aria-busy đã nói đúng trạng thái ấy. */
             ?>
-            <button type="button" class="authov__x" data-authov-close
-                    aria-label="<?= e(t('ui.close')) ?>">✕</button>
+            <div class="authov__head">
+                <span class="authov__title" data-authov-title aria-hidden="true"></span>
 
-            <?php /* CHỈ KHỐI NÀY CUỘN, không phải cả tấm — nhờ vậy nút ✕ và
-                     tiêu đề đứng yên khi nội dung dài. */ ?>
+                <button type="button" class="authov__x" data-authov-close
+                        aria-label="<?= e(t('ui.close')) ?>">✕</button>
+            </div>
+
+            <?php /* CHỈ KHỐI NÀY CUỘN, không phải cả tấm — nhờ vậy thanh đầu
+                     tấm và nút ✕ đứng yên khi nội dung dài. */ ?>
             <div class="authov__scroll">
                 <div class="authov__body" data-auth-body aria-live="polite" aria-busy="true">
                     <p class="authov__wait"><?= e(t('ui.loading')) ?></p>

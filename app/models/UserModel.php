@@ -57,6 +57,25 @@ class UserModel extends BaseModel
     /**
      * Tạo tài khoản khách mới.
      *
+     * ─────────────────────────────────────────────────────────────────────
+     * $passwordHash — MẬT KHẨU ĐÃ BĂM SẴN, CHỈ DÙNG CHO MỘT LUỒNG
+     *
+     * Màn đăng ký nay chia đôi (form → màn nhập mã OTP → tài khoản ra đời),
+     * nên giữa hai lượt gửi có một quãng mà hồ sơ đang chờ phải nằm trong
+     * phiên. BR-UC.USER.02-02 cấm cất MẬT KHẨU THÔ ở bất kỳ bước nào, nên
+     * AuthController::signupSubmit() băm ngay khi nhận và chỉ cất chuỗi băm —
+     * đúng thứ sẽ vào cột `users.password_hash`, không hơn.
+     *
+     * Vì thế tham số này KHÔNG qua passwordProblem(): không có gì để kiểm,
+     * chuỗi băm đâu còn là mật khẩu. Phép kiểm ấy đã chạy trên chuỗi THÔ,
+     * trong chính request đã sinh ra chuỗi băm này — xem signupSubmit().
+     *
+     * ⚠ Đừng mở tham số này cho một luồng mới mà không làm đúng thứ tự ấy:
+     * đưa thẳng một chuỗi băm từ đâu đó vào đây là bỏ qua toàn bộ luật mật
+     * khẩu của dự án mà không có dòng lỗi nào. Mọi đường đặt mật khẩu KHÁC
+     * phải truyền chuỗi thô qua $password như cũ.
+     * ─────────────────────────────────────────────────────────────────────
+     *
      * @return array ['ok'=>true,'id'=>...] | ['ok'=>false,'error'=>...]
      */
     public static function register(
@@ -64,7 +83,8 @@ class UserModel extends BaseModel
         string $password,
         string $fullName,
         string $email = '',
-        string $termsVersion = ''
+        string $termsVersion = '',
+        ?string $passwordHash = null
     ): array {
         /*
          * SỐ ĐIỆN THOẠI THAY EMAIL LÀM THỨ ĐỂ ĐĂNG NHẬP.
@@ -98,7 +118,7 @@ class UserModel extends BaseModel
 
            Cùng một lý lẽ đã ghi ở changePassword() và createStaff(): mọi đường
            đặt mật khẩu phải đi qua đúng một hàm kiểm. */
-        if (($loiMatKhau = passwordProblem($password)) !== null) {
+        if ($passwordHash === null && ($loiMatKhau = passwordProblem($password)) !== null) {
             return ['ok' => false, 'error' => $loiMatKhau];
         }
 
@@ -137,7 +157,7 @@ class UserModel extends BaseModel
         $userId = uuid();
 
         try {
-            Database::transaction(static function () use ($userId, $email, $password, $fullName, $phone, $termsVersion): void {
+            Database::transaction(static function () use ($userId, $email, $password, $passwordHash, $fullName, $phone, $termsVersion): void {
                 /*
                  * VẾT ĐỒNG Ý ĐIỀU KHOẢN nằm trong CHÍNH câu INSERT tạo tài khoản.
                  *
@@ -158,8 +178,10 @@ class UserModel extends BaseModel
                         // khoá duy nhất, mà '' thì chỉ một tài khoản dùng được.
                         'email' => $email !== '' ? $email : null,
                         // PASSWORD_DEFAULT để PHP tự nâng thuật toán ở bản
-                        // sau mà không phải sửa dòng này
-                        'hash'  => password_hash($password, PASSWORD_DEFAULT),
+                        // sau mà không phải sửa dòng này. Chuỗi băm sẵn (nếu
+                        // có) do signupSubmit() sinh ra bằng ĐÚNG lời gọi này
+                        // — xem khối chú thích $passwordHash ở đầu hàm.
+                        'hash'  => $passwordHash ?? password_hash($password, PASSWORD_DEFAULT),
                         'accepted_at'   => $termsVersion !== '' ? date('Y-m-d H:i:s') : null,
                         'terms_version' => $termsVersion !== '' ? $termsVersion : null,
                     ]
