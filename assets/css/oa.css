@@ -1277,16 +1277,69 @@ textarea.oa-field {
     width: 100%;
     aspect-ratio: 1 / 1.36;
     cursor: pointer;
-    display: block;
+
+    /* Khung ôm ảnh căn GIỮA theo chiều dọc trong ô tỉ lệ cố định — đúng chỗ
+       ảnh vẫn nằm từ trước, chỉ khác là nay có một hộp thật bao quanh nó. */
+    display: flex;
+    align-items: center;
+
+    /* Cho .oa-card__frame đo được bề NGANG của ô này bằng đơn vị cqw. Xem
+       max-height ở .oa-card__frame img bên dưới — đó là chỗ duy nhất dùng
+       tới, và không có nó thì ảnh cao quá khổ tràn xuống đè phần chữ. */
+    container-type: inline-size;
+}
+
+/* ┌─ KHUNG ÔM SÁT TẤM ẢNH — MỐC NEO CỦA HUY HIỆU ─────────────────────────
+   │ ĐỌC TRƯỚC KHI GỘP LẠI. Ảnh sản phẩm là `contain` trong một ô khoá tỉ lệ
+   │ 1/1,36, mà ảnh trong kho là VUÔNG (800×800). Ảnh vuông đặt vừa bề ngang
+   │ thì trên và dưới mỗi bên còn thừa 18% chiều cao ô: ở cột 315px là 57px
+   │ trống. Huy hiệu neo vào ô (`.oa-card__media`) thì nó nổi lơ lửng trong
+   │ khoảng trống ấy, cách mép trên tấm ảnh gần 50px — trông như huy hiệu
+   │ của THẺ chứ không phải của ẢNH. Đó là lỗi đã sửa ngày 12/09/2026.
+   │
+   │ Nay <a> ảnh KHÔNG còn `position:absolute; inset:0` nữa: nó nằm thường
+   │ trong khung này, và khung cao ĐÚNG bằng tấm ảnh (img: width 100%,
+   │ height auto). Huy hiệu neo vào khung, nên góc trên trái của nó là góc
+   │ trên trái của tấm ảnh ở mọi tỉ lệ ảnh và mọi bề ngang cột.
+   │
+   │ VÙNG BẤM HẸP LẠI THEO, và đó là chủ ý: trước đây bấm vào khoảng trắng
+   │ trên/dưới ảnh cũng đi sang trang chi tiết.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-card__frame {
+    position: relative;
+    width: 100%;
 }
 
 .oa-card__media .oa-slot {
-    position: absolute;
-    inset: 0;
+    position: static;
+    display: block;
+    width: 100%;
     aspect-ratio: auto;
 }
 
-/* Huy hiệu góc trên trái: "MỚI", "-30%" */
+.oa-card__frame .oa-slot > img {
+    width: 100%;
+    height: auto;
+
+    /* TRẦN CHIỀU CAO = chiều cao của ô. 136cqw là 1,36 lần bề ngang ô ảnh,
+       tức đúng chiều cao ô theo aspect-ratio 1/1,36 ở trên. Ảnh cao hơn tỉ
+       lệ ấy (hiếm với gọng kính) bị ép về đúng khổ ô và lúc đó `contain`
+       lại chừa khoảng trống hai bên như cũ — chấp nhận, miễn là không có
+       tấm ảnh nào tràn xuống đè lên tên và giá. */
+    max-height: 136cqw;
+    object-fit: contain;
+}
+
+/* Không có ảnh: khung không có gì để lấy chiều cao, mà ô giữ chỗ
+   (.oa-slot__ph) lại là `position:absolute; inset:0`. Cho khung cao trọn ô
+   để chữ "chưa có ảnh" nằm giữa khung trống, đúng như trước. */
+.oa-card__frame--empty,
+.oa-card__frame--empty .oa-slot {
+    height: 100%;
+}
+
+/* Huy hiệu góc trên trái CỦA TẤM ẢNH — neo vào .oa-card__frame, xem khối
+   chú thích ở đó. */
 .oa-badges {
     position: absolute;
     top: 10px;

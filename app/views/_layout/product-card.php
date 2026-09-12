@@ -102,53 +102,67 @@ foreach ($variants as $v) {
 <li class="oa-card">
 
     <div class="oa-card__media">
-        <?php
-        /* Ô ẢNH CŨNG LÀ ĐƯỜNG SANG TRANG CHI TIẾT — khách bấm vào ảnh theo phản
-           xạ chứ không đi tìm nút.
-
-           Liên kết chỉ phủ ô ảnh, KHÔNG phủ cả thẻ: chân thẻ có form "Mua
-           ngay", mà lồng <button> vào trong <a> là HTML sai và bấm nút sẽ hoá
-           thành đi theo liên kết.
-
-           aria-hidden + tabindex="-1" vì đây là liên kết TRÙNG ĐÍCH với tên
-           sản phẩm ngay bên dưới. Ảnh mang alt="" (tên đã có ở tiêu đề, đọc
-           lại là đọc hai lần) nên nếu để trình đọc màn hình thấy, nó chỉ đọc
-           được một "liên kết" trơ trọi không tên; còn để nhận tiêu điểm thì
-           người dùng bàn phím phải Tab qua bốn liên kết một thẻ thay vì ba.
-           Huy hiệu nằm NGOÀI liên kết nên vẫn đọc được. */
-        ?>
-        <a class="oa-slot oa-slot--contain" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1"
-           style="position:absolute;inset:0">
-            <?php if (ProductModel::hasImage($product)): ?>
-                <img src="<?= e(asset(ProductModel::image($product))) ?>" alt=""
-                     width="600" height="750"
-                     <?= $eager ? '' : 'loading="lazy"' ?> decoding="async">
-            <?php else: ?>
-                <?php /* Ô trống thật thà, không mượn ảnh của mặt hàng khác —
-                         xem chú thích ở ProductModel::hasImage(). */ ?>
-                <span class="oa-slot__ph"><?= e(t('product.no_image')) ?></span>
-            <?php endif; ?>
-        </a>
 
         <?php
-        /* ┌─ HUY HIỆU ────────────────────────────────────────────────────
-           │ Mẫu cho phép tối đa hai huy hiệu cạnh nhau: đen "MỚI" rồi đỏ
-           │ "-30%". Hết hàng thì nuốt cả hai — lúc đó điều duy nhất đáng
-           │ nói về mặt hàng này là nó không mua được.
-           └──────────────────────────────────────────────────────────────── */
+        /* ┌─ KHUNG ÔM SÁT TẤM ẢNH ────────────────────────────────────────
+           │ Lớp bọc này KHÔNG phải để trang trí: nó cao đúng bằng tấm ảnh,
+           │ và huy hiệu neo vào nó. Bỏ đi thì huy hiệu tụt về góc của KHUNG
+           │ 1/1,36, nổi lơ lửng trên khoảng trắng phía trên ảnh vuông — xem
+           │ khối chú thích .oa-card__frame trong assets/css/oa.css.
+           │
+           │ Không có ảnh thì khung không có gì để lấy chiều cao, nên thêm
+           │ lớp --empty cho nó cao trọn ô giữ chỗ. */
         ?>
-        <div class="oa-badges">
-            <?php if (!$inStock): ?>
-                <span class="oa-badge"><?= e(t('product.out_of_stock')) ?></span>
-            <?php else: ?>
-                <?php if ($badgeTone === 'new' || !empty($product['is_featured'])): ?>
-                    <span class="oa-badge"><?= e($badgeTone === 'new' ? t('product.badge_new') : t('product.badge_hot')) ?></span>
+        <div class="oa-card__frame<?= ProductModel::hasImage($product) ? '' : ' oa-card__frame--empty' ?>">
+
+            <?php
+            /* Ô ẢNH CŨNG LÀ ĐƯỜNG SANG TRANG CHI TIẾT — khách bấm vào ảnh theo phản
+               xạ chứ không đi tìm nút.
+
+               Liên kết chỉ phủ ô ảnh, KHÔNG phủ cả thẻ: chân thẻ có form "Mua
+               ngay", mà lồng <button> vào trong <a> là HTML sai và bấm nút sẽ hoá
+               thành đi theo liên kết.
+
+               aria-hidden + tabindex="-1" vì đây là liên kết TRÙNG ĐÍCH với tên
+               sản phẩm ngay bên dưới. Ảnh mang alt="" (tên đã có ở tiêu đề, đọc
+               lại là đọc hai lần) nên nếu để trình đọc màn hình thấy, nó chỉ đọc
+               được một "liên kết" trơ trọi không tên; còn để nhận tiêu điểm thì
+               người dùng bàn phím phải Tab qua bốn liên kết một thẻ thay vì ba.
+               Huy hiệu nằm NGOÀI liên kết nên vẫn đọc được. */
+            ?>
+            <a class="oa-slot oa-slot--contain" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
+                <?php if (ProductModel::hasImage($product)): ?>
+                    <img src="<?= e(asset(ProductModel::image($product))) ?>" alt=""
+                         width="600" height="750"
+                         <?= $eager ? '' : 'loading="lazy"' ?> decoding="async">
+                <?php else: ?>
+                    <?php /* Ô trống thật thà, không mượn ảnh của mặt hàng khác —
+                             xem chú thích ở ProductModel::hasImage(). */ ?>
+                    <span class="oa-slot__ph"><?= e(t('product.no_image')) ?></span>
                 <?php endif; ?>
-                <?php if ($percent !== null && $showCompare): ?>
-                    <span class="oa-badge oa-badge--sale">-<?= (int) $percent ?>%</span>
+            </a>
+
+            <?php
+            /* ┌─ HUY HIỆU ────────────────────────────────────────────────────
+               │ Mẫu cho phép tối đa hai huy hiệu cạnh nhau: đen "MỚI" rồi đỏ
+               │ "-30%". Hết hàng thì nuốt cả hai — lúc đó điều duy nhất đáng
+               │ nói về mặt hàng này là nó không mua được.
+               └──────────────────────────────────────────────────────────────── */
+            ?>
+            <div class="oa-badges">
+                <?php if (!$inStock): ?>
+                    <span class="oa-badge"><?= e(t('product.out_of_stock')) ?></span>
+                <?php else: ?>
+                    <?php if ($badgeTone === 'new' || !empty($product['is_featured'])): ?>
+                        <span class="oa-badge"><?= e($badgeTone === 'new' ? t('product.badge_new') : t('product.badge_hot')) ?></span>
+                    <?php endif; ?>
+                    <?php if ($percent !== null && $showCompare): ?>
+                        <span class="oa-badge oa-badge--sale">-<?= (int) $percent ?>%</span>
+                    <?php endif; ?>
                 <?php endif; ?>
-            <?php endif; ?>
-        </div>
+            </div>
+
+        </div><?php /* .oa-card__frame */ ?>
     </div>
 
     <div class="oa-card__body">
