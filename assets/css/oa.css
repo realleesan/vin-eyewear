@@ -1677,9 +1677,11 @@ textarea.oa-field {
    │ mờ là TRANG phía sau, không phải thanh — thanh giờ thuộc về lớp phủ.
    │ Mốc cắt trùng đúng `top` của .oa-panel nên hai mép khít nhau.
    │
-   │ Chỉ ô tìm mới có .hpop__scrim (xem _layout/header.php); ngăn giỏ dùng
-   │ .offcanvas-backdrop của Bootstrap, gắn thẳng vào <body> nên không dính
-   │ chuyện này.
+   │ Chỉ ô tìm mới có .hpop__scrim (xem _layout/header.php). Ngăn giỏ dùng
+   │ .offcanvas-backdrop của Bootstrap và DÍNH ĐÚNG LỖI NÀY — Offcanvas dựng
+   │ nền mờ với `rootElement: element.parentNode`, tức cũng nằm trong <header>,
+   │ không phải trong <body> như tên gọi gợi ý. Xem khối .offcanvas-backdrop ở
+   │ cuối file, nơi nó được cắt y hệt.
    └──────────────────────────────────────────────────────────────────────── */
 .hpop--search .hpop__scrim {
     top: var(--hdr-h);
@@ -2612,12 +2614,31 @@ body.is-search-open {
     transform: none;
 }
 
-/* Nền mờ do Offcanvas tự dựng và gắn vào <body>. Độ đậm .18 lấy theo mẫu —
-   cùng con số với .oa-scrim, vì đây là lớp phủ "nằm dưới" y như bảng tìm
-   kiếm: trang phía sau vẫn phải đọc được. */
+/* ┌─ NỀN MỜ CỦA TẤM GIỎ ──────────────────────────────────────────────────
+   │ Offcanvas tự dựng phần tử này. Độ đậm .18 lấy theo mẫu — cùng con số với
+   │ .oa-scrim, vì đây là lớp phủ "nằm dưới" y như bảng tìm kiếm: trang phía
+   │ sau vẫn phải đọc được.
+   │
+   │ `top: var(--hdr-h)` — CÙNG MỘT LÝ DO với .hpop--search .hpop__scrim ở
+   │ trên, đọc khối chú thích ở đó. Bootstrap KHÔNG gắn nền mờ vào <body> như
+   │ người ta tưởng: Offcanvas dựng nó với `rootElement: element.parentNode`,
+   │ mà cha của tấm giỏ là .hpop nằm trong <header>. Chuỗi thật đo được:
+   │
+   │     .offcanvas-backdrop → .hpop → .oa-header__actions → #siteHeader
+   │
+   │ Thành ra nó là CON của thanh đầu trang, và con thì luôn vẽ đè lên nền của
+   │ cha bất kể --z-scrim (4) nhỏ hơn --z-header (5) — z-index chỉ so bên
+   │ trong cùng ngữ cảnh xếp chồng.
+   │
+   │ Trước đây không ai thấy vì thanh trong suốt trên hero. Từ khi thanh nhận
+   │ .is-overlay và có nền đục thì nó hiện nguyên hình: thanh xám hơn hẳn tấm
+   │ ngay dưới, đúng chỗ đáng lẽ phải liền một khối.
+   │
+   │ Mốc cắt trùng `top` của .offcanvas.hpop__panel--cart nên hai mép khít.
+   └──────────────────────────────────────────────────────────────────────── */
 .offcanvas-backdrop {
     position: fixed;
-    inset: 0;
+    inset: var(--hdr-h) 0 0;
     z-index: var(--z-scrim);
     background: #000;
     opacity: 0;

@@ -13,6 +13,33 @@
     var toggle = document.getElementById('navToggle');
     var nav = document.getElementById('mobileNav');
 
+    /* ┌─ .is-overlay — MỘT LỚP, HAI CHỦ, NÊN PHẢI CÓ MỘT NGUỒN SỰ THẬT ──────
+       │ `.oa-header.is-overlay` (oa.css) cho thanh đầu trang mượn đúng nền của
+       │ lớp phủ đang mở — nền --bg-panel, bỏ blur, chữ --ink — để thanh và tấm
+       │ liền thành một mảng. Thấy rõ nhất ở trang chủ, nơi thanh đang trong
+       │ suốt đè lên video hero.
+       │
+       │ HAI lớp phủ cùng cần nó, và chúng mở bằng hai cơ chế khác hẳn nhau:
+       │   ô tìm kiếm  .is-open do khối 2 bên dưới gắn
+       │   ngăn giỏ    .show/.showing do Bootstrap Offcanvas gắn
+       │
+       │ ĐỪNG cho mỗi bên tự add/remove thẳng lên thanh. Đã thử và nó hỏng ngay:
+       │ bấm icon giỏ thì Offcanvas bắn `show` (gắn lớp), rồi CÙNG cú bấm ấy nổi
+       │ bọt lên handler click ở document -> closeAllPops -> closePop(ô tìm) ->
+       │ gỡ đúng cái lớp giỏ vừa gắn. Đo được: tấm giỏ mở ra mà thanh vẫn trong
+       │ suốt. Hai chủ ghi đè lẫn nhau theo thứ tự sự kiện.
+       │
+       │ Nên mỗi bên chỉ khai BÁO TRẠNG THÁI CỦA MÌNH vào `lopPhu`, còn việc
+       │ chạm vào DOM thì dồn về một chỗ: dongBoLopPhu() tính lại từ cả hai cờ.
+       │ Thêm lớp phủ thứ ba sau này là thêm một cờ, không phải thêm một chủ.
+       └──────────────────────────────────────────────────────────────────────── */
+    var lopPhu = { tim: false, gio: false };
+
+    var dongBoLopPhu = function () {
+        if (!header) return;
+        header.classList.toggle('is-overlay', lopPhu.tim || lopPhu.gio);
+    };
+
     /* ====================================================================
        1. BÓNG ĐỔ CỦA HEADER KHI CUỘN
 
@@ -160,7 +187,8 @@
                    đều đi qua closePop. Gắn ở nhánh mở nhưng gỡ ở một chỗ khác
                    là kiểu sai để lại thanh đầu trang kẹt màu nền sau khi bảng
                    đã biến mất. */
-                if (header) header.classList.remove('is-overlay');
+                lopPhu.tim = false;
+                dongBoLopPhu();
             }
 
             /* GỠ LỚP THÔI LÀ CHƯA ĐÓNG ĐƯỢC.
@@ -243,13 +271,10 @@
                            --bg sang --bg-panel, mất đường ranh mờ giữa hai
                            khối.
 
-                           `header &&`: khung rút gọn của trang thanh toán /
-                           đăng nhập không có #siteHeader. Hôm nay ô tìm nằm
-                           BÊN TRONG thanh nên không có thanh là cũng không có
-                           ô tìm, tức nhánh này không với tới được — nhưng đó
-                           là một bất biến của markup, không phải của file này.
-                           Xem `if (header)` ở khối cuộn đầu file, cùng lối. */
-                        if (header) header.classList.add('is-overlay');
+                           Khai cờ chứ không tự chạm vào thanh — xem khối
+                           `lopPhu` ở đầu file về lý do. */
+                        lopPhu.tim = true;
+                        dongBoLopPhu();
                     }
                 } else {
                     /* ĐÓNG PHẢI ĐI QUA closePop, không phải chỉ gỡ .is-open.
@@ -462,8 +487,15 @@
         var cartPanel   = cart.querySelector('.hpop__panel');
 
         if (cartPanel) {
-            /* `backdrop: true` -> Bootstrap tự dựng .offcanvas-backdrop và gắn
-               vào <body>; `scroll: false` -> khoá cuộn nền CÓ BÙ thanh cuộn. */
+            /* `backdrop: true` -> Bootstrap tự dựng .offcanvas-backdrop;
+               `scroll: false` -> khoá cuộn nền CÓ BÙ thanh cuộn.
+
+               KHÔNG gắn vào <body> như tên gọi gợi ý (và như dòng chú thích cũ
+               ở đây khẳng định nhầm): Offcanvas dựng nền mờ với
+               `rootElement: element.parentNode`, nên chuỗi thật đo được là
+               .offcanvas-backdrop → .hpop → .oa-header__actions → #siteHeader.
+               Tức nó là CON của thanh đầu trang, và điều đó có hậu quả nhìn
+               thấy được — xem khối .offcanvas-backdrop trong oa.css. */
             var cartOc = window.bootstrap.Offcanvas.getOrCreateInstance(cartPanel, {
                 backdrop: true,
                 scroll: false,
@@ -514,6 +546,25 @@
                │    Bootstrap không có tham chiếu nào để trả về — tiêu điểm rơi
                │    ra <body> và người dùng bàn phím phải Tab lại từ đầu trang.
                └──────────────────────────────────────────────────────────────── */
+            /* ┌─ THANH ĐẦU TRANG LIỀN MỘT MẢNG VỚI TẤM GIỎ ────────────────────
+               │ Cùng thứ ô tìm kiếm làm ở khối 2 — `.oa-header.is-overlay` trong
+               │ oa.css: nền --bg-panel, bỏ blur, chữ --ink. Thấy rõ nhất ở trang
+               │ chủ, nơi thanh đang trong suốt đè lên video hero.
+               │
+               │ `show` CHỨ KHÔNG `shown`, và đây là chỗ dễ đặt nhầm: `shown` chỉ
+               │ bắn SAU khi tấm trượt xong (~300ms), nên thanh sẽ đổi màu trễ
+               │ hẳn một nhịp so với tấm đang trôi xuống — đọc ra như hai thứ rời
+               │ nhau. `show` bắn ngay lúc bắt đầu mở.
+               │
+               │ Không gộp được vào handler `shown` bên dưới: cái đó phải ở lại
+               │ `shown` vì nó đặt tiêu điểm, mà tiêu điểm chỉ vào được phần tử
+               │ đã hiện (xem khối chú thích ở đó).
+               └──────────────────────────────────────────────────────────────── */
+            cartPanel.addEventListener('show.bs.offcanvas', function () {
+                lopPhu.gio = true;
+                dongBoLopPhu();
+            });
+
             cartPanel.addEventListener('shown.bs.offcanvas', function () {
                 document.body.classList.add('is-cart-open');
                 if (cartTrigger) cartTrigger.setAttribute('aria-expanded', 'true');
@@ -574,6 +625,19 @@
 
             cartPanel.addEventListener('hidden.bs.offcanvas', function () {
                 document.body.classList.remove('is-cart-open');
+
+                /* `hidden` CHỨ KHÔNG `hide` — ngược với chiều mở, và cũng vì
+                   cùng một lý do. `hide` bắn lúc BẮT ĐẦU trượt ra: thanh sẽ trả
+                   về trong suốt trong khi tấm còn đang trôi lên, tức là ba tấc
+                   cuối của hoạt ảnh tấm giỏ trôi ngang qua một thanh đã đổi màu.
+                   `hidden` giữ thanh liền mảng với tấm suốt chừng nào tấm còn
+                   nhìn thấy được.
+
+                   Gộp lại một câu: thanh DẪN lúc mở (`show`) và THEO SAU lúc
+                   đóng (`hidden`) — hai đầu đều nằm ngoài quãng tấm hiện hình. */
+                lopPhu.gio = false;
+                dongBoLopPhu();
+
                 if (cartTrigger) {
                     cartTrigger.setAttribute('aria-expanded', 'false');
                     cartTrigger.focus();
