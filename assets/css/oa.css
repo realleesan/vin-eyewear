@@ -2435,10 +2435,33 @@ textarea.oa-field {
     padding: 48px var(--edge) 0;
 }
 
-/* .oa-band__more nay chỉ là một .oa-btn — dáng nút lấy nguyên từ đó. Lớp này
-   giữ lại làm mốc tìm kiếm và chỗ để khác biệt (hiện chưa có khác biệt nào);
-   ĐỪNG khai lại chiều cao, viền hay bo góc ở đây, nếu không nút này sẽ lệch
-   khỏi mọi nút khác của site vào đúng lần ai đó sửa .oa-btn. */
+/* ┌─ NÚT CHỮ IN HOA, IN ĐẬM (12/09/2026, theo yêu cầu chủ dự án) ─────────
+   │ Dùng cho những nút PHẢI ĐỌC RA NGAY từ xa: "Xem tất cả" ở chân bốn băng
+   │ trang chủ (.oa-band__more) và hai nút của khối "Ghé thăm cửa hàng"
+   │ (.oa-btn--strong, gắn tay trong home/index.php).
+   │
+   │ MỘT LUẬT, HAI CỬA VÀO — không chép ba dòng ra hai chỗ. Nút nào cần dáng
+   │ này thì thêm .oa-btn--strong; .oa-band__more có tên riêng vì nó còn là
+   │ mốc tìm kiếm của khối chân băng.
+   │
+   │ CHỈ KHAI PHẦN KHÁC. Chiều cao, viền, góc, đệm vẫn của .oa-btn dùng
+   │ chung — khai lại ở đây là để nút này lệch khỏi mọi nút khác vào đúng
+   │ lần ai đó sửa .oa-btn.
+   │
+   │ ĐÂY KHÔNG PHẢI DÁNG MẶC ĐỊNH CỦA .oa-btn: nút trong thẻ sản phẩm ("Mua
+   │ ngay", "Thêm vào giỏ") cố ý giữ chữ thường — bốn thẻ một hàng, mỗi thẻ
+   │ hai nút in hoa đậm là tám khối chữ nặng tranh nhau với chính tấm ảnh.
+   │
+   │ Giãn chữ đi kèm IN HOA, không phải trang trí: chữ hoa đặt sát nhau ở cỡ
+   │ 11px đọc chậm hơn hẳn chữ thường. Cùng trị số --ls-tight với tên hàng
+   │ trên thẻ và với tiêu đề băng.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-btn--strong,
+.oa-band__more {
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: var(--ls-tight);
+}
 
 /* Lưới trong băng có thêm khoảng thở phía trên so với lưới trần */
 .oa-band .oa-grid {

@@ -112,9 +112,12 @@ $bands = [
         <h2 class="oa-title"><?= e(t('home.store.title')) ?></h2>
         <p class="oa-muted"><?= e(t('home.store.lead')) ?></p>
 
+        <?php /* .oa-btn--strong: chữ in hoa, in đậm — cùng dáng với nút "Xem tất
+                 cả" ở chân bốn băng phía trên, xem khối chú thích của lớp ấy
+                 trong assets/css/oa.css. */ ?>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-            <a class="oa-btn oa-btn--solid" href="/dat-lich"><?= e(t('cta.book')) ?></a>
-            <a class="oa-btn" href="/lien-he"><?= e(t('home.store.branches')) ?></a>
+            <a class="oa-btn oa-btn--strong oa-btn--solid" href="/dat-lich"><?= e(t('cta.book')) ?></a>
+            <a class="oa-btn oa-btn--strong" href="/lien-he"><?= e(t('home.store.branches')) ?></a>
         </div>
     </div>
 
