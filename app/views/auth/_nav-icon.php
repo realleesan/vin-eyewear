@@ -18,8 +18,12 @@
  * theo đúng chữ trong mục Giao diện của UC-USER-05 ("icon: shopping-bag"). Tờ
  * giấy cũ dễ đọc nhầm thành "hoá đơn" hoặc "tài liệu".
  *
+ * 'da-luu' thêm 12/09/2026 cùng lúc chức năng lưu sản phẩm dựng thật. Hình cờ
+ * RỖNG, cùng đường path với icon cờ ở trang chi tiết sản phẩm (.pdsave__ico)
+ * nhưng vẽ lại trên khung 24×24 nét 1.8 của bộ này — xem khối đầu file.
+ *
  * Nhận qua partial():
- *   $key — khoá mục ('ho-so' | 'don-hang' | 'lich-hen')
+ *   $key — khoá mục ('ho-so' | 'don-hang' | 'da-luu' | 'lich-hen')
  */
 ?>
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -33,6 +37,10 @@
         case 'don-hang': ?>
             <path d="M5 7h14l1 13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1L5 7z"></path>
             <path d="M9 10V6a3 3 0 0 1 6 0v4"></path>
+            <?php break;
+
+        case 'da-luu': ?>
+            <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z"></path>
             <?php break;
 
         case 'lich-hen': ?>

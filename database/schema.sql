@@ -83,10 +83,12 @@ DROP TABLE IF EXISTS `collections`;
 DROP TABLE IF EXISTS `product_variants`;
 DROP TABLE IF EXISTS `products`;
 DROP TABLE IF EXISTS `categories`;
--- Hai bảng dưới đây KHÔNG còn được tạo lại ở dưới (gỡ theo SRS v2.1.0: K06 và
--- dọn mã chết), nhưng lệnh DROP thì phải GIỮ: chạy lại file này trên một cơ sở
--- dữ liệu cũ mà bỏ hai dòng đó là để lại hai bảng mồ côi mang khoá ngoại trỏ
--- vào `users`/`stores`/`products` vừa dựng lại.
+-- `staff_stores` KHÔNG còn được tạo lại ở dưới (gỡ theo SRS v2.1.0: K06),
+-- nhưng lệnh DROP thì phải GIỮ: chạy lại file này trên một cơ sở dữ liệu cũ mà
+-- bỏ dòng đó là để lại một bảng mồ côi mang khoá ngoại trỏ vào
+-- `users`/`stores` vừa dựng lại.
+-- `favorites` thì có dựng lại (12/09/2026, mục 4) — dòng DROP của nó ở đây là
+-- bước dọn thường lệ như mọi bảng khác.
 DROP TABLE IF EXISTS `staff_stores`;
 DROP TABLE IF EXISTS `favorites`;
 DROP TABLE IF EXISTS `user_roles`;
@@ -1183,15 +1185,36 @@ ALTER TABLE `prescriptions`
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- BẢNG `favorites` ĐÃ GỠ — dọn mã chết cùng đợt 1 (SRS v2.1.0)
+-- BẢNG `favorites` — dấu trang của khách.
 --
--- Bảng này có từ bản dựng đầu tiên nhưng CHƯA BAO GIỜ có màn hình nào ghi hay
--- đọc nó: không có nút "yêu thích" ở trang sản phẩm, không có mục nào ở trang
--- tài khoản, không có model nào trỏ vào. Một bảng rỗng mang hai khoá ngoại thì
--- không hại gì, nhưng nó khiến người đọc lược đồ tin rằng tính năng ấy có thật.
+-- GỠ 06/09/2026 rồi DỰNG LẠI 12/09/2026, và lần này nó có màn hình thật: nút
+-- "Lưu sản phẩm" ở trang chi tiết (app/views/product/detail.php) và mục "Đã
+-- lưu" ở trang tài khoản (app/views/auth/account/da-luu.php), đi qua
+-- FavoriteModel. Lý do gỡ lần trước vẫn đúng nguyên văn và đáng giữ lại ở đây
+-- như một cái mốc: một bảng không màn hình nào dùng khiến người đọc lược đồ
+-- tin rằng tính năng ấy có thật.
 --
--- Muốn làm tính năng yêu thích thì dựng lại từ đầu cùng với màn hình của nó.
+-- Máy ĐANG CHẠY thì dựng bằng database/migrations/2026-09-12-yeu-thich-tro-lai.sql
+-- chứ không phải file này — file này xoá sạch rồi dựng lại cả cơ sở dữ liệu.
+--
+-- MỘT NGƯỜI, MỘT MẶT HÀNG, MỘT DÒNG (UNIQUE). Không gắn theo biến thể: lưu là
+-- "để dành xem lại cái gọng này", không phải "tôi đợi đúng màu đen size 52" —
+-- khác hẳn `stock_waitlist` ngay dưới. Cả hai khoá ngoại CASCADE: đây là dữ
+-- liệu tiện ích, không phải chứng từ như `orders`.
 -- ----------------------------------------------------------------------------
+CREATE TABLE `favorites` (
+    `id`         CHAR(36) NOT NULL DEFAULT (UUID()),
+    `user_id`    CHAR(36) NOT NULL,
+    `product_id` CHAR(36) NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uq_favorites` (`user_id`, `product_id`),
+    KEY `idx_favorites_product` (`product_id`),
+    CONSTRAINT `fk_favorites_user` FOREIGN KEY (`user_id`)
+        REFERENCES `users` (`id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_favorites_product` FOREIGN KEY (`product_id`)
+        REFERENCES `products` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Lịch hẹn khám mắt / tư vấn.
 --

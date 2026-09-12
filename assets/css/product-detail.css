@@ -455,6 +455,58 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   DẤU TRANG — nút lưu sản phẩm
+
+   KHÔNG phải .pdbtn thứ tư. Ba nút kia (Mua ngay · Thêm vào giỏ · Thử ảo)
+   là những việc khách tới đây để làm; lưu lại là việc phụ, và một nút thứ
+   tư cùng cỡ cùng viền sẽ chia đều sự chú ý của cả bốn. Nên nó là một dòng
+   chữ có icon, nằm sát dưới cụm nút, không viền không nền.
+
+   CAO 36px NHƯ .pdbtn dù không có viền: cụm nút ở trên đứng trên một lưới
+   36px, và một dòng cao 22px chen vào giữa làm gãy nhịp ấy — thấy rõ nhất
+   khi mặt hàng hết hàng, lúc khối "Thông báo khi có hàng" nối ngay bên dưới.
+
+   TRẠNG THÁI ĐANG LƯU chỉ đổi MÀU CHỮ và cờ đặc/rỗng (do PHP đổi thuộc tính
+   `fill` của <svg>, không phải CSS — xem chú thích ở product/detail.php).
+   Không đổi nền, không đổi cỡ: cái nút nhảy hình mỗi lần bấm là thứ làm
+   người ta tưởng mình bấm nhầm.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.pdsave {
+    margin-top: 10px;
+}
+
+.pdsave__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink-2);
+    font-family: inherit;
+    font-size: var(--fs-body);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color .18s ease;
+}
+
+.pdsave__btn:hover {
+    color: var(--ink);
+}
+
+.pdsave__btn.is-on {
+    color: var(--ink);
+}
+
+.pdsave__ico {
+    flex: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    MỤC GẬP TRONG CỘT PHẢI  (Chi tiết · Kích cỡ · Bảo hành)
 
    Mẫu vẽ chúng thành những dòng phân cách bằng một đường kẻ trên, chữ 9px

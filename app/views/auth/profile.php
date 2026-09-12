@@ -16,6 +16,7 @@
  *
  *     Hồ sơ cá nhân    (icon user)          — highlight khi đang ở trang này
  *     Đơn hàng         (icon shopping-bag)
+ *     Đã lưu           (icon bookmark)      — NGOÀI đặc tả, thêm 12/09/2026
  *     Lịch hẹn của tôi (icon calendar)      — NGOÀI đặc tả, xem bên dưới
  *     Đăng xuất        (icon sign-out)      — hỏi lại trước khi thoát
  *
@@ -110,9 +111,11 @@ $initial = utf8Substr($name, 0, 1);
             </form>
 
             <?php
-            /* Ba mục, dựng từ chính bảng SECTIONS của controller. Vòng lặp chứ
-               không ba khối vẽ tay: thêm/bớt một mục thì chỉ có một chỗ để sửa,
-               và thứ tự hiện ra luôn là thứ tự khai trong SECTIONS. */
+            /* Các mục dựng từ chính bảng SECTIONS của controller. Vòng lặp chứ
+               không mấy khối vẽ tay: thêm/bớt một mục thì chỉ có một chỗ để
+               sửa, và thứ tự hiện ra luôn là thứ tự khai trong SECTIONS.
+               (Mục "Đã lưu" thêm 12/09/2026 đúng bằng cách ấy: một dòng trong
+               SECTIONS, một case trong sectionData, một file view.) */
             foreach ($sections as $key => $label): ?>
                 <a class="acct-nav__item<?= $section === $key ? ' is-active' : '' ?>"
                    href="/tai-khoan?muc=<?= e($key) ?>"

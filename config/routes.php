@@ -104,6 +104,10 @@ return [
 
     'nhan-tin/dang-ky' => 'NewsletterController@submit', // đăng ký nhận tin (POST)
 
+    /* Dấu trang: MỘT đường cho cả bật lẫn tắt (POST). Danh sách đã lưu không
+       có đường riêng — nó là mục 'da-luu' của /tai-khoan. */
+    'yeu-thich'        => 'FavoriteController@toggle',   // POST
+
     // Giỏ hàng — lưu trong session, chưa chạm DB cho tới lúc đặt hàng.
     // Bốn đường dưới chỉ nhận POST (CartController tự chặn GET).
     // 'gio-hang/sua' nhận CẢ BỐN nút của một dòng (tick · − · + · thùng rác),

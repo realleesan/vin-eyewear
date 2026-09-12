@@ -289,12 +289,17 @@ foreach ($variants as $v) {
 
         </div>
 
-        <?php /* Dấu trang — trang trí thuần, chưa có chức năng yêu thích. Mang
-                 aria-hidden vì nó không phải nút: vẽ một icon mà trình đọc màn
-                 hình gọi là "hình ảnh" rồi không làm gì thì thà đừng đọc. */ ?>
-        <svg class="oa-card__flag" width="12" height="14" viewBox="0 0 12 14" fill="none"
-             stroke="currentColor" stroke-width="1.2" aria-hidden="true" focusable="false">
-            <path d="M1 1h10v12L6 9.5 1 13V1z"/>
-        </svg>
+        <?php
+        /* ĐÃ GỠ DẤU TRANG (icon cờ .oa-card__flag) — 12/09/2026, theo yêu cầu
+           chủ dự án. Nó là trang trí thuần: bảng `favorites` đã bị gỡ khỏi
+           CSDL từ 06/09 vì chưa từng có màn hình nào dùng, nên cái icon ấy
+           không lưu được gì. Một dấu trang bấm vào không có gì xảy ra là lời
+           hứa suông với khách.
+
+           Lớp .oa-card__flag cũng đã gỡ khỏi oa.css — thẻ này là chỗ duy
+           nhất dùng nó. Ngày nào dựng chức năng "yêu thích" thật (bảng +
+           model + controller + trạng thái đăng nhập) thì chỗ của nó là
+           TRANG CHI TIẾT, không phải thẻ trong lưới. */
+        ?>
     </div>
 </li>

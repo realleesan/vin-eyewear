@@ -551,6 +551,66 @@ $stars = static function (float $score): string {
             </form>
 
             <?php
+            /* ═════════════════════════════════════════════════════════════════
+               DẤU TRANG — lưu mặt hàng để xem lại (/tai-khoan?muc=da-luu)
+
+               NẰM NGOÀI form mua ở trên, và bắt buộc phải thế: hai <form> lồng
+               nhau là HTML không hợp lệ, trình duyệt vứt cái bên trong đi mà
+               không báo gì. Cùng lý do với khối "Thông báo khi có hàng" ngay
+               dưới đây.
+
+               ĐÂY LÀ NƠI DUY NHẤT CÓ DẤU TRANG. Thẻ sản phẩm trong lưới từng
+               có một icon cờ, nhưng nó không lưu được gì (bảng `favorites` khi
+               đó đã gỡ khỏi CSDL) — đã bỏ ngày 12/09/2026 cùng lúc chức năng
+               này dựng thật. Đừng đưa lại: một lưới bốn thẻ có bốn cái công
+               tắc nhỏ là bốn cú bấm nhầm chờ sẵn, còn ở đây khách đã dừng lại
+               trước đúng một mặt hàng.
+
+               MỘT NÚT, HAI TRẠNG THÁI. Cùng một form, cùng một đường: máy chủ
+               tự lật (FavoriteModel::batTat). aria-pressed nói cho trình đọc
+               màn hình biết đây là công tắc và nó đang bật hay tắt — thiếu nó
+               thì người dùng nghe "nút Đã lưu" mà không biết đó là trạng thái
+               hiện tại hay việc sắp xảy ra.
+
+               CHƯA ĐĂNG NHẬP thì vẫn in ra nút, chỉ đổi nhãn: bấm vào đi
+               /auth kèm đường quay lại, nên khách quay về đúng trang này. Giấu
+               hẳn thì không ai biết là có chức năng ấy.
+
+               $luuDuoc = false nghĩa là máy chủ chưa chạy migration
+               2026-09-12-yeu-thich-tro-lai. Lúc ấy KHÔNG in gì cả — một cái
+               công tắc bấm vào chỉ ra câu "đang tạm ngưng" thì thà đừng vẽ.
+               ═════════════════════════════════════════════════════════════════ */
+            ?>
+            <?php if (!empty($luuDuoc)): ?>
+                <form class="pdsave" method="post" action="/yeu-thich">
+                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                    <input type="hidden" name="slug" value="<?= e($product['slug']) ?>">
+                    <input type="hidden" name="back" value="<?= e(currentUrlWithout(['mua', 'buoc'])) ?>">
+
+                    <button type="submit" class="pdsave__btn<?= !empty($daLuu) ? ' is-on' : '' ?>"
+                            <?= empty($daDangNhap) ? '' : 'aria-pressed="' . (!empty($daLuu) ? 'true' : 'false') . '"' ?>>
+                        <?php /* Cờ ĐẶC khi đã lưu, cờ RỖNG khi chưa — khác nhau ở
+                                 mỗi `fill`. Hình dạng giữ nguyên để nút không
+                                 nhảy kích thước giữa hai trạng thái. */ ?>
+                        <svg class="pdsave__ico" width="14" height="16" viewBox="0 0 12 14"
+                             fill="<?= !empty($daLuu) ? 'currentColor' : 'none' ?>"
+                             stroke="currentColor" stroke-width="1.2"
+                             aria-hidden="true" focusable="false">
+                            <path d="M1 1h10v12L6 9.5 1 13V1z"/>
+                        </svg>
+
+                        <span><?php
+                            if (empty($daDangNhap)) {
+                                echo e(t('pd.save_login'));
+                            } else {
+                                echo e(!empty($daLuu) ? t('pd.saved') : t('pd.save'));
+                            }
+                        ?></span>
+                    </button>
+                </form>
+            <?php endif; ?>
+
+            <?php
             /* ─────────────────────────────────────────────────────────────────
                HAI MỤC GẬP DƯỚI NÚT MUA — <details> thật, không JS.
 

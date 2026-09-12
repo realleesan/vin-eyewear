@@ -1465,12 +1465,6 @@ textarea.oa-field {
     color: var(--ink-2);
 }
 
-/* Dấu trang góc phải — icon cờ 12×14 */
-.oa-card__flag {
-    flex: none;
-    color: var(--ink);
-}
-
 /* ┌─ HAI NÚT MUA — NỔI TRONG LÒNG ẢNH, HIỆN KHI RÊ CHUỘT ─────────────────
    │ (12/09/2026, theo yêu cầu chủ dự án) Trước đây hai nút nằm dưới chân
    │ thẻ và luôn hiện. Nay chúng tuyệt đối trong .oa-card__frame — khung cao

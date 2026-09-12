@@ -1741,6 +1741,7 @@ class AuthController extends BaseController
     private const SECTIONS = [
         'ho-so'    => 'Hồ sơ cá nhân',
         'don-hang' => 'Đơn hàng',
+        'da-luu'   => 'Đã lưu',
         'lich-hen' => 'Lịch hẹn của tôi',
     ];
 
@@ -1843,6 +1844,14 @@ class AuthController extends BaseController
         $counts = [
             'don-hang' => OrderModel::countActive($userId),
             'lich-hen' => BookingModel::countUpcoming($userId),
+            /* 'da-luu' đếm TỔNG chứ không đếm "việc còn phải theo dõi" như hai
+               mục kia, và đó không phải sơ sót: danh sách đã lưu không có
+               trạng thái nào để xong. Con số ở đây là kích thước của danh
+               sách, đúng nghĩa nhãn "Đã lưu" — nó giảm khi khách bỏ lưu.
+
+               Bảng chưa dựng thì dem() trả 0, và huy hiệu 0 không in ra (xem
+               vòng lặp mục trong auth/profile.php). */
+            'da-luu'   => FavoriteModel::dem($userId),
         ];
 
         /*
@@ -1949,6 +1958,18 @@ class AuthController extends BaseController
                     /* Chế độ của Khu vực 1: xem (mặc định) hay sửa. Xem khối
                        "XEM TRƯỚC, BẤM MỚI SỬA" ở đầu account/ho-so.php. */
                     'suaHoSo'      => isset($_GET['sua-ho-so']),
+                ];
+
+            case 'da-luu':
+                /* MỘT câu hỏi cho cả mục — danhSach() đã lọc mặt hàng bị ẩn và
+                   giải mã cột JSON, nên view dựng thẳng bằng
+                   _layout/product-card.php như mọi lưới khác của site. */
+                return [
+                    'saved'     => FavoriteModel::danhSach($userId),
+                    /* Bảng chưa dựng thì mục vẫn mở được và nói thẳng lý do,
+                       thay vì hiện một danh sách rỗng trông như "bạn chưa lưu
+                       gì" — hai chuyện khác hẳn nhau. */
+                    'luuDuoc'   => FavoriteModel::available(),
                 ];
 
             case 'don-hang':

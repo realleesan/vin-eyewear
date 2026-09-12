@@ -1293,6 +1293,122 @@ select.acct-field__input {
    MÀN HẸP
    ══════════════════════════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════════════════════════
+   MỤC "ĐÃ LƯU" — lưới mẫu khách đánh dấu   (12/09/2026)
+
+   KHÔNG dùng .oa-grid / .pgrid của lưới sản phẩm: hai lớp ấy khai lề ngang
+   --edge-grid (60px) cho một lưới chạy hết bề ngang trang, còn ở đây lưới
+   nằm trong cột nội dung của trang tài khoản, vốn đã có lề riêng.
+
+   auto-fill chứ không số cột cố định: cột nội dung này co theo bề ngang màn
+   và theo cả việc cột điều hướng bên trái còn hay mất ở màn hẹp, nên một con
+   số cứng sẽ đúng ở đúng một bề ngang. minmax(150px) cho ra 4 thẻ ở màn rộng,
+   2 thẻ trên điện thoại, không cần @media nào.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.acct-saved {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 24px 16px;
+    margin-top: 20px;
+    list-style: none;
+}
+
+.acct-saved__item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+/* Khung ảnh VUÔNG, khác khung 1/1,15 của thẻ sản phẩm ngoài trang bán hàng:
+   ở đây thẻ chỉ rộng ~150px, mỗi pixel chiều cao thừa là một hàng chữ bị đẩy
+   xuống dưới tầm mắt. `contain` giữ nguyên — vẫn phải thấy trọn cái gọng. */
+.acct-saved__shot {
+    position: relative;
+    display: block;
+    aspect-ratio: 1 / 1;
+    background: var(--bg);
+    overflow: hidden;
+}
+
+.acct-saved__shot > img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.acct-saved__noimg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
+    text-align: center;
+}
+
+.acct-saved__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.acct-saved__name {
+    color: var(--ink);
+    /* Tên dài cắt ở hai dòng: thẻ trong lưới phải cao bằng nhau thì hàng nút
+       "Bỏ lưu" bên dưới mới thẳng hàng. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.acct-saved__price {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.acct-saved__price s {
+    color: var(--ink-5);
+    font-size: var(--fs-micro);
+}
+
+.acct-saved__price b {
+    font-weight: 500;
+}
+
+.acct-saved__out {
+    color: var(--sale);
+    font-size: var(--fs-micro);
+}
+
+/* Nút phụ nhất của cả trang: chữ nhỏ, gạch chân, không viền. Một nút viền
+   đầy đủ dưới mỗi thẻ sẽ nặng hơn chính tên hàng nó đứng dưới. */
+.acct-saved__drop {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ink-3);
+    font-family: inherit;
+    font-size: var(--fs-micro);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    transition: color .18s ease;
+}
+
+.acct-saved__drop:hover {
+    color: var(--ink);
+}
+
 @media (max-width: 760px) {
     .acct-main {
         padding: 32px 0 0;

@@ -53,6 +53,13 @@ class ProductDetailController extends BaseController
             'reviewOk'   => flash('review_ok') !== null,
             // Danh sách chờ hàng chỉ mở cho khách đã đăng nhập — FR-SP-17.
             'daDangNhap' => $userId !== null,
+            /* Dấu trang. Chưa đăng nhập thì KHÔNG hỏi CSDL: câu trả lời đằng
+               nào cũng là "chưa lưu", và nút lúc ấy chỉ là lời mời đăng nhập.
+               Bảng chưa dựng (máy chưa chạy migration) thì daLuu() trả false
+               và view tự giấu nút — xem FavoriteModel::available(). */
+            'daLuu'      => $userId !== null
+                && FavoriteModel::daLuu($product['id'], $userId),
+            'luuDuoc'    => FavoriteModel::available(),
         ]);
     }
 
