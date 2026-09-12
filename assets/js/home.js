@@ -1069,6 +1069,10 @@
             prev.hidden = !cuonDuoc;
             next.hidden = !cuonDuoc;
 
+            /* Cho CSS biết dải có kéo được không: con trỏ bàn tay chỉ được
+               phép hiện khi kéo thật sự đi tới đâu đó. */
+            strip.classList.toggle('is-drag-ready', cuonDuoc);
+
             if (!cuonDuoc) return;
 
             prev.classList.toggle('is-off', strip.scrollLeft <= 2);
@@ -1090,5 +1094,95 @@
         window.addEventListener('resize', veLaiNut);
 
         veLaiNut();
+
+        /* ────────────────────────────────────────────────────────────────
+           BẤM GIỮ RỒI KÉO ĐỂ LƯỚT   (12/09/2026, theo yêu cầu chủ dự án)
+
+           CHỈ CHO CHUỘT. Màn cảm ứng đã vuốt được sẵn bằng cơ chế của hệ
+           điều hành — thứ có quán tính, có nảy ở hai đầu và chạy trên luồng
+           hợp thành. Chen mã JavaScript vào đó là đổi một cú vuốt mượt lấy
+           một cú vuốt giật. Nên `pointerType !== 'mouse'` thì thoát ngay,
+           và trackpad vẫn cuộn hai ngón như thường.
+
+           HAI THỨ PHẢI TẮT TRONG LÚC KÉO, cả hai đều nằm ở CSS lớp .is-drag:
+
+             scroll-behavior: smooth  -> auto
+                 Dải này khai `smooth` cho hai mũi tên chạy êm. Nhưng lúc
+                 kéo, mỗi lần gán scrollLeft lại khởi động một chuyển động
+                 êm mới, nên dải bò theo con trỏ chậm hơn hẳn tay — cảm giác
+                 "dính" rất khó chịu.
+             scroll-snap-type: x mandatory -> none
+                 Đang kéo mà điểm neo cứ hút về thẻ gần nhất thì dải giật
+                 từng nấc. Thả tay là luật quay lại và nó tự hút vào thẻ —
+                 đúng cái ta muốn, chỉ không muốn TRONG KHI kéo.
+
+           NUỐT CÚ CLICK SAU KHI KÉO. Trong thẻ có liên kết tên sản phẩm;
+           kéo qua nó rồi thả tay thì trình duyệt vẫn bắn một sự kiện click
+           và khách bị đá sang trang sản phẩm dù họ chỉ đang lướt. Cờ
+           `nuotClick` chặn đúng một cú click ngay sau một lần kéo THẬT
+           (di chuyển quá 4px) — dưới ngưỡng đó vẫn tính là bấm, để người
+           dùng bấm liên kết bình thường.
+           ──────────────────────────────────────────────────────────────── */
+
+        var keo = null;          // { x, left, xa } khi đang kéo, null khi không
+        var nuotClick = false;
+
+        strip.addEventListener('pointerdown', function (e) {
+            if (e.pointerType !== 'mouse' || e.button !== 0) return;
+
+            // Không có gì để cuộn (năm thẻ vừa khung) thì đừng bắt chuột.
+            if (strip.scrollWidth - strip.clientWidth <= 2) return;
+
+            /* XOÁ CỜ NUỐT CLICK Ở ĐÂY, và dòng này KHÔNG thừa. Cờ được bật
+               lúc thả tay và chỉ được xoá bởi cú click ngay sau đó — nhưng
+               có một đường thoát không đi qua click: kéo dải rồi đưa con trỏ
+               RA NGOÀI dải mới thả tay. Khi ấy không cú click nào bắn vào
+               dải, cờ nằm lại `true`, và lần sau khách bấm một liên kết
+               trong thẻ thì cú bấm thật bị nuốt oan — phải bấm hai lần.
+
+               Đặt ở pointerdown là đúng thứ tự: nó chạy trước pointerup của
+               chính lần kéo này, nên không xoá nhầm cờ vừa bật. */
+            nuotClick = false;
+
+            keo = { x: e.clientX, left: strip.scrollLeft, xa: 0 };
+            strip.classList.add('is-drag');
+        });
+
+        /* Nghe trên window chứ không trên dải: người ta kéo nhanh thì con
+           trỏ ra khỏi dải giữa chừng, và lúc ấy dải phải đi tiếp theo tay
+           chứ không đứng lại. */
+        window.addEventListener('pointermove', function (e) {
+            if (!keo) return;
+
+            var dx = e.clientX - keo.x;
+
+            keo.xa = Math.max(keo.xa, Math.abs(dx));
+            strip.scrollLeft = keo.left - dx;
+
+            /* Chặn hành vi mặc định: kéo chuột qua chữ là bôi đen, kéo qua
+               ảnh là kéo-thả ảnh. Cả hai đều cắt ngang cú lướt. */
+            e.preventDefault();
+        });
+
+        function thaTay() {
+            if (!keo) return;
+
+            nuotClick = keo.xa > 4;
+            keo = null;
+            strip.classList.remove('is-drag');
+        }
+
+        window.addEventListener('pointerup', thaTay);
+        window.addEventListener('pointercancel', thaTay);
+
+        /* Pha BẮT (capture) — phải chặn trước khi cú click tới được thẻ <a>
+           bên trong, chứ không phải sau. */
+        strip.addEventListener('click', function (e) {
+            if (!nuotClick) return;
+
+            nuotClick = false;
+            e.preventDefault();
+            e.stopPropagation();
+        }, true);
     })();
 })();

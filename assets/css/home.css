@@ -290,6 +290,40 @@ html:not(.js) .vhero__bars {
     display: none;
 }
 
+/* ┌─ BẤM GIỮ RỒI KÉO ─────────────────────────────────────────────────────
+   │ Ba luật dưới đây là phần CSS của cú kéo; phần còn lại ở khối 6 trong
+   │ assets/js/home.js, đọc kèm.
+   │
+   │ .is-drag-ready — JS bật khi dải THẬT SỰ còn chỗ để cuộn. Con trỏ bàn
+   │   tay ở một dải đã lấp đầy là lời mời hão: bấm giữ kéo mà không có gì
+   │   nhúc nhích.
+   │
+   │ .is-drag — bật trong lúc tay đang giữ. Nó TẮT hai luật cuộn của chính
+   │   dải này, và cả hai đều phải tắt:
+   │     scroll-behavior: auto     mỗi lần gán scrollLeft mà còn `smooth`
+   │                               là một chuyển động êm mới -> dải bò theo
+   │                               tay, cảm giác dính
+   │     scroll-snap-type: none    điểm neo cứ hút về thẻ gần nhất thì kéo
+   │                               ra giật từng nấc
+   │   Thả tay là lớp này rơi ra, hai luật trở lại, và dải tự hút vào thẻ
+   │   gần nhất — đúng cái snap ta muốn, chỉ không muốn TRONG KHI kéo.
+   │
+   │ Chỉ trong @media (hover: hover): màn cảm ứng không có con trỏ để đổi
+   │ hình, mà vuốt thì đã chạy sẵn bằng cơ chế của hệ điều hành.
+   └──────────────────────────────────────────────────────────────────────── */
+@media (hover: hover) and (pointer: fine) {
+    .hrev__strip.is-drag-ready {
+        cursor: grab;
+    }
+
+    .hrev__strip.is-drag {
+        cursor: grabbing;
+        scroll-behavior: auto;
+        scroll-snap-type: none;
+        user-select: none;
+    }
+}
+
 /* Viền tiêu điểm cho người dùng bàn phím: dải mang tabindex="0" nên nó
    nhận được tiêu điểm, và một vùng cuộn nhận tiêu điểm mà không hiện gì là
    một cái bẫy. */
