@@ -68,7 +68,8 @@
     pointer-events: auto;
 
     opacity: 0;
-    transition: opacity .45s cubic-bezier(.4, 0, .2, 1);
+    /* 280ms, không phải 450ms. Xem khối chú thích ở .authov__panel. */
+    transition: opacity .28s cubic-bezier(.4, 0, .2, 1);
 }
 
 .authov.is-open .authov__backdrop {
@@ -105,7 +106,17 @@
     pointer-events: auto;
 
     transform: translateX(100%);
-    transition: transform .45s cubic-bezier(.4, 0, .2, 1);
+    /* ┌─ 280ms — RÚT TỪ 450ms (12/09/2026) ───────────────────────────────
+       │ 450ms là quãng của một hoạt cảnh ĐỂ NGẮM. Tấm này không phải để
+       │ ngắm: khách bấm nó vì muốn gõ mật khẩu, và chừng nào nó còn trượt
+       │ thì chừng ấy họ chưa gõ được. Cộng thêm một vòng gọi mạng nữa (nay
+       │ đã gỡ — xem AuthController::hatGiongNganKeo) thì nửa giây đầu tiên
+       │ chỉ toàn chờ.
+       │
+       │ 280ms vẫn đủ dài để mắt bám được hướng tấm đi vào — dưới ~200ms thì
+       │ nó đọc như "hiện ra tại chỗ" và người ta mất manh mối tấm từ đâu
+       │ tới, tức là mất luôn cảm giác bấm ✕ sẽ trả nó về đâu. */
+    transition: transform .28s cubic-bezier(.4, 0, .2, 1);
 
     /* Nói trước cho trình duyệt biết thuộc tính nào sẽ đổi để nó tách lớp
        hợp thành riêng. Chỉ đặt ở đây — tấm sống ngắn (gắn khi mở, gỡ khi

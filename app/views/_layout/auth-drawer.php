@@ -92,8 +92,27 @@
             <?php /* CHỈ KHỐI NÀY CUỘN, không phải cả tấm — nhờ vậy thanh đầu
                      tấm và nút ✕ đứng yên khi nội dung dài. */ ?>
             <div class="authov__scroll">
-                <div class="authov__body" data-auth-body aria-live="polite" aria-busy="true">
-                    <p class="authov__wait"><?= e(t('ui.loading')) ?></p>
+                <?php
+                /* ┌─ MÀN MỘT IN SẴN, KHÔNG PHẢI "Đang tải…" ──────────────────
+                   │ Trước đây chỗ này là một dòng chờ, và mỗi lần mở tấm là
+                   │ một vòng gọi mạng mới: tấm trượt vào, đứng trống, rồi chữ
+                   │ mới nhảy ra. Nay máy chủ in luôn màn một vào khuôn — mở là
+                   │ thấy form, không gọi mạng lần nào.
+                   │
+                   │ Lý do đầy đủ (nhất là chuyện token CSRF không bị cũ) nằm ở
+                   │ AuthController::hatGiongNganKeo().
+                   │
+                   │ data-auth-seeded là cờ cho assets/js/auth-drawer.js biết
+                   │ ruột đã có sẵn nên không phải nạp gì. Thiếu cờ — hoặc in
+                   │ hỏng, không ra nổi cái form nào — thì bên đó tự lùi về
+                   │ cách cũ: gọi /auth rồi đổ vào. Một lối lùi, không phải một
+                   │ trang trắng.
+                   │
+                   │ aria-busy="false" ngay từ đầu: không có gì đang chờ cả. */
+                ?>
+                <div class="authov__body" data-auth-body data-auth-seeded
+                     aria-live="polite" aria-busy="false">
+                    <?php partial('auth/index', AuthController::hatGiongNganKeo()); ?>
                 </div>
             </div>
         </div>

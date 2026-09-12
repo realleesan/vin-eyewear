@@ -55,7 +55,6 @@
     var panel = null;      // .authov__panel
     var moBoi = null;      // phần tử đã bấm để mở — trả tiêu điểm về đúng nó
     var hetGio = null;     // lưới an toàn cho transitionend
-    var daNap = false;
     var dangNap = false;
 
     /* ──────────────────────────────────────────────────────────────────
@@ -154,6 +153,34 @@
     };
 
     /* ──────────────────────────────────────────────────────────────────
+       GẮN RUỘT — dùng chung cho ruột IN SẴN và mảnh vừa nạp về
+
+       Hai đường vào tấm phải làm y hệt nhau, nếu không thì một trong hai
+       thiếu mất nút con mắt hoặc thiếu tên màn trên thanh — đúng loại lệch
+       chỉ lộ ra ở một đường mà không lộ ở đường kia.
+       ────────────────────────────────────────────────────────────────── */
+    var ganRuot = function () {
+        if (!than) return;
+
+        datTenMan();
+
+        /* Phần tăng cường của auth.js: nút con mắt, sáu ô mã tự nhảy, đồng hồ
+           "Gửi lại mã". Không gọi thì trong tấm nút con mắt mang `hidden` mãi
+           mãi và sáu ô mã phải bấm Tab từng ô — xem khối "BA KHỐI DƯỚI ĐÂY
+           NHẬN MỘT GỐC" trong assets/js/auth.js. */
+        if (window.AuthUI && window.AuthUI.gan) window.AuthUI.gan(than);
+
+        /* Con trỏ vào ô đầu tiên — người mở ngăn kéo là để gõ.
+
+           preventScroll BẮT BUỘC: lúc này tấm đang ở giữa quãng trượt
+           (translateX), và focus() mặc định sẽ kéo phần tử vào tầm nhìn —
+           trình duyệt cuộn cả trang nền để "tìm" một ô đang nằm ngoài màn.
+           Kết quả là trang phía sau giật một cái ngay khi tấm mở ra. */
+        var o = than.querySelector('input:not([type=hidden]):not([readonly])');
+        if (o) o.focus({ preventScroll: true });
+    };
+
+    /* ──────────────────────────────────────────────────────────────────
        NẠP MỘT ĐỊA CHỈ VÀO TẤM
 
        `X-Auth: 1` bảo máy chủ in nguyên view, không in khung — cùng hợp
@@ -191,18 +218,90 @@
             : '';
     };
 
+    /* ──────────────────────────────────────────────────────────────────
+       XIN TRƯỚC MẢNH CỦA MỘT LIÊN KẾT — chỉ cho GET
+
+       Ba liên kết trong tấm ("Đăng ký", "Đổi", "Sửa lại thông tin") là GET
+       thuần: chúng không đổi gì ở máy chủ, chỉ xin một màn khác. Nên rê chuột
+       tới là xin luôn, chưa cần bấm — quãng từ lúc con trỏ chạm liên kết tới
+       lúc ngón tay bấm xuống thường đủ cho cả vòng gọi.
+
+       KHO CHỈ GIỮ MỘT MỤC, và cố ý:
+
+         · Giữ nhiều mục thì phải quyết cái nào cũ, cái nào còn dùng được —
+           mà mỗi mảnh đều mang token CSRF và trạng thái OTP có hạn.
+         · Người ta rê qua các liên kết lần lượt, nên mục cần tới gần như
+           luôn là mục vừa xin.
+
+       HẠN 15 GIÂY: quá đó thì bỏ và xin lại. Một mảnh nằm chờ lâu hơn thế là
+       một mảnh có thể đã lệch với phiên (mã OTP hết hạn, chốt 60 giây đã
+       chạy xong), và một màn hiện ra với con số sai còn tệ hơn chờ thêm
+       200ms.
+
+       ⚠ ĐỪNG mở nó cho POST. Một cú POST "xin trước" là một lần GỬI THẬT:
+       rê chuột qua nút "Đăng nhập" sẽ thành một lượt thử mật khẩu.
+       ────────────────────────────────────────────────────────────────── */
+    var HAN_XIN_TRUOC = 15000;
+    var xinTruoc = null;   // { url, luc, hua }
+
+    var boXinTruoc = function () {
+        xinTruoc = null;
+    };
+
+    var xinSom = function (url) {
+        if (dangNap || (xinTruoc && xinTruoc.url === url && Date.now() - xinTruoc.luc < HAN_XIN_TRUOC)) {
+            return;
+        }
+
+        /* .catch ở đây để một lần xin trước hỏng KHÔNG thành "unhandled
+           rejection" trên console. Lỗi thật vẫn được xử đúng chỗ: goiMang()
+           sẽ gọi lại vì mục hỏng không bao giờ vào kho. */
+        var hua = goiMang(url, { method: 'GET' }).catch(function () {
+            if (xinTruoc && xinTruoc.url === url) boXinTruoc();
+            return null;
+        });
+
+        xinTruoc = { url: url, luc: Date.now(), hua: hua };
+    };
+
+    /* Cú gọi mạng trần — tách khỏi nap() để xinSom() dùng lại được y hệt một
+       cú gọi thật, kể cả header X-Auth và cookie phiên. */
+    var goiMang = function (url, tuyChon) {
+        var caiDat = tuyChon || {};
+        caiDat.credentials = 'same-origin';
+        caiDat.headers = caiDat.headers || {};
+        caiDat.headers['X-Auth'] = '1';
+
+        return window.fetch(url, caiDat).then(function (res) {
+            return res.text().then(function (html) {
+                return { url: res.url, html: html };
+            });
+        });
+    };
+
     var nap = function (url, tuyChon) {
         if (dangNap || !than) return;
 
         dangNap = true;
         than.setAttribute('aria-busy', 'true');
 
-        var caiDat = tuyChon || {};
-        caiDat.credentials = 'same-origin';
-        caiDat.headers = caiDat.headers || {};
-        caiDat.headers['X-Auth'] = '1';
+        /* Đã xin trước đúng địa chỉ này và còn hạn thì dùng luôn — thường là
+           cả vòng gọi đã xong từ lúc con trỏ chạm vào liên kết. */
+        var coSan = (!tuyChon || (tuyChon.method || 'GET').toUpperCase() === 'GET')
+            && xinTruoc && xinTruoc.url === url
+            && Date.now() - xinTruoc.luc < HAN_XIN_TRUOC
+            ? xinTruoc.hua : null;
 
-        return window.fetch(url, caiDat)
+        /* Dùng một lần rồi bỏ: giữ lại là lần sau đổ ra một mảnh đã cũ. */
+        boXinTruoc();
+
+        return (coSan || goiMang(url, tuyChon))
+            .then(function (res) {
+                /* Mảnh xin trước bị hỏng thì .catch của xinSom() đã đổi nó
+                   thành null — gọi lại một cách tử tế thay vì đổ trang trắng. */
+                if (res === null) return goiMang(url, tuyChon);
+                return res;
+            })
             .then(function (res) {
                 /* ĐÃ BỊ CHUYỂN HƯỚNG RA KHỎI luồng = ĐĂNG NHẬP XONG.
 
@@ -218,29 +317,14 @@
 
                 if (DUONG_TRONG_TAM.indexOf(dich.pathname) === -1) {
                     window.location.assign(res.url);
-                    return null;
+                    return;
                 }
 
-                return res.text();
-            })
-            .then(function (html) {
-                if (html === null || !than) return;
+                if (!than) return;
 
-                than.innerHTML = html;
-                daNap = true;
+                than.innerHTML = res.html;
 
-                datTenMan();
-
-                /* Gắn lại phần tăng cường của auth.js cho mảnh vừa về: nút con
-                   mắt, sáu ô mã tự nhảy, đồng hồ "Gửi lại mã". Không gọi thì
-                   trong tấm nút con mắt mang `hidden` mãi mãi và sáu ô mã phải
-                   bấm Tab từng ô — xem khối "BA KHỐI DƯỚI ĐÂY NHẬN MỘT GỐC"
-                   trong assets/js/auth.js. */
-                if (window.AuthUI && window.AuthUI.gan) window.AuthUI.gan(than);
-
-                /* Con trỏ vào ô đầu tiên — người mở ngăn kéo là để gõ. */
-                var o = than.querySelector('input:not([type=hidden]):not([readonly])');
-                if (o) o.focus();
+                ganRuot();
             })
             .catch(function () {
                 /* Mạng hỏng — KHÔNG nuốt lỗi rồi để tấm trống. Đưa khách sang
@@ -295,26 +379,23 @@
 
         document.addEventListener('keydown', onKeydown, true);
 
-        /* Nạp LẠI mỗi lần mở, trừ khi có chữ đang gõ dở: token CSRF và các
-           bước OTP đều có hạn, một tấm mở ra sau nửa tiếng với nội dung cũ
-           là một form gửi đi sẽ hỏng. */
-        if (!daNap || !coChuDangGo()) nap('/auth');
-    };
-
-    var coChuDangGo = function () {
-        if (!than) return false;
-
-        var os = than.querySelectorAll('input:not([type=hidden]), textarea');
-
-        for (var i = 0; i < os.length; i++) {
-            if (os[i].type === 'checkbox' || os[i].type === 'radio') {
-                if (os[i].checked !== os[i].defaultChecked) return true;
-            } else if (os[i].value !== '') {
-                return true;
-            }
+        /* ┌─ KHÔNG GỌI MẠNG LÚC MỞ ───────────────────────────────────────
+           │ Ruột màn một do MÁY CHỦ in sẵn vào khuôn (xem
+           │ AuthController::hatGiongNganKeo), nên tới đây đã có đủ form để
+           │ dùng. Bản trước gọi /auth ở đúng chỗ này, và đó là toàn bộ chỗ
+           │ khách thấy chậm: tấm trượt vào rồi đứng trống chờ một vòng máy
+           │ chủ, mỗi lần mở.
+           │
+           │ Lối lùi vẫn còn: khuôn không có cờ `data-auth-seeded`, hoặc có cờ
+           │ mà không in ra nổi cái form nào, thì gọi /auth như cũ. Kiểm cả
+           │ HAI vì chúng hỏng theo hai kiểu khác nhau — quên in cờ, và in cờ
+           │ nhưng view ném lỗi giữa chừng. */
+        if (!than.hasAttribute('data-auth-seeded') || !than.querySelector('form')) {
+            nap('/auth');
+            return;
         }
 
-        return false;
+        ganRuot();
     };
 
     /* ──────────────────────────────────────────────────────────────────
@@ -337,7 +418,7 @@
 
         lop = than = panel = null;
         trangThai = 'closed';
-        daNap = false;
+        boXinTruoc();
 
         document.removeEventListener('keydown', onKeydown, true);
         moKhoaCuon();
@@ -372,10 +453,10 @@
            người dùng đổi tab (trình duyệt dừng hoạt ảnh), hoặc hệ điều hành
            đặt "giảm chuyển động" khiến thời lượng về ~0 ở một số bản. Không
            có nhánh này thì node kẹt lại trong DOM và khoá cuộn không bao giờ
-           được trả — trang đứng chết, không cuộn được nữa. 600ms > 450ms của
+           được trả — trang đứng chết, không cuộn được nữa. 450ms > 280ms của
            hiệu ứng dài nhất. */
         huyHetGio();
-        hetGio = window.setTimeout(goHan, 600);
+        hetGio = window.setTimeout(goHan, 450);
     };
 
     /* ──────────────────────────────────────────────────────────────────
@@ -442,6 +523,32 @@
         e.preventDefault();
         nap(dich.pathname + dich.search);
     });
+
+    /* ──────────────────────────────────────────────────────────────────
+       RÊ TỚI LÀ XIN TRƯỚC
+
+       pointerover chứ không mouseover: một handler lo cả chuột, bút và chạm.
+       Trên điện thoại, pointerover bắn ngay khi ngón tay CHẠM XUỐNG — sớm hơn
+       cú click chừng một phần mười giây, vẫn là một phần mười giây thật.
+
+       focusin đi kèm để người dùng bàn phím cũng được phần ấy: Tab tới liên
+       kết là xin, Enter là đã có.
+       ────────────────────────────────────────────────────────────────── */
+    var ngamXin = function (e) {
+        if (trangThai !== 'open' || !than) return;
+
+        var a = e.target instanceof Element ? e.target.closest('a[href]') : null;
+        if (!a || !than.contains(a)) return;
+
+        var dich = new URL(a.href, window.location.href);
+        if (dich.origin !== window.location.origin) return;
+        if (DUONG_TRONG_TAM.indexOf(dich.pathname) === -1) return;
+
+        xinSom(dich.pathname + dich.search);
+    };
+
+    document.addEventListener('pointerover', ngamXin);
+    document.addEventListener('focusin', ngamXin);
 
     document.addEventListener('submit', function (e) {
         if (trangThai !== 'open' || !than) return;

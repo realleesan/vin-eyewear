@@ -419,7 +419,18 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
        │
        │ Chỉ in khi CHƯA đăng nhập: đã vào được rồi thì icon tài khoản là
        │ liên kết trơn tới /tai-khoan, không có gì để mở. */
-    if (!AuthMiddleware::check()) {
+    /* ┌─ VÀ CHỈ Ở KHUNG ĐẦY ĐỦ ───────────────────────────────────────────
+       │ Thẻ mở ngăn kéo ([data-authov-open]) nằm trong _layout/header-auth.php,
+       │ mà file đó chỉ được thanh đầu trang ĐẦY ĐỦ gọi. Khung rút gọn dùng
+       │ _layout/auth-header.php — không có icon tài khoản, nên không có gì mở
+       │ được cái tấm ấy.
+       │
+       │ Trước 12/09/2026 khuôn vẫn in ra ở cả hai khung. Vô hại khi ruột khuôn
+       │ chỉ là dòng "Đang tải…", nhưng nay ruột là CẢ MÀN MỘT in sẵn: ở trang
+       │ /auth (vốn chạy khung rút gọn) thì đúng một view bị dựng HAI LẦN trong
+       │ một lượt tải, và mọi trang rút gọn khác cõng thêm mấy KB không ai
+       │ dùng tới. */
+    if (!$bare && !AuthMiddleware::check()) {
         partial('_layout/auth-drawer');
     }
     ?>

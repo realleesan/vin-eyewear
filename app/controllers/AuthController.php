@@ -155,6 +155,53 @@ class AuthController extends BaseController
     }
 
     /**
+     * Dữ liệu để _layout/auth-drawer.php in SẴN màn một vào khuôn ngăn kéo.
+     *
+     * ═════════════════════════════════════════════════════════════════════
+     * VÌ SAO IN SẴN — VÀ VÌ SAO NÓ AN TOÀN
+     *
+     * Trước đây khuôn ngăn kéo chỉ chứa dòng "Đang tải…", và mỗi lần khách bấm
+     * icon tài khoản là một vòng gọi mạng /auth mới bắt đầu: tấm trượt vào,
+     * đứng trống, rồi chữ mới nhảy ra. Tức là độ trễ khách thấy được = thời
+     * gian trượt CỘNG một vòng máy chủ, mỗi lần mở.
+     *
+     * Màn một không phụ thuộc gì vào lượt bấm ấy — nó giống hệt nhau ở mọi
+     * trang, mọi thời điểm. Nên máy chủ in luôn nó vào khuôn khi dựng trang:
+     * mở tấm là thấy form ngay, không gọi mạng lần nào.
+     *
+     * TOKEN CSRF KHÔNG BỊ CŨ. csrfToken() trả về một chuỗi CỦA PHIÊN, sinh một
+     * lần rồi giữ nguyên cho tới khi phiên chết (xem core/helpers.php) — nó
+     * không xoay theo từng request. Token in sẵn ở đây vì thế "cũ" đúng bằng
+     * token của mọi form khác đang nằm trên cùng trang đó; phiên hết hạn thì
+     * cả trang cùng hết hạn, và câu báo đã có sẵn.
+     *
+     * ⚠ Hàm này KHÔNG ĐƯỢC đọc flash. flash() là đọc-rồi-xoá: gọi nó ở đây là
+     * ngăn kéo ăn mất câu báo mà trang thật sắp hiện. Ba ô $error/$success/
+     * $staffGate vì thế luôn rỗng — câu báo của một lượt gửi form trong tấm đi
+     * theo mảnh nạp về sau đó, không đi qua đường này.
+     * ═════════════════════════════════════════════════════════════════════
+     */
+    public static function hatGiongNganKeo(): array
+    {
+        return [
+            /* Luôn là màn một. Phiên có thể đang giữ dở một định danh hay một
+               hồ sơ chờ, nhưng những trạng thái ấy chỉ sinh ra NGAY SAU một
+               lượt gửi form — mà lượt ấy xảy ra bên trong tấm, nơi mảnh trả về
+               đã thay chỗ cho hạt giống này rồi. */
+            'buoc'        => 'dinh-danh',
+            'dinhDanh'    => '',
+            'old'         => [],
+            'errors'      => [],
+            'signup'      => [],
+            'redirect'    => '',
+            'redirectRaw' => '',
+            'error'       => null,
+            'success'     => null,
+            'staffGate'   => false,
+        ];
+    }
+
+    /**
      * Định danh khách đang chờ ở màn mật khẩu — chuỗi rỗng nghĩa là chưa có.
      *
      * Cất trong PHIÊN chứ không phải trên địa chỉ: số điện thoại và email là
