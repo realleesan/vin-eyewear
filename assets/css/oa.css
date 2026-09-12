@@ -1525,9 +1525,28 @@ textarea.oa-field {
     color: inherit;
 }
 
-.oa-header__mark:hover {
+/* ┌─ THANH ĐẦU TRANG ĐỨNG YÊN DƯỚI CON TRỎ — CẢ WORDMARK LẪN BA ICON ─────
+   │ Cùng luật đã áp cho hàng nav bên trên và cho liên kết bảng xổ (xem
+   │ components/mega-menu.css): không chữ nào, icon nào đổi màu hay đổi độ
+   │ mờ khi rê chuột. Bản trước wordmark mờ xuống .75.
+   │
+   │ LUẬT NÀY PHẢI CÓ MẶT, không thể chỉ xoá khối :hover cũ. Lý do là
+   │ `a:hover { color: var(--ink-3) }` ở đầu file: wordmark và HAI trong ba
+   │ icon (tài khoản, giỏ) là thẻ <a>, nên xoá xong chúng vẫn ngả xám — chỉ
+   │ đổi từ "mờ đi" sang "xám đi". Riêng icon kính lúp là <button> nên vốn
+   │ đã không dính; gộp cả ba vào một bộ chọn để đừng ai phải nhớ thẻ nào là
+   │ thẻ gì khi sửa markup sau này.
+   │
+   │ `.oa-header__btn:hover` là (0,2,0), thắng thẳng `a:hover` (0,1,1) —
+   │ không phụ thuộc thứ tự khai trong file.
+   │
+   │ :focus-visible ở cuối file KHÔNG bị đụng tới: bàn phím vẫn thấy được
+   │ mình đang đứng ở đâu, và đó là thứ duy nhất còn lại làm việc ấy.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-header__mark:hover,
+.oa-header__btn:hover {
     color: inherit;
-    opacity: .75;
+    opacity: 1;
 }
 
 .oa-header__actions {
