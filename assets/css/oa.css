@@ -2382,9 +2382,14 @@ textarea.oa-field {
    │ `:focus-within` trên THẺ BỌC, không phải `:focus` trên input — gạch
    │ chân thuộc về thẻ bọc, còn tiêu điểm thì rơi vào input bên trong.
    │
-   │ Đây là ngoại lệ DUY NHẤT của luật "không `outline: none` ở bất kỳ đâu"
-   │ ghi ở khối cuối file, và nó chỉ là ngoại lệ vì có thứ thay thế đứng
-   │ ngay cạnh. Đừng chép lối này sang ô nhập khác mà không dựng dấu thay.
+   │ Từ 12/09/2026 luật chung ở cuối file đã tự tắt vòng tiêu điểm cho MỌI ô
+   │ nhập chữ, nên dòng `outline: none` dưới đây chỉ còn là thừa chứ không
+   │ còn là ngoại lệ. Giữ lại vì nó nói rõ ý định tại chỗ: ô này cố tình
+   │ không có dấu riêng, dấu nằm ở thẻ bọc ngay trên.
+   │
+   │ ⚠ Đừng chép lối "ô không có dấu" này sang ô nhập khác mà không dựng dấu
+   │ thay ở thẻ bọc — xem .srch__form:focus-within trong assets/css/search.css,
+   │ nơi đúng cái bẫy ấy đã sập một lần.
    └──────────────────────────────────────────────────────────────────────── */
 .oa-searchbar:focus-within {
     border-bottom-color: var(--ink);
@@ -3150,8 +3155,9 @@ textarea.oa-field {
 
 /* ┌─ BÙ LẠI CHO VIỆC BỎ GẠCH CHÂN ───────────────────────────────────────
    │ Mẫu bỏ gạch chân liên kết, nên dấu hiệu tiêu điểm phải rõ hơn mức
-   │ thường. Viền 2px màu --ink cách 2px, trên MỌI thứ bấm được — không
-   │ dùng `outline:none` ở bất kỳ đâu trong file này.
+   │ thường. Viền 2px màu --ink cách 2px, trên MỌI thứ bấm được.
+   │
+   │ Ô NHẬP CHỮ LÀ NGOẠI LỆ — xem khối ngay dưới.
    └──────────────────────────────────────────────────────────────────────*/
 a:focus-visible,
 button:focus-visible,
@@ -3163,6 +3169,62 @@ summary:focus-visible,
     outline: 2px solid var(--ink);
     outline-offset: 2px;
     border-radius: 2px;
+}
+
+/* ┌─ Ô NHẬP CHỮ: KHÔNG VẼ VÒNG TIÊU ĐIỂM ─────────────────────────────────
+   │ (12/09/2026, theo yêu cầu chủ dự án)
+   │
+   │ VÌ SAO RIÊNG Ô CHỮ. `:focus-visible` vốn sinh ra để vòng tiêu điểm chỉ
+   │ hiện với người dùng BÀN PHÍM, không hiện khi bấm chuột. Nhưng đặc tả có
+   │ một ngoại lệ: với ô nhập CHỮ, trình duyệt luôn coi là "visible" dù tiêu
+   │ điểm tới bằng đường nào — vì một ô chữ thì kiểu gì cũng sắp gõ phím.
+   │
+   │ Hệ quả: mọi lần bấm chuột vào một ô nhập, khách nhận HAI dấu hiệu chồng
+   │ nhau — viền ô tự đậm lên (luật riêng của từng ô, xem danh sách dưới) và
+   │ thêm một khung 2px bo góc nằm ngoài. Cái khung ngoài ấy không nói thêm
+   │ gì mà bản thiết kế cũng không có.
+   │
+   │ ⚠ ĐÂY KHÔNG PHẢI "BỎ DẤU TIÊU ĐIỂM". Dấu vẫn còn, chỉ là dấu KIA:
+   │ `border-color: var(--ink)` ở dòng cuối khối này bảo đảm mọi ô chữ CÓ
+   │ VIỀN đều đổi viền sang đen khi nhận tiêu điểm, kể cả những ô không có
+   │ luật `:focus` riêng (.catpick__select, .pfacet__input). Người dùng bàn
+   │ phím Tab qua form vẫn luôn thấy mình đang ở ô nào. Bỏ nốt dòng ấy là vi
+   │ phạm WCAG 2.4.7.
+   │
+   │ ⚠ Ô KHÔNG CÓ VIỀN thì `border-color` không vẽ ra gì — chúng phải tự lo
+   │ lấy dấu, và đã rà đủ sáu ô như thế trên site:
+   │     .cfield__input · .oa-field          có border-bottom, đổi màu được
+   │     .oa-searchbar input                 dấu ở thẻ bọc :focus-within
+   │     .srch__input                        dấu ở .srch__form:focus-within
+   │     .oa-input--flat · .policy-search__input
+   │                                         tự khai :focus box-shadow 1px
+   │ Thêm một ô `border: 0` nữa mà quên dựng dấu là Tab tới đó con trỏ biến
+   │ mất — đúng lỗi .srch__input đã mắc trước 12/09/2026.
+   │
+   │ (Khu quản trị KHÔNG đi qua khối này: nó nạp layout.css chứ không nạp
+   │ oa.css, nên .amono và các ô admin khác nằm ngoài phạm vi.)
+   │
+   │ NÚT, LIÊN KẾT, Ô TICK, Ô CHỌN TRÒN VẪN GIỮ VÒNG 2px của luật trên —
+   │ chúng không có dấu nào khác để thay, và bấm chuột vào chúng thì
+   │ `:focus-visible` vốn đã không khớp nên không ai thấy vòng đó cả.
+   └──────────────────────────────────────────────────────────────────────*/
+input:not([type]):focus-visible,
+input[type="text"]:focus-visible,
+input[type="search"]:focus-visible,
+input[type="email"]:focus-visible,
+input[type="tel"]:focus-visible,
+input[type="url"]:focus-visible,
+input[type="password"]:focus-visible,
+input[type="number"]:focus-visible,
+input[type="date"]:focus-visible,
+input[type="time"]:focus-visible,
+input[type="datetime-local"]:focus-visible,
+input[type="month"]:focus-visible,
+input[type="week"]:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: none;
+    border-color: var(--ink);
 }
 
 .oa-header--over:not(.is-past-hero) a:focus-visible,

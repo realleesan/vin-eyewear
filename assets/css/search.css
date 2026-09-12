@@ -58,6 +58,20 @@
     color: var(--ink-5);
 }
 
+/* ┌─ TIÊU ĐIỂM CỦA Ô TÌM KIẾM NẰM Ở THẺ BỌC ──────────────────────────────
+   │ .srch__input không có viền nào (`border: 0`), nên luật chung "ô chữ đổi
+   │ viền sang đen khi nhận tiêu điểm" (cuối assets/css/oa.css) không với
+   │ tới nó — mà chính nó lại tự khai `outline: none` từ trước. Nghĩa là
+   │ trước 12/09/2026 ô tìm kiếm KHÔNG có dấu tiêu điểm nào cả: Tab tới đây
+   │ là con trỏ biến mất.
+   │
+   │ Gạch chân thuộc về thẻ BỌC (.srch__form) chứ không phải ô, nên dấu phải
+   │ vẽ bằng :focus-within — cùng lối mà .oa-searchbar ở đầu trang đã dùng. */
+.srch__form:focus-within {
+    border-bottom-color: var(--ink);
+    box-shadow: 0 1px 0 var(--ink);
+}
+
 .srch__go {
     flex: none;
     height: var(--h-chip);
