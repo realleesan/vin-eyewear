@@ -162,6 +162,76 @@ foreach ($variants as $v) {
                 <?php endif; ?>
             </div>
 
+            <?php
+            /* ┌─ HAI NÚT MUA — NỔI TRÊN ẢNH, HIỆN KHI RÊ CHUỘT ───────────
+               │ Nằm TRONG .oa-card__frame chứ không dưới chân thẻ nữa
+               │ (12/09/2026, theo yêu cầu chủ dự án): khung này cao đúng
+               │ bằng tấm ảnh, nên hai nút luôn nổi trong lòng ảnh, không
+               │ bao giờ trôi xuống dải trắng dưới ảnh.
+               │
+               │ NGOÀI <a> ẢNH, và bắt buộc phải thế: lồng <button> vào
+               │ trong <a> là HTML sai, bấm nút sẽ hoá thành đi theo liên
+               │ kết. Cùng lý do với huy hiệu ở trên.
+               │
+               │ MÀN CẢM ỨNG THÌ HAI NÚT HIỆN SẴN — không có "rê chuột" để
+               │ mở chúng ra. Xem @media (hover: hover) ở khối
+               │ .oa-card__actions trong assets/css/oa.css. */
+            ?>
+            <div class="oa-card__actions">
+                <?php if (!$inStock): ?>
+
+                    <span class="oa-btn oa-btn--card oa-btn--solid" aria-disabled="true">
+                        <?= e(t('product.out_of_stock')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
+                    </span>
+
+                <?php elseif (!$canBuyNow): ?>
+
+                    <?php
+                    /* MẶT HÀNG CÓ PHƯƠNG ÁN (chiết suất tròng, màu gọng…) KHÔNG mua được
+                       từ thẻ này: thẻ không có chỗ nào để chọn, và CartController::add()
+                       từ chối một mặt hàng có phương án mà không kèm phương án nào.
+
+                       Trước đây chỗ này vẫn vẽ nút "Mua ngay". Bấm vào là bị đá sang
+                       trang chi tiết kèm một dòng báo lỗi — trông y như trang bị hỏng.
+                       Nhãn nay nói đúng việc sẽ xảy ra. */
+                    ?>
+                    <a class="oa-btn oa-btn--card oa-btn--solid" href="<?= e($url) ?>">
+                        <?= e(t('product.choose_option')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
+                    </a>
+                    <a class="oa-btn oa-btn--card" href="<?= e($url) ?>">
+                        <?= e(t('product.details')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
+                    </a>
+
+                <?php else: ?>
+
+                    <form action="/gio-hang/them" method="post" style="display:contents">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="product_id" value="<?= e($product['id']) ?>">
+                        <?php /* Nơi quay về sau khi chọn hình thức mua. Gọng và kính mát
+                                 không vào thẳng giỏ — chúng mở hộp thoại "Chọn hình thức
+                                 mua" ngay trên trang này, và hộp thoại cần biết "trang
+                                 này" là trang nào. Xem CartController::add(). */ ?>
+                        <input type="hidden" name="back" value="<?= e(currentUrlWithout(['mua', 'buoc'])) ?>">
+
+                        <?php /* HAI NÚT, MỘT FORM. Trình duyệt chỉ gửi name/value của
+                                 ĐÚNG nút được bấm, nên không cần hai form:
+                                   "Mua ngay"     -> action=buy -> add() đưa tiếp tới
+                                                     /thanh-toan
+                                   "Thêm vào giỏ" -> không gửi `action` -> add() hiểu là
+                                                     'add' và dừng ở giỏ hàng
+                                 Nút thứ hai cố ý KHÔNG mang name/value, đúng quy ước mà
+                                 trang chi tiết cũng dùng. */ ?>
+                        <button type="submit" name="action" value="buy" class="oa-btn oa-btn--card oa-btn--solid">
+                            <?= e(t('product.buy_now')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
+                        </button>
+                        <button type="submit" class="oa-btn oa-btn--card">
+                            <?= e(t('product.add_to_cart')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
+                        </button>
+                    </form>
+
+                <?php endif; ?>
+            </div>
+
         </div><?php /* .oa-card__frame */ ?>
     </div>
 
@@ -217,60 +287,5 @@ foreach ($variants as $v) {
              stroke="currentColor" stroke-width="1.2" aria-hidden="true" focusable="false">
             <path d="M1 1h10v12L6 9.5 1 13V1z"/>
         </svg>
-    </div>
-
-    <div class="oa-card__actions">
-        <?php if (!$inStock): ?>
-
-            <span class="oa-btn oa-btn--card oa-btn--solid" aria-disabled="true">
-                <?= e(t('product.out_of_stock')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
-            </span>
-
-        <?php elseif (!$canBuyNow): ?>
-
-            <?php
-            /* MẶT HÀNG CÓ PHƯƠNG ÁN (chiết suất tròng, màu gọng…) KHÔNG mua được
-               từ thẻ này: thẻ không có chỗ nào để chọn, và CartController::add()
-               từ chối một mặt hàng có phương án mà không kèm phương án nào.
-
-               Trước đây chỗ này vẫn vẽ nút "Mua ngay". Bấm vào là bị đá sang
-               trang chi tiết kèm một dòng báo lỗi — trông y như trang bị hỏng.
-               Nhãn nay nói đúng việc sẽ xảy ra. */
-            ?>
-            <a class="oa-btn oa-btn--card oa-btn--solid" href="<?= e($url) ?>">
-                <?= e(t('product.choose_option')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
-            </a>
-            <a class="oa-btn oa-btn--card" href="<?= e($url) ?>">
-                <?= e(t('product.details')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
-            </a>
-
-        <?php else: ?>
-
-            <form action="/gio-hang/them" method="post" style="display:contents">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                <input type="hidden" name="product_id" value="<?= e($product['id']) ?>">
-                <?php /* Nơi quay về sau khi chọn hình thức mua. Gọng và kính mát
-                         không vào thẳng giỏ — chúng mở hộp thoại "Chọn hình thức
-                         mua" ngay trên trang này, và hộp thoại cần biết "trang
-                         này" là trang nào. Xem CartController::add(). */ ?>
-                <input type="hidden" name="back" value="<?= e(currentUrlWithout(['mua', 'buoc'])) ?>">
-
-                <?php /* HAI NÚT, MỘT FORM. Trình duyệt chỉ gửi name/value của
-                         ĐÚNG nút được bấm, nên không cần hai form:
-                           "Mua ngay"     -> action=buy -> add() đưa tiếp tới
-                                             /thanh-toan
-                           "Thêm vào giỏ" -> không gửi `action` -> add() hiểu là
-                                             'add' và dừng ở giỏ hàng
-                         Nút thứ hai cố ý KHÔNG mang name/value, đúng quy ước mà
-                         trang chi tiết cũng dùng. */ ?>
-                <button type="submit" name="action" value="buy" class="oa-btn oa-btn--card oa-btn--solid">
-                    <?= e(t('product.buy_now')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
-                </button>
-                <button type="submit" class="oa-btn oa-btn--card">
-                    <?= e(t('product.add_to_cart')) ?><span class="sr-only"> — <?= e($product['name']) ?></span>
-                </button>
-            </form>
-
-        <?php endif; ?>
     </div>
 </li>

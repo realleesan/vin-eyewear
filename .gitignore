@@ -47,3 +47,7 @@ assets/uploads/bo-suu-tap/
 # Cầu nối SePay chạy trên Render — cấu hình thật và hàng đợi tạm, không lên git.
 relay/.env
 relay/data/
+
+# Ảnh chụp màn hình Claude tạo ra khi đối chiếu một thay đổi giao diện.
+# Cùng loại với design-export/ và .playwright-mcp/: chụp lại lúc nào cũng được.
+Claude outputs/

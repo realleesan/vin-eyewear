@@ -528,7 +528,7 @@ html.js .catpick__go {
 .pgrid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--gap-row) var(--gap-col);
+    gap: var(--gap-card-row) var(--gap-card);
     padding: 40px var(--edge-grid) 0;
     list-style: none;
 }

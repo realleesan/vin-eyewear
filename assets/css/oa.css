@@ -197,9 +197,34 @@
        │ 79px thì ở màn hẹp khe nuốt mất cột, ở màn rộng lại thành hai thẻ
        │ dính nhau.
        └──────────────────────────────────────────────────────────────────── */
-    --gap-col: 6%;          /* khe dọc giữa cột trong lưới sản phẩm */
-    --gap-row: 48px;        /* khe ngang giữa hàng trong lưới sản phẩm */
+    --gap-col: 6%;          /* khe dọc giữa cột — lưới CHỮ và lưới ô nhỏ */
+    --gap-row: 48px;        /* khe ngang giữa hàng — lưới CHỮ và lưới ô nhỏ */
+    --gap-card-row: 36px;   /* khe ngang giữa HÀNG THẺ trong .oa-grid/.pgrid */
     --gap-tight: 12px;      /* lưới ảnh chiến dịch, lưới cửa hàng */
+
+    /* ┌─ KHE GIỮA HAI THẺ SẢN PHẨM — HẸP HƠN KHE CHỮ ─────────────────────
+       │ (12/09/2026, theo yêu cầu chủ dự án: thu khe lại, thẻ to lên.)
+       │
+       │ Con số 6% ở trên đo cho lưới BA cột của gentlemonster.com. Giữ
+       │ nguyên nó cho lưới bốn cột thì khe nuốt mất thẻ: ở màn 1440 khe
+       │ rộng 79px mà lề ngoài trang chỉ 60px — khoảng cách GIỮA hai thẻ
+       │ lớn hơn khoảng cách từ thẻ ra MÉP TRANG. Mắt đọc ra ngay là lưới bị
+       │ rời, vì luật bố cục cơ bản là lề ngoài phải rộng hơn khe trong.
+       │
+       │ 2,6% lật lại đúng thứ tự ấy ở mọi bề ngang:
+       │
+       │   màn 1440  lưới 1320 · khe 34,3 · thẻ 304   (lề 60 = 1,75× khe)
+       │   màn 1280  lưới 1160 · khe 30,2 · thẻ 267
+       │   màn 1024  lưới  904 · khe 23,5 · thẻ 208
+       │
+       │ Thẻ to thêm khoảng 12% so với bản 6% mà không đụng tới lề trang,
+       │ nên tiêu đề băng (dùng --edge) vẫn thẳng hàng với mép thẻ như cũ.
+       │
+       │ VẪN LÀ %, KHÔNG PHẢI px — cùng lý do đã ghi ở khối --gap-col trên.
+       │ Ở màn ≤760px nó về 12px cùng lúc với --gap-col (xem @media cuối
+       │ file): dưới đó lưới chỉ còn hai cột, khe tính theo % thành ra quá
+       │ hẹp so với thẻ. */
+    --gap-card: 2.6%;       /* khe dọc giữa THẺ trong .oa-grid / .pgrid */
 
     /* ┌─ CHIỀU CAO Ô ĐIỀU KHIỂN — CO GIÃN CÙNG CHỮ ──────────────────────
        │ Đây là nhóm số DUY NHẤT ngoài thang chữ được nhân với --oa-scale,
@@ -1214,7 +1239,7 @@ textarea.oa-field {
 .oa-grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--gap-row) var(--gap-col);
+    gap: var(--gap-card-row) var(--gap-card);
     padding: 40px var(--edge-grid) 0;
     background: var(--bg);
 }
@@ -1275,7 +1300,20 @@ textarea.oa-field {
 .oa-card__media {
     position: relative;
     width: 100%;
-    aspect-ratio: 1 / 1.36;
+
+    /* 1/1,15 — KHÔNG PHẢI 1/1,36 nữa (12/09/2026, theo yêu cầu chủ dự án).
+       Tỉ lệ 1,36 đo từ gentlemonster.com, nhưng ảnh của HỌ là `cover` nên
+       lấp kín khung; ảnh của ta là `contain` và ảnh trong kho là VUÔNG, nên
+       khung 1,36 chừa ~18% chiều cao trống trên và dưới mỗi tấm — ở thẻ
+       304px là 49px mỗi bên. Khoảng trống ấy đẩy hai hàng thẻ xa nhau và
+       làm cả lưới trông rời rạc.
+
+       1,15 rút khoảng trống còn ~23px mỗi bên mà TẤM ẢNH KHÔNG NHỎ ĐI một
+       pixel nào: ảnh vuông vẫn đặt vừa bề ngang thẻ, chỉ khung bớt cao.
+
+       ĐỔI SỐ NÀY THÌ NHỚ: nó chỉ đúng chừng nào ảnh sản phẩm còn là ảnh
+       vuông. Ngày nào kho đổi sang ảnh dọc thì tính lại. */
+    aspect-ratio: 1 / 1.15;
     cursor: pointer;
 
     /* Khung ôm ảnh căn GIỮA theo chiều dọc trong ô tỉ lệ cố định — đúng chỗ
@@ -1321,12 +1359,13 @@ textarea.oa-field {
     width: 100%;
     height: auto;
 
-    /* TRẦN CHIỀU CAO = chiều cao của ô. 136cqw là 1,36 lần bề ngang ô ảnh,
-       tức đúng chiều cao ô theo aspect-ratio 1/1,36 ở trên. Ảnh cao hơn tỉ
+    /* TRẦN CHIỀU CAO = chiều cao của ô. 115cqw là 1,15 lần bề ngang ô ảnh,
+       tức đúng chiều cao ô theo aspect-ratio 1/1,15 ở trên — ĐỔI TỈ LỆ
+       KHUNG THÌ PHẢI ĐỔI CẢ SỐ NÀY, hai chỗ là một. Ảnh cao hơn tỉ
        lệ ấy (hiếm với gọng kính) bị ép về đúng khổ ô và lúc đó `contain`
        lại chừa khoảng trống hai bên như cũ — chấp nhận, miễn là không có
        tấm ảnh nào tràn xuống đè lên tên và giá. */
-    max-height: 136cqw;
+    max-height: 115cqw;
     object-fit: contain;
 }
 
@@ -1438,10 +1477,99 @@ textarea.oa-field {
     color: var(--ink);
 }
 
+/* ┌─ HAI NÚT MUA — NỔI TRONG LÒNG ẢNH, HIỆN KHI RÊ CHUỘT ─────────────────
+   │ (12/09/2026, theo yêu cầu chủ dự án) Trước đây hai nút nằm dưới chân
+   │ thẻ và luôn hiện. Nay chúng tuyệt đối trong .oa-card__frame — khung cao
+   │ đúng bằng tấm ảnh — nên chúng nổi ở đáy ẢNH chứ không phải đáy ô.
+   │
+   │ VẪN XẾP NGANG, chia đôi bề ngang: .oa-btn--card mang flex:1.
+   │
+   │ BA ĐIỀU KIỆN HIỆN, và thiếu cái nào cũng thành một cái bẫy:
+   │   :hover        — chuột rê vào ảnh, đúng thứ chủ dự án yêu cầu
+   │   :focus-within — người dùng bàn phím Tab tới nút. Không có luật này
+   │                   thì tiêu điểm nhảy vào một nút TRONG SUỐT: họ đang
+   │                   bấm Enter lên một thứ không nhìn thấy.
+   │   (hover: none) — màn cảm ứng KHÔNG có trạng thái rê chuột. Ở đó hai
+   │                   nút hiện sẵn; nếu giấu, mặt hàng trên điện thoại
+   │                   không còn đường nào vào giỏ ngoài trang chi tiết.
+   │
+   │ pointer-events KHÔNG PHẢI THỪA bên cạnh opacity: nút trong suốt vẫn ăn
+   │ cú bấm. Thiếu dòng ấy thì bấm vào đáy ảnh là thêm hàng vào giỏ mà không
+   │ ai hiểu vì sao.
+   └──────────────────────────────────────────────────────────────────────── */
 .oa-card__actions {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    z-index: 2;
     display: flex;
     gap: 6px;
-    padding: 12px 14px 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .oa-card__actions {
+        opacity: 0;
+        transform: translateY(6px);
+        pointer-events: none;
+        transition: opacity .18s ease, transform .18s ease;
+    }
+
+    .oa-card__frame:hover .oa-card__actions,
+    .oa-card__frame:focus-within .oa-card__actions {
+        opacity: 1;
+        transform: none;
+        pointer-events: auto;
+    }
+}
+
+/* ┌─ THẺ HẸP: VẪN MỘT HÀNG, NÚT TỰ CO ────────────────────────────────────
+   │ HAI NÚT LUÔN NẰM CÙNG MỘT HÀNG — yêu cầu chủ dự án, không có ngoại lệ
+   │ nào theo bề ngang. Ở đây từng có luật `flex-direction: column` cho thẻ
+   │ hẹp và nó ĐÃ GỠ; đừng đặt lại.
+   │
+   │ Vấn đề có thật mà luật ấy định chữa: .oa-btn có `white-space: nowrap`,
+   │ nên ở thẻ hẹp chữ không xuống dòng mà TRÀO RA ngoài mép ảnh. Lưới 4 cột
+   │ ở màn ~800px cho thẻ chỉ ~145px, mà "Mua ngay" + "Thêm vào giỏ" ở cỡ
+   │ chữ 9px cần khoảng 166px mới đủ.
+   │
+   │ Cách chữa nay là cho chữ XUỐNG DÒNG TRONG LÒNG NÚT thay vì cho nút
+   │ xuống hàng: dưới 190px thì bỏ nowrap, hạ cỡ chữ một nấc, nút cao theo
+   │ nội dung (min-height giữ đúng chiều cao viên cũ khi chữ vẫn một dòng).
+   │
+   │ min-width: 0 là điều kiện cần: mục flex mặc định không co dưới bề ngang
+   │ nội dung của nó, nên thiếu dòng này thì mọi luật bên dưới vô hiệu. */
+.oa-card__actions .oa-btn--card {
+    min-width: 0;
+}
+
+@container (max-width: 190px) {
+    .oa-card__actions {
+        gap: 4px;
+    }
+
+    .oa-card__actions .oa-btn--card {
+        height: auto;
+        min-height: var(--h-btn-sm);
+        padding: 5px 8px;
+        font-size: var(--fs-nano);
+        letter-spacing: 0;
+        white-space: normal;
+        line-height: 1.15;
+        text-align: center;
+    }
+}
+
+/* Nút nằm ĐÈ LÊN ẢNH nên nền trong suốt là không đọc được — nền đặc và
+   viền cùng màu, đúng dáng viên của .oa-btn--card. */
+.oa-card__actions .oa-btn--card:not(.oa-btn--solid) {
+    background: var(--bg);
+    border-color: var(--bg);
+}
+
+.oa-card__actions .oa-btn--card:not(.oa-btn--solid):hover {
+    background: var(--bg);
+    border-color: var(--ink);
 }
 
 /* Hàng ô màu dưới giá */
@@ -3423,7 +3551,9 @@ body.is-search-open {
         --edge: 20px;
         --edge-grid: 16px;
         --gap-row: 32px;
+        --gap-card-row: 28px;
         --gap-col: 12px;
+        --gap-card: 12px;
     }
 
     /* ┌─ HÀNG NAV BIẾN THÀNH NGĂN KÉO ────────────────────────────────────
@@ -3525,9 +3655,6 @@ body.is-search-open {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .oa-card__actions {
-        flex-direction: column;
-    }
 }
 
 /* Người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành */
