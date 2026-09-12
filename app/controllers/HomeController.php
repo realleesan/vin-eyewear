@@ -38,13 +38,32 @@ class HomeController extends BaseController
     private const PER_BAND = 4;
 
     /**
-     * Số thẻ của băng đánh giá — 5, theo yêu cầu chủ dự án.
+     * Băng đánh giá — HAI CON SỐ, và chúng trả lời hai câu hỏi khác nhau.
      *
-     * Đây là số THẺ, không phải số đánh giá lấy được: chưa đủ 5 đánh giá đã
-     * duyệt thì view in tiếp thẻ trống cho đủ năm (xem _layout/home/reviews.php).
-     * Nên con số này quyết định cả hình của khối lẫn câu truy vấn.
+     *   REVIEW_VIS  = 5   số thẻ NHÌN THẤY trong một khung (khớp --hrev-vis
+     *                     của assets/css/home.css). Nó cũng là số thẻ tối
+     *                     thiểu view in ra: chưa đủ 5 đánh giá đã duyệt thì
+     *                     phần còn lại là thẻ trống, để hàng thẻ không hụt
+     *                     một khoảng giữa chừng.
+     *   REVIEW_TAKE = 10  số đánh giá LẤY VỀ.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO LẤY NHIỀU HƠN SỐ NHÌN THẤY (12/09/2026, theo yêu cầu chủ dự án)
+     *
+     * Trước đây lấy đúng 5 — bằng số thẻ một khung — nên ở khổ máy tính năm
+     * thẻ lấp vừa khít và KHÔNG CÒN GÌ ĐỂ LƯỚT: bấm giữ kéo không nhúc
+     * nhích, hai mũi tên tự ẩn vì đúng là chẳng có đâu để đi. Một băng
+     * trượt chỉ sống khi có nhiều thẻ hơn số thẻ nhìn thấy.
+     *
+     * 10 chứ không phải "lấy hết": trang chủ không phải trang đánh giá. Đủ
+     * một khung dôi ra để lướt, mà vẫn là một câu LIMIT nhỏ.
+     *
+     * HỆ QUẢ PHẢI BIẾT: cửa hàng mới duyệt được 3 đánh giá thì băng vẫn là
+     * ba thẻ thật + hai thẻ trống, vừa khít khung, và lúc ấy KHÔNG lướt
+     * được — không phải lỗi, mà vì chưa có gì ở phía sau để lướt tới.
      */
-    private const PER_REVIEWS = 5;
+    private const REVIEW_VIS  = 5;
+    private const REVIEW_TAKE = 10;
 
     public function index(): void
     {
@@ -80,8 +99,8 @@ class HomeController extends BaseController
             /* Băng đánh giá. MỘT câu cho cả khối, và nó rỗng là chuyện BÌNH
                THƯỜNG chứ không phải lỗi: cửa hàng mới mở, hoặc đánh giá đang
                chờ duyệt trong khu quản trị. View lo phần "chưa có gì". */
-            'reviews'  => ReviewModel::latestPublished(self::PER_REVIEWS),
-            'reviewSlots' => self::PER_REVIEWS,
+            'reviews'  => ReviewModel::latestPublished(self::REVIEW_TAKE),
+            'reviewSlots' => self::REVIEW_VIS,
         ]);
     }
 }

@@ -36,17 +36,29 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * THẺ TRỐNG KHI CHƯA CÓ ĐÁNH GIÁ — CỐ Ý, THEO YÊU CẦU
  *
- * Chưa đủ 5 đánh giá đã duyệt thì in tiếp thẻ trống cho đủ năm, thay vì giấu
- * cả khối. Cửa hàng mới mở là lúc khối này trống nhất mà cũng là lúc chủ dự án
- * cần nhìn thấy chỗ của nó để đi duyệt đánh giá trong khu quản trị.
+ * Chưa đủ một khung (5 thẻ) đánh giá đã duyệt thì in tiếp thẻ trống cho đủ
+ * năm, thay vì giấu cả khối. Cửa hàng mới mở là lúc khối này trống nhất mà
+ * cũng là lúc chủ dự án cần nhìn thấy chỗ của nó để đi duyệt đánh giá trong
+ * khu quản trị.
+ *
+ * Thẻ trống CHỈ bù cho đủ một khung, không bù thêm để "có cái mà lướt": kéo
+ * qua lại giữa mấy ô trống là một băng trượt giả vờ có nội dung.
  *
  * Thẻ trống KHÔNG giả vờ là đánh giá: không sao, không tên người, chỉ một dòng
  * nói thẳng "chưa có đánh giá" — bịa một lời khen vào đó là thứ tuyệt đối
  * không được làm.
  *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * SỐ THẺ IN RA KHÁC SỐ THẺ NHÌN THẤY
+ *
+ * $reviewSlots (5) là số thẻ NHÌN THẤY trong một khung, đồng thời là số thẻ
+ * TỐI THIỂU: thiếu thì bù bằng thẻ trống. Còn $reviews có thể nhiều hơn thế
+ * (controller lấy 10) — và đó chính là thứ làm băng lướt được: phần dôi ra
+ * nằm ngoài khung, chờ được kéo tới.
+ *
  * Nhận qua renderView():
- *   $reviews     — mảng đánh giá đã duyệt (ReviewModel::latestPublished)
- *   $reviewSlots — số thẻ của băng (5)
+ *   $reviews     — đánh giá đã duyệt, tối đa 10 (ReviewModel::latestPublished)
+ *   $reviewSlots — số thẻ nhìn thấy trong một khung, cũng là số thẻ tối thiểu
  */
 
 $reviews     = $reviews     ?? [];
