@@ -138,7 +138,38 @@
 
 .mega__panel {
     position: absolute;
-    top: var(--hdr-h);
+
+    /* ┌─ ĐỈNH BẢNG = ĐÁY CHỮ MỤC NAV, KHÔNG PHẢI ĐÁY THANH ───────────────
+       │ (12/09/2026, theo yêu cầu chủ dự án: "giữ nguyên mọi thứ của nav,
+       │ kéo khối dropdown lùi lên sát vào nav".)
+       │
+       │ Trước đây là `top: var(--hdr-h)` — bảng dán vào ĐÁY THANH. Bảng và
+       │ thanh khi ấy đã sát nhau đúng 0px rồi; thứ trông như một khoảng hở
+       │ là NỬA DƯỚI CỦA CHÍNH THANH: chữ nav căn giữa một thanh cao 89,6px
+       │ nên dưới chân chữ còn 33,8px trống trước khi tới đỉnh bảng. Ở trang
+       │ chưa cuộn, sau thanh không có gì nên dải ấy trắng trơn, còn bảng thì
+       │ bắt đầu làm mờ — mắt đọc ra đúng chỗ bảng "bắt đầu".
+       │
+       │ CÔNG THỨC, KHÔNG PHẢI SỐ GÕ CỨNG. Chữ nav căn giữa thanh, nên đáy
+       │ chữ = nửa thanh + nửa chiều cao dòng chữ:
+       │
+       │     50%                 = 44,8px  (nửa thanh 89,6)
+       │     --fs-ui × 1,5 ÷ 2   = 11,6px  (dòng chữ nav: cỡ --fs-ui,
+       │                                    line-height 1.5 → cao 23,1px)
+       │     ────────────────────────────
+       │     top                 = 56,4px  ≈ đáy chữ nav (đo được 55,8)
+       │
+       │ Gõ cứng 56px thì hỏng ngay lần ai đó đổi --oa-scale hoặc --fs-ui:
+       │ cả thang chữ to ra mà riêng con số này đứng im, bảng sẽ cắt ngang
+       │ chữ nav. Viết theo token thì nó tự bám.
+       │
+       │ ĐI KÈM MỘT LUẬT NỮA, ĐỪNG TÁCH RỜI: .oa-header:has(...)::before ở
+       │ oa.css thu lớp kính của thanh lại đúng mốc này khi bảng mở. Thiếu
+       │ nó thì đoạn 56→89,6 có HAI lớp kính chồng nhau (tint .55 trên .55
+       │ ≈ .80, blur hai lần) và hiện ra một dải trắng đục đậm hơn hẳn chạy
+       │ ngang màn hình.
+       └──────────────────────────────────────────────────────────────────── */
+    top: calc(50% + var(--fs-ui) * .75);
     left: 0;
     right: 0;
     z-index: 1;

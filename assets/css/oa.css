@@ -1761,8 +1761,23 @@ textarea.oa-field {
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     padding: 0 var(--edge);
-    border-bottom: 1px solid transparent;
     color: var(--ink);
+
+    /* ┌─ KHÔNG CÓ border-bottom Ở ĐÂY NỮA ────────────────────────────────
+       │ Chỗ này từng có `border-bottom: 1px solid transparent`. Không luật
+       │ nào trong cả site tô màu cho nó — nó là viền trong suốt thuần tuý,
+       │ và từ lúc lớp kính dời xuống ::before (12/09/2026) nó thành một lỗi
+       │ nhìn thấy được: ::before là con tuyệt đối `inset: 0`, mà mốc của
+       │ `inset` là PADDING BOX, tức nó dừng trước viền 1px ấy. Kết quả là
+       │ một dải trong suốt 1px chạy ngang đáy thanh, ngay chỗ giáp với bảng
+       │ xổ — đo được đúng 1.00px trên Chrome.
+       │
+       │ Bỏ viền thì `inset: 0` phủ trọn thanh. Chiều cao tổng KHÔNG đổi:
+       │ box-sizing là border-box nên `height: var(--hdr-h)` vẫn là 89.6px,
+       │ chỉ padding box nở thêm 1px vào đúng chỗ vừa hở.
+       │
+       │ Muốn có đường kẻ chân thanh thật thì thêm vào ::before (nơi đang
+       │ vẽ nền), đừng thêm lại vào đây. */
 
     /* KHÔNG có background/backdrop-filter ở đây — xem khối ngay dưới. */
     background: transparent;
@@ -1807,6 +1822,44 @@ textarea.oa-field {
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     transition: background .25s ease;
+}
+
+/* ┌─ BẢNG XỔ ĐANG MỞ: LỚP KÍNH CỦA THANH THU LÊN, NHƯỜNG CHỖ CHO BẢNG ────
+   │ (12/09/2026) LUẬT NÀY ĐI LIỀN VỚI `top` CỦA .mega__panel — sửa một cái
+   │ mà quên cái kia là hỏng ngay, cả hai cùng một mốc.
+   │
+   │ Từ 12/09/2026 bảng xổ không còn dán ở đáy thanh mà kéo lên sát đáy chữ
+   │ mục nav (yêu cầu chủ dự án). Nó vì thế ĐÈ LÊN nửa dưới của thanh — mà
+   │ cả hai đều là kính mờ, nên đoạn chồng nhau có HAI lớp kính:
+   │
+   │     tint  .55 chồng .55  ≈ .80   → trắng đục hơn hẳn
+   │     blur  14px hai lần          → nhoè gấp đôi
+   │
+   │ ra một dải đậm rộng 33,8px chạy ngang màn hình, ngay dưới chữ nav.
+   │
+   │ Chữa bằng cách cho lớp kính của thanh DỪNG ở đúng mốc bảng bắt đầu,
+   │ nên hai tấm kính TIẾP NỐI nhau thay vì chồng lên nhau. Cùng công thức,
+   │ cùng lấy mẫu từ trang, nên mắt thấy MỘT mặt kính liền từ đỉnh thanh
+   │ xuống hết bảng — đúng nghĩa "dropdown dính vào nav".
+   │
+   │ `bottom` là phần bù của `top` bên .mega__panel, cùng hai số hạng:
+   │     top    = calc(50% + --fs-ui × .75)   tính từ ĐỈNH
+   │     bottom = calc(50% - --fs-ui × .75)   tính từ ĐÁY
+   │
+   │ CHỈ KHI BẢNG MỞ. Bảng đóng thì lớp kính phải phủ trọn thanh như thường,
+   │ không thì nửa dưới thanh mất kính mờ ở mọi trang.
+   │
+   │ :has() — trình duyệt nào cũng có từ 2023, và site này đã dùng sẵn
+   │ (.bkpill:has(.bk__radio:disabled) trong booking.css). Máy quá cũ không
+   │ hiểu :has() thì bỏ qua cả luật: về đúng hành vi cũ, dải đậm hiện lại —
+   │ xấu chứ không vỡ.
+   │
+   │ Hai điều kiện khớp đúng cặp đang bật bảng ở mega-menu.css
+   │ (.mega:hover · .mega:focus-within). Thêm trạng thái mở thứ ba thì phải
+   │ thêm cả ở đây. */
+.oa-header:has(.mega:hover)::before,
+.oa-header:has(.mega:focus-within)::before {
+    bottom: calc(50% - var(--fs-ui) * .75);
 }
 
 /* ┌─ ĐẦU TRANG TRONG SUỐT TRÊN TRANG CHỦ ─────────────────────────────────
