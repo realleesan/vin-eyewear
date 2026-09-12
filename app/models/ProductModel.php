@@ -507,6 +507,10 @@ class ProductModel extends BaseModel
                 default                      => [],
             };
 
+            /* Ẩn và ghim theo bảng /quan-tri/tieu-chi-loc KHÔNG làm ở đây:
+               chúng nằm trong chính ProductFacets::group(), để trang chi tiết
+               bộ sưu tập — trang gọi thẳng group(), không qua catalog() —
+               cũng nghe lời cửa hàng. Xem khối chú thích trong hàm đó. */
             $groups[$group] = ProductFacets::group($all, $selected, $group, $order, $seed);
         }
 

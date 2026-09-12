@@ -116,101 +116,151 @@ if ($minPrice !== null) {
                    <?= $dangXem ? 'aria-current="page"' : '' ?>><?= e($bo['name']) ?></a>
             <?php endforeach; ?>
         </nav>
-    <!-- ══════════ BỘ LỌC ══════════ -->
-    <?php
-    /* ┌─ <details> CHỨ KHÔNG PHẢI JAVASCRIPT ───────────────────────────────
-       │ Tấm lọc mở/đóng bằng chính <details> của trình duyệt, cùng lối mà ô
-       │ chọn của trang danh mục đang dùng. Tắt JavaScript thì nó vẫn mở được
-       │ và form vẫn gửi được — đây là một form GET thật, không phải một lớp
-       │ phủ do script dựng.
-       │
-       │ Dựng theo tấm lọc của nhà mốt tham chiếu: một lớp tràn bề ngang nền
-       │ #f3f4f6, tiêu đề "FILTER" kèm số ở góc trái, nút đóng ở góc phải, và
-       │ NĂM CỘT ĐỀU nhau bên dưới (đo được: 5 cột cách nhau 283px ở 1440).
-       │ Ở đây bốn cột đầu là bốn nhóm lọc, cột thứ năm là sắp xếp.
-       └──────────────────────────────────────────────────────────────────── */
-    $nhanNhom = [
-        'shape'      => 'Dáng gọng',
-        'material'   => 'Chất liệu',
-        'lens_color' => 'Màu tròng',
-        'gender'     => 'Giới tính',
-    ];
-
-    $coLuaChon = false;
-
-    foreach ($luaChon as $ds) {
-        if ($ds !== []) { $coLuaChon = true; break; }
-    }
-    ?>
-    <?php if ($coLuaChon): ?>
-        <details class="cfil"<?= $soLocDangBat > 0 ? ' open' : '' ?>>
-            <summary class="cfil__toggle">
-                Bộ lọc
-                <?php if ($soLocDangBat > 0): ?>
-                    <span class="cfil__badge"><?= (int) $soLocDangBat ?></span>
-                <?php endif; ?>
-            </summary>
-
-            <form class="cfil__panel" method="get" action="">
-                <div class="cfil__head">
-                    <p class="cfil__title">
-                        Bộ lọc<span class="cfil__count"><?= (int) $tongCaBo ?></span>
-                    </p>
-                    <?php /* Đóng tấm = một liên kết về chính trang này KHÔNG mang
-                             tham số nào: nó vừa đóng vừa xoá sạch bộ lọc, và chạy
-                             cả khi tắt JavaScript. */ ?>
-                    <a class="cfil__close" href="/bo-suu-tap/<?= e(rawurlencode($collection['slug'])) ?>"
-                       aria-label="Đóng bộ lọc">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-                        </svg>
-                    </a>
-                </div>
-
-                <div class="cfil__cols">
-                    <?php foreach ($nhanNhom as $khoa => $nhan): ?>
-                        <?php if ($luaChon[$khoa] === []) { continue; } ?>
-                        <fieldset class="cfil__col">
-                            <legend class="cfil__legend"><?= e($nhan) ?></legend>
-                            <?php foreach ($luaChon[$khoa] as $muc): ?>
-                                <label class="cfil__opt">
-                                    <input type="checkbox" name="<?= e($khoa) ?>[]"
-                                           value="<?= e($muc['key']) ?>"
-                                           <?= !empty($muc['on']) ? 'checked' : '' ?>>
-                                    <span><?= e($muc['label']) ?></span>
-                                </label>
-                            <?php endforeach; ?>
-                        </fieldset>
-                    <?php endforeach; ?>
-
-                    <fieldset class="cfil__col">
-                        <legend class="cfil__legend">Sắp xếp</legend>
-                        <?php foreach ([
-                            ''           => 'Mặc định',
-                            'newest'     => 'Mới nhất',
-                            'price-asc'  => 'Giá thấp trước',
-                            'price-desc' => 'Giá cao trước',
-                        ] as $gt => $nhan): ?>
-                            <label class="cfil__opt">
-                                <input type="radio" name="sort" value="<?= e($gt) ?>"
-                                       <?= $sapXep === $gt ? 'checked' : '' ?>>
-                                <span><?= e($nhan) ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </fieldset>
-                </div>
-
-                <div class="cfil__foot">
-                    <button type="submit" class="cfil__apply">Áp dụng</button>
-                    <?php if ($soLocDangBat > 0): ?>
-                        <a class="cfil__clear" href="/bo-suu-tap/<?= e(rawurlencode($collection['slug'])) ?>">Xoá lọc</a>
-                    <?php endif; ?>
-                </div>
-            </form>
-        </details>
-    <?php endif; ?>
         </div><!-- /.cdet__bar -->
     <?php endif; ?>
+
+    <?php /* ⚠ TẤM LỌC NẰM NGOÀI `if (count($dsBst) > 1)`.
+
+             Trước 12/09/2026 nó nằm TRONG, cùng khối .cdet__bar với hàng chip
+             chuyển bộ — nghĩa là cửa hàng mới, mới có đúng một bộ sưu tập, thì
+             trang bộ ấy không có bộ lọc nào cả. Không ai báo vì ai cũng thử
+             trên kho demo đã có ba bộ. Hai thứ không liên quan gì nhau: một
+             cái là điều hướng giữa các bộ, một cái là lọc trong một bộ. */ ?>
+    <!-- ══════════ BỘ LỌC ══════════ -->
+    <?php
+    /*
+     * ════════════════════════════════════════════════════════════════════════
+     * DÙNG CHUNG TẤM LỌC VỚI TRANG DANH MỤC — _layout/filter-bar.php
+     *
+     * Trước 12/09/2026 trang này có tấm lọc RIÊNG (.cfil): cùng ý tưởng, cùng
+     * dáng, nhưng là bản sao thứ hai — một <details> bọc một form GET với nút
+     * "Áp dụng". Hai bản đã bắt đầu lệch nhau: trang danh mục bấm một cái là
+     * lọc ngay, trang này bắt tick xong rồi bấm thêm nút thứ hai; trang danh
+     * mục làm mờ mục hết hàng, trang này vẫn cho tick vào rồi trả lưới rỗng.
+     *
+     * ⚠ ĐỪNG dựng lại một tấm riêng ở đây. Chủ dự án đã chốt: ba trang có lưới
+     * sản phẩm (gọng · tròng · bộ sưu tập) GIỐNG NHAU về dáng, chỉ khác ở chỗ
+     * mỗi trang hỏi những nhóm tiêu chí khác nhau — mà nhóm nào thì do
+     * $nhomLoc trong CollectionController::show() quyết, không phải do tấm.
+     *
+     * ────────────────────────────────────────────────────────────────────────
+     * KHÁC TRANG DANH MỤC ĐÚNG MỘT ĐIỂM: KHÔNG THAY RUỘT BẰNG JAVASCRIPT
+     *
+     * catalog.js chỉ chạy ở product/index (nó tìm .catbody / .catmain, trang
+     * này không có). Nên mỗi cú bấm ở đây là một lần tải trang thật. Chấp
+     * nhận được: một bộ sưu tập là vài chục món, không phân trang, và tấm lọc
+     * vốn đã là liên kết thường nên không có gì hỏng khi thiếu JS.
+     * ════════════════════════════════════════════════════════════════════════
+     */
+
+    /* Trạng thái hiện tại của địa chỉ: các nhóm lọc + ô sắp xếp. KHÔNG mang
+       theo ?mau= — đổi tiêu chí lọc trong lúc ngăn kéo một mẫu đang mở thì
+       ngăn kéo ấy phải đóng lại, chứ không nói về một mẫu vừa bị lọc ra. */
+    $cfBase  = '/bo-suu-tap/' . rawurlencode($collection['slug']);
+    $cfState = $chon + ['sort' => $sapXep];
+
+    $cfUrl = static function (array $patch = []) use ($cfState, $cfBase): string {
+        $sach = [];
+
+        foreach (array_merge($cfState, $patch) as $k => $v) {
+            if (is_array($v)) {
+                if ($v !== []) { $sach[$k] = array_values($v); }
+                continue;
+            }
+
+            if ($v === null || $v === '') { continue; }
+
+            $sach[$k] = $v;
+        }
+
+        return $cfBase . ($sach === [] ? '' : '?' . http_build_query($sach));
+    };
+
+    /* Bật/tắt một giá trị trong một nhóm chọn-nhiều — cùng phép với
+       $toggleUrl của product/index.php. */
+    $cfToggle = static function (string $nhom, string $gt) use ($cfState, $cfUrl): string {
+        $dang = $cfState[$nhom] ?? [];
+
+        return $cfUrl([$nhom => in_array($gt, $dang, true)
+            ? array_values(array_diff($dang, [$gt]))
+            : array_merge($dang, [$gt])]);
+    };
+
+    /* Nhãn cột. Nhóm nào không có mục nào trong bộ này thì tự vắng mặt — tấm
+       lọc bỏ qua cột rỗng, nên không phải kiểm ở đây. */
+    $nhanNhom = [
+        'color'      => 'Màu gọng',
+        'shape'      => 'Dáng gọng',
+        'material'   => 'Chất liệu',
+        'gender'     => 'Giới tính',
+        'lens_color' => 'Màu tròng',
+    ];
+
+    $fbCols = [];
+
+    foreach ($nhanNhom as $khoa => $nhan) {
+        if (empty($luaChon[$khoa])) {
+            continue;
+        }
+
+        $muc = [];
+
+        foreach ($luaChon[$khoa] as $o) {
+            $muc[] = [
+                'label' => $o['label'],
+                'url'   => $cfToggle($khoa, (string) $o['key']),
+                'on'    => (bool) $o['on'],
+                /* count 0 = bấm vào sẽ ra lưới rỗng. Mục ĐANG BẬT không bao
+                   giờ bị tắt, nếu không thì không còn cách nào bỏ lọc nó. */
+                'off'   => $o['count'] === 0 && empty($o['on']),
+            ];
+        }
+
+        $fbCols[] = ['label' => $nhan, 'options' => $muc];
+    }
+
+    /*
+     * Sắp xếp là cột CUỐI và là cột chọn-MỘT — y như trang danh mục. Mục đầu
+     * "Mặc định" là thứ tự cửa hàng xếp tay cho bộ này, nên nó khác "Mới nhất"
+     * và phải giữ lại.
+     *
+     * CHỈ THÊM KHI ĐÃ CÓ ÍT NHẤT MỘT CỘT LỌC. Một bộ mà mọi mẫu giống nhau về
+     * màu, dáng, chất liệu, giới tính thì không có gì để lọc — và một tấm
+     * "Bộ lọc" chỉ chứa đúng một cột Sắp xếp đọc ra như trang bị hỏng. Trang
+     * danh mục không cần luật này vì ở đó luôn còn cột Khoảng giá.
+     */
+    if ($fbCols !== []) {
+        $fbCols[] = [
+            'label'   => 'Sắp xếp',
+            'single'  => true,
+            'options' => array_map(
+                static fn (string $gt, string $nhan): array => [
+                    'label' => $nhan,
+                    'url'   => $cfUrl(['sort' => $gt]),
+                    'on'    => $sapXep === $gt,
+                    'off'   => false,
+                ],
+                array_keys($cfSapXep = [
+                    ''           => 'Mặc định',
+                    'newest'     => 'Mới nhất',
+                    'price-asc'  => 'Giá thấp trước',
+                    'price-desc' => 'Giá cao trước',
+                ]),
+                array_values($cfSapXep)
+            ),
+        ];
+    }
+
+    partial('_layout/filter-bar', [
+        'fbCols'  => $fbCols,
+        /* Số mũ cạnh chữ "Bộ lọc" là số món ĐANG KHỚP, không phải cả bộ —
+           cùng nghĩa với trang danh mục, nơi nó đọc $total sau lọc. */
+        'fbTotal' => count($products),
+        /* ✕ và "Xoá tất cả" cùng trỏ về bộ này không mang tiêu chí nào. */
+        'fbClose' => $cfBase,
+        'fbClear' => $soLocDangBat > 0 ? $cfBase : '',
+    ]);
+    ?>
 
     <!-- ══════════ LỚP 1 · BANNER TRÀN BỀ NGANG ══════════ -->
     <?php

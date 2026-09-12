@@ -253,12 +253,17 @@ if ($manhCua !== null) {
     $pageStyles = [
         'home/index'         => ['home.css'],
 
-        'product/index'      => ['catalog.css'],
+        /* ⚠ components/filter-bar.css PHẢI đi kèm mọi trang gọi
+           partial('_layout/filter-bar'). Bỏ quên nó thì tấm lọc vẫn in ra đủ
+           chữ và đủ liên kết — chỉ là không còn hình dáng nào: bảy cột đổ
+           thành một cột dọc dài lê thê, ô tick biến mất. Không có gì báo lỗi.
+           Đã xảy ra thật ngày 12/09/2026, sống sót qua cả một lượt kiểm. */
+        'product/index'      => ['catalog.css', 'components/filter-bar.css'],
         'product/detail'     => ['product-detail.css'],
         'search/index'       => ['catalog.css'],
 
         'collection/index'   => ['collection.css'],
-        'collection/detail'  => ['catalog.css', 'collection.css'],
+        'collection/detail'  => ['catalog.css', 'collection.css', 'components/filter-bar.css'],
 
         'cart/index'         => ['cart.css'],
         'order/checkout'     => ['cart.css', 'checkout.css'],

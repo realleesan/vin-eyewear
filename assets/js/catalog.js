@@ -345,7 +345,10 @@
          */
         if (a.pathname !== duongCatalog) return false;
 
-        return !!(a.closest('.cfilter') ||
+        /* .fbar là TẤM LỌC NGANG (12/09/2026) — tên cũ .cfilter là cột lọc
+           trái đã gỡ. Quên đổi tên ở đây thì mọi cú bấm tiêu chí rơi về điều
+           hướng thật: vẫn đúng kết quả, nhưng tải lại cả trang. */
+        return !!(a.closest('.fbar') ||
                   a.closest('.catpager') ||
                   a.classList.contains('catbar__drop'));
     }
@@ -425,31 +428,37 @@
      */
     function thayMang(html) {
         var doc     = new DOMParser().parseFromString(html, 'text/html');
-        var locMoi  = doc.querySelector('.cfilter');
+        var locMoi  = doc.querySelector('.fbar');
         var mainMoi = doc.querySelector('.catmain');
-        var locCu   = catbody.querySelector('.cfilter');
+        var locCu   = catbody.querySelector('.fbar');
         var mainCu  = catbody.querySelector('.catmain');
 
-        if (!locMoi || !mainMoi || !locCu || !mainCu) return false;
+        /* Tấm lọc CÓ THỂ vắng mặt hợp lệ: kho chưa đủ hàng để có gì mà lọc thì
+           _layout/filter-bar.php không in ra gì cả. Lúc ấy vẫn thay được lưới,
+           nên chỉ .catmain là bắt buộc. */
+        if (!mainMoi || !mainCu) return false;
 
-        /* THAY RUỘT (innerHTML), KHÔNG THAY CẢ PHẦN TỬ.
-           .cfilter chính là cái <details> mà mục 4 đang nghe sự kiện, và
-           thuộc tính `open` của nó là trạng thái "bảng lọc đang mở" trên điện
-           thoại. Thay cả phần tử là mất cả hai: listener đi theo phần tử cũ,
-           còn HTML mới từ máy chủ thì không mang `open` — đúng cái lỗi đóng
-           sập mà mục này sinh ra để sửa. */
-        var panel = locCu.querySelector('.cfilter__panel');
-        var cuon  = panel ? panel.scrollTop : 0;
+        /* THAY RUỘT (innerHTML), KHÔNG THAY CẢ PHẦN TỬ — listener gắn trên
+           phần tử cũ sẽ đi theo nó nếu thay cả thẻ.
 
-        locCu.innerHTML  = locMoi.innerHTML;
+           CHỖ CUỘN CỦA TỪNG CỘT phải giữ lại: cột Thương hiệu cuộn được
+           (.fbar__list cao tối đa 246px), nên tick một hãng ở gần cuối mà cột
+           bị hất về đầu là người dùng mất dấu chỗ mình đang dò. Nhớ theo THỨ
+           TỰ cột chứ không theo tên nhóm: mảnh mới do máy chủ vẽ lại nên số
+           cột có thể đổi, và zip theo thứ tự là cách duy nhất còn đúng khi
+           một cột rỗng vừa biến mất. */
+        var cuonCu = locCu
+            ? Array.prototype.map.call(locCu.querySelectorAll('.fbar__list'),
+                                       function (el) { return el.scrollTop; })
+            : [];
+
+        if (locCu && locMoi) locCu.innerHTML = locMoi.innerHTML;
         mainCu.innerHTML = mainMoi.innerHTML;
 
-        /* Trả lại chỗ cuộn TRONG bảng lọc: người dùng tick một tiêu chí ở gần
-           cuối danh sách thì phải thấy nó vẫn ở trước mắt, không bị hất về
-           đầu bảng. */
-        panel = locCu.querySelector('.cfilter__panel');
-
-        if (panel) panel.scrollTop = cuon;
+        if (locCu) {
+            Array.prototype.forEach.call(locCu.querySelectorAll('.fbar__list'),
+                function (el, i) { if (cuonCu[i] !== undefined) el.scrollTop = cuonCu[i]; });
+        }
 
         mainCu.removeAttribute('aria-busy');
 
@@ -474,12 +483,12 @@
     function nhoViTri(a) {
         viTri = null;
 
-        var oLoc = a.closest('.cfilter');
-        var nhom = a.closest('.pfacet');
+        var oLoc = a.closest('.fbar');
+        var nhom = a.closest('.fbar__col');
 
         if (!oLoc || !nhom) return;
 
-        var cacNhom = Array.prototype.slice.call(oLoc.querySelectorAll('.pfacet'));
+        var cacNhom = Array.prototype.slice.call(oLoc.querySelectorAll('.fbar__col'));
         var cacMuc  = Array.prototype.slice.call(nhom.querySelectorAll('a'));
 
         viTri = { nhom: cacNhom.indexOf(nhom), muc: cacMuc.indexOf(a) };
@@ -492,8 +501,8 @@
 
         if (!nho || nho.nhom < 0 || nho.muc < 0) return;
 
-        var oLoc = catbody.querySelector('.cfilter');
-        var nhom = oLoc ? oLoc.querySelectorAll('.pfacet')[nho.nhom] : null;
+        var oLoc = catbody.querySelector('.fbar');
+        var nhom = oLoc ? oLoc.querySelectorAll('.fbar__col')[nho.nhom] : null;
         var muc  = nhom ? nhom.querySelectorAll('a')[nho.muc] : null;
 
         if (!muc) return;

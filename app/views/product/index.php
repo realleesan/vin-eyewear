@@ -139,100 +139,7 @@ foreach (ProductFacets::GROUPS as $group) {
 
 $resetPatch['price'] = null;
 
-/**
- * In các <input type="hidden"> mang bộ lọc hiện tại qua một form GET.
- *
- * Hai form trên trang (ô sắp xếp, ô tìm thương hiệu) chỉ đổi ĐÚNG MỘT tham
- * số. Không mang phần còn lại theo thì bấm vào là mất sạch bộ lọc đang bật mà
- * chẳng có gì báo.
- */
-$hiddenFilters = static function (array $except = []) use ($state, $catalogBase): void {
-    foreach ($state as $key => $value) {
-        if (in_array($key, $except, true)) {
-            continue;
-        }
 
-        /* Cùng lý do với $buildUrl: trên trang con, danh mục nằm ở ĐƯỜNG DẪN
-           (action của form), không phải ở một input ẩn. */
-        if ($key === 'category' && $catalogBase !== '/san-pham') {
-            continue;
-        }
-
-        if (is_array($value)) {
-            foreach ($value as $item) {
-                printf('<input type="hidden" name="%s[]" value="%s">', e($key), e((string) $item));
-            }
-            continue;
-        }
-
-        if ($value === null || $value === '') {
-            continue;
-        }
-
-        printf('<input type="hidden" name="%s" value="%s">', e($key), e((string) $value));
-    }
-};
-
-/**
- * MỘT huy hiệu lọc.
- *
- * NAY CHỈ CÒN MỘT CHỖ GỌI: chip "Chất liệu tái chế / bio" đi kèm ô chọn chất
- * liệu. Chip đó thuộc nhóm lọc riêng (?eco[]=recycled) nhưng người dùng đọc nó
- * như một chất liệu nữa, nên nó ở chung khối với ô chọn chứ không thành một
- * khối có tiêu đề riêng (thừa một dòng chữ hoa cho đúng một mục).
- *
- * Vẫn để rời thành hàm chứ không nội tuyến: nó là chỗ duy nhất còn giữ luật
- * "mục lọc ra 0 sản phẩm thì in nhưng bỏ liên kết", và luật đó dài hơn hẳn
- * đoạn markup nó sinh ra.
- */
-$chip = static function (string $group, array $opt) use ($toggleUrl): void {
-    /*
-     * Mục lọc ra 0 sản phẩm: vẫn in nhưng bỏ liên kết và làm mờ. Giấu hẳn thì
-     * cột lọc co giãn sau mỗi cú bấm và người dùng mất dấu tiêu chí vừa nhìn
-     * thấy ở đó một giây trước.
-     *
-     * Mục ĐANG BẬT luôn còn liên kết dù đếm ra bao nhiêu — nếu không sẽ không
-     * còn cách nào tắt nó đi.
-     *
-     * ─────────────────────────────────────────────────────────────────────
-     * SỐ ĐẾM VẪN TÍNH, NHƯNG KHÔNG CÒN IN RA (2026-08-29)
-     *
-     * Trước đây mỗi tiêu chí kèm một con số: "Acetate 2". Cửa hàng thấy nó
-     * không giúp gì cho việc chọn — người ta lọc theo thứ mình cần, không
-     * theo chỗ nào đông hàng — mà lại làm mỗi dòng thêm một cụm số nhấp nháy
-     * đổi sau mỗi cú bấm. Nay bỏ khỏi giao diện, ở cả ba nhóm: huy hiệu, danh
-     * sách tick, và khoảng giá.
-     *
-     * `count` thì VẪN PHẢI TÍNH, vì nó là thứ quyết định mục nào bị làm mờ.
-     * Đừng thấy "không ai in ra nữa" mà bỏ luôn phép đếm — bỏ là mọi tiêu chí
-     * đều bấm được, kể cả những cái dẫn tới lưới rỗng.
-     *
-     * Mục bị mờ nay mang thêm một câu sr-only "không có sản phẩm nào": số 0
-     * từng là dấu hiệu duy nhất cho người dùng trình đọc màn hình, bỏ nó đi
-     * mà không thay gì là lấy mất thông tin của đúng nhóm người không nhìn
-     * thấy màu mờ.
-     * ─────────────────────────────────────────────────────────────────────
-     */
-    $dead = $opt['count'] === 0 && !$opt['on'];
-    ?>
-    <?php if ($dead): ?>
-        <span class="pchip is-off" aria-disabled="true"><?= e($opt['label']) ?><span
-            class="sr-only"> — <?= e(t('filter.none_sr')) ?></span></span>
-    <?php else: ?>
-        <?php /* aria-current chứ không phải aria-pressed: aria-pressed chỉ hợp
-                 lệ trên nút, còn đây là <a>. Kèm một câu chỉ trình đọc màn hình
-                 nghe được — không có nó thì trạng thái "đang chọn" chỉ nằm ở màu
-                 nền, người không nhìn thấy màu sẽ nghe hai huy hiệu bật và tắt
-                 giống hệt nhau. */ ?>
-        <a class="pchip<?= $opt['on'] ? ' is-on' : '' ?>"
-           href="<?= e($toggleUrl($group, $opt['key'])) ?>"
-           <?= $opt['on'] ? 'aria-current="true"' : '' ?>
-           rel="nofollow"><?= e($opt['label']) ?><?php
-            if ($opt['on']): ?><span class="sr-only"> — <?= e(t('filter.on_sr')) ?></span><?php endif;
-        ?></a>
-    <?php endif; ?>
-    <?php
-};
 
 /*
  * ĐÃ BỎ $chipGroup — 2026-08-30.
@@ -258,224 +165,7 @@ $chip = static function (string $group, array $opt) use ($toggleUrl): void {
  * quả — cả hai đều là việc riêng, không phải phần của lần bỏ này.
  */
 
-/**
- * Một nhóm lọc dạng Ô CHỌN XỔ XUỐNG (Kiểu dáng · Chất liệu).
- *
- * In NHÃN + FORM, KHÔNG in thẻ .pfacet bọc ngoài — nơi gọi tự bọc, vì khối
- * "Chất liệu" còn phải nhét thêm chip "Tái chế / bio" vào cùng thẻ đó.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- * VÌ SAO Ô CHỌN CHỨ KHÔNG PHẢI HÀNG HUY HIỆU NHƯ CÁC NHÓM CÒN LẠI
- *
- * Hai nhóm này dài nhất cột lọc — tám chất liệu, và kiểu dáng thì tuỳ kho, có
- * thể hơn — mà lại là hai nhóm người ta ít đổi nhất. Vẽ thành huy hiệu thì mỗi
- * nhóm ăn ba, bốn dòng của một cột chỉ rộng 280px, đẩy "Thương hiệu" và
- * "Khoảng giá" xuống dưới nếp gấp. Ô chọn thu mỗi nhóm về một dòng.
- *
- * Dùng ĐÚNG bộ lớp .catpick của ô "Sắp xếp theo" ở cột kết quả: ba ô nhìn thấy
- * cùng lúc trên một màn hình nên phải giống hệt nhau.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- * CHỌN-MỘT, ĐỔI TỪ CHỌN-NHIỀU (2026-08-30, theo yêu cầu)
- *
- * MÁY CHỦ KHÔNG ĐỔI. 'shape' và 'material' vẫn nằm trong ProductFacets::MULTI
- * và controller vẫn nhận mảng, nên name="<khoá>[]" gửi lên đúng một phần tử là
- * khớp sẵn. Muốn quay lại chọn-nhiều thì chỉ phải dựng lại giao diện ở đây,
- * không đụng tới tầng lọc.
- *
- * MỘT ĐƯỜNG CŨ CÒN SỐNG: liên kết đã lưu từ hồi chọn-nhiều
- * (?material[]=titanium&material[]=acetate) vẫn lọc đúng cả hai — lưới ra hai
- * sản phẩm. Ô chọn không diễn tả nổi trạng thái đó, nên $daChon chỉ cho đánh
- * dấu MỘT mục: cái đứng trước trong DANH SÁCH (không phải cái đứng trước trong
- * URL — thứ tự URL không tới được view). Bỏ $daChon đi thì hai <option> cùng
- * mang selected và trình duyệt lặng lẽ lấy cái cuối, tức là vẫn một giá trị
- * nhưng không ai đoán được là cái nào. Đụng vào ô một lần là trạng thái tự về
- * đúng một giá trị.
- *
- * @param string $tatCa nhãn của mục "bỏ lọc" — viết đủ ("Tất cả kiểu dáng")
- *                      chứ không dùng chung một chữ "Tất cả": bốn ô chọn đứng
- *                      gần nhau, mà một danh sách mở ra chỉ ghi "Tất cả" thì
- *                      không tự nói được nó thuộc nhóm nào.
- * @param bool   $mang  nhóm này lên URL dưới dạng mảng (?shape[]=round) hay số
- *                      đơn (?price=2). KHOẢNG GIÁ là ngoại lệ duy nhất: nó vốn
- *                      đã chọn-một từ trước, và trên URL là ?price=2 — đổi
- *                      thành price[]=2 là làm hỏng mọi liên kết đã có người
- *                      lưu, xem chú thích ở $state đầu file.
- */
-$pick = static function (
-    string $key,
-    string $legend,
-    array $options,
-    string $tatCa,
-    bool $mang = true
-) use ($buildUrl): void {
-    $id = 'f-' . $key;
 
-    if ($options === []) {
-        /* Không còn tiêu chí nào để chọn (kho hết sạch nhóm này) thì chỉ in
-           tiêu đề. */
-        printf('<p class="pfacet__legend">%s</p>', e($legend));
-
-        return;
-    }
-
-    /*
-     * ═════════════════════════════════════════════════════════════════════════
-     * <details> + DANH SÁCH LIÊN KẾT, KHÔNG CÒN <select> (09/09/2026)
-     *
-     * <select> vẽ bằng giao diện của HỆ ĐIỀU HÀNH: hộp thả xanh Windows, chữ
-     * Segoe, viền xám — thứ duy nhất trên cả trang không do ta vẽ, và nó nằm
-     * ngay giữa cột lọc. Không CSS nào chạm vào được bên trong nó.
-     *
-     * Nay mỗi nhóm là một <details> mở gập TẠI CHỖ (không thả nổi, không cần
-     * z-index hay bắt cú bấm ra ngoài), bên trong là các <a href> THẬT — mỗi
-     * mục là đúng URL mà ô chọn cũ sẽ tạo ra, do $buildUrl dựng ở máy chủ.
-     *
-     * KHÔNG CẦN SỬA catalog.js: laDuongLoc() đã chặn mọi <a> cùng đường dẫn
-     * trong cột lọc và nạp ngầm hai mảnh — nên bấm một mục là lưới đổi mà trang
-     * không tải lại, y như lúc đổi <select>. Vòng lặp [data-pick] của nó nay
-     * không tìm thấy gì và tự thoát. Tắt JavaScript thì liên kết vẫn là liên
-     * kết: bấm là điều hướng, bộ lọc vẫn chạy — không còn cần nút "Áp dụng".
-     *
-     * Mỗi cú lọc thay cả cột .cfilter bằng bản máy chủ vẽ lại, nên <details>
-     * tự về trạng thái gập — đúng thứ người ta mong sau khi chọn xong.
-     * ═════════════════════════════════════════════════════════════════════════
-     */
-    $dangOn = null;
-    foreach ($options as $opt) {
-        if ($opt['on']) {
-            $dangOn = $opt;
-            break;
-        }
-    }
-    ?>
-    <p class="pfacet__legend" id="<?= e($id) ?>-legend"><?= e($legend) ?></p>
-
-    <details class="catpick" data-catpick>
-        <summary class="catpick__sum" aria-labelledby="<?= e($id) ?>-legend">
-            <span class="catpick__cur"><?= e($dangOn !== null ? $dangOn['label'] : $tatCa) ?></span>
-            <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.6"
-                      stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </summary>
-
-        <ul class="catpick__menu" role="list">
-            <li>
-                <a class="catpick__opt<?= $dangOn === null ? ' is-on' : '' ?>"
-                   href="<?= e($buildUrl([$key => null, 'page' => null])) ?>"
-                   <?= $dangOn === null ? 'aria-current="true"' : '' ?>>
-                    <span><?= e($tatCa) ?></span>
-                </a>
-            </li>
-            <?php foreach ($options as $opt): ?>
-                <?php
-                /* Mục hết hàng (count 0) đứng mờ và KHÔNG bấm được — cùng luật
-                   với huy hiệu .is-off. Mục ĐANG BẬT không bao giờ bị tắt. */
-                $tat = $opt['count'] === 0 && !$opt['on'];
-                ?>
-                <li>
-                    <a class="catpick__opt<?= $opt['on'] ? ' is-on' : '' ?><?= $tat ? ' is-off' : '' ?>"
-                       href="<?= e($buildUrl([$key => ($mang ? [$opt['key']] : $opt['key']), 'page' => null])) ?>"
-                       <?= $opt['on'] ? 'aria-current="true"' : '' ?><?= $tat ? ' aria-disabled="true" tabindex="-1"' : '' ?>>
-                        <span><?= e($opt['label']) ?></span>
-                        <span class="catpick__n"><?= (int) $opt['count'] ?></span>
-                    </a>
-                </li>
-            <?php endforeach; ?>
-        </ul>
-    </details>
-    <?php
-};
-
-/**
- * Một nhóm dạng danh sách tick (Thương hiệu · Bộ sưu tập hợp tác · Bộ sưu tập).
- *
- * $search = true thì có thêm ô "Tìm thương hiệu" phía trên.
- */
-$checkGroup = static function (string $key, string $legend, array $options, bool $search = false)
-    use ($state, $filters, $hiddenFilters, $toggleUrl, $catalogBase): void {
-    if ($options === []) {
-        return;
-    }
-
-    /*
-     * Lọc danh sách theo chữ đang gõ trong ô tìm — KHÔNG PHÂN BIỆT HOA THƯỜNG
-     * LẪN DẤU, nên gõ "gioi" ra "Giới", gõ "SAINT" ra "Saint Laurent".
-     *
-     * Hai phép so chứ không một: utf8Lower() giữ dấu (khớp người gõ đủ dấu),
-     * slugify() bỏ dấu (khớp người gõ không dấu — cách gõ nhanh phổ biến hơn
-     * hẳn trên điện thoại).
-     *
-     * utf8Lower() chứ không mb_strtolower(): dự án cố ý KHÔNG phụ thuộc
-     * extension mbstring (xem chú thích ở VN_ACCENT_MAP trong core/helpers.php),
-     * mà máy dev đang thiếu đúng extension đó — mb_strtolower() làm cả trang
-     * này chết với "Call to undefined function", không chỉ hỏng bộ lọc.
-     */
-    $needle = $search ? trim($filters['bq']) : '';
-
-    if ($needle !== '') {
-        $lower = utf8Lower($needle);
-        $plain = slugify($needle);
-
-        $options = array_values(array_filter($options, static function (array $o) use ($lower, $plain) {
-            return str_contains(utf8Lower($o['label']), $lower)
-                || ($plain !== '' && str_contains(slugify($o['label']), $plain));
-        }));
-    }
-
-    $legendId = 'lg-' . $key;
-    ?>
-    <div class="pfacet">
-        <p class="pfacet__legend" id="<?= e($legendId) ?>"><?= e($legend) ?></p>
-
-        <?php if ($search): ?>
-            <form class="pfacet__search" method="get" action="<?= e($catalogBase) ?>" data-brand-filter>
-                <?php $hiddenFilters(['bq', 'page']); ?>
-                <label class="sr-only" for="f-bq"><?= e(t('filter.brand_search')) ?></label>
-                <input class="pfacet__input" type="text" id="f-bq" name="bq"
-                       value="<?= e($filters['bq']) ?>" placeholder="Tìm thương hiệu"
-                       autocomplete="off">
-                <button type="submit" class="pfacet__go"><?= e(t('filter.filter')) ?></button>
-            </form>
-        <?php endif; ?>
-
-        <div class="pfacet__list" role="group" aria-labelledby="<?= e($legendId) ?>">
-            <?php foreach ($options as $opt): ?>
-                <?php $dead = $opt['count'] === 0 && !$opt['on']; ?>
-                <?php if ($dead): ?>
-                    <span class="pcheck is-off" aria-disabled="true"
-                          <?php if ($search): ?>data-brand="<?= e(utf8Lower($opt['label'])) ?>"
-                          data-brand-plain="<?= e(slugify($opt['label'])) ?>"<?php endif; ?>>
-                        <span class="pcheck__box" aria-hidden="true"></span>
-                        <span class="pcheck__label"><?= e($opt['label']) ?></span>
-                        <span class="sr-only"> — <?= e(t('filter.none_sr')) ?></span>
-                    </span>
-                <?php else: ?>
-                    <a class="pcheck<?= $opt['on'] ? ' is-on' : '' ?>"
-                       href="<?= e($toggleUrl($key, $opt['key'])) ?>"
-                       <?= $opt['on'] ? 'aria-current="true"' : '' ?>
-                       rel="nofollow"
-                       <?php /* Hai thuộc tính cho hai cách gõ, khớp đúng hai phép so
-                                ở trên và ở assets/js/catalog.js. GIỮ NGUYÊN DẤU ở
-                                data-brand — nó so với String.toLowerCase() bên JS,
-                                vốn không bỏ dấu. */ ?>
-                       <?php if ($search): ?>data-brand="<?= e(utf8Lower($opt['label'])) ?>"
-                       data-brand-plain="<?= e(slugify($opt['label'])) ?>"<?php endif; ?>>
-                        <span class="pcheck__box" aria-hidden="true"><?= $opt['on'] ? '✓' : '' ?></span>
-                        <span class="pcheck__label"><?= e($opt['label']) ?></span>
-                        <?php if ($opt['on']): ?><span class="sr-only"> — <?= e(t('filter.on_sr')) ?></span><?php endif; ?>
-                    </a>
-                <?php endif; ?>
-            <?php endforeach; ?>
-
-            <?php if ($options === []): ?>
-                <p class="pfacet__none"><?= e(t('filter.no_brand')) ?></p>
-            <?php endif; ?>
-        </div>
-    </div>
-    <?php
-};
 
 /*
  * Có tiêu chí nào đang bật không — quyết định "Xoá tất cả" sáng hay mờ.
@@ -486,31 +176,7 @@ $checkGroup = static function (string $key, string $legend, array $options, bool
  */
 $hasFacetFilter = ($activeCount - ($filters['category'] !== '' ? 1 : 0)) > 0;
 
-/* Tách bộ sưu tập hợp tác khỏi bộ sưu tập theo mùa — hai nhóm khác nhau về
-   bản chất (một là hàng bắt tay với nhà thiết kế, một là chủ đề bán theo mùa)
-   nên đứng chung một danh sách thì không đọc ra được cái nào là cái nào. */
-$collabOptions = $groups['collab'];
 
-/*
- * BỘ SƯU TẬP NAY LUÔN HIỆN — 2026-08-25.
- *
- * Trước đây nhóm này chỉ vẽ khi URL đã có ?collection=, với lý lẽ: cột lọc
- * chốt ở BẢY nhóm theo bản thiết kế, còn bộ sưu tập theo mùa là cách BÀY HÀNG
- * ngoài trang chủ chứ không phải một thuộc tính của gọng kính, chen vào giữa
- * thì làm loãng đúng chỗ người ta đang dò thương hiệu.
- *
- * Cửa hàng quyết định ngược lại, và lý do đủ mạnh: bộ sưu tập nay có TRANG
- * RIÊNG (/bo-suu-tap) và một ô trên thanh điều hướng chính. Từ lúc nó là một
- * lối duyệt hàng chính thức thì việc người ta muốn bật/tắt nó ngay trong cột
- * lọc là chuyện đương nhiên — giấu đi thành ra bắt họ quay ra trang kia rồi
- * bấm vào lại.
- *
- * $groups['collection'] chỉ chứa những bộ CÓ HÀNG trong kết quả hiện tại, nên
- * không cần lọc thêm: bộ rỗng tự vắng mặt thay vì thành một dòng bấm vào ra
- * lưới trắng. Bộ đang ẩn trong khu quản trị cũng không lọt vào đây chừng nào
- * không còn sản phẩm nào gắn nó.
- */
-$collectionOptions = $groups['collection'];
 ?>
 
 <?php
@@ -529,207 +195,154 @@ partial('_layout/page-head', [
 ]);
 ?>
 
+<?php
+/*
+ * ════════════════════════════════════════════════════════════════════════════
+ * TẤM LỌC NGANG — thay cho cột lọc trái 280px (12/09/2026)
+ *
+ * Cột trái cũ là thứ đã ép bốn nhóm lọc phải gói vào ô xổ xuống; chú thích của
+ * chính nó nói thẳng: "một nhóm ăn ba, bốn dòng của một cột chỉ rộng 280px".
+ * Tấm ngang gỡ đúng cái ép ấy — bề ngang cả trang đủ cho bảy cột đứng cạnh
+ * nhau, nên mỗi nhóm bày thẳng ra hết lựa chọn.
+ *
+ * Cả ba trang có lưới sản phẩm (gọng · tròng · bộ sưu tập) dùng CHUNG một tấm
+ * — _layout/filter-bar.php. Trang nào hiện nhóm nào thì do $fbCols dưới đây
+ * quyết, không phải do tấm biết trước.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * NHÓM NÀO HIỆN RA — SỬA Ở ĐÚNG MỘT CHỖ
+ *
+ * $thuTuNhom bên dưới là danh sách DUY NHẤT quyết định có những cột nào và xếp
+ * theo thứ tự nào. Thêm/bớt một nhóm là sửa một dòng ở đó; đừng đi tìm trong
+ * phần dựng HTML, ở đó không còn tên nhóm nào cả.
+ * ════════════════════════════════════════════════════════════════════════════
+ */
+
+/* Nhãn của từng nhóm. Nhóm nào không có mục nào trong kết quả hiện tại thì tự
+   vắng mặt — tấm lọc tự bỏ qua cột rỗng. */
+$nhanNhom = [
+    'color'      => 'Màu gọng',
+    'shape'      => 'Kiểu dáng',
+    'material'   => 'Chất liệu',
+    'gender'     => 'Giới tính',
+    'brand'      => 'Thương hiệu',
+    'collab'     => 'Bộ sưu tập hợp tác',
+    'collection' => 'Bộ sưu tập',
+    'lens_type'  => 'Loại tròng',
+    'lens_index' => 'Chiết suất',
+    'lens_coat'  => 'Tính năng / lớp phủ',
+    'lens_color' => 'Màu tròng',
+];
+
+/* Trang tròng kính và trang gọng hỏi hai bộ tiêu chí khác nhau: kiểu dáng và
+   chất liệu là thuộc tính của GỌNG, chiết suất và lớp phủ là của TRÒNG. Thương
+   hiệu, bộ sưu tập và khoảng giá thì chung — chúng không thuộc về gọng hay
+   tròng, chúng thuộc về việc mua hàng. */
+$thuTuNhom = $laTrongKinh
+    ? ['lens_type', 'lens_index', 'lens_coat', 'lens_color', 'brand', 'collection']
+    : ['color', 'shape', 'material', 'gender', 'brand', 'collab', 'collection'];
+
+$fbCols = [];
+
+foreach ($thuTuNhom as $khoa) {
+    if (empty($groups[$khoa])) {
+        continue;
+    }
+
+    $muc = [];
+
+    foreach ($groups[$khoa] as $opt) {
+        $muc[] = [
+            'label' => $opt['label'],
+            'url'   => $toggleUrl($khoa, $opt['key']),
+            'on'    => (bool) $opt['on'],
+            /* count 0 = bấm vào sẽ ra lưới rỗng. Mục ĐANG BẬT không bao giờ bị
+               tắt, nếu không thì không còn cách nào bỏ lọc nó. */
+            'off'   => $opt['count'] === 0,
+        ];
+    }
+
+    $fbCols[] = ['label' => $nhanNhom[$khoa] ?? $khoa, 'options' => $muc];
+}
+
+/* KHOẢNG GIÁ là nhóm chọn-MỘT và không lên URL dạng mảng — địa chỉ của nó là
+   ?price=2, một chỉ số trong PRICE_RANGES. Đổi sang price[]=2 cho giống mấy
+   nhóm kia sẽ làm hỏng mọi liên kết đã có người lưu. */
+if ($hasPrices && $groups['price'] !== []) {
+    $mucGia = [[
+        'label' => 'Tất cả mức giá',
+        'url'   => $buildUrl(['price' => null, 'page' => null]),
+        'on'    => $priceIndex === null,
+        'off'   => false,
+    ]];
+
+    foreach ($groups['price'] as $opt) {
+        $mucGia[] = [
+            'label' => $opt['label'],
+            'url'   => $buildUrl(['price' => $opt['key'], 'page' => null]),
+            'on'    => (bool) $opt['on'],
+            'off'   => $opt['count'] === 0,
+        ];
+    }
+
+    $fbCols[] = ['label' => 'Khoảng giá', 'single' => true, 'options' => $mucGia];
+}
+
+/*
+ * SẮP XẾP NẰM TRONG TẤM LỌC (12/09/2026, theo yêu cầu chủ dự án).
+ *
+ * Trước đây nó là một ô <select> đứng riêng ở thanh trên lưới. Hai chỗ điều
+ * khiển cùng một lưới, cách nhau nửa màn hình, mà cái nào cũng đổi đúng một
+ * tham số trên URL. Gom vào đây thì mọi thứ tác động lên lưới nằm chung một
+ * tấm — và ô sắp xếp cũ đã gỡ khỏi .catbar.
+ *
+ * 'newest' là mặc định nên $buildUrl tự bỏ nó khỏi URL; mục này vì thế vừa là
+ * "Mới nhất" vừa là "về mặc định".
+ */
+$fbCols[] = [
+    'label'   => 'Sắp xếp',
+    'single'  => true,
+    'options' => array_map(
+        static fn (string $gt, string $nhan): array => [
+            'label' => $nhan,
+            'url'   => $buildUrl(['sort' => $gt, 'page' => null]),
+            'on'    => ($filters['sort'] ?: 'newest') === $gt,
+            'off'   => false,
+        ],
+        array_keys($sapXepMuc = [
+            'newest'     => t('cat.sort_newest'),
+            'popular'    => t('cat.sort_popular'),
+            'price-asc'  => t('cat.sort_price_asc'),
+            'price-desc' => t('cat.sort_price_desc'),
+        ]),
+        array_values($sapXepMuc)
+    ),
+];
+
+?>
+
 <!-- ============================================================
-     THÂN TRANG — cột lọc + lưới kết quả
+     THÂN TRANG — tấm lọc + lưới kết quả
      ============================================================ -->
 <section class="catbody">
+
+    <?php
+    /* NẰM TRONG .catbody, và phải thế: assets/js/catalog.js thay ruột hai khối
+       `.fbar` và `.catmain` sau mỗi cú lọc, mà nó tìm cả hai BÊN TRONG
+       .catbody. Đặt tấm ra ngoài thẻ này thì mỗi cú bấm tiêu chí lại tải lại
+       cả trang thay vì đổi tại chỗ — chạy đúng, nhưng chậm hơn hẳn. */
+    partial('_layout/filter-bar', [
+        'fbCols'  => $fbCols,
+        'fbTotal' => (int) $total,
+        /* ✕ và "Xoá tất cả" cùng trỏ về trang này KHÔNG mang tiêu chí nào. Giữ
+           nguyên ?q= nếu khách tới từ ô tìm kiếm: xoá bộ lọc khác với xoá từ
+           khoá đang tìm. */
+        'fbClose' => $buildUrl($resetPatch),
+        'fbClear' => $hasFacetFilter ? $buildUrl($resetPatch) : '',
+    ]);
+    ?>
+
     <div class="catbody__grid">
-
-        <!-- ────────────────────────────────────────────────────
-             CỘT LỌC
-             <details> để màn hình hẹp thu gọn được mà không cần
-             JavaScript; từ 1101px CSS ép luôn mở và bỏ nút bấm.
-             Dưới 1101px, CSS biến .cfilter__panel thành bottom-sheet.
-             ──────────────────────────────────────────────────── -->
-        <details class="cfilter" data-filter-sheet>
-            <summary class="cfilter__toggle">
-                <?= icon('filter', '', 16) ?>
-                <?= e(t('filter.title')) ?>
-                <?php if ($activeCount > 0): ?>
-                    <span class="cfilter__count"><?= $activeCount ?><span class="sr-only"> <?= e(t('filter.count_sr')) ?></span></span>
-                <?php endif; ?>
-            </summary>
-
-            <?php /* Nền mờ sau bottom-sheet. Bấm vào là đóng — nhưng đó là
-                     việc của JavaScript; không có JS thì nó chỉ là một lớp
-                     màu, và người dùng đóng sheet bằng chính nút "Bộ lọc"
-                     phía trên. Ẩn hoàn toàn ở desktop. */ ?>
-            <div class="cfilter__scrim" data-sheet-close hidden></div>
-
-            <div class="cfilter__panel">
-
-                <div class="cfilter__head">
-                    <p class="cfilter__title">Bộ lọc</p>
-                    <?php /* Chưa lọc gì thì làm mờ và tắt hẳn thay vì giấu đi:
-                             bản thiết kế luôn vẽ nút này, mà giấu rồi hiện lại
-                             sẽ khiến hàng tiêu đề nhảy chiều cao mỗi lần bấm
-                             tiêu chí lọc đầu tiên. */ ?>
-                    <?php if ($hasFacetFilter): ?>
-                        <a class="cfilter__clear" rel="nofollow" href="<?= e($buildUrl($resetPatch)) ?>"><?= e(t('filter.clear_all')) ?></a>
-                    <?php else: ?>
-                        <span class="cfilter__clear is-off" aria-hidden="true"><?= e(t('filter.clear_all')) ?></span>
-                    <?php endif; ?>
-                </div>
-
-                <?php if ($laTrongKinh): ?>
-                    <?php
-                    /*
-                     * ─────────────────────────────────────────────────────
-                     * CỘT LỌC CỦA TRANG TRÒNG KÍNH
-                     *
-                     * Sáu nhóm, theo yêu cầu cửa hàng: loại tròng · chiết
-                     * suất · tính năng/lớp phủ · màu tròng · thương hiệu ·
-                     * khoảng giá.
-                     *
-                     * BỐN NHÓM ĐẦU đọc từ `lens_options` — cửa hàng tự thêm
-                     * mục ở /quan-tri/thuoc-tinh-trong, không phải sửa mã.
-                     * Nhóm nào chưa hàng nào được tick thì tự vắng mặt, nên
-                     * cột lọc lớn dần theo lúc cửa hàng nhập đủ thuộc tính
-                     * chứ không bày sẵn bốn ô rỗng.
-                     *
-                     * LỚP PHỦ LÀ DANH SÁCH TICK, không phải ô chọn — cửa
-                     * hàng yêu cầu chọn nhiều. Đó cũng là nhóm duy nhất mà
-                     * một sản phẩm mang NHIỀU giá trị cùng lúc (một tròng
-                     * vừa chống ánh sáng xanh vừa đổi màu), nên ô chọn-một
-                     * không diễn tả nổi. Ba nhóm kia mỗi tròng chỉ có một
-                     * giá trị thật sự, nên ô chọn là đúng.
-                     *
-                     * "Màu tròng" gộp luôn phần ĐẶC TÍNH QUANG HỌC theo cách
-                     * cửa hàng đặt tên: Gradient và Tráng gương nằm trong
-                     * danh sách màu, còn Phân cực và Đổi màu nằm ở nhóm lớp
-                     * phủ — chúng là lớp phủ thật, và để cả hai chỗ thì cùng
-                     * một tròng đếm hai lần.
-                     * ─────────────────────────────────────────────────────
-                     */
-                    ?>
-                    <?php if ($groups['lens_type'] !== []): ?>
-                        <div class="pfacet">
-                            <?php $pick('lens_type', 'Loại tròng', $groups['lens_type'], 'Tất cả loại tròng'); ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($groups['lens_index'] !== []): ?>
-                        <div class="pfacet">
-                            <?php $pick('lens_index', 'Chiết suất', $groups['lens_index'], 'Tất cả chiết suất'); ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php $checkGroup('lens_coat', 'Tính năng / lớp phủ', $groups['lens_coat']); ?>
-
-                    <?php if ($groups['lens_color'] !== []): ?>
-                        <div class="pfacet">
-                            <?php $pick('lens_color', 'Màu tròng', $groups['lens_color'], 'Tất cả màu tròng'); ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
-
-                    <?php /* KHOẢNG GIÁ dùng CHUNG hàm với trang gọng, kể cả cờ
-                             $mang = false — nó vẫn là ?price=<chỉ số>, một
-                             thang giá cho cả kho. Tròng và gọng cùng một dải
-                             giá thì hai thang riêng chỉ là hai chỗ phải nhớ
-                             sửa cùng lúc. */ ?>
-                    <?php if ($hasPrices && $groups['price'] !== []): ?>
-                        <div class="pfacet">
-                            <?php $pick('price', 'Khoảng giá', $groups['price'], 'Tất cả mức giá', false); ?>
-                        </div>
-                    <?php endif; ?>
-
-                <?php else: ?>
-                <?php if ($groups['shape'] !== []): ?>
-                        <div class="pfacet">
-                            <?php /* "Kiểu dáng" chứ không "Dáng gọng" (2026-08-30):
-                                     kho bán cả tròng kính và phụ kiện, mà "gọng" thì
-                                     chỉ đúng với một phần hàng. Bảng thông số ở trang
-                                     chi tiết vẫn ghi "Dáng gọng" — đó là dòng nói về
-                                     riêng cái gọng nên vẫn đúng nghĩa. */ ?>
-                            <?php $pick('shape', 'Kiểu dáng', $groups['shape'], 'Tất cả kiểu dáng'); ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if ($groups['material'] !== [] || $groups['eco'] !== []): ?>
-                        <div class="pfacet">
-                            <?php $pick('material', 'Chất liệu', $groups['material'], 'Tất cả chất liệu'); ?>
-
-                            <?php /* CHIP "TÁI CHẾ / BIO" ngay dưới ô chọn, trong cùng
-                                     khối. Nó là nhóm lọc riêng (?eco[]=recycled) nên
-                                     không nhét vào ô chọn được, nhưng người dùng đọc
-                                     nó như một chất liệu nữa — tách thành khối có tiêu
-                                     đề riêng là thừa một dòng chữ hoa cho đúng một
-                                     mục. */ ?>
-                            <?php if ($groups['eco'] !== []): ?>
-                                <div class="pfacet__chips">
-                                    <?php foreach ($groups['eco'] as $opt): ?>
-                                        <?php $chip('eco', $opt); ?>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php $checkGroup('brand', 'Thương hiệu', $groups['brand'], true); ?>
-                    <?php $checkGroup('collab', 'Bộ sưu tập hợp tác', $collabOptions); ?>
-
-                    <?php /* Đứng ở đây chứ không dưới cùng để "Giới tính" luôn là
-                             nhóm chốt cột lọc. */ ?>
-                    <?php $checkGroup('collection', 'Bộ sưu tập', $collectionOptions); ?>
-
-                    <?php
-                    /*
-                     * KHOẢNG GIÁ — ô xổ xuống, giống ba ô còn lại.
-                     *
-                     * Chỉ hiện khi kho đã có giá: một ô chọn không lọc ra được gì
-                     * thì thà đừng vẽ, người dùng bấm rồi thấy lưới không đổi sẽ
-                     * tưởng trang hỏng.
-                     *
-                     * $mang = false. Đây là nhóm DUY NHẤT không lên URL dạng mảng:
-                     * nó vốn đã chọn-một từ trước và địa chỉ là ?price=2. Đổi sang
-                     * price[]=2 chỉ để cho giống ba ô kia là làm hỏng mọi liên kết
-                     * đã có người lưu — xem chú thích ở $state đầu file.
-                     *
-                     * Ô chọn còn HƠN dãy ô tròn cũ một chỗ: dãy cũ không có mục
-                     * "tất cả" nên phải bấm lại chính ô đang chọn để bỏ lọc, một
-                     * cử chỉ không ai đoán ra nếu chưa từng thử. Nay có hẳn một
-                     * dòng "Tất cả mức giá".
-                     */
-                    ?>
-                    <?php if ($hasPrices && $groups['price'] !== []): ?>
-                        <div class="pfacet">
-                            <?php $pick('price', 'Khoảng giá', $groups['price'], 'Tất cả mức giá', false); ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php
-                    /*
-                     * GIỚI TÍNH — ô xổ xuống, và nay là nhóm CUỐI của cột lọc.
-                     *
-                     * Tên cũ là "Đối tượng" (2026-08-30 đổi theo yêu cầu). Danh
-                     * sách vẫn nguyên bốn mục Nam · Nữ · Unisex · Trẻ em, tức là
-                     * "Trẻ em" nay nằm dưới một tiêu đề nói về giới tính trong khi
-                     * nó là nhóm tuổi. Biết và chấp nhận: đây là cách gần như mọi
-                     * trang bán kính ở Việt Nam đặt tên, và khách tìm bằng chữ
-                     * "giới tính" chứ không phải "đối tượng". Muốn chuẩn hơn thì
-                     * phải TÁCH thành hai nhóm lọc — thêm cột và thêm khoá trong
-                     * ProductTaxonomy::GENDERS, không phải đổi mỗi cái nhãn ở đây.
-                     */
-                    ?>
-                    <?php if ($groups['gender'] !== []): ?>
-                        <div class="pfacet">
-                            <?php $pick('gender', 'Giới tính', $groups['gender'], 'Tất cả giới tính'); ?>
-                        </div>
-                    <?php endif; ?>
-
-                <?php endif; ?>
-
-                <?php /* Chốt của bottom-sheet trên màn hình hẹp: sheet che gần
-                         hết màn hình nên nút đóng phải nằm TRONG nó, không thể
-                         bắt người dùng cuộn ngược lên tìm lại chữ "Bộ lọc".
-                         CSS giấu nút này từ 1101px trở lên. */ ?>
-                <button type="button" class="cfilter__done" data-sheet-close>
-                    <?= e(t('cat.show_n', [':n' => (string) (int) $total])) ?>
-                </button>
-            </div>
-        </details>
 
         <!-- ────────────────────────────────────────────────────
              KẾT QUẢ
@@ -753,39 +366,10 @@ partial('_layout/page-head', [
                     <?php endif; ?>
                 </p>
 
-                <form class="catsort" method="get" action="<?= e($catalogBase) ?>">
-                    <?php $hiddenFilters(['sort', 'page']); ?>
-                    <label class="catsort__label" for="f-sort"><?= e(t('cat.sort_by')) ?></label>
-                    <?php /* .catpick--select: ô này VẪN là <select> (thanh sắp xếp
-                             không đi cùng đợt đổi cột lọc sang <details>) nên
-                             cần biến thể giữ lại dáng cũ — xem category.css. */ ?>
-                    <span class="catpick catpick--select">
-                        <select class="catpick__select" id="f-sort" name="sort" data-pick="sort">
-                            <?php foreach ([
-                                'newest'     => t('cat.sort_newest'),
-                                'popular'    => t('cat.sort_popular'),
-                                'price-asc'  => t('cat.sort_price_asc'),
-                                'price-desc' => t('cat.sort_price_desc'),
-                            ] as $value => $text): ?>
-                                <option value="<?= e($value) ?>"<?= $filters['sort'] === $value ? ' selected' : '' ?>><?= e($text) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <?php
-                        /* SVG chữ V vẽ tay. Trước đây là ký tự ▼ — mà ký tự thì
-                           mỗi hệ điều hành vẽ một kiểu: Windows ra tam giác đặc
-                           nhỏ xíu, Android ra một hình khác hẳn, và không chỉnh
-                           được độ dày nét cho khớp phần còn lại của site. */
-                        ?>
-                        <svg class="catpick__caret" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.2"
-                                  stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </span>
-                    <?php /* Ẩn khi có JavaScript (catalog.js đổi ô chọn là gửi
-                             luôn). Không có JS thì đây là cách duy nhất để
-                             chốt lựa chọn, nên không được bỏ. */ ?>
-                    <button type="submit" class="catpick__go"><?= e(t('filter.apply')) ?></button>
-                </form>
+                <?php /* Ô "Sắp xếp theo" ĐÃ GỠ KHỎI ĐÂY (12/09/2026).
+                         Nó nay là một cột trong tấm lọc phía trên — xem khối
+                         "SẮP XẾP NẰM TRONG TẤM LỌC". Hai chỗ điều khiển cùng
+                         một lưới, cách nhau nửa màn hình, là thứ vừa dọn. */ ?>
             </div>
 
             <?php if ($total === 0): ?>

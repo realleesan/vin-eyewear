@@ -421,6 +421,15 @@ return [
     /* Bốn danh sách thuộc tính tròng (loại · chiết suất · lớp phủ · màu) —
        chúng dựng nên bộ lọc của /san-pham/trong-kinh. Đặt ngay trên "Giá tròng"
        vì hai màn cùng nói về tròng và người mở cái này thường mở luôn cái kia. */
+    /* TIÊU CHÍ LỌC — tuỳ biến những mục mà bộ lọc TỰ RÚT ra từ dữ liệu hàng
+       (đặt lại tên, gộp, ẩn, ghim lên đầu). Khác hẳn 'thuoc-tinh-trong' ngay
+       dưới: ở đó cửa hàng KHAI danh sách rồi sản phẩm tick vào. */
+    'quan-tri/tieu-chi-loc'          => 'FilterOptionAdminController@index',
+    'quan-tri/tieu-chi-loc/luu'      => 'FilterOptionAdminController@save',   // POST
+    'quan-tri/tieu-chi-loc/hien'     => 'FilterOptionAdminController@toggle', // POST
+    'quan-tri/tieu-chi-loc/xoa'      => 'FilterOptionAdminController@delete', // POST
+    'quan-tri/tieu-chi-loc/thu-tu'   => 'FilterOptionAdminController@move',   // POST
+
     'quan-tri/thuoc-tinh-trong'         => 'LensOptionAdminController@index',
     'quan-tri/thuoc-tinh-trong/luu'     => 'LensOptionAdminController@save',   // POST
     'quan-tri/thuoc-tinh-trong/hien'    => 'LensOptionAdminController@toggle', // POST

@@ -107,6 +107,41 @@ class ProductTaxonomy
      * (xem matchToken), nếu không thì "female" chứa "male" và mọi món hàng nữ
      * đều thành hàng nam.
      */
+    /**
+     * Bảng quy đổi MÀU GỌNG.
+     *
+     * Nguồn màu là biến thể (`product_variants.color`) — mỗi gọng có mấy phương
+     * án màu thì bấy nhiêu mẩu chữ do người nhập hàng gõ: "Đen nhám", "Black",
+     * "Đen bóng", "Nâu havana". Không gộp thì bộ lọc mọc ra bốn dòng cho hai
+     * màu, và cột Màu gọng dài gấp ba những cột khác.
+     *
+     * Chỉ gom những sắc độ CÙNG MỘT MÀU: "Đen nhám" và "Đen bóng" về `den`, vì
+     * người tìm gọng đen không phân biệt độ bóng ở bước lọc. Nhưng "Vàng gold"
+     * và "Bạc" thì KHÔNG gộp thành "kim loại" — đó là hai màu khác nhau, gộp là
+     * lấy mất một lựa chọn có thật.
+     *
+     * Mẩu nào không khớp bảng này vẫn thành một lựa chọn RIÊNG mang đúng chữ đã
+     * gõ — xem canonical(). Nhờ vậy nhập một màu lạ là bộ lọc tự có, không phải
+     * sửa file này.
+     */
+    private const COLORS = [
+        'den'        => ['label' => 'Đen',        'syn' => ['den', 'black', 'den-nham', 'den-bong', 'matte-black', 'den-mo']],
+        'trang'      => ['label' => 'Trắng',      'syn' => ['trang', 'white', 'trang-sua', 'ivory', 'nga']],
+        'xam'        => ['label' => 'Xám',        'syn' => ['xam', 'gray', 'grey', 'ghi', 'xam-khoi']],
+        'bac'        => ['label' => 'Bạc',        'syn' => ['bac', 'silver', 'ma-bac']],
+        'vang-gold'  => ['label' => 'Vàng gold',  'syn' => ['vang', 'gold', 'vang-gold', 'ma-vang', 'gold-plated', 'champagne']],
+        'nau'        => ['label' => 'Nâu',        'syn' => ['nau', 'brown', 'havana', 'nau-havana', 'tortoise', 'doi-moi', 'nau-tra']],
+        'hong'       => ['label' => 'Hồng',       'syn' => ['hong', 'pink', 'hong-pastel', 'rose', 'vang-hong', 'rose-gold']],
+        'do'         => ['label' => 'Đỏ',         'syn' => ['do', 'red', 'do-do', 'burgundy', 'do-ruou']],
+        'cam'        => ['label' => 'Cam',        'syn' => ['cam', 'orange']],
+        'vang-chanh' => ['label' => 'Vàng chanh', 'syn' => ['vang-chanh', 'yellow']],
+        'xanh-la'    => ['label' => 'Xanh lá',    'syn' => ['xanh-la', 'green', 'luc', 'xanh-reu']],
+        'xanh-duong' => ['label' => 'Xanh dương', 'syn' => ['xanh-duong', 'blue', 'navy', 'xanh-navy', 'xanh-bien']],
+        'tim'        => ['label' => 'Tím',        'syn' => ['tim', 'purple', 'violet']],
+        'trong-suot' => ['label' => 'Trong suốt', 'syn' => ['trong-suot', 'clear', 'transparent', 'trong', 'crystal']],
+        'nhieu-mau'  => ['label' => 'Nhiều màu',  'syn' => ['nhieu-mau', 'multicolor', 'multicolour', 'multi', 'phoi-mau']],
+    ];
+
     private const GENDERS = [
         'male'   => ['label' => 'Nam',    'syn' => ['male', 'nam', 'men', 'man']],
         'female' => ['label' => 'Nữ',     'syn' => ['female', 'nu', 'women', 'woman', 'ladies']],
@@ -173,10 +208,10 @@ class ProductTaxonomy
         [$brands, $collab] = self::brands((string) ($p['brand'] ?? ''));
 
         return [
-            'shape'      => self::canonical((string) ($p['frame_shape'] ?? ''), self::SHAPES),
+            'shape'      => self::canonical((string) ($p['frame_shape'] ?? ''), self::SHAPES, 'shape'),
             'material'   => $materials,
             'eco'        => $eco ? ['recycled' => self::ECO_LABEL] : [],
-            'gender'     => self::canonical((string) ($p['gender'] ?? ''), self::GENDERS),
+            'gender'     => self::canonical((string) ($p['gender'] ?? ''), self::GENDERS, 'gender'),
             'lens'       => self::lens($p),
             'brand'      => $brands,
             'collab'     => $collab,
@@ -201,6 +236,50 @@ class ProductTaxonomy
             'lens_coat'  => self::lopPhu($p),
             'lens_color' => self::tuOption((string) ($p['lens_color'] ?? ''), 'mau-trong'),
         ];
+    }
+
+    /**
+     * MÀU GỌNG của một mặt hàng — gom từ biến thể, thiếu thì lùi về cột `color`.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * VÌ SAO LẤY TỪ BIẾN THỂ CHỨ KHÔNG PHẢI CỘT `products.color`
+     *
+     * Một gọng bán ra mấy màu là mấy DÒNG trong product_variants, mỗi dòng một
+     * mã hàng và một mức tồn riêng. Cột `products.color` chỉ ghi được một chuỗi
+     * cho cả mặt hàng, nên lọc theo nó là lọc theo "màu của tấm ảnh bìa" — khách
+     * chọn "Nâu" sẽ không thấy cái gọng có bán màu nâu chỉ vì ảnh bìa chụp bản
+     * màu đen.
+     *
+     * ─────────────────────────────────────────────────────────────────────
+     * NHƯNG CỘT CŨ VẪN LÀ LƯỚI ĐỠ, VÀ ĐỪNG GỠ NÓ
+     *
+     * Mặt hàng chưa khai biến thể nào thì rơi về `products.color`. Không có vế
+     * này thì mọi gọng chưa nhập biến thể sẽ KHÔNG có màu nào cả — tức là biến
+     * mất khỏi lưới ngay khi khách bấm một màu bất kỳ. Hỏng âm thầm, và chỉ lộ
+     * ra khi có người khiếu nại rằng hàng của họ không ai tìm thấy.
+     *
+     * @param array<int,array<string,mixed>> $bienThe các dòng product_variants
+     * @return array<string,string>
+     */
+    public static function colors(array $p, array $bienThe): array
+    {
+        $tho = [];
+
+        foreach ($bienThe as $bt) {
+            $mau = trim((string) ($bt['color'] ?? ''));
+
+            if ($mau !== '') {
+                $tho[] = $mau;
+            }
+        }
+
+        /* Biến thể có nhưng KHÔNG dòng nào điền màu (phương án cỡ, phương án
+           chiết suất tròng) cũng tính là "chưa khai màu" — vẫn lùi về cột cũ. */
+        if ($tho === []) {
+            $tho[] = (string) ($p['color'] ?? '');
+        }
+
+        return self::canonical(implode(' / ', $tho), self::COLORS, 'color');
     }
 
     /**
@@ -312,14 +391,26 @@ class ProductTaxonomy
      * Mẩu không tra được trong bảng thì thành lựa chọn riêng, khoá là slug của
      * chính nó và nhãn là chữ người nhập đã gõ (đã dọn khoảng trắng).
      */
-    private static function canonical(string $raw, array $table): array
+    private static function canonical(string $raw, array $table, string $nhom = ''): array
     {
+        /* ĐỒNG NGHĨA CỦA CỬA HÀNG ĐỨNG TRƯỚC bảng gõ cứng: khai "pantos" cho
+           mục X ở /quan-tri/tieu-chi-loc thì chữ ấy về X, kể cả khi bảng cứng
+           cũng nhận ra nó. Cửa hàng biết hàng của mình rõ hơn bảng mặc định.
+           Nhóm rỗng = nơi gọi không muốn đè (dùng cho bảng phụ). */
+        $cuaHang = $nhom !== '' ? FilterOverrideModel::synonymMap($nhom) : [];
+
         $out = [];
 
         foreach (self::split($raw) as $piece) {
             $slug = slugify($piece);
 
             if ($slug === '') {
+                continue;
+            }
+
+            if (isset($cuaHang[$slug])) {
+                $khoa       = $cuaHang[$slug];
+                $out[$khoa] = $table[$khoa]['label'] ?? self::prettify($piece);
                 continue;
             }
 
@@ -363,7 +454,7 @@ class ProductTaxonomy
             }
         }
 
-        return [self::canonical($raw, self::MATERIALS), $eco];
+        return [self::canonical($raw, self::MATERIALS, 'material'), $eco];
     }
 
     /**

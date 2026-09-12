@@ -40,6 +40,8 @@ class ProductFacets
      */
     public const GROUPS = [
         'shape', 'material', 'eco', 'brand', 'collab', 'collection', 'lens', 'gender', 'price',
+        // Màu gọng (12/09/2026) — gom từ product_variants.color, xem attach().
+        'color',
         // Bốn nhóm chỉ dùng ở trang /san-pham/trong-kinh (2026-08-30). Vẫn khai
         // chung một danh sách vì tầng đếm động không phân biệt trang nào — nhóm
         // nào không có hàng thì tự vắng mặt. Xem cột lọc trong product/index.php.
@@ -55,7 +57,7 @@ class ProductFacets
      * trên URL nó là ?price=2 chứ không phải price[]=2.
      */
     public const MULTI = [
-        'shape', 'material', 'eco', 'brand', 'collab', 'collection', 'lens', 'gender',
+        'shape', 'material', 'eco', 'brand', 'collab', 'collection', 'lens', 'gender', 'color',
         'lens_type', 'lens_index', 'lens_coat', 'lens_color',
     ];
 
@@ -68,14 +70,91 @@ class ProductFacets
      */
     public static function attach(array $products, array $priceRanges = []): array
     {
+        /*
+         * MÀU GỌNG ĐI MỘT ĐƯỜNG RIÊNG, vì nó là nhóm DUY NHẤT không đọc được
+         * từ một dòng `products`: màu nằm ở các dòng product_variants của mặt
+         * hàng đó. ProductTaxonomy::of() chỉ nhận một dòng sản phẩm nên không
+         * với tới chúng.
+         *
+         * MỘT câu truy vấn cho CẢ TẬP, không phải một câu mỗi món:
+         * forProducts() nhận cả danh sách id và gom kết quả theo product_id.
+         * Gọi trong vòng lặp là N+1 câu lệnh cho một trang danh mục có thể có
+         * vài trăm món.
+         */
+        $bienThe = $products === []
+            ? []
+            : VariantModel::forProducts(array_column($products, 'id'));
+
         foreach ($products as $i => $p) {
             $facets          = ProductTaxonomy::of($p);
             $facets['price'] = self::priceKey($p, $priceRanges);
+            $facets['color'] = ProductTaxonomy::colors($p, $bienThe[$p['id']] ?? []);
 
-            $products[$i]['_facets'] = $facets;
+            $products[$i]['_facets'] = self::deLen($facets);
         }
 
         return self::pruneCollabBrands($products);
+    }
+
+    /**
+     * Áp bảng đè của cửa hàng lên bảng facet vừa rút ra được.
+     *
+     * ═════════════════════════════════════════════════════════════════════
+     * LÀM ĐÚNG HAI VIỆC, VÀ CỐ Ý KHÔNG LÀM VIỆC THỨ BA
+     *
+     *   GỘP   merge_into: mục A chuyển thành mục B. Sau bước này sản phẩm
+     *         đếm dưới B, lọc ?shape[]=B ra nó, và A không còn tồn tại.
+     *   ĐỔI TÊN  label: chỉ thay chữ hiện ra, khoá giữ nguyên nên mọi liên
+     *         kết cũ vẫn trúng.
+     *
+     * KHÔNG lọc mục bị ẩn ở đây. `is_visible = 0` nghĩa là "thôi bày ra như
+     * một lựa chọn", KHÔNG phải "sản phẩm này mất thuộc tính đó". Gỡ khỏi
+     * facet là địa chỉ ?shape[]=… cũ mà khách đã lưu bỗng trả về lưới rỗng,
+     * và mega menu trỏ vào một tiêu chí không còn khớp món nào. Việc ẩn thuộc
+     * về tầng dựng DANH SÁCH LỰA CHỌN — xem ProductModel::catalog().
+     *
+     * ═════════════════════════════════════════════════════════════════════
+     * GỘP CHỈ ĐI MỘT CHẶNG
+     *
+     * A -> B -> C thì A về B, không về C. Đi tiếp nhiều chặng là mở cửa cho
+     * vòng lặp vô hạn (A -> B, B -> A) và cho những dây gộp dài mà không ai
+     * còn hình dung nổi kết quả. Muốn cả ba về C thì khai thẳng A -> C và
+     * B -> C; màn quản trị nói rõ điều đó.
+     */
+    private static function deLen(array $facets): array
+    {
+        foreach ($facets as $nhom => $muc) {
+            if (!is_array($muc) || $muc === [] || !isset(FilterOverrideModel::GROUPS[$nhom])) {
+                continue;
+            }
+
+            $de = FilterOverrideModel::forGroup($nhom);
+
+            if ($de === []) {
+                continue;
+            }
+
+            $moi = [];
+
+            foreach ($muc as $khoa => $nhan) {
+                $gop = $de[$khoa]['merge_into'] ?? null;
+
+                /* Gộp vào một khoá KHÔNG tồn tại trong bảng đè vẫn hợp lệ:
+                   đích có thể là một tiêu chí máy tự rút ra (gộp "Pantos tròn"
+                   về "pantos"). Chỉ chặn gộp vào chính mình — một dòng như thế
+                   là lỗi nhập liệu và nó sẽ làm mục biến mất. */
+                if ($gop !== null && $gop !== $khoa) {
+                    $khoa = $gop;
+                    $nhan = $de[$gop]['label'] ?? ($muc[$gop] ?? $nhan);
+                }
+
+                $moi[$khoa] = $de[$khoa]['label'] ?? $nhan;
+            }
+
+            $facets[$nhom] = $moi;
+        }
+
+        return $facets;
     }
 
     /**
@@ -315,11 +394,84 @@ class ProductFacets
             ];
         }
 
+        /*
+         * ═════════════════════════════════════════════════════════════════════
+         * TUỲ BIẾN CỦA CỬA HÀNG ÁP Ở ĐÂY — MỘT CHỖ CHO CẢ BA TRANG
+         *
+         * Ẩn và ghim vốn nằm trong ProductModel::catalog(). Nhưng trang chi
+         * tiết bộ sưu tập gọi THẲNG group() chứ không qua catalog(), nên nó
+         * không nhận được gì cả: cửa hàng ẩn "Oval" ở /quan-tri/tieu-chi-loc
+         * thì trang gọng kính nghe lời, trang bộ sưu tập vẫn bày ra.
+         *
+         * ⚠ ĐỪNG chuyển hai khối này ngược lên tầng gọi. Mọi danh sách lựa
+         * chọn của cả site đều đi qua đúng hàm này — đây là chỗ duy nhất áp
+         * một lần mà không trang nào bị bỏ quên.
+         * ═════════════════════════════════════════════════════════════════════
+         */
+        $de = FilterOverrideModel::forGroup($group);
+
+        if ($de !== []) {
+            /*
+             * THỨ TỰ CỬA HÀNG XẾP TAY ĐỨNG TRƯỚC thứ tự máy tính theo số lượng.
+             *
+             * Chỉ mục CÓ sort_order > 0 mới được ghim; mục để 0 (mặc định) rơi
+             * xuống dưới và vẫn xếp theo số hàng như trước. Nhờ vậy cửa hàng
+             * ghim ba màu bán chạy lên đầu mà không phải xếp tay cả ba chục
+             * mục còn lại.
+             */
+            $ghim = [];
+
+            foreach ($de as $khoa => $o) {
+                if ($o['sort_order'] > 0) {
+                    $ghim[$khoa] = $o['sort_order'];
+                }
+            }
+
+            if ($ghim !== []) {
+                asort($ghim);
+
+                /*
+                 * array_unique GIỮ LẦN XUẤT HIỆN ĐẦU — và đó là cả điểm.
+                 *
+                 * ⚠ Bản trước chỉ array_merge. Với nhóm đã có $order sẵn
+                 * (Giới tính, bốn nhóm tròng) thì khoá vừa ghim NẰM HAI LẦN
+                 * trong mảng, mà array_flip() bên dưới lấy lần CUỐI — nên thứ
+                 * hạng của nó thành thứ hạng cũ và cú ghim không có tác dụng
+                 * gì. Ghim "Nữ" xong vẫn thấy "Nam" đứng trước.
+                 */
+                $order = array_values(array_unique(array_merge(array_keys($ghim), $order)));
+            }
+
+            /*
+             * MỤC BỊ ẨN RỜI KHỎI DANH SÁCH LỰA CHỌN — nhưng KHÔNG rời khỏi
+             * facet của sản phẩm (xem deLen() ở trên). Nghĩa là: thôi bày ra
+             * để bấm, mà địa chỉ ?shape[]=… cũ vẫn lọc đúng.
+             *
+             * MỤC ĐANG BẬT thì KHÔNG ẩn: khách đang đứng trên một tiêu chí mà
+             * nó biến mất khỏi cột lọc thì không còn cách nào tắt nó đi ngoài
+             * việc tự sửa thanh địa chỉ.
+             */
+            $options = array_values(array_filter(
+                $options,
+                static fn (array $o): bool =>
+                    !empty($o['on']) || ($de[(string) $o['key']]['is_visible'] ?? true)
+            ));
+        }
+
         if ($order !== []) {
             $rank = array_flip($order);
 
+            /*
+             * MỤC KHÔNG NẰM TRONG $order VẪN XẾP THEO SỐ HÀNG, không theo vần.
+             *
+             * ⚠ Bản trước hoà thì so nhãn. Hậu quả chỉ lộ ra từ khi có tính
+             * năng ghim: ghim MỘT thương hiệu lên đầu là $order khác rỗng, và
+             * ba chục hãng còn lại lập tức nhảy từ "nhiều hàng trước" sang xếp
+             * theo bảng chữ cái — ghim một mục mà xáo trộn cả cột.
+             */
             usort($options, static fn ($a, $b) =>
-                ($rank[$a['key']] ?? PHP_INT_MAX) <=> ($rank[$b['key']] ?? PHP_INT_MAX)
+                (($rank[$a['key']] ?? PHP_INT_MAX) <=> ($rank[$b['key']] ?? PHP_INT_MAX))
+                ?: ($b['total'] <=> $a['total'])
                 ?: strcmp($a['label'], $b['label']));
 
             return $options;

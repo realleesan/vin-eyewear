@@ -10,6 +10,7 @@
  *   $canEdit  — có quyền sửa hay không
  *   $editing  — bản ghi đang sửa (null = đang thêm mới)
  *   $addLabel — nhãn nút thêm, vd '+ Thêm sản phẩm'
+ *   $addUrl   — địa chỉ nút thêm (tuỳ chọn), mặc định '$base?them=1'
  *   $search   — ô tìm kiếm (tuỳ chọn), xem khối ngay dưới
  */
 
@@ -43,6 +44,18 @@ $search = $search ?? null;
  * nút vẫn chạy, chỉ là kém rõ.
  */
 $addLabel = $addLabel ?? '+ Thêm mới';
+
+/*
+ * $addUrl — ĐỊA CHỈ RIÊNG CHO NÚT THÊM (tuỳ chọn).
+ *
+ * Mặc định nút trỏ tới "$base?them=1", đúng cho mười mấy trang CRUD mà cả
+ * bảng nằm trên một địa chỉ trần. Trang nào chia nhóm bằng tham số — Tiêu chí
+ * lọc với ?nhom=… — thì "$base?them=1" làm rơi mất nhóm đang mở, và hộp thêm
+ * mở ra không biết mình đang thêm vào nhóm nào.
+ *
+ * Không truyền thì sinh ra y hệt như trước.
+ */
+$addUrl = ($addUrl ?? '') !== '' ? $addUrl : $base . '?them=1';
 ?>
 <header class="ahead ahead--row">
     <div>
@@ -83,7 +96,7 @@ $addLabel = $addLabel ?? '+ Thêm mới';
                      Vẫn hiện nút kể cả khi đang sửa: hộp thoại phủ kín màn
                      hình nên không ai nhìn thấy nó lúc đó, mà bỏ đi thì dòng
                      tiêu đề co lại rồi giãn ra mỗi lần đóng mở hộp. */ ?>
-            <a href="<?= e($base) ?>?them=1" class="astatus__save" data-modal><?= e($addLabel) ?></a>
+            <a href="<?= e($addUrl) ?>" class="astatus__save" data-modal><?= e($addLabel) ?></a>
         <?php else: ?>
             <p class="ahead__note">Bạn chỉ có quyền xem. Cần quyền quản lý để chỉnh sửa.</p>
         <?php endif; ?>

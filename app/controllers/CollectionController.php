@@ -143,16 +143,20 @@ class CollectionController extends BaseController
            │ trả kết quả khác nhau cho cùng một lựa chọn ngay lần đầu ai đó đổi
            │ luật gộp (VÀ/HOẶC) ở một bên.
            │
-           │ BỐN NHÓM, không phải cả GROUPS: bộ sưu tập vốn đã là MỘT bộ nên
+           │ NĂM NHÓM, không phải cả GROUPS: bộ sưu tập vốn đã là MỘT bộ nên
            │ nhóm 'collection' vô nghĩa ở đây, còn 'brand'/'collab' thì cả bộ
-           │ thường chung một hãng. Bốn nhóm còn lại là thứ thật sự khác nhau
+           │ thường chung một hãng. Năm nhóm còn lại là thứ thật sự khác nhau
            │ giữa các mẫu trong cùng một bộ.
+           │
+           │ 'color' (màu gọng) vào từ 12/09/2026, cùng đợt thêm nó cho trang
+           │ danh mục: trong một bộ sưu tập thì màu là thứ khác nhau NHIỀU
+           │ NHẤT giữa các mẫu, nên nó đáng đứng đầu chứ không phải vắng mặt.
            │
            │ attach() TRƯỚC apply(): apply đọc khoá '_facets' do attach gắn vào
            │ từng sản phẩm, gọi ngược thứ tự là lọc trên một mảng chưa có khoá
            │ nào và trả về rỗng — im lặng, không báo lỗi.
            └──────────────────────────────────────────────────────────────────── */
-        $nhomLoc = ['shape', 'material', 'lens_color', 'gender'];
+        $nhomLoc = ['color', 'shape', 'material', 'gender', 'lens_color'];
         $chon    = [];
 
         foreach ($nhomLoc as $g) {

@@ -988,124 +988,17 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   BỘ LỌC RIÊNG CỦA TRANG BỘ  (.cfil)
+   BỘ LỌC CỦA TRANG BỘ SƯU TẬP — ĐÃ CHUYỂN SANG components/filter-bar.css
 
-   Cùng hình với .cfilter của catalog.css — bảng tràn ngang bung ra từ một
-   hàng, không phải cột bên trái. Hai bộ lớp khác nhau vì hai trang dựng ở
-   hai đợt; luật thì giống nhau.
+   Bộ lớp .cfil* (một <details> bọc form GET với nút "Áp dụng") gỡ hẳn ngày
+   12/09/2026: trang này nay dùng CHUNG tấm lọc ngang .fbar với trang danh
+   mục — xem app/views/_layout/filter-bar.php.
+
+   ⚠ Đừng dựng lại bộ lớp riêng ở đây. Hai bản song song đã bắt đầu lệch
+   nhau về hành vi (bấm-là-lọc so với tick-rồi-Áp-dụng, làm mờ mục hết hàng
+   so với không) trước khi kịp gộp.
    ══════════════════════════════════════════════════════════════════════ */
 
-.cfil {
-    border-bottom: 1px solid var(--line);
-}
-
-.cfil__toggle {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    padding: 16px var(--edge);
-    font-size: var(--fs-ui);
-    cursor: pointer;
-    list-style: none;
-}
-
-.cfil__toggle::-webkit-details-marker {
-    display: none;
-}
-
-.cfil__badge,
-.cfil__count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
-    border-radius: 8px;
-    background: var(--ink);
-    color: #fff;
-    font-size: var(--fs-nano);
-}
-
-.cfil__panel {
-    padding: 0 var(--edge) 28px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.cfil__head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-}
-
-.cfil__title {
-    font-size: var(--fs-title);
-    font-weight: 400;
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.cfil__close,
-.cfil__clear {
-    border: 0;
-    background: none;
-    padding: 0;
-    color: var(--ink-3);
-    font-family: inherit;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    cursor: pointer;
-}
-
-.cfil__cols {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 24px 32px;
-}
-
-.cfil__col {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.cfil__legend {
-    font-size: var(--fs-body);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.cfil__opt {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    font-size: var(--fs-body);
-    cursor: pointer;
-}
-
-.cfil__foot {
-    display: flex;
-    gap: 8px;
-}
-
-.cfil__apply {
-    height: var(--h-btn);
-    padding: 0 28px;
-    border: 1px solid var(--ink);
-    border-radius: var(--r-pill);
-    background: var(--ink);
-    color: #fff;
-    font-family: inherit;
-    font-size: var(--fs-ui);
-    cursor: pointer;
-}
 
 /* ══════════════════════════════════════════════════════════════════════
    MÀN HẸP

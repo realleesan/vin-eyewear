@@ -99,6 +99,10 @@ $navGroups = [
         /* Ngay dưới "Giá tròng": hai màn cùng nói về tròng, và người sửa bảng
            giá thường là người vừa thêm một lựa chọn mới ở đây. */
         ['url' => '/quan-tri/thuoc-tinh-trong', 'label' => 'Thuộc tính tròng'],
+        /* Ngay dưới "Thuộc tính tròng" vì hai màn trả lời cùng một câu hỏi —
+           "bộ lọc ngoài kia hiện những mục gì" — chỉ khác nguồn: tròng thì
+           cửa hàng KHAI, gọng thì máy RÚT ra từ chữ người nhập hàng gõ. */
+        ['url' => '/quan-tri/tieu-chi-loc', 'label' => 'Tiêu chí lọc'],
     ]],
     ['label' => 'Marketing', 'items' => [
         ['url' => '/quan-tri/bo-suu-tap',  'label' => 'Bộ sưu tập'],

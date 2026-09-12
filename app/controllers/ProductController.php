@@ -95,7 +95,11 @@ class ProductController extends BaseController
      * một ô chọn không lọc ra được gì chỉ làm người dùng bấm rồi tưởng trang
      * hỏng. Nhập giá cho một sản phẩm là nhóm hiện lại, không phải sửa code.
      */
-    private const PRICE_RANGES = [
+    /* public chứ không private từ 13/09/2026: màn /quan-tri/tieu-chi-loc gọi
+       ProductModel::catalog() để lấy đúng danh sách tiêu chí mà khách đang
+       nhìn thấy, và catalog() đòi thang giá này. Chép một bản thứ hai sang đó
+       là hai thang giá rồi có ngày lệch nhau. */
+    public const PRICE_RANGES = [
         ['label' => 'Dưới 500 nghìn',     'min' => 0,       'max' => 500000],
         ['label' => '500 nghìn – 1 triệu','min' => 500000,  'max' => 1000000],
         ['label' => '1 – 1,5 triệu',      'min' => 1000000, 'max' => 1500000],
