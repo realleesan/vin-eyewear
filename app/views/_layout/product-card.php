@@ -238,7 +238,16 @@ foreach ($variants as $v) {
     <div class="oa-card__body">
         <div class="oa-card__info">
 
-            <span class="oa-card__kicker"><?= e($product['brand'] ?? 'Vin Eyewear') ?></span>
+            <?php
+            /* ĐÃ GỠ DÒNG NHÃN HIỆU (.oa-card__kicker) — 12/09/2026, theo yêu
+               cầu chủ dự án. Nó in $product['brand'], mà cả kho là một nhãn
+               "Vin Eyewear" nên mỗi thẻ lặp lại đúng một chuỗi ấy: một dòng
+               chữ không mang tin nào, chen giữa ảnh và tên hàng.
+
+               CỘT `brand` TRONG CSDL VẪN CÒN và các nơi khác vẫn đọc — đây
+               chỉ là gỡ khỏi THẺ. Lớp .oa-card__kicker cũng đã gỡ khỏi
+               oa.css vì đây là chỗ duy nhất dùng nó. */
+            ?>
 
             <?php
             /* notranslate / translate="no" / lang="vi" — tên sản phẩm là danh

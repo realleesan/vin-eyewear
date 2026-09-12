@@ -1436,12 +1436,6 @@ textarea.oa-field {
     min-width: 0;
 }
 
-/* Dòng gạch nối phía trên tên — chỗ giữ cho tên danh mục/bộ sưu tập */
-.oa-card__kicker {
-    color: var(--ink-5);
-    font-size: var(--fs-micro);
-}
-
 .oa-card__name {
     cursor: pointer;
     color: var(--ink);
