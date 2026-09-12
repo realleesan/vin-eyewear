@@ -1201,14 +1201,19 @@ textarea.oa-field {
    ══════════════════════════════════════════════════════════════════════ */
 
 /* Lưới 4 cột — dáng chuẩn của mọi trang có hàng: danh mục, bộ sưu tập,
-   băng trang chủ, kết quả tìm kiếm. */
-/* BA CỘT, KHÔNG PHẢI BỐN (12/09/2026, theo yêu cầu chủ dự án: lấy đúng cỡ
-   thẻ của gentlemonster.com). Ba cột cộng khe 6% và lề --edge-grid 60px cho
-   ra cột 387px ở màn 1440 — trùng số đo trên chính trang họ. Bốn cột trước
-   đây cho cột 315px, thẻ nhỏ hơn hẳn. */
+   băng trang chủ, kết quả tìm kiếm.
+
+   BỐN CỘT (12/09/2026, theo yêu cầu chủ dự án — trả lại sau một quãng ngắn
+   chạy ba cột). Bốn cột cộng khe 6% và lề --edge-grid 60px cho ra cột 315px
+   ở màn 1440. Ba cột cho cột 387px, đúng cỡ thẻ đo trên gentlemonster.com,
+   nhưng trang chủ mỗi băng lấy đúng 4 mặt hàng, nên ba cột luôn để lại một
+   thẻ mồ côi ở hàng dưới — bốn lần trong một lượt cuộn.
+
+   MỐC KẾ TIẾP LÀ 760px XUỐNG THẲNG 2 CỘT, KHÔNG QUA 3 — cũng theo yêu cầu
+   chủ dự án. Đừng "sửa" bằng cách chèn lại một mốc ba cột ở quãng giữa. */
 .oa-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--gap-row) var(--gap-col);
     padding: 40px var(--edge-grid) 0;
     background: var(--bg);
@@ -3344,9 +3349,8 @@ body.is-search-open {
 }
 
 @media (max-width: 1000px) {
-    /* ĐÃ GỠ luật hạ .oa-grid xuống 3 cột: cơ sở nay đã là 3. Đo trên
-       gentlemonster.com ở màn 1024 thì họ VẪN ba cột (cột 275px), nên mốc
-       hạ xuống 2 cột để nguyên ở 760px bên dưới. */
+    /* KHÔNG CÓ luật hạ .oa-grid xuống 3 cột ở mốc này, và đó là chủ ý:
+       lưới đi thẳng từ 4 cột xuống 2 cột ở mốc 760px bên dưới. */
 
     .oa-footer__brand,
     .oa-footer__help {

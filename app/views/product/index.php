@@ -818,8 +818,8 @@ partial('_layout/page-head', [
                             'showCompare' => true,
                             // Hàng thẻ ĐẦU TIÊN nằm trong khung nhìn ngay khi trang
                             // mở, lazy-load chúng chỉ làm ảnh tới chậm hơn. BỐN chứ
-                            // không ba: .pgrid xếp 4 cột từ 1101px (xem
-                            // components/product.css), trước đây .catgrid xếp 3.
+                            // không ba: .pgrid xếp 4 cột ở khổ máy tính
+                            // (assets/css/catalog.css).
                             'eager'       => $i < 4,
                         ]); ?>
                     <?php endforeach; ?>

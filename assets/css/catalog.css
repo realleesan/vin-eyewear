@@ -520,12 +520,14 @@ html.js .catpick__go {
    .pgrid còn nằm trong cả catalog.js (mảnh nạp ngầm) lẫn bốn file view.
    ══════════════════════════════════════════════════════════════════════ */
 
-/* Ba cột — cùng số với .oa-grid, xem khối chú thích ở đó (cỡ thẻ đo từ
-   gentlemonster.com). Hai chỗ PHẢI khớp nhau: lưới trang /san-pham và lưới
-   trang chủ đặt cạnh nhau trong cùng một lượt cuộn. */
+/* Bốn cột — cùng số với .oa-grid, xem khối chú thích ở đó (12/09/2026,
+   theo yêu cầu chủ dự án). Hai chỗ PHẢI khớp nhau: lưới trang /san-pham và
+   lưới trang chủ đặt cạnh nhau trong cùng một lượt cuộn; đổi số cột ở một
+   bên mà quên bên kia là thứ đọc ra ngay khi cuộn từ trang này sang trang
+   kia. Mốc kế tiếp là 760px xuống thẳng 2 cột, không qua 3. */
 .pgrid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--gap-row) var(--gap-col);
     padding: 40px var(--edge-grid) 0;
     list-style: none;
@@ -624,9 +626,8 @@ html.js .catpick__go {
    MÀN HẸP
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ĐÃ GỠ mốc 1000px hạ xuống 3 cột: cơ sở nay đã là 3. Đo trên
-   gentlemonster.com ở màn 1024 thì họ VẪN ba cột, nên mốc hạ xuống 2 cột
-   để nguyên ở 760px bên dưới. */
+/* KHÔNG CÓ mốc trung gian hạ xuống 3 cột, và đó là chủ ý: lưới đi thẳng
+   từ 4 cột xuống 2 cột ở mốc 760px ngay dưới — giống hệt .oa-grid. */
 
 @media (max-width: 760px) {
     .pgrid {
