@@ -1850,6 +1850,13 @@ textarea.oa-field {
     margin-left: 4px;
 }
 
+/* "+3" khi có hơn năm màu. Cùng cỡ và cùng màu với tên màu bên cạnh nó —
+   nó là một mẩu chữ phụ, không phải một cái chấm thứ sáu. */
+.oa-swatch__more {
+    font-size: var(--fs-micro);
+    color: var(--ink-4);
+}
+
 /* Nút "Xem thêm" cuối lưới — mẫu cho nó rất nhiều khoảng thở */
 .oa-more {
     display: flex;

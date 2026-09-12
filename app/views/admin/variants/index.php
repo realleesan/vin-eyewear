@@ -102,6 +102,7 @@ $base = '/quan-tri/bien-the';
             <thead>
                 <tr>
                     <th scope="col">Phương án</th>
+                    <th scope="col">Màu</th>
                     <th scope="col">Ghi chú</th>
                     <th scope="col">Chênh giá</th>
                     <th scope="col">Giá bán</th>
@@ -114,7 +115,7 @@ $base = '/quan-tri/bien-the';
             <tbody>
                 <?php if ($variants === []): ?>
                     <tr>
-                        <td colspan="<?= $canEdit ? 8 : 7 ?>">
+                        <td colspan="<?= $canEdit ? 9 : 8 ?>">
                             Mặt hàng này chưa có phương án nào — nó được bán như một sản phẩm đơn,
                             dùng kho online <?= (int) $product['stock_quantity'] ?> của chính nó.
                         </td>
@@ -125,6 +126,41 @@ $base = '/quan-tri/bien-the';
                     <?php $delta = (int) $v['price_delta']; ?>
                     <tr>
                         <td><code><?= e($v['label']) ?></code></td>
+
+                        <?php /* IN RA ĐÚNG CHẤM MÀ KHÁCH SẼ THẤY, không phải mã
+                                 trong CSDL — kể cả khi mã ấy để trống và hệ thống
+                                 tự suy từ tên màu. Đây là cách duy nhất người
+                                 nhập hàng biết chữ mình vừa gõ có được nhận ra
+                                 hay không, trước khi ra xem trang bán hàng. */ ?>
+                        <?php
+                        $btMa = trim((string) ($v['swatch_hex'] ?? ''));
+                        $btTu = false;
+
+                        if ($btMa === '' || !preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/', $btMa)) {
+                            $btMa = (string) ProductTaxonomy::colorHex((string) ($v['color'] ?? ''));
+                            $btTu = $btMa !== '';
+                        }
+                        ?>
+                        <td class="avcolor">
+                            <?php if ($btMa !== ''): ?>
+                                <span class="avdot" style="background: <?= e($btMa) ?>"
+                                      title="<?= e($btTu ? 'Tự suy từ tên màu' : 'Mã màu tự đặt') ?>"></span>
+                            <?php endif; ?>
+                            <?php if (trim((string) ($v['color'] ?? '')) !== ''): ?>
+                                <?= e($v['color']) ?>
+                                <?php if ($btMa === ''): ?>
+                                    <?php /* Gõ màu rồi mà không ra chấm = chữ ấy không
+                                             khớp màu chuẩn nào. Nói ngay tại dòng, kèm
+                                             cách chữa — dùng .badge--neutral như mọi
+                                             nhãn trung tính khác của khu quản trị. */ ?>
+                                    <span class="badge badge--neutral"
+                                          title="Không khớp màu chuẩn nào — điền Mã màu để tự đặt">chưa có chấm</span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span class="num">—</span>
+                            <?php endif; ?>
+                        </td>
+
                         <td class="atable__msg"><?= e($v['note'] ?? '—') ?></td>
                         <td><?= $delta === 0 ? '—' : ($delta > 0 ? '+' : '−') . money(abs($delta)) ?></td>
                         <td><?= money(VariantModel::priceOf($product, $v)) ?></td>
@@ -201,17 +237,57 @@ $base = '/quan-tri/bien-the';
                     <p class="field__hint">Dòng nhỏ dưới nhãn, giúp khách chọn đúng.</p>
                 </div>
 
+                <?php /* ┌─ Ô "MÀU" — THÊM 12/09/2026 ─────────────────────────
+                         │ Cột `product_variants.color` có từ đầu nhưng form này
+                         │ CHƯA BAO GIỜ ghi vào nó. Hậu quả kéo theo hai chỗ,
+                         │ cả hai đều im lặng:
+                         │
+                         │   · thẻ sản phẩm không có chấm màu nào (nó đọc màu
+                         │     từ đây);
+                         │   · bộ lọc "Màu gọng" không có dữ liệu, phải lùi về
+                         │     cột products.color của cả mặt hàng.
+                         │
+                         │ ⚠ Đây là ô quyết định cả hai thứ đó. Gõ tên màu bình
+                         │ thường ("Đen", "Nâu havana") — KHÔNG phải mã hex. */ ?>
+                <div class="field">
+                    <label for="color">Màu <span class="field__opt">(chỉ phương án màu)</span></label>
+                    <input type="text" id="color" name="color" maxlength="60"
+                           placeholder="Đen / Nâu havana / Vàng gold"
+                           value="<?= e($ed['color'] ?? '') ?>">
+                    <p class="field__hint">
+                        Chữ này vừa là tên màu khách đọc trên thẻ sản phẩm, vừa là thứ
+                        bộ lọc “Màu gọng” gom nhóm. Phương án chiết suất tròng hay cỡ
+                        gọng thì bỏ trống.
+                    </p>
+                </div>
+
                 <?php if ($hasSwatch): ?>
-                    <?php /* Hai ô CHỈ dành cho phương án MÀU. Phương án chiết suất
-                             tròng hay cỡ thì bỏ trống — trang bộ sưu tập chỉ vẽ ô màu
-                             cho biến thể nào có mã màu. */ ?>
+                    <?php /* MÃ MÀU LÀ Ô ĐÈ, KHÔNG PHẢI Ô BẮT BUỘC.
+
+                             Bỏ trống thì chấm màu vẫn hiện: hệ thống suy mã ra từ
+                             tên màu ở ô trên (ProductTaxonomy::colorHex — mười lăm
+                             màu chuẩn kèm đồng nghĩa). Chỉ điền khi phối màu thật
+                             khác hẳn màu chuẩn, ví dụ nâu havana vân đồi mồi.
+
+                             Hai ô cùng một tên `swatch_hex` là CỐ Ý: ô chọn màu của
+                             trình duyệt cho bấm nhanh, ô chữ cho dán mã và cho XOÁ
+                             (ô màu không có trạng thái "trống", nó luôn trả về một
+                             mã). Ô chữ đứng SAU nên khi cả hai cùng gửi, giá trị
+                             của nó thắng — PHP lấy giá trị cuối cùng của một tên.
+                             Đừng đảo thứ tự: đảo là không bao giờ xoá mã đi được. */ ?>
                     <div class="field">
-                        <label for="swatch_hex">Mã màu <span class="field__opt">(chỉ phương án màu)</span></label>
-                        <input type="text" id="swatch_hex" name="swatch_hex" maxlength="7"
-                               placeholder="#d8c3ac" value="<?= e($ed['swatch_hex'] ?? '') ?>">
+                        <label for="swatch_hex">Mã màu <span class="field__opt">(bỏ trống = suy từ tên màu)</span></label>
+                        <div class="afrm-swatch">
+                            <input type="color" id="swatch_hex_pick" name="swatch_hex"
+                                   aria-label="Chọn mã màu"
+                                   value="<?= e($ed['swatch_hex'] ?? '#888888') ?>">
+                            <input type="text" id="swatch_hex" name="swatch_hex" maxlength="7"
+                                   placeholder="bỏ trống để tự suy" value="<?= e($ed['swatch_hex'] ?? '') ?>">
+                        </div>
                         <p class="field__hint">
-                            Dạng <code>#rrggbb</code>. Sai dạng thì bị bỏ khi lưu — giá trị
-                            này vẽ thẳng ra ô màu tròn trong ngăn kéo thông số.
+                            Dạng <code>#rrggbb</code>. Sai dạng thì bị bỏ khi lưu. Chỉ cần
+                            điền khi phối màu khác hẳn màu chuẩn — còn lại cứ để trống,
+                            chấm màu vẫn hiện đúng theo tên màu ở ô trên.
                         </p>
                     </div>
 

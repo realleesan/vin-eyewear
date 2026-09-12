@@ -1324,6 +1324,49 @@ a.alist__name:hover { color: var(--brand); }
 
 .atable--full { min-width: 860px; }
 
+/* ┌─ CHẤM MÀU CỦA PHƯƠNG ÁN (/quan-tri/bien-the) ─────────────────────────
+   │ Cùng hình với .oa-swatch của thẻ sản phẩm ngoài trang bán hàng — cả điểm
+   │ của cột này là người nhập hàng thấy TRƯỚC đúng cái khách sẽ thấy.
+   │
+   │ Vòng viền mờ bên ngoài chứ không phải `border`: màu trắng và màu trong
+   │ suốt nếu không có nó thì thành một lỗ tròn vô hình trên nền trắng, mà
+   │ border thì ăn vào 14px đường kính làm chấm nhỏ đi so với bên kia. */
+/* Cột Màu KHÔNG xuống dòng: "Nâu havana" gãy làm hai dòng kéo cao cả hàng
+   gấp đôi hàng bên cạnh, và bảng này vốn đã cuộn ngang được. */
+.avcolor {
+    white-space: nowrap;
+}
+
+.avdot {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
+    vertical-align: -2px;
+}
+
+/* Ô chọn màu của trình duyệt + ô chữ đứng cạnh nhau trong form phương án. */
+.afrm-swatch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.afrm-swatch input[type="color"] {
+    flex: none;
+    width: 44px;
+    height: 36px;
+    padding: 2px;
+    cursor: pointer;
+}
+
+.afrm-swatch input[type="text"] {
+    flex: 1;
+    min-width: 0;
+}
+
 .atable th,
 .atable td {
     padding: 12px 20px;

@@ -124,22 +124,47 @@ class ProductTaxonomy
      * gõ — xem canonical(). Nhờ vậy nhập một màu lạ là bộ lọc tự có, không phải
      * sửa file này.
      */
+    /*
+     * ─────────────────────────────────────────────────────────────────────────
+     * 'hex' — MÀU MẶC ĐỊNH ĐỂ VẼ CHẤM MÀU TRÊN THẺ SẢN PHẨM
+     *
+     * Cột `product_variants.swatch_hex` vẫn là thứ ĐÈ LÊN bảng này: cửa hàng
+     * gõ mã riêng cho một phối màu cụ thể (nâu havana vân đồi mồi khác hẳn nâu
+     * trơn) thì mã ấy thắng. Bảng đây chỉ là câu trả lời khi ô ấy để trống.
+     *
+     * ⚠ CÓ BẢNG NÀY LÀ CÓ CHẤM MÀU MÀ KHÔNG PHẢI GÕ GÌ. Trước 12/09/2026 thẻ
+     * chỉ vẽ chấm khi có swatch_hex, mà khu quản trị KHÔNG có ô nhập màu nào
+     * cả (chỉ có ô mã hex) — nên trên thực tế không mặt hàng nào có chấm màu.
+     * Cửa hàng gõ "Đen" vào ô Màu là xong: chấm hiện ra, và bộ lọc "Màu gọng"
+     * cũng có dữ liệu để lọc.
+     *
+     * Trị số chọn theo cách MẮT đọc ra trên nền trắng, không phải theo tên màu
+     * chuẩn CSS. Hai luật, và cả hai đều đã bắt được lỗi thật:
+     *
+     *   · KHÔNG mã nào sáng quá (độ sáng cảm nhận > 240): 'trang' là #ededed
+     *     chứ không #fff — trắng tinh trên thẻ nền trắng là một lỗ tròn vô
+     *     hình, vòng viền mờ của .oa-swatch không cứu nổi.
+     *   · 'trang' và 'trong-suot' phải KHÁC NHAU nhìn thấy được: trong suốt
+     *     ngả xanh xám (#dfe6ea), đúng cách acetate trong đọc ra dưới ánh
+     *     sáng. Cùng một sắc xám thì hai chấm cạnh nhau trông như lỗi lặp.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
     private const COLORS = [
-        'den'        => ['label' => 'Đen',        'syn' => ['den', 'black', 'den-nham', 'den-bong', 'matte-black', 'den-mo']],
-        'trang'      => ['label' => 'Trắng',      'syn' => ['trang', 'white', 'trang-sua', 'ivory', 'nga']],
-        'xam'        => ['label' => 'Xám',        'syn' => ['xam', 'gray', 'grey', 'ghi', 'xam-khoi']],
-        'bac'        => ['label' => 'Bạc',        'syn' => ['bac', 'silver', 'ma-bac']],
-        'vang-gold'  => ['label' => 'Vàng gold',  'syn' => ['vang', 'gold', 'vang-gold', 'ma-vang', 'gold-plated', 'champagne']],
-        'nau'        => ['label' => 'Nâu',        'syn' => ['nau', 'brown', 'havana', 'nau-havana', 'tortoise', 'doi-moi', 'nau-tra']],
-        'hong'       => ['label' => 'Hồng',       'syn' => ['hong', 'pink', 'hong-pastel', 'rose', 'vang-hong', 'rose-gold']],
-        'do'         => ['label' => 'Đỏ',         'syn' => ['do', 'red', 'do-do', 'burgundy', 'do-ruou']],
-        'cam'        => ['label' => 'Cam',        'syn' => ['cam', 'orange']],
-        'vang-chanh' => ['label' => 'Vàng chanh', 'syn' => ['vang-chanh', 'yellow']],
-        'xanh-la'    => ['label' => 'Xanh lá',    'syn' => ['xanh-la', 'green', 'luc', 'xanh-reu']],
-        'xanh-duong' => ['label' => 'Xanh dương', 'syn' => ['xanh-duong', 'blue', 'navy', 'xanh-navy', 'xanh-bien']],
-        'tim'        => ['label' => 'Tím',        'syn' => ['tim', 'purple', 'violet']],
-        'trong-suot' => ['label' => 'Trong suốt', 'syn' => ['trong-suot', 'clear', 'transparent', 'trong', 'crystal']],
-        'nhieu-mau'  => ['label' => 'Nhiều màu',  'syn' => ['nhieu-mau', 'multicolor', 'multicolour', 'multi', 'phoi-mau']],
+        'den'        => ['label' => 'Đen',        'hex' => '#1b1b1b', 'syn' => ['den', 'black', 'den-nham', 'den-bong', 'matte-black', 'den-mo']],
+        'trang'      => ['label' => 'Trắng',      'hex' => '#ededed', 'syn' => ['trang', 'white', 'trang-sua', 'ivory', 'nga']],
+        'xam'        => ['label' => 'Xám',        'hex' => '#8b8b8b', 'syn' => ['xam', 'gray', 'grey', 'ghi', 'xam-khoi']],
+        'bac'        => ['label' => 'Bạc',        'hex' => '#c6c8ca', 'syn' => ['bac', 'silver', 'ma-bac']],
+        'vang-gold'  => ['label' => 'Vàng gold',  'hex' => '#c9962f', 'syn' => ['vang', 'gold', 'vang-gold', 'ma-vang', 'gold-plated', 'champagne']],
+        'nau'        => ['label' => 'Nâu',        'hex' => '#6b4423', 'syn' => ['nau', 'brown', 'havana', 'nau-havana', 'tortoise', 'doi-moi', 'nau-tra']],
+        'hong'       => ['label' => 'Hồng',       'hex' => '#e59db0', 'syn' => ['hong', 'pink', 'hong-pastel', 'rose', 'vang-hong', 'rose-gold']],
+        'do'         => ['label' => 'Đỏ',         'hex' => '#9b1c24', 'syn' => ['do', 'red', 'do-do', 'burgundy', 'do-ruou']],
+        'cam'        => ['label' => 'Cam',        'hex' => '#d4732a', 'syn' => ['cam', 'orange']],
+        'vang-chanh' => ['label' => 'Vàng chanh', 'hex' => '#e3c218', 'syn' => ['vang-chanh', 'yellow']],
+        'xanh-la'    => ['label' => 'Xanh lá',    'hex' => '#3f7a4d', 'syn' => ['xanh-la', 'green', 'luc', 'xanh-reu']],
+        'xanh-duong' => ['label' => 'Xanh dương', 'hex' => '#22355c', 'syn' => ['xanh-duong', 'blue', 'navy', 'xanh-navy', 'xanh-bien']],
+        'tim'        => ['label' => 'Tím',        'hex' => '#6b4f8a', 'syn' => ['tim', 'purple', 'violet']],
+        'trong-suot' => ['label' => 'Trong suốt', 'hex' => '#dfe6ea', 'syn' => ['trong-suot', 'clear', 'transparent', 'trong', 'crystal']],
+        'nhieu-mau'  => ['label' => 'Nhiều màu',  'hex' => '#9a9a9a', 'syn' => ['nhieu-mau', 'multicolor', 'multicolour', 'multi', 'phoi-mau']],
     ];
 
     private const GENDERS = [
@@ -280,6 +305,64 @@ class ProductTaxonomy
         }
 
         return self::canonical(implode(' / ', $tho), self::COLORS, 'color');
+    }
+
+    /**
+     * Tên màu người nhập gõ  =>  mã màu để vẽ chấm. Không nhận ra thì null.
+     *
+     * Dùng ở thẻ sản phẩm khi biến thể KHÔNG có `swatch_hex` riêng. Nhờ vậy
+     * cửa hàng chỉ cần gõ "Đen" hay "Havana" vào ô Màu là có chấm màu, không
+     * phải đi tra mã hex.
+     *
+     * KHÔNG đi qua canonical(): hàm đó có thể trả về một khoá do CỬA HÀNG tự
+     * đặt qua bảng đè (/quan-tri/tieu-chi-loc) — khoá ấy không có trong
+     * COLORS nên cũng không có mã màu nào. Ở đây chỉ cần biết chữ vừa gõ có
+     * rơi vào một trong mười lăm màu chuẩn hay không; rơi thì vẽ, không rơi
+     * thì thôi (thà thiếu một chấm còn hơn vẽ sai màu hàng).
+     *
+     * Mỗi khoá so một lần và nhớ lại: một trang lưới gọi hàm này vài trăm
+     * lượt (mỗi biến thể một lượt) trên cùng dăm chuỗi.
+     */
+    public static function colorHex(string $raw): ?string
+    {
+        static $nho = [];
+
+        $raw = trim($raw);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        if (array_key_exists($raw, $nho)) {
+            return $nho[$raw];
+        }
+
+        $slug = slugify($raw);
+        $ma   = null;
+
+        foreach (self::COLORS as $khoa => $c) {
+            if ($slug === $khoa || in_array($slug, $c['syn'], true)) {
+                $ma = $c['hex'];
+                break;
+            }
+        }
+
+        /* Chưa trúng thì thử theo TỪ: "Nâu havana bóng" không khớp nguyên
+           chuỗi, nhưng "nau" và "havana" đều nằm trong bảng. Lấy từ khớp đầu
+           tiên theo thứ tự chữ xuất hiện, không phải theo thứ tự bảng — người
+           gõ đặt màu chính lên trước. */
+        if ($ma === null) {
+            foreach (explode('-', $slug) as $tu) {
+                foreach (self::COLORS as $khoa => $c) {
+                    if ($tu === $khoa || in_array($tu, $c['syn'], true)) {
+                        $ma = $c['hex'];
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        return $nho[$raw] = $ma;
     }
 
     /**

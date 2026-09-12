@@ -182,9 +182,31 @@ class VariantAdminController extends AdminController
          * thẳng vào thuộc tính style của thẻ in ra. View kiểm lại lần nữa,
          * nhưng chặn từ lúc ghi thì cột không bao giờ chứa thứ phải đi kiểm.
          */
+        /*
+         * TÊN MÀU — ô mới, 12/09/2026.
+         *
+         * ⚠ Cột `color` có từ ngày dựng bảng nhưng form này CHƯA BAO GIỜ ghi
+         * vào nó, nên trên thực tế nó luôn NULL. Hai chỗ hỏng theo mà không
+         * báo gì: thẻ sản phẩm không vẽ được chấm màu nào, và bộ lọc "Màu
+         * gọng" phải lùi về cột products.color của cả mặt hàng (một mặt hàng
+         * ba màu vẫn chỉ đếm vào một màu).
+         *
+         * Không kiểm gì ngoài độ dài: đây là chữ người nhập hàng gõ tự do, và
+         * cả bộ lọc lẫn chấm màu đều tự lo phần đối chiếu (ProductTaxonomy).
+         * Gõ một màu lạ thì bộ lọc mọc thêm một mục mới — đúng thiết kế.
+         */
+        $data['color'] = mb_substr(trim((string) ($_POST['color'] ?? '')), 0, 60) ?: null;
+
         if (Database::columnExists('product_variants', 'swatch_hex')) {
+            /* HAI Ô CÙNG TÊN `swatch_hex` trong form (ô chọn màu + ô chữ) —
+               PHP giữ giá trị CUỐI, tức ô chữ. Cố ý: ô chọn màu của trình
+               duyệt không có trạng thái "trống", nên nếu nó thắng thì không
+               bao giờ xoá mã đè đi được. Xem chú thích tại form. */
             $ma = trim((string) ($_POST['swatch_hex'] ?? ''));
 
+            /* Trống là HỢP LỆ và là mặc định nên dùng: lúc ấy thẻ sản phẩm suy
+               mã ra từ tên màu ở trên (ProductTaxonomy::colorHex). Sai dạng
+               cũng về NULL — giá trị này đi thẳng vào thuộc tính style. */
             $data['swatch_hex'] = preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/', $ma) ? $ma : null;
             $data['image']      = trim((string) ($_POST['image'] ?? '')) ?: null;
         }

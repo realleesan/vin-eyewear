@@ -84,19 +84,54 @@ $canBuyNow = $inStock && !$hasOption;
    └──────────────────────────────────────────────────────────────────────── */
 
 /* ┌─ Ô MÀU ───────────────────────────────────────────────────────────────
-   │ Chỉ vẽ từ biến thể CÓ mã màu thật (`swatch_hex`). Phương án chiết suất
-   │ tròng hay cỡ gọng để cột ấy NULL, và một ô màu trống thì vô nghĩa.
+   │ HAI NGUỒN, THEO THỨ TỰ:
+   │
+   │   1. `swatch_hex` của biến thể — cửa hàng gõ tay ở /quan-tri/bien-the.
+   │      Dùng khi phối màu thật khác hẳn màu chuẩn (nâu havana vân đồi mồi).
+   │   2. Suy ra từ TÊN MÀU (`color`) qua ProductTaxonomy::colorHex().
+   │
+   │ ⚠ Bước 2 thêm ngày 12/09/2026 và nó mới là thứ làm hàng chấm màu XUẤT
+   │ HIỆN. Trước đó thẻ chỉ đọc swatch_hex, mà form quản trị không có ô nhập
+   │ màu nào — chỉ có ô mã hex, và không ai đi tra mã hex cho từng phối màu.
+   │ Kết quả: cả kho không mặt hàng nào có chấm màu. Nay gõ "Đen" là đủ.
+   │
+   │ Biến thể KHÔNG phải màu (chiết suất tròng, cỡ gọng) không có cả hai nên
+   │ tự rơi ra ngoài — không cần cờ "đây là biến thể màu" nào cả.
+   │
+   │ TRÙNG MÀU THÌ GỘP: một gọng có "Đen bóng" và "Đen nhám" cho ra cùng một
+   │ mã #1b1b1b, in hai chấm đen giống hệt cạnh nhau trông như lỗi lặp. Giữ
+   │ cái đầu tiên — nó cũng là cái mà ô màu đang chọn trỏ tới.
    │
    │ Ô ĐẦU TIÊN LÀ Ô ĐANG CHỌN. Ở lưới thì ô màu chỉ là xem trước, không đổi
    │ được gì — nên chúng là <a> dẫn sang trang chi tiết kèm ?bien-the=, chứ
    │ không phải <button> giả vờ bấm được rồi không xảy ra gì.
    └──────────────────────────────────────────────────────────────────────── */
 $swatches = [];
+$daCoMa   = [];
 
 foreach ($variants as $v) {
-    if (!empty($v['swatch_hex'])) {
-        $swatches[] = $v;
+    $ma = trim((string) ($v['swatch_hex'] ?? ''));
+
+    if ($ma === '' || !preg_match('/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/', $ma)) {
+        $ma = (string) ProductTaxonomy::colorHex((string) ($v['color'] ?? ''));
     }
+
+    if ($ma === '' || isset($daCoMa[strtolower($ma)])) {
+        continue;
+    }
+
+    $daCoMa[strtolower($ma)] = true;
+
+    /* `hex` là thứ view in ra, `ten` là chữ đọc lên. Tên lấy cột `color` —
+       lùi về `label` chỉ khi cột ấy trống, vì nhãn của biến thể màu đôi khi
+       là mã phối ("C2", "BLK-01") chứ không phải tên màu. */
+    $swatches[] = [
+        'id'  => $v['id'],
+        'hex' => $ma,
+        'ten' => trim((string) ($v['color'] ?? '')) !== ''
+            ? (string) $v['color']
+            : (string) ($v['label'] ?? ''),
+    ];
 }
 ?>
 <li class="oa-card">
@@ -275,16 +310,29 @@ foreach ($variants as $v) {
             <?php endif; ?>
 
             <?php if ($swatches !== []): ?>
+                <?php /* HÀNG CHẤM MÀU NẰM DƯỚI GIÁ — đúng thứ tự của mẫu, và
+                         đúng yêu cầu chủ dự án (12/09/2026). Căn giữa theo
+                         trục thẻ do .oa-card__info (align-items: center) lo;
+                         text-align không với tới con của một flex column. */ ?>
                 <div class="oa-swatches">
                     <?php foreach (array_slice($swatches, 0, 5) as $k => $v): ?>
                         <a class="oa-swatch<?= $k === 0 ? ' is-active' : '' ?>"
                            href="<?= e($url) ?>?bien-the=<?= e(rawurlencode((string) $v['id'])) ?>"
-                           title="<?= e($v['color'] ?? $v['label']) ?>"
-                           style="background:<?= e($v['swatch_hex']) ?>">
-                            <span class="sr-only"><?= e($v['color'] ?? $v['label']) ?></span>
+                           title="<?= e($v['ten']) ?>"
+                           style="background:<?= e($v['hex']) ?>">
+                            <span class="sr-only"><?= e($v['ten']) ?></span>
                         </a>
                     <?php endforeach; ?>
-                    <span class="oa-swatch__label"><?= e($swatches[0]['color'] ?? $swatches[0]['label']) ?></span>
+
+                    <?php /* Còn dư thì nói "+3" chứ không cắt im lặng: khách
+                             đếm ba chấm rồi tưởng gọng này chỉ có ba màu. */ ?>
+                    <?php if (count($swatches) > 5): ?>
+                        <span class="oa-swatch__more">+<?= count($swatches) - 5 ?></span>
+                    <?php endif; ?>
+
+                    <?php if ($swatches[0]['ten'] !== ''): ?>
+                        <span class="oa-swatch__label"><?= e($swatches[0]['ten']) ?></span>
+                    <?php endif; ?>
                 </div>
             <?php endif; ?>
 
