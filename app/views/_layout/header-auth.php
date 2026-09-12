@@ -79,6 +79,22 @@
     <?php /* Nền mờ — anh em với tấm, không nằm trong nó. Cùng lối ô tìm. */ ?>
     <button type="button" class="hpop__scrim oa-scrim" data-hpop-close tabindex="-1" aria-hidden="true"></button>
 
+    <?php
+    /* ┌─ KHUNG CẮT — KHÔNG PHẢI THẺ TRANG TRÍ, ĐỪNG GỠ ────────────────────
+       │ Lúc nghỉ, tấm nằm ngoài mép phải khung nhìn (translateX(100%)). Một
+       │ phần tử `position: fixed` như thế VẪN được trình duyệt tính vào vùng
+       │ cuộn: đo được thanh cuộn ngang thừa đúng 520px trên MỌI trang.
+       │
+       │ `overflow-x: clip` trên <body> KHÔNG chữa được — đã thử: phần tử
+       │ fixed thoát khỏi khung cắt của tổ tiên. Nên tấm phải đổi sang
+       │ `position: absolute` và nằm trong đúng một khung fixed cỡ khung nhìn
+       │ có `overflow: hidden`; khung ấy là thẻ này.
+       │
+       │ Nó phủ kín màn hình nên PHẢI mang `pointer-events: none`, còn tấm
+       │ bên trong bật lại — nếu không nó nuốt mọi cú bấm của cả trang.
+       └──────────────────────────────────────────────────────────────────── */
+    ?>
+    <div class="authdrawer__clip">
     <div class="hpop__panel authdrawer" role="dialog" aria-modal="true"
          aria-label="<?= e(t('account.login')) ?>">
 
@@ -95,6 +111,7 @@
         <div class="authdrawer__body" data-auth-body aria-live="polite" aria-busy="false">
             <p class="authdrawer__wait"><?= e(t('ui.loading')) ?></p>
         </div>
+    </div>
     </div>
 </div>
 

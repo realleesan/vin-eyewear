@@ -10,9 +10,9 @@
  * HÌNH CỦA MẪU, từ trên xuống:
  *
  *   ┌─────────────────────────┐
- *   │ [MỚI] [-30%]            │  huy hiệu góc trên trái, nằm NGOÀI liên kết
- *   │                         │
- *   │      ảnh 4:5 contain    │  nền thẻ là một trong bốn tông xám luân phiên
+ *   │ [MỚI] [-30%]            │  huy hiệu góc trên trái CỦA KHUNG ẢNH, nằm
+ *   │                         │  NGOÀI liên kết
+ *   │    ảnh 1:1,36 contain   │  KHÔNG nền — thẻ trong suốt, lấy nền trang
  *   │                         │
  *   ├─────────────────────────┤
  *   │ —                    ⚑  │  dòng nhãn hiệu (mờ) · dấu trang góc phải
@@ -25,12 +25,19 @@
  *
  * ẢNH `contain` CHỨ KHÔNG `cover`, và đó là điểm mẫu phân biệt rất rõ: ảnh
  * SẢN PHẨM phải thấy trọn cái gọng, ảnh CHIẾN DỊCH mới cắt tràn khung.
+ * (gentlemonster.com dùng `cover` phóng 2x rồi cắt — cố ý KHÔNG chép, vì họ
+ * bán dáng kính còn ta phải cho khách thấy trọn gọng.)
+ *
+ * CỠ THẺ lấy từ gentlemonster.com, đo trực tiếp — xem ba khối chú thích
+ * .oa-grid / --gap-col / .oa-card__media trong assets/css/oa.css. Tóm tắt:
+ * ba cột, khe 6%, khung ảnh khoá tỉ lệ 1/1,36, thẻ không có nền riêng.
  *
  * ───────────────────────────────────────────────────────────────────────────
  * THAM SỐ
  *
  *   $product      bắt buộc — một dòng từ ProductModel
- *   $i            chỉ số trong lưới, quyết định tông nền (mặc định 0)
+ *   $i            chỉ số trong lưới (mặc định 0). NAY KHÔNG AI ĐỌC — xem
+ *                 khối "ĐÃ GỠ TÔNG NỀN LUÂN PHIÊN" bên dưới.
  *   $variants     mảng biến thể của MẶT HÀNG NÀY, để vẽ ô màu. Không truyền
  *                 thì hàng ô màu không hiện — thẻ vẫn đúng, chỉ thiếu một
  *                 dòng. Xem khối "Ô MÀU" bên dưới về cách lấy rẻ.
@@ -61,13 +68,20 @@ $inStock   = ProductModel::inStock($product);
 $hasOption = VariantModel::hasVariants($product['id']);
 $canBuyNow = $inStock && !$hasOption;
 
-/* ┌─ TÔNG NỀN LUÂN PHIÊN ─────────────────────────────────────────────────
-   │ Mẫu đổi tông theo chỉ số thẻ để lưới không thành một mảng xám phẳng.
-   │ Công thức của mẫu: `(i + floor(i/4)) % 4` — nó dịch pha mỗi khi xuống
-   │ một hàng, nên hai thẻ nằm ngay trên/dưới nhau không bao giờ cùng tông.
-   │ Chép nguyên, đừng rút gọn thành `i % 4`: rút gọn là mất đúng hiệu ứng đó.
+/* ┌─ ĐÃ GỠ TÔNG NỀN LUÂN PHIÊN (12/09/2026) ──────────────────────────────
+   │ Ở đây từng tính `$tone = ((i + floor(i/4)) % 4) + 1` rồi in ra lớp
+   │ .oa-card--t1…t4, cho lưới bốn tông xám xen kẽ theo mẫu.
+   │
+   │ Gỡ theo yêu cầu chủ dự án, và lý do là số học chứ không phải gu: bốn
+   │ tông khác nhau thì một tấm ảnh sản phẩm chỉ khớp nền được với NHIỀU
+   │ NHẤT một trong bốn ô, ba ô còn lại luôn lộ ra hình chữ nhật nền ảnh.
+   │ Muốn ảnh "sạch" như gentlemonster.com thì nền thẻ phải là một màu, và
+   │ đúng bằng màu trang — xem khối .oa-card trong assets/css/oa.css.
+   │
+   │ $i VẪN CÒN THAM SỐ và vẫn nhận được: nó là chỉ số trong lưới, nơi gọi
+   │ đang truyền sẵn, và bỏ tham số đi thì phải sửa năm chỗ gọi cho một thứ
+   │ chẳng ai được lợi. Chỉ là nay không ai đọc nó nữa.
    └──────────────────────────────────────────────────────────────────────── */
-$tone = (((int) $i + intdiv((int) $i, 4)) % 4) + 1;
 
 /* ┌─ Ô MÀU ───────────────────────────────────────────────────────────────
    │ Chỉ vẽ từ biến thể CÓ mã màu thật (`swatch_hex`). Phương án chiết suất
@@ -85,7 +99,7 @@ foreach ($variants as $v) {
     }
 }
 ?>
-<li class="oa-card oa-card--t<?= $tone ?>">
+<li class="oa-card">
 
     <div class="oa-card__media">
         <?php

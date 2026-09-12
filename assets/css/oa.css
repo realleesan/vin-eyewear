@@ -181,7 +181,23 @@
     --edge: 64px;           /* lề ngang của khối CHỮ */
     --edge-grid: 60px;      /* lề ngang của LƯỚI thẻ (thẻ có padding 14px) */
 
-    --gap-col: 20px;        /* khe dọc giữa cột trong lưới sản phẩm */
+    /* ┌─ KHE DỌC GIỮA CỘT — SỐ PHẦN TRĂM, ĐO TỪ gentlemonster.com ────────
+       │ Đo trực tiếp trên trang /category/glasses/view-all của họ, hai bề
+       │ ngang khác nhau, và tỉ lệ giữ nguyên tuyệt đối:
+       │
+       │   màn 1440  cột 387,33px · khe 79,44px  -> khe = 20,51% bề rộng cột
+       │   màn 1024  cột 275,44px · khe 56,49px  -> khe = 20,51% bề rộng cột
+       │
+       │ Với ba cột: W = 3c + 2g và g = 0,2051c  =>  g = 0,0601W. Làm tròn 6%.
+       │ Kiểm lại ở 1440: lưới rộng 1320 (1440 trừ hai lề --edge-grid 60px),
+       │ khe = 79,2 và cột = (1320 - 158,4)/3 = 387,2 — lệch 0,1px so với
+       │ chính trang họ. Lề 60px của ta trùng luôn lề 60px của họ.
+       │
+       │ PHẢI LÀ %, KHÔNG PHẢI px: khe của họ co giãn theo bề ngang: gõ cứng
+       │ 79px thì ở màn hẹp khe nuốt mất cột, ở màn rộng lại thành hai thẻ
+       │ dính nhau.
+       └──────────────────────────────────────────────────────────────────── */
+    --gap-col: 6%;          /* khe dọc giữa cột trong lưới sản phẩm */
     --gap-row: 48px;        /* khe ngang giữa hàng trong lưới sản phẩm */
     --gap-tight: 12px;      /* lưới ảnh chiến dịch, lưới cửa hàng */
 
@@ -1186,9 +1202,13 @@ textarea.oa-field {
 
 /* Lưới 4 cột — dáng chuẩn của mọi trang có hàng: danh mục, bộ sưu tập,
    băng trang chủ, kết quả tìm kiếm. */
+/* BA CỘT, KHÔNG PHẢI BỐN (12/09/2026, theo yêu cầu chủ dự án: lấy đúng cỡ
+   thẻ của gentlemonster.com). Ba cột cộng khe 6% và lề --edge-grid 60px cho
+   ra cột 387px ở màn 1440 — trùng số đo trên chính trang họ. Bốn cột trước
+   đây cho cột 315px, thẻ nhỏ hơn hẳn. */
 .oa-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--gap-row) var(--gap-col);
     padding: 40px var(--edge-grid) 0;
     background: var(--bg);
@@ -1203,24 +1223,54 @@ textarea.oa-field {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
+/* ┌─ THẺ KHÔNG CÓ NỀN RIÊNG — ĐÂY LÀ THỨ LÀM ẢNH "SẠCH" ──────────────────
+   │ Đo trên gentlemonster.com: thẻ, khung ảnh và <img> của họ đều
+   │ `background: rgba(0,0,0,0)`. Không mặt phẳng nào cả — ảnh sản phẩm nằm
+   │ thẳng trên nền trang.
+   │
+   │ Ở ĐÂY TRƯỚC CÓ BỐN TÔNG XÁM LUÂN PHIÊN (#f4f4f4 · #f7f7f7 · #f2f2f2 ·
+   │ #f5f5f5) gắn theo chỉ số thẻ, và ĐÃ GỠ HẲN theo yêu cầu chủ dự án. Lý do
+   │ không phải thẩm mỹ mà là số học: bốn tông khác nhau thì một tấm ảnh chỉ
+   │ có thể khớp nền với NHIỀU NHẤT một trong bốn ô — ba ô còn lại luôn lộ ra
+   │ đúng cái hình chữ nhật nền ảnh. Muốn "nền ảnh giống 100% màu nền" thì
+   │ nền thẻ buộc phải là MỘT màu, và màu ấy phải là màu trang.
+   │
+   │ `transparent` chứ không gõ một mã màu: thẻ tự lấy đúng nền của trang nó
+   │ đang nằm, nên đổi nền trang về sau là thẻ đi theo, không lệch.
+   │
+   │ CÒN MỘT NỬA VIỆC KHÔNG NẰM Ở CSS: ảnh sản phẩm phải được TÁCH NỀN (PNG
+   │ trong suốt) hoặc chụp trên đúng màu nền trang. CSS không xoá được nền đã
+   │ nướng vào tấm ảnh — file này chỉ bảo đảm rằng khi ảnh đã sạch thì không
+   │ còn mảng màu nào của giao diện chen vào.
+   │
+   │ .oa-card--t1…t4 đã xoá cùng lượt; _layout/product-card.php thôi sinh ra
+   │ lớp đó. Đừng thêm lại.
+   └──────────────────────────────────────────────────────────────────────── */
 .oa-card {
     display: flex;
     flex-direction: column;
-    background: var(--bg-soft);
+    background: transparent;
     padding: 0 0 14px;
 }
 
-/* Bốn tông nền luân phiên giữa các thẻ. Mẫu đổi tông theo chỉ số thẻ để
-   lưới không thành một mảng xám phẳng — view gắn .oa-card--t1…t4. */
-.oa-card--t1 { background: #f4f4f4; }
-.oa-card--t2 { background: #f7f7f7; }
-.oa-card--t3 { background: #f2f2f2; }
-.oa-card--t4 { background: #f5f5f5; }
-
+/* ┌─ KHUNG ẢNH CỐ ĐỊNH — TỈ LỆ ĐO TỪ gentlemonster.com ───────────────────
+   │ Đo hai bề ngang, tỉ lệ không đổi một chút nào:
+   │
+   │   màn 1440  khung 387 x 527  ->  cao / rộng = 1,3617
+   │   màn 1024  khung 275 x 375  ->  cao / rộng = 1,3615
+   │
+   │ Tức khung của họ khoá ở 1 / 1,36. Trước đây ta dùng 4/5 (1 / 1,25) nên
+   │ khung thấp và bè hơn rõ.
+   │
+   │ "CỐ ĐỊNH" Ở ĐÂY LÀ CỐ ĐỊNH TỈ LỆ, không phải cố định pixel — đó cũng là
+   │ cách họ làm. Khung co giãn theo cột nhưng MỌI thẻ luôn cùng một hình,
+   │ bất kể tấm ảnh bên trong to nhỏ ngang dọc ra sao; đó là thứ làm cả lưới
+   │ thẳng hàng. Gõ cứng 527px thì màn hẹp là khung tràn ra ngoài cột.
+   └──────────────────────────────────────────────────────────────────────── */
 .oa-card__media {
     position: relative;
     width: 100%;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1 / 1.36;
     cursor: pointer;
     display: block;
 }
@@ -2580,13 +2630,30 @@ summary:focus-visible,
    nối liền.
    ══════════════════════════════════════════════════════════════════════ */
 
-.authdrawer {
+/* ┌─ KHUNG CẮT CỠ KHUNG NHÌN ─────────────────────────────────────────────
+   │ Lý do đầy đủ ở _layout/header-auth.php, tóm tắt: tấm lúc nghỉ đỗ ngoài
+   │ mép phải, và một phần tử `position: fixed` như thế VẪN được tính vào
+   │ vùng cuộn — đo được thanh cuộn ngang thừa đúng 520px trên MỌI trang.
+   │ `overflow-x: clip` trên <body> không chữa được vì fixed thoát khỏi khung
+   │ cắt của tổ tiên; phải cho tấm một tổ tiên fixed để mà nằm trong.
+   │
+   │ `pointer-events: none` là BẮT BUỘC — khung này phủ kín màn hình.
+   └──────────────────────────────────────────────────────────────────────── */
+.authdrawer__clip {
     position: fixed;
+    inset: 0;
+    z-index: var(--z-panel);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.authdrawer {
+    position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
-    z-index: var(--z-panel);
     width: min(520px, 100%);
+    pointer-events: auto;
     background: var(--bg);
 
     /* `color` PHẢI ĐI KÈM `background` — CÙNG BẪY ĐÃ SẬP MỘT LẦN Ở .oa-panel,
@@ -3277,9 +3344,9 @@ body.is-search-open {
 }
 
 @media (max-width: 1000px) {
-    .oa-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+    /* ĐÃ GỠ luật hạ .oa-grid xuống 3 cột: cơ sở nay đã là 3. Đo trên
+       gentlemonster.com ở màn 1024 thì họ VẪN ba cột (cột 275px), nên mốc
+       hạ xuống 2 cột để nguyên ở 760px bên dưới. */
 
     .oa-footer__brand,
     .oa-footer__help {
