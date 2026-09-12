@@ -1938,16 +1938,20 @@ textarea.oa-field {
    │
    │ 78dvh CHỨ KHÔNG 100vh, và hai chi tiết ở đây đều có lý do:
    │
-   │   78 — mẫu vẽ hero trọn màn hình, nhưng trọn màn hình thì không có
+   │   84 — mẫu vẽ hero trọn màn hình, nhưng trọn màn hình thì không có
    │        mẩu nội dung nào ló ra dưới đáy, và trang chủ mở ra trông như
-   │        một trang đích chứ không phải một cửa hàng. Chừa 22% là để thấy
+   │        một trang đích chứ không phải một cửa hàng. Chừa 16% là để thấy
    │        rõ mép băng "Sản phẩm mới về" — dấu hiệu duy nhất nói cho người
    │        dùng biết bên dưới còn gì.
    │
-   │        Đã đi 100 -> 85 -> 78 theo yêu cầu chủ dự án. ĐỔI TIẾP THÌ SỬA
-   │        ĐÚNG HAI DÒNG `height` bên dưới (phải sửa cả hai: dòng `vh` là
-   │        bản dự phòng cho trình duyệt cũ, để lệch nhau là hai bề cao khác
-   │        nhau tuỳ máy).
+   │        Đã đi 100 -> 85 -> 78 -> 84 theo yêu cầu chủ dự án. Con số nay
+   │        quay lại gần mốc 85 cũ; 16% còn lại vẫn đủ để mép băng dưới ló
+   │        ra, nên lý do chọn "không trọn màn hình" ở trên không đổi.
+   │
+   │        ĐỔI TIẾP THÌ SỬA ĐÚNG HAI DÒNG `height` bên dưới (phải sửa cả
+   │        hai: dòng `vh` là bản dự phòng cho trình duyệt cũ, để lệch nhau
+   │        là hai bề cao khác nhau tuỳ máy) — VÀ sửa cả `min-height`, nó
+   │        neo theo chính tỉ lệ này.
    │
    │   dvh — `vh` trên di động tính theo khung nhìn LỚN NHẤT (lúc thanh
    │        địa chỉ đã thu vào), nên ở trạng thái vừa mở trang hero luôn
@@ -1957,12 +1961,13 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────*/
 .oa-hero--full {
     aspect-ratio: auto;
-    height: 78vh;
-    height: 78dvh;
-    /* Sàn hạ theo cho cùng nhịp: 78% của 565px (cửa sổ thấp, laptop 13" đã mở
-       sẵn thanh dấu trang) là 440. Giữ 480 thì ở những cửa sổ ấy sàn đè lên
-       tỉ lệ và hero lại cao gần trọn màn hình — đúng thứ vừa bỏ đi. */
-    min-height: 440px;
+    height: 84vh;
+    height: 84dvh;
+    /* Sàn đi theo cho cùng nhịp: 84% của 565px (cửa sổ thấp, laptop 13" đã mở
+       sẵn thanh dấu trang) là 475. Con số này KHÔNG được gõ độc lập — để nó
+       lệch khỏi tỉ lệ thì ở những cửa sổ thấp sàn đè lên tỉ lệ và hero lại
+       cao gần trọn màn hình, đúng thứ mốc 78/84 muốn tránh. */
+    min-height: 475px;
     margin-top: calc(var(--hdr-h) * -1);
     background: #b9b3a6;
 }
