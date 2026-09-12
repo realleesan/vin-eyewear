@@ -23,6 +23,10 @@ CLAUDE.local.md
 .codegraph/
 # Ảnh chụp giao diện để đưa sang Claude Design — sinh lại được, không cần theo dõi
 design-export/
+# Ảnh chụp + snapshot do Playwright MCP sinh ra khi mở trang thật để kiểm chứng
+# một thay đổi giao diện. Cùng loại với design-export/: sản phẩm phụ của một
+# lượt kiểm tra, chụp lại lúc nào cũng được.
+.playwright-mcp/
 
 # Thư mục ghi của ứng dụng (bản nháp email, log) — không đưa lên git
 storage/
