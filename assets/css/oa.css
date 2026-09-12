@@ -244,8 +244,39 @@
        │
        │ assets/js/header.js đo bằng header.offsetHeight nên nó tự đúng. */
     --hdr-h: calc(64px * var(--oa-scale));
-    --edge: 64px;           /* lề ngang của khối CHỮ */
-    --edge-grid: 60px;      /* lề ngang của LƯỚI thẻ (thẻ có padding 14px) */
+    /* ┌─ LỀ NGANG CỦA TRANG — RỘNG RA (12/09/2026, theo yêu cầu chủ dự án) ─
+       │ 64 → 96 và 60 → 92. Cả hai cùng tăng một lượng để KHOẢNG LỆCH 4px
+       │ giữa chúng giữ nguyên: lề chữ rộng hơn lề lưới đúng 4px, vừa bằng
+       │ nửa khoảng nhô của chữ so với mép ảnh, nên tiêu đề băng vẫn thẳng
+       │ hàng với mép thẻ đầu tiên như từ trước tới nay. Đổi một số mà quên
+       │ số kia là hai khối ấy lệch nhau, và lệch 4px thì thấy rất rõ.
+       │
+       │ Đo lại bằng --edge-grid (92), tức số của LƯỚI:
+       │
+       │     màn 1280   vùng nội dung 1096 (trước 1160)   thẻ 253 (trước 267)
+       │     màn 1440   vùng nội dung 1256 (trước 1320)   thẻ 290 (trước 304)
+       │     màn 1920   vùng nội dung 1736 (trước 1800)   thẻ 400 (trước 415)
+       │
+       │ Thẻ hẹp đi ~14px ở mọi khổ. HỆ QUẢ DUY NHẤT ĐÁNG BIẾT nằm ở mốc
+       │ 190px của @container tại .oa-card__actions — dưới mốc ấy CHỮ trong
+       │ hai nút mua xuống dòng (hai nút VẪN cùng một hàng; xem khối "THẺ
+       │ HẸP: VẪN MỘT HÀNG" ở đó).
+       │
+       │ Lưới giữ 4 cột tới tận 760px, nên mốc ấy rơi vào khoảng màn hình
+       │ 760–1008px: trước khi rộng lề, khoảng ấy là 760–944px. Tức dải máy
+       │ tính bảng nằm ngang nay chạm luật xuống dòng sớm hơn ~64px. Chấp
+       │ nhận được — @container lo đúng việc đó và thẻ vẫn nguyên hình; ghi
+       │ ra để người sau đừng tưởng là lỗi mới.
+       │
+       │ KHÔNG ĐỤNG mốc ≤760px bên dưới (20px/16px): trên điện thoại mỗi
+       │ pixel lề là một pixel bị lấy khỏi chỗ đọc chữ, và ở đó khoảng thở
+       │ đến từ khe giữa các khối chứ không từ lề trang.
+       │
+       │ Khối TRÀN MÉP không đi qua hai biến này nên không đổi theo: hero,
+       │ ảnh chiến dịch, dải nền màu. Đó là chủ ý — chúng tràn mép chính vì
+       │ không có lề. */
+    --edge: 96px;           /* lề ngang của khối CHỮ */
+    --edge-grid: 92px;      /* lề ngang của LƯỚI thẻ (thẻ có padding 14px) */
 
     /* ┌─ KHE DỌC GIỮA CỘT — SỐ PHẦN TRĂM, ĐO TỪ gentlemonster.com ────────
        │ Đo trực tiếp trên trang /category/glasses/view-all của họ, hai bề
@@ -1442,9 +1473,13 @@ textarea.oa-field {
     min-height: 0;
     overflow: hidden;
 
-    /* Ô chứa cho @container của .oa-card__actions (hai nút xếp dọc khi thẻ
-       hẹp). KHÔNG còn dùng cho trần chiều cao ảnh — ảnh nay lấp kín khung
-       nên không có gì để chặn. */
+    /* Ô chứa cho @container của .oa-card__actions — dưới 190px thì CHỮ trong
+       hai nút mua xuống dòng, còn hai nút VẪN nằm cùng một hàng (luật
+       `flex-direction: column` từng có ở đó đã gỡ; xem khối "THẺ HẸP: VẪN
+       MỘT HÀNG" tại .oa-card__actions).
+
+       KHÔNG còn dùng cho trần chiều cao ảnh — ảnh nay lấp kín khung nên
+       không có gì để chặn. */
     container-type: inline-size;
 }
 

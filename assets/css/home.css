@@ -249,7 +249,28 @@ html:not(.js) .vhero__bars {
 
 .hrev__strip {
     display: flex;
-    gap: 16px;
+
+    /* ┌─ SỐ THẺ NHÌN THẤY TRONG MỘT KHUNG ─────────────────────────────────
+       │ Thẻ KHÔNG còn rộng cố định 320px (12/09/2026, chủ dự án: "băng đánh
+       │ giá đang lệch sang trái"). Lý do bản cũ lệch: năm thẻ 320px cộng khe
+       │ là 1664px, rộng hơn vùng nội dung 1248px — dải tràn sang phải và
+       │ dính vào mép trái, trong khi tiêu đề ngay trên nó căn giữa. Mắt đọc
+       │ ra ngay là cả khối bị kéo lệch.
+       │
+       │ Nay bề ngang thẻ TÍNH TỪ số thẻ muốn thấy, nên năm thẻ lấp vừa khít
+       │ vùng nội dung: mép thẻ đầu và mép thẻ cuối trùng đúng lề trang, và
+       │ thẳng hàng luôn với lưới sản phẩm phía trên.
+       │
+       │ 100% ở đây là bề ngang PHẦN NỘI DUNG của dải (đã trừ hai lề
+       │ --edge-grid), đúng thứ cần chia.
+       │
+       │ VẪN LÀ BĂNG CUỘN: ở khổ hẹp --hrev-vis nhỏ lại nhưng số thẻ vẫn là
+       │ năm, nên phần dôi ra cuộn như cũ. Khổ máy tính vừa đủ năm thẻ thì
+       │ không còn gì để cuộn — và home.js giấu hai mũi tên đi thay vì để hai
+       │ nút bấm không đi đâu. */
+    --hrev-vis: 5;
+    --hrev-gap: 16px;
+    gap: var(--hrev-gap);
     padding: 40px var(--edge-grid) 4px;
     list-style: none;
 
@@ -278,8 +299,7 @@ html:not(.js) .vhero__bars {
 }
 
 .hrev__card {
-    flex: 0 0 320px;
-    max-width: 320px;
+    flex: 0 0 calc((100% - (var(--hrev-vis) - 1) * var(--hrev-gap)) / var(--hrev-vis));
     scroll-snap-align: start;
 
     display: flex;
@@ -415,16 +435,27 @@ html:not(.js) .vhero__bars {
     }
 }
 
+/* Dưới 1100px, năm thẻ cho ra thẻ hẹp hơn 150px — không đủ cho một câu
+   nhận xét. Hạ xuống ba thẻ; hai thẻ còn lại cuộn tới. */
+@media (max-width: 1100px) {
+    .hrev__strip {
+        --hrev-vis: 3;
+    }
+}
+
 @media (max-width: 760px) {
     .hrev__strip {
         padding-top: 28px;
-        gap: 12px;
+
+        /* Khe đổi thì phép chia bề ngang thẻ đổi theo — cùng một biến, nên
+           không có chuyện sửa khe mà quên sửa công thức. */
+        --hrev-gap: 12px;
     }
 
-    /* Thẻ hẹp hơn bề ngang màn để lòi ra một mẩu thẻ sau — đó là thứ duy
-       nhất nói cho người dùng biết dải này cuộn được. */
-    .hrev__card {
-        flex-basis: min(320px, 78vw);
-        max-width: min(320px, 78vw);
+    /* 1,4 thẻ một khung: thẻ sau lòi ra một mẩu — đó là thứ duy nhất nói
+       cho người dùng biết dải này cuộn được. Số LẺ là cố ý; một số chẵn cho
+       ra thẻ cắt đúng mép màn, trông như bị xén chứ không như còn tiếp. */
+    .hrev__strip {
+        --hrev-vis: 1.4;
     }
 }

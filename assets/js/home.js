@@ -1040,9 +1040,6 @@
 
         if (!prev || !next) return;
 
-        prev.hidden = false;
-        next.hidden = false;
-
         /** Bề ngang một bước cuộn = thẻ + khe. */
         function buoc() {
             var card = strip.querySelector('.hrev__card');
@@ -1054,11 +1051,25 @@
             return card.getBoundingClientRect().width + khe;
         }
 
-        /* Hết đường thì làm mờ nút, không giấu đi: nút biến mất làm cả dải
-           nhảy chỗ. 2px dung sai vì scrollWidth/clientWidth trả số lẻ khi
-           trình duyệt phóng to. */
+        /* Hai việc, và chúng khác nhau:
+
+             · KHÔNG CÓ GÌ ĐỂ CUỘN (năm thẻ lấp vừa khung — khổ máy tính) thì
+               GIẤU HẲN hai nút. Một mũi tên đứng đó suốt mà bấm không bao giờ
+               đi đâu là một lời hứa suông.
+             · CÒN CUỘN ĐƯỢC nhưng đang ở đầu/cuối dải thì chỉ LÀM MỜ nút ấy,
+               không giấu: giấu giữa chừng làm cả dải nhảy chỗ và người dùng
+               mất mốc.
+
+           2px dung sai vì scrollWidth/clientWidth trả số lẻ khi trình duyệt
+           phóng to. */
         function veLaiNut() {
             var het = strip.scrollWidth - strip.clientWidth;
+            var cuonDuoc = het > 2;
+
+            prev.hidden = !cuonDuoc;
+            next.hidden = !cuonDuoc;
+
+            if (!cuonDuoc) return;
 
             prev.classList.toggle('is-off', strip.scrollLeft <= 2);
             next.classList.toggle('is-off', strip.scrollLeft >= het - 2);
