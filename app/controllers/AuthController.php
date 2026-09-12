@@ -1737,14 +1737,8 @@ class AuthController extends BaseController
      * NHÃN LẤY THEO ĐÚNG CHỮ TRONG ĐẶC TẢ ("Hồ sơ cá nhân", "Đơn hàng"), vì
      * chúng vừa là nhãn trên cột điều hướng vừa là tiêu đề thẻ trình duyệt.
      * 'lich-hen' không có trong đặc tả nên giữ nguyên chữ cũ.
-     *
-     * CÔNG KHAI (2026-09-12) vì ngăn kéo tài khoản trên thanh đầu trang đọc
-     * chính bảng này — xem _layout/header-account.php. Cột điều hướng trong
-     * auth/profile.php đã dùng vòng lặp trên SECTIONS thay vì ba khối vẽ tay,
-     * đúng để thêm/bớt một mục chỉ sửa một chỗ; ngăn kéo chép lại ba nhãn ấy
-     * là dựng chỗ thứ hai để lệch. Vẫn là hằng chỉ-đọc nên mở ra không mất gì.
      */
-    public const SECTIONS = [
+    private const SECTIONS = [
         'ho-so'    => 'Hồ sơ cá nhân',
         'don-hang' => 'Đơn hàng',
         'lich-hen' => 'Lịch hẹn của tôi',

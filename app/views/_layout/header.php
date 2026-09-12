@@ -289,21 +289,16 @@ $headerOver = ($viewName ?? '') === 'home/index';
         </div>
 
         <?php
-        /* ┌─ TÀI KHOẢN — NGĂN KÉO MENU, KHÔNG PHẢI FORM ──────────────────
-           │ Markup ở _layout/header-account.php; đọc khối chú thích đầu
-           │ file đó trước khi sửa.
+        /* ┌─ TÀI KHOẢN — LIÊN KẾT THẲNG, KHÔNG PHẢI NGĂN KÉO ─────────────
+           │ Mẫu mở một ngăn kéo bên phải chứa form đăng nhập/đăng ký cùng
+           │ luồng Zalo OTP. Ở đây luồng ấy là trang thật /auth: nó có
+           │ CSRF, có trạng thái lỗi, có bước OTP nhiều màn. Dựng lại nó
+           │ lần thứ hai trong thanh đầu trang là hai bản sao của cùng một
+           │ luồng đăng nhập, và bản trong header sẽ lệch dần.
            │
-           │ Ở ĐÂY TRƯỚC LÀ MỘT <a> TRƠN, và lý do từ chối ngăn kéo vẫn
-           │ được giữ nguyên chứ không bị lật: mẫu mở ngăn kéo chứa FORM
-           │ đăng nhập/đăng ký cùng luồng Zalo OTP, mà luồng ấy ở đây là
-           │ trang thật /auth — có CSRF, có trạng thái lỗi, có bước OTP
-           │ nhiều màn. Dựng lại nó lần thứ hai là hai bản sao sẽ lệch dần.
-           │
-           │ Ngăn kéo mới (theo yêu cầu chủ dự án, 12/09/2026) KHÔNG chứa ô
-           │ nhập nào — nó là menu: chưa đăng nhập thì hai lối vào /auth, đã
-           │ đăng nhập thì ba mục của AuthController::SECTIONS cộng nút
-           │ thoát. Không chép gì nên không có gì để lệch. TRANG /auth vẫn
-           │ mang đúng dáng ngăn kéo của mẫu — xem app/views/auth/.
+           │ Nên: icon dẫn thẳng tới /auth, còn TRANG /auth mang đúng dáng
+           │ của ngăn kéo trong mẫu — cùng hai tab, cùng ô nhập cao 44 bo
+           │ 6, cùng nút Zalo OTP, cùng nút Google. Xem app/views/auth/.
            │
            │ KHÔNG kèm ?redirect=: tham số đó dành cho khách BỊ CHẶN giữa
            │ chừng (AuthMiddleware::requireLogin đá về đây rồi trả lại đúng
@@ -315,7 +310,13 @@ $headerOver = ($viewName ?? '') === 'home/index';
            │ khu quản trị hay không.
            └──────────────────────────────────────────────────────────────── */
         ?>
-        <?php partial('_layout/header-account', ['isLoggedIn' => $isLoggedIn]); ?>
+        <a href="<?= $isLoggedIn ? '/tai-khoan' : '/auth' ?>" class="oa-header__btn"
+           aria-label="<?= e($isLoggedIn ? t('account.mine') : t('account.login')) ?>">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/>
+            </svg>
+        </a>
 
         <?php /* GIỎ HÀNG — icon, số món và ngăn kéo, ở _layout/header-cart.php.
                  Nằm riêng một file vì master.php cũng in đúng cụm đó khi trả
