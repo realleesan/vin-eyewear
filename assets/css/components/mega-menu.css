@@ -277,15 +277,30 @@
     list-style: none;
 }
 
+/* ┌─ `color: inherit` LÀ THỨ TẮT HOVER, ĐỪNG GỠ ──────────────────────────
+   │ oa.css có luật toàn site `a:hover { color: var(--ink-3) }`. Dòng này
+   │ ghim màu về màu thừa kế của bảng ở MỌI trạng thái, nên liên kết bảng xổ
+   │ không đổi màu dưới con trỏ. Bỏ nó đi là luật toàn site thắng lại và
+   │ hiệu ứng quay về — im lặng, vì ở trạng thái thường trông vẫn đúng.
+   │
+   │ Nó cũng là thứ giữ cho bảng đọc được trên ảnh hero trang chủ: ở đó chữ
+   │ nav màu trắng, mà --ink-3 là xám đậm.
+   └──────────────────────────────────────────────────────────────────────── */
 .mega__links a {
     font-size: var(--fs-body);
     color: inherit;
 }
 
-.mega__links a:hover {
-    color: inherit;
-    opacity: .65;
-}
+/* ┌─ KHÔNG CÓ LUẬT `:hover` — CỐ Ý (theo yêu cầu chủ dự án) ───────────────
+   │ Bản trước làm liên kết mờ xuống `opacity: .65` khi rê chuột. Đã bỏ:
+   │ cả khu nav nay đứng yên dưới con trỏ, không chữ nào đổi màu hay đổi độ
+   │ mờ — cùng luật đã áp cho hàng nav (xem .oa-header__nav trong oa.css và
+   │ .mega__trigger bên trên).
+   │
+   │ Dấu "con trỏ đang ở đâu" còn lại là chính con trỏ: liên kết vẫn nhận
+   │ `cursor: pointer` mặc định. Bàn phím thì đi bằng :focus-visible, khai ở
+   │ cuối oa.css và KHÔNG bị lượt bỏ này đụng tới.
+   └──────────────────────────────────────────────────────────────────────── */
 
 /* .mega__col còn trong markup của collection-menu.php — giữ nó thành một
    khối dọc thường, không cho nó dáng riêng nào. */
