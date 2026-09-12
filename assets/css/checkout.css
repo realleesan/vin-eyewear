@@ -427,7 +427,8 @@ html.js .cofallback {
     height: 36px;
     padding: 0 12px;
     border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     background: var(--bg);
     font-size: var(--fs-body);
     cursor: pointer;
@@ -546,7 +547,8 @@ html.js .cofallback {
     height: 36px;
     padding: 0 14px;
     border: 1px solid var(--ink);
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     background: var(--ink);
     color: #fff;
     font-family: inherit;
@@ -901,7 +903,8 @@ html.js .cofallback {
     justify-content: center;
     height: var(--h-field);
     border: 1px solid var(--line-btn-2);
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     background: transparent;
     color: var(--ink);
     font-family: inherit;

@@ -240,10 +240,30 @@
        │ đầu trang (--hdr-h), bề ngang ngăn kéo. Đó mới là số của bố cục —
        │ phóng chúng thì lưới 4 cột vỡ sang cuộn ngang trên laptop 1366px.
        └──────────────────────────────────────────────────────────────────── */
-    --r-pill: calc(18px * var(--oa-scale));      /* = ½ --h-btn    */
-    --r-pill-sm: calc(16px * var(--oa-scale));   /* = ½ --h-btn-sm */
-    --r-chip: calc(13px * var(--oa-scale));      /* = ½ --h-chip   */
-    --r-tab: calc(14px * var(--oa-scale));       /* = ½ --h-tab    */
+    /* ┌─ KHÔNG BO TRÒN (12/09/2026, theo yêu cầu chủ dự án) ─────────────
+       │ BỐN TOKEN NÀY NAY LÀ 0. Chúng từng là bán kính "viên thuốc" —
+       │ đúng một nửa chiều cao ô, nên nút, chip và tab ra hình thuôn hai
+       │ đầu; mẫu gốc vẽ như thế. Nay mọi nút của khu bán hàng là GÓC VUÔNG.
+       │
+       │ GIỮ TÊN VÀ GIỮ CẢ BỐN, không xoá: chúng nằm rải ở ~40 chỗ trong 15
+       │ file CSS. Đổi giá trị tại MỘT chỗ thì cả site vuông cùng lúc và
+       │ quay lại cũng một dòng; xoá token rồi sửa 40 chỗ thì lần sau muốn
+       │ bo lại phải đi tìm đủ 40 chỗ ấy.
+       │
+       │ CÒN MỘT NHÓM NÚT NỮA không đi qua bốn token này mà dùng --r-field
+       │ (6px, vốn là góc bo của Ô NHẬP chứ không phải của nút): .pdbtn,
+       │ .authbtn, .oa-btn--block, .acct-btn, .bmodal__cta… Chúng đã được
+       │ khai `border-radius: 0` ngay tại chỗ, mỗi chỗ kèm một dòng trỏ về
+       │ khối này. ĐỪNG đặt --r-field về 0 để "gom một mối": nó còn là góc
+       │ của ô nhập, thẻ, bảng và hộp thoại — những thứ chủ dự án KHÔNG yêu
+       │ cầu đổi.
+       │
+       │ --h-* (chiều cao) giữ nguyên: chỉ hình góc đổi, cỡ nút không đổi.
+       └──────────────────────────────────────────────────────────────────── */
+    --r-pill: 0;       /* trước: ½ --h-btn    (18px) */
+    --r-pill-sm: 0;    /* trước: ½ --h-btn-sm (16px) */
+    --r-chip: 0;       /* trước: ½ --h-chip   (13px) */
+    --r-tab: 0;        /* trước: ½ --h-tab    (14px) */
     --r-field: calc(6px * var(--oa-scale));      /* góc bo, không phải viên */
 
     --h-btn: calc(36px * var(--oa-scale));
@@ -725,7 +745,8 @@ ol[role="list"],
     height: var(--h-field);
     padding: 0 12px;
     border: 0;
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     background: var(--ink);
     color: #fff;
     font-size: var(--fs-micro);
@@ -1310,88 +1331,93 @@ textarea.oa-field {
    │ bất kể tấm ảnh bên trong to nhỏ ngang dọc ra sao; đó là thứ làm cả lưới
    │ thẳng hàng. Gõ cứng 527px thì màn hẹp là khung tràn ra ngoài cột.
    └──────────────────────────────────────────────────────────────────────── */
+/* ┌─ KHUNG ẢNH NẰM NGANG, ẢNH LẤP KÍN (12/09/2026, theo yêu cầu chủ dự án) ─
+   │ 3/2 — khung NGANG, thay cho 1/1,15 (dọc) và 1/1,36 (dọc, đo từ
+   │ gentlemonster.com) trước đó. Mẫu chủ dự án gửi đo ra 1,69; lấy 1,5 chứ
+   │ không lấy đúng 1,69 là một phép đổi chác nói rõ ở đây:
+   │
+   │ ẢNH TRONG KHO LÀ ẢNH VUÔNG (800×800) nên khung ngang chỉ ra hình ngang
+   │ khi ảnh LẤP KÍN khung — `cover`, tức CẮT bớt trên và dưới. Cắt bao
+   │ nhiêu là do tỉ lệ quyết định:
+   │
+   │     3/2  (đang dùng)  cắt 33% chiều cao ảnh vuông
+   │     5/3  (≈ mẫu)      cắt 40%
+   │
+   │ Ảnh chụp gọng kính để giữa khung, phần bị cắt là nền trắng phía trên và
+   │ bóng đổ phía dưới — đã kiểm trên ảnh thật của kho, cả 3/2 lẫn 5/3 đều
+   │ còn nguyên cái gọng. Nhưng biên an toàn của 3/2 rộng hơn, và ngày nào
+   │ cửa hàng đăng một tấm chụp cận thì 3/2 còn giữ được, 5/3 thì cắt mất
+   │ càng kính. Muốn sát mẫu hơn thì đổi ĐÚNG con số này.
+   │
+   │ ĐÂY LÀ CHỖ DUY NHẤT CỦA SITE `cover` ĐÈ LÊN LUẬT "ảnh sản phẩm phải
+   │ contain": luật ấy (xem chú thích đầu _layout/product-card.php) sinh ra
+   │ để khách thấy TRỌN cái gọng, và nó vẫn đúng ở trang chi tiết — nơi
+   │ khách đang cân nhắc đúng một mặt hàng. Thẻ trong lưới là chỗ để NHẬN
+   │ RA món hàng, không phải chỗ để xem xét nó.
+   └──────────────────────────────────────────────────────────────────────── */
 .oa-card__media {
     position: relative;
     width: 100%;
-
-    /* 1/1,15 — KHÔNG PHẢI 1/1,36 nữa (12/09/2026, theo yêu cầu chủ dự án).
-       Tỉ lệ 1,36 đo từ gentlemonster.com, nhưng ảnh của HỌ là `cover` nên
-       lấp kín khung; ảnh của ta là `contain` và ảnh trong kho là VUÔNG, nên
-       khung 1,36 chừa ~18% chiều cao trống trên và dưới mỗi tấm — ở thẻ
-       304px là 49px mỗi bên. Khoảng trống ấy đẩy hai hàng thẻ xa nhau và
-       làm cả lưới trông rời rạc.
-
-       1,15 rút khoảng trống còn ~23px mỗi bên mà TẤM ẢNH KHÔNG NHỎ ĐI một
-       pixel nào: ảnh vuông vẫn đặt vừa bề ngang thẻ, chỉ khung bớt cao.
-
-       ĐỔI SỐ NÀY THÌ NHỚ: nó chỉ đúng chừng nào ảnh sản phẩm còn là ảnh
-       vuông. Ngày nào kho đổi sang ảnh dọc thì tính lại. */
-    aspect-ratio: 1 / 1.15;
+    aspect-ratio: 3 / 2;
     cursor: pointer;
+    display: block;
 
-    /* Khung ôm ảnh căn GIỮA theo chiều dọc trong ô tỉ lệ cố định — đúng chỗ
-       ảnh vẫn nằm từ trước, chỉ khác là nay có một hộp thật bao quanh nó. */
-    display: flex;
-    align-items: center;
+    /* HAI DÒNG NÀY GIỮ CHO aspect-ratio LÀ THẬT — đừng gỡ.
 
-    /* Cho .oa-card__frame đo được bề NGANG của ô này bằng đơn vị cqw. Xem
-       max-height ở .oa-card__frame img bên dưới — đó là chỗ duy nhất dùng
-       tới, và không có nó thì ảnh cao quá khổ tràn xuống đè phần chữ. */
+       .oa-card là flex cột, nên ô này là MỘT MỤC FLEX và mục flex mặc định
+       mang `min-height: auto`: chiều cao tối thiểu của nó là chiều cao NỘI
+       DUNG. Nội dung ở đây là tấm ảnh vuông, cao bằng bề ngang cột — tức
+       304px ở thẻ 304px, trong khi khung 3/2 chỉ cần 202px. Thiếu
+       `min-height: 0` thì ô phình lên 304px và khung quay về VUÔNG, đúng
+       thứ vừa sửa xong; và thẻ có ảnh sẽ cao hơn thẻ chưa có ảnh.
+
+       `overflow: hidden` cắt phần ảnh thừa ra ngoài khung — chính là phép
+       cắt trên/dưới mà `cover` cần. */
+    min-height: 0;
+    overflow: hidden;
+
+    /* Ô chứa cho @container của .oa-card__actions (hai nút xếp dọc khi thẻ
+       hẹp). KHÔNG còn dùng cho trần chiều cao ảnh — ảnh nay lấp kín khung
+       nên không có gì để chặn. */
     container-type: inline-size;
 }
 
-/* ┌─ KHUNG ÔM SÁT TẤM ẢNH — MỐC NEO CỦA HUY HIỆU ─────────────────────────
-   │ ĐỌC TRƯỚC KHI GỘP LẠI. Ảnh sản phẩm là `contain` trong một ô khoá tỉ lệ
-   │ 1/1,36, mà ảnh trong kho là VUÔNG (800×800). Ảnh vuông đặt vừa bề ngang
-   │ thì trên và dưới mỗi bên còn thừa 18% chiều cao ô: ở cột 315px là 57px
-   │ trống. Huy hiệu neo vào ô (`.oa-card__media`) thì nó nổi lơ lửng trong
-   │ khoảng trống ấy, cách mép trên tấm ảnh gần 50px — trông như huy hiệu
-   │ của THẺ chứ không phải của ẢNH. Đó là lỗi đã sửa ngày 12/09/2026.
+/* ┌─ KHUNG ẢNH — MỐC NEO CỦA HUY HIỆU VÀ HAI NÚT MUA ─────────────────────
+   │ Nay khung TRÙNG KHÍT ô ảnh (100% × 100%), vì ảnh `cover` lấp kín ô nên
+   │ không còn dải trắng nào để trừ ra. Trước 12/09/2026 ảnh là `contain`
+   │ trong một ô dọc, ảnh vuông chừa ~18% chiều cao trống trên và dưới, và
+   │ huy hiệu neo thẳng vào ô thì nổi lơ lửng cách mép ảnh gần 50px — khung
+   │ này sinh ra để chữa đúng lỗi đó.
    │
-   │ Nay <a> ảnh KHÔNG còn `position:absolute; inset:0` nữa: nó nằm thường
-   │ trong khung này, và khung cao ĐÚNG bằng tấm ảnh (img: width 100%,
-   │ height auto). Huy hiệu neo vào khung, nên góc trên trái của nó là góc
-   │ trên trái của tấm ảnh ở mọi tỉ lệ ảnh và mọi bề ngang cột.
-   │
-   │ VÙNG BẤM HẸP LẠI THEO, và đó là chủ ý: trước đây bấm vào khoảng trắng
-   │ trên/dưới ảnh cũng đi sang trang chi tiết.
+   │ GIỮ KHUNG LẠI dù nay nó trùng ô: nó là chỗ neo của .oa-badges và
+   │ .oa-card__actions, và là thứ giữ cho việc quay về `contain` chỉ phải
+   │ sửa một luật (cho khung cao theo ảnh trở lại) thay vì sửa cả ba.
    └──────────────────────────────────────────────────────────────────────── */
 .oa-card__frame {
     position: relative;
     width: 100%;
+    height: 100%;
 }
 
 .oa-card__media .oa-slot {
     position: static;
     display: block;
     width: 100%;
+    height: 100%;
     aspect-ratio: auto;
 }
 
-.oa-card__frame .oa-slot > img {
-    width: 100%;
-    height: auto;
+/* Ảnh thẻ sản phẩm: lấp kín khung ngang, nền trong suốt.
 
-    /* TRẦN CHIỀU CAO = chiều cao của ô. 115cqw là 1,15 lần bề ngang ô ảnh,
-       tức đúng chiều cao ô theo aspect-ratio 1/1,15 ở trên — ĐỔI TỈ LỆ
-       KHUNG THÌ PHẢI ĐỔI CẢ SỐ NÀY, hai chỗ là một. Ảnh cao hơn tỉ
-       lệ ấy (hiếm với gọng kính) bị ép về đúng khổ ô và lúc đó `contain`
-       lại chừa khoảng trống hai bên như cũ — chấp nhận, miễn là không có
-       tấm ảnh nào tràn xuống đè lên tên và giá. */
-    max-height: 115cqw;
-    object-fit: contain;
-}
-
-/* Không có ảnh: khung không có gì để lấy chiều cao, mà ô giữ chỗ
-   (.oa-slot__ph) lại là `position:absolute; inset:0`. Cho khung cao trọn ô
-   để chữ "chưa có ảnh" nằm giữa khung trống, đúng như trước. */
-.oa-card__frame--empty,
-.oa-card__frame--empty .oa-slot {
-    height: 100%;
+   `.oa-slot > img` ở khối .oa-slot bên trên đã cho width/height 100% và
+   `object-fit: cover`, nên ở đây chỉ còn phần nền — thẻ không có mặt phẳng
+   riêng, ảnh nằm thẳng trên nền trang (xem khối .oa-card). */
+.oa-slot--card {
+    background: transparent;
 }
 
 /* Huy hiệu góc trên trái CỦA TẤM ẢNH — neo vào .oa-card__frame, xem khối
-   chú thích ở đó. */
+   chú thích ở đó. Ảnh lấp kín khung nên góc ấy đúng là góc ảnh. */
 .oa-badges {
     position: absolute;
     top: 10px;

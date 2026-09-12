@@ -104,16 +104,13 @@ foreach ($variants as $v) {
     <div class="oa-card__media">
 
         <?php
-        /* ┌─ KHUNG ÔM SÁT TẤM ẢNH ────────────────────────────────────────
-           │ Lớp bọc này KHÔNG phải để trang trí: nó cao đúng bằng tấm ảnh,
-           │ và huy hiệu neo vào nó. Bỏ đi thì huy hiệu tụt về góc của KHUNG
-           │ 1/1,36, nổi lơ lửng trên khoảng trắng phía trên ảnh vuông — xem
-           │ khối chú thích .oa-card__frame trong assets/css/oa.css.
-           │
-           │ Không có ảnh thì khung không có gì để lấy chiều cao, nên thêm
-           │ lớp --empty cho nó cao trọn ô giữ chỗ. */
+        /* ┌─ KHUNG ẢNH ───────────────────────────────────────────────────
+           │ Lớp bọc này KHÔNG phải để trang trí: huy hiệu và hai nút mua
+           │ neo vào nó. Xem khối chú thích .oa-card__frame trong
+           │ assets/css/oa.css — ở đó có cả lý do nó từng phải tồn tại khi
+           │ ảnh còn là `contain` trong khung dọc. */
         ?>
-        <div class="oa-card__frame<?= ProductModel::hasImage($product) ? '' : ' oa-card__frame--empty' ?>">
+        <div class="oa-card__frame">
 
             <?php
             /* Ô ẢNH CŨNG LÀ ĐƯỜNG SANG TRANG CHI TIẾT — khách bấm vào ảnh theo phản
@@ -130,10 +127,14 @@ foreach ($variants as $v) {
                người dùng bàn phím phải Tab qua bốn liên kết một thẻ thay vì ba.
                Huy hiệu nằm NGOÀI liên kết nên vẫn đọc được. */
             ?>
-            <a class="oa-slot oa-slot--contain" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
+            <a class="oa-slot oa-slot--card" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
                 <?php if (ProductModel::hasImage($product)): ?>
+                    <?php /* width/height = tỉ lệ CỦA KHUNG (3/2), không phải của
+                             tấm ảnh: ảnh `cover` nên khung mới là thứ quyết định
+                             chỗ trình duyệt chừa ra trước khi ảnh tải xong. Ghi
+                             sai tỉ lệ ở đây là một cú nhảy bố cục khi ảnh về. */ ?>
                     <img src="<?= e(asset(ProductModel::image($product))) ?>" alt=""
-                         width="600" height="750"
+                         width="600" height="400"
                          <?= $eager ? '' : 'loading="lazy"' ?> decoding="async">
                 <?php else: ?>
                     <?php /* Ô trống thật thà, không mượn ảnh của mặt hàng khác —

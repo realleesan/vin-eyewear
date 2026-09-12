@@ -455,7 +455,8 @@
     justify-content: center;
     height: var(--h-field);
     border: 0;
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     background: var(--ink);
     color: #fff;
     font-family: inherit;

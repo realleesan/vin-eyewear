@@ -480,7 +480,8 @@
     height: var(--h-field);
     margin-top: 6px;
     border: 0;
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     background: var(--ink);
     color: #fff;
     font-family: inherit;
@@ -572,7 +573,8 @@
     height: 36px;
     padding: 0 14px;
     border: 1px solid var(--ink);
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     background: var(--ink);
     color: #fff;
     font-family: inherit;

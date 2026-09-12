@@ -104,7 +104,8 @@
     height: var(--h-field);
     padding: 0 12px;
     border: 0;
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     font-family: inherit;
     font-size: var(--fs-micro);
     letter-spacing: var(--ls);

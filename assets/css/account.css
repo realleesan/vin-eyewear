@@ -452,7 +452,8 @@ select.acct-field__input {
     height: var(--h-field);
     padding: 0 20px;
     border: 1px solid var(--line-btn-2);
-    border-radius: var(--r-field);
+    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    border-radius: 0;
     background: transparent;
     color: var(--ink);
     font-family: inherit;
