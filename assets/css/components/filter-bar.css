@@ -52,23 +52,91 @@
    nhất trong trang có góc tròn.
    ══════════════════════════════════════════════════════════════════════ */
 
-.fbarwrap {
-    display: block;
+/* ┌─ HÀNG TRÊN: chip bộ sưu tập bên trái, nút "Bộ lọc" bên phải ──────────
+   │ Hàng chip nằm NGOÀI <details> — xem khối chú thích trong filter-bar.php
+   │ để biết vì sao không được đưa nó vào trong. */
+.fbarbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 var(--edge);
     border-bottom: 1px solid var(--line);
 }
 
-/* Tấm đang mở thì chính .fbar đã có viền trên/dưới — hai đường liền nhau ở
-   cùng một chỗ dày gấp đôi. */
-.fbarwrap[open] {
+/* Tấm đang mở thì chính .fbar đã có viền trên — hai đường liền nhau ở cùng
+   một chỗ dày gấp đôi. */
+.fbarbar:has(.fbarwrap[open]) {
     border-bottom: 0;
 }
 
+/* Hàng chip CUỘN NGANG khi tràn, không xuống hai hàng: số bộ sưu tập tăng
+   theo thời gian, mà xuống hàng thì nó thành một khối menu chứ không còn là
+   một dải điều hướng. Cùng luật với .cdet__chips của trang bộ sưu tập. */
+.fbarbar__chips {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    gap: 6px;
+    padding: 14px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.fbarbar__chips::-webkit-scrollbar {
+    display: none;
+}
+
+/* Dáng lấy nguyên của .cdet__chip (trang bộ sưu tập) — hai hàng chip của
+   site phải trông như một, kể cả khi chỉ một trong hai được sửa sau này.
+
+   Góc theo --r-chip, hiện là 0 (góc vuông, luật chung của cả site). Bản
+   thiết kế vẽ viên bo tròn, nhưng đổi bo ở đây là tự tay tạo ra chỗ duy nhất
+   còn góc tròn — muốn tròn thì sửa --r-chip trong oa.css, cả site theo. */
+.fbarchip {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    height: var(--h-chip);
+    padding: 0 12px;
+    border: 1px solid var(--line-chip);
+    border-radius: var(--r-chip);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: var(--fs-ui);
+    white-space: nowrap;
+    transition: background .18s ease, border-color .18s ease;
+}
+
+.fbarchip:hover {
+    border-color: var(--ink-6);
+    color: var(--ink);
+}
+
+.fbarchip.is-on {
+    background: var(--bg-chip-flat);
+    border-color: var(--bg-chip-flat);
+}
+
+/* Bộ sưu tập không còn món nào khớp: mờ và không bấm được — cùng luật với
+   mục hết hàng trong tấm lọc. */
+.fbarchip.is-off {
+    color: var(--ink-4);
+    border-color: var(--line);
+    pointer-events: none;
+}
+
+.fbarwrap {
+    flex: none;
+    margin-left: auto;
+}
+
+/* Không còn <details> bọc cả tấm, nên đệm ngang chuyển lên .fbarbar — để lại
+   ở đây thì nút bị đẩy lùi thêm một lần var(--edge) nữa khỏi mép phải. */
 .fbarwrap__btn {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
     gap: 8px;
-    padding: 16px var(--edge);
+    padding: 16px 0;
     font-size: var(--fs-text, 13px);
     color: var(--ink);
     list-style: none;
@@ -116,10 +184,37 @@
     outline-offset: -1px;
 }
 
+/*
+ * TẤM LỌC ĐÓNG/MỞ THEO <details> Ở HÀNG TRÊN, QUA :has().
+ *
+ * ⚠ .fbar phải là EM LIỀN KỀ của .fbarbar. Chèn bất cứ thẻ nào vào giữa hai
+ * khối là tấm không bao giờ mở ra nữa, và không có lỗi nào để thấy.
+ */
 .fbar {
+    display: none;
     border-top: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
     background: var(--bg-off);
+}
+
+.fbarbar:has(.fbarwrap[open]) + .fbar {
+    display: block;
+}
+
+/*
+ * ĐƯỜNG LUI CHO TRÌNH DUYỆT CHƯA HIỂU :has() (trước 2023).
+ *
+ * Ở đó tấm LUÔN MỞ — xấu hơn, nhưng mọi tiêu chí vẫn bấm được. Thà thế còn
+ * hơn một cái nút bấm vào không có gì xảy ra.
+ */
+@supports not selector(:has(*)) {
+    .fbar {
+        display: block;
+    }
+
+    .fbarwrap {
+        display: none;
+    }
 }
 
 /* ┌─ HÀNG ĐẦU: tên tấm + tổng số hàng (nút ✕ đã gỡ — xem filter-bar.php) ── */

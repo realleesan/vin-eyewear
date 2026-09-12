@@ -181,22 +181,6 @@ $hasFacetFilter = ($activeCount - ($filters['category'] !== '' ? 1 : 0)) > 0;
 
 <?php
 /*
- * Đầu trang nền hồng phấn — dùng chung với trang Liên hệ, vì hai bản thiết kế
- * vẽ khối này giống hệt nhau. Đủ cả ba phần: breadcrumb, tiêu đề, mô tả.
- *
- * $lead ở đây CÙNG một chuỗi với thẻ <meta description> (xem ProductController)
- * — đừng viết lại một câu khác cho đẹp, hai chỗ lệch nhau thì kết quả tìm kiếm
- * hứa một đằng, trang mở ra một nẻo.
- */
-partial('_layout/page-head', [
-    'head_crumbs' => $crumbs,
-    'head_title'  => $heading,
-    'head_lead'   => $lead,
-]);
-?>
-
-<?php
-/*
  * ════════════════════════════════════════════════════════════════════════════
  * TẤM LỌC NGANG — thay cho cột lọc trái 280px (12/09/2026)
  *
@@ -239,8 +223,18 @@ $nhanNhom = [
    hiệu, bộ sưu tập và khoảng giá thì chung — chúng không thuộc về gọng hay
    tròng, chúng thuộc về việc mua hàng. */
 $thuTuNhom = $laTrongKinh
-    ? ['lens_type', 'lens_index', 'lens_coat', 'lens_color', 'brand', 'collection']
-    : ['color', 'shape', 'material', 'gender', 'brand', 'collab', 'collection'];
+    ? ['lens_type', 'lens_index', 'lens_coat', 'lens_color', 'brand']
+    : ['color', 'shape', 'material', 'gender', 'brand', 'collab'];
+
+/*
+ * 'collection' KHÔNG CÒN LÀ MỘT CỘT TRONG TẤM — nó lên HÀNG CHIP phía trên
+ * (12/09/2026, theo yêu cầu chủ dự án).
+ *
+ * ⚠ Đừng thêm nó lại vào $thuTuNhom. Lúc ấy cùng một tham số ?collection= có
+ * hai chỗ điều khiển, cách nhau một khoảng — và chúng sẽ không khớp nhau, vì
+ * hàng chip chọn MỘT bộ còn cột lọc tick được NHIỀU. Đây đúng là thứ vừa dọn
+ * xong với ô "Sắp xếp theo".
+ */
 
 $fbCols = [];
 
@@ -319,18 +313,69 @@ $fbCols[] = [
     ),
 ];
 
+
+/*
+ * ════════════════════════════════════════════════════════════════════════════
+ * HÀNG CHIP BỘ SƯU TẬP — NGANG HÀNG VỚI NÚT "BỘ LỌC" (12/09/2026)
+ *
+ * Chọn MỘT bộ, không phải tick nhiều: chip đầu "Tất cả" là lối về, đúng dáng
+ * bản thiết kế chủ dự án đưa và cũng đúng cách người ta dùng nó — xem hàng
+ * mẫu của một bộ chứ không hỏi "gộp bộ A với bộ B".
+ *
+ * Bấm lại chip ĐANG BẬT thì bỏ chọn, y như mọi tiêu chí khác trong tấm lọc.
+ * Nó dẫn về cùng địa chỉ với "Tất cả" — hai lối cho cùng một việc là cố ý:
+ * lối hiển nhiên cho người đọc kỹ, lối theo phản xạ cho người bấm nhanh.
+ *
+ * Hàng tự vắng mặt khi kho chưa có bộ sưu tập nào — lúc ấy chỉ còn mỗi chip
+ * "Tất cả", mà một lựa chọn duy nhất thì không phải một lựa chọn.
+ */
+$fbChips = [];
+
+if (!empty($groups['collection'])) {
+    $dangLocBo = false;
+
+    foreach ($groups['collection'] as $o) {
+        if (!empty($o['on'])) {
+            $dangLocBo = true;
+            break;
+        }
+    }
+
+    $veTatCa = $buildUrl(['collection' => [], 'page' => null]);
+
+    $fbChips[] = ['label' => 'Tất cả', 'url' => $veTatCa, 'on' => !$dangLocBo, 'off' => false];
+
+    foreach ($groups['collection'] as $o) {
+        $fbChips[] = [
+            'label' => $o['label'],
+            /* Đang bật -> bấm là BỎ chọn (về "Tất cả"). Chưa bật -> thay hẳn
+               bộ đang chọn, không cộng thêm: hàng này chọn một. */
+            'url'   => !empty($o['on']) ? $veTatCa
+                                        : $buildUrl(['collection' => [$o['key']], 'page' => null]),
+            'on'    => (bool) $o['on'],
+            'off'   => $o['count'] === 0,
+        ];
+    }
+}
 ?>
 
 <!-- ============================================================
-     THÂN TRANG — tấm lọc + lưới kết quả
+     THÂN TRANG — hàng chip + tấm lọc + tiêu đề + lưới kết quả
      ============================================================ -->
 <section class="catbody">
 
     <?php
-    /* NẰM TRONG .catbody, và phải thế: assets/js/catalog.js thay ruột hai khối
+    /* TẤM LỌC ĐỨNG TRÊN TIÊU ĐỀ "Gọng kính" (12/09/2026, yêu cầu chủ dự án) —
+       vì thế _layout/page-head nằm DƯỚI lời gọi này chứ không còn ở ngoài
+       .catbody như trước.
+
+       NẰM TRONG .catbody, và phải thế: assets/js/catalog.js thay ruột hai khối
        `.fbar` và `.catmain` sau mỗi cú lọc, mà nó tìm cả hai BÊN TRONG
        .catbody. Đặt tấm ra ngoài thẻ này thì mỗi cú bấm tiêu chí lại tải lại
-       cả trang thay vì đổi tại chỗ — chạy đúng, nhưng chậm hơn hẳn. */
+       cả trang thay vì đổi tại chỗ — chạy đúng, nhưng chậm hơn hẳn.
+
+       ⚠ .fbar phải là em LIỀN KỀ của .fbarbar (CSS dùng `+` để bung tấm ra).
+       Cả hai do partial này in ra cạnh nhau — đừng chèn gì vào giữa. */
     partial('_layout/filter-bar', [
         'fbCols'  => $fbCols,
         'fbTotal' => (int) $total,
@@ -343,6 +388,17 @@ $fbCols[] = [
            chứ không phải một tiêu chí khách vừa bấm, nên đếm nó vào là tấm
            luôn bung sẵn ở mọi trang con. Cùng phép với $hasFacetFilter. */
         'fbCount' => max(0, $activeCount - ($filters['category'] !== '' ? 1 : 0)),
+        'fbChips' => $fbChips,
+    ]);
+
+    /* Tiêu đề trang — ĐÃ CHUYỂN XUỐNG ĐÂY, dưới tấm lọc.
+       $lead cùng một chuỗi với thẻ <meta description> (xem ProductController):
+       đừng viết lại một câu khác cho đẹp, hai chỗ lệch nhau thì kết quả tìm
+       kiếm hứa một đằng, trang mở ra một nẻo. */
+    partial('_layout/page-head', [
+        'head_crumbs' => $crumbs,
+        'head_title'  => $heading,
+        'head_lead'   => $lead,
     ]);
     ?>
 

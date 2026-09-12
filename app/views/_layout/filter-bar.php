@@ -34,6 +34,10 @@
  *   $fbTitle  string nhan đề tấm, mặc định "Bộ lọc"
  *   $fbCount  int    số tiêu chí ĐANG BẬT — in lên nút mở, và quyết định tấm
  *                    có bung sẵn hay không
+ *   $fbChips  array  hàng chip NGANG HÀNG với nút mở, bên trái nó. Mảng rỗng
+ *                    thì hàng không in ra và nút tự dồn sát mép phải:
+ *                      [['label' => 'Tất cả', 'url' => '/…', 'on' => true,
+ *                        'off' => false], …]
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * TẤM ĐÓNG SẴN, MỞ RA BẰNG NÚT "BỘ LỌC"
@@ -63,6 +67,7 @@ $fbTotal = (int) ($fbTotal ?? 0);
 $fbClear = (string) ($fbClear ?? '');
 $fbTitle = (string) ($fbTitle ?? 'Bộ lọc');
 $fbCount = (int) ($fbCount ?? 0);
+$fbChips = (array) ($fbChips ?? []);
 
 /* Không còn cột nào có lựa chọn thì không vẽ tấm rỗng. Một tấm lọc trống làm
    người ta tưởng trang hỏng, trong khi sự thật chỉ là kho chưa đủ hàng để có
@@ -81,6 +86,51 @@ if (!$fbCoGi) {
 }
 ?>
 
+<?php
+/*
+ * ════════════════════════════════════════════════════════════════════════════
+ * HÀNG TRÊN: CHIP BỘ SƯU TẬP BÊN TRÁI · NÚT "BỘ LỌC" BÊN PHẢI
+ *
+ * ⚠ TẤM LỌC (.fbar) NẰM NGOÀI <details>, KHÔNG PHẢI TRONG.
+ *
+ * Đây là chỗ dễ "sửa cho gọn" rồi làm hỏng. Lý do phải thế: <details> khi
+ * đóng thì GIẤU MỌI CON trừ <summary> — kể cả hàng chip, nếu hàng chip nằm
+ * trong nó. Mà hàng chip phải luôn thấy được, nó là điều hướng chứ không phải
+ * một phần của bộ lọc.
+ *
+ * Nên <details> chỉ còn giữ đúng cái nút, còn việc bung/thu tấm do CSS làm:
+ *
+ *     .fbar                                  { display: none }
+ *     .fbarbar:has(.fbarwrap[open]) + .fbar  { display: block }
+ *
+ * Hệ quả bắt buộc nhớ: .fbar phải là EM LIỀN KỀ của .fbarbar. Chèn bất cứ thẻ
+ * nào vào giữa hai khối là bộ lọc không bao giờ mở ra nữa, và không có lỗi
+ * nào để thấy. Có sẵn đường lui cho trình duyệt chưa hiểu :has() — xem
+ * @supports ở cuối filter-bar.css: ở đó tấm luôn mở, xấu hơn nhưng dùng được.
+ * ════════════════════════════════════════════════════════════════════════════
+ */
+?>
+<div class="fbarbar">
+    <?php if ($fbChips !== []): ?>
+        <?php /* <nav> chứ không phải <div>: đây là một hàng LỐI ĐI giữa các bộ
+                 sưu tập, và trình đọc màn hình cần nghe đúng vai trò ấy để
+                 nhảy thẳng vào nó. */ ?>
+        <nav class="fbarbar__chips" aria-label="Bộ sưu tập">
+            <?php foreach ($fbChips as $c): ?>
+                <?php if (!empty($c['off']) && empty($c['on'])): ?>
+                    <?php /* Bộ sưu tập không còn món nào khớp các tiêu chí đang
+                             bật: mờ đi và BỎ liên kết, cùng luật với mục trong
+                             tấm lọc — bấm vào chỉ dẫn tới một lưới rỗng. */ ?>
+                    <span class="fbarchip is-off" aria-disabled="true"><?= e((string) $c['label']) ?></span>
+                <?php else: ?>
+                    <a class="fbarchip<?= !empty($c['on']) ? ' is-on' : '' ?>"
+                       href="<?= e((string) $c['url']) ?>" rel="nofollow"
+                       <?= !empty($c['on']) ? 'aria-current="true"' : '' ?>><?= e((string) $c['label']) ?></a>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </nav>
+    <?php endif; ?>
+
 <details class="fbarwrap"<?= $fbCount > 0 ? ' open' : '' ?>>
     <?php /* <summary> mang sẵn tam giác riêng của trình duyệt và nó không
              chỉnh được nét cho khớp phần còn lại — tắt ở cả hai cú pháp trong
@@ -96,6 +146,8 @@ if (!$fbCoGi) {
         <span class="fbarwrap__num"<?= $fbCount > 0 ? '' : ' hidden' ?>><?= $fbCount ?><span
             class="sr-only"> tiêu chí đang bật</span></span>
     </summary>
+</details>
+</div><!-- /.fbarbar -->
 
 <div class="fbar">
     <div class="fbar__head">
@@ -165,5 +217,4 @@ if (!$fbCoGi) {
             <a class="fbar__clear" href="<?= e($fbClear) ?>" rel="nofollow">Xoá tất cả bộ lọc</a>
         </div>
     <?php endif; ?>
-</div>
-</details>
+</div><!-- /.fbar -->
