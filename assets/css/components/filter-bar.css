@@ -189,14 +189,22 @@
  *
  * NỀN TRẮNG NHƯ PHẦN CÒN LẠI CỦA TRANG (12/09/2026, yêu cầu chủ dự án).
  * Trước đây là --bg-off, tức một mảng xám nhạt bung ra giữa trang mỗi lần mở
- * bộ lọc. Nay chỉ còn một nét viền trên làm mép của tấm — đủ để biết nó vừa
- * xổ ra, mà không cắt trang thành hai mảng màu.
+ * bộ lọc.
  *
- * Cũng KHÔNG còn border-bottom: xem lý do ở .fbarbar bên trên.
+ * ĐÚNG MỘT NÉT VIỀN, VÀ NÓ NẰM DƯỚI (yêu cầu chủ dự án, cùng ngày).
+ *
+ *   - KHÔNG có border-top: hàng chip và tấm lọc là một khối, kẻ một đường
+ *     giữa chúng là chia đôi chính cái vừa mở ra.
+ *   - CÓ border-bottom: nó là mép dưới của cả khối bộ lọc, tách khối ấy khỏi
+ *     tiêu đề trang bên dưới.
+ *
+ * ⚠ Nét này chỉ tồn tại khi tấm ĐANG MỞ, vì .fbar lúc đóng là display:none.
+ * Đừng chuyển nó lên .fbarbar cho "luôn có": lúc đóng thì không được có
+ * đường kẻ nào cả — xem chú thích ở .fbarbar bên trên.
  */
 .fbar {
     display: none;
-    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
     background: var(--bg);
 }
 
