@@ -64,12 +64,20 @@
         <div class="authov__panel" role="dialog" aria-modal="true"
              aria-labelledby="authovTitle" tabindex="-1" data-authov-panel>
 
-            <div class="authov__head">
-                <h2 class="authov__title" id="authovTitle"><?= e(t('account.login')) ?></h2>
+            <?php
+            /* CHỈ CÒN NÚT ✕ Ở ĐÂY. Tiêu đề của tấm nằm trong chính mảnh /auth
+               (hai viên thuốc ĐĂNG NHẬP/ĐĂNG KÝ rồi tới tiêu đề) — bản thiết
+               kế vẽ như thế, và để nó ở đó thì nhãn tự đổi theo tab đang mở
+               mà không cần JS nói cho khung biết.
 
-                <button type="button" class="authov__x" data-authov-close
-                        aria-label="<?= e(t('ui.close')) ?>">✕</button>
-            </div>
+               aria-labelledby của hộp thoại vì vậy trỏ vào một phần tử của
+               MẢNH, không phải của khung: h1 trong /auth mang id="authovTitle"
+               ngay khi mảnh được đổ vào. Quãng ngắn trước đó tấm chỉ có chữ
+               "Đang tải…" nên chưa có gì để đọc tên — chấp nhận được, và
+               aria-busy đã nói đúng trạng thái ấy. */
+            ?>
+            <button type="button" class="authov__x" data-authov-close
+                    aria-label="<?= e(t('ui.close')) ?>">✕</button>
 
             <?php /* CHỈ KHỐI NÀY CUỘN, không phải cả tấm — nhờ vậy nút ✕ và
                      tiêu đề đứng yên khi nội dung dài. */ ?>

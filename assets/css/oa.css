@@ -214,11 +214,22 @@
        │ Thang bảy cỡ ở trên vẫn là nguồn duy nhất; ba token dưới đây không
        │ thêm cỡ nào mà chỉ ĐẶT TÊN THEO VAI TRÒ cho ba cỡ đã có:
        │
-       │   --fs-title     13px  tiêu đề LỚN  — h1 của trang, h2 của khối/băng
+       │   --fs-title     15px  tiêu đề LỚN  — h1 của trang, h2 của khối/băng
        │   --fs-subtitle  11px  tiêu đề NHỎ  — tên mặt hàng trong thẻ/giỏ/đơn,
        │                                       tiêu đề khối con, tiêu đề hộp
        │                                       thoại
        │   --fs-text      10px  chữ THÂN BÀI — đoạn dẫn, mô tả, nội dung thẻ
+       │
+       │ --fs-title TỪ 13px LÊN 15px (12/09/2026, theo yêu cầu chủ dự án:
+       │ "tiêu đề mỗi section trang chủ phải lớn hơn nút Xem tất cả"). Ở 13px
+       │ nó ĐÃ lớn hơn nút (11px) rồi, nhưng nút mang weight 600 còn tiêu đề
+       │ chỉ 500, nên chênh 2px không đọc ra. 15px cho chênh 5,6px sau khi
+       │ nhân --oa-scale — đủ để mắt thấy ngay.
+       │
+       │ ĐÂY LÀ ĐỔI CẢ SITE, không riêng trang chủ: h1 của danh mục, giỏ
+       │ hàng, liên hệ, chính sách, đặt lịch… đều qua .oa-title. Chủ dự án
+       │ chọn đúng phạm vi này khi được hỏi, để mọi tiêu đề giữ chung một cỡ
+       │ như yêu cầu trước đó trong cùng ngày.
        │
        │ VÌ SAO PHẢI ĐẶT TÊN THEO VAI TRÒ. Trước đợt này, cùng một vai trò
        │ nằm rải trên bốn cỡ khác nhau: tên sản phẩm ở thẻ là 12px, ở giỏ
@@ -232,11 +243,22 @@
        │ BA CỠ KHÔNG ĐI QUA HỆ NÀY, và đều có lý do riêng:
        │   --fs-micro 9px  nhãn IN HOA, chú thích, dòng meta — vai trò THỨ TƯ
        │                   (222 chỗ dùng); nó không phải "chữ thân bài nhỏ"
-       │   --fs-hero/--fs-home  tiêu đề đè trên ảnh và trên video hero — chữ
-       │                   nằm trên ảnh phải to hơn hẳn chữ trên nền trắng
+       │   --fs-home 22px  tiêu đề đè trên video hero đầu trang chủ
        │   --fs-mark*      wordmark ở thanh đầu trang và chân trang
+       │
+       │ --fs-hero KHÔNG CÒN Ở DANH SÁCH NÀY NỮA, và đó là một mất mát có
+       │ thật, ghi ra để người sau biết: nó vốn là cỡ của tiêu đề ĐÈ TRÊN ẢNH
+       │ (hero bộ sưu tập, hero giới thiệu), tách riêng vì chữ nằm trên ảnh
+       │ phải to hơn hẳn chữ trên nền trắng. Từ 12/09/2026 --fs-title trỏ
+       │ đúng vào nó, nên hai thứ BẰNG NHAU: tiêu đề trên ảnh thôi nổi hơn
+       │ tiêu đề trên nền trắng.
+       │
+       │ Chấp nhận được vì tiêu đề trên ảnh còn chữ TRẮNG và lớp phủ tối đỡ
+       │ lưng (xem .cdet__veil, .vhero__veil), tức nó vẫn tách khỏi nền bằng
+       │ MÀU thay vì bằng cỡ. Ngày nào muốn trả lại bậc ấy thì đừng hạ
+       │ --fs-title — hãy cho tiêu đề trên ảnh một cỡ riêng cao hơn.
        └────────────────────────────────────────────────────────────────── */
-    --fs-title: var(--fs-h);
+    --fs-title: var(--fs-hero);
     --fs-subtitle: var(--fs-ui);
     --fs-text: var(--fs-body);
 

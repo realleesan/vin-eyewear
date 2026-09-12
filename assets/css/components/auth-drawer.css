@@ -124,23 +124,14 @@
    yên ở góc, không trôi theo nội dung.
    ══════════════════════════════════════════════════════════════════════ */
 
-.authov__head {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 20px var(--edge) 0;
-}
-
-.authov__title {
-    font-size: var(--fs-title);
-    font-weight: 500;
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
+/* Nút ✕ NỔI ở góc phải trên, không nằm trong luồng: bản thiết kế đặt nó
+   ngang hàng với hai viên thuốc của mảnh /auth, mà mảnh ấy lại nằm trong
+   vùng cuộn. Cho ✕ ra ngoài vùng cuộn thì nó đứng yên khi nội dung dài. */
 .authov__x {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    z-index: 1;
     flex: none;
     width: 32px;
     height: 32px;
@@ -166,7 +157,7 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 24px var(--edge) 40px;
+    padding: 18px var(--edge) 48px;
 }
 
 /* Ruột là chính view /auth, vốn dựng cho một TRANG rộng. Trong tấm 768px nó
@@ -217,8 +208,9 @@
         transition-duration: .24s;
     }
 
-    .authov__head {
-        padding-top: 16px;
+    .authov__x {
+        top: 14px;
+        right: 14px;
     }
 
     .authov__scroll {
@@ -237,10 +229,17 @@
    chỉ áp cho bản nằm trong tấm.
    ══════════════════════════════════════════════════════════════════════ */
 
+/* `background` PHẢI tắt ở đây. auth.css tô .authwrap bằng var(--bg-panel)
+   (trắng) vì trang /auth thật đứng trên nền trắng. Trong ngăn kéo thì nền là
+   tấm xám #f3f4f6, mà .authwrap lại chỉ rộng bằng cột chữ 420px — nên cái nền
+   trắng ấy vẽ ra một dải trắng đúng bề ngang cột, và ô nhập trắng của bản
+   thiết kế biến mất vào nó. Cả dáng "ô trắng nổi trên nền xám" sống nhờ luật
+   một dòng này; gỡ là mất. */
 .authov__body .authwrap {
     min-height: 0;
     padding: 0;
     display: block;
+    background: none;
 }
 
 .authov__body .authcard {
@@ -259,8 +258,310 @@
     display: none;
 }
 
+/* gap: 0 — auth.css cho .authcard__panel `gap: 28px`, tức MỌI khối con cách
+   nhau đúng 28px. Bản thiết kế thì không đều thế: dải tab cách tiêu đề 28px,
+   tiêu đề cách form 22px, "hoặc" thở rộng hơn, còn chân tấm tách hẳn 56px.
+   Nên khoảng cách ở đây do margin của từng khối tự khai (bên dưới), và gap
+   phải về 0 — để nguyên 28px thì mọi margin ấy đều bị cộng thêm 28. */
 .authov__body .authcard__panel {
     width: 100%;
     max-width: none;
     padding: 0;
+    gap: 0;
+}
+
+/* ============================================================================
+   DÁNG THEO BẢN THIẾT KẾ CHỦ DỰ ÁN GỬI (12/09/2026)
+
+   Ảnh mẫu: tấm nền xám nhạt, hai viên thuốc ĐĂNG NHẬP/ĐĂNG KÝ ở đầu, ô nhập
+   TRẮNG cao không viền, nút chính ĐEN tràn ngang, dòng "hoặc", nút Google
+   trắng tràn ngang, rồi nút viền "Theo dõi đơn hàng", cuối cùng là lối sang
+   chăm sóc khách hàng.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   VÌ SAO CÁC LUẬT NÀY Ở ĐÂY MÀ KHÔNG PHẢI auth.css
+
+   auth.css dựng trang /auth mở bằng đường dẫn thường: thẻ hai cột, ảnh
+   thương hiệu bên trái, form bên phải trên nền TRẮNG. Bản thiết kế này vẽ
+   riêng cho NGĂN KÉO — nền xám, không ảnh, một cột.
+
+   Nên mọi bộ chọn dưới đây đều bắt đầu bằng .authov__body: trang /auth thật
+   giữ nguyên dáng cũ, chỉ bản nằm trong tấm mới đổi. ĐỪNG rút gọn tiền tố ấy;
+   rút là đổi luôn cả trang mà không ai yêu cầu.
+   ============================================================================ */
+
+/* ══════════════════════════════════════════════════════════════════════
+   HAI VIÊN THUỐC ĐẦU TẤM
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* margin-bottom nằm trong phạm vi .authov__body chứ không đặt ở đây: trên
+   trang /auth thật, .authcard__panel vẫn còn `gap: 28px` của auth.css, nên một
+   margin nữa ở đây là cộng thành 56px — rộng gấp đôi chỗ bản thiết kế vẽ. */
+.authtabs {
+    display: flex;
+    gap: 4px;
+}
+
+.authov__body .authtabs {
+    margin-bottom: 28px;
+}
+
+.authtab {
+    padding: 8px 18px;
+    border-radius: 999px;
+    color: var(--ink-3);
+    font-size: var(--fs-subtitle);
+    font-weight: 600;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* Viên đang đứng: nền trắng đặc — cùng thủ pháp bản thiết kế dùng, và nó đọc
+   được cả khi người dùng không phân biệt được màu, vì khác biệt là NỀN chứ
+   không phải sắc độ chữ.
+   
+   Vòng viền 1px đi kèm vì HAI NƠI dùng chung dải tab này: trong ngăn kéo, nền
+   tấm xám nên riêng vệt trắng đã đủ; nhưng trang /auth mở bằng đường dẫn
+   thường lại đứng trên nền TRẮNG, ở đó vệt trắng vô hình và dấu hiệu duy nhất
+   còn lại là sắc độ chữ — tức là phân biệt bằng màu, đúng thứ WCAG 1.4.1 cấm.
+   Nét viền ấy đọc được ở cả hai nền. Đừng gỡ nó vì "trong ngăn kéo trông đã
+   rõ rồi". */
+.authtab.is-on {
+    background: #fff;
+    box-shadow: inset 0 0 0 1px var(--line-input);
+    color: var(--ink);
+}
+
+.authtab:not(.is-on):hover {
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TIÊU ĐỀ · DÒNG DẪN · "*BẮT BUỘC"
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authov__body .authhead {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 22px;
+}
+
+.authov__body .authhead__title {
+    font-size: var(--fs-subtitle);
+    font-weight: 600;
+}
+
+.authov__body .authhead__lead {
+    color: var(--ink-2);
+    font-size: var(--fs-text);
+}
+
+/* Căn PHẢI, sát mép ô nhập đầu tiên — đúng chỗ bản thiết kế đặt nó. */
+.authreq {
+    margin-top: 6px;
+    color: var(--ink-4);
+    font-size: var(--fs-micro);
+    text-align: right;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Ô NHẬP — TRẮNG, CAO, KHÔNG VIỀN
+
+   Bản thiết kế bỏ hẳn đường viền: ô nổi lên nhờ TƯƠNG PHẢN NỀN (trắng trên
+   xám), không nhờ nét kẻ. Nhưng viền tiêu điểm thì PHẢI có — bỏ cả hai thì
+   người dùng bàn phím không biết mình đang ở ô nào. Nên :focus vẽ lại một
+   nét đen 1px.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authov__body .authform {
+    gap: 2px;
+}
+
+.authov__body .authfield__input,
+.authov__body .authpw__input {
+    height: 56px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    background: #fff;
+    font-size: var(--fs-text);
+}
+
+.authov__body .authfield__input:focus,
+.authov__body .authpw__input:focus {
+    border-color: var(--ink);
+}
+
+.authov__body .authfield__input::placeholder,
+.authov__body .authpw__input::placeholder {
+    color: var(--ink-4);
+}
+
+/* Hai ô dính liền nhau thành một khối, đúng bản thiết kế: chỉ chừa 2px khe
+   (gap của .authform ở trên) để thấy ranh giới mà không thành hai hộp rời. */
+.authov__body .authfield {
+    gap: 0;
+}
+
+/* "Quên mật khẩu?" — căn phải, ngay dưới ô mật khẩu. */
+.authforgot {
+    align-self: flex-end;
+    margin: 10px 0 4px;
+    color: var(--ink-2);
+    font-size: var(--fs-micro);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.authforgot:hover {
+    color: var(--ink);
+}
+
+/* Ô "Ghi nhớ đăng nhập" không có trong bản thiết kế nhưng vẫn giữ: nó là một
+   lựa chọn THẬT của hệ thống (cookie 30 ngày), gỡ đi là bỏ mất chức năng chứ
+   không phải dọn giao diện. Đặt nó xuống dưới, nhỏ và nhạt. */
+.authov__body .authcheck {
+    margin: 4px 0 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   NÚT — TRÀN NGANG, GÓC VUÔNG
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authov__body .authbtn {
+    width: 100%;
+    height: 56px;
+    border-radius: 0;
+    font-size: var(--fs-subtitle);
+    font-weight: 600;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.authov__body .authbtn--primary {
+    background: var(--ink);
+    color: #fff;
+}
+
+/* auth.css đẩy nút Google về mép trái (`justify-content: flex-start`) và cho
+   ô chữ cuối `flex: 1` — dáng cũ của trang /auth. Bản thiết kế căn GIỮA cả
+   cụm logo + chữ, nên phải gỡ cả hai, không chỉ cái thứ nhất: để lại `flex: 1`
+   thì chữ vẫn bị kéo giãn và cụm lệch trở lại. */
+.authov__body .authbtn--google {
+    justify-content: center;
+    border: 1px solid transparent;
+    background: #fff;
+}
+
+.authov__body .authbtn--google > span:last-child {
+    flex: none;
+}
+
+.authov__body .authbtn--google:hover {
+    border-color: var(--ink);
+}
+
+/* Nút phụ cuối tấm: chỉ có viền, nền trong suốt — nhẹ hơn hẳn hai nút trên,
+   vì nó là lối đi phụ chứ không phải việc chính của tấm này. */
+.authbtn--ghost {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 56px;
+    border: 1px solid var(--line-btn);
+    background: none;
+    color: var(--ink);
+    font-size: var(--fs-subtitle);
+    font-weight: 600;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.authbtn--ghost:hover {
+    border-color: var(--ink);
+}
+
+.authov__body .authbtn--ghost {
+    margin-top: 18px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   "HOẶC" · DÒNG CHUYỂN TAB · CHÂN TẤM
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* Bản thiết kế chỉ có CHỮ "hoặc" căn giữa, không có hai vạch kẻ hai bên. */
+/* justify-content chứ KHÔNG phải text-align: .author là một hộp flex
+   (auth.css dựng nó cho kiểu "vạch — chữ — vạch"). text-align không nhúc nhích
+   được một flex item; phải căn bằng trục chính. */
+.authov__body .author {
+    margin: 22px 0;
+    justify-content: center;
+    color: var(--ink-3);
+    font-size: var(--fs-text);
+    text-transform: none;
+}
+
+.authov__body .author__line {
+    display: none;
+}
+
+.authov__body .author__word {
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.authov__body .authalt {
+    margin-top: 20px;
+    color: var(--ink-2);
+    font-size: var(--fs-text);
+}
+
+.authov__body .authalt a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Chân tấm — bản thiết kế đặt nó tách hẳn xuống dưới cùng. margin-top lớn
+   thay vì `position: absolute`: tấm cuộn được, mà một dòng dính đáy tấm sẽ
+   đè lên nội dung ngay khi form dài ra (màn đăng ký có sáu ô). */
+.authfoot {
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
+}
+
+.authov__body .authfoot {
+    margin-top: 56px;
+}
+
+.authfoot a:hover {
+    color: var(--ink);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   KHOẢNG CÁCH CÁC KHỐI CÒN LẠI · DÒNG PHÁP LÝ
+
+   Ba khối này bình thường ăn `gap: 28px` của .authcard__panel. Gap vừa về 0
+   (xem trên) nên chúng phải tự khai margin — thiếu là dính sát nhau.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authov__body .authflash,
+.authov__body .authgate {
+    margin-bottom: 18px;
+}
+
+/* Dòng "Bằng việc đăng nhập, bạn đồng ý…" — trên trang /auth nó là một hộp
+   có nền và vạch kẻ trái, cùng hình với dải báo lỗi .authflash. Trong tấm này
+   thì vạch ấy nói sai: nó khiến một câu pháp lý tĩnh trông như một thông báo
+   vừa xảy ra. Trả nó về đúng thân phận — chữ nhỏ, nhạt, không khung. */
+.authov__body .authnote {
+    margin-top: 22px;
+    padding: 0;
+    border-left: 0;
+    background: none;
+    color: var(--ink-3);
+    font-size: var(--fs-micro);
 }
