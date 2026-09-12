@@ -1477,22 +1477,28 @@ textarea.oa-field {
    │ thẳng hàng. Gõ cứng 527px thì màn hẹp là khung tràn ra ngoài cột.
    └──────────────────────────────────────────────────────────────────────── */
 /* ┌─ KHUNG ẢNH NẰM NGANG, ẢNH LẤP KÍN (12/09/2026, theo yêu cầu chủ dự án) ─
-   │ 3/2 — khung NGANG, thay cho 1/1,15 (dọc) và 1/1,36 (dọc, đo từ
-   │ gentlemonster.com) trước đó. Mẫu chủ dự án gửi đo ra 1,69; lấy 1,5 chứ
+   │ 7/5 = 1,4 — khung NGANG, thay cho 1/1,15 (dọc) và 1/1,36 (dọc, đo từ
+   │ gentlemonster.com) trước đó. Mẫu chủ dự án gửi đo ra 1,69; lấy 1,4 chứ
    │ không lấy đúng 1,69 là một phép đổi chác nói rõ ở đây:
    │
    │ ẢNH TRONG KHO LÀ ẢNH VUÔNG (800×800) nên khung ngang chỉ ra hình ngang
    │ khi ảnh LẤP KÍN khung — `cover`, tức CẮT bớt trên và dưới. Cắt bao
    │ nhiêu là do tỉ lệ quyết định:
    │
-   │     3/2  (đang dùng)  cắt 33% chiều cao ảnh vuông
+   │     7/5  (đang dùng)  cắt 29% chiều cao ảnh vuông
+   │     3/2                cắt 33%
    │     5/3  (≈ mẫu)      cắt 40%
    │
+   │ 12/09/2026: hạ từ 3/2 xuống 7/5 theo yêu cầu "thẻ cao thêm một chút" —
+   │ ở cột 288px là thêm 14px chiều cao, và cắt ít đi 4% nên thấy nhiều gọng
+   │ hơn một chút.
+   │
    │ Ảnh chụp gọng kính để giữa khung, phần bị cắt là nền trắng phía trên và
-   │ bóng đổ phía dưới — đã kiểm trên ảnh thật của kho, cả 3/2 lẫn 5/3 đều
-   │ còn nguyên cái gọng. Nhưng biên an toàn của 3/2 rộng hơn, và ngày nào
-   │ cửa hàng đăng một tấm chụp cận thì 3/2 còn giữ được, 5/3 thì cắt mất
-   │ càng kính. Muốn sát mẫu hơn thì đổi ĐÚNG con số này.
+   │ bóng đổ phía dưới — đã kiểm trên ảnh thật của kho, cả ba tỉ lệ đều còn
+   │ nguyên cái gọng. Càng lên trên bảng thì biên an toàn càng rộng: ngày nào
+   │ cửa hàng đăng một tấm chụp cận, 7/5 còn giữ được trong khi 5/3 đã cắt
+   │ mất càng kính. Muốn sát mẫu hơn thì đổi ĐÚNG con số này — và nhớ rằng
+   │ đổi lên là thẻ THẤP đi, vì chiều cao khung = bề ngang ÷ tỉ lệ.
    │
    │ ĐÂY LÀ CHỖ DUY NHẤT CỦA SITE `cover` ĐÈ LÊN LUẬT "ảnh sản phẩm phải
    │ contain": luật ấy (xem chú thích đầu _layout/product-card.php) sinh ra
@@ -1503,7 +1509,7 @@ textarea.oa-field {
 .oa-card__media {
     position: relative;
     width: 100%;
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 7 / 5;
     cursor: pointer;
     display: block;
 
