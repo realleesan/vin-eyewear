@@ -4,10 +4,10 @@
  * auth/_signup.php — màn "Tạo tài khoản" (/auth?tab=dang-ky).
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * BA Ô, RỒI MỘT MÀN NHẬP MÃ — theo "Đăng ký Đăng nhập.dc.html" (Claude Design,
- * 12/09/2026). Bản vẽ đặt đúng ba ô trên màn này:
+ * BỐN Ô, RỒI MỘT MÀN NHẬP MÃ — dựng theo "Đăng ký Đăng nhập.dc.html"
+ * (Claude Design, 12/09/2026):
  *
- *     Họ và tên * · Số điện thoại * · Mật khẩu *
+ *     Họ và tên * · Số điện thoại * · Mật khẩu * · Nhập lại mật khẩu *
  *     nút "Tạo tài khoản" -> màn nhập mã (auth/_signup-otp.php)
  *
  * Vạch "HOẶC", nút Google và dòng "Đã có tài khoản?" nằm ở auth/index.php vì
@@ -16,10 +16,16 @@
  * ─────────────────────────────────────────────────────────────────────────────
  * BA THỨ CỦA BẢN CŨ KHÔNG CÒN Ở ĐÂY — VÀ KHÔNG THỨ NÀO BỊ VỨT ĐI
  *
- * 1. Ô "XÁC NHẬN MẬT KHẨU" gỡ hẳn. Thay chỗ nó là nút "Hiện" ngay trong ô mật
- *    khẩu: khách ĐỌC được chuỗi mình vừa gõ, thay vì gõ mù hai lần rồi so. Đó
- *    là cách bản thiết kế giải quyết đúng vấn đề mà ô thứ hai sinh ra để giải
- *    quyết, bằng một ô ít hơn.
+ * 1. Ô "NHẬP LẠI MẬT KHẨU" KHÔNG có trong bản vẽ — chủ dự án yêu cầu thêm vào
+ *    (12/09/2026) để hai màn đăng ký giống nhau: màn "Hoàn tất tạo tài khoản"
+ *    của luồng Google có ô ấy, nên màn này cũng phải có.
+ *
+ *    Nó đứng CẠNH nút "Hiện" trong ô mật khẩu chứ không thay thế: nút ấy cho
+ *    khách ĐỌC lại chuỗi vừa gõ, ô này bắt gõ lại. Hai lớp cùng chống một lỗi,
+ *    và giữ cả hai là lựa chọn của chủ dự án.
+ *
+ *    ⚠ Luật và CÂU CHỮ báo lỗi phải khớp từng chữ với màn Google — xem
+ *    AuthController::signupErrors(). Lệch một chữ là hai màn trông như hai luật.
  *
  * 2. HÀNG "MÃ XÁC MINH" chuyển sang màn riêng. Ở bản cũ nó nằm giữa form, nên
  *    khách phải bấm "Gửi mã" TRƯỚC khi biết mình có gõ hỏng ô nào khác không —
@@ -166,6 +172,26 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
             8–32 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
         </span>
         <?php $loi('password'); ?>
+    </label>
+
+    <!-- ══════════ NHẬP LẠI MẬT KHẨU ══════════ -->
+    <?php /* Nhãn hiện rõ ở CẢ HAI ô: một mình ô mật khẩu thì chữ mờ trong ô là
+             đủ, nhưng hai ô giống hệt nhau nằm sát nhau mà chữ mờ lại biến mất
+             ngay khi gõ ký tự đầu thì không còn gì phân biệt ô trên với ô dưới.
+
+             Chuỗi gợi ý "Gõ lại mật khẩu ở trên" giống hệt màn Google — xem
+             auth/google-signup.php. */ ?>
+    <label class="authfield">
+        <span class="authfield__label">Nhập lại mật khẩu</span>
+        <?php partial('auth/_password', [
+            'pw_name'     => 'password_confirm',
+            'pw_auto'     => 'new-password',
+            'pw_holder'   => 'Gõ lại mật khẩu ở trên',
+            'pw_min'      => 8,
+            'pw_required' => true,
+            'pw_err'      => $hong('password_confirm'),
+        ]); ?>
+        <?php $loi('password_confirm'); ?>
     </label>
 
     <?php

@@ -332,16 +332,22 @@ $dinhDanhCu = (string) ($old['email'] ?? $dinhDanh);
 
             <?php
             /*
-             * VẠCH "HOẶC" VÀ NÚT GOOGLE — CHỈ Ở MÀN MỘT.
+             * VẠCH "HOẶC" VÀ NÚT GOOGLE — Ở MÀN MỘT VÀ MÀN ĐĂNG KÝ.
              *
-             * Bản thiết kế vẽ chúng đúng một lần, ở màn nhập định danh, và đó
-             * là chỗ duy nhất chúng có nghĩa: màn mật khẩu là của một người đã
-             * chọn xong cách đăng nhập, còn hai màn đăng ký thì đã đi được nửa
-             * đường bằng số điện thoại — mời họ rẽ sang Google ở đó là bỏ dở
-             * mọi thứ vừa gõ.
+             * Hai màn ấy là hai chỗ khách còn đang CHỌN cách vào: màn một chọn
+             * đăng nhập kiểu gì, màn đăng ký chọn mở tài khoản kiểu gì. Bày cả
+             * hai lối ở đúng chỗ người ta đang cân nhắc mới có nghĩa.
+             *
+             * HAI MÀN CÒN LẠI KHÔNG CÓ, và đó là chủ ý:
+             *
+             *   mat-khau     người này đã chọn xong cách đăng nhập từ màn
+             *                trước; giờ chỉ còn việc gõ mật khẩu.
+             *   dang-ky-ma   mã xác minh đã GỬI ĐI rồi (một tin nhắn mất
+             *                tiền). Mời họ rẽ sang Google ở đó là vứt bỏ cả
+             *                tin nhắn ấy lẫn hồ sơ đang chờ trong phiên.
              */
             ?>
-            <?php if ($buoc === 'dinh-danh'): ?>
+            <?php if ($buoc === 'dinh-danh' || $buoc === 'dang-ky'): ?>
 
                 <div class="author" aria-hidden="true">
                     <span class="author__line"></span>
@@ -361,11 +367,31 @@ $dinhDanhCu = (string) ($old['email'] ?? $dinhDanh);
                  *
                  * Đăng ký bằng Google KHÔNG tạo tài khoản ngay khi quay về: nó
                  * dẫn sang màn "Hoàn tất tạo tài khoản" (auth/google-signup.php),
-                 * nơi có ô tick Điều khoản của chính nó — BR-UC.USER.01-05.
-                 */
+                 * nơi có ô tick Điều khoản VÀ hai ô mật khẩu của chính nó —
+                 * BR-UC.USER.01-05. Nghĩa là cú bấm này KHÔNG mượn gì của form
+                 * đăng ký đang đứng ngay trên nó: bỏ dở form ấy giữa chừng rồi
+                 * bấm sang đây là chuyện hoàn toàn hợp lệ.
+                 *
+                 * ┌─ `tab=dang-ky` KHÔNG PHẢI TRANG TRÍ ───────────────────────
+                 * │ googleStart() đọc đúng tham số này để biết khách xuất phát
+                 * │ từ đâu, và nó quyết HAI thứ:
+                 * │
+                 * │   · đích mặc định sau khi xong — BR-UC.USER.01-09 chốt hai
+                 * │     ngả khác nhau: đăng ký xong về TRANG CHỦ, đăng nhập
+                 * │     xong về /tai-khoan.
+                 * │   · chỗ trả khách về khi luồng Google hỏng giữa chừng.
+                 * │
+                 * │ Thiếu nó thì khách bấm "Tiếp tục với Google" ở màn ĐĂNG KÝ
+                 * │ lại bị đối xử như người đang ĐĂNG NHẬP — và không có dòng
+                 * │ lỗi nào báo, chỉ là họ rơi nhầm chỗ. */
                 $googleOn = GoogleAuth::isConfigured();
+                $laDangKy = $buoc === 'dang-ky';
+
                 $urlGoogle = '/auth/google'
-                    . ($redirect !== '' ? '?redirect=' . rawurlencode($redirect) : '');
+                    . ($laDangKy ? '?tab=dang-ky' : '')
+                    . ($redirect !== ''
+                        ? ($laDangKy ? '&' : '?') . 'redirect=' . rawurlencode($redirect)
+                        : '');
                 ?>
                 <?php if ($googleOn): ?>
                 <a class="authbtn authbtn--google" href="<?= e($urlGoogle) ?>" rel="nofollow">

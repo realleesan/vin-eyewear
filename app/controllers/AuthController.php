@@ -869,7 +869,7 @@ class AuthController extends BaseController
      * ⚠ Hàm này CÓ ghi vào phiên: signupCodeProblem() đếm số lần nhập sai mã.
      * Đó là chủ ý — đếm ở đâu khác thì hai nơi phải cùng biết một phép kiểm.
      */
-    private static function signupErrors(array $in, string $password): array
+    private static function signupErrors(array $in, string $password, string $confirm): array
     {
         $loi = [];
 
@@ -954,21 +954,30 @@ class AuthController extends BaseController
             $loi['password'] = $yeu;
         }
 
+        /* NHẬP LẠI MẬT KHẨU — EF-08/EF-09.
+
+           Câu báo gắn vào ô NHẬP LẠI chứ không phải ô mật khẩu: ô dưới mới là
+           ô khách cần sửa.
+
+           Câu chữ phải KHỚP TỪNG CHỮ với googleSignupSubmit(). Hai màn đăng ký
+           hỏi cùng một thứ theo cùng một luật, nên chúng phải nói cùng một
+           câu — lệch một chữ là hai màn trông như hai luật. */
+        if ($confirm === '') {
+            $loi['password_confirm'] = 'Vui lòng nhập lại mật khẩu.';
+        } elseif ($password !== $confirm) {
+            $loi['password_confirm'] = 'Mật khẩu nhập lại không khớp.';
+        }
+
         /*
          * ─────────────────────────────────────────────────────────────────
-         * HAI PHÉP KIỂM ĐÃ RỜI KHỎI ĐÂY — VÀ CHÚNG KHÔNG "BIẾN MẤT"
+         * MÃ XÁC MINH KHÔNG CÒN Ở ĐÂY — VÀ NÓ KHÔNG "BIẾN MẤT"
          *
-         * XÁC NHẬN MẬT KHẨU (EF-08/EF-09) gỡ hẳn cùng ô nhập của nó: bản
-         * thiết kế 12/09/2026 vẽ màn đăng ký đúng ba ô, không có ô gõ lại.
-         * Thứ thay chỗ nó là nút "Hiện" ngay trong ô mật khẩu — khách ĐỌC
-         * được chuỗi mình vừa gõ, thay vì gõ mù hai lần rồi so.
+         * Nó chuyển sang signupVerify(): nay là MỘT MÀN RIÊNG, hiện ra sau
+         * khi form này đã hợp lệ và mã đã thật sự gửi đi. Kiểm mã ở đây thì
+         * màn ấy không còn gì để làm.
          *
-         * MÃ XÁC MINH chuyển sang signupVerify(): nó nay là MỘT MÀN RIÊNG,
-         * hiện ra sau khi form này đã hợp lệ và mã đã thật sự gửi đi. Kiểm mã
-         * ở đây thì màn ấy không còn gì để làm.
-         *
-         * ⚠ Cả hai vẫn chạy ở máy chủ, chỉ đổi chỗ. Đừng đọc khối này thành
-         * "đăng ký nay không cần mã nữa".
+         * ⚠ Vẫn chạy ở máy chủ, chỉ đổi chỗ. Đừng đọc khối này thành "đăng ký
+         * nay không cần mã nữa".
          * ─────────────────────────────────────────────────────────────────
          */
 
@@ -1315,12 +1324,14 @@ class AuthController extends BaseController
         ];
 
         $password = (string) ($_POST['password'] ?? '');
+        $confirm  = (string) ($_POST['password_confirm'] ?? '');
         $to       = $this->signupTarget($_POST['redirect'] ?? null);
 
         /* Giữ lại mọi chữ đã gõ, kể cả hai cú tick — quay về vì một ô sai mà
            mất luôn tên, số và cú tick là bắt làm lại những việc đã làm đúng.
-           Ô MẬT KHẨU THÌ KHÔNG: không cất mật khẩu vào phiên, và một ô mật
-           khẩu điền sẵn thì khách không biết mình đang gửi lại chuỗi nào. */
+           HAI Ô MẬT KHẨU THÌ KHÔNG: không cất mật khẩu vào phiên
+           (BR-UC.USER.02-02), và một ô mật khẩu điền sẵn thì khách không biết
+           mình đang gửi lại chuỗi nào. */
         $_SESSION['_old_auth'] = [
             'full_name' => $in['full_name'],
             'phone'     => $in['phone'],
@@ -1329,7 +1340,7 @@ class AuthController extends BaseController
             'tin_tuc'   => $in['tin_tuc'],
         ];
 
-        $loi = self::signupErrors($in, $password);
+        $loi = self::signupErrors($in, $password, $confirm);
 
         if ($loi !== []) {
             $_SESSION['_auth_errors'] = $loi;
@@ -1771,8 +1782,15 @@ class AuthController extends BaseController
      *   Đồng ý Điều khoản bắt buộc — BR-UC.USER.01-05. Đây là ô tick THẬT của
      *                     cách đăng ký này, không còn mượn của form kia.
      *
-     * KHÔNG CÓ Ô MẬT KHẨU: khách đăng nhập bằng Google. Muốn có mật khẩu thì
-     * đi đường "Quên mật khẩu" như mọi khách khác — xem createFromGoogle().
+     *   Mật khẩu + Nhập lại  BẮT BUỘC (12/09/2026). Trước đây màn này không
+     *                     hỏi mật khẩu và tài khoản nhận một chuỗi ngẫu nhiên
+     *                     không ai biết, nên chỉ đăng nhập lại được bằng
+     *                     Google. Nay đặt ngay tại đây, và tài khoản dùng
+     *                     được CẢ HAI cửa: nút Google, hoặc email + mật khẩu.
+     *
+     * Ô "Nhập lại mật khẩu" có ở CẢ HAI màn đăng ký (chủ dự án chốt
+     * 12/09/2026). Hai màn vì thế phải giữ cùng luật và cùng CÂU CHỮ báo lỗi —
+     * xem signupErrors(); lệch một chữ là hai màn trông như hai luật.
      * ─────────────────────────────────────────────────────────────────────
      */
     public function googleSignup(): void
@@ -1829,6 +1847,14 @@ class AuthController extends BaseController
             'dong_y'    => !empty($_POST['dong_y']),
         ];
 
+        /* HAI Ô MẬT KHẨU ĐỨNG NGOÀI $in, và đó là chủ ý: mảng ấy được cất
+           nguyên vào $_SESSION['_google_old'] ở nhánh lỗi bên dưới để điền lại
+           form. Mật khẩu thô không được nằm trong phiên ở bất kỳ bước nào —
+           BR-UC.USER.02-02. Khách gõ sai một ô khác thì gõ lại mật khẩu, và
+           đó là cái giá đúng. */
+        $password = (string) ($_POST['password'] ?? '');
+        $confirm  = (string) ($_POST['password_confirm'] ?? '');
+
         $loi = [];
 
         // BR-UC.USER.01-05, EF-12 — kiểm ở máy chủ, không tin `required`.
@@ -1860,9 +1886,42 @@ class AuthController extends BaseController
             }
         }
 
+        /*
+         * ─────────────────────────────────────────────────────────────────
+         * MẬT KHẨU — BẮT BUỘC Ở MÀN NÀY (12/09/2026, theo yêu cầu chủ dự án)
+         *
+         * Trước đây màn này không hỏi mật khẩu: tài khoản mở bằng Google nhận
+         * một chuỗi ngẫu nhiên không ai biết, nên chỉ đăng nhập lại được bằng
+         * Google. Mất quyền vào tài khoản Google — hay đơn giản là muốn gõ
+         * email + mật khẩu — thì phải đi vòng qua "Quên mật khẩu".
+         *
+         * Nay hỏi thẳng, và BẮT BUỘC: nửa số tài khoản có mật khẩu còn nửa kia
+         * không là thứ không ai nhớ nổi khi đứng trước màn đăng nhập.
+         *
+         * Bộ quy tắc dùng chung với mọi màn đặt mật khẩu khác —
+         * passwordProblem() trong core/helpers.php. Đừng viết luật riêng ở
+         * đây: một luồng nhận mật khẩu yếu hơn các luồng còn lại thì nó thành
+         * cửa vào yếu nhất của cả hệ thống.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        if ($password === '') {
+            $loi['password'] = 'Vui lòng nhập mật khẩu.';
+        } elseif (($yeu = passwordProblem($password)) !== null) {
+            $loi['password'] = $yeu;
+        }
+
+        /* Câu báo gắn vào ô NHẬP LẠI chứ không phải ô mật khẩu: ô dưới mới là
+           ô khách cần sửa. */
+        if ($confirm === '') {
+            $loi['password_confirm'] = 'Vui lòng nhập lại mật khẩu.';
+        } elseif ($password !== $confirm) {
+            $loi['password_confirm'] = 'Mật khẩu nhập lại không khớp.';
+        }
+
         if ($loi !== []) {
             /* Giữ lại chữ đã gõ và cú tick — quay về vì một ô sai mà mất cả
-               ba là bắt làm lại những việc đã làm đúng. */
+               ba là bắt làm lại những việc đã làm đúng. HAI Ô MẬT KHẨU THÌ
+               KHÔNG: xem khối chú thích ở chỗ khai $password. */
             $_SESSION['_google_old']    = $in;
             $_SESSION['_google_errors'] = $loi;
             redirect('/auth/dang-ky/google');
@@ -1873,7 +1932,8 @@ class AuthController extends BaseController
             $cho['email'] ?? null,
             $in['full_name'],
             $in['phone'] !== '' ? $in['phone'] : null,
-            !empty($cho['verified'])
+            !empty($cho['verified']),
+            $password
         );
 
         if (!$ket['ok']) {

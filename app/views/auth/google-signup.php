@@ -21,18 +21,26 @@
  * màn kia — cùng ngôn ngữ hình ảnh, chỉ khác khung.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * BỐN Ô, HAI Ô BẮT BUỘC
+ * SÁU Ô, BỐN Ô BẮT BUỘC
  *
  *   Email             điền sẵn từ Google, KHOÁ (disabled + không có `name`).
  *                     Nó là thứ nối tài khoản này với Google, và máy chủ lấy
  *                     email từ PHIÊN chứ không từ form — xem ghi chú tại chỗ.
  *   Họ và tên         bắt buộc. Điền sẵn tên Google trả về, sửa được.
  *   Số điện thoại     KHÔNG bắt buộc. Google đã bảo chứng danh tính rồi.
+ *   Mật khẩu          bắt buộc (12/09/2026).
+ *   Nhập lại mật khẩu bắt buộc.
  *   Đồng ý Điều khoản bắt buộc — BR-UC.USER.01-05.
  *
- * KHÔNG CÓ Ô MẬT KHẨU và không có ô mã xác minh: đó là hai thứ của cách đăng
- * ký bằng số điện thoại, và trộn chúng vào đây là gộp lại đúng hai cách vừa
- * tách ra.
+ * HAI Ô MẬT KHẨU MỞ CỬA THỨ HAI vào tài khoản. Trước đây màn này không hỏi
+ * mật khẩu: tài khoản nhận một chuỗi ngẫu nhiên không ai biết nên chỉ vào lại
+ * được bằng đúng nút Google. Nay đặt ngay tại đây, dùng được cả email + mật
+ * khẩu — xem khối chú thích ở chính hai ô ấy bên dưới.
+ *
+ * VẪN KHÔNG CÓ Ô MÃ XÁC MINH: nó là thứ của cách đăng ký bằng số điện thoại
+ * (mã gửi qua Zalo để chứng minh khách giữ số ấy). Ở đây Google đã bảo chứng
+ * danh tính rồi, thêm một khâu xác minh nữa là dựng lại đúng cái rào mà cách
+ * đăng ký thứ hai sinh ra để tránh.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -142,6 +150,63 @@ $termsUrl = (string) ($consent['terms_url'] ?? '');
                         Dùng để cửa hàng gọi xác nhận đơn và nhắc lịch hẹn.
                     </span>
                     <?php $loi('phone'); ?>
+                </label>
+
+                <?php
+                /*
+                 * ─────────────────────────────────────────────────────────
+                 * HAI Ô MẬT KHẨU — CỬA THỨ HAI VÀO TÀI KHOẢN
+                 *
+                 * Tài khoản mở bằng Google trước đây nhận một mật khẩu ngẫu
+                 * nhiên không ai biết, nên chỉ vào lại được bằng đúng nút
+                 * Google. Đặt mật khẩu ngay tại đây thì khách có thêm cửa
+                 * email + mật khẩu — và cửa ấy vẫn còn khi họ mất quyền vào
+                 * tài khoản Google.
+                 *
+                 * Ô nhập luôn hiện đủ, KHÔNG điền lại sau một lượt gửi hỏng:
+                 * mật khẩu thô không nằm trong phiên (BR-UC.USER.02-02), và
+                 * một ô mật khẩu điền sẵn thì khách không biết mình đang gửi
+                 * lại chuỗi nào.
+                 *
+                 * MÀN ĐĂNG KÝ BẰNG SỐ ĐIỆN THOẠI CÓ ĐÚNG HAI Ô NÀY — chủ
+                 * dự án chốt 12/09/2026 cho hai màn giống nhau. Nên luật và
+                 * CÂU CHỮ báo lỗi ở hai nơi phải khớp từng chữ; xem
+                 * AuthController::signupErrors(). Sửa một bên thì sửa cả hai,
+                 * lệch một chữ là hai màn trông như hai luật.
+                 * ─────────────────────────────────────────────────────────
+                 */
+                ?>
+                <label class="authfield">
+                    <span class="authfield__label">Mật khẩu</span>
+                    <?php partial('auth/_password', [
+                        'pw_name'     => 'password',
+                        'pw_auto'     => 'new-password',
+                        'pw_holder'   => 'Tối thiểu 8 ký tự',
+                        'pw_min'      => 8,
+                        'pw_required' => true,
+                        'pw_err'      => $hong('password'),
+                    ]); ?>
+                    <?php /* Câu này phải KHỚP passwordProblem() trong
+                             core/helpers.php — nơi thật sự quyết định. Sửa hàm
+                             đó thì sửa cả đây. */ ?>
+                    <span class="authfield__hint">
+                        8–32 ký tự, có chữ hoa, chữ thường, chữ số và ký tự đặc biệt.
+                        Dùng để đăng nhập bằng email khi bạn không mở Google.
+                    </span>
+                    <?php $loi('password'); ?>
+                </label>
+
+                <label class="authfield">
+                    <span class="authfield__label">Nhập lại mật khẩu</span>
+                    <?php partial('auth/_password', [
+                        'pw_name'     => 'password_confirm',
+                        'pw_auto'     => 'new-password',
+                        'pw_holder'   => 'Gõ lại mật khẩu ở trên',
+                        'pw_min'      => 8,
+                        'pw_required' => true,
+                        'pw_err'      => $hong('password_confirm'),
+                    ]); ?>
+                    <?php $loi('password_confirm'); ?>
                 </label>
 
                 <?php

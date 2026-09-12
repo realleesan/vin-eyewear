@@ -319,11 +319,23 @@ class UserModel extends BaseModel
      * và khách bổ sung sau ở trang Hồ sơ; hệ quả là hoSoDayDu() trả false nên
      * lần vào /tai-khoan kế tiếp họ rơi vào mục Hồ sơ — đúng chỗ để điền.
      *
-     * MẬT KHẨU NGẪU NHIÊN 32 BYTE, không ai biết: khách đăng nhập bằng
-     * Google, không bằng mật khẩu. Cột password_hash NOT NULL nên vẫn phải
-     * điền một giá trị — để rỗng thì một ngày nào đó có người so sánh hash
-     * rỗng và mở cửa cho cả thiên hạ. Muốn có mật khẩu thì đi đường "Quên mật
-     * khẩu" như mọi khách khác.
+     * MẬT KHẨU DO KHÁCH ĐẶT, ngay tại màn hoàn tất (12/09/2026).
+     *
+     * Trước đây cột này nhận một chuỗi ngẫu nhiên 32 byte không ai biết —
+     * khách đăng nhập bằng Google, không bằng mật khẩu, và muốn có mật khẩu
+     * thì phải đi đường "Quên mật khẩu". Nay màn hoàn tất hỏi thẳng, nên tài
+     * khoản mở bằng Google đăng nhập được bằng CẢ HAI cách ngay từ đầu.
+     *
+     * $password vẫn có mặc định rỗng, và nhánh rỗng vẫn sinh chuỗi ngẫu
+     * nhiên ấy. Nó KHÔNG phải mã chết: cột password_hash là NOT NULL, nên bất
+     * kỳ nơi gọi nào sau này chưa thu thập mật khẩu vẫn phải ghi được một giá
+     * trị. Để rỗng thì một ngày nào đó có người so sánh hash rỗng và mở cửa
+     * cho cả thiên hạ.
+     *
+     * ⚠ Chuỗi thô đi vào đây và được băm NGAY trong hàm này, không qua phiên,
+     * không qua URL — BR-UC.USER.02-02. Khác với register() (màn đăng ký bằng
+     * số điện thoại chia đôi nên phải băm sớm rồi cất chuỗi băm), luồng này
+     * chỉ có MỘT lượt gửi nên không cần tham số $passwordHash nào cả.
      *
      * TRA LẠI `google_id` VÀ `email` MỘT LẦN NỮA dù googleLookup() vừa tra
      * cách đây mấy giây: giữa hai thời điểm ấy là cả một màn hình khách ngồi
@@ -338,7 +350,8 @@ class UserModel extends BaseModel
         ?string $email,
         string $fullName,
         ?string $phone,
-        bool $emailVerified
+        bool $emailVerified,
+        string $password = ''
     ): array {
         $email    = $email !== null ? strtolower(trim($email)) : null;
         $fullName = trim($fullName);
@@ -378,13 +391,25 @@ class UserModel extends BaseModel
             $phone = $normalized;
         }
 
+        /* CHỐT TẦNG MODEL, dùng ĐÚNG hàm kiểm mà controller dùng.
+
+           googleSignupSubmit() đã gọi passwordProblem() trước khi tới đây, nên
+           trước mắt không lộ ra gì. Nhưng đây là chốt SÂU NHẤT, và để nó yếu
+           hơn tầng trên thì hai tầng nói hai luật khác nhau — cùng lý lẽ đã
+           ghi ở register(). Chuỗi rỗng đi thẳng xuống nhánh ngẫu nhiên bên
+           dưới, không qua phép kiểm này: "không đặt mật khẩu" khác hẳn "đặt
+           một mật khẩu yếu". */
+        if ($password !== '' && ($loiMatKhau = passwordProblem($password)) !== null) {
+            return ['ok' => false, 'error' => $loiMatKhau];
+        }
+
         $userId = uuid();
 
         try {
             $termsVersion = (string) config('auth.consent.version', '');
 
             Database::transaction(static function () use (
-                $userId, $sub, $email, $fullName, $phone, $emailVerified, $termsVersion
+                $userId, $sub, $email, $fullName, $phone, $emailVerified, $termsVersion, $password
             ): void {
                 /* GHI VẾT ĐỒNG Ý — BR-UC.USER.01-05.
 
@@ -398,7 +423,13 @@ class UserModel extends BaseModel
                         'id'       => $userId,
                         'email'    => ($email !== null && $email !== '') ? $email : null,
                         'google'   => $sub,
-                        'hash'     => password_hash(bin2hex(random_bytes(32)), PASSWORD_DEFAULT),
+                        /* Mật khẩu khách vừa đặt ở màn hoàn tất. Rỗng thì rơi
+                           về chuỗi ngẫu nhiên 32 byte không ai biết — xem khối
+                           chú thích "MẬT KHẨU DO KHÁCH ĐẶT" ở đầu hàm. */
+                        'hash'     => password_hash(
+                            $password !== '' ? $password : bin2hex(random_bytes(32)),
+                            PASSWORD_DEFAULT
+                        ),
                         'verified' => $emailVerified ? 1 : 0,
                         'accepted_at'   => $termsVersion !== '' ? date('Y-m-d H:i:s') : null,
                         'terms_version' => $termsVersion !== '' ? $termsVersion : null,
