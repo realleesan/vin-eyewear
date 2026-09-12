@@ -116,7 +116,7 @@
 }
 
 .coll__name {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
 }
 
@@ -321,14 +321,14 @@
 }
 
 .cdet__h2 {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .cdet__h3 {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -694,7 +694,7 @@
 }
 
 .cdet__end-title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -855,7 +855,7 @@
 }
 
 .cdraw__name {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
 }
 
 .cdraw__type,
@@ -1043,7 +1043,7 @@
 }
 
 .cfil__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;

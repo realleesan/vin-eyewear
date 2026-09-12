@@ -197,15 +197,24 @@
 }
 
 .acct-head__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
-.acct-head--sub .acct-head__title,
-.acct-head--row .acct-head__title {
-    font-size: var(--fs-micro);
+/* CHỈ .acct-head--sub, KHÔNG CÒN --row (12/09/2026). Hai lớp này làm hai
+   việc khác nhau mà trước đây chung một luật:
+
+     --sub  tiêu đề của một KHỐI CON bên trong mục (Thông tin cá nhân, Đổi
+            mật khẩu…) -> tiêu đề nhỏ
+     --row  chỉ là "tiêu đề trái, nút phải"; ở lich-hen và da-luu nó bọc
+            chính H1 CỦA MỤC -> phải là tiêu đề lớn như mọi trang khác
+
+   Gộp chung nghĩa là h1 của hai mục ấy in ra 9px, trong khi h1 trang giỏ
+   hàng là 13px. Đó đúng là thứ đợt đồng bộ cỡ chữ này đi sửa. */
+.acct-head--sub .acct-head__title {
+    font-size: var(--fs-subtitle);
     font-weight: 400;
 }
 
@@ -279,7 +288,7 @@
 }
 
 .acct-form__title {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -712,7 +721,7 @@ select.acct-field__input {
 }
 
 .acct-order__name {
-    font-size: var(--fs-body);
+    font-size: var(--fs-subtitle);
 }
 
 .acct-order__brand,
@@ -1032,7 +1041,7 @@ select.acct-field__input {
 }
 
 .acct-addr__name {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
 }
 
 .acct-addr__phone,
@@ -1236,7 +1245,7 @@ select.acct-field__input {
 }
 
 .acct-empty__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;

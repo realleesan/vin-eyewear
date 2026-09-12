@@ -82,7 +82,7 @@
 }
 
 .authhead__title {
-    font-size: var(--fs-body);
+    font-size: var(--fs-title);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -619,7 +619,7 @@
 }
 
 .asay__title {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-subtitle);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -665,7 +665,7 @@
 }
 
 .authgate__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;

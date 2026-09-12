@@ -83,7 +83,7 @@
 }
 
 .bkcard__title {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -173,7 +173,7 @@
 }
 
 .bkstore__name {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
 }
 
 .bkstore__addr {
@@ -419,7 +419,7 @@
 }
 
 .bkside__title {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -550,7 +550,7 @@
 }
 
 .bkempty__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -598,7 +598,7 @@
 }
 
 .bkflow__title {
-    font-size: var(--fs-body);
+    font-size: var(--fs-title);
 }
 
 .bkflow__text,

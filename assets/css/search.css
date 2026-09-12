@@ -100,7 +100,7 @@
 
 .section-h2,
 .section-h2--plain {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -175,7 +175,7 @@
 }
 
 .srchitem__title {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
     color: var(--ink);
 }
 
@@ -222,7 +222,7 @@
 }
 
 .srchstore__name {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
 }
 
 .srchstore__addr,
@@ -253,7 +253,7 @@
 }
 
 .srch__empty-title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;

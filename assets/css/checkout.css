@@ -79,7 +79,7 @@
 }
 
 .cohead__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -133,7 +133,7 @@
 }
 
 .costep__title {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -386,7 +386,7 @@ html.js .cofallback {
 }
 
 .coitem__name {
-    font-size: var(--fs-body);
+    font-size: var(--fs-subtitle);
 }
 
 .coitem__meta,
@@ -661,7 +661,7 @@ html.js .cofallback {
 .coqr__title,
 .coqr__paytitle,
 .coqr__ordertitle {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -1017,7 +1017,7 @@ html.js .cofallback {
 
 .ocomp__title,
 .opaid__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;

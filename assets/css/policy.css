@@ -185,7 +185,7 @@
    đích của mẫu: trang này có rất nhiều chữ IN HOA rồi (mỗi nhóm gập là
    một dòng IN HOA), thêm bốn tiêu đề IN HOA nữa là không còn tầng bậc. */
 .policy-group__title {
-    font-size: var(--fs-sub);
+    font-size: var(--fs-title);
     font-weight: 400;
 }
 
@@ -308,7 +308,7 @@
 }
 
 .policy-card__title {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -331,7 +331,7 @@
 }
 
 .policy-hot__title {
-    font-size: var(--fs-sub);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
 }
 

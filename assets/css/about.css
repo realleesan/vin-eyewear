@@ -39,7 +39,7 @@
 .about-exam__h2,
 .about-start__h2,
 .about-vlead__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -201,7 +201,7 @@
 }
 
 .about-vcard__title {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     line-height: var(--lh-tight);
 }
@@ -257,7 +257,7 @@
 }
 
 .about-exam__title {
-    font-size: var(--fs-body);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
 }
 

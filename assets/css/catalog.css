@@ -92,7 +92,7 @@
 }
 
 .cfilter__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -548,7 +548,7 @@ html.js .catpick__go {
 }
 
 .catempty__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;

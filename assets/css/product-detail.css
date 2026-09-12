@@ -143,7 +143,7 @@
 }
 
 .pdinfo__title {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-title);
     font-weight: 400;
 }
 
@@ -316,7 +316,7 @@
 }
 
 .pdopt__name {
-    font-size: var(--fs-body);
+    font-size: var(--fs-subtitle);
 }
 
 .pdopt__note {
@@ -647,7 +647,7 @@
 }
 
 .pdwait__title {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -734,14 +734,14 @@
 }
 
 .pdcommit__title {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-subtitle);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .pdcommit__desc {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-text);
     line-height: var(--lh-tight);
 }
 
@@ -772,7 +772,7 @@
 }
 
 .pdcard__title {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -843,7 +843,7 @@
 }
 
 .pdreview__name {
-    font-size: var(--fs-body);
+    font-size: var(--fs-subtitle);
 }
 
 .pdreview__meta {

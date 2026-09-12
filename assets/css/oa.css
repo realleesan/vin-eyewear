@@ -207,6 +207,39 @@
     --fs-mark-lg: calc(18px * var(--oa-scale));
     --fs-home: calc(22px * var(--oa-scale));
 
+    /* ┌─ BA VAI TRÒ CHỮ — DÙNG TÊN NÀY, ĐỪNG GỌI THẲNG CỠ ────────────────
+       │ (12/09/2026, theo yêu cầu chủ dự án: "chữ thân bài đồng bộ, tiêu đề
+       │ lớn đồng bộ, tiêu đề nhỏ đồng bộ trên cả site".)
+       │
+       │ Thang bảy cỡ ở trên vẫn là nguồn duy nhất; ba token dưới đây không
+       │ thêm cỡ nào mà chỉ ĐẶT TÊN THEO VAI TRÒ cho ba cỡ đã có:
+       │
+       │   --fs-title     13px  tiêu đề LỚN  — h1 của trang, h2 của khối/băng
+       │   --fs-subtitle  11px  tiêu đề NHỎ  — tên mặt hàng trong thẻ/giỏ/đơn,
+       │                                       tiêu đề khối con, tiêu đề hộp
+       │                                       thoại
+       │   --fs-text      10px  chữ THÂN BÀI — đoạn dẫn, mô tả, nội dung thẻ
+       │
+       │ VÌ SAO PHẢI ĐẶT TÊN THEO VAI TRÒ. Trước đợt này, cùng một vai trò
+       │ nằm rải trên bốn cỡ khác nhau: tên sản phẩm ở thẻ là 12px, ở giỏ
+       │ hàng 11px, ở đơn hàng 10px, ở bảng đơn thuốc 9px; tiêu đề trang chi
+       │ tiết sản phẩm 11px trong khi tiêu đề trang giỏ hàng 13px. Không ai
+       │ cố ý làm thế — mỗi trang dựng một lúc, và người dựng gọi thẳng
+       │ --fs-ui hay --fs-body theo cảm giác lúc đó. Có tên vai trò thì câu
+       │ hỏi đổi từ "cỡ nào trông hợp" thành "đây là cái gì", và câu sau chỉ
+       │ có một đáp án.
+       │
+       │ BA CỠ KHÔNG ĐI QUA HỆ NÀY, và đều có lý do riêng:
+       │   --fs-micro 9px  nhãn IN HOA, chú thích, dòng meta — vai trò THỨ TƯ
+       │                   (222 chỗ dùng); nó không phải "chữ thân bài nhỏ"
+       │   --fs-hero/--fs-home  tiêu đề đè trên ảnh và trên video hero — chữ
+       │                   nằm trên ảnh phải to hơn hẳn chữ trên nền trắng
+       │   --fs-mark*      wordmark ở thanh đầu trang và chân trang
+       └────────────────────────────────────────────────────────────────── */
+    --fs-title: var(--fs-h);
+    --fs-subtitle: var(--fs-ui);
+    --fs-text: var(--fs-body);
+
     /* Giãn chữ — ba mức, đi kèm IN HOA. .12em chỉ dành cho wordmark. */
     --ls-tight: .04em;
     --ls: .06em;
@@ -641,7 +674,7 @@ ol[role="list"],
    └──────────────────────────────────────────────────────────────────────── */
 .oa-title,
 .oa-band-title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -664,7 +697,7 @@ ol[role="list"],
 .oa-band-lead {
     max-width: 560px;
     color: var(--ink-3);
-    font-size: var(--fs-body);
+    font-size: var(--fs-text);
     line-height: var(--lh);
     text-wrap: balance;
 }
@@ -679,7 +712,7 @@ ol[role="list"],
 }
 
 .oa-lead {
-    font-size: var(--fs-body);
+    font-size: var(--fs-text);
     color: var(--ink-2);
 }
 
@@ -1587,7 +1620,7 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────── */
 .oa-card__body {
     padding: 14px 14px 4px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-text);
     line-height: var(--lh);
     text-align: center;
 }
@@ -1614,15 +1647,23 @@ textarea.oa-field {
     cursor: pointer;
     color: var(--ink);
 
-    /* TO HƠN GIÁ MỘT BẬC RƯỠI (12/09/2026, theo yêu cầu chủ dự án): tên ở
-       --fs-sub (12px), giá giữ --fs-body (10px) thừa hưởng từ .oa-card__body.
-       Lấy trong THANG CHỮ có sẵn chứ không gõ cứng 12px — xem khối "THANG
-       CHỮ" đầu file: gõ cứng thì phóng --oa-scale lên, cả site to ra mà
-       riêng tên hàng đứng im.
-
-       Bậc kế bên là --fs-ui (11px); ở cỡ ấy tên chỉ nhỉnh hơn giá đúng một
-       pixel, và phần lớn sự khác biệt là do in đậm chứ không phải cỡ chữ. */
-    font-size: var(--fs-sub);
+    /* ┌─ TÊN HÀNG LÀ MỘT "TIÊU ĐỀ NHỎ" ──────────────────────────────────
+       │ --fs-subtitle (11px), giá giữ --fs-text (10px) thừa hưởng từ
+       │ .oa-card__body. Gọi qua TÊN VAI TRÒ chứ không gọi cỡ — xem khối "BA
+       │ VAI TRÒ CHỮ" đầu file.
+       │
+       │ ĐÃ TỪNG LÀ --fs-sub (12px) trong cùng ngày 12/09/2026, và chú thích
+       │ cũ ở đây còn lập luận rằng 11px thì "tên chỉ nhỉnh hơn giá đúng một
+       │ pixel". Lập luận ấy đúng khi nhìn riêng cái thẻ, nhưng nó thua một
+       │ yêu cầu rộng hơn: tên mặt hàng phải CÙNG MỘT CỠ ở mọi nơi — thẻ,
+       │ giỏ hàng, đơn hàng, hộp thoại mua. Trước đợt này bốn chỗ ấy là
+       │ 12/11/10/9px, mỗi trang một kiểu.
+       │
+       │ Phần "nhỉnh hơn giá" nay do IN ĐẬM (600) và IN HOA gánh, không phải
+       │ do một pixel cỡ chữ. Muốn tên to hơn nữa thì đổi --fs-subtitle, và
+       │ chấp nhận là mọi tên hàng trên cả site to lên theo — đó chính là
+       │ điều mà hệ vai trò này bảo đảm. */
+    font-size: var(--fs-subtitle);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--ls-tight);
@@ -2872,7 +2913,7 @@ textarea.oa-field {
 }
 
 .oa-footer__quote {
-    font-size: var(--fs-sub);
+    font-size: var(--fs-text);
     letter-spacing: .02em;
     text-wrap: pretty;
 }
@@ -2947,7 +2988,7 @@ textarea.oa-field {
     border-left: 2px solid var(--ink);
     border-radius: var(--r-field);
     background: var(--bg);
-    font-size: var(--fs-body);
+    font-size: var(--fs-text);
     line-height: var(--lh);
 }
 
@@ -3514,7 +3555,7 @@ body.is-search-open {
    ══════════════════════════════════════════════════════════════════════ */
 
 .oa-footer__helptitle {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-subtitle);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -3738,7 +3779,7 @@ body.is-search-open {
 
 .error-page__title,
 .errpage__title {
-    font-size: var(--fs-h);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
