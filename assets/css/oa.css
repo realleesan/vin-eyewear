@@ -1683,7 +1683,8 @@ textarea.oa-field {
    │ không phải trong <body> như tên gọi gợi ý. Xem khối .offcanvas-backdrop ở
    │ cuối file, nơi nó được cắt y hệt.
    └──────────────────────────────────────────────────────────────────────── */
-.hpop--search .hpop__scrim {
+.hpop--search .hpop__scrim,
+.hpop--account .hpop__scrim {
     top: var(--hdr-h);
 }
 
@@ -1743,6 +1744,73 @@ textarea.oa-field {
     flex-direction: column;
     gap: 48px;
     margin-top: 28px;
+}
+
+/* ┌─ NGĂN KÉO TÀI KHOẢN — MỘT CỘT MỤC ────────────────────────────────────
+   │ Markup ở _layout/header-account.php. Tấm mượn nguyên .oa-panel của ô tìm
+   │ nên khối này chỉ khai phần RUỘT.
+   │
+   │ Cố ý KHÔNG dùng lại .acct-nav__item của cột điều hướng trong trang tài
+   │ khoản: hai chỗ khác điều kiện hẳn nhau — cột bên kia rộng cố định, có
+   │ huy hiệu đếm, có dấu mục đang đứng. Ở đây không mục nào "đang đứng" vì
+   │ tấm nổi trên mọi trang. Dùng chung lớp là một trong hai bên phải mang
+   │ luật vô nghĩa của bên kia.
+   │
+   │ Bề rộng theo .oa-panel__inner (600px) nhưng bó lại 280px: một cột chữ
+   │ ngắn kéo dài 600px thì icon và nhãn trôi xa nhau, mắt phải nhảy.
+   └──────────────────────────────────────────────────────────────────────── */
+.acctpop {
+    display: flex;
+    flex-direction: column;
+    width: min(280px, 100%);
+}
+
+/* `width: 100%` + `text-align: left` cho cả <a> lẫn <button>: nút đăng xuất
+   là <button> trong <form>, mà nút thì mặc định căn giữa và co theo chữ. */
+.acctpop__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 0;
+    border: 0;
+    border-bottom: 1px solid var(--line-input);
+    background: none;
+    text-align: left;
+    font: inherit;
+    font-size: var(--fs-ui);
+    letter-spacing: var(--ls-tight);
+    color: inherit;
+    cursor: pointer;
+}
+
+/* ┌─ ĐỨNG YÊN DƯỚI CON TRỎ — VÀ PHẢI KHAI RA MỚI ĐƯỢC ────────────────────
+   │ Cả thanh đầu trang không đổi gì khi rê chuột (xem .oa-header__mark trong
+   │ file này và .mega__links ở components/mega-menu.css), ngăn kéo này theo
+   │ cùng luật.
+   │
+   │ `color: inherit` ở khối trên KHÔNG đủ để chặn, và đó là chỗ dễ tưởng
+   │ nhầm: `.acctpop__item` là (0,1,0) còn `a:hover` toàn site là (0,1,1) —
+   │ luật kia thắng. Đo được trước khi thêm khối này: mục đang rê ra
+   │ rgb(85,85,85) trong khi mục bên cạnh là rgb(17,17,17).
+   │
+   │ `.acctpop__item:hover` là (0,2,0) nên thắng thẳng, không phụ thuộc thứ
+   │ tự khai. Cùng lối đã dùng cho .oa-header__btn:hover. */
+.acctpop__item:hover {
+    color: inherit;
+}
+
+.acctpop__icon {
+    display: flex;
+    flex: none;
+    color: var(--ink-3);
+}
+
+/* Form chỉ là thẻ bọc để đăng xuất đi bằng POST — nó không được thêm khoảng
+   cách nào, nút bên trong phải nối liền hàng mục phía trên. */
+.acctpop__out {
+    width: min(280px, 100%);
+    margin: 0;
 }
 
 /* Ô tìm kiếm lớn — gạch chân, có kính lúp bên trái */
@@ -2537,15 +2605,22 @@ summary:focus-visible,
     align-items: center;
 }
 
+/* HAI TẤM, KHÔNG PHẢI MỘT — .hpop__panel--account thêm 12/09/2026.
+
+   Ngăn giỏ CỐ Ý không có mặt trong ba nhóm luật này: nó là Bootstrap
+   Offcanvas, ẩn/hiện bằng .show/.showing/.hiding ở khối riêng cuối file.
+   Thêm nó vào đây là hai cơ chế cùng điều khiển một tấm. */
 .hpop__scrim,
-.hpop__panel--search {
+.hpop__panel--search,
+.hpop__panel--account {
     visibility: hidden;
     opacity: 0;
     transition: opacity .2s ease, visibility 0s linear .2s;
 }
 
 .hpop.is-open .hpop__scrim,
-.hpop.is-open .hpop__panel--search {
+.hpop.is-open .hpop__panel--search,
+.hpop.is-open .hpop__panel--account {
     visibility: visible;
     opacity: 1;
     transition: opacity .2s ease;
@@ -2555,7 +2630,8 @@ summary:focus-visible,
    :hover/:focus-within. Giữ luật này kể cả khi không còn luật hover nào:
    gỡ đi thì lần sau ai thêm hover vào lại vỡ đúng chỗ cũ. */
 .hpop.is-closed .hpop__scrim,
-.hpop.is-closed .hpop__panel--search {
+.hpop.is-closed .hpop__panel--search,
+.hpop.is-closed .hpop__panel--account {
     visibility: hidden;
     opacity: 0;
 }

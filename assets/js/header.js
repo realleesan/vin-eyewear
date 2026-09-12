@@ -33,11 +33,26 @@
        │ chạm vào DOM thì dồn về một chỗ: dongBoLopPhu() tính lại từ cả hai cờ.
        │ Thêm lớp phủ thứ ba sau này là thêm một cờ, không phải thêm một chủ.
        └──────────────────────────────────────────────────────────────────────── */
-    var lopPhu = { tim: false, gio: false };
+    var lopPhu = { gio: false };
 
+    /* Phần "ô tìm" của công thức KHÔNG còn là một cờ riêng: nó hỏi thẳng DOM
+       xem có [data-hpop] nào đang mang .is-open không. Lý do là từ khi có ngăn
+       kéo tài khoản (_layout/header-account.php) thì số lớp phủ mở-bằng-bấm
+       đã là HAI, và sẽ còn thêm — một cờ cho mỗi cái là một chỗ nữa để quên.
+       Giỏ vẫn phải giữ cờ riêng: nó là Bootstrap Offcanvas, và lúc `show` bắn
+       ra thì .showing CHƯA được gắn, nên không hỏi DOM được. */
     var dongBoLopPhu = function () {
-        if (!header) return;
-        header.classList.toggle('is-overlay', lopPhu.tim || lopPhu.gio);
+        var coTamMo = !!document.querySelector('[data-hpop].is-open');
+
+        if (header) {
+            header.classList.toggle('is-overlay', coTamMo || lopPhu.gio);
+        }
+
+        /* Khoá cuộn nền. Tên lớp giữ nguyên `is-search-open` vì oa.css đang
+           đọc nó; nay nó có nghĩa rộng hơn tên gọi — "một tấm mở-bằng-bấm
+           đang mở". KHÔNG tính ngăn giỏ vào đây: Offcanvas đã tự khoá cuộn
+           bằng `scroll: false`, cộng thêm lớp này là khoá hai lần. */
+        document.body.classList.toggle('is-search-open', coTamMo);
     };
 
     /* ====================================================================
@@ -176,20 +191,15 @@
 
             pop.classList.remove('is-open');
 
-            /* Lớp phủ tìm kiếm khoá cuộn nền và nâng đầu trang lên trên cụm nút
-               nổi bằng một lớp trên <body> — gỡ ở đây, đúng chỗ mọi lối đóng
-               (Esc · bấm ngoài · nút X · rê sang bảng khác) đều đi qua. */
-            if (pop.classList.contains('hpop--search')) {
-                document.body.classList.remove('is-search-open');
+            /* Khoá cuộn nền và màu thanh đầu trang tính lại ở ĐÂY, đúng chỗ
+               mọi lối đóng (Esc · bấm ngoài · nút X · rê sang bảng khác) đều
+               đi qua. Gọi SAU khi .is-open đã gỡ ở trên, vì dongBoLopPhu() đọc
+               chính lớp đó.
 
-                /* Gỡ cùng chỗ, cùng điều kiện với is-search-open — khối chú
-                   thích ngay trên đã nói vì sao đây là chỗ đúng: mọi lối đóng
-                   đều đi qua closePop. Gắn ở nhánh mở nhưng gỡ ở một chỗ khác
-                   là kiểu sai để lại thanh đầu trang kẹt màu nền sau khi bảng
-                   đã biến mất. */
-                lopPhu.tim = false;
-                dongBoLopPhu();
-            }
+               Không còn điều kiện `pop.classList.contains('hpop--search')`:
+               hàm tính từ trạng thái thật của MỌI [data-hpop], nên nó đúng cho
+               cả ngăn kéo tài khoản và cho bất cứ tấm nào thêm sau này. */
+            dongBoLopPhu();
 
             /* GỠ LỚP THÔI LÀ CHƯA ĐÓNG ĐƯỢC.
 
@@ -236,9 +246,33 @@
 
         pops.forEach(function (pop) {
             var trigger = pop.querySelector('[data-hpop-trigger]');
-            if (!trigger || trigger.tagName !== 'BUTTON') return;
+            if (!trigger) return;
 
-            trigger.addEventListener('click', function () {
+            /* ┌─ AI ĐƯỢC VÒNG LẶP NÀY NHẬN ────────────────────────────────────
+               │ <button>              ô tìm kiếm — không đi đâu cả, bấm là mở
+               │ <a> + [data-hpop-link] ngăn kéo tài khoản — là liên kết THẬT tới
+               │                        /tai-khoan, JS chặn lại để mở tấm
+               │
+               │ Giỏ hàng cũng là <a> nhưng KHÔNG mang [data-hpop-link], nên nó
+               │ rơi khỏi đây — đúng ý: nó do khối Bootstrap Offcanvas ở mục 2c
+               │ lo, và nhận cả hai nơi là hai handler cùng bật/tắt một tấm.
+               │
+               │ Thuộc tính chọn-vào chứ không phải loại-trừ-ra: thêm một tấm
+               │ mới thì tác giả của nó phải nói rõ mình muốn gì, không ai vô
+               │ tình bị cuốn vào. */
+            var laLienKet = trigger.tagName !== 'BUTTON';
+
+            if (laLienKet && !trigger.hasAttribute('data-hpop-link')) return;
+
+            trigger.addEventListener('click', function (e) {
+                /* Ctrl/Cmd/Shift/chuột giữa trên một <a> = ý muốn MỞ TAB MỚI.
+                   Để trình duyệt làm việc của nó — cùng lối đã dùng cho thẻ mở
+                   giỏ hàng ở mục 2c. */
+                if (laLienKet) {
+                    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                    e.preventDefault();
+                }
+
                 var willOpen = !pop.classList.contains('is-open');
 
                 // Mở cái này thì đóng ba cái kia — hai bảng chồng nhau thì
@@ -252,30 +286,12 @@
                     pop.classList.remove('is-closed');
                     pop.classList.add('is-open');
 
-                    if (pop.classList.contains('hpop--search')) {
-                        document.body.classList.add('is-search-open');
+                    /* Khoá cuộn và màu thanh đầu trang đều do dongBoLopPhu()
+                       tính lại từ trạng thái thật, gọi sau khi .is-open đã gắn
+                       ở ngay trên. Trước đây hai việc ấy gắn tay tại đây và
+                       chỉ cho `.hpop--search`. */
+                    dongBoLopPhu();
 
-                        /* THANH ĐẦU TRANG LIỀN MỘT MẢNG VỚI BẢNG.
-
-                           oa.css có sẵn `.oa-header.is-overlay` — nền
-                           --bg-panel, bỏ blur, chữ --ink — đúng cho lúc này,
-                           nhưng cho tới nay KHÔNG mã nào gắn lớp ấy, nên luật
-                           đó nằm chết trong file. Đây là chỗ gắn nó.
-
-                           Thấy rõ nhất ở trang chủ: thanh đang trong suốt đè
-                           lên ảnh hero, mở ô tìm ra thì phía dưới là một mảng
-                           --bg-panel còn thanh vẫn là ảnh — hai khối rời nhau
-                           ngay chỗ giáp. Gắn lớp này là chúng thành một.
-
-                           Trang trong cũng có tác dụng, chỉ là nhẹ: nền đổi từ
-                           --bg sang --bg-panel, mất đường ranh mờ giữa hai
-                           khối.
-
-                           Khai cờ chứ không tự chạm vào thanh — xem khối
-                           `lopPhu` ở đầu file về lý do. */
-                        lopPhu.tim = true;
-                        dongBoLopPhu();
-                    }
                 } else {
                     /* ĐÓNG PHẢI ĐI QUA closePop, không phải chỉ gỡ .is-open.
 
