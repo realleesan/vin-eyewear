@@ -220,8 +220,25 @@
    │ Nền trải hết bề ngang, nhưng chữ thụt vào đúng bằng --mega-x (khoảng
    │ cách từ mép trái màn hình tới mục nav). Trừ đi --edge vì thẻ cha đã có
    │ sẵn chừng ấy đệm; `max(0px, …)` chặn số âm khi mục nav nằm sát mép.
+   │
+   │ HAI BỘ CHỌN, VÌ RUỘT BẢNG CÓ HAI HÌNH DÁNG — đừng bỏ bớt cái nào:
+   │
+   │   .mega__grid   chỉ _layout/collection-menu.php còn dựng thẻ bọc này
+   │   .mega__links  _layout/mega-menu.php (Gọng kính · Tròng kính) in danh
+   │                 sách THẲNG vào panel, không thẻ bọc nào
+   │
+   │ Bản "một cột phẳng" gỡ .mega__grid khỏi mega-menu.php mà luật thụt lề
+   │ vẫn đứng một mình ở .mega__grid, nên hai bảng đó không tiêu thụ --mega-x
+   │ nữa: chữ nằm sát --edge trong khi mục nav đã dịch sang phải. Gọng kính
+   │ là mục ĐẦU TIÊN (trigger đúng ở --edge) nên nó trông vẫn đúng — chỉ
+   │ Tròng kính lệch, và đó là lý do lỗi này khó thấy.
+   │
+   │ Bộ chọn là con TRỰC TIẾP của panel, không phải `.mega__links` trần:
+   │ danh sách bên trong .mega__grid đã được thẻ bọc thụt lề hộ rồi, thụt
+   │ thêm lần nữa là cộng dồn hai lần.
    └──────────────────────────────────────────────────────────────────────── */
-.mega__grid {
+.mega__panel > .mega__grid,
+.mega__panel > .mega__links {
     margin-left: max(0px, calc(var(--mega-x, 0px) - var(--edge)));
 }
 
