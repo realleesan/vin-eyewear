@@ -1725,6 +1725,7 @@ textarea.oa-field {
     gap: 8px;
     border-bottom: 1px solid var(--line-strong);
     padding-bottom: 8px;
+    transition: border-color .18s ease, box-shadow .18s ease;
 }
 
 .oa-searchbar input {
@@ -1735,6 +1736,36 @@ textarea.oa-field {
     font-family: inherit;
     font-size: var(--fs-body);
     color: var(--ink);
+}
+
+/* ┌─ DẤU TIÊU ĐIỂM LÀ GẠCH CHÂN ĐẬM LÊN, KHÔNG PHẢI KHUNG CHỮ NHẬT ───────
+   │ Khối "TIÊU ĐIỂM BÀN PHÍM" ở cuối file cho MỌI input một khung
+   │ `outline: 2px solid var(--ink)` bo 2px. Đúng ở khắp nơi, sai đúng ở ô
+   │ này: header.js đặt tiêu điểm vào đây NGAY khi bảng mở, nên chỉ bấm cái
+   │ kính lúp bằng chuột là một khung chữ nhật bật ra quanh ô — giữa một
+   │ bảng mà cả mẫu lẫn phần còn lại của bảng không có lấy một cái khung.
+   │
+   │ ĐỔI CHỖ CHỨ KHÔNG XOÁ. Khung nhường chỗ cho chính gạch chân của ô: nó
+   │ đổi từ xám --line-strong sang đen --ink và dày gấp đôi. Ô tìm vẫn nói
+   │ rõ "đang gõ được vào đây", chỉ là nói bằng đúng ngôn ngữ của mẫu.
+   │
+   │ Dày gấp đôi bằng `box-shadow` chứ không bằng `border-width: 2px`: đổi
+   │ bề dày viền là đẩy cả ô nhích lên 1px mỗi lần nhận/mất tiêu điểm.
+   │
+   │ `:focus-within` trên THẺ BỌC, không phải `:focus` trên input — gạch
+   │ chân thuộc về thẻ bọc, còn tiêu điểm thì rơi vào input bên trong.
+   │
+   │ Đây là ngoại lệ DUY NHẤT của luật "không `outline: none` ở bất kỳ đâu"
+   │ ghi ở khối cuối file, và nó chỉ là ngoại lệ vì có thứ thay thế đứng
+   │ ngay cạnh. Đừng chép lối này sang ô nhập khác mà không dựng dấu thay.
+   └──────────────────────────────────────────────────────────────────────── */
+.oa-searchbar:focus-within {
+    border-bottom-color: var(--ink);
+    box-shadow: 0 1px 0 var(--ink);
+}
+
+.oa-searchbar input:focus-visible {
+    outline: none;
 }
 
 /* Dải thẻ nhỏ cuộn ngang — "Search Trends", "Recently Viewed" */
