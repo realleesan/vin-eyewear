@@ -721,3 +721,19 @@
         gap: 8px;
     }
 }
+
+/* Lối "tiếp tục không đăng nhập" ở bước 1 — liên kết phụ, không phải nút:
+   nó là lối RA khỏi luồng, không nên nặng ngang hai nút chính. */
+.authskip {
+    display: block;
+    margin-top: 14px;
+    color: var(--ink-3);
+    font-size: var(--fs-text);
+    text-align: center;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.authskip:hover {
+    color: var(--ink);
+}

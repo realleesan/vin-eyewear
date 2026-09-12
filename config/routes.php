@@ -150,6 +150,10 @@ return [
     'thanh-toan/thanh-cong' => 'OrderController@paid',
     // Đăng nhập / đăng ký / tài khoản
     'auth'              => 'AuthController@index',
+    /* Bước 1 của luồng hỏi định danh trước: chỉ nhận email/số điện thoại rồi
+       chuyển sang bước mật khẩu hoặc bước tạo tài khoản. Xem khối chú thích ở
+       AuthController::identify() — nó nới một luật bảo mật có chủ ý. */
+    'auth/tiep-tuc'     => 'AuthController@identify',   // POST
     'auth/dang-nhap'    => 'AuthController@login',      // POST
     /*
      * ĐĂNG KÝ LÀ MỘT MÀN, MỘT CÚ POST — theo UC-USER-01.

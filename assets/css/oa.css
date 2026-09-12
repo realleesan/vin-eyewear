@@ -3187,135 +3187,15 @@ summary:focus-visible,
    :hover/:focus-within. Giữ luật này kể cả khi không còn luật hover nào:
    gỡ đi thì lần sau ai thêm hover vào lại vỡ đúng chỗ cũ. */
 .hpop.is-closed .hpop__scrim,
-.hpop.is-closed .hpop__panel--search,
-.hpop.is-closed .authdrawer {
+.hpop.is-closed .hpop__panel--search {
     visibility: hidden;
     opacity: 0;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   NGĂN KÉO ĐĂNG NHẬP — trượt từ MÉP PHẢI
-
-   Ruột là chính trang /auth, nạp ngầm (assets/js/auth-drawer.js). Khối này
-   chỉ lo cái khung và vài luật bóp trang ấy cho vừa bề ngang hẹp.
-
-   KHÁC HAI LỚP PHỦ KIA VỀ HÌNH: ô tìm và ngăn giỏ là tấm tràn bề ngang xổ
-   từ dưới thanh đầu trang xuống; cái này là cột dọc bám mép phải, phủ trọn
-   chiều cao. Vì thế nó KHÔNG dùng .oa-panel và KHÔNG bật .is-overlay —
-   thanh đầu trang không giáp nó theo chiều ngang nên chẳng có mép nào để
-   nối liền.
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* ┌─ KHUNG CẮT CỠ KHUNG NHÌN ─────────────────────────────────────────────
-   │ Lý do đầy đủ ở _layout/header-auth.php, tóm tắt: tấm lúc nghỉ đỗ ngoài
-   │ mép phải, và một phần tử `position: fixed` như thế VẪN được tính vào
-   │ vùng cuộn — đo được thanh cuộn ngang thừa đúng 520px trên MỌI trang.
-   │ `overflow-x: clip` trên <body> không chữa được vì fixed thoát khỏi khung
-   │ cắt của tổ tiên; phải cho tấm một tổ tiên fixed để mà nằm trong.
-   │
-   │ `pointer-events: none` là BẮT BUỘC — khung này phủ kín màn hình.
-   └──────────────────────────────────────────────────────────────────────── */
-.authdrawer__clip {
-    position: fixed;
-    inset: 0;
-    z-index: var(--z-panel);
-    overflow: hidden;
-    pointer-events: none;
-}
-
-.authdrawer {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: min(520px, 100%);
-    pointer-events: auto;
-    background: var(--bg);
-
-    /* `color` PHẢI ĐI KÈM `background` — CÙNG BẪY ĐÃ SẬP MỘT LẦN Ở .oa-panel,
-       đọc khối chú thích ở đó. Ngăn kéo nằm BÊN TRONG <header> trong DOM, mà
-       trang chủ đặt .oa-header--over { color: #fff } để thanh đọc được trên
-       video hero. Màu trắng ấy chảy thẳng vào đây, nơi nền là --bg: nhãn ô,
-       tiêu đề, dòng "Ghi nhớ đăng nhập" đều trắng trên trắng.
-       Đo được trước khi thêm dòng này: rgb(255,255,255). */
-    color: var(--ink);
-
-    overflow-y: auto;
-    overscroll-behavior: contain;
-
-    /* Trạng thái nghỉ: nằm sẵn ngoài mép phải. `visibility` chứ không
-       `display` — cùng lý do đã ghi ở khối .hpop bên trên (tiêu điểm). */
-    visibility: hidden;
-    transform: translateX(100%);
-    transition: transform .3s ease, visibility 0s linear .3s;
-}
-
-.hpop.is-open .authdrawer {
-    visibility: visible;
-    transform: none;
-    transition: transform .3s ease;
-}
-
-/* Nút ✕ nổi góc trên phải, trên cả nội dung vừa nạp về. */
-.authdrawer__x {
-    position: sticky;
-    top: 0;
-    float: right;
-    z-index: 1;
-    margin: 14px 18px 0 0;
-}
-
-.authdrawer__wait {
-    padding: 40px var(--edge);
-    color: var(--ink-3);
-}
-
-/* ┌─ BÓP /auth CHO VỪA CỘT HẸP ───────────────────────────────────────────
-   │ auth/index.php dựng một thẻ 1060px chia hai cột: ảnh thương hiệu bên
-   │ trái, form 460px bên phải. Trong cột 520px thì cột ảnh không còn chỗ.
-   │
-   │ Luật ở đây CHỈ áp trong .authdrawer, nên trang /auth mở bằng đường dẫn
-   │ thường vẫn nguyên dáng hai cột. Đây là lý do các bộ chọn đều bắt đầu
-   │ bằng .authdrawer — đừng rút gọn chúng.
-   └──────────────────────────────────────────────────────────────────────── */
-.authdrawer .authwrap {
-    min-height: 0;
-    padding: 0;
-    display: block;
-}
-
-.authdrawer .authcard {
-    width: 100%;
-    max-width: none;
-    display: block;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-    background: none;
-}
-
-/* Cột ảnh thương hiệu — bỏ hẳn ở bề ngang này. Nó là trang trí; form mới là
-   thứ khách mở ngăn kéo để dùng. */
-.authdrawer .authcard__brand {
-    display: none;
-}
-
-.authdrawer .authcard__panel {
-    width: 100%;
-    max-width: none;
-    padding: 56px var(--edge) 48px;
-}
-
-@media (max-width: 560px) {
-    .authdrawer {
-        width: 100%;
-    }
-
-    .authdrawer .authcard__panel {
-        padding-left: 24px;
-        padding-right: 24px;
-    }
-}
+/* ĐÃ DỜI: ngăn kéo đăng nhập không còn ở đây (12/09/2026). Nó là một thành
+   phần riêng, in ở cấp <body> và gắn/gỡ khỏi DOM theo trạng thái —
+   assets/css/components/auth-drawer.css, _layout/auth-drawer.php,
+   assets/js/auth-drawer.js. Lý do dời khỏi <header> ghi ở đầu file view đó. */
 
 /* Khoá cuộn nền khi lớp phủ tìm kiếm mở — header.js gắn lớp này lên <body> */
 body.is-search-open {

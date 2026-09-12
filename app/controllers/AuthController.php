@@ -62,7 +62,25 @@ class AuthController extends BaseController
             redirect('/tai-khoan');
         }
 
-        $isRegister = ($_GET['tab'] ?? '') === 'dang-ky';
+        /* ┌─ BA BƯỚC CỦA MÀN NÀY (12/09/2026) ────────────────────────────
+           │   ''          hỏi định danh — chỉ một ô email + nút Tiếp tục
+           │   'mat-khau'  đã có tài khoản → ô mật khẩu
+           │   'tao'       chưa có        → form tạo tài khoản
+           │
+           │ ?tab=dang-ky CŨ VẪN CHẠY và map thẳng sang bước 'tao': nó nằm
+           │ trong liên kết cũ, trong thư đã gửi, và trong bookmark của khách.
+           │ Một tham số cũ còn đi được thì không có lý do gì bỏ. */
+        $buoc = (string) ($_GET['buoc'] ?? '');
+
+        if (($_GET['tab'] ?? '') === 'dang-ky') {
+            $buoc = 'tao';
+        }
+
+        if (!in_array($buoc, ['', 'mat-khau', 'tao'], true)) {
+            $buoc = '';
+        }
+
+        $isRegister = $buoc === 'tao';
 
         $this->renderView('auth/index', [
             'signup'    => self::signupView(),
@@ -86,6 +104,7 @@ class AuthController extends BaseController
                tab đăng ký, và đăng ký xong lạc mất chỗ đang dở. */
             'redirectRaw' => safeRedirectPath($_GET['redirect'] ?? null, ''),
             'tab'       => $isRegister ? 'dang-ky' : 'dang-nhap',
+            'buoc'      => $buoc,
             'old'       => $_SESSION['_old_auth'] ?? [],
             // Lỗi theo từng ô của màn đăng ký — xem signupErrors().
             'errors'    => $_SESSION['_auth_errors'] ?? [],
@@ -103,6 +122,78 @@ class AuthController extends BaseController
         /* Xoá SAU khi vẽ xong, đúng nếp của flash(): hai ô này chỉ sống đúng
            một lần hiện trang, tải lại là form sạch trở lại. */
         unset($_SESSION['_old_auth'], $_SESSION['_auth_errors']);
+    }
+
+    /**
+     * BƯỚC 1 CỦA LUỒNG "HỎI ĐỊNH DANH TRƯỚC" — POST /auth/tiep-tuc.
+     *
+     * Khách chỉ gõ email (hoặc số điện thoại) rồi bấm Tiếp tục; máy chủ tra
+     * xem đã có tài khoản chưa rồi đưa sang ĐÚNG một trong hai bước:
+     *
+     *     có    → /auth?buoc=mat-khau   (ô mật khẩu, định danh điền sẵn)
+     *     chưa  → /auth?buoc=tao        (form tạo tài khoản, email điền sẵn)
+     *
+     * ═════════════════════════════════════════════════════════════════════
+     * ĐỌC KỸ: LUỒNG NÀY CỐ Ý NỚI MỘT LUẬT BẢO MẬT ĐÃ CHỐT
+     *
+     * BR-UC.USER.02-03 bắt màn đăng nhập phải dùng MỘT câu chung cho cả
+     * "không tìm thấy tài khoản" lẫn "sai mật khẩu", chính là để người ngoài
+     * không dò được địa chỉ nào có tài khoản ở đây (xem khối chú thích trong
+     * login()). Hỏi định danh trước thì ĐƯƠNG NHIÊN lộ điều đó: cùng một cú
+     * bấm, một địa chỉ ra màn nhập mật khẩu còn địa chỉ khác ra màn đăng ký.
+     *
+     * Đây là đánh đổi CÓ CHỦ Ý theo yêu cầu chủ dự án (12/09/2026), cùng lối
+     * mà Google, Amazon và Gentle Monster đang dùng. Ba điều phải giữ để cái
+     * giá ấy không tăng thêm:
+     *
+     *   1. login() KHÔNG ĐƯỢC nới theo. Một khi đã sang bước mật khẩu thì câu
+     *      báo lỗi vẫn là câu chung — biết địa chỉ có tài khoản là một
+     *      chuyện, biết mật khẩu nào sai là chuyện khác.
+     *   2. CÓ HÃM. Dò cả một danh sách email chỉ đáng ngại khi dò được nhanh;
+     *      LoginAttemptModel đang đếm theo định danh cho login(), và bước này
+     *      dùng chung bộ đếm ấy.
+     *   3. KHÔNG BAO GIỜ in ra câu "địa chỉ này chưa có tài khoản". Màn đăng
+     *      ký tự nó đã nói điều đó theo cách không đọc ra như một lời xác
+     *      nhận cho máy dò.
+     * ═════════════════════════════════════════════════════════════════════
+     */
+    public function identify(): void
+    {
+        $this->requirePost('/auth');
+
+        $login = trim((string) ($_POST['email'] ?? ''));
+        $to    = safeRedirectPath($_POST['redirect'] ?? null, '');
+
+        /* Giữ lại chuỗi vừa gõ cho cả hai bước sau: bước mật khẩu in nó ra ô
+           chỉ-đọc, bước tạo tài khoản điền sẵn vào ô email. */
+        $_SESSION['_old_auth'] = ['email' => $login];
+
+        $tiep = static function (string $buoc) use ($to): never {
+            redirect('/auth?buoc=' . $buoc . ($to !== '' ? '&redirect=' . rawurlencode($to) : ''));
+        };
+
+        /* Kiểm HÌNH DẠNG trước, y như login(): những lỗi nhìn vào chuỗi là
+           biết thì nói thẳng, vì câu trả lời không phụ thuộc vào việc tài
+           khoản có tồn tại hay không. */
+        if ($login === '') {
+            $_SESSION['_auth_errors'] = ['email' => 'Vui lòng nhập số điện thoại hoặc email.'];
+            redirect('/auth');
+        }
+
+        if (!looksLikePhone($login) && !filter_var($login, FILTER_VALIDATE_EMAIL)) {
+            $_SESSION['_auth_errors'] = ['email' => 'Email chưa đúng định dạng.'];
+            redirect('/auth');
+        }
+
+        /* HÃM DÙNG CHUNG BỘ ĐẾM VỚI login(): đang bị khoá vì gõ sai mật khẩu
+           nhiều lần thì cũng không được dùng bước này để dò tiếp. Không đếm
+           thêm lượt ở đây — bước này chưa phải một lần thử sai. */
+        if (LoginAttemptModel::conKhoa($login) > 0) {
+            flash('auth_error', 'Bạn đã thử quá nhiều lần. Vui lòng đợi ít phút rồi thử lại.');
+            redirect('/auth');
+        }
+
+        $tiep(UserModel::findByLogin($login) !== null ? 'mat-khau' : 'tao');
     }
 
     public function login(): void

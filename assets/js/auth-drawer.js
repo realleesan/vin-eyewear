@@ -1,27 +1,38 @@
 /**
- * auth-drawer.js — đổ trang /auth vào ngăn kéo bên phải của thanh đầu trang.
+ * auth-drawer.js — ngăn kéo đăng nhập/đăng ký.
  *
- * Markup: app/views/_layout/header-auth.php
- * Khung:  .authdrawer trong assets/css/oa.css
- * Mảnh:   nhánh `X-Auth` ở app/views/_layout/master.php
+ * Khuôn:  app/views/_layout/auth-drawer.php   (<template id="authDrawerTpl">)
+ * Khung:  assets/css/components/auth-drawer.css
+ * Ruột:   chính trang /auth, nạp ngầm qua nhánh `X-Auth` ở master.php
  *
  * ═══════════════════════════════════════════════════════════════════════════
- * NGUYÊN TẮC DUY NHẤT CỦA FILE NÀY: KHÔNG BIẾT GÌ VỀ LUỒNG ĐĂNG NHẬP
+ * NGUYÊN TẮC DUY NHẤT: FILE NÀY KHÔNG BIẾT GÌ VỀ LUỒNG ĐĂNG NHẬP
  *
  * Nó không biết có mấy bước, ô nào bắt buộc, lỗi trông ra sao, OTP gửi đi
- * đâu. Nó chỉ làm đúng hai việc:
+ * đâu. Nó làm đúng ba việc: mở/đóng một cái tấm, nạp HTML của /auth vào đó,
+ * và gửi form nào được submit bên trong.
  *
- *   1. GET /auth  → đổ HTML trả về vào ngăn kéo
- *   2. Form nào bên trong submit → gửi đúng form ấy tới đúng action của nó,
- *      rồi đổ HTML trả về vào chỗ cũ
+ * Mọi thứ thuộc nghiệp vụ vẫn nằm ở AuthController và app/views/auth/. Thêm
+ * một bước, đổi một nhãn, sửa một luật kiểm tra — KHÔNG phải sửa file này.
+ * Đừng bao giờ đọc tên trường, kiểm tra dữ liệu hay dựng thông báo lỗi ở đây.
  *
- * Nghĩa là mọi thứ thuộc về nghiệp vụ vẫn nằm nguyên ở AuthController và
- * app/views/auth/. Thêm một bước, đổi một nhãn, sửa một luật kiểm tra —
- * KHÔNG phải sửa file này. Đó là cả lý do ngăn kéo được phép tồn tại; xem
- * khối chú thích ở _layout/header-auth.php.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * BỐN TRẠNG THÁI, KHÔNG PHẢI MỘT CỜ isOpen
  *
- * Hệ quả phải giữ: đừng bao giờ đọc tên trường, đừng kiểm tra dữ liệu, đừng
- * dựng thông báo lỗi ở đây.
+ *     'closed'  → không có node nào trong DOM
+ *     'open'    → đã gắn, đang/đã trượt vào
+ *     'closing' → đang trượt ra, node VẪN CÒN
+ *     'closed'  → transitionend bắn xong mới gỡ node
+ *
+ * Một cờ boolean không đủ, và đây là lý do cụ thể: gỡ node ngay lúc bấm đóng
+ * thì hiệu ứng ra không bao giờ chạy — tấm biến mất tức thì, còn nền mờ nhấp
+ * nháy. Phải có một pha thứ ba để chờ.
+ *
+ * Chiều ngược lại cũng cần một bước riêng: gắn node rồi thêm .is-open ngay
+ * trong cùng một khung hình thì trình duyệt GỘP hai trạng thái, không thấy
+ * giá trị đầu, nên không có gì để nội suy — tấm hiện ra tại chỗ. Nên giữa
+ * hai bước phải ÉP MỘT LƯỢT REFLOW (đọc offsetWidth). Đó là một dòng trông
+ * như thừa và nó tuyệt đối không thừa.
  *
  * ═══════════════════════════════════════════════════════════════════════════
  * TẮT JAVASCRIPT: file này không chạy, thẻ mở là <a href="/auth"> thật nên
@@ -31,52 +42,132 @@
 (function () {
     'use strict';
 
-    var cum = document.querySelector('[data-auth-drawer]');
-    if (!cum) return;
+    var khuon = document.getElementById('authDrawerTpl');
+    var goc   = document.getElementById('modal-root');
 
-    var than = cum.querySelector('[data-auth-body]');
-    if (!than) return;
+    if (!khuon || !goc) return;
 
+    /* Trạng thái: 'closed' | 'open' | 'closing'. */
+    var trangThai = 'closed';
+
+    var lop = null;        // .authov đang sống trong DOM
+    var than = null;       // [data-auth-body]
+    var panel = null;      // .authov__panel
+    var moBoi = null;      // phần tử đã bấm để mở — trả tiêu điểm về đúng nó
+    var hetGio = null;     // lưới an toàn cho transitionend
     var daNap = false;
     var dangNap = false;
 
-    /* ------------------------------------------------------------------
-       NHỮNG ĐƯỜNG SỐNG ĐƯỢC TRONG NGĂN KÉO
+    /* ──────────────────────────────────────────────────────────────────
+       KHOÁ CUỘN NỀN
 
-       Danh sách CHỌN-VÀO, cố ý gõ tay chứ không đoán: tấm chỉ dựng được
-       những trang máy chủ trả ra ở dạng mảnh VÀ vẫn thuộc luồng đăng nhập.
+       Bù đúng bề ngang thanh cuộn vừa mất: thiếu bước này, khoá cuộn làm
+       cả trang nhảy sang phải vài pixel đúng lúc tấm trượt vào — cú nhảy
+       thấy rõ nhất ở thanh đầu trang dính.
 
-         /auth            đổi tab Đăng nhập <-> Đăng ký
-         /quen-mat-khau   xin mã đặt lại mật khẩu
+       ĐẾM SỐ LẦN thay vì đặt/xoá thẳng: ngăn kéo này không phải lớp phủ
+       duy nhất của site (còn ô tìm kiếm, hộp thoại mua). Nếu hai thứ cùng
+       mở rồi một cái đóng, trả cuộn về ngay là mở khoá dưới chân cái còn
+       lại. Biến đếm nằm trên window để mọi lớp phủ dùng chung được.
+       ────────────────────────────────────────────────────────────────── */
+    var khoaCuon = function () {
+        window.__scrollLocks = (window.__scrollLocks || 0) + 1;
 
-       Dùng ở HAI chỗ, và phải là cùng một danh sách: lọc liên kết được bấm,
-       và xét địa chỉ CUỐI CÙNG sau khi máy chủ chuyển hướng. Tách làm hai
-       bản là một luồng đi vào được mà không đi ra được, hoặc ngược lại.
+        if (window.__scrollLocks > 1) return;
 
-       ĐỪNG THÊM /auth/google. Nó chuyển hướng sang tên miền Google: fetch()
-       vướng CORS, mà kể cả qua được thì màn đồng ý của Google không có lý do
-       gì sống trong một cái tấm 520px của ta. Nó phải là điều hướng thật,
-       nên nó rơi ra khỏi đây và chạy như liên kết bình thường.
+        var bu = window.innerWidth - document.documentElement.clientWidth;
 
-       Mọi đường khác (Chính sách bảo mật, /tai-khoan sau khi đăng nhập
-       xong…) cũng vậy: rời tấm, điều hướng như thường. Đúng hành vi, không
-       phải thiếu sót.
-       ------------------------------------------------------------------ */
+        document.body.dataset.authovPad = document.body.style.paddingRight || '';
+        document.body.style.overflow = 'hidden';
+
+        if (bu > 0) document.body.style.paddingRight = bu + 'px';
+    };
+
+    var moKhoaCuon = function () {
+        window.__scrollLocks = Math.max(0, (window.__scrollLocks || 1) - 1);
+
+        if (window.__scrollLocks > 0) return;
+
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = document.body.dataset.authovPad || '';
+        delete document.body.dataset.authovPad;
+    };
+
+    /* ──────────────────────────────────────────────────────────────────
+       BẪY TIÊU ĐIỂM
+
+       Tab ở phần tử cuối vòng về đầu, Shift+Tab ở đầu vòng về cuối. Danh
+       sách phần tử tính LẠI mỗi lần bấm phím chứ không nhớ sẵn: ruột tấm
+       bị thay mới sau mỗi lượt nạp (bước email → bước mật khẩu), nên một
+       danh sách nhớ sẵn sẽ trỏ vào những nút đã bị gỡ.
+       ────────────────────────────────────────────────────────────────── */
+    var CHON_DUOC =
+        'a[href],button:not([disabled]),input:not([disabled]):not([type=hidden]),' +
+        'select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+    var danhSachTieuDiem = function () {
+        if (!lop) return [];
+
+        return Array.prototype.filter.call(
+            lop.querySelectorAll(CHON_DUOC),
+            function (el) {
+                /* offsetParent === null = đang bị ẩn. Bẫy tiêu điểm vào một
+                   nút vô hình là cách chắc chắn làm người dùng bàn phím kẹt
+                   cứng trong tấm. */
+                return el.offsetParent !== null || el === document.activeElement;
+            }
+        );
+    };
+
+    var onKeydown = function (e) {
+        if (trangThai !== 'open') return;
+
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            dong();
+            return;
+        }
+
+        if (e.key !== 'Tab') return;
+
+        var ds = danhSachTieuDiem();
+        if (!ds.length) return;
+
+        var dau = ds[0];
+        var cuoi = ds[ds.length - 1];
+
+        /* Tiêu điểm đang ở NGOÀI tấm (vừa mở, hoặc trình duyệt trả nhầm) thì
+           kéo về phần tử đầu. */
+        if (!lop.contains(document.activeElement)) {
+            e.preventDefault();
+            dau.focus();
+            return;
+        }
+
+        if (!e.shiftKey && document.activeElement === cuoi) {
+            e.preventDefault();
+            dau.focus();
+        } else if (e.shiftKey && document.activeElement === dau) {
+            e.preventDefault();
+            cuoi.focus();
+        }
+    };
+
+    /* ──────────────────────────────────────────────────────────────────
+       NẠP MỘT ĐỊA CHỈ VÀO TẤM
+
+       `X-Auth: 1` bảo máy chủ in nguyên view, không in khung — cùng hợp
+       đồng với X-Catalog/X-Account, xem nhánh trả mảnh ở master.php.
+
+       `credentials: same-origin` BẮT BUỘC: phiên nằm trong cookie, thiếu
+       nó thì token CSRF in ra thuộc một phiên khác và mọi lần gửi form đều
+       hỏng — lỗi chỉ lộ ra lúc bấm nút, không phải lúc mở.
+       ────────────────────────────────────────────────────────────────── */
     var DUONG_TRONG_TAM = ['/auth', '/quen-mat-khau'];
 
-    /* ------------------------------------------------------------------
-       NẠP MỘT ĐỊA CHỈ VÀO NGĂN KÉO
-
-       `X-Auth: 1` là thứ bảo máy chủ in nguyên view, không in khung. Xem
-       nhánh trả mảnh ở master.php — cùng hợp đồng với X-Catalog/X-Account.
-
-       `credentials: same-origin` BẮT BUỘC: phiên đăng nhập nằm trong cookie
-       và fetch() không tự gửi cookie cho mọi cấu hình trình duyệt cũ. Thiếu
-       nó thì token CSRF in ra thuộc về một phiên khác và mọi lần gửi form
-       đều hỏng — kiểu lỗi chỉ lộ ra lúc bấm nút, không phải lúc mở.
-       ------------------------------------------------------------------ */
     var nap = function (url, tuyChon) {
-        if (dangNap) return;
+        if (dangNap || !than) return;
+
         dangNap = true;
         than.setAttribute('aria-busy', 'true');
 
@@ -87,24 +178,16 @@
 
         return window.fetch(url, caiDat)
             .then(function (res) {
-                /* ĐÃ BỊ CHUYỂN HƯỚNG RA KHỎI /auth = ĐĂNG NHẬP XONG.
+                /* ĐÃ BỊ CHUYỂN HƯỚNG RA KHỎI luồng = ĐĂNG NHẬP XONG.
 
-                   AuthController luôn kết thúc bằng redirect(): thất bại thì
-                   về lại /auth kèm flash lỗi, thành công thì sang đích thật
-                   (/tai-khoan, hoặc chỗ khách đang dở). Nên chỉ cần nhìn địa
-                   chỉ CUỐI CÙNG là biết kết quả — không phải đọc nội dung,
-                   không phải đoán theo chữ trong trang.
+                   AuthController luôn kết thúc bằng redirect(): hỏng thì về
+                   lại /auth kèm flash lỗi, xong thì sang đích thật. Nên chỉ
+                   cần nhìn địa chỉ CUỐI CÙNG — không phải đọc nội dung.
 
-                   Thành công thì rời hẳn sang trang đó: phiên vừa đổi, mà cả
-                   trang nền phía sau (giỏ hàng, icon tài khoản, thanh nav)
-                   đang dựng theo phiên CŨ. Vá từng mẩu ở đây là dựng lại
-                   nửa cái máy chủ trong trình duyệt.
-
-                   SO VỚI CẢ DANH SÁCH DUONG_TRONG_TAM, không riêng '/auth':
-                   luồng quên mật khẩu cũng sống trong tấm này, nên một lượt
-                   POST /quen-mat-khau/gui kết thúc ở /quen-mat-khau vẫn là
-                   "còn ở trong tấm". So đúng một đường thì mỗi bước của luồng
-                   ấy lại đá khách ra một trang thật. */
+                   Rời hẳn sang trang đó: phiên vừa đổi, mà cả trang nền phía
+                   sau (giỏ hàng, icon tài khoản, nav) đang dựng theo phiên
+                   CŨ. Vá từng mẩu ở đây là dựng lại nửa cái máy chủ trong
+                   trình duyệt. */
                 var dich = new URL(res.url, window.location.href);
 
                 if (DUONG_TRONG_TAM.indexOf(dich.pathname) === -1) {
@@ -115,52 +198,79 @@
                 return res.text();
             })
             .then(function (html) {
-                if (html === null) return;
+                if (html === null || !than) return;
+
                 than.innerHTML = html;
                 daNap = true;
 
-                /* Con trỏ vào ô đầu tiên — người mở ngăn kéo là để gõ. Bỏ qua
-                   ô ẩn và ô chỉ-đọc. */
+                /* Con trỏ vào ô đầu tiên — người mở ngăn kéo là để gõ. */
                 var o = than.querySelector('input:not([type=hidden]):not([readonly])');
                 if (o) o.focus();
             })
             .catch(function () {
-                /* Mạng hỏng — KHÔNG nuốt lỗi rồi để ngăn kéo trống. Đưa khách
-                   sang trang thật, ở đó ít nhất họ thấy trang lỗi của trình
-                   duyệt thay vì một tấm trắng không giải thích gì. */
+                /* Mạng hỏng — KHÔNG nuốt lỗi rồi để tấm trống. Đưa khách sang
+                   trang thật, ở đó ít nhất họ thấy trang lỗi của trình duyệt
+                   thay vì một tấm trắng không giải thích gì. */
                 window.location.assign('/auth');
             })
             .then(function () {
                 dangNap = false;
-                than.setAttribute('aria-busy', 'false');
+                if (than) than.setAttribute('aria-busy', 'false');
             });
     };
 
-    /* ------------------------------------------------------------------
-       MỞ LẦN ĐẦU THÌ NẠP
+    /* ──────────────────────────────────────────────────────────────────
+       MỞ
+       ────────────────────────────────────────────────────────────────── */
+    var mo = function (nutMo) {
+        /* Đang đóng dở thì huỷ pha ra và mở lại chính node ấy — không gắn
+           thêm cái thứ hai. Bấm nhanh hai lần là cảnh có thật. */
+        if (trangThai === 'closing') {
+            huyHetGio();
+            trangThai = 'open';
+            lop.classList.remove('is-closing');
+            lop.classList.add('is-open');
+            return;
+        }
 
-       header.js gắn .is-open (xem vòng lặp [data-hpop] ở đó) — file này chỉ
-       NGHE, không tự mở/đóng gì. MutationObserver chứ không nghe cú bấm:
-       ngăn kéo còn mở được bằng bàn phím và đóng được bằng Esc / nền mờ /
-       nút ✕, mà mọi lối ấy đều đi qua đúng một chỗ là lớp .is-open.
+        if (trangThai !== 'closed') return;
 
-       Nạp LẠI mỗi lần mở, không phải chỉ lần đầu — trừ khi đang có form dở.
-       Token CSRF và các bước OTP có hạn; một ngăn kéo mở ra sau nửa tiếng
-       với nội dung cũ là một form gửi đi sẽ hỏng.
-       ------------------------------------------------------------------ */
-    var quanSat = new MutationObserver(function () {
-        if (!cum.classList.contains('is-open')) return;
-        if (dangNap) return;
+        moBoi = nutMo || document.activeElement;
 
-        /* Có chữ khách đang gõ dở thì giữ nguyên — đóng nhầm rồi mở lại
-           không được phép xoá mất thứ họ vừa nhập. */
-        if (daNap && coChuDangGo()) return;
+        lop = khuon.content.firstElementChild.cloneNode(true);
+        goc.appendChild(lop);
 
-        nap('/auth');
-    });
+        than  = lop.querySelector('[data-auth-body]');
+        panel = lop.querySelector('[data-authov-panel]');
+
+        khoaCuon();
+
+        /* ÉP REFLOW — xem khối chú thích đầu file. Trình duyệt phải THẤY
+           trạng thái ngoài màn trước khi ta đổi sang trạng thái vào, nếu
+           không nó gộp hai bước và tấm hiện ra tại chỗ. */
+        void lop.offsetWidth;
+
+        trangThai = 'open';
+        lop.classList.add('is-open');
+
+        /* Tiêu điểm vào tấm (tabindex="-1") chứ không vào nút đầu tiên:
+           trình đọc màn hình đọc tên hộp thoại trước, rồi người dùng Tab
+           tới nút đầu — đúng thứ tự họ mong đợi ở một hộp thoại. */
+        if (panel) panel.focus();
+
+        document.addEventListener('keydown', onKeydown, true);
+
+        /* Nạp LẠI mỗi lần mở, trừ khi có chữ đang gõ dở: token CSRF và các
+           bước OTP đều có hạn, một tấm mở ra sau nửa tiếng với nội dung cũ
+           là một form gửi đi sẽ hỏng. */
+        if (!daNap || !coChuDangGo()) nap('/auth');
+    };
 
     var coChuDangGo = function () {
+        if (!than) return false;
+
         var os = than.querySelectorAll('input:not([type=hidden]), textarea');
+
         for (var i = 0; i < os.length; i++) {
             if (os[i].type === 'checkbox' || os[i].type === 'radio') {
                 if (os[i].checked !== os[i].defaultChecked) return true;
@@ -168,50 +278,150 @@
                 return true;
             }
         }
+
         return false;
     };
 
-    quanSat.observe(cum, { attributes: true, attributeFilter: ['class'] });
+    /* ──────────────────────────────────────────────────────────────────
+       ĐÓNG — ba pha: bỏ lớp, đợi transitionend, mới gỡ node
+       ────────────────────────────────────────────────────────────────── */
+    var huyHetGio = function () {
+        if (hetGio) {
+            window.clearTimeout(hetGio);
+            hetGio = null;
+        }
+    };
 
-    /* Liên kết trong tấm — lọc qua DUONG_TRONG_TAM khai ở đầu file. */
-    than.addEventListener('click', function (e) {
+    var goHan = function () {
+        if (trangThai !== 'closing' || !lop) return;
+
+        huyHetGio();
+
+        lop.removeEventListener('transitionend', onXongRa);
+        lop.remove();
+
+        lop = than = panel = null;
+        trangThai = 'closed';
+        daNap = false;
+
+        document.removeEventListener('keydown', onKeydown, true);
+        moKhoaCuon();
+
+        /* Trả tiêu điểm về đúng phần tử đã bấm để mở. Kiểm isConnected: sau
+           một lượt nạp ngầm, nút cũ có thể đã bị thay — lúc ấy focus() vào
+           một node mồ côi là mất tiêu điểm về <body>. */
+        if (moBoi && moBoi.isConnected) moBoi.focus();
+        moBoi = null;
+    };
+
+    var onXongRa = function (e) {
+        /* CHỈ nghe `transform` của chính tấm. Nền mờ cũng chạy transition
+           (opacity) và cũng bắn transitionend — nghe bừa thì node bị gỡ giữa
+           chừng lúc tấm còn đang trượt. */
+        if (e.propertyName !== 'transform') return;
+        if (panel && e.target !== panel) return;
+
+        goHan();
+    };
+
+    var dong = function () {
+        if (trangThai !== 'open' || !lop) return;
+
+        trangThai = 'closing';
+        lop.classList.remove('is-open');
+        lop.classList.add('is-closing');
+
+        lop.addEventListener('transitionend', onXongRa);
+
+        /* LƯỚI AN TOÀN. transitionend KHÔNG bắn khi: tấm bị ẩn giữa chừng,
+           người dùng đổi tab (trình duyệt dừng hoạt ảnh), hoặc hệ điều hành
+           đặt "giảm chuyển động" khiến thời lượng về ~0 ở một số bản. Không
+           có nhánh này thì node kẹt lại trong DOM và khoá cuộn không bao giờ
+           được trả — trang đứng chết, không cuộn được nữa. 600ms > 450ms của
+           hiệu ứng dài nhất. */
+        huyHetGio();
+        hetGio = window.setTimeout(goHan, 600);
+    };
+
+    /* ──────────────────────────────────────────────────────────────────
+       CÁC LỐI MỞ / ĐÓNG
+       ────────────────────────────────────────────────────────────────── */
+
+    /* Uỷ quyền từ document: thẻ mở nằm trong thanh đầu trang, mà thanh ấy
+       bị thay ruột ở vài luồng (đăng xuất, đổi giỏ) — handler gắn trực tiếp
+       sẽ chết theo. */
+    document.addEventListener('click', function (e) {
+        var el = e.target instanceof Element ? e.target : null;
+        if (!el) return;
+
+        var nutMo = el.closest('[data-authov-open]');
+
+        if (nutMo) {
+            /* Ctrl/Cmd/Shift/chuột giữa trên một <a> = ý muốn mở tab mới. */
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+
+            e.preventDefault();
+            mo(nutMo);
+            return;
+        }
+
+        if (el.closest('[data-authov-close]')) {
+            /* CHỈ nuốt cú bấm KHI TẤM ĐANG MỞ. Vài phần tử mang thuộc tính
+               này còn sống trên trang /auth mở bằng đường dẫn thường — ở đó
+               không có tấm nào để đóng, và chúng là liên kết THẬT (ví dụ
+               "Tiếp tục không đăng nhập" trỏ về trang chủ). Nuốt vô điều
+               kiện là biến chúng thành nút chết ở đúng trang ấy. */
+            if (trangThai !== 'open') return;
+
+            e.preventDefault();
+            dong();
+        }
+    });
+
+    /* ──────────────────────────────────────────────────────────────────
+       LIÊN KẾT VÀ FORM BÊN TRONG TẤM
+
+       Uỷ quyền từ document chứ không từ tấm: tấm bị gỡ và dựng lại mỗi lần
+       mở, nên handler gắn vào nó phải gắn lại mỗi lượt — và đó đúng là kiểu
+       rò rỉ listener mà đặc tả yêu cầu tránh. Một handler sống suốt đời
+       trang, lọc bằng closest(), thì không có gì để rò.
+       ────────────────────────────────────────────────────────────────── */
+    document.addEventListener('click', function (e) {
+        if (trangThai !== 'open' || !than) return;
+
         var a = e.target instanceof Element ? e.target.closest('a[href]') : null;
-        if (!a) return;
+        if (!a || !than.contains(a)) return;
 
-        /* Ctrl/Cmd/Shift/chuột giữa = mở tab mới, để trình duyệt lo. */
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
 
         var dich = new URL(a.href, window.location.href);
         if (dich.origin !== window.location.origin) return;
+
+        /* Danh sách CHỌN-VÀO: chỉ những đường máy chủ trả ra được ở dạng
+           mảnh VÀ vẫn thuộc luồng đăng nhập. ĐỪNG thêm /auth/google — nó
+           chuyển hướng sang tên miền Google (fetch vướng CORS, mà màn đồng ý
+           của Google cũng không có lý do gì sống trong một cái tấm). Nó phải
+           là điều hướng thật, nên nó rơi ra khỏi đây. */
         if (DUONG_TRONG_TAM.indexOf(dich.pathname) === -1) return;
 
         e.preventDefault();
         nap(dich.pathname + dich.search);
     });
 
-    /* ------------------------------------------------------------------
-       GỬI FORM NGAY TRONG NGĂN KÉO
+    document.addEventListener('submit', function (e) {
+        if (trangThai !== 'open' || !than) return;
 
-       Uỷ quyền từ thẻ bọc, không gắn vào từng form: ruột ngăn kéo bị thay
-       mới sau mỗi lượt nạp, nên handler gắn trực tiếp sẽ chết ngay sau đó.
-
-       FormData(form) lấy ĐÚNG những gì trình duyệt sẽ gửi — kể cả _token và
-       các ô ẩn. Không liệt kê tay trường nào, xem nguyên tắc đầu file.
-       ------------------------------------------------------------------ */
-    than.addEventListener('submit', function (e) {
         var form = e.target;
-        if (!(form instanceof HTMLFormElement)) return;
+        if (!(form instanceof HTMLFormElement) || !than.contains(form)) return;
 
-        /* Form dùng GET (nếu có) để nguyên cho trình duyệt: nó chỉ đổi địa
-           chỉ chứ không đổi gì phía máy chủ. */
+        /* Form GET để nguyên cho trình duyệt: nó chỉ đổi địa chỉ. */
         if ((form.method || 'get').toLowerCase() !== 'post') return;
 
         e.preventDefault();
 
         /* Nút submit vừa bấm có `name` thì giá trị của nó PHẢI đi kèm —
            FormData(form) không tự thêm, và vài form dùng chính nó để phân
-           biệt hành động. e.submitter không có ở trình duyệt cũ, nên có
-           kiểm tra trước. */
+           biệt hành động. */
         var data = new FormData(form);
         var nut = e.submitter;
         if (nut && nut.name) data.append(nut.name, nut.value);

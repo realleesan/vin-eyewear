@@ -39,6 +39,11 @@ $pw_min      = $pw_min      ?? null;
 $pw_required = $pw_required ?? false;
 $pw_id       = $pw_id       ?? null;
 $pw_err      = $pw_err      ?? false;
+/* Chỉ bước "nhập mật khẩu" của luồng hỏi định danh trước bật cờ này: ở đó
+   định danh đã gõ xong nên ô mật khẩu là ô trống duy nhất. ĐỪNG bật ở form
+   đăng ký — ô mật khẩu nằm giữa form, kéo tiêu điểm xuống đó là cuốn màn hình
+   qua mất mấy ô phía trên. */
+$pw_autofocus = $pw_autofocus ?? false;
 ?>
 
 <span class="authpw">
@@ -48,7 +53,8 @@ $pw_err      = $pw_err      ?? false;
            autocomplete="<?= e($pw_auto) ?>"
            placeholder="<?= e($pw_holder) ?>"
            <?= $pw_min !== null ? 'minlength="' . (int) $pw_min . '"' : '' ?>
-           <?= $pw_required ? 'required' : '' ?>>
+           <?= $pw_required ? 'required' : '' ?>
+           <?= $pw_autofocus ? 'autofocus' : '' ?>>
 
     <button type="button" class="authpw__eye" hidden
             aria-label="Hiện mật khẩu" aria-pressed="false">

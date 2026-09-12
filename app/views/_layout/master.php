@@ -237,6 +237,7 @@ if ($manhCua !== null) {
     <link rel="stylesheet" href="<?= asset('assets/css/components/buy-modal.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/confirm.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/floating.css') ?>">
+    <link rel="stylesheet" href="<?= asset('assets/css/components/auth-drawer.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/search.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/auth.css') ?>">
 
@@ -404,6 +405,25 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
     }
     ?>
 
+    <?php
+    /* ┌─ NGĂN KÉO ĐĂNG NHẬP — IN Ở CẤP <body>, KHÔNG PHẢI TRONG <header> ──
+       │ Một <template> rỗng cộng #modal-root; assets/js/auth-drawer.js nhân
+       │ bản vào đó lúc mở và gỡ hẳn khi đóng.
+       │
+       │ PHẢI Ở ĐÂY chứ không nằm trong thanh đầu trang: thanh là
+       │ `position: sticky` và có lúc mang `transform`, mà một tổ tiên có
+       │ transform biến mọi `position: fixed` con cháu thành "fixed so với
+       │ tổ tiên đó" — tấm sẽ neo vào thanh nav thay vì vào khung nhìn, và
+       │ còn bị `overflow` của thanh cắt cụt. Lý do đầy đủ ở đầu
+       │ _layout/auth-drawer.php.
+       │
+       │ Chỉ in khi CHƯA đăng nhập: đã vào được rồi thì icon tài khoản là
+       │ liên kết trơn tới /tai-khoan, không có gì để mở. */
+    if (!AuthMiddleware::check()) {
+        partial('_layout/auth-drawer');
+    }
+    ?>
+
     <?php /* Dải báo sau khi thêm vào giỏ — ở _layout/toast.php, vì chế độ
              mảnh ở đầu file cũng in nó. */ ?>
     <?php if (!empty($toast)): ?>
@@ -454,13 +474,13 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
                  File tự thoát khi không tìm thấy ô hoặc <datalist>, nên trang
                  khung rút gọn (checkout) không cần loại trừ gì. */ ?>
         <script src="<?= asset('assets/js/search-suggest.js') ?>" defer></script>
-        <?php /* Ngăn kéo đăng nhập — nạp ngầm /auth vào tấm bên phải thanh
-                 đầu trang. Cạnh header.js vì cùng lý do: icon tài khoản có
-                 mặt ở MỌI trang khung đầy đủ, không thuộc trang nào cả.
+        <?php /* Ngăn kéo đăng nhập — nhân bản <template id="authDrawerTpl">
+                 vào #modal-root lúc mở, gỡ hẳn khi đóng. Cạnh header.js vì
+                 cùng lý do: icon tài khoản có mặt ở MỌI trang khung đầy đủ,
+                 không thuộc trang nào cả.
 
-                 File tự thoát khi không thấy [data-auth-drawer], nên với
-                 khách ĐÃ đăng nhập (lúc ấy icon là <a> trơn, không có ngăn
-                 kéo) nó không làm gì. */ ?>
+                 File tự thoát khi không thấy khuôn (khách ĐÃ đăng nhập thì
+                 master.php không in nó ra), nên nó không làm gì ở đó. */ ?>
         <script src="<?= asset('assets/js/auth-drawer.js') ?>" defer></script>
         <script src="<?= asset('assets/js/floating.js') ?>" defer></script>
         <?php /* Mua hàng không tải lại trang. Nạp cho MỌI trang khung đầy đủ

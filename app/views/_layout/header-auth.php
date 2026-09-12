@@ -8,43 +8,34 @@
  * ═════════════════════════════════════════════════════════════════════════
  * HAI TRẠNG THÁI, VÀ CHỈ MỘT TRONG HAI CÓ NGĂN KÉO
  *
- *   đã đăng nhập  → <a href="/tai-khoan"> trơn, y như trước. Ngăn kéo không
- *                   có việc gì làm: khách đã vào được rồi.
- *   chưa đăng nhập → <a href="/auth"> mở NGĂN KÉO BÊN PHẢI chứa đúng trang
- *                   /auth, nạp ngầm.
+ *   đã đăng nhập  → <a href="/tai-khoan"> trơn. Ngăn kéo không có việc gì
+ *                   làm: khách đã vào được rồi.
+ *   chưa đăng nhập → <a href="/auth" data-authov-open> mở NGĂN KÉO chứa đúng
+ *                   trang /auth, nạp ngầm.
  *
  * ═════════════════════════════════════════════════════════════════════════
- * NGĂN KÉO KHÔNG CHỨA FORM NÀO CỦA RIÊNG NÓ — ĐỌC KỸ TRƯỚC KHI SỬA
+ * FILE NÀY CHỈ CÒN THẺ MỞ — TẤM Ở CHỖ KHÁC (12/09/2026)
  *
- * Khối chú thích ở _layout/header.php từ chối dựng ngăn kéo đăng nhập, với
- * lý do: bản mẫu đặt form đăng nhập/đăng ký cùng luồng Zalo OTP vào trong
- * ngăn kéo, mà luồng ấy ở đây đã là trang thật /auth — có CSRF, có trạng
- * thái lỗi, có bước OTP nhiều màn; dựng lại là hai bản sao sẽ lệch dần.
+ * Trước đây cả ngăn kéo (nền mờ + tấm + ruột) nằm ngay trong file này, tức
+ * NẰM TRONG <header>. Nay chỉ còn cái nút; khuôn của tấm in ở cấp <body> qua
+ * _layout/auth-drawer.php, và JS nhân bản nó vào #modal-root khi mở.
  *
- * Lý do ấy VẪN ĐÚNG, và cách làm dưới đây không vi phạm nó: ruột ngăn kéo
- * để TRỐNG trong HTML, rồi assets/js/auth-drawer.js nạp ngầm chính /auth
- * (header `X-Auth: 1`, xem nhánh trả mảnh ở _layout/master.php) và đổ vào.
- * Cùng view, cùng controller, cùng token, cùng mọi bước — không có bản thứ
- * hai nào để lệch.
+ * VÌ SAO PHẢI DỜI: thanh đầu trang là `position: sticky` và có lúc mang
+ * `transform`. Một tổ tiên có transform biến mọi `position: fixed` con cháu
+ * thành "fixed so với tổ tiên đó" — tấm neo vào thanh nav thay vì vào khung
+ * nhìn. Thanh còn có `overflow` ở vài nhánh, đủ để cắt cụt tấm. Lý do đầy đủ
+ * ở đầu _layout/auth-drawer.php.
  *
- * ĐỪNG gõ một <form> đăng nhập vào file này. Muốn đổi form thì sửa
- * app/views/auth/index.php; ngăn kéo tự ăn theo.
+ * ĐỪNG gõ một <form> đăng nhập vào file này, cũng đừng gõ vào khuôn kia:
+ * ruột ngăn kéo LÀ trang /auth nạp ngầm (cùng view, cùng controller, cùng
+ * token, cùng mọi bước). Muốn đổi form thì sửa app/views/auth/index.php.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * TẮT JAVASCRIPT VẪN ĐI ĐƯỢC
  *
  * Thẻ mở là <a href="/auth"> THẬT. Không có JS thì bấm vào là sang trang
- * /auth như trước khi có file này — không mất lối nào. header.js chặn cú
- * bấm nhờ [data-hpop-link]; auth-drawer.js lo phần nạp.
- *
- * ─────────────────────────────────────────────────────────────────────────
- * KHÔNG DÙNG .is-overlay
- *
- * Ô tìm kiếm và ngăn giỏ là tấm TRÀN BỀ NGANG xổ từ dưới thanh đầu trang
- * xuống, nên thanh phải đổi sang nền của tấm để hai khối liền nhau. Ngăn
- * kéo này trượt từ MÉP PHẢI và không giáp thanh theo chiều ngang — cho thanh
- * đổi màu ở đây là đổi một thứ chẳng dính gì tới nó. Vì thế header.js không
- * khai cờ nào cho .hpop--auth.
+ * /auth — không mất lối nào. Thuộc tính [data-authov-open] chỉ là chỗ bám
+ * cho auth-drawer.js.
  */
 ?>
 <?php if ($isLoggedIn): ?>
@@ -60,59 +51,15 @@
 
 <?php else: ?>
 
-<div class="hpop hpop--auth" data-hpop data-auth-drawer>
-
-    <?php /* [data-hpop-link] nói với header.js "trigger này là <a>, chặn cú
-             bấm giùm". Thiếu nó thì vòng lặp hpop bỏ qua (nó chỉ nhận
-             <button>) và ngăn kéo không bao giờ mở. */ ?>
     <a href="/auth"
-       class="hpop__trigger oa-header__btn"
-       data-hpop-trigger
-       data-hpop-link
+       class="oa-header__btn"
+       data-authov-open
+       aria-haspopup="dialog"
        aria-label="<?= e(t('account.login')) ?>">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" focusable="false">
             <circle cx="12" cy="8" r="4"/>
             <path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/>
         </svg>
     </a>
-
-    <?php /* Nền mờ — anh em với tấm, không nằm trong nó. Cùng lối ô tìm. */ ?>
-    <button type="button" class="hpop__scrim oa-scrim" data-hpop-close tabindex="-1" aria-hidden="true"></button>
-
-    <?php
-    /* ┌─ KHUNG CẮT — KHÔNG PHẢI THẺ TRANG TRÍ, ĐỪNG GỠ ────────────────────
-       │ Lúc nghỉ, tấm nằm ngoài mép phải khung nhìn (translateX(100%)). Một
-       │ phần tử `position: fixed` như thế VẪN được trình duyệt tính vào vùng
-       │ cuộn: đo được thanh cuộn ngang thừa đúng 520px trên MỌI trang.
-       │
-       │ `overflow-x: clip` trên <body> KHÔNG chữa được — đã thử: phần tử
-       │ fixed thoát khỏi khung cắt của tổ tiên. Nên tấm phải đổi sang
-       │ `position: absolute` và nằm trong đúng một khung fixed cỡ khung nhìn
-       │ có `overflow: hidden`; khung ấy là thẻ này.
-       │
-       │ Nó phủ kín màn hình nên PHẢI mang `pointer-events: none`, còn tấm
-       │ bên trong bật lại — nếu không nó nuốt mọi cú bấm của cả trang.
-       └──────────────────────────────────────────────────────────────────── */
-    ?>
-    <div class="authdrawer__clip">
-    <div class="hpop__panel authdrawer" role="dialog" aria-modal="true"
-         aria-label="<?= e(t('account.login')) ?>">
-
-        <button type="button" class="oa-close authdrawer__x" data-hpop-close
-                aria-label="<?= e(t('ui.close')) ?>">✕</button>
-
-        <?php
-        /* RUỘT TRỐNG LÀ CỐ Ý — auth-drawer.js đổ /auth vào đây ở lần mở đầu
-           tiên rồi giữ lại cho các lần sau.
-
-           `aria-live="polite"` để trình đọc màn hình biết có nội dung vừa
-           tới; `aria-busy` do JS bật/tắt quanh lượt nạp. */
-        ?>
-        <div class="authdrawer__body" data-auth-body aria-live="polite" aria-busy="false">
-            <p class="authdrawer__wait"><?= e(t('ui.loading')) ?></p>
-        </div>
-    </div>
-    </div>
-</div>
 
 <?php endif; ?>

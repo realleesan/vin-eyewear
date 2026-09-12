@@ -1,0 +1,266 @@
+/* ============================================================================
+   auth-drawer.css — NGĂN KÉO ĐĂNG NHẬP / ĐĂNG KÝ
+
+   Markup: app/views/_layout/auth-drawer.php  (một <template> ở cấp <body>)
+   JS:     assets/js/auth-drawer.js
+   Nội dung: chính trang /auth, nạp ngầm qua nhánh `X-Auth` ở master.php
+
+   ─────────────────────────────────────────────────────────────────────────────
+   BA LỚP RỜI NHAU, KHÔNG LỒNG TRONG NHAU
+
+     .authov            khung phủ khung nhìn, `pointer-events: none`
+       .authov__backdrop nền mờ            z-index 500
+       .authov__panel    tấm trượt          z-index 1500
+
+   Khung ngoài PHẢI có `overflow: hidden`. Lúc nghỉ tấm nằm ngoài mép phải
+   (translateX(100%)), mà một phần tử `position: fixed` như thế VẪN được tính
+   vào vùng cuộn của trang: đo được thanh cuộn ngang thừa đúng bằng bề ngang
+   tấm. `overflow-x: clip` trên <body> KHÔNG chữa được — phần tử fixed thoát
+   khỏi khung cắt của tổ tiên. Nên tấm là `absolute` nằm trong khung fixed này.
+
+   `pointer-events: none` ở khung ngoài và bật lại ở hai lớp con: khung phủ
+   kín màn hình, không tắt thì nó nuốt mọi cú bấm của cả trang trong quãng
+   ngắn giữa hai lần mở.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   BỐN TRẠNG THÁI, HAI LỚP
+
+     (không có trong DOM)  →  .authov            (vừa gắn, còn ngoài màn)
+                           →  .authov.is-open    (đã vào)
+                           →  .authov.is-closing (đang ra)
+                           →  (gỡ khỏi DOM)
+
+   JS ép một lượt reflow giữa bước gắn và bước thêm .is-open — không có nó thì
+   trình duyệt gộp hai trạng thái làm một và tấm hiện ra tại chỗ, không trượt.
+   Chi tiết ở đầu assets/js/auth-drawer.js.
+
+   ─────────────────────────────────────────────────────────────────────────────
+   CHỈ TRƯỢT BẰNG transform, KHÔNG BAO GIỜ ANIMATE `right`/`bottom`
+
+   `right` đổi từng khung hình buộc trình duyệt tính lại bố cục cả trang;
+   `transform` chỉ hợp thành lại một lớp đã vẽ sẵn. Đây là khác biệt giữa một
+   cú trượt mượt và một cú trượt giật trên máy yếu.
+   ============================================================================ */
+
+.authov {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   NỀN MỜ
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authov__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 500;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: rgba(31, 30, 29, .6);
+    cursor: pointer;
+    pointer-events: auto;
+
+    opacity: 0;
+    transition: opacity .45s cubic-bezier(.4, 0, .2, 1);
+}
+
+.authov.is-open .authov__backdrop {
+    opacity: 1;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TẤM — KHỔ MÁY TÍNH: NGĂN KÉO MÉP PHẢI
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authov__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1500;
+
+    width: min(768px, 100vw);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    background: #f3f4f6;
+    box-shadow: 0 0 8px rgba(0, 0, 0, .1), 0 0 16px rgba(0, 0, 0, .05);
+    pointer-events: auto;
+
+    transform: translateX(100%);
+    transition: transform .45s cubic-bezier(.4, 0, .2, 1);
+
+    /* Nói trước cho trình duyệt biết thuộc tính nào sẽ đổi để nó tách lớp
+       hợp thành riêng. Chỉ đặt ở đây — tấm sống ngắn (gắn khi mở, gỡ khi
+       đóng) nên không có chuyện một lớp hợp thành nằm lại vĩnh viễn. */
+    will-change: transform;
+}
+
+.authov.is-open .authov__panel {
+    transform: translateX(0);
+}
+
+/* Đang đóng: trả về đúng hướng đã vào. Không cần khai lại — bỏ .is-open là
+   luật gốc translateX(100%) tự áp, và transition vẫn chạy vì phần tử CHƯA bị
+   gỡ (JS đợi transitionend). Lớp .is-closing chỉ để JS và CSS con biết đang
+   ở pha ra; xem .authov.is-closing bên dưới. */
+.authov.is-closing {
+    /* Khoá mọi cú bấm trong pha ra: bấm thêm lần nữa lúc tấm đang trượt đi
+       là mở lại một tấm sắp bị gỡ khỏi DOM. */
+    pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   RUỘT
+
+   TẤM KHÔNG TỰ CUỘN — chỉ ruột cuộn. Nút ✕ nằm ngoài vùng cuộn nên nó đứng
+   yên ở góc, không trôi theo nội dung.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authov__head {
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 20px var(--edge) 0;
+}
+
+.authov__title {
+    font-size: var(--fs-title);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.authov__x {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--ink);
+    font-size: var(--fs-subtitle);
+    line-height: 1;
+    cursor: pointer;
+}
+
+.authov__x:hover {
+    opacity: .6;
+}
+
+.authov__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 24px var(--edge) 40px;
+}
+
+/* Ruột là chính view /auth, vốn dựng cho một TRANG rộng. Trong tấm 768px nó
+   cần một cột hẹp hơn và căn giữa, không thì hai ô nhập kéo dài hết bề ngang
+   và mắt phải chạy cả 700px cho một dòng chữ. */
+.authov__body {
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+.authov__wait {
+    padding: 40px 0;
+    color: var(--ink-3);
+    text-align: center;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   KHỔ ĐIỆN THOẠI — CÙNG MỘT PHẦN TỬ, ĐỔI THÀNH TẤM TRƯỢT TỪ ĐÁY
+
+   Cùng markup, cùng JS, cùng máy trạng thái: chỉ CSS đổi. Nhờ vậy đổi khổ
+   màn hình lúc tấm đang mở không phải gắn/gỡ gì — trạng thái mở là
+   `transform: none` ở cả hai khổ, còn hướng vào/ra do luật dưới đây quyết
+   định và nó đổi ngay khi @media đổi.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 767px) {
+    .authov__panel {
+        top: auto;
+        bottom: 0;
+        right: 0;
+        left: 0;
+
+        width: 100%;
+        height: auto;
+        max-height: 88vh;
+        max-height: 88dvh;
+        border-radius: 16px 16px 0 0;
+
+        transform: translateY(100%);
+        transition: transform .24s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .authov.is-open .authov__panel {
+        transform: translateY(0);
+    }
+
+    .authov__backdrop {
+        transition-duration: .24s;
+    }
+
+    .authov__head {
+        padding-top: 16px;
+    }
+
+    .authov__scroll {
+        padding-bottom: 32px;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BÓP TRANG /auth CHO VỪA CỘT HẸP
+
+   app/views/auth/index.php dựng một thẻ 1060px chia hai cột: ảnh thương
+   hiệu bên trái, form bên phải. Trong tấm này thì cột ảnh không còn chỗ.
+
+   MỌI BỘ CHỌN Ở ĐÂY ĐỀU BẮT ĐẦU BẰNG .authov__body — đừng rút gọn. Nhờ nó
+   mà trang /auth mở bằng đường dẫn thường vẫn nguyên dáng hai cột; luật này
+   chỉ áp cho bản nằm trong tấm.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.authov__body .authwrap {
+    min-height: 0;
+    padding: 0;
+    display: block;
+}
+
+.authov__body .authcard {
+    width: 100%;
+    max-width: none;
+    display: block;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+}
+
+/* Cột ảnh thương hiệu — bỏ hẳn ở bề ngang này. Nó là trang trí; form mới là
+   thứ khách mở ngăn kéo để dùng. */
+.authov__body .authcard__brand {
+    display: none;
+}
+
+.authov__body .authcard__panel {
+    width: 100%;
+    max-width: none;
+    padding: 0;
+}
