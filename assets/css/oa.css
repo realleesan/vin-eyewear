@@ -519,7 +519,7 @@ ol[role="list"],
    dải hàng, không phải tiêu đề của trang. */
 .oa-band-title {
     font-size: var(--fs-h);
-    font-weight: 400;
+    font-weight: 600;
     letter-spacing: var(--ls-tight);
     text-transform: uppercase;
 }
@@ -2330,21 +2330,32 @@ textarea.oa-field {
     padding: 80px 0 96px;
 }
 
+/* Tiêu đề băng căn GIỮA (12/09/2026, theo yêu cầu chủ dự án). Khối này từng
+   là "tiêu đề trên, liên kết Xem thêm ngay dưới" xếp dọc căn trái; liên kết
+   đã dời xuống .oa-band__foot nên ở đây chỉ còn một dòng tiêu đề. */
 .oa-band__head {
     padding: 0 var(--edge);
     display: flex;
     flex-direction: column;
     gap: 6px;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
 }
 
-.oa-band__more {
-    font-size: var(--fs-body);
-    letter-spacing: var(--ls-tight);
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+/* Chân băng: đúng một nút "Xem tất cả", căn giữa.
+
+   48px trên, KHÔNG có đệm dưới: .oa-band đã mang 96px đệm đáy, cộng thêm ở
+   đây là đẩy hai băng xa nhau tới mức chúng thôi đọc ra là một dải liên tục. */
+.oa-band__foot {
+    display: flex;
+    justify-content: center;
+    padding: 48px var(--edge) 0;
 }
+
+/* .oa-band__more nay chỉ là một .oa-btn — dáng nút lấy nguyên từ đó. Lớp này
+   giữ lại làm mốc tìm kiếm và chỗ để khác biệt (hiện chưa có khác biệt nào);
+   ĐỪNG khai lại chiều cao, viền hay bo góc ở đây, nếu không nút này sẽ lệch
+   khỏi mọi nút khác của site vào đúng lần ai đó sửa .oa-btn. */
 
 /* Lưới trong băng có thêm khoảng thở phía trên so với lưới trần */
 .oa-band .oa-grid {
@@ -3656,6 +3667,10 @@ body.is-search-open {
 
     .oa-band .oa-grid {
         padding-top: 40px;
+    }
+
+    .oa-band__foot {
+        padding-top: 32px;
     }
 
     .oa-narrow {

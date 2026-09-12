@@ -48,9 +48,10 @@ $bands = [
     <?php if ($band['items'] === []) { continue; } ?>
 
     <section class="oa-band">
+        <?php /* Tiêu đề đứng MỘT MÌNH giữa băng. Lối sang trang danh mục đã
+                 dời xuống chân băng — xem khối .oa-band__foot ngay dưới lưới. */ ?>
         <div class="oa-band__head">
             <h2 class="oa-band-title"><?= e($band['title']) ?></h2>
-            <a class="oa-band__more" href="<?= e($band['more']) ?>"><?= e(t('home.band.more')) ?></a>
         </div>
 
         <?php /* <ul role="list"> chứ không <div>: đây là một DANH SÁCH hàng hoá,
@@ -77,6 +78,23 @@ $bands = [
                 ]); ?>
             <?php endforeach; ?>
         </ul>
+
+        <?php
+        /* ─────────────────────────────────────────────────────────────────
+           "XEM TẤT CẢ" — CUỐI BĂNG, CĂN GIỮA (12/09/2026, theo yêu cầu chủ
+           dự án). Trước đây nó nằm ngay dưới tiêu đề, ở đầu băng.
+
+           Chỗ này đúng hơn về luồng đọc: người ta xem hết bốn thẻ rồi mới
+           nảy ra ý "còn gì nữa không" — và lúc ấy mắt đang ở ĐÁY băng, chứ
+           không phải quay ngược lên đầu.
+
+           Dùng .oa-btn, tức đúng cái nút viên của cả site, chứ không dựng
+           dáng nút thứ hai ở đây. .oa-band__more chỉ còn giữ phần khác biệt
+           (không có), để lần sau ai sửa nút của site thì nút này đi theo. */
+        ?>
+        <div class="oa-band__foot">
+            <a class="oa-btn oa-band__more" href="<?= e($band['more']) ?>"><?= e(t('home.band.all')) ?></a>
+        </div>
     </section>
 
 <?php endforeach; ?>

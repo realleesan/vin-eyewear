@@ -135,7 +135,7 @@ return [
     // ── Trang chủ: bốn băng hàng + khối cửa hàng ─────────────────────────
     'home.band.new'       => 'Sản phẩm mới về',
     'home.band.best'      => 'Sản phẩm bán chạy',
-    'home.band.more'      => 'Xem thêm',
+    'home.band.all'       => 'Xem tất cả',
     'home.store.eyebrow'  => 'Ghé thăm cửa hàng',
     'home.store.title'    => 'Gặp chúng tôi tại cửa hàng',
     'home.store.lead'     => 'Hai cơ sở tại Hà Nội, mở cửa cả tuần. Đo khúc xạ miễn phí và thử kính trực tiếp, kể cả khi bạn chưa mua.',

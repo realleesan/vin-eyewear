@@ -130,7 +130,7 @@ return [
     // ── Home: four product bands + store block ──────────────────────────
     'home.band.new'       => 'New arrivals',
     'home.band.best'      => 'Bestsellers',
-    'home.band.more'      => 'More',
+    'home.band.all'       => 'View all',
     'home.store.eyebrow'  => 'Visit a store',
     'home.store.title'    => 'Meet us in store',
     'home.store.lead'     => 'Two stores in Hanoi, open all week. Free eye tests and in-person fittings, even if you are not buying yet.',
