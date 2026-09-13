@@ -601,7 +601,10 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         // Hộp thoại hỏi lại trước khi xoá dòng giỏ hàng. Thiếu file này thì
         // mỗi nút xoá vẫn còn onclick="return confirm(...)" của trình duyệt —
         // xấu hơn, nhưng khách vẫn được hỏi. Xem confirm-dialog.js.
-        'cart/index'     => 'confirm-dialog.js',
+        /* confirm-dialog: hộp hỏi lại trước khi bỏ một món khỏi giỏ.
+           cart.js: đổi ô số lượng là gửi form luôn. Thiếu file nào thì phần
+           việc của nó lùi về bản không-JS — xem chú thích đầu mỗi file. */
+        'cart/index'     => ['confirm-dialog.js', 'cart.js'],
     ];
 
     foreach ((array) ($pageScripts[$viewName ?? ''] ?? []) as $js) {

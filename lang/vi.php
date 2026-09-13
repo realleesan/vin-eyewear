@@ -106,6 +106,32 @@ return [
     'cart.voucher_ph'       => 'Nhập mã giảm giá',
     'cart.voucher_off'      => 'Gỡ mã',
 
+    /* ── Trang giỏ hàng dựng theo "Cart Screen.dc.html" (13/09/2026) ──
+       Bản thiết kế viết bằng tiếng Anh và IN HOA; ở đây giữ đúng dáng ấy
+       (in hoa là do CSS, không phải do chữ gõ hoa). */
+    'cart.tab_bag'          => 'GIỎ HÀNG',
+    'cart.tab_bag_sr'       => 'sản phẩm trong giỏ',
+    'cart.tab_wish'         => 'ĐÃ LƯU',
+    'cart.tab_wish_sr'      => 'sản phẩm đã lưu',
+    'cart.close'            => 'Đóng giỏ hàng',
+    'cart.qty'              => 'Số lượng',
+    'cart.qty_go'           => 'Cập nhật',
+    'cart.remove'           => 'Bỏ khỏi giỏ',
+    'cart.confirm_title'    => 'Bỏ khỏi giỏ?',
+    'cart.wish_on'          => 'Lưu sản phẩm',
+    'cart.wish_off'         => 'Bỏ khỏi danh sách đã lưu',
+    'cart.subtotal_plain'   => 'Tạm tính',
+    'cart.free'             => 'MIỄN PHÍ',
+    'cart.tax'              => 'Thuế',
+    'cart.tax_at_checkout'  => 'TÍNH KHI THANH TOÁN',
+    'cart.checkout_short'   => 'THANH TOÁN',
+    'cart.keep_shopping_caps' => 'TIẾP TỤC MUA SẮM',
+    'cart.faq_ship'         => 'VẬN CHUYỂN & ĐỔI TRẢ',
+    'cart.faq_ship_body'    => 'Đơn từ :n được miễn phí vận chuyển; dưới mức đó phí là :fee. Điều kiện đổi trả và bảo hành xem đầy đủ ở trang Chính sách.',
+    'cart.faq_ship_body_flat' => 'Phí vận chuyển :fee cho mọi đơn. Điều kiện đổi trả và bảo hành xem đầy đủ ở trang Chính sách.',
+    'cart.faq_pay'          => 'HÌNH THỨC THANH TOÁN',
+    'cart.faq_pay_body'     => 'Thanh toán khi nhận hàng, chuyển khoản ngân hàng hoặc quét mã QR. Chọn hình thức ở bước thanh toán.',
+
     // ── Trang chủ ────────────────────────────────────────────────────────
     'home.see_all'        => 'Xem tất cả →',
     'home.strip.prev'     => 'Sản phẩm trước',

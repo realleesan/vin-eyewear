@@ -1,442 +1,284 @@
 <?php
 
 /**
- * cart/index.php — giỏ hàng (/gio-hang)
+ * cart/index.php — trang giỏ hàng /gio-hang
  *
- * Dựng theo "Vin Eyewear Cart.dc.html" (Claude Design):
+ * Dựng 1:1 từ "Cart Screen.dc.html" (Claude Design, 13/09/2026).
  *
- *   tiêu đề trần (không khối nền tối, không breadcrumb)
- *   → hai cột: danh sách dòng hàng | khối tóm tắt 380px dính theo cuộn
- *   thanh công cụ "Chọn tất cả" nằm trên cùng của cột trái
+ * ═════════════════════════════════════════════════════════════════════════════
+ * BẢN NÀY ĐÃ BỎ NĂM THỨ SO VỚI BẢN TRƯỚC — chủ dự án chốt "giống design tuyệt
+ * đối". Ghi ra đây vì cả năm đều còn nguyên phần xử lý ở máy chủ, và người đọc
+ * file này sau sẽ tưởng chúng chưa từng tồn tại:
  *
- * CSS: assets/css/cart.css
+ *   1. Ô TICK TỪNG DÒNG (`.citem__pick`, /gio-hang/chon-tat-ca, /gio-hang/xoa-chon)
+ *      Cờ `selected` VẪN sống và vẫn quyết định đơn hàng. Bù lại: mở trang giỏ
+ *      là tick lại tất cả — xem khối chú thích dài trong CartController::index().
+ *      ⚠ Đây là chỗ nguy hiểm nhất của đợt đổi này. Đọc khối ấy trước khi đụng.
+ *
+ *   2. Ô NHẬP MÃ GIẢM GIÁ (`.cvou`, POST /gio-hang/ma)
+ *      Không mất đường dùng mã: TRANG THANH TOÁN có ô riêng (POST
+ *      /thanh-toan/ma, xem .covou trong order/checkout.php). Mã đã áp vẫn được
+ *      applyVoucher() tính vào tổng như cũ.
+ *
+ *   3. DẢI "MUA THÊM X ĐỂ MIỄN PHÍ SHIP" (`.csum__nudge`)
+ *   4. GÓI TRÒNG KÈM + SỐ ĐO MẮT trên mỗi dòng (`.clens`)
+ *   5. CẢNH BÁO GIÁ ĐÃ ĐỔI / KHÔNG ĐỦ TỒN KHO (`.citem__pricechg`, `.citem__warn`)
+ *      Máy chủ vẫn kiểm tồn kho lúc đặt hàng — khách chỉ không thấy trước nữa.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * KHÔNG MỘT DÒNG JAVASCRIPT NÀO
+ * MỘT CHỖ CỐ Ý KHÔNG CHÉP THEO DESIGN: DÒNG "SHIPPING — FREE"
  *
- * Bản thiết kế giữ trạng thái tick, số lượng và mã giảm giá trong state của
- * trình duyệt. Ở đây tất cả nằm trong session phía server, và mỗi nút là một
- * nút gửi <form> thật — tick, dấu −, dấu +, thùng rác, áp mã.
+ * Bản thiết kế in cứng chữ FREE. Cửa hàng này CÓ thu phí ship khi đơn dưới
+ * ngưỡng (config app.shipping_fee / app.free_shipping_threshold), nên in FREE
+ * lên đó là nói sai một con số tiền. Ô ấy giữ nguyên vị trí, cỡ chữ, cách canh
+ * của design — chỉ thay chữ bằng con số thật, và "MIỄN PHÍ" khi nó thật sự
+ * bằng không.
  *
- * Lý do không phải là "ngại viết JS": mọi thao tác ở trang này đều ĐỔI TRẠNG
- * THÁI, nên đằng nào cũng phải là POST kèm token CSRF. Làm bằng form thì trang
- * chạy đúng cả khi JS hỏng, và không có đường nào để giá tiền bị sửa ở client.
- *
- * MỘT <form> CHO MỖI DÒNG, BỐN NÚT BÊN TRONG
- * HTML không cho lồng <form> vào nhau, mà bản thiết kế đặt cả bốn nút trên
- * cùng một hàng. Nên mỗi dòng là một form duy nhất, phân biệt bằng nút nào
- * được bấm (`name="act"`) — xem CartController::update().
+ * ⚠ ĐỪNG đổi lại thành chữ FREE cứng cho "giống mẫu".
  * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * Nhận từ controller: xem CartController::index().
  */
 
-$count = count($lines);
+$soMon = 0;
+
+foreach ($lines as $line) {
+    $soMon += (int) $line['quantity'];
+}
+
+$hoiXoaMon = static fn (string $ten): string => t('cart.confirm_one', [':name' => $ten]);
 ?>
 
 <section class="cart">
 
-    <div class="cart__head">
-        <h1 class="cart__title"><?= e(t('cart.title')) ?></h1>
-        <?php /* HAI CHUỖI NÀY TỪNG BỊ GÕ CỨNG BẰNG TIẾNG VIỆT, không đi qua t().
-                 Hệ quả: chọn English thì màn giỏ rỗng đọc ra "Cart" → "Chưa có
-                 sản phẩm nào" → "Your cart is empty" → "KEEP SHOPPING", tức là
-                 đổi ngôn ngữ hai lần trong bốn dòng.
+    <?php /* ┌─ HAI TAB + NÚT ĐÓNG ──────────────────────────────────────────
+             │ BAG là tab đang đứng (nền xám), WISHLIST là liên kết sang mục
+             │ "Đã lưu" của trang tài khoản — nơi danh sách ấy đã sống từ
+             │ 12/09/2026. Không dựng trang thứ hai cho cùng một danh sách.
+             │
+             │ ✕ trả về trang khách vừa rời, không phải một trang cố định:
+             │ giỏ hàng mở ra từ khắp nơi trong site. */ ?>
+    <div class="ctabs">
+        <span class="ctabs__on">
+            <?= e(t('cart.tab_bag')) ?><sup><?= (int) $soMon ?><span class="sr-only"> <?= e(t('cart.tab_bag_sr')) ?></span></sup>
+        </span>
 
-                 Khoá riêng cho dòng dẫn chứ không dùng lại cart.empty_title:
-                 dòng dẫn và tiêu đề trạng thái rỗng đứng cách nhau vài trăm
-                 pixel trên cùng một màn, nói y hệt nhau là thừa. */ ?>
-        <p class="cart__lead">
-            <?= e($count > 0
-                ? t('cart.lead_count', [':n' => $count])
-                : t('cart.lead_empty')) ?>
-        </p>
+        <a class="ctabs__off" href="/tai-khoan?muc=da-luu">
+            <?= e(t('cart.tab_wish')) ?><sup><?= (int) $wishCount ?><span class="sr-only"> <?= e(t('cart.tab_wish_sr')) ?></span></sup>
+        </a>
+
+        <a class="ctabs__x" href="/san-pham/gong-kinh" aria-label="<?= e(t('cart.close')) ?>">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                 stroke-width="1.3" aria-hidden="true">
+                <line x1="2" y1="2" x2="14" y2="14"></line>
+                <line x1="14" y1="2" x2="2" y2="14"></line>
+            </svg>
+        </a>
     </div>
 
-    <?php if ($success !== null): ?>
-        <p class="cart__flash cart__flash--ok" role="status"><?= e($success) ?></p>
-    <?php endif; ?>
-    <?php if ($error !== null): ?>
-        <p class="cart__flash cart__flash--err" role="alert"><?= e($error) ?></p>
-    <?php endif; ?>
-
-    <?php
-    /* ─────────────────────────────────────────────────────────────────────────
-       DẢI CẢNH BÁO SAU KHI PHIÊN HẾT HẠN — Q14.2, chốt 04/09/2026
-
-       Giỏ hàng được GIỮ LẠI khi phiên đăng nhập hết hạn. Nhưng giữ lại mà
-       không nói gì là chỗ sinh chuyện: một giỏ để qua đêm rồi thanh toán ở một
-       mức giá khác, hoặc với một món đã hết hàng, mà khách chỉ biết ở bước
-       cuối — đó là cách chắc chắn nhất để mất niềm tin.
-
-       Ba câu, không phải một, vì ba tình huống khác nhau:
-         · phiên vừa hết hạn        -> giải thích vì sao phải đăng nhập lại
-         · có dòng đổi giá          -> nói bao nhiêu dòng, chi tiết ở từng dòng
-         · có dòng hết / thiếu hàng -> như trên
-
-       Chỉ hiện khi CÓ chuyện. Một dải "mọi thứ vẫn ổn" thường trực là thứ
-       người ta thôi đọc sau lần thứ ba.
-       ───────────────────────────────────────────────────────────────────────── */
-    $canhBao = [];
-
-    if (!empty($quaPhien)) {
-        /* Câu này ĐÃ ĐỔI 07/09/2026. Trước đây nó hứa "giỏ hàng vẫn được giữ
-           nguyên" và trang bên dưới hiện đúng giỏ ấy. Nay giỏ được cất vào
-           ngăn của tài khoản (core/GioHangPhien.php) nên bên dưới là giỏ
-           trống — giữ nguyên câu cũ là nói sai ngay giữa màn hình. */
-        $canhBao[] = 'Phiên đăng nhập đã hết hạn. Giỏ hàng của bạn vẫn được giữ — '
-                   . 'đăng nhập lại để xem tiếp.';
-    }
-
-    if (!empty($soDoiGia)) {
-        $canhBao[] = sprintf(
-            '%d sản phẩm đã thay đổi giá kể từ lúc bạn thêm vào giỏ — xem ghi chú ở từng dòng.',
-            (int) $soDoiGia
-        );
-    }
-
-    if (!empty($soHetHang)) {
-        $canhBao[] = sprintf(
-            '%d sản phẩm không còn đủ tồn kho.',
-            (int) $soHetHang
-        );
-    }
-    ?>
-
-    <?php if ($canhBao !== []): ?>
-        <div class="cart__notice" role="status">
-            <?php foreach ($canhBao as $cau): ?>
-                <p class="cart__notice-line"><?= e($cau) ?></p>
-            <?php endforeach; ?>
-        </div>
+    <?php /* Dải báo của thao tác vừa rồi. KHÔNG có trong bản thiết kế, và vẫn
+             giữ: nó là câu trả lời cho "vừa bấm xoá thì chuyện gì xảy ra".
+             Chỉ hiện khi có việc gì đó vừa xảy ra, nên trang ở trạng thái
+             thường vẫn đúng y mẫu. */ ?>
+    <?php if ($success !== null || $error !== null): ?>
+        <p class="cmsg<?= $error !== null ? ' is-err' : '' ?>" role="status">
+            <?= e($error ?? $success) ?>
+        </p>
     <?php endif; ?>
 
-    <?php if ($lines === []): ?>
+    <div class="cmain">
 
-        <div class="cart__empty">
-            <span class="cart__empty-ring" aria-hidden="true">
-                <?php /* currentColor, KHÔNG phải #b0736a. Mã màu cũ là một sắc hồng
-                         đất gõ cứng — nó không nằm trong bảng token nào, và bảng
-                         màu trang khách chỉ có đen, xám và ĐÚNG MỘT sắc crimson
-                         dành riêng cho giá khuyến mãi. Một icon giỏ hàng màu hồng
-                         đất là chỗ duy nhất trên site phá quy tắc đó. */ ?>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M2.5 4h2l2.2 11h11.1l2.2-8H6"></path>
-                    <circle cx="8.5" cy="20" r="1.6"></circle>
-                    <circle cx="16.5" cy="20" r="1.6"></circle>
-                </svg>
-            </span>
-            <span class="cart__empty-title"><?= e(t('cart.empty_title')) ?></span>
-            <a class="cart__empty-cta" href="/san-pham/gong-kinh"><?= e(t('cart.keep_shopping')) ?></a>
-        </div>
+        <!-- ══════════ DANH SÁCH ══════════ -->
+        <section class="clist" aria-label="<?= e(t('cart.title')) ?>">
 
-    <?php else: ?>
+            <?php if ($lines === []): ?>
+                <p class="cempty"><?= e(t('cart.empty_title')) ?></p>
+            <?php endif; ?>
 
-        <div class="cart__grid">
+            <?php foreach ($lines as $line): ?>
+                <?php
+                $p    = $line['product'];
+                $slug = '/san-pham/' . rawurlencode($p['slug']);
 
-            <!-- ══════════ CỘT DÒNG HÀNG ══════════ -->
-            <div class="cart__lines">
+                /* Dòng "phiên bản": nhãn biến thể nếu có, không thì ghép màu và
+                   chất liệu — cùng phép với bản trước. */
+                $variant = $line['variant'] !== null
+                    ? $line['variant']['label'] . ($line['variant']['note'] ? ' · ' . $line['variant']['note'] : '')
+                    : implode(' · ', array_filter([$p['color'] ?? null, $p['material'] ?? null]));
 
-                <div class="cbar">
-                    <form method="post" action="/gio-hang/chon-tat-ca">
-                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                        <button type="submit" class="cbar__all">
-                            <!-- Ô tick là một <span> chứ không phải <input
-                                 type=checkbox>: nó KHÔNG lưu trạng thái ở client,
-                                 mà gửi lên server rồi vẽ lại theo session. Dùng
-                                 checkbox thật ở đây sẽ có một khoảnh khắc ô đã
-                                 tick nhưng tổng tiền chưa đổi. aria-pressed nói
-                                 đúng trạng thái đó cho trình đọc màn hình. -->
-                            <span class="cbox<?= $allSelected ? ' is-on' : '' ?>" aria-hidden="true">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4 12.5l5.5 5.5L20 7"></path>
+                /* Trần số lượng của ĐÚNG dòng này. Bản thiết kế vẽ năm mục 1–5;
+                   ở đây danh sách dài tới tồn kho thật (chặn trên bằng
+                   ABS_MAX_QTY), vì một giỏ đang có sáu chiếc mà ô chọn chỉ tới
+                   năm thì không còn cách nào giữ nguyên số đang có. */
+                $tran = (int) min($maxQty, max(1, $line['stock']));
+                $daCo = !empty($daLuu[(string) $p['id']]);
+                ?>
+                <article class="citem">
+
+                    <a class="citem__thumb" href="<?= e($slug) ?>" tabindex="-1" aria-hidden="true">
+                        <?php /* asset() bọc ngoài — xem _layout/product-card.php. */ ?>
+                        <img src="<?= e(asset(ProductModel::image($p))) ?>" alt=""
+                             width="220" height="110" loading="lazy" decoding="async">
+                    </a>
+
+                    <div class="citem__body">
+                        <span class="citem__name notranslate" translate="no" lang="vi">
+                            <a href="<?= e($slug) ?>"><?= e($p['name']) ?></a>
+                        </span>
+
+                        <?php if ($variant !== ''): ?>
+                            <span class="citem__variant"><?= e($variant) ?></span>
+                        <?php endif; ?>
+
+                        <span class="citem__price"><?= money($line['unitPrice']) ?></span>
+
+                        <?php /* ┌─ SỐ LƯỢNG ────────────────────────────────
+                                 │ Bản thiết kế là một <select> TRONG SUỐT phủ
+                                 │ lên con số và mũi tên — trông như chữ thường
+                                 │ nhưng bấm đâu cũng mở được danh sách.
+                                 │
+                                 │ Có JS thì đổi ô là gửi luôn (assets/js/cart.js).
+                                 │ KHÔNG có JS thì nút "Cập nhật" ngay dưới hiện
+                                 │ ra — xem `html.js .cqty__go` trong cart.css.
+                                 │ Cùng lối với ô chọn của khu quản trị. */ ?>
+                        <form class="cqty" method="post" action="/gio-hang/sua">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="key" value="<?= e($line['key']) ?>">
+
+                            <span class="cqty__label" id="qtyl-<?= e($line['key']) ?>"><?= e(t('cart.qty')) ?></span>
+
+                            <span class="cqty__pick">
+                                <select name="quantity" data-cart-qty
+                                        aria-labelledby="qtyl-<?= e($line['key']) ?>">
+                                    <?php for ($i = 1; $i <= $tran; $i++): ?>
+                                        <option value="<?= $i ?>"<?= $i === (int) $line['quantity'] ? ' selected' : '' ?>><?= $i ?></option>
+                                    <?php endfor; ?>
+                                </select>
+                                <span class="cqty__num" aria-hidden="true"><?= (int) $line['quantity'] ?></span>
+                                <svg class="cqty__caret" width="12" height="8" viewBox="0 0 12 8" fill="none"
+                                     stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+                                    <path d="M1 1l5 5 5-5"></path>
                                 </svg>
                             </span>
-                            <span class="cbar__label"><?= e(t('cart.select_all', [':n' => (string) $count])) ?></span>
-                        </button>
-                    </form>
 
-                    <?php
-                    /* MỘT câu hỏi, hai đường dùng. data-confirm cho hộp thoại
-                       trên trang; onsubmit là lớp dự phòng khi không có JS —
-                       confirm-dialog.js gỡ nó ra khi đã sẵn sàng thay thế.
-                       Cùng một biến nên hai đường không thể lệch chữ. */
-                    $hoiXoaChon = t('cart.confirm_selected');
-                    ?>
-                    <form method="post" action="/gio-hang/xoa-chon"
-                          data-confirm="<?= e($hoiXoaChon) ?>"
-                          data-confirm-title="Xoá mục đã chọn?"
-                          data-confirm-ok="Xoá"
-                          onsubmit="return confirm('<?= e($hoiXoaChon) ?>')">
-                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                        <button type="submit" class="cbar__wipe"><?= e(t('cart.remove_selected')) ?></button>
-                    </form>
-                </div>
+                            <button type="submit" class="cqty__go"><?= e(t('cart.qty_go')) ?></button>
+                        </form>
 
-                <?php foreach ($lines as $line): ?>
-                    <?php
-                    $p    = $line['product'];
-                    $slug = '/san-pham/' . rawurlencode($p['slug']);
-
-                    /* GỌI TÊN MÓN SẮP XOÁ. Câu cũ ("sản phẩm này") đúng với
-                       hộp confirm() của trình duyệt — nó bật lên ngay dưới con
-                       trỏ nên "này" là rõ. Hộp thoại trên trang thì nằm giữa
-                       màn hình, che mất chính cái dòng vừa bấm, và giỏ có năm
-                       dòng thì "này" không còn chỉ vào đâu cả. */
-                    $hoiXoaMon = t('cart.confirm_one', [':name' => $p['name']]);
-                    /* Dòng mô tả phiên bản. Ưu tiên NHÃN BIẾN THỂ khách đã chọn
-                       (vd "Chiết suất 1.61") — đó mới là thứ phân biệt hai dòng
-                       cùng một mặt hàng trong giỏ. Không có biến thể thì ghép
-                       từ màu và chất liệu như trước. */
-                    $variant = $line['variant'] !== null
-                        ? $line['variant']['label'] . ($line['variant']['note'] ? ' · ' . $line['variant']['note'] : '')
-                        : implode(' · ', array_filter([$p['color'] ?? null, $p['material'] ?? null]));
-                    ?>
-                    <form class="citem<?= $line['available'] ? '' : ' is-out' ?>"
-                          method="post" action="/gio-hang/sua">
-                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                        <!-- 'key' chứ không phải product_id: cùng một mặt hàng có
-                             thể nằm trong giỏ nhiều lần với biến thể khác nhau. -->
-                        <input type="hidden" name="key" value="<?= e($line['key']) ?>">
-
-                        <button type="submit" name="act" value="chon" class="citem__pick"
-                                aria-pressed="<?= $line['selected'] ? 'true' : 'false' ?>">
-                            <span class="cbox<?= $line['selected'] ? ' is-on' : '' ?>" aria-hidden="true">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M4 12.5l5.5 5.5L20 7"></path>
-                                </svg>
-                            </span>
-                            <span class="sr-only"><?= e(t('cart.pick_sr', [':name' => $p['name']])) ?></span>
-                        </button>
-
-                        <a class="citem__thumb" href="<?= e($slug) ?>" tabindex="-1" aria-hidden="true">
-                            <?php /* asset() bọc ngoài — xem _layout/product-card.php. */ ?>
-                            <img src="<?= e(asset(ProductModel::image($p))) ?>" alt=""
-                                 width="96" height="96" loading="lazy" decoding="async">
-                        </a>
-
-                        <div class="citem__body">
-                            <span class="citem__brand"><?= e($p['brand'] ?? 'Vin Eyewear') ?></span>
-                            <h2 class="citem__name notranslate" translate="no" lang="vi"><a href="<?= e($slug) ?>"><?= e($p['name']) ?></a></h2>
-                            <?php if ($variant !== ''): ?>
-                                <span class="citem__variant"><?= e($variant) ?></span>
-                            <?php endif; ?>
-
-                            <?php if ($line['lens'] !== null || $line['rx'] !== null): ?>
-                                <?php /* Tròng cắt kèm. Hiện thành một dòng RIÊNG có
-                                         nền, không gộp vào dòng phiên bản: nó là
-                                         phần lớn nhất của khoản chênh giá, và số đo
-                                         mắt là thứ khách phải soát lại được trước
-                                         khi đặt. Xem CartController::add(). */ ?>
-                                <span class="clens">
-                                    <?php if ($line['lens'] !== null): ?>
-                                        <span class="clens__name">
-                                            + <?= e($line['lens']['name']) ?>
-                                            <span class="clens__price">
-                                                <?php /* THIẾU GIÁ LÀ LỖI DỮ LIỆU, không phải một
-                                                         bước bán hàng — FR-GH-09. Chỉ dòng giỏ cũ
-                                                         mới rơi vào đây; hộp mua hàng nay không
-                                                         cho chọn gói chưa có giá nữa. In "0₫" thì
-                                                         khách đọc ra thành "tròng miễn phí". */ ?>
-                                                <?= !empty($line['lens']['thieu_gia'])
-                                                    ? 'Liên hệ cửa hàng'
-                                                    : money((int) $line['lens']['price']) ?>
-                                            </span>
-                                        </span>
-                                    <?php endif; ?>
-                                    <?php /* Số đo hiện KỂ CẢ khi không có gói tròng kèm:
-                                             tròng rời cũng đi qua nhánh "theo số đo"
-                                             nhưng không cộng thêm gói nào, mà con số vẫn
-                                             là thứ quyết định hàng giao ra. */ ?>
-                                    <span class="clens__rx">
-                                        <?= $line['rx'] !== null
-                                            ? e($line['rx'])
-                                            : 'Chưa có số đo — đo tại cửa hàng' ?>
-                                    </span>
-                                </span>
-                            <?php endif; ?>
-
-                            <span class="citem__unit"><?= money($line['unitPrice']) ?></span>
-
-                            <?php /* GIÁ ĐÃ ĐỔI KỂ TỪ LÚC BỎ VÀO GIỎ — Q14.2.
-
-                                     In cả giá cũ chứ không chỉ nói "giá đã
-                                     thay đổi": khách cần tự thấy chênh bao
-                                     nhiêu để quyết định, và một câu cảnh báo
-                                     không kèm con số chỉ làm họ lo mà không
-                                     giúp họ chọn.
-
-                                     Giá TĂNG tô cảnh báo, giá GIẢM thì không —
-                                     giảm giá là tin tốt, tô đỏ nó là nói sai
-                                     chuyện vừa xảy ra. */ ?>
-                            <?php if (!empty($line['giaDoi'])): ?>
-                                <span class="citem__pricechg<?= $line['unitPrice'] > $line['giaCu'] ? ' is-up' : ' is-down' ?>">
-                                    <?= $line['unitPrice'] > $line['giaCu'] ? 'Giá đã tăng' : 'Giá đã giảm' ?>
-                                    — trước là <?= money((int) $line['giaCu']) ?>
-                                </span>
-                            <?php endif; ?>
-
-                            <?php if (!$line['available']): ?>
-                                <span class="citem__warn">
-                                    Không đủ tồn kho — còn <?= (int) $line['stock'] ?> sản phẩm.
-                                </span>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="cstep">
-                            <?php
-                            /* Ở SỐ 1, NÚT "−" LÀ NÚT XOÁ CÓ HỎI LẠI.
-                               Trước đây nó bị tắt, nên khách muốn bỏ món ra
-                               phải đi tìm biểu tượng thùng rác ở đầu kia dòng.
-                               Giảm xuống 0 nghĩa là bỏ món đi — cứ hỏi thẳng
-                               câu đó, rồi mới xoá. */
-                            ?>
-                            <?php if ($line['quantity'] <= 1): ?>
-                                <button type="submit" name="act" value="xoa" class="cstep__btn"
-                                        data-confirm="<?= e($hoiXoaMon) ?>"
-                                        data-confirm-title="Xoá sản phẩm?"
-                                        data-confirm-ok="Xoá"
-                                        onclick="return confirm('<?= e($hoiXoaMon) ?>')"
-                                        aria-label="<?= e(t('cart.remove_sr', [':name' => $p['name']])) ?>">−</button>
-                            <?php else: ?>
-                                <button type="submit" name="act" value="giam" class="cstep__btn"
-                                        aria-label="<?= e(t('cart.dec_sr', [':name' => $p['name']])) ?>">−</button>
-                            <?php endif; ?>
-
-                            <!-- Ô số thật, không phải chữ: bàn phím và trình đọc
-                                 màn hình sửa thẳng được số lượng thay vì phải
-                                 bấm dấu − mười lần. Gửi form (Enter) không kèm
-                                 `act` nào, controller hiểu là "đặt số lượng". -->
-                            <label class="sr-only" for="qty-<?= e($line['key']) ?>">
-                                Số lượng <?= e($p['name']) ?>
-                            </label>
-                            <input class="cstep__num" type="number" id="qty-<?= e($line['key']) ?>"
-                                   name="quantity" value="<?= (int) $line['quantity'] ?>"
-                                   min="1" max="<?= (int) min($maxQty, max(1, $line['stock'])) ?>"
-                                   inputmode="numeric">
-
-                            <?php /* Tắt theo TỒN KHO chứ không chỉ theo trần 20 —
-                                     xem 'canAdd' trong CartController::lines().
-                                     Đây chỉ là phần nhìn thấy được; máy chủ vẫn
-                                     kiểm lại trong setQuantity(). */ ?>
-                            <button type="submit" name="act" value="tang" class="cstep__btn"
-                                    <?= $line['canAdd'] ? '' : 'disabled' ?>
-                                    aria-label="<?= e(t('cart.inc_sr', [':name' => $p['name']])) ?>">+</button>
-                        </div>
-
-                        <div class="citem__end">
-                            <span class="citem__total"><?= money($line['lineTotal']) ?></span>
-                            <button type="submit" name="act" value="xoa" class="citem__del"
-                                    data-confirm="<?= e($hoiXoaMon) ?>"
-                                    data-confirm-title="Xoá sản phẩm?"
-                                    data-confirm-ok="Xoá"
-                                    onclick="return confirm('<?= e($hoiXoaMon) ?>')">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
-                                </svg>
-                                <span class="sr-only"><?= e(t('cart.remove_sr', [':name' => $p['name']])) ?></span>
+                        <form method="post" action="/gio-hang/sua"
+                              data-confirm="<?= e($hoiXoaMon($p['name'])) ?>"
+                              data-confirm-title="<?= e(t('cart.confirm_title')) ?>"
+                              data-confirm-ok="<?= e(t('cart.remove')) ?>"
+                              onsubmit="return confirm('<?= e($hoiXoaMon($p['name'])) ?>')">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="key" value="<?= e($line['key']) ?>">
+                            <button type="submit" name="act" value="xoa" class="crem">
+                                <?= e(t('cart.remove')) ?><span class="sr-only"> — <?= e($p['name']) ?></span>
                             </button>
-                        </div>
+                        </form>
+                    </div>
+
+                    <?php /* Dấu trang. POST vì nó ĐỔI dữ liệu — lý do đầy đủ ở
+                             đầu FavoriteController. Tô đặc khi đã lưu, đúng
+                             `item.wishFill` của bản thiết kế. */ ?>
+                    <form class="cwish" method="post" action="/yeu-thich">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="slug" value="<?= e($p['slug']) ?>">
+                        <input type="hidden" name="back" value="/gio-hang">
+                        <button type="submit" class="cwish__btn"
+                                aria-pressed="<?= $daCo ? 'true' : 'false' ?>">
+                            <svg width="20" height="22" viewBox="0 0 20 22"
+                                 fill="<?= $daCo ? 'currentColor' : 'none' ?>"
+                                 stroke="currentColor" stroke-width="1.3" aria-hidden="true">
+                                <path d="M4 2h12v18l-6-4.5L4 20z"></path>
+                            </svg>
+                            <span class="sr-only">
+                                <?= e($daCo ? t('cart.wish_off') : t('cart.wish_on')) ?> — <?= e($p['name']) ?>
+                            </span>
+                        </button>
                     </form>
+                </article>
+            <?php endforeach; ?>
+        </section>
+
+        <!-- ══════════ TÓM TẮT ══════════ -->
+        <aside class="csum" aria-labelledby="csum-t">
+            <h2 class="sr-only" id="csum-t"><?= e(t('cart.summary')) ?></h2>
+
+            <dl class="csum__rows">
+                <dt><?= e(t('cart.subtotal_plain')) ?></dt>
+                <dd><?= money($subtotal) ?></dd>
+
+                <?php if ($discount > 0): ?>
+                    <?php /* Mã giảm giá KHÔNG nhập được ở trang này nữa, nhưng
+                             mã đã áp thì vẫn phải hiện: nó đang trừ tiền thật.
+                             Giấu đi là để khách tự dò xem vì sao tổng lệch. */ ?>
+                    <dt><?= e(t('cart.discount')) ?></dt>
+                    <dd class="csum__cut">−<?= money($discount) ?></dd>
+                <?php endif; ?>
+
+                <dt><?= e(t('cart.shipping')) ?></dt>
+                <dd><?= $shippingFee === 0 ? e(t('cart.free')) : money($shippingFee) ?></dd>
+
+                <dt><?= e(t('cart.tax')) ?></dt>
+                <dd><?= e(t('cart.tax_at_checkout')) ?></dd>
+            </dl>
+
+            <p class="csum__total">
+                <span><?= e(t('cart.grand')) ?></span>
+                <span class="csum__num"><?= money($total) ?></span>
+            </p>
+
+            <?php if ($lines !== []): ?>
+                <a class="csum__go" href="/thanh-toan">
+                    <?= e(t('cart.checkout_short')) ?> — <?= money($total) ?>
+                </a>
+            <?php else: ?>
+                <span class="csum__go is-off" aria-disabled="true"><?= e(t('cart.checkout_short')) ?></span>
+            <?php endif; ?>
+
+            <a class="csum__keep" href="/san-pham/gong-kinh"><?= e(t('cart.keep_shopping_caps')) ?></a>
+
+            <?php
+            /* ┌─ HAI MỤC GẬP ─────────────────────────────────────────────────
+               │ Bản thiết kế để sẵn hai mục nói về VẬN CHUYỂN & ĐỔI TRẢ và về
+               │ THANH TOÁN. Chữ ở đây KHÔNG chép từ mẫu (mẫu nói chuyện của một
+               │ cửa hàng khác: miễn ship mọi đơn, đổi trả 14 ngày, trả góp) —
+               │ nó dựng từ chính cấu hình của cửa hàng này, nên không hứa gì
+               │ sai. Chi tiết đầy đủ nằm ở /chinh-sach.
+               │
+               │ <details> chứ không JavaScript: cùng lối với tấm lọc danh mục.
+               └───────────────────────────────────────────────────────────── */
+            $nguong = (int) $threshold;
+            $phi    = (int) config('app.shipping_fee');
+
+            $mucGap = [
+                [
+                    'tua' => t('cart.faq_ship'),
+                    'than' => $nguong > 0
+                        ? t('cart.faq_ship_body', [':n' => money($nguong), ':fee' => money($phi)])
+                        : t('cart.faq_ship_body_flat', [':fee' => money($phi)]),
+                ],
+                [
+                    'tua'  => t('cart.faq_pay'),
+                    'than' => t('cart.faq_pay_body'),
+                ],
+            ];
+            ?>
+            <div class="cfaq">
+                <?php foreach ($mucGap as $m): ?>
+                    <details class="cfaq__item">
+                        <summary class="cfaq__q">
+                            <span><?= e($m['tua']) ?></span>
+                            <svg class="cfaq__ico" width="14" height="14" viewBox="0 0 14 14" fill="none"
+                                 stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+                                <line x1="7" y1="1" x2="7" y2="13"></line>
+                                <line x1="1" y1="7" x2="13" y2="7"></line>
+                            </svg>
+                        </summary>
+                        <p class="cfaq__a"><?= e($m['than']) ?></p>
+                    </details>
                 <?php endforeach; ?>
             </div>
-
-            <!-- ══════════ KHỐI TÓM TẮT ══════════ -->
-            <aside class="csum" aria-labelledby="csum-title">
-
-                <div class="csum__card">
-                    <h2 id="csum-title" class="csum__title"><?= e(t('cart.summary')) ?></h2>
-
-                    <div class="csum__row">
-                        <span><?= e(t('cart.subtotal', [':n' => (string) (int) $picked])) ?></span>
-                        <span class="csum__val"><?= money($subtotal) ?></span>
-                    </div>
-
-                    <div class="csum__row">
-                        <span><?= e(t('cart.discount')) ?></span>
-                        <span class="csum__val csum__val--cut">
-                            <?= $discount > 0 ? '−' . money($discount) : money(0) ?>
-                        </span>
-                    </div>
-
-                    <div class="csum__row">
-                        <span><?= e(t('cart.shipping')) ?></span>
-                        <span class="csum__val<?= $shippingFee === 0 ? ' csum__val--free' : '' ?>">
-                            <?= $shippingFee === 0 ? 'Miễn phí' : money($shippingFee) ?>
-                        </span>
-                    </div>
-
-                    <?php if ($shippingFee > 0 && $subtotal > 0): ?>
-                        <div class="csum__nudge">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a2701c"
-                                 stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M1 3h13v13H1zM14 8h4l3 3v5h-7V8z"></path>
-                                <circle cx="5.5" cy="18.5" r="2"></circle>
-                                <circle cx="17.5" cy="18.5" r="2"></circle>
-                            </svg>
-                            <span>Mua thêm <strong><?= money($threshold - $subtotal) ?></strong> để được miễn phí giao hàng</span>
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="csum__rule"></div>
-
-                    <div class="csum__grand">
-                        <span><?= e(t('cart.grand')) ?></span>
-                        <span class="csum__grand-num"><?= money($total) ?></span>
-                    </div>
-
-                    <?php if ($picked > 0): ?>
-                        <a class="csum__cta" href="/thanh-toan"><?= e(t('cart.checkout')) ?></a>
-                    <?php else: ?>
-                        <!-- Không có dòng nào được tick thì trang thanh toán sẽ
-                             đá ngược về đây. Chặn ngay tại nút, kèm lý do, thay
-                             vì để khách bấm rồi bị đẩy về chỗ cũ. -->
-                        <span class="csum__cta is-off" aria-disabled="true"><?= e(t('cart.checkout')) ?></span>
-                        <p class="csum__note"><?= e(t('cart.pick_one')) ?></p>
-                    <?php endif; ?>
-
-                    <a class="csum__more" href="/san-pham/gong-kinh">← Tiếp tục mua sắm</a>
-                </div>
-
-                <div class="cvou">
-                    <span class="cvou__label"><?= e(t('cart.voucher')) ?></span>
-
-                    <?php if ($voucher !== null): ?>
-                        <div class="cvou__on">
-                            <span class="cvou__code"><?= e($voucher['code']) ?></span>
-                            <span class="cvou__title"><?= e($voucher['title']) ?></span>
-                            <form method="post" action="/gio-hang/ma">
-                                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                <button type="submit" name="act" value="go" class="cvou__off"><?= e(t('cart.voucher_off')) ?></button>
-                            </form>
-                        </div>
-                    <?php else: ?>
-                        <form class="cvou__form" method="post" action="/gio-hang/ma">
-                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                            <label class="sr-only" for="ma-giam-gia"><?= e(t('cart.voucher')) ?></label>
-                            <input class="cvou__input" type="text" id="ma-giam-gia" name="code"
-                                   maxlength="40" autocomplete="off" spellcheck="false"
-                                   placeholder="<?= e(t('cart.voucher_ph')) ?>"
-                                   value="<?= e($voucherCode) ?>">
-                            <button type="submit" class="cvou__apply"><?= e(t('filter.apply')) ?></button>
-                        </form>
-                    <?php endif; ?>
-
-                    <?php if ($voucherMsg !== null): ?>
-                        <span class="cvou__msg<?= $voucherOk ? ' is-ok' : ' is-err' ?>"
-                              role="<?= $voucherOk ? 'status' : 'alert' ?>"><?= e($voucherMsg) ?></span>
-                    <?php endif; ?>
-                </div>
-            </aside>
-        </div>
-
-    <?php endif; ?>
+        </aside>
+    </div>
 </section>
-
-<?php
-/* Hộp thoại hỏi lại trước khi xoá — in một lần cho cả trang, mọi nút mang
-   data-confirm đều dùng chung nó. Xem _layout/confirm-dialog.php. */
-partial('_layout/confirm-dialog');
-?>

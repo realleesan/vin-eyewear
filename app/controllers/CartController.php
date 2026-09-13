@@ -69,6 +69,36 @@ class CartController extends BaseController
 
     public function index(): void
     {
+        /*
+         * ════════════════════════════════════════════════════════════════════
+         * MỞ TRANG GIỎ = TICK LẠI TOÀN BỘ. Đây là một phép SỬA LỖI, không phải
+         * tiện lợi.
+         *
+         * Từ 13/09/2026 trang giỏ dựng theo "Cart Screen.dc.html" và bản thiết
+         * kế ấy KHÔNG có ô tick từng dòng — chủ dự án chốt bỏ. Nhưng cờ
+         * `selected` thì vẫn sống và vẫn là thứ quyết định đơn hàng:
+         * selectedItems() đọc nó, trang thanh toán đọc nó, OrderModel::place()
+         * đọc nó.
+         *
+         * ⚠ VÀ CÓ ĐÚNG MỘT CHỖ BỎ TICK SAU LƯNG NGƯỜI DÙNG: nút "Mua ngay"
+         * (xem $buyNow trong add()) bỏ tick MỌI dòng khác để khách chỉ trả
+         * tiền món vừa bấm. Bỏ ô tick khỏi giao diện mà để nguyên chỗ ấy thì:
+         * khách bấm "Mua ngay" một món, quay ra /gio-hang, THẤY ĐỦ ba món, bấm
+         * thanh toán — và trả tiền đúng một món. Không có ô tick nào để họ
+         * nhận ra, cũng không có cách nào sửa. Đó là một lỗi tiền bạc im lặng.
+         *
+         * Nên: vào trang giỏ là mọi dòng được tick lại. "Mua ngay" vẫn chạy
+         * đúng (nó đi thẳng /thanh-toan, không qua đây), còn giỏ hàng trở lại
+         * đúng nghĩa "tất cả những gì đang có trong giỏ".
+         *
+         * ⚠ ĐỪNG gỡ khối này khi chưa trả ô tick về giao diện. Nếu ngày nào
+         * ô tick quay lại thì gỡ — lúc ấy khách tự thấy và tự sửa được.
+         * ════════════════════════════════════════════════════════════════════
+         */
+        foreach (array_keys($_SESSION['cart'] ?? []) as $k) {
+            $_SESSION['cart'][$k]['selected'] = true;
+        }
+
         $lines    = self::lines();
         $subtotal = 0;
         /*
@@ -115,6 +145,24 @@ class CartController extends BaseController
         $quaPhien = !empty($_SESSION['gio_qua_phien']);
         unset($_SESSION['gio_qua_phien']);
 
+        /* Dấu trang: một câu đếm cho tab, một câu cho mỗi dòng. Vòng lặp này
+           chạy nhiều nhất bằng số dòng trong giỏ (thực tế dưới mười), và chỉ
+           chạy khi khách đã đăng nhập VÀ bảng đã dựng. */
+        $userId    = AuthMiddleware::customerId();
+        $coDauTrang = $userId !== null && FavoriteModel::available();
+        $wishCount = $coDauTrang ? FavoriteModel::dem($userId) : 0;
+        $daLuu     = [];
+
+        if ($coDauTrang) {
+            foreach ($lines as $line) {
+                $pid = (string) $line['product']['id'];
+
+                /* Một mặt hàng có thể nằm trong giỏ nhiều dòng (khác biến thể)
+                   mà dấu trang thì theo MẶT HÀNG — hỏi một lần cho mỗi mã. */
+                $daLuu[$pid] ??= FavoriteModel::daLuu($pid, $userId);
+            }
+        }
+
         $threshold   = (int) config('app.free_shipping_threshold');
         $shippingFee = ($subtotal > 0 && $subtotal < $threshold) ? (int) config('app.shipping_fee') : 0;
         $summary     = self::applyVoucher($subtotal, $shippingFee);
@@ -147,6 +195,22 @@ class CartController extends BaseController
             'quaPhien'    => $quaPhien,
             'soDoiGia'    => $soDoiGia,
             'soHetHang'   => $soHetHang,
+
+            /* ┌─ DẤU TRANG — tab WISHLIST và nút trên từng dòng ──────────────
+               │ Bản thiết kế có cả hai, và chức năng này CÓ THẬT: bảng
+               │ `favorites` dựng lại ngày 12/09/2026, đường ghi là POST
+               │ /yeu-thich (FavoriteController), danh sách nằm ở
+               │ /tai-khoan?muc=da-luu.
+               │
+               │ Khách chưa đăng nhập thì đếm bằng 0 và nút vẫn vẽ — bấm vào
+               │ FavoriteController tự đẩy sang /auth kèm đường quay lại. Giấu
+               │ nút đi sẽ làm tab WISHLIST đứng trơ một mình không giải thích
+               │ được vì sao.
+               │
+               │ available() lo trường hợp mã lên hosting trước migration:
+               │ chưa có bảng thì không vẽ gì cả, thay vì đổ 500. */
+            'wishCount'   => $wishCount,
+            'daLuu'       => $daLuu,
         ]);
     }
 
