@@ -368,10 +368,51 @@
     text-wrap: pretty;
 }
 
+/* ┌─ LIÊN KẾT TRONG CÂU ĐỒNG Ý — PHẢI TRÔNG RA LIÊN KẾT ──────────────────
+   │ Ba lớp, cùng một câu "…đồng ý với Điều khoản dịch vụ và Chính sách bảo
+   │ mật của Vin Eyewear", chỉ khác chỗ đứng:
+   │   .authnote         màn đăng nhập — auth/index.php
+   │   .authcheck__text  màn đăng ký   — auth/_signup.php, google-signup.php
+   │   .authagree        ô đồng ý rời
+   │
+   │ .authnote THÊM VÀO 13/09/2026 theo yêu cầu chủ dự án ("Chính sách bảo
+   │ mật thì gạch chân"). Hai lớp kia đã nằm đây từ trước — thêm vào danh
+   │ sách này thay vì viết một luật thứ hai ở gần .authnote: hai luật cùng
+   │ khai gạch chân cho cùng một loại liên kết thì sớm muộn ai đó sửa một
+   │ cái, và gạch chân biến mất ở đúng một màn hình. (Bản nháp của chính
+   │ lượt sửa này đã viết luật thứ hai ấy.)
+   └──────────────────────────────────────────────────────────────────────── */
+.authnote a,
 .authcheck__text a,
 .authagree a {
     text-decoration: underline;
     text-underline-offset: 2px;
+}
+
+/* ┌─ RÊ VÀO THÌ ĐEN — CHỈ MÀN ĐĂNG NHẬP ─────────────────────────────────
+   │ (13/09/2026: "hover vào thì chữ màu đen".)
+   │
+   │ Vì sao chỉ .authnote, và đây KHÔNG phải sơ sót — đã đo cả hai lớp:
+   │
+   │   .authnote         câu văn xám var(--ink-3) → rê thành đen: THẤY RÕ
+   │   .authcheck__text  câu văn đen var(--ink)   → rê thành đen: KHÔNG ĐỔI
+   │
+   │ Câu ở màn đăng ký vốn đã đen. Ép hover về đen ở đó là XOÁ MẤT phản hồi
+   │ đang có: luật chung cho a:hover trong oa.css làm nó nhạt đi — vẫn là một
+   │ thay đổi mắt thấy được. Gộp vào cho "nhất quán" là đổi một màn hình đang
+   │ đúng thành một màn hình không phản hồi; bản nháp đầu của lượt sửa này đã
+   │ gộp, và khung đo bắt được đúng chỗ ấy.
+   │
+   │ Nên cả hai màn đều có phản hồi khi rê, chỉ khác chiều: xám → đen ở màn
+   │ đăng nhập, đen → xám ở màn đăng ký. Muốn CÙNG một chiều thì phải đổi MÀU
+   │ NGHỈ của câu ở màn đăng ký sang xám — một thay đổi thị giác khác, hỏi
+   │ chủ dự án trước khi làm.
+   │
+   │ Màu NGHỈ của liên kết thì để nguyên (kế thừa câu văn): bôi đen sẵn thì
+   │ hai cái tên văn bản pháp lý hút mắt hơn cả nút "Tiếp tục" ngay trên.
+   └──────────────────────────────────────────────────────────────────────── */
+.authnote a:hover {
+    color: var(--ink);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
