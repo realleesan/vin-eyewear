@@ -139,14 +139,22 @@
         var main = document.getElementById('noi-dung-chinh');
         if (main) main.focus({ preventScroll: true });
 
-        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        /*
+         * MÁY BẬT "GIẢM CHUYỂN ĐỘNG" VẪN CUỘN MƯỢT, CHỈ NGẮN HƠN (13/09/2026,
+         * theo yêu cầu chủ dự án).
+         *
+         * Bản trước nhảy phựt lên đỉnh cho nhóm này. Hệ quả đo được: trên chính
+         * máy chủ dự án (macOS bật Reduce motion) nút KHÔNG BAO GIỜ cuộn mượt,
+         * dù hoạt ảnh bên dưới chạy đúng — nên "chưa có cuộn mượt" là điều
+         * duy nhất người dùng thấy được.
+         *
+         * Không bỏ hẳn sở thích ấy: nhóm này nhận một lượt cuộn cố định ~300ms
+         * thay vì tới 900ms. Đủ để mắt thấy trang trượt lên, chưa đủ lâu để
+         * thành một cảnh chuyển động dài.
+         */
+        var giamChuyenDong = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-        if (reduce) {
-            window.scrollTo({ top: 0, behavior: 'auto' });
-            return;
-        }
-
-        leoLenDinh();
+        leoLenDinh(giamChuyenDong);
     });
 
     /* ====================================================================
@@ -184,7 +192,11 @@
        trang giật qua lại giữa hai vị trí. */
     var dangLeo = null;
 
-    function leoLenDinh() {
+    /* Máy bật "Giảm chuyển động": một thời lượng cố định, không theo quãng —
+       xem lý do ở trình nghe click phía trên. */
+    var THOI_LUONG_NGAN = 300;
+
+    function leoLenDinh(ngan) {
         var batDau = window.scrollY;
 
         if (batDau <= 0) return;
@@ -194,7 +206,9 @@
         /* 0,6ms cho mỗi pixel, chặn 320–900ms. Con số 0,6 chọn để một trang
            chủ (~900px quãng cuộn) rơi vào khoảng 540ms — đủ để mắt theo kịp
            mà không phải ngồi đợi. */
-        var thoiLuong = Math.max(320, Math.min(900, batDau * 0.6));
+        var thoiLuong = ngan
+            ? THOI_LUONG_NGAN
+            : Math.max(320, Math.min(900, batDau * 0.6));
         var moc       = null;
         var huy       = false;
 
