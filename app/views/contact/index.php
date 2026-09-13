@@ -3,50 +3,14 @@
 /**
  * contact/index.php — Liên hệ / Hệ thống cửa hàng.
  *
- * Dựng theo "Vin Eyewear Contact.dc.html" (Claude Design):
- *
- *   đầu trang nền hồng phấn
- *   → danh sách cơ sở bên trái (chọn được) | bản đồ lớn bên phải
- *   → form gửi câu hỏi | cột kênh liên hệ nhanh nền hồng, dính theo cuộn
- *
- * ĐÃ BỎ khối "tiện ích" (bãi đỗ xe, phòng đo khúc xạ, thanh toán, nắn chỉnh).
- * Bản thiết kế không có nó; dữ liệu vẫn còn trong ContactController nếu muốn
- * dựng lại.
- *
- * ─────────────────────────────────────────────────────────────────────────────
- * KHÁC BẢN THIẾT KẾ: CHỌN CƠ SỞ BẰNG LIÊN KẾT
- *
- * Bản thiết kế giữ cơ sở đang chọn trong `this.state.selected` và đổi bản đồ
- * ngay trong trình duyệt. Ở đây mỗi thẻ cơ sở là một <a> trỏ về chính trang
- * kèm ?cs=<mã cơ sở>:
- *   - Không có JavaScript vẫn đổi được bản đồ.
- *   - Gửi link "cửa hàng Tây Hồ" cho người khác thì họ mở ra đúng cửa hàng đó.
- * contact.js chỉ tăng cường: đổi ngay tại chỗ, không tải lại trang.
- *
- * Nó cũng bắt hai nút "Chỉ đường" (trên thẻ cơ sở và trên thẻ nổi của bản đồ)
- * để xin vị trí hiện tại rồi mở Google Maps với lộ trình từ chỗ khách đang
- * đứng tới cơ sở. Không có JS, hoặc khách từ chối chia sẻ vị trí, thì vẫn ra
- * Google Maps đúng cơ sở — chỉ thiếu điểm xuất phát và Google sẽ tự hỏi.
- * ─────────────────────────────────────────────────────────────────────────────
+ * Giao diện bám theo design-reference/contact. Dữ liệu cửa hàng, form POST,
+ * CSRF, flash message và các móc data-* cho contact.js vẫn là dữ liệu thật
+ * của ứng dụng; code.html chỉ được dùng làm tham chiếu trình bày.
  */
 
-/**
- * Đường dẫn chỉ đường Google Maps tới một địa chỉ.
- *
- * CỐ Ý KHÔNG có tham số `origin`: đây là bản dùng khi không có JavaScript
- * (hoặc khách từ chối chia sẻ vị trí), lúc đó Google Maps tự hỏi điểm xuất
- * phát. Khi có JS, contact.js xin vị trí hiện tại rồi nối thêm
- * `&origin=<vĩ độ>,<kinh độ>` vào chính đường dẫn này — xem hàm withOrigin.
- */
 $directionsUrl = static fn (string $address): string =>
     'https://www.google.com/maps/dir/?api=1&destination=' . rawurlencode($address);
 
-/**
- * Bản đồ nhúng của một cơ sở.
- *
- * Ưu tiên map_url đã lưu trong DB (quản trị viên có thể dán link đã ghim đúng
- * vị trí); chưa có thì dựng từ địa chỉ như bản thiết kế làm.
- */
 $embedUrl = static function (array $store): string {
     if (!empty($store['map_url'])) {
         return $store['map_url'];
@@ -55,11 +19,6 @@ $embedUrl = static function (array $store): string {
     return 'https://maps.google.com/maps?q=' . rawurlencode($store['address']) . '&z=16&output=embed';
 };
 
-/**
- * Đang trong giờ mở cửa hay không, đọc từ chuỗi kiểu "08:00 - 21:00 hàng ngày".
- * Không đọc được thì coi như đang mở — thà hiện nhầm "đang mở" còn hơn đuổi
- * khách về vì một chuỗi giờ ghi khác định dạng.
- */
 $openStatus = static function (?string $hours): array {
     if (!preg_match('/(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})/', (string) $hours, $m)) {
         return ['open' => true, 'range' => (string) $hours];
@@ -75,37 +34,17 @@ $openStatus = static function (?string $hours): array {
     ];
 };
 
-/*
- * Bốn kênh liên hệ nhanh.
- *
- * KHÁC BẢN THIẾT KẾ: dùng LOGO GỐC của từng ứng dụng (brandIcon), không phải
- * vòng tròn hồng chứa một ký tự.
- *
- * Bản thiết kế đặt chữ "Z" và "M" trong vòng tròn đơn sắc vì nếu vẽ cả hai
- * bằng icon bong bóng chat của site thì không phân biệt được kênh nào. Logo
- * gốc giải quyết đúng vấn đề đó mà còn tốt hơn: khách nhận ra Zalo, Messenger
- * hay Gmail bằng màu và hình quen thuộc, không phải đọc nhãn. Đây là bốn nút
- * dẫn khách RA NGOÀI site — dấu hiệu của nơi sắp đến quan trọng hơn việc giữ
- * cho hàng icon đồng bộ với phần còn lại của trang.
- *
- * Đổi lại, các mark này không còn ăn theo màu chữ nữa: màu là một phần nhận
- * dạng thương hiệu, không được đổi. Nên .cchan__mark--brand bỏ hẳn nền hồng
- * và màu chữ — xem contact.css.
- *
- * Hotline không phải ứng dụng nên không có logo gốc; brandIcon('hotline') vẽ
- * nút nhấc máy xanh lá quen mắt của iOS/Android.
- */
 $channels = [
     [
         'brand' => 'hotline',
-        'label' => 'Hotline',
+        'label' => 'Hotline tư vấn',
         'value' => $company['hotline'],
         'href'  => $company['hotline_href'],
         'blank' => false,
     ],
     [
         'brand' => 'zalo',
-        'label' => 'Zalo',
+        'label' => 'Zalo chat',
         'value' => 'Nhắn tin tư vấn',
         'href'  => $company['channels']['zalo'],
         'blank' => true,
@@ -113,200 +52,236 @@ $channels = [
     [
         'brand' => 'messenger',
         'label' => 'Messenger',
-        'value' => 'Chat trực tiếp',
+        'value' => 'Chat Facebook',
         'href'  => $company['channels']['messenger'],
         'blank' => true,
     ],
     [
         'brand' => 'gmail',
-        'label' => 'Email',
+        'label' => 'Thư điện tử',
         'value' => $company['email'],
         'href'  => 'mailto:' . $company['email'],
         'blank' => false,
     ],
 ];
+
+$servicePromises = [
+    'Đo khám thị lực chuẩn khúc xạ',
+    'Tư vấn dáng kính hợp khuôn mặt',
+    'Căn chỉnh gọng, vệ sinh trọn đời',
+    'Bảo hành chính hãng toàn diện',
+];
 ?>
 
 <?php partial('_layout/page-head', [
     'head_crumbs' => [['label' => 'Liên hệ']],
+    'head_badge'  => 'Chăm sóc khách hàng & Dịch vụ khúc xạ',
     'head_title'  => 'Ghé thăm Vin Eyewear',
     'head_lead'   => 'Hai cơ sở tại Hà Nội, mở cửa cả tuần. Đo khúc xạ miễn phí kể cả '
                    . 'khi bạn chưa mua kính.',
 ]); ?>
 
-<!-- ============================================================
-     CƠ SỞ + BẢN ĐỒ
+<div class="contact-page">
+    <section class="ccontact" id="form" aria-labelledby="contact-support-title">
+        <div class="ccontact__grid">
+            <aside class="cquick">
+                <div class="cquick__main">
+                    <header class="cquick__head">
+                        <div>
+                            <h2 class="cquick__title" id="contact-support-title">Cần hỗ trợ ngay?</h2>
+                            <p class="cquick__lead">Chọn kênh bạn thấy tiện nhất, 8:30 – 21:00 mỗi ngày.</p>
+                        </div>
+                        <span class="cstatus cstatus--online">
+                            <span class="cstatus__dot" aria-hidden="true"></span>
+                            Đang trực tuyến
+                        </span>
+                    </header>
 
-     Bỏ hẳn khối này khi bảng `stores` chưa có cơ sở nào đang hoạt động:
-     một khung bản đồ rỗng kèm thẻ thông tin trống trông như trang hỏng, mà
-     phần form bên dưới thì vẫn dùng được bình thường.
-     ============================================================ -->
-<section class="cbottom" id="form">
-    <div class="cbottom__grid">
+                    <div class="cchannels">
+                        <?php foreach ($channels as $ch): ?>
+                            <a class="cchan" href="<?= e($ch['href']) ?>"
+                               <?= $ch['blank'] ? 'target="_blank" rel="noreferrer noopener"' : '' ?>>
+                                <span class="cchan__mark cchan__mark--<?= e($ch['brand']) ?>" aria-hidden="true">
+                                    <?php if ($ch['brand'] === 'hotline'): ?>
+                                        <?= icon('phone', 'cchan__logo cchan__logo--hotline', 22) ?>
+                                    <?php elseif ($ch['brand'] === 'gmail'): ?>
+                                        <?= icon('mail', 'cchan__logo cchan__logo--gmail', 22) ?>
+                                    <?php else: ?>
+                                        <?= brandIcon($ch['brand'], 'cchan__logo cchan__logo--' . $ch['brand'], 28) ?>
+                                    <?php endif; ?>
+                                </span>
+                                <span class="cchan__text">
+                                    <span class="cchan__label"><?= e($ch['label']) ?></span>
+                                    <span class="cchan__value"><?= e($ch['value']) ?></span>
+                                </span>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
 
-        <div class="cform">
-            <div class="cform__head">
-                <h2 class="cform__title">Gửi câu hỏi cho chúng tôi</h2>
-                <p class="cform__lead">
-                    Điền thông tin bên dưới, đội ngũ tư vấn sẽ liên hệ lại trong ngày làm việc.
-                </p>
-            </div>
+                <div class="cservice">
+                    <h3 class="cservice__title">Cam kết dịch vụ Vin Eyewear</h3>
+                    <ul class="cservice-list" role="list">
+                        <?php foreach ($servicePromises as $promise): ?>
+                            <li><?= icon('check', 'cservice__icon', 14) ?><span><?= e($promise) ?></span></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            </aside>
 
-            <?php if ($success !== null): ?>
-                <p class="alert alert--ok" role="status"><?= e($success) ?></p>
-            <?php endif; ?>
-            <?php if ($error !== null): ?>
-                <p class="alert alert--err" role="alert"><?= e($error) ?></p>
-            <?php endif; ?>
+            <section class="cform" aria-labelledby="contact-form-title">
+                <header class="cform__head">
+                    <span class="cform__eyebrow">Trợ giúp khách hàng</span>
+                    <h2 class="cform__title" id="contact-form-title">Gửi câu hỏi cho chúng tôi</h2>
+                    <p class="cform__lead">
+                        Điền thông tin bên dưới, đội ngũ tư vấn sẽ liên hệ lại trong ngày làm việc.
+                    </p>
+                </header>
 
-            <form class="cform__body" method="post" action="/lien-he/gui">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                <?php if ($success !== null): ?>
+                    <p class="alert alert--ok" role="status"><?= e($success) ?></p>
+                <?php endif; ?>
+                <?php if ($error !== null): ?>
+                    <p class="alert alert--err" role="alert"><?= e($error) ?></p>
+                <?php endif; ?>
 
-                <div class="cform__pair">
-                    <label class="cfield">
-                        <span class="cfield__label">Họ và tên</span>
-                        <input class="cfield__input" type="text" name="full_name" required
+                <form class="cform__body" method="post" action="/lien-he/gui">
+                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+
+                    <label class="cfield" for="contact-full-name">
+                        <span class="cfield__label">Họ và tên <span aria-hidden="true">*</span></span>
+                        <input class="cfield__input" id="contact-full-name" type="text" name="full_name" required
                                minlength="2" maxlength="120" autocomplete="name"
                                placeholder="Nguyễn Văn A"
                                value="<?= e($old['fullName'] ?? '') ?>">
                     </label>
 
-                    <label class="cfield">
-                        <span class="cfield__label">Số điện thoại</span>
-                        <input class="cfield__input" type="tel" name="phone" required
+                    <label class="cfield" for="contact-phone">
+                        <span class="cfield__label">Số điện thoại <span aria-hidden="true">*</span></span>
+                        <input class="cfield__input" id="contact-phone" type="tel" name="phone" required
                                autocomplete="tel" inputmode="tel"
                                placeholder="09xx xxx xxx"
                                value="<?= e($old['phone'] ?? '') ?>">
                     </label>
+
+                    <label class="cfield" for="contact-email">
+                        <span class="cfield__label">Email</span>
+                        <input class="cfield__input" id="contact-email" type="email" name="email" autocomplete="email"
+                               placeholder="ban@email.com"
+                               value="<?= e($old['email'] ?? '') ?>">
+                    </label>
+
+                    <label class="cfield" for="contact-message">
+                        <span class="cfield__label">Nội dung thắc mắc hoặc đặt lịch hẹn</span>
+                        <textarea class="cfield__input cfield__input--area" id="contact-message" name="message" rows="3"
+                                  required minlength="5" maxlength="1000"
+                                  placeholder="Bạn cần tư vấn về gọng kính, tròng kính hay đặt lịch đo mắt?"><?= e($old['message'] ?? '') ?></textarea>
+                    </label>
+
+                    <button type="submit" class="cform__submit">
+                        <span>Gửi câu hỏi</span>
+                        <?= icon('arrow-right', 'cform__submit-icon', 17) ?>
+                    </button>
+
+                    <p class="cform__privacy">
+                        <?= icon('shield', 'cform__privacy-icon', 14) ?>
+                        <span>Bảo mật thông tin khách hàng 100%</span>
+                    </p>
+                </form>
+            </section>
+        </div>
+    </section>
+
+    <?php if ($selected !== null): ?>
+        <section class="cstores" id="store-locator" aria-labelledby="store-locator-title">
+            <header class="cstores__head">
+                <div>
+                    <span class="cstores__eyebrow">Store locator</span>
+                    <h2 class="cstores__title" id="store-locator-title">Hệ thống cửa hàng Vin Eyewear</h2>
+                    <p class="cstores__lead">Trải nghiệm không gian đo mắt chuyên nghiệp &amp; thử trực tiếp hơn 1000+ mẫu kính.</p>
+                </div>
+                <p class="cstores__amenity">
+                    <?= icon('check', 'cstores__amenity-icon', 14) ?>
+                    <span>Bãi đỗ ô tô &amp; xe máy thuận tiện cả <?= count($stores) ?> cơ sở</span>
+                </p>
+            </header>
+
+            <div class="cstores__shell">
+                <div class="cstores__list">
+                    <?php foreach ($stores as $store): ?>
+                        <?php
+                        $status = $openStatus($store['open_hours']);
+                        $on     = $store['code'] === $selected['code'];
+                        ?>
+                        <article class="cstore<?= $on ? ' is-on' : '' ?>"
+                                 data-store="<?= e($store['code']) ?>"
+                                 data-map="<?= e($embedUrl($store)) ?>"
+                                 data-name="<?= e($store['name']) ?>"
+                                 data-address="<?= e($store['address']) ?>"
+                                 data-directions="<?= e($directionsUrl($store['address'])) ?>">
+                            <a class="cstore__select" href="?cs=<?= e(rawurlencode($store['code'])) ?>"
+                               <?= $on ? 'aria-current="true"' : '' ?>>
+                                <span class="cstore__head">
+                                    <span class="cstore__identity">
+                                        <span class="cstore__dot" aria-hidden="true"></span>
+                                        <span class="cstore__name"><?= e($store['name']) ?></span>
+                                    </span>
+                                    <span class="cstore__hours<?= $status['open'] ? '' : ' is-closed' ?>">
+                                        <?= $status['open'] ? 'Mở cửa' : 'Đã đóng' ?> <?= e($status['range']) ?>
+                                    </span>
+                                </span>
+
+                                <span class="cstore__details">
+                                    <span class="cstore__row">
+                                        <?= icon('map-pin', 'cstore__ico', 15) ?>
+                                        <span class="cstore__address"><?= e($store['address']) ?></span>
+                                    </span>
+                                    <?php if (!empty($store['phone'])): ?>
+                                        <span class="cstore__row">
+                                            <?= icon('phone', 'cstore__ico', 15) ?>
+                                            <span>Hotline: <strong class="cstore__phone"><?= e($store['phone']) ?></strong> <small>(Hỗ trợ 24/7)</small></span>
+                                        </span>
+                                    <?php endif; ?>
+                                </span>
+                            </a>
+
+                            <div class="cstore__actions">
+                                <a class="cstore__directions" href="<?= e($directionsUrl($store['address'])) ?>"
+                                   target="_blank" rel="noreferrer noopener">
+                                    <span>Chỉ đường</span>
+                                </a>
+                                <a class="cstore__book" href="/dat-lich">Đặt lịch đo mắt</a>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
                 </div>
 
-                <label class="cfield">
-                    <span class="cfield__label">
-                        Email
-                    </span>
-                    <input class="cfield__input" type="email" name="email" autocomplete="email"
-                           placeholder="ban@email.com"
-                           value="<?= e($old['email'] ?? '') ?>">
-                </label>
+                <div class="cmap">
+                    <iframe class="cmap__frame"
+                            id="storeMap"
+                            src="<?= e($embedUrl($selected)) ?>"
+                            title="Bản đồ <?= e($selected['name']) ?>"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            allowfullscreen></iframe>
 
-                <label class="cfield">
-                    <span class="cfield__label">Nội dung</span>
-                    <textarea class="cfield__input cfield__input--area" name="message" rows="5"
-                              required minlength="5" maxlength="1000"
-                              placeholder="Bạn cần tư vấn về gọng kính, tròng kính hay đặt lịch đo mắt?"><?= e($old['message'] ?? '') ?></textarea>
-                </label>
-
-                <button type="submit" class="cform__submit">Gửi câu hỏi</button>
-            </form>
-        </div>
-
-        <aside class="cquick">
-            <h2 class="cquick__title">Cần hỗ trợ ngay?</h2>
-            <p class="cquick__lead">Chọn kênh bạn thấy tiện nhất, 8:30 – 21:00 mỗi ngày.</p>
-
-            <?php foreach ($channels as $ch): ?>
-                <a class="cchan" href="<?= e($ch['href']) ?>"
-                   <?= $ch['blank'] ? 'target="_blank" rel="noreferrer noopener"' : '' ?>>
-                    <span class="cchan__mark cchan__mark--brand" aria-hidden="true">
-                        <?= brandIcon($ch['brand'], 'cchan__logo cchan__logo--' . $ch['brand'], 34) ?>
-                    </span>
-                    <span class="cchan__text">
-                        <span class="cchan__label"><?= e($ch['label']) ?></span>
-                        <span class="cchan__value"><?= e($ch['value']) ?></span>
-                    </span>
-                </a>
-            <?php endforeach; ?>
-        </aside>
-    </div>
-</section>
-
-<?php if ($selected !== null): ?>
-<section class="cstores">
-    <div class="cstores__grid">
-
-        <div class="cstores__list">
-            <p class="cstores__count"><?= count($stores) ?> cơ sở tại Hà Nội</p>
-
-            <?php foreach ($stores as $store): ?>
-                <?php
-                $status = $openStatus($store['open_hours']);
-                $on     = $store['code'] === $selected['code'];
-                ?>
-                <a class="cstore<?= $on ? ' is-on' : '' ?>"
-                   href="?cs=<?= e(rawurlencode($store['code'])) ?>"
-                   <?= $on ? 'aria-current="true"' : '' ?>
-                   data-store="<?= e($store['code']) ?>"
-                   data-map="<?= e($embedUrl($store)) ?>"
-                   data-name="<?= e($store['name']) ?>"
-                   data-address="<?= e($store['address']) ?>"
-                   data-directions="<?= e($directionsUrl($store['address'])) ?>">
-
-                    <span class="cstore__head">
-                        <span class="cstore__name"><?= e($store['name']) ?></span>
-                        <?php /* Chấm tròn = cơ sở đang xem trên bản đồ. Trạng
-                                 thái này chỉ nằm ở hình dạng chấm, nên phải có
-                                 thêm một câu cho trình đọc màn hình. */ ?>
-                        <span class="cstore__dot" aria-hidden="true"></span>
-                        <?php if ($on): ?>
-                            <span class="sr-only"> — đang xem trên bản đồ</span>
-                        <?php endif; ?>
-                    </span>
-
-                    <span class="cstore__row">
-                        <?= icon('map-pin', 'cstore__ico', 14) ?>
-                        <span class="cstore__address"><?= e($store['address']) ?></span>
-                    </span>
-
-                    <?php if (!empty($store['phone'])): ?>
-                        <span class="cstore__row">
-                            <?= icon('phone', 'cstore__ico', 14) ?>
-                            <span class="cstore__phone"><?= e($store['phone']) ?></span>
-                        </span>
-                    <?php endif; ?>
-
-                    <span class="cstore__foot">
-                        <span class="cstore__hours<?= $status['open'] ? '' : ' is-closed' ?>">
-                            <?= $status['open'] ? 'Mở cửa' : 'Đã đóng' ?> · <?= e($status['range']) ?>
-                        </span>
-                        <?php /* Không thể là <a> riêng vì cả thẻ cơ sở đã là
-                                 một <a> rồi, mà HTML cấm <a> lồng <a>.
-                                 contact.js bắt cú bấm vào đây để xin vị trí và
-                                 mở chỉ đường; không có JS thì bấm vào đây bằng
-                                 bấm vào thẻ — mở cơ sở này lên bản đồ, và nút
-                                 chỉ đường thật nằm ngay trên thẻ bản đồ đó. */ ?>
-                        <span class="cstore__go"
-                              title="Chỉ đường từ vị trí của bạn tới <?= e($store['name']) ?>">Chỉ đường</span>
-                    </span>
-                </a>
-            <?php endforeach; ?>
-
-            <a class="cstores__cta" href="/dat-lich">Đặt lịch đo mắt</a>
-        </div>
-
-        <div class="cmap">
-            <?php /* title bắt buộc cho trình đọc màn hình. Không đặt
-                     loading="lazy": bản đồ nằm ngay đầu trang, hoãn tải chỉ
-                     làm nó hiện ra muộn sau khi người dùng đã nhìn vào đó. */ ?>
-            <iframe class="cmap__frame"
-                    id="storeMap"
-                    src="<?= e($embedUrl($selected)) ?>"
-                    title="Bản đồ <?= e($selected['name']) ?>"
-                    referrerpolicy="no-referrer-when-downgrade"
-                    allowfullscreen></iframe>
-
-            <div class="cmap__card">
-                <p class="cmap__name" data-map-name><?= e($selected['name']) ?></p>
-                <p class="cmap__address" data-map-address><?= e($selected['address']) ?></p>
-                <a class="cmap__link" data-map-link
-                   href="<?= e($directionsUrl($selected['address'])) ?>"
-                   target="_blank" rel="noreferrer noopener">Chỉ đường từ vị trí của tôi ↗</a>
+                    <div class="cmap__card" aria-live="polite">
+                        <div class="cmap__card-head">
+                            <div>
+                                <span class="cmap__status"><span aria-hidden="true"></span>Đang phục vụ</span>
+                                <p class="cmap__name" data-map-name><?= e($selected['name']) ?></p>
+                                <p class="cmap__address" data-map-address><?= e($selected['address']) ?></p>
+                            </div>
+                            <span class="cmap__pin" aria-hidden="true"><?= icon('map-pin', '', 18) ?></span>
+                        </div>
+                        <div class="cmap__card-foot">
+                            <span>Đo mắt miễn phí</span>
+                            <a class="cmap__link" data-map-link
+                               href="<?= e($directionsUrl($selected['address'])) ?>"
+                               target="_blank" rel="noreferrer noopener">Mở Google Maps ↗</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</section>
-<?php endif; ?>
-
-<!-- ============================================================
-     FORM + KÊNH LIÊN HỆ NHANH
-     ============================================================ -->
-
+        </section>
+    <?php endif; ?>
+</div>

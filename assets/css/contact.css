@@ -1,505 +1,919 @@
-/* ============================================================================
-   contact.css — TRANG LIÊN HỆ (/lien-he)
+/* ==========================================================================
+   Contact — design-reference/contact/screen.png
 
-   ═════════════════════════════════════════════════════════════════════════
-   MẪU VẼ TRANG NÀY GẦN NHƯ NGUYÊN VẸN — bốn khối, đúng thứ tự của view:
+   The page deliberately uses a quieter global canvas and two strong, paired
+   compositions: support/form, then stores/map. Backend-driven content and
+   progressive-enhancement hooks remain in the view and contact.js.
+   ========================================================================== */
 
-     1. đầu trang căn giữa
-     2. hai cột: "Cần hỗ trợ ngay?" (hàng nhãn↔giá trị) | form nền #f4f4f4
-     3. lưới cửa hàng + một ô ĐEN "Đặt lịch đo mắt"
-     4. ảnh bản đồ 16:6 có dải chữ nền trắng mờ chạy dọc đáy
-
-   HAI CHI TIẾT CỦA MẪU RẤT DỄ BỎ SÓT, và cả hai đều đáng giữ:
-
-     · Ô ĐEN trong lưới cửa hàng. Nó là thẻ thứ ba trong một hàng hai thẻ
-       cửa hàng, nền #111 chữ trắng. Đó là điểm tối DUY NHẤT của cả trang,
-       và nó đứng đúng chỗ mắt dừng sau khi đọc xong hai địa chỉ.
-
-     · Ô NHẬP GẠCH CHÂN trong form, không phải ô có viền. Đây là chỗ duy
-       nhất trên site dùng .oa-field thay cho .oa-input.
-
-       Lý do CŨ là "form nằm trên nền #f4f4f4, thêm hộp viền nữa thành hai
-       đường bao lồng nhau". Từ 12/09/2026 nền ấy đã trắng và chính .cform
-       mang viền (xem khối "NỀN TRẮNG TOÀN SITE" ở assets/css/oa.css), nên
-       lý do còn đúng NGUYÊN VẸN — chỉ là đường bao ngoài nay là nét viền
-       chứ không phải mảng xám. ĐỪNG đổi sang .oa-input.
-   ═════════════════════════════════════════════════════════════════════════ */
-
-/* ══════════════════════════════════════════════════════════════════════
-   HAI CỘT: KÊNH HỖ TRỢ | FORM
-   ══════════════════════════════════════════════════════════════════════ */
-
-.cbottom,
-.cquick {
-    padding: 0 var(--edge-grid);
+.page-contact-index {
+    background: #fafafa;
 }
 
-/* Mẫu đặt cột kênh hỗ trợ BÊN TRÁI, form BÊN PHẢI. Markup để form trước —
-   đảo bằng `order`, không đảo markup: form là nội dung chính của trang này
-   và nó nên đứng trước trong thứ tự đọc. */
-.cbottom__grid {
+.page-contact-index main {
+    background: #fafafa;
+}
+
+.page-contact-index .oa-pagehead {
+    gap: 10px;
+    padding-top: clamp(52px, 5vw, 76px);
+    padding-bottom: clamp(52px, 5vw, 72px);
+    border-bottom: 1px solid #eef0f2;
+    background: #fff;
+}
+
+.page-contact-index .oa-pagehead .oa-eyebrow {
+    color: #7b8491;
+    font-size: clamp(10px, .8vw, 12px);
+    font-weight: 600;
+    letter-spacing: .14em;
+    line-height: 1.5;
+    text-transform: uppercase;
+}
+
+.page-contact-index .oa-pagehead .oa-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(32px, 3.5vw, 48px);
+    font-weight: 500;
+    letter-spacing: -.035em;
+    line-height: 1.1;
+    text-transform: uppercase;
+}
+
+.page-contact-index .oa-pagehead p {
+    max-width: 720px;
+    color: #68717e;
+    font-size: clamp(13px, 1vw, 15px);
+    line-height: 1.6;
+}
+
+.contact-page {
+    --c-ink: #111827;
+    --c-ink-soft: #647081;
+    --c-muted: #9aa3af;
+    --c-line: #e4e7eb;
+    --c-line-soft: #eef0f2;
+    --c-panel: #fff;
+    --c-soft: #f7f8f9;
+    --c-success: #059669;
+    --c-success-bg: #ecfdf5;
+    --c-success-line: #a7f3d0;
+    --c-radius-lg: 16px;
+    --c-radius-md: 11px;
+    --c-shadow: 0 1px 2px rgba(17, 24, 39, .04);
+
+    max-width: 1440px;
+    margin: 0 auto;
+    color: var(--c-ink);
+}
+
+.ccontact,
+.cstores {
+    padding-right: clamp(20px, 3.6vw, 52px);
+    padding-left: clamp(20px, 3.6vw, 52px);
+}
+
+.ccontact {
+    padding-top: clamp(52px, 5vw, 78px);
+}
+
+.ccontact__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--gap-tight);
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: clamp(28px, 4vw, 54px);
+    align-items: stretch;
 }
 
-.cbottom__grid > .cquick {
-    order: -1;
+.cquick,
+.cform {
+    min-width: 0;
+    min-height: 600px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--c-radius-lg);
+    background: var(--c-panel);
+    box-shadow: var(--c-shadow);
 }
 
-/* ┌─ CỘT TRÁI — BỐN KÊNH ─────────────────────────────────────────────── */
+/* Quick support ---------------------------------------------------------- */
+
 .cquick {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 0 12px;
+    justify-content: space-between;
+    gap: 40px;
+    padding: clamp(26px, 2.7vw, 38px);
 }
 
-.cquick__title {
-    font-size: var(--fs-subtitle);
-    font-weight: 500;
-    letter-spacing: var(--ls);
+.cquick__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--c-line-soft);
+}
+
+.cquick__title,
+.cservice__title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .11em;
+    line-height: 1.45;
     text-transform: uppercase;
 }
 
 .cquick__lead {
-    color: var(--ink-3);
+    margin-top: 5px;
+    color: var(--c-ink-soft);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.cstatus {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 7px;
+    min-height: 25px;
+    padding: 3px 11px;
+    border: 1px solid var(--c-success-line);
+    border-radius: 999px;
+    background: var(--c-success-bg);
+    color: #047857;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.cstatus__dot,
+.cmap__status > span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #34d399;
+}
+
+.cchannels {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 24px;
 }
 
 .cchan {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    padding: 12px 0;
-    border-top: 1px solid var(--line);
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+    min-height: 72px;
+    padding: 13px 15px;
+    border: 1px solid var(--c-line-soft);
+    border-radius: var(--c-radius-md);
+    background: #fafbfc;
+    color: var(--c-ink);
+    transition: border-color .18s ease, background-color .18s ease, transform .18s ease;
 }
 
-/* Kênh cuối cùng cũng cần một đường kẻ dưới — không thì danh sách trông
-   như bị cắt cụt giữa chừng. */
-.cchan:last-of-type {
-    border-bottom: 1px solid var(--line);
+.cchan:hover {
+    border-color: #c9ced5;
+    background: #fff;
+    color: var(--c-ink);
+    transform: translateY(-1px);
 }
 
-.cchan__label {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
+.cchan:focus-visible {
+    outline: 2px solid var(--c-ink);
+    outline-offset: 2px;
+}
+
+.cchan__mark {
+    display: grid;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.cchan__mark--hotline {
+    background: #060606;
+}
+
+.cchan__mark--gmail {
+    background: #1f2937;
+}
+
+.cchan__mark--messenger {
+    background: #1da1f2;
+}
+
+.cchan__logo {
+    display: block;
+    width: 28px;
+    height: 28px;
+}
+
+.cchan__logo--hotline,
+.cchan__logo--gmail {
+    color: #fff;
+}
+
+.cchan__text {
+    min-width: 0;
+}
+
+.cchan__label,
+.cchan__value {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.cchan__value,
-.cchan__text {
-    text-align: right;
-}
-
-/* Chấm màu thương hiệu cạnh tên kênh (Zalo, Messenger). Mẫu không có nó;
-   ẩn hẳn thay vì đưa thêm hai màu vào một trang chỉ có đen trắng. */
-.cchan__mark,
-.cchan__mark--brand {
-    display: none;
-}
-
-/* ┌─ CỘT PHẢI — FORM ─────────────────────────────────────────────────── */
-.cform {
-    display: flex;
-    flex-direction: column;
-    gap: 22px;
-    padding: 40px var(--edge) 24px;
-    background: var(--bg-soft);
-    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
-       trong assets/css/oa.css. */
-    border: 1px solid var(--line-input);
-}
-
-.cform__head {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.cform__title {
-    font-size: var(--fs-subtitle);
-    font-weight: 500;
-    letter-spacing: var(--ls);
+.cchan__label {
+    color: var(--c-muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    line-height: 1.4;
     text-transform: uppercase;
 }
 
+.cchan__value {
+    margin-top: 3px;
+    color: var(--c-ink);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.cservice {
+    padding: 23px 22px;
+    border-radius: var(--c-radius-md);
+    background: #fafafa;
+}
+
+.cservice-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 13px 24px;
+    margin: 16px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.cservice-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    color: var(--c-ink-soft);
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.cservice__icon {
+    flex: none;
+    margin-top: 1px;
+    color: var(--c-ink);
+}
+
+/* Contact form ----------------------------------------------------------- */
+
+.cform {
+    padding: clamp(28px, 3vw, 40px);
+}
+
+.cform__eyebrow,
+.cstores__eyebrow {
+    display: block;
+    color: var(--c-muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    line-height: 1.45;
+    text-transform: uppercase;
+}
+
+.cform__title {
+    margin-top: 7px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(24px, 2vw, 30px);
+    font-weight: 500;
+    letter-spacing: -.025em;
+    line-height: 1.2;
+}
+
 .cform__lead {
-    color: var(--ink-3);
+    margin-top: 7px;
+    color: var(--c-ink-soft);
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.alert {
+    margin-top: 18px;
+    padding: 11px 13px;
+    border: 1px solid var(--c-line);
+    border-left-width: 3px;
+    border-radius: 7px;
+    background: #fafafa;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.alert--ok {
+    border-left-color: var(--c-success);
+}
+
+.alert--err {
+    border-left-color: #dc2626;
 }
 
 .cform__body {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px 20px;
-}
-
-/* Ô chiếm trọn hàng — email và nội dung */
-.cform__pair,
-.cfield--wide {
-    grid-column: 1 / -1;
+    gap: 15px;
+    margin-top: 24px;
 }
 
 .cfield {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
     min-width: 0;
+    flex-direction: column;
+    gap: 7px;
 }
 
 .cfield__label {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
+    color: #566171;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .075em;
+    line-height: 1.4;
     text-transform: uppercase;
 }
 
-/* Ô GẠCH CHÂN, không viền — xem khối chú thích đầu file */
+.cfield__label [aria-hidden="true"] {
+    color: #ef4444;
+}
+
 .cfield__input {
     width: 100%;
-    height: 34px;
-    padding: 0;
-    border: 0;
-    border-bottom: 1px solid var(--line-btn);
-    background: none;
-    color: var(--ink);
+    height: 46px;
+    padding: 0 14px;
+    border: 1px solid #87919e;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--c-ink);
     font-family: inherit;
-    font-size: var(--fs-body);
-    outline: none;
-    transition: border-color .18s ease;
+    font-size: 12px;
+    outline: 0;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.cfield__input::placeholder {
+    color: #5f6876;
+    opacity: 1;
+}
+
+.cfield__input:hover {
+    border-color: #5d6672;
+}
+
+.cfield__input:focus {
+    border-color: var(--c-ink);
+    box-shadow: 0 0 0 1px var(--c-ink);
+}
+
+.cfield__input:invalid:not(:placeholder-shown),
+.cfield__input[aria-invalid="true"] {
+    border-color: #dc2626;
 }
 
 .cfield__input--area {
     height: auto;
-    min-height: 90px;
-    padding: 10px 0;
+    min-height: 84px;
+    padding-top: 12px;
+    padding-bottom: 12px;
     resize: vertical;
-    line-height: var(--lh);
+    line-height: 1.55;
 }
 
-.cfield__input::placeholder {
-    color: var(--ink-5);
-}
-
-.cfield__input:focus {
-    border-bottom-color: var(--ink);
-}
-
-.cfield__input[aria-invalid="true"] {
-    border-bottom-color: var(--sale);
-}
-
-/* ┌─ NÚT GỬI NÉP PHẢI ────────────────────────────────────────────────────
-   │ Nút nằm TRONG `.cform__body`, mà thẻ đó là một LƯỚI. Trong lưới,
-   │ `align-self` căn theo trục DỌC — nó không đẩy nút sang phải được.
-   │ Cặp đúng là `grid-column: 1/-1` (chiếm trọn hàng) + `justify-self: end`.
-   │
-   │ Bẫy này đáng ghi: `align-self:flex-end` là câu đúng khi thẻ cha là
-   │ flex, và nó im lặng không làm gì khi thẻ cha là grid.
-   └──────────────────────────────────────────────────────────────────────── */
 .cform__submit {
-    grid-column: 1 / -1;
-    justify-self: end;
     display: inline-flex;
+    width: 100%;
+    min-height: 50px;
     align-items: center;
-    height: var(--h-btn);
-    padding: 0 28px;
-    border: 1px solid var(--ink);
-    border-radius: var(--r-pill);
-    background: var(--ink);
+    justify-content: center;
+    gap: 10px;
+    margin-top: 6px;
+    padding: 0 24px;
+    border: 1px solid #050505;
+    border-radius: 8px;
+    background: #050505;
     color: #fff;
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .11em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: background .18s ease, color .18s ease;
+    transition: background-color .18s ease, color .18s ease;
 }
 
 .cform__submit:hover {
-    background: var(--bg);
-    color: var(--ink);
+    background: #242424;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   BÁO TRẠNG THÁI
-   ══════════════════════════════════════════════════════════════════════ */
-
-.alert {
-    padding: 12px 14px;
-    border-radius: var(--r-field);
-    background: var(--bg);
-    border-left: 2px solid var(--ink);
-    line-height: var(--lh);
+.cform__submit:focus-visible {
+    outline: 2px solid var(--c-ink);
+    outline-offset: 3px;
 }
 
-.alert--ok {
-    border-left-color: var(--success);
+.cform__submit-icon {
+    transition: transform .18s ease;
 }
 
-.alert--err {
-    border-left-color: var(--sale);
+.cform__submit:hover .cform__submit-icon {
+    transform: translateX(3px);
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   HAI CƠ SỞ + BẢN ĐỒ
+.cform__privacy {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #a0a8b2;
+    font-size: 10px;
+    line-height: 1.4;
+}
 
-   ┌──────────────────┬──────────────────────────────────┐
-   │ 2 CƠ SỞ TẠI HN   │                                  │
-   │ ┌──────────────┐ │        <iframe> bản đồ           │
-   │ │ Long Biên  ● │ │                                  │
-   │ │ 261 Ngọc Lâm │ │  ┌────────────────────────────┐  │
-   │ │ 0901 234 568 │ │  │ Long Biên · 261 Ngọc Lâm   │  │
-   │ │ Mở · Chỉ đg  │ │  └────────────────────────────┘  │
-   │ └──────────────┘ │                                  │
-   │ [Đặt lịch đo mắt]│                                  │
-   └──────────────────┴──────────────────────────────────┘
+.cform__privacy-icon {
+    color: var(--c-success);
+}
 
-   THẺ CƠ SỞ KHÔNG CÓ ẢNH, và đó là điều quan trọng nhất ở khối này: mẫu vẽ
-   thẻ cửa hàng có ảnh mặt tiền, nhưng markup ở đây không mang ảnh nào —
-   `.cstore__head` là HÀNG TÊN, không phải khung ảnh.
-
-   Nên thẻ dựng bằng HÀNG KẺ NGANG thay vì bằng ảnh: cùng ngôn ngữ với
-   .oa-rows của mẫu, và nó nói đúng thứ đang có. Cho .cstore__head một
-   `aspect-ratio` là ra một ô xám trống ôm lấy dòng chữ tên — đúng thứ đã
-   xảy ra.
-
-   CẢ THẺ LÀ MỘT <a>. Vì vậy "Chỉ đường" bên trong là <span> chứ không phải
-   <a> (HTML cấm <a> lồng <a>) — contact.js bắt cú bấm ở đó. Đừng dựng lại
-   nó thành liên kết.
-   ══════════════════════════════════════════════════════════════════════ */
+/* Store locator ---------------------------------------------------------- */
 
 .cstores {
-    padding: 96px var(--edge-grid) 0;
+    padding-top: clamp(84px, 8vw, 116px);
+    padding-bottom: clamp(78px, 8vw, 112px);
 }
 
-.cstores__grid {
-    display: grid;
-    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+.cstores__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
     gap: 32px;
-    align-items: start;
+    padding-bottom: 19px;
+    border-bottom: 1px solid var(--c-line);
+}
+
+.cstores__title {
+    margin-top: 5px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(25px, 2.4vw, 34px);
+    font-weight: 500;
+    letter-spacing: -.025em;
+    line-height: 1.15;
+    text-transform: uppercase;
+}
+
+.cstores__lead {
+    margin-top: 7px;
+    color: var(--c-ink-soft);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.cstores__amenity {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    color: #7b8491;
+    font-size: 10px;
+    line-height: 1.45;
+}
+
+.cstores__amenity-icon {
+    color: #9ca3af;
+}
+
+.cstores__shell {
+    display: grid;
+    grid-template-columns: minmax(340px, .78fr) minmax(0, 1.22fr);
+    gap: 24px;
+    margin-top: 24px;
+    padding: 24px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--c-radius-lg);
+    background: #fff;
+    box-shadow: var(--c-shadow);
 }
 
 .cstores__list {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
     min-width: 0;
-}
-
-.cstores__count {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls-wide);
-    text-transform: uppercase;
-    color: var(--ink-3);
-    margin-bottom: 4px;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .cstore {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 14px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg);
-    color: var(--ink);
-    transition: border-color .18s ease;
+    padding: 20px;
+    border: 1px solid var(--c-line);
+    border-radius: var(--c-radius-md);
+    background: #fff;
+    transition: border-color .18s ease, box-shadow .18s ease;
 }
 
 .cstore:hover {
-    border-color: var(--ink-6);
-    color: var(--ink);
+    border-color: #aeb5bf;
 }
 
-/* Cơ sở ĐANG XEM trên bản đồ — viền đen, đúng luật "đánh dấu lựa chọn bằng
-   đường bao" của mẫu. */
 .cstore.is-on {
-    border-color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--ink);
+    border-color: #111;
+    box-shadow: inset 0 0 0 1px #111;
+}
+
+.cstore__select {
+    display: block;
+    color: var(--c-ink);
+}
+
+.cstore__select:hover {
+    color: var(--c-ink);
+}
+
+.cstore__select:focus-visible,
+.cstore__actions a:focus-visible,
+.cmap__link:focus-visible {
+    outline: 2px solid var(--c-ink);
+    outline-offset: 3px;
 }
 
 .cstore__head {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
+    gap: 16px;
 }
 
-.cstore__name {
-    font-size: var(--fs-subtitle);
+.cstore__identity {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
 }
 
-/* Chấm tròn chỉ cơ sở đang xem. Rỗng khi không chọn, đặc khi đang chọn —
-   trạng thái này chỉ nằm ở hình dạng chấm nên markup có kèm một câu cho
-   trình đọc màn hình; đừng bỏ câu ấy đi. */
 .cstore__dot {
     flex: none;
-    width: 7px;
-    height: 7px;
-    border: 1px solid var(--line-btn);
+    width: 9px;
+    height: 9px;
     border-radius: 50%;
+    background: #d8dde3;
 }
 
 .cstore.is-on .cstore__dot {
-    background: var(--ink);
-    border-color: var(--ink);
+    background: #080808;
+}
+
+.cstore__name {
+    overflow: hidden;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.cstore__hours {
+    flex: none;
+    padding: 4px 10px;
+    border: 1px solid var(--c-success-line);
+    border-radius: 999px;
+    background: var(--c-success-bg);
+    color: #047857;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.cstore__hours.is-closed {
+    border-color: #e5e7eb;
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.cstore__details {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+    color: var(--c-ink-soft);
 }
 
 .cstore__row {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    color: var(--ink-2);
+    gap: 10px;
+    font-size: 11px;
+    line-height: 1.5;
 }
 
-.cstore__row svg {
+.cstore__ico {
     flex: none;
-    margin-top: 2px;
-    color: var(--ink-5);
+    margin-top: 1px;
+    color: #9ca3af;
 }
 
-.cstore__address,
 .cstore__phone {
-    min-width: 0;
+    color: #303846;
+    font-weight: 700;
 }
 
-.cstore__foot {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    padding-top: 8px;
-    margin-top: 2px;
-    border-top: 1px solid var(--line);
+.cstore__row small {
+    color: #89919d;
+    font-size: inherit;
 }
 
-.cstore__hours {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
+.cstore__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 17px;
+    padding-top: 15px;
+    border-top: 1px solid var(--c-line-soft);
 }
 
-.cstore__go {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    white-space: nowrap;
-}
-
-/* ĐIỂM TỐI DUY NHẤT CỦA TRANG — mẫu đặt một ô đen "Đặt lịch đo mắt" ở cuối
-   dãy cửa hàng, và nó là thứ mắt dừng lại sau khi đọc xong hai địa chỉ. */
-.cstores__cta {
-    display: flex;
+.cstore__actions a {
+    display: inline-flex;
+    min-height: 38px;
     align-items: center;
     justify-content: center;
-    height: var(--h-field);
-    margin-top: 6px;
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
-    background: var(--ink);
-    color: #fff;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    line-height: 1.35;
+    text-align: center;
     text-transform: uppercase;
-    transition: background .18s ease;
 }
 
-.cstores__cta:hover {
-    background: #333;
+.cstore__directions {
+    background: #111;
     color: #fff;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   BẢN ĐỒ
+.cstore__directions:hover {
+    background: #292929;
+    color: #fff;
+}
 
-   Dải chữ nền trắng .92 chạy dọc đáy. `pointer-events:none` cho cả dải rồi
-   bật lại cho riêng liên kết "Chỉ đường": dải phủ hết bề ngang, để nó bắt
-   chuột là khách không kéo được bản đồ nữa.
-   ══════════════════════════════════════════════════════════════════════ */
+.cstore__directions::after {
+    content: "→";
+    font-size: 14px;
+    line-height: 1;
+}
+
+.cstore__book {
+    background: #f3f4f6;
+    color: #29313e;
+}
+
+.cstore__book:hover {
+    background: #e8eaed;
+    color: #111827;
+}
+
+/* Map -------------------------------------------------------------------- */
 
 .cmap {
     position: relative;
     min-width: 0;
-    aspect-ratio: 16 / 9;
-    min-height: 360px;
+    min-height: 500px;
     overflow: hidden;
-    background: var(--bg-slot);
+    border: 1px solid var(--c-line);
+    border-radius: var(--c-radius-md);
+    background: #e8e7e3;
 }
 
-/* `position:absolute; inset:0` CHỨ KHÔNG `height:100%`.
-   <iframe> mang chiều cao mặc định 150px của riêng nó, và `height:100%`
-   trên một thẻ cha lấy chiều cao từ `aspect-ratio` thì trình duyệt không
-   phải lúc nào cũng giải được — kết quả là bản đồ nhỏ xíu nằm trong một ô
-   xám lớn. Trải tuyệt đối thì không còn phụ thuộc vào việc ấy. */
 .cmap__frame {
     position: absolute;
     inset: 0;
+    display: block;
     width: 100%;
     height: 100%;
     border: 0;
-    display: block;
 }
 
 .cmap__card {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 18px;
+    left: 18px;
+    z-index: 1;
+    width: min(320px, calc(100% - 36px));
+    padding: 16px;
+    border: 1px solid rgba(222, 226, 230, .95);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .95);
+    box-shadow: 0 10px 25px rgba(17, 24, 39, .13);
+    backdrop-filter: blur(8px);
+}
+
+.cmap__card-head {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 14px;
+}
+
+.cmap__status {
+    display: inline-flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    padding: 12px 14px;
-    background: rgba(255, 255, 255, .92);
-    pointer-events: none;
+    gap: 6px;
+    color: #047857;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1.4;
+    text-transform: uppercase;
 }
 
 .cmap__name {
-    font-size: var(--fs-subtitle);
+    margin-top: 5px;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
 }
 
 .cmap__address {
-    color: var(--ink-3);
+    margin-top: 4px;
+    color: var(--c-ink-soft);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.cmap__pin {
+    display: grid;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 7px;
+    background: #070707;
+    color: #fff;
+}
+
+.cmap__card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 13px;
+    padding-top: 11px;
+    border-top: 1px solid var(--c-line-soft);
+    color: #87909c;
+    font-size: 10px;
+    line-height: 1.4;
 }
 
 .cmap__link {
-    pointer-events: auto;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
+    color: #111;
+    font-weight: 700;
     white-space: nowrap;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   MÀN HẸP
-   ══════════════════════════════════════════════════════════════════════ */
+.cmap__link:hover {
+    color: #111;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
 
-@media (max-width: 760px) {
-    .cquick {
-        padding: 0;
+.is-locating {
+    cursor: wait;
+    opacity: .65;
+}
+
+.page-contact-index .oa-footer {
+    margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cchan,
+    .cfield__input,
+    .cform__submit,
+    .cform__submit-icon,
+    .cstore {
+        transition: none;
     }
+}
 
-    .cform {
-        padding: 24px var(--edge);
-    }
-
-    .cstores {
-        padding-top: 56px;
-    }
-
-    .cstores__grid {
+@media (max-width: 980px) {
+    .ccontact__grid {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .cstores__count {
-        padding: 0;
+    .cquick,
+    .cform {
+        min-height: 0;
     }
 
-    /* Bản đồ thấp lại khi nó không còn phải cao bằng cột cửa hàng bên cạnh */
+    .cstores__head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .cstores__shell {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .cmap {
-        min-height: 300px;
-        aspect-ratio: 1 / 1;
+        min-height: 440px;
+    }
+}
+
+@media (max-width: 620px) {
+    .page-contact-index .oa-pagehead {
+        padding-right: 20px;
+        padding-left: 20px;
+    }
+
+    .page-contact-index .oa-pagehead .oa-title {
+        max-width: 360px;
+    }
+
+    .ccontact,
+    .cstores {
+        padding-right: 16px;
+        padding-left: 16px;
+    }
+
+    .cquick,
+    .cform {
+        border-radius: 13px;
+    }
+
+    .cquick {
+        padding: 22px;
+    }
+
+    .cquick__head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .cchannels,
+    .cservice-list {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cform {
+        padding: 24px 20px;
+    }
+
+    .cstores {
+        padding-top: 68px;
+    }
+
+    .cstores__title {
+        max-width: 360px;
+    }
+
+    .cstores__shell {
+        gap: 16px;
+        padding: 12px;
+        border-radius: 13px;
+    }
+
+    .cstore {
+        padding: 17px;
+    }
+
+    .cstore__head {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .cstore__name {
+        white-space: normal;
+    }
+
+    .cstore__actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .cmap {
+        min-height: 400px;
+    }
+
+    .cmap__card {
+        top: 12px;
+        left: 12px;
+        width: calc(100% - 24px);
     }
 }

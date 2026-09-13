@@ -28,6 +28,10 @@ design-export/
 # lượt kiểm tra, chụp lại lúc nào cũng được.
 .playwright-mcp/
 
+# Tài liệu tham chiếu thiết kế và test cục bộ — không đưa lên Git.
+/design-reference/
+/tests/
+
 # Thư mục ghi của ứng dụng (bản nháp email, log) — không đưa lên git
 storage/
 

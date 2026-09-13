@@ -3,9 +3,9 @@
  *
  * Hai việc, đều là TĂNG CƯỜNG chứ không phải điều kiện để trang chạy:
  *
- *   1. Đổi cơ sở trên bản đồ mà không tải lại trang. Mỗi thẻ cơ sở là một
- *      <a href="?cs=MÃ"> thật; tắt JavaScript thì bấm vào vẫn đổi được bản đồ,
- *      chỉ là qua một lượt tải trang.
+ *   1. Đổi cơ sở trên bản đồ mà không tải lại trang. Tên và nội dung chính
+ *      của mỗi thẻ nằm trong một <a href="?cs=MÃ"> thật; tắt JavaScript thì
+ *      bấm vào vẫn đổi được bản đồ, chỉ là qua một lượt tải trang.
  *
  *   2. Nút "Chỉ đường" xin vị trí hiện tại của khách rồi mở Google Maps với
  *      lộ trình từ đúng chỗ khách đang đứng tới cơ sở. Không có JS — hoặc
@@ -173,30 +173,42 @@
 
         if (!store || !list.contains(store)) return;
 
+        var directionsButton = event.target.closest('.cstore__directions');
+        var bookingButton    = event.target.closest('.cstore__book');
+        var selectLink       = event.target.closest('.cstore__select');
+
+        // Các hành động có link thật để vẫn dùng được khi JavaScript tắt.
+        // Đặt lịch đi thẳng tới trang riêng; chỉ đường được tăng cường bằng
+        // vị trí hiện tại nếu trình duyệt cho phép.
+        if (bookingButton) return;
+
+        if (directionsButton) {
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+
+            event.preventDefault();
+            directions(store.getAttribute('data-directions'), directionsButton);
+            return;
+        }
+
+        if (!selectLink) return;
+
         // Ctrl/Cmd/giữa chuột = người dùng cố ý mở tab mới -> để trình duyệt lo
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
 
         event.preventDefault();
-
-        // "Chỉ đường" nằm LỒNG trong thẻ <a> của cơ sở nên không thể tự là một
-        // liên kết riêng (HTML cấm <a> trong <a>). Vì vậy phải tách ở đây, và
-        // phải tách TRƯỚC nhánh "đang xem sẵn" bên dưới — bấm chỉ đường trên
-        // chính cơ sở đang mở là trường hợp hay gặp nhất.
-        if (event.target.closest('.cstore__go')) {
-            directions(store.getAttribute('data-directions'), event.target.closest('.cstore__go'));
-            return;
-        }
 
         // Đang xem sẵn rồi thì không làm gì — tránh nạp lại iframe vô ích
         if (store.classList.contains('is-on')) return;
 
         list.querySelectorAll('.cstore').forEach(function (el) {
             el.classList.remove('is-on');
-            el.removeAttribute('aria-current');
+
+            var link = el.querySelector('.cstore__select');
+            if (link) link.removeAttribute('aria-current');
         });
 
         store.classList.add('is-on');
-        store.setAttribute('aria-current', 'true');
+        selectLink.setAttribute('aria-current', 'true');
 
         var name = store.getAttribute('data-name');
 
@@ -212,7 +224,7 @@
         // pushState: chọn qua lại giữa hai cơ sở không đáng để nút Back phải
         // lùi từng bước một.
         if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', store.getAttribute('href'));
+            window.history.replaceState(null, '', selectLink.getAttribute('href'));
         }
     });
 
