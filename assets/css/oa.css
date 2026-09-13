@@ -2208,9 +2208,13 @@ textarea.oa-field {
    │ kể cả khi đổi --oa-scale về sau. CSS width/height đè lên thuộc tính HTML
    │ nên không phải sửa một dòng markup nào.
    │
-   │ HỆ SỐ NAY LÀ 1.26 (13/09/2026, theo yêu cầu chủ dự án: icon phải CAO
-   │ BẰNG các mục nav bên trái). Lịch sử: 1.3 → 1 (12/09) → .92 → 1.26
-   │ (cùng ngày 13/09). Đổi tiếp thì đọc hết đoạn này trước.
+   │ HỆ SỐ NAY LÀ 1.34 (13/09/2026, theo yêu cầu chủ dự án: icon phải CAO
+   │ BẰNG các mục nav bên trái). Lịch sử: 1.3 → 1 (12/09) → .92 → 1.26 →
+   │ 1.34 (cùng ngày 13/09). Đổi tiếp thì đọc hết đoạn này trước.
+   │
+   │ 1.34 CHỌN THEO MẮT, KHÔNG THEO PHÉP TÍNH: ở 1.26 số đo đã khớp (xem
+   │ dưới) mà nhìn vẫn thấy icon nhỉnh bé hơn chữ, nên nhích thêm ~6% (nét
+   │ trung bình ~16px). Đừng "sửa" về 1.26 cho khớp phép tính.
    │
    │ "Cao bằng mục nav" đo theo NÉT MẮT THẤY, không theo khung:
    │   · hàng chữ nav, từ đỉnh dấu ("ọ", "ờ") tới đáy đuôi chữ ("g", "p"),
@@ -2236,8 +2240,8 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────── */
 .oa-header__btn > svg,
 .oa-header__burger > svg {
-    width: 1.26em;
-    height: 1.26em;
+    width: 1.34em;
+    height: 1.34em;
 
     /* `flex: none` BẮT BUỘC. Ba nút là flex item của .oa-header__actions, và
        svg bên trong chúng cũng là flex item. Ở màn hẹp, wordmark giữa đẩy cột
