@@ -9,8 +9,8 @@
 
      nền trang     #fbfbfb; ô nhập và thẻ nền trắng nổi lên trên
      chữ           #111 · phụ #8a8a8a · 14px; tiêu đề 20px IN HOA
-     tab           viên thuốc 40px, viền #d9d9d9, chữ xám; đang chọn nền #e8e8e8
-     nút           cao 52px, bo 4px, viền #9a9a9a, rê chuột thành nền đen;
+     tab           ô 40px VUÔNG GÓC, viền #d9d9d9, chữ xám; đang chọn nền #e8e8e8
+     nút           cao 52px, VUÔNG GÓC, viền #9a9a9a, rê chuột thành nền đen;
                    nút đặc nền #111, chưa gửi được thì nền #8a8a8a
      ô nhập        cao 48px, viền #d9d9d9, bo 4px, lấy nét viền đen
      ô có nhãn     nhãn 12px xám nằm TRONG ô trắng, padding 8px 14px
@@ -93,7 +93,9 @@
     height: 40px;
     padding: 0 15px;
     border: 1px solid var(--acct-line);
-    border-radius: 999px;
+    /* Vuông góc — mọi nút của trang tài khoản không bo (chủ dự án, 13/09/2026).
+       Bản vẽ gốc là viên thuốc 999px. */
+    border-radius: 0;
     background: transparent;
     color: var(--acct-mute);
     font-size: 14px;
@@ -340,7 +342,8 @@
     height: 52px;
     padding: 0 20px;
     border: 1px solid var(--acct-btn-line);
-    border-radius: 4px;
+    /* Vuông góc — xem .acct-nav__tab. Bản vẽ gốc bo 4px. */
+    border-radius: 0;
     background: transparent;
     color: var(--acct-ink);
     font-size: 14px;
@@ -877,8 +880,8 @@ select.acct-field__ctl {
    chúng ghi ở đầu app/views/auth/account/da-luu.php — đọc bên đó trước khi
    "sửa cho giống mẫu".
 
-   ⚠ #f9f9f9 (nền ô ảnh), #ebebeb (nền nút), #8a8a8a (chữ mờ) và bo góc 2px
-   lấy nguyên của mẫu, KHÔNG qua token của site. Cùng lối với trang giỏ hàng
+   ⚠ #f9f9f9 (nền ô ảnh), #ebebeb (nền nút), #8a8a8a (chữ mờ)
+   lấy nguyên của mẫu (bo góc 2px của mẫu đã bỏ — nút trang này vuông góc), KHÔNG qua token của site. Cùng lối với trang giỏ hàng
    dựng cùng đợt; muốn kéo về hệ token thì đổi cả hai trang một lần.
    ══════════════════════════════════════════════════════════════════════ */
 
@@ -1041,7 +1044,7 @@ select.acct-field__ctl {
     align-self: flex-start;
     margin-top: 14px;
     border: 0;
-    border-radius: 2px;
+    border-radius: 0;
     background: #ebebeb;
     padding: 10px 12px;
     font: inherit;
@@ -1086,7 +1089,7 @@ select.acct-field__ctl {
     display: flex;
     align-items: center;
     gap: 12px;
-    border-radius: 2px;
+    border-radius: 0;
     background: #fff;
     padding: 12px 16px;
     font-size: 14px;
