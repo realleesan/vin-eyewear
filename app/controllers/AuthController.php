@@ -2091,11 +2091,17 @@ class AuthController extends BaseController
      * chúng vừa là nhãn trên cột điều hướng vừa là tiêu đề thẻ trình duyệt.
      * 'lich-hen' không có trong đặc tả nên giữ nguyên chữ cũ.
      */
+    /* THỨ TỰ CỦA "Ho So Nguoi Dung.dc.html" (13/09/2026): năm tab Tài khoản ·
+       Đơn hàng · Đã lưu · Sổ địa chỉ · Hồ sơ. 'lich-hen' không có trong bản vẽ
+       nhưng giữ lại theo yêu cầu chủ dự án — đây là chỗ duy nhất khách xem, đổi
+       và huỷ lịch đo mắt — nên nó đứng cuối hàng tab. */
     private const SECTIONS = [
-        'ho-so'    => 'Hồ sơ cá nhân',
-        'don-hang' => 'Đơn hàng',
-        'da-luu'   => 'Đã lưu',
-        'lich-hen' => 'Lịch hẹn của tôi',
+        'tong-quan' => 'Tài khoản',
+        'don-hang'  => 'Đơn hàng',
+        'da-luu'    => 'Đã lưu',
+        'dia-chi'   => 'Sổ địa chỉ',
+        'ho-so'     => 'Hồ sơ',
+        'lich-hen'  => 'Lịch hẹn',
     ];
 
     /**
@@ -2123,7 +2129,11 @@ class AuthController extends BaseController
      * tới. Hai dòng menu liền nhau, hai nhãn khác nhau, cùng một trang.
      * ─────────────────────────────────────────────────────────────────────
      */
-    private const DEFAULT_SECTION = 'ho-so';
+    /* ĐỔI 13/09/2026 — bản thiết kế "Ho So Nguoi Dung" mở trang bằng tab
+       "Tài khoản" (lời chào + đơn gần đây + đã lưu + tóm tắt hồ sơ). Tab ấy
+       trả lời được cả hai lối vào nói trên — "Thông tin tài khoản" lẫn "Tài
+       khoản của tôi" — mà không rơi vào danh sách đơn. */
+    private const DEFAULT_SECTION = 'tong-quan';
 
     public function profile(): void
     {
@@ -2278,14 +2288,31 @@ class AuthController extends BaseController
     private function sectionData(string $section, string $userId): array
     {
         switch ($section) {
+            case 'tong-quan':
+                /* Tab mở đầu: ba đơn mới nhất và bốn mẫu vừa lưu. forUser() đã
+                   xếp mới nhất trước; cắt ở PHP vì hàm ấy không nhận giới hạn,
+                   và một khách có vài chục đơn là trường hợp hiếm. */
+                $recent = array_slice(OrderModel::forUser($userId), 0, 3);
+
+                return [
+                    'recent'      => $recent,
+                    'recentItems' => OrderModel::itemsForOrders(array_column($recent, 'id')),
+                    'saved'       => FavoriteModel::danhSach($userId, 4),
+                    'luuDuoc'     => FavoriteModel::available(),
+                ];
+
             case 'ho-so':
+                return [
+                    'google'  => UserModel::googleLink($userId),
+                    /* Chế độ xem (mặc định) hay form sửa — xem đầu account/ho-so.php. */
+                    'suaHoSo' => isset($_GET['sua-ho-so']),
+                ];
+
+            case 'dia-chi':
                 /*
                  * ─────────────────────────────────────────────────────────────
-                 * BA KHU VỰC CỦA TRANG HỒ SƠ CẦN GÌ
-                 *
-                 * Hỏi ở đây chứ không để view gọi model: mục này là mục duy
-                 * nhất vẽ chúng, nên các câu hỏi không nên chạy ở hai mục còn
-                 * lại.
+                 * SỔ ĐỊA CHỈ — TAB RIÊNG TỪ 13/09/2026 (bản thiết kế "Ho So
+                 * Nguoi Dung" tách nó khỏi trang Hồ sơ)
                  *
                  * ?sua= THẮNG ?them= — và đây không phải chuyện ưu tiên tuỳ ý.
                  * Cả hai form địa chỉ đều mang khối [data-vnaddr], mà
@@ -2302,15 +2329,11 @@ class AuthController extends BaseController
                     ? AddressModel::findOwned((string) $_GET['sua'], $userId) : null;
 
                 return [
-                    'google'       => UserModel::googleLink($userId),
                     'addresses'    => AddressModel::forUser($userId),
                     'editing'      => $suaDiaChi,
                     'themDiaChi'   => isset($_GET['them']),
                     'nhanDiaChi'   => AddressModel::NHAN,
                     'toiDaDiaChi'  => AddressModel::TOI_DA,
-                    /* Chế độ của Khu vực 1: xem (mặc định) hay sửa. Xem khối
-                       "XEM TRƯỚC, BẤM MỚI SỬA" ở đầu account/ho-so.php. */
-                    'suaHoSo'      => isset($_GET['sua-ho-so']),
                 ];
 
             case 'da-luu':
@@ -2444,12 +2467,14 @@ class AuthController extends BaseController
             redirect(self::VE_HO_SO . '&sua-ho-so=1#thong-tin');
         }
 
+        /* CHỈ HAI CỘT. Form theo bản thiết kế "Ho So Nguoi Dung" (13/09/2026)
+           không còn ô giới tính và ngày sinh. updateProfile() chỉ ghi những khoá
+           CÓ MẶT trong mảng, nên bỏ hai khoá ở đây là GIỮ NGUYÊN giá trị cũ —
+           để lại chúng thì mỗi lần khách lưu họ tên là một lần xoá trắng hai cột
+           ấy, vì form không còn gửi gì lên cho chúng. */
         $result = UserModel::updateProfile($userId, [
-            'full_name'     => trim((string) ($_POST['full_name'] ?? '')),
-            'phone'         => trim((string) ($_POST['phone'] ?? '')),
-            'gender'        => (string) ($_POST['gender'] ?? ''),
-            'date_of_birth' => ($_POST['date_of_birth'] ?? '') !== ''
-                ? (string) $_POST['date_of_birth'] : null,
+            'full_name' => trim((string) ($_POST['full_name'] ?? '')),
+            'phone'     => trim((string) ($_POST['phone'] ?? '')),
         ]);
 
         if (!$result['ok']) {
@@ -2479,10 +2504,13 @@ class AuthController extends BaseController
     /** Đường quay về trang Hồ sơ. Một hằng vì mười mấy chỗ dưới đây dùng nó. */
     private const VE_HO_SO = '/tai-khoan?muc=ho-so';
 
+    /** Đường quay về tab Sổ địa chỉ — tab riêng từ 13/09/2026. */
+    private const VE_DIA_CHI = '/tai-khoan?muc=dia-chi';
+
     public function addAddress(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost(self::VE_HO_SO . '#so-dia-chi');
+        $this->requirePost(self::VE_DIA_CHI . '#so-dia-chi');
 
         $result = AddressModel::them($userId, $_POST);
 
@@ -2491,34 +2519,34 @@ class AuthController extends BaseController
             /* Mở lại form THÊM, không về danh sách: dữ liệu khách vừa gõ mất
                rồi (form này không giữ giá trị cũ), nhưng ít nhất họ không phải
                tìm lại nút "Thêm địa chỉ mới" trước khi gõ lại. */
-            redirect(self::VE_HO_SO . '&them=1#them-dia-chi');
+            redirect(self::VE_DIA_CHI . '&them=1#them-dia-chi');
         }
 
         flash('account_success', 'Đã thêm địa chỉ vào sổ.');
-        redirect(self::VE_HO_SO . '#so-dia-chi');
+        redirect(self::VE_DIA_CHI . '#so-dia-chi');
     }
 
     public function updateAddress(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost(self::VE_HO_SO . '#so-dia-chi');
+        $this->requirePost(self::VE_DIA_CHI . '#so-dia-chi');
 
         $id     = (string) ($_POST['id'] ?? '');
         $result = AddressModel::sua($id, $userId, $_POST);
 
         if (!$result['ok']) {
             flash('account_error', $result['error']);
-            redirect(self::VE_HO_SO . '&sua=' . rawurlencode($id) . '#sua-dia-chi');
+            redirect(self::VE_DIA_CHI . '&sua=' . rawurlencode($id) . '#sua-dia-chi');
         }
 
         flash('account_success', 'Đã cập nhật địa chỉ.');
-        redirect(self::VE_HO_SO . '#so-dia-chi');
+        redirect(self::VE_DIA_CHI . '#so-dia-chi');
     }
 
     public function deleteAddress(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost(self::VE_HO_SO . '#so-dia-chi');
+        $this->requirePost(self::VE_DIA_CHI . '#so-dia-chi');
 
         $result = AddressModel::xoa((string) ($_POST['id'] ?? ''), $userId);
 
@@ -2528,13 +2556,13 @@ class AuthController extends BaseController
             flash('account_success', 'Đã xoá địa chỉ khỏi sổ.');
         }
 
-        redirect(self::VE_HO_SO . '#so-dia-chi');
+        redirect(self::VE_DIA_CHI . '#so-dia-chi');
     }
 
     public function setDefaultAddress(): void
     {
         $userId = AuthMiddleware::requireLogin();
-        $this->requirePost(self::VE_HO_SO . '#so-dia-chi');
+        $this->requirePost(self::VE_DIA_CHI . '#so-dia-chi');
 
         $result = AddressModel::datMacDinh((string) ($_POST['id'] ?? ''), $userId);
 
@@ -2545,7 +2573,7 @@ class AuthController extends BaseController
                 'Đã đặt địa chỉ mặc định. Địa chỉ này sẽ được điền sẵn khi bạn đặt hàng.');
         }
 
-        redirect(self::VE_HO_SO . '#so-dia-chi');
+        redirect(self::VE_DIA_CHI . '#so-dia-chi');
     }
 
     /**
@@ -2946,7 +2974,8 @@ class AuthController extends BaseController
         // gợi ý của trình duyệt — request gửi tay thì không đi qua nó.
         if ($new !== $confirm) {
             flash('account_error', 'Hai lần nhập mật khẩu mới không khớp.');
-            redirect(self::VE_HO_SO . '#doi-mat-khau');
+            // &doi-mat-khau=1: form đổi mật khẩu gập sẵn, lỗi thì phải mở lại.
+            redirect(self::VE_HO_SO . '&doi-mat-khau=1#doi-mat-khau');
         }
 
         $result = UserModel::changePassword(
@@ -2957,7 +2986,7 @@ class AuthController extends BaseController
 
         if (!$result['ok']) {
             flash('account_error', $result['error']);
-            redirect(self::VE_HO_SO . '#doi-mat-khau');
+            redirect(self::VE_HO_SO . '&doi-mat-khau=1#doi-mat-khau');
         }
 
         // Đổi mật khẩu là đá mọi thiết bị đang "ghi nhớ đăng nhập" ra ngoài.

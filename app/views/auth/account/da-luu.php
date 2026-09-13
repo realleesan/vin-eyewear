@@ -1,78 +1,45 @@
 <?php
 
 /**
- * auth/account/da-luu.php — mục "Đã lưu" (/tai-khoan?muc=da-luu).
+ * auth/account/da-luu.php — tab "Đã lưu" (/tai-khoan?muc=da-luu).
  *
- * Danh sách mặt hàng khách bấm dấu trang ở trang chi tiết sản phẩm. Mới lưu
- * nằm trước; mặt hàng cửa hàng đã ẩn thì rơi khỏi danh sách nhưng dòng lưu vẫn
- * còn trong CSDL — xem FavoriteModel::danhSach().
+ * Màn "Wishlist" của "Ho So Nguoi Dung.dc.html": tiêu đề kèm số mũ, chưa có gì
+ * thì một câu + nút TIẾP TỤC MUA SẮM. Có hàng thì lưới thẻ gọn bên dưới tiêu
+ * đề — bản thiết kế không vẽ trạng thái này.
  *
- * ─────────────────────────────────────────────────────────────────────────────
- * VÌ SAO KHÔNG DÙNG _layout/product-card.php
+ * Mặt hàng cửa hàng đã ẩn thì rơi khỏi danh sách nhưng dòng lưu vẫn còn trong
+ * CSDL — xem FavoriteModel::danhSach().
  *
- * Thẻ sản phẩm dùng chung là thẻ để MUA: nó mang hai nút "Mua ngay / Thêm vào
- * giỏ" nổi trên ảnh, và không có chỗ nào để bỏ lưu. Mục này cần đúng một thao
- * tác khác hẳn — gỡ khỏi danh sách — nên nó có thẻ riêng, gọn hơn, cùng ngôn
- * ngữ với các thẻ khác của trang tài khoản.
+ * THẺ RIÊNG, KHÔNG DÙNG _layout/product-card.php: thẻ dùng chung là thẻ để MUA
+ * (hai nút nổi trên ảnh) và không có chỗ bỏ lưu. Mọi việc mua diễn ra ở trang
+ * chi tiết — bấm ảnh hoặc tên là tới đó.
  *
- * Đường sang trang chi tiết vẫn còn (bấm vào ảnh hoặc tên), và mọi việc mua
- * bán diễn ra ở đó.
+ * NÚT "BỎ LƯU" LÀ FORM POST tới /yeu-thich — một công tắc, một cửa với nút ở
+ * trang chi tiết. KHÔNG hỏi lại: bỏ lưu không mất gì (bấm dấu trang lại là có),
+ * mà hộp thoại cho việc vô hại thì lần thứ ba người ta bấm "Đồng ý" không đọc.
  *
- * ─────────────────────────────────────────────────────────────────────────────
- * NÚT "BỎ LƯU" LÀ FORM POST, KHÔNG PHẢI LIÊN KẾT
- *
- * Cùng đường /yeu-thich với nút ở trang chi tiết — một công tắc, một cửa. Ô ẩn
- * `back` đưa khách về đúng mục này thay vì nhảy sang trang sản phẩm vừa bỏ.
- *
- * KHÔNG hỏi lại trước khi bỏ: thao tác này không mất gì (bấm lại dấu trang ở
- * trang sản phẩm là có lại ngay), mà hộp thoại xác nhận cho một việc vô hại thì
- * lần thứ ba người ta bấm "Đồng ý" mà không đọc nữa — rồi tới lúc gặp hộp thoại
- * huỷ đơn hàng, họ cũng bấm như thế.
- *
- * Nhận qua sectionData():
- *   $saved   — mảng dòng sản phẩm đã giải mã (có thể rỗng)
- *   $luuDuoc — CSDL đã có bảng `favorites` chưa
+ * Nhận qua sectionData(): $saved, $luuDuoc
  */
 
 $saved   = $saved   ?? [];
 $luuDuoc = $luuDuoc ?? false;
-
-/* Đường về sau khi bấm "Bỏ lưu". Gõ thẳng chứ không currentUrlWithout(): mục
-   này không có tham số phụ nào cần giữ, và một hằng thì không phụ thuộc vào
-   việc khách tới đây bằng liên kết nào. */
-$quayVe = '/tai-khoan?muc=da-luu';
 ?>
 
-<div class="acct-head acct-head--row">
-    <div>
-        <h1 class="acct-head__title">Đã lưu</h1>
-        <p class="acct-head__lead">Những mẫu bạn đánh dấu để xem lại.</p>
-    </div>
-    <a class="acct-btn" href="/san-pham">Xem thêm sản phẩm</a>
-</div>
+<h1 class="acct-title">Đã lưu<sup class="acct-title__sup"><?= count($saved) ?></sup></h1>
 
 <?php if (!$luuDuoc): ?>
 
-    <?php /* Bảng chưa dựng (máy chưa chạy migration). Nói thẳng là tính năng
-             đang tạm ngưng — một danh sách rỗng ở đây sẽ đọc thành "bạn chưa
-             lưu gì", và khách đã lưu vài món sẽ tưởng mình mất dữ liệu. */ ?>
+    <?php /* Bảng chưa dựng: nói thẳng là tạm ngưng — một danh sách rỗng ở đây
+             đọc thành "bạn chưa lưu gì", khách đã lưu sẽ tưởng mất dữ liệu. */ ?>
     <div class="acct-empty">
-        <span class="acct-empty__title">Tính năng đang tạm ngưng</span>
-        <span class="acct-empty__lead">Danh sách đã lưu sẽ trở lại trong ít phút nữa. Không có mục nào của bạn bị mất.</span>
+        <p class="acct-empty__text">Danh sách đã lưu đang tạm ngưng — không mục nào của bạn bị mất.</p>
     </div>
 
 <?php elseif ($saved === []): ?>
 
     <div class="acct-empty">
-        <span class="acct-empty__ring" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b0736a"
-                 stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z"></path>
-            </svg>
-        </span>
-        <span class="acct-empty__title">Chưa lưu mẫu nào</span>
-        <span class="acct-empty__lead">Mở một sản phẩm bạn thích rồi bấm “Lưu sản phẩm” — nó sẽ nằm ở đây.</span>
-        <a class="acct-empty__cta" href="/san-pham">Xem sản phẩm</a>
+        <p class="acct-empty__text">Bạn chưa lưu sản phẩm nào.</p>
+        <a class="acct-btn acct-empty__btn" href="/san-pham/gong-kinh">Tiếp tục mua sắm</a>
     </div>
 
 <?php else: ?>
@@ -86,7 +53,6 @@ $quayVe = '/tai-khoan?muc=da-luu';
             $conHang = ProductModel::inStock($p);
             ?>
             <li class="acct-saved__item">
-
                 <a class="acct-saved__shot" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
                     <?php if (ProductModel::hasImage($p)): ?>
                         <img src="<?= e(asset(ProductModel::image($p))) ?>" alt=""
@@ -97,35 +63,31 @@ $quayVe = '/tai-khoan?muc=da-luu';
                 </a>
 
                 <div class="acct-saved__body">
-                    <a class="acct-saved__name notranslate" translate="no" lang="vi"
-                       href="<?= e($url) ?>"><?= e($p['name']) ?></a>
-
-                    <span class="acct-saved__price">
-                        <?php if ($gach !== null && $gach > $gia): ?>
-                            <s><?= money($gach) ?></s>
+                    <div>
+                        <a class="acct-saved__name notranslate" translate="no" lang="vi"
+                           href="<?= e($url) ?>"><?= e($p['name']) ?></a>
+                        <span class="acct-saved__price">
+                            <?= money($gia) ?>
+                            <?php if ($gach !== null && $gach > $gia): ?>
+                                <s><?= money($gach) ?></s>
+                            <?php endif; ?>
+                        </span>
+                        <?php if (!$conHang): ?>
+                            <span class="acct-saved__out">Tạm hết hàng</span>
                         <?php endif; ?>
-                        <b><?= money($gia) ?></b>
-                    </span>
+                    </div>
 
-                    <?php if (!$conHang): ?>
-                        <span class="acct-saved__out">Tạm hết hàng</span>
-                    <?php endif; ?>
+                    <form method="post" action="/yeu-thich">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="slug" value="<?= e($p['slug']) ?>">
+                        <input type="hidden" name="back" value="/tai-khoan?muc=da-luu">
+                        <?php /* Tên hàng trong .sr-only: cả danh sách nhiều nút giống
+                                 hệt nhau, "Bỏ lưu · Bỏ lưu" không chỉ được cái nào. */ ?>
+                        <button type="submit" class="acct-saved__drop">
+                            Bỏ lưu<span class="sr-only"> — <?= e($p['name']) ?></span>
+                        </button>
+                    </form>
                 </div>
-
-                <form method="post" action="/yeu-thich">
-                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                    <input type="hidden" name="slug" value="<?= e($p['slug']) ?>">
-                    <input type="hidden" name="back" value="<?= e($quayVe) ?>">
-
-                    <?php /* Tên hàng nhắc lại trong .sr-only: cả danh sách có
-                             nhiều nút giống hệt nhau, và trình đọc màn hình
-                             duyệt riêng danh sách nút thì "Bỏ lưu · Bỏ lưu ·
-                             Bỏ lưu" không chỉ được cái nào. */ ?>
-                    <button type="submit" class="acct-saved__drop">
-                        Bỏ lưu<span class="sr-only"> — <?= e($p['name']) ?></span>
-                    </button>
-                </form>
-
             </li>
         <?php endforeach; ?>
     </ul>

@@ -63,26 +63,15 @@ $khiNao = static fn (array $a): string => formatDate($a['appointment_date']);
    nào, hành động chính của cả mục lại nằm ở giữa thẻ trạng thái rỗng và nhảy chỗ
    ngay khi khách đặt lịch đầu tiên. ĐỪNG di chuyển khối này vào trong. */
 ?>
-<div class="acct-head acct-head--row">
-    <div>
-        <h1 class="acct-head__title">Lịch hẹn của tôi</h1>
-        <p class="acct-head__lead">Lịch đo mắt và tư vấn tại cửa hàng.</p>
-    </div>
-    <a class="acct-btn acct-btn--primary" href="/dat-lich">Đặt lịch mới</a>
-</div>
+<?php /* Tab này KHÔNG có trong "Ho So Nguoi Dung.dc.html" — giữ theo yêu cầu chủ
+         dự án, và dựng bằng đúng các nguyên thể của bản vẽ: tiêu đề in hoa căn
+         giữa, trạng thái rỗng là một câu + một nút viền. */ ?>
+<h1 class="acct-title">Lịch hẹn</h1>
 
 <?php if ($appointments === []): ?>
     <div class="acct-empty">
-        <span class="acct-empty__ring" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b0736a"
-                 stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M7 3v3M17 3v3"></path>
-                <path d="M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"></path>
-            </svg>
-        </span>
-        <span class="acct-empty__title">Chưa có lịch hẹn nào</span>
-        <span class="acct-empty__lead">Đo khúc xạ tại Vin Eyewear miễn phí, chỉ mất khoảng 20 phút.</span>
-        <a class="acct-empty__cta" href="/dat-lich">Đặt lịch đo mắt</a>
+        <p class="acct-empty__text">Bạn chưa có lịch hẹn nào. Đo khúc xạ tại Vin Eyewear miễn phí, chỉ mất khoảng 20 phút.</p>
+        <a class="acct-btn acct-empty__btn" href="/dat-lich">Đặt lịch đo mắt</a>
     </div>
 <?php else: ?>
     <div class="acct-list">

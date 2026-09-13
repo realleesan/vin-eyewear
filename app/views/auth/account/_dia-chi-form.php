@@ -3,10 +3,12 @@
 /**
  * auth/account/_dia-chi-form.php — form thêm/sửa một địa chỉ trong sổ.
  *
+ * Dáng "NEW ADDRESS" của "Ho So Nguoi Dung.dc.html": ô nhập cao 48px, viền
+ * #d9d9d9, chữ gợi ý nằm trong ô; hai nút HUỶ · LƯU chia đôi ở cuối.
+ *
  * MỘT FILE CHO CẢ HAI VIỆC. Thêm và sửa hỏi đúng cùng bộ câu hỏi; khác nhau ở
  * đường gửi, chữ trên nút, và một ô ẩn `id`. Hai file thì sớm muộn có một bản
- * quên thêm ô mới — và ô quên ấy sẽ là ô người ta chỉ phát hiện khi hàng đi
- * nhầm chỗ.
+ * quên thêm ô mới.
  *
  * Nhận qua partial():
  *   $dc       mảng địa chỉ đang sửa, hoặc null khi đang thêm mới
@@ -16,151 +18,111 @@
  *   $nutLuu   chữ trên nút gửi
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * HỢP ĐỒNG VỚI address-picker.js
+ * NHÃN ẨN, KHÔNG BỎ. Bản thiết kế chỉ có chữ gợi ý trong ô; chữ gợi ý biến mất
+ * khi gõ và trình đọc màn hình không coi nó là nhãn. Mỗi ô vẫn có <label> thật,
+ * chỉ ẩn khỏi mắt (.sr-only).
  *
- * Nằm ở các thuộc tính data-vnaddr* dưới đây, KHÔNG ở tên ô — đọc khối chú
- * thích đầu assets/js/address-picker.js trước khi đổi bất cứ thứ gì trong khối
- * [data-vnaddr]. File ấy đã được nạp sẵn cho trang tài khoản (xem $pageScripts
- * trong _layout/master.php).
+ * HỢP ĐỒNG VỚI address-picker.js nằm ở các thuộc tính data-vnaddr* — đọc khối
+ * chú thích đầu file JS ấy trước khi đổi gì trong khối [data-vnaddr]. CẢ TRANG
+ * CHỈ ĐƯỢC CÓ MỘT KHỐI như thế.
  *
- * ⚠ CẢ TRANG CHỈ ĐƯỢC CÓ MỘT KHỐI [data-vnaddr]: cụm kia tìm bằng
- * querySelector, không phải querySelectorAll. Vì thế trang hồ sơ chỉ mở MỘT
- * form địa chỉ mỗi lượt — AuthController::sectionData() lo phần đó (?sua=
- * thắng ?them=). Mở hai cái thì cái thứ hai còn trơ hai ô gõ tay.
- *
- * KHÔNG CÓ Ô QUẬN/HUYỆN, dù UC-USER-05 có liệt kê. Từ 01/07/2025 Việt Nam bỏ
- * cấp huyện, địa chỉ còn hai cấp tỉnh/thành -> phường/xã, và
- * provinces.open-api.vn v2 cũng chỉ trả hai cấp — không có nguồn nào đổ dữ
- * liệu cho một ô như thế.
+ * KHÔNG CÓ Ô QUẬN/HUYỆN như bản thiết kế ("District, City"): từ 01/07/2025 Việt
+ * Nam bỏ cấp huyện, địa chỉ còn tỉnh/thành -> phường/xã.
  */
 
 $laSua = $dc !== null;
 $neo   = $laSua ? 'sua-dia-chi' : 'them-dia-chi';
 ?>
 
-<?php /* MỘT thẻ mang cả ba lớp, không phải <section> bọc <form>: .acct-card cho
-         nền và bo góc, .acct-form cho cột dọc + đệm 36/40, .acct-addr-form cho
-         viền nhấn. Lồng hai lớp .acct-form vào nhau là đệm cộng đôi — form thụt
-         vào 80px so với thẻ địa chỉ ngay trên nó. */ ?>
-    <form class="acct-card acct-form acct-addr-form" id="<?= e($neo) ?>"
-          method="post" action="<?= e($action) ?>">
-        <h3 class="acct-form__title"><?= e($tieuDe) ?></h3>
+<form class="acct-addr-form" id="<?= e($neo) ?>" method="post" action="<?= e($action) ?>">
+    <h3 class="acct-label"><?= e($tieuDe) ?></h3>
 
-        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
 
-        <?php if ($laSua): ?>
-            <input type="hidden" name="id" value="<?= e($dc['id']) ?>">
-        <?php endif; ?>
+    <?php if ($laSua): ?>
+        <input type="hidden" name="id" value="<?= e($dc['id']) ?>">
+    <?php endif; ?>
 
-        <div class="acct-form__row">
-            <label class="acct-field">
-                <span class="acct-field__label">Người nhận</span>
-                <?php /* KHÔNG điền sẵn họ tên chủ tài khoản khi thêm mới: phần
-                         lớn địa chỉ thứ hai trở đi là gửi cho người khác (nhà bố
-                         mẹ, cơ quan), và một ô đã có sẵn tên đúng của mình là ô
-                         người ta lướt qua không đọc. */ ?>
-                <input class="acct-field__input" type="text" name="recipient_name" required
-                       maxlength="120" autocomplete="name"
-                       value="<?= e((string) ($dc['recipient_name'] ?? '')) ?>">
-            </label>
+    <div class="acct-grid2">
+        <label class="sr-only" for="<?= e($neo) ?>-ten">Người nhận</label>
+        <?php /* KHÔNG điền sẵn họ tên chủ tài khoản khi thêm mới: phần lớn địa chỉ
+                 thứ hai trở đi là gửi cho người khác, và một ô đã có sẵn tên
+                 đúng của mình là ô người ta lướt qua không đọc. */ ?>
+        <input class="acct-input acct-grid2__full" type="text" id="<?= e($neo) ?>-ten"
+               name="recipient_name" required maxlength="120" autocomplete="name"
+               placeholder="Họ tên người nhận"
+               value="<?= e((string) ($dc['recipient_name'] ?? '')) ?>">
 
-            <label class="acct-field">
-                <span class="acct-field__label">Số điện thoại</span>
-                <input class="acct-field__input" type="tel" name="phone" required
-                       autocomplete="tel"
-                       value="<?= e((string) ($dc['phone'] ?? '')) ?>">
-                <span class="acct-field__hint">Số người giao hàng sẽ gọi khi tới nơi.</span>
-            </label>
-        </div>
+        <label class="sr-only" for="<?= e($neo) ?>-dc">Địa chỉ chi tiết</label>
+        <?php /* CHỈ số nhà và tên đường — phường và tỉnh có ô riêng ngay dưới,
+                 gõ lại vào đây thì phiếu gửi hàng in chúng hai lần. */ ?>
+        <input class="acct-input acct-grid2__full" type="text" id="<?= e($neo) ?>-dc"
+               name="line1" required maxlength="255" autocomplete="address-line1"
+               placeholder="Số nhà, tên đường"
+               value="<?= e((string) ($dc['line1'] ?? '')) ?>">
 
-        <div class="acct-form__row" data-vnaddr>
-            <label class="acct-field">
-                <span class="acct-field__label">Tỉnh / Thành phố</span>
-                <input class="acct-field__input" type="text" name="province_name" required
-                       maxlength="120" autocomplete="address-level1"
-                       placeholder="Thành phố Hà Nội"
-                       data-vnaddr-field="province"
-                       value="<?= e((string) ($dc['province_name'] ?? '')) ?>">
-            </label>
+        <div class="acct-grid2 acct-grid2__full" data-vnaddr>
+            <label class="sr-only" for="<?= e($neo) ?>-tinh">Tỉnh / Thành phố</label>
+            <input class="acct-input" type="text" id="<?= e($neo) ?>-tinh" name="province_name"
+                   required maxlength="120" autocomplete="address-level1"
+                   placeholder="Tỉnh / Thành phố" data-vnaddr-field="province"
+                   value="<?= e((string) ($dc['province_name'] ?? '')) ?>">
 
-            <label class="acct-field">
-                <span class="acct-field__label">Phường / Xã</span>
-                <input class="acct-field__input" type="text" name="ward_name" required
-                       maxlength="120" autocomplete="address-level2"
-                       placeholder="Phường Tây Hồ"
-                       data-vnaddr-field="ward"
-                       value="<?= e((string) ($dc['ward_name'] ?? '')) ?>">
-            </label>
+            <label class="sr-only" for="<?= e($neo) ?>-phuong">Phường / Xã</label>
+            <input class="acct-input" type="text" id="<?= e($neo) ?>-phuong" name="ward_name"
+                   required maxlength="120" autocomplete="address-level2"
+                   placeholder="Phường / Xã" data-vnaddr-field="ward"
+                   value="<?= e((string) ($dc['ward_name'] ?? '')) ?>">
 
             <?php /* Mã chỉ để address-picker.js chọn lại đúng mục khi mở form.
-                     Mang `name` nên chúng ĐƯỢC gửi lên và lưu — khác trang thanh
-                     toán, nơi đơn hàng chỉ lưu chữ nên hai ô mã ở đó không có
-                     `name`. AddressModel bỏ mã nào không phải chữ số. */ ?>
+                     AddressModel bỏ mã nào không phải chữ số. */ ?>
             <input type="hidden" name="province_code" data-vnaddr-code="province"
                    value="<?= e((string) ($dc['province_code'] ?? '')) ?>">
             <input type="hidden" name="ward_code" data-vnaddr-code="ward"
                    value="<?= e((string) ($dc['ward_code'] ?? '')) ?>">
         </div>
 
-        <label class="acct-field">
-            <span class="acct-field__label">Địa chỉ chi tiết</span>
-            <?php /* CHỈ số nhà và tên đường. Phường và tỉnh đã có hai ô trên —
-                     gõ lại vào đây thì phiếu gửi hàng in chúng hai lần. */ ?>
-            <input class="acct-field__input" type="text" name="line1" required
-                   maxlength="255" autocomplete="address-line1"
-                   placeholder="Số 12, ngõ 5 Đội Cấn"
-                   value="<?= e((string) ($dc['line1'] ?? '')) ?>">
+        <label class="sr-only" for="<?= e($neo) ?>-sdt">Số điện thoại</label>
+        <input class="acct-input" type="tel" id="<?= e($neo) ?>-sdt" name="phone" required
+               autocomplete="tel" placeholder="Số điện thoại"
+               value="<?= e((string) ($dc['phone'] ?? '')) ?>">
+
+        <label class="sr-only" for="<?= e($neo) ?>-ghi-chu">Ghi chú cho người giao</label>
+        <?php /* Q75.1 — "Gọi trước 15 phút", "cổng sau". Không có ô này thì khách
+                 nhét chúng vào địa chỉ chi tiết, hỏng dòng in lên phiếu gửi. */ ?>
+        <input class="acct-input" type="text" id="<?= e($neo) ?>-ghi-chu" name="ghi_chu"
+               maxlength="255" placeholder="Ghi chú cho người giao (không bắt buộc)"
+               value="<?= e((string) ($dc['ghi_chu'] ?? '')) ?>">
+    </div>
+
+    <?php /* Loại địa chỉ: không bắt buộc, có "Không đặt" — ép chọn là bịa dữ liệu
+             cho người chỉ có đúng một nơi nhận hàng. */ ?>
+    <div class="acct-choice" role="radiogroup" aria-label="Loại địa chỉ">
+        <label class="acct-choice__opt">
+            <input type="radio" name="nhan" value="" <?= empty($dc['nhan']) ? 'checked' : '' ?>>
+            <span>Không đặt</span>
         </label>
-
-        <div class="acct-form__row">
-            <div class="acct-field">
-                <span class="acct-field__label" id="nhan-<?= e($neo) ?>">Loại địa chỉ</span>
-                <?php /* Không bắt buộc, và có nút bỏ chọn — khác cụm giới tính ở
-                         form hồ sơ. Nhãn ở đây là thứ chỉ có nghĩa khi sổ có
-                         nhiều địa chỉ; ép chọn một trong hai là bịa ra dữ liệu
-                         cho người chỉ có đúng một nơi nhận hàng. */ ?>
-                <div class="acct-choice" role="radiogroup" aria-labelledby="nhan-<?= e($neo) ?>">
-                    <label class="acct-choice__opt">
-                        <input type="radio" name="nhan" value=""
-                               <?= empty($dc['nhan']) ? 'checked' : '' ?>>
-                        <span>Không đặt</span>
-                    </label>
-                    <?php foreach ($nhanCua as $ma => $nhan): ?>
-                        <label class="acct-choice__opt">
-                            <input type="radio" name="nhan" value="<?= e($ma) ?>"
-                                   <?= ($dc['nhan'] ?? null) === $ma ? 'checked' : '' ?>>
-                            <span><?= e($nhan) ?></span>
-                        </label>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
-            <label class="acct-field">
-                <span class="acct-field__label">Ghi chú cho người giao</span>
-                <?php /* Q75.1 — "Gọi trước 15 phút", "cổng sau", "bảo vệ nhận
-                         giúp". Không có ô này thì khách nhét chúng vào địa chỉ
-                         chi tiết, làm hỏng đúng cái dòng được in lên phiếu gửi
-                         hàng. */ ?>
-                <input class="acct-field__input" type="text" name="ghi_chu" maxlength="255"
-                       placeholder="Gọi trước khi giao"
-                       value="<?= e((string) ($dc['ghi_chu'] ?? '')) ?>">
+        <?php foreach ($nhanCua as $ma => $nhan): ?>
+            <label class="acct-choice__opt">
+                <input type="radio" name="nhan" value="<?= e($ma) ?>"
+                       <?= ($dc['nhan'] ?? null) === $ma ? 'checked' : '' ?>>
+                <span><?= e($nhan) ?></span>
             </label>
-        </div>
+        <?php endforeach; ?>
+    </div>
 
-        <?php if (!$laSua): ?>
-            <label class="acct-check">
-                <input type="checkbox" name="is_default" value="1">
-                <span>Đặt làm địa chỉ mặc định</span>
-            </label>
-            <?php /* Ô tick này KHÔNG có ở form sửa: đặt mặc định là thao tác
-                     riêng có nút riêng trên từng thẻ (UC-USER-05, Khu vực 2).
-                     Gộp vào form sửa thì mỗi lần sửa số nhà cũng là một lần âm
-                     thầm đổi nơi nhận hàng mặc định — xem AddressModel::sua(). */ ?>
-        <?php endif; ?>
+    <?php if (!$laSua): ?>
+        <?php /* Ô tick này KHÔNG có ở form sửa: đặt mặc định là thao tác riêng có
+                 nút riêng trên từng thẻ. Gộp vào form sửa thì mỗi lần sửa số nhà
+                 là một lần âm thầm đổi nơi nhận hàng mặc định. */ ?>
+        <label class="acct-check">
+            <input type="checkbox" name="is_default" value="1">
+            <span>Đặt làm địa chỉ mặc định</span>
+        </label>
+    <?php endif; ?>
 
-        <div class="acct-form__actions">
-            <button type="submit" class="acct-btn acct-btn--primary"><?= e($nutLuu) ?></button>
-            <a class="acct-btn acct-btn--quiet acct-btn--sm"
-               href="/tai-khoan?muc=ho-so#so-dia-chi">Huỷ</a>
-        </div>
-    </form>
+    <div class="acct-pair acct-pair--gap">
+        <a class="acct-btn" href="/tai-khoan?muc=dia-chi#so-dia-chi">Huỷ</a>
+        <button type="submit" class="acct-btn acct-btn--solid"><?= e($nutLuu) ?></button>
+    </div>
+</form>

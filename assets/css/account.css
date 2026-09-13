@@ -1,160 +1,130 @@
 /* ============================================================================
-   account.css — KHU TÀI KHOẢN (/tai-khoan và các mục con)
+   account.css — TRANG TÀI KHOẢN (/tai-khoan)
 
-   Một trang, năm mục: Hồ sơ · Đơn hàng · Lịch hẹn · Địa chỉ · Mật khẩu.
-   assets/js/account.js nạp ngầm mục mới rồi thay hai khối .acct-nav và
-   .acct-main — nên hai tên lớp ấy là HỢP ĐỒNG, đừng đổi.
+   Dựng theo "Ho So Nguoi Dung.dc.html" (Claude Design, 13/09/2026).
 
    ═════════════════════════════════════════════════════════════════════════
-   MẪU VẼ TRANG NÀY, và nó bỏ hẳn cột điều hướng bên trái:
+   NGÔN NGỮ CỦA BẢN THIẾT KẾ — mọi khối trên trang dùng lại đúng bấy nhiêu:
 
-     ┌─────────────────────────────────────────────────────────┐
-     │ (Account)(Purchases)(Wishlist)(Profile)      ĐĂNG XUẤT  │ ← hàng tab viên
-     │                                                         │
-     │                   XIN CHÀO, DUY ANH                     │ ← 13px IN HOA, GIỮA
-     │                                                         │
-     │              ┌───────────────────────┐                  │
-     │              │  cột 650px căn giữa   │                  │
-     │              └───────────────────────┘                  │
-     └─────────────────────────────────────────────────────────┘
-                          nền #f3f3f5
+     nền trang     #fbfbfb (riêng trang này — cả site nền trắng), ô nhập và
+                   thẻ nền trắng nổi lên trên nó
+     chữ           #111 · phụ #8a8a8a · cỡ 14px, tiêu đề 20px IN HOA
+     tab           viên thuốc cao 40px, viền #d9d9d9; đang chọn nền #e8e8e8
+     nút           cao 52px, bo 4px, viền #9a9a9a, rê chuột thành nền đen
+     ô nhập        cao 48px, viền #d9d9d9, bo 4px, lấy nét viền đen
+     cột nội dung  725px, căn giữa trang
 
-   Nên .acct-nav đổi vai: từ CỘT DỌC 260px bên trái → HÀNG TAB NGANG ở
-   đỉnh. Không phải sửa markup — nó vốn là một <aside> chứa các <a>, và
-   flex-direction là thứ duy nhất phải đổi.
+   KHÔNG dùng token --fs-* của oa.css: bản vẽ này ĐÃ ở thang của site (chữ
+   hàng nav 16px của bản vẽ ≈ 11px × 1.4 của site), nên các con số px viết
+   thẳng như bản vẽ. Nhân thêm --oa-scale là phóng to hai lần.
 
-   Ba mẩu của cột cũ không có chỗ trong hàng tab và bị ẩn: ảnh đại diện
-   (.acct-nav__face), tên người dùng (.acct-nav__who) và nút đổi ảnh
-   (.acct-nav__cam). Tên người dùng KHÔNG mất — nó là tiêu đề trang ở giữa
-   ("Xin chào, …"), đúng chỗ mẫu đặt.
+   Thẻ đơn hàng và lịch hẹn (tab Đơn hàng, Lịch hẹn) bản thiết kế KHÔNG vẽ —
+   giữ theo yêu cầu chủ dự án. Chúng dựng bằng đúng các nét trên: thẻ trắng
+   viền #d9d9d9, huy hiệu viên thuốc, không màu nhấn nào ngoài đen và xám.
    ═════════════════════════════════════════════════════════════════════════ */
 
+.page-auth-profile {
+    --acct-bg: #fbfbfb;
+    --acct-ink: #111;
+    --acct-mute: #8a8a8a;
+    --acct-line: #d9d9d9;
+    --acct-rule: #e3e3e3;
+    --acct-btn-line: #9a9a9a;
+    --acct-chip: #e8e8e8;
+    /* Kính mờ của thanh đầu trang — cùng độ trong với oa.css, đổi màu gốc
+       sang nền trang này để thanh không thành một dải trắng. */
+    --glass-bg: rgba(251, 251, 251, .55);
+    background: var(--acct-bg);
+}
+
+.page-auth-profile .oa-footer {
+    background: var(--acct-bg);
+}
+
 .acct {
-    background: var(--bg-panel);
-    min-height: calc(100vh - var(--hdr-h));
-    padding-bottom: 96px;
+    color: var(--acct-ink);
+    font-size: 15px;
+    line-height: 1.3;
 }
 
-/* ┌─ THANH ĐẦU TRANG LẤY ĐÚNG NỀN CỦA TRANG ──────────────────────────────
-   │ .acct ở trên là --bg-panel (#f3f3f5), còn thanh đầu trang mặc định là
-   │ `rgba(255,255,255,.55)` + `blur(14px)`. Kính mờ trắng chồng lên #f3f3f5
-   │ ra một dải sáng hơn hẳn phần dưới — một đường giáp thấy rõ ngay dưới
-   │ thanh, suốt cả trang tài khoản.
-   │
-   │ Trang này không có gì trôi qua sau lưng thanh (nội dung là khối chữ trên
-   │ nền phẳng), nên lớp kính mờ không còn việc gì để làm ngoài việc phá màu.
-   │ Bỏ blur và lấy thẳng token của nền.
-   │
-   │ ĐỂ LUẬT NÀY Ở ĐÂY, CẠNH .acct, chứ không mang sang oa.css: hai giá trị
-   │ phải BẰNG NHAU, và cách chắc nhất để chúng không lệch là đứng liền nhau.
-   │ account.css cũng chỉ nạp cho đúng view auth/profile ($pageStyles trong
-   │ _layout/master.php) nên luật không rò sang trang nào khác.
-   │
-   │ Không đụng `color`: thanh vẫn --ink như mọi trang trong. Và không xung
-   │ đột với `.oa-header.is-overlay` (bật khi mở ô tìm / ngăn giỏ) — hai luật
-   │ cùng độ ưu tiên (0,2,0) nhưng đặt CÙNG một nền, nên thắng thua thế nào
-   │ cũng ra một kết quả.
-   └──────────────────────────────────────────────────────────────────────── */
-/* NHẮM VÀO ::before, không vào chính thanh: từ 12/09/2026 lớp kính của
-   .oa-header nằm trên ::before (để bảng xổ mega menu blur được — xem khối
-   .oa-header::before trong oa.css). Đặt `background` lên .oa-header thì nó
-   phủ LÊN TRÊN lớp kính, không thay được lớp ấy. */
-.page-auth-profile .oa-header::before {
-    background: var(--bg-panel);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
+.acct a {
+    color: inherit;
+    text-decoration: none;
 }
 
-.acct__grid {
-    display: flex;
-    flex-direction: column;
+.acct a:hover {
+    opacity: .7;
+}
+
+.acct :is(a, button, input, select, textarea):focus-visible {
+    outline: 1px solid var(--acct-ink);
+    outline-offset: 2px;
+}
+
+.acct-muted {
+    color: var(--acct-mute);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   HÀNG TAB
+   HÀNG TAB + ĐĂNG XUẤT
    ══════════════════════════════════════════════════════════════════════ */
 
 .acct-nav {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 16px 24px;
+    padding: 2px var(--edge) 0;
+}
+
+.acct-nav__tabs {
+    display: flex;
     flex-wrap: wrap;
-    padding: 20px var(--edge);
+    gap: 10px;
 }
 
-/* Ba mẩu của cột dọc cũ — xem khối chú thích đầu file */
-.acct-nav__face,
-.acct-nav__facein,
-.acct-nav__who,
-.acct-nav__cam,
-.acct-nav__initial,
-.acct-nav__name,
-.acct-nav__edit,
-.acct-nav__send {
-    display: none;
-}
-
-.acct-nav__item {
+.acct .acct-nav__tab {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    height: var(--h-tab);
-    padding: 0 13px;
-    border: 1px solid var(--line-chip);
-    border-radius: var(--r-tab);
-    background: transparent;
-    color: var(--ink-5);
-    font-size: var(--fs-body);
+    height: 40px;
+    padding: 0 15px;
+    border: 1px solid var(--acct-line);
+    border-radius: 999px;
+    color: var(--acct-mute);
+    font-size: 14px;
     white-space: nowrap;
-    transition: background .18s ease, border-color .18s ease, color .18s ease;
 }
 
-.acct-nav__item:hover {
-    border-color: var(--ink-6);
-    color: var(--ink);
+.acct .acct-nav__tab:hover {
+    color: var(--acct-ink);
+    opacity: 1;
 }
 
-.acct-nav__item.is-on,
-.acct-nav__item[aria-current="page"] {
-    background: var(--bg-chip);
-    border-color: var(--bg-chip);
-    color: var(--ink);
+.acct .acct-nav__tab.is-active {
+    border-color: var(--acct-chip);
+    background: var(--acct-chip);
+    color: var(--acct-ink);
 }
 
-/* Icon trong tab bỏ hẳn: mẫu dùng tab CHỈ CÓ CHỮ, và năm icon nhỏ xíu trên
-   một hàng viên là năm vết bẩn chứ không phải thông tin. */
-.acct-nav__icon {
-    display: none;
+.acct-nav__out {
+    flex: none;
 }
 
-/* Số đơn / số lịch hẹn treo sau nhãn — cùng dáng .oa-sup của mẫu */
-.acct-nav__count {
-    font-size: var(--fs-pico);
-    vertical-align: super;
-    margin-left: 1px;
-}
-
-/* Nút "Đăng xuất" đẩy sang mép phải — mẫu đặt nó đúng chỗ đó, và cho nó
-   dáng chữ IN HOA đậm chứ không phải một tab nữa. */
-.acct-nav__foot {
-    margin-left: auto;
-}
-
-.acct-nav__quiet {
+/* Một <button> trong form POST, vẽ đúng như liên kết "LOGOUT" của bản vẽ. */
+.acct-nav__logout {
+    padding: 0;
     border: 0;
     background: none;
-    padding: 0;
-    color: var(--ink);
+    color: var(--acct-ink);
     font-family: inherit;
-    font-size: var(--fs-body);
-    font-weight: 700;
-    letter-spacing: var(--ls);
+    font-size: 14px;
+    letter-spacing: .01em;
     text-transform: uppercase;
     cursor: pointer;
 }
 
-.acct-nav__quiet:hover {
-    color: var(--ink-3);
+.acct-nav__logout:hover {
+    opacity: .7;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -162,491 +132,890 @@
    ══════════════════════════════════════════════════════════════════════ */
 
 .acct-main {
-    width: min(650px, 100%);
+    max-width: calc(725px + 48px);
     margin: 0 auto;
-    padding: 48px 24px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 48px;
-    font-size: var(--fs-body);
-    line-height: var(--lh);
+    padding: 60px 24px 120px;
+    transition: opacity .15s ease;
 }
 
-.acct-head {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+/* account.js đang nạp tab mới */
+.acct-main[aria-busy="true"] {
+    opacity: .5;
+}
+
+.acct-title {
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: .01em;
     text-align: center;
-    align-items: center;
-}
-
-/* Biến thể "tiêu đề trái + nút phải" — dùng ở đầu các khối con bên trong
-   một mục, không phải ở đầu trang. */
-.acct-head--row {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    text-align: left;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.acct-head--sub {
-    align-items: flex-start;
-    text-align: left;
-}
-
-.acct-head__title {
-    font-size: var(--fs-title);
-    font-weight: 500;
-    letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
-/* CHỈ .acct-head--sub, KHÔNG CÒN --row (12/09/2026). Hai lớp này làm hai
-   việc khác nhau mà trước đây chung một luật:
-
-     --sub  tiêu đề của một KHỐI CON bên trong mục (Thông tin cá nhân, Đổi
-            mật khẩu…) -> tiêu đề nhỏ
-     --row  chỉ là "tiêu đề trái, nút phải"; ở lich-hen và da-luu nó bọc
-            chính H1 CỦA MỤC -> phải là tiêu đề lớn như mọi trang khác
-
-   Gộp chung nghĩa là h1 của hai mục ấy in ra 9px, trong khi h1 trang giỏ
-   hàng là 13px. Đó đúng là thứ đợt đồng bộ cỡ chữ này đi sửa. */
-.acct-head--sub .acct-head__title {
-    font-size: var(--fs-subtitle);
-    font-weight: 400;
-}
-
-.acct-head__lead {
-    color: var(--ink-3);
-    text-wrap: pretty;
-}
-
-/* ┌─ TRANG PHẲNG MỘT MÀU — THẺ KHÔNG CÒN LÀ MỘT MẶT PHẲNG RIÊNG ──────────
-   │ Trước: trang --bg-panel, thẻ --bg (#fff). Nay tất cả về --bg-panel, nên
-   │ .acct-card thôi làm "tấm trắng nổi trên nền xám" và chỉ còn là một khối
-   │ đệm 20px gom nhóm.
-   │
-   │ HỆ QUẢ PHẢI BIẾT: thẻ này KHÔNG có viền, không đổ bóng — trắng-trên-xám
-   │ chính là toàn bộ thứ vẽ ra ranh giới của nó. Từ nay ranh giới ấy biến
-   │ mất; cái phân nhóm còn lại là khoảng trắng giữa các thẻ và nhãn mục.
-   │ Muốn thấy lại đường bao thì thêm `border: 1px solid var(--line-input)`,
-   │ đừng trả nền trắng về — trả nền là hỏng đúng thứ vừa làm.
-   │
-   │ BỐN BIẾN THỂ CỦA THẺ CŨNG PHẢI ĐỔI THEO, nếu không trang ra chỗ xám chỗ
-   │ trắng: .acct-order · .acct-addr · .acct-cancel/.acct-danger · .acct-link.
-   │ Cả bốn khai `background` của riêng chúng, đứng SAU luật này và cùng độ
-   │ ưu tiên nên chúng thắng. Ba cái sau có viền sẵn nên vẫn còn hình; riêng
-   │ .acct-order thì giống .acct-card, mất hẳn đường bao.
-   └──────────────────────────────────────────────────────────────────────── */
-.acct-card,
-.acct-notice {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 20px;
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
+.acct-title__sup {
+    position: relative;
+    top: -2px;
+    margin-left: 1px;
+    font-size: 11px;
+    vertical-align: top;
 }
 
 .acct-flash {
+    margin-bottom: 24px;
     padding: 12px 14px;
-    border-radius: var(--r-field);
-    background: var(--bg);
-    border-left: 2px solid var(--ink);
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.45;
 }
 
 .acct-flash--ok {
-    border-left-color: var(--success);
+    border-color: var(--acct-ink);
 }
 
 .acct-flash--err {
-    border-left-color: var(--sale);
+    border-color: var(--sale);
+    color: var(--sale);
 }
 
-.acct-list {
+/* ── Khối có nhãn IN HOA ──────────────────────────────────────────────── */
+
+.acct-sec {
+    margin-top: 74px;
+}
+
+.acct-sec--first {
+    margin-top: 110px;
+}
+
+.acct-sec--rule {
+    padding-top: 34px;
+    border-top: 1px solid var(--acct-rule);
+}
+
+.acct-sec__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+}
+
+.acct-label {
+    color: var(--acct-ink);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+}
+
+/* Câu "chưa có gì" của tab Tài khoản — bản vẽ để nó cách nhãn một khoảng
+   rộng, như một ô trống đang chờ nội dung. */
+.acct-sec__empty {
+    margin-top: 85px;
+    font-size: 14px;
+}
+
+.acct-sec__text {
+    margin-top: 34px;
+    font-size: 14px;
+    line-height: 1.4;
+    text-wrap: pretty;
+}
+
+.acct-sec__btn {
+    margin-top: 24px;
+}
+
+/* Ba dòng chữ lớn "họ tên · email · số điện thoại" */
+.acct-me {
+    margin-top: 34px;
+    font-size: 20px;
+    line-height: 1.45;
+    letter-spacing: -.005em;
+    overflow-wrap: anywhere;
+}
+
+.acct-sec--first > .acct-me:first-child,
+.acct-sec--first > .acct-sec__text:first-child {
+    margin-top: 0;
+}
+
+.acct-link {
+    display: inline-block;
+    font-size: 14px;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+    text-decoration: underline !important;
+    text-underline-offset: 3px;
+}
+
+/* ── Trạng thái rỗng của một tab ──────────────────────────────────────── */
+
+.acct-empty {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    list-style: none;
+    align-items: center;
+    text-align: center;
+}
+
+.acct-empty__text {
+    margin-top: clamp(96px, 32vh, 385px);
+    font-size: 14px;
+    line-height: 1.45;
+    text-wrap: pretty;
+}
+
+.acct-empty__btn {
+    max-width: 365px;
+    margin-top: 52px;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   FORM
+   NÚT
    ══════════════════════════════════════════════════════════════════════ */
 
-.acct-form,
-.acct-addr-form {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.acct-form--narrow {
-    max-width: 420px;
-}
-
-.acct-form__title {
-    font-size: var(--fs-subtitle);
-    font-weight: 400;
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.acct-form__row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 12px;
-}
-
-.acct-form__note {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    line-height: var(--lh-tight);
-}
-
-.acct-form__actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.acct-field {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
-
-.acct-field__label {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-/* ┌─ Ô NHẬP LẤY NỀN CỦA TRANG, KHÔNG PHẢI TRẮNG ──────────────────────────
-   │ Ba mặt phẳng của trang này trước đây là: trang --bg-panel (#f3f3f5),
-   │ thẻ --bg (#fff), ô nhập --bg (#fff). Ô nhập vì thế TRÙNG với thẻ chứa
-   │ nó và chỉ còn đường viền 1px phân biệt.
-   │
-   │ Nay ô nhập lấy --bg-panel, bằng đúng nền trang. Viền `--line-input`
-   │ GIỮ NGUYÊN và nay là thứ duy nhất vẽ ra hình ô — đừng gỡ nó đi, không
-   │ thì không còn gì cho biết chỗ nào gõ được.
-   │
-   │ `select.acct-field__input` bên dưới chỉ khai `background-image` (hai
-   │ vệt chéo làm mũi tên) và nó đứng SAU luật này, nên thuộc tính rút gọn
-   │ ở đây không xoá mất mũi tên. Đảo thứ tự hai khối là mất.
-   └──────────────────────────────────────────────────────────────────────── */
-.acct-field__input,
-.acct-pw__input {
-    width: 100%;
-    height: var(--h-field);
-    padding: 0 12px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
-    color: var(--ink);
-    font-family: inherit;
-    font-size: var(--fs-body);
-    outline: none;
-    transition: border-color .18s ease;
-}
-
-textarea.acct-field__input {
-    height: auto;
-    min-height: 80px;
-    padding: 12px;
-    resize: vertical;
-    line-height: var(--lh);
-}
-
-select.acct-field__input {
-    appearance: none;
-    -webkit-appearance: none;
-    background-image:
-        linear-gradient(45deg, transparent 50%, var(--ink) 50%),
-        linear-gradient(135deg, var(--ink) 50%, transparent 50%);
-    background-position: calc(100% - 15px) 19px, calc(100% - 10px) 19px;
-    background-size: 5px 5px, 5px 5px;
-    background-repeat: no-repeat;
-    padding-right: 30px;
-}
-
-.acct-field__input:focus,
-.acct-pw__input:focus {
-    border-color: var(--ink);
-}
-
-.acct-field__input[aria-invalid="true"] {
-    border-color: var(--sale);
-}
-
-.acct-field__hint {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    line-height: var(--lh-tight);
-}
-
-/* Ô mật khẩu có con mắt — cùng cơ chế aria-pressed với auth.css */
-.acct-pw {
-    position: relative;
-}
-
-.acct-pw__input {
-    padding-right: 40px;
-}
-
-.acct-pw__eye {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 40px;
-    height: var(--h-field);
+.acct-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 0;
-    background: none;
-    color: var(--ink-5);
+    width: 100%;
+    height: 52px;
+    padding: 0 20px;
+    border: 1px solid var(--acct-btn-line);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--acct-ink);
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: .01em;
+    text-align: center;
+    text-transform: uppercase;
+    white-space: nowrap;
     cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease, opacity .15s ease;
 }
 
-.acct-pw__eye[aria-pressed="false"] .acct-pw__off,
-.acct-pw__eye[aria-pressed="true"] .acct-pw__on {
-    display: none;
+.acct .acct-btn:hover,
+.acct-btn--outline:hover {
+    border-color: var(--acct-ink);
+    background: var(--acct-ink);
+    color: #fff;
+    opacity: 1;
+}
+
+/* Tiền tố .acct là BẮT BUỘC: luật `.acct a { color: inherit }` ở đầu file
+   nặng hơn một lớp trần, và nút đặc là <a> (Xem chi tiết, Đặt lại) sẽ thành
+   chữ đen trên nền đen — một khối đen trống. */
+.acct .acct-btn--solid,
+.acct .acct-btn--primary,
+.acct .acct-btn--danger {
+    border-color: var(--acct-ink);
+    background: var(--acct-ink);
+    color: #fff;
+}
+
+.acct .acct-btn--solid:hover,
+.acct .acct-btn--primary:hover,
+.acct .acct-btn--danger:hover {
+    opacity: .85;
+}
+
+/* Nút lặng — "Huỷ", "Để nguyên" ở chân thẻ đơn và lịch hẹn */
+.acct-btn--quiet {
+    border-color: transparent;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.acct .acct-btn--quiet:hover {
+    border-color: transparent;
+    background: transparent;
+    color: var(--acct-ink);
+    opacity: .7;
+}
+
+/* Nút nhỏ trong thẻ — không chiếm cả bề ngang */
+.acct-btn--sm {
+    display: inline-flex;
+    width: auto;
+    height: 40px;
+    padding: 0 16px;
+    font-size: 13px;
+}
+
+.acct-btn:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+}
+
+/* Hai nút chia đôi: HUỶ · CẬP NHẬT */
+.acct-pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.acct-pair--gap {
+    margin-top: 10px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Ô NHẬP
+   ══════════════════════════════════════════════════════════════════════ */
+
+.acct-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--acct-ink);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.acct-input:focus {
+    border-color: var(--acct-ink);
+}
+
+.acct .acct-input:focus-visible {
+    outline: none;
+}
+
+.acct-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 34px;
 }
 
 .acct-check {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    cursor: pointer;
-}
-
-.acct-choice {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-/* Cùng nền với ô nhập — khối này (chọn giới tính ở ho-so.php, loại địa chỉ
-   ở _dia-chi-form.php) mang đúng viền và bo góc của một ô nhập, nên để nó
-   trắng trong khi mọi ô cạnh nó đã xám thì đọc ra như một chỗ bị sót. */
-.acct-choice__opt {
-    display: flex;
-    align-items: flex-start;
     gap: 10px;
-    padding: 12px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
+    font-size: 13px;
+    line-height: 1.4;
     cursor: pointer;
 }
 
-.acct-choice__opt:has(input:checked) {
-    border-color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--ink);
+.acct-check input {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 1px 0 0;
+    accent-color: var(--acct-ink);
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   NÚT
+/* ── Form sửa hồ sơ: ô trắng có nhãn nhỏ nằm trong ────────────────────── */
 
-   Bốn dáng: đặc · rỗng · đỏ · trần. Tất cả đều VUÔNG bo 6 cao 44, đúng
-   .oa-btn--block của mẫu — đây là khu form, và mẫu để nút viên cho nội
-   dung trang chứ không cho form.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: var(--h-field);
-    padding: 0 20px;
-    border: 1px solid var(--line-btn-2);
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
-    background: transparent;
-    color: var(--ink);
-    font-family: inherit;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background .18s ease, color .18s ease, border-color .18s ease;
+.acct-edit__req {
+    margin-top: 120px;
+    color: var(--acct-mute);
+    font-size: 12px;
+    text-align: right;
 }
 
-.acct-btn:hover {
-    border-color: var(--ink);
-    color: var(--ink);
-}
-
-.acct-btn--primary {
-    border: 0;
-    background: var(--ink);
-    color: #fff;
-}
-
-.acct-btn--primary:hover {
-    background: #333;
-    color: #fff;
-}
-
-.acct-btn--outline {
-    border-color: var(--ink);
-}
-
-.acct-btn--danger {
-    border-color: var(--sale);
-    color: var(--sale);
-}
-
-.acct-btn--danger:hover {
-    background: var(--sale);
-    border-color: var(--sale);
-    color: #fff;
-}
-
-.acct-btn--google {
-    border-color: var(--line-input);
-    background: var(--bg);
-}
-
-.acct-btn--quiet {
-    border: 0;
-    background: none;
-    padding: 0;
-    height: auto;
-    color: var(--ink-3);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.acct-btn--quiet:hover {
-    color: var(--ink);
-}
-
-.acct-btn--sm {
-    height: 32px;
-    padding: 0 14px;
-}
-
-.acct-btn--start {
-    align-self: flex-start;
-}
-
-.acct-btn:disabled {
-    background: var(--ink-5);
-    border-color: var(--ink-5);
-    color: #fff;
-    cursor: not-allowed;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   HÀNG NHÃN ↔ GIÁ TRỊ  (hồ sơ, chi tiết đơn)
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.acct-info__row {
-    display: grid;
-    grid-template-columns: 130px minmax(0, 1fr);
-    gap: 12px;
-    padding: 10px 0;
-    border-top: 1px solid var(--line-2);
-}
-
-.acct-info__row:first-child {
-    border-top: 0;
-}
-
-.acct-info__label {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.acct-info__value {
-    word-break: break-word;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   HUY HIỆU & THẺ TRẠNG THÁI
-
-   MỘT DÁNG DUY NHẤT cho mọi trạng thái đơn hàng: viền mảnh, chữ 8px IN
-   HOA, KHÔNG nền màu. Bản cũ tô mỗi trạng thái một màu (chờ = vàng, đang
-   giao = xanh dương, xong = xanh lá, huỷ = đỏ) — năm màu trên một site có
-   hai. Trạng thái đọc bằng CHỮ, không bằng màu; và chữ thì người mù màu
-   cũng đọc được.
-
-   Ngoại lệ duy nhất: trạng thái HUỶ dùng --sale, vì đó là thông tin xấu
-   và nó phải nhìn ra ngay trong một danh sách mười đơn.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-badge,
-.acct-tag,
-.acct-order__tag {
-    display: inline-flex;
-    align-items: center;
-    height: 18px;
-    padding: 0 7px;
-    border: 1px solid var(--ink);
-    font-size: var(--fs-nano);
-    letter-spacing: var(--ls-wide);
-    text-transform: uppercase;
-    white-space: nowrap;
-    color: var(--ink);
-}
-
-.acct-tag--quiet,
-.acct-order__tag.is-quiet {
-    border-color: var(--line-input);
-    color: var(--ink-3);
-}
-
-.acct-tag.is-danger,
-.acct-order__tag.is-danger {
-    border-color: var(--sale);
-    color: var(--sale);
-}
-
-.acct-order__tags,
-.acct-order__flags {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   MỘT ĐƠN HÀNG
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* Cùng nền với .acct-card — xem khối chú thích ở đó. Thẻ đơn hàng cũng
-   không có viền, nên danh sách đơn nay phân nhau bằng khoảng trống chứ
-   không bằng mép thẻ. */
-.acct-order {
+.acct-boxes {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    margin-top: 8px;
+}
+
+.acct-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 48px;
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.acct-box:focus-within {
+    border-color: var(--acct-ink);
+}
+
+.acct-box--row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.acct-box__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.acct-box__label {
+    color: var(--acct-mute);
+    font-size: 12px;
+}
+
+.acct-box__value {
+    color: var(--acct-mute);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+}
+
+.acct-box__input {
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--acct-ink);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.acct .acct-box__input:focus-visible {
+    outline: none;
+}
+
+.acct-box__act {
+    flex-shrink: 0;
+    font-size: 14px;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+}
+
+.acct-edit__save {
+    margin-top: 34px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TÀI KHOẢN LIÊN KẾT
+   ══════════════════════════════════════════════════════════════════════ */
+
+.acct-conn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 60px;
+    margin-top: 14px;
+    padding: 8px 15px;
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: #fff;
+}
+
+.acct-conn__who {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.acct-conn__who svg {
+    flex: none;
+    width: 22px;
+    height: 22px;
+}
+
+.acct-conn__text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.acct-conn__name {
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.acct-conn__sub {
+    color: var(--acct-mute);
+    font-size: 12px;
+}
+
+.acct .acct-conn__act {
+    display: flex;
+    color: var(--acct-btn-line);
+}
+
+.acct-conn__link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--acct-ink);
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: .01em;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HỘP THOẠI XOÁ TÀI KHOẢN (?xoa=1)
+   ══════════════════════════════════════════════════════════════════════ */
+
+.acct-modal {
+    position: fixed;
+    inset: 0;
+    /* Trên thanh đầu trang (dính, z-index riêng) và mọi nút nổi của site. */
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.acct .acct-modal__scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(17, 17, 17, .4);
+    opacity: 1;
+}
+
+.acct-modal__box {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 440px;
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+    padding: 40px 32px 32px;
+    border-radius: 4px;
+    background: var(--acct-bg);
+}
+
+.acct-modal__title {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: .01em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.acct-modal__text {
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+    text-wrap: pretty;
+}
+
+.acct-modal__err {
+    color: var(--sale);
+    font-size: 13px;
+    line-height: 1.45;
+    text-align: center;
+}
+
+/* Nút XOÁ mờ và không bấm được cho tới khi tích ô xác nhận — đúng bản vẽ.
+   Máy chủ vẫn kiểm lại ô tích (AuthController::deleteAccount). */
+.acct-modal__box:has(input[name="dong_y"]:not(:checked)) .acct-modal__del {
+    opacity: .35;
+    pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SỔ ĐỊA CHỈ
+   ══════════════════════════════════════════════════════════════════════ */
+
+.acct-addrs {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 34px;
+}
+
+.acct-addr {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
     padding: 20px;
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: #fff;
+}
+
+/* Viền đen = địa chỉ mặc định */
+.acct-addr.is-default {
+    border-color: var(--acct-ink);
+}
+
+.acct-addr__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.acct-addr__who {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.acct-addr__name {
+    font-size: 15px;
+}
+
+.acct-pill {
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--acct-chip);
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.acct-pill--quiet {
+    padding: 2px 7px;
+    border: 1px solid var(--acct-line);
+    background: transparent;
+}
+
+.acct-addr__acts {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.acct-addr__act {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--acct-ink);
+    font-family: inherit;
+    font-size: 13px;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.acct-addr__act:hover {
+    opacity: .7;
+}
+
+.acct .acct-addr__act--quiet {
+    color: var(--acct-mute);
+}
+
+.acct-addr-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 34px;
+}
+
+.acct-grid2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.acct-grid2__full {
+    grid-column: 1 / -1;
+}
+
+/* Chọn một — viên thuốc nhỏ cùng dáng tab */
+.acct-choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.acct-choice__opt {
+    position: relative;
+    cursor: pointer;
+}
+
+.acct-choice__opt input {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+}
+
+.acct-choice__opt span {
+    display: inline-flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--acct-line);
+    border-radius: 999px;
+    color: var(--acct-mute);
+    font-size: 13px;
+}
+
+.acct-choice__opt input:checked + span {
+    border-color: var(--acct-chip);
+    background: var(--acct-chip);
+    color: var(--acct-ink);
+}
+
+.acct-choice__opt input:focus-visible + span {
+    outline: 1px solid var(--acct-ink);
+    outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TAB TÀI KHOẢN — đơn gần đây, mẫu đã lưu
+   ══════════════════════════════════════════════════════════════════════ */
+
+.acct-rows {
+    margin-top: 34px;
+    border-top: 1px solid var(--acct-rule);
+    list-style: none;
+}
+
+.acct .acct-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--acct-rule);
+}
+
+.acct-row__pic {
+    flex: none;
+    width: 64px;
+    height: 64px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #fff;
+}
+
+/* Ảnh sản phẩm thấy trọn gọng (contain). multiply: nền trắng của ảnh nhân
+   với nền ô thành đúng màu ô, không lộ khung chữ nhật. */
+.acct-row__pic img,
+.acct-mini__shot img,
+.acct-saved__shot img,
+.acct-order__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.acct-row__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.acct-row__name {
+    overflow: hidden;
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.acct-row__meta {
+    color: var(--acct-mute);
+    font-size: 12px;
+}
+
+.acct-row__num {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.acct-mini {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 34px;
+    list-style: none;
+}
+
+.acct .acct-mini__item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+}
+
+.acct-mini__shot {
+    aspect-ratio: 1 / 1;
+    margin-bottom: 6px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.acct-mini__price {
+    color: var(--acct-mute);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TAB ĐÃ LƯU
+   ══════════════════════════════════════════════════════════════════════ */
+
+.acct-saved {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px 14px;
+    margin-top: 60px;
+    list-style: none;
+}
+
+.acct-saved__item {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.acct .acct-saved__shot {
+    display: block;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.acct-saved__noimg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--acct-mute);
+    font-size: 12px;
+}
+
+.acct-saved__body {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.acct-saved__name {
+    display: block;
+}
+
+.acct-saved__price {
+    display: block;
+    margin-top: 2px;
+    color: #333;
+}
+
+.acct-saved__price s {
+    margin-left: 6px;
+    color: var(--acct-mute);
+}
+
+.acct-saved__out {
+    display: block;
+    margin-top: 2px;
+    color: var(--sale);
+    font-size: 12px;
+}
+
+.acct-saved__drop {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--acct-mute);
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: .01em;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TAB ĐƠN HÀNG + LỊCH HẸN — không có trong bản thiết kế, vẽ bằng nét của nó
+   ══════════════════════════════════════════════════════════════════════ */
+
+.acct-notice {
+    margin-top: 24px;
+    padding: 12px 14px;
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: #fff;
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+/* Dải lọc theo trạng thái — viên thuốc nhỏ, cùng luật tab của trang */
+.acct-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 60px;
+}
+
+.acct .acct-tab {
+    display: inline-flex;
+    align-items: center;
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid var(--acct-line);
+    border-radius: 999px;
+    color: var(--acct-mute);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.acct .acct-tab:hover {
+    color: var(--acct-ink);
+    opacity: 1;
+}
+
+.acct .acct-tab.is-active {
+    border-color: var(--acct-chip);
+    background: var(--acct-chip);
+    color: var(--acct-ink);
+}
+
+.acct-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 34px;
+}
+
+/* Lịch hẹn không có dải lọc — kéo danh sách xuống cách tiêu đề như bản vẽ */
+.acct-title + .acct-list {
+    margin-top: 60px;
+}
+
+.acct-card {
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: #fff;
+}
+
+.acct-order {
+    font-size: 14px;
 }
 
 .acct-order__top {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
     flex-wrap: wrap;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--line-input);
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px 12px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--acct-rule);
 }
 
 .acct-order__id {
@@ -655,818 +1024,634 @@ select.acct-field__input {
     gap: 2px;
 }
 
-.acct-order__eyebrow,
-.acct-order__when,
-.acct-order__note,
-.acct-order__footnote,
-.acct-order__memo,
-.acct-order__paysub {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    line-height: var(--lh-tight);
+.acct-order__code {
+    font-size: 14px;
+    letter-spacing: .02em;
 }
 
-.acct-order__code,
-.acct-order__num {
-    font-variant-numeric: tabular-nums;
-    letter-spacing: .06em;
+.acct-order__when {
+    color: var(--acct-mute);
+    font-size: 12px;
+}
+
+.acct-order__flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* Huy hiệu. Trạng thái ĐƠN: nền đặc xám (đang chạy), đen (xong), viền
+   xám (huỷ/đã qua). Trạng thái TIỀN: chỉ viền — hai trục không tranh nhau. */
+.acct-badge {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border: 1px solid var(--acct-chip);
+    border-radius: 999px;
+    background: var(--acct-chip);
+    color: var(--acct-ink);
+    font-size: 11px;
+    letter-spacing: .04em;
     text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.acct-badge--done {
+    border-color: var(--acct-ink);
+    background: var(--acct-ink);
+    color: #fff;
+}
+
+.acct-badge--stop,
+.acct-badge--gone {
+    border-color: var(--acct-line);
+    background: transparent;
+    color: var(--acct-mute);
+}
+
+.acct-badge--paid,
+.acct-badge--part,
+.acct-badge--due {
+    background: transparent;
+}
+
+.acct-badge--paid {
+    border-color: var(--acct-ink);
+}
+
+.acct-badge--part {
+    border-color: var(--acct-btn-line);
+}
+
+.acct-badge--due {
+    border-color: var(--sale);
+    color: var(--sale);
+}
+
+.acct-order__line {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+}
+
+.acct-order__thumb {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--acct-bg);
+}
+
+/* Icon kính trong thẻ lịch hẹn — màu nét in sẵn trong SVG là hồng của bản
+   thiết kế cũ; thuộc tính CSS `stroke` đè được thuộc tính trình bày ấy. */
+.acct-order__thumb--icon svg {
+    stroke: var(--acct-mute);
+}
+
+.acct-order__what {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.acct-order__brand {
+    color: var(--acct-mute);
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.acct-order__name {
+    font-size: 15px;
+}
+
+.acct-order__variant {
+    color: var(--acct-mute);
+    font-size: 13px;
+}
+
+.acct-order__money {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+}
+
+.acct-order__qty {
+    color: var(--acct-mute);
+    font-size: 12px;
+}
+
+.acct-order__total {
+    font-size: 15px;
+    white-space: nowrap;
+}
+
+.acct-order__note {
+    padding: 0 20px 14px;
+    color: var(--acct-mute);
+    font-size: 13px;
+}
+
+/* ── Thanh tiến trình năm bước ────────────────────────────────────────── */
+
+.acct-track {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 4px 20px 18px;
+    list-style: none;
+}
+
+.acct-track__step {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    text-align: center;
+}
+
+.acct-track__bar {
+    position: absolute;
+    top: 9px;
+    right: calc(50% + 13px);
+    left: calc(-50% + 13px);
+    height: 1px;
+    background: var(--acct-line);
+}
+
+.acct-track__step:first-child .acct-track__bar {
+    display: none;
+}
+
+.acct-track__step--1 .acct-track__bar,
+.acct-track__step--2 .acct-track__bar {
+    background: var(--acct-ink);
+}
+
+.acct-track__dot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--acct-line);
+    border-radius: 50%;
+    background: #fff;
+    color: #fff;
+}
+
+.acct-track__step--2 .acct-track__dot {
+    border-color: var(--acct-ink);
+    background: var(--acct-ink);
+}
+
+/* Đang ở bước này: vòng đen, lõi trắng */
+.acct-track__step--1 .acct-track__dot {
+    border: 5px solid var(--acct-ink);
+}
+
+.acct-track__label {
+    color: var(--acct-mute);
+}
+
+.acct-track__step--1 .acct-track__label,
+.acct-track__step--2 .acct-track__label {
+    color: var(--acct-ink);
+}
+
+.acct-track__time {
+    min-height: 1.3em;
+    color: var(--acct-mute);
+    font-size: 10px;
+}
+
+/* ── Phần chi tiết (mở bằng "Xem chi tiết") ───────────────────────────── */
+
+.acct-order__detail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 28px;
+    padding: 18px 20px;
+    border-top: 1px solid var(--acct-rule);
+    background: var(--acct-bg);
+}
+
+.acct-order__detail[hidden] {
+    display: none;
 }
 
 .acct-order__block {
     display: flex;
     flex-direction: column;
     gap: 8px;
-}
-
-.acct-order__line,
-.acct-order__what {
-    display: grid;
-    grid-template-columns: 48px minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: start;
-    padding: 10px 0;
-    border-top: 1px solid var(--line-2);
-}
-
-.acct-order__thumb {
-    width: 48px;
-    aspect-ratio: 4 / 5;
-    overflow: hidden;
-    background: var(--bg-media);
-}
-
-.acct-order__thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-/* Dòng không có ảnh (gói tròng rời) — ô vuông viền mảnh có icon */
-.acct-order__thumb--icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    aspect-ratio: 1 / 1;
-    border: 1px solid var(--line-input);
-    background: var(--bg);
-    color: var(--ink-5);
-}
-
-.acct-order__detail {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
     min-width: 0;
 }
 
-.acct-order__name {
-    font-size: var(--fs-subtitle);
+.acct-order__eyebrow {
+    color: var(--acct-mute);
+    font-size: 11px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
 }
 
-.acct-order__brand,
-.acct-order__variant,
-.acct-order__qty,
-.acct-order__lens {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    line-height: var(--lh-tight);
+.acct-order__who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.acct-order__money,
-.acct-order__sum,
-.acct-order__total {
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
+.acct-order__tel,
+.acct-order__memo {
+    color: var(--acct-mute);
+    font-size: 13px;
 }
 
-.acct-order__free {
-    color: var(--ink-3);
+.acct-order__addr {
+    color: #333;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.acct-order__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.acct-order__tag {
+    padding: 3px 8px;
+    border: 1px solid var(--acct-line);
+    border-radius: 999px;
+    background: #fff;
+    font-size: 11px;
 }
 
 .acct-order__sum {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
     gap: 12px;
-    color: var(--ink-3);
+    font-size: 13px;
+    line-height: 1.4;
 }
 
-.acct-order__sum--grand {
-    padding-top: 10px;
-    border-top: 1px solid var(--line-input);
-    color: var(--ink);
-}
-
-.acct-order__grand {
-    font-size: var(--fs-h);
-    font-variant-numeric: tabular-nums;
-}
-
-.acct-order__to,
-.acct-order__who,
-.acct-order__tel,
-.acct-order__addr {
-    color: var(--ink-2);
-}
-
-.acct-order__foot,
-.acct-order__acts {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-    padding-top: 12px;
-    border-top: 1px solid var(--line-input);
-}
-
-.acct-order__more {
-    margin-left: auto;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    text-decoration: underline;
+.acct-order__sum a {
+    text-decoration: underline !important;
     text-underline-offset: 2px;
 }
 
-/* ┌─ KHỐI CHUYỂN KHOẢN TRONG ĐƠN CHƯA TRẢ ────────────────────────────── */
-.acct-order__pay {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 14px;
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
+.acct-order__sum--split,
+.acct-order__sum--grand {
+    padding-top: 8px;
+    border-top: 1px solid var(--acct-rule);
 }
 
-.acct-order__payhead,
-.acct-order__payfoot,
-.acct-order__paysum {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
+.acct-order__sum--grand {
+    font-size: 14px;
 }
 
-.acct-order__paylabel,
-.acct-order__paywhat {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
+.acct-order__lens {
+    display: block;
+    color: var(--acct-mute);
+    font-size: 12px;
 }
 
-.acct-order__paynum {
-    font-size: var(--fs-h);
-    font-variant-numeric: tabular-nums;
-}
-
-.acct-order__bank {
-    display: flex;
-    flex-direction: column;
-}
-
-.acct-order__bankline {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    padding: 8px 0;
-    border-top: 1px solid var(--line-input);
-}
-
-.acct-order__bankkey {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
+.acct-order__num,
+.acct-order__grand {
     white-space: nowrap;
 }
 
-.acct-order__bankval {
-    text-align: right;
-    font-variant-numeric: tabular-nums;
+.acct-order__free {
+    font-size: 11px;
     letter-spacing: .04em;
-    word-break: break-word;
-}
-
-/* Khung QR — nền TRẮNG bắt buộc, đệm quanh mã. Cùng lý do với .coqr__frame:
-   máy quét cần vùng lặng, và nền xám làm mã khó quét trên máy cũ. */
-.acct-order__qr {
-    width: min(180px, 100%);
-    aspect-ratio: 1 / 1;
-    padding: 10px;
-    background: #fff;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    align-self: center;
-}
-
-.acct-order__qr img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    text-transform: uppercase;
 }
 
 .acct-order__deposit {
     display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: var(--r-field);
-    background: var(--bg);
-}
-
-/* Đã nhận hàng — dấu tích trong vòng tròn viền mảnh, KHÔNG tô xanh đặc */
-.acct-order__got {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--ink-2);
-    font-size: var(--fs-micro);
-}
-
-.acct-order__gotmark {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border: 1px solid var(--ink);
-    border-radius: 50%;
-    font-size: var(--fs-micro);
-}
-
-.acct-order__thanks {
-    color: var(--ink-2);
-    text-wrap: pretty;
-}
-
-.acct-order__field {
-    display: flex;
     flex-direction: column;
     gap: 4px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--acct-line);
 }
 
-.acct-copy {
-    border: 0;
-    background: none;
-    padding: 0;
-    margin-left: 8px;
-    color: var(--ink-3);
-    font-family: inherit;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    cursor: pointer;
-}
-
-.acct-copy:hover {
-    color: var(--ink);
-}
-
-.acct-copy.is-copied {
-    color: var(--success);
-    text-decoration: none;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   ĐƯỜNG ĐI CỦA ĐƠN
-
-   Hàng ngang các mốc, nối bằng một đường 1px. Mốc đã qua: chấm đen đặc.
-   Mốc chưa tới: chấm rỗng viền xám.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-track {
+.acct-order__got {
     display: flex;
-    align-items: flex-start;
-    position: relative;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: #fff;
+    font-size: 13px;
+    line-height: 1.4;
 }
 
-/* Đường nối chạy NGANG QUA tâm các chấm. top:5px = nửa chiều cao chấm 10px;
-   inset trái/phải 10% để nó không thò ra ngoài mốc đầu và mốc cuối. */
-.acct-track__bar {
-    position: absolute;
-    top: 5px;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: var(--line-input);
-}
+/* ── Khối chuyển khoản ────────────────────────────────────────────────── */
 
-.acct-track__step {
-    position: relative;
-    z-index: 1;
-    flex: 1;
+.acct-order__pay {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    text-align: center;
-}
-
-.acct-track__dot {
-    width: 10px;
-    height: 10px;
-    border: 1px solid var(--line-btn);
-    border-radius: 50%;
-    background: var(--bg);
-}
-
-.acct-track__step.is-done .acct-track__dot,
-.acct-track__step.is-on .acct-track__dot {
-    background: var(--ink);
-    border-color: var(--ink);
-}
-
-.acct-track__label {
-    font-size: var(--fs-micro);
-    color: var(--ink-5);
-    line-height: var(--lh-tight);
-}
-
-.acct-track__step.is-done .acct-track__label,
-.acct-track__step.is-on .acct-track__label {
-    color: var(--ink);
-}
-
-.acct-track__time {
-    font-size: var(--fs-nano);
-    color: var(--ink-5);
-    font-variant-numeric: tabular-nums;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   ĐỊA CHỈ
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-addr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 12px;
+    grid-column: 1 / -1;
+    gap: 14px;
     padding: 16px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
+    border: 1px solid var(--acct-ink);
+    border-radius: 4px;
+    background: #fff;
 }
 
-/* Địa chỉ mặc định — viền đen thay vì một huy hiệu màu */
-.acct-addr.is-default {
-    border-color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--ink);
-}
-
-.acct-addr__body {
+.acct-order__payhead {
     display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-}
-
-.acct-addr__bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
     flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 12px 16px;
 }
 
-.acct-addr__who {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    flex-wrap: wrap;
+.acct-order__paysub {
+    margin-top: 4px;
+    color: var(--acct-mute);
+    font-size: 13px;
 }
 
-.acct-addr__name {
-    font-size: var(--fs-subtitle);
-}
-
-.acct-addr__phone,
-.acct-addr__lines {
-    color: var(--ink-3);
-}
-
-.acct-addr__note {
-    color: var(--ink-5);
-    font-size: var(--fs-micro);
-}
-
-.acct-addr__side,
-.acct-addr__links {
+.acct-order__paysum {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 6px;
+    gap: 2px;
 }
 
-.acct-addr__links a,
-.acct-addr__del {
-    border: 0;
-    background: none;
-    padding: 0;
-    color: var(--ink-3);
-    font-family: inherit;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    cursor: pointer;
+.acct-order__paylabel,
+.acct-order__bankkey {
+    color: var(--acct-mute);
+    font-size: 12px;
 }
 
-.acct-addr__del:hover {
-    color: var(--sale);
+.acct-order__paynum {
+    font-size: 20px;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   LỊCH HẸN — ĐỔI GIỜ
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-resched {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 16px;
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
-}
-
-.acct-resched__label {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.acct-resched__now {
-    color: var(--ink-2);
-}
-
-.acct-resched__date {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.acct-resched__hint {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-}
-
-.acct-resched__acts {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   HUỶ ĐƠN & XOÁ TÀI KHOẢN
-
-   Hai khối duy nhất được dùng sắc đỏ ở khu này. Viền đỏ 1px, KHÔNG nền
-   hồng: nền màu trên nền #f3f3f5 là mảng màu duy nhất của cả trang, và nó
-   kéo mắt mạnh hơn hẳn mức cần cho một khối khách hiếm khi dùng.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-cancel,
-.acct-danger {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 20px;
-    border: 1px solid var(--sale);
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
-}
-
-.acct-cancel__lead,
-.acct-danger__lead {
-    color: var(--ink-2);
-    text-wrap: pretty;
-}
-
-.acct-cancel__money {
-    font-variant-numeric: tabular-nums;
-}
-
-.acct-danger__list {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding-left: 16px;
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-}
-
-.acct-cancel__acts,
-.acct-danger__acts {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   LIÊN KẾT TÀI KHOẢN GOOGLE
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-link {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-    min-height: 56px;
-    padding: 12px 16px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg-panel);
-}
-
-.acct-link__state {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-
-.acct-link__lead {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-}
-
-.acct-link__dot {
-    flex: none;
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--line-btn);
-}
-
-.acct-link.is-on .acct-link__dot {
-    background: var(--ink);
-}
-
-.acct-link__soon {
-    color: var(--ink-5);
-    font-size: var(--fs-micro);
-}
-
-.acct-link__acts,
-.acct-link__form {
-    display: flex;
-    gap: 8px;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   KHỐI RỖNG  (chưa có đơn / chưa có lịch hẹn / chưa có địa chỉ)
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    padding: 72px 0 88px;
-    text-align: center;
-}
-
-.acct-empty__ring {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 56px;
-    height: 56px;
-    border: 1px solid var(--line-input);
-    border-radius: 50%;
-    color: var(--ink-5);
-}
-
-.acct-empty__title {
-    font-size: var(--fs-title);
-    font-weight: 500;
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.acct-empty__lead {
-    color: var(--ink-3);
-    max-width: 400px;
-    text-wrap: pretty;
-}
-
-.acct-empty__cta {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 40px;
-    width: min(276px, 100%);
-    border: 1px solid var(--line-btn-2);
-    color: var(--ink);
-    font-size: var(--fs-body);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    transition: background .18s ease, color .18s ease, border-color .18s ease;
-}
-
-.acct-empty__cta:hover {
-    background: var(--ink);
-    border-color: var(--ink);
-    color: #fff;
-}
-
-/* Hàng tab con bên trong một mục (Tất cả / Chờ xử lý / Đã giao…) */
-.acct-tabs {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.acct-tab {
-    display: inline-flex;
-    align-items: center;
-    height: var(--h-chip);
-    padding: 0 12px;
-    border: 1px solid var(--line-chip);
-    border-radius: var(--r-chip);
-    background: var(--bg);
-    color: var(--ink);
-    font-size: var(--fs-ui);
-    white-space: nowrap;
-}
-
-.acct-tab.is-on,
-.acct-tab[aria-current="page"] {
-    background: var(--bg-chip-flat);
-    border-color: var(--bg-chip-flat);
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   MÀN HẸP
-   ══════════════════════════════════════════════════════════════════════ */
-
-/* ══════════════════════════════════════════════════════════════════════
-   MỤC "ĐÃ LƯU" — lưới mẫu khách đánh dấu   (12/09/2026)
-
-   KHÔNG dùng .oa-grid / .pgrid của lưới sản phẩm: hai lớp ấy khai lề ngang
-   --edge-grid (60px) cho một lưới chạy hết bề ngang trang, còn ở đây lưới
-   nằm trong cột nội dung của trang tài khoản, vốn đã có lề riêng.
-
-   auto-fill chứ không số cột cố định: cột nội dung này co theo bề ngang màn
-   và theo cả việc cột điều hướng bên trái còn hay mất ở màn hẹp, nên một con
-   số cứng sẽ đúng ở đúng một bề ngang. minmax(150px) cho ra 4 thẻ ở màn rộng,
-   2 thẻ trên điện thoại, không cần @media nào.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.acct-saved {
+.acct-order__bank {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 24px 16px;
-    margin-top: 20px;
-    list-style: none;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 20px;
 }
 
-.acct-saved__item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width: 0;
-}
-
-/* Khung ảnh VUÔNG, khác khung 1/1,15 của thẻ sản phẩm ngoài trang bán hàng:
-   ở đây thẻ chỉ rộng ~150px, mỗi pixel chiều cao thừa là một hàng chữ bị đẩy
-   xuống dưới tầm mắt. `contain` giữ nguyên — vẫn phải thấy trọn cái gọng. */
-.acct-saved__shot {
-    position: relative;
-    display: block;
-    aspect-ratio: 1 / 1;
-    background: var(--bg);
-    overflow: hidden;
-}
-
-.acct-saved__shot > img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.acct-saved__noimg {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    color: var(--ink-5);
-    font-size: var(--fs-micro);
-    text-align: center;
-}
-
-.acct-saved__body {
+.acct-order__field {
     display: flex;
     flex-direction: column;
     gap: 2px;
     min-width: 0;
 }
 
-.acct-saved__name {
-    color: var(--ink);
-    /* Tên dài cắt ở hai dòng: thẻ trong lưới phải cao bằng nhau thì hàng nút
-       "Bỏ lưu" bên dưới mới thẳng hàng. */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.acct-saved__price {
+.acct-order__bankline {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
     flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
 }
 
-.acct-saved__price s {
-    color: var(--ink-5);
-    font-size: var(--fs-micro);
+.acct-order__bankval {
+    overflow-wrap: anywhere;
 }
 
-.acct-saved__price b {
-    font-weight: 500;
-}
-
-.acct-saved__out {
-    color: var(--sale);
-    font-size: var(--fs-micro);
-}
-
-/* Nút phụ nhất của cả trang: chữ nhỏ, gạch chân, không viền. Một nút viền
-   đầy đủ dưới mỗi thẻ sẽ nặng hơn chính tên hàng nó đứng dưới. */
-.acct-saved__drop {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--ink-3);
+.acct-copy {
+    height: 24px;
+    padding: 0 10px;
+    border: 1px solid var(--acct-line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--acct-ink);
     font-family: inherit;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
+    font-size: 11px;
+    letter-spacing: .04em;
     text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 2px;
     cursor: pointer;
-    transition: color .18s ease;
 }
 
-.acct-saved__drop:hover {
-    color: var(--ink);
+.acct-order__payfoot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
 }
+
+/* ── Chân thẻ ─────────────────────────────────────────────────────────── */
+
+.acct-order__foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--acct-rule);
+}
+
+.acct-order__footnote {
+    color: var(--acct-mute);
+    font-size: 12px;
+}
+
+.acct-order__thanks {
+    font-size: 12px;
+}
+
+.acct-order__acts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-left: auto;
+}
+
+/* ── Hộp xác nhận huỷ đơn, form đổi ngày hẹn ──────────────────────────── */
+
+.acct-cancel,
+.acct-resched {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 100%;
+    gap: 12px;
+    padding: 16px;
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: var(--acct-bg);
+}
+
+.acct-resched {
+    margin: 0 20px 16px;
+}
+
+.acct-resched form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.acct-cancel__money,
+.acct-resched__now {
+    color: #333;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.acct-resched__hint {
+    color: var(--acct-mute);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.acct-resched__hint a {
+    text-decoration: underline !important;
+}
+
+.acct-cancel__acts,
+.acct-resched__acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.acct-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.acct-field__label,
+.acct-resched__label {
+    color: var(--acct-mute);
+    font-size: 12px;
+}
+
+.acct-field__input,
+.acct-resched__date {
+    width: 100%;
+    height: 48px;
+    padding: 0 14px;
+    border: 1px solid var(--acct-line);
+    border-radius: 4px;
+    background: #fff;
+    color: var(--acct-ink);
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+}
+
+.acct-resched__date {
+    max-width: 260px;
+}
+
+.acct-field__input:focus,
+.acct-resched__date:focus {
+    border-color: var(--acct-ink);
+}
+
+.field__opt {
+    color: var(--acct-mute);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP — bản thiết kế chỉ vẽ màn rộng
+   ══════════════════════════════════════════════════════════════════════ */
 
 @media (max-width: 760px) {
-    .acct-main {
-        padding: 32px 0 0;
-        gap: 32px;
+    /* ĐĂNG XUẤT lên trên, hàng tab thành một dải vuốt ngang ngay dưới —
+       sáu viên thuốc xuống ba dòng thì chiếm nửa màn hình điện thoại. */
+    .acct-nav {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 12px;
+        padding-top: 12px;
     }
 
-    .acct-nav {
-        /* Hàng tab cuộn ngang thay vì xuống dòng: xuống dòng thì năm tab
-           thành ba hàng và đẩy nội dung tụt quá màn hình đầu. */
+    .acct-nav__out {
+        align-self: flex-end;
+    }
+
+    .acct-nav__tabs {
         flex-wrap: nowrap;
+        margin: 0 calc(-1 * var(--edge));
+        padding: 0 var(--edge);
         overflow-x: auto;
         scrollbar-width: none;
     }
 
-    .acct-nav::-webkit-scrollbar {
+    .acct-nav__tabs::-webkit-scrollbar {
         display: none;
     }
 
-    .acct-nav__foot {
-        margin-left: 8px;
+    .acct-main {
+        padding: 40px var(--edge) 80px;
     }
 
-    .acct-info__row {
+    .acct-sec {
+        margin-top: 56px;
+    }
+
+    .acct-sec--first {
+        margin-top: 64px;
+    }
+
+    .acct-sec__empty {
+        margin-top: 40px;
+    }
+
+    .acct-edit__req {
+        margin-top: 48px;
+    }
+
+    .acct-grid2,
+    .acct-order__detail,
+    .acct-order__bank {
         grid-template-columns: minmax(0, 1fr);
-        gap: 2px;
     }
 
-    .acct-order__line,
-    .acct-order__what {
-        grid-template-columns: 40px minmax(0, 1fr);
-    }
-
-    .acct-order__money {
-        grid-column: 2;
+    .acct-mini,
+    .acct-saved {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .acct-addr {
-        grid-template-columns: minmax(0, 1fr);
+        flex-direction: column;
+        gap: 16px;
     }
 
-    .acct-addr__side,
-    .acct-addr__links {
+    .acct-addr__acts {
         flex-direction: row;
+        flex-wrap: wrap;
         align-items: center;
+        gap: 20px;
+    }
+
+    .acct-order__line {
         gap: 12px;
+    }
+
+    .acct-order__thumb {
+        width: 64px;
+        height: 64px;
+    }
+
+    .acct-track {
+        padding-inline: 12px;
+    }
+
+    .acct-track__label {
+        font-size: 10px;
+    }
+
+    .acct-modal__box {
+        padding: 32px 20px 20px;
     }
 }

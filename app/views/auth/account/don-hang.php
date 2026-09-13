@@ -120,10 +120,10 @@ $paymentShort  = [
 ];
 ?>
 
-<div class="acct-head">
-    <h1 class="acct-head__title">Đơn hàng của tôi</h1>
-    <p class="acct-head__lead">Theo dõi trạng thái và lịch sử mua kính của bạn.</p>
-</div>
+<?php /* Tiêu đề in hoa căn giữa — màn "Purchases" của "Ho So Nguoi Dung.dc.html".
+         Bản thiết kế chỉ vẽ trạng thái chưa có đơn; dải lọc và thẻ đơn bên dưới
+         giữ lại theo yêu cầu chủ dự án, vẽ lại bằng cùng bộ nét của bản vẽ. */ ?>
+<h1 class="acct-title">Đơn hàng</h1>
 
 <?php
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -149,6 +149,9 @@ $paymentShort  = [
     </p>
 <?php endif; ?>
 
+<?php /* Chưa từng có đơn nào thì không vẽ dải lọc: sáu nút lọc một danh sách
+         rỗng chỉ đẩy câu "chưa có lịch sử mua hàng" xuống dưới. */ ?>
+<?php if ($total > 0): ?>
 <div class="acct-tabs">
     <?php
     /* Số trong ngoặc CHỈ hiện khi khác 0, đúng bản thiết kế: "Đã huỷ (0)" là
@@ -164,20 +167,14 @@ $paymentShort  = [
         </a>
     <?php endforeach; ?>
 </div>
+<?php endif; ?>
 
 <?php if ($orders === []): ?>
     <div class="acct-empty">
-        <span class="acct-empty__ring" aria-hidden="true">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b0736a"
-                 stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2.5 4h2l2.2 11h11.1l2.2-8H6"></path>
-                <circle cx="8.5" cy="20" r="1.6"></circle>
-                <circle cx="16.5" cy="20" r="1.6"></circle>
-            </svg>
-        </span>
-        <span class="acct-empty__title">Chưa có đơn hàng nào</span>
-        <span class="acct-empty__lead">Các đơn ở trạng thái này sẽ hiển thị tại đây.</span>
-        <a class="acct-empty__cta" href="/san-pham/gong-kinh">Khám phá gọng kính</a>
+        <p class="acct-empty__text">
+            <?= $total > 0 ? 'Không có đơn nào ở trạng thái này.' : 'Bạn chưa có lịch sử mua hàng.' ?>
+        </p>
+        <a class="acct-btn acct-empty__btn" href="/san-pham/gong-kinh">Tiếp tục mua sắm</a>
     </div>
 <?php else: ?>
     <div class="acct-list">
