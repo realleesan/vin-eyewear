@@ -148,9 +148,10 @@
          * dù hoạt ảnh bên dưới chạy đúng — nên "chưa có cuộn mượt" là điều
          * duy nhất người dùng thấy được.
          *
-         * Không bỏ hẳn sở thích ấy: nhóm này nhận một lượt cuộn cố định ~300ms
-         * thay vì tới 900ms. Đủ để mắt thấy trang trượt lên, chưa đủ lâu để
-         * thành một cảnh chuyển động dài.
+         * Không bỏ hẳn sở thích ấy: nhóm này nhận một lượt cuộn cố định 600ms
+         * thay vì tới 1200ms. Đủ để mắt thấy trang trượt lên êm, chưa đủ lâu
+         * để thành một cảnh chuyển động dài. (Bản đầu là 300ms — chủ dự án
+         * thấy vẫn nhanh.)
          */
         var giamChuyenDong = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -171,10 +172,17 @@
 
          · THỜI LƯỢNG THEO QUÃNG ĐƯỜNG. Cuộn 400px và cuộn 6000px mà cùng một
            thời lượng thì một cái lết, một cái phi. Ở đây tỉ lệ thuận với
-           quãng, chặn hai đầu 320–900ms.
-         · ĐƯỜNG CONG easeOutCubic: đi nhanh ngay từ khung hình đầu (bấm là
-           thấy phản hồi tức thì) rồi hãm dần, đáp xuống đỉnh chứ không đập
-           vào đỉnh.
+           quãng, chặn hai đầu 600–1200ms.
+         · ĐƯỜNG CONG easeInOutSine: lăn bánh nhẹ, nhanh nhất ở giữa quãng,
+           rồi hãm dần và đáp xuống đỉnh chứ không đập vào đỉnh.
+
+       (13/09/2026, theo yêu cầu chủ dự án: "vẫn hơi nhanh, cho chậm mà mượt
+       hơn".) Bản trước là easeOutCubic, 320–900ms. Đường cong ấy đạt tốc độ
+       CAO NHẤT ngay khung hình đầu, gấp 3 lần tốc độ trung bình — đo trên
+       trang chủ, lượt 300ms nhảy 236px ở khung đầu, mắt đọc ra "giật lên".
+       easeInOutSine đạt đỉnh ở giữa quãng và đỉnh chỉ ~1,57 lần trung bình
+       (π/2). ĐỪNG đổi sang easeInOutCubic cho "mượt hơn nữa": đỉnh của nó
+       cũng gấp 3 lần như easeOutCubic, chỉ dời vào giữa quãng.
          · DỪNG KHI NGƯỜI DÙNG ĐỘNG VÀO. Lăn chuột, chạm màn hay bấm phím
            cuộn giữa chừng là huỷ ngay. Hoạt ảnh cãi nhau với ngón tay người
            dùng là lỗi khó chịu hơn hẳn việc không có hoạt ảnh.
@@ -194,7 +202,7 @@
 
     /* Máy bật "Giảm chuyển động": một thời lượng cố định, không theo quãng —
        xem lý do ở trình nghe click phía trên. */
-    var THOI_LUONG_NGAN = 300;
+    var THOI_LUONG_NGAN = 600;
 
     function leoLenDinh(ngan) {
         var batDau = window.scrollY;
@@ -203,12 +211,13 @@
 
         if (dangLeo) dangLeo();
 
-        /* 0,6ms cho mỗi pixel, chặn 320–900ms. Con số 0,6 chọn để một trang
-           chủ (~900px quãng cuộn) rơi vào khoảng 540ms — đủ để mắt theo kịp
-           mà không phải ngồi đợi. */
+        /* 0,7ms cho mỗi pixel, chặn 600–1200ms. Trang chủ cuộn hết cỡ
+           (~1540px) rơi vào khoảng 1080ms. Trần 1200ms để trang rất dài không
+           bắt khách ngồi đợi; chạm trần thì chỉ tốc độ giữa quãng tăng lên,
+           hai đầu vẫn êm nhờ đường cong. */
         var thoiLuong = ngan
             ? THOI_LUONG_NGAN
-            : Math.max(320, Math.min(900, batDau * 0.6));
+            : Math.max(600, Math.min(1200, batDau * 0.7));
         var moc       = null;
         var huy       = false;
 
@@ -251,8 +260,8 @@
 
             var xong = Math.min(1, (nay - moc) / thoiLuong);
 
-            /* easeOutCubic: 1 - (1-t)³ */
-            var t = 1 - Math.pow(1 - xong, 3);
+            /* easeInOutSine: (1 - cos πt) / 2 — lý do chọn ở đầu mục 3. */
+            var t = (1 - Math.cos(Math.PI * xong)) / 2;
 
             window.scrollTo({ top: Math.round(batDau * (1 - t)), behavior: 'instant' });
 
