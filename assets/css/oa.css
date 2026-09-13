@@ -2208,11 +2208,17 @@ textarea.oa-field {
    │ kể cả khi đổi --oa-scale về sau. CSS width/height đè lên thuộc tính HTML
    │ nên không phải sửa một dòng markup nào.
    │
-   │ HỆ SỐ NAY LÀ 1, TRƯỚC LÀ 1.3 (12/09/2026, theo yêu cầu chủ dự án:
-   │ "icon phải tương đương kích thước nav items"). Chú thích cũ ở đây từng
-   │ lập luận ngược lại — "icon nét mảnh đọc nhẹ hơn chữ cùng cỡ, để đúng
-   │ 1em là nhìn ra vẫn bé" — và lập luận ấy không sai, nó chỉ thua một yêu
-   │ cầu rõ ràng hơn: icon phải ĐO BẰNG chữ nav, không to hơn.
+   │ HỆ SỐ NAY LÀ .92, TRƯỚC LÀ 1, TRƯỚC NỮA LÀ 1.3. Cả hai lần hạ đều theo
+   │ yêu cầu chủ dự án: icon phải ĐO BẰNG chữ nav, không to hơn.
+   │
+   │ Vì sao 1em vẫn chưa bằng (13/09/2026): "1em" là cỡ KHUNG, không phải cỡ
+   │ mắt thấy. Nét vẽ icon cao ~.775 khung (kính lúp 11,3 · người 11,9 · túi
+   │ 12,6px trên khung 15,4px), còn chữ hoa Helvetica Neue chỉ cao .714em
+   │ (11px). Đo trên Chrome: ở 1em icon cao hơn chữ nav gần 1px. .714 / .775
+   │ ≈ .92 → nét icon trung bình cao đúng bằng chữ hoa.
+   │
+   │ ĐỪNG sửa bằng cách phóng chữ nav lên cho bằng icon: đã thử, chữ rộng
+   │ thêm ~27px và "Liên hệ" bị cắt ở màn 1280px.
    │
    │ Cả ba VỀ CÙNG MỘT CỠ. Mẫu vẽ kính lúp 14 còn hai cái kia 15 — lệch 1px
    │ ở cỡ đó không ai thấy, nhưng phóng lên là thành lệch 1,4px giữa ba icon
@@ -2224,8 +2230,8 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────── */
 .oa-header__btn > svg,
 .oa-header__burger > svg {
-    width: 1em;
-    height: 1em;
+    width: .92em;
+    height: .92em;
 
     /* `flex: none` BẮT BUỘC. Ba nút là flex item của .oa-header__actions, và
        svg bên trong chúng cũng là flex item. Ở màn hẹp, wordmark giữa đẩy cột
