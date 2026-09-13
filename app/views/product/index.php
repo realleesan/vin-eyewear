@@ -293,6 +293,43 @@ if ($hasPrices && $groups['price'] !== []) {
  * 'newest' là mặc định nên $buildUrl tự bỏ nó khỏi URL; mục này vì thế vừa là
  * "Mới nhất" vừa là "về mặc định".
  */
+/*
+ * ════════════════════════════════════════════════════════════════════════════
+ * SỐ TRÊN NÚT ĐẾM ĐÚNG NHỮNG GÌ NẰM TRONG TẤM — đếm TỪ $fbCols, không từ
+ * $activeCount của controller.
+ *
+ * ⚠ LỖI ĐÃ XẢY RA THẬT (13/09/2026): bấm một chip bộ sưu tập là tấm lọc tự
+ * bung ra, kèm số "1" mà tìm khắp bảy cột không thấy tiêu chí nào đang bật.
+ * Lý do: $activeCount cộng cả nhóm 'collection', mà nhóm ấy đã rời khỏi tấm
+ * để lên HÀNG CHIP từ cùng đợt. Số đếm một đằng, tấm lọc một nẻo.
+ *
+ * Đếm từ chính $fbCols thì không bao giờ lệch nữa: cột nào có trong tấm mới
+ * được tính, và thêm/bớt cột về sau không phải nhớ sửa thêm chỗ nào.
+ *
+ * ⚠ ĐẶT TRƯỚC KHI THÊM CỘT "SẮP XẾP", và đó là chủ ý: sắp xếp KHÔNG thu hẹp
+ * kết quả, nó luôn có đúng một mục đang bật. Tính nó vào thì số không bao giờ
+ * xuống 0 và tấm lọc bung sẵn ở mọi trang. Cùng luật với trang bộ sưu tập.
+ * ════════════════════════════════════════════════════════════════════════════
+ */
+$fbCount = 0;
+
+foreach ($fbCols as $cot) {
+    foreach ($cot['options'] as $i => $muc) {
+        if (empty($muc['on'])) {
+            continue;
+        }
+
+        /* Cột chọn-MỘT (Khoảng giá) LUÔN có đúng một mục bật, và mục ĐẦU
+           TIÊN của nó là "Tất cả mức giá" — tức trạng thái KHÔNG lọc. Tính nó
+           vào thì mọi trang đều đếm ít nhất 1 và tấm bung sẵn mãi mãi. */
+        if (!empty($cot['single']) && $i === 0) {
+            continue;
+        }
+
+        $fbCount++;
+    }
+}
+
 $fbCols[] = [
     'label'   => 'Sắp xếp',
     'single'  => true,
@@ -384,10 +421,8 @@ if (!empty($groups['collection'])) {
            đang tìm. */
         'fbClear' => $hasFacetFilter ? $buildUrl($resetPatch) : '',
         /* Số tiêu chí đang bật — in lên nút mở, và là thứ quyết định tấm có
-           bung sẵn hay không. Trừ 'category' ra: danh mục là CHÍNH trang này
-           chứ không phải một tiêu chí khách vừa bấm, nên đếm nó vào là tấm
-           luôn bung sẵn ở mọi trang con. Cùng phép với $hasFacetFilter. */
-        'fbCount' => max(0, $activeCount - ($filters['category'] !== '' ? 1 : 0)),
+           bung sẵn hay không. Đếm từ chính $fbCols, xem khối chú thích ở trên. */
+        'fbCount' => $fbCount,
         'fbChips' => $fbChips,
     ]);
 
