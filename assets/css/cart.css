@@ -23,69 +23,17 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   HAI TAB + NÚT ĐÓNG
+   HAI TAB + NÚT ĐÓNG — ĐÃ CHUYỂN SANG assets/css/oa.css (13/09/2026)
+
+   Bộ lớp .ctabs* nay dùng ở HAI chỗ: trang giỏ hàng này và ngăn kéo giỏ mở
+   ra từ icon trên thanh đầu trang (_layout/header-cart.php). Ngăn kéo ấy có
+   mặt ở MỌI trang, mà cart.css thì chỉ nạp cho riêng trang /gio-hang — để
+   luật ở đây thì ngăn kéo ra một hàng tab không kiểu dáng.
+
+   ⚠ Đừng chép ngược về đây. Hai bản sao của cùng một hàng tab là hai chỗ sẽ
+   lệch nhau, đúng thứ vừa dọn xong ở bảng xổ tìm kiếm.
    ══════════════════════════════════════════════════════════════════════ */
 
-.ctabs {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 28px;
-    padding: 14px 0 0;
-}
-
-/* Tab đang đứng và tab kia CÙNG cỡ chữ 16px — khác nhau ở nền và màu chữ,
-   không ở kích thước. Đổi cỡ là hai tab nhảy chỗ mỗi lần chuyển. */
-.ctabs__on,
-.ctabs__off {
-    font-size: 16px;
-    line-height: 1;
-    padding: 6px 0;
-}
-
-.ctabs__on {
-    background: #ebebeb;
-    border-radius: 4px;
-    padding: 6px 14px;
-    color: #111;
-}
-
-.ctabs__off {
-    color: #8a8a8a;
-}
-
-.ctabs__off:hover {
-    color: #111;
-    text-decoration: none;
-}
-
-/* Số nhỏ đặt cao — `vertical-align: top` một mình chưa đủ, bản thiết kế còn
-   kéo thêm 2px nữa cho nó ngang vai chữ hoa. */
-.ctabs__on sup,
-.ctabs__off sup {
-    position: relative;
-    top: -2px;
-    vertical-align: top;
-    font-size: 9px;
-}
-
-.ctabs__on sup {
-    font-weight: 600;
-}
-
-.ctabs__x {
-    position: absolute;
-    right: 32px;
-    top: 14px;
-    display: flex;
-    padding: 6px;
-    color: #111;
-}
-
-.ctabs__x:hover {
-    opacity: .6;
-}
 
 /* Dải báo sau thao tác — không có trong mẫu, xem chú thích ở view. */
 .cmsg {
@@ -470,10 +418,6 @@ html.js .cqty__go {
 
     .csum {
         padding-top: 0;
-    }
-
-    .ctabs__x {
-        right: 20px;
     }
 }
 

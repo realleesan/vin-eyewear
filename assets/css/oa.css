@@ -2557,6 +2557,108 @@ textarea.oa-field {
     aspect-ratio: 4 / 3;
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   HÀNG TAB "GIỎ HÀNG / YÊU THÍCH" + NÚT ĐÓNG
+
+   DÙNG Ở HAI CHỖ, và chúng phải trông y hệt nhau:
+     · trang /gio-hang            app/views/cart/index.php
+     · ngăn kéo giỏ ở đầu trang   app/views/_layout/header-cart.php
+
+   Ở đây (oa.css) chứ không ở cart.css vì ngăn kéo có mặt trên MỌI trang,
+   còn cart.css chỉ nạp cho riêng /gio-hang.
+
+   ⚠ Sửa một con số ở đây là đổi cả hai chỗ — đó là chủ ý. Đừng khai lại
+   một bản riêng cho ngăn kéo.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.ctabs {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 28px;
+    padding: 14px 0 0;
+}
+
+/* Tab đang đứng và tab kia CÙNG cỡ chữ 16px — khác nhau ở nền và màu chữ,
+   không ở kích thước. Đổi cỡ là hai tab nhảy chỗ mỗi lần chuyển. */
+.ctabs__on,
+.ctabs__off {
+    font-size: 16px;
+    line-height: 1;
+    padding: 6px 0;
+}
+
+.ctabs__on {
+    background: #ebebeb;
+    border-radius: 4px;
+    padding: 6px 14px;
+    color: #111;
+}
+
+.ctabs__off {
+    color: #8a8a8a;
+}
+
+.ctabs__off:hover {
+    color: #111;
+    text-decoration: none;
+}
+
+/* Số nhỏ đặt cao — `vertical-align: top` một mình chưa đủ, bản thiết kế còn
+   kéo thêm 2px nữa cho nó ngang vai chữ hoa. */
+.ctabs__on sup,
+.ctabs__off sup {
+    position: relative;
+    top: -2px;
+    vertical-align: top;
+    font-size: 9px;
+}
+
+.ctabs__on sup {
+    font-weight: 600;
+}
+
+.ctabs__x {
+    position: absolute;
+    right: 32px;
+    top: 14px;
+    display: flex;
+    padding: 6px;
+    color: #111;
+}
+
+.ctabs__x:hover {
+    opacity: .6;
+}
+
+/* Trong ngăn kéo, hàng tab là hàng ĐẦU TIÊN của tấm và tấm đã có đệm riêng —
+   nên bỏ đệm-trên 14px của bản trang giỏ, chỉ giữ chỗ neo cho nút ✕. */
+.ctabs--drawer {
+    padding: 0;
+}
+
+.ctabs--drawer .ctabs__x {
+    top: 0;
+    right: 0;
+}
+
+/* Màn hẹp: mép trang co từ 32px xuống 20px nên nút ✕ của TRANG GIỎ theo.
+   Bản trong ngăn kéo giữ nguyên right:0 nhờ độ đặc hiệu cao hơn.
+
+   ⚠ Luật này từng nằm trong cart.css cùng khối .ctabs*; để lại bên đó thì
+   ngăn kéo — vốn không nạp cart.css — vẫn đúng, nhưng TRANG GIỎ ở màn hẹp
+   mất nó. Bộ lớp đi đâu thì luật màn hẹp của nó đi theo. */
+@media (max-width: 900px) {
+    .ctabs__x {
+        right: 20px;
+    }
+
+    .ctabs--drawer .ctabs__x {
+        right: 0;
+    }
+}
+
 /* Ngăn kéo phải — tài khoản/đăng nhập */
 .oa-drawer {
     position: fixed;

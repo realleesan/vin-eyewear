@@ -31,6 +31,19 @@ $cartCount = count($_SESSION['cart'] ?? []);
 /* Chỉ truy vấn khi giỏ có hàng — giỏ rỗng là trường hợp phổ biến nhất và nó
    không cần một lượt xuống CSDL nào. */
 $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' => 0];
+
+/* ┌─ SỐ MÓN ĐÃ LƯU — cho tab "Yêu thích" bên cạnh ──────────────────────────
+   │ Một câu COUNT, và chỉ hỏi khi khách ĐÃ đăng nhập VÀ bảng đã dựng: chưa
+   │ đăng nhập thì danh sách yêu thích gắn với ai cũng không biết, nên số ấy
+   │ luôn bằng 0 và không có gì để hỏi.
+   │
+   │ Ngăn kéo này dựng ở MỌI trang khung đầy đủ, nên mỗi truy vấn thêm vào
+   │ đây là một truy vấn cho cả site — lý do phải chặn bằng hai điều kiện
+   │ trên chứ không hỏi vô điều kiện. */
+$wishId    = AuthMiddleware::customerId();
+$wishCount = ($wishId !== null && FavoriteModel::available())
+    ? FavoriteModel::dem($wishId)
+    : 0;
 ?>
 <div class="hpop" data-hpop data-cart>
 
@@ -69,15 +82,39 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
         <?php /* Hàng đỉnh ba cột: ô trống · tab căn giữa · nút đóng nép phải.
                  Ô trống bên trái là thứ giữ cho hàng tab ở CHÍNH GIỮA màn hình
                  chứ không phải giữa khoảng còn lại sau nút đóng. */ ?>
-        <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px">
-            <span></span>
-            <div style="display:flex;gap:12px;align-items:center">
-                <span class="oa-tab oa-tab--caps is-active">
-                    <?= e(t('cart.title')) ?><sup class="oa-sup"><?= (int) $cartCount ?></sup>
-                </span>
-            </div>
-            <button type="button" class="oa-close" data-cart-close style="justify-self:end"
-                    aria-label="<?= e(t('menu.close')) ?>">✕</button>
+        <?php /* ┌─ HAI TAB — DÙNG CHUNG BỘ LỚP VỚI TRANG /gio-hang ──────────
+                 │ .ctabs* khai một lần trong oa.css và dùng ở cả hai chỗ, nên
+                 │ hàng tab trong ngăn kéo này trông y hệt hàng tab trên trang
+                 │ giỏ. Trước 13/09/2026 ở đây là .oa-tab--caps, một dáng thứ
+                 │ hai cho cùng một vai trò.
+                 │
+                 │ "Yêu thích" là LIÊN KẾT, không phải tab đổi nội dung tại
+                 │ chỗ: danh sách ấy đã có nhà riêng ở /tai-khoan?muc=da-luu từ
+                 │ 12/09. Dựng thêm một bản trong ngăn kéo là hai chỗ vẽ cùng
+                 │ một danh sách — và chúng sẽ lệch nhau. Cùng lối với tab
+                 │ tương ứng trên trang giỏ.
+                 │
+                 │ Chưa đăng nhập thì số là 0 và liên kết vẫn còn: bấm vào,
+                 │ trang tài khoản tự đẩy sang /auth kèm đường quay lại. Giấu
+                 │ tab đi thì khách không có đường nào biết chức năng tồn tại.
+                 └──────────────────────────────────────────────────────────── */ ?>
+        <div class="ctabs ctabs--drawer">
+            <span class="ctabs__on">
+                <?= e(t('cart.tab_bag')) ?><sup><?= (int) $cartCount ?><span class="sr-only"> <?= e(t('cart.tab_bag_sr')) ?></span></sup>
+            </span>
+
+            <a class="ctabs__off" href="/tai-khoan?muc=da-luu">
+                <?= e(t('cart.tab_wish')) ?><sup><?= (int) $wishCount ?><span class="sr-only"> <?= e(t('cart.tab_wish_sr')) ?></span></sup>
+            </a>
+
+            <button type="button" class="ctabs__x" data-cart-close
+                    aria-label="<?= e(t('menu.close')) ?>">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                     stroke-width="1.3" aria-hidden="true">
+                    <line x1="2" y1="2" x2="14" y2="14"></line>
+                    <line x1="14" y1="2" x2="2" y2="14"></line>
+                </svg>
+            </button>
         </div>
 
         <?php if ($recent['lines'] === []): ?>

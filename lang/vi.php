@@ -111,8 +111,8 @@ return [
        (in hoa là do CSS, không phải do chữ gõ hoa). */
     'cart.tab_bag'          => 'GIỎ HÀNG',
     'cart.tab_bag_sr'       => 'sản phẩm trong giỏ',
-    'cart.tab_wish'         => 'ĐÃ LƯU',
-    'cart.tab_wish_sr'      => 'sản phẩm đã lưu',
+    'cart.tab_wish'         => 'YÊU THÍCH',
+    'cart.tab_wish_sr'      => 'sản phẩm yêu thích',
     'cart.close'            => 'Đóng giỏ hàng',
     'cart.qty'              => 'Số lượng',
     'cart.qty_go'           => 'Cập nhật',
