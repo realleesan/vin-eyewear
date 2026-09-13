@@ -3,9 +3,10 @@
 /**
  * auth/profile.php — trang tài khoản (/tai-khoan)
  *
- * Dựng theo "Ho So Nguoi Dung.dc.html" (Claude Design, 13/09/2026):
+ * Dựng 1:1 theo "Ho So Nguoi Dung.dc.html" (Claude Design, bản 13/09/2026),
+ * chữ dịch sang tiếng Việt:
  *
- *   ( Tài khoản ) ( Đơn hàng ) ( Đã lưu ) ( Sổ địa chỉ ) ( Hồ sơ ) ( Lịch hẹn )   ĐĂNG XUẤT
+ *   ( Tài khoản ) ( Đơn hàng ) ( Đã lưu ) ( Lịch hẹn ) ( Sổ địa chỉ ) ( Hồ sơ )   ĐĂNG XUẤT
  *
  *                              TIÊU ĐỀ IN HOA
  *                    một cột nội dung 725px, căn giữa trang
@@ -23,13 +24,15 @@
  * ngoài, và thay ruột đúng hai khối .acct-nav và .acct-main sau mỗi cú đổi tab.
  *
  * ─────────────────────────────────────────────────────────────────────────────
- * ĐÃ GỠ CÙNG BẢN DỰNG NÀY (theo yêu cầu chủ dự án)
+ * CHỖ LỆCH BẢN VẼ — ĐỀU DO CHỦ DỰ ÁN CHỐT (13/09/2026)
  *
- *   - cột điều hướng trái + thẻ khách có ảnh đại diện: bản thiết kế là một hàng
- *     tab ngang, không có ảnh. Đường POST /tai-khoan/anh vẫn còn, chỉ không
- *     còn nút nào gọi tới.
- *   - ô giới tính và ngày sinh trong form hồ sơ: dữ liệu cũ GIỮ NGUYÊN, xem
- *     AuthController::updateProfile().
+ *   - không dựng khối "Marketing preferences" ở tab Hồ sơ: hệ thống chưa có
+ *     chỗ lưu hai công tắc ấy.
+ *   - form đặt lịch không có ô Giờ: giả định A5, xem BookingModel.
+ *   - thứ bản vẽ không vẽ nhưng hệ thống đang chạy thật (chi tiết đơn, chuyển
+ *     khoản, huỷ đơn, mua lại, sửa địa chỉ, đổi ngày hẹn) vẫn giữ, vẽ bằng
+ *     đúng các nét của bản vẽ: thẻ trắng viền #d9d9d9, viên trạng thái, liên
+ *     kết chữ IN HOA 13px.
  */
 ?>
 

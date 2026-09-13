@@ -263,6 +263,9 @@ return [
     // app/views/auth/account/lich-hen.php.
     'tai-khoan/lich-hen/doi' => 'AuthController@rescheduleBooking', // POST
     'tai-khoan/lich-hen/huy' => 'AuthController@cancelBooking',     // POST
+    // Form "Lịch hẹn mới" ngay trong tab Lịch hẹn (?dat=1) — bản thiết kế
+    // "Ho So Nguoi Dung". Xem AuthController::bookAppointment().
+    'tai-khoan/lich-hen/dat' => 'AuthController@bookAppointment',   // POST
 
     // Quên mật khẩu — khách tự làm bằng mã OTP. Bốn chặng nằm chung một địa
     // chỉ, chọn bằng ?buoc= (xem khối chú thích trong AuthController).

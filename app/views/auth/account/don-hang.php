@@ -1,620 +1,309 @@
 <?php
 
 /**
- * auth/account/don-hang.php — mục "Đơn hàng của tôi" (/tai-khoan?muc=don-hang).
+ * auth/account/don-hang.php — tab "Đơn hàng" (/tai-khoan?muc=don-hang).
  *
- * Dựng theo khối "ĐƠN HÀNG" trong "Vin Eyewear Account.dc.html" (Claude Design):
+ * Màn "Purchases" của "Ho So Nguoi Dung.dc.html". Bản vẽ chỉ có trạng thái
+ * CHƯA CÓ ĐƠN: tiêu đề, một câu cách xa bên dưới, nút TIẾP TỤC MUA SẮM.
  *
- *   dải thẻ lọc theo trạng thái
- *   rồi mỗi đơn là một thẻ VIỀN MỎNG chia thành từng dải ngang:
- *     dải đầu (nền pearl)  mã · ngày · huy hiệu trạng thái
- *     dải hàng             ảnh 84px · thương hiệu/tên/phiên bản · SL + tiền
- *     dải tiến trình       5 chấm
- *     dải chi tiết         (nền pearl) hai cột: nhận hàng | tóm tắt thanh toán
- *     dải chân             cách giao · cách trả  ‖  nút hành động
+ * CÓ ĐƠN thì mỗi đơn là một THẺ LỊCH HẸN của chính bản vẽ (màn Appointments):
  *
- * Thẻ đơn hàng KHÔNG cùng ngôn ngữ hình khối với các thẻ khác của trang tài
- * khoản: bản thiết kế vẽ những thẻ kia bo tròn lớn + đổ bóng, còn thẻ đơn thì
- * viền 1px + bo nhỏ + không bóng, và chia dải bằng nền pearl. Đây là chủ ý của
- * bản thiết kế (một hoá đơn nên trông như chứng từ, không như thẻ quảng cáo),
- * nên .acct-order tự tắt bóng và tự thêm viền chứ không sửa .acct-card.
+ *   ĐƠN ĐÃ ĐẶT                                              3
+ *   ┌───────────────────────────────────────────────────────┐
+ *   │ Tên sản phẩm +1                          ( ĐANG GIAO ) │
+ *   │ VE-123 · Đặt ngày 13/09/2026              XEM CHI TIẾT │
+ *   │ 1.200.000đ · Chưa thanh toán (xám)             HUỶ ĐƠN │
+ *   ├───────────────────────────────────────────────────────┤  ?don=<mã>
+ *   │ Nhận hàng · Sản phẩm · Thanh toán · Chuyển khoản        │
+ *   └───────────────────────────────────────────────────────┘
  *
- * ─────────────────────────────────────────────────────────────────────────────
- * MÀU HUY HIỆU TRẠNG THÁI
+ * Thanh tiến trình năm chấm, huy hiệu màu và dải lọc trạng thái của bản cũ ĐÃ
+ * GỠ. CHỨC NĂNG thì giữ đủ: số tài khoản + nút QR cho đơn còn nợ tiền, huỷ đơn
+ * (UC-02), mua lại, biên nhận, lối Zalo cho đơn không tự huỷ được.
  *
- * Sáu trạng thái của OrderModel::STATUSES ↔ đúng sáu cặp màu bản thiết kế khai
- * trong `Component.STATUS`. 'confirmed' xanh chàm và 'preparing' tím là HAI cặp
- * khác nhau — trước đây hai trạng thái này dùng chung một màu.
+ * MỞ/ĐÓNG CHI TIẾT BẰNG URL (?don=<mã>): gửi link tới đúng đơn được, F5 không
+ * đóng lại. Khối chi tiết dựng SẴN cho mọi đơn (ẩn bằng `hidden`) — dữ liệu đã
+ * nạp cả rồi, và account.js nhờ vậy bật/tắt tại chỗ không tải lại trang.
  *
- * THANH TIẾN TRÌNH: NĂM BƯỚC
- * Đúng 5 mốc như bản thiết kế. Đơn đã huỷ thì không vẽ thanh này: một đường
- * tiến trình dừng giữa chừng trông như đơn đang kẹt chứ không phải đã huỷ.
- *
- * BỐN CHỖ THÊM SO VỚI BẢN THIẾT KẾ — VÀ VÌ SAO
- *
- * 1. DÒNG "GIẢM GIÁ" trong tóm tắt thanh toán. Bản thiết kế chỉ có tạm tính +
- *    phí vận chuyển + tổng cộng vì đơn mẫu của nó không có mã giảm giá. Thiếu
- *    dòng này thì hoá đơn thật trông như tính sai. Chỉ hiện khi discount > 0.
- *
- * 2. DÒNG TỪNG SẢN PHẨM trong tóm tắt, CHỈ khi đơn có nhiều hơn một món. Bản
- *    thiết kế vẽ đơn một món nên dải hàng nói được hết; đơn nhiều món thì
- *    không, và khách không còn chỗ nào xem mình đã mua gì. Dựng bằng đúng
- *    nguyên thể "dòng tóm tắt" (nhãn trái · số phải) mà bản thiết kế đã định
- *    nghĩa ngay trong cột đó, không thêm hình khối mới.
- *
- * 3. GHI CHÚ CỦA KHÁCH dưới địa chỉ, cùng cột "Thông tin nhận hàng" — nó là
- *    một phần của việc nhận hàng. Chỉ hiện khi đơn có ghi chú.
- *
- * 4. HUY HIỆU TRẠNG THÁI TIỀN ở đầu thẻ, và KHỐI CHUYỂN KHOẢN trong cột tóm tắt
- *    khi đơn chuyển khoản còn nợ tiền. Bản thiết kế chỉ vẽ một huy hiệu — trạng
- *    thái giao vận — vì dữ liệu mẫu của nó không có trục trạng thái tiền nào.
- *    CSDL thì có (orders.payment_status), và đó là thứ khách hỏi trước nhất khi
- *    mở trang này: "tôi đã trả chưa, còn phải chuyển bao nhiêu, vào đâu".
- *    Xem OrderModel::PAYMENT_STATUSES.
- * ─────────────────────────────────────────────────────────────────────────────
+ * Hộp xác nhận huỷ đơn mở bằng ?huy=<mã>, ngay trong thẻ đó.
  */
-
-$badgeTones = [
-    'new'       => 'wait',
-    'confirmed' => 'sure',
-    'preparing' => 'prep',
-    'shipping'  => 'ship',
-    'completed' => 'done',
-    'cancelled' => 'stop',
-];
-
-/* Vòng đời đơn, dùng để biết một đơn đã đi qua bước nào. Khớp thứ tự khai
-   trong OrderModel::STATUSES, bỏ 'cancelled' vì huỷ không phải một bước tiến. */
-$flow = [
-    'new'       => 'Đã đặt hàng',
-    'confirmed' => 'Đã xác nhận',
-    'preparing' => 'Đang chuẩn bị',
-    'shipping'  => 'Đang giao',
-    'completed' => 'Đã nhận hàng',
-];
-
-/* Nút chính ở chân thẻ, theo trạng thái. Trạng thái không có tên ở đây thì chân
-   thẻ chỉ còn nút "Xem chi tiết" — đúng như bản thiết kế để trống hai trạng
-   thái 'confirmed' và 'preparing'.
-
-   TRẠNG THÁI 'new' KHÔNG CÒN NÚT NÀO. Trước đây nó là "Xem hướng dẫn thanh
-   toán" trỏ /chinh-sach#thanh-toan — một NEO CHẾT (trang chính sách chỉ có
-   bao-hanh · doi-tra · do-mat · giao-hang · bao-mat), nên nút mở trang chính
-   sách rồi đứng ở đầu trang. Nó lại hiện cho cả đơn COD, mà đơn COD thì không có
-   hướng dẫn thanh toán nào để xem — cứ nhận hàng rồi trả tiền cho shipper.
-
-   Việc trả tiền nay đi theo TRẠNG THÁI TIỀN chứ không theo trạng thái đơn: đơn
-   chuyển khoản chưa nhận tiền có nút riêng, xem $needsTransfer bên dưới. */
-$primaryLabels = [
-    'shipping'  => 'Theo dõi vận chuyển',
-    'completed' => 'Mua lại',
-    'cancelled' => 'Mua lại',
-];
-
-/* KHÔNG CÒN $canStillCancel Ở ĐÂY — gỡ ở đợt 4.
-
-   Nó từng liệt kê ba trạng thái khách còn kịp đổi ý, và cả file dùng nó để
-   quyết định vẽ lối liên hệ huỷ đơn. Nay câu trả lời ấy do
-   OrderModel::khachHuyDuoc() đưa ra, cho từng đơn một, và nó biết cả thứ mà
-   một danh sách trạng thái không biết được: đơn vẫn ở "Đang chuẩn bị" nhưng ĐÃ
-   BẤM MỐC MÀI thì tròng đã cắt theo số đo của chính khách này, và đó không còn
-   là chuyện đổi ý nữa.
-
-   Giữ cả hai nghĩa là hai chỗ trả lời cùng một câu hỏi bằng hai luật khác nhau
-   — và chúng đã lệch thật: bản đầu của đợt 4 nối hai vế bằng AND, khiến đơn
-   'shipping' trượt cả hai và mất luôn lối Zalo vốn viết ra cho đúng nó. */
 
 $deliveryLabels = ['pickup' => 'Nhận tại cửa hàng', 'shipping' => 'Giao tận nơi'];
 
-/* HAI tên cho cùng một cách thanh toán, đúng như bản thiết kế viết: thẻ vuông
-   trong phần chi tiết ghi cả chữ viết tắt (`payMethod`), còn dòng dưới chân thẻ
-   thì bỏ nó đi (`footNote`) — chỗ đó là một dòng đọc nhanh, ngoặc đơn chỉ làm
-   rối. */
 $paymentLabels = [
-    'cod'           => 'Thanh toán khi nhận hàng (COD)',
-    'bank_transfer' => 'Chuyển khoản ngân hàng',
-];
-$paymentShort  = [
     'cod'           => 'Thanh toán khi nhận hàng',
     'bank_transfer' => 'Chuyển khoản ngân hàng',
 ];
+
+/* Vòng đời đơn, theo thứ tự — chỉ để in các mốc đã qua trong phần chi tiết.
+   Bỏ 'cancelled' vì huỷ không phải một bước tiến. */
+$flow = ['new', 'confirmed', 'preparing', 'shipping', 'completed'];
+
+$chevron = '<svg class="acct-field__chev" width="16" height="16" viewBox="0 0 16 16" fill="none"'
+         . ' stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">'
+         . '<path d="M3 6l5 5 5-5"></path></svg>';
 ?>
 
-<?php /* Tiêu đề in hoa căn giữa — màn "Purchases" của "Ho So Nguoi Dung.dc.html".
-         Bản thiết kế chỉ vẽ trạng thái chưa có đơn; dải lọc và thẻ đơn bên dưới
-         giữ lại theo yêu cầu chủ dự án, vẽ lại bằng cùng bộ nét của bản vẽ. */ ?>
-<h1 class="acct-title">Đơn hàng</h1>
-
-<?php
-/* ─────────────────────────────────────────────────────────────────────────────
-   "ĐÃ CHUYỂN KHOẢN, ĐANG CHỜ TIỀN VỀ" — FR-TT-05
-
-   Đến đây từ nút "Tôi đã chuyển khoản — kiểm tra giúp tôi" ở trang QR. Câu chữ
-   lấy đúng của SRS, và nó cố ý KHÔNG nói "đã nhận được tiền": chỉ sao kê ngân
-   hàng mới trả lời được câu đó, và trang biên nhận vẫn chỉ mở khi tiền về thật.
-
-   Không dùng flash vì đây là một liên kết GET — khách bấm F5 hay chia sẻ link
-   thì câu này vẫn đúng, không như một flash chỉ sống một lượt.
-
-   Chỉ in khi tham số có mặt. Không kiểm đơn nào, không kiểm trạng thái tiền: đây
-   là một câu trấn an chung, và làm nó phụ thuộc vào trạng thái nghĩa là khách
-   bấm nút xong tiền vừa về thì câu biến mất — đúng lúc họ đang tìm nó. Thẻ đơn
-   ngay dưới đã nói trạng thái thật.
-   ───────────────────────────────────────────────────────────────────────────── */
-?>
 <?php if (isset($_GET['da-chuyen'])): ?>
-    <p class="acct-notice" role="status">
-        <strong>Đơn của bạn đã được ghi nhận.</strong>
-        Chúng tôi đang chờ tiền về và sẽ báo lại ngay.
+    <?php /* FR-TT-05 — tới đây từ nút "Tôi đã chuyển khoản" ở trang QR. Cố ý KHÔNG
+             nói "đã nhận được tiền": chỉ sao kê ngân hàng trả lời được câu đó.
+             Là tham số GET chứ không phải flash, để F5 vẫn còn câu này. */ ?>
+    <p class="acct-flash acct-flash--ok" role="status">
+        Đơn của bạn đã được ghi nhận. Chúng tôi đang chờ tiền về và sẽ báo lại ngay.
     </p>
 <?php endif; ?>
 
-<?php /* Chưa từng có đơn nào thì không vẽ dải lọc: sáu nút lọc một danh sách
-         rỗng chỉ đẩy câu "chưa có lịch sử mua hàng" xuống dưới. */ ?>
-<?php if ($total > 0): ?>
-<div class="acct-tabs">
-    <?php
-    /* Số trong ngoặc CHỈ hiện khi khác 0, đúng bản thiết kế: "Đã huỷ (0)" là
-       một con số không nói gì mà vẫn chiếm chỗ trên dải. */
-    ?>
-    <a class="acct-tab<?= $tab === '' ? ' is-active' : '' ?>" href="/tai-khoan?muc=don-hang">
-        Tất cả<?= $total > 0 ? ' (' . (int) $total . ')' : '' ?>
-    </a>
-    <?php foreach ($statuses as $key => $label): ?>
-        <a class="acct-tab<?= $tab === $key ? ' is-active' : '' ?>"
-           href="/tai-khoan?muc=don-hang&amp;loc=<?= e($key) ?>">
-            <?= e($label) ?><?= !empty($tabCounts[$key]) ? ' (' . (int) $tabCounts[$key] . ')' : '' ?>
-        </a>
-    <?php endforeach; ?>
-</div>
-<?php endif; ?>
+<h1 class="acct-title">Đơn hàng</h1>
 
 <?php if ($orders === []): ?>
+
     <div class="acct-empty">
-        <p class="acct-empty__text">
-            <?= $total > 0 ? 'Không có đơn nào ở trạng thái này.' : 'Bạn chưa có lịch sử mua hàng.' ?>
-        </p>
+        <p class="acct-empty__text">Bạn chưa có lịch sử mua hàng.</p>
         <a class="acct-btn acct-empty__btn" href="/san-pham/gong-kinh">Tiếp tục mua sắm</a>
     </div>
+
 <?php else: ?>
-    <div class="acct-list">
+
+<section class="acct-sec acct-sec--first" aria-labelledby="dh-tieu-de">
+    <div class="acct-head">
+        <h2 class="acct-head__label" id="dh-tieu-de">Đơn đã đặt</h2>
+        <span class="acct-mute"><?= count($orders) ?></span>
+    </div>
+
+    <div class="acct-cards">
         <?php foreach ($orders as $o): ?>
             <?php
             $lines = $items[$o['id']] ?? [];
-            $lead  = $lines[0] ?? null;          // dòng hàng in ra dải hàng
-            $extra = max(0, count($lines) - 1);  // số dòng còn lại, nêu ở phiên bản
+            $lead  = $lines[0] ?? null;
+            $extra = max(0, count($lines) - 1);
             $marks = $history[$o['id']] ?? [];
-            $step  = array_search($o['status'], array_keys($flow), true);
 
-            /* Mở/đóng bằng URL (?don=<mã>) chứ không bằng <details>: cùng lý do
-               đã ghi ở đầu app/views/auth/profile.php — gửi được link tới đúng
-               đơn đang hỏi, và F5 không đóng lại.
-
-               Khối chi tiết dựng SẴN cho mọi đơn (ẩn bằng `hidden` nếu đang thu
-               gọn) chứ không dựng khi ?don= khớp: dữ liệu của cả danh sách đã
-               nạp từ trước — xem itemsForOrders trong AuthController — nên in
-               thêm không tốn câu truy vấn nào, mà account.js mới có gì để
-               bật/tắt tại chỗ, khỏi tải lại trang. Không có JS thì href bên
-               dưới vẫn làm đúng việc như cũ. */
             $isOpen    = $expanded === $o['code'];
-            $base      = '/tai-khoan?muc=don-hang' . ($tab !== '' ? '&amp;loc=' . e($tab) : '');
+            $base      = '/tai-khoan?muc=don-hang';
             $openHref  = $base . '&amp;don=' . e(rawurlencode($o['code'])) . '#' . e($o['code']);
             $closeHref = $base . '#' . e($o['code']);
             $detailId  = 'chi-tiet-' . e($o['code']);
 
+            $daHuy    = $o['status'] === 'cancelled';
             $delivery = $deliveryLabels[$o['delivery_method']] ?? $o['delivery_method'];
             $payment  = $paymentLabels[$o['payment_method']] ?? $o['payment_method'];
-            $payShort = $paymentShort[$o['payment_method']] ?? $payment;
+            $payState = (string) ($o['payment_status'] ?? 'unpaid');
+            $daTra    = in_array($payState, ['paid', 'deposit_paid'], true) && !$daHuy;
+            $deposit  = (int) ($o['deposit_amount'] ?? 0);
 
-            $isPaid = ($o['payment_status'] ?? 'unpaid') === 'paid';
+            /* CÒN PHẢI CHUYỂN KHOẢN: đơn chuyển khoản chưa nhận tiền, HOẶC đơn cắt
+               tròng chọn COD — tiền cọc không trả cho shipper được, cửa hàng cần
+               nó trước khi mài tròng. Đơn COD thường thì không: khách không phải
+               làm gì trước khi nhận hàng. */
+            $needsTransfer = !$daTra && !$daHuy
+                && ($o['payment_method'] === 'bank_transfer' || $deposit > 0)
+                && !empty($bank['number']);
 
-            /* Đơn chuyển khoản còn nợ tiền và chưa huỷ -> chân thẻ có nút riêng
-               dẫn tới khối chuyển khoản, nằm ngay trong phần chi tiết của chính
-               thẻ này. Bấm nút = mở phần chi tiết ra (cùng href với "Xem chi
-               tiết"), nên không đi đâu khỏi trang và cũng không cần JS.
-
-               Đơn COD KHÔNG có nút này: khách không phải làm gì trước khi nhận
-               hàng cả. */
-            /* Đơn CẮT TRÒNG chọn COD cũng cần chuyển khoản phần cọc — tiền
-               cọc không trả cho shipper được, cửa hàng cần nó trước khi mài
-               tròng. Nên điều kiện không còn chỉ là "đơn chuyển khoản". */
-            $needsTransfer = !$isPaid
-                && ($o['payment_method'] === 'bank_transfer'
-                    || (int) ($o['deposit_amount'] ?? 0) > 0)
-                && $o['payment_status'] !== 'deposit_paid'
-                && $o['status'] !== 'cancelled';
+            /* Huỷ được hay không do OrderModel::khachHuyDuoc() trả lời: null là
+               được, một câu là lý do từ chối. Nó biết cả thứ một danh sách trạng
+               thái không biết — đơn "Đang chuẩn bị" mà đã bấm mốc mài thì tròng
+               đã cắt theo số đo riêng của khách. Máy chủ kiểm lại y hệt. */
+            $chanHuy = OrderModel::khachHuyDuoc($o);
+            $moHuy   = $chanHuy === null && ($_GET['huy'] ?? '') === $o['code'];
+            $conChay = !in_array($o['status'], ['completed', 'cancelled'], true);
             ?>
-            <div class="acct-card acct-order" id="<?= e($o['code']) ?>">
+            <article class="acct-card" id="<?= e($o['code']) ?>">
 
-                <div class="acct-order__top">
-                    <div class="acct-order__id">
-                        <span class="acct-order__code"><?= e($o['code']) ?></span>
-                        <span class="acct-order__when">Đặt ngày <?= e(formatDate($o['created_at'])) ?></span>
-                    </div>
-                    <div class="acct-order__flags">
-                        <?php
-                        /* Huy hiệu TIỀN đứng trước huy hiệu trạng thái đơn, và có
-                           dáng khác (viền thay vì nền đặc) để hai trục trạng thái
-                           không tranh nhau — xem OrderModel::PAYMENT_STATUSES.
-
-                           Đơn đã huỷ thì không nói chuyện tiền: "Chưa thanh toán"
-                           trên một đơn đã huỷ đọc như còn nợ. */
-                        ?>
-                        <?php
-                        /* BA nấc chứ không hai, từ khi có đặt cọc: đơn đã nhận
-                           cọc mà vẫn in "Chưa thanh toán" là nói sai với người
-                           vừa chuyển tiền. Nhãn lấy thẳng từ PAYMENT_STATUSES
-                           để thêm nấc mới sau này không phải sửa view. */
-                        $payState = (string) ($o['payment_status'] ?? 'unpaid');
-                        $payTone  = ['paid' => 'paid', 'deposit_paid' => 'part'][$payState] ?? 'due';
-                        ?>
-                        <?php if ($o['status'] !== 'cancelled'): ?>
-                            <span class="acct-badge acct-badge--<?= e($payTone) ?>">
-                                <?= e($payStatuses[$payState] ?? 'Chưa thanh toán') ?>
-                            </span>
-                        <?php endif; ?>
-
-                        <?php /* Nhãn qua OrderModel::nhanTrangThai() — đơn nhận
-                                 tại quầy đọc là "Sẵn sàng tại cửa hàng", không
-                                 phải "Đang giao" (B9, FR-QT-05). Ngăn kéo đơn của
-                                 nhân viên gọi cùng hàm này nên hai bên luôn cùng
-                                 một chữ. */ ?>
-                        <span class="acct-badge acct-badge--<?= e($badgeTones[$o['status']] ?? 'wait') ?>">
-                            <?= e(OrderModel::nhanTrangThai($o['status'], $o['delivery_method'] ?? null)) ?>
-                        </span>
-                    </div>
+                <div class="acct-card__body">
+                    <span class="acct-card__lead notranslate" translate="no"><?= e($lead['product_name'] ?? 'Sản phẩm đã gỡ khỏi cửa hàng') ?><?= $extra > 0 ? ' +' . $extra : '' ?></span>
+                    <span><?= e($o['code']) ?> · Đặt ngày <?= e(formatDate($o['created_at'])) ?></span>
+                    <?php /* Đơn đã huỷ không nói chuyện tiền: "Chưa thanh toán" trên
+                             một đơn đã huỷ đọc như còn nợ. */ ?>
+                    <span class="acct-mute"><?= money((int) $o['total']) ?><?= $daHuy ? '' : ' · ' . e($payStatuses[$payState] ?? 'Chưa thanh toán') ?></span>
                 </div>
 
-                <div class="acct-order__line">
-                    <div class="acct-order__thumb">
-                        <?php
-                        /* images là JSON, phần tử đầu là ảnh đại diện. Sản phẩm
-                           đã bị gỡ thì product_id là NULL và không có ảnh —
-                           thẻ vẫn dựng, chỉ còn ô nền. */
-                        $pics = $lead && $lead['images'] ? json_decode($lead['images'], true) : null;
-                        $pic  = is_array($pics) ? ($pics[0] ?? null) : null;
-                        ?>
-                        <?php if ($pic !== null): ?>
-                            <img src="<?= e(asset($pic)) ?>" alt="" width="84" height="84" loading="lazy">
-                        <?php endif; ?>
-                    </div>
+                <div class="acct-card__acts">
+                    <?php /* Nhãn qua OrderModel::nhanTrangThai() — đơn nhận tại quầy
+                             đọc là "Sẵn sàng tại cửa hàng", không phải "Đang giao"
+                             (B9). Ngăn kéo đơn của nhân viên gọi cùng hàm này. */ ?>
+                    <span class="acct-pill"><?= e(OrderModel::nhanTrangThai($o['status'], $o['delivery_method'] ?? null)) ?></span>
 
-                    <div class="acct-order__what">
-                        <?php if (!empty($lead['brand'])): ?>
-                            <span class="acct-order__brand"><?= e($lead['brand']) ?></span>
-                        <?php endif; ?>
-                        <span class="acct-order__name notranslate" translate="no">
-                            <?= e($lead['product_name'] ?? 'Sản phẩm đã gỡ khỏi cửa hàng') ?>
-                        </span>
-                        <span class="acct-order__variant">
+                    <a class="acct-act" data-more
+                       href="<?= $isOpen ? $closeHref : $openHref ?>"
+                       aria-expanded="<?= $isOpen ? 'true' : 'false' ?>"
+                       aria-controls="<?= $detailId ?>"
+                       data-open-href="<?= $openHref ?>"
+                       data-close-href="<?= $closeHref ?>"><?= $isOpen ? 'Thu gọn' : 'Xem chi tiết' ?></a>
+
+                    <?php if ($needsTransfer): ?>
+                        <a class="acct-act" href="<?= $base ?>&amp;don=<?= e(rawurlencode($o['code'])) ?>#ck-<?= e($o['code']) ?>">Thanh toán</a>
+                    <?php endif; ?>
+
+                    <?php if ($daTra): ?>
+                        <?php /* Biên nhận chỉ mở khi tiền đã về thật — xem OrderController::paid. */ ?>
+                        <a class="acct-act" href="/thanh-toan/thanh-cong?ma=<?= e(rawurlencode($o['code'])) ?>">Xem biên nhận</a>
+                    <?php endif; ?>
+
+                    <?php if ($o['status'] === 'shipping'): ?>
+                        <?php /* Đơn nhận tại quầy không có ai đang giao — việc của
+                                 khách là ra cửa hàng, nên mời xem địa chỉ (B9). */ ?>
+                        <a class="acct-act" href="/lien-he"><?= ($o['delivery_method'] ?? '') === 'pickup' ? 'Xem địa chỉ cửa hàng' : 'Theo dõi vận chuyển' ?></a>
+                    <?php endif; ?>
+
+                    <?php if (!$conChay): ?>
+                        <form method="post" action="/tai-khoan/mua-lai">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="code" value="<?= e($o['code']) ?>">
+                            <button type="submit" class="acct-act">Mua lại</button>
+                        </form>
+                    <?php endif; ?>
+
+                    <?php if ($chanHuy === null): ?>
+                        <a class="acct-act acct-act--mute"
+                           href="<?= $base ?>&amp;huy=<?= e(rawurlencode($o['code'])) ?>#<?= e($o['code']) ?>">Huỷ đơn</a>
+                    <?php elseif ($conChay): ?>
+                        <?php /* Đơn đã qua mốc tự huỷ (đang giao, hoặc đã bấm mốc mài):
+                                 đây là chỗ khách đi tìm nút "Huỷ đơn", nên đặt lối
+                                 thay thế đúng vào đó. Số Zalo in thành chữ — liên kết
+                                 zalo.me trên máy tính bàn không phải lúc nào cũng mở
+                                 được ứng dụng, khách cần ĐỌC được số để tự tìm. */ ?>
+                        <a class="acct-act acct-act--mute" href="<?= e(config('company.channels.zalo')) ?>"
+                           target="_blank" rel="noopener">Đổi hoặc huỷ qua Zalo <?= e(config('company.zalo')) ?></a>
+                    <?php endif; ?>
+                </div>
+
+                <div class="acct-card__more" id="<?= $detailId ?>"<?= $isOpen ? '' : ' hidden' ?>>
+
+                    <div class="acct-part">
+                        <h3 class="acct-cap">Nhận hàng</h3>
+                        <span><?= e($o['customer_name']) ?></span>
+                        <span><?= e(groupPhone($o['customer_phone'])) ?></span>
+                        <span>
                             <?php
-                            /* Bản thiết kế in một dòng mô tả phiên bản ("Đen bóng ·
-                               Tròng chống ánh sáng xanh 1.61"). CSDL không có cột
-                               "phiên bản", nên ghép từ màu và chất liệu của sản
-                               phẩm; đơn nhiều món thì nói luôn còn mấy món nữa. */
-                            $bits = array_filter([$lead['color'] ?? null, $lead['material'] ?? null]);
-
-                            if ($extra > 0) {
-                                $bits[] = 'và ' . $extra . ' sản phẩm khác';
+                            /* Đơn nhận tại cửa hàng thì địa chỉ CẦN xem là địa chỉ
+                               cơ sở — in địa chỉ nhà khách ở đây là chỉ sai đường. */
+                            if ($o['delivery_method'] === 'pickup') {
+                                echo e(trim(($o['store_name'] ?? 'Cơ sở Vin Eyewear')
+                                    . (!empty($o['store_address']) ? ' · ' . $o['store_address'] : '')));
+                            } else {
+                                echo e($o['shipping_address'] ?: 'Chưa có địa chỉ nhận hàng');
                             }
-
-                            echo e($bits === [] ? $delivery : implode(' · ', $bits));
                             ?>
                         </span>
+                        <?php if (!empty($o['note'])): ?>
+                            <span class="acct-mute">Ghi chú: <?= e($o['note']) ?></span>
+                        <?php endif; ?>
+                        <span class="acct-mute"><?= e($delivery) ?> · <?= e($payment) ?></span>
                     </div>
 
-                    <div class="acct-order__money">
-                        <span class="acct-order__qty">x<?= (int) ($lead['quantity'] ?? 1) ?></span>
-                        <span class="acct-order__total"><?= money((int) $o['total']) ?></span>
-                    </div>
-                </div>
-
-                <?php if ($o['status'] !== 'cancelled'): ?>
-                    <ol class="acct-track">
-                        <?php $i = 0; foreach ($flow as $key => $label): ?>
-                            <?php
-                            /* Ba trạng thái mỗi bước: 2 đã qua · 1 đang ở đây · 0 chưa tới.
-                               'completed' là mốc CUỐI của vòng đời, nên bước đang
-                               đứng ở đó phải là 2 (chấm đặc có dấu tick) chứ không
-                               phải 1 (vòng rỗng "đang chờ") — đơn đã xong rồi thì
-                               không còn gì để chờ nữa. */
-                            $state = $i < $step ? 2
-                                : ($i === $step ? ($o['status'] === 'completed' ? 2 : 1) : 0);
-                            $at    = $marks[$key] ?? null;
-                            /* Mốc "Đang giao" đổi chữ với đơn nhận tại quầy — B9. */
-                            $label = OrderModel::nhanTrangThai($key, $o['delivery_method'] ?? null);
-                            ?>
-                            <li class="acct-track__step acct-track__step--<?= $state ?>">
-                                <span class="acct-track__bar" aria-hidden="true"></span>
-                                <span class="acct-track__dot" aria-hidden="true">
-                                    <?php if ($state === 2): ?>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                             stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                             stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 7"></path></svg>
+                    <div class="acct-part">
+                        <h3 class="acct-cap">Sản phẩm</h3>
+                        <?php foreach ($lines as $ln): ?>
+                            <div class="acct-sum">
+                                <span>
+                                    <?php if (!empty($ln['slug'])): ?>
+                                        <a class="notranslate" translate="no" href="/san-pham/<?= e($ln['slug']) ?>"><?= e($ln['product_name']) ?></a>
+                                    <?php else: ?>
+                                        <span class="notranslate" translate="no"><?= e($ln['product_name']) ?></span>
+                                    <?php endif; ?>
+                                    × <?= (int) $ln['quantity'] ?>
+                                    <?php if (!empty($ln['lens_name']) || !empty($ln['prescription'])): ?>
+                                        <?php /* Tròng cắt kèm đã nằm trong line_total — nói
+                                                 tên nó ra để con số cao hơn giá gọng có lời
+                                                 giải thích. */ ?>
+                                        <span class="acct-sum__sub">
+                                            <?= e(implode(' · ', array_filter([
+                                                !empty($ln['lens_name']) ? '+ ' . $ln['lens_name'] : null,
+                                                $ln['prescription'] ?? null,
+                                            ]))) ?>
+                                        </span>
                                     <?php endif; ?>
                                 </span>
-                                <span class="acct-track__label"><?= e($label) ?></span>
-                                <span class="acct-track__time">
-                                    <?= $at !== null ? e(formatDate($at, 'd/m · H:i')) : '' ?>
-                                </span>
-                            </li>
-                            <?php $i++; ?>
+                                <span class="acct-sum__num"><?= money((int) $ln['line_total']) ?></span>
+                            </div>
                         <?php endforeach; ?>
-                    </ol>
-                <?php endif; ?>
-
-                <div class="acct-order__detail" id="<?= $detailId ?>"<?= $isOpen ? '' : ' hidden' ?>>
-
-                    <div class="acct-order__block">
-                        <span class="acct-order__eyebrow">Thông tin nhận hàng</span>
-                        <div class="acct-order__who">
-                            <?php
-                            /* TÊN VÀ SỐ ĐIỆN THOẠI TÁCH HAI DÒNG, không còn
-                               "Tên · Số" dính nhau như trước.
-
-                               Hai thứ đó được đọc trong hai tình huống khác
-                               nhau: tên để khách liếc xem đơn này gửi cho ai,
-                               còn số điện thoại là thứ họ ĐỌC LẠI TỪNG SỐ khi
-                               gọi cho shipper hay đối chiếu với cửa hàng. Dán
-                               liền sau một dấu chấm giữa dòng thì con số phải
-                               tự tách mình ra khỏi cái tên trước đã.
-
-                               Số cũng nhạt và nhỏ hơn tên một nấc: nó là thông
-                               tin phụ của dòng trên, không phải một dòng ngang
-                               hàng. */
-                            ?>
-                            <span class="acct-order__to"><?= e($o['customer_name']) ?></span>
-                            <span class="acct-order__tel"><?= e(groupPhone($o['customer_phone'])) ?></span>
-                            <span class="acct-order__addr">
-                                <?php
-                                /* Đơn giao tận nơi có địa chỉ khách; đơn nhận tại
-                                   cửa hàng thì địa chỉ CẦN xem là địa chỉ cơ sở —
-                                   in địa chỉ nhà khách ở đây là chỉ sai đường. */
-                                if ($o['delivery_method'] === 'pickup') {
-                                    echo e(trim(($o['store_name'] ?? 'Cơ sở Vin Eyewear')
-                                        . (!empty($o['store_address']) ? ' · ' . $o['store_address'] : '')));
-                                } else {
-                                    echo e($o['shipping_address'] ?: 'Chưa có địa chỉ nhận hàng');
-                                }
-                                ?>
-                            </span>
-                        </div>
-
-                        <?php if (!empty($o['note'])): ?>
-                            <p class="acct-order__memo">Ghi chú: <?= e($o['note']) ?></p>
-                        <?php endif; ?>
-
-                        <div class="acct-order__tags">
-                            <span class="acct-order__tag"><?= e($delivery) ?></span>
-                            <span class="acct-order__tag"><?= e($payment) ?></span>
-                            <?php /* KHÔNG còn thẻ "Đã nhận tiền <ngày>" ở đây.
-                                     Dòng xanh trong cột "Tóm tắt thanh toán"
-                                     (.acct-order__got) nói đúng chuyện đó và nói
-                                     đủ hơn — có cả SỐ TIỀN và ĐƯỜNG tiền về, thứ
-                                     mà một thẻ vuông chỉ mang ngày không có. Giữ
-                                     cả hai là bắt khách đọc cùng một tin hai lần
-                                     ở hai chỗ, với hai mức đầy đủ khác nhau. */ ?>
-                        </div>
-
                     </div>
 
-                    <div class="acct-order__block">
-                        <span class="acct-order__eyebrow">Tóm tắt thanh toán</span>
+                    <div class="acct-part">
+                        <h3 class="acct-cap">Thanh toán</h3>
 
-                        <?php if ($extra > 0): ?>
-                            <?php foreach ($lines as $ln): ?>
-                                <div class="acct-order__sum">
-                                    <span>
-                                        <?php if (!empty($ln['slug'])): ?>
-                                            <a class="notranslate" translate="no" href="/san-pham/<?= e($ln['slug']) ?>"><?= e($ln['product_name']) ?></a>
-                                        <?php else: ?>
-                                            <span class="notranslate" translate="no"><?= e($ln['product_name']) ?></span>
-                                        <?php endif; ?>
-                                        × <?= (int) $ln['quantity'] ?>
-                                        <?php if (!empty($ln['lens_name']) || !empty($ln['prescription'])): ?>
-                                            <?php /* Tròng cắt kèm đã nằm trong
-                                                     line_total — nói tên nó ra để
-                                                     con số không cao hơn giá gọng
-                                                     mà không có lời giải thích. */ ?>
-                                            <span class="acct-order__lens">
-                                                <?php if (!empty($ln['lens_name'])): ?>
-                                                    + <?= e($ln['lens_name']) ?><?= $ln['prescription'] !== null ? ' ·' : '' ?>
-                                                <?php endif; ?>
-                                                <?php if ($ln['prescription'] !== null): ?>
-                                                    <?= e($ln['prescription']) ?>
-                                                <?php endif; ?>
-                                            </span>
-                                        <?php endif; ?>
-                                    </span>
-                                    <span class="acct-order__num"><?= money((int) $ln['line_total']) ?></span>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-
-                        <div class="acct-order__sum<?= $extra > 0 ? ' acct-order__sum--split' : '' ?>">
+                        <div class="acct-sum">
                             <span>Tạm tính</span>
-                            <span class="acct-order__num"><?= money((int) $o['subtotal']) ?></span>
+                            <span class="acct-sum__num"><?= money((int) $o['subtotal']) ?></span>
                         </div>
 
                         <?php if ((int) $o['discount'] > 0): ?>
-                            <div class="acct-order__sum">
+                            <div class="acct-sum">
                                 <span>Giảm giá</span>
-                                <span class="acct-order__num">−<?= money((int) $o['discount']) ?></span>
+                                <span class="acct-sum__num">−<?= money((int) $o['discount']) ?></span>
                             </div>
                         <?php endif; ?>
 
-                        <div class="acct-order__sum">
+                        <div class="acct-sum">
                             <span>Phí vận chuyển</span>
-                            <?php if ((int) $o['shipping_fee'] === 0): ?>
-                                <span class="acct-order__free">Miễn phí</span>
-                            <?php else: ?>
-                                <span class="acct-order__num"><?= money((int) $o['shipping_fee']) ?></span>
-                            <?php endif; ?>
+                            <span class="acct-sum__num"><?= (int) $o['shipping_fee'] === 0 ? 'Miễn phí' : money((int) $o['shipping_fee']) ?></span>
                         </div>
 
-                        <div class="acct-order__sum acct-order__sum--grand">
+                        <div class="acct-sum acct-sum--total">
                             <span>Tổng cộng</span>
-                            <span class="acct-order__grand"><?= money((int) $o['total']) ?></span>
+                            <span class="acct-sum__num"><?= money((int) $o['total']) ?></span>
                         </div>
 
-                        <?php
-                        /* ĐẶT CỌC — đơn có cắt tròng theo độ.
-                           Đây là chỗ khách quay lại tra "hôm nhận kính phải cầm
-                           bao nhiêu", có khi vài tuần sau khi đặt. Nên in cả hai
-                           vế chứ không chỉ số cọc. */
-                        $deposit = (int) ($o['deposit_amount'] ?? 0);
-                        ?>
                         <?php if ($deposit > 0): ?>
-                            <div class="acct-order__deposit">
-                                <div class="acct-order__sum">
-                                    <span>Đặt cọc <?= (int) ($o['deposit_rate'] ?? 0) ?>%</span>
-                                    <span class="acct-order__num"><?= money($deposit) ?></span>
-                                </div>
-                                <div class="acct-order__sum">
-                                    <span>Còn lại khi nhận hàng</span>
-                                    <span class="acct-order__num"><?= money((int) $o['total'] - $deposit) ?></span>
-                                </div>
+                            <?php /* Đơn cắt tròng theo độ: khách quay lại đây tra "hôm
+                                     nhận kính phải cầm bao nhiêu", nên in cả hai vế. */ ?>
+                            <div class="acct-sum">
+                                <span>Đặt cọc <?= (int) ($o['deposit_rate'] ?? 0) ?>%</span>
+                                <span class="acct-sum__num"><?= money($deposit) ?></span>
+                            </div>
+                            <div class="acct-sum">
+                                <span>Còn lại khi nhận hàng</span>
+                                <span class="acct-sum__num"><?= money((int) $o['total'] - $deposit) ?></span>
                             </div>
                         <?php endif; ?>
 
-                        <?php
-                        /* ══════════ DÒNG XÁC NHẬN ĐÃ NHẬN TIỀN ══════════
-                           Chỉ hiện khi tiền đã về thật. Cột tóm tắt bên trên
-                           mới chỉ nói đơn ĐÁNG bao nhiêu; dòng này nói đã TRẢ
-                           bao nhiêu, bằng đường nào, ngày nào — ba thứ khách
-                           đối chiếu với app ngân hàng của họ.
-
-                           Huy hiệu "Đã thanh toán" ở đầu thẻ không thay được
-                           dòng này: nó chỉ trả lời có/chưa, không nói số tiền
-                           và cũng không nói ngày. Với đơn đặt cọc thì khác
-                           biệt đó là toàn bộ vấn đề — "đã thanh toán" mà mới
-                           nhận 30% là hai chuyện khác nhau.
-
-                           SỐ TIỀN ĐÃ NHẬN không phải lúc nào cũng bằng tổng
-                           đơn: đơn mới nhận cọc thì đó là phần cọc. */
-                        $gotAmount = $payState === 'deposit_paid' && $deposit > 0
-                            ? $deposit : (int) $o['total'];
-
-                        /* Ngày tiền về. paid_at là mốc trả ĐỦ và chỉ có ở đơn
-                           đã xong; đơn mới cọc chưa có mốc đó (xem
-                           OrderModel::markDepositPaid) nên lùi về mốc cập nhật
-                           gần nhất thay vì bỏ trống. */
-                        $gotAt = $o['paid_at'] ?: ($o['updated_at'] ?? null);
-                        ?>
-                        <?php if (in_array($payState, ['paid', 'deposit_paid'], true)
-                                  && $o['status'] !== 'cancelled'): ?>
-                            <p class="acct-order__got">
-                                <span class="acct-order__gotmark" aria-hidden="true">✓</span>
-                                <span>
-                                    Đã nhận <strong><?= money($gotAmount) ?></strong>
-                                    <?php if ($payState === 'deposit_paid' && $deposit > 0): ?>
-                                        (cọc <?= (int) ($o['deposit_rate'] ?? 0) ?>%)
-                                    <?php endif; ?>
-                                    qua <?= e(utf8Lower($payShort)) ?><?php
-                                        /* Đơn chuyển khoản: nói luôn ngân hàng nào —
-                                           đó là thứ khách dò trong app của họ. */
-                                        if ($o['payment_method'] === 'bank_transfer' && !empty($bank['name'])) {
-                                            echo ' ' . e($bank['name']);
-                                        }
-                                        if ($gotAt !== null) {
-                                            echo ' · ' . e(formatDate($gotAt, 'd/m'));
-                                        }
-                                    ?>
-                                </span>
-                            </p>
+                        <?php if ($daTra): ?>
+                            <?php
+                            /* ĐÃ TRẢ bao nhiêu, bằng đường nào, ngày nào — ba thứ khách
+                               đối chiếu với app ngân hàng. Đơn mới nhận cọc thì số đã
+                               nhận là phần cọc; paid_at chỉ có khi trả đủ nên lùi về
+                               mốc cập nhật gần nhất. */
+                            $gotAmount = $payState === 'deposit_paid' && $deposit > 0 ? $deposit : (int) $o['total'];
+                            $gotAt     = $o['paid_at'] ?: ($o['updated_at'] ?? null);
+                            $gotVia    = utf8Lower($payment)
+                                . ($o['payment_method'] === 'bank_transfer' && !empty($bank['name']) ? ' ' . $bank['name'] : '');
+                            ?>
+                            <span class="acct-mute">
+                                Đã nhận <?= money($gotAmount) ?><?= $payState === 'deposit_paid' && $deposit > 0 ? ' (cọc ' . (int) ($o['deposit_rate'] ?? 0) . '%)' : '' ?>
+                                qua <?= e($gotVia) ?><?= $gotAt !== null ? ' · ' . e(formatDate($gotAt, 'd/m/Y')) : '' ?>
+                            </span>
                         <?php endif; ?>
-
                     </div>
 
-                    <?php if ($needsTransfer && !empty($bank['number'])): ?>
+                    <?php if ($needsTransfer): ?>
                         <?php
-                        /* ══════════ KHỐI CHUYỂN KHOẢN ══════════
-                           NẰM NGANG CẢ HAI CỘT, không còn nhét trong cột "Tóm
-                           tắt thanh toán" như trước. Đây là thứ khách phải LÀM
-                           chứ không phải con số để đọc, nên nó không thuộc về
-                           một cột tóm tắt — và bó trong nửa bề ngang thì tên
-                           chủ tài khoản dài phải xuống ba dòng.
-
-                           Vẫn ở TRONG phần chi tiết (gấp lại được cùng thẻ):
-                           danh sách nhiều đơn mà thẻ nào cũng bung khối này ra
-                           thì cuộn mãi không hết. */
-                        ?>
-                        <?php
+                        /* KHỐI CHUYỂN KHOẢN — thứ khách phải LÀM, không phải con số để
+                           đọc, nên nó là một khung viền đen riêng. SỐ TIỀN đứng ở dòng
+                           đầu: đó là con số khách gõ vào app và quyết định chuyển đúng
+                           hay sai. NÚT CHÉP chỉ ở số tài khoản và nội dung — hai thứ gõ
+                           sai thì tiền đi lạc hoặc không khớp được đơn. */
                         $payAmount = $deposit > 0 ? $deposit : (int) $o['total'];
-
-                        /* "CHỜ ĐẶT CỌC" hay "CHỜ THANH TOÁN" — hai chuyện khác
-                           nhau và khách cần biết ngay mình đang ở chuyện nào.
-                           Đơn cắt tròng chỉ chuyển 30% ở bước này; gọi đó là
-                           "chờ thanh toán" thì con số nhỏ trong khối trông như
-                           đơn bị tính sai. */
-                        $payWait = $deposit > 0 ? 'Chờ đặt cọc' : 'Chờ thanh toán';
+                        $fields = [
+                            ['Ngân hàng',             $bank['name'] ?? '',   null],
+                            ['Chủ tài khoản',         $bank['holder'] ?? '', null],
+                            ['Số tài khoản',          $bank['number'],       $bank['number']],
+                            ['Nội dung chuyển khoản', $o['code'],            $o['code']],
+                        ];
                         ?>
-                        <div class="acct-order__pay" id="ck-<?= e($o['code']) ?>">
-
-                            <?php
-                            /* ══════════ DẢI ĐẦU ══════════
-                               SỐ TIỀN LÊN ĐÂY, không còn là một dòng lẫn giữa
-                               bảng thông tin ngân hàng.
-
-                               Bốn dòng kia (tên ngân hàng, số tài khoản, chủ
-                               tài khoản, nội dung) là thứ khách CHÉP SANG app
-                               ngân hàng. Số tiền thì không — họ gõ nó vào ô số
-                               tiền, và đó là con số quyết định chuyển đúng hay
-                               sai. Để nó nằm cùng hàng với bốn dòng chép-dán
-                               nghĩa là thứ quan trọng nhất trông giống hệt thứ
-                               phụ nhất. */
-                            ?>
-                            <div class="acct-order__payhead">
-                                <div class="acct-order__paywhat">
-                                    <span class="acct-order__eyebrow acct-order__pay-head">
-                                        <?= e($payWait) ?> · Chuyển khoản ngân hàng
-                                    </span>
-                                    <p class="acct-order__paysub">
-                                        Chuyển đúng số tiền và nội dung bên dưới để đơn được xác nhận nhanh.
-                                    </p>
-                                </div>
-
-                                <div class="acct-order__paysum">
-                                    <span class="acct-order__paylabel">
-                                        <?= $deposit > 0
-                                            ? 'Tiền cọc cần chuyển (' . (int) ($o['deposit_rate'] ?? 0) . '%)'
-                                            : 'Số tiền cần chuyển' ?>
-                                    </span>
-                                    <span class="acct-order__paynum"><?= money($payAmount) ?></span>
-                                </div>
+                        <div class="acct-pay" id="ck-<?= e($o['code']) ?>">
+                            <div class="acct-head">
+                                <h3 class="acct-head__label"><?= $deposit > 0 ? 'Chờ đặt cọc ' . (int) ($o['deposit_rate'] ?? 0) . '%' : 'Chờ thanh toán' ?></h3>
+                                <span class="acct-pay__num"><?= money($payAmount) ?></span>
                             </div>
 
-                            <?php
-                            /* ══════════ BỐN Ô THÔNG TIN ══════════
-                               Lưới 2×2, nhãn NẰM TRÊN giá trị thay vì bên trái.
-
-                               Nhãn bên trái buộc phải khoá một bề rộng cột cho
-                               nhãn dài nhất ("Nội dung chuyển khoản"), và bề
-                               rộng đó bị trừ vào chỗ của mọi giá trị — tên chủ
-                               tài khoản dài phải vắt dòng. Nhãn nằm trên thì
-                               giá trị được trọn nửa bề ngang.
-
-                               NÚT CHÉP CHỈ Ở HAI Ô DƯỚI: số tài khoản và nội
-                               dung là hai thứ phải gõ lại vào app, và cũng là
-                               hai chỗ gõ sai thì tiền đi lạc hoặc về đúng nơi
-                               mà không khớp được đơn. Tên ngân hàng thì khách
-                               chọn trong danh sách của app; tên chủ tài khoản
-                               thì app tự hiện ra sau khi nhập số. */
-                            $fields = [
-                                ['Ngân hàng',              $bank['name'],   null],
-                                ['Chủ tài khoản',          $bank['holder'], null],
-                                ['Số tài khoản',           $bank['number'], $bank['number']],
-                                ['Nội dung chuyển khoản',  $o['code'],      $o['code']],
-                            ];
-                            ?>
-                            <div class="acct-order__bank">
+                            <div class="acct-grid2">
                                 <?php foreach ($fields as [$label, $value, $copy]): ?>
-                                    <div class="acct-order__field">
-                                        <span class="acct-order__bankkey"><?= e($label) ?></span>
-                                        <span class="acct-order__bankline">
-                                            <span class="acct-order__bankval"><?= e((string) $value) ?></span>
+                                    <div class="acct-kv">
+                                        <span class="acct-cap"><?= e($label) ?></span>
+                                        <span class="acct-kv__val">
+                                            <span><?= e((string) $value) ?></span>
                                             <?php if ($copy !== null): ?>
-                                                <button type="button" class="acct-copy js-copy"
+                                                <button type="button" class="acct-act js-copy"
                                                         data-copy="<?= e((string) $copy) ?>">Sao chép</button>
                                             <?php endif; ?>
                                         </span>
@@ -622,324 +311,86 @@ $paymentShort  = [
                                 <?php endforeach; ?>
                             </div>
 
-                            <div class="acct-order__payfoot">
-                                <p class="acct-order__memo">
-                                    <?php /* Nhắc lại MÃ ĐƠN ngay trong câu, không chỉ nói
-                                             chung chung "ghi đúng mã đơn": khách đang ở app
-                                             ngân hàng, mắt rời khỏi trang này rồi, và mã nằm
-                                             ngay trong câu thì họ liếc lại một cái là thấy. */ ?>
-                                    Ghi đúng mã đơn <strong><?= e($o['code']) ?></strong>
-                                    ở phần nội dung để chúng tôi đối chiếu được.
-                                </p>
+                            <p class="acct-note">
+                                Ghi đúng mã đơn <?= e($o['code']) ?> ở phần nội dung để chúng tôi đối chiếu được.
+                            </p>
 
-                                <?php
-                                /* LỐI VÀO MÀN QUÉT MÃ QR.
-                                   Bốn ô trên chỉ in số tài khoản dạng chữ, và gõ tay
-                                   10 chữ số vào app ngân hàng là đúng chỗ người ta
-                                   gõ sai. Nút này mở màn có mã QR mang sẵn số tiền và
-                                   nội dung chuyển khoản. Xem OrderController::transfer. */
-                                ?>
-                                <a class="acct-btn acct-btn--primary acct-btn--sm acct-order__qr"
-                                   href="/thanh-toan/chuyen-khoan?ma=<?= e(rawurlencode($o['code'])) ?>">
-                                    Quét mã QR để thanh toán
-                                </a>
-                            </div>
+                            <?php /* Mã QR mang sẵn số tiền và nội dung — gõ tay 10 chữ số
+                                     vào app ngân hàng là đúng chỗ người ta gõ sai. */ ?>
+                            <a class="acct-btn acct-btn--solid"
+                               href="/thanh-toan/chuyen-khoan?ma=<?= e(rawurlencode($o['code'])) ?>">Quét mã QR để thanh toán</a>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!$daHuy && $marks !== []): ?>
+                        <div class="acct-part">
+                            <h3 class="acct-cap">Tiến trình</h3>
+                            <?php foreach ($flow as $buoc): ?>
+                                <?php if (isset($marks[$buoc])): ?>
+                                    <div class="acct-sum">
+                                        <span><?= e(OrderModel::nhanTrangThai($buoc, $o['delivery_method'] ?? null)) ?></span>
+                                        <span class="acct-sum__num acct-mute"><?= e(formatDate($marks[$buoc], 'd/m/Y · H:i')) ?></span>
+                                    </div>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
                         </div>
                     <?php endif; ?>
                 </div>
 
-                <div class="acct-order__foot">
-                    <span class="acct-order__footnote"><?= e($delivery) ?> · <?= e($payShort) ?></span>
-
+                <?php if ($moHuy): ?>
                     <?php
-                    /* Câu cảm ơn nằm BÊN TRÁI, cạnh dòng ghi chú — không nhét
-                       vào hàng nút bên phải.
-
-                       Bản thiết kế đặt nó đúng chỗ nút "Xem thông tin chuyển
-                       khoản" vừa biến mất, vì bản vẽ không có nút nào khác ở
-                       chân thẻ. Ở đây thì có: "Xem biên nhận", "Đổi hoặc huỷ
-                       đơn" và "Thu gọn". Thêm một câu chữ vào giữa ba nút đó
-                       là hàng nút tràn xuống dòng thứ hai. */
+                    /* HỘP XÁC NHẬN HUỶ ĐƠN — bước 2 và 3 của UC-02. NÓI RÕ CHUYỆN
+                       TIỀN TRƯỚC KHI HỎI. Số tiền là số cửa hàng ĐANG GIỮ (cùng phép
+                       tính với sổ hoàn tiền), không phải deposit_amount — khách trả
+                       đủ một lần thì cửa hàng giữ cả tổng đơn. */
+                    $daNhan = RefundRequestModel::daNhan($o);
                     ?>
-                    <?php if (in_array($payState, ['paid', 'deposit_paid'], true)
-                              && $o['status'] !== 'cancelled'): ?>
-                        <span class="acct-order__thanks">
-                            <?= $payState === 'deposit_paid'
-                                ? 'Cảm ơn bạn — đã nhận tiền cọc.'
-                                : 'Cảm ơn bạn — đơn hàng đã được thanh toán.' ?>
-                        </span>
-                    <?php endif; ?>
+                    <form class="acct-card__more" method="post" action="/tai-khoan/don-hang/huy">
+                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                        <input type="hidden" name="code" value="<?= e($o['code']) ?>">
 
-                    <div class="acct-order__acts">
-                        <?php
-                        /* KHÔNG CÒN NÚT "QUÉT MÃ QR" Ở ĐÂY.
+                        <h3 class="acct-label">Huỷ đơn <?= e($o['code']) ?>?</h3>
 
-                           Nó từng đứng đúng chỗ này để rút ngắn đường tới chỗ
-                           trả tiền. Nhưng khối chuyển khoản bên trong phần chi
-                           tiết ĐÃ CÓ một nút y hệt, cùng nhãn, cùng đích — hai
-                           nút giống nhau trong một thẻ thì khách phải dừng lại
-                           đoán xem chúng có khác gì nhau không.
-
-                           Nút còn lại nằm ở dải chân của khối chuyển khoản,
-                           tức ngay dưới bốn ô số tài khoản — đúng chỗ khách
-                           đang nhìn khi họ quyết định quét mã thay vì gõ tay. */
-                        ?>
-                        <?php
-                        /* NÚT CHÍNH — đơn NHẬN TẠI QUẦY không mời "Theo dõi vận
-                           chuyển" (B9). Không có ai đang giao gì cả; việc của
-                           khách là ra cửa hàng lấy kính, nên nút đổi thành lời
-                           mời xem địa chỉ cơ sở. */
-                        $nhanNut = $primaryLabels[$o['status']] ?? null;
-
-                        if ($nhanNut === 'Theo dõi vận chuyển'
-                            && ($o['delivery_method'] ?? '') === 'pickup') {
-                            $nhanNut = 'Xem địa chỉ cửa hàng';
-                        }
-                        ?>
-                        <?php if ($nhanNut !== null): ?>
-                            <?php if ($nhanNut === 'Mua lại'): ?>
-                                <form method="post" action="/tai-khoan/mua-lai">
-                                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                                    <input type="hidden" name="code" value="<?= e($o['code']) ?>">
-                                    <button type="submit" class="acct-btn acct-btn--primary acct-btn--sm">
-                                        Mua lại
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <a class="acct-btn acct-btn--primary acct-btn--sm" href="/lien-he">
-                                    <?= e($nhanNut) ?>
-                                </a>
-                            <?php endif; ?>
-                        <?php endif; ?>
-
-                        <?php
-                        /* BIÊN NHẬN — chỉ hiện khi tiền đã về thật.
-                           Dùng cùng $payState đã tính ở dải đầu thẻ. Đơn đã huỷ
-                           thì không mời xem biên nhận nữa, kể cả khi từng nhận
-                           được tiền: chuyện hoàn tiền là việc nói qua điện
-                           thoại, không phải một trang mừng công. */
-                        ?>
-                        <?php if (in_array($payState, ['paid', 'deposit_paid'], true)
-                                  && $o['status'] !== 'cancelled'): ?>
-                            <a class="acct-btn acct-btn--outline acct-btn--sm"
-                               href="/thanh-toan/thanh-cong?ma=<?= e(rawurlencode($o['code'])) ?>">
-                                Xem biên nhận
-                            </a>
-                        <?php endif; ?>
-
-                        <?php
-                        /* ─────────────────────────────────────────────────────
-                           NÚT HUỶ ĐƠN — SRS v2.1.0, UC-02
-
-                           Chỉ hiện khi đơn thật sự huỷ được. OrderModel::
-                           khachHuyDuoc() trả null nghĩa là được; trả một câu
-                           thì đó là lý do từ chối, và ta không vẽ nút.
-
-                           HAI ĐIỀU KIỆN, KHÔNG PHẢI MỘT: ba trạng thái đầu, VÀ
-                           chưa bấm mốc bắt đầu mài. Đơn ở "Đang chuẩn bị" mà
-                           tròng đã cắt theo số đo riêng của khách thì vật tư
-                           đã mất — xem BR-HS-13.2.
-
-                           Máy chủ kiểm lại y hệt (OrderModel::khachHuy). Ẩn nút
-                           là chuyện gọn mắt; chặn mới là nghiệp vụ. */
-                        $chanHuy = OrderModel::khachHuyDuoc($o);
-
-                        /* Mở hộp xác nhận bằng ĐỊA CHỈ (?huy=<mã>), không bằng
-                           JavaScript — cùng lối với ?doi= của lịch hẹn và ?sua=
-                           của sổ địa chỉ. Gửi link được, F5 không mất chỗ, và
-                           không có JS thì vẫn huỷ được.
-
-                           Tính NGOÀI nhánh $chanHuy để biến luôn có giá trị ở
-                           mọi vòng lặp: hộp xác nhận nằm ở cuối thẻ và đọc lại
-                           nó, và một biến chỉ tồn tại trong vài vòng lặp là thứ
-                           rò giá trị từ đơn này sang đơn khác. */
-                        $moHuy = ($_GET['huy'] ?? '') === $o['code'];
-                        ?>
-                        <?php if ($chanHuy === null): ?>
-                            <?php /* --outline chứ không --ghost: lớp sau không có
-                                     trong account.css, nút sẽ hiện ra không viền
-                                     không nền, lẫn hẳn vào chân thẻ đơn. */ ?>
-                            <a class="acct-btn acct-btn--outline acct-btn--sm"
-                               href="/tai-khoan?muc=don-hang&amp;huy=<?= e(rawurlencode($o['code'])) ?>#<?= e($o['code']) ?>">
-                                Huỷ đơn
-                            </a>
-                        <?php endif; ?>
-
-                        <?php
-                        /* LỐI ZALO CHỈ CÒN CHO ĐƠN KHÔNG TỰ HUỶ ĐƯỢC — UC-02.
-
-                           Trước SRS v2.1.0 đây là lối duy nhất, kể cả với đơn
-                           vừa đặt xong. Nay ba trạng thái đầu có nút Huỷ đơn
-                           thật ở ngay trên, nên bày thêm một liên kết Zalo cùng
-                           nghĩa là bắt khách dừng lại đoán xem hai thứ khác gì
-                           nhau.
-
-                           $chanHuy khác null nghĩa là không tự huỷ được — đơn
-                           đã sang Đang giao, hoặc đã bấm mốc mài. Đúng lúc đó
-                           lối Zalo mới là câu trả lời. */
-                        ?>
-                        <?php
-                        /* ĐIỀU KIỆN CHỈ CÒN $chanHuy — bỏ isset($canStillCancel[…]).
-
-                           Hai vế cũ loại trừ nhau: $chanHuy khác null nghĩa là đơn
-                           KHÔNG nằm trong ba trạng thái tự huỷ được (hoặc đã bấm mốc
-                           mài), còn $canStillCancel chính là ba trạng thái ấy. Đơn
-                           'shipping' — ca mà cả khối chú thích trên viết ra để phục
-                           vụ — trượt cả hai, nên liên kết Zalo chưa bao giờ hiện ở
-                           đúng chỗ nó cần hiện.
-
-                           Loại 'completed' và 'cancelled': đơn đã xong hoặc đã huỷ
-                           thì không còn gì để nhắn tin xin huỷ. */
-                        ?>
-                        <?php if ($chanHuy !== null
-                                  && !in_array($o['status'], ['completed', 'cancelled'], true)): ?>
-                            <?php
-                            /*
-                                ĐÂY LÀ CHỖ KHÁCH ĐI TÌM NÚT "HUỶ ĐƠN" khi đơn đã
-                                qua mốc không tự huỷ được nữa.
-
-                                Cửa hàng tự đi giao, không đồng bộ trạng thái
-                                vận chuyển thời gian thực với đơn vị vận chuyển
-                                nào; một nút huỷ trên web sẽ đổi trạng thái
-                                trong CSDL trong khi hàng có thể đã nằm trên xe,
-                                và hai bên hiểu khác nhau về cùng một đơn.
-
-                                Nhưng chỗ trống thì phải có lối đi thay thế đặt
-                                đúng vào đó, chứ không phải để khách bấm quanh
-                                rồi tự đoán. Nhãn nói thẳng là sang Zalo, không
-                                phải một nút huỷ tại chỗ — bấm nhầm rồi mới biết
-                                nó mở ứng dụng khác là một kiểu nói dối nhỏ.
-
-                                Đơn hàng của khách đã nằm sẵn trong Zalo của cửa
-                                hàng từ lúc đặt (xem Zalo::order), nên nhân viên
-                                bên kia mở đúng đơn này ra được ngay.
-
-                                SỐ ZALO IN THÀNH CHỮ TRONG CHÍNH NHÃN NÚT, không
-                                chỉ nằm trong href. Bấm liên kết zalo.me trên máy
-                                tính bàn không phải lúc nào cũng mở được ứng
-                                dụng; khi đó khách cần ĐỌC được con số để tự tìm,
-                                chứ không phải bấm vào một chỗ không phản hồi rồi
-                                bỏ cuộc.
-                            */
-                            ?>
-                            <a class="acct-btn acct-btn--quiet acct-btn--sm"
-                               href="<?= e(config('company.channels.zalo')) ?>"
-                               target="_blank" rel="noopener">
-                                Đổi hoặc huỷ đơn — Zalo <?= e(config('company.zalo')) ?>
-                            </a>
-                        <?php endif; ?>
-
-                        <?php
-                        /* NÚT ĐẶC MÀU THƯƠNG HIỆU, không còn viền rỗng.
-
-                           Từ khi nút "Quét mã QR" rời khỏi chân thẻ, hàng này
-                           toàn nút viền rỗng và một liên kết chữ — không có gì
-                           nói cho mắt biết đâu là việc chính. Mà "Xem chi tiết"
-                           ĐÚNG LÀ việc chính ở đây: mọi thứ khách cần (địa chỉ
-                           nhận, tóm tắt tiền, số tài khoản, nút quét QR) đều
-                           nằm sau nó. */
-                        ?>
-                        <a class="acct-btn acct-btn--primary acct-btn--sm acct-order__more"
-                           href="<?= $isOpen ? $closeHref : $openHref ?>"
-                           aria-expanded="<?= $isOpen ? 'true' : 'false' ?>"
-                           aria-controls="<?= $detailId ?>"
-                           data-open-href="<?= $openHref ?>"
-                           data-close-href="<?= $closeHref ?>">
-                            <?= $isOpen ? 'Thu gọn' : 'Xem chi tiết' ?>
-                        </a>
-                    </div>
-
-                    <?php
-                    /* ─────────────────────────────────────────────────────────
-                       HỘP XÁC NHẬN HUỶ ĐƠN — bước 2 và 3 của UC-02
-
-                       Mở bằng ?huy=<mã>, nên nó nằm NGAY TRONG thẻ đơn đó chứ
-                       không phải một hộp thoại nổi ở giữa màn hình: khách đang
-                       nhìn đúng đơn mình sắp huỷ, kèm số tiền và trạng thái
-                       của nó.
-
-                       NÓI RÕ CHUYỆN TIỀN TRƯỚC KHI HỎI. Bước 2 của ca dùng bắt
-                       nêu hệ quả về tiền, và đó là phần khách thật sự cần: đơn
-                       chưa trả gì thì không phát sinh, đơn đã cọc thì nêu số
-                       tiền sẽ được xem xét hoàn. Hỏi "bạn chắc chứ" mà không
-                       nói tiền đi đâu là hỏi một câu vô nghĩa. */
-                    ?>
-                    <?php if ($chanHuy === null && $moHuy): ?>
-                        <form class="acct-cancel" method="post"
-                              action="/tai-khoan/don-hang/huy">
-                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                            <input type="hidden" name="code" value="<?= e($o['code']) ?>">
-
-                            <p class="acct-cancel__lead">
-                                <strong>Huỷ đơn <?= e($o['code']) ?>?</strong>
-                            </p>
-
-                            <?php
-                            /* SỐ TIỀN PHẢI LÀ SỐ CỬA HÀNG ĐANG GIỮ, không phải
-                               `deposit_amount`.
-
-                               `deposit_amount` là phần cọc PHẢI trả, chốt lúc đặt
-                               đơn. Khách chuyển khoản thường trả đủ một lần, đơn
-                               sang 'paid', và khi ấy cửa hàng đang giữ cả tổng đơn.
-                               In `deposit_amount` ở đó là nói với khách một con số
-                               nhỏ hơn nhiều số họ đã chuyển — với đơn chỉ mua gọng
-                               (không cần cọc) thì con số ấy còn là 0đ tròn.
-
-                               Cùng một phép tính với RefundRequestModel::daNhan(),
-                               là thứ sẽ thật sự được ghi vào sổ hoàn tiền ngay sau
-                               khi khách bấm. Hai chỗ nói lệch nhau còn tệ hơn không
-                               nói. */
-                            $daNhan = RefundRequestModel::daNhan($o);
-                            ?>
+                        <p class="acct-note">
                             <?php if ($daNhan > 0): ?>
-                                <p class="acct-cancel__money">
-                                    Cửa hàng đã nhận
-                                    <strong><?= e(money($daNhan)) ?></strong>
-                                    của đơn này. Sau khi huỷ, cửa hàng sẽ xem xét hoàn lại và
-                                    liên hệ với bạn. Số tiền hoàn phụ thuộc việc tròng đã
-                                    được cắt theo số đo của bạn hay chưa.
-                                </p>
+                                Cửa hàng đã nhận <?= e(money($daNhan)) ?> của đơn này. Sau khi huỷ, cửa hàng
+                                sẽ xem xét hoàn lại và liên hệ với bạn. Số tiền hoàn phụ thuộc việc tròng đã
+                                được cắt theo số đo của bạn hay chưa.
                             <?php else: ?>
-                                <p class="acct-cancel__money">
-                                    Đơn này chưa phát sinh khoản thanh toán nào, nên huỷ
-                                    không ảnh hưởng gì tới tiền của bạn.
-                                </p>
+                                Đơn này chưa phát sinh khoản thanh toán nào, nên huỷ không ảnh hưởng gì tới
+                                tiền của bạn.
                             <?php endif; ?>
+                        </p>
 
-                            <label class="acct-field">
-                                <span class="acct-field__label">Vì sao bạn huỷ đơn?</span>
-                                <select class="acct-field__input" name="ly_do" required
-                                        data-cancel-reason>
-                                    <option value="">— Chọn lý do —</option>
-                                    <?php foreach (OrderModel::LY_DO_HUY as $ma => $nhan): ?>
-                                        <option value="<?= e($ma) ?>"><?= e($nhan) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </label>
+                        <label class="acct-field">
+                            <span class="acct-field__cap">Lý do huỷ đơn</span>
+                            <select class="acct-field__ctl" name="ly_do" required data-cancel-reason>
+                                <option value="">Chọn lý do</option>
+                                <?php foreach (OrderModel::LY_DO_HUY as $ma => $nhan): ?>
+                                    <option value="<?= e($ma) ?>"><?= e($nhan) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <?= $chevron ?>
+                        </label>
 
-                            <?php /* Ô tự do LUÔN HIỆN, không ẩn theo JS: không có
-                                     JavaScript thì khách chọn "Lý do khác" vẫn
-                                     phải gõ được. Máy chủ chỉ đọc ô này khi mã lý
-                                     do là 'khac'. */ ?>
-                            <label class="acct-field">
-                                <span class="acct-field__label">
-                                    Ghi rõ hơn <span class="field__opt">(bắt buộc nếu chọn "Lý do khác")</span>
-                                </span>
-                                <input class="acct-field__input" type="text" name="ly_do_khac"
-                                       maxlength="200" placeholder="Ví dụ: đặt nhầm màu gọng">
-                            </label>
+                        <?php /* Ô tự do LUÔN HIỆN: không có JS thì khách chọn "Lý do
+                                 khác" vẫn phải gõ được. Máy chủ chỉ đọc nó khi mã lý do
+                                 là 'khac'. */ ?>
+                        <label class="acct-field">
+                            <span class="acct-field__cap">Ghi rõ hơn (bắt buộc nếu chọn "Lý do khác")</span>
+                            <input class="acct-field__ctl" type="text" name="ly_do_khac" maxlength="200"
+                                   placeholder="Ví dụ: đặt nhầm màu gọng">
+                        </label>
 
-                            <div class="acct-cancel__acts">
-                                <button type="submit" class="acct-btn acct-btn--danger acct-btn--sm">
-                                    Xác nhận huỷ đơn
-                                </button>
-                                <a class="acct-btn acct-btn--quiet acct-btn--sm"
-                                   href="/tai-khoan?muc=don-hang">Không huỷ nữa</a>
-                            </div>
-                        </form>
-                    <?php endif; ?>
-                </div>
-            </div>
+                        <div class="acct-pair">
+                            <a class="acct-btn" href="<?= $base ?>#<?= e($o['code']) ?>">Không huỷ nữa</a>
+                            <button type="submit" class="acct-btn acct-btn--solid acct-btn--save">Xác nhận huỷ đơn</button>
+                        </div>
+                    </form>
+                <?php endif; ?>
+            </article>
         <?php endforeach; ?>
     </div>
+</section>
+
 <?php endif; ?>

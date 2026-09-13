@@ -21,7 +21,7 @@ $dongToi = array_values(array_filter([
 ?>
 
 <?php if ($dongToi === []): ?>
-    <p class="acct-sec__text">Bạn chưa cập nhật họ tên và thông tin liên hệ.</p>
+    <p class="acct-text">Bạn chưa cập nhật họ tên và thông tin liên hệ.</p>
 <?php else: ?>
     <div class="acct-me">
         <?php foreach ($dongToi as $dong): ?>

@@ -280,6 +280,27 @@ class BookingModel extends BaseModel
         );
     }
 
+    /**
+     * Ngày hẹn đọc thành chữ: "2026-09-20" -> "Thứ 7, 20/09/2026".
+     *
+     * Dáng dòng ngày trên thẻ lịch hẹn của bản thiết kế "Ho So Nguoi Dung"
+     * ("Sat, 20 Sep 2026"), bỏ vế giờ vì lịch hẹn không lưu giờ (giả định A5).
+     * Tab Tài khoản và tab Lịch hẹn cùng gọi hàm này nên hai chỗ nói về một cái
+     * hẹn bằng đúng một câu.
+     */
+    public static function nhanNgay(string $date): string
+    {
+        $ts = strtotime($date);
+
+        if ($ts === false) {
+            return $date;
+        }
+
+        $thu = ['Chủ nhật', 'Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7'][(int) date('w', $ts)];
+
+        return $thu . ', ' . date('d/m/Y', $ts);
+    }
+
     public static function forUser(string $userId): array
     {
         // Kèm tên cơ sở: thẻ lịch hẹn trong trang tài khoản phải nói khách hẹn

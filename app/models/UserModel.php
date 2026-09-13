@@ -1096,6 +1096,29 @@ class UserModel extends BaseModel
     }
 
     /**
+     * Tách cột họ tên duy nhất thành HỌ và TÊN.
+     *
+     * Bản thiết kế "Ho So Nguoi Dung" hỏi hai ô Tên* · Họ* và chào khách bằng
+     * tên ("XIN CHÀO, DUY ANH"), còn `profiles` chỉ có một cột full_name. Tên
+     * Việt đặt họ ở ĐẦU, nên họ = chữ đầu, tên = phần còn lại. Họ tên một chữ
+     * thì cả chuỗi là tên, họ rỗng — form sẽ đòi khách điền nốt.
+     *
+     * Chiều ngược lại (ghép hai ô thành "Họ Tên") ở AuthController::updateProfile().
+     *
+     * @return array{ho:string, ten:string}
+     */
+    public static function tachHoTen(?string $fullName): array
+    {
+        $chu = preg_split('/\s+/u', trim((string) $fullName), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        if (count($chu) < 2) {
+            return ['ho' => '', 'ten' => $chu[0] ?? ''];
+        }
+
+        return ['ho' => array_shift($chu), 'ten' => implode(' ', $chu)];
+    }
+
+    /**
      * Địa chỉ giao hàng của khách, ĐÚNG HÌNH DẠNG mà trang thanh toán chờ.
      *
      * ─────────────────────────────────────────────────────────────────────────

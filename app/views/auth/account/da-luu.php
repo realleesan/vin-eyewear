@@ -32,13 +32,13 @@ $luuDuoc = $luuDuoc ?? false;
     <?php /* Bảng chưa dựng: nói thẳng là tạm ngưng — một danh sách rỗng ở đây
              đọc thành "bạn chưa lưu gì", khách đã lưu sẽ tưởng mất dữ liệu. */ ?>
     <div class="acct-empty">
-        <p class="acct-empty__text">Danh sách đã lưu đang tạm ngưng — không mục nào của bạn bị mất.</p>
+        <p class="acct-empty__text acct-empty__text--luu">Danh sách đã lưu đang tạm ngưng — không mục nào của bạn bị mất.</p>
     </div>
 
 <?php elseif ($saved === []): ?>
 
     <div class="acct-empty">
-        <p class="acct-empty__text">Bạn chưa lưu sản phẩm nào.</p>
+        <p class="acct-empty__text acct-empty__text--luu">Bạn chưa có sản phẩm nào trong danh sách đã lưu.</p>
         <a class="acct-btn acct-empty__btn" href="/san-pham/gong-kinh">Tiếp tục mua sắm</a>
     </div>
 

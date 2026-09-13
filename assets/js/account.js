@@ -37,14 +37,14 @@
  * về đúng chỗ ban đầu, ghi lại thì nút Lùi phải bấm mấy lần mới ra khỏi trang.
  */
 function ganChiTietDon() {
-    var list = document.querySelector('.acct-list');
+    var list = document.querySelector('.acct-cards');
     if (!list) return;
 
     list.addEventListener('click', function (ev) {
         // Bấm giữ Ctrl/Shift/giữa chuột là ý muốn mở tab khác — để nguyên.
         if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button !== 0) return;
 
-        var btn = ev.target.closest('.acct-order__more');
+        var btn = ev.target.closest('[data-more]');
         if (!btn) return;
 
         var panel = document.getElementById(btn.getAttribute('aria-controls'));
@@ -70,7 +70,7 @@ function ganChiTietDon() {
 
         // Khi thu gọn mới cuộn — đầu thẻ có thể đã bị đẩy lên trên mép màn hình.
         if (!open) {
-            var card = btn.closest('.acct-order');
+            var card = btn.closest('.acct-card');
             var top  = card ? card.getBoundingClientRect().top : 0;
 
             if (card && top < 0) {

@@ -2074,9 +2074,9 @@ class AuthController extends BaseController
      * KHU VỰC THỨ BA ngay trong trang Hồ sơ, cùng trang với Thông tin cá nhân
      * và Sổ địa chỉ. Đặc tả cấm dùng tab hoặc chuyển trang giữa ba khu vực.
      *
-     * File app/views/auth/account/mat-khau.php vẫn còn, nay được ho-so.php gọi
-     * bằng partial(). Liên kết cũ ?muc=mat-khau KHÔNG vỡ: nó thành một giá trị
-     * lạ, và profile() đưa mọi giá trị lạ về mục mặc định — chính là 'ho-so'.
+     * Form đổi mật khẩu nay nằm thẳng trong account/ho-so.php. Liên kết cũ
+     * ?muc=mat-khau KHÔNG vỡ: nó thành một giá trị lạ, và profile() đưa mọi
+     * giá trị lạ về mục mặc định.
      *
      * 'do-mat' (Thông số đo mắt) ĐÃ GỠ. Số đo vẫn nằm trong
      * customer_prescriptions và vẫn do kỹ thuật viên nhập ở
@@ -2091,17 +2091,16 @@ class AuthController extends BaseController
      * chúng vừa là nhãn trên cột điều hướng vừa là tiêu đề thẻ trình duyệt.
      * 'lich-hen' không có trong đặc tả nên giữ nguyên chữ cũ.
      */
-    /* THỨ TỰ CỦA "Ho So Nguoi Dung.dc.html" (13/09/2026): năm tab Tài khoản ·
-       Đơn hàng · Đã lưu · Sổ địa chỉ · Hồ sơ. 'lich-hen' không có trong bản vẽ
-       nhưng giữ lại theo yêu cầu chủ dự án — đây là chỗ duy nhất khách xem, đổi
-       và huỷ lịch đo mắt — nên nó đứng cuối hàng tab. */
+    /* THỨ TỰ CỦA "Ho So Nguoi Dung.dc.html" (bản 13/09/2026): sáu tab Tài
+       khoản · Đơn hàng · Đã lưu · Lịch hẹn · Sổ địa chỉ · Hồ sơ. Bản vẽ nay có
+       cả tab lịch hẹn ("Appointments"), đứng thứ tư. */
     private const SECTIONS = [
         'tong-quan' => 'Tài khoản',
         'don-hang'  => 'Đơn hàng',
         'da-luu'    => 'Đã lưu',
+        'lich-hen'  => 'Lịch hẹn',
         'dia-chi'   => 'Sổ địa chỉ',
         'ho-so'     => 'Hồ sơ',
-        'lich-hen'  => 'Lịch hẹn',
     ];
 
     /**
@@ -2289,16 +2288,25 @@ class AuthController extends BaseController
     {
         switch ($section) {
             case 'tong-quan':
-                /* Tab mở đầu: ba đơn mới nhất và bốn mẫu vừa lưu. forUser() đã
-                   xếp mới nhất trước; cắt ở PHP vì hàm ấy không nhận giới hạn,
-                   và một khách có vài chục đơn là trường hợp hiếm. */
-                $recent = array_slice(OrderModel::forUser($userId), 0, 3);
+                /* Tab mở đầu. Mỗi khối in đúng MỘT mục theo khuôn ba dòng của
+                   bản vẽ, nên chỉ lấy đúng một: đơn mới nhất (forUser() đã xếp
+                   mới nhất trước), mẫu vừa lưu, lịch hẹn sắp tới gần nhất.
+
+                   Đếm mẫu đã lưu bằng count() của danhSach() chứ không bằng
+                   dem(): danhSach() đã lọc mặt hàng bị ẩn, và "và N sản phẩm
+                   khác" phải khớp với số khách thấy ở tab Đã lưu. */
+                $donMoi = OrderModel::forUser($userId)[0] ?? null;
+                $daLuu  = FavoriteModel::danhSach($userId);
 
                 return [
-                    'recent'      => $recent,
-                    'recentItems' => OrderModel::itemsForOrders(array_column($recent, 'id')),
-                    'saved'       => FavoriteModel::danhSach($userId, 4),
-                    'luuDuoc'     => FavoriteModel::available(),
+                    'donMoi'     => $donMoi,
+                    'donMoiHang' => $donMoi !== null
+                        ? (OrderModel::itemsForOrders([$donMoi['id']])[$donMoi['id']] ?? [])
+                        : [],
+                    'luuMoi'     => $daLuu[0] ?? null,
+                    'soLuu'      => count($daLuu),
+                    'luuDuoc'    => FavoriteModel::available(),
+                    'henToi'     => self::lichSapToi(BookingModel::forUser($userId))[0] ?? null,
                 ];
 
             case 'ho-so':
@@ -2332,7 +2340,6 @@ class AuthController extends BaseController
                     'addresses'    => AddressModel::forUser($userId),
                     'editing'      => $suaDiaChi,
                     'themDiaChi'   => isset($_GET['them']),
-                    'nhanDiaChi'   => AddressModel::NHAN,
                     'toiDaDiaChi'  => AddressModel::TOI_DA,
                 ];
 
@@ -2349,33 +2356,19 @@ class AuthController extends BaseController
                 ];
 
             case 'don-hang':
+                /* KHÔNG CÒN DẢI LỌC ?loc= — gỡ cùng bản dựng "Ho So Nguoi Dung"
+                   (13/09/2026): bản vẽ không có nó. Liên kết cũ kèm ?loc= vẫn
+                   mở được tab, chỉ ra đủ mọi đơn. */
                 $orders = OrderModel::forUser($userId);
-                $tab    = (string) ($_GET['loc'] ?? '');
-
-                if (!isset(OrderModel::STATUSES[$tab])) {
-                    $tab = '';   // '' = thẻ "Tất cả"
-                }
-
-                // LỌC TRONG PHP, không phải bằng câu SQL thứ hai: dải thẻ lọc
-                // hiện số đơn của TỪNG trạng thái, nên danh sách đầy đủ đằng
-                // nào cũng phải có sẵn. Lọc lại bằng SQL là đọc hai lần cùng
-                // một thứ.
-                $shown = $tab === ''
-                    ? $orders
-                    : array_values(array_filter($orders, static fn ($o) => $o['status'] === $tab));
 
                 return [
-                    'orders'    => $shown,
-                    'tab'       => $tab,
+                    'orders'    => $orders,
                     // ?don=<mã> mở rộng đúng một thẻ đơn. Không cần kiểm mã có
                     // thật hay không: view chỉ so nó với mã của các đơn đã lọc
                     // theo user_id, mã lạ thì không thẻ nào khớp.
                     'expanded'  => (string) ($_GET['don'] ?? ''),
-                    'tabCounts' => array_count_values(array_column($orders, 'status')),
-                    'total'     => count($orders),
-                    'items'     => OrderModel::itemsForOrders(array_column($shown, 'id')),
-                    'history'   => OrderModel::historyForOrders(array_column($shown, 'id')),
-                    'statuses'  => OrderModel::STATUSES,
+                    'items'     => OrderModel::itemsForOrders(array_column($orders, 'id')),
+                    'history'   => OrderModel::historyForOrders(array_column($orders, 'id')),
                     // Nhãn trạng thái TIỀN. Từ khi có đặt cọc thì nó có ba nấc
                     // (chưa trả · đã cọc · đã trả đủ), nên view không tự đoán
                     // được bằng một phép so với 'paid' nữa.
@@ -2388,9 +2381,10 @@ class AuthController extends BaseController
 
             case 'lich-hen':
                 /*
-                 * ?doi=<mã lịch> mở form đổi giờ NGAY TRONG thẻ lịch hẹn đó —
-                 * cùng lối với ?sua= của sổ địa chỉ và ?don= của đơn hàng, nên
-                 * gửi link được và F5 không mất chỗ.
+                 * ?doi=<mã lịch> mở form đổi ngày NGAY TRONG thẻ lịch hẹn đó,
+                 * ?dat=1 mở form "Lịch hẹn mới" ở cuối khối Sắp tới — cùng lối
+                 * với ?sua= của sổ địa chỉ và ?don= của đơn hàng, nên gửi link
+                 * được và F5 không mất chỗ.
                  *
                  * findOwned trả null khi mã lạ hoặc lịch của người khác, và khi
                  * đó view chỉ đơn giản không mở form nào.
@@ -2402,6 +2396,8 @@ class AuthController extends BaseController
                    nên không phải hỏi máy chủ giờ trống của ngày nào cả — xem
                    khối chú thích đầu app/views/auth/account/_doi-lich.php. */
                 $appointments = BookingModel::forUser($userId);
+                $sapToi       = self::lichSapToi($appointments);
+                $maSapToi     = array_column($sapToi, 'code');
 
                 /*
                  * "Vì sao lịch này không sửa được nữa", tính SẴN cho từng lịch.
@@ -2418,10 +2414,19 @@ class AuthController extends BaseController
                 }
 
                 return [
-                    'appointments'    => $appointments,
+                    'sapToi'          => $sapToi,
+                    /* Phần còn lại — quá ngày, đã đo xong, đã huỷ — giữ thứ tự
+                       mới nhất trước của forUser(). */
+                    'daQua'           => array_values(array_filter(
+                        $appointments,
+                        static fn (array $a): bool => !in_array($a['code'], $maSapToi, true)
+                    )),
                     'bookingStatuses' => BookingModel::STATUSES,
                     'blockers'        => $blockers,
                     'editing'         => $editing,
+                    'datLich'         => isset($_GET['dat']),
+                    'stores'          => StoreModel::active(),
+                    'services'        => BookingModel::SERVICES,
                 ];
 
             default:
@@ -2431,6 +2436,26 @@ class AuthController extends BaseController
                    variable" trong view, không phải một lỗi đọc ra được. */
                 return [];
         }
+    }
+
+    /**
+     * Lịch hẹn SẮP TỚI trong một danh sách BookingModel::forUser(), gần nhất
+     * trước.
+     *
+     * "Sắp tới" = còn hiệu lực (chờ hoặc đã xác nhận) và chưa quá ngày — cùng
+     * ngưỡng với BookingModel::isExpired() và countUpcoming(), nên số trên
+     * khối "Sắp tới" và chữ "Đã qua" trên thẻ không nói hai điều khác nhau.
+     */
+    private static function lichSapToi(array $lich): array
+    {
+        $sapToi = array_filter(
+            $lich,
+            static fn (array $a): bool => in_array($a['status'], ['pending', 'confirmed'], true)
+                && !BookingModel::isExpired($a)
+        );
+
+        /* forUser() xếp ngày MUỘN NHẤT trước — lật lại để lịch gần nhất đứng đầu. */
+        return array_reverse(array_values($sapToi));
     }
 
     /**
@@ -2460,6 +2485,20 @@ class AuthController extends BaseController
            Lỗi thì quay lại với ?sua-ho-so=1: form phải còn MỞ để khách sửa
            đúng cái ô vừa bị chê. Về chế độ xem là bắt họ bấm "Chỉnh sửa" lần
            nữa rồi gõ lại từ đầu. */
+        /* HỌ VÀ TÊN LÀ HAI Ô — bản thiết kế "Ho So Nguoi Dung" hỏi Tên* · Họ*,
+           còn `profiles` chỉ có một cột full_name. Ghép lại theo thứ tự Việt
+           "Họ Tên"; UserModel::tachHoTen() tách ngược khi dựng form.
+
+           Kiểm TRƯỚC email, cùng lẽ với khối dưới: thiếu tên mà email đã ghi
+           xong thì màn hình báo "không lưu được" cho một form đã lưu dở. */
+        $ho  = trim((string) ($_POST['last_name'] ?? ''));
+        $ten = trim((string) ($_POST['first_name'] ?? ''));
+
+        if ($ho === '' || $ten === '') {
+            flash('account_error', 'Vui lòng nhập đủ họ và tên.');
+            redirect(self::VE_HO_SO . '&sua-ho-so=1#thong-tin');
+        }
+
         $email = UserModel::updateEmail($userId, (string) ($_POST['email'] ?? ''));
 
         if (!$email['ok']) {
@@ -2473,7 +2512,7 @@ class AuthController extends BaseController
            để lại chúng thì mỗi lần khách lưu họ tên là một lần xoá trắng hai cột
            ấy, vì form không còn gửi gì lên cho chúng. */
         $result = UserModel::updateProfile($userId, [
-            'full_name' => trim((string) ($_POST['full_name'] ?? '')),
+            'full_name' => $ho . ' ' . $ten,
             'phone'     => trim((string) ($_POST['phone'] ?? '')),
         ]);
 
@@ -2506,6 +2545,9 @@ class AuthController extends BaseController
 
     /** Đường quay về tab Sổ địa chỉ — tab riêng từ 13/09/2026. */
     private const VE_DIA_CHI = '/tai-khoan?muc=dia-chi';
+
+    /** Đường quay về tab Lịch hẹn. */
+    private const VE_LICH_HEN = '/tai-khoan?muc=lich-hen';
 
     public function addAddress(): void
     {
@@ -2617,6 +2659,71 @@ class AuthController extends BaseController
     // còn trống) nằm trong BookingModel. Hai hàm dưới đây chỉ lấy tham số, gọi
     // model, rồi nói lại kết quả — xem khối "KHÁCH TỰ ĐỔI / HUỶ LỊCH" ở đó.
     // ========================================================================
+
+    /**
+     * Đặt lịch hẹn NGAY TRONG tab Lịch hẹn (POST /tai-khoan/lich-hen/dat) —
+     * form "Lịch hẹn mới" của bản thiết kế "Ho So Nguoi Dung".
+     *
+     * KHÔNG hỏi lại họ tên và số điện thoại như form /dat-lich: khách đã đăng
+     * nhập, hai thứ ấy lấy thẳng từ hồ sơ. Hồ sơ thiếu số thì chặn và chỉ sang
+     * tab Hồ sơ — lịch hẹn không có số để gọi là lịch không ai chốt giờ được
+     * (giả định A5, xem BookingModel).
+     *
+     * Ngày gửi lên là NGÀY THẬT (ô date), không phải chỉ số trong dải 7 ngày
+     * như /dat-lich. BookingModel::create() tự chặn ngày đã qua, quá trần
+     * DAT_TRUOC_TOI_DA và cơ sở không nhận lịch, nên ở đây chỉ kiểm hình dạng.
+     */
+    public function bookAppointment(): void
+    {
+        $userId = AuthMiddleware::requireLogin();
+        $this->requirePost(self::VE_LICH_HEN);
+
+        // Lỗi thì mở lại đúng form vừa gửi, không đẩy về danh sách.
+        $moLai = self::VE_LICH_HEN . '&dat=1#dat-lich';
+
+        $dichVu = (string) ($_POST['service_type'] ?? '');
+
+        if (!in_array($dichVu, BookingModel::SERVICES, true)) {
+            flash('account_error', 'Vui lòng chọn dịch vụ.');
+            redirect($moLai);
+        }
+
+        $ngay = (string) ($_POST['date'] ?? '');
+        $d    = DateTime::createFromFormat('!Y-m-d', $ngay);
+
+        if ($d === false || $d->format('Y-m-d') !== $ngay) {
+            flash('account_error', 'Vui lòng chọn ngày hẹn.');
+            redirect($moLai);
+        }
+
+        $hoSo  = UserModel::profile($userId);
+        $hoTen = trim((string) ($hoSo['full_name'] ?? ''));
+        $sdt   = trim((string) ($hoSo['phone'] ?? ''));
+
+        if (utf8Length($hoTen) < 2 || strlen((string) preg_replace('/\D/', '', $sdt)) < 8) {
+            flash('account_error', 'Hồ sơ của bạn cần có họ tên và số điện thoại để cửa hàng gọi '
+                . 'xác nhận lịch hẹn. Vui lòng cập nhật ở tab Hồ sơ.');
+            redirect($moLai);
+        }
+
+        $ket = BookingModel::create([
+            'storeId'     => (string) ($_POST['store_id'] ?? ''),
+            'date'        => $ngay,
+            'serviceType' => $dichVu,
+            'fullName'    => $hoTen,
+            'phone'       => $sdt,
+            'note'        => '',
+            'userId'      => $userId,
+        ]);
+
+        if (!$ket['ok']) {
+            flash('account_error', $ket['error']);
+            redirect($moLai);
+        }
+
+        flash('account_success', 'Đã đặt lịch hẹn. Cửa hàng sẽ gọi điện để chốt giờ hẹn.');
+        redirect(self::VE_LICH_HEN . '#sap-toi');
+    }
 
     public function cancelBooking(): void
     {
