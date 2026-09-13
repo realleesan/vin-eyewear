@@ -3674,9 +3674,19 @@ body.is-search-open {
     letter-spacing: var(--ls-tight);
 }
 
-.mobile-nav__links > a.is-active {
-    color: var(--ink-3);
-}
+/* ĐÃ GỠ dấu mục hiện hành ở ngăn nav điện thoại (13/09/2026) — trước là
+   `color: var(--ink-3)`.
+
+   ĐÂY LÀ LUẬT THỨ BA VÀ LÀ CÁI SUÝT SÓT. Cùng một dấu ấy nằm rải ở BỐN
+   chỗ, hai file:
+
+     .oa-header__nav a.is-active            hàng nav khổ máy tính  (oa.css)
+     .mega__trigger.is-active               mục có bảng xổ         (mega-menu)
+     .mobile-nav__group > summary.is-active mục gập ở điện thoại   (mega-menu)
+     .mobile-nav__links > a.is-active       mục phẳng ở điện thoại (oa.css)  ← đây
+
+   Gỡ ba cái rồi tưởng xong là còn đúng một mục vẫn đổi màu, và nó chỉ lộ
+   ra ở khổ điện thoại. Sửa dấu mục hiện hành thì phải sửa CẢ BỐN. */
 
 .mobile-nav__foot {
     display: flex;
