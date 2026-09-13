@@ -89,6 +89,56 @@ function ganChiTietDon() {
 
 ganChiTietDon();
 
+/* ── CUỘN XUỐNG: CHỈ CÒN TIÊU ĐỀ ───────────────────────────────────────────────
+ *
+ * Rời đỉnh trang thì thanh đầu trang và hàng tab lui đi, chỉ tiêu đề tab dính
+ * ở mép trên màn hình (chủ dự án, 13/09/2026). Hàm này chỉ bật/tắt MỘT lớp,
+ * .is-acct-gon trên <body>; mọi thứ nhìn thấy nằm trong account.css.
+ *
+ * NGƯỠNG: đáy hàng tab đã khuất dưới thanh đầu trang. Sớm hơn thì thanh đầu
+ * trang lui đi khi hàng tab còn đang hiện dở — hai thanh không cùng nhịp.
+ *
+ * ĐO BẰNG VỊ TRÍ TRONG TÀI LIỆU (offsetHeight, bottom + scrollY), không đo đáy
+ * thanh đầu trang trên màn hình: thanh đã trượt lên thì đáy ấy đổi theo, và
+ * phép so sẽ lật lớp qua lại liên tục ngay tại ngưỡng. Hàng tab không dính
+ * và không bị transform nên vị trí trong tài liệu của nó đứng yên.
+ *
+ * KHÔNG CÓ JS: lớp không bao giờ bật, hai thanh ở nguyên chỗ cũ, và tiêu đề
+ * dính ngay dưới thanh đầu trang — trang vẫn đọc được bình thường.
+ */
+function ganThuGon() {
+    var header = document.querySelector('.oa-header');
+    var dangGon = false;
+
+    /* Tính THẲNG trong sự kiện scroll, không hoãn qua requestAnimationFrame:
+       trình duyệt đã tự gom scroll về tối đa một lần mỗi khung hình, và rAF
+       bị tạm dừng ở tab không có tiêu điểm — lớp sẽ đứng ở trạng thái cũ cho
+       tới khi tab được nhìn lại. */
+    function tinh() {
+        /* Hỏi lại mỗi lần: đổi tab thay ruột .acct-nav, không thay chính nó,
+           nhưng rẻ và khỏi phải nhớ điều đó. */
+        var nav = document.querySelector('.acct-nav');
+        if (!nav) return;
+
+        var dayNav = nav.getBoundingClientRect().bottom + window.scrollY;
+        var cao    = header ? header.offsetHeight : 0;
+        var gon    = window.scrollY + cao >= dayNav;
+
+        if (gon !== dangGon) {
+            dangGon = gon;
+            document.body.classList.toggle('is-acct-gon', gon);
+        }
+    }
+
+    window.addEventListener('scroll', tinh, { passive: true });
+    window.addEventListener('resize', tinh);
+
+    // F5 giữa trang: trình duyệt khôi phục vị trí cuộn mà không bắn sự kiện.
+    tinh();
+}
+
+ganThuGon();
+
 /* ── ĐỔI TAB KHÔNG TẢI LẠI TRANG ──────────────────────────────────────────────
  *
  * Mỗi tab là một <a href="/tai-khoan?muc=…"> thật, nên bấm là điều hướng:
@@ -197,12 +247,12 @@ ganChiTietDon();
 
                 if (dayLichSu) window.history.pushState({ acct: 1 }, '', url);
 
-                /* Hàng tab nằm ngay dưới thanh đầu trang: đã cuộn xuống quá nó
-                   thì đưa về, để người dùng thấy tab vừa bấm và dòng tiêu đề
-                   mới. */
-                var nav = grid.querySelector('.acct-nav');
-
-                if (nav && nav.getBoundingClientRect().top < 0) {
+                /* Đang cuộn giữa trang (hàng tab và thanh đầu trang đã lui đi,
+                   xem ganThuGon) thì đưa về đầu tab, để thấy hàng tab vừa bấm
+                   và dòng tiêu đề mới. scroll-margin-top của .acct__grid dừng
+                   nó ngay dưới thanh đầu trang — tức về đúng chỗ hai thanh hiện
+                   lại. */
+                if (document.body.classList.contains('is-acct-gon')) {
                     grid.scrollIntoView({ block: 'start' });
                 }
 

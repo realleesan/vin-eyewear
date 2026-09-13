@@ -72,6 +72,8 @@
    HÀNG TAB + ĐĂNG XUẤT
    ══════════════════════════════════════════════════════════════════════ */
 
+/* Hàng tab KHÔNG dính: cuộn xuống là nó trôi đi theo nội dung — xem khối
+   "CUỘN XUỐNG: CHỈ CÒN TIÊU ĐỀ" ngay dưới phần tiêu đề. */
 .acct-nav {
     display: flex;
     align-items: center;
@@ -79,6 +81,18 @@
     gap: 16px 24px;
     margin-top: 2px;
     padding: 0 var(--edge);
+}
+
+/* account.js đưa khung này về đầu màn hình khi đổi tab lúc đang cuộn giữa
+   trang. Dừng dưới thanh đầu trang để nó hiện lại (lớp .is-acct-gon tắt). */
+.acct__grid {
+    scroll-margin-top: var(--hdr-h);
+}
+
+/* Cuộn tới một neo (#doi-mat-khau, #so-dia-chi…) thì dừng dưới dải tiêu đề
+   dính, không để khối lọt ra sau nó. */
+.acct-main [id] {
+    scroll-margin-top: 90px;
 }
 
 .acct-nav__tabs {
@@ -164,6 +178,60 @@
     margin-left: 1px;
     font-size: 11px;
     vertical-align: top;
+}
+
+/* ┌─ CUỘN XUỐNG: CHỈ CÒN TIÊU ĐỀ ─────────────────────────────────────────
+   │ (chủ dự án, 13/09/2026) Rời đỉnh trang thì thanh đầu trang và hàng tab
+   │ lui đi, chỉ tiêu đề của tab dính ở mép trên màn hình. Về lại đỉnh trang
+   │ thì cả hai hiện lại.
+   │
+   │ account.js (ganThuGon) bật .is-acct-gon trên <body> khi hàng tab đã khuất
+   │ dưới thanh đầu trang. Thanh đầu trang — vốn sticky — trượt lên khỏi màn
+   │ hình bằng transform: không đổi bố cục, trang không giật. Hàng tab không
+   │ dính nên tự trôi đi theo nội dung.
+   │
+   │ KHÔNG CÓ JS: lớp không bật, thanh đầu trang ở nguyên, và tiêu đề dính
+   │ NGAY DƯỚI nó (top: --hdr-h) chứ không chui xuống dưới.
+   │
+   │ DẢI NỀN CỦA TIÊU ĐỀ: padding 20px trên dưới, bù bằng margin âm đúng 20px
+   │ nên chữ tiêu đề không đổi chỗ so với bản vẽ. box-shadow + clip-path kéo
+   │ nền tràn hết bề ngang màn hình — chữ cuộn qua không lọt lên hai bên cột.
+   │ z-index dưới --z-scrim: ngăn kéo đăng nhập, giỏ hàng vẫn phủ lên nó.
+   └──────────────────────────────────────────────────────────────────────── */
+.page-auth-profile .oa-header {
+    /* Giữ `color .25s` của oa.css, thêm transform. */
+    transition: color .25s ease, transform .25s ease;
+}
+
+.page-auth-profile.is-acct-gon .oa-header {
+    transform: translateY(-100%);
+}
+
+/* Bàn phím Tab vào thanh đầu trang đang ẩn thì kéo nó ra lại — tiêu điểm
+   không được nằm trên một thứ không nhìn thấy. */
+.page-auth-profile.is-acct-gon .oa-header:focus-within {
+    transform: none;
+}
+
+.acct-title,
+.wl__title {
+    position: sticky;
+    top: var(--hdr-h);
+    z-index: calc(var(--z-scrim) - 1);
+    padding: 20px 0;
+    background: var(--acct-bg);
+    box-shadow: 0 0 0 100vmax var(--acct-bg);
+    clip-path: inset(0 -100vmax);
+    transition: top .25s ease;
+}
+
+.acct-title {
+    margin: -20px 0;
+}
+
+.is-acct-gon .acct-title,
+.is-acct-gon .wl__title {
+    top: 0;
 }
 
 /* Dải báo sau một thao tác — bản vẽ không có, vẽ bằng khung ô nhập. */
@@ -888,7 +956,9 @@ select.acct-field__ctl {
 /* Tiêu đề CĂN GIỮA, khác mọi tab khác của trang tài khoản (chúng căn trái).
    Đó là dáng của mẫu: lưới bốn cột cần một cái mốc ở giữa. */
 .wl__title {
-    margin: 46px 0 0;
+    /* 26 + 20px padding của dải tiêu đề dính = 46px của mẫu; -20px dưới bù
+       padding dưới. Xem "CUỘN XUỐNG: CHỈ CÒN TIÊU ĐỀ". */
+    margin: 26px 0 -20px;
     font-size: 18px;
     font-weight: 500;
     letter-spacing: .02em;
@@ -1175,8 +1245,9 @@ select.acct-field__ctl {
         gap: 32px 12px;
     }
 
+    /* 8 + 20px padding của dải tiêu đề dính = 28px. */
     .wl__title {
-        margin-top: 28px;
+        margin-top: 8px;
     }
 
     .wl__foot {
