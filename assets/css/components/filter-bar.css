@@ -150,25 +150,12 @@
     flex: none;
 }
 
-/* Số tiêu chí đang bật — viên đen nhỏ, chỉ hiện khi > 0. `hidden` do PHP
-   đặt, nhưng display:inline-flex ngay dưới sẽ thắng nó nếu không chốt lại
-   ở khối [hidden] bên dưới. */
-.fbarwrap__num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 4px;
-    background: var(--ink);
-    color: #fff;
-    font-size: var(--fs-micro, 10px);
-    line-height: 1;
-}
+/* ĐÃ GỠ: viên số đếm tiêu chí cạnh chữ "Bộ lọc" (13/09/2026, yêu cầu chủ
+   dự án). Số ấy VẪN được tính ở product/index.php — nó là thứ quyết định tấm
+   có bung sẵn hay không — chỉ là không in ra nữa. Xem $fbCount ở view đó.
 
-.fbarwrap__num[hidden] {
-    display: none;
-}
+   ⚠ Gỡ kèm cả đoạn chép con số trong assets/js/catalog.js: đoạn ấy sinh ra
+   chỉ để làm tươi cái viên này sau mỗi cú lọc, không còn việc gì khác. */
 
 .fbarwrap__btn:hover {
     opacity: .65;
@@ -402,15 +389,24 @@
     padding: 0 var(--edge) 24px;
 }
 
+/* KHÔNG gạch chân (13/09/2026, yêu cầu chủ dự án). Nó vẫn là liên kết duy
+   nhất trong chân tấm và vẫn đậm màu lên khi rê chuột, nên vẫn đọc ra là bấm
+   được — cùng lối với mọi liên kết khác của site, nơi luật `a` toàn cục đã
+   tắt sẵn gạch chân. */
 .fbar__clear {
     color: var(--ink-2);
     font-size: var(--fs-text);
-    text-decoration: underline;
-    text-underline-offset: 3px;
+
+    /* Khai THẲNG, không dựa vào luật `a` toàn cục của oa.css. Thành phần này
+       dùng ở ba trang và đã có lần được dựng thử ngoài bộ CSS đầy đủ; thiếu
+       dòng này thì gạch chân mặc định của trình duyệt quay lại, mà đó đúng là
+       thứ vừa được yêu cầu bỏ. */
+    text-decoration: none;
 }
 
 .fbar__clear:hover {
     color: var(--ink);
+    text-decoration: none;
 }
 
 /* ══════════════════════════════════════════════════════════════════════

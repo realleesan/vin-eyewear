@@ -32,8 +32,10 @@
  *   $fbTotal  int    tổng số món đang khớp (số mũ cạnh chữ "Bộ lọc")
  *   $fbClear  string địa chỉ "Xoá tất cả"; chuỗi rỗng = không có gì để xoá
  *   $fbTitle  string nhan đề tấm, mặc định "Bộ lọc"
- *   $fbCount  int    số tiêu chí ĐANG BẬT — in lên nút mở, và quyết định tấm
- *                    có bung sẵn hay không
+ *   $fbCount  int    số tiêu chí ĐANG BẬT. KHÔNG in ra nữa (13/09/2026, yêu
+ *                    cầu chủ dự án gỡ viên số cạnh chữ "Bộ lọc") — nay nó chỉ
+ *                    còn quyết định tấm có bung sẵn hay không. Đừng bỏ tham
+ *                    số: bỏ là tấm luôn đóng, kể cả khi khách đang lọc dở.
  *   $fbChips  array  hàng chip NGANG HÀNG với nút mở, bên trái nó. Mảng rỗng
  *                    thì hàng không in ra và nút tự dồn sát mép phải:
  *                      [['label' => 'Tất cả', 'url' => '/…', 'on' => true,
@@ -58,8 +60,7 @@
  *
  * ⚠ NÚT MỞ NẰM NGOÀI .fbar, còn assets/js/catalog.js thì thay ruột .fbar sau
  * mỗi cú bấm tiêu chí. Cố ý: nhờ vậy trạng thái mở/đóng và cả vị trí cuộn
- * không bị dựng lại. Đổi lại, con số trên nút phải để catalog.js chép sang —
- * xem .fbarwrap__num ở đó.
+ * không bị dựng lại.
  */
 
 $fbCols  = $fbCols  ?? [];
@@ -138,13 +139,6 @@ if (!$fbCoGi) {
     <summary class="fbarwrap__btn">
         <span><?= e($fbTitle) ?></span>
         <?= icon('sliders', 'fbarwrap__ico', 16) ?>
-
-        <?php /* Ô SỐ LUÔN CÓ MẶT, chỉ `hidden` khi bằng 0 — không phải khi
-                 rỗng thì bỏ hẳn thẻ. catalog.js chép con số này sang sau mỗi
-                 cú lọc, mà chép vào một thẻ không tồn tại thì con số đứng im
-                 ở giá trị lúc nạp trang. */ ?>
-        <span class="fbarwrap__num"<?= $fbCount > 0 ? '' : ' hidden' ?>><?= $fbCount ?><span
-            class="sr-only"> tiêu chí đang bật</span></span>
     </summary>
 </details>
 </div><!-- /.fbarbar -->
