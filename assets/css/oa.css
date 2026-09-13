@@ -172,7 +172,25 @@
        │ tên này thì chữ rơi xuống font mặc định của trình duyệt — thường là
        │ một serif. Arial và Liberation Sans đều phủ đủ dấu tiếng Việt.
        └────────────────────────────────────────────────────────────────── */
-    --font: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", system-ui, sans-serif;
+    /* ┌─ BE VIETNAM PRO — QUAY LẠI TOÀN SITE (13/09/2026) ────────────────
+       │ Theo yêu cầu chủ dự án, khi dựng hai màn thanh toán theo
+       │ "Thanh toan.dc.html": mẫu ấy chạy Be Vietnam Pro, và chủ dự án chốt
+       │ đổi CẢ SITE chứ không riêng hai màn — để chữ không nhảy font giữa
+       │ trang giỏ và trang thanh toán.
+       │
+       │ Font này TỪNG bị gỡ (xem khối "KHÔNG TẢI FONT NGOÀI" trong
+       │ _layout/master.php, nay đã viết lại): lần ấy giao diện mới không
+       │ dùng nó nữa. Nay giao diện dùng lại, nên nó về.
+       │
+       │ ⚠ ĐỔI Ở ĐÂY, KHÔNG ĐỔI Ở master.php. Hai thẻ <link> bên đó chỉ TẢI
+       │   font về; thứ quyết định trang dùng font nào là token này. Sửa một
+       │   nơi mà quên nơi kia thì hoặc tải một font không ai dùng, hoặc gọi
+       │   một font chưa tải (và rơi về Helvetica lặng lẽ).
+       │
+       │ Helvetica đứng ngay sau làm lối lùi: mạng chặn Google Fonts hay
+       │ font chưa về kịp thì trang vẫn đúng chữ cũ, không có FOIT.
+       └──────────────────────────────────────────────────────────────────── */
+    --font: "Be Vietnam Pro", "Helvetica Neue", Helvetica, Arial, "Liberation Sans", system-ui, sans-serif;
 
     /* Serif DÙNG ĐÚNG MỘT CHỖ: tiêu đề hero trang chủ. Mẫu khai Georgia ở
        đó và không ở đâu khác — đừng gọi token này chỗ thứ hai. */

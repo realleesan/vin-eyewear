@@ -88,52 +88,49 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
     <!-- ══════════ HÀNG ĐẦU ══════════ -->
     <div class="coqr__head">
 
+        <?php /* Mắt xích ba nấc — của mẫu. Hai nấc đầu là liên kết thật:
+                 giỏ hàng luôn về được, còn "Thanh toán" thì KHÔNG (đơn đã ghi
+                 vào CSDL, mở lại form là mời khách đặt trùng một đơn nữa), nên
+                 nấc giữa ở đây là chữ chứ không phải liên kết — khác mẫu đúng
+                 một chỗ, và khác có lý do. */ ?>
+        <nav class="coqr__crumbs" aria-label="Đường dẫn">
+            <a href="/gio-hang">Giỏ hàng</a>
+            <span class="coqr__crumbsep" aria-hidden="true">›</span>
+            <span>Thanh toán</span>
+            <span class="coqr__crumbsep" aria-hidden="true">›</span>
+            <span class="coqr__crumbhere" aria-current="page">Quét mã QR</span>
+        </nav>
+
         <div class="coqr__titles">
+            <div class="coqr__titlebox">
+                <h1 class="coqr__title">Thanh toán bằng mã QR</h1>
+
+                <?php
+                /* ┌─ MỘT DÒNG THAY CHO DÃY BA BƯỚC ───────────────────────────
+                   │ Bản trước có một <ol class="coqr__steps"> ba nấc: "Mở app
+                   │ ngân hàng → Quét mã & chuyển tiền → Hệ thống xác nhận".
+                   │ Mẫu không có dãy ấy — nó nói cùng chừng ấy việc bằng MỘT
+                   │ dòng ngay dưới tiêu đề.
+                   │
+                   │ Đây là ĐỔI CÁCH NÓI, không phải bỏ thông tin: câu dưới vẫn
+                   │ trả lời đúng câu hỏi mà dãy ba bước sinh ra để trả lời —
+                   │ "giờ tôi phải làm gì". Dãy ba bước bị gỡ hẳn cùng bộ lớp
+                   │ .coqr__step* của nó.
+                   └──────────────────────────────────────────────────────── */
+                ?>
+                <span class="coqr__paysub">
+                    Mã đơn <strong><?= e($order['code']) ?></strong>
+                    · Quét bằng ứng dụng ngân hàng hoặc ví điện tử bất kỳ
+                </span>
+            </div>
+
             <?php /* Bản thiết kế cho nút này quay về FORM thanh toán. Ở đây không
                      quay lại được: đơn đã ghi vào CSDL rồi, và mở lại form là mời
                      khách đặt thêm một đơn trùng. Nên nó theo $doneHref — vừa đặt
                      xong thì sang trang xác nhận, quay lại sau thì về đúng thẻ đơn.
                      Xem OrderController::transfer. */ ?>
-            <a class="coqr__back" href="<?= e($doneHref) ?>" aria-label="Quay lại đơn hàng">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M15 18l-6-6 6-6"></path>
-                </svg>
-            </a>
-
-            <div>
-                <h1 class="coqr__title">Thanh toán</h1>
-                <span class="coqr__code">Đơn hàng #<?= e($order['code']) ?></span>
-            </div>
+            <a class="coqr__back" href="<?= e($doneHref) ?>">← Quay lại đơn hàng</a>
         </div>
-
-        <?php
-        /* ══════════ BA BƯỚC ══════════
-           Không phải trang trí. Khách tới màn này giữa chừng một việc, và câu
-           hỏi đầu tiên trong đầu họ là "giờ tôi phải làm gì" — trang cũ trả lời
-           bằng cách bày ra một mã QR rồi để họ tự suy.
-
-           Bước 3 để RỖNG (viền, không tô đặc): nó chưa xảy ra, và tô đặc cả ba
-           thì dãy số thành một hàng trang trí chứ không nói được đang ở đâu. */
-        $steps = [
-            ['1', 'Mở app ngân hàng',      true],
-            ['2', 'Quét mã & chuyển tiền', true],
-            /* "Hệ thống xác nhận" chứ không phải "Xác nhận đã chuyển": bước
-               này KHÔNG còn là việc của khách kể từ khi nút "Tôi đã chuyển
-               khoản" bị bỏ. Để nguyên chữ cũ là vẫn dặn họ đi tìm một nút
-               không còn tồn tại. */
-            ['3', 'Hệ thống xác nhận',     false],
-        ];
-        ?>
-        <ol class="coqr__steps">
-            <?php foreach ($steps as $i => [$num, $label, $done]): ?>
-                <?php if ($i > 0): ?><li class="coqr__steprule" aria-hidden="true"></li><?php endif; ?>
-                <li class="coqr__step<?= $done ? '' : ' is-todo' ?>">
-                    <span class="coqr__stepnum"><?= e($num) ?></span>
-                    <span class="coqr__steplabel"><?= e($label) ?></span>
-                </li>
-            <?php endforeach; ?>
-        </ol>
     </div>
 
     <!-- ══════════ THẺ CHÍNH ══════════ -->
@@ -165,6 +162,17 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                         Chưa có mã QR. Vui lòng chuyển khoản theo thông tin bên cạnh.
                     </p>
                 <?php endif; ?>
+
+                <?php
+                /* Lớp phủ "hết giờ" — nằm SẴN trong trang, ẩn bằng CSS, chỉ hiện
+                   khi assets/js/qr-expire.js gắn lớp .is-qr-expired. Dựng sẵn
+                   thay vì để JS tạo ra: tắt JS thì không có đồng hồ nào chạy,
+                   nên cũng không được có lớp phủ nào che mã. */
+                ?>
+                <div class="coqr__again">
+                    <p class="coqr__againnote">Mã QR đã hết hạn hiển thị. Tạo mã mới để tiếp tục.</p>
+                    <button type="button" class="coqr__againbtn" data-qr-again>Tạo mã mới</button>
+                </div>
             </div>
 
             <div class="coqr__amount">
@@ -254,22 +262,51 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                 ?>
                 <span class="coqr__manual">Chuyển khoản thủ công — nếu không quét được mã</span>
 
+                <?php
+                /* ┌─ MỖI DÒNG LÀ MỘT HÀNG THẬT ───────────────────────────────
+                   │ Bản trước đổ tám <span> và hai <button> thẳng vào
+                   │ .coqr__bank rồi để `flex-direction: column` tự xuống dòng —
+                   │ nghĩa là KHÔNG có hàng nào cả, chỉ có mười phần tử xếp dọc.
+                   │ Hệ quả: hai nút "Sao chép" thành hai dòng riêng chiếm hết
+                   │ bề ngang, và không thể kẻ nét dưới từng cặp khoá–giá trị
+                   │ như mẫu, vì không có cái gì để kẻ.
+                   │
+                   │ Nay mỗi cặp nằm trong một .coqr__line. Nút sao chép đi
+                   │ kèm giá trị trong cùng một ô bên phải.
+                   │
+                   │ ⚠ copy-btn.js bắt theo `.js-copy[data-copy]` bằng uỷ quyền
+                   │   từ document, nên bọc thêm một lớp <span> KHÔNG ảnh hưởng
+                   │   gì tới nó. Đã kiểm trước khi đổi.
+                   └──────────────────────────────────────────────────────── */
+                ?>
                 <div class="coqr__bank">
-                    <span class="coqr__bankkey">Ngân hàng</span>
-                    <span class="coqr__bankval coqr__bankval--wide"><?= e($bank['name']) ?></span>
+                    <div class="coqr__line">
+                        <span class="coqr__bankkey">Ngân hàng</span>
+                        <span class="coqr__bankval coqr__bankval--wide"><?= e($bank['name']) ?></span>
+                    </div>
 
-                    <span class="coqr__bankkey">Số tài khoản</span>
-                    <span class="coqr__bankval"><?= e($bank['number']) ?></span>
-                    <button type="button" class="coqr__copy js-copy"
-                            data-copy="<?= e($bank['number']) ?>">Sao chép</button>
+                    <div class="coqr__line">
+                        <span class="coqr__bankkey">Số tài khoản</span>
+                        <span class="coqr__bankval">
+                            <?= e($bank['number']) ?>
+                            <button type="button" class="coqr__copy js-copy"
+                                    data-copy="<?= e($bank['number']) ?>">Sao chép</button>
+                        </span>
+                    </div>
 
-                    <span class="coqr__bankkey">Chủ tài khoản</span>
-                    <span class="coqr__bankval coqr__bankval--wide"><?= e($bank['holder']) ?></span>
+                    <div class="coqr__line">
+                        <span class="coqr__bankkey">Chủ tài khoản</span>
+                        <span class="coqr__bankval coqr__bankval--wide"><?= e($bank['holder']) ?></span>
+                    </div>
 
-                    <span class="coqr__bankkey">Nội dung</span>
-                    <span class="coqr__bankval"><?= e($order['code']) ?></span>
-                    <button type="button" class="coqr__copy js-copy"
-                            data-copy="<?= e($order['code']) ?>">Sao chép</button>
+                    <div class="coqr__line">
+                        <span class="coqr__bankkey">Nội dung</span>
+                        <span class="coqr__bankval">
+                            <?= e($order['code']) ?>
+                            <button type="button" class="coqr__copy js-copy"
+                                    data-copy="<?= e($order['code']) ?>">Sao chép</button>
+                        </span>
+                    </div>
                 </div>
             <?php else: ?>
                 <?php /* Chưa cấu hình tài khoản nhận tiền — thà hứa một cuộc gọi
@@ -308,6 +345,40 @@ $qrSrc = !empty($bank['bin']) && !empty($bank['number'])
                     <span class="coqr__watchtext" role="status">
                         Đang chờ xác nhận chuyển khoản <?= money($due) ?>…
                     </span>
+                </p>
+
+                <?php
+                /* ┌─ ĐỒNG HỒ 5 PHÚT — thêm 13/09/2026 ────────────────────────────
+                   │ Bản thiết kế "Thanh toan.dc.html" vẽ dòng "Mã QR hết hạn sau
+                   │ mm:ss". Chủ dự án chốt: cho mã hết hạn thật sau 5 phút nếu
+                   │ chưa ai quét.
+                   │
+                   │ ⚠ "HẾT HẠN" Ở ĐÂY NGHĨA LÀ GÌ — đọc kỹ trước khi sửa.
+                   │ Mã QR của SePay KHÔNG có thời hạn ở phía ngân hàng: nó đối
+                   │ soát theo NỘI DUNG chuyển khoản (mã đơn), nên một cú chuyển
+                   │ tiền sau 5 phút vẫn khớp đúng đơn này và vẫn được ghi nhận.
+                   │ Thời hạn này là của TRANG, không phải của ngân hàng, và nó
+                   │ làm đúng hai việc có thật:
+                   │
+                   │   · dừng vòng hỏi máy chủ của pay-watch.js — không để một
+                   │     tab bỏ quên hỏi mãi;
+                   │   · buộc khách bấm một cái để xác nhận họ vẫn ở đây, rồi
+                   │     trang nạp lại và mở một cửa sổ 5 phút mới.
+                   │
+                   │ Nên CHỮ PHẢI NÓI ĐÚNG CHỪNG ẤY. Đừng đổi thành "mã không còn
+                   │ dùng được" hay "ngân hàng đã từ chối" — cả hai đều sai, và
+                   │ sai theo hướng làm khách đã chuyển tiền hoảng lên.
+                   │
+                   │ KHÔNG chặn ở máy chủ, và đó là chủ ý: chặn nghĩa là từ chối
+                   │ tiền khách đã chuyển thật. Việc duy nhất máy chủ làm vẫn là
+                   │ đối soát theo mã đơn.
+                   │
+                   │ <time datetime> để trình đọc màn hình đọc ra một quãng thời
+                   │ gian chứ không phải hai con số rời. */
+                ?>
+                <p class="coqr__expire" data-qr-expire="300" hidden>
+                    Mã QR hết hạn sau
+                    <time class="coqr__expiretime" data-qr-clock datetime="PT5M">05:00</time>
                 </p>
 
                 <?php

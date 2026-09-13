@@ -189,9 +189,26 @@ $storeId  = $old['storeId'] ?? '';
 
                     <label class="cofield">
                         <span class="cofield__label"><?= e(t('co.phone')) ?></span>
-                        <input class="cofield__input" type="tel" name="customer_phone" required
-                               autocomplete="tel" inputmode="tel" placeholder="<?= e(t('co.phone_ph')) ?>"
-                               value="<?= e($fillCo('customerPhone', $address['phone'] ?? null, $profile['phone'] ?? null)) ?>">
+
+                        <?php /* ┌─ TIỀN TỐ "VN +84" — theo mẫu, 13/09/2026 ─────────────
+                                 │ Viền bọc CẢ tiền tố lẫn ô gõ; bản thân <input> bỏ viền
+                                 │ và bỏ bo góc, nếu không sẽ có hai lớp viền lồng nhau.
+                                 │
+                                 │ Tiền tố là CHỮ TĨNH, không phải ô chọn quốc gia: cửa
+                                 │ hàng chỉ giao trong nước và OrderController::place()
+                                 │ kiểm số theo dạng Việt Nam. Một ô chọn ở đây là hứa
+                                 │ một thứ máy chủ sẽ từ chối.
+                                 │
+                                 │ aria-hidden: nhãn "Số điện thoại" ngay trên đã đủ, và
+                                 │ trình đọc màn hình đọc "VN +84" trước mỗi lần vào ô là
+                                 │ tiếng ồn. Số khách gõ vẫn là số đầy đủ (0915…), tiền
+                                 │ tố KHÔNG được ghép vào giá trị gửi lên. */ ?>
+                        <span class="cofield__tel">
+                            <span class="cofield__telpre" aria-hidden="true">VN +84</span>
+                            <input class="cofield__input" type="tel" name="customer_phone" required
+                                   autocomplete="tel" inputmode="tel" placeholder="<?= e(t('co.phone_ph')) ?>"
+                                   value="<?= e($fillCo('customerPhone', $address['phone'] ?? null, $profile['phone'] ?? null)) ?>">
+                        </span>
                     </label>
                 </div>
 
@@ -380,6 +397,13 @@ $storeId  = $old['storeId'] ?? '';
                                 <?php /* asset() bọc ngoài — xem _layout/product-card.php. */ ?>
                                 <img src="<?= e(asset(ProductModel::image($p))) ?>" alt=""
                                      width="60" height="60" loading="lazy" decoding="async">
+
+                                <?php /* HUY HIỆU SỐ LƯỢNG — thêm 13/09/2026 theo mẫu
+                                         "Thanh toan.dc.html": một vòng tròn đen đè lên
+                                         góc ảnh. aria-hidden vì số lượng đã có trong
+                                         .coitem__meta ("x2") ngay bên dưới; in hai lần
+                                         là trình đọc màn hình đọc "2" hai lượt. */ ?>
+                                <span class="coitem__qty" aria-hidden="true"><?= (int) $line['quantity'] ?></span>
                             </span>
                             <span class="coitem__body">
                                 <span class="coitem__name notranslate" translate="no" lang="vi"><?= e($p['name']) ?></span>

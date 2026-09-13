@@ -175,19 +175,35 @@ if ($manhCua !== null) {
     }
     ?>
 
-    <!-- ┌─ KHÔNG TẢI FONT NGOÀI ────────────────────────────────────────────
-         │ Thiết kế mới (mẫu "Eyewear Collection") chạy trên stack font hệ
-         │ thống: "Helvetica Neue", Helvetica, Arial. Xem --font trong
-         │ assets/css/oa.css — đổi ở đó, không đổi ở đây.
+    <!-- ┌─ MỘT FONT NGOÀI, VÀ ĐÚNG MỘT ────────────────────────────────────
+         │ Be Vietnam Pro — quay lại 13/09/2026 theo yêu cầu chủ dự án, khi
+         │ hai màn thanh toán dựng theo "Thanh toan.dc.html". Chủ dự án chốt
+         │ dùng CHO CẢ SITE để chữ không nhảy font giữa giỏ hàng và thanh
+         │ toán.
          │
-         │ ĐÃ GỠ ba family cũ cùng hai thẻ <link> Google Fonts: Be Vietnam Pro
-         │ (thân bài), EB Garamond (wordmark), JetBrains Mono (mã đơn hàng).
-         │ Không còn nơi nào gọi chúng — giao diện cũ đi cùng chúng.
+         │ LỊCH SỬ, để không ai hoàn tác nhầm: font này từng bị gỡ cùng
+         │ EB Garamond và JetBrains Mono khi giao diện "Eyewear Collection"
+         │ ra đời — lúc ấy không còn chỗ nào gọi nó. Hai family kia VẪN KHÔNG
+         │ quay lại: wordmark dùng --font-hero (Georgia, có sẵn trong máy) và
+         │ mã đơn hàng dùng --font-mono (ui-monospace). Đừng tiện tay thêm.
          │
-         │ Bỏ luôn hai thẻ <link rel="preconnect">: không còn origin nào ngoài
-         │ site để mở sẵn kết nối, và đó là hai lượt DNS + TLS đứng chặn đường
-         │ vẽ trang mỗi lượt truy cập.
+         │ ⚠ CHỈ TẢI Ở ĐÂY, CÒN GỌI THÌ Ở --font TRONG oa.css. Sửa một nơi mà
+         │   quên nơi kia thì hoặc tải một font không ai dùng, hoặc gọi một
+         │   font chưa tải rồi rơi về Helvetica mà không ai hay.
+         │
+         │ &display=swap: chữ hiện NGAY bằng Helvetica rồi tráo khi font về —
+         │ không có quãng trang trắng chữ. Ở trang thanh toán thì đó không
+         │ phải chuyện thẩm mỹ: một giây trắng chữ giữa lúc khách sắp trả
+         │ tiền là một giây họ nghĩ trang hỏng.
+         │
+         │ preconnect mở sẵn DNS + TLS tới hai origin của Google Fonts. Nó
+         │ từng bị gỡ đúng vì "hai lượt đứng chặn đường vẽ trang"; nay có
+         │ font thật để tải thì nó tiết kiệm lại đúng hai lượt ấy.
          └──────────────────────────────────────────────────────────────────── -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;display=swap">
 
     <!-- ══════════════════════════════════════════════════════════════
          CSS — nạp cho MỌI trang.
@@ -641,7 +657,7 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
         // pay-watch.js hỏi máy chủ xem tiền về chưa rồi tự chuyển sang biên
         // nhận — thứ thay cho nút "Tôi đã chuyển khoản" đã bỏ. Thiếu nó thì
         // khối chờ vẫn đọc được và lối ra hiện sẵn ngay bên dưới.
-        'order/transfer' => ['copy-btn.js', 'pay-watch.js'],
+        'order/transfer' => ['copy-btn.js', 'pay-watch.js', 'qr-expire.js'],
         // Biên nhận thanh toán. copy-btn.js: nút chép mã đơn — thiếu nó thì mã
         // vẫn in ra dạng chữ để bôi đen chép tay, y như ở màn QR.
         //
