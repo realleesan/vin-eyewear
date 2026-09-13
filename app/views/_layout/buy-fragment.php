@@ -29,9 +29,21 @@
    nghĩa", và nó chỉ đổ ở đúng nhánh POST. */
 require_once CORE_PATH . '/i18n.php';
 ?>
-<?php if (!empty($buyModal)): ?>
-    <?php partial('_layout/buy-modal', ['buyModal' => $buyModal]); ?>
-<?php endif; ?>
+<?php
+/* ┌─ HỘP THOẠI MUA HÀNG — ĐÃ TẮT 13/09/2026 (chỗ 5/5) ────────────────────
+   │ Cùng lý do với master.php: mảnh này là câu trả lời cho cú POST của
+   │ buy-flow.js, và buy-flow.js lấy .bmodal ra khỏi đó để mở/đổi bước hộp
+   │ thoại. Không in .bmodal nữa thì buy-flow.js không tìm thấy gì, đúng như
+   │ nó vẫn xử khi một cú thêm giỏ kết thúc mà không có hộp thoại nào — tức
+   │ là chỉ thay dải báo và huy hiệu giỏ, y như "Thêm vào giỏ" xưa nay.
+   │
+   │ Hai mảnh còn lại (.toast và cụm giỏ) VẪN PHẢI IN: đó là toàn bộ phản
+   │ hồi mà khách nhận được khi bấm "Thêm vào giỏ" mà không tải lại trang.
+   └──────────────────────────────────────────────────────────────────────── */
+?>
+<?php // if (!empty($buyModal)): ?>
+    <?php // partial('_layout/buy-modal', ['buyModal' => $buyModal]); ?>
+<?php // endif; ?>
 
 <?php if (!empty($toast)): ?>
     <?php partial('_layout/toast', ['toast' => $toast, 'toastTone' => $toastTone ?? 'ok']); ?>

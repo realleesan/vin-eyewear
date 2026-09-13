@@ -118,9 +118,21 @@ return [
     'gio-hang/sua'        => 'CartController@update',
     'gio-hang/chon-tat-ca'=> 'CartController@toggleAll',
     'gio-hang/xoa-chon'   => 'CartController@removeSelected',
-    // Một bước của hộp thoại "Chọn hình thức mua" (POST). Năm bước dùng chung
-    // một đường, phân biệt bằng trường `buoc` — xem CartController::buyStep().
-    'gio-hang/chon'       => 'CartController@buyStep',
+    /* ┌─ HỘP THOẠI MUA HÀNG — ĐÃ TẮT 13/09/2026 (chỗ 3/5) ───────────────────
+       │ Một bước của hộp thoại "Chọn hình thức mua" (POST). Năm bước dùng
+       │ chung một đường, phân biệt bằng trường `buoc` — CartController::buyStep().
+       │
+       │ Hộp thoại không còn được vẽ ra nữa (xem khối ghi chú đầu
+       │ CartController::add), nên không còn form nào gửi tới đây. Đóng luôn
+       │ cả đường đi: một ý định cũ còn sót trong phiên của ai đó cộng với một
+       │ cú POST dựng tay vẫn có thể chạy hết buyStep() và nhét vào giỏ một
+       │ dòng có gói tròng — thứ mà giao diện nay không còn chỗ nào hiển thị
+       │ để khách kiểm lại trước khi trả tiền.
+       │
+       │ ⚠ buyStep() trong CartController VẪN CÒN NGUYÊN và vẫn đúng; chỉ là
+       │   không ai gọi tới. Bật lại hộp thoại thì gỡ chú thích dòng dưới.
+       └──────────────────────────────────────────────────────────────────── */
+    // 'gio-hang/chon'       => 'CartController@buyStep',
     'gio-hang/ma'         => 'CartController@voucher',
     'gio-hang/xoa-het'    => 'CartController@clear',
 

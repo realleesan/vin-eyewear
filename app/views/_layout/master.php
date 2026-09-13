@@ -234,7 +234,17 @@ if ($manhCua !== null) {
        └────────────────────────────────────────────────────────────────────*/
     ?>
     <link rel="stylesheet" href="<?= asset('assets/css/components/mega-menu.css') ?>">
-    <link rel="stylesheet" href="<?= asset('assets/css/components/buy-modal.css') ?>">
+    <?php /* ┌─ HỘP THOẠI MUA HÀNG — ĐÃ TẮT 13/09/2026 (chỗ 4/5, phần a) ──────
+             │ 706 dòng CSS cho một hộp thoại không còn được vẽ ra nữa, mà
+             │ dòng <link> này nằm trên MỌI trang của site. Gỡ đi là bớt một
+             │ lượt tải chặn hiển thị ở mọi lần vào trang.
+             │
+             │ ⚠ .bmodal còn xuất hiện trong oa.css (khối vũ đạo chuyển động)
+             │   và buy-rx.js — hai nơi đó vô hại vì không có .bmodal nào
+             │   trong DOM để chúng bám vào. Đừng dọn chúng: bật lại hộp thoại
+             │   mà thiếu vũ đạo là hộp hiện ra giật cục.
+             └──────────────────────────────────────────────────────────── */ ?>
+    <?php /* <link rel="stylesheet" href="<?= asset('assets/css/components/buy-modal.css') ?>"> */ ?>
     <link rel="stylesheet" href="<?= asset('assets/css/components/confirm.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/floating.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/components/auth-drawer.css') ?>">
@@ -405,9 +415,19 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
      * đọc màn hình và phím Tab đi hết nội dung trang rồi mới tới nó — đúng thứ
      * tự với một lớp phủ.
      */
-    if (!empty($buyModal)) {
-        partial('_layout/buy-modal', ['buyModal' => $buyModal]);
-    }
+    /* ┌─ HỘP THOẠI MUA HÀNG — ĐÃ TẮT 13/09/2026 (chỗ 4/5, phần b) ────────
+       │ BaseController::buyModal() đã tự trả null khi không có ý định mua
+       │ đang treo, mà ý định nay không còn được đặt ở đâu cả — nên trên thực
+       │ tế nhánh này không bao giờ vào. Vẫn chặn thêm ở đây vì một lý do cụ
+       │ thể: phiên của khách sống nhiều ngày, và ngay lúc đưa bản này lên
+       │ hosting vẫn có người đang treo dở một ý định từ bản cũ. Với họ,
+       │ buyModal() trả về dữ liệu thật và hộp thoại sẽ hiện ra một lần cuối
+       │ — một hộp thoại mà mọi nút bấm đều gửi tới 'gio-hang/chon' nay đã
+       │ đóng, tức là một màn hình cụt.
+       └──────────────────────────────────────────────────────────────────── */
+    // if (!empty($buyModal)) {
+    //     partial('_layout/buy-modal', ['buyModal' => $buyModal]);
+    // }
     ?>
 
     <?php

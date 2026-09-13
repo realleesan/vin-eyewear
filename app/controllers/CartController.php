@@ -221,22 +221,48 @@ class CartController extends BaseController
     /**
      * Thêm sản phẩm vào giỏ. Nhận POST từ thẻ sản phẩm và trang chi tiết.
      *
-     * ─────────────────────────────────────────────────────────────────────
-     * GỌNG KÍNH VÀ KÍNH MÁT KHÔNG VÀO THẲNG GIỎ
+     * ═════════════════════════════════════════════════════════════════════
+     * HỘP THOẠI "CHỌN HÌNH THỨC MUA" ĐÃ TẮT — 13/09/2026
      *
-     * Hai danh mục đó bán được theo hai kiểu — mua trần, hoặc cắt kèm tròng
-     * theo số đo mắt — và giá chênh nhau tới vài triệu. Nên lần bấm đầu tiên
-     * không thêm gì cả: nó cất ý định vào phiên rồi đá về đúng trang khách
-     * đang đứng, kèm ?mua=<id>, và _layout/buy-modal.php vẽ hộp thoại "Chọn
-     * hình thức mua" ngay trên trang đó.
+     * Theo yêu cầu chủ dự án: "Khi click vào Mua ngay trên card sản phẩm, nó
+     * sẽ đưa đến trang checkout, comment lại mấy cái popup đi, không cần
+     * thiết nữa."
      *
-     * Hộp thoại gửi lại chính đường này, lần này có `mode`:
-     *   mode=gong   thêm trần, đúng như trước khi có hộp thoại
-     *   mode=trong  kèm một gói tròng + số đo mắt
+     * Nay mọi cú bấm đi thẳng:
+     *   "Mua ngay"      -> hàng vào giỏ -> chuyển sang /thanh-toan
+     *   "Thêm vào giỏ"  -> hàng vào giỏ -> ở lại đúng trang đang đứng
      *
-     * Không có JS nào trong luồng này. Hộp thoại là HTML do máy chủ vẽ ra,
-     * nút ✕ là một liên kết. Tắt JS vẫn mua được — xem ghi chú đầu
-     * _layout/buy-modal.php.
+     * ĐÂY LÀ CÔNG TẮC CHÍNH. Khối `if ($mode === '')` bên dưới là chỗ duy
+     * nhất từng chặn cú bấm đầu tiên lại để mở hộp thoại; nó đã được bọc
+     * thành chú thích. Bật lại hộp thoại = gỡ dấu chú thích ở ĐÚNG NĂM chỗ,
+     * tất cả đều mang nhãn "HỘP THOẠI MUA HÀNG — ĐÃ TẮT 13/09/2026":
+     *
+     *   1. khối `if ($mode === '')` ngay trong hàm này
+     *   2. lệnh redirect ở cuối hàm này (?back= trỏ về bước "xac-nhan")
+     *   3. config/routes.php            'gio-hang/chon'
+     *   4. app/views/_layout/master.php  partial('_layout/buy-modal') + <link>
+     *   5. app/views/_layout/buy-fragment.php  partial('_layout/buy-modal')
+     *
+     * ⚠ KHÔNG XOÁ MÃ CỦA HỘP THOẠI. buyStep() (~640 dòng dưới đây),
+     * _layout/buy-modal.php, buy-modal.css, buy-rx.js đều còn nguyên và vẫn
+     * đúng; chúng chỉ không còn ai gọi tới. Xoá đi là ném mất luồng bán gọng
+     * kèm tròng theo số đo, dựng lại tốn hơn gỡ năm dấu chú thích rất nhiều.
+     *
+     * ⚠ HỆ QUẢ PHẢI BIẾT: không còn đường nào trên web để khách đặt GỌNG KÈM
+     * TRÒNG THEO SỐ ĐO. Nhánh `if ($mode === 'trong')` bên dưới vẫn đứng đó
+     * nhưng không bao giờ chạy nữa, vì `mode` CHỈ do buy-modal.php gửi lên
+     * (đã kiểm: không còn chỗ nào khác trong app/views in ra name="mode").
+     * Đơn cắt tròng từ nay phải nhận qua kênh khác — cửa hàng, Zalo.
+     * ═════════════════════════════════════════════════════════════════════
+     *
+     * ─── Luồng CŨ, giữ lại để hiểu mã bên dưới ───────────────────────────
+     * Gọng kính và kính mát bán được theo hai kiểu — mua trần, hoặc cắt kèm
+     * tròng theo số đo mắt — giá chênh nhau tới vài triệu. Nên lần bấm đầu
+     * tiên không thêm gì cả: nó cất ý định vào phiên rồi đá về đúng trang
+     * khách đang đứng, kèm ?mua=<id>, và _layout/buy-modal.php vẽ hộp thoại
+     * "Chọn hình thức mua" ngay trên trang đó. Hộp thoại gửi lại chính đường
+     * này, lần này có `mode`: mode=gong thêm trần, mode=trong kèm gói tròng
+     * + số đo mắt. Không có JS nào trong luồng đó.
      * ─────────────────────────────────────────────────────────────────────
      */
     public function add(): void
@@ -312,42 +338,62 @@ class CartController extends BaseController
             '/san-pham/' . rawurlencode($product['slug'])
         );
 
-        // ── Chưa qua hộp thoại -> mở hộp thoại thay vì thêm thẳng vào giỏ ──
+        /* ┌─ HỘP THOẠI MUA HÀNG — ĐÃ TẮT 13/09/2026 (chỗ 1/5) ───────────────
+           │ Đây là chốt chặn duy nhất từng giữ cú bấm đầu tiên lại để mở hộp
+           │ thoại "Chọn hình thức mua". Tắt nó đi thì:
+           │
+           │   - $_SESSION['_buy_intent'] KHÔNG bao giờ được đặt nữa, mà
+           │     BaseController::buyModal() trả null ngay khi không có ý định
+           │     đang treo -> hộp thoại tự nó không còn mở được, kể cả khi gõ
+           │     tay ?mua=<id> trên thanh địa chỉ;
+           │   - $mode luôn là chuỗi rỗng, vì name="mode" CHỈ do buy-modal.php
+           │     in ra -> nhánh `if ($mode === 'trong')` ngay dưới thành mã
+           │     chết (giữ nguyên, xem khối ghi chú đầu hàm);
+           │   - hàm chạy thẳng một mạch tới phần thêm vào giỏ, rồi "Mua ngay"
+           │     đi tiếp sang /thanh-toan còn "Thêm vào giỏ" ở lại trang cũ.
+           │
+           │ ⚠ GỠ CHÚ THÍCH KHỐI NÀY THÌ PHẢI GỠ CẢ BỐN CHỖ CÒN LẠI (routes,
+           │   master.php × 2, buy-fragment.php) và đổi lại lệnh redirect ở
+           │   cuối hàm — xem danh sách năm chỗ ở khối ghi chú đầu hàm add().
+           │   Gỡ mỗi chỗ này thôi thì khách bấm mua sẽ bị treo ở một trang
+           │   mang ?mua=&buoc= mà chẳng có hộp thoại nào hiện ra.
+           └──────────────────────────────────────────────────────────────── */
+        // // ── Chưa qua hộp thoại -> mở hộp thoại thay vì thêm thẳng vào giỏ ──
+        // //
+        // // MỌI mặt hàng đều đi qua đây, không riêng gọng và kính mát. Trước đây
+        // // chỉ hai danh mục đó bị chặn, nên bấm "Mua ngay" một chiếc tròng rời
+        // // là nhảy thẳng sang trang thanh toán — khách chưa kịp thấy mình vừa
+        // // mua gì, mua mấy cái.
+        // //
+        // // Khác nhau ở chỗ hộp thoại MỞ Ở BƯỚC NÀO, không phải ở chỗ có mở hay
+        // // không: gọng và kính mát bắt đầu từ "Chọn hình thức mua", còn tròng
+        // // rời vào thẳng "Xác nhận sản phẩm" — hỏi một chiếc tròng "chỉ mua
+        // // gọng hay cắt thêm tròng?" là câu vô nghĩa.
+        // if ($mode === '') {
+        //     // Cất Ý ĐỊNH chứ không nhét vào URL: số lượng, phương án và việc
+        //     // khách bấm "Mua ngay" hay "Thêm vào giỏ" đều phải sống qua hai
+        //     // bước của hộp thoại, mà nhồi hết vào query thì địa chỉ dài dòng
+        //     // và sửa tay được.
+        //     $_SESSION['_buy_intent'] = [
+        //         'product_id' => $product['id'],
+        //         'variant_id' => $variantId,
+        //         'quantity'   => $qty,
+        //         'action'     => ($_POST['action'] ?? '') === 'buy' ? 'buy' : 'add',
+        //         'back'       => $back,
+        //         // Bốn khoá dưới do buyStep() điền dần qua từng bước của hộp
+        //         // thoại. Khai sẵn ở đây để mọi nơi đọc chúng không phải nhớ
+        //         // rằng chúng có thể chưa tồn tại.
+        //         //
+        //         'mode'       => null,   // 'frame' | 'combo'
+        //         'rx'         => null,   // chuỗi số đo đã gói (để hiển thị)
+        //         'rx_raw'     => null,   // đúng thứ khách đã chọn (để điền lại)
+        //         'rx_ho_so'   => null,   // hồ sơ đo mắt khách đã chọn (UC-03)
+        //         'lens_type'  => null,   // kiểu tròng: đơn / hai / đa tròng
+        //         'lens_id'    => null,   // gói chiết suất của kiểu đã chọn
+        //     ];
         //
-        // MỌI mặt hàng đều đi qua đây, không riêng gọng và kính mát. Trước đây
-        // chỉ hai danh mục đó bị chặn, nên bấm "Mua ngay" một chiếc tròng rời
-        // là nhảy thẳng sang trang thanh toán — khách chưa kịp thấy mình vừa
-        // mua gì, mua mấy cái.
-        //
-        // Khác nhau ở chỗ hộp thoại MỞ Ở BƯỚC NÀO, không phải ở chỗ có mở hay
-        // không: gọng và kính mát bắt đầu từ "Chọn hình thức mua", còn tròng
-        // rời vào thẳng "Xác nhận sản phẩm" — hỏi một chiếc tròng "chỉ mua
-        // gọng hay cắt thêm tròng?" là câu vô nghĩa.
-        if ($mode === '') {
-            // Cất Ý ĐỊNH chứ không nhét vào URL: số lượng, phương án và việc
-            // khách bấm "Mua ngay" hay "Thêm vào giỏ" đều phải sống qua hai
-            // bước của hộp thoại, mà nhồi hết vào query thì địa chỉ dài dòng
-            // và sửa tay được.
-            $_SESSION['_buy_intent'] = [
-                'product_id' => $product['id'],
-                'variant_id' => $variantId,
-                'quantity'   => $qty,
-                'action'     => ($_POST['action'] ?? '') === 'buy' ? 'buy' : 'add',
-                'back'       => $back,
-                // Bốn khoá dưới do buyStep() điền dần qua từng bước của hộp
-                // thoại. Khai sẵn ở đây để mọi nơi đọc chúng không phải nhớ
-                // rằng chúng có thể chưa tồn tại.
-                //
-                'mode'       => null,   // 'frame' | 'combo'
-                'rx'         => null,   // chuỗi số đo đã gói (để hiển thị)
-                'rx_raw'     => null,   // đúng thứ khách đã chọn (để điền lại)
-                'rx_ho_so'   => null,   // hồ sơ đo mắt khách đã chọn (UC-03)
-                'lens_type'  => null,   // kiểu tròng: đơn / hai / đa tròng
-                'lens_id'    => null,   // gói chiết suất của kiểu đã chọn
-            ];
-
-            $this->buyStepDone(self::stepUrl($back, $product['id'], null));
-        }
+        //     $this->buyStepDone(self::stepUrl($back, $product['id'], null));
+        // }
 
         // ── Tròng cắt kèm ────────────────────────────────────────────────
         $lens     = null;
@@ -630,14 +676,30 @@ class CartController extends BaseController
          * CartController::count() ở mỗi lần vẽ trang, nên chỉ cần trang được
          * vẽ lại là con số đúng.
          */
-        /* ?back= trỏ về BƯỚC TRƯỚC, tức bước "Xác nhận sản phẩm" — không phải
-           trang khách vừa rời. Lùi từ trang thanh toán là lùi một bước trong
-           lượt mua, chứ không phải bỏ cả lượt mua để về trang chủ.
-
-           Không có tham số này thì nút lùi ở đó chỉ biết chỉ về /gio-hang —
-           mà luồng "Mua ngay" không đi qua giỏ hàng lần nào. */
+        /* ┌─ HỘP THOẠI MUA HÀNG — ĐÃ TẮT 13/09/2026 (chỗ 2/5) ───────────────
+           │ ?back= nay trỏ về ĐÚNG TRANG KHÁCH VỪA RỜI, không phải về một
+           │ bước của hộp thoại nữa.
+           │
+           │ Bản cũ đính stepUrl(..., 'xac-nhan') vào ?back= để nút "‹" trên
+           │ trang thanh toán lùi về bước "Xác nhận sản phẩm". Hộp thoại đã
+           │ tắt nên địa chỉ ấy giờ chỉ còn là trang cũ đeo thêm hai tham số
+           │ ?mua=&buoc= vô nghĩa: bấm "‹" ra đúng trang đó nhưng không có
+           │ hộp thoại nào mở, mà thanh địa chỉ thì bẩn và chép cho người
+           │ khác là dẫn họ tới một trạng thái không tồn tại.
+           │
+           │ $back là ô ẩn `back` của chính form vừa gửi, đã qua
+           │ safeRedirectPath ở đầu hàm — tức là trang danh mục hoặc trang chi
+           │ tiết mà khách đang đứng lúc bấm. Lùi từ thanh toán về đó là đúng
+           │ nghĩa "quay lại chỗ tôi vừa bấm".
+           │
+           │ ⚠ Bật lại hộp thoại thì trả dòng cũ về (còn nguyên ngay dưới),
+           │   nếu không nút "‹" sẽ bỏ qua bước xác nhận.
+           └──────────────────────────────────────────────────────────────── */
+        // redirect($buyNow
+        //     ? '/thanh-toan?back=' . rawurlencode(self::stepUrl($back, $product['id'], 'xac-nhan'))
+        //     : $back);
         redirect($buyNow
-            ? '/thanh-toan?back=' . rawurlencode(self::stepUrl($back, $product['id'], 'xac-nhan'))
+            ? '/thanh-toan?back=' . rawurlencode($back)
             : $back);
     }
 
