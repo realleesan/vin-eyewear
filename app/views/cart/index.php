@@ -116,7 +116,7 @@ $hoiXoaMon = static fn (string $ten): string => t('cart.confirm_one', [':name' =
                     <a class="citem__thumb" href="<?= e($slug) ?>" tabindex="-1" aria-hidden="true">
                         <?php /* asset() bọc ngoài — xem _layout/product-card.php. */ ?>
                         <img src="<?= e(asset(ProductModel::image($p))) ?>" alt=""
-                             width="337" height="230" loading="lazy" decoding="async">
+                             width="220" height="110" loading="lazy" decoding="async">
                     </a>
 
                     <div class="citem__body">
@@ -262,16 +262,9 @@ $hoiXoaMon = static fn (string $ten): string => t('cart.confirm_one', [':name' =
                 ],
             ];
             ?>
-            <?php /* Mục ĐẦU mở sẵn (13/09/2026, theo ảnh mẫu chủ dự án gửi).
-                     Đây là mục vận chuyển & đổi trả — câu hỏi khách hay hỏi
-                     nhất ngay trước khi bấm thanh toán, và trong ảnh mẫu nó
-                     đang xoè chữ ra sẵn.
-
-                     `$i === 0` chứ không viết cứng hai <details> rời: danh
-                     sách $mucGap dựng từ cấu hình cửa hàng và có thể dài ra. */ ?>
             <div class="cfaq">
-                <?php foreach ($mucGap as $i => $m): ?>
-                    <details class="cfaq__item"<?= $i === 0 ? ' open' : '' ?>>
+                <?php foreach ($mucGap as $m): ?>
+                    <details class="cfaq__item">
                         <summary class="cfaq__q">
                             <span><?= e($m['tua']) ?></span>
                             <svg class="cfaq__ico" width="14" height="14" viewBox="0 0 14 14" fill="none"

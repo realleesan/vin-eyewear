@@ -4,28 +4,14 @@
    Dựng 1:1 từ "Cart Screen.dc.html" (Claude Design, 13/09/2026). Mọi con số
    dưới đây lấy thẳng từ bản thiết kế; chỗ nào lệch đều có chú thích nói vì sao.
 
-   ⚠ CÒN ĐÚNG HAI GIÁ TRỊ KHÔNG LẤY TỪ TOKEN CỦA SITE, và đó là chủ ý:
+   ⚠ BA GIÁ TRỊ KHÔNG LẤY TỪ TOKEN CỦA SITE, và đó là chủ ý — chủ dự án chốt
+   "giống design tuyệt đối":
 
+     border-radius 3px/4px   site để --r-pill/--r-chip = 0 (góc vuông)
      #ebebeb                 nền nút BAG và nút "Bỏ khỏi giỏ"
      #8a8a8a · #9a9a9a       chữ tab tắt · viền nút phụ
 
-   BO GÓC VÀ CỠ CHỮ ĐÃ VỀ HỆ CHUNG (13/09/2026, theo hai yêu cầu của chủ dự án
-   trong cùng ngày: "bỏ hết bo viền đi, để viền góc vuông" và "font size của
-   tất cả các trang phải giống nhau, title giống title, text giống text").
-   Bản trước in cứng 3px/4px cùng năm cỡ chữ rời — 10 · 11.5 · 12 · 13 · 17px —
-   nên trang giỏ là trang DUY NHẤT không nhúc nhích khi --oa-scale đổi. Nay mọi
-   cỡ gọi qua --fs-*, theo đúng tên vai trò đặt ở oa.css:
-
-     tên món         --fs-subtitle   (oa.css ghi thẳng "tên mặt hàng trong
-                                      thẻ/giỏ/đơn" là vai trò của token này)
-     chữ thân bài    --fs-text
-     nhãn nhỏ, nút   --fs-micro
-     nhãn tổng cộng  --fs-sub   ·  con số tổng  --fs-mark
-                                (lấy ĐÚNG cặp của .checkout .csum__grand, để
-                                 tiền ở giỏ và tiền ở trang thanh toán cùng cỡ)
-
-   ⚠ ĐỪNG in số px trở lại "cho khớp mẫu". Bản vẽ dựng ở một thang khác; khớp
-   từng pixel với nó đồng nghĩa lệch pha với mười mấy trang còn lại.
+   Muốn kéo trang này về hệ token chung thì đổi cả ba cùng lúc, đừng đổi một.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .cart {
@@ -52,10 +38,11 @@
 /* Dải báo sau thao tác — không có trong mẫu, xem chú thích ở view. */
 .cmsg {
     margin: 18px auto 0;
-    padding: 0 clamp(24px, 3vw, 64px);
+    padding: 0 32px;
+    max-width: 1288px;
     width: 100%;
     box-sizing: border-box;
-    font-size: var(--fs-micro);
+    font-size: 12px;
     color: #555;
 }
 
@@ -67,28 +54,13 @@
    LƯỚI CHÍNH — danh sách trái, tóm tắt phải
    ══════════════════════════════════════════════════════════════════════ */
 
-/* KHÔNG CÒN max-width (13/09/2026, theo ảnh mẫu chủ dự án gửi). Bản trước ghim
-   1288px rồi căn giữa, nên trên màn 1900px cột tiền lùi vào 300px và cả trang
-   trông như một hộp thoại thả giữa khoảng trắng — đúng thứ ảnh mẫu KHÔNG có:
-   ở đó cột tiền ĐỨNG SÁT MÉP PHẢI màn hình.
-
-   Đã thử đặt max-width 1760px trước khi bỏ hẳn: ở 1900px thì vừa đẹp, nhưng
-   sang màn 2560px lại thừa ra 400px mỗi bên và cột tiền trôi vào giữa y như cũ.
-   Một con số cố định không thể vừa "sát mép" ở mọi khổ — chỉ có đệm mới làm
-   được, nên ở đây là đệm co giãn và không có trần bề ngang.
-
-   Cột phải hẹp lại (368 → 304) vì cùng lý do: trong ảnh mẫu nó là một dải tiền
-   mảnh chừng 14% bề ngang cạnh vùng ảnh rộng, không phải nửa trang.
-
-   ⚠ Danh sách bên trái VẪN căn giữa cột của nó (.clist align-items: center),
-   nên bỏ trần bề ngang ở đây KHÔNG kéo các món dạt ra hai mép — chúng vẫn là
-   một cột 720px nằm giữa. Kiểm tra lại điều này trước khi "sửa" gì ở .clist. */
 .cmain {
     flex: 1;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(248px, 304px);
-    gap: 72px;
-    padding: 48px clamp(24px, 3vw, 64px) 96px;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 368px);
+    gap: 40px;
+    padding: 60px 32px 80px;
+    max-width: 1288px;
     width: 100%;
     box-sizing: border-box;
     margin: 0 auto;
@@ -98,65 +70,44 @@
    DANH SÁCH
    ══════════════════════════════════════════════════════════════════════ */
 
-/* KHOẢNG CÁCH RỘNG GIỮA HAI DÒNG là dáng của mẫu: mỗi món đứng như một tấm
-   ảnh trưng bày chứ không phải một hàng trong bảng.
-
-   84 → 64 (13/09/2026) vì tấm ảnh nay CÓ NỀN XÁM: chính cái nền ấy đã tách hai
-   món ra rồi, cộng thêm 84px khoảng trắng nữa thì một màn hình chỉ còn thấy
-   được một món. Đừng rút xuống dưới 64; rút nữa là mất hẳn nhịp của trang. */
+/* gap 84px — KHOẢNG CÁCH RẤT RỘNG GIỮA HAI DÒNG, và đó là dáng của mẫu:
+   mỗi món đứng như một tấm ảnh trưng bày chứ không phải một hàng trong bảng.
+   Đừng rút lại cho "gọn"; rút là mất hẳn nhịp của trang. */
 .clist {
     display: flex;
     flex-direction: column;
-    gap: 64px;
-    padding-top: 64px;
+    gap: 84px;
+    padding-top: 100px;
     align-items: center;
 }
 
 .cempty {
     margin: 0;
-    font-size: var(--fs-text);
+    font-size: 13px;
     color: #8a8a8a;
 }
 
-/* Ba cột: ảnh · chữ · dấu trang. max-width giữ khối chữ không trôi ra xa tấm
-   ảnh khi màn hình rộng — cả cụm căn giữa cột trái.
-
-   580 → 720 và cột ảnh 220 → 340 (13/09/2026): tấm ảnh nay là một mảng xám lớn
-   như trong ảnh mẫu, và ở 220px thì cái gọng kính bên trong chỉ còn bằng con
-   tem. */
+/* Ba cột: ảnh · chữ · dấu trang. max-width 580px giữ khối chữ không trôi ra
+   xa tấm ảnh khi màn hình rộng — cả cụm căn giữa cột trái. */
 .citem {
     display: grid;
-    grid-template-columns: minmax(160px, 340px) minmax(0, 1fr) auto;
-    gap: 28px;
+    grid-template-columns: minmax(140px, 220px) minmax(0, 1fr) auto;
+    gap: 32px;
     align-items: center;
     width: 100%;
-    max-width: 720px;
+    max-width: 580px;
 }
 
-/* TẤM NỀN XÁM (13/09/2026, theo ảnh mẫu chủ dự án gửi). Trước đợt này ảnh
-   nằm trên nền trắng trơn, nên một cái gọng kính nền trắng gần như tàng hình
-   giữa trang trắng — trong ảnh mẫu mỗi món ngồi trong một ô xám nhạt cỡ
-   337×230, và đó là thứ làm cho danh sách đọc được.
-
-   #f5f5f5 chứ không var(--bg-off) (#f4f4f4): lệch một bậc là cố ý, ô này phải
-   nhạt hơn nền các thẻ khác của site để không ăn tranh với tấm ảnh bên trong.
-
-   `contain` + padding: gọng kính là hình NẰM NGANG và phải thấy TRỌN cái gọng,
-   padding giữ nó không chạm mép ô. Cùng lý lẽ với .oa-slot của thẻ sản phẩm —
-   ảnh sản phẩm không bao giờ cắt tràn khung.
-
-   ⚠ box-sizing: border-box bắt buộc, không thì padding cộng thêm vào 340px và
-   cột ảnh phình ra khỏi lưới. */
+/* aspect-ratio 2/1 + contain: gọng kính là hình NẰM NGANG, và `contain` để
+   thấy trọn cái gọng. Cùng lý lẽ với .oa-slot của thẻ sản phẩm — ảnh sản
+   phẩm không bao giờ cắt tràn khung. */
 .citem__thumb {
     display: flex;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
     width: 100%;
-    max-width: 340px;
-    aspect-ratio: 337 / 230;
-    padding: 20px;
-    background: #f5f5f5;
+    max-width: 220px;
+    aspect-ratio: 2 / 1;
 }
 
 .citem__thumb img {
@@ -168,17 +119,10 @@
 .citem__body {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
-    font-size: var(--fs-text);
+    font-size: 11.5px;
     line-height: 1.5;
-}
-
-/* Tên món là TIÊU ĐỀ NHỎ, không phải chữ thân bài — xem bảng vai trò ở oa.css
-   ("tên mặt hàng trong thẻ/giỏ/đơn"). Trước đợt này nó cùng cỡ với dòng màu và
-   dòng giá ngay dưới, nên mắt không có chỗ bám khi lướt danh sách. */
-.citem__name {
-    font-size: var(--fs-subtitle);
 }
 
 .citem__name a:hover {
@@ -227,7 +171,7 @@
 }
 
 .cqty__num {
-    font-size: var(--fs-text);
+    font-size: 12px;
 }
 
 .cqty__caret {
@@ -250,7 +194,7 @@
     background: #fff;
     padding: 4px 10px;
     font: inherit;
-    font-size: var(--fs-micro);
+    font-size: 10px;
     color: #111;
     cursor: pointer;
 }
@@ -267,9 +211,9 @@ html.js .cqty__go {
     border: 0;
     border-radius: 0;
     background: #ebebeb;
-    padding: 7px 12px;
+    padding: 6px 10px;
     font: inherit;
-    font-size: var(--fs-micro);
+    font-size: 10px;
     color: #111;
     cursor: pointer;
 }
@@ -302,14 +246,13 @@ html.js .cqty__go {
    TÓM TẮT
    ══════════════════════════════════════════════════════════════════════ */
 
-/* padding-top KHỚP với .clist: hai cột phải bắt đầu ngang vai, mà cột trái đã
-   đẩy xuống chừng ấy. Sửa một bên mà quên bên kia là hai cột lệch vai — bộ
-   kiểm gio/shot.mjs có một khẳng định riêng cho đúng cái bẫy này. */
+/* padding-top 100px KHỚP với .clist: hai cột phải bắt đầu ngang nhau, mà cột
+   trái đã đẩy xuống chừng ấy. Sửa một bên mà quên bên kia là hai cột lệch vai. */
 .csum {
     display: flex;
     flex-direction: column;
-    padding-top: 64px;
-    font-size: var(--fs-text);
+    padding-top: 100px;
+    font-size: 12px;
 }
 
 /* <dl> chứ không hai <span>: đây là những CẶP nhãn–giá trị, và cặp thẻ này là
@@ -340,43 +283,25 @@ html.js .cqty__go {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 12px;
-    margin: 20px 0 0;
-    padding-top: 16px;
-    border-top: 1px solid #ececea;
-}
-
-/* Cặp cỡ chữ này lấy NGUYÊN của .checkout .csum__grand / .csum__grand-num.
-   Tiền ở giỏ và tiền ở trang thanh toán là cùng một con số trong đầu khách,
-   nên phải cùng một cỡ trên màn hình. Đổi một bên thì đổi cả hai. */
-.csum__total > span:first-child {
-    font-size: var(--fs-sub);
-    font-weight: 600;
+    margin: 16px 0 0;
 }
 
 .csum__num {
-    font-size: var(--fs-mark);
-    font-weight: 700;
-    letter-spacing: -.01em;
-    font-variant-numeric: tabular-nums;
+    font-size: 17px;
 }
 
 .csum__go {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 24px;
-    box-sizing: border-box;
-    min-height: 52px;
-    padding: 14px 16px;
+    margin-top: 22px;
+    height: 48px;
     border: 0;
     border-radius: 0;
     background: #111;
     color: #fff;
-    font-size: var(--fs-sub);
-    font-weight: 600;
+    font-size: 12px;
     letter-spacing: .02em;
-    text-align: center;
     cursor: pointer;
 }
 
@@ -400,16 +325,13 @@ html.js .cqty__go {
     align-items: center;
     justify-content: center;
     margin-top: 12px;
-    box-sizing: border-box;
-    min-height: 52px;
-    padding: 14px 16px;
+    height: 52px;
     border: 1px solid #9a9a9a;
     border-radius: 0;
     background: #fff;
     color: #111;
-    font-size: var(--fs-text);
+    font-size: 12px;
     letter-spacing: .02em;
-    text-align: center;
 }
 
 .csum__keep:hover {
@@ -422,17 +344,13 @@ html.js .cqty__go {
    ══════════════════════════════════════════════════════════════════════ */
 
 .cfaq {
-    margin-top: 44px;
+    margin-top: 50px;
     display: flex;
     flex-direction: column;
-    border-top: 1px solid #ececea;
 }
 
-/* Nét kẻ dưới mỗi mục: trong ảnh mẫu hai mục này là hai hàng có vạch ngăn, chứ
-   không phải hai dòng chữ trôi nổi. Mục ĐẦU mở sẵn — xem chú thích ở view. */
 .cfaq__item {
     padding: 16px 0;
-    border-bottom: 1px solid #ececea;
 }
 
 /* Tam giác mặc định của <summary> — tắt ở cả hai cú pháp; dấu + bên phải mới
@@ -442,7 +360,7 @@ html.js .cqty__go {
     justify-content: space-between;
     align-items: flex-start;
     gap: 20px;
-    font-size: var(--fs-text);
+    font-size: 12px;
     line-height: 1.55;
     letter-spacing: .01em;
     color: #111;
@@ -473,7 +391,7 @@ html.js .cqty__go {
 .cfaq__a {
     margin: 12px 0 0;
     max-width: 320px;
-    font-size: var(--fs-text);
+    font-size: 11.5px;
     line-height: 1.6;
     color: #555;
 }
@@ -490,11 +408,11 @@ html.js .cqty__go {
     .cmain {
         grid-template-columns: minmax(0, 1fr);
         gap: 56px;
-        padding: 32px clamp(20px, 3vw, 24px) 64px;
+        padding: 32px 20px 64px;
     }
 
     .clist {
-        gap: 48px;
+        gap: 56px;
         padding-top: 0;
     }
 
