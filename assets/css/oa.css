@@ -2505,6 +2505,37 @@ textarea.oa-field {
     min-width: 0;
 }
 
+/*
+ * ┌─ TÊN HÀNG CẮT Ở HAI DÒNG ──────────────────────────────────────────────
+ * │ (13/09/2026, yêu cầu chủ dự án: tên kính không được dài quá.)
+ * │
+ * │ Mục chỉ rộng 96px, mà tên hàng ở kho này dài hơn hẳn tên trong bản
+ * │ thiết kế ("Gọng kính Titan Vin T01" so với "Futura 02(BRG)"). Không
+ * │ chặn thì một tên bốn dòng đẩy hàng cao gấp đôi, và vì các mục xếp
+ * │ ngang nên cả dải bị kéo theo đúng cái tên dài nhất.
+ * │
+ * │ CẮT BẰNG CSS, KHÔNG CẮT CHUỖI Ở PHP: cắt ở PHP thì phải đoán trước bao
+ * │ nhiêu ký tự vừa một dòng, mà con số ấy đổi theo bề ngang mục, theo cỡ
+ * │ chữ và theo chính mặt chữ. CSS đo thật rồi mới cắt, và cắt đúng chỗ
+ * │ tràn chứ không cắt giữa từ.
+ * │
+ * │ min-height GIỮ ĐÚNG HAI DÒNG kể cả khi tên chỉ có một: thiếu nó thì
+ * │ dòng giá của mục tên ngắn nhảy lên cao hơn dòng giá của mục bên cạnh.
+ * │ Cùng lý do với .wl__note ở tab Đã lưu.
+ * │
+ * │ ⚠ `-webkit-line-clamp` cần đúng bộ ba display/box-orient/overflow mới
+ * │ chạy — thiếu một dòng là tên tràn ra như cũ mà không báo gì. Khai kèm
+ * │ `line-clamp` không tiền tố cho trình duyệt đời sau.
+ * └──────────────────────────────────────────────────────────────────────── */
+.srchmini__name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    min-height: calc(2 * 1.45em);
+}
+
 .srchmini__price {
     color: var(--ink-3);
 }
