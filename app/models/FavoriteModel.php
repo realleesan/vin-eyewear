@@ -161,21 +161,11 @@ class FavoriteModel extends BaseModel
             ['u' => $userId]
         );
 
-        $ids = array_column($ids, 'product_id');
-
-        if ($ids === []) {
-            return [];
-        }
-
-        $sanPham = ProductModel::findManyById($ids);
-        $ra      = [];
-
-        foreach ($ids as $id) {
-            if (isset($sanPham[$id])) {
-                $ra[] = $sanPham[$id];
-            }
-        }
-
-        return $ra;
+        /* Sắp lại theo đúng thứ tự id ở trên là việc của ProductModel::
+           theoThuTuId(). Đoạn ấy TỪNG nằm ngay đây, và khi kho yêu thích của
+           khách vãng lai ra đời (Wishlist) thì nó bị chép sang bản thứ hai —
+           hai bản chép rồi sẽ lệch, và lúc đó cùng một màn hình "Đã lưu" sắp
+           một thứ tự cho người đăng nhập, một thứ tự cho khách vãng lai. */
+        return ProductModel::theoThuTuId(array_column($ids, 'product_id'));
     }
 }

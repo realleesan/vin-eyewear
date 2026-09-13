@@ -2213,7 +2213,10 @@ class AuthController extends BaseController
 
                Bảng chưa dựng thì dem() trả 0, và huy hiệu 0 không in ra (xem
                vòng lặp mục trong auth/profile.php). */
-            'da-luu'   => FavoriteModel::dem($userId),
+            /* Qua Wishlist (13/09/2026). Trang này luôn có người đã đăng
+               nhập nên nó rơi đúng vào nhánh CSDL như cũ — dùng cửa chung để
+               sau này đổi cách đếm chỉ phải đổi một chỗ. */
+            'da-luu'   => Wishlist::dem(),
         ];
 
         /*
@@ -2296,7 +2299,7 @@ class AuthController extends BaseController
                    dem(): danhSach() đã lọc mặt hàng bị ẩn, và "và N sản phẩm
                    khác" phải khớp với số khách thấy ở tab Đã lưu. */
                 $donMoi = OrderModel::forUser($userId)[0] ?? null;
-                $daLuu  = FavoriteModel::danhSach($userId);
+                $daLuu  = Wishlist::danhSach();
 
                 return [
                     'donMoi'     => $donMoi,
@@ -2305,7 +2308,7 @@ class AuthController extends BaseController
                         : [],
                     'luuMoi'     => $daLuu[0] ?? null,
                     'soLuu'      => count($daLuu),
-                    'luuDuoc'    => FavoriteModel::available(),
+                    'luuDuoc'    => Wishlist::available(),
                     'henToi'     => self::lichSapToi(BookingModel::forUser($userId))[0] ?? null,
                 ];
 
@@ -2346,14 +2349,14 @@ class AuthController extends BaseController
             case 'da-luu':
                 /* MỘT câu hỏi cho cả mục — danhSach() đã lọc mặt hàng bị ẩn và
                    giải mã cột JSON. */
-                $daLuuDs = FavoriteModel::danhSach($userId);
+                $daLuuDs = Wishlist::danhSach();
 
                 return [
                     'saved'     => $daLuuDs,
                     /* Bảng chưa dựng thì mục vẫn mở được và nói thẳng lý do,
                        thay vì hiện một danh sách rỗng trông như "bạn chưa lưu
                        gì" — hai chuyện khác hẳn nhau. */
-                    'luuDuoc'   => FavoriteModel::available(),
+                    'luuDuoc'   => Wishlist::available(),
 
                     /* Biến thể của CẢ LƯỚI trong một câu, không hỏi từng thẻ —
                        cùng phép với ProductController::index() và trang bộ sưu

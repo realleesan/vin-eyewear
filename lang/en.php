@@ -51,6 +51,11 @@ return [
 
     'menu.open'        => 'Open navigation menu',
     'menu.close'       => 'Close menu',
+
+    /* Members-only popup — _layout/login-gate.php. */
+    'gate.msg'         => 'This product is for members only. Please log in to purchase.',
+    'gate.cta'         => 'LOGIN OR SIGN UP',
+    'gate.close'       => 'Close',
     'menu.aria'        => 'Navigation menu',
 
     // ── Search ───────────────────────────────────────────────────────────

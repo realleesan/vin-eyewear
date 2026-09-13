@@ -146,12 +146,17 @@ class CartController extends BaseController
         unset($_SESSION['gio_qua_phien']);
 
         /* Dấu trang: một câu đếm cho tab, một câu cho mỗi dòng. Vòng lặp này
-           chạy nhiều nhất bằng số dòng trong giỏ (thực tế dưới mười), và chỉ
-           chạy khi khách đã đăng nhập VÀ bảng đã dựng. */
-        $userId    = AuthMiddleware::customerId();
-        $coDauTrang = $userId !== null && FavoriteModel::available();
-        $wishCount = $coDauTrang ? FavoriteModel::dem($userId) : 0;
-        $daLuu     = [];
+           chạy nhiều nhất bằng số dòng trong giỏ (thực tế dưới mười).
+
+           KHÔNG CÒN CHẶN THEO "đã đăng nhập chưa" (13/09/2026): khách vãng lai
+           nay cũng lưu được, và Wishlist trả lời họ từ phiên nên vòng lặp này
+           không sinh truy vấn nào cho họ. Chốt duy nhất còn lại là
+           Wishlist::available() — người đã đăng nhập mà bảng `favorites` chưa
+           dựng thì mới tắt hẳn. */
+        $userId     = AuthMiddleware::customerId();
+        $coDauTrang = Wishlist::available();
+        $wishCount  = $coDauTrang ? Wishlist::dem() : 0;
+        $daLuu      = [];
 
         if ($coDauTrang) {
             foreach ($lines as $line) {
@@ -159,7 +164,7 @@ class CartController extends BaseController
 
                 /* Một mặt hàng có thể nằm trong giỏ nhiều dòng (khác biến thể)
                    mà dấu trang thì theo MẶT HÀNG — hỏi một lần cho mỗi mã. */
-                $daLuu[$pid] ??= FavoriteModel::daLuu($pid, $userId);
+                $daLuu[$pid] ??= Wishlist::daLuu($pid);
             }
         }
 
@@ -268,6 +273,40 @@ class CartController extends BaseController
     public function add(): void
     {
         $this->requirePost();
+
+        /* ┌─ PHẢI ĐĂNG NHẬP MỚI BỎ HÀNG VÀO GIỎ — 13/09/2026 ─────────────────
+           │ Theo yêu cầu chủ dự án: "khi thêm sản phẩm cần phải đăng nhập.
+           │ Nếu không đăng nhập mà thêm sản phẩm, nó sẽ hiện ra popup blur."
+           │ Áp cho CẢ "Mua ngay" lẫn "Thêm vào giỏ" — cả hai đều đi qua hàm
+           │ này, nên một chốt ở đây là đủ cho mọi nút trên site.
+           │
+           │ CHẶN Ở ĐÂY, KHÔNG CHỈ Ở VIEW. Popup là chuyện của trình duyệt; một
+           │ cú POST dựng tay không đi qua view nào cả. Không có dòng này thì
+           │ luật "phải là thành viên" chỉ là một lớp sơn.
+           │
+           │ ĐẶT NGAY ĐẦU HÀM, trước cả khi tra sản phẩm: khách chưa đăng nhập
+           │ thì câu trả lời đã biết rồi, không việc gì phải chạy hai truy vấn
+           │ sản phẩm để đi tới cùng một chỗ.
+           │
+           │ KHÔNG DÙNG requireLogin(): hàm ấy đá thẳng sang /auth, mà chủ dự
+           │ án muốn khách Ở LẠI trang sản phẩm và thấy một popup. Nên ở đây
+           │ chỉ đặt cờ rồi trả khách về đúng chỗ họ vừa bấm; _layout/master.php
+           │ thấy cờ thì vẽ popup ra. Đường dẫn ấy được cất LUÔN TRONG CỜ để
+           │ nút "Đăng nhập" trong popup mang được ?redirect= — đăng nhập xong
+           │ khách quay lại đúng trang đang xem, không rơi ra trang chủ.
+           │
+           │ ⚠ GIỎ HÀNG CHO KHÁCH VÃNG LAI THÀNH MÃ CHẾT, nhưng core/
+           │   GioHangPhien.php VẪN GIỮ NGUYÊN — ngăn 'khach' của nó từ nay
+           │   không bao giờ có hàng, song chính nó là thứ bịt lỗ "A đăng xuất,
+           │   B đăng nhập trên cùng máy và thấy giỏ của A". Gỡ đi là mở lại
+           │   lỗ ấy. Xem khối chú thích đầu file đó.
+           └──────────────────────────────────────────────────────────────────── */
+        if (AuthMiddleware::customerId() === null) {
+            $veLai = safeRedirectPath($_POST['back'] ?? null, '/san-pham');
+
+            flash('cong_dang_nhap', $veLai);
+            redirect($veLai);
+        }
 
         $id        = (string) ($_POST['product_id'] ?? '');
         $variantId = trim((string) ($_POST['variant_id'] ?? '')) ?: null;

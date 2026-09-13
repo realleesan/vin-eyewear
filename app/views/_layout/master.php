@@ -291,6 +291,13 @@ if ($manhCua !== null) {
            auth/google-signup. */
         'auth/profile'       => ['account.css'],
 
+        /* Trang /yeu-thich mượn nguyên lưới của tab "Đã lưu" (xem
+           WishlistController), mà lưới ấy khai trong account.css — thiếu dòng
+           này thì trang mở ra không có kiểu nào cả. ⚠ Đổi tên view thì đổi cả
+           khoá ở đây: bảng này khớp theo TÊN VIEW CHÍNH XÁC, sai một ký tự là
+           im lặng không nạp gì. */
+        'wishlist/index'     => ['account.css'],
+
         'about/index'        => ['about.css'],
         'contact/index'      => ['contact.css'],
         'policy/index'       => ['policy.css'],
@@ -428,6 +435,32 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
     // if (!empty($buyModal)) {
     //     partial('_layout/buy-modal', ['buyModal' => $buyModal]);
     // }
+    ?>
+
+    <?php
+    /*
+     * POPUP "CHỈ DÀNH CHO THÀNH VIÊN" — 13/09/2026.
+     *
+     * Khách chưa đăng nhập bấm "Mua ngay"/"Thêm vào giỏ" thì
+     * CartController::add() đặt cờ này rồi trả họ về đúng trang vừa bấm; cờ
+     * mang theo đường quay lại để nút đăng nhập dẫn về đó.
+     *
+     * flash() ĐỌC MỘT LẦN RỒI MẤT, và đó chính là đường đóng popup khi không
+     * có JavaScript: nút ✕ chỉ là liên kết về chính trang này, tải lại là cờ
+     * đã tiêu nên popup không vẽ nữa.
+     *
+     * ⚠ ĐỌC Ở ĐÂY VÀ CHỈ Ở ĐÂY trong khung đầy đủ. Đọc thêm một lần nữa ở chỗ
+     *   khác là lần đọc sau nhận null và popup biến mất không dấu vết.
+     *
+     * Đặt cạnh chỗ hộp thoại mua hàng từng đứng, cùng lý do: position:fixed
+     * nên vị trí trong luồng không ảnh hưởng hình ảnh, mà để cuối <body> thì
+     * phím Tab đi hết nội dung trang rồi mới tới lớp phủ.
+     */
+    $congDangNhap = flash('cong_dang_nhap');
+
+    if ($congDangNhap !== null) {
+        partial('_layout/login-gate', ['veLai' => $congDangNhap]);
+    }
     ?>
 
     <?php

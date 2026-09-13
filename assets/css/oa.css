@@ -4376,6 +4376,110 @@ body.is-search-open {
 }
 
 /* Người dùng đã tắt hiệu ứng chuyển động trong hệ điều hành */
+/* ┌─ POPUP "CHỈ DÀNH CHO THÀNH VIÊN" ─────────────────────────────────────────
+   │ Bật ra khi khách CHƯA ĐĂNG NHẬP bấm "Mua ngay" / "Thêm vào giỏ".
+   │ Markup: app/views/_layout/login-gate.php — đọc khối chú thích ở đó trước
+   │ khi sửa bất cứ gì dưới đây.
+   │
+   │ KHAI Ở oa.css CHỨ KHÔNG PHẢI MỘT FILE RIÊNG: popup này bật được ở MỌI
+   │ trang có nút mua (danh mục, bộ sưu tập, chi tiết, trang chủ), nên một file
+   │ component chỉ nạp cho vài view sẽ để nó trơ không kiểu ở những trang còn
+   │ lại. Đúng lý do đã đưa khối .ctabs* từ cart.css về đây hôm nay.
+   └──────────────────────────────────────────────────────────────────────────── */
+
+.lgate {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-drawer);
+    display: grid;
+    place-items: center;
+    padding: var(--edge);
+}
+
+/* Lớp bắt chuột, KHÔNG TÔ MÀU. Theo ảnh tham chiếu chủ dự án gửi: trang phía
+   sau vẫn sáng nguyên, chỉ riêng tấm thẻ là kính mờ. Một lớp nền tối ở đây sẽ
+   dìm cả trang xuống — đúng thứ ảnh ấy không có. */
+.lgate__scrim {
+    position: absolute;
+    inset: 0;
+}
+
+.lgate__panel {
+    position: relative;
+    width: min(340px, 100%);
+    padding: 40px 28px 28px;
+    text-align: center;
+
+    /* ┌─ KÍNH MỜ — ĐÚNG CÔNG THỨC CỦA BẢNG XỔ MEGA MENU ──────────────────
+       │ (13/09/2026, theo yêu cầu chủ dự án: "blur như thế nào thì lấy blur
+       │ theo dropdown của mega menu trên header".)
+       │
+       │ Hai token này khai MỘT LẦN ở đầu file và nay dùng cho BA chỗ:
+       │ .oa-header, .mega__panel và tấm thẻ này.
+       │
+       │ ⚠ ĐỪNG GÕ SỐ THẲNG VÀO ĐÂY, kể cả khi chỉ muốn "đục thêm một chút".
+       │   Số gõ thẳng là cách chắc chắn ba chỗ sẽ lệch nhau. Sửa ở token, cả
+       │   ba đi theo — đúng bài học đã ghi trong mega-menu.css.
+       └──────────────────────────────────────────────────────────────────── */
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+
+    /* Bóng đổ rất nhạt — tấm kính mờ đặt trên nền trắng thì không có đường
+       viền nào tách nó ra khỏi trang; thiếu bóng là thẻ tan vào nền. */
+    box-shadow: 0 18px 48px rgba(0, 0, 0, .10);
+}
+
+/* Trình duyệt không có backdrop-filter (Firefox cũ, một số webview): nền đục
+   hẳn. Mất hiệu ứng, nhưng không bao giờ có cảnh chữ trang chồng lên chữ trong
+   popup. Cùng nếp với .mega__panel. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .lgate__panel {
+        background: var(--bg);
+    }
+}
+
+.lgate__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    color: var(--ink-3);
+    text-decoration: none;
+}
+
+.lgate__close:hover {
+    color: var(--ink);
+}
+
+.lgate__msg {
+    margin: 0 0 22px;
+    font-size: var(--fs-text);
+    line-height: 1.5;
+    color: var(--ink);
+}
+
+/* Nút đặc, đúng dáng nút mua trên trang chi tiết. Là <a> chứ không <button>:
+   nó đi tới một trang khác, và một liên kết thì mở được ở tab mới, bấm giữa
+   chuột được, hiện địa chỉ ở thanh trạng thái. */
+.lgate__cta {
+    display: block;
+    padding: 14px 18px;
+    background: var(--ink);
+    color: #fff;
+    font-size: var(--fs-ui);
+    letter-spacing: .06em;
+    text-align: center;
+    text-decoration: none;
+}
+
+.lgate__cta:hover {
+    opacity: .88;
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,

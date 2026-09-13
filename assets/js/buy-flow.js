@@ -112,6 +112,32 @@
         var newToast = doc.querySelector('.toast');
         if (newToast) document.body.appendChild(document.importNode(newToast, true));
 
+        /*
+         * 2b. POPUP "CHỈ DÀNH CHO THÀNH VIÊN" — 13/09/2026.
+         *
+         * Khách chưa đăng nhập bấm mua thì máy chủ không thêm gì vào giỏ; nó
+         * trả về đúng trang cũ kèm popup này (xem _layout/login-gate.php).
+         * Không tráo nó vào thì cú bấm lặng thinh — người dùng thấy nút hỏng.
+         *
+         * Xoá cũ rồi thêm mới, cùng lối với dải báo ngay trên và VÌ CÙNG MỘT
+         * LÝ DO: giữ lại phần tử cũ thì đường vào bằng transition không chạy
+         * lại, bấm lần hai không thấy gì nhấp nháy.
+         */
+        var oldGate = document.querySelector('.lgate');
+        if (oldGate) oldGate.remove();
+
+        var newGate = doc.querySelector('.lgate');
+
+        if (newGate) {
+            var gate = document.importNode(newGate, true);
+            document.body.appendChild(gate);
+
+            /* Con trỏ bàn phím vào trong popup. focusModal() phía dưới chỉ biết
+               .bmodal, mà hộp thoại ấy đã tắt — không mượn lại được. */
+            var panel = gate.querySelector('.lgate__panel');
+            if (panel) panel.focus();
+        }
+
         // 3. GIỎ HÀNG TRÊN HEADER — chỉ ruột, xem khối chú thích đầu file.
         var oldCart = document.querySelector('[data-cart]');
         var newCart = doc.querySelector('[data-cart]');
@@ -448,6 +474,48 @@
         e.preventDefault();
         send(link.href, { credentials: 'same-origin' },
             function () { window.location.href = link.href; }, true, link);
+    });
+
+    /* ── Đóng popup "chỉ dành cho thành viên" ───────────────────────────────
+       Nút ✕ và lớp nền của nó là những LIÊN KẾT về chính trang đang đứng —
+       tắt JavaScript thì bấm vào là tải lại trang, cờ flash đã tiêu nên popup
+       không vẽ nữa (xem _layout/login-gate.php). Ở đây chỉ rút ngắn: gỡ thẳng
+       khỏi DOM, không đi một vòng máy chủ để nhận về đúng trang vừa rời.
+
+       ⚠ Phải đứng TRƯỚC trình nghe liên kết-trong-hộp-thoại ở trên? Không —
+       hai trình nghe bắt hai thứ khác nhau (.lgate vs .bmodal) và không chồng
+       lấn. Nhưng phải gọi preventDefault, nếu không trình duyệt vẫn đi theo
+       href và trang tải lại đúng thứ ta vừa tránh. */
+    document.addEventListener('click', function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        if (!(e.target instanceof Element)) return;
+
+        var dong = e.target.closest('[data-lgate-close]');
+        if (!dong) return;
+
+        var gate = dong.closest('.lgate');
+        if (!gate) return;
+
+        e.preventDefault();
+        gate.remove();
+
+        /* Trả con trỏ bàn phím về nút đã mở popup — người dùng bàn phím vừa
+           bấm "Thêm vào giỏ" ở giữa trang, đóng popup mà không trả chỗ là họ
+           rơi về đầu tài liệu. */
+        if (opener && document.contains(opener)) opener.focus();
+        opener = null;
+    });
+
+    /* Esc cũng đóng popup ấy — bấm đúng nút đóng có sẵn thay vì dựng đường
+       đóng thứ hai, để chỉ có một chỗ quyết định "đóng nghĩa là gì". */
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+
+        var gate = document.querySelector('.lgate');
+        if (!gate) return;
+
+        var dong = gate.querySelector('.lgate__close');
+        if (dong) dong.click();
     });
 
     /* ── Esc để đóng ────────────────────────────────────────────────────────

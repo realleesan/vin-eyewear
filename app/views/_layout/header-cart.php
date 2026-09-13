@@ -40,10 +40,10 @@ $recent = $cartCount > 0 ? CartController::recent(5) : ['lines' => [], 'more' =>
    │ Ngăn kéo này dựng ở MỌI trang khung đầy đủ, nên mỗi truy vấn thêm vào
    │ đây là một truy vấn cho cả site — lý do phải chặn bằng hai điều kiện
    │ trên chứ không hỏi vô điều kiện. */
-$wishId    = AuthMiddleware::customerId();
-$wishCount = ($wishId !== null && FavoriteModel::available())
-    ? FavoriteModel::dem($wishId)
-    : 0;
+/* Từ 13/09/2026 hỏi QUA Wishlist và KHÔNG chặn theo "đã đăng nhập chưa":
+   khách vãng lai cũng lưu được, và với họ dem() chỉ là count() trên một mảng
+   trong phiên — không truy vấn, nên chốt cũ không còn bảo vệ gì. */
+$wishCount = Wishlist::available() ? Wishlist::dem() : 0;
 ?>
 <div class="hpop" data-hpop data-cart>
 
@@ -89,21 +89,23 @@ $wishCount = ($wishId !== null && FavoriteModel::available())
                  │ hai cho cùng một vai trò.
                  │
                  │ "Yêu thích" là LIÊN KẾT, không phải tab đổi nội dung tại
-                 │ chỗ: danh sách ấy đã có nhà riêng ở /tai-khoan?muc=da-luu từ
-                 │ 12/09. Dựng thêm một bản trong ngăn kéo là hai chỗ vẽ cùng
-                 │ một danh sách — và chúng sẽ lệch nhau. Cùng lối với tab
-                 │ tương ứng trên trang giỏ.
+                 │ chỗ: danh sách ấy đã có nhà riêng. Dựng thêm một bản trong
+                 │ ngăn kéo là hai chỗ vẽ cùng một danh sách — và chúng sẽ
+                 │ lệch nhau. Cùng lối với tab tương ứng trên trang giỏ.
                  │
-                 │ Chưa đăng nhập thì số là 0 và liên kết vẫn còn: bấm vào,
-                 │ trang tài khoản tự đẩy sang /auth kèm đường quay lại. Giấu
-                 │ tab đi thì khách không có đường nào biết chức năng tồn tại.
+                 │ ĐÍCH ĐẾN ĐỔI 13/09/2026: /yeu-thich thay cho
+                 │ /tai-khoan?muc=da-luu. Từ nay khách CHƯA ĐĂNG NHẬP cũng lưu
+                 │ được, mà trang tài khoản thì bắt đăng nhập — trỏ về đó là
+                 │ để khách bấm trái tim, thấy số nhảy lên, rồi bấm vào chính
+                 │ con số ấy và bị ném sang trang đăng nhập. /yeu-thich mở
+                 │ được cho cả hai loại khách và tự chọn đúng kho.
                  └──────────────────────────────────────────────────────────── */ ?>
         <div class="ctabs ctabs--drawer">
             <span class="ctabs__on">
                 <?= e(t('cart.tab_bag')) ?><sup><?= (int) $cartCount ?><span class="sr-only"> <?= e(t('cart.tab_bag_sr')) ?></span></sup>
             </span>
 
-            <a class="ctabs__off" href="/tai-khoan?muc=da-luu">
+            <a class="ctabs__off" href="/yeu-thich">
                 <?= e(t('cart.tab_wish')) ?><sup><?= (int) $wishCount ?><span class="sr-only"> <?= e(t('cart.tab_wish_sr')) ?></span></sup>
             </a>
 

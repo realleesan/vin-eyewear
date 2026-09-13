@@ -38,13 +38,13 @@
  *      mặt — chỗ của nó vẫn được giữ để bốn thẻ không so le nhau.
  * ═════════════════════════════════════════════════════════════════════════════
  *
- * Mặt hàng cửa hàng đã ẩn thì rơi khỏi danh sách nhưng dòng lưu vẫn còn trong
- * CSDL — xem FavoriteModel::danhSach().
+ * Mặt hàng cửa hàng đã ẩn thì rơi khỏi danh sách nhưng dòng lưu vẫn còn —
+ * xem Wishlist::danhSach().
  *
  * THẺ RIÊNG, KHÔNG DÙNG _layout/product-card.php: thẻ dùng chung là thẻ để MUA
  * (hai nút nổi trên ảnh) và không có chỗ cho dấu trang lẫn dãy vạch màu.
  *
- * Nhận qua sectionData(): $saved, $luuDuoc, $variants, $anhPhu
+ * Nhận vào: $saved, $luuDuoc, $variants, $anhPhu, $tabUrl (có mặc định)
  */
 
 $saved    = $saved    ?? [];
@@ -52,8 +52,23 @@ $luuDuoc  = $luuDuoc  ?? false;
 $variants = $variants ?? [];
 $anhPhu   = (bool) ($anhPhu ?? false);
 
-/* Đường về chính tab này — nút dấu trang và nút lật ảnh đều cần. */
-$tabUrl = '/tai-khoan?muc=da-luu';
+/* ┌─ ĐƯỜNG VỀ CHÍNH MÀN NÀY — nút dấu trang và nút lật ảnh đều cần ───────
+   │ NHẬN TỪ NGOÀI, có mặc định (13/09/2026). Cùng một khối markup nay dựng
+   │ ở HAI cửa:
+   │
+   │   /tai-khoan?muc=da-luu   tab trong trang tài khoản (phải đăng nhập)
+   │   /yeu-thich              trang riêng, mở được khi CHƯA đăng nhập
+   │
+   │ Hai cửa vì khách vãng lai nay cũng lưu được nhưng không vào được trang
+   │ tài khoản. Dựng bản thứ hai của lưới này là chắc chắn hai bên lệch nhau
+   │ sau vài lượt sửa, nên WishlistController chỉ gọi lại đúng file này.
+   │
+   │ $noi: /yeu-thich KHÔNG có dấu ? sẵn, còn /tai-khoan?muc=da-luu thì có.
+   │ Nối cứng bằng '&' như bản cũ sẽ ra '/yeu-thich&anh=nguoi-mau' — một
+   │ đường dẫn không tồn tại, và nút lật ảnh thành nút hỏng.
+   └──────────────────────────────────────────────────────────────────────── */
+$tabUrl = $tabUrl ?? '/tai-khoan?muc=da-luu';
+$noi    = str_contains($tabUrl, '?') ? '&' : '?';
 
 /*
  * Dãy vạch màu + dòng phối màu của MỘT mặt hàng, dựng từ biến thể.
@@ -208,10 +223,10 @@ foreach ($saved as $p) {
                              sách đã lưu. Bấm là bỏ lưu. KHÔNG hỏi lại: bỏ lưu
                              không mất gì, mà hộp thoại cho việc vô hại thì lần
                              thứ ba người ta bấm "Đồng ý" không đọc. */ ?>
-                    <form method="post" action="/yeu-thich">
+                    <form method="post" action="/yeu-thich/luu">
                         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                         <input type="hidden" name="slug" value="<?= e($p['slug']) ?>">
-                        <input type="hidden" name="back" value="<?= e($tabUrl . ($anhPhu ? '&anh=nguoi-mau' : '')) ?>">
+                        <input type="hidden" name="back" value="<?= e($tabUrl . ($anhPhu ? $noi . 'anh=nguoi-mau' : '')) ?>">
                         <button type="submit" class="wl__mark" aria-pressed="true">
                             <svg width="16" height="22" viewBox="0 0 16 22" aria-hidden="true">
                                 <path d="M0 0h16v22l-8-6-8 6z" fill="currentColor"
@@ -227,7 +242,7 @@ foreach ($saved as $p) {
 
     <?php if ($coAnhPhu): ?>
         <div class="wl__foot">
-            <a class="wl__view" href="<?= e($tabUrl . ($anhPhu ? '' : '&anh=nguoi-mau')) ?>">
+            <a class="wl__view" href="<?= e($tabUrl . ($anhPhu ? '' : $noi . 'anh=nguoi-mau')) ?>">
                 <span><?= e($anhPhu ? t('wl.view_main') : t('wl.view_alt')) ?></span>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
                      stroke-width="1.5" aria-hidden="true">

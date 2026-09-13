@@ -778,6 +778,41 @@ class ProductModel extends BaseModel
         return $out;
     }
 
+    /**
+     * Như findManyById(), nhưng TRẢ VỀ ĐÚNG THỨ TỰ $ids đã cho.
+     *
+     * ─────────────────────────────────────────────────────────────────────────
+     * VÌ SAO PHẢI CÓ HÀM NÀY, KHÔNG PHẢI GỌI findManyById RỒI TỰ SẮP
+     *
+     * findManyById() trả mảng ĐÁNH KHOÁ theo id, và thứ tự của nó là thứ tự
+     * CSDL trả về — tức là thứ tự của chỉ mục, không phải thứ tự người gọi
+     * muốn. Mọi danh sách "mới nhất trước" vì thế đều phải sắp lại tay sau khi
+     * gọi, và đoạn sắp lại ấy giống hệt nhau ở từng chỗ.
+     *
+     * Trước khi có hàm này đã có HAI bản chép của đoạn ấy (FavoriteModel và
+     * kho yêu thích của khách vãng lai). Hai bản chép thì sớm muộn cũng lệch,
+     * và lúc đó danh sách yêu thích của người đã đăng nhập sắp một kiểu, của
+     * khách vãng lai sắp một kiểu — cùng một màn hình, hai thứ tự.
+     *
+     * Mặt hàng đã ẩn RƠI KHỎI kết quả (findManyById lọc is_visible), nên mảng
+     * trả về có thể ngắn hơn $ids. Đó là cố ý: dòng lưu vẫn còn, cửa hàng bật
+     * lại mặt hàng là nó hiện lại.
+     * ─────────────────────────────────────────────────────────────────────────
+     */
+    public static function theoThuTuId(array $ids): array
+    {
+        $sanPham = self::findManyById($ids);
+        $ra      = [];
+
+        foreach ($ids as $id) {
+            if (isset($sanPham[$id])) {
+                $ra[] = $sanPham[$id];
+            }
+        }
+
+        return $ra;
+    }
+
     // ========================================================================
     // TRÌNH BÀY
     // ========================================================================

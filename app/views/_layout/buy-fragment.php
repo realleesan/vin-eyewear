@@ -45,6 +45,23 @@ require_once CORE_PATH . '/i18n.php';
     <?php // partial('_layout/buy-modal', ['buyModal' => $buyModal]); ?>
 <?php // endif; ?>
 
+<?php
+/* POPUP "CHỈ DÀNH CHO THÀNH VIÊN" — mảnh thứ tư, thêm 13/09/2026.
+
+   buy-flow.js bắt cú bấm "Thêm vào giỏ"/"Mua ngay" và gửi bằng fetch, nên câu
+   trả lời của máy chủ về đây chứ không về master.php. Thiếu khối này thì với
+   người BẬT JavaScript — tức gần như tất cả — cú bấm lặng thinh: không popup,
+   không dải báo, không gì cả, đọc ra đúng như nút hỏng.
+
+   Cùng một partial với master.php, không phải bản chép: hai đường trả lời cho
+   cùng một cú bấm thì phải ra cùng một popup. */
+$congDangNhap = flash('cong_dang_nhap');
+
+if ($congDangNhap !== null) {
+    partial('_layout/login-gate', ['veLai' => $congDangNhap]);
+}
+?>
+
 <?php if (!empty($toast)): ?>
     <?php partial('_layout/toast', ['toast' => $toast, 'toastTone' => $toastTone ?? 'ok']); ?>
 <?php endif; ?>

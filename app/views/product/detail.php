@@ -244,15 +244,25 @@ $stars = static function (float $score): string {
  * Luôn là FORM RIÊNG, không bao giờ nằm trong form mua: hai form lồng nhau là
  * HTML sai, trình duyệt vứt form bên trong mà không báo gì.
  *
- * Chưa đăng nhập vẫn in nút — FavoriteController gửi khách sang /auth rồi đưa
- * về đúng trang này. aria-pressed chỉ có khi đăng nhập: lúc đó nút mới thật sự
- * là một công tắc có trạng thái.
+ * ┌─ KHÔNG CÒN PHÂN BIỆT ĐÃ/CHƯA ĐĂNG NHẬP — 13/09/2026 ──────────────────────
+ * │ Bản cũ đổi nhãn thành "Đăng nhập để lưu" và BỎ aria-pressed cho khách
+ * │ vãng lai, vì khi ấy bấm vào là bị đẩy sang /auth — nút không phải một
+ * │ công tắc, nó là một lời mời.
+ * │
+ * │ Nay khách vãng lai lưu được thật (xem app/services/Wishlist.php), nên nó
+ * │ là công tắc với MỌI người: nhãn "Lưu sản phẩm" và aria-pressed nói đúng
+ * │ việc sẽ xảy ra. Giữ nhãn cũ là hứa sai — bấm vào thì nó lưu luôn chứ
+ * │ chẳng đưa ai đi đăng nhập cả.
+ * │
+ * │ ⚠ Khoá 'pd.save_login' trong lang/*.php ĐỂ LẠI, không xoá: gỡ hẳn thì
+ * │   lúc muốn quay lại luật cũ phải viết lại cả hai bản dịch.
+ * └──────────────────────────────────────────────────────────────────────────
  */
-$nutLuu = static function (string $slugSp, string $tenSp, bool $dangLuu, int $co) use ($daDangNhap): string {
-    $nhan  = empty($daDangNhap) ? t('pd.save_login') : t('pd.save');
-    $trang = empty($daDangNhap) ? '' : ' aria-pressed="' . ($dangLuu ? 'true' : 'false') . '"';
+$nutLuu = static function (string $slugSp, string $tenSp, bool $dangLuu, int $co): string {
+    $nhan  = t('pd.save');
+    $trang = ' aria-pressed="' . ($dangLuu ? 'true' : 'false') . '"';
 
-    return '<form class="pdsave" method="post" action="/yeu-thich">'
+    return '<form class="pdsave" method="post" action="/yeu-thich/luu">'
         . '<input type="hidden" name="_token" value="' . e(csrfToken()) . '">'
         . '<input type="hidden" name="slug" value="' . e($slugSp) . '">'
         . '<input type="hidden" name="back" value="' . e(currentUrlWithout(['mua', 'buoc'])) . '">'

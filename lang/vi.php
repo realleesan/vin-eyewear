@@ -53,6 +53,11 @@ return [
 
     'menu.open'        => 'Mở menu điều hướng',
     'menu.close'       => 'Đóng menu',
+
+    /* Popup "chỉ dành cho thành viên" — _layout/login-gate.php. */
+    'gate.msg'         => 'Sản phẩm này chỉ dành cho thành viên. Vui lòng đăng nhập để mua.',
+    'gate.cta'         => 'ĐĂNG NHẬP HOẶC ĐĂNG KÝ',
+    'gate.close'       => 'Đóng',
     'menu.aria'        => 'Menu điều hướng',
 
     // ── Tìm kiếm ─────────────────────────────────────────────────────────

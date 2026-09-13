@@ -63,7 +63,10 @@ $hoiXoaMon = static fn (string $ten): string => t('cart.confirm_one', [':name' =
             <?= e(t('cart.tab_bag')) ?><sup><?= (int) $soMon ?><span class="sr-only"> <?= e(t('cart.tab_bag_sr')) ?></span></sup>
         </span>
 
-        <a class="ctabs__off" href="/tai-khoan?muc=da-luu">
+        <?php /* /yeu-thich, KHÔNG phải /tai-khoan?muc=da-luu (đổi 13/09/2026):
+                 khách chưa đăng nhập nay cũng lưu được, mà trang tài khoản thì
+                 bắt đăng nhập. Xem WishlistController. */ ?>
+        <a class="ctabs__off" href="/yeu-thich">
             <?= e(t('cart.tab_wish')) ?><sup><?= (int) $wishCount ?><span class="sr-only"> <?= e(t('cart.tab_wish_sr')) ?></span></sup>
         </a>
 
@@ -180,7 +183,7 @@ $hoiXoaMon = static fn (string $ten): string => t('cart.confirm_one', [':name' =
                     <?php /* Dấu trang. POST vì nó ĐỔI dữ liệu — lý do đầy đủ ở
                              đầu FavoriteController. Tô đặc khi đã lưu, đúng
                              `item.wishFill` của bản thiết kế. */ ?>
-                    <form class="cwish" method="post" action="/yeu-thich">
+                    <form class="cwish" method="post" action="/yeu-thich/luu">
                         <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
                         <input type="hidden" name="slug" value="<?= e($p['slug']) ?>">
                         <input type="hidden" name="back" value="/gio-hang">

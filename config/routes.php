@@ -104,9 +104,22 @@ return [
 
     'nhan-tin/dang-ky' => 'NewsletterController@submit', // đăng ký nhận tin (POST)
 
-    /* Dấu trang: MỘT đường cho cả bật lẫn tắt (POST). Danh sách đã lưu không
-       có đường riêng — nó là mục 'da-luu' của /tai-khoan. */
-    'yeu-thich'        => 'FavoriteController@toggle',   // POST
+    /* ┌─ YÊU THÍCH — 13/09/2026 ĐỔI CÁCH ĐẶT ĐƯỜNG ─────────────────────────
+       │ Bảng này khớp theo ĐƯỜNG DẪN, không theo phương thức: một đường chỉ
+       │ trỏ tới đúng một hàm, dù khách gửi GET hay POST. Nên khi danh sách
+       │ đã lưu cần một trang xem được lúc chưa đăng nhập, không thể để cả
+       │ trang (GET) lẫn công tắc (POST) cùng ở 'yeu-thich'.
+       │
+       │ Công tắc dời xuống 'yeu-thich/luu'; 'yeu-thich' nay là trang xem.
+       │ Cùng nếp với 'gio-hang' (trang) và 'gio-hang/them' (thao tác).
+       │
+       │ ⚠ ĐỔI ĐƯỜNG NÀY THÌ ĐỔI CẢ BA FORM đang gửi tới nó: product/detail
+       │   (nút dấu trang), cart/index (nút lưu trên dòng giỏ), và
+       │   auth/account/da-luu (nút bỏ lưu trong lưới). Sót một chỗ thì nút ấy
+       │   im lặng đưa khách về trang chủ, không báo lỗi gì.
+       └──────────────────────────────────────────────────────────────────── */
+    'yeu-thich'        => 'WishlistController@index',    // GET  — trang xem
+    'yeu-thich/luu'    => 'FavoriteController@toggle',   // POST — bật/tắt
 
     // Giỏ hàng — lưu trong session, chưa chạm DB cho tới lúc đặt hàng.
     // Bốn đường dưới chỉ nhận POST (CartController tự chặn GET).

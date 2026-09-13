@@ -7,9 +7,10 @@
  * tắc nên máy chủ cũng là một cái công tắc — lý do đầy đủ ở khối chú thích của
  * FavoriteModel::batTat().
  *
- * Danh sách đã lưu KHÔNG có controller riêng: nó là một mục của trang tài
- * khoản (/tai-khoan?muc=da-luu), do AuthController::profile() dựng cùng bốn
- * mục kia.
+ * Danh sách đã lưu có HAI cửa, cùng một nội dung:
+ *   /yeu-thich              WishlistController@index — mở được khi CHƯA đăng nhập
+ *   /tai-khoan?muc=da-luu   một mục của trang tài khoản, AuthController::profile()
+ * Cả hai đọc qua Wishlist nên không có bản chép thứ hai của luật nào cả.
  *
  * ─────────────────────────────────────────────────────────────────────────────
  * VÌ SAO POST CHỨ KHÔNG PHẢI MỘT LIÊN KẾT
@@ -49,16 +50,23 @@ class FavoriteController extends BaseController
             redirect($back);
         }
 
-        /* PHẢI ĐĂNG NHẬP, và chốt Ở ĐÂY chứ không chỉ ở view.
-
-           View đã thay nút bằng lời mời đăng nhập, nhưng đó là chuyện của
-           trình duyệt: một POST dựng tay không đi qua view nào cả, mà cột
-           user_id thì NOT NULL — không chặn ở đây là nhận một lỗi CSDL thay vì
-           một câu tiếng Việt.
-
-           requireLogin() tự chuyển hướng sang /auth kèm đường quay lại, nên
-           đăng nhập xong khách về đúng trang sản phẩm họ đang xem. */
-        $userId = AuthMiddleware::requireLogin($back);
+        /* ┌─ KHÔNG CÒN BẮT ĐĂNG NHẬP — 13/09/2026 ────────────────────────────
+           │ Theo yêu cầu chủ dự án: "Wishlist (yêu thích) không cần đăng nhập
+           │ vẫn thêm được, nhưng khi thêm sản phẩm (vào giỏ) cần phải đăng
+           │ nhập." Hai việc đổi ngược chiều nhau trong cùng một lượt sửa: chốt
+           │ đăng nhập rời KHỎI đây và mọc ra ở CartController::add().
+           │
+           │ Bản cũ gọi AuthMiddleware::requireLogin($back) ngay chỗ này, và lý
+           │ do khi ấy đúng: cột `favorites.user_id` là NOT NULL nên một POST
+           │ dựng tay sẽ đổ lỗi CSDL. Lý do ấy KHÔNG mất đi — nó chuyển chỗ:
+           │ Wishlist::batTat() chỉ chạm tới bảng khi có người đăng nhập, còn
+           │ khách vãng lai thì ghi vào $_SESSION. Không đường nào còn INSERT
+           │ một user_id rỗng nữa.
+           │
+           │ ⚠ ĐỪNG thêm lại requireLogin() ở đây "cho chắc": làm thế là khách
+           │   vãng lai bấm trái tim liền bị ném sang trang đăng nhập — đúng
+           │   cái trải nghiệm mà lượt sửa này bỏ đi.
+           └──────────────────────────────────────────────────────────────────── */
 
         $product = $slug === '' ? null : ProductModel::findVisibleBySlug($slug);
 
@@ -71,12 +79,12 @@ class FavoriteController extends BaseController
            với nút "Thông báo khi có hàng", xem ProductDetailController::waitlist.
            Mã lên hosting tự động còn migration thì bấm tay, nên quãng lệch giữa
            hai thứ là chuyện bình thường. */
-        if (!FavoriteModel::available()) {
+        if (!Wishlist::available()) {
             flash('site_error', 'Tính năng lưu sản phẩm đang tạm ngưng. Vui lòng thử lại sau.');
             redirect($back);
         }
 
-        $dangLuu = FavoriteModel::batTat($product['id'], $userId);
+        $dangLuu = Wishlist::batTat($product['id']);
 
         flash('site_success', $dangLuu
             ? 'Đã lưu “' . $product['name'] . '” vào danh sách của bạn.'

@@ -181,6 +181,21 @@ class AuthMiddleware
            đổi — hàm này được gọi hàng chục lần trong một lượt dựng trang. */
         GioHangPhien::theoChu($userId);
 
+        /* DANH SÁCH YÊU THÍCH CŨNG ĐI THEO NGƯỜI — 13/09/2026.
+
+           Từ nay khách chưa đăng nhập cũng lưu được (xem đầu app/services/
+           Wishlist.php), và thứ họ lưu nằm trong phiên. Đăng nhập thì đổ hết
+           vào tài khoản rồi xoá ngăn phiên đi.
+
+           ĐẶT CẠNH GioHangPhien::theoChu() chứ không móc vào login(), vì đúng
+           một lý do: danh tính còn đổi ở ba đường mà login() không hề chạy —
+           dựng lại phiên từ cookie ghi nhớ, phiên 24 giờ hết hạn ngay ở hàm
+           trên, tài khoản bị khoá giữa chừng. Đây là chỗ duy nhất thấy cả ba.
+
+           Ngăn rỗng thì hàm thoát ngay, không chạm CSDL — bắt buộc, vì
+           customerId() chạy hàng chục lần mỗi lượt dựng trang. */
+        Wishlist::khiDangNhap($userId);
+
         return $userId;
     }
 
@@ -372,6 +387,11 @@ class AuthMiddleware
            sau, nhưng gọi ngay tại đây thì trang đích ngay sau khi đăng nhập
            (thường là /gio-hang hoặc /thanh-toan) đã thấy đúng giỏ. */
         GioHangPhien::theoChu($userId);
+
+        /* Và gộp luôn danh sách yêu thích vừa lưu lúc chưa đăng nhập, cùng lý
+           do: trang đích ngay sau khi đăng nhập phải thấy đủ. customerId() ở
+           lượt sau cũng làm việc này, gọi ở đây chỉ để không lệch một nhịp. */
+        Wishlist::khiDangNhap($userId);
 
         if ($remember) {
             RememberModel::issue($userId);

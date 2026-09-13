@@ -36,13 +36,16 @@ class ProductDetailController extends BaseController
         // Năm thẻ — bản thiết kế "Product Detail" vẽ một hàng năm cột.
         $related = ProductModel::related($product['category_id'], $product['id'], 5);
 
-        /* Dấu trang của từng thẻ "sản phẩm tương tự". Chưa đăng nhập thì không
-           hỏi CSDL — cùng lý do với 'daLuu' bên dưới. Năm câu hỏi nhỏ, không
-           đáng dựng một hàm gom riêng. */
+        /* Dấu trang của từng thẻ "sản phẩm tương tự".
+           HỎI CẢ KHI CHƯA ĐĂNG NHẬP (13/09/2026): từ nay khách vãng lai cũng
+           lưu được, và Wishlist::daLuu() trả lời họ từ phiên — không truy vấn
+           nào cả. Bản cũ chặn bằng `$userId !== null` nên trái tim của khách
+           vãng lai luôn rỗng dù họ vừa bấm lưu. Năm câu hỏi nhỏ, không đáng
+           dựng một hàm gom riêng. */
         $relatedSaved = [];
-        if ($userId !== null && FavoriteModel::available()) {
+        if (Wishlist::available()) {
             foreach ($related as $r) {
-                $relatedSaved[$r['id']] = FavoriteModel::daLuu($r['id'], $userId);
+                $relatedSaved[$r['id']] = Wishlist::daLuu($r['id']);
             }
         }
 
@@ -79,13 +82,13 @@ class ProductDetailController extends BaseController
             'reviewOk'   => flash('review_ok') !== null,
             // Danh sách chờ hàng chỉ mở cho khách đã đăng nhập — FR-SP-17.
             'daDangNhap' => $userId !== null,
-            /* Dấu trang. Chưa đăng nhập thì KHÔNG hỏi CSDL: câu trả lời đằng
-               nào cũng là "chưa lưu", và nút lúc ấy chỉ là lời mời đăng nhập.
-               Bảng chưa dựng (máy chưa chạy migration) thì daLuu() trả false
-               và view tự giấu nút — xem FavoriteModel::available(). */
-            'daLuu'      => $userId !== null
-                && FavoriteModel::daLuu($product['id'], $userId),
-            'luuDuoc'    => FavoriteModel::available(),
+            /* Dấu trang — nay qua Wishlist, cửa chung của cả hai loại khách.
+               Khách vãng lai được trả lời từ phiên (không truy vấn), người đã
+               đăng nhập thì từ bảng `favorites`. Bảng chưa dựng (máy chưa chạy
+               migration) mà khách ĐÃ đăng nhập thì available() trả false và
+               view tự giấu nút — xem đầu app/services/Wishlist.php. */
+            'daLuu'      => Wishlist::daLuu($product['id']),
+            'luuDuoc'    => Wishlist::available(),
         ]);
     }
 
