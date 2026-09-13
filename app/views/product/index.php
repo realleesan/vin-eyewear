@@ -409,6 +409,16 @@ if (!empty($groups['collection'])) {
              ──────────────────────────────────────────────────── -->
         <div class="catmain">
 
+            <?php
+            /* DÒNG "HIỂN THỊ N SẢN PHẨM" ĐÃ BỎ Ở HAI TRANG CON (13/09/2026, theo
+               yêu cầu chủ dự án) — số đếm đã có sẵn cạnh chữ "Bộ lọc" ngay trên.
+               Vẫn in khi có ?q=: mẩu "cho “…” · bỏ từ khoá" sống trong chính
+               dòng này, và trang tìm kiếm không có chỗ nào khác nói khách vừa
+               gõ gì (xem chú thích bên dưới). */
+            $inDem = !in_array($catalogSlug ?? '', ProductController::SUB_PAGES, true)
+                || $filters['q'] !== '';
+            ?>
+            <?php if ($inDem): ?>
             <div class="catbar">
                 <p class="catbar__count" aria-live="polite">
                     <?= strtr(
@@ -431,6 +441,7 @@ if (!empty($groups['collection'])) {
                          "SẮP XẾP NẰM TRONG TẤM LỌC". Hai chỗ điều khiển cùng
                          một lưới, cách nhau nửa màn hình, là thứ vừa dọn. */ ?>
             </div>
+            <?php endif; ?>
 
             <?php if ($total === 0): ?>
                 <div class="catempty">

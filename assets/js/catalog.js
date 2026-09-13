@@ -538,7 +538,10 @@
     function bao(main) {
         if (!loa) return;
 
-        var dem = main.querySelector('.catbar__count');
+        /* Trang con gọng/tròng không in .catbar__count nữa — đọc con số cạnh
+           chữ "Bộ lọc" thay vào ("24 sản phẩm đang khớp"). */
+        var dem = main.querySelector('.catbar__count') ||
+                  catbody.querySelector('.fbar__count');
 
         loa.textContent = dem ? dem.textContent.replace(/\s+/g, ' ').trim() : '';
     }
