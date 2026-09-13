@@ -971,22 +971,40 @@ select.acct-field__ctl {
     height: 2px;
 }
 
+/* ┌─ MỖI DÒNG CHỮ MỘT Ô CAO CỐ ĐỊNH ──────────────────────────────────────
+   │ Tên · phối màu · giá · dòng trạng thái đều có `height` cứng, không phải
+   │ `min-height`. Tên dài xuống dòng hay ngắn một chữ thì thẻ vẫn đúng một
+   │ khuôn, và nút ở chân bốn thẻ nằm cùng một đường kẻ.
+   │
+   │ Trước đây chỉ có min-height: tên ngắn một dòng thì nút của thẻ đó nhảy
+   │ lên cao hơn nút của thẻ tên dài hai dòng bên cạnh.
+   │
+   │ TÊN: đúng HAI dòng (36px), dài hơn thì cắt bằng dấu "…". PHỐI MÀU, GIÁ,
+   │ TRẠNG THÁI: đúng MỘT dòng, tràn thì "…". Tên đầy đủ vẫn đọc được ở trang
+   │ chi tiết, và trình đọc màn hình vẫn đọc trọn chữ bị cắt.
+   └──────────────────────────────────────────────────────────────────────── */
 .wl__name {
+    display: -webkit-box;
+    height: 36px;
     margin-top: 14px;
+    overflow: hidden;
     font-size: 14px;
+    line-height: 18px;
+    overflow-wrap: anywhere;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
 }
 
 .wl__color,
 .wl__price {
+    display: block;
+    height: 18px;
     margin-top: 4px;
+    overflow: hidden;
     font-size: 14px;
-}
-
-/* GIỮ CHỖ khi mặt hàng chưa khai màu nào. 18px = một dòng chữ 14px ở
-   line-height 1.3 — cùng vai trò với min-height của .wl__note, và cùng lý do:
-   bốn cái nút ở chân bốn thẻ phải thẳng hàng nhau. */
-.wl__color {
-    min-height: 18px;
+    line-height: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Hết hàng thì giá mờ đi — mẫu đổi màu chữ giá, không gạch ngang nó. */
@@ -995,7 +1013,7 @@ select.acct-field__ctl {
 }
 
 /* GIỮ CHỖ khi không có gì để nói: thiếu nó thì nút của thẻ còn hàng nhảy lên
-   cao hơn nút của thẻ hết hàng.
+   cao hơn nút của thẻ hết hàng. Cao cố định một dòng như ba dòng trên.
 
    ⚠ 16px, KHÔNG phải 15px như mẫu, và `line-height` ghim luôn cho khỏi trôi.
    Mẫu để min-height:15px trong khi một dòng chữ 12px ở line-height 1.3 cao
@@ -1004,11 +1022,15 @@ select.acct-field__ctl {
    so le nhau đúng 1px. Phép đo bắt được; đây là sửa cho ĐÚNG Ý mẫu, không
    phải đi chệch khỏi mẫu. */
 .wl__note {
+    display: block;
+    height: 16px;
     margin-top: 2px;
-    min-height: 16px;
+    overflow: hidden;
     font-size: 12px;
     line-height: 16px;
     color: #8a8a8a;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Một lớp cho cả <button> lẫn <a>: ba cảnh của nút hành động không cùng một
@@ -1024,6 +1046,10 @@ select.acct-field__ctl {
     padding: 10px 12px;
     font: inherit;
     font-size: 12px;
+    /* Nút cao đúng một dòng ở mọi thẻ: thẻ hẹp (hai cột trên điện thoại) mà
+       để chữ "Chọn phương án" gãy làm hai thì nút ấy cao gấp đôi nút bên cạnh. */
+    line-height: 16px;
+    white-space: nowrap;
     color: #111;
     cursor: pointer;
     transition: background-color .18s ease, color .18s ease;
