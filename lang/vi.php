@@ -132,6 +132,16 @@ return [
     'cart.faq_pay'          => 'HÌNH THỨC THANH TOÁN',
     'cart.faq_pay_body'     => 'Thanh toán khi nhận hàng, chuyển khoản ngân hàng hoặc quét mã QR. Chọn hình thức ở bước thanh toán.',
 
+    /* ── Tab "Đã lưu" dựng theo "Wishlist.dc.html" (13/09/2026) ── */
+    'wl.title'     => 'ĐÃ LƯU',
+    'wl.restock'   => 'Sắp có hàng lại',
+    'wl.add'       => 'Thêm vào giỏ',
+    'wl.pick'      => 'Chọn phương án',
+    'wl.notify'    => 'Báo khi có hàng',
+    'wl.drop'      => 'Bỏ khỏi danh sách đã lưu',
+    'wl.view_alt'  => 'Xem ảnh khác',
+    'wl.view_main' => 'Xem ảnh sản phẩm',
+
     // ── Trang chủ ────────────────────────────────────────────────────────
     'home.see_all'        => 'Xem tất cả →',
     'home.strip.prev'     => 'Sản phẩm trước',

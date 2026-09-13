@@ -2345,14 +2345,34 @@ class AuthController extends BaseController
 
             case 'da-luu':
                 /* MỘT câu hỏi cho cả mục — danhSach() đã lọc mặt hàng bị ẩn và
-                   giải mã cột JSON, nên view dựng thẳng bằng
-                   _layout/product-card.php như mọi lưới khác của site. */
+                   giải mã cột JSON. */
+                $daLuuDs = FavoriteModel::danhSach($userId);
+
                 return [
-                    'saved'     => FavoriteModel::danhSach($userId),
+                    'saved'     => $daLuuDs,
                     /* Bảng chưa dựng thì mục vẫn mở được và nói thẳng lý do,
                        thay vì hiện một danh sách rỗng trông như "bạn chưa lưu
                        gì" — hai chuyện khác hẳn nhau. */
                     'luuDuoc'   => FavoriteModel::available(),
+
+                    /* Biến thể của CẢ LƯỚI trong một câu, không hỏi từng thẻ —
+                       cùng phép với ProductController::index() và trang bộ sưu
+                       tập. Thẻ dùng chúng để vẽ dãy vạch màu và dòng "Bạc /
+                       Nâu" theo bản thiết kế "Wishlist.dc.html". */
+                    'variants'  => $daLuuDs === []
+                        ? []
+                        : VariantModel::forProducts(array_column($daLuuDs, 'id')),
+
+                    /* ┌─ CHẾ ĐỘ ẢNH — ?anh=nguoi-mau ────────────────────────
+                       │ Bản thiết kế có nút lật giữa "ảnh sản phẩm" và "ảnh
+                       │ người mẫu". Ở đây nó lật sang ẢNH THỨ HAI trong cột
+                       │ `images` của mặt hàng.
+                       │
+                       │ ⚠ TRẠNG THÁI NẰM TRÊN ĐỊA CHỈ, không phải trong
+                       │ JavaScript: F5 không mất chỗ, gửi link cho người khác
+                       │ ra đúng cảnh đang xem, và tắt JS vẫn lật được. Cùng
+                       │ nếp với ?sua-ho-so=1 và ?xoa=1 của tab Hồ sơ. */
+                    'anhPhu'    => ($_GET['anh'] ?? '') === 'nguoi-mau',
                 ];
 
             case 'don-hang':

@@ -127,6 +127,15 @@ return [
     'cart.faq_pay'          => 'PAYMENT OPTIONS',
     'cart.faq_pay_body'     => 'Cash on delivery, bank transfer or QR code. Pick one at checkout.',
 
+    'wl.title'     => 'WISHLIST',
+    'wl.restock'   => 'To be restocked',
+    'wl.add'       => 'Add to Bag',
+    'wl.pick'      => 'Choose options',
+    'wl.notify'    => 'Notify Me',
+    'wl.drop'      => 'Remove from wishlist',
+    'wl.view_alt'  => 'Other View',
+    'wl.view_main' => 'Product View',
+
     // ── Home page ────────────────────────────────────────────────────────
     'home.see_all'        => 'View all →',
     'home.strip.prev'     => 'Previous products',

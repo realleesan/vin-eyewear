@@ -871,95 +871,207 @@ select.acct-field__ctl {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   TAB ĐÃ LƯU — lưới mẫu đã lưu (bản vẽ chỉ vẽ trạng thái rỗng)
+   TAB ĐÃ LƯU — dựng 1:1 từ "Wishlist.dc.html" (13/09/2026)
+
+   Mọi con số dưới đây lấy thẳng từ bản thiết kế. Ba chỗ lệch và lý do của
+   chúng ghi ở đầu app/views/auth/account/da-luu.php — đọc bên đó trước khi
+   "sửa cho giống mẫu".
+
+   ⚠ #f9f9f9 (nền ô ảnh), #ebebeb (nền nút), #8a8a8a (chữ mờ) và bo góc 2px
+   lấy nguyên của mẫu, KHÔNG qua token của site. Cùng lối với trang giỏ hàng
+   dựng cùng đợt; muốn kéo về hệ token thì đổi cả hai trang một lần.
    ══════════════════════════════════════════════════════════════════════ */
 
-.acct-saved {
+/* Tiêu đề CĂN GIỮA, khác mọi tab khác của trang tài khoản (chúng căn trái).
+   Đó là dáng của mẫu: lưới bốn cột cần một cái mốc ở giữa. */
+.wl__title {
+    margin: 46px 0 0;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: .02em;
+    text-align: center;
+}
+
+.wl__sup {
+    margin-left: 1px;
+    font-size: 10px;
+    font-weight: 600;
+    vertical-align: super;
+}
+
+/* gap `0 12px` — KHÔNG có khe dọc, đúng mẫu: bốn thẻ đứng thành một hàng,
+   khoảng thở dọc do chính chiều cao thẻ lo. */
+.wl {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 28px 14px;
-    margin: 60px 0 0;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0 12px;
+    margin: 40px 0 0;
     padding: 0;
     list-style: none;
 }
 
-.acct-saved__item {
+.wl__item {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    min-width: 0;
 }
 
-.acct .acct-saved__shot {
-    display: block;
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    border-radius: 4px;
-    background: #fff;
-}
-
-/* Ảnh thấy trọn gọng (contain). multiply: nền trắng của ảnh nhân với nền ô
-   thành đúng màu ô, không lộ khung chữ nhật. */
-.acct-saved__shot img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    mix-blend-mode: multiply;
-}
-
-.acct-saved__noimg {
+/* 5/6.4 là tỉ lệ của mẫu — ô dọc, không vuông. `contain` để thấy trọn cái
+   gọng; cùng luật với mọi ô ảnh sản phẩm khác của site. */
+.acct .wl__shot {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
-    color: var(--acct-mute);
-    font-size: 12px;
+    width: 100%;
+    aspect-ratio: 5 / 6.4;
+    background: #f9f9f9;
+    overflow: hidden;
 }
 
-.acct-saved__body {
+.wl__shot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.wl__noimg {
+    font-size: 12px;
+    color: #8a8a8a;
+}
+
+/* Đệm hai bên co theo bề ngang thẻ, đúng cặp clamp() của mẫu: thẻ hẹp thì
+   chữ vẫn cách mép ít nhất 8–10px, thẻ rộng thì thụt vào nhiều hơn. */
+.wl__body {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 10px;
+    flex: 1;
+    margin-top: -2px;
+    padding: 0 clamp(8px, 3.5%, 40px) 0 clamp(10px, 4%, 48px);
+}
+
+.wl__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Dãy vạch màu: mỗi màu một vạch 10×2px. Khối cao 8px CỐ ĐỊNH kể cả khi
+   rỗng — xem chú thích tại chỗ trong view. */
+.wl__sw {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 8px;
+}
+
+.wl__sw span {
+    width: 10px;
+    height: 2px;
+}
+
+.wl__name {
+    margin-top: 14px;
     font-size: 14px;
 }
 
-.acct-saved__name {
-    display: block;
+.wl__color,
+.wl__price {
+    margin-top: 4px;
+    font-size: 14px;
 }
 
-.acct-saved__price {
-    display: block;
+/* GIỮ CHỖ khi mặt hàng chưa khai màu nào. 18px = một dòng chữ 14px ở
+   line-height 1.3 — cùng vai trò với min-height của .wl__note, và cùng lý do:
+   bốn cái nút ở chân bốn thẻ phải thẳng hàng nhau. */
+.wl__color {
+    min-height: 18px;
+}
+
+/* Hết hàng thì giá mờ đi — mẫu đổi màu chữ giá, không gạch ngang nó. */
+.wl__price.is-off {
+    color: #8a8a8a;
+}
+
+/* GIỮ CHỖ khi không có gì để nói: thiếu nó thì nút của thẻ còn hàng nhảy lên
+   cao hơn nút của thẻ hết hàng.
+
+   ⚠ 16px, KHÔNG phải 15px như mẫu, và `line-height` ghim luôn cho khỏi trôi.
+   Mẫu để min-height:15px trong khi một dòng chữ 12px ở line-height 1.3 cao
+   15,6px → làm tròn 16. Tức chính con số của mẫu lệch 1px so với thứ nó sinh
+   ra để bảo đảm: ô rỗng 15px, ô có chữ 16px, và bốn cái nút ở chân bốn thẻ
+   so le nhau đúng 1px. Phép đo bắt được; đây là sửa cho ĐÚNG Ý mẫu, không
+   phải đi chệch khỏi mẫu. */
+.wl__note {
     margin-top: 2px;
-}
-
-.acct-saved__price s {
-    margin-left: 6px;
-    color: var(--acct-mute);
-}
-
-.acct-saved__out {
-    display: block;
-    margin-top: 2px;
-    color: var(--acct-mute);
+    min-height: 16px;
     font-size: 12px;
+    line-height: 16px;
+    color: #8a8a8a;
 }
 
-.acct-saved__drop {
-    padding: 0;
+/* Một lớp cho cả <button> lẫn <a>: ba cảnh của nút hành động không cùng một
+   thẻ HTML (thêm vào giỏ là form POST, hai cảnh kia là liên kết), nhưng phải
+   trông y hệt nhau. */
+.acct .wl__cta {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 14px;
+    border: 0;
+    border-radius: 2px;
+    background: #ebebeb;
+    padding: 10px 12px;
+    font: inherit;
+    font-size: 12px;
+    color: #111;
+    cursor: pointer;
+    transition: background-color .18s ease, color .18s ease;
+}
+
+.acct .wl__cta:hover {
+    background: #111;
+    color: #fff;
+    text-decoration: none;
+}
+
+.wl__mark {
     border: 0;
     background: none;
-    color: var(--acct-mute);
-    font-size: 13px;
-    letter-spacing: .01em;
-    text-transform: uppercase;
-    white-space: nowrap;
+    padding: 12px 0 0;
+    line-height: 0;
+    color: #111;
     cursor: pointer;
-    transition: opacity .15s ease;
 }
 
-.acct-saved__drop:hover {
-    opacity: .7;
+.wl__mark:hover {
+    opacity: .6;
+}
+
+/* ── Nút lật ảnh ─────────────────────────────────────────────────────── */
+
+.wl__foot {
+    display: flex;
+    justify-content: center;
+    margin-top: 56px;
+}
+
+.acct .wl__view {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 2px;
+    background: #fff;
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #111;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+}
+
+.acct .wl__view:hover {
+    color: #111;
+    text-decoration: none;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .12);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1027,8 +1139,19 @@ select.acct-field__ctl {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .acct-saved {
+    /* Bốn cột → hai. Mẫu chỉ vẽ khổ rộng; dưới 760px mỗi thẻ chỉ còn chừng
+       160px, ba chữ trong .wl__body sẽ gãy dòng giữa từ. */
+    .wl {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 32px 12px;
+    }
+
+    .wl__title {
+        margin-top: 28px;
+    }
+
+    .wl__foot {
+        margin-top: 36px;
     }
 
     /* Thẻ thành một cột: liên kết hành động xuống dưới, xếp ngang */
