@@ -134,6 +134,7 @@ return [
 
     'wl.title'     => 'WISHLIST',
     'wl.restock'   => 'To be restocked',
+    'wl.sold_out'  => 'Sold out',
     'wl.add'       => 'Add to Bag',
     'wl.pick'      => 'Choose options',
     'wl.notify'    => 'Notify Me',

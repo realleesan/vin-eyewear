@@ -1,50 +1,64 @@
 <?php
 
 /**
- * auth/account/da-luu.php — tab "Đã lưu" (/tai-khoan?muc=da-luu).
+ * auth/account/da-luu.php — LƯỚI YÊU THÍCH, dùng chung cho hai màn.
  *
- * Dựng 1:1 từ "Wishlist.dc.html" (Claude Design, 13/09/2026): tiêu đề WISHLIST
- * kèm số mũ, lưới BỐN CỘT, mỗi thẻ là ô ảnh 5/6.4 nền #f9f9f9 rồi dãy vạch màu,
- * tên, phối màu, giá, dòng trạng thái, một nút hành động và dấu trang bên phải.
- * Dưới lưới là nút lật chế độ ảnh.
+ * Dựng 1:1 từ "Wishlist.dc.html" — bản thiết kế THỨ HAI, dự án
+ * aac1974c-accf-4a00-ba8f-97da249ca461 (13/09/2026). Bản trước
+ * (68da5130-…) đã bị thay hẳn: lưới bốn cột nay là những TẤM THẺ NỀN XÁM
+ * dính nhau bằng khe 2px, ảnh nằm ngang 3/2 ở giữa thẻ, chữ dồn xuống chân.
  *
- * ═════════════════════════════════════════════════════════════════════════════
- * BA CHỖ CỐ Ý KHÔNG CHÉP NGUYÊN MẪU — cả ba đều vì mẫu hứa thứ trang này không
- * làm được thật. Đọc trước khi "sửa cho giống":
+ *   nền trang   #f4f4f4      thẻ       #f7f7f7     khe lưới   2px
+ *   ảnh         80% × 3/2, contain, đệm 40px 24px 24px
+ *   chữ         13px / 1.4, đệm 8px 24px 40px 28px
+ *   nút mua     #e6e6e6, bo 3px, 11px, đệm 8px 10px, rê → nền #111 chữ trắng
+ *   dấu trang   tam giác ĐẶC 14×20
+ *   nút lật ảnh nền trắng, bo 4px, 13px, đệm 10px 14px, đổ bóng nhạt
  *
- *   1. NÚT HÀNH ĐỘNG không phải lúc nào cũng là "Add to Bag".
- *      Mẫu chỉ có hai cảnh: còn hàng → Add to Bag, hết hàng → Notify Me. Kho
- *      này có cảnh thứ ba: mặt hàng CÓ PHƯƠNG ÁN (màu gọng, chiết suất tròng).
+ * ═════════════════════════════════════════════════════════════════════════
+ * BỐN CHỖ CỐ Ý KHÔNG CHÉP NGUYÊN MẪU. Đọc trước khi "sửa cho giống":
+ *
+ *   1. NÚT HÀNH ĐỘNG không phải lúc nào cũng là "Thêm vào giỏ".
+ *      Mẫu chỉ có hai cảnh: còn hàng → Add to Bag, hết hàng → không nút.
+ *      Kho này có cảnh thứ ba: mặt hàng CÓ PHƯƠNG ÁN (màu gọng, chiết suất).
  *      CartController::add() từ chối một mặt hàng có phương án mà không kèm
- *      phương án nào, nên một nút "Thêm vào giỏ" ở đây sẽ đá khách sang trang
- *      chi tiết kèm một dòng báo lỗi — trông y như trang hỏng. Thẻ sản phẩm
+ *      phương án nào, nên một nút "Thêm vào giỏ" ở đây sẽ đá khách sang
+ *      trang chi tiết kèm dòng báo lỗi — trông y như trang hỏng. Nhãn nay
+ *      nói đúng việc sẽ xảy ra, và nút vẫn ĐÚNG DÁNG của mẫu. Thẻ sản phẩm
  *      dùng chung đã gặp đúng lỗi ấy và đã sửa theo lối này.
  *
- *      Hết hàng cũng vậy: /san-pham/cho-hang luôn trả khách về TRANG CHI TIẾT,
- *      và nó đòi variant_id khi mặt hàng có phương án. Nên nút ấy là một liên
- *      kết tới đúng khối đăng ký chờ hàng, không phải một POST sẽ bị dội lại.
+ *   2. HẾT HÀNG: mẫu in "Sold out" thay chỗ giá rồi bỏ trống ô nút. Làm
+ *      đúng thế — nhưng như vậy lối đăng ký CHỜ HÀNG biến khỏi màn này. Nó
+ *      vẫn còn ở trang chi tiết (bấm tên hàng là tới). Bản trước để một nút
+ *      "Báo khi có hàng" ở đây; mẫu mới không có, và ô nút cao 52px của mẫu
+ *      cố ý để trống.
  *
- *   2. NÚT LẬT ẢNH chỉ hiện khi THẬT SỰ có ảnh thứ hai.
- *      Mẫu gọi hai cảnh là "Product View" / "Model View". Cột `images` của mặt
- *      hàng là một dãy ảnh do cửa hàng tải lên — ảnh thứ hai có thể là ảnh
- *      người mẫu, mà cũng có thể là ảnh cận. Nút vì thế nói "ảnh khác" chứ
- *      không hứa là ảnh người mẫu, và nó VẮNG MẶT khi cả lưới không mặt hàng
- *      nào có ảnh thứ hai — thà thiếu một cái nút còn hơn một cái nút bấm vào
- *      không có gì đổi.
+ *   3. TIỀN: mẫu viết "đ 8,451,400" — ký hiệu ĐỨNG TRƯỚC, cỡ nhỏ, và nhóm
+ *      số bằng dấu phẩy. Ở đây lấy DÁNG của mẫu (ký hiệu nhỏ đứng trước)
+ *      nhưng CHỮ SỐ thì vẫn của money(): "8.451.400". Vì sao không chép cả
+ *      dấu phẩy — cùng một chiếc kính sẽ hiện "8,451,400" ở đây và
+ *      "8.451.400" ở giỏ hàng, trang chi tiết, hoá đơn. Hai con số trông
+ *      khác nhau cho cùng một món là thứ khách đếm lại bằng tay.
+ *      Phần chữ số CẮT RA TỪ money() chứ không gọi number_format lần nữa:
+ *      money() là nguồn duy nhất, đổi cách nhóm số ở đó thì chỗ này đi theo.
  *
- *   3. DÃY VẠCH MÀU dựng từ biến thể THẬT, không phải năm vạch xám của mẫu.
- *      Mã màu suy ra như ở thẻ sản phẩm (ProductTaxonomy::colorHex, có
- *      swatch_hex thì mã ấy thắng). Mặt hàng chưa khai màu nào thì dãy vắng
- *      mặt — chỗ của nó vẫn được giữ để bốn thẻ không so le nhau.
- * ═════════════════════════════════════════════════════════════════════════════
+ *   4. NÚT LẬT ẢNH chỉ hiện khi THẬT SỰ có ảnh thứ hai. Cột `images` là một
+ *      dãy ảnh cửa hàng tải lên — ảnh thứ hai có thể là ảnh người mẫu, cũng
+ *      có thể là ảnh cận. Nút vì thế nói "ảnh khác" chứ không hứa là ảnh
+ *      người mẫu, và nó VẮNG MẶT khi cả lưới không mặt hàng nào có ảnh thứ
+ *      hai — thà thiếu một cái nút còn hơn một cái nút bấm vào không đổi gì.
+ *
+ * ĐÃ GỠ so với bản trước: dãy VẠCH MÀU (.wl__sw) — mẫu mới không có; dòng
+ * "Sắp có hàng lại" (.wl__note) — thay bằng chữ "Hết hàng" ở chỗ giá.
+ * ═════════════════════════════════════════════════════════════════════════
  *
  * Mặt hàng cửa hàng đã ẩn thì rơi khỏi danh sách nhưng dòng lưu vẫn còn —
  * xem Wishlist::danhSach().
  *
- * THẺ RIÊNG, KHÔNG DÙNG _layout/product-card.php: thẻ dùng chung là thẻ để MUA
- * (hai nút nổi trên ảnh) và không có chỗ cho dấu trang lẫn dãy vạch màu.
+ * THẺ RIÊNG, KHÔNG DÙNG _layout/product-card.php: thẻ dùng chung là thẻ để
+ * MUA (hai nút nổi trên ảnh) và không có chỗ cho dấu trang.
  *
- * Nhận vào: $saved, $luuDuoc, $variants, $anhPhu, $tabUrl (có mặc định)
+ * Nhận vào: $saved, $luuDuoc, $variants, $anhPhu, $tabUrl, $wlTieuDe
  */
 
 $saved    = $saved    ?? [];
@@ -71,13 +85,16 @@ $tabUrl = $tabUrl ?? '/tai-khoan?muc=da-luu';
 $noi    = str_contains($tabUrl, '?') ? '&' : '?';
 
 /*
- * Dãy vạch màu + dòng phối màu của MỘT mặt hàng, dựng từ biến thể.
+ * Dòng phối màu của MỘT mặt hàng — "Bạc / Nâu", đúng dòng thứ hai của mẫu.
+ *
+ * CHỈ CÒN CHỮ. Bản trước còn trả về cả một dãy MÃ MÀU để vẽ vạch màu dưới
+ * ảnh; bản thiết kế mới không có dãy vạch ấy nên phần dựng mã màu đã gỡ —
+ * giữ lại một mảng không ai đọc là mời người sau tưởng nó còn dùng.
  *
  * Gộp theo MÃ MÀU chứ không theo biến thể: "Đen bóng" và "Đen nhám" cho ra
- * cùng một mã, in hai vạch đen sát nhau trông như lỗi lặp — cùng luật với
- * hàng chấm màu ở thẻ sản phẩm.
+ * cùng một mã, in ra "Đen / Đen" là đọc thành hai màu khác nhau.
  */
-$mauCua = static function (array $p) use ($variants): array {
+$mauCua = static function (array $p) use ($variants): string {
     $ma  = [];
     $ten = [];
 
@@ -92,8 +109,7 @@ $mauCua = static function (array $p) use ($variants): array {
             continue;
         }
 
-        $ma[strtolower($hex)] = $hex;
-
+        $ma[strtolower($hex)] = true;
         $t = trim((string) ($v['color'] ?? ''));
 
         if ($t !== '') {
@@ -101,15 +117,30 @@ $mauCua = static function (array $p) use ($variants): array {
         }
     }
 
-    return [
-        'hex' => array_values($ma),
-        /* Dòng dưới tên hàng: mẫu ghi "Silver / Brown". Lấy hai màu đầu, ngăn
-           bằng " / ". Chưa khai biến thể nào thì lùi về cột màu của chính mặt
-           hàng, và vẫn trống thì bỏ hẳn dòng. */
-        'chu' => $ten !== []
-            ? implode(' / ', array_slice($ten, 0, 2))
-            : trim((string) ($p['color'] ?? '')),
-    ];
+    /* Lấy hai màu đầu, ngăn bằng " / ". Chưa khai biến thể nào thì lùi về
+       cột màu của chính mặt hàng, và vẫn trống thì trả chuỗi rỗng — dòng
+       vẫn được in ra để bốn thẻ không so le, xem chú thích tại chỗ. */
+    return $ten !== []
+        ? implode(' / ', array_slice($ten, 0, 2))
+        : trim((string) ($p['color'] ?? ''));
+};
+
+/*
+ * TIỀN THEO DÁNG CỦA MẪU, CHỮ SỐ CỦA money() — xem điểm 3 ở đầu file.
+ *
+ * Cắt ký hiệu ra khỏi chuỗi money() trả về thay vì gọi number_format lần
+ * nữa: money() là chỗ duy nhất biết cách nhóm số, đổi ở đó thì chỗ này đi
+ * theo. money() đổi ký hiệu mà quên chỗ này thì str_ends_with không khớp và
+ * hàm trả về NGUYÊN chuỗi — giá vẫn đúng, chỉ mất cái dáng nhỏ ở trước.
+ * Hỏng thì hỏng về phía an toàn.
+ */
+$tienCua = static function ($gia): array {
+    $chuoi = money($gia);
+    $kyHieu = '₫';
+
+    return str_ends_with($chuoi, $kyHieu)
+        ? ['ky' => $kyHieu, 'so' => mb_substr($chuoi, 0, -mb_strlen($kyHieu))]
+        : ['ky' => '', 'so' => $chuoi];
 };
 
 /* Có mặt hàng nào có ảnh thứ hai không — quyết định nút lật ảnh có mặt hay
@@ -124,7 +155,21 @@ foreach ($saved as $p) {
 }
 ?>
 
-<h1 class="wl__title"><?= e(t('wl.title')) ?><sup class="wl__sup"><?= count($saved) ?></sup></h1>
+<?php
+/* ┌─ TIÊU ĐỀ CHỈ Ở TRANG TÀI KHOẢN ───────────────────────────────────────
+   │ Mẫu mới KHÔNG có dòng tiêu đề: chỗ của nó là hàng tab BAG / WISHLIST,
+   │ mà hàng tab ấy chỉ có nghĩa ở /yeu-thich (WishlistController in nó ra —
+   │ xem app/views/wishlist/index.php). Trong trang tài khoản thì ngược lại:
+   │ mục nào cũng có tiêu đề riêng, bỏ đi là tab "Đã lưu" mở ra không biết
+   │ mình đang ở đâu.
+   │
+   │ Nên tiêu đề nhận từ ngoài, mặc định CÓ. ⚠ Đừng gỡ hẳn "cho giống mẫu":
+   │ mẫu vẽ một màn hình đứng riêng, không vẽ một tab trong trang tài khoản.
+   └──────────────────────────────────────────────────────────────────────── */
+?>
+<?php if ($wlTieuDe ?? true): ?>
+    <h1 class="wl__title"><?= e(t('wl.title')) ?><sup class="wl__sup"><?= count($saved) ?></sup></h1>
+<?php endif; ?>
 
 <?php if (!$luuDuoc): ?>
 
@@ -137,7 +182,7 @@ foreach ($saved as $p) {
 <?php elseif ($saved === []): ?>
 
     <div class="acct-empty">
-        <p class="acct-empty__text acct-empty__text--luu">Bạn chưa có sản phẩm nào trong danh sách đã lưu.</p>
+        <p class="acct-empty__text acct-empty__text--luu">Bạn chưa có sản phẩm nào trong danh sách yêu thích.</p>
         <a class="acct-btn acct-empty__btn" href="/san-pham/gong-kinh">Tiếp tục mua sắm</a>
     </div>
 
@@ -147,10 +192,10 @@ foreach ($saved as $p) {
         <?php foreach ($saved as $p): ?>
             <?php
             $url     = '/san-pham/' . rawurlencode($p['slug']);
-            $gia     = ProductPricing::giaBan($p);
             $conHang = ProductModel::inStock($p);
             $coPa    = VariantModel::hasVariants($p['id']);
             $mau     = $mauCua($p);
+            $tien    = $tienCua(ProductPricing::giaBan($p));
 
             /* Ảnh: cảnh thường là ảnh đại diện, cảnh "ảnh khác" là ảnh thứ hai
                NẾU mặt hàng này có — không có thì giữ nguyên ảnh đầu, chứ không
@@ -163,43 +208,68 @@ foreach ($saved as $p) {
             ?>
             <li class="wl__item">
 
+                <?php /* Ô ảnh chiếm HẾT phần trên của thẻ (flex:1) và căn giữa
+                         tấm ảnh trong đó — đúng mẫu: ảnh nổi giữa một khoảng
+                         xám rộng, không dính mép trên. */ ?>
                 <a class="wl__shot" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
-                    <?php if ($anh !== ''): ?>
-                        <img src="<?= e(asset($anh)) ?>" alt=""
-                             width="500" height="640" loading="lazy" decoding="async">
-                    <?php else: ?>
-                        <span class="wl__noimg"><?= e(t('product.no_image')) ?></span>
-                    <?php endif; ?>
+                    <span class="wl__slot">
+                        <?php if ($anh !== ''): ?>
+                            <img src="<?= e(asset($anh)) ?>" alt=""
+                                 width="600" height="400" loading="lazy" decoding="async">
+                        <?php else: ?>
+                            <span class="wl__noimg"><?= e(t('product.no_image')) ?></span>
+                        <?php endif; ?>
+                    </span>
                 </a>
 
                 <div class="wl__body">
-                    <div class="wl__info">
 
-                        <?php /* Dãy vạch màu. Khối bọc LUÔN có mặt kể cả khi rỗng:
-                                 nó cao 8px cố định, bỏ đi thì thẻ không có màu bị
-                                 kéo lên cao hơn ba thẻ bên cạnh. */ ?>
-                        <div class="wl__sw" aria-hidden="true">
-                            <?php foreach (array_slice($mau['hex'], 0, 7) as $hex): ?>
-                                <span style="background: <?= e($hex) ?>"></span>
-                            <?php endforeach; ?>
+                    <div class="wl__top">
+                        <div class="wl__info">
+
+                            <a class="wl__name notranslate" translate="no" lang="vi" href="<?= e($url) ?>"><?= e($p['name']) ?></a>
+
+                            <?php /* LUÔN IN RA kể cả khi trống: mặt hàng chưa khai
+                                     màu nào mà bỏ hẳn dòng này thì thẻ đó ngắn hơn
+                                     ba thẻ bên cạnh một dòng, và bốn cái nút ở chân
+                                     thẻ không còn thẳng hàng. Phép đo bắt được đúng
+                                     lỗi ấy ở bản trước. */ ?>
+                            <span class="wl__color"><?= e($mau) ?></span>
+
+                            <?php if ($conHang): ?>
+                                <span class="wl__price">
+                                    <?php if ($tien['ky'] !== ''): ?><span class="wl__cur"><?= e($tien['ky']) ?></span> <?php endif; ?><?= e($tien['so']) ?>
+                                </span>
+                            <?php else: ?>
+                                <?php /* Mẫu thay GIÁ bằng chữ "Sold out", không phải
+                                         thêm một dòng nữa — xem điểm 2 đầu file. */ ?>
+                                <span class="wl__price wl__price--off"><?= e(t('wl.sold_out')) ?></span>
+                            <?php endif; ?>
                         </div>
 
-                        <a class="wl__name notranslate" translate="no" lang="vi" href="<?= e($url) ?>"><?= e($p['name']) ?></a>
+                        <?php /* Dấu trang đang BẬT ở mọi thẻ — cả lưới này là danh
+                                 sách đã lưu. Bấm là bỏ lưu. KHÔNG hỏi lại: bỏ lưu
+                                 không mất gì, mà hộp thoại cho việc vô hại thì lần
+                                 thứ ba người ta bấm "Đồng ý" không đọc. */ ?>
+                        <form method="post" action="/yeu-thich/luu">
+                            <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
+                            <input type="hidden" name="slug" value="<?= e($p['slug']) ?>">
+                            <input type="hidden" name="back" value="<?= e($tabUrl . ($anhPhu ? $noi . 'anh=nguoi-mau' : '')) ?>">
+                            <button type="submit" class="wl__mark" aria-pressed="true">
+                                <?php /* Tam giác ĐẶC 14×20 của mẫu, không viền. */ ?>
+                                <svg width="14" height="20" viewBox="0 0 14 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M0 0h14v20l-7-5-7 5z"></path>
+                                </svg>
+                                <span class="sr-only"><?= e(t('wl.drop')) ?> — <?= e($p['name']) ?></span>
+                            </button>
+                        </form>
+                    </div>
 
-                        <?php /* LUÔN IN RA kể cả khi trống — cùng lý do với dòng
-                                 trạng thái bên dưới: mặt hàng chưa khai màu nào mà
-                                 bỏ hẳn dòng này thì thẻ đó ngắn hơn ba thẻ bên
-                                 cạnh một dòng, và bốn cái nút ở chân thẻ không còn
-                                 thẳng hàng. Phép đo bắt được đúng lỗi ấy. */ ?>
-                        <span class="wl__color"><?= e($mau['chu']) ?></span>
-
-                        <span class="wl__price<?= $conHang ? '' : ' is-off' ?>"><?= money($gia) ?></span>
-
-                        <?php /* Dòng trạng thái giữ chỗ CẢ KHI TRỐNG (min-height
-                                 trong CSS) — đúng `min-height:15px` của mẫu, để
-                                 nút bên dưới của bốn thẻ thẳng hàng nhau. */ ?>
-                        <span class="wl__note"><?= $conHang ? '' : e(t('wl.restock')) ?></span>
-
+                    <?php /* Ô NÚT CAO 52px CỐ ĐỊNH, nút dính ĐÁY ô — đúng mẫu.
+                             Cao cố định kể cả khi rỗng (hết hàng): thiếu nó thì
+                             thẻ hết hàng ngắn hơn ba thẻ bên cạnh, và chân bốn
+                             thẻ không còn một đường. */ ?>
+                    <div class="wl__act">
                         <?php if ($conHang && !$coPa): ?>
                             <?php /* Mua thẳng được: không phương án nào để chọn. */ ?>
                             <form method="post" action="/gio-hang/them">
@@ -210,31 +280,14 @@ foreach ($saved as $p) {
                                     <?= e(t('wl.add')) ?><span class="sr-only"> — <?= e($p['name']) ?></span>
                                 </button>
                             </form>
-                        <?php else: ?>
-                            <?php /* Hai cảnh còn lại đều dẫn sang trang chi tiết —
-                                     xem điểm 1 ở khối chú thích đầu file. */ ?>
-                            <a class="wl__cta" href="<?= e($url) ?><?= $conHang ? '' : '#cho-hang' ?>">
-                                <?= e($conHang ? t('wl.pick') : t('wl.notify')) ?><span class="sr-only"> — <?= e($p['name']) ?></span>
+                        <?php elseif ($conHang): ?>
+                            <?php /* Có phương án — xem điểm 1 ở đầu file. Cùng dáng
+                                     nút, khác nhãn và khác đích. */ ?>
+                            <a class="wl__cta" href="<?= e($url) ?>">
+                                <?= e(t('wl.pick')) ?><span class="sr-only"> — <?= e($p['name']) ?></span>
                             </a>
                         <?php endif; ?>
                     </div>
-
-                    <?php /* Dấu trang đang BẬT ở mọi thẻ — cả lưới này là danh
-                             sách đã lưu. Bấm là bỏ lưu. KHÔNG hỏi lại: bỏ lưu
-                             không mất gì, mà hộp thoại cho việc vô hại thì lần
-                             thứ ba người ta bấm "Đồng ý" không đọc. */ ?>
-                    <form method="post" action="/yeu-thich/luu">
-                        <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                        <input type="hidden" name="slug" value="<?= e($p['slug']) ?>">
-                        <input type="hidden" name="back" value="<?= e($tabUrl . ($anhPhu ? $noi . 'anh=nguoi-mau' : '')) ?>">
-                        <button type="submit" class="wl__mark" aria-pressed="true">
-                            <svg width="16" height="22" viewBox="0 0 16 22" aria-hidden="true">
-                                <path d="M0 0h16v22l-8-6-8 6z" fill="currentColor"
-                                      stroke="currentColor" stroke-width="1.5"></path>
-                            </svg>
-                            <span class="sr-only"><?= e(t('wl.drop')) ?> — <?= e($p['name']) ?></span>
-                        </button>
-                    </form>
                 </div>
             </li>
         <?php endforeach; ?>
@@ -244,12 +297,10 @@ foreach ($saved as $p) {
         <div class="wl__foot">
             <a class="wl__view" href="<?= e($tabUrl . ($anhPhu ? '' : $noi . 'anh=nguoi-mau')) ?>">
                 <span><?= e($anhPhu ? t('wl.view_main') : t('wl.view_alt')) ?></span>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                     stroke-width="1.5" aria-hidden="true">
-                    <path d="M13 6.5A5.5 5.5 0 0 0 3.3 4.6"></path>
-                    <path d="M3 9.5a5.5 5.5 0 0 0 9.7 1.9"></path>
-                    <path d="M3 2v3h3"></path>
-                    <path d="M13 14v-3h-3"></path>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                     stroke-width="1.3" aria-hidden="true">
+                    <path d="M2 7a5 5 0 0 1 8.5-3.6M12 7a5 5 0 0 1-8.5 3.6"></path>
+                    <path d="M10.5 1v2.6H8M3.5 13v-2.6H6"></path>
                 </svg>
             </a>
         </div>

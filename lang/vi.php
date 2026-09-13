@@ -139,7 +139,10 @@ return [
 
     /* ── Tab "Đã lưu" dựng theo "Wishlist.dc.html" (13/09/2026) ── */
     'wl.title'     => 'ĐÃ LƯU',
+    /* 'wl.restock' ĐỂ LẠI dù bản thiết kế mới không còn dòng "Sắp có hàng
+       lại" — lối đăng ký chờ hàng ở trang chi tiết vẫn dùng cách nói này. */
     'wl.restock'   => 'Sắp có hàng lại',
+    'wl.sold_out'  => 'Hết hàng',
     'wl.add'       => 'Thêm vào giỏ',
     'wl.pick'      => 'Chọn phương án',
     'wl.notify'    => 'Báo khi có hàng',

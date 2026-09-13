@@ -942,22 +942,31 @@ select.acct-field__ctl {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   TAB ĐÃ LƯU — dựng 1:1 từ "Wishlist.dc.html" (13/09/2026)
+   LƯỚI YÊU THÍCH — dựng 1:1 từ "Wishlist.dc.html", bản thiết kế THỨ HAI
+   (dự án aac1974c-…, 13/09/2026). Bản trước (68da5130-…) đã thay hẳn.
 
-   Mọi con số dưới đây lấy thẳng từ bản thiết kế. Ba chỗ lệch và lý do của
-   chúng ghi ở đầu app/views/auth/account/da-luu.php — đọc bên đó trước khi
-   "sửa cho giống mẫu".
+   Mọi con số dưới đây lấy THẲNG từ style nội tuyến của mẫu. Bốn chỗ lệch và
+   lý do của chúng ghi ở đầu app/views/auth/account/da-luu.php — đọc bên đó
+   trước khi "sửa cho giống mẫu".
 
-   ⚠ #f9f9f9 (nền ô ảnh), #ebebeb (nền nút), #8a8a8a (chữ mờ)
-   lấy nguyên của mẫu (bo góc 2px của mẫu đã bỏ — nút trang này vuông góc), KHÔNG qua token của site. Cùng lối với trang giỏ hàng
-   dựng cùng đợt; muốn kéo về hệ token thì đổi cả hai trang một lần.
+   ⚠ MÀU LẤY NGUYÊN CỦA MẪU, không qua token của site: #f4f4f4 (nền trang),
+     #f7f7f7 (nền thẻ), #e6e6e6 (nền nút), #9a9a9a (chữ hết hàng). Cùng lối
+     với trang giỏ hàng dựng cùng đợt. Muốn kéo cả hai về hệ token thì đổi
+     một lần cho cả hai trang, đừng đổi lẻ.
+
+   ⚠ BO GÓC 3–4px LÀ CỦA MẪU và cố ý giữ, dù --r-* của site đều bằng 0.
+     Chủ dự án chốt "giống 100%" cho màn này.
    ══════════════════════════════════════════════════════════════════════ */
 
-/* Tiêu đề CĂN GIỮA, khác mọi tab khác của trang tài khoản (chúng căn trái).
-   Đó là dáng của mẫu: lưới bốn cột cần một cái mốc ở giữa. */
+.wl {
+    --wl-the: #f7f7f7;   /* nền một tấm thẻ */
+    --wl-nut: #e6e6e6;   /* nền nút "Thêm vào giỏ" và ô tab */
+    --wl-mo:  #9a9a9a;   /* chữ "Hết hàng" */
+}
+
+/* Tiêu đề CĂN GIỮA — chỉ còn ở trang tài khoản; /yeu-thich thay nó bằng hàng
+   tab. Xem chú thích tại chỗ trong da-luu.php. */
 .wl__title {
-    /* 26 + 20px padding của dải tiêu đề dính = 46px của mẫu; -20px dưới bù
-       padding dưới. Xem "CUỘN XUỐNG: CHỈ CÒN TIÊU ĐỀ". */
     margin: 26px 0 -20px;
     font-size: 18px;
     font-weight: 500;
@@ -972,36 +981,51 @@ select.acct-field__ctl {
     vertical-align: super;
 }
 
-/* gap `0 12px` — KHÔNG có khe dọc, đúng mẫu: bốn thẻ đứng thành một hàng,
-   khoảng thở dọc do chính chiều cao thẻ lo. */
+/* KHE 2px, KHÔNG PHẢI 12px. Mẫu để bốn tấm thẻ nền xám DÍNH gần nhau thành
+   một dải liền — khe chỉ đủ để mắt thấy đường chia. Đây là điểm khác lớn
+   nhất so với bản thiết kế trước, nơi bốn thẻ đứng rời trên nền trắng. */
 .wl {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0 12px;
+    gap: 2px;
     margin: 40px 0 0;
     padding: 0;
     list-style: none;
 }
 
+/* min-height: min(640px, 60vw) — đúng mẫu. Thẻ CAO CỐ ĐỊNH chứ không co
+   theo nội dung: ảnh nổi giữa một khoảng xám rộng là dáng của mẫu, mà
+   khoảng ấy chỉ có khi thẻ cao hơn thứ nó chứa. */
 .wl__item {
     display: flex;
     flex-direction: column;
+    min-height: min(640px, 60vw);
+    background: var(--wl-the);
 }
 
-/* 5/6.4 là tỉ lệ của mẫu — ô dọc, không vuông. `contain` để thấy trọn cái
-   gọng; cùng luật với mọi ô ảnh sản phẩm khác của site. */
-.acct .wl__shot {
-    position: relative;
+/* Phần ảnh ăn hết chỗ trống còn lại và CĂN GIỮA tấm ảnh trong đó. */
+.acct .wl__shot,
+.wlpage .wl__shot {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px 24px;
+}
+
+/* 80% bề ngang, tỉ lệ 3/2 NẰM NGANG — mẫu cũ để 5/6.4 dọc. Cái gọng kính
+   vốn nằm ngang, nên khung ngang để nó to hơn hẳn trong cùng một thẻ. */
+.wl__slot {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    aspect-ratio: 5 / 6.4;
-    background: #f9f9f9;
-    overflow: hidden;
+    width: 80%;
+    aspect-ratio: 3 / 2;
 }
 
-.wl__shot img {
+/* `contain` để thấy TRỌN cái gọng — cùng luật với mọi ô ảnh sản phẩm khác
+   của site, và đúng fit="contain" của <image-slot> trong mẫu. */
+.wl__slot img {
     width: 100%;
     height: 100%;
     object-fit: contain;
@@ -1009,60 +1033,45 @@ select.acct-field__ctl {
 
 .wl__noimg {
     font-size: 12px;
-    color: #8a8a8a;
+    color: var(--wl-mo);
 }
 
-/* Đệm hai bên co theo bề ngang thẻ, đúng cặp clamp() của mẫu: thẻ hẹp thì
-   chữ vẫn cách mép ít nhất 8–10px, thẻ rộng thì thụt vào nhiều hơn. */
 .wl__body {
+    padding: 8px 24px 40px 28px;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.wl__top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    flex: 1;
-    margin-top: -2px;
-    padding: 0 clamp(8px, 3.5%, 40px) 0 clamp(10px, 4%, 48px);
 }
 
 .wl__info {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
     min-width: 0;
 }
 
-/* Dãy vạch màu: mỗi màu một vạch 10×2px. Khối cao 8px CỐ ĐỊNH kể cả khi
-   rỗng — xem chú thích tại chỗ trong view. */
-.wl__sw {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    height: 8px;
-}
-
-.wl__sw span {
-    width: 10px;
-    height: 2px;
-}
-
-/* ┌─ MỖI DÒNG CHỮ MỘT Ô CAO CỐ ĐỊNH ──────────────────────────────────────
-   │ Tên · phối màu · giá · dòng trạng thái đều có `height` cứng, không phải
-   │ `min-height`. Tên dài xuống dòng hay ngắn một chữ thì thẻ vẫn đúng một
-   │ khuôn, và nút ở chân bốn thẻ nằm cùng một đường kẻ.
+/* ┌─ BA DÒNG CHỮ SÁT NHAU, KHÔNG Ô CAO CỐ ĐỊNH ───────────────────────────
+   │ Mẫu để tên · phối màu · giá là ba <div> trần, cao đúng một dòng chữ,
+   │ dính liền nhau. Bản đầu ở đây ghim `height: 37px` cho tên (chỗ của hai
+   │ dòng) như bản thiết kế CŨ từng cần — và ảnh chụp so với mẫu lộ ra ngay
+   │ một khe trống dưới mọi cái tên ngắn.
    │
-   │ Trước đây chỉ có min-height: tên ngắn một dòng thì nút của thẻ đó nhảy
-   │ lên cao hơn nút của thẻ tên dài hai dòng bên cạnh.
+   │ VÌ SAO KHÔNG CẦN GHIM: mẫu giữ bốn cái nút thẳng hàng bằng một cơ chế
+   │ khác, và nó khoẻ hơn. Thẻ cao cố định (min-height ở .wl__item), ô ảnh
+   │ `flex:1` co giãn, nên khối chữ luôn DÍNH ĐÁY thẻ: tên dài hai dòng thì
+   │ ô ảnh tự thu lại 18px, còn mép dưới của khối chữ — và cái nút nằm trong
+   │ đó — không nhúc nhích. Ghim chiều cao từng dòng là giải lại một bài đã
+   │ được giải, và giải sai.
    │
-   │ TÊN: đúng HAI dòng (36px), dài hơn thì cắt bằng dấu "…". PHỐI MÀU, GIÁ,
-   │ TRẠNG THÁI: đúng MỘT dòng, tràn thì "…". Tên đầy đủ vẫn đọc được ở trang
-   │ chi tiết, và trình đọc màn hình vẫn đọc trọn chữ bị cắt.
+   │ Tên vẫn cắt ở HAI dòng: dài hơn thì "…" chứ không đẩy ảnh bé lại mãi.
+   │ Tên đầy đủ vẫn đọc được ở trang chi tiết và trình đọc màn hình vẫn đọc
+   │ trọn chữ bị cắt.
    └──────────────────────────────────────────────────────────────────────── */
 .wl__name {
     display: -webkit-box;
-    height: 36px;
-    margin-top: 14px;
     overflow: hidden;
-    font-size: 14px;
-    line-height: 18px;
     overflow-wrap: anywhere;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -1071,73 +1080,37 @@ select.acct-field__ctl {
 .wl__color,
 .wl__price {
     display: block;
-    height: 18px;
-    margin-top: 4px;
     overflow: hidden;
-    font-size: 14px;
-    line-height: 18px;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* Hết hàng thì giá mờ đi — mẫu đổi màu chữ giá, không gạch ngang nó. */
-.wl__price.is-off {
-    color: #8a8a8a;
+/* GIỮ CHỖ KHI TRỐNG — mặt hàng chưa khai màu nào vẫn phải chiếm một dòng,
+   nếu không thẻ đó có hai dòng chữ trong khi ba thẻ bên cạnh có ba, và mắt
+   thấy ngay là chữ so le. `min-height` chứ không `height`: dòng có chữ thì
+   cứ cao tự nhiên. 18.2px = 13px × 1.4, đúng nhịp dòng của mẫu. */
+.wl__color {
+    min-height: 18.2px;
 }
 
-/* GIỮ CHỖ khi không có gì để nói: thiếu nó thì nút của thẻ còn hàng nhảy lên
-   cao hơn nút của thẻ hết hàng. Cao cố định một dòng như ba dòng trên.
-
-   ⚠ 16px, KHÔNG phải 15px như mẫu, và `line-height` ghim luôn cho khỏi trôi.
-   Mẫu để min-height:15px trong khi một dòng chữ 12px ở line-height 1.3 cao
-   15,6px → làm tròn 16. Tức chính con số của mẫu lệch 1px so với thứ nó sinh
-   ra để bảo đảm: ô rỗng 15px, ô có chữ 16px, và bốn cái nút ở chân bốn thẻ
-   so le nhau đúng 1px. Phép đo bắt được; đây là sửa cho ĐÚNG Ý mẫu, không
-   phải đi chệch khỏi mẫu. */
-.wl__note {
-    display: block;
-    height: 16px;
-    margin-top: 2px;
-    overflow: hidden;
-    font-size: 12px;
-    line-height: 16px;
-    color: #8a8a8a;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+/* Mẫu thay hẳn dòng giá bằng chữ "Sold out" màu nhạt — không gạch ngang giá,
+   không thêm dòng thứ tư. */
+.wl__price--off {
+    color: var(--wl-mo);
 }
 
-/* Một lớp cho cả <button> lẫn <a>: ba cảnh của nút hành động không cùng một
-   thẻ HTML (thêm vào giỏ là form POST, hai cảnh kia là liên kết), nhưng phải
-   trông y hệt nhau. */
-.acct .wl__cta {
-    display: inline-block;
-    align-self: flex-start;
-    margin-top: 14px;
-    border: 0;
-    border-radius: 0;
-    background: #ebebeb;
-    padding: 10px 12px;
-    font: inherit;
-    font-size: 12px;
-    /* Nút cao đúng một dòng ở mọi thẻ: thẻ hẹp (hai cột trên điện thoại) mà
-       để chữ "Chọn phương án" gãy làm hai thì nút ấy cao gấp đôi nút bên cạnh. */
-    line-height: 16px;
-    white-space: nowrap;
-    color: #111;
-    cursor: pointer;
-    transition: background-color .18s ease, color .18s ease;
-}
-
-.acct .wl__cta:hover {
-    background: #111;
-    color: #fff;
-    text-decoration: none;
+/* Ký hiệu tiền NHỎ VÀ ĐỨNG TRƯỚC, đúng mẫu (9px, vertical-align:top). Chữ
+   số thì vẫn của money() — xem điểm 3 ở đầu da-luu.php. */
+.wl__cur {
+    font-size: 9px;
+    vertical-align: top;
 }
 
 .wl__mark {
     border: 0;
     background: none;
-    padding: 12px 0 0;
+    padding: 0;
+    margin-top: 2px;
     line-height: 0;
     color: #111;
     cursor: pointer;
@@ -1147,35 +1120,100 @@ select.acct-field__ctl {
     opacity: .6;
 }
 
+/* Ô NÚT CAO 52px, nút DÍNH ĐÁY ô — đúng mẫu. Cao cố định kể cả khi rỗng
+   (thẻ hết hàng không có nút): bỏ đi thì thẻ ấy ngắn hơn ba thẻ bên cạnh. */
+.wl__act {
+    display: flex;
+    align-items: flex-end;
+    height: 52px;
+}
+
+/* Một lớp cho cả <button> lẫn <a>: hai cảnh của nút hành động không cùng một
+   thẻ HTML (thêm vào giỏ là form POST, chọn phương án là liên kết), nhưng
+   phải trông y hệt nhau. */
+.acct .wl__cta,
+.wlpage .wl__cta {
+    display: inline-block;
+    border: 0;
+    border-radius: 3px;
+    background: var(--wl-nut);
+    padding: 8px 10px;
+    font: inherit;
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: nowrap;
+    color: #111;
+    cursor: pointer;
+    transition: background-color .18s ease, color .18s ease;
+}
+
+.acct .wl__cta:hover,
+.wlpage .wl__cta:hover {
+    background: #111;
+    color: #fff;
+    text-decoration: none;
+}
+
 /* ── Nút lật ảnh ─────────────────────────────────────────────────────── */
 
 .wl__foot {
     display: flex;
     justify-content: center;
-    margin-top: 56px;
+    padding: 40px 0 60px;
 }
 
-.acct .wl__view {
+.acct .wl__view,
+.wlpage .wl__view {
     display: flex;
     align-items: center;
     gap: 12px;
-    border-radius: 0;
+    border-radius: 4px;
     background: #fff;
-    padding: 12px 16px;
-    font-size: 14px;
+    padding: 10px 14px;
+    font-size: 13px;
     color: #111;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
 }
 
-.acct .wl__view:hover {
+.acct .wl__view:hover,
+.wlpage .wl__view:hover {
     color: #111;
     text-decoration: none;
     box-shadow: 0 1px 6px rgba(0, 0, 0, .12);
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   MÀN HẸP — bản thiết kế chỉ vẽ màn rộng
-   ══════════════════════════════════════════════════════════════════════ */
+/* ┌─ TRANG /yeu-thich ĐỨNG RIÊNG ─────────────────────────────────────────
+   │ Mẫu vẽ CẢ MÀN HÌNH nền #f4f4f4 với lưới tràn ngang, đệm hai bên 32px —
+   │ khác trang tài khoản, nơi lưới này nằm trong một cột hẹp trên nền trắng.
+   │ Nên nền và đệm của mẫu chỉ áp cho trang riêng, không áp cho tab.
+   └──────────────────────────────────────────────────────────────────────── */
+.wlpage {
+    display: flex;
+    flex-direction: column;
+    background: #f4f4f4;
+    padding: 0 32px;
+
+    /* ┌─ CAO ÍT NHẤT BẰNG MÀN HÌNH ───────────────────────────────────────
+       │ Mẫu bọc cả màn trong một cột flex `min-height:100vh` rồi cho lưới
+       │ `flex:1`. Con số 640px ở .wl__item chỉ là SÀN: trên màn 1440×1000
+       │ của mẫu, thẻ thật cao 688px vì lưới nở ra ăn hết chỗ trống.
+       │
+       │ Phép đo bắt được đúng chỗ này: bản đầu để thẻ đứng ở 640px và lệch
+       │ 48px so với mẫu. Chép mỗi con số 640 là chép cái SÀN mà bỏ mất cái
+       │ LUẬT sinh ra nó.
+       │
+       │ Trừ --hdr-h chứ không 100vh trần: trang này nằm dưới thanh đầu
+       │ trang, còn mẫu vẽ cả màn hình từ mép trên. */
+    min-height: calc(100vh - var(--hdr-h));
+}
+
+/* Lưới ăn hết chỗ trống còn lại; hàng thẻ nở theo. Nhiều hơn một hàng thì
+   lưới đã cao hơn màn hình và dòng này không còn tác dụng gì — đúng như
+   mẫu. */
+.wlpage .wl {
+    flex: 1;
+    margin-top: 0;
+}
 
 @media (max-width: 760px) {
     /* ĐĂNG XUẤT lên trên, hàng tab thành một dải vuốt ngang ngay dưới —
@@ -1239,10 +1277,27 @@ select.acct-field__ctl {
     }
 
     /* Bốn cột → hai. Mẫu chỉ vẽ khổ rộng; dưới 760px mỗi thẻ chỉ còn chừng
-       160px, ba chữ trong .wl__body sẽ gãy dòng giữa từ. */
+       160px, ba chữ trong .wl__body sẽ gãy dòng giữa từ.
+
+       min(640px, 60vw) của mẫu ở đây cho ra thẻ cao 456px trên màn 760px —
+       quá cao cho một thẻ rộng 180px. Kẹp lại bằng 78vw: thẻ vẫn cao hơn
+       rộng, nhưng không thành một cột xám dài. */
     .wl {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 32px 12px;
+        gap: 2px;
+    }
+
+    .wl__item {
+        min-height: min(480px, 78vw);
+    }
+
+    .acct .wl__shot,
+    .wlpage .wl__shot {
+        padding: 24px 16px 16px;
+    }
+
+    .wl__body {
+        padding: 8px 16px 28px 18px;
     }
 
     /* 8 + 20px padding của dải tiêu đề dính = 28px. */
@@ -1251,7 +1306,11 @@ select.acct-field__ctl {
     }
 
     .wl__foot {
-        margin-top: 36px;
+        padding: 28px 0 40px;
+    }
+
+    .wlpage {
+        padding: 0 12px;
     }
 
     /* Thẻ thành một cột: liên kết hành động xuống dưới, xếp ngang */
