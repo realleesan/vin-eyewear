@@ -1,0 +1,439 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TRANG GIỎ HÀNG — /gio-hang
+
+   Dựng 1:1 từ "Cart Screen.dc.html" (Claude Design, 13/09/2026). Mọi con số
+   dưới đây lấy thẳng từ bản thiết kế; chỗ nào lệch đều có chú thích nói vì sao.
+
+   ⚠ BA GIÁ TRỊ KHÔNG LẤY TỪ TOKEN CỦA SITE, và đó là chủ ý — chủ dự án chốt
+   "giống design tuyệt đối":
+
+     border-radius 3px/4px   site để --r-pill/--r-chip = 0 (góc vuông)
+     #ebebeb                 nền nút BAG và nút "Bỏ khỏi giỏ"
+     #8a8a8a · #9a9a9a       chữ tab tắt · viền nút phụ
+
+   Muốn kéo trang này về hệ token chung thì đổi cả ba cùng lúc, đừng đổi một.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cart {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #fff;
+    color: #111;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HAI TAB + NÚT ĐÓNG — ĐÃ CHUYỂN SANG assets/css/oa.css (13/09/2026)
+
+   Bộ lớp .ctabs* nay dùng ở HAI chỗ: trang giỏ hàng này và ngăn kéo giỏ mở
+   ra từ icon trên thanh đầu trang (_layout/header-cart.php). Ngăn kéo ấy có
+   mặt ở MỌI trang, mà cart.css thì chỉ nạp cho riêng trang /gio-hang — để
+   luật ở đây thì ngăn kéo ra một hàng tab không kiểu dáng.
+
+   ⚠ Đừng chép ngược về đây. Hai bản sao của cùng một hàng tab là hai chỗ sẽ
+   lệch nhau, đúng thứ vừa dọn xong ở bảng xổ tìm kiếm.
+   ══════════════════════════════════════════════════════════════════════ */
+
+
+/* Dải báo sau thao tác — không có trong mẫu, xem chú thích ở view. */
+.cmsg {
+    margin: 18px auto 0;
+    padding: 0 32px;
+    max-width: 1288px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 12px;
+    color: #555;
+}
+
+.cmsg.is-err {
+    color: var(--sale, #b3261e);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LƯỚI CHÍNH — danh sách trái, tóm tắt phải
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cmain {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 368px);
+    gap: 40px;
+    padding: 60px 32px 80px;
+    max-width: 1288px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 auto;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   DANH SÁCH
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* gap 84px — KHOẢNG CÁCH RẤT RỘNG GIỮA HAI DÒNG, và đó là dáng của mẫu:
+   mỗi món đứng như một tấm ảnh trưng bày chứ không phải một hàng trong bảng.
+   Đừng rút lại cho "gọn"; rút là mất hẳn nhịp của trang. */
+.clist {
+    display: flex;
+    flex-direction: column;
+    gap: 84px;
+    padding-top: 100px;
+    align-items: center;
+}
+
+.cempty {
+    margin: 0;
+    font-size: 13px;
+    color: #8a8a8a;
+}
+
+/* Ba cột: ảnh · chữ · dấu trang. max-width 580px giữ khối chữ không trôi ra
+   xa tấm ảnh khi màn hình rộng — cả cụm căn giữa cột trái. */
+.citem {
+    display: grid;
+    grid-template-columns: minmax(140px, 220px) minmax(0, 1fr) auto;
+    gap: 32px;
+    align-items: center;
+    width: 100%;
+    max-width: 580px;
+}
+
+/* aspect-ratio 2/1 + contain: gọng kính là hình NẰM NGANG, và `contain` để
+   thấy trọn cái gọng. Cùng lý lẽ với .oa-slot của thẻ sản phẩm — ảnh sản
+   phẩm không bao giờ cắt tràn khung. */
+.citem__thumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 220px;
+    aspect-ratio: 2 / 1;
+}
+
+.citem__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.citem__body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+    font-size: 11.5px;
+    line-height: 1.5;
+}
+
+.citem__name a:hover {
+    text-decoration: underline;
+}
+
+.citem__variant,
+.citem__price {
+    color: #111;
+}
+
+/* ── Số lượng ─────────────────────────────────────────────────────────── */
+
+.cqty {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-top: 6px;
+}
+
+.cqty__pick {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Ô CHỌN THẬT, PHỦ TRONG SUỐT LÊN CON SỐ.
+
+   Đây là mẹo của bản thiết kế và nó đáng giữ: khách thấy một con số với mũi
+   tên nhỏ, nhưng bấm vào bất cứ đâu trong cụm là mở đúng danh sách chọn của
+   HỆ ĐIỀU HÀNH — trên điện thoại đó là bánh xe quen tay, không phải một cái
+   menu tự vẽ.
+
+   ⚠ `opacity: 0` chứ KHÔNG `visibility:hidden` hay `display:none`: hai cái
+   kia gỡ phần tử khỏi cây tiêu điểm, và lúc ấy bàn phím không còn đường nào
+   đổi số lượng. */
+.cqty select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.cqty__num {
+    font-size: 12px;
+}
+
+.cqty__caret {
+    flex: none;
+}
+
+/* Vòng tiêu điểm vẽ quanh CỤM, vì cái ô thật thì trong suốt — không có luật
+   này thì người dùng bàn phím Tab tới đây và không thấy gì cả. */
+.cqty select:focus-visible + .cqty__num {
+    outline: 1px solid #111;
+    outline-offset: 3px;
+}
+
+/* Nút gửi cho trường hợp KHÔNG có JavaScript. Có JS thì cart.js gửi form ngay
+   khi đổi ô, nút này thừa nên ẩn đi — cùng lối với .catpick__go của trang
+   danh mục và ô chọn trạng thái ở khu quản trị. */
+.cqty__go {
+    border: 1px solid #9a9a9a;
+    border-radius: 0;
+    background: #fff;
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 10px;
+    color: #111;
+    cursor: pointer;
+}
+
+html.js .cqty__go {
+    display: none;
+}
+
+/* ── Bỏ khỏi giỏ ──────────────────────────────────────────────────────── */
+
+.crem {
+    align-self: flex-start;
+    margin-top: 8px;
+    border: 0;
+    border-radius: 0;
+    background: #ebebeb;
+    padding: 6px 10px;
+    font: inherit;
+    font-size: 10px;
+    color: #111;
+    cursor: pointer;
+}
+
+.crem:hover {
+    background: #e0e0e0;
+}
+
+/* ── Dấu trang ────────────────────────────────────────────────────────── */
+
+.cwish {
+    align-self: start;
+    margin-top: -4px;
+}
+
+.cwish__btn {
+    display: block;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: #111;
+    cursor: pointer;
+}
+
+.cwish__btn:hover {
+    opacity: .6;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TÓM TẮT
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* padding-top 100px KHỚP với .clist: hai cột phải bắt đầu ngang nhau, mà cột
+   trái đã đẩy xuống chừng ấy. Sửa một bên mà quên bên kia là hai cột lệch vai. */
+.csum {
+    display: flex;
+    flex-direction: column;
+    padding-top: 100px;
+    font-size: 12px;
+}
+
+/* <dl> chứ không hai <span>: đây là những CẶP nhãn–giá trị, và cặp thẻ này là
+   thứ trình đọc màn hình đọc ra đúng "Tạm tính: 1.890.000 đồng". Lưới hai cột
+   khai ở đây nên dt/dd vẫn nằm ngang nhau y như mẫu. */
+.csum__rows {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    row-gap: 4px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.csum__rows dt,
+.csum__rows dd {
+    margin: 0;
+}
+
+.csum__rows dd {
+    text-align: right;
+}
+
+.csum__cut {
+    color: var(--sale, #b3261e);
+}
+
+.csum__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin: 16px 0 0;
+}
+
+.csum__num {
+    font-size: 17px;
+}
+
+.csum__go {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 22px;
+    height: 48px;
+    border: 0;
+    border-radius: 0;
+    background: #111;
+    color: #fff;
+    font-size: 12px;
+    letter-spacing: .02em;
+    cursor: pointer;
+}
+
+.csum__go:hover {
+    background: #000;
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Giỏ rỗng: nút vẫn CHIẾM CHỖ chứ không biến mất — bỏ hẳn thì cả cột nhảy
+   lên 48px đúng lúc khách vừa xoá món cuối cùng. */
+.csum__go.is-off {
+    background: #ebebeb;
+    color: #8a8a8a;
+    cursor: default;
+    pointer-events: none;
+}
+
+.csum__keep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    height: 52px;
+    border: 1px solid #9a9a9a;
+    border-radius: 0;
+    background: #fff;
+    color: #111;
+    font-size: 12px;
+    letter-spacing: .02em;
+}
+
+.csum__keep:hover {
+    border-color: #111;
+    text-decoration: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   HAI MỤC GẬP
+   ══════════════════════════════════════════════════════════════════════ */
+
+.cfaq {
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+}
+
+.cfaq__item {
+    padding: 16px 0;
+}
+
+/* Tam giác mặc định của <summary> — tắt ở cả hai cú pháp; dấu + bên phải mới
+   là thứ nói đóng/mở. */
+.cfaq__q {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    font-size: 12px;
+    line-height: 1.55;
+    letter-spacing: .01em;
+    color: #111;
+    cursor: pointer;
+    list-style: none;
+}
+
+.cfaq__q::-webkit-details-marker {
+    display: none;
+}
+
+.cfaq__q > span {
+    max-width: 280px;
+}
+
+/* Dấu + xoay 45° thành dấu ✕ khi mở. Quãng .2s lấy của mẫu; người tắt chuyển
+   động trong hệ điều hành đã có khối prefers-reduced-motion ở cuối oa.css lo. */
+.cfaq__ico {
+    flex: none;
+    margin-top: 2px;
+    transition: transform .2s;
+}
+
+.cfaq__item[open] .cfaq__ico {
+    transform: rotate(45deg);
+}
+
+.cfaq__a {
+    margin: 12px 0 0;
+    max-width: 320px;
+    font-size: 11.5px;
+    line-height: 1.6;
+    color: #555;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP
+
+   Mẫu chỉ vẽ khổ máy tính. Dưới 900px cột tóm tắt xuống dưới danh sách, và
+   hai khối bỏ luôn đệm-trên 100px — con số ấy để cân hai cột cạnh nhau, mà
+   xếp dọc thì nó thành một mảng trắng dài.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+    .cmain {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 56px;
+        padding: 32px 20px 64px;
+    }
+
+    .clist {
+        gap: 56px;
+        padding-top: 0;
+    }
+
+    .csum {
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    /* Ảnh lên trên, chữ xuống dưới, dấu trang nằm cùng hàng với ảnh: ba cột
+       trong 320px thì cột chữ chỉ còn chừng 90px. */
+    .citem {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 16px 12px;
+    }
+
+    .citem__thumb {
+        max-width: none;
+    }
+
+    .citem__body {
+        grid-column: 1 / -1;
+    }
+}
