@@ -491,7 +491,16 @@ $nutLuu = static function (string $slugSp, string $tenSp, bool $dangLuu, int $co
                             Đăng nhập để cửa hàng báo cho bạn khi mẫu này về — thông tin liên hệ
                             lấy sẵn từ tài khoản, bạn không phải gõ lại.
                         </p>
-                        <a class="pdwait__go" href="/auth?redirect=<?= e(rawurlencode($veLai)) ?>">
+                        <?php /* [data-authov-open]: mở ngăn kéo tại chỗ thay vì
+                                 sang trang — 13/09/2026, chủ dự án chốt MỌI lối
+                                 vào đăng nhập đều phải là lớp phủ. Đây là lối
+                                 thứ hai (lối kia là popup "chỉ dành cho thành
+                                 viên"); sau hai chỗ này, không còn thẻ nào
+                                 trong app/views đưa khách rời trang để đăng
+                                 nhập. Vẫn là <a href> thật để tắt JS không mất
+                                 lối. Xem _layout/login-gate.php. */ ?>
+                        <a class="pdwait__go" href="/auth?redirect=<?= e(rawurlencode($veLai)) ?>"
+                           data-authov-open aria-haspopup="dialog">
                             Đăng nhập để nhận thông báo
                         </a>
                     <?php endif; ?>

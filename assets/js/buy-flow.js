@@ -506,6 +506,30 @@
         opener = null;
     });
 
+    /* ── Bấm "ĐĂNG NHẬP HOẶC ĐĂNG KÝ" trong popup ───────────────────────────
+       Nút ấy mang [data-authov-open], và assets/js/auth-drawer.js đã lo phần
+       mở ngăn kéo. Ở đây chỉ dọn popup đi: hai lớp phủ chồng nhau thì popup
+       nằm dưới nền mờ của ngăn kéo, mà lời nhắn của nó ("phải là thành viên")
+       đã hết việc ngay khi form đăng nhập hiện ra.
+
+       ⚠ KHÔNG gọi preventDefault, và KHÔNG bỏ qua khi e.defaultPrevented.
+       Hai điều này giữ cho thứ tự chạy không quan trọng:
+         · auth-drawer.js nạp TRƯỚC buy-flow.js (xem _layout/master.php) nên
+           trình nghe của nó chạy trước và ĐÃ gọi preventDefault — bỏ qua
+           defaultPrevented ở đây thì popup không bao giờ được dọn;
+         · còn nếu auth-drawer.js vắng mặt hay hỏng, không ai preventDefault
+           cả, trình duyệt đi theo href sang /auth như lối lùi vốn có — dọn
+           popup trước khi rời trang cũng chẳng hại gì. */
+    document.addEventListener('click', function (e) {
+        if (!(e.target instanceof Element)) return;
+
+        var mo = e.target.closest('[data-authov-open]');
+        if (!mo) return;
+
+        var gate = mo.closest('.lgate');
+        if (gate) gate.remove();
+    });
+
     /* Esc cũng đóng popup ấy — bấm đúng nút đóng có sẵn thay vì dựng đường
        đóng thứ hai, để chỉ có một chỗ quyết định "đóng nghĩa là gì". */
     document.addEventListener('keydown', function (e) {

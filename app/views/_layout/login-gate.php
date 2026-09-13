@@ -60,11 +60,29 @@ $veLai = (string) ($veLai ?? '/san-pham');
 
         <p class="lgate__msg" id="lgate-msg"><?= e(t('gate.msg')) ?></p>
 
-        <?php /* ?redirect= chứ không phải một đường cố định: khách đang đứng ở
-                 giữa một trang sản phẩm, và bắt họ tự tìm đường về sau khi đăng
-                 nhập là mất nốt phần kiên nhẫn còn lại. /auth đọc tham số này —
-                 xem AuthController. */ ?>
-        <a class="lgate__cta" href="/auth?redirect=<?= e(rawurlencode($veLai)) ?>">
+        <?php
+        /* ┌─ MỞ NGĂN KÉO TẠI CHỖ, KHÔNG CHUYỂN TRANG (13/09/2026) ────────────
+           │ Theo yêu cầu chủ dự án: "khi click vào button đó, tôi cần mở cái
+           │ overlay đăng ký/đăng nhập ra chứ không phải chuyển sang trang
+           │ khác."
+           │
+           │ [data-authov-open] là toàn bộ phần việc phải làm: assets/js/
+           │ auth-drawer.js uỷ quyền từ document và bắt mọi phần tử mang thuộc
+           │ tính ấy — đúng cách icon tài khoản trên thanh đầu trang vẫn mở
+           │ ngăn kéo. Không thêm một dòng JS nào cho riêng popup này.
+           │
+           │ VẪN LÀ <a href> THẬT, và đó là lối lùi khi JavaScript không chạy:
+           │ bấm vào là sang trang /auth như trước. ⚠ Đừng đổi thành <button>
+           │ cho "gọn" — làm thế là bỏ mất lối lùi ấy.
+           │
+           │ ?redirect= giữ nguyên cho ĐÚNG lối lùi đó. Khi ngăn kéo mở được
+           │ thì tham số này không được dùng tới: ruột ngăn kéo do máy chủ in
+           │ sẵn (AuthController::hatGiongNganKeo) và nó tự lấy trang đang
+           │ đứng làm đích — cùng một trang, cùng một kết quả.
+           └──────────────────────────────────────────────────────────────── */
+        ?>
+        <a class="lgate__cta" href="/auth?redirect=<?= e(rawurlencode($veLai)) ?>"
+           data-authov-open aria-haspopup="dialog">
             <?= e(t('gate.cta')) ?>
         </a>
     </div>

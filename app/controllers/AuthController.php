@@ -193,8 +193,41 @@ class AuthController extends BaseController
             'old'         => [],
             'errors'      => [],
             'signup'      => [],
-            'redirect'    => '',
-            'redirectRaw' => '',
+
+            /* ┌─ ĐÍCH SAU KHI ĐĂNG NHẬP = ĐÚNG TRANG ĐANG ĐỨNG (13/09/2026) ──
+               │ Bản trước để chuỗi rỗng, nên loginTarget(null) rơi về mặc
+               │ định HOME_AFTER_LOGIN = '/'. Hệ quả: khách đang xem một chiếc
+               │ gọng, mở ngăn kéo, đăng nhập xong thì bị ném ra TRANG CHỦ —
+               │ mất chỗ, và phải tự tìm đường về chiếc kính vừa xem.
+               │
+               │ Chuỗi rỗng ấy đúng khi ngăn kéo chỉ mở từ icon tài khoản trên
+               │ thanh đầu trang ("chủ động vào từ menu thì về trang chủ",
+               │ BR-UC.USER.02-06). Nay nó còn mở từ popup "chỉ dành cho thành
+               │ viên" và từ nút chờ hàng — hai chỗ mà khách đang ở GIỮA một
+               │ việc dở dang. Với họ, về trang chủ là bỏ dở hộ.
+               │
+               │ currentUrlWithout() chứ không currentPath(): giữ cả query, để
+               │ đăng nhập ở /san-pham?category=gong-kinh&sort=gia không ném
+               │ khách về danh sách chưa lọc.
+               │
+               │ safeRedirectPath() dù nguồn là REQUEST_URI của chính máy chủ:
+               │ rẻ, và nó là chốt cuối cho mọi giá trị chảy vào ô ẩn `redirect`
+               │ — đừng tạo ngoại lệ cho một nguồn trông có vẻ sạch.
+               │
+               │ ⚠ HÀM NÀY CHẠY Ở MỌI TRANG (khuôn ngăn kéo in trong
+               │   _layout/auth-drawer.php). Trang /auth không dựng khuôn vì nó
+               │   chạy khung rút gọn — xem chốt ở _layout/master.php — nên
+               │   không có cảnh "đăng nhập xong quay lại chính trang đăng
+               │   nhập".
+               └──────────────────────────────────────────────────────────── */
+            'redirect'    => ($noiDangDung = safeRedirectPath(currentUrlWithout(), '/')),
+
+            /* redirectRaw chỉ dùng để DỰNG LIÊN KẾT trong luồng (nút "Đăng ký"
+               phải mang tham số sang màn đăng ký — xem $giuDich ở
+               auth/index.php). Trang chủ là mặc định rồi nên không cần đeo
+               theo: '?redirect=%2F' chỉ làm bẩn địa chỉ mà không đổi gì. */
+            'redirectRaw' => $noiDangDung === '/' ? '' : $noiDangDung,
+
             'error'       => null,
             'success'     => null,
             'staffGate'   => false,
