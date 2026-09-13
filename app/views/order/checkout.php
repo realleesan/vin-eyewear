@@ -126,29 +126,39 @@ $storeId  = $old['storeId'] ?? '';
 
 <section class="checkout">
 
+    <?php
+    /* ┌─ ĐẦU TRANG DỰNG THEO MÀN QUÉT QR ─────────────────────────────────
+       │ (13/09/2026, theo yêu cầu chủ dự án: "breadcrumb ở màn hoàn tất
+       │ giỏ hàng thiết kế theo màn hình quét QR".)
+       │
+       │ Ba thứ đổi so với bản trước:
+       │   · dấu ngăn "/" thành "›", và mắt xích dùng chung dáng với màn QR;
+       │   · nút lùi thôi là một mũi tên "‹" đứng cạnh tiêu đề, nay là một
+       │     liên kết có CHỮ nằm sát mép phải — một mũi tên trần không nói
+       │     được nó lùi về đâu, mà ở đây nó lùi về hai chỗ khác nhau tuỳ
+       │     luồng (xem $backUrl);
+       │   · tiêu đề không còn phải chừa chỗ cho mũi tên nên căn thẳng mép
+       │     trái như mọi tiêu đề khác của site.
+       │
+       │ Bộ lớp .cohead__* giữ nguyên tên — chúng chỉ đổi dáng, và đổi tên
+       │ thì phải sờ vào cả checkout.css lẫn bài kiểm thử mà không được gì. */
+    ?>
     <div class="cohead">
-        <?php /* Hai mắt xích, đúng bản thiết kế: giỏ hàng → thanh toán. Đây
-                 vừa là đường lùi vừa là thước đo "còn mấy bước nữa" — khách
-                 đang ở giữa một biểu mẫu dài thì cần cả hai. */ ?>
+
         <nav class="cohead__crumbs" aria-label="<?= e(t('co.crumbs')) ?>">
             <a href="/gio-hang"><?= e(t('cart.title')) ?></a>
-            <span class="cohead__sep" aria-hidden="true">/</span>
+            <span class="cohead__sep" aria-hidden="true">›</span>
             <span class="cohead__here" aria-current="page"><?= e(t('co.checkout')) ?></span>
         </nav>
-        <?php /* NÚT LÙI cạnh tiêu đề, cùng dáng với nút "‹" của hộp thoại mua
-                 hàng. Dải mắt xích ngay trên cũng là một đường lùi, nhưng nó
-                 LUÔN chỉ về giỏ hàng — mà luồng "Mua ngay" không đi qua giỏ
-                 hàng lần nào, nên với họ mắt xích đó dẫn tới một trang lạ.
-                 Nút này chỉ về đúng chỗ vừa rời; xem $backUrl ở
-                 OrderController::checkout(). */ ?>
+
         <div class="cohead__row">
-            <a class="cohead__back" href="<?= e($backUrl ?? '/gio-hang') ?>" aria-label="<?= e(t('co.back')) ?>">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M15 18l-6-6 6-6"></path>
-                </svg>
-            </a>
             <h1 class="cohead__title"><?= e(t('co.title')) ?></h1>
+
+            <?php /* Lùi về ĐÚNG CHỖ VỪA RỜI, không phải luôn về giỏ hàng: luồng
+                     "Mua ngay" không đi qua giỏ lần nào, nên với họ mắt xích ở
+                     trên dẫn tới một trang lạ. Xem $backUrl ở
+                     OrderController::checkout(). */ ?>
+            <a class="cohead__back" href="<?= e($backUrl ?? '/gio-hang') ?>">← <?= e(t('co.back')) ?></a>
         </div>
     </div>
 

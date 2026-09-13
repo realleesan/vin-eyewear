@@ -190,7 +190,7 @@
    danh mục và ô chọn trạng thái ở khu quản trị. */
 .cqty__go {
     border: 1px solid #9a9a9a;
-    border-radius: 3px;
+    border-radius: 0;
     background: #fff;
     padding: 4px 10px;
     font: inherit;
@@ -209,7 +209,7 @@ html.js .cqty__go {
     align-self: flex-start;
     margin-top: 8px;
     border: 0;
-    border-radius: 3px;
+    border-radius: 0;
     background: #ebebeb;
     padding: 6px 10px;
     font: inherit;
@@ -297,7 +297,7 @@ html.js .cqty__go {
     margin-top: 22px;
     height: 48px;
     border: 0;
-    border-radius: 3px;
+    border-radius: 0;
     background: #111;
     color: #fff;
     font-size: 12px;
@@ -327,7 +327,7 @@ html.js .cqty__go {
     margin-top: 12px;
     height: 52px;
     border: 1px solid #9a9a9a;
-    border-radius: 3px;
+    border-radius: 0;
     background: #fff;
     color: #111;
     font-size: 12px;

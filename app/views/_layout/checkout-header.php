@@ -27,7 +27,22 @@
  */
 ?>
 
-<p class="barepromo"><?= e(t('announce.shipping')) ?></p>
+<?php
+/* ┌─ DẢI THÔNG BÁO CHỈ Ở MÀN ĐẶT HÀNG ────────────────────────────────────
+   │ (13/09/2026, theo yêu cầu chủ dự án: bỏ dải đen ở màn quét mã QR.)
+   │
+   │ Lý do nó tồn tại: ở bước điền form, "có mất phí ship không?" là câu hỏi
+   │ khách đang có trong đầu, và dải này trả lời trước khi họ phải đi tìm.
+   │ Tới màn QR thì câu hỏi ấy đã xong từ lâu — số tiền phải chuyển đang
+   │ hiện to giữa màn hình, đã gồm cả phí ship. Một dải đen nhắc về phí giao
+   │ hàng ở đó chỉ còn là tiếng ồn ngay trên đầu con số quan trọng nhất.
+   │
+   │ $barePromo do controller truyền; mặc định CÓ, để mọi màn dùng khung rút
+   │ gọn khác (nếu thêm sau này) giữ nguyên hành vi cũ mà không phải khai gì. */
+?>
+<?php if ($barePromo ?? true): ?>
+    <p class="barepromo"><?= e(t('announce.shipping')) ?></p>
+<?php endif; ?>
 
 <header class="barebar">
     <a class="barebar__logo oa-header__mark" href="/">Vin Eyewear</a>

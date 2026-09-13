@@ -239,7 +239,7 @@
     margin: 0 0 24px;
     padding: 12px 14px;
     border: 1px solid var(--acct-line);
-    border-radius: 4px;
+    border-radius: 0;
     background: #fff;
     font-size: 14px;
     line-height: 1.45;
@@ -504,7 +504,7 @@
     height: 48px;
     padding: 0 14px;
     border: 1px solid var(--acct-line);
-    border-radius: 4px;
+    border-radius: 0;
     background: #fff;
     color: var(--acct-ink);
     font-size: 14px;
@@ -535,7 +535,7 @@ select.acct-input {
     min-height: 48px;
     padding: 8px 14px;
     border: 1px solid var(--acct-line);
-    border-radius: 4px;
+    border-radius: 0;
     background: #fff;
 }
 
@@ -690,7 +690,7 @@ select.acct-field__ctl {
     gap: 20px 24px;
     padding: 20px;
     border: 1px solid var(--acct-line);
-    border-radius: 4px;
+    border-radius: 0;
     background: #fff;
 }
 
@@ -757,7 +757,7 @@ select.acct-field__ctl {
 
 .acct-pill {
     padding: 3px 8px;
-    border-radius: 999px;
+    border-radius: 0;
     background: var(--acct-chip);
     font-size: 11px;
     letter-spacing: .04em;
@@ -833,7 +833,7 @@ select.acct-field__ctl {
     gap: 14px;
     padding: 20px;
     border: 1px solid var(--acct-ink);
-    border-radius: 4px;
+    border-radius: 0;
 }
 
 .acct-pay__num {
@@ -900,7 +900,7 @@ select.acct-field__ctl {
     margin: 0;
     overflow: auto;
     padding: 40px 32px 32px;
-    border-radius: 4px;
+    border-radius: 0;
     background: var(--acct-bg);
 }
 
@@ -968,7 +968,7 @@ select.acct-field__ctl {
    tab. Xem chú thích tại chỗ trong da-luu.php. */
 .wl__title {
     margin: 26px 0 -20px;
-    font-size: 18px;
+    font-size: var(--fs-h);
     font-weight: 500;
     letter-spacing: .02em;
     text-align: center;
@@ -976,7 +976,7 @@ select.acct-field__ctl {
 
 .wl__sup {
     margin-left: 1px;
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 600;
     vertical-align: super;
 }
@@ -1032,13 +1032,13 @@ select.acct-field__ctl {
 }
 
 .wl__noimg {
-    font-size: 12px;
+    font-size: var(--fs-micro);
     color: var(--wl-mo);
 }
 
 .wl__body {
     padding: 8px 24px 40px 28px;
-    font-size: 13px;
+    font-size: var(--fs-micro);
     line-height: 1.4;
 }
 
@@ -1102,7 +1102,7 @@ select.acct-field__ctl {
 /* Ký hiệu tiền NHỎ VÀ ĐỨNG TRƯỚC, đúng mẫu (9px, vertical-align:top). Chữ
    số thì vẫn của money() — xem điểm 3 ở đầu da-luu.php. */
 .wl__cur {
-    font-size: 9px;
+    font-size: var(--fs-micro);
     vertical-align: top;
 }
 
@@ -1135,11 +1135,11 @@ select.acct-field__ctl {
 .wlpage .wl__cta {
     display: inline-block;
     border: 0;
-    border-radius: 3px;
+    border-radius: 0;
     background: var(--wl-nut);
     padding: 8px 10px;
     font: inherit;
-    font-size: 11px;
+    font-size: var(--fs-micro);
     line-height: 1.2;
     white-space: nowrap;
     color: #111;
@@ -1167,10 +1167,10 @@ select.acct-field__ctl {
     display: flex;
     align-items: center;
     gap: 12px;
-    border-radius: 4px;
+    border-radius: 0;
     background: #fff;
     padding: 10px 14px;
-    font-size: 13px;
+    font-size: var(--fs-micro);
     color: #111;
     box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
 }

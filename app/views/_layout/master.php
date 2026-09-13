@@ -404,7 +404,17 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
        │ vì trang vẫn chạy bình thường.
        └──────────────────────────────────────────────────────────────────── */
     ?>
-    <?php partial($bare ? $bareHead : '_layout/header', ['viewName' => $viewName ?? '']); ?>
+    <?php
+    /* $barePromo đi kèm để _layout/checkout-header.php biết có in dải "miễn
+       phí giao hàng" hay không — màn quét QR tắt nó. partial() chạy
+       extract($data) nên biến chỉ tới được nếu chuyền tay như thế này;
+       KHÔNG kế thừa từ phạm vi của master. Mặc định true để mọi màn khung
+       rút gọn khác giữ nguyên hành vi cũ. */
+    partial($bare ? $bareHead : '_layout/header', [
+        'viewName'  => $viewName ?? '',
+        'barePromo' => $barePromo ?? true,
+    ]);
+    ?>
 
     <!-- id là đích của .skip-link trong header.php — đổi tên là link đó gãy -->
     <main class="main-content" id="noi-dung-chinh" tabindex="-1">

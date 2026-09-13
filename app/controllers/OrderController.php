@@ -620,6 +620,12 @@ class OrderController extends BaseController
             // Vẫn khung rút gọn: khách chưa trả tiền xong, đây vẫn là bước
             // cuối của luồng thanh toán.
             'bareLayout' => true,
+
+            /* Tắt dải đen "miễn phí giao hàng" ở riêng màn này — 13/09/2026,
+               theo yêu cầu chủ dự án. Tới đây câu hỏi phí ship đã xong từ lâu:
+               số tiền phải chuyển đang hiện to giữa màn hình và đã gồm cả phí.
+               Lý do đầy đủ ở _layout/checkout-header.php. */
+            'barePromo'  => false,
             'bareHeader' => '_layout/checkout-header',
             'pageTitle'  => 'Thanh toán chuyển khoản — Vin Eyewear',
             'metaDesc'   => 'Quét mã QR để hoàn tất thanh toán đơn hàng.',
