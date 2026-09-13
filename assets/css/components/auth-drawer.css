@@ -68,8 +68,10 @@
     pointer-events: auto;
 
     opacity: 0;
-    /* 280ms, không phải 450ms. Xem khối chú thích ở .authov__panel. */
-    transition: opacity .28s cubic-bezier(.4, 0, .2, 1);
+    /* Nhịp lấy từ token chung --dur-enter/--ease-enter (oa.css) — cùng một
+       nhịp với bảng tìm kiếm và ngăn giỏ. Trị số vẫn đúng 280ms như trước,
+       chỉ khác là nay ba lớp phủ đọc chung một chỗ. */
+    transition: opacity var(--dur-enter) var(--ease-enter);
 }
 
 .authov.is-open .authov__backdrop {
@@ -115,8 +117,12 @@
        │
        │ 280ms vẫn đủ dài để mắt bám được hướng tấm đi vào — dưới ~200ms thì
        │ nó đọc như "hiện ra tại chỗ" và người ta mất manh mối tấm từ đâu
-       │ tới, tức là mất luôn cảm giác bấm ✕ sẽ trả nó về đâu. */
-    transition: transform .28s cubic-bezier(.4, 0, .2, 1);
+       │ tới, tức là mất luôn cảm giác bấm ✕ sẽ trả nó về đâu.
+       │
+       │ CON SỐ ẤY NAY LÀ TOKEN CHUNG --dur-enter (13/09/2026): lập luận
+       │ trên đúng cho cả ba lớp phủ mở ra từ thanh đầu trang, nên chúng
+       │ dùng chung một nhịp. Xem khối token ở đầu assets/css/oa.css. */
+    transition: transform var(--dur-enter) var(--ease-enter);
 
     /* Nói trước cho trình duyệt biết thuộc tính nào sẽ đổi để nó tách lớp
        hợp thành riêng. Chỉ đặt ở đây — tấm sống ngắn (gắn khi mở, gỡ khi
@@ -242,7 +248,11 @@
         border-radius: 16px 16px 0 0;
 
         transform: translateY(100%);
-        transition: transform .24s cubic-bezier(.4, 0, .2, 1);
+        /* Cùng token với bản máy tính. Trước là .24s gõ cứng — nhanh hơn
+           bản kia 40ms mà không có lý do nào ghi lại, và ở khổ này tấm còn
+           đi QUÃNG DÀI HƠN (cả chiều cao tấm, thay vì 520px bề ngang) nên
+           nếu có lệch thì phải lệch theo chiều ngược lại. */
+        transition: transform var(--dur-enter) var(--ease-enter);
     }
 
     .authov.is-open .authov__panel {

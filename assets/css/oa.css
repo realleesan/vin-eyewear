@@ -424,6 +424,33 @@
     --h-tab: calc(28px * var(--oa-scale));
     --h-field: calc(44px * var(--oa-scale));
 
+    /* ┌─ CHUYỂN ĐỘNG CỦA LỚP PHỦ ────────────────────────────────────────
+       │ Ba thứ mở ra từ thanh đầu trang — bảng TÌM KIẾM, ngăn kéo TÀI
+       │ KHOẢN, ngăn GIỎ HÀNG — trước 13/09/2026 mỗi cái một nhịp riêng:
+       │ tìm kiếm .2s ease (chỉ mờ dần, KHÔNG nhúc nhích), tài khoản .28s
+       │ cubic-bezier, giỏ .3s ease-in-out. Bấm ba icon cạnh nhau trên cùng
+       │ một thanh mà ra ba cảm giác khác nhau.
+       │
+       │ ⚠ Thêm một lớp phủ mới thì lấy token ở đây, ĐỪNG gõ số. Bốn dòng
+       │ này là chỗ duy nhất chỉnh được nhịp của cả ba cùng lúc.
+       │
+       │ VÀO CHẬM HƠN RA, và hai đường cong khác nhau — không phải cho đẹp:
+       │
+       │   · VÀO (.28s, giảm tốc): tấm lao vào rồi phanh lại ở đích. Mắt
+       │     bám được hướng nó đi vào, nên người dùng biết bấm ✕ sẽ trả nó
+       │     về đâu. Dưới ~200ms thì nó đọc như "hiện ra tại chỗ" và manh
+       │     mối ấy mất.
+       │   · RA (.2s, tăng tốc): người đã quyết định đóng rồi, mọi mili
+       │     giây còn lại chỉ là chờ. Nhanh hơn và rời đi dứt khoát.
+       │
+       │ Không cần khai đường lui cho người tắt chuyển động: khối
+       │ @media (prefers-reduced-motion: reduce) ở cuối file này đã ép mọi
+       │ transition-duration về .01ms. */
+    --dur-enter: .28s;
+    --dur-exit: .2s;
+    --ease-enter: cubic-bezier(.4, 0, .2, 1);
+    --ease-exit: cubic-bezier(.4, 0, 1, 1);
+
     /* ┌─ Z-INDEX ────────────────────────────────────────────────────────
        │ Mẫu dùng đúng năm mức. Ghi ra thành token vì thứ tự giữa chúng là
        │ thứ quyết định lớp phủ nào đè lớp nào, và nó dễ vỡ nhất khi có
@@ -3311,23 +3338,60 @@ select:focus-visible {
     align-items: center;
 }
 
+/*
+ * ┌─ BẢNG TÌM KIẾM MỞ RA: TRƯỢT XUỐNG + MỜ DẦN ───────────────────────────
+ * │ Trước 13/09/2026 nó CHỈ mờ dần, không nhúc nhích — và đó là lý do nó
+ * │ đọc ra "kém mượt" hơn hai lớp phủ kia dù cùng nằm trên một thanh: mắt
+ * │ không có hướng nào để bám, bảng cứ thế hiện ra tại chỗ.
+ * │
+ * │ Nay nó ĐỔ XUỐNG từ mép dưới thanh đầu trang, đúng hướng vật lý của
+ * │ một bảng neo vào thanh ấy — cùng hướng với ngăn giỏ, ngược hướng với
+ * │ ngăn kéo tài khoản (tấm ấy vào từ mép phải, vì nó là một cột đứng).
+ * │
+ * │ -10px THÔI, không nhiều hơn. Bảng này cao gần hết màn hình; cho nó
+ * │ trượt cả trăm pixel là một khối lớn quét qua mắt mỗi lần bấm tìm kiếm.
+ * │ Quãng ngắn chỉ để NÓI HƯỚNG, không phải để ngắm.
+ * │
+ * │ NỀN MỜ CHỈ MỜ DẦN, không trượt: nó phủ kín khung nhìn nên không có
+ * │ "hướng" nào để nói, mà cho nó trượt thì mép trên hở ra một dải sáng
+ * │ chạy ngang giữa lúc mở.
+ * │
+ * │ `visibility` đổi TỨC THÌ khi vào (0s) và ĐỢI HẾT quãng khi ra
+ * │ (0s linear var(--dur-exit)) — thiếu độ trễ ấy thì phần tử tắt ngay
+ * │ lúc bắt đầu đóng và không ai thấy nó rời đi.
+ * └──────────────────────────────────────────────────────────────────────*/
 .hpop__scrim,
 .hpop__panel--search {
     visibility: hidden;
     opacity: 0;
-    transition: opacity .2s ease, visibility 0s linear .2s;
+    transition: opacity var(--dur-exit) var(--ease-exit),
+                transform var(--dur-exit) var(--ease-exit),
+                visibility 0s linear var(--dur-exit);
+}
+
+.hpop__panel--search {
+    transform: translateY(-10px);
 }
 
 .hpop.is-open .hpop__scrim,
 .hpop.is-open .hpop__panel--search {
     visibility: visible;
     opacity: 1;
-    transition: opacity .2s ease;
+    transition: opacity var(--dur-enter) var(--ease-enter),
+                transform var(--dur-enter) var(--ease-enter);
+}
+
+.hpop.is-open .hpop__panel--search {
+    transform: translateY(0);
 }
 
 /* .is-closed do header.js gắn khi bấm lần thứ hai — nó tồn tại để đè lên
    :hover/:focus-within. Giữ luật này kể cả khi không còn luật hover nào:
-   gỡ đi thì lần sau ai thêm hover vào lại vỡ đúng chỗ cũ. */
+   gỡ đi thì lần sau ai thêm hover vào lại vỡ đúng chỗ cũ.
+
+   ⚠ KHÔNG khai lại transform ở đây: bỏ .is-open là luật gốc
+   translateY(-10px) tự áp trở lại, và tấm trượt NGƯỢC ra đúng đường đã
+   vào. Khai `transform: none` ở khối này là tấm đứng im rồi biến mất. */
 .hpop.is-closed .hpop__scrim,
 .hpop.is-closed .hpop__panel--search {
     visibility: hidden;
@@ -3370,19 +3434,31 @@ body.is-search-open {
     max-height: none;
     border: 0;
 
-    /* Trạng thái nghỉ: ẩn hẳn và nằm sẵn phía trên mép màn hình */
+    /* Trạng thái nghỉ: ẩn hẳn và nằm sẵn phía trên mép màn hình.
+
+       NHỊP LẤY TỪ TOKEN CHUNG (13/09/2026) — trước đây là .3s ease-in-out
+       gõ cứng, tức là một nhịp thứ ba khác hẳn tìm kiếm và tài khoản. Đây
+       là pha RA vì đó là trạng thái nghỉ; pha VÀO nằm ở khối .showing/.show
+       ngay dưới. Xem khối token --dur-enter ở đầu file. */
     visibility: hidden;
     transform: translateY(-100%);
-    transition: transform .3s ease-in-out, visibility 0s linear .3s;
+    transition: transform var(--dur-exit) var(--ease-exit),
+                visibility 0s linear var(--dur-exit);
 }
 
 /* .showing bật ngay lúc bắt đầu mở; .hiding còn giữ trong lúc trượt ra.
-   Cả ba đều phải NHÌN THẤY được, nếu không thì không có hoạt ảnh nào. */
+   Cả ba đều phải NHÌN THẤY được, nếu không thì không có hoạt ảnh nào.
+
+   ⚠ .hiding CÙNG KHỐI với .showing/.show nên nó cũng nhận nhịp VÀO. Đúng
+   như vậy chứ không phải sót: Bootstrap gắn .hiding trong suốt pha đóng,
+   mà lúc ấy transform đang chạy từ 0 về -100% — nếu đổi sang nhịp ra ở
+   đây thì quãng đường đổi giữa chừng và tấm giật một nhịp. Trường hợp
+   dùng nhịp ra thật sự là trạng thái nghỉ ở khối trên. */
 .offcanvas.hpop__panel--cart.showing,
 .offcanvas.hpop__panel--cart.hiding,
 .offcanvas.hpop__panel--cart.show {
     visibility: visible;
-    transition: transform .3s ease-in-out;
+    transition: transform var(--dur-enter) var(--ease-enter);
 }
 
 /* Về đúng chỗ khi đang mở. `:not(.hiding)` là chốt của Bootstrap: lúc đóng,
@@ -3561,7 +3637,10 @@ body.is-search-open {
     gap: 32px;
     overflow-y: auto;
     transform: translateX(100%);
-    transition: transform .28s ease;
+    /* Ngăn điều hướng trên điện thoại cũng mở ra từ thanh đầu trang, nên nó
+       theo cùng token với ba lớp phủ kia. `ease` cũ là đường cong đối xứng:
+       tấm khởi hành chậm rồi dừng chậm, đọc ra "nặng" hơn hẳn. */
+    transition: transform var(--dur-enter) var(--ease-enter);
 }
 
 .mobile-nav.is-open .mobile-nav__panel {
