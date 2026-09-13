@@ -90,12 +90,18 @@
     white-space: nowrap;
 }
 
-/* Không có luật `:hover` ở đây — hàng nav đứng yên dưới con trỏ, xem khối
-   chú thích tại .oa-header__nav trong oa.css. Chỉ còn dấu trang đang đứng. */
-.mega__trigger.is-active {
-    opacity: .65;
-    color: inherit;
-}
+/* KHÔNG có luật `:hover`, và từ 13/09/2026 cũng KHÔNG còn luật `.is-active`.
+   Mục nav đứng yên dưới con trỏ, và mục đang đứng cũng không mờ đi — cả ba
+   mục có bảng xổ trông y hệt hai mục tĩnh ở mọi trạng thái.
+
+   ⚠ Lớp .is-active VẪN ĐƯỢC GẮN trong markup (_layout/mega-menu.php) cùng
+   với aria-current="page". Giữ nó: trợ năng đọc từ aria-current, còn lớp
+   kia là chỗ bám sẵn cho ngày nào chủ dự án muốn một dấu KHÔNG đụng tới màu
+   chữ (gạch chân mảnh, chấm dưới). Gỡ lớp khỏi PHP là ngày ấy phải sửa ba
+   partial thay vì một dòng CSS.
+
+   Lý do đầy đủ và luật song song cho hai mục tĩnh: khối .oa-header__nav
+   trong oa.css. Hai chỗ phải khớp nhau. */
 
 /* ┌─ MŨI TÊN XUỐNG — ẨN HẲN ──────────────────────────────────────────────
    │ Theo tham chiếu: hàng nav chỉ có chữ, không mục nào đeo mũi tên. Ba mục
@@ -470,9 +476,13 @@
     display: none;
 }
 
-.mobile-nav__group > summary.is-active {
-    color: var(--ink-3);
-}
+/* ĐÃ GỠ dấu mục hiện hành ở ngăn nav điện thoại (13/09/2026) — trước là
+   `color: var(--ink-3)`, tức chữ xám nhạt đi.
+
+   Đi CÙNG LƯỢT với hàng nav khổ máy tính (.oa-header__nav trong oa.css) vì
+   đây là ĐÚNG NĂM MỤC ẤY, chỉ khác bề ngang màn hình. Gỡ một bên mà để bên
+   kia thì cùng một trang, xoay ngang xoay dọc lại thấy hai hành vi khác
+   nhau — và người sửa sau sẽ tưởng một trong hai là lỗi. */
 
 .mobile-nav__group > summary svg {
     width: 1em;

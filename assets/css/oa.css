@@ -2109,22 +2109,30 @@ textarea.oa-field {
     color: inherit;
 }
 
-/* ┌─ KHÔNG CÓ HIỆU ỨNG HOVER TRÊN HÀNG NAV — CỐ Ý ────────────────────────
-   │ Bản trước làm mờ mục nav xuống `opacity: .65` khi rê chuột. Đã bỏ theo
-   │ yêu cầu: hàng nav đứng yên, chữ không đổi gì dưới con trỏ.
+/* ┌─ HÀNG NAV KHÔNG ĐỔI GÌ — KHÔNG HOVER, KHÔNG DẤU MỤC HIỆN HÀNH ────────
+   │ Năm mục nav luôn CÙNG MỘT MÀU, cùng một độ đục, ở mọi trạng thái: rê
+   │ chuột, mở bảng xổ, hay đang đứng đúng trang đó.
    │
-   │ `.is-active` GIỮ LẠI và vẫn mờ — nó không phải hiệu ứng rê chuột mà là
-   │ dấu "đang đứng ở nhánh này", thứ duy nhất phân biệt mục hiện hành. Đừng
-   │ gộp nó vào đây rồi xoá luôn.
+   │ HAI ĐỢT GỠ, ghi lại cả hai để không ai "khôi phục" nhầm:
    │
-   │ Mục có bảng xổ cũng theo luật này — xem .mega__trigger ở
-   │ components/mega-menu.css, nơi luật `:hover` song song đã gỡ cùng lượt.
-   │ Dấu hiệu "rê vào có gì đó" nay là chính cái bảng bật ra, không cần chữ
-   │ nhạt đi báo trước.
-   └──────────────────────────────────────────────────────────────────────── */
-.oa-header__nav a.is-active {
-    opacity: .65;
-}
+   │   · hiệu ứng rê chuột (opacity .65 khi :hover) — gỡ trước đó;
+   │   · dấu mục hiện hành (.is-active cũng opacity .65) — gỡ 13/09/2026,
+   │     theo yêu cầu chủ dự án: bấm vào một mục nav thì chính mục ấy không
+   │     được đổi màu chữ đi.
+   │
+   │ ⚠ KHÔNG BỊ MẤT PHẦN TRỢ NĂNG. Mục hiện hành vẫn mang aria-current="page"
+   │ trong markup (xem _layout/mega-menu.php) — trình đọc màn hình vẫn đọc ra
+   │ "trang hiện tại", chỉ mắt thường là không còn dấu. Đó là đánh đổi đã
+   │ được chọn, không phải sót.
+   │
+   │ ⚠ ĐỪNG thay bằng màu khác, đậm hơn, hay nền: yêu cầu là KHÔNG đổi gì.
+   │ Muốn dấu nhìn thấy được thì phải là thứ không đụng tới chữ (gạch chân
+   │ mảnh, chấm dưới) và phải hỏi chủ dự án trước.
+   │
+   │ Luật song song cho mục có bảng xổ: .mega__trigger ở
+   │ components/mega-menu.css — gỡ cùng lượt, cùng lý do. Hai chỗ phải khớp
+   │ nhau, sửa một mà quên cái kia thì ba mục có bảng xổ lại khác hai mục
+   │ tĩnh. */
 
 .oa-header__mark {
     font-size: var(--fs-mark-lg);
