@@ -109,14 +109,10 @@ $wishCount = Wishlist::available() ? Wishlist::dem() : 0;
                 <?= e(t('cart.tab_wish')) ?><sup><?= (int) $wishCount ?><span class="sr-only"> <?= e(t('cart.tab_wish_sr')) ?></span></sup>
             </a>
 
-            <button type="button" class="ctabs__x" data-cart-close
-                    aria-label="<?= e(t('menu.close')) ?>">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                     stroke-width="1.3" aria-hidden="true">
-                    <line x1="2" y1="2" x2="14" y2="14"></line>
-                    <line x1="14" y1="2" x2="2" y2="14"></line>
-                </svg>
-            </button>
+            <?php /* Cùng dáng ✕ với nút đóng bảng tìm kiếm (.oa-close trong
+                     _layout/header.php) — xem khối .ctabs__x trong oa.css. */ ?>
+            <button type="button" class="ctabs__x oa-close" data-cart-close
+                    aria-label="<?= e(t('menu.close')) ?>">✕</button>
         </div>
 
         <?php if ($recent['lines'] === []): ?>

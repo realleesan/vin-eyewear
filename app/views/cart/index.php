@@ -70,13 +70,8 @@ $hoiXoaMon = static fn (string $ten): string => t('cart.confirm_one', [':name' =
             <?= e(t('cart.tab_wish')) ?><sup><?= (int) $wishCount ?><span class="sr-only"> <?= e(t('cart.tab_wish_sr')) ?></span></sup>
         </a>
 
-        <a class="ctabs__x" href="/san-pham/gong-kinh" aria-label="<?= e(t('cart.close')) ?>">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                 stroke-width="1.3" aria-hidden="true">
-                <line x1="2" y1="2" x2="14" y2="14"></line>
-                <line x1="14" y1="2" x2="2" y2="14"></line>
-            </svg>
-        </a>
+        <?php /* Cùng dáng ✕ với nút đóng bảng tìm kiếm — xem .ctabs__x trong oa.css. */ ?>
+        <a class="ctabs__x oa-close" href="/san-pham/gong-kinh" aria-label="<?= e(t('cart.close')) ?>">✕</a>
     </div>
 
     <?php /* Dải báo của thao tác vừa rồi. KHÔNG có trong bản thiết kế, và vẫn

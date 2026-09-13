@@ -2635,17 +2635,31 @@ textarea.oa-field {
     font-weight: 600;
 }
 
+/* ┌─ NÚT ✕ = NÚT ĐÓNG BẢNG TÌM KIẾM (13/09/2026, theo yêu cầu chủ dự án) ──
+   │ Markup mang cả hai lớp: `.oa-close` lo DÁNG (ký tự ✕ 16px, màu --ink —
+   │ đúng nút đóng của bảng tìm kiếm trong _layout/header.php), còn
+   │ `.ctabs__x` ở đây chỉ lo CHỖ ĐỨNG. Bản trước là một SVG hai nét 1.3 tự
+   │ vẽ, nên hai nút đóng của đầu trang ra hai dáng khác nhau.
+   │
+   │ Đệm 6px GIỮ LẠI: bằng đúng đệm dọc của tab bên cạnh, nên ✕ cao 28px
+   │ thẳng hàng với tab, và vùng bấm không co về đúng cỡ ký tự. Luật này
+   │ đứng SAU .oa-close trong file nên đè được `padding: 0` của nó.
+   │
+   │ KHÔNG còn mờ đi khi rê chuột — nút ✕ của bảng tìm kiếm không có. Luật
+   │ :hover dưới đây ghim màu lại vì trang /gio-hang dùng thẻ <a>, mà
+   │ `a:hover` toàn site sẽ ngả nó sang xám.
+   └──────────────────────────────────────────────────────────────────────── */
 .ctabs__x {
     position: absolute;
     right: 32px;
     top: 14px;
     display: flex;
     padding: 6px;
-    color: #111;
 }
 
 .ctabs__x:hover {
-    opacity: .6;
+    color: var(--ink);
+    text-decoration: none;
 }
 
 /* Trong ngăn kéo, hàng tab là hàng ĐẦU TIÊN của tấm và tấm đã có đệm riêng —
