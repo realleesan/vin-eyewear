@@ -705,6 +705,28 @@ ol[role="list"],
     text-transform: uppercase;
 }
 
+/*
+ * ┌─ .oa-label TRÊN MỘT CÁI NÚT — AI THẮNG AI ────────────────────────────
+ * │ `.oa-btn-bare` (dòng ~1000 bên dưới) cũng khai font-size, và nó khai
+ * │ SAU. Hai lớp cùng độ đặc hiệu thì cái đứng sau thắng — nên
+ * │ `<button class="oa-btn-bare oa-label">` ra 11px trong khi
+ * │ `<h3 class="oa-label">` ngay cạnh nó ra 9px.
+ * │
+ * │ Đó chính là chỗ lệch ở bảng xổ tìm kiếm: "XU HƯỚNG TÌM KIẾM" và "ĐÃ XEM
+ * │ GẦN ĐÂY" nhỏ hơn nút "XOÁ" đứng cùng hàng với chúng.
+ * │
+ * │ Chủ dự án chốt: lấy theo cỡ của "XOÁ" (13/09/2026). Nên .oa-label khi
+ * │ đi CÙNG .oa-btn-bare không còn là chỗ quyết định nữa — thay vào đó cả
+ * │ hai vai cùng đọc một con số ở đây.
+ * │
+ * │ ⚠ Đừng "dọn" bằng cách gỡ font-size khỏi .oa-btn-bare: lớp đó dùng ở
+ * │ nhiều nút KHÔNG đeo .oa-label, và chúng đang đúng cỡ.
+ * └──────────────────────────────────────────────────────────────────────── */
+.oa-label,
+.oa-btn-bare.oa-label {
+    font-size: var(--fs-ui);
+}
+
 /* ┌─ TIÊU ĐỀ TRANG VÀ TIÊU ĐỀ BĂNG — MỘT DÁNG DUY NHẤT ───────────────────
    │ 13px, weight 500, IN HOA, giãn .06em. Mẫu dùng đúng một dáng cho h1 và
    │ cho h2 của các băng; khác nhau chỉ ở chỗ đặt, không ở dáng chữ.
@@ -2456,7 +2478,7 @@ textarea.oa-field {
 
 .oa-strip__item {
     flex: none;
-    width: 80px;
+    width: 96px;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -2464,10 +2486,44 @@ textarea.oa-field {
     line-height: 1.45;
 }
 
+/* `gap` của <li> không với tới đây: con duy nhất của nó là thẻ <a>, mà <a>
+   mới là chỗ xếp ảnh và chữ. Khai flex ngay trên <a> thì khoảng cách ảnh ↔
+   chữ mới có thật. */
+.oa-strip__item > a {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Tên và giá dính nhau thành một khối chữ, cách ảnh đúng 8px ở trên — nếu
+   để cả ba cùng một gap thì giá trôi xa tên đúng bằng khoảng cách tên tới
+   ảnh, và mắt đọc ra ba dòng rời rạc thay vì một nhãn hai dòng. */
+.srchmini__txt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.srchmini__price {
+    color: var(--ink-3);
+}
+
+/* KHUNG ẢNH HƠI CHỮ NHẬT (13/09/2026, yêu cầu chủ dự án) — 4/3, không phải
+   80×44 như trước.
+
+   80×44 là tỉ lệ 1,82 : 1 — một dải ngang dẹt, và một cái gọng kính nằm
+   trong đó chỉ còn cao 20–25px. Tỉ lệ 4/3 vẫn là hình chữ nhật (rộng hơn
+   cao) nhưng trả lại cho tấm ảnh chiều cao để nhìn ra cái gọng.
+
+   ⚠ MỘT LUẬT CHO CẢ HAI HÀNG — xu hướng tìm kiếm và đã xem gần đây. Trước
+   đây hàng thứ hai dựng bằng bộ lớp .srchmini__* không có CSS nào, nên hai
+   hàng ra hai cỡ. Nay cả hai đều là .oa-strip__item; sửa ở đây là sửa cả
+   hai, và không có cách nào để chúng lệch nhau nữa. */
 .oa-strip__item .oa-slot {
-    width: 80px;
-    height: 44px;
-    aspect-ratio: auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
 }
 
 /* Ngăn kéo phải — tài khoản/đăng nhập */

@@ -112,40 +112,50 @@
         }
 
         ds.forEach(function (m) {
+            /* ⚠ KHUÔN PHẢI KHỚP TỪNG THẺ với hàng "xu hướng tìm kiếm" mà
+               _layout/header.php in ra — hai hàng nằm cạnh nhau trong cùng
+               một bảng xổ.
+
+               Trước 13/09/2026 đoạn này dựng một bộ lớp RIÊNG (.srchmini__item,
+               .srchmini__link, .srchmini__thumb) mà KHÔNG CÓ MỘT DÒNG CSS nào
+               trong cả dự án — nên hàng đã-xem ra ảnh cỡ khác hẳn hàng xu
+               hướng, và không ai đọc code thấy được vì lớp thì có, kiểu dáng
+               thì không. Nay hai hàng dùng chung .oa-strip__item + .oa-slot,
+               tức là không còn cách nào lệch nữa. */
             var li = document.createElement('li');
-            li.className = 'srchmini__item';
+            li.className = 'oa-strip__item';
 
             var a = document.createElement('a');
-            a.className = 'srchmini__link';
             a.href = '/san-pham/' + encodeURIComponent(m.slug);
 
             var thumb = document.createElement('span');
-            thumb.className = 'srchmini__thumb';
+            thumb.className = 'oa-slot oa-slot--contain';
             if (m.image) {
                 var img = document.createElement('img');
                 img.src = m.image;
                 img.alt = '';
-                img.width = 200;
-                img.height = 200;
                 img.loading = 'lazy';
                 thumb.appendChild(img);
             }
+
+            var txt = document.createElement('span');
+            txt.className = 'srchmini__txt';
 
             var name = document.createElement('span');
             name.className = 'srchmini__name';
             name.setAttribute('lang', 'vi');
             name.textContent = m.name;
-
-            a.appendChild(thumb);
-            a.appendChild(name);
+            txt.appendChild(name);
 
             if (m.price) {
                 var price = document.createElement('span');
                 price.className = 'srchmini__price';
                 price.textContent = m.price;
-                a.appendChild(price);
+                txt.appendChild(price);
             }
 
+            a.appendChild(thumb);
+            a.appendChild(txt);
             li.appendChild(a);
             listDX.appendChild(li);
         });

@@ -258,13 +258,24 @@ $headerOver = ($viewName ?? '') === 'home/index';
                             <section class="oa-stack" style="gap:28px">
                                 <h3 class="oa-label"><?= e(t('search.trends')) ?></h3>
                                 <ul class="oa-strip oa-plain" role="list">
+                                    <?php /* ⚠ KHUÔN NÀY PHẢI KHỚP TỪNG THẺ với mục "đã
+                                             xem gần đây" mà assets/js/search-suggest.js
+                                             dựng — hai hàng nằm cạnh nhau trong cùng một
+                                             bảng xổ, lệch một chút là mắt thấy ngay.
+                                             Trước 13/09/2026 chúng là HAI bộ lớp khác
+                                             hẳn nhau (.oa-strip__item và .srchmini__*,
+                                             mà bộ sau chưa từng có một dòng CSS nào),
+                                             nên hai hàng ra hai cỡ ảnh khác nhau.
+                                             Sửa khuôn ở đây thì sửa cả bên kia. */ ?>
                                     <?php foreach ($searchTrends as $p): ?>
                                         <li class="oa-strip__item">
                                             <a href="/san-pham/<?= e(rawurlencode((string) $p['slug'])) ?>">
                                                 <span class="oa-slot oa-slot--contain">
                                                     <img src="<?= e(asset(ProductModel::image($p))) ?>" alt="" loading="lazy" decoding="async">
                                                 </span>
-                                                <span lang="vi"><?= e($p['name']) ?></span>
+                                                <span class="srchmini__txt">
+                                                    <span class="srchmini__name" lang="vi"><?= e($p['name']) ?></span>
+                                                </span>
                                             </a>
                                         </li>
                                     <?php endforeach; ?>
