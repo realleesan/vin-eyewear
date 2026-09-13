@@ -313,6 +313,16 @@ return [
     'pd.send'         => 'Gửi đánh giá',
     'pd.moderated'    => 'Đánh giá hiển thị sau khi được duyệt.',
     'pd.related'      => 'Sản phẩm liên quan',
+    // Thêm 13/09/2026 cùng bản dựng theo "Product Detail.dc.html".
+    'pd.color'        => 'Màu',
+    'pd.acc_size'     => 'Kích cỡ & vừa vặn',
+    'pd.size_note'    => 'Số đo theo quy ước quốc tế: rộng tròng · cầu kính · càng kính.',
+    'pd.reviews_based' => 'Dựa trên :n đánh giá',
+    'pd.reviews_all'  => 'Xem tất cả đánh giá',
+    'pd.write_link'   => 'Viết đánh giá',
+    'pd.try_ar'       => 'Thử ảo trên khuôn mặt',
+    'pd.campaign_more' => 'Khám phá thêm',
+    'pd.similar'      => 'Sản phẩm tương tự',
 
     // ── Thẻ sản phẩm (dùng ở 5 trang) ────────────────────────────────────
     'product.out_of_stock' => 'Hết hàng',

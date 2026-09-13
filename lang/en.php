@@ -303,6 +303,16 @@ return [
     'pd.send'         => 'Submit review',
     'pd.moderated'    => 'Reviews appear once approved.',
     'pd.related'      => 'Related products',
+    // Added 2026-09-13 with the "Product Detail.dc.html" rebuild.
+    'pd.color'        => 'Colour',
+    'pd.acc_size'     => 'Size and fit',
+    'pd.size_note'    => 'Measurements follow the international convention: lens width · bridge · temple.',
+    'pd.reviews_based' => 'Based on :n reviews',
+    'pd.reviews_all'  => 'See all reviews',
+    'pd.write_link'   => 'Write a review',
+    'pd.try_ar'       => 'Virtual try-on',
+    'pd.campaign_more' => 'Discover more',
+    'pd.similar'      => 'Similar products',
 
     // ── Product card (used on 5 pages) ───────────────────────────────────
     'product.out_of_stock' => 'Out of stock',

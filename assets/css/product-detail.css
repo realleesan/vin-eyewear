@@ -1,285 +1,242 @@
 /* ============================================================================
    product-detail.css — TRANG CHI TIẾT SẢN PHẨM (/san-pham/{slug})
 
+   Dựng theo "Product Detail.dc.html" (Claude Design, 13/09/2026).
+
    ═════════════════════════════════════════════════════════════════════════
-   MẪU VẼ TRANG NÀY, và nó vẽ một hình rất đặc biệt — đọc kỹ trước khi sửa:
+   BỐN ĐIỂM LÀM NÊN HÌNH NÀY — đọc trước khi sửa:
 
-     ┌────────────────────────────────┬──────────────┐
-     │                                │  Gatt 02(C)  │  ← cột phải RỘNG 220px,
-     │        ảnh 1  (4:3, 520px)     │  8.446.300₫  │    DÍNH khi cuộn
-     │                                │  ● ● ●       │
-     │            ↕ 120px             │  [Add to Bag]│
-     │                                │  ─────────── │
-     │        ảnh 2  (4:3, 520px)     │  Chi tiết    │
-     │                                │  Kích cỡ     │
-     │            ↕ 120px             │              │
-     │        ảnh 3 …                 │              │
-     └────────────────────────────────┴──────────────┘
+     1. MỖI ẢNH MỘT MÀN HÌNH. Ảnh đầu cao đúng phần màn hình dưới thanh đầu
+        trang, các ảnh sau cao 100vh; tấm ảnh căn giữa trong ô đó, rộng 56%
+        (tối đa 560px), cao 60%. Khách CUỘN qua từng góc chụp.
 
-   BA ĐIỂM LÀM NÊN HÌNH NÀY, phá điểm nào là hỏng cả trang:
+     2. CỘT MUA 236px, DÍNH, VÀ TỰ CUỘN BÊN TRONG. max-height bằng phần màn
+        hình dưới thanh đầu trang: mở mục "Đánh giá" dài thì cột cuộn riêng,
+        không đẩy ảnh.
 
-     1. ẢNH XẾP DỌC, KHÔNG PHẢI BĂNG TRƯỢT CÓ THUMBNAIL. Khách CUỘN để xem
-        hết các góc chụp. Đó là lý do khe giữa hai ảnh lớn tới 120px — nó
-        cho mỗi tấm một màn hình riêng.
+     3. NỀN #f6f6f6 — RIÊNG TRANG NÀY. Cả site nền trắng (12/09/2026), nhưng
+        bản thiết kế trang chi tiết là xám rất nhạt, kể cả thanh đầu trang và
+        chân trang. Ảnh sản phẩm chụp nền trắng nên ảnh dùng
+        mix-blend-mode: multiply — trắng nhân với nền thành đúng màu nền, cái
+        gọng vẫn giữ màu. Bỏ dòng đó là hiện ra những ô chữ nhật trắng.
 
-     2. CỘT PHẢI CHỈ 220px, VÀ NÓ DÍNH. Cả cột thông tin — tên, giá, ô màu,
-        nút mua, thông số — gói trong 220px ở cỡ chữ 10px. Cột hẹp là thứ
-        làm ảnh chiếm phần còn lại của màn hình.
-
-     3. NỀN TRẮNG — ĐIỂM DUY NHẤT TRANG NÀY RỜI KHỎI MẪU (12/09/2026, theo
-        yêu cầu chủ dự án: cả site về #FFFFFF).
-
-        Mẫu cho trang này nền #f7f7f8, và đây là trang DUY NHẤT của mẫu có
-        nền xám nhạt — cốt để ảnh sản phẩm nền trắng nổi lên khỏi nó. Nay
-        ảnh trắng nằm trên trang trắng, tức mép ảnh do CHÍNH tấm ảnh vẽ ra
-        chứ không còn nền đỡ.
-
-        Ảnh gọng kính chụp trên nền trắng nên việc này không mất mát gì:
-        cái gọng vẫn là thứ duy nhất có màu trong khung. Ngày nào kho đổi
-        sang ảnh nền trắng CÓ VIỀN hoặc ảnh cắt nền, thì tính lại — xem
-        khối "NỀN TRẮNG TOÀN SITE" trong assets/css/oa.css.
+     4. MỌI CON SỐ px CỦA MẪU NHÂN --oa-scale. Mẫu vẽ ở thang 1; cả site đang
+        chạy thang 1.4 (xem assets/css/oa.css). Chữ đi qua token --fs-*, khoảng
+        cách viết calc(Npx * var(--oa-scale)) — để tỉ lệ giữa chữ và khoảng
+        trắng đúng như mẫu.
    ═════════════════════════════════════════════════════════════════════════ */
 
-.pd {
-    background: var(--bg-page);
+.page-product-detail {
+    --pd-bg: #f6f6f6;
+    --pd-mute: #777;
+    --pd-line: var(--line-input);   /* #ddd — kẻ của mục gập */
+    /* Kính mờ của thanh đầu trang — cùng độ trong .55 với oa.css, chỉ đổi
+       màu gốc sang nền của trang này. */
+    --glass-bg: rgba(246, 246, 246, .55);
+    background: var(--pd-bg);
 }
 
-.pd__grid {
+.page-product-detail .oa-footer {
+    background: var(--pd-bg);
+}
+
+.pd {
+    color: var(--ink);
+    font-size: var(--fs-ui);
+    line-height: 1.4;
+    letter-spacing: .01em;
+}
+
+.pd__main {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 220px;
-    gap: 32px;
-    padding: 40px var(--edge) 0;
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr) calc(236px * var(--oa-scale));
+    column-gap: calc(24px * var(--oa-scale));
+    padding-right: calc(12px * var(--oa-scale));
+}
+
+/* Liên kết gạch chân chữ in hoa — "WRITE A REVIEW" / "DISCOVER MORE" của mẫu.
+   Dùng cả cho <summary> mở form viết đánh giá. */
+.pdlink {
+    display: inline-block;
+    align-self: flex-start;
+    color: var(--ink);
+    font-size: var(--fs-body);
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.pdlink::-webkit-details-marker {
+    display: none;
+}
+
+.pdsec__title {
+    font-size: var(--fs-ui);
+    font-weight: 400;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   CỘT TRÁI — ẢNH
+   ẢNH
    ══════════════════════════════════════════════════════════════════════ */
 
 .pdgal {
     display: flex;
     flex-direction: column;
-    gap: 120px;
+    align-items: center;
     min-width: 0;
 }
 
-.pdgal__frame {
-    width: min(520px, 100%);
-    margin: 0 auto;
-    aspect-ratio: 4 / 3;
-    position: relative;
-}
-
-.pdgal__img {
+.pdgal__screen {
     width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-/* Huy hiệu giảm giá trên ảnh đầu — cùng dáng .oa-badge của thẻ sản phẩm */
-[class^="pdgal__sale"] {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 18px;
-    padding: 0 7px;
-    display: flex;
-    align-items: center;
-    background: var(--sale);
-    color: #fff;
-    font-size: var(--fs-nano);
-    letter-spacing: var(--ls-wide);
-    text-transform: uppercase;
-}
-
-.pdgal__video {
-    align-self: center;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-.pcard__noimg {
+    height: 100vh;
+    min-height: 520px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    height: 100%;
+}
+
+.pdgal__screen:first-child {
+    height: calc(100vh - var(--hdr-h));
+}
+
+.pdgal__img,
+.pdgal__empty {
+    width: min(56%, calc(560px * var(--oa-scale)));
+    height: 60%;
+}
+
+.pdgal__img {
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.pdgal__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--bg-slot);
     color: var(--ink-5);
     font-size: var(--fs-micro);
     text-align: center;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   CỘT PHẢI — THÔNG TIN, DÍNH KHI CUỘN
+.pdgal__end {
+    display: flex;
+    justify-content: center;
+    padding: calc(16px * var(--oa-scale)) 0 calc(56px * var(--oa-scale));
+}
 
-   64px = 52 (thanh đầu trang) + 12 thở. Mẫu dùng đúng con số này.
+.pdgal__end svg {
+    width: calc(16px * var(--oa-scale));
+    height: calc(16px * var(--oa-scale));
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CỘT MUA
    ══════════════════════════════════════════════════════════════════════ */
 
 .pdinfo {
     position: sticky;
-    /* 12px thở dưới thanh nav. Neo theo var(--hdr-h) chứ KHÔNG gõ 64:
-       64 là 52 + 12 của lúc thang chữ còn ở 1. Đổi --oa-scale là thanh cao
-       lên, mà cột dính vẫn neo ở 64 thì nó chui xuống dưới thanh và mất hút. */
-    top: calc(var(--hdr-h) + 12px);
+    /* Neo theo --hdr-h, không gõ số: đổi --oa-scale là thanh đầu trang cao
+       lên, cột neo số cứng sẽ chui xuống dưới thanh. */
+    top: var(--hdr-h);
     align-self: start;
+    max-height: calc(100vh - var(--hdr-h));
+    overflow: auto;
+    scrollbar-width: thin;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    font-size: var(--fs-body);
-    line-height: var(--lh);
+    padding: calc(40px * var(--oa-scale)) calc(12px * var(--oa-scale)) calc(24px * var(--oa-scale)) 0;
 }
 
 .pdinfo__head {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: calc(12px * var(--oa-scale));
 }
 
 .pdinfo__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-sub);
     font-weight: 400;
+    line-height: 1.4;
 }
 
 .pdinfo__price {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    gap: 6px;
-}
-
-.pdinfo__now {
-    color: var(--ink);
-}
-
-/* Có giá gạch thì giá thật chuyển sang đỏ — cùng luật với thẻ sản phẩm */
-.pdinfo__old {
-    color: var(--ink-6);
-    text-decoration: line-through;
-}
-
-.pdinfo__old ~ .pdinfo__now,
-.pdinfo__price:has(.pdinfo__old) .pdinfo__now {
-    color: var(--sale);
-    font-weight: 700;
-}
-
-.pdinfo__eyebrow,
-.pdinfo__sale-han {
-    font-size: var(--fs-micro);
-    color: var(--ink-3);
-}
-
-.pdinfo__rate {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px;
-    font-size: var(--fs-micro);
-    color: var(--ink-3);
-}
-
-.pdinfo__dot {
-    color: var(--line-btn);
-}
-
-.pdinfo__score {
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-}
-
-.pdinfo__stock {
+    gap: 0 calc(6px * var(--oa-scale));
+    margin-top: calc(4px * var(--oa-scale));
     color: var(--ink-2);
 }
 
-.pdinfo__desc {
-    color: var(--ink-3);
-    text-wrap: pretty;
+.pdinfo__old {
+    color: var(--pd-mute);
 }
 
-/* ┌─ SAO ĐÁNH GIÁ ────────────────────────────────────────────────────────
-   │ Sao là ĐEN, không phải vàng. Đây là chỗ dễ lén đưa màu thứ ba vào site
-   │ nhất — mọi thư viện sao đều mặc định vàng. Mẫu không có vàng.
-   │
-   │ Dựng bằng một dải ký tự ★ với nền cắt theo phần trăm: không tải icon,
-   │ không năm thẻ <svg>, và nửa sao hiện đúng tỉ lệ.
-   └──────────────────────────────────────────────────────────────────────── */
-.pdstars {
-    display: inline-block;
-    position: relative;
-    color: var(--line-btn);
-    font-size: var(--fs-ui);
-    letter-spacing: .06em;
-    line-height: 1;
-    white-space: nowrap;
+/* Có giá gạch thì giá bán sang đỏ — cùng luật với thẻ sản phẩm. */
+.pdinfo__price:has(.pdinfo__old) .pdinfo__now {
+    color: var(--sale);
 }
 
-.pdstars::before {
-    content: "★★★★★";
+.pdinfo__stock.is-out {
+    color: var(--sale);
 }
 
-.pdstars::after {
-    content: "★★★★★";
-    position: absolute;
-    top: 0;
-    left: 0;
-    overflow: hidden;
+/* ── Dấu trang ───────────────────────────────────────────────────────── */
+
+.pdsave {
+    flex: none;
+    display: flex;
+}
+
+.pdsave__btn {
+    display: flex;
+    padding: 0;
+    border: 0;
+    background: none;
     color: var(--ink);
-    /* --pct do view đặt inline: style="--pct:86%" */
-    width: var(--pct, 0%);
+    cursor: pointer;
 }
 
-.pdstars--sm {
-    font-size: var(--fs-body);
+.pdsave__btn--14 svg {
+    width: calc(14px * var(--oa-scale));
+    height: calc(14px * var(--oa-scale));
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   PHƯƠNG ÁN (màu gọng, chiết suất tròng)
-   ══════════════════════════════════════════════════════════════════════ */
-
-.pdbuy {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
+.pdsave__btn--13 svg {
+    width: calc(13px * var(--oa-scale));
+    height: calc(13px * var(--oa-scale));
 }
 
-.pdopts {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
+/* ── Ô màu ───────────────────────────────────────────────────────────── */
 
-.pdopts__label {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.pdopts__row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.pdopt {
+.pdswatch {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    padding: 10px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg);
-    cursor: pointer;
-    transition: border-color .18s ease;
+    gap: calc(12px * var(--oa-scale));
+    margin-top: calc(18px * var(--oa-scale));
 }
 
+.pdswatch__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(8px * var(--oa-scale));
+}
+
+.pdswatch__opt {
+    position: relative;
+    display: block;
+    cursor: pointer;
+}
+
+.pdswatch__opt input,
 .pdopt input {
     position: absolute;
     opacity: 0;
@@ -287,18 +244,68 @@
     height: 0;
 }
 
-.pdopt:hover {
-    border-color: var(--ink-6);
+.pdswatch__chip {
+    display: block;
+    width: calc(16px * var(--oa-scale));
+    height: calc(16px * var(--oa-scale));
+    border: 1px solid var(--line-btn);
+    background: var(--sw, var(--bg-slot));
 }
 
-/* ĐANG CHỌN = VIỀN ĐEN, không đổi nền — luật của mẫu ở mọi chỗ có lựa chọn */
+/* ĐANG CHỌN = VIỀN ĐEN — luật của mẫu ở mọi chỗ có lựa chọn. */
+.pdswatch__opt:has(input:checked) .pdswatch__chip {
+    border-color: var(--ink);
+}
+
+.pdswatch__opt:has(input:focus-visible) {
+    outline: 1px solid var(--ink);
+    outline-offset: 2px;
+}
+
+/* Hết hàng: ô mờ, gạch chéo — vẫn thấy màu gì, nhưng rõ là không chọn được. */
+.pdswatch__opt:has(input:disabled) {
+    cursor: not-allowed;
+}
+
+.pdswatch__opt:has(input:disabled) .pdswatch__chip {
+    opacity: .45;
+    background:
+        linear-gradient(to top right, transparent calc(50% - .5px), var(--ink) 50%, transparent calc(50% + .5px)),
+        var(--sw, var(--bg-slot));
+}
+
+.pdswatch__name {
+    color: var(--ink-2);
+    text-align: right;
+}
+
+/* ── Phương án không phải màu (chiết suất tròng…) ────────────────────── */
+
+.pdopts {
+    display: flex;
+    flex-direction: column;
+    gap: calc(6px * var(--oa-scale));
+    margin-top: calc(18px * var(--oa-scale));
+}
+
+.pdopt {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: calc(8px * var(--oa-scale));
+    min-height: var(--h-btn-sm);
+    padding: calc(6px * var(--oa-scale)) calc(10px * var(--oa-scale));
+    border: 1px solid var(--line-btn);
+    cursor: pointer;
+}
+
 .pdopt:has(input:checked) {
     border-color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--ink);
 }
 
 .pdopt:has(input:focus-visible) {
-    outline: 2px solid var(--ink);
+    outline: 1px solid var(--ink);
     outline-offset: 2px;
 }
 
@@ -308,239 +315,158 @@
     cursor: not-allowed;
 }
 
-.pdopt__body {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-}
-
-.pdopt__name {
-    font-size: var(--fs-subtitle);
-}
-
 .pdopt__note {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    line-height: var(--lh-tight);
-}
-
-.pdopt__delta {
-    flex: none;
-    font-size: var(--fs-micro);
+    color: var(--pd-mute);
     white-space: nowrap;
-    color: var(--ink-2);
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   SỐ LƯỢNG & NÚT MUA
+/* ── Hai nút mua ─────────────────────────────────────────────────────── */
 
-   Cột chỉ rộng 220px, nên ô số lượng và hai nút KHÔNG nằm cùng hàng: ô số
-   lượng một hàng, hai nút xếp dọc bên dưới. Nhét cả ba vào một hàng thì
-   mỗi nút còn ~60px.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.pdbuy__row {
+.pdbuy {
     display: flex;
     flex-direction: column;
-    gap: 8px;
 }
 
-.pdqty {
+.pdbuy__btns {
     display: flex;
-    align-items: center;
-    width: max-content;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg);
-    overflow: hidden;
+    flex-direction: column;
+    gap: calc(8px * var(--oa-scale));
+    margin-top: calc(20px * var(--oa-scale));
 }
 
-.pdqty__btn {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    background: none;
-    color: var(--ink);
-    font-family: inherit;
-    font-size: var(--fs-ui);
-    cursor: pointer;
-}
-
-.pdqty__btn:hover {
-    background: var(--bg-hover);
-}
-
-.pdqty__btn:disabled {
-    color: var(--line-btn);
-    cursor: not-allowed;
-}
-
-.pdqty__num {
-    width: 40px;
-    height: 32px;
-    border: 0;
-    border-left: 1px solid var(--line-input);
-    border-right: 1px solid var(--line-input);
-    background: none;
-    text-align: center;
-    font-family: inherit;
-    font-size: var(--fs-body);
-    font-variant-numeric: tabular-nums;
-    outline: none;
-    -moz-appearance: textfield;
-}
-
-.pdqty__num::-webkit-outer-spin-button,
-.pdqty__num::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.pdqty__note {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    line-height: var(--lh-tight);
-}
-
-/* Nút mua — dáng .oa-btn--block của mẫu: VUÔNG bo 6, cao 36, chữ 10px IN
-   HOA. Cao 36 chứ không 44 như trong form: mẫu dùng đúng 36 cho "Add to
-   Bag" ở cột này. */
 .pdbtn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 100%;
-    height: 36px;
-    padding: 0 12px;
+    height: var(--h-btn);
+    padding: 0 calc(12px * var(--oa-scale));
     border: 1px solid var(--ink);
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
     border-radius: 0;
-    background: var(--bg);
+    background: transparent;
     color: var(--ink);
     font-family: inherit;
     font-size: var(--fs-body);
-    letter-spacing: var(--ls);
+    letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     white-space: nowrap;
     cursor: pointer;
     transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
 
-.pdbtn--buy {
+.pdbtn:hover {
     background: var(--ink);
-    border: 0;
     color: #fff;
 }
 
-.pdbtn--buy:hover {
+.pdbtn--solid {
+    background: var(--ink);
+    color: #fff;
+}
+
+.pdbtn--solid:hover {
+    border-color: #333;
     background: #333;
-    color: #fff;
 }
 
-.pdbtn--add:hover {
-    background: var(--ink);
-    color: #fff;
-}
-
-/* Thử kính ảo — nút phụ nhất trong ba, nên nó rỗng và viền nhạt */
-.pdbtn--ar {
-    border-color: var(--line-btn);
-}
-
-.pdbtn--ar:hover {
-    border-color: var(--ink);
-    background: var(--bg);
-    color: var(--ink);
-}
-
-.pdbtn:disabled,
-.pdbtn[aria-disabled="true"] {
-    background: var(--ink-5);
+.pdbtn:disabled {
     border-color: var(--ink-5);
+    background: var(--ink-5);
     color: #fff;
     cursor: not-allowed;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   DẤU TRANG — nút lưu sản phẩm
-
-   KHÔNG phải .pdbtn thứ tư. Ba nút kia (Mua ngay · Thêm vào giỏ · Thử ảo)
-   là những việc khách tới đây để làm; lưu lại là việc phụ, và một nút thứ
-   tư cùng cỡ cùng viền sẽ chia đều sự chú ý của cả bốn. Nên nó là một dòng
-   chữ có icon, nằm sát dưới cụm nút, không viền không nền.
-
-   CAO 36px NHƯ .pdbtn dù không có viền: cụm nút ở trên đứng trên một lưới
-   36px, và một dòng cao 22px chen vào giữa làm gãy nhịp ấy — thấy rõ nhất
-   khi mặt hàng hết hàng, lúc khối "Thông báo khi có hàng" nối ngay bên dưới.
-
-   TRẠNG THÁI ĐANG LƯU chỉ đổi MÀU CHỮ và cờ đặc/rỗng (do PHP đổi thuộc tính
-   `fill` của <svg>, không phải CSS — xem chú thích ở product/detail.php).
-   Không đổi nền, không đổi cỡ: cái nút nhảy hình mỗi lần bấm là thứ làm
-   người ta tưởng mình bấm nhầm.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.pdsave {
-    margin-top: 10px;
+.pdbuy__ar {
+    margin-top: calc(12px * var(--oa-scale));
 }
 
-.pdsave__btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    height: 36px;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--ink-2);
-    font-family: inherit;
+/* ── Báo khi có hàng ─────────────────────────────────────────────────── */
+
+.pdwait {
+    display: flex;
+    flex-direction: column;
+    gap: calc(10px * var(--oa-scale));
+    margin-top: calc(24px * var(--oa-scale));
+    padding-top: calc(14px * var(--oa-scale));
+    border-top: 1px solid var(--pd-line);
+}
+
+.pdwait__title {
     font-size: var(--fs-body);
+    font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
-    white-space: nowrap;
+}
+
+.pdwait__lead,
+.pdwait__msg {
+    color: var(--ink-2);
+    line-height: 1.55;
+}
+
+.pdwait__msg--loi {
+    margin-top: calc(12px * var(--oa-scale));
+    color: var(--sale);
+}
+
+.pdwait__form {
+    display: flex;
+    flex-direction: column;
+    gap: calc(8px * var(--oa-scale));
+}
+
+.pdwait__label {
+    color: var(--pd-mute);
+}
+
+.pdwait__select {
+    width: 100%;
+    height: var(--h-btn);
+    padding: 0 calc(10px * var(--oa-scale));
+    border: 1px solid var(--line-btn);
+    border-radius: 0;
+    background: transparent;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--fs-ui);
+}
+
+.pdwait__go {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--h-btn);
+    border: 0;
+    border-radius: 0;
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: var(--fs-body);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
     cursor: pointer;
-    transition: color .18s ease;
 }
 
-.pdsave__btn:hover {
-    color: var(--ink);
-}
-
-.pdsave__btn.is-on {
-    color: var(--ink);
-}
-
-.pdsave__ico {
-    flex: none;
+.pdwait__go:hover {
+    background: #333;
+    color: #fff;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   MỤC GẬP TRONG CỘT PHẢI  (Chi tiết · Kích cỡ · Bảo hành)
-
-   Mẫu vẽ chúng thành những dòng phân cách bằng một đường kẻ trên, chữ 9px
-   IN HOA. KHÔNG có hộp, không nền, không bo góc — cột chỉ rộng 220px, mỗi
-   đường viền thêm là 2px bị lấy khỏi chỗ đọc chữ.
+   MỤC GẬP — Giao hàng · Chi tiết · Kích cỡ · Đánh giá
    ══════════════════════════════════════════════════════════════════════ */
 
 .pdacc {
-    display: flex;
-    flex-direction: column;
-}
-
-.pdacc__item {
-    border-top: 1px solid var(--line-input);
+    margin-top: calc(24px * var(--oa-scale));
+    border-top: 1px solid var(--pd-line);
 }
 
 .pdacc__sum {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    padding: 12px 0;
-    font-size: var(--fs-micro);
+    gap: calc(12px * var(--oa-scale));
+    padding: calc(14px * var(--oa-scale)) 0;
+    border-bottom: 1px solid var(--pd-line);
+    color: var(--ink);
+    font-size: var(--fs-body);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
@@ -553,7 +479,8 @@
 
 .pdacc__ico {
     flex: none;
-    font-size: 14px;
+    font-size: calc(14px * var(--oa-scale));
+    font-weight: 300;
     line-height: 1;
 }
 
@@ -561,16 +488,24 @@
     content: "+";
 }
 
-.pdacc__item[open] .pdacc__ico::after {
-    content: "−";
+.pdacc__item[open] > .pdacc__sum .pdacc__ico::after {
+    content: "–";
 }
 
 .pdacc__body {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 0 0 16px;
-    color: var(--ink-3);
+    padding: calc(12px * var(--oa-scale)) 0 calc(16px * var(--oa-scale));
+    border-bottom: 1px solid var(--pd-line);
+    color: var(--ink-2);
+    line-height: 1.6;
+}
+
+.pdacc__body--details {
+    padding-bottom: calc(18px * var(--oa-scale));
+}
+
+/* Nhịp 12px giữa các cụm — mô tả, bảng, dòng ghi chú — đúng như mẫu. */
+.pdacc__body > * + * {
+    margin-top: calc(12px * var(--oa-scale));
 }
 
 .pdacc__text {
@@ -578,343 +513,114 @@
     text-wrap: pretty;
 }
 
-.pdacc__link {
-    text-decoration: underline;
-    text-underline-offset: 2px;
+.pdacc__mute {
+    color: var(--pd-mute);
+}
+
+.pdacc__em {
     color: var(--ink);
 }
 
-/* Bảng thông số bên trong mục gập — nhãn trái, giá trị phải */
-.pdspecs {
+.pdacc__list {
     display: flex;
     flex-direction: column;
-}
-
-.pdspecs__row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 10px;
-    padding: 6px 0;
-    border-top: 1px solid var(--line-2);
-}
-
-.pdspecs__row:first-child {
-    border-top: 0;
-}
-
-/* Số đo gọng (cầu · càng · tròng) */
-.pdsize {
-    display: flex;
-    gap: 14px;
-    flex-wrap: wrap;
-}
-
-.pdsize__item {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-}
-
-.pdsize__num {
-    font-size: var(--fs-ui);
-    color: var(--ink);
-    font-variant-numeric: tabular-nums;
-}
-
-.pdsize__unit {
-    color: var(--ink-5);
-}
-
-.pdsize__label {
-    font-size: var(--fs-nano);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    color: var(--ink-5);
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   BÁO KHI CÓ HÀNG LẠI
-   ══════════════════════════════════════════════════════════════════════ */
-
-.pdwait {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 16px;
-    border-radius: var(--r-field);
-    background: var(--bg);
-}
-
-.pdwait__title {
-    font-size: var(--fs-subtitle);
-    font-weight: 400;
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.pdwait__lead,
-.pdwait__msg {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-    line-height: var(--lh);
-}
-
-.pdwait__msg--loi {
-    color: var(--sale);
-}
-
-.pdwait__form,
-.pdwait__row {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.pdwait__label {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.pdwait__select {
-    width: 100%;
-    height: 36px;
-    padding: 0 10px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg);
-    color: var(--ink);
-    font-family: inherit;
-    font-size: var(--fs-body);
-    outline: none;
-}
-
-.pdwait__go {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 36px;
-    border: 0;
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
-    background: var(--ink);
-    color: #fff;
-    font-family: inherit;
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    cursor: pointer;
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   CAM KẾT  (bảo hành · đổi trả · giao hàng)
-
-   Ba dòng dưới cột phải. Icon bỏ hẳn: cột 220px không đủ chỗ cho icon mà
-   chữ vẫn đọc được, và ba icon nhỏ xíu là ba vết bẩn chứ không phải thông
-   tin.
-   ══════════════════════════════════════════════════════════════════════ */
-
-.pdcommit {
-    display: flex;
-    flex-direction: column;
+    gap: calc(8px * var(--oa-scale));
     list-style: none;
-    border-top: 1px solid var(--line-input);
 }
 
-.pdcommit__item {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--line-2);
+.pdacc__list span {
+    display: block;
 }
 
-.pdcommit__text {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
+/* Bảng nhãn · giá trị — nhãn xám bên trái, cột nhãn co theo chữ dài nhất. */
+.pdkv {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: calc(12px * var(--oa-scale));
+    row-gap: calc(2px * var(--oa-scale));
 }
 
-.pdcommit__title {
-    font-size: var(--fs-subtitle);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
+.pdkv dt {
+    color: var(--pd-mute);
 }
 
-.pdcommit__desc {
-    color: var(--ink-3);
-    font-size: var(--fs-text);
-    line-height: var(--lh-tight);
+.pdkv dd {
+    overflow-wrap: anywhere;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   PHẦN DƯỚI — ĐÁNH GIÁ & SẢN PHẨM TƯƠNG TỰ
-   ══════════════════════════════════════════════════════════════════════ */
+/* ── Đánh giá ────────────────────────────────────────────────────────── */
 
-.pdbottom {
-    padding: 96px var(--edge) 0;
-    background: var(--bg-page);
-    display: flex;
-    flex-direction: column;
-    gap: 48px;
-}
-
-.pdcard {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.pdcard__head {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.pdcard__title {
-    font-size: var(--fs-subtitle);
-    font-weight: 400;
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-.pdcard__score {
+.pdrv__score {
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: calc(8px * var(--oa-scale));
+    color: var(--ink);
 }
 
-.pdcard__num {
-    font-size: var(--fs-h);
-    font-variant-numeric: tabular-nums;
+.pdrv__num {
+    font-size: var(--fs-mark-lg);
 }
 
-.pdcard__note,
-.pdcard__empty {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
+.pdrv__stars {
+    color: var(--ink);
+    letter-spacing: .1em;
+    white-space: nowrap;
 }
 
-.pdcard__more {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-}
-
-/* ┌─ MỘT Ý KIẾN ──────────────────────────────────────────────────────── */
-.pdreview {
+.pdrv__list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 18px 0;
-    border-top: 1px solid var(--line-input);
+    gap: calc(12px * var(--oa-scale));
 }
 
-.pdreview__head {
+.pdrv__top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: calc(8px * var(--oa-scale));
+    color: var(--ink);
 }
 
-.pdreview__who {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Ảnh đại diện = một chữ cái trong vòng tròn viền mảnh. Không tải ảnh, và
-   không có ô xám trống khi khách chưa đặt ảnh nào. */
-.pdreview__face {
-    flex: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--line-input);
-    border-radius: 50%;
-    font-size: var(--fs-micro);
-    text-transform: uppercase;
-    color: var(--ink-3);
-}
-
-.pdreview__name {
-    font-size: var(--fs-subtitle);
-}
-
-.pdreview__meta {
-    color: var(--ink-5);
-    font-size: var(--fs-micro);
-}
-
-.pdreview__body {
-    color: var(--ink-2);
+.pdrv__text {
+    margin-top: calc(2px * var(--oa-scale));
     text-wrap: pretty;
 }
 
-/* Ý kiến vừa gửi xong — nhấp nháy một lần rồi thôi, để khách thấy nó đã
-   vào danh sách. */
-.pdreview__flash {
-    animation: pdflash 1.6s ease-out 1;
+.pdrv__flash {
+    color: var(--ink);
 }
 
-@keyframes pdflash {
-    0%   { background: var(--bg-chip); }
-    100% { background: transparent; }
+.pdrv__flash.is-err {
+    color: var(--sale);
 }
 
-/* Trả lời của cửa hàng — thụt vào, kẻ trái, đúng lối của .clens */
 .pdreply {
-    margin-top: 8px;
-    padding-left: 12px;
-    border-left: 1px solid var(--line-input);
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
+    margin-top: calc(6px * var(--oa-scale));
+    padding-left: calc(10px * var(--oa-scale));
+    border-left: 1px solid var(--pd-line);
 }
 
 .pdreply__from {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
+    color: var(--ink);
 }
 
-.pdreply__when {
-    color: var(--ink-5);
-    font-size: var(--fs-micro);
-}
+/* ── Viết đánh giá ───────────────────────────────────────────────────── */
 
-.pdreply__body {
-    color: var(--ink-3);
-}
-
-/* ┌─ VIẾT ĐÁNH GIÁ ───────────────────────────────────────────────────── */
 .pdwrite {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 20px;
-    border-radius: var(--r-field);
-    background: var(--bg);
-    max-width: 560px;
+    gap: calc(8px * var(--oa-scale));
+    margin-top: calc(12px * var(--oa-scale));
 }
 
-.pdwrite__label {
-    font-size: var(--fs-micro);
-    letter-spacing: var(--ls);
-    text-transform: uppercase;
-}
-
-/* Chọn sao — năm nút radio. Ngôi sao đen, và sao chưa chọn để viền xám. */
+/* Năm radio xếp 5 → 1 trong HTML, lật lại thành 1 → 5 trên màn hình. Sao
+   đang chọn và mọi sao ĐỨNG SAU nó trong DOM (tức bên trái) tô đen. */
 .pdwrite__stars {
     display: flex;
-    gap: 4px;
-    font-size: var(--fs-sub);
-    color: var(--line-btn);
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: calc(2px * var(--oa-scale));
+    font-size: var(--fs-mark);
+    line-height: 1;
 }
 
 .pdwrite__stars input {
@@ -925,31 +631,40 @@
 }
 
 .pdwrite__stars label {
+    color: var(--line-btn);
     cursor: pointer;
-    line-height: 1;
 }
 
-.pdwrite__stars:hover label,
-.pdwrite__stars label:has(input:checked),
-.pdwrite__stars label:has(input:checked) ~ label {
+.pdwrite__stars input:checked ~ label {
     color: var(--ink);
 }
 
-.pdwrite__stars label:hover ~ label {
+/* Rê chuột thì xem trước: xoá màu đang chọn, tô theo sao dưới con trỏ. */
+.pdwrite__stars:hover input ~ label {
     color: var(--line-btn);
+}
+
+.pdwrite__stars:hover label:hover,
+.pdwrite__stars:hover label:hover ~ label {
+    color: var(--ink);
+}
+
+.pdwrite__stars input:focus-visible + label {
+    outline: 1px solid var(--ink);
+    outline-offset: 2px;
 }
 
 .pdwrite__area {
     width: 100%;
     min-height: 90px;
-    padding: 12px;
-    border: 1px solid var(--line-input);
-    border-radius: var(--r-field);
-    background: var(--bg);
+    padding: calc(8px * var(--oa-scale));
+    border: 1px solid var(--line-btn);
+    border-radius: 0;
+    background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
-    line-height: var(--lh);
+    font-size: var(--fs-ui);
+    line-height: 1.5;
     resize: vertical;
     outline: none;
 }
@@ -958,69 +673,201 @@
     border-color: var(--ink);
 }
 
-.pdwrite__note {
-    color: var(--ink-3);
-    font-size: var(--fs-micro);
-}
-
-/* Dòng nhắc trần ký tự, ngay dưới ô nhập — cùng dáng với .pdwrite__note
-   nhưng nhạt hơn: nó là ghi chú kỹ thuật, không phải lời cửa hàng nói. */
-.pdwrite__hint {
-    margin-top: -4px;
-    color: var(--ink-5);
-    font-size: var(--fs-micro);
-}
-
 .pdwrite__send {
-    align-self: flex-start;
     height: var(--h-btn);
-    padding: 0 28px;
-    border: 1px solid var(--ink);
-    border-radius: var(--r-pill);
+    border: 0;
+    border-radius: 0;
     background: var(--ink);
     color: #fff;
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-body);
+    letter-spacing: var(--ls-wide);
+    text-transform: uppercase;
     cursor: pointer;
 }
 
 .pdwrite__send:hover {
-    background: var(--bg);
-    color: var(--ink);
-}
-
-/* Lưới "sản phẩm tương tự" — dùng .pgrid của catalog.css, nhưng bỏ lề
-   ngang: nó đã nằm trong .pdbottom vốn có lề rồi. */
-.pdrelated .pgrid {
-    padding-left: 0;
-    padding-right: 0;
+    background: #333;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   MÀN HẸP
-
-   Dưới 900px cột phải hết chỗ để dính: nó chuyển lên TRÊN ảnh. Khách trên
-   điện thoại phải thấy tên, giá và nút mua trước khi cuộn qua sáu tấm ảnh.
+   CAMPAIGN — năm ảnh 3:4 của bộ sưu tập
    ══════════════════════════════════════════════════════════════════════ */
 
+.pdcamp {
+    padding: calc(56px * var(--oa-scale)) calc(24px * var(--oa-scale)) 0;
+}
+
+.pdcamp__grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: calc(4px * var(--oa-scale));
+}
+
+.pdcamp__cell {
+    aspect-ratio: 3 / 4;
+    overflow: hidden;
+}
+
+.pdcamp__cell img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pdcamp__text {
+    max-width: calc(420px * var(--oa-scale));
+    margin-top: calc(24px * var(--oa-scale));
+}
+
+.pdcamp__lead {
+    margin-top: calc(8px * var(--oa-scale));
+    color: var(--ink-2);
+    line-height: 1.55;
+    text-wrap: pretty;
+}
+
+.pdcamp .pdlink {
+    margin-top: calc(10px * var(--oa-scale));
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SẢN PHẨM TƯƠNG TỰ — năm thẻ 1:1
+   ══════════════════════════════════════════════════════════════════════ */
+
+.pdsim {
+    padding: calc(72px * var(--oa-scale)) calc(24px * var(--oa-scale)) calc(48px * var(--oa-scale));
+}
+
+.pdsim__grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: calc(4px * var(--oa-scale));
+    margin-top: calc(32px * var(--oa-scale));
+    list-style: none;
+}
+
+.pdsim__card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pdsim__media {
+    display: block;
+    aspect-ratio: 1 / 1;
+}
+
+.pdsim__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    mix-blend-mode: multiply;
+}
+
+.pdsim__media .pdgal__empty {
+    width: 100%;
+    height: 100%;
+}
+
+.pdsim__info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: calc(8px * var(--oa-scale));
+    padding: calc(12px * var(--oa-scale)) calc(2px * var(--oa-scale)) 0;
+}
+
+.pdsim__price {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 calc(6px * var(--oa-scale));
+    margin-top: calc(2px * var(--oa-scale));
+    color: var(--ink-2);
+}
+
+.pdsim__price s {
+    color: var(--pd-mute);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   MÀN HẸP — bản thiết kế chỉ vẽ màn rộng
+   ══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1100px) {
+    .pdcamp__grid,
+    .pdsim__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* Dưới 900px không còn chỗ cho cột dính. Ảnh thành một dải VUỐT NGANG ở đầu
+   trang — mỗi tấm một nhịp vuốt, tấm sau ló mép để báo còn ảnh — rồi tới cột
+   mua ngay bên dưới. Xếp dọc từng tấm cao một màn hình như màn rộng thì khách
+   điện thoại phải cuộn qua sáu màn ảnh mới thấy nút mua. */
 @media (max-width: 900px) {
-    .pd__grid {
+    .pd__main {
         grid-template-columns: minmax(0, 1fr);
-        gap: 32px;
+        padding-right: 0;
+    }
+
+    .pdgal {
+        flex-direction: row;
+        align-items: stretch;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+    }
+
+    .pdgal::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pdgal__screen,
+    .pdgal__screen:first-child {
+        flex: 0 0 88%;
+        height: auto;
+        min-height: 0;
+        aspect-ratio: 1 / 1;
+        scroll-snap-align: start;
+    }
+
+    /* Chỉ một tấm (theo sau là .pdgal__end) thì chiếm trọn bề ngang. */
+    .pdgal__screen:first-child:nth-last-child(2) {
+        flex-basis: 100%;
+    }
+
+    .pdgal__img,
+    .pdgal__empty {
+        width: 80%;
+        height: 80%;
+    }
+
+    .pdgal__end {
+        display: none;
     }
 
     .pdinfo {
         position: static;
-        order: -1;
+        max-height: none;
+        overflow: visible;
+        padding: 24px var(--edge) 0;
     }
 
-    /* Khe 120px giữa hai ảnh là để mỗi tấm có một màn hình desktop riêng.
-       Trên điện thoại màn hình đã hẹp, giữ 120px thành ba màn hình trống. */
-    .pdgal {
-        gap: 48px;
+    .pdcamp {
+        padding: 48px var(--edge) 0;
     }
 
-    .pdbottom {
-        padding-top: 56px;
+    .pdsim {
+        padding: 56px var(--edge) 40px;
+    }
+}
+
+@media (max-width: 760px) {
+    .pdcamp__grid,
+    .pdsim__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

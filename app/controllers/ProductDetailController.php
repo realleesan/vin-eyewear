@@ -33,7 +33,30 @@ class ProductDetailController extends BaseController
             : null;
 
         $userId  = AuthMiddleware::customerId();
-        $related = ProductModel::related($product['category_id'], $product['id'], 4);
+        // Năm thẻ — bản thiết kế "Product Detail" vẽ một hàng năm cột.
+        $related = ProductModel::related($product['category_id'], $product['id'], 5);
+
+        /* Dấu trang của từng thẻ "sản phẩm tương tự". Chưa đăng nhập thì không
+           hỏi CSDL — cùng lý do với 'daLuu' bên dưới. Năm câu hỏi nhỏ, không
+           đáng dựng một hàm gom riêng. */
+        $relatedSaved = [];
+        if ($userId !== null && FavoriteModel::available()) {
+            foreach ($related as $r) {
+                $relatedSaved[$r['id']] = FavoriteModel::daLuu($r['id'], $userId);
+            }
+        }
+
+        /* Bộ sưu tập của mặt hàng — nguồn cho khối "Campaign" dưới cột mua.
+           `products.collection` lưu slug của bộ; bộ đã ẩn thì coi như không có,
+           khối đó tự không vẽ. */
+        $collection = !empty($product['collection'])
+            ? CollectionModel::findVisibleBySlug((string) $product['collection'])
+            : null;
+
+        /* Phương án chọn sẵn: ?pa= (khách vừa chọn hỏng, CartController gửi
+           về) rồi tới ?bien-the= (ô màu trên thẻ sản phẩm ngoài lưới dẫn sang
+           kèm tham số này, mà trước nay trang chi tiết không đọc). */
+        $picked = $_GET['pa'] ?? $_GET['bien-the'] ?? '';
 
         $this->renderView('product/detail', [
             'pageTitle' => $product['name'] . ' — Vin Eyewear',
@@ -42,13 +65,10 @@ class ProductDetailController extends BaseController
             'category'  => $category,
             'variants'  => VariantModel::forProduct($product['id']),
             // Biến thể khách vừa chọn hỏng (thiếu, sai) — nhớ lại để chọn sẵn
-            'pickedVariant' => (string) ($_GET['pa'] ?? ''),
+            'pickedVariant' => is_scalar($picked) ? (string) $picked : '',
             'related'   => $related,
-            /* Biến thể màu của bốn thẻ "sản phẩm tương tự". KHÁC 'variants' ở
-               trên: đó là biến thể của CHÍNH mặt hàng đang mở (cột chọn phương
-               án), còn đây là của bốn mặt hàng khác. Hai thứ khác nhau nên hai
-               tên khác nhau — gộp lại là chỗ sẽ có người đọc nhầm. */
-            'relatedVariants' => VariantModel::forProducts(array_column($related, 'id')),
+            'relatedSaved' => $relatedSaved,
+            'collection'   => $collection,
             // Chỉ lấy vài đánh giá đầu; "Xem tất cả" mở trang riêng.
             'reviews'   => ReviewModel::published($product['id'], $showAll ? null : ReviewModel::PREVIEW),
             'showAll'   => $showAll,
