@@ -787,67 +787,13 @@ select.acct-field__ctl {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   TÀI KHOẢN LIÊN KẾT
+   ĐÃ GỠ: TÀI KHOẢN LIÊN KẾT (13/09/2026)
+
+   Tám bộ chọn .acct-conn* vẽ ô nối/gỡ Google trong trang hồ sơ. Khối HTML
+   dùng chúng đã gỡ theo yêu cầu chủ dự án — xem chú thích tại chỗ trong
+   app/views/auth/account/ho-so.php, ở đó ghi rõ cái gì còn, cái gì mất.
    ══════════════════════════════════════════════════════════════════════ */
 
-.acct-conn {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    min-height: 60px;
-    margin-top: 14px;
-    padding: 8px 15px;
-    border: 1px solid var(--acct-line);
-    border-radius: 4px;
-    background: #fff;
-}
-
-.acct-conn__who {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 0;
-}
-
-.acct-conn__who svg {
-    flex: none;
-    width: 22px;
-    height: 22px;
-}
-
-.acct-conn__text {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.acct-conn__name {
-    font-size: 14px;
-    text-transform: uppercase;
-}
-
-.acct-conn__sub {
-    color: var(--acct-mute);
-    font-size: 12px;
-}
-
-.acct .acct-conn__act {
-    display: flex;
-    color: var(--acct-btn-line);
-}
-
-.acct-conn__link {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--acct-ink);
-    font-size: 14px;
-    letter-spacing: .01em;
-    text-decoration: underline;
-    text-transform: uppercase;
-    cursor: pointer;
-}
 
 /* ══════════════════════════════════════════════════════════════════════
    HỘP THOẠI XOÁ TÀI KHOẢN (?xoa=1)

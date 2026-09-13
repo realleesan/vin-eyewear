@@ -33,16 +33,18 @@
  *     ?sua-ho-so=1            form sửa hồ sơ (thay cả tab, đúng như bản vẽ)
  *     &sua-email=1            mở ô email trong form đó
  *     ?doi-mat-khau=1         mở form đổi mật khẩu
- *     ?go-google=1            hỏi mật khẩu trước khi gỡ liên kết Google
  *     ?xoa=1 (&canh-bao=1)    hộp thoại xoá tài khoản
  *
  * F5 không mất chỗ, và máy chủ gửi lỗi về đúng trạng thái còn mở — xem các
  * redirect trong AuthController.
  */
 
-$email    = trim((string) ($profile['email'] ?? ''));
-$daNoi    = !empty($google['linked']);
-$googleOn = GoogleAuth::isConfigured();
+$email = trim((string) ($profile['email'] ?? ''));
+
+/* $daNoi và $googleOn đã gỡ cùng khối "Tài khoản liên kết" — không còn chỗ
+   nào trong file này đọc chúng. Controller VẪN truyền $google xuống (xem
+   AuthController::profile); để nguyên bên đó vì hai đường nối/gỡ Google chưa
+   gỡ, và một biến thừa thì rẻ hơn một lần dựng lại. */
 ?>
 
 <?php if ($suaHoSo): ?>
@@ -120,68 +122,22 @@ $googleOn = GoogleAuth::isConfigured();
     </section>
 
     <?php
-    /* ═════════════════════════ TÀI KHOẢN LIÊN KẾT ═════════════════════════
-       Chỗ nối Google mà AF-03 hứa: đăng nhập Google bằng email trùng tài khoản
-       có sẵn thì câu báo bảo khách "đăng nhập rồi liên kết" — và đây là chỗ ấy.
-
-       KHÔNG IN EMAIL GOOGLE như bản thiết kế: bảng `users` chỉ giữ google_id
-       (chuỗi `sub`), và email Google chưa chắc trùng email tài khoản. Xem
-       UserModel::googleLink(). */
-    $moGoGoogle = $daNoi && isset($_GET['go-google']);
+    /* ┌─ ĐÃ GỠ: KHỐI "TÀI KHOẢN LIÊN KẾT" (13/09/2026, yêu cầu chủ dự án) ────
+       │ Nó là ô nối/gỡ tài khoản Google trong trang hồ sơ.
+       │
+       │ ĐĂNG NHẬP BẰNG GOOGLE KHÔNG BỊ ĐỘNG TỚI: nút Google ở ngăn kéo đăng
+       │ nhập và màn đăng ký vẫn nguyên, tài khoản đã nối vẫn đăng nhập được
+       │ như cũ. Thứ mất đi là hai thao tác THỦ CÔNG trong trang hồ sơ:
+       │
+       │   · nối Google vào một tài khoản đã lập bằng số điện thoại
+       │   · gỡ liên kết Google ra khỏi tài khoản
+       │
+       │ Hai đường POST /tai-khoan/google và /tai-khoan/google/go vẫn còn
+       │ trong config/routes.php và AuthController — CỐ Ý giữ: gỡ chúng đi là
+       │ ngày nào chủ dự án muốn khối này quay lại thì phải dựng lại cả phần
+       │ máy chủ, chứ không phải chỉ dán lại đoạn HTML.
+       └──────────────────────────────────────────────────────────────────── */
     ?>
-    <section class="acct-sec" id="tai-khoan-google" aria-labelledby="hs-google">
-        <h2 class="acct-label" id="hs-google">Tài khoản liên kết</h2>
-        <p class="acct-text">Liên kết tài khoản mạng xã hội để đăng nhập dễ và nhanh hơn.</p>
-
-        <div class="acct-conn">
-            <span class="acct-conn__who">
-                <?php partial('auth/_google-icon'); ?>
-                <span class="acct-conn__text">
-                    <span class="acct-conn__name">Google</span>
-                    <span class="acct-conn__sub">
-                        <?= $daNoi ? 'Đã liên kết' : ($googleOn ? 'Chưa liên kết' : 'Sắp có') ?>
-                    </span>
-                </span>
-            </span>
-
-            <?php if ($daNoi && !$moGoGoogle): ?>
-                <a class="acct-conn__act" href="/tai-khoan?muc=ho-so&amp;go-google=1#tai-khoan-google"
-                   aria-label="Gỡ liên kết Google" title="Gỡ liên kết">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="1.5" stroke-linecap="round" aria-hidden="true" focusable="false">
-                        <path d="M10 14a4 4 0 0 0 5.6.4l2.8-2.8a4 4 0 0 0-5.6-5.6l-1 1"></path>
-                        <path d="M14 10a4 4 0 0 0-5.6-.4l-2.8 2.8a4 4 0 0 0 5.6 5.6l1-1"></path>
-                        <line x1="4" y1="4" x2="20" y2="20"></line>
-                    </svg>
-                </a>
-            <?php elseif (!$daNoi && $googleOn): ?>
-                <?php /* FORM POST, không phải <a>: để /tai-khoan/google mở bằng GET
-                         thì một <img> ở trang khác cũng đẩy được khách sang
-                         Google và nối nhầm một tài khoản. */ ?>
-                <form method="post" action="/tai-khoan/google">
-                    <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                    <button type="submit" class="acct-conn__link">Liên kết</button>
-                </form>
-            <?php endif; ?>
-        </div>
-
-        <?php if ($moGoGoogle): ?>
-            <form class="acct-form" method="post" action="/tai-khoan/google/go">
-                <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
-                <p class="acct-note">
-                    Sau khi gỡ, bạn chỉ còn đăng nhập bằng số điện thoại hoặc email và mật
-                    khẩu. Nhập mật khẩu hiện tại để xác nhận.
-                </p>
-                <label class="sr-only" for="go-google-mk">Mật khẩu hiện tại</label>
-                <input class="acct-input" type="password" id="go-google-mk" name="mat_khau"
-                       required autocomplete="current-password" placeholder="Mật khẩu hiện tại">
-                <div class="acct-pair">
-                    <a class="acct-btn" href="/tai-khoan?muc=ho-so#tai-khoan-google">Để nguyên</a>
-                    <button type="submit" class="acct-btn acct-btn--solid">Gỡ liên kết</button>
-                </div>
-            </form>
-        <?php endif; ?>
-    </section>
 
     <?php
     /* ═════════════════════════ ĐỔI MẬT KHẨU ═════════════════════════
