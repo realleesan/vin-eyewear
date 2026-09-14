@@ -329,6 +329,8 @@ if ($manhCua !== null) {
         printf('    <link rel="stylesheet" href="%s">' . "\n", e(asset('assets/css/' . $css)));
     }
     ?>
+    <!-- Lớp cuối: quy tắc viền Gentle Monster phải thắng CSS riêng từng trang. -->
+    <link rel="stylesheet" href="<?= asset('assets/css/gentle-border.css') ?>">
 </head>
 
 <?php
