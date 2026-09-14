@@ -7,7 +7,7 @@
    ⚠ BA GIÁ TRỊ KHÔNG LẤY TỪ TOKEN CỦA SITE, và đó là chủ ý — chủ dự án chốt
    "giống design tuyệt đối":
 
-     border-radius 3px/4px   site để --r-pill/--r-chip = 0 (góc vuông)
+     border-radius 3px/4px   thay bằng hệ bo góc editorial dùng chung
      #ebebeb                 nền nút BAG và nút "Bỏ khỏi giỏ"
      #8a8a8a · #9a9a9a       chữ tab tắt · viền nút phụ
 
@@ -190,7 +190,7 @@
    danh mục và ô chọn trạng thái ở khu quản trị. */
 .cqty__go {
     border: 1px solid #9a9a9a;
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: #fff;
     padding: 4px 10px;
     font: inherit;
@@ -209,7 +209,7 @@ html.js .cqty__go {
     align-self: flex-start;
     margin-top: 8px;
     border: 0;
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: #ebebeb;
     padding: 6px 10px;
     font: inherit;
@@ -297,7 +297,7 @@ html.js .cqty__go {
     margin-top: 22px;
     height: 48px;
     border: 0;
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: #111;
     color: #fff;
     font-size: 12px;
@@ -327,7 +327,7 @@ html.js .cqty__go {
     margin-top: 12px;
     height: 52px;
     border: 1px solid #9a9a9a;
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: #fff;
     color: #111;
     font-size: 12px;

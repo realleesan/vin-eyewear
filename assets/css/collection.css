@@ -726,7 +726,7 @@
     height: var(--h-btn);
     padding: 0 28px;
     border: 1px solid var(--line-btn);
-    border-radius: var(--r-pill);
+    border-radius: var(--r-secondary);
     background: var(--bg);
     color: var(--ink);
     font-size: var(--fs-ui);
@@ -741,7 +741,12 @@
     color: #fff;
 }
 
+.cdet__cta {
+    border-radius: var(--r-cta);
+}
+
 .cdet__end-btn--main {
+    border-radius: var(--r-cta);
     background: var(--ink);
     border-color: var(--ink);
     color: #fff;
@@ -753,6 +758,7 @@
 }
 
 .cdet__cta--ghost {
+    border-radius: var(--r-secondary);
     border-color: var(--line-btn);
 }
 
@@ -973,8 +979,7 @@
     justify-content: center;
     height: var(--h-field);
     border: 0;
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
     font-size: var(--fs-micro);

@@ -245,7 +245,7 @@
         height: auto;
         max-height: 88vh;
         max-height: 88dvh;
-        border-radius: 16px 16px 0 0;
+        border-radius: 0;
 
         transform: translateY(100%);
         /* Cùng token với bản máy tính. Trước là .24s gõ cứng — nhanh hơn

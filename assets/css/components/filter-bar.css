@@ -86,9 +86,7 @@
 /* Dáng lấy nguyên của .cdet__chip (trang bộ sưu tập) — hai hàng chip của
    site phải trông như một, kể cả khi chỉ một trong hai được sửa sau này.
 
-   Góc theo --r-chip, hiện là 0 (góc vuông, luật chung của cả site). Bản
-   thiết kế vẽ viên bo tròn, nhưng đổi bo ở đây là tự tay tạo ra chỗ duy nhất
-   còn góc tròn — muốn tròn thì sửa --r-chip trong oa.css, cả site theo. */
+   Góc theo --r-chip: 35px trên desktop và 20px trên mobile. */
 .fbarchip {
     flex: none;
     display: inline-flex;
@@ -310,7 +308,7 @@
     height: 13px;
     margin-top: 1px;
     border: 1px solid var(--line-strong);
-    /* Góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    /* Checkbox giữ góc vuông theo hệ editorial. */
     border-radius: 0;
     background: #fff;
     display: flex;

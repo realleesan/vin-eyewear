@@ -13,10 +13,10 @@
    ═════════════════════════════════════════════════════════════════════════
    MẪU KHÔNG VẼ TRANG NÀO TRONG BỐN TRANG NÀY. Bốn quy tắc dịch, áp cả file:
 
-     ô nhập      → .oa-input: cao 44, bo 6, viền #ddd, nền trắng
+     ô nhập      → .oa-input: cao 44, góc vuông, viền #ddd, nền trắng
      ô chọn      → viền 1px #ddd; ĐANG CHỌN thì viền đen (box-shadow inset),
                    KHÔNG đổi nền. Đây là luật của mẫu ở mọi chỗ có lựa chọn.
-     nút chính   → .oa-btn--block: cao 44, bo 6, chữ 9px IN HOA
+     nút chính   → .oa-btn--block: cao 44, pill 25px, chữ 9px IN HOA
      mã đơn / số → `tabular-nums`, giãn .06em. Không tải font mono nào —
                    bộ số đều bề ngang đã có sẵn trong font hệ thống.
 
@@ -33,8 +33,7 @@
    cũng gõ số thật — cùng lối với trang giỏ hàng và lưới yêu thích dựng
    cùng đợt. Muốn kéo cả ba về hệ token thì đổi một lần cho cả ba.
 
-   ⚠ BO GÓC 9–20px LÀ CỦA MẪU và cố ý giữ, dù --r-* của site đều bằng 0.
-     Chủ dự án chốt "giống 100%" cho hai màn này.
+   Bo góc theo hệ editorial chung: bề mặt vuông, CTA 25px, nút phụ 8px.
    ══════════════════════════════════════════════════════════════════════ */
 
 .checkout {
@@ -523,7 +522,7 @@ html.js .cofallback {
     height: 36px;
     padding: 0 12px;
     border: 1px solid var(--line-input);
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
+    /* Menu chọn giữ góc vuông theo hệ editorial. */
     border-radius: 0;
     background: var(--bg);
     font-size: var(--fs-body);
@@ -659,8 +658,7 @@ html.js .cofallback {
     height: 36px;
     padding: 0 14px;
     border: 1px solid var(--ink);
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: var(--ink);
     color: #fff;
     font-family: inherit;
@@ -1007,7 +1005,7 @@ html.js .cofallback {
 .coqr__copy {
     flex: none;
     border: 1px solid #e1e1de;
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: #fff;
     padding: 5px 10px;
     margin-left: 10px;
@@ -1627,7 +1625,7 @@ html.js .cofallback {
     height: var(--h-btn);
     padding: 0 28px;
     border: 1px solid var(--ink);
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
     font-family: inherit;
@@ -1642,6 +1640,7 @@ html.js .cofallback {
 }
 
 .opaid__btn--ghost {
+    border-radius: var(--r-secondary);
     background: var(--bg);
     border-color: var(--line-btn);
     color: var(--ink);
@@ -1932,7 +1931,7 @@ html.js .cofallback {
 
 .checkout .covou__apply {
     border: 0;
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: #111;
     color: #fff;
     padding: 10px 16px;
@@ -2025,7 +2024,7 @@ html.js .cofallback {
 .checkout .csum__cta--btn {
     width: 100%;
     border: 0;
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: #111;
     color: #fff;
     padding: 17px 20px;
@@ -2165,7 +2164,7 @@ html.js .cofallback {
 
 .coqr__againbtn {
     border: 0;
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: #111;
     color: #fff;
     padding: 9px 16px;

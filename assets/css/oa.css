@@ -317,39 +317,10 @@
        │
        │ assets/js/header.js đo bằng header.offsetHeight nên nó tự đúng. */
     --hdr-h: calc(64px * var(--oa-scale));
-    /* ┌─ LỀ NGANG CỦA TRANG — RỘNG RA (12/09/2026, theo yêu cầu chủ dự án) ─
-       │ 64 → 96 và 60 → 92. Cả hai cùng tăng một lượng để KHOẢNG LỆCH 4px
-       │ giữa chúng giữ nguyên: lề chữ rộng hơn lề lưới đúng 4px, vừa bằng
-       │ nửa khoảng nhô của chữ so với mép ảnh, nên tiêu đề băng vẫn thẳng
-       │ hàng với mép thẻ đầu tiên như từ trước tới nay. Đổi một số mà quên
-       │ số kia là hai khối ấy lệch nhau, và lệch 4px thì thấy rất rõ.
-       │
-       │ Đo lại bằng --edge-grid (92), tức số của LƯỚI:
-       │
-       │     màn 1280   vùng nội dung 1096 (trước 1160)   thẻ 253 (trước 267)
-       │     màn 1440   vùng nội dung 1256 (trước 1320)   thẻ 290 (trước 304)
-       │     màn 1920   vùng nội dung 1736 (trước 1800)   thẻ 400 (trước 415)
-       │
-       │ Thẻ hẹp đi ~14px ở mọi khổ. HỆ QUẢ DUY NHẤT ĐÁNG BIẾT nằm ở mốc
-       │ 190px của @container tại .oa-card__actions — dưới mốc ấy CHỮ trong
-       │ hai nút mua xuống dòng (hai nút VẪN cùng một hàng; xem khối "THẺ
-       │ HẸP: VẪN MỘT HÀNG" ở đó).
-       │
-       │ Lưới giữ 4 cột tới tận 760px, nên mốc ấy rơi vào khoảng màn hình
-       │ 760–1008px: trước khi rộng lề, khoảng ấy là 760–944px. Tức dải máy
-       │ tính bảng nằm ngang nay chạm luật xuống dòng sớm hơn ~64px. Chấp
-       │ nhận được — @container lo đúng việc đó và thẻ vẫn nguyên hình; ghi
-       │ ra để người sau đừng tưởng là lỗi mới.
-       │
-       │ KHÔNG ĐỤNG mốc ≤760px bên dưới (20px/16px): trên điện thoại mỗi
-       │ pixel lề là một pixel bị lấy khỏi chỗ đọc chữ, và ở đó khoảng thở
-       │ đến từ khe giữa các khối chứ không từ lề trang.
-       │
-       │ Khối TRÀN MÉP không đi qua hai biến này nên không đổi theo: hero,
-       │ ảnh chiến dịch, dải nền màu. Đó là chủ ý — chúng tràn mép chính vì
-       │ không có lề. */
-    --edge: 96px;           /* lề ngang của khối CHỮ */
-    --edge-grid: 92px;      /* lề ngang của LƯỚI thẻ (thẻ có padding 14px) */
+    /* Lề trắng editorial: khối chữ rộng hơn lưới thẻ 4px để mép chữ và ảnh
+       vẫn thẳng hàng. Hero, banner và các khối tràn mép không dùng token này. */
+    --edge: 120px;          /* lề ngang của khối CHỮ */
+    --edge-grid: 116px;     /* lề ngang của LƯỚI thẻ (thẻ có padding 14px) */
 
     /* ┌─ KHE DỌC GIỮA CỘT — SỐ PHẦN TRĂM, ĐO TỪ gentlemonster.com ────────
        │ Đo trực tiếp trên trang /category/glasses/view-all của họ, hai bề
@@ -396,38 +367,15 @@
        │ hẹp so với thẻ. */
     --gap-card: 2.6%;       /* khe dọc giữa THẺ trong .oa-grid / .pgrid */
 
-    /* ┌─ CHIỀU CAO Ô ĐIỀU KHIỂN — CO GIÃN CÙNG CHỮ ──────────────────────
-       │ Đây là nhóm số DUY NHẤT ngoài thang chữ được nhân với --oa-scale,
-       │ và nó bắt buộc phải thế: một cái chip cao 26px không chứa nổi dòng
-       │ chữ 15px. Chiều cao của chip/tab/nút/ô nhập là số ĐI THEO CHỮ, không
-       │ phải số của bố cục.
-       │
-       │ Bán kính đi kèm chiều cao: nút viên cần bán kính bằng ĐÚNG một nửa
-       │ chiều cao. Phóng chiều cao mà quên bán kính là nút viên hoá hình chữ
-       │ nhật bo góc.
-       │
-       │ KHÔNG phóng: lề ngang (--edge), khe lưới (--gap-*), chiều cao thanh
-       │ đầu trang (--hdr-h), bề ngang ngăn kéo. Đó mới là số của bố cục —
-       │ phóng chúng thì lưới 4 cột vỡ sang cuộn ngang trên laptop 1366px.
-       └──────────────────────────────────────────────────────────────────── */
-    /* ┌─ KHÔNG BO TRÒN (12/09/2026, theo yêu cầu chủ dự án) ─────────────
-       │ BỐN TOKEN NÀY NAY LÀ 0. Chúng từng là bán kính "viên thuốc" —
-       │ đúng một nửa chiều cao ô, nên nút, chip và tab ra hình thuôn hai
-       │ đầu; mẫu gốc vẽ như thế. Nay mọi nút của khu bán hàng là GÓC VUÔNG.
-       │
-       │ GIỮ TÊN VÀ GIỮ CẢ BỐN, không xoá: chúng nằm rải ở ~40 chỗ trong 15
-       │ file CSS. Đổi giá trị tại MỘT chỗ thì cả site vuông cùng lúc và
-       │ quay lại cũng một dòng; xoá token rồi sửa 40 chỗ thì lần sau muốn
-       │ bo lại phải đi tìm đủ 40 chỗ ấy.
-       │
-       │ CÒN MỘT NHÓM NÚT NỮA không đi qua bốn token này mà dùng --r-field
-       │ (6px, vốn là góc bo của Ô NHẬP chứ không phải của nút): .pdbtn,
-       │ .authbtn, .oa-btn--block, .acct-btn, .bmodal__cta… Chúng đã được
-       │ khai `border-radius: 0;       /* trước: ½ --h-btn    (18px) */
-    --r-pill-sm: 0;    /* trước: ½ --h-btn-sm (16px) */
-    --r-chip: 0;       /* trước: ½ --h-chip   (13px) */
-    --r-tab: 0;        /* trước: ½ --h-tab    (14px) */
-    --r-field: calc(6px * var(--oa-scale));      /* góc bo, không phải viên */
+    /* Kích thước điều khiển co giãn cùng chữ; bán kính giữ đúng hệ editorial:
+       bề mặt 0px, CTA 25px, nút phụ 8px, chip 35px (20px trên mobile). */
+    --r-cta: 25px;
+    --r-secondary: 8px;
+    --r-pill: var(--r-cta);
+    --r-pill-sm: var(--r-secondary);
+    --r-chip: 35px;
+    --r-tab: var(--r-secondary);
+    --r-field: 0;
 
     --h-btn: calc(36px * var(--oa-scale));
     --h-btn-sm: calc(32px * var(--oa-scale));
@@ -516,8 +464,8 @@
     --page-edge: var(--edge);
     --gutter: var(--gap-col);
     --gutter-tight: var(--gap-tight);
-    --radius: var(--r-field);
-    --radius-sm: 3px;
+    --radius: 0;
+    --radius-sm: var(--r-secondary);
     --radius-round: 999px;
     --section-pad: 80px;
     --section-pad-lg: 96px;
@@ -617,6 +565,7 @@ video {
 img {
     display: block;
     height: auto;
+    border-radius: 0;
 }
 
 button,
@@ -625,6 +574,7 @@ select,
 textarea {
     font: inherit;
     color: inherit;
+    border-radius: 0;
 }
 
 ul[role="list"],
@@ -685,7 +635,7 @@ ol[role="list"],
     font-size: var(--fs-micro);
     letter-spacing: var(--ls);
     text-transform: uppercase;
-    border-radius: 0;
+    border-radius: var(--r-secondary);
 }
 
 .skip-link:focus {
@@ -857,15 +807,10 @@ ol[role="list"],
    │ Mẫu dùng ba hình dáng khác hẳn nhau, mỗi hình một chỗ. Chọn nhầm dáng
    │ là chỗ dễ lệch mẫu nhất, nên ghi rõ:
    │
-   │   .oa-btn      VIÊN, cao 36, chữ 11px thường  → nút trong nội dung
-   │                trang (CTA cuối trang, "Xem thêm", "Gửi câu hỏi")
-   │   .oa-btn--sm  VIÊN, cao 32, chữ 11px         → nút trên ảnh hero,
-   │                nút trong thẻ cửa hàng
-   │   .oa-btn--card VIÊN, cao 32, chữ 9px         → hai nút trong thẻ SP
-   │   .oa-btn--block VUÔNG r6, cao 44, chữ 9px IN HOA → form và ngăn kéo
-   │
-   │ Luật ngầm: nút VIÊN nằm trên nền trang, nút VUÔNG nằm trong form.
-   │ Mẫu không có ngoại lệ nào.
+   │   .oa-btn      nút phụ bo 8px, cao 36, chữ 11px
+   │   .oa-btn--sm  biến thể cao 32, giữ bán kính theo vai trò
+   │   .oa-btn--card hai nút trong thẻ SP: chính 25px, phụ 8px
+   │   .oa-btn--block CTA pill 25px, cao 44, chữ 9px IN HOA → form và ngăn kéo
    └──────────────────────────────────────────────────────────────────────*/
 .oa-btn {
     display: inline-flex;
@@ -875,7 +820,7 @@ ol[role="list"],
     height: var(--h-btn);
     padding: 0 28px;
     border: 1px solid var(--line-btn);
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
@@ -895,6 +840,7 @@ ol[role="list"],
 /* Nút chính — đặc sẵn, rê chuột thì ĐẢO NGƯỢC thành rỗng. Đây là cú lật
    của mẫu, không phải "đậm hơn một chút" như lối thường gặp. */
 .oa-btn--solid {
+    border-radius: var(--r-cta);
     background: var(--ink);
     border-color: var(--ink);
     color: #fff;
@@ -920,6 +866,7 @@ ol[role="list"],
 }
 
 .oa-btn--onimage-solid {
+    border-radius: var(--r-cta);
     border-color: #fff;
     background: #fff;
     color: var(--ink);
@@ -933,7 +880,6 @@ ol[role="list"],
 .oa-btn--sm {
     height: var(--h-btn-sm);
     padding: 0 22px;
-    border-radius: 0;
 }
 
 /* Hai nút trong thẻ sản phẩm — chia đôi bề ngang, chữ 9px */
@@ -941,7 +887,6 @@ ol[role="list"],
     height: var(--h-btn-sm);
     flex: 1;
     padding: 0 10px;
-    border-radius: 0;
     font-size: var(--fs-micro);
     letter-spacing: var(--ls-tight);
 }
@@ -958,7 +903,7 @@ ol[role="list"],
     color: var(--ink);
 }
 
-/* Nút khối trong form / ngăn kéo — VUÔNG bo 6, cao 44, chữ 9px IN HOA.
+/* Nút khối chính trong form / ngăn kéo — CTA pill, cao 44, chữ 9px IN HOA.
 
    TỰ ĐỦ, không cần đi kèm .oa-btn: align-items/justify-content khai lại ở
    đây vì nửa số chỗ dùng nó là <button class="oa-btn--block"> trần. Thiếu
@@ -972,8 +917,7 @@ ol[role="list"],
     height: var(--h-field);
     padding: 0 12px;
     border: 0;
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
     font-size: var(--fs-micro);
@@ -989,6 +933,7 @@ ol[role="list"],
 
 /* Nút khối phụ — rỗng, viền xám */
 .oa-btn--block-ghost {
+    border-radius: var(--r-secondary);
     background: transparent;
     border: 1px solid var(--line-btn-2);
     color: var(--ink);
@@ -1086,7 +1031,7 @@ ol[role="list"],
     height: var(--h-chip);
     padding: 0 12px;
     border: 1px solid var(--line-chip);
-    border-radius: 0;
+    border-radius: var(--r-chip);
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
@@ -1138,7 +1083,7 @@ ol[role="list"],
     height: var(--h-tab);
     padding: 0 13px;
     border: 1px solid var(--line-chip);
-    border-radius: 0;
+    border-radius: var(--r-tab);
     background: transparent;
     color: var(--ink-5);
     font-family: inherit;
@@ -1188,7 +1133,7 @@ ol[role="list"],
    ══════════════════════════════════════════════════════════════════════ */
 
 /* ┌─ HAI DÁNG Ô NHẬP ────────────────────────────────────────────────────
-   │ .oa-input  HỘP cao 44, bo 6, viền #ddd, nền trắng → form trong ngăn
+   │ .oa-input  HỘP cao 44, góc vuông, viền #ddd, nền trắng → form
    │            kéo, trang đăng nhập, trang CSKH
    │ .oa-field  GẠCH CHÂN, cao 34, không nền          → form liên hệ
    │
@@ -3267,7 +3212,7 @@ textarea.oa-field {
    MẨU DÙNG CHUNG
    ══════════════════════════════════════════════════════════════════════ */
 
-/* Thông báo — mẫu không vẽ, suy ra theo đúng lối: hộp vuông bo 6, viền
+/* Thông báo — mẫu không vẽ, suy ra theo đúng lối: hộp vuông, viền
    mảnh, không nền màu. Sắc chỉ nằm ở một đường kẻ trái 2px. */
 .oa-note {
     display: flex;
@@ -3784,6 +3729,7 @@ body.is-search-open {
     height: 40px;
     width: min(276px, 100%);
     border: 1px solid var(--line-btn-2);
+    border-radius: var(--r-secondary);
     background: none;
     color: var(--ink);
     font-size: var(--fs-body);
@@ -3925,7 +3871,7 @@ body.is-search-open {
     height: var(--h-btn);
     padding: 0 28px;
     border: 1px solid var(--line-btn);
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
@@ -3937,6 +3883,7 @@ body.is-search-open {
 }
 
 .btn-primary {
+    border-radius: var(--r-cta);
     background: var(--ink);
     border-color: var(--ink);
     color: #fff;
@@ -4154,7 +4101,7 @@ body.is-search-open {
     height: var(--h-btn);
     padding: 0 28px;
     border: 1px solid var(--line-btn);
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: var(--bg);
     color: var(--ink);
     font-size: var(--fs-ui);
@@ -4166,6 +4113,7 @@ body.is-search-open {
 .error-page__btn,
 .errpage__actions .btn-primary,
 .mobile-nav__foot .btn-primary {
+    border-radius: var(--r-cta);
     background: var(--ink);
     border-color: var(--ink);
     color: #fff;
@@ -4218,8 +4166,8 @@ body.is-search-open {
 
 @media (max-width: 1200px) {
     :root {
-        --edge: 40px;
-        --edge-grid: 36px;
+        --edge: 56px;
+        --edge-grid: 52px;
         --gap-row: 40px;
     }
 
@@ -4248,12 +4196,13 @@ body.is-search-open {
 
 @media (max-width: 760px) {
     :root {
-        --edge: 20px;
-        --edge-grid: 16px;
+        --edge: 24px;
+        --edge-grid: 20px;
         --gap-row: 32px;
         --gap-card-row: 28px;
         --gap-col: 12px;
         --gap-card: 12px;
+        --r-chip: 20px;
     }
 
     /* ┌─ HÀNG NAV BIẾN THÀNH NGĂN KÉO ────────────────────────────────────
@@ -4454,6 +4403,7 @@ body.is-search-open {
 .lgate__cta {
     display: block;
     padding: 14px 18px;
+    border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
     font-size: var(--fs-ui);

@@ -410,8 +410,7 @@
     height: 52px;
     padding: 0 20px;
     border: 1px solid var(--acct-btn-line);
-    /* Vuông góc — xem .acct-nav__tab. Bản vẽ gốc bo 4px. */
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: transparent;
     color: var(--acct-ink);
     font-size: 14px;
@@ -433,6 +432,7 @@
 }
 
 .acct .acct-btn--solid {
+    border-radius: var(--r-cta);
     border-color: var(--acct-ink);
     background: var(--acct-ink);
     color: #fff;
@@ -1135,7 +1135,7 @@ select.acct-field__ctl {
 .wlpage .wl__cta {
     display: inline-block;
     border: 0;
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: var(--wl-nut);
     padding: 8px 10px;
     font: inherit;
@@ -1167,7 +1167,7 @@ select.acct-field__ctl {
     display: flex;
     align-items: center;
     gap: 12px;
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: #fff;
     padding: 10px 14px;
     font-size: var(--fs-micro);

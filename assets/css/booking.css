@@ -13,7 +13,7 @@
 
      bkcard    = costep      khối một bước, số trong vòng tròn viền mảnh
      bkstore   = cocard      ô chọn, ĐANG CHỌN thì viền đen không đổi nền
-     bkfield   = cofield     ô nhập cao 44 bo 6
+     bkfield   = cofield     ô nhập cao 44, góc vuông
      bksum     = csum        thẻ tóm tắt nền #f3f3f5, dính top 72px
 
    Hai thứ riêng của trang này, không có ở đâu khác:
@@ -21,7 +21,7 @@
      .bkdays   dải NGÀY cuộn ngang — mỗi ngày một ô vuông, thứ ở trên, số
                ở dưới. Đây là chỗ duy nhất trên site có một dải ô vuông
                chọn được.
-     .bkpills  hàng GIỜ — chip cao 26 bo 13, đúng .oa-chip của mẫu.
+     .bkpills  hàng GIỜ — chip 35px, về 20px trên mobile.
    ═════════════════════════════════════════════════════════════════════════ */
 
 .bk {
@@ -452,8 +452,7 @@
     justify-content: center;
     height: var(--h-field);
     border: 0;
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
     font-family: inherit;

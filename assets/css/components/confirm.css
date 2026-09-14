@@ -6,8 +6,8 @@
 
      · nền lớp phủ  rgba(0,0,0,.35)   (cùng .oa-scrim--deep, vì hộp này cũng
        đòi toàn bộ sự chú ý)
-     · tấm hộp      nền #f3f3f5, bo 6, cùng nền với ngăn kéo tài khoản
-     · hai nút      cao 44, bo 6, chữ 9px IN HOA — đúng .oa-btn--block
+     · tấm hộp      nền #f3f3f5, góc vuông như panel
+     · hai nút      cao 44; nút chính 25px, nút phụ 8px
 
    Tức là hộp xác nhận trông như một ngăn kéo thu nhỏ, không phải một hộp
    thoại theo lối khác. Đó là điều duy nhất mẫu cho phép suy ra.
@@ -104,8 +104,7 @@
     height: var(--h-field);
     padding: 0 12px;
     border: 0;
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
+    border-radius: var(--r-secondary, 8px);
     font-family: inherit;
     font-size: var(--fs-micro);
     letter-spacing: var(--ls);
@@ -128,6 +127,7 @@
 /* ĐỎ, không phải đen: đây là một trong hai chỗ duy nhất trên site được dùng
    sắc --sale ngoài giá khuyến mãi. Việc sắp xảy ra là xoá thật. */
 .cfm__act--ok {
+    border-radius: var(--r-cta, 25px);
     background: var(--sale);
     color: #fff;
 }

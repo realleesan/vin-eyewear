@@ -16,10 +16,10 @@
      tấm hộp   → nền #f3f3f5, không bo góc ở mép dính màn hình — đây là một
                  NGĂN KÉO BÊN PHẢI, cùng dáng với .oa-drawer của mẫu. Bản cũ
                  là hộp giữa màn hình; mẫu không có hộp giữa màn hình nào.
-     ô chọn    → viền 1px #ddd, nền trắng, bo 6. Đang chọn thì viền đen 1px
+     ô chọn    → viền 1px #ddd, nền trắng, góc vuông
                  và KHÔNG đổi nền — mẫu đánh dấu lựa chọn bằng viền, không
                  bằng mảng màu.
-     nút chính → .oa-btn--block: cao 44, bo 6, chữ 9px IN HOA
+     nút chính → .oa-btn--block: cao 44, pill 25px, chữ 9px IN HOA
      mọi con số tiền → 10px thường; tổng tiền 13px. Không in đậm, không tô
                  màu. Sắc --sale chỉ dành cho giá ĐÃ GIẢM, không cho tổng.
    ========================================================================= */
@@ -626,8 +626,7 @@
     height: var(--h-field);
     padding: 0 12px;
     border: 0;
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
+    border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
     font-family: inherit;
@@ -657,8 +656,7 @@
     height: var(--h-field);
     padding: 0 12px;
     border: 1px solid var(--line-btn-2);
-    /* Nút góc VUÔNG — xem khối "KHÔNG BO TRÒN" ở assets/css/oa.css. */
-    border-radius: 0;
+    border-radius: var(--r-secondary);
     background: transparent;
     color: var(--ink);
     font-family: inherit;
