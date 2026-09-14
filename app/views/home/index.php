@@ -40,10 +40,10 @@
    chúng tôi tại cửa hàng" (theo yêu cầu chủ dự án 12/09/2026). Chữ nằm trong
    lang/vi.php để sửa được mà không đụng view; khối này chỉ chọn khoá. */
 $bands = [
-    ['title' => t('home.band.new'),    'lead' => t('home.band.new_lead'),    'more' => '/san-pham?sap-xep=moi-nhat',  'items' => $newArrivals, 'tone' => 'new'],
-    ['title' => t('home.band.best'),   'lead' => t('home.band.best_lead'),   'more' => '/san-pham?sap-xep=ban-chay',  'items' => $bestSellers, 'tone' => 'sale'],
-    ['title' => t('nav.frames'),       'lead' => t('home.band.frames_lead'), 'more' => '/san-pham/gong-kinh',         'items' => $frames,      'tone' => 'sale'],
-    ['title' => t('nav.lenses'),       'lead' => t('home.band.lenses_lead'), 'more' => '/san-pham/trong-kinh',        'items' => $lenses,      'tone' => 'sale'],
+    ['title' => t('home.band.new'),    'lead' => t('home.band.new_lead'),    'more' => '/san-pham?sap-xep=moi-nhat', 'items' => $newArrivals],
+    ['title' => t('home.band.best'),   'lead' => t('home.band.best_lead'),   'more' => '/san-pham?sap-xep=ban-chay', 'items' => $bestSellers],
+    ['title' => t('nav.frames'),       'lead' => t('home.band.frames_lead'), 'more' => '/san-pham/gong-kinh',        'items' => $frames],
+    ['title' => t('nav.lenses'),       'lead' => t('home.band.lenses_lead'), 'more' => '/san-pham/trong-kinh',       'items' => $lenses],
 ];
 ?>
 
@@ -71,7 +71,6 @@ $bands = [
                 <?php partial('_layout/product-card', [
                     'product'   => $item,
                     'i'         => $i,
-                    'badgeTone' => $band['tone'],
                     /* Biến thể đã gom sẵn MỘT câu ở HomeController — tra mảng,
                        không hỏi CSDL trong vòng lặp. */
                     'variants'  => $variants[$item['id']] ?? [],

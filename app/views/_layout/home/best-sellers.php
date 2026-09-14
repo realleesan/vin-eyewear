@@ -3,9 +3,9 @@
 /**
  * _layout/home/best-sellers.php — lưới sản phẩm bán chạy (S08).
  *
- * Dựng theo "Vin Eyewear Home.dc.html": thẻ sản phẩm DỌC — ảnh cao 300px, huy
- * hiệu đỏ mức giảm giá ở góc trái, dưới ảnh là thương hiệu · tên · giá kèm giá
- * gốc gạch ngang, chân thẻ có hai nút "Mua ngay" và "Chi tiết".
+ * Dựng theo "Vin Eyewear Home.dc.html": thẻ sản phẩm dọc; dưới ảnh là
+ * thương hiệu · tên · giá kèm giá gốc gạch ngang, chân thẻ có hai nút
+ * "Mua ngay" và "Chi tiết".
  *
  * KHÁC BẢN THIẾT KẾ: lưới tĩnh 4 cột của bản thiết kế nay là BĂNG TRƯỢT có hai
  * mũi tên tới/lui — xem chú thích dài hơn ở đầu _layout/home/new-arrivals.php,
@@ -43,7 +43,6 @@ $products = $products ?? [];
             <?php foreach ($products as $i => $p): ?>
                 <?php partial('_layout/product-card', [
                     'product'     => $p,
-                    'badgeTone'   => 'sale',
                     'showCompare' => true,
                     // Hàng đầu của lưới (4 thẻ ở desktop) nằm trong khung nhìn
                     // nếu khách cuộn tới đây; giữ lazy cho phần còn lại.

@@ -1619,17 +1619,7 @@ textarea.oa-field {
     container-type: inline-size;
 }
 
-/* ┌─ KHUNG ẢNH — MỐC NEO CỦA HUY HIỆU VÀ HAI NÚT MUA ─────────────────────
-   │ Nay khung TRÙNG KHÍT ô ảnh (100% × 100%), vì ảnh `cover` lấp kín ô nên
-   │ không còn dải trắng nào để trừ ra. Trước 12/09/2026 ảnh là `contain`
-   │ trong một ô dọc, ảnh vuông chừa ~18% chiều cao trống trên và dưới, và
-   │ huy hiệu neo thẳng vào ô thì nổi lơ lửng cách mép ảnh gần 50px — khung
-   │ này sinh ra để chữa đúng lỗi đó.
-   │
-   │ GIỮ KHUNG LẠI dù nay nó trùng ô: nó là chỗ neo của .oa-badges và
-   │ .oa-card__actions, và là thứ giữ cho việc quay về `contain` chỉ phải
-   │ sửa một luật (cho khung cao theo ảnh trở lại) thay vì sửa cả ba.
-   └──────────────────────────────────────────────────────────────────────── */
+/* Khung ảnh trùng khít ô ảnh và làm mốc neo cho hai nút mua. */
 .oa-card__frame {
     position: relative;
     width: 100%;
@@ -1651,35 +1641,6 @@ textarea.oa-field {
    riêng, ảnh nằm thẳng trên nền trang (xem khối .oa-card). */
 .oa-slot--card {
     background: transparent;
-}
-
-/* Huy hiệu góc trên trái CỦA TẤM ẢNH — neo vào .oa-card__frame, xem khối
-   chú thích ở đó. Ảnh lấp kín khung nên góc ấy đúng là góc ảnh. */
-.oa-badges {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    display: flex;
-    gap: 4px;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.oa-badge {
-    height: 18px;
-    padding: 0 7px;
-    display: flex;
-    align-items: center;
-    background: var(--ink);
-    color: #fff;
-    font-size: var(--fs-nano);
-    letter-spacing: var(--ls-wide);
-    text-transform: uppercase;
-    white-space: nowrap;
-}
-
-.oa-badge--sale {
-    background: var(--sale);
 }
 
 /* Mũi tên trái/phải khi thẻ có nhiều ảnh */

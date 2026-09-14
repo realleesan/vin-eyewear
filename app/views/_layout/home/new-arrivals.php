@@ -3,8 +3,7 @@
 /**
  * _layout/home/new-arrivals.php — "Sản phẩm mới về" (S07).
  *
- * Dựng theo "Vin Eyewear Home.dc.html": thẻ sản phẩm DỌC, huy hiệu xanh lá
- * "Mới" ở góc trái trên mỗi ảnh.
+ * Dựng theo "Vin Eyewear Home.dc.html": thẻ sản phẩm dọc.
  *
  * KHÁC BẢN THIẾT KẾ: bản thiết kế là một lưới TĨNH 4 cột; ở đây là BĂNG TRƯỢT
  * 4 thẻ một khung nhìn với hai mũi tên tới/lui ở hai mép — cùng cơ chế với
@@ -18,8 +17,7 @@
  * .pstrip__window), nên trình đọc màn hình và máy tìm kiếm vẫn thấy đủ.
  *
  * Khối này và "Sản phẩm bán chạy" dùng CHUNG một dáng thẻ — xem
- * _layout/product-card.php. Khác nhau đúng hai điểm, cả hai đều truyền
- * qua tham số: huy hiệu xanh thay vì đỏ, và không in giá gốc gạch ngang.
+ * _layout/product-card.php. Khối này không in giá gốc gạch ngang.
  *
  * Vì sao KHÔNG in giá gốc: hàng vừa lên kệ thì mức giảm (nếu có) là giá mở
  * bán chứ không phải một đợt hạ giá — treo giá gạch ngang lên đó là hứa một
@@ -76,7 +74,6 @@ $products = $products ?? [];
             <?php foreach ($products as $i => $p): ?>
                 <?php partial('_layout/product-card', [
                     'product'     => $p,
-                    'badgeTone'   => 'new',
                     'showCompare' => false,
                     'eager'       => $i < 4,
                 ]); ?>

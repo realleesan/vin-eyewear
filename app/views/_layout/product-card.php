@@ -10,8 +10,7 @@
  * HÌNH CỦA MẪU, từ trên xuống:
  *
  *   ┌─────────────────────────┐
- *   │ [MỚI] [-30%]            │  huy hiệu góc trên trái CỦA KHUNG ẢNH, nằm
- *   │                         │  NGOÀI liên kết
+ *   │                         │
  *   │    ảnh 1:1,36 contain   │  KHÔNG nền — thẻ trong suốt, lấy nền trang
  *   │                         │
  *   ├─────────────────────────┤
@@ -41,14 +40,11 @@
  *   $variants     mảng biến thể của MẶT HÀNG NÀY, để vẽ ô màu. Không truyền
  *                 thì hàng ô màu không hiện — thẻ vẫn đúng, chỉ thiếu một
  *                 dòng. Xem khối "Ô MÀU" bên dưới về cách lấy rẻ.
- *   $badgeTone    'sale' (mặc định) | 'new' — quyết định huy hiệu nào hiện
- *                 khi mặt hàng KHÔNG giảm giá
  *   $showCompare  false để giấu giá gạch (dùng ở khối gợi ý)
  *   $eager        true cho thẻ nằm trong màn hình đầu — bỏ loading="lazy"
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
-$badgeTone   = $badgeTone   ?? 'sale';
 $showCompare = $showCompare ?? true;
 $eager       = $eager       ?? false;
 $i           = $i           ?? 0;
@@ -62,7 +58,6 @@ $url = '/san-pham/' . rawurlencode($product['slug']);
    app/services/ProductPricing.php. */
 $price   = ProductPricing::giaBan($product);
 $compare = ProductPricing::giaGach($product);
-$percent = discount($price, $compare);
 
 $inStock   = ProductModel::inStock($product);
 $hasOption = VariantModel::hasVariants($product['id']);
@@ -140,7 +135,7 @@ foreach ($variants as $v) {
 
         <?php
         /* ┌─ KHUNG ẢNH ───────────────────────────────────────────────────
-           │ Lớp bọc này KHÔNG phải để trang trí: huy hiệu và hai nút mua
+           │ Lớp bọc này KHÔNG phải để trang trí: hai nút mua
            │ neo vào nó. Xem khối chú thích .oa-card__frame trong
            │ assets/css/oa.css — ở đó có cả lý do nó từng phải tồn tại khi
            │ ảnh còn là `contain` trong khung dọc. */
@@ -159,8 +154,7 @@ foreach ($variants as $v) {
                sản phẩm ngay bên dưới. Ảnh mang alt="" (tên đã có ở tiêu đề, đọc
                lại là đọc hai lần) nên nếu để trình đọc màn hình thấy, nó chỉ đọc
                được một "liên kết" trơ trọi không tên; còn để nhận tiêu điểm thì
-               người dùng bàn phím phải Tab qua bốn liên kết một thẻ thay vì ba.
-               Huy hiệu nằm NGOÀI liên kết nên vẫn đọc được. */
+               người dùng bàn phím phải Tab qua bốn liên kết một thẻ thay vì ba. */
             ?>
             <a class="oa-slot oa-slot--card" href="<?= e($url) ?>" aria-hidden="true" tabindex="-1">
                 <?php if (ProductModel::hasImage($product)): ?>
@@ -179,26 +173,6 @@ foreach ($variants as $v) {
             </a>
 
             <?php
-            /* ┌─ HUY HIỆU ────────────────────────────────────────────────────
-               │ Mẫu cho phép tối đa hai huy hiệu cạnh nhau: đen "MỚI" rồi đỏ
-               │ "-30%". Hết hàng thì nuốt cả hai — lúc đó điều duy nhất đáng
-               │ nói về mặt hàng này là nó không mua được.
-               └──────────────────────────────────────────────────────────────── */
-            ?>
-            <div class="oa-badges">
-                <?php if (!$inStock): ?>
-                    <span class="oa-badge"><?= e(t('product.out_of_stock')) ?></span>
-                <?php else: ?>
-                    <?php if ($badgeTone === 'new' || !empty($product['is_featured'])): ?>
-                        <span class="oa-badge"><?= e($badgeTone === 'new' ? t('product.badge_new') : t('product.badge_hot')) ?></span>
-                    <?php endif; ?>
-                    <?php if ($percent !== null && $showCompare): ?>
-                        <span class="oa-badge oa-badge--sale">-<?= (int) $percent ?>%</span>
-                    <?php endif; ?>
-                <?php endif; ?>
-            </div>
-
-            <?php
             /* ┌─ HAI NÚT MUA — NỔI TRÊN ẢNH, HIỆN KHI RÊ CHUỘT ───────────
                │ Nằm TRONG .oa-card__frame chứ không dưới chân thẻ nữa
                │ (12/09/2026, theo yêu cầu chủ dự án): khung này cao đúng
@@ -207,7 +181,7 @@ foreach ($variants as $v) {
                │
                │ NGOÀI <a> ẢNH, và bắt buộc phải thế: lồng <button> vào
                │ trong <a> là HTML sai, bấm nút sẽ hoá thành đi theo liên
-               │ kết. Cùng lý do với huy hiệu ở trên.
+               │ kết.
                │
                │ MÀN CẢM ỨNG THÌ HAI NÚT HIỆN SẴN — không có "rê chuột" để
                │ mở chúng ra. Xem @media (hover: hover) ở khối
