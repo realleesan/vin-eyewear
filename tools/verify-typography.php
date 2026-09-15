@@ -92,6 +92,61 @@ function typographyError(string $css): ?string
     return null;
 }
 
+function literalFontSizeErrors(string $css, string $path): array
+{
+    $allowed = [
+        // Zero removes inline whitespace without rendering text.
+        'font-size: 0;',
+        // Zero-pixel declarations serve the same non-text layout purpose.
+        'font-size: 0px;',
+    ];
+    $css = preg_replace_callback(
+        '/\/\*.*?\*\//s',
+        static fn(array $match): string => str_replace(["\r", "\n"], '', $match[0])
+            . str_repeat("\n", substr_count($match[0], "\n")),
+        $css,
+    );
+    $errors = [];
+    $declarationPattern = '/font-size\s*:\s*(?:\d+(?:\.\d+)?px|0)\s*;/i';
+
+    foreach (preg_split('/\R/', $css) as $index => $line) {
+        preg_match_all($declarationPattern, $line, $matches);
+        foreach ($matches[0] as $declaration) {
+            if (!in_array($declaration, $allowed, true)) {
+                $errors[] = $path . ':' . ($index + 1);
+            }
+        }
+    }
+
+    return $errors;
+}
+
+function cssPaths(string $directory): array
+{
+    $paths = [];
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory));
+    foreach ($files as $file) {
+        if ($file->isFile() && strtolower($file->getExtension()) === 'css') {
+            $paths[] = $file->getPathname();
+        }
+    }
+
+    sort($paths);
+
+    return $paths;
+}
+
+$sample = '.sample { font-size: 13px; }';
+if (!preg_match('/font-size\s*:\s*\d+(?:\.\d+)?px\s*;/', $sample)) {
+    fwrite(STDERR, "FAIL: checker did not detect literal text size\n");
+    exit(1);
+}
+
+if (literalFontSizeErrors($sample, 'sample.css') !== ['sample.css:1']) {
+    fwrite(STDERR, "FAIL: checker did not report literal text size location\n");
+    exit(1);
+}
+
 $cssPath = $argv[1] ?? __DIR__ . '/../assets/css/typography.css';
 $css = file_get_contents($cssPath);
 if ($css === false) {
@@ -102,6 +157,27 @@ if ($css === false) {
 $error = typographyError($css);
 if ($error !== null) {
     fwrite(STDERR, $error . "\n");
+    exit(1);
+}
+
+$projectRoot = realpath(__DIR__ . '/..');
+$literalSizeErrors = [];
+foreach (cssPaths($projectRoot . '/assets/css') as $path) {
+    $contents = file_get_contents($path);
+    if ($contents === false) {
+        fwrite(STDERR, "FAIL: unable to read {$path}\n");
+        exit(1);
+    }
+
+    $relativePath = substr($path, strlen($projectRoot) + 1);
+    $literalSizeErrors = array_merge(
+        $literalSizeErrors,
+        literalFontSizeErrors($contents, $relativePath),
+    );
+}
+
+if ($literalSizeErrors !== []) {
+    fwrite(STDERR, implode("\n", $literalSizeErrors) . "\n");
     exit(1);
 }
 
