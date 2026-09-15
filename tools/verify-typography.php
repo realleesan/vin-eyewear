@@ -190,6 +190,24 @@ if ($error !== null) {
 }
 
 $projectRoot = realpath(__DIR__ . '/..');
+$oaCssPath = $projectRoot . '/assets/css/oa.css';
+$oaCss = file_get_contents($oaCssPath);
+if ($oaCss === false) {
+    fwrite(STDERR, "FAIL: unable to read {$oaCssPath}\n");
+    exit(1);
+}
+
+$aliases = [
+    '--fs-text: var(--fs-body);',
+    '--fs-h: var(--fs-heading);',
+];
+foreach ($aliases as $alias) {
+    if (!str_contains($oaCss, $alias)) {
+        fwrite(STDERR, "FAIL: oa.css must define {$alias}\n");
+        exit(1);
+    }
+}
+
 $literalSizeErrors = [];
 foreach (cssPaths($projectRoot . '/assets/css') as $path) {
     $contents = file_get_contents($path);

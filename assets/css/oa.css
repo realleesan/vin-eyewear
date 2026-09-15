@@ -13,10 +13,8 @@
       xanh Zalo #0068ff. Không thêm màu thứ ba — bản sắc của mẫu nằm ở chỗ
       nó không có màu.
 
-   2. CHỮ NHỎ, GIÃN RỘNG, IN HOA. Thân bài 10px, nhãn 9px IN HOA giãn .06em,
-      tiêu đề trang 13px IN HOA. Đây là cỡ THẬT của mẫu, không phải mẫu bị
-      thu nhỏ — xem khối THANG CHỮ bên dưới. Muốn phóng to cả site thì đổi
-      đúng một số: --oa-scale.
+   2. CHỮ NHỎ, GIÃN RỘNG, IN HOA. Cỡ chữ dùng các vai trò semantic trong
+      typography.css; nhãn IN HOA dùng giãn .06em.
 
    3. LỀ 64px CHO KHỐI CHỮ, 60px CHO LƯỚI. Hai con số khác nhau là cố ý:
       thẻ sản phẩm có padding trong 14px, nên lưới lùi ra 4px để mép chữ của
@@ -32,28 +30,9 @@
 }
 
 :root {
-    /* ┌─ THANG PHÓNG — MỘT SỐ, CẢ SITE ĐI THEO ──────────────────────────
-       │ Mẫu vẽ ở 1:1 với cỡ chữ rất nhỏ theo lối nhà mốt: thân bài 10px,
-       │ nhãn 9px. Đo trên trang thật thì phần lớn chữ rơi vào 9–10px — dưới
-       │ ngưỡng đọc thoải mái, và tiếng Việt còn thiệt hơn nữa vì dấu thanh
-       │ chồng lên dấu mũ cần chiều cao mới tách ra được.
-       │
-       │ 1.4 đưa thân bài về 14px. Con số ấy không lấy từ trên trời: chính
-       │ repo này từng chốt "chữ thân về 13–14px" ở commit 224fe78, trước khi
-       │ dựng lại theo mẫu.
-       │
-       │       --oa-scale   thân bài   nhãn    tiêu đề trang
-       │            1         10px     9px        13px      (đúng mẫu)
-       │          1.4         14px    12.6px      18.2px    (đang dùng)
-       │
-       │ ĐỔI ĐÚNG MỘT SỐ NÀY, không sửa gì khác. Cả thang chữ lẫn chiều cao
-       │ ô điều khiển (chip, tab, nút, ô nhập) đều nhân với nó — xem khối
-       │ CHIỀU CAO Ô ĐIỀU KHIỂN bên dưới.
-       │
-       │ KHÔNG ăn theo: lề ngang, khe lưới, chiều cao thanh đầu trang, bề
-       │ ngang ngăn kéo. Phóng cả những số đó thì lưới 4 cột vỡ sang cuộn
-       │ ngang trên laptop 1366px.
-       └────────────────────────────────────────────────────────────────── */
+    /* Scale controls whose dimensions follow the storefront's control
+       density. Text size is controlled separately by --type-scale in
+       typography.css. */
     --oa-scale: 1.4;
 
     /* ══ MÀU ══════════════════════════════════════════════════════════ */
@@ -196,88 +175,12 @@
        đó và không ở đâu khác — đừng gọi token này chỗ thứ hai. */
     --font-hero: Georgia, "Times New Roman", serif;
 
-    /* ┌─ THANG CHỮ ──────────────────────────────────────────────────────
-       │ Bảy cỡ, hết. Mỗi cỡ có đúng một vai trò; không chèn cỡ thứ tám.
-       │
-       │   --fs-micro  9px   nhãn IN HOA, chú thích nhỏ nhất, huy hiệu
-       │   --fs-body  10px   THÂN BÀI mặc định của cả site
-       │   --fs-ui    11px   nav, chip, nút, tên sản phẩm trong cột phải
-       │   --fs-sub   12px   tiêu đề mục trong trang CSKH, câu trích footer
-       │   --fs-h     13px   TIÊU ĐỀ TRANG (h1) và tiêu đề băng (h2)
-       │   --fs-hero  15px   tiêu đề đè trên ảnh hero bộ sưu tập/giới thiệu
-       │   --fs-mark  18px   wordmark trên thanh đầu trang
-       │   --fs-home  22px   tiêu đề hero trang chủ (font serif)
-       └────────────────────────────────────────────────────────────────── */
-    /* Hai cỡ DƯỚI --fs-micro. Chúng chỉ dùng cho huy hiệu, số đếm treo và
-       nhãn nhỏ nhất — nhưng phải nằm trong thang, không được gõ cứng: gõ
-       cứng thì phóng --oa-scale lên, cả site to ra mà riêng chúng đứng im và
-       teo lại thành vết bẩn. */
-    --fs-nano: calc(8px * var(--oa-scale));
-    --fs-pico: calc(7px * var(--oa-scale));
-
-    --fs-micro: calc(9px * var(--oa-scale));
-    --fs-body: calc(10px * var(--oa-scale));
-    --fs-ui: calc(11px * var(--oa-scale));
-    --fs-sub: calc(12px * var(--oa-scale));
-    --fs-h: calc(13px * var(--oa-scale));
-    --fs-hero: calc(15px * var(--oa-scale));
-    --fs-mark: calc(16px * var(--oa-scale));
-    --fs-mark-lg: calc(18px * var(--oa-scale));
-    --fs-home: calc(22px * var(--oa-scale));
-
-    /* ┌─ BA VAI TRÒ CHỮ — DÙNG TÊN NÀY, ĐỪNG GỌI THẲNG CỠ ────────────────
-       │ (12/09/2026, theo yêu cầu chủ dự án: "chữ thân bài đồng bộ, tiêu đề
-       │ lớn đồng bộ, tiêu đề nhỏ đồng bộ trên cả site".)
-       │
-       │ Thang bảy cỡ ở trên vẫn là nguồn duy nhất; ba token dưới đây không
-       │ thêm cỡ nào mà chỉ ĐẶT TÊN THEO VAI TRÒ cho ba cỡ đã có:
-       │
-       │   --fs-title     15px  tiêu đề LỚN  — h1 của trang, h2 của khối/băng
-       │   --fs-subtitle  11px  tiêu đề NHỎ  — tên mặt hàng trong thẻ/giỏ/đơn,
-       │                                       tiêu đề khối con, tiêu đề hộp
-       │                                       thoại
-       │   --fs-text      10px  chữ THÂN BÀI — đoạn dẫn, mô tả, nội dung thẻ
-       │
-       │ --fs-title TỪ 13px LÊN 15px (12/09/2026, theo yêu cầu chủ dự án:
-       │ "tiêu đề mỗi section trang chủ phải lớn hơn nút Xem tất cả"). Ở 13px
-       │ nó ĐÃ lớn hơn nút (11px) rồi, nhưng nút mang weight 600 còn tiêu đề
-       │ chỉ 500, nên chênh 2px không đọc ra. 15px cho chênh 5,6px sau khi
-       │ nhân --oa-scale — đủ để mắt thấy ngay.
-       │
-       │ ĐÂY LÀ ĐỔI CẢ SITE, không riêng trang chủ: h1 của danh mục, giỏ
-       │ hàng, liên hệ, chính sách, đặt lịch… đều qua .oa-title. Chủ dự án
-       │ chọn đúng phạm vi này khi được hỏi, để mọi tiêu đề giữ chung một cỡ
-       │ như yêu cầu trước đó trong cùng ngày.
-       │
-       │ VÌ SAO PHẢI ĐẶT TÊN THEO VAI TRÒ. Trước đợt này, cùng một vai trò
-       │ nằm rải trên bốn cỡ khác nhau: tên sản phẩm ở thẻ là 12px, ở giỏ
-       │ hàng 11px, ở đơn hàng 10px, ở bảng đơn thuốc 9px; tiêu đề trang chi
-       │ tiết sản phẩm 11px trong khi tiêu đề trang giỏ hàng 13px. Không ai
-       │ cố ý làm thế — mỗi trang dựng một lúc, và người dựng gọi thẳng
-       │ --fs-ui hay --fs-body theo cảm giác lúc đó. Có tên vai trò thì câu
-       │ hỏi đổi từ "cỡ nào trông hợp" thành "đây là cái gì", và câu sau chỉ
-       │ có một đáp án.
-       │
-       │ BA CỠ KHÔNG ĐI QUA HỆ NÀY, và đều có lý do riêng:
-       │   --fs-micro 9px  nhãn IN HOA, chú thích, dòng meta — vai trò THỨ TƯ
-       │                   (222 chỗ dùng); nó không phải "chữ thân bài nhỏ"
-       │   --fs-home 22px  tiêu đề đè trên video hero đầu trang chủ
-       │   --fs-mark*      wordmark ở thanh đầu trang và chân trang
-       │
-       │ --fs-hero KHÔNG CÒN Ở DANH SÁCH NÀY NỮA, và đó là một mất mát có
-       │ thật, ghi ra để người sau biết: nó vốn là cỡ của tiêu đề ĐÈ TRÊN ẢNH
-       │ (hero bộ sưu tập, hero giới thiệu), tách riêng vì chữ nằm trên ảnh
-       │ phải to hơn hẳn chữ trên nền trắng. Từ 12/09/2026 --fs-title trỏ
-       │ đúng vào nó, nên hai thứ BẰNG NHAU: tiêu đề trên ảnh thôi nổi hơn
-       │ tiêu đề trên nền trắng.
-       │
-       │ Chấp nhận được vì tiêu đề trên ảnh còn chữ TRẮNG và lớp phủ tối đỡ
-       │ lưng (xem .cdet__veil, .vhero__veil), tức nó vẫn tách khỏi nền bằng
-       │ MÀU thay vì bằng cỡ. Ngày nào muốn trả lại bậc ấy thì đừng hạ
-       │ --fs-title — hãy cho tiêu đề trên ảnh một cỡ riêng cao hơn.
-       └────────────────────────────────────────────────────────────────── */
-    --fs-title: var(--fs-hero);
-    --fs-subtitle: var(--fs-ui);
+    /* Typography scale lives in typography.css. These aliases preserve the
+       remaining page styles that are migrated in later tasks. */
+    --fs-nano: var(--fs-micro);
+    --fs-ui: var(--fs-label);
+    --fs-sub: var(--fs-caption);
+    --fs-h: var(--fs-heading);
     --fs-text: var(--fs-body);
 
     /* Giãn chữ — ba mức, đi kèm IN HOA. .12em chỉ dành cho wordmark. */
@@ -286,8 +189,7 @@
     --ls-wide: .08em;
     --ls-mark: .12em;
 
-    --lh: 1.5;              /* thân bài */
-    --lh-tight: 1.4;        /* chữ trong thẻ, dòng ngắn */
+    --lh: var(--lh-body);   /* thân bài */
 
     /* ══ BỐ CỤC ═══════════════════════════════════════════════════════ */
 
@@ -474,20 +376,15 @@
     --elev-2: none;
     --elev-3: none;
     --fs-micro-legacy: var(--fs-micro);
-    --fs-caption: var(--fs-micro);
-    --fs-label: var(--fs-micro);
     --fs-note: var(--fs-micro);
-    --fs-body-sm: var(--fs-micro);
-    --fs-body-lg: var(--fs-ui);
-    --fs-lead: var(--fs-ui);
-    --fs-subhead: var(--fs-sub);
+    --fs-lead: var(--fs-body-lg);
+    --fs-subhead: var(--fs-heading);
     --fs-h6: var(--fs-micro);
     --fs-h5: var(--fs-body);
-    --fs-h4: var(--fs-ui);
-    --fs-h3: var(--fs-sub);
-    --fs-h2: var(--fs-h);
-    --fs-h1: var(--fs-h);
-    --fs-display: var(--fs-home);
+    --fs-h4: var(--fs-label);
+    --fs-h3: var(--fs-subtitle);
+    --fs-h2: var(--fs-heading);
+    --fs-h1: var(--fs-heading);
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -685,7 +582,7 @@ ol[role="list"],
  * └──────────────────────────────────────────────────────────────────────── */
 .oa-label,
 .oa-btn-bare.oa-label {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 /* ┌─ TIÊU ĐỀ TRANG VÀ TIÊU ĐỀ BĂNG — MỘT DÁNG DUY NHẤT ───────────────────
@@ -698,7 +595,7 @@ ol[role="list"],
    │ lệch nữa là cho chúng dùng CHUNG MỘT LUẬT thay vì chép ba dòng khai báo
    │ sang chỗ thứ hai.
    │
-   │ ĐÃ GỠ bản riêng của .oa-band-title: 18px (--fs-mark-lg), weight 600,
+   │ ĐÃ GỠ bản riêng của .oa-band-title: cỡ heading, weight 600,
    │ giãn --ls-tight. Nó sống đúng một quãng ngắn trong ngày 12/09 giữa hai
    │ yêu cầu ngược nhau của chủ dự án — "to hơn nữa" rồi "lấy giống khối cửa
    │ hàng". Ghi lại ở đây để lần sau ai thấy tiêu đề băng nhỏ thì biết đó là
@@ -729,14 +626,14 @@ ol[role="list"],
 .oa-band-lead {
     max-width: 560px;
     color: var(--ink-3);
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     line-height: var(--lh);
     text-wrap: balance;
 }
 
 /* Tiêu đề đè trên ảnh hero (bộ sưu tập, giới thiệu) */
 .oa-hero-title {
-    font-size: var(--fs-hero);
+    font-size: var(--fs-title);
     font-weight: 500;
     letter-spacing: var(--ls-tight);
     text-transform: uppercase;
@@ -744,7 +641,7 @@ ol[role="list"],
 }
 
 .oa-lead {
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     color: var(--ink-2);
 }
 
@@ -824,7 +721,7 @@ ol[role="list"],
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
@@ -979,7 +876,7 @@ ol[role="list"],
     padding: 0;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     cursor: pointer;
 }
 
@@ -988,13 +885,13 @@ ol[role="list"],
     background: none;
     padding: 0;
     color: var(--ink);
-    font-size: 16px;
+    font-size: var(--fs-body-lg);
     line-height: 1;
     cursor: pointer;
 }
 
 .oa-close--lg {
-    font-size: 18px;
+    font-size: var(--fs-heading);
 }
 
 /* Ô vuông xanh chữ "Zalo" nhét vào đầu nút — dáng riêng của mẫu */
@@ -1005,7 +902,7 @@ ol[role="list"],
     border-radius: 0;
     background: var(--zalo);
     color: #fff;
-    font-size: calc(6px * var(--oa-scale));
+    font-size: var(--fs-micro);
     font-weight: 700;
     letter-spacing: 0;
     display: flex;
@@ -1035,7 +932,7 @@ ol[role="list"],
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     white-space: nowrap;
     cursor: pointer;
     transition: background .18s ease, border-color .18s ease;
@@ -1118,13 +1015,13 @@ ol[role="list"],
 
 /* Số nhỏ treo sau nhãn tab: Bag⁰, Recently Viewed³ */
 .oa-sup {
-    font-size: var(--fs-pico);
+    font-size: var(--fs-micro);
     margin-left: 1px;
     vertical-align: super;
 }
 
 .oa-sup--lg {
-    font-size: var(--fs-nano);
+    font-size: var(--fs-micro);
     margin-left: 2px;
 }
 
@@ -1265,7 +1162,7 @@ textarea.oa-field {
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: var(--fs-nano);
+    font-size: var(--fs-micro);
     line-height: 1;
 }
 
@@ -1597,7 +1494,7 @@ textarea.oa-field {
     align-items: center;
     padding: 0 10px;
     pointer-events: none;
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     color: var(--ink);
 }
 
@@ -1614,7 +1511,7 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────── */
 .oa-card__body {
     padding: 14px 14px 4px;
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     line-height: var(--lh);
     text-align: center;
 }
@@ -1642,11 +1539,10 @@ textarea.oa-field {
     color: var(--ink);
 
     /* ┌─ TÊN HÀNG LÀ MỘT "TIÊU ĐỀ NHỎ" ──────────────────────────────────
-       │ --fs-subtitle (11px), giá giữ --fs-text (10px) thừa hưởng từ
-       │ .oa-card__body. Gọi qua TÊN VAI TRÒ chứ không gọi cỡ — xem khối "BA
-       │ VAI TRÒ CHỮ" đầu file.
+       │ --fs-subtitle, giá giữ --fs-body thừa hưởng từ .oa-card__body.
+       │ Gọi qua TÊN VAI TRÒ chứ không gọi cỡ — xem typography.css.
        │
-       │ ĐÃ TỪNG LÀ --fs-sub (12px) trong cùng ngày 12/09/2026, và chú thích
+       │ ĐÃ TỪNG LÀ một cỡ subtitle riêng trong cùng ngày 12/09/2026, và chú thích
        │ cũ ở đây còn lập luận rằng 11px thì "tên chỉ nhỉnh hơn giá đúng một
        │ pixel". Lập luận ấy đúng khi nhìn riêng cái thẻ, nhưng nó thua một
        │ yêu cầu rộng hơn: tên mặt hàng phải CÙNG MỘT CỠ ở mọi nơi — thẻ,
@@ -1764,7 +1660,7 @@ textarea.oa-field {
         height: auto;
         min-height: var(--h-btn-sm);
         padding: 5px 8px;
-        font-size: var(--fs-nano);
+        font-size: var(--fs-micro);
         letter-spacing: 0;
         white-space: normal;
         line-height: 1.15;
@@ -2008,7 +1904,7 @@ textarea.oa-field {
     margin-right: 24px;
     overflow: hidden;
     white-space: nowrap;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     letter-spacing: .01em;
 
     /* ┌─ CAO TRỌN THANH — ĐỪNG ĐỔI VỀ `center` ────────────────────────────
@@ -2074,7 +1970,7 @@ textarea.oa-field {
    │ tĩnh. */
 
 .oa-header__mark {
-    font-size: var(--fs-mark-lg);
+    font-size: var(--fs-heading);
     font-weight: 700;
     letter-spacing: var(--ls-mark);
     text-transform: uppercase;
@@ -2111,7 +2007,7 @@ textarea.oa-field {
     justify-content: flex-end;
     align-items: center;
     gap: 16px;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 /* ┌─ CỠ ICON LẤY TỪ CỠ CHỮ NAV, KHÔNG GÕ CỨNG ───────────────────────────
@@ -2191,18 +2087,18 @@ textarea.oa-field {
 
 /* ┌─ KÍNH LÚP TRONG Ô TÌM KIẾM — CỠ LẤY THẲNG TỪ TOKEN, KHÔNG DÙNG 1em ────
    │ Ở ba icon trên kia, `1em` đúng vì chúng nằm TRONG nút, mà nút mang
-   │ --fs-ui. Ở đây thì KHÔNG: <svg> này là ANH EM của <input> trong
+   │ --fs-label. Ở đây thì KHÔNG: <svg> này là ANH EM của <input> trong
    │ .oa-searchbar (một flex row), nên `1em` của nó tính theo cỡ chữ của
    │ .oa-searchbar — mà thẻ ấy không khai cỡ nào, nó thừa hưởng từ tổ tiên.
    │ Tức `1em` ở đây ra một con số không ai chủ động chọn.
    │
-   │ Ghi thẳng token cho hết đoán: cùng --fs-text mà .oa-searchbar input
+   │ Ghi thẳng token cho hết đoán: cùng --fs-body mà .oa-searchbar input
    │ đang dùng, nên kính lúp luôn bằng đúng cỡ chữ khách đang gõ.
    └──────────────────────────────────────────────────────────────────────── */
 .oa-searchbar > svg {
     flex: none;
-    width: var(--fs-text);
-    height: var(--fs-text);
+    width: var(--fs-body);
+    height: var(--fs-body);
 }
 
 /* Số món trong giỏ — chấm nhỏ góc trên phải icon túi */
@@ -2216,7 +2112,7 @@ textarea.oa-field {
     border-radius: 0;
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-nano);
+    font-size: var(--fs-micro);
     line-height: 13px;
     text-align: center;
 }
@@ -2229,10 +2125,10 @@ textarea.oa-field {
 /* Nút mở ngăn kéo trên mobile — ẩn ở desktop, xem @media cuối file */
 /* font-size ở đây KHÔNG phải để in chữ (nút chỉ có icon) — nó là GỐC cho
    đơn vị `em` của icon bên trong. Nút hamburger nằm ngoài .oa-header__actions
-   nên không thừa hưởng --fs-ui từ đó. */
+   nên không thừa hưởng --fs-label từ đó. */
 .oa-header__burger {
     display: none;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2517,7 +2413,7 @@ textarea.oa-field {
    không ở kích thước. Đổi cỡ là hai tab nhảy chỗ mỗi lần chuyển. */
 .ctabs__on,
 .ctabs__off {
-    font-size: 16px;
+    font-size: var(--fs-body-lg);
     line-height: 1;
     padding: 6px 0;
 }
@@ -2545,7 +2441,7 @@ textarea.oa-field {
     position: relative;
     top: -2px;
     vertical-align: top;
-    font-size: 9px;
+    font-size: var(--fs-micro);
 }
 
 .ctabs__on sup {
@@ -2809,7 +2705,7 @@ textarea.oa-field {
 
 .oa-hero__title {
     font-family: var(--font-hero);
-    font-size: var(--fs-home);
+    font-size: var(--fs-display);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -3015,7 +2911,7 @@ textarea.oa-field {
 }
 
 .oa-acc__chev {
-    font-size: 12px;
+    font-size: var(--fs-caption);
     display: inline-block;
     transform: rotate(90deg);
     transition: transform .2s ease;
@@ -3058,12 +2954,12 @@ textarea.oa-field {
 /* Câu hỏi ĐANG MỞ to lên 13px — mẫu đổi cả cỡ chữ lẫn padding, không chỉ
    xoay mũi tên. Đó là thứ làm mục đang mở nổi hẳn khỏi danh sách. */
 .oa-qa[open] > .oa-qa__q {
-    font-size: var(--fs-h);
+    font-size: var(--fs-heading);
     padding: 14px 0 12px;
 }
 
 .oa-qa__sign {
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     flex: none;
 }
 
@@ -3141,14 +3037,14 @@ textarea.oa-field {
 }
 
 .oa-footer__mark {
-    font-size: var(--fs-mark);
+    font-size: var(--fs-heading);
     font-weight: 700;
     letter-spacing: var(--ls-mark);
     text-transform: uppercase;
 }
 
 .oa-footer__quote {
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     letter-spacing: .02em;
     text-wrap: pretty;
 }
@@ -3223,7 +3119,7 @@ textarea.oa-field {
     border-left: 2px solid var(--ink);
     border-radius: 0;
     background: var(--bg);
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     line-height: var(--lh);
 }
 
@@ -3807,7 +3703,7 @@ body.is-search-open {
 .mobile-nav__links > a {
     padding: 14px 0;
     border-bottom: 1px solid var(--line-input);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     letter-spacing: var(--ls-tight);
 }
 
@@ -3875,7 +3771,7 @@ body.is-search-open {
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
@@ -4104,7 +4000,7 @@ body.is-search-open {
     border-radius: var(--r-secondary);
     background: var(--bg);
     color: var(--ink);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     white-space: nowrap;
     cursor: pointer;
     transition: background .18s ease, color .18s ease, border-color .18s ease;
@@ -4152,7 +4048,7 @@ body.is-search-open {
     }
 
     .barebar__help {
-        font-size: var(--fs-nano);
+        font-size: var(--fs-micro);
     }
 }
 
@@ -4229,15 +4125,11 @@ body.is-search-open {
        │ đúng bề ngang wordmark và bóp hai cột bên. Wordmark quá rộng thì nó
        │ không xuống dòng mà ĐÈ LÊN ba icon bên phải.
        │
-       │ Sau khi phóng thang chữ lên 1.4, "VIN EYEWEAR" ở 22,4px kèm giãn
-       │ .12em rộng ~215px — cộng nút hamburger, ba icon, khe và lề thì vượt
-       │ 390px. Nên ở đây thu cả hai: cỡ chữ VÀ độ giãn.
-       │
-       │ 13 × scale = 18,2px, giãn .08em → wordmark ~160px, còn dư chỗ ở cả
-       │ màn 360px. Vẫn là wordmark IN HOA giãn rộng, chỉ bớt phô trương.
+       │ Cỡ heading mặc định quá rộng khi kèm giãn .12em. Ở đây thu cả cỡ
+       │ chữ VÀ độ giãn để wordmark vẫn vừa màn 360px.
        └──────────────────────────────────────────────────────────────────── */
     .oa-header__mark {
-        font-size: calc(13px * var(--oa-scale));
+        font-size: var(--fs-body-sm);
         letter-spacing: .08em;
     }
 
@@ -4392,7 +4284,7 @@ body.is-search-open {
 
 .lgate__msg {
     margin: 0 0 22px;
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     line-height: 1.5;
     color: var(--ink);
 }
@@ -4406,7 +4298,7 @@ body.is-search-open {
     border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     letter-spacing: .06em;
     text-align: center;
     text-decoration: none;

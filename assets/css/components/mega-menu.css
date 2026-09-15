@@ -150,7 +150,7 @@
        │ nữa.
        │
        │ Yêu cầu ban đầu: "bảng xổ dính sát vào mục nav, đang cách nhau một
-       │ khoảng nhỏ". Bản thử kéo đỉnh bảng lên `calc(50% + --fs-ui * .75)`,
+       │ khoảng nhỏ". Bản thử kéo đỉnh bảng lên `calc(50% + var(--fs-label) * .75)`,
        │ tức đúng đáy chữ mục nav (đo được 56,3px). Kết quả: bảng ĐÈ LÊN nửa
        │ dưới của thanh, và chủ dự án nhìn ra ngay — "sao cắt đi phần dưới
        │ của nav menu?".
@@ -398,14 +398,14 @@
    └──────────────────────────────────────────────────────────────────────── */
 .mega__links a {
     /* CHỮ TRONG BẢNG XỔ = CHỮ TRÊN HÀNG NAV (12/09/2026, theo yêu cầu chủ dự
-       án). Trước đây bảng dùng --fs-body (10px) còn hàng nav --fs-ui (11px):
+       án). Trước đây bảng dùng body còn hàng nav label:
        rê chuột vào một mục nav thì chữ bên dưới nhỏ hơn chính mục vừa rê một
        nấc, mà cả hai đều là LỐI ĐI — cùng một vai trò thì cùng một cỡ.
 
-       --fs-ui là cỡ của MỌI thứ điều hướng và điều khiển: hàng nav, mục trong
+       --fs-label là cỡ của MỌI thứ điều hướng và điều khiển: hàng nav, mục trong
        bảng xổ, mục trong ngăn kéo di động, chip, nút. Xem khối "BA VAI TRÒ
-       CHỮ" trong oa.css để biết nó đứng ở đâu trong hệ. */
-    font-size: var(--fs-ui);
+       CHỮ" trong typography.css để biết nó đứng ở đâu trong hệ. */
+    font-size: var(--fs-label);
     color: inherit;
 }
 
@@ -466,7 +466,7 @@
     gap: 12px;
     padding: 14px 0;
     border-bottom: 1px solid var(--line-input);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     letter-spacing: var(--ls-tight);
     cursor: pointer;
     list-style: none;
@@ -510,7 +510,7 @@
 .mobile-nav__sub a {
     /* Cùng cỡ với mục cha (.mobile-nav__group > summary) và với hàng nav ở
        khổ máy tính — xem chú thích ở .mega__links a. */
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     color: var(--ink);
 }
 

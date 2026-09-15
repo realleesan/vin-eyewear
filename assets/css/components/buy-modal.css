@@ -93,7 +93,7 @@
 }
 
 .bmodal__close {
-    font-size: 16px;
+    font-size: var(--fs-body-lg);
     letter-spacing: 0;
     text-transform: none;
 }
@@ -300,7 +300,7 @@
 }
 
 .bhoso__ngay {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 /* Số đo là DỮ LIỆU BẢNG — chữ đều bề ngang để hai mắt thẳng cột nhau. Đây là
@@ -391,7 +391,7 @@
 }
 
 .brxtable__sub {
-    font-size: var(--fs-nano);
+    font-size: var(--fs-micro);
     color: var(--ink-5);
 }
 
@@ -409,7 +409,7 @@
     align-items: center;
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-nano);
+    font-size: var(--fs-micro);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
 }
@@ -569,7 +569,7 @@
     background: none;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     cursor: pointer;
 }
 
@@ -610,7 +610,7 @@
 }
 
 .bsum__totalnum {
-    font-size: var(--fs-h);
+    font-size: var(--fs-heading);
     white-space: nowrap;
 }
 
