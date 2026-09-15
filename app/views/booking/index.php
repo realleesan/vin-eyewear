@@ -42,13 +42,11 @@ $company = config('company');
 $old     = $old ?? [];
 ?>
 
-<header class="bkhead">
-    <h1 class="bkhead__title">Đặt lịch đo mắt</h1>
-    <p class="bkhead__lead">
-        Đo khúc xạ miễn phí với kỹ thuật viên nhiều năm kinh nghiệm —
-        kể cả khi bạn chưa mua kính.
-    </p>
-</header>
+<?php partial('_layout/page-head', [
+    'head_crumbs' => [['label' => 'Đặt lịch đo mắt']],
+    'head_title'  => 'Đặt lịch đo mắt',
+    'head_lead'   => 'Đo khúc xạ miễn phí với kỹ thuật viên nhiều năm kinh nghiệm — kể cả khi bạn chưa mua kính.',
+]); ?>
 
 <section class="bk">
 
