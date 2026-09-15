@@ -177,9 +177,7 @@
     aspect-ratio: 4 / 5;
     padding: 16px 14px;
     background: var(--bg-soft);
-    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
-       trong assets/css/oa.css. */
-    border: 1px solid var(--line-input);
+    border: 0;
 }
 
 /* ┌─ BỐN TÔNG XÁM LUÂN PHIÊN — ĐÃ GỠ (12/09/2026, nền trắng toàn site) ───
@@ -271,17 +269,17 @@
     align-items: center;
     height: var(--h-btn);
     padding: 0 28px;
-    border: 1px solid var(--line-btn);
+    border: 0;
     border-radius: var(--r-pill);
-    background: var(--bg);
-    color: var(--ink);
+    background: var(--ink);
+    color: #fff;
     font-size: var(--fs-ui);
     transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
 
 .about-exam__cta:hover {
-    background: var(--ink);
-    border-color: var(--ink);
+    border: 0;
+    background: #333;
     color: #fff;
 }
 

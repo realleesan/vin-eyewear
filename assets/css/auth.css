@@ -123,8 +123,8 @@
 .authflash {
     padding: 12px 14px;
     border-radius: var(--r-field);
-    background: var(--bg);
-    border-left: 2px solid var(--ink);
+    background: transparent;
+    border-left: 1px solid var(--ink);
     line-height: var(--lh);
 }
 
@@ -466,9 +466,7 @@
 }
 
 /* ┌─ NÚT GOOGLE ──────────────────────────────────────────────────────────
-   │ Nền TRẮNG, không viền lúc nghỉ; rê chuột thì hiện một đường viền
-   │ TRONG 1px bằng box-shadow. Dùng box-shadow chứ không border: border
-   │ mọc thêm 1px vào bố cục và nút nhích lên 1px mỗi lần rê qua.
+   │ Nút outline luôn giữ border 1px ở trạng thái nghỉ và hover.
    │
    │ Icon Google giữ NGUYÊN BỐN MÀU gốc. Đây là ngoại lệ duy nhất với luật
    │ "site không có màu" ngoài đỏ giảm giá và xanh Zalo — logo của bên thứ
@@ -480,13 +478,13 @@
    có" có ba. */
 .authbtn--google {
     border: 1px solid var(--line-input);
-    background: #fff;
+    background: transparent;
     color: var(--ink);
 }
 
 .authbtn--google:hover {
     border-color: var(--ink);
-    background: #fff;
+    background: transparent;
 }
 
 .authbtn__soon {
@@ -686,7 +684,7 @@
     height: 8px;
     border: 1px solid var(--line-btn);
     border-radius: 50%;
-    background: var(--bg);
+    background: transparent;
 }
 
 .astage__label {
@@ -700,7 +698,7 @@
 }
 
 .astage__item.is-on .astage__dot {
-    border-color: var(--ink);
+    border: 0;
     background: var(--ink);
 }
 

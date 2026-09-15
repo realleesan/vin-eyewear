@@ -189,7 +189,7 @@
 .cdet__chip.is-on,
 .cdet__chip[aria-current="page"] {
     background: var(--bg-chip-flat);
-    border-color: var(--bg-chip-flat);
+    border-color: var(--ink);
 }
 
 /* Chấm màu của bộ trước tên chip — mẫu không có. Ẩn: mỗi bộ một sắc là
@@ -410,9 +410,7 @@
     gap: 4px;
     padding: 16px;
     background: var(--bg-soft);
-    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
-       trong assets/css/oa.css. */
-    border: 1px solid var(--line-input);
+    border: 0;
 }
 
 .cdet__aud-label {
@@ -516,8 +514,8 @@
     content: "";
     width: 14px;
     height: 14px;
+    border: 1px solid rgba(0, 0, 0, .15);
     border-radius: 50%;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
     /* --sw do view đặt inline: style="--sw:#6b3e1e" */
     background: var(--sw, var(--bg-slot));
 }
@@ -555,9 +553,7 @@
     gap: 6px;
     padding: 16px;
     background: var(--bg-soft);
-    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
-       trong assets/css/oa.css. */
-    border: 1px solid var(--line-input);
+    border: 0;
 }
 
 .cdet__face-name {
@@ -633,7 +629,7 @@
 .cdet__faq {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0;
     margin-top: 16px;
     max-width: 650px;
 }
@@ -643,9 +639,12 @@
     flex-direction: column;
     border-radius: var(--r-field);
     background: var(--bg-soft);
-    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
-       trong assets/css/oa.css. */
-    border: 1px solid var(--line-input);
+    border: 0;
+    border-bottom: 1px solid var(--line-input);
+}
+
+.cdet__q:last-child {
+    border-bottom: 0;
 }
 
 .cdet__q-head {
@@ -727,7 +726,7 @@
     padding: 0 28px;
     border: 1px solid var(--line-btn);
     border-radius: var(--r-secondary);
-    background: var(--bg);
+    background: transparent;
     color: var(--ink);
     font-size: var(--fs-ui);
     white-space: nowrap;
@@ -736,9 +735,9 @@
 
 .cdet__cta:hover,
 .cdet__end-btn:hover {
-    background: var(--ink);
+    background: transparent;
     border-color: var(--ink);
-    color: #fff;
+    color: var(--ink);
 }
 
 .cdet__cta {
@@ -747,14 +746,15 @@
 
 .cdet__end-btn--main {
     border-radius: var(--r-cta);
+    border: 0;
     background: var(--ink);
-    border-color: var(--ink);
     color: #fff;
 }
 
 .cdet__end-btn--main:hover {
-    background: var(--bg);
-    color: var(--ink);
+    border: 0;
+    background: #333;
+    color: #fff;
 }
 
 .cdet__cta--ghost {
@@ -779,9 +779,7 @@
     display: flex;
     flex-direction: column;
     background: var(--bg-soft);
-    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
-       trong assets/css/oa.css. */
-    border: 1px solid var(--line-input);
+    border: 0;
 }
 
 .cdet__oimg {
@@ -943,8 +941,8 @@
 .cdraw__dot {
     width: 14px;
     height: 14px;
+    border: 1px solid rgba(0, 0, 0, .15);
     border-radius: 50%;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
     background: var(--sw, var(--bg-slot));
 }
 

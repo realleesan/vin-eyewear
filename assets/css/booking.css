@@ -12,7 +12,7 @@
    Nên booking.css mượn thẳng ngôn ngữ đã dựng ở checkout.css:
 
      bkcard    = costep      khối một bước, số trong vòng tròn viền mảnh
-     bkstore   = cocard      ô chọn, ĐANG CHỌN thì viền đen không đổi nền
+     bkstore   = cocard      card cửa hàng không viền, trạng thái đổi nền
      bkfield   = cofield     ô nhập cao 44, góc vuông
      bksum     = csum        thẻ tóm tắt nền #f3f3f5, dính top 72px
 
@@ -46,8 +46,8 @@
 .bkalert {
     padding: 12px 14px;
     border-radius: var(--r-field);
-    background: var(--bg);
-    border-left: 2px solid var(--sale);
+    background: transparent;
+    border-left: 1px solid var(--sale);
     line-height: var(--lh);
 }
 
@@ -110,7 +110,7 @@
     align-items: flex-start;
     gap: 10px;
     padding: 14px;
-    border: 1px solid var(--line-input);
+    border: 0;
     border-radius: var(--r-field);
     background: var(--bg);
     cursor: pointer;
@@ -118,7 +118,7 @@
 }
 
 .bkstore:hover {
-    border-color: var(--ink-6);
+    background: var(--bg-hover);
 }
 
 /* ┌─ RADIO THẬT, ĐƯỢC TẠO DÁNG — không ẩn đi rồi vẽ ô giả ────────────────
@@ -161,8 +161,7 @@
 }
 
 .bkstore:has(.bkstore__dot:checked) {
-    border-color: var(--ink);
-    box-shadow: inset 0 0 0 1px var(--ink);
+    background: var(--bg-hover);
 }
 
 .bkstore__text {
@@ -220,12 +219,12 @@
     width: 0;
     height: 0;
     margin: 0;
-    border: 0;
+    border: 1px solid var(--ink);
 }
 
 .bkpill:has(.bk__radio:checked) {
     background: var(--bg-chip-flat);
-    border-color: var(--bg-chip-flat);
+    border: 1px solid var(--ink);
 }
 
 .bkpill:has(.bk__radio:focus-visible) {
@@ -268,7 +267,7 @@
     width: 0;
     height: 0;
     margin: 0;
-    border: 0;
+    border: 1px solid var(--ink);
 }
 
 .bkday__box {
@@ -285,7 +284,7 @@
     height: calc(56px * var(--oa-scale));
     border: 1px solid var(--line-input);
     border-radius: var(--r-field);
-    background: var(--bg);
+    background: transparent;
     transition: background .18s ease, border-color .18s ease, color .18s ease;
 }
 
@@ -298,7 +297,7 @@
    thì một đường viền đen không đủ để mắt bắt được ô nào đang chọn. */
 .bkday:has(.bk__radio:checked) .bkday__box {
     background: var(--ink);
-    border-color: var(--ink);
+    border: 0;
     color: #fff;
 }
 
@@ -309,7 +308,7 @@
 
 .bkday:has(.bk__radio:disabled) .bkday__box {
     background: var(--bg-off);
-    border-color: var(--line);
+    border: 0;
     color: var(--ink-6);
     cursor: not-allowed;
 }
@@ -407,9 +406,7 @@
     padding: 20px;
     border-radius: var(--r-field);
     background: var(--bg-panel);
-    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
-       trong assets/css/oa.css. */
-    border: 1px solid var(--line-input);
+    border: 0;
 }
 
 .bkside__title {

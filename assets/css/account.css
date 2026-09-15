@@ -240,7 +240,7 @@
     padding: 12px 14px;
     border: 1px solid var(--acct-line);
     border-radius: 0;
-    background: #fff;
+    background: transparent;
     font-size: 14px;
     line-height: 1.45;
 }
@@ -426,14 +426,14 @@
    và nút là <a> sẽ giữ chữ đen trên nền đen. */
 .acct .acct-btn:hover {
     border-color: var(--acct-ink);
-    background: var(--acct-ink);
-    color: #fff;
+    background: transparent;
+    color: var(--acct-ink);
     opacity: .7;
 }
 
 .acct .acct-btn--solid {
     border-radius: var(--r-cta);
-    border-color: var(--acct-ink);
+    border: 0;
     background: var(--acct-ink);
     color: #fff;
 }
@@ -449,7 +449,7 @@
 /* Nút gửi XÁM và không bấm được cho tới khi form đủ ô bắt buộc — SAVE, CONFIRM
    BOOKING của bản vẽ. Máy chủ vẫn kiểm lại, đây chỉ là gợi ý bằng mắt. */
 .acct form:has(:invalid) .acct-btn--save {
-    border-color: var(--acct-mute);
+    border: 0;
     background: var(--acct-mute);
     pointer-events: none;
 }
@@ -534,18 +534,18 @@ select.acct-input {
     gap: 2px;
     min-height: 48px;
     padding: 8px 14px;
-    border: 1px solid var(--acct-line);
+    border: 0;
     border-radius: 0;
     background: #fff;
 }
 
-/* Form "Sửa hồ sơ" — ô trắng không viền, lấy nét mới hiện viền đen */
+/* Form "Sửa hồ sơ" — khối nhãn không viền; chính input luôn giữ viền 1px. */
 .acct-field--bare {
-    border-color: transparent;
+    border: 0;
 }
 
 .acct-field:focus-within {
-    border-color: var(--acct-ink);
+    border: 0;
 }
 
 /* __label: dấu * do oa.css sinh từ `required`. __cap: cùng dáng, không dấu —
@@ -565,7 +565,7 @@ select.acct-input {
 .acct-field__ctl {
     width: 100%;
     padding: 0;
-    border: 0;
+    border: 1px solid var(--acct-line);
     background: transparent;
     color: var(--acct-ink);
     font-size: 14px;
@@ -629,11 +629,37 @@ select.acct-field__ctl {
 }
 
 .acct-check input {
+    display: grid;
+    place-content: center;
     flex: none;
     width: 16px;
     height: 16px;
     margin: 0;
-    accent-color: var(--acct-ink);
+    appearance: none;
+    border: 1px solid var(--acct-ink);
+    background: transparent;
+}
+
+.acct-check input::before {
+    content: "";
+    width: 8px;
+    height: 5px;
+    border-left: 1px solid #fff;
+    border-bottom: 1px solid #fff;
+    transform: rotate(-45deg) scale(0);
+}
+
+.acct-check input:checked {
+    background: var(--acct-ink);
+}
+
+.acct-check input:checked::before {
+    transform: rotate(-45deg) scale(1);
+}
+
+.acct-check input:focus-visible {
+    outline: 2px solid var(--acct-ink);
+    outline-offset: 2px;
 }
 
 /* Ô tick trong hộp thoại xoá tài khoản */
@@ -689,14 +715,14 @@ select.acct-field__ctl {
     justify-content: space-between;
     gap: 20px 24px;
     padding: 20px;
-    border: 1px solid var(--acct-line);
+    border: 0;
     border-radius: 0;
     background: #fff;
 }
 
 /* Viền đen = địa chỉ mặc định */
 .acct-card.is-default {
-    border-color: var(--acct-ink);
+    background: var(--bg-hover);
 }
 
 .acct-card__body {

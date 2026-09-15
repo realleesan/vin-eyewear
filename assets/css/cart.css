@@ -181,8 +181,8 @@
 /* Vòng tiêu điểm vẽ quanh CỤM, vì cái ô thật thì trong suốt — không có luật
    này thì người dùng bàn phím Tab tới đây và không thấy gì cả. */
 .cqty select:focus-visible + .cqty__num {
-    outline: 1px solid #111;
-    outline-offset: 3px;
+    outline: 2px solid #111;
+    outline-offset: 2px;
 }
 
 /* Nút gửi cho trường hợp KHÔNG có JavaScript. Có JS thì cart.js gửi form ngay
@@ -191,7 +191,7 @@
 .cqty__go {
     border: 1px solid #9a9a9a;
     border-radius: var(--r-secondary);
-    background: #fff;
+    background: transparent;
     padding: 4px 10px;
     font: inherit;
     font-size: 10px;
@@ -328,7 +328,7 @@ html.js .cqty__go {
     height: 52px;
     border: 1px solid #9a9a9a;
     border-radius: var(--r-secondary);
-    background: #fff;
+    background: transparent;
     color: #111;
     font-size: 12px;
     letter-spacing: .02em;
@@ -351,6 +351,11 @@ html.js .cqty__go {
 
 .cfaq__item {
     padding: 16px 0;
+    border-bottom: 1px solid var(--line-input);
+}
+
+.cfaq__item:last-child {
+    border-bottom: 0;
 }
 
 /* Tam giác mặc định của <summary> — tắt ở cả hai cú pháp; dấu + bên phải mới

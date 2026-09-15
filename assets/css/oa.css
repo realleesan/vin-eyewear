@@ -821,7 +821,7 @@ ol[role="list"],
     padding: 0 28px;
     border: 1px solid var(--line-btn);
     border-radius: var(--r-secondary);
-    background: var(--bg);
+    background: transparent;
     color: var(--ink);
     font-family: inherit;
     font-size: var(--fs-ui);
@@ -832,9 +832,9 @@ ol[role="list"],
 }
 
 .oa-btn:hover {
-    background: var(--ink);
+    background: transparent;
     border-color: var(--ink);
-    color: #fff;
+    color: var(--ink);
 }
 
 /* Nút chính — đặc sẵn, rê chuột thì ĐẢO NGƯỢC thành rỗng. Đây là cú lật
@@ -842,14 +842,14 @@ ol[role="list"],
 .oa-btn--solid {
     border-radius: var(--r-cta);
     background: var(--ink);
-    border-color: var(--ink);
+    border: 0;
     color: #fff;
 }
 
 .oa-btn--solid:hover {
-    background: var(--bg);
-    color: var(--ink);
-    border-color: var(--ink);
+    background: #333;
+    color: #fff;
+    border: 0;
 }
 
 /* Trên nền ảnh tối: viền trắng */
@@ -867,14 +867,15 @@ ol[role="list"],
 
 .oa-btn--onimage-solid {
     border-radius: var(--r-cta);
-    border-color: #fff;
+    border: 1px solid #fff;
     background: #fff;
     color: var(--ink);
 }
 
 .oa-btn--onimage-solid:hover {
-    background: transparent;
-    color: #fff;
+    border: 1px solid #fff;
+    background: var(--bg-hover);
+    color: var(--ink);
 }
 
 .oa-btn--sm {
@@ -893,7 +894,7 @@ ol[role="list"],
 
 .oa-btn--card.oa-btn--solid:hover {
     background: #333;
-    border-color: #333;
+    border: 0;
     color: #fff;
 }
 
@@ -927,7 +928,7 @@ ol[role="list"],
 
 .oa-btn--block:hover {
     background: #333;
-    border-color: #333;
+    border: 0;
     color: #fff;
 }
 
@@ -958,14 +959,14 @@ ol[role="list"],
 .oa-btn[aria-disabled="true"] {
     cursor: not-allowed;
     background: var(--ink-5);
-    border-color: var(--ink-5);
+    border: 0;
     color: #fff;
 }
 
 .oa-btn:disabled:hover,
 .oa-btn[aria-disabled="true"]:hover {
     background: var(--ink-5);
-    border-color: var(--ink-5);
+    border: 0;
     color: #fff;
 }
 
@@ -1050,7 +1051,7 @@ ol[role="list"],
 .oa-chip[aria-current="true"],
 .oa-chip[aria-pressed="true"] {
     background: var(--bg-chip-flat);
-    border-color: var(--bg-chip-flat);
+    border: 1px solid var(--ink);
 }
 
 /* Hàng chip cuộn ngang + nút Filter ở cuối hàng */
@@ -1082,7 +1083,7 @@ ol[role="list"],
     align-items: center;
     height: var(--h-tab);
     padding: 0 13px;
-    border: 1px solid var(--line-chip);
+    border: 0;
     border-radius: var(--r-tab);
     background: transparent;
     color: var(--ink-5);
@@ -1097,7 +1098,7 @@ ol[role="list"],
 .oa-tab[aria-current="page"],
 .oa-tab[aria-selected="true"] {
     background: var(--bg-chip);
-    border-color: var(--bg-chip);
+    border: 0;
     color: var(--ink);
 }
 
@@ -1132,14 +1133,25 @@ ol[role="list"],
    Ô NHẬP
    ══════════════════════════════════════════════════════════════════════ */
 
-/* ┌─ HAI DÁNG Ô NHẬP ────────────────────────────────────────────────────
-   │ .oa-input  HỘP cao 44, góc vuông, viền #ddd, nền trắng → form
-   │            kéo, trang đăng nhập, trang CSKH
-   │ .oa-field  GẠCH CHÂN, cao 34, không nền          → form liên hệ
-   │
-   │ Trong trang CSKH mẫu bỏ hẳn viền (`border:0`) vì nền trang đã là xám
-   │ — dùng .oa-input--flat cho chỗ đó.
-   └──────────────────────────────────────────────────────────────────────*/
+/* Cả .oa-input, .oa-field và biến thể flat đều giữ viền 1px ở mọi trạng
+   thái. Ô tìm kiếm là ngoại lệ và tự khai border-bottom tại component. */
+input:not([type="hidden"], [type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+textarea {
+    box-sizing: border-box;
+    border: 1px solid var(--line-input);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+    box-sizing: border-box;
+    border: 1px solid var(--line-input);
+}
+
+select {
+    box-sizing: border-box;
+    border: 1px solid var(--line-input);
+}
+
 .oa-input {
     display: block;
     width: 100%;
@@ -1172,11 +1184,11 @@ textarea.oa-input {
 }
 
 .oa-input--flat {
-    border: 0;
+    border: 1px solid var(--line-input);
 }
 
 .oa-input--flat:focus {
-    box-shadow: inset 0 0 0 1px var(--ink);
+    border-color: var(--ink);
 }
 
 /* Ô mã OTP — chữ giãn rộng, căn giữa */
@@ -1189,9 +1201,8 @@ textarea.oa-input {
     display: block;
     width: 100%;
     height: 34px;
-    padding: 0;
-    border: 0;
-    border-bottom: 1px solid var(--line-btn);
+    padding: 0 12px;
+    border: 1px solid var(--line-btn);
     background: none;
     color: var(--ink);
     font-family: inherit;
@@ -1213,7 +1224,7 @@ textarea.oa-field {
 }
 
 .oa-field:focus {
-    border-bottom-color: var(--ink);
+    border-color: var(--ink);
 }
 
 /* Nhãn trên ô nhập */
@@ -1363,8 +1374,20 @@ textarea.oa-field {
     appearance: none;
 }
 
-.oa-select:focus {
-    border-color: var(--ink);
+/* Danh sách mở giữ một khung 1px; các lựa chọn chỉ ngăn nhau bằng nét dưới. */
+select option {
+    border-bottom: 1px solid var(--line-input);
+}
+
+select option:last-child {
+    border-bottom: 0;
+}
+
+/* Hợp đồng cho tab phân đoạn: cả track lẫn thumb đều là mặt phẳng đặc. */
+.oa-segmented,
+.oa-segmented__track,
+.oa-segmented__thumb {
+    border: 0;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1485,6 +1508,7 @@ textarea.oa-field {
 .oa-card {
     display: flex;
     flex-direction: column;
+    border: 0;
     background: transparent;
     padding: 0 0 14px;
 }
@@ -1775,12 +1799,12 @@ textarea.oa-field {
 /* Nút nằm ĐÈ LÊN ẢNH nên nền trong suốt là không đọc được — nền đặc và
    viền cùng màu, đúng dáng viên của .oa-btn--card. */
 .oa-card__actions .oa-btn--card:not(.oa-btn--solid) {
-    background: var(--bg);
-    border-color: var(--bg);
+    background: transparent;
+    border-color: var(--line-btn);
 }
 
 .oa-card__actions .oa-btn--card:not(.oa-btn--solid):hover {
-    background: var(--bg);
+    background: transparent;
     border-color: var(--ink);
 }
 
@@ -1795,19 +1819,29 @@ textarea.oa-field {
 }
 
 .oa-swatch {
+    position: relative;
     width: 14px;
     height: 14px;
     flex: none;
-    border: 0;
+    border: 1px solid rgba(0, 0, 0, .15);
     border-radius: 50%;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, .15);
     padding: 0;
     cursor: pointer;
 }
 
 .oa-swatch.is-active,
 .oa-swatch[aria-pressed="true"] {
-    box-shadow: 0 0 0 1px #fff, 0 0 0 2px var(--ink);
+    border-color: transparent;
+}
+
+.oa-swatch.is-active::after,
+.oa-swatch[aria-pressed="true"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--ink);
+    border-radius: inherit;
+    pointer-events: none;
 }
 
 .oa-swatch__label {
@@ -2370,11 +2404,8 @@ textarea.oa-field {
    │ bảng mà cả mẫu lẫn phần còn lại của bảng không có lấy một cái khung.
    │
    │ ĐỔI CHỖ CHỨ KHÔNG XOÁ. Khung nhường chỗ cho chính gạch chân của ô: nó
-   │ đổi từ xám --line-strong sang đen --ink và dày gấp đôi. Ô tìm vẫn nói
+   │ đổi từ xám --line-strong sang đen --ink. Ô tìm vẫn nói
    │ rõ "đang gõ được vào đây", chỉ là nói bằng đúng ngôn ngữ của mẫu.
-   │
-   │ Dày gấp đôi bằng `box-shadow` chứ không bằng `border-width: 2px`: đổi
-   │ bề dày viền là đẩy cả ô nhích lên 1px mỗi lần nhận/mất tiêu điểm.
    │
    │ `:focus-within` trên THẺ BỌC, không phải `:focus` trên input — gạch
    │ chân thuộc về thẻ bọc, còn tiêu điểm thì rơi vào input bên trong.
@@ -2390,7 +2421,6 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────── */
 .oa-searchbar:focus-within {
     border-bottom-color: var(--ink);
-    box-shadow: 0 1px 0 var(--ink);
 }
 
 .oa-searchbar input:focus-visible {
@@ -2511,12 +2541,14 @@ textarea.oa-field {
     align-items: center;
     gap: 28px;
     padding: 14px 0 0;
+    border: 0;
 }
 
 /* Tab đang đứng và tab kia CÙNG cỡ chữ 16px — khác nhau ở nền và màu chữ,
    không ở kích thước. Đổi cỡ là hai tab nhảy chỗ mỗi lần chuyển. */
 .ctabs__on,
 .ctabs__off {
+    border: 0;
     font-size: 16px;
     line-height: 1;
     padding: 6px 0;
@@ -3213,16 +3245,16 @@ textarea.oa-field {
    ══════════════════════════════════════════════════════════════════════ */
 
 /* Thông báo — mẫu không vẽ, suy ra theo đúng lối: hộp vuông, viền
-   mảnh, không nền màu. Sắc chỉ nằm ở một đường kẻ trái 2px. */
+   mảnh, không nền màu. Sắc chỉ nằm ở một đường kẻ trái 1px. */
 .oa-note {
     display: flex;
     flex-direction: column;
     gap: 6px;
     padding: 12px 14px;
     border: 1px solid var(--line-input);
-    border-left: 2px solid var(--ink);
+    border-left: 1px solid var(--ink);
     border-radius: 0;
-    background: var(--bg);
+    background: transparent;
     font-size: var(--fs-text);
     line-height: var(--lh);
 }
@@ -3415,18 +3447,15 @@ summary:focus-visible,
    │
    │ ⚠ ĐÂY KHÔNG PHẢI "BỎ DẤU TIÊU ĐIỂM". Dấu vẫn còn, chỉ là dấu KIA:
    │ `border-color: var(--ink)` ở dòng cuối khối này bảo đảm mọi ô chữ CÓ
-   │ VIỀN đều đổi viền sang đen khi nhận tiêu điểm, kể cả những ô không có
-   │ luật `:focus` riêng (.catpick__select, .pfacet__input). Người dùng bàn
+   │ VIỀN đều đổi viền sang đen khi nhận tiêu điểm. Người dùng bàn
    │ phím Tab qua form vẫn luôn thấy mình đang ở ô nào. Bỏ nốt dòng ấy là vi
    │ phạm WCAG 2.4.7.
    │
    │ ⚠ Ô KHÔNG CÓ VIỀN thì `border-color` không vẽ ra gì — chúng phải tự lo
    │ lấy dấu, và đã rà đủ sáu ô như thế trên site:
-   │     .cfield__input · .oa-field          có border-bottom, đổi màu được
    │     .oa-searchbar input                 dấu ở thẻ bọc :focus-within
    │     .srch__input                        dấu ở .srch__form:focus-within
-   │     .oa-input--flat · .policy-search__input
-   │                                         tự khai :focus box-shadow 1px
+   │     .policy-search__input                có border-bottom, đổi màu được
    │ Thêm một ô `border: 0` nữa mà quên dựng dấu là Tab tới đó con trỏ biến
    │ mất — đúng lỗi .srch__input đã mắc trước 12/09/2026.
    │
@@ -3450,10 +3479,14 @@ input[type="time"]:focus-visible,
 input[type="datetime-local"]:focus-visible,
 input[type="month"]:focus-visible,
 input[type="week"]:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
+textarea:focus-visible {
     outline: none;
     border-color: var(--ink);
+}
+
+select:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
 }
 
 .oa-header--over:not(.is-past-hero) a:focus-visible,
@@ -3872,7 +3905,7 @@ body.is-search-open {
     padding: 0 28px;
     border: 1px solid var(--line-btn);
     border-radius: var(--r-secondary);
-    background: var(--bg);
+    background: transparent;
     color: var(--ink);
     font-family: inherit;
     font-size: var(--fs-ui);
@@ -3885,21 +3918,21 @@ body.is-search-open {
 .btn-primary {
     border-radius: var(--r-cta);
     background: var(--ink);
-    border-color: var(--ink);
+    border: 0;
     color: #fff;
 }
 
 /* Nút đặc rê chuột thì ĐẢO NGƯỢC thành rỗng — cú lật của mẫu, xem .oa-btn */
 .btn-primary:hover {
-    background: var(--bg);
-    color: var(--ink);
-    border-color: var(--ink);
+    background: #333;
+    color: #fff;
+    border: 0;
 }
 
 .btn-outline:hover {
-    background: var(--ink);
+    background: transparent;
     border-color: var(--ink);
-    color: #fff;
+    color: var(--ink);
 }
 
 /* .btn-lg KHÔNG làm nút to hơn. Thang của mẫu chỉ có hai chiều cao nút —
@@ -4102,7 +4135,7 @@ body.is-search-open {
     padding: 0 28px;
     border: 1px solid var(--line-btn);
     border-radius: var(--r-secondary);
-    background: var(--bg);
+    background: transparent;
     color: var(--ink);
     font-size: var(--fs-ui);
     white-space: nowrap;
@@ -4115,23 +4148,23 @@ body.is-search-open {
 .mobile-nav__foot .btn-primary {
     border-radius: var(--r-cta);
     background: var(--ink);
-    border-color: var(--ink);
+    border: 0;
     color: #fff;
 }
 
 .error-page__btn:hover,
 .errpage__actions .btn-primary:hover,
 .mobile-nav__foot .btn-primary:hover {
-    background: var(--bg);
-    color: var(--ink);
-    border-color: var(--ink);
+    background: #333;
+    color: #fff;
+    border: 0;
 }
 
 .errpage__actions .btn-outline:hover,
 .mobile-nav__foot .btn-outline:hover {
-    background: var(--ink);
+    background: transparent;
     border-color: var(--ink);
-    color: #fff;
+    color: var(--ink);
 }
 
 /* .btn-inline KHÔNG khai ở đây nữa — nó đã có luật riêng ở khối "BA TÊN NÚT

@@ -340,7 +340,7 @@ html:not(.js) .vhero__bars {
     flex-direction: column;
     gap: 10px;
     padding: 20px;
-    border: 1px solid var(--line-input);
+    border: 0;
     background: var(--bg);
     font-size: var(--fs-body);
     line-height: var(--lh);
@@ -433,7 +433,7 @@ html:not(.js) .vhero__bars {
         height: 36px;
         padding: 0;
         border: 1px solid var(--line-btn);
-        background: var(--bg);
+        background: transparent;
         color: var(--ink);
         cursor: pointer;
         transition: background .18s ease, color .18s ease, opacity .18s ease;
@@ -448,8 +448,8 @@ html:not(.js) .vhero__bars {
     }
 
     .hrev__arrow:hover {
-        background: var(--ink);
-        color: #fff;
+        background: transparent;
+        color: var(--ink);
     }
 
     /* Hết đường thì MỜ ĐI chứ không biến mất: một nút biến mất làm cả dải

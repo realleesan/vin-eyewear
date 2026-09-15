@@ -245,6 +245,7 @@
 }
 
 .pdswatch__chip {
+    position: relative;
     display: block;
     width: calc(16px * var(--oa-scale));
     height: calc(16px * var(--oa-scale));
@@ -254,11 +255,19 @@
 
 /* ĐANG CHỌN = VIỀN ĐEN — luật của mẫu ở mọi chỗ có lựa chọn. */
 .pdswatch__opt:has(input:checked) .pdswatch__chip {
-    border-color: var(--ink);
+    border-color: transparent;
+}
+
+.pdswatch__opt:has(input:checked) .pdswatch__chip::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--ink);
+    pointer-events: none;
 }
 
 .pdswatch__opt:has(input:focus-visible) {
-    outline: 1px solid var(--ink);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
 }
 
@@ -305,7 +314,7 @@
 }
 
 .pdopt:has(input:focus-visible) {
-    outline: 1px solid var(--ink);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
 }
 
@@ -358,17 +367,18 @@
 
 .pdbtn--solid {
     border-radius: var(--r-cta);
+    border: 0;
     background: var(--ink);
     color: #fff;
 }
 
 .pdbtn--solid:hover {
-    border-color: #333;
+    border: 0;
     background: #333;
 }
 
 .pdbtn:disabled {
-    border-color: var(--ink-5);
+    border: 0;
     background: var(--ink-5);
     color: #fff;
     cursor: not-allowed;
@@ -456,7 +466,14 @@
 
 .pdacc {
     margin-top: calc(24px * var(--oa-scale));
-    border-top: 1px solid var(--pd-line);
+}
+
+.pdacc__item {
+    border-bottom: 1px solid var(--pd-line);
+}
+
+.pdacc__item:last-child {
+    border-bottom: 0;
 }
 
 .pdacc__sum {
@@ -465,7 +482,7 @@
     align-items: center;
     gap: calc(12px * var(--oa-scale));
     padding: calc(14px * var(--oa-scale)) 0;
-    border-bottom: 1px solid var(--pd-line);
+    border: 0;
     color: var(--ink);
     font-size: var(--fs-body);
     letter-spacing: var(--ls);
@@ -495,7 +512,7 @@
 
 .pdacc__body {
     padding: calc(12px * var(--oa-scale)) 0 calc(16px * var(--oa-scale));
-    border-bottom: 1px solid var(--pd-line);
+    border: 0;
     color: var(--ink-2);
     line-height: 1.6;
 }
@@ -651,7 +668,7 @@
 }
 
 .pdwrite__stars input:focus-visible + label {
-    outline: 1px solid var(--ink);
+    outline: 2px solid var(--ink);
     outline-offset: 2px;
 }
 
