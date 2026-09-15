@@ -918,3 +918,115 @@
     .cform__title,
     .cform__hours { font-size: var(--fs-ui); }
 }
+
+/* Keep the contact page on the same neutral surface and colour system as home. */
+.page-contact-index,
+.page-contact-index main {
+    background: var(--bg);
+}
+
+.contact-page {
+    --contact-ink: var(--ink);
+    --contact-copy: var(--ink-2);
+    --contact-muted: var(--ink-3);
+    --contact-line: var(--line);
+    background: var(--bg);
+}
+
+.cpromo,
+.cform,
+.cstores__shell,
+.cstore,
+.cmap,
+.cmap__link {
+    border-color: var(--line);
+    background: var(--bg);
+}
+
+.cpromo__eyebrow,
+.cform__hours,
+.cfield__input,
+.cstore__hours,
+.cstore__book,
+.cmap__link {
+    border-color: var(--line-input);
+}
+
+.cform__head,
+.cpromo__notes,
+.cstore__actions {
+    border-color: var(--line);
+}
+
+.cpromo__title,
+.cform__title,
+.cfield__label,
+.cfield__input,
+.cstore__name,
+.cstore__phone,
+.cstore__ico,
+.cpromo__note-icon {
+    color: var(--ink);
+}
+
+.cpromo__lead,
+.cform__lead,
+.cfield__input::placeholder,
+.cform__foot,
+.cstore__details {
+    color: var(--ink-3);
+}
+
+.cpromo__cta,
+.cform__submit,
+.cstore__directions {
+    background: var(--ink);
+    color: var(--bg);
+}
+
+.cpromo__cta:hover,
+.cform__submit:hover,
+.cstore__directions:hover,
+.cmap__link:hover {
+    background: var(--ink-2);
+    color: var(--bg);
+}
+
+.cstore__book,
+.cstore__hours {
+    background: var(--bg-soft);
+    color: var(--ink);
+}
+
+.cfield__input:hover,
+.cfield__input:focus,
+.cstore:hover,
+.cstore.is-on,
+.cstore__book:hover {
+    border-color: var(--ink);
+}
+
+.cpromo,
+.cform,
+.cstores__shell,
+.cstore,
+.cmap,
+.cstore__book,
+.cmap__link {
+    border-radius: var(--r-secondary);
+}
+
+.cpromo__cta,
+.cform__submit,
+.cstore__directions {
+    border-radius: var(--r-cta);
+}
+
+.cform__hours span,
+.cstore.is-on .cstore__dot {
+    background: var(--ink);
+}
+
+.cstore__dot {
+    background: var(--line-input);
+}
