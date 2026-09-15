@@ -34,108 +34,40 @@ $openStatus = static function (?string $hours): array {
     ];
 };
 
-$channels = [
-    [
-        'brand' => 'hotline',
-        'label' => 'Hotline tư vấn',
-        'value' => $company['hotline'],
-        'href'  => $company['hotline_href'],
-        'blank' => false,
-    ],
-    [
-        'brand' => 'zalo',
-        'label' => 'Zalo chat',
-        'value' => 'Nhắn tin tư vấn',
-        'href'  => $company['channels']['zalo'],
-        'blank' => true,
-    ],
-    [
-        'brand' => 'messenger',
-        'label' => 'Messenger',
-        'value' => 'Chat Facebook',
-        'href'  => $company['channels']['messenger'],
-        'blank' => true,
-    ],
-    [
-        'brand' => 'gmail',
-        'label' => 'Thư điện tử',
-        'value' => $company['email'],
-        'href'  => 'mailto:' . $company['email'],
-        'blank' => false,
-    ],
-];
-
-$servicePromises = [
-    'Đo khám thị lực chuẩn khúc xạ',
-    'Tư vấn dáng kính hợp khuôn mặt',
-    'Căn chỉnh gọng, vệ sinh trọn đời',
-    'Bảo hành chính hãng toàn diện',
-];
 ?>
 
 <?php partial('_layout/page-head', [
     'head_crumbs' => [['label' => 'Liên hệ']],
-    'head_badge'  => 'Chăm sóc khách hàng & Dịch vụ khúc xạ',
-    'head_title'  => 'Ghé thăm Vin Eyewear',
-    'head_lead'   => 'Hai cơ sở tại Hà Nội, mở cửa cả tuần. Đo khúc xạ miễn phí kể cả '
-                   . 'khi bạn chưa mua kính.',
+    'head_title'  => 'Liên hệ',
+    'head_lead'   => 'Hai cơ sở tại Hà Nội · Mở cửa 8:00 – 21:00 hằng ngày',
 ]); ?>
 
 <div class="contact-page">
-    <section class="ccontact" id="form" aria-labelledby="contact-support-title">
+    <section class="ccontact" id="form" aria-labelledby="contact-form-title">
         <div class="ccontact__grid">
-            <aside class="cquick">
-                <div class="cquick__main">
-                    <header class="cquick__head">
-                        <div>
-                            <h2 class="cquick__title" id="contact-support-title">Cần hỗ trợ ngay?</h2>
-                            <p class="cquick__lead">Chọn kênh bạn thấy tiện nhất, 8:30 – 21:00 mỗi ngày.</p>
-                        </div>
-                        <span class="cstatus cstatus--online">
-                            <span class="cstatus__dot" aria-hidden="true"></span>
-                            Đang trực tuyến
-                        </span>
-                    </header>
+            <aside class="cpromo" aria-labelledby="contact-promo-title">
+                <div class="cpromo__copy">
+                    <span class="cpromo__eyebrow">Ưu đãi đặc quyền</span>
+                    <h2 class="cpromo__title" id="contact-promo-title">Tư vấn thị lực<br>miễn phí</h2>
+                    <p class="cpromo__lead">Đặt lịch ngay để được các chuyên viên đo thị lực chuẩn xác và tư vấn kiểu dáng tròng kính hài hòa nhất.</p>
+                    <a class="cpromo__cta" href="/dat-lich">Đặt lịch ngay!</a>
 
-                    <div class="cchannels">
-                        <?php foreach ($channels as $ch): ?>
-                            <a class="cchan" href="<?= e($ch['href']) ?>"
-                               <?= $ch['blank'] ? 'target="_blank" rel="noreferrer noopener"' : '' ?>>
-                                <span class="cchan__mark cchan__mark--<?= e($ch['brand']) ?>" aria-hidden="true">
-                                    <?php if ($ch['brand'] === 'hotline'): ?>
-                                        <?= icon('phone', 'cchan__logo cchan__logo--hotline', 22) ?>
-                                    <?php elseif ($ch['brand'] === 'gmail'): ?>
-                                        <?= icon('mail', 'cchan__logo cchan__logo--gmail', 22) ?>
-                                    <?php else: ?>
-                                        <?= brandIcon($ch['brand'], 'cchan__logo cchan__logo--' . $ch['brand'], 28) ?>
-                                    <?php endif; ?>
-                                </span>
-                                <span class="cchan__text">
-                                    <span class="cchan__label"><?= e($ch['label']) ?></span>
-                                    <span class="cchan__value"><?= e($ch['value']) ?></span>
-                                </span>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <div class="cservice">
-                    <h3 class="cservice__title">Cam kết dịch vụ Vin Eyewear</h3>
-                    <ul class="cservice-list" role="list">
-                        <?php foreach ($servicePromises as $promise): ?>
-                            <li><?= icon('check', 'cservice__icon', 14) ?><span><?= e($promise) ?></span></li>
-                        <?php endforeach; ?>
+                    <ul class="cpromo__notes" role="list">
+                        <li><?= icon('check', 'cpromo__note-icon', 14) ?><span>Thiết bị quang học kỹ thuật số chuẩn quốc tế</span></li>
+                        <li><?= icon('check', 'cpromo__note-icon', 14) ?><span>Chuyên viên khúc xạ giàu kinh nghiệm tư vấn</span></li>
                     </ul>
                 </div>
+                <img class="cpromo__image" src="/assets/images/showroom-exam-room.jpg"
+                     alt="Chuyên viên Vin Eyewear đang đo mắt cho khách hàng">
             </aside>
 
             <section class="cform" aria-labelledby="contact-form-title">
                 <header class="cform__head">
-                    <span class="cform__eyebrow">Trợ giúp khách hàng</span>
-                    <h2 class="cform__title" id="contact-form-title">Gửi câu hỏi cho chúng tôi</h2>
-                    <p class="cform__lead">
-                        Điền thông tin bên dưới, đội ngũ tư vấn sẽ liên hệ lại trong ngày làm việc.
-                    </p>
+                    <div>
+                        <h2 class="cform__title" id="contact-form-title">Gửi tin nhắn &amp; đặt lịch</h2>
+                        <p class="cform__lead">Phản hồi ngay trong ngày làm việc</p>
+                    </div>
+                    <span class="cform__hours"><span aria-hidden="true"></span>8:30 – 21:00</span>
                 </header>
 
                 <?php if ($success !== null): ?>
@@ -148,21 +80,23 @@ $servicePromises = [
                 <form class="cform__body" method="post" action="/lien-he/gui">
                     <input type="hidden" name="_token" value="<?= e(csrfToken()) ?>">
 
-                    <label class="cfield" for="contact-full-name">
-                        <span class="cfield__label">Họ và tên <span aria-hidden="true">*</span></span>
-                        <input class="cfield__input" id="contact-full-name" type="text" name="full_name" required
-                               minlength="2" maxlength="120" autocomplete="name"
-                               placeholder="Nguyễn Văn A"
-                               value="<?= e($old['fullName'] ?? '') ?>">
-                    </label>
+                    <div class="cform__split">
+                        <label class="cfield" for="contact-full-name">
+                            <span class="cfield__label">Họ và tên <span aria-hidden="true">*</span></span>
+                            <input class="cfield__input" id="contact-full-name" type="text" name="full_name" required
+                                   minlength="2" maxlength="120" autocomplete="name"
+                                   placeholder="Nguyễn Văn A"
+                                   value="<?= e($old['fullName'] ?? '') ?>">
+                        </label>
 
-                    <label class="cfield" for="contact-phone">
-                        <span class="cfield__label">Số điện thoại <span aria-hidden="true">*</span></span>
-                        <input class="cfield__input" id="contact-phone" type="tel" name="phone" required
-                               autocomplete="tel" inputmode="tel"
-                               placeholder="09xx xxx xxx"
-                               value="<?= e($old['phone'] ?? '') ?>">
-                    </label>
+                        <label class="cfield" for="contact-phone">
+                            <span class="cfield__label">Số điện thoại <span aria-hidden="true">*</span></span>
+                            <input class="cfield__input" id="contact-phone" type="tel" name="phone" required
+                                   autocomplete="tel" inputmode="tel"
+                                   placeholder="09xx xxx xxx"
+                                   value="<?= e($old['phone'] ?? '') ?>">
+                        </label>
+                    </div>
 
                     <label class="cfield" for="contact-email">
                         <span class="cfield__label">Email</span>
@@ -179,14 +113,16 @@ $servicePromises = [
                     </label>
 
                     <button type="submit" class="cform__submit">
-                        <span>Gửi câu hỏi</span>
+                        <span>Gửi tin nhắn &amp; đặt lịch</span>
                         <?= icon('arrow-right', 'cform__submit-icon', 17) ?>
                     </button>
 
-                    <p class="cform__privacy">
-                        <?= icon('shield', 'cform__privacy-icon', 14) ?>
-                        <span>Bảo mật thông tin khách hàng 100%</span>
-                    </p>
+                    <footer class="cform__foot">
+                        <a class="cform__hotline" href="<?= e($company['hotline_href']) ?>">
+                            <?= icon('phone', '', 15) ?> <span>Hotline: <strong><?= e($company['hotline']) ?></strong></span>
+                        </a>
+                        <a class="cform__zalo" href="<?= e($company['channels']['zalo']) ?>" target="_blank" rel="noreferrer noopener">Zalo tư vấn ↗</a>
+                    </footer>
                 </form>
             </section>
         </div>
