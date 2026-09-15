@@ -1,0 +1,15 @@
+:root {
+    --type-scale: 1;
+    --fs-micro: calc(.625rem * var(--type-scale));
+    --fs-label: calc(.6875rem * var(--type-scale));
+    --fs-caption: calc(.75rem * var(--type-scale));
+    --fs-body-sm: calc(.875rem * var(--type-scale));
+    --fs-body: calc(.9375rem * var(--type-scale));
+    --fs-body-lg: calc(1rem * var(--type-scale));
+    --fs-subtitle: calc(1rem * var(--type-scale));
+    --fs-heading: clamp(1.25rem, calc(1rem + .6vw), 1.75rem);
+    --fs-title: clamp(1.75rem, calc(1.2rem + 1.8vw), 3rem);
+    --fs-display: clamp(2.25rem, calc(1.4rem + 3vw), 4.5rem);
+    --lh-body: 1.5;
+    --lh-tight: 1.25;
+}

@@ -281,6 +281,7 @@ if (!array_filter(array_column($navGroups, 'active'))) {
              lần sẽ còn giữ bản CSS cũ trong bộ nhớ đệm cho tới khi họ Ctrl+F5
              — và không ai nghĩ tới việc đó, nên kết luận đầu tiên luôn là
              "deploy hỏng". Đây đúng là chuyện đã xảy ra ngày 24/08/2026. */ ?>
+    <link rel="stylesheet" href="<?= asset('assets/css/typography.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/layout.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/admin.css') ?>">
     <?php /* Hộp thoại "bạn có chắc không" — xem _layout/confirm-dialog.php.

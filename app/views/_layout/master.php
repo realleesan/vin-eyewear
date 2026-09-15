@@ -217,6 +217,7 @@ if ($manhCua !== null) {
          Bảng $pageStyles bên dưới vì thế chỉ còn CSS thật sự riêng của
          từng trang, và phần lớn trang không cần dòng nào.
          ══════════════════════════════════════════════════════════════ -->
+    <link rel="stylesheet" href="<?= asset('assets/css/typography.css') ?>">
     <link rel="stylesheet" href="<?= asset('assets/css/oa.css') ?>">
 
     <?php
