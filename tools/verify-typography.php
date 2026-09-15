@@ -96,29 +96,58 @@ function literalFontSizeErrors(string $css, string $path): array
 {
     $allowed = [
         // Zero removes inline whitespace without rendering text.
-        'font-size: 0;',
+        '/^font-size\s*:\s*0\s*;$/i',
         // Zero-pixel declarations serve the same non-text layout purpose.
-        'font-size: 0px;',
+        '/^font-size\s*:\s*0px\s*;$/i',
     ];
     $css = preg_replace_callback(
         '/\/\*.*?\*\//s',
-        static fn(array $match): string => str_replace(["\r", "\n"], '', $match[0])
-            . str_repeat("\n", substr_count($match[0], "\n")),
+        static fn(array $match): string => preg_replace('/[^\r\n]/', ' ', $match[0]),
         $css,
     );
     $errors = [];
-    $declarationPattern = '/font-size\s*:\s*(?:\d+(?:\.\d+)?px|0)\s*;/i';
+    $declarationPattern = '/font-size\s*:\s*([^;]+);/i';
+    preg_match_all($declarationPattern, $css, $matches, PREG_OFFSET_CAPTURE);
 
-    foreach (preg_split('/\R/', $css) as $index => $line) {
-        preg_match_all($declarationPattern, $line, $matches);
-        foreach ($matches[0] as $declaration) {
-            if (!in_array($declaration, $allowed, true)) {
-                $errors[] = $path . ':' . ($index + 1);
+    foreach ($matches[0] as $index => $declarationMatch) {
+        $declaration = $declarationMatch[0];
+        foreach ($allowed as $allowedPattern) {
+            if (preg_match($allowedPattern, $declaration)) {
+                continue 2;
             }
+        }
+
+        $value = $matches[1][$index][0];
+        if (containsLiteralTextSize($value)) {
+            $errors[] = $path . ':' . physicalLineNumber($css, $declarationMatch[1]);
         }
     }
 
     return $errors;
+}
+
+function containsLiteralTextSize(string $value): bool
+{
+    $number = '[+-]?(?:(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?)';
+    $units = '(?:%|r?em|ex|ch|cap|ic|lh|rlh|px|q|in|cm|mm|pt|pc|'
+        . 'vw|vh|vi|vb|vmin|vmax|svw|svh|svi|svb|svmin|svmax|'
+        . 'lvw|lvh|lvi|lvb|lvmin|lvmax|dvw|dvh|dvi|dvb|dvmin|dvmax|'
+        . 'cqw|cqh|cqi|cqb|cqmin|cqmax)';
+    if (preg_match('/(?<![\\w-])' . $number . $units . '(?![a-z])/i', $value)) {
+        return true;
+    }
+
+    if (preg_match('/^\\s*' . $number . '\\s*$/', $value)) {
+        return true;
+    }
+
+    return preg_match('/\\b(?:calc|min|max|clamp)\\s*\\(/i', $value) === 1
+        && preg_match('/(?<![\\w.-])' . $number . '(?![\\w.-])/', $value) === 1;
+}
+
+function physicalLineNumber(string $css, int $offset): int
+{
+    return preg_match_all('/\r\n|\n|\r/', substr($css, 0, $offset)) + 1;
 }
 
 function cssPaths(string $directory): array
