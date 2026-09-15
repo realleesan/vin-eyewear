@@ -69,13 +69,14 @@
    │ vẽ bằng :focus-within — cùng lối mà .oa-searchbar ở đầu trang đã dùng. */
 .srch__form:focus-within {
     border-bottom-color: var(--ink);
+    box-shadow: 0 1px 0 var(--ink);
 }
 
 .srch__go {
     flex: none;
     height: var(--h-chip);
     padding: 0 14px;
-    border: 0;
+    border: 1px solid var(--ink);
     border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
@@ -141,9 +142,9 @@
 }
 
 .pill-link:hover {
-    background: transparent;
+    background: var(--ink);
     border-color: var(--ink);
-    color: var(--ink);
+    color: #fff;
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -229,7 +230,9 @@
     padding: 16px;
     border-radius: var(--r-field);
     background: var(--bg-soft);
-    border: 0;
+    /* Viền thay cho nền xám cũ — xem khối "NỀN TRẮNG TOÀN SITE"
+       trong assets/css/oa.css. */
+    border: 1px solid var(--line-input);
 }
 
 .srchstore__name {

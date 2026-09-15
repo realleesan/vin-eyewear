@@ -95,15 +95,15 @@
    │ nháy theo cuộn.
    └──────────────────────────────────────────────────────────────────────── */
 .fab__btn--top {
-    background: transparent;
+    background: var(--bg);
     border: 1px solid var(--line-btn);
     color: var(--ink);
 }
 
 .fab__btn--top:hover {
-    background: transparent;
+    background: var(--ink);
     border-color: var(--ink);
-    color: var(--ink);
+    color: #fff;
 }
 
 /* ══════════════════════════════════════════════════════════════════════

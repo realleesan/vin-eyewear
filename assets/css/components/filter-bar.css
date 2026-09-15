@@ -109,7 +109,7 @@
 
 .fbarchip.is-on {
     background: var(--bg-chip-flat);
-    border-color: var(--ink);
+    border-color: var(--bg-chip-flat);
 }
 
 /* Bộ sưu tập không còn món nào khớp: mờ và không bấm được — cùng luật với
@@ -162,8 +162,8 @@
 /* Bàn phím: <summary> nhận tiêu điểm như một nút, và nó phải THẤY được —
    đây là lối duy nhất vào bộ lọc khi không dùng chuột. */
 .fbarwrap__btn:focus-visible {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
+    outline: 1px solid var(--ink);
+    outline-offset: -1px;
 }
 
 /*

@@ -196,7 +196,7 @@
     flex: none;
     height: 32px;
     padding: 0 12px;
-    border: 0;
+    border: 1px solid var(--ink);
     border-radius: var(--r-secondary);
     background: var(--ink);
     color: #fff;
@@ -295,7 +295,7 @@
 
 .pchip.is-on {
     background: var(--bg-chip-flat);
-    border-color: var(--ink);
+    border-color: var(--bg-chip-flat);
 }
 
 .pchip.is-off {
@@ -309,7 +309,7 @@
     justify-self: start;
     height: var(--h-btn);
     padding: 0 28px;
-    border: 0;
+    border: 1px solid var(--ink);
     border-radius: var(--r-pill);
     background: var(--ink);
     color: #fff;
@@ -319,8 +319,8 @@
 }
 
 .cfilter__done:hover {
-    background: #333;
-    color: #fff;
+    background: var(--bg);
+    color: var(--ink);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -398,10 +398,27 @@
     -webkit-appearance: none;
 }
 
-/* Select giữ viền 1px khi focus; dấu bàn phím nằm ngoài bằng outline 2px. */
+/* ┌─ VIỀN ĐEN CHỈ HIỆN VỚI BÀN PHÍM, KHÔNG HIỆN KHI BẤM CHUỘT ────────────
+   │ (12/09/2026, theo yêu cầu chủ dự án: "bấm vào ô sắp xếp thì có viền chữ
+   │ nhật đen bo quanh, bỏ đi".)
+   │
+   │ Thủ phạm là luật này lúc còn là `:focus` trơn: viền 1px đổi sang --ink
+   │ (#111). Dấu này chỉ hiện cho thao tác bàn phím để không làm nặng
+   │ trạng thái nghỉ của chip sắp xếp.
+   │
+   │ ĐỔI SANG :focus-visible CHỨ KHÔNG XOÁ HẲN, và đây là chỗ quan trọng:
+   │ .catpick__select có `outline: none` ngay trên kia. Xoá nốt luật này là ô
+   │ sắp xếp KHÔNG CÒN DẤU HIỆU TIÊU ĐIỂM NÀO — người dùng bàn phím Tab tới
+   │ đây rồi không biết mình đang đứng ở đâu, mà đây lại là ô đổi cả thứ tự
+   │ danh sách.
+   │
+   │ :focus-visible chia đúng hai đường: bấm chuột thì trình duyệt không coi
+   │ là "cần hiện tiêu điểm" nên viền im — đúng thứ chủ dự án muốn; Tab tới
+   │ thì viền hiện như cũ. Lối này site đã dùng sẵn ở chín chỗ (booking.css,
+   │ checkout.css, product-detail.css…).
+   └──────────────────────────────────────────────────────────────────────── */
 .catpick__select:focus-visible {
-    outline: 2px solid var(--ink);
-    outline-offset: 2px;
+    border-color: var(--ink);
 }
 
 .catpick--select .catpick__caret {
@@ -422,7 +439,7 @@ html.js .catpick__go {
 .catpick__go {
     height: var(--h-chip);
     padding: 0 12px;
-    border: 0;
+    border: 1px solid var(--ink);
     border-radius: var(--r-chip);
     background: var(--ink);
     color: #fff;
@@ -491,12 +508,7 @@ html.js .catpick__go {
     align-items: center;
     gap: 10px;
     padding: 9px 12px;
-    border-bottom: 1px solid var(--line-input);
     font-size: var(--fs-body);
-}
-
-.catpick__opt:last-child {
-    border-bottom: 0;
 }
 
 .catpick__opt:hover {
@@ -571,7 +583,7 @@ html.js .catpick__go {
     padding: 0 28px;
     display: inline-flex;
     align-items: center;
-    border: 0;
+    border: 1px solid var(--ink);
     border-radius: var(--r-pill);
     background: var(--ink);
     color: #fff;
@@ -580,8 +592,8 @@ html.js .catpick__go {
 }
 
 .catempty__btn:hover {
-    background: #333;
-    color: #fff;
+    background: var(--bg);
+    color: var(--ink);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -611,20 +623,20 @@ html.js .catpick__go {
     padding: 0 16px;
     border: 1px solid var(--line-btn);
     border-radius: var(--r-secondary);
-    background: transparent;
+    background: var(--bg);
     color: var(--ink);
     font-size: var(--fs-ui);
 }
 
 .catpager__btn:hover {
-    background: transparent;
+    background: var(--ink);
     border-color: var(--ink);
-    color: var(--ink);
+    color: #fff;
 }
 
 .catpager__btn.is-current {
     background: var(--ink);
-    border: 0;
+    border-color: var(--ink);
     color: #fff;
     cursor: default;
 }

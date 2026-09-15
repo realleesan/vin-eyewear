@@ -88,10 +88,10 @@
 .cform {
     min-width: 0;
     min-height: 600px;
-    border: 0;
+    border: 1px solid var(--c-line);
     border-radius: var(--c-radius-lg);
     background: var(--c-panel);
-    box-shadow: none;
+    box-shadow: var(--c-shadow);
 }
 
 /* Quick support ---------------------------------------------------------- */
@@ -136,7 +136,7 @@
     gap: 7px;
     min-height: 25px;
     padding: 3px 11px;
-    border: 0;
+    border: 1px solid var(--c-success-line);
     border-radius: 0;
     background: var(--c-success-bg);
     color: #047857;
@@ -167,7 +167,7 @@
     min-width: 0;
     min-height: 72px;
     padding: 13px 15px;
-    border: 0;
+    border: 1px solid var(--c-line-soft);
     border-radius: var(--r-secondary);
     background: #fafbfc;
     color: var(--c-ink);
@@ -314,7 +314,8 @@
 .alert {
     margin-top: 18px;
     padding: 11px 13px;
-    border: 0;
+    border: 1px solid var(--c-line);
+    border-left-width: 3px;
     border-radius: 0;
     background: #fafafa;
     font-size: 12px;
@@ -365,8 +366,8 @@
     color: var(--c-ink);
     font-family: inherit;
     font-size: 12px;
-    outline: none;
-    transition: border-color .18s ease;
+    outline: 0;
+    transition: border-color .18s ease, box-shadow .18s ease;
 }
 
 .cfield__input::placeholder {
@@ -380,6 +381,7 @@
 
 .cfield__input:focus {
     border-color: var(--c-ink);
+    box-shadow: 0 0 0 1px var(--c-ink);
 }
 
 .cfield__input:invalid:not(:placeholder-shown),
@@ -405,7 +407,7 @@
     gap: 10px;
     margin-top: 6px;
     padding: 0 24px;
-    border: 0;
+    border: 1px solid #050505;
     border-radius: var(--r-cta);
     background: #050505;
     color: #fff;
@@ -424,7 +426,7 @@
 
 .cform__submit:focus-visible {
     outline: 2px solid var(--c-ink);
-    outline-offset: 2px;
+    outline-offset: 3px;
 }
 
 .cform__submit-icon {
@@ -502,10 +504,10 @@
     gap: 24px;
     margin-top: 24px;
     padding: 24px;
-    border: 0;
+    border: 1px solid var(--c-line);
     border-radius: var(--c-radius-lg);
     background: #fff;
-    box-shadow: none;
+    box-shadow: var(--c-shadow);
 }
 
 .cstores__list {
@@ -517,18 +519,19 @@
 
 .cstore {
     padding: 20px;
-    border: 0;
+    border: 1px solid var(--c-line);
     border-radius: var(--c-radius-md);
     background: #fff;
-    transition: background .18s ease;
+    transition: border-color .18s ease, box-shadow .18s ease;
 }
 
 .cstore:hover {
-    background: var(--bg-hover);
+    border-color: #aeb5bf;
 }
 
 .cstore.is-on {
-    background: var(--bg-hover);
+    border-color: #111;
+    box-shadow: inset 0 0 0 1px #111;
 }
 
 .cstore__select {
@@ -544,7 +547,7 @@
 .cstore__actions a:focus-visible,
 .cmap__link:focus-visible {
     outline: 2px solid var(--c-ink);
-    outline-offset: 2px;
+    outline-offset: 3px;
 }
 
 .cstore__head {
@@ -587,7 +590,7 @@
 .cstore__hours {
     flex: none;
     padding: 4px 10px;
-    border: 0;
+    border: 1px solid var(--c-success-line);
     border-radius: 0;
     background: var(--c-success-bg);
     color: #047857;
@@ -693,7 +696,7 @@
     min-width: 0;
     min-height: 500px;
     overflow: hidden;
-    border: 0;
+    border: 1px solid var(--c-line);
     border-radius: var(--c-radius-md);
     background: #e8e7e3;
 }
@@ -714,7 +717,7 @@
     z-index: 1;
     width: min(320px, calc(100% - 36px));
     padding: 16px;
-    border: 0;
+    border: 1px solid rgba(222, 226, 230, .95);
     border-radius: 0;
     background: rgba(255, 255, 255, .95);
     box-shadow: 0 10px 25px rgba(17, 24, 39, .13);
