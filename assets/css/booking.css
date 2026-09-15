@@ -587,3 +587,60 @@
         font-size: var(--fs-text);
     }
 }
+
+/* Booking follows the same quiet surface system as Contact and the home bands. */
+.page-booking-index,
+.page-booking-index main {
+    background: var(--bg);
+}
+
+.bk__grid {
+    gap: clamp(24px, 2.6vw, 32px);
+}
+
+.bk__steps {
+    gap: 16px;
+}
+
+.bkcard {
+    gap: 16px;
+    padding: clamp(20px, 2.4vw, 28px);
+    border: 1px solid var(--line);
+    border-radius: var(--r-secondary);
+    background: var(--bg);
+}
+
+.bkcard__head {
+    padding-bottom: 13px;
+    border-bottom: 1px solid var(--line);
+}
+
+.bkcard__num {
+    color: var(--ink);
+    font-size: var(--fs-ui);
+}
+
+.bkside__card {
+    border: 1px solid var(--line);
+}
+
+.bkside__title,
+.bksum,
+.bkok {
+    border-color: var(--line);
+}
+
+.bkside__cta {
+    background: var(--ink);
+    color: var(--bg);
+}
+
+.bkside__cta:hover {
+    background: var(--ink-2);
+}
+
+@media (max-width: 700px) {
+    .bkcard {
+        padding: 20px;
+    }
+}
