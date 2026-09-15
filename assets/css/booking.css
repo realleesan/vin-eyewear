@@ -3,7 +3,7 @@
    ============================================================================ */
 
 .bkhead {
-    padding: 52px 24px 40px;
+    padding: 52px var(--edge) 40px;
     text-align: center;
 }
 
@@ -26,9 +26,9 @@
 }
 
 .bk {
-    max-width: 1320px;
+    max-width: none;
     margin: 0 auto;
-    padding: 0 24px 80px;
+    padding: 0 var(--edge) 80px;
 }
 
 .bk__grid {
@@ -557,7 +557,7 @@
 
 @media (max-width: 1023px) {
     .bk {
-        max-width: 860px;
+        max-width: none;
     }
 
     .bk__grid {
@@ -572,7 +572,7 @@
 
 @media (max-width: 700px) {
     .bkhead {
-        padding: 40px 16px 32px;
+        padding: 40px var(--edge) 32px;
     }
 
     .bkhead__title {
@@ -586,7 +586,7 @@
     }
 
     .bk {
-        padding: 0 16px 56px;
+        padding: 0 var(--edge) 56px;
     }
 
     .bk__steps {
