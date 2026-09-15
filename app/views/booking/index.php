@@ -40,26 +40,15 @@
 
 $company = config('company');
 $old     = $old ?? [];
-
-/* Dòng nhắc "Đang đặt lịch tham dự …" cùng ô ẩn event_slug đã bỏ 2026-08-26,
-   theo tính năng sự kiện — xem chú thích trong app/controllers/BookingController.php. */
-
-partial('_layout/page-head', [
-    'head_crumbs' => [['label' => 'Đặt lịch đo mắt']],
-    'head_title'  => 'Đặt lịch đo mắt',
-    'head_lead'   => 'Đo khúc xạ miễn phí với kỹ thuật viên nhiều năm kinh nghiệm — '
-                   . 'kể cả khi bạn chưa mua kính.',
-]);
-
-/** Năm bước của quy trình, đúng chữ trong bản thiết kế. */
-$steps = [
-    'Tiếp nhận & khai thác tiền sử thị lực',
-    'Đo khúc xạ tự động + thử kính chủ quan',
-    'Thử tròng phù hợp trong 10–15 phút',
-    'Tư vấn dáng gọng theo khuôn mặt',
-    'Lắp tròng, căn chỉnh và hướng dẫn bảo quản',
-];
 ?>
+
+<header class="bkhead">
+    <h1 class="bkhead__title">Đặt lịch đo mắt</h1>
+    <p class="bkhead__lead">
+        Đo khúc xạ miễn phí với kỹ thuật viên nhiều năm kinh nghiệm —
+        kể cả khi bạn chưa mua kính.
+    </p>
+</header>
 
 <section class="bk">
 
@@ -96,7 +85,7 @@ $steps = [
                 <!-- ────── 1. CƠ SỞ ────── -->
                 <div class="bkcard">
                     <div class="bkcard__head">
-                        <span class="bkcard__num" aria-hidden="true">1</span>
+                        <span class="bkcard__num" aria-hidden="true">①</span>
                         <h2 class="bkcard__title">Chọn cơ sở</h2>
                     </div>
 
@@ -118,7 +107,7 @@ $steps = [
                 <!-- ────── 2. DỊCH VỤ ────── -->
                 <div class="bkcard">
                     <div class="bkcard__head">
-                        <span class="bkcard__num" aria-hidden="true">2</span>
+                        <span class="bkcard__num" aria-hidden="true">②</span>
                         <h2 class="bkcard__title">Chọn dịch vụ</h2>
                     </div>
 
@@ -137,7 +126,7 @@ $steps = [
                 <!-- ────── 3. NGÀY ────── -->
                 <div class="bkcard">
                     <div class="bkcard__head">
-                        <span class="bkcard__num" aria-hidden="true">3</span>
+                        <span class="bkcard__num" aria-hidden="true">③</span>
                         <h2 class="bkcard__title">Chọn ngày</h2>
                     </div>
 
@@ -176,7 +165,7 @@ $steps = [
                 <!-- ────── 4. THÔNG TIN ────── -->
                 <div class="bkcard">
                     <div class="bkcard__head">
-                        <span class="bkcard__num" aria-hidden="true">4</span>
+                        <span class="bkcard__num" aria-hidden="true">④</span>
                         <h2 class="bkcard__title">Thông tin của bạn</h2>
                     </div>
 
@@ -269,57 +258,8 @@ $steps = [
                     <?php endif; ?>
                 </div>
 
-                <div class="bkflow">
-                    <h2 class="bkflow__title">Quy trình đo mắt</h2>
-
-                    <?php foreach ($steps as $i => $step): ?>
-                        <div class="bkflow__step">
-                            <span class="bkflow__n"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
-                            <span class="bkflow__text"><?= e($step) ?></span>
-                        </div>
-                    <?php endforeach; ?>
-
-                    <div class="bkflow__rule"></div>
-
-                    <p class="bkflow__note">
-                        Toàn bộ quy trình 25–40 phút, <strong>hoàn toàn miễn phí</strong>
-                        kể cả khi bạn chưa mua kính. Cần hỗ trợ?
-                        <a href="<?= e($company['hotline_href']) ?>"><?= e($company['hotline']) ?></a>
-                    </p>
-                </div>
             </aside>
         </form>
 
     <?php endif; ?>
 </section>
-
-<?php
-/*
- * ═════════════════════════════════════════════════════════════════════════════
- * "KIỂM TRA 5 PHÚT" — CHUYỂN VỀ ĐÂY TỪ TRANG CHỦ (09/09/2026)
- *
- * Khối này (tư vấn dáng mặt + bộ chọn tròng) trước nằm giữa trang chủ. Ở đó nó
- * chặn đường tới hàng và làm trang chủ đọc ra như một cổng dịch vụ. Ở đây thì
- * đúng người đúng lúc: ai đã cuộn hết một trang đặt lịch đo khúc xạ chính là
- * người đang cần tư vấn chọn dáng và chọn tròng.
- *
- * ĐẶT SAU </section> của form, không lồng vào trong: nó là một chương riêng
- * của trang, và <section class="qcheck"> tự mang khung + nhịp của mình.
- *
- * BA THỨ PHẢI ĐI CÙNG NÓ, khai trong hai bảng của _layout/master.php:
- *   components/home-sections.css   bộ lớp .qcheck/.qcard/.qface/.qlens/.qmodal
- *   home.js                        IIFE quickCheck() mở hộp thoại và lo hai
- *                                  bộ chọn; nó tìm #quickCheck bằng
- *                                  getElementById nên chạy ở bất kỳ trang nào
- *   (không thứ ba nào nữa — partial tự dựng lấy dữ liệu từ config/lang)
- *
- * ĐÃ ĐỐI CHIẾU VA CHẠM LỚP trước khi nạp home-sections.css vào trang này:
- * file đó khai 155 tên lớp, view này dùng 52, GIAO NHAU BẰNG 0. Bộ lớp .bk*
- * của trang đặt lịch và bộ lớp của trang chủ không đụng nhau chỗ nào.
- *
- * KHÔNG ĐƯỢC BẬT ĐỒNG THỜI Ở TRANG CHỦ: home.js tìm #quickCheck bằng
- * getElementById, mà id thì phải là duy nhất trên một trang.
- * ═════════════════════════════════════════════════════════════════════════════
- */
-partial('_layout/home/quick-check');
-?>

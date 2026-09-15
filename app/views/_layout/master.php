@@ -617,12 +617,6 @@ $bareFoot = $bareFooter ?? '_layout/auth-footer';
      */
     $pageScripts = [
         'home/index'    => 'home.js',
-        /* Trang đặt lịch dùng home.js CHỈ vì khối "Kiểm tra 5 phút" chuyển về
-           đây (xem cuối app/views/booking/index.php). Bốn khối còn lại của file
-           ấy — băng hero, hai băng sản phẩm, băng đánh giá — đều vào bằng một
-           câu document.querySelector và thoát ngay khi không thấy phần tử, nên
-           chúng im lặng ở trang này. */
-        'booking/index' => 'home.js',
         'policy/index'  => 'policy.js',
         'ar/tryon'      => 'ar-tryon.js',
         // Chỉ là tăng cường: đổi ô sắp xếp là gửi form luôn, và lọc danh sách
