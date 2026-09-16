@@ -9,6 +9,7 @@ Task 3: complete (commits ec1249a..360dff1, review clean)
 Task 4: complete (storefront page CSS migration, review clean)
 Task 5: complete (admin foundations migration, review clean)
 Task 6: complete (admin page-specific CSS migration, review clean)
+Task 7: complete (static audit and whole-branch review clean; visual evidence unavailable)
 
 ## Task 3 review package
 
@@ -55,3 +56,16 @@ Task 6: complete (admin page-specific CSS migration, review clean)
   `git diff --check` pass.
 - Reviewer verdict: clean after legacy `--fs-note` references were converted
   to `--fs-body-sm`; no selectors or layout behavior changed.
+
+## Task 7 final audit
+
+- `php tools/verify-typography_self_test.php`,
+  `php tools/verify-typography.php`, and `git diff --check` pass.
+- Whole-branch reviewer verdict: clean after Account nav/button controls were
+  corrected to `--fs-label`. The reviewer verified `--type-scale: 1`, scale
+  coverage for all semantic tokens, and `clamp()` only on title/display.
+- `php tests/contact_view_test.php` could not run because the referenced file
+  is absent from the root workspace. Visual QA could not target this worktree:
+  the available browser surface exposes production rather than the branch.
+  These limitations were explicitly recorded before the user directed merge
+  and push.

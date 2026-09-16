@@ -112,7 +112,7 @@
     border-radius: 0;
     background: transparent;
     color: var(--acct-mute);
-    font-size: var(--fs-body);
+    font-size: var(--fs-label);
     white-space: nowrap;
 }
 
@@ -132,7 +132,7 @@
     border: 0;
     background: none;
     color: var(--acct-ink);
-    font-size: var(--fs-body);
+    font-size: var(--fs-label);
     letter-spacing: .01em;
     text-transform: uppercase;
     cursor: pointer;
@@ -413,7 +413,7 @@
     border-radius: var(--r-secondary);
     background: transparent;
     color: var(--acct-ink);
-    font-size: var(--fs-body);
+    font-size: var(--fs-label);
     letter-spacing: .01em;
     text-align: center;
     text-transform: uppercase;
