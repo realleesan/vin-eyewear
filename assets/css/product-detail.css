@@ -162,12 +162,13 @@
 }
 
 .pdinfo__title {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     line-height: 1.4;
 }
 
 .pdinfo__price {
+    font-size: var(--fs-body);
     display: flex;
     flex-wrap: wrap;
     gap: 0 calc(6px * var(--oa-scale));

@@ -1070,6 +1070,7 @@ select.acct-field__ctl {
    │ trọn chữ bị cắt.
    └──────────────────────────────────────────────────────────────────────── */
 .wl__name {
+    font-size: var(--fs-subtitle);
     display: -webkit-box;
     overflow: hidden;
     overflow-wrap: anywhere;
@@ -1083,6 +1084,10 @@ select.acct-field__ctl {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.wl__price {
+    font-size: var(--fs-body);
 }
 
 /* GIỮ CHỖ KHI TRỐNG — mặt hàng chưa khai màu nào vẫn phải chiếm một dòng,

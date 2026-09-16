@@ -1435,7 +1435,7 @@ html.js .cofallback {
 }
 
 .ocomp__itemname {
-    font-size: var(--fs-body);
+    font-size: var(--fs-subtitle);
 }
 
 .ocomp__itemqty,
@@ -1836,7 +1836,7 @@ html.js .cofallback {
 }
 
 .checkout .coitem__name {
-    font-size: var(--fs-body);
+    font-size: var(--fs-subtitle);
     font-weight: 600;
 }
 

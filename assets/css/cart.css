@@ -129,9 +129,17 @@
     text-decoration: underline;
 }
 
+.citem__name {
+    font-size: var(--fs-subtitle);
+}
+
 .citem__variant,
 .citem__price {
     color: #111;
+}
+
+.citem__price {
+    font-size: var(--fs-body);
 }
 
 /* ── Số lượng ─────────────────────────────────────────────────────────── */
