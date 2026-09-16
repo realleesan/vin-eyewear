@@ -61,7 +61,7 @@
 .apf__tab {
     padding: 9px 13px;
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     white-space: nowrap;
     color: var(--muted);
@@ -184,7 +184,7 @@
     flex: none;
     padding-left: 4px;
     font-family: var(--font-mono);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: var(--muted);
     white-space: nowrap;
 }
@@ -285,14 +285,14 @@
     padding: 5px 6px;
     border-width: 1px;
     border-radius: var(--radius-sm);
-    font-size: 11px;
+    font-size: var(--fs-label);
 }
 
 .apf__vdel {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: var(--danger);
     cursor: pointer;
 }
@@ -346,7 +346,7 @@
     display: flex;
     justify-content: space-between;
     gap: 8px;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
 }
 
 .apf__img-acts label {
@@ -364,7 +364,7 @@
 
 .apf__img-alt {
     width: 100%;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
 }
 
 /* --- Màn hẹp -------------------------------------------------- */
@@ -458,7 +458,7 @@
 
 .apprice__now {
     display: block;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -469,7 +469,7 @@
 .apprice__was {
     display: block;
     margin-top: 1px;
-    font-size: 11.5px;
+    font-size: var(--fs-label);
     color: #a99a88;
     text-decoration: line-through;
     font-variant-numeric: tabular-nums;
@@ -482,7 +482,7 @@
     width: 30px;
     height: 30px;
     border-radius: var(--radius-sm);
-    font-size: 18px;
+    font-size: var(--fs-heading);
     line-height: 1;
 }
 
@@ -507,7 +507,7 @@
 .apf__gen {
     flex: none;
     padding: 0 10px;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
 }
 
 /* ============================================================
@@ -662,7 +662,7 @@
     border-radius: var(--radius-round);
     background: var(--brand);
     color: #fff;
-    font-size: 9.5px;
+    font-size: var(--fs-micro);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;

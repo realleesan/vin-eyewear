@@ -96,9 +96,9 @@ function literalFontSizeErrors(string $css, string $path): array
 {
     $allowed = [
         // Zero removes inline whitespace without rendering text.
-        '/^font-size\s*:\s*0\s*;$/i',
+        '/^font-size\s*:\s*0\s*;?$/i',
         // Zero-pixel declarations serve the same non-text layout purpose.
-        '/^font-size\s*:\s*0px\s*;$/i',
+        '/^font-size\s*:\s*0px\s*;?$/i',
     ];
     $css = preg_replace_callback(
         '/\/\*.*?\*\//s',
@@ -106,7 +106,7 @@ function literalFontSizeErrors(string $css, string $path): array
         $css,
     );
     $errors = [];
-    $declarationPattern = '/font-size\s*:\s*([^;]+);/i';
+    $declarationPattern = '/font-size\s*:\s*([^;}]+)(?=;|})/i';
     preg_match_all($declarationPattern, $css, $matches, PREG_OFFSET_CAPTURE);
 
     foreach ($matches[0] as $index => $declarationMatch) {

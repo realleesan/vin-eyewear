@@ -42,7 +42,10 @@ function assertLiteralSizeLocations(string $name, string $css, array $expectedLi
         $matches,
     );
     $actualLines = array_map('intval', $matches[1]);
-    if ($exitCode === 0 || $actualLines !== $expectedLines) {
+    $expectsFailure = $expectedLines !== [];
+    if (($expectsFailure && $exitCode === 0)
+        || (!$expectsFailure && $exitCode !== 0)
+        || $actualLines !== $expectedLines) {
         fwrite(STDERR, "FAIL: {$name} locations were not reported as expected\n");
         exit(1);
     }

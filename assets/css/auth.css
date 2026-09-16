@@ -135,7 +135,7 @@
    │ xảy ra. Bản thiết kế vẽ nó là chữ nhỏ nhạt, không khung; đúng hơn. */
 .authnote {
     color: var(--ink-3);
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     line-height: var(--lh);
 }
 
@@ -192,7 +192,7 @@
     background: #fff;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     outline: none;
     transition: border-color .18s ease;
 }
@@ -220,12 +220,12 @@
 
 .authfield__err {
     color: var(--sale);
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
 }
 
 .authfield__hint {
     color: var(--ink-3);
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     line-height: var(--lh-tight);
 }
 
@@ -431,7 +431,7 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     font-weight: 600;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -832,7 +832,7 @@
     display: block;
     margin-top: 14px;
     color: var(--ink-3);
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     text-align: center;
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -855,7 +855,7 @@
     align-self: center;
     margin-top: -6px;
     color: var(--ink-2);
-    font-size: var(--fs-text);
+    font-size: var(--fs-body);
     text-decoration: underline;
     text-underline-offset: 3px;
 }

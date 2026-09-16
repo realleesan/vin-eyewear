@@ -73,7 +73,7 @@
     padding: 0 30px 0 15px;
     background-position: right 15px center, right 10px center;
     background-size: 6px 6px, 6px 6px;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
 }
 
 .astatus select.astatus__pick:focus-visible {
@@ -207,7 +207,7 @@
     border-radius: 9px;
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: var(--ink);
 }
 
@@ -236,7 +236,7 @@
     border-radius: var(--a-btn-radius);
     background: var(--brand);
     font-family: var(--font-sans);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     color: var(--on-brand);
     cursor: pointer;
@@ -437,7 +437,7 @@
     border-radius: 5px;
     background: var(--pill-lens-bg);
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 700;
     color: var(--pill-lens-ink);
 }
@@ -463,7 +463,7 @@
     padding: 2px 8px;
     border-radius: var(--radius-round);
     background: var(--pill-lens-bg);
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
     font-weight: 600;
     white-space: nowrap;
     color: var(--pill-lens-ink);
@@ -546,7 +546,7 @@
 }
 
 .aobulk__count {
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     white-space: nowrap;
     color: var(--on-ink);
@@ -652,14 +652,14 @@
     .aodraw { animation: none; }
 }
 
-.aoundo__msg { font-size: var(--fs-note); color: var(--on-ink); }
+.aoundo__msg { font-size: var(--fs-body-sm); color: var(--on-ink); }
 
 .aoundo__go {
     padding: 0;
     border: none;
     background: transparent;
     font-family: var(--font-sans);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 700;
     color: var(--brand-light);
     cursor: pointer;
@@ -773,14 +773,14 @@
 .aodraw__code {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 19px;
+    font-size: var(--fs-heading);
     font-weight: 700;
     color: var(--ink);
 }
 
 .aodraw__when {
     margin: 3px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: #9a8a79;
 }
 
@@ -792,7 +792,7 @@
     padding: 4px 8px;
     border-radius: 8px;
     background: transparent;
-    font-size: 22px;
+    font-size: var(--fs-heading);
     line-height: 1;
     color: #9a8a79;
     text-decoration: none;
@@ -829,9 +829,9 @@ body.admin:has(.aodraw) { overflow: hidden; }
 
 .aodraw__name { margin: 0; font-size: var(--fs-body-sm); font-weight: 600; }
 
-.aodraw__line { margin: 4px 0 0; font-size: var(--fs-note); color: #6b5b4e; }
+.aodraw__line { margin: 4px 0 0; font-size: var(--fs-body-sm); color: #6b5b4e; }
 
-.aodraw__addr { margin: 4px 0 0; font-size: var(--fs-note); line-height: 1.5; color: #6b5b4e; }
+.aodraw__addr { margin: 4px 0 0; font-size: var(--fs-body-sm); line-height: 1.5; color: #6b5b4e; }
 
 .aodraw__meta { margin: 8px 0 0; font-size: var(--fs-caption); color: var(--muted); }
 
@@ -841,7 +841,7 @@ body.admin:has(.aodraw) { overflow: hidden; }
     border: 1px solid var(--line);
     border-radius: var(--radius-sm);
     background: var(--surface-sunken);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: #6b5b4e;
 }
@@ -862,7 +862,7 @@ body.admin:has(.aodraw) { overflow: hidden; }
     justify-content: space-between;
     gap: 10px;
     margin: 0;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
 }
 
@@ -892,7 +892,7 @@ body.admin:has(.aodraw) { overflow: hidden; }
 .aorxtb thead th {
     padding: 7px 11px;
     background: var(--surface);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 700;
     letter-spacing: 0.8px;
     text-align: left;
@@ -946,8 +946,8 @@ body.admin:has(.aodraw) { overflow: hidden; }
 
 .aosum__row + .aosum__row { margin-top: 8px; }
 
-.aosum__row dt { font-size: var(--fs-note); color: #6b5b4e; }
-.aosum__row dd { margin: 0; font-size: var(--fs-note); font-weight: 600; }
+.aosum__row dt { font-size: var(--fs-body-sm); color: #6b5b4e; }
+.aosum__row dd { margin: 0; font-size: var(--fs-body-sm); font-weight: 600; }
 
 .aosum__row--total {
     margin-top: 10px;
@@ -956,7 +956,7 @@ body.admin:has(.aodraw) { overflow: hidden; }
 }
 
 .aosum__row--total dt { font-weight: 600; color: var(--ink); }
-.aosum__row--total dd { font-size: 19px; font-weight: 700; color: var(--ink); }
+.aosum__row--total dd { font-size: var(--fs-heading); font-weight: 700; color: var(--ink); }
 
 /* Cọc đứng sau tổng và lặng hơn: nó không làm đơn rẻ đi, chỉ nói phần nào đã
    trả trước. Xem chú thích trong _drawer.php. */

@@ -174,7 +174,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     padding: 10px 16px;
     background: var(--brand);
     color: var(--on-brand);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     transform: translateY(-200%);
     transition: transform 0.2s;
@@ -229,7 +229,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
    sang phong cách công cụ. Đừng đổi sang sans cho "đồng bộ". */
 .asidebar__logo {
     font-family: var(--font-serif);
-    font-size: 21px;
+    font-size: var(--fs-heading);
     font-weight: 700;
     color: var(--on-ink);
     text-decoration: none;
@@ -243,7 +243,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 .asidebar__sub {
     margin: 4px 0 0;
-    font-size: 10px;
+    font-size: var(--fs-label);
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.22em;
@@ -279,7 +279,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     margin: 0;
     padding: 11px 10px;
     border-radius: var(--radius-sm);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.18em;
@@ -336,7 +336,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     border-radius: var(--radius-round);
     background: var(--a-badge);
     color: #fff;
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 600;
     /* Trả lại giãn cách bình thường: 0.18em của nhãn nhóm là để đọc chữ hoa,
        đeo lên một con số thì nó lệch hẳn sang trái trong viên thuốc. */
@@ -401,7 +401,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     margin-bottom: 2px;
     padding: 8px 10px;
     border-radius: var(--radius-sm);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 500;
     text-decoration: none;
     color: var(--a-sidebar-ink);
@@ -437,7 +437,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     border-radius: var(--radius-round);
     background: var(--a-badge);
     color: #fff;
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
     font-weight: 600;
 }
 
@@ -469,7 +469,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     border-radius: var(--radius-round);
     background: var(--brand);
     color: #fff;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -483,7 +483,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     font-weight: 600;
     color: #f0e6da;
 }
@@ -502,7 +502,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 11px;
+    font-size: var(--fs-label);
     color: var(--a-sidebar-mute);
 }
 
@@ -521,7 +521,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     border-radius: var(--a-btn-radius);
     background: transparent;
     font-family: var(--font-sans);
-    font-size: 11.5px;
+    font-size: var(--fs-label);
     font-weight: 500;
     text-decoration: none;
     color: var(--a-sidebar-ink);
@@ -558,14 +558,14 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 .ahead__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 28px;
+    font-size: var(--fs-title);
     font-weight: 700;
     color: var(--ink);
 }
 
 .ahead__lead {
     margin: 4px 0 0;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: var(--muted);
 }
 
@@ -589,7 +589,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     border: 1px solid var(--line);
     border-radius: var(--radius-round);
     background: var(--surface-raised);
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--muted);
 }
 
@@ -643,7 +643,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     border-radius: var(--radius-round);
     background: var(--ink);
     box-shadow: 0 8px 24px rgba(30, 15, 10, 0.35);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 500;
     text-align: center;
     color: var(--on-ink);
@@ -764,7 +764,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .astat__label {
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -780,7 +780,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 .astat__value {
     margin-top: 8px;
     font-family: var(--font-serif);
-    font-size: 30px;
+    font-size: var(--fs-title);
     font-weight: 700;
     line-height: 1.15;
     letter-spacing: -0.01em;
@@ -790,7 +790,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 .astat__note {
     margin-top: 4px;
-    font-size: 11.5px;
+    font-size: var(--fs-label);
     color: #98897b;
 }
 
@@ -800,7 +800,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
    chưa đẩy" thì không — "Đẩy sang Zalo" mới là thứ trả lời. */
 .astat__cta {
     margin-top: 12px;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 600;
     color: var(--brand);
 }
@@ -819,13 +819,13 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .astat__extra-label {
-    font-size: 11px;
+    font-size: var(--fs-label);
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
 
 .astat__extra-value {
-    font-size: 15px;
+    font-size: var(--fs-body);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
@@ -900,7 +900,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 .afacts__num {
     font-family: var(--font-serif);
-    font-size: 22px;
+    font-size: var(--fs-heading);
     font-weight: 700;
     line-height: 1.1;
     color: var(--ink);
@@ -912,7 +912,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 .afacts__num--warn { color: var(--warn); }
 
 .afacts__label {
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: #5c4f42;
 }
 
@@ -985,13 +985,13 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 
 .apanel__title {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-body);
     font-weight: 700;
     color: var(--ink);
 }
 
 .apanel__more {
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     font-weight: 600;
     text-decoration: none;
     color: var(--brand);
@@ -1021,14 +1021,14 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 }
 
 .apanel__count {
-    font-size: 12px;
+    font-size: var(--fs-caption);
     color: #98897b;
 }
 
 .apanel__empty {
     padding: 36px 16px;
     text-align: center;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: #a2937f;
 }
 
@@ -1105,7 +1105,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
 .alist__code {
     display: block;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 600;
     color: var(--brand);
 }
@@ -1115,7 +1115,7 @@ body.admin ::-webkit-scrollbar-track { background: transparent; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: var(--ink);
 }
 
@@ -1135,7 +1135,7 @@ a.alist__name:hover { color: var(--brand); }
 .alist__num {
     min-width: 76px;
     text-align: right;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
 }
@@ -1176,7 +1176,7 @@ a.alist__name:hover { color: var(--brand); }
 /* Dấu trang trí (ba ngôi sao ở màn Đánh giá). Màu ngà rất nhạt và aria-hidden
    ở chỗ dùng: nó không mang thông tin nào mà tiêu đề bên dưới chưa nói. */
 .aempty__mark {
-    font-size: 30px;
+    font-size: var(--fs-title);
     line-height: 1;
     color: #d9cebc;
 }
@@ -1185,7 +1185,7 @@ a.alist__name:hover { color: var(--brand); }
 
 .aempty__title {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--fs-body);
     font-weight: 700;
     color: var(--ink);
 }
@@ -1229,7 +1229,7 @@ a.alist__name:hover { color: var(--brand); }
        giữa thành một tầng thẻ thứ ba. Để nền ngà lộ qua thì nó đọc ra là mấy
        cái nút thả trên trang, đúng như bản thiết kế. */
     background: transparent;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     font-weight: 600;
     text-decoration: none;
     color: #5c4f42;
@@ -1259,7 +1259,7 @@ a.alist__name:hover { color: var(--brand); }
     padding: 1px 7px;
     border-radius: var(--radius-round);
     background: #ece2d0;
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: #7a6a5f;
@@ -1319,7 +1319,7 @@ a.alist__name:hover { color: var(--brand); }
     border-collapse: collapse;
     /* 13px thay vì 14px: thêm được khoảng một dòng rưỡi mỗi màn hình.
        Vẫn trên ngưỡng đọc thoải mái cho bảng dữ liệu. */
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
 }
 
 .atable--full { min-width: 860px; }
@@ -1395,7 +1395,7 @@ a.alist__name:hover { color: var(--brand); }
     padding-block: 10px;
     border-bottom: 1px solid var(--a-panel-line);
     background: var(--surface-sunken);
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -1409,7 +1409,7 @@ a.alist__name:hover { color: var(--brand); }
 
 .atable code {
     font-family: var(--font-mono);
-    font-size: 11.5px;
+    font-size: var(--fs-label);
     font-weight: 600;
     color: var(--brand);
 }
@@ -1419,7 +1419,7 @@ a.alist__name:hover { color: var(--brand); }
 .atable__sub {
     display: block;
     margin-top: 2px;
-    font-size: 11.5px;
+    font-size: var(--fs-label);
     color: var(--muted);
 }
 
@@ -1477,7 +1477,7 @@ a.alist__name:hover { color: var(--brand); }
     padding: 3px 9px;
     border-radius: var(--radius-round);
     background: var(--pill-neutral-bg);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 600;
     white-space: nowrap;
     color: var(--pill-neutral-ink);
@@ -1502,7 +1502,7 @@ a.alist__name:hover { color: var(--brand); }
     padding: 3px 9px;
     background: #f8efd9;
     color: #8a6a20;
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
 }
 
 /* Nhãn ĐÁNH DẤU CHỦ SỞ HỮU ("Bạn" ở bảng tài khoản nội bộ) — bo 5px chứ không
@@ -1515,7 +1515,7 @@ a.alist__name:hover { color: var(--brand); }
     padding: 2px 7px;
     border-radius: 5px;
     background: #f0ebe2;
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
     font-weight: 600;
     white-space: nowrap;
     color: #6f6355;
@@ -1555,7 +1555,7 @@ a.alist__name:hover { color: var(--brand); }
 }
 
 .amoney__total {
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 700;
     line-height: 20px;
 }
@@ -1731,7 +1731,7 @@ a.alist__name:hover { color: var(--brand); }
     background: var(--brand);
     box-shadow: 0 2px 8px rgba(143, 43, 60, 0.28);
     font-family: var(--font-sans);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     color: var(--on-brand);
     cursor: pointer;
@@ -1918,7 +1918,7 @@ a.alist__name:hover { color: var(--brand); }
     gap: 8px;
     flex-wrap: wrap;
     margin: 0 0 16px;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: var(--muted);
 }
 
@@ -1995,7 +1995,7 @@ a.alist__name:hover { color: var(--brand); }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     text-decoration: none;
     color: var(--ink);
@@ -2013,7 +2013,7 @@ a.alist__name:hover { color: var(--brand); }
     text-overflow: ellipsis;
     white-space: nowrap;
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
     font-weight: 600;
     color: var(--brand);
 }
@@ -2073,7 +2073,7 @@ a.alist__name:hover { color: var(--brand); }
     height: 36px;
     border-radius: var(--radius-round);
     background: #ece2d0;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 700;
     text-transform: uppercase;
     color: #7a6a5f;
@@ -2095,7 +2095,7 @@ a.alist__name:hover { color: var(--brand); }
     padding: 3px 10px;
     border-radius: var(--radius-round);
     background: var(--pill-blue-bg);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 600;
     white-space: nowrap;
     color: var(--pill-blue-ink);
@@ -2104,7 +2104,7 @@ a.alist__name:hover { color: var(--brand); }
 .anrole--admin { background: var(--pill-ok-bg); color: var(--pill-ok-ink); }
 
 .anname {
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
 }
 
@@ -2113,7 +2113,7 @@ a.alist__name:hover { color: var(--brand); }
 .annote {
     max-width: 760px;
     margin: 14px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     line-height: 1.6;
     color: #98897b;
 }
@@ -2135,7 +2135,7 @@ a.alist__name:hover { color: var(--brand); }
 
 .arvrep__label {
     margin: 0;
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -2144,7 +2144,7 @@ a.alist__name:hover { color: var(--brand); }
 
 .arvrep__text {
     margin: 4px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     line-height: 1.55;
     color: #5c4f42;
     white-space: pre-wrap;
@@ -2157,7 +2157,7 @@ a.alist__name:hover { color: var(--brand); }
     padding: 12px 14px;
     border-radius: 10px;
     background: #faf5ea;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     line-height: 1.55;
     color: #5c4f42;
 }
@@ -2190,18 +2190,18 @@ a.arv__btn {
 
 .alcdet__row dt {
     margin-bottom: 4px;
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
     font-weight: 700;
     letter-spacing: 0.09em;
     text-transform: uppercase;
     color: #7a6a5f;
 }
 
-.alcdet__row dd { margin: 0; font-size: 13.5px; font-weight: 600; }
+.alcdet__row dd { margin: 0; font-size: var(--fs-body-sm); font-weight: 600; }
 
 .alcdet__label {
     margin: 0 0 6px;
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
     font-weight: 700;
     letter-spacing: 0.09em;
     text-transform: uppercase;
@@ -2215,7 +2215,7 @@ a.arv__btn {
     padding: 14px 16px;
     border-radius: 10px;
     background: #faf5ea;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: var(--ink);
     white-space: pre-wrap;
@@ -2226,7 +2226,7 @@ a.arv__btn {
     align-items: center;
     gap: 8px;
     margin: 16px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: #5c4f42;
 }
 
@@ -2257,14 +2257,14 @@ a.arv__btn {
 .aqtable th:nth-child(4), .aqtable td:nth-child(4) { width: 130px; }
 .aqtable th:nth-child(5), .aqtable td:nth-child(5) { width: 200px; text-align: right; }
 
-.aqwhen { font-size: 12.5px; font-weight: 600; }
+.aqwhen { font-size: var(--fs-caption); font-weight: 600; }
 
 .aqname {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
 }
 
@@ -2341,19 +2341,19 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
    phải một nút hay một trạng thái của cửa hàng. Giãn chữ 2px để năm ký tự
    đếm được bằng mắt mà không phải nhìn kỹ. */
 .arv__stars {
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     letter-spacing: 2px;
     color: #c9a227;
     white-space: nowrap;
 }
 
-.arv__who { font-size: var(--fs-note); font-weight: 600; }
+.arv__who { font-size: var(--fs-body-sm); font-weight: 600; }
 .arv__when { font-size: var(--fs-caption); color: #9a8a79; }
 
 .arv__product {
     display: inline-block;
     margin-top: 6px;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     font-weight: 600;
     text-decoration: none;
 }
@@ -2362,7 +2362,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
    DUY NHẤT trong cả khu này mà người ta đọc từ đầu đến cuối, không phải liếc. */
 .arv__text {
     margin: 8px 0 0;
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     line-height: 1.6;
     color: var(--ink);
     white-space: pre-wrap;
@@ -2460,7 +2460,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
    to nhỏ ("VIN10" so với "VINIO"), thứ có thật khi đọc mã qua điện thoại. */
 .avc__code {
     font-family: var(--font-mono);
-    font-size: 14px;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
     letter-spacing: 0.04em;
     color: var(--brand);
@@ -2472,14 +2472,14 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
     padding: 2px 8px;
     border-radius: 6px;
     background: var(--pill-wait-bg);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 700;
     color: var(--pill-wait-ink);
 }
 
 .avc__title {
     margin: 6px 0 0;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     color: var(--ink);
 }
@@ -2503,7 +2503,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
     color: #5c4f42;
 }
 
-.avc__stats strong { font-size: var(--fs-note); }
+.avc__stats strong { font-size: var(--fs-body-sm); }
 
 /* Dồn TRÁI (ghi đè .arow-actions) — cùng lý do với .acs__acts ở thẻ cơ sở. */
 .avc__card .avc__acts {
@@ -2550,7 +2550,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
     border-radius: 6px;
     background: #f7ecec;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-label);
     font-weight: 700;
     color: var(--brand);
 }
@@ -2561,7 +2561,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
 .acs__name {
     margin: 8px 0 0;
     font-family: var(--font-serif);
-    font-size: 18px;
+    font-size: var(--fs-heading);
     font-weight: 700;
     color: var(--ink);
 }
@@ -2571,7 +2571,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
     flex-direction: column;
     gap: 8px;
     margin: 12px 0 0;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: #5c4f42;
 }
 
@@ -2588,7 +2588,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
     flex-shrink: 0;
     width: 72px;
     padding-top: 2px;
-    font-size: 10.5px;
+    font-size: var(--fs-micro);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -2601,7 +2601,7 @@ a.aqgo:hover { border-color: var(--brand-strong); background: var(--brand-strong
 
 /* Có bản đồ thì xanh và đậm, chưa có thì mờ — một trạng thái nhị phân đọc
    được bằng liếc mắt, không phải một câu phải đọc hết. */
-.acs__map { font-size: 12.5px; color: #a99a88; }
+.acs__map { font-size: var(--fs-caption); color: #a99a88; }
 .acs__map.is-on { font-weight: 600; color: var(--success); }
 
 /* Cụm nút tách bằng một đường kẻ: nó là phần THAO TÁC, khác loài với bốn dòng
@@ -2743,14 +2743,14 @@ body.admin:has(.amodal) { overflow: hidden; }
 .amodal__title {
     margin: 0;
     font-family: var(--font-serif);
-    font-size: 19px;
+    font-size: var(--fs-heading);
     font-weight: 700;
     color: var(--ink);
 }
 
 .amodal__sub {
     margin: 3px 0 0;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: #9a8a79;
 }
 
@@ -2761,7 +2761,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     border-radius: 8px;
     background: transparent;
     font-family: var(--font-sans);
-    font-size: 22px;
+    font-size: var(--fs-heading);
     line-height: 1;
     text-decoration: none;
     color: #9a8a79;
@@ -2843,7 +2843,7 @@ body.admin:has(.amodal) { overflow: hidden; }
 .amodal__note {
     flex: 1;
     margin: 0;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     color: #98897b;
 }
 
@@ -2884,7 +2884,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     border-radius: var(--a-btn-radius);
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     line-height: 1;
     color: #5c4f42;
     cursor: pointer;
@@ -2946,7 +2946,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     padding: 3px 10px;
     border-radius: var(--radius-round);
     background: var(--pill-ok-bg);
-    font-size: 11px;
+    font-size: var(--fs-label);
     color: var(--pill-ok-ink);
 }
 
@@ -3076,7 +3076,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
 }
 
@@ -3104,7 +3104,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: #5c4f42;
 }
 
@@ -3141,7 +3141,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
 }
 
@@ -3175,7 +3175,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     border-radius: 9px;
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: #5c4f42;
     cursor: pointer;
 }
@@ -3219,7 +3219,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     font-weight: 600;
     text-decoration: none;
 }
@@ -3259,7 +3259,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     border: 0;
     background: transparent;
     font-family: var(--font-sans);
-    font-size: 16px;
+    font-size: var(--fs-subtitle);
     line-height: 1;
     color: var(--muted);
     cursor: pointer;
@@ -3280,7 +3280,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     border-radius: 0;
     background: transparent;
     font-family: var(--font-sans);
-    font-size: 13.5px;
+    font-size: var(--fs-body-sm);
     font-weight: 700;
     text-align: center;
     color: var(--ink);
@@ -3377,7 +3377,7 @@ body.admin:has(.amodal) { overflow: hidden; }
     border-radius: 4px;
     background: #f1e8d7;
     font-family: var(--font-mono);
-    font-size: 0.92em;
+    font-size: var(--fs-body-sm);
     color: inherit;
 }
 
@@ -3450,7 +3450,7 @@ body.admin:has(.amodal) { overflow: hidden; }
 .aprice__hint {
     display: block;
     margin-top: 4px;
-    font-size: 11px;
+    font-size: var(--fs-label);
     text-align: right;
     color: #a99a88;
 }
@@ -3677,7 +3677,7 @@ a.astatus__save { text-decoration: none; }
     border-radius: 9px;
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: var(--ink);
 }
 
@@ -3788,7 +3788,7 @@ a.astatus__save { text-decoration: none; }
 .apf .field label {
     display: block;
     margin-bottom: 6px;
-    font-size: 10.5px;
+    font-size: var(--fs-label);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -3843,7 +3843,7 @@ a.astatus__save { text-decoration: none; }
     border-radius: var(--radius-sm);
     background: var(--surface-raised);
     font-family: var(--font-sans);
-    font-size: var(--fs-note);
+    font-size: var(--fs-body-sm);
     color: var(--ink);
 }
 
@@ -3941,7 +3941,7 @@ a.astatus__save { text-decoration: none; }
 
 .field__hint {
     margin-top: 4px;
-    font-size: 11px;
+    font-size: var(--fs-label);
     color: #a2937f;
 }
 
@@ -3993,7 +3993,7 @@ a.astatus__save { text-decoration: none; }
    khai. Đó là thông tin người nhập liệu không đoán được từ tên ô, và là
    thứ quyết định họ có nên bỏ công điền hay không. */
 .aform__sect-note {
-    font-size: 11.5px;
+    font-size: var(--fs-label);
     font-weight: 400;
     text-transform: none;
     letter-spacing: normal;
@@ -4055,7 +4055,7 @@ a.astatus__save { text-decoration: none; }
 .atable__rx {
     display: block;
     font-family: var(--font-mono, monospace);
-    font-size: 11.5px;
+    font-size: var(--fs-label);
     line-height: 1.5;
     color: var(--brand, #8a2432);
 }
@@ -4209,7 +4209,7 @@ a.astatus__save { text-decoration: none; }
        tuỳ tấm — để trong suốt thì có tấm nhìn rõ, có tấm mất hút. */
     background: rgba(40, 33, 28, 0.72);
     color: #fff;
-    font-size: 16px;
+    font-size: var(--fs-subtitle);
     line-height: 1;
     cursor: pointer;
     transition: background-color 0.15s, transform 0.15s;
@@ -4336,7 +4336,7 @@ a.astatus__save { text-decoration: none; }
     border-radius: var(--radius-round);
     background: var(--surface-sunken);
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: var(--fs-body);
     line-height: 1;
     color: var(--muted);
     cursor: pointer;
@@ -4368,7 +4368,7 @@ a.astatus__save { text-decoration: none; }
     border-radius: 10px;
     background: #fcfaf5;
     font-family: var(--font-sans);
-    font-size: 12.5px;
+    font-size: var(--fs-caption);
     color: #6f6355;
     cursor: pointer;
 }
@@ -4419,7 +4419,7 @@ a.astatus__save { text-decoration: none; }
 /* Con số ngày/giờ trong dải .astats — nhỏ hơn hai ô tiền và số đơn bên cạnh.
    Một chuỗi "26/08/2026" đặt ở cỡ chữ của "12.500.000 đ" sẽ tràn ô trên màn
    hẹp, mà nó cũng không phải con số người ta liếc tìm trước. */
-.astat__value--nho { font-size: 20px; }
+.astat__value--nho { font-size: var(--fs-heading); }
 
 /* Hai cột nội dung. Sập thành một cột ở màn hẹp — bảng quản trị vẫn được mở
    trên máy tính bảng ở quầy. */
@@ -4455,7 +4455,7 @@ a.astatus__save { text-decoration: none; }
     color: var(--muted);
 }
 
-.acus__facts dd { margin: 0; font-size: 14px; }
+.acus__facts dd { margin: 0; font-size: var(--fs-body-sm); }
 
 @media (max-width: 520px) {
     /* Dưới ngưỡng này hai cột 150px + phần còn lại làm giá trị bị bóp thành
@@ -4541,7 +4541,7 @@ a.astatus__save { text-decoration: none; }
 
 .acus__addr-body { min-width: 0; }
 .acus__addr-name { margin: 0 0 4px; font-weight: 600; }
-.acus__addr-line { margin: 0; font-size: 13px; color: var(--muted); }
+.acus__addr-line { margin: 0; font-size: var(--fs-body-sm); color: var(--muted); }
 
 
 /* ── Bảng đơn thuốc kính ──────────────────────────────────────────────── */
@@ -4555,7 +4555,7 @@ a.astatus__save { text-decoration: none; }
    để hai hàng đọc ra là "nhóm rồi tới cột con" chứ không phải hai nhóm. */
 .acus__rx-sub th {
     padding-top: 0;
-    font-size: 10px;
+    font-size: var(--fs-micro);
     font-weight: 500;
     color: var(--muted);
 }
@@ -4627,11 +4627,11 @@ a.astatus__save { text-decoration: none; }
     gap: 6px;
     align-items: center;
     margin: 0 0 4px;
-    font-size: 12px;
+    font-size: var(--fs-caption);
     color: var(--muted);
 }
 
-.acus__feed-body { margin: 0; font-size: 14px; line-height: 1.6; }
+.acus__feed-body { margin: 0; font-size: var(--fs-body-sm); line-height: 1.6; }
 
 /* Ô lý do xoá đứng cùng dòng với nút. Ngắn — nó không bắt buộc, nên không nên
    chiếm chỗ ngang với ô lý do khoá phía trên (ô đó thì bắt buộc). */
@@ -4649,7 +4649,7 @@ a.astatus__save { text-decoration: none; }
     border-radius: var(--a-btn-radius);
     background: var(--surface-raised);
     font: inherit;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     color: var(--ink);
 }
 
@@ -4726,7 +4726,7 @@ a.astatus__save { text-decoration: none; }
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     color: var(--ink-2, #41535f);
     cursor: pointer;
     line-height: 1.4;
