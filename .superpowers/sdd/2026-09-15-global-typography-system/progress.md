@@ -7,6 +7,7 @@ Task 1: complete (commit 6d54119)
 Task 2: complete (commits bf4643e..ec1249a)
 Task 3: complete (commits ec1249a..360dff1, review clean)
 Task 4: complete (storefront page CSS migration, review clean)
+Task 5: complete (admin foundations migration, review clean)
 
 ## Task 3 review package
 
@@ -33,3 +34,13 @@ Task 4: complete (storefront page CSS migration, review clean)
   deferred Task 5–6 admin CSS, with no Task 4 target errors.
 - Reviewer verdict: clean after removal of the redundant Contact media query
   that contained only font-size overrides.
+
+## Task 5 implementation report and review
+
+- Removed the local admin typography scale from `layout.css` and migrated
+  `layout.css`, `admin.css`, and `admin-login.css` to canonical semantic
+  tokens, including all former decimal pixel values.
+- Focused guardrail now reports only the three Task 6 page-specific admin
+  files; checker self-test and `git diff --check` pass.
+- Reviewer verdict: clean after labels were corrected to `--fs-label` and the
+  redundant title-only mobile override was removed.
