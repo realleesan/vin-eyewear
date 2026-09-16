@@ -8,6 +8,7 @@ Task 2: complete (commits bf4643e..ec1249a)
 Task 3: complete (commits ec1249a..360dff1, review clean)
 Task 4: complete (storefront page CSS migration, review clean)
 Task 5: complete (admin foundations migration, review clean)
+Task 6: complete (admin page-specific CSS migration, review clean)
 
 ## Task 3 review package
 
@@ -44,3 +45,13 @@ Task 5: complete (admin foundations migration, review clean)
   files; checker self-test and `git diff --check` pass.
 - Reviewer verdict: clean after labels were corrected to `--fs-label` and the
   redundant title-only mobile override was removed.
+
+## Task 6 implementation report and review
+
+- Migrated `admin-dashboard.css`, `admin-orders.css`, and
+  `admin-products.css` from literal sizes and legacy aliases to canonical
+  semantic typography tokens.
+- Focused verification: `php tools/verify-typography.php` and
+  `git diff --check` pass.
+- Reviewer verdict: clean after legacy `--fs-note` references were converted
+  to `--fs-body-sm`; no selectors or layout behavior changed.
