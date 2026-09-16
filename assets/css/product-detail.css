@@ -42,7 +42,7 @@
 
 .pd {
     color: var(--ink);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     line-height: 1.4;
     letter-spacing: .01em;
 }
@@ -74,7 +74,7 @@
 }
 
 .pdsec__title {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -162,7 +162,7 @@
 }
 
 .pdinfo__title {
-    font-size: var(--fs-sub);
+    font-size: var(--fs-caption);
     font-weight: 400;
     line-height: 1.4;
 }
@@ -426,7 +426,7 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 .pdwait__go {
@@ -480,7 +480,7 @@
 
 .pdacc__ico {
     flex: none;
-    font-size: calc(14px * var(--oa-scale));
+    font-size: var(--fs-body-sm);
     font-weight: 300;
     line-height: 1;
 }
@@ -559,7 +559,7 @@
 }
 
 .pdrv__num {
-    font-size: var(--fs-mark-lg);
+    font-size: var(--fs-heading);
 }
 
 .pdrv__stars {
@@ -620,7 +620,7 @@
     flex-direction: row-reverse;
     justify-content: flex-end;
     gap: calc(2px * var(--oa-scale));
-    font-size: var(--fs-mark);
+    font-size: var(--fs-heading);
     line-height: 1;
 }
 
@@ -664,7 +664,7 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     line-height: 1.5;
     resize: vertical;
     outline: none;

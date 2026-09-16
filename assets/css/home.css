@@ -348,7 +348,7 @@ html:not(.js) .vhero__bars {
 
 .hrev__stars {
     color: var(--ink);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     letter-spacing: .12em;
 }
 

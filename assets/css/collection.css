@@ -176,7 +176,7 @@
     border-radius: var(--r-chip);
     background: var(--bg);
     color: var(--ink);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     white-space: nowrap;
     transition: background .18s ease, border-color .18s ease;
 }
@@ -259,7 +259,7 @@
 }
 
 .cdet__name {
-    font-size: var(--fs-hero);
+    font-size: var(--fs-display);
     font-weight: 500;
     letter-spacing: var(--ls-tight);
     text-transform: uppercase;
@@ -423,7 +423,7 @@
 }
 
 .cdet__aud-value {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 .cdet__aud-note {
@@ -536,7 +536,7 @@
 }
 
 .cdet__size .num {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     font-variant-numeric: tabular-nums;
 }
 
@@ -561,7 +561,7 @@
 }
 
 .cdet__face-name {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 .cdet__face-models,
@@ -669,7 +669,7 @@
 .cdet__q-head::after {
     content: "+";
     flex: none;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1;
 }
 
@@ -729,7 +729,7 @@
     border-radius: var(--r-secondary);
     background: var(--bg);
     color: var(--ink);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     white-space: nowrap;
     transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
@@ -802,7 +802,7 @@
 
 .cdet__oname {
     padding: 12px 14px 4px;
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 .cdet__otag {
@@ -882,7 +882,7 @@
     background: none;
     padding: 0;
     color: var(--ink);
-    font-size: 16px;
+    font-size: var(--fs-subtitle);
     line-height: 1;
     cursor: pointer;
 }
@@ -962,7 +962,7 @@
     border: 1px solid var(--line-chip);
     border-radius: var(--r-chip);
     background: var(--bg);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 .cdraw__foot {

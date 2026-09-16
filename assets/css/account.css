@@ -47,7 +47,7 @@
 
 .acct {
     color: var(--acct-ink);
-    font-size: 15px;
+    font-size: var(--fs-body);
     line-height: 1.3;
 }
 
@@ -112,7 +112,7 @@
     border-radius: 0;
     background: transparent;
     color: var(--acct-mute);
-    font-size: 14px;
+    font-size: var(--fs-body);
     white-space: nowrap;
 }
 
@@ -132,7 +132,7 @@
     border: 0;
     background: none;
     color: var(--acct-ink);
-    font-size: 14px;
+    font-size: var(--fs-body);
     letter-spacing: .01em;
     text-transform: uppercase;
     cursor: pointer;
@@ -164,7 +164,7 @@
 .acct-title {
     margin: 0;
     color: var(--acct-ink);
-    font-size: 20px;
+    font-size: var(--fs-heading);
     font-weight: 400;
     letter-spacing: .01em;
     line-height: 1.3;
@@ -176,7 +176,7 @@
     position: relative;
     top: -2px;
     margin-left: 1px;
-    font-size: 11px;
+    font-size: var(--fs-label);
     vertical-align: top;
 }
 
@@ -241,7 +241,7 @@
     border: 1px solid var(--acct-line);
     border-radius: 0;
     background: #fff;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.45;
 }
 
@@ -280,7 +280,7 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 16px;
-    font-size: 14px;
+    font-size: var(--fs-body);
     letter-spacing: .01em;
 }
 
@@ -288,7 +288,7 @@
 .acct-label {
     margin: 0;
     color: var(--acct-ink);
-    font-size: 14px;
+    font-size: var(--fs-body);
     font-weight: 400;
     letter-spacing: .01em;
     line-height: 1.3;
@@ -301,7 +301,7 @@
 
 .acct-text {
     margin: 34px 0 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.3;
     text-wrap: pretty;
 }
@@ -310,7 +310,7 @@
 .acct-note {
     margin: 0;
     color: var(--acct-mute);
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     line-height: 1.4;
     text-wrap: pretty;
 }
@@ -325,7 +325,7 @@
    rộng, như một ô trống đang chờ nội dung. */
 .acct-blank {
     margin: 90px 0 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
 }
 
 .acct-sec--first .acct-blank {
@@ -337,19 +337,19 @@
     display: flex;
     flex-direction: column;
     margin-top: 34px;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.45;
     overflow-wrap: anywhere;
 }
 
 .acct-brief__lead {
-    font-size: 15px;
+    font-size: var(--fs-body);
 }
 
 /* Ba dòng chữ lớn "họ tên · email · số điện thoại" */
 .acct-me {
     margin-top: 34px;
-    font-size: 20px;
+    font-size: var(--fs-heading);
     line-height: 1.45;
     letter-spacing: -.005em;
     overflow-wrap: anywhere;
@@ -368,7 +368,7 @@
 .acct .acct-link {
     display: inline-block;
     margin-top: 24px;
-    font-size: 14px;
+    font-size: var(--fs-body);
     letter-spacing: .01em;
     text-decoration: underline;
     text-transform: uppercase;
@@ -385,7 +385,7 @@
 
 .acct-empty__text {
     margin: 385px 0 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
     text-wrap: pretty;
 }
 
@@ -413,7 +413,7 @@
     border-radius: var(--r-secondary);
     background: transparent;
     color: var(--acct-ink);
-    font-size: 14px;
+    font-size: var(--fs-body);
     letter-spacing: .01em;
     text-align: center;
     text-transform: uppercase;
@@ -507,7 +507,7 @@
     border-radius: 0;
     background: #fff;
     color: var(--acct-ink);
-    font-size: 14px;
+    font-size: var(--fs-body);
     outline: none;
 }
 
@@ -553,7 +553,7 @@ select.acct-input {
 .acct-field__label,
 .acct-field__cap {
     color: var(--acct-mute);
-    font-size: 12px;
+    font-size: var(--fs-caption);
 }
 
 /* Bản vẽ viết "First Name*" liền, oa.css chèn " *" có dấu cách. */
@@ -568,7 +568,7 @@ select.acct-input {
     border: 0;
     background: transparent;
     color: var(--acct-ink);
-    font-size: 14px;
+    font-size: var(--fs-body);
     outline: none;
 }
 
@@ -609,13 +609,13 @@ select.acct-field__ctl {
 
 .acct-field__value {
     color: var(--acct-mute);
-    font-size: 14px;
+    font-size: var(--fs-body);
     overflow-wrap: anywhere;
 }
 
 .acct-field__act {
     flex-shrink: 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
     letter-spacing: .01em;
     text-transform: uppercase;
 }
@@ -624,7 +624,7 @@ select.acct-field__ctl {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 14px;
+    font-size: var(--fs-body);
     cursor: pointer;
 }
 
@@ -639,7 +639,7 @@ select.acct-field__ctl {
 /* Ô tick trong hộp thoại xoá tài khoản */
 .acct-check--small {
     align-items: flex-start;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     line-height: 1.4;
 }
 
@@ -652,7 +652,7 @@ select.acct-field__ctl {
 .acct-req {
     margin: 120px 0 0;
     color: var(--acct-mute);
-    font-size: 12px;
+    font-size: var(--fs-caption);
     text-align: right;
 }
 
@@ -705,7 +705,7 @@ select.acct-field__ctl {
     flex-direction: column;
     gap: 6px;
     min-width: 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
@@ -718,7 +718,7 @@ select.acct-field__ctl {
 }
 
 .acct-card__lead {
-    font-size: 15px;
+    font-size: var(--fs-body);
 }
 
 .acct-card__acts {
@@ -728,7 +728,7 @@ select.acct-field__ctl {
     align-items: flex-end;
     gap: 12px;
     max-width: 45%;
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     letter-spacing: .01em;
 }
 
@@ -738,7 +738,7 @@ select.acct-field__ctl {
     border: 0;
     background: none;
     color: var(--acct-ink);
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     letter-spacing: .01em;
     line-height: 1.3;
     text-align: right;
@@ -759,7 +759,7 @@ select.acct-field__ctl {
     padding: 3px 8px;
     border-radius: 0;
     background: var(--acct-chip);
-    font-size: 11px;
+    font-size: var(--fs-label);
     letter-spacing: .04em;
     line-height: 1.3;
     text-transform: uppercase;
@@ -775,7 +775,7 @@ select.acct-field__ctl {
     gap: 14px;
     padding-top: 20px;
     border-top: 1px solid var(--acct-rule);
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.4;
 }
 
@@ -794,7 +794,7 @@ select.acct-field__ctl {
 .acct-cap {
     margin: 0 0 2px;
     color: var(--acct-mute);
-    font-size: 12px;
+    font-size: var(--fs-caption);
     font-weight: 400;
     line-height: 1.3;
 }
@@ -812,7 +812,7 @@ select.acct-field__ctl {
 .acct-sum__sub {
     display: block;
     color: var(--acct-mute);
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
 }
 
 .acct .acct-sum a {
@@ -823,7 +823,7 @@ select.acct-field__ctl {
 .acct-sum--total {
     padding-top: 8px;
     border-top: 1px solid var(--acct-rule);
-    font-size: 15px;
+    font-size: var(--fs-body);
 }
 
 /* Khung chuyển khoản: viền đen như địa chỉ mặc định — thứ khách phải làm */
@@ -837,7 +837,7 @@ select.acct-field__ctl {
 }
 
 .acct-pay__num {
-    font-size: 20px;
+    font-size: var(--fs-heading);
     letter-spacing: -.005em;
     white-space: nowrap;
 }
@@ -906,7 +906,7 @@ select.acct-field__ctl {
 
 .acct-modal__title {
     margin: 0;
-    font-size: 18px;
+    font-size: var(--fs-subtitle);
     font-weight: 400;
     letter-spacing: .01em;
     line-height: 1.3;
@@ -916,7 +916,7 @@ select.acct-field__ctl {
 
 .acct-modal__text {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1.5;
     text-align: center;
     text-wrap: pretty;
@@ -925,7 +925,7 @@ select.acct-field__ctl {
 .acct-modal__err {
     margin: 0;
     color: var(--sale);
-    font-size: 13px;
+    font-size: var(--fs-body-sm);
     line-height: 1.45;
     text-align: center;
 }
@@ -968,7 +968,7 @@ select.acct-field__ctl {
    tab. Xem chú thích tại chỗ trong da-luu.php. */
 .wl__title {
     margin: 26px 0 -20px;
-    font-size: var(--fs-h);
+    font-size: var(--fs-heading);
     font-weight: 500;
     letter-spacing: .02em;
     text-align: center;

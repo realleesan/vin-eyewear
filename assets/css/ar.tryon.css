@@ -321,7 +321,7 @@
 }
 
 .arswatch__label {
-    font-size: var(--fs-nano);
+    font-size: var(--fs-micro);
     color: var(--ink-3);
 }
 
@@ -343,7 +343,7 @@
     border-radius: var(--r-chip);
     background: var(--bg);
     color: var(--ink);
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
     white-space: nowrap;
     cursor: pointer;
     transition: background .18s ease, border-color .18s ease;
@@ -449,7 +449,7 @@
 }
 
 .aradvice__shape {
-    font-size: var(--fs-ui);
+    font-size: var(--fs-label);
 }
 
 .aradvice__text {

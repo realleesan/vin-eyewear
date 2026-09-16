@@ -238,7 +238,7 @@
 .policy-qa__q::after {
     content: "+";
     flex: none;
-    font-size: 14px;
+    font-size: var(--fs-body);
     line-height: 1;
 }
 
@@ -248,7 +248,7 @@
 
 /* CÂU HỎI ĐANG MỞ TO LÊN — xem điểm 2 ở khối chú thích đầu file */
 .policy-qa__item[open] > .policy-qa__q {
-    font-size: var(--fs-h);
+    font-size: var(--fs-heading);
     letter-spacing: var(--ls-tight);
     text-transform: none;
     padding: 14px 14px 12px;
