@@ -12,9 +12,11 @@
     /* Email OTP token */
     --fs-otp: 34px;
 
-    /* Product card price token: 1px smaller than header nav menu (--fs-sm: 14px) */
+    /* Product card tokens: 1px smaller than header nav menu (--fs-sm: 14px) */
     --fs-card-price: calc(var(--fs-sm) - 1px);
     --fs-price-card: var(--fs-card-price);
+    --fs-card-text: var(--fs-card-price);
+    --fs-text-card: var(--fs-card-price);
 
     /* Backward-compatible aliases for legacy token consumers */
     --fs-micro: var(--fs-xs);
