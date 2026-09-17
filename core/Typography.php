@@ -23,6 +23,17 @@ final class Typography
             $value = self::$tokens[$aliasToken];
         }
 
+        // Resolve simple calc(var(...) [+-] Xpx) expressions
+        if (preg_match('/^calc\(\s*var\(\s*(--[a-z0-9_-]+)\s*\)\s*([+-])\s*(\d+(?:\.\d+)?px)\s*\)$/i', $value, $calcMatch)) {
+            $baseVal = self::size($calcMatch[1]);
+            if (preg_match('/^(\d+(?:\.\d+)?)px$/i', $baseVal, $numMatch)) {
+                $baseNum = (float) $numMatch[1];
+                $diff = (float) $calcMatch[3];
+                $res = $calcMatch[2] === '-' ? ($baseNum - $diff) : ($baseNum + $diff);
+                return $res . 'px';
+            }
+        }
+
         return $value;
     }
 
@@ -42,7 +53,9 @@ final class Typography
             return;
         }
 
-        preg_match_all('/(--fs-[a-z-]+)\s*:\s*([^;]+);/', $css, $matches, PREG_SET_ORDER);
+        $css = preg_replace('/\/\*.*?\*\//s', '', $css);
+
+        preg_match_all('/(--fs-[a-z0-9_-]+)\s*:\s*([^;]+);/', $css, $matches, PREG_SET_ORDER);
         foreach ($matches as $match) {
             self::$tokens[$match[1]] = trim($match[2]);
         }

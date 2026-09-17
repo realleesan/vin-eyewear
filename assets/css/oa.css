@@ -1568,7 +1568,7 @@ textarea.oa-field {
 }
 
 .oa-card__price {
-    font-size: var(--fs-base);
+    font-size: var(--fs-card-price);
     color: var(--ink-2);
 }
 
@@ -1578,16 +1578,16 @@ textarea.oa-field {
     align-items: baseline;
     flex-wrap: wrap;
     justify-content: center;
-    font-size: var(--fs-base);
+    font-size: var(--fs-card-price);
 }
 
 .oa-card__pricesale s {
-    font-size: var(--fs-base);
+    font-size: var(--fs-card-price);
     color: var(--ink-6);
 }
 
 .oa-card__pricesale b {
-    font-size: var(--fs-base);
+    font-size: var(--fs-card-price);
     color: var(--sale);
     font-weight: 700;
 }
