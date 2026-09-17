@@ -118,7 +118,7 @@
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     outline: none;
 }
 
@@ -129,7 +129,7 @@
 .policy-result,
 .policy-empty {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -146,7 +146,7 @@
 }
 
 .policy-toc__label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -159,7 +159,7 @@
 }
 
 .policy-toc__item {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     color: var(--ink-3);
 }
 
@@ -185,7 +185,7 @@
    đích của mẫu: trang này có rất nhiều chữ IN HOA rồi (mỗi nhóm gập là
    một dòng IN HOA), thêm bốn tiêu đề IN HOA nữa là không còn tầng bậc. */
 .policy-group__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 400;
 }
 
@@ -216,7 +216,7 @@
     gap: 12px;
     min-height: 48px;
     padding: 12px 14px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     color: var(--ink);
@@ -238,7 +238,7 @@
 .policy-qa__q::after {
     content: "+";
     flex: none;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: 1;
 }
 
@@ -248,7 +248,7 @@
 
 /* CÂU HỎI ĐANG MỞ TO LÊN — xem điểm 2 ở khối chú thích đầu file */
 .policy-qa__item[open] > .policy-qa__q {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-lg);
     letter-spacing: var(--ls-tight);
     text-transform: none;
     padding: 14px 14px 12px;
@@ -308,7 +308,7 @@
 }
 
 .policy-card__title {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -331,7 +331,7 @@
 }
 
 .policy-hot__title {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 400;
 }
 
@@ -367,7 +367,7 @@
 }
 
 .policy-ch__label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     white-space: nowrap;
@@ -385,7 +385,7 @@
     border-radius: var(--r-field);
     background: var(--bg);
     color: var(--ink-2);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh);
 }
 

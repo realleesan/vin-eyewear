@@ -98,7 +98,7 @@
     align-items: center;
     justify-content: center;
     color: var(--ink-5);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .coll__body {
@@ -109,14 +109,14 @@
 }
 
 .coll__when {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--ink-5);
 }
 
 .coll__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 400;
 }
 
@@ -129,7 +129,7 @@
 .coll__cta {
     align-self: flex-start;
     margin-top: 4px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     text-decoration: underline;
@@ -176,7 +176,7 @@
     border-radius: var(--r-chip);
     background: var(--bg);
     color: var(--ink);
-    font-size: var(--fs-label);
+    font-size: var(--fs-xs);
     white-space: nowrap;
     transition: background .18s ease, border-color .18s ease;
 }
@@ -223,7 +223,7 @@
     justify-content: center;
     background: var(--bg-slot);
     color: var(--ink-5);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 /* Lớp phủ tối từ đáy lên — ảnh do nhân viên tải lên, không ai biết trước
@@ -253,13 +253,13 @@
 .cdet__season,
 .cdet__season-tag,
 .cdet__eyebrow {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
 }
 
 .cdet__name {
-    font-size: var(--fs-display);
+    font-size: var(--fs-3xl);
     font-weight: 500;
     letter-spacing: var(--ls-tight);
     text-transform: uppercase;
@@ -278,14 +278,14 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls-tight);
     text-transform: uppercase;
     color: inherit;
 }
 
 .cdet__story-arrow {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -321,14 +321,14 @@
 }
 
 .cdet__h2 {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .cdet__h3 {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -364,7 +364,7 @@
 .cdet__shop-more,
 .cdet__cmp-all,
 .cdet__olink {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     text-decoration: underline;
@@ -416,19 +416,19 @@
 }
 
 .cdet__aud-label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     color: var(--ink-3);
 }
 
 .cdet__aud-value {
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 .cdet__aud-note {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -445,7 +445,7 @@
     width: 100%;
     min-width: 520px;
     border-collapse: collapse;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 .cdet__cell-title,
@@ -453,7 +453,7 @@
     padding: 10px 8px;
     text-align: left;
     border-bottom: 1px solid var(--line-input);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -475,7 +475,7 @@
 .cdet__cell-lens,
 .cdet__cell-text {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .cdet__cell-sku {
@@ -509,7 +509,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .cdet__swatch::before {
@@ -536,7 +536,7 @@
 }
 
 .cdet__size .num {
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     font-variant-numeric: tabular-nums;
 }
 
@@ -561,13 +561,13 @@
 }
 
 .cdet__face-name {
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 .cdet__face-models,
 .cdet__face-foot {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -603,7 +603,7 @@
 }
 
 .cdet__step-n {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-5);
     font-variant-numeric: tabular-nums;
 }
@@ -623,7 +623,7 @@
 }
 
 .cdet__ways-label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -655,7 +655,7 @@
     gap: 12px;
     min-height: 48px;
     padding: 12px 14px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
@@ -669,7 +669,7 @@
 .cdet__q-head::after {
     content: "+";
     flex: none;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: 1;
 }
 
@@ -694,7 +694,7 @@
 }
 
 .cdet__end-title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -729,7 +729,7 @@
     border-radius: var(--r-secondary);
     background: var(--bg);
     color: var(--ink);
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     white-space: nowrap;
     transition: background .18s ease, color .18s ease, border-color .18s ease;
 }
@@ -797,24 +797,24 @@
     justify-content: center;
     background: var(--bg-slot);
     color: var(--ink-5);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .cdet__oname {
     padding: 12px 14px 4px;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 .cdet__otag {
     padding: 0 14px 14px;
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 /* Bộ chưa mở bán */
 .cdet__soon {
     color: var(--ink-5);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -840,7 +840,7 @@
     flex-direction: column;
     gap: 20px;
     overflow-y: auto;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 .cdraw[hidden] {
@@ -861,7 +861,7 @@
 }
 
 .cdraw__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
 }
 
 .cdraw__type,
@@ -869,7 +869,7 @@
 .cdraw__size-hint,
 .cdraw__alt {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .cdraw__sku {
@@ -882,7 +882,7 @@
     background: none;
     padding: 0;
     color: var(--ink);
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-base);
     line-height: 1;
     cursor: pointer;
 }
@@ -937,7 +937,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .cdraw__dot {
@@ -962,7 +962,7 @@
     border: 1px solid var(--line-chip);
     border-radius: var(--r-chip);
     background: var(--bg);
-    font-size: var(--fs-label);
+    font-size: var(--fs-xs);
 }
 
 .cdraw__foot {
@@ -982,7 +982,7 @@
     border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }

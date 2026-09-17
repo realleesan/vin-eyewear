@@ -64,7 +64,7 @@ class App
 
             if ($debug) {
                 echo '<link rel="stylesheet" href="/assets/css/typography.css">';
-                echo '<pre style="padding:24px;font-family:monospace;font-size:var(--fs-body-sm);line-height:1.6;white-space:pre-wrap">';
+                echo '<pre style="padding:24px;font-family:monospace;font-size:var(--fs-sm);line-height:1.6;white-space:pre-wrap">';
                 echo e($e::class . ': ' . $e->getMessage()) . "\n\n";
                 echo e($e->getTraceAsString());
                 echo '</pre>';

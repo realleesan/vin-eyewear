@@ -42,7 +42,7 @@
     max-width: 1288px;
     width: 100%;
     box-sizing: border-box;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: #555;
 }
 
@@ -83,7 +83,7 @@
 
 .cempty {
     margin: 0;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     color: #8a8a8a;
 }
 
@@ -121,7 +121,7 @@
     flex-direction: column;
     gap: 3px;
     min-width: 0;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     line-height: 1.5;
 }
 
@@ -130,7 +130,7 @@
 }
 
 .citem__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
 }
 
 .citem__variant,
@@ -139,7 +139,7 @@
 }
 
 .citem__price {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 /* ── Số lượng ─────────────────────────────────────────────────────────── */
@@ -179,7 +179,7 @@
 }
 
 .cqty__num {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
 }
 
 .cqty__caret {
@@ -202,7 +202,7 @@
     background: #fff;
     padding: 4px 10px;
     font: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     color: #111;
     cursor: pointer;
 }
@@ -221,7 +221,7 @@ html.js .cqty__go {
     background: #ebebeb;
     padding: 6px 10px;
     font: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     color: #111;
     cursor: pointer;
 }
@@ -260,7 +260,7 @@ html.js .cqty__go {
     display: flex;
     flex-direction: column;
     padding-top: 100px;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
 }
 
 /* <dl> chứ không hai <span>: đây là những CẶP nhãn–giá trị, và cặp thẻ này là
@@ -295,7 +295,7 @@ html.js .cqty__go {
 }
 
 .csum__num {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-base);
 }
 
 .csum__go {
@@ -308,7 +308,7 @@ html.js .cqty__go {
     border-radius: var(--r-cta);
     background: #111;
     color: #fff;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-sm);
     letter-spacing: .02em;
     cursor: pointer;
 }
@@ -338,7 +338,7 @@ html.js .cqty__go {
     border-radius: var(--r-secondary);
     background: #fff;
     color: #111;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-sm);
     letter-spacing: .02em;
 }
 
@@ -368,7 +368,7 @@ html.js .cqty__go {
     justify-content: space-between;
     align-items: flex-start;
     gap: 20px;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-base);
     line-height: 1.55;
     letter-spacing: .01em;
     color: #111;
@@ -399,7 +399,7 @@ html.js .cqty__go {
 .cfaq__a {
     margin: 12px 0 0;
     max-width: 320px;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-base);
     line-height: 1.6;
     color: #555;
 }

@@ -17,7 +17,7 @@
 
 /* Nhãn chương — .oa-eyebrow đã lo dáng, ở đây chỉ thêm biến thể căn giữa */
 .about-eyebrow {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--ink-3);
@@ -31,7 +31,7 @@
 .about-exam__h2,
 .about-start__h2,
 .about-vlead__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -121,11 +121,11 @@
 
 .about-story__text .about-prose + p {
     opacity: .7;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
 }
 
 .about-sign {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     padding-top: 10px;
@@ -193,20 +193,20 @@
 }
 
 .about-vcard__num {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: var(--ink-5);
     font-variant-numeric: tabular-nums;
     margin-bottom: 16px;
 }
 
 .about-vcard__title {
-    font-size: var(--fs-body);
+    font-size: var(--fs-md);
     font-weight: 600;
     line-height: var(--lh-tight);
 }
 
 .about-vcard__desc {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
     line-height: 1.6;
     font-weight: 300;
@@ -219,7 +219,7 @@
 }
 
 .about-vcard__tag {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--ink-5);
@@ -273,7 +273,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
 }
 
@@ -285,7 +285,7 @@
 .about-exam__photo-tag {
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .about-exam__photo-row {
@@ -321,14 +321,14 @@
 }
 
 .about-exam__stat-num {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 600;
     color: var(--ink);
     margin-bottom: 4px;
 }
 
 .about-exam__stat-text {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
     line-height: 1.5;
 }
@@ -366,20 +366,20 @@
 }
 
 .about-exam__num {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     font-weight: 600;
     color: var(--ink-5);
     font-variant-numeric: tabular-nums;
 }
 
 .about-exam__title {
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 600;
     margin-bottom: 2px;
 }
 
 .about-exam__desc {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
     line-height: 1.6;
     font-weight: 300;
@@ -395,7 +395,7 @@
     border-radius: 5px;
     background: var(--bg);
     color: var(--ink);
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     font-weight: 500;
@@ -428,7 +428,7 @@
 }
 
 .about-commit__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -462,13 +462,13 @@
 }
 
 .about-commit__card-title {
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 600;
     margin-bottom: 8px;
 }
 
 .about-commit__card-desc {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
     line-height: 1.6;
     font-weight: 300;

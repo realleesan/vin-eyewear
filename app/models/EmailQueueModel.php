@@ -269,9 +269,9 @@ class EmailQueueModel extends BaseModel
             $chan .= ' Cần hỗ trợ, bạn gọi ' . $sdt . '.';
         }
 
-        $headingSize = Typography::size('--fs-heading');
-        $bodySize = Typography::size('--fs-body');
-        $captionSize = Typography::size('--fs-caption');
+        $headingSize = Typography::size('--fs-lg');
+        $bodySize = Typography::size('--fs-base');
+        $captionSize = Typography::size('--fs-xs');
 
         return '<div style="margin:0;padding:24px 12px;background:#f6f2ec;'
              . 'font-family:Helvetica,Arial,sans-serif;color:#2f2a24;">'

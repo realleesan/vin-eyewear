@@ -525,7 +525,7 @@ body {
    background: var(--surface);
    color: var(--ink);
    font-family: var(--font-sans);
-   font-size: var(--fs-body);
+   font-size: var(--fs-base);
    font-weight: 400;
    line-height: 1.7;
    letter-spacing: -0.005em;

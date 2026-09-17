@@ -1,16 +1,29 @@
 :root {
-    --type-scale: 1;
-    --fs-micro: calc(.625rem * var(--type-scale));
-    --fs-label: calc(.6875rem * var(--type-scale));
-    --fs-caption: calc(.75rem * var(--type-scale));
-    --fs-body-sm: calc(.875rem * var(--type-scale));
-    --fs-body: calc(.9375rem * var(--type-scale));
-    --fs-body-lg: calc(1rem * var(--type-scale));
-    --fs-subtitle: calc(1rem * var(--type-scale));
-    --fs-heading: calc(1.25rem * var(--type-scale));
-    --fs-otp: calc(2.125rem * var(--type-scale));
-    --fs-title: clamp(calc(1.75rem * var(--type-scale)), calc((1.2rem + 1.8vw) * var(--type-scale)), calc(3rem * var(--type-scale)));
-    --fs-display: clamp(calc(2.25rem * var(--type-scale)), calc((1.4rem + 3vw) * var(--type-scale)), calc(4.5rem * var(--type-scale)));
+    --fs-xs: 12px;
+    --fs-sm: 14px;
+    --fs-base: 16px;
+    --fs-md: 18px;
+    --fs-lg: 20px;
+    --fs-xl: 24px;
+
+    --fs-2xl: clamp(32px, 3vw, 40px);
+    --fs-3xl: clamp(40px, 5vw, 64px);
+
+    /* Email OTP token */
+    --fs-otp: 34px;
+
+    /* Backward-compatible aliases for legacy token consumers */
+    --fs-micro: var(--fs-xs);
+    --fs-label: var(--fs-sm);
+    --fs-caption: var(--fs-xs);
+    --fs-body-sm: var(--fs-sm);
+    --fs-body: var(--fs-base);
+    --fs-body-lg: var(--fs-base);
+    --fs-subtitle: var(--fs-base);
+    --fs-heading: var(--fs-lg);
+    --fs-title: var(--fs-2xl);
+    --fs-display: var(--fs-3xl);
+
     --lh-body: 1.5;
     --lh-tight: 1.25;
 }

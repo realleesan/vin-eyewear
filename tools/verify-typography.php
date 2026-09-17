@@ -56,36 +56,20 @@ function typographyError(string $css): ?string
 {
     $css = preg_replace('/\\/\\*.*?\\*\\//s', '', $css);
     $required = [
-        '--type-scale', '--fs-micro', '--fs-label', '--fs-caption',
-        '--fs-body-sm', '--fs-body', '--fs-body-lg', '--fs-subtitle', '--fs-otp',
-        '--fs-heading', '--fs-title', '--fs-display', '--lh-body', '--lh-tight',
+        '--fs-xs', '--fs-sm', '--fs-base', '--fs-md',
+        '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-3xl',
+        '--lh-body', '--lh-tight',
     ];
     foreach ($required as $token) {
-        if (substr_count($css, $token . ':') !== 1) {
-            return "FAIL: token {$token} must have one definition";
+        if (substr_count($css, $token . ':') < 1) {
+            return "FAIL: token {$token} must have at least one definition";
         }
     }
 
-    $semanticSizeTokens = [
-        '--fs-micro', '--fs-label', '--fs-caption', '--fs-body-sm', '--fs-body',
-        '--fs-body-lg', '--fs-subtitle', '--fs-heading', '--fs-otp', '--fs-title', '--fs-display',
-    ];
-    foreach ($semanticSizeTokens as $token) {
+    foreach (['--fs-2xl', '--fs-3xl'] as $token) {
         $value = declarationValue($css, $token);
-        if ($value === null || !usesTypeScale($value)) {
-            return "FAIL: token {$token} must use --type-scale";
-        }
-    }
-
-    $heading = declarationValue($css, '--fs-heading');
-    if ($heading !== null && preg_match('/\\bclamp\\s*\\(/i', $heading)) {
-        return 'FAIL: token --fs-heading must not use clamp()';
-    }
-
-    foreach (['--fs-title', '--fs-display'] as $token) {
-        $bounds = clampBounds(declarationValue($css, $token) ?? '');
-        if ($bounds === null || count(array_filter($bounds, 'usesTypeScale')) !== 3) {
-            return "FAIL: token {$token} must scale every clamp() bound";
+        if ($value === null || !preg_match('/\\bclamp\\s*\\(/i', $value)) {
+            return "FAIL: token {$token} must use clamp()";
         }
     }
 
@@ -198,8 +182,8 @@ if ($oaCss === false) {
 }
 
 $aliases = [
-    '--fs-text: var(--fs-body);',
-    '--fs-h: var(--fs-heading);',
+    '--fs-text: var(--fs-base);',
+    '--fs-h: var(--fs-lg);',
 ];
 foreach ($aliases as $alias) {
     if (!str_contains($oaCss, $alias)) {

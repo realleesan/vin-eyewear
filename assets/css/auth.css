@@ -106,7 +106,7 @@
 }
 
 .authhead__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -135,7 +135,7 @@
    │ xảy ra. Bản thiết kế vẽ nó là chữ nhỏ nhạt, không khung; đúng hơn. */
 .authnote {
     color: var(--ink-3);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
 }
 
@@ -177,7 +177,7 @@
    site xếp ngược lại (tiêu đề nhỏ > chữ thường), và giữ đúng BA VAI là thứ
    chủ dự án đã chốt — xem ghi chú 1 ở đầu file. */
 .authfield__label {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-base);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -192,7 +192,7 @@
     background: #fff;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     outline: none;
     transition: border-color .18s ease;
 }
@@ -220,12 +220,12 @@
 
 .authfield__err {
     color: var(--sale);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 .authfield__hint {
     color: var(--ink-3);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh-tight);
 }
 
@@ -431,7 +431,7 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 600;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -514,13 +514,13 @@
 /* "hoặc" căn giữa giữa hai nhóm nút */
 .aresend__or {
     text-align: center;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     color: var(--ink-3);
 }
 
 .aback {
     align-self: center;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     color: var(--ink-3);
 }
 
@@ -570,7 +570,7 @@
     background: #fff;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     text-align: center;
     outline: none;
     transition: border-color .18s ease;
@@ -590,7 +590,7 @@
     align-items: baseline;
     gap: 12px;
     flex-wrap: wrap;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
 }
 
 .aresend__btn,
@@ -600,7 +600,7 @@
     padding: 0;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     text-decoration: underline;
     text-underline-offset: 2px;
     cursor: pointer;
@@ -637,7 +637,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
 }
 
@@ -690,7 +690,7 @@
 }
 
 .astage__label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-5);
     line-height: var(--lh-tight);
 }
@@ -723,7 +723,7 @@
 }
 
 .asay__title {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -769,7 +769,7 @@
 }
 
 .authgate__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -792,7 +792,7 @@
     align-items: center;
     gap: 10px;
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .author__line {
@@ -832,7 +832,7 @@
     display: block;
     margin-top: 14px;
     color: var(--ink-3);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     text-align: center;
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -855,7 +855,7 @@
     align-self: center;
     margin-top: -6px;
     color: var(--ink-2);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     text-decoration: underline;
     text-underline-offset: 3px;
 }

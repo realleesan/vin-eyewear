@@ -53,37 +53,38 @@ function assertLiteralSizeLocations(string $name, string $css, array $expectedLi
     echo "PASS: {$name} locations reported\n";
 }
 
-$uppercaseClamp = preg_replace(
-    '/--fs-heading:\\s*[^;]+;/',
-    '--fs-heading: CLAMP(calc(1.25rem * var(--type-scale)), calc(1.5rem * var(--type-scale)), calc(1.75rem * var(--type-scale)));',
+$missingClamp = preg_replace(
+    '/--fs-2xl:\\s*[^;]+;/',
+    '--fs-2xl: 32px;',
     $source,
     1,
-    $uppercaseClampCount,
+    $missingClampCount,
 );
-if ($uppercaseClampCount !== 1) {
-    fwrite(STDERR, "FAIL: could not create uppercase CLAMP mutation\n");
+if ($missingClampCount !== 1) {
+    fwrite(STDERR, "FAIL: could not create missing clamp mutation\n");
     exit(1);
 }
 assertRejected(
-    'uppercase CLAMP heading',
-    $uppercaseClamp,
-    'FAIL: token --fs-heading must not use clamp()',
+    'missing 2xl clamp',
+    $missingClamp,
+    'FAIL: token --fs-2xl must use clamp()',
 );
 
-$commentScale = str_replace(
-    'calc(3rem * var(--type-scale))',
-    'calc(3rem) /* var(--type-scale) */',
+$missingDisplayClamp = preg_replace(
+    '/--fs-3xl:\\s*[^;]+;/',
+    '--fs-3xl: 64px;',
     $source,
-    $commentScaleCount,
+    1,
+    $missingDisplayClampCount,
 );
-if ($commentScaleCount !== 1) {
-    fwrite(STDERR, "FAIL: could not create comment scale mutation\n");
+if ($missingDisplayClampCount !== 1) {
+    fwrite(STDERR, "FAIL: could not create missing 3xl clamp mutation\n");
     exit(1);
 }
 assertRejected(
-    'commented title scale',
-    $commentScale,
-    'FAIL: token --fs-title must scale every clamp() bound',
+    'missing 3xl clamp',
+    $missingDisplayClamp,
+    'FAIL: token --fs-3xl must use clamp()',
 );
 
 assertLiteralSizeLocations(

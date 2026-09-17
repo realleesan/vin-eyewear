@@ -199,11 +199,11 @@ if ($fatal === null) {
             margin: 0; padding: 40px 20px;
             background: #faf6f2; color: #1a1214;
             font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-            font-size: var(--fs-body-lg);
+            font-size: var(--fs-base);
             line-height: 1.7;
         }
         .box { max-width: 680px; margin-inline: auto; }
-        h1 { font-size: var(--fs-title); margin: 0 0 4px; }
+        h1 { font-size: var(--fs-2xl); margin: 0 0 4px; }
         .sub { color: #5c4f52; margin: 0 0 28px; }
         ul { list-style: none; padding: 0; margin: 0 0 24px; border: 1px solid #c5bcb8; background: #fff; }
         li { display: flex; gap: 10px; padding: 12px 16px; border-bottom: 1px solid #ede8e3; }
@@ -211,14 +211,14 @@ if ($fatal === null) {
         .ico { flex-shrink: 0; font-weight: 700; }
         .ok .ico   { color: #27ae60; }
         .bad .ico  { color: #c0392b; }
-        .detail { display: block; font-size: var(--fs-body-sm); color: #5c4f52; }
+        .detail { display: block; font-size: var(--fs-sm); color: #5c4f52; }
         .msg { padding: 14px 16px; border-left: 3px solid; margin-bottom: 24px; }
         .msg--err { border-color: #c0392b; background: #fbeae8; }
         .msg--ok  { border-color: #27ae60; background: #e9f7ef; }
         .cred { padding: 20px; border: 2px solid #801a20; background: #fff; }
-        .cred dt { font-size: var(--fs-caption); text-transform: uppercase; letter-spacing: .12em; color: #5c4f52; }
-        .cred dd { margin: 2px 0 14px; font-family: ui-monospace, "JetBrains Mono", monospace; font-size: var(--fs-heading); font-weight: 600; line-height: 1.4; word-break: break-all; }
-        code { background: #ede8e3; padding: 2px 6px; font-size: var(--fs-body-sm); }
+        .cred dt { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .12em; color: #5c4f52; }
+        .cred dd { margin: 2px 0 14px; font-family: ui-monospace, "JetBrains Mono", monospace; font-size: var(--fs-lg); font-weight: 600; line-height: 1.4; word-break: break-all; }
+        code { background: #ede8e3; padding: 2px 6px; font-size: var(--fs-sm); }
         a { color: #801a20; }
     </style>
 </head>

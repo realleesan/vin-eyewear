@@ -176,7 +176,7 @@
 }
 
 .authov__title {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 600;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -194,7 +194,7 @@
     border-radius: 0;
     background: none;
     color: var(--ink);
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-base);
     line-height: 1;
     cursor: pointer;
 }

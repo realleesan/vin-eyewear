@@ -61,7 +61,7 @@
 .apf__tab {
     padding: 9px 13px;
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 600;
     white-space: nowrap;
     color: var(--muted);
@@ -131,7 +131,7 @@
 
 .apf__lead {
     margin: 0;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     color: var(--muted);
 }
 
@@ -140,7 +140,7 @@
     padding: 18px 16px;
     border: 1px dashed var(--line);
     border-radius: var(--radius-sm);
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     color: var(--muted);
     text-align: center;
 }
@@ -175,7 +175,7 @@
 .apf__size-sep {
     flex: none;
     color: var(--muted);
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
 }
 
 /* Dòng "52□18-145" do admin-product-form.js chèn vào cuối dải. Không có JS
@@ -184,7 +184,7 @@
     flex: none;
     padding-left: 4px;
     font-family: var(--font-mono);
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     color: var(--muted);
     white-space: nowrap;
 }
@@ -200,7 +200,7 @@
 
 .apf__set > legend {
     padding: 0 6px;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     font-weight: 700;
     letter-spacing: 0.09em;
     text-transform: uppercase;
@@ -221,7 +221,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 400;
     text-transform: none;
     letter-spacing: normal;
@@ -266,7 +266,7 @@
 }
 
 .apf__vhead > span {
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     font-weight: 700;
     letter-spacing: 0.09em;
     text-transform: uppercase;
@@ -285,14 +285,14 @@
     padding: 5px 6px;
     border-width: 1px;
     border-radius: var(--radius-sm);
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 .apf__vdel {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     color: var(--danger);
     cursor: pointer;
 }
@@ -346,7 +346,7 @@
     display: flex;
     justify-content: space-between;
     gap: 8px;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
 }
 
 .apf__img-acts label {
@@ -364,7 +364,7 @@
 
 .apf__img-alt {
     width: 100%;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
 }
 
 /* --- Màn hẹp -------------------------------------------------- */
@@ -458,7 +458,7 @@
 
 .apprice__now {
     display: block;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -469,7 +469,7 @@
 .apprice__was {
     display: block;
     margin-top: 1px;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     color: #a99a88;
     text-decoration: line-through;
     font-variant-numeric: tabular-nums;
@@ -482,7 +482,7 @@
     width: 30px;
     height: 30px;
     border-radius: var(--radius-sm);
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     line-height: 1;
 }
 
@@ -507,7 +507,7 @@
 .apf__gen {
     flex: none;
     padding: 0 10px;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
 }
 
 /* ============================================================
@@ -526,7 +526,7 @@
 
 .apfimg__head {
     margin: 0;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.09em;
     text-transform: uppercase;
@@ -562,14 +562,14 @@
 
 .apfimg__drop-title {
     margin: 0;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 500;
     color: var(--ink-soft, #5c4f42);
 }
 
 .apfimg__or {
     margin: 6px 0 12px;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     color: var(--muted);
 }
 
@@ -577,7 +577,7 @@
 
 .apfimg__hint {
     margin: 12px 0 0;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: var(--muted);
     line-height: 1.55;
 }
@@ -593,7 +593,7 @@
     display: inline-block;
     padding: 8px 18px;
     border-radius: 8px;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 600;
     cursor: pointer;
 }
@@ -662,7 +662,7 @@
     border-radius: var(--radius-round);
     background: var(--brand);
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -681,7 +681,7 @@
     background: var(--surface-raised);
     color: var(--brand);
     padding: 7px 14px;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-sm);
 }
 
 .apfimg__btn:hover { border-color: var(--brand); }
@@ -708,7 +708,7 @@
     display: block;
     width: 100%;
     margin-top: 2px;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--danger);
 }

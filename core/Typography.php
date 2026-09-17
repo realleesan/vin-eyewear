@@ -13,14 +13,14 @@ final class Typography
     public static function size(string $token): string
     {
         self::load();
-        $value = self::$tokens[$token] ?? 'var(--fs-body)';
-
-        // Transactional email clients do not consistently support CSS custom
-        // properties. Resolve the shared rem token while keeping typography.css
-        // as the only numeric source of truth.
-        if (preg_match('/^calc\(\s*([0-9.]+)rem\s*\*\s*var\(--type-scale\)\s*\)$/', $value, $match)) {
-            $rem = (float) $match[1] * self::$scale;
-            return rtrim(rtrim(number_format($rem, 4, '.', ''), '0'), '.') . 'rem';
+        $value = self::$tokens[$token] ?? '16px';
+        // Recursively resolve var(--...) aliases so email clients get concrete values
+        while (preg_match('/^var\(\s*(--[a-z0-9_-]+)\s*\)$/i', $value, $aliasMatch)) {
+            $aliasToken = $aliasMatch[1];
+            if (!isset(self::$tokens[$aliasToken]) || self::$tokens[$aliasToken] === $value) {
+                break;
+            }
+            $value = self::$tokens[$aliasToken];
         }
 
         return $value;

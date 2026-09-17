@@ -59,7 +59,7 @@
     flex-direction: column;
     gap: 24px;
     overflow-y: auto;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
 }
 
@@ -71,7 +71,7 @@
 }
 
 .bmodal__title {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -86,14 +86,14 @@
     background: none;
     padding: 0;
     color: var(--ink);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
 }
 
 .bmodal__close {
-    font-size: var(--fs-body-lg);
+    font-size: var(--fs-base);
     letter-spacing: 0;
     text-transform: none;
 }
@@ -134,13 +134,13 @@
 }
 
 .bmodal__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
 }
 
 .bmodal__meta,
 .bsum__val--soft {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .bmodal__price {
@@ -173,7 +173,7 @@
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     text-align: left;
     cursor: pointer;
     transition: border-color .18s ease;
@@ -221,13 +221,13 @@
 }
 
 .bopt__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
 }
 
 .bopt__note,
 .blens__desc {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -253,7 +253,7 @@
 }
 
 .blens__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
 }
 
 .blens__price {
@@ -300,7 +300,7 @@
 }
 
 .bhoso__ngay {
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 /* Số đo là DỮ LIỆU BẢNG — chữ đều bề ngang để hai mắt thẳng cột nhau. Đây là
@@ -314,7 +314,7 @@
 .bhoso__nguon,
 .bhoso__hint {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -339,14 +339,14 @@
 }
 
 .brx__eyebrow {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .brx__hint {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .brxtable {
@@ -385,13 +385,13 @@
 }
 
 .brxtable__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .brxtable__sub {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-5);
 }
 
@@ -409,13 +409,13 @@
     align-items: center;
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
 }
 
 .brxtable__eyename {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .brxtable__cell {
@@ -433,7 +433,7 @@
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-variant-numeric: tabular-nums;
     outline: none;
 }
@@ -469,7 +469,7 @@
 }
 
 .brxnote__cap {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -481,7 +481,7 @@
     padding: 0;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     text-decoration: underline;
@@ -497,7 +497,7 @@
     background: var(--bg);
     border-left: 2px solid var(--ink);
     color: var(--ink-2);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh);
 }
 
@@ -545,7 +545,7 @@
 }
 
 .bqty__label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -569,7 +569,7 @@
     background: none;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     cursor: pointer;
 }
 
@@ -610,7 +610,7 @@
 }
 
 .bsum__totalnum {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     white-space: nowrap;
 }
 
@@ -630,7 +630,7 @@
     background: var(--ink);
     color: #fff;
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
@@ -660,7 +660,7 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;

@@ -65,7 +65,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: normal;
     text-transform: none;
     color: #8a8a87;
@@ -96,7 +96,7 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: normal;
     text-transform: none;
     color: var(--ink-3);
@@ -112,7 +112,7 @@
    tiêu đề BÊN TRONG tấm thẻ trắng, còn ở đây nó đứng trên trang. */
 .cohead__title {
     margin: 0;
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 700;
     letter-spacing: -.01em;
     text-transform: none;
@@ -187,13 +187,13 @@
     border-radius: 50%;
     background: #111;
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
 
 .costep__title {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     font-weight: 600;
     letter-spacing: normal;
     text-transform: none;
@@ -224,7 +224,7 @@
 }
 
 .cofield__label {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 500;
     letter-spacing: normal;
     text-transform: none;
@@ -249,7 +249,7 @@
     background: #fff;
     color: #111;
     font-family: inherit;
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-base);
     outline: none;
     transition: border-color .18s ease, box-shadow .18s ease;
 }
@@ -394,7 +394,7 @@ select.cofield__input {
 
 .cocard__name,
 .ckopt__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 600;
 }
 
@@ -406,7 +406,7 @@ select.cofield__input {
 .cocard__note,
 .ckopt__note {
     color: #6b6b68;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -414,7 +414,7 @@ select.cofield__input {
 .cotrust,
 .cofallback {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     line-height: var(--lh-tight);
 }
 
@@ -481,13 +481,13 @@ html.js .cofallback {
 }
 
 .coitem__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
 }
 
 .coitem__meta,
 .coitem__lens {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -525,7 +525,7 @@ html.js .cofallback {
     /* Menu chọn giữ góc vuông theo hệ editorial. */
     border-radius: 0;
     background: var(--bg);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     cursor: pointer;
     list-style: none;
 }
@@ -561,7 +561,7 @@ html.js .cofallback {
     background: none;
     text-align: left;
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     cursor: pointer;
 }
 
@@ -592,7 +592,7 @@ html.js .cofallback {
 .covou__onnote,
 .covou__none {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -643,7 +643,7 @@ html.js .cofallback {
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     text-transform: uppercase;
     letter-spacing: .06em;
     outline: none;
@@ -662,7 +662,7 @@ html.js .cofallback {
     background: var(--ink);
     color: #fff;
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
@@ -698,7 +698,7 @@ html.js .cofallback {
     padding: 0;
     color: var(--ink-3);
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     text-decoration: underline;
     text-underline-offset: 2px;
     cursor: pointer;
@@ -709,7 +709,7 @@ html.js .cofallback {
 }
 
 .covou__msg {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--sale);
 }
 
@@ -742,7 +742,7 @@ html.js .cofallback {
 
 .csum__deposit-why {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -782,7 +782,7 @@ html.js .cofallback {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: #8a8a87;
 }
 
@@ -820,7 +820,7 @@ html.js .cofallback {
    Ba dòng `normal/none` là để đè luật cũ (.coqr__back từng là một nút
    chữ hoa gạch chân). */
 .coqr__back {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     color: #555;
     letter-spacing: normal;
     text-transform: none;
@@ -839,7 +839,7 @@ html.js .cofallback {
 }
 
 .coqr__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 700;
     letter-spacing: -.01em;
     text-transform: none;
@@ -848,14 +848,14 @@ html.js .cofallback {
 /* Hai tiêu đề cột phải nhỏ hơn tiêu đề trang một bậc — của mẫu. */
 .coqr__paytitle,
 .coqr__ordertitle {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     font-weight: 600;
     letter-spacing: normal;
     text-transform: none;
 }
 
 .coqr__paysub {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     color: #6b6b68;
     line-height: var(--lh);
 }
@@ -865,7 +865,7 @@ html.js .cofallback {
 .coqr__nocode,
 .coqr__slow {
     color: #8a8a87;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: 1.5;
 }
 
@@ -969,7 +969,7 @@ html.js .cofallback {
     padding: 0 0 12px;
     border-top: 0;
     border-bottom: 1px solid #ececea;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 .coqr__bank .coqr__line:last-child {
@@ -979,7 +979,7 @@ html.js .cofallback {
 
 .coqr__bankkey {
     color: #555;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: normal;
     text-transform: none;
     white-space: nowrap;
@@ -987,7 +987,7 @@ html.js .cofallback {
 
 .coqr__bankval {
     text-align: right;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     letter-spacing: normal;
@@ -1011,7 +1011,7 @@ html.js .cofallback {
     margin-left: 10px;
     color: #333;
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: normal;
     text-transform: none;
     text-decoration: none;
@@ -1055,14 +1055,14 @@ html.js .cofallback {
 }
 
 .coqr__amountlabel {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: normal;
     text-transform: none;
     color: #6b6b68;
 }
 
 .coqr__amountval {
-    font-size: var(--fs-display);
+    font-size: var(--fs-3xl);
     font-weight: 700;
     letter-spacing: -.02em;
     font-variant-numeric: tabular-nums;
@@ -1070,7 +1070,7 @@ html.js .cofallback {
 
 .coqr__amountrest {
     color: #6b6b68;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 /* Nội dung chuyển khoản — đây là chuỗi khách phải chép ĐÚNG TỪNG KÝ TỰ,
@@ -1107,7 +1107,7 @@ html.js .cofallback {
     padding: 10px 16px;
     border-radius: 0;
     background: #f5f5f3;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 500;
 }
 
@@ -1157,7 +1157,7 @@ html.js .cofallback {
     background: transparent;
     padding: 0;
     color: #111;
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     font-weight: 600;
     letter-spacing: normal;
     text-transform: none;
@@ -1176,7 +1176,7 @@ html.js .cofallback {
     background: transparent;
     color: #111;
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: normal;
     text-transform: none;
 }
@@ -1208,13 +1208,13 @@ html.js .cofallback {
 }
 
 .coqr__totallabel {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .coqr__totalval {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     font-variant-numeric: tabular-nums;
 }
 
@@ -1224,7 +1224,7 @@ html.js .cofallback {
 
 .coqr__lens {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 /* pay-watch.js hiện câu này sau vài phút chưa thấy tiền về */
@@ -1266,7 +1266,7 @@ html.js .cofallback {
 
 .ocomp__title,
 .opaid__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -1282,7 +1282,7 @@ html.js .cofallback {
 /* Mã đơn — thứ khách sẽ đọc qua điện thoại, nên nó đặc và giãn rộng */
 .ocomp__codelabel,
 .opaid__code {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     color: var(--ink-3);
@@ -1312,7 +1312,7 @@ html.js .cofallback {
     padding: 0;
     color: var(--ink-3);
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     text-decoration: underline;
@@ -1356,14 +1356,14 @@ html.js .cofallback {
 
 .ocomp__ordertitle,
 .opaid__cardtitle {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
 
 .ocomp__ordercount {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 /* Bảng thông tin giao hàng — nhãn trái, giá trị phải */
@@ -1382,7 +1382,7 @@ html.js .cofallback {
 
 .ocomp__label {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -1394,7 +1394,7 @@ html.js .cofallback {
 .ocomp__factsub,
 .ocomp__addr {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -1435,14 +1435,14 @@ html.js .cofallback {
 }
 
 .ocomp__itemname {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
 }
 
 .ocomp__itemqty,
 .ocomp__itemlens,
 .opaid__lens {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
 }
 
@@ -1450,7 +1450,7 @@ html.js .cofallback {
     font-variant-numeric: tabular-nums;
     letter-spacing: .02em;
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .ocomp__itemsum {
@@ -1479,7 +1479,7 @@ html.js .cofallback {
 }
 
 .ocomp__grandlabel {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -1487,7 +1487,7 @@ html.js .cofallback {
 .ocomp__grandval,
 .opaid__totalnum,
 .opaid__restnum {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
 }
@@ -1511,7 +1511,7 @@ html.js .cofallback {
 .opaid__help,
 .opaid__next {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh);
 }
 
@@ -1523,7 +1523,7 @@ html.js .cofallback {
     padding: 16px;
     border-radius: 0;
     background: var(--bg);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh);
 }
 
@@ -1542,7 +1542,7 @@ html.js .cofallback {
     display: block;
     margin: 16px auto 0;
     text-align: center;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -1578,7 +1578,7 @@ html.js .cofallback {
     align-items: center;
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
 }
@@ -1629,7 +1629,7 @@ html.js .cofallback {
     background: var(--ink);
     color: #fff;
     font-family: inherit;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     cursor: pointer;
     transition: background .18s ease, color .18s ease;
 }
@@ -1663,7 +1663,7 @@ html.js .cofallback {
     padding: 0;
     color: var(--ink-3);
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     text-decoration: underline;
@@ -1781,7 +1781,7 @@ html.js .cofallback {
 
 .checkout .csum__title {
     margin: 0;
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     font-weight: 700;
     letter-spacing: -.01em;
     text-transform: none;
@@ -1823,7 +1823,7 @@ html.js .cofallback {
     border-radius: 50%;
     background: #111;
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     font-weight: 600;
 }
 
@@ -1836,25 +1836,25 @@ html.js .cofallback {
 }
 
 .checkout .coitem__name {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 600;
 }
 
 .checkout .coitem__meta,
 .checkout .coitem__lens {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: #6b6b68;
 }
 
 /* Số đo mắt: nhỏ và nhạt nhất trong thẻ — nó là thứ để đối chiếu, không
    phải thứ để đọc lướt. */
 .checkout .coitem__rx {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: #8a8a87;
 }
 
 .checkout .coitem__price {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 600;
     white-space: nowrap;
 }
@@ -1871,13 +1871,13 @@ html.js .cofallback {
 }
 
 .checkout .covou__oncode {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 600;
     letter-spacing: .04em;
 }
 
 .checkout .covou__onnote {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: #6b6b68;
 }
 
@@ -1898,7 +1898,7 @@ html.js .cofallback {
     border: 0;
     background: transparent;
     padding: 10px 0;
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-base);
     color: #111;
     box-shadow: none;
 }
@@ -1935,7 +1935,7 @@ html.js .cofallback {
     background: #111;
     color: #fff;
     padding: 10px 16px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 600;
     cursor: pointer;
 }
@@ -1949,7 +1949,7 @@ html.js .cofallback {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 /* Nhãn (span đầu, không có lớp) nhạt hơn con số — của mẫu. */
@@ -1965,13 +1965,13 @@ html.js .cofallback {
 }
 
 .checkout .csum__grand > span:first-child {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     font-weight: 600;
     color: #111;
 }
 
 .checkout .csum__grand-num {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     font-weight: 700;
     letter-spacing: -.01em;
 }
@@ -1994,7 +1994,7 @@ html.js .cofallback {
 
 .checkout .csum__deposit-why {
     margin: 0;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: 1.5;
     color: #555;
 }
@@ -2006,17 +2006,17 @@ html.js .cofallback {
 .checkout .csum__deposit .csum__row {
     flex-direction: column;
     gap: 4px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .checkout .csum__deposit .csum__row > span:first-child {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: #6b6b68;
 }
 
 .checkout .csum__val--deposit,
 .checkout .csum__deposit .csum__val {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     font-weight: 700;
 }
 
@@ -2028,7 +2028,7 @@ html.js .cofallback {
     background: #111;
     color: #fff;
     padding: 17px 20px;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-sm);
     font-weight: 600;
     cursor: pointer;
     transition: background-color .18s ease;
@@ -2040,7 +2040,7 @@ html.js .cofallback {
 }
 
 .checkout .csum__more {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     color: #555;
     text-align: center;
 }
@@ -2089,7 +2089,7 @@ html.js .cofallback {
     border-right: 1px solid #e1e1de;
     background: #fafaf8;
     padding: 13px 14px;
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-base);
     color: #555;
     white-space: nowrap;
 }
@@ -2111,7 +2111,7 @@ html.js .cofallback {
 /* ── Đồng hồ hết hạn mã QR ───────────────────────────────────────────── */
 .coqr__expire {
     margin: 0;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: #6b6b68;
     text-align: center;
 }
@@ -2157,7 +2157,7 @@ html.js .cofallback {
 
 .coqr__againnote {
     max-width: 190px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: 1.45;
     color: #555;
 }
@@ -2169,7 +2169,7 @@ html.js .cofallback {
     color: #fff;
     padding: 9px 16px;
     font-family: inherit;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     font-weight: 600;
     cursor: pointer;
 }

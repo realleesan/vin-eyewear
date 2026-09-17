@@ -524,10 +524,10 @@ class PasswordResetModel extends BaseModel
         $hello = $name !== '' ? 'Chào ' . e($name) . ',' : 'Chào bạn,';
         $mins  = (int) (Otp::TTL / 60);
         $code  = e($code);
-        $bodySize = Typography::size('--fs-body');
-        $headingSize = Typography::size('--fs-heading');
+        $bodySize = Typography::size('--fs-base');
+        $headingSize = Typography::size('--fs-lg');
         $otpSize = Typography::size('--fs-otp');
-        $captionSize = Typography::size('--fs-caption');
+        $captionSize = Typography::size('--fs-xs');
 
         return <<<HTML
         <div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;

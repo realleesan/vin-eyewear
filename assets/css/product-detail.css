@@ -42,7 +42,7 @@
 
 .pd {
     color: var(--ink);
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     line-height: 1.4;
     letter-spacing: .01em;
 }
@@ -60,7 +60,7 @@
     display: inline-block;
     align-self: flex-start;
     color: var(--ink);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     text-decoration: underline;
@@ -74,7 +74,7 @@
 }
 
 .pdsec__title {
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -121,7 +121,7 @@
     justify-content: center;
     background: var(--bg-slot);
     color: var(--ink-5);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     text-align: center;
 }
 
@@ -162,13 +162,13 @@
 }
 
 .pdinfo__title {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 400;
     line-height: 1.4;
 }
 
 .pdinfo__price {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     display: flex;
     flex-wrap: wrap;
     gap: 0 calc(6px * var(--oa-scale));
@@ -344,7 +344,7 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     white-space: nowrap;
@@ -391,7 +391,7 @@
 }
 
 .pdwait__title {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -427,7 +427,7 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 .pdwait__go {
@@ -440,7 +440,7 @@
     background: var(--ink);
     color: #fff;
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     cursor: pointer;
@@ -468,7 +468,7 @@
     padding: calc(14px * var(--oa-scale)) 0;
     border-bottom: 1px solid var(--pd-line);
     color: var(--ink);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
@@ -481,7 +481,7 @@
 
 .pdacc__ico {
     flex: none;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 300;
     line-height: 1;
 }
@@ -560,7 +560,7 @@
 }
 
 .pdrv__num {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-lg);
 }
 
 .pdrv__stars {
@@ -621,7 +621,7 @@
     flex-direction: row-reverse;
     justify-content: flex-end;
     gap: calc(2px * var(--oa-scale));
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     line-height: 1;
 }
 
@@ -665,7 +665,7 @@
     background: transparent;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     line-height: 1.5;
     resize: vertical;
     outline: none;
@@ -682,7 +682,7 @@
     background: var(--ink);
     color: #fff;
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     cursor: pointer;

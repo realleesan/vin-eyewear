@@ -135,7 +135,7 @@ body.page-admin-login {
 .alogbar__logo {
     font-family: var(--font-serif);
     font-weight: 600;
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     color: var(--alog-fg);
 }
 
@@ -145,7 +145,7 @@ body.page-admin-login {
 
 .alogbar__badge {
     font-family: var(--font-mono);
-    font-size: var(--fs-label);
+    font-size: var(--fs-xs);
     letter-spacing: 2px;
     color: var(--alog-accent);
     border: 1px solid var(--alog-accent-line);
@@ -158,7 +158,7 @@ body.page-admin-login {
     align-items: center;
     gap: 7px;
     font-family: var(--font-mono);
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     letter-spacing: 1px;
     color: var(--alog-ok);
     white-space: nowrap;
@@ -183,14 +183,14 @@ body.page-admin-login {
 .alog__title {
     font-family: var(--font-serif);
     font-weight: 600;
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     line-height: 1.25;
     color: var(--alog-fg);
     margin: 0 0 8px;
 }
 
 .alog__lead {
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     line-height: 1.6;
     color: var(--alog-lead);
     margin: 0 0 32px;
@@ -206,7 +206,7 @@ body.page-admin-login {
     border: 1px solid var(--alog-danger-line);
     background: var(--alog-danger-bg);
     border-radius: 6px;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     line-height: 1.6;
     color: var(--alog-danger);
 }
@@ -232,14 +232,14 @@ body.page-admin-login {
 }
 
 .alogfield__label {
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     font-weight: 600;
     letter-spacing: 1.2px;
     text-transform: uppercase;
     color: var(--alog-label);
 }
 
-.alogfield__aside { font-size: var(--fs-body-sm); }
+.alogfield__aside { font-size: var(--fs-sm); }
 
 .alogfield__input {
     width: 100%;
@@ -251,7 +251,7 @@ body.page-admin-login {
     background: var(--alog-field);
     color: var(--alog-fg);
     font-family: var(--font-sans);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 .alogfield__input::placeholder { color: var(--alog-faint); }
@@ -282,7 +282,7 @@ body.page-admin-login {
     background: transparent;
     color: var(--alog-dim);
     font-family: var(--font-sans);
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     cursor: pointer;
 }
 
@@ -303,7 +303,7 @@ body.page-admin-login {
     background: var(--alog-brand);
     color: var(--alog-on-brand);
     font-family: var(--font-sans);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 600;
     letter-spacing: 0.2px;
     cursor: pointer;
@@ -320,7 +320,7 @@ body.page-admin-login {
     padding: 14px 16px;
     border: 1px solid var(--alog-accent-soft);
     border-radius: 6px;
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     line-height: 1.6;
     color: var(--alog-dim);
 }
@@ -349,14 +349,14 @@ body.page-admin-login {
     /* Viền trái đậm hơn để phân biệt với .alognote ở dưới: khối kia là lời
        nhắc thường trực, khối này là thứ vừa mở ra do một cú bấm. */
     border-left: 2px solid var(--alog-accent);
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     line-height: 1.65;
     color: var(--alog-dim);
 }
 
 .aloghelp__title {
     margin: 0 0 8px;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     font-weight: 600;
     color: var(--alog-fg);
 }
@@ -385,7 +385,7 @@ body.page-admin-login {
     border-radius: 4px;
     background: var(--alog-field);
     font-family: var(--font-mono);
-    font-size: var(--fs-label);
+    font-size: var(--fs-xs);
     color: var(--alog-accent);
     overflow-wrap: anywhere;
 }
@@ -411,11 +411,11 @@ body.page-admin-login {
     gap: 16px;
     padding: 20px 40px;
     border-top: 1px solid var(--alog-rule);
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     color: var(--alog-faint);
 }
 
-.alogfoot a { font-size: var(--fs-caption); }
+.alogfoot a { font-size: var(--fs-xs); }
 
 /* --- Màn hẹp -----------------------------------------------
    Bản thiết kế chỉ vẽ ở 1440×900. Đệm 40px hai bên và hai dòng chân trang

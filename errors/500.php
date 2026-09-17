@@ -105,7 +105,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
         overflow: auto;
         background: #faf6f0;
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-        font-size: var(--fs-body);
+        font-size: var(--fs-base);
         line-height: 1.65;
         color: #33272a;
         -webkit-font-smoothing: antialiased;
@@ -122,7 +122,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
     }
 
     .vin-err__brand {
-        font-size: var(--fs-heading);
+        font-size: var(--fs-lg);
         font-weight: 600;
         letter-spacing: 0.02em;
         color: #8a2432;
@@ -138,7 +138,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
     }
 
     .vin-err__title {
-        font-size: var(--fs-heading);
+        font-size: var(--fs-lg);
         font-weight: 600;
         line-height: 1.35;
         color: #33272a;
@@ -146,7 +146,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
 
     .vin-err__desc {
         margin-top: 12px;
-        font-size: var(--fs-body-sm);
+        font-size: var(--fs-sm);
         color: #6f5f5a;
     }
 
@@ -156,7 +156,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
         padding: 10px 14px;
         border-radius: 4px;
         background: #f7efe6;
-        font-size: var(--fs-caption);
+        font-size: var(--fs-xs);
         color: #6f5f5a;
     }
 
@@ -177,7 +177,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
         border-radius: 4px;
         background: #8a2432;
         color: #fff;
-        font-size: var(--fs-body-sm);
+        font-size: var(--fs-sm);
         font-weight: 500;
         text-decoration: none;
         cursor: pointer;
@@ -196,7 +196,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
 
     .vin-err__help {
         margin-top: 22px;
-        font-size: var(--fs-body-sm);
+        font-size: var(--fs-sm);
         color: #6f5f5a;
     }
 

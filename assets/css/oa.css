@@ -177,11 +177,11 @@
 
     /* Typography scale lives in typography.css. These aliases preserve the
        remaining page styles that are migrated in later tasks. */
-    --fs-nano: var(--fs-micro);
-    --fs-ui: var(--fs-label);
-    --fs-sub: var(--fs-caption);
-    --fs-h: var(--fs-heading);
-    --fs-text: var(--fs-body);
+    --fs-nano: var(--fs-xs);
+    --fs-ui: var(--fs-sm);
+    --fs-sub: var(--fs-xs);
+    --fs-h: var(--fs-lg);
+    --fs-text: var(--fs-base);
 
     /* Giãn chữ — ba mức, đi kèm IN HOA. .12em chỉ dành cho wordmark. */
     --ls-tight: .04em;
@@ -375,16 +375,16 @@
     --elev-1: none;
     --elev-2: none;
     --elev-3: none;
-    --fs-micro-legacy: var(--fs-micro);
-    --fs-note: var(--fs-micro);
-    --fs-lead: var(--fs-body-lg);
-    --fs-subhead: var(--fs-heading);
-    --fs-h6: var(--fs-micro);
-    --fs-h5: var(--fs-body);
-    --fs-h4: var(--fs-label);
-    --fs-h3: var(--fs-subtitle);
-    --fs-h2: var(--fs-heading);
-    --fs-h1: var(--fs-heading);
+    --fs-micro-legacy: var(--fs-xs);
+    --fs-note: var(--fs-xs);
+    --fs-lead: var(--fs-base);
+    --fs-subhead: var(--fs-lg);
+    --fs-h6: var(--fs-xs);
+    --fs-h5: var(--fs-base);
+    --fs-h4: var(--fs-sm);
+    --fs-h3: var(--fs-md);
+    --fs-h2: var(--fs-lg);
+    --fs-h1: var(--fs-xl);
     --space-1: 4px;
     --space-2: 8px;
     --space-3: 12px;
@@ -413,7 +413,7 @@ body {
     background: var(--bg);
     color: var(--ink);
     font-family: var(--font);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -529,7 +529,7 @@ ol[role="list"],
     background: var(--ink);
     color: #fff;
     padding: 10px 16px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     border-radius: var(--r-secondary);
@@ -546,7 +546,7 @@ ol[role="list"],
 
 /* Nhãn IN HOA nhỏ: "01 — VỀ CHÚNG TÔI", "CAMPAIGN", tiêu đề cột chân trang */
 .oa-eyebrow {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--ink-3);
@@ -558,7 +558,7 @@ ol[role="list"],
 
 /* Nhãn IN HOA trong thẻ/ngăn — giãn hẹp hơn eyebrow một mức */
 .oa-label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -582,7 +582,7 @@ ol[role="list"],
  * └──────────────────────────────────────────────────────────────────────── */
 .oa-label,
 .oa-btn-bare.oa-label {
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 /* ┌─ TIÊU ĐỀ TRANG VÀ TIÊU ĐỀ BĂNG — MỘT DÁNG DUY NHẤT ───────────────────
@@ -603,7 +603,7 @@ ol[role="list"],
    └──────────────────────────────────────────────────────────────────────── */
 .oa-title,
 .oa-band-title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -626,14 +626,14 @@ ol[role="list"],
 .oa-band-lead {
     max-width: 560px;
     color: var(--ink-3);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
     text-wrap: balance;
 }
 
 /* Tiêu đề đè trên ảnh hero (bộ sưu tập, giới thiệu) */
 .oa-hero-title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls-tight);
     text-transform: uppercase;
@@ -641,7 +641,7 @@ ol[role="list"],
 }
 
 .oa-lead {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     color: var(--ink-2);
 }
 
@@ -650,7 +650,7 @@ ol[role="list"],
 }
 
 .oa-prose {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
     text-wrap: pretty;
 }
@@ -692,7 +692,7 @@ ol[role="list"],
 }
 
 .oa-pagehead p {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     color: var(--ink-2);
 }
 
@@ -721,7 +721,7 @@ ol[role="list"],
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
@@ -784,7 +784,7 @@ ol[role="list"],
     height: var(--h-btn-sm);
     flex: 1;
     padding: 0 10px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls-tight);
 }
 
@@ -817,7 +817,7 @@ ol[role="list"],
     border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -876,7 +876,7 @@ ol[role="list"],
     padding: 0;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     cursor: pointer;
 }
 
@@ -885,13 +885,13 @@ ol[role="list"],
     background: none;
     padding: 0;
     color: var(--ink);
-    font-size: var(--fs-body-lg);
+    font-size: var(--fs-base);
     line-height: 1;
     cursor: pointer;
 }
 
 .oa-close--lg {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-lg);
 }
 
 /* Ô vuông xanh chữ "Zalo" nhét vào đầu nút — dáng riêng của mẫu */
@@ -902,7 +902,7 @@ ol[role="list"],
     border-radius: 0;
     background: var(--zalo);
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0;
     display: flex;
@@ -932,7 +932,7 @@ ol[role="list"],
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-label);
+    font-size: var(--fs-xs);
     white-space: nowrap;
     cursor: pointer;
     transition: background .18s ease, border-color .18s ease;
@@ -984,7 +984,7 @@ ol[role="list"],
     background: transparent;
     color: var(--ink-5);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     white-space: nowrap;
     cursor: pointer;
     transition: background .18s ease, border-color .18s ease, color .18s ease;
@@ -1002,7 +1002,7 @@ ol[role="list"],
 .oa-tab--caps {
     padding: 0 14px;
     border: 0;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     font-weight: 700;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -1015,13 +1015,13 @@ ol[role="list"],
 
 /* Số nhỏ treo sau nhãn tab: Bag⁰, Recently Viewed³ */
 .oa-sup {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     margin-left: 1px;
     vertical-align: super;
 }
 
 .oa-sup--lg {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     margin-left: 2px;
 }
 
@@ -1047,7 +1047,7 @@ ol[role="list"],
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     outline: none;
     transition: border-color .18s ease;
 }
@@ -1092,7 +1092,7 @@ textarea.oa-input {
     background: none;
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     outline: none;
     transition: border-color .18s ease;
 }
@@ -1122,7 +1122,7 @@ textarea.oa-field {
 
 .oa-formrow > span,
 .oa-formrow > label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -1130,7 +1130,7 @@ textarea.oa-field {
 /* "*Bắt buộc" nép phải trên đầu nhóm ô nhập */
 .oa-req {
     align-self: flex-end;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
 }
 
@@ -1140,7 +1140,7 @@ textarea.oa-field {
     display: flex;
     align-items: center;
     gap: 7px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     white-space: nowrap;
     cursor: pointer;
 }
@@ -1162,7 +1162,7 @@ textarea.oa-field {
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: 1;
 }
 
@@ -1202,7 +1202,7 @@ textarea.oa-field {
     width: 14px;
     height: 14px;
     border-radius: 0;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     margin-top: 1px;
 }
 
@@ -1253,7 +1253,7 @@ textarea.oa-field {
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     white-space: nowrap;
     cursor: pointer;
     outline: none;
@@ -1318,7 +1318,7 @@ textarea.oa-field {
     align-items: center;
     justify-content: center;
     padding: 12px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
     color: var(--ink-5);
     text-align: center;
@@ -1494,7 +1494,7 @@ textarea.oa-field {
     align-items: center;
     padding: 0 10px;
     pointer-events: none;
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     color: var(--ink);
 }
 
@@ -1511,7 +1511,7 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────── */
 .oa-card__body {
     padding: 14px 14px 4px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
     text-align: center;
 }
@@ -1553,7 +1553,7 @@ textarea.oa-field {
        │ do một pixel cỡ chữ. Muốn tên to hơn nữa thì đổi --fs-subtitle, và
        │ chấp nhận là mọi tên hàng trên cả site to lên theo — đó chính là
        │ điều mà hệ vai trò này bảo đảm. */
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-base);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--ls-tight);
@@ -1660,7 +1660,7 @@ textarea.oa-field {
         height: auto;
         min-height: var(--h-btn-sm);
         padding: 5px 8px;
-        font-size: var(--fs-micro);
+        font-size: var(--fs-sm);
         letter-spacing: 0;
         white-space: normal;
         line-height: 1.15;
@@ -1707,7 +1707,7 @@ textarea.oa-field {
 }
 
 .oa-swatch__label {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-4);
     margin-left: 4px;
 }
@@ -1715,7 +1715,7 @@ textarea.oa-field {
 /* "+3" khi có hơn năm màu. Cùng cỡ và cùng màu với tên màu bên cạnh nó —
    nó là một mẩu chữ phụ, không phải một cái chấm thứ sáu. */
 .oa-swatch__more {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-4);
 }
 
@@ -1904,7 +1904,7 @@ textarea.oa-field {
     margin-right: 24px;
     overflow: hidden;
     white-space: nowrap;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     letter-spacing: .01em;
 
     /* ┌─ CAO TRỌN THANH — ĐỪNG ĐỔI VỀ `center` ────────────────────────────
@@ -1970,7 +1970,7 @@ textarea.oa-field {
    │ tĩnh. */
 
 .oa-header__mark {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-lg);
     font-weight: 700;
     letter-spacing: var(--ls-mark);
     text-transform: uppercase;
@@ -2007,7 +2007,7 @@ textarea.oa-field {
     justify-content: flex-end;
     align-items: center;
     gap: 16px;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 /* ┌─ CỠ ICON LẤY TỪ CỠ CHỮ NAV, KHÔNG GÕ CỨNG ───────────────────────────
@@ -2112,7 +2112,7 @@ textarea.oa-field {
     border-radius: 0;
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: 13px;
     text-align: center;
 }
@@ -2128,7 +2128,7 @@ textarea.oa-field {
    nên không thừa hưởng --fs-label từ đó. */
 .oa-header__burger {
     display: none;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -2254,7 +2254,7 @@ textarea.oa-field {
     background: none;
     outline: none;
     font-family: inherit;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     color: var(--ink);
 }
 
@@ -2311,7 +2311,7 @@ textarea.oa-field {
     display: flex;
     flex-direction: column;
     gap: 12px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: 1.45;
 }
 
@@ -2413,7 +2413,7 @@ textarea.oa-field {
    không ở kích thước. Đổi cỡ là hai tab nhảy chỗ mỗi lần chuyển. */
 .ctabs__on,
 .ctabs__off {
-    font-size: var(--fs-body-lg);
+    font-size: var(--fs-base);
     line-height: 1;
     padding: 6px 0;
 }
@@ -2441,7 +2441,7 @@ textarea.oa-field {
     position: relative;
     top: -2px;
     vertical-align: top;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-sm);
 }
 
 .ctabs__on sup {
@@ -2516,7 +2516,7 @@ textarea.oa-field {
     display: flex;
     flex-direction: column;
     gap: 28px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
     color: var(--ink);
     overflow-y: auto;
@@ -2546,7 +2546,7 @@ textarea.oa-field {
 /* "hoặc" căn giữa giữa hai nhóm nút */
 .oa-or {
     text-align: center;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
 }
 
@@ -2679,7 +2679,7 @@ textarea.oa-field {
 }
 
 .oa-hero__copy p {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
     text-wrap: pretty;
 }
@@ -2705,7 +2705,7 @@ textarea.oa-field {
 
 .oa-hero__title {
     font-family: var(--font-hero);
-    font-size: var(--fs-display);
+    font-size: var(--fs-3xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -2821,7 +2821,7 @@ textarea.oa-field {
     flex-direction: column;
     gap: 14px;
     max-width: 420px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
 }
 
@@ -2841,7 +2841,7 @@ textarea.oa-field {
 }
 
 .oa-steps__n {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-5);
 }
 
@@ -2866,7 +2866,7 @@ textarea.oa-field {
 }
 
 .oa-rows__k {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
 }
@@ -2893,7 +2893,7 @@ textarea.oa-field {
     align-items: center;
     gap: 12px;
     padding: 0 14px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     color: var(--ink);
@@ -2911,7 +2911,7 @@ textarea.oa-field {
 }
 
 .oa-acc__chev {
-    font-size: var(--fs-caption);
+    font-size: var(--fs-xs);
     display: inline-block;
     transform: rotate(90deg);
     transition: transform .2s ease;
@@ -2939,7 +2939,7 @@ textarea.oa-field {
     align-items: center;
     gap: 16px;
     padding: 12px 0;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh-tight);
     color: var(--ink);
     cursor: pointer;
@@ -2954,12 +2954,12 @@ textarea.oa-field {
 /* Câu hỏi ĐANG MỞ to lên 13px — mẫu đổi cả cỡ chữ lẫn padding, không chỉ
    xoay mũi tên. Đó là thứ làm mục đang mở nổi hẳn khỏi danh sách. */
 .oa-qa[open] > .oa-qa__q {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-xl);
     padding: 14px 0 12px;
 }
 
 .oa-qa__sign {
-    font-size: var(--fs-body-sm);
+    font-size: var(--fs-sm);
     flex: none;
 }
 
@@ -3008,7 +3008,7 @@ textarea.oa-field {
        dưới cùng — nó tự mang theo khoảng thở của riêng nó. Bỏ hàng ấy mà giữ
        32 thì bốn cột kết thúc sát mép dưới, chân trang trông như bị cắt cụt. */
     padding: 72px var(--edge) 64px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
     color: var(--ink);
     display: flex;
@@ -3037,14 +3037,14 @@ textarea.oa-field {
 }
 
 .oa-footer__mark {
-    font-size: var(--fs-heading);
+    font-size: var(--fs-lg);
     font-weight: 700;
     letter-spacing: var(--ls-mark);
     text-transform: uppercase;
 }
 
 .oa-footer__quote {
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: .02em;
     text-wrap: pretty;
 }
@@ -3097,7 +3097,7 @@ textarea.oa-field {
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .oa-footer__channel span {
@@ -3119,7 +3119,7 @@ textarea.oa-field {
     border-left: 2px solid var(--ink);
     border-radius: 0;
     background: var(--bg);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
 }
 
@@ -3135,7 +3135,7 @@ textarea.oa-field {
     border-left-width: 1px;
     border-left-color: var(--line-input);
     color: var(--ink-2);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     line-height: var(--lh-tight);
     max-width: 220px;
 }
@@ -3155,7 +3155,7 @@ textarea.oa-field {
     border-radius: 0;
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
 }
 
@@ -3204,7 +3204,7 @@ textarea.oa-field {
 .oa-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 .oa-table th,
@@ -3216,7 +3216,7 @@ textarea.oa-field {
 }
 
 .oa-table th {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     font-weight: 400;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -3570,7 +3570,7 @@ body.is-search-open {
     gap: 14px;
     padding: 12px 0;
     border-top: 1px solid var(--line-input);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
 }
 
 .cartdrawer__list li:last-child .cartdrawer__row {
@@ -3628,7 +3628,7 @@ body.is-search-open {
     border-radius: var(--r-secondary);
     background: none;
     color: var(--ink);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     cursor: pointer;
@@ -3703,7 +3703,7 @@ body.is-search-open {
 .mobile-nav__links > a {
     padding: 14px 0;
     border-bottom: 1px solid var(--line-input);
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     letter-spacing: var(--ls-tight);
 }
 
@@ -3737,7 +3737,7 @@ body.is-search-open {
    ══════════════════════════════════════════════════════════════════════ */
 
 .oa-footer__helptitle {
-    font-size: var(--fs-subtitle);
+    font-size: var(--fs-md);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -3771,7 +3771,7 @@ body.is-search-open {
     background: var(--bg);
     color: var(--ink);
     font-family: inherit;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     line-height: 1;
     white-space: nowrap;
     cursor: pointer;
@@ -3845,7 +3845,7 @@ body.is-search-open {
     padding: 8px var(--edge);
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls);
     text-transform: uppercase;
     text-align: center;
@@ -3866,7 +3866,7 @@ body.is-search-open {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
     text-align: right;
 }
@@ -3896,7 +3896,7 @@ body.is-search-open {
     padding: 24px var(--edge);
     border-top: 1px solid var(--line);
     background: var(--bg);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     color: var(--ink-3);
 }
 
@@ -3954,7 +3954,7 @@ body.is-search-open {
    cho khách biết phải làm gì. */
 .error-page__code,
 .errpage__code {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-wide);
     text-transform: uppercase;
     color: var(--ink-3);
@@ -3962,7 +3962,7 @@ body.is-search-open {
 
 .error-page__title,
 .errpage__title {
-    font-size: var(--fs-title);
+    font-size: var(--fs-2xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -4000,7 +4000,7 @@ body.is-search-open {
     border-radius: var(--r-secondary);
     background: var(--bg);
     color: var(--ink);
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     white-space: nowrap;
     cursor: pointer;
     transition: background .18s ease, color .18s ease, border-color .18s ease;
@@ -4048,7 +4048,7 @@ body.is-search-open {
     }
 
     .barebar__help {
-        font-size: var(--fs-micro);
+        font-size: var(--fs-xs);
     }
 }
 
@@ -4129,7 +4129,7 @@ body.is-search-open {
        │ chữ VÀ độ giãn để wordmark vẫn vừa màn 360px.
        └──────────────────────────────────────────────────────────────────── */
     .oa-header__mark {
-        font-size: var(--fs-body-sm);
+        font-size: var(--fs-sm);
         letter-spacing: .08em;
     }
 
@@ -4284,7 +4284,7 @@ body.is-search-open {
 
 .lgate__msg {
     margin: 0 0 22px;
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: 1.5;
     color: var(--ink);
 }
@@ -4298,7 +4298,7 @@ body.is-search-open {
     border-radius: var(--r-cta);
     background: var(--ink);
     color: #fff;
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     letter-spacing: .06em;
     text-align: center;
     text-decoration: none;

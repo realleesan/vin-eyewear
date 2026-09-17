@@ -342,13 +342,13 @@ html:not(.js) .vhero__bars {
     padding: 20px;
     border: 1px solid var(--line-input);
     background: var(--bg);
-    font-size: var(--fs-body);
+    font-size: var(--fs-base);
     line-height: var(--lh);
 }
 
 .hrev__stars {
     color: var(--ink);
-    font-size: var(--fs-label);
+    font-size: var(--fs-sm);
     letter-spacing: .12em;
 }
 
@@ -390,7 +390,7 @@ html:not(.js) .vhero__bars {
 }
 
 .hrev__who {
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
     letter-spacing: var(--ls-tight);
     text-transform: uppercase;
 }
@@ -401,7 +401,7 @@ html:not(.js) .vhero__bars {
 
 .hrev__what {
     color: var(--ink-3);
-    font-size: var(--fs-micro);
+    font-size: var(--fs-xs);
 }
 
 .hrev__what:hover {
