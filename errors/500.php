@@ -80,6 +80,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Hệ thống đang gặp sự cố — Vin Eyewear</title>
+<link rel="stylesheet" href="/assets/css/typography.css">
 <style>
     /* Phông HỆ THỐNG, không tải gì từ ngoài — xem khối chú thích đầu file. */
     .vin-err, .vin-err * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -104,7 +105,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
         overflow: auto;
         background: #faf6f0;
         font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-        font-size: 15px;
+        font-size: var(--fs-body);
         line-height: 1.65;
         color: #33272a;
         -webkit-font-smoothing: antialiased;
@@ -121,7 +122,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
     }
 
     .vin-err__brand {
-        font-size: 20px;
+        font-size: var(--fs-heading);
         font-weight: 600;
         letter-spacing: 0.02em;
         color: #8a2432;
@@ -137,7 +138,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
     }
 
     .vin-err__title {
-        font-size: 21px;
+        font-size: var(--fs-heading);
         font-weight: 600;
         line-height: 1.35;
         color: #33272a;
@@ -145,7 +146,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
 
     .vin-err__desc {
         margin-top: 12px;
-        font-size: 14.5px;
+        font-size: var(--fs-body-sm);
         color: #6f5f5a;
     }
 
@@ -155,7 +156,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
         padding: 10px 14px;
         border-radius: 4px;
         background: #f7efe6;
-        font-size: 13px;
+        font-size: var(--fs-caption);
         color: #6f5f5a;
     }
 
@@ -176,7 +177,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
         border-radius: 4px;
         background: #8a2432;
         color: #fff;
-        font-size: 14px;
+        font-size: var(--fs-body-sm);
         font-weight: 500;
         text-decoration: none;
         cursor: pointer;
@@ -195,7 +196,7 @@ $luc = date('H:i') . ' ngày ' . date('d/m/Y');
 
     .vin-err__help {
         margin-top: 22px;
-        font-size: 13.5px;
+        font-size: var(--fs-body-sm);
         color: #6f5f5a;
     }
 

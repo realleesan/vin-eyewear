@@ -524,16 +524,20 @@ class PasswordResetModel extends BaseModel
         $hello = $name !== '' ? 'Chào ' . e($name) . ',' : 'Chào bạn,';
         $mins  = (int) (Otp::TTL / 60);
         $code  = e($code);
+        $bodySize = Typography::size('--fs-body');
+        $headingSize = Typography::size('--fs-heading');
+        $otpSize = Typography::size('--fs-otp');
+        $captionSize = Typography::size('--fs-caption');
 
         return <<<HTML
         <div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;
-                    font-size:15px;line-height:1.7;color:#1a1214;max-width:520px">
-          <p style="font-family:Georgia,serif;font-size:22px;margin:0 0 18px">Vin Eyewear</p>
+                    font-size:{$bodySize};line-height:1.7;color:#1a1214;max-width:520px">
+          <p style="font-family:Georgia,serif;font-size:{$headingSize};margin:0 0 18px">Vin Eyewear</p>
           <p>{$hello}</p>
           <p>Mã xác minh để đặt lại mật khẩu của bạn là:</p>
-          <p style="margin:24px 0;font-size:34px;font-weight:700;letter-spacing:10px;
+          <p style="margin:24px 0;font-size:{$otpSize};font-weight:700;letter-spacing:10px;
                     color:#801a20">{$code}</p>
-          <p style="color:#5c4f52;font-size:13px">
+          <p style="color:#5c4f52;font-size:{$captionSize}">
             Mã có hiệu lực trong {$mins} phút và chỉ dùng được một lần.<br>
             Nếu bạn không yêu cầu việc này, hãy bỏ qua email — mật khẩu hiện tại
             của bạn không thay đổi. Đừng đưa mã cho bất kỳ ai, kể cả người tự

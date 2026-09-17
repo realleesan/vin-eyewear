@@ -8,6 +8,7 @@
     --fs-body-lg: calc(1rem * var(--type-scale));
     --fs-subtitle: calc(1rem * var(--type-scale));
     --fs-heading: calc(1.25rem * var(--type-scale));
+    --fs-otp: calc(2.125rem * var(--type-scale));
     --fs-title: clamp(calc(1.75rem * var(--type-scale)), calc((1.2rem + 1.8vw) * var(--type-scale)), calc(3rem * var(--type-scale)));
     --fs-display: clamp(calc(2.25rem * var(--type-scale)), calc((1.4rem + 3vw) * var(--type-scale)), calc(4.5rem * var(--type-scale)));
     --lh-body: 1.5;

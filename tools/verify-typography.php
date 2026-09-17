@@ -57,7 +57,7 @@ function typographyError(string $css): ?string
     $css = preg_replace('/\\/\\*.*?\\*\\//s', '', $css);
     $required = [
         '--type-scale', '--fs-micro', '--fs-label', '--fs-caption',
-        '--fs-body-sm', '--fs-body', '--fs-body-lg', '--fs-subtitle',
+        '--fs-body-sm', '--fs-body', '--fs-body-lg', '--fs-subtitle', '--fs-otp',
         '--fs-heading', '--fs-title', '--fs-display', '--lh-body', '--lh-tight',
     ];
     foreach ($required as $token) {
@@ -68,7 +68,7 @@ function typographyError(string $css): ?string
 
     $semanticSizeTokens = [
         '--fs-micro', '--fs-label', '--fs-caption', '--fs-body-sm', '--fs-body',
-        '--fs-body-lg', '--fs-subtitle', '--fs-heading', '--fs-title', '--fs-display',
+        '--fs-body-lg', '--fs-subtitle', '--fs-heading', '--fs-otp', '--fs-title', '--fs-display',
     ];
     foreach ($semanticSizeTokens as $token) {
         $value = declarationValue($css, $token);
