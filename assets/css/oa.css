@@ -1582,7 +1582,7 @@ textarea.oa-field {
 }
 
 .oa-card__pricesale s {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-base);
     color: var(--ink-6);
 }
 

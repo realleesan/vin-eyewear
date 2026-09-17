@@ -177,7 +177,7 @@
 }
 
 .pdinfo__old {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-base);
     color: var(--pd-mute);
 }
 
@@ -793,7 +793,7 @@
 }
 
 .pdsim__price s {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-base);
     color: var(--pd-mute);
 }
 
