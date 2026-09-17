@@ -14,41 +14,94 @@ class AboutController extends BaseController
 {
     public function index(): void
     {
-        // Khối 02 — bốn ô nền đỏ trong lưới giá trị cốt lõi. Chỉ có tên: bản
-        // thiết kế để mỗi ô một số thứ tự và một dòng tiêu đề, phần diễn giải
-        // nằm gọn ở ô mở đầu chiếm hai cột.
+        // Khối 02 — bốn thẻ giá trị cốt lõi, mỗi thẻ có tiêu đề, mô tả ngắn
+        // và nhãn phụ phía dưới (theo bản thiết kế design-reference/introduction).
         $values = [
-            'Lấy khách hàng làm trọng tâm',
-            'Chính trực',
-            'Nhiệt huyết',
-            'Tận tâm',
+            [
+                'title' => 'Lấy khách hàng làm trọng tâm',
+                'desc'  => 'Lắng nghe thói quen sinh hoạt và đặc thù công việc để gợi ý tròng '
+                         . 'kính và kiểu dáng gọng tối ưu nhất.',
+                'tag'   => 'Tận tâm',
+            ],
+            [
+                'title' => 'Chính trực & Minh bạch',
+                'desc'  => '100% tròng kính và phụ kiện chính hãng, thông tin xuất xứ rõ ràng, '
+                         . 'giá niêm yết công khai không phụ phí ẩn.',
+                'tag'   => 'Đáng tin cậy',
+            ],
+            [
+                'title' => 'Nhiệt huyết & Chuyên môn',
+                'desc'  => 'Kỹ thuật viên khúc xạ nhiều năm kinh nghiệm, liên tục cập nhật '
+                         . 'công nghệ đo khám thị lực tiên tiến.',
+                'tag'   => 'Chuẩn xác',
+            ],
+            [
+                'title' => 'Tận tâm đồng hành',
+                'desc'  => 'Bảo dưỡng, vệ sinh siêu âm và cân chỉnh gọng kính trọn đời, hỗ '
+                         . 'trợ trước và sau bán hàng chu đáo.',
+                'tag'   => 'Đồng hành',
+            ],
         ];
 
-        // Khối 03 — ba mục trong danh sách của phần dịch vụ đo mắt
+        // Khối 03 — bốn mục trong danh sách của phần dịch vụ đo mắt
         $exam = [
             [
-                'title' => 'Thiết bị đo khúc xạ',
-                'desc'  => 'Máy đo được bảo dưỡng định kỳ, kết hợp thử kính trực tiếp để ra kết '
-                         . 'quả phù hợp với từng người.',
+                'title' => 'Quy trình đo khúc xạ 5 bước chuẩn quốc tế',
+                'desc'  => 'Không vội vã. Kết hợp máy đo điện tử tự động và thử thị lực thực '
+                         . 'tế 10–15 phút để mắt hoàn toàn thích nghi.',
             ],
             [
-                'title' => 'Quy trình chuẩn hóa',
-                'desc'  => 'Mỗi lần tư vấn đi qua đủ bước: đo mắt, thử tròng, tư vấn gọng, lắp '
-                         . 'kính và hướng dẫn bảo quản.',
+                'title' => 'Đa dạng phong cách & Phù hợp gương mặt',
+                'desc'  => 'Hàng trăm mẫu gọng kính Titanium, Acetate cao cấp từ phong cách '
+                         . 'cổ điển thanh lịch đến tối giản hiện đại.',
             ],
             [
-                'title' => 'Cải tiến liên tục',
-                'desc'  => 'Chúng tôi thường xuyên cập nhật kiến thức kỹ thuật và theo dõi nhãn '
-                         . 'khoa mới để phục vụ tốt hơn.',
+                'title' => 'Hỗ trợ công nghệ chọn kính thông minh (AI & Digital Fitting)',
+                'desc'  => 'Tư vấn kiểu dáng gọng theo tỷ lệ khuôn mặt và đo tâm mắt, khoảng '
+                         . 'cách đồng tử (PD) chuẩn xác tuyệt đối.',
+            ],
+            [
+                'title' => 'Nguồn gốc tròng kính chính hãng 100%',
+                'desc'  => 'Bao bì niêm phong được bóc trước mặt khách hàng cùng thẻ bảo hành '
+                         . 'chính hãng từ nhà phân phối.',
+            ],
+        ];
+
+        // Khối cam kết dịch vụ — bốn thẻ icon + tiêu đề + mô tả
+        $commitments = [
+            [
+                'icon'  => 'check',
+                'title' => 'Chất lượng kiểm định',
+                'desc'  => 'Tròng kính chống trầy xước, chống tia UV, lọc ánh sáng xanh đạt '
+                         . 'chuẩn quang học quốc tế.',
+            ],
+            [
+                'icon'  => 'refresh',
+                'title' => 'Bảo hành linh hoạt',
+                'desc'  => 'Đổi mới trong 7 ngày nếu có lỗi kỹ thuật. Miễn phí thay ve ốc và '
+                         . 'cân chỉnh gọng trọn đời.',
+            ],
+            [
+                'icon'  => 'eye',
+                'title' => 'Đo mắt miễn phí 100%',
+                'desc'  => 'Quy trình đo khúc xạ chuyên sâu hoàn toàn miễn phí, chu đáo ngay '
+                         . 'cả khi bạn chưa mua sản phẩm.',
+            ],
+            [
+                'icon'  => 'clock',
+                'title' => 'Cắt kính lấy ngay',
+                'desc'  => 'Hệ thống máy mài tự động tại chỗ, hoàn thiện gọng tròng kính chuẩn '
+                         . 'xác chỉ sau 20 phút.',
             ],
         ];
 
         $this->renderView('about/index', [
-            'pageTitle' => 'Giới thiệu Vin Eyewear — Chuyên gia kính cận',
-            'metaDesc'  => 'Câu chuyện thương hiệu, giá trị cốt lõi và dịch vụ đo khúc xạ '
-                         . 'của Vin Eyewear.',
-            'values'    => $values,
-            'exam'      => $exam,
+            'pageTitle'   => 'Giới thiệu Vin Eyewear — Chuyên gia kính cận',
+            'metaDesc'    => 'Câu chuyện thương hiệu, giá trị cốt lõi và dịch vụ đo khúc xạ '
+                           . 'của Vin Eyewear.',
+            'values'      => $values,
+            'exam'        => $exam,
+            'commitments' => $commitments,
         ]);
     }
 }

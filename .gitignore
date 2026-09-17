@@ -20,6 +20,7 @@ scripts/
 /CLAUDE.md
 CLAUDE.local.md
 .claude/
+.agents/
 .codegraph/
 # Ảnh chụp giao diện để đưa sang Claude Design — sinh lại được, không cần theo dõi
 design-export/

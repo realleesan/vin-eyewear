@@ -3,14 +3,14 @@
 /**
  * about/index.php — Giới thiệu
  *
- * Dựng theo "Gioi thieu v2.dc.html": bốn khối đánh số 01→04 — Về chúng tôi ·
- * Giá trị cốt lõi · Dịch vụ đo mắt · Bắt đầu. Kiểu dáng ở assets/css/about.css,
- * bảng màu lấy từ token cũ của site (ghi chú ánh xạ nằm ở đầu file CSS đó).
+ * Dựng theo design-reference/introduction: năm khối —
+ *   01 — Về chúng tôi (hero full-width, chữ trắng bên trái giữa)
+ *   02 — Giá trị cốt lõi (4 thẻ viền, có mô tả và nhãn phụ)
+ *   03 — Dịch vụ đo mắt (grid ảnh trái + 4 mục text phải)
+ *   Cam kết dịch vụ (4 thẻ icon)
+ *   04 — Bắt đầu (CTA căn giữa)
  *
- * Khối nền hồng đầu trang mà bản vẽ để trên cùng chính là .pagehead dùng
- * chung — cùng nền, cùng cách xếp breadcrumb / tiêu đề trái / câu dẫn phải —
- * nên gọi lại partial thay vì vẽ lại một bản riêng cho trang này.
- *
+ * Kiểu dáng ở assets/css/about.css, bảng màu lấy từ token của site.
  * Class .reveal là hiệu ứng hiện dần khi cuộn tới, do đoạn script dùng chung
  * ở cuối master.php xử lý.
  */
@@ -22,8 +22,6 @@ partial('_layout/page-head', [
 ]);
 ?>
 
-<?php /* Các biến --about-* (đệm khối, khe cột, độ lệch khung ảnh) khai trên
-         thẻ bọc này để bốn khối bên dưới dùng chung một bộ số. */ ?>
 <div class="about">
 
     <!-- ============================================================
@@ -35,9 +33,9 @@ partial('_layout/page-head', [
             <figure class="about-frame reveal">
                 <div class="about-frame__media">
                     <img
-                        src="<?= asset('assets/images/hero-models.jpg') ?>"
-                        alt="Khách hàng đeo kính Vin Eyewear"
-                        width="1431" height="1352"
+                        src="<?= asset('assets/images/store-interior.jpg') ?>"
+                        alt="Không gian trưng bày tối giản hiện đại của Vin Eyewear"
+                        width="1920" height="1080"
                         loading="lazy" decoding="async"
                     >
                 </div>
@@ -56,8 +54,8 @@ partial('_layout/page-head', [
                         thị lực chuẩn xác và sản phẩm kính mắt ở mức giá minh bạch.
                     </p>
                     <p>
-                        Từ hai cơ sở tại Hà Nội, chúng tôi phục vụ từng khách hàng theo cùng một
-                        cách: lắng nghe nhu cầu, đo mắt cẩn thận và tư vấn đúng với ngân sách
+                        Tự hào tại Hà Nội với 2 cơ sở, chúng tôi phục vụ từng khách hàng theo cùng
+                        một cách: lắng nghe nhu cầu, đo mắt cẩn thận và tư vấn đúng với ngân sách
                         của bạn.
                     </p>
                 </div>
@@ -73,31 +71,11 @@ partial('_layout/page-head', [
     <section class="about-values" aria-labelledby="about-values-title">
         <div class="about-values__inner">
 
-            <?php
-            /* ─────────────────────────────────────────────────────────────
-               DỰNG THEO KHỐI "Our Core Values" CỦA about.html (Furnish):
-
-                   <section class="py-lg-9 py-5 bg-light">
-                     <div class="container text-center">
-                       <h2 class="mb-5">Our Core Values</h2>
-                       <div class="row g-4">
-                         <div class="col-md-4">
-                           <div class="card rounded-0 border-0 shadow-sm h-100 p-4">
-
-               ĐÃ BỎ LƯỚI SO LE CÓ HAI Ô ẢNH của bản cũ. Nó là bố cục kiểu
-               masonry — mỗi hàng một ô ảnh lệch nhau — và đó đúng là thứ làm
-               trang này không đọc ra là Furnish: bản mẫu xếp các giá trị
-               thành một hàng thẻ ĐỀU NHAU, căn giữa, trên một dải nền xám.
-
-               Hai tấm ảnh bỏ đi không mất chỗ nào khác: cả hai đã có mặt ở
-               khối 01 và khối 03 của chính trang này.
-               ───────────────────────────────────────────────────────────── */
-            ?>
             <div class="about-values__head">
                 <p class="about-eyebrow about-eyebrow--center">02 — Giá trị cốt lõi</p>
 
                 <h2 id="about-values-title" class="about-vlead__title">
-                    Giá trị cốt lõi<br><em>tạo nên một thương hiệu.</em>
+                    Tạo nên một thương hiệu.
                 </h2>
 
                 <p class="about-values__note">
@@ -109,8 +87,14 @@ partial('_layout/page-head', [
             <ul class="about-values__grid" role="list">
                 <?php foreach ($values as $i => $value): ?>
                     <li class="about-vcard">
-                        <span class="about-vcard__num"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
-                        <h3 class="about-vcard__title"><?= e($value) ?></h3>
+                        <div class="about-vcard__top">
+                            <span class="about-vcard__num"><?= str_pad((string) ($i + 1), 2, '0', STR_PAD_LEFT) ?></span>
+                            <h3 class="about-vcard__title"><?= e($value['title']) ?></h3>
+                            <p class="about-vcard__desc"><?= e($value['desc']) ?></p>
+                        </div>
+                        <div class="about-vcard__bottom">
+                            <span class="about-vcard__tag"><?= e($value['tag']) ?></span>
+                        </div>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -123,8 +107,39 @@ partial('_layout/page-head', [
     <section class="about-exam" aria-labelledby="about-exam-title">
         <div class="about-exam__grid">
 
+            <!-- Cột trái: grid ảnh -->
+            <div class="about-exam__visuals reveal">
+                <div class="about-exam__photo-main">
+                    <img
+                        src="<?= asset('assets/images/showroom-exam-room.jpg') ?>"
+                        alt="Phòng đo khám thị lực kỹ thuật số chuyên sâu Vin Eyewear"
+                        width="1280" height="960"
+                        loading="lazy" decoding="async"
+                    >
+                    <div class="about-exam__photo-caption">
+                        <span class="about-exam__photo-label">Trang thiết bị khúc xạ tự động hiện đại</span>
+                        <span class="about-exam__photo-tag">Phòng khám chuyên khoa</span>
+                    </div>
+                </div>
+                <div class="about-exam__photo-row">
+                    <div class="about-exam__photo-sub">
+                        <img
+                            src="<?= asset('assets/images/showroom-frames.jpg') ?>"
+                            alt="Kỹ thuật cân chỉnh và mài lắp tròng kính thủ công tinh xảo"
+                            width="640" height="480"
+                            loading="lazy" decoding="async"
+                        >
+                    </div>
+                    <div class="about-exam__stat">
+                        <span class="about-exam__stat-num">100%</span>
+                        <span class="about-exam__stat-text">Tròng kính quang học nhập khẩu chính hãng từ Essilor, Chemi &amp; Hoya.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: nội dung text -->
             <div class="about-exam__text reveal">
-                <p class="about-eyebrow">03 — Dịch vụ đo mắt</p>
+                <p class="about-eyebrow">03 — Dịch vụ đo mắt & khác biệt</p>
 
                 <h2 id="about-exam-title" class="about-h2 about-exam__h2">
                     Đo mắt cẩn thận —<br><em>chuẩn xác trong từng chi tiết.</em>
@@ -132,7 +147,7 @@ partial('_layout/page-head', [
 
                 <p class="about-exam__lead">
                     Chúng tôi dùng thiết bị đo mắt chuyên dụng, bảo dưỡng định kỳ, kết hợp thử
-                    kính trực tiếp để mỗi kết quả tư vấn đều phù hợp với từng người.
+                    kính thực tế để mỗi kết quả tư vấn đều phù hợp với từng người.
                 </p>
 
                 <ol class="about-exam__list">
@@ -149,17 +164,38 @@ partial('_layout/page-head', [
 
                 <a href="/dat-lich" class="btn-primary btn-inline about-exam__cta">Đặt lịch đo mắt</a>
             </div>
+        </div>
+    </section>
 
-            <figure class="about-frame about-frame--left reveal">
-                <div class="about-frame__media">
-                    <img
-                        src="<?= asset('assets/images/showroom-exam-room.jpg') ?>"
-                        alt="Phòng đo khúc xạ tại Vin Eyewear"
-                        width="1280" height="960"
-                        loading="lazy" decoding="async"
-                    >
+    <!-- ============================================================
+         CAM KẾT DỊCH VỤ
+         ============================================================ -->
+    <section class="about-commit" aria-labelledby="about-commit-title">
+        <div class="about-commit__head">
+            <p class="about-eyebrow about-eyebrow--center">Cam kết dịch vụ</p>
+            <h2 id="about-commit-title" class="about-commit__title">
+                An tâm trong từng lần trải nghiệm
+            </h2>
+        </div>
+
+        <div class="about-commit__grid">
+            <?php foreach ($commitments as $item): ?>
+                <div class="about-commit__card">
+                    <div class="about-commit__icon">
+                        <?php if ($item['icon'] === 'check'): ?>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path></svg>
+                        <?php elseif ($item['icon'] === 'refresh'): ?>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path></svg>
+                        <?php elseif ($item['icon'] === 'eye'): ?>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path></svg>
+                        <?php elseif ($item['icon'] === 'clock'): ?>
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"></path></svg>
+                        <?php endif; ?>
+                    </div>
+                    <h3 class="about-commit__card-title"><?= e($item['title']) ?></h3>
+                    <p class="about-commit__card-desc"><?= e($item['desc']) ?></p>
                 </div>
-            </figure>
+            <?php endforeach; ?>
         </div>
     </section>
 
@@ -170,10 +206,10 @@ partial('_layout/page-head', [
         <p class="about-eyebrow about-eyebrow--center">04 — Bắt đầu</p>
 
         <h2 id="about-start-title" class="about-h2 about-start__h2">
-            Hành trình nhìn rõ hơn bắt đầu<br><em>từ một lựa chọn phù hợp.</em>
+            Hành trình<br>nhìn rõ hơn<br>bắt đầu từ một<br><em>lựa chọn phù hợp.</em>
         </h2>
 
-        <p class="about-start__quote">“Your journey to clearer vision starts with the right choice.”</p>
+        <p class="about-start__quote">"Your journey to clearer vision starts with the right choice."</p>
 
         <div class="about-start__actions">
             <a href="/san-pham/gong-kinh" class="btn-primary btn-inline">Khám phá gọng kính</a>
