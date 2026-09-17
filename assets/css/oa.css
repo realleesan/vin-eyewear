@@ -601,9 +601,16 @@ ol[role="list"],
    │ hàng". Ghi lại ở đây để lần sau ai thấy tiêu đề băng nhỏ thì biết đó là
    │ lựa chọn, không phải sót.
    └──────────────────────────────────────────────────────────────────────── */
-.oa-title,
-.oa-band-title {
+.oa-title {
     font-size: var(--fs-2xl);
+    font-weight: 500;
+    letter-spacing: var(--ls);
+    text-transform: uppercase;
+}
+
+.oa-band-title,
+.oa-split .oa-title {
+    font-size: var(--fs-xl);
     font-weight: 500;
     letter-spacing: var(--ls);
     text-transform: uppercase;
@@ -1553,7 +1560,7 @@ textarea.oa-field {
        │ do một pixel cỡ chữ. Muốn tên to hơn nữa thì đổi --fs-subtitle, và
        │ chấp nhận là mọi tên hàng trên cả site to lên theo — đó chính là
        │ điều mà hệ vai trò này bảo đảm. */
-    font-size: var(--fs-base);
+    font-size: var(--fs-md);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--ls-tight);
@@ -1561,6 +1568,7 @@ textarea.oa-field {
 }
 
 .oa-card__price {
+    font-size: var(--fs-base);
     color: var(--ink-2);
 }
 
@@ -1570,18 +1578,22 @@ textarea.oa-field {
     align-items: baseline;
     flex-wrap: wrap;
     justify-content: center;
+    font-size: var(--fs-base);
 }
 
 .oa-card__pricesale s {
+    font-size: var(--fs-sm);
     color: var(--ink-6);
 }
 
 .oa-card__pricesale b {
+    font-size: var(--fs-base);
     color: var(--sale);
     font-weight: 700;
 }
 
 .oa-card__status {
+    font-size: var(--fs-xs);
     color: var(--ink-2);
 }
 

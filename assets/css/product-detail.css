@@ -177,6 +177,7 @@
 }
 
 .pdinfo__old {
+    font-size: var(--fs-sm);
     color: var(--pd-mute);
 }
 
@@ -783,6 +784,7 @@
 }
 
 .pdsim__price {
+    font-size: var(--fs-base);
     display: flex;
     flex-wrap: wrap;
     gap: 0 calc(6px * var(--oa-scale));
@@ -791,6 +793,7 @@
 }
 
 .pdsim__price s {
+    font-size: var(--fs-sm);
     color: var(--pd-mute);
 }
 
