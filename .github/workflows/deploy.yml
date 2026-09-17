@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+  # Cho phép bấm nút chạy tay ở tab Actions trên GitHub.
+  # Cần cho lần đẩy ĐẦU TIÊN: khi trên máy không còn commit nào để push mà
+  # hosting thì vẫn trống, không có workflow_dispatch sẽ không có cách nào
+  # khởi động deploy ngoài việc tạo một commit rỗng.
+  workflow_dispatch:
 
 jobs:
   web-deploy:
@@ -14,7 +19,7 @@ jobs:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Quét toàn bộ để upload đủ 100% file
+          fetch-depth: 0 # Chỉ lấy 2 commit gần nhất để so sánh file khác biệt nhanh hơn
 
       - name: 📂 Sync files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -23,7 +28,99 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ./htdocs/
+          local-dir: ./
+          # --- CÁC THAM SỐ TỐI ƯU THÊM VÀO ---
           protocol: ftp
           port: 21
-          security: loose
-          dangerous-clean-up: false
+          # ĐẨY LẠI TOÀN BỘ MỘT LẦN — 2026-08-22.
+          #
+          # Action chỉ upload file KHÁC so với trạng thái ghi trong file này. Cơ
+          # chế đó nhanh, nhưng có một điểm mù: file nào đã lên hosting hỏng sẵn
+          # (FTP đứt giữa chừng, upload thiếu đuôi) thì mọi lần deploy sau đều bỏ
+          # qua nó và vẫn báo success — hỏng vĩnh viễn mà bảng điều khiển xanh.
+          #
+          # Đổi tên file trạng thái là cách bảo action "chưa từng deploy bao giờ":
+          # nó không tìm thấy trạng thái cũ nên đẩy lại TẤT CẢ, ghi đè file hỏng.
+          #
+          # Đổi tên chứ không xoá file cũ: `dangerous-clean-slate` để false nên bản cũ
+          # cứ nằm đó, và nếu lần này hỏng thì đổi tên ngược lại là quay về đúng
+          # trạng thái trước.
+          #
+          # LẦN THỨ HAI — v2 -> v3, ngày 2026-08-26.
+          #
+          # Khu quản trị trả 500 trên trang thật trong khi trang bán hàng vẫn
+          # chạy. Hình dạng đó chỉ đúng một nguyên nhân: file trong core/ hoặc
+          # app/models/ lên hosting thiếu hay lên dở. Trang bán hàng không đụng
+          # tới chúng nên nó không việc gì, còn AdminController::renderAdmin()
+          # thì gọi ContactModel và Database::columnExists() ở MỌI trang quản
+          # trị — thiếu một mắt là 500 sạch cả khu.
+          #
+          # Bằng chứng: tải một file .php mới lên bằng deploy rồi mở nó trên
+          # trang thật thì nhận 404 của ứng dụng, nghĩa là file không có trên
+          # đĩa — mà .htaccess chỉ đẩy về index.php khi REQUEST_FILENAME !-f.
+          state-name: .ftp-deploy-sync-state-v4.json
+          # THAM SỐ NÀY TỪNG GÕ SAI TÊN VÀ BỊ BỎ QUA IM LẶNG.
+          #
+          # Trước đây viết `dangerous-clean-up`, mà action không có input nào
+          # tên vậy — tên đúng là `dangerous-clean-slate`. Action chỉ in một
+          # dòng Warning giữa hàng trăm dòng log rồi chạy tiếp, nên suốt nhiều
+          # lần deploy không ai thấy:
+          #
+          #   Warning: Unexpected input(s) 'dangerous-clean-up', valid inputs
+          #   are [... 'dangerous-clean-slate' ...]
+          #
+          # May là mặc định của nó vốn đã là false, nên hành vi thật vẫn đúng
+          # với ý định. Nhưng một dòng cấu hình KHÔNG LÀM GÌ CẢ trong khi chú
+          # thích ngay cạnh nói nó đang bảo vệ mình thì nguy hiểm hơn là không
+          # có dòng nào: lần sau ai đó cần tắt/bật thật sẽ sửa đúng dòng này và
+          # tưởng đã xong.
+          #
+          # false = KHÔNG xoá file trên hosting chỉ vì nó không có trong Git.
+          # Trên server có những thứ Git không giữ và không được phép mất:
+          # .env (mật khẩu CSDL), assets/uploads/ (ảnh sản phẩm nhân viên tải
+          # lên), storage/ (token Zalo, log thư).
+          dangerous-clean-slate: false
+          timeout: 60000 # Tăng thời gian chờ response lên 60 giây để tránh đứt kết nối
+
+          # KHÔNG ĐẨY BỐN FILE CÔNG CỤ LÊN HOSTING — thêm 2026-08-27.
+          #
+          # install.php · kiem-tra-db.php · kiem-tra-sepay.php ·
+          # chan-doan-quan-tri.php đều là công cụ dùng MỘT LẦN lúc cài đặt hoặc
+          # lúc chẩn đoán, và cả bốn đều tự dặn "XOÁ NGAY SAU KHI XEM XONG" ở
+          # đầu file. Nhưng lời dặn ấy chỉ nhắc được người đọc nó.
+          #
+          # install.php TẠO ĐƯỢC TÀI KHOẢN QUẢN TRỊ. Cả bốn mở bằng cùng một
+          # INSTALL_TOKEN trong .env — một chuỗi đi qua thanh địa chỉ trình
+          # duyệt, nên nó nằm trong lịch sử duyệt web, trong access log của
+          # hosting, và trong bất kỳ ảnh chụp màn hình nào.
+          #
+          # Ngày 2026-08-26 cả bốn lên hosting cùng lúc: lần đẩy toàn bộ (đổi
+          # state-name sang v3) không phân biệt file nào là công cụ. Xoá tay
+          # thì lần đẩy toàn bộ SAU lại đưa chúng lên. Chặn ở đây là chặn được
+          # cả lớp vấn đề, không phải một lần.
+          #
+          # Vẫn GIỮ trong repo: chúng cần cho lần cài trên máy mới, và cho
+          # chính việc chẩn đoán ở máy phát triển. Chỉ là không lên máy chủ
+          # thật nữa. Cần chạy trên hosting thì tải tay lên rồi xoá tay đi —
+          # một thao tác có chủ ý, không phải thứ tự động xảy ra.
+
+          # KHÔNG ĐẨY relay/ LÊN HOSTING.
+          #
+          # Thư mục đó là mã Node.js của cầu nối SePay, chạy trên Render chứ
+          # không phải ở đây — InfinityFree không chạy Node. Đẩy lên thì nó nằm
+          # chết trong htdocs, tốn dung lượng của gói miễn phí, và phơi cấu trúc
+          # bên trong của tích hợp ra ngoài mà chẳng đổi lấy được gì.
+          #
+          # Ba dòng đầu là danh sách loại trừ MẶC ĐỊNH của action. Khai `exclude`
+          # là GHI ĐÈ mặc định chứ không cộng thêm, nên phải chép lại — bỏ sót
+          # là .git/ của repo được đẩy nguyên lên hosting.
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            relay/**
+            render.yaml
+            install.php
+            kiem-tra-db.php
+            kiem-tra-sepay.php
+            chan-doan-quan-tri.php
