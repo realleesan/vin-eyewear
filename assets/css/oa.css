@@ -1518,7 +1518,7 @@ textarea.oa-field {
    └──────────────────────────────────────────────────────────────────────── */
 .oa-card__body {
     padding: 14px 14px 4px;
-    font-size: var(--fs-card-text);
+    font-size: var(--fs-base);
     line-height: var(--lh);
     text-align: center;
 }
@@ -1546,7 +1546,7 @@ textarea.oa-field {
     color: var(--ink);
 
     /* ┌─ TÊN HÀNG LÀ MỘT "TIÊU ĐỀ NHỎ" ──────────────────────────────────
-       │ --fs-card-text, giá giữ --fs-card-price thừa hưởng từ .oa-card__body.
+       │ --fs-subtitle, giá giữ --fs-body thừa hưởng từ .oa-card__body.
        │ Gọi qua TÊN VAI TRÒ chứ không gọi cỡ — xem typography.css.
        │
        │ ĐÃ TỪNG LÀ một cỡ subtitle riêng trong cùng ngày 12/09/2026, và chú thích
@@ -1560,7 +1560,7 @@ textarea.oa-field {
        │ do một pixel cỡ chữ. Muốn tên to hơn nữa thì đổi --fs-subtitle, và
        │ chấp nhận là mọi tên hàng trên cả site to lên theo — đó chính là
        │ điều mà hệ vai trò này bảo đảm. */
-    font-size: var(--fs-card-text);
+    font-size: var(--fs-md);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: var(--ls-tight);
