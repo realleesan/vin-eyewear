@@ -19,7 +19,7 @@ jobs:
       - name: 🚚 Get latest code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Chỉ lấy 2 commit gần nhất để so sánh file khác biệt nhanh hơn
+          fetch-depth: 2 # Chỉ lấy 2 commit gần nhất để so sánh file khác biệt nhanh hơn
 
       - name: 📂 Sync files via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
