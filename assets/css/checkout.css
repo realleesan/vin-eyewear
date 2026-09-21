@@ -1732,7 +1732,7 @@ html.js .cofallback {
     padding: 4px 20px;
     border: 1px solid #d5d3df;
     border-radius: 16px;
-    background: #fbfaff;
+    background: #fff;
 }
 
 .page-order-checkout .covou__tag {
@@ -1750,7 +1750,7 @@ html.js .cofallback {
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: transparent;
+    background: #fff;
     color: #222;
     font-size: 20px;
     letter-spacing: normal;
