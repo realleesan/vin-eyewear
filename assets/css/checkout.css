@@ -1788,8 +1788,8 @@ html.js .cofallback {
 }
 
 .page-order-checkout .covou__apply:hover {
-    background: transparent;
-    color: #000;
+    background: #fff;
+    color: #222126;
 }
 
 .page-order-checkout .covou__pick {
