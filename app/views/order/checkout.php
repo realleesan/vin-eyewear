@@ -149,6 +149,8 @@ $storeId  = $old['storeId'] ?? '';
             <a href="/gio-hang"><?= e(t('cart.title')) ?></a>
             <span class="cohead__sep" aria-hidden="true">›</span>
             <span class="cohead__here" aria-current="page"><?= e(t('co.checkout')) ?></span>
+            <span class="cohead__sep" aria-hidden="true">›</span>
+            <span class="cohead__next">Hoàn tất</span>
         </nav>
 
         <div class="cohead__row">

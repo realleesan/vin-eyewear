@@ -207,11 +207,10 @@ class OrderController extends BaseController
         $summary      = CartController::applyVoucher($subtotal, $baseShipping);
 
         $this->renderView('order/checkout', [
-            // Khung rút gọn: khách đang ở bước cuối, mọi liên kết điều hướng
-            // đều là một lối để họ rời khỏi giỏ hàng đã điền dở.
-            'bareLayout'  => true,
-            'bareHeader'  => '_layout/checkout-header',
-            'pageTitle'   => 'Thanh toán — Vin Eyewear',
+            // Màn hoàn tất đơn hàng dùng header/footer đầy đủ theo thiết kế
+            // tham chiếu; dữ liệu và luồng submit vẫn giữ nguyên.
+            'bareLayout'  => false,
+            'pageTitle'   => 'Hoàn tất đơn hàng — Vin Eyewear',
             'metaDesc'    => 'Hoàn tất đơn hàng tại Vin Eyewear.',
             'payments'    => self::PAYMENTS,
 

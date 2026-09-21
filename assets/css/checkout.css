@@ -1746,6 +1746,204 @@ html.js .cofallback {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   GIAO DIỆN HOÀN TẤT ĐƠN HÀNG — design-reference/hoan_tat_don_hang
+
+   Màn tham chiếu dùng header đầy đủ, nền xám rất nhạt và các card trắng
+   bo mềm. Các selector dưới đây chỉ nằm trong trang checkout nên không làm
+   thay đổi giỏ hàng, màn QR hay biên nhận thanh toán.
+   ══════════════════════════════════════════════════════════════════════ */
+
+.page-order-checkout {
+    background: #fafafa;
+}
+
+.page-order-checkout .main-content {
+    background: #fafafa;
+}
+
+.page-order-checkout .oa-header {
+    min-height: 80px;
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.page-order-checkout .checkout {
+    padding: 0 24px;
+}
+
+.page-order-checkout .cohead {
+    max-width: 1216px;
+    padding: 40px 0 0;
+    gap: 14px;
+}
+
+.page-order-checkout .cohead__row {
+    align-items: center;
+}
+
+.page-order-checkout .cohead__title {
+    font-size: clamp(28px, 3vw, 34px);
+    font-weight: 700;
+    letter-spacing: -.035em;
+}
+
+.page-order-checkout .cohead__back {
+    display: none;
+}
+
+.page-order-checkout .cohead__next {
+    color: #aaa;
+}
+
+.page-order-checkout .cogrid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(360px, .95fr);
+    gap: 32px;
+    max-width: 1216px;
+    padding: 30px 0 64px;
+}
+
+.page-order-checkout .costeps,
+.page-order-checkout .checkout .csum {
+    border: 1px solid #e3e3e3;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .05);
+}
+
+.page-order-checkout .costeps {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+.page-order-checkout .costep {
+    gap: 18px;
+    padding: 24px;
+    border: 1px solid #e3e3e3;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, .05);
+}
+
+.page-order-checkout .costep + .costep {
+    margin-top: 0;
+    padding-top: 24px;
+    border-top: 1px solid #e3e3e3;
+}
+
+.page-order-checkout .costep__head {
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eeeeec;
+}
+
+.page-order-checkout .costep__title {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.page-order-checkout .costep__num {
+    width: 28px;
+    height: 28px;
+    box-shadow: 0 0 0 4px #f1f1f1;
+}
+
+.page-order-checkout .cofield__label {
+    color: #484848;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.page-order-checkout .cofield__input,
+.page-order-checkout .cofield__tel {
+    min-height: 42px;
+    border: 1px solid #d4d4d4;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.page-order-checkout .cofield__input {
+    padding: 11px 14px;
+}
+
+.page-order-checkout .cocard,
+.page-order-checkout .ckopt__item {
+    border-radius: 12px;
+}
+
+.page-order-checkout .checkout .csum {
+    position: sticky;
+    top: 24px;
+    max-width: none;
+    padding: 24px;
+}
+
+.page-order-checkout .checkout .csum__title {
+    font-size: 16px;
+}
+
+.page-order-checkout .checkout .coitem__thumb {
+    border-radius: 12px;
+}
+
+.page-order-checkout .checkout .covou__type {
+    border-radius: 12px;
+}
+
+.page-order-checkout .checkout .csum__cta--btn {
+    min-height: 52px;
+    border-radius: 12px;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, .12);
+}
+
+.page-order-checkout .cotrust {
+    border: 1px solid #e3e3e3;
+    border-radius: 16px;
+    background: #fff;
+    padding: 18px 20px;
+}
+
+.page-order-checkout .oa-footer {
+    padding-top: 32px;
+    padding-bottom: 32px;
+}
+
+@media (max-width: 900px) {
+    .page-order-checkout .cogrid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-order-checkout .checkout .csum {
+        position: static;
+    }
+}
+
+@media (max-width: 560px) {
+    .page-order-checkout .checkout {
+        padding: 0 16px;
+    }
+
+    .page-order-checkout .cohead {
+        padding-top: 28px;
+    }
+
+    .page-order-checkout .cogrid {
+        padding-top: 22px;
+    }
+
+    .page-order-checkout .costep,
+    .page-order-checkout .checkout .csum {
+        padding: 18px;
+        border-radius: 14px;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    CỘT TÓM TẮT, MÀN QR, VÀ HAI CHỖ SỬA LỖI — "Thanh toan.dc.html"
    (dự án 7bbd0d0c-…, 13/09/2026)
 
