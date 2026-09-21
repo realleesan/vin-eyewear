@@ -2121,7 +2121,7 @@ textarea.oa-field {
     min-width: 13px;
     height: 13px;
     padding: 0 3px;
-    border-radius: 0;
+    border-radius: 50%;
     background: var(--ink);
     color: #fff;
     font-size: var(--fs-xs);
