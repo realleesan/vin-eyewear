@@ -500,6 +500,12 @@ $storeId  = $old['storeId'] ?? '';
                            ───────────────────────────────────────────────── */
                         ?>
                         <div class="covou__type">
+                            <svg class="covou__tag" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                 stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                                 stroke-linejoin="round" aria-hidden="true">
+                                <path d="M20.59 13.41 13.41 20.59a2 2 0 0 1-2.82 0L3.41 13.41a2 2 0 0 1 0-2.82V4h6.59a2 2 0 0 1 1.41.59l8.59 8.82a2 2 0 0 1 0 2.82Z"></path>
+                                <circle cx="7.5" cy="7.5" r="1"></circle>
+                            </svg>
                             <label class="sr-only" for="co-ma"><?= e(t('cart.voucher')) ?></label>
                             <input class="covou__input" type="text" id="co-ma" name="code"
                                    maxlength="40" autocomplete="off" spellcheck="false"
