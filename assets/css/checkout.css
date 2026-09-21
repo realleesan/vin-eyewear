@@ -1964,15 +1964,70 @@ html.js .cofallback {
     position: sticky;
     top: 24px;
     max-width: none;
-    padding: 24px;
+    padding: 20px;
+    gap: 14px;
+}
+
+.page-order-checkout .checkout .csum__card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.page-order-checkout .checkout .csum__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eeeeec;
 }
 
 .page-order-checkout .checkout .csum__title {
     font-size: 16px;
+    font-weight: 700;
+}
+
+.page-order-checkout .checkout .csum__count {
+    flex: none;
+    padding: 5px 11px;
+    border-radius: 999px;
+    background: #f4f4f4;
+    color: #555;
+    font-size: 12px;
 }
 
 .page-order-checkout .checkout .coitem__thumb {
+    width: 80px;
+    height: 80px;
     border-radius: 12px;
+}
+
+.page-order-checkout .checkout .coitem {
+    gap: 16px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid #eeeeec;
+}
+
+.page-order-checkout .checkout .coitem__name {
+    font-size: 15px;
+    line-height: 1.3;
+}
+
+.page-order-checkout .checkout .coitem__qty {
+    top: auto;
+    right: 4px;
+    bottom: 4px;
+    width: 20px;
+    height: 17px;
+    border: 0;
+    border-radius: 3px;
+    font-size: 10px;
+}
+
+.page-order-checkout .checkout .coitem__price {
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .page-order-checkout .checkout .covou__type {
@@ -1983,6 +2038,79 @@ html.js .cofallback {
     min-height: 52px;
     border-radius: 12px;
     box-shadow: 0 5px 12px rgba(0, 0, 0, .12);
+}
+
+.page-order-checkout .checkout .csum__rule {
+    border-color: #eeeeec;
+}
+
+.page-order-checkout .checkout .csum__row {
+    min-height: 20px;
+    font-size: 13px;
+}
+
+.page-order-checkout .checkout .csum__row > span:first-child {
+    color: #666;
+}
+
+.page-order-checkout .checkout .csum__grand {
+    padding-top: 14px;
+    border-top: 1px solid #eeeeec;
+}
+
+.page-order-checkout .checkout .csum__grand > span:first-child {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.page-order-checkout .checkout .csum__grandleft {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.page-order-checkout .checkout .csum__grandleft small {
+    color: #aaa;
+    font-size: 11px;
+    font-weight: 400;
+}
+
+.page-order-checkout .checkout .csum__grand-num {
+    font-size: 26px;
+    font-weight: 800;
+}
+
+.page-order-checkout .checkout .csum__deposit[data-deposit-block="bank_transfer"] {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    background: #fafafa;
+}
+
+.page-order-checkout .checkout .csum__deposit-why {
+    color: #666;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.page-order-checkout .checkout .csum__deposit .csum__row {
+    min-height: 20px;
+    padding: 0;
+    border: 0;
+    color: #666;
+    font-size: 13px;
+}
+
+.page-order-checkout .checkout .csum__deposit .csum__val {
+    color: #222;
+    font-weight: 700;
+}
+
+.page-order-checkout .checkout .csum__more {
+    display: none;
 }
 
 .page-order-checkout .cotrust {

@@ -396,7 +396,10 @@ $storeId  = $old['storeId'] ?? '';
         <!-- ══════════ CỘT PHẢI: TÓM TẮT ══════════ -->
         <aside class="csum" aria-labelledby="co-sum">
             <div class="csum__card">
-                <h2 id="co-sum" class="csum__title"><?= e(t('co.your_order')) ?></h2>
+                <div class="csum__head">
+                    <h2 id="co-sum" class="csum__title"><?= e(t('co.your_order')) ?></h2>
+                    <span class="csum__count"><?= count($lines) ?> sản phẩm</span>
+                </div>
 
                 <div class="coitems">
                     <?php foreach ($lines as $line): ?>
@@ -596,7 +599,10 @@ $storeId  = $old['storeId'] ?? '';
                 <div class="csum__rule"></div>
 
                 <div class="csum__grand">
-                    <span><?= e(t('cart.grand')) ?></span>
+                    <span class="csum__grandleft">
+                        <span><?= e(t('cart.grand')) ?></span>
+                        <small>Đã bao gồm VAT &amp; phí vận chuyển</small>
+                    </span>
                     <span class="csum__grand-num"><?= money($total) ?></span>
                 </div>
 
@@ -663,12 +669,12 @@ $storeId  = $old['storeId'] ?? '';
                            Xem OrderModel::place(). */
                         ?>
                         <p class="csum__deposit-why">
-                            Chuyển khoản thì thanh toán <strong>đủ 100%</strong>.
-                            Nhận hàng không phải trả thêm.
+                            Chuyển khoản thanh toán <strong>100%</strong> qua VietQR.
+                            Nhận hàng kiểm tra đầy đủ, không phát sinh chi phí.
                         </p>
 
                         <div class="csum__row csum__row--deposit">
-                            <span><?= e(t('co.to_transfer')) ?></span>
+                            <span>Cần chuyển khoản:</span>
                             <span class="csum__val csum__val--deposit"><?= money($total) ?></span>
                         </div>
                     <?php else: ?>
@@ -731,10 +737,11 @@ $storeId  = $old['storeId'] ?? '';
                 ?>
                 <button type="submit" class="csum__cta csum__cta--btn"
                         data-cta
-                        data-cta-plain="Đặt hàng"
-                        data-cta-pay="Đặt hàng &amp; Thanh toán">
+                        data-cta-plain="Đặt hàng · <?= e(money($total)) ?> →"
+                        data-cta-pay="Đặt hàng &amp; Thanh toán · <?= e(money($total)) ?> →">
                     <?= $payment === 'cod' && !$needsDeposit
-                        ? 'Đặt hàng' : 'Đặt hàng &amp; Thanh toán' ?>
+                        ? 'Đặt hàng · ' . money($total) . ' →'
+                        : 'Đặt hàng &amp; Thanh toán · ' . money($total) . ' →' ?>
                 </button>
                 <a class="csum__more" href="/gio-hang">← Quay lại giỏ hàng</a>
             </div>
