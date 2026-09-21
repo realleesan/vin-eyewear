@@ -1767,21 +1767,27 @@ html.js .cofallback {
 }
 
 .page-order-checkout .covou__apply {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
     height: 34px;
-    padding: 0 0 0 12px;
+    margin-left: 8px;
+    padding: 0 16px;
     border: 0;
-    border-radius: 0;
-    background: transparent;
-    color: #222;
+    border-radius: 8px;
+    background: #171717;
+    color: #fff;
     font-size: 14px;
     font-weight: 600;
     letter-spacing: normal;
     text-transform: none;
+    line-height: 1;
 }
 
 .page-order-checkout .covou__apply:hover {
-    background: transparent;
-    color: #000;
+    background: #2d2d2d;
+    color: #fff;
 }
 
 .page-order-checkout .covou__pick {
